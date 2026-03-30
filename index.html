@@ -311,7 +311,7 @@ tbody td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 .tier-name{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2);cursor:text;min-width:60px;padding:1px 4px;border-radius:3px;border:1px solid transparent}
 .tier-name:hover{border-color:rgba(245,158,11,.3);color:var(--text1)}
 .tier-name:focus{outline:none;border-color:var(--accent);color:var(--accent);background:rgba(245,158,11,.05)}
-.tier-controls{margin-left:auto;display:flex;gap:3px;opacity:0;transition:opacity .15s}
+.tier-controls{margin-left:auto;display:flex;gap:3px;opacity:.4;transition:opacity .15s}
 .tier-row:hover .tier-controls{opacity:1}
 .tier-btn{background:none;border:1px solid rgba(255,255,255,.1);color:var(--text2);cursor:pointer;padding:1px 6px;border-radius:3px;font-size:.65rem;font-family:'DM Sans',sans-serif;line-height:1.4}
 .tier-btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -915,7 +915,14 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 <div class="auth-error" id="authError"></div>
 <div id="authFormWrap">
 <input type="email" class="auth-input" id="authEmail" placeholder="Email address" autocomplete="email">
-<input type="password" class="auth-input" id="authPassword" placeholder="Password" autocomplete="current-password">
+<div style="position:relative">
+<input type="password" class="auth-input" id="authPassword" placeholder="Password" autocomplete="current-password" style="padding-right:3rem;margin-bottom:0">
+<button type="button" id="authPwToggle" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text2);padding:4px;display:flex;align-items:center;transition:color .15s" title="Show password">
+<svg id="pwEyeShow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+<svg id="pwEyeHide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+</button>
+</div>
+<div style="height:.65rem"></div>
 <button class="auth-btn auth-btn-primary" id="authSubmit">SIGN IN</button>
 <div class="auth-divider">OR</div>
 <button class="auth-btn auth-btn-google" id="authGoogle">
@@ -4731,6 +4738,19 @@ try {
   const authSwitchMode = document.getElementById('authSwitchMode');
   const authGoogle = document.getElementById('authGoogle');
   const authClose = document.getElementById('authClose');
+
+  // Password show/hide toggle
+  const pwToggle = document.getElementById('authPwToggle');
+  const pwEyeShow = document.getElementById('pwEyeShow');
+  const pwEyeHide = document.getElementById('pwEyeHide');
+  pwToggle.addEventListener('click', () => {
+    const isHidden = authPassword.type === 'password';
+    authPassword.type = isHidden ? 'text' : 'password';
+    pwEyeShow.style.display = isHidden ? 'none' : '';
+    pwEyeHide.style.display = isHidden ? '' : 'none';
+    pwToggle.title = isHidden ? 'Hide password' : 'Show password';
+    pwToggle.style.color = isHidden ? 'var(--accent)' : 'var(--text2)';
+  });
   const acctBar = { style: {} };       // removed from sidebar
   const acctAvatar = { textContent: '' };
   const acctName = { textContent: '' };

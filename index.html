@@ -53,8 +53,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .elite-pull-header{padding:1.25rem 1.5rem .75rem;text-align:center;border-bottom:1px solid var(--border)}
 .elite-pull-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:3px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .elite-pull-subtitle{font-size:.75rem;color:var(--text2);margin-top:2px;letter-spacing:.5px}
-.elite-pull-img-wrap{position:relative;width:100%;aspect-ratio:1/1;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center}
-.elite-pull-img-wrap img{width:100%;height:100%;object-fit:cover;object-position:top;filter:brightness(1.05)}
+.elite-pull-img-wrap{position:relative;width:100%;height:300px;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.elite-pull-img-wrap img{max-width:100%;max-height:100%;object-fit:contain;filter:brightness(1.05)}
 .elite-pull-img-wrap .ep-blur{filter:blur(0) brightness(1.05);transition:filter .8s ease}
 .elite-pull-img-wrap .ep-blur.ep-reveal{filter:blur(0) brightness(1.05)}
 .elite-pull-img-wrap .ep-placeholder{color:var(--text2);font-size:.85rem}
@@ -262,6 +262,8 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:3px;backg
 .tb-btn svg{width:14px;height:14px}
 .tb-btn#btnSave.has-changes{border-color:var(--accent);color:var(--accent);background:rgba(245,158,11,.1);animation:saveGlow 2s ease-in-out infinite}
 .tb-btn#btnSave.saving{opacity:.6;pointer-events:none}
+.tb-btn#btnSave.saved{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.1)}
+.tb-btn#btnSave.save-error{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.1);animation:none}
 @keyframes saveGlow{0%,100%{box-shadow:0 0 0 rgba(245,158,11,0)}50%{box-shadow:0 0 8px rgba(245,158,11,.3)}}
 
 .controls{display:flex;gap:.75rem;padding:1rem 2rem;flex-wrap:wrap;align-items:center;flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--border)}
@@ -288,8 +290,8 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:3px;backg
 .stat-chip strong{color:var(--text);font-weight:600}
 .ranked-count{color:var(--green)}
 
-.table-wrap{padding:0 2rem 2rem;overflow:auto;flex:1;will-change:scroll-position;-webkit-overflow-scrolling:touch}
-table{width:100%;border-collapse:collapse;min-width:680px;contain:style}
+.table-wrap{padding:0 2rem 2rem;overflow:auto;flex:1;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:680px}
 thead th{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);padding:.6rem .6rem;text-align:left;border-bottom:2px solid var(--accent);position:sticky;top:0;background:var(--surface);z-index:10;cursor:pointer;user-select:none;white-space:nowrap}
 thead th:hover{color:var(--accent)}
 thead th.sorted{color:var(--accent)}
@@ -301,7 +303,7 @@ tbody tr:hover{background:rgba(245,158,11,.04)}
 tbody tr.dragging{opacity:.25;transition:none}
 tbody tr.drag-indicator{position:relative}
 tbody tr.drag-indicator::before{content:'';position:absolute;left:0;right:0;top:-2px;height:3px;background:var(--accent);border-radius:2px;box-shadow:0 0 12px rgba(245,158,11,.7);z-index:5}
-.drag-clone{position:fixed;pointer-events:none;z-index:3000;will-change:transform;opacity:.95;background:var(--surface);border:1px solid var(--accent);border-radius:5px;box-shadow:0 16px 48px rgba(0,0,0,.65),0 0 0 1px rgba(245,158,11,.4);transform-origin:center center;backface-visibility:hidden;-webkit-backface-visibility:hidden;contain:strict}
+.drag-clone{position:fixed;pointer-events:none;z-index:3000;will-change:transform;opacity:.95;background:var(--surface);border:1px solid var(--accent);border-radius:5px;box-shadow:0 16px 48px rgba(0,0,0,.65),0 0 0 1px rgba(245,158,11,.4);transform-origin:center center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .drag-clone td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 tbody tr.ranked-row{background:rgba(34,197,94,.03)}
 tbody tr.just-dropped{background:rgba(245,158,11,.12);box-shadow:inset 0 0 0 1px rgba(245,158,11,.3);animation:dropFade 2s ease-out forwards}
@@ -399,6 +401,24 @@ tbody td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 
 /* Toast */
 .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--accent);color:var(--accent);padding:.6rem 1.5rem;border-radius:4px;font-size:.78rem;font-weight:600;z-index:1000;opacity:0;transition:opacity .3s;pointer-events:none}
+
+/* Help button */
+.help-btn{width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.72rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;line-height:1;font-family:'DM Sans',sans-serif;flex-shrink:0}
+.help-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(245,158,11,.08)}
+
+/* Help modal */
+.help-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);z-index:2500;display:none;justify-content:center;align-items:center;animation:fadeIn .15s ease;padding:1rem}
+.help-overlay.open{display:flex}
+.help-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:560px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:slideUp .2s ease;position:relative;padding:1.75rem 1.5rem 1.5rem}
+.help-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.1rem;padding:4px 8px;border-radius:4px;transition:all .15s}
+.help-close:hover{color:var(--accent);background:rgba(245,158,11,.1)}
+.help-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:3px;text-align:center;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1.25rem}
+.help-sections{display:flex;flex-direction:column;gap:1rem}
+.help-section{display:flex;gap:12px;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);transition:border-color .15s}
+.help-section:hover{border-color:rgba(245,158,11,.3)}
+.help-section-icon{font-size:1.3rem;flex-shrink:0;width:32px;text-align:center;padding-top:2px}
+.help-section-title{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:4px}
+.help-section-desc{font-size:.78rem;color:var(--text2);line-height:1.55}
 .toast.show{opacity:1}
 
 /* Player Card Modal */
@@ -1340,7 +1360,7 @@ PREMIUM ACTIVE
 <div class="elite-pull-card">
 <div class="elite-pull-header">
 <div class="elite-pull-title">ELITE PULL</div>
-<div class="elite-pull-subtitle">Guess today's player from their picture &middot; 5 attempts</div>
+<div class="elite-pull-subtitle">Guess today's player from their picture &middot; 1 attempt</div>
 </div>
 <div class="elite-pull-img-wrap">
 <img id="epImage" class="ep-blur" src="" alt="Mystery player" style="display:none">
@@ -1394,7 +1414,7 @@ SAVE
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
 COMPARE <span id="compareCount" style="display:none;background:var(--accent);color:var(--bg);border-radius:50%;width:18px;height:18px;font-size:.65rem;display:inline-flex;align-items:center;justify-content:center;margin-left:2px"></span>
 </button>
-<button class="tb-btn" id="btnExport" title="Export your rankings as JSON">
+<button class="tb-btn" id="btnExport" title="Export rankings to Excel/CSV">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 EXPORT
 </button>
@@ -1417,6 +1437,7 @@ CLEAR
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 <input type="text" id="search" placeholder="Search player or team...">
 </div>
+<button class="help-btn" id="helpBtn" title="How to use">?</button>
 <div class="pos-filters">
 <div class="version-tabs">
 <button class="version-tab active" data-version="jacks">JACK'S</button>
@@ -1498,7 +1519,7 @@ CLEAR
 <div class="elite-pull-card">
 <div class="elite-pull-header">
 <div class="elite-pull-title">ELITE PULL — UNLIMITED</div>
-<div class="elite-pull-subtitle">Guess the player from their picture &middot; 5 attempts &middot; Play as many as you want</div>
+<div class="elite-pull-subtitle">Guess the player from their picture &middot; 1 attempt &middot; Play as many as you want</div>
 <div id="epuStats" class="ep-streak-display" style="margin-top:6px"></div>
 </div>
 <div class="elite-pull-img-wrap">
@@ -1720,6 +1741,19 @@ CLEAR
 Jack's Rankings require a <span class="md-premium-link" id="mdPremiumLink">Premium</span> account. Upgrade to draft using expert ranks.
 </div>
 <div class="md-setup-row">
+<label class="md-label">ADP Source</label>
+<div class="md-rank-src-tabs" id="mdAdpSrcTabs">
+<button class="md-rank-src-tab active" data-mdadp="underdog">UNDERDOG</button>
+<button class="md-rank-src-tab locked" data-mdadp="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
+<button class="md-rank-src-tab locked" data-mdadp="sleeper"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>SLEEPER</button>
+<button class="md-rank-src-tab locked" data-mdadp="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
+</div>
+</div>
+<div class="md-rank-premium-hint" id="mdAdpPremiumHint">
+<svg style="width:16px;height:16px;color:var(--accent);vertical-align:middle;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumLink">Premium</span> account. Upgrade to draft with ESPN, Sleeper, or Yahoo ADP.
+</div>
+<div class="md-setup-row">
 <label class="md-label">Number of Teams</label>
 <div class="md-stepper">
 <button class="md-step-btn" id="mdTeamsDec">−</button>
@@ -1803,9 +1837,65 @@ Jack's Rankings require a <span class="md-premium-link" id="mdPremiumLink">Premi
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Help Modal -->
+<div class="help-overlay" id="helpOverlay">
+<div class="help-card">
+<button class="help-close" id="helpClose">✕</button>
+<div class="help-title">HOW TO USE</div>
+<div class="help-sections">
+
+<div class="help-section">
+<div class="help-section-icon">📋</div>
+<div class="help-section-title">MY RANKINGS</div>
+<div class="help-section-desc">Your personal custom rankings. Drag and drop players to reorder them, add and remove tiers to organize by position group, export your rankings to a spreadsheet, use the trade calculator powered by your custom values, and mock draft using your personal board.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">⭐</div>
+<div class="help-section-title">JACK'S RANKINGS</div>
+<div class="help-section-desc">Jack's official rankings for the 2026 fantasy football season. View his player valuations, tier breakdowns, and use them as a reference when building your own board. Free users can see the top 24 overall (or top 12 per position).</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🏷️</div>
+<div class="help-section-title">TIERS</div>
+<div class="help-section-desc">Hover between any two players and click "+ Add Tier" to create a tier break. Tiers are separate for each position filter — your WR tiers won't affect your ALL tiers. Click the tier name to rename it, or the ✕ to remove it.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🔄</div>
+<div class="help-section-title">TRADE CALCULATOR</div>
+<div class="help-section-desc">Evaluate trades using your custom rankings or Jack's rankings as the value source. Add players and draft picks to each side to see which team wins the deal.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🎯</div>
+<div class="help-section-title">MOCK DRAFT</div>
+<div class="help-section-desc">Practice drafting against AI opponents using your personal rankings as the ADP board. Pick your draft slot, number of teams, and rounds to simulate a real draft experience.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">📊</div>
+<div class="help-section-title">EXPORT</div>
+<div class="help-section-desc">Download your current rankings view as a CSV file that opens in Excel. It exports whatever you're viewing — filter to a specific position to export just those players.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">💾</div>
+<div class="help-section-title">SAVING</div>
+<div class="help-section-desc">Sign in to save your rankings to the cloud. After making changes, hit the Save button in the toolbar. Your rankings sync across devices and persist between sessions.</div>
+</div>
+
+</div>
+</div>
+</div>
 <input type="file" id="fileImport" accept=".json" style="display:none">
 
 <script>
+// Global auth state flag — used by canEdit() before Firebase auth module loads
+window._authCurrentUser = null;
+
 // === SECURITY UTILITIES ===
 function escapeHTML(str) {
   if (typeof str !== 'string') return str;
@@ -2062,36 +2152,47 @@ const versionBoards = {
   jacks: { redraft: defaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() },
   mine: { redraft: defaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() }
 };
+const POS_TIER_KEYS = ['ALL','QB','RB','WR','TE'];
+function _mkPosTiers() { return {ALL:[],QB:[],RB:[],WR:[],TE:[]}; }
+function _mkPosTierCtrs() { return {ALL:0,QB:0,RB:0,WR:0,TE:0}; }
 const versionTiers = {
-  jacks: { redraft: [], superflex: [], dynasty: [], dynastysf: [] },
-  mine: { redraft: [], superflex: [], dynasty: [], dynastysf: [] }
+  jacks: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
+  mine: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() }
 };
 const versionTierCounters = {
-  jacks: { redraft: 0, superflex: 0, dynasty: 0, dynastysf: 0 },
-  mine: { redraft: 0, superflex: 0, dynasty: 0, dynastysf: 0 }
+  jacks: { redraft: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
+  mine: { redraft: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() }
 };
 
 // (board/tiers aliases are managed via syncMode below)
 
 // Convenience accessors - always point to the active version + mode
 function getBoard() { return versionBoards[currentVersion][currentMode]; }
-function getTiers() { return versionTiers[currentVersion][currentMode]; }
+function getTiers() { return versionTiers[currentVersion][currentMode][_tierPK()]; }
 function setBoard(b) { versionBoards[currentVersion][currentMode] = b; }
-function setTiers(t) { versionTiers[currentVersion][currentMode] = t; }
+function setTiers(t) { versionTiers[currentVersion][currentMode][_tierPK()] = t; }
+
+// Map current position filter to tier bucket key
+function _tierPK() {
+  if (typeof filter !== 'undefined' && (filter==='QB'||filter==='RB'||filter==='WR'||filter==='TE')) return filter;
+  return 'ALL';
+}
 
 // board/tiers aliases (used everywhere - we update these on mode/version switch)
 let board = versionBoards[currentVersion].redraft;
-let tiers = versionTiers[currentVersion].redraft;
+let tiers = versionTiers[currentVersion].redraft.ALL;
 let tierCounter = 0;
 
 function syncMode() {
   board = versionBoards[currentVersion][currentMode];
-  tiers = versionTiers[currentVersion][currentMode];
-  tierCounter = versionTierCounters[currentVersion][currentMode];
+  tiers = versionTiers[currentVersion][currentMode][_tierPK()];
+  tierCounter = versionTierCounters[currentVersion][currentMode][_tierPK()];
 }
 
 // Check if current user can edit the active version
 function canEdit() {
+  // Must be signed in to edit anything
+  if (typeof window._authCurrentUser !== 'undefined' && !window._authCurrentUser) return false;
   if (currentVersion === 'mine') return true;
   // Jack's rankings require admin
   return typeof window.isAdmin === 'function' && window.isAdmin();
@@ -2127,40 +2228,54 @@ let userData = {};
 const TIER_LABELS = ['S','A','B','C','D','E','F','G','H','I','J'];
 const TIER_COLORS = {'S':'S','A':'A','B':'B','C':'C','D':'D','E':'E','F':'F','G':'F','H':'F','I':'F','J':'F'};
 
-function nextTierLabel() {
-  const used = tiers.map(t => t.label);
-  for (const l of TIER_LABELS) { if (!used.includes(l)) return l; }
-  return 'T' + tiers.length;
-}
-
 let _bypassEditCheck = false;
 
-function addTier(afterRank, label, name) {
-  if (!_bypassEditCheck && !canEdit()) { toast("Only admins can edit Jack's rankings"); return null; }
-  if (!label) label = nextTierLabel();
+function addTier(afterRank, label, name, _pk) {
+  if (!_bypassEditCheck && !canEdit()) { 
+    if (!window._authCurrentUser) {
+      toast("Sign in to create your rankings");
+      if (typeof window.openAuthModal === 'function') window.openAuthModal();
+    } else {
+      toast("Only admins can edit Jack's rankings");
+    }
+    return null; 
+  }
+  const pk = _pk || _tierPK();
+  const arr = versionTiers[currentVersion][currentMode][pk];
+  if (!label) { const used = arr.map(t => t.label); label = TIER_LABELS.find(l => !used.includes(l)) || ('T' + arr.length); }
   if (!name) name = label === 'S' ? 'ELITE' : 'TIER ' + label;
-  const id = ++versionTierCounters[currentVersion][currentMode];
-  tierCounter = versionTierCounters[currentVersion][currentMode];
-  tiers.push({id, label, name, afterRank});
-  tiers.sort((a,b) => a.afterRank - b.afterRank);
+  const id = ++versionTierCounters[currentVersion][currentMode][pk];
+  arr.push({id, label, name, afterRank});
+  arr.sort((a,b) => a.afterRank - b.afterRank);
+  tiers = versionTiers[currentVersion][currentMode][_tierPK()];
+  tierCounter = versionTierCounters[currentVersion][currentMode][_tierPK()];
   return id;
 }
 
 function removeTier(id) {
-  if (!canEdit()) { toast("Only admins can edit Jack's rankings"); return; }
-  versionTiers[currentVersion][currentMode] = tiers.filter(t => t.id !== id);
-  tiers = versionTiers[currentVersion][currentMode];
+  if (!canEdit()) { 
+    if (!window._authCurrentUser) {
+      toast("Sign in to create your rankings");
+      if (typeof window.openAuthModal === 'function') window.openAuthModal();
+    } else {
+      toast("Only admins can edit Jack's rankings");
+    }
+    return; 
+  }
+  const pk = _tierPK();
+  versionTiers[currentVersion][currentMode][pk] = versionTiers[currentVersion][currentMode][pk].filter(t => t.id !== id);
+  tiers = versionTiers[currentVersion][currentMode][pk];
 }
 
 function saveLocal() {
-  // Save all modes for current version using player names (not indices) for data resilience
   userData = {};
+  function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
   ['jacks','mine'].forEach(function(ver) {
     userData[ver] = {
-      redraft: { _order: boardToNames(versionBoards[ver].redraft), _tiers: versionTiers[ver].redraft.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) },
-      superflex: { _order: boardToNames(versionBoards[ver].superflex), _tiers: versionTiers[ver].superflex.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) },
-      dynasty: { _order: boardToNames(versionBoards[ver].dynasty), _tiers: versionTiers[ver].dynasty.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) },
-      dynastysf: { _order: boardToNames(versionBoards[ver].dynastysf), _tiers: versionTiers[ver].dynastysf.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) }
+      redraft: { _order: boardToNames(versionBoards[ver].redraft), _posTiers: _serPT(versionTiers[ver].redraft) },
+      superflex: { _order: boardToNames(versionBoards[ver].superflex), _posTiers: _serPT(versionTiers[ver].superflex) },
+      dynasty: { _order: boardToNames(versionBoards[ver].dynasty), _posTiers: _serPT(versionTiers[ver].dynasty) },
+      dynastysf: { _order: boardToNames(versionBoards[ver].dynastysf), _posTiers: _serPT(versionTiers[ver].dynastysf) }
     };
   });
 }
@@ -2169,23 +2284,29 @@ function loadModeData(mode, obj, ver) {
   _bypassEditCheck = true;
   ver = ver || currentVersion;
   if (obj._order && Array.isArray(obj._order)) {
-    // Resolve names (or legacy indices) to current indices
     const fallback = mode === 'dynastysf' ? sfDefaultBoard : mode === 'dynasty' ? dynastyDefaultBoard : mode === 'superflex' ? superflexDefaultBoard : defaultBoard;
     versionBoards[ver][mode] = namesToBoard(obj._order, fallback);
   }
-  if (obj._tiers && Array.isArray(obj._tiers)) {
-    versionTiers[ver][mode] = [];
-    versionTierCounters[ver][mode] = 0;
-    const prevMode = currentMode;
-    const prevVer = currentVersion;
-    currentMode = mode;
-    currentVersion = ver;
-    syncMode();
-    obj._tiers.forEach(t => addTier(t.afterRank, t.label, t.name));
-    currentMode = prevMode;
-    currentVersion = prevVer;
-    syncMode();
+  const prevMode = currentMode, prevVer = currentVersion;
+  currentMode = mode; currentVersion = ver;
+  // New format: per-position tiers
+  if (obj._posTiers && typeof obj._posTiers === 'object') {
+    POS_TIER_KEYS.forEach(pk => {
+      versionTiers[ver][mode][pk] = [];
+      versionTierCounters[ver][mode][pk] = 0;
+      if (obj._posTiers[pk] && Array.isArray(obj._posTiers[pk])) {
+        obj._posTiers[pk].forEach(t => addTier(t.afterRank, t.label, t.name, pk));
+      }
+    });
   }
+  // Legacy: flat _tiers → load into ALL
+  else if (obj._tiers && Array.isArray(obj._tiers)) {
+    versionTiers[ver][mode].ALL = [];
+    versionTierCounters[ver][mode].ALL = 0;
+    obj._tiers.forEach(t => addTier(t.afterRank, t.label, t.name, 'ALL'));
+  }
+  currentMode = prevMode; currentVersion = prevVer;
+  syncMode();
   _bypassEditCheck = false;
 }
 
@@ -2215,7 +2336,15 @@ function loadUserData(obj) {
 
 // Move a player from one board position to another, renumber
 function movePlayer(fromIdx, toPosition) {
-  if (!canEdit()) { toast("Only admins can edit Jack's rankings"); return; }
+  if (!canEdit()) { 
+    if (!window._authCurrentUser) {
+      toast("Sign in to create your rankings");
+      if (typeof window.openAuthModal === 'function') window.openAuthModal();
+    } else {
+      toast("Only admins can edit Jack's rankings");
+    }
+    return; 
+  }
   const curPos = board.indexOf(fromIdx);
   if (curPos === -1 || curPos === toPosition) return;
   board.splice(curPos, 1);
@@ -2277,13 +2406,12 @@ function diffHtml(d) {
 }
 
 function getTierForRank(rank) {
-  // Use cached sorted tiers for performance
-  if (!getTierForRank._cache || getTierForRank._cacheKey !== tiers.length + ':' + tiers.map(t=>t.afterRank).join(',')) {
-    getTierForRank._sorted = tiers.slice().sort((a,b) => a.afterRank - b.afterRank);
-    getTierForRank._cacheKey = tiers.length + ':' + tiers.map(t=>t.afterRank).join(',');
-  }
+  // A tier with afterRank=N appears above the player at rank N.
+  // That player and all below belong to that tier until the next tier.
+  // So find the tier with the largest afterRank that is <= this rank.
   let currentTier = null;
-  for (const t of getTierForRank._sorted) {
+  const sorted = tiers.slice().sort((a,b) => a.afterRank - b.afterRank);
+  for (const t of sorted) {
     if (t.afterRank <= rank) currentTier = t;
     else break;
   }
@@ -2313,88 +2441,76 @@ function render() {
 
   // Build a map of afterRank -> tier for tier rows (only in default sort, no search, ALL/position filter)
   const showTiers = (sortKey === 'myrank' && sortDir === 1 && !query);
-  // Pre-sort tiers by afterRank and build a fast lookup map
-  const tiersByRank = {};
-  const sortedTiers = showTiers ? tiers.slice().sort((a,b) => a.afterRank - b.afterRank) : [];
+  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+  const tierMap = {};
   if (showTiers) {
-    for (let i = 0; i < sortedTiers.length; i++) {
-      const t = sortedTiers[i];
-      if (!tiersByRank[t.afterRank]) tiersByRank[t.afterRank] = [];
-      tiersByRank[t.afterRank].push(t);
-    }
+    tiers.forEach(t => { tierMap[t.afterRank] = t; });
   }
 
-  // Pre-build tier label cache for myrank-num styling
-  getTierForRank._cache = null; // invalidate
-
-  // Build HTML using array join (faster than string concat for large tables)
-  const parts = [];
-  for (let i = 0; i < data.length; i++) {
-    const d = data[i];
-
-    // Insert tier rows before this player
+  let html = '';
+  data.forEach((d, i) => {
+    const displayRank = useFilteredRank ? (i + 1) : d.myRank;
+    // Insert tier row before this player if a tier sits between previous rank and this rank
     if (showTiers) {
-      const prevRank = i > 0 ? data[i-1].myRank : 0;
-      for (let ti = 0; ti < sortedTiers.length; ti++) {
-        const t = sortedTiers[ti];
-        if (t.afterRank > prevRank && t.afterRank <= d.myRank) {
-          parts.push('<tr class="tier-row" data-tier-id="', t.id, '"><td colspan="10"><div class="tier-inner"><span class="tier-badge ', t.label, '">', t.label, '</span>');
-          if (editable) {
-            parts.push('<input class="tier-name" value="', t.name, '" data-tier-id="', t.id, '" spellcheck="false"><div class="tier-controls"><button class="tier-btn del" data-tier-del="', t.id, '" title="Remove tier">✕</button></div>');
-          } else {
-            parts.push('<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">', t.name, '</span>');
-          }
-          parts.push('</div></td></tr>');
+      const prevDisplayRank = i > 0 ? (useFilteredRank ? i : data[i-1].myRank) : 0;
+      tiers.forEach(t => {
+        if (t.afterRank > prevDisplayRank && t.afterRank <= displayRank) {
+          html += `<tr class="tier-row" data-tier-id="${t.id}">
+            <td colspan="10"><div class="tier-inner">
+              <span class="tier-badge ${t.label}">${t.label}</span>
+              ${editable ? `<input class="tier-name" value="${t.name}" data-tier-id="${t.id}" spellcheck="false">
+              <div class="tier-controls">
+                <button class="tier-btn del" data-tier-del="${t.id}" title="Remove tier">✕</button>
+              </div>` : `<span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">${t.name}</span>`}
+            </div></td>
+          </tr>`;
         }
-      }
+      });
     }
 
     const _adp = modeAdp(d);
     const moved = d.myRank !== (board.indexOf(d.idx) + 1) || Math.abs(_adp - d.myRank) >= 1;
     const checked = compareSet.has(d.idx) ? 'checked' : '';
     const blurred = shouldBlur && (i + 1) > blurCutoff ? 'premium-blur' : '';
-    const tierLabel = getTierForRank(d.myRank);
-    const ageClass = d.s==='DST' ? (d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '') : d.age!=null ? (d.s==='RB' ? (d.age>=30?'age-red':d.age>=28?'age-yellow':'age-green') : d.s==='QB' ? (d.age>=35?'age-red':d.age>=32?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='WR' ? (d.age>=32?'age-red':d.age>=29?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='TE' ? (d.age>=33?'age-red':d.age>=31?'age-orange':d.age>=25?'age-green':'age-yellow') : '') : '';
-    const ageVal = d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (d.age != null ? d.age : '—');
+    html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}">
+      <td><div class="drag-handle"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div></td>
+      <td class="myrank-cell"><span class="myrank-num tier-${getTierForRank(displayRank)}">${d.myRank}</span></td>
+      <td><div class="player-cell" style="flex-direction:row;align-items:center;gap:6px">${d._slImg ? `<img class="player-headshot-sm" src="${d._slImg}" alt="" onerror="this.style.display='none'">` : ''}<div style="display:flex;flex-direction:column;gap:1px"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}</span><span class="player-team">${d.t}</span></div></div></td>
+      <td><span class="pos-badge ${d.s}">${d.s}</span></td>
+      <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
+      <td class="adp-cell">${modeAdp(d) != null ? modeAdp(d) : '—'}</td>
+      <td class="pts-cell">${d.s==='K'||d.s==='DST'?'—':(d.p/17).toFixed(1)}</td>
+      <td class="pts-cell">${d.s25 ? d.s25.ppg : '—'}</td>
+      <td class="pts-cell yrr-cell" style="display:none">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</td>
+      <td class="age-cell ${d.s==='DST' ? (d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '') : d.age!=null ? (d.s==='RB' ? (d.age>=30?'age-red':d.age>=28?'age-yellow':'age-green') : d.s==='QB' ? (d.age>=35?'age-red':d.age>=32?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='WR' ? (d.age>=32?'age-red':d.age>=29?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='TE' ? (d.age>=33?'age-red':d.age>=31?'age-orange':d.age>=25?'age-green':'age-yellow') : '') : ''}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (d.age != null ? d.age : '—')}</td>
+      <td class="diff-cell">${diffHtml(d)}</td>
+    </tr>`;
 
-    parts.push('<tr data-idx="', d.idx, '" class="', moved?'ranked-row':'', ' ', checked?'cmp-selected':'', ' ', blurred, '">',
-      '<td>', editable ? '<div class="drag-handle"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div>' : '', '</td>',
-      '<td class="myrank-cell"><span class="myrank-num tier-', tierLabel, '">', d.myRank, '</span></td>',
-      '<td><div class="player-cell" style="flex-direction:row;align-items:center;gap:6px">', d._slImg ? '<img class="player-headshot-sm" src="' + d._slImg + '" alt="" onerror="this.style.display=\'none\'">' : '', '<div style="display:flex;flex-direction:column;gap:1px"><span class="player-name player-name-link" data-cidx="', d.idx, '">', d.n, '</span><span class="player-team">', d.t, '</span></div></div></td>',
-      '<td><span class="pos-badge ', d.s, '">', d.s, '</span></td>',
-      '<td class="pos-rank-cell">', d.myPosRank || d.r, '</td>',
-      '<td class="adp-cell">', _adp != null ? _adp : '—', '</td>',
-      '<td class="pts-cell">', d.s==='K'||d.s==='DST'?'—':(d.p/17).toFixed(1), '</td>',
-      '<td class="pts-cell">', d.s25 ? d.s25.ppg : '—', '</td>',
-      '<td class="pts-cell yrr-cell" style="display:none">', d._yrr != null ? d._yrr.toFixed(2) : '—', '</td>',
-      '<td class="age-cell ', ageClass, '">', ageVal, '</td>',
-      '<td class="diff-cell">', diffHtml(d), '</td>',
-    '</tr>');
-
-    // "Add tier" mini-button between rows
-    if (editable && showTiers && !tiersByRank[d.myRank]) {
-      parts.push('<tr class="add-tier-row" data-after-rank="', d.myRank, '"><td colspan="10"><button class="add-tier-btn" data-add-tier="', d.myRank, '">+ ADD TIER</button></td></tr>');
+    // "Add tier" mini-button between rows (only show on hover via CSS)
+    if (editable && showTiers && !tierMap[displayRank]) {
+      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="10"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
     }
-  }
+  });
 
   // Tiers that come after the last player
   if (showTiers) {
-    const lastRank = data.length > 0 ? data[data.length-1].myRank : 0;
-    for (let ti = 0; ti < sortedTiers.length; ti++) {
-      const t = sortedTiers[ti];
-      if (t.afterRank > lastRank) {
-        parts.push('<tr class="tier-row" data-tier-id="', t.id, '"><td colspan="10"><div class="tier-inner"><span class="tier-badge ', t.label, '">', t.label, '</span>');
-        if (editable) {
-          parts.push('<input class="tier-name" value="', t.name, '" data-tier-id="', t.id, '" spellcheck="false"><div class="tier-controls"><button class="tier-btn del" data-tier-del="', t.id, '" title="Remove tier">✕</button></div>');
-        } else {
-          parts.push('<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">', t.name, '</span>');
-        }
-        parts.push('</div></td></tr>');
+    const lastDisplayRank = data.length > 0 ? (useFilteredRank ? data.length : data[data.length-1].myRank) : 0;
+    tiers.forEach(t => {
+      if (t.afterRank > lastDisplayRank) {
+        html += `<tr class="tier-row" data-tier-id="${t.id}">
+          <td colspan="10"><div class="tier-inner">
+            <span class="tier-badge ${t.label}">${t.label}</span>
+            ${editable ? `<input class="tier-name" value="${t.name}" data-tier-id="${t.id}" spellcheck="false">
+            <div class="tier-controls">
+              <button class="tier-btn del" data-tier-del="${t.id}" title="Remove tier">✕</button>
+            </div>` : `<span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">${t.name}</span>`}
+          </div></td>
+        </tr>`;
       }
-    }
+    });
   }
 
-  tbody.innerHTML = parts.join('');
+  tbody.innerHTML = html;
 
   // Premium upsell wall
   const existingWall = document.getElementById('premiumWall');
@@ -2452,41 +2568,45 @@ function updateCompareBtn() {
 }
 
 function attachRowListeners() {
-  // No-op: all row listeners now use event delegation (attached once below)
+  // No-op: all listeners use event delegation below
 }
 
-// === EVENT DELEGATION: attach once, never re-attach ===
-(function initDelegatedListeners() {
+function attachTierListeners() {
+  // No-op: all listeners use event delegation below
+}
+
+// === EVENT DELEGATION (attached once, never re-attached) ===
+(function() {
   const tbody = document.getElementById('tbody');
   const scrollContainer = document.querySelector('.table-wrap');
 
-  // Player card click (delegated)
+  // Player card click
   tbody.addEventListener('click', e => {
     const nameLink = e.target.closest('.player-name-link');
-    if (nameLink) {
-      e.stopPropagation();
-      const idx = +nameLink.dataset.cidx;
-      openPlayerCard(D[idx]);
-      return;
-    }
+    if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
+    // Add tier
+    const addBtn = e.target.closest('[data-add-tier]');
+    if (addBtn) { addTier(+addBtn.dataset.addTier); saveLocal(); render(); toast('Tier added'); return; }
+    // Delete tier
+    const delBtn = e.target.closest('[data-tier-del]');
+    if (delBtn) { removeTier(+delBtn.dataset.tierDel); saveLocal(); render(); toast('Tier removed'); return; }
   });
 
-  // Compare checkboxes (delegated)
+  // Compare checkboxes + tier name editing
   tbody.addEventListener('change', e => {
     const cb = e.target.closest('.cmp-cb');
-    if (cb) {
-      const idx = +cb.dataset.idx;
-      if (cb.checked) compareSet.add(idx);
-      else compareSet.delete(idx);
-      cb.closest('tr').classList.toggle('cmp-selected', cb.checked);
-      updateCompareBtn();
-    }
+    if (cb) { const idx = +cb.dataset.idx; if (cb.checked) compareSet.add(idx); else compareSet.delete(idx); cb.closest('tr').classList.toggle('cmp-selected', cb.checked); updateCompareBtn(); return; }
+    const inp = e.target.closest('.tier-name');
+    if (inp) { const t = tiers.find(t => t.id === +inp.dataset.tierId); if (t) { t.name = inp.value; saveLocal(); } }
   });
 
-  // === High-performance drag & drop (attached once via delegation) ===
+  tbody.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest('.tier-name')) e.target.blur(); });
+
+  // === Optimized drag & drop ===
   let dragRow = null, dragIdx = null, clone = null, lastIndicatorRow = null;
   let pointerY = 0, cloneX = 0, cloneOffsetY = 0;
   let rafId = null, isDragging = false;
+  let _rowRects = [];
 
   function clearIndicators() {
     if (lastIndicatorRow) { lastIndicatorRow.classList.remove('drag-indicator'); lastIndicatorRow = null; }
@@ -2498,8 +2618,7 @@ function attachRowListeners() {
     table.style.cssText = `width:${tbl.offsetWidth}px;border-collapse:collapse;table-layout:fixed;`;
     const tr = row.cloneNode(true);
     tr.classList.remove('dragging','cmp-selected','ranked-row');
-    const origCells = row.children;
-    const cloneCells = tr.children;
+    const origCells = row.children, cloneCells = tr.children;
     for (let i = 0; i < origCells.length; i++) {
       if (cloneCells[i]) cloneCells[i].style.width = origCells[i].offsetWidth + 'px';
     }
@@ -2511,76 +2630,46 @@ function attachRowListeners() {
     return wrap;
   }
 
-  // Cache row rects during drag for fast hit-testing (avoids elementsFromPoint)
-  let _rowRects = [];
   function cacheRowRects() {
     _rowRects = [];
     const rows = tbody.querySelectorAll('tr[data-idx]');
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i].getBoundingClientRect();
-      _rowRects.push({ row: rows[i], top: r.top, bottom: r.bottom, midY: r.top + r.height / 2 });
+      _rowRects.push({ row: rows[i], top: r.top, bottom: r.bottom });
     }
   }
 
-  let _rectCacheFrame = 0;
   function getRowAtY(y) {
-    // Binary search on cached rects for O(log n) hit test
     let lo = 0, hi = _rowRects.length - 1;
     while (lo <= hi) {
       const mid = (lo + hi) >> 1;
       const r = _rowRects[mid];
       if (y < r.top) hi = mid - 1;
       else if (y > r.bottom) lo = mid + 1;
-      else {
-        if (r.row !== dragRow) return r.row;
-        // If we hit the drag row, check neighbors
-        if (mid > 0 && y <= _rowRects[mid-1].bottom && _rowRects[mid-1].row !== dragRow) return _rowRects[mid-1].row;
-        if (mid < _rowRects.length-1 && y >= _rowRects[mid+1].top && _rowRects[mid+1].row !== dragRow) return _rowRects[mid+1].row;
-        return null;
-      }
-    }
-    // Clamp to nearest visible row
-    if (_rowRects.length > 0) {
-      if (y <= _rowRects[0].top && _rowRects[0].row !== dragRow) return _rowRects[0].row;
-      const last = _rowRects[_rowRects.length-1];
-      if (y >= last.bottom && last.row !== dragRow) return last.row;
+      else return r.row !== dragRow ? r.row : null;
     }
     return null;
   }
 
-  // Single RAF loop
   function tick() {
     if (!isDragging) return;
+    if (clone) clone.style.transform = `translate3d(${cloneX}px, ${pointerY - cloneOffsetY}px, 0) scale(1.015)`;
 
-    // 1. Position clone with GPU
-    if (clone) {
-      clone.style.transform = `translate3d(${cloneX}px, ${pointerY - cloneOffsetY}px, 0) scale(1.015)`;
-    }
-
-    // 2. Auto-scroll with easing
     const rect = scrollContainer.getBoundingClientRect();
     const zone = 80;
     let scrolled = false;
     if (pointerY < rect.top + zone) {
-      const pct = 1 - (pointerY - rect.top) / zone;
-      scrollContainer.scrollTop -= Math.round(2 + pct * pct * 18);
+      scrollContainer.scrollTop -= Math.round(2 + Math.pow(1 - (pointerY - rect.top) / zone, 2) * 18);
       scrolled = true;
     } else if (pointerY > rect.bottom - zone) {
-      const pct = 1 - (rect.bottom - pointerY) / zone;
-      scrollContainer.scrollTop += Math.round(2 + pct * pct * 18);
+      scrollContainer.scrollTop += Math.round(2 + Math.pow(1 - (rect.bottom - pointerY) / zone, 2) * 18);
       scrolled = true;
     }
-
-    // Refresh row rects if scrolled (positions shifted)
     if (scrolled) cacheRowRects();
 
-    // 3. Update indicator
     clearIndicators();
     const target = getRowAtY(pointerY);
-    if (target) {
-      target.classList.add('drag-indicator');
-      lastIndicatorRow = target;
-    }
+    if (target) { target.classList.add('drag-indicator'); lastIndicatorRow = target; }
 
     rafId = requestAnimationFrame(tick);
   }
@@ -2610,9 +2699,7 @@ function attachRowListeners() {
     clone.style.top = '0px';
     clone.style.transform = `translate3d(${cloneX}px, ${pointerY - cloneOffsetY}px, 0) scale(1.015)`;
 
-    // Cache all row positions once at drag start
     cacheRowRects();
-
     isDragging = true;
     rafId = requestAnimationFrame(tick);
 
@@ -2620,10 +2707,7 @@ function attachRowListeners() {
     document.addEventListener('pointerup', onPointerUp);
   }
 
-  function onPointerMove(e) {
-    e.preventDefault();
-    pointerY = e.clientY;
-  }
+  function onPointerMove(e) { e.preventDefault(); pointerY = e.clientY; }
 
   function onPointerUp(e) {
     if (!isDragging) return;
@@ -2648,7 +2732,6 @@ function attachRowListeners() {
       else if (!dropAbove) targetPos = targetPos + 1;
       else if (dropAbove && dragPos < targetPos) targetPos = targetPos - 1;
       movePlayer(dragIdx, targetPos);
-      toast(`${D[dragIdx].n} → #${D[dragIdx].myRank}`);
       const movedIdx = dragIdx;
       render();
       const droppedRow = tbody.querySelector(`tr[data-idx="${movedIdx}"]`);
@@ -2664,51 +2747,6 @@ function attachRowListeners() {
   tbody.addEventListener('pointerdown', onPointerDown);
 })();
 
-function attachTierListeners() {
-  // No-op: tier listeners now use event delegation (attached once below)
-}
-
-// === TIER EVENT DELEGATION: attach once ===
-(function initTierDelegation() {
-  const tbody = document.getElementById('tbody');
-
-  // Add tier + Delete tier (click delegation)
-  tbody.addEventListener('click', e => {
-    const addBtn = e.target.closest('[data-add-tier]');
-    if (addBtn) {
-      const afterRank = +addBtn.dataset.addTier;
-      addTier(afterRank);
-      saveLocal();
-      render();
-      toast('Tier added');
-      return;
-    }
-    const delBtn = e.target.closest('[data-tier-del]');
-    if (delBtn) {
-      removeTier(+delBtn.dataset.tierDel);
-      saveLocal();
-      render();
-      toast('Tier removed');
-      return;
-    }
-  });
-
-  // Tier name editing (change delegation)
-  tbody.addEventListener('change', e => {
-    const inp = e.target.closest('.tier-name');
-    if (inp) {
-      const id = +inp.dataset.tierId;
-      const t = tiers.find(t => t.id === id);
-      if (t) { t.name = inp.value; saveLocal(); }
-    }
-  });
-
-  // Enter key on tier name
-  tbody.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target.closest('.tier-name')) e.target.blur();
-  });
-})();
-
 // Toast
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -2716,6 +2754,17 @@ function toast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 1800);
 }
+
+// Help modal
+document.getElementById('helpBtn').addEventListener('click', () => {
+  document.getElementById('helpOverlay').classList.add('open');
+});
+document.getElementById('helpClose').addEventListener('click', () => {
+  document.getElementById('helpOverlay').classList.remove('open');
+});
+document.getElementById('helpOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('helpOverlay')) document.getElementById('helpOverlay').classList.remove('open');
+});
 
 // Controls
 let _searchTimer = null;
@@ -2730,6 +2779,7 @@ document.querySelectorAll('.pos-btn[data-pos]').forEach(btn => {
     document.querySelectorAll('.pos-btn[data-pos]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     filter = btn.dataset.pos;
+    syncMode();
     document.getElementById('ageHeader').firstChild.textContent = filter === 'DST' ? 'Opp PPG ' : 'Age ';
     render();
   });
@@ -2789,20 +2839,66 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   });
 });
 
-// Export
+// Export as CSV (opens in Excel)
 document.getElementById('btnExport').addEventListener('click', () => {
-  saveLocal();
-  const blob = new Blob([JSON.stringify(userData, null, 2)], {type:'application/json'});
+  const data = getFiltered();
+  const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : 'Redraft';
+  const verLabel = currentVersion === 'jacks' ? 'Jacks' : 'My';
+  const posLabel = filter === 'ALL' ? 'All' : filter;
+  
+  // Build CSV
+  const esc = v => { const s = String(v ?? ''); return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+  
+  const headers = ['Rank', 'Tier', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', 'PPG (Proj)', 'PPG (2025)', 'Age', 'ADP Diff'];
+  const rows = [headers.join(',')];
+  
+  data.forEach((d, i) => {
+    const displayRank = useFilteredRank ? (i + 1) : d.myRank;
+    const tierLabel = getTierForRank(displayRank);
+    const tierName = tiers.find(t => {
+      const sorted = tiers.slice().sort((a,b) => a.afterRank - b.afterRank);
+      let cur = null;
+      for (const tt of sorted) { if (tt.afterRank <= displayRank) cur = tt; else break; }
+      return cur && cur.label === tierLabel && cur === t;
+    });
+    const adp = modeAdp(d);
+    const diff = adp != null ? Math.round(adp - d.myRank) : '';
+    const ppgProj = (d.s === 'K' || d.s === 'DST') ? '' : (d.p / 17).toFixed(1);
+    const ppg25 = d.s25 ? d.s25.ppg : '';
+    const age = d.s === 'DST' ? (d.oppg != null ? d.oppg : '') : (d.age != null ? d.age : '');
+    
+    rows.push([
+      d.myRank,
+      esc(tierLabel ? 'Tier ' + tierLabel : ''),
+      esc(d.n),
+      esc(d.t),
+      d.s,
+      esc(d.myPosRank || d.r),
+      adp != null ? adp : '',
+      ppgProj,
+      ppg25,
+      age,
+      diff
+    ].join(','));
+  });
+  
+  const csv = '\uFEFF' + rows.join('\r\n'); // BOM for Excel UTF-8
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'jackb933-rankings-2026.json';
+  a.download = `${verLabel}-${modeLabel}-${posLabel}-Rankings.csv`;
   a.click();
-  toast('Rankings exported (all modes)!');
+  toast(`Exported ${data.length} players to CSV`);
 });
 
 // Import
 document.getElementById('btnImport').addEventListener('click', () => {
-  if (currentVersion === 'jacks' && !canEdit()) { toast("Only admins can edit Jack's rankings"); return; }
+  if (!canEdit()) { 
+    if (!window._authCurrentUser) { toast("Sign in to create your rankings"); if (typeof window.openAuthModal === 'function') window.openAuthModal(); }
+    else toast("Only admins can edit Jack's rankings"); 
+    return; 
+  }
   document.getElementById('fileImport').click();
 });
 document.getElementById('fileImport').addEventListener('change', e => {
@@ -2827,13 +2923,17 @@ document.getElementById('fileImport').addEventListener('change', e => {
 
 // Clear = reset current mode to ADP order
 document.getElementById('btnClear').addEventListener('click', () => {
-  if (!canEdit()) { toast("Only admins can edit Jack's rankings"); return; }
+  if (!canEdit()) { 
+    if (!window._authCurrentUser) { toast("Sign in to create your rankings"); if (typeof window.openAuthModal === 'function') window.openAuthModal(); }
+    else toast("Only admins can edit Jack's rankings"); 
+    return; 
+  }
   const label = currentMode === 'dynastysf' ? 'Dynasty SF' : currentMode === 'dynasty' ? 'Dynasty 1QB' : 'Redraft';
   const verLabel = currentVersion === 'jacks' ? "Jack's" : "My";
   if (!confirm(`Reset ${verLabel} ${label} rankings back to ADP order?`)) return;
   versionBoards[currentVersion][currentMode] = currentMode==='dynastysf' ? sfDefaultBoard.slice() : currentMode==='dynasty' ? dynastyDefaultBoard.slice() : currentMode==='superflex' ? superflexDefaultBoard.slice() : D.map((d,i) => i);
-  versionTiers[currentVersion][currentMode] = [];
-  versionTierCounters[currentVersion][currentMode] = 0;
+  versionTiers[currentVersion][currentMode] = _mkPosTiers();
+  versionTierCounters[currentVersion][currentMode] = _mkPosTierCtrs();
   syncMode();
   renumber();
   userData = {};
@@ -3057,22 +3157,14 @@ function openPlayerCard(d) {
     <div class="card-body">
       <div class="card-section">
         <div class="card-section-title">Rankings</div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
+        <div class="card-rank-row" style="grid-template-columns:1fr 1fr">
           <div class="card-rank-box">
             <div class="lbl">Your Rank</div>
             <div class="num green">${d.myRank}</div>
           </div>
           <div class="card-rank-box">
-            <div class="lbl">ADP</div>
-            <div class="num accent">${_cardAdp != null ? _cardAdp : '—'}</div>
-          </div>
-          <div class="card-rank-box">
             <div class="lbl">Pos Rank</div>
             <div class="num accent">${d.myPosRank || d.r}</div>
-          </div>
-          <div class="card-rank-box">
-            <div class="lbl">+/- ADP</div>
-            <div class="num ${diffClass}">${diffText}</div>
           </div>
         </div>
         <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr':'1fr 1fr'};margin-top:.4rem">
@@ -3090,6 +3182,28 @@ function openPlayerCard(d) {
           </div>` : ''}
         </div>
       </div>
+
+      ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-section">
+        <div class="card-section-title">ADP Comparison</div>
+        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
+          <div class="card-rank-box">
+            <div class="lbl">Underdog</div>
+            <div class="num accent">${d.a != null ? d.a : '—'}</div>
+          </div>
+          <div class="card-rank-box">
+            <div class="lbl">Sleeper</div>
+            <div class="num accent">${d.slp != null ? d.slp : '—'}</div>
+          </div>
+          <div class="card-rank-box">
+            <div class="lbl">ESPN</div>
+            <div class="num" style="color:var(--text2)">—</div>
+          </div>
+          <div class="card-rank-box">
+            <div class="lbl">Yahoo</div>
+            <div class="num" style="color:var(--text2)">—</div>
+          </div>
+        </div>
+      </div>` : ''}
 
       ${d.career && d.career.length > 0 ? `<div class="card-section">
         <div class="card-section-title">Career Log (Half PPR)</div>
@@ -3521,7 +3635,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
   const epStreak = document.getElementById('epStreak');
   const epSuggestions = document.getElementById('epSuggestions');
 
-  const MAX_GUESSES = 5;
+  const MAX_GUESSES = 1;
   let todayPlayer = getDailyPlayer();
   let guesses = [];
   let gameOver = false;
@@ -3796,7 +3910,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
   }
 
   const allNamesU = D.map(d => ({name: d.n, team: d.t, pos: d.s}));
-  const MAX_GUESSES_U = 5;
+  const MAX_GUESSES_U = 1;
 
   const epuImage = document.getElementById('epuImage');
   const epuPlaceholder = document.getElementById('epuPlaceholder');
@@ -4714,7 +4828,7 @@ window.fmtHeight = function(h) {
 
   function getTierForPlayer(d) {
     // Get the tier label for a player based on the selected source and mode
-    const srcTiers = versionTiers[tradeSource][tradeMode];
+    const srcTiers = versionTiers[tradeSource][tradeMode].ALL || [];
     const srcBoard = versionBoards[tradeSource][tradeMode];
     const boardPos = srcBoard.indexOf(d.idx);
     const rank = boardPos >= 0 ? boardPos + 1 : 999;
@@ -5135,6 +5249,7 @@ window.fmtHeight = function(h) {
     authPassword.value = '';
     overlay.classList.add('open');
   }
+  window.openAuthModal = openAuth;
   function closeAuth() {
     overlay.classList.remove('open');
   }
@@ -5142,11 +5257,11 @@ window.fmtHeight = function(h) {
   function setAuthMode(signUp) {
     isSignUp = signUp;
     authTitle.textContent = signUp ? 'CREATE ACCOUNT' : 'SIGN IN';
-    authSub.textContent = signUp ? 'Create an account to save rankings' : 'Save your rankings to the cloud';
+    authSub.textContent = signUp ? 'Create an account to build your own rankings' : 'Sign in to create and save your rankings';
     authSubmit.textContent = signUp ? 'CREATE ACCOUNT' : 'SIGN IN';
     authToggle.innerHTML = signUp
       ? 'Already have an account? <a id="authSwitchMode">Sign in</a>'
-      : 'Don\'t have an account? <a id="authSwitchMode">Sign up</a>';
+      : 'Don\'t have an account? <a id="authSwitchMode">Create one</a>';
     document.getElementById('authSwitchMode').addEventListener('click', () => setAuthMode(!signUp));
     clearError();
   }
@@ -5260,12 +5375,13 @@ window.fmtHeight = function(h) {
     if (!currentUser || !db) return;
     showSaving();
     try {
+      function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
       const data = {
         mine: {
-          redraft: { _order: boardToNames(versionBoards.mine.redraft), _tiers: versionTiers.mine.redraft.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) },
-          superflex: { _order: boardToNames(versionBoards.mine.superflex), _tiers: versionTiers.mine.superflex.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) },
-          dynasty: { _order: boardToNames(versionBoards.mine.dynasty), _tiers: versionTiers.mine.dynasty.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) },
-          dynastysf: { _order: boardToNames(versionBoards.mine.dynastysf), _tiers: versionTiers.mine.dynastysf.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) }
+          redraft: { _order: boardToNames(versionBoards.mine.redraft), _posTiers: _serPT(versionTiers.mine.redraft) },
+          superflex: { _order: boardToNames(versionBoards.mine.superflex), _posTiers: _serPT(versionTiers.mine.superflex) },
+          dynasty: { _order: boardToNames(versionBoards.mine.dynasty), _posTiers: _serPT(versionTiers.mine.dynasty) },
+          dynastysf: { _order: boardToNames(versionBoards.mine.dynastysf), _posTiers: _serPT(versionTiers.mine.dynastysf) }
         }
       };
       await db.collection('rankings').doc(currentUser.uid).set({
@@ -5285,12 +5401,13 @@ window.fmtHeight = function(h) {
     if (!currentUser || !db || !isAdmin()) return;
     showSaving();
     try {
+      function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
       const data = {
         jacks: {
-          redraft: { _order: boardToNames(versionBoards.jacks.redraft), _tiers: versionTiers.jacks.redraft.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) },
-          superflex: { _order: boardToNames(versionBoards.jacks.superflex), _tiers: versionTiers.jacks.superflex.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) },
-          dynasty: { _order: boardToNames(versionBoards.jacks.dynasty), _tiers: versionTiers.jacks.dynasty.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) },
-          dynastysf: { _order: boardToNames(versionBoards.jacks.dynastysf), _tiers: versionTiers.jacks.dynastysf.map(t => ({label:t.label, name:t.name, afterRank:t.afterRank})) }
+          redraft: { _order: boardToNames(versionBoards.jacks.redraft), _posTiers: _serPT(versionTiers.jacks.redraft) },
+          superflex: { _order: boardToNames(versionBoards.jacks.superflex), _posTiers: _serPT(versionTiers.jacks.superflex) },
+          dynasty: { _order: boardToNames(versionBoards.jacks.dynasty), _posTiers: _serPT(versionTiers.jacks.dynasty) },
+          dynastysf: { _order: boardToNames(versionBoards.jacks.dynastysf), _posTiers: _serPT(versionTiers.jacks.dynastysf) }
         }
       };
       await db.collection('rankings').doc('__jacks_official__').set({
@@ -5413,7 +5530,7 @@ window.fmtHeight = function(h) {
     if (!currentUser) return;
     _hasUnsavedChanges = true;
     const btn = document.getElementById('btnSave');
-    if (btn) btn.classList.add('has-changes');
+    if (btn) { btn.classList.add('has-changes'); btn.classList.remove('saved'); }
   }
   
   function markSaved() {
@@ -5423,16 +5540,39 @@ window.fmtHeight = function(h) {
   }
 
   // Manual save button handler
+  const _saveIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
+  const _checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+  const _warnIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+  function resetSaveBtn() {
+    const btn = document.getElementById('btnSave');
+    btn.classList.remove('saving', 'saved', 'save-error');
+    if (_hasUnsavedChanges) btn.classList.add('has-changes');
+    btn.innerHTML = _saveIcon + ' SAVE';
+  }
+
   document.getElementById('btnSave').addEventListener('click', async () => {
     if (!currentUser || !db) { toast('Sign in to save to cloud'); return; }
     const btn = document.getElementById('btnSave');
     btn.classList.add('saving');
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> SAVING...';
-    await saveToCloud();
-    markSaved();
-    btn.classList.remove('saving');
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> SAVE';
-    toast('Rankings & tiers saved to cloud!');
+    btn.classList.remove('has-changes', 'saved', 'save-error');
+    btn.innerHTML = _saveIcon + ' SAVING...';
+    try {
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
+      await Promise.race([saveToCloud(), timeout]);
+      markSaved();
+      btn.classList.remove('saving');
+      btn.classList.add('saved');
+      btn.innerHTML = _checkIcon + ' SAVED';
+      setTimeout(() => { if (!_hasUnsavedChanges) { btn.classList.remove('saved'); btn.innerHTML = _saveIcon + ' SAVE'; } }, 3000);
+    } catch(e) {
+      console.error('[Save] Error:', e);
+      btn.classList.remove('saving');
+      btn.classList.add('save-error');
+      btn.innerHTML = _warnIcon + ' RETRY';
+      toast(e.message === 'timeout' ? 'Save timed out — tap Retry' : 'Save failed — tap Retry');
+      _hasUnsavedChanges = true;
+    }
   });
 
   // Monkey-patch saveLocal to track unsaved changes (no auto cloud save)
@@ -5445,6 +5585,7 @@ window.fmtHeight = function(h) {
   // === AUTH STATE LISTENER ===
   function updateAccountUI(user) {
     currentUser = user;
+    window._authCurrentUser = user;
     if (user) {
       const initial = (user.email || user.displayName || '?')[0].toUpperCase();
       const displayEmail = user.email || user.displayName || 'Signed in';
@@ -5499,17 +5640,12 @@ window.fmtHeight = function(h) {
       const el = document.getElementById(id);
       if (el) el.style.display = allowed ? '' : 'none';
     });
-    // Show save button when signed in and can edit
     const saveBtn = document.getElementById('btnSave');
     if (saveBtn) saveBtn.style.display = (currentUser && allowed) ? '' : 'none';
   }
 
-  // Warn before leaving with unsaved changes
   window.addEventListener('beforeunload', e => {
-    if (_hasUnsavedChanges && currentUser) {
-      e.preventDefault();
-      e.returnValue = '';
-    }
+    if (_hasUnsavedChanges && currentUser) { e.preventDefault(); e.returnValue = ''; }
   });
 
   if (isConfigured && auth) {
@@ -5834,6 +5970,7 @@ window.fmtHeight = function(h) {
 (function() {
   let mdMode = 'redraft', mdTeams = 12, mdUserPick = 1;
   let mdRankSrc = 'mine';
+  let mdAdpSrc = 'underdog';
   let mdState = null;
 
   // Lineup requirements — user can adjust
@@ -5904,6 +6041,42 @@ window.fmtHeight = function(h) {
   updateRankSrcLock();
   // Premium link navigates to account page
   document.getElementById('mdPremiumLink').addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.nav-btn[data-page="account"]').classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('pageAccount').classList.add('active');
+  });
+
+  // ADP source tabs (Underdog / ESPN / Sleeper / Yahoo)
+  const adpSrcTabs = document.querySelectorAll('#mdAdpSrcTabs .md-rank-src-tab');
+  const adpPremiumHint = document.getElementById('mdAdpPremiumHint');
+  adpSrcTabs.forEach(t => t.addEventListener('click', () => {
+    const src = t.dataset.mdadp;
+    if (src !== 'underdog' && !hasPremium()) {
+      adpPremiumHint.classList.add('show');
+      return;
+    }
+    adpPremiumHint.classList.remove('show');
+    adpSrcTabs.forEach(b => b.classList.remove('active'));
+    t.classList.add('active');
+    mdAdpSrc = src;
+    updateAdpSrcLocks();
+  }));
+  function updateAdpSrcLocks() {
+    adpSrcTabs.forEach(tab => {
+      if (tab.dataset.mdadp === 'underdog') return;
+      const icon = tab.querySelector('.lock-icon');
+      if (hasPremium()) {
+        tab.classList.remove('locked');
+        if (icon) icon.style.display = 'none';
+      } else {
+        tab.classList.add('locked');
+        if (icon) icon.style.display = '';
+      }
+    });
+  }
+  updateAdpSrcLocks();
+  document.getElementById('mdAdpPremiumLink').addEventListener('click', () => {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.nav-btn[data-page="account"]').classList.add('active');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));

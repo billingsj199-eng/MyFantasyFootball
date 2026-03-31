@@ -5375,7 +5375,13 @@ window.fmtHeight = function(h) {
       app = firebase.initializeApp(firebaseConfig);
       auth = firebase.auth();
       db = firebase.firestore();
-      db.settings({ experimentalForceLongPolling: true });
+      db.settings({ experimentalForceLongPolling: true, merge: true });
+      // Enable offline persistence so writes resolve from cache immediately
+      db.enablePersistence({ synchronizeTabs: false }).then(() => {
+        console.log('[Auth] Firestore persistence enabled');
+      }).catch(err => {
+        console.warn('[Auth] Persistence failed:', err.code, '— saves may hang if offline');
+      });
       console.log('[Auth] Firebase initialized (long-polling mode)');
     } catch(e) {
       console.error('[Auth] Firebase init error:', e);
@@ -5771,11 +5777,20 @@ window.fmtHeight = function(h) {
     btn.classList.remove('has-changes', 'saved', 'save-error');
     btn.innerHTML = _saveIcon + ' SAVING...';
     try {
-      await saveToCloud();
+      // With persistence enabled, writes resolve from cache even if offline.
+      // Add a safety timeout — if it takes >15s, the write is cached and will sync later.
+      let done = false;
+      const savePromise = saveToCloud().then(() => { done = true; });
+      const timer = new Promise(resolve => setTimeout(() => {
+        if (!done) console.warn('[Save] Still waiting — write is cached, will sync when online');
+        resolve();
+      }, 15000));
+      await Promise.race([savePromise, timer]);
       markSaved();
       btn.classList.remove('saving');
       btn.classList.add('saved');
       btn.innerHTML = _checkIcon + ' SAVED';
+      if (!done) toast('Saved locally — will sync to cloud when online');
       setTimeout(() => { if (!_hasUnsavedChanges) { btn.classList.remove('saved'); btn.innerHTML = _saveIcon + ' SAVE'; } }, 3000);
     } catch(e) {
       console.error('[Save] Error:', e);

@@ -803,6 +803,27 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .global-acct-avatar:hover{filter:brightness(1.15);transform:scale(1.05)}
 
 /* Home page sign-in card */
+.lb-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:480px}
+.lb-tabs{display:flex;border-bottom:1px solid var(--border)}
+.lb-tab{flex:1;padding:10px 8px;background:none;border:none;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer;transition:all .15s;border-bottom:2px solid transparent}
+.lb-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.lb-tab:hover:not(.active){color:var(--text)}
+.lb-panel{display:none;padding:12px 16px;max-height:360px;overflow-y:auto}
+.lb-panel.active{display:block}
+.lb-loading{text-align:center;color:var(--text2);font-size:.85rem;padding:24px 0}
+.lb-empty{text-align:center;color:var(--text2);font-size:.85rem;padding:24px 0}
+.lb-list{display:flex;flex-direction:column;gap:2px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;transition:background .15s}
+.lb-row:hover{background:var(--surface2)}
+.lb-row.lb-me{background:rgba(245,158,11,.08)}
+.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;min-width:28px;text-align:center;color:var(--text2)}
+.lb-rank-1{color:gold}
+.lb-rank-2{color:silver}
+.lb-rank-3{color:#cd7f32}
+.lb-avatar{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.75rem;color:var(--text2);flex-shrink:0}
+.lb-name{flex:1;font-size:.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-stat{font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--accent);letter-spacing:.5px;white-space:nowrap}
+.lb-sub{font-size:.7rem;color:var(--text2);margin-left:4px;letter-spacing:0}
 .home-auth-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;text-align:center;width:100%;transition:all .2s}
 .home-auth-card:hover{border-color:rgba(245,158,11,.3);box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .home-auth-icon{width:48px;height:48px;border-radius:50%;background:rgba(245,158,11,.1);display:flex;align-items:center;justify-content:center;margin:0 auto .75rem}
@@ -1378,6 +1399,32 @@ PREMIUM ACTIVE
 <div id="epResult" class="ep-result" style="display:none"></div>
 <div id="epStreak" class="ep-streak-display"></div>
 </div>
+</div>
+</div>
+</div>
+
+<div>
+<div class="home-section-label">Leaderboard</div>
+<div class="lb-card">
+<div class="lb-tabs">
+<button class="lb-tab active" data-lb="daily">Today</button>
+<button class="lb-tab" data-lb="alltime">All-Time</button>
+<button class="lb-tab" data-lb="fantasygame">Fantasy Game</button>
+</div>
+<div class="lb-panel active" id="lbDaily">
+<div class="lb-loading" id="lbDailyLoading">Loading...</div>
+<div class="lb-list" id="lbDailyList"></div>
+<div class="lb-empty" id="lbDailyEmpty" style="display:none">No results yet today</div>
+</div>
+<div class="lb-panel" id="lbAlltime">
+<div class="lb-loading" id="lbAlltimeLoading">Loading...</div>
+<div class="lb-list" id="lbAlltimeList"></div>
+<div class="lb-empty" id="lbAlltimeEmpty" style="display:none">No data yet</div>
+</div>
+<div class="lb-panel" id="lbFantasygame">
+<div class="lb-loading" id="lbFantasygameLoading">Loading...</div>
+<div class="lb-list" id="lbFantasygameList"></div>
+<div class="lb-empty" id="lbFantasygameEmpty" style="display:none">No scores yet</div>
 </div>
 </div>
 </div>
@@ -3534,7 +3581,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     {name:"Jonathan Taylor",team:"IND",pos:"RB",id:"4241985"},
     {name:"Christian McCaffrey",team:"SF",pos:"RB",id:"3117251"},
     {name:"CeeDee Lamb",team:"DAL",pos:"WR",id:"4241389"},
-    {name:"Amon-Ra St. Brown",team:"DET",pos:"WR",id:"4360310"},
+    {name:"Amon-Ra St. Brown",team:"DET",pos:"WR",id:"4374302"},
     {name:"Justin Jefferson",team:"MIN",pos:"WR",id:"4262921"},
     {name:"Josh Allen",team:"BUF",pos:"QB",id:"3918298"},
     {name:"Lamar Jackson",team:"BAL",pos:"QB",id:"3916387"},
@@ -3557,7 +3604,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     {name:"Breece Hall",team:"NYJ",pos:"RB",id:"4362081"},
     {name:"James Cook",team:"BUF",pos:"RB",id:"4361579"},
     {name:"Kenneth Walker III",team:"KC",pos:"RB",id:"4362073"},
-    {name:"Nick Chubb",team:"CLE",pos:"RB",id:"3128720"},
+    {name:"Nick Chubb",team:"CLE",pos:"RB",id:"3128721"},
     {name:"George Pickens",team:"DAL",pos:"WR",id:"4431611"},
     {name:"Nico Collins",team:"HOU",pos:"WR",id:"4361370"},
     {name:"Chris Olave",team:"NO",pos:"WR",id:"4241478"},
@@ -3571,17 +3618,17 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     {name:"Bucky Irving",team:"TB",pos:"RB",id:"4690055"},
     {name:"Alvin Kamara",team:"NO",pos:"RB",id:"3054212"},
     {name:"Mike Evans",team:"SF",pos:"WR",id:"2508061"},
-    {name:"DeVonta Smith",team:"PHI",pos:"WR",id:"4362628"},
+    {name:"DeVonta Smith",team:"PHI",pos:"WR",id:"4360797"},
     {name:"Terry McLaurin",team:"WSH",pos:"WR",id:"3932905"},
     {name:"Jaylen Waddle",team:"DEN",pos:"WR",id:"4372519"},
     {name:"Cooper Kupp",team:"SEA",pos:"WR",id:"3046779"},
     {name:"Sam LaPorta",team:"DET",pos:"TE",id:"4432098"},
-    {name:"Kyle Pitts",team:"ATL",pos:"TE",id:"4362081"},
-    {name:"Mark Andrews",team:"BAL",pos:"TE",id:"3116365"},
-    {name:"Brock Purdy",team:"SF",pos:"QB",id:"4361741"},
+    {name:"Kyle Pitts",team:"ATL",pos:"TE",id:"4362238"},
+    {name:"Mark Andrews",team:"BAL",pos:"TE",id:"3059915"},
+    {name:"Brock Purdy",team:"SF",pos:"QB",id:"4432169"},
     {name:"Trevor Lawrence",team:"JAX",pos:"QB",id:"4360310"},
     {name:"Jared Goff",team:"DET",pos:"QB",id:"2977644"},
-    {name:"Matthew Stafford",team:"LAR",pos:"QB",id:"2580"},
+    {name:"Matthew Stafford",team:"LAR",pos:"QB",id:"12483"},
     {name:"Rashee Rice",team:"KC",pos:"WR",id:"4430027"},
     {name:"Tee Higgins",team:"CIN",pos:"WR",id:"4239993"},
     {name:"Chase Brown",team:"CIN",pos:"RB",id:"4430090"},
@@ -3861,6 +3908,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     revealImage();
     updateStreak(won);
     saveState();
+    if (typeof window._lbUpdateDaily === 'function') window._lbUpdateDaily(won, streak);
 
     epResult.style.display = 'block';
     if (won) {
@@ -3993,7 +4041,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     {name:"Jonathan Taylor",team:"IND",pos:"RB",id:"4241985"},
     {name:"Christian McCaffrey",team:"SF",pos:"RB",id:"3117251"},
     {name:"CeeDee Lamb",team:"DAL",pos:"WR",id:"4241389"},
-    {name:"Amon-Ra St. Brown",team:"DET",pos:"WR",id:"4360310"},
+    {name:"Amon-Ra St. Brown",team:"DET",pos:"WR",id:"4374302"},
     {name:"Justin Jefferson",team:"MIN",pos:"WR",id:"4262921"},
     {name:"Josh Allen",team:"BUF",pos:"QB",id:"3918298"},
     {name:"Lamar Jackson",team:"BAL",pos:"QB",id:"3916387"},
@@ -4016,7 +4064,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     {name:"Breece Hall",team:"NYJ",pos:"RB",id:"4362081"},
     {name:"James Cook",team:"BUF",pos:"RB",id:"4361579"},
     {name:"Kenneth Walker III",team:"KC",pos:"RB",id:"4362073"},
-    {name:"Nick Chubb",team:"CLE",pos:"RB",id:"3128720"},
+    {name:"Nick Chubb",team:"CLE",pos:"RB",id:"3128721"},
     {name:"George Pickens",team:"DAL",pos:"WR",id:"4431611"},
     {name:"Nico Collins",team:"HOU",pos:"WR",id:"4361370"},
     {name:"Chris Olave",team:"NO",pos:"WR",id:"4241478"},
@@ -4034,17 +4082,17 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     {name:"Jaylen Waddle",team:"DEN",pos:"WR",id:"4372519"},
     {name:"Cooper Kupp",team:"SEA",pos:"WR",id:"3046779"},
     {name:"Sam LaPorta",team:"DET",pos:"TE",id:"4432098"},
-    {name:"Mark Andrews",team:"BAL",pos:"TE",id:"3116365"},
-    {name:"Brock Purdy",team:"SF",pos:"QB",id:"4361741"},
+    {name:"Mark Andrews",team:"BAL",pos:"TE",id:"3059915"},
+    {name:"Brock Purdy",team:"SF",pos:"QB",id:"4432169"},
     {name:"Trevor Lawrence",team:"JAX",pos:"QB",id:"4360310"},
     {name:"Jared Goff",team:"DET",pos:"QB",id:"2977644"},
-    {name:"Matthew Stafford",team:"LAR",pos:"QB",id:"2580"},
+    {name:"Matthew Stafford",team:"LAR",pos:"QB",id:"12483"},
     {name:"Rashee Rice",team:"KC",pos:"WR",id:"4430027"},
     {name:"Tee Higgins",team:"CIN",pos:"WR",id:"4239993"},
     {name:"Chase Brown",team:"CIN",pos:"RB",id:"4430090"},
     {name:"Ashton Jeanty",team:"LV",pos:"RB",id:"4920706"},
     {name:"Baker Mayfield",team:"TB",pos:"QB",id:"3052587"},
-    {name:"Tyreek Hill",team:"MIA",pos:"WR",id:"3116406"},
+    {name:"Tyreek Hill",team:"MIA",pos:"WR",id:"2976499"},
     {name:"Omarion Hampton",team:"LAC",pos:"RB",id:"4921083"},
     {name:"Travis Etienne Jr.",team:"NO",pos:"RB",id:"4239996"},
     {name:"Tetairoa McMillan",team:"CAR",pos:"WR",id:"4690128"},
@@ -4175,6 +4223,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     localStorage.setItem('epu_played', totalPlayedU);
     localStorage.setItem('epu_correct', totalCorrectU);
     localStorage.setItem('epu_streak', streakU);
+    if (typeof window._lbUpdateUnlimited === 'function') window._lbUpdateUnlimited(totalPlayedU, totalCorrectU, streakU);
 
     epuResult.style.display = 'block';
     if (won) {
@@ -4896,6 +4945,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
       goSubEl.textContent = `High Score: ${highScore.toFixed(1)}`;
       goSubEl.style.color = 'var(--text2)';
     }
+    if (typeof window._lbUpdateFantasyGame === 'function') window._lbUpdateFantasyGame(total);
     renderRoster();
   }
 
@@ -7016,6 +7066,176 @@ window.fmtHeight = function(h) {
   document.getElementById('mdStartBtn').addEventListener('click', startDraft);
   document.getElementById('mdResetBtn').addEventListener('click', resetDraft);
   document.getElementById('mdNewDraftBtn').addEventListener('click', resetDraft);
+})();
+
+// ============ LEADERBOARD ============
+(function() {
+  // Wait for Firebase to be ready
+  function getDb() { return window.firebase && firebase.firestore ? firebase.firestore() : null; }
+  function getUser() { return window._authCurrentUser || null; }
+
+  function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // === SAVE STATS TO FIRESTORE ===
+  window._lbUpdateDaily = function(won, streak) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    db.collection('leaderboard').doc(user.uid).set({
+      name: name,
+      daily: { date: todayKey(), won: won, streak: streak },
+      updatedAt: new Date().toISOString()
+    }, { merge: true }).catch(e => console.warn('[LB] daily save error:', e));
+  };
+
+  window._lbUpdateUnlimited = function(played, correct, streak) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    db.collection('leaderboard').doc(user.uid).set({
+      name: name,
+      unlimited: { played: played, correct: correct, streak: streak },
+      updatedAt: new Date().toISOString()
+    }, { merge: true }).catch(e => console.warn('[LB] unlimited save error:', e));
+  };
+
+  window._lbUpdateFantasyGame = function(score) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    // Only update if it's a new high score
+    db.collection('leaderboard').doc(user.uid).get().then(doc => {
+      const existing = doc.exists && doc.data().fantasygame ? doc.data().fantasygame.highScore : 0;
+      if (score > existing) {
+        db.collection('leaderboard').doc(user.uid).set({
+          name: name,
+          fantasygame: { highScore: score, date: todayKey() },
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(e => console.warn('[LB] fg save error:', e));
+      }
+    }).catch(e => console.warn('[LB] fg read error:', e));
+  };
+
+  // === LOAD & RENDER LEADERBOARDS ===
+  function renderRow(rank, name, statHtml, isMe) {
+    const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+    const rankDisplay = medals[rank] || rank;
+    const rankClass = rank <= 3 ? ' lb-rank-' + rank : '';
+    const initial = (name || '?')[0].toUpperCase();
+    return `<div class="lb-row${isMe ? ' lb-me' : ''}">
+      <div class="lb-rank${rankClass}">${rankDisplay}</div>
+      <div class="lb-avatar">${initial}</div>
+      <div class="lb-name">${name}</div>
+      <div class="lb-stat">${statHtml}</div>
+    </div>`;
+  }
+
+  function loadLeaderboards() {
+    const db = getDb();
+    if (!db) {
+      document.querySelectorAll('.lb-loading').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.lb-empty').forEach(el => { el.style.display = 'block'; el.textContent = 'Sign in to see leaderboards'; });
+      return;
+    }
+    const user = getUser();
+    const uid = user ? user.uid : null;
+    const today = todayKey();
+
+    db.collection('leaderboard').get().then(snap => {
+      const all = [];
+      snap.forEach(doc => { all.push({ id: doc.id, ...doc.data() }); });
+
+      // --- DAILY ---
+      const dailyPlayers = all.filter(u => u.daily && u.daily.date === today && u.daily.won)
+        .sort((a, b) => (b.daily.streak || 0) - (a.daily.streak || 0));
+      const lbDailyList = document.getElementById('lbDailyList');
+      const lbDailyLoading = document.getElementById('lbDailyLoading');
+      const lbDailyEmpty = document.getElementById('lbDailyEmpty');
+      lbDailyLoading.style.display = 'none';
+      if (dailyPlayers.length === 0) {
+        lbDailyEmpty.style.display = 'block';
+        lbDailyList.innerHTML = '';
+      } else {
+        lbDailyEmpty.style.display = 'none';
+        lbDailyList.innerHTML = dailyPlayers.map((u, i) =>
+          renderRow(i + 1, u.name, '🔥 ' + (u.daily.streak || 1) + ' day streak', u.id === uid)
+        ).join('');
+      }
+
+      // --- ALL-TIME (Unlimited EP) ---
+      const unlimitedPlayers = all.filter(u => u.unlimited && u.unlimited.played > 0)
+        .sort((a, b) => {
+          const aRate = a.unlimited.correct / a.unlimited.played;
+          const bRate = b.unlimited.correct / b.unlimited.played;
+          if (Math.abs(bRate - aRate) > 0.001) return bRate - aRate;
+          return b.unlimited.correct - a.unlimited.correct;
+        });
+      const lbAlltimeList = document.getElementById('lbAlltimeList');
+      const lbAlltimeLoading = document.getElementById('lbAlltimeLoading');
+      const lbAlltimeEmpty = document.getElementById('lbAlltimeEmpty');
+      lbAlltimeLoading.style.display = 'none';
+      if (unlimitedPlayers.length === 0) {
+        lbAlltimeEmpty.style.display = 'block';
+        lbAlltimeList.innerHTML = '';
+      } else {
+        lbAlltimeEmpty.style.display = 'none';
+        lbAlltimeList.innerHTML = unlimitedPlayers.map((u, i) => {
+          const pct = Math.round((u.unlimited.correct / u.unlimited.played) * 100);
+          return renderRow(i + 1, u.name,
+            u.unlimited.correct + '/' + u.unlimited.played + '<span class="lb-sub">(' + pct + '%)</span>',
+            u.id === uid
+          );
+        }).join('');
+      }
+
+      // --- FANTASY GAME ---
+      const fgPlayers = all.filter(u => u.fantasygame && u.fantasygame.highScore > 0)
+        .sort((a, b) => b.fantasygame.highScore - a.fantasygame.highScore);
+      const lbFgList = document.getElementById('lbFantasygameList');
+      const lbFgLoading = document.getElementById('lbFantasygameLoading');
+      const lbFgEmpty = document.getElementById('lbFantasygameEmpty');
+      lbFgLoading.style.display = 'none';
+      if (fgPlayers.length === 0) {
+        lbFgEmpty.style.display = 'block';
+        lbFgList.innerHTML = '';
+      } else {
+        lbFgEmpty.style.display = 'none';
+        lbFgList.innerHTML = fgPlayers.map((u, i) =>
+          renderRow(i + 1, u.name, u.fantasygame.highScore.toFixed(1) + ' PTS', u.id === uid)
+        ).join('');
+      }
+    }).catch(e => {
+      console.warn('[LB] load error:', e);
+      document.querySelectorAll('.lb-loading').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.lb-empty').forEach(el => { el.style.display = 'block'; });
+    });
+  }
+
+  // === TAB SWITCHING ===
+  document.querySelectorAll('.lb-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const map = { daily: 'lbDaily', alltime: 'lbAlltime', fantasygame: 'lbFantasygame' };
+      document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.lb-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(map[tab.dataset.lb]).classList.add('active');
+    });
+  });
+
+  // Load on home page visit and after auth
+  window._lbRefresh = loadLeaderboards;
+  // Refresh when home nav is clicked
+  const homeBtn = document.querySelector('.nav-btn[data-page="home"]');
+  if (homeBtn) homeBtn.addEventListener('click', () => setTimeout(loadLeaderboards, 300));
+  // Also refresh when home cards navigate back
+  document.querySelectorAll('.home-card[data-goto]').forEach(c => {
+    c.addEventListener('click', () => { if (c.dataset.goto === 'home') setTimeout(loadLeaderboards, 300); });
+  });
+  // Initial load after a delay for Firebase to init
+  setTimeout(loadLeaderboards, 2500);
 })();
 
 </script>

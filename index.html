@@ -223,7 +223,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 tr.premium-blur td{filter:blur(5px);user-select:none;pointer-events:none;transition:filter .2s}
 tr.premium-blur:hover td{filter:blur(5px)}
 .premium-wall{position:relative;margin-top:-2px}
-.premium-wall-inner{text-align:center;padding:2rem 1rem;background:linear-gradient(180deg,rgba(10,10,14,.0) 0%,rgba(10,10,14,.95) 30%);position:sticky;bottom:0;z-index:10}
+.premium-wall-inner{text-align:center;padding:2.5rem 1.5rem;background:linear-gradient(180deg,rgba(10,10,14,0) 0%,rgba(10,10,14,.98) 20%);position:sticky;bottom:0;z-index:10}
 .premium-wall-icon{font-size:1.5rem;margin-bottom:.5rem;opacity:.7}
 .premium-wall-text{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text1);margin-bottom:.25rem}
 .premium-wall-sub{font-size:.72rem;color:var(--text2);margin-bottom:.75rem}
@@ -2288,6 +2288,25 @@ function renumber() {
 }
 renumber();
 
+// Default tiers for Jack's redraft rankings
+(function() {
+  const jt = versionTiers.jacks.redraft.ALL;
+  let jc = versionTierCounters.jacks.redraft.ALL;
+  const _defaultTiers = [
+    {afterRank:1, label:'S', name:'ELITE'},
+    {afterRank:5, label:'A', name:'TIER A'},
+    {afterRank:13, label:'B', name:'TIER B'},
+    {afterRank:25, label:'C', name:'TIER C'},
+    {afterRank:37, label:'D', name:'TIER D'},
+    {afterRank:49, label:'E', name:'TIER E'},
+    {afterRank:73, label:'F', name:'TIER F'}
+  ];
+  if (!jt.length) {
+    _defaultTiers.forEach(t => { jc++; jt.push({id:jc, label:t.label, name:t.name, afterRank:t.afterRank}); });
+    versionTierCounters.jacks.redraft.ALL = jc;
+  }
+})();
+
 // Persistence
 let userData = {};
 // Tiers: array of {id, label, name, afterRank} — afterRank means tier shows after that board position
@@ -2502,10 +2521,13 @@ function render() {
   empty.style.display = 'none';
 
   // Premium blur: on Jack's rankings, blur after top 24 (ALL) or top 12 (position)
+  // My Rankings: blur everything if not signed in
   const isPremium = hasPremium();
   const isJacks = currentVersion === 'jacks';
-  const blurCutoff = (filter === 'ALL' || filter === 'ROOKIE') ? 24 : 12;
-  const shouldBlur = isJacks && !isPremium;
+  const isMine = currentVersion === 'mine';
+  const isSignedOut = !window._authCurrentUser;
+  const blurCutoff = (isMine && isSignedOut) ? 0 : (filter === 'ALL' || filter === 'ROOKIE') ? 24 : 12;
+  const shouldBlur = (isJacks && !isPremium) || (isMine && isSignedOut);
 
   // Build a map of afterRank -> tier for tier rows (only in default sort, no search, ALL/position filter)
   const showTiers = (sortKey === 'myrank' && sortDir === 1 && !query);
@@ -2540,6 +2562,19 @@ function render() {
     const moved = d.myRank !== (board.indexOf(d.idx) + 1) || Math.abs(_adp - d.myRank) >= 1;
     const checked = compareSet.has(d.idx) ? 'checked' : '';
     const blurred = shouldBlur && (i + 1) > blurCutoff ? 'premium-blur' : '';
+
+    // Insert premium wall row right at the cutoff, above blurred rows
+    if (shouldBlur && i === blurCutoff && data.length > blurCutoff) {
+      const _isSignedIn = !!window._authCurrentUser;
+      if (isMine && !_isSignedIn) {
+        html += '<tr id="premiumWallRow"><td colspan="11" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+      } else if (!_isSignedIn) {
+        html += '<tr id="premiumWallRow"><td colspan="11" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+      } else {
+        html += '<tr id="premiumWallRow"><td colspan="11" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();document.getElementById(\'premiumRedeemInput\').focus()},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+      }
+    }
+
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}">
       <td><div class="drag-handle"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(getTierForRank(displayRank))}">${d.myRank}</span></td>
@@ -2580,21 +2615,6 @@ function render() {
 
   tbody.innerHTML = html;
 
-  // Premium upsell wall
-  const existingWall = document.getElementById('premiumWall');
-  if (existingWall) existingWall.remove();
-  if (shouldBlur && data.length > blurCutoff) {
-    const wall = document.createElement('div');
-    wall.id = 'premiumWall';
-    wall.className = 'premium-wall';
-    wall.innerHTML = `<div class="premium-wall-inner">
-      <div class="premium-wall-icon">&#128274;</div>
-      <div class="premium-wall-text">UNLOCK FULL RANKINGS</div>
-      <div class="premium-wall-sub">The top ${blurCutoff} are free. Upgrade to PRO to see all of Jack's rankings${filter !== 'ALL' && filter !== 'ROOKIE' ? ' for ' + filter : ''}.</div>
-      <button class="premium-wall-btn" onclick="document.querySelector('[data-page=account]').click();setTimeout(()=>{document.querySelector('[data-acct-tab=premium]').click();document.getElementById('premiumRedeemInput').focus()},150)">UNLOCK WITH PREMIUM</button>
-    </div>`;
-    tbody.parentElement.parentElement.appendChild(wall);
-  }
 
   updateStats(data);
   attachRowListeners();
@@ -7486,6 +7506,7 @@ window.fmtHeight = fmtHeight;
   function updateAccountUI(user) {
     currentUser = user;
     window._authCurrentUser = user;
+    if (typeof render === 'function') render();
     if (user) {
       const initial = (user.email || user.displayName || '?')[0].toUpperCase();
       const displayEmail = user.email || user.displayName || 'Signed in';

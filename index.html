@@ -5580,7 +5580,7 @@ window.fmtHeight = function(h) {
 
   // Save user's personal "mine" rankings to their own document
   async function saveUserRankings() {
-    if (!currentUser || !db) return;
+    if (!currentUser || !db) { console.warn('[Save] No user or db'); return; }
     showSaving();
     try {
       function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
@@ -5592,14 +5592,16 @@ window.fmtHeight = function(h) {
           dynastysf: { _order: boardToNames(versionBoards.mine.dynastysf), _posTiers: _serPT(versionTiers.mine.dynastysf) }
         }
       };
+      console.log('[Save] Writing user doc (' + JSON.stringify(data).length + ' bytes)...');
       await db.collection('rankings').doc(currentUser.uid).set({
         data: JSON.stringify(data),
         email: currentUser.email || '',
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt: new Date().toISOString()
       }, {merge: true});
-      console.log('[Auth] Saved user rankings to cloud');
+      console.log('[Save] User rankings saved OK');
     } catch(e) {
-      console.error('[Auth] User cloud save error:', e.code, e.message, e);
+      console.error('[Save] User save error:', e.code, e.message, e);
+      throw e;
     }
     hideSaving();
   }
@@ -5618,15 +5620,17 @@ window.fmtHeight = function(h) {
           dynastysf: { _order: boardToNames(versionBoards.jacks.dynastysf), _posTiers: _serPT(versionTiers.jacks.dynastysf) }
         }
       };
+      console.log('[Save] Writing jacks doc (' + JSON.stringify(data).length + ' bytes)...');
       await db.collection('rankings').doc('__jacks_official__').set({
         data: JSON.stringify(data),
         updatedBy: currentUser.email || '',
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt: new Date().toISOString()
       }, {merge: true});
-      console.log('[Auth] Saved Jack\'s rankings to shared cloud');
+      console.log('[Save] Jacks rankings saved OK');
       toast("Jack's rankings saved & shared with all users");
     } catch(e) {
-      console.error('[Auth] Jacks cloud save error:', e.code, e.message, e);
+      console.error('[Save] Jacks save error:', e.code, e.message, e);
+      throw e;
     }
     hideSaving();
   }
@@ -5674,6 +5678,7 @@ window.fmtHeight = function(h) {
         if (obj.mine) {
           _bypassEditCheck = true;
           if (obj.mine.redraft) loadModeData('redraft', obj.mine.redraft, 'mine');
+          if (obj.mine.superflex) loadModeData('superflex', obj.mine.superflex, 'mine');
           if (obj.mine.dynasty) loadModeData('dynasty', obj.mine.dynasty, 'mine');
           if (obj.mine.dynastysf) loadModeData('dynastysf', obj.mine.dynastysf, 'mine');
           _bypassEditCheck = false;
@@ -5766,8 +5771,7 @@ window.fmtHeight = function(h) {
     btn.classList.remove('has-changes', 'saved', 'save-error');
     btn.innerHTML = _saveIcon + ' SAVING...';
     try {
-      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 20000));
-      await Promise.race([saveToCloud(), timeout]);
+      await saveToCloud();
       markSaved();
       btn.classList.remove('saving');
       btn.classList.add('saved');
@@ -5778,7 +5782,7 @@ window.fmtHeight = function(h) {
       btn.classList.remove('saving');
       btn.classList.add('save-error');
       btn.innerHTML = _warnIcon + ' RETRY';
-      toast(e.message === 'timeout' ? 'Save timed out — tap Retry' : 'Save failed — tap Retry');
+      toast('Save failed — ' + (e.code || e.message || 'tap Retry'));
       _hasUnsavedChanges = true;
     }
   });
@@ -5851,6 +5855,7 @@ window.fmtHeight = function(h) {
     const saveBtn = document.getElementById('btnSave');
     if (saveBtn) saveBtn.style.display = (currentUser && allowed) ? '' : 'none';
   }
+  window.updateToolbarVisibility = updateToolbarVisibility;
 
   window.addEventListener('beforeunload', e => {
     if (_hasUnsavedChanges && currentUser) { e.preventDefault(); e.returnValue = ''; }

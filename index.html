@@ -260,6 +260,9 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:3px;backg
 .tb-btn:hover{border-color:var(--accent);color:var(--accent)}
 .tb-btn.active-mode{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 .tb-btn svg{width:14px;height:14px}
+.tb-btn#btnSave.has-changes{border-color:var(--accent);color:var(--accent);background:rgba(245,158,11,.1);animation:saveGlow 2s ease-in-out infinite}
+.tb-btn#btnSave.saving{opacity:.6;pointer-events:none}
+@keyframes saveGlow{0%,100%{box-shadow:0 0 0 rgba(245,158,11,0)}50%{box-shadow:0 0 8px rgba(245,158,11,.3)}}
 
 .controls{display:flex;gap:.75rem;padding:1rem 2rem;flex-wrap:wrap;align-items:center;flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--border)}
 .search-box{position:relative;flex:1;min-width:200px;max-width:360px}
@@ -285,19 +288,20 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:3px;backg
 .stat-chip strong{color:var(--text);font-weight:600}
 .ranked-count{color:var(--green)}
 
-.table-wrap{padding:0 2rem 2rem;overflow:auto;flex:1}
-table{width:100%;border-collapse:collapse;min-width:680px}
+.table-wrap{padding:0 2rem 2rem;overflow:auto;flex:1;will-change:scroll-position;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:680px;contain:style}
 thead th{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);padding:.6rem .6rem;text-align:left;border-bottom:2px solid var(--accent);position:sticky;top:0;background:var(--surface);z-index:10;cursor:pointer;user-select:none;white-space:nowrap}
 thead th:hover{color:var(--accent)}
 thead th.sorted{color:var(--accent)}
 thead th .arrow{margin-left:3px;font-size:.55rem}
 tbody tr{border-bottom:1px solid rgba(30,42,66,.5);transition:none}
-tbody.is-dragging tr{transition:transform .18s cubic-bezier(.2,.9,.3,1)}
+tbody.is-dragging tr{transition:transform .18s cubic-bezier(.2,.9,.3,1);pointer-events:none}
+tbody.is-dragging{user-select:none;-webkit-user-select:none}
 tbody tr:hover{background:rgba(245,158,11,.04)}
 tbody tr.dragging{opacity:.25;transition:none}
 tbody tr.drag-indicator{position:relative}
 tbody tr.drag-indicator::before{content:'';position:absolute;left:0;right:0;top:-2px;height:3px;background:var(--accent);border-radius:2px;box-shadow:0 0 12px rgba(245,158,11,.7);z-index:5}
-.drag-clone{position:fixed;pointer-events:none;z-index:3000;will-change:transform;opacity:.95;background:var(--surface);border:1px solid var(--accent);border-radius:5px;box-shadow:0 16px 48px rgba(0,0,0,.65),0 0 0 1px rgba(245,158,11,.4);transform-origin:center center}
+.drag-clone{position:fixed;pointer-events:none;z-index:3000;will-change:transform;opacity:.95;background:var(--surface);border:1px solid var(--accent);border-radius:5px;box-shadow:0 16px 48px rgba(0,0,0,.65),0 0 0 1px rgba(245,158,11,.4);transform-origin:center center;backface-visibility:hidden;-webkit-backface-visibility:hidden;contain:strict}
 .drag-clone td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 tbody tr.ranked-row{background:rgba(34,197,94,.03)}
 tbody tr.just-dropped{background:rgba(245,158,11,.12);box-shadow:inset 0 0 0 1px rgba(245,158,11,.3);animation:dropFade 2s ease-out forwards}
@@ -1382,6 +1386,10 @@ PREMIUM ACTIVE
 <h1>JACKB933 FANTASY FOOTBALL RANKINGS</h1>
 <span class="tag">2026 NFL</span>
 <div class="toolbar">
+<button class="tb-btn" id="btnSave" title="Save rankings & tiers to cloud" style="display:none">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+SAVE
+</button>
 <button class="tb-btn" id="btnCompare" title="Open compare tool">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
 COMPARE <span id="compareCount" style="display:none;background:var(--accent);color:var(--bg);border-radius:50%;width:18px;height:18px;font-size:.65rem;display:inline-flex;align-items:center;justify-content:center;margin-left:2px"></span>
@@ -1401,7 +1409,7 @@ CLEAR
 <div class="auth-anchor" id="authAnchorRankings"></div>
 </div>
 </div>
-<p class="subtitle">413 players ranked 1–413 &middot; Click a name for full player card &middot; Drag to reorder &middot; Hover between rows to add tiers &middot; Export to save</p>
+<p class="subtitle">413 players ranked 1–413 &middot; Click a name for full player card &middot; Drag to reorder &middot; Hover between rows to add tiers &middot; Hit Save to sync</p>
 </header>
 
 <div class="controls">
@@ -2269,12 +2277,13 @@ function diffHtml(d) {
 }
 
 function getTierForRank(rank) {
-  // A tier with afterRank=N appears above the player at rank N.
-  // That player and all below belong to that tier until the next tier.
-  // So find the tier with the largest afterRank that is <= this rank.
+  // Use cached sorted tiers for performance
+  if (!getTierForRank._cache || getTierForRank._cacheKey !== tiers.length + ':' + tiers.map(t=>t.afterRank).join(',')) {
+    getTierForRank._sorted = tiers.slice().sort((a,b) => a.afterRank - b.afterRank);
+    getTierForRank._cacheKey = tiers.length + ':' + tiers.map(t=>t.afterRank).join(',');
+  }
   let currentTier = null;
-  const sorted = tiers.slice().sort((a,b) => a.afterRank - b.afterRank);
-  for (const t of sorted) {
+  for (const t of getTierForRank._sorted) {
     if (t.afterRank <= rank) currentTier = t;
     else break;
   }
@@ -2304,74 +2313,88 @@ function render() {
 
   // Build a map of afterRank -> tier for tier rows (only in default sort, no search, ALL/position filter)
   const showTiers = (sortKey === 'myrank' && sortDir === 1 && !query);
-  const tierMap = {};
+  // Pre-sort tiers by afterRank and build a fast lookup map
+  const tiersByRank = {};
+  const sortedTiers = showTiers ? tiers.slice().sort((a,b) => a.afterRank - b.afterRank) : [];
   if (showTiers) {
-    tiers.forEach(t => { tierMap[t.afterRank] = t; });
+    for (let i = 0; i < sortedTiers.length; i++) {
+      const t = sortedTiers[i];
+      if (!tiersByRank[t.afterRank]) tiersByRank[t.afterRank] = [];
+      tiersByRank[t.afterRank].push(t);
+    }
   }
 
-  let html = '';
-  data.forEach((d, i) => {
-    // Insert tier row before this player if a tier sits between previous rank and this rank
+  // Pre-build tier label cache for myrank-num styling
+  getTierForRank._cache = null; // invalidate
+
+  // Build HTML using array join (faster than string concat for large tables)
+  const parts = [];
+  for (let i = 0; i < data.length; i++) {
+    const d = data[i];
+
+    // Insert tier rows before this player
     if (showTiers) {
       const prevRank = i > 0 ? data[i-1].myRank : 0;
-      tiers.forEach(t => {
+      for (let ti = 0; ti < sortedTiers.length; ti++) {
+        const t = sortedTiers[ti];
         if (t.afterRank > prevRank && t.afterRank <= d.myRank) {
-          html += `<tr class="tier-row" data-tier-id="${t.id}">
-            <td colspan="10"><div class="tier-inner">
-              <span class="tier-badge ${t.label}">${t.label}</span>
-              ${editable ? `<input class="tier-name" value="${t.name}" data-tier-id="${t.id}" spellcheck="false">
-              <div class="tier-controls">
-                <button class="tier-btn del" data-tier-del="${t.id}" title="Remove tier">✕</button>
-              </div>` : `<span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">${t.name}</span>`}
-            </div></td>
-          </tr>`;
+          parts.push('<tr class="tier-row" data-tier-id="', t.id, '"><td colspan="10"><div class="tier-inner"><span class="tier-badge ', t.label, '">', t.label, '</span>');
+          if (editable) {
+            parts.push('<input class="tier-name" value="', t.name, '" data-tier-id="', t.id, '" spellcheck="false"><div class="tier-controls"><button class="tier-btn del" data-tier-del="', t.id, '" title="Remove tier">✕</button></div>');
+          } else {
+            parts.push('<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">', t.name, '</span>');
+          }
+          parts.push('</div></td></tr>');
         }
-      });
+      }
     }
 
     const _adp = modeAdp(d);
     const moved = d.myRank !== (board.indexOf(d.idx) + 1) || Math.abs(_adp - d.myRank) >= 1;
     const checked = compareSet.has(d.idx) ? 'checked' : '';
     const blurred = shouldBlur && (i + 1) > blurCutoff ? 'premium-blur' : '';
-    html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}">
-      <td>${editable ? '<div class="drag-handle"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div>' : ''}</td>
-      <td class="myrank-cell"><span class="myrank-num tier-${getTierForRank(d.myRank)}">${d.myRank}</span></td>
-      <td><div class="player-cell" style="flex-direction:row;align-items:center;gap:6px">${d._slImg ? `<img class="player-headshot-sm" src="${d._slImg}" alt="" onerror="this.style.display='none'">` : ''}<div style="display:flex;flex-direction:column;gap:1px"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}</span><span class="player-team">${d.t}</span></div></div></td>
-      <td><span class="pos-badge ${d.s}">${d.s}</span></td>
-      <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
-      <td class="adp-cell">${modeAdp(d) != null ? modeAdp(d) : '—'}</td>
-      <td class="pts-cell">${d.s==='K'||d.s==='DST'?'—':(d.p/17).toFixed(1)}</td>
-      <td class="pts-cell">${d.s25 ? d.s25.ppg : '—'}</td>
-      <td class="pts-cell yrr-cell" style="display:none">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</td>
-      <td class="age-cell ${d.s==='DST' ? (d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '') : d.age!=null ? (d.s==='RB' ? (d.age>=30?'age-red':d.age>=28?'age-yellow':'age-green') : d.s==='QB' ? (d.age>=35?'age-red':d.age>=32?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='WR' ? (d.age>=32?'age-red':d.age>=29?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='TE' ? (d.age>=33?'age-red':d.age>=31?'age-orange':d.age>=25?'age-green':'age-yellow') : '') : ''}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (d.age != null ? d.age : '—')}</td>
-      <td class="diff-cell">${diffHtml(d)}</td>
-    </tr>`;
+    const tierLabel = getTierForRank(d.myRank);
+    const ageClass = d.s==='DST' ? (d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '') : d.age!=null ? (d.s==='RB' ? (d.age>=30?'age-red':d.age>=28?'age-yellow':'age-green') : d.s==='QB' ? (d.age>=35?'age-red':d.age>=32?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='WR' ? (d.age>=32?'age-red':d.age>=29?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='TE' ? (d.age>=33?'age-red':d.age>=31?'age-orange':d.age>=25?'age-green':'age-yellow') : '') : '';
+    const ageVal = d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (d.age != null ? d.age : '—');
 
-    // "Add tier" mini-button between rows (only show on hover via CSS)
-    if (editable && showTiers && !tierMap[d.myRank]) {
-      html += `<tr class="add-tier-row" data-after-rank="${d.myRank}"><td colspan="10"><button class="add-tier-btn" data-add-tier="${d.myRank}">+ ADD TIER</button></td></tr>`;
+    parts.push('<tr data-idx="', d.idx, '" class="', moved?'ranked-row':'', ' ', checked?'cmp-selected':'', ' ', blurred, '">',
+      '<td>', editable ? '<div class="drag-handle"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div>' : '', '</td>',
+      '<td class="myrank-cell"><span class="myrank-num tier-', tierLabel, '">', d.myRank, '</span></td>',
+      '<td><div class="player-cell" style="flex-direction:row;align-items:center;gap:6px">', d._slImg ? '<img class="player-headshot-sm" src="' + d._slImg + '" alt="" onerror="this.style.display=\'none\'">' : '', '<div style="display:flex;flex-direction:column;gap:1px"><span class="player-name player-name-link" data-cidx="', d.idx, '">', d.n, '</span><span class="player-team">', d.t, '</span></div></div></td>',
+      '<td><span class="pos-badge ', d.s, '">', d.s, '</span></td>',
+      '<td class="pos-rank-cell">', d.myPosRank || d.r, '</td>',
+      '<td class="adp-cell">', _adp != null ? _adp : '—', '</td>',
+      '<td class="pts-cell">', d.s==='K'||d.s==='DST'?'—':(d.p/17).toFixed(1), '</td>',
+      '<td class="pts-cell">', d.s25 ? d.s25.ppg : '—', '</td>',
+      '<td class="pts-cell yrr-cell" style="display:none">', d._yrr != null ? d._yrr.toFixed(2) : '—', '</td>',
+      '<td class="age-cell ', ageClass, '">', ageVal, '</td>',
+      '<td class="diff-cell">', diffHtml(d), '</td>',
+    '</tr>');
+
+    // "Add tier" mini-button between rows
+    if (editable && showTiers && !tiersByRank[d.myRank]) {
+      parts.push('<tr class="add-tier-row" data-after-rank="', d.myRank, '"><td colspan="10"><button class="add-tier-btn" data-add-tier="', d.myRank, '">+ ADD TIER</button></td></tr>');
     }
-  });
+  }
 
   // Tiers that come after the last player
   if (showTiers) {
     const lastRank = data.length > 0 ? data[data.length-1].myRank : 0;
-    tiers.forEach(t => {
+    for (let ti = 0; ti < sortedTiers.length; ti++) {
+      const t = sortedTiers[ti];
       if (t.afterRank > lastRank) {
-        html += `<tr class="tier-row" data-tier-id="${t.id}">
-          <td colspan="10"><div class="tier-inner">
-            <span class="tier-badge ${t.label}">${t.label}</span>
-            ${editable ? `<input class="tier-name" value="${t.name}" data-tier-id="${t.id}" spellcheck="false">
-            <div class="tier-controls">
-              <button class="tier-btn del" data-tier-del="${t.id}" title="Remove tier">✕</button>
-            </div>` : `<span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">${t.name}</span>`}
-          </div></td>
-        </tr>`;
+        parts.push('<tr class="tier-row" data-tier-id="', t.id, '"><td colspan="10"><div class="tier-inner"><span class="tier-badge ', t.label, '">', t.label, '</span>');
+        if (editable) {
+          parts.push('<input class="tier-name" value="', t.name, '" data-tier-id="', t.id, '" spellcheck="false"><div class="tier-controls"><button class="tier-btn del" data-tier-del="', t.id, '" title="Remove tier">✕</button></div>');
+        } else {
+          parts.push('<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">', t.name, '</span>');
+        }
+        parts.push('</div></td></tr>');
       }
-    });
+    }
   }
 
-  tbody.innerHTML = html;
+  tbody.innerHTML = parts.join('');
 
   // Premium upsell wall
   const existingWall = document.getElementById('premiumWall');
@@ -2429,30 +2452,38 @@ function updateCompareBtn() {
 }
 
 function attachRowListeners() {
-  // Player card click
-  document.querySelectorAll('.player-name-link').forEach(el => {
-    el.addEventListener('click', e => {
+  // No-op: all row listeners now use event delegation (attached once below)
+}
+
+// === EVENT DELEGATION: attach once, never re-attach ===
+(function initDelegatedListeners() {
+  const tbody = document.getElementById('tbody');
+  const scrollContainer = document.querySelector('.table-wrap');
+
+  // Player card click (delegated)
+  tbody.addEventListener('click', e => {
+    const nameLink = e.target.closest('.player-name-link');
+    if (nameLink) {
       e.stopPropagation();
-      const idx = +el.dataset.cidx;
+      const idx = +nameLink.dataset.cidx;
       openPlayerCard(D[idx]);
-    });
+      return;
+    }
   });
 
-  // Compare checkboxes
-  document.querySelectorAll('.cmp-cb').forEach(cb => {
-    cb.addEventListener('change', e => {
+  // Compare checkboxes (delegated)
+  tbody.addEventListener('change', e => {
+    const cb = e.target.closest('.cmp-cb');
+    if (cb) {
       const idx = +cb.dataset.idx;
       if (cb.checked) compareSet.add(idx);
       else compareSet.delete(idx);
       cb.closest('tr').classList.toggle('cmp-selected', cb.checked);
       updateCompareBtn();
-    });
+    }
   });
 
-  // === High-performance drag & drop ===
-  const tbody = document.getElementById('tbody');
-  const scrollContainer = document.querySelector('.table-wrap');
-
+  // === High-performance drag & drop (attached once via delegation) ===
   let dragRow = null, dragIdx = null, clone = null, lastIndicatorRow = null;
   let pointerY = 0, cloneX = 0, cloneOffsetY = 0;
   let rafId = null, isDragging = false;
@@ -2467,7 +2498,6 @@ function attachRowListeners() {
     table.style.cssText = `width:${tbl.offsetWidth}px;border-collapse:collapse;table-layout:fixed;`;
     const tr = row.cloneNode(true);
     tr.classList.remove('dragging','cmp-selected','ranked-row');
-    // Copy exact widths
     const origCells = row.children;
     const cloneCells = tr.children;
     for (let i = 0; i < origCells.length; i++) {
@@ -2481,21 +2511,48 @@ function attachRowListeners() {
     return wrap;
   }
 
+  // Cache row rects during drag for fast hit-testing (avoids elementsFromPoint)
+  let _rowRects = [];
+  function cacheRowRects() {
+    _rowRects = [];
+    const rows = tbody.querySelectorAll('tr[data-idx]');
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i].getBoundingClientRect();
+      _rowRects.push({ row: rows[i], top: r.top, bottom: r.bottom, midY: r.top + r.height / 2 });
+    }
+  }
+
+  let _rectCacheFrame = 0;
   function getRowAtY(y) {
-    // Use elementFromPoint for speed — skip the dragging row & clone
-    const els = document.elementsFromPoint(cloneX + 40, y);
-    for (const el of els) {
-      const tr = el.closest('tr[data-idx]');
-      if (tr && tr !== dragRow && tr.dataset.idx !== undefined) return tr;
+    // Binary search on cached rects for O(log n) hit test
+    let lo = 0, hi = _rowRects.length - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const r = _rowRects[mid];
+      if (y < r.top) hi = mid - 1;
+      else if (y > r.bottom) lo = mid + 1;
+      else {
+        if (r.row !== dragRow) return r.row;
+        // If we hit the drag row, check neighbors
+        if (mid > 0 && y <= _rowRects[mid-1].bottom && _rowRects[mid-1].row !== dragRow) return _rowRects[mid-1].row;
+        if (mid < _rowRects.length-1 && y >= _rowRects[mid+1].top && _rowRects[mid+1].row !== dragRow) return _rowRects[mid+1].row;
+        return null;
+      }
+    }
+    // Clamp to nearest visible row
+    if (_rowRects.length > 0) {
+      if (y <= _rowRects[0].top && _rowRects[0].row !== dragRow) return _rowRects[0].row;
+      const last = _rowRects[_rowRects.length-1];
+      if (y >= last.bottom && last.row !== dragRow) return last.row;
     }
     return null;
   }
 
-  // Single RAF loop handles everything
+  // Single RAF loop
   function tick() {
     if (!isDragging) return;
 
-    // 1. Position clone with GPU (translate3d)
+    // 1. Position clone with GPU
     if (clone) {
       clone.style.transform = `translate3d(${cloneX}px, ${pointerY - cloneOffsetY}px, 0) scale(1.015)`;
     }
@@ -2503,13 +2560,19 @@ function attachRowListeners() {
     // 2. Auto-scroll with easing
     const rect = scrollContainer.getBoundingClientRect();
     const zone = 80;
+    let scrolled = false;
     if (pointerY < rect.top + zone) {
       const pct = 1 - (pointerY - rect.top) / zone;
       scrollContainer.scrollTop -= Math.round(2 + pct * pct * 18);
+      scrolled = true;
     } else if (pointerY > rect.bottom - zone) {
       const pct = 1 - (rect.bottom - pointerY) / zone;
       scrollContainer.scrollTop += Math.round(2 + pct * pct * 18);
+      scrolled = true;
     }
+
+    // Refresh row rects if scrolled (positions shifted)
+    if (scrolled) cacheRowRects();
 
     // 3. Update indicator
     clearIndicators();
@@ -2546,6 +2609,9 @@ function attachRowListeners() {
     clone.style.left = '0px';
     clone.style.top = '0px';
     clone.style.transform = `translate3d(${cloneX}px, ${pointerY - cloneOffsetY}px, 0) scale(1.015)`;
+
+    // Cache all row positions once at drag start
+    cacheRowRects();
 
     isDragging = true;
     rafId = requestAnimationFrame(tick);
@@ -2592,41 +2658,56 @@ function attachRowListeners() {
       }
     }
     dragRow = null; dragIdx = null;
+    _rowRects = [];
   }
 
   tbody.addEventListener('pointerdown', onPointerDown);
-}
+})();
 
 function attachTierListeners() {
-  // Add tier buttons
-  document.querySelectorAll('[data-add-tier]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const afterRank = +btn.dataset.addTier;
+  // No-op: tier listeners now use event delegation (attached once below)
+}
+
+// === TIER EVENT DELEGATION: attach once ===
+(function initTierDelegation() {
+  const tbody = document.getElementById('tbody');
+
+  // Add tier + Delete tier (click delegation)
+  tbody.addEventListener('click', e => {
+    const addBtn = e.target.closest('[data-add-tier]');
+    if (addBtn) {
+      const afterRank = +addBtn.dataset.addTier;
       addTier(afterRank);
       saveLocal();
       render();
       toast('Tier added');
-    });
-  });
-  // Delete tier buttons
-  document.querySelectorAll('[data-tier-del]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      removeTier(+btn.dataset.tierDel);
+      return;
+    }
+    const delBtn = e.target.closest('[data-tier-del]');
+    if (delBtn) {
+      removeTier(+delBtn.dataset.tierDel);
       saveLocal();
       render();
       toast('Tier removed');
-    });
+      return;
+    }
   });
-  // Tier name editing
-  document.querySelectorAll('.tier-name').forEach(inp => {
-    inp.addEventListener('change', e => {
+
+  // Tier name editing (change delegation)
+  tbody.addEventListener('change', e => {
+    const inp = e.target.closest('.tier-name');
+    if (inp) {
       const id = +inp.dataset.tierId;
       const t = tiers.find(t => t.id === id);
       if (t) { t.name = inp.value; saveLocal(); }
-    });
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+    }
   });
-}
+
+  // Enter key on tier name
+  tbody.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.closest('.tier-name')) e.target.blur();
+  });
+})();
 
 // Toast
 function toast(msg) {
@@ -2637,7 +2718,12 @@ function toast(msg) {
 }
 
 // Controls
-document.getElementById('search').addEventListener('input', e => { query = e.target.value; render(); });
+let _searchTimer = null;
+document.getElementById('search').addEventListener('input', e => { 
+  query = e.target.value; 
+  if (_searchTimer) clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(render, 120);
+});
 
 document.querySelectorAll('.pos-btn[data-pos]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -4951,8 +5037,6 @@ window.fmtHeight = function(h) {
   }
 
   let app, auth, db, currentUser = null;
-  let _saveTimeout = null;
-  const SAVE_DEBOUNCE = 2000; // ms
 
   // === ADMIN ACCOUNTS ===
   // Add admin email addresses here — only these accounts can edit Jack's Rankings
@@ -5322,18 +5406,40 @@ window.fmtHeight = function(h) {
     });
   }
 
-  // Debounced cloud save — called whenever rankings change
-  function debouncedCloudSave() {
+  // Track unsaved changes instead of auto-saving
+  let _hasUnsavedChanges = false;
+  
+  function markUnsaved() {
     if (!currentUser) return;
-    if (_saveTimeout) clearTimeout(_saveTimeout);
-    _saveTimeout = setTimeout(saveToCloud, SAVE_DEBOUNCE);
+    _hasUnsavedChanges = true;
+    const btn = document.getElementById('btnSave');
+    if (btn) btn.classList.add('has-changes');
+  }
+  
+  function markSaved() {
+    _hasUnsavedChanges = false;
+    const btn = document.getElementById('btnSave');
+    if (btn) btn.classList.remove('has-changes');
   }
 
-  // Monkey-patch saveLocal to also trigger cloud save
+  // Manual save button handler
+  document.getElementById('btnSave').addEventListener('click', async () => {
+    if (!currentUser || !db) { toast('Sign in to save to cloud'); return; }
+    const btn = document.getElementById('btnSave');
+    btn.classList.add('saving');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> SAVING...';
+    await saveToCloud();
+    markSaved();
+    btn.classList.remove('saving');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> SAVE';
+    toast('Rankings & tiers saved to cloud!');
+  });
+
+  // Monkey-patch saveLocal to track unsaved changes (no auto cloud save)
   const _origSaveLocal = saveLocal;
   saveLocal = function() {
     _origSaveLocal();
-    debouncedCloudSave();
+    markUnsaved();
   };
 
   // === AUTH STATE LISTENER ===
@@ -5362,7 +5468,7 @@ window.fmtHeight = function(h) {
       homeAuthCard.querySelector('.home-auth-title').textContent = 'CONNECTED';
       homeAuthCard.querySelector('.home-auth-desc').textContent = isAdmin()
         ? 'Admin account — you can edit all rankings.'
-        : 'Your rankings are being saved to the cloud automatically.';
+        : 'Your rankings sync to the cloud when you hit Save.';
     } else {
       // Sidebar
       acctBar.style.display = 'none';
@@ -5393,7 +5499,18 @@ window.fmtHeight = function(h) {
       const el = document.getElementById(id);
       if (el) el.style.display = allowed ? '' : 'none';
     });
+    // Show save button when signed in and can edit
+    const saveBtn = document.getElementById('btnSave');
+    if (saveBtn) saveBtn.style.display = (currentUser && allowed) ? '' : 'none';
   }
+
+  // Warn before leaving with unsaved changes
+  window.addEventListener('beforeunload', e => {
+    if (_hasUnsavedChanges && currentUser) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
 
   if (isConfigured && auth) {
     auth.onAuthStateChanged(user => {

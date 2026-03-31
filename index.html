@@ -5382,7 +5382,7 @@ window.fmtHeight = function(h) {
         console.warn('[Auth] Persistence failed:', err.code);
       });
       // Connectivity diagnostic — test if we can reach Firestore at all
-      fetch('https://firestore.googleapis.com/v1/projects/' + firebaseConfig.projectId + '/databases/(default)/documents/rankings/__jacks_official__', {
+      fetch('https://firestore.googleapis.com/v1/projects/' + firebaseConfig.projectId + '/databases/(default)/documents/rankings/jacks-official', {
         headers: { 'Content-Type': 'application/json' }
       }).then(r => {
         console.log('[Auth] Firestore REST test:', r.status, r.statusText);
@@ -5638,7 +5638,7 @@ window.fmtHeight = function(h) {
         }
       };
       console.log('[Save] Writing jacks doc (' + JSON.stringify(data).length + ' bytes)...');
-      await db.collection('rankings').doc('__jacks_official__').set({
+      await db.collection('rankings').doc('jacks-official').set({
         data: JSON.stringify(data),
         updatedBy: currentUser.email || '',
         updatedAt: new Date().toISOString()
@@ -5667,7 +5667,7 @@ window.fmtHeight = function(h) {
   async function loadJacksFromCloud() {
     if (!db) return;
     try {
-      const doc = await db.collection('rankings').doc('__jacks_official__').get();
+      const doc = await db.collection('rankings').doc('jacks-official').get();
       if (doc.exists && doc.data().data) {
         const obj = JSON.parse(doc.data().data);
         if (obj.jacks) {
@@ -5730,7 +5730,7 @@ window.fmtHeight = function(h) {
   let jacksUnsubscribe = null;
   function listenForJacksUpdates() {
     if (!db || jacksUnsubscribe) return;
-    jacksUnsubscribe = db.collection('rankings').doc('__jacks_official__').onSnapshot(doc => {
+    jacksUnsubscribe = db.collection('rankings').doc('jacks-official').onSnapshot(doc => {
       if (doc.exists && doc.data().data) {
         const obj = JSON.parse(doc.data().data);
         if (obj.jacks) {

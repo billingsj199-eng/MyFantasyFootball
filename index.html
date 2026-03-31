@@ -5375,12 +5375,23 @@ window.fmtHeight = function(h) {
       app = firebase.initializeApp(firebaseConfig);
       auth = firebase.auth();
       db = firebase.firestore();
-      db.settings({ experimentalForceLongPolling: true, merge: true });
       // Enable offline persistence so writes resolve from cache immediately
       db.enablePersistence({ synchronizeTabs: false }).then(() => {
         console.log('[Auth] Firestore persistence enabled');
       }).catch(err => {
-        console.warn('[Auth] Persistence failed:', err.code, '— saves may hang if offline');
+        console.warn('[Auth] Persistence failed:', err.code);
+      });
+      // Connectivity diagnostic — test if we can reach Firestore at all
+      fetch('https://firestore.googleapis.com/v1/projects/' + firebaseConfig.projectId + '/databases/(default)/documents/rankings/__jacks_official__', {
+        headers: { 'Content-Type': 'application/json' }
+      }).then(r => {
+        console.log('[Auth] Firestore REST test:', r.status, r.statusText);
+        if (r.status === 403 || r.status === 401) console.warn('[Auth] ⚠️ Firestore RULES are blocking reads — check Firebase Console → Firestore → Rules');
+        if (r.status === 404) console.warn('[Auth] ⚠️ Firestore database or collection may not exist yet');
+        if (r.status === 200) console.log('[Auth] ✓ Firestore is reachable and rules allow reads');
+      }).catch(err => {
+        console.error('[Auth] ✗ Cannot reach Firestore server at all:', err.message);
+        console.error('[Auth] ⚠️ This is likely a CSP or network issue. Check if the page is served over HTTPS.');
       });
       console.log('[Auth] Firebase initialized (long-polling mode)');
     } catch(e) {

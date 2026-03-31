@@ -461,7 +461,9 @@ tbody td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 .player-name-link:hover{color:var(--accent)}
 
 /* Career Log Table */
-.career-table{width:auto;border-collapse:collapse;margin-top:.25rem;font-size:.55rem}
+.career-table-wrap{max-height:220px;overflow-y:auto;overflow-x:auto;border-radius:4px;border:1px solid var(--border)}
+.career-table{width:auto;border-collapse:collapse;margin-top:0;font-size:.55rem}
+.career-table thead{position:sticky;top:0;z-index:1;background:var(--surface)}
 .career-table th{font-size:.42rem;text-transform:uppercase;letter-spacing:.2px;color:var(--text2);padding:.14rem .06rem;text-align:center;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap}
 .career-table th:first-child{text-align:left}
 .career-table td{padding:.14rem .06rem;text-align:center;border-bottom:1px solid rgba(30,42,66,.2);color:var(--text);line-height:1.2;white-space:nowrap}
@@ -1818,7 +1820,7 @@ Jack's Rankings require a <span class="md-premium-link" id="mdPremiumLink">Premi
 </div>
 <div class="md-rank-premium-hint" id="mdAdpPremiumHint">
 <svg style="width:16px;height:16px;color:var(--accent);vertical-align:middle;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumLink">Premium</span> account. Upgrade to draft with ESPN, Sleeper, or Yahoo ADP.
+Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumLink">Premium</span> account. ESPN, Sleeper, and Yahoo ADP coming soon.
 </div>
 <div class="md-setup-row">
 <label class="md-label">Number of Teams</label>
@@ -2219,9 +2221,9 @@ const versionBoards = {
   jacks: { redraft: defaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() },
   mine: { redraft: defaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() }
 };
-const POS_TIER_KEYS = ['ALL','QB','RB','WR','TE'];
-function _mkPosTiers() { return {ALL:[],QB:[],RB:[],WR:[],TE:[]}; }
-function _mkPosTierCtrs() { return {ALL:0,QB:0,RB:0,WR:0,TE:0}; }
+const POS_TIER_KEYS = ['ALL','QB','RB','WR','TE','K','DST','ROOKIE'];
+function _mkPosTiers() { return {ALL:[],QB:[],RB:[],WR:[],TE:[],K:[],DST:[],ROOKIE:[]}; }
+function _mkPosTierCtrs() { return {ALL:0,QB:0,RB:0,WR:0,TE:0,K:0,DST:0,ROOKIE:0}; }
 const versionTiers = {
   jacks: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
   mine: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() }
@@ -2241,7 +2243,7 @@ function setTiers(t) { versionTiers[currentVersion][currentMode][_tierPK()] = t;
 
 // Map current position filter to tier bucket key
 function _tierPK() {
-  if (typeof filter !== 'undefined' && (filter==='QB'||filter==='RB'||filter==='WR'||filter==='TE')) return filter;
+  if (typeof filter !== 'undefined' && (filter==='QB'||filter==='RB'||filter==='WR'||filter==='TE'||filter==='K'||filter==='DST'||filter==='ROOKIE')) return filter;
   return 'ALL';
 }
 
@@ -3215,7 +3217,7 @@ function buildCareerTable(d) {
     return row;
   }).join('');
 
-  return '<table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table>';
+  return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 function fmtHeight(h) {
@@ -6112,10 +6114,23 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     });
   }
 
-  // Add historical players from HP (only if not already in D or LDB)
+  // Add historical players from HP — merge _bestByTeam into existing pool entries
   HP.forEach(p => {
     const key = p.n + '|' + p.s;
-    if (poolNameSet.has(key)) return; // skip duplicates
+    if (poolNameSet.has(key)) {
+      // Player already in pool from D/LDB — merge HP data into them
+      const existing = FG_POOL.find(x => x.n === p.n && x.s === p.s);
+      if (existing) {
+        if (p._bestByTeam) existing._bestByTeam = Object.assign(existing._bestByTeam || {}, p._bestByTeam);
+        if (p._teams) {
+          const tSet = new Set(existing._fgTeams || []);
+          p._teams.forEach(t => tSet.add(t));
+          existing._fgTeams = [...tSet];
+        }
+        if (p._yrs && !existing._yrs) existing._yrs = p._yrs;
+      }
+      return;
+    }
     FG_POOL.push({
       n: p.n, s: p.s, _fgTeams: p._teams || [], _fgIdx: FG_POOL.length,
       _yrs: p._yrs || '', _retired: true,
@@ -7804,6 +7819,7 @@ window.fmtHeight = fmtHeight;
         premiumBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg> PRO PLAN';
       }
       premiumActiveStatus.style.display = 'none';
+      if (typeof updateRankSrcLock === 'function') updateRankSrcLock();
       return true;
     }
 
@@ -7828,6 +7844,7 @@ window.fmtHeight = fmtHeight;
         premiumBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg> PRO PLAN';
       }
       premiumActiveStatus.style.display = 'none';
+      if (typeof updateRankSrcLock === 'function') updateRankSrcLock();
       return true;
     }
 
@@ -7839,6 +7856,7 @@ window.fmtHeight = fmtHeight;
       premiumBadge.className = 'premium-badge free';
       premiumBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/></svg> FREE PLAN';
     }
+    if (typeof updateRankSrcLock === 'function') updateRankSrcLock();
     return false;
   }
 
@@ -7994,11 +8012,13 @@ window.fmtHeight = fmtHeight;
   });
 
   // ADP source tabs (Underdog / ESPN / Sleeper / Yahoo)
+  // ESPN, Sleeper, Yahoo are PERMANENTLY locked until ADP data is added
+  const _ADP_ENABLED = { underdog: true, espn: false, sleeper: false, yahoo: false };
   const adpSrcTabs = document.querySelectorAll('#mdAdpSrcTabs .md-rank-src-tab');
   const adpPremiumHint = document.getElementById('mdAdpPremiumHint');
   adpSrcTabs.forEach(t => t.addEventListener('click', () => {
     const src = t.dataset.mdadp;
-    if (src !== 'underdog' && !hasPremium()) {
+    if (!_ADP_ENABLED[src]) {
       adpPremiumHint.classList.add('show');
       return;
     }
@@ -8012,7 +8032,7 @@ window.fmtHeight = fmtHeight;
     adpSrcTabs.forEach(tab => {
       if (tab.dataset.mdadp === 'underdog') return;
       const icon = tab.querySelector('.lock-icon');
-      if (hasPremium()) {
+      if (_ADP_ENABLED[tab.dataset.mdadp]) {
         tab.classList.remove('locked');
         if (icon) icon.style.display = 'none';
       } else {

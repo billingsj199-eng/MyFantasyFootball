@@ -113,9 +113,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .fg-title{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
 .fg-subtitle{color:var(--text2);font-size:.82rem;margin-top:4px;max-width:500px;margin-left:auto;margin-right:auto}
 .fg-layout{display:flex;gap:1.5rem;align-items:flex-start}
-@media(max-width:768px){.fg-layout{flex-direction:column}}
+@media(max-width:768px){.fg-layout{flex-direction:column-reverse;align-items:center}.fg-draft-panel{order:0}.fg-roster-panel{order:1}}
 .fg-roster-panel{width:320px;min-width:280px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;flex-shrink:0}
-@media(max-width:768px){.fg-roster-panel{width:100%}}
+@media(max-width:768px){.fg-roster-panel{width:100%;max-width:420px}}
 .fg-roster-title{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;color:var(--accent);margin-bottom:.75rem;text-align:center}
 .fg-roster-slots{display:flex;flex-direction:column;gap:6px}
 .fg-slot{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all .15s;min-height:48px}
@@ -342,6 +342,18 @@ tbody td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 .myrank-num.tier-D{color:#a855f7;background:rgba(168,85,247,.1)}
 .myrank-num.tier-E{color:#f97316;background:rgba(249,115,22,.1)}
 .myrank-num.tier-F{color:#9ca3af;background:rgba(107,114,128,.12)}
+.myrank-num.tier-G{color:#ec4899;background:rgba(236,72,153,.12)}
+.myrank-num.tier-H{color:#06b6d4;background:rgba(6,182,212,.12)}
+.myrank-num.tier-I{color:#84cc16;background:rgba(132,204,22,.12)}
+.myrank-num.tier-J{color:#f43f5e;background:rgba(244,63,94,.12)}
+.myrank-num.tier-K{color:#6366f1;background:rgba(99,102,241,.12)}
+.myrank-num.tier-L{color:#fbbf24;background:rgba(251,191,36,.12)}
+.myrank-num.tier-M{color:#14b8a6;background:rgba(20,184,166,.12)}
+.myrank-num.tier-N{color:#d946ef;background:rgba(217,70,239,.12)}
+.myrank-num.tier-O{color:#ea580c;background:rgba(234,88,12,.12)}
+.myrank-num.tier-P{color:#38bdf8;background:rgba(56,189,248,.12)}
+.myrank-num.tier-Q{color:#a3e635;background:rgba(163,230,53,.12)}
+.myrank-num.tier-R{color:#fb7185;background:rgba(251,113,133,.12)}
 
 /* Diff indicator */
 .diff-cell{width:55px;font-size:.72rem;font-weight:600;text-align:center}
@@ -379,6 +391,18 @@ tbody td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 .tier-badge.D{background:rgba(168,85,247,.2);color:#a855f7}
 .tier-badge.E{background:rgba(249,115,22,.2);color:#f97316}
 .tier-badge.F{background:rgba(107,114,128,.25);color:#9ca3af}
+.tier-badge.G{background:rgba(236,72,153,.2);color:#ec4899}
+.tier-badge.H{background:rgba(6,182,212,.2);color:#06b6d4}
+.tier-badge.I{background:rgba(132,204,22,.2);color:#84cc16}
+.tier-badge.J{background:rgba(244,63,94,.2);color:#f43f5e}
+.tier-badge.K{background:rgba(99,102,241,.2);color:#6366f1}
+.tier-badge.L{background:rgba(251,191,36,.2);color:#fbbf24}
+.tier-badge.M{background:rgba(20,184,166,.2);color:#14b8a6}
+.tier-badge.N{background:rgba(217,70,239,.2);color:#d946ef}
+.tier-badge.O{background:rgba(234,88,12,.2);color:#ea580c}
+.tier-badge.P{background:rgba(56,189,248,.2);color:#38bdf8}
+.tier-badge.Q{background:rgba(163,230,53,.2);color:#a3e635}
+.tier-badge.R{background:rgba(251,113,133,.2);color:#fb7185}
 .tier-name{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2);cursor:text;min-width:60px;padding:1px 4px;border-radius:3px;border:1px solid transparent}
 .tier-name:hover{border-color:rgba(245,158,11,.3);color:var(--text1)}
 .tier-name:focus{outline:none;border-color:var(--accent);color:var(--accent);background:rgba(245,158,11,.05)}
@@ -582,9 +606,9 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .myrank-num{width:36px;font-size:.9rem}
 
   /* Player card modal - full screen on mobile */
-  .modal-overlay{align-items:flex-end;padding:0}
+  .modal-overlay{align-items:flex-end;padding:0;overflow-y:auto}
   .player-card{
-    width:100%;max-width:100vw;max-height:92vh;
+    width:100%;max-width:100vw;max-height:calc(100vh - env(safe-area-inset-top,0) - 20px);max-height:calc(100dvh - env(safe-area-inset-top,0) - 20px);
     border-radius:14px 14px 0 0;
     margin-bottom:0;
     animation:slideUpMobile .25s ease
@@ -592,7 +616,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   @keyframes slideUpMobile{from{transform:translateY(100%)}to{transform:translateY(0)}}
   .card-close{top:.75rem;right:.75rem;font-size:1.4rem;padding:6px 10px;min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center}
   .card-name{font-size:1.5rem}
-  .card-body{padding:.75rem 1rem;padding-bottom:calc(.75rem + env(safe-area-inset-bottom,0))}
+  .card-body{padding:.75rem 1rem;padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0))}
   .career-table{font-size:.5rem}
   .career-table th{font-size:.4rem;padding:.12rem .04rem}
   .career-table td{padding:.12rem .04rem}
@@ -627,7 +651,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .fg-slot-detail{font-size:.62rem}
   .fg-slot-pos{font-size:.78rem;width:32px}
   .fg-slot-pts{font-size:1rem}
-  .fg-draft-panel{padding:1rem;min-height:300px}
+  .fg-draft-panel{padding:1rem;min-height:300px;width:100%;max-width:420px}
   .fg-team-name{font-size:1.6rem}
   .fg-player-card{padding:10px;gap:8px;min-height:44px}
   .fg-player-card .fg-pc-name{font-size:.82rem}
@@ -708,7 +732,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .trade-mode-tab:hover,.trade-src-tab:hover{color:var(--text)}
 .trade-mode-tab.active,.trade-src-tab.active{background:var(--accent);color:var(--bg);font-weight:700}
 .trade-layout{display:flex;gap:1.25rem;align-items:flex-start}
-@media(max-width:768px){.trade-layout{flex-direction:column}}
+@media(max-width:768px){.trade-layout{flex-direction:column;align-items:center}.trade-side{width:100%;max-width:420px}.trade-result{max-width:420px;margin-left:auto;margin-right:auto}.trade-vs{padding:.25rem 0}.trade-vs-icon{width:36px;height:36px;font-size:.9rem}}
 .trade-side{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;position:relative}
 .trade-side-label{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;text-align:center;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
 .trade-side-label.side-a{color:var(--green)}
@@ -807,7 +831,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 /* Home page sign-in card */
 .lb-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:480px}
 .lb-tabs{display:flex;border-bottom:1px solid var(--border)}
-.lb-tab{flex:1;padding:10px 8px;background:none;border:none;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer;transition:all .15s;border-bottom:2px solid transparent}
+.lb-tab{flex:1;padding:10px 6px;background:none;border:none;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.88rem;letter-spacing:1px;cursor:pointer;transition:all .15s;border-bottom:2px solid transparent}
 .lb-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .lb-tab:hover:not(.active){color:var(--text)}
 .lb-panel{display:none;padding:12px 16px;max-height:360px;overflow-y:auto}
@@ -1429,6 +1453,7 @@ PREMIUM ACTIVE
 <div class="lb-card">
 <div class="lb-tabs">
 <button class="lb-tab active" data-lb="daily">Today</button>
+<button class="lb-tab" data-lb="streaks">Streaks</button>
 <button class="lb-tab" data-lb="alltime">All-Time</button>
 <button class="lb-tab" data-lb="fantasygame">Fantasy Game</button>
 </div>
@@ -1436,6 +1461,11 @@ PREMIUM ACTIVE
 <div class="lb-loading" id="lbDailyLoading">Loading...</div>
 <div class="lb-list" id="lbDailyList"></div>
 <div class="lb-empty" id="lbDailyEmpty" style="display:none">No results yet today</div>
+</div>
+<div class="lb-panel" id="lbStreaks">
+<div class="lb-loading" id="lbStreaksLoading">Loading...</div>
+<div class="lb-list" id="lbStreaksList"></div>
+<div class="lb-empty" id="lbStreaksEmpty" style="display:none">No streaks yet</div>
 </div>
 <div class="lb-panel" id="lbAlltime">
 <div class="lb-loading" id="lbAlltimeLoading">Loading...</div>
@@ -2314,7 +2344,7 @@ let userData = {};
 // Tiers: array of {id, label, name, afterRank} — afterRank means tier shows after that board position
 // label = 'S','A','B', etc.  name = user-editable description
 const TIER_LABELS = ['S','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','T','U','V','W','X','Y','Z'];
-const _TIER_COLOR_CYCLE = ['S','A','B','C','D','E','F'];
+const _TIER_COLOR_CYCLE = ['S','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
 function tierColor(label) { const i = TIER_LABELS.indexOf(label); return i >= 0 ? _TIER_COLOR_CYCLE[i % _TIER_COLOR_CYCLE.length] : _TIER_COLOR_CYCLE[0]; }
 
 let _bypassEditCheck = false;
@@ -5443,10 +5473,101 @@ document.querySelectorAll('[data-goto]').forEach(el => {
   });
 
   // Deterministic daily pick from retired pool using date seed
+  // Curated retired players with ESPN headshot IDs for daily pull
+  const DAILY_RETIRED_POOL = [
+    {name:"Tom Brady",pos:"QB",team:"NE/TB",id:"2330"},
+    {name:"Peyton Manning",pos:"QB",team:"IND/DEN",id:"1428"},
+    {name:"Drew Brees",pos:"QB",team:"NO/SD",id:"2580"},
+    {name:"Brett Favre",pos:"QB",team:"GB/MIN",id:"110"},
+    {name:"Dan Marino",pos:"QB",team:"MIA",id:"546"},
+    {name:"John Elway",pos:"QB",team:"DEN",id:"100"},
+    {name:"Joe Montana",pos:"QB",team:"SF/KC",id:"529"},
+    {name:"Aaron Rodgers",pos:"QB",team:"GB/NYJ",id:"8439"},
+    {name:"Ben Roethlisberger",pos:"QB",team:"PIT",id:"5536"},
+    {name:"Eli Manning",pos:"QB",team:"NYG",id:"5526"},
+    {name:"Philip Rivers",pos:"QB",team:"LAC/IND",id:"5529"},
+    {name:"Matt Ryan",pos:"QB",team:"ATL/IND",id:"11237"},
+    {name:"Cam Newton",pos:"QB",team:"CAR/NE",id:"13994"},
+    {name:"Russell Wilson",pos:"QB",team:"SEA/DEN",id:"14881"},
+    {name:"Andrew Luck",pos:"QB",team:"IND",id:"14874"},
+    {name:"Steve Young",pos:"QB",team:"SF",id:"890"},
+    {name:"Troy Aikman",pos:"QB",team:"DAL",id:"20"},
+    {name:"Michael Vick",pos:"QB",team:"ATL/PHI",id:"2549"},
+    {name:"Donovan McNabb",pos:"QB",team:"PHI",id:"1565"},
+    {name:"Tony Romo",pos:"QB",team:"DAL",id:"5209"},
+    {name:"Matthew Stafford",pos:"QB",team:"DET/LAR",id:"12483"},
+    {name:"Jay Cutler",pos:"QB",team:"CHI/DEN",id:"9597"},
+    {name:"Alex Smith",pos:"QB",team:"KC/SF",id:"8416"},
+    {name:"Nick Foles",pos:"QB",team:"PHI/JAX",id:"14877"},
+    {name:"Joe Flacco",pos:"QB",team:"BAL",id:"11252"},
+    {name:"Colin Kaepernick",pos:"QB",team:"SF",id:"14001"},
+    {name:"Robert Griffin III",pos:"QB",team:"WAS",id:"14875"},
+    {name:"Carson Palmer",pos:"QB",team:"ARI/CIN",id:"2573"},
+    {name:"Randall Cunningham",pos:"QB",team:"PHI/MIN",id:"68"},
+    {name:"Emmitt Smith",pos:"RB",team:"DAL",id:"802"},
+    {name:"Barry Sanders",pos:"RB",team:"DET",id:"743"},
+    {name:"Adrian Peterson",pos:"RB",team:"MIN",id:"10452"},
+    {name:"LaDainian Tomlinson",pos:"RB",team:"SD",id:"2554"},
+    {name:"Marshall Faulk",pos:"RB",team:"STL/IND",id:"109"},
+    {name:"Terrell Davis",pos:"RB",team:"DEN",id:"186"},
+    {name:"Marshawn Lynch",pos:"RB",team:"SEA/BUF",id:"10456"},
+    {name:"Arian Foster",pos:"RB",team:"HOU",id:"12479"},
+    {name:"Jamaal Charles",pos:"RB",team:"KC",id:"12460"},
+    {name:"LeSean McCoy",pos:"RB",team:"PHI/BUF",id:"12514"},
+    {name:"DeMarco Murray",pos:"RB",team:"DAL/PHI",id:"13960"},
+    {name:"Frank Gore",pos:"RB",team:"SF",id:"8479"},
+    {name:"Eddie George",pos:"RB",team:"TEN",id:"299"},
+    {name:"Clinton Portis",pos:"RB",team:"WAS/DEN",id:"2565"},
+    {name:"Priest Holmes",pos:"RB",team:"KC",id:"1469"},
+    {name:"Ezekiel Elliott",pos:"RB",team:"DAL",id:"3051392"},
+    {name:"Todd Gurley",pos:"RB",team:"LAR/ATL",id:"2977644"},
+    {name:"Le'Veon Bell",pos:"RB",team:"PIT",id:"16731"},
+    {name:"Shaun Alexander",pos:"RB",team:"SEA",id:"2139"},
+    {name:"Edgerrin James",pos:"RB",team:"IND",id:"1404"},
+    {name:"Jerome Bettis",pos:"RB",team:"PIT",id:"32"},
+    {name:"Nick Chubb",pos:"RB",team:"CLE",id:"3128720"},
+    {name:"Alvin Kamara",pos:"RB",team:"NO",id:"3054212"},
+    {name:"Jerry Rice",pos:"WR",team:"SF",id:"698"},
+    {name:"Randy Moss",pos:"WR",team:"MIN/NE",id:"1557"},
+    {name:"Terrell Owens",pos:"WR",team:"SF/PHI/DAL",id:"1588"},
+    {name:"Calvin Johnson",pos:"WR",team:"DET",id:"9706"},
+    {name:"Larry Fitzgerald",pos:"WR",team:"ARI",id:"2508"},
+    {name:"Julio Jones",pos:"WR",team:"ATL",id:"13982"},
+    {name:"Antonio Brown",pos:"WR",team:"PIT",id:"13934"},
+    {name:"Michael Irvin",pos:"WR",team:"DAL",id:"378"},
+    {name:"Andre Johnson",pos:"WR",team:"HOU",id:"2563"},
+    {name:"Steve Smith Sr.",pos:"WR",team:"CAR/BAL",id:"2140"},
+    {name:"Dez Bryant",pos:"WR",team:"DAL",id:"13215"},
+    {name:"Odell Beckham Jr.",pos:"WR",team:"NYG/CLE",id:"16733"},
+    {name:"DeAndre Hopkins",pos:"WR",team:"HOU/ARI",id:"16502"},
+    {name:"Tyreek Hill",pos:"WR",team:"KC/MIA",id:"3116406"},
+    {name:"Stefon Diggs",pos:"WR",team:"BUF/MIN",id:"2976499"},
+    {name:"DeSean Jackson",pos:"WR",team:"PHI/WAS",id:"11283"},
+    {name:"Brandon Marshall",pos:"WR",team:"CHI/NYJ/DEN",id:"9637"},
+    {name:"Wes Welker",pos:"WR",team:"NE/DEN",id:"5941"},
+    {name:"Chad Johnson",pos:"WR",team:"CIN",id:"2552"},
+    {name:"Hines Ward",pos:"WR",team:"PIT",id:"2158"},
+    {name:"Victor Cruz",pos:"WR",team:"NYG",id:"14065"},
+    {name:"Cooper Kupp",pos:"WR",team:"LAR",id:"3046779"},
+    {name:"Mike Evans",pos:"WR",team:"TB",id:"16737"},
+    {name:"Rob Gronkowski",pos:"TE",team:"NE/TB",id:"13229"},
+    {name:"Tony Gonzalez",pos:"TE",team:"KC/ATL",id:"310"},
+    {name:"Travis Kelce",pos:"TE",team:"KC",id:"15847"},
+    {name:"Jason Witten",pos:"TE",team:"DAL",id:"2565"},
+    {name:"Jimmy Graham",pos:"TE",team:"NO/SEA",id:"13232"},
+    {name:"Antonio Gates",pos:"TE",team:"SD",id:"5547"},
+    {name:"Shannon Sharpe",pos:"TE",team:"DEN/BAL",id:"766"},
+    {name:"Greg Olsen",pos:"TE",team:"CAR/CHI",id:"12616"},
+    {name:"George Kittle",pos:"TE",team:"SF",id:"3040151"},
+    {name:"Zach Ertz",pos:"TE",team:"PHI/ARI",id:"15835"},
+    {name:"Mark Andrews",pos:"TE",team:"BAL",id:"3116365"},
+    {name:"Darren Waller",pos:"TE",team:"LV/NYG",id:"3045144"}
+  ];
+
   function getDailyPlayer() {
     const today = new Date();
     const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
-    return EP_RETIRED[seed % EP_RETIRED.length];
+    return DAILY_RETIRED_POOL[seed % DAILY_RETIRED_POOL.length];
   }
 
   function getTodayKey() {
@@ -5456,6 +5577,12 @@ document.querySelectorAll('[data-goto]').forEach(el => {
 
   // All players from the D array for autocomplete
   const allNames = D.map(d => ({name: d.n, team: d.t, pos: d.s}));
+  // Ensure all daily pull players are searchable
+  DAILY_RETIRED_POOL.forEach(p => {
+    if (!allNames.some(a => a.name.toLowerCase() === p.name.toLowerCase())) {
+      allNames.push({name: p.name, team: p.team, pos: p.pos});
+    }
+  });
 
   const epImage = document.getElementById('epImage');
   const epPlaceholder = document.getElementById('epPlaceholder');
@@ -8761,11 +8888,24 @@ window.fmtHeight = fmtHeight;
     const user = getUser(); const db = getDb();
     if (!user || !db) return;
     const name = user.displayName || user.email.split('@')[0];
-    db.collection('leaderboard').doc(user.uid).set({
-      name: name,
-      daily: { date: todayKey(), won: won, streak: streak },
-      updatedAt: new Date().toISOString()
-    }, { merge: true }).catch(e => console.warn('[LB] daily save error:', e));
+    // Read existing bestStreak, then update
+    const docRef = db.collection('leaderboard').doc(user.uid);
+    docRef.get().then(doc => {
+      const existing = doc.exists && doc.data().daily ? (doc.data().daily.bestStreak || 0) : 0;
+      const newBest = Math.max(existing, streak);
+      docRef.set({
+        name: name,
+        daily: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }).catch(e => {
+      // Fallback: just save without checking best
+      docRef.set({
+        name: name,
+        daily: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(e2 => console.warn('[LB] daily save error:', e2));
+    });
   };
 
   window._lbUpdateUnlimited = function(played, correct, streak) {
@@ -8840,6 +8980,34 @@ window.fmtHeight = fmtHeight;
         lbDailyList.innerHTML = dailyPlayers.map((u, i) =>
           renderRow(i + 1, u.name, '🔥 ' + (u.daily.streak || 1) + ' day streak', u.id === uid)
         ).join('');
+      }
+
+      // --- STREAKS (Best Daily EP Streaks) ---
+      const streakPlayers = all.filter(u => u.daily && (u.daily.bestStreak > 0 || u.daily.streak > 0))
+        .map(u => ({
+          ...u,
+          _bestStreak: Math.max(u.daily.bestStreak || 0, u.daily.streak || 0),
+          _currentStreak: (u.daily.date === today && u.daily.won) ? (u.daily.streak || 0) : 0
+        }))
+        .sort((a, b) => {
+          if (b._bestStreak !== a._bestStreak) return b._bestStreak - a._bestStreak;
+          return b._currentStreak - a._currentStreak;
+        });
+      const lbStreaksList = document.getElementById('lbStreaksList');
+      const lbStreaksLoading = document.getElementById('lbStreaksLoading');
+      const lbStreaksEmpty = document.getElementById('lbStreaksEmpty');
+      lbStreaksLoading.style.display = 'none';
+      if (streakPlayers.length === 0) {
+        lbStreaksEmpty.style.display = 'block';
+        lbStreaksList.innerHTML = '';
+      } else {
+        lbStreaksEmpty.style.display = 'none';
+        lbStreaksList.innerHTML = streakPlayers.map((u, i) => {
+          const isActive = u._currentStreak > 0 && u._currentStreak === u._bestStreak;
+          const statHtml = '🔥 ' + u._bestStreak + ' best' +
+            (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
+          return renderRow(i + 1, u.name, statHtml, u.id === uid);
+        }).join('');
       }
 
       // --- ALL-TIME (Unlimited EP) ---
@@ -8923,7 +9091,7 @@ window.fmtHeight = fmtHeight;
   // === TAB SWITCHING ===
   document.querySelectorAll('.lb-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      const map = { daily: 'lbDaily', alltime: 'lbAlltime', fantasygame: 'lbFantasygame' };
+      const map = { daily: 'lbDaily', streaks: 'lbStreaks', alltime: 'lbAlltime', fantasygame: 'lbFantasygame' };
       document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.lb-panel').forEach(p => p.classList.remove('active'));
       tab.classList.add('active');

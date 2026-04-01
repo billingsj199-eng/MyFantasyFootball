@@ -42,7 +42,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .home-hero::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(245,158,11,.2),transparent)}
 .home-title{font-family:'Bebas Neue',sans-serif;font-size:3.4rem;letter-spacing:5px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;line-height:1.1}
 .home-subtitle{color:var(--text2);font-size:.92rem;text-align:center;max-width:460px;margin:8px auto 0;line-height:1.5}
+.home-nav-bar{display:flex;justify-content:center;gap:8px;margin-top:1.25rem;flex-wrap:wrap;padding:0 1rem}
+.home-nav-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border:1px solid var(--border);background:var(--surface);border-radius:10px;color:var(--text2);cursor:pointer;transition:all .15s;min-width:72px}
+.home-nav-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.home-nav-btn svg{width:22px;height:22px;flex-shrink:0}
+.home-nav-btn span{font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;white-space:nowrap}
 .home-body{width:100%;max-width:960px;margin:0 auto;padding:1.5rem 2rem 3rem;display:flex;flex-direction:column;gap:1.5rem}
+.home-two-col{display:flex;gap:1.5rem;align-items:flex-start}
+.home-col-left{flex:1;min-width:0;max-width:480px}
+.home-col-right{flex:1;min-width:0}
+.home-col-right .lb-card{max-width:none}
 .home-section-label{font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:3px;color:var(--text2);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:4px}
 .home-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .home-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 16px;cursor:pointer;transition:all .2s;text-align:center;position:relative;overflow:hidden}
@@ -59,7 +68,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .elite-pull-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:3px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .elite-pull-subtitle{font-size:.75rem;color:var(--text2);margin-top:2px;letter-spacing:.5px}
 .elite-pull-img-wrap{position:relative;width:100%;height:300px;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center}
-.elite-pull-img-wrap img{max-width:100%;max-height:100%;object-fit:contain;filter:brightness(1.05)}
+.elite-pull-img-wrap img{max-width:100%;max-height:100%;object-fit:contain;filter:brightness(1.05);width:auto;height:auto}
 .elite-pull-img-wrap .ep-blur{filter:blur(0) brightness(1.05);transition:filter .8s ease}
 .elite-pull-img-wrap .ep-blur.ep-reveal{filter:blur(0) brightness(1.05)}
 .elite-pull-img-wrap .ep-placeholder{color:var(--text2);font-size:.85rem}
@@ -612,6 +621,12 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .home-title{font-size:2.4rem;letter-spacing:2px}
   .home-subtitle{font-size:.82rem;padding:0 .5rem}
   .home-body{padding:1rem 1rem 3rem}
+  .home-two-col{flex-direction:column}
+  .home-col-left{max-width:none}
+  .home-col-left .elite-pull-section{max-width:none!important}
+  .elite-pull-img-wrap{height:220px}
+  .home-nav-bar{gap:6px;padding:0 .5rem}
+  .home-nav-btn{min-width:60px;padding:8px 10px}
   .home-cards{grid-template-columns:1fr 1fr;gap:10px}
   .home-card{padding:16px 12px}
   .home-card svg{width:24px;height:24px}
@@ -1466,41 +1481,34 @@ PREMIUM ACTIVE
 <div class="home-hero">
 <div class="home-title">JACKB933</div>
 <div class="home-subtitle">Fantasy football rankings, tools, and mini-games — all in one place.</div>
+<div class="home-nav-bar">
+<button class="home-nav-btn" data-goto="rankings">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+<span>Rankings</span>
+</button>
+<button class="home-nav-btn" data-goto="trade">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+<span>Trade Calc</span>
+</button>
+<button class="home-nav-btn" data-goto="mockdraft">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
+<span>Mock Draft</span>
+</button>
+<button class="home-nav-btn" data-goto="compare">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+<span>Compare</span>
+</button>
+<button class="home-nav-btn" data-goto="games">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
+<span>Games</span>
+</button>
+</div>
 </div>
 
 <div class="home-body">
-<div>
-<div class="home-section-label">Tools &amp; Features</div>
-<div class="home-cards">
-<div class="home-card" data-goto="rankings">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-<div class="home-card-title">RANKINGS</div>
-<div class="home-card-desc">2026 NFL &middot; 413 Players</div>
-</div>
-<div class="home-card" data-goto="trade">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-<div class="home-card-title">TRADE CALC</div>
-<div class="home-card-desc">Evaluate fantasy trades</div>
-</div>
-<div class="home-card" data-goto="games">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
-<div class="home-card-title">FANTASY GAME</div>
-<div class="home-card-desc">Draft your dream roster</div>
-</div>
-<div class="home-card" data-goto="games-elitepull">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-<div class="home-card-title">ELITE PULL</div>
-<div class="home-card-desc">Unlimited player guessing</div>
-</div>
-<div class="home-card" data-goto="mockdraft">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
-<div class="home-card-title">MOCK DRAFT</div>
-<div class="home-card-desc">Simulate a full draft</div>
-</div>
-</div>
-</div>
 
-<div>
+<div class="home-two-col">
+<div class="home-col-left">
 <div class="home-section-label">Daily Challenge</div>
 <!-- Elite Pull Daily Game -->
 <div class="elite-pull-section" style="max-width:480px">
@@ -1529,7 +1537,7 @@ PREMIUM ACTIVE
 </div>
 </div>
 
-<div>
+<div class="home-col-right">
 <div class="home-section-label">Leaderboard</div>
 <div class="lb-card" style="padding:12px 16px">
 
@@ -1563,6 +1571,7 @@ PREMIUM ACTIVE
 <div class="lb-loading" id="lbAlltimeLoading">Loading...</div>
 <div class="lb-empty" id="lbAlltimeEmpty" style="display:none">No data yet</div>
 
+</div>
 </div>
 </div>
 
@@ -8075,7 +8084,7 @@ window.fmtHeight = fmtHeight;
   const homeBtn = document.querySelector('.nav-btn[data-page="home"]');
   if (homeBtn) homeBtn.addEventListener('click', () => setTimeout(loadLeaderboards, 300));
   // Also refresh when home cards navigate back
-  document.querySelectorAll('.home-card[data-goto]').forEach(c => {
+  document.querySelectorAll('.home-card[data-goto], .home-nav-btn[data-goto]').forEach(c => {
     c.addEventListener('click', () => {
       const goto = c.dataset.goto;
       if (goto === 'home') setTimeout(loadLeaderboards, 300);

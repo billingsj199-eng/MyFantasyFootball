@@ -5644,14 +5644,13 @@ window.fmtHeight = fmtHeight;
         if (!email) { showAdminMsg(premMsg, 'Enter an email', 'error'); return; }
         const expires = Date.now() + (days * 24 * 60 * 60 * 1000);
         const labels = { 7: '1 Week', 30: '1 Month', 150: 'Season Pass', 365: 'Yearly Pass' };
-        findUserUid(db, email).then(uid => {
-          return db.collection('gifted_premium').doc(uid).set({
-            email, expires, days,
-            label: labels[days] || days + ' days',
-            grantedBy: (auth.currentUser ? auth.currentUser.email : 'admin'),
-            grantedAt: new Date().toISOString()
-          }, { merge: true });
-        }).then(() => {
+        const docId = email.replace(/[^a-z0-9]/g, '_');
+        db.collection('gifted_premium').doc(docId).set({
+          email, expires, days,
+          label: labels[days] || days + ' days',
+          grantedBy: (auth.currentUser ? auth.currentUser.email : 'admin'),
+          grantedAt: new Date().toISOString()
+        }, { merge: true }).then(() => {
           showAdminMsg(premMsg, 'Granted ' + (labels[days] || days + ' days') + ' premium to ' + email, 'success');
         }).catch(e => showAdminMsg(premMsg, 'Error: ' + e.message, 'error'));
       });
@@ -5662,8 +5661,9 @@ window.fmtHeight = fmtHeight;
   function loadGiftedPremium() {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
-    if (!db || !user) return;
-    db.collection('gifted_premium').doc(user.uid).get().then(doc => {
+    if (!db || !user || !user.email) return;
+    const docId = user.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    db.collection('gifted_premium').doc(docId).get().then(doc => {
       if (doc.exists) {
         const data = doc.data();
         if (data.expires && data.expires > Date.now()) {
@@ -7712,6 +7712,7 @@ window.fmtHeight = fmtHeight;
   // Wait for Firebase to be ready
   function getDb() { return window.firebase && firebase.firestore ? firebase.firestore() : null; }
   function getUser() { return window._authCurrentUser || null; }
+  function getLbBadge() { var b=localStorage.getItem('jb_active_badge')||'default'; var icons={'default':null,'creator':'🛠️','founder':'⭐','first_game':'🏈','century':'💯','1k_club':'🔥','goat':'🐐','weekly_warrior':'⚡','streak_7':'🔥','streak_30':'🌟','streak_100':'💎','sharpshooter':'🎯','elite_mind':'🏆','big_brain':'🧠','premium':'👑','mock_master':'📋'}; return {activeBadge:b, activeBadgeIcon:icons[b]||null}; }
 
   function todayKey() {
     const d = new Date();
@@ -7729,14 +7730,14 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().daily ? (doc.data().daily.bestStreak || 0) : 0;
       const newBest = Math.max(existing, streak);
       docRef.set({
-        name: name, email: (user.email||''),
+        name: name, email: (user.email||''), ...getLbBadge(),
         daily: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
         updatedAt: new Date().toISOString()
       }, { merge: true });
     }).catch(e => {
       // Fallback: just save without checking best
       docRef.set({
-        name: name, email: (user.email||''),
+        name: name, email: (user.email||''), ...getLbBadge(),
         daily: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(e2 => console.warn('[LB] daily save error:', e2));
@@ -7751,7 +7752,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().unlimited ? (doc.data().unlimited.bestStreak || 0) : 0;
       const bestStreak = Math.max(existing, streak);
       db.collection('leaderboard').doc(user.uid).set({
-        name: name, email: (user.email||''),
+        name: name, email: (user.email||''), ...getLbBadge(),
         unlimited: { played: played, correct: correct, streak: streak, bestStreak: bestStreak },
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(e => console.warn('[LB] unlimited save error:', e));
@@ -7767,7 +7768,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().fantasygame ? doc.data().fantasygame.highScore : 0;
       if (score > existing) {
         db.collection('leaderboard').doc(user.uid).set({
-          name: name, email: (user.email||''),
+          name: name, email: (user.email||''), ...getLbBadge(),
           fantasygame: { highScore: score, date: todayKey() },
           updatedAt: new Date().toISOString()
         }, { merge: true }).catch(e => console.warn('[LB] fg save error:', e));
@@ -7783,7 +7784,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().fantasygameWeek ? doc.data().fantasygameWeek.highScore : 0;
       if (score > existing) {
         db.collection('leaderboard').doc(user.uid).set({
-          name: name, email: (user.email||''),
+          name: name, email: (user.email||''), ...getLbBadge(),
           fantasygameWeek: { highScore: score, date: todayKey() },
           updatedAt: new Date().toISOString()
         }, { merge: true }).catch(e => console.warn('[LB] fg week save error:', e));

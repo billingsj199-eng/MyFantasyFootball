@@ -590,10 +590,15 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
     padding:4px 0 env(safe-area-inset-bottom,0);
     justify-content:space-around;gap:0;
     position:fixed;bottom:0;left:0;right:0;z-index:200;
-    background:var(--surface)
+    background:var(--surface);
+    overflow-x:auto;overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none
   }
+  .sidebar::-webkit-scrollbar{display:none}
+  .nav-spacer{display:none}
   .sidebar-logo{display:none}
-  .nav-btn{width:auto;height:auto;min-width:54px;min-height:44px;padding:4px 8px;border-radius:6px}
+  .nav-btn{width:auto;height:auto;min-width:48px;min-height:44px;padding:4px 6px;border-radius:6px;flex-shrink:0}
   .nav-btn svg{width:22px;height:22px}
   .nav-btn .nav-label{font-size:.52rem;margin-top:1px}
   .nav-btn.active::before{display:none}
@@ -1165,7 +1170,7 @@ Continue with Google
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
 <span class="nav-label">Games</span>
 </button>
-<div style="flex:1"></div>
+<div class="nav-spacer" style="flex:1"></div>
 <button class="nav-btn" data-page="account" id="navAccountBtn" title="Account" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
 <span class="nav-label">Account</span>
@@ -4340,19 +4345,48 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     epuImage.classList.add('ep-reveal');
     epuImage.style.filter = 'blur(0) brightness(1.05)';
     totalPlayedU++;
-    if (won) { totalCorrectU++; streakU++; } else { streakU = 0; }
+    if (won) { totalCorrectU++; streakU++; } else {
+      const finalStreak = streakU;
+      streakU = 0;
+      // Show game over screen
+      localStorage.setItem('epu_played', totalPlayedU);
+      localStorage.setItem('epu_correct', totalCorrectU);
+      localStorage.setItem('epu_streak', streakU);
+      if (typeof window._lbUpdateUnlimited === 'function') window._lbUpdateUnlimited(totalPlayedU, totalCorrectU, streakU);
+
+      epuResult.style.display = 'block';
+      epuResult.innerHTML = `
+        <div class="ep-result-text lose">GAME OVER</div>
+        <div class="ep-result-sub" style="margin-bottom:8px">It was <strong style="color:var(--accent)">${currentPlayerU.name}</strong> · ${currentPlayerU.team} · ${currentPlayerU.pos}</div>
+        <div style="display:flex;gap:12px;justify-content:center;margin:12px 0">
+          <div style="text-align:center;padding:8px 16px;border-radius:6px;background:var(--surface2);border:1px solid var(--border)">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:1px">${finalStreak}</div>
+            <div style="font-size:.6rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Streak</div>
+          </div>
+          <div style="text-align:center;padding:8px 16px;border-radius:6px;background:var(--surface2);border:1px solid var(--border)">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--green);letter-spacing:1px">${totalCorrectU}</div>
+            <div style="font-size:.6rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Correct</div>
+          </div>
+          <div style="text-align:center;padding:8px 16px;border-radius:6px;background:var(--surface2);border:1px solid var(--border)">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--text);letter-spacing:1px">${totalPlayedU}</div>
+            <div style="font-size:.6rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Played</div>
+          </div>
+        </div>
+      `;
+      epuNextBtn.style.display = 'inline-block';
+      epuNextBtn.textContent = 'PLAY AGAIN';
+      renderStatsU();
+      return;
+    }
     localStorage.setItem('epu_played', totalPlayedU);
     localStorage.setItem('epu_correct', totalCorrectU);
     localStorage.setItem('epu_streak', streakU);
     if (typeof window._lbUpdateUnlimited === 'function') window._lbUpdateUnlimited(totalPlayedU, totalCorrectU, streakU);
 
     epuResult.style.display = 'block';
-    if (won) {
-      epuResult.innerHTML = `<div class="ep-result-text win">CORRECT!</div><div class="ep-result-sub">${currentPlayerU.name} · ${currentPlayerU.team} · ${currentPlayerU.pos} — Guessed in ${guessesU.length}/${MAX_GUESSES_U}</div>`;
-    } else {
-      epuResult.innerHTML = `<div class="ep-result-text lose">NOT QUITE</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">${currentPlayerU.name}</strong> · ${currentPlayerU.team} · ${currentPlayerU.pos}</div>`;
-    }
+    epuResult.innerHTML = `<div class="ep-result-text win">CORRECT!</div><div class="ep-result-sub">${currentPlayerU.name} · ${currentPlayerU.team} · ${currentPlayerU.pos}</div>`;
     epuNextBtn.style.display = 'inline-block';
+    epuNextBtn.textContent = 'NEXT PLAYER';
     renderStatsU();
   }
 

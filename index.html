@@ -4237,17 +4237,27 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     if (!e.target.closest('.ep-guess-wrap')) epSuggestions.classList.remove('show');
   });
 
+  // Track players with missing images to remove from pools
+  const BAD_IMG_KEY = 'ep_bad_images';
+  function getBadImages() { try { return JSON.parse(sessionStorage.getItem(BAD_IMG_KEY) || '[]'); } catch(e) { return []; } }
+  function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { bad.push(id); sessionStorage.setItem(BAD_IMG_KEY, JSON.stringify(bad)); } }
+
   // Initialize
   function initElitePull() {
     loadState();
 
     // Load image — use customImg if available, otherwise ESPN headshot
-    // If headshot fails, cycle to next pool player with a valid image
+    // If headshot fails or returns a placeholder, remove from pool and try next
     let _epSkipAttempts = 0;
     function _epTryLoadImage() {
       const imgUrl = todayPlayer.customImg || getHeadshotUrl(todayPlayer.id);
       epImage.src = imgUrl;
       epImage.onload = () => {
+        if (epImage.naturalWidth < 50 || epImage.naturalHeight < 50) {
+          addBadImage(todayPlayer.id);
+          _epSkipToNext();
+          return;
+        }
         epPlaceholder.style.display = 'none';
         epImage.style.display = 'block';
         if (!gameOver) {
@@ -4256,15 +4266,20 @@ document.querySelectorAll('[data-goto]').forEach(el => {
         }
       };
       epImage.onerror = () => {
-        _epSkipAttempts++;
-        if (_epSkipAttempts < DAILY_RETIRED_POOL.length) {
-          // Move to next player in pool
-          const today = new Date();
-          const baseSeed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
-          todayPlayer = DAILY_RETIRED_POOL[(baseSeed + _epSkipAttempts) % DAILY_RETIRED_POOL.length];
-          _epTryLoadImage();
-        }
+        addBadImage(todayPlayer.id);
+        _epSkipToNext();
       };
+    }
+    function _epSkipToNext() {
+      _epSkipAttempts++;
+      if (_epSkipAttempts < DAILY_RETIRED_POOL.length) {
+        const today = new Date();
+        const baseSeed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
+        todayPlayer = DAILY_RETIRED_POOL[(baseSeed + _epSkipAttempts) % DAILY_RETIRED_POOL.length];
+        _epTryLoadImage();
+      } else {
+        epPlaceholder.textContent = 'No player image available';
+      }
     }
     _epTryLoadImage();
 
@@ -4321,11 +4336,14 @@ document.querySelectorAll('[data-goto]').forEach(el => {
   let usedIndices = [];
 
   function pickRandomPlayer() {
-    if (usedIndices.length >= EP_PLAYERS_U.length) usedIndices = [];
+    const bad = getBadImages();
+    const validPool = EP_PLAYERS_U.filter(p => !bad.includes(p.id));
+    const pool = validPool.length > 0 ? validPool : EP_PLAYERS_U;
+    if (usedIndices.length >= pool.length) usedIndices = [];
     let idx;
-    do { idx = Math.floor(Math.random() * EP_PLAYERS_U.length); } while (usedIndices.includes(idx));
+    do { idx = Math.floor(Math.random() * pool.length); } while (usedIndices.includes(idx));
     usedIndices.push(idx);
-    return EP_PLAYERS_U[idx];
+    return pool[idx];
   }
 
   function renderStatsU() {
@@ -4469,18 +4487,37 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     epuPlaceholder.textContent = 'Loading player...';
 
     const imgUrl = getHeadshotUrlU(currentPlayerU.id);
-    epuImage.src = imgUrl;
-    epuImage.onload = () => {
-      epuPlaceholder.style.display = 'none';
-      epuImage.style.display = 'block';
-      epuImage.style.filter = 'blur(0) brightness(1.05)';
-    };
-    epuImage.onerror = () => {
-      // Image failed — pick a different player
-      currentPlayerU = pickRandomPlayer();
-      const newUrl = getHeadshotUrlU(currentPlayerU.id);
-      epuImage.src = newUrl;
-    };
+    let _epuRetries = 0;
+    function _epuTryLoad(url) {
+      epuImage.src = url;
+      epuImage.onload = () => {
+        if (epuImage.naturalWidth < 50 || epuImage.naturalHeight < 50) {
+          addBadImage(currentPlayerU.id);
+          _epuRetries++;
+          if (_epuRetries < 10) {
+            currentPlayerU = pickRandomPlayer();
+            _epuTryLoad(getHeadshotUrlU(currentPlayerU.id));
+          } else {
+            epuPlaceholder.textContent = 'No image available';
+          }
+          return;
+        }
+        epuPlaceholder.style.display = 'none';
+        epuImage.style.display = 'block';
+        epuImage.style.filter = 'blur(0) brightness(1.05)';
+      };
+      epuImage.onerror = () => {
+        addBadImage(currentPlayerU.id);
+        _epuRetries++;
+        if (_epuRetries < 10) {
+          currentPlayerU = pickRandomPlayer();
+          _epuTryLoad(getHeadshotUrlU(currentPlayerU.id));
+        } else {
+          epuPlaceholder.textContent = 'No image available';
+        }
+      };
+    }
+    _epuTryLoad(imgUrl);
     renderStatsU();
   }
 

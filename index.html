@@ -3708,7 +3708,7 @@ function renderCompareGrid() {
               <div class="card-meta">
                 <span class="pos-badge ${p.s}">${p.s}</span>
                 <span class="card-team">${p.t}</span>
-                <span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:#f59e0b;font-weight:600">LEGEND</span>
+                <span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:#f59e0b;font-weight:600">RETIRED</span>
                 ${p.hof ? '<span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#0a0e17;font-weight:700">HOF</span>' : ''}
               </div>
             </div>
@@ -5204,7 +5204,8 @@ const sSE=document.getElementById('lgSearch'),sDE=document.getElementById('lgDro
 // Build all searchable players: legends + current D array + historical (HP)
 function allSearchable(){
   const legends=LDB.map(p=>({...p,_key:'L:'+p.n,_src:p}));
-  const current=D.filter(d=>d.n&&d.s).map(d=>({n:d.n,s:d.s,t:d.t,yrs:d.career&&d.career.length?d.career[0].yr+'\u2013'+d.career[d.career.length-1].yr:'2026',_retired:false,_key:'C:'+d.n,_src:d}));
+  const legendNames=new Set(legends.map(l=>l.n));
+  const current=D.filter(d=>d.n&&d.s&&!legendNames.has(d.n)).map(d=>({n:d.n,s:d.s,t:d.t,yrs:d.career&&d.career.length?d.career[0].yr+'\u2013'+d.career[d.career.length-1].yr:'2026',_retired:!!d._retired,_key:'C:'+d.n,_src:d}));
   // Add HP players not already in LDB or D
   const existingKeys=new Set([...legends.map(l=>l.n),...current.map(c=>c.n)]);
   const hpPlayers=HP.filter(p=>!existingKeys.has(p.n)&&p.s&&p.s!=='K'&&p.s!=='DST').map(p=>{
@@ -5232,7 +5233,7 @@ function sRD(){
   const already=new Set([...searchAdded.map(p=>p._key),...[...compareSet].map(i=>'C:'+D[i].n)]);
   sDE.innerHTML=list.map(p=>{
     const used=already.has(p._key);
-    const tag=p._retired?'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(245,158,11,.15);color:#f59e0b;margin-left:4px">LEGEND</span>':'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(34,197,94,.15);color:#22c55e;margin-left:4px">2026</span>';
+    const tag=p._retired?'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(245,158,11,.15);color:#f59e0b;margin-left:4px">RETIRED</span>':'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(34,197,94,.15);color:#22c55e;margin-left:4px">ACTIVE</span>';
     return '<div class="lg-drop-item'+(used?' used':'')+'" data-key="'+p._key+'"><span class="lg-badge" style="background:'+_PB[p.s]+';color:'+_PC[p.s]+'">'+p.s+'</span><span style="font-weight:600">'+p.n+'</span>'+tag+'<span style="color:var(--text2);font-size:.66rem;margin-left:auto">'+p.yrs+'</span></div>';
   }).join('');
   sDE.querySelectorAll('.lg-drop-item:not(.used)').forEach(el=>{

@@ -2157,7 +2157,20 @@ function validateImportData(obj) {
     "Aaron Rodgers":"8439","Najee Harris":"4372019","Joe Mixon":"3116385",
     "Kirk Cousins":"14880","Anthony Richardson":"4432616","Kareem Hunt":"3122840",
     "Darren Waller":"3051389","DeAndre Hopkins":"2543498","Zach Ertz":"2517018",
-    "JuJu Smith-Schuster":"3121422"
+    "JuJu Smith-Schuster":"3121422",
+    "Keenan Allen":"15818","DK Metcalf":"4047650","Cooper Kupp":"2977187",
+    "Jaylen Waddle":"4372016","Mike Evans":"2976316","Davante Adams":"2543495",
+    "George Pickens":"4432577","DJ Moore":"3116406","Darnell Mooney":"4360438",
+    "Romeo Doubs":"4569618","Michael Pittman Jr.":"4241389","Jakobi Meyers":"3929924",
+    "Rashid Shaheed":"4567298","Adonai Mitchell":"4601460","Isaiah Likely":"4567048",
+    "Tyler Warren":"4565898","Evan Engram":"3051876","Jonnu Smith":"3040151",
+    "Geno Smith":"15168","Daniel Jones":"4040715","Sam Darnold":"3912547",
+    "Kyler Murray":"3917315","Tua Tagovailoa":"4241479","Baker Mayfield":"3052587",
+    "Mac Jones":"4361741","Malik Willis":"4567018","Jacoby Brissett":"2574511",
+    "Kenneth Walker III":"4567048","Travis Etienne Jr.":"4239996","Jordan Mason":"4374302",
+    "Isiah Pacheco":"4362628","Rico Dowdle":"4038815","Rachaad White":"4426354",
+    "Kenneth Gainwell":"4360310","J.K. Dobbins":"4242335","Tyler Allgeier":"4371985",
+    "Javonte Williams":"4361579","David Montgomery":"3916148","Cam Skattebo":"4685038"
   };
   Object.assign(nameToId, FALLBACK_IDS);
 
@@ -5427,6 +5440,16 @@ window.fmtHeight = fmtHeight;
   function setActiveBadge(id) {
     localStorage.setItem(BADGE_STORAGE_KEY, id);
     renderAllAvatars();
+    // Save to Firestore so it shows on leaderboards
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (db && user) {
+      const badge = getBadgeById(id);
+      db.collection('leaderboard').doc(user.uid).set({
+        activeBadge: id,
+        activeBadgeIcon: badge ? badge.icon : null
+      }, { merge: true }).catch(e => console.warn('[Badge] save error:', e));
+    }
   }
 
   function getBadgeById(id) {
@@ -7769,14 +7792,16 @@ window.fmtHeight = fmtHeight;
   };
 
   // === LOAD & RENDER LEADERBOARDS ===
-  function renderRow(rank, name, statHtml, isMe) {
+  function renderRow(rank, name, statHtml, isMe, badgeIcon) {
     const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
     const rankDisplay = medals[rank] || rank;
     const rankClass = rank <= 3 ? ' lb-rank-' + rank : '';
     const initial = (name || '?')[0].toUpperCase();
+    const avatarContent = badgeIcon && badgeIcon !== 'default' ? `<span style="font-size:.85rem">${badgeIcon}</span>` : initial;
+    const avatarStyle = badgeIcon && badgeIcon !== 'default' ? ' style="background:var(--surface);border-color:var(--accent)"' : '';
     return `<div class="lb-row${isMe ? ' lb-me' : ''}">
       <div class="lb-rank${rankClass}">${rankDisplay}</div>
-      <div class="lb-avatar">${initial}</div>
+      <div class="lb-avatar"${avatarStyle}>${avatarContent}</div>
       <div class="lb-name">${name}</div>
       <div class="lb-stat">${statHtml}</div>
     </div>`;
@@ -7785,13 +7810,13 @@ window.fmtHeight = fmtHeight;
   // Render top 3 + user's own rank if not in top 3
   function renderTop3(sortedList, uid, statFn) {
     const top3 = sortedList.slice(0, 3);
-    let html = top3.map((u, i) => renderRow(i + 1, u.name, statFn(u), u.id === uid)).join('');
+    let html = top3.map((u, i) => renderRow(i + 1, u.name, statFn(u), u.id === uid, u.activeBadgeIcon)).join('');
     // Find user's position if not in top 3
     if (uid) {
       const userIdx = sortedList.findIndex(u => u.id === uid);
       if (userIdx >= 3) {
         html += '<div style="text-align:center;color:var(--text2);font-size:.65rem;letter-spacing:1px;padding:4px 0;margin:2px 0">• • •</div>';
-        html += renderRow(userIdx + 1, sortedList[userIdx].name, statFn(sortedList[userIdx]), true);
+        html += renderRow(userIdx + 1, sortedList[userIdx].name, statFn(sortedList[userIdx]), true, sortedList[userIdx].activeBadgeIcon);
       }
     }
     return html;
@@ -7960,7 +7985,7 @@ window.fmtHeight = fmtHeight;
         return;
       }
       const rows = fgPlayers.slice(0, 10).map((u, i) =>
-        renderRow(i + 1, u.name, u.fantasygame.highScore.toFixed(1) + ' PTS', u.id === uid)
+        renderRow(i + 1, u.name, u.fantasygame.highScore.toFixed(1) + ' PTS', u.id === uid, u.activeBadgeIcon)
       ).join('');
       wrap.innerHTML = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);text-align:center;margin-bottom:8px">LEADERBOARD</div>' +
         '<div class="lb-list" style="max-height:280px;overflow-y:auto">' + rows + '</div>';

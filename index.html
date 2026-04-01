@@ -4043,8 +4043,8 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     const cache = JSON.parse(sessionStorage.getItem('espnIdCache4') || '{}');
     const poolPlayer = EP_PLAYERS.find(p => p.id === id);
     if (poolPlayer) {
-      if (window.FALLBACK_IDS[poolPlayer.name]) {
-        id = FALLBACK_IDS[poolPlayer.name];
+      if (window.FALLBACK_IDS && window.FALLBACK_IDS[poolPlayer.name]) {
+        id = window.FALLBACK_IDS[poolPlayer.name];
       } else if (cache[poolPlayer.name]) {
         id = cache[poolPlayer.name];
       }
@@ -4329,9 +4329,8 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     const cache = JSON.parse(sessionStorage.getItem('espnIdCache4') || '{}');
     const poolPlayer = EP_PLAYERS_U.find(p => p.id === id);
     if (poolPlayer) {
-      // Check FALLBACK_IDS first (most reliable)
-      if (window.FALLBACK_IDS[poolPlayer.name]) {
-        id = FALLBACK_IDS[poolPlayer.name];
+      if (window.FALLBACK_IDS && window.FALLBACK_IDS[poolPlayer.name]) {
+        id = window.FALLBACK_IDS[poolPlayer.name];
       } else if (cache[poolPlayer.name]) {
         id = cache[poolPlayer.name];
       }

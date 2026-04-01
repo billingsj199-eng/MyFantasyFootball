@@ -1197,10 +1197,6 @@ SIGN IN
 <label style="font-size:.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px">Password</label>
 <input type="text" class="auth-input" value="••••••••" readonly style="margin-bottom:0;opacity:.5;cursor:default">
 </div>
-<div>
-<label style="font-size:.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px">Promo Code</label>
-<input type="text" class="auth-input" id="acctPromo" value="" placeholder="Enter promo code" style="margin-bottom:0">
-</div>
 </div>
 <div style="display:flex;gap:8px;margin-top:1.25rem">
 <button class="auth-btn auth-btn-primary" id="acctSaveBtn" style="flex:1">SAVE</button>
@@ -1243,18 +1239,6 @@ SIGN IN
 <button class="acct-btn acct-btn-primary" id="acctSaveUsername">SAVE</button>
 </div>
 <div class="acct-msg" id="acctUsernameMsg"></div>
-</div>
-</div>
-
-<div class="acct-section">
-<div class="acct-section-title">Promo Code</div>
-<div class="acct-field">
-<label class="acct-label">Enter Code</label>
-<div class="acct-input-row">
-<input type="text" class="acct-input" id="acctPagePromo" placeholder="Enter promo code">
-<button class="acct-btn acct-btn-primary" id="acctApplyPromo">APPLY</button>
-</div>
-<div class="acct-msg" id="acctPromoMsg"></div>
 </div>
 </div>
 
@@ -1361,7 +1345,7 @@ Ad-free experience
 </div>
 <style>.plan-option.selected{border-color:var(--accent)!important;background:rgba(245,158,11,.08)!important}.plan-option:not(.selected){border-color:rgba(255,255,255,.1)!important;background:rgba(255,255,255,.02)!important}.plan-option:not(.selected):hover{border-color:rgba(245,158,11,.3)!important}</style>
 <div class="premium-price" id="premiumPriceDisplay" style="margin-top:.75rem">$69.99 <span>/ year</span></div>
-<div id="premiumPromoApplied" style="display:none;font-size:.72rem;color:#22c55e;margin-top:.25rem"></div>
+
 <div style="margin-top:.75rem">
 <button class="premium-btn" id="premiumUpgradeBtn">UPGRADE NOW</button>
 </div>
@@ -1417,24 +1401,6 @@ PREMIUM ACTIVE
 
 </div>
 
-<!-- Premium Redemption Code -->
-<div style="margin-top:1.5rem;padding:1.25rem;border-radius:12px;background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.15)">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:.5rem">REDEEM ACCESS CODE</div>
-<div style="font-size:.75rem;color:var(--text2);margin-bottom:.75rem">Have a code? Enter it below to unlock premium features temporarily.</div>
-<div style="display:flex;gap:8px;align-items:center">
-<input type="text" class="acct-input" id="premiumRedeemInput" placeholder="Enter access code" style="flex:1;text-transform:uppercase;letter-spacing:1px;font-family:monospace">
-<button class="premium-btn" id="premiumRedeemBtn" style="padding:.55rem 1.25rem;font-size:.7rem;white-space:nowrap">REDEEM</button>
-</div>
-<div class="acct-msg" id="premiumRedeemMsg" style="margin-top:.5rem"></div>
-<div id="premiumActiveStatus" style="display:none;margin-top:.75rem;padding:.75rem;border-radius:8px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2)">
-<div style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#22c55e;font-weight:600">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
-PREMIUM ACTIVE
-</div>
-<div style="font-size:.68rem;color:var(--text2);margin-top:4px" id="premiumExpiry"></div>
-</div>
-</div>
-
 </div>
 
 <!-- Admin Panel (admins only) -->
@@ -1476,7 +1442,6 @@ PREMIUM ACTIVE
 </div>
 <div style="display:flex;gap:8px;margin-top:.5rem">
 <button class="acct-btn acct-btn-primary" id="adminGiftPremBtn">GRANT PREMIUM</button>
-<button class="acct-btn acct-btn-outline" id="adminRevokePremBtn">REVOKE PREMIUM</button>
 </div>
 <div class="acct-msg" id="adminGiftPremMsg"></div>
 </div>
@@ -2731,7 +2696,7 @@ function render() {
       } else if (!_isSignedIn) {
         html += '<tr id="premiumWallRow"><td colspan="11" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else {
-        html += '<tr id="premiumWallRow"><td colspan="11" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();document.getElementById(\'premiumRedeemInput\').focus()},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="11" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       }
     }
 
@@ -5440,12 +5405,17 @@ window.fmtHeight = fmtHeight;
     const gifted = JSON.parse(localStorage.getItem(GIFTED_BADGES_KEY) || '[]');
     const unlocked = new Set(saved);
     unlocked.add('default');
-    // Add gifted badges
-    gifted.forEach(id => unlocked.add(id));
-    // Check automatic unlocks
-    BADGES.forEach(b => {
-      if (b.always || (b.check && b.check())) unlocked.add(b.id);
-    });
+    // Admins get every badge
+    if (typeof window.isAdmin === 'function' && window.isAdmin()) {
+      BADGES.forEach(b => unlocked.add(b.id));
+    } else {
+      // Add gifted badges
+      gifted.forEach(id => unlocked.add(id));
+      // Check automatic unlocks
+      BADGES.forEach(b => {
+        if (b.always || (b.check && b.check())) unlocked.add(b.id);
+      });
+    }
     localStorage.setItem(BADGE_UNLOCKED_KEY, JSON.stringify([...unlocked]));
     return unlocked;
   }
@@ -5639,7 +5609,6 @@ window.fmtHeight = fmtHeight;
 
     // Premium gift/revoke
     const giftPremBtn = document.getElementById('adminGiftPremBtn');
-    const revokePremBtn = document.getElementById('adminRevokePremBtn');
     const premMsg = document.getElementById('adminGiftPremMsg');
 
     if (giftPremBtn && !giftPremBtn._bound) {
@@ -5661,22 +5630,6 @@ window.fmtHeight = fmtHeight;
           }, { merge: true });
         }).then(() => {
           showAdminMsg(premMsg, 'Granted ' + (labels[days] || days + ' days') + ' premium to ' + email, 'success');
-        }).catch(e => showAdminMsg(premMsg, 'Error: ' + e.message, 'error'));
-      });
-
-      revokePremBtn.addEventListener('click', () => {
-        const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-        const email = document.getElementById('adminGiftPremEmail').value.trim().toLowerCase();
-        if (!db) { showAdminMsg(premMsg, 'Database not available', 'error'); return; }
-        if (!email) { showAdminMsg(premMsg, 'Enter an email', 'error'); return; }
-        findUserUid(db, email).then(uid => {
-          return db.collection('gifted_premium').doc(uid).set({
-            email, expires: 0, revoked: true,
-            revokedBy: (auth.currentUser ? auth.currentUser.email : 'admin'),
-            revokedAt: new Date().toISOString()
-          }, { merge: true });
-        }).then(() => {
-          showAdminMsg(premMsg, 'Revoked premium from ' + email, 'success');
         }).catch(e => showAdminMsg(premMsg, 'Error: ' + e.message, 'error'));
       });
     }
@@ -6200,7 +6153,6 @@ window.fmtHeight = fmtHeight;
   // Account modal elements
   const acctOverlay = document.getElementById('acctOverlay');
   const acctEmailField = document.getElementById('acctEmail');
-  const acctPromo = document.getElementById('acctPromo');
   const acctSaveBtn = document.getElementById('acctSaveBtn');
   const acctSignoutBtn = document.getElementById('acctSignoutBtn');
   const acctClose = document.getElementById('acctClose');
@@ -6275,7 +6227,6 @@ window.fmtHeight = fmtHeight;
   acctClose.addEventListener('click', () => { acctOverlay.style.display = 'none'; });
   acctOverlay.addEventListener('click', (e) => { if (e.target === acctOverlay) acctOverlay.style.display = 'none'; });
   acctSaveBtn.addEventListener('click', () => {
-    localStorage.setItem('jb_promo', acctPromo.value.trim());
     acctOverlay.style.display = 'none';
     if (typeof toast === 'function') toast('Settings saved');
   });
@@ -6675,9 +6626,6 @@ window.fmtHeight = fmtHeight;
   const acctPageUsername = document.getElementById('acctPageUsername');
   const acctSaveUsernameBtn = document.getElementById('acctSaveUsername');
   const acctUsernameMsg = document.getElementById('acctUsernameMsg');
-  const acctPagePromo = document.getElementById('acctPagePromo');
-  const acctApplyPromoBtn = document.getElementById('acctApplyPromo');
-  const acctPromoMsg = document.getElementById('acctPromoMsg');
   const acctCurrentPw = document.getElementById('acctCurrentPw');
   const acctNewPw = document.getElementById('acctNewPw');
   const acctConfirmPw = document.getElementById('acctConfirmPw');
@@ -6719,8 +6667,6 @@ window.fmtHeight = fmtHeight;
     acctPageEmailDisplay.textContent = email;
     acctPageEmailInput.value = email;
     acctPageUsername.value = displayName;
-    const savedPromo = localStorage.getItem('jb_promo');
-    acctPagePromo.value = savedPromo !== null ? savedPromo : '';
     // Check if user signed in with Google (no password change)
     const isGoogleUser = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
     const pwSection = acctChangePwBtn.closest('.acct-section');
@@ -6770,49 +6716,18 @@ window.fmtHeight = fmtHeight;
   });
 
   // Promo codes that give discounts on the first month
-  const PROMO_DISCOUNTS = {
-    'jack': { percent: 20, label: '20% off your first month' },
-    'JACK': { percent: 20, label: '20% off your first month' },
-  };
-
   function updatePriceDisplay() {
     const priceEl = document.getElementById('premiumPriceDisplay');
-    const promoAppliedEl = document.getElementById('premiumPromoApplied');
-    if (!priceEl || !promoAppliedEl) return;
-    const savedPromo = (localStorage.getItem('jb_promo') || '').trim();
-    const discount = PROMO_DISCOUNTS[savedPromo];
+    if (!priceEl) return;
     const yearlySelected = document.querySelector('#planYearly.selected');
     const seasonSelected = document.querySelector('#planSeason.selected');
     const basePrice = yearlySelected ? 69.99 : seasonSelected ? 29.99 : 9.99;
     const planLabel = yearlySelected ? 'year' : seasonSelected ? 'season' : 'month';
-    if (discount) {
-      const discounted = (basePrice * (1 - discount.percent / 100)).toFixed(2);
-      priceEl.innerHTML = '<span style="text-decoration:line-through;color:var(--text2);font-size:1.3rem">$' + basePrice.toFixed(2) + '</span> $' + discounted + ' <span>/ ' + planLabel + '</span>';
-      promoAppliedEl.style.display = 'block';
-      promoAppliedEl.innerHTML = '&#10003; Promo "<strong>' + savedPromo + '</strong>" applied — ' + discount.label + '.';
-    } else {
-      priceEl.innerHTML = '$' + basePrice.toFixed(2) + ' <span>/ ' + planLabel + '</span>';
-      promoAppliedEl.style.display = 'none';
-    }
+    priceEl.innerHTML = '$' + basePrice.toFixed(2) + ' <span>/ ' + planLabel + '</span>';
   }
   window._updatePriceDisplay = updatePriceDisplay;
 
-  // Apply promo code
-  acctApplyPromoBtn.addEventListener('click', () => {
-    const code = acctPagePromo.value.trim();
-    if (!code) { showMsg(acctPromoMsg, 'Please enter a promo code.', 'error'); return; }
-    localStorage.setItem('jb_promo', code);
-    if (acctPromo) acctPromo.value = code;
-    const discount = PROMO_DISCOUNTS[code];
-    if (discount) {
-      showMsg(acctPromoMsg, 'Promo applied! ' + discount.label + '.', 'success');
-    } else {
-      showMsg(acctPromoMsg, 'Promo code saved.', 'success');
-    }
-    updatePriceDisplay();
-  });
-
-  // Show discount on load if promo already saved
+  // Show price on load
   updatePriceDisplay();
 
   // Change password
@@ -6850,26 +6765,10 @@ window.fmtHeight = fmtHeight;
     }
   });
 
-  // === PREMIUM ACCESS CODE SYSTEM ===
-  const premiumRedeemInput = document.getElementById('premiumRedeemInput');
-  const premiumRedeemBtn = document.getElementById('premiumRedeemBtn');
-  const premiumRedeemMsg = document.getElementById('premiumRedeemMsg');
+  // === PREMIUM STATUS SYSTEM ===
   const premiumActiveStatus = document.getElementById('premiumActiveStatus');
   const premiumExpiry = document.getElementById('premiumExpiry');
   const premiumBadge = document.getElementById('premiumBadge');
-
-  // Valid access codes and their duration in days
-  const VALID_CODES = {
-    'JACKB933PRO': 30,
-    'FANTASY2026': 14,
-    'TRYME': 7,
-    'EARLYBIRD': 30,
-    'DRAFT2026': 14,
-    'VIP2026': 90,
-    'BETAACCESS': 30,
-    'FREETRIAL': 7,
-    'FOUNDER365': 365
-  };
 
   function checkPremiumStatus() {
     const freeView = document.getElementById('premiumFreeView');
@@ -6882,7 +6781,6 @@ window.fmtHeight = fmtHeight;
     const hasCode = data && data.expires > Date.now();
 
     if (admin) {
-      // Admin — permanent access
       freeView.style.display = 'none';
       proView.style.display = 'block';
       proDesc.textContent = 'Admin account with permanent access to all premium features.';
@@ -6891,13 +6789,12 @@ window.fmtHeight = fmtHeight;
         premiumBadge.className = 'premium-badge pro';
         premiumBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg> PRO PLAN';
       }
-      premiumActiveStatus.style.display = 'none';
+      if (premiumActiveStatus) premiumActiveStatus.style.display = 'none';
       if (typeof updateRankSrcLock === 'function') updateRankSrcLock();
       return true;
     }
 
     if (hasCode) {
-      // Code-based premium
       const days = Math.ceil((data.expires - Date.now()) / (1000 * 60 * 60 * 24));
       const expDate = new Date(data.expires).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
       const actDate = new Date(data.activated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -6906,17 +6803,16 @@ window.fmtHeight = fmtHeight;
       proView.style.display = 'block';
       proDesc.textContent = 'You have full access to all premium features.';
 
-      let billingHtml = '<strong style="color:var(--text1)">Plan:</strong> Pro (' + (data.plan || 'Access Code') + ')';
+      let billingHtml = '<strong style="color:var(--text1)">Plan:</strong> Pro (' + (data.plan || 'Premium Access') + ')';
       billingHtml += '<br><strong style="color:var(--text1)">Activated:</strong> ' + actDate;
       billingHtml += '<br><strong style="color:var(--text1)">Expires:</strong> ' + expDate + ' <span style="color:#22c55e">(' + days + ' day' + (days !== 1 ? 's' : '') + ' left)</span>';
-      if (data.price) billingHtml += '<br><strong style="color:var(--text1)">Price:</strong> ' + data.price;
       billingDetails.innerHTML = billingHtml;
 
       if (premiumBadge) {
         premiumBadge.className = 'premium-badge pro';
         premiumBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg> PRO PLAN';
       }
-      premiumActiveStatus.style.display = 'none';
+      if (premiumActiveStatus) premiumActiveStatus.style.display = 'none';
       if (typeof updateRankSrcLock === 'function') updateRankSrcLock();
       return true;
     }
@@ -6924,7 +6820,7 @@ window.fmtHeight = fmtHeight;
     // Free user
     freeView.style.display = 'block';
     proView.style.display = 'none';
-    premiumActiveStatus.style.display = 'none';
+    if (premiumActiveStatus) premiumActiveStatus.style.display = 'none';
     if (premiumBadge) {
       premiumBadge.className = 'premium-badge free';
       premiumBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/></svg> FREE PLAN';
@@ -6932,39 +6828,6 @@ window.fmtHeight = fmtHeight;
     if (typeof updateRankSrcLock === 'function') updateRankSrcLock();
     return false;
   }
-
-  premiumRedeemBtn.addEventListener('click', () => {
-    const code = premiumRedeemInput.value.trim().toUpperCase();
-    if (!code) {
-      showMsg(premiumRedeemMsg, 'Please enter an access code.', 'error');
-      return;
-    }
-    // Check if code was already used
-    const usedCodes = JSON.parse(localStorage.getItem('jb_used_codes') || '[]');
-    if (usedCodes.includes(code)) {
-      showMsg(premiumRedeemMsg, 'This code has already been redeemed.', 'error');
-      return;
-    }
-    if (VALID_CODES[code]) {
-      const days = VALID_CODES[code];
-      const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
-      const baseTime = (existing && existing.expires > Date.now()) ? existing.expires : Date.now();
-      const expires = baseTime + (days * 24 * 60 * 60 * 1000);
-      localStorage.setItem('jb_premium', JSON.stringify({ code: code, activated: Date.now(), expires: expires }));
-      usedCodes.push(code);
-      localStorage.setItem('jb_used_codes', JSON.stringify(usedCodes));
-      premiumRedeemInput.value = '';
-      showMsg(premiumRedeemMsg, 'Premium activated for ' + days + ' days!', 'success');
-      checkPremiumStatus();
-    } else {
-      showMsg(premiumRedeemMsg, 'Invalid access code. Please try again.', 'error');
-    }
-  });
-
-  // Allow Enter key to submit
-  premiumRedeemInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') premiumRedeemBtn.click();
-  });
 
   // Check status on load
   checkPremiumStatus();

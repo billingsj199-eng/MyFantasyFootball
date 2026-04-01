@@ -5350,7 +5350,7 @@ window.fmtHeight = fmtHeight;
   // Load gifted badges from Firestore into localStorage
   function loadGiftedBadges() {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
     db.collection('gifted_badges').doc(user.uid).get().then(doc => {
       if (doc.exists) {
@@ -5366,7 +5366,7 @@ window.fmtHeight = fmtHeight;
   // Check and claim Founder badge (first 100 users)
   function checkFounderStatus() {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
     // Already a founder? Skip
     if (localStorage.getItem('jb_is_founder') === 'true') return;
@@ -5441,15 +5441,21 @@ window.fmtHeight = fmtHeight;
     localStorage.setItem(BADGE_STORAGE_KEY, id);
     renderAllAvatars();
     // Save to Firestore so it shows on leaderboards
-    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
-    if (db && user) {
-      const badge = getBadgeById(id);
-      db.collection('leaderboard').doc(user.uid).set({
-        activeBadge: id,
-        activeBadgeIcon: badge ? badge.icon : null
-      }, { merge: true }).catch(e => console.warn('[Badge] save error:', e));
-    }
+    try {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+      if (db && user) {
+        const badge = getBadgeById(id);
+        db.collection('leaderboard').doc(user.uid).set({
+          activeBadge: id,
+          activeBadgeIcon: badge ? badge.icon : null
+        }, { merge: true }).then(function() {
+          console.log('[Badge] Saved badge to leaderboard:', id);
+        }).catch(function(e) { console.warn('[Badge] save error:', e); });
+      } else {
+        console.warn('[Badge] Cannot save - db:', !!db, 'user:', !!user);
+      }
+    } catch(e) { console.warn('[Badge] save error:', e); }
   }
 
   function getBadgeById(id) {
@@ -5472,7 +5478,7 @@ window.fmtHeight = fmtHeight;
         el.style.background = 'var(--surface2)';
         el.style.border = '2px solid var(--accent)';
       } else {
-        const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+        const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
         const initial = user ? (user.displayName || user.email || '?')[0].toUpperCase() : '?';
         el.textContent = initial;
         el.style.background = '';
@@ -5649,7 +5655,7 @@ window.fmtHeight = fmtHeight;
           const labels = { 7: '1 Week', 30: '1 Month', 150: 'Season Pass', 365: 'Yearly Pass' };
           const expDate = new Date(expires).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
           const docId = email.replace(/[^a-z0-9]/g, '_');
-          const adminEmail = (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.email : 'admin';
+          const adminEmail = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : 'admin';
           db.collection('gifted_premium').doc(docId).set({
             email: email,
             expires: expires,
@@ -5679,7 +5685,7 @@ window.fmtHeight = fmtHeight;
   // Load gifted premium on auth
   function loadGiftedPremium() {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user || !user.email) return;
     const docId = user.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
     db.collection('gifted_premium').doc(docId).get().then(doc => {

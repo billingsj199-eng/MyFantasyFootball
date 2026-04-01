@@ -223,6 +223,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .acct-msg.success{display:block;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
 .acct-msg.error{display:block;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
 .acct-signout-row{text-align:center;margin-top:1.5rem}
+/* Badge System */
+.badge-cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all .15s;position:relative}
+.badge-cell:hover:not(.badge-locked){border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.badge-cell.badge-locked{opacity:.4;cursor:default;filter:grayscale(1)}
+.badge-cell.badge-active{border-color:var(--accent);background:rgba(245,158,11,.08);box-shadow:0 0 12px rgba(245,158,11,.2)}
+.badge-cell .badge-icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:2rem}
+.badge-cell .badge-label{font-size:.6rem;color:var(--text2);text-align:center;line-height:1.2;font-weight:600;letter-spacing:.3px}
+.badge-cell.badge-active .badge-label{color:var(--accent)}
+.badge-cell .badge-lock{position:absolute;top:4px;right:4px;font-size:.6rem;opacity:.5}
+.badge-prog-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border)}
+.badge-prog-row.done{border-color:rgba(34,197,94,.2);background:rgba(34,197,94,.03)}
+.badge-prog-icon{font-size:1.3rem;flex-shrink:0}
+.badge-prog-info{flex:1;min-width:0}
+.badge-prog-name{font-size:.78rem;font-weight:600;color:var(--text)}
+.badge-prog-desc{font-size:.65rem;color:var(--text2);margin-top:1px}
+.badge-prog-bar{height:4px;border-radius:2px;background:var(--surface);margin-top:4px;overflow:hidden}
+.badge-prog-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .3s}
+.badge-prog-check{font-size:.9rem;flex-shrink:0}
+.avatar-badge{display:flex;align-items:center;justify-content:center}
 /* Premium Section */
 .premium-card{background:linear-gradient(135deg,rgba(245,158,11,.06),rgba(245,158,11,.02));border:1px solid rgba(245,158,11,.2);border-radius:12px;padding:1.5rem;text-align:center;margin-bottom:1rem}
 .premium-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:20px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;margin-bottom:.75rem}
@@ -1203,7 +1222,9 @@ SIGN IN
 
 <div class="acct-tabs">
 <button class="acct-tab active" data-acct-tab="settings">Settings</button>
+<button class="acct-tab" data-acct-tab="badges">Badges</button>
 <button class="acct-tab" data-acct-tab="premium">Premium</button>
+<button class="acct-tab" data-acct-tab="admin" id="acctAdminTab" style="display:none">Admin</button>
 </div>
 
 <!-- Settings Panel -->
@@ -1261,6 +1282,19 @@ SIGN IN
 <button class="acct-btn acct-btn-danger" id="acctPageSignout" style="padding:.65rem 2.5rem">
 <span style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> SIGN OUT</span>
 </button>
+</div>
+</div>
+
+<!-- Badges Panel -->
+<div class="acct-panel" id="acctPanelBadges">
+<div class="acct-section">
+<div class="acct-section-title">Profile Badges</div>
+<div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Unlock badges by hitting milestones. Select one to use as your profile picture!</div>
+<div id="badgeGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px"></div>
+</div>
+<div class="acct-section" id="badgeProgressSection">
+<div class="acct-section-title">Progress</div>
+<div id="badgeProgressList" style="display:flex;flex-direction:column;gap:8px"></div>
 </div>
 </div>
 
@@ -1399,6 +1433,52 @@ PREMIUM ACTIVE
 </div>
 <div style="font-size:.68rem;color:var(--text2);margin-top:4px" id="premiumExpiry"></div>
 </div>
+</div>
+
+</div>
+
+<!-- Admin Panel (admins only) -->
+<div class="acct-panel" id="acctPanelAdmin">
+
+<div class="acct-section">
+<div class="acct-section-title">🛠️ Gift Badge</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem">Grant any badge to a user by email.</div>
+<div class="acct-field">
+<label class="acct-label">User Email</label>
+<input type="email" class="acct-input" id="adminGiftBadgeEmail" placeholder="user@example.com">
+</div>
+<div class="acct-field">
+<label class="acct-label">Badge</label>
+<select id="adminGiftBadgeSelect" class="acct-input" style="padding:.55rem .75rem"></select>
+</div>
+<div style="display:flex;gap:8px;margin-top:.5rem">
+<button class="acct-btn acct-btn-primary" id="adminGiftBadgeBtn">GIFT BADGE</button>
+<button class="acct-btn acct-btn-outline" id="adminRevokeBadgeBtn">REVOKE</button>
+</div>
+<div class="acct-msg" id="adminGiftBadgeMsg"></div>
+</div>
+
+<div class="acct-section">
+<div class="acct-section-title">👑 Gift Premium Access</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem">Grant premium access to a user by email.</div>
+<div class="acct-field">
+<label class="acct-label">User Email</label>
+<input type="email" class="acct-input" id="adminGiftPremEmail" placeholder="user@example.com">
+</div>
+<div class="acct-field">
+<label class="acct-label">Duration</label>
+<select id="adminGiftPremDuration" class="acct-input" style="padding:.55rem .75rem">
+<option value="7">1 Week</option>
+<option value="30">1 Month</option>
+<option value="150">Season Pass (~5 months)</option>
+<option value="365">Yearly Pass</option>
+</select>
+</div>
+<div style="display:flex;gap:8px;margin-top:.5rem">
+<button class="acct-btn acct-btn-primary" id="adminGiftPremBtn">GRANT PREMIUM</button>
+<button class="acct-btn acct-btn-outline" id="adminRevokePremBtn">REVOKE PREMIUM</button>
+</div>
+<div class="acct-msg" id="adminGiftPremMsg"></div>
 </div>
 
 </div>
@@ -5134,6 +5214,9 @@ document.querySelectorAll('[data-goto]').forEach(el => {
 
   function endGame() {
     gameOver = true;
+    // Track total games played
+    const gamesPlayed = parseInt(localStorage.getItem('fg_games_played')||'0') + 1;
+    localStorage.setItem('fg_games_played', gamesPlayed);
     if (spinnerInterval) { cancelAnimationFrame(spinnerInterval); spinnerInterval = null; }
     spinnerWrap.style.display = 'none';
     spinnerResult.style.display = 'none';
@@ -5260,6 +5343,420 @@ window.fmtHeight = fmtHeight;
 
 
 
+
+// === PROFILE BADGE SYSTEM ===
+(function(){
+  const BADGES = [
+    { id:'default', icon:'👤', name:'Default', desc:'Your initial', unlocked:true, always:true },
+    { id:'creator', icon:'🛠️', name:'Creator', desc:'App creator / Admin', check:()=> typeof window.isAdmin==='function' && window.isAdmin(), adminOnly:true },
+    { id:'founder', icon:'⭐', name:'Founder', desc:'One of the first 100 users', check:()=> localStorage.getItem('jb_is_founder') === 'true' },
+    { id:'first_game', icon:'🏈', name:'First Game', desc:'Play your first Fantasy Game', check:()=> parseInt(localStorage.getItem('fg_games_played')||'0') > 0 },
+    { id:'century', icon:'💯', name:'Century Club', desc:'Play 100 Fantasy Games', check:()=> parseInt(localStorage.getItem('fg_games_played')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('fg_games_played')||'0') },
+    { id:'1k_club', icon:'🔥', name:'1K Club', desc:'Play 1,000 Fantasy Games', check:()=> parseInt(localStorage.getItem('fg_games_played')||'0') >= 1000, goal:1000, getCurrent:()=> parseInt(localStorage.getItem('fg_games_played')||'0') },
+    { id:'goat', icon:'🐐', name:'G.O.A.T.', desc:'Be #1 all-time on any leaderboard', check:()=> localStorage.getItem('jb_is_lb_first') === 'true' },
+    { id:'weekly_warrior', icon:'⚡', name:'Weekly Warrior', desc:'Be #1 on any weekly leaderboard', check:()=> localStorage.getItem('jb_is_lb_week_first') === 'true' },
+    { id:'streak_7', icon:'🔥', name:'On Fire', desc:'7 day Daily Elite Pull streak', check:()=> parseInt(localStorage.getItem('ep_streak')||'0') >= 7, goal:7, getCurrent:()=> parseInt(localStorage.getItem('ep_streak')||'0') },
+    { id:'streak_30', icon:'🌟', name:'Dedicated', desc:'30 day Daily Elite Pull streak', check:()=> parseInt(localStorage.getItem('ep_streak')||'0') >= 30, goal:30, getCurrent:()=> parseInt(localStorage.getItem('ep_streak')||'0') },
+    { id:'streak_100', icon:'💎', name:'Diamond 100', desc:'100 day Daily Elite Pull streak', check:()=> parseInt(localStorage.getItem('ep_streak')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('ep_streak')||'0') },
+    { id:'sharpshooter', icon:'🎯', name:'Sharpshooter', desc:'50 correct in a row — Unlimited Elite Pull', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 50, goal:50, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
+    { id:'elite_mind', icon:'🏆', name:'Elite Mind', desc:'100 correct in a row — Unlimited Elite Pull', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
+    { id:'big_brain', icon:'🧠', name:'Big Brain', desc:'200 correct in a row — Unlimited Elite Pull', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 200, goal:200, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
+    { id:'premium', icon:'👑', name:'Premium', desc:'Become a premium member', check:()=> typeof hasPremium==='function' && hasPremium() },
+    { id:'mock_master', icon:'📋', name:'Draft Master', desc:'Complete 100 mock drafts', check:()=> parseInt(localStorage.getItem('md_games_played')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('md_games_played')||'0') },
+  ];
+
+  const BADGE_STORAGE_KEY = 'jb_active_badge';
+  const BADGE_UNLOCKED_KEY = 'jb_unlocked_badges';
+  const GIFTED_BADGES_KEY = 'jb_gifted_badges';
+
+  // Load gifted badges from Firestore into localStorage
+  function loadGiftedBadges() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (!db || !user) return;
+    db.collection('gifted_badges').doc(user.uid).get().then(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        const badges = data.badges || [];
+        localStorage.setItem(GIFTED_BADGES_KEY, JSON.stringify(badges));
+        getUnlockedBadges();
+        if (typeof window._renderBadgeGrid === 'function') window._renderBadgeGrid();
+      }
+    }).catch(e => console.warn('[Badges] gifted load error:', e));
+  }
+
+  // Check and claim Founder badge (first 100 users)
+  function checkFounderStatus() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (!db || !user) return;
+    // Already a founder? Skip
+    if (localStorage.getItem('jb_is_founder') === 'true') return;
+
+    const counterRef = db.collection('app_meta').doc('founder_counter');
+    const founderRef = db.collection('founders').doc(user.uid);
+
+    // Check if this user already claimed founder
+    founderRef.get().then(doc => {
+      if (doc.exists) {
+        // Already a founder
+        localStorage.setItem('jb_is_founder', 'true');
+        getUnlockedBadges();
+        renderAllAvatars();
+        return;
+      }
+      // Check counter
+      return counterRef.get().then(cDoc => {
+        const count = cDoc.exists ? (cDoc.data().count || 0) : 0;
+        if (count >= 100) {
+          // Too late, not a founder
+          localStorage.setItem('jb_is_founder', 'false');
+          return;
+        }
+        // Claim founder spot — use a batch to atomically set both
+        const batch = db.batch();
+        batch.set(founderRef, {
+          email: user.email || '',
+          name: user.displayName || '',
+          claimedAt: new Date().toISOString(),
+          number: count + 1
+        });
+        // Increment counter
+        batch.set(counterRef, { count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+        return batch.commit().then(() => {
+          localStorage.setItem('jb_is_founder', 'true');
+          getUnlockedBadges();
+          renderAllAvatars();
+          console.log('[Badges] Founder badge claimed! #' + (count + 1));
+        });
+      });
+    }).catch(e => {
+      console.warn('[Badges] founder check error:', e);
+    });
+  }
+
+  function getUnlockedBadges() {
+    const saved = JSON.parse(localStorage.getItem(BADGE_UNLOCKED_KEY) || '[]');
+    const gifted = JSON.parse(localStorage.getItem(GIFTED_BADGES_KEY) || '[]');
+    const unlocked = new Set(saved);
+    unlocked.add('default');
+    // Add gifted badges
+    gifted.forEach(id => unlocked.add(id));
+    // Check automatic unlocks
+    BADGES.forEach(b => {
+      if (b.always || (b.check && b.check())) unlocked.add(b.id);
+    });
+    localStorage.setItem(BADGE_UNLOCKED_KEY, JSON.stringify([...unlocked]));
+    return unlocked;
+  }
+
+  function getActiveBadge() {
+    return localStorage.getItem(BADGE_STORAGE_KEY) || 'default';
+  }
+
+  function setActiveBadge(id) {
+    localStorage.setItem(BADGE_STORAGE_KEY, id);
+    renderAllAvatars();
+  }
+
+  function getBadgeById(id) {
+    return BADGES.find(b => b.id === id);
+  }
+
+  // Render avatars everywhere
+  function renderAllAvatars() {
+    const active = getActiveBadge();
+    const badge = getBadgeById(active);
+    const els = [
+      document.getElementById('acctPageAvatar'),
+      document.getElementById('globalAcctAvatar'),
+      document.getElementById('homeAcctAvatar')
+    ];
+    els.forEach(el => {
+      if (!el) return;
+      if (badge && active !== 'default') {
+        el.innerHTML = '<span class="avatar-badge" style="font-size:' + (el.classList.contains('acct-avatar-lg') ? '2.2rem' : '.95rem') + '">' + badge.icon + '</span>';
+        el.style.background = 'var(--surface2)';
+        el.style.border = '2px solid var(--accent)';
+      } else {
+        const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+        const initial = user ? (user.displayName || user.email || '?')[0].toUpperCase() : '?';
+        el.textContent = initial;
+        el.style.background = '';
+        el.style.border = '';
+      }
+    });
+  }
+
+  function renderBadgeGrid() {
+    const grid = document.getElementById('badgeGrid');
+    const progList = document.getElementById('badgeProgressList');
+    if (!grid) return;
+    const unlocked = getUnlockedBadges();
+    const active = getActiveBadge();
+
+    grid.innerHTML = BADGES.map(b => {
+      const isUnlocked = unlocked.has(b.id);
+      const isActive = active === b.id;
+      return `<div class="badge-cell ${isUnlocked ? '' : 'badge-locked'} ${isActive ? 'badge-active' : ''}" data-badge="${b.id}" title="${b.desc}">
+        ${!isUnlocked ? '<span class="badge-lock">🔒</span>' : ''}
+        <div class="badge-icon">${b.icon}</div>
+        <div class="badge-label">${b.name}</div>
+        ${isActive ? '<div style="font-size:.5rem;color:var(--accent);font-weight:700;letter-spacing:.5px">ACTIVE</div>' : ''}
+      </div>`;
+    }).join('');
+
+    grid.querySelectorAll('.badge-cell:not(.badge-locked)').forEach(cell => {
+      cell.addEventListener('click', () => {
+        setActiveBadge(cell.dataset.badge);
+        renderBadgeGrid();
+      });
+    });
+
+    // Progress list
+    if (progList) {
+      progList.innerHTML = BADGES.filter(b => !b.always).map(b => {
+        const isUnlocked = unlocked.has(b.id);
+        const current = b.getCurrent ? b.getCurrent() : (isUnlocked ? 1 : 0);
+        const goal = b.goal || 1;
+        const pct = Math.min(100, Math.round((current / goal) * 100));
+        return `<div class="badge-prog-row ${isUnlocked ? 'done' : ''}">
+          <span class="badge-prog-icon">${b.icon}</span>
+          <div class="badge-prog-info">
+            <div class="badge-prog-name">${b.name}</div>
+            <div class="badge-prog-desc">${b.desc}</div>
+            ${!isUnlocked && b.goal ? `<div class="badge-prog-bar"><div class="badge-prog-fill" style="width:${pct}%"></div></div>
+            <div style="font-size:.55rem;color:var(--text2);margin-top:2px">${typeof current==='number'?current.toFixed(current%1?1:0):current} / ${goal}</div>` : ''}
+          </div>
+          <span class="badge-prog-check">${isUnlocked ? '✅' : ''}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Hook into tab switching to render badges when tab opens
+  const origTabClick = document.querySelectorAll('.acct-tab');
+  origTabClick.forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab.dataset.acctTab === 'badges') setTimeout(renderBadgeGrid, 50);
+    });
+  });
+
+  // === ADMIN PANEL LOGIC ===
+  function findUserUid(db, email) {
+    return db.collection('leaderboard').get().then(snap => {
+      let uid = null;
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data.email && data.email.toLowerCase() === email) uid = doc.id;
+      });
+      if (uid) return uid;
+      return db.collection('gifted_badges').get().then(gbSnap => {
+        gbSnap.forEach(doc => {
+          const data = doc.data();
+          if (data.email && data.email.toLowerCase() === email) uid = doc.id;
+        });
+        return uid || ('email_' + email.replace(/[^a-z0-9]/g, '_'));
+      });
+    });
+  }
+
+  function showAdminMsg(el, msg, type) {
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'acct-msg ' + type;
+    setTimeout(() => { el.className = 'acct-msg'; el.textContent = ''; }, 5000);
+  }
+
+  function initAdminPanel() {
+    const adminTab = document.getElementById('acctAdminTab');
+    const adminPanel = document.getElementById('acctPanelAdmin');
+    if (typeof window.isAdmin === 'function' && window.isAdmin()) {
+      adminTab.style.display = '';
+    } else {
+      adminTab.style.display = 'none';
+      if (adminPanel) adminPanel.innerHTML = '';
+      return;
+    }
+
+    // Populate badge dropdown
+    const badgeSelect = document.getElementById('adminGiftBadgeSelect');
+    if (badgeSelect && !badgeSelect.children.length) {
+      BADGES.filter(b => b.id !== 'default').forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = b.icon + ' ' + b.name;
+        badgeSelect.appendChild(opt);
+      });
+    }
+
+    // Badge gift/revoke
+    const giftBadgeBtn = document.getElementById('adminGiftBadgeBtn');
+    const revokeBadgeBtn = document.getElementById('adminRevokeBadgeBtn');
+    const badgeMsg = document.getElementById('adminGiftBadgeMsg');
+
+    if (giftBadgeBtn && !giftBadgeBtn._bound) {
+      giftBadgeBtn._bound = true;
+      giftBadgeBtn.addEventListener('click', () => {
+        const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+        const email = document.getElementById('adminGiftBadgeEmail').value.trim().toLowerCase();
+        const badgeId = document.getElementById('adminGiftBadgeSelect').value;
+        if (!db) { showAdminMsg(badgeMsg, 'Database not available', 'error'); return; }
+        if (!email) { showAdminMsg(badgeMsg, 'Enter an email', 'error'); return; }
+        findUserUid(db, email).then(uid => {
+          const docRef = db.collection('gifted_badges').doc(uid);
+          return docRef.get().then(doc => {
+            let badges = doc.exists ? (doc.data().badges || []) : [];
+            if (!badges.includes(badgeId)) badges.push(badgeId);
+            return docRef.set({ email, badges, updatedAt: new Date().toISOString() }, { merge: true });
+          }).then(() => {
+            const badge = getBadgeById(badgeId);
+            showAdminMsg(badgeMsg, 'Gifted ' + (badge ? badge.icon + ' ' + badge.name : badgeId) + ' to ' + email, 'success');
+          });
+        }).catch(e => showAdminMsg(badgeMsg, 'Error: ' + e.message, 'error'));
+      });
+
+      revokeBadgeBtn.addEventListener('click', () => {
+        const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+        const email = document.getElementById('adminGiftBadgeEmail').value.trim().toLowerCase();
+        const badgeId = document.getElementById('adminGiftBadgeSelect').value;
+        if (!db) { showAdminMsg(badgeMsg, 'Database not available', 'error'); return; }
+        if (!email) { showAdminMsg(badgeMsg, 'Enter an email', 'error'); return; }
+        findUserUid(db, email).then(uid => {
+          const docRef = db.collection('gifted_badges').doc(uid);
+          return docRef.get().then(doc => {
+            let badges = doc.exists ? (doc.data().badges || []) : [];
+            badges = badges.filter(b => b !== badgeId);
+            return docRef.set({ email, badges, updatedAt: new Date().toISOString() }, { merge: true });
+          }).then(() => {
+            const badge = getBadgeById(badgeId);
+            showAdminMsg(badgeMsg, 'Revoked ' + (badge ? badge.icon + ' ' + badge.name : badgeId) + ' from ' + email, 'success');
+          });
+        }).catch(e => showAdminMsg(badgeMsg, 'Error: ' + e.message, 'error'));
+      });
+    }
+
+    // Premium gift/revoke
+    const giftPremBtn = document.getElementById('adminGiftPremBtn');
+    const revokePremBtn = document.getElementById('adminRevokePremBtn');
+    const premMsg = document.getElementById('adminGiftPremMsg');
+
+    if (giftPremBtn && !giftPremBtn._bound) {
+      giftPremBtn._bound = true;
+      giftPremBtn.addEventListener('click', () => {
+        const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+        const email = document.getElementById('adminGiftPremEmail').value.trim().toLowerCase();
+        const days = parseInt(document.getElementById('adminGiftPremDuration').value);
+        if (!db) { showAdminMsg(premMsg, 'Database not available', 'error'); return; }
+        if (!email) { showAdminMsg(premMsg, 'Enter an email', 'error'); return; }
+        const expires = Date.now() + (days * 24 * 60 * 60 * 1000);
+        const labels = { 7: '1 Week', 30: '1 Month', 150: 'Season Pass', 365: 'Yearly Pass' };
+        findUserUid(db, email).then(uid => {
+          return db.collection('gifted_premium').doc(uid).set({
+            email, expires, days,
+            label: labels[days] || days + ' days',
+            grantedBy: (auth.currentUser ? auth.currentUser.email : 'admin'),
+            grantedAt: new Date().toISOString()
+          }, { merge: true });
+        }).then(() => {
+          showAdminMsg(premMsg, 'Granted ' + (labels[days] || days + ' days') + ' premium to ' + email, 'success');
+        }).catch(e => showAdminMsg(premMsg, 'Error: ' + e.message, 'error'));
+      });
+
+      revokePremBtn.addEventListener('click', () => {
+        const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+        const email = document.getElementById('adminGiftPremEmail').value.trim().toLowerCase();
+        if (!db) { showAdminMsg(premMsg, 'Database not available', 'error'); return; }
+        if (!email) { showAdminMsg(premMsg, 'Enter an email', 'error'); return; }
+        findUserUid(db, email).then(uid => {
+          return db.collection('gifted_premium').doc(uid).set({
+            email, expires: 0, revoked: true,
+            revokedBy: (auth.currentUser ? auth.currentUser.email : 'admin'),
+            revokedAt: new Date().toISOString()
+          }, { merge: true });
+        }).then(() => {
+          showAdminMsg(premMsg, 'Revoked premium from ' + email, 'success');
+        }).catch(e => showAdminMsg(premMsg, 'Error: ' + e.message, 'error'));
+      });
+    }
+  }
+
+  // Load gifted premium on auth
+  function loadGiftedPremium() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (!db || !user) return;
+    db.collection('gifted_premium').doc(user.uid).get().then(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.expires && data.expires > Date.now()) {
+          // Apply gifted premium to localStorage
+          const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+          if (!existing || data.expires > (existing.expires || 0)) {
+            localStorage.setItem('jb_premium', JSON.stringify({
+              plan: 'Gifted: ' + (data.label || 'Admin Grant'),
+              activated: Date.now(),
+              expires: data.expires,
+              gifted: true
+            }));
+          }
+        }
+      }
+    }).catch(e => console.warn('[Premium] gifted load error:', e));
+  }
+  window._loadGiftedPremium = loadGiftedPremium;
+  window._initAdminPanel = initAdminPanel;
+
+  // Check for new unlocks whenever fantasy game or elite pull finishes
+  const _origLbFG = window._lbUpdateFantasyGame;
+  window._lbUpdateFantasyGame = function(score) {
+    if (_origLbFG) _origLbFG(score);
+    getUnlockedBadges();
+  };
+  const _origLbFGW = window._lbUpdateFantasyGameWeek;
+  window._lbUpdateFantasyGameWeek = function(score) {
+    if (_origLbFGW) _origLbFGW(score);
+    getUnlockedBadges();
+  };
+  const _origLbDaily = window._lbUpdateDaily;
+  window._lbUpdateDaily = function(won, streak) {
+    if (_origLbDaily) _origLbDaily(won, streak);
+    getUnlockedBadges();
+  };
+  const _origLbUnlimited = window._lbUpdateUnlimited;
+  window._lbUpdateUnlimited = function(played, correct, streak) {
+    if (_origLbUnlimited) _origLbUnlimited(played, correct, streak);
+    getUnlockedBadges();
+  };
+
+  // Render badge avatars on page load
+  window._renderBadgeAvatars = renderAllAvatars;
+  window._renderBadgeGrid = renderBadgeGrid;
+
+  // Initial render after auth
+  const _origPopulate = window.populateAccountPage;
+  if (typeof populateAccountPage === 'function') {
+    const _origPop = populateAccountPage;
+    // Override only if not already done
+  }
+  // Render on load
+  setTimeout(() => { renderAllAvatars(); loadGiftedBadges(); checkFounderStatus(); loadGiftedPremium(); initAdminPanel(); }, 500);
+
+  // Hook badge tab to render
+  function renderBadgeGridFull() {
+    renderBadgeGrid();
+  }
+  document.querySelectorAll('.acct-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab.dataset.acctTab === 'badges') setTimeout(renderBadgeGridFull, 50);
+      if (tab.dataset.acctTab === 'admin') setTimeout(initAdminPanel, 50);
+    });
+  });
+
+  window._renderBadgeGrid = renderBadgeGridFull;
+  window._loadGiftedBadges = loadGiftedBadges;
+  window._checkFounderStatus = checkFounderStatus;
+})();
 
 // === TRADE CALCULATOR ===
 (function() {
@@ -6191,6 +6688,8 @@ window.fmtHeight = fmtHeight;
   // Tab switching
   document.querySelectorAll('.acct-tab').forEach(tab => {
     tab.addEventListener('click', () => {
+      // Block non-admins from opening admin panel
+      if (tab.dataset.acctTab === 'admin' && !(typeof isAdmin === 'function' && isAdmin())) return;
       document.querySelectorAll('.acct-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.acct-panel').forEach(p => p.classList.remove('active'));
       tab.classList.add('active');
@@ -6240,6 +6739,11 @@ window.fmtHeight = fmtHeight;
   updateAccountUI = function(user) {
     _origUpdateAccountUI(user);
     populateAccountPage(user);
+    if (typeof window._renderBadgeAvatars === 'function') setTimeout(window._renderBadgeAvatars, 100);
+    if (typeof window._loadGiftedBadges === 'function') setTimeout(window._loadGiftedBadges, 200);
+    if (typeof window._checkFounderStatus === 'function') setTimeout(window._checkFounderStatus, 300);
+    if (typeof window._loadGiftedPremium === 'function') setTimeout(window._loadGiftedPremium, 250);
+    if (typeof window._initAdminPanel === 'function') setTimeout(window._initAdminPanel, 350);
   };
 
   // Save username (display name)
@@ -6256,6 +6760,8 @@ window.fmtHeight = fmtHeight;
       acctPageAvatar.textContent = initial;
       globalAcctAvatar.textContent = initial;
       homeAcctAvatar.textContent = initial;
+      // Render badge avatars if a badge is active
+      if (typeof window._renderBadgeAvatars === 'function') window._renderBadgeAvatars();
       showMsg(acctUsernameMsg, 'Username updated!', 'success');
     } catch(e) {
       showMsg(acctUsernameMsg, e.message || 'Failed to update username.', 'error');
@@ -7096,6 +7602,9 @@ window.fmtHeight = fmtHeight;
       completeEl.removeAttribute('style');
       completeEl.style.display = 'block';
     }
+    // Track total mock drafts played
+    const mdPlayed = parseInt(localStorage.getItem('md_games_played')||'0') + 1;
+    localStorage.setItem('md_games_played', mdPlayed);
     
     const myPicks = mdState ? mdState.picks.filter(p => p.isUser) : [];
     
@@ -7333,14 +7842,14 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().daily ? (doc.data().daily.bestStreak || 0) : 0;
       const newBest = Math.max(existing, streak);
       docRef.set({
-        name: name,
+        name: name, email: (user.email||''),
         daily: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
         updatedAt: new Date().toISOString()
       }, { merge: true });
     }).catch(e => {
       // Fallback: just save without checking best
       docRef.set({
-        name: name,
+        name: name, email: (user.email||''),
         daily: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(e2 => console.warn('[LB] daily save error:', e2));
@@ -7355,7 +7864,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().unlimited ? (doc.data().unlimited.bestStreak || 0) : 0;
       const bestStreak = Math.max(existing, streak);
       db.collection('leaderboard').doc(user.uid).set({
-        name: name,
+        name: name, email: (user.email||''),
         unlimited: { played: played, correct: correct, streak: streak, bestStreak: bestStreak },
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(e => console.warn('[LB] unlimited save error:', e));
@@ -7371,7 +7880,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().fantasygame ? doc.data().fantasygame.highScore : 0;
       if (score > existing) {
         db.collection('leaderboard').doc(user.uid).set({
-          name: name,
+          name: name, email: (user.email||''),
           fantasygame: { highScore: score, date: todayKey() },
           updatedAt: new Date().toISOString()
         }, { merge: true }).catch(e => console.warn('[LB] fg save error:', e));
@@ -7387,7 +7896,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().fantasygameWeek ? doc.data().fantasygameWeek.highScore : 0;
       if (score > existing) {
         db.collection('leaderboard').doc(user.uid).set({
-          name: name,
+          name: name, email: (user.email||''),
           fantasygameWeek: { highScore: score, date: todayKey() },
           updatedAt: new Date().toISOString()
         }, { merge: true }).catch(e => console.warn('[LB] fg week save error:', e));
@@ -7537,6 +8046,29 @@ window.fmtHeight = fmtHeight;
           return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
         });
       }
+
+      // === Badge #1 detection ===
+      if (uid) {
+        let isFirst = false;
+        let isWeekFirst = false;
+        // Check all-time #1 across all leaderboards
+        if (fgPlayers.length && fgPlayers[0].id === uid) isFirst = true;
+        if (fgWeekPlayers.length && fgWeekPlayers[0].id === uid) isFirst = true;
+        if (dailyPlayers2.length && dailyPlayers2[0].id === uid) isFirst = true;
+        if (unlimitedPlayers.length && unlimitedPlayers[0].id === uid) isFirst = true;
+        // Weekly: check if #1 with a recent date (within 7 days)
+        const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+        const weekStr = weekAgo.toISOString().slice(0,10);
+        const fgWeeklyRecent = all.filter(u => u.fantasygame && u.fantasygame.highScore > 0 && u.fantasygame.date >= weekStr).sort((a,b) => b.fantasygame.highScore - a.fantasygame.highScore);
+        const fgWkWeeklyRecent = all.filter(u => u.fantasygameWeek && u.fantasygameWeek.highScore > 0 && u.fantasygameWeek.date >= weekStr).sort((a,b) => b.fantasygameWeek.highScore - a.fantasygameWeek.highScore);
+        if (fgWeeklyRecent.length && fgWeeklyRecent[0].id === uid) isWeekFirst = true;
+        if (fgWkWeeklyRecent.length && fgWkWeeklyRecent[0].id === uid) isWeekFirst = true;
+        // Also count all-time #1 as weekly #1
+        if (isFirst) isWeekFirst = true;
+        localStorage.setItem('jb_is_lb_first', isFirst ? 'true' : 'false');
+        localStorage.setItem('jb_is_lb_week_first', isWeekFirst ? 'true' : 'false');
+      }
+
     }).catch(e => {
       console.warn('[LB] load error:', e);
       document.querySelectorAll('.lb-loading').forEach(el => el.style.display = 'none');

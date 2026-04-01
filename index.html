@@ -95,7 +95,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .ep-guess-wrap{position:relative}
 
 /* Trivia page */
-.page-trivia{align-items:center;justify-content:center;padding:2rem}
+.page-games{align-items:center;justify-content:center;padding:2rem}
 .trivia-container{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;max-width:600px;width:100%}
 .trivia-header{text-align:center;margin-bottom:1.5rem}
 .trivia-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;color:var(--accent)}
@@ -112,7 +112,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .trivia-next.show{display:inline-block}
 .trivia-streak{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--accent);margin-top:8px}
 /* Fantasy Game */
-.page-fantasygame{padding:1.5rem;overflow-y:auto}
+.page-games{padding:1.5rem;overflow-y:auto}
 .fg-wrapper{max-width:1000px;margin:0 auto;width:100%}
 .fg-header{text-align:center;margin-bottom:1.5rem}
 .fg-mode-toggle{margin:8px auto 4px!important}
@@ -223,6 +223,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .acct-msg.success{display:block;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
 .acct-msg.error{display:block;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
 .acct-signout-row{text-align:center;margin-top:1.5rem}
+/* Badge System */
+.games-tabs{display:flex;gap:2px;justify-content:center;margin-bottom:1.25rem;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.15);width:fit-content;margin-left:auto;margin-right:auto}
+.games-tab{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;padding:7px 20px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;white-space:nowrap}
+.games-tab:hover{color:var(--text)}
+.games-tab.active{background:var(--accent);color:var(--bg)}
+.games-subpage{display:none}
+.games-subpage.active{display:block}
 /* Badge System */
 .badge-cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all .15s;position:relative}
 .badge-cell:hover:not(.badge-locked){border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
@@ -681,7 +688,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .ep-sug-item{padding:.55rem .75rem;font-size:.78rem;min-height:40px}
 
   /* Fantasy Draft Game */
-  .page-fantasygame{padding:.75rem}
+  .page-games{padding:.75rem}
   .fg-title{font-size:2rem;letter-spacing:2px}
   .fg-subtitle{font-size:.72rem;padding:0 .5rem}
   .fg-layout{gap:1rem}
@@ -714,7 +721,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   /* Allow all pages to scroll on mobile */
   .page{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
   .page-home{justify-content:flex-start;padding:0;padding-bottom:calc(1rem + env(safe-area-inset-bottom,0))}
-  .page-trivia{justify-content:flex-start;padding:1.5rem .75rem;padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0))}
+  .page-games{justify-content:flex-start;padding:1.5rem .75rem;padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0))}
 }
 
 /* Compare Modal Tabs + Legends */
@@ -856,8 +863,8 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .logo-row .auth-anchor{display:contents}
 /* Home / Trivia / Fantasy: top-right bar */
 .page-home > .auth-anchor,
-.page-trivia > .auth-anchor,
-.page-fantasygame > .auth-anchor,
+.page-games > .auth-anchor,
+.page-games > .auth-anchor,
 .page-trade > .auth-anchor,
 .page-mockdraft > .auth-anchor,
 .page-account > .auth-anchor{position:absolute;top:12px;right:16px;z-index:50}
@@ -915,8 +922,8 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .global-signin-btn{padding:6px 10px;font-size:.75rem;letter-spacing:1px}
   .global-acct-pill{padding:0}
   .page-home > .auth-anchor,
-  .page-trivia > .auth-anchor,
-  .page-fantasygame > .auth-anchor,
+  .page-games > .auth-anchor,
+  .page-games > .auth-anchor,
   .page-trade > .auth-anchor,
   .page-mockdraft > .auth-anchor,
   .page-account > .auth-anchor{top:8px;right:8px}
@@ -1154,13 +1161,9 @@ Continue with Google
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
 <span class="nav-label">Compare</span>
 </button>
-<button class="nav-btn" data-page="fantasygame" title="Fantasy Game">
+<button class="nav-btn" data-page="games" title="Games">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
-<span class="nav-label">Fantasy<br>Game</span>
-</button>
-<button class="nav-btn" data-page="trivia" title="Elite Pull">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-<span class="nav-label">Elite<br>Pull</span>
+<span class="nav-label">Games</span>
 </button>
 <div style="flex:1"></div>
 <button class="nav-btn" data-page="account" id="navAccountBtn" title="Account" style="display:none">
@@ -1474,12 +1477,12 @@ PREMIUM ACTIVE
 <div class="home-card-title">TRADE CALC</div>
 <div class="home-card-desc">Evaluate fantasy trades</div>
 </div>
-<div class="home-card" data-goto="fantasygame">
+<div class="home-card" data-goto="games">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
 <div class="home-card-title">FANTASY GAME</div>
 <div class="home-card-desc">Draft your dream roster</div>
 </div>
-<div class="home-card" data-goto="trivia">
+<div class="home-card" data-goto="games-elitepull">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 <div class="home-card-title">ELITE PULL</div>
 <div class="home-card-desc">Unlimited player guessing</div>
@@ -1689,39 +1692,16 @@ CLEAR
 </div>
 </div>
 
-<!-- TRIVIA PAGE — Unlimited Elite Pull -->
-<div class="page page-trivia" id="pageTrivia">
-<div class="auth-anchor" id="authAnchorTrivia"></div>
-<div class="elite-pull-section" style="margin:0 auto">
-<div class="elite-pull-card">
-<div class="elite-pull-header">
-<div class="elite-pull-title">ELITE PULL — UNLIMITED</div>
-<div class="elite-pull-subtitle">Guess the player from their picture &middot; 1 attempt &middot; Play as many as you want</div>
-<div id="epuStats" class="ep-streak-display" style="margin-top:6px"></div>
-</div>
-<div class="elite-pull-img-wrap">
-<img id="epuImage" class="ep-blur" src="" alt="Mystery player" style="display:none">
-<div id="epuPlaceholder" class="ep-placeholder">Loading player...</div>
-</div>
-<div class="elite-pull-body">
-<div id="epuAttempts" class="ep-attempts"></div>
-<div class="ep-guess-wrap">
-<div id="epuSuggestions" class="ep-suggestions"></div>
-<div class="ep-guess-row">
-<input type="text" id="epuInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
-<button id="epuGuessBtn" class="ep-guess-btn">GUESS</button>
-</div>
-</div>
-<div id="epuResult" class="ep-result" style="display:none"></div>
-<button id="epuNextBtn" class="trivia-next" style="display:none;margin-top:1rem;width:100%">NEXT PLAYER</button>
-</div>
-</div>
-</div>
+<!-- GAMES PAGE (Fantasy Game + Elite Pull) -->
+<div class="page page-games" id="pageGames">
+<div class="auth-anchor" id="authAnchorGames"></div>
+<div class="games-tabs">
+<button class="games-tab active" data-games-tab="fantasygame">Fantasy Game</button>
+<button class="games-tab" data-games-tab="elitepull">Elite Pull</button>
 </div>
 
-<!-- FANTASY GAME PAGE -->
-<div class="page page-fantasygame" id="pageFantasygame">
-<div class="auth-anchor" id="authAnchorFantasygame"></div>
+<!-- Fantasy Game Sub-page -->
+<div class="games-subpage active" id="gamesFantasygame">
 <div class="fg-wrapper">
 <div class="fg-header">
 <div class="fg-title">FANTASY GAME</div>
@@ -1780,6 +1760,37 @@ CLEAR
 </div>
 </div>
 </div>
+</div>
+
+<!-- Elite Pull Sub-page -->
+<div class="games-subpage" id="gamesElitepull">
+<div class="elite-pull-section" style="margin:0 auto">
+<div class="elite-pull-card">
+<div class="elite-pull-header">
+<div class="elite-pull-title">ELITE PULL — UNLIMITED</div>
+<div class="elite-pull-subtitle">Guess the player from their picture &middot; 1 attempt &middot; Play as many as you want</div>
+<div id="epuStats" class="ep-streak-display" style="margin-top:6px"></div>
+</div>
+<div class="elite-pull-img-wrap">
+<img id="epuImage" class="ep-blur" src="" alt="Mystery player" style="display:none">
+<div id="epuPlaceholder" class="ep-placeholder">Loading player...</div>
+</div>
+<div class="elite-pull-body">
+<div id="epuAttempts" class="ep-attempts"></div>
+<div class="ep-guess-wrap">
+<div id="epuSuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="epuInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="epuGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="epuResult" class="ep-result" style="display:none"></div>
+<button id="epuNextBtn" class="trivia-next" style="display:none;margin-top:1rem;width:100%">NEXT PLAYER</button>
+</div>
+</div>
+</div>
+</div>
+
 </div>
 
 <!-- TRADE CALCULATOR PAGE -->
@@ -3903,8 +3914,8 @@ function renderSearchChips() {
 render();
 
 // === Page Navigation ===
-const pageMap = { home: 'pageHome', rankings: 'pageRankings', compare: 'pageCompare', trivia: 'pageTrivia', fantasygame: 'pageFantasygame', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount' };
-const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', trivia: 'authAnchorTrivia', fantasygame: 'authAnchorFantasygame', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount' };
+const pageMap = { home: 'pageHome', rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount' };
+const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount' };
 function switchPage(page) {
   Object.values(pageMap).forEach(id => {
     const el = document.getElementById(id);
@@ -4396,7 +4407,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
   });
   epuGuessBtn.addEventListener('click', submitGuessU);
   document.addEventListener('click', e => {
-    if (!e.target.closest('#pageTrivia .ep-guess-wrap')) epuSuggestions.classList.remove('show');
+    if (!e.target.closest('#pageGames .ep-guess-wrap')) epuSuggestions.classList.remove('show');
   });
 
   function startRoundU() {
@@ -5701,6 +5712,9 @@ window.fmtHeight = fmtHeight;
               expires: data.expires,
               gifted: true
             }));
+            console.log('[Premium] Gifted premium applied — expires', new Date(data.expires).toLocaleDateString());
+            // Refresh premium status display
+            if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();
           }
         }
       }
@@ -6879,6 +6893,7 @@ window.fmtHeight = fmtHeight;
 
   // Check status on load
   checkPremiumStatus();
+  window.checkPremiumStatus = checkPremiumStatus;
 
   // Premium upgrade button (placeholder)
   premiumUpgradeBtn.addEventListener('click', () => {
@@ -8027,7 +8042,31 @@ window.fmtHeight = fmtHeight;
   if (homeBtn) homeBtn.addEventListener('click', () => setTimeout(loadLeaderboards, 300));
   // Also refresh when home cards navigate back
   document.querySelectorAll('.home-card[data-goto]').forEach(c => {
-    c.addEventListener('click', () => { if (c.dataset.goto === 'home') setTimeout(loadLeaderboards, 300); });
+    c.addEventListener('click', () => {
+      const goto = c.dataset.goto;
+      if (goto === 'home') setTimeout(loadLeaderboards, 300);
+      if (goto === 'games-elitepull') {
+        switchPage('games');
+        // Switch to elite pull tab
+        document.querySelectorAll('.games-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.games-subpage').forEach(p => p.classList.remove('active'));
+        document.querySelector('.games-tab[data-games-tab="elitepull"]').classList.add('active');
+        document.getElementById('gamesElitepull').classList.add('active');
+        return;
+      }
+      if (goto) switchPage(goto);
+    });
+  });
+
+  // Games page sub-tab switching
+  document.querySelectorAll('.games-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.games-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.games-subpage').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const target = document.getElementById('games' + tab.dataset.gamesTab.charAt(0).toUpperCase() + tab.dataset.gamesTab.slice(1));
+      if (target) target.classList.add('active');
+    });
   });
   // Initial load after a delay for Firebase to init
   setTimeout(loadLeaderboards, 2500);

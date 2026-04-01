@@ -1108,7 +1108,26 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 .md-complete{text-align:center;padding:2rem 0}
 .md-complete-sub{color:var(--text2);font-size:.85rem;margin-top:4px;margin-bottom:1rem}
-.md-final-roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;max-width:700px;margin:0 auto;text-align:left}
+.md-final-roster{display:flex;flex-direction:column;gap:3px;max-width:520px;margin:0 auto;text-align:left}
+.md-final-roster .mdr-section{font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);padding:8px 0 2px 4px;border-bottom:1px solid var(--border);margin-top:6px}
+.md-final-roster .mdr-section:first-child{margin-top:0}
+.md-final-roster .mdr-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);font-size:.8rem}
+.md-final-roster .mdr-row .mdr-rd{font-family:'Bebas Neue',sans-serif;font-size:.72rem;color:var(--text2);letter-spacing:.5px;width:24px;flex-shrink:0;text-align:center}
+.md-final-roster .mdr-row .mdr-slot{font-size:.58rem;font-weight:700;letter-spacing:.5px;padding:2px 6px;border-radius:3px;flex-shrink:0;min-width:28px;text-align:center}
+.md-final-roster .mdr-row .mdr-slot.QB{background:var(--qb-bg);color:var(--qb)}
+.md-final-roster .mdr-row .mdr-slot.RB{background:var(--rb-bg);color:var(--rb)}
+.md-final-roster .mdr-row .mdr-slot.WR{background:var(--wr-bg);color:var(--wr)}
+.md-final-roster .mdr-row .mdr-slot.TE{background:var(--te-bg);color:var(--te)}
+.md-final-roster .mdr-row .mdr-slot.K{background:rgba(245,158,11,.12);color:var(--accent)}
+.md-final-roster .mdr-row .mdr-slot.DST{background:rgba(107,114,128,.12);color:#6b7280}
+.md-final-roster .mdr-row .mdr-slot.FLEX{background:rgba(168,85,247,.1);color:#a855f7}
+.md-final-roster .mdr-row .mdr-slot.BN{background:rgba(107,114,128,.08);color:var(--text2)}
+.md-final-roster .mdr-row .mdr-info{flex:1;min-width:0;overflow:hidden}
+.md-final-roster .mdr-row .mdr-name{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-final-roster .mdr-row .mdr-meta{font-size:.62rem;color:var(--text2)}
+.md-final-roster .mdr-row .mdr-grade{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1px;min-width:30px;text-align:center;flex-shrink:0}
+.md-final-roster .mdr-row .mdr-label{font-size:.55rem;color:var(--text2);min-width:50px;text-align:right;flex-shrink:0}
+.md-final-roster .mdr-row.empty{border-style:dashed;opacity:.4;justify-content:center;font-size:.72rem;color:var(--text2);font-style:italic}
 @media(max-width:600px){
   .page-mockdraft{padding:.75rem}
   .md-title{font-size:2rem;letter-spacing:2px}
@@ -1117,7 +1136,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .md-draft-top{flex-direction:column;gap:8px;align-items:flex-start}
   .md-your-team{width:100%}
   .md-avail-list{max-height:260px}
-  .md-final-roster{grid-template-columns:1fr}
+  .md-final-roster{max-width:100%}
 }
 </style>
 
@@ -7796,75 +7815,107 @@ window.fmtHeight = fmtHeight;
       }
     });
 
-    // === PER-PICK GRADING ===
-    function gradePickValue(adp, pickNum) {
-      const diff = adp - pickNum; // positive = got value, negative = reached
-      if (diff >= 24) return { grade: 'A+', color: '#22c55e', label: 'Steal' };
-      if (diff >= 16) return { grade: 'A', color: '#22c55e', label: 'Great value' };
-      if (diff >= 10) return { grade: 'A-', color: '#4ade80', label: 'Good value' };
-      if (diff >= 5)  return { grade: 'B+', color: '#86efac', label: 'Nice pick' };
-      if (diff >= 0)  return { grade: 'B', color: '#fbbf24', label: 'Fair' };
-      if (diff >= -5) return { grade: 'B-', color: '#fbbf24', label: 'Slight reach' };
-      if (diff >= -10) return { grade: 'C+', color: '#f97316', label: 'Reach' };
-      if (diff >= -18) return { grade: 'C', color: '#f97316', label: 'Big reach' };
-      if (diff >= -28) return { grade: 'D', color: '#ef4444', label: 'Overdraft' };
+    // === RANKING-BASED GRADING ===
+    // Get the ranking board to grade picks by rank position, not just ADP
+    const _gradeBoard = versionBoards[mdRankSrc] ? (versionBoards[mdRankSrc][mdMode] || versionBoards[mdRankSrc].redraft) : versionBoards.mine.redraft;
+    function getRankPos(playerIdx) {
+      const pos = _gradeBoard.indexOf(playerIdx);
+      return pos >= 0 ? pos + 1 : 999;
+    }
+    // Positional rank among same position on the ranking board
+    function getPosRank(playerIdx, pos) {
+      let posCount = 0;
+      for (let i = 0; i < _gradeBoard.length; i++) {
+        const d = D[_gradeBoard[i]];
+        if (d && d.s === pos) {
+          posCount++;
+          if (_gradeBoard[i] === playerIdx) return posCount;
+        }
+      }
+      return 99;
+    }
+
+    function gradePickValue(pick) {
+      const rankPos = getRankPos(pick.player.idx);
+      const pickNum = pick.overall + 1;
+      const diff = rankPos > 0 ? pickNum - rankPos : 0; // negative = reached past rank, positive = got value
+      const valueDiff = rankPos - pickNum; // positive = value, negative = reach (inverted for display)
+      if (valueDiff >= 36) return { grade: 'A+', color: '#22c55e', label: 'Steal' };
+      if (valueDiff >= 20) return { grade: 'A', color: '#22c55e', label: 'Great value' };
+      if (valueDiff >= 10) return { grade: 'A-', color: '#4ade80', label: 'Good value' };
+      if (valueDiff >= 4)  return { grade: 'B+', color: '#86efac', label: 'Nice pick' };
+      if (valueDiff >= -2) return { grade: 'B', color: '#fbbf24', label: 'Fair' };
+      if (valueDiff >= -8) return { grade: 'B-', color: '#fbbf24', label: 'Slight reach' };
+      if (valueDiff >= -16) return { grade: 'C+', color: '#f97316', label: 'Reach' };
+      if (valueDiff >= -26) return { grade: 'C', color: '#f97316', label: 'Big reach' };
+      if (valueDiff >= -40) return { grade: 'D', color: '#ef4444', label: 'Overdraft' };
       return { grade: 'F', color: '#ef4444', label: 'Yikes' };
     }
 
-    let html = '';
-    let lastPos = '';
+    // Build organized HTML — starters section, then bench
+    let html = '<div class="mdr-section">STARTERS</div>';
+    let benchStarted = false;
     console.log('finishDraft myPicks:', myPicks.length, myPicks.map(p => ({ name: p.player.name, team: p.player.team, pos: p.player.pos })));
     slots.forEach(slot => {
-      if (slot.pos !== lastPos && slot.pos === 'BN' && lastPos !== 'BN') {
-        html += '<div style="border-top:1px solid var(--border);margin:4px 0"></div>';
+      if (!benchStarted && slot.pos === 'BN') {
+        benchStarted = true;
+        html += '<div class="mdr-section">BENCH</div>';
       }
-      lastPos = slot.pos;
-      const posLabel = slot.pos === 'BN' ? 'BN' : slot.pos === 'FLEX' ? 'FLX' : slot.pos;
+      const slotLabel = slot.pos === 'FLEX' ? 'FLEX' : slot.pos;
       if (slot.filled) {
         const pc = slot.filled.player.pos;
         const rd = 'R' + slot.filled.round;
-        const pg = gradePickValue(slot.filled.player.adp, slot.filled.overall + 1);
-        const diff = slot.filled.player.adp - (slot.filled.overall + 1);
-        const diffStr = diff >= 0 ? '+' + Math.round(diff) : Math.round(diff);
-        html += '<div class="md-roster-pick" style="display:flex;align-items:center;gap:6px">' +
-          '<span class="md-rp-rd">' + rd + '</span>' +
-          '<span class="md-rp-pos ' + pc + '">' + escapeHTML(posLabel) + '</span>' +
-          '<div style="flex:1;min-width:0;overflow:hidden"><div class="md-rp-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHTML(slot.filled.player.name) + '</div><div style="font-size:.6rem;color:var(--text2)">' + escapeHTML(slot.filled.player.team) + '</div></div>' +
-          '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1px;color:' + pg.color + ';min-width:28px;text-align:center">' + pg.grade + '</span>' +
-          '<span style="font-size:.58rem;color:var(--text2);min-width:46px;text-align:right" title="' + pg.label + ' (ADP ' + slot.filled.player.adp.toFixed(1) + ', Pick ' + (slot.filled.overall+1) + ')">' + pg.label + '</span>' +
+        const pg = gradePickValue(slot.filled);
+        const rankPos = getRankPos(slot.filled.player.idx);
+        const pickNum = slot.filled.overall + 1;
+        html += '<div class="mdr-row">' +
+          '<span class="mdr-rd">' + rd + '</span>' +
+          '<span class="mdr-slot ' + (slot.pos === 'FLEX' ? 'FLEX' : slot.pos === 'BN' ? 'BN' : pc) + '">' + escapeHTML(slotLabel) + '</span>' +
+          '<div class="mdr-info"><div class="mdr-name">' + escapeHTML(slot.filled.player.name) + '</div><div class="mdr-meta">' + escapeHTML(slot.filled.player.team) + ' · Rank ' + rankPos + ' · Pick ' + pickNum + '</div></div>' +
+          '<span class="mdr-grade" style="color:' + pg.color + '">' + pg.grade + '</span>' +
+          '<span class="mdr-label">' + pg.label + '</span>' +
           '</div>';
       } else {
-        html += '<div class="md-roster-pick empty"><span class="md-rp-rd">' + posLabel + '</span><span style="color:var(--text2);font-size:.72rem;font-style:italic">\u2014</span></div>';
+        html += '<div class="mdr-row empty">' + slotLabel + ' — empty</div>';
       }
     });
     document.getElementById('mdFinalRoster').innerHTML = html;
 
-    // === DRAFT GRADE ===
+    // === OVERALL DRAFT GRADE ===
     const myPks = mdState.picks.filter(p => p.isUser);
-    let totalValue = 0;
-    let totalExpected = 0;
+    const rounds = getMdRounds();
     const posDepth = { QB: 0, RB: 0, WR: 0, TE: 0, K: 0, DST: 0 };
     const starterSlots = { QB: mdLineup.QB||0, RB: mdLineup.RB||0, WR: mdLineup.WR||0, TE: mdLineup.TE||0, K: mdLineup.K||0, DST: mdLineup.DST||0 };
+    let totalRankValue = 0;
+
+    // Track best positional rank for each position (for starter quality)
+    const bestPosRank = { QB: 99, RB1: 99, RB2: 99, WR1: 99, WR2: 99, TE: 99 };
+    const posPicks = { QB: [], RB: [], WR: [], TE: [], K: [], DST: [] };
 
     myPks.forEach(pick => {
-      const adpRank = pick.player.adp;
+      const rankPos = getRankPos(pick.player.idx);
       const pickNum = pick.overall + 1;
-      // Value = how far ahead of ADP we drafted (positive = good value)
-      const valueDiff = adpRank - pickNum;
-      totalValue += valueDiff;
-      // Expected value: picking at your slot, perfect pick = ADP matches pick
-      totalExpected += pickNum;
+      totalRankValue += (rankPos - pickNum);
       posDepth[pick.player.pos] = (posDepth[pick.player.pos] || 0) + 1;
+      const pr = getPosRank(pick.player.idx, pick.player.pos);
+      if (posPicks[pick.player.pos]) posPicks[pick.player.pos].push(pr);
     });
 
-    // Score components (0-100 scale)
-    const rounds = getMdRounds();
-    const avgValuePerPick = totalValue / rounds;
+    // Sort positional picks to find starters
+    Object.keys(posPicks).forEach(k => posPicks[k].sort((a, b) => a - b));
+    if (posPicks.QB[0]) bestPosRank.QB = posPicks.QB[0];
+    if (posPicks.RB[0]) bestPosRank.RB1 = posPicks.RB[0];
+    if (posPicks.RB[1]) bestPosRank.RB2 = posPicks.RB[1];
+    if (posPicks.WR[0]) bestPosRank.WR1 = posPicks.WR[0];
+    if (posPicks.WR[1]) bestPosRank.WR2 = posPicks.WR[1];
+    if (posPicks.TE[0]) bestPosRank.TE = posPicks.TE[0];
 
-    // 1. Value score: avg ADP surplus per pick (capped)
-    const valuePts = Math.min(40, Math.max(0, 20 + avgValuePerPick * 1.5));
+    const avgRankValue = totalRankValue / rounds;
 
-    // 2. Starter coverage: did you fill all starting slots?
+    // 1. Value score (0-30): avg rank surplus per pick
+    const valuePts = Math.min(30, Math.max(0, 12 + avgRankValue * 1.2));
+
+    // 2. Starter coverage (0-20): did you fill all starting slots?
     let startersFilled = 0;
     let totalStarters = 0;
     ['QB','RB','WR','TE','K','DST'].forEach(pos => {
@@ -7876,50 +7927,72 @@ window.fmtHeight = fmtHeight;
     const flexFillable = Math.max(0, posDepth.RB - starterSlots.RB) + Math.max(0, posDepth.WR - starterSlots.WR) + Math.max(0, posDepth.TE - starterSlots.TE);
     startersFilled += Math.min(flexNeed, flexFillable);
     totalStarters += flexNeed;
-    const coveragePts = (startersFilled / Math.max(1, totalStarters)) * 25;
+    const coveragePts = (startersFilled / Math.max(1, totalStarters)) * 20;
 
-    // 3. Position balance: penalize missing key positions
-    let balancePts = 20;
-    if (posDepth.QB < 1) balancePts -= 5;
+    // 3. Position balance (0-15): penalize missing key positions
+    let balancePts = 15;
+    if (posDepth.QB < 1) balancePts -= 6;
     if (posDepth.RB < 2) balancePts -= (2 - posDepth.RB) * 3;
     if (posDepth.WR < 2) balancePts -= (2 - posDepth.WR) * 3;
-    if (posDepth.TE < 1) balancePts -= 4;
+    if (posDepth.TE < 1) balancePts -= 5;
+    if (posDepth.K < 1) balancePts -= 1;
+    if (posDepth.DST < 1) balancePts -= 1;
     balancePts = Math.max(0, balancePts);
 
-    // 4. Early round value: top 3 picks should be high value
+    // 4. Starter quality (0-20): how good are your actual starters by positional rank?
+    // Lower positional rank = better. TE1 ranked 20th at TE is brutal, etc.
+    let qualityPts = 20;
+    function qualityPenalty(posRank, maxGood, maxOk) {
+      if (posRank <= maxGood) return 0;
+      if (posRank <= maxOk) return 1 + (posRank - maxGood) * 0.15;
+      return 2 + (posRank - maxOk) * 0.3;
+    }
+    qualityPts -= qualityPenalty(bestPosRank.QB, 10, 18);    // QB1 quality
+    qualityPts -= qualityPenalty(bestPosRank.RB1, 12, 22);   // RB1 quality
+    qualityPts -= qualityPenalty(bestPosRank.RB2, 24, 36);   // RB2 quality
+    qualityPts -= qualityPenalty(bestPosRank.WR1, 12, 22);   // WR1 quality
+    qualityPts -= qualityPenalty(bestPosRank.WR2, 24, 36);   // WR2 quality
+    qualityPts -= qualityPenalty(bestPosRank.TE, 8, 16);     // TE1 quality — tight window, bad TE hurts
+    // No QB/RB/WR/TE at all = big penalty (posRank stays 99)
+    qualityPts = Math.max(0, qualityPts);
+
+    // 5. Early round premium (0-15): top 3 picks should not be reaches
     let earlyPts = 0;
     myPks.slice(0, 3).forEach(pick => {
-      const surplus = pick.player.adp - (pick.overall + 1);
+      const rankPos = getRankPos(pick.player.idx);
+      const pickNum = pick.overall + 1;
+      const surplus = rankPos - pickNum;
       if (surplus >= 0) earlyPts += 5;
-      else earlyPts += Math.max(0, 5 + surplus * 0.5);
+      else earlyPts += Math.max(0, 5 + surplus * 0.4);
     });
     earlyPts = Math.min(15, earlyPts);
 
-    const totalScore = Math.round(valuePts + coveragePts + balancePts + earlyPts);
+    const totalScore = Math.round(valuePts + coveragePts + balancePts + qualityPts + earlyPts);
     const clampedScore = Math.min(100, Math.max(0, totalScore));
 
-    // Map score to letter grade
+    // Map score to letter grade — tighter thresholds
     let grade, gradeColor, gradeSummary;
-    if (clampedScore >= 93) { grade = 'A+'; gradeColor = '#22c55e'; gradeSummary = 'Elite draft — you crushed it!'; }
-    else if (clampedScore >= 87) { grade = 'A'; gradeColor = '#22c55e'; gradeSummary = 'Excellent draft with great value picks.'; }
-    else if (clampedScore >= 82) { grade = 'A-'; gradeColor = '#4ade80'; gradeSummary = 'Very strong roster with solid depth.'; }
+    if (clampedScore >= 95) { grade = 'A+'; gradeColor = '#22c55e'; gradeSummary = 'Elite draft — you crushed it!'; }
+    else if (clampedScore >= 89) { grade = 'A'; gradeColor = '#22c55e'; gradeSummary = 'Excellent draft with great value picks.'; }
+    else if (clampedScore >= 83) { grade = 'A-'; gradeColor = '#4ade80'; gradeSummary = 'Very strong roster with solid depth.'; }
     else if (clampedScore >= 77) { grade = 'B+'; gradeColor = '#86efac'; gradeSummary = 'Above average — nice work.'; }
-    else if (clampedScore >= 72) { grade = 'B'; gradeColor = '#fbbf24'; gradeSummary = 'Solid draft with a balanced roster.'; }
-    else if (clampedScore >= 67) { grade = 'B-'; gradeColor = '#fbbf24'; gradeSummary = 'Decent draft, a few reaches though.'; }
-    else if (clampedScore >= 60) { grade = 'C+'; gradeColor = '#f97316'; gradeSummary = 'Average — some positional gaps.'; }
-    else if (clampedScore >= 52) { grade = 'C'; gradeColor = '#f97316'; gradeSummary = 'Below average — too many reaches.'; }
-    else if (clampedScore >= 44) { grade = 'C-'; gradeColor = '#f97316'; gradeSummary = 'Rough draft — missing key starters.'; }
-    else if (clampedScore >= 35) { grade = 'D'; gradeColor = '#ef4444'; gradeSummary = 'Poor draft — major roster holes.'; }
+    else if (clampedScore >= 71) { grade = 'B'; gradeColor = '#fbbf24'; gradeSummary = 'Solid draft with a balanced roster.'; }
+    else if (clampedScore >= 65) { grade = 'B-'; gradeColor = '#fbbf24'; gradeSummary = 'Decent draft, a few reaches though.'; }
+    else if (clampedScore >= 57) { grade = 'C+'; gradeColor = '#f97316'; gradeSummary = 'Average — some positional gaps.'; }
+    else if (clampedScore >= 48) { grade = 'C'; gradeColor = '#f97316'; gradeSummary = 'Below average — too many reaches.'; }
+    else if (clampedScore >= 38) { grade = 'C-'; gradeColor = '#f97316'; gradeSummary = 'Rough draft — missing key starters.'; }
+    else if (clampedScore >= 28) { grade = 'D'; gradeColor = '#ef4444'; gradeSummary = 'Poor draft — major roster holes.'; }
     else { grade = 'F'; gradeColor = '#ef4444'; gradeSummary = 'Yikes. Better luck next time.'; }
 
     document.getElementById('mdGradeCard').innerHTML = `
       <div style="display:inline-block;padding:1.25rem 2rem;background:var(--surface);border:2px solid ${gradeColor};border-radius:12px;margin-bottom:.5rem">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:3px;color:${gradeColor};line-height:1">${grade}</div>
         <div style="font-size:.75rem;color:var(--text2);margin-top:4px">${gradeSummary}</div>
-        <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;font-size:.6rem;color:var(--text2)">
-          <span>Value: ${Math.round(valuePts)}/40</span>
-          <span>Coverage: ${Math.round(coveragePts)}/25</span>
-          <span>Balance: ${Math.round(balancePts)}/20</span>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;font-size:.58rem;color:var(--text2)">
+          <span>Value: ${Math.round(valuePts)}/30</span>
+          <span>Coverage: ${Math.round(coveragePts)}/20</span>
+          <span>Balance: ${Math.round(balancePts)}/15</span>
+          <span>Starters: ${Math.round(qualityPts)}/20</span>
           <span>Early Rds: ${Math.round(earlyPts)}/15</span>
         </div>
       </div>`;

@@ -621,9 +621,10 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .home-title{font-size:2.4rem;letter-spacing:2px}
   .home-subtitle{font-size:.82rem;padding:0 .5rem}
   .home-body{padding:1rem 1rem 3rem}
-  .home-two-col{flex-direction:column}
-  .home-col-left{max-width:none}
+  .home-two-col{flex-direction:column;align-items:center}
+  .home-col-left{max-width:none;width:100%}
   .home-col-left .elite-pull-section{max-width:none!important}
+  .home-col-right{width:100%;max-width:480px}
   .elite-pull-img-wrap{height:220px}
   .home-nav-bar{gap:6px;padding:0 .5rem}
   .home-nav-btn{min-width:60px;padding:8px 10px}
@@ -2195,9 +2196,16 @@ function validateImportData(obj) {
     "Kenneth Walker III":"4567048","Travis Etienne Jr.":"4239996","Jordan Mason":"4374302",
     "Isiah Pacheco":"4362628","Rico Dowdle":"4038815","Rachaad White":"4426354",
     "Kenneth Gainwell":"4360310","J.K. Dobbins":"4242335","Tyler Allgeier":"4371985",
-    "Javonte Williams":"4361579","David Montgomery":"3916148","Cam Skattebo":"4685038"
+    "Javonte Williams":"4361579","David Montgomery":"3916148","Cam Skattebo":"4685038",
+    "Tyreek Hill":"3116406","Derrick Henry":"3043078","Saquon Barkley":"3929630",
+    "Josh Jacobs":"4241457","Travis Kelce":"15847","Mark Andrews":"3051889",
+    "George Kittle":"3040151","Patrick Mahomes":"3139477","Lamar Jackson":"3916387",
+    "Josh Allen":"3918298","Jalen Hurts":"4040715","CeeDee Lamb":"4241389",
+    "Justin Jefferson":"4262921","Ja'Marr Chase":"4362628","Amon-Ra St. Brown":"4360939",
+    "Bijan Robinson":"4426348","Breece Hall":"4430737","Jonathan Taylor":"4242335"
   };
   Object.assign(nameToId, FALLBACK_IDS);
+  window.FALLBACK_IDS = FALLBACK_IDS;
 
   function normName(n) { return n.replace(/['']/g, "'").replace(/\s+/g, ' ').trim(); }
 
@@ -4034,8 +4042,12 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   function getHeadshotUrl(id) {
     const cache = JSON.parse(sessionStorage.getItem('espnIdCache4') || '{}');
     const poolPlayer = EP_PLAYERS.find(p => p.id === id);
-    if (poolPlayer && cache[poolPlayer.name]) {
-      id = cache[poolPlayer.name];
+    if (poolPlayer) {
+      if (window.FALLBACK_IDS[poolPlayer.name]) {
+        id = FALLBACK_IDS[poolPlayer.name];
+      } else if (cache[poolPlayer.name]) {
+        id = cache[poolPlayer.name];
+      }
     }
     return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350&h=254`;
   }
@@ -4095,12 +4107,17 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       const state = JSON.parse(saved);
       guesses = state.guesses || [];
       gameOver = state.gameOver || false;
+      // Restore the actual player used (may differ from seed if image was skipped)
+      if (state.playerName) {
+        const found = DAILY_RETIRED_POOL.find(p => p.name === state.playerName);
+        if (found) todayPlayer = found;
+      }
     }
   }
 
   function saveState() {
     const key = getTodayKey();
-    localStorage.setItem(key, JSON.stringify({guesses, gameOver}));
+    localStorage.setItem(key, JSON.stringify({guesses, gameOver, playerName: todayPlayer.name}));
   }
 
   function updateStreak(won) {
@@ -4261,6 +4278,8 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         }
         epPlaceholder.style.display = 'none';
         epImage.style.display = 'block';
+        // Save the actual player used after any image skips
+        saveState();
         if (!gameOver) {
           epImage.style.filter = 'blur(0) brightness(1.05)';
           epImage.classList.remove('ep-reveal');
@@ -4309,8 +4328,13 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     function getHeadshotUrlU(id) {
     const cache = JSON.parse(sessionStorage.getItem('espnIdCache4') || '{}');
     const poolPlayer = EP_PLAYERS_U.find(p => p.id === id);
-    if (poolPlayer && cache[poolPlayer.name]) {
-      id = cache[poolPlayer.name];
+    if (poolPlayer) {
+      // Check FALLBACK_IDS first (most reliable)
+      if (window.FALLBACK_IDS[poolPlayer.name]) {
+        id = FALLBACK_IDS[poolPlayer.name];
+      } else if (cache[poolPlayer.name]) {
+        id = cache[poolPlayer.name];
+      }
     }
     return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350&h=254`;
   }
@@ -4821,8 +4845,8 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     }
     resetGame();
   }
-  fgModeSeason.addEventListener('click', () => { if (fgMode !== 'season' && Object.keys(roster).length === 0) setFgMode('season'); });
-  fgModeWeek.addEventListener('click', () => { if (fgMode !== 'week' && Object.keys(roster).length === 0) setFgMode('week'); });
+  fgModeSeason.addEventListener('click', () => { if (fgMode !== 'season' && (Object.keys(roster).length === 0 || gameOver)) setFgMode('season'); });
+  fgModeWeek.addEventListener('click', () => { if (fgMode !== 'week' && (Object.keys(roster).length === 0 || gameOver)) setFgMode('week'); });
 
   const slotsContainer = document.getElementById('fgRosterSlots');
   const totalPtsEl = document.getElementById('fgTotalPts');
@@ -5315,7 +5339,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       if (typeof window._lbUpdateFantasyGame === 'function') window._lbUpdateFantasyGame(total);
       if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
     }
-    setTimeout(() => { if (typeof window._lbRenderFgInline === 'function') window._lbRenderFgInline(total); }, 500);
+    setTimeout(() => { if (typeof window._lbRenderFgInline === 'function') window._lbRenderFgInline(total, isWeek); }, 500);
     renderRoster();
   }
 
@@ -8164,7 +8188,7 @@ window.fmtHeight = fmtHeight;
   }
 
   // === INLINE FG LEADERBOARD (shown after game ends) ===
-  window._lbRenderFgInline = function(myScore) {
+  window._lbRenderFgInline = function(myScore, isWeek) {
     const db = getDb();
     const wrap = document.getElementById('fgLeaderboard');
     if (!wrap || !db) return;
@@ -8175,17 +8199,20 @@ window.fmtHeight = fmtHeight;
     db.collection('leaderboard').get().then(snap => {
       const all = [];
       snap.forEach(doc => { all.push({ id: doc.id, ...doc.data() }); });
-      const fgPlayers = all.filter(u => u.fantasygame && u.fantasygame.highScore > 0)
-        .sort((a, b) => b.fantasygame.highScore - a.fantasygame.highScore);
+
+      const key = isWeek ? 'fantasygameWeek' : 'fantasygame';
+      const label = isWeek ? 'BEST WEEK LEADERBOARD' : 'BEST SEASON LEADERBOARD';
+      const fgPlayers = all.filter(u => u[key] && u[key].highScore > 0)
+        .sort((a, b) => b[key].highScore - a[key].highScore);
 
       if (fgPlayers.length === 0) {
         wrap.innerHTML = '<div class="lb-empty">No scores yet — you\'ll be first!</div>';
         return;
       }
       const rows = fgPlayers.slice(0, 10).map((u, i) =>
-        renderRow(i + 1, u.name, u.fantasygame.highScore.toFixed(1) + ' PTS', u.id === uid, u.activeBadgeIcon)
+        renderRow(i + 1, u.name, u[key].highScore.toFixed(1) + ' PTS', u.id === uid, u.activeBadgeIcon)
       ).join('');
-      wrap.innerHTML = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);text-align:center;margin-bottom:8px">LEADERBOARD</div>' +
+      wrap.innerHTML = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);text-align:center;margin-bottom:8px">' + label + '</div>' +
         '<div class="lb-list" style="max-height:280px;overflow-y:auto">' + rows + '</div>';
     }).catch(() => {
       wrap.innerHTML = '';

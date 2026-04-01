@@ -4294,19 +4294,66 @@ document.querySelectorAll('[data-goto]').forEach(el => {
 
   // Active player team history: maps player name -> [{team, startYr, endYr}]
   // Only needed for players who've changed teams
+
+  // Build reverse abbreviation -> full name lookup
+  const _ABBR_TO_FULL_TEAM = {};
+  if (typeof TEAM_ABBR_MAP !== 'undefined') {
+    Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => {
+      _ABBR_TO_FULL_TEAM[abbr] = full;
+    });
+  }
+
+  // Helper: convert team abbreviation or name to modern full team name
+  function toFullTeamName(t) {
+    if (!t || t === 'TBD' || t === 'FA' || t === 'Retired') return null;
+    // If it's already a full name, return it (with alias resolution)
+    if (TEAM_ALIASES[t]) return TEAM_ALIASES[t];
+    if (typeof ALL_NFL_TEAMS !== 'undefined' && ALL_NFL_TEAMS.includes(t)) return t;
+    // Try abbreviation lookup
+    const full = _ABBR_TO_FULL_TEAM[t];
+    if (full) return TEAM_ALIASES[full] || full;
+    return null;
+  }
+
     // Helper: get all teams an active player has played for
   function getActivePlayerTeams(name, currentTeam) {
-    const hist = ACTIVE_TEAM_HISTORY[name];
-    if (hist) return [...new Set(hist.map(h => h.t))];
-    return currentTeam && currentTeam !== 'TBD' ? [currentTeam] : [];
+    // First check ACTIVE_TEAM_HISTORY (uses full team names)
+    if (typeof ACTIVE_TEAM_HISTORY !== 'undefined') {
+      const hist = ACTIVE_TEAM_HISTORY[name];
+      if (hist) return [...new Set(hist.map(h => h.t))];
+    }
+    // Fallback: check PLAYER_TEAM_HISTORY (uses abbreviations) for multi-team players
+    if (typeof PLAYER_TEAM_HISTORY !== 'undefined') {
+      const pHist = PLAYER_TEAM_HISTORY[name];
+      if (pHist && pHist.length) {
+        const teams = pHist.map(h => toFullTeamName(h.t)).filter(Boolean);
+        if (teams.length) return [...new Set(teams)];
+      }
+    }
+    // Last fallback: just current team (convert abbreviation to full name)
+    const full = toFullTeamName(currentTeam);
+    return full ? [full] : [];
   }
 
   // Helper: get team for a D-player career season year
   function getTeamForYear(playerName, yr) {
-    const hist = ACTIVE_TEAM_HISTORY[playerName];
-    if (!hist) return null;
-    for (const h of hist) {
-      if (yr >= h.y1 && yr <= h.y2) return h.t;
+    if (typeof ACTIVE_TEAM_HISTORY !== 'undefined') {
+      const hist = ACTIVE_TEAM_HISTORY[playerName];
+      if (hist) {
+        for (const h of hist) {
+          if (yr >= h.y1 && yr <= h.y2) return h.t;
+        }
+        return null;
+      }
+    }
+    // Fallback: PLAYER_TEAM_HISTORY (uses abbreviations, convert to full)
+    if (typeof PLAYER_TEAM_HISTORY !== 'undefined') {
+      const pHist = PLAYER_TEAM_HISTORY[playerName];
+      if (pHist) {
+        for (const h of pHist) {
+          if (yr >= h.y1 && yr <= h.y2) return toFullTeamName(h.t);
+        }
+      }
     }
     return null;
   }
@@ -4418,6 +4465,9 @@ document.querySelectorAll('[data-goto]').forEach(el => {
       if (t === modernTeam) return true;
       const alias = TEAM_ALIASES[t];
       if (alias === modernTeam) return true;
+      // Handle abbreviation stored as team name
+      const full = toFullTeamName(t);
+      if (full === modernTeam) return true;
       return false;
     });
   }
@@ -4616,6 +4666,75 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     return null;
   }
 
+  // Get the year range a player was on a specific team
+  function getTeamYears(player, forTeam) {
+    const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
+    if (!modernTeam) return player._yrs || '';
+    let minYr = Infinity, maxYr = -Infinity;
+
+    // Check ACTIVE_TEAM_HISTORY (full team names)
+    if (typeof ACTIVE_TEAM_HISTORY !== 'undefined') {
+      const hist = ACTIVE_TEAM_HISTORY[player.n];
+      if (hist) {
+        hist.forEach(h => {
+          const hModern = TEAM_ALIASES[h.t] || h.t;
+          if (hModern === modernTeam) {
+            if (h.y1 < minYr) minYr = h.y1;
+            if (h.y2 > maxYr) maxYr = h.y2;
+          }
+        });
+        if (minYr !== Infinity) return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
+      }
+    }
+
+    // Check PLAYER_TEAM_HISTORY (abbreviations)
+    if (typeof PLAYER_TEAM_HISTORY !== 'undefined') {
+      const pHist = PLAYER_TEAM_HISTORY[player.n];
+      if (pHist) {
+        pHist.forEach(h => {
+          const hFull = toFullTeamName(h.t);
+          if (hFull === modernTeam) {
+            if (h.y1 < minYr) minYr = h.y1;
+            if (h.y2 > maxYr) maxYr = h.y2;
+          }
+        });
+        if (minYr !== Infinity) return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
+      }
+    }
+
+    // Fallback: scan career array for seasons on this team
+    const career = (player._dRef && player._dRef.career) ? player._dRef.career : (player.career || []);
+    if (career.length && modernTeam) {
+      career.forEach(s => {
+        const yr = s.yr;
+        const sTeam = getTeamForYear(player.n, yr);
+        if (sTeam) {
+          const sModern = TEAM_ALIASES[sTeam] || sTeam;
+          if (sModern === modernTeam) {
+            if (yr < minYr) minYr = yr;
+            if (yr > maxYr) maxYr = yr;
+          }
+        }
+      });
+      if (minYr !== Infinity) return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
+    }
+
+    // Fallback: if player only has one team, use overall _yrs
+    if (player._fgTeams.length <= 1) return player._yrs || '';
+
+    // Check _bestByTeam for HP players
+    if (player._bestByTeam) {
+      for (const [tk, tv] of Object.entries(player._bestByTeam)) {
+        const tkModern = TEAM_ALIASES[tk] || tk;
+        if (tkModern === modernTeam && tv && tv.yr) {
+          return String(tv.yr);
+        }
+      }
+    }
+
+    return player._yrs || '';
+  }
+
   function canFitSlot(slot, playerPos) {
     if (slot.pos === 'FLEX') return ['RB','WR','TE'].includes(playerPos);
     return slot.pos === playerPos;
@@ -4638,7 +4757,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
       div.className = 'fg-slot' + (filled ? ' filled' : '') + (isPending ? ' active-slot' : '');
       if (filled) {
         const pTeam = filled.draftedFrom || filled.player._fgTeams[0] || '—';
-        const pYrs = filled.player._yrs || (filled.player._retired ? '' : 'Active');
+        const pYrs = getTeamYears(filled.player, filled.draftedFrom) || (filled.player._retired ? '' : 'Active');
         const bestYr = filled.bestSeason ? filled.bestSeason.yr : '';
         let slotDetail;
         if (fgMode === 'week' && filled.bestSeason) {
@@ -4819,7 +4938,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
       const fits = fittingSlots.length > 0;
       const card = document.createElement('div');
       card.className = 'fg-player-card' + (!fits ? ' no-fit' : '');
-      const eraLabel = p._dRef ? 'Active' : (p._yrs || '');
+      const eraLabel = getTeamYears(p, currentTeam) || (p._dRef ? 'Active' : (p._yrs || ''));
       const metaText = eraLabel;
       card.innerHTML = `
         <span class="fg-pc-pos ${p.s}">${p.s}</span>

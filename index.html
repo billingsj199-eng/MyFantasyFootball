@@ -7,7 +7,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.firebaseio.com https://*.googleapis.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src * data: blob:; connect-src https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firestore.googleapis.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com https://lm-api-reads.lazydays.host https://a.espncdn.com https://site.api.espn.com https://sports.core.api.espn.com; frame-src https://*.firebaseapp.com https://*.googleapis.com https://accounts.google.com;">
-<title>jackb933 Fantasy Football Rankings</title>
+<title>MyFantasyFootball</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1499,7 +1499,7 @@ PREMIUM ACTIVE
 <div class="auth-anchor" id="authAnchorHome"></div>
 
 <div class="home-hero">
-<div class="home-title">JACKB933</div>
+<div class="home-title">MYFANTASYFOOTBALL</div>
 <div class="home-subtitle">Fantasy football rankings, tools, and mini-games — all in one place.</div>
 <div class="home-nav-bar">
 <button class="home-nav-btn" data-goto="rankings">
@@ -4993,7 +4993,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
           }
         });
         if (minYr !== Infinity) {
-          if (!player._retired && maxYr >= currentYear) return minYr + '–pres';
+          if (!player._retired && maxYr >= currentYear - 1) return minYr + '–pres';
           return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
         }
       }
@@ -5013,7 +5013,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
           }
         });
         if (minYr !== Infinity) {
-          if (!player._retired && maxYr >= currentYear) return minYr + '–pres';
+          if (!player._retired && maxYr >= currentYear - 1) return minYr + '–pres';
           return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
         }
       }
@@ -5039,8 +5039,46 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       }
     }
 
+    // Active player on current team — compute start year and show year–pres
+    if (!player._retired && player._dRef) {
+      const d = player._dRef;
+      const playerCurrentTeam = toFullTeamName(d.t);
+      const isCurrentTeam = playerCurrentTeam === modernTeam || (TEAM_ALIASES[playerCurrentTeam] || playerCurrentTeam) === modernTeam;
+      if (isCurrentTeam) {
+        // Try career data for earliest year
+        if (career.length) {
+          const startYr = Math.min(...career.map(s => s.yr));
+          if (startYr && startYr < Infinity) return startYr + '–pres';
+        }
+        // Try experience field
+        if (d.exp && !isNaN(d.exp)) {
+          const draftYr = currentYear - parseInt(d.exp);
+          return draftYr + '–pres';
+        }
+        // Try _yrs field
+        if (player._yrs) {
+          const m = player._yrs.match(/^(\d{4})/);
+          if (m) return m[1] + '–pres';
+        }
+        return currentYear + '–pres';
+      }
+    }
+
     // Fallback: if player only has one team, use overall _yrs
-    if (player._fgTeams.length <= 1) return player._yrs || '';
+    if (player._fgTeams.length <= 1) {
+      if (!player._retired) {
+        // Active single-team player — show year–pres
+        if (career.length) {
+          const startYr = Math.min(...career.map(s => s.yr));
+          if (startYr && startYr < Infinity) return startYr + '–pres';
+        }
+        if (player._yrs) {
+          const m = player._yrs.match(/^(\d{4})/);
+          if (m) return m[1] + '–pres';
+        }
+      }
+      return player._yrs || '';
+    }
 
     // Check _bestByTeam for HP players — use _yrs since we only have one year
     if (player._bestByTeam) {
@@ -5077,7 +5115,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       div.className = 'fg-slot' + (filled ? ' filled' : '') + (isPending ? ' active-slot' : '');
       if (filled) {
         const pTeam = filled.draftedFrom || filled.player._fgTeams[0] || '—';
-        const pYrs = getTeamYears(filled.player, filled.draftedFrom) || (filled.player._retired ? '' : 'Active');
+        const pYrs = getTeamYears(filled.player, filled.draftedFrom);
         const bestYr = filled.bestSeason ? filled.bestSeason.yr : '';
         let slotDetail;
         if (fgMode === 'week' && filled.bestSeason) {
@@ -5252,13 +5290,20 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     }
 
     const openSlots = getOpenSlots();
+    // Deduplicate players with same name+position on this team
+    const seenKeys = new Set();
+    const dedupedPlayers = [];
     players.forEach(p => {
+      const key = p.n + '|' + p.s;
+      if (!seenKeys.has(key)) { seenKeys.add(key); dedupedPlayers.push(p); }
+    });
+    dedupedPlayers.forEach(p => {
       const best = getScore(p, currentTeam);
       const fittingSlots = getOpenSlotsForPos(p.s);
       const fits = fittingSlots.length > 0;
       const card = document.createElement('div');
       card.className = 'fg-player-card' + (!fits ? ' no-fit' : '');
-      const eraLabel = getTeamYears(p, currentTeam) || (p._dRef ? 'Active' : (p._yrs || ''));
+      const eraLabel = getTeamYears(p, currentTeam) || (p._yrs || '');
       const metaText = eraLabel;
       card.innerHTML = `
         <span class="fg-pc-pos ${p.s}">${p.s}</span>

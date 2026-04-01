@@ -4295,6 +4295,19 @@ document.querySelectorAll('[data-goto]').forEach(el => {
   // Active player team history: maps player name -> [{team, startYr, endYr}]
   // Only needed for players who've changed teams
 
+  // Historical team name aliases -> modern names
+  const TEAM_ALIASES = {
+    'St. Louis Rams': 'Los Angeles Rams',
+    'San Diego Chargers': 'Los Angeles Chargers',
+    'Oakland Raiders': 'Las Vegas Raiders',
+    'Houston Oilers': 'Tennessee Titans',
+    'Phoenix Cardinals': 'Arizona Cardinals',
+    'St. Louis Cardinals': 'Arizona Cardinals',
+    'Los Angeles Raiders': 'Las Vegas Raiders',
+    'Baltimore Colts': 'Indianapolis Colts',
+    'Boston Patriots': 'New England Patriots',
+  };
+
   // Build reverse abbreviation -> full name lookup
   const _ABBR_TO_FULL_TEAM = {};
   if (typeof TEAM_ABBR_MAP !== 'undefined') {
@@ -4446,19 +4459,6 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     'New York Jets','Philadelphia Eagles','Pittsburgh Steelers','San Francisco 49ers',
     'Seattle Seahawks','Tampa Bay Buccaneers','Tennessee Titans','Washington Commanders'
   ];
-  // Also include historical team names for matching
-  const TEAM_ALIASES = {
-    'St. Louis Rams': 'Los Angeles Rams',
-    'San Diego Chargers': 'Los Angeles Chargers',
-    'Oakland Raiders': 'Las Vegas Raiders',
-    'Houston Oilers': 'Tennessee Titans',
-    'Phoenix Cardinals': 'Arizona Cardinals',
-    'St. Louis Cardinals': 'Arizona Cardinals',
-    'Los Angeles Raiders': 'Las Vegas Raiders',
-    'Baltimore Colts': 'Indianapolis Colts',
-    'Boston Patriots': 'New England Patriots',
-  };
-
   // Function to check if player played for a given modern team
   function playerPlaysForTeam(player, modernTeam) {
     return player._fgTeams.some(t => {

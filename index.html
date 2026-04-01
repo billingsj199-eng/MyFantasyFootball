@@ -4332,14 +4332,22 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
 // === UNLIMITED ELITE PULL — Trivia Tab ===
 (function() {
-    function getHeadshotUrlU(id) {
+    function getHeadshotUrlU(id, playerName) {
     const cache = JSON.parse(sessionStorage.getItem('espnIdCache4') || '{}');
-    const poolPlayer = EP_PLAYERS_U.find(p => p.id === id);
-    if (poolPlayer) {
-      if (window.FALLBACK_IDS && window.FALLBACK_IDS[poolPlayer.name]) {
-        id = window.FALLBACK_IDS[poolPlayer.name];
-      } else if (cache[poolPlayer.name]) {
-        id = cache[poolPlayer.name];
+    if (playerName) {
+      if (window.FALLBACK_IDS && window.FALLBACK_IDS[playerName]) {
+        id = window.FALLBACK_IDS[playerName];
+      } else if (cache[playerName]) {
+        id = cache[playerName];
+      }
+    } else {
+      const poolPlayer = EP_PLAYERS_U.find(p => p.id === id);
+      if (poolPlayer) {
+        if (window.FALLBACK_IDS && window.FALLBACK_IDS[poolPlayer.name]) {
+          id = window.FALLBACK_IDS[poolPlayer.name];
+        } else if (cache[poolPlayer.name]) {
+          id = cache[poolPlayer.name];
+        }
       }
     }
     return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350&h=254`;
@@ -4521,7 +4529,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     epuPlaceholder.style.display = 'block';
     epuPlaceholder.textContent = 'Loading player...';
 
-    const imgUrl = getHeadshotUrlU(currentPlayerU.id);
+    const imgUrl = getHeadshotUrlU(currentPlayerU.id, currentPlayerU.name);
     let _epuRetries = 0;
     function _epuTryLoad(url) {
       epuImage.src = url;
@@ -4531,7 +4539,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
           _epuRetries++;
           if (_epuRetries < 10) {
             currentPlayerU = pickRandomPlayer();
-            _epuTryLoad(getHeadshotUrlU(currentPlayerU.id));
+            _epuTryLoad(getHeadshotUrlU(currentPlayerU.id, currentPlayerU.name));
           } else {
             epuPlaceholder.textContent = 'No image available';
           }
@@ -4546,7 +4554,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         _epuRetries++;
         if (_epuRetries < 10) {
           currentPlayerU = pickRandomPlayer();
-          _epuTryLoad(getHeadshotUrlU(currentPlayerU.id));
+          _epuTryLoad(getHeadshotUrlU(currentPlayerU.id, currentPlayerU.name));
         } else {
           epuPlaceholder.textContent = 'No image available';
         }

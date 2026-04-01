@@ -2016,7 +2016,7 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <span id="mdCpuText">CPU is picking...</span>
 </div>
 <div id="mdUserPick">
-<div class="md-pick-title">YOU'RE ON THE CLOCK</div>
+<div class="md-pick-title">YOU'RE ON THE CLOCK <span id="mdPickTimer" style="color:var(--accent);margin-left:6px"></span></div>
 <div class="md-search-wrap">
 <svg class="md-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-width="2" d="m21 21-4.35-4.35"/></svg>
 <input type="text" class="md-search" id="mdSearch" placeholder="Search available players..." autocomplete="off">
@@ -4357,6 +4357,8 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   let totalPlayedU = parseInt(localStorage.getItem('epu_played') || '0');
   let totalCorrectU = parseInt(localStorage.getItem('epu_correct') || '0');
   let streakU = parseInt(localStorage.getItem('epu_streak') || '0');
+  let bestStreakU = parseInt(localStorage.getItem('epu_best_streak') || '0');
+  if (streakU > bestStreakU) { bestStreakU = streakU; localStorage.setItem('epu_best_streak', bestStreakU); }
   let usedIndices = [];
 
   function pickRandomPlayer() {
@@ -4373,7 +4375,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   function renderStatsU() {
     const parts = [];
     if (streakU > 0) parts.push(`🔥 ${streakU} STREAK`);
-    parts.push(`${totalCorrectU}/${totalPlayedU} CORRECT`);
+    parts.push(`⭐ ${bestStreakU} BEST`);
     epuStats.textContent = parts.join('  ·  ');
   }
 
@@ -4396,7 +4398,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     epuImage.classList.add('ep-reveal');
     epuImage.style.filter = 'blur(0) brightness(1.05)';
     totalPlayedU++;
-    if (won) { totalCorrectU++; streakU++; } else {
+    if (won) { totalCorrectU++; streakU++; if (streakU > bestStreakU) { bestStreakU = streakU; localStorage.setItem('epu_best_streak', bestStreakU); } } else {
       const finalStreak = streakU;
       streakU = 0;
       // Show game over screen
@@ -5884,7 +5886,7 @@ window.fmtHeight = fmtHeight;
 
 // === CLOUD SYNC — Game data across devices ===
 (function(){
-  const SYNC_KEYS_MAX = ['ep_streak','epu_played','epu_correct','epu_streak','fg_games_played','fg_highscore','fg_highscore_week','md_games_played'];
+  const SYNC_KEYS_MAX = ['ep_streak','epu_played','epu_correct','epu_streak','epu_best_streak','fg_games_played','fg_highscore','fg_highscore_week','md_games_played'];
   const SYNC_KEYS_STR = ['ep_last_win','jb_active_badge','jb_is_founder'];
   const SYNC_KEYS_JSON = ['jb_unlocked_badges'];
 
@@ -7641,7 +7643,7 @@ window.fmtHeight = fmtHeight;
 
   function makePick(player, isUser) {
     if (!mdState || mdState.done) return;
-    if (_draftStallTimer) clearTimeout(_draftStallTimer);
+    clearUserTimer();
     const teamIdx = getCurrentTeamIdx(mdState.currentPick);
     const { round, pickInRound } = getRoundAndPick(mdState.currentPick);
     mdState.picks.push({ overall: mdState.currentPick, round, pickInRound, teamIdx, player, isUser });
@@ -7655,20 +7657,53 @@ window.fmtHeight = fmtHeight;
   }
 
   let _draftStallTimer = null;
+  let _userPickTimer = null;
+  let _userPickCountdown = null;
+
+  function clearUserTimer() {
+    if (_userPickTimer) { clearTimeout(_userPickTimer); _userPickTimer = null; }
+    if (_userPickCountdown) { clearInterval(_userPickCountdown); _userPickCountdown = null; }
+    const timerEl = document.getElementById('mdPickTimer');
+    if (timerEl) timerEl.textContent = '';
+  }
+
+  function startUserTimer() {
+    clearUserTimer();
+    let secondsLeft = 30;
+    const timerEl = document.getElementById('mdPickTimer');
+    if (timerEl) timerEl.textContent = '(' + secondsLeft + 's)';
+
+    _userPickCountdown = setInterval(() => {
+      secondsLeft--;
+      if (timerEl) {
+        timerEl.textContent = '(' + secondsLeft + 's)';
+        if (secondsLeft <= 10) timerEl.style.color = 'var(--red)';
+        else timerEl.style.color = 'var(--accent)';
+      }
+      if (secondsLeft <= 0) {
+        clearUserTimer();
+        autoPickForUser();
+      }
+    }, 1000);
+  }
+
+  function autoPickForUser() {
+    if (!mdState || mdState.done) return;
+    // Pick the best available player by ADP
+    const best = mdState.available[0];
+    if (best) {
+      makePick(best, true);
+    } else {
+      mdState.currentPick++;
+      if (mdState.currentPick >= mdState.totalPicks) { mdState.done = true; finishDraft(); return; }
+      advanceDraft();
+    }
+  }
+
   function advanceDraft() {
     if (!mdState || mdState.done) return;
     
-    // Clear any existing stall timer
-    if (_draftStallTimer) clearTimeout(_draftStallTimer);
-    
-    // Set a stall watchdog — if no progress in 10 seconds, force finish
-    _draftStallTimer = setTimeout(() => {
-      if (mdState && !mdState.done) {
-        console.warn('Draft stall detected at pick', mdState.currentPick, '/', mdState.totalPicks);
-        mdState.done = true;
-        finishDraft();
-      }
-    }, 10000);
+    clearUserTimer();
     
     updateHeader();
     const teamIdx = getCurrentTeamIdx(mdState.currentPick);
@@ -7677,6 +7712,7 @@ window.fmtHeight = fmtHeight;
       document.getElementById('mdUserPick').style.display = '';
       document.getElementById('mdCpuMsg').style.display = 'none';
       renderAvailable();
+      startUserTimer();
     } else {
       document.getElementById('mdUserPick').style.display = 'none';
       document.getElementById('mdCpuMsg').style.display = 'flex';
@@ -7687,7 +7723,6 @@ window.fmtHeight = fmtHeight;
         if (picked) {
           makePick(picked, false);
         } else {
-          // No players available — force-advance the pick
           mdState.currentPick++;
           if (mdState.currentPick >= mdState.totalPicks) { mdState.done = true; finishDraft(); return; }
           advanceDraft();

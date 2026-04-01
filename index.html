@@ -4319,9 +4319,10 @@ document.querySelectorAll('[data-goto]').forEach(el => {
   // Helper: convert team abbreviation or name to modern full team name
   function toFullTeamName(t) {
     if (!t || t === 'TBD' || t === 'FA' || t === 'Retired') return null;
-    // If it's already a full name, return it (with alias resolution)
+    // If it's a historical alias, resolve it
     if (TEAM_ALIASES[t]) return TEAM_ALIASES[t];
-    if (typeof ALL_NFL_TEAMS !== 'undefined' && ALL_NFL_TEAMS.includes(t)) return t;
+    // If it's already a modern full name, return it
+    if (Object.values(_ABBR_TO_FULL_TEAM).includes(t)) return t;
     // Try abbreviation lookup
     const full = _ABBR_TO_FULL_TEAM[t];
     if (full) return TEAM_ALIASES[full] || full;

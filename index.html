@@ -113,7 +113,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .fg-title{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
 .fg-subtitle{color:var(--text2);font-size:.82rem;margin-top:4px;max-width:500px;margin-left:auto;margin-right:auto}
 .fg-layout{display:flex;gap:1.5rem;align-items:flex-start}
-@media(max-width:768px){.fg-layout{flex-direction:column-reverse;align-items:center}.fg-draft-panel{order:0}.fg-roster-panel{order:1}}
+@media(max-width:768px){.fg-layout{flex-direction:column;align-items:center}.fg-draft-panel{order:-1}.fg-roster-panel{order:1}}
 .fg-roster-panel{width:320px;min-width:280px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;flex-shrink:0}
 @media(max-width:768px){.fg-roster-panel{width:100%;max-width:420px}}
 .fg-roster-title{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;color:var(--accent);margin-bottom:.75rem;text-align:center}
@@ -2490,6 +2490,8 @@ let filter = 'ALL', sortKey = 'myrank', sortDir = 1, query = '', viewMode = 'all
 function getFiltered() {
   // Always get board-ordered list first
   let f = board.map(idx => D[idx]);
+  // Hide retired players from rankings
+  f = f.filter(d => !d._retired);
   f = f.filter(d => {
     if (filter === 'ROOKIE') {
       if ((d.career && d.career.length > 0) || (d.t && d.t !== 'TBD')) return false;
@@ -5768,19 +5770,31 @@ document.querySelectorAll('[data-goto]').forEach(el => {
     loadState();
 
     // Load image — use customImg if available, otherwise ESPN headshot
-    const imgUrl = todayPlayer.customImg || getHeadshotUrl(todayPlayer.id);
-    epImage.src = imgUrl;
-    epImage.onload = () => {
-      epPlaceholder.style.display = 'none';
-      epImage.style.display = 'block';
-      if (!gameOver) {
-        epImage.style.filter = 'blur(0) brightness(1.05)';
-        epImage.classList.remove('ep-reveal');
-      }
-    };
-    epImage.onerror = () => {
-      epPlaceholder.textContent = 'Could not load image';
-    };
+    // If headshot fails, cycle to next pool player with a valid image
+    let _epSkipAttempts = 0;
+    function _epTryLoadImage() {
+      const imgUrl = todayPlayer.customImg || getHeadshotUrl(todayPlayer.id);
+      epImage.src = imgUrl;
+      epImage.onload = () => {
+        epPlaceholder.style.display = 'none';
+        epImage.style.display = 'block';
+        if (!gameOver) {
+          epImage.style.filter = 'blur(0) brightness(1.05)';
+          epImage.classList.remove('ep-reveal');
+        }
+      };
+      epImage.onerror = () => {
+        _epSkipAttempts++;
+        if (_epSkipAttempts < DAILY_RETIRED_POOL.length) {
+          // Move to next player in pool
+          const today = new Date();
+          const baseSeed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
+          todayPlayer = DAILY_RETIRED_POOL[(baseSeed + _epSkipAttempts) % DAILY_RETIRED_POOL.length];
+          _epTryLoadImage();
+        }
+      };
+    }
+    _epTryLoadImage();
 
     renderAttempts();
     renderStreak();
@@ -6083,7 +6097,12 @@ document.querySelectorAll('[data-goto]').forEach(el => {
       epuImage.style.display = 'block';
       epuImage.style.filter = 'blur(0) brightness(1.05)';
     };
-    epuImage.onerror = () => { epuPlaceholder.textContent = 'Could not load image'; };
+    epuImage.onerror = () => {
+      // Image failed — pick a different player
+      currentPlayerU = pickRandomPlayer();
+      const newUrl = getHeadshotUrlU(currentPlayerU.id);
+      epuImage.src = newUrl;
+    };
     renderStatsU();
   }
 

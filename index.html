@@ -5573,9 +5573,10 @@ window.fmtHeight = fmtHeight;
     const adminPanel = document.getElementById('acctPanelAdmin');
     if (typeof window.isAdmin === 'function' && window.isAdmin()) {
       adminTab.style.display = '';
+      if (adminPanel) adminPanel.style.display = '';
     } else {
       adminTab.style.display = 'none';
-      if (adminPanel) adminPanel.innerHTML = '';
+      if (adminPanel) { adminPanel.classList.remove('active'); adminPanel.style.display = 'none'; }
       return;
     }
 

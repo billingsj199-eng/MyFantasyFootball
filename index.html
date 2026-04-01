@@ -5637,31 +5637,41 @@ window.fmtHeight = fmtHeight;
     if (giftPremBtn && !giftPremBtn._bound) {
       giftPremBtn._bound = true;
       giftPremBtn.addEventListener('click', () => {
-        const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-        const email = document.getElementById('adminGiftPremEmail').value.trim().toLowerCase();
-        const days = parseInt(document.getElementById('adminGiftPremDuration').value);
-        if (!db) { showAdminMsg(premMsg, 'Database not available', 'error'); return; }
-        if (!email) { showAdminMsg(premMsg, 'Enter an email', 'error'); return; }
-        giftPremBtn.disabled = true;
-        giftPremBtn.textContent = 'GRANTING...';
-        const expires = Date.now() + (days * 24 * 60 * 60 * 1000);
-        const labels = { 7: '1 Week', 30: '1 Month', 150: 'Season Pass', 365: 'Yearly Pass' };
-        const expDate = new Date(expires).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const docId = email.replace(/[^a-z0-9]/g, '_');
-        db.collection('gifted_premium').doc(docId).set({
-          email, expires, days,
-          label: labels[days] || days + ' days',
-          grantedBy: (auth.currentUser ? auth.currentUser.email : 'admin'),
-          grantedAt: new Date().toISOString()
-        }).then(() => {
+        try {
+          const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+          const email = document.getElementById('adminGiftPremEmail').value.trim().toLowerCase();
+          const days = parseInt(document.getElementById('adminGiftPremDuration').value);
+          if (!db) { showAdminMsg(premMsg, 'Database not available', 'error'); return; }
+          if (!email) { showAdminMsg(premMsg, 'Enter an email', 'error'); return; }
+          giftPremBtn.disabled = true;
+          giftPremBtn.textContent = 'GRANTING...';
+          const expires = Date.now() + (days * 24 * 60 * 60 * 1000);
+          const labels = { 7: '1 Week', 30: '1 Month', 150: 'Season Pass', 365: 'Yearly Pass' };
+          const expDate = new Date(expires).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const docId = email.replace(/[^a-z0-9]/g, '_');
+          const adminEmail = (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.email : 'admin';
+          db.collection('gifted_premium').doc(docId).set({
+            email: email,
+            expires: expires,
+            days: days,
+            label: labels[days] || days + ' days',
+            grantedBy: adminEmail,
+            grantedAt: new Date().toISOString()
+          }).then(function() {
+            giftPremBtn.disabled = false;
+            giftPremBtn.textContent = 'GRANT PREMIUM';
+            showAdminMsg(premMsg, '✅ Granted ' + (labels[days] || days + ' days') + ' premium to ' + email + ' — expires ' + expDate, 'success');
+          }).catch(function(e) {
+            giftPremBtn.disabled = false;
+            giftPremBtn.textContent = 'GRANT PREMIUM';
+            showAdminMsg(premMsg, 'Firestore error: ' + e.message, 'error');
+          });
+        } catch(err) {
           giftPremBtn.disabled = false;
           giftPremBtn.textContent = 'GRANT PREMIUM';
-          showAdminMsg(premMsg, '✅ Granted ' + (labels[days] || days + ' days') + ' premium to ' + email + ' — expires ' + expDate, 'success');
-        }).catch(e => {
-          giftPremBtn.disabled = false;
-          giftPremBtn.textContent = 'GRANT PREMIUM';
-          showAdminMsg(premMsg, 'Error: ' + e.message, 'error');
-        });
+          showAdminMsg(premMsg, 'Error: ' + err.message, 'error');
+          console.error('[Admin] Grant premium error:', err);
+        }
       });
     }
   }

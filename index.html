@@ -3960,6 +3960,11 @@ document.querySelectorAll('[data-goto]').forEach(el => {
   if (authBar && anchor) anchor.appendChild(authBar);
 })();
 
+// === Shared bad image tracking for Elite Pull games ===
+const BAD_IMG_KEY = 'ep_bad_images';
+function getBadImages() { try { return JSON.parse(sessionStorage.getItem(BAD_IMG_KEY) || '[]'); } catch(e) { return []; } }
+function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { bad.push(id); sessionStorage.setItem(BAD_IMG_KEY, JSON.stringify(bad)); } }
+
 // === ELITE PULL — Daily Player Guessing Game ===
 (function() {
   // Pool of players with headshot URLs (ESPN headshots are publicly accessible)
@@ -4236,11 +4241,6 @@ document.querySelectorAll('[data-goto]').forEach(el => {
   document.addEventListener('click', e => {
     if (!e.target.closest('.ep-guess-wrap')) epSuggestions.classList.remove('show');
   });
-
-  // Track players with missing images to remove from pools
-  const BAD_IMG_KEY = 'ep_bad_images';
-  function getBadImages() { try { return JSON.parse(sessionStorage.getItem(BAD_IMG_KEY) || '[]'); } catch(e) { return []; } }
-  function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { bad.push(id); sessionStorage.setItem(BAD_IMG_KEY, JSON.stringify(bad)); } }
 
   // Initialize
   function initElitePull() {

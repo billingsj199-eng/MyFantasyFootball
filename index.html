@@ -4160,6 +4160,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     updateStreak(won);
     saveState();
     if (typeof window._lbUpdateDaily === 'function') window._lbUpdateDaily(won, streak);
+    if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
 
     epResult.style.display = 'block';
     if (won) {
@@ -4380,6 +4381,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       localStorage.setItem('epu_correct', totalCorrectU);
       localStorage.setItem('epu_streak', streakU);
       if (typeof window._lbUpdateUnlimited === 'function') window._lbUpdateUnlimited(totalPlayedU, totalCorrectU, streakU);
+    if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
 
       epuResult.style.display = 'block';
       epuResult.innerHTML = `
@@ -4409,6 +4411,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     localStorage.setItem('epu_correct', totalCorrectU);
     localStorage.setItem('epu_streak', streakU);
     if (typeof window._lbUpdateUnlimited === 'function') window._lbUpdateUnlimited(totalPlayedU, totalCorrectU, streakU);
+    if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
 
     epuResult.style.display = 'block';
     epuResult.innerHTML = `<div class="ep-result-text win">CORRECT!</div><div class="ep-result-sub">${currentPlayerU.name} · ${currentPlayerU.team} · ${currentPlayerU.pos}</div>`;
@@ -5307,8 +5310,10 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     }
     if (isWeek) {
       if (typeof window._lbUpdateFantasyGameWeek === 'function') window._lbUpdateFantasyGameWeek(total);
+      if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
     } else {
       if (typeof window._lbUpdateFantasyGame === 'function') window._lbUpdateFantasyGame(total);
+      if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
     }
     setTimeout(() => { if (typeof window._lbRenderFgInline === 'function') window._lbRenderFgInline(total); }, 500);
     renderRoster();
@@ -5852,6 +5857,77 @@ window.fmtHeight = fmtHeight;
   window._renderBadgeGrid = renderBadgeGridFull;
   window._loadGiftedBadges = loadGiftedBadges;
   window._checkFounderStatus = checkFounderStatus;
+})();
+
+// === CLOUD SYNC — Game data across devices ===
+(function(){
+  const SYNC_KEYS_MAX = ['ep_streak','epu_played','epu_correct','epu_streak','fg_games_played','fg_highscore','fg_highscore_week','md_games_played'];
+  const SYNC_KEYS_STR = ['ep_last_win','jb_active_badge','jb_is_founder'];
+  const SYNC_KEYS_JSON = ['jb_unlocked_badges'];
+
+  function saveGameDataToCloud() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+    const data = {};
+    SYNC_KEYS_MAX.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = parseFloat(v) || 0; });
+    SYNC_KEYS_STR.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+    SYNC_KEYS_JSON.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+    data.syncedAt = new Date().toISOString();
+    db.collection('user_game_data').doc(user.uid).set(data, { merge: true }).catch(e => console.warn('[Sync] save error:', e));
+  }
+
+  function loadGameDataFromCloud() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+    db.collection('user_game_data').doc(user.uid).get().then(doc => {
+      if (!doc.exists) return;
+      const cloud = doc.data();
+      // For numeric keys, take the higher value between local and cloud
+      SYNC_KEYS_MAX.forEach(k => {
+        if (cloud[k] !== undefined) {
+          const local = parseFloat(localStorage.getItem(k) || '0');
+          const remote = parseFloat(cloud[k] || 0);
+          if (remote > local) {
+            localStorage.setItem(k, String(remote));
+          }
+        }
+      });
+      // For string keys, use cloud if local is empty
+      SYNC_KEYS_STR.forEach(k => {
+        if (cloud[k] !== undefined) {
+          const local = localStorage.getItem(k);
+          if (!local || local === '' || local === 'false') {
+            localStorage.setItem(k, cloud[k]);
+          }
+        }
+      });
+      // For JSON array keys, merge
+      SYNC_KEYS_JSON.forEach(k => {
+        if (cloud[k]) {
+          try {
+            const localArr = JSON.parse(localStorage.getItem(k) || '[]');
+            const cloudArr = JSON.parse(cloud[k] || '[]');
+            const merged = [...new Set([...localArr, ...cloudArr])];
+            localStorage.setItem(k, JSON.stringify(merged));
+          } catch(e) {}
+        }
+      });
+      console.log('[Sync] Game data loaded from cloud');
+      // Refresh badge display
+      if (typeof window._renderBadgeAvatars === 'function') window._renderBadgeAvatars();
+    }).catch(e => console.warn('[Sync] load error:', e));
+  }
+
+  window._saveGameDataToCloud = saveGameDataToCloud;
+  window._loadGameDataFromCloud = loadGameDataFromCloud;
+
+  // Auto-save periodically when user is active (every 30 seconds)
+  setInterval(() => {
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (user) saveGameDataToCloud();
+  }, 30000);
 })();
 
 // === TRADE CALCULATOR ===
@@ -6833,6 +6909,7 @@ window.fmtHeight = fmtHeight;
     if (typeof window._checkFounderStatus === 'function') setTimeout(window._checkFounderStatus, 300);
     if (typeof window._loadGiftedPremium === 'function') setTimeout(window._loadGiftedPremium, 250);
     if (typeof window._initAdminPanel === 'function') setTimeout(window._initAdminPanel, 350);
+    if (typeof window._loadGameDataFromCloud === 'function') setTimeout(window._loadGameDataFromCloud, 400);
   };
 
   // Save username (display name)

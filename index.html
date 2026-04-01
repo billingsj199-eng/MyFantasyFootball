@@ -1068,7 +1068,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .md-search{width:100%;padding:.55rem .75rem .55rem 2rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;transition:border-color .15s}
 .md-search:focus{border-color:var(--accent)}
 .md-search-icon{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text2)}
-.md-pos-filters{display:flex;gap:3px;margin-bottom:.6rem}
+.md-pos-filters{display:flex;gap:3px;margin-bottom:.6rem;align-items:center;flex-wrap:wrap}
 .md-pos-btn{padding:.35rem .7rem;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.68rem;font-weight:600;font-family:inherit;cursor:pointer;border-radius:3px;transition:all .15s;letter-spacing:.5px}
 .md-pos-btn:hover{border-color:var(--text2)}
 .md-pos-btn.active{color:#fff}
@@ -1091,6 +1091,8 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .md-avail-row .md-ar-pos.K{background:rgba(245,158,11,.12);color:var(--accent)}
 .md-avail-row .md-ar-info{flex:1;min-width:0}
 .md-avail-row .md-ar-name{font-weight:600;color:var(--text)}
+.md-avail-row .md-ar-name .md-card-link:hover{color:var(--accent);text-decoration:underline}
+.md-roster-pick .md-rp-name .md-card-link:hover{color:var(--accent);text-decoration:underline}
 .md-avail-row .md-ar-meta{font-size:.68rem;color:var(--text2)}
 .md-avail-row .md-ar-adp{font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:var(--accent);letter-spacing:1px;flex-shrink:0}
 .md-avail-row .md-ar-btn{padding:4px 12px;background:var(--accent);border:none;border-radius:4px;color:var(--bg);font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;cursor:pointer;transition:filter .1s;flex-shrink:0}
@@ -2048,6 +2050,11 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <button class="md-pos-btn" data-mdpos="TE">TE</button>
 <button class="md-pos-btn" data-mdpos="K">K</button>
 <button class="md-pos-btn" data-mdpos="DST">D/ST</button>
+<span style="flex:1"></span>
+<span class="md-sort-toggle" id="mdSortToggle" style="display:flex;align-items:center;gap:2px;margin-left:auto">
+<button class="md-sort-btn active" data-mdsort="rank" style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;padding:3px 8px;border:1px solid var(--border);background:var(--accent);color:var(--bg);cursor:pointer;border-radius:3px 0 0 3px;transition:all .15s">RANK</button>
+<button class="md-sort-btn" data-mdsort="adp" style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;padding:3px 8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;border-radius:0 3px 3px 0;transition:all .15s">ADP</button>
+</span>
 </div>
 <div class="md-avail-list" id="mdAvailList"></div>
 </div>
@@ -7319,19 +7326,23 @@ window.fmtHeight = fmtHeight;
   function syncPickMax() { if (mdUserPick > mdTeams) { mdUserPick = mdTeams; document.getElementById('mdPickVal').textContent = mdUserPick; } }
 
   function getADPBoard() {
-    // If using "My Rankings", use the user's custom board order
-    if (mdRankSrc === 'mine') {
-      const myBoard = versionBoards.mine[mdMode] || versionBoards.mine.redraft;
-      // myBoard is an array of indices into D — use position in board as rank
-      const boardEntries = myBoard.map((dIdx, rank) => {
-        const d = D[dIdx];
-        if (!d) return null;
-        return { idx: dIdx, adp: rank + 1, pos: d.s, name: d.n, team: d.t };
-      }).filter(Boolean);
-      // If user hasn't customized, fall back to ADP-based board
-      if (boardEntries.length === 0) return getADPBoardDefault();
-      return boardEntries;
+    // If using "My Rankings" or "Jack's Rankings", use that board order
+    if (mdRankSrc === 'mine' || mdRankSrc === 'jacks') {
+      const rankBoard = versionBoards[mdRankSrc] ? (versionBoards[mdRankSrc][mdMode] || versionBoards[mdRankSrc].redraft) : null;
+      if (rankBoard && rankBoard.length) {
+        const boardEntries = rankBoard.map((dIdx, rank) => {
+          const d = D[dIdx];
+          if (!d) return null;
+          return { idx: dIdx, adp: rank + 1, pos: d.s, name: d.n, team: d.t };
+        }).filter(Boolean);
+        if (boardEntries.length > 0) return boardEntries;
+      }
     }
+    return getADPBoardDefault();
+  }
+
+  // CPU always drafts by ADP regardless of user's ranking source
+  function getCPUADPBoard() {
     return getADPBoardDefault();
   }
 
@@ -7531,13 +7542,21 @@ window.fmtHeight = fmtHeight;
       if (slot.filled) {
         const pc = slot.filled.player.pos;
         const rd = 'R' + slot.filled.round;
-        html += '<div class="md-roster-pick"><span class="md-rp-rd">' + rd + '</span><span class="md-rp-pos ' + pc + '">' + escapeHTML(posLabel) + '</span><span class="md-rp-name">' + escapeHTML(slot.filled.player.name) + '</span><span class="md-rp-team">' + escapeHTML(slot.filled.player.team) + '</span></div>';
+        html += '<div class="md-roster-pick"><span class="md-rp-rd">' + rd + '</span><span class="md-rp-pos ' + pc + '">' + escapeHTML(posLabel) + '</span><span class="md-rp-name"><a class="md-card-link" data-didx="' + slot.filled.player.idx + '" href="javascript:void(0)" style="color:inherit;text-decoration:none">' + escapeHTML(slot.filled.player.name) + '</a></span><span class="md-rp-team">' + escapeHTML(slot.filled.player.team) + '</span></div>';
       } else {
         const posCol = slot.pos==='QB'?'var(--qb)':slot.pos==='RB'?'var(--rb)':slot.pos==='WR'?'var(--wr)':slot.pos==='TE'?'var(--te)':'var(--text2)';
         html += '<div class="md-roster-pick empty"><span class="md-rp-rd" style="color:' + posCol + '">' + posLabel + '</span><span style="color:var(--text2);font-size:.72rem;font-style:italic">\u2014</span></div>';
       }
     });
     container.innerHTML = html;
+    container.querySelectorAll('.md-card-link').forEach(link => {
+      link.addEventListener('click', e => {
+        e.stopPropagation();
+        const dIdx = parseInt(link.dataset.didx);
+        const d = D[dIdx];
+        if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
+      });
+    });
   }
 
   function renderFullBoard() {
@@ -7578,11 +7597,38 @@ window.fmtHeight = fmtHeight;
     el.innerHTML = html;
   }
 
-  let mdPosFilter = 'ALL', mdSearchQuery = '';
+  let mdPosFilter = 'ALL', mdSearchQuery = '', mdSortBy = 'rank';
+
+  // Sort toggle handler
+  document.querySelectorAll('#mdSortToggle .md-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#mdSortToggle .md-sort-btn').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'var(--surface2)';
+        b.style.color = 'var(--text2)';
+      });
+      btn.classList.add('active');
+      btn.style.background = 'var(--accent)';
+      btn.style.color = 'var(--bg)';
+      mdSortBy = btn.dataset.mdsort;
+      renderAvailable();
+    });
+  });
+
   function renderAvailable() {
     const container = document.getElementById('mdAvailList');
     if (!mdState) { container.innerHTML = ''; return; }
-    let list = mdState.available;
+    let list = mdState.available.slice();
+
+    // Sort by ADP if selected (otherwise default rank order from available array)
+    if (mdSortBy === 'adp') {
+      list.sort((a, b) => {
+        const aAdp = D[a.idx] ? (D[a.idx].a || 999) : 999;
+        const bAdp = D[b.idx] ? (D[b.idx].a || 999) : 999;
+        return aAdp - bAdp;
+      });
+    }
+
     if (mdPosFilter !== 'ALL') list = list.filter(p => p.pos === mdPosFilter);
     if (mdSearchQuery) { const q = mdSearchQuery.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)); }
 
@@ -7646,14 +7692,28 @@ window.fmtHeight = fmtHeight;
       const maxed = (userCounts[pc] || 0) >= getMaxForPos(pc);
       const needTag = needed ? '<span style="font-size:.55rem;background:rgba(34,197,94,.15);color:#22c55e;padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:700">NEED</span>' : '';
       const rowStyle = maxed ? 'opacity:.35;pointer-events:none' : '';
-      return '<div class="md-avail-row" data-pidx="'+p.idx+'" style="'+rowStyle+'"><span class="md-ar-rank">'+Math.round(p.adp)+'</span><span class="md-ar-pos '+pc+'">'+escapeHTML(pc)+'</span><div class="md-ar-info"><div class="md-ar-name">'+escapeHTML(p.name)+needTag+'</div><div class="md-ar-meta">'+escapeHTML(p.team)+'</div></div><span class="md-ar-adp">'+(mdRankSrc==='mine'?'#'+Math.round(p.adp):'ADP '+p.adp.toFixed(1))+'</span><button class="md-ar-btn">'+(maxed?'FULL':'DRAFT')+'</button></div>';
+      const rawAdp = D[p.idx] ? (D[p.idx].a || 999) : 999;
+      const rankNum = Math.round(p.adp);
+      const displayRank = mdSortBy === 'adp' ? rawAdp.toFixed(1) : String(rankNum);
+      const adpLabel = mdSortBy === 'adp' ? 'Rank #' + rankNum : 'ADP ' + rawAdp.toFixed(1);
+      return '<div class="md-avail-row" data-pidx="'+p.idx+'" style="'+rowStyle+'"><span class="md-ar-rank">'+displayRank+'</span><span class="md-ar-pos '+pc+'">'+escapeHTML(pc)+'</span><div class="md-ar-info"><div class="md-ar-name"><a class="md-card-link" data-didx="'+p.idx+'" href="javascript:void(0)" style="color:var(--text);text-decoration:none">'+escapeHTML(p.name)+'</a>'+needTag+'</div><div class="md-ar-meta">'+escapeHTML(p.team)+' · '+adpLabel+'</div></div><button class="md-ar-btn" data-pidx="'+p.idx+'">'+(maxed?'FULL':'DRAFT')+'</button></div>';
     }).join('');
-    container.querySelectorAll('.md-avail-row').forEach(row => {
-      row.addEventListener('click', () => {
+    // Name clicks open player card
+    container.querySelectorAll('.md-card-link').forEach(link => {
+      link.addEventListener('click', e => {
+        e.stopPropagation();
+        const dIdx = parseInt(link.dataset.didx);
+        const d = D[dIdx];
+        if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
+      });
+    });
+    container.querySelectorAll('.md-ar-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
         if (!mdState || mdState.done) return;
         const teamIdx = getCurrentTeamIdx(mdState.currentPick);
         if (teamIdx !== mdState.userTeamIdx) return;
-        const idx = parseInt(row.dataset.pidx);
+        const idx = parseInt(btn.dataset.pidx);
         const player = mdState.available.find(p => p.idx === idx);
         if (!player) return;
 
@@ -7679,7 +7739,6 @@ window.fmtHeight = fmtHeight;
         ['QB','RB','WR','TE','K','DST'].forEach(pos => {
           const required = mdLineup[pos] || 0;
           if (required > 0 && (simCounts[pos] || 0) < required) {
-            // For flex-eligible positions, we only strictly require the base slots
             mustFillSlots += required - (simCounts[pos] || 0);
           }
         });
@@ -7695,7 +7754,6 @@ window.fmtHeight = fmtHeight;
         }
 
         if (mustFillSlots > picksLeft) {
-          // Figure out which positions still need to be filled
           const needed = [];
           ['QB','RB','WR','TE','K','DST'].forEach(pos => {
             const still = (mdLineup[pos] || 0) - (simCounts[pos] || 0);
@@ -7727,6 +7785,7 @@ window.fmtHeight = fmtHeight;
     const { round, pickInRound } = getRoundAndPick(mdState.currentPick);
     mdState.picks.push({ overall: mdState.currentPick, round, pickInRound, teamIdx, player, isUser });
     mdState.available = mdState.available.filter(p => p.idx !== player.idx);
+    if (mdState.cpuAvailable) mdState.cpuAvailable = mdState.cpuAvailable.filter(p => p.idx !== player.idx);
     addLogRow(mdState.picks[mdState.picks.length - 1]);
     renderFullBoard();
     mdState.currentPick++;
@@ -7798,7 +7857,7 @@ window.fmtHeight = fmtHeight;
       document.getElementById('mdCpuText').textContent = 'Team ' + (teamIdx + 1) + ' is picking...';
       setTimeout(() => {
         if (!mdState || mdState.done) return;
-        const picked = cpuPick(mdState.available, teamIdx);
+        const picked = cpuPick(mdState.cpuAvailable || mdState.available, teamIdx);
         if (picked) {
           makePick(picked, false);
         } else {
@@ -7863,6 +7922,9 @@ window.fmtHeight = fmtHeight;
     // === RANKING-BASED GRADING ===
     // Get the ranking board to grade picks by rank position, not just ADP
     const _gradeBoard = versionBoards[mdRankSrc] ? (versionBoards[mdRankSrc][mdMode] || versionBoards[mdRankSrc].redraft) : versionBoards.mine.redraft;
+    const _gradeTiers = versionTiers[mdRankSrc] ? (versionTiers[mdRankSrc][mdMode] || {}) : {};
+    const _gradeTiersAll = (_gradeTiers.ALL || []).slice().sort((a,b) => a.afterRank - b.afterRank);
+
     function getRankPos(playerIdx) {
       const pos = _gradeBoard.indexOf(playerIdx);
       return pos >= 0 ? pos + 1 : 999;
@@ -7879,22 +7941,43 @@ window.fmtHeight = fmtHeight;
       }
       return 99;
     }
+    // Get tier label for a rank position
+    function getTierAtRank(rank) {
+      let current = null;
+      for (const t of _gradeTiersAll) {
+        if (t.afterRank <= rank) current = t;
+        else break;
+      }
+      return current ? current.label : '';
+    }
+    // Numeric tier value — S=1, A=2, B=3, etc. Lower = better
+    const _tierOrder = ['S','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
+    function tierValue(label) {
+      if (!label) return 20;
+      const idx = _tierOrder.indexOf(label.toUpperCase());
+      return idx >= 0 ? idx + 1 : 20;
+    }
 
     function gradePickValue(pick) {
       const rankPos = getRankPos(pick.player.idx);
       const pickNum = pick.overall + 1;
-      const diff = rankPos > 0 ? pickNum - rankPos : 0; // negative = reached past rank, positive = got value
-      const valueDiff = rankPos - pickNum; // positive = value, negative = reach (inverted for display)
-      if (valueDiff >= 36) return { grade: 'A+', color: '#22c55e', label: 'Steal' };
-      if (valueDiff >= 20) return { grade: 'A', color: '#22c55e', label: 'Great value' };
-      if (valueDiff >= 10) return { grade: 'A-', color: '#4ade80', label: 'Good value' };
-      if (valueDiff >= 4)  return { grade: 'B+', color: '#86efac', label: 'Nice pick' };
-      if (valueDiff >= -2) return { grade: 'B', color: '#fbbf24', label: 'Fair' };
-      if (valueDiff >= -8) return { grade: 'B-', color: '#fbbf24', label: 'Slight reach' };
-      if (valueDiff >= -16) return { grade: 'C+', color: '#f97316', label: 'Reach' };
-      if (valueDiff >= -26) return { grade: 'C', color: '#f97316', label: 'Big reach' };
-      if (valueDiff >= -40) return { grade: 'D', color: '#ef4444', label: 'Overdraft' };
-      return { grade: 'F', color: '#ef4444', label: 'Yikes' };
+      const valueDiff = rankPos - pickNum; // positive = value, negative = reach
+      // Tier bonus/penalty: drafting a high-tier player amplifies value, low-tier amplifies reach
+      const tier = getTierAtRank(rankPos);
+      const tv = tierValue(tier);
+      // Tier multiplier: S/A tier picks are worth more, low tiers worth less
+      const tierMult = tv <= 2 ? 1.3 : tv <= 4 ? 1.1 : tv <= 6 ? 1.0 : tv <= 8 ? 0.9 : 0.8;
+      const adjDiff = valueDiff * tierMult;
+      if (adjDiff >= 36) return { grade: 'A+', color: '#22c55e', label: 'Steal', tier };
+      if (adjDiff >= 20) return { grade: 'A', color: '#22c55e', label: 'Great value', tier };
+      if (adjDiff >= 10) return { grade: 'A-', color: '#4ade80', label: 'Good value', tier };
+      if (adjDiff >= 4)  return { grade: 'B+', color: '#86efac', label: 'Nice pick', tier };
+      if (adjDiff >= -2) return { grade: 'B', color: '#fbbf24', label: 'Fair', tier };
+      if (adjDiff >= -8) return { grade: 'B-', color: '#fbbf24', label: 'Slight reach', tier };
+      if (adjDiff >= -16) return { grade: 'C+', color: '#f97316', label: 'Reach', tier };
+      if (adjDiff >= -26) return { grade: 'C', color: '#f97316', label: 'Big reach', tier };
+      if (adjDiff >= -40) return { grade: 'D', color: '#ef4444', label: 'Overdraft', tier };
+      return { grade: 'F', color: '#ef4444', label: 'Yikes', tier };
     }
 
     // Build organized HTML — starters section, then bench
@@ -7913,10 +7996,11 @@ window.fmtHeight = fmtHeight;
         const pg = gradePickValue(slot.filled);
         const rankPos = getRankPos(slot.filled.player.idx);
         const pickNum = slot.filled.overall + 1;
+        const tierBadge = pg.tier ? '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.6rem;letter-spacing:.5px;padding:1px 4px;border-radius:2px;margin-left:4px;opacity:.7" class="tier-badge ' + pg.tier + '">' + pg.tier + '</span>' : '';
         html += '<div class="mdr-row">' +
           '<span class="mdr-rd">' + rd + '</span>' +
           '<span class="mdr-slot ' + (slot.pos === 'FLEX' ? 'FLEX' : slot.pos === 'BN' ? 'BN' : pc) + '">' + escapeHTML(slotLabel) + '</span>' +
-          '<div class="mdr-info"><div class="mdr-name">' + escapeHTML(slot.filled.player.name) + '</div><div class="mdr-meta">' + escapeHTML(slot.filled.player.team) + ' · Rank ' + rankPos + ' · Pick ' + pickNum + '</div></div>' +
+          '<div class="mdr-info"><div class="mdr-name">' + escapeHTML(slot.filled.player.name) + tierBadge + '</div><div class="mdr-meta">' + escapeHTML(slot.filled.player.team) + ' · Rank ' + rankPos + ' · Pick ' + pickNum + '</div></div>' +
           '<span class="mdr-grade" style="color:' + pg.color + '">' + pg.grade + '</span>' +
           '<span class="mdr-label">' + pg.label + '</span>' +
           '</div>';
@@ -7937,6 +8021,10 @@ window.fmtHeight = fmtHeight;
     const bestPosRank = { QB: 99, RB1: 99, RB2: 99, WR1: 99, WR2: 99, TE: 99 };
     const posPicks = { QB: [], RB: [], WR: [], TE: [], K: [], DST: [] };
 
+    // Track tiers of drafted players
+    const pickedTiers = [];
+    const starterTiers = []; // tiers of players in starter slots
+
     myPks.forEach(pick => {
       const rankPos = getRankPos(pick.player.idx);
       const pickNum = pick.overall + 1;
@@ -7944,6 +8032,15 @@ window.fmtHeight = fmtHeight;
       posDepth[pick.player.pos] = (posDepth[pick.player.pos] || 0) + 1;
       const pr = getPosRank(pick.player.idx, pick.player.pos);
       if (posPicks[pick.player.pos]) posPicks[pick.player.pos].push(pr);
+      pickedTiers.push(tierValue(getTierAtRank(rankPos)));
+    });
+
+    // Figure out which picks are starters for tier scoring
+    slots.forEach(slot => {
+      if (slot.filled && slot.pos !== 'BN') {
+        const rankPos = getRankPos(slot.filled.player.idx);
+        starterTiers.push(tierValue(getTierAtRank(rankPos)));
+      }
     });
 
     // Sort positional picks to find starters
@@ -7957,10 +8054,10 @@ window.fmtHeight = fmtHeight;
 
     const avgRankValue = totalRankValue / rounds;
 
-    // 1. Value score (0-30): avg rank surplus per pick
-    const valuePts = Math.min(30, Math.max(0, 12 + avgRankValue * 1.2));
+    // 1. Value score (0-25): avg rank surplus per pick
+    const valuePts = Math.min(25, Math.max(0, 10 + avgRankValue * 1.1));
 
-    // 2. Starter coverage (0-20): did you fill all starting slots?
+    // 2. Starter coverage (0-15): did you fill all starting slots?
     let startersFilled = 0;
     let totalStarters = 0;
     ['QB','RB','WR','TE','K','DST'].forEach(pos => {
@@ -7972,36 +8069,50 @@ window.fmtHeight = fmtHeight;
     const flexFillable = Math.max(0, posDepth.RB - starterSlots.RB) + Math.max(0, posDepth.WR - starterSlots.WR) + Math.max(0, posDepth.TE - starterSlots.TE);
     startersFilled += Math.min(flexNeed, flexFillable);
     totalStarters += flexNeed;
-    const coveragePts = (startersFilled / Math.max(1, totalStarters)) * 20;
+    const coveragePts = (startersFilled / Math.max(1, totalStarters)) * 15;
 
-    // 3. Position balance (0-15): penalize missing key positions
-    let balancePts = 15;
-    if (posDepth.QB < 1) balancePts -= 6;
-    if (posDepth.RB < 2) balancePts -= (2 - posDepth.RB) * 3;
-    if (posDepth.WR < 2) balancePts -= (2 - posDepth.WR) * 3;
-    if (posDepth.TE < 1) balancePts -= 5;
+    // 3. Position balance (0-10): penalize missing key positions
+    let balancePts = 10;
+    if (posDepth.QB < 1) balancePts -= 4;
+    if (posDepth.RB < 2) balancePts -= (2 - posDepth.RB) * 2;
+    if (posDepth.WR < 2) balancePts -= (2 - posDepth.WR) * 2;
+    if (posDepth.TE < 1) balancePts -= 3;
     if (posDepth.K < 1) balancePts -= 1;
     if (posDepth.DST < 1) balancePts -= 1;
     balancePts = Math.max(0, balancePts);
 
-    // 4. Starter quality (0-20): how good are your actual starters by positional rank?
-    // Lower positional rank = better. TE1 ranked 20th at TE is brutal, etc.
-    let qualityPts = 20;
+    // 4. Starter quality (0-15): how good are your actual starters by positional rank?
+    let qualityPts = 15;
     function qualityPenalty(posRank, maxGood, maxOk) {
       if (posRank <= maxGood) return 0;
-      if (posRank <= maxOk) return 1 + (posRank - maxGood) * 0.15;
-      return 2 + (posRank - maxOk) * 0.3;
+      if (posRank <= maxOk) return 0.8 + (posRank - maxGood) * 0.12;
+      return 1.5 + (posRank - maxOk) * 0.25;
     }
-    qualityPts -= qualityPenalty(bestPosRank.QB, 10, 18);    // QB1 quality
-    qualityPts -= qualityPenalty(bestPosRank.RB1, 12, 22);   // RB1 quality
-    qualityPts -= qualityPenalty(bestPosRank.RB2, 24, 36);   // RB2 quality
-    qualityPts -= qualityPenalty(bestPosRank.WR1, 12, 22);   // WR1 quality
-    qualityPts -= qualityPenalty(bestPosRank.WR2, 24, 36);   // WR2 quality
-    qualityPts -= qualityPenalty(bestPosRank.TE, 8, 16);     // TE1 quality — tight window, bad TE hurts
-    // No QB/RB/WR/TE at all = big penalty (posRank stays 99)
+    qualityPts -= qualityPenalty(bestPosRank.QB, 10, 18);
+    qualityPts -= qualityPenalty(bestPosRank.RB1, 12, 22);
+    qualityPts -= qualityPenalty(bestPosRank.RB2, 24, 36);
+    qualityPts -= qualityPenalty(bestPosRank.WR1, 12, 22);
+    qualityPts -= qualityPenalty(bestPosRank.WR2, 24, 36);
+    qualityPts -= qualityPenalty(bestPosRank.TE, 8, 16);
     qualityPts = Math.max(0, qualityPts);
 
-    // 5. Early round premium (0-15): top 3 picks should not be reaches
+    // 5. Tier quality (0-20): reward starters in high tiers, penalize low-tier starters
+    // Average tier value of starters (1=S, 2=A, etc.) — lower is better
+    let tierPts = 0;
+    if (starterTiers.length > 0) {
+      const avgStarterTier = starterTiers.reduce((s, v) => s + v, 0) / starterTiers.length;
+      // Best possible: avg tier ~1.5 (all S/A) = 20 pts. Worst: avg tier 8+ = 0 pts
+      tierPts = Math.max(0, Math.min(20, 20 - (avgStarterTier - 1.5) * 3));
+      // Bonus: having multiple S-tier starters
+      const sTierCount = starterTiers.filter(t => t === 1).length;
+      if (sTierCount >= 3) tierPts = Math.min(20, tierPts + 3);
+      else if (sTierCount >= 2) tierPts = Math.min(20, tierPts + 1.5);
+      // Penalty: any starter in tier F or worse (7+)
+      const lowTierStarters = starterTiers.filter(t => t >= 7).length;
+      tierPts = Math.max(0, tierPts - lowTierStarters * 2);
+    }
+
+    // 6. Early round premium (0-15): top 3 picks should not be reaches
     let earlyPts = 0;
     myPks.slice(0, 3).forEach(pick => {
       const rankPos = getRankPos(pick.player.idx);
@@ -8012,7 +8123,7 @@ window.fmtHeight = fmtHeight;
     });
     earlyPts = Math.min(15, earlyPts);
 
-    const totalScore = Math.round(valuePts + coveragePts + balancePts + qualityPts + earlyPts);
+    const totalScore = Math.round(valuePts + coveragePts + balancePts + qualityPts + tierPts + earlyPts);
     const clampedScore = Math.min(100, Math.max(0, totalScore));
 
     // Map score to letter grade — tighter thresholds
@@ -8034,10 +8145,11 @@ window.fmtHeight = fmtHeight;
         <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:3px;color:${gradeColor};line-height:1">${grade}</div>
         <div style="font-size:.75rem;color:var(--text2);margin-top:4px">${gradeSummary}</div>
         <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;font-size:.58rem;color:var(--text2)">
-          <span>Value: ${Math.round(valuePts)}/30</span>
-          <span>Coverage: ${Math.round(coveragePts)}/20</span>
-          <span>Balance: ${Math.round(balancePts)}/15</span>
-          <span>Starters: ${Math.round(qualityPts)}/20</span>
+          <span>Value: ${Math.round(valuePts)}/25</span>
+          <span>Coverage: ${Math.round(coveragePts)}/15</span>
+          <span>Balance: ${Math.round(balancePts)}/10</span>
+          <span>Starters: ${Math.round(qualityPts)}/15</span>
+          <span>Tiers: ${Math.round(tierPts)}/20</span>
           <span>Early Rds: ${Math.round(earlyPts)}/15</span>
         </div>
       </div>`;
@@ -8060,17 +8172,21 @@ window.fmtHeight = fmtHeight;
     document.getElementById('mdDraft').style.display = 'none';
     document.getElementById('mdComplete').style.display = 'none';
     document.getElementById('mdComplete').style.cssText = 'display:none';
-    mdPosFilter = 'ALL'; mdSearchQuery = '';
+    mdPosFilter = 'ALL'; mdSearchQuery = ''; mdSortBy = 'rank';
     document.getElementById('mdSearch').value = '';
     document.querySelectorAll('#mdPosFilters .md-pos-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('#mdPosFilters .md-pos-btn[data-mdpos="ALL"]').classList.add('active');
+    document.querySelectorAll('#mdSortToggle .md-sort-btn').forEach(b => { b.classList.remove('active'); b.style.background='var(--surface2)'; b.style.color='var(--text2)'; });
+    const _rstRank = document.querySelector('#mdSortToggle .md-sort-btn[data-mdsort="rank"]'); if(_rstRank){_rstRank.classList.add('active');_rstRank.style.background='var(--accent)';_rstRank.style.color='var(--bg)';}
   }
 
   function startDraft() {
     const rounds = getMdRounds();
     const adpBoard = getADPBoard();
+    const cpuBoard = getCPUADPBoard();
     mdState = {
       available: adpBoard.slice(),
+      cpuAvailable: cpuBoard.slice(),
       picks: [],
       currentPick: 0,
       totalPicks: mdTeams * rounds,
@@ -8083,7 +8199,7 @@ window.fmtHeight = fmtHeight;
     document.getElementById('mdYourPickNum').textContent = '(Pick #' + mdUserPick + ')';
     document.getElementById('mdLog').innerHTML = '';
     document.getElementById('mdSearch').value = '';
-    mdPosFilter = 'ALL'; mdSearchQuery = '';
+    mdPosFilter = 'ALL'; mdSearchQuery = ''; mdSortBy = 'rank';
     renderYourRoster();
     renderFullBoard();
     renderAvailable();

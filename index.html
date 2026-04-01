@@ -4671,6 +4671,7 @@ document.querySelectorAll('[data-goto]').forEach(el => {
   function getTeamYears(player, forTeam) {
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
     if (!modernTeam) return player._yrs || '';
+    const currentYear = new Date().getFullYear();
     let minYr = Infinity, maxYr = -Infinity;
 
     // Check ACTIVE_TEAM_HISTORY (full team names)
@@ -4680,11 +4681,16 @@ document.querySelectorAll('[data-goto]').forEach(el => {
         hist.forEach(h => {
           const hModern = TEAM_ALIASES[h.t] || h.t;
           if (hModern === modernTeam) {
-            if (h.y1 < minYr) minYr = h.y1;
-            if (h.y2 > maxYr) maxYr = h.y2;
+            const y1 = h.y1;
+            const y2 = Math.min(h.y2, currentYear);
+            if (y1 < minYr) minYr = y1;
+            if (y2 > maxYr) maxYr = y2;
           }
         });
-        if (minYr !== Infinity) return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
+        if (minYr !== Infinity) {
+          if (!player._retired && maxYr >= currentYear) return minYr + '–pres';
+          return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
+        }
       }
     }
 
@@ -4695,11 +4701,16 @@ document.querySelectorAll('[data-goto]').forEach(el => {
         pHist.forEach(h => {
           const hFull = toFullTeamName(h.t);
           if (hFull === modernTeam) {
-            if (h.y1 < minYr) minYr = h.y1;
-            if (h.y2 > maxYr) maxYr = h.y2;
+            const y1 = h.y1;
+            const y2 = Math.min(h.y2, currentYear);
+            if (y1 < minYr) minYr = y1;
+            if (y2 > maxYr) maxYr = y2;
           }
         });
-        if (minYr !== Infinity) return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
+        if (minYr !== Infinity) {
+          if (!player._retired && maxYr >= currentYear) return minYr + '–pres';
+          return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
+        }
       }
     }
 
@@ -4717,18 +4728,21 @@ document.querySelectorAll('[data-goto]').forEach(el => {
           }
         }
       });
-      if (minYr !== Infinity) return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
+      if (minYr !== Infinity) {
+        if (!player._retired && maxYr >= currentYear - 1) return minYr + '–pres';
+        return minYr === maxYr ? String(minYr) : minYr + '–' + maxYr;
+      }
     }
 
     // Fallback: if player only has one team, use overall _yrs
     if (player._fgTeams.length <= 1) return player._yrs || '';
 
-    // Check _bestByTeam for HP players
+    // Check _bestByTeam for HP players — use _yrs since we only have one year
     if (player._bestByTeam) {
       for (const [tk, tv] of Object.entries(player._bestByTeam)) {
         const tkModern = TEAM_ALIASES[tk] || tk;
-        if (tkModern === modernTeam && tv && tv.yr) {
-          return String(tv.yr);
+        if (tkModern === modernTeam) {
+          return player._yrs || (tv && tv.yr ? String(tv.yr) : '');
         }
       }
     }

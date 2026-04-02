@@ -829,6 +829,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .trade-player-chip .tp-pos.WR{background:var(--wr-bg);color:var(--wr)}
 .trade-player-chip .tp-pos.TE{background:var(--te-bg);color:var(--te)}
 .trade-player-chip .tp-name{font-weight:600;font-size:.82rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trade-player-chip .tp-card-link:hover{color:var(--accent);text-decoration:underline}
 .trade-player-chip .tp-val{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--accent);letter-spacing:1px;flex-shrink:0}
 .trade-player-chip .tp-remove{background:none;border:none;color:var(--text2);cursor:pointer;font-size:1rem;padding:0 2px;line-height:1;transition:color .1s;flex-shrink:0}
 .trade-player-chip .tp-remove:hover{color:var(--red)}
@@ -6133,7 +6134,7 @@ window.fmtHeight = fmtHeight;
         const tierHtml = tier ? `<span class="tier-badge ${tierColor(tier)}" style="font-size:.55rem;padding:1px 5px;min-width:auto;margin-left:auto">${tier}</span>` : '';
         html += `<div class="trade-player-chip">
           <span class="tp-pos ${d.s}">${d.s}</span>
-          <span class="tp-name">${d.n}</span>
+          <a class="tp-name tp-card-link" href="javascript:void(0)" data-didx="${idx}" style="color:inherit;text-decoration:none;cursor:pointer">${d.n}</a>
           ${tierHtml}
           <span class="tp-val">${val}</span>
           <button class="tp-remove" data-idx="${idx}" data-side="${sideClass}">&times;</button>
@@ -6201,6 +6202,15 @@ window.fmtHeight = fmtHeight;
           side.picks.splice(+btn.dataset.pickIdx, 1);
         }
         renderAll();
+      });
+    });
+    // Player name clicks open player card
+    document.querySelectorAll('.tp-card-link').forEach(link => {
+      link.addEventListener('click', e => {
+        e.stopPropagation();
+        const dIdx = parseInt(link.dataset.didx);
+        const d = D[dIdx];
+        if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
       });
     });
   }

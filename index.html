@@ -1124,6 +1124,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .md-final-roster .mdr-row .mdr-slot.K{background:rgba(245,158,11,.12);color:var(--accent)}
 .md-final-roster .mdr-row .mdr-slot.DST{background:rgba(107,114,128,.12);color:#6b7280}
 .md-final-roster .mdr-row .mdr-slot.FLEX{background:rgba(168,85,247,.1);color:#a855f7}
+.md-final-roster .mdr-row .mdr-slot.SFLEX{background:rgba(168,85,247,.1);color:#a855f7}
 .md-final-roster .mdr-row .mdr-slot.BN{background:rgba(107,114,128,.08);color:var(--text2)}
 .md-final-roster .mdr-row .mdr-info{flex:1;min-width:0;overflow:hidden}
 .md-final-roster .mdr-row .mdr-name{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2030,6 +2031,7 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <div class="md-lineup-slot"><span class="md-ls-pos" style="background:var(--wr-bg);color:var(--wr)">WR</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="WR">−</button><span class="md-step-val md-lu-val" data-lupos="WR">2</span><button class="md-step-btn md-lu-inc" data-lupos="WR">+</button></div></div>
 <div class="md-lineup-slot"><span class="md-ls-pos" style="background:var(--te-bg);color:var(--te)">TE</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="TE">−</button><span class="md-step-val md-lu-val" data-lupos="TE">1</span><button class="md-step-btn md-lu-inc" data-lupos="TE">+</button></div></div>
 <div class="md-lineup-slot"><span class="md-ls-pos" style="background:rgba(245,158,11,.12);color:var(--accent)">FLEX</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="FLEX">−</button><span class="md-step-val md-lu-val" data-lupos="FLEX">1</span><button class="md-step-btn md-lu-inc" data-lupos="FLEX">+</button></div></div>
+<div class="md-lineup-slot" id="mdSflexSlot"><span class="md-ls-pos" style="background:rgba(168,85,247,.1);color:#a855f7">SFLEX</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="SFLEX">−</button><span class="md-step-val md-lu-val" data-lupos="SFLEX">0</span><button class="md-step-btn md-lu-inc" data-lupos="SFLEX">+</button></div></div>
 <div class="md-lineup-slot"><span class="md-ls-pos" style="background:rgba(245,158,11,.12);color:var(--accent)">K</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="K">−</button><span class="md-step-val md-lu-val" data-lupos="K">1</span><button class="md-step-btn md-lu-inc" data-lupos="K">+</button></div></div>
 <div class="md-lineup-slot"><span class="md-ls-pos" style="background:rgba(107,114,128,.12);color:#6b7280">D/ST</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="DST">−</button><span class="md-step-val md-lu-val" data-lupos="DST">1</span><button class="md-step-btn md-lu-inc" data-lupos="DST">+</button></div></div>
 <div class="md-lineup-slot"><span class="md-ls-pos" style="background:rgba(255,255,255,.06);color:var(--text2)">BENCH</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="BN">−</button><span class="md-step-val md-lu-val" data-lupos="BN">6</span><button class="md-step-btn md-lu-inc" data-lupos="BN">+</button></div></div>
@@ -3227,15 +3229,23 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
   });
 });
 
-// Hide non-consensus ADP tabs in dynasty modes (no platform ADP data for dynasty)
+// Hide non-applicable ADP tabs based on mode
+// Dynasty: only Consensus + Sleeper (locked); Redraft/SF: all tabs
 function updateRnkAdpForMode() {
   const isDynasty = currentMode === 'dynasty' || currentMode === 'dynastysf';
   document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(tab => {
-    if (tab.dataset.rnkadp === 'consensus') return;
-    tab.style.display = isDynasty ? 'none' : '';
+    const src = tab.dataset.rnkadp;
+    if (src === 'consensus') return; // always visible
+    if (isDynasty) {
+      // In dynasty: show Sleeper (locked), hide Underdog/ESPN/Yahoo
+      tab.style.display = src === 'sleeper' ? '' : 'none';
+    } else {
+      // In redraft/superflex: show all
+      tab.style.display = '';
+    }
   });
-  // If switching to dynasty and a non-consensus source is active, reset to consensus
-  if (isDynasty && rnkAdpSrc !== 'consensus') {
+  // If switching modes and current source is no longer visible, reset to consensus
+  if (isDynasty && rnkAdpSrc !== 'consensus' && rnkAdpSrc !== 'sleeper') {
     rnkAdpSrc = 'consensus';
     document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(b => b.classList.remove('active'));
     document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="consensus"]').classList.add('active');
@@ -7412,7 +7422,7 @@ window.fmtHeight = fmtHeight;
   let mdState = null;
 
   // Lineup requirements — user can adjust
-  const mdLineup = { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, K: 1, DST: 1, BN: 6 };
+  const mdLineup = { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SFLEX: 0, K: 1, DST: 1, BN: 6 };
   function getRosterSize() { return Object.values(mdLineup).reduce((s,v) => s+v, 0); }
   function getMdRounds() { return getRosterSize(); }
 
@@ -7442,12 +7452,68 @@ window.fmtHeight = fmtHeight;
     document.getElementById('mdRosterTotal').textContent = 'Roster size: ' + sz + ' \u2014 Rounds will match';
   }
 
+  // Lineup presets per mode+adp combination
+  const _LINEUP_DEFAULTS = {
+    consensus: { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SFLEX: 0, K: 1, DST: 1, BN: 6 },
+    underdog: { QB: 1, RB: 2, WR: 3, TE: 1, FLEX: 1, SFLEX: 0, K: 0, DST: 0, BN: 12 }
+  };
+  function applyLineupPreset() {
+    const isSF = mdMode === 'superflex' || mdMode === 'dynastysf';
+    const key = mdAdpSrc === 'underdog' && (mdMode === 'redraft' || mdMode === 'superflex') ? 'underdog' : 'consensus';
+    const preset = _LINEUP_DEFAULTS[key];
+    Object.keys(mdLineup).forEach(pos => {
+      mdLineup[pos] = preset[pos] != null ? preset[pos] : 0;
+    });
+    // Auto-set SFLEX based on mode
+    if (isSF && mdLineup.SFLEX === 0) mdLineup.SFLEX = 1;
+    if (!isSF) mdLineup.SFLEX = 0;
+    // Update all displayed values
+    Object.keys(mdLineup).forEach(pos => {
+      const el = document.querySelector('.md-lu-val[data-lupos="'+pos+'"]');
+      if (el) el.textContent = mdLineup[pos];
+    });
+    syncLineupTotal();
+  }
+
   const modeTabs = document.querySelectorAll('#mdModeTabs .md-mode-tab');
   modeTabs.forEach(t => t.addEventListener('click', () => {
     modeTabs.forEach(b => b.classList.remove('active'));
     t.classList.add('active');
     mdMode = t.dataset.mdmode;
+    updateMdAdpForMode();
+    updateMdSflexVisibility();
+    applyLineupPreset();
   }));
+
+  // Show SFLEX lineup slot only in superflex/dynasty SF modes
+  function updateMdSflexVisibility() {
+    const isSF = mdMode === 'superflex' || mdMode === 'dynastysf';
+    const sflexSlot = document.getElementById('mdSflexSlot');
+    if (sflexSlot) sflexSlot.style.display = isSF ? '' : 'none';
+  }
+  updateMdSflexVisibility();
+
+  // Hide non-applicable ADP tabs based on mock draft mode
+  // Dynasty: only Consensus + Sleeper (locked); Redraft/SF: all tabs
+  function updateMdAdpForMode() {
+    const isDynasty = mdMode === 'dynasty' || mdMode === 'dynastysf';
+    const tabs = document.querySelectorAll('#mdAdpSrcTabs .md-rank-src-tab');
+    tabs.forEach(tab => {
+      const src = tab.dataset.mdadp;
+      if (src === 'consensus') return;
+      if (isDynasty) {
+        tab.style.display = src === 'sleeper' ? '' : 'none';
+      } else {
+        tab.style.display = '';
+      }
+    });
+    // Reset to consensus if current source is hidden
+    if (isDynasty && mdAdpSrc !== 'consensus' && mdAdpSrc !== 'sleeper') {
+      mdAdpSrc = 'consensus';
+      tabs.forEach(b => b.classList.remove('active'));
+      document.querySelector('#mdAdpSrcTabs .md-rank-src-tab[data-mdadp="consensus"]').classList.add('active');
+    }
+  }
 
   // Ranking source tabs (My Ranks vs Jack's)
   const rankSrcTabs = document.querySelectorAll('#mdRankSrcTabs .md-rank-src-tab');
@@ -7506,6 +7572,7 @@ window.fmtHeight = fmtHeight;
     t.classList.add('active');
     mdAdpSrc = src;
     updateAdpSrcLocks();
+    applyLineupPreset();
   }));
   function updateAdpSrcLocks() {
     adpSrcTabs.forEach(tab => {
@@ -7597,7 +7664,8 @@ window.fmtHeight = fmtHeight;
 
   function getMaxForPos(pos) {
     let max = mdLineup[pos] || 0;
-    if (pos === 'RB' || pos === 'WR' || pos === 'TE') max += (mdLineup.FLEX || 0);
+    if (pos === 'RB' || pos === 'WR' || pos === 'TE') max += (mdLineup.FLEX || 0) + (mdLineup.SFLEX || 0);
+    if (pos === 'QB') max += (mdLineup.SFLEX || 0);
     max += (mdLineup.BN || 0);
     return max;
   }
@@ -7609,11 +7677,19 @@ window.fmtHeight = fmtHeight;
   function totalStartersNeeded(counts) {
     let need = 0;
     ['QB','RB','WR','TE','K','DST'].forEach(pos => { need += startersNeeded(counts, pos); });
+    // FLEX slots (RB/WR/TE eligible)
     const flexSlots = mdLineup.FLEX || 0;
     const excessRB = Math.max(0, counts.RB - (mdLineup.RB || 0));
     const excessWR = Math.max(0, counts.WR - (mdLineup.WR || 0));
     const excessTE = Math.max(0, counts.TE - (mdLineup.TE || 0));
-    need += flexSlots - Math.min(flexSlots, excessRB + excessWR + excessTE);
+    const flexFilled = Math.min(flexSlots, excessRB + excessWR + excessTE);
+    need += flexSlots - flexFilled;
+    // SFLEX slots (QB/RB/WR/TE eligible)
+    const sflexSlots = mdLineup.SFLEX || 0;
+    const excessQB = Math.max(0, counts.QB - (mdLineup.QB || 0));
+    const remainFlex = excessRB + excessWR + excessTE - flexFilled;
+    const sflexFilled = Math.min(sflexSlots, excessQB + Math.max(0, remainFlex));
+    need += sflexSlots - sflexFilled;
     return need;
   }
 
@@ -7722,7 +7798,7 @@ window.fmtHeight = fmtHeight;
 
     // Build positional slots based on mdLineup
     const slots = [];
-    const posOrder = ['QB','RB','WR','TE','FLEX','K','DST','BN'];
+    const posOrder = ['QB','RB','WR','TE','FLEX','SFLEX','K','DST','BN'];
     posOrder.forEach(pos => {
       const count = mdLineup[pos] || 0;
       for (let i = 0; i < count; i++) slots.push({ pos, filled: null });
@@ -7745,6 +7821,13 @@ window.fmtHeight = fmtHeight;
           if (slots[i].pos === 'FLEX') { slots[i].filled = pick; assigned.add(i); placed = true; break; }
         }
       }
+      // Try SFLEX (QB/RB/WR/TE)
+      if (!placed && (pc === 'QB' || pc === 'RB' || pc === 'WR' || pc === 'TE')) {
+        for (let i = 0; i < slots.length; i++) {
+          if (assigned.has(i)) continue;
+          if (slots[i].pos === 'SFLEX') { slots[i].filled = pick; assigned.add(i); placed = true; break; }
+        }
+      }
       // Bench
       if (!placed) {
         for (let i = 0; i < slots.length; i++) {
@@ -7763,7 +7846,7 @@ window.fmtHeight = fmtHeight;
       }
       lastPos = slot.pos;
 
-      const posLabel = slot.pos === 'BN' ? 'BN' : slot.pos === 'FLEX' ? 'FLX' : slot.pos;
+      const posLabel = slot.pos === 'BN' ? 'BN' : slot.pos === 'FLEX' ? 'FLX' : slot.pos === 'SFLEX' ? 'SF' : slot.pos;
       if (slot.filled) {
         const pc = slot.filled.player.pos;
         const rd = 'R' + slot.filled.round;
@@ -7890,12 +7973,25 @@ window.fmtHeight = fmtHeight;
 
       // FLEX slots
       const flexSlots = mdLineup.FLEX || 0;
+      let flexFilled = 0;
       if (flexSlots > 0) {
         const excessRB = Math.max(0, (simCounts.RB || 0) - (mdLineup.RB || 0));
         const excessWR = Math.max(0, (simCounts.WR || 0) - (mdLineup.WR || 0));
         const excessTE = Math.max(0, (simCounts.TE || 0) - (mdLineup.TE || 0));
-        const flexFilled = Math.min(flexSlots, excessRB + excessWR + excessTE);
+        flexFilled = Math.min(flexSlots, excessRB + excessWR + excessTE);
         mustFillSlots += flexSlots - flexFilled;
+      }
+
+      // SFLEX slots (QB/RB/WR/TE eligible)
+      const sflexSlots = mdLineup.SFLEX || 0;
+      if (sflexSlots > 0) {
+        const excessQB = Math.max(0, (simCounts.QB || 0) - (mdLineup.QB || 0));
+        const excessRB2 = Math.max(0, (simCounts.RB || 0) - (mdLineup.RB || 0));
+        const excessWR2 = Math.max(0, (simCounts.WR || 0) - (mdLineup.WR || 0));
+        const excessTE2 = Math.max(0, (simCounts.TE || 0) - (mdLineup.TE || 0));
+        const remainFlex = excessRB2 + excessWR2 + excessTE2 - flexFilled;
+        const sflexFilled = Math.min(sflexSlots, excessQB + Math.max(0, remainFlex));
+        mustFillSlots += sflexSlots - sflexFilled;
       }
 
       const remainingAfter = picksLeft - 1;
@@ -7972,12 +8068,25 @@ window.fmtHeight = fmtHeight;
 
         // FLEX: check if flex slots can be filled by excess RB/WR/TE
         const flexSlots = mdLineup.FLEX || 0;
+        let flexFilled = 0;
         if (flexSlots > 0) {
           const excessRB = Math.max(0, (simCounts.RB || 0) - (mdLineup.RB || 0));
           const excessWR = Math.max(0, (simCounts.WR || 0) - (mdLineup.WR || 0));
           const excessTE = Math.max(0, (simCounts.TE || 0) - (mdLineup.TE || 0));
-          const flexFilled = Math.min(flexSlots, excessRB + excessWR + excessTE);
+          flexFilled = Math.min(flexSlots, excessRB + excessWR + excessTE);
           mustFillSlots += flexSlots - flexFilled;
+        }
+
+        // SFLEX: check if superflex slots can be filled by excess QB/RB/WR/TE
+        const sflexSlots = mdLineup.SFLEX || 0;
+        if (sflexSlots > 0) {
+          const excessQB = Math.max(0, (simCounts.QB || 0) - (mdLineup.QB || 0));
+          const excessRB2 = Math.max(0, (simCounts.RB || 0) - (mdLineup.RB || 0));
+          const excessWR2 = Math.max(0, (simCounts.WR || 0) - (mdLineup.WR || 0));
+          const excessTE2 = Math.max(0, (simCounts.TE || 0) - (mdLineup.TE || 0));
+          const remainFlex = excessRB2 + excessWR2 + excessTE2 - flexFilled;
+          const sflexFilled = Math.min(sflexSlots, excessQB + Math.max(0, remainFlex));
+          mustFillSlots += sflexSlots - sflexFilled;
         }
 
         if (mustFillSlots > picksLeft) {
@@ -8119,7 +8228,7 @@ window.fmtHeight = fmtHeight;
 
     // Build positional slots
     const slots = [];
-    const posOrder = ['QB','RB','WR','TE','FLEX','K','DST','BN'];
+    const posOrder = ['QB','RB','WR','TE','FLEX','SFLEX','K','DST','BN'];
     posOrder.forEach(pos => {
       const count = mdLineup[pos] || 0;
       for (let i = 0; i < count; i++) slots.push({ pos, filled: null });
@@ -8136,6 +8245,12 @@ window.fmtHeight = fmtHeight;
         for (let i = 0; i < slots.length; i++) {
           if (assigned.has(i)) continue;
           if (slots[i].pos === 'FLEX') { slots[i].filled = pick; assigned.add(i); placed = true; break; }
+        }
+      }
+      if (!placed && (pc === 'QB' || pc === 'RB' || pc === 'WR' || pc === 'TE')) {
+        for (let i = 0; i < slots.length; i++) {
+          if (assigned.has(i)) continue;
+          if (slots[i].pos === 'SFLEX') { slots[i].filled = pick; assigned.add(i); placed = true; break; }
         }
       }
       if (!placed) {
@@ -8216,7 +8331,7 @@ window.fmtHeight = fmtHeight;
         benchStarted = true;
         html += '<div class="mdr-section">BENCH</div>';
       }
-      const slotLabel = slot.pos === 'FLEX' ? 'FLEX' : slot.pos;
+      const slotLabel = slot.pos === 'FLEX' ? 'FLEX' : slot.pos === 'SFLEX' ? 'SFLEX' : slot.pos;
       if (slot.filled) {
         const pc = slot.filled.player.pos;
         const rd = 'R' + slot.filled.round;
@@ -8226,7 +8341,7 @@ window.fmtHeight = fmtHeight;
         const tierBadge = pg.tier ? '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.6rem;letter-spacing:.5px;padding:1px 4px;border-radius:2px;margin-left:4px;opacity:.7" class="tier-badge ' + pg.tier + '">' + pg.tier + '</span>' : '';
         html += '<div class="mdr-row">' +
           '<span class="mdr-rd">' + rd + '</span>' +
-          '<span class="mdr-slot ' + (slot.pos === 'FLEX' ? 'FLEX' : slot.pos === 'BN' ? 'BN' : pc) + '">' + escapeHTML(slotLabel) + '</span>' +
+          '<span class="mdr-slot ' + (slot.pos === 'FLEX' || slot.pos === 'SFLEX' ? slot.pos : slot.pos === 'BN' ? 'BN' : pc) + '">' + escapeHTML(slotLabel) + '</span>' +
           '<div class="mdr-info"><div class="mdr-name">' + escapeHTML(slot.filled.player.name) + tierBadge + '</div><div class="mdr-meta">' + escapeHTML(slot.filled.player.team) + ' · Rank ' + rankPos + ' · Pick ' + pickNum + '</div></div>' +
           '<span class="mdr-grade" style="color:' + pg.color + '">' + pg.grade + '</span>' +
           '<span class="mdr-label">' + pg.label + '</span>' +

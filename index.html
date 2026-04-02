@@ -4332,16 +4332,23 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     }
   });
 
+  // Get current date in Eastern Time (handles EST/EDT automatically)
+  function getEasternDate() {
+    const now = new Date();
+    const eastern = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    return eastern;
+  }
+
   // Deterministic daily pick from retired pool using date seed
   // Curated retired players with ESPN headshot IDs for daily pull
     function getDailyPlayer() {
-    const today = new Date();
+    const today = getEasternDate();
     const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
     return DAILY_RETIRED_POOL[seed % DAILY_RETIRED_POOL.length];
   }
 
   function getTodayKey() {
-    const d = new Date();
+    const d = getEasternDate();
     return `ep_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;
   }
 
@@ -4392,7 +4399,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   }
 
   function updateStreak(won) {
-    const today = new Date();
+    const today = getEasternDate();
     const todayStr = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
     if (won) {
       // Check if yesterday was a win for streak continuation
@@ -4564,7 +4571,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     function _epSkipToNext() {
       _epSkipAttempts++;
       if (_epSkipAttempts < DAILY_RETIRED_POOL.length) {
-        const today = new Date();
+        const today = getEasternDate();
         const baseSeed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
         todayPlayer = DAILY_RETIRED_POOL[(baseSeed + _epSkipAttempts) % DAILY_RETIRED_POOL.length];
         _epTryLoadImage();

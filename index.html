@@ -123,6 +123,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .gw-cat-cell.higher-close{background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.35);color:#facc15}
 .gw-cat-cell.lower-close{background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.35);color:#facc15}
 .gw-cat-cell.neutral{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+.gw-share-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);opacity:0;transition:opacity .25s;pointer-events:none}
+.gw-share-overlay.show{opacity:1;pointer-events:auto}
+.gw-share-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;max-width:340px;width:90%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.5);transform:scale(.92);transition:transform .25s}
+.gw-share-overlay.show .gw-share-box{transform:scale(1)}
+.gw-share-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--accent);margin-bottom:4px}
+.gw-share-sub{font-size:.75rem;color:var(--text2);margin-bottom:12px}
+.gw-share-grid{display:inline-flex;flex-direction:column;gap:3px;margin-bottom:14px}
+.gw-share-row{display:flex;gap:3px;justify-content:center}
+.gw-share-sq{width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.gw-share-sq.g{background:rgba(34,197,94,.35);border:1px solid rgba(34,197,94,.5)}
+.gw-share-sq.y{background:rgba(250,204,21,.3);border:1px solid rgba(250,204,21,.45)}
+.gw-share-sq.r{background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.4)}
+.gw-share-sq.n{background:var(--surface2);border:1px solid var(--border)}
+.gw-share-btn{display:inline-block;padding:8px 24px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;border:none;border-radius:8px;cursor:pointer;margin:0 4px}
+.gw-share-btn:hover{filter:brightness(1.15)}
+.gw-share-close{display:inline-block;padding:8px 16px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:8px;cursor:pointer;margin:0 4px}
+.gw-share-copied{font-size:.7rem;color:var(--green);margin-top:6px;opacity:0;transition:opacity .2s}
+.gw-share-copied.show{opacity:1}
 .gw-guess-name{font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);text-align:center;margin-bottom:2px;margin-top:4px}
 @media(max-width:600px){
 .gw-header{padding:1rem .75rem .5rem}
@@ -5027,34 +5045,54 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     if (typeof WEEKLY_STATS === 'undefined') return null;
     if (WEEKLY_STATS[name]) return WEEKLY_STATS[name];
     if (_gwWsCache[name] !== undefined) return _gwWsCache[name];
-    // Build a normalized lookup on first miss
+    // Build a normalized lookup on first miss — strip dots, suffixes, extra spaces
     if (!gwLookupWeekly._norm) {
       gwLookupWeekly._norm = {};
-      for (const k of Object.keys(WEEKLY_STATS)) {
-        gwLookupWeekly._norm[k.replace(/\./g, '').replace(/\s+/g,' ').trim().toLowerCase()] = k;
+      gwLookupWeekly._keys = Object.keys(WEEKLY_STATS);
+      for (const k of gwLookupWeekly._keys) {
+        const nk = k.replace(/\./g, '').replace(/\s+(jr|sr|ii|iii|iv|v)\.?$/i, '').replace(/\s+/g,' ').trim().toLowerCase();
+        // Store first match (don't overwrite)
+        if (!gwLookupWeekly._norm[nk]) gwLookupWeekly._norm[nk] = k;
       }
     }
-    const normName = name.replace(/\./g, '').replace(/\s+/g,' ').trim().toLowerCase();
-    const match = gwLookupWeekly._norm[normName];
-    // Also try adding dots to initials: "AJ" -> "A.J.", "TJ" -> "T.J.", "DJ" -> "D.J.", "DK" -> "D.K.", "CJ" -> "C.J."
-    let match2 = null;
-    if (!match) {
-      const dottedName = name.replace(/\b([A-Z])([A-Z])\b/g, '$1.$2.').replace(/\s+/g,' ').trim();
-      if (dottedName !== name && WEEKLY_STATS[dottedName]) {
-        match2 = dottedName;
-      }
+    // Strategy 1: normalized match (strip dots + suffixes)
+    const normName = name.replace(/\./g, '').replace(/\s+(jr|sr|ii|iii|iv|v)\.?$/i, '').replace(/\s+/g,' ').trim().toLowerCase();
+    let found = gwLookupWeekly._norm[normName] ? WEEKLY_STATS[gwLookupWeekly._norm[normName]] : null;
+
+    // Strategy 2: try adding dots to two-letter initials "AJ" -> "A.J."
+    if (!found) {
+      const dottedName = name.replace(/\b([A-Z])([A-Z])\b/g, '$1.$2.').trim();
+      if (dottedName !== name && WEEKLY_STATS[dottedName]) found = WEEKLY_STATS[dottedName];
     }
-    // Try removing dots: "A.J. Brown" -> "AJ Brown"
-    let match3 = null;
-    if (!match && !match2) {
+
+    // Strategy 3: try removing dots "A.J. Brown" -> "AJ Brown"
+    if (!found) {
       const undottedName = name.replace(/(\b[A-Z])\./g, '$1').replace(/\s+/g,' ').trim();
-      if (undottedName !== name && WEEKLY_STATS[undottedName]) {
-        match3 = undottedName;
+      if (undottedName !== name && WEEKLY_STATS[undottedName]) found = WEEKLY_STATS[undottedName];
+    }
+
+    // Strategy 4: try adding/removing "Jr.", "III", etc.
+    if (!found) {
+      const base = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+      if (base !== name) {
+        // Name has suffix — try without it
+        if (WEEKLY_STATS[base]) found = WEEKLY_STATS[base];
+        if (!found) {
+          const nb = base.replace(/\./g, '').replace(/\s+/g,' ').trim().toLowerCase();
+          if (gwLookupWeekly._norm[nb]) found = WEEKLY_STATS[gwLookupWeekly._norm[nb]];
+        }
+      } else {
+        // Name has no suffix — try with common suffixes
+        for (const suf of [' Jr.', ' III', ' II', ' Jr', ' Sr.']) {
+          if (WEEKLY_STATS[name + suf]) { found = WEEKLY_STATS[name + suf]; break; }
+          const dotless = name.replace(/\./g, '').trim();
+          if (dotless !== name && WEEKLY_STATS[dotless + suf]) { found = WEEKLY_STATS[dotless + suf]; break; }
+        }
       }
     }
-    const result = match ? WEEKLY_STATS[match] : match2 ? WEEKLY_STATS[match2] : match3 ? WEEKLY_STATS[match3] : null;
-    _gwWsCache[name] = result;
-    return result;
+
+    _gwWsCache[name] = found || null;
+    return found || null;
   }
 
   let _gwPoolBuiltWithWeekly = false;
@@ -5389,6 +5427,56 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     gwGuessRows.appendChild(row);
   }
 
+  // === Share popup for Guess Who results ===
+  // matchType -> emoji + color class
+  function gwMatchToShare(m) {
+    if (m === 'correct') return { emoji: '🟩', cls: 'g' };
+    if (m === 'close' || m === 'higher-close' || m === 'lower-close') return { emoji: '🟨', cls: 'y' };
+    if (m === 'neutral') return { emoji: '⬜', cls: 'n' };
+    return { emoji: '🟥', cls: 'r' }; // wrong, higher, lower
+  }
+
+  function gwShowSharePopup(title, subtitle, resultRows) {
+    const overlay = document.getElementById('gwShareOverlay');
+    const grid = document.getElementById('gwShareGrid');
+    const titleEl = document.getElementById('gwShareTitle');
+    const subEl = document.getElementById('gwShareSub');
+    const copiedEl = document.getElementById('gwShareCopied');
+    titleEl.textContent = title;
+    subEl.textContent = subtitle;
+    copiedEl.classList.remove('show');
+    // Build visual grid
+    grid.innerHTML = '';
+    resultRows.forEach(cells => {
+      const row = document.createElement('div');
+      row.className = 'gw-share-row';
+      cells.forEach(m => {
+        const sq = document.createElement('div');
+        sq.className = 'gw-share-sq ' + gwMatchToShare(m).cls;
+        row.appendChild(sq);
+      });
+      grid.appendChild(row);
+    });
+    overlay.classList.add('show');
+    // Build text for clipboard
+    const textGrid = resultRows.map(cells => cells.map(m => gwMatchToShare(m).emoji).join('')).join('\n');
+    const copyText = title + '\n' + subtitle + '\n\n' + textGrid + '\n\nmyfantasyfootball.org';
+    document.getElementById('gwShareCopyBtn').onclick = () => {
+      navigator.clipboard.writeText(copyText).then(() => {
+        copiedEl.classList.add('show');
+        setTimeout(() => copiedEl.classList.remove('show'), 2000);
+      }).catch(() => {});
+    };
+    document.getElementById('gwShareCloseBtn').onclick = () => overlay.classList.remove('show');
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
+  }
+  // Expose for daily GW
+  window._gwShowSharePopup = gwShowSharePopup;
+  window._gwMatchToShare = gwMatchToShare;
+
+  // Track comparison results for unlimited share grid
+  let gwResultRows = [];
+
   function gwEndGame(won) {
     gwGameOver = true;
     gwInput.disabled = true;
@@ -5401,13 +5489,23 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
     gwResult.style.display = 'block';
     if (won) {
-      gwResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos} &mdash; Guessed in ${gwGuesses.length}/${GW_MAX_GUESSES}</div>`;
+      gwResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos} &mdash; Guessed in ${gwGuesses.length}/${GW_MAX_GUESSES}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
     } else {
-      gwResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK NEXT TIME</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos}</div>`;
+      gwResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK NEXT TIME</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
     }
     gwNextBtn.style.display = 'inline-block';
     gwGiveUpBtn.style.display = 'none';
     gwRenderStats();
+    // Show share popup
+    const modeLabel = gwMode === 'alltime' ? 'All-Time' : 'Current';
+    const shareTitle = 'GUESS WHO — ' + modeLabel;
+    const shareSub = won ? ('Guessed in ' + gwGuesses.length + '/' + GW_MAX_GUESSES) : ('X/' + GW_MAX_GUESSES);
+    gwShowSharePopup(shareTitle, shareSub, gwResultRows);
+    // Re-open share on button click
+    const reBtn = gwResult.querySelector('.gw-share-reopen');
+    if (reBtn) {
+      reBtn.addEventListener('click', () => gwShowSharePopup(shareTitle, shareSub, gwResultRows));
+    }
   }
 
   function gwSubmitGuess() {
@@ -5427,6 +5525,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     gwSuggestions.classList.remove('show');
 
     const result = gwCompare(matched);
+    gwResultRows.push(result.cells.map(c => c.match));
     gwRenderRow(result);
 
     if (matched.name.toLowerCase() === gwTarget.name.toLowerCase()) {
@@ -5438,6 +5537,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
   function gwStartRound() {
     gwGuesses = [];
+    gwResultRows = [];
     gwGameOver = false;
     gwInput.disabled = false;
     gwGuessBtn.disabled = false;
@@ -5581,6 +5681,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     const MAX = 6;
     let target = null;
     let guesses = [];
+    let resultRows = [];
     let gameOver = false;
     let streak = parseInt(localStorage.getItem(config.streakKey) || '0');
     let lastWinDate = localStorage.getItem(config.lastWinKey) || '';
@@ -5708,11 +5809,27 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       result.style.display = 'block';
       function a(t) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) ? TEAM_ABBR_MAP[t] : t; }
       if (won) {
-        result.innerHTML = '<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + ' — Guessed in ' + guesses.length + '/' + MAX + '</div>';
+        result.innerHTML = '<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + ' — Guessed in ' + guesses.length + '/' + MAX + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
       } else {
-        result.innerHTML = '<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + '</div>';
+        result.innerHTML = '<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
       }
       renderStreak();
+      // Show share popup
+      var modeLabel = config.modeLabel || 'Current';
+      var shareTitle = 'GUESS WHO DAILY — ' + modeLabel;
+      var shareSub = won ? ('Guessed in ' + guesses.length + '/' + MAX) : ('X/' + MAX);
+      if (typeof window._gwShowSharePopup === 'function' && resultRows.length > 0) {
+        window._gwShowSharePopup(shareTitle, shareSub, resultRows);
+      }
+      // Re-open share on button click
+      var reBtn = result.querySelector('.gw-share-reopen');
+      if (reBtn) {
+        reBtn.addEventListener('click', function() {
+          if (typeof window._gwShowSharePopup === 'function' && resultRows.length > 0) {
+            window._gwShowSharePopup(shareTitle, shareSub, resultRows);
+          }
+        });
+      }
     }
 
     function submitGuess() {
@@ -5727,6 +5844,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       input.value = '';
       suggestions.classList.remove('show');
       const r = compare(matched, target);
+      resultRows.push(r.cells.map(c => c.match));
       renderRow(r);
       saveState();
       if (matched.name.toLowerCase() === target.name.toLowerCase()) endGame(true);
@@ -5742,7 +5860,11 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       if (guesses.length > 0) {
         guesses.forEach(gName => {
           const p = pool.find(x => x.name === gName);
-          if (p) renderRow(compare(p, target));
+          if (p) {
+            const r = compare(p, target);
+            resultRows.push(r.cells.map(c => c.match));
+            renderRow(r);
+          }
         });
       }
       if (gameOver) {
@@ -5753,9 +5875,21 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         result.style.display = 'block';
         function a(t) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) ? TEAM_ABBR_MAP[t] : t; }
         if (won) {
-          result.innerHTML = '<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub"><strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + ' — Guessed in ' + guesses.length + '/' + MAX + '</div>';
+          result.innerHTML = '<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub"><strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + ' — Guessed in ' + guesses.length + '/' + MAX + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
         } else {
-          result.innerHTML = '<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + '</div>';
+          result.innerHTML = '<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
+        }
+        // Wire up share button for replayed games
+        var modeLabel2 = config.modeLabel || 'Current';
+        var shareTitle2 = 'GUESS WHO DAILY — ' + modeLabel2;
+        var shareSub2 = won ? ('Guessed in ' + guesses.length + '/' + MAX) : ('X/' + MAX);
+        var reBtn2 = result.querySelector('.gw-share-reopen');
+        if (reBtn2) {
+          reBtn2.addEventListener('click', function() {
+            if (typeof window._gwShowSharePopup === 'function' && resultRows.length > 0) {
+              window._gwShowSharePopup(shareTitle2, shareSub2, resultRows);
+            }
+          });
         }
       }
       renderStreak();
@@ -5800,6 +5934,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       streakKey: 'gw_daily_streak',
       lastWinKey: 'gw_daily_last_win',
       seedOffset: 0,
+      modeLabel: 'Current',
       inputId: 'gwDailyInput',
       guessBtnId: 'gwDailyGuessBtn',
       resultId: 'gwDailyResult',
@@ -5817,6 +5952,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       streakKey: 'gw_daily_at_streak',
       lastWinKey: 'gw_daily_at_last_win',
       seedOffset: 7919, // Different offset so different player
+      modeLabel: 'All-Time',
       inputId: 'gwDailyATInput',
       guessBtnId: 'gwDailyATGuessBtn',
       resultId: 'gwDailyATResult',
@@ -10066,5 +10202,17 @@ window.fmtHeight = fmtHeight;
 })();
 
 </script>
+<div class="gw-share-overlay" id="gwShareOverlay">
+<div class="gw-share-box">
+<div class="gw-share-title" id="gwShareTitle">GUESS WHO</div>
+<div class="gw-share-sub" id="gwShareSub"></div>
+<div class="gw-share-grid" id="gwShareGrid"></div>
+<div style="display:flex;justify-content:center;gap:6px">
+<button class="gw-share-btn" id="gwShareCopyBtn">COPY</button>
+<button class="gw-share-close" id="gwShareCloseBtn">CLOSE</button>
+</div>
+<div class="gw-share-copied" id="gwShareCopied">Copied to clipboard!</div>
+</div>
+</div>
 </body>
 </html>

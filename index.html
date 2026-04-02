@@ -1911,6 +1911,7 @@ CLEAR
 </div>
 </div>
 <div id="gwResult" class="ep-result" style="display:none"></div>
+<button id="gwGiveUpBtn" style="margin-top:.75rem;width:100%;padding:10px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
 <button id="gwNextBtn" class="trivia-next" style="display:none;margin-top:1rem;width:100%">NEXT PLAYER</button>
 </div>
 </div>
@@ -5080,10 +5081,65 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       });
     }
 
+    // Add historical players from HP (retired players with per-team best seasons)
+    if (typeof HP !== 'undefined') {
+      HP.forEach(p => {
+        if (!p.s || p.s === 'K' || p.s === 'DST') return;
+        if (seen.has(p.n)) return;
+        const bestByTeam = p._bestByTeam || {};
+        const entries = Object.entries(bestByTeam);
+        if (!entries.length) return;
+
+        // Find the team with the best fantasy season
+        let bestTeam = null;
+        let bestSznFpts = 0;
+        entries.forEach(([tm, data]) => {
+          const fpts = data.fpts || 0;
+          if (fpts > bestSznFpts) {
+            bestSznFpts = fpts;
+            const modernTm = gwModernTeam(tm);
+            if (TEAM_DIVISION[modernTm]) bestTeam = modernTm;
+          }
+        });
+
+        // If no valid team found, try _teams array
+        if (!bestTeam && p._teams) {
+          for (const t of p._teams) {
+            const mt = gwModernTeam(t);
+            if (TEAM_DIVISION[mt]) { bestTeam = mt; break; }
+          }
+        }
+
+        if (!bestTeam || !TEAM_DIVISION[bestTeam]) return;
+        if (!bestSznFpts) return;
+
+        // Check weekly stats
+        let bestWkFpts = null;
+        if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[p.n]) {
+          const ws = WEEKLY_STATS[p.n];
+          for (const [szn, weeks] of Object.entries(ws.seasons)) {
+            for (const w of weeks) {
+              if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
+            }
+          }
+        }
+
+        seen.add(p.n);
+        allPool.push({
+          name: p.n, pos: p.s, team: bestTeam,
+          division: TEAM_DIVISION[bestTeam],
+          bestSzn: bestSznFpts ? Math.round(bestSznFpts * 10) / 10 : null,
+          bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null,
+          _active: false,
+          _hasWeekly: bestWkFpts != null
+        });
+      });
+    }
+
     // Filter to only players with season stats for better gameplay
     // Current = active players only; All-Time = all players with weekly stats
     gwPoolCurrent = allPool.filter(p => p.bestSzn !== null && p._active);
-    gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly);
+    gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && !p._active);
   }
 
   const GW_MAX_GUESSES = 6;
@@ -5099,6 +5155,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   const gwGuessBtn = document.getElementById('gwGuessBtn');
   const gwResult = document.getElementById('gwResult');
   const gwNextBtn = document.getElementById('gwNextBtn');
+  const gwGiveUpBtn = document.getElementById('gwGiveUpBtn');
   const gwSuggestions = document.getElementById('gwSuggestions');
   const gwGuessRows = document.getElementById('gwGuessRows');
   const gwStreakEl = document.getElementById('gwStreak');
@@ -5211,6 +5268,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       gwResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK NEXT TIME</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos}</div>`;
     }
     gwNextBtn.style.display = 'inline-block';
+    gwGiveUpBtn.style.display = 'none';
     gwRenderStats();
   }
 
@@ -5249,6 +5307,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     gwGuessRows.innerHTML = '';
     gwResult.style.display = 'none';
     gwNextBtn.style.display = 'none';
+    gwGiveUpBtn.style.display = '';
     gwPickTarget();
     gwRenderStats();
   }
@@ -5278,6 +5337,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   gwInput.addEventListener('keydown', e => { if (e.key === 'Enter') gwSubmitGuess(); });
   gwGuessBtn.addEventListener('click', gwSubmitGuess);
   gwNextBtn.addEventListener('click', gwStartRound);
+  gwGiveUpBtn.addEventListener('click', () => { if (!gwGameOver) gwEndGame(false); });
 
   // Mode toggle
   const gwModeCurrent = document.getElementById('gwModeCurrent');

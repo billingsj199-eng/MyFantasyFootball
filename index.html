@@ -6936,6 +6936,11 @@ document.addEventListener('click', function(e) {
           </div>
           <span class="fg-slot-pts">${filled.pts.toFixed(1)}</span>
         `;
+        div.style.cursor = 'pointer';
+        div.addEventListener('click', () => {
+          const d = D.find(dd => dd.n === filled.player.n);
+          if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
+        });
       } else {
         const label = isPending ? 'Click to place ' + pendingPlayer.n : 'Empty';
         div.innerHTML = `

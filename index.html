@@ -5020,6 +5020,43 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
   function getGwPool() { return gwMode === 'alltime' ? gwPoolAlltime : gwPoolCurrent; }
 
+  // Helper: look up WEEKLY_STATS with name normalization
+  // Handles mismatches like "AJ Brown" vs "A.J. Brown", "TJ Hockenson" vs "T.J. Hockenson", etc.
+  const _gwWsCache = {};
+  function gwLookupWeekly(name) {
+    if (typeof WEEKLY_STATS === 'undefined') return null;
+    if (WEEKLY_STATS[name]) return WEEKLY_STATS[name];
+    if (_gwWsCache[name] !== undefined) return _gwWsCache[name];
+    // Build a normalized lookup on first miss
+    if (!gwLookupWeekly._norm) {
+      gwLookupWeekly._norm = {};
+      for (const k of Object.keys(WEEKLY_STATS)) {
+        gwLookupWeekly._norm[k.replace(/\./g, '').replace(/\s+/g,' ').trim().toLowerCase()] = k;
+      }
+    }
+    const normName = name.replace(/\./g, '').replace(/\s+/g,' ').trim().toLowerCase();
+    const match = gwLookupWeekly._norm[normName];
+    // Also try adding dots to initials: "AJ" -> "A.J.", "TJ" -> "T.J.", "DJ" -> "D.J.", "DK" -> "D.K.", "CJ" -> "C.J."
+    let match2 = null;
+    if (!match) {
+      const dottedName = name.replace(/\b([A-Z])([A-Z])\b/g, '$1.$2.').replace(/\s+/g,' ').trim();
+      if (dottedName !== name && WEEKLY_STATS[dottedName]) {
+        match2 = dottedName;
+      }
+    }
+    // Try removing dots: "A.J. Brown" -> "AJ Brown"
+    let match3 = null;
+    if (!match && !match2) {
+      const undottedName = name.replace(/(\b[A-Z])\./g, '$1').replace(/\s+/g,' ').trim();
+      if (undottedName !== name && WEEKLY_STATS[undottedName]) {
+        match3 = undottedName;
+      }
+    }
+    const result = match ? WEEKLY_STATS[match] : match2 ? WEEKLY_STATS[match2] : match3 ? WEEKLY_STATS[match3] : null;
+    _gwWsCache[name] = result;
+    return result;
+  }
+
   let _gwPoolBuiltWithWeekly = false;
   function initGwPool() {
     // Rebuild if we built without weekly stats but they're now available
@@ -5052,11 +5089,11 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         career.forEach(s => { if (s.fpts && (!bestSznFpts || s.fpts > bestSznFpts)) bestSznFpts = s.fpts; });
       }
 
-      // Find best week fpts
+      // Find best week fpts (use gwLookupWeekly for name normalization)
       let bestWkFpts = null;
-      if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[name]) {
-        const ws = WEEKLY_STATS[name];
-        for (const [szn, weeks] of Object.entries(ws.seasons)) {
+      const _ws1 = gwLookupWeekly(name);
+      if (_ws1) {
+        for (const [szn, weeks] of Object.entries(_ws1.seasons)) {
           for (const w of weeks) {
             if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
           }
@@ -5152,11 +5189,11 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         if (!bestTeam || !TEAM_DIVISION[bestTeam]) return;
         if (!bestSznFpts) return;
 
-        // Check weekly stats for legends too
+        // Check weekly stats for legends too (use gwLookupWeekly for name normalization)
         let bestWkFpts = null;
-        if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[p.n]) {
-          const ws = WEEKLY_STATS[p.n];
-          for (const [szn, weeks] of Object.entries(ws.seasons)) {
+        const _ws2 = gwLookupWeekly(p.n);
+        if (_ws2) {
+          for (const [szn, weeks] of Object.entries(_ws2.seasons)) {
             for (const w of weeks) {
               if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
             }
@@ -5207,11 +5244,11 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         if (!bestTeam || !TEAM_DIVISION[bestTeam]) return;
         if (!bestSznFpts) return;
 
-        // Check weekly stats
+        // Check weekly stats (use gwLookupWeekly for name normalization)
         let bestWkFpts = null;
-        if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[p.n]) {
-          const ws = WEEKLY_STATS[p.n];
-          for (const [szn, weeks] of Object.entries(ws.seasons)) {
+        const _ws3 = gwLookupWeekly(p.n);
+        if (_ws3) {
+          for (const [szn, weeks] of Object.entries(_ws3.seasons)) {
             for (const w of weeks) {
               if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
             }

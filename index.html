@@ -1142,13 +1142,17 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 }
 </style>
 
-<!-- Firebase SDK (crossorigin for SRI) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" crossorigin="anonymous"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous"></script>
+<!-- Firebase SDK (optional — page works without it if blocked by privacy settings) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true;console.warn('[Firebase] SDK blocked — running in offline mode')"></script>
+<script>if(!window._fbBlocked){document.write('<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script>');}</script>
 </head>
 <body>
 <div class="noise"></div>
+
+<!-- Player Card Modal (global - accessible from any page) -->
+<div class="modal-overlay" id="modal">
+<div class="player-card" id="playerCard"></div>
+</div>
 
 <!-- Auth Modal -->
 <div class="auth-overlay" id="authOverlay">
@@ -1703,9 +1707,6 @@ CLEAR
 </div>
 </div>
 
-<div class="modal-overlay" id="modal">
-<div class="player-card" id="playerCard"></div>
-</div>
 </div>
 
 <!-- COMPARE PAGE -->
@@ -6413,7 +6414,7 @@ window.fmtHeight = fmtHeight;
   // Expose globally so rankings code can check
   window.isAdmin = isAdmin;
 
-  if (isConfigured) {
+  if (isConfigured && typeof firebase !== 'undefined' && !window._fbBlocked) {
     try {
       app = firebase.initializeApp(firebaseConfig);
       auth = firebase.auth();
@@ -7694,8 +7695,10 @@ window.fmtHeight = fmtHeight;
       const rowStyle = maxed ? 'opacity:.35;pointer-events:none' : '';
       const rawAdp = D[p.idx] ? (D[p.idx].a || 999) : 999;
       const rankNum = Math.round(p.adp);
-      const displayRank = mdSortBy === 'adp' ? rawAdp.toFixed(1) : String(rankNum);
-      const adpLabel = mdSortBy === 'adp' ? 'Rank #' + rankNum : 'ADP ' + rawAdp.toFixed(1);
+      // For K/DST in default ADP mode, p.adp is inflated (900+) — show real ADP instead
+      const isInflated = (pc === 'K' || pc === 'DST') && rankNum >= 900;
+      const displayRank = mdSortBy === 'adp' ? rawAdp.toFixed(1) : (isInflated ? rawAdp.toFixed(1) : String(rankNum));
+      const adpLabel = mdSortBy === 'adp' ? (isInflated ? '' : 'Rank #' + rankNum) : 'ADP ' + rawAdp.toFixed(1);
       return '<div class="md-avail-row" data-pidx="'+p.idx+'" style="'+rowStyle+'"><span class="md-ar-rank">'+displayRank+'</span><span class="md-ar-pos '+pc+'">'+escapeHTML(pc)+'</span><div class="md-ar-info"><div class="md-ar-name"><a class="md-card-link" data-didx="'+p.idx+'" href="javascript:void(0)" style="color:var(--text);text-decoration:none">'+escapeHTML(p.name)+'</a>'+needTag+'</div><div class="md-ar-meta">'+escapeHTML(p.team)+' · '+adpLabel+'</div></div><button class="md-ar-btn" data-pidx="'+p.idx+'">'+(maxed?'FULL':'DRAFT')+'</button></div>';
     }).join('');
     // Name clicks open player card

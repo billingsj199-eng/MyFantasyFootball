@@ -2310,7 +2310,9 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <script src="data/ep_players_u.js"></script>
 <script src="data/active_team_history.js"></script>
 <script src="data/daily_retired_pool.js"></script>
-<script src="data/weekly_stats.js"></script>
+<script src="data/weekly_stats_active.js"></script>
+<script src="data/weekly_stats_retired.js"></script>
+<script>const WEEKLY_STATS = Object.assign({}, WEEKLY_STATS_RETIRED, WEEKLY_STATS_ACTIVE);</script>
 <script>
 // Global auth state flag — used by canEdit() before Firebase auth module loads
 window._authCurrentUser = null;

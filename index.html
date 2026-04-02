@@ -7489,7 +7489,6 @@ window.fmtHeight = fmtHeight;
       mdLineup[pos] = preset[pos] != null ? preset[pos] : 0;
     });
     // SFLEX: default 1 in superflex/dynasty SF, 0 in redraft/dynasty 1QB
-    const isSF = mdMode === 'superflex' || mdMode === 'dynastysf';
     mdLineup.SFLEX = isSF ? 1 : 0;
     // Update all displayed values
     Object.keys(mdLineup).forEach(pos => {

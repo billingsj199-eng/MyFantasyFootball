@@ -3660,25 +3660,29 @@ function teamAbbr(fullName) { return TEAM_ABBR_MAP[fullName] || fullName; }
 const _ABBR_TO_FULL = {};
 Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => { _ABBR_TO_FULL[abbr] = full; });
 
-// Get current team abbreviation for a player using team history data
-// Returns the most recent team abbreviation, falling back to the provided default
-function getCurrentTeamAbbr(playerName, fallbackAbbr) {
+// Get current team for a player using team history data
+// Detects whether fallback is a full name or abbreviation and returns the same format
+function getCurrentTeamAbbr(playerName, fallbackTeam) {
+  // Determine if fallback is a full name (contains a space) or an abbreviation
+  const wantsFull = fallbackTeam && fallbackTeam.includes(' ');
+
   // Check ACTIVE_TEAM_HISTORY first (uses full team names, e.g. "Los Angeles Rams")
   if (typeof ACTIVE_TEAM_HISTORY !== 'undefined' && ACTIVE_TEAM_HISTORY[playerName]) {
     const hist = ACTIVE_TEAM_HISTORY[playerName];
     if (hist.length) {
-      const last = hist[hist.length - 1];
-      return TEAM_ABBR_MAP[last.t] || last.t;
+      const fullName = hist[hist.length - 1].t;
+      return wantsFull ? fullName : (TEAM_ABBR_MAP[fullName] || fullName);
     }
   }
   // Fallback: PLAYER_TEAM_HISTORY (uses abbreviations like "LAR")
   if (typeof PLAYER_TEAM_HISTORY !== 'undefined' && PLAYER_TEAM_HISTORY[playerName]) {
     const pHist = PLAYER_TEAM_HISTORY[playerName];
     if (pHist.length) {
-      return pHist[pHist.length - 1].t;
+      const abbr = pHist[pHist.length - 1].t;
+      return wantsFull ? (_ABBR_TO_FULL[abbr] || abbr) : abbr;
     }
   }
-  return fallbackAbbr;
+  return fallbackTeam;
 }
 
 // Weekly stats data (from Sleeper API, 2018-2025)

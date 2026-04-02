@@ -113,6 +113,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .gw-body{padding:1.25rem 1.5rem}
 .gw-categories{margin-bottom:1rem}
 .gw-cat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:4px}
+.gw-cat-row.gw-6col{grid-template-columns:repeat(6,1fr)}
 .gw-cat-header .gw-cat-cell{font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);text-align:center;padding:4px 2px}
 .gw-cat-cell{text-align:center;padding:6px 2px;border-radius:6px;font-size:.72rem;font-weight:600;transition:all .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gw-cat-cell.correct{background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4);color:var(--green)}
@@ -1247,11 +1248,11 @@ Continue with Google
 <!-- Sidebar Navigation -->
 <nav class="sidebar">
 <div class="sidebar-logo">JB</div>
-<button class="nav-btn" data-page="home" title="Home">
+<button class="nav-btn active" data-page="home" title="Home">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M9 21V12h6v9"/></svg>
 <span class="nav-label">Home</span>
 </button>
-<button class="nav-btn active" data-page="rankings" title="Rankings">
+<button class="nav-btn" data-page="rankings" title="Rankings">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
 <span class="nav-label">Rankings</span>
 </button>
@@ -1561,7 +1562,7 @@ PREMIUM ACTIVE
 </div>
 
 <!-- HOME PAGE -->
-<div class="page page-home" id="pageHome">
+<div class="page page-home active" id="pageHome">
 <div class="auth-anchor" id="authAnchorHome"></div>
 
 <div class="home-hero">
@@ -1627,7 +1628,17 @@ PREMIUM ACTIVE
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
 <div class="gw-title" style="font-size:1.5rem">DAILY GUESS WHO — CURRENT</div>
-<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's active player &middot; 6 attempts</div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's active player &middot; 6 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
+<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player in 6 tries. Each guess reveals clues:<br><br>
+<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
+<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
+<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
+<strong>Team:</strong> Green if correct, red if wrong<br>
+<strong>Division:</strong> Green if exact, yellow if same conference<br>
+<strong>Position:</strong> Green if correct, red if wrong<br>
+<strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
+<strong>Wk High:</strong> Green if within 0.5 pts, yellow if within 5. Arrows show direction
+</div></span></div>
 <div id="gwDailyStreak" class="ep-streak-display" style="margin-top:4px"></div>
 </div>
 <div class="gw-body">
@@ -1653,12 +1664,23 @@ PREMIUM ACTIVE
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
 <div class="gw-title" style="font-size:1.5rem">DAILY GUESS WHO — ALL-TIME</div>
-<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's retired legend &middot; 6 attempts</div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's retired legend &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
+<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery legend in 8 tries. Each guess reveals clues:<br><br>
+<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
+<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
+<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
+<strong>Team:</strong> Green if correct, red if wrong<br>
+<strong>Division:</strong> Green if exact, yellow if same conference<br>
+<strong>Position:</strong> Green if correct, red if wrong<br>
+<strong>Year:</strong> Year of best season. Green if exact, yellow if within 2 years, red otherwise. Arrows show direction<br>
+<strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
+<strong>Wk High:</strong> Green if within 0.5 pts, yellow if within 5. Arrows show direction
+</div></span></div>
 <div id="gwDailyATStreak" class="ep-streak-display" style="margin-top:4px"></div>
 </div>
 <div class="gw-body">
 <div class="gw-categories">
-<div class="gw-cat-row gw-cat-header"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDailyATGuessRows"></div>
 </div>
 <div class="ep-guess-wrap">
@@ -1744,7 +1766,7 @@ PREMIUM ACTIVE
 </div>
 
 <!-- RANKINGS PAGE (existing content) -->
-<div class="page active" id="pageRankings">
+<div class="page" id="pageRankings">
 <header>
 <div class="logo-row">
 <h1>FANTASY FOOTBALL RANKINGS</h1>
@@ -1989,12 +2011,12 @@ CLEAR
 <button class="fg-mode-btn active" id="gwModeCurrent" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">CURRENT</button>
 <button class="fg-mode-btn" id="gwModeAlltime" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">ALL-TIME</button>
 </div>
-<div class="gw-subtitle">Guess the mystery player using the clues &middot; 6 attempts<span class="gw-help-icon">?<div class="gw-tooltip"><strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player in 6 tries. Each guess reveals clues:<br><br><span style="color:var(--green)">&#9632; Green</span> = Exact match<br><span style="color:#facc15">&#9632; Yellow</span> = Close<br><span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br><strong>Team:</strong> Green if correct, red if wrong<br><strong>Division:</strong> Green if exact, yellow if same conference, red if wrong<br><strong>Position:</strong> Green if correct, red if wrong<br><strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30, red otherwise. Arrows show if answer is ↑ higher or ↓ lower<br><strong>Wk High:</strong> Green if within 0.5 pts, yellow if within 5, red otherwise. Arrows show direction<br><br><strong>Current:</strong> Active players only<br><strong>All-Time:</strong> Legends with weekly stats</div></span></div>
+<div class="gw-subtitle">Guess the mystery player using the clues<span class="gw-help-icon">?<div class="gw-tooltip"><strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player. Each guess reveals clues:<br><br><span style="color:var(--green)">&#9632; Green</span> = Exact match<br><span style="color:#facc15">&#9632; Yellow</span> = Close<br><span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br><strong>Team:</strong> Green if correct, red if wrong<br><strong>Division:</strong> Green if exact, yellow if same conference, red if wrong<br><strong>Position:</strong> Green if correct, red if wrong<br><strong>Year (All-Time only):</strong> Year of best season. Green if exact, yellow if within 2 years, red otherwise<br><strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30, red otherwise. Arrows show if answer is ↑ higher or ↓ lower<br><strong>Wk High:</strong> Green if within 0.5 pts, yellow if within 5, red otherwise. Arrows show direction<br><br><strong>Current:</strong> Active players only &middot; 6 attempts<br><strong>All-Time:</strong> Legends &middot; 8 attempts</div></span></div>
 <div id="gwStreak" class="ep-streak-display" style="margin-top:6px"></div>
 </div>
 <div class="gw-body">
 <div class="gw-categories" id="gwCategories">
-<div class="gw-cat-row gw-cat-header">
+<div class="gw-cat-row gw-cat-header" id="gwCatHeader">
 <div class="gw-cat-cell">TEAM</div>
 <div class="gw-cat-cell">DIVISION</div>
 <div class="gw-cat-cell">POSITION</div>
@@ -5122,9 +5144,10 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
       // Find best season fpts
       let bestSznFpts = null;
+      let bestSznYear = null;
       const career = (p.career && p.career.length) ? p.career : (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[name] ? LEGEND_CAREERS[name] : []);
       if (career.length) {
-        career.forEach(s => { if (s.fpts && (!bestSznFpts || s.fpts > bestSznFpts)) bestSznFpts = s.fpts; });
+        career.forEach(s => { if (s.fpts && (!bestSznFpts || s.fpts > bestSznFpts)) { bestSznFpts = s.fpts; bestSznYear = s.yr || null; } });
       }
 
       // Find best week fpts (use gwLookupWeekly for name normalization)
@@ -5174,6 +5197,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         name, pos: p.s, team: bestTeam,
         division: TEAM_DIVISION[bestTeam],
         bestSzn: bestSznFpts ? Math.round(bestSznFpts * 10) / 10 : null,
+        bestSznYear: bestSznYear,
         bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null,
         _active: !isRetired,
         _hasWeekly: bestWkFpts != null
@@ -5187,6 +5211,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         if (seen.has(p.n)) return;
         const seasons = p.seasons || (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[p.n] ? LEGEND_CAREERS[p.n] : []);
         let bestSznFpts = null;
+        let bestSznYear = null;
         let bestTeam = null;
         let bestTeamFpts = 0;
         const teamStr = p.t || '';
@@ -5213,7 +5238,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
         seasons.forEach(s => {
           if (!s.fpts) return;
-          if (!bestSznFpts || s.fpts > bestSznFpts) bestSznFpts = s.fpts;
+          if (!bestSznFpts || s.fpts > bestSznFpts) { bestSznFpts = s.fpts; bestSznYear = s.yr || null; }
         });
 
         // Pick first team with a valid division as "best team" — simplistic but works for legends
@@ -5243,6 +5268,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
           name: p.n, pos: p.s, team: bestTeam,
           division: TEAM_DIVISION[bestTeam],
           bestSzn: bestSznFpts ? Math.round(bestSznFpts * 10) / 10 : null,
+          bestSznYear: bestSznYear,
           bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null,
           _active: false,
           _hasWeekly: bestWkFpts != null
@@ -5262,10 +5288,12 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         // Find the team with the best fantasy season
         let bestTeam = null;
         let bestSznFpts = 0;
+        let bestSznYear = null;
         entries.forEach(([tm, data]) => {
           const fpts = data.fpts || 0;
           if (fpts > bestSznFpts) {
             bestSznFpts = fpts;
+            bestSznYear = data.yr || null;
             const modernTm = gwModernTeam(tm);
             if (TEAM_DIVISION[modernTm]) bestTeam = modernTm;
           }
@@ -5298,6 +5326,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
           name: p.n, pos: p.s, team: bestTeam,
           division: TEAM_DIVISION[bestTeam],
           bestSzn: bestSznFpts ? Math.round(bestSznFpts * 10) / 10 : null,
+          bestSznYear: bestSznYear,
           bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null,
           _active: false,
           _hasWeekly: bestWkFpts != null
@@ -5314,7 +5343,9 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     window._gwGetPoolAlltime = function() { return gwPoolAlltime; };
   }
 
-  const GW_MAX_GUESSES = 6;
+  const GW_MAX_GUESSES_CURRENT = 6;
+  const GW_MAX_GUESSES_ALLTIME = 8;
+  function gwMaxGuesses() { return gwMode === 'alltime' ? GW_MAX_GUESSES_ALLTIME : GW_MAX_GUESSES_CURRENT; }
   let gwTarget = null;
   let gwGuesses = [];
   let gwGameOver = false;
@@ -5368,6 +5399,22 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     // Position
     result.cells.push({ label: g.pos, match: g.pos === t.pos ? 'correct' : 'wrong' });
 
+    // Year of best season (all-time mode only)
+    if (gwMode === 'alltime') {
+      if (g.bestSznYear != null && t.bestSznYear != null) {
+        const diff = Math.abs(g.bestSznYear - t.bestSznYear);
+        if (diff === 0) {
+          result.cells.push({ label: String(g.bestSznYear), match: 'correct' });
+        } else if (diff <= 2) {
+          result.cells.push({ label: String(g.bestSznYear) + (g.bestSznYear > t.bestSznYear ? ' ↓' : ' ↑'), match: 'close' });
+        } else {
+          result.cells.push({ label: String(g.bestSznYear) + (g.bestSznYear > t.bestSznYear ? ' ↓' : ' ↑'), match: g.bestSznYear > t.bestSznYear ? 'higher' : 'lower' });
+        }
+      } else {
+        result.cells.push({ label: '—', match: 'neutral' });
+      }
+    }
+
     // Season high — green within 0.5, yellow within 50, red otherwise
     if (g.bestSzn != null && t.bestSzn != null) {
       const diff = g.bestSzn - t.bestSzn;
@@ -5417,7 +5464,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     gwGuessRows.appendChild(nameDiv);
 
     const row = document.createElement('div');
-    row.className = 'gw-cat-row';
+    row.className = 'gw-cat-row' + (gwMode === 'alltime' ? ' gw-6col' : '');
     result.cells.forEach(c => {
       const cell = document.createElement('div');
       cell.className = 'gw-cat-cell ' + c.match;
@@ -5489,7 +5536,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
     gwResult.style.display = 'block';
     if (won) {
-      gwResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos} &mdash; Guessed in ${gwGuesses.length}/${GW_MAX_GUESSES}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
+      gwResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos} &mdash; Guessed in ${gwGuesses.length}/${gwMaxGuesses()}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
     } else {
       gwResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK NEXT TIME</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
     }
@@ -5499,7 +5546,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     // Show share popup
     const modeLabel = gwMode === 'alltime' ? 'All-Time' : 'Current';
     const shareTitle = 'GUESS WHO — ' + modeLabel;
-    const shareSub = won ? ('Guessed in ' + gwGuesses.length + '/' + GW_MAX_GUESSES) : ('X/' + GW_MAX_GUESSES);
+    const shareSub = won ? ('Guessed in ' + gwGuesses.length + '/' + gwMaxGuesses()) : ('X/' + gwMaxGuesses());
     gwShowSharePopup(shareTitle, shareSub, gwResultRows);
     // Re-open share on button click
     const reBtn = gwResult.querySelector('.gw-share-reopen');
@@ -5530,8 +5577,20 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
     if (matched.name.toLowerCase() === gwTarget.name.toLowerCase()) {
       gwEndGame(true);
-    } else if (gwGuesses.length >= GW_MAX_GUESSES) {
+    } else if (gwGuesses.length >= gwMaxGuesses()) {
       gwEndGame(false);
+    }
+  }
+
+  function gwUpdateHeader() {
+    const hdr = document.getElementById('gwCatHeader');
+    if (!hdr) return;
+    if (gwMode === 'alltime') {
+      hdr.classList.add('gw-6col');
+      hdr.innerHTML = '<div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div>';
+    } else {
+      hdr.classList.remove('gw-6col');
+      hdr.innerHTML = '<div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">SZN HIGH</div><div class="gw-cat-cell">WK HIGH</div>';
     }
   }
 
@@ -5546,6 +5605,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     gwResult.style.display = 'none';
     gwNextBtn.style.display = 'none';
     gwGiveUpBtn.style.display = '';
+    gwUpdateHeader();
     gwPickTarget();
     gwRenderStats();
   }
@@ -5605,43 +5665,32 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   // Defer initial start to ensure LDB seasons are populated from LEGEND_CAREERS
   setTimeout(gwStartRound, 3000);
 
-  // Position tooltip with fixed positioning to avoid overflow clipping
-  const gwHelpIcon = document.querySelector('.gw-help-icon');
-  const gwTooltip = document.querySelector('.gw-tooltip');
-  if (gwHelpIcon && gwTooltip) {
-    gwHelpIcon.addEventListener('mouseenter', () => {
-      const rect = gwHelpIcon.getBoundingClientRect();
-      gwTooltip.style.display = 'block';
-      // Try positioning below the icon
+  // Position tooltips with fixed positioning to avoid overflow clipping
+  document.querySelectorAll('.gw-help-icon').forEach(icon => {
+    const tip = icon.querySelector('.gw-tooltip');
+    if (!icon || !tip) return;
+    function positionTip() {
+      const rect = icon.getBoundingClientRect();
+      tip.style.display = 'block';
       let top = rect.bottom + 8;
       let left = rect.left + rect.width / 2 - 135;
-      // Keep within viewport
       if (left < 8) left = 8;
       if (left + 270 > window.innerWidth - 8) left = window.innerWidth - 278;
-      // If it would go off the bottom, show above instead
-      if (top + gwTooltip.offsetHeight > window.innerHeight - 8) {
-        top = rect.top - gwTooltip.offsetHeight - 8;
-      }
-      gwTooltip.style.top = top + 'px';
-      gwTooltip.style.left = left + 'px';
-    });
-    gwHelpIcon.addEventListener('mouseleave', () => { gwTooltip.style.display = 'none'; });
-    // Also support tap on mobile
-    gwHelpIcon.addEventListener('click', (e) => {
+      if (top + tip.offsetHeight > window.innerHeight - 8) top = rect.top - tip.offsetHeight - 8;
+      tip.style.top = top + 'px';
+      tip.style.left = left + 'px';
+    }
+    icon.addEventListener('mouseenter', positionTip);
+    icon.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+    icon.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (gwTooltip.style.display === 'block') { gwTooltip.style.display = 'none'; return; }
-      const rect = gwHelpIcon.getBoundingClientRect();
-      gwTooltip.style.display = 'block';
-      let top = rect.bottom + 8;
-      let left = rect.left + rect.width / 2 - 135;
-      if (left < 8) left = 8;
-      if (left + 270 > window.innerWidth - 8) left = window.innerWidth - 278;
-      if (top + gwTooltip.offsetHeight > window.innerHeight - 8) top = rect.top - gwTooltip.offsetHeight - 8;
-      gwTooltip.style.top = top + 'px';
-      gwTooltip.style.left = left + 'px';
+      if (tip.style.display === 'block') { tip.style.display = 'none'; return; }
+      positionTip();
     });
-    document.addEventListener('click', () => { gwTooltip.style.display = 'none'; });
-  }
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.gw-tooltip').forEach(t => t.style.display = 'none');
+  });
 })();
 
 // ===== DAILY GUESS WHO GAMES =====
@@ -5678,7 +5727,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
   // Generic daily GW game factory
   function createDailyGW(config) {
-    const MAX = 6;
+    const MAX = config.maxGuesses || 6;
     let target = null;
     let guesses = [];
     let resultRows = [];
@@ -5761,6 +5810,15 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       cells.push({ label: g.division, match: divM });
       // Position
       cells.push({ label: g.pos, match: g.pos === t.pos ? 'correct' : 'wrong' });
+      // Year of best season (all-time mode only)
+      if (config.modeLabel === 'All-Time') {
+        if (g.bestSznYear != null && t.bestSznYear != null) {
+          const yd = Math.abs(g.bestSznYear - t.bestSznYear);
+          if (yd === 0) cells.push({ label: String(g.bestSznYear), match: 'correct' });
+          else if (yd <= 2) cells.push({ label: String(g.bestSznYear) + (g.bestSznYear > t.bestSznYear ? ' ↓':' ↑'), match: 'close' });
+          else cells.push({ label: String(g.bestSznYear) + (g.bestSznYear > t.bestSznYear ? ' ↓':' ↑'), match: g.bestSznYear > t.bestSznYear ? 'higher':'lower' });
+        } else { cells.push({ label: '—', match: 'neutral' }); }
+      }
       // Season high
       if (g.bestSzn != null && t.bestSzn != null) {
         const diff = g.bestSzn - t.bestSzn; const abs = Math.abs(diff);
@@ -5786,7 +5844,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       nameDiv.textContent = r.name;
       guessRows.appendChild(nameDiv);
       const row = document.createElement('div');
-      row.className = 'gw-cat-row';
+      row.className = 'gw-cat-row' + (config.modeLabel === 'All-Time' ? ' gw-6col' : '');
       r.cells.forEach(c => {
         const cell = document.createElement('div');
         cell.className = 'gw-cat-cell ' + c.match;
@@ -5953,6 +6011,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       lastWinKey: 'gw_daily_at_last_win',
       seedOffset: 7919, // Different offset so different player
       modeLabel: 'All-Time',
+      maxGuesses: 8,
       inputId: 'gwDailyATInput',
       guessBtnId: 'gwDailyATGuessBtn',
       resultId: 'gwDailyATResult',
@@ -7359,9 +7418,25 @@ window.fmtHeight = fmtHeight;
 
 // === CLOUD SYNC — Game data across devices ===
 (function(){
-  const SYNC_KEYS_MAX = ['ep_streak','epu_played','epu_correct','epu_streak','epu_best_streak','fg_games_played','fg_highscore','fg_highscore_week','md_games_played'];
-  const SYNC_KEYS_STR = ['ep_last_win','jb_active_badge','jb_is_founder'];
+  const SYNC_KEYS_MAX = ['ep_streak','epu_played','epu_correct','epu_streak','epu_best_streak','fg_games_played','fg_highscore','fg_highscore_week','md_games_played','gw_daily_streak','gw_daily_at_streak'];
+  const SYNC_KEYS_STR = ['ep_last_win','jb_active_badge','jb_is_founder','gw_daily_last_win','gw_daily_at_last_win'];
   const SYNC_KEYS_JSON = ['jb_unlocked_badges'];
+
+  // Helper: get today's Eastern date key parts
+  function _syncEasternDate() {
+    const now = new Date();
+    const d = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    return { y: d.getFullYear(), m: d.getMonth()+1, d: d.getDate() };
+  }
+  function _syncDailyKeys() {
+    const e = _syncEasternDate();
+    return {
+      ep: `ep_${e.y}_${e.m}_${e.d}`,
+      gwC: `gwd_c_${e.y}_${e.m}_${e.d}`,
+      gwAT: `gwd_at_${e.y}_${e.m}_${e.d}`,
+      dateStr: `${e.y}-${e.m}-${e.d}`
+    };
+  }
 
   function saveGameDataToCloud() {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
@@ -7371,6 +7446,16 @@ window.fmtHeight = fmtHeight;
     SYNC_KEYS_MAX.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = parseFloat(v) || 0; });
     SYNC_KEYS_STR.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
     SYNC_KEYS_JSON.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+    // Save today's daily game states
+    const keys = _syncDailyKeys();
+    const dailyStates = { date: keys.dateStr };
+    const epState = localStorage.getItem(keys.ep);
+    const gwCState = localStorage.getItem(keys.gwC);
+    const gwATState = localStorage.getItem(keys.gwAT);
+    if (epState) dailyStates.ep = epState;
+    if (gwCState) dailyStates.gwC = gwCState;
+    if (gwATState) dailyStates.gwAT = gwATState;
+    data.dailyStates = dailyStates;
     data.syncedAt = new Date().toISOString();
     db.collection('user_game_data').doc(user.uid).set(data, { merge: true }).catch(e => console.warn('[Sync] save error:', e));
   }
@@ -7412,6 +7497,34 @@ window.fmtHeight = fmtHeight;
           } catch(e) {}
         }
       });
+      // Load today's daily game states from cloud if not played locally
+      let _dailyRestored = false;
+      if (cloud.dailyStates) {
+        const keys = _syncDailyKeys();
+        if (cloud.dailyStates.date === keys.dateStr) {
+          // Elite Pull daily — only restore if no local state exists
+          if (cloud.dailyStates.ep && !localStorage.getItem(keys.ep)) {
+            localStorage.setItem(keys.ep, cloud.dailyStates.ep);
+            _dailyRestored = true;
+          }
+          // Guess Who daily current
+          if (cloud.dailyStates.gwC && !localStorage.getItem(keys.gwC)) {
+            localStorage.setItem(keys.gwC, cloud.dailyStates.gwC);
+            _dailyRestored = true;
+          }
+          // Guess Who daily all-time
+          if (cloud.dailyStates.gwAT && !localStorage.getItem(keys.gwAT)) {
+            localStorage.setItem(keys.gwAT, cloud.dailyStates.gwAT);
+            _dailyRestored = true;
+          }
+        }
+      }
+      // If we restored daily state that the games already initialized without, reload once
+      if (_dailyRestored && !sessionStorage.getItem('_dailySyncReloaded')) {
+        sessionStorage.setItem('_dailySyncReloaded', '1');
+        setTimeout(() => window.location.reload(), 300);
+        return;
+      }
       console.log('[Sync] Game data loaded from cloud');
       // Refresh badge display
       if (typeof window._renderBadgeAvatars === 'function') window._renderBadgeAvatars();
@@ -9787,7 +9900,8 @@ window.fmtHeight = fmtHeight;
   function getLbBadge() { var b=localStorage.getItem('jb_active_badge')||'default'; var icons={'default':null,'creator':'🛠️','founder':'⭐','first_game':'🏈','century':'💯','1k_club':'🔥','goat':'🐐','weekly_warrior':'⚡','streak_7':'🔥','streak_30':'🌟','streak_100':'💎','sharpshooter':'🎯','elite_mind':'🏆','big_brain':'🧠','premium':'👑','mock_master':'📋','gw_first_win':'🔍','gw_streak_7':'🕵️','gw_streak_30':'🔮','gw_master':'🧩'}; return {activeBadge:b, activeBadgeIcon:icons[b]||null}; }
 
   function todayKey() {
-    const d = new Date();
+    const now = new Date();
+    const d = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
 
@@ -9945,15 +10059,17 @@ window.fmtHeight = fmtHeight;
 
   // Date helpers for time filtering
   function getMonday() {
-    const d = new Date();
+    const now = new Date();
+    const d = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
     const day = d.getDay();
     const diff = day === 0 ? 6 : day - 1; // Monday=0 offset
     d.setDate(d.getDate() - diff);
-    return d.toISOString().slice(0, 10);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
 
   function getFirstOfMonth() {
-    const d = new Date();
+    const now = new Date();
+    const d = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01';
   }
 
@@ -10199,6 +10315,39 @@ window.fmtHeight = fmtHeight;
   });
   // Initial load after a delay for Firebase to init
   setTimeout(loadLeaderboards, 2500);
+})();
+
+// === MIDNIGHT EASTERN AUTO-REFRESH ===
+// Refresh all daily games at midnight Eastern time
+(function() {
+  function getEasternNow() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  }
+  function easternDateStr(d) {
+    return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+  }
+  var pageLoadDate = easternDateStr(getEasternNow());
+
+  function scheduleRefresh() {
+    var eastern = getEasternNow();
+    // Calculate midnight Eastern (next day, 00:00:00)
+    var midnightEastern = new Date(eastern);
+    midnightEastern.setDate(midnightEastern.getDate() + 1);
+    midnightEastern.setHours(0, 0, 0, 0);
+    var msUntilMidnight = midnightEastern.getTime() - eastern.getTime();
+    // Add a small buffer (2 seconds) to ensure we're past midnight
+    setTimeout(function() { window.location.reload(); }, Math.max(msUntilMidnight + 2000, 1000));
+  }
+  scheduleRefresh();
+
+  // Also check on visibility change (user returns to tab after midnight)
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      if (easternDateStr(getEasternNow()) !== pageLoadDate) {
+        window.location.reload();
+      }
+    }
+  });
 })();
 
 </script>

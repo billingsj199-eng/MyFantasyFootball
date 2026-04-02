@@ -5255,9 +5255,14 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
       seen.add(name);
       const isRetired = !!(p._retired || (p.t && (p.t === 'FA' || p.t === 'Retired' || p.t === 'TBD')));
+      // For active players, use their current team; for retired, use bestTeam
+      const displayTeam = (!isRetired && typeof getCurrentTeamAbbr === 'function')
+        ? (function() { const ct = getCurrentTeamAbbr(name, p.t); return (TEAM_DIVISION[ct]) ? ct : bestTeam; })()
+        : bestTeam;
+      const displayDiv = TEAM_DIVISION[displayTeam] || TEAM_DIVISION[bestTeam];
       allPool.push({
-        name, pos: p.s, team: bestTeam,
-        division: TEAM_DIVISION[bestTeam],
+        name, pos: p.s, team: displayTeam,
+        division: displayDiv,
         bestSzn: bestSznFpts ? Math.round(bestSznFpts * 10) / 10 : null,
         bestSznYear: bestSznYear,
         bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null,

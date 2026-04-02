@@ -1702,6 +1702,10 @@ CLEAR
 </div>
 </div>
 </div>
+<div class="md-rank-premium-hint" id="rnkAdpHint" style="margin:4px 2rem 0">
+<svg style="width:16px;height:16px;color:var(--accent);vertical-align:middle;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+<span id="rnkAdpHintText">Additional ADP sources require a Premium account.</span>
+</div>
 
 <div class="stats-bar" id="statsBar"></div>
 
@@ -3166,22 +3170,28 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
 });
 
 // ADP source toggle (Consensus / Underdog / ESPN / Sleeper / Yahoo)
+const rnkAdpHint = document.getElementById('rnkAdpHint');
+const rnkAdpHintText = document.getElementById('rnkAdpHintText');
 document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     const src = btn.dataset.rnkadp;
     if (src === 'underdog') {
       if (currentMode === 'superflex') {
-        toast('Underdog Superflex ADP coming soon');
+        rnkAdpHintText.textContent = 'Underdog Superflex ADP coming soon.';
+        rnkAdpHint.classList.add('show');
         return;
       }
       if (!hasPremium()) {
-        toast('Underdog ADP requires Premium');
+        rnkAdpHintText.innerHTML = 'Underdog ADP requires a <span class="md-premium-link" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">Premium</span> account.';
+        rnkAdpHint.classList.add('show');
         return;
       }
     } else if (btn.classList.contains('locked')) {
-      toast('Coming soon — additional ADP sources will be added');
+      rnkAdpHintText.textContent = 'Coming soon — additional ADP sources will be added.';
+      rnkAdpHint.classList.add('show');
       return;
     }
+    rnkAdpHint.classList.remove('show');
     document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     rnkAdpSrc = src;
@@ -7615,18 +7625,22 @@ window.fmtHeight = fmtHeight;
   const _ADP_ENABLED = { consensus: true, underdog: true, espn: false, sleeper: false, yahoo: false };
   const adpSrcTabs = document.querySelectorAll('#mdAdpSrcTabs .md-rank-src-tab');
   const adpPremiumHint = document.getElementById('mdAdpPremiumHint');
+  const _adpHintDefault = adpPremiumHint.innerHTML;
   adpSrcTabs.forEach(t => t.addEventListener('click', () => {
     const src = t.dataset.mdadp;
     if (src === 'underdog') {
       if (mdMode === 'superflex') {
-        toast('Underdog Superflex ADP coming soon');
+        adpPremiumHint.innerHTML = '<svg style="width:16px;height:16px;color:var(--accent);vertical-align:middle;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Underdog Superflex ADP coming soon.';
+        adpPremiumHint.classList.add('show');
         return;
       }
       if (!hasPremium()) {
+        adpPremiumHint.innerHTML = _adpHintDefault;
         adpPremiumHint.classList.add('show');
         return;
       }
     } else if (!_ADP_ENABLED[src]) {
+      adpPremiumHint.innerHTML = _adpHintDefault;
       adpPremiumHint.classList.add('show');
       return;
     }

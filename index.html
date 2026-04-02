@@ -2011,7 +2011,24 @@ CLEAR
 <button class="fg-mode-btn active" id="gwModeCurrent" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">CURRENT</button>
 <button class="fg-mode-btn" id="gwModeAlltime" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">ALL-TIME</button>
 </div>
-<div class="gw-subtitle">Guess the mystery player using the clues<span class="gw-help-icon">?<div class="gw-tooltip"><strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player. Each guess reveals clues:<br><br><span style="color:var(--green)">&#9632; Green</span> = Exact match<br><span style="color:#facc15">&#9632; Yellow</span> = Close<br><span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br><strong>Team:</strong> Green if correct, red if wrong<br><strong>Division:</strong> Green if exact, yellow if same conference, red if wrong<br><strong>Position:</strong> Green if correct, red if wrong<br><strong>Year (All-Time only):</strong> Year of best season. Green if exact, yellow if within 2 years, red otherwise<br><strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30, red otherwise. Arrows show if answer is ↑ higher or ↓ lower<br><strong>Wk High:</strong> Best single-week score (data back to 1999). Green if within 0.5 pts, yellow if within 5, red otherwise. Arrows show direction. Shows — if no weekly data available for that player<br><br><strong>Current:</strong> Active players only &middot; 6 attempts<br><strong>All-Time:</strong> Legends &middot; 8 attempts</div></span></div>
+<div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px auto 4px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<button class="fg-mode-btn active" id="gwPlayRandom" style="padding:5px 14px;font-size:.68rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">RANDOM</button>
+<button class="fg-mode-btn" id="gwPlayCustom" style="padding:5px 14px;font-size:.68rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">CUSTOM</button>
+</div>
+<!-- Custom mode: pick a player to challenge a friend -->
+<div id="gwCustomPanel" style="display:none;margin:8px 0 4px;text-align:center">
+<div style="font-size:.7rem;color:var(--text2);margin-bottom:6px">Pick a player, then send the link to a friend</div>
+<div style="position:relative;max-width:300px;margin:0 auto">
+<input type="text" id="gwCustomInput" class="ep-guess-input" placeholder="Search for a player..." autocomplete="off" style="width:100%;font-size:.8rem">
+<div id="gwCustomSuggestions" class="ep-suggestions"></div>
+</div>
+<div id="gwCustomSelected" style="display:none;margin-top:8px">
+<div style="font-size:.82rem;font-weight:600;color:var(--accent)" id="gwCustomName"></div>
+<button class="gw-share-btn" id="gwCustomCreateBtn" style="margin-top:6px;font-size:.75rem;padding:7px 18px">CREATE CHALLENGE LINK</button>
+<div id="gwCustomCopied" style="font-size:.7rem;color:var(--green);margin-top:4px;opacity:0;transition:opacity .2s"></div>
+</div>
+</div>
+<div class="gw-subtitle">Guess the mystery player using the clues<span class="gw-help-icon">?<div class="gw-tooltip"><strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player. Each guess reveals clues:<br><br><span style="color:var(--green)">&#9632; Green</span> = Exact match<br><span style="color:#facc15">&#9632; Yellow</span> = Close<br><span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br><strong>Team:</strong> Green if correct, red if wrong<br><strong>Division:</strong> Green if exact, yellow if same conference, red if wrong<br><strong>Position:</strong> Green if correct, red if wrong<br><strong>Year (All-Time only):</strong> Year of best season. Green if exact, yellow if within 2 years, red otherwise<br><strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30, red otherwise. Arrows show if answer is ↑ higher or ↓ lower<br><strong>Wk High:</strong> Best single-week score (data back to 1999). Green if within 0.5 pts, yellow if within 5, red otherwise. Arrows show direction. Shows — if no weekly data available for that player<br><br><strong>Current:</strong> Active players only &middot; 6 attempts<br><strong>All-Time:</strong> Legends &middot; 8 attempts<br><br><strong style="color:var(--accent)">Game Modes</strong><br><strong>Random:</strong> A random player is picked each round<br><strong>Custom:</strong> Pick any player and create a challenge link to send to friends — they'll get the same player to guess<br><br>After finishing a game, tap <strong>Challenge a Friend</strong> to share a link with your results</div></span></div>
 <div id="gwStreak" class="ep-streak-display" style="margin-top:6px"></div>
 </div>
 <div class="gw-body">
@@ -5483,12 +5500,13 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     return { emoji: '🟥', cls: 'r' }; // wrong, higher, lower
   }
 
-  function gwShowSharePopup(title, subtitle, resultRows) {
+  function gwShowSharePopup(title, subtitle, resultRows, challengeUrl) {
     const overlay = document.getElementById('gwShareOverlay');
     const grid = document.getElementById('gwShareGrid');
     const titleEl = document.getElementById('gwShareTitle');
     const subEl = document.getElementById('gwShareSub');
     const copiedEl = document.getElementById('gwShareCopied');
+    const challengeBtn = document.getElementById('gwShareChallengeBtn');
     titleEl.textContent = title;
     subEl.textContent = subtitle;
     copiedEl.classList.remove('show');
@@ -5510,16 +5528,39 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     const copyText = title + '\n' + subtitle + '\n\n' + textGrid + '\n\nmyfantasyfootball.org';
     document.getElementById('gwShareCopyBtn').onclick = () => {
       navigator.clipboard.writeText(copyText).then(() => {
+        copiedEl.textContent = 'Copied to clipboard!';
         copiedEl.classList.add('show');
         setTimeout(() => copiedEl.classList.remove('show'), 2000);
       }).catch(() => {});
     };
+    // Challenge button — copies link with encoded player
+    if (challengeUrl) {
+      challengeBtn.style.display = '';
+      challengeBtn.onclick = () => {
+        const challengeText = title + '\n' + subtitle + '\n\n' + textGrid + '\n\nCan you beat me?\n' + challengeUrl;
+        navigator.clipboard.writeText(challengeText).then(() => {
+          copiedEl.textContent = 'Challenge link copied!';
+          copiedEl.classList.add('show');
+          setTimeout(() => copiedEl.classList.remove('show'), 2000);
+        }).catch(() => {});
+      };
+    } else {
+      challengeBtn.style.display = 'none';
+    }
     document.getElementById('gwShareCloseBtn').onclick = () => overlay.classList.remove('show');
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
   }
   // Expose for daily GW
   window._gwShowSharePopup = gwShowSharePopup;
   window._gwMatchToShare = gwMatchToShare;
+
+  // Generate a challenge URL that encodes the target player for sharing
+  function gwChallengeUrl(target, mode) {
+    if (!target || !target.name) return null;
+    const payload = JSON.stringify({ n: target.name, m: mode });
+    const encoded = btoa(unescape(encodeURIComponent(payload)));
+    return 'https://myfantasyfootball.org?ep=' + encodeURIComponent(encoded);
+  }
 
   // Track comparison results for unlimited share grid
   let gwResultRows = [];
@@ -5547,11 +5588,12 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     const modeLabel = gwMode === 'alltime' ? 'All-Time' : 'Current';
     const shareTitle = 'ELITE PULL — ' + modeLabel;
     const shareSub = won ? ('Guessed in ' + gwGuesses.length + '/' + gwMaxGuesses()) : ('X/' + gwMaxGuesses());
-    gwShowSharePopup(shareTitle, shareSub, gwResultRows);
+    const challengeLink = gwChallengeUrl(gwTarget, gwMode);
+    gwShowSharePopup(shareTitle, shareSub, gwResultRows, challengeLink);
     // Re-open share on button click
     const reBtn = gwResult.querySelector('.gw-share-reopen');
     if (reBtn) {
-      reBtn.addEventListener('click', () => gwShowSharePopup(shareTitle, shareSub, gwResultRows));
+      reBtn.addEventListener('click', () => gwShowSharePopup(shareTitle, shareSub, gwResultRows, challengeLink));
     }
   }
 
@@ -5634,7 +5676,26 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
   gwInput.addEventListener('keydown', e => { if (e.key === 'Enter') gwSubmitGuess(); });
   gwGuessBtn.addEventListener('click', gwSubmitGuess);
-  gwNextBtn.addEventListener('click', gwStartRound);
+  gwNextBtn.addEventListener('click', () => {
+    if (gwPlayMode === 'custom') {
+      // In custom mode, reset to player selection
+      gwCustomTarget = null;
+      gwCustomInput.value = '';
+      gwCustomSelected.style.display = 'none';
+      gwCustomPanel.style.display = '';
+      gwGuessRows.innerHTML = '';
+      gwResult.style.display = 'none';
+      gwNextBtn.style.display = 'none';
+      gwGiveUpBtn.style.display = 'none';
+      gwInput.disabled = true;
+      gwGuessBtn.disabled = true;
+      gwGuesses = [];
+      gwResultRows = [];
+      gwGameOver = false;
+    } else {
+      gwStartRound();
+    }
+  });
   gwGiveUpBtn.addEventListener('click', () => { if (!gwGameOver) gwEndGame(false); });
 
   // Mode toggle
@@ -5645,14 +5706,125 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     gwMode = 'current';
     gwModeCurrent.classList.add('active');
     gwModeAlltime.classList.remove('active');
-    gwStartRound();
+    if (gwPlayMode === 'custom') {
+      gwCustomTarget = null; gwCustomInput.value = ''; gwCustomSelected.style.display = 'none';
+      gwGuessRows.innerHTML = ''; gwResult.style.display = 'none'; gwNextBtn.style.display = 'none';
+      gwGiveUpBtn.style.display = 'none'; gwInput.disabled = true; gwGuessBtn.disabled = true;
+      gwUpdateHeader();
+    } else { gwStartRound(); }
   });
   gwModeAlltime.addEventListener('click', () => {
     if (gwMode === 'alltime') return;
     gwMode = 'alltime';
     gwModeAlltime.classList.add('active');
     gwModeCurrent.classList.remove('active');
+    if (gwPlayMode === 'custom') {
+      gwCustomTarget = null; gwCustomInput.value = ''; gwCustomSelected.style.display = 'none';
+      gwGuessRows.innerHTML = ''; gwResult.style.display = 'none'; gwNextBtn.style.display = 'none';
+      gwGiveUpBtn.style.display = 'none'; gwInput.disabled = true; gwGuessBtn.disabled = true;
+      gwUpdateHeader();
+    } else { gwStartRound(); }
+  });
+
+  // === Random / Custom mode toggle ===
+  let gwPlayMode = 'random'; // 'random' or 'custom'
+  const gwPlayRandomBtn = document.getElementById('gwPlayRandom');
+  const gwPlayCustomBtn = document.getElementById('gwPlayCustom');
+  const gwCustomPanel = document.getElementById('gwCustomPanel');
+  const gwCustomInput = document.getElementById('gwCustomInput');
+  const gwCustomSuggestions = document.getElementById('gwCustomSuggestions');
+  const gwCustomSelected = document.getElementById('gwCustomSelected');
+  const gwCustomName = document.getElementById('gwCustomName');
+  const gwCustomCreateBtn = document.getElementById('gwCustomCreateBtn');
+  const gwCustomCopied = document.getElementById('gwCustomCopied');
+  let gwCustomTarget = null;
+
+  gwPlayRandomBtn.addEventListener('click', () => {
+    if (gwPlayMode === 'random') return;
+    gwPlayMode = 'random';
+    gwPlayRandomBtn.classList.add('active');
+    gwPlayCustomBtn.classList.remove('active');
+    gwCustomPanel.style.display = 'none';
     gwStartRound();
+  });
+  gwPlayCustomBtn.addEventListener('click', () => {
+    if (gwPlayMode === 'custom') return;
+    gwPlayMode = 'custom';
+    gwPlayCustomBtn.classList.add('active');
+    gwPlayRandomBtn.classList.remove('active');
+    gwCustomPanel.style.display = '';
+    gwCustomTarget = null;
+    gwCustomInput.value = '';
+    gwCustomSelected.style.display = 'none';
+    gwCustomSuggestions.classList.remove('show');
+    // Hide the game area while no player is selected
+    gwGuessRows.innerHTML = '';
+    gwResult.style.display = 'none';
+    gwNextBtn.style.display = 'none';
+    gwGiveUpBtn.style.display = 'none';
+    gwInput.disabled = true;
+    gwGuessBtn.disabled = true;
+  });
+
+  // Custom mode: player search autocomplete
+  gwCustomInput.addEventListener('input', () => {
+    initGwPool();
+    const val = gwCustomInput.value.trim().toLowerCase();
+    if (val.length < 2) { gwCustomSuggestions.classList.remove('show'); return; }
+    const pool = getGwPool();
+    const matches = pool.filter(p => p.name.toLowerCase().includes(val)).slice(0, 8);
+    if (!matches.length) { gwCustomSuggestions.classList.remove('show'); return; }
+    gwCustomSuggestions.innerHTML = matches.map(p =>
+      '<div class="ep-sug-item" data-name="' + p.name + '"><span class="ep-sug-pos ' + p.pos + '">' + p.pos + '</span> ' + p.name + ' <span class="ep-sug-team">' + gwModernTeamAbbr(p.team) + '</span></div>'
+    ).join('');
+    gwCustomSuggestions.classList.add('show');
+    gwCustomSuggestions.querySelectorAll('.ep-sug-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const name = el.dataset.name;
+        const pool = getGwPool();
+        gwCustomTarget = pool.find(p => p.name === name);
+        gwCustomInput.value = '';
+        gwCustomSuggestions.classList.remove('show');
+        if (gwCustomTarget) {
+          gwCustomName.textContent = gwCustomTarget.name + ' — ' + gwModernTeamAbbr(gwCustomTarget.team) + ' ' + gwCustomTarget.pos;
+          gwCustomSelected.style.display = '';
+        }
+      });
+    });
+  });
+
+  // Create challenge link for custom player
+  gwCustomCreateBtn.addEventListener('click', () => {
+    if (!gwCustomTarget) return;
+    const url = gwChallengeUrl(gwCustomTarget, gwMode);
+    if (!url) return;
+    const text = 'I picked a player for you in Elite Pull!\n\nCan you guess who it is?\n' + url;
+    navigator.clipboard.writeText(text).then(() => {
+      gwCustomCopied.textContent = 'Challenge link copied!';
+      gwCustomCopied.style.opacity = '1';
+      setTimeout(() => { gwCustomCopied.style.opacity = '0'; }, 2500);
+    }).catch(() => {});
+    // Also start the game with this player so the creator can play too
+    gwGuesses = [];
+    gwResultRows = [];
+    gwGameOver = false;
+    gwInput.disabled = false;
+    gwGuessBtn.disabled = false;
+    gwInput.value = '';
+    gwGuessRows.innerHTML = '';
+    gwResult.style.display = 'none';
+    gwNextBtn.style.display = 'none';
+    gwGiveUpBtn.style.display = '';
+    gwUpdateHeader();
+    gwTarget = gwCustomTarget;
+    gwRenderStats();
+  });
+
+  // Close custom suggestions when clicking outside
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#gwCustomSuggestions') && !e.target.closest('#gwCustomInput')) {
+      gwCustomSuggestions.classList.remove('show');
+    }
   });
 
   // Close suggestions when clicking outside
@@ -5663,7 +5835,78 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   });
 
   // Defer initial start to ensure LDB seasons are populated from LEGEND_CAREERS
-  setTimeout(gwStartRound, 3000);
+  // Check for challenge URL parameter
+  function gwCheckChallenge() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const epParam = params.get('ep');
+      if (!epParam) return false;
+      const decoded = decodeURIComponent(epParam);
+      const json = JSON.parse(decodeURIComponent(escape(atob(decoded))));
+      if (json && json.n) {
+        // Set mode
+        if (json.m === 'alltime' && gwMode !== 'alltime') {
+          gwMode = 'alltime';
+          const atBtn = document.getElementById('gwModeAlltime');
+          const cBtn = document.getElementById('gwModeCurrent');
+          if (atBtn) atBtn.classList.add('active');
+          if (cBtn) cBtn.classList.remove('active');
+        } else if (json.m === 'current' && gwMode !== 'current') {
+          gwMode = 'current';
+          const cBtn = document.getElementById('gwModeCurrent');
+          const atBtn = document.getElementById('gwModeAlltime');
+          if (cBtn) cBtn.classList.add('active');
+          if (atBtn) atBtn.classList.remove('active');
+        }
+        initGwPool();
+        const pool = getGwPool();
+        const found = pool.find(p => p.name === json.n);
+        if (found) {
+          gwGuesses = [];
+          gwResultRows = [];
+          gwGameOver = false;
+          gwInput.disabled = false;
+          gwGuessBtn.disabled = false;
+          gwInput.value = '';
+          gwGuessRows.innerHTML = '';
+          gwResult.style.display = 'none';
+          gwNextBtn.style.display = 'none';
+          gwGiveUpBtn.style.display = '';
+          gwUpdateHeader();
+          gwTarget = found;
+          gwRenderStats();
+          // Hide custom panel if visible, set to random mode display
+          if (typeof gwPlayMode !== 'undefined') {
+            gwPlayMode = 'random';
+            var rb = document.getElementById('gwPlayRandom');
+            var cb = document.getElementById('gwPlayCustom');
+            var cp = document.getElementById('gwCustomPanel');
+            if (rb) rb.classList.add('active');
+            if (cb) cb.classList.remove('active');
+            if (cp) cp.style.display = 'none';
+          }
+          // Navigate to Games page > Elite Pull tab
+          if (typeof switchPage === 'function') switchPage('games');
+          document.querySelectorAll('.games-subpage').forEach(p => p.classList.remove('active'));
+          const gwSub = document.getElementById('gamesGuesswho');
+          if (gwSub) gwSub.classList.add('active');
+          document.querySelectorAll('.games-tab').forEach(t => t.classList.remove('active'));
+          const gwTab = document.querySelector('.games-tab[data-games-tab="guesswho"]');
+          if (gwTab) gwTab.classList.add('active');
+          // Clean the URL so refreshing doesn't replay
+          history.replaceState(null, '', window.location.pathname);
+          return true;
+        }
+      }
+    } catch(e) { console.warn('[Challenge] parse error:', e); }
+    return false;
+  }
+
+  setTimeout(function() {
+    if (!gwCheckChallenge()) {
+      gwStartRound();
+    }
+  }, 3000);
 
   // Position tooltips with fixed positioning to avoid overflow clipping
   document.querySelectorAll('.gw-help-icon').forEach(icon => {
@@ -10356,8 +10599,9 @@ window.fmtHeight = fmtHeight;
 <div class="gw-share-title" id="gwShareTitle">ELITE PULL</div>
 <div class="gw-share-sub" id="gwShareSub"></div>
 <div class="gw-share-grid" id="gwShareGrid"></div>
-<div style="display:flex;justify-content:center;gap:6px">
+<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap">
 <button class="gw-share-btn" id="gwShareCopyBtn">COPY</button>
+<button class="gw-share-btn" id="gwShareChallengeBtn" style="display:none;background:linear-gradient(135deg,#3b82f6,#8b5cf6)">CHALLENGE A FRIEND</button>
 <button class="gw-share-close" id="gwShareCloseBtn">CLOSE</button>
 </div>
 <div class="gw-share-copied" id="gwShareCopied">Copied to clipboard!</div>

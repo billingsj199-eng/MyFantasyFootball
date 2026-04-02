@@ -3170,6 +3170,10 @@ document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     const src = btn.dataset.rnkadp;
     if (src === 'underdog') {
+      if (currentMode === 'superflex') {
+        toast('Underdog Superflex ADP coming soon');
+        return;
+      }
       if (!hasPremium()) {
         toast('Underdog ADP requires Premium');
         return;
@@ -3184,13 +3188,22 @@ document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(btn => {
     render();
   });
 });
-// Unlock Underdog ADP tab for premium users
+// Update Underdog ADP tab lock state based on mode + premium
 function updateRnkAdpLocks() {
   const udTab = document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="underdog"]');
   if (udTab) {
     const icon = udTab.querySelector('.lock-icon');
-    if (hasPremium()) { udTab.classList.remove('locked'); if (icon) icon.style.display = 'none'; }
-    else { udTab.classList.add('locked'); if (icon) icon.style.display = ''; }
+    if (currentMode === 'superflex') {
+      // Superflex: always locked (coming soon)
+      udTab.classList.add('locked');
+      if (icon) icon.style.display = '';
+    } else if (hasPremium()) {
+      udTab.classList.remove('locked');
+      if (icon) icon.style.display = 'none';
+    } else {
+      udTab.classList.add('locked');
+      if (icon) icon.style.display = '';
+    }
   }
 }
 updateRnkAdpLocks();
@@ -3230,22 +3243,29 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
 });
 
 // Hide non-applicable ADP tabs based on mode
-// Dynasty: only Consensus + Sleeper (locked); Redraft/SF: all tabs
+// Dynasty: only Consensus + Sleeper (locked)
+// Superflex/Dynasty SF: hide Underdog (no SF ADP data yet)
+// Dynasty: only Consensus + Sleeper; Superflex: show all (Underdog locked); Redraft: show all
 function updateRnkAdpForMode() {
   const isDynasty = currentMode === 'dynasty' || currentMode === 'dynastysf';
   document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(tab => {
     const src = tab.dataset.rnkadp;
-    if (src === 'consensus') return; // always visible
+    if (src === 'consensus') return;
     if (isDynasty) {
-      // In dynasty: show Sleeper (locked), hide Underdog/ESPN/Yahoo
       tab.style.display = src === 'sleeper' ? '' : 'none';
     } else {
-      // In redraft/superflex: show all
       tab.style.display = '';
     }
   });
-  // If switching modes and current source is no longer visible, reset to consensus
+  // Update Underdog lock state for the new mode
+  updateRnkAdpLocks();
+  // Reset to consensus if current source is now hidden or locked-unavailable
   if (isDynasty && rnkAdpSrc !== 'consensus' && rnkAdpSrc !== 'sleeper') {
+    rnkAdpSrc = 'consensus';
+    document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(b => b.classList.remove('active'));
+    document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="consensus"]').classList.add('active');
+  }
+  if (currentMode === 'superflex' && rnkAdpSrc === 'underdog') {
     rnkAdpSrc = 'consensus';
     document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(b => b.classList.remove('active'));
     document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="consensus"]').classList.add('active');
@@ -7455,18 +7475,22 @@ window.fmtHeight = fmtHeight;
   // Lineup presets per mode+adp combination
   const _LINEUP_DEFAULTS = {
     consensus: { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SFLEX: 0, K: 1, DST: 1, BN: 6 },
-    underdog: { QB: 1, RB: 2, WR: 3, TE: 1, FLEX: 1, SFLEX: 0, K: 0, DST: 0, BN: 12 }
+    underdog: { QB: 1, RB: 2, WR: 3, TE: 1, FLEX: 1, SFLEX: 0, K: 0, DST: 0, BN: 12 },
+    underdog_sf: { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SFLEX: 0, K: 0, DST: 0, BN: 12 }
   };
   function applyLineupPreset() {
     const isSF = mdMode === 'superflex' || mdMode === 'dynastysf';
-    const key = mdAdpSrc === 'underdog' && (mdMode === 'redraft' || mdMode === 'superflex') ? 'underdog' : 'consensus';
+    let key = 'consensus';
+    if (mdAdpSrc === 'underdog' && (mdMode === 'redraft' || mdMode === 'superflex')) {
+      key = isSF ? 'underdog_sf' : 'underdog';
+    }
     const preset = _LINEUP_DEFAULTS[key];
     Object.keys(mdLineup).forEach(pos => {
       mdLineup[pos] = preset[pos] != null ? preset[pos] : 0;
     });
-    // Auto-set SFLEX based on mode
-    if (isSF && mdLineup.SFLEX === 0) mdLineup.SFLEX = 1;
-    if (!isSF) mdLineup.SFLEX = 0;
+    // SFLEX: default 1 in superflex/dynasty SF, 0 in redraft/dynasty 1QB
+    const isSF = mdMode === 'superflex' || mdMode === 'dynastysf';
+    mdLineup.SFLEX = isSF ? 1 : 0;
     // Update all displayed values
     Object.keys(mdLineup).forEach(pos => {
       const el = document.querySelector('.md-lu-val[data-lupos="'+pos+'"]');
@@ -7485,16 +7509,30 @@ window.fmtHeight = fmtHeight;
     applyLineupPreset();
   }));
 
-  // Show SFLEX lineup slot only in superflex/dynasty SF modes
+  // SFLEX slot visibility:
+  // Redraft/Dynasty 1QB: hidden; Superflex/Dynasty SF: visible and active
   function updateMdSflexVisibility() {
-    const isSF = mdMode === 'superflex' || mdMode === 'dynastysf';
     const sflexSlot = document.getElementById('mdSflexSlot');
-    if (sflexSlot) sflexSlot.style.display = isSF ? '' : 'none';
+    if (!sflexSlot) return;
+    const isSF = mdMode === 'superflex' || mdMode === 'dynastysf';
+    if (isSF) {
+      sflexSlot.style.display = '';
+      sflexSlot.style.opacity = '';
+      sflexSlot.style.pointerEvents = '';
+      sflexSlot.title = '';
+    } else {
+      sflexSlot.style.display = 'none';
+      sflexSlot.style.opacity = '';
+      sflexSlot.style.pointerEvents = '';
+      sflexSlot.title = '';
+    }
   }
   updateMdSflexVisibility();
 
-  // Hide non-applicable ADP tabs based on mock draft mode
-  // Dynasty: only Consensus + Sleeper (locked); Redraft/SF: all tabs
+  // Hide non-applicable ADP tabs based on mode
+  // Dynasty: only Consensus + Sleeper (locked)
+  // Superflex: show all, but Underdog is locked (coming soon - no SF data yet)
+  // Redraft: show all, Underdog premium-gated
   function updateMdAdpForMode() {
     const isDynasty = mdMode === 'dynasty' || mdMode === 'dynastysf';
     const tabs = document.querySelectorAll('#mdAdpSrcTabs .md-rank-src-tab');
@@ -7507,8 +7545,30 @@ window.fmtHeight = fmtHeight;
         tab.style.display = '';
       }
     });
-    // Reset to consensus if current source is hidden
-    if (isDynasty && mdAdpSrc !== 'consensus' && mdAdpSrc !== 'sleeper') {
+    // Update Underdog lock state based on mode
+    const udTab = document.querySelector('#mdAdpSrcTabs .md-rank-src-tab[data-mdadp="underdog"]');
+    if (udTab) {
+      const icon = udTab.querySelector('.lock-icon');
+      if (mdMode === 'superflex') {
+        // Superflex: always locked (coming soon)
+        udTab.classList.add('locked');
+        if (icon) icon.style.display = '';
+      } else if (mdMode === 'redraft') {
+        // Redraft: premium-gated
+        if (hasPremium()) { udTab.classList.remove('locked'); if (icon) icon.style.display = 'none'; }
+        else { udTab.classList.add('locked'); if (icon) icon.style.display = ''; }
+      }
+    }
+    // Reset to consensus if current source is now hidden
+    const hiddenSources = [];
+    if (isDynasty) hiddenSources.push('underdog', 'espn', 'yahoo');
+    if (hiddenSources.includes(mdAdpSrc)) {
+      mdAdpSrc = 'consensus';
+      tabs.forEach(b => b.classList.remove('active'));
+      document.querySelector('#mdAdpSrcTabs .md-rank-src-tab[data-mdadp="consensus"]').classList.add('active');
+    }
+    // If in superflex and underdog was selected, reset to consensus
+    if (mdMode === 'superflex' && mdAdpSrc === 'underdog') {
       mdAdpSrc = 'consensus';
       tabs.forEach(b => b.classList.remove('active'));
       document.querySelector('#mdAdpSrcTabs .md-rank-src-tab[data-mdadp="consensus"]').classList.add('active');
@@ -7559,6 +7619,10 @@ window.fmtHeight = fmtHeight;
   adpSrcTabs.forEach(t => t.addEventListener('click', () => {
     const src = t.dataset.mdadp;
     if (src === 'underdog') {
+      if (mdMode === 'superflex') {
+        toast('Underdog Superflex ADP coming soon');
+        return;
+      }
       if (!hasPremium()) {
         adpPremiumHint.classList.add('show');
         return;

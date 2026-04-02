@@ -4490,28 +4490,9 @@ document.addEventListener('click', function(e) {
   if (!link) return;
   const name = link.dataset.epcard;
   if (!name) return;
-  // Find player in D array first
   const d = D.find(p => p.n.toLowerCase() === name.toLowerCase());
   if (d && typeof openPlayerCard === 'function') {
     openPlayerCard(d);
-    return;
-  }
-  // Fallback: check LDB (legends database) and build a D-compatible object
-  if (typeof LDB !== 'undefined') {
-    const legend = LDB.find(p => p.n && p.n.toLowerCase() === name.toLowerCase());
-    if (legend && typeof openPlayerCard === 'function') {
-      const career = legend.seasons || (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[legend.n] ? LEGEND_CAREERS[legend.n] : []);
-      const bestSzn = career.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
-      openPlayerCard({
-        n: legend.n, s: legend.s || legend.pos || '?', t: legend.t || 'Retired', r: (legend.s || '') + '—',
-        a: 999, myRank: 999, age: legend.birthYear ? (new Date().getFullYear() - legend.birthYear) : null,
-        _retired: true, _slImg: legend._slImg || null, career: career,
-        _debut: legend.debut || (career.length ? career[0].yr : null),
-        _last: legend.last || (career.length ? career[career.length - 1].yr : null),
-        s25: null, p25: null, p24: null, p23: null, exp: career.length || null,
-        inj: null, sal: null, dr: null, cyr: null, out: null, role: null, notes: ''
-      });
-    }
   }
 });
 
@@ -5448,6 +5429,29 @@ document.addEventListener('click', function(e) {
     // Expose for daily Guess Who games
     window._gwGetPoolCurrent = function() { return gwPoolCurrent; };
     window._gwGetPoolAlltime = function() { return gwPoolAlltime; };
+
+    // Ensure all-time pool players (legends) exist in D so player cards can open for them
+    if (gwPoolAlltime && gwPoolAlltime.length) {
+      gwPoolAlltime.forEach(function(p) {
+        if (D.find(function(dd) { return dd.n.toLowerCase() === p.name.toLowerCase(); })) return;
+        // Find the LDB entry for extra data (seasons array, birthYear, headshot)
+        var ldb = (typeof LDB !== 'undefined') ? LDB.find(function(l) { return l.n === p.name; }) : null;
+        // ldb.seasons is year-by-year career array (attached from LEGEND_CAREERS)
+        var career = (ldb && ldb.seasons) ? ldb.seasons : [];
+        var debut = career.length ? career[0].yr : null;
+        var last = career.length ? career[career.length - 1].yr : null;
+        var bestPpgVal = (ldb && ldb.best) ? ldb.best.ppg : null;
+        D.push({
+          n: p.name, a: 999, p: 0, s: p.pos, r: p.pos + '\u2014', t: p.team || 'Retired',
+          p25: bestPpgVal, p24: null, p23: null,
+          age: (ldb && ldb.birthYear) ? (new Date().getFullYear() - ldb.birthYear) : null,
+          cyr: null, out: null, sal: null, dr: null, exp: career.length || null, role: null, inj: null,
+          s25: null, career: career, da: 999, sa: 999, idx: D.length, myRank: D.length + 1,
+          round: 99, notes: '', _retired: true, _debut: debut, _last: last,
+          _slImg: null
+        });
+      });
+    }
   }
 
   const GW_MAX_GUESSES_CURRENT = 6;
@@ -7237,6 +7241,25 @@ document.addEventListener('click', function(e) {
 (function() {
 LDB.forEach(p => { if (LEGEND_CAREERS[p.n]) p.seasons = LEGEND_CAREERS[p.n]; });
 D.forEach(d => { if (d._retired && (!d.career || !d.career.length) && LEGEND_CAREERS[d.n]) d.career = LEGEND_CAREERS[d.n]; });
+
+// Add HP players with LEGEND_CAREERS data to D so they get full career log cards
+HP.forEach(p => {
+  if (!p.n || !p.s || p.s === 'K' || p.s === 'DST') return;
+  if (!LEGEND_CAREERS[p.n]) return; // No career data available
+  if (D.find(d => d.n === p.n)) return; // Already in D
+  const career = LEGEND_CAREERS[p.n];
+  const teams = (p._teams || []).join(' / ');
+  const yrsMatch = (p._yrs || '').match(/(\d{4})-(\d{4})/);
+  const debut = yrsMatch ? parseInt(yrsMatch[1]) : (career.length ? career[0].yr : null);
+  const last = yrsMatch ? parseInt(yrsMatch[2]) : (career.length ? career[career.length - 1].yr : null);
+  D.push({
+    n: p.n, a: 999, p: 0, s: p.s, r: p.s + '\u2014', t: teams || 'Retired',
+    p25: null, p24: null, p23: null, age: null,
+    cyr: null, out: null, sal: null, dr: null, exp: career.length || null, role: null, inj: null,
+    s25: null, career: career, da: 999, sa: 999, idx: D.length, myRank: D.length + 1,
+    round: 99, notes: '', _retired: true, _debut: debut, _last: last, _slImg: null
+  });
+});
 const LEGEND_BIRTH_YEARS={"Tom Brady":1977,"Peyton Manning":1976,"Drew Brees":1979,"Brett Favre":1969,"Dan Marino":1961,"John Elway":1960,"Joe Montana":1956,"Ben Roethlisberger":1982,"Steve Young":1961,"Eli Manning":1981,"Philip Rivers":1981,"Matt Ryan":1985,"Cam Newton":1989,"Emmitt Smith":1969,"Walter Payton":1954,"Barry Sanders":1968,"LaDainian Tomlinson":1979,"Adrian Peterson":1985,"Marshall Faulk":1973,"Terrell Davis":1972,"Marshawn Lynch":1986,"Jerry Rice":1962,"Randy Moss":1977,"Terrell Owens":1973,"Calvin Johnson":1985,"Larry Fitzgerald":1983,"Antonio Brown":1988,"Julio Jones":1989,"Marvin Harrison Sr.":1972,"Tony Gonzalez":1976,"Rob Gronkowski":1989,"Jason Witten":1982,"Shannon Sharpe":1968,"Antonio Gates":1980,"Jimmy Graham":1986,"Adam Vinatieri":1972,"Morten Andersen":1960,"Stephen Gostkowski":1984};
 LDB.forEach(p => { if (LEGEND_BIRTH_YEARS[p.n]) p.birthYear = LEGEND_BIRTH_YEARS[p.n]; });
 

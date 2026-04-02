@@ -3353,7 +3353,7 @@ function fptsStyle(pts, pos) {
   return ' style="color:' + color + ';font-weight:700"';
 }
 
-function buildWeeklyTable(d, season) {
+function buildWeeklyTable(d, season, scoringFormat) {
   const wd = WEEKLY_STATS[d.n];
   if (!wd || !wd.seasons[season]) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
   const weeks = wd.seasons[season];
@@ -3361,8 +3361,18 @@ function buildWeeklyTable(d, season) {
   const isQB = pos === 'QB';
   const isRB = pos === 'RB';
 
+  // Scoring adjustment: stored data is half PPR
+  const fmt = scoringFormat || 'half';
+  const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;
+
+  const adjusted = weeks.map(w => {
+    const recs = w.rec || 0;
+    const adjFpts = Math.round((w.fpts + recs * recAdj) * 10) / 10;
+    return { ...w, fpts: adjFpts };
+  });
+
   // Find best week fpts for highlighting
-  const bestFpts = Math.max(...weeks.map(w => w.fpts));
+  const bestFpts = Math.max(...adjusted.map(w => w.fpts));
 
   let hdr = '<tr><th>WK</th><th>TM</th><th>FPTS</th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
@@ -3373,7 +3383,7 @@ function buildWeeklyTable(d, season) {
   // Get team for this season from career data or team history
   const curAbbr = teamAbbr(d.t);
 
-  let rows = weeks.map(w => {
+  let rows = adjusted.map(w => {
     const isBest = w.fpts === bestFpts && bestFpts > 0 ? ' class="best-yr"' : '';
     const tm = w.tm || getCareerTeamAbbr(d.n, +season, curAbbr);
     let row = '<tr>';
@@ -3399,7 +3409,7 @@ function buildWeeklyTable(d, season) {
 
   // Add totals row
   const totals = {fpts:0,py:0,ptd:0,int:0,pa:0,pc:0,ry:0,rtd:0,ra:0,fl:0,rec:0,rcy:0,rctd:0,tgt:0};
-  weeks.forEach(w => { for (const k in totals) totals[k] += (w[k]||0); });
+  adjusted.forEach(w => { for (const k in totals) totals[k] += (w[k]||0); });
   totals.fpts = Math.round(totals.fpts * 10) / 10;
   let totalRow = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
   totalRow += '<td style="color:var(--accent)">TOT</td><td></td><td style="color:var(--green);font-weight:700">' + totals.fpts + '</td>';
@@ -3412,15 +3422,41 @@ function buildWeeklyTable(d, season) {
   return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-function buildCareerTable(d) {
+function buildCareerTable(d, scoringFormat) {
   const c = d.career;
   if (!c || !c.length) return '';
   const isQB = d.s === 'QB';
   const isRB = d.s === 'RB';
   const isK  = d.s === 'K' || d.s === 'DST';
-  const bestPPG = Math.max(...c.map(y => y.ppg));
   const curAbbr = teamAbbr(d.t);
   const hasTeamHistory = !!PLAYER_TEAM_HISTORY[d.n];
+
+  // Scoring adjustment: stored data is half PPR
+  // PPR = +0.5 per reception, STD = -0.5 per reception
+  const fmt = scoringFormat || 'half';
+  const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;
+
+  const adjusted = c.map(y => {
+    const recs = y.rc || 0;
+    const adjFpts = Math.round((y.fpts + recs * recAdj) * 10) / 10;
+    const adjPpg = y.gp > 0 ? Math.round((adjFpts / y.gp) * 10) / 10 : 0;
+    return { ...y, fpts: adjFpts, ppg: adjPpg };
+  });
+
+  // Fill in missing years with zero rows
+  const filled = [];
+  for (let i = 0; i < adjusted.length; i++) {
+    if (i > 0) {
+      const prev = adjusted[i - 1].yr;
+      const cur = adjusted[i].yr;
+      for (let yr = prev + 1; yr < cur; yr++) {
+        filled.push({ yr, gp: 0, fpts: 0, ppg: 0, py: 0, ptd: 0, int: 0, ry: 0, rtd: 0, ra: 0, rc: 0, rcy: 0, rctd: 0, fl: 0, yrr: null, _gap: true });
+      }
+    }
+    filled.push(adjusted[i]);
+  }
+
+  const bestPPG = Math.max(...filled.filter(y => !y._gap).map(y => y.ppg));
 
   let hdr = '<tr><th>YR</th><th>TM</th><th>AGE</th><th>GP</th><th>PPG</th><th>Pts</th>';
   if (isQB)       hdr += '<th>PyD</th><th>TD</th><th>IN</th><th>RyD</th><th>TD</th>';
@@ -3428,26 +3464,35 @@ function buildCareerTable(d) {
   else if (!isK)  hdr += '<th>Yds</th><th>Rec</th><th>TD</th><th>Y/RR</th>';
   hdr += '</tr>';
 
-  let rows = c.map(y => {
-    const isBest = y.ppg === bestPPG ? ' class="best-yr"' : '';
-    const tm = getCareerTeamAbbr(d.n, y.yr, curAbbr);
-    let row = '<tr>';
+  let rows = filled.map(y => {
+    const isGap = y._gap;
+    const isBest = !isGap && y.ppg === bestPPG ? ' class="best-yr"' : '';
+    const tm = isGap ? getCareerTeamAbbr(d.n, y.yr, curAbbr) : getCareerTeamAbbr(d.n, y.yr, curAbbr);
+    const dimStyle = isGap ? ' style="color:var(--text2);opacity:.45"' : '';
+    let row = '<tr' + dimStyle + '>';
     row += '<td' + isBest + '>' + y.yr + '</td>';
     row += '<td style="color:var(--text2)">' + tm + '</td>';
     const ageInSeason = d.age != null ? d.age - (2026 - y.yr) : (d.birthYear != null ? y.yr - d.birthYear : '—');
     row += '<td style="color:var(--text2)">' + ageInSeason + '</td>';
-    row += '<td>' + y.gp + '</td>';
-    const _fptsColor = posFptsColor(y.ppg, d.s);
-    if (_fptsColor) {
-      row += '<td class="fpts-cell" style="color:' + _fptsColor + ';font-weight:700">' + y.ppg + '</td>';
+    row += '<td>' + (isGap ? '—' : y.gp) + '</td>';
+    if (isGap) {
+      row += '<td class="fpts-cell">—</td><td class="fpts-cell">—</td>';
+      if (isQB)      row += '<td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>';
+      else if (isRB) row += '<td>—</td><td>—</td><td>—</td><td>—</td>';
+      else if (!isK) row += '<td>—</td><td>—</td><td>—</td><td>—</td>';
     } else {
-      const ppgClass = y.ppg === bestPPG ? ' class="fpts-cell best-yr"' : ' class="fpts-cell"';
-      row += '<td' + ppgClass + '>' + y.ppg + '</td>';
+      const _fptsColor = posFptsColor(y.ppg, d.s);
+      if (_fptsColor) {
+        row += '<td class="fpts-cell" style="color:' + _fptsColor + ';font-weight:700">' + y.ppg + '</td>';
+      } else {
+        const ppgClass = y.ppg === bestPPG ? ' class="fpts-cell best-yr"' : ' class="fpts-cell"';
+        row += '<td' + ppgClass + '>' + y.ppg + '</td>';
+      }
+      row += '<td class="fpts-cell">' + y.fpts + '</td>';
+      if (isQB)      row += '<td>' + (y.py||0) + '</td><td>' + (y.ptd||0) + '</td><td>' + (y.int||0) + '</td><td>' + (y.ry||0) + '</td><td>' + (y.rtd||0) + '</td>';
+      else if (isRB) row += '<td>' + ((y.ry||0)+(y.rcy||0)) + '</td><td>' + (y.rc||0) + '</td><td>' + ((y.rtd||0)+(y.rctd||0)) + '</td><td>' + (y.yrr != null ? y.yrr.toFixed(2) : '—') + '</td>';
+      else if (!isK) row += '<td>' + ((y.rcy||0)+(y.ry||0)) + '</td><td>' + (y.rc||0) + '</td><td>' + ((y.rctd||0)+(y.rtd||0)) + '</td><td>' + (y.yrr != null ? y.yrr.toFixed(2) : '—') + '</td>';
     }
-    row += '<td class="fpts-cell">' + y.fpts + '</td>';
-    if (isQB)      row += '<td>' + (y.py||0) + '</td><td>' + (y.ptd||0) + '</td><td>' + (y.int||0) + '</td><td>' + (y.ry||0) + '</td><td>' + (y.rtd||0) + '</td>';
-    else if (isRB) row += '<td>' + ((y.ry||0)+(y.rcy||0)) + '</td><td>' + (y.rc||0) + '</td><td>' + ((y.rtd||0)+(y.rctd||0)) + '</td><td>' + (y.yrr != null ? y.yrr.toFixed(2) : '—') + '</td>';
-    else if (!isK) row += '<td>' + ((y.rcy||0)+(y.ry||0)) + '</td><td>' + (y.rc||0) + '</td><td>' + ((y.rctd||0)+(y.rtd||0)) + '</td><td>' + (y.yrr != null ? y.yrr.toFixed(2) : '—') + '</td>';
     row += '</tr>';
     return row;
   }).join('');
@@ -3539,18 +3584,23 @@ function openPlayerCard(d) {
 
       ${d.career && d.career.length > 0 ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-          <span>Career Log (Half PPR)</span>
-          ${hasWeeklyData(d) ? `<div class="career-log-controls">
+          <span id="clScoringLabel">Career Log (Half PPR)</span>
+          <div class="career-log-controls">
             <div class="career-log-toggle">
+              <button class="cl-scoring-btn" data-clscoring="ppr">PPR</button>
+              <button class="cl-scoring-btn active" data-clscoring="half">HALF</button>
+              <button class="cl-scoring-btn" data-clscoring="std">STD</button>
+            </div>
+            ${hasWeeklyData(d) ? `<div class="career-log-toggle">
               <button class="cl-mode-btn active" data-clmode="season">SEASON</button>
               <button class="cl-mode-btn" data-clmode="weekly">WEEKLY</button>
             </div>
             <select class="career-log-year-select" id="clYearSelect" style="display:none">
               ${getWeeklySeasons(d).map(s => '<option value="'+s+'">'+s+'</option>').join('')}
-            </select>
-          </div>` : ''}
+            </select>` : ''}
+          </div>
         </div>
-        <div id="careerLogContent">${buildCareerTable(d)}</div>
+        <div id="careerLogContent">${buildCareerTable(d, 'half')}</div>
       </div>` : d._retired ? `<div class="card-section">
         <div class="card-section-title">Career Summary</div>
         <div class="card-grid">
@@ -3616,10 +3666,36 @@ function openPlayerCard(d) {
   modal.classList.add('open');
   document.getElementById('cardClose').addEventListener('click', closeCard);
 
-  // Career log Season/Weekly toggle
+  // Career log Season/Weekly toggle + Scoring toggle
   const clModeBtns = cardEl.querySelectorAll('.cl-mode-btn');
+  const clScoringBtns = cardEl.querySelectorAll('.cl-scoring-btn');
   const clYearSelect = document.getElementById('clYearSelect');
   const clContent = document.getElementById('careerLogContent');
+  const clLabel = document.getElementById('clScoringLabel');
+  let _clScoring = 'half';
+  const scoringLabels = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
+
+  function _clRefresh() {
+    const activeMode = cardEl.querySelector('.cl-mode-btn.active');
+    const mode = activeMode ? activeMode.dataset.clmode : 'season';
+    if (mode === 'weekly' && clYearSelect) {
+      clContent.innerHTML = buildWeeklyTable(d, clYearSelect.value, _clScoring);
+    } else {
+      clContent.innerHTML = buildCareerTable(d, _clScoring);
+    }
+    if (clLabel) clLabel.textContent = 'Career Log (' + scoringLabels[_clScoring] + ')';
+  }
+
+  if (clScoringBtns.length) {
+    clScoringBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        clScoringBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _clScoring = btn.dataset.clscoring;
+        _clRefresh();
+      });
+    });
+  }
   if (clModeBtns.length) {
     clModeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3628,18 +3704,14 @@ function openPlayerCard(d) {
         const mode = btn.dataset.clmode;
         if (mode === 'weekly') {
           clYearSelect.style.display = '';
-          const yr = clYearSelect.value;
-          clContent.innerHTML = buildWeeklyTable(d, yr);
         } else {
           clYearSelect.style.display = 'none';
-          clContent.innerHTML = buildCareerTable(d);
         }
+        _clRefresh();
       });
     });
     if (clYearSelect) {
-      clYearSelect.addEventListener('change', () => {
-        clContent.innerHTML = buildWeeklyTable(d, clYearSelect.value);
-      });
+      clYearSelect.addEventListener('change', () => { _clRefresh(); });
     }
   }
 }

@@ -5045,8 +5045,9 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
       // Find best season fpts
       let bestSznFpts = null;
-      if (p.career && p.career.length) {
-        p.career.forEach(s => { if (s.fpts && (!bestSznFpts || s.fpts > bestSznFpts)) bestSznFpts = s.fpts; });
+      const career = (p.career && p.career.length) ? p.career : (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[name] ? LEGEND_CAREERS[name] : []);
+      if (career.length) {
+        career.forEach(s => { if (s.fpts && (!bestSznFpts || s.fpts > bestSznFpts)) bestSznFpts = s.fpts; });
       }
 
       // Find best week fpts
@@ -5063,11 +5064,11 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       // Determine "best fantasy team" — team where they had their best season
       let bestTeam = null;
       let bestTeamFpts = 0;
-      if (p.career && p.career.length) {
+      if (career.length) {
         // Use team history to figure out which team each season was on
         const hist = (typeof ACTIVE_TEAM_HISTORY !== 'undefined') ? ACTIVE_TEAM_HISTORY[name] : null;
         const pHist = (typeof PLAYER_TEAM_HISTORY !== 'undefined') ? PLAYER_TEAM_HISTORY[name] : null;
-        p.career.forEach(s => {
+        career.forEach(s => {
           if (!s.fpts) return;
           let tm = null;
           if (hist) {
@@ -5091,12 +5092,13 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       if (!bestSznFpts && !bestWkFpts) return;
 
       seen.add(name);
+      const isRetired = !!(p._retired || (p.t && (p.t === 'FA' || p.t === 'Retired' || p.t === 'TBD')));
       allPool.push({
         name, pos: p.s, team: bestTeam,
         division: TEAM_DIVISION[bestTeam],
         bestSzn: bestSznFpts ? Math.round(bestSznFpts * 10) / 10 : null,
         bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null,
-        _active: true,
+        _active: !isRetired,
         _hasWeekly: bestWkFpts != null
       });
     });

@@ -4058,6 +4058,34 @@ function openPlayerCard(d) {
             <span class="card-stat-value">${d._college || '—'}</span>
           </div>
         </div>
+      </div>` : (d._height || d._weight || d.dr || d._college) ? `<div class="card-section">
+        <div class="card-section-title">Player Info</div>
+        <div class="card-grid">
+          <div class="card-stat">
+            <span class="card-stat-label">Height</span>
+            <span class="card-stat-value">${fmtHeight(d._height)}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Weight</span>
+            <span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Draft Pick</span>
+            <span class="card-stat-value">${d.dr != null ? '#' + d.dr + ' Overall' : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">College</span>
+            <span class="card-stat-value">${d._college || '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Jersey</span>
+            <span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Years Active</span>
+            <span class="card-stat-value">${d._debut && d._last ? d._debut + '–' + d._last : '—'}</span>
+          </div>
+        </div>
       </div>` : ''}
     </div>
   `;
@@ -4155,11 +4183,108 @@ function renderCompareGrid() {
     const sr = isSearch ? searchAdded[i - checkPlayers.length] : null;
     
     if (isSearch && sr && sr._isHP) {
-      // HP retired player card — uses _bestByTeam data
+      // HP retired player without D entry — uses _bestByTeam data
       const p = sr._src || sr;
       const teams = (p._teams || []).join(' / ');
       const bestByTeam = p._bestByTeam || {};
       const teamEntries = Object.entries(bestByTeam);
+      
+      let overallBest = null;
+      teamEntries.forEach(([tm, stats]) => {
+        if (!overallBest || (stats.fpts || 0) > (overallBest.fpts || 0)) {
+          overallBest = { ...stats, team: tm };
+        }
+      });
+      
+      let teamsHtml = teamEntries.map(([tm, stats]) => {
+        const isBest = overallBest && stats.yr === overallBest.yr && tm === overallBest.team;
+        return `<div style="padding:6px 8px;border-radius:4px;background:${isBest ? 'rgba(34,197,94,.08)' : 'var(--surface2)'};border:1px solid ${isBest ? 'rgba(34,197,94,.2)' : 'var(--border)'}">
+          <div style="font-size:.68rem;color:var(--text2);margin-bottom:2px">${tm}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:${isBest ? 'var(--green)' : 'var(--text)'};letter-spacing:1px">${stats.fpts ? stats.fpts.toFixed(1) : '—'} PTS</span>
+            <span style="font-size:.65rem;color:var(--text2)">${stats.yr || '—'} · ${stats.gp || '?'}G${stats.ppg ? ' · ' + stats.ppg.toFixed(1) + ' PPG' : ''}</span>
+          </div>
+        </div>`;
+      }).join('');
+      
+      return `<div class="compare-col">
+        <div class="card-header" style="position:relative">
+          <button class="remove-from-search" data-key="${sr._key}">&times;</button>
+          <div class="card-hero"><div>
+            <div class="card-name">${p.n}</div>
+            <div class="card-meta">
+              <span class="pos-badge ${p.s}">${p.s}</span>
+              <span class="card-team">${teams}</span>
+              <span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:#f59e0b;font-weight:600">${p._yrs || 'RETIRED'}</span>
+            </div>
+          </div></div>
+        </div>
+        <div class="card-body">
+          ${teamEntries.length > 0 ? `<div class="card-section">
+            <div class="card-section-title">Best by Team</div>
+            <div style="display:flex;flex-direction:column;gap:4px">${teamsHtml}</div>
+          </div>` : ''}
+        </div>
+      </div>`;
+    }
+    
+    // Retired player card (from D array — includes EP_RETIRED, LDB legends, HP with career data)
+    if (d && d._retired) {
+      const removeBtn = isSearch 
+        ? `<button class="remove-from-search" data-key="${sr._key}">&times;</button>`
+        : `<button class="remove-from-compare" data-idx="${d.idx}">&times;</button>`;
+      const career = d.career || [];
+      const bestSzn = career.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
+      const totalGp = career.reduce((sum, s) => sum + (s.gp || 0), 0);
+      const totalFpts = career.reduce((sum, s) => sum + (s.fpts || 0), 0);
+      const yrsActive = d._debut && d._last ? d._debut + '–' + d._last : (career.length ? career[0].yr + '–' + career[career.length - 1].yr : '');
+      
+      return `<div class="compare-col" data-epcard="${d.n}" style="cursor:pointer">
+        <div class="card-header" style="position:relative">
+          ${removeBtn}
+          <div class="card-hero">
+            ${d._slImg ? `<img src="${d._slImg}" alt="${d.n}" onerror="this.style.display='none'">` : ''}
+            <div>
+              <div class="card-name">${d.n}</div>
+              <div class="card-meta">
+                <span class="pos-badge ${d.s}">${d.s}</span>
+                <span class="card-team">${d.t}</span>
+                ${d.age != null ? `<span class="card-team">Age ${d.age}</span>` : ''}
+                <span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:#f59e0b;font-weight:600">${yrsActive || 'RETIRED'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          ${bestSzn ? `<div class="card-section">
+            <div class="card-section-title">Career Highlights</div>
+            <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
+              <div class="card-rank-box"><div class="lbl">Best PPG</div><div class="num green">${bestSzn.ppg}</div></div>
+              <div class="card-rank-box"><div class="lbl">Best Pts</div><div class="num green">${bestSzn.fpts}</div></div>
+              <div class="card-rank-box"><div class="lbl">Best Yr</div><div class="num accent">${bestSzn.yr}</div></div>
+              <div class="card-rank-box"><div class="lbl">Seasons</div><div class="num accent">${career.length}</div></div>
+            </div>
+            <div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">
+              <div class="card-rank-box"><div class="lbl">Career GP</div><div class="num accent">${totalGp}</div></div>
+              <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(totalFpts)}</div></div>
+            </div>
+          </div>` : ''}
+          ${career.length > 0 ? `<div class="card-section">
+            <div class="card-section-title">Career Log (Half PPR)</div>
+            ${buildCareerTable(d, 'half')}
+          </div>` : ''}
+          ${d._height || d._weight || d.dr || d._college ? `<div class="card-section">
+            <div class="card-section-title">Player Info</div>
+            <div class="card-grid">
+              <div class="card-stat"><span class="card-stat-label">Height</span><span class="card-stat-value">${fmtHeight(d._height)}</span></div>
+              <div class="card-stat"><span class="card-stat-label">Weight</span><span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span></div>
+              <div class="card-stat"><span class="card-stat-label">Draft Pick</span><span class="card-stat-value">${d.dr != null ? '#' + d.dr + ' Overall' : '—'}</span></div>
+              <div class="card-stat"><span class="card-stat-label">College</span><span class="card-stat-value">${d._college || '—'}</span></div>
+            </div>
+          </div>` : ''}
+        </div>
+      </div>`;
+    }
       
       // Find overall best season across all teams
       let overallBest = null;
@@ -4243,95 +4368,6 @@ function renderCompareGrid() {
           ${teamEntries.length > 1 ? `<div class="card-section">
             <div class="card-section-title">Best by Team</div>
             <div style="display:flex;flex-direction:column;gap:4px">${teamsHtml}</div>
-          </div>` : ''}
-        </div>
-      </div>`;
-    }
-    
-    if (isSearch && sr && sr._retired) {
-      // Retired legend card — matches current player card structure
-      const p = sr;
-      const c = p.career;
-      const gp = c.gp;
-      
-      // Build career stats grid (same card-grid style as Player Info)
-      let statsHtml = '';
-      if(p.s==='QB') {
-        statsHtml = `
-          <div class="card-stat"><span class="card-stat-label">Pass Yds</span><span class="card-stat-value">${c.py.toLocaleString()}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Pass TD</span><span class="card-stat-value">${c.ptd}</span></div>
-          <div class="card-stat"><span class="card-stat-label">INT</span><span class="card-stat-value">${c.int}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Rush Yds</span><span class="card-stat-value">${c.ry.toLocaleString()}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Rush TD</span><span class="card-stat-value">${c.rtd}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Fumbles</span><span class="card-stat-value">${c.fl}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Yds/Gm</span><span class="card-stat-value">${(c.py/gp).toFixed(1)}</span></div>
-          <div class="card-stat"><span class="card-stat-label">TD/Gm</span><span class="card-stat-value">${(c.ptd/gp).toFixed(2)}</span></div>`;
-      } else if(p.s==='RB') {
-        statsHtml = `
-          <div class="card-stat"><span class="card-stat-label">Rush Yds</span><span class="card-stat-value">${c.ry.toLocaleString()}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Rush TD</span><span class="card-stat-value">${c.rtd}</span></div>
-          <div class="card-stat"><span class="card-stat-label">YPC</span><span class="card-stat-value">${(c.ry/c.ra).toFixed(1)}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Rec</span><span class="card-stat-value">${c.rc}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Rec Yds</span><span class="card-stat-value">${c.rcy.toLocaleString()}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Rec TD</span><span class="card-stat-value">${c.rctd}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Total TD</span><span class="card-stat-value">${c.rtd + c.rctd}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Fumbles</span><span class="card-stat-value">${c.fl}</span></div>`;
-      } else if(p.s==='K') {
-        statsHtml = `
-          <div class="card-stat"><span class="card-stat-label">FGM/FGA</span><span class="card-stat-value">${c.fgm}/${c.fga}</span></div>
-          <div class="card-stat"><span class="card-stat-label">FG%</span><span class="card-stat-value">${(c.fgm/c.fga*100).toFixed(1)}</span></div>
-          <div class="card-stat"><span class="card-stat-label">XPM/XPA</span><span class="card-stat-value">${c.xpm}/${c.xpa}</span></div>
-          <div class="card-stat"><span class="card-stat-label">XP%</span><span class="card-stat-value">${(c.xpm/c.xpa*100).toFixed(1)}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Points</span><span class="card-stat-value">${c.pts.toLocaleString()}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Pts/Gm</span><span class="card-stat-value">${(c.pts/gp).toFixed(1)}</span></div>`;
-      } else {
-        statsHtml = `
-          <div class="card-stat"><span class="card-stat-label">Rec</span><span class="card-stat-value">${c.rc.toLocaleString()}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Rec Yds</span><span class="card-stat-value">${c.rcy.toLocaleString()}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Rec TD</span><span class="card-stat-value">${c.rctd}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Yds/Rec</span><span class="card-stat-value">${(c.rcy/c.rc).toFixed(1)}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Rec/Gm</span><span class="card-stat-value">${(c.rc/gp).toFixed(1)}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Rush Yds</span><span class="card-stat-value">${(c.ry||0).toLocaleString()}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Fumbles</span><span class="card-stat-value">${c.fl}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Yds/Gm</span><span class="card-stat-value">${(c.rcy/gp).toFixed(1)}</span></div>`;
-      }
-      
-      return `<div class="compare-col">
-        <div class="card-header" style="position:relative">
-          <button class="remove-from-search" data-key="${p._key}">&times;</button>
-          <div class="card-hero">
-            <div>
-              <div class="card-name">${p.n}</div>
-              <div class="card-meta">
-                <span class="pos-badge ${p.s}">${p.s}</span>
-                <span class="card-team">${p.t}</span>
-                <span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:#f59e0b;font-weight:600">RETIRED</span>
-                ${p.hof ? '<span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#0a0e17;font-weight:700">HOF</span>' : ''}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="card-section">
-            <div class="card-section-title">Rankings</div>
-            <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
-              <div class="card-rank-box"><div class="lbl">Best PPG</div><div class="num green">${p.best.ppg}</div></div>
-              <div class="card-rank-box"><div class="lbl">Best Pts</div><div class="num green">${p.best.fpts}</div></div>
-              <div class="card-rank-box"><div class="lbl">Best Yr</div><div class="num accent">${p.best.yr}</div></div>
-              <div class="card-rank-box"><div class="lbl">Games</div><div class="num accent">${gp}</div></div>
-            </div>
-            <div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">
-              <div class="card-rank-box"><div class="lbl">Seasons</div><div class="num accent">${p.yrs}</div></div>
-              <div class="card-rank-box"><div class="lbl">Accolades</div><div class="num accent" style="font-size:.55rem;letter-spacing:0;font-family:inherit;font-weight:600;line-height:1.3">${p.accolades}</div></div>
-            </div>
-          </div>
-          <div class="card-section">
-            <div class="card-section-title">Career Stats</div>
-            <div class="card-grid">${statsHtml}</div>
-          </div>
-          ${p.seasons && p.seasons.length > 0 ? `<div class="card-section">
-            <div class="card-section-title">Career Log (Half PPR)</div>
-            ${buildCareerTable({career: p.seasons, s: p.s, n: p.n, t: p.t, age: null, birthYear: p.birthYear || null})}
           </div>` : ''}
         </div>
       </div>`;
@@ -4484,9 +4520,11 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 function _epCardLink(name, extraStyle) {
   return '<span class="ep-card-link" data-epcard="' + name.replace(/"/g, '&quot;') + '"' + (extraStyle ? ' style="' + extraStyle + '"' : '') + '>' + name + '</span>';
 }
-// Global delegated click handler for all ep-card-link elements
+// Global delegated click handler for all ep-card-link and data-epcard elements
 document.addEventListener('click', function(e) {
-  const link = e.target.closest('.ep-card-link');
+  // Don't trigger if clicking a button (remove, close, etc.)
+  if (e.target.closest('button')) return;
+  const link = e.target.closest('.ep-card-link') || e.target.closest('[data-epcard]');
   if (!link) return;
   const name = link.dataset.epcard;
   if (!name) return;

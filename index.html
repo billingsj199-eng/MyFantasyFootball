@@ -4182,54 +4182,14 @@ function renderCompareGrid() {
     const isSearch = i >= checkPlayers.length;
     const sr = isSearch ? searchAdded[i - checkPlayers.length] : null;
     
-    if (isSearch && sr && sr._isHP) {
-      // HP retired player without D entry — uses _bestByTeam data
-      const p = sr._src || sr;
-      const teams = (p._teams || []).join(' / ');
-      const bestByTeam = p._bestByTeam || {};
-      const teamEntries = Object.entries(bestByTeam);
-      
-      let overallBest = null;
-      teamEntries.forEach(([tm, stats]) => {
-        if (!overallBest || (stats.fpts || 0) > (overallBest.fpts || 0)) {
-          overallBest = { ...stats, team: tm };
-        }
-      });
-      
-      let teamsHtml = teamEntries.map(([tm, stats]) => {
-        const isBest = overallBest && stats.yr === overallBest.yr && tm === overallBest.team;
-        return `<div style="padding:6px 8px;border-radius:4px;background:${isBest ? 'rgba(34,197,94,.08)' : 'var(--surface2)'};border:1px solid ${isBest ? 'rgba(34,197,94,.2)' : 'var(--border)'}">
-          <div style="font-size:.68rem;color:var(--text2);margin-bottom:2px">${tm}</div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:${isBest ? 'var(--green)' : 'var(--text)'};letter-spacing:1px">${stats.fpts ? stats.fpts.toFixed(1) : '—'} PTS</span>
-            <span style="font-size:.65rem;color:var(--text2)">${stats.yr || '—'} · ${stats.gp || '?'}G${stats.ppg ? ' · ' + stats.ppg.toFixed(1) + ' PPG' : ''}</span>
-          </div>
-        </div>`;
-      }).join('');
-      
-      return `<div class="compare-col">
-        <div class="card-header" style="position:relative">
-          <button class="remove-from-search" data-key="${sr._key}">&times;</button>
-          <div class="card-hero"><div>
-            <div class="card-name">${p.n}</div>
-            <div class="card-meta">
-              <span class="pos-badge ${p.s}">${p.s}</span>
-              <span class="card-team">${teams}</span>
-              <span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:#f59e0b;font-weight:600">${p._yrs || 'RETIRED'}</span>
-            </div>
-          </div></div>
-        </div>
-        <div class="card-body">
-          ${teamEntries.length > 0 ? `<div class="card-section">
-            <div class="card-section-title">Best by Team</div>
-            <div style="display:flex;flex-direction:column;gap:4px">${teamsHtml}</div>
-          </div>` : ''}
-        </div>
-      </div>`;
+    // For search-added players, try to find their D entry for consistent rendering
+    if (isSearch && d && !d.myRank && d.n) {
+      const dEntry = D.find(dd => dd.n === d.n);
+      if (dEntry) d = dEntry;
     }
     
-    // Retired player card (from D array — includes EP_RETIRED, LDB legends, HP with career data)
-    if (d && d._retired) {
+    // All retired players (from any source) use the same card
+    if (d && (d._retired || (sr && sr._retired) || (sr && sr._key && sr._key.startsWith('L:')))) {
       const removeBtn = isSearch 
         ? `<button class="remove-from-search" data-key="${sr._key}">&times;</button>`
         : `<button class="remove-from-compare" data-idx="${d.idx}">&times;</button>`;
@@ -4270,8 +4230,15 @@ function renderCompareGrid() {
             </div>
           </div>` : ''}
           ${career.length > 0 ? `<div class="card-section">
-            <div class="card-section-title">Career Log (Half PPR)</div>
-            ${buildCareerTable(d, 'half')}
+            <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+              <span class="cmp-cl-label">Career Log (Half PPR)</span>
+              <div class="career-log-toggle">
+                <button class="cmp-cl-scoring" data-cmpscoring="ppr" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">PPR</button>
+                <button class="cmp-cl-scoring active" data-cmpscoring="half" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">HALF</button>
+                <button class="cmp-cl-scoring" data-cmpscoring="std" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">STD</button>
+              </div>
+            </div>
+            <div class="cmp-cl-content" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">${buildCareerTable(d, 'half')}</div>
           </div>` : ''}
           ${d._height || d._weight || d.dr || d._college ? `<div class="card-section">
             <div class="card-section-title">Player Info</div>
@@ -4370,6 +4337,26 @@ function renderCompareGrid() {
       searchAdded = searchAdded.filter(p => p._key !== btn.dataset.key);
       renderCompareGrid();
       renderSearchChips();
+    });
+  });
+  // Compare career log scoring toggles (PPR/HALF/STD)
+  const scoringLabels = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
+  compareGrid.querySelectorAll('.cmp-cl-scoring').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Don't trigger card popup
+      const playerName = btn.dataset.cmpplayer;
+      const scoring = btn.dataset.cmpscoring;
+      // Update active state for this player's buttons
+      compareGrid.querySelectorAll('.cmp-cl-scoring[data-cmpplayer="' + playerName.replace(/"/g, '\\"') + '"]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // Update the career log content
+      const contentEl = compareGrid.querySelector('.cmp-cl-content[data-cmpplayer="' + playerName.replace(/"/g, '\\"') + '"]');
+      const labelEl = btn.closest('.card-section').querySelector('.cmp-cl-label');
+      if (contentEl) {
+        const d = D.find(dd => dd.n === playerName);
+        if (d) contentEl.innerHTML = buildCareerTable(d, scoring);
+      }
+      if (labelEl) labelEl.textContent = 'Career Log (' + scoringLabels[scoring] + ')';
     });
   });
 }

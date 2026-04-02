@@ -4490,10 +4490,28 @@ document.addEventListener('click', function(e) {
   if (!link) return;
   const name = link.dataset.epcard;
   if (!name) return;
-  // Find player in D array
+  // Find player in D array first
   const d = D.find(p => p.n.toLowerCase() === name.toLowerCase());
   if (d && typeof openPlayerCard === 'function') {
     openPlayerCard(d);
+    return;
+  }
+  // Fallback: check LDB (legends database) and build a D-compatible object
+  if (typeof LDB !== 'undefined') {
+    const legend = LDB.find(p => p.n && p.n.toLowerCase() === name.toLowerCase());
+    if (legend && typeof openPlayerCard === 'function') {
+      const career = legend.seasons || (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[legend.n] ? LEGEND_CAREERS[legend.n] : []);
+      const bestSzn = career.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
+      openPlayerCard({
+        n: legend.n, s: legend.s || legend.pos || '?', t: legend.t || 'Retired', r: (legend.s || '') + '—',
+        a: 999, myRank: 999, age: legend.birthYear ? (new Date().getFullYear() - legend.birthYear) : null,
+        _retired: true, _slImg: legend._slImg || null, career: career,
+        _debut: legend.debut || (career.length ? career[0].yr : null),
+        _last: legend.last || (career.length ? career[career.length - 1].yr : null),
+        s25: null, p25: null, p24: null, p23: null, exp: career.length || null,
+        inj: null, sal: null, dr: null, cyr: null, out: null, role: null, notes: ''
+      });
+    }
   }
 });
 

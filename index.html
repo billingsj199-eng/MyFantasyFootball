@@ -110,10 +110,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .gw-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:3px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .gw-subtitle{font-size:.75rem;color:var(--text2);margin-top:2px;letter-spacing:.5px}
 .gw-body{padding:1.25rem 1.5rem}
-.gw-categories{margin-bottom:1rem;overflow-x:auto}
-.gw-cat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px;min-width:420px}
+.gw-categories{margin-bottom:1rem}
+.gw-cat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:4px}
 .gw-cat-header .gw-cat-cell{font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);text-align:center;padding:4px 2px}
-.gw-cat-cell{text-align:center;padding:8px 4px;border-radius:6px;font-size:.72rem;font-weight:600;transition:all .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gw-cat-cell{text-align:center;padding:6px 2px;border-radius:6px;font-size:.72rem;font-weight:600;transition:all .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gw-cat-cell.correct{background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4);color:var(--green)}
 .gw-cat-cell.wrong{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--red)}
 .gw-cat-cell.close{background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.35);color:#facc15}
@@ -123,6 +123,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .gw-cat-cell.lower-close{background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.35);color:#facc15}
 .gw-cat-cell.neutral{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
 .gw-guess-name{font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);text-align:center;margin-bottom:2px;margin-top:4px}
+@media(max-width:600px){
+.gw-header{padding:1rem .75rem .5rem}
+.gw-body{padding:.75rem .5rem}
+.gw-cat-row{gap:3px;margin-bottom:3px}
+.gw-cat-header .gw-cat-cell{font-size:.55rem;letter-spacing:.5px;padding:2px 1px}
+.gw-cat-cell{font-size:.6rem;padding:5px 1px;border-radius:4px}
+.gw-guess-name{font-size:.65rem}
+.gw-title{font-size:1.6rem;letter-spacing:2px}
+.gw-subtitle{font-size:.65rem}
+}
 .gw-help-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border);color:var(--text2);font-size:.7rem;font-weight:700;cursor:pointer;position:relative;vertical-align:middle;margin-left:6px}
 .gw-tooltip{display:none;position:fixed;width:270px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:.72rem;font-weight:400;color:var(--text);line-height:1.6;z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,.7);text-align:left;letter-spacing:0;font-family:'DM Sans',sans-serif}
 
@@ -657,7 +667,10 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .home-card-title{font-size:1rem}
   .home-card-desc{font-size:.65rem}
 
-  /* Rankings page */
+  /* Rankings page - make entire page scroll so header/controls scroll away */
+  #pageRankings{overflow-y:auto;overflow-x:hidden}
+  #pageRankings .table-wrap{flex:none;overflow-x:auto;overflow-y:visible}
+  #pageRankings thead th{position:sticky;top:0;z-index:10}
   header{padding:.75rem 1rem .5rem}
   header::after{display:none}
   .logo-row{gap:.5rem}
@@ -1881,7 +1894,7 @@ CLEAR
 
 <!-- Guess Who Sub-page -->
 <div class="games-subpage" id="gamesGuesswho">
-<div class="gw-section" style="margin:0 auto;max-width:520px">
+<div class="gw-section" style="margin:0 auto;max-width:520px;padding:0 4px;box-sizing:border-box">
 <div class="gw-card">
 <div class="gw-header">
 <div class="gw-title">GUESS WHO</div>

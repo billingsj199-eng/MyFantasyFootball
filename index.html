@@ -103,6 +103,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .ep-sug-item .ep-sug-team{color:var(--text2);font-size:.72rem}
 .ep-guess-wrap{position:relative}
 
+/* Guess Who game */
+.gw-section{width:100%}
+.gw-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.gw-header{padding:1.25rem 1.5rem .75rem;text-align:center;border-bottom:1px solid var(--border)}
+.gw-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:3px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.gw-subtitle{font-size:.75rem;color:var(--text2);margin-top:2px;letter-spacing:.5px}
+.gw-body{padding:1.25rem 1.5rem}
+.gw-categories{margin-bottom:1rem;overflow-x:auto}
+.gw-cat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px;min-width:420px}
+.gw-cat-header .gw-cat-cell{font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);text-align:center;padding:4px 2px}
+.gw-cat-cell{text-align:center;padding:8px 4px;border-radius:6px;font-size:.72rem;font-weight:600;transition:all .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gw-cat-cell.correct{background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4);color:var(--green)}
+.gw-cat-cell.wrong{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+.gw-cat-cell.close{background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.35);color:#facc15}
+.gw-cat-cell.higher{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+.gw-cat-cell.lower{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+.gw-cat-cell.higher-close{background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.35);color:#facc15}
+.gw-cat-cell.lower-close{background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.35);color:#facc15}
+.gw-cat-cell.neutral{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+.gw-guess-name{font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);text-align:center;margin-bottom:2px;margin-top:4px}
+.gw-help-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border);color:var(--text2);font-size:.7rem;font-weight:700;cursor:pointer;position:relative;vertical-align:middle;margin-left:6px}
+.gw-help-icon:hover .gw-tooltip{display:block}
+.gw-tooltip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:260px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:.7rem;font-weight:400;color:var(--text);line-height:1.5;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.5);text-align:left;letter-spacing:0;font-family:'DM Sans',sans-serif}
+.gw-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border)}
+
 /* Trivia page */
 .page-games{align-items:center;justify-content:center;padding:2rem}
 .trivia-container{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;max-width:600px;width:100%}
@@ -1762,6 +1787,7 @@ CLEAR
 <div class="games-tabs">
 <button class="games-tab active" data-games-tab="fantasygame">Fantasy Game</button>
 <button class="games-tab" data-games-tab="elitepull">Elite Pull</button>
+<button class="games-tab" data-games-tab="guesswho">Guess Who</button>
 </div>
 
 <!-- Fantasy Game Sub-page -->
@@ -1850,6 +1876,40 @@ CLEAR
 </div>
 <div id="epuResult" class="ep-result" style="display:none"></div>
 <button id="epuNextBtn" class="trivia-next" style="display:none;margin-top:1rem;width:100%">NEXT PLAYER</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Guess Who Sub-page -->
+<div class="games-subpage" id="gamesGuesswho">
+<div class="gw-section" style="margin:0 auto;max-width:520px">
+<div class="gw-card">
+<div class="gw-header">
+<div class="gw-title">GUESS WHO</div>
+<div class="gw-subtitle">Guess the mystery player using the clues &middot; 6 attempts<span class="gw-help-icon">?<div class="gw-tooltip"><strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player in 6 tries. Each guess reveals clues:<br><br><span style="color:var(--green)">&#9632; Green</span> = Exact match<br><span style="color:#facc15">&#9632; Yellow</span> = Close<br><span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br><strong>Team:</strong> Green if correct, red if wrong<br><strong>Division:</strong> Green if exact, yellow if same conference, red if wrong<br><strong>Position:</strong> Green if correct, red if wrong<br><strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 50, red otherwise. Arrows show if answer is ↑ higher or ↓ lower<br><strong>Wk High:</strong> Green if within 0.5 pts, yellow if within 5, red otherwise. Arrows show direction</div></span></div>
+<div id="gwStreak" class="ep-streak-display" style="margin-top:6px"></div>
+</div>
+<div class="gw-body">
+<div class="gw-categories" id="gwCategories">
+<div class="gw-cat-row gw-cat-header">
+<div class="gw-cat-cell">TEAM</div>
+<div class="gw-cat-cell">DIVISION</div>
+<div class="gw-cat-cell">POSITION</div>
+<div class="gw-cat-cell">SZN HIGH</div>
+<div class="gw-cat-cell">WK HIGH</div>
+</div>
+<div id="gwGuessRows"></div>
+</div>
+<div class="gw-guess-wrap">
+<div id="gwSuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwResult" class="ep-result" style="display:none"></div>
+<button id="gwNextBtn" class="trivia-next" style="display:none;margin-top:1rem;width:100%">NEXT PLAYER</button>
 </div>
 </div>
 </div>
@@ -4837,6 +4897,380 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
   epuNextBtn.addEventListener('click', startRoundU);
   startRoundU();
+})();
+
+// ===== GUESS WHO GAME =====
+(function(){
+  // NFL Division map
+  const TEAM_DIVISION = {
+    'Arizona Cardinals':'NFC West','Atlanta Falcons':'NFC South','Baltimore Ravens':'AFC North','Buffalo Bills':'AFC East',
+    'Carolina Panthers':'NFC South','Chicago Bears':'NFC North','Cincinnati Bengals':'AFC North','Cleveland Browns':'AFC North',
+    'Dallas Cowboys':'NFC East','Denver Broncos':'AFC West','Detroit Lions':'NFC North','Green Bay Packers':'NFC North',
+    'Houston Texans':'AFC South','Indianapolis Colts':'AFC South','Jacksonville Jaguars':'AFC South','Kansas City Chiefs':'AFC West',
+    'Las Vegas Raiders':'AFC West','Los Angeles Chargers':'AFC West','Los Angeles Rams':'NFC West','Miami Dolphins':'AFC East',
+    'Minnesota Vikings':'NFC North','New England Patriots':'AFC East','New Orleans Saints':'NFC South','New York Giants':'NFC East',
+    'New York Jets':'AFC East','Philadelphia Eagles':'NFC East','Pittsburgh Steelers':'AFC North','San Francisco 49ers':'NFC West',
+    'Seattle Seahawks':'NFC West','Tampa Bay Buccaneers':'NFC South','Tennessee Titans':'AFC South','Washington Commanders':'NFC East'
+  };
+
+  // Historical aliases to modern
+  const GW_ALIASES = {
+    'St. Louis Rams':'Los Angeles Rams','San Diego Chargers':'Los Angeles Chargers',
+    'Oakland Raiders':'Las Vegas Raiders','Houston Oilers':'Tennessee Titans',
+    'Phoenix Cardinals':'Arizona Cardinals','St. Louis Cardinals':'Arizona Cardinals',
+    'Los Angeles Raiders':'Las Vegas Raiders','Baltimore Colts':'Indianapolis Colts',
+    'Boston Patriots':'New England Patriots','Washington Redskins':'Washington Commanders',
+    'Washington Football Team':'Washington Commanders'
+  };
+
+  function gwModernTeam(t) { return GW_ALIASES[t] || t; }
+
+  // Build player pool from FG_POOL (available after Fantasy Game IIFE runs) — we'll lazy-init
+  let gwPool = null;
+  let gwAbbrToFull = {};
+
+  function initGwPool() {
+    if (gwPool) return;
+    // Build abbreviation lookup
+    if (typeof TEAM_ABBR_MAP !== 'undefined') {
+      Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => {
+        gwAbbrToFull[abbr] = GW_ALIASES[full] || full;
+      });
+    }
+    gwPool = [];
+    const seen = new Set();
+
+    // Gather from D (active players)
+    D.forEach(p => {
+      if (!p.s || p.s === 'K' || p.s === 'DST') return;
+      const name = p.n;
+      if (seen.has(name)) return;
+
+      // Find best season fpts
+      let bestSznFpts = null;
+      if (p.career && p.career.length) {
+        p.career.forEach(s => { if (s.fpts && (!bestSznFpts || s.fpts > bestSznFpts)) bestSznFpts = s.fpts; });
+      }
+
+      // Find best week fpts
+      let bestWkFpts = null;
+      if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[name]) {
+        const ws = WEEKLY_STATS[name];
+        for (const [szn, weeks] of Object.entries(ws.seasons)) {
+          for (const w of weeks) {
+            if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
+          }
+        }
+      }
+
+      // Determine "best fantasy team" — team where they had their best season
+      let bestTeam = null;
+      let bestTeamFpts = 0;
+      if (p.career && p.career.length) {
+        // Use team history to figure out which team each season was on
+        const hist = (typeof ACTIVE_TEAM_HISTORY !== 'undefined') ? ACTIVE_TEAM_HISTORY[name] : null;
+        const pHist = (typeof PLAYER_TEAM_HISTORY !== 'undefined') ? PLAYER_TEAM_HISTORY[name] : null;
+        p.career.forEach(s => {
+          if (!s.fpts) return;
+          let tm = null;
+          if (hist) {
+            for (const h of hist) { if (s.yr >= h.y1 && s.yr <= h.y2) { tm = gwModernTeam(h.t); break; } }
+          } else if (pHist) {
+            for (const h of pHist) { if (s.yr >= h.y1 && s.yr <= h.y2) { tm = gwAbbrToFull[h.t] || gwModernTeam(h.t); break; } }
+          }
+          if (!tm) {
+            const full = gwAbbrToFull[p.t] || gwModernTeam(p.t);
+            if (TEAM_DIVISION[full]) tm = full;
+          }
+          if (tm && s.fpts > bestTeamFpts) { bestTeamFpts = s.fpts; bestTeam = tm; }
+        });
+      }
+      if (!bestTeam) {
+        const full = gwAbbrToFull[p.t] || gwModernTeam(p.t);
+        if (TEAM_DIVISION[full]) bestTeam = full;
+      }
+
+      if (!bestTeam || !TEAM_DIVISION[bestTeam]) return;
+      if (!bestSznFpts && !bestWkFpts) return;
+
+      seen.add(name);
+      gwPool.push({
+        name, pos: p.s, team: bestTeam,
+        division: TEAM_DIVISION[bestTeam],
+        bestSzn: bestSznFpts ? Math.round(bestSznFpts * 10) / 10 : null,
+        bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null
+      });
+    });
+
+    // Add LDB legends
+    if (typeof LDB !== 'undefined') {
+      LDB.forEach(p => {
+        if (!p.s || p.s === 'K' || p.s === 'DST') return;
+        if (seen.has(p.n)) return;
+        const seasons = p.seasons || [];
+        let bestSznFpts = null;
+        let bestTeam = null;
+        let bestTeamFpts = 0;
+        const teamStr = p.t || '';
+        const teamNames = teamStr.split('/').map(t => t.trim()).filter(Boolean);
+        const mapping = {
+          'Patriots':'New England Patriots','Buccaneers':'Tampa Bay Buccaneers',
+          'Colts':'Indianapolis Colts','Broncos':'Denver Broncos',
+          'Chargers':'Los Angeles Chargers','Saints':'New Orleans Saints',
+          'Packers':'Green Bay Packers','Vikings':'Minnesota Vikings',
+          'Dolphins':'Miami Dolphins','49ers':'San Francisco 49ers',
+          'Steelers':'Pittsburgh Steelers','Cowboys':'Dallas Cowboys',
+          'Cardinals':'Arizona Cardinals','Bears':'Chicago Bears',
+          'Lions':'Detroit Lions','Rams':'Los Angeles Rams',
+          'Chiefs':'Kansas City Chiefs','Falcons':'Atlanta Falcons',
+          'Eagles':'Philadelphia Eagles','Seahawks':'Seattle Seahawks',
+          'Raiders':'Las Vegas Raiders','Jets':'New York Jets',
+          'Giants':'New York Giants','Titans':'Tennessee Titans',
+          'Ravens':'Baltimore Ravens','Panthers':'Carolina Panthers',
+          'Texans':'Houston Texans','Bills':'Buffalo Bills',
+          'Bengals':'Cincinnati Bengals','Browns':'Cleveland Browns',
+          'Jaguars':'Jacksonville Jaguars','Commanders':'Washington Commanders',
+        };
+        const fullTeams = teamNames.map(t => gwModernTeam(mapping[t] || t));
+
+        seasons.forEach(s => {
+          if (!s.fpts) return;
+          if (!bestSznFpts || s.fpts > bestSznFpts) bestSznFpts = s.fpts;
+        });
+
+        // Pick first team with a valid division as "best team" — simplistic but works for legends
+        // Try to find team with best season if career data has team info
+        if (seasons.length && fullTeams.length === 1 && TEAM_DIVISION[fullTeams[0]]) {
+          bestTeam = fullTeams[0];
+        } else {
+          for (const ft of fullTeams) { if (TEAM_DIVISION[ft]) { bestTeam = ft; break; } }
+        }
+
+        if (!bestTeam || !TEAM_DIVISION[bestTeam]) return;
+        if (!bestSznFpts) return;
+
+        // Check weekly stats for legends too
+        let bestWkFpts = null;
+        if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[p.n]) {
+          const ws = WEEKLY_STATS[p.n];
+          for (const [szn, weeks] of Object.entries(ws.seasons)) {
+            for (const w of weeks) {
+              if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
+            }
+          }
+        }
+
+        seen.add(p.n);
+        gwPool.push({
+          name: p.n, pos: p.s, team: bestTeam,
+          division: TEAM_DIVISION[bestTeam],
+          bestSzn: bestSznFpts ? Math.round(bestSznFpts * 10) / 10 : null,
+          bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null
+        });
+      });
+    }
+
+    // Filter to only players with both stats for better gameplay
+    gwPool = gwPool.filter(p => p.bestSzn !== null);
+  }
+
+  const GW_MAX_GUESSES = 6;
+  let gwTarget = null;
+  let gwGuesses = [];
+  let gwGameOver = false;
+  let gwWins = parseInt(localStorage.getItem('gw_wins') || '0');
+  let gwGames = parseInt(localStorage.getItem('gw_games') || '0');
+
+  const gwInput = document.getElementById('gwInput');
+  const gwGuessBtn = document.getElementById('gwGuessBtn');
+  const gwResult = document.getElementById('gwResult');
+  const gwNextBtn = document.getElementById('gwNextBtn');
+  const gwSuggestions = document.getElementById('gwSuggestions');
+  const gwGuessRows = document.getElementById('gwGuessRows');
+  const gwStreakEl = document.getElementById('gwStreak');
+
+  function gwRenderStats() {
+    if (gwGames > 0) {
+      gwStreakEl.textContent = `${gwWins}W - ${gwGames - gwWins}L`;
+    } else {
+      gwStreakEl.textContent = '';
+    }
+  }
+
+  function gwPickTarget() {
+    initGwPool();
+    if (!gwPool.length) return;
+    gwTarget = gwPool[Math.floor(Math.random() * gwPool.length)];
+  }
+
+  function gwCompare(guessPlayer) {
+    const g = guessPlayer;
+    const t = gwTarget;
+    const result = { name: g.name, cells: [] };
+
+    // Team
+    result.cells.push({ label: gwModernTeamAbbr(g.team), match: g.team === t.team ? 'correct' : 'wrong' });
+
+    // Division — yellow if same conference
+    let divMatch = 'wrong';
+    if (g.division === t.division) {
+      divMatch = 'correct';
+    } else if (g.division && t.division && g.division.substring(0, 3) === t.division.substring(0, 3)) {
+      divMatch = 'close';
+    }
+    result.cells.push({ label: g.division, match: divMatch });
+
+    // Position
+    result.cells.push({ label: g.pos, match: g.pos === t.pos ? 'correct' : 'wrong' });
+
+    // Season high — green within 0.5, yellow within 50, red otherwise
+    if (g.bestSzn != null && t.bestSzn != null) {
+      const diff = g.bestSzn - t.bestSzn;
+      const absDiff = Math.abs(diff);
+      if (absDiff < 0.5) {
+        result.cells.push({ label: g.bestSzn.toFixed(1), match: 'correct' });
+      } else if (absDiff <= 50) {
+        result.cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher-close' : 'lower-close' });
+      } else {
+        result.cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher' : 'lower' });
+      }
+    } else {
+      result.cells.push({ label: g.bestSzn != null ? g.bestSzn.toFixed(1) : '—', match: 'neutral' });
+    }
+
+    // Week high — green within 0.5, yellow within 5, red otherwise
+    if (g.bestWk != null && t.bestWk != null) {
+      const diff = g.bestWk - t.bestWk;
+      const absDiff = Math.abs(diff);
+      if (absDiff < 0.5) {
+        result.cells.push({ label: g.bestWk.toFixed(1), match: 'correct' });
+      } else if (absDiff <= 5) {
+        result.cells.push({ label: g.bestWk.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher-close' : 'lower-close' });
+      } else {
+        result.cells.push({ label: g.bestWk.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher' : 'lower' });
+      }
+    } else {
+      result.cells.push({ label: g.bestWk != null ? g.bestWk.toFixed(1) : '—', match: 'neutral' });
+    }
+
+    return result;
+  }
+
+  function gwModernTeamAbbr(fullName) {
+    if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[fullName]) return TEAM_ABBR_MAP[fullName];
+    return fullName;
+  }
+
+  function gwRenderRow(result) {
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'gw-guess-name';
+    nameDiv.textContent = result.name;
+    gwGuessRows.appendChild(nameDiv);
+
+    const row = document.createElement('div');
+    row.className = 'gw-cat-row';
+    result.cells.forEach(c => {
+      const cell = document.createElement('div');
+      cell.className = 'gw-cat-cell ' + c.match;
+      cell.textContent = c.label;
+      row.appendChild(cell);
+    });
+    gwGuessRows.appendChild(row);
+  }
+
+  function gwEndGame(won) {
+    gwGameOver = true;
+    gwInput.disabled = true;
+    gwGuessBtn.disabled = true;
+    gwSuggestions.classList.remove('show');
+    gwGames++;
+    if (won) gwWins++;
+    localStorage.setItem('gw_wins', gwWins.toString());
+    localStorage.setItem('gw_games', gwGames.toString());
+
+    gwResult.style.display = 'block';
+    if (won) {
+      gwResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos} &mdash; Guessed in ${gwGuesses.length}/${GW_MAX_GUESSES}</div>`;
+    } else {
+      gwResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK NEXT TIME</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos}</div>`;
+    }
+    gwNextBtn.style.display = 'inline-block';
+    gwRenderStats();
+  }
+
+  function gwSubmitGuess() {
+    if (gwGameOver) return;
+    const val = gwInput.value.trim();
+    if (!val) return;
+
+    initGwPool();
+    const matched = gwPool.find(p => p.name.toLowerCase() === val.toLowerCase());
+    if (!matched) return;
+
+    // Don't allow duplicate guesses
+    if (gwGuesses.some(g => g.toLowerCase() === matched.name.toLowerCase())) return;
+
+    gwGuesses.push(matched.name);
+    gwInput.value = '';
+    gwSuggestions.classList.remove('show');
+
+    const result = gwCompare(matched);
+    gwRenderRow(result);
+
+    if (matched.name.toLowerCase() === gwTarget.name.toLowerCase()) {
+      gwEndGame(true);
+    } else if (gwGuesses.length >= GW_MAX_GUESSES) {
+      gwEndGame(false);
+    }
+  }
+
+  function gwStartRound() {
+    gwGuesses = [];
+    gwGameOver = false;
+    gwInput.disabled = false;
+    gwGuessBtn.disabled = false;
+    gwInput.value = '';
+    gwGuessRows.innerHTML = '';
+    gwResult.style.display = 'none';
+    gwNextBtn.style.display = 'none';
+    gwPickTarget();
+    gwRenderStats();
+  }
+
+  // Autocomplete suggestions
+  gwInput.addEventListener('input', () => {
+    initGwPool();
+    const val = gwInput.value.trim().toLowerCase();
+    if (val.length < 2) { gwSuggestions.classList.remove('show'); return; }
+    const matches = gwPool.filter(p =>
+      p.name.toLowerCase().includes(val) && !gwGuesses.some(g => g.toLowerCase() === p.name.toLowerCase())
+    ).slice(0, 8);
+    if (!matches.length) { gwSuggestions.classList.remove('show'); return; }
+    gwSuggestions.innerHTML = matches.map(p =>
+      `<div class="ep-sug-item" data-name="${p.name}"><span class="ep-sug-pos ${p.pos}">${p.pos}</span> ${p.name} <span class="ep-sug-team">${gwModernTeamAbbr(p.team)}</span></div>`
+    ).join('');
+    gwSuggestions.classList.add('show');
+    gwSuggestions.querySelectorAll('.ep-sug-item').forEach(el => {
+      el.addEventListener('click', () => {
+        gwInput.value = el.dataset.name;
+        gwSuggestions.classList.remove('show');
+        gwSubmitGuess();
+      });
+    });
+  });
+
+  gwInput.addEventListener('keydown', e => { if (e.key === 'Enter') gwSubmitGuess(); });
+  gwGuessBtn.addEventListener('click', gwSubmitGuess);
+  gwNextBtn.addEventListener('click', gwStartRound);
+
+  // Close suggestions when clicking outside
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#gwSuggestions') && !e.target.closest('#gwInput')) {
+      gwSuggestions.classList.remove('show');
+    }
+  });
+
+  gwStartRound();
 })();
 
 // Dynamic sticky offsets no longer needed - flex layout handles it

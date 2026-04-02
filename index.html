@@ -124,9 +124,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .gw-cat-cell.neutral{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
 .gw-guess-name{font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);text-align:center;margin-bottom:2px;margin-top:4px}
 .gw-help-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border);color:var(--text2);font-size:.7rem;font-weight:700;cursor:pointer;position:relative;vertical-align:middle;margin-left:6px}
-.gw-help-icon:hover .gw-tooltip{display:block}
-.gw-tooltip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:260px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:.7rem;font-weight:400;color:var(--text);line-height:1.5;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.5);text-align:left;letter-spacing:0;font-family:'DM Sans',sans-serif}
-.gw-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border)}
+.gw-tooltip{display:none;position:fixed;width:270px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:.72rem;font-weight:400;color:var(--text);line-height:1.6;z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,.7);text-align:left;letter-spacing:0;font-family:'DM Sans',sans-serif}
 
 /* Trivia page */
 .page-games{align-items:center;justify-content:center;padding:2rem}
@@ -1901,7 +1899,7 @@ CLEAR
 </div>
 <div id="gwGuessRows"></div>
 </div>
-<div class="gw-guess-wrap">
+<div class="ep-guess-wrap">
 <div id="gwSuggestions" class="ep-suggestions"></div>
 <div class="ep-guess-row">
 <input type="text" id="gwInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
@@ -5271,6 +5269,44 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   });
 
   gwStartRound();
+
+  // Position tooltip with fixed positioning to avoid overflow clipping
+  const gwHelpIcon = document.querySelector('.gw-help-icon');
+  const gwTooltip = document.querySelector('.gw-tooltip');
+  if (gwHelpIcon && gwTooltip) {
+    gwHelpIcon.addEventListener('mouseenter', () => {
+      const rect = gwHelpIcon.getBoundingClientRect();
+      gwTooltip.style.display = 'block';
+      // Try positioning below the icon
+      let top = rect.bottom + 8;
+      let left = rect.left + rect.width / 2 - 135;
+      // Keep within viewport
+      if (left < 8) left = 8;
+      if (left + 270 > window.innerWidth - 8) left = window.innerWidth - 278;
+      // If it would go off the bottom, show above instead
+      if (top + gwTooltip.offsetHeight > window.innerHeight - 8) {
+        top = rect.top - gwTooltip.offsetHeight - 8;
+      }
+      gwTooltip.style.top = top + 'px';
+      gwTooltip.style.left = left + 'px';
+    });
+    gwHelpIcon.addEventListener('mouseleave', () => { gwTooltip.style.display = 'none'; });
+    // Also support tap on mobile
+    gwHelpIcon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (gwTooltip.style.display === 'block') { gwTooltip.style.display = 'none'; return; }
+      const rect = gwHelpIcon.getBoundingClientRect();
+      gwTooltip.style.display = 'block';
+      let top = rect.bottom + 8;
+      let left = rect.left + rect.width / 2 - 135;
+      if (left < 8) left = 8;
+      if (left + 270 > window.innerWidth - 8) left = window.innerWidth - 278;
+      if (top + gwTooltip.offsetHeight > window.innerHeight - 8) top = rect.top - gwTooltip.offsetHeight - 8;
+      gwTooltip.style.top = top + 'px';
+      gwTooltip.style.left = left + 'px';
+    });
+    document.addEventListener('click', () => { gwTooltip.style.display = 'none'; });
+  }
 })();
 
 // Dynamic sticky offsets no longer needed - flex layout handles it

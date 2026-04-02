@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
@@ -18,7 +18,8 @@
 --qb-bg:rgba(231,76,60,.12);--rb-bg:rgba(34,197,94,.12);--wr-bg:rgba(59,130,246,.12);--te-bg:rgba(168,85,247,.12);
 --green:#22c55e;--red:#ef4444;
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:row}
+html{overflow:hidden;width:100%;height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:row;width:100%;max-width:100vw}
 *{scrollbar-width:thin;scrollbar-color:rgba(245,158,11,.3) transparent}
 *::-webkit-scrollbar{width:4px;height:4px}
 *::-webkit-scrollbar-track{background:transparent}
@@ -740,7 +741,9 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   /* Elite Pull game */
   .elite-pull-section{max-width:100%}
   .home-section-label{font-size:.7rem;letter-spacing:2px}
-  .ep-guess-input{font-size:.85rem;padding:.55rem .75rem}
+  /* Prevent Safari auto-zoom on input focus */
+  input,select,textarea{font-size:16px !important}
+  .ep-guess-input{padding:.55rem .75rem}
   .ep-guess-btn{padding:.55rem 1rem;min-height:42px}
   .ep-sug-item{padding:.55rem .75rem;font-size:.78rem;min-height:40px}
 
@@ -5217,8 +5220,8 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
     // Filter to only players with season stats for better gameplay
     // Current = active players only; All-Time = all players with weekly stats
-    gwPoolCurrent = allPool.filter(p => p.bestSzn !== null && p._active);
-    gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && !p._active);
+    gwPoolCurrent = allPool.filter(p => p.bestSzn !== null && p._active && p.bestWk !== null);
+    gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && !p._active && p.bestWk !== null);
     // Expose for daily Guess Who games
     window._gwGetPoolCurrent = function() { return gwPoolCurrent; };
     window._gwGetPoolAlltime = function() { return gwPoolAlltime; };

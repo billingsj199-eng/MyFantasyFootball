@@ -1683,6 +1683,15 @@ CLEAR
 
 <div class="stats-bar" id="statsBar"></div>
 
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:0 2px">
+<span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">SCORING:</span>
+<div class="career-log-toggle" id="rankingScoringToggle">
+<button class="rnk-scoring-btn" data-rnkscoring="ppr">PPR</button>
+<button class="rnk-scoring-btn active" data-rnkscoring="half">HALF</button>
+<button class="rnk-scoring-btn" data-rnkscoring="std">STD</button>
+</div>
+</div>
+
 <div class="table-wrap">
 <table>
 <thead>
@@ -1693,8 +1702,8 @@ CLEAR
 <th data-sort="pos">Pos <span class="arrow"></span></th>
 <th data-sort="posRank">Pos Rank <span class="arrow"></span></th>
 <th data-sort="adp">ADP <span class="arrow"></span></th>
-<th data-sort="pts">Proj PPG <span class="arrow"></span></th>
-<th data-sort="fpts25">'25 PPG <span class="arrow"></span></th>
+<th data-sort="pts">Proj PPG (Half PPR) <span class="arrow"></span></th>
+<th data-sort="fpts25"><span id="ppg25Header">'25 PPG (Half PPR)</span> <span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" style="display:none">Y/RR <span class="arrow"></span></th>
 <th data-sort="age" id="ageHeader">Age <span class="arrow"></span></th>
 <th data-sort="diff">+/- <span class="arrow"></span></th>
@@ -2646,6 +2655,23 @@ function movePlayer(fromIdx, toPosition) {
 
 // State
 let filter = 'ALL', sortKey = 'myrank', sortDir = 1, query = '', viewMode = 'all';
+let rankingScoringFmt = 'half';
+
+function adj25ppg(d) {
+  if (!d.s25) return null;
+  const recs = d.s25.rc || 0;
+  const gp = d.s25.gp || 1;
+  const adj = rankingScoringFmt === 'ppr' ? 0.5 : rankingScoringFmt === 'std' ? -0.5 : 0;
+  return Math.round(((d.s25.fpts + recs * adj) / gp) * 10) / 10;
+}
+
+function adjProjPpg(d) {
+  if (d.s === 'K' || d.s === 'DST') return null;
+  // d.p is total projected half-PPR points; estimate receptions from s25 or career
+  const recs = d.s25 ? d.s25.rc : (d.career && d.career.length ? d.career[d.career.length - 1].rc || 0 : 0);
+  const adj = rankingScoringFmt === 'ppr' ? 0.5 : rankingScoringFmt === 'std' ? -0.5 : 0;
+  return Math.round(((d.p + recs * adj) / 17) * 10) / 10;
+}
 
 function getFiltered() {
   // Always get board-ordered list first
@@ -2673,8 +2699,8 @@ function getFiltered() {
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
         case 'adp': av = modeAdp(a) ?? 999; bv = modeAdp(b) ?? 999; break;
         case 'round': av = a.round; bv = b.round; break;
-        case 'pts': av = a.p; bv = b.p; break;
-        case 'fpts25': av = a.s25?a.s25.ppg:0; bv = b.s25?b.s25.ppg:0; break;
+        case 'pts': av = adjProjPpg(a)||0; bv = adjProjPpg(b)||0; break;
+        case 'fpts25': av = adj25ppg(a)||0; bv = adj25ppg(b)||0; break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
@@ -2788,8 +2814,8 @@ function render() {
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       <td class="adp-cell">${modeAdp(d) != null ? modeAdp(d) : '—'}</td>
-      <td class="pts-cell"${posFptsColor(d.p/17,d.s) ? ' style="color:'+posFptsColor(d.p/17,d.s)+';font-weight:700"' : ''}>${d.s==='K'||d.s==='DST'?'—':(d.p/17).toFixed(1)}</td>
-      <td class="pts-cell"${d.s25&&posFptsColor(d.s25.ppg,d.s) ? ' style="color:'+posFptsColor(d.s25.ppg,d.s)+';font-weight:700"' : ''}>${d.s25 ? d.s25.ppg : '—'}</td>
+      <td class="pts-cell"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</td>
+      <td class="pts-cell"${(()=>{const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const v=adj25ppg(d);return v!=null?v:'—';})()}</td>
       <td class="pts-cell yrr-cell" style="display:none">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</td>
       <td class="age-cell ${d.s==='DST' ? (d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '') : d.age!=null ? (d.s==='RB' ? (d.age>=30?'age-red':d.age>=28?'age-yellow':'age-green') : d.s==='QB' ? (d.age>=35?'age-red':d.age>=32?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='WR' ? (d.age>=32?'age-red':d.age>=29?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='TE' ? (d.age>=33?'age-red':d.age>=31?'age-orange':d.age>=25?'age-green':'age-yellow') : '') : ''}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (d.age != null ? d.age : '—')}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
@@ -3087,6 +3113,21 @@ document.querySelectorAll('.pos-btn[data-pos]').forEach(btn => {
   });
 });
 
+// Scoring format toggle (PPR / Half / STD)
+const _scoringLabelsRnk = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
+document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.rnk-scoring-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    rankingScoringFmt = btn.dataset.rnkscoring;
+    const projTh = document.querySelector('th[data-sort="pts"]');
+    if (projTh) projTh.firstChild.textContent = 'Proj PPG (' + _scoringLabelsRnk[rankingScoringFmt] + ') ';
+    const ppg25Hdr = document.getElementById('ppg25Header');
+    if (ppg25Hdr) ppg25Hdr.textContent = "'25 PPG (" + _scoringLabelsRnk[rankingScoringFmt] + ")";
+    render();
+  });
+});
+
 // Version tabs: switch between Jack's and My Rankings
 document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -3152,7 +3193,8 @@ document.getElementById('btnExport').addEventListener('click', () => {
   const esc = v => { const s = String(v ?? ''); return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
   
-  const headers = ['Rank', 'Tier', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', 'PPG (Proj)', 'PPG (2025)', 'Age', 'ADP Diff'];
+  const _sl = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
+  const headers = ['Rank', 'Tier', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', 'PPG Proj (' + _sl[rankingScoringFmt] + ')', 'PPG 2025 (' + _sl[rankingScoringFmt] + ')', 'Age', 'ADP Diff'];
   const rows = [headers.join(',')];
   
   data.forEach((d, i) => {
@@ -3166,8 +3208,8 @@ document.getElementById('btnExport').addEventListener('click', () => {
     });
     const adp = modeAdp(d);
     const diff = adp != null ? Math.round(adp - d.myRank) : '';
-    const ppgProj = (d.s === 'K' || d.s === 'DST') ? '' : (d.p / 17).toFixed(1);
-    const ppg25 = d.s25 ? d.s25.ppg : '';
+    const ppgProj = adjProjPpg(d) != null ? adjProjPpg(d) : '';
+    const ppg25 = adj25ppg(d) != null ? adj25ppg(d) : '';
     const age = d.s === 'DST' ? (d.oppg != null ? d.oppg : '') : (d.age != null ? d.age : '');
     
     rows.push([
@@ -3547,11 +3589,11 @@ function openPlayerCard(d) {
         <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr':'1fr 1fr'};margin-top:.4rem">
           <div class="card-rank-box">
             <div class="lbl">Proj PPG</div>
-            <div class="num${posFptsColor(d.p/17,d.s)?'':' accent'}"${posFptsColor(d.p/17,d.s)?' style="color:'+posFptsColor(d.p/17,d.s)+'"':''}>${d.s==='K'||d.s==='DST'?'—':(d.p/17).toFixed(1)}</div>
+            <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div>
           </div>
           <div class="card-rank-box">
             <div class="lbl">'25 PPG</div>
-            <div class="num${d.s25&&posFptsColor(d.s25.ppg,d.s)?'':' green'}"${d.s25&&posFptsColor(d.s25.ppg,d.s)?' style="color:'+posFptsColor(d.s25.ppg,d.s)+'"':''}>${d.s25 ? d.s25.ppg.toFixed(1) : '—'}</div>
+            <div class="num${(()=>{const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adj25ppg(d);return v!=null?v.toFixed(1):'—';})()}</div>
           </div>
           ${(d.s==='RB'||d.s==='WR'||d.s==='TE') ? `<div class="card-rank-box">
             <div class="lbl">'${d._yrr_yr ? String(d._yrr_yr).slice(-2) : '25'} Y/RR</div>
@@ -3978,8 +4020,8 @@ function renderCompareGrid() {
             <div class="card-rank-box"><div class="lbl">+/- ADP</div><div class="num ${diffClass}">${diffText}</div></div>
           </div>
           <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr':'1fr 1fr'};margin-top:.4rem">
-            <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${d.s==='K'||d.s==='DST'?'—':(d.p/17).toFixed(1)}</div></div>
-            <div class="card-rank-box"><div class="lbl">'25 PPG</div><div class="num green">${d.s25 ? d.s25.ppg.toFixed(1) : '—'}</div></div>
+            <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div></div>
+            <div class="card-rank-box"><div class="lbl">'25 PPG</div><div class="num green">${(()=>{const v=adj25ppg(d);return v!=null?v.toFixed(1):'—';})()}</div></div>
             ${(d.s==='RB'||d.s==='WR'||d.s==='TE') ? `<div class="card-rank-box"><div class="lbl">'${d._yrr_yr ? String(d._yrr_yr).slice(-2) : '25'} Y/RR</div><div class="num" style="color:${d._yrr!=null?(d._yrr>=2.0?'var(--green)':d._yrr>=1.5?'var(--accent)':'var(--text2)'):'var(--text2)'}">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</div></div>` : ''}
           </div>
         </div>

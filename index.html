@@ -154,7 +154,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .gw-subtitle{font-size:.65rem}
 }
 .gw-help-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--border);color:var(--text2);font-size:.7rem;font-weight:700;cursor:pointer;position:relative;vertical-align:middle;margin-left:6px}
-.gw-tooltip{display:none;position:fixed;width:270px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:.72rem;font-weight:400;color:var(--text);line-height:1.6;z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,.7);text-align:left;letter-spacing:0;font-family:'DM Sans',sans-serif}
+.gw-tooltip{display:none;position:fixed;width:270px;max-height:70vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:.72rem;font-weight:400;color:var(--text);line-height:1.6;z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,.7);text-align:left;letter-spacing:0;font-family:'DM Sans',sans-serif}
 
 /* Trivia page */
 .page-games{align-items:center;justify-content:center;padding:2rem}
@@ -5130,6 +5130,19 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       }
     }
 
+    // Strategy 5: ultra-fuzzy — strip to lowercase alpha only
+    if (!found) {
+      if (!gwLookupWeekly._fuzzy) {
+        gwLookupWeekly._fuzzy = {};
+        for (const k of gwLookupWeekly._keys || Object.keys(WEEKLY_STATS)) {
+          const fk = k.replace(/[^a-zA-Z]/g, '').toLowerCase();
+          if (!gwLookupWeekly._fuzzy[fk]) gwLookupWeekly._fuzzy[fk] = k;
+        }
+      }
+      const fn = name.replace(/[^a-zA-Z]/g, '').toLowerCase();
+      if (gwLookupWeekly._fuzzy[fn]) found = WEEKLY_STATS[gwLookupWeekly._fuzzy[fn]];
+    }
+
     _gwWsCache[name] = found || null;
     return found || null;
   }
@@ -5353,7 +5366,9 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
     // Filter to only players with season stats for better gameplay
     // Current = active players only; All-Time = all players with weekly stats
-    gwPoolCurrent = allPool.filter(p => p.bestSzn !== null && p._active);
+    const currentWithWeekly = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && p._active);
+    const currentAll = allPool.filter(p => p.bestSzn !== null && p._active);
+    gwPoolCurrent = currentWithWeekly.length >= 50 ? currentWithWeekly : currentAll;
     gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && !p._active);
     // Expose for daily Guess Who games
     window._gwGetPoolCurrent = function() { return gwPoolCurrent; };
@@ -5393,7 +5408,11 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   function gwPickTarget() {
     initGwPool();
     if (!getGwPool().length) return;
-    gwTarget = getGwPool()[Math.floor(Math.random() * getGwPool().length)];
+    // Prefer players with weekly data so the WK column is useful
+    const pool = getGwPool();
+    const withWeekly = pool.filter(p => p._hasWeekly);
+    const pickFrom = withWeekly.length > 20 ? withWeekly : pool;
+    gwTarget = pickFrom[Math.floor(Math.random() * pickFrom.length)];
   }
 
   function gwCompare(guessPlayer) {
@@ -5915,11 +5934,18 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     function positionTip() {
       const rect = icon.getBoundingClientRect();
       tip.style.display = 'block';
+      // Clamp width on small screens
+      const tipW = Math.min(270, window.innerWidth - 16);
+      tip.style.width = tipW + 'px';
       let top = rect.bottom + 8;
-      let left = rect.left + rect.width / 2 - 135;
+      let left = rect.left + rect.width / 2 - tipW / 2;
       if (left < 8) left = 8;
-      if (left + 270 > window.innerWidth - 8) left = window.innerWidth - 278;
-      if (top + tip.offsetHeight > window.innerHeight - 8) top = rect.top - tip.offsetHeight - 8;
+      if (left + tipW > window.innerWidth - 8) left = window.innerWidth - tipW - 8;
+      // If it goes off bottom, try above; if still too tall, pin to top
+      if (top + tip.offsetHeight > window.innerHeight - 8) {
+        top = rect.top - tip.offsetHeight - 8;
+      }
+      if (top < 8) top = 8;
       tip.style.top = top + 'px';
       tip.style.left = left + 'px';
     }

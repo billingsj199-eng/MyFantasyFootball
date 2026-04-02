@@ -3221,10 +3221,27 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     renumber();
     compareSet.clear();
     updateCompareBtn();
+    updateRnkAdpForMode();
     render();
-    toast(currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : 'Redraft');
+    toast(currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : 'Redraft');
   });
 });
+
+// Hide non-consensus ADP tabs in dynasty modes (no platform ADP data for dynasty)
+function updateRnkAdpForMode() {
+  const isDynasty = currentMode === 'dynasty' || currentMode === 'dynastysf';
+  document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(tab => {
+    if (tab.dataset.rnkadp === 'consensus') return;
+    tab.style.display = isDynasty ? 'none' : '';
+  });
+  // If switching to dynasty and a non-consensus source is active, reset to consensus
+  if (isDynasty && rnkAdpSrc !== 'consensus') {
+    rnkAdpSrc = 'consensus';
+    document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(b => b.classList.remove('active'));
+    document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="consensus"]').classList.add('active');
+  }
+}
+updateRnkAdpForMode();
 
 document.querySelectorAll('.pos-btn[data-view]').forEach(btn => {
   btn.addEventListener('click', () => {

@@ -4936,7 +4936,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   function getGwPool() { return gwMode === 'alltime' ? gwPoolAlltime : gwPoolCurrent; }
 
   function initGwPool() {
-    if (gwPoolCurrent) return;
+    if (gwPoolCurrent && gwPoolCurrent.length > 0) return;
     // Build abbreviation lookup
     if (typeof TEAM_ABBR_MAP !== 'undefined') {
       Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => {
@@ -5015,7 +5015,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       LDB.forEach(p => {
         if (!p.s || p.s === 'K' || p.s === 'DST') return;
         if (seen.has(p.n)) return;
-        const seasons = p.seasons || [];
+        const seasons = p.seasons || (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[p.n] ? LEGEND_CAREERS[p.n] : []);
         let bestSznFpts = null;
         let bestTeam = null;
         let bestTeamFpts = 0;
@@ -5304,7 +5304,8 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     }
   });
 
-  gwStartRound();
+  // Defer initial start to ensure LDB seasons are populated from LEGEND_CAREERS
+  setTimeout(gwStartRound, 3000);
 
   // Position tooltip with fixed positioning to avoid overflow clipping
   const gwHelpIcon = document.querySelector('.gw-help-icon');

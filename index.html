@@ -1885,7 +1885,11 @@ CLEAR
 <div class="gw-card">
 <div class="gw-header">
 <div class="gw-title">GUESS WHO</div>
-<div class="gw-subtitle">Guess the mystery player using the clues &middot; 6 attempts<span class="gw-help-icon">?<div class="gw-tooltip"><strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player in 6 tries. Each guess reveals clues:<br><br><span style="color:var(--green)">&#9632; Green</span> = Exact match<br><span style="color:#facc15">&#9632; Yellow</span> = Close<br><span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br><strong>Team:</strong> Green if correct, red if wrong<br><strong>Division:</strong> Green if exact, yellow if same conference, red if wrong<br><strong>Position:</strong> Green if correct, red if wrong<br><strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 50, red otherwise. Arrows show if answer is ↑ higher or ↓ lower<br><strong>Wk High:</strong> Green if within 0.5 pts, yellow if within 5, red otherwise. Arrows show direction</div></span></div>
+<div class="fg-mode-toggle" style="display:flex;gap:0;margin:8px auto 4px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<button class="fg-mode-btn active" id="gwModeCurrent" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">CURRENT</button>
+<button class="fg-mode-btn" id="gwModeAlltime" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">ALL-TIME</button>
+</div>
+<div class="gw-subtitle">Guess the mystery player using the clues &middot; 6 attempts<span class="gw-help-icon">?<div class="gw-tooltip"><strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player in 6 tries. Each guess reveals clues:<br><br><span style="color:var(--green)">&#9632; Green</span> = Exact match<br><span style="color:#facc15">&#9632; Yellow</span> = Close<br><span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br><strong>Team:</strong> Green if correct, red if wrong<br><strong>Division:</strong> Green if exact, yellow if same conference, red if wrong<br><strong>Position:</strong> Green if correct, red if wrong<br><strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30, red otherwise. Arrows show if answer is ↑ higher or ↓ lower<br><strong>Wk High:</strong> Green if within 0.5 pts, yellow if within 5, red otherwise. Arrows show direction<br><br><strong>Current:</strong> Active players only<br><strong>All-Time:</strong> Legends with weekly stats</div></span></div>
 <div id="gwStreak" class="ep-streak-display" style="margin-top:6px"></div>
 </div>
 <div class="gw-body">
@@ -4924,18 +4928,22 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   function gwModernTeam(t) { return GW_ALIASES[t] || t; }
 
   // Build player pool from FG_POOL (available after Fantasy Game IIFE runs) — we'll lazy-init
-  let gwPool = null;
+  let gwPoolCurrent = null;
+  let gwPoolAlltime = null;
   let gwAbbrToFull = {};
+  let gwMode = 'current'; // 'current' or 'alltime'
+
+  function getGwPool() { return gwMode === 'alltime' ? gwPoolAlltime : gwPoolCurrent; }
 
   function initGwPool() {
-    if (gwPool) return;
+    if (gwPoolCurrent) return;
     // Build abbreviation lookup
     if (typeof TEAM_ABBR_MAP !== 'undefined') {
       Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => {
         gwAbbrToFull[abbr] = GW_ALIASES[full] || full;
       });
     }
-    gwPool = [];
+    const allPool = [];
     const seen = new Set();
 
     // Gather from D (active players)
@@ -4992,11 +5000,13 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       if (!bestSznFpts && !bestWkFpts) return;
 
       seen.add(name);
-      gwPool.push({
+      allPool.push({
         name, pos: p.s, team: bestTeam,
         division: TEAM_DIVISION[bestTeam],
         bestSzn: bestSznFpts ? Math.round(bestSznFpts * 10) / 10 : null,
-        bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null
+        bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null,
+        _active: true,
+        _hasWeekly: bestWkFpts != null
       });
     });
 
@@ -5059,25 +5069,31 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         }
 
         seen.add(p.n);
-        gwPool.push({
+        allPool.push({
           name: p.n, pos: p.s, team: bestTeam,
           division: TEAM_DIVISION[bestTeam],
           bestSzn: bestSznFpts ? Math.round(bestSznFpts * 10) / 10 : null,
-          bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null
+          bestWk: bestWkFpts ? Math.round(bestWkFpts * 10) / 10 : null,
+          _active: false,
+          _hasWeekly: bestWkFpts != null
         });
       });
     }
 
-    // Filter to only players with both stats for better gameplay
-    gwPool = gwPool.filter(p => p.bestSzn !== null);
+    // Filter to only players with season stats for better gameplay
+    // Current = active players only; All-Time = all players with weekly stats
+    gwPoolCurrent = allPool.filter(p => p.bestSzn !== null && p._active);
+    gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly);
   }
 
   const GW_MAX_GUESSES = 6;
   let gwTarget = null;
   let gwGuesses = [];
   let gwGameOver = false;
-  let gwWins = parseInt(localStorage.getItem('gw_wins') || '0');
-  let gwGames = parseInt(localStorage.getItem('gw_games') || '0');
+
+  function gwStatsKey(suffix) { return gwMode === 'alltime' ? 'gw_at_' + suffix : 'gw_' + suffix; }
+  function getGwWins() { return parseInt(localStorage.getItem(gwStatsKey('wins')) || '0'); }
+  function getGwGames() { return parseInt(localStorage.getItem(gwStatsKey('games')) || '0'); }
 
   const gwInput = document.getElementById('gwInput');
   const gwGuessBtn = document.getElementById('gwGuessBtn');
@@ -5088,8 +5104,10 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   const gwStreakEl = document.getElementById('gwStreak');
 
   function gwRenderStats() {
-    if (gwGames > 0) {
-      gwStreakEl.textContent = `${gwWins}W - ${gwGames - gwWins}L`;
+    const wins = getGwWins();
+    const games = getGwGames();
+    if (games > 0) {
+      gwStreakEl.textContent = `${wins}W - ${games - wins}L`;
     } else {
       gwStreakEl.textContent = '';
     }
@@ -5097,8 +5115,8 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
   function gwPickTarget() {
     initGwPool();
-    if (!gwPool.length) return;
-    gwTarget = gwPool[Math.floor(Math.random() * gwPool.length)];
+    if (!getGwPool().length) return;
+    gwTarget = getGwPool()[Math.floor(Math.random() * getGwPool().length)];
   }
 
   function gwCompare(guessPlayer) {
@@ -5127,7 +5145,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       const absDiff = Math.abs(diff);
       if (absDiff < 0.5) {
         result.cells.push({ label: g.bestSzn.toFixed(1), match: 'correct' });
-      } else if (absDiff <= 50) {
+      } else if (absDiff <= 30) {
         result.cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher-close' : 'lower-close' });
       } else {
         result.cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher' : 'lower' });
@@ -5181,10 +5199,10 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     gwInput.disabled = true;
     gwGuessBtn.disabled = true;
     gwSuggestions.classList.remove('show');
-    gwGames++;
-    if (won) gwWins++;
-    localStorage.setItem('gw_wins', gwWins.toString());
-    localStorage.setItem('gw_games', gwGames.toString());
+    const newGames = getGwGames() + 1;
+    const newWins = getGwWins() + (won ? 1 : 0);
+    localStorage.setItem(gwStatsKey('games'), newGames.toString());
+    localStorage.setItem(gwStatsKey('wins'), newWins.toString());
 
     gwResult.style.display = 'block';
     if (won) {
@@ -5202,7 +5220,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     if (!val) return;
 
     initGwPool();
-    const matched = gwPool.find(p => p.name.toLowerCase() === val.toLowerCase());
+    const matched = getGwPool().find(p => p.name.toLowerCase() === val.toLowerCase());
     if (!matched) return;
 
     // Don't allow duplicate guesses
@@ -5240,7 +5258,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     initGwPool();
     const val = gwInput.value.trim().toLowerCase();
     if (val.length < 2) { gwSuggestions.classList.remove('show'); return; }
-    const matches = gwPool.filter(p =>
+    const matches = getGwPool().filter(p =>
       p.name.toLowerCase().includes(val) && !gwGuesses.some(g => g.toLowerCase() === p.name.toLowerCase())
     ).slice(0, 8);
     if (!matches.length) { gwSuggestions.classList.remove('show'); return; }
@@ -5260,6 +5278,24 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
   gwInput.addEventListener('keydown', e => { if (e.key === 'Enter') gwSubmitGuess(); });
   gwGuessBtn.addEventListener('click', gwSubmitGuess);
   gwNextBtn.addEventListener('click', gwStartRound);
+
+  // Mode toggle
+  const gwModeCurrent = document.getElementById('gwModeCurrent');
+  const gwModeAlltime = document.getElementById('gwModeAlltime');
+  gwModeCurrent.addEventListener('click', () => {
+    if (gwMode === 'current') return;
+    gwMode = 'current';
+    gwModeCurrent.classList.add('active');
+    gwModeAlltime.classList.remove('active');
+    gwStartRound();
+  });
+  gwModeAlltime.addEventListener('click', () => {
+    if (gwMode === 'alltime') return;
+    gwMode = 'alltime';
+    gwModeAlltime.classList.add('active');
+    gwModeCurrent.classList.remove('active');
+    gwStartRound();
+  });
 
   // Close suggestions when clicking outside
   document.addEventListener('click', e => {

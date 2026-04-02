@@ -1681,9 +1681,8 @@ CLEAR
 
 </div>
 
-<div class="stats-bar" id="statsBar"></div>
-
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:0 2px">
+<div style="display:flex;align-items:center;gap:16px;padding:0 2rem .4rem;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">SCORING:</span>
 <div class="career-log-toggle" id="rankingScoringToggle">
 <button class="rnk-scoring-btn" data-rnkscoring="ppr">PPR</button>
@@ -1691,6 +1690,19 @@ CLEAR
 <button class="rnk-scoring-btn" data-rnkscoring="std">STD</button>
 </div>
 </div>
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">ADP:</span>
+<div class="md-rank-src-tabs" id="rnkAdpSrcTabs" style="border:none;background:rgba(255,255,255,.04);padding:1px">
+<button class="md-rank-src-tab active" data-rnkadp="consensus" style="font-size:.65rem;padding:3px 10px">CONSENSUS</button>
+<button class="md-rank-src-tab locked" data-rnkadp="underdog" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
+<button class="md-rank-src-tab locked" data-rnkadp="espn" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
+<button class="md-rank-src-tab locked" data-rnkadp="sleeper" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>SLEEPER</button>
+<button class="md-rank-src-tab locked" data-rnkadp="yahoo" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
+</div>
+</div>
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
 
 <div class="table-wrap">
 <table>
@@ -1983,7 +1995,8 @@ Jack's Rankings require a <span class="md-premium-link" id="mdPremiumLink">Premi
 <div class="md-setup-row">
 <label class="md-label">ADP Source</label>
 <div class="md-rank-src-tabs" id="mdAdpSrcTabs">
-<button class="md-rank-src-tab active" data-mdadp="underdog">UNDERDOG</button>
+<button class="md-rank-src-tab active" data-mdadp="consensus">CONSENSUS</button>
+<button class="md-rank-src-tab locked" data-mdadp="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
 <button class="md-rank-src-tab locked" data-mdadp="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
 <button class="md-rank-src-tab locked" data-mdadp="sleeper"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>SLEEPER</button>
 <button class="md-rank-src-tab locked" data-mdadp="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
@@ -2656,6 +2669,28 @@ function movePlayer(fromIdx, toPosition) {
 // State
 let filter = 'ALL', sortKey = 'myrank', sortDir = 1, query = '', viewMode = 'all';
 let rankingScoringFmt = 'half';
+let rnkAdpSrc = 'consensus';
+
+// Get ADP for a player based on the selected ranking ADP source
+function rnkAdp(d) {
+  if (d.s === 'K' || d.s === 'DST') return null;
+  if (rnkAdpSrc === 'consensus') {
+    // Average all available ADP sources for the current mode
+    const vals = [];
+    const base = modeAdp(d); // underdog (default)
+    if (base != null && base < 900) vals.push(base);
+    // Future: add espn, sleeper, yahoo ADP fields here
+    // e.g. if (d.espnAdp != null) vals.push(d.espnAdp);
+    if (vals.length === 0) return null;
+    return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+  }
+  if (rnkAdpSrc === 'underdog') return modeAdp(d);
+  // Future sources
+  // if (rnkAdpSrc === 'espn') return d.espnAdp || null;
+  // if (rnkAdpSrc === 'sleeper') return d.slpAdp || null;
+  // if (rnkAdpSrc === 'yahoo') return d.yahooAdp || null;
+  return modeAdp(d);
+}
 
 function adj25ppg(d) {
   if (!d.s25) return null;
@@ -2697,7 +2732,7 @@ function getFiltered() {
         case 'name': return sortDir * a.n.localeCompare(b.n);
         case 'pos': return sortDir * a.s.localeCompare(b.s);
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
-        case 'adp': av = modeAdp(a) ?? 999; bv = modeAdp(b) ?? 999; break;
+        case 'adp': av = rnkAdp(a) ?? 999; bv = rnkAdp(b) ?? 999; break;
         case 'round': av = a.round; bv = b.round; break;
         case 'pts': av = adjProjPpg(a)||0; bv = adjProjPpg(b)||0; break;
         case 'fpts25': av = adj25ppg(a)||0; bv = adj25ppg(b)||0; break;
@@ -2706,7 +2741,7 @@ function getFiltered() {
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
         case 'yrr': av = a._yrr||0; bv = b._yrr||0; break;
-        case 'diff': av = a.a - a.myRank; bv = b.a - b.myRank; break;
+        case 'diff': av = (rnkAdp(a)??a.myRank) - a.myRank; bv = (rnkAdp(b)??b.myRank) - b.myRank; break;
         default: av = a.myRank; bv = b.myRank;
       }
       return sortDir * (av - bv);
@@ -2716,7 +2751,7 @@ function getFiltered() {
 }
 
 function diffHtml(d) {
-  const adp = modeAdp(d);
+  const adp = rnkAdp(d);
   if (adp == null) return '<span class="diff-even">—</span>';
   const diff = adp - d.myRank;
   if (Math.abs(diff) < 0.5) return '<span class="diff-even">—</span>';
@@ -2790,8 +2825,8 @@ function render() {
       });
     }
 
-    const _adp = modeAdp(d);
-    const moved = d.myRank !== (board.indexOf(d.idx) + 1) || Math.abs(_adp - d.myRank) >= 1;
+    const _adp = rnkAdp(d);
+    const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (_adp != null && Math.abs(_adp - d.myRank) >= 1);
     const checked = compareSet.has(d.idx) ? 'checked' : '';
     const blurred = shouldBlur && (i + 1) > blurCutoff ? 'premium-blur' : '';
 
@@ -2813,7 +2848,7 @@ function render() {
       <td><div class="player-cell" style="flex-direction:row;align-items:center;gap:6px">${d._slImg ? `<img class="player-headshot-sm" src="${d._slImg}" alt="" onerror="this.style.display='none'">` : ''}<div style="display:flex;flex-direction:column;gap:1px"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}</span><span class="player-team">${d.t}</span></div></div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
-      <td class="adp-cell">${modeAdp(d) != null ? modeAdp(d) : '—'}</td>
+      <td class="adp-cell">${rnkAdp(d) != null ? rnkAdp(d) : '—'}</td>
       <td class="pts-cell"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</td>
       <td class="pts-cell"${(()=>{const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const v=adj25ppg(d);return v!=null?v:'—';})()}</td>
       <td class="pts-cell yrr-cell" style="display:none">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</td>
@@ -2861,7 +2896,7 @@ function updateStats(data) {
   const rbs = data.filter(d=>d.s==='RB').length;
   const wrs = data.filter(d=>d.s==='WR').length;
   const tes = data.filter(d=>d.s==='TE').length;
-  const moved = D.filter(d => modeAdp(d) != null && Math.abs(modeAdp(d) - d.myRank) >= 1).length;
+  const moved = D.filter(d => rnkAdp(d) != null && Math.abs(rnkAdp(d) - d.myRank) >= 1).length;
   const rookies = data.filter(d=>(!d.career || d.career.length===0) && (!d.t || d.t==='TBD')).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : '🏈 REDRAFT';
   const versionLabel = currentVersion === 'jacks' ? "📋 JACK'S" : '📋 MY RANKINGS';
@@ -3128,6 +3163,36 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
   });
 });
 
+// ADP source toggle (Consensus / Underdog / ESPN / Sleeper / Yahoo)
+document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const src = btn.dataset.rnkadp;
+    if (src === 'underdog') {
+      if (!hasPremium()) {
+        toast('Underdog ADP requires Premium');
+        return;
+      }
+    } else if (btn.classList.contains('locked')) {
+      toast('Coming soon — additional ADP sources will be added');
+      return;
+    }
+    document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    rnkAdpSrc = src;
+    render();
+  });
+});
+// Unlock Underdog ADP tab for premium users
+function updateRnkAdpLocks() {
+  const udTab = document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="underdog"]');
+  if (udTab) {
+    const icon = udTab.querySelector('.lock-icon');
+    if (hasPremium()) { udTab.classList.remove('locked'); if (icon) icon.style.display = 'none'; }
+    else { udTab.classList.add('locked'); if (icon) icon.style.display = ''; }
+  }
+}
+updateRnkAdpLocks();
+
 // Version tabs: switch between Jack's and My Rankings
 document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -3206,7 +3271,7 @@ document.getElementById('btnExport').addEventListener('click', () => {
       for (const tt of sorted) { if (tt.afterRank <= displayRank) cur = tt; else break; }
       return cur && cur.label === tierLabel && cur === t;
     });
-    const adp = modeAdp(d);
+    const adp = rnkAdp(d);
     const diff = adp != null ? Math.round(adp - d.myRank) : '';
     const ppgProj = adjProjPpg(d) != null ? adjProjPpg(d) : '';
     const ppg25 = adj25ppg(d) != null ? adj25ppg(d) : '';
@@ -3551,7 +3616,7 @@ function fmtHeight(h) {
 
 function openPlayerCard(d) {
   const best = bestPpg(d);
-  const _cardAdp = modeAdp(d);
+  const _cardAdp = rnkAdp(d);
   const diffVal = _cardAdp != null ? _cardAdp - d.myRank : 0;
   const diffClass = _cardAdp == null ? 'accent' : Math.abs(diffVal) < 0.5 ? 'accent' : diffVal > 0 ? 'green' : 'red';
   const diffText = _cardAdp == null ? '—' : Math.abs(diffVal) < 0.5 ? '—' : (diffVal > 0 ? '▲ ' : '▼ ') + Math.abs(diffVal).toFixed(0);
@@ -3983,7 +4048,7 @@ function renderCompareGrid() {
     // Current player card (from checkbox or search-added current)
     if (!d) return '';
     const bp = bestPpg(d);
-    const _cmpAdp = modeAdp(d);
+    const _cmpAdp = rnkAdp(d);
     const diffVal = _cmpAdp != null ? _cmpAdp - d.myRank : 0;
     const diffClass = _cmpAdp == null ? 'accent' : Math.abs(diffVal) < 0.5 ? 'accent' : diffVal > 0 ? 'green' : 'red';
     const diffText = _cmpAdp == null ? '—' : Math.abs(diffVal) < 0.5 ? '—' : (diffVal > 0 ? '▲ ' : '▼ ') + Math.abs(diffVal).toFixed(0);
@@ -7326,7 +7391,7 @@ window.fmtHeight = fmtHeight;
 (function() {
   let mdMode = 'redraft', mdTeams = 12, mdUserPick = 1;
   let mdRankSrc = 'mine';
-  let mdAdpSrc = 'underdog';
+  let mdAdpSrc = 'consensus';
   let mdState = null;
 
   // Lineup requirements — user can adjust
@@ -7403,14 +7468,19 @@ window.fmtHeight = fmtHeight;
     document.getElementById('pageAccount').classList.add('active');
   });
 
-  // ADP source tabs (Underdog / ESPN / Sleeper / Yahoo)
-  // ESPN, Sleeper, Yahoo are PERMANENTLY locked until ADP data is added
-  const _ADP_ENABLED = { underdog: true, espn: false, sleeper: false, yahoo: false };
+  // ADP source tabs (Consensus / Underdog / ESPN / Sleeper / Yahoo)
+  // Underdog requires premium; ESPN, Sleeper, Yahoo are locked until data is added
+  const _ADP_ENABLED = { consensus: true, underdog: true, espn: false, sleeper: false, yahoo: false };
   const adpSrcTabs = document.querySelectorAll('#mdAdpSrcTabs .md-rank-src-tab');
   const adpPremiumHint = document.getElementById('mdAdpPremiumHint');
   adpSrcTabs.forEach(t => t.addEventListener('click', () => {
     const src = t.dataset.mdadp;
-    if (!_ADP_ENABLED[src]) {
+    if (src === 'underdog') {
+      if (!hasPremium()) {
+        adpPremiumHint.classList.add('show');
+        return;
+      }
+    } else if (!_ADP_ENABLED[src]) {
       adpPremiumHint.classList.add('show');
       return;
     }
@@ -7422,14 +7492,15 @@ window.fmtHeight = fmtHeight;
   }));
   function updateAdpSrcLocks() {
     adpSrcTabs.forEach(tab => {
-      if (tab.dataset.mdadp === 'underdog') return;
+      const src = tab.dataset.mdadp;
+      if (src === 'consensus') return;
       const icon = tab.querySelector('.lock-icon');
-      if (_ADP_ENABLED[tab.dataset.mdadp]) {
-        tab.classList.remove('locked');
-        if (icon) icon.style.display = 'none';
+      if (src === 'underdog') {
+        if (hasPremium()) { tab.classList.remove('locked'); if (icon) icon.style.display = 'none'; }
+        else { tab.classList.add('locked'); if (icon) icon.style.display = ''; }
       } else {
-        tab.classList.add('locked');
-        if (icon) icon.style.display = '';
+        if (_ADP_ENABLED[src]) { tab.classList.remove('locked'); if (icon) icon.style.display = 'none'; }
+        else { tab.classList.add('locked'); if (icon) icon.style.display = ''; }
       }
     });
   }
@@ -7473,10 +7544,22 @@ window.fmtHeight = fmtHeight;
 
   function getADPBoardDefault() {
     return D.map((d, i) => {
-      let adp = d.a || 999;
-      if (mdMode === 'superflex' && d.sfa) adp = d.sfa;
-      else if (mdMode === 'dynasty' && d.da) adp = d.da;
-      else if (mdMode === 'dynastysf' && d.sa) adp = d.sa;
+      let adp;
+      if (mdAdpSrc === 'consensus') {
+        // Average all available ADP sources for the current mode
+        const vals = [];
+        if (mdMode === 'superflex' && d.sfa) vals.push(d.sfa);
+        else if (mdMode === 'dynasty' && d.da) vals.push(d.da);
+        else if (mdMode === 'dynastysf' && d.sa) vals.push(d.sa);
+        else if (d.a && d.a < 900) vals.push(d.a);
+        // Future: add espn, sleeper, yahoo ADP fields here
+        adp = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 999;
+      } else {
+        adp = d.a || 999;
+        if (mdMode === 'superflex' && d.sfa) adp = d.sfa;
+        else if (mdMode === 'dynasty' && d.da) adp = d.da;
+        else if (mdMode === 'dynastysf' && d.sa) adp = d.sa;
+      }
       // Kickers & DST: ignore ADP, sort by pos rank at the bottom
       if (d.s === 'K' || d.s === 'DST') {
         const kRank = d.s === 'K' ? (parseInt((d.r || 'K99').replace('K','')) || 99) : (parseInt((d.r || 'DST99').replace('DST','')) || 99);

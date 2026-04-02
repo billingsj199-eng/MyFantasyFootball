@@ -980,11 +980,12 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .global-signin-btn{padding:6px 10px;font-size:.75rem;letter-spacing:1px}
   .global-acct-pill{padding:0}
   .page-home > .auth-anchor,
-  .page-games > .auth-anchor,
-  .page-games > .auth-anchor,
   .page-trade > .auth-anchor,
   .page-mockdraft > .auth-anchor,
   .page-account > .auth-anchor{top:8px;right:8px}
+  .page-games > .auth-anchor{position:relative;top:auto;right:auto;display:flex;justify-content:center;margin-bottom:8px;z-index:50}
+  .games-tabs{width:auto;max-width:100%;flex-wrap:wrap}
+  .games-tab{font-size:.78rem;padding:6px 14px;letter-spacing:1px}
   .home-auth-card{padding:1.25rem 1rem;margin:0}
   .home-auth-btn{padding:8px 20px;font-size:.9rem}
   .home-auth-google{padding:6px 14px;font-size:.75rem}
@@ -1599,6 +1600,59 @@ PREMIUM ACTIVE
 </div>
 </div>
 </div>
+
+<!-- Daily Guess Who — Current -->
+<div style="margin-top:12px;max-width:480px">
+<div class="gw-card">
+<div class="gw-header" style="padding:1rem 1.25rem .5rem">
+<div class="gw-title" style="font-size:1.5rem">DAILY GUESS WHO — CURRENT</div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's active player &middot; 6 attempts</div>
+<div id="gwDailyStreak" class="ep-streak-display" style="margin-top:4px"></div>
+</div>
+<div class="gw-body">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDailyGuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDailySuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDailyInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDailyGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDailyResult" class="ep-result" style="display:none"></div>
+<button id="gwDailyGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+</div>
+</div>
+
+<!-- Daily Guess Who — All-Time -->
+<div style="margin-top:12px;max-width:480px">
+<div class="gw-card">
+<div class="gw-header" style="padding:1rem 1.25rem .5rem">
+<div class="gw-title" style="font-size:1.5rem">DAILY GUESS WHO — ALL-TIME</div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's retired legend &middot; 6 attempts</div>
+<div id="gwDailyATStreak" class="ep-streak-display" style="margin-top:4px"></div>
+</div>
+<div class="gw-body">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDailyATGuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDailyATSuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDailyATInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDailyATGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDailyATResult" class="ep-result" style="display:none"></div>
+<button id="gwDailyATGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+</div>
+</div>
+
 </div>
 
 <div class="home-col-right">
@@ -1634,6 +1688,18 @@ PREMIUM ACTIVE
 <div class="lb-list" id="lbAlltimeList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbAlltimeLoading">Loading...</div>
 <div class="lb-empty" id="lbAlltimeEmpty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Guess Who — Current Streak</div>
+<div class="lb-list" id="lbGwCurrentList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbGwCurrentLoading">Loading...</div>
+<div class="lb-empty" id="lbGwCurrentEmpty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Guess Who — All-Time Streak</div>
+<div class="lb-list" id="lbGwAlltimeList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbGwAlltimeLoading">Loading...</div>
+<div class="lb-empty" id="lbGwAlltimeEmpty" style="display:none">No data yet</div>
 
 </div>
 </div>
@@ -5153,6 +5219,9 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     // Current = active players only; All-Time = all players with weekly stats
     gwPoolCurrent = allPool.filter(p => p.bestSzn !== null && p._active);
     gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && !p._active);
+    // Expose for daily Guess Who games
+    window._gwGetPoolCurrent = function() { return gwPoolCurrent; };
+    window._gwGetPoolAlltime = function() { return gwPoolAlltime; };
   }
 
   const GW_MAX_GUESSES = 6;
@@ -5417,6 +5486,291 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     });
     document.addEventListener('click', () => { gwTooltip.style.display = 'none'; });
   }
+})();
+
+// ===== DAILY GUESS WHO GAMES =====
+(function(){
+  // Reuse pools from the unlimited Guess Who — wait for them to be ready
+  function waitForPools(cb) {
+    const check = () => {
+      // The unlimited GW initializes pools on a 3s timeout; we wait for them
+      if (typeof window._gwGetPoolCurrent === 'function') { cb(); return; }
+      setTimeout(check, 500);
+    };
+    check();
+  }
+
+  // Eastern date helper (same as Elite Pull daily)
+  function getEasternDate() {
+    const now = new Date();
+    return new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  }
+  function getDailyKey(prefix) {
+    const d = getEasternDate();
+    return `${prefix}_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;
+  }
+  function getDailyDateStr() {
+    const d = getEasternDate();
+    return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  }
+
+  function pickDailyTarget(pool, offset) {
+    const d = getEasternDate();
+    const seed = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate() + (offset || 0);
+    return pool[Math.abs(seed * 2654435761 >>> 0) % pool.length]; // Better hash spread
+  }
+
+  // Generic daily GW game factory
+  function createDailyGW(config) {
+    const MAX = 6;
+    let target = null;
+    let guesses = [];
+    let gameOver = false;
+    let streak = parseInt(localStorage.getItem(config.streakKey) || '0');
+    let lastWinDate = localStorage.getItem(config.lastWinKey) || '';
+
+    const input = document.getElementById(config.inputId);
+    const guessBtn = document.getElementById(config.guessBtnId);
+    const result = document.getElementById(config.resultId);
+    const giveUpBtn = document.getElementById(config.giveUpBtnId);
+    const suggestions = document.getElementById(config.suggestionsId);
+    const guessRows = document.getElementById(config.guessRowsId);
+    const streakEl = document.getElementById(config.streakElId);
+
+    if (!input || !guessBtn) return; // Elements not found
+
+    function getPool() { return config.getPool(); }
+
+    function loadState() {
+      const key = getDailyKey(config.statePrefix);
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const state = JSON.parse(saved);
+        guesses = state.guesses || [];
+        gameOver = state.gameOver || false;
+        if (state.targetName) {
+          const pool = getPool();
+          const found = pool.find(p => p.name === state.targetName);
+          if (found) target = found;
+        }
+      }
+    }
+
+    function saveState() {
+      const key = getDailyKey(config.statePrefix);
+      localStorage.setItem(key, JSON.stringify({ guesses, gameOver, targetName: target ? target.name : null }));
+    }
+
+    function renderStreak() {
+      if (streak > 0) {
+        streakEl.textContent = '🔥 ' + streak + ' DAY STREAK';
+      } else {
+        streakEl.textContent = '';
+      }
+    }
+
+    function updateStreak(won) {
+      const todayStr = getDailyDateStr();
+      if (won) {
+        const d = getEasternDate();
+        d.setDate(d.getDate() - 1);
+        const yesterdayStr = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+        if (lastWinDate === yesterdayStr) {
+          streak++;
+        } else if (lastWinDate !== todayStr) {
+          streak = 1;
+        }
+        lastWinDate = todayStr;
+        localStorage.setItem(config.lastWinKey, lastWinDate);
+      } else {
+        if (lastWinDate !== todayStr) {
+          streak = 0;
+        }
+      }
+      localStorage.setItem(config.streakKey, streak.toString());
+    }
+
+    // Reuse compare logic from unlimited GW
+    function compare(g, t) {
+      const TEAM_DIVISION = {'Arizona Cardinals':'NFC West','Atlanta Falcons':'NFC South','Baltimore Ravens':'AFC North','Buffalo Bills':'AFC East','Carolina Panthers':'NFC South','Chicago Bears':'NFC North','Cincinnati Bengals':'AFC North','Cleveland Browns':'AFC North','Dallas Cowboys':'NFC East','Denver Broncos':'AFC West','Detroit Lions':'NFC North','Green Bay Packers':'NFC North','Houston Texans':'AFC South','Indianapolis Colts':'AFC South','Jacksonville Jaguars':'AFC South','Kansas City Chiefs':'AFC West','Las Vegas Raiders':'AFC West','Los Angeles Chargers':'AFC West','Los Angeles Rams':'NFC West','Miami Dolphins':'AFC East','Minnesota Vikings':'NFC North','New England Patriots':'AFC East','New Orleans Saints':'NFC South','New York Giants':'NFC East','New York Jets':'AFC East','Philadelphia Eagles':'NFC East','Pittsburgh Steelers':'AFC North','San Francisco 49ers':'NFC West','Seattle Seahawks':'NFC West','Tampa Bay Buccaneers':'NFC South','Tennessee Titans':'AFC South','Washington Commanders':'NFC East'};
+      function abbr(team) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[team]) ? TEAM_ABBR_MAP[team] : team; }
+      const cells = [];
+      // Team
+      cells.push({ label: abbr(g.team), match: g.team === t.team ? 'correct' : 'wrong' });
+      // Division
+      let divM = 'wrong';
+      if (g.division === t.division) divM = 'correct';
+      else if (g.division && t.division && g.division.substring(0,3) === t.division.substring(0,3)) divM = 'close';
+      cells.push({ label: g.division, match: divM });
+      // Position
+      cells.push({ label: g.pos, match: g.pos === t.pos ? 'correct' : 'wrong' });
+      // Season high
+      if (g.bestSzn != null && t.bestSzn != null) {
+        const diff = g.bestSzn - t.bestSzn; const abs = Math.abs(diff);
+        if (abs < 0.5) cells.push({ label: g.bestSzn.toFixed(1), match: 'correct' });
+        else if (abs <= 30) cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓':' ↑'), match: diff > 0 ? 'higher-close':'lower-close' });
+        else cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓':' ↑'), match: diff > 0 ? 'higher':'lower' });
+      } else { cells.push({ label: '—', match: 'neutral' }); }
+      // Week high
+      if (g.bestWk != null && t.bestWk != null) {
+        const diff = g.bestWk - t.bestWk; const abs = Math.abs(diff);
+        if (abs < 0.5) cells.push({ label: g.bestWk.toFixed(1), match: 'correct' });
+        else if (abs <= 5) cells.push({ label: g.bestWk.toFixed(1) + (diff > 0 ? ' ↓':' ↑'), match: diff > 0 ? 'higher-close':'lower-close' });
+        else cells.push({ label: g.bestWk.toFixed(1) + (diff > 0 ? ' ↓':' ↑'), match: diff > 0 ? 'higher':'lower' });
+      } else { cells.push({ label: '—', match: 'neutral' }); }
+      return { name: g.name, cells };
+    }
+
+    function renderRow(r) {
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'gw-guess-name';
+      nameDiv.textContent = r.name;
+      guessRows.appendChild(nameDiv);
+      const row = document.createElement('div');
+      row.className = 'gw-cat-row';
+      r.cells.forEach(c => {
+        const cell = document.createElement('div');
+        cell.className = 'gw-cat-cell ' + c.match;
+        cell.textContent = c.label;
+        row.appendChild(cell);
+      });
+      guessRows.appendChild(row);
+    }
+
+    function endGame(won) {
+      gameOver = true;
+      input.disabled = true;
+      guessBtn.disabled = true;
+      giveUpBtn.style.display = 'none';
+      suggestions.classList.remove('show');
+      updateStreak(won);
+      saveState();
+      if (typeof config.lbUpdate === 'function') config.lbUpdate(won, streak);
+      if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
+      result.style.display = 'block';
+      function a(t) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) ? TEAM_ABBR_MAP[t] : t; }
+      if (won) {
+        result.innerHTML = '<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + ' — Guessed in ' + guesses.length + '/' + MAX + '</div>';
+      } else {
+        result.innerHTML = '<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + '</div>';
+      }
+      renderStreak();
+    }
+
+    function submitGuess() {
+      if (gameOver) return;
+      const val = input.value.trim();
+      if (!val) return;
+      const pool = getPool();
+      const matched = pool.find(p => p.name.toLowerCase() === val.toLowerCase());
+      if (!matched) return;
+      if (guesses.some(g => g.toLowerCase() === matched.name.toLowerCase())) return;
+      guesses.push(matched.name);
+      input.value = '';
+      suggestions.classList.remove('show');
+      const r = compare(matched, target);
+      renderRow(r);
+      saveState();
+      if (matched.name.toLowerCase() === target.name.toLowerCase()) endGame(true);
+      else if (guesses.length >= MAX) endGame(false);
+    }
+
+    function init() {
+      const pool = getPool();
+      if (!pool || !pool.length) return;
+      target = pickDailyTarget(pool, config.seedOffset || 0);
+      loadState();
+      // Replay saved guesses
+      if (guesses.length > 0) {
+        guesses.forEach(gName => {
+          const p = pool.find(x => x.name === gName);
+          if (p) renderRow(compare(p, target));
+        });
+      }
+      if (gameOver) {
+        input.disabled = true;
+        guessBtn.disabled = true;
+        giveUpBtn.style.display = 'none';
+        const won = guesses.some(g => g.toLowerCase() === target.name.toLowerCase());
+        result.style.display = 'block';
+        function a(t) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) ? TEAM_ABBR_MAP[t] : t; }
+        if (won) {
+          result.innerHTML = '<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub"><strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + ' — Guessed in ' + guesses.length + '/' + MAX + '</div>';
+        } else {
+          result.innerHTML = '<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + '</div>';
+        }
+      }
+      renderStreak();
+    }
+
+    // Autocomplete
+    input.addEventListener('input', () => {
+      const pool = getPool();
+      const val = input.value.trim().toLowerCase();
+      if (val.length < 2) { suggestions.classList.remove('show'); return; }
+      const matches = pool.filter(p => p.name.toLowerCase().includes(val) && !guesses.some(g => g.toLowerCase() === p.name.toLowerCase())).slice(0, 8);
+      if (!matches.length) { suggestions.classList.remove('show'); return; }
+      function a(t) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) ? TEAM_ABBR_MAP[t] : t; }
+      suggestions.innerHTML = matches.map(p => '<div class="ep-sug-item" data-name="' + p.name + '"><span class="ep-sug-pos ' + p.pos + '">' + p.pos + '</span> ' + p.name + ' <span class="ep-sug-team">' + a(p.team) + '</span></div>').join('');
+      suggestions.classList.add('show');
+      suggestions.querySelectorAll('.ep-sug-item').forEach(el => {
+        el.addEventListener('click', () => { input.value = el.dataset.name; suggestions.classList.remove('show'); submitGuess(); });
+      });
+    });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submitGuess(); });
+    guessBtn.addEventListener('click', submitGuess);
+    giveUpBtn.addEventListener('click', () => { if (!gameOver) endGame(false); });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#' + config.suggestionsId) && !e.target.closest('#' + config.inputId)) suggestions.classList.remove('show');
+    });
+
+    return { init };
+  }
+
+  // Expose pool getters from the unlimited GW
+  // These will be set after the unlimited GW initializes its pools
+  let _poolCurrent = null;
+  let _poolAlltime = null;
+
+  // Wait for pools, then create both daily games
+  waitForPools(function() {
+    _poolCurrent = window._gwGetPoolCurrent();
+    _poolAlltime = window._gwGetPoolAlltime();
+
+    const dailyCurrent = createDailyGW({
+      statePrefix: 'gwd_c',
+      streakKey: 'gw_daily_streak',
+      lastWinKey: 'gw_daily_last_win',
+      seedOffset: 0,
+      inputId: 'gwDailyInput',
+      guessBtnId: 'gwDailyGuessBtn',
+      resultId: 'gwDailyResult',
+      giveUpBtnId: 'gwDailyGiveUpBtn',
+      suggestionsId: 'gwDailySuggestions',
+      guessRowsId: 'gwDailyGuessRows',
+      streakElId: 'gwDailyStreak',
+      getPool: () => _poolCurrent,
+      lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily === 'function') window._lbUpdateGwDaily(won, streak); }
+    });
+    if (dailyCurrent) dailyCurrent.init();
+
+    const dailyAT = createDailyGW({
+      statePrefix: 'gwd_at',
+      streakKey: 'gw_daily_at_streak',
+      lastWinKey: 'gw_daily_at_last_win',
+      seedOffset: 7919, // Different offset so different player
+      inputId: 'gwDailyATInput',
+      guessBtnId: 'gwDailyATGuessBtn',
+      resultId: 'gwDailyATResult',
+      giveUpBtnId: 'gwDailyATGiveUpBtn',
+      suggestionsId: 'gwDailyATSuggestions',
+      guessRowsId: 'gwDailyATGuessRows',
+      streakElId: 'gwDailyATStreak',
+      getPool: () => _poolAlltime,
+      lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDailyAT === 'function') window._lbUpdateGwDailyAT(won, streak); }
+    });
+    if (dailyAT) dailyAT.init();
+  });
 })();
 
 // Dynamic sticky offsets no longer needed - flex layout handles it
@@ -6373,6 +6727,10 @@ window.fmtHeight = fmtHeight;
     { id:'big_brain', icon:'🧠', name:'Big Brain', desc:'200 correct in a row — Unlimited Elite Pull', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 200, goal:200, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
     { id:'premium', icon:'👑', name:'Premium', desc:'Become a premium member', check:()=> typeof hasPremium==='function' && hasPremium() },
     { id:'mock_master', icon:'📋', name:'Draft Master', desc:'Complete 100 mock drafts', check:()=> parseInt(localStorage.getItem('md_games_played')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('md_games_played')||'0') },
+    { id:'gw_first_win', icon:'🔍', name:'Detective', desc:'Win your first Guess Who game', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') > 0 },
+    { id:'gw_streak_7', icon:'🕵️', name:'Sleuth', desc:'7 day Daily Guess Who streak (either mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) >= 7, goal:7, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) },
+    { id:'gw_streak_30', icon:'🔮', name:'Oracle', desc:'30 day Daily Guess Who streak (either mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) >= 30, goal:30, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) },
+    { id:'gw_master', icon:'🧩', name:'Guess Who Master', desc:'Win 100 Guess Who games (any mode)', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') },
   ];
 
   const BADGE_STORAGE_KEY = 'jb_active_badge';
@@ -6763,6 +7121,16 @@ window.fmtHeight = fmtHeight;
   const _origLbUnlimited = window._lbUpdateUnlimited;
   window._lbUpdateUnlimited = function(played, correct, streak) {
     if (_origLbUnlimited) _origLbUnlimited(played, correct, streak);
+    getUnlockedBadges();
+  };
+  const _origLbGwDaily = window._lbUpdateGwDaily;
+  window._lbUpdateGwDaily = function(won, streak) {
+    if (_origLbGwDaily) _origLbGwDaily(won, streak);
+    getUnlockedBadges();
+  };
+  const _origLbGwDailyAT = window._lbUpdateGwDailyAT;
+  window._lbUpdateGwDailyAT = function(won, streak) {
+    if (_origLbGwDailyAT) _origLbGwDailyAT(won, streak);
     getUnlockedBadges();
   };
 
@@ -9222,7 +9590,7 @@ window.fmtHeight = fmtHeight;
   // Wait for Firebase to be ready
   function getDb() { return window.firebase && firebase.firestore ? firebase.firestore() : null; }
   function getUser() { return window._authCurrentUser || null; }
-  function getLbBadge() { var b=localStorage.getItem('jb_active_badge')||'default'; var icons={'default':null,'creator':'🛠️','founder':'⭐','first_game':'🏈','century':'💯','1k_club':'🔥','goat':'🐐','weekly_warrior':'⚡','streak_7':'🔥','streak_30':'🌟','streak_100':'💎','sharpshooter':'🎯','elite_mind':'🏆','big_brain':'🧠','premium':'👑','mock_master':'📋'}; return {activeBadge:b, activeBadgeIcon:icons[b]||null}; }
+  function getLbBadge() { var b=localStorage.getItem('jb_active_badge')||'default'; var icons={'default':null,'creator':'🛠️','founder':'⭐','first_game':'🏈','century':'💯','1k_club':'🔥','goat':'🐐','weekly_warrior':'⚡','streak_7':'🔥','streak_30':'🌟','streak_100':'💎','sharpshooter':'🎯','elite_mind':'🏆','big_brain':'🧠','premium':'👑','mock_master':'📋','gw_first_win':'🔍','gw_streak_7':'🕵️','gw_streak_30':'🔮','gw_master':'🧩'}; return {activeBadge:b, activeBadgeIcon:icons[b]||null}; }
 
   function todayKey() {
     const d = new Date();
@@ -9300,6 +9668,52 @@ window.fmtHeight = fmtHeight;
         }, { merge: true }).catch(e => console.warn('[LB] fg week save error:', e));
       }
     }).catch(e => console.warn('[LB] fg week read error:', e));
+  };
+
+  // Guess Who — Current daily
+  window._lbUpdateGwDaily = function(won, streak) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    const docRef = db.collection('leaderboard').doc(user.uid);
+    docRef.get().then(doc => {
+      const existing = doc.exists && doc.data().gwDaily ? (doc.data().gwDaily.bestStreak || 0) : 0;
+      const newBest = Math.max(existing, streak);
+      docRef.set({
+        name: name, email: (user.email||''), ...getLbBadge(),
+        gwDaily: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }).catch(() => {
+      docRef.set({
+        name: name, email: (user.email||''), ...getLbBadge(),
+        gwDaily: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(e => console.warn('[LB] gw daily save error:', e));
+    });
+  };
+
+  // Guess Who — All-Time daily
+  window._lbUpdateGwDailyAT = function(won, streak) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    const docRef = db.collection('leaderboard').doc(user.uid);
+    docRef.get().then(doc => {
+      const existing = doc.exists && doc.data().gwDailyAT ? (doc.data().gwDailyAT.bestStreak || 0) : 0;
+      const newBest = Math.max(existing, streak);
+      docRef.set({
+        name: name, email: (user.email||''), ...getLbBadge(),
+        gwDailyAT: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }).catch(() => {
+      docRef.set({
+        name: name, email: (user.email||''), ...getLbBadge(),
+        gwDailyAT: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(e => console.warn('[LB] gw daily AT save error:', e));
+    });
   };
 
   // === LOAD & RENDER LEADERBOARDS ===
@@ -9447,6 +9861,52 @@ window.fmtHeight = fmtHeight;
         });
       }
 
+      // --- GUESS WHO — CURRENT STREAK ---
+      const gwCurrentPlayers = all.filter(u => u.gwDaily && (u.gwDaily.bestStreak > 0 || u.gwDaily.streak > 0) && isWithinTimeFilter(u.gwDaily.date, tf))
+        .map(u => ({
+          ...u,
+          _bestStreak: Math.max(u.gwDaily.bestStreak || 0, u.gwDaily.streak || 0),
+          _currentStreak: (u.gwDaily.date === today && u.gwDaily.won) ? (u.gwDaily.streak || 0) : 0
+        }))
+        .sort((a, b) => {
+          if (b._bestStreak !== a._bestStreak) return b._bestStreak - a._bestStreak;
+          return b._currentStreak - a._currentStreak;
+        });
+      const lbGwCurrentLoading = document.getElementById('lbGwCurrentLoading');
+      const lbGwCurrentEmpty = document.getElementById('lbGwCurrentEmpty');
+      const lbGwCurrentList = document.getElementById('lbGwCurrentList');
+      lbGwCurrentLoading.style.display = 'none';
+      if (gwCurrentPlayers.length === 0) { lbGwCurrentEmpty.style.display = 'block'; lbGwCurrentList.innerHTML = ''; }
+      else {
+        lbGwCurrentEmpty.style.display = 'none';
+        lbGwCurrentList.innerHTML = renderTop3(gwCurrentPlayers, uid, u => {
+          return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
+        });
+      }
+
+      // --- GUESS WHO — ALL-TIME STREAK ---
+      const gwATPlayers = all.filter(u => u.gwDailyAT && (u.gwDailyAT.bestStreak > 0 || u.gwDailyAT.streak > 0) && isWithinTimeFilter(u.gwDailyAT.date, tf))
+        .map(u => ({
+          ...u,
+          _bestStreak: Math.max(u.gwDailyAT.bestStreak || 0, u.gwDailyAT.streak || 0),
+          _currentStreak: (u.gwDailyAT.date === today && u.gwDailyAT.won) ? (u.gwDailyAT.streak || 0) : 0
+        }))
+        .sort((a, b) => {
+          if (b._bestStreak !== a._bestStreak) return b._bestStreak - a._bestStreak;
+          return b._currentStreak - a._currentStreak;
+        });
+      const lbGwATLoading = document.getElementById('lbGwAlltimeLoading');
+      const lbGwATEmpty = document.getElementById('lbGwAlltimeEmpty');
+      const lbGwATList = document.getElementById('lbGwAlltimeList');
+      lbGwATLoading.style.display = 'none';
+      if (gwATPlayers.length === 0) { lbGwATEmpty.style.display = 'block'; lbGwATList.innerHTML = ''; }
+      else {
+        lbGwATEmpty.style.display = 'none';
+        lbGwATList.innerHTML = renderTop3(gwATPlayers, uid, u => {
+          return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
+        });
+      }
+
       // === Badge #1 detection ===
       if (uid) {
         let isFirst = false;
@@ -9456,6 +9916,8 @@ window.fmtHeight = fmtHeight;
         if (fgWeekPlayers.length && fgWeekPlayers[0].id === uid) isFirst = true;
         if (dailyPlayers2.length && dailyPlayers2[0].id === uid) isFirst = true;
         if (unlimitedPlayers.length && unlimitedPlayers[0].id === uid) isFirst = true;
+        if (gwCurrentPlayers.length && gwCurrentPlayers[0].id === uid) isFirst = true;
+        if (gwATPlayers.length && gwATPlayers[0].id === uid) isFirst = true;
         // Weekly: check if #1 with a recent date (within 7 days)
         const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
         const weekStr = weekAgo.toISOString().slice(0,10);

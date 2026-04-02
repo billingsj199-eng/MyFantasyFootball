@@ -1001,7 +1001,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 @media(max-width:600px){
   .global-signin-btn{padding:6px 10px;font-size:.75rem;letter-spacing:1px}
   .global-acct-pill{padding:0}
-  .home-hero > .auth-anchor,
+  .home-hero > .auth-anchor{position:relative;top:auto;right:auto;display:flex;justify-content:flex-end;margin-bottom:4px}
   .page-trade > .auth-anchor,
   .page-mockdraft > .auth-anchor,
   .page-account > .auth-anchor{top:8px;right:8px}
@@ -1597,37 +1597,11 @@ PREMIUM ACTIVE
 <div class="home-two-col">
 <div class="home-col-left">
 <div class="home-section-label">Daily Challenge</div>
-<!-- Elite Pull Daily Game -->
-<div class="elite-pull-section" style="max-width:480px">
-<div class="elite-pull-card">
-<div class="elite-pull-header">
-<div class="elite-pull-title">ELITE PULL</div>
-<div class="elite-pull-subtitle">Guess today's player from their picture &middot; 1 attempt</div>
-</div>
-<div class="elite-pull-img-wrap">
-<img id="epImage" class="ep-blur" src="" alt="Mystery player" style="display:none">
-<div id="epPlaceholder" class="ep-placeholder">Loading today's player...</div>
-</div>
-<div class="elite-pull-body">
-<div id="epAttempts" class="ep-attempts"></div>
-<div class="ep-guess-wrap">
-<div id="epSuggestions" class="ep-suggestions"></div>
-<div class="ep-guess-row">
-<input type="text" id="epInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
-<button id="epGuessBtn" class="ep-guess-btn">GUESS</button>
-</div>
-</div>
-<div id="epResult" class="ep-result" style="display:none"></div>
-<div id="epStreak" class="ep-streak-display"></div>
-</div>
-</div>
-</div>
-
-<!-- Daily Guess Who — Current -->
-<div style="margin-top:12px;max-width:480px">
+<!-- Daily ELITE PULL — Current -->
+<div style="max-width:480px">
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
-<div class="gw-title" style="font-size:1.5rem">DAILY GUESS WHO — CURRENT</div>
+<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — CURRENT</div>
 <div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's active player &middot; 6 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
 <strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player in 6 tries. Each guess reveals clues:<br><br>
 <span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
@@ -1659,11 +1633,11 @@ PREMIUM ACTIVE
 </div>
 </div>
 
-<!-- Daily Guess Who — All-Time -->
+<!-- Daily ELITE PULL — All-Time -->
 <div style="margin-top:12px;max-width:480px">
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
-<div class="gw-title" style="font-size:1.5rem">DAILY GUESS WHO — ALL-TIME</div>
+<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — ALL-TIME</div>
 <div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's retired legend &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
 <strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery legend in 8 tries. Each guess reveals clues:<br><br>
 <span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
@@ -1696,6 +1670,32 @@ PREMIUM ACTIVE
 </div>
 </div>
 
+
+<!-- GUESS WHO Daily Game -->
+<div class="elite-pull-section" style="max-width:480px;margin-top:12px">
+<div class="elite-pull-card">
+<div class="elite-pull-header">
+<div class="elite-pull-title">GUESS WHO</div>
+<div class="elite-pull-subtitle">Guess today's player from their picture &middot; 1 attempt</div>
+</div>
+<div class="elite-pull-img-wrap">
+<img id="epImage" class="ep-blur" src="" alt="Mystery player" style="display:none">
+<div id="epPlaceholder" class="ep-placeholder">Loading today's player...</div>
+</div>
+<div class="elite-pull-body">
+<div id="epAttempts" class="ep-attempts"></div>
+<div class="ep-guess-wrap">
+<div id="epSuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="epInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="epGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="epResult" class="ep-result" style="display:none"></div>
+<div id="epStreak" class="ep-streak-display"></div>
+</div>
+</div>
+</div>
 </div>
 
 <div class="home-col-right">
@@ -1727,19 +1727,19 @@ PREMIUM ACTIVE
 <div class="lb-empty" id="lbDailyEmpty" style="display:none">No results yet today</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Elite Pull Unlimited</div>
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">GUESS WHO Unlimited</div>
 <div class="lb-list" id="lbAlltimeList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbAlltimeLoading">Loading...</div>
 <div class="lb-empty" id="lbAlltimeEmpty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Guess Who — Current Streak</div>
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">ELITE PULL — Current Streak</div>
 <div class="lb-list" id="lbGwCurrentList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbGwCurrentLoading">Loading...</div>
 <div class="lb-empty" id="lbGwCurrentEmpty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Guess Who — All-Time Streak</div>
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">ELITE PULL — All-Time Streak</div>
 <div class="lb-list" id="lbGwAlltimeList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbGwAlltimeLoading">Loading...</div>
 <div class="lb-empty" id="lbGwAlltimeEmpty" style="display:none">No data yet</div>
@@ -1906,8 +1906,8 @@ CLEAR
 <div class="auth-anchor" id="authAnchorGames"></div>
 <div class="games-tabs">
 <button class="games-tab active" data-games-tab="fantasygame">Fantasy Game</button>
-<button class="games-tab" data-games-tab="elitepull">Elite Pull</button>
-<button class="games-tab" data-games-tab="guesswho">Guess Who</button>
+<button class="games-tab" data-games-tab="elitepull">GUESS WHO</button>
+<button class="games-tab" data-games-tab="guesswho">ELITE PULL</button>
 </div>
 
 <!-- Fantasy Game Sub-page -->
@@ -1972,12 +1972,12 @@ CLEAR
 </div>
 </div>
 
-<!-- Elite Pull Sub-page -->
+<!-- GUESS WHO Sub-page -->
 <div class="games-subpage" id="gamesElitepull">
 <div class="elite-pull-section" style="margin:0 auto">
 <div class="elite-pull-card">
 <div class="elite-pull-header">
-<div class="elite-pull-title">ELITE PULL — UNLIMITED</div>
+<div class="elite-pull-title">GUESS WHO — UNLIMITED</div>
 <div class="elite-pull-subtitle">Guess the player from their picture &middot; 1 attempt &middot; Play as many as you want</div>
 <div id="epuStats" class="ep-streak-display" style="margin-top:6px"></div>
 </div>
@@ -2001,12 +2001,12 @@ CLEAR
 </div>
 </div>
 
-<!-- Guess Who Sub-page -->
+<!-- ELITE PULL Sub-page -->
 <div class="games-subpage" id="gamesGuesswho">
 <div class="gw-section" style="margin:0 auto;max-width:520px;padding:0 4px;box-sizing:border-box">
 <div class="gw-card">
 <div class="gw-header">
-<div class="gw-title">GUESS WHO</div>
+<div class="gw-title">ELITE PULL</div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:8px auto 4px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
 <button class="fg-mode-btn active" id="gwModeCurrent" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">CURRENT</button>
 <button class="fg-mode-btn" id="gwModeAlltime" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">ALL-TIME</button>
@@ -5545,7 +5545,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     gwRenderStats();
     // Show share popup
     const modeLabel = gwMode === 'alltime' ? 'All-Time' : 'Current';
-    const shareTitle = 'GUESS WHO — ' + modeLabel;
+    const shareTitle = 'ELITE PULL — ' + modeLabel;
     const shareSub = won ? ('Guessed in ' + gwGuesses.length + '/' + gwMaxGuesses()) : ('X/' + gwMaxGuesses());
     gwShowSharePopup(shareTitle, shareSub, gwResultRows);
     // Re-open share on button click
@@ -5874,7 +5874,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       renderStreak();
       // Show share popup
       var modeLabel = config.modeLabel || 'Current';
-      var shareTitle = 'GUESS WHO DAILY — ' + modeLabel;
+      var shareTitle = 'ELITE PULL DAILY — ' + modeLabel;
       var shareSub = won ? ('Guessed in ' + guesses.length + '/' + MAX) : ('X/' + MAX);
       if (typeof window._gwShowSharePopup === 'function' && resultRows.length > 0) {
         window._gwShowSharePopup(shareTitle, shareSub, resultRows);
@@ -5939,7 +5939,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         }
         // Wire up share button for replayed games
         var modeLabel2 = config.modeLabel || 'Current';
-        var shareTitle2 = 'GUESS WHO DAILY — ' + modeLabel2;
+        var shareTitle2 = 'ELITE PULL DAILY — ' + modeLabel2;
         var shareSub2 = won ? ('Guessed in ' + guesses.length + '/' + MAX) : ('X/' + MAX);
         var reBtn2 = result.querySelector('.gw-share-reopen');
         if (reBtn2) {
@@ -6972,18 +6972,18 @@ window.fmtHeight = fmtHeight;
     { id:'1k_club', icon:'🔥', name:'1K Club', desc:'Play 1,000 Fantasy Games', check:()=> parseInt(localStorage.getItem('fg_games_played')||'0') >= 1000, goal:1000, getCurrent:()=> parseInt(localStorage.getItem('fg_games_played')||'0') },
     { id:'goat', icon:'🐐', name:'G.O.A.T.', desc:'Be #1 all-time on any leaderboard', check:()=> localStorage.getItem('jb_is_lb_first') === 'true' },
     { id:'weekly_warrior', icon:'⚡', name:'Weekly Warrior', desc:'Be #1 on any weekly leaderboard', check:()=> localStorage.getItem('jb_is_lb_week_first') === 'true' },
-    { id:'streak_7', icon:'🔥', name:'On Fire', desc:'7 day Daily Elite Pull streak', check:()=> parseInt(localStorage.getItem('ep_streak')||'0') >= 7, goal:7, getCurrent:()=> parseInt(localStorage.getItem('ep_streak')||'0') },
-    { id:'streak_30', icon:'🌟', name:'Dedicated', desc:'30 day Daily Elite Pull streak', check:()=> parseInt(localStorage.getItem('ep_streak')||'0') >= 30, goal:30, getCurrent:()=> parseInt(localStorage.getItem('ep_streak')||'0') },
-    { id:'streak_100', icon:'💎', name:'Diamond 100', desc:'100 day Daily Elite Pull streak', check:()=> parseInt(localStorage.getItem('ep_streak')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('ep_streak')||'0') },
-    { id:'sharpshooter', icon:'🎯', name:'Sharpshooter', desc:'50 correct in a row — Unlimited Elite Pull', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 50, goal:50, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
-    { id:'elite_mind', icon:'🏆', name:'Elite Mind', desc:'100 correct in a row — Unlimited Elite Pull', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
-    { id:'big_brain', icon:'🧠', name:'Big Brain', desc:'200 correct in a row — Unlimited Elite Pull', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 200, goal:200, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
+    { id:'streak_7', icon:'🔥', name:'On Fire', desc:'7 day Daily GUESS WHO streak', check:()=> parseInt(localStorage.getItem('ep_streak')||'0') >= 7, goal:7, getCurrent:()=> parseInt(localStorage.getItem('ep_streak')||'0') },
+    { id:'streak_30', icon:'🌟', name:'Dedicated', desc:'30 day Daily GUESS WHO streak', check:()=> parseInt(localStorage.getItem('ep_streak')||'0') >= 30, goal:30, getCurrent:()=> parseInt(localStorage.getItem('ep_streak')||'0') },
+    { id:'streak_100', icon:'💎', name:'Diamond 100', desc:'100 day Daily GUESS WHO streak', check:()=> parseInt(localStorage.getItem('ep_streak')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('ep_streak')||'0') },
+    { id:'sharpshooter', icon:'🎯', name:'Sharpshooter', desc:'50 correct in a row — Unlimited GUESS WHO', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 50, goal:50, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
+    { id:'elite_mind', icon:'🏆', name:'Elite Mind', desc:'100 correct in a row — Unlimited GUESS WHO', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
+    { id:'big_brain', icon:'🧠', name:'Big Brain', desc:'200 correct in a row — Unlimited GUESS WHO', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 200, goal:200, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
     { id:'premium', icon:'👑', name:'Premium', desc:'Become a premium member', check:()=> typeof hasPremium==='function' && hasPremium() },
     { id:'mock_master', icon:'📋', name:'Draft Master', desc:'Complete 100 mock drafts', check:()=> parseInt(localStorage.getItem('md_games_played')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('md_games_played')||'0') },
-    { id:'gw_first_win', icon:'🔍', name:'Detective', desc:'Win your first Guess Who game', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') > 0 },
-    { id:'gw_streak_7', icon:'🕵️', name:'Sleuth', desc:'7 day Daily Guess Who streak (either mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) >= 7, goal:7, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) },
-    { id:'gw_streak_30', icon:'🔮', name:'Oracle', desc:'30 day Daily Guess Who streak (either mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) >= 30, goal:30, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) },
-    { id:'gw_master', icon:'🧩', name:'Guess Who Master', desc:'Win 100 Guess Who games (any mode)', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') },
+    { id:'gw_first_win', icon:'🔍', name:'Detective', desc:'Win your first ELITE PULL game', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') > 0 },
+    { id:'gw_streak_7', icon:'🕵️', name:'Sleuth', desc:'7 day Daily ELITE PULL streak (either mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) >= 7, goal:7, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) },
+    { id:'gw_streak_30', icon:'🔮', name:'Oracle', desc:'30 day Daily ELITE PULL streak (either mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) >= 30, goal:30, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) },
+    { id:'gw_master', icon:'🧩', name:'ELITE PULL Master', desc:'Win 100 ELITE PULL games (any mode)', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') },
   ];
 
   const BADGE_STORAGE_KEY = 'jb_active_badge';
@@ -10353,7 +10353,7 @@ window.fmtHeight = fmtHeight;
 </script>
 <div class="gw-share-overlay" id="gwShareOverlay">
 <div class="gw-share-box">
-<div class="gw-share-title" id="gwShareTitle">GUESS WHO</div>
+<div class="gw-share-title" id="gwShareTitle">ELITE PULL</div>
 <div class="gw-share-sub" id="gwShareSub"></div>
 <div class="gw-share-grid" id="gwShareGrid"></div>
 <div style="display:flex;justify-content:center;gap:6px">

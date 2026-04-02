@@ -91,6 +91,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .ep-result-text.win{color:var(--green)}
 .ep-result-text.lose{color:var(--red)}
 .ep-result-sub{font-size:.78rem;color:var(--text2);margin-top:4px}
+.ep-card-link{color:var(--accent);cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;transition:color .15s}
+.ep-card-link:hover{color:var(--green);text-decoration-style:solid}
 .ep-streak-display{text-align:center;margin-top:.5rem;font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--accent);letter-spacing:1.5px}
 .ep-suggestions{position:absolute;bottom:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;max-height:180px;overflow-y:auto;display:none;z-index:20;box-shadow:0 -4px 16px rgba(0,0,0,.4)}
 .ep-suggestions.show{display:block}
@@ -4477,6 +4479,24 @@ const BAD_IMG_KEY = 'ep_bad_images';
 function getBadImages() { try { return JSON.parse(sessionStorage.getItem(BAD_IMG_KEY) || '[]'); } catch(e) { return []; } }
 function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { bad.push(id); sessionStorage.setItem(BAD_IMG_KEY, JSON.stringify(bad)); } }
 
+// === Clickable player name links in game results ===
+// Returns an HTML string for a clickable player name that opens their card
+function _epCardLink(name, extraStyle) {
+  return '<span class="ep-card-link" data-epcard="' + name.replace(/"/g, '&quot;') + '"' + (extraStyle ? ' style="' + extraStyle + '"' : '') + '>' + name + '</span>';
+}
+// Global delegated click handler for all ep-card-link elements
+document.addEventListener('click', function(e) {
+  const link = e.target.closest('.ep-card-link');
+  if (!link) return;
+  const name = link.dataset.epcard;
+  if (!name) return;
+  // Find player in D array
+  const d = D.find(p => p.n.toLowerCase() === name.toLowerCase());
+  if (d && typeof openPlayerCard === 'function') {
+    openPlayerCard(d);
+  }
+});
+
 // === ELITE PULL — Daily Player Guessing Game ===
 (function() {
   // Pool of players with headshot URLs (ESPN headshots are publicly accessible)
@@ -4692,9 +4712,9 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
     epResult.style.display = 'block';
     if (won) {
-      epResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">${todayPlayer.name} &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos} &mdash; Guessed in ${guesses.length}/${MAX_GUESSES}</div>`;
+      epResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos} &mdash; Guessed in ${guesses.length}/${MAX_GUESSES}</div>`;
     } else {
-      epResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">${todayPlayer.name}</strong> &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos}</div>`;
+      epResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was ${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos}</div>`;
     }
     renderStreak();
   }
@@ -4824,9 +4844,9 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       const won = guesses.some(g => g.toLowerCase() === todayPlayer.name.toLowerCase());
       epResult.style.display = 'block';
       if (won) {
-        epResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">${todayPlayer.name} &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos} &mdash; Guessed in ${guesses.length}/${MAX_GUESSES}</div>`;
+        epResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos} &mdash; Guessed in ${guesses.length}/${MAX_GUESSES}</div>`;
       } else {
-        epResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">${todayPlayer.name}</strong> &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos}</div>`;
+        epResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was ${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos}</div>`;
       }
     }
   }
@@ -4933,7 +4953,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       epuResult.style.display = 'block';
       epuResult.innerHTML = `
         <div class="ep-result-text lose">GAME OVER</div>
-        <div class="ep-result-sub" style="margin-bottom:8px">It was <strong style="color:var(--accent)">${currentPlayerU.name}</strong> · ${currentPlayerU.team} · ${currentPlayerU.pos}</div>
+        <div class="ep-result-sub" style="margin-bottom:8px">It was ${_epCardLink(currentPlayerU.name, 'color:var(--accent)')} · ${currentPlayerU.team} · ${currentPlayerU.pos}</div>
         <div style="display:flex;gap:12px;justify-content:center;margin:12px 0">
           <div style="text-align:center;padding:8px 16px;border-radius:6px;background:var(--surface2);border:1px solid var(--border)">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:1px">${finalStreak}</div>
@@ -4961,7 +4981,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
 
     epuResult.style.display = 'block';
-    epuResult.innerHTML = `<div class="ep-result-text win">CORRECT!</div><div class="ep-result-sub">${currentPlayerU.name} · ${currentPlayerU.team} · ${currentPlayerU.pos}</div>`;
+    epuResult.innerHTML = `<div class="ep-result-text win">CORRECT!</div><div class="ep-result-sub">${_epCardLink(currentPlayerU.name, 'color:var(--accent)')} · ${currentPlayerU.team} · ${currentPlayerU.pos}</div>`;
     epuNextBtn.style.display = 'inline-block';
     epuNextBtn.textContent = 'NEXT PLAYER';
     renderStatsU();
@@ -5633,9 +5653,9 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
     gwResult.style.display = 'block';
     if (won) {
-      gwResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos} &mdash; Guessed in ${gwGuesses.length}/${gwMaxGuesses()}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
+      gwResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was ${_epCardLink(gwTarget.name, 'color:var(--accent)')} &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos} &mdash; Guessed in ${gwGuesses.length}/${gwMaxGuesses()}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
     } else {
-      gwResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK NEXT TIME</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">${gwTarget.name}</strong> &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
+      gwResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK NEXT TIME</div><div class="ep-result-sub">It was ${_epCardLink(gwTarget.name, 'color:var(--accent)')} &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
     }
     gwNextBtn.style.display = 'inline-block';
     gwGiveUpBtn.style.display = 'none';
@@ -6173,9 +6193,9 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       result.style.display = 'block';
       function a(t) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) ? TEAM_ABBR_MAP[t] : t; }
       if (won) {
-        result.innerHTML = '<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + ' — Guessed in ' + guesses.length + '/' + MAX + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
+        result.innerHTML = '<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was ' + _epCardLink(target.name, 'color:var(--accent)') + ' · ' + a(target.team) + ' · ' + target.pos + ' — Guessed in ' + guesses.length + '/' + MAX + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
       } else {
-        result.innerHTML = '<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
+        result.innerHTML = '<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was ' + _epCardLink(target.name, 'color:var(--accent)') + ' · ' + a(target.team) + ' · ' + target.pos + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
       }
       renderStreak();
       // Show share popup
@@ -6239,9 +6259,9 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         result.style.display = 'block';
         function a(t) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) ? TEAM_ABBR_MAP[t] : t; }
         if (won) {
-          result.innerHTML = '<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub"><strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + ' — Guessed in ' + guesses.length + '/' + MAX + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
+          result.innerHTML = '<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">' + _epCardLink(target.name, 'color:var(--accent)') + ' · ' + a(target.team) + ' · ' + target.pos + ' — Guessed in ' + guesses.length + '/' + MAX + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
         } else {
-          result.innerHTML = '<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was <strong style="color:var(--accent)">' + target.name + '</strong> · ' + a(target.team) + ' · ' + target.pos + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
+          result.innerHTML = '<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was ' + _epCardLink(target.name, 'color:var(--accent)') + ' · ' + a(target.team) + ' · ' + target.pos + '</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>';
         }
         // Wire up share button for replayed games
         var modeLabel2 = config.modeLabel || 'Current';

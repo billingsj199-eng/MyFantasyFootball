@@ -3959,6 +3959,26 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
 
+      ${d._retired && d.career && d.career.length > 0 ? (() => {
+        const _cr = d.career;
+        const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
+        const _totalGp = _cr.reduce((sum, s) => sum + (s.gp || 0), 0);
+        const _totalFpts = _cr.reduce((sum, s) => sum + (s.fpts || 0), 0);
+        return `<div class="card-section">
+        <div class="card-section-title">Career Highlights</div>
+        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
+          <div class="card-rank-box"><div class="lbl">Best PPG</div><div class="num green">${_bestSzn ? _bestSzn.ppg : '—'}</div></div>
+          <div class="card-rank-box"><div class="lbl">Best Pts</div><div class="num green">${_bestSzn ? _bestSzn.fpts : '—'}</div></div>
+          <div class="card-rank-box"><div class="lbl">Best Yr</div><div class="num accent">${_bestSzn ? _bestSzn.yr : '—'}</div></div>
+          <div class="card-rank-box"><div class="lbl">Seasons</div><div class="num accent">${_cr.length}</div></div>
+        </div>
+        <div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">
+          <div class="card-rank-box"><div class="lbl">Career GP</div><div class="num accent">${_totalGp}</div></div>
+          <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(_totalFpts)}</div></div>
+        </div>
+      </div>`;
+      })() : ''}
+
       ${!d._retired && d.s !== 'K' && d.s !== 'DST' ? `<div class="card-section">
         <div class="card-section-title">ADP Comparison</div>
         <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
@@ -3983,7 +4003,7 @@ function openPlayerCard(d) {
 
       ${d.career && d.career.length > 0 ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-          <span id="clScoringLabel">Career Log (Half PPR)</span>
+          <span id="clScoringLabel">Career Log (Half PPR)${d._retired && d.career && d._debut && d._last && d.career.length < (d._last - d._debut + 1) * 0.5 ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : ''}</span>
           <div class="career-log-controls">
             <div class="career-log-toggle">
               <button class="cl-scoring-btn" data-clscoring="ppr">PPR</button>
@@ -4231,11 +4251,20 @@ function renderCompareGrid() {
           </div>` : ''}
           ${career.length > 0 ? `<div class="card-section">
             <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-              <span class="cmp-cl-label">Career Log (Half PPR)</span>
-              <div class="career-log-toggle">
-                <button class="cmp-cl-scoring" data-cmpscoring="ppr" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">PPR</button>
-                <button class="cmp-cl-scoring active" data-cmpscoring="half" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">HALF</button>
-                <button class="cmp-cl-scoring" data-cmpscoring="std" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">STD</button>
+              <span class="cmp-cl-label">Career Log (Half PPR)${career.length < ((d._last||0) - (d._debut||0) + 1) * 0.5 ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : ''}</span>
+              <div class="career-log-controls">
+                <div class="career-log-toggle">
+                  <button class="cmp-cl-scoring" data-cmpscoring="ppr" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">PPR</button>
+                  <button class="cmp-cl-scoring active" data-cmpscoring="half" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">HALF</button>
+                  <button class="cmp-cl-scoring" data-cmpscoring="std" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">STD</button>
+                </div>
+                ${hasWeeklyData(d) ? `<div class="career-log-toggle">
+                  <button class="cmp-cl-mode active" data-cmpmode="season" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">SEASON</button>
+                  <button class="cmp-cl-mode" data-cmpmode="weekly" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">WEEKLY</button>
+                </div>
+                <select class="career-log-year-select cmp-cl-year" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}" style="display:none">
+                  ${getWeeklySeasons(d).map(s => '<option value="'+s+'">'+s+'</option>').join('')}
+                </select>` : ''}
               </div>
             </div>
             <div class="cmp-cl-content" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">${buildCareerTable(d, 'half')}</div>
@@ -4339,24 +4368,68 @@ function renderCompareGrid() {
       renderSearchChips();
     });
   });
-  // Compare career log scoring toggles (PPR/HALF/STD)
+  // Compare career log scoring toggles (PPR/HALF/STD) and mode toggles (SEASON/WEEKLY)
   const scoringLabels = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
+  // Track scoring per player
+  const _cmpScoring = {};
+  
+  function _cmpRefresh(playerName) {
+    const d = D.find(dd => dd.n === playerName);
+    if (!d) return;
+    const esc = playerName.replace(/"/g, '\\"');
+    const contentEl = compareGrid.querySelector('.cmp-cl-content[data-cmpplayer="' + esc + '"]');
+    const labelEl = compareGrid.querySelector('.cmp-cl-label');
+    const modeBtn = compareGrid.querySelector('.cmp-cl-mode.active[data-cmpplayer="' + esc + '"]');
+    const yearSel = compareGrid.querySelector('.cmp-cl-year[data-cmpplayer="' + esc + '"]');
+    if (!contentEl) return;
+    const scoring = _cmpScoring[playerName] || 'half';
+    const mode = modeBtn ? modeBtn.dataset.cmpmode : 'season';
+    if (mode === 'weekly' && yearSel) {
+      contentEl.innerHTML = buildWeeklyTable(d, yearSel.value, scoring);
+    } else {
+      contentEl.innerHTML = buildCareerTable(d, scoring);
+    }
+  }
+  
   compareGrid.querySelectorAll('.cmp-cl-scoring').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Don't trigger card popup
+      e.stopPropagation();
       const playerName = btn.dataset.cmpplayer;
       const scoring = btn.dataset.cmpscoring;
-      // Update active state for this player's buttons
-      compareGrid.querySelectorAll('.cmp-cl-scoring[data-cmpplayer="' + playerName.replace(/"/g, '\\"') + '"]').forEach(b => b.classList.remove('active'));
+      const esc = playerName.replace(/"/g, '\\"');
+      compareGrid.querySelectorAll('.cmp-cl-scoring[data-cmpplayer="' + esc + '"]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      // Update the career log content
-      const contentEl = compareGrid.querySelector('.cmp-cl-content[data-cmpplayer="' + playerName.replace(/"/g, '\\"') + '"]');
-      const labelEl = btn.closest('.card-section').querySelector('.cmp-cl-label');
-      if (contentEl) {
-        const d = D.find(dd => dd.n === playerName);
-        if (d) contentEl.innerHTML = buildCareerTable(d, scoring);
+      _cmpScoring[playerName] = scoring;
+      const section = btn.closest('.card-section');
+      if (section) {
+        const lbl = section.querySelector('.cmp-cl-label');
+        if (lbl) {
+          let txt = 'Career Log (' + scoringLabels[scoring] + ')';
+          const best = lbl.querySelector('span');
+          lbl.innerHTML = txt + (best ? ' ' + best.outerHTML : '');
+        }
       }
-      if (labelEl) labelEl.textContent = 'Career Log (' + scoringLabels[scoring] + ')';
+      _cmpRefresh(playerName);
+    });
+  });
+  
+  compareGrid.querySelectorAll('.cmp-cl-mode').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const playerName = btn.dataset.cmpplayer;
+      const esc = playerName.replace(/"/g, '\\"');
+      compareGrid.querySelectorAll('.cmp-cl-mode[data-cmpplayer="' + esc + '"]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const yearSel = compareGrid.querySelector('.cmp-cl-year[data-cmpplayer="' + esc + '"]');
+      if (yearSel) yearSel.style.display = btn.dataset.cmpmode === 'weekly' ? '' : 'none';
+      _cmpRefresh(playerName);
+    });
+  });
+  
+  compareGrid.querySelectorAll('.cmp-cl-year').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      e.stopPropagation();
+      _cmpRefresh(sel.dataset.cmpplayer);
     });
   });
 }

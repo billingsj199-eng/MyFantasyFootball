@@ -3656,6 +3656,31 @@ const TEAM_ABBR_MAP = {
 };
 function teamAbbr(fullName) { return TEAM_ABBR_MAP[fullName] || fullName; }
 
+// Reverse lookup: abbreviation → full name (for team history lookups)
+const _ABBR_TO_FULL = {};
+Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => { _ABBR_TO_FULL[abbr] = full; });
+
+// Get current team abbreviation for a player using team history data
+// Returns the most recent team abbreviation, falling back to the provided default
+function getCurrentTeamAbbr(playerName, fallbackAbbr) {
+  // Check ACTIVE_TEAM_HISTORY first (uses full team names, e.g. "Los Angeles Rams")
+  if (typeof ACTIVE_TEAM_HISTORY !== 'undefined' && ACTIVE_TEAM_HISTORY[playerName]) {
+    const hist = ACTIVE_TEAM_HISTORY[playerName];
+    if (hist.length) {
+      const last = hist[hist.length - 1];
+      return TEAM_ABBR_MAP[last.t] || last.t;
+    }
+  }
+  // Fallback: PLAYER_TEAM_HISTORY (uses abbreviations like "LAR")
+  if (typeof PLAYER_TEAM_HISTORY !== 'undefined' && PLAYER_TEAM_HISTORY[playerName]) {
+    const pHist = PLAYER_TEAM_HISTORY[playerName];
+    if (pHist.length) {
+      return pHist[pHist.length - 1].t;
+    }
+  }
+  return fallbackAbbr;
+}
+
 // Weekly stats data (from Sleeper API, 2018-2025)
 function hasWeeklyData(d) {
   return !!(WEEKLY_STATS[d.n] && Object.keys(WEEKLY_STATS[d.n].seasons).length > 0);
@@ -4556,8 +4581,8 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     return `ep_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;
   }
 
-  // All players from the D array for autocomplete
-  const allNames = D.map(d => ({name: d.n, team: d.t, pos: d.s}));
+  // All players from the D array for autocomplete — use current team from history data
+  const allNames = D.map(d => ({name: d.n, team: getCurrentTeamAbbr(d.n, d.t), pos: d.s}));
   // Ensure all daily pull players are searchable
   DAILY_RETIRED_POOL.forEach(p => {
     if (!allNames.some(a => a.name.toLowerCase() === p.name.toLowerCase())) {
@@ -4828,7 +4853,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350&h=254`;
   }
 
-  const allNamesU = D.map(d => ({name: d.n, team: d.t, pos: d.s}));
+  const allNamesU = D.map(d => ({name: d.n, team: getCurrentTeamAbbr(d.n, d.t), pos: d.s}));
   const MAX_GUESSES_U = 1;
 
   const epuImage = document.getElementById('epuImage');
@@ -4859,7 +4884,10 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
     let idx;
     do { idx = Math.floor(Math.random() * pool.length); } while (usedIndices.includes(idx));
     usedIndices.push(idx);
-    return pool[idx];
+    const picked = pool[idx];
+    // Ensure team reflects current active team, not old team from data
+    const correctedTeam = getCurrentTeamAbbr(picked.name, picked.team);
+    return Object.assign({}, picked, { team: correctedTeam });
   }
 
   function renderStatsU() {

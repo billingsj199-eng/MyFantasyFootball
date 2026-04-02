@@ -563,4 +563,8 @@ const PLAYER_TEAM_HISTORY = {
   'Neil O\'Donnell': [{t:'TEN',y1:1999,y2:2003}],
   'Le\'Veon Bell': [{t:'PIT',y1:2013,y2:2018},{t:'NYJ',y1:2019,y2:2019},{t:'KC',y1:2020,y2:2020},{t:'TB',y1:2021,y2:2021}],
   'Ken O\'Brien': [{t:'NYJ',y1:1984,y2:1993}],
+
+  'Neil O\'Donnell': [{t:'TEN',y1:1999,y2:2003}],
+  'Le\'Veon Bell': [{t:'PIT',y1:2013,y2:2018},{t:'NYJ',y1:2019,y2:2019},{t:'KC',y1:2020,y2:2020},{t:'TB',y1:2021,y2:2021}],
+  'Ken O\'Brien': [{t:'NYJ',y1:1984,y2:1993}],
 };

@@ -5018,8 +5018,16 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
   function getGwPool() { return gwMode === 'alltime' ? gwPoolAlltime : gwPoolCurrent; }
 
+  let _gwPoolBuiltWithWeekly = false;
   function initGwPool() {
-    if (gwPoolCurrent && gwPoolCurrent.length > 0) return;
+    // Rebuild if we built without weekly stats but they're now available
+    if (gwPoolCurrent && gwPoolCurrent.length > 0) {
+      if (_gwPoolBuiltWithWeekly || typeof WEEKLY_STATS === 'undefined') return;
+      // Weekly stats now available but pool was built without them — rebuild
+    }
+    _gwPoolBuiltWithWeekly = (typeof WEEKLY_STATS !== 'undefined');
+    gwPoolCurrent = null;
+    gwPoolAlltime = null;
     // Build abbreviation lookup
     if (typeof TEAM_ABBR_MAP !== 'undefined') {
       Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => {
@@ -5220,8 +5228,8 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
 
     // Filter to only players with season stats for better gameplay
     // Current = active players only; All-Time = all players with weekly stats
-    gwPoolCurrent = allPool.filter(p => p.bestSzn !== null && p._active && p.bestWk !== null);
-    gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && !p._active && p.bestWk !== null);
+    gwPoolCurrent = allPool.filter(p => p.bestSzn !== null && p._active);
+    gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && !p._active);
     // Expose for daily Guess Who games
     window._gwGetPoolCurrent = function() { return gwPoolCurrent; };
     window._gwGetPoolAlltime = function() { return gwPoolAlltime; };
@@ -5292,8 +5300,10 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       } else {
         result.cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher' : 'lower' });
       }
+    } else if (g.bestSzn != null) {
+      result.cells.push({ label: g.bestSzn.toFixed(1), match: 'neutral' });
     } else {
-      result.cells.push({ label: g.bestSzn != null ? g.bestSzn.toFixed(1) : '—', match: 'neutral' });
+      result.cells.push({ label: '—', match: 'neutral' });
     }
 
     // Week high — green within 0.5, yellow within 5, red otherwise
@@ -5307,8 +5317,10 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
       } else {
         result.cells.push({ label: g.bestWk.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher' : 'lower' });
       }
+    } else if (g.bestWk != null) {
+      result.cells.push({ label: g.bestWk.toFixed(1), match: 'neutral' });
     } else {
-      result.cells.push({ label: g.bestWk != null ? g.bestWk.toFixed(1) : '—', match: 'neutral' });
+      result.cells.push({ label: '—', match: 'neutral' });
     }
 
     return result;
@@ -5613,6 +5625,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         if (abs < 0.5) cells.push({ label: g.bestSzn.toFixed(1), match: 'correct' });
         else if (abs <= 30) cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓':' ↑'), match: diff > 0 ? 'higher-close':'lower-close' });
         else cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓':' ↑'), match: diff > 0 ? 'higher':'lower' });
+      } else if (g.bestSzn != null) { cells.push({ label: g.bestSzn.toFixed(1), match: 'neutral' });
       } else { cells.push({ label: '—', match: 'neutral' }); }
       // Week high
       if (g.bestWk != null && t.bestWk != null) {
@@ -5620,6 +5633,7 @@ function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { 
         if (abs < 0.5) cells.push({ label: g.bestWk.toFixed(1), match: 'correct' });
         else if (abs <= 5) cells.push({ label: g.bestWk.toFixed(1) + (diff > 0 ? ' ↓':' ↑'), match: diff > 0 ? 'higher-close':'lower-close' });
         else cells.push({ label: g.bestWk.toFixed(1) + (diff > 0 ? ' ↓':' ↑'), match: diff > 0 ? 'higher':'lower' });
+      } else if (g.bestWk != null) { cells.push({ label: g.bestWk.toFixed(1), match: 'neutral' });
       } else { cells.push({ label: '—', match: 'neutral' }); }
       return { name: g.name, cells };
     }

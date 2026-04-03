@@ -2393,6 +2393,9 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <script src="data/all_players.js"></script>
 <script src="data/combine_data.js"></script>
 <script src="data/college_stats.js"></script>
+<script src="data/college_weekly_1.js"></script>
+<script src="data/college_weekly_2.js"></script>
+<script src="data/college_weekly_3.js"></script>
 <script src="data/all_players_weekly_1.js"></script>
 <script src="data/all_players_weekly_2.js"></script>
 <script src="data/all_players_weekly_3.js"></script>
@@ -4012,6 +4015,68 @@ function buildCollegeTable(d, scoringFormat) {
   tr += '</tr>';
   rows += tr;
   return '<div class="career-table-wrap"><table class="career-table"><thead>'+hdr+'</thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function buildCollegeWeeklyTable(d, season, scoringFormat) {
+  if (typeof COLLEGE_WEEKLY === 'undefined' || !COLLEGE_WEEKLY[d.n]) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
+  const weeks = COLLEGE_WEEKLY[d.n][season];
+  if (!weeks || !weeks.length) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
+  const pos = d.s || 'WR';
+  const isQB = pos === 'QB';
+  const isRB = pos === 'RB';
+  const fmt = scoringFormat || 'half';
+  const recMult = fmt === 'ppr' ? 1.0 : fmt === 'std' ? 0 : 0.5;
+  const _cfpts = (w) => {
+    let fp = (w.py||0)/25 + (w.ptd||0)*4 + (w.int||0)*-2 + (w.ry||0)/10 + (w.rtd||0)*6 + (w.rec||0)*recMult + (w.rcy||0)/10 + (w.rctd||0)*6 - (w.fl||0)*2;
+    return Math.round(fp*10)/10;
+  };
+  const withFpts = weeks.map(w => ({...w, fpts: _cfpts(w)}));
+  const bestFpts = Math.max(...withFpts.map(w => w.fpts));
+  let hdr = '<tr><th>WK</th><th>OPP</th><th>FPTS</th>';
+  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>YDS</th><th>TD</th><th>INT</th><th>RuYd</th><th>RuTD</th>';
+  else if (isRB) hdr += '<th>CAR</th><th>RuYd</th><th>RuTD</th><th>REC</th><th>RcYd</th><th>RcTD</th>';
+  else hdr += '<th>REC</th><th>RcYd</th><th>RcTD</th><th>RuYd</th><th>RuTD</th>';
+  hdr += '</tr>';
+  let rows = withFpts.map(w => {
+    const isBest = w.fpts === bestFpts && bestFpts > 0 ? ' class="best-yr"' : '';
+    const fptsColor = (typeof posFptsColor === 'function') ? posFptsColor(w.fpts, pos) : null;
+    let r = '<tr><td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
+    r += '<td style="color:var(--text2)">' + (w.opp||'—') + '</td>';
+    if (fptsColor) r += '<td class="fpts-cell" style="color:'+fptsColor+';font-weight:700">'+w.fpts+'</td>';
+    else r += '<td class="fpts-cell'+isBest+'">'+w.fpts+'</td>';
+    if (isQB) {
+      r += '<td>'+(w.pc||0)+'</td><td>'+(w.pa||0)+'</td><td>'+(w.py||0)+'</td>';
+      r += '<td style="color:var(--green)">'+(w.ptd||0)+'</td><td style="color:var(--red)">'+(w.int||0)+'</td>';
+      r += '<td>'+(w.ry||0)+'</td><td>'+(w.rtd||0)+'</td>';
+    } else if (isRB) {
+      r += '<td>'+(w.ra||0)+'</td><td>'+(w.ry||0)+'</td><td style="color:var(--green)">'+(w.rtd||0)+'</td>';
+      r += '<td>'+(w.rec||0)+'</td><td>'+(w.rcy||0)+'</td><td>'+(w.rctd||0)+'</td>';
+    } else {
+      r += '<td>'+(w.rec||0)+'</td><td>'+(w.rcy||0)+'</td><td style="color:var(--green)">'+(w.rctd||0)+'</td>';
+      r += '<td>'+(w.ry||0)+'</td><td>'+(w.rtd||0)+'</td>';
+    }
+    return r + '</tr>';
+  }).join('');
+  // Totals
+  const tot = {fpts:0,pc:0,pa:0,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rec:0,rcy:0,rctd:0};
+  withFpts.forEach(w => { for (const k in tot) tot[k]+=(w[k]||0); });
+  tot.fpts = Math.round(tot.fpts*10)/10;
+  let tr = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
+  tr += '<td style="color:var(--accent)">TOT</td><td></td><td style="font-weight:700">'+tot.fpts+'</td>';
+  if (isQB) tr += '<td>'+tot.pc+'</td><td>'+tot.pa+'</td><td>'+tot.py+'</td><td style="color:var(--green)">'+tot.ptd+'</td><td style="color:var(--red)">'+tot.int+'</td><td>'+tot.ry+'</td><td>'+tot.rtd+'</td>';
+  else if (isRB) tr += '<td>'+tot.ra+'</td><td>'+tot.ry+'</td><td style="color:var(--green)">'+tot.rtd+'</td><td>'+tot.rec+'</td><td>'+tot.rcy+'</td><td>'+tot.rctd+'</td>';
+  else tr += '<td>'+tot.rec+'</td><td>'+tot.rcy+'</td><td style="color:var(--green)">'+tot.rctd+'</td><td>'+tot.ry+'</td><td>'+tot.rtd+'</td>';
+  rows += tr + '</tr>';
+  return '<div class="career-table-wrap"><table class="career-table"><thead>'+hdr+'</thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function hasCollegeWeekly(d) {
+  return typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[d.n] && Object.keys(COLLEGE_WEEKLY[d.n]).length > 0;
+}
+
+function getCollegeWeeklySeasons(d) {
+  if (!hasCollegeWeekly(d)) return [];
+  return Object.keys(COLLEGE_WEEKLY[d.n]).sort((a,b) => +b - +a);
 }
 
 function fmtHeight(h) {
@@ -6949,6 +7014,12 @@ document.addEventListener('click', function(e) {
       ABBR_TO_FULL[abbr] = modern;
     });
   }
+  // Add nflfastR abbreviations that differ from TEAM_ABBR_MAP
+  ABBR_TO_FULL['LA'] = 'Los Angeles Rams';
+  ABBR_TO_FULL['LAR'] = 'Los Angeles Rams';
+  ABBR_TO_FULL['SD'] = 'Los Angeles Chargers';
+  ABBR_TO_FULL['OAK'] = 'Las Vegas Raiders';
+  ABBR_TO_FULL['STL'] = 'Los Angeles Rams';
 
   // Get best single-week game for a player on a given team from WEEKLY_STATS
   function getBestWeek(player, forTeam) {

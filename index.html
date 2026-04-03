@@ -13379,7 +13379,7 @@ window.fmtHeight = fmtHeight;
   // Top-5 pick = 100, late round / UDFA = very low
   function jmDraftCapital(dr) {
     if (dr == null) return null; // Missing = don't count
-    if (dr === 'U') return 8; // UDFAs occasionally hit but rate is very low
+    if (dr === 'U') return 0; // Undrafted = lowest possible draft capital score
     const pick = typeof dr === 'number' ? dr : parseInt(dr);
     if (isNaN(pick) || pick < 1) return null;
     // Piecewise mapping: pick → score
@@ -13836,6 +13836,18 @@ window.fmtHeight = fmtHeight;
           const ROUND_MID = { 1: 16, 2: 48, 3: 80, 4: 112, 5: 144, 6: 176, 7: 208 };
           dr = ROUND_MID[rd] || (rd * 32 - 16);
         } else if (dPlayer.dr === 'U' || dPlayer.dr === 'u' || dPlayer.dr === 0) {
+          dr = 'U';
+        }
+      }
+
+      // Infer undrafted: if no draft data found from any source, but the player
+      // has an NFL career (in D array with career stats or a team), they made
+      // the league as a UDFA. For 2026 prospects with no career yet, dr stays
+      // null (truly unknown — they haven't been drafted yet).
+      if (dr == null && dPlayer) {
+        const hasNFLCareer = (dPlayer.career && dPlayer.career.length > 0) || (dPlayer.t && dPlayer.t !== 'TBD');
+        const is2026 = draftYr === 2026;
+        if (hasNFLCareer && !is2026) {
           dr = 'U';
         }
       }

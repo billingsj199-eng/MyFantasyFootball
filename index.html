@@ -1780,6 +1780,18 @@ PREMIUM ACTIVE
 <div class="lb-empty" id="lbFantasygameWeekEmpty" style="display:none">No scores yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">College Fantasy — Season</div>
+<div class="lb-list" id="lbCollegeSeasonList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbCollegeSeasonLoading">Loading...</div>
+<div class="lb-empty" id="lbCollegeSeasonEmpty" style="display:none">No scores yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">College Fantasy — Week</div>
+<div class="lb-list" id="lbCollegeWeekList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbCollegeWeekLoading">Loading...</div>
+<div class="lb-empty" id="lbCollegeWeekEmpty" style="display:none">No scores yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Pull Streak</div>
 <div class="lb-list" id="lbDailyList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbDailyLoading">Loading...</div>
@@ -7211,8 +7223,19 @@ document.addEventListener('click', function(e) {
   const CONF_COLORS = {'SEC':'#ffd700','Big Ten':'#0088ce','ACC':'#013ca6','Big 12':'#ef1234','Pac-12':'#004b8d','Conference USA':'#002649','American Athletic':'#cf0032','Mountain West':'#06294a','Mid-American':'#00573e','Sun Belt':'#ffbc00'};
   const CONF_ALIASES = {'Pac-10':'Pac-12'};
 
+  const CONF_LOGO_IDS = {
+    'SEC':'8','Big Ten':'5','ACC':'1','Big 12':'4','Pac-12':'9',
+    'Conference USA':'12','American Athletic':'151','Mountain West':'17',
+    'Mid-American':'15','Sun Belt':'37'
+  };
+  function confLogoUrl(conf) {
+    const id = CONF_LOGO_IDS[conf];
+    return id ? 'https://a.espncdn.com/i/teamlogos/conferences/500/' + id + '.png' : '';
+  }
   function confLogoSvg(conf, size) {
     const s = size || 80;
+    const url = confLogoUrl(conf);
+    if (url) return '<img src="' + url + '" alt="' + (CONF_DISPLAY[conf]||conf) + '" style="width:' + s + 'px;height:' + s + 'px;object-fit:contain" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'"><div style="display:none;width:' + s + 'px;height:' + s + 'px;border-radius:50%;background:' + (CONF_COLORS[conf]||'#f59e0b') + ';align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:' + Math.max(s/5,12) + 'px;color:#fff;letter-spacing:1px;font-weight:700;text-align:center;line-height:1.1;padding:4px">' + (CONF_DISPLAY[conf]||conf) + '</div>';
     const color = CONF_COLORS[conf] || '#f59e0b';
     const label = CONF_DISPLAY[conf] || conf;
     return '<div style="width:'+s+'px;height:'+s+'px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:'+Math.max(s/5,12)+'px;color:#fff;letter-spacing:1px;font-weight:700;text-align:center;line-height:1.1;padding:4px">'+label+'</div>';
@@ -7984,7 +8007,14 @@ document.addEventListener('click', function(e) {
         goSubEl.style.color = 'var(--text2)';
       }
     }
-    if (isWeek) {
+    if (fgLeague === 'college') {
+      if (isWeek) {
+        if (typeof window._lbUpdateCollegeWeek === 'function') window._lbUpdateCollegeWeek(total);
+      } else {
+        if (typeof window._lbUpdateCollegeSeason === 'function') window._lbUpdateCollegeSeason(total);
+      }
+      if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
+    } else if (isWeek) {
       if (typeof window._lbUpdateFantasyGameWeek === 'function') window._lbUpdateFantasyGameWeek(total);
       if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
     } else {
@@ -11266,6 +11296,38 @@ window.fmtHeight = fmtHeight;
     }).catch(e => console.warn('[LB] fg week read error:', e));
   };
 
+  window._lbUpdateCollegeSeason = function(score) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    db.collection('leaderboard').doc(user.uid).get().then(doc => {
+      const existing = doc.exists && doc.data().collegeSeason ? doc.data().collegeSeason.highScore : 0;
+      if (score > existing) {
+        db.collection('leaderboard').doc(user.uid).set({
+          name: name, email: (user.email||''), ...getLbBadge(),
+          collegeSeason: { highScore: score, date: todayKey() },
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(e => console.warn('[LB] college season save error:', e));
+      }
+    }).catch(e => console.warn('[LB] college season read error:', e));
+  };
+
+  window._lbUpdateCollegeWeek = function(score) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    db.collection('leaderboard').doc(user.uid).get().then(doc => {
+      const existing = doc.exists && doc.data().collegeWeek ? doc.data().collegeWeek.highScore : 0;
+      if (score > existing) {
+        db.collection('leaderboard').doc(user.uid).set({
+          name: name, email: (user.email||''), ...getLbBadge(),
+          collegeWeek: { highScore: score, date: todayKey() },
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(e => console.warn('[LB] college week save error:', e));
+      }
+    }).catch(e => console.warn('[LB] college week read error:', e));
+  };
+
   // Guess Who — Current daily
   window._lbUpdateGwDaily = function(won, streak) {
     const user = getUser(); const db = getDb();
@@ -11412,6 +11474,30 @@ window.fmtHeight = fmtHeight;
       lbFgWeekLoading.style.display = 'none';
       if (fgWeekPlayers.length === 0) { lbFgWeekEmpty.style.display = 'none'; lbFgWeekList.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:8px 0">No scores yet</div>'; }
       else { lbFgWeekEmpty.style.display = 'none'; lbFgWeekList.innerHTML = renderTop3(fgWeekPlayers, uid, u => u.fantasygameWeek.highScore.toFixed(1) + ' PTS'); }
+
+      // --- COLLEGE FANTASY SEASON ---
+      const colSeasonPlayers = all.filter(u => u.collegeSeason && u.collegeSeason.highScore > 0 && isWithinTimeFilter(u.collegeSeason.date, tf))
+        .sort((a, b) => b.collegeSeason.highScore - a.collegeSeason.highScore);
+      const lbColSeasonList = document.getElementById('lbCollegeSeasonList');
+      const lbColSeasonLoading = document.getElementById('lbCollegeSeasonLoading');
+      const lbColSeasonEmpty = document.getElementById('lbCollegeSeasonEmpty');
+      if (lbColSeasonLoading) lbColSeasonLoading.style.display = 'none';
+      if (lbColSeasonList) {
+        if (colSeasonPlayers.length === 0) { if (lbColSeasonEmpty) lbColSeasonEmpty.style.display = 'none'; lbColSeasonList.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:8px 0">No scores yet</div>'; }
+        else { if (lbColSeasonEmpty) lbColSeasonEmpty.style.display = 'none'; lbColSeasonList.innerHTML = renderTop3(colSeasonPlayers, uid, u => u.collegeSeason.highScore.toFixed(1) + ' PTS'); }
+      }
+
+      // --- COLLEGE FANTASY WEEK ---
+      const colWeekPlayers = all.filter(u => u.collegeWeek && u.collegeWeek.highScore > 0 && isWithinTimeFilter(u.collegeWeek.date, tf))
+        .sort((a, b) => b.collegeWeek.highScore - a.collegeWeek.highScore);
+      const lbColWeekList = document.getElementById('lbCollegeWeekList');
+      const lbColWeekLoading = document.getElementById('lbCollegeWeekLoading');
+      const lbColWeekEmpty = document.getElementById('lbCollegeWeekEmpty');
+      if (lbColWeekLoading) lbColWeekLoading.style.display = 'none';
+      if (lbColWeekList) {
+        if (colWeekPlayers.length === 0) { if (lbColWeekEmpty) lbColWeekEmpty.style.display = 'none'; lbColWeekList.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:8px 0">No scores yet</div>'; }
+        else { if (lbColWeekEmpty) lbColWeekEmpty.style.display = 'none'; lbColWeekList.innerHTML = renderTop3(colWeekPlayers, uid, u => u.collegeWeek.highScore.toFixed(1) + ' PTS'); }
+      }
 
       // --- DAILY PULL STREAK ---
       const dailyPlayers2 = all.filter(u => u.daily && (u.daily.bestStreak > 0 || u.daily.streak > 0) && isWithinTimeFilter(u.daily.date, tf))

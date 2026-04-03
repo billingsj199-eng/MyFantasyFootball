@@ -2372,6 +2372,7 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <script src="data/weekly_stats_active.js"></script>
 <script src="data/weekly_stats_retired.js"></script>
 <script src="data/all_players.js"></script>
+<script src="data/all_players_weekly.js"></script>
 <script>const WEEKLY_STATS = Object.assign({}, WEEKLY_STATS_RETIRED, WEEKLY_STATS_ACTIVE);</script>
 <script>
 // Global auth state flag — used by canEdit() before Firebase auth module loads
@@ -3867,7 +3868,7 @@ function buildCareerTable(d, scoringFormat) {
   let rows = filled.map(y => {
     const isGap = y._gap;
     const isBest = !isGap && y.ppg === bestPPG ? ' class="best-yr"' : '';
-    const tm = isGap ? getCareerTeamAbbr(d.n, y.yr, curAbbr) : getCareerTeamAbbr(d.n, y.yr, curAbbr);
+    const tm = isGap ? getCareerTeamAbbr(d.n, y.yr, curAbbr) : (y.tm || getCareerTeamAbbr(d.n, y.yr, curAbbr));
     const dimStyle = isGap ? ' style="color:var(--text2);opacity:.45"' : '';
     let row = '<tr' + dimStyle + '>';
     row += '<td' + isBest + '>' + y.yr + '</td>';
@@ -7285,33 +7286,63 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   const _apdb = {};
   ALL_PLAYERS_DB.forEach(p => { _apdb[p.name] = p; });
 
-  // 1) Fill in career stats for existing D entries that don't have them
+  // 1) Fill in career stats + birth year for existing D entries
   D.forEach(d => {
-    if ((!d.career || !d.career.length) && _apdb[d.n]) {
-      d.career = _apdb[d.n].career;
+    const ap = _apdb[d.n];
+    if (!ap) return;
+    if (!d.career || !d.career.length) d.career = ap.career;
+    if (d.birthYear == null && ap.birthYear != null) {
+      d.birthYear = typeof ap.birthYear === 'string' ? parseInt(ap.birthYear) : ap.birthYear;
+      if (d.age == null && d.birthYear) d.age = 2026 - d.birthYear;
     }
   });
 
-  // 2) Add players from ALL_PLAYERS_DB that aren't in D yet (retired players not in EP_RETIRED)
+  // 2) Merge ALL_PLAYERS_TEAMS into PLAYER_TEAM_HISTORY
+  if (typeof ALL_PLAYERS_TEAMS !== 'undefined' && typeof PLAYER_TEAM_HISTORY !== 'undefined') {
+    for (const [name, hist] of Object.entries(ALL_PLAYERS_TEAMS)) {
+      if (!PLAYER_TEAM_HISTORY[name]) PLAYER_TEAM_HISTORY[name] = hist;
+    }
+  }
+
+  // 3) Merge ALL_PLAYERS_WEEKLY into WEEKLY_STATS
+  if (typeof ALL_PLAYERS_WEEKLY !== 'undefined' && typeof WEEKLY_STATS !== 'undefined') {
+    for (const [name, data] of Object.entries(ALL_PLAYERS_WEEKLY)) {
+      if (!WEEKLY_STATS[name]) WEEKLY_STATS[name] = data;
+      else {
+        // Merge missing seasons
+        for (const [yr, weeks] of Object.entries(data.seasons)) {
+          if (!WEEKLY_STATS[name].seasons[yr]) WEEKLY_STATS[name].seasons[yr] = weeks;
+        }
+      }
+    }
+  }
+
+  // 4) Add players from ALL_PLAYERS_DB that aren't in D yet
   const _dNames = new Set(D.map(d => d.n));
   let _apAdded = 0;
   ALL_PLAYERS_DB.forEach(p => {
     if (_dNames.has(p.name)) return;
     if (p.pos === 'K' || p.pos === 'DST') return;
     // Only add players who are actually retired (last season before 2024)
-    // Players with last=2024 are likely still active — nflfastR data ends at 2024
     if (p.last >= 2024) return;
     const seasons = p.last - p.debut + 1;
     const imgUrl = (window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.name])
       ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + window.RETIRED_ESPN_IDS[p.name] + '.png&w=350&h=254'
       : null;
+    // Get last team from career data or team history
+    const lastTeam = (p.career && p.career.length && p.career[p.career.length-1].tm)
+      ? p.career[p.career.length-1].tm : 'Retired';
+    // Get birth year and calculate age
+    const by = p.birthYear ? (typeof p.birthYear === 'string' ? parseInt(p.birthYear) : p.birthYear) : null;
+    const age = by ? 2026 - by : null;
     D.push({
-      n: p.name, a: 999, p: 0, s: p.pos, r: p.pos + '\u2014', t: 'Retired',
-      p25: null, p24: null, p23: null, age: null, cyr: null, out: null,
+      n: p.name, a: 999, p: 0, s: p.pos, r: p.pos + '\u2014', t: lastTeam,
+      p25: null, p24: null, p23: null, age: age, cyr: null, out: null,
       sal: null, dr: null, exp: seasons, role: null, inj: null, s25: null,
       career: p.career || [], da: 999, sa: 999, idx: D.length,
       myRank: D.length + 1, round: 99, notes: '',
-      _retired: true, _debut: p.debut, _last: p.last, _slImg: imgUrl
+      _retired: true, _debut: p.debut, _last: p.last, _slImg: imgUrl,
+      birthYear: by
     });
     _apAdded++;
   });

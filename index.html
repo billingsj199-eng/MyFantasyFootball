@@ -3956,7 +3956,7 @@ function openPlayerCard(d) {
       </div>
     </div>
     <div class="card-body">
-      ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] && (COMBINE_DATA[d.n].forty || COMBINE_DATA[d.n].vert || COMBINE_DATA[d.n].broad || COMBINE_DATA[d.n].bench || COMBINE_DATA[d.n].ras) ? `<div class="card-view-toggle" id="cardViewToggle">
+      ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         <button class="card-view-btn active" data-cardview="fantasy">FANTASY</button>
         <button class="card-view-btn" data-cardview="prospect">PROSPECT</button>
       </div>` : ''}
@@ -4192,10 +4192,35 @@ function openPlayerCard(d) {
           <div class="card-stat"><span class="card-stat-label">Height</span><span class="card-stat-value">${cb.ht || fmtHeight(d._height)}</span></div>
           <div class="card-stat"><span class="card-stat-label">Weight</span><span class="card-stat-value">${cb.wt ? cb.wt + ' lbs' : (d._weight ? d._weight + ' lbs' : '—')}</span></div>
           <div class="card-stat"><span class="card-stat-label">Draft Pick</span><span class="card-stat-value">${cb.draft ? '#' + cb.draft + ' Overall' : (d.dr ? '#' + d.dr + ' Overall' : 'Undrafted')}</span></div>
+          <div class="card-stat"><span class="card-stat-label">Draft Team</span><span class="card-stat-value">${cb.dt || '—'}</span></div>
+        </div>
+      </div>
+      ${cb.pb || cb.ap || cb.hof ? `<div class="card-section">
+        <div class="card-section-title">Career Accolades</div>
+        <div class="card-rank-row" style="grid-template-columns:${cb.hof ? '1fr 1fr 1fr' : '1fr 1fr'}">
+          ${cb.pb ? `<div class="card-rank-box"><div class="lbl">Pro Bowls</div><div class="num accent">${cb.pb}</div></div>` : ''}
+          ${cb.ap ? `<div class="card-rank-box"><div class="lbl">All-Pro</div><div class="num green">${cb.ap}</div></div>` : ''}
+          ${cb.hof ? `<div class="card-rank-box"><div class="lbl">Hall of Fame</div><div class="num" style="color:var(--green)">HOF</div></div>` : ''}
+        </div>
+      </div>` : ''}`;
+      })() : `<div class="card-section" style="text-align:center;padding:12px">
+        <div class="card-section-title">RAS</div>
+        <div style="color:var(--text2);font-size:.7rem;padding:8px 0">No RAS available</div>
+      </div>
+      <div class="card-section" style="text-align:center;padding:12px">
+        <div class="card-section-title">Athletic Profile</div>
+        <div style="color:var(--text2);font-size:.7rem;padding:8px 0">No combine data available</div>
+      </div>
+      <div class="card-section">
+        <div class="card-section-title">Prospect Info</div>
+        <div class="card-grid">
+          <div class="card-stat"><span class="card-stat-label">Height</span><span class="card-stat-value">${fmtHeight(d._height)}</span></div>
+          <div class="card-stat"><span class="card-stat-label">Weight</span><span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span></div>
+          <div class="card-stat"><span class="card-stat-label">College</span><span class="card-stat-value">${d._college || '—'}</span></div>
+          <div class="card-stat"><span class="card-stat-label">Draft Pick</span><span class="card-stat-value">${d.dr ? '#' + d.dr + ' Overall' : '—'}</span></div>
           <div class="card-stat"><span class="card-stat-label">Position</span><span class="card-stat-value">${d.s}</span></div>
         </div>
-      </div>`;
-      })() : '<div class="card-section"><div style="text-align:center;padding:16px;color:var(--text2);font-size:.72rem">No combine data available</div></div>'}
+      </div>`}
       </div>
     </div>
   `;

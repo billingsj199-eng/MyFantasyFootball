@@ -1288,6 +1288,13 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .pm-ras.ras-good{color:#3b82f6}
 .pm-ras.ras-avg{color:#eab308}
 .pm-ras.ras-below{color:var(--text2)}
+.pm-jm{font-family:'Bebas Neue',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:.5px;text-align:center;min-width:42px}
+.pm-jm-badge{display:inline-block;padding:2px 8px;border-radius:5px;min-width:32px;text-align:center}
+.pm-jm-elite{background:rgba(34,197,94,.18);color:#22c55e}
+.pm-jm-great{background:rgba(59,130,246,.15);color:#60a5fa}
+.pm-jm-good{background:rgba(234,179,8,.12);color:#eab308}
+.pm-jm-avg{background:rgba(168,162,158,.1);color:var(--text2)}
+.pm-jm-low{background:rgba(239,68,68,.08);color:#ef4444;opacity:.7}
 .pm-empty{text-align:center;padding:3rem 1rem;color:var(--text2);font-size:.9rem}
 .pm-count{font-size:.72rem;color:var(--text2);text-align:center;margin-top:8px}
 .pm-fpts-good{color:#22c55e;font-weight:600}
@@ -2257,7 +2264,7 @@ CLEAR
 <div class="pm-wrapper">
 <div class="pm-header">
 <div class="pm-title">Prospect Model</div>
-<div class="pm-subtitle">College prospect data sorted by position — draft age, school, conference, RAS &amp; production</div>
+<div class="pm-subtitle">JM Score (0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS &amp; draft capital</div>
 </div>
 <div class="pm-controls">
 <div class="pm-pos-tabs" id="pmPosTabs">
@@ -13166,7 +13173,7 @@ window.fmtHeight = fmtHeight;
   let pmPos = 'QB';
   let pmTotals = false; // false = per game, true = totals
   let pmScoring = 'half';
-  let pmSort = { col: 'bestPpg', dir: 'desc' };
+  let pmSort = { col: 'jm', dir: 'desc' };
   let pmSearchVal = '';
   let pmBuiltData = [];
 
@@ -13245,6 +13252,208 @@ window.fmtHeight = fmtHeight;
   function cfpts(s) {
     const rm = getRecMult();
     return Math.round(((s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*rm + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2) * 10) / 10;
+  }
+
+  // === JM SCORE MODEL ===
+  // Predicts NFL fantasy success (0-100) based on prospect profile.
+  // Built by studying common traits of elite NFL fantasy producers at each position.
+  //
+  // COMPONENT WEIGHTS BY POSITION:
+  //   Component      QB    RB    WR    TE    Rationale
+  //   ─────────────────────────────────────────────────
+  //   Draft Age      15%   18%   15%   10%   RBs degrade fastest; TEs bloom later
+  //   Breakout Age   12%   15%   18%   15%   Early WR breakouts strongly predictive
+  //   Production     30%   28%   28%   28%   Best-season PPG is king at every spot
+  //   Conference     10%    8%   10%   12%   TE scarcity means more non-P5 hits
+  //   RAS             8%   13%   12%   15%   Athleticism matters more for TEs/RBs
+  //   Draft Capital  25%   18%   17%   20%   NFL eval strongest signal for QBs
+  //
+  // Each component outputs a 0-100 sub-score, then the weighted sum is the JM Score.
+
+  const JM_WEIGHTS = {
+    QB:  { age: 0.15, breakout: 0.12, prod: 0.30, conf: 0.10, ras: 0.08, dc: 0.25 },
+    RB:  { age: 0.18, breakout: 0.15, prod: 0.28, conf: 0.08, ras: 0.13, dc: 0.18 },
+    WR:  { age: 0.15, breakout: 0.18, prod: 0.28, conf: 0.10, ras: 0.12, dc: 0.17 },
+    TE:  { age: 0.10, breakout: 0.15, prod: 0.28, conf: 0.12, ras: 0.15, dc: 0.20 }
+  };
+
+  // Conference tiers based on historical NFL production rates
+  const CONF_TIERS = {
+    'SEC': 100, 'Big Ten': 90, 'Big 12': 82, 'ACC': 80, 'Pac-12': 78,
+    'Big East': 70, 'AAC': 55, 'Mountain West': 50, 'Sun Belt': 42,
+    'C-USA': 40, 'MAC': 38, 'Independent': 45, 'Ind': 45,
+    'WAC': 35, 'MVC': 30, 'MVFC': 30, 'Big Sky': 28,
+    'CAA': 28, 'Southland': 25, 'OVC': 22, 'SWAC': 20,
+    'MEAC': 20, 'Pioneer': 15, 'NEC': 15, 'Patriot': 15,
+    'SoCon': 25, 'Big South': 22, 'A-Sun': 20, 'Ivy': 18
+  };
+
+  // Sub-score: Draft Age → 0-100
+  // Optimal ranges by position (based on elite NFL producers):
+  //   QB: 21.5-23.0 (Mahomes 21.7, Allen 22.0, Burrow 23.4, Herbert 22.0)
+  //   RB: 20.5-21.5 (Henry 22.3, McCaffrey 20.9, Barkley 21.2, Chubb 22.3)
+  //   WR: 20.5-22.0 (Jefferson 21.0, Chase 21.1, Lamb 21.2, Hill 22.3)
+  //   TE: 21.0-23.5 (Kelce 24.7, Andrews 23.0, Kittle 23.1, Pitts 20.8)
+  function jmAge(age, pos) {
+    if (age == null) return null;
+    // Position-specific ideal center and decay rate
+    const params = {
+      QB:  { center: 22.0, sigma: 1.8, skew: 0.3 },  // slight tolerance for older QBs
+      RB:  { center: 21.0, sigma: 1.2, skew: -0.2 },  // younger is significantly better
+      WR:  { center: 21.2, sigma: 1.5, skew: -0.1 },  // slight young bias
+      TE:  { center: 22.5, sigma: 2.0, skew: 0.5 }    // TEs can enter older
+    };
+    const p = params[pos] || params.WR;
+    const diff = age - p.center;
+    const adjDiff = diff > 0 ? diff * (1 - p.skew) : diff * (1 + p.skew);
+    const raw = Math.exp(-0.5 * (adjDiff / p.sigma) ** 2) * 100;
+    return Math.max(0, Math.min(100, Math.round(raw)));
+  }
+
+  // Sub-score: Breakout Age → 0-100
+  // Earlier breakout = higher score. No breakout = penalty but not zero.
+  function jmBreakout(breakoutAge, age, pos) {
+    if (breakoutAge == null) {
+      // No breakout: give a base score — they might still have decent production
+      // but lack of a true breakout season is a yellow flag
+      return 25;
+    }
+    // Ideal breakout ages: the earlier the better
+    // Elite: ≤19.5 for WR/RB, ≤20.0 for QB, ≤20.5 for TE
+    // Good: ≤20.5 for WR/RB, ≤21.5 for QB, ≤21.5 for TE
+    const params = {
+      QB:  { elite: 20.0, good: 21.5, late: 23.5 },
+      RB:  { elite: 19.5, good: 20.5, late: 22.0 },
+      WR:  { elite: 19.5, good: 20.5, late: 22.5 },
+      TE:  { elite: 20.0, good: 21.5, late: 23.0 }
+    };
+    const p = params[pos] || params.WR;
+    if (breakoutAge <= p.elite) return 100;
+    if (breakoutAge <= p.good) return 100 - ((breakoutAge - p.elite) / (p.good - p.elite)) * 25;
+    if (breakoutAge <= p.late) return 75 - ((breakoutAge - p.good) / (p.late - p.good)) * 40;
+    // Very late breakout — diminishing returns
+    return Math.max(10, 35 - (breakoutAge - p.late) * 15);
+  }
+
+  // Sub-score: College Production (Best PPG) → 0-100
+  // Based on position-specific thresholds from successful NFL players' college stats
+  function jmProduction(bestPpg, pos) {
+    if (bestPpg == null || bestPpg === 0) return 0;
+    // Thresholds: [elite_ppg, good_ppg, avg_ppg]
+    // Calibrated to historical best college PPG of successful NFL fantasy players
+    const params = {
+      QB:  { elite: 28, good: 22, avg: 16, floor: 8 },   // Burrow ~32, Mahomes ~28, Herbert ~25
+      RB:  { elite: 22, good: 16, avg: 11, floor: 6 },   // Barkley ~24, Henry ~18, McCaffrey ~25
+      WR:  { elite: 18, good: 13, avg: 9,  floor: 5 },   // Chase ~22, Jefferson ~15, Lamb ~14
+      TE:  { elite: 14, good: 10, avg: 7,  floor: 3 }    // Pitts ~16, Kelce ~8, Andrews ~9
+    };
+    const p = params[pos] || params.WR;
+    if (bestPpg >= p.elite) return Math.min(100, 85 + (bestPpg - p.elite) / (p.elite * 0.3) * 15);
+    if (bestPpg >= p.good) return 65 + (bestPpg - p.good) / (p.elite - p.good) * 20;
+    if (bestPpg >= p.avg) return 40 + (bestPpg - p.avg) / (p.good - p.avg) * 25;
+    if (bestPpg >= p.floor) return 10 + (bestPpg - p.floor) / (p.avg - p.floor) * 30;
+    return Math.max(0, bestPpg / p.floor * 10);
+  }
+
+  // Sub-score: Conference → 0-100
+  function jmConf(conf) {
+    if (!conf || conf === '—') return 30; // Unknown conference
+    const aliased = CONF_ALIASES[conf] || conf;
+    return CONF_TIERS[aliased] || 30;
+  }
+
+  // Sub-score: RAS → 0-100
+  // RAS is already 0-10 scale. Map it with position-specific importance.
+  function jmRas(ras, pos) {
+    if (ras == null) return null; // Missing = don't count
+    // Simple sigmoid-style mapping: 0-10 → 0-100
+    // Below 3 = very bad, 5 = average, 7 = good, 9+ = elite
+    if (ras >= 9.5) return 100;
+    if (ras >= 8.0) return 75 + (ras - 8.0) / 1.5 * 25;
+    if (ras >= 6.0) return 50 + (ras - 6.0) / 2.0 * 25;
+    if (ras >= 4.0) return 25 + (ras - 4.0) / 2.0 * 25;
+    return Math.max(0, ras / 4.0 * 25);
+  }
+
+  // Sub-score: Draft Capital → 0-100
+  // Top-5 pick = 100, late round / UDFA = very low
+  function jmDraftCapital(dr) {
+    if (dr == null) return null; // Missing = don't count
+    if (dr === 'U') return 8; // UDFAs occasionally hit but rate is very low
+    const pick = typeof dr === 'number' ? dr : parseInt(dr);
+    if (isNaN(pick) || pick < 1) return null;
+    // Piecewise mapping: pick → score
+    if (pick <= 1) return 100;
+    if (pick <= 5) return 98 - (pick - 1) * 2;          // 1-5: 100-90
+    if (pick <= 10) return 90 - (pick - 5) * 2;          // 5-10: 90-80
+    if (pick <= 20) return 80 - (pick - 10) * 1.5;       // 10-20: 80-65
+    if (pick <= 32) return 65 - (pick - 20) * 1.25;      // 20-32: 65-50
+    if (pick <= 64) return 50 - (pick - 32) * 0.6;       // 33-64: 50-31
+    if (pick <= 100) return 31 - (pick - 64) * 0.4;      // 65-100: 31-17
+    if (pick <= 150) return 17 - (pick - 100) * 0.2;     // 101-150: 17-7
+    if (pick <= 224) return 7 - (pick - 150) * 0.05;     // 151-224: 7-3
+    return Math.max(1, 3 - (pick - 224) * 0.03);         // 225+: 3-1
+  }
+
+  // Calculate final JM Score
+  function calcJM(p) {
+    const w = JM_WEIGHTS[p.pos];
+    if (!w) return null;
+
+    const ageScore = jmAge(p.age, p.pos);
+    const breakoutScore = jmBreakout(p.breakoutAge, p.age, p.pos);
+    const prodScore = jmProduction(p.bestPpg, p.pos);
+    const confScore = jmConf(p.lastConf);
+    const rasScore = jmRas(p.ras, p.pos);
+    const dcScore = jmDraftCapital(p.dr);
+
+    // Handle missing components: redistribute weight proportionally
+    let totalWeight = 0;
+    let weightedSum = 0;
+
+    const components = [
+      { score: ageScore, weight: w.age },
+      { score: breakoutScore, weight: w.breakout },
+      { score: prodScore, weight: w.prod },
+      { score: confScore, weight: w.conf },
+      { score: rasScore, weight: w.ras },
+      { score: dcScore, weight: w.dc }
+    ];
+
+    components.forEach(c => {
+      if (c.score != null) {
+        totalWeight += c.weight;
+        weightedSum += c.score * c.weight;
+      }
+    });
+
+    if (totalWeight === 0) return null;
+
+    // Normalize to account for missing components
+    const raw = weightedSum / totalWeight;
+
+    // Games played bonus/penalty: playing 40+ college games = slight bonus (durability),
+    // fewer than 20 games = slight penalty (small sample)
+    let gpAdj = 0;
+    if (p.gp != null) {
+      if (p.gp >= 50) gpAdj = 2;
+      else if (p.gp >= 40) gpAdj = 1;
+      else if (p.gp < 15) gpAdj = -3;
+      else if (p.gp < 20) gpAdj = -1.5;
+    }
+
+    const final = Math.max(0, Math.min(100, Math.round((raw + gpAdj) * 10) / 10));
+    return final;
+  }
+
+  // JM Score display class
+  function jmClass(v) {
+    if (v == null) return 'pm-jm-avg';
+    if (v >= 80) return 'pm-jm-elite';
+    if (v >= 65) return 'pm-jm-great';
+    if (v >= 50) return 'pm-jm-good';
+    if (v >= 35) return 'pm-jm-avg';
+    return 'pm-jm-low';
   }
 
   // Calculate age at draft to one decimal — ONLY for exact birthdays
@@ -13507,14 +13716,21 @@ window.fmtHeight = fmtHeight;
         }
       }
 
-      results.push({
+      const prospectRecord = {
         name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,
         dr, breakoutAge,
         bestPpg, bestFpts, totFpts, fptsPerGame,
         totPy, totRy, totRcy, totRec, totalTd,
         pasYpg, rushYpg, recYpg, recPg, tdPg,
         totPtd, totRtd, totRctd, totInt
-      });
+      };
+      // For 2026 prospects, use Firestore draft capital if available
+      if (draftYr === 2026 && _dcCache[name]) {
+        const dcVal = _dcCache[name];
+        prospectRecord.dr = dcVal === 'U' ? 'U' : (parseInt(dcVal) || prospectRecord.dr);
+      }
+      prospectRecord.jm = calcJM(prospectRecord);
+      results.push(prospectRecord);
     });
 
     return results;
@@ -13540,6 +13756,7 @@ window.fmtHeight = fmtHeight;
   function getColumns(pos, isTotals) {
     const cols = [
       { key: 'name', label: 'PLAYER', sortable: true },
+      { key: 'jm', label: 'JM', sortable: true },
       { key: 'dc', label: 'DC', sortable: true },
       { key: 'age', label: 'DRAFT AGE', sortable: true },
       { key: 'breakoutAge', label: 'BREAKOUT', sortable: true },
@@ -13647,6 +13864,13 @@ window.fmtHeight = fmtHeight;
         switch (c.key) {
           case 'name':
             rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span></td>`;
+            break;
+          case 'jm':
+            if (p.jm != null) {
+              rows += `<td class="pm-jm"><span class="pm-jm-badge ${jmClass(p.jm)}">${p.jm.toFixed(1)}</span></td>`;
+            } else {
+              rows += `<td class="pm-jm" style="color:var(--text2);opacity:.4">—</td>`;
+            }
             break;
           case 'dc': {
             const is2026 = p.draftYr === 2026;
@@ -13812,8 +14036,8 @@ window.fmtHeight = fmtHeight;
     this.querySelectorAll('.pm-pos-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     pmPos = btn.dataset.pmpos;
-    // Reset sort to the active stat column
-    pmSort.col = pmTotals ? 'bestFpts' : 'bestPpg';
+    // Reset sort to JM score
+    pmSort.col = 'jm';
     pmSort.dir = 'desc';
     renderTable();
   });

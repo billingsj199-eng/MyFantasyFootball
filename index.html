@@ -2420,7 +2420,7 @@ function validateImportData(obj) {
   let cache = {};
   try { cache = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '{}'); } catch(e) {}
 
-  const playersToFix = D.filter(p => p._slImg && p._slImg.includes('espncdn.com') && p.n && !p.n.includes('D/ST'));
+  const playersToFix = D.filter(p => p._slImg && p._slImg.includes('espncdn.com') && p.n && !p.n.includes('D/ST') && !(p._retired && window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.n]));
 
   // Apply cached fixes immediately
   let cachedCount = 0;
@@ -2441,14 +2441,14 @@ function validateImportData(obj) {
   const FALLBACK_IDS = {
     "James Cook":"4379399","Luther Burden":"4685278","Harold Fannin":"5083076",
     "Kyle Pitts":"4360248","Chris Godwin":"3116165","Jauan Jennings":"3886598",
-    "Stefon Diggs":"2976212","Aaron Jones":"3042519","Chris Rodriguez":"4379403",
+    "Stefon Diggs":"2976499","Aaron Jones":"3042519","Chris Rodriguez":"4379403",
     "Deebo Samuel":"3126486","David Njoku":"3043275","Michael Penix":"4432580",
     "Aaron Rodgers":"8439","Najee Harris":"4372019","Joe Mixon":"3116385",
     "Kirk Cousins":"14880","Anthony Richardson":"4432616","Kareem Hunt":"3122840",
-    "Darren Waller":"3051389","DeAndre Hopkins":"2543498","Zach Ertz":"2517018",
-    "JuJu Smith-Schuster":"3121422",
-    "Keenan Allen":"15818","DK Metcalf":"4047650","Cooper Kupp":"2977187",
-    "Jaylen Waddle":"4372016","Mike Evans":"2976316","Davante Adams":"2543495",
+    "Darren Waller":"3045144","DeAndre Hopkins":"16502","Zach Ertz":"15835",
+    "JuJu Smith-Schuster":"3116164",
+    "Keenan Allen":"15818","DK Metcalf":"4047650","Cooper Kupp":"3046779",
+    "Jaylen Waddle":"4372016","Mike Evans":"2508061","Davante Adams":"2543495",
     "George Pickens":"4432577","DJ Moore":"3116406","Darnell Mooney":"4360438",
     "Romeo Doubs":"4569618","Michael Pittman Jr.":"4241389","Jakobi Meyers":"3929924",
     "Rashid Shaheed":"4567298","Adonai Mitchell":"4601460","Isaiah Likely":"4567048",
@@ -2461,14 +2461,14 @@ function validateImportData(obj) {
     "Kenneth Gainwell":"4360310","J.K. Dobbins":"4242335","Tyler Allgeier":"4371985",
     "Javonte Williams":"4361579","David Montgomery":"3916148","Cam Skattebo":"4685038",
     "Tyreek Hill":"3116406","Derrick Henry":"3043078","Saquon Barkley":"3929630",
-    "Josh Jacobs":"4241457","Travis Kelce":"15847","Mark Andrews":"3051889",
+    "Josh Jacobs":"4241457","Travis Kelce":"15847","Mark Andrews":"3116365",
     "George Kittle":"3040151","Patrick Mahomes":"3139477","Lamar Jackson":"3916387",
     "Josh Allen":"3918298","Jalen Hurts":"4040715","CeeDee Lamb":"4241389",
     "Justin Jefferson":"4262921","Ja'Marr Chase":"4362628","Amon-Ra St. Brown":"4360939",
     "Bijan Robinson":"4426348","Breece Hall":"4430737","Jonathan Taylor":"4242335",
-    "Nick Chubb":"3128721","Alvin Kamara":"3054850","Austin Ekeler":"3068267",
+    "Nick Chubb":"3128720","Alvin Kamara":"3054212","Austin Ekeler":"3068267",
     "Christian McCaffrey":"3117251","Dalvin Cook":"3045147","Leonard Fournette":"3126486",
-    "Todd Gurley":"2977644","Odell Beckham Jr.":"2976316","Calvin Ridley":"3128429",
+    "Todd Gurley":"2977644","Odell Beckham Jr.":"16733","Calvin Ridley":"3128429",
     "Russell Wilson":"14881","Deshaun Watson":"3122840","Dak Prescott":"2577417",
     "Tee Higgins":"4239993","Puka Nacua":"4432688","Jahmyr Gibbs":"4427366",
     "De'Von Achane":"4430807","Rashee Rice":"4430027","Drake London":"4567048",
@@ -4543,7 +4543,7 @@ document.addEventListener('click', function(e) {
     {name:"Breece Hall",team:"NYJ",pos:"RB",id:"4362081"},
     {name:"James Cook",team:"BUF",pos:"RB",id:"4361579"},
     {name:"Kenneth Walker III",team:"KC",pos:"RB",id:"4362073"},
-    {name:"Nick Chubb",team:"CLE",pos:"RB",id:"3128721"},
+    {name:"Nick Chubb",team:"CLE",pos:"RB",id:"3128720"},
     {name:"George Pickens",team:"DAL",pos:"WR",id:"4431611"},
     {name:"Nico Collins",team:"HOU",pos:"WR",id:"4361370"},
     {name:"Chris Olave",team:"NO",pos:"WR",id:"4241478"},
@@ -4603,17 +4603,17 @@ document.addEventListener('click', function(e) {
     return eastern;
   }
 
-  // Deterministic daily pick from retired pool using date seed
-  // Curated retired players with ESPN headshot IDs for daily pull
+  // Deterministic daily pick — golden-ratio hash spreads consecutive days far apart
+  function _epHash(n) { return Math.abs((n * 2654435761) >>> 0); }
     function getDailyPlayer() {
     const today = getEasternDate();
     const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
-    return DAILY_RETIRED_POOL[seed % DAILY_RETIRED_POOL.length];
+    return DAILY_RETIRED_POOL[_epHash(seed) % DAILY_RETIRED_POOL.length];
   }
 
   function getTodayKey() {
     const d = getEasternDate();
-    return `ep_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;
+    return `ep_v3_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;
   }
 
   // All players from the D array for autocomplete — use current team from history data
@@ -4837,7 +4837,7 @@ document.addEventListener('click', function(e) {
       if (_epSkipAttempts < DAILY_RETIRED_POOL.length) {
         const today = getEasternDate();
         const baseSeed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
-        todayPlayer = DAILY_RETIRED_POOL[(baseSeed + _epSkipAttempts) % DAILY_RETIRED_POOL.length];
+        todayPlayer = DAILY_RETIRED_POOL[_epHash(baseSeed + _epSkipAttempts) % DAILY_RETIRED_POOL.length];
         _epTryLoadImage();
       } else {
         epPlaceholder.textContent = 'No player image available';
@@ -4867,6 +4867,18 @@ document.addEventListener('click', function(e) {
 
 // === UNLIMITED ELITE PULL — Trivia Tab ===
 (function() {
+  // Build unlimited pool dynamically from ALL players with headshots
+  let EP_PLAYERS_U = [];
+  function _buildUnlimitedPool() {
+    EP_PLAYERS_U = D.filter(d => d._slImg && d.n && !d.n.includes('D/ST') && d.s !== 'K' && d.s !== 'DST').map(d => {
+      const idMatch = d._slImg.match(/full\/(\d+)\.png/);
+      return {name: d.n, team: d.t, pos: d.s, id: idMatch ? idMatch[1] : ''};
+    }).filter(p => p.id);
+  }
+  _buildUnlimitedPool();
+  setTimeout(_buildUnlimitedPool, 8000);
+  setTimeout(_buildUnlimitedPool, 15000);
+
     function getHeadshotUrlU(id, playerName) {
     const cache = JSON.parse(sessionStorage.getItem('espnIdCache4') || '{}');
     if (playerName) {
@@ -4912,6 +4924,7 @@ document.addEventListener('click', function(e) {
   let usedIndices = [];
 
   function pickRandomPlayer() {
+    if (EP_PLAYERS_U.length < 100) _buildUnlimitedPool();
     const bad = getBadImages();
     const validPool = EP_PLAYERS_U.filter(p => !bad.includes(p.id));
     const pool = validPool.length > 0 ? validPool : EP_PLAYERS_U;

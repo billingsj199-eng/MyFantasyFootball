@@ -13418,6 +13418,11 @@ window.fmtHeight = fmtHeight;
       // Aggregated totals
       let totPy = 0, totRy = 0, totRcy = 0, totRec = 0, totPtd = 0, totRtd = 0, totRctd = 0, totInt = 0;
 
+      // Breakout age: earliest season with PPG above threshold
+      const _boThresh = { QB: 20, RB: 14, WR: 12, TE: 8.5 };
+      const boThresh = _boThresh[pos] || 12;
+      let breakoutYr = null;
+
       if (cs && cs.length) {
         cs.forEach(s => {
           const fp = cfpts(s);
@@ -13429,6 +13434,8 @@ window.fmtHeight = fmtHeight;
           if (gp && gp > 0) {
             const ppg = Math.round((fp / gp) * 10) / 10;
             if (ppg > bestPpg) bestPpg = ppg;
+            // Track earliest breakout season
+            if (ppg >= boThresh && (!breakoutYr || s.yr < breakoutYr)) breakoutYr = s.yr;
           }
           totPy += (s.py || 0);
           totRy += (s.ry || 0);
@@ -13485,9 +13492,23 @@ window.fmtHeight = fmtHeight;
         }
       }
 
+      // Breakout age: age at Sept 1 of earliest breakout season
+      let breakoutAge = null;
+      if (breakoutYr && birth) {
+        const parts = birth.split('-');
+        const bY = parseInt(parts[0]), bM = parseInt(parts[1]) - 1, bD = parseInt(parts[2]);
+        if (bY && bM >= 0 && bD >= 1) {
+          // Sept 1 of breakout year
+          const seasonDays = breakoutYr * 365.25 + 8 * 30.44 + 1; // month 8 = September (0-indexed)
+          const birthDays = bY * 365.25 + bM * 30.44 + bD;
+          const ba = (seasonDays - birthDays) / 365.25;
+          if (ba >= 17 && ba <= 26) breakoutAge = Math.round(ba * 10) / 10;
+        }
+      }
+
       results.push({
         name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,
-        dr,
+        dr, breakoutAge,
         bestPpg, bestFpts, totFpts, fptsPerGame,
         totPy, totRy, totRcy, totRec, totalTd,
         pasYpg, rushYpg, recYpg, recPg, tdPg,
@@ -13520,6 +13541,7 @@ window.fmtHeight = fmtHeight;
       { key: 'name', label: 'PLAYER', sortable: true },
       { key: 'dc', label: 'DC', sortable: true },
       { key: 'age', label: 'DRAFT AGE', sortable: true },
+      { key: 'breakoutAge', label: 'BREAKOUT', sortable: true },
       { key: 'draftYr', label: 'YEAR', sortable: true },
       { key: 'lastCollege', label: 'COLLEGE', sortable: true },
       { key: 'lastConf', label: 'CONF', sortable: true },
@@ -13649,6 +13671,9 @@ window.fmtHeight = fmtHeight;
           }
           case 'age':
             rows += `<td>${p.age != null ? p.age.toFixed(1) : '—'}</td>`;
+            break;
+          case 'breakoutAge':
+            rows += `<td${p.breakoutAge != null ? '' : ' style="color:var(--text2);opacity:.4"'}>${p.breakoutAge != null ? p.breakoutAge.toFixed(1) : '—'}</td>`;
             break;
           case 'draftYr':
             rows += `<td>${p.draftYr || '—'}</td>`;

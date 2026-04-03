@@ -2371,6 +2371,7 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <script src="data/daily_retired_pool.js"></script>
 <script src="data/weekly_stats_active.js"></script>
 <script src="data/weekly_stats_retired.js"></script>
+<script src="data/all_players.js"></script>
 <script>const WEEKLY_STATS = Object.assign({}, WEEKLY_STATS_RETIRED, WEEKLY_STATS_ACTIVE);</script>
 <script>
 // Global auth state flag — used by canEdit() before Firebase auth module loads
@@ -2419,7 +2420,7 @@ function validateImportData(obj) {
   let cache = {};
   try { cache = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '{}'); } catch(e) {}
 
-  const playersToFix = D.filter(p => p._slImg && p._slImg.includes('espncdn.com') && p.n && !p.n.includes('D/ST') && !(p._retired && window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.n]));
+  const playersToFix = D.filter(p => p._slImg && p._slImg.includes('espncdn.com') && p.n && !p.n.includes('D/ST'));
 
   // Apply cached fixes immediately
   let cachedCount = 0;
@@ -2440,14 +2441,14 @@ function validateImportData(obj) {
   const FALLBACK_IDS = {
     "James Cook":"4379399","Luther Burden":"4685278","Harold Fannin":"5083076",
     "Kyle Pitts":"4360248","Chris Godwin":"3116165","Jauan Jennings":"3886598",
-    "Stefon Diggs":"2976499","Aaron Jones":"3042519","Chris Rodriguez":"4379403",
+    "Stefon Diggs":"2976212","Aaron Jones":"3042519","Chris Rodriguez":"4379403",
     "Deebo Samuel":"3126486","David Njoku":"3043275","Michael Penix":"4432580",
     "Aaron Rodgers":"8439","Najee Harris":"4372019","Joe Mixon":"3116385",
     "Kirk Cousins":"14880","Anthony Richardson":"4432616","Kareem Hunt":"3122840",
-    "Darren Waller":"3045144","DeAndre Hopkins":"16502","Zach Ertz":"15835",
-    "JuJu Smith-Schuster":"3116164",
-    "Keenan Allen":"15818","DK Metcalf":"4047650","Cooper Kupp":"3046779",
-    "Jaylen Waddle":"4372016","Mike Evans":"2508061","Davante Adams":"2543495",
+    "Darren Waller":"3051389","DeAndre Hopkins":"2543498","Zach Ertz":"2517018",
+    "JuJu Smith-Schuster":"3121422",
+    "Keenan Allen":"15818","DK Metcalf":"4047650","Cooper Kupp":"2977187",
+    "Jaylen Waddle":"4372016","Mike Evans":"2976316","Davante Adams":"2543495",
     "George Pickens":"4432577","DJ Moore":"3116406","Darnell Mooney":"4360438",
     "Romeo Doubs":"4569618","Michael Pittman Jr.":"4241389","Jakobi Meyers":"3929924",
     "Rashid Shaheed":"4567298","Adonai Mitchell":"4601460","Isaiah Likely":"4567048",
@@ -2460,14 +2461,14 @@ function validateImportData(obj) {
     "Kenneth Gainwell":"4360310","J.K. Dobbins":"4242335","Tyler Allgeier":"4371985",
     "Javonte Williams":"4361579","David Montgomery":"3916148","Cam Skattebo":"4685038",
     "Tyreek Hill":"3116406","Derrick Henry":"3043078","Saquon Barkley":"3929630",
-    "Josh Jacobs":"4241457","Travis Kelce":"15847","Mark Andrews":"3116365",
+    "Josh Jacobs":"4241457","Travis Kelce":"15847","Mark Andrews":"3051889",
     "George Kittle":"3040151","Patrick Mahomes":"3139477","Lamar Jackson":"3916387",
     "Josh Allen":"3918298","Jalen Hurts":"4040715","CeeDee Lamb":"4241389",
     "Justin Jefferson":"4262921","Ja'Marr Chase":"4362628","Amon-Ra St. Brown":"4360939",
     "Bijan Robinson":"4426348","Breece Hall":"4430737","Jonathan Taylor":"4242335",
-    "Nick Chubb":"3128720","Alvin Kamara":"3054212","Austin Ekeler":"3068267",
+    "Nick Chubb":"3128721","Alvin Kamara":"3054850","Austin Ekeler":"3068267",
     "Christian McCaffrey":"3117251","Dalvin Cook":"3045147","Leonard Fournette":"3126486",
-    "Todd Gurley":"2977644","Odell Beckham Jr.":"16733","Calvin Ridley":"3128429",
+    "Todd Gurley":"2977644","Odell Beckham Jr.":"2976316","Calvin Ridley":"3128429",
     "Russell Wilson":"14881","Deshaun Watson":"3122840","Dak Prescott":"2577417",
     "Tee Higgins":"4239993","Puka Nacua":"4432688","Jahmyr Gibbs":"4427366",
     "De'Von Achane":"4430807","Rashee Rice":"4430027","Drake London":"4567048",
@@ -3959,7 +3960,7 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
 
-      ${d._retired && d.career && d.career.length > 0 ? (() => {
+      ${d.career && d.career.length > 0 ? (() => {
         const _cr = d.career;
         const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
         const _totalGp = _cr.reduce((sum, s) => sum + (s.gp || 0), 0);
@@ -4542,7 +4543,7 @@ document.addEventListener('click', function(e) {
     {name:"Breece Hall",team:"NYJ",pos:"RB",id:"4362081"},
     {name:"James Cook",team:"BUF",pos:"RB",id:"4361579"},
     {name:"Kenneth Walker III",team:"KC",pos:"RB",id:"4362073"},
-    {name:"Nick Chubb",team:"CLE",pos:"RB",id:"3128720"},
+    {name:"Nick Chubb",team:"CLE",pos:"RB",id:"3128721"},
     {name:"George Pickens",team:"DAL",pos:"WR",id:"4431611"},
     {name:"Nico Collins",team:"HOU",pos:"WR",id:"4361370"},
     {name:"Chris Olave",team:"NO",pos:"WR",id:"4241478"},
@@ -4591,7 +4592,7 @@ document.addEventListener('click', function(e) {
   EP_RETIRED.forEach(p => {
     if (!D.find(d => d.n === p.name)) {
       const seasons = p.last - p.debut + 1;
-      D.push({n:p.name,a:999,p:0,s:p.pos,r:p.pos+"\u2014",t:"Retired",p25:null,p24:null,p23:null,age:null,cyr:null,out:null,sal:null,dr:null,exp:seasons,role:null,inj:null,s25:null,career:p.career||[],da:999,sa:999,idx:D.length,myRank:D.length+1,round:99,notes:"",_retired:true,_debut:p.debut,_last:p.last,_slImg:(window.RETIRED_ESPN_IDS&&window.RETIRED_ESPN_IDS[p.name])?'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/'+window.RETIRED_ESPN_IDS[p.name]+'.png&w=350&h=254':null});
+      D.push({n:p.name,a:999,p:0,s:p.pos,r:p.pos+"\u2014",t:"Retired",p25:null,p24:null,p23:null,age:null,cyr:null,out:null,sal:null,dr:null,exp:seasons,role:null,inj:null,s25:null,career:p.career||[],da:999,sa:999,idx:D.length,myRank:D.length+1,round:99,notes:"",_retired:true,_debut:p.debut,_last:p.last});
     }
   });
 
@@ -4602,17 +4603,17 @@ document.addEventListener('click', function(e) {
     return eastern;
   }
 
-  // Deterministic daily pick — golden-ratio hash spreads consecutive days far apart
-  function _epHash(n) { return Math.abs((n * 2654435761) >>> 0); }
+  // Deterministic daily pick from retired pool using date seed
+  // Curated retired players with ESPN headshot IDs for daily pull
     function getDailyPlayer() {
     const today = getEasternDate();
     const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
-    return DAILY_RETIRED_POOL[_epHash(seed) % DAILY_RETIRED_POOL.length];
+    return DAILY_RETIRED_POOL[seed % DAILY_RETIRED_POOL.length];
   }
 
   function getTodayKey() {
     const d = getEasternDate();
-    return `ep_v3_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;
+    return `ep_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;
   }
 
   // All players from the D array for autocomplete — use current team from history data
@@ -4836,7 +4837,7 @@ document.addEventListener('click', function(e) {
       if (_epSkipAttempts < DAILY_RETIRED_POOL.length) {
         const today = getEasternDate();
         const baseSeed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
-        todayPlayer = DAILY_RETIRED_POOL[_epHash(baseSeed + _epSkipAttempts) % DAILY_RETIRED_POOL.length];
+        todayPlayer = DAILY_RETIRED_POOL[(baseSeed + _epSkipAttempts) % DAILY_RETIRED_POOL.length];
         _epTryLoadImage();
       } else {
         epPlaceholder.textContent = 'No player image available';
@@ -4866,23 +4867,6 @@ document.addEventListener('click', function(e) {
 
 // === UNLIMITED ELITE PULL — Trivia Tab ===
 (function() {
-  // Build unlimited pool dynamically from ALL players with headshots
-  // Rebuilt lazily so async roster fetch has time to populate _slImg
-  let EP_PLAYERS_U = [];
-  let _epuPoolBuilt = false;
-  function _buildUnlimitedPool() {
-    EP_PLAYERS_U = D.filter(d => d._slImg && d.n && !d.n.includes('D/ST') && d.s !== 'K' && d.s !== 'DST').map(d => {
-      const idMatch = d._slImg.match(/full\/(\d+)\.png/);
-      return {name: d.n, team: d.t, pos: d.s, id: idMatch ? idMatch[1] : ''};
-    }).filter(p => p.id);
-    _epuPoolBuilt = true;
-  }
-  // Build once now (catches cached + FALLBACK_IDS + RETIRED_ESPN_IDS players)
-  _buildUnlimitedPool();
-  // Rebuild after roster fetch likely completes (catches all remaining active players)
-  setTimeout(_buildUnlimitedPool, 8000);
-  setTimeout(_buildUnlimitedPool, 15000);
-
     function getHeadshotUrlU(id, playerName) {
     const cache = JSON.parse(sessionStorage.getItem('espnIdCache4') || '{}');
     if (playerName) {
@@ -4928,8 +4912,6 @@ document.addEventListener('click', function(e) {
   let usedIndices = [];
 
   function pickRandomPlayer() {
-    // Rebuild pool if roster fetch has added more headshots since last build
-    if (EP_PLAYERS_U.length < 100) _buildUnlimitedPool();
     const bad = getBadImages();
     const validPool = EP_PLAYERS_U.filter(p => !bad.includes(p.id));
     const pool = validPool.length > 0 ? validPool : EP_PLAYERS_U;
@@ -7277,6 +7259,44 @@ document.addEventListener('click', function(e) {
 LDB.forEach(p => { if (LEGEND_CAREERS[p.n]) p.seasons = LEGEND_CAREERS[p.n]; });
 D.forEach(d => { if (d._retired && (!d.career || !d.career.length) && LEGEND_CAREERS[d.n]) d.career = LEGEND_CAREERS[d.n]; });
 
+// === ALL_PLAYERS_DB integration: enrich D array with career stats ===
+if (typeof ALL_PLAYERS_DB !== 'undefined') {
+  // Build lookup by name
+  const _apdb = {};
+  ALL_PLAYERS_DB.forEach(p => { _apdb[p.name] = p; });
+
+  // 1) Fill in career stats for existing D entries that don't have them
+  D.forEach(d => {
+    if ((!d.career || !d.career.length) && _apdb[d.n]) {
+      d.career = _apdb[d.n].career;
+    }
+  });
+
+  // 2) Add players from ALL_PLAYERS_DB that aren't in D yet (retired players not in EP_RETIRED)
+  const _dNames = new Set(D.map(d => d.n));
+  let _apAdded = 0;
+  ALL_PLAYERS_DB.forEach(p => {
+    if (_dNames.has(p.name)) return;
+    if (p.pos === 'K' || p.pos === 'DST') return;
+    // Only add players who are actually retired (last season before 2025)
+    if (p.last >= 2025) return;
+    const seasons = p.last - p.debut + 1;
+    const imgUrl = (window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.name])
+      ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + window.RETIRED_ESPN_IDS[p.name] + '.png&w=350&h=254'
+      : null;
+    D.push({
+      n: p.name, a: 999, p: 0, s: p.pos, r: p.pos + '\u2014', t: 'Retired',
+      p25: null, p24: null, p23: null, age: null, cyr: null, out: null,
+      sal: null, dr: null, exp: seasons, role: null, inj: null, s25: null,
+      career: p.career || [], da: 999, sa: 999, idx: D.length,
+      myRank: D.length + 1, round: 99, notes: '',
+      _retired: true, _debut: p.debut, _last: p.last, _slImg: imgUrl
+    });
+    _apAdded++;
+  });
+  console.log('[ALL_PLAYERS_DB] Enriched career stats, added ' + _apAdded + ' new retired players');
+}
+
 // Add HP players with LEGEND_CAREERS data to D so they get full career log cards
 HP.forEach(p => {
   if (!p.n || !p.s || p.s === 'K' || p.s === 'DST') return;
@@ -7293,8 +7313,7 @@ HP.forEach(p => {
     p25: null, p24: null, p23: null, age: null,
     cyr: null, out: null, sal: null, dr: null, exp: career.length || null, role: null, inj: null,
     s25: null, career: career, da: 999, sa: 999, idx: D.length, myRank: D.length + 1,
-    round: 99, notes: '', _retired: true, _debut: debut, _last: last,
-    _slImg: (window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.n]) ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + window.RETIRED_ESPN_IDS[p.n] + '.png&w=350&h=254' : null
+    round: 99, notes: '', _retired: true, _debut: debut, _last: last, _slImg: null
   });
 });
 const LEGEND_BIRTH_YEARS={"A.J. Green":"1988-07-31","Aaron Brooks":"1976-03-24","Adam Thielen":"1990-08-22","Adam Vinatieri":"1972-12-28","Adrian Peterson":"1979-07-01","Ahmad Bradshaw":"1986-03-19","Ahmad Rashad":1950,"Ahman Green":"1977-02-16","Al Toon":1963,"Alex Smith":"1984-05-07","Alfred Morris":"1988-12-12","Alge Crumpler":"1977-12-23","Allen Robinson":"1993-08-24","Alshon Jeffery":"1990-02-14","Alvin Kamara":"1995-07-25","Amani Toomer":"1974-09-08","Amari Cooper":"1994-06-17","Andre Johnson":"1981-07-11","Andre Reed":"1964-01-29","Andre Rison":"1967-03-18","Andrew Luck":"1989-09-12","Andy Dalton":"1987-10-29","Anquan Boldin":"1980-10-03","Anthony Carter":1963,"Antonio Brown":"1978-03-03","Antonio Freeman":"1972-05-27","Antonio Gates":"1980-06-18","Archie Manning":1949,"Arian Foster":"1986-08-24","Art Monk":1958,"Baker Mayfield":"1995-04-14","Barry Sanders":1967,"Bart Starr":1934,"Ben Coates":"1969-08-16","Ben Roethlisberger":"1982-03-02","Ben Tate":"1988-08-21","Ben Watson":1982,"BenJarvus Green-Ellis":"1985-07-02","Bernie Kosar":1963,"Bert Jones":1951,"Billy Sims":1958,"Bo Jackson":1965,"Bob Griese":1945,"Bob Hayes":1943,"Bobby Engram":"1973-01-07","Bobby Hebert":1963,"Bobby Layne":1926,"Boomer Esiason":1962,"Brad Johnson":"1968-09-13","Brandin Cooks":"1993-09-25","Brandon Jacobs":"1982-07-06","Brandon Lloyd":"1981-07-05","Brandon Marshall":"1984-03-23","Braylon Edwards":"1983-02-21","Brett Favre":"1969-10-10","Brett Perriman":1966,"Brian Blades":1966,"Brian Griese":"1975-03-18","Brian Sipe":1952,"Brian Westbrook":"1979-09-02","C.J. Anderson":"1991-02-10","C.J. Spiller":"1987-08-05","Cadillac Williams":1983,"Calvin Johnson":"1985-09-29","Cam Newton":"1982-05-19","Carl Pickens":"1970-03-23","Carlos Carson":1958,"Carlos Hyde":"1990-09-20","Carson Palmer":"1979-12-27","Carson Wentz":"1992-12-30","Case Keenum":"1988-02-17","Cedric Benson":"1982-12-28","Chad Johnson":"1978-01-09","Chad Pennington":"1976-06-26","Charley Taylor":1942,"Charlie Garner":"1972-02-13","Charlie Joiner":1947,"Chester Taylor":"1979-09-22","Chris Carson":"1994-09-16","Chris Chambers":"1978-08-12","Chris Chandler":"1965-10-12","Chris Johnson":"1979-09-25","Christian Okoye":1965,"Chuck Foreman":1951,"Chuck Muncie":1954,"Cliff Branch":1950,"Clinton Portis":"1981-09-01","Colin Kaepernick":"1987-11-03","Cooper Kupp":"1993-06-15","Corey Davis":"1995-01-11","Corey Dillon":"1974-10-24","Craig Morton":1943,"Cris Carter":"1965-11-25","Curt Warner":1961,"Curtis Conway":"1971-01-13","Curtis Martin":"1973-05-01","Curtis Samuel":"1996-08-11","DJ Moore":"1997-04-14","Dallas Clark":"1979-06-12","Damien Harris":"1997-02-11","Dan Fouts":1951,"Dan Marino":"1961-09-15","Danny White":1954,"Darren McFadden":"1987-08-27","Darren Waller":"1992-09-13","Daryle Lamonica":1941,"Daunte Culpepper":"1977-01-28","Dave Casper":1952,"Dave Krieg":1958,"David Carr":"1979-07-21","David Garrard":"1978-02-14","David Johnson":"1987-08-26","DeAndre Hopkins":"1992-06-06","DeAngelo Williams":"1983-04-25","DeMarco Murray":"1988-02-12","DeSean Jackson":"1986-12-01","Del Shofner":1935,"Delanie Walker":"1984-08-12","Demaryius Thomas":"1987-12-25","Derrick Mason":"1974-01-17","Deshaun Watson":"1995-09-14","Deuce McAllister":"1978-12-27","Devonta Freeman":"1992-03-15","Dez Bryant":"1988-11-04","Diontae Johnson":"1996-07-05","Domanick Williams":"1980-10-01","Don Majkowski":1965,"Don Maynard":1936,"Don Meredith":1938,"Donald Driver":"1975-02-02","Donovan McNabb":"1976-11-25","Dorsey Levens":"1970-05-21","Doug Baldwin":"1988-09-21","Doug Flutie":"1962-10-23","Doug Martin":"1989-01-13","Doug Williams":1956,"Drew Bledsoe":"1972-02-14","Drew Brees":"1979-01-15","Drew Hill":1957,"Drew Pearson":1951,"Duce Staley":"1975-02-27","Dwayne Bowe":"1984-09-21","Dwight Clark":1957,"Earl Campbell":1956,"Ed McCaffrey":"1968-08-17","Eddie George":"1973-09-24","Eddie Kennison":"1973-01-20","Eddie Lacy":"1990-06-02","Edgerrin James":"1978-08-01","Eli Manning":"1981-01-03","Emmanuel Sanders":"1987-03-17","Emmitt Smith":"1969-05-15","Eric Decker":"1987-03-15","Eric Dickerson":1961,"Eric Martin":"1991-07-21","Eric Moulds":"1973-07-17","Erik Kramer":"1964-11-06","Ernest Givins":1964,"Evan Engram":"1994-09-02","Ezekiel Elliott":"1995-07-22","Floyd Little":1945,"Fran Tarkenton":1939,"Franco Harris":1950,"Frank Gifford":1930,"Frank Gore":"1983-05-14","Frank Wycheck":"1971-10-14","Fred Jackson":"1981-02-20","Fred Taylor":"1976-01-27","Freeman McNeil":1959,"Gale Sayers":1943,"Gardner Minshew":"1996-05-16","Garrison Hearst":"1971-01-04","Gary Clark":1963,"Gene Washington":1947,"George Kittle":"1993-10-09","George Rogers":1959,"Gerald Riggs":1960,"Giovani Bernard":"1991-11-22","Golden Tate":"1988-08-02","Greg Jennings":"1983-09-21","Greg Landry":1946,"Greg Olsen":"1985-03-11","Hakeem Nicks":"1988-01-14","Harold Carmichael":1949,"Henry Ellard":1961,"Herman Moore":"1969-10-20","Herschel Walker":1964,"Hines Ward":"1976-03-08","Isaac Bruce":"1972-11-10","Isaac Curtis":1951,"Isaiah Crowell":"1993-01-08","Jack Kemp":1935,"Jack Snow":1943,"Jake Delhomme":"1975-01-10","Jake Plummer":"1974-12-19","Jamaal Charles":"1986-12-27","Jamal Anderson":"1972-09-30","Jamal Lewis":"1979-08-26","Jameis Winston":"1994-01-06","James Brooks":1959,"James Lofton":1956,"James White":"1992-02-03","James Wilder":1959,"Jared Cook":"1987-04-07","Jarvis Landry":"1992-11-28","Jason Witten":"1982-05-06","Jay Ajayi":"1993-06-15","Jay Cutler":"1983-04-29","Jay Novacek":1963,"Jeff Garcia":"1970-02-24","Jeff George":"1967-12-08","Jeremy Hill":"1992-10-20","Jeremy Maclin":"1988-05-11","Jeremy Shockey":"1980-08-18","Jermichael Finley":"1987-03-26","Jerome Bettis":"1972-02-16","Jerry Porter":"1978-07-14","Jerry Rice":"1962-10-13","Jim Brown":1935,"Jim Everett":1964,"Jim Harbaugh":"1963-12-23","Jim Hart":1944,"Jim Kelly":1964,"Jim McMahon":1960,"Jim Plunkett":1949,"Jim Taylor":1936,"Jimmy Garoppolo":"1991-11-02","Jimmy Graham":"1986-11-24","Jimmy Smith":"1969-02-09","Joe Flacco":"1985-01-16","Joe Horn":"1972-01-16","Joe Mixon":"1996-07-24","Joe Montana":1957,"Joe Morris":1960,"Joe Namath":1943,"Joe Perry":1926,"Joe Theismann":1952,"Joey Galloway":"1971-11-20","John Brodie":1935,"John Elway":1961,"John Mackey":1941,"John Riggins":1949,"John Stallworth":1952,"John Taylor":1965,"Johnnie Morton":"1971-10-07","Johnny Morris":1936,"Johnny Unitas":1934,"Jon Kitna":"1972-09-21","Jonathan Stewart":"1987-03-21","Jordan Howard":"1994-11-02","Jordan Reed":"1990-07-03","Jordy Nelson":"1985-05-31","Joseph Addai":"1983-05-03","Josh Gordon":"1991-04-13","JuJu Smith-Schuster":"1996-11-22","Julian Edelman":"1986-05-22","Julio Jones":"1989-02-08","Julius Jones":"1981-08-14","Julius Thomas":"1988-06-27","Kareem Hunt":"1995-08-06","Keenan Allen":"1992-04-27","Keenan McCardell":"1970-01-06","Keith Jackson":1966,"Kellen Winslow":"1983-07-21","Kelvin Benjamin":"1991-02-05","Ken Anderson":"1975-10-04","Ken O'Brien":1962,"Ken Stabler":1948,"Kenny Britt":"1988-09-19","Kenny Golladay":"1993-11-03","Kerry Collins":"1972-12-30","Kerryon Johnson":"1997-06-30","Kevin House":"1979-01-09","Kevin Jones":"1982-08-21","Kevin Mack":1963,"Kevin Smith":"1970-04-07","Keyshawn Johnson":"1972-07-22","Knowshon Moreno":"1987-07-16","Kordell Stewart":"1972-10-16","Kurt Warner":"1971-06-22","Kyle Orton":"1982-11-14","LaDainian Tomlinson":"1979-06-23","Lamar Miller":"1991-04-25","Lamar Smith":"1970-11-29","Lance Alworth":1940,"Larry Csonka":1946,"Larry Fitzgerald":"1983-08-31","Larry Johnson":"1979-11-19","Latavius Murray":"1990-01-18","Laveranues Coles":"1977-12-29","Le'Veon Bell":"1992-02-18","LeGarrette Blount":"1986-12-05","LeSean McCoy":"1988-07-12","Lee Evans":"1981-03-11","Len Dawson":1935,"LenDale White":"1984-12-20","Leonard Fournette":"1995-01-18","Leroy Kelly":1942,"Lynn Dickey":1949,"Lynn Swann":1952,"Marc Bulger":"1977-04-05","Marcus Allen":"1996-08-07","Marcus Mariota":"1993-10-30","Marion Barber":"1983-06-10","Mark Andrews":"1995-09-06","Mark Bavaro":1963,"Mark Brunell":"1970-09-17","Mark Carrier":"1968-04-28","Mark Clayton":"1982-07-02","Mark Duper":1960,"Mark Ingram":"1989-12-21","Mark Ingram II":1989,"Mark Rypien":"1962-10-02","Mark Sanchez":"1986-11-11","Marlon Mack":"1996-03-07","Marques Colston":"1983-06-05","Marquise Brown":"1997-06-04","Marshall Faulk":"1973-02-26","Marshawn Lynch":"1986-04-22","Martellus Bennett":"1987-03-10","Marty Booker":"1976-07-31","Marvin Harrison":"1972-08-25","Marvin Harrison Sr.":1974,"Matt Cassel":"1982-05-17","Matt Forte":"1985-12-10","Matt Hasselbeck":"1975-09-25","Matt Ryan":"1985-05-17","Matt Schaub":"1981-06-25","Matthew Stafford":"1988-02-07","Maurice Jones-Drew":"1985-03-23","Melvin Gordon":"1993-04-13","Michael Irvin":"1966-03-05","Michael Thomas":"1990-03-17","Michael Turner":"1982-02-13","Michael Vick":"1980-06-26","Mike Alstott":"1973-12-21","Mike Anderson":"1973-09-21","Mike Ditka":1939,"Mike Evans":"1993-08-21","Mike Quick":1960,"Mike Williams":"1980-01-11","Miles Austin":"1984-06-30","Miles Sanders":"1997-05-01","Mitchell Trubisky":"1994-08-20","Mohamed Sanu":"1989-08-22","Morten Andersen":"1960-08-19","Muhsin Muhammad":"1973-05-05","Napoleon Kaufman":"1973-06-07","Natrone Means":"1972-04-26","Neal Anderson":1964,"Neil Lomax":1959,"Neil O'Donnell":"1966-07-03","Nick Chubb":"1995-12-27","Nick Foles":"1989-01-20","Norm Van Brocklin":1927,"O.J. McDuffie":"1969-12-02","O.J. Simpson":1947,"Odell Beckham Jr.":"1992-11-05","Olandis Gary":"1975-05-18","Otis Taylor":1943,"Ottis Anderson":1957,"Otto Graham":1924,"Owen Daniels":"1982-11-09","Ozzie Newsome":1956,"Paul Hornung":1935,"Paul Warfield":1942,"Percy Harvin":"1988-05-28","Peyton Manning":"1976-03-24","Phil Simms":1957,"Philip Rivers":"1981-12-08","Phillip Lindsay":"1994-07-24","Pierre Garcon":"1986-08-08","Pierre Thomas":"1984-12-18","Plaxico Burress":"1977-08-12","Priest Holmes":"1973-10-07","Raheem Mostert":"1992-04-09","Randall Cobb":"1990-08-22","Randall Cunningham":"1963-03-27","Randy Moss":"1977-02-13","Rashad Jennings":"1985-03-26","Rashard Mendenhall":"1987-06-19","Ray Rice":"1987-01-22","Raymond Berry":1933,"Reggie Bush":"1985-03-02","Reggie Wayne":"1978-11-17","Rex Grossman":"1980-08-23","Rich Gannon":"1965-12-20","Ricky Sanders":1964,"Ricky Williams":"1977-05-21","Rob Gronkowski":"1989-05-14","Robert Brooks":"1970-06-23","Robert Griffin III":"1990-02-12","Robert Smith":"1972-03-04","Robert Woods":"1992-04-10","Rod Smith":"1970-05-15","Roddy White":"1981-11-02","Rodney Hampton":1968,"Roger Craig":1961,"Roger Staubach":1947,"Roman Gabriel":1940,"Ron Jaworski":1952,"Ronald Jones":"1997-08-03","Ronnie Brown":"1981-12-12","Roy Green":1957,"Roy Williams":"1980-08-14","Rudi Johnson":"1979-10-01","Russell Wilson":"1988-11-29","Ryan Fitzpatrick":"1982-11-24","Ryan Grant":"1982-12-09","Ryan Mathews":"1987-10-10","Ryan Tannehill":"1988-07-27","Sammy Watkins":"1993-06-14","Santana Moss":"1979-06-01","Shannon Sharpe":"1968-06-26","Shaun Alexander":"1977-08-30","Shonn Greene":"1985-08-21","Sid Luckman":1917,"Sidney Rice":"1986-09-01","Sonny Jurgensen":1935,"Sony Michel":"1995-02-17","Stan Humphries":1967,"Stanley Morgan":"1996-09-07","Stefon Diggs":"1993-11-29","Stephen Davis":"1974-03-01","Stephen Gostkowski":"1984-01-28","Sterling Sharpe":1966,"Sterling Shepard":"1993-02-10","Steve Bartkowski":1953,"Steve Grogan":1953,"Steve Largent":1954,"Steve McNair":"1973-02-14","Steve Smith Sr.":"1979-05-12","Steve Van Buren":1922,"Steve Young":"1961-10-11","Steven Jackson":"1983-07-22","Stump Mitchell":1959,"T.J. Houshmandzadeh":"1977-09-26","T.Y. Hilton":"1989-11-14","Teddy Bridgewater":"1992-11-10","Terance Mathis":"1967-06-07","Terrell Davis":"1972-10-28","Terrell Owens":"1973-12-07","Terry Allen":"1968-02-21","Terry Bradshaw":1948,"Terry Glenn":"1974-07-23","Tevin Coleman":"1993-04-16","Thomas Jones":"1978-08-19","Thurman Thomas":"1966-05-16","Tiki Barber":"1975-04-07","Tim Brown":"1966-07-22","Todd Gurley":"1994-08-03","Todd Heap":"1980-03-16","Tom Brady":"1977-08-03","Tommy Kramer":1955,"Tommy Maddox":"1971-09-02","Tommy McDonald":1935,"Tony Dorsett":1955,"Tony Gonzalez":"1976-02-27","Tony Martin":"1965-09-05","Tony Romo":"1980-04-21","Torrey Smith":"1989-01-26","Torry Holt":"1976-06-05","Travis Henry":"1978-10-29","Travis Kelce":"1989-10-05","Trent Green":"1970-07-09","Troy Aikman":"1966-11-21","Troy Brown":"1971-07-02","Tyler Boyd":"1994-11-15","Tyler Eifert":"1990-09-08","Tyler Lockett":"1992-09-28","Tyreek Hill":"1994-03-01","Tyrod Taylor":"1989-08-03","Vernon Davis":"1984-01-31","Victor Cruz":"1986-11-11","Vincent Jackson":"1983-01-14","Vinny Testaverde":"1963-11-13","Walter Payton":1953,"Warren Moon":"1956-11-18","Warrick Dunn":"1975-01-05","Wayne Chrebet":"1973-08-14","Webster Slaughter":1964,"Wes Chandler":1956,"Wes Welker":"1981-05-01","Wesley Walls":"1966-02-26","Wilbert Montgomery":1955,"Will Fuller":"1994-04-16","Will Fuller V":1994,"Willie Gault":1961,"Willie Parker":"1980-11-11","Willis McGahee":"1981-10-21","Y.A. Tittle":1926,"Yancey Thigpen":"1969-08-15","Zach Ertz":"1990-11-10"};

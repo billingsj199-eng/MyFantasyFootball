@@ -51,7 +51,7 @@ const RETIRED_ESPN_IDS = {
   "Antonio Brown":"13934","Andre Johnson":"2563","Steve Smith Sr.":"2140",
   "Dez Bryant":"13215","Odell Beckham Jr.":"16733","DeAndre Hopkins":"16502",
   "Tyreek Hill":"3116406","Stefon Diggs":"2976499","DeSean Jackson":"11283",
-  "Brandon Marshall":"9637","Wes Welker":"5941","Chad Johnson":"2552",
+  "Brandon Marshall":"9705","Wes Welker":"5941","Chad Johnson":"2552",
   "Hines Ward":"2158","Victor Cruz":"14065","Cooper Kupp":"3046779",
   "Mike Evans":"2508061","Julian Edelman":"12649","Emmanuel Sanders":"13295",
   "Demaryius Thomas":"13216","Jordy Nelson":"11281","Randall Cobb":"14053",

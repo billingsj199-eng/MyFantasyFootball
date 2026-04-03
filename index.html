@@ -7319,14 +7319,13 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   }
 
   // 3) Merge ALL_PLAYERS_WEEKLY into WEEKLY_STATS
+  // Prefer ALL_PLAYERS_WEEKLY data since it's consistent with ALL_PLAYERS_DB season totals
   if (typeof ALL_PLAYERS_WEEKLY !== 'undefined' && typeof WEEKLY_STATS !== 'undefined') {
     for (const [name, data] of Object.entries(ALL_PLAYERS_WEEKLY)) {
-      if (!WEEKLY_STATS[name]) WEEKLY_STATS[name] = data;
-      else {
-        // Merge missing seasons
-        for (const [yr, weeks] of Object.entries(data.seasons)) {
-          if (!WEEKLY_STATS[name].seasons[yr]) WEEKLY_STATS[name].seasons[yr] = weeks;
-        }
+      if (!WEEKLY_STATS[name]) { WEEKLY_STATS[name] = data; continue; }
+      // Overwrite all seasons from ALL_PLAYERS_WEEKLY for scoring consistency
+      for (const [yr, weeks] of Object.entries(data.seasons)) {
+        WEEKLY_STATS[name].seasons[yr] = weeks;
       }
     }
   }

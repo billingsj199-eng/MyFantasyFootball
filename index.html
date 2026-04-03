@@ -12043,26 +12043,19 @@ window.fmtHeight = fmtHeight;
     return Math.round(((s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*rm + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2) * 10) / 10;
   }
 
-  // Calculate age at draft to one decimal
-  // Uses day-of-year fractions: Jan 1 = 1/365, Apr 28 = 118/365, Dec 31 = 365/365
+  // Calculate age at draft to one decimal — ONLY for exact birthdays
   function draftAge(birthEntry, draftYear) {
-    if (!birthEntry || !draftYear) return null;
-    const DRAFT_DAY_FRAC = 118 / 365; // April 28 = day 118
-    let birthYearExact;
-    if (typeof birthEntry === 'string' && birthEntry.includes('-')) {
-      const parts = birthEntry.split('-');
-      const y = parseInt(parts[0]), m = parseInt(parts[1]), day = parseInt(parts[2]);
-      // Calculate day of year for birthday
-      const daysInMonth = [0,31,28,31,30,31,30,31,31,30,31,30,31];
-      let dayOfYear = day;
-      for (let i = 1; i < m; i++) dayOfYear += daysInMonth[i];
-      birthYearExact = y + (dayOfYear / 365);
-    } else {
-      // Only have birth year — use mid-year estimate
-      const yr = typeof birthEntry === 'number' ? birthEntry : parseInt(birthEntry);
-      if (!yr || yr < 1900) return null;
-      birthYearExact = yr + 0.5;
-    }
+    if (!draftYear) return null;
+    // Only accept exact YYYY-MM-DD date strings
+    if (typeof birthEntry !== 'string' || !birthEntry.includes('-')) return null;
+    const DRAFT_DAY_FRAC = 118 / 365;
+    const parts = birthEntry.split('-');
+    const y = parseInt(parts[0]), m = parseInt(parts[1]), day = parseInt(parts[2]);
+    if (!y || !m || !day) return null;
+    const daysInMonth = [0,31,28,31,30,31,30,31,31,30,31,30,31];
+    let dayOfYear = day;
+    for (let i = 1; i < m; i++) dayOfYear += daysInMonth[i];
+    const birthYearExact = y + (dayOfYear / 365);
     const draftYearExact = draftYear + DRAFT_DAY_FRAC;
     const ageYears = draftYearExact - birthYearExact;
     if (ageYears < 18 || ageYears > 30) return null;
@@ -12176,12 +12169,10 @@ window.fmtHeight = fmtHeight;
       if (!pos || !['QB','RB','WR','TE'].includes(pos)) return;
 
       const draftYr = getDraftYear(name);
-      // Get birthday — check LEGEND_BIRTH_YEARS directly first
+      // Get exact birthday ONLY — no integer approximations
       let birth = null;
-      if (typeof LEGEND_BIRTH_YEARS !== 'undefined' && LEGEND_BIRTH_YEARS[name]) {
+      if (typeof LEGEND_BIRTH_YEARS !== 'undefined' && typeof LEGEND_BIRTH_YEARS[name] === 'string' && LEGEND_BIRTH_YEARS[name].includes('-')) {
         birth = LEGEND_BIRTH_YEARS[name];
-      } else {
-        birth = getBirth(name);
       }
       const age = draftAge(birth, draftYr);
 

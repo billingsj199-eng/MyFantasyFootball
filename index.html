@@ -7349,6 +7349,41 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   console.log('[ALL_PLAYERS_DB] Enriched career stats, added ' + _apAdded + ' new retired players');
 }
 
+// === ALL_PLAYERS_BIO integration: merge bio, birth years, ESPN IDs ===
+if (typeof ALL_PLAYERS_BIO !== 'undefined') {
+  let _bioAdded = 0;
+  for (const [name, bio] of Object.entries(ALL_PLAYERS_BIO)) {
+    // Merge into LEGEND_BIO
+    if (typeof LEGEND_BIO !== 'undefined' && !LEGEND_BIO[name]) {
+      const entry = {};
+      if (bio.h) entry.h = bio.h;
+      if (bio.w) entry.w = bio.w;
+      if (bio.dr) entry.dr = bio.dr;
+      if (bio.c) entry.c = bio.c;
+      if (bio.j != null) entry.j = bio.j;
+      LEGEND_BIO[name] = entry;
+      _bioAdded++;
+    }
+    // Merge birth dates
+    if (bio.b && typeof LEGEND_BIRTH_YEARS !== 'undefined' && !LEGEND_BIRTH_YEARS[name]) {
+      LEGEND_BIRTH_YEARS[name] = bio.b;
+    }
+    // Merge ESPN IDs for retired player headshots
+    if (bio.e && typeof window.RETIRED_ESPN_IDS !== 'undefined' && !window.RETIRED_ESPN_IDS[name]) {
+      window.RETIRED_ESPN_IDS[name] = bio.e;
+    }
+  }
+  // Update D array entries with new birth year / age data
+  D.forEach(d => {
+    if (d.age == null && LEGEND_BIRTH_YEARS[d.n]) {
+      const by = LEGEND_BIRTH_YEARS[d.n];
+      const yr = typeof by === 'string' ? parseInt(by) : by;
+      if (yr > 1900) { d.birthYear = yr; d.age = 2026 - yr; }
+    }
+  });
+  console.log('[ALL_PLAYERS_BIO] Added ' + _bioAdded + ' bio entries');
+}
+
 // Add HP players with LEGEND_CAREERS data to D so they get full career log cards
 HP.forEach(p => {
   if (!p.n || !p.s || p.s === 'K' || p.s === 'DST') return;
@@ -7387,7 +7422,6 @@ function _calcAge(entry) {
 D.forEach(d => { if (d._retired && d.age == null && LEGEND_BIRTH_YEARS[d.n]) d.age = _calcAge(LEGEND_BIRTH_YEARS[d.n]); });
 // Apply bio data (height, weight, draft, college, jersey) to retired D entries
 D.forEach(d => {
-  if (!d._retired) return;
   const bio = LEGEND_BIO[d.n];
   if (!bio) return;
   if (bio.h && d._height == null) d._height = bio.h;

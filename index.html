@@ -4030,9 +4030,12 @@ function buildCollegeWeeklyTable(d, season, scoringFormat) {
     let fp = (w.py||0)/25 + (w.ptd||0)*4 + (w.int||0)*-2 + (w.ry||0)/10 + (w.rtd||0)*6 + (w.rec||0)*recMult + (w.rcy||0)/10 + (w.rctd||0)*6 - (w.fl||0)*2;
     return Math.round(fp*10)/10;
   };
+  // Check if player played for multiple teams this season
+  const teams = [...new Set(weeks.map(w => w.tm).filter(Boolean))];
+  const showTm = teams.length > 1 || (teams.length === 1 && weeks.some(w => !w.tm));
   const withFpts = weeks.map(w => ({...w, fpts: _cfpts(w)}));
   const bestFpts = Math.max(...withFpts.map(w => w.fpts));
-  let hdr = '<tr><th>WK</th><th>OPP</th><th>FPTS</th>';
+  let hdr = '<tr><th>WK</th><th>TM</th><th>OPP</th><th>FPTS</th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>YDS</th><th>TD</th><th>INT</th><th>RuYd</th><th>RuTD</th>';
   else if (isRB) hdr += '<th>CAR</th><th>RuYd</th><th>RuTD</th><th>REC</th><th>RcYd</th><th>RcTD</th>';
   else hdr += '<th>REC</th><th>RcYd</th><th>RcTD</th><th>RuYd</th><th>RuTD</th>';
@@ -4041,6 +4044,7 @@ function buildCollegeWeeklyTable(d, season, scoringFormat) {
     const isBest = w.fpts === bestFpts && bestFpts > 0 ? ' class="best-yr"' : '';
     const fptsColor = (typeof posFptsColor === 'function') ? posFptsColor(w.fpts, pos) : null;
     let r = '<tr><td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
+    r += '<td style="color:var(--text2);font-size:.62rem">' + (w.tm||'—') + '</td>';
     r += '<td style="color:var(--text2)">' + (w.opp||'—') + '</td>';
     if (fptsColor) r += '<td class="fpts-cell" style="color:'+fptsColor+';font-weight:700">'+w.fpts+'</td>';
     else r += '<td class="fpts-cell'+isBest+'">'+w.fpts+'</td>';
@@ -4062,7 +4066,7 @@ function buildCollegeWeeklyTable(d, season, scoringFormat) {
   withFpts.forEach(w => { for (const k in tot) tot[k]+=(w[k]||0); });
   tot.fpts = Math.round(tot.fpts*10)/10;
   let tr = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
-  tr += '<td style="color:var(--accent)">TOT</td><td></td><td style="font-weight:700">'+tot.fpts+'</td>';
+  tr += '<td style="color:var(--accent)">' + withFpts.length + 'G</td><td></td><td></td><td style="font-weight:700">'+tot.fpts+'</td>';
   if (isQB) tr += '<td>'+tot.pc+'</td><td>'+tot.pa+'</td><td>'+tot.py+'</td><td style="color:var(--green)">'+tot.ptd+'</td><td style="color:var(--red)">'+tot.int+'</td><td>'+tot.ry+'</td><td>'+tot.rtd+'</td>';
   else if (isRB) tr += '<td>'+tot.ra+'</td><td>'+tot.ry+'</td><td style="color:var(--green)">'+tot.rtd+'</td><td>'+tot.rec+'</td><td>'+tot.rcy+'</td><td>'+tot.rctd+'</td>';
   else tr += '<td>'+tot.rec+'</td><td>'+tot.rcy+'</td><td style="color:var(--green)">'+tot.rctd+'</td><td>'+tot.ry+'</td><td>'+tot.rtd+'</td>';
@@ -4367,6 +4371,13 @@ function openPlayerCard(d) {
               <button class="college-scoring-btn active" data-collegescoring="half">HALF</button>
               <button class="college-scoring-btn" data-collegescoring="std">STD</button>
             </div>
+            ${hasCollegeWeekly(d) ? `<div class="career-log-toggle">
+              <button class="ccl-mode-btn active" data-cclmode="season">SEASON</button>
+              <button class="ccl-mode-btn" data-cclmode="weekly">WEEKLY</button>
+            </div>
+            <select class="career-log-year-select" id="cclYearSelect" style="display:none">
+              ${getCollegeWeeklySeasons(d).map(s => '<option value="'+s+'">'+s+'</option>').join('')}
+            </select>` : ''}
           </div>
         </div>
         <div id="collegeLogContent">${buildCollegeTable(d, 'half')}</div>
@@ -4398,6 +4409,13 @@ function openPlayerCard(d) {
               <button class="college-scoring-btn active" data-collegescoring="half">HALF</button>
               <button class="college-scoring-btn" data-collegescoring="std">STD</button>
             </div>
+            ${hasCollegeWeekly(d) ? `<div class="career-log-toggle">
+              <button class="ccl-mode-btn active" data-cclmode="season">SEASON</button>
+              <button class="ccl-mode-btn" data-cclmode="weekly">WEEKLY</button>
+            </div>
+            <select class="career-log-year-select" id="cclYearSelect" style="display:none">
+              ${getCollegeWeeklySeasons(d).map(s => '<option value="'+s+'">'+s+'</option>').join('')}
+            </select>` : ''}
           </div>
         </div>
         <div id="collegeLogContent">${buildCollegeTable(d, 'half')}</div>
@@ -4430,20 +4448,49 @@ function openPlayerCard(d) {
     });
   }
 
-  // College career log scoring toggle
+  // College career log scoring toggle + SEASON/WEEKLY mode toggle
   const _collegeScoringBtns = cardEl.querySelectorAll('.college-scoring-btn');
+  const _cclModeBtns = cardEl.querySelectorAll('.ccl-mode-btn');
+  const _cclYearSelect = document.getElementById('cclYearSelect');
+  const _cclContent = document.getElementById('collegeLogContent');
+  const _cclLabel = document.getElementById('collegeLogLabel');
   let _collegeScoring = 'half';
+  const _cclScoringLabels = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
+
+  function _cclRefresh() {
+    const activeMode = cardEl.querySelector('.ccl-mode-btn.active');
+    const mode = activeMode ? activeMode.dataset.cclmode : 'season';
+    if (mode === 'weekly' && _cclYearSelect) {
+      _cclContent.innerHTML = buildCollegeWeeklyTable(d, _cclYearSelect.value, _collegeScoring);
+    } else {
+      _cclContent.innerHTML = buildCollegeTable(d, _collegeScoring);
+    }
+    if (_cclLabel) _cclLabel.textContent = 'College Career Log (' + _cclScoringLabels[_collegeScoring] + ')';
+  }
+
   _collegeScoringBtns.forEach(btn => {
     btn.addEventListener('click', function() {
       _collegeScoringBtns.forEach(b => b.classList.remove('active'));
       this.classList.add('active');
       _collegeScoring = this.dataset.collegescoring;
-      const label = document.getElementById('collegeLogLabel');
-      if (label) label.textContent = 'College Career Log (' + (_collegeScoring === 'ppr' ? 'PPR' : _collegeScoring === 'std' ? 'Standard' : 'Half PPR') + ')';
-      const content = document.getElementById('collegeLogContent');
-      if (content) content.innerHTML = buildCollegeTable(d, _collegeScoring);
+      _cclRefresh();
     });
   });
+
+  if (_cclModeBtns.length) {
+    _cclModeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        _cclModeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const mode = btn.dataset.cclmode;
+        if (_cclYearSelect) _cclYearSelect.style.display = mode === 'weekly' ? '' : 'none';
+        _cclRefresh();
+      });
+    });
+    if (_cclYearSelect) {
+      _cclYearSelect.addEventListener('change', () => { _cclRefresh(); });
+    }
+  }
 
   // Career log Season/Weekly toggle + Scoring toggle
   const clModeBtns = cardEl.querySelectorAll('.cl-mode-btn');

@@ -1761,6 +1761,13 @@ PREMIUM ACTIVE
 <div class="home-section-label">Leaderboard</div>
 <div class="lb-card" style="padding:12px 16px">
 
+<div class="fg-mode-toggle" style="display:flex;gap:0;margin-bottom:8px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content;margin-left:auto;margin-right:auto">
+<button class="fg-mode-btn active" id="lbTabGames" style="padding:6px 18px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">GAMES</button>
+<button class="fg-mode-btn" id="lbTabDaily" style="padding:6px 18px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">DAILY</button>
+</div>
+
+<!-- GAMES TAB -->
+<div id="lbPanelGames">
 <div class="lb-time-filter" id="lbTimeFilter" style="display:flex;gap:0;margin-bottom:12px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content;margin-left:auto;margin-right:auto">
 <button class="lb-time-btn active" data-lbt="alltime" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">All-Time</button>
 <button class="lb-time-btn" data-lbt="month" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">Month</button>
@@ -1792,28 +1799,40 @@ PREMIUM ACTIVE
 <div class="lb-empty" id="lbCollegeWeekEmpty" style="display:none">No scores yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Pull Streak</div>
-<div class="lb-list" id="lbDailyList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbDailyLoading">Loading...</div>
-<div class="lb-empty" id="lbDailyEmpty" style="display:none">No results yet today</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">GUESS WHO Unlimited</div>
 <div class="lb-list" id="lbAlltimeList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbAlltimeLoading">Loading...</div>
 <div class="lb-empty" id="lbAlltimeEmpty" style="display:none">No data yet</div>
+
+</div><!-- end lbPanelGames -->
+
+<!-- DAILY TAB -->
+<div id="lbPanelDaily" style="display:none">
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — Current</div>
+<div class="lb-list" id="lbDailyEpCurrentList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEpCurrentLoading">Loading...</div>
+<div class="lb-empty" id="lbDailyEpCurrentEmpty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">ELITE PULL — Current Streak</div>
-<div class="lb-list" id="lbGwCurrentList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbGwCurrentLoading">Loading...</div>
-<div class="lb-empty" id="lbGwCurrentEmpty" style="display:none">No data yet</div>
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — All-Time</div>
+<div class="lb-list" id="lbDailyEpAlltimeList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEpAlltimeLoading">Loading...</div>
+<div class="lb-empty" id="lbDailyEpAlltimeEmpty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">ELITE PULL — All-Time Streak</div>
-<div class="lb-list" id="lbGwAlltimeList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbGwAlltimeLoading">Loading...</div>
-<div class="lb-empty" id="lbGwAlltimeEmpty" style="display:none">No data yet</div>
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — College</div>
+<div class="lb-list" id="lbDailyEpCollegeList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEpCollegeLoading">Loading...</div>
+<div class="lb-empty" id="lbDailyEpCollegeEmpty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Guess Who</div>
+<div class="lb-list" id="lbDailyGuesswhoList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyGuesswhoLoading">Loading...</div>
+<div class="lb-empty" id="lbDailyGuesswhoEmpty" style="display:none">No data yet</div>
+
+</div><!-- end lbPanelDaily -->
 
 </div>
 </div>
@@ -6998,7 +7017,7 @@ document.addEventListener('click', function(e) {
         guessRowsId: 'gwDailyColGuessRows',
         streakElId: 'gwDailyColStreak',
         getPool: () => _poolCollege,
-        lbUpdate: (won, streak) => {}
+        lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDailyCol === 'function') window._lbUpdateGwDailyCol(won, streak); }
       });
       if (dailyCollege) dailyCollege.init();
     }
@@ -8298,10 +8317,15 @@ window.fmtHeight = fmtHeight;
     { id:'big_brain', icon:'🧠', name:'Big Brain', desc:'200 correct in a row — Unlimited GUESS WHO', check:()=> parseInt(localStorage.getItem('epu_streak')||'0') >= 200, goal:200, getCurrent:()=> parseInt(localStorage.getItem('epu_streak')||'0') },
     { id:'premium', icon:'👑', name:'Premium', desc:'Become a premium member', check:()=> typeof hasPremium==='function' && hasPremium() },
     { id:'mock_master', icon:'📋', name:'Draft Master', desc:'Complete 100 mock drafts', check:()=> parseInt(localStorage.getItem('md_games_played')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('md_games_played')||'0') },
-    { id:'gw_first_win', icon:'🔍', name:'Detective', desc:'Win your first ELITE PULL game', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') > 0 },
-    { id:'gw_streak_7', icon:'🕵️', name:'Sleuth', desc:'7 day Daily ELITE PULL streak (either mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) >= 7, goal:7, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) },
-    { id:'gw_streak_30', icon:'🔮', name:'Oracle', desc:'30 day Daily ELITE PULL streak (either mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) >= 30, goal:30, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0')) },
-    { id:'gw_master', icon:'🧩', name:'ELITE PULL Master', desc:'Win 100 ELITE PULL games (any mode)', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') },
+    { id:'gw_first_win', icon:'🔍', name:'Detective', desc:'Win your first ELITE PULL game', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') + parseInt(localStorage.getItem('gw_col_wins')||'0') > 0 },
+    { id:'gw_streak_7', icon:'🕵️', name:'Sleuth', desc:'7 day Daily ELITE PULL streak (any mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0'), parseInt(localStorage.getItem('gw_daily_col_streak')||'0')) >= 7, goal:7, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0'), parseInt(localStorage.getItem('gw_daily_col_streak')||'0')) },
+    { id:'gw_streak_30', icon:'🔮', name:'Oracle', desc:'30 day Daily ELITE PULL streak (any mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0'), parseInt(localStorage.getItem('gw_daily_col_streak')||'0')) >= 30, goal:30, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0'), parseInt(localStorage.getItem('gw_daily_col_streak')||'0')) },
+    { id:'gw_master', icon:'🧩', name:'ELITE PULL Master', desc:'Win 100 ELITE PULL games (any mode)', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') + parseInt(localStorage.getItem('gw_col_wins')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') + parseInt(localStorage.getItem('gw_col_wins')||'0') },
+    { id:'college_first', icon:'🎓', name:'Scholar', desc:'Play your first College Fantasy Game', check:()=> parseFloat(localStorage.getItem('fg_highscore_college_season')||'0') > 0 || parseFloat(localStorage.getItem('fg_highscore_college_week')||'0') > 0 },
+    { id:'college_300', icon:'🏫', name:'Dean\'s List', desc:'Score 300+ in College Fantasy Game (Season)', check:()=> parseFloat(localStorage.getItem('fg_highscore_college_season')||'0') >= 300, goal:300, getCurrent:()=> parseFloat(localStorage.getItem('fg_highscore_college_season')||'0') },
+    { id:'college_400', icon:'🎓', name:'Valedictorian', desc:'Score 400+ in College Fantasy Game (Season)', check:()=> parseFloat(localStorage.getItem('fg_highscore_college_season')||'0') >= 400, goal:400, getCurrent:()=> parseFloat(localStorage.getItem('fg_highscore_college_season')||'0') },
+    { id:'college_ep_streak_7', icon:'📚', name:'Study Streak', desc:'7 day Daily College ELITE PULL streak', check:()=> parseInt(localStorage.getItem('gw_daily_col_streak')||'0') >= 7, goal:7, getCurrent:()=> parseInt(localStorage.getItem('gw_daily_col_streak')||'0') },
+    { id:'college_sweep', icon:'🏆', name:'Triple Threat', desc:'Complete all 3 daily ELITE PULL games in one day', check:()=> { const t = new Date().toLocaleDateString('en-CA', {timeZone:'America/New_York'}); return localStorage.getItem('gw_daily_last_win')===t && localStorage.getItem('gw_daily_at_last_win')===t && localStorage.getItem('gw_daily_col_last_win')===t; } },
   ];
 
   const BADGE_STORAGE_KEY = 'jb_active_badge';
@@ -11374,6 +11398,28 @@ window.fmtHeight = fmtHeight;
     });
   };
 
+  window._lbUpdateGwDailyCol = function(won, streak) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    const docRef = db.collection('leaderboard').doc(user.uid);
+    docRef.get().then(doc => {
+      const existing = doc.exists && doc.data().gwDailyCol ? (doc.data().gwDailyCol.bestStreak || 0) : 0;
+      const newBest = Math.max(existing, streak);
+      docRef.set({
+        name: name, email: (user.email||''), ...getLbBadge(),
+        gwDailyCol: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }).catch(() => {
+      docRef.set({
+        name: name, email: (user.email||''), ...getLbBadge(),
+        gwDailyCol: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(e => console.warn('[LB] gw daily college save error:', e));
+    });
+  };
+
   // === LOAD & RENDER LEADERBOARDS ===
   function renderRow(rank, name, statHtml, isMe, badgeIcon) {
     const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -11439,6 +11485,28 @@ window.fmtHeight = fmtHeight;
     });
   });
 
+  // Games/Daily tab toggle
+  const lbTabGames = document.getElementById('lbTabGames');
+  const lbTabDaily = document.getElementById('lbTabDaily');
+  const lbPanelGames = document.getElementById('lbPanelGames');
+  const lbPanelDaily = document.getElementById('lbPanelDaily');
+  let lbActiveTab = 'games';
+  if (lbTabGames && lbTabDaily) {
+    lbTabGames.addEventListener('click', () => {
+      if (lbActiveTab === 'games') return;
+      lbActiveTab = 'games';
+      lbTabGames.classList.add('active'); lbTabDaily.classList.remove('active');
+      lbPanelGames.style.display = ''; lbPanelDaily.style.display = 'none';
+    });
+    lbTabDaily.addEventListener('click', () => {
+      if (lbActiveTab === 'daily') return;
+      lbActiveTab = 'daily';
+      lbTabDaily.classList.add('active'); lbTabGames.classList.remove('active');
+      lbPanelDaily.style.display = ''; lbPanelGames.style.display = 'none';
+      loadDailyLeaderboards();
+    });
+  }
+
   function loadLeaderboards() {
     const db = getDb();
     if (!db) {
@@ -11499,28 +11567,10 @@ window.fmtHeight = fmtHeight;
         else { if (lbColWeekEmpty) lbColWeekEmpty.style.display = 'none'; lbColWeekList.innerHTML = renderTop3(colWeekPlayers, uid, u => u.collegeWeek.highScore.toFixed(1) + ' PTS'); }
       }
 
-      // --- DAILY PULL STREAK ---
-      const dailyPlayers2 = all.filter(u => u.daily && (u.daily.bestStreak > 0 || u.daily.streak > 0) && isWithinTimeFilter(u.daily.date, tf))
-        .map(u => ({
-          ...u,
-          _bestStreak: Math.max(u.daily.bestStreak || 0, u.daily.streak || 0),
-          _currentStreak: (u.daily.date === today && u.daily.won) ? (u.daily.streak || 0) : 0
-        }))
-        .sort((a, b) => {
-          if (b._bestStreak !== a._bestStreak) return b._bestStreak - a._bestStreak;
-          return b._currentStreak - a._currentStreak;
-        });
-      const lbDailyList = document.getElementById('lbDailyList');
-      const lbDailyLoading = document.getElementById('lbDailyLoading');
-      const lbDailyEmpty = document.getElementById('lbDailyEmpty');
-      lbDailyLoading.style.display = 'none';
-      if (dailyPlayers2.length === 0) { lbDailyEmpty.style.display = 'block'; lbDailyList.innerHTML = ''; }
-      else {
-        lbDailyEmpty.style.display = 'none';
-        lbDailyList.innerHTML = renderTop3(dailyPlayers2, uid, u => {
-          return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
-        });
-      }
+      // --- DAILY STREAK DATA (rendering moved to Daily tab, kept for badge detection) ---
+      const dailyPlayers2 = all.filter(u => u.daily && (u.daily.bestStreak > 0 || u.daily.streak > 0))
+        .map(u => ({ ...u, _bestStreak: Math.max(u.daily.bestStreak || 0, u.daily.streak || 0) }))
+        .sort((a, b) => b._bestStreak - a._bestStreak);
 
       // --- ELITE PULL UNLIMITED ---
       const unlimitedPlayers = all.filter(u => u.unlimited && (u.unlimited.bestStreak > 0 || u.unlimited.streak > 0) && isWithinTimeFilter(u.updatedAt ? u.updatedAt.slice(0,10) : '', tf))
@@ -11536,60 +11586,24 @@ window.fmtHeight = fmtHeight;
       const lbAlltimeLoading = document.getElementById('lbAlltimeLoading');
       const lbAlltimeEmpty = document.getElementById('lbAlltimeEmpty');
       const lbAlltimeList = document.getElementById('lbAlltimeList');
-      lbAlltimeLoading.style.display = 'none';
-      if (unlimitedPlayers.length === 0) { lbAlltimeEmpty.style.display = 'block'; lbAlltimeList.innerHTML = ''; }
-      else {
-        lbAlltimeEmpty.style.display = 'none';
-        lbAlltimeList.innerHTML = renderTop3(unlimitedPlayers, uid, u => {
-          return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
-        });
+      if (lbAlltimeLoading) lbAlltimeLoading.style.display = 'none';
+      if (lbAlltimeList) {
+        if (unlimitedPlayers.length === 0) { if (lbAlltimeEmpty) lbAlltimeEmpty.style.display = 'block'; lbAlltimeList.innerHTML = ''; }
+        else {
+          if (lbAlltimeEmpty) lbAlltimeEmpty.style.display = 'none';
+          lbAlltimeList.innerHTML = renderTop3(unlimitedPlayers, uid, u => {
+            return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
+          });
+        }
       }
 
-      // --- GUESS WHO — CURRENT STREAK ---
-      const gwCurrentPlayers = all.filter(u => u.gwDaily && (u.gwDaily.bestStreak > 0 || u.gwDaily.streak > 0) && isWithinTimeFilter(u.gwDaily.date, tf))
-        .map(u => ({
-          ...u,
-          _bestStreak: Math.max(u.gwDaily.bestStreak || 0, u.gwDaily.streak || 0),
-          _currentStreak: (u.gwDaily.date === today && u.gwDaily.won) ? (u.gwDaily.streak || 0) : 0
-        }))
-        .sort((a, b) => {
-          if (b._bestStreak !== a._bestStreak) return b._bestStreak - a._bestStreak;
-          return b._currentStreak - a._currentStreak;
-        });
-      const lbGwCurrentLoading = document.getElementById('lbGwCurrentLoading');
-      const lbGwCurrentEmpty = document.getElementById('lbGwCurrentEmpty');
-      const lbGwCurrentList = document.getElementById('lbGwCurrentList');
-      lbGwCurrentLoading.style.display = 'none';
-      if (gwCurrentPlayers.length === 0) { lbGwCurrentEmpty.style.display = 'block'; lbGwCurrentList.innerHTML = ''; }
-      else {
-        lbGwCurrentEmpty.style.display = 'none';
-        lbGwCurrentList.innerHTML = renderTop3(gwCurrentPlayers, uid, u => {
-          return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
-        });
-      }
-
-      // --- GUESS WHO — ALL-TIME STREAK ---
-      const gwATPlayers = all.filter(u => u.gwDailyAT && (u.gwDailyAT.bestStreak > 0 || u.gwDailyAT.streak > 0) && isWithinTimeFilter(u.gwDailyAT.date, tf))
-        .map(u => ({
-          ...u,
-          _bestStreak: Math.max(u.gwDailyAT.bestStreak || 0, u.gwDailyAT.streak || 0),
-          _currentStreak: (u.gwDailyAT.date === today && u.gwDailyAT.won) ? (u.gwDailyAT.streak || 0) : 0
-        }))
-        .sort((a, b) => {
-          if (b._bestStreak !== a._bestStreak) return b._bestStreak - a._bestStreak;
-          return b._currentStreak - a._currentStreak;
-        });
-      const lbGwATLoading = document.getElementById('lbGwAlltimeLoading');
-      const lbGwATEmpty = document.getElementById('lbGwAlltimeEmpty');
-      const lbGwATList = document.getElementById('lbGwAlltimeList');
-      lbGwATLoading.style.display = 'none';
-      if (gwATPlayers.length === 0) { lbGwATEmpty.style.display = 'block'; lbGwATList.innerHTML = ''; }
-      else {
-        lbGwATEmpty.style.display = 'none';
-        lbGwATList.innerHTML = renderTop3(gwATPlayers, uid, u => {
-          return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
-        });
-      }
+      // --- GW STREAK DATA (rendering moved to Daily tab, kept for badge detection) ---
+      const gwCurrentPlayers = all.filter(u => u.gwDaily && (u.gwDaily.bestStreak > 0 || u.gwDaily.streak > 0))
+        .map(u => ({ ...u, _bestStreak: Math.max(u.gwDaily.bestStreak || 0, u.gwDaily.streak || 0) }))
+        .sort((a, b) => b._bestStreak - a._bestStreak);
+      const gwATPlayers = all.filter(u => u.gwDailyAT && (u.gwDailyAT.bestStreak > 0 || u.gwDailyAT.streak > 0))
+        .map(u => ({ ...u, _bestStreak: Math.max(u.gwDailyAT.bestStreak || 0, u.gwDailyAT.streak || 0) }))
+        .sort((a, b) => b._bestStreak - a._bestStreak);
 
       // === Badge #1 detection ===
       if (uid) {
@@ -11623,6 +11637,65 @@ window.fmtHeight = fmtHeight;
   }
 
   // === INLINE FG LEADERBOARD (shown after game ends) ===
+  function loadDailyLeaderboards() {
+    const db = getDb();
+    if (!db) {
+      document.querySelectorAll('#lbPanelDaily .lb-loading').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('#lbPanelDaily .lb-empty').forEach(el => { el.style.display = 'block'; el.textContent = 'Sign in to see leaderboards'; });
+      return;
+    }
+    const uid = getUser() ? getUser().uid : null;
+    const today = todayKey();
+
+    db.collection('leaderboard').get().then(snap => {
+      const all = [];
+      snap.forEach(doc => { all.push({ id: doc.id, ...doc.data() }); });
+
+      function renderStreakSection(listId, loadingId, emptyId, fieldName) {
+        const list = document.getElementById(listId);
+        const loading = document.getElementById(loadingId);
+        const empty = document.getElementById(emptyId);
+        if (loading) loading.style.display = 'none';
+        if (!list) return;
+        const players = all.filter(u => u[fieldName] && (u[fieldName].bestStreak > 0 || u[fieldName].streak > 0))
+          .map(u => ({
+            ...u,
+            _bestStreak: Math.max(u[fieldName].bestStreak || 0, u[fieldName].streak || 0),
+            _currentStreak: (u[fieldName].date === today && u[fieldName].won) ? (u[fieldName].streak || 0) : 0
+          }))
+          .sort((a, b) => {
+            if (b._bestStreak !== a._bestStreak) return b._bestStreak - a._bestStreak;
+            return b._currentStreak - a._currentStreak;
+          });
+        if (players.length === 0) {
+          if (empty) empty.style.display = 'none';
+          list.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:8px 0">No data yet</div>';
+        } else {
+          if (empty) empty.style.display = 'none';
+          list.innerHTML = renderTop3(players, uid, u => {
+            return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
+          });
+        }
+      }
+
+      // Daily Elite Pull — Current (gwDaily)
+      renderStreakSection('lbDailyEpCurrentList', 'lbDailyEpCurrentLoading', 'lbDailyEpCurrentEmpty', 'gwDaily');
+
+      // Daily Elite Pull — All-Time (gwDailyAT)
+      renderStreakSection('lbDailyEpAlltimeList', 'lbDailyEpAlltimeLoading', 'lbDailyEpAlltimeEmpty', 'gwDailyAT');
+
+      // Daily Elite Pull — College (gwDailyCol)
+      renderStreakSection('lbDailyEpCollegeList', 'lbDailyEpCollegeLoading', 'lbDailyEpCollegeEmpty', 'gwDailyCol');
+
+      // Daily Guess Who (daily)
+      renderStreakSection('lbDailyGuesswhoList', 'lbDailyGuesswhoLoading', 'lbDailyGuesswhoEmpty', 'daily');
+
+    }).catch(e => {
+      console.warn('[LB] daily load error:', e);
+      document.querySelectorAll('#lbPanelDaily .lb-loading').forEach(el => el.style.display = 'none');
+    });
+  }
+
   window._lbRenderFgInline = function(myScore, isWeek) {
     const db = getDb();
     const wrap = document.getElementById('fgLeaderboard');

@@ -3926,26 +3926,41 @@ function buildCareerTable(d, scoringFormat) {
   return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-function buildCollegeTable(d) {
+function buildCollegeTable(d, scoringFormat) {
   if (typeof COLLEGE_STATS === 'undefined') return '';
   const stats = COLLEGE_STATS[d.n];
   if (!stats || !stats.length) return '';
   const pos = d.s || 'WR';
   const isQB = pos === 'QB';
   const isRB = pos === 'RB';
-  let hdr = '<tr><th>YR</th><th>TEAM</th><th>CONF</th>';
+  const fmt = scoringFormat || 'half';
+  const recMult = fmt === 'ppr' ? 1.0 : fmt === 'std' ? 0 : 0.5;
+  // Fantasy calc with variable reception scoring
+  const _cfpts = (s) => {
+    let fp = (s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*-2 + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*recMult + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2;
+    return Math.round(fp*10)/10;
+  };
+  // Compute fpts for each season
+  const withFpts = stats.map(s => ({...s, fpts: _cfpts(s)}));
+  const bestFpts = Math.max(...withFpts.map(s => s.fpts));
+
+  let hdr = '<tr><th>YR</th><th>TEAM</th><th>CONF</th><th>Pts</th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>YDS</th><th>TD</th><th>INT</th><th>PCT</th><th>RuYd</th><th>RuTD</th>';
   else if (isRB) hdr += '<th>CAR</th><th>RuYd</th><th>RuTD</th><th>YPC</th><th>REC</th><th>RcYd</th><th>RcTD</th>';
   else hdr += '<th>REC</th><th>RcYd</th><th>RcTD</th><th>YPR</th><th>RuYd</th><th>RuTD</th>';
   hdr += '</tr>';
-  let bestYds = 0;
-  stats.forEach(s => { const t = (s.py||0)+(s.ry||0)+(s.rcy||0); if (t>bestYds) bestYds=t; });
-  let rows = stats.map(s => {
-    const t = (s.py||0)+(s.ry||0)+(s.rcy||0);
-    const isBest = t===bestYds&&bestYds>0?' class="best-yr"':'';
+
+  let rows = withFpts.map(s => {
+    const isBest = s.fpts===bestFpts&&bestFpts>0?' class="best-yr"':'';
+    const fptsColor = posFptsColor ? posFptsColor(s.fpts / 13, pos) : null;
     let r = '<tr><td'+isBest+'>'+s.yr+'</td>';
     r += '<td style="color:var(--text2)">'+s.tm+'</td>';
     r += '<td><span class="college-conf-badge">'+(s.conf||'—')+'</span></td>';
+    if (fptsColor) {
+      r += '<td class="fpts-cell" style="color:'+fptsColor+';font-weight:700">'+s.fpts+'</td>';
+    } else {
+      r += '<td class="fpts-cell'+(s.fpts===bestFpts&&bestFpts>0?' best-yr':'')+'">'+s.fpts+'</td>';
+    }
     if (isQB) {
       r += '<td>'+(s.pc||0)+'</td><td>'+(s.pa||0)+'</td><td style="font-weight:700">'+(s.py||0)+'</td>';
       r += '<td style="color:var(--green);font-weight:700">'+(s.ptd||0)+'</td><td style="color:var(--red)">'+(s.int||0)+'</td>';
@@ -3961,10 +3976,13 @@ function buildCollegeTable(d) {
     }
     return r+'</tr>';
   }).join('');
-  const tot = {pc:0,pa:0,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rec:0,rcy:0,rctd:0};
-  stats.forEach(s => { tot.pc+=s.pc||0;tot.pa+=s.pa||0;tot.py+=s.py||0;tot.ptd+=s.ptd||0;tot.int+=s.int||0;tot.ra+=s.ra||0;tot.ry+=s.ry||0;tot.rtd+=s.rtd||0;tot.rec+=s.rec||0;tot.rcy+=s.rcy||0;tot.rctd+=s.rctd||0; });
+
+  const tot = {pc:0,pa:0,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rec:0,rcy:0,rctd:0,fl:0,fpts:0};
+  withFpts.forEach(s => { tot.pc+=s.pc||0;tot.pa+=s.pa||0;tot.py+=s.py||0;tot.ptd+=s.ptd||0;tot.int+=s.int||0;tot.ra+=s.ra||0;tot.ry+=s.ry||0;tot.rtd+=s.rtd||0;tot.rec+=s.rec||0;tot.rcy+=s.rcy||0;tot.rctd+=s.rctd||0;tot.fl+=s.fl||0;tot.fpts+=s.fpts; });
+  tot.fpts = Math.round(tot.fpts*10)/10;
   let tr = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
   tr += '<td style="color:var(--accent)">TOT</td><td></td><td></td>';
+  tr += '<td style="color:var(--green);font-weight:700">'+tot.fpts+'</td>';
   if (isQB) {
     const pct=tot.pa>0?((tot.pc/tot.pa)*100).toFixed(1)+'%':'—';
     tr += '<td>'+tot.pc+'</td><td>'+tot.pa+'</td><td>'+tot.py+'</td><td style="color:var(--green)">'+tot.ptd+'</td><td style="color:var(--red)">'+tot.int+'</td><td>'+pct+'</td><td>'+tot.ry+'</td><td>'+tot.rtd+'</td>';
@@ -4260,8 +4278,17 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
       ${typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[d.n] ? `<div class="card-section">
-        <div class="card-section-title">College Career Log</div>
-        ${buildCollegeTable(d)}
+        <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+          <span id="collegeLogLabel">College Career Log (Half PPR)</span>
+          <div class="career-log-controls">
+            <div class="career-log-toggle">
+              <button class="college-scoring-btn" data-collegescoring="ppr">PPR</button>
+              <button class="college-scoring-btn active" data-collegescoring="half">HALF</button>
+              <button class="college-scoring-btn" data-collegescoring="std">STD</button>
+            </div>
+          </div>
+        </div>
+        <div id="collegeLogContent">${buildCollegeTable(d, 'half')}</div>
       </div>` : ''}`;
       })() : `<div class="card-section" style="text-align:center;padding:12px">
         <div class="card-section-title">RAS</div>
@@ -4282,8 +4309,17 @@ function openPlayerCard(d) {
         </div>
       </div>
       ${typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[d.n] ? `<div class="card-section">
-        <div class="card-section-title">College Career Log</div>
-        ${buildCollegeTable(d)}
+        <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+          <span id="collegeLogLabel">College Career Log (Half PPR)</span>
+          <div class="career-log-controls">
+            <div class="career-log-toggle">
+              <button class="college-scoring-btn" data-collegescoring="ppr">PPR</button>
+              <button class="college-scoring-btn active" data-collegescoring="half">HALF</button>
+              <button class="college-scoring-btn" data-collegescoring="std">STD</button>
+            </div>
+          </div>
+        </div>
+        <div id="collegeLogContent">${buildCollegeTable(d, 'half')}</div>
       </div>` : ''}`}
       </div>
     </div>
@@ -4312,6 +4348,21 @@ function openPlayerCard(d) {
       });
     });
   }
+
+  // College career log scoring toggle
+  const _collegeScoringBtns = cardEl.querySelectorAll('.college-scoring-btn');
+  let _collegeScoring = 'half';
+  _collegeScoringBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      _collegeScoringBtns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      _collegeScoring = this.dataset.collegescoring;
+      const label = document.getElementById('collegeLogLabel');
+      if (label) label.textContent = 'College Career Log (' + (_collegeScoring === 'ppr' ? 'PPR' : _collegeScoring === 'std' ? 'Standard' : 'Half PPR') + ')';
+      const content = document.getElementById('collegeLogContent');
+      if (content) content.innerHTML = buildCollegeTable(d, _collegeScoring);
+    });
+  });
 
   // Career log Season/Weekly toggle + Scoring toggle
   const clModeBtns = cardEl.querySelectorAll('.cl-mode-btn');

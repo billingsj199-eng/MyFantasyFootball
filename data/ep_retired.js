@@ -1811,7 +1811,6 @@ const EP_RETIRED = [
     {name:"Stefon Diggs",pos:"WR",debut:2015,last:2024},
     {name:"Cooper Kupp",pos:"WR",debut:2017,last:2024},
     {name:"Mike Evans",pos:"WR",debut:2014,last:2024},
-    {name:"Marvin Harrison",pos:"WR",debut:1996,last:2008},
     {name:"Reggie Wayne",pos:"WR",debut:2001,last:2014},
     {name:"Anquan Boldin",pos:"WR",debut:2003,last:2016},
     {name:"Torry Holt",pos:"WR",debut:1999,last:2009},

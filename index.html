@@ -3956,7 +3956,7 @@ function openPlayerCard(d) {
       </div>
     </div>
     <div class="card-body">
-      ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] && (COMBINE_DATA[d.n].forty || COMBINE_DATA[d.n].vert || COMBINE_DATA[d.n].broad || COMBINE_DATA[d.n].bench) ? `<div class="card-view-toggle" id="cardViewToggle">
+      ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] && (COMBINE_DATA[d.n].forty || COMBINE_DATA[d.n].vert || COMBINE_DATA[d.n].broad || COMBINE_DATA[d.n].bench || COMBINE_DATA[d.n].ras) ? `<div class="card-view-toggle" id="cardViewToggle">
         <button class="card-view-btn active" data-cardview="fantasy">FANTASY</button>
         <button class="card-view-btn" data-cardview="prospect">PROSPECT</button>
       </div>` : ''}
@@ -4142,22 +4142,46 @@ function openPlayerCard(d) {
       ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] ? (() => {
         const cb = COMBINE_DATA[d.n];
         const hasDrills = cb.forty || cb.bench || cb.vert || cb.broad || cb.cone || cb.shuttle;
-        const _cbClass = (val, th) => { if (val==null) return ''; return val<=th[0]?'cb-elite':val<=th[1]?'cb-good':val<=th[2]?'cb-avg':'cb-below'; };
-        const _cbClassHigh = (val, th) => { if (val==null) return ''; return val>=th[0]?'cb-elite':val>=th[1]?'cb-good':val>=th[2]?'cb-avg':'cb-below'; };
-        const pos = d.s || cb.pos;
-        const fortyT = pos==='QB'?[4.6,4.75,4.9]:pos==='TE'?[4.55,4.65,4.8]:pos==='RB'?[4.4,4.5,4.6]:[4.35,4.45,4.55];
-        const coneT = [6.8,7.0,7.2]; const shuttleT = [4.1,4.25,4.4];
-        const benchT = [24,18,14]; const vertT = pos==='QB'?[34,30,27]:[38,34,30];
-        const broadT = pos==='QB'?[118,112,105]:[126,120,114];
-        return `${hasDrills ? `<div class="card-section">
+        // Real percentile thresholds from 2000-2026 combine data by position
+        // Format: [elite(top5%), good(top25%), avg(top50%)] — below 50% = bottom half
+        const _cbThresholds = {
+          QB:{forty:[4.55,4.69,4.81],bench:[25,22,20],vert:[36.5,33.5,31],broad:[124,116,111],cone:[6.78,6.98,7.13],shuttle:[4.08,4.2,4.34]},
+          RB:{forty:[4.38,4.48,4.57],bench:[28,23,20],vert:[40,36,34],broad:[128,122,118],cone:[6.79,6.95,7.09],shuttle:[4.06,4.18,4.29]},
+          WR:{forty:[4.34,4.43,4.5],bench:[22,17,14],vert:[41,37.5,35.5],broad:[132,125,121],cone:[6.65,6.83,6.97],shuttle:[3.99,4.13,4.22]},
+          TE:{forty:[4.52,4.65,4.75],bench:[27,23,20],vert:[38.5,35.5,33.5],broad:[126,120,116],cone:[6.84,7.03,7.15],shuttle:[4.11,4.27,4.37]}
+        };
+        const pos = d.s || cb.pos || 'WR';
+        const th = _cbThresholds[pos] || _cbThresholds['WR'];
+        // Lower is better
+        const _cbLow = (val, t) => { if (val==null||!t) return ['','—']; return val<=t[0]?['cb-elite','Elite']:val<=t[1]?['cb-good','Good']:val<=t[2]?['cb-avg','Avg']:['cb-below','Below']; };
+        // Higher is better
+        const _cbHigh = (val, t) => { if (val==null||!t) return ['','—']; return val>=t[0]?['cb-elite','Elite']:val>=t[1]?['cb-good','Good']:val>=t[2]?['cb-avg','Avg']:['cb-below','Below']; };
+        const _drill = (label, val, unit, grade) => `<div class="combine-stat"><div class="cb-val ${grade[0]}">${val}${unit}</div><div class="cb-lbl">${label}</div><div class="cb-lbl" style="font-weight:700;margin-top:1px"><span class="${grade[0]}">${grade[1]}</span></div></div>`;
+        // RAS color: 9+ elite, 7+ good, 5+ avg, below 5 poor
+        const _rasGrade = (v) => { if (v==null) return ['','']; return v>=9?['cb-elite','Elite']:v>=7?['cb-good','Good']:v>=5?['cb-avg','Avg']:['cb-below','Below']; };
+        const rasG = _rasGrade(cb.ras);
+        return `${cb.ras != null ? `<div class="card-section" style="text-align:center;padding-bottom:4px">
+        <div class="card-section-title">RAS <span style="font-size:.55rem;color:var(--text2);font-weight:400">· Relative Athletic Score</span></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:1" class="${rasG[0]}">${cb.ras.toFixed(2)}</div>
+        <div style="font-size:.5rem;font-weight:700;margin-top:2px" class="${rasG[0]}">${rasG[1]}</div>
+        <div style="font-size:.42rem;color:var(--text2);margin-top:2px">Scale: 0–10 · Based on ${pos} combine metrics</div>
+      </div>` : ''}
+      ${hasDrills ? `<div class="card-section">
         <div class="card-section-title">Athletic Profile <span style="font-size:.55rem;color:var(--text2);font-weight:400">· ${cb.yr} Combine${cb.school ? ' · ' + cb.school : ''}</span></div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:6px;flex-wrap:wrap">
+          <span style="font-size:.45rem;color:var(--text2)"><span class="cb-elite" style="font-weight:700">●</span> Elite <span style="opacity:.6">(Top 5%)</span></span>
+          <span style="font-size:.45rem;color:var(--text2)"><span class="cb-good" style="font-weight:700">●</span> Good <span style="opacity:.6">(Top 25%)</span></span>
+          <span style="font-size:.45rem;color:var(--text2)"><span class="cb-avg" style="font-weight:700">●</span> Avg <span style="opacity:.6">(Top 50%)</span></span>
+          <span style="font-size:.45rem;color:var(--text2)"><span class="cb-below" style="font-weight:700">●</span> Below <span style="opacity:.6">(Bottom 50%)</span></span>
+        </div>
+        <div style="text-align:center;margin-bottom:6px;font-size:.45rem;color:var(--text2)">Percentiles based on ${pos} combine results (2000–2026)</div>
         <div class="combine-grid">
-          ${cb.forty ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.forty, fortyT)}">${cb.forty}s</div><div class="cb-lbl">40-Yard</div></div>` : ''}
-          ${cb.vert ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.vert, vertT)}">${cb.vert}"</div><div class="cb-lbl">Vertical</div></div>` : ''}
-          ${cb.broad ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.broad, broadT)}">${cb.broad}"</div><div class="cb-lbl">Broad Jump</div></div>` : ''}
-          ${cb.bench ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.bench, benchT)}">${cb.bench}</div><div class="cb-lbl">Bench Reps</div></div>` : ''}
-          ${cb.cone ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.cone, coneT)}">${cb.cone}s</div><div class="cb-lbl">3-Cone</div></div>` : ''}
-          ${cb.shuttle ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.shuttle, shuttleT)}">${cb.shuttle}s</div><div class="cb-lbl">Shuttle</div></div>` : ''}
+          ${cb.forty ? _drill('40-Yard', cb.forty, 's', _cbLow(cb.forty, th.forty)) : ''}
+          ${cb.vert ? _drill('Vertical', cb.vert, '"', _cbHigh(cb.vert, th.vert)) : ''}
+          ${cb.broad ? _drill('Broad Jump', cb.broad, '"', _cbHigh(cb.broad, th.broad)) : ''}
+          ${cb.bench ? _drill('Bench Reps', cb.bench, '', _cbHigh(cb.bench, th.bench)) : ''}
+          ${cb.cone ? _drill('3-Cone', cb.cone, 's', _cbLow(cb.cone, th.cone)) : ''}
+          ${cb.shuttle ? _drill('Shuttle', cb.shuttle, 's', _cbLow(cb.shuttle, th.shuttle)) : ''}
         </div>
       </div>` : ''}
       <div class="card-section">
@@ -4338,15 +4362,19 @@ function renderCompareGrid() {
           </div>` : ''}
           ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] && (COMBINE_DATA[d.n].forty || COMBINE_DATA[d.n].vert || COMBINE_DATA[d.n].broad) ? (() => {
             const cb = COMBINE_DATA[d.n];
+            const _cmpTh = {QB:{forty:[4.55,4.69,4.81],vert:[36.5,33.5,31],broad:[124,116,111],bench:[25,22,20],cone:[6.78,6.98,7.13],shuttle:[4.08,4.2,4.34]},RB:{forty:[4.38,4.48,4.57],vert:[40,36,34],broad:[128,122,118],bench:[28,23,20],cone:[6.79,6.95,7.09],shuttle:[4.06,4.18,4.29]},WR:{forty:[4.34,4.43,4.5],vert:[41,37.5,35.5],broad:[132,125,121],bench:[22,17,14],cone:[6.65,6.83,6.97],shuttle:[3.99,4.13,4.22]},TE:{forty:[4.52,4.65,4.75],vert:[38.5,35.5,33.5],broad:[126,120,116],bench:[27,23,20],cone:[6.84,7.03,7.15],shuttle:[4.11,4.27,4.37]}};
+            const t = _cmpTh[d.s] || _cmpTh['WR'];
+            const _lo = (v,th) => !v||!th?'accent':v<=th[0]?'green':v<=th[1]?'accent':v<=th[2]?'text2':'red';
+            const _hi = (v,th) => !v||!th?'accent':v>=th[0]?'green':v>=th[1]?'accent':v>=th[2]?'text2':'red';
             return `<div class="card-section">
             <div class="card-section-title">Athletic Profile <span style="font-size:.55rem;color:var(--text2);font-weight:400">· ${cb.yr} Combine</span></div>
             <div class="card-rank-row" style="grid-template-columns:repeat(${[cb.forty,cb.vert,cb.broad,cb.bench,cb.cone,cb.shuttle].filter(Boolean).length > 4 ? 3 : [cb.forty,cb.vert,cb.broad,cb.bench,cb.cone,cb.shuttle].filter(Boolean).length},1fr)">
-              ${cb.forty ? `<div class="card-rank-box"><div class="lbl">40-Yard</div><div class="num accent">${cb.forty}s</div></div>` : ''}
-              ${cb.vert ? `<div class="card-rank-box"><div class="lbl">Vertical</div><div class="num accent">${cb.vert}"</div></div>` : ''}
-              ${cb.broad ? `<div class="card-rank-box"><div class="lbl">Broad</div><div class="num accent">${cb.broad}"</div></div>` : ''}
-              ${cb.bench ? `<div class="card-rank-box"><div class="lbl">Bench</div><div class="num accent">${cb.bench}</div></div>` : ''}
-              ${cb.cone ? `<div class="card-rank-box"><div class="lbl">3-Cone</div><div class="num accent">${cb.cone}s</div></div>` : ''}
-              ${cb.shuttle ? `<div class="card-rank-box"><div class="lbl">Shuttle</div><div class="num accent">${cb.shuttle}s</div></div>` : ''}
+              ${cb.forty ? `<div class="card-rank-box"><div class="lbl">40-Yard</div><div class="num" style="color:var(--${_lo(cb.forty,t.forty)})">${cb.forty}s</div></div>` : ''}
+              ${cb.vert ? `<div class="card-rank-box"><div class="lbl">Vertical</div><div class="num" style="color:var(--${_hi(cb.vert,t.vert)})">${cb.vert}"</div></div>` : ''}
+              ${cb.broad ? `<div class="card-rank-box"><div class="lbl">Broad</div><div class="num" style="color:var(--${_hi(cb.broad,t.broad)})">${cb.broad}"</div></div>` : ''}
+              ${cb.bench ? `<div class="card-rank-box"><div class="lbl">Bench</div><div class="num" style="color:var(--${_hi(cb.bench,t.bench)})">${cb.bench}</div></div>` : ''}
+              ${cb.cone ? `<div class="card-rank-box"><div class="lbl">3-Cone</div><div class="num" style="color:var(--${_lo(cb.cone,t.cone)})">${cb.cone}s</div></div>` : ''}
+              ${cb.shuttle ? `<div class="card-rank-box"><div class="lbl">Shuttle</div><div class="num" style="color:var(--${_lo(cb.shuttle,t.shuttle)})">${cb.shuttle}s</div></div>` : ''}
             </div></div>`;
           })() : ''}
           ${career.length > 0 ? `<div class="card-section">

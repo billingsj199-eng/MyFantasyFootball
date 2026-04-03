@@ -13492,16 +13492,17 @@ window.fmtHeight = fmtHeight;
         }
       }
 
-      // Breakout age: age at Sept 1 of earliest breakout season
+      // Breakout age: age at April 28 of the year AFTER breakout season (draft time reference)
+      // This matches draft age's reference point so the two are directly comparable
       let breakoutAge = null;
       if (breakoutYr && birth) {
         const parts = birth.split('-');
         const bY = parseInt(parts[0]), bM = parseInt(parts[1]) - 1, bD = parseInt(parts[2]);
         if (bY && bM >= 0 && bD >= 1) {
-          // Sept 1 of breakout year
-          const seasonDays = breakoutYr * 365.25 + 8 * 30.44 + 1; // month 8 = September (0-indexed)
+          const refYr = breakoutYr + 1; // draft after breakout season
+          const refDays = refYr * 365.25 + 3 * 30.44 + 28; // April 28
           const birthDays = bY * 365.25 + bM * 30.44 + bD;
-          const ba = (seasonDays - birthDays) / 365.25;
+          const ba = (refDays - birthDays) / 365.25;
           if (ba >= 17 && ba <= 26) breakoutAge = Math.round(ba * 10) / 10;
         }
       }

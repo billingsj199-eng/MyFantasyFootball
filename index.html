@@ -2264,7 +2264,7 @@ CLEAR
 <div class="pm-wrapper">
 <div class="pm-header">
 <div class="pm-title">Prospect Model</div>
-<div class="pm-subtitle">JM Score (0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS &amp; draft capital</div>
+<div class="pm-subtitle">JM Score (0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS, draft capital &amp; teammate quality</div>
 </div>
 <div class="pm-controls">
 <div class="pm-pos-tabs" id="pmPosTabs">
@@ -13271,10 +13271,10 @@ window.fmtHeight = fmtHeight;
   // Each component outputs a 0-100 sub-score, then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.15, breakout: 0.12, prod: 0.30, conf: 0.10, ras: 0.08, dc: 0.25 },
-    RB:  { age: 0.18, breakout: 0.15, prod: 0.28, conf: 0.08, ras: 0.13, dc: 0.18 },
-    WR:  { age: 0.15, breakout: 0.18, prod: 0.28, conf: 0.10, ras: 0.12, dc: 0.17 },
-    TE:  { age: 0.10, breakout: 0.15, prod: 0.28, conf: 0.12, ras: 0.15, dc: 0.20 }
+    QB:  { age: 0.14, breakout: 0.11, prod: 0.28, conf: 0.10, ras: 0.08, dc: 0.24, tm: 0.05 },
+    RB:  { age: 0.17, breakout: 0.14, prod: 0.27, conf: 0.08, ras: 0.12, dc: 0.17, tm: 0.05 },
+    WR:  { age: 0.14, breakout: 0.17, prod: 0.26, conf: 0.10, ras: 0.11, dc: 0.16, tm: 0.06 },
+    TE:  { age: 0.10, breakout: 0.14, prod: 0.27, conf: 0.11, ras: 0.14, dc: 0.19, tm: 0.05 }
   };
 
   // Conference tiers based on historical NFL production rates
@@ -13406,6 +13406,8 @@ window.fmtHeight = fmtHeight;
     const confScore = jmConf(p.lastConf);
     const rasScore = jmRas(p.ras, p.pos);
     const dcScore = jmDraftCapital(p.dr);
+    // Teammate score is 0-10, scale to 0-100 for weighting
+    const tmScore = p.tm != null ? Math.min(100, p.tm * 10) : null;
 
     // Handle missing components: redistribute weight proportionally
     let totalWeight = 0;
@@ -13417,7 +13419,8 @@ window.fmtHeight = fmtHeight;
       { score: prodScore, weight: w.prod },
       { score: confScore, weight: w.conf },
       { score: rasScore, weight: w.ras },
-      { score: dcScore, weight: w.dc }
+      { score: dcScore, weight: w.dc },
+      { score: tmScore, weight: w.tm }
     ];
 
     components.forEach(c => {
@@ -13565,6 +13568,123 @@ window.fmtHeight = fmtHeight;
     if (typeof COMBINE_DATA !== 'undefined') Object.keys(COMBINE_DATA).forEach(n => allNames.add(n));
     if (typeof COLLEGE_STATS !== 'undefined') Object.keys(COLLEGE_STATS).forEach(n => allNames.add(n));
 
+    // === TEAMMATE INDEX ===
+    // Build school+year → [{name, pos, dr}] map for teammate quality detection
+    // "dr" here = best available draft capital (overall pick estimate)
+    const _tmIndex = {}; // key: "normalizedSchool::year" → [{name, pos, drVal}]
+    if (typeof COLLEGE_STATS !== 'undefined') {
+      // Helper: get position for a name
+      function _getPos(n) {
+        if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[n] && COMBINE_DATA[n].pos) return COMBINE_DATA[n].pos;
+        const d = D.find(p => p.n === n);
+        return d ? d.s : null;
+      }
+      // Helper: get overall pick estimate for a name
+      function _getDrVal(n) {
+        const cbO = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[n] : null;
+        if (cbO && cbO.draft != null) {
+          if (cbO.draft === 'U' || cbO.draft === 'u') return 300;
+          const v = parseInt(cbO.draft); if (!isNaN(v) && v > 0) return v;
+        }
+        if (typeof LEGEND_BIO !== 'undefined' && LEGEND_BIO[n] && LEGEND_BIO[n].dr != null) {
+          const lb = LEGEND_BIO[n].dr;
+          if (lb === 'U' || lb === 'u') return 300;
+          const v = parseInt(lb); if (!isNaN(v) && v > 0) return v;
+        }
+        const d = D.find(p => p.n === n);
+        if (d && d.dr != null) {
+          const rd = parseInt(d.dr);
+          if (!isNaN(rd) && rd >= 1 && rd <= 7) {
+            const ROUND_MID = { 1: 16, 2: 48, 3: 80, 4: 112, 5: 144, 6: 176, 7: 208 };
+            return ROUND_MID[rd] || 999;
+          }
+          if (d.dr === 'U' || d.dr === 'u' || d.dr === 0) return 300;
+        }
+        return 999; // unknown
+      }
+      Object.entries(COLLEGE_STATS).forEach(([n, seasons]) => {
+        const p = _getPos(n);
+        if (!p || !['QB','RB','WR','TE'].includes(p)) return;
+        const drVal = _getDrVal(n);
+        seasons.forEach(s => {
+          if (!s.tm || !s.yr) return;
+          const key = _normSchool(s.tm) + '::' + s.yr;
+          if (!_tmIndex[key]) _tmIndex[key] = [];
+          _tmIndex[key].push({ name: n, pos: p, drVal: drVal });
+        });
+      });
+    }
+
+    // Calculate teammate score (0-10) for a prospect
+    // Looks at same-school, same-year players and evaluates:
+    //   QB: bonus if had elite WR/RB/TE weapons (good situation signal)
+    //   WR/TE: bonus if shared targets with other drafted WRs/TEs (production was suppressed)
+    //   RB: bonus if shared backfield with other drafted RBs
+    function calcTeammate(name, pos, cs) {
+      if (!cs || !cs.length) return null;
+
+      let bestScore = 0;
+
+      cs.forEach(s => {
+        if (!s.tm || !s.yr) return;
+        const key = _normSchool(s.tm) + '::' + s.yr;
+        const teammates = _tmIndex[key];
+        if (!teammates) return;
+
+        // Filter out self
+        const others = teammates.filter(t => t.name !== name);
+        if (!others.length) return;
+
+        let seasonScore = 5.0; // baseline: average teammates
+
+        if (pos === 'QB') {
+          // QBs BENEFIT from elite weapons — having good receivers/RBs is a positive signal
+          // Great QBs at programs with NFL weapons = strong situation
+          const weapons = others.filter(t => ['WR','TE','RB'].includes(t.pos));
+          const r1weapons = weapons.filter(t => t.drVal <= 32).length;   // 1st round skill players
+          const r2weapons = weapons.filter(t => t.drVal > 32 && t.drVal <= 64).length;
+          const r3weapons = weapons.filter(t => t.drVal > 64 && t.drVal <= 100).length;
+          const draftedWeapons = weapons.filter(t => t.drVal < 260).length;
+
+          // Each 1st-round weapon is a big boost, 2nd-round moderate, etc.
+          seasonScore += r1weapons * 1.5 + r2weapons * 0.8 + r3weapons * 0.4 + Math.max(0, draftedWeapons - r1weapons - r2weapons - r3weapons) * 0.15;
+        } else if (pos === 'WR' || pos === 'TE') {
+          // WRs/TEs get CREDIT for producing despite sharing targets
+          const receiversTEs = others.filter(t => ['WR','TE'].includes(t.pos));
+          const r1rec = receiversTEs.filter(t => t.drVal <= 32).length;
+          const r2rec = receiversTEs.filter(t => t.drVal > 32 && t.drVal <= 64).length;
+          const r3rec = receiversTEs.filter(t => t.drVal > 64 && t.drVal <= 100).length;
+          const draftedRec = receiversTEs.filter(t => t.drVal < 260).length;
+
+          // Also check if they had an elite QB (positive context)
+          const eliteQB = others.filter(t => t.pos === 'QB' && t.drVal <= 64).length;
+
+          // Sharing with 1st-round WRs = big boost to their profile
+          seasonScore += r1rec * 1.8 + r2rec * 0.9 + r3rec * 0.4 + Math.max(0, draftedRec - r1rec - r2rec - r3rec) * 0.15;
+          // Elite QB is a slight positive (better offense overall)
+          seasonScore += eliteQB * 0.3;
+        } else if (pos === 'RB') {
+          // RBs get CREDIT for producing despite sharing carries
+          const otherBacks = others.filter(t => t.pos === 'RB');
+          const r1rb = otherBacks.filter(t => t.drVal <= 32).length;
+          const r2rb = otherBacks.filter(t => t.drVal > 32 && t.drVal <= 64).length;
+          const r3rb = otherBacks.filter(t => t.drVal > 64 && t.drVal <= 100).length;
+          const draftedRb = otherBacks.filter(t => t.drVal < 260).length;
+
+          // Sharing with drafted RBs = boost
+          seasonScore += r1rb * 1.8 + r2rb * 1.0 + r3rb * 0.5 + Math.max(0, draftedRb - r1rb - r2rb - r3rb) * 0.2;
+          // Elite QB benefits RB too
+          const eliteQB = others.filter(t => t.pos === 'QB' && t.drVal <= 64).length;
+          seasonScore += eliteQB * 0.2;
+        }
+
+        if (seasonScore > bestScore) bestScore = seasonScore;
+      });
+
+      // Clamp to 0-10 range
+      return Math.max(0, Math.min(10, Math.round(bestScore * 10) / 10));
+    }
+
     const results = [];
     allNames.forEach(name => {
       let cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
@@ -13588,9 +13708,18 @@ window.fmtHeight = fmtHeight;
       }
 
       // Determine position
+      // Override map: players whose NFL position differs from their college position
+      // These players should be scored at their COLLEGE position (or excluded if they
+      // shouldn't appear at a position they never played in college)
+      const _COLLEGE_POS_OVERRIDE = {
+        'Tim Tebow': 'QB'  // Played QB at Florida, briefly attempted TE conversion in NFL
+      };
       let pos = null;
-      if (cb && cb.pos) pos = cb.pos;
-      if (!pos) {
+      if (_COLLEGE_POS_OVERRIDE[name]) {
+        pos = _COLLEGE_POS_OVERRIDE[name];
+      } else if (cb && cb.pos) {
+        pos = cb.pos;
+      } else {
         const d = D.find(p => p.n === name);
         if (d && d.s) pos = d.s;
       }
@@ -13726,9 +13855,11 @@ window.fmtHeight = fmtHeight;
         }
       }
 
+      const tmScore = calcTeammate(name, pos, cs);
+
       const prospectRecord = {
         name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,
-        dr, breakoutAge,
+        dr, breakoutAge, tm: tmScore,
         bestPpg, bestFpts, totFpts, fptsPerGame,
         totPy, totRy, totRcy, totRec, totalTd,
         pasYpg, rushYpg, recYpg, recPg, tdPg,
@@ -13774,6 +13905,7 @@ window.fmtHeight = fmtHeight;
       { key: 'lastCollege', label: 'COLLEGE', sortable: true },
       { key: 'lastConf', label: 'CONF', sortable: true },
       { key: 'ras', label: 'RAS', sortable: true },
+      { key: 'tm', label: 'TM', sortable: true },
       { key: 'gp', label: 'GP', sortable: true }
     ];
 
@@ -13921,6 +14053,14 @@ window.fmtHeight = fmtHeight;
             break;
           case 'ras':
             rows += `<td class="pm-ras ${rasClass(p.ras)}">${p.ras != null ? p.ras.toFixed(2) : '—'}</td>`;
+            break;
+          case 'tm':
+            if (p.tm != null && p.tm !== 5.0) {
+              const tmCls = p.tm >= 8 ? 'pm-jm-elite' : p.tm >= 6.5 ? 'pm-jm-great' : p.tm >= 5.5 ? 'pm-jm-good' : p.tm >= 4 ? 'pm-jm-avg' : 'pm-jm-low';
+              rows += `<td class="pm-jm"><span class="pm-jm-badge ${tmCls}">${p.tm.toFixed(1)}</span></td>`;
+            } else {
+              rows += `<td style="color:var(--text2);opacity:.4;text-align:center">5.0</td>`;
+            }
             break;
           case 'gp':
             rows += `<td>${p.gp || '—'}</td>`;

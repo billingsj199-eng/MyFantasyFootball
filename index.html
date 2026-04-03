@@ -601,6 +601,16 @@ tbody td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 .career-table .best-yr{color:var(--green);font-weight:700}
 .career-table .fpts-cell{font-weight:700}
 .career-table .career-bar{display:none}
+/* Combine/Athletic Profile */
+.combine-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.combine-stat{text-align:center;padding:6px 4px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--border)}
+.combine-stat .cb-val{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--accent);line-height:1.1}
+.combine-stat .cb-lbl{font-size:.5rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.combine-stat .cb-pct{font-size:.45rem;margin-top:1px;font-weight:600}
+.cb-elite{color:var(--green) !important}
+.cb-good{color:var(--accent) !important}
+.cb-avg{color:var(--text2) !important}
+.cb-below{color:var(--red) !important}
 
 /* Compare checkbox */
 .cmp-cb{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;opacity:.4;transition:opacity .15s}
@@ -2372,6 +2382,7 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <script src="data/weekly_stats_active.js"></script>
 <script src="data/weekly_stats_retired.js"></script>
 <script src="data/all_players.js"></script>
+<script src="data/combine_data.js"></script>
 <script src="data/all_players_weekly_1.js"></script>
 <script src="data/all_players_weekly_2.js"></script>
 <script src="data/all_players_weekly_3.js"></script>
@@ -3965,6 +3976,47 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
 
+      ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] ? (() => {
+        const cb = COMBINE_DATA[d.n];
+        const hasDrills = cb.forty || cb.bench || cb.vert || cb.broad || cb.cone || cb.shuttle;
+        if (!hasDrills) return '';
+        // Percentile thresholds by position (approximate)
+        const _cbClass = (val, thresholds) => {
+          if (val == null) return '';
+          if (val <= thresholds[0]) return 'cb-elite';
+          if (val <= thresholds[1]) return 'cb-good';
+          if (val <= thresholds[2]) return 'cb-avg';
+          return 'cb-below';
+        };
+        const _cbClassHigh = (val, thresholds) => {
+          if (val == null) return '';
+          if (val >= thresholds[0]) return 'cb-elite';
+          if (val >= thresholds[1]) return 'cb-good';
+          if (val >= thresholds[2]) return 'cb-avg';
+          return 'cb-below';
+        };
+        const pos = d.s || cb.pos;
+        // Lower is better for: forty, cone, shuttle
+        const fortyT = pos === 'QB' ? [4.6, 4.75, 4.9] : pos === 'TE' ? [4.55, 4.65, 4.8] : pos === 'RB' ? [4.4, 4.5, 4.6] : [4.35, 4.45, 4.55];
+        const coneT = [6.8, 7.0, 7.2];
+        const shuttleT = [4.1, 4.25, 4.4];
+        // Higher is better for: bench, vert, broad
+        const benchT = [24, 18, 14];
+        const vertT = pos === 'QB' ? [34, 30, 27] : [38, 34, 30];
+        const broadT = pos === 'QB' ? [118, 112, 105] : [126, 120, 114];
+        return `<div class="card-section">
+        <div class="card-section-title">Athletic Profile <span style="font-size:.55rem;color:var(--text2);font-weight:400">· ${cb.yr} Combine${cb.school ? ' · ' + cb.school : ''}</span></div>
+        <div class="combine-grid">
+          ${cb.forty ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.forty, fortyT)}">${cb.forty}s</div><div class="cb-lbl">40-Yard</div></div>` : ''}
+          ${cb.vert ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.vert, vertT)}">${cb.vert}"</div><div class="cb-lbl">Vertical</div></div>` : ''}
+          ${cb.broad ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.broad, broadT)}">${cb.broad}"</div><div class="cb-lbl">Broad Jump</div></div>` : ''}
+          ${cb.bench ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.bench, benchT)}">${cb.bench}</div><div class="cb-lbl">Bench Reps</div></div>` : ''}
+          ${cb.cone ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.cone, coneT)}">${cb.cone}s</div><div class="cb-lbl">3-Cone</div></div>` : ''}
+          ${cb.shuttle ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.shuttle, shuttleT)}">${cb.shuttle}s</div><div class="cb-lbl">Shuttle</div></div>` : ''}
+        </div>
+      </div>`;
+      })() : ''}
+
       ${d.career && d.career.length > 0 ? (() => {
         const _cr = d.career;
         const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
@@ -4255,6 +4307,19 @@ function renderCompareGrid() {
               <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(totalFpts)}</div></div>
             </div>
           </div>` : ''}
+          ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] && (COMBINE_DATA[d.n].forty || COMBINE_DATA[d.n].vert || COMBINE_DATA[d.n].broad) ? (() => {
+            const cb = COMBINE_DATA[d.n];
+            return `<div class="card-section">
+            <div class="card-section-title">Athletic Profile <span style="font-size:.55rem;color:var(--text2);font-weight:400">· ${cb.yr} Combine</span></div>
+            <div class="card-rank-row" style="grid-template-columns:repeat(${[cb.forty,cb.vert,cb.broad,cb.bench,cb.cone,cb.shuttle].filter(Boolean).length > 4 ? 3 : [cb.forty,cb.vert,cb.broad,cb.bench,cb.cone,cb.shuttle].filter(Boolean).length},1fr)">
+              ${cb.forty ? `<div class="card-rank-box"><div class="lbl">40-Yard</div><div class="num accent">${cb.forty}s</div></div>` : ''}
+              ${cb.vert ? `<div class="card-rank-box"><div class="lbl">Vertical</div><div class="num accent">${cb.vert}"</div></div>` : ''}
+              ${cb.broad ? `<div class="card-rank-box"><div class="lbl">Broad</div><div class="num accent">${cb.broad}"</div></div>` : ''}
+              ${cb.bench ? `<div class="card-rank-box"><div class="lbl">Bench</div><div class="num accent">${cb.bench}</div></div>` : ''}
+              ${cb.cone ? `<div class="card-rank-box"><div class="lbl">3-Cone</div><div class="num accent">${cb.cone}s</div></div>` : ''}
+              ${cb.shuttle ? `<div class="card-rank-box"><div class="lbl">Shuttle</div><div class="num accent">${cb.shuttle}s</div></div>` : ''}
+            </div></div>`;
+          })() : ''}
           ${career.length > 0 ? `<div class="card-section">
             <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
               <span class="cmp-cl-label">Career Log (Half PPR)${career.length < ((d._last||0) - (d._debut||0) + 1) * 0.5 ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : ''}</span>

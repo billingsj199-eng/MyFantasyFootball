@@ -1692,6 +1692,44 @@ PREMIUM ACTIVE
 </div>
 
 
+<!-- Daily ELITE PULL — College -->
+<div style="margin-top:12px;max-width:480px">
+<div class="gw-card">
+<div class="gw-header" style="padding:1rem 1.25rem .5rem">
+<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — COLLEGE</div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's college player &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
+<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery college player in 8 tries. Each guess reveals clues:<br><br>
+<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
+<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
+<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
+<strong>Team:</strong> College team. Green if correct, red if wrong<br>
+<strong>Conf:</strong> Conference. Green if correct, red if wrong<br>
+<strong>Position:</strong> Green if correct, red if wrong<br>
+<strong>Year:</strong> Year of best college season. Green if exact, yellow if within 2 years, red otherwise. Arrows show direction<br>
+<strong>Szn High:</strong> Best college fantasy season (half PPR). Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
+<strong>Wk High:</strong> Best single college game. Green if within 0.5 pts, yellow if within 5. Arrows show direction
+</div></span></div>
+<div id="gwDailyColStreak" class="ep-streak-display" style="margin-top:4px"></div>
+</div>
+<div class="gw-body">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">CONF</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDailyColGuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDailyColSuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDailyColInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDailyColGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDailyColResult" class="ep-result" style="display:none"></div>
+<button id="gwDailyColGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+</div>
+</div>
+
+
 <!-- GUESS WHO Daily Game -->
 <div class="elite-pull-section" style="max-width:480px;margin-top:12px">
 <div class="elite-pull-card">
@@ -2035,6 +2073,7 @@ CLEAR
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:8px auto 4px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
 <button class="fg-mode-btn active" id="gwModeCurrent" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">CURRENT</button>
 <button class="fg-mode-btn" id="gwModeAlltime" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">ALL-TIME</button>
+<button class="fg-mode-btn" id="gwModeCollege" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">COLLEGE</button>
 </div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px auto 4px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
 <button class="fg-mode-btn active" id="gwPlayRandom" style="padding:5px 14px;font-size:.68rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">RANDOM</button>
@@ -5554,10 +5593,11 @@ document.addEventListener('click', function(e) {
   // Build player pool from FG_POOL (available after Fantasy Game IIFE runs) — we'll lazy-init
   let gwPoolCurrent = null;
   let gwPoolAlltime = null;
+  let gwPoolCollege = null;
   let gwAbbrToFull = {};
-  let gwMode = 'current'; // 'current' or 'alltime'
+  let gwMode = 'current'; // 'current', 'alltime', or 'college'
 
-  function getGwPool() { return gwMode === 'alltime' ? gwPoolAlltime : gwPoolCurrent; }
+  function getGwPool() { return gwMode === 'college' ? gwPoolCollege : gwMode === 'alltime' ? gwPoolAlltime : gwPoolCurrent; }
 
   // Helper: look up WEEKLY_STATS with name normalization
   // Handles mismatches like "AJ Brown" vs "A.J. Brown", "TJ Hockenson" vs "T.J. Hockenson", etc.
@@ -5639,6 +5679,7 @@ document.addEventListener('click', function(e) {
     _gwPoolBuiltWithWeekly = (typeof WEEKLY_STATS !== 'undefined');
     gwPoolCurrent = null;
     gwPoolAlltime = null;
+    gwPoolCollege = null;
     // Build abbreviation lookup
     if (typeof TEAM_ABBR_MAP !== 'undefined') {
       Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => {
@@ -5867,9 +5908,59 @@ document.addEventListener('click', function(e) {
     const currentAll = allPool.filter(p => p.bestSzn !== null && p._active);
     gwPoolCurrent = currentWithWeekly.length >= 50 ? currentWithWeekly : currentAll;
     gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && !p._active);
+
+    // Build college pool from COLLEGE_STATS + COLLEGE_WEEKLY
+    if (typeof COLLEGE_STATS !== 'undefined') {
+      const _gwGetPos = (name) => {
+        if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].pos) return COMBINE_DATA[name].pos;
+        const dp = D.find(p => p.n === name); if (dp && dp.s) return dp.s;
+        if (typeof ALL_PLAYERS_DB !== 'undefined' && ALL_PLAYERS_DB[name] && ALL_PLAYERS_DB[name].pos) return ALL_PLAYERS_DB[name].pos;
+        if (typeof HP !== 'undefined') { const hp = HP.find(p => p.n === name); if (hp && hp.s) return hp.s; }
+        if (typeof LDB !== 'undefined') { const lb = LDB.find(p => p.n === name); if (lb && lb.s) return lb.s; }
+        return null;
+      };
+      const _gwCfpts = (s) => Math.round(((s.py||0)/25+(s.ptd||0)*4+(s.int||0)*(-2)+(s.ry||0)/10+(s.rtd||0)*6+(s.rec||0)*0.5+(s.rcy||0)/10+(s.rctd||0)*6-(s.fl||0)*2)*10)/10;
+      const _gwConfAliases = {'Pac-10':'Pac-12'};
+      const collegePool = [];
+      Object.entries(COLLEGE_STATS).forEach(([name, seasons]) => {
+        const pos = _gwGetPos(name);
+        if (!pos || !['QB','RB','WR','TE'].includes(pos)) return;
+        // Find best season
+        let bestSzn = null, bestSznYear = null, bestTeam = null, bestConf = null;
+        seasons.forEach(s => {
+          const fp = _gwCfpts(s);
+          if (!bestSzn || fp > bestSzn) {
+            bestSzn = fp; bestSznYear = s.yr; bestTeam = s.tm;
+            bestConf = _gwConfAliases[s.conf] || s.conf || '';
+          }
+        });
+        if (!bestSzn || bestSzn <= 0) return;
+        // Find best week
+        let bestWk = null;
+        if (typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[name]) {
+          const _cwFpts = (w) => Math.round(((w.py||0)/25+(w.ptd||0)*4+(w.int||0)*(-2)+(w.ry||0)/10+(w.rtd||0)*6+(w.rec||0)*0.5+(w.rcy||0)/10+(w.rctd||0)*6-(w.fl||0)*2)*10)/10;
+          for (const [szn, weeks] of Object.entries(COLLEGE_WEEKLY[name])) {
+            for (const w of weeks) { const fp = _cwFpts(w); if (!bestWk || fp > bestWk) bestWk = fp; }
+          }
+        }
+        if (!bestTeam) return;
+        collegePool.push({
+          name, pos, team: bestTeam, conference: bestConf,
+          bestSzn: Math.round(bestSzn*10)/10, bestSznYear,
+          bestWk: bestWk ? Math.round(bestWk*10)/10 : null,
+          _hasWeekly: bestWk != null,
+          _college: true
+        });
+      });
+      // Prefer players with weekly data
+      const collegeWithWeekly = collegePool.filter(p => p._hasWeekly);
+      gwPoolCollege = collegeWithWeekly.length >= 100 ? collegeWithWeekly : collegePool;
+    }
+
     // Expose for daily Guess Who games
     window._gwGetPoolCurrent = function() { return gwPoolCurrent; };
     window._gwGetPoolAlltime = function() { return gwPoolAlltime; };
+    window._gwGetPoolCollege = function() { return gwPoolCollege; };
 
     // Ensure all-time pool players (legends) exist in D so player cards can open for them
     if (gwPoolAlltime && gwPoolAlltime.length) {
@@ -5897,12 +5988,13 @@ document.addEventListener('click', function(e) {
 
   const GW_MAX_GUESSES_CURRENT = 6;
   const GW_MAX_GUESSES_ALLTIME = 8;
-  function gwMaxGuesses() { return gwMode === 'alltime' ? GW_MAX_GUESSES_ALLTIME : GW_MAX_GUESSES_CURRENT; }
+  const GW_MAX_GUESSES_COLLEGE = 8;
+  function gwMaxGuesses() { return gwMode === 'college' ? GW_MAX_GUESSES_COLLEGE : gwMode === 'alltime' ? GW_MAX_GUESSES_ALLTIME : GW_MAX_GUESSES_CURRENT; }
   let gwTarget = null;
   let gwGuesses = [];
   let gwGameOver = false;
 
-  function gwStatsKey(suffix) { return gwMode === 'alltime' ? 'gw_at_' + suffix : 'gw_' + suffix; }
+  function gwStatsKey(suffix) { return gwMode === 'college' ? 'gw_col_' + suffix : gwMode === 'alltime' ? 'gw_at_' + suffix : 'gw_' + suffix; }
   function getGwWins() { return parseInt(localStorage.getItem(gwStatsKey('wins')) || '0'); }
   function getGwGames() { return parseInt(localStorage.getItem(gwStatsKey('games')) || '0'); }
 
@@ -5940,6 +6032,64 @@ document.addEventListener('click', function(e) {
     const t = gwTarget;
     const result = { name: g.name, cells: [] };
 
+    if (gwMode === 'college') {
+      // TEAM (school) — green if same, red if different
+      result.cells.push({ label: g.team || '—', match: g.team === t.team ? 'correct' : 'wrong' });
+
+      // CONFERENCE — green if same, red if different
+      result.cells.push({ label: g.conference || '—', match: g.conference === t.conference ? 'correct' : 'wrong' });
+
+      // Position
+      result.cells.push({ label: g.pos, match: g.pos === t.pos ? 'correct' : 'wrong' });
+
+      // Year of best season
+      if (g.bestSznYear != null && t.bestSznYear != null) {
+        const diff = Math.abs(g.bestSznYear - t.bestSznYear);
+        if (diff === 0) {
+          result.cells.push({ label: String(g.bestSznYear), match: 'correct' });
+        } else if (diff <= 2) {
+          result.cells.push({ label: String(g.bestSznYear) + (g.bestSznYear > t.bestSznYear ? ' ↓' : ' ↑'), match: 'close' });
+        } else {
+          result.cells.push({ label: String(g.bestSznYear) + (g.bestSznYear > t.bestSznYear ? ' ↓' : ' ↑'), match: g.bestSznYear > t.bestSznYear ? 'higher' : 'lower' });
+        }
+      } else {
+        result.cells.push({ label: '—', match: 'neutral' });
+      }
+
+      // Season high
+      if (g.bestSzn != null && t.bestSzn != null) {
+        const diff = g.bestSzn - t.bestSzn;
+        const absDiff = Math.abs(diff);
+        if (absDiff < 0.5) {
+          result.cells.push({ label: g.bestSzn.toFixed(1), match: 'correct' });
+        } else if (absDiff <= 30) {
+          result.cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher-close' : 'lower-close' });
+        } else {
+          result.cells.push({ label: g.bestSzn.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher' : 'lower' });
+        }
+      } else {
+        result.cells.push({ label: '—', match: 'neutral' });
+      }
+
+      // Week high
+      if (g.bestWk != null && t.bestWk != null) {
+        const diff = g.bestWk - t.bestWk;
+        const absDiff = Math.abs(diff);
+        if (absDiff < 0.5) {
+          result.cells.push({ label: g.bestWk.toFixed(1), match: 'correct' });
+        } else if (absDiff <= 5) {
+          result.cells.push({ label: g.bestWk.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher-close' : 'lower-close' });
+        } else {
+          result.cells.push({ label: g.bestWk.toFixed(1) + (diff > 0 ? ' ↓' : ' ↑'), match: diff > 0 ? 'higher' : 'lower' });
+        }
+      } else {
+        result.cells.push({ label: '—', match: 'neutral' });
+      }
+
+      return result;
+    }
+
+    // NFL modes (existing logic)
     // Team
     result.cells.push({ label: gwModernTeamAbbr(g.team), match: g.team === t.team ? 'correct' : 'wrong' });
 
@@ -6020,7 +6170,7 @@ document.addEventListener('click', function(e) {
     gwGuessRows.appendChild(nameDiv);
 
     const row = document.createElement('div');
-    row.className = 'gw-cat-row' + (gwMode === 'alltime' ? ' gw-6col' : '');
+    row.className = 'gw-cat-row' + (gwMode === 'alltime' || gwMode === 'college' ? ' gw-6col' : '');
     result.cells.forEach(c => {
       const cell = document.createElement('div');
       cell.className = 'gw-cat-cell ' + c.match;
@@ -6115,10 +6265,11 @@ document.addEventListener('click', function(e) {
     localStorage.setItem(gwStatsKey('wins'), newWins.toString());
 
     gwResult.style.display = 'block';
+    const _gwTeamLabel = gwMode === 'college' ? (gwTarget.team || '') : gwModernTeamAbbr(gwTarget.team);
     if (won) {
-      gwResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was ${_epCardLink(gwTarget.name, 'color:var(--accent)')} &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos} &mdash; Guessed in ${gwGuesses.length}/${gwMaxGuesses()}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
+      gwResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">The answer was ${_epCardLink(gwTarget.name, 'color:var(--accent)')} &middot; ${_gwTeamLabel} &middot; ${gwTarget.pos} &mdash; Guessed in ${gwGuesses.length}/${gwMaxGuesses()}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
     } else {
-      gwResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK NEXT TIME</div><div class="ep-result-sub">It was ${_epCardLink(gwTarget.name, 'color:var(--accent)')} &middot; ${gwModernTeamAbbr(gwTarget.team)} &middot; ${gwTarget.pos}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
+      gwResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK NEXT TIME</div><div class="ep-result-sub">It was ${_epCardLink(gwTarget.name, 'color:var(--accent)')} &middot; ${_gwTeamLabel} &middot; ${gwTarget.pos}</div><button class="gw-share-btn gw-share-reopen" style="margin-top:8px">SHARE</button>`;
     }
     gwNextBtn.style.display = 'inline-block';
     gwGiveUpBtn.style.display = 'none';
@@ -6166,7 +6317,10 @@ document.addEventListener('click', function(e) {
   function gwUpdateHeader() {
     const hdr = document.getElementById('gwCatHeader');
     if (!hdr) return;
-    if (gwMode === 'alltime') {
+    if (gwMode === 'college') {
+      hdr.classList.add('gw-6col');
+      hdr.innerHTML = '<div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">CONF</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div>';
+    } else if (gwMode === 'alltime') {
       hdr.classList.add('gw-6col');
       hdr.innerHTML = '<div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div>';
     } else {
@@ -6201,7 +6355,7 @@ document.addEventListener('click', function(e) {
     ).slice(0, 8);
     if (!matches.length) { gwSuggestions.classList.remove('show'); return; }
     gwSuggestions.innerHTML = matches.map(p =>
-      `<div class="ep-sug-item" data-name="${p.name}"><span class="ep-sug-pos ${p.pos}">${p.pos}</span> ${p.name} <span class="ep-sug-team">${gwModernTeamAbbr(p.team)}</span></div>`
+      `<div class="ep-sug-item" data-name="${p.name}"><span class="ep-sug-pos ${p.pos}">${p.pos}</span> ${p.name} <span class="ep-sug-team">${gwMode === 'college' ? (p.team || '') : gwModernTeamAbbr(p.team)}</span></div>`
     ).join('');
     gwSuggestions.classList.add('show');
     gwSuggestions.querySelectorAll('.ep-sug-item').forEach(el => {
@@ -6240,30 +6394,23 @@ document.addEventListener('click', function(e) {
   // Mode toggle
   const gwModeCurrent = document.getElementById('gwModeCurrent');
   const gwModeAlltime = document.getElementById('gwModeAlltime');
-  gwModeCurrent.addEventListener('click', () => {
-    if (gwMode === 'current') return;
-    gwMode = 'current';
-    gwModeCurrent.classList.add('active');
-    gwModeAlltime.classList.remove('active');
+  const gwModeCollege = document.getElementById('gwModeCollege');
+  function _gwSetMode(mode) {
+    if (gwMode === mode) return;
+    gwMode = mode;
+    gwModeCurrent.classList.toggle('active', mode === 'current');
+    gwModeAlltime.classList.toggle('active', mode === 'alltime');
+    gwModeCollege.classList.toggle('active', mode === 'college');
     if (gwPlayMode === 'custom') {
       gwCustomTarget = null; gwCustomInput.value = ''; gwCustomSelected.style.display = 'none';
       gwGuessRows.innerHTML = ''; gwResult.style.display = 'none'; gwNextBtn.style.display = 'none';
       gwGiveUpBtn.style.display = 'none'; gwInput.disabled = true; gwGuessBtn.disabled = true;
       gwUpdateHeader();
     } else { gwStartRound(); }
-  });
-  gwModeAlltime.addEventListener('click', () => {
-    if (gwMode === 'alltime') return;
-    gwMode = 'alltime';
-    gwModeAlltime.classList.add('active');
-    gwModeCurrent.classList.remove('active');
-    if (gwPlayMode === 'custom') {
-      gwCustomTarget = null; gwCustomInput.value = ''; gwCustomSelected.style.display = 'none';
-      gwGuessRows.innerHTML = ''; gwResult.style.display = 'none'; gwNextBtn.style.display = 'none';
-      gwGiveUpBtn.style.display = 'none'; gwInput.disabled = true; gwGuessBtn.disabled = true;
-      gwUpdateHeader();
-    } else { gwStartRound(); }
-  });
+  }
+  gwModeCurrent.addEventListener('click', () => _gwSetMode('current'));
+  gwModeAlltime.addEventListener('click', () => _gwSetMode('alltime'));
+  gwModeCollege.addEventListener('click', () => _gwSetMode('college'));
 
   // === Random / Custom mode toggle ===
   let gwPlayMode = 'random'; // 'random' or 'custom'
@@ -6590,17 +6737,26 @@ document.addEventListener('click', function(e) {
       const TEAM_DIVISION = {'Arizona Cardinals':'NFC West','Atlanta Falcons':'NFC South','Baltimore Ravens':'AFC North','Buffalo Bills':'AFC East','Carolina Panthers':'NFC South','Chicago Bears':'NFC North','Cincinnati Bengals':'AFC North','Cleveland Browns':'AFC North','Dallas Cowboys':'NFC East','Denver Broncos':'AFC West','Detroit Lions':'NFC North','Green Bay Packers':'NFC North','Houston Texans':'AFC South','Indianapolis Colts':'AFC South','Jacksonville Jaguars':'AFC South','Kansas City Chiefs':'AFC West','Las Vegas Raiders':'AFC West','Los Angeles Chargers':'AFC West','Los Angeles Rams':'NFC West','Miami Dolphins':'AFC East','Minnesota Vikings':'NFC North','New England Patriots':'AFC East','New Orleans Saints':'NFC South','New York Giants':'NFC East','New York Jets':'AFC East','Philadelphia Eagles':'NFC East','Pittsburgh Steelers':'AFC North','San Francisco 49ers':'NFC West','Seattle Seahawks':'NFC West','Tampa Bay Buccaneers':'NFC South','Tennessee Titans':'AFC South','Washington Commanders':'NFC East'};
       function abbr(team) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[team]) ? TEAM_ABBR_MAP[team] : team; }
       const cells = [];
-      // Team
-      cells.push({ label: abbr(g.team), match: g.team === t.team ? 'correct' : 'wrong' });
-      // Division
-      let divM = 'wrong';
-      if (g.division === t.division) divM = 'correct';
-      else if (g.division && t.division && g.division.substring(0,3) === t.division.substring(0,3)) divM = 'close';
-      cells.push({ label: g.division, match: divM });
+      const isCollege = config.modeLabel === 'College';
+
+      if (isCollege) {
+        // Team (school)
+        cells.push({ label: g.team || '—', match: g.team === t.team ? 'correct' : 'wrong' });
+        // Conference
+        cells.push({ label: g.conference || '—', match: g.conference === t.conference ? 'correct' : 'wrong' });
+      } else {
+        // Team
+        cells.push({ label: abbr(g.team), match: g.team === t.team ? 'correct' : 'wrong' });
+        // Division
+        let divM = 'wrong';
+        if (g.division === t.division) divM = 'correct';
+        else if (g.division && t.division && g.division.substring(0,3) === t.division.substring(0,3)) divM = 'close';
+        cells.push({ label: g.division, match: divM });
+      }
       // Position
       cells.push({ label: g.pos, match: g.pos === t.pos ? 'correct' : 'wrong' });
-      // Year of best season (all-time mode only)
-      if (config.modeLabel === 'All-Time') {
+      // Year of best season (all-time and college modes)
+      if (config.modeLabel === 'All-Time' || isCollege) {
         if (g.bestSznYear != null && t.bestSznYear != null) {
           const yd = Math.abs(g.bestSznYear - t.bestSznYear);
           if (yd === 0) cells.push({ label: String(g.bestSznYear), match: 'correct' });
@@ -6633,7 +6789,7 @@ document.addEventListener('click', function(e) {
       nameDiv.textContent = r.name;
       guessRows.appendChild(nameDiv);
       const row = document.createElement('div');
-      row.className = 'gw-cat-row' + (config.modeLabel === 'All-Time' ? ' gw-6col' : '');
+      row.className = 'gw-cat-row' + (config.modeLabel === 'All-Time' || config.modeLabel === 'College' ? ' gw-6col' : '');
       r.cells.forEach(c => {
         const cell = document.createElement('div');
         cell.className = 'gw-cat-cell ' + c.match;
@@ -6750,7 +6906,7 @@ document.addEventListener('click', function(e) {
       const matches = pool.filter(p => p.name.toLowerCase().includes(val) && !guesses.some(g => g.toLowerCase() === p.name.toLowerCase())).slice(0, 8);
       if (!matches.length) { suggestions.classList.remove('show'); return; }
       function a(t) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) ? TEAM_ABBR_MAP[t] : t; }
-      suggestions.innerHTML = matches.map(p => '<div class="ep-sug-item" data-name="' + p.name + '"><span class="ep-sug-pos ' + p.pos + '">' + p.pos + '</span> ' + p.name + ' <span class="ep-sug-team">' + a(p.team) + '</span></div>').join('');
+      suggestions.innerHTML = matches.map(p => '<div class="ep-sug-item" data-name="' + p.name + '"><span class="ep-sug-pos ' + p.pos + '">' + p.pos + '</span> ' + p.name + ' <span class="ep-sug-team">' + (config.modeLabel === 'College' ? (p.team || '') : a(p.team)) + '</span></div>').join('');
       suggestions.classList.add('show');
       suggestions.querySelectorAll('.ep-sug-item').forEach(el => {
         el.addEventListener('click', () => { input.value = el.dataset.name; suggestions.classList.remove('show'); submitGuess(); });
@@ -6775,6 +6931,7 @@ document.addEventListener('click', function(e) {
   waitForPools(function() {
     _poolCurrent = window._gwGetPoolCurrent();
     _poolAlltime = window._gwGetPoolAlltime();
+    const _poolCollege = typeof window._gwGetPoolCollege === 'function' ? window._gwGetPoolCollege() : null;
 
     const dailyCurrent = createDailyGW({
       statePrefix: 'gwd_c',
@@ -6798,7 +6955,7 @@ document.addEventListener('click', function(e) {
       statePrefix: 'gwd_at',
       streakKey: 'gw_daily_at_streak',
       lastWinKey: 'gw_daily_at_last_win',
-      seedOffset: 7919, // Different offset so different player
+      seedOffset: 7919,
       modeLabel: 'All-Time',
       maxGuesses: 8,
       inputId: 'gwDailyATInput',
@@ -6812,6 +6969,27 @@ document.addEventListener('click', function(e) {
       lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDailyAT === 'function') window._lbUpdateGwDailyAT(won, streak); }
     });
     if (dailyAT) dailyAT.init();
+
+    if (_poolCollege && _poolCollege.length) {
+      const dailyCollege = createDailyGW({
+        statePrefix: 'gwd_col',
+        streakKey: 'gw_daily_col_streak',
+        lastWinKey: 'gw_daily_col_last_win',
+        seedOffset: 13337,
+        modeLabel: 'College',
+        maxGuesses: 8,
+        inputId: 'gwDailyColInput',
+        guessBtnId: 'gwDailyColGuessBtn',
+        resultId: 'gwDailyColResult',
+        giveUpBtnId: 'gwDailyColGiveUpBtn',
+        suggestionsId: 'gwDailyColSuggestions',
+        guessRowsId: 'gwDailyColGuessRows',
+        streakElId: 'gwDailyColStreak',
+        getPool: () => _poolCollege,
+        lbUpdate: (won, streak) => {}
+      });
+      if (dailyCollege) dailyCollege.init();
+    }
   });
 })();
 

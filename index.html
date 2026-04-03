@@ -606,11 +606,19 @@ tbody td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 .combine-stat{text-align:center;padding:6px 4px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--border)}
 .combine-stat .cb-val{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--accent);line-height:1.1}
 .combine-stat .cb-lbl{font-size:.5rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.combine-stat .cb-pct{font-size:.45rem;margin-top:1px;font-weight:600}
 .cb-elite{color:var(--green) !important}
 .cb-good{color:var(--accent) !important}
 .cb-avg{color:var(--text2) !important}
 .cb-below{color:var(--red) !important}
+/* Card View Toggle */
+.card-view-toggle{display:flex;gap:1px;background:rgba(255,255,255,.04);border-radius:6px;padding:2px;margin-bottom:10px}
+.card-view-btn{flex:1;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;padding:5px 0;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;text-align:center}
+.card-view-btn.active{background:var(--accent);color:var(--bg);font-weight:700}
+.card-view-btn:hover:not(.active){background:rgba(255,255,255,.06)}
+.card-prospect-view{display:none}
+.card-prospect-view.active{display:block}
+.card-fantasy-view{display:block}
+.card-fantasy-view.hidden{display:none}
 
 /* Compare checkbox */
 .cmp-cb{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;opacity:.4;transition:opacity .15s}
@@ -3948,6 +3956,11 @@ function openPlayerCard(d) {
       </div>
     </div>
     <div class="card-body">
+      ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] && (COMBINE_DATA[d.n].forty || COMBINE_DATA[d.n].vert || COMBINE_DATA[d.n].broad || COMBINE_DATA[d.n].bench) ? `<div class="card-view-toggle" id="cardViewToggle">
+        <button class="card-view-btn active" data-cardview="fantasy">FANTASY</button>
+        <button class="card-view-btn" data-cardview="prospect">PROSPECT</button>
+      </div>` : ''}
+      <div class="card-fantasy-view" id="cardFantasyView">
       ${!d._retired ? `<div class="card-section">
         <div class="card-section-title">Rankings</div>
         <div class="card-rank-row" style="grid-template-columns:1fr 1fr">
@@ -3975,47 +3988,6 @@ function openPlayerCard(d) {
           </div>` : ''}
         </div>
       </div>` : ''}
-
-      ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] ? (() => {
-        const cb = COMBINE_DATA[d.n];
-        const hasDrills = cb.forty || cb.bench || cb.vert || cb.broad || cb.cone || cb.shuttle;
-        if (!hasDrills) return '';
-        // Percentile thresholds by position (approximate)
-        const _cbClass = (val, thresholds) => {
-          if (val == null) return '';
-          if (val <= thresholds[0]) return 'cb-elite';
-          if (val <= thresholds[1]) return 'cb-good';
-          if (val <= thresholds[2]) return 'cb-avg';
-          return 'cb-below';
-        };
-        const _cbClassHigh = (val, thresholds) => {
-          if (val == null) return '';
-          if (val >= thresholds[0]) return 'cb-elite';
-          if (val >= thresholds[1]) return 'cb-good';
-          if (val >= thresholds[2]) return 'cb-avg';
-          return 'cb-below';
-        };
-        const pos = d.s || cb.pos;
-        // Lower is better for: forty, cone, shuttle
-        const fortyT = pos === 'QB' ? [4.6, 4.75, 4.9] : pos === 'TE' ? [4.55, 4.65, 4.8] : pos === 'RB' ? [4.4, 4.5, 4.6] : [4.35, 4.45, 4.55];
-        const coneT = [6.8, 7.0, 7.2];
-        const shuttleT = [4.1, 4.25, 4.4];
-        // Higher is better for: bench, vert, broad
-        const benchT = [24, 18, 14];
-        const vertT = pos === 'QB' ? [34, 30, 27] : [38, 34, 30];
-        const broadT = pos === 'QB' ? [118, 112, 105] : [126, 120, 114];
-        return `<div class="card-section">
-        <div class="card-section-title">Athletic Profile <span style="font-size:.55rem;color:var(--text2);font-weight:400">· ${cb.yr} Combine${cb.school ? ' · ' + cb.school : ''}</span></div>
-        <div class="combine-grid">
-          ${cb.forty ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.forty, fortyT)}">${cb.forty}s</div><div class="cb-lbl">40-Yard</div></div>` : ''}
-          ${cb.vert ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.vert, vertT)}">${cb.vert}"</div><div class="cb-lbl">Vertical</div></div>` : ''}
-          ${cb.broad ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.broad, broadT)}">${cb.broad}"</div><div class="cb-lbl">Broad Jump</div></div>` : ''}
-          ${cb.bench ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.bench, benchT)}">${cb.bench}</div><div class="cb-lbl">Bench Reps</div></div>` : ''}
-          ${cb.cone ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.cone, coneT)}">${cb.cone}s</div><div class="cb-lbl">3-Cone</div></div>` : ''}
-          ${cb.shuttle ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.shuttle, shuttleT)}">${cb.shuttle}s</div><div class="cb-lbl">Shuttle</div></div>` : ''}
-        </div>
-      </div>`;
-      })() : ''}
 
       ${d.career && d.career.length > 0 ? (() => {
         const _cr = d.career;
@@ -4165,11 +4137,68 @@ function openPlayerCard(d) {
           </div>
         </div>
       </div>` : ''}
+      </div>
+      <div class="card-prospect-view" id="cardProspectView">
+      ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] ? (() => {
+        const cb = COMBINE_DATA[d.n];
+        const hasDrills = cb.forty || cb.bench || cb.vert || cb.broad || cb.cone || cb.shuttle;
+        const _cbClass = (val, th) => { if (val==null) return ''; return val<=th[0]?'cb-elite':val<=th[1]?'cb-good':val<=th[2]?'cb-avg':'cb-below'; };
+        const _cbClassHigh = (val, th) => { if (val==null) return ''; return val>=th[0]?'cb-elite':val>=th[1]?'cb-good':val>=th[2]?'cb-avg':'cb-below'; };
+        const pos = d.s || cb.pos;
+        const fortyT = pos==='QB'?[4.6,4.75,4.9]:pos==='TE'?[4.55,4.65,4.8]:pos==='RB'?[4.4,4.5,4.6]:[4.35,4.45,4.55];
+        const coneT = [6.8,7.0,7.2]; const shuttleT = [4.1,4.25,4.4];
+        const benchT = [24,18,14]; const vertT = pos==='QB'?[34,30,27]:[38,34,30];
+        const broadT = pos==='QB'?[118,112,105]:[126,120,114];
+        return `${hasDrills ? `<div class="card-section">
+        <div class="card-section-title">Athletic Profile <span style="font-size:.55rem;color:var(--text2);font-weight:400">· ${cb.yr} Combine${cb.school ? ' · ' + cb.school : ''}</span></div>
+        <div class="combine-grid">
+          ${cb.forty ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.forty, fortyT)}">${cb.forty}s</div><div class="cb-lbl">40-Yard</div></div>` : ''}
+          ${cb.vert ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.vert, vertT)}">${cb.vert}"</div><div class="cb-lbl">Vertical</div></div>` : ''}
+          ${cb.broad ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.broad, broadT)}">${cb.broad}"</div><div class="cb-lbl">Broad Jump</div></div>` : ''}
+          ${cb.bench ? `<div class="combine-stat"><div class="cb-val ${_cbClassHigh(cb.bench, benchT)}">${cb.bench}</div><div class="cb-lbl">Bench Reps</div></div>` : ''}
+          ${cb.cone ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.cone, coneT)}">${cb.cone}s</div><div class="cb-lbl">3-Cone</div></div>` : ''}
+          ${cb.shuttle ? `<div class="combine-stat"><div class="cb-val ${_cbClass(cb.shuttle, shuttleT)}">${cb.shuttle}s</div><div class="cb-lbl">Shuttle</div></div>` : ''}
+        </div>
+      </div>` : ''}
+      <div class="card-section">
+        <div class="card-section-title">Prospect Info</div>
+        <div class="card-grid">
+          <div class="card-stat"><span class="card-stat-label">Combine Year</span><span class="card-stat-value">${cb.yr}</span></div>
+          <div class="card-stat"><span class="card-stat-label">School</span><span class="card-stat-value">${cb.school || d._college || '—'}</span></div>
+          <div class="card-stat"><span class="card-stat-label">Height</span><span class="card-stat-value">${cb.ht || fmtHeight(d._height)}</span></div>
+          <div class="card-stat"><span class="card-stat-label">Weight</span><span class="card-stat-value">${cb.wt ? cb.wt + ' lbs' : (d._weight ? d._weight + ' lbs' : '—')}</span></div>
+          <div class="card-stat"><span class="card-stat-label">Draft Pick</span><span class="card-stat-value">${cb.draft ? '#' + cb.draft + ' Overall' : (d.dr ? '#' + d.dr + ' Overall' : 'Undrafted')}</span></div>
+          <div class="card-stat"><span class="card-stat-label">Position</span><span class="card-stat-value">${d.s}</span></div>
+        </div>
+      </div>`;
+      })() : '<div class="card-section"><div style="text-align:center;padding:16px;color:var(--text2);font-size:.72rem">No combine data available</div></div>'}
+      </div>
     </div>
   `;
 
   modal.classList.add('open');
   document.getElementById('cardClose').addEventListener('click', closeCard);
+
+  // Fantasy/Prospect view toggle
+  const _cvToggle = document.getElementById('cardViewToggle');
+  if (_cvToggle) {
+    _cvToggle.querySelectorAll('.card-view-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        _cvToggle.querySelectorAll('.card-view-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const view = this.dataset.cardview;
+        const fv = document.getElementById('cardFantasyView');
+        const pv = document.getElementById('cardProspectView');
+        if (view === 'prospect') {
+          fv.classList.add('hidden');
+          pv.classList.add('active');
+        } else {
+          fv.classList.remove('hidden');
+          pv.classList.remove('active');
+        }
+      });
+    });
+  }
 
   // Career log Season/Weekly toggle + Scoring toggle
   const clModeBtns = cardEl.querySelectorAll('.cl-mode-btn');

@@ -8300,7 +8300,7 @@ HP.forEach(p => {
     round: 99, notes: '', _retired: true, _debut: debut, _last: last, _slImg: null
   });
 });
-var LEGEND_BIRTH_YEARS={
+window.LEGEND_BIRTH_YEARS={
 "A.J. Green":"1988-07-31",
 "Aaron Brooks":"1976-03-24",
 "Adam Thielen":"1990-08-22",
@@ -9139,7 +9139,7 @@ var LEGEND_BIRTH_YEARS={
 LDB.forEach(p => { if (LEGEND_BIRTH_YEARS[p.n]) p.birthYear = typeof LEGEND_BIRTH_YEARS[p.n] === 'string' ? parseInt(LEGEND_BIRTH_YEARS[p.n]) : LEGEND_BIRTH_YEARS[p.n]; });
 
 // Active player birthdays merged into LEGEND_BIRTH_YEARS above
-var LEGEND_BIO={
+window.LEGEND_BIO={
 "Troy Aikman":{h:76,w:220,j:8},
 "Terry Allen":{h:71,w:208,j:22},
 "Mike Alstott":{h:73,w:248,dr:35,j:40},

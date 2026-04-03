@@ -610,6 +610,7 @@ tbody td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 .cb-good{color:var(--accent) !important}
 .cb-avg{color:var(--text2) !important}
 .cb-below{color:var(--red) !important}
+.college-conf-badge{font-size:.4rem;padding:1px 4px;border-radius:3px;background:rgba(245,158,11,.12);color:var(--accent);font-weight:600;white-space:nowrap}
 /* Card View Toggle */
 .card-view-toggle{display:flex;gap:1px;background:rgba(255,255,255,.04);border-radius:6px;padding:2px;margin-bottom:10px}
 .card-view-btn{flex:1;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;padding:5px 0;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;text-align:center}
@@ -2391,6 +2392,7 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <script src="data/weekly_stats_retired.js"></script>
 <script src="data/all_players.js"></script>
 <script src="data/combine_data.js"></script>
+<script src="data/college_stats.js"></script>
 <script src="data/all_players_weekly_1.js"></script>
 <script src="data/all_players_weekly_2.js"></script>
 <script src="data/all_players_weekly_3.js"></script>
@@ -3924,6 +3926,60 @@ function buildCareerTable(d, scoringFormat) {
   return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
+function buildCollegeTable(d) {
+  if (typeof COLLEGE_STATS === 'undefined') return '';
+  const stats = COLLEGE_STATS[d.n];
+  if (!stats || !stats.length) return '';
+  const pos = d.s || 'WR';
+  const isQB = pos === 'QB';
+  const isRB = pos === 'RB';
+  let hdr = '<tr><th>YR</th><th>TEAM</th><th>CONF</th>';
+  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>YDS</th><th>TD</th><th>INT</th><th>PCT</th><th>RuYd</th><th>RuTD</th>';
+  else if (isRB) hdr += '<th>CAR</th><th>RuYd</th><th>RuTD</th><th>YPC</th><th>REC</th><th>RcYd</th><th>RcTD</th>';
+  else hdr += '<th>REC</th><th>RcYd</th><th>RcTD</th><th>YPR</th><th>RuYd</th><th>RuTD</th>';
+  hdr += '</tr>';
+  let bestYds = 0;
+  stats.forEach(s => { const t = (s.py||0)+(s.ry||0)+(s.rcy||0); if (t>bestYds) bestYds=t; });
+  let rows = stats.map(s => {
+    const t = (s.py||0)+(s.ry||0)+(s.rcy||0);
+    const isBest = t===bestYds&&bestYds>0?' class="best-yr"':'';
+    let r = '<tr><td'+isBest+'>'+s.yr+'</td>';
+    r += '<td style="color:var(--text2)">'+s.tm+'</td>';
+    r += '<td><span class="college-conf-badge">'+(s.conf||'—')+'</span></td>';
+    if (isQB) {
+      r += '<td>'+(s.pc||0)+'</td><td>'+(s.pa||0)+'</td><td style="font-weight:700">'+(s.py||0)+'</td>';
+      r += '<td style="color:var(--green);font-weight:700">'+(s.ptd||0)+'</td><td style="color:var(--red)">'+(s.int||0)+'</td>';
+      r += '<td>'+(s.pct?(s.pct*100).toFixed(1)+'%':'—')+'</td><td>'+(s.ry||0)+'</td><td>'+(s.rtd||0)+'</td>';
+    } else if (isRB) {
+      r += '<td>'+(s.ra||0)+'</td><td style="font-weight:700">'+(s.ry||0)+'</td>';
+      r += '<td style="color:var(--green);font-weight:700">'+(s.rtd||0)+'</td><td>'+(s.rypc||'—')+'</td>';
+      r += '<td>'+(s.rec||0)+'</td><td>'+(s.rcy||0)+'</td><td>'+(s.rctd||0)+'</td>';
+    } else {
+      r += '<td>'+(s.rec||0)+'</td><td style="font-weight:700">'+(s.rcy||0)+'</td>';
+      r += '<td style="color:var(--green);font-weight:700">'+(s.rctd||0)+'</td><td>'+(s.rypr||'—')+'</td>';
+      r += '<td>'+(s.ry||0)+'</td><td>'+(s.rtd||0)+'</td>';
+    }
+    return r+'</tr>';
+  }).join('');
+  const tot = {pc:0,pa:0,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rec:0,rcy:0,rctd:0};
+  stats.forEach(s => { tot.pc+=s.pc||0;tot.pa+=s.pa||0;tot.py+=s.py||0;tot.ptd+=s.ptd||0;tot.int+=s.int||0;tot.ra+=s.ra||0;tot.ry+=s.ry||0;tot.rtd+=s.rtd||0;tot.rec+=s.rec||0;tot.rcy+=s.rcy||0;tot.rctd+=s.rctd||0; });
+  let tr = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
+  tr += '<td style="color:var(--accent)">TOT</td><td></td><td></td>';
+  if (isQB) {
+    const pct=tot.pa>0?((tot.pc/tot.pa)*100).toFixed(1)+'%':'—';
+    tr += '<td>'+tot.pc+'</td><td>'+tot.pa+'</td><td>'+tot.py+'</td><td style="color:var(--green)">'+tot.ptd+'</td><td style="color:var(--red)">'+tot.int+'</td><td>'+pct+'</td><td>'+tot.ry+'</td><td>'+tot.rtd+'</td>';
+  } else if (isRB) {
+    const ypc=tot.ra>0?(tot.ry/tot.ra).toFixed(1):'—';
+    tr += '<td>'+tot.ra+'</td><td>'+tot.ry+'</td><td style="color:var(--green)">'+tot.rtd+'</td><td>'+ypc+'</td><td>'+tot.rec+'</td><td>'+tot.rcy+'</td><td>'+tot.rctd+'</td>';
+  } else {
+    const ypr=tot.rec>0?(tot.rcy/tot.rec).toFixed(1):'—';
+    tr += '<td>'+tot.rec+'</td><td>'+tot.rcy+'</td><td style="color:var(--green)">'+tot.rctd+'</td><td>'+ypr+'</td><td>'+tot.ry+'</td><td>'+tot.rtd+'</td>';
+  }
+  tr += '</tr>';
+  rows += tr;
+  return '<div class="career-table-wrap"><table class="career-table"><thead>'+hdr+'</thead><tbody>'+rows+'</tbody></table></div>';
+}
+
 function fmtHeight(h) {
   if (!h) return '—';
   const inches = parseInt(h);
@@ -4202,6 +4258,10 @@ function openPlayerCard(d) {
           ${cb.ap ? `<div class="card-rank-box"><div class="lbl">All-Pro</div><div class="num green">${cb.ap}</div></div>` : ''}
           ${cb.hof ? `<div class="card-rank-box"><div class="lbl">Hall of Fame</div><div class="num" style="color:var(--green)">HOF</div></div>` : ''}
         </div>
+      </div>` : ''}
+      ${typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[d.n] ? `<div class="card-section">
+        <div class="card-section-title">College Career Log</div>
+        ${buildCollegeTable(d)}
       </div>` : ''}`;
       })() : `<div class="card-section" style="text-align:center;padding:12px">
         <div class="card-section-title">RAS</div>
@@ -4220,7 +4280,11 @@ function openPlayerCard(d) {
           <div class="card-stat"><span class="card-stat-label">Draft Pick</span><span class="card-stat-value">${d.dr ? '#' + d.dr + ' Overall' : '—'}</span></div>
           <div class="card-stat"><span class="card-stat-label">Position</span><span class="card-stat-value">${d.s}</span></div>
         </div>
-      </div>`}
+      </div>
+      ${typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[d.n] ? `<div class="card-section">
+        <div class="card-section-title">College Career Log</div>
+        ${buildCollegeTable(d)}
+      </div>` : ''}`}
       </div>
     </div>
   `;

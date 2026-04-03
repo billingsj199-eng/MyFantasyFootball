@@ -6143,7 +6143,7 @@ document.addEventListener('click', function(e) {
         D.push({
           n: p.name, a: 999, p: 0, s: p.pos, r: p.pos + '\u2014', t: p.team || 'Retired',
           p25: bestPpgVal, p24: null, p23: null,
-          age: (ldb && ldb.birthYear) ? (typeof _calcAge === 'function' ? _calcAge(LEGEND_BIRTH_YEARS[p.name] || ldb.birthYear) : (new Date().getFullYear() - ldb.birthYear)) : null,
+          age: (ldb && ldb.birthYear) ? (typeof _calcAge === 'function' ? _calcAge((typeof LEGEND_BIRTH_YEARS !== 'undefined' && LEGEND_BIRTH_YEARS && LEGEND_BIRTH_YEARS[p.name]) || ldb.birthYear) : (new Date().getFullYear() - ldb.birthYear)) : null,
           cyr: null, out: null, sal: null, dr: null, exp: career.length || null, role: null, inj: null,
           s25: null, career: career, da: 999, sa: 999, idx: D.length, myRank: D.length + 1,
           round: 99, notes: '', _retired: true, _debut: debut, _last: last,

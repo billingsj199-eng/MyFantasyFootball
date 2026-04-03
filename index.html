@@ -11969,6 +11969,8 @@ window.fmtHeight = fmtHeight;
     const draftDate = new Date(draftYear, DRAFT_DATE_MONTH, DRAFT_DATE_DAY);
     const diffMs = draftDate - bd;
     const ageYears = diffMs / (365.25 * 24 * 60 * 60 * 1000);
+    // Sanity: draft age should be between 18 and 30 for any realistic prospect
+    if (ageYears < 18 || ageYears > 30) return null;
     // Truncate to 1 decimal (no rounding)
     return Math.floor(ageYears * 10) / 10;
   }
@@ -11977,11 +11979,21 @@ window.fmtHeight = fmtHeight;
   function getDraftYear(name) {
     const d = D.find(p => p.n === name);
     // Prefer D array exp field — most reliable for active players
-    if (d && d.exp && !isNaN(d.exp)) {
+    if (d && d.exp != null && !isNaN(d.exp)) {
       return 2026 - parseInt(d.exp);
     }
+    // Get combine + college data, with collision check
+    let cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
+    const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[name] : null;
+    // If both exist, check for name collision (different people)
+    if (cb && cs && cs.length && cb.school && typeof _normSchool === 'function') {
+      const csLast = cs.reduce((a, b) => (b.yr > a.yr) ? b : a, cs[0]);
+      if (csLast.tm && Math.abs((cb.yr||0) - (csLast.yr||0)) > 2 &&
+          _normSchool(csLast.tm) !== _normSchool(cb.school)) {
+        cb = null; // collision — ignore combine data
+      }
+    }
     // From COMBINE_DATA — validate yr is a plausible draft year (>= 2010)
-    const cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
     if (cb && cb.yr && cb.yr >= 2010) {
       // Additional sanity: if player has career data, yr should be <= first career year
       if (d && d.career && d.career.length) {
@@ -11994,7 +12006,6 @@ window.fmtHeight = fmtHeight;
     // From D career seasons
     if (d && d.career && d.career.length) return Math.min(...d.career.map(s => s.yr));
     // From college stats — last season + 1
-    const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[name] : null;
     if (cs && cs.length) return Math.max(...cs.map(s => s.yr)) + 1;
     // Last resort: cb.yr even if it seems off
     if (cb && cb.yr) return cb.yr;
@@ -12013,6 +12024,10 @@ window.fmtHeight = fmtHeight;
   }
 
   // Build prospect data for all players who have college stats or combine data
+  // School name normalization for collision detection
+  const _SCHOOL_NORM={"App State":"Appalachian State","Arizona State":"Arizona St.","Arkansas State":"Arkansas St.","Boise State":"Boise St.","Boston College":"Boston Col.","Colorado State":"Colorado St.","Eastern Illinois":"East. Illinois","Eastern Washington":"East. Washington","Florida State":"Florida St.","Fresno State":"Fresno St.","Georgia State":"Georgia St.","Illinois State":"Illinois St.","Iowa State":"Iowa St.","Kansas State":"Kansas St.","Kent State":"Kent St.","Louisiana":"Louisiana-Lafayette","Miami":"Miami (FL)","Michigan State":"Michigan St.","Middle Tennessee":"Middle Tennessee State","Mississippi State":"Mississippi St.","NC State":"North Carolina State","North Dakota State":"North Dakota St.","Northwestern State":"Northwestern St. (LA)","Ohio State":"Ohio St.","Oklahoma State":"Oklahoma St.","Ole Miss":"Mississippi","Oregon State":"Oregon St.","Penn State":"Penn St.","Prairie View A&M":"Prairie View","SE Louisiana":"Southeastern Louisiana","San Diego State":"San Diego St.","San José State":"San Jose State","South Dakota State":"South Dakota St.","Southeast Missouri State":"Southeast Missouri St.","Southern Miss":"Southern Mississippi","UAB":"Ala-Birmingham","UCF":"Central Florida","UConn":"Connecticut","UTEP":"Texas-El Paso","Utah State":"Utah St.","Washington State":"Washington St.","Western Michigan":"West. Michigan"};
+  function _normSchool(s) { if (!s) return ''; const a = _SCHOOL_NORM[s] || s; return a.toLowerCase().replace(/[.\s]/g,''); }
+
   function buildProspectData() {
     const allNames = new Set();
     if (typeof COMBINE_DATA !== 'undefined') Object.keys(COMBINE_DATA).forEach(n => allNames.add(n));
@@ -12020,8 +12035,24 @@ window.fmtHeight = fmtHeight;
 
     const results = [];
     allNames.forEach(name => {
-      const cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
+      let cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
       const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[name] : null;
+
+      // Collision detection: if both CB and CS exist, check if schools match
+      // If schools differ AND year gap > 2, they're different people — drop CB data
+      if (cb && cs && cs.length && cb.school) {
+        const csLast = cs.reduce((a, b) => (b.yr > a.yr) ? b : a, cs[0]);
+        const csSchool = _normSchool(csLast.tm);
+        const cbSchool = _normSchool(cb.school);
+        if (csSchool && cbSchool && csSchool !== cbSchool) {
+          const csLastYr = csLast.yr || 0;
+          const cbYr = cb.yr || 0;
+          if (Math.abs(cbYr - csLastYr) > 2) {
+            // Different people — use college stats only, ignore combine
+            cb = null;
+          }
+        }
+      }
 
       // Determine position
       let pos = null;

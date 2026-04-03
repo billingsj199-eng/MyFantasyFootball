@@ -968,7 +968,8 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .page-games > .auth-anchor,
 .page-trade > .auth-anchor,
 .page-mockdraft > .auth-anchor,
-.page-account > .auth-anchor{position:absolute;top:12px;right:16px;z-index:50}
+.page-account > .auth-anchor,
+.page-prospect > .auth-anchor{position:absolute;top:12px;right:16px;z-index:50}
 .global-signin-btn{display:flex;align-items:center;gap:6px;padding:7px 16px;background:var(--accent);border:none;border-radius:6px;color:var(--bg);font-family:'Bebas Neue',sans-serif;font-size:.88rem;letter-spacing:1.5px;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(245,158,11,.25);white-space:nowrap}
 .global-signin-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
 .global-signin-btn svg{width:16px;height:16px}
@@ -1025,7 +1026,8 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .home-hero > .auth-anchor{position:relative;top:auto;right:auto;display:flex;justify-content:flex-end;margin-bottom:4px}
   .page-trade > .auth-anchor,
   .page-mockdraft > .auth-anchor,
-  .page-account > .auth-anchor{top:8px;right:8px}
+  .page-account > .auth-anchor,
+  .page-prospect > .auth-anchor{top:8px;right:8px}
   .page-games > .auth-anchor{position:relative;top:auto;right:auto;display:flex;justify-content:center;margin-bottom:8px;z-index:50}
   .games-tabs{width:auto;max-width:100%;flex-wrap:wrap}
   .games-tab{font-size:.78rem;padding:6px 14px;letter-spacing:1px}
@@ -1222,6 +1224,79 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .md-avail-list{max-height:260px}
   .md-final-roster{max-width:100%}
 }
+
+/* Prospect Model Page */
+.page-prospect{padding:0;overflow-y:auto}
+.pm-wrapper{width:100%;max-width:1400px;margin:0 auto;padding:1.5rem}
+.pm-header{text-align:center;margin-bottom:1.25rem}
+.pm-title{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
+.pm-subtitle{color:var(--text2);font-size:.8rem;margin-top:4px}
+.pm-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-bottom:1rem}
+.pm-pos-tabs{display:flex;gap:2px;background:rgba(245,158,11,.06);border-radius:8px;padding:3px;border:1px solid rgba(245,158,11,.12)}
+.pm-pos-tab{padding:7px 16px;border:none;background:none;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;cursor:pointer;border-radius:6px;transition:all .15s}
+.pm-pos-tab:hover{color:var(--text)}
+.pm-pos-tab.active{background:var(--accent);color:var(--bg)}
+.pm-toggle-wrap{display:flex;align-items:center;gap:6px}
+.pm-toggle-label{font-size:.72rem;color:var(--text2);font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.pm-toggle{position:relative;width:40px;height:22px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;cursor:pointer;transition:all .2s}
+.pm-toggle.on{background:rgba(245,158,11,.25);border-color:var(--accent)}
+.pm-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--text2);border-radius:50%;transition:all .2s}
+.pm-toggle.on::after{left:20px;background:var(--accent)}
+.pm-search-wrap{position:relative}
+.pm-search{padding:6px 12px 6px 32px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.82rem;font-family:'DM Sans',sans-serif;outline:none;width:200px;transition:border-color .15s}
+.pm-search:focus{border-color:var(--accent)}
+.pm-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text2)}
+.pm-scoring-tabs{display:flex;gap:2px;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.12)}
+.pm-scoring-btn{padding:4px 10px;border:none;background:none;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;cursor:pointer;border-radius:4px;transition:all .15s}
+.pm-scoring-btn:hover{color:var(--text)}
+.pm-scoring-btn.active{background:var(--accent);color:var(--bg)}
+.pm-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.pm-table{width:100%;border-collapse:collapse;font-size:.78rem;white-space:nowrap}
+.pm-table thead{position:sticky;top:0;z-index:5}
+.pm-table th{background:var(--surface2);padding:8px 10px;text-align:left;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--text2);border-bottom:2px solid var(--border);cursor:pointer;user-select:none;transition:color .15s}
+.pm-table th:hover{color:var(--accent)}
+.pm-table th.sorted-asc,.pm-table th.sorted-desc{color:var(--accent)}
+.pm-table th.sorted-asc::after{content:' ▲';font-size:.55rem}
+.pm-table th.sorted-desc::after{content:' ▼';font-size:.55rem}
+.pm-table td{padding:6px 10px;border-bottom:1px solid rgba(30,42,66,.5)}
+.pm-table tr:hover{background:rgba(245,158,11,.04)}
+.pm-table .pm-name{font-weight:600;color:var(--text);cursor:pointer;transition:color .15s}
+.pm-table .pm-name:hover{color:var(--accent)}
+.pm-table .pm-pos{font-size:.65rem;font-weight:700;letter-spacing:.5px;padding:1px 5px;border-radius:3px;display:inline-block}
+.pm-table .pm-pos.QB{background:var(--qb-bg);color:var(--qb)}
+.pm-table .pm-pos.RB{background:var(--rb-bg);color:var(--rb)}
+.pm-table .pm-pos.WR{background:var(--wr-bg);color:var(--wr)}
+.pm-table .pm-pos.TE{background:var(--te-bg);color:var(--te)}
+.pm-table .pm-team{color:var(--text2);font-size:.72rem}
+.pm-table .pm-conf{font-size:.65rem;padding:1px 6px;border-radius:10px;background:rgba(245,158,11,.08);color:var(--accent);font-weight:600;letter-spacing:.3px}
+.pm-table .pm-ras{font-weight:700}
+.pm-ras.ras-elite{color:#22c55e}
+.pm-ras.ras-good{color:#3b82f6}
+.pm-ras.ras-avg{color:#eab308}
+.pm-ras.ras-below{color:var(--text2)}
+.pm-empty{text-align:center;padding:3rem 1rem;color:var(--text2);font-size:.9rem}
+.pm-count{font-size:.72rem;color:var(--text2);text-align:center;margin-top:8px}
+.pm-fpts-good{color:#22c55e;font-weight:600}
+.pm-fpts-avg{color:#eab308;font-weight:600}
+.pm-fpts-low{color:var(--text2)}
+@media(max-width:768px){
+  .pm-wrapper{padding:1rem .75rem}
+  .pm-title{font-size:2rem;letter-spacing:2px}
+  .pm-controls{gap:6px}
+  .pm-search{width:160px}
+  .pm-table{font-size:.72rem}
+  .pm-table th,.pm-table td{padding:5px 6px}
+}
+@media(max-width:600px){
+  .pm-wrapper{padding:.75rem .5rem;padding-bottom:calc(1rem + env(safe-area-inset-bottom,0))}
+  .pm-title{font-size:1.6rem}
+  .pm-controls{flex-direction:column;gap:6px}
+  .pm-pos-tabs{flex-wrap:wrap;justify-content:center}
+  .pm-pos-tab{padding:5px 10px;font-size:.75rem}
+  .pm-search{width:100%}
+  .pm-table{font-size:.68rem}
+  .pm-table th,.pm-table td{padding:4px 5px}
+}
 </style>
 
 <!-- Firebase SDK (optional — page works without it if blocked by privacy settings) -->
@@ -1284,6 +1359,10 @@ Continue with Google
 <button class="nav-btn" data-page="mockdraft" title="Mock Draft">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
 <span class="nav-label">Mock<br>Draft</span>
+</button>
+<button class="nav-btn" data-page="prospect" title="Prospect Model">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/><circle cx="12" cy="7" r="2"/><circle cx="18" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="6" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
+<span class="nav-label">Prospect</span>
 </button>
 <button class="nav-btn" data-page="compare" title="Compare">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
@@ -1601,6 +1680,10 @@ PREMIUM ACTIVE
 <button class="home-nav-btn" data-goto="mockdraft">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
 <span>Mock Draft</span>
+</button>
+<button class="home-nav-btn" data-goto="prospect">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+<span>Prospect</span>
 </button>
 <button class="home-nav-btn" data-goto="compare">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
@@ -2155,6 +2238,45 @@ CLEAR
 </div>
 
 <!-- TRADE CALCULATOR PAGE -->
+<div class="page page-prospect" id="pageProspect">
+<div class="auth-anchor" id="authAnchorProspect"></div>
+<div class="pm-wrapper">
+<div class="pm-header">
+<div class="pm-title">Prospect Model</div>
+<div class="pm-subtitle">College prospect data sorted by position — draft age, school, conference, RAS &amp; production</div>
+</div>
+<div class="pm-controls">
+<div class="pm-pos-tabs" id="pmPosTabs">
+<button class="pm-pos-tab active" data-pmpos="QB">QB</button>
+<button class="pm-pos-tab" data-pmpos="RB">RB</button>
+<button class="pm-pos-tab" data-pmpos="WR">WR</button>
+<button class="pm-pos-tab" data-pmpos="TE">TE</button>
+</div>
+<div class="pm-toggle-wrap">
+<span class="pm-toggle-label">Per Game</span>
+<div class="pm-toggle" id="pmToggle" title="Toggle between per-game and season totals"></div>
+<span class="pm-toggle-label">Totals</span>
+</div>
+<div class="pm-scoring-tabs" id="pmScoringTabs">
+<button class="pm-scoring-btn" data-pmscoring="ppr">PPR</button>
+<button class="pm-scoring-btn active" data-pmscoring="half">HALF</button>
+<button class="pm-scoring-btn" data-pmscoring="std">STD</button>
+</div>
+<div class="pm-search-wrap">
+<svg class="pm-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+<input type="text" class="pm-search" id="pmSearch" placeholder="Search player...">
+</div>
+</div>
+<div class="pm-table-wrap">
+<table class="pm-table" id="pmTable">
+<thead id="pmThead"></thead>
+<tbody id="pmTbody"></tbody>
+</table>
+</div>
+<div class="pm-count" id="pmCount"></div>
+</div>
+</div>
+
 <div class="page page-trade" id="pageTrade">
 <div class="auth-anchor" id="authAnchorTrade"></div>
 <div class="trade-wrapper">
@@ -4921,8 +5043,8 @@ function renderSearchChips() {
 render();
 
 // === Page Navigation ===
-const pageMap = { home: 'pageHome', rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount' };
-const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount' };
+const pageMap = { home: 'pageHome', rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect' };
+const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect' };
 function switchPage(page) {
   Object.values(pageMap).forEach(id => {
     const el = document.getElementById(id);
@@ -11795,6 +11917,484 @@ window.fmtHeight = fmtHeight;
       }
     }
   });
+})();
+
+// === PROSPECT MODEL PAGE ===
+(function() {
+  if (typeof COMBINE_DATA === 'undefined' && typeof COLLEGE_STATS === 'undefined') return;
+
+  const CONF_ALIASES = {'Pac-10':'Pac-12'};
+  const DRAFT_DATE_MONTH = 3; // April (0-indexed)
+  const DRAFT_DATE_DAY = 28;
+
+  let pmPos = 'QB';
+  let pmTotals = false; // false = per game, true = totals
+  let pmScoring = 'half';
+  let pmSort = { col: 'bestPpg', dir: 'desc' };
+  let pmSearchVal = '';
+  let pmBuiltData = [];
+
+  const pmThead = document.getElementById('pmThead');
+  const pmTbody = document.getElementById('pmTbody');
+  const pmCount = document.getElementById('pmCount');
+  const pmSearch = document.getElementById('pmSearch');
+  const pmToggle = document.getElementById('pmToggle');
+
+  // Scoring multiplier
+  function getRecMult() {
+    return pmScoring === 'ppr' ? 1.0 : pmScoring === 'std' ? 0 : 0.5;
+  }
+
+  // Calculate fantasy points for a college season
+  function cfpts(s) {
+    const rm = getRecMult();
+    return Math.round(((s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*rm + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2) * 10) / 10;
+  }
+
+  // Calculate age at draft to one decimal (no rounding up/down — truncate to 1 decimal)
+  function draftAge(birthEntry, draftYear) {
+    if (!birthEntry || !draftYear) return null;
+    let bd;
+    if (typeof birthEntry === 'string' && birthEntry.includes('-')) {
+      bd = new Date(birthEntry + 'T00:00:00');
+    } else {
+      // Only have birth year — approximate as June 1
+      const yr = typeof birthEntry === 'number' ? birthEntry : parseInt(birthEntry);
+      if (!yr || yr < 1900) return null;
+      bd = new Date(yr, 5, 1); // June 1 approximation
+    }
+    const draftDate = new Date(draftYear, DRAFT_DATE_MONTH, DRAFT_DATE_DAY);
+    const diffMs = draftDate - bd;
+    const ageYears = diffMs / (365.25 * 24 * 60 * 60 * 1000);
+    // Truncate to 1 decimal (no rounding)
+    return Math.floor(ageYears * 10) / 10;
+  }
+
+  // Determine draft year for a player
+  function getDraftYear(name) {
+    // From COMBINE_DATA
+    const cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
+    if (cb && cb.yr) return cb.yr;
+    // From D array — find by name
+    const d = D.find(p => p.n === name);
+    if (d) {
+      if (d.exp && !isNaN(d.exp)) return 2026 - parseInt(d.exp);
+      // Check career seasons
+      if (d.career && d.career.length) return Math.min(...d.career.map(s => s.yr));
+    }
+    // From college stats — last season + 1
+    const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[name] : null;
+    if (cs && cs.length) return Math.max(...cs.map(s => s.yr)) + 1;
+    return null;
+  }
+
+  // Get birth info
+  function getBirth(name) {
+    if (typeof LEGEND_BIRTH_YEARS !== 'undefined' && LEGEND_BIRTH_YEARS[name]) return LEGEND_BIRTH_YEARS[name];
+    const d = D.find(p => p.n === name);
+    if (d && d.birthYear) return d.birthYear;
+    return null;
+  }
+
+  // Build prospect data for all players who have college stats or combine data
+  function buildProspectData() {
+    const allNames = new Set();
+    if (typeof COMBINE_DATA !== 'undefined') Object.keys(COMBINE_DATA).forEach(n => allNames.add(n));
+    if (typeof COLLEGE_STATS !== 'undefined') Object.keys(COLLEGE_STATS).forEach(n => allNames.add(n));
+
+    const results = [];
+    allNames.forEach(name => {
+      const cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
+      const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[name] : null;
+
+      // Determine position
+      let pos = null;
+      if (cb && cb.pos) pos = cb.pos;
+      if (!pos) {
+        const d = D.find(p => p.n === name);
+        if (d && d.s) pos = d.s;
+      }
+      if (!pos || !['QB','RB','WR','TE'].includes(pos)) return;
+
+      const draftYr = getDraftYear(name);
+      const birth = getBirth(name);
+      const age = draftAge(birth, draftYr);
+
+      // College info — last season
+      let lastCollege = '—', lastConf = '—';
+      if (cs && cs.length) {
+        const last = cs.reduce((a, b) => (b.yr > a.yr) ? b : a, cs[0]);
+        lastCollege = last.tm || '—';
+        lastConf = last.conf || '—';
+        if (typeof CONF_ALIASES !== 'undefined' && CONF_ALIASES[lastConf]) lastConf = CONF_ALIASES[lastConf];
+      } else if (cb && cb.school) {
+        lastCollege = cb.school;
+      }
+
+      // RAS
+      const ras = cb ? cb.ras : null;
+
+      // College weekly data for GP
+      const weeklyData = (typeof COLLEGE_WEEKLY !== 'undefined') ? COLLEGE_WEEKLY[name] : null;
+
+      // Calculate season-level stats
+      let totalGp = 0, bestPpg = 0, bestFpts = 0;
+      let totFpts = 0;
+      // Aggregated totals
+      let totPy = 0, totRy = 0, totRcy = 0, totRec = 0, totPtd = 0, totRtd = 0, totRctd = 0, totInt = 0;
+
+      if (cs && cs.length) {
+        cs.forEach(s => {
+          const fp = cfpts(s);
+          let gp = s.gp || null;
+          if (!gp && weeklyData && weeklyData[s.yr]) gp = weeklyData[s.yr].length;
+          if (gp) totalGp += gp;
+          totFpts += fp;
+          if (fp > bestFpts) bestFpts = fp;
+          if (gp && gp > 0) {
+            const ppg = Math.round((fp / gp) * 10) / 10;
+            if (ppg > bestPpg) bestPpg = ppg;
+          }
+          totPy += (s.py || 0);
+          totRy += (s.ry || 0);
+          totRcy += (s.rcy || 0);
+          totRec += (s.rec || 0);
+          totPtd += (s.ptd || 0);
+          totRtd += (s.rtd || 0);
+          totRctd += (s.rctd || 0);
+          totInt += (s.int || 0);
+        });
+      }
+
+      totFpts = Math.round(totFpts * 10) / 10;
+      bestFpts = Math.round(bestFpts * 10) / 10;
+
+      // Per-game averages (career)
+      const gp = totalGp || null;
+      const fptsPerGame = gp ? Math.round((totFpts / gp) * 10) / 10 : null;
+
+      // Position-specific yards per game
+      let pasYpg = null, rushYpg = null, recYpg = null, recPg = null, tdPg = null;
+      if (gp && gp > 0) {
+        if (pos === 'QB') {
+          pasYpg = Math.round((totPy / gp) * 10) / 10;
+          rushYpg = Math.round((totRy / gp) * 10) / 10;
+        } else if (pos === 'RB') {
+          rushYpg = Math.round((totRy / gp) * 10) / 10;
+          recYpg = Math.round((totRcy / gp) * 10) / 10;
+        } else {
+          recYpg = Math.round((totRcy / gp) * 10) / 10;
+        }
+        recPg = Math.round((totRec / gp) * 10) / 10;
+        const totalTd = (pos === 'QB') ? (totPtd + totRtd) : (pos === 'RB') ? (totRtd + totRctd) : (totRctd + totRtd);
+        tdPg = Math.round((totalTd / gp) * 10) / 10;
+      }
+
+      // Total TDs
+      const totalTd = (pos === 'QB') ? (totPtd + totRtd) : (pos === 'RB') ? (totRtd + totRctd) : (totRctd + totRtd);
+
+      results.push({
+        name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,
+        bestPpg, bestFpts, totFpts, fptsPerGame,
+        totPy, totRy, totRcy, totRec, totalTd,
+        pasYpg, rushYpg, recYpg, recPg, tdPg,
+        totPtd, totRtd, totRctd, totInt
+      });
+    });
+
+    return results;
+  }
+
+  // Column definitions per position
+  function getColumns(pos, isTotals) {
+    const cols = [
+      { key: 'name', label: 'PLAYER', sortable: true },
+      { key: 'age', label: 'DRAFT AGE', sortable: true },
+      { key: 'draftYr', label: 'YEAR', sortable: true },
+      { key: 'lastCollege', label: 'COLLEGE', sortable: true },
+      { key: 'lastConf', label: 'CONF', sortable: true },
+      { key: 'ras', label: 'RAS', sortable: true },
+      { key: 'gp', label: 'GP', sortable: true }
+    ];
+
+    if (isTotals) {
+      cols.push({ key: 'totFpts', label: 'FPTS', sortable: true });
+      cols.push({ key: 'bestFpts', label: 'BEST SZN', sortable: true });
+      if (pos === 'QB') {
+        cols.push({ key: 'totPy', label: 'PASS YDS', sortable: true });
+        cols.push({ key: 'totRy', label: 'RUSH YDS', sortable: true });
+      } else if (pos === 'RB') {
+        cols.push({ key: 'totRy', label: 'RUSH YDS', sortable: true });
+        cols.push({ key: 'totRcy', label: 'REC YDS', sortable: true });
+      } else {
+        cols.push({ key: 'totRcy', label: 'REC YDS', sortable: true });
+      }
+      cols.push({ key: 'totRec', label: 'REC', sortable: true });
+      cols.push({ key: 'totalTd', label: 'TD', sortable: true });
+    } else {
+      cols.push({ key: 'bestPpg', label: 'BEST PPG', sortable: true });
+      cols.push({ key: 'fptsPerGame', label: 'FPTS/G', sortable: true });
+      if (pos === 'QB') {
+        cols.push({ key: 'pasYpg', label: 'PASS YD/G', sortable: true });
+        cols.push({ key: 'rushYpg', label: 'RUSH YD/G', sortable: true });
+      } else if (pos === 'RB') {
+        cols.push({ key: 'rushYpg', label: 'RUSH YD/G', sortable: true });
+        cols.push({ key: 'recYpg', label: 'REC YD/G', sortable: true });
+      } else {
+        cols.push({ key: 'recYpg', label: 'REC YD/G', sortable: true });
+      }
+      cols.push({ key: 'recPg', label: 'REC/G', sortable: true });
+      cols.push({ key: 'tdPg', label: 'TD/G', sortable: true });
+    }
+    return cols;
+  }
+
+  // RAS color class
+  function rasClass(v) {
+    if (v == null) return 'ras-below';
+    if (v >= 9) return 'ras-elite';
+    if (v >= 7) return 'ras-good';
+    if (v >= 5) return 'ras-avg';
+    return 'ras-below';
+  }
+
+  // Fantasy points color
+  function fptsColor(v, pos) {
+    if (v == null) return 'pm-fpts-low';
+    const thresholds = {
+      QB: [22, 16], RB: [18, 12], WR: [16, 10], TE: [12, 7]
+    };
+    const t = thresholds[pos] || thresholds['WR'];
+    if (v >= t[0]) return 'pm-fpts-good';
+    if (v >= t[1]) return 'pm-fpts-avg';
+    return 'pm-fpts-low';
+  }
+
+  function formatVal(v, decimals) {
+    if (v == null || v === 0) return '—';
+    if (typeof decimals === 'number') return v.toFixed ? v.toFixed(decimals) : v;
+    return v;
+  }
+
+  function renderTable() {
+    // Filter by position
+    let data = pmBuiltData.filter(p => p.pos === pmPos);
+
+    // Search filter
+    if (pmSearchVal) {
+      const q = pmSearchVal.toLowerCase();
+      data = data.filter(p => p.name.toLowerCase().includes(q) || (p.lastCollege && p.lastCollege.toLowerCase().includes(q)) || (p.lastConf && p.lastConf.toLowerCase().includes(q)));
+    }
+
+    // Sort
+    const cols = getColumns(pmPos, pmTotals);
+    const colDef = cols.find(c => c.key === pmSort.col);
+    if (colDef) {
+      data.sort((a, b) => {
+        let av = a[pmSort.col], bv = b[pmSort.col];
+        // Nulls to bottom
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        // String sort
+        if (typeof av === 'string' && typeof bv === 'string') {
+          return pmSort.dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+        }
+        return pmSort.dir === 'asc' ? av - bv : bv - av;
+      });
+    }
+
+    // Build header
+    let hdr = '<tr>';
+    cols.forEach(c => {
+      let cls = '';
+      if (pmSort.col === c.key) cls = pmSort.dir === 'asc' ? ' class="sorted-asc"' : ' class="sorted-desc"';
+      hdr += `<th data-pmcol="${c.key}"${cls}>${c.label}</th>`;
+    });
+    hdr += '</tr>';
+    pmThead.innerHTML = hdr;
+
+    // Build rows
+    if (!data.length) {
+      pmTbody.innerHTML = `<tr><td colspan="${cols.length}" class="pm-empty">No prospects found for this position.</td></tr>`;
+      pmCount.textContent = '';
+      return;
+    }
+
+    let rows = '';
+    data.forEach(p => {
+      rows += '<tr>';
+      cols.forEach(c => {
+        switch (c.key) {
+          case 'name':
+            rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span></td>`;
+            break;
+          case 'age':
+            rows += `<td>${p.age != null ? p.age.toFixed(1) : '—'}</td>`;
+            break;
+          case 'draftYr':
+            rows += `<td>${p.draftYr || '—'}</td>`;
+            break;
+          case 'lastCollege':
+            rows += `<td class="pm-team">${p.lastCollege}</td>`;
+            break;
+          case 'lastConf':
+            rows += `<td>${p.lastConf !== '—' ? `<span class="pm-conf">${p.lastConf}</span>` : '—'}</td>`;
+            break;
+          case 'ras':
+            rows += `<td class="pm-ras ${rasClass(p.ras)}">${p.ras != null ? p.ras.toFixed(2) : '—'}</td>`;
+            break;
+          case 'gp':
+            rows += `<td>${p.gp || '—'}</td>`;
+            break;
+          case 'bestPpg':
+            rows += `<td class="${fptsColor(p.bestPpg, p.pos)}">${formatVal(p.bestPpg, 1)}</td>`;
+            break;
+          case 'fptsPerGame':
+            rows += `<td class="${fptsColor(p.fptsPerGame, p.pos)}">${formatVal(p.fptsPerGame, 1)}</td>`;
+            break;
+          case 'bestFpts':
+            rows += `<td>${formatVal(p.bestFpts, 1)}</td>`;
+            break;
+          case 'totFpts':
+            rows += `<td style="font-weight:600">${formatVal(p.totFpts, 1)}</td>`;
+            break;
+          case 'totPy':
+            rows += `<td>${p.totPy ? p.totPy.toLocaleString() : '—'}</td>`;
+            break;
+          case 'totRy':
+            rows += `<td>${p.totRy ? p.totRy.toLocaleString() : '—'}</td>`;
+            break;
+          case 'totRcy':
+            rows += `<td>${p.totRcy ? p.totRcy.toLocaleString() : '—'}</td>`;
+            break;
+          case 'totRec':
+            rows += `<td>${p.totRec || '—'}</td>`;
+            break;
+          case 'totalTd':
+            rows += `<td style="color:var(--green);font-weight:600">${p.totalTd || '—'}</td>`;
+            break;
+          case 'pasYpg':
+            rows += `<td>${formatVal(p.pasYpg, 1)}</td>`;
+            break;
+          case 'rushYpg':
+            rows += `<td>${formatVal(p.rushYpg, 1)}</td>`;
+            break;
+          case 'recYpg':
+            rows += `<td>${formatVal(p.recYpg, 1)}</td>`;
+            break;
+          case 'recPg':
+            rows += `<td>${formatVal(p.recPg, 1)}</td>`;
+            break;
+          case 'tdPg':
+            rows += `<td style="color:var(--green);font-weight:600">${formatVal(p.tdPg, 1)}</td>`;
+            break;
+          default:
+            rows += `<td>—</td>`;
+        }
+      });
+      rows += '</tr>';
+    });
+    pmTbody.innerHTML = rows;
+    pmCount.textContent = data.length + ' prospect' + (data.length !== 1 ? 's' : '');
+
+    // Click on player name to open card
+    pmTbody.querySelectorAll('.pm-name[data-pmplayer]').forEach(el => {
+      el.addEventListener('click', function() {
+        const name = this.dataset.pmplayer;
+        const d = D.find(p => p.n === name);
+        if (d && typeof openPlayerCard === 'function') {
+          openPlayerCard(d);
+        }
+      });
+    });
+  }
+
+  function rebuildAndRender() {
+    pmBuiltData = buildProspectData();
+    renderTable();
+  }
+
+  // Position tabs
+  document.getElementById('pmPosTabs').addEventListener('click', function(e) {
+    const btn = e.target.closest('.pm-pos-tab');
+    if (!btn) return;
+    this.querySelectorAll('.pm-pos-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    pmPos = btn.dataset.pmpos;
+    // Reset sort to bestPpg/totFpts
+    pmSort.col = pmTotals ? 'totFpts' : 'bestPpg';
+    pmSort.dir = 'desc';
+    renderTable();
+  });
+
+  // Totals toggle
+  pmToggle.addEventListener('click', function() {
+    pmTotals = !pmTotals;
+    this.classList.toggle('on', pmTotals);
+    // Switch sort column
+    if (pmSort.col === 'bestPpg') pmSort.col = 'totFpts';
+    else if (pmSort.col === 'fptsPerGame') pmSort.col = 'totFpts';
+    else if (pmSort.col === 'totFpts' && !pmTotals) pmSort.col = 'bestPpg';
+    else if (pmSort.col === 'pasYpg') pmSort.col = 'totPy';
+    else if (pmSort.col === 'totPy' && !pmTotals) pmSort.col = 'pasYpg';
+    else if (pmSort.col === 'rushYpg') pmSort.col = 'totRy';
+    else if (pmSort.col === 'totRy' && !pmTotals) pmSort.col = 'rushYpg';
+    else if (pmSort.col === 'recYpg') pmSort.col = 'totRcy';
+    else if (pmSort.col === 'totRcy' && !pmTotals) pmSort.col = 'recYpg';
+    else if (pmSort.col === 'recPg') pmSort.col = 'totRec';
+    else if (pmSort.col === 'totRec' && !pmTotals) pmSort.col = 'recPg';
+    else if (pmSort.col === 'tdPg') pmSort.col = 'totalTd';
+    else if (pmSort.col === 'totalTd' && !pmTotals) pmSort.col = 'tdPg';
+    else if (pmSort.col === 'bestFpts' && !pmTotals) pmSort.col = 'bestPpg';
+    renderTable();
+  });
+
+  // Scoring tabs
+  document.getElementById('pmScoringTabs').addEventListener('click', function(e) {
+    const btn = e.target.closest('.pm-scoring-btn');
+    if (!btn) return;
+    this.querySelectorAll('.pm-scoring-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    pmScoring = btn.dataset.pmscoring;
+    rebuildAndRender();
+  });
+
+  // Search
+  pmSearch.addEventListener('input', function() {
+    pmSearchVal = this.value.trim();
+    renderTable();
+  });
+
+  // Sort on header click
+  document.getElementById('pmTable').addEventListener('click', function(e) {
+    const th = e.target.closest('th[data-pmcol]');
+    if (!th) return;
+    const col = th.dataset.pmcol;
+    if (pmSort.col === col) {
+      pmSort.dir = pmSort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      pmSort.col = col;
+      // Default direction: desc for numbers, asc for strings
+      pmSort.dir = ['name', 'lastCollege', 'lastConf'].includes(col) ? 'asc' : 'desc';
+    }
+    renderTable();
+  });
+
+  // Render on page switch to prospect
+  const origSwitchPage = window.switchPage || (typeof switchPage === 'function' ? switchPage : null);
+  // Use a MutationObserver to detect when prospect page becomes active
+  const prospectPage = document.getElementById('pageProspect');
+  let pmInitialized = false;
+  const pmObserver = new MutationObserver(function() {
+    if (prospectPage.classList.contains('active') && !pmInitialized) {
+      pmInitialized = true;
+      rebuildAndRender();
+    } else if (prospectPage.classList.contains('active') && pmInitialized) {
+      // Already initialized, just re-render in case scoring changed elsewhere
+    }
+  });
+  pmObserver.observe(prospectPage, { attributes: true, attributeFilter: ['class'] });
 })();
 
 </script>

@@ -11961,14 +11961,20 @@ window.fmtHeight = fmtHeight;
 
   function _dcLoad() {
     if (_dcLoaded) return Promise.resolve();
-    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-    if (!db) { _dcLoaded = true; return Promise.resolve(); }
-    return db.collection('prospect_draft_capital').get().then(function(snap) {
-      snap.forEach(function(doc) {
-        _dcCache[doc.id] = doc.data().dc || '';
-      });
+    try {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      if (!db) { _dcLoaded = true; return Promise.resolve(); }
+      return db.collection('prospect_draft_capital').get().then(function(snap) {
+        snap.forEach(function(doc) {
+          _dcCache[doc.id] = doc.data().dc || '';
+        });
+        _dcLoaded = true;
+      }).catch(function(err) { console.warn('DC load error:', err); _dcLoaded = true; });
+    } catch(e) {
+      console.warn('DC load exception:', e);
       _dcLoaded = true;
-    }).catch(function() { _dcLoaded = true; });
+      return Promise.resolve();
+    }
   }
 
   function _dcSave(playerName, val) {
@@ -12560,14 +12566,28 @@ window.fmtHeight = fmtHeight;
   const prospectPage = document.getElementById('pageProspect');
   let pmInitialized = false;
   const pmObserver = new MutationObserver(function() {
-    if (prospectPage.classList.contains('active') && !pmInitialized) {
-      pmInitialized = true;
-      rebuildAndRender();
-    } else if (prospectPage.classList.contains('active') && pmInitialized) {
-      // Already initialized, just re-render in case scoring changed elsewhere
+    if (prospectPage.classList.contains('active')) {
+      if (!pmInitialized) {
+        pmInitialized = true;
+        rebuildAndRender();
+      } else {
+        // Re-render on revisit to pick up auth changes (admin pencil icons)
+        renderTable();
+      }
     }
   });
   pmObserver.observe(prospectPage, { attributes: true, attributeFilter: ['class'] });
+
+  // Re-render when auth state changes so admin edit icons appear
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try {
+      firebase.auth().onAuthStateChanged(function() {
+        if (pmInitialized && prospectPage.classList.contains('active')) {
+          renderTable();
+        }
+      });
+    } catch(e) {}
+  }
 })();
 
 </script>

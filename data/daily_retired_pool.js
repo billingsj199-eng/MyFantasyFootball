@@ -13,7 +13,7 @@ const RETIRED_ESPN_IDS = {
   "Carson Palmer":"2573","Kurt Warner":"4459","Drew Bledsoe":"2132",
   "Matt Hasselbeck":"4588","Jake Delhomme":"4686","Steve McNair":"1619",
   "Kerry Collins":"1552","Mark Brunell":"1554","Matt Cassel":"9609",
-  "Ryan Fitzpatrick":"5615","Charlie Batch":"2083","Jon Kitna":"1556",
+  "Ryan Fitzpatrick":"8664","Charlie Batch":"2083","Jon Kitna":"1556",
   "Brad Johnson":"1076","Matt Schaub":"8520","Trent Dilfer":"1094",
   "Josh McCown":"4515","Chad Henne":"11284","Brian Hoyer":"13156",
   "Chase Daniel":"12471","Blaine Gabbert":"14013","Geno Smith":"15168",

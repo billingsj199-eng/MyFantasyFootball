@@ -13684,13 +13684,13 @@ window.fmtHeight = fmtHeight;
       // Total TDs
       const totalTd = (pos === 'QB') ? (totPtd + totRtd) : (pos === 'RB') ? (totRtd + totRctd) : (totRctd + totRtd);
 
-      // Draft capital — overall pick number (all sources use the same format)
+      // Draft capital — overall pick number
+      // COMBINE_DATA.draft and LEGEND_BIO.dr store OVERALL PICK (1-262)
+      // D[].dr stores ROUND NUMBER (1-7) — must be converted to estimated overall pick
       const dPlayer = D.find(p => p.n === name);
       let dr = null;
-      // Check all sources for overall pick — same format in all three
       const rawPick = (cbOrig && cbOrig.draft != null) ? cbOrig.draft
         : (LEGEND_BIO && LEGEND_BIO[name] && LEGEND_BIO[name].dr != null) ? LEGEND_BIO[name].dr
-        : (dPlayer && dPlayer.dr != null) ? dPlayer.dr
         : null;
       if (rawPick != null) {
         if (rawPick === 'U' || rawPick === 'u') {
@@ -13698,6 +13698,16 @@ window.fmtHeight = fmtHeight;
         } else {
           const pick = parseInt(rawPick);
           if (!isNaN(pick) && pick > 0) dr = pick;
+        }
+      } else if (dPlayer && dPlayer.dr != null) {
+        // D[].dr is a ROUND number (1-7), convert to estimated mid-round overall pick
+        const rd = parseInt(dPlayer.dr);
+        if (!isNaN(rd) && rd >= 1 && rd <= 7) {
+          // Estimate: middle of each round (32 picks per round)
+          const ROUND_MID = { 1: 16, 2: 48, 3: 80, 4: 112, 5: 144, 6: 176, 7: 208 };
+          dr = ROUND_MID[rd] || (rd * 32 - 16);
+        } else if (dPlayer.dr === 'U' || dPlayer.dr === 'u' || dPlayer.dr === 0) {
+          dr = 'U';
         }
       }
 
@@ -14001,6 +14011,7 @@ window.fmtHeight = fmtHeight;
               else val = String(n);
             }
             _dcSave(name, val);
+            pmBuiltData = buildProspectData();
             renderTable();
           }
           inp.addEventListener('blur', commit);

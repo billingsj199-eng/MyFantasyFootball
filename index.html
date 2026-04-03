@@ -2253,9 +2253,9 @@ CLEAR
 <button class="pm-pos-tab" data-pmpos="TE">TE</button>
 </div>
 <div class="pm-toggle-wrap">
-<span class="pm-toggle-label">Per Game</span>
-<div class="pm-toggle" id="pmToggle" title="Toggle between per-game and season totals"></div>
-<span class="pm-toggle-label">Totals</span>
+<span class="pm-toggle-label">PPG</span>
+<div class="pm-toggle" id="pmToggle" title="Toggle between best PPG and best season total points"></div>
+<span class="pm-toggle-label">Season Pts</span>
 </div>
 <div class="pm-scoring-tabs" id="pmScoringTabs">
 <button class="pm-scoring-btn" data-pmscoring="ppr">PPR</button>
@@ -12118,33 +12118,9 @@ window.fmtHeight = fmtHeight;
     ];
 
     if (isTotals) {
-      cols.push({ key: 'totFpts', label: 'FPTS', sortable: true });
-      cols.push({ key: 'bestFpts', label: 'BEST SZN', sortable: true });
-      if (pos === 'QB') {
-        cols.push({ key: 'totPy', label: 'PASS YDS', sortable: true });
-        cols.push({ key: 'totRy', label: 'RUSH YDS', sortable: true });
-      } else if (pos === 'RB') {
-        cols.push({ key: 'totRy', label: 'RUSH YDS', sortable: true });
-        cols.push({ key: 'totRcy', label: 'REC YDS', sortable: true });
-      } else {
-        cols.push({ key: 'totRcy', label: 'REC YDS', sortable: true });
-      }
-      cols.push({ key: 'totRec', label: 'REC', sortable: true });
-      cols.push({ key: 'totalTd', label: 'TD', sortable: true });
+      cols.push({ key: 'bestFpts', label: 'BEST SZN PTS', sortable: true });
     } else {
       cols.push({ key: 'bestPpg', label: 'BEST PPG', sortable: true });
-      cols.push({ key: 'fptsPerGame', label: 'FPTS/G', sortable: true });
-      if (pos === 'QB') {
-        cols.push({ key: 'pasYpg', label: 'PASS YD/G', sortable: true });
-        cols.push({ key: 'rushYpg', label: 'RUSH YD/G', sortable: true });
-      } else if (pos === 'RB') {
-        cols.push({ key: 'rushYpg', label: 'RUSH YD/G', sortable: true });
-        cols.push({ key: 'recYpg', label: 'REC YD/G', sortable: true });
-      } else {
-        cols.push({ key: 'recYpg', label: 'REC YD/G', sortable: true });
-      }
-      cols.push({ key: 'recPg', label: 'REC/G', sortable: true });
-      cols.push({ key: 'tdPg', label: 'TD/G', sortable: true });
     }
     return cols;
   }
@@ -12322,8 +12298,8 @@ window.fmtHeight = fmtHeight;
     this.querySelectorAll('.pm-pos-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     pmPos = btn.dataset.pmpos;
-    // Reset sort to bestPpg/totFpts
-    pmSort.col = pmTotals ? 'totFpts' : 'bestPpg';
+    // Reset sort to the active stat column
+    pmSort.col = pmTotals ? 'bestFpts' : 'bestPpg';
     pmSort.dir = 'desc';
     renderTable();
   });
@@ -12332,21 +12308,9 @@ window.fmtHeight = fmtHeight;
   pmToggle.addEventListener('click', function() {
     pmTotals = !pmTotals;
     this.classList.toggle('on', pmTotals);
-    // Switch sort column
-    if (pmSort.col === 'bestPpg') pmSort.col = 'totFpts';
-    else if (pmSort.col === 'fptsPerGame') pmSort.col = 'totFpts';
-    else if (pmSort.col === 'totFpts' && !pmTotals) pmSort.col = 'bestPpg';
-    else if (pmSort.col === 'pasYpg') pmSort.col = 'totPy';
-    else if (pmSort.col === 'totPy' && !pmTotals) pmSort.col = 'pasYpg';
-    else if (pmSort.col === 'rushYpg') pmSort.col = 'totRy';
-    else if (pmSort.col === 'totRy' && !pmTotals) pmSort.col = 'rushYpg';
-    else if (pmSort.col === 'recYpg') pmSort.col = 'totRcy';
-    else if (pmSort.col === 'totRcy' && !pmTotals) pmSort.col = 'recYpg';
-    else if (pmSort.col === 'recPg') pmSort.col = 'totRec';
-    else if (pmSort.col === 'totRec' && !pmTotals) pmSort.col = 'recPg';
-    else if (pmSort.col === 'tdPg') pmSort.col = 'totalTd';
-    else if (pmSort.col === 'totalTd' && !pmTotals) pmSort.col = 'tdPg';
-    else if (pmSort.col === 'bestFpts' && !pmTotals) pmSort.col = 'bestPpg';
+    // Switch sort column between the two stat columns
+    if (pmSort.col === 'bestPpg') pmSort.col = 'bestFpts';
+    else if (pmSort.col === 'bestFpts') pmSort.col = 'bestPpg';
     renderTable();
   });
 

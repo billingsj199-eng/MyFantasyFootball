@@ -11975,19 +11975,29 @@ window.fmtHeight = fmtHeight;
 
   // Determine draft year for a player
   function getDraftYear(name) {
-    // From COMBINE_DATA
-    const cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
-    if (cb && cb.yr) return cb.yr;
-    // From D array — find by name
     const d = D.find(p => p.n === name);
-    if (d) {
-      if (d.exp && !isNaN(d.exp)) return 2026 - parseInt(d.exp);
-      // Check career seasons
-      if (d.career && d.career.length) return Math.min(...d.career.map(s => s.yr));
+    // Prefer D array exp field — most reliable for active players
+    if (d && d.exp && !isNaN(d.exp)) {
+      return 2026 - parseInt(d.exp);
     }
+    // From COMBINE_DATA — validate yr is a plausible draft year (>= 2010)
+    const cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
+    if (cb && cb.yr && cb.yr >= 2010) {
+      // Additional sanity: if player has career data, yr should be <= first career year
+      if (d && d.career && d.career.length) {
+        const firstYr = Math.min(...d.career.map(s => s.yr));
+        if (cb.yr <= firstYr) return cb.yr;
+      } else {
+        return cb.yr;
+      }
+    }
+    // From D career seasons
+    if (d && d.career && d.career.length) return Math.min(...d.career.map(s => s.yr));
     // From college stats — last season + 1
     const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[name] : null;
     if (cs && cs.length) return Math.max(...cs.map(s => s.yr)) + 1;
+    // Last resort: cb.yr even if it seems off
+    if (cb && cb.yr) return cb.yr;
     return null;
   }
 

@@ -4616,8 +4616,15 @@ document.addEventListener('click', function(e) {
     return `ep_v3_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;
   }
 
-  // All players from the D array for autocomplete — use current team from history data
-  const allNames = D.map(d => ({name: d.n, team: getCurrentTeamAbbr(d.n, d.t), pos: d.s}));
+  // All players from the D array for autocomplete
+  // For retired players, use pool team to avoid name collisions with active players
+  const _dailyPoolTeams = {};
+  DAILY_RETIRED_POOL.forEach(p => { _dailyPoolTeams[p.name.toLowerCase()] = p.team; });
+  const allNames = D.map(d => ({
+    name: d.n,
+    team: _dailyPoolTeams[d.n.toLowerCase()] || getCurrentTeamAbbr(d.n, d.t),
+    pos: d.s
+  }));
   // Ensure all daily pull players are searchable
   DAILY_RETIRED_POOL.forEach(p => {
     if (!allNames.some(a => a.name.toLowerCase() === p.name.toLowerCase())) {

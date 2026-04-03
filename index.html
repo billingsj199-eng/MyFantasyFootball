@@ -7298,8 +7298,9 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   ALL_PLAYERS_DB.forEach(p => {
     if (_dNames.has(p.name)) return;
     if (p.pos === 'K' || p.pos === 'DST') return;
-    // Only add players who are actually retired (last season before 2025)
-    if (p.last >= 2025) return;
+    // Only add players who are actually retired (last season before 2024)
+    // Players with last=2024 are likely still active — nflfastR data ends at 2024
+    if (p.last >= 2024) return;
     const seasons = p.last - p.debut + 1;
     const imgUrl = (window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.name])
       ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + window.RETIRED_ESPN_IDS[p.name] + '.png&w=350&h=254'

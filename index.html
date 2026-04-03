@@ -1243,6 +1243,20 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .pm-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--text2);border-radius:50%;transition:all .2s}
 .pm-toggle.on::after{left:20px;background:var(--accent)}
 .pm-search-wrap{position:relative}
+.pm-dc{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:.5px;white-space:nowrap}
+.pm-dc-val{color:var(--accent);font-weight:600}
+.pm-dc-edit{display:inline-flex;align-items:center;gap:4px;cursor:pointer;padding:2px 6px;border-radius:4px;transition:background .15s}
+.pm-dc-edit:hover{background:rgba(245,158,11,.1)}
+.pm-dc-edit svg{width:12px;height:12px;color:var(--text2);opacity:.5;transition:opacity .15s}
+.pm-dc-edit:hover svg{opacity:1}
+.pm-dc-input{width:52px;padding:2px 6px;background:var(--surface2);border:1px solid var(--accent);border-radius:4px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.85rem;text-align:center;outline:none}
+.pm-dc-locked{color:var(--text2);opacity:.6}
+.pm-dc-badge{display:inline-block;padding:1px 8px;border-radius:4px;font-size:.8rem;letter-spacing:.5px}
+.pm-dc-r1{background:rgba(245,158,11,.15);color:var(--accent)}
+.pm-dc-r2{background:rgba(59,130,246,.12);color:#60a5fa}
+.pm-dc-r3{background:rgba(34,197,94,.1);color:#4ade80}
+.pm-dc-r4{background:rgba(168,162,158,.1);color:var(--text2)}
+.pm-dc-r5,.pm-dc-r6,.pm-dc-r7{background:rgba(168,162,158,.06);color:var(--text2);opacity:.7}
 .pm-search{padding:6px 12px 6px 32px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.82rem;font-family:'DM Sans',sans-serif;outline:none;width:200px;transition:border-color .15s}
 .pm-search:focus{border-color:var(--accent)}
 .pm-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text2)}
@@ -11937,6 +11951,57 @@ window.fmtHeight = fmtHeight;
   let pmSearchVal = '';
   let pmBuiltData = [];
 
+  // Draft Capital: stored in Firestore, only editable for 2026 class by admin
+  const _dcCache = {}; // {playerName: "1.04", ...}
+  let _dcLoaded = false;
+
+  function _dcIsAdmin() {
+    return typeof window.isAdmin === 'function' && window.isAdmin();
+  }
+
+  function _dcLoad() {
+    if (_dcLoaded) return Promise.resolve();
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    if (!db) { _dcLoaded = true; return Promise.resolve(); }
+    return db.collection('prospect_draft_capital').get().then(function(snap) {
+      snap.forEach(function(doc) {
+        _dcCache[doc.id] = doc.data().dc || '';
+      });
+      _dcLoaded = true;
+    }).catch(function() { _dcLoaded = true; });
+  }
+
+  function _dcSave(playerName, val) {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    if (!db) return;
+    const clean = (val || '').trim();
+    _dcCache[playerName] = clean;
+    if (clean) {
+      db.collection('prospect_draft_capital').doc(playerName).set({ dc: clean, ts: new Date().toISOString() });
+    } else {
+      db.collection('prospect_draft_capital').doc(playerName).delete().catch(function(){});
+      delete _dcCache[playerName];
+    }
+  }
+
+  function _dcRoundClass(val) {
+    if (!val) return '';
+    const r = parseInt(val);
+    if (r === 1) return 'pm-dc-r1';
+    if (r === 2) return 'pm-dc-r2';
+    if (r === 3) return 'pm-dc-r3';
+    if (r === 4) return 'pm-dc-r4';
+    return 'pm-dc-r5';
+  }
+
+  function _dcSortVal(val) {
+    if (!val) return 999;
+    const parts = val.split('.');
+    const r = parseInt(parts[0]) || 9;
+    const p = parseInt(parts[1]) || 99;
+    return r * 100 + p;
+  }
+
   const pmThead = document.getElementById('pmThead');
   const pmTbody = document.getElementById('pmTbody');
   const pmCount = document.getElementById('pmCount');
@@ -12192,6 +12257,7 @@ window.fmtHeight = fmtHeight;
   function getColumns(pos, isTotals) {
     const cols = [
       { key: 'name', label: 'PLAYER', sortable: true },
+      { key: 'dc', label: 'DC', sortable: true },
       { key: 'age', label: 'DRAFT AGE', sortable: true },
       { key: 'draftYr', label: 'YEAR', sortable: true },
       { key: 'lastCollege', label: 'COLLEGE', sortable: true },
@@ -12250,7 +12316,13 @@ window.fmtHeight = fmtHeight;
     const colDef = cols.find(c => c.key === pmSort.col);
     if (colDef) {
       data.sort((a, b) => {
-        let av = a[pmSort.col], bv = b[pmSort.col];
+        let av, bv;
+        if (pmSort.col === 'dc') {
+          av = _dcSortVal(_dcCache[a.name]);
+          bv = _dcSortVal(_dcCache[b.name]);
+        } else {
+          av = a[pmSort.col]; bv = b[pmSort.col];
+        }
         // Nulls to bottom
         if (av == null && bv == null) return 0;
         if (av == null) return 1;
@@ -12288,6 +12360,26 @@ window.fmtHeight = fmtHeight;
           case 'name':
             rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span></td>`;
             break;
+          case 'dc': {
+            const dcVal = _dcCache[p.name] || '';
+            const is2026 = p.draftYr === 2026;
+            const admin = _dcIsAdmin();
+            if (is2026 && admin) {
+              // Editable: show value with edit icon
+              const cls = dcVal ? _dcRoundClass(dcVal) : '';
+              rows += `<td class="pm-dc"><span class="pm-dc-edit" data-dcname="${p.name}" title="Click to edit draft capital">${dcVal ? `<span class="pm-dc-badge ${cls}">${dcVal}</span>` : '<span style="color:var(--text2);opacity:.4">—</span>'}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span></td>`;
+            } else if (dcVal) {
+              // Read-only with value
+              const cls = _dcRoundClass(dcVal);
+              rows += `<td class="pm-dc"><span class="pm-dc-badge ${cls}">${dcVal}</span></td>`;
+            } else if (!is2026) {
+              // Non-2026: show locked dash
+              rows += `<td class="pm-dc pm-dc-locked">—</td>`;
+            } else {
+              rows += `<td class="pm-dc" style="color:var(--text2);opacity:.4">—</td>`;
+            }
+            break;
+          }
           case 'age':
             rows += `<td>${p.age != null ? p.age.toFixed(1) : '—'}</td>`;
             break;
@@ -12367,12 +12459,45 @@ window.fmtHeight = fmtHeight;
         }
       });
     });
+
+    // Draft capital inline edit (admin only, 2026 only)
+    if (_dcIsAdmin()) {
+      pmTbody.querySelectorAll('.pm-dc-edit[data-dcname]').forEach(el => {
+        el.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const name = this.dataset.dcname;
+          const cur = _dcCache[name] || '';
+          const td = this.closest('td');
+          // Replace cell content with input
+          td.innerHTML = `<input type="text" class="pm-dc-input" value="${cur}" placeholder="1.01" maxlength="5">`;
+          const inp = td.querySelector('.pm-dc-input');
+          inp.focus();
+          inp.select();
+          function commit() {
+            let val = inp.value.trim();
+            // Validate: should be like "1.04" or "2.15" or "3" or empty
+            if (val && !/^\d{1}(\.\d{1,2})?$/.test(val)) {
+              val = ''; // invalid format, clear
+            }
+            _dcSave(name, val);
+            renderTable();
+          }
+          inp.addEventListener('blur', commit);
+          inp.addEventListener('keydown', function(ev) {
+            if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
+            if (ev.key === 'Escape') { ev.preventDefault(); renderTable(); }
+          });
+        });
+      });
+    }
   }
 
   function rebuildAndRender() {
-    pmBuiltData = buildProspectData();
-    _pmDiagnostic(pmBuiltData);
-    renderTable();
+    _dcLoad().then(function() {
+      pmBuiltData = buildProspectData();
+      _pmDiagnostic(pmBuiltData);
+      renderTable();
+    });
   }
 
   // Position tabs

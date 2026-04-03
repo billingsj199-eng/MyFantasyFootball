@@ -3838,7 +3838,7 @@ function buildWeeklyTable(d, season, scoringFormat) {
   adjusted.forEach(w => { for (const k in totals) totals[k] += (w[k]||0); });
   totals.fpts = Math.round(totals.fpts * 10) / 10;
   let totalRow = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
-  totalRow += '<td style="color:var(--accent)">TOT</td><td></td><td style="color:var(--green);font-weight:700">' + totals.fpts + '</td>';
+  totalRow += '<td style="color:var(--accent)">TOT</td><td></td><td style="font-weight:700">' + totals.fpts + '</td>';
   if (isQB) totalRow += '<td>'+totals.pc+'</td><td>'+totals.pa+'</td><td>'+totals.py+'</td><td>'+totals.ptd+'</td><td>'+totals.int+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
   else if (isRB) totalRow += '<td>'+totals.ra+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+totals.rctd+'</td><td>'+totals.fl+'</td>';
   else totalRow += '<td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+totals.rctd+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
@@ -3935,16 +3935,23 @@ function buildCollegeTable(d, scoringFormat) {
   const isRB = pos === 'RB';
   const fmt = scoringFormat || 'half';
   const recMult = fmt === 'ppr' ? 1.0 : fmt === 'std' ? 0 : 0.5;
-  // Fantasy calc with variable reception scoring
   const _cfpts = (s) => {
     let fp = (s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*-2 + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*recMult + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2;
     return Math.round(fp*10)/10;
   };
-  // Compute fpts for each season
-  const withFpts = stats.map(s => ({...s, fpts: _cfpts(s)}));
+  // Get games played from COLLEGE_WEEKLY if available
+  const weeklyData = (typeof COLLEGE_WEEKLY !== 'undefined') ? COLLEGE_WEEKLY[d.n] : null;
+  const withFpts = stats.map(s => {
+    const fpts = _cfpts(s);
+    let gp = s.gp || null;
+    if (!gp && weeklyData && weeklyData[s.yr]) gp = weeklyData[s.yr].length;
+    const ppg = (gp && gp > 0) ? Math.round((fpts / gp) * 10) / 10 : null;
+    return {...s, fpts, gp, ppg};
+  });
+  const bestPpg = Math.max(...withFpts.filter(s => s.ppg != null).map(s => s.ppg), 0);
   const bestFpts = Math.max(...withFpts.map(s => s.fpts));
 
-  let hdr = '<tr><th>YR</th><th>TEAM</th><th>CONF</th><th>Pts</th>';
+  let hdr = '<tr><th>YR</th><th>TEAM</th><th>CONF</th><th>GP</th><th>PPG</th><th>Pts</th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>YDS</th><th>TD</th><th>INT</th><th>PCT</th><th>RuYd</th><th>RuTD</th>';
   else if (isRB) hdr += '<th>CAR</th><th>RuYd</th><th>RuTD</th><th>YPC</th><th>REC</th><th>RcYd</th><th>RcTD</th>';
   else hdr += '<th>REC</th><th>RcYd</th><th>RcTD</th><th>YPR</th><th>RuYd</th><th>RuTD</th>';
@@ -3952,15 +3959,21 @@ function buildCollegeTable(d, scoringFormat) {
 
   let rows = withFpts.map(s => {
     const isBest = s.fpts===bestFpts&&bestFpts>0?' class="best-yr"':'';
-    const fptsColor = posFptsColor ? posFptsColor(s.fpts / 13, pos) : null;
     let r = '<tr><td'+isBest+'>'+s.yr+'</td>';
     r += '<td style="color:var(--text2)">'+s.tm+'</td>';
     r += '<td><span class="college-conf-badge">'+(s.conf||'—')+'</span></td>';
-    if (fptsColor) {
-      r += '<td class="fpts-cell" style="color:'+fptsColor+';font-weight:700">'+s.fpts+'</td>';
+    r += '<td>'+(s.gp != null ? s.gp : '—')+'</td>';
+    if (s.ppg != null) {
+      const ppgColor = (typeof posFptsColor === 'function') ? posFptsColor(s.ppg, pos) : null;
+      if (ppgColor) {
+        r += '<td class="fpts-cell" style="color:'+ppgColor+';font-weight:700">'+s.ppg+'</td>';
+      } else {
+        r += '<td class="fpts-cell'+(s.ppg===bestPpg&&bestPpg>0?' best-yr':'')+'">'+s.ppg+'</td>';
+      }
     } else {
-      r += '<td class="fpts-cell'+(s.fpts===bestFpts&&bestFpts>0?' best-yr':'')+'">'+s.fpts+'</td>';
+      r += '<td class="fpts-cell">—</td>';
     }
+    r += '<td class="fpts-cell'+(s.fpts===bestFpts&&bestFpts>0?' best-yr':'')+'">'+s.fpts+'</td>';
     if (isQB) {
       r += '<td>'+(s.pc||0)+'</td><td>'+(s.pa||0)+'</td><td style="font-weight:700">'+(s.py||0)+'</td>';
       r += '<td style="color:var(--green);font-weight:700">'+(s.ptd||0)+'</td><td style="color:var(--red)">'+(s.int||0)+'</td>';
@@ -3977,11 +3990,14 @@ function buildCollegeTable(d, scoringFormat) {
     return r+'</tr>';
   }).join('');
 
-  const tot = {pc:0,pa:0,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rec:0,rcy:0,rctd:0,fl:0,fpts:0};
-  withFpts.forEach(s => { tot.pc+=s.pc||0;tot.pa+=s.pa||0;tot.py+=s.py||0;tot.ptd+=s.ptd||0;tot.int+=s.int||0;tot.ra+=s.ra||0;tot.ry+=s.ry||0;tot.rtd+=s.rtd||0;tot.rec+=s.rec||0;tot.rcy+=s.rcy||0;tot.rctd+=s.rctd||0;tot.fl+=s.fl||0;tot.fpts+=s.fpts; });
+  const tot = {pc:0,pa:0,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rec:0,rcy:0,rctd:0,fl:0,fpts:0,gp:0};
+  withFpts.forEach(s => { tot.pc+=s.pc||0;tot.pa+=s.pa||0;tot.py+=s.py||0;tot.ptd+=s.ptd||0;tot.int+=s.int||0;tot.ra+=s.ra||0;tot.ry+=s.ry||0;tot.rtd+=s.rtd||0;tot.rec+=s.rec||0;tot.rcy+=s.rcy||0;tot.rctd+=s.rctd||0;tot.fl+=s.fl||0;tot.fpts+=s.fpts;if(s.gp)tot.gp+=s.gp; });
   tot.fpts = Math.round(tot.fpts*10)/10;
+  const totPpg = tot.gp > 0 ? Math.round((tot.fpts/tot.gp)*10)/10 : null;
   let tr = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
   tr += '<td style="color:var(--accent)">TOT</td><td></td><td></td>';
+  tr += '<td>'+(tot.gp||'—')+'</td>';
+  tr += '<td class="fpts-cell">'+(totPpg != null ? totPpg : '—')+'</td>';
   tr += '<td style="color:var(--green);font-weight:700">'+tot.fpts+'</td>';
   if (isQB) {
     const pct=tot.pa>0?((tot.pc/tot.pa)*100).toFixed(1)+'%':'—';
@@ -7284,7 +7300,12 @@ document.addEventListener('click', function(e) {
     spinnerWrap.style.display = 'flex';
 
     // Build the spinner track with shuffled team logos
-    const shuffled = ALL_NFL_TEAMS.slice().sort(() => Math.random() - 0.5);
+    const shuffled = ALL_NFL_TEAMS.slice();
+    // Fisher-Yates shuffle for truly random order
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     spinnerTrack.innerHTML = '';
     // Repeat the logos so the track is long enough for continuous scrolling
     const loopTeams = [...shuffled, ...shuffled, ...shuffled];
@@ -7295,8 +7316,8 @@ document.addEventListener('click', function(e) {
       spinnerTrack.appendChild(img);
     });
 
-    // Animate: scroll the track upward
-    let offset = 0;
+    // Animate: scroll the track upward — start at a random offset
+    let offset = Math.floor(Math.random() * shuffled.length) * 120;
     const itemHeight = 120; // matches viewport height
     const speed = 8; // pixels per frame
     let stopping = false;

@@ -3869,6 +3869,41 @@ function draftRdLabel(rd) {
   return 'UDFA';
 }
 
+// Collision-safe COMBINE_DATA lookup: returns cb entry only if it belongs to this player
+// Prevents wrong data when multiple players share the same name (e.g. Chris Johnson)
+const _CB_SCHOOL_NORM={"App State":"Appalachian State","Arizona State":"Arizona St.","Boise State":"Boise St.","Boston College":"Boston Col.","Colorado State":"Colorado St.","Eastern Illinois":"East. Illinois","Eastern Washington":"East. Washington","Florida State":"Florida St.","Fresno State":"Fresno St.","Georgia State":"Georgia St.","Illinois State":"Illinois St.","Iowa State":"Iowa St.","Kansas State":"Kansas St.","Kent State":"Kent St.","Louisiana":"Louisiana-Lafayette","Miami":"Miami (FL)","Michigan State":"Michigan St.","Middle Tennessee":"Middle Tennessee State","Mississippi State":"Mississippi St.","NC State":"North Carolina State","North Dakota State":"North Dakota St.","Northwestern State":"Northwestern St. (LA)","Ohio State":"Ohio St.","Oklahoma State":"Oklahoma St.","Ole Miss":"Mississippi","Oregon State":"Oregon St.","Penn State":"Penn St.","San Diego State":"San Diego St.","San José State":"San Jose State","South Dakota State":"South Dakota St.","Southern Miss":"Southern Mississippi","UAB":"Ala-Birmingham","UCF":"Central Florida","UConn":"Connecticut","UTEP":"Texas-El Paso","Utah State":"Utah St.","Washington State":"Washington St."};
+function _cbNormSchool(s) { if (!s) return ''; const a = _CB_SCHOOL_NORM[s] || s; return a.toLowerCase().replace(/[.\s]/g,''); }
+
+function _getValidCB(d) {
+  if (typeof COMBINE_DATA === 'undefined' || !d || !d.n) return null;
+  const cb = COMBINE_DATA[d.n];
+  if (!cb) return null;
+
+  // Method 1: College name mismatch — if both have school info and they don't match
+  if (cb.school && d._college) {
+    const cbS = _cbNormSchool(cb.school);
+    const dS = _cbNormSchool(d._college);
+    if (cbS && dS && cbS !== dS) {
+      // Schools differ — check if year gap confirms different person
+      let careerFirst = (d.career && d.career.length) ? Math.min(...d.career.map(s => s.yr)) : (d._debut || null);
+      if (d._debut && (!careerFirst || d._debut < careerFirst)) careerFirst = d._debut;
+      const cbYr = cb.yr || 0;
+      if (careerFirst && cbYr && Math.abs(cbYr - careerFirst) > 3) return null;
+      // Even without year gap, different schools = likely different person
+      if (cbS !== dS) return null;
+    }
+  }
+
+  // Method 2: Career year mismatch — if cb combine year is far from player's career start
+  if (cb.yr) {
+    let careerFirst = (d.career && d.career.length) ? Math.min(...d.career.map(s => s.yr)) : (d._debut || null);
+    if (d._debut && (!careerFirst || d._debut < careerFirst)) careerFirst = d._debut;
+    if (careerFirst && Math.abs(cb.yr - careerFirst) > 3) return null;
+  }
+
+  return cb;
+}
+
 function bestPpg(d) {
   const vals = [d.p25, d.p24, d.p23].filter(v => v != null);
   return vals.length ? Math.max(...vals) : null;
@@ -4508,8 +4543,7 @@ function openPlayerCard(d) {
       </div>` : ''}
       </div>
       <div class="card-prospect-view" id="cardProspectView">
-      ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] ? (() => {
-        const cb = COMBINE_DATA[d.n];
+      ${(() => { const cb = _getValidCB(d); return cb ? (() => {
         const hasDrills = cb.forty || cb.bench || cb.vert || cb.broad || cb.cone || cb.shuttle;
         // Real percentile thresholds from 2000-2026 combine data by position
         // Format: [elite(top5%), good(top25%), avg(top50%)] — below 50% = bottom half
@@ -4629,7 +4663,7 @@ function openPlayerCard(d) {
           </div>
         </div>
         <div id="collegeLogContent">${buildCollegeTable(d, 'half')}</div>
-      </div>` : ''}`}
+      </div>` : ''}`; })()}
       </div>
     </div>
   `;
@@ -4838,8 +4872,7 @@ function renderCompareGrid() {
               <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(totalFpts)}</div></div>
             </div>
           </div>` : ''}
-          ${typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] && (COMBINE_DATA[d.n].forty || COMBINE_DATA[d.n].vert || COMBINE_DATA[d.n].broad) ? (() => {
-            const cb = COMBINE_DATA[d.n];
+          ${(() => { const cb = _getValidCB(d); return cb && (cb.forty || cb.vert || cb.broad) ? (() => {
             const _cmpTh = {QB:{forty:[4.55,4.69,4.81],vert:[36.5,33.5,31],broad:[124,116,111],bench:[25,22,20],cone:[6.78,6.98,7.13],shuttle:[4.08,4.2,4.34]},RB:{forty:[4.38,4.48,4.57],vert:[40,36,34],broad:[128,122,118],bench:[28,23,20],cone:[6.79,6.95,7.09],shuttle:[4.06,4.18,4.29]},WR:{forty:[4.34,4.43,4.5],vert:[41,37.5,35.5],broad:[132,125,121],bench:[22,17,14],cone:[6.65,6.83,6.97],shuttle:[3.99,4.13,4.22]},TE:{forty:[4.52,4.65,4.75],vert:[38.5,35.5,33.5],broad:[126,120,116],bench:[27,23,20],cone:[6.84,7.03,7.15],shuttle:[4.11,4.27,4.37]}};
             const t = _cmpTh[d.s] || _cmpTh['WR'];
             const _lo = (v,th) => !v||!th?'accent':v<=th[0]?'green':v<=th[1]?'accent':v<=th[2]?'text2':'red';
@@ -4854,7 +4887,7 @@ function renderCompareGrid() {
               ${cb.cone ? `<div class="card-rank-box"><div class="lbl">3-Cone</div><div class="num" style="color:var(--${_lo(cb.cone,t.cone)})">${cb.cone}s</div></div>` : ''}
               ${cb.shuttle ? `<div class="card-rank-box"><div class="lbl">Shuttle</div><div class="num" style="color:var(--${_lo(cb.shuttle,t.shuttle)})">${cb.shuttle}s</div></div>` : ''}
             </div></div>`;
-          })() : ''}
+          })() : ''; })()}
           ${career.length > 0 ? `<div class="card-section">
             <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
               <span class="cmp-cl-label">Career Log (Half PPR)${career.length < ((d._last||0) - (d._debut||0) + 1) * 0.5 ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : ''}</span>
@@ -13245,8 +13278,12 @@ window.fmtHeight = fmtHeight;
       }
     }
 
-    // Career first year from D
-    const careerFirst = (d && d.career && d.career.length) ? Math.min(...d.career.map(s => s.yr)) : null;
+    // Career first year from D — use _debut if it's earlier than career stats
+    // (stats data starts in 1999, so pre-1999 players have career arrays that start too late)
+    let careerFirst = (d && d.career && d.career.length) ? Math.min(...d.career.map(s => s.yr)) : null;
+    if (d && d._debut && (!careerFirst || d._debut < careerFirst)) {
+      careerFirst = d._debut;
+    }
 
     // 1. GOLD STANDARD: career first year matches cb.yr
     if (careerFirst && cb && cb.yr && (careerFirst === cb.yr || careerFirst === cb.yr + 1)) {

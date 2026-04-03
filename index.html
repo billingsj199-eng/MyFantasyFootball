@@ -5247,6 +5247,12 @@ document.addEventListener('click', function(e) {
         gwAbbrToFull[abbr] = GW_ALIASES[full] || full;
       });
     }
+    // Add nflfastR-specific abbreviations
+    gwAbbrToFull['LA'] = 'Los Angeles Rams';
+    gwAbbrToFull['SD'] = 'Los Angeles Chargers';
+    gwAbbrToFull['OAK'] = 'Las Vegas Raiders';
+    gwAbbrToFull['STL'] = 'Los Angeles Rams';
+    gwAbbrToFull['LAR'] = 'Los Angeles Rams';
     const allPool = [];
     const seen = new Set();
 
@@ -5285,9 +5291,13 @@ document.addEventListener('click', function(e) {
         career.forEach(s => {
           if (!s.fpts) return;
           let tm = null;
-          if (hist) {
+          // Use career data tm field first (from ALL_PLAYERS_DB)
+          if (s.tm) {
+            tm = gwAbbrToFull[s.tm] || gwModernTeam(s.tm);
+          }
+          if (!tm && hist) {
             for (const h of hist) { if (s.yr >= h.y1 && s.yr <= h.y2) { tm = gwModernTeam(h.t); break; } }
-          } else if (pHist) {
+          } else if (!tm && pHist) {
             for (const h of pHist) { if (s.yr >= h.y1 && s.yr <= h.y2) { tm = gwAbbrToFull[h.t] || gwModernTeam(h.t); break; } }
           }
           if (!tm) {

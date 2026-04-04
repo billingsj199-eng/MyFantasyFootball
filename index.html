@@ -5454,10 +5454,12 @@ document.addEventListener('click', function(e) {
   let gameOver = false;
   let streak = parseInt(localStorage.getItem('ep_streak') || '0');
   let lastWinDate = localStorage.getItem('ep_last_win') || '';
+  let _epInitDateKey = null; // tracks the date this game was initialized for
 
   // Load saved state for today
   function loadState() {
     const key = getTodayKey();
+    _epInitDateKey = key; // lock to the date at init time
     const saved = localStorage.getItem(key);
     if (saved) {
       const state = JSON.parse(saved);
@@ -5472,7 +5474,9 @@ document.addEventListener('click', function(e) {
   }
 
   function saveState() {
+    // Guard: never write state if the date has rolled over since init
     const key = getTodayKey();
+    if (_epInitDateKey && key !== _epInitDateKey) return;
     localStorage.setItem(key, JSON.stringify({guesses, gameOver, playerName: todayPlayer.name}));
   }
 
@@ -7039,6 +7043,7 @@ document.addEventListener('click', function(e) {
     let gameOver = false;
     let streak = parseInt(localStorage.getItem(config.streakKey) || '0');
     let lastWinDate = localStorage.getItem(config.lastWinKey) || '';
+    let _initDateKey = null; // tracks the date this game was initialized for
 
     const input = document.getElementById(config.inputId);
     const guessBtn = document.getElementById(config.guessBtnId);
@@ -7054,6 +7059,7 @@ document.addEventListener('click', function(e) {
 
     function loadState() {
       const key = getDailyKey(config.statePrefix);
+      _initDateKey = key; // lock to the date at init time
       const saved = localStorage.getItem(key);
       if (saved) {
         const state = JSON.parse(saved);
@@ -7068,7 +7074,9 @@ document.addEventListener('click', function(e) {
     }
 
     function saveState() {
+      // Guard: never write state if the date has rolled over since init
       const key = getDailyKey(config.statePrefix);
+      if (_initDateKey && key !== _initDateKey) return;
       localStorage.setItem(key, JSON.stringify({ guesses, gameOver, targetName: target ? target.name : null }));
     }
 
@@ -10315,16 +10323,17 @@ window.fmtHeight = fmtHeight;
     SYNC_KEYS_MAX.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = parseFloat(v) || 0; });
     SYNC_KEYS_STR.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
     SYNC_KEYS_JSON.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
-    // Save today's daily game states
+    // Save today's daily game states — only include if the state's target is from today's seed
     const keys = _syncDailyKeys();
     const dailyStates = { date: keys.dateStr };
     const epState = localStorage.getItem(keys.ep);
     const gwCState = localStorage.getItem(keys.gwC);
     const gwATState = localStorage.getItem(keys.gwAT);
+    // Only sync daily states that actually exist (avoids pushing empty object that overwrites real data)
     if (epState) dailyStates.ep = epState;
     if (gwCState) dailyStates.gwC = gwCState;
     if (gwATState) dailyStates.gwAT = gwATState;
-    data.dailyStates = dailyStates;
+    if (epState || gwCState || gwATState) data.dailyStates = dailyStates;
     data.syncedAt = new Date().toISOString();
     db.collection('user_game_data').doc(user.uid).set(data, { merge: true }).catch(e => console.warn('[Sync] save error:', e));
   }
@@ -15027,8 +15036,21 @@ window.fmtHeight = fmtHeight;
     }
 
     let rows = '';
-    data.forEach(p => {
-      rows += '<tr>';
+    const _pmIsPremium = typeof hasPremium === 'function' && hasPremium();
+    const _pmIsSignedIn = !!window._authCurrentUser;
+    const _pmBlurCutoff = 10;
+    const _pmShouldBlur = !_pmIsPremium;
+    data.forEach((p, _pmIdx) => {
+      const _pmBlurred = _pmShouldBlur && _pmIdx >= _pmBlurCutoff ? ' premium-blur' : '';
+      // Insert paywall row at the cutoff
+      if (_pmShouldBlur && _pmIdx === _pmBlurCutoff && data.length > _pmBlurCutoff) {
+        if (!_pmIsSignedIn) {
+          rows += `<tr><td colspan="${cols.length}" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL PROSPECT MODEL</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all prospect scores and data.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal==='function')window.openAuthModal()">SIGN IN</button></div></div></td></tr>`;
+        } else {
+          rows += `<tr><td colspan="${cols.length}" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL PROSPECT MODEL</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ${_pmBlurCutoff} are free. Upgrade to PRO to see all prospect scores, combine data, and scouting metrics.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector('[data-page=account]').click();setTimeout(()=>{document.querySelector('[data-acct-tab=premium]').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>`;
+        }
+      }
+      rows += `<tr class="${_pmBlurred}">`;
       cols.forEach(c => {
         switch (c.key) {
           case 'name':

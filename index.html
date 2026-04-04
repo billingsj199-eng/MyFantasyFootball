@@ -14902,6 +14902,15 @@ window.fmtHeight = fmtHeight;
     const _addedNames = new Set();
     let _csDebugCount = 0;
 
+    // Direct test
+    if (typeof COLLEGE_STATS !== 'undefined') {
+      const _test = COLLEGE_STATS['A.J. Brown'];
+      console.log('[JM DEBUG DIRECT] COLLEGE_STATS["A.J. Brown"] = ' + (typeof _test) + ', isArray: ' + Array.isArray(_test) + ', length: ' + (_test ? _test.length : 'null'));
+      const _testD = D.find(p => p.n === 'A.J. Brown');
+      console.log('[JM DEBUG DIRECT] D "A.J. Brown" exists: ' + !!_testD + ', pos: ' + (_testD ? _testD.s : '—'));
+      if (_test && _test.length) console.log('[JM DEBUG DIRECT] First season: ' + JSON.stringify(_test[0]));
+    }
+
     D.forEach(d => {
       if (!d.n || !d.s || !['QB','RB','WR','TE'].includes(d.s)) return;
       const career = d.career || (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[d.n] ? LEGEND_CAREERS[d.n] : []);

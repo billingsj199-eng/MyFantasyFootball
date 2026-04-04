@@ -15510,6 +15510,104 @@ window.fmtHeight = fmtHeight;
       }
     });
 
+    // === SECTION 11: BREAKOUT THRESHOLD OPTIMIZATION ===
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 11: BREAKOUT THRESHOLD OPTIMIZATION', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c  Testing different PPG thresholds to find which best separates hits from busts', 'color: #f59e0b');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    // For each position, test various breakout PPG thresholds
+    // For each threshold, calculate breakout age for every player, then compare
+    // NFL success rate of early breakouts vs late breakouts vs no breakout
+
+    const testThresholds = {
+      QB:  [14, 16, 18, 20, 22, 24, 26],
+      RB:  [8, 10, 12, 14, 16, 18, 20],
+      WR:  [6, 8, 10, 12, 14, 16],
+      TE:  [4, 5, 6, 7, 8.5, 10, 12]
+    };
+
+    positions.forEach(pos => {
+      const t = thresholds[pos];
+      const threshList = testThresholds[pos];
+      // Get modern players with college stats
+      const posPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2010);
+
+      console.log('%c\n' + pos + ' Breakout Threshold Test (n=' + posPlayers.length + ', 2010+)', 'color: #22c55e; font-weight: bold; font-size: 13px');
+      console.log('  Threshold    Broke Out   No Breakout   BO Starter%   No-BO Starter%   GAP     BO Elite%   No-BO Elite%   Elite GAP   Avg BO Age');
+
+      threshList.forEach(thresh => {
+        // Recalculate breakout age for each player at this threshold
+        let boPlayers = 0, noBoPlayers = 0;
+        let boStarters = 0, noBoStarters = 0;
+        let boElite = 0, noBoElite = 0;
+        let totalBoAge = 0, boAgeCount = 0;
+
+        posPlayers.forEach(p => {
+          const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[p.name] : null;
+          if (!cs || !cs.length) return;
+
+          const rm = 0.5;
+          let brokeOut = false;
+          let earliestBoAge = null;
+
+          cs.forEach(s => {
+            const fp = (s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*rm + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2;
+            const gp = s.gp || null;
+            if (gp && gp > 0) {
+              const ppg = fp / gp;
+              if (ppg >= thresh) {
+                brokeOut = true;
+                // Calculate breakout age
+                if (p.age != null && s.yr && p.draftYr) {
+                  const seasonsBeforeDraft = p.draftYr - s.yr - 1;
+                  const boAge = p.age - seasonsBeforeDraft;
+                  if (boAge >= 17 && boAge <= 25 && (earliestBoAge == null || boAge < earliestBoAge)) {
+                    earliestBoAge = boAge;
+                  }
+                }
+              }
+            }
+          });
+
+          if (brokeOut) {
+            boPlayers++;
+            if (p.bestPpg >= t.starter) boStarters++;
+            if (p.bestPpg >= t.elite) boElite++;
+            if (earliestBoAge != null) { totalBoAge += earliestBoAge; boAgeCount++; }
+          } else {
+            noBoPlayers++;
+            if (p.bestPpg >= t.starter) noBoStarters++;
+            if (p.bestPpg >= t.elite) noBoElite++;
+          }
+        });
+
+        if (boPlayers < 3 || noBoPlayers < 3) return;
+
+        const boPct = (boStarters / boPlayers * 100).toFixed(0);
+        const noBoPct = (noBoStarters / noBoPlayers * 100).toFixed(0);
+        const gap = (boStarters / boPlayers * 100 - noBoStarters / noBoPlayers * 100).toFixed(0);
+        const boElPct = (boElite / boPlayers * 100).toFixed(0);
+        const noBoElPct = (noBoElite / noBoPlayers * 100).toFixed(0);
+        const elGap = (boElite / boPlayers * 100 - noBoElite / noBoPlayers * 100).toFixed(0);
+        const avgBoAge = boAgeCount > 0 ? (totalBoAge / boAgeCount).toFixed(1) : '—';
+
+        // Highlight the best threshold (biggest gap)
+        const marker = parseInt(gap) >= 20 ? ' ⭐' : parseInt(gap) >= 15 ? ' ✓' : '';
+
+        console.log('  ' + (thresh + ' PPG').padEnd(14) +
+          ('' + boPlayers).padStart(5) + '       ' +
+          ('' + noBoPlayers).padStart(5) + '          ' +
+          (boPct + '%').padStart(4) + '            ' +
+          (noBoPct + '%').padStart(4) + '           ' +
+          ('+' + gap + '%').padStart(5) + marker + '    ' +
+          (boElPct + '%').padStart(4) + '          ' +
+          (noBoElPct + '%').padStart(4) + '          ' +
+          ('+' + elGap + '%').padStart(5) + '      ' +
+          avgBoAge);
+      });
+    });
+
     console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
     console.log('%c  [JM ERA ANALYSIS COMPLETE] — Copy all output and share to calibrate model', 'color: #f59e0b; font-weight: bold; font-size: 14px');
     console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');

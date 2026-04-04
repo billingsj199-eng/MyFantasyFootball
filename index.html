@@ -15016,12 +15016,46 @@ window.fmtHeight = fmtHeight;
       const ypc = totRushAtt > 0 ? Math.round((totRushYds / totRushAtt) * 10) / 10 : null;
       const ypr = totRecs > 0 ? Math.round((totRecYds / totRecs) * 10) / 10 : null;
 
+      // Breakout age: earliest season exceeding position PPG threshold
+      const _dBoThresh = { QB: 22, RB: 10, WR: 12, TE: 8.5 };
+      const boT = _dBoThresh[d.s] || 12;
+      let breakoutYr = null;
+      collegeSeasons.forEach(s => {
+        if (s.ppg >= boT && (!breakoutYr || s.yr < breakoutYr)) breakoutYr = s.yr;
+      });
+      let breakoutAge = null;
+      if (breakoutYr && birth && typeof birth === 'string' && birth.includes('-')) {
+        const bParts = birth.split('-');
+        const bY2 = parseInt(bParts[0]), bM2 = parseInt(bParts[1]) - 1, bD2 = parseInt(bParts[2]);
+        if (bY2 && bM2 >= 0 && bD2 >= 1) {
+          const refDays = (breakoutYr + 1) * 365.25 + 3 * 30.44 + 28;
+          const birthDays2 = bY2 * 365.25 + bM2 * 30.44 + bD2;
+          const ba2 = (refDays - birthDays2) / 365.25;
+          if (ba2 >= 17 && ba2 <= 26) breakoutAge = Math.round(ba2 * 10) / 10;
+        }
+      }
+
+      // NFL career stats for bust analysis
+      const nflBestPpg = bestPpg; // already computed above from career
+      let nflTotalGp = 0, nflTotalFpts = 0, nflSeasons = career.length;
+      let nflBestSeasonPts = 0, nflBestSeasonGp = 0;
+      career.forEach(s => {
+        nflTotalGp += (s.gp || 0);
+        nflTotalFpts += (s.fpts || 0);
+        if (s.fpts && (!nflBestSeasonPts || s.fpts > nflBestSeasonPts)) {
+          nflBestSeasonPts = s.fpts;
+          nflBestSeasonGp = s.gp || 0;
+        }
+      });
+      const nflCareerPpg = nflTotalGp > 0 ? Math.round((nflTotalFpts / nflTotalGp) * 10) / 10 : null;
+
       players.push({
         name: d.n, pos: d.s, pick, draftYr,
         bestPpg: Math.round(bestPpg * 10) / 10,
         age, ht, wt, ras, collegePpg, conf,
-        ypc, ypr, collegeSeasons,
-        seasons: career.length
+        ypc, ypr, collegeSeasons, breakoutAge,
+        seasons: career.length,
+        nflCareerPpg, nflTotalGp, nflSeasons, nflBestSeasonPts
       });
     });
 

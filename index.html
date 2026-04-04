@@ -14882,11 +14882,30 @@ window.fmtHeight = fmtHeight;
     ];
 
     // Gather all players with full context
+    // Start from D array for NFL careers, but ALSO index COLLEGE_STATS by name
+    // so we can match college data even when names differ slightly
+    const _csNameToD = {}; // Map COLLEGE_STATS names to D array entries
+    if (typeof COLLEGE_STATS !== 'undefined') {
+      Object.keys(COLLEGE_STATS).forEach(csName => {
+        // Try exact match first
+        let d = D.find(p => p.n === csName);
+        if (!d) {
+          // Try without suffixes/periods
+          const norm = csName.replace(/\./g, '').replace(/ Jr$| Sr$| II$| III$| IV$/i, '').trim().toLowerCase();
+          d = D.find(p => p.n && p.n.replace(/\./g, '').replace(/ Jr$| Sr$| II$| III$| IV$/i, '').trim().toLowerCase() === norm);
+        }
+        if (d) _csNameToD[csName] = d;
+      });
+    }
+
     const players = [];
+    const _addedNames = new Set();
+
     D.forEach(d => {
       if (!d.n || !d.s || !['QB','RB','WR','TE'].includes(d.s)) return;
       const career = d.career || (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[d.n] ? LEGEND_CAREERS[d.n] : []);
       if (!career.length) return;
+      _addedNames.add(d.n);
 
       // Draft year
       let draftYr = null;
@@ -14947,8 +14966,15 @@ window.fmtHeight = fmtHeight;
       const ras = cbO ? cbO.ras : null;
 
       // College production (best PPG)
+      // Try direct name match first, then check if any COLLEGE_STATS key maps to this D entry
       let collegePpg = null;
-      const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[d.n] : null;
+      let cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[d.n] : null;
+      if (!cs) {
+        // Reverse lookup: find COLLEGE_STATS name that maps to this D entry
+        for (const [csName, dEntry] of Object.entries(_csNameToD)) {
+          if (dEntry === d) { cs = COLLEGE_STATS[csName]; break; }
+        }
+      }
       if (cs && cs.length) {
         const rm = 0.5; // half PPR
         cs.forEach(s => {

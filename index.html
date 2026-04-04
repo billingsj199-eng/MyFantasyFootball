@@ -3929,7 +3929,12 @@ function _getValidCB(d) {
     }
   }
 
-  // Method 2: Career year mismatch — if cb combine year is far from player's career start
+  // Method 2: Draft pick mismatch — if both have draft picks and they differ, different player
+  if (cb.dr && d.dr && typeof d.dr === 'number' && cb.dr !== d.dr) {
+    return null;
+  }
+
+  // Method 3: Career year mismatch — if cb combine year is far from player's career start
   if (cb.yr) {
     let careerFirst = (d.career && d.career.length) ? Math.min(...d.career.map(s => s.yr)) : (d._debut || null);
     if (d._debut && (!careerFirst || d._debut < careerFirst)) careerFirst = d._debut;
@@ -14495,6 +14500,14 @@ window.fmtHeight = fmtHeight;
         }
       }
 
+      // Draft pick cross-check: if D array player has a known draft pick and cb.dr differs, wrong person
+      if (cb && cb.dr) {
+        const dPlayer = D.find(p => p.n === name);
+        if (dPlayer && dPlayer.dr && typeof dPlayer.dr === 'number' && cb.dr !== dPlayer.dr) {
+          cb = null;
+        }
+      }
+
       // College stats collision detection: verify CS belongs to this player
       // Handles cases like "Lamar Jackson" QB (Louisville) vs WR (same name, different school)
       if (cs && cs.length) {
@@ -15377,7 +15390,7 @@ window.fmtHeight = fmtHeight;
 
       // Draft pick
       let pick = null;
-      const cbO = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
+      const cbO = (typeof _getValidCB === 'function') ? _getValidCB(d) : ((typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null);
       const bio = (typeof LEGEND_BIO !== 'undefined') ? LEGEND_BIO[d.n] : null;
       if (cbO && cbO.draft != null) {
         if (cbO.draft === 'U' || cbO.draft === 'u') pick = 'U';
@@ -15433,10 +15446,12 @@ window.fmtHeight = fmtHeight;
       let collegePpg = null;
       let cs = null;
       if (typeof COLLEGE_STATS !== 'undefined') {
-        cs = COLLEGE_STATS[d.n] || null;
+        cs = (typeof _getCollegeStats === 'function') ? _getCollegeStats(d.n, d.s) : (COLLEGE_STATS[d.n] || null);
         if (!cs) {
           const csKey = Object.keys(_csNameToD).find(k => _csNameToD[k].n === d.n);
-          if (csKey) { cs = COLLEGE_STATS[csKey]; }
+          if (csKey) {
+            cs = (typeof _getCollegeStats === 'function') ? _getCollegeStats(csKey, d.s) : COLLEGE_STATS[csKey];
+          }
         }
       }
       if (cs && cs.length) {

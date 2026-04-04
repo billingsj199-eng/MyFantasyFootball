@@ -15024,6 +15024,24 @@ window.fmtHeight = fmtHeight;
 
     console.log('%c[JM ERA ANALYSIS] ' + players.length + ' total players', 'color: #f59e0b; font-weight: bold; font-size: 16px');
 
+    // Diagnostic: how many players have college data?
+    const withCS = players.filter(p => p.collegeSeasons && p.collegeSeasons.length > 0);
+    const withCPpg = players.filter(p => p.collegePpg != null);
+    console.log('[JM DEBUG] Players with collegeSeasons: ' + withCS.length + ', with collegePpg: ' + withCPpg.length);
+    console.log('[JM DEBUG] _csNameToD entries: ' + Object.keys(_csNameToD).length);
+    if (typeof COLLEGE_STATS !== 'undefined') {
+      const csKeys = Object.keys(COLLEGE_STATS);
+      console.log('[JM DEBUG] COLLEGE_STATS has ' + csKeys.length + ' keys');
+      // Show first 5 CS keys and whether they match D array
+      csKeys.slice(0, 10).forEach(k => {
+        const dMatch = D.find(p => p.n === k);
+        const revMatch = _csNameToD[k];
+        console.log('[JM DEBUG]   CS key: "' + k + '" → D exact: ' + (dMatch ? dMatch.n : 'NO') + ', reverse: ' + (revMatch ? revMatch.n : 'NO'));
+      });
+    } else {
+      console.log('[JM DEBUG] COLLEGE_STATS is undefined!');
+    }
+
     // === SECTION 1: DRAFT CAPITAL BY ERA ===
     console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
     console.log('%c  SECTION 1: DRAFT CAPITAL BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');

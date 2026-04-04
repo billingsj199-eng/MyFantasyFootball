@@ -13493,10 +13493,10 @@ window.fmtHeight = fmtHeight;
   // Each component outputs a 0-100 sub-score (except DC: 0-1000), then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.16, breakout: 0.13, prod: 0.28, conf: 0.07, ras: 0.11, dc: 0.03, tm: 0.04, size: 0.03, eff: 0.00, mktShare: 0.00, improve: 0.06, rbRec: 0.00, qbRush: 0.09, nflYrr: 0.00 },
-    RB:  { age: 0.17, breakout: 0.13, prod: 0.22, conf: 0.06, ras: 0.12, dc: 0.03, tm: 0.04, size: 0.03, eff: 0.05, mktShare: 0.06, improve: 0.05, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00 },
-    WR:  { age: 0.15, breakout: 0.16, prod: 0.21, conf: 0.07, ras: 0.07, dc: 0.03, tm: 0.04, size: 0.04, eff: 0.03, mktShare: 0.06, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.09 },
-    TE:  { age: 0.11, breakout: 0.14, prod: 0.22, conf: 0.07, ras: 0.14, dc: 0.03, tm: 0.04, size: 0.05, eff: 0.05, mktShare: 0.06, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.04 }
+    QB:  { age: 0.15, breakout: 0.12, prod: 0.25, conf: 0.06, ras: 0.10, dc: 0.12, tm: 0.04, size: 0.03, eff: 0.00, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.08, nflYrr: 0.00 },
+    RB:  { age: 0.15, breakout: 0.12, prod: 0.19, conf: 0.05, ras: 0.11, dc: 0.12, tm: 0.04, size: 0.03, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00 },
+    WR:  { age: 0.14, breakout: 0.15, prod: 0.18, conf: 0.06, ras: 0.06, dc: 0.12, tm: 0.04, size: 0.04, eff: 0.03, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.08 },
+    TE:  { age: 0.10, breakout: 0.13, prod: 0.18, conf: 0.06, ras: 0.13, dc: 0.12, tm: 0.04, size: 0.05, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.04 }
   };
 
   // Conference tiers — DATA-DRIVEN from era analysis
@@ -13677,16 +13677,17 @@ window.fmtHeight = fmtHeight;
       return Math.max(2, 12 - (pick - 220) * 0.1);              // 221+: 12→7
     }
 
-    // === RB (n=237) — Picks 2-15 elite, pick 1 cursed, cliff at 26 ===
-    // Data: Pick 1: 0% SR (Ki-Jana Carter, Hollings), Pick 2: 80%/60% (Barkley, Faulk)
-    //   4-5: 90%/60% (Edgerrin, LT, Ricky Williams), 6-10: 90%/40% (CMC, Bijan)
-    //   11-15: 82%/36%, 16-20: 100%/67% (small n=3), 21-25: 82%/27%
-    //   26-32: 60%/13% ← cliff, 33-40: 53%/6%, 41-50: 57%/29% (JT, Forte, Henry)
-    //   51-64: 40%/16%, 65-100: mixed 46-50%
+    // === RB (n=237) — Picks 2-15 elite, smooth monotonic decrease ===
+    // Data: Pick 2: 80%/60% (Barkley, Faulk), 4-5: 90%/60% (Edgerrin, LT, Ricky Williams)
+    //   6-10: 90%/40% (CMC, Bijan), 11-15: 82%/36%, 16-20: 100%/67% (small n=3)
+    //   21-25: 82%/27%, 26-32: 60%/13% ← cliff, 33-40: 53%/6%
+    //   41-50: 57%/29% (JT, Forte, Henry), 51-64: 40%/16%, 65+: mixed
+    // Note: Pick 1 RB data (n=2) shows 0% SR but that's 2 players — not meaningful.
+    // Curve is forced monotonically decreasing: pick 1 is always the best pick.
     if (pos === 'RB') {
-      if (pick <= 1) return 500;                                  // Pick 1 RBs historically bad
-      if (pick <= 3) return 1000 - (pick - 2) * 20;             // 2-3: 1000-980
-      if (pick <= 5) return 980 - (pick - 3) * 15;              // 4-5: 965-950
+      if (pick === 1) return 1000;
+      if (pick <= 3) return 990 - (pick - 1) * 10;              // 2-3: 980-970
+      if (pick <= 5) return 970 - (pick - 3) * 10;              // 4-5: 960-950
       if (pick <= 10) return 950 - (pick - 5) * 14;             // 6-10: 936-880
       if (pick <= 15) return 880 - (pick - 10) * 8;             // 11-15: 872-840
       if (pick <= 20) return 840 - (pick - 15) * 12;            // 16-20: 828-780
@@ -14108,10 +14109,10 @@ window.fmtHeight = fmtHeight;
   //   TE: YPR 41% gap (#1!), RAS 11% gap, DC only 31%
 
   const JM_CEILING_WEIGHTS = {
-    QB:  { age: 0.12, breakout: 0.12, prod: 0.27, conf: 0.03, ras: 0.18, dc: 0.03, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.00, improve: 0.06, rbRec: 0.00, qbRush: 0.10, nflYrr: 0.00 },
-    RB:  { age: 0.17, breakout: 0.14, prod: 0.20, conf: 0.02, ras: 0.18, dc: 0.03, tm: 0.03, size: 0.04, eff: 0.05, mktShare: 0.06, improve: 0.06, rbRec: 0.02, qbRush: 0.00, nflYrr: 0.00 },
-    WR:  { age: 0.10, breakout: 0.21, prod: 0.22, conf: 0.03, ras: 0.04, dc: 0.03, tm: 0.03, size: 0.02, eff: 0.05, mktShare: 0.06, improve: 0.06, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.15 },
-    TE:  { age: 0.09, breakout: 0.13, prod: 0.15, conf: 0.03, ras: 0.15, dc: 0.03, tm: 0.03, size: 0.04, eff: 0.16, mktShare: 0.06, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.08 }
+    QB:  { age: 0.11, breakout: 0.11, prod: 0.24, conf: 0.03, ras: 0.16, dc: 0.12, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.09, nflYrr: 0.00 },
+    RB:  { age: 0.15, breakout: 0.13, prod: 0.18, conf: 0.02, ras: 0.16, dc: 0.12, tm: 0.03, size: 0.04, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.02, qbRush: 0.00, nflYrr: 0.00 },
+    WR:  { age: 0.09, breakout: 0.19, prod: 0.19, conf: 0.03, ras: 0.04, dc: 0.12, tm: 0.03, size: 0.02, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.14 },
+    TE:  { age: 0.08, breakout: 0.12, prod: 0.14, conf: 0.03, ras: 0.14, dc: 0.12, tm: 0.03, size: 0.04, eff: 0.13, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.07 }
   };
 
   function calcJM(p) {
@@ -14124,7 +14125,11 @@ window.fmtHeight = fmtHeight;
     const prodScore = jmProduction(p.bestPpg, p.pos);
     const confScore = jmConf(p.lastConf);
     let rasScore = jmRas(p.ras, p.pos);
-    const dcScore = jmDraftCapital(p.dr, p.pos);
+    const dcScoreRaw = jmDraftCapital(p.dr, p.pos);
+    // DC function returns 0-1000 for granular separation; normalize to 0-100 effective
+    // range so the weighted average stays in 0-100 and scores distribute properly.
+    // The 1000-scale precision is preserved: pick 6 WR = 88.0, pick 90 = 15.8
+    const dcScore = dcScoreRaw != null ? dcScoreRaw / 10 : null;
     const tmScore = p.tm != null ? Math.min(100, p.tm * 10) : null;
     const sizeScore = jmSize(p.ht, p.wt, p.pos);
     const effScore = jmEfficiency(p.pos, p.ypc, p.ypr);

@@ -14014,7 +14014,7 @@ window.fmtHeight = fmtHeight;
       sleeperAdj = Math.min(sleeperAdj, sleeperCap[p.pos] || 4);
     }
 
-    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + bustAdj + sleeperAdj) * 10) / 10));
+    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj) * 10) / 10));
     return { jm: final, bustAdj, sleeperAdj };
   }
 
@@ -14593,6 +14593,7 @@ window.fmtHeight = fmtHeight;
     const cols = [
       { key: 'name', label: 'PLAYER', sortable: true },
       { key: 'jm', label: 'JM', sortable: true },
+      { key: 'risk', label: 'RISK', sortable: true },
       { key: 'dc', label: 'DC', sortable: true },
       { key: 'age', label: 'DRAFT AGE', sortable: true },
       { key: 'breakoutAge', label: 'BREAKOUT', sortable: true },
@@ -14683,6 +14684,9 @@ window.fmtHeight = fmtHeight;
           const bVal = b2026 ? (_dcCache[b.name] || '') : (b.dr != null ? String(b.dr) : '');
           av = _dcSortVal(aVal);
           bv = _dcSortVal(bVal);
+        } else if (pmSort.col === 'risk') {
+          av = (a.bustAdj || 0) + (a.sleeperAdj || 0);
+          bv = (b.bustAdj || 0) + (b.sleeperAdj || 0);
         } else {
           av = a[pmSort.col]; bv = b[pmSort.col];
         }
@@ -14725,13 +14729,22 @@ window.fmtHeight = fmtHeight;
             break;
           case 'jm':
             if (p.jm != null) {
-              const _bustFlag = p.bustAdj && p.bustAdj < 0 ? ` <span style="font-size:.55rem;color:#ef4444;opacity:.8" title="Bust penalty: ${p.bustAdj}">▼${Math.abs(p.bustAdj)}</span>` : '';
-              const _sleeperFlag = p.sleeperAdj && p.sleeperAdj > 0 ? ` <span style="font-size:.55rem;color:#22c55e;opacity:.8" title="Sleeper bonus: +${p.sleeperAdj}">▲${p.sleeperAdj}</span>` : '';
-              rows += `<td class="pm-jm"><span class="pm-jm-badge ${jmClass(p.jm)}">${p.jm.toFixed(1)}</span>${_bustFlag}${_sleeperFlag}</td>`;
+              rows += `<td class="pm-jm"><span class="pm-jm-badge ${jmClass(p.jm)}">${p.jm.toFixed(1)}</span></td>`;
             } else {
               rows += `<td class="pm-jm" style="color:var(--text2);opacity:.4">—</td>`;
             }
             break;
+          case 'risk': {
+            const _riskVal = (p.bustAdj || 0) + (p.sleeperAdj || 0);
+            if (_riskVal < 0) {
+              rows += `<td style="text-align:center"><span style="font-size:.75rem;font-weight:700;color:#ef4444" title="Bust penalty: ${p.bustAdj}${p.sleeperAdj ? ', Sleeper: +' + p.sleeperAdj : ''}">▼${Math.abs(_riskVal)}</span></td>`;
+            } else if (_riskVal > 0) {
+              rows += `<td style="text-align:center"><span style="font-size:.75rem;font-weight:700;color:#22c55e" title="Sleeper bonus: +${p.sleeperAdj}${p.bustAdj ? ', Bust: ' + p.bustAdj : ''}">▲${_riskVal}</span></td>`;
+            } else {
+              rows += `<td style="text-align:center;color:var(--text2);opacity:.4">—</td>`;
+            }
+            break;
+          }
           case 'dc': {
             const is2026 = p.draftYr === 2026;
             const fsVal = _dcCache[p.name] || '';

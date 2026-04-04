@@ -2691,10 +2691,6 @@ function validateImportData(obj) {
   });
   if (cachedCount > 0) console.log('[HeadshotFix] Applied ' + cachedCount + ' cached fixes');
 
-  const uncached = playersToFix.filter(p => !cache[p.n]);
-  if (uncached.length === 0) return;
-  console.log('[HeadshotFix] Need to look up ' + uncached.length + ' players...');
-
   const teamIds = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,33,34];
   const nameToId = {};
 
@@ -2742,12 +2738,18 @@ function validateImportData(obj) {
   window.FALLBACK_IDS = FALLBACK_IDS;
 
   // Override stale cached IDs with FALLBACK_IDS (corrects wrong headshots from prior cache)
+  // Runs BEFORE uncached filter so FALLBACK always wins over bad cache entries
   playersToFix.forEach(p => {
     if (FALLBACK_IDS[p.n] && cache[p.n] !== FALLBACK_IDS[p.n]) {
       p._slImg = IMG_BASE + FALLBACK_IDS[p.n] + IMG_SUFFIX;
       cache[p.n] = FALLBACK_IDS[p.n];
     }
   });
+  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch(e) {}
+
+  const uncached = playersToFix.filter(p => !cache[p.n]);
+  if (uncached.length === 0) return;
+  console.log('[HeadshotFix] Need to look up ' + uncached.length + ' players...');
 
   function normName(n) { return n.replace(/['']/g, "'").replace(/\s+/g, ' ').trim(); }
 
@@ -4281,7 +4283,7 @@ function buildCollegeTable(d, scoringFormat) {
     return Math.round(fp*10)/10;
   };
   // Get games played from COLLEGE_WEEKLY if available
-  const weeklyData = (typeof COLLEGE_WEEKLY !== 'undefined') ? COLLEGE_WEEKLY[d.n] : null;
+  const weeklyData = _getCollegeWeekly(d.n);
   const withFpts = stats.map(s => {
     const fpts = _cfpts(s);
     let gp = s.gp || null;
@@ -4356,8 +4358,9 @@ function buildCollegeTable(d, scoringFormat) {
 }
 
 function buildCollegeWeeklyTable(d, season, scoringFormat) {
-  if (typeof COLLEGE_WEEKLY === 'undefined' || !COLLEGE_WEEKLY[d.n]) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
-  const weeks = _filterCollegeWeeks(COLLEGE_WEEKLY[d.n][season]);
+  const _cw = _getCollegeWeekly(d.n);
+  if (!_cw) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
+  const weeks = _filterCollegeWeeks(_cw[season]);
   if (!weeks || !weeks.length) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
   const pos = d.s || 'WR';
   const isQB = pos === 'QB';
@@ -4412,13 +4415,39 @@ function buildCollegeWeeklyTable(d, season, scoringFormat) {
   return '<div class="career-table-wrap"><table class="career-table"><thead>'+hdr+'</thead><tbody>'+rows+'</tbody></table></div>';
 }
 
+function _getCollegeWeekly(name) {
+  if (typeof COLLEGE_WEEKLY === 'undefined') return null;
+  let w = COLLEGE_WEEKLY[name];
+  if (w) return w;
+  // Same alias fallback as _getCollegeStats
+  const _CSA = {
+    'Marvin Harrison Jr.': 'Marvin Harrison Jr','Marvin Harrison Jr': 'Marvin Harrison Jr.',
+    'Marvin Harrison': 'Marvin Harrison Jr.',
+    'D.K. Metcalf': 'DK Metcalf','DK Metcalf': 'D.K. Metcalf',
+    'D.J. Moore': 'DJ Moore','DJ Moore': 'D.J. Moore',
+    'A.J. Brown': 'AJ Brown','AJ Brown': 'A.J. Brown',
+    'C.J. Stroud': 'CJ Stroud','CJ Stroud': 'C.J. Stroud'
+  };
+  if (_CSA[name]) w = COLLEGE_WEEKLY[_CSA[name]];
+  if (w) return w;
+  const noSuffix = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+  if (noSuffix !== name) w = COLLEGE_WEEKLY[noSuffix];
+  if (w) return w;
+  if (!/\s+(Jr|Sr|II|III|IV|V)\.?$/i.test(name)) {
+    w = COLLEGE_WEEKLY[name + ' Jr.'] || COLLEGE_WEEKLY[name + ' Jr'];
+  }
+  return w || null;
+}
+
 function hasCollegeWeekly(d) {
-  return typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[d.n] && Object.keys(COLLEGE_WEEKLY[d.n]).length > 0;
+  const w = _getCollegeWeekly(d.n);
+  return w && Object.keys(w).length > 0;
 }
 
 function getCollegeWeeklySeasons(d) {
-  if (!hasCollegeWeekly(d)) return [];
-  return Object.keys(COLLEGE_WEEKLY[d.n]).sort((a,b) => +b - +a);
+  const w = _getCollegeWeekly(d.n);
+  if (!w) return [];
+  return Object.keys(w).sort((a,b) => +b - +a);
 }
 
 function fmtHeight(h) {
@@ -15436,8 +15465,11 @@ window.fmtHeight = fmtHeight;
           // GP might be missing from college stats — try multiple sources
           let gp = s.gp || null;
           // Try COLLEGE_WEEKLY for GP
-          if (!gp && typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[d.n] && COLLEGE_WEEKLY[d.n][s.yr]) {
-            gp = _filterCollegeWeeks(COLLEGE_WEEKLY[d.n][s.yr]).length;
+          if (!gp) {
+            const _cwGp = (typeof _getCollegeWeekly === 'function') ? _getCollegeWeekly(d.n) : ((typeof COLLEGE_WEEKLY !== 'undefined') ? COLLEGE_WEEKLY[d.n] : null);
+            if (_cwGp && _cwGp[s.yr]) {
+              gp = _filterCollegeWeeks(_cwGp[s.yr]).length;
+            }
           }
           // Estimate GP from stats if still missing (most college seasons are 12-14 games)
           if (!gp && fp > 0) gp = 13; // reasonable estimate

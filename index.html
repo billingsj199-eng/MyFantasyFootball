@@ -4216,9 +4216,8 @@ function _getCollegeStats(name, pos) {
     // Explicit alias map
     const _CSA = {
       'Mitchell Trubisky': 'Mitch Trubisky','Mitch Trubisky': 'Mitchell Trubisky',
-      'A.J. Green': 'AJ Green','AJ Green': 'A.J. Green',
       'Marvin Harrison Jr.': 'Marvin Harrison Jr','Marvin Harrison Jr': 'Marvin Harrison Jr.',
-    'Marvin Harrison': 'Marvin Harrison Jr.',
+      'Marvin Harrison': 'Marvin Harrison Jr.',
       'D.K. Metcalf': 'DK Metcalf','DK Metcalf': 'D.K. Metcalf',
       'D.J. Moore': 'DJ Moore','DJ Moore': 'D.J. Moore',
       'A.J. Brown': 'AJ Brown','AJ Brown': 'A.J. Brown',
@@ -4245,23 +4244,30 @@ function _getCollegeStats(name, pos) {
   }
   if (!cs || !cs.length) return null;
 
-  // Position-based collision detection — reject stats that belong to a different player
-  // Infer position from argument, or look up from D array
-  let p = pos;
-  if (!p) {
-    const dEntry = (typeof D !== 'undefined') ? D.find(x => x.n === name) : null;
-    if (dEntry) p = dEntry.s;
+  // --- School-based collision detection ---
+  // Find the player's known college from any available source
+  const dEntry = (typeof D !== 'undefined') ? D.find(x => x.n === name) : null;
+  const knownCollege = (dEntry && dEntry._college) ? dEntry._college
+    : (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].c) ? COMBINE_DATA[name].c
+    : (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].school) ? COMBINE_DATA[name].school
+    : (typeof LEGEND_BIO !== 'undefined' && LEGEND_BIO[name] && LEGEND_BIO[name].c) ? LEGEND_BIO[name].c
+    : null;
+  if (knownCollege && typeof _cbNormSchool === 'function') {
+    const knownNorm = _cbNormSchool(knownCollege);
+    const anySchoolMatch = cs.some(s => s.tm && _cbNormSchool(s.tm) === knownNorm);
+    if (!anySchoolMatch) return null; // Stats are for a different player at a different school
   }
+
+  // --- Position-based collision detection ---
+  let p = pos;
+  if (!p && dEntry) p = dEntry.s;
   if (p === 'QB') {
-    // QB must have at least one season with meaningful passing yards
     if (!cs.some(s => (s.py || 0) > 200)) return null;
   } else if (p === 'RB') {
-    // RB must have rushing stats; if only passing stats, wrong player
     const hasPassing = cs.some(s => (s.py || 0) > 1000);
     const hasRushing = cs.some(s => (s.ry || 0) > 50 || (s.ra || 0) > 10);
     if (hasPassing && !hasRushing) return null;
   } else if (p === 'WR' || p === 'TE') {
-    // WR/TE must have receiving; if only passing stats, wrong player
     const hasPassing = cs.some(s => (s.py || 0) > 1000);
     const hasReceiving = cs.some(s => (s.rcy || 0) > 50 || (s.rec || 0) > 5);
     if (hasPassing && !hasReceiving) return null;

@@ -13278,22 +13278,23 @@ window.fmtHeight = fmtHeight;
   // COMPONENT WEIGHTS BY POSITION (data-driven, modern-era weighted):
   //   Component      QB    RB    WR    TE    Rationale (from era analysis)
   //   ─────────────────────────────────────────────────
-  //   Draft Age      15%   18%   16%   12%   Modern RBs: 70% at 21 vs 11% at 23. Steeper than ever.
-  //   Breakout Age   10%   12%   16%   14%   Modern WRs: 66% at 21.5 vs 13% at 23.6+. Huge signal.
-  //   Production     27%   24%   25%   26%   Still king but slightly less dominant with more data
-  //   Conference      7%    6%    7%    8%   Data shows conferences are flatter than expected (32-43%)
-  //   RAS             7%   12%   10%   15%   Modern TE: 57% at 9+ RAS vs 0% at <3. Biggest era shift.
-  //   Draft Capital  23%   18%   13%   11%   QB DC most predictive; TE DC barely matters
+  //   Draft Age      15%   16%   15%   11%   Modern RBs: 70% at 21 vs 11% at 23. Steeper than ever.
+  //   Breakout Age   10%   11%   15%   13%   Modern WRs: 66% at 21.5 vs 13% at 23.6+. Huge signal.
+  //   Production     27%   22%   23%   24%   Still king but slightly less dominant with more data
+  //   Conference      7%    6%    7%    7%   Data shows conferences are flatter than expected (32-43%)
+  //   RAS             7%   11%    9%   14%   Modern TE: 57% at 9+ RAS vs 0% at <3. Biggest era shift.
+  //   Draft Capital  23%   17%   13%   11%   QB DC most predictive; TE DC barely matters
   //   Teammates       5%    5%    5%    5%   Talent competition context
-  //   Size            6%    5%    8%    9%   WR height data surprisingly flat; TE size still matters
+  //   Size            6%    5%    7%    8%   WR height data surprisingly flat; TE size still matters
+  //   Efficiency      0%    7%    6%    7%   YPC/YPR — data-driven: 6+ YPC = 50% starter, 14+ YPR = 38-50%
   //
   // Each component outputs a 0-100 sub-score, then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.15, breakout: 0.10, prod: 0.27, conf: 0.07, ras: 0.07, dc: 0.23, tm: 0.05, size: 0.06 },
-    RB:  { age: 0.18, breakout: 0.12, prod: 0.24, conf: 0.06, ras: 0.12, dc: 0.18, tm: 0.05, size: 0.05 },
-    WR:  { age: 0.16, breakout: 0.16, prod: 0.25, conf: 0.07, ras: 0.10, dc: 0.13, tm: 0.05, size: 0.08 },
-    TE:  { age: 0.12, breakout: 0.14, prod: 0.26, conf: 0.08, ras: 0.15, dc: 0.11, tm: 0.05, size: 0.09 }
+    QB:  { age: 0.15, breakout: 0.10, prod: 0.27, conf: 0.07, ras: 0.07, dc: 0.23, tm: 0.05, size: 0.06, eff: 0.00 },
+    RB:  { age: 0.16, breakout: 0.11, prod: 0.22, conf: 0.06, ras: 0.11, dc: 0.17, tm: 0.05, size: 0.05, eff: 0.07 },
+    WR:  { age: 0.15, breakout: 0.15, prod: 0.23, conf: 0.07, ras: 0.09, dc: 0.13, tm: 0.05, size: 0.07, eff: 0.06 },
+    TE:  { age: 0.11, breakout: 0.13, prod: 0.24, conf: 0.07, ras: 0.14, dc: 0.11, tm: 0.05, size: 0.08, eff: 0.07 }
   };
 
   // Conference tiers — DATA-DRIVEN from era analysis
@@ -13685,10 +13686,73 @@ window.fmtHeight = fmtHeight;
     return null;
   }
 
+  // Sub-score: Efficiency (YPC for RB, YPR for WR/TE) → 0-100
+  // DATA-DRIVEN from Section 7 & 8 analysis:
+  //   RB YPC: 6.0-6.99 = 50% starter (sweet spot), 5.5-5.99 = 32%, <5.0 = 18%
+  //     7.0+ drops to 29% (small sample/change-of-pace backs)
+  //   WR YPR: 14.0-17.99 = 34-38% starter (sweet spot), 12.0-13.99 = 20%, <12 = 11%
+  //     18+ drops slightly (deep threats only, less volume)
+  //   TE YPR: 14.0-15.99 = 50% starter (money zone), 12.0-13.99 = 38%, <12 = 21%
+  function jmEfficiency(pos, ypc, ypr) {
+    if (pos === 'RB') {
+      if (ypc == null) return null;
+      // Sweet spot is 6.0-6.99, above 7 is actually worse (small sample/gadget backs)
+      if (ypc >= 6.5 && ypc < 7.0) return 95;
+      if (ypc >= 6.0 && ypc < 6.5) return 90;
+      if (ypc >= 7.0 && ypc < 7.5) return 75;       // Slightly high — could be low volume
+      if (ypc >= 5.5 && ypc < 6.0) return 65;
+      if (ypc >= 7.5) return 55;                      // Very high — almost certainly low volume
+      if (ypc >= 5.0 && ypc < 5.5) return 40;
+      if (ypc >= 4.5 && ypc < 5.0) return 25;
+      if (ypc >= 4.0 && ypc < 4.5) return 15;
+      return 5;                                        // Under 4.0 — bad
+    }
+
+    if (pos === 'WR') {
+      if (ypr == null) return null;
+      // Sweet spot is 14-18, above 18 drops slightly (deep threats)
+      if (ypr >= 16.0 && ypr < 18.0) return 90;
+      if (ypr >= 14.0 && ypr < 16.0) return 85;
+      if (ypr >= 18.0 && ypr < 20.0) return 70;      // Deep threats — flashy but less consistent
+      if (ypr >= 12.0 && ypr < 14.0) return 45;       // Big dropoff in data (20% starter)
+      if (ypr >= 20.0) return 55;                      // Very deep — gadget risk
+      if (ypr >= 10.0 && ypr < 12.0) return 25;       // Short-area only
+      if (ypr >= 8.0 && ypr < 10.0) return 15;
+      return 10;
+    }
+
+    if (pos === 'TE') {
+      if (ypr == null) return null;
+      // Sweet spot is 14-16, drops off both sides
+      if (ypr >= 14.0 && ypr < 16.0) return 95;       // Andrews, Kittle zone — 50% starter
+      if (ypr >= 16.0 && ypr < 18.0) return 80;       // Gronk zone
+      if (ypr >= 12.0 && ypr < 14.0) return 70;       // McBride, Ertz — 38-44% starter
+      if (ypr >= 18.0) return 65;                      // Waller zone — can work but risky
+      if (ypr >= 10.0 && ypr < 12.0) return 40;       // Below average — 21-25%
+      if (ypr >= 8.0 && ypr < 10.0) return 20;
+      return 10;
+    }
+
+    return null; // QBs don't use this
+  }
+
   // Calculate final JM Score
+  // Blends FLOOR (starter hit rate, 70%) and CEILING (elite hit rate, 30%)
+  // Floor weights = JM_WEIGHTS (calibrated to starter rates)
+  // Ceiling weights shift emphasis: production & athleticism matter MORE for elite,
+  // draft capital & conference matter LESS
+
+  const JM_CEILING_WEIGHTS = {
+    QB:  { age: 0.14, breakout: 0.12, prod: 0.32, conf: 0.04, ras: 0.10, dc: 0.18, tm: 0.04, size: 0.04, eff: 0.02 },
+    RB:  { age: 0.20, breakout: 0.14, prod: 0.28, conf: 0.03, ras: 0.14, dc: 0.10, tm: 0.03, size: 0.03, eff: 0.05 },
+    WR:  { age: 0.18, breakout: 0.20, prod: 0.28, conf: 0.03, ras: 0.12, dc: 0.07, tm: 0.04, size: 0.04, eff: 0.04 },
+    TE:  { age: 0.14, breakout: 0.16, prod: 0.28, conf: 0.04, ras: 0.18, dc: 0.06, tm: 0.04, size: 0.06, eff: 0.04 }
+  };
+
   function calcJM(p) {
-    const w = JM_WEIGHTS[p.pos];
-    if (!w) return null;
+    const wFloor = JM_WEIGHTS[p.pos];
+    const wCeil = JM_CEILING_WEIGHTS[p.pos];
+    if (!wFloor || !wCeil) return null;
 
     const ageScore = jmAge(p.age, p.pos);
     const breakoutScore = jmBreakout(p.breakoutAge, p.age, p.pos);
@@ -13696,39 +13760,51 @@ window.fmtHeight = fmtHeight;
     const confScore = jmConf(p.lastConf);
     const rasScore = jmRas(p.ras, p.pos);
     const dcScore = jmDraftCapital(p.dr, p.pos);
-    // Teammate score is 0-10, scale to 0-100 for weighting
     const tmScore = p.tm != null ? Math.min(100, p.tm * 10) : null;
     const sizeScore = jmSize(p.ht, p.wt, p.pos);
+    const effScore = jmEfficiency(p.pos, p.ypc, p.ypr);
 
-    // Handle missing components: redistribute weight proportionally
-    let totalWeight = 0;
-    let weightedSum = 0;
-
-    const components = [
-      { score: ageScore, weight: w.age },
-      { score: breakoutScore, weight: w.breakout },
-      { score: prodScore, weight: w.prod },
-      { score: confScore, weight: w.conf },
-      { score: rasScore, weight: w.ras },
-      { score: dcScore, weight: w.dc },
-      { score: tmScore, weight: w.tm },
-      { score: sizeScore, weight: w.size }
+    const scores = [
+      { key: 'age', score: ageScore },
+      { key: 'breakout', score: breakoutScore },
+      { key: 'prod', score: prodScore },
+      { key: 'conf', score: confScore },
+      { key: 'ras', score: rasScore },
+      { key: 'dc', score: dcScore },
+      { key: 'tm', score: tmScore },
+      { key: 'size', score: sizeScore },
+      { key: 'eff', score: effScore }
     ];
 
-    components.forEach(c => {
-      if (c.score != null) {
-        totalWeight += c.weight;
-        weightedSum += c.score * c.weight;
+    // Calculate floor score (starter rate calibrated)
+    let floorWeight = 0, floorSum = 0;
+    scores.forEach(s => {
+      if (s.score != null) {
+        const w = wFloor[s.key];
+        floorWeight += w;
+        floorSum += s.score * w;
       }
     });
 
-    if (totalWeight === 0) return null;
+    // Calculate ceiling score (elite rate calibrated)
+    let ceilWeight = 0, ceilSum = 0;
+    scores.forEach(s => {
+      if (s.score != null) {
+        const w = wCeil[s.key];
+        ceilWeight += w;
+        ceilSum += s.score * w;
+      }
+    });
 
-    // Normalize to account for missing components
-    const raw = weightedSum / totalWeight;
+    if (floorWeight === 0) return null;
 
-    // Games played bonus/penalty: playing 40+ college games = slight bonus (durability),
-    // fewer than 20 games = slight penalty (small sample)
+    const floorRaw = floorSum / floorWeight;
+    const ceilRaw = ceilWeight > 0 ? ceilSum / ceilWeight : floorRaw;
+
+    // Blend: 70% floor, 30% ceiling
+    const blended = floorRaw * 0.70 + ceilRaw * 0.30;
+
+    // Games played bonus/penalty
     let gpAdj = 0;
     if (p.gp != null) {
       if (p.gp >= 50) gpAdj = 2;
@@ -13737,7 +13813,7 @@ window.fmtHeight = fmtHeight;
       else if (p.gp < 20) gpAdj = -1.5;
     }
 
-    const final = Math.max(0, Math.min(100, Math.round((raw + gpAdj) * 10) / 10));
+    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj) * 10) / 10));
     return final;
   }
 
@@ -15214,6 +15290,192 @@ window.fmtHeight = fmtHeight;
             ('' + avgPpg).padStart(6) + '  ' + top);
         });
       });
+    });
+
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 9: NFL TIER ANALYSIS — What prospect profiles produce each tier?', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c  Tiers account for PEAK performance AND longevity (sustained production)', 'color: #f59e0b');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    // Tier definitions by position — combining peak PPG with years of starter-level production
+    // "Starter seasons" = seasons where PPG >= position starter threshold
+    const tierDefs = {
+      QB: {
+        label: 'QB',
+        starterPpg: 13,
+        tiers: [
+          { name: 'GENERATIONAL', desc: '22+ PPG peak, 5+ starter seasons', fn: (p, ss) => p.bestPpg >= 22 && ss >= 5 },
+          { name: 'ELITE', desc: '20+ PPG peak, 3+ starter seasons', fn: (p, ss) => p.bestPpg >= 20 && ss >= 3 },
+          { name: 'FRANCHISE', desc: '16+ PPG peak, 4+ starter seasons', fn: (p, ss) => p.bestPpg >= 16 && ss >= 4 },
+          { name: 'SOLID STARTER', desc: '13+ PPG peak, 2+ starter seasons', fn: (p, ss) => p.bestPpg >= 13 && ss >= 2 },
+          { name: 'ONE-YEAR WONDER', desc: '13+ PPG peak, 1 starter season', fn: (p, ss) => p.bestPpg >= 13 && ss === 1 },
+          { name: 'BACKUP/BUST', desc: 'Never reached starter level', fn: (p, ss) => true }
+        ]
+      },
+      RB: {
+        label: 'RB',
+        starterPpg: 10,
+        tiers: [
+          { name: 'GENERATIONAL', desc: '20+ PPG peak, 4+ starter seasons', fn: (p, ss) => p.bestPpg >= 20 && ss >= 4 },
+          { name: 'ELITE', desc: '16+ PPG peak, 3+ starter seasons', fn: (p, ss) => p.bestPpg >= 16 && ss >= 3 },
+          { name: 'STRONG RB1', desc: '13+ PPG peak, 3+ starter seasons', fn: (p, ss) => p.bestPpg >= 13 && ss >= 3 },
+          { name: 'SOLID STARTER', desc: '10+ PPG peak, 2+ starter seasons', fn: (p, ss) => p.bestPpg >= 10 && ss >= 2 },
+          { name: 'ONE-YEAR WONDER', desc: '10+ PPG peak, 1 starter season', fn: (p, ss) => p.bestPpg >= 10 && ss === 1 },
+          { name: 'ROLE PLAYER', desc: 'Played 2+ seasons, never started', fn: (p, ss) => p.seasons >= 2 },
+          { name: 'BUST', desc: 'Minimal NFL impact', fn: (p, ss) => true }
+        ]
+      },
+      WR: {
+        label: 'WR',
+        starterPpg: 8,
+        tiers: [
+          { name: 'GENERATIONAL', desc: '18+ PPG peak, 5+ starter seasons', fn: (p, ss) => p.bestPpg >= 18 && ss >= 5 },
+          { name: 'ELITE', desc: '14+ PPG peak, 4+ starter seasons', fn: (p, ss) => p.bestPpg >= 14 && ss >= 4 },
+          { name: 'STRONG WR1', desc: '11+ PPG peak, 3+ starter seasons', fn: (p, ss) => p.bestPpg >= 11 && ss >= 3 },
+          { name: 'SOLID STARTER', desc: '8+ PPG peak, 2+ starter seasons', fn: (p, ss) => p.bestPpg >= 8 && ss >= 2 },
+          { name: 'ONE-YEAR WONDER', desc: '8+ PPG peak, 1 starter season', fn: (p, ss) => p.bestPpg >= 8 && ss === 1 },
+          { name: 'ROLE PLAYER', desc: 'Played 2+ seasons, never started', fn: (p, ss) => p.seasons >= 2 },
+          { name: 'BUST', desc: 'Minimal NFL impact', fn: (p, ss) => true }
+        ]
+      },
+      TE: {
+        label: 'TE',
+        starterPpg: 6,
+        tiers: [
+          { name: 'GENERATIONAL', desc: '14+ PPG peak, 4+ starter seasons', fn: (p, ss) => p.bestPpg >= 14 && ss >= 4 },
+          { name: 'ELITE', desc: '12+ PPG peak, 3+ starter seasons', fn: (p, ss) => p.bestPpg >= 12 && ss >= 3 },
+          { name: 'STRONG TE1', desc: '9+ PPG peak, 3+ starter seasons', fn: (p, ss) => p.bestPpg >= 9 && ss >= 3 },
+          { name: 'SOLID STARTER', desc: '6+ PPG peak, 2+ starter seasons', fn: (p, ss) => p.bestPpg >= 6 && ss >= 2 },
+          { name: 'ONE-YEAR WONDER', desc: '6+ PPG peak, 1 starter season', fn: (p, ss) => p.bestPpg >= 6 && ss === 1 },
+          { name: 'ROLE PLAYER', desc: 'Played 2+ seasons, never started', fn: (p, ss) => p.seasons >= 2 },
+          { name: 'BUST', desc: 'Minimal NFL impact', fn: (p, ss) => true }
+        ]
+      }
+    };
+
+    // Enrich players with starter season count and tier
+    players.forEach(p => {
+      const career = [];
+      const d = D.find(dd => dd.n === p.name);
+      if (d) {
+        const c = d.career || (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[d.n] ? LEGEND_CAREERS[d.n] : []);
+        c.forEach(s => {
+          if (s.gp && s.gp > 0 && s.fpts) career.push(s);
+        });
+      }
+      const td = tierDefs[p.pos];
+      if (!td) { p.tier = 'UNKNOWN'; p.starterSeasons = 0; return; }
+      p.starterSeasons = career.filter(s => s.gp > 0 && (s.fpts / s.gp) >= td.starterPpg).length;
+      // Assign tier (first match wins since tiers are ordered highest to lowest)
+      p.tier = 'BUST';
+      for (const tier of td.tiers) {
+        if (tier.fn(p, p.starterSeasons)) { p.tier = tier.name; break; }
+      }
+    });
+
+    // Now for each position, show the average prospect profile per tier
+    positions.forEach(pos => {
+      const td = tierDefs[pos];
+      const modernPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2015);
+
+      console.log('%c\n' + pos + ' NFL TIERS — Modern Era (n=' + modernPlayers.length + ')', 'color: #22c55e; font-weight: bold; font-size: 13px');
+
+      td.tiers.forEach(tier => {
+        const group = modernPlayers.filter(p => p.tier === tier.name);
+        if (!group.length) return;
+
+        function avg(field) {
+          const v = group.filter(p => p[field] != null);
+          return v.length ? (v.reduce((s, p) => s + p[field], 0) / v.length).toFixed(1) : '—';
+        }
+        function pickStr() {
+          const v = group.filter(p => p.pick != null && p.pick !== 'U');
+          return v.length ? Math.round(v.reduce((s, p) => s + p.pick, 0) / v.length) : '—';
+        }
+        function pctUdfa() {
+          return (group.filter(p => p.pick === 'U').length / group.length * 100).toFixed(0) + '%';
+        }
+
+        console.log('%c  ── ' + tier.name + ' (' + tier.desc + ') — n=' + group.length + ' ──', 'color: #60a5fa; font-weight: bold');
+        console.log('    Avg Draft Pick: ' + pickStr() + '   UDFA%: ' + pctUdfa() + '   Avg Draft Age: ' + avg('age'));
+        console.log('    Avg College PPG: ' + avg('collegePpg') + '   Avg RAS: ' + avg('ras') + '   Avg Ht: ' + avg('ht') + 'in   Avg Wt: ' + avg('wt'));
+        if (pos === 'RB') console.log('    Avg YPC: ' + avg('ypc') + '   Avg Starter Seasons: ' + avg('starterSeasons') + '   Avg NFL Peak PPG: ' + avg('bestPpg'));
+        else if (pos === 'WR' || pos === 'TE') console.log('    Avg YPR: ' + avg('ypr') + '   Avg Starter Seasons: ' + avg('starterSeasons') + '   Avg NFL Peak PPG: ' + avg('bestPpg'));
+        else console.log('    Avg Starter Seasons: ' + avg('starterSeasons') + '   Avg NFL Peak PPG: ' + avg('bestPpg'));
+
+        // List the players in this tier
+        const names = [...group].sort((a, b) => b.bestPpg - a.bestPpg).map(p => p.name + '(' + p.bestPpg + ')');
+        if (names.length <= 8) {
+          console.log('    Players: ' + names.join(', '));
+        } else {
+          console.log('    Top Players: ' + names.slice(0, 8).join(', ') + ' + ' + (names.length - 8) + ' more');
+        }
+      });
+    });
+
+    // === SECTION 10: FACTOR GAP ANALYSIS — Which factors separate tiers most? ===
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 10: FACTOR GAP ANALYSIS — What separates each tier?', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c  Shows the % difference in each factor between adjacent tiers', 'color: #f59e0b');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    positions.forEach(pos => {
+      const td = tierDefs[pos];
+      const modernPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2015);
+      const fields = pos === 'RB' ? ['pick', 'age', 'collegePpg', 'ras', 'ht', 'wt', 'ypc']
+        : (pos === 'WR' || pos === 'TE') ? ['pick', 'age', 'collegePpg', 'ras', 'ht', 'wt', 'ypr']
+        : ['pick', 'age', 'collegePpg', 'ras', 'ht', 'wt'];
+      const labels = { pick: 'Draft Pick', age: 'Draft Age', collegePpg: 'College PPG', ras: 'RAS', ht: 'Height', wt: 'Weight', ypc: 'YPC', ypr: 'YPR' };
+
+      // Get tier averages
+      const tierAvgs = {};
+      const tierOrder = td.tiers.map(t => t.name);
+      tierOrder.forEach(tierName => {
+        const group = modernPlayers.filter(p => p.tier === tierName);
+        if (!group.length) return;
+        tierAvgs[tierName] = {};
+        fields.forEach(f => {
+          if (f === 'pick') {
+            const v = group.filter(p => p.pick != null && p.pick !== 'U');
+            tierAvgs[tierName][f] = v.length ? v.reduce((s, p) => s + p.pick, 0) / v.length : null;
+          } else {
+            const v = group.filter(p => p[f] != null);
+            tierAvgs[tierName][f] = v.length ? v.reduce((s, p) => s + p[f], 0) / v.length : null;
+          }
+        });
+      });
+
+      console.log('%c\n' + pos + ' — Factor Averages by Tier (Modern)', 'color: #22c55e; font-weight: bold');
+      let header = '  Tier'.padEnd(20);
+      fields.forEach(f => { header += labels[f].padStart(12); });
+      console.log(header);
+
+      tierOrder.forEach(tierName => {
+        if (!tierAvgs[tierName]) return;
+        let row = ('  ' + tierName).padEnd(20);
+        fields.forEach(f => {
+          const v = tierAvgs[tierName][f];
+          row += (v != null ? v.toFixed(1) : '—').padStart(12);
+        });
+        console.log(row);
+      });
+
+      // Show which factors have the biggest gap between top tier and bust
+      const topTier = tierOrder.find(t => tierAvgs[t]);
+      const bottomTier = [...tierOrder].reverse().find(t => tierAvgs[t]);
+      if (topTier && bottomTier && topTier !== bottomTier) {
+        console.log('%c  Gap Analysis (top tier vs bust):', 'color: #60a5fa');
+        fields.forEach(f => {
+          const top = tierAvgs[topTier][f];
+          const bot = tierAvgs[bottomTier][f];
+          if (top != null && bot != null && bot !== 0) {
+            const diff = top - bot;
+            const pctDiff = ((diff / Math.abs(bot)) * 100).toFixed(0);
+            const direction = f === 'pick' || f === 'age' ? (diff < 0 ? '✅ ' : '❌ ') : (diff > 0 ? '✅ ' : '❌ ');
+            console.log('    ' + direction + labels[f].padEnd(14) + 'Top: ' + top.toFixed(1).padStart(6) + '  Bust: ' + bot.toFixed(1).padStart(6) + '  Gap: ' + (diff > 0 ? '+' : '') + diff.toFixed(1) + ' (' + pctDiff + '%)');
+          }
+        });
+      }
     });
 
     console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');

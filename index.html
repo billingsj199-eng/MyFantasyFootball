@@ -14829,10 +14829,24 @@ window.fmtHeight = fmtHeight;
         if (conf && CONF_ALIASES[conf]) conf = CONF_ALIASES[conf];
       }
 
+      // Career college YPC and YPR
+      let totRushYds = 0, totRushAtt = 0, totRecYds = 0, totRecs = 0;
+      if (cs && cs.length) {
+        cs.forEach(s => {
+          totRushYds += (s.ry || 0);
+          totRushAtt += (s.ra || 0);
+          totRecYds += (s.rcy || 0);
+          totRecs += (s.rec || 0);
+        });
+      }
+      const ypc = totRushAtt > 0 ? Math.round((totRushYds / totRushAtt) * 10) / 10 : null;
+      const ypr = totRecs > 0 ? Math.round((totRecYds / totRecs) * 10) / 10 : null;
+
       players.push({
         name: d.n, pos: d.s, pick, draftYr,
         bestPpg: Math.round(bestPpg * 10) / 10,
         age, ht, wt, ras, collegePpg, conf,
+        ypc, ypr,
         seasons: career.length
       });
     });
@@ -15118,6 +15132,86 @@ window.fmtHeight = fmtHeight;
             ((hit / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
             ((starter / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
             ('' + avgPpg).padStart(6));
+        });
+      });
+    });
+
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 7: YARDS PER CARRY (RB) vs NFL SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    const ypcRanges = [
+      { label: '7.0+ YPC', fn: y => y >= 7.0 },
+      { label: '6.0-6.99', fn: y => y >= 6.0 && y < 7.0 },
+      { label: '5.5-5.99', fn: y => y >= 5.5 && y < 6.0 },
+      { label: '5.0-5.49', fn: y => y >= 5.0 && y < 5.5 },
+      { label: '4.5-4.99', fn: y => y >= 4.5 && y < 5.0 },
+      { label: '4.0-4.49', fn: y => y >= 4.0 && y < 4.5 },
+      { label: '<4.0', fn: y => y < 4.0 }
+    ];
+
+    eras.forEach(era => {
+      const eraRBs = players.filter(p => p.pos === 'RB' && p.ypc != null && p.draftYr && era.fn(p.draftYr));
+      if (eraRBs.length < 5) return;
+      const t = thresholds.RB;
+
+      console.log('%c\nRB YPC — ' + era.label + ' (n=' + eraRBs.length + ')', 'color: ' + era.color + '; font-weight: bold');
+      console.log('  YPC Range        N    Elite  Hit    Start  NFL AvgPPG');
+
+      ypcRanges.forEach(range => {
+        const group = eraRBs.filter(p => range.fn(p.ypc));
+        if (!group.length) return;
+        const n = group.length;
+        const elite = group.filter(p => p.bestPpg >= t.elite).length;
+        const hit = group.filter(p => p.bestPpg >= t.hit).length;
+        const starter = group.filter(p => p.bestPpg >= t.starter).length;
+        const avgPpg = (group.reduce((s, p) => s + p.bestPpg, 0) / n).toFixed(1);
+        const top = [...group].sort((a, b) => b.bestPpg - a.bestPpg).slice(0, 2).map(p => p.name + '(' + p.ypc + ')').join(', ');
+        console.log('  ' + range.label.padEnd(16) + ('' + n).padStart(4) + '    ' +
+          ((elite / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+          ((hit / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+          ((starter / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+          ('' + avgPpg).padStart(6) + '  ' + top);
+      });
+    });
+
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 8: YARDS PER RECEPTION (WR/TE) vs NFL SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    const yprRanges = [
+      { label: '18.0+ YPR', fn: y => y >= 18.0 },
+      { label: '16.0-17.99', fn: y => y >= 16.0 && y < 18.0 },
+      { label: '14.0-15.99', fn: y => y >= 14.0 && y < 16.0 },
+      { label: '12.0-13.99', fn: y => y >= 12.0 && y < 14.0 },
+      { label: '10.0-11.99', fn: y => y >= 10.0 && y < 12.0 },
+      { label: '8.0-9.99', fn: y => y >= 8.0 && y < 10.0 },
+      { label: '<8.0', fn: y => y < 8.0 }
+    ];
+
+    ['WR', 'TE'].forEach(pos => {
+      const t = thresholds[pos];
+      eras.forEach(era => {
+        const eraPlayers = players.filter(p => p.pos === pos && p.ypr != null && p.draftYr && era.fn(p.draftYr));
+        if (eraPlayers.length < 5) return;
+
+        console.log('%c\n' + pos + ' YPR — ' + era.label + ' (n=' + eraPlayers.length + ')', 'color: ' + era.color + '; font-weight: bold');
+        console.log('  YPR Range        N    Elite  Hit    Start  NFL AvgPPG');
+
+        yprRanges.forEach(range => {
+          const group = eraPlayers.filter(p => range.fn(p.ypr));
+          if (!group.length) return;
+          const n = group.length;
+          const elite = group.filter(p => p.bestPpg >= t.elite).length;
+          const hit = group.filter(p => p.bestPpg >= t.hit).length;
+          const starter = group.filter(p => p.bestPpg >= t.starter).length;
+          const avgPpg = (group.reduce((s, p) => s + p.bestPpg, 0) / n).toFixed(1);
+          const top = [...group].sort((a, b) => b.bestPpg - a.bestPpg).slice(0, 2).map(p => p.name + '(' + p.ypr + ')').join(', ');
+          console.log('  ' + range.label.padEnd(16) + ('' + n).padStart(4) + '    ' +
+            ((elite / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((hit / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((starter / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ('' + avgPpg).padStart(6) + '  ' + top);
         });
       });
     });

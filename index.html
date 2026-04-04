@@ -13896,19 +13896,24 @@ window.fmtHeight = fmtHeight;
     // Returns 0-100
 
     if (pos === 'QB') {
-      // QBs: height is primary threshold, weight validates durability for the frame
+      // QBs: height is the primary physical trait — taller QBs see the field better,
+      // throw over the line, and have dramatically higher hit rates.
       // Ideal builds: Mahomes 6'3"/225, Allen 6'5"/237, Burrow 6'4"/215, Herbert 6'6"/236
       if (ht == null) return wt != null && wt >= 210 && wt <= 240 ? 60 : null;
 
-      // Height tier score (threshold-based)
+      // Height score — steep curve reflecting real NFL bias and hit rate data
       // DATA: Modern QB - 6'4"+ at 58% starter, 6'2"-6'3" at 37%, 6'0"-6'1" at 28%
+      // The 6'4"+ hit rate is 2x the 6'0"-6'1" rate — the curve should reflect that
       let htScore;
-      if (ht >= 76) htScore = 90;        // 6'4"+ — highest hit rate in modern era (58%)
-      else if (ht >= 74) htScore = 75;    // 6'2"-6'3" — solid (37%)
-      else if (ht >= 73) htScore = 60;    // 6'1" — moderate (28% bucket)
-      else if (ht >= 72) htScore = 50;    // 6'0" — concern
-      else if (ht >= 70) htScore = 30;    // 5'10"-5'11" — real risk
-      else htScore = 15;                   // Under 5'10" — major red flag
+      if (ht >= 78) htScore = 100;       // 6'6"+ — elite size (Herbert, Allen frame)
+      else if (ht >= 77) htScore = 97;   // 6'5" — ideal (Allen 6'5")
+      else if (ht >= 76) htScore = 93;   // 6'4" — premium (Burrow, Lawrence)
+      else if (ht >= 75) htScore = 85;   // 6'3" — strong (Mahomes, Stroud)
+      else if (ht >= 74) htScore = 72;   // 6'2" — acceptable (Ward)
+      else if (ht >= 73) htScore = 55;   // 6'1" — below ideal, workable (Lamar)
+      else if (ht >= 72) htScore = 38;   // 6'0" — real concern
+      else if (ht >= 70) htScore = 20;   // 5'10"-5'11" — major red flag (Kyler exception)
+      else htScore = 8;                   // Under 5'10" — historically almost never works
 
       if (wt == null) return htScore;
 

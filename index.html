@@ -4206,46 +4206,68 @@ function buildCareerTable(d, scoringFormat) {
   return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-function _getCollegeStats(name) {
+function _getCollegeStats(name, pos) {
   if (typeof COLLEGE_STATS === 'undefined') return null;
   let cs = COLLEGE_STATS[name];
-  if (cs) return cs;
-  // Explicit alias map
-  const _CSA = {
-    'Mitchell Trubisky': 'Mitch Trubisky','Mitch Trubisky': 'Mitchell Trubisky',
-    'A.J. Green': 'AJ Green','AJ Green': 'A.J. Green',
-    'Marvin Harrison Jr.': 'Marvin Harrison Jr','Marvin Harrison Jr': 'Marvin Harrison Jr.',
-    'D.K. Metcalf': 'DK Metcalf','DK Metcalf': 'D.K. Metcalf',
-    'D.J. Moore': 'DJ Moore','DJ Moore': 'D.J. Moore',
-    'A.J. Brown': 'AJ Brown','AJ Brown': 'A.J. Brown',
-    'C.J. Stroud': 'CJ Stroud','CJ Stroud': 'C.J. Stroud',
-    'D.J. Uiagalelei': 'DJ Uiagalelei','DJ Uiagalelei': 'D.J. Uiagalelei',
-    'J.J. McCarthy': 'JJ McCarthy','JJ McCarthy': 'J.J. McCarthy'
-  };
-  if (_CSA[name]) cs = COLLEGE_STATS[_CSA[name]];
-  if (cs) return cs;
-  // Try without dots
-  const noDots = name.replace(/\./g, '');
-  if (noDots !== name) cs = COLLEGE_STATS[noDots];
-  if (cs) return cs;
-  // Try adding dots
-  const withDots = name.replace(/\b([A-Z])([A-Z])\b/g, '$1.$2.');
-  if (withDots !== name) cs = COLLEGE_STATS[withDots];
-  if (cs) return cs;
-  // Try without suffix
-  const noSuffix = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
-  if (noSuffix !== name) cs = COLLEGE_STATS[noSuffix];
-  if (cs) return cs;
-  // Try adding Jr.
-  if (!/\s+(Jr|Sr|II|III|IV|V)\.?$/i.test(name)) {
-    cs = COLLEGE_STATS[name + ' Jr.'] || COLLEGE_STATS[name + ' Jr'];
+  if (!cs) {
+    // Explicit alias map
+    const _CSA = {
+      'Mitchell Trubisky': 'Mitch Trubisky','Mitch Trubisky': 'Mitchell Trubisky',
+      'A.J. Green': 'AJ Green','AJ Green': 'A.J. Green',
+      'Marvin Harrison Jr.': 'Marvin Harrison Jr','Marvin Harrison Jr': 'Marvin Harrison Jr.',
+      'D.K. Metcalf': 'DK Metcalf','DK Metcalf': 'D.K. Metcalf',
+      'D.J. Moore': 'DJ Moore','DJ Moore': 'D.J. Moore',
+      'A.J. Brown': 'AJ Brown','AJ Brown': 'A.J. Brown',
+      'C.J. Stroud': 'CJ Stroud','CJ Stroud': 'C.J. Stroud',
+      'D.J. Uiagalelei': 'DJ Uiagalelei','DJ Uiagalelei': 'D.J. Uiagalelei',
+      'J.J. McCarthy': 'JJ McCarthy','JJ McCarthy': 'J.J. McCarthy'
+    };
+    if (_CSA[name]) cs = COLLEGE_STATS[_CSA[name]];
+    if (!cs) {
+      const noDots = name.replace(/\./g, '');
+      if (noDots !== name) cs = COLLEGE_STATS[noDots];
+    }
+    if (!cs) {
+      const withDots = name.replace(/\b([A-Z])([A-Z])\b/g, '$1.$2.');
+      if (withDots !== name) cs = COLLEGE_STATS[withDots];
+    }
+    if (!cs) {
+      const noSuffix = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+      if (noSuffix !== name) cs = COLLEGE_STATS[noSuffix];
+    }
+    if (!cs && !/\s+(Jr|Sr|II|III|IV|V)\.?$/i.test(name)) {
+      cs = COLLEGE_STATS[name + ' Jr.'] || COLLEGE_STATS[name + ' Jr'];
+    }
   }
-  return cs || null;
+  if (!cs || !cs.length) return null;
+
+  // Position-based collision detection — reject stats that belong to a different player
+  // Infer position from argument, or look up from D array
+  let p = pos;
+  if (!p) {
+    const dEntry = (typeof D !== 'undefined') ? D.find(x => x.n === name) : null;
+    if (dEntry) p = dEntry.s;
+  }
+  if (p === 'QB') {
+    // QB must have at least one season with meaningful passing yards
+    if (!cs.some(s => (s.py || 0) > 200)) return null;
+  } else if (p === 'RB') {
+    // RB must have rushing stats; if only passing stats, wrong player
+    const hasPassing = cs.some(s => (s.py || 0) > 1000);
+    const hasRushing = cs.some(s => (s.ry || 0) > 50 || (s.ra || 0) > 10);
+    if (hasPassing && !hasRushing) return null;
+  } else if (p === 'WR' || p === 'TE') {
+    // WR/TE must have receiving; if only passing stats, wrong player
+    const hasPassing = cs.some(s => (s.py || 0) > 1000);
+    const hasReceiving = cs.some(s => (s.rcy || 0) > 50 || (s.rec || 0) > 5);
+    if (hasPassing && !hasReceiving) return null;
+  }
+  return cs;
 }
 
 function buildCollegeTable(d, scoringFormat) {
   if (typeof COLLEGE_STATS === 'undefined') return '';
-  const stats = _getCollegeStats(d.n);
+  const stats = _getCollegeStats(d.n, d.s);
   if (!stats || !stats.length) return '';
   const pos = d.s || 'WR';
   const isQB = pos === 'QB';
@@ -4711,7 +4733,7 @@ function openPlayerCard(d) {
           ${cb.hof ? `<div class="card-rank-box"><div class="lbl">Hall of Fame</div><div class="num" style="color:var(--green)">HOF</div></div>` : ''}
         </div>
       </div>` : ''}
-      ${_getCollegeStats(d.n) ? `<div class="card-section">
+      ${_getCollegeStats(d.n, d.s) ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="collegeLogLabel">College Career Log (Half PPR)</span>
           <div class="career-log-controls">
@@ -4749,7 +4771,7 @@ function openPlayerCard(d) {
           <div class="card-stat"><span class="card-stat-label">Position</span><span class="card-stat-value">${d.s}</span></div>
         </div>
       </div>
-      ${_getCollegeStats(d.n) ? `<div class="card-section">
+      ${_getCollegeStats(d.n, d.s) ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="collegeLogLabel">College Career Log (Half PPR)</span>
           <div class="career-log-controls">

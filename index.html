@@ -4215,7 +4215,7 @@ function buildCollegeTable(d, scoringFormat) {
   const withFpts = stats.map(s => {
     const fpts = _cfpts(s);
     let gp = s.gp || null;
-    if (!gp && weeklyData && weeklyData[s.yr]) gp = weeklyData[s.yr].length;
+    if (!gp && weeklyData && weeklyData[s.yr]) gp = _filterCollegeWeeks(weeklyData[s.yr]).length;
     const ppg = (gp && gp > 0) ? Math.round((fpts / gp) * 10) / 10 : null;
     return {...s, fpts, gp, ppg};
   });
@@ -4287,7 +4287,7 @@ function buildCollegeTable(d, scoringFormat) {
 
 function buildCollegeWeeklyTable(d, season, scoringFormat) {
   if (typeof COLLEGE_WEEKLY === 'undefined' || !COLLEGE_WEEKLY[d.n]) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
-  const weeks = COLLEGE_WEEKLY[d.n][season];
+  const weeks = _filterCollegeWeeks(COLLEGE_WEEKLY[d.n][season]);
   if (!weeks || !weeks.length) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
   const pos = d.s || 'WR';
   const isQB = pos === 'QB';
@@ -4352,6 +4352,35 @@ function getCollegeWeeklySeasons(d) {
 }
 
 function fmtHeight(h) {
+  if (!h) return '—';
+  const inches = parseInt(h);
+  if (isNaN(inches)) return h;
+  return Math.floor(inches/12) + "'" + (inches%12) + '"';
+}
+
+// College weekly data sanity check — filters out obviously broken stat lines
+// Max realistic college fantasy game: ~65 pts (7 passing TDs + rushing stats)
+// Anything over 70 is almost certainly bad data (season totals in week 1, etc.)
+function _isValidCollegeWeek(w) {
+  if (!w) return false;
+  if ((w.py || 0) > 800) return false;    // No one throws 800+ yards in a game
+  if ((w.ry || 0) > 500) return false;    // No one rushes 500+ yards in a game
+  if ((w.rcy || 0) > 400) return false;   // No one receives 400+ yards in a game
+  if ((w.ptd || 0) > 10) return false;    // 10+ passing TDs is impossible
+  if ((w.rtd || 0) > 8) return false;     // 8+ rushing TDs is impossible
+  if ((w.rctd || 0) > 6) return false;    // 6+ receiving TDs is impossible
+  if ((w.rec || 0) > 25) return false;    // 25+ receptions is impossible
+  if ((w.ra || 0) > 50) return false;     // 50+ rush attempts is impossible
+  if ((w.pa || 0) > 80) return false;     // 80+ pass attempts is impossible
+  return true;
+}
+
+function _filterCollegeWeeks(weeks) {
+  if (!weeks || !weeks.length) return weeks;
+  return weeks.filter(_isValidCollegeWeek);
+}
+
+function openPlayerCard(d) {
   if (!h) return '—';
   const inches = parseInt(h);
   if (isNaN(inches)) return h;
@@ -14236,7 +14265,7 @@ window.fmtHeight = fmtHeight;
         cs.forEach(s => {
           const fp = cfpts(s);
           let gp = s.gp || null;
-          if (!gp && weeklyData && weeklyData[s.yr]) gp = weeklyData[s.yr].length;
+          if (!gp && weeklyData && weeklyData[s.yr]) gp = _filterCollegeWeeks(weeklyData[s.yr]).length;
           if (gp) totalGp += gp;
           totFpts += fp;
           if (fp > bestFpts) bestFpts = fp;
@@ -15538,10 +15567,11 @@ window.fmtHeight = fmtHeight;
     positions.forEach(pos => {
       const t = thresholds[pos];
       const threshList = testThresholds[pos];
-      // Get modern players with college stats
-      const posPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2010);
+      // Get players with college stats (required for breakout analysis)
+      const posPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2010 && p.collegeSeasons && p.collegeSeasons.length > 0);
 
-      console.log('%c\n' + pos + ' Breakout Threshold Test (n=' + posPlayers.length + ', 2010+)', 'color: #22c55e; font-weight: bold; font-size: 13px');
+      console.log('%c\n' + pos + ' Breakout Threshold Test (n=' + posPlayers.length + ' with college stats, 2010+)', 'color: #22c55e; font-weight: bold; font-size: 13px');
+      if (!posPlayers.length) { console.log('  No players with college season data found'); return; }
       console.log('  Threshold    Broke Out   No Breakout   BO Starter%   No-BO Starter%   GAP     BO Elite%   No-BO Elite%   Elite GAP   Avg BO Age');
 
       threshList.forEach(thresh => {
@@ -15551,8 +15581,6 @@ window.fmtHeight = fmtHeight;
         let totalBoAge = 0, boAgeCount = 0;
 
         posPlayers.forEach(p => {
-          if (!p.collegeSeasons || !p.collegeSeasons.length) return;
-
           let brokeOut = false;
           let earliestBoAge = null;
 
@@ -15581,7 +15609,11 @@ window.fmtHeight = fmtHeight;
           }
         });
 
-        if (boPlayers < 3 || noBoPlayers < 3) return;
+        if (boPlayers < 3 || noBoPlayers < 3) {
+          if (boPlayers + noBoPlayers === 0) return; // truly no data
+          console.log('  ' + (thresh + ' PPG').padEnd(14) + ('' + boPlayers).padStart(5) + '       ' + ('' + noBoPlayers).padStart(5) + '    (too few in one group)');
+          return;
+        }
 
         const boPct = (boStarters / boPlayers * 100).toFixed(0);
         const noBoPct = (noBoStarters / noBoPlayers * 100).toFixed(0);

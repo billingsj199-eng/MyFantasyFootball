@@ -13291,10 +13291,10 @@ window.fmtHeight = fmtHeight;
   // Each component outputs a 0-100 sub-score, then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.15, breakout: 0.10, prod: 0.27, conf: 0.07, ras: 0.07, dc: 0.23, tm: 0.05, size: 0.06, eff: 0.00 },
-    RB:  { age: 0.16, breakout: 0.11, prod: 0.22, conf: 0.06, ras: 0.11, dc: 0.17, tm: 0.05, size: 0.05, eff: 0.07 },
-    WR:  { age: 0.15, breakout: 0.15, prod: 0.23, conf: 0.07, ras: 0.09, dc: 0.13, tm: 0.05, size: 0.07, eff: 0.06 },
-    TE:  { age: 0.11, breakout: 0.13, prod: 0.24, conf: 0.07, ras: 0.14, dc: 0.11, tm: 0.05, size: 0.08, eff: 0.07 }
+    QB:  { age: 0.15, breakout: 0.10, prod: 0.27, conf: 0.07, ras: 0.09, dc: 0.22, tm: 0.04, size: 0.03, eff: 0.03 },
+    RB:  { age: 0.18, breakout: 0.12, prod: 0.22, conf: 0.06, ras: 0.14, dc: 0.15, tm: 0.04, size: 0.03, eff: 0.06 },
+    WR:  { age: 0.15, breakout: 0.16, prod: 0.23, conf: 0.07, ras: 0.07, dc: 0.13, tm: 0.04, size: 0.05, eff: 0.06 },
+    TE:  { age: 0.12, breakout: 0.14, prod: 0.22, conf: 0.07, ras: 0.15, dc: 0.10, tm: 0.04, size: 0.06, eff: 0.10 }
   };
 
   // Conference tiers — DATA-DRIVEN from era analysis
@@ -13742,11 +13742,18 @@ window.fmtHeight = fmtHeight;
   // Ceiling weights shift emphasis: production & athleticism matter MORE for elite,
   // draft capital & conference matter LESS
 
+  // CEILING WEIGHTS (30% of JM) — calibrated from Section 10 gap analysis
+  // Key findings from generational vs bust gaps:
+  //   QB: RAS 44% gap (#1), DC 82% gap (#2), Age 7% gap
+  //   RB: RAS 45% gap (#1), DC 72% gap, YPC 12% gap, Age 7%
+  //   WR: DC 63% gap (#1), YPR 10% gap, RAS only 5%! Height INVERSE
+  //   TE: YPR 41% gap (#1!), RAS 11% gap, DC only 31%
+
   const JM_CEILING_WEIGHTS = {
-    QB:  { age: 0.14, breakout: 0.12, prod: 0.32, conf: 0.04, ras: 0.10, dc: 0.18, tm: 0.04, size: 0.04, eff: 0.02 },
-    RB:  { age: 0.20, breakout: 0.14, prod: 0.28, conf: 0.03, ras: 0.14, dc: 0.10, tm: 0.03, size: 0.03, eff: 0.05 },
-    WR:  { age: 0.18, breakout: 0.20, prod: 0.28, conf: 0.03, ras: 0.12, dc: 0.07, tm: 0.04, size: 0.04, eff: 0.04 },
-    TE:  { age: 0.14, breakout: 0.16, prod: 0.28, conf: 0.04, ras: 0.18, dc: 0.06, tm: 0.04, size: 0.06, eff: 0.04 }
+    QB:  { age: 0.12, breakout: 0.10, prod: 0.28, conf: 0.03, ras: 0.18, dc: 0.15, tm: 0.03, size: 0.03, eff: 0.08 },
+    RB:  { age: 0.18, breakout: 0.14, prod: 0.20, conf: 0.02, ras: 0.20, dc: 0.10, tm: 0.03, size: 0.05, eff: 0.08 },
+    WR:  { age: 0.10, breakout: 0.18, prod: 0.22, conf: 0.03, ras: 0.05, dc: 0.14, tm: 0.03, size: 0.03, eff: 0.12 },
+    TE:  { age: 0.10, breakout: 0.14, prod: 0.18, conf: 0.03, ras: 0.18, dc: 0.05, tm: 0.03, size: 0.05, eff: 0.24 }
   };
 
   function calcJM(p) {
@@ -13801,8 +13808,11 @@ window.fmtHeight = fmtHeight;
     const floorRaw = floorSum / floorWeight;
     const ceilRaw = ceilWeight > 0 ? ceilSum / ceilWeight : floorRaw;
 
-    // Blend: 70% floor, 30% ceiling
-    const blended = floorRaw * 0.70 + ceilRaw * 0.30;
+    // Blend: 60% floor, 40% ceiling
+    // Fantasy is about finding league-winners, not just starters.
+    // The ceiling factors (RAS for QB/RB, YPR for TE, breakout for WR) showed
+    // clear separation between generational and merely good in the tier analysis.
+    const blended = floorRaw * 0.60 + ceilRaw * 0.40;
 
     // Games played bonus/penalty
     let gpAdj = 0;

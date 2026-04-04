@@ -8850,6 +8850,7 @@ window.LEGEND_BIRTH_YEARS={
 "Martellus Bennett":"1987-03-10",
 "Marty Booker":"1976-07-31",
 "Marvin Harrison Sr.":"1972-08-25",
+"Marvin Harrison":"2002-08-16",
 "Matt Cassel":"1982-05-17",
 "Matt Forte":"1985-12-10",
 "Matt Hasselbeck":"1975-09-25",
@@ -14280,7 +14281,15 @@ window.fmtHeight = fmtHeight;
   // Get birth info — prefer exact date strings over integer approximations
   function getBirth(name) {
     if (typeof LEGEND_BIRTH_YEARS !== 'undefined') {
-      const lb = LEGEND_BIRTH_YEARS[name];
+      let lb = LEGEND_BIRTH_YEARS[name];
+      // Suffix alias fallback
+      if (!lb) {
+        const noSuffix = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+        if (noSuffix !== name) lb = LEGEND_BIRTH_YEARS[noSuffix];
+        if (!lb && !/\s+(Jr|Sr|II|III|IV|V)\.?$/i.test(name)) {
+          lb = LEGEND_BIRTH_YEARS[name + ' Jr.'] || LEGEND_BIRTH_YEARS[name + ' Jr'];
+        }
+      }
       if (lb) return lb;
     }
     const d = D.find(p => p.n === name);

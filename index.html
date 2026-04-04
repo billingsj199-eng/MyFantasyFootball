@@ -13493,10 +13493,10 @@ window.fmtHeight = fmtHeight;
   // Each component outputs a 0-100 sub-score (except DC: 0-1000), then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.15, breakout: 0.12, prod: 0.25, conf: 0.06, ras: 0.10, dc: 0.12, tm: 0.04, size: 0.03, eff: 0.00, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.08, nflYrr: 0.00 },
-    RB:  { age: 0.15, breakout: 0.12, prod: 0.19, conf: 0.05, ras: 0.11, dc: 0.12, tm: 0.04, size: 0.03, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00 },
-    WR:  { age: 0.14, breakout: 0.15, prod: 0.18, conf: 0.06, ras: 0.06, dc: 0.12, tm: 0.04, size: 0.04, eff: 0.03, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.08 },
-    TE:  { age: 0.10, breakout: 0.13, prod: 0.18, conf: 0.06, ras: 0.13, dc: 0.12, tm: 0.04, size: 0.05, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.04 }
+    QB:  { age: 0.15, breakout: 0.12, prod: 0.23, conf: 0.06, ras: 0.10, dc: 0.12, tm: 0.04, size: 0.03, eff: 0.00, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.08, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.02, qbCtx: 0.00 },
+    RB:  { age: 0.14, breakout: 0.11, prod: 0.17, conf: 0.05, ras: 0.10, dc: 0.12, tm: 0.04, size: 0.03, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.00 },
+    WR:  { age: 0.13, breakout: 0.14, prod: 0.15, conf: 0.05, ras: 0.05, dc: 0.12, tm: 0.04, size: 0.04, eff: 0.03, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.07, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 },
+    TE:  { age: 0.09, breakout: 0.12, prod: 0.14, conf: 0.05, ras: 0.12, dc: 0.12, tm: 0.04, size: 0.05, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.04, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 }
   };
 
   // Conference tiers — DATA-DRIVEN from era analysis
@@ -14095,6 +14095,85 @@ window.fmtHeight = fmtHeight;
     return Math.max(0, yrr / 1.0 * 30);
   }
 
+  // Sub-score: Dominator Rating (% of team TDs scored by prospect) → 0-100
+  // Different from market share (yards). A player who scores 40%+ of his team's
+  // touchdowns is the undisputed red zone weapon — translates directly to fantasy.
+  // WR/TE = (player rec TDs + rush TDs) / (all WR+TE+RB TDs on team)
+  // RB = (player rush TDs + rec TDs) / (all RB TDs on team)
+  // QB = null (QBs throw TDs, they don't "dominate" the same way)
+  function jmDominator(domRate, pos) {
+    if (domRate == null || pos === 'QB') return null;
+    // domRate is 0.0-1.0 (fraction of team-level TDs)
+    if (pos === 'RB') {
+      // RB: 50%+ of RB TDs = bellcow, 35% = good, <20% = committee
+      if (domRate >= 0.60) return 100;
+      if (domRate >= 0.50) return 85 + (domRate - 0.50) / 0.10 * 15;
+      if (domRate >= 0.35) return 55 + (domRate - 0.35) / 0.15 * 30;
+      if (domRate >= 0.20) return 25 + (domRate - 0.20) / 0.15 * 30;
+      return Math.max(5, domRate / 0.20 * 25);
+    }
+    // WR/TE: 35%+ of WR+TE TDs = alpha, 25% = good, <15% = depth
+    if (domRate >= 0.45) return 100;
+    if (domRate >= 0.35) return 85 + (domRate - 0.35) / 0.10 * 15;
+    if (domRate >= 0.25) return 55 + (domRate - 0.25) / 0.10 * 30;
+    if (domRate >= 0.15) return 25 + (domRate - 0.15) / 0.10 * 30;
+    return Math.max(5, domRate / 0.15 * 25);
+  }
+
+  // Sub-score: Early Declare → 0-100
+  // A player who left college after 2-3 seasons with strong production is a
+  // fundamentally different prospect than a 4-5 year senior. Early declares
+  // are typically more talented — they had nothing left to prove.
+  // Uses college season count + age + production to determine declare quality.
+  function jmEarlyDeclare(numSeasons, age, bestPpg, pos) {
+    if (numSeasons == null || numSeasons < 1) return null;
+    const prodThresh = { QB: 18, RB: 12, WR: 10, TE: 7 };
+    const thresh = prodThresh[pos] || 10;
+    const hadProd = bestPpg != null && bestPpg >= thresh;
+    const wasYoung = age != null && age <= 21.5;
+
+    // 2 seasons + productive + young = true early declare (best signal)
+    if (numSeasons <= 2) {
+      if (hadProd && wasYoung) return 100;
+      if (hadProd) return 85;
+      if (wasYoung) return 70;
+      return 55; // 2 seasons but limited production — transferred or injury?
+    }
+    // 3 seasons = standard early declare (still good)
+    if (numSeasons === 3) {
+      if (hadProd && wasYoung) return 80;
+      if (hadProd) return 65;
+      return 45;
+    }
+    // 4 seasons = typical graduate
+    if (numSeasons === 4) {
+      return hadProd ? 35 : 25;
+    }
+    // 5+ seasons = super senior / grad transfer — needed extra time
+    return Math.max(10, 20 - (numSeasons - 4) * 5);
+  }
+
+  // Sub-score: QB Context (quality of QB throwing to WR/TE) → 0-100
+  // A WR who produced with a bad QB is a stronger prospect than one who
+  // padded stats with a Heisman-winning passer. This inverts the normal
+  // teammate logic: WORSE QB = BETTER score for the pass catcher.
+  // Only applies to WR and TE.
+  function jmQbContext(qbDrVal, pos) {
+    if ((pos !== 'WR' && pos !== 'TE') || qbDrVal == null) return null;
+    // qbDrVal = best QB teammate's draft value (overall pick estimate)
+    // Lower pick = better QB = LOWER score for the WR/TE (production was inflated)
+    // Higher pick / UDFA = worse QB = HIGHER score (production was earned)
+    if (qbDrVal >= 260) return 95;       // UDFA QB — production fully earned
+    if (qbDrVal >= 150) return 85;       // Day 3 QB — minimal help
+    if (qbDrVal >= 100) return 70;       // Round 3 QB — moderate context
+    if (qbDrVal >= 65) return 60;        // Late R2 QB — decent passer
+    if (qbDrVal >= 33) return 50;        // R2 QB — good passer, some inflation
+    if (qbDrVal >= 16) return 40;        // Mid R1 QB — strong passer
+    if (qbDrVal >= 6) return 30;         // Top 10 QB — significant inflation risk
+    if (qbDrVal >= 1) return 20;         // Top 5 QB — stats heavily inflated
+    return 50; // unknown
+  }
+
   // Calculate final JM Score
   // Blends FLOOR (starter hit rate, 70%) and CEILING (elite hit rate, 30%)
   // Floor weights = JM_WEIGHTS (calibrated to starter rates)
@@ -14109,10 +14188,10 @@ window.fmtHeight = fmtHeight;
   //   TE: YPR 41% gap (#1!), RAS 11% gap, DC only 31%
 
   const JM_CEILING_WEIGHTS = {
-    QB:  { age: 0.11, breakout: 0.11, prod: 0.24, conf: 0.03, ras: 0.16, dc: 0.12, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.09, nflYrr: 0.00 },
-    RB:  { age: 0.15, breakout: 0.13, prod: 0.18, conf: 0.02, ras: 0.16, dc: 0.12, tm: 0.03, size: 0.04, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.02, qbRush: 0.00, nflYrr: 0.00 },
-    WR:  { age: 0.09, breakout: 0.19, prod: 0.19, conf: 0.03, ras: 0.04, dc: 0.12, tm: 0.03, size: 0.02, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.14 },
-    TE:  { age: 0.08, breakout: 0.12, prod: 0.14, conf: 0.03, ras: 0.14, dc: 0.12, tm: 0.03, size: 0.04, eff: 0.13, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.07 }
+    QB:  { age: 0.11, breakout: 0.11, prod: 0.22, conf: 0.03, ras: 0.16, dc: 0.12, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.09, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.02, qbCtx: 0.00 },
+    RB:  { age: 0.14, breakout: 0.12, prod: 0.16, conf: 0.02, ras: 0.15, dc: 0.12, tm: 0.03, size: 0.04, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.02, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.00 },
+    WR:  { age: 0.08, breakout: 0.15, prod: 0.17, conf: 0.03, ras: 0.04, dc: 0.12, tm: 0.03, size: 0.02, eff: 0.05, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.13, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 },
+    TE:  { age: 0.07, breakout: 0.11, prod: 0.11, conf: 0.03, ras: 0.13, dc: 0.12, tm: 0.03, size: 0.04, eff: 0.12, mktShare: 0.05, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.06, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 }
   };
 
   function calcJM(p) {
@@ -14138,6 +14217,9 @@ window.fmtHeight = fmtHeight;
     const rbRecScore = jmRbReceiving(p.recPg, p.pos);
     const qbRushScore = jmQbRushing(p.qbRushFppg, p.pos);
     const nflYrrScore = jmNflYrr(p.nflYrr, p.pos);
+    const dominatorScore = jmDominator(p.domRate, p.pos);
+    const earlyDecScore = jmEarlyDeclare(p.numSeasons, p.age, p.bestPpg, p.pos);
+    const qbCtxScore = jmQbContext(p.qbDrVal, p.pos);
 
     // === ELITE PROSPECT MISSING DATA HANDLING ===
     // High draft capital players who skip the combine or have limited college data
@@ -14163,7 +14245,10 @@ window.fmtHeight = fmtHeight;
       { key: 'improve', score: improveScore },
       { key: 'rbRec', score: rbRecScore },
       { key: 'qbRush', score: qbRushScore },
-      { key: 'nflYrr', score: nflYrrScore }
+      { key: 'nflYrr', score: nflYrrScore },
+      { key: 'dominator', score: dominatorScore },
+      { key: 'earlyDec', score: earlyDecScore },
+      { key: 'qbCtx', score: qbCtxScore }
     ];
 
     // Calculate floor score (starter rate calibrated)
@@ -14180,7 +14265,7 @@ window.fmtHeight = fmtHeight;
 
     // Data coverage: what % of the total weight do we actually have data for?
     const dataCoverage = totalPossibleWeight > 0 ? Math.round((floorWeight / totalPossibleWeight) * 100) : 0;
-    // Count how many of the 14 components have data
+    // Count how many of the 17 components have data
     const dataCount = scores.filter(s => s.score != null).length;
 
     // Calculate ceiling score (elite rate calibrated)
@@ -14374,7 +14459,7 @@ window.fmtHeight = fmtHeight;
     }
 
     const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj) * 10) / 10));
-    // Low confidence if less than 50% of weight has data, or fewer than 5 of 14 components
+    // Low confidence if less than 50% of weight has data, or fewer than 5 of 17 components
     const lowConfidence = dataCoverage < 50 || dataCount < 5;
 
     return { jm: final, bustAdj, sleeperAdj, dataCoverage, dataCount, lowConfidence };
@@ -15201,6 +15286,59 @@ window.fmtHeight = fmtHeight;
         nflYrr = dPlayer._yrr;
       }
 
+      // 6) Dominator Rating: % of team TDs scored by this prospect
+      // Uses _tmIndex to find all teammates, cross-references COLLEGE_STATS for their TDs
+      let domRate = null;
+      if (cs && cs.length && !_tooFewGames && (pos === 'WR' || pos === 'TE' || pos === 'RB')) {
+        let bestDom = 0;
+        cs.forEach(s => {
+          if (!s.tm || !s.yr) return;
+          const key = _normSchool(s.tm) + '::' + s.yr;
+          const teammates = _tmIndex[key];
+          if (!teammates) return;
+          let myTDs = (pos === 'RB') ? ((s.rtd || 0) + (s.rctd || 0)) : ((s.rctd || 0) + (s.rtd || 0));
+          let teamTDs = 0;
+          const posGroup = (pos === 'RB') ? ['RB'] : ['WR', 'TE'];
+          teammates.forEach(t => {
+            if (posGroup.includes(t.pos)) {
+              const tcs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[t.name] : null;
+              if (tcs) {
+                const tSeason = tcs.find(ts => ts.yr === s.yr && _normSchool(ts.tm || '') === _normSchool(s.tm));
+                if (tSeason) {
+                  if (t.pos === 'RB') teamTDs += (tSeason.rtd || 0) + (tSeason.rctd || 0);
+                  else teamTDs += (tSeason.rctd || 0) + (tSeason.rtd || 0);
+                }
+              }
+            }
+          });
+          if (teamTDs > 0) {
+            const dom = myTDs / teamTDs;
+            if (dom > bestDom) bestDom = dom;
+          }
+        });
+        if (bestDom > 0) domRate = Math.round(bestDom * 1000) / 1000;
+      }
+
+      // 7) Early Declare: number of college seasons played
+      const numSeasons = (cs && cs.length) ? cs.length : null;
+
+      // 8) QB Context: draft value of the best QB teammate (for WR/TE)
+      // Lower drVal = better QB = production was more inflated
+      let qbDrVal = null;
+      if ((pos === 'WR' || pos === 'TE') && cs && cs.length) {
+        let bestQbDr = 999;
+        cs.forEach(s => {
+          if (!s.tm || !s.yr) return;
+          const key = _normSchool(s.tm) + '::' + s.yr;
+          const teammates = _tmIndex[key];
+          if (!teammates) return;
+          teammates.forEach(t => {
+            if (t.pos === 'QB' && t.drVal < bestQbDr) bestQbDr = t.drVal;
+          });
+        });
+        if (bestQbDr < 999) qbDrVal = bestQbDr;
+      }
+
       const prospectRecord = {
         name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,
         dr, breakoutAge, breakoutPpg, boThresh, tm: tmScore, preBreakoutTm, ht: htInches, wt: wt,
@@ -15209,7 +15347,8 @@ window.fmtHeight = fmtHeight;
         pasYpg, rushYpg, recYpg, recPg, tdPg,
         totPtd, totRtd, totRctd, totInt,
         ypc, ypr,
-        mktShare, improvSlope, qbRushFppg, nflYrr
+        mktShare, improvSlope, qbRushFppg, nflYrr,
+        domRate, numSeasons, qbDrVal
       };
       // For 2026 prospects, use Firestore draft capital if available
       if (draftYr === 2026 && _dcCache[name]) {

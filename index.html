@@ -14001,16 +14001,46 @@ window.fmtHeight = fmtHeight;
     const breakoutScore = jmBreakout(p.breakoutAge, p.age, p.pos, p.breakoutPpg, p.boThresh, p.preBreakoutTm);
     const prodScore = jmProduction(p.bestPpg, p.pos);
     const confScore = jmConf(p.lastConf);
-    const rasScore = jmRas(p.ras, p.pos);
+    let rasScore = jmRas(p.ras, p.pos);
     const dcScore = jmDraftCapital(p.dr, p.pos);
     const tmScore = p.tm != null ? Math.min(100, p.tm * 10) : null;
     const sizeScore = jmSize(p.ht, p.wt, p.pos);
     const effScore = jmEfficiency(p.pos, p.ypc, p.ypr);
 
+    // === ELITE PROSPECT MISSING DATA INFERENCE ===
+    // High draft capital players who skip the combine or have limited college data
+    // shouldn't be penalized — NFL teams invested premium picks based on private workouts,
+    // pro days, and film. Missing data ≠ bad data for these players.
+    const _dcPick = (p.dr != null && p.dr !== 'U') ? (typeof p.dr === 'number' ? p.dr : parseInt(p.dr)) : 999;
+    const _isEliteDC = !isNaN(_dcPick) && _dcPick <= 15;
+    const _isYoung = p.age != null && p.age <= 22;
+
+    // Impute RAS for elite picks who skipped combine — teams don't draft top 15
+    // without verifying athleticism. Imputed score is conservative (good, not elite).
+    if (rasScore == null && _isEliteDC) {
+      if (_dcPick <= 5) rasScore = 70;       // Top 5: assume good athlete (~7.5 RAS)
+      else if (_dcPick <= 10) rasScore = 60;  // Top 10: assume above avg (~6.5 RAS)
+      else rasScore = 50;                     // Top 15: assume average (~5.5 RAS)
+    }
+
+    // Impute production for elite DC players when bestPpg is 0 due to missing GP
+    // If they have season totals (totFpts > 0) but no GP data, estimate PPG from totals
+    let adjProdScore = prodScore;
+    if (prodScore === 0 && _isEliteDC && p.totFpts > 0 && (p.gp == null || p.gp === 0)) {
+      // Estimate games per season (typical college season ~12-13 games)
+      const cs = (typeof COLLEGE_STATS !== 'undefined') ? (COLLEGE_STATS[p.name] || COLLEGE_STATS[p.name + ' Jr.'] || COLLEGE_STATS[p.name + ' Jr']) : null;
+      const numSeasons = cs ? cs.length : 1;
+      const estGpPerSeason = 12;
+      const estPpg = p.totFpts / (numSeasons * estGpPerSeason);
+      adjProdScore = jmProduction(estPpg, p.pos);
+      // Discount by 15% since it's estimated, not actual
+      adjProdScore = Math.round(adjProdScore * 0.85);
+    }
+
     const scores = [
       { key: 'age', score: ageScore },
       { key: 'breakout', score: breakoutScore },
-      { key: 'prod', score: prodScore },
+      { key: 'prod', score: adjProdScore },
       { key: 'conf', score: confScore },
       { key: 'ras', score: rasScore },
       { key: 'dc', score: dcScore },
@@ -14062,11 +14092,22 @@ window.fmtHeight = fmtHeight;
     // incomplete data because if we only have <15 games, sample IS small regardless.
     // We don't bonus high GP or penalize high GP because GP tracking is inconsistent
     // across eras and some players have more complete records than others.
+    // EXCEPTION: Elite draft picks who are young get reduced penalty — the team saw enough
+    // in limited reps to invest a premium pick.
     let gpAdj = 0;
     if (p.gp != null) {
       if (p.gp < 15) gpAdj = -3;
       else if (p.gp < 20) gpAdj = -1.5;
+      // Reduce penalty for elite DC + young: team invested despite small sample
+      if (gpAdj < 0 && _isEliteDC && _isYoung) {
+        gpAdj = gpAdj * 0.3; // Reduce by 70%
+      } else if (gpAdj < 0 && _isEliteDC) {
+        gpAdj = gpAdj * 0.5; // Reduce by 50% for elite DC regardless of age
+      }
     }
+    // Also reduce penalty when GP data is completely missing (null) for elite prospects
+    // Missing GP ≠ few GP — it's just incomplete data
+    if (p.gp == null && _isEliteDC) gpAdj = 0;
 
     // Early declare bonus: if player produced at elite level but only played 2-3 college seasons,
     // they were so good they left early — strong upside signal for RB/WR
@@ -14132,6 +14173,26 @@ window.fmtHeight = fmtHeight;
       if (p.ras != null && p.ras < 5.0) bustAdj -= 3;
       // Old + no breakout
       if (isOld && !hasBo) bustAdj -= 5;
+    }
+
+    // ═══ ELITE PROSPECT MISSING DATA MITIGATION ═══
+    // When bust penalties stem from MISSING data (not bad data) and the player has
+    // elite draft capital + young age, reduce the penalty. NFL teams invested a premium
+    // pick — missing college stats ≠ bad prospect, often just incomplete data coverage.
+    // Only mitigate "no breakout" penalties, NOT "late breakout" or other red flags
+    // that come from actual data showing concerning patterns.
+    if (bustAdj < 0 && _isEliteDC && !hasBo) {
+      // Check if breakout is missing due to data gaps vs genuinely no production
+      const _hasProd = p.bestPpg != null && p.bestPpg > 0;
+      const _hasGp = p.gp != null && p.gp > 0;
+      if (!_hasGp || !_hasProd) {
+        // Missing GP or production data — penalties are from data gaps, not red flags
+        if (_isYoung) {
+          bustAdj = Math.round(bustAdj * 0.25); // Reduce by 75% — young + elite DC + data gap
+        } else {
+          bustAdj = Math.round(bustAdj * 0.5);  // Reduce by 50% — elite DC + data gap
+        }
+      }
     }
 
     // ═══ SLEEPER BONUS SYSTEM ═══
@@ -14771,6 +14832,30 @@ window.fmtHeight = fmtHeight;
 
       totFpts = Math.round(totFpts * 10) / 10;
       bestFpts = Math.round(bestFpts * 10) / 10;
+
+      // === ESTIMATE GP WHEN MISSING ===
+      // When GP data is completely missing (totalGp = 0) but we have season fpts,
+      // estimate GP from season totals so bestPpg and breakout age can be calculated.
+      // Uses ~12 games/season as a conservative estimate for FBS.
+      // Only applies if there are actual stats (totFpts > 0) and cs exists.
+      if (totalGp === 0 && totFpts > 0 && cs && cs.length) {
+        const _EST_GP_PER_SEASON = 12;
+        // Re-run per-season PPG/breakout calculations with estimated GP
+        cs.forEach(s => {
+          const fp = cfpts(s);
+          const estGp = _EST_GP_PER_SEASON;
+          totalGp += estGp;
+          const ppg = Math.round((fp / estGp) * 10) / 10;
+          if (ppg > bestPpg) bestPpg = ppg;
+          if (ppg >= boSoftFloor && (!breakoutYr || s.yr < breakoutYr)) {
+            breakoutYr = s.yr;
+            breakoutPpg = ppg;
+          } else if (ppg >= boSoftFloor && breakoutYr === s.yr && ppg > (breakoutPpg || 0)) {
+            breakoutPpg = ppg;
+          }
+        });
+        bestPpg = Math.round(bestPpg * 10) / 10;
+      }
 
       // Minimum games threshold: if total career GP is very low (≤5),
       // the production stats are unreliable and could unfairly penalize the player.

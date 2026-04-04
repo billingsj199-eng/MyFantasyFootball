@@ -10300,7 +10300,7 @@ window.fmtHeight = fmtHeight;
   function _syncDailyKeys() {
     const e = _syncEasternDate();
     return {
-      ep: `ep_${e.y}_${e.m}_${e.d}`,
+      ep: `ep_v3_${e.y}_${e.m}_${e.d}`,
       gwC: `gwd_c_${e.y}_${e.m}_${e.d}`,
       gwAT: `gwd_at_${e.y}_${e.m}_${e.d}`,
       dateStr: `${e.y}-${e.m}-${e.d}`
@@ -13322,6 +13322,14 @@ window.fmtHeight = fmtHeight;
       }
     }
   });
+
+  // Periodic check every 60s — catches cases where the tab stays visible
+  // but the midnight setTimeout was throttled by the browser
+  setInterval(function() {
+    if (easternDateStr(getEasternNow()) !== pageLoadDate) {
+      window.location.reload();
+    }
+  }, 60000);
 })();
 
 // === PROSPECT MODEL PAGE ===

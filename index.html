@@ -2268,7 +2268,7 @@ CLEAR
 <div class="pm-wrapper">
 <div class="pm-header">
 <div class="pm-title">Prospect Model</div>
-<div class="pm-subtitle">JM Score (0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS, draft capital &amp; teammate quality</div>
+<div class="pm-subtitle">JM Score (0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS, draft capital, size &amp; teammate quality</div>
 </div>
 <div class="pm-controls">
 <div class="pm-pos-tabs" id="pmPosTabs">
@@ -13277,20 +13277,22 @@ window.fmtHeight = fmtHeight;
   // COMPONENT WEIGHTS BY POSITION:
   //   Component      QB    RB    WR    TE    Rationale
   //   ─────────────────────────────────────────────────
-  //   Draft Age      15%   18%   15%   10%   RBs degrade fastest; TEs bloom later
-  //   Breakout Age   12%   15%   18%   15%   Early WR breakouts strongly predictive
-  //   Production     30%   28%   28%   28%   Best-season PPG is king at every spot
-  //   Conference     10%    8%   10%   12%   TE scarcity means more non-P5 hits
-  //   RAS             8%   13%   12%   15%   Athleticism matters more for TEs/RBs
-  //   Draft Capital  25%   18%   17%   20%   NFL eval strongest signal for QBs
+  //   Draft Age      14%   16%   14%   10%   RBs degrade fastest; TEs bloom later
+  //   Breakout Age   11%   13%   16%   14%   Early WR breakouts strongly predictive
+  //   Production     27%   26%   25%   25%   Best-season PPG is king at every spot
+  //   Conference     10%    8%   10%   11%   TE scarcity means more non-P5 hits
+  //   RAS             7%   11%   10%   13%   Athleticism matters more for TEs/RBs
+  //   Draft Capital  23%   16%   15%   17%   NFL eval strongest signal for QBs
+  //   Teammates       5%    5%    5%    5%   Talent competition context
+  //   Size            3%    5%    5%    5%   Threshold for QBs, build for skill pos
   //
   // Each component outputs a 0-100 sub-score, then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.14, breakout: 0.11, prod: 0.28, conf: 0.10, ras: 0.08, dc: 0.24, tm: 0.05 },
-    RB:  { age: 0.17, breakout: 0.14, prod: 0.27, conf: 0.08, ras: 0.12, dc: 0.17, tm: 0.05 },
-    WR:  { age: 0.14, breakout: 0.17, prod: 0.26, conf: 0.10, ras: 0.11, dc: 0.16, tm: 0.06 },
-    TE:  { age: 0.10, breakout: 0.14, prod: 0.27, conf: 0.11, ras: 0.14, dc: 0.19, tm: 0.05 }
+    QB:  { age: 0.14, breakout: 0.11, prod: 0.27, conf: 0.10, ras: 0.07, dc: 0.23, tm: 0.05, size: 0.03 },
+    RB:  { age: 0.16, breakout: 0.13, prod: 0.26, conf: 0.08, ras: 0.11, dc: 0.16, tm: 0.05, size: 0.05 },
+    WR:  { age: 0.14, breakout: 0.16, prod: 0.25, conf: 0.10, ras: 0.10, dc: 0.15, tm: 0.05, size: 0.05 },
+    TE:  { age: 0.10, breakout: 0.14, prod: 0.25, conf: 0.11, ras: 0.13, dc: 0.17, tm: 0.05, size: 0.05 }
   };
 
   // Conference tiers based on historical NFL production rates
@@ -13411,6 +13413,88 @@ window.fmtHeight = fmtHeight;
     return Math.max(1, 3 - (pick - 224) * 0.03);         // 225+: 3-1
   }
 
+  // Sub-score: Size/Build → 0-100
+  // QB: Threshold-based — under 6'0" is a red flag, 6'2"+ full credit
+  // RB: Sweet spot 210-230 lbs, penalize very light (<195) and very heavy (>245)
+  // WR: Sweet spot 5'11"-6'3" and 190-215, penalize extremes
+  // TE: Bigger is better — 6'4"+ and 240+ rewarded
+  function jmSize(ht, wt, pos) {
+    if (ht == null && wt == null) return null;
+
+    if (pos === 'QB') {
+      // Threshold model — height is what matters
+      if (ht == null) return null;
+      if (ht >= 76) return 80;      // 6'4"+ — no extra bonus, just full credit
+      if (ht >= 74) return 80;      // 6'2"-6'3" — ideal range (Mahomes, Allen, Burrow)
+      if (ht >= 73) return 70;      // 6'1" — fine (Hurts, Brees)
+      if (ht >= 72) return 55;      // 6'0" — slight concern (Baker)
+      if (ht >= 70) return 30;      // 5'10"-5'11" — real risk (Kyler, Wilson)
+      return 15;                     // Under 5'10" — major red flag (Manziel)
+    }
+
+    if (pos === 'RB') {
+      // Weight is the main driver for RB durability
+      let score = 50;
+      if (wt != null) {
+        if (wt >= 225 && wt <= 235) score = 90;       // Tank sweet spot (Barkley 233, Henry 247)
+        else if (wt >= 215 && wt <= 245) score = 80;  // Solid range (Chubb 227, Kamara 215)
+        else if (wt >= 205 && wt <= 250) score = 65;  // Acceptable
+        else if (wt >= 195) score = 45;                // Light — durability concern
+        else score = 25;                                // Very light — high bust risk
+      }
+      // Height is minor for RBs but extreme short/tall is odd
+      if (ht != null) {
+        if (ht >= 69 && ht <= 74) score += 5;         // 5'9"-6'2" normal RB range
+        else if (ht < 67) score -= 5;                  // Under 5'7" — very small
+        else if (ht > 76) score -= 3;                  // Over 6'4" — unusual, less agile
+      }
+      return Math.max(0, Math.min(100, score));
+    }
+
+    if (pos === 'WR') {
+      let score = 50;
+      // Height: taller is fine, shorter is the real risk
+      // Moss (6'4"), Calvin (6'5"), Evans (6'5"), DK (6'4") — tall WRs dominate
+      // Short WRs have a much lower NFL hit rate
+      if (ht != null) {
+        if (ht >= 76) score = 85;                      // 6'4"+ — elite size (Moss, Calvin, Evans, DK)
+        else if (ht >= 73) score = 80;                 // 6'1"-6'3" — prime range (Jefferson, Chase, Lamb)
+        else if (ht >= 71) score = 75;                 // 5'11"-6'0" — solid (AJ Brown, Diggs)
+        else if (ht >= 69) score = 50;                 // 5'9"-5'10" — risky, need elite speed (Tyreek)
+        else score = 25;                                // Under 5'9" — very low hit rate
+      }
+      // Weight modifier
+      if (wt != null) {
+        if (wt >= 190 && wt <= 225) score += 10;      // Ideal WR weight
+        else if (wt >= 180 && wt <= 235) score += 5;  // Acceptable
+        else if (wt < 175) score -= 10;                // Too light — gets jammed
+      }
+      return Math.max(0, Math.min(100, score));
+    }
+
+    if (pos === 'TE') {
+      let score = 40;
+      // Height: bigger is better for TEs
+      if (ht != null) {
+        if (ht >= 78) score = 90;                      // 6'6"+ — elite size (Pitts)
+        else if (ht >= 76) score = 85;                 // 6'4"-6'5" — ideal (Kelce, Kittle, Andrews)
+        else if (ht >= 74) score = 65;                 // 6'2"-6'3" — average TE
+        else if (ht >= 72) score = 40;                 // 6'0"-6'1" — small for TE
+        else score = 20;                                // Under 6'0" — basically a WR
+      }
+      // Weight: 240+ preferred
+      if (wt != null) {
+        if (wt >= 245 && wt <= 265) score += 10;      // Ideal TE weight
+        else if (wt >= 235) score += 5;                // Solid
+        else if (wt < 225) score -= 10;                // Too light — won't block, less red zone
+        else if (wt > 275) score -= 5;                 // Too heavy — less athletic
+      }
+      return Math.max(0, Math.min(100, score));
+    }
+
+    return null;
+  }
+
   // Calculate final JM Score
   function calcJM(p) {
     const w = JM_WEIGHTS[p.pos];
@@ -13424,6 +13508,7 @@ window.fmtHeight = fmtHeight;
     const dcScore = jmDraftCapital(p.dr);
     // Teammate score is 0-10, scale to 0-100 for weighting
     const tmScore = p.tm != null ? Math.min(100, p.tm * 10) : null;
+    const sizeScore = jmSize(p.ht, p.wt, p.pos);
 
     // Handle missing components: redistribute weight proportionally
     let totalWeight = 0;
@@ -13436,7 +13521,8 @@ window.fmtHeight = fmtHeight;
       { score: confScore, weight: w.conf },
       { score: rasScore, weight: w.ras },
       { score: dcScore, weight: w.dc },
-      { score: tmScore, weight: w.tm }
+      { score: tmScore, weight: w.tm },
+      { score: sizeScore, weight: w.size }
     ];
 
     components.forEach(c => {
@@ -13791,18 +13877,28 @@ window.fmtHeight = fmtHeight;
           const belowRange = t[2] * 0.12;
           return Math.max(0, 5 - (t[2] - val) / belowRange * 5);
         }
-        const drills = [
-          _scoreLow(cb.forty, th.forty),
-          _scoreHigh(cb.vert, th.vert),
-          _scoreHigh(cb.broad, th.broad),
-          _scoreHigh(cb.bench, th.bench),
-          _scoreLow(cb.cone, th.cone),
-          _scoreLow(cb.shuttle, th.shuttle)
-        ].filter(v => v != null);
-        if (drills.length >= 2) {
-          // Need at least 2 drills for a meaningful estimate
-          const avg = drills.reduce((a, b) => a + b, 0) / drills.length;
-          ras = Math.max(0, Math.min(10, Math.round(avg * 100) / 100));
+        // Position-specific drill weights — 40 is most predictive, bench least
+        //                         forty  vert  broad  bench  cone  shuttle
+        const _drillWeights = {
+          QB:  { forty: 1.0, vert: 1.0, broad: 1.0, bench: 0.5, cone: 0.8, shuttle: 0.8 },
+          RB:  { forty: 1.5, vert: 1.3, broad: 1.3, bench: 0.4, cone: 1.0, shuttle: 0.8 },
+          WR:  { forty: 2.0, vert: 1.2, broad: 1.2, bench: 0.3, cone: 1.0, shuttle: 0.8 },
+          TE:  { forty: 1.8, vert: 1.0, broad: 1.0, bench: 0.5, cone: 0.8, shuttle: 0.7 }
+        };
+        const dw = _drillWeights[pos] || _drillWeights.WR;
+        const drillEntries = [
+          { score: _scoreLow(cb.forty, th.forty), weight: dw.forty },
+          { score: _scoreHigh(cb.vert, th.vert), weight: dw.vert },
+          { score: _scoreHigh(cb.broad, th.broad), weight: dw.broad },
+          { score: _scoreHigh(cb.bench, th.bench), weight: dw.bench },
+          { score: _scoreLow(cb.cone, th.cone), weight: dw.cone },
+          { score: _scoreLow(cb.shuttle, th.shuttle), weight: dw.shuttle }
+        ].filter(d => d.score != null);
+        if (drillEntries.length >= 2) {
+          // Weighted average of available drills
+          const totalW = drillEntries.reduce((s, d) => s + d.weight, 0);
+          const weightedAvg = drillEntries.reduce((s, d) => s + d.score * d.weight, 0) / totalW;
+          ras = Math.max(0, Math.min(10, Math.round(weightedAvg * 100) / 100));
         }
       }
 

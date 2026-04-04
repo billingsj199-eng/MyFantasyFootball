@@ -2276,8 +2276,24 @@ CLEAR
 <button class="pm-pos-tab" data-pmpos="RB">RB</button>
 <button class="pm-pos-tab" data-pmpos="WR">WR</button>
 <button class="pm-pos-tab" data-pmpos="TE">TE</button>
-<button class="pm-pos-tab" data-pmpos="2026">2026</button>
+<button class="pm-pos-tab" data-pmpos="ALL">ALL</button>
 </div>
+<select id="pmDraftClassFilter" style="padding:5px 10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.78rem;cursor:pointer;margin-left:6px">
+<option value="all">All Classes</option>
+<option value="2026">2026</option>
+<option value="2025">2025</option>
+<option value="2024">2024</option>
+<option value="2023">2023</option>
+<option value="2022">2022</option>
+<option value="2021">2021</option>
+<option value="2020">2020</option>
+<option value="2019">2019</option>
+<option value="2018">2018</option>
+<option value="2017">2017</option>
+<option value="2016">2016</option>
+<option value="2015">2015</option>
+<option value="older">Pre-2015</option>
+</select>
 <div class="pm-toggle-wrap">
 <span class="pm-toggle-label">PPG</span>
 <div class="pm-toggle" id="pmToggle" title="Toggle between best PPG and best season total points"></div>
@@ -13503,6 +13519,7 @@ window.fmtHeight = fmtHeight;
   const DRAFT_DATE_DAY = 28;
 
   let pmPos = 'QB';
+  let pmDraftClass = 'all'; // 'all', '2026', '2025', ... or 'older'
   let pmTotals = false; // false = per game, true = totals
   let pmScoring = 'half';
   let pmSort = { col: 'jm', dir: 'desc' };
@@ -15600,10 +15617,10 @@ window.fmtHeight = fmtHeight;
     }
 
     // Position-specific efficiency columns
-    if (pos === 'RB' || pos === '2026') {
+    if (pos === 'RB' || pos === 'ALL') {
       cols.push({ key: 'ypc', label: 'YPC', sortable: true });
     }
-    if (pos === 'WR' || pos === 'TE' || pos === '2026') {
+    if (pos === 'WR' || pos === 'TE' || pos === 'ALL') {
       cols.push({ key: 'ypr', label: 'YPR', sortable: true });
     }
 
@@ -15639,12 +15656,22 @@ window.fmtHeight = fmtHeight;
   }
 
   function renderTable() {
-    // Filter by position or 2026 class
+    // Filter by position
     let data;
-    if (pmPos === '2026') {
-      data = pmBuiltData.filter(p => p.draftYr === 2026);
+    if (pmPos === 'ALL') {
+      data = pmBuiltData.slice(); // all positions
     } else {
       data = pmBuiltData.filter(p => p.pos === pmPos);
+    }
+
+    // Draft class filter
+    if (pmDraftClass !== 'all') {
+      if (pmDraftClass === 'older') {
+        data = data.filter(p => p.draftYr != null && p.draftYr < 2015);
+      } else {
+        const yr = parseInt(pmDraftClass);
+        data = data.filter(p => p.draftYr === yr);
+      }
     }
 
     // Search filter
@@ -15942,6 +15969,14 @@ window.fmtHeight = fmtHeight;
     btn.classList.add('active');
     pmPos = btn.dataset.pmpos;
     // Reset sort to JM score
+    pmSort.col = 'jm';
+    pmSort.dir = 'desc';
+    renderTable();
+  });
+
+  // Draft class filter dropdown
+  document.getElementById('pmDraftClassFilter').addEventListener('change', function() {
+    pmDraftClass = this.value;
     pmSort.col = 'jm';
     pmSort.dir = 'desc';
     renderTable();

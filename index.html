@@ -2734,7 +2734,8 @@ function validateImportData(obj) {
     "Russell Wilson":"14881","Deshaun Watson":"3122840","Dak Prescott":"2577417",
     "Tee Higgins":"4239993","Puka Nacua":"4432688","Jahmyr Gibbs":"4427366",
     "De'Von Achane":"4430807","Rashee Rice":"4430027","Drake London":"4567048",
-    "Garrett Wilson":"4567178","Chris Olave":"4362897","Tank Dell":"4432811"
+    "Garrett Wilson":"4567178","Chris Olave":"4362897","Tank Dell":"4432811",
+    "Marvin Harrison Jr.":"4432708"
   };
   Object.assign(nameToId, FALLBACK_IDS);
   window.FALLBACK_IDS = FALLBACK_IDS;
@@ -13872,8 +13873,62 @@ window.fmtHeight = fmtHeight;
       }
     }
 
-    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj) * 10) / 10));
-    return final;
+    // ═══ BUST PENALTY SYSTEM ═══
+    // Derived from Section 12 analysis of Rd 1-2 busts vs hits (2010-2022).
+    // Penalties stack when multiple red flags combine — this matches the data
+    // showing that individual factors are mild but combinations are lethal.
+    let bustAdj = 0;
+
+    const hasBo = p.breakoutAge != null;
+    const boAge = p.breakoutAge;
+    const isOld = p.age != null && p.age >= 22;
+
+    if (p.pos === 'QB') {
+      // QB: No breakout = 43% bust rate vs 18% for those with breakout (25% gap)
+      if (!hasBo) bustAdj -= 5;
+      // Late breakout compounds the risk
+      if (hasBo && boAge >= 22.5) bustAdj -= 5;
+      else if (hasBo && boAge >= 21.5) bustAdj -= 3;
+      // Old + no breakout is the worst combo (21% of busts vs 12% of hits)
+      if (isOld && !hasBo) bustAdj -= 4;
+    }
+
+    if (p.pos === 'RB') {
+      // RB: No breakout = 20% bust vs 12% hit
+      if (!hasBo) bustAdj -= 3;
+      // Low YPC is a clear bust signal (5.5 busts vs 6.2 hits, 10.6% gap)
+      if (p.ypc != null && p.ypc < 5.0) bustAdj -= 4;
+      else if (p.ypc != null && p.ypc < 5.5) bustAdj -= 2;
+      // Old + no breakout
+      if (isOld && !hasBo) bustAdj -= 2;
+    }
+
+    if (p.pos === 'WR') {
+      // WR: No breakout = 26% bust vs 13% hit; late breakout ≥21.5 = 38% bust vs 19% hit
+      if (!hasBo) bustAdj -= 5;
+      if (hasBo && boAge >= 22.5) bustAdj -= 6;
+      else if (hasBo && boAge >= 21.5) bustAdj -= 4;
+      // "Athletic freak trap": high RAS + late/no breakout (Perriman, Kevin White, etc.)
+      // Busts averaged 7.8 RAS vs hits 7.5 — busts are MORE athletic but can't produce
+      if (p.ras != null && p.ras >= 9.0 && (!hasBo || boAge >= 21.5)) bustAdj -= 3;
+      // Old + no breakout
+      if (isOld && !hasBo) bustAdj -= 3;
+    }
+
+    if (p.pos === 'TE') {
+      // TE: No breakout is the #1 signal — 38% of busts vs 0% of hits (37.5% gap!)
+      if (!hasBo) bustAdj -= 8;
+      // Late breakout
+      if (hasBo && boAge >= 22.5) bustAdj -= 5;
+      else if (hasBo && boAge >= 21.5) bustAdj -= 3;
+      // Low RAS for TE is significant (7.7 busts vs 8.5 hits, 9.2% gap)
+      if (p.ras != null && p.ras < 5.0) bustAdj -= 3;
+      // Old + no breakout
+      if (isOld && !hasBo) bustAdj -= 5;
+    }
+
+    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + bustAdj) * 10) / 10));
+    return { jm: final, bustAdj };
   }
 
   // JM Score display class
@@ -14402,7 +14457,14 @@ window.fmtHeight = fmtHeight;
         const dcVal = _dcCache[name];
         prospectRecord.dr = dcVal === 'U' ? 'U' : (parseInt(dcVal) || prospectRecord.dr);
       }
-      prospectRecord.jm = calcJM(prospectRecord);
+      const _jmResult = calcJM(prospectRecord);
+      if (_jmResult && typeof _jmResult === 'object') {
+        prospectRecord.jm = _jmResult.jm;
+        prospectRecord.bustAdj = _jmResult.bustAdj;
+      } else {
+        prospectRecord.jm = _jmResult;
+        prospectRecord.bustAdj = 0;
+      }
       results.push(prospectRecord);
     });
 
@@ -14562,7 +14624,8 @@ window.fmtHeight = fmtHeight;
             break;
           case 'jm':
             if (p.jm != null) {
-              rows += `<td class="pm-jm"><span class="pm-jm-badge ${jmClass(p.jm)}">${p.jm.toFixed(1)}</span></td>`;
+              const _bustFlag = p.bustAdj && p.bustAdj < 0 ? ` <span style="font-size:.55rem;color:#ef4444;opacity:.8" title="Bust penalty: ${p.bustAdj}">▼${Math.abs(p.bustAdj)}</span>` : '';
+              rows += `<td class="pm-jm"><span class="pm-jm-badge ${jmClass(p.jm)}">${p.jm.toFixed(1)}</span>${_bustFlag}</td>`;
             } else {
               rows += `<td class="pm-jm" style="color:var(--text2);opacity:.4">—</td>`;
             }

@@ -14583,6 +14583,21 @@ window.fmtHeight = fmtHeight;
       totFpts = Math.round(totFpts * 10) / 10;
       bestFpts = Math.round(bestFpts * 10) / 10;
 
+      // Minimum games threshold: if total career GP is very low (≤5),
+      // the production stats are unreliable and could unfairly penalize the player.
+      // Examples: Carson Wentz (NDSU, limited data), Trey Lance (3 GP in 2019).
+      // In these cases, null out production-derived fields so the model treats them
+      // as "no data" rather than "bad production" — the player gets scored on
+      // draft capital, age, RAS, size, etc. instead.
+      const _MIN_COLLEGE_GP = 6;
+      const _tooFewGames = totalGp > 0 && totalGp < _MIN_COLLEGE_GP;
+      if (_tooFewGames) {
+        bestPpg = 0;
+        breakoutYr = null;
+        breakoutPpg = null;
+        // Keep totals for context but zero out per-game derived stats
+      }
+
       // Per-game averages (career)
       const gp = totalGp || null;
       const fptsPerGame = gp ? Math.round((totFpts / gp) * 10) / 10 : null;
@@ -14698,8 +14713,8 @@ window.fmtHeight = fmtHeight;
       if (wt != null) wt = parseInt(wt) || null;
 
       // Efficiency stats
-      const ypc = (totRa > 0) ? Math.round((totRy / totRa) * 10) / 10 : null;   // yards per carry (RB)
-      const ypr = (totRec > 0) ? Math.round((totRcy / totRec) * 10) / 10 : null; // yards per reception (WR/TE)
+      const ypc = (!_tooFewGames && totRa > 0) ? Math.round((totRy / totRa) * 10) / 10 : null;
+      const ypr = (!_tooFewGames && totRec > 0) ? Math.round((totRcy / totRec) * 10) / 10 : null;
 
       const prospectRecord = {
         name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,

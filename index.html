@@ -13928,9 +13928,28 @@ window.fmtHeight = fmtHeight;
 
       const tmScore = calcTeammate(name, pos, cs);
 
+      // Height & weight — prefer combine data, fall back to D array
+      // cb.ht is a string like "6-2", d._height is inches (e.g. 74)
+      // cb.wt is a number (lbs), d._weight is a number (lbs)
+      let htInches = null;
+      if (cb && cb.ht) {
+        // Parse "6-2" or "6'2" format to total inches
+        const htParts = String(cb.ht).replace(/'/g, '-').replace(/"/g, '').split('-');
+        if (htParts.length === 2) {
+          const ft = parseInt(htParts[0]), inc = parseInt(htParts[1]);
+          if (!isNaN(ft) && !isNaN(inc)) htInches = ft * 12 + inc;
+        }
+      }
+      if (htInches == null && dPlayer && dPlayer._height) {
+        htInches = parseInt(dPlayer._height);
+        if (isNaN(htInches)) htInches = null;
+      }
+      let wt = (cb && cb.wt) ? cb.wt : (dPlayer && dPlayer._weight ? dPlayer._weight : null);
+      if (wt != null) wt = parseInt(wt) || null;
+
       const prospectRecord = {
         name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,
-        dr, breakoutAge, tm: tmScore,
+        dr, breakoutAge, tm: tmScore, ht: htInches, wt: wt,
         bestPpg, bestFpts, totFpts, fptsPerGame,
         totPy, totRy, totRcy, totRec, totalTd,
         pasYpg, rushYpg, recYpg, recPg, tdPg,
@@ -13973,10 +13992,11 @@ window.fmtHeight = fmtHeight;
       { key: 'age', label: 'DRAFT AGE', sortable: true },
       { key: 'breakoutAge', label: 'BREAKOUT', sortable: true },
       { key: 'draftYr', label: 'YEAR', sortable: true },
+      { key: 'ht', label: 'HT', sortable: true },
+      { key: 'wt', label: 'WT', sortable: true },
       { key: 'lastCollege', label: 'COLLEGE', sortable: true },
       { key: 'lastConf', label: 'CONF', sortable: true },
       { key: 'ras', label: 'RAS', sortable: true },
-      { key: 'tm', label: 'TM', sortable: true },
       { key: 'gp', label: 'GP', sortable: true }
     ];
 
@@ -13985,6 +14005,7 @@ window.fmtHeight = fmtHeight;
     } else {
       cols.push({ key: 'bestPpg', label: 'BEST PPG', sortable: true });
     }
+    cols.push({ key: 'tm', label: 'TM', sortable: true });
     return cols;
   }
 
@@ -14120,6 +14141,12 @@ window.fmtHeight = fmtHeight;
             break;
           case 'draftYr':
             rows += `<td>${p.draftYr || '—'}</td>`;
+            break;
+          case 'ht':
+            rows += `<td style="white-space:nowrap">${p.ht ? Math.floor(p.ht/12) + "'" + (p.ht%12) + '"' : '—'}</td>`;
+            break;
+          case 'wt':
+            rows += `<td>${p.wt ? p.wt : '—'}</td>`;
             break;
           case 'lastCollege':
             rows += `<td class="pm-team">${p.lastCollege}</td>`;

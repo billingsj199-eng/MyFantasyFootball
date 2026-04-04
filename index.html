@@ -13495,8 +13495,8 @@ window.fmtHeight = fmtHeight;
   const JM_WEIGHTS = {
     QB:  { age: 0.13, breakout: 0.10, prod: 0.19, conf: 0.05, ras: 0.09, dc: 0.25, tm: 0.03, size: 0.03, eff: 0.00, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.07, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.02, qbCtx: 0.00 },
     RB:  { age: 0.12, breakout: 0.09, prod: 0.15, conf: 0.04, ras: 0.09, dc: 0.25, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.03, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.00 },
-    WR:  { age: 0.11, breakout: 0.12, prod: 0.13, conf: 0.04, ras: 0.04, dc: 0.25, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.06, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 },
-    TE:  { age: 0.08, breakout: 0.10, prod: 0.13, conf: 0.04, ras: 0.10, dc: 0.25, tm: 0.03, size: 0.04, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.03, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 }
+    WR:  { age: 0.11, breakout: 0.14, prod: 0.15, conf: 0.04, ras: 0.04, dc: 0.25, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.06, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 },
+    TE:  { age: 0.08, breakout: 0.11, prod: 0.14, conf: 0.04, ras: 0.11, dc: 0.25, tm: 0.03, size: 0.04, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 }
   };
 
   // Conference tiers — DATA-DRIVEN from era analysis
@@ -14190,8 +14190,8 @@ window.fmtHeight = fmtHeight;
   const JM_CEILING_WEIGHTS = {
     QB:  { age: 0.09, breakout: 0.09, prod: 0.17, conf: 0.03, ras: 0.14, dc: 0.25, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.08, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.02, qbCtx: 0.00 },
     RB:  { age: 0.12, breakout: 0.10, prod: 0.13, conf: 0.02, ras: 0.13, dc: 0.25, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.02, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.00 },
-    WR:  { age: 0.07, breakout: 0.13, prod: 0.13, conf: 0.03, ras: 0.03, dc: 0.25, tm: 0.03, size: 0.02, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.11, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 },
-    TE:  { age: 0.06, breakout: 0.09, prod: 0.09, conf: 0.03, ras: 0.11, dc: 0.25, tm: 0.03, size: 0.03, eff: 0.10, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.05, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 }
+    WR:  { age: 0.07, breakout: 0.17, prod: 0.16, conf: 0.03, ras: 0.03, dc: 0.25, tm: 0.03, size: 0.02, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.05, earlyDec: 0.02, qbCtx: 0.05 },
+    TE:  { age: 0.06, breakout: 0.11, prod: 0.11, conf: 0.03, ras: 0.12, dc: 0.25, tm: 0.03, size: 0.03, eff: 0.10, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 }
   };
 
   function calcJM(p) {
@@ -14688,15 +14688,27 @@ window.fmtHeight = fmtHeight;
           seasonScore -= bc.r1 * 0.4 + bc.r2 * 0.2;
 
         } else if (pos === 'WR' || pos === 'TE') {
-          // WR/TE with elite QB → NEGATIVE (stats inflated by great QB play)
+          // WR/TE with elite QB → very mild negative (slight stat inflation)
+          // Kept minimal because the separate QB Context component handles this precisely
           const qbs = others.filter(t => t.pos === 'QB');
-          const qc = countByTier(qbs);
-          seasonScore -= qc.r1 * 1.5 + qc.r2 * 0.8 + qc.r3 * 0.3;
+          qbs.forEach(t => {
+            // Continuous scale: pick 1 QB = -0.4, pick 32 = -0.15, pick 64 = -0.05, 150+ = ~0
+            if (t.drVal <= 260) seasonScore -= Math.max(0.02, 0.4 * Math.pow(0.99, t.drVal - 1));
+          });
 
-          // WR/TE with other elite WRs/TEs → POSITIVE (production suppressed)
+          // WR/TE with other elite WRs/TEs → MAJOR POSITIVE (production suppressed)
+          // Continuous scale based on actual draft capital — pick 1 WR teammate is
+          // far more impactful than pick 32 because they commanded way more targets.
+          // Formula: bonus = 4.0 * (1 - pick/300)^2 for each WR/TE teammate
+          // Pick 1 = 4.0, Pick 5 = 3.7, Pick 10 = 3.5, Pick 20 = 3.1,
+          // Pick 32 = 2.6, Pick 50 = 2.1, Pick 64 = 1.8, Pick 100 = 1.2, Pick 150 = 0.6
           const receiversTEs = others.filter(t => ['WR','TE'].includes(t.pos));
-          const rc = countByTier(receiversTEs);
-          seasonScore += rc.r1 * 1.8 + rc.r2 * 0.9 + rc.r3 * 0.4 + rc.mid * 0.1;
+          receiversTEs.forEach(t => {
+            if (t.drVal < 260) {
+              const bonus = 4.0 * Math.pow(1 - t.drVal / 300, 2);
+              seasonScore += Math.max(0.05, bonus);
+            }
+          });
 
         } else if (pos === 'RB') {
           // RB with other elite RBs → POSITIVE (production suppressed)
@@ -15280,11 +15292,7 @@ window.fmtHeight = fmtHeight;
         qbRushFppg = Math.round((rushFpts / totalGp) * 10) / 10;
       }
 
-      // 5) NFL Yards Per Route Run: from the D array _yrr field
-      let nflYrr = null;
-      if ((pos === 'WR' || pos === 'TE') && dPlayer && dPlayer._yrr != null) {
-        nflYrr = dPlayer._yrr;
-      }
+      // 5) (NFL Y/RR removed — JM model uses college/athletic data only, no NFL stats)
 
       // 6) Dominator Rating: % of team TDs scored by this prospect
       // Uses _tmIndex to find all teammates, cross-references COLLEGE_STATS for their TDs
@@ -15347,7 +15355,7 @@ window.fmtHeight = fmtHeight;
         pasYpg, rushYpg, recYpg, recPg, tdPg,
         totPtd, totRtd, totRctd, totInt,
         ypc, ypr,
-        mktShare, improvSlope, qbRushFppg, nflYrr,
+        mktShare, improvSlope, qbRushFppg,
         domRate, numSeasons, qbDrVal
       };
       // For 2026 prospects, use Firestore draft capital if available

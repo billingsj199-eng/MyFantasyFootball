@@ -2625,6 +2625,15 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <script src="data/weekly_stats_retired.js"></script>
 <script src="data/all_players.js"></script>
 <script src="data/combine_data.js"></script>
+<script>
+// Fix combine data errors from external file
+if (typeof COMBINE_DATA !== 'undefined') {
+  // Marvin Harrison Jr.: yr was 2000, should be 2024
+  if (COMBINE_DATA['Marvin Harrison Jr.'] && COMBINE_DATA['Marvin Harrison Jr.'].yr === 2000) {
+    COMBINE_DATA['Marvin Harrison Jr.'].yr = 2024;
+  }
+}
+</script>
 <script src="data/college_stats.js"></script>
 <script src="data/college_weekly_1.js"></script>
 <script src="data/college_weekly_2.js"></script>
@@ -3911,7 +3920,15 @@ function _cbNormSchool(s) { if (!s) return ''; const a = _CB_SCHOOL_NORM[s] || s
 
 function _getValidCB(d) {
   if (typeof COMBINE_DATA === 'undefined' || !d || !d.n) return null;
-  const cb = COMBINE_DATA[d.n];
+  let cb = COMBINE_DATA[d.n];
+  // Suffix alias fallback — try Jr./Sr. variations if exact name not found
+  if (!cb) {
+    const noSuffix = d.n.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+    if (noSuffix !== d.n) cb = COMBINE_DATA[noSuffix] || null;
+    if (!cb && !/\s+(Jr|Sr|II|III|IV|V)\.?$/i.test(d.n)) {
+      cb = COMBINE_DATA[d.n + ' Jr.'] || COMBINE_DATA[d.n + ' Jr'] || null;
+    }
+  }
   if (!cb) return null;
 
   // Method 1: College name mismatch — if both have school info and they don't match
@@ -14444,6 +14461,14 @@ window.fmtHeight = fmtHeight;
     const results = [];
     allNames.forEach(name => {
       let cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
+      // Combine data name alias fallback — try Jr./Sr. suffix variations
+      if (!cb && typeof COMBINE_DATA !== 'undefined') {
+        const noSuffix = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+        if (noSuffix !== name) cb = COMBINE_DATA[noSuffix] || null;
+        if (!cb && !/\s+(Jr|Sr|II|III|IV|V)\.?$/i.test(name)) {
+          cb = COMBINE_DATA[name + ' Jr.'] || COMBINE_DATA[name + ' Jr'] || null;
+        }
+      }
       const cbOrig = cb; // Save original for draft pick lookup (even if collision nulls cb)
       let cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[name] : null;
 
@@ -14666,7 +14691,15 @@ window.fmtHeight = fmtHeight;
       }
 
       // College weekly data for GP
-      const weeklyData = (typeof COLLEGE_WEEKLY !== 'undefined') ? COLLEGE_WEEKLY[name] : null;
+      let weeklyData = (typeof COLLEGE_WEEKLY !== 'undefined') ? COLLEGE_WEEKLY[name] : null;
+      // Weekly data alias fallback — try Jr./Sr. suffix variations
+      if (!weeklyData && typeof COLLEGE_WEEKLY !== 'undefined') {
+        const noSuffix = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+        if (noSuffix !== name) weeklyData = COLLEGE_WEEKLY[noSuffix] || null;
+        if (!weeklyData && !/\s+(Jr|Sr|II|III|IV|V)\.?$/i.test(name)) {
+          weeklyData = COLLEGE_WEEKLY[name + ' Jr.'] || COLLEGE_WEEKLY[name + ' Jr'] || null;
+        }
+      }
 
       // Calculate season-level stats
       let totalGp = 0, bestPpg = 0, bestFpts = 0;

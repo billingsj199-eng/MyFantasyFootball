@@ -2678,7 +2678,7 @@ function validateImportData(obj) {
 (function() {
   const IMG_BASE = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/';
   const IMG_SUFFIX = '.png&w=350&h=254';
-  const CACHE_KEY = 'espnIdCache4';
+  const CACHE_KEY = 'espnIdCache5';
   let cache = {};
   try { cache = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '{}'); } catch(e) {}
 
@@ -2687,7 +2687,12 @@ function validateImportData(obj) {
   // Apply cached fixes immediately
   let cachedCount = 0;
   playersToFix.forEach(p => {
-    if (cache[p.n]) { p._slImg = IMG_BASE + cache[p.n] + IMG_SUFFIX; cachedCount++; }
+    // FALLBACK_IDS always take priority over cached values
+    if (FALLBACK_IDS[p.n]) {
+      p._slImg = IMG_BASE + FALLBACK_IDS[p.n] + IMG_SUFFIX;
+      cache[p.n] = FALLBACK_IDS[p.n];
+      cachedCount++;
+    } else if (cache[p.n]) { p._slImg = IMG_BASE + cache[p.n] + IMG_SUFFIX; cachedCount++; }
   });
   if (cachedCount > 0) console.log('[HeadshotFix] Applied ' + cachedCount + ' cached fixes');
 
@@ -4198,9 +4203,46 @@ function buildCareerTable(d, scoringFormat) {
   return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
+function _getCollegeStats(name) {
+  if (typeof COLLEGE_STATS === 'undefined') return null;
+  let cs = COLLEGE_STATS[name];
+  if (cs) return cs;
+  // Explicit alias map
+  const _CSA = {
+    'Mitchell Trubisky': 'Mitch Trubisky','Mitch Trubisky': 'Mitchell Trubisky',
+    'A.J. Green': 'AJ Green','AJ Green': 'A.J. Green',
+    'Marvin Harrison Jr.': 'Marvin Harrison Jr','Marvin Harrison Jr': 'Marvin Harrison Jr.',
+    'D.K. Metcalf': 'DK Metcalf','DK Metcalf': 'D.K. Metcalf',
+    'D.J. Moore': 'DJ Moore','DJ Moore': 'D.J. Moore',
+    'A.J. Brown': 'AJ Brown','AJ Brown': 'A.J. Brown',
+    'C.J. Stroud': 'CJ Stroud','CJ Stroud': 'C.J. Stroud',
+    'D.J. Uiagalelei': 'DJ Uiagalelei','DJ Uiagalelei': 'D.J. Uiagalelei',
+    'J.J. McCarthy': 'JJ McCarthy','JJ McCarthy': 'J.J. McCarthy'
+  };
+  if (_CSA[name]) cs = COLLEGE_STATS[_CSA[name]];
+  if (cs) return cs;
+  // Try without dots
+  const noDots = name.replace(/\./g, '');
+  if (noDots !== name) cs = COLLEGE_STATS[noDots];
+  if (cs) return cs;
+  // Try adding dots
+  const withDots = name.replace(/\b([A-Z])([A-Z])\b/g, '$1.$2.');
+  if (withDots !== name) cs = COLLEGE_STATS[withDots];
+  if (cs) return cs;
+  // Try without suffix
+  const noSuffix = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+  if (noSuffix !== name) cs = COLLEGE_STATS[noSuffix];
+  if (cs) return cs;
+  // Try adding Jr.
+  if (!/\s+(Jr|Sr|II|III|IV|V)\.?$/i.test(name)) {
+    cs = COLLEGE_STATS[name + ' Jr.'] || COLLEGE_STATS[name + ' Jr'];
+  }
+  return cs || null;
+}
+
 function buildCollegeTable(d, scoringFormat) {
   if (typeof COLLEGE_STATS === 'undefined') return '';
-  const stats = COLLEGE_STATS[d.n];
+  const stats = _getCollegeStats(d.n);
   if (!stats || !stats.length) return '';
   const pos = d.s || 'WR';
   const isQB = pos === 'QB';
@@ -4666,7 +4708,7 @@ function openPlayerCard(d) {
           ${cb.hof ? `<div class="card-rank-box"><div class="lbl">Hall of Fame</div><div class="num" style="color:var(--green)">HOF</div></div>` : ''}
         </div>
       </div>` : ''}
-      ${typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[d.n] ? `<div class="card-section">
+      ${_getCollegeStats(d.n) ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="collegeLogLabel">College Career Log (Half PPR)</span>
           <div class="career-log-controls">
@@ -4704,7 +4746,7 @@ function openPlayerCard(d) {
           <div class="card-stat"><span class="card-stat-label">Position</span><span class="card-stat-value">${d.s}</span></div>
         </div>
       </div>
-      ${typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[d.n] ? `<div class="card-section">
+      ${_getCollegeStats(d.n) ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="collegeLogLabel">College Career Log (Half PPR)</span>
           <div class="career-log-controls">
@@ -5273,7 +5315,7 @@ document.addEventListener('click', function(e) {
   ];
 
   function getHeadshotUrl(id) {
-    const cache = JSON.parse(sessionStorage.getItem('espnIdCache4') || '{}');
+    const cache = JSON.parse(sessionStorage.getItem('espnIdCache5') || '{}');
     const poolPlayer = EP_PLAYERS.find(p => p.id === id);
     if (poolPlayer) {
       if (window.FALLBACK_IDS && window.FALLBACK_IDS[poolPlayer.name]) {
@@ -5585,7 +5627,7 @@ document.addEventListener('click', function(e) {
   setTimeout(_buildUnlimitedPool, 15000);
 
     function getHeadshotUrlU(id, playerName) {
-    const cache = JSON.parse(sessionStorage.getItem('espnIdCache4') || '{}');
+    const cache = JSON.parse(sessionStorage.getItem('espnIdCache5') || '{}');
     if (playerName) {
       if (window.FALLBACK_IDS && window.FALLBACK_IDS[playerName]) {
         id = window.FALLBACK_IDS[playerName];
@@ -14416,18 +14458,21 @@ window.fmtHeight = fmtHeight;
         if (cs && cs.length) {
           const dPos = (dPlayer && dPlayer.s) ? dPlayer.s : (cb && cb.pos) ? cb.pos : null;
           if (dPos === 'QB') {
-            // QB should have passing yards — if only rushing/receiving, it's a different player
+            // QB should have passing yards — if no season with > 200 passing yards, wrong player
             const hasPassing = cs.some(s => (s.py || 0) > 200);
             if (!hasPassing) {
-              const hasRushing = cs.some(s => (s.ry || 0) > 200);
-              const hasReceiving = cs.some(s => (s.rcy || 0) > 100);
-              if (hasRushing || hasReceiving) cs = null; // RB/WR stats, not a QB
+              cs = null; // No meaningful passing stats — not a QB's college record
             }
           } else if (dPos === 'WR' || dPos === 'TE') {
             // WR/TE should have receiving — if only passing yards, it's a QB with same name
             const hasPassing = cs.some(s => (s.py || 0) > 1000);
             const hasReceiving = cs.some(s => (s.rcy || 0) > 50 || (s.rec || 0) > 5);
             if (hasPassing && !hasReceiving) cs = null; // QB stats, not a WR/TE
+          } else if (dPos === 'RB') {
+            // RB should have rushing stats — if only passing yards, it's a QB with same name
+            const hasPassing = cs.some(s => (s.py || 0) > 1000);
+            const hasRushing = cs.some(s => (s.ry || 0) > 50 || (s.ra || 0) > 10);
+            if (hasPassing && !hasRushing) cs = null; // QB stats, not an RB
           }
         }
       }

@@ -14390,6 +14390,48 @@ window.fmtHeight = fmtHeight;
         }
       }
 
+      // College stats collision detection: verify CS belongs to this player
+      // Handles cases like "Lamar Jackson" QB (Louisville) vs WR (same name, different school)
+      if (cs && cs.length) {
+        const dPlayer = D.find(p => p.n === name);
+        const knownSchool = (cb && cb.school) ? cb.school
+          : (typeof LEGEND_BIO !== 'undefined' && LEGEND_BIO[name] && LEGEND_BIO[name].c) ? LEGEND_BIO[name].c
+          : (dPlayer && dPlayer._college) ? dPlayer._college
+          : null;
+        if (knownSchool) {
+          const csLast = cs.reduce((a, b) => (b.yr > a.yr) ? b : a, cs[0]);
+          const csSchool = _normSchool(csLast.tm);
+          const known = _normSchool(knownSchool);
+          if (csSchool && known && csSchool !== known) {
+            // Schools don't match — check if ANY season matches (for transfers)
+            const anyMatch = cs.some(s => s.tm && _normSchool(s.tm) === known);
+            if (!anyMatch) {
+              // No season from the known school — likely a different player, drop CS
+              cs = null;
+            }
+          }
+        }
+        // Position-based collision: if CS shows passing stats but player is WR/RB/TE, likely wrong person
+        // Or if CS shows only receiving stats but player is a QB
+        if (cs && cs.length) {
+          const dPos = (dPlayer && dPlayer.s) ? dPlayer.s : (cb && cb.pos) ? cb.pos : null;
+          if (dPos === 'QB') {
+            // QB should have passing yards — if only rushing/receiving, it's a different player
+            const hasPassing = cs.some(s => (s.py || 0) > 200);
+            if (!hasPassing) {
+              const hasRushing = cs.some(s => (s.ry || 0) > 200);
+              const hasReceiving = cs.some(s => (s.rcy || 0) > 100);
+              if (hasRushing || hasReceiving) cs = null; // RB/WR stats, not a QB
+            }
+          } else if (dPos === 'WR' || dPos === 'TE') {
+            // WR/TE should have receiving — if only passing yards, it's a QB with same name
+            const hasPassing = cs.some(s => (s.py || 0) > 1000);
+            const hasReceiving = cs.some(s => (s.rcy || 0) > 50 || (s.rec || 0) > 5);
+            if (hasPassing && !hasReceiving) cs = null; // QB stats, not a WR/TE
+          }
+        }
+      }
+
       // Determine position
       // Override map: players whose NFL position differs from their college position
       // These players should be scored at their COLLEGE position (or excluded if they

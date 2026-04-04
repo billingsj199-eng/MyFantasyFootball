@@ -14007,40 +14007,20 @@ window.fmtHeight = fmtHeight;
     const sizeScore = jmSize(p.ht, p.wt, p.pos);
     const effScore = jmEfficiency(p.pos, p.ypc, p.ypr);
 
-    // === ELITE PROSPECT MISSING DATA INFERENCE ===
+    // === ELITE PROSPECT MISSING DATA HANDLING ===
     // High draft capital players who skip the combine or have limited college data
     // shouldn't be penalized — NFL teams invested premium picks based on private workouts,
     // pro days, and film. Missing data ≠ bad data for these players.
+    // Strategy: leave missing scores as null so their weight redistributes to components
+    // we actually have data for, rather than imputing values that could be wrong.
     const _dcPick = (p.dr != null && p.dr !== 'U') ? (typeof p.dr === 'number' ? p.dr : parseInt(p.dr)) : 999;
     const _isEliteDC = !isNaN(_dcPick) && _dcPick <= 15;
     const _isYoung = p.age != null && p.age <= 22;
 
-    // Impute RAS for elite picks who skipped combine — teams don't draft top 15
-    // without verifying athleticism. Imputed score is conservative (good, not elite).
-    if (rasScore == null && _isEliteDC) {
-      if (_dcPick <= 5) rasScore = 70;       // Top 5: assume good athlete (~7.5 RAS)
-      else if (_dcPick <= 10) rasScore = 60;  // Top 10: assume above avg (~6.5 RAS)
-      else rasScore = 50;                     // Top 15: assume average (~5.5 RAS)
-    }
-
-    // Impute production for elite DC players when bestPpg is 0 due to missing GP
-    // If they have season totals (totFpts > 0) but no GP data, estimate PPG from totals
-    let adjProdScore = prodScore;
-    if (prodScore === 0 && _isEliteDC && p.totFpts > 0 && (p.gp == null || p.gp === 0)) {
-      // Estimate games per season (typical college season ~12-13 games)
-      const cs = (typeof COLLEGE_STATS !== 'undefined') ? (COLLEGE_STATS[p.name] || COLLEGE_STATS[p.name + ' Jr.'] || COLLEGE_STATS[p.name + ' Jr']) : null;
-      const numSeasons = cs ? cs.length : 1;
-      const estGpPerSeason = 12;
-      const estPpg = p.totFpts / (numSeasons * estGpPerSeason);
-      adjProdScore = jmProduction(estPpg, p.pos);
-      // Discount by 15% since it's estimated, not actual
-      adjProdScore = Math.round(adjProdScore * 0.85);
-    }
-
     const scores = [
       { key: 'age', score: ageScore },
       { key: 'breakout', score: breakoutScore },
-      { key: 'prod', score: adjProdScore },
+      { key: 'prod', score: prodScore },
       { key: 'conf', score: confScore },
       { key: 'ras', score: rasScore },
       { key: 'dc', score: dcScore },

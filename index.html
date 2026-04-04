@@ -2642,6 +2642,13 @@ if (typeof COMBINE_DATA !== 'undefined') {
     // Overwrite with Jr.'s clean data — remove dad's accolades
     COMBINE_DATA['Marvin Harrison'] = { yr: 2024, school: 'Ohio St.', ht: '6-3', wt: 209, draft: 4, dt: 'ARI' };
   }
+  // Travis Hunter: 2025 draft, pick 2 overall
+  if (!COMBINE_DATA['Travis Hunter']) {
+    COMBINE_DATA['Travis Hunter'] = { yr: 2025, school: 'Colorado', pos: 'WR', ht: '6-1', wt: 185, draft: 2, dt: 'CLE' };
+  } else if (COMBINE_DATA['Travis Hunter'] && !COMBINE_DATA['Travis Hunter'].draft) {
+    COMBINE_DATA['Travis Hunter'].draft = 2;
+    if (!COMBINE_DATA['Travis Hunter'].yr) COMBINE_DATA['Travis Hunter'].yr = 2025;
+  }
 }
 </script>
 <script src="data/college_stats.js"></script>
@@ -9371,7 +9378,8 @@ window.LEGEND_BIRTH_YEARS={
 "Zach Charbonnet":"2001-06-13",
 "Zachariah Branch":"2004-05-16",
 "Zamir White":"2000-01-19",
-"Zay Flowers":"2000-09-23"
+"Zay Flowers":"2000-09-23",
+"Travis Hunter":"2003-12-01"
 };
 LDB.forEach(p => { if (LEGEND_BIRTH_YEARS[p.n]) p.birthYear = typeof LEGEND_BIRTH_YEARS[p.n] === 'string' ? parseInt(LEGEND_BIRTH_YEARS[p.n]) : LEGEND_BIRTH_YEARS[p.n]; });
 

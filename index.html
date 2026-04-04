@@ -13378,9 +13378,18 @@ window.fmtHeight = fmtHeight;
   // Era analysis confirms: earlier breakout = higher hit rate, especially in modern era
   // Uses graduated confidence: a near-breakout (e.g., 11.9 WR PPG vs 12 threshold)
   // still counts but at reduced weight, while a dominant breakout gets full credit.
-  function jmBreakout(breakoutAge, age, pos, breakoutPpg, boThresh) {
+  // preBreakoutTm: if a player had elite same-position teammates before breakout,
+  // their late breakout is less concerning (production was suppressed, not absent).
+  function jmBreakout(breakoutAge, age, pos, breakoutPpg, boThresh, preBreakoutTm) {
     if (breakoutAge == null) {
-      return 20; // No breakout is a bigger red flag than before
+      // No breakout — but if pre-breakout teammate score was high (>7), they had real
+      // competition. Give partial credit instead of the harsh 20 baseline.
+      if (preBreakoutTm != null && preBreakoutTm > 7.0) {
+        // Scale from 20 (no excuse) to 35 (strong excuse) based on teammate pressure
+        const tmBoost = Math.min(15, (preBreakoutTm - 7.0) * 5);
+        return Math.round(20 + tmBoost);
+      }
+      return 20;
     }
     const params = {
       QB:  { elite: 20.0, good: 21.5, late: 23.5 },
@@ -13397,6 +13406,15 @@ window.fmtHeight = fmtHeight;
     else if (breakoutAge <= p.late) baseScore = 75 - ((breakoutAge - p.good) / (p.late - p.good)) * 40;
     else baseScore = Math.max(5, 35 - (breakoutAge - p.late) * 18);
 
+    // Teammate-adjusted breakout: if the player had elite same-position teammates
+    // BEFORE their breakout, the late breakout is partially excused.
+    // A preBreakoutTm of 7+ means real competition suppressed early production.
+    // This boosts the score by up to 10 points for the most suppressed players.
+    if (preBreakoutTm != null && preBreakoutTm > 6.0 && breakoutAge > p.elite) {
+      const tmBoost = Math.min(10, (preBreakoutTm - 6.0) * 2.5);
+      baseScore = Math.min(100, baseScore + tmBoost);
+    }
+
     // Confidence multiplier based on how strong the breakout was relative to threshold
     // At 100%+ of threshold → full credit (1.0)
     // At 75% of threshold → partial credit (0.5)
@@ -13409,7 +13427,6 @@ window.fmtHeight = fmtHeight;
         baseScore = Math.min(100, baseScore + dominanceBonus);
       } else {
         // Near breakout — scale confidence from 0.5 at 75% to 1.0 at 100%
-        // This is a smooth curve: confidence = 0.5 + 0.5 * ((ratio - 0.75) / 0.25)
         const confidence = Math.max(0.5, 0.5 + 0.5 * ((ratio - 0.75) / 0.25));
         // Blend toward the "no breakout" score (20) based on confidence
         baseScore = 20 + (baseScore - 20) * confidence;
@@ -13828,7 +13845,7 @@ window.fmtHeight = fmtHeight;
     if (!wFloor || !wCeil) return null;
 
     const ageScore = jmAge(p.age, p.pos);
-    const breakoutScore = jmBreakout(p.breakoutAge, p.age, p.pos, p.breakoutPpg, p.boThresh);
+    const breakoutScore = jmBreakout(p.breakoutAge, p.age, p.pos, p.breakoutPpg, p.boThresh, p.preBreakoutTm);
     const prodScore = jmProduction(p.bestPpg, p.pos);
     const confScore = jmConf(p.lastConf);
     const rasScore = jmRas(p.ras, p.pos);
@@ -14201,11 +14218,9 @@ window.fmtHeight = fmtHeight;
     //   WR/TE: bonus if shared targets with other drafted WRs/TEs (production was suppressed)
     //   RB: bonus if shared backfield with other drafted RBs
     function calcTeammate(name, pos, cs) {
-      if (!cs || !cs.length) return null;
+      if (!cs || !cs.length) return { overall: null, seasons: [] };
 
-      // Track the most impactful season (furthest from baseline 5.0 in either direction)
-      let mostImpactful = null;
-      let biggestDelta = 0;
+      const seasonScores = [];
 
       cs.forEach(s => {
         if (!s.tm || !s.yr) return;
@@ -14258,29 +14273,39 @@ window.fmtHeight = fmtHeight;
           seasonScore += bc.r1 * 1.8 + bc.r2 * 1.0 + bc.r3 * 0.5 + bc.mid * 0.15;
 
           // RB with elite QB → slight NEGATIVE (team likely pass-heavy)
-          // RB with bad QB → NEGATIVE (team was run-heavy by default, inflating volume)
           const qbs = others.filter(t => t.pos === 'QB');
           const qc = countByTier(qbs);
           seasonScore -= qc.r1 * 0.5 + qc.r2 * 0.2;
 
           // Check for bad QBs — late round or undrafted QBs mean run-heavy offense
-          const badQBs = qbs.filter(t => t.drVal >= 150).length;  // 5th round+ or UDFA
-          const terribleQBs = qbs.filter(t => t.drVal >= 260).length; // undrafted
+          const badQBs = qbs.filter(t => t.drVal >= 150).length;
+          const terribleQBs = qbs.filter(t => t.drVal >= 260).length;
           seasonScore -= terribleQBs * 1.2 + Math.max(0, badQBs - terribleQBs) * 0.6;
         }
 
-        // Keep the season with the biggest impact (furthest from 5.0 baseline)
-        const delta = Math.abs(seasonScore - 5.0);
+        seasonScores.push({
+          yr: s.yr,
+          score: Math.max(0, Math.min(10, Math.round(seasonScore * 10) / 10))
+        });
+      });
+
+      if (!seasonScores.length) return { overall: 5.0, seasons: [] };
+
+      // Overall: use the most impactful season (furthest from 5.0)
+      let mostImpactful = 5.0;
+      let biggestDelta = 0;
+      seasonScores.forEach(ss => {
+        const delta = Math.abs(ss.score - 5.0);
         if (delta > biggestDelta) {
           biggestDelta = delta;
-          mostImpactful = seasonScore;
+          mostImpactful = ss.score;
         }
       });
 
-      if (mostImpactful == null) return 5.0;
-
-      // Clamp to 0-10 range
-      return Math.max(0, Math.min(10, Math.round(mostImpactful * 10) / 10));
+      return {
+        overall: Math.max(0, Math.min(10, Math.round(mostImpactful * 10) / 10)),
+        seasons: seasonScores
+      };
     }
 
     const results = [];
@@ -14534,7 +14559,22 @@ window.fmtHeight = fmtHeight;
         }
       }
 
-      const tmScore = calcTeammate(name, pos, cs);
+      const tmResult = calcTeammate(name, pos, cs);
+      const tmScore = tmResult.overall;
+      const tmSeasons = tmResult.seasons;
+
+      // Teammate-adjusted breakout context:
+      // If a player broke out late BUT had high teammate scores in early seasons
+      // (meaning elite same-position teammates were suppressing their production),
+      // the late breakout is less concerning. We store the pre-breakout teammate
+      // average so jmBreakout can factor it in.
+      let preBreakoutTm = null;
+      if (breakoutYr != null && tmSeasons.length > 0) {
+        const preBo = tmSeasons.filter(ts => ts.yr < breakoutYr);
+        if (preBo.length > 0) {
+          preBreakoutTm = Math.round((preBo.reduce((s, ts) => s + ts.score, 0) / preBo.length) * 10) / 10;
+        }
+      }
 
       // Height & weight — prefer combine data, fall back to D array
       // cb.ht is a string like "6-2", d._height is inches (e.g. 74)
@@ -14561,7 +14601,7 @@ window.fmtHeight = fmtHeight;
 
       const prospectRecord = {
         name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,
-        dr, breakoutAge, breakoutPpg, boThresh, tm: tmScore, ht: htInches, wt: wt,
+        dr, breakoutAge, breakoutPpg, boThresh, tm: tmScore, preBreakoutTm, ht: htInches, wt: wt,
         bestPpg, bestFpts, totFpts, fptsPerGame,
         totPy, totRy, totRcy, totRec, totalTd, totRa,
         pasYpg, rushYpg, recYpg, recPg, tdPg,

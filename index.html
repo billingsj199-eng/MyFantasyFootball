@@ -15957,6 +15957,204 @@ window.fmtHeight = fmtHeight;
       });
     });
 
+    // === SECTION 13: LATE-ROUND SLEEPER PROFILE ANALYSIS ===
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 13: LATE-ROUND SLEEPER PROFILE ANALYSIS', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c  Compares prospect profiles of late-DC hits vs late-DC misses to find sleeper signals', 'color: #f59e0b');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    // "Late draft" = Rd 3+ (pick 65+) and UDFAs
+    // "Sleeper hit" = reached SOLID STARTER or better tier
+    // "Miss" = ROLE PLAYER, ONE-YEAR WONDER, BUST
+    const sleeperHitTiers = new Set(['GENERATIONAL', 'ELITE', 'FRANCHISE', 'STRONG RB1', 'STRONG WR1', 'STRONG TE1', 'SOLID STARTER']);
+    const sleeperMissTiers = new Set(['BUST', 'BACKUP/BUST', 'ROLE PLAYER', 'ONE-YEAR WONDER']);
+
+    positions.forEach(pos => {
+      // Late draft capital = Rd 3+ (pick 65+), modern era 2010-2022
+      const lateDC = players.filter(p =>
+        p.pos === pos && p.draftYr && p.draftYr >= 2010 && p.draftYr <= 2022 &&
+        p.tier != null &&
+        ((p.pick != null && p.pick >= 65) || (p.pick == null))
+      );
+      if (lateDC.length < 10) return;
+
+      const sleepers = lateDC.filter(p => sleeperHitTiers.has(p.tier));
+      const misses = lateDC.filter(p => sleeperMissTiers.has(p.tier));
+
+      const hitRate = Math.round(sleepers.length / lateDC.length * 100);
+      console.log('%c\n' + pos + ' — Late Draft Capital (Rd 3+/UDFA, 2010-2022): ' +
+        lateDC.length + ' total, ' + sleepers.length + ' sleeper hits, ' + misses.length + ' misses (' +
+        hitRate + '% hit rate)',
+        'color: #22c55e; font-weight: bold; font-size: 13px');
+
+      if (sleepers.length < 3) {
+        console.log('  (Too few sleeper hits to analyze)');
+        return;
+      }
+
+      function grpAvg(arr, field) {
+        const v = arr.filter(p => p[field] != null);
+        return v.length >= 2 ? (v.reduce((s, p) => s + p[field], 0) / v.length) : null;
+      }
+
+      // ── Attribute comparison table ──
+      const attrs = [
+        { key: 'age', label: 'Draft Age' },
+        { key: 'breakoutAge', label: 'Breakout Age' },
+        { key: 'collegePpg', label: 'College Best PPG' },
+        { key: 'ras', label: 'RAS Score' },
+        { key: 'ht', label: 'Height (in)' },
+        { key: 'wt', label: 'Weight (lbs)' },
+        { key: 'pick', label: 'Draft Pick' }
+      ];
+      if (pos === 'RB') attrs.push({ key: 'ypc', label: 'College YPC' });
+      if (pos === 'WR' || pos === 'TE') attrs.push({ key: 'ypr', label: 'College YPR' });
+
+      console.log('\n  ── Average Prospect Profile: Sleeper Hits vs Misses ──');
+      console.log('  Attribute            Hits       Misses     Δ        Signal');
+      attrs.forEach(a => {
+        const hAvg = grpAvg(sleepers, a.key);
+        const mAvg = grpAvg(misses, a.key);
+        if (hAvg == null || mAvg == null) return;
+        const diff = hAvg - mAvg;
+        const pctDiff = mAvg !== 0 ? Math.round(Math.abs(diff) / Math.abs(mAvg) * 100) : 0;
+        const higherIsBetter = ['collegePpg', 'ras', 'ht', 'wt', 'ypc', 'ypr'].includes(a.key);
+        const lowerIsBetter = ['age', 'breakoutAge', 'pick'].includes(a.key);
+        let signal = '';
+        if (Math.abs(pctDiff) >= 10) {
+          if (higherIsBetter) signal = diff > 0 ? '⭐ HITS HIGHER' : '';
+          else if (lowerIsBetter) signal = diff < 0 ? '⭐ HITS LOWER' : '';
+        }
+        if (Math.abs(pctDiff) >= 20) signal = signal.replace('⭐', '🌟');
+        console.log('  ' + a.label.padEnd(22) +
+          hAvg.toFixed(1).padStart(7) +
+          mAvg.toFixed(1).padStart(10) +
+          ((diff >= 0 ? '+' : '') + diff.toFixed(1)).padStart(9) +
+          '    ' + signal);
+      });
+
+      // ── Conference breakdown ──
+      console.log('\n  ── Conference Distribution ──');
+      const p5Confs = new Set(['SEC', 'Big Ten', 'Big 12', 'ACC', 'Pac-12', 'Pac-10', 'Big East']);
+      function confDist(arr, label) {
+        const p5Count = arr.filter(p => p.conf && p5Confs.has(p.conf)).length;
+        const total = arr.filter(p => p.conf != null).length;
+        if (!total) return;
+        console.log('  ' + label.padEnd(10) + 'P5: ' + Math.round(p5Count/total*100) + '% (' + p5Count + '/' + total + ')' +
+          '    Non-P5: ' + Math.round((total-p5Count)/total*100) + '%');
+      }
+      confDist(sleepers, 'Hits');
+      confDist(misses, 'Misses');
+
+      // ── Breakout analysis ──
+      console.log('\n  ── Breakout Signals ──');
+      const hitBo = sleepers.filter(p => p.breakoutAge != null).length;
+      const missBo = misses.filter(p => p.breakoutAge != null).length;
+      console.log('  Has breakout:  Hits ' + Math.round(hitBo/sleepers.length*100) + '% (' + hitBo + '/' + sleepers.length + ')' +
+        '    Misses ' + Math.round(missBo/misses.length*100) + '% (' + missBo + '/' + misses.length + ')');
+
+      const hitEarlyBo = sleepers.filter(p => p.breakoutAge != null && p.breakoutAge <= 20.5).length;
+      const missEarlyBo = misses.filter(p => p.breakoutAge != null && p.breakoutAge <= 20.5).length;
+      const hitWithBo = sleepers.filter(p => p.breakoutAge != null).length;
+      const missWithBo = misses.filter(p => p.breakoutAge != null).length;
+      if (hitWithBo >= 2 && missWithBo >= 2) {
+        console.log('  Early breakout (≤20.5):  Hits ' + Math.round(hitEarlyBo/hitWithBo*100) + '% (' + hitEarlyBo + '/' + hitWithBo + ')' +
+          '    Misses ' + Math.round(missEarlyBo/missWithBo*100) + '% (' + missEarlyBo + '/' + missWithBo + ')');
+      }
+
+      // ── Combo Sleeper Factors ──
+      console.log('\n  ── Combo Sleeper Factors ──');
+      // Young + has breakout
+      const hitYoungBo = sleepers.filter(p => p.age != null && p.age <= 22 && p.breakoutAge != null).length;
+      const missYoungBo = misses.filter(p => p.age != null && p.age <= 22 && p.breakoutAge != null).length;
+      console.log('  Young (≤22) + Has Breakout:  Hits ' + hitYoungBo + '/' + sleepers.length +
+        ' (' + Math.round(hitYoungBo/sleepers.length*100) + '%)' +
+        '    Misses ' + missYoungBo + '/' + misses.length +
+        ' (' + Math.round(missYoungBo/misses.length*100) + '%)');
+
+      // Young + early breakout
+      const hitYoungEarly = sleepers.filter(p => p.age != null && p.age <= 21.5 && p.breakoutAge != null && p.breakoutAge <= 20.5).length;
+      const missYoungEarly = misses.filter(p => p.age != null && p.age <= 21.5 && p.breakoutAge != null && p.breakoutAge <= 20.5).length;
+      console.log('  Young (≤21.5) + Early Breakout (≤20.5):  Hits ' + hitYoungEarly + '/' + sleepers.length +
+        ' (' + Math.round(hitYoungEarly/sleepers.length*100) + '%)' +
+        '    Misses ' + missYoungEarly + '/' + misses.length +
+        ' (' + Math.round(missYoungEarly/misses.length*100) + '%)');
+
+      // High RAS + young
+      const hitHighRasYoung = sleepers.filter(p => p.ras != null && p.ras >= 8.0 && p.age != null && p.age <= 22).length;
+      const missHighRasYoung = misses.filter(p => p.ras != null && p.ras >= 8.0 && p.age != null && p.age <= 22).length;
+      const hitWithRas = sleepers.filter(p => p.ras != null).length;
+      const missWithRas = misses.filter(p => p.ras != null).length;
+      if (hitWithRas >= 2 && missWithRas >= 2) {
+        console.log('  High RAS (≥8) + Young (≤22):  Hits ' + hitHighRasYoung + '/' + hitWithRas +
+          ' (' + Math.round(hitHighRasYoung/hitWithRas*100) + '%)' +
+          '    Misses ' + missHighRasYoung + '/' + missWithRas +
+          ' (' + Math.round(missHighRasYoung/missWithRas*100) + '%)');
+      }
+
+      // High RAS + early breakout (the "overlooked talent" signal)
+      const hitRasBo = sleepers.filter(p => p.ras != null && p.ras >= 7.0 && p.breakoutAge != null && p.breakoutAge <= 21).length;
+      const missRasBo = misses.filter(p => p.ras != null && p.ras >= 7.0 && p.breakoutAge != null && p.breakoutAge <= 21).length;
+      if (hitWithRas >= 2 && missWithRas >= 2) {
+        console.log('  RAS ≥7 + Breakout ≤21:  Hits ' + hitRasBo + '/' + hitWithRas +
+          ' (' + Math.round(hitRasBo/hitWithRas*100) + '%)' +
+          '    Misses ' + missRasBo + '/' + missWithRas +
+          ' (' + Math.round(missRasBo/missWithRas*100) + '%)');
+      }
+
+      // P5 conference for late-round (did they produce against top competition?)
+      const hitP5 = sleepers.filter(p => p.conf && p5Confs.has(p.conf)).length;
+      const missP5 = misses.filter(p => p.conf && p5Confs.has(p.conf)).length;
+      const hitWithConf = sleepers.filter(p => p.conf != null).length;
+      const missWithConf = misses.filter(p => p.conf != null).length;
+      if (hitWithConf >= 2 && missWithConf >= 2) {
+        console.log('  P5 Conference:  Hits ' + hitP5 + '/' + hitWithConf +
+          ' (' + Math.round(hitP5/hitWithConf*100) + '%)' +
+          '    Misses ' + missP5 + '/' + missWithConf +
+          ' (' + Math.round(missP5/missWithConf*100) + '%)');
+      }
+
+      // ── Individual Sleeper Hit Profiles ──
+      console.log('\n  ── Individual Sleeper Hit Profiles (Rd 3+/UDFA) ──');
+      console.log('  Name                      Pick  Age   BrkAge  ColPPG  RAS   Tier            BestPPG  Seasons');
+      sleepers.sort((a, b) => (b.bestPpg || 0) - (a.bestPpg || 0)).forEach(p => {
+        console.log('  ' +
+          (p.name || '').padEnd(28) +
+          (p.pick != null ? ('' + p.pick) : 'UDFA').padStart(4) +
+          (p.age != null ? p.age.toFixed(1) : '  —').padStart(6) +
+          (p.breakoutAge != null ? p.breakoutAge.toFixed(1) : '   —').padStart(8) +
+          (p.collegePpg != null ? p.collegePpg.toFixed(1) : '  —').padStart(8) +
+          (p.ras != null ? p.ras.toFixed(1) : ' —').padStart(6) +
+          '   ' + (p.tier || '').padEnd(16) +
+          (p.bestPpg != null ? p.bestPpg.toFixed(1) : '—').padStart(7) +
+          ('' + (p.seasons || 0)).padStart(5));
+      });
+
+      // ── Summary: strongest sleeper indicators ──
+      console.log('\n  ── Strongest Sleeper Indicators for ' + pos + ' ──');
+      const indicators = [];
+      attrs.forEach(a => {
+        const hAvg = grpAvg(sleepers, a.key);
+        const mAvg = grpAvg(misses, a.key);
+        if (hAvg == null || mAvg == null) return;
+        const diff = hAvg - mAvg;
+        const pctDiff = mAvg !== 0 ? Math.abs(diff) / Math.abs(mAvg) * 100 : 0;
+        indicators.push({ label: a.label, pctDiff, diff, key: a.key });
+      });
+      // Add breakout rate as indicator
+      if (sleepers.length && misses.length) {
+        const hitBoRate = hitBo / sleepers.length;
+        const missBoRate = missBo / misses.length;
+        if (hitBoRate > missBoRate) {
+          indicators.push({ label: 'Has Breakout Rate', pctDiff: (hitBoRate - missBoRate) * 100, diff: hitBoRate - missBoRate, key: '_hasBo' });
+        }
+      }
+      indicators.sort((a, b) => b.pctDiff - a.pctDiff);
+      indicators.slice(0, 5).forEach((ind, i) => {
+        console.log('  ' + (i + 1) + '. ' + ind.label + ' — ' + ind.pctDiff.toFixed(1) + '% gap between sleeper hits and misses');
+      });
+    });
+
     console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
     console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
   }

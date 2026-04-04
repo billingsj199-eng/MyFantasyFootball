@@ -13275,30 +13275,35 @@ window.fmtHeight = fmtHeight;
   // Predicts NFL fantasy success (0-100) based on prospect profile.
   // Built by studying common traits of elite NFL fantasy producers at each position.
   //
-  // COMPONENT WEIGHTS BY POSITION (data-driven DC calibration):
-  //   Component      QB    RB    WR    TE    Rationale
+  // COMPONENT WEIGHTS BY POSITION (data-driven, modern-era weighted):
+  //   Component      QB    RB    WR    TE    Rationale (from era analysis)
   //   ─────────────────────────────────────────────────
-  //   Draft Age      14%   16%   14%   10%   RBs degrade fastest; TEs bloom later
-  //   Breakout Age   11%   13%   16%   15%   Early WR breakouts strongly predictive
-  //   Production     27%   25%   26%   28%   Best-season PPG is king at every spot
-  //   Conference     10%    8%   10%   11%   TE scarcity means more non-P5 hits
-  //   RAS             7%   11%   10%   14%   Athleticism matters more for TEs/RBs
-  //   Draft Capital  23%   18%   13%   11%   QB DC most predictive; TE DC barely matters (data)
+  //   Draft Age      15%   18%   16%   12%   Modern RBs: 70% at 21 vs 11% at 23. Steeper than ever.
+  //   Breakout Age   10%   12%   16%   14%   Modern WRs: 66% at 21.5 vs 13% at 23.6+. Huge signal.
+  //   Production     27%   24%   25%   26%   Still king but slightly less dominant with more data
+  //   Conference      7%    6%    7%    8%   Data shows conferences are flatter than expected (32-43%)
+  //   RAS             7%   12%   10%   15%   Modern TE: 57% at 9+ RAS vs 0% at <3. Biggest era shift.
+  //   Draft Capital  23%   18%   13%   11%   QB DC most predictive; TE DC barely matters
   //   Teammates       5%    5%    5%    5%   Talent competition context
-  //   Size            3%    4%    6%    6%   WR/TE size combos most predictive
+  //   Size            6%    5%    8%    9%   WR height data surprisingly flat; TE size still matters
   //
   // Each component outputs a 0-100 sub-score, then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.14, breakout: 0.11, prod: 0.27, conf: 0.10, ras: 0.07, dc: 0.23, tm: 0.05, size: 0.03 },
-    RB:  { age: 0.16, breakout: 0.13, prod: 0.25, conf: 0.08, ras: 0.11, dc: 0.18, tm: 0.05, size: 0.04 },
-    WR:  { age: 0.14, breakout: 0.16, prod: 0.26, conf: 0.10, ras: 0.10, dc: 0.13, tm: 0.05, size: 0.06 },
-    TE:  { age: 0.10, breakout: 0.15, prod: 0.28, conf: 0.11, ras: 0.14, dc: 0.11, tm: 0.05, size: 0.06 }
+    QB:  { age: 0.15, breakout: 0.10, prod: 0.27, conf: 0.07, ras: 0.07, dc: 0.23, tm: 0.05, size: 0.06 },
+    RB:  { age: 0.18, breakout: 0.12, prod: 0.24, conf: 0.06, ras: 0.12, dc: 0.18, tm: 0.05, size: 0.05 },
+    WR:  { age: 0.16, breakout: 0.16, prod: 0.25, conf: 0.07, ras: 0.10, dc: 0.13, tm: 0.05, size: 0.08 },
+    TE:  { age: 0.12, breakout: 0.14, prod: 0.26, conf: 0.08, ras: 0.15, dc: 0.11, tm: 0.05, size: 0.09 }
   };
 
-  // Conference tiers based on historical NFL production rates
+  // Conference tiers — DATA-DRIVEN from era analysis
+  // Data showed conferences are much flatter than previously assumed.
+  // ALL ERAS starter rates by conf (averaged across positions):
+  //   Big 12: 43% (highest for RB, QB), SEC: 39%, Big Ten: 36%, Pac-12: 35%, ACC: 32%
+  //   G5: 28-30%, FCS: 24-29%
+  // Modern era is even flatter. SEC isn't the clear #1 the way we assumed.
   const CONF_TIERS = {
-    'SEC': 100, 'Big Ten': 90, 'Big 12': 82, 'ACC': 80, 'Pac-12': 78,
+    'SEC': 85, 'Big Ten': 82, 'Big 12': 85, 'ACC': 75, 'Pac-12': 80,
     'Big East': 70, 'AAC': 55, 'Mountain West': 50, 'Sun Belt': 42,
     'C-USA': 40, 'MAC': 38, 'Independent': 45, 'Ind': 45,
     'WAC': 35, 'MVC': 30, 'MVFC': 30, 'Big Sky': 28,
@@ -13308,19 +13313,19 @@ window.fmtHeight = fmtHeight;
   };
 
   // Sub-score: Draft Age → 0-100
-  // Optimal ranges by position (based on elite NFL producers):
-  //   QB: 21.5-23.0 (Mahomes 21.7, Allen 22.0, Burrow 23.4, Herbert 22.0)
-  //   RB: 20.5-21.5 (Henry 22.3, McCaffrey 20.9, Barkley 21.2, Chubb 22.3)
-  //   WR: 20.5-22.0 (Jefferson 21.0, Chase 21.1, Lamb 21.2, Hill 22.3)
-  //   TE: 21.0-23.5 (Kelce 24.7, Andrews 23.0, Kittle 23.1, Pitts 20.8)
+  // DATA-DRIVEN from era analysis. Modern era shows steeper age curves than classic.
+  // Modern QB: 21.5-22.0 is 75% starter, 23.6+ drops to 24%
+  // Modern RB: 20.6-21.0 is 70% starter, 22.6+ drops to 10-11%
+  // Modern WR: 21.1-21.5 is 66% starter, 23.6+ drops to 13%
+  // Modern TE: 21.1-21.5 is 100% starter, 23.6+ drops to 13%
   function jmAge(age, pos) {
     if (age == null) return null;
-    // Position-specific ideal center and decay rate
+    // Using modern era data with tighter curves than before
     const params = {
-      QB:  { center: 22.0, sigma: 1.8, skew: 0.3 },  // slight tolerance for older QBs
-      RB:  { center: 21.0, sigma: 1.2, skew: -0.2 },  // younger is significantly better
-      WR:  { center: 21.2, sigma: 1.5, skew: -0.1 },  // slight young bias
-      TE:  { center: 22.5, sigma: 2.0, skew: 0.5 }    // TEs can enter older
+      QB:  { center: 21.8, sigma: 1.5, skew: 0.2 },   // Modern: 21.5-22.5 sweet spot (75%)
+      RB:  { center: 20.8, sigma: 1.0, skew: -0.3 },   // Modern: 20.6-21.0 best (70%), drops fast
+      WR:  { center: 21.0, sigma: 1.3, skew: -0.2 },   // Modern: 20.6-21.5 best (50-66%)
+      TE:  { center: 21.3, sigma: 1.5, skew: 0.1 }     // Modern: 21.1-21.5 best (100% but small n)
     };
     const p = params[pos] || params.WR;
     const diff = age - p.center;
@@ -13330,16 +13335,11 @@ window.fmtHeight = fmtHeight;
   }
 
   // Sub-score: Breakout Age → 0-100
-  // Earlier breakout = higher score. No breakout = penalty but not zero.
+  // Era analysis confirms: earlier breakout = higher hit rate, especially in modern era
   function jmBreakout(breakoutAge, age, pos) {
     if (breakoutAge == null) {
-      // No breakout: give a base score — they might still have decent production
-      // but lack of a true breakout season is a yellow flag
-      return 25;
+      return 20; // No breakout is a bigger red flag than before
     }
-    // Ideal breakout ages: the earlier the better
-    // Elite: ≤19.5 for WR/RB, ≤20.0 for QB, ≤20.5 for TE
-    // Good: ≤20.5 for WR/RB, ≤21.5 for QB, ≤21.5 for TE
     const params = {
       QB:  { elite: 20.0, good: 21.5, late: 23.5 },
       RB:  { elite: 19.5, good: 20.5, late: 22.0 },
@@ -13350,21 +13350,18 @@ window.fmtHeight = fmtHeight;
     if (breakoutAge <= p.elite) return 100;
     if (breakoutAge <= p.good) return 100 - ((breakoutAge - p.elite) / (p.good - p.elite)) * 25;
     if (breakoutAge <= p.late) return 75 - ((breakoutAge - p.good) / (p.late - p.good)) * 40;
-    // Very late breakout — diminishing returns
-    return Math.max(10, 35 - (breakoutAge - p.late) * 15);
+    return Math.max(5, 35 - (breakoutAge - p.late) * 18);
   }
 
   // Sub-score: College Production (Best PPG) → 0-100
-  // Based on position-specific thresholds from successful NFL players' college stats
+  // Production thresholds remain similar — this is the most stable component across eras
   function jmProduction(bestPpg, pos) {
     if (bestPpg == null || bestPpg === 0) return 0;
-    // Thresholds: [elite_ppg, good_ppg, avg_ppg]
-    // Calibrated to historical best college PPG of successful NFL fantasy players
     const params = {
-      QB:  { elite: 28, good: 22, avg: 16, floor: 8 },   // Burrow ~32, Mahomes ~28, Herbert ~25
-      RB:  { elite: 22, good: 16, avg: 11, floor: 6 },   // Barkley ~24, Henry ~18, McCaffrey ~25
-      WR:  { elite: 18, good: 13, avg: 9,  floor: 5 },   // Chase ~22, Jefferson ~15, Lamb ~14
-      TE:  { elite: 14, good: 10, avg: 7,  floor: 3 }    // Pitts ~16, Kelce ~8, Andrews ~9
+      QB:  { elite: 28, good: 22, avg: 16, floor: 8 },
+      RB:  { elite: 22, good: 16, avg: 11, floor: 6 },
+      WR:  { elite: 18, good: 13, avg: 9,  floor: 5 },
+      TE:  { elite: 14, good: 10, avg: 7,  floor: 3 }
     };
     const p = params[pos] || params.WR;
     if (bestPpg >= p.elite) return Math.min(100, 85 + (bestPpg - p.elite) / (p.elite * 0.3) * 15);
@@ -13376,22 +13373,26 @@ window.fmtHeight = fmtHeight;
 
   // Sub-score: Conference → 0-100
   function jmConf(conf) {
-    if (!conf || conf === '—') return 30; // Unknown conference
+    if (!conf || conf === '—') return 30;
     const aliased = CONF_ALIASES[conf] || conf;
     return CONF_TIERS[aliased] || 30;
   }
 
   // Sub-score: RAS → 0-100
-  // RAS is already 0-10 scale. Map it with position-specific importance.
+  // DATA-DRIVEN: Modern era shows RAS matters MORE than before, especially for TEs
+  // Modern TE: 57% starter at 9+ RAS vs 0% at <3.0
+  // Modern RB: 45% at 9+ vs 15% at 3-5
+  // Modern WR: 36% at 9+ vs 14% at <5
+  // Modern QB: 65% at 9+ vs 0% at <3 (but QB RAS is least predictive)
   function jmRas(ras, pos) {
-    if (ras == null) return null; // Missing = don't count
-    // Simple sigmoid-style mapping: 0-10 → 0-100
-    // Below 3 = very bad, 5 = average, 7 = good, 9+ = elite
+    if (ras == null) return null;
+    // Steeper curve than before based on modern data
     if (ras >= 9.5) return 100;
-    if (ras >= 8.0) return 75 + (ras - 8.0) / 1.5 * 25;
-    if (ras >= 6.0) return 50 + (ras - 6.0) / 2.0 * 25;
-    if (ras >= 4.0) return 25 + (ras - 4.0) / 2.0 * 25;
-    return Math.max(0, ras / 4.0 * 25);
+    if (ras >= 9.0) return 90 + (ras - 9.0) / 0.5 * 10;
+    if (ras >= 7.0) return 55 + (ras - 7.0) / 2.0 * 35;
+    if (ras >= 5.0) return 30 + (ras - 5.0) / 2.0 * 25;
+    if (ras >= 3.0) return 10 + (ras - 3.0) / 2.0 * 20;
+    return Math.max(0, ras / 3.0 * 10);
   }
 
   // Sub-score: Draft Capital → 0-100
@@ -13514,11 +13515,13 @@ window.fmtHeight = fmtHeight;
       if (ht == null) return wt != null && wt >= 210 && wt <= 240 ? 60 : null;
 
       // Height tier score (threshold-based)
+      // DATA: Modern QB - 6'4"+ at 58% starter, 6'2"-6'3" at 37%, 6'0"-6'1" at 28%
       let htScore;
-      if (ht >= 74) htScore = 85;        // 6'2"+ — ideal (vast majority of elite QBs)
-      else if (ht >= 73) htScore = 72;    // 6'1" — fine (Hurts, Brees)
-      else if (ht >= 72) htScore = 55;    // 6'0" — concern (Baker)
-      else if (ht >= 70) htScore = 30;    // 5'10"-5'11" — real risk (Kyler)
+      if (ht >= 76) htScore = 90;        // 6'4"+ — highest hit rate in modern era (58%)
+      else if (ht >= 74) htScore = 75;    // 6'2"-6'3" — solid (37%)
+      else if (ht >= 73) htScore = 60;    // 6'1" — moderate (28% bucket)
+      else if (ht >= 72) htScore = 50;    // 6'0" — concern
+      else if (ht >= 70) htScore = 30;    // 5'10"-5'11" — real risk
       else htScore = 15;                   // Under 5'10" — major red flag
 
       if (wt == null) return htScore;
@@ -13558,10 +13561,13 @@ window.fmtHeight = fmtHeight;
       const idealMax = 210 + (ht - 66) * 7;   // e.g. 5'10" (70") → 238 max
 
       let score;
-      if (ht >= 69 && ht <= 74) score = 80;   // 5'9"-6'2" — normal RB range
-      else if (ht >= 67 && ht <= 75) score = 65;
-      else if (ht < 67) score = 45;            // Under 5'7" — very small
-      else score = 50;                          // Over 6'3" — unusual
+      // DATA: Modern RB height - 5'9"-5'10" at 37% starter, 5'11"-6'0" at 27%, 6'1"+ at 26%
+      // Shorter RBs actually have HIGHER hit rates — lower center of gravity, harder to tackle
+      if (ht >= 69 && ht <= 72) score = 80;   // 5'9"-6'0" — best RB range (data confirms)
+      else if (ht >= 73 && ht <= 74) score = 70;  // 6'1"-6'2" — fine but slightly lower hit rate
+      else if (ht >= 67 && ht <= 68) score = 70;  // 5'7"-5'8" — small but can work
+      else if (ht >= 75) score = 55;            // 6'3"+ — unusual, lower hit rate
+      else if (ht < 67) score = 45;             // Under 5'7" — very small
 
       if (wt == null) return score;
 
@@ -13595,13 +13601,16 @@ window.fmtHeight = fmtHeight;
         return wt < 175 ? 30 : 50;
       }
 
-      // Height tier — taller is better, short is the risk
+      // Height tier — DATA SHOWS HEIGHT IS MUCH FLATTER THAN ASSUMED
+      // ALL ERAS: 6'4"+ 34%, 6'1"-6'3" 34%, 5'11"-6'0" 33%, 5'9"-5'10" 31%, <5'9" 27%
+      // Modern: 5'11"-6'0" actually leads at 33%, 6'4"+ only 24%
+      // Height matters much less than build proportions (WPI)
       let htBase;
-      if (ht >= 76) htBase = 85;              // 6'4"+ — elite size
-      else if (ht >= 73) htBase = 82;         // 6'1"-6'3" — prime range
-      else if (ht >= 71) htBase = 75;         // 5'11"-6'0" — solid
-      else if (ht >= 69) htBase = 50;         // 5'9"-5'10" — risky
-      else htBase = 25;                        // Under 5'9" — very low hit rate
+      if (ht >= 76) htBase = 72;              // 6'4"+ — can work but not the advantage we assumed
+      else if (ht >= 73) htBase = 75;         // 6'1"-6'3" — slight sweet spot
+      else if (ht >= 71) htBase = 75;         // 5'11"-6'0" — equally good (modern era best)
+      else if (ht >= 69) htBase = 65;         // 5'9"-5'10" — slightly lower but viable
+      else htBase = 40;                        // Under 5'9" — data does show a real dropoff here
 
       if (wt == null) return htBase;
 

@@ -14966,13 +14966,15 @@ window.fmtHeight = fmtHeight;
       const ras = cbO ? cbO.ras : null;
 
       // College production (best PPG)
-      // Try direct name match first, then check if any COLLEGE_STATS key maps to this D entry
+      // Try direct name match, then normalized name match
       let collegePpg = null;
-      let cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[d.n] : null;
-      if (!cs) {
-        // Reverse lookup: find COLLEGE_STATS name that maps to this D entry
-        for (const [csName, dEntry] of Object.entries(_csNameToD)) {
-          if (dEntry === d) { cs = COLLEGE_STATS[csName]; break; }
+      let cs = null;
+      if (typeof COLLEGE_STATS !== 'undefined') {
+        cs = COLLEGE_STATS[d.n] || null;
+        if (!cs) {
+          // Try to find matching CS key for this D entry name
+          const csKey = Object.keys(_csNameToD).find(k => _csNameToD[k].n === d.n);
+          if (csKey) cs = COLLEGE_STATS[csKey];
         }
       }
       if (cs && cs.length) {

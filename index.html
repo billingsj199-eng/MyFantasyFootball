@@ -2672,6 +2672,13 @@ if (typeof COMBINE_DATA !== 'undefined') {
     if (!th.school) th.school = 'Colorado';
     if (!th.dt) th.dt = 'JAX';
   }
+  // 2026 prospects missing RAS scores — from ras.football CSV
+  if (COMBINE_DATA['Elijah Sarratt'] && !COMBINE_DATA['Elijah Sarratt'].ras) COMBINE_DATA['Elijah Sarratt'].ras = 6.30;
+  if (COMBINE_DATA['Behren Morton'] && !COMBINE_DATA['Behren Morton'].ras) COMBINE_DATA['Behren Morton'].ras = 5.40;
+  if (COMBINE_DATA['Leon Neal'] && !COMBINE_DATA['Leon Neal'].ras) COMBINE_DATA['Leon Neal'].ras = 2.49;
+  if (COMBINE_DATA['Roman Hemby'] && !COMBINE_DATA['Roman Hemby'].ras) COMBINE_DATA['Roman Hemby'].ras = 6.24;
+  if (COMBINE_DATA['Roydell Williams'] && !COMBINE_DATA['Roydell Williams'].ras) COMBINE_DATA['Roydell Williams'].ras = 7.01;
+  if (COMBINE_DATA['Sebastian Brown'] && !COMBINE_DATA['Sebastian Brown'].ras) COMBINE_DATA['Sebastian Brown'].ras = 4.72;
 }
 </script>
 <script src="data/college_stats.js"></script>

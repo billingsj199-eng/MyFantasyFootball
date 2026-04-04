@@ -13956,55 +13956,62 @@ window.fmtHeight = fmtHeight;
     // ═══ SLEEPER BONUS SYSTEM ═══
     // Derived from Section 13 analysis of Rd 3+/UDFA hits vs misses (2010-2022).
     // Only applies to late-round picks (pick 65+ or UDFA) — these traits being present
-    // despite low draft capital is the actual signal. Bonuses stack.
+    // despite low draft capital is the actual signal.
+    // Values are conservative — the goal is a mild nudge, not a full override of draft capital.
+    // Capped per position to prevent over-inflation.
     let sleeperAdj = 0;
     const isLateRound = (p.dr === 'U') || (typeof p.dr === 'number' && p.dr >= 65) || (typeof p.dr === 'string' && parseInt(p.dr) >= 65);
 
     if (isLateRound) {
       if (p.pos === 'QB') {
         // QB: RAS is the #1 sleeper signal (13.8% gap). Dak 8.2, Russ 8.8, Tyrod 9.7
-        if (p.ras != null && p.ras >= 8.0) sleeperAdj += 3;
-        else if (p.ras != null && p.ras >= 7.0) sleeperAdj += 1;
+        if (p.ras != null && p.ras >= 8.0) sleeperAdj += 2;
       }
 
       if (p.pos === 'RB') {
         // RB: Has breakout is #1 (23.1% gap!) — 93% of hits vs 70% of misses
-        if (hasBo) sleeperAdj += 3;
-        // Early breakout (≤20.5): 50% of hits vs 39% of misses
-        if (hasBo && boAge <= 20.5) sleeperAdj += 3;
-        // Young + has breakout: 47% hits vs 26% misses
-        if (p.age != null && p.age <= 22 && hasBo) sleeperAdj += 2;
-        // RAS ≥7 + breakout ≤21: 34% hits vs 20% misses
-        if (p.ras != null && p.ras >= 7.0 && hasBo && boAge <= 21) sleeperAdj += 2;
-        // High RAS + young: 21% hits vs 9% misses
-        if (p.ras != null && p.ras >= 8.0 && p.age != null && p.age <= 22) sleeperAdj += 2;
+        // Use best-of combo logic: pick the strongest signal, don't stack everything
+        if (hasBo && boAge <= 20.5 && p.age != null && p.age <= 22) {
+          sleeperAdj += 4; // Young + early breakout = strongest combo
+        } else if (hasBo && boAge <= 20.5) {
+          sleeperAdj += 3; // Early breakout alone
+        } else if (hasBo) {
+          sleeperAdj += 2; // Has breakout but not early
+        }
+        // Athletic bonus (independent, smaller)
+        if (p.ras != null && p.ras >= 8.0 && p.age != null && p.age <= 22) sleeperAdj += 1;
       }
 
       if (p.pos === 'WR') {
         // WR: Has breakout = 84% hits vs 65% misses (19.3% gap)
-        if (hasBo) sleeperAdj += 3;
-        // Early breakout (≤20.5): 34% of hits vs 25% of misses
-        if (hasBo && boAge <= 20.5) sleeperAdj += 2;
-        // Young + has breakout: 26% hits vs 15% misses
-        if (p.age != null && p.age <= 22 && hasBo) sleeperAdj += 2;
-        // Young + early breakout: 18% hits vs 5% misses (3.6x!)
-        if (p.age != null && p.age <= 21.5 && hasBo && boAge <= 20.5) sleeperAdj += 2;
-        // RAS ≥7 + breakout ≤21: 20% hits vs 11% misses
-        if (p.ras != null && p.ras >= 7.0 && hasBo && boAge <= 21) sleeperAdj += 2;
+        // Best-of combo logic
+        if (hasBo && boAge <= 20.5 && p.age != null && p.age <= 21.5) {
+          sleeperAdj += 4; // Young + early breakout = strongest (18% hits vs 5% misses)
+        } else if (hasBo && boAge <= 20.5) {
+          sleeperAdj += 3; // Early breakout
+        } else if (hasBo && p.age != null && p.age <= 22) {
+          sleeperAdj += 2; // Young + breakout
+        } else if (hasBo) {
+          sleeperAdj += 1; // Has breakout but nothing else special
+        }
       }
 
       if (p.pos === 'TE') {
-        // TE: Has breakout = 61% hits vs 42% misses; RAS is huge (15.1% gap)
-        if (hasBo) sleeperAdj += 3;
-        // Early breakout (≤20.5): 29% of hits vs 7% of misses (4x!)
-        if (hasBo && boAge <= 20.5) sleeperAdj += 4;
-        // RAS ≥7 + breakout ≤21: 29% hits vs 3% misses (nearly 10x!)
-        if (p.ras != null && p.ras >= 7.0 && hasBo && boAge <= 21) sleeperAdj += 5;
-        // High RAS + young: 19% hits vs 4% misses (4.8x)
-        if (p.ras != null && p.ras >= 8.0 && p.age != null && p.age <= 22) sleeperAdj += 3;
-        // Young + has breakout: 22% vs 6% (3.7x)
-        if (p.age != null && p.age <= 22 && hasBo) sleeperAdj += 3;
+        // TE: RAS + breakout combo is the killer signal (29% vs 3%, nearly 10x)
+        if (p.ras != null && p.ras >= 7.0 && hasBo && boAge <= 21) {
+          sleeperAdj += 4; // RAS + early breakout = strongest TE combo
+        } else if (hasBo && boAge <= 20.5) {
+          sleeperAdj += 3; // Early breakout (29% vs 7%, 4x)
+        } else if (p.ras != null && p.ras >= 8.0 && p.age != null && p.age <= 22) {
+          sleeperAdj += 3; // High RAS + young (19% vs 4%, 4.8x)
+        } else if (hasBo) {
+          sleeperAdj += 2; // Has breakout
+        }
       }
+
+      // Hard cap: sleeper bonus can never exceed these values
+      const sleeperCap = { QB: 2, RB: 5, WR: 4, TE: 4 };
+      sleeperAdj = Math.min(sleeperAdj, sleeperCap[p.pos] || 4);
     }
 
     const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + bustAdj + sleeperAdj) * 10) / 10));

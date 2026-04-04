@@ -15022,7 +15022,14 @@ window.fmtHeight = fmtHeight;
           totRecYds += (s.rcy || 0);
           totRecs += (s.rec || 0);
           const fp = (s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*rm + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2;
-          const gp = s.gp || null;
+          // GP might be missing from college stats — try multiple sources
+          let gp = s.gp || null;
+          // Try COLLEGE_WEEKLY for GP
+          if (!gp && typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[d.n] && COLLEGE_WEEKLY[d.n][s.yr]) {
+            gp = _filterCollegeWeeks(COLLEGE_WEEKLY[d.n][s.yr]).length;
+          }
+          // Estimate GP from stats if still missing (most college seasons are 12-14 games)
+          if (!gp && fp > 0) gp = 13; // reasonable estimate
           if (gp && gp > 0) {
             collegeSeasons.push({ yr: s.yr, ppg: Math.round((fp / gp) * 10) / 10 });
           }

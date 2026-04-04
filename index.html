@@ -14939,12 +14939,20 @@ window.fmtHeight = fmtHeight;
 
       // Career college YPC and YPR
       let totRushYds = 0, totRushAtt = 0, totRecYds = 0, totRecs = 0;
+      // Store per-season PPGs for breakout threshold testing
+      const collegeSeasons = [];
       if (cs && cs.length) {
+        const rm = 0.5;
         cs.forEach(s => {
           totRushYds += (s.ry || 0);
           totRushAtt += (s.ra || 0);
           totRecYds += (s.rcy || 0);
           totRecs += (s.rec || 0);
+          const fp = (s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*rm + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2;
+          const gp = s.gp || null;
+          if (gp && gp > 0) {
+            collegeSeasons.push({ yr: s.yr, ppg: Math.round((fp / gp) * 10) / 10 });
+          }
         });
       }
       const ypc = totRushAtt > 0 ? Math.round((totRushYds / totRushAtt) * 10) / 10 : null;
@@ -14954,7 +14962,7 @@ window.fmtHeight = fmtHeight;
         name: d.n, pos: d.s, pick, draftYr,
         bestPpg: Math.round(bestPpg * 10) / 10,
         age, ht, wt, ras, collegePpg, conf,
-        ypc, ypr,
+        ypc, ypr, collegeSeasons,
         seasons: career.length
       });
     });
@@ -15537,34 +15545,25 @@ window.fmtHeight = fmtHeight;
       console.log('  Threshold    Broke Out   No Breakout   BO Starter%   No-BO Starter%   GAP     BO Elite%   No-BO Elite%   Elite GAP   Avg BO Age');
 
       threshList.forEach(thresh => {
-        // Recalculate breakout age for each player at this threshold
         let boPlayers = 0, noBoPlayers = 0;
         let boStarters = 0, noBoStarters = 0;
         let boElite = 0, noBoElite = 0;
         let totalBoAge = 0, boAgeCount = 0;
 
         posPlayers.forEach(p => {
-          const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[p.name] : null;
-          if (!cs || !cs.length) return;
+          if (!p.collegeSeasons || !p.collegeSeasons.length) return;
 
-          const rm = 0.5;
           let brokeOut = false;
           let earliestBoAge = null;
 
-          cs.forEach(s => {
-            const fp = (s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*rm + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2;
-            const gp = s.gp || null;
-            if (gp && gp > 0) {
-              const ppg = fp / gp;
-              if (ppg >= thresh) {
-                brokeOut = true;
-                // Calculate breakout age
-                if (p.age != null && s.yr && p.draftYr) {
-                  const seasonsBeforeDraft = p.draftYr - s.yr - 1;
-                  const boAge = p.age - seasonsBeforeDraft;
-                  if (boAge >= 17 && boAge <= 25 && (earliestBoAge == null || boAge < earliestBoAge)) {
-                    earliestBoAge = boAge;
-                  }
+          p.collegeSeasons.forEach(s => {
+            if (s.ppg >= thresh) {
+              brokeOut = true;
+              if (p.age != null && s.yr && p.draftYr) {
+                const seasonsBeforeDraft = p.draftYr - s.yr - 1;
+                const boAge = p.age - seasonsBeforeDraft;
+                if (boAge >= 17 && boAge <= 25 && (earliestBoAge == null || boAge < earliestBoAge)) {
+                  earliestBoAge = boAge;
                 }
               }
             }

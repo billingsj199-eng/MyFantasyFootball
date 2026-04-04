@@ -13959,6 +13959,13 @@ window.fmtHeight = fmtHeight;
       }
       // Helper: get overall pick estimate for a name
       function _getDrVal(n) {
+        // Check Firestore DC edits first (admin-edited 2026 draft capital)
+        if (_dcCache[n]) {
+          const dcVal = _dcCache[n];
+          if (dcVal === 'U') return 300;
+          const v = parseInt(dcVal);
+          if (!isNaN(v) && v > 0) return v;
+        }
         const cbO = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[n] : null;
         if (cbO && cbO.draft != null) {
           if (cbO.draft === 'U' || cbO.draft === 'u') return 300;

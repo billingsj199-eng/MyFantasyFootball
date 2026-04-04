@@ -2687,12 +2687,7 @@ function validateImportData(obj) {
   // Apply cached fixes immediately
   let cachedCount = 0;
   playersToFix.forEach(p => {
-    // FALLBACK_IDS always take priority over cached values
-    if (FALLBACK_IDS[p.n]) {
-      p._slImg = IMG_BASE + FALLBACK_IDS[p.n] + IMG_SUFFIX;
-      cache[p.n] = FALLBACK_IDS[p.n];
-      cachedCount++;
-    } else if (cache[p.n]) { p._slImg = IMG_BASE + cache[p.n] + IMG_SUFFIX; cachedCount++; }
+    if (cache[p.n]) { p._slImg = IMG_BASE + cache[p.n] + IMG_SUFFIX; cachedCount++; }
   });
   if (cachedCount > 0) console.log('[HeadshotFix] Applied ' + cachedCount + ' cached fixes');
 
@@ -2744,6 +2739,14 @@ function validateImportData(obj) {
   };
   Object.assign(nameToId, FALLBACK_IDS);
   window.FALLBACK_IDS = FALLBACK_IDS;
+
+  // Override stale cached IDs with FALLBACK_IDS (corrects wrong headshots from prior cache)
+  playersToFix.forEach(p => {
+    if (FALLBACK_IDS[p.n] && cache[p.n] !== FALLBACK_IDS[p.n]) {
+      p._slImg = IMG_BASE + FALLBACK_IDS[p.n] + IMG_SUFFIX;
+      cache[p.n] = FALLBACK_IDS[p.n];
+    }
+  });
 
   function normName(n) { return n.replace(/['']/g, "'").replace(/\s+/g, ' ').trim(); }
 

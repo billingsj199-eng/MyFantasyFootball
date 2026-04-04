@@ -14900,6 +14900,7 @@ window.fmtHeight = fmtHeight;
 
     const players = [];
     const _addedNames = new Set();
+    let _csDebugCount = 0;
 
     D.forEach(d => {
       if (!d.n || !d.s || !['QB','RB','WR','TE'].includes(d.s)) return;
@@ -14969,13 +14970,19 @@ window.fmtHeight = fmtHeight;
       // Try direct name match, then normalized name match
       let collegePpg = null;
       let cs = null;
+      let _csSource = 'none';
       if (typeof COLLEGE_STATS !== 'undefined') {
         cs = COLLEGE_STATS[d.n] || null;
+        if (cs) _csSource = 'direct';
         if (!cs) {
-          // Try to find matching CS key for this D entry name
           const csKey = Object.keys(_csNameToD).find(k => _csNameToD[k].n === d.n);
-          if (csKey) cs = COLLEGE_STATS[csKey];
+          if (csKey) { cs = COLLEGE_STATS[csKey]; _csSource = 'reverse:' + csKey; }
         }
+      }
+      // Debug: log first 3 matches
+      if (cs && _csDebugCount < 3) {
+        console.log('[JM DEBUG CS] ' + d.n + ' → found via ' + _csSource + ', seasons: ' + cs.length);
+        _csDebugCount++;
       }
       if (cs && cs.length) {
         const rm = 0.5; // half PPR

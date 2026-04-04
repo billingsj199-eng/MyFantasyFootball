@@ -13696,12 +13696,13 @@ window.fmtHeight = fmtHeight;
   function jmEfficiency(pos, ypc, ypr) {
     if (pos === 'RB') {
       if (ypc == null) return null;
-      // Sweet spot is 6.0-6.99, above 7 is actually worse (small sample/gadget backs)
+      // Data: 6.0-6.99 = 50% starter (sweet spot), 7.0+ = 29% (decent, not a penalty)
+      // 5.5-5.99 = 32%, 5.0-5.49 = 18%, <4.5 = 14%
       if (ypc >= 6.5 && ypc < 7.0) return 95;
       if (ypc >= 6.0 && ypc < 6.5) return 90;
-      if (ypc >= 7.0 && ypc < 7.5) return 75;       // Slightly high — could be low volume
+      if (ypc >= 7.0 && ypc < 8.0) return 82;       // Good — 29% starter rate is solid
       if (ypc >= 5.5 && ypc < 6.0) return 65;
-      if (ypc >= 7.5) return 55;                      // Very high — almost certainly low volume
+      if (ypc >= 8.0) return 70;                      // Very high — might be low volume but still efficient
       if (ypc >= 5.0 && ypc < 5.5) return 40;
       if (ypc >= 4.5 && ypc < 5.0) return 25;
       if (ypc >= 4.0 && ypc < 4.5) return 15;
@@ -13815,12 +13816,26 @@ window.fmtHeight = fmtHeight;
     const blended = floorRaw * 0.60 + ceilRaw * 0.40;
 
     // Games played bonus/penalty
+    // Only penalize very low GP (small sample concern) — this is defensible even with
+    // incomplete data because if we only have <15 games, sample IS small regardless.
+    // We don't bonus high GP or penalize high GP because GP tracking is inconsistent
+    // across eras and some players have more complete records than others.
     let gpAdj = 0;
     if (p.gp != null) {
-      if (p.gp >= 50) gpAdj = 2;
-      else if (p.gp >= 40) gpAdj = 1;
-      else if (p.gp < 15) gpAdj = -3;
+      if (p.gp < 15) gpAdj = -3;
       else if (p.gp < 20) gpAdj = -1.5;
+    }
+
+    // Early declare bonus: if player produced at elite level but only played 2-3 college seasons,
+    // they were so good they left early — strong upside signal for RB/WR
+    if (p.pos === 'RB' || p.pos === 'WR') {
+      const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[p.name] : null;
+      if (cs && cs.length <= 3 && cs.length >= 2 && p.bestPpg > 0) {
+        const prodThresh = p.pos === 'RB' ? 14 : 11;
+        if (p.bestPpg >= prodThresh && p.age != null && p.age <= 21.5) {
+          gpAdj += 2;  // Young + productive + declared early = strong signal
+        }
+      }
     }
 
     const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj) * 10) / 10));

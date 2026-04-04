@@ -2632,6 +2632,16 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Marvin Harrison Jr.'] && COMBINE_DATA['Marvin Harrison Jr.'].yr === 2000) {
     COMBINE_DATA['Marvin Harrison Jr.'].yr = 2024;
   }
+  // 'Marvin Harrison' entry in external file mixes dad's accolades (pb:8, ap:3, hof:1, dt:IND)
+  // with Jr.'s draft data (school:Ohio St., draft:4, ht:6-3, wt:209). Clean it up:
+  if (COMBINE_DATA['Marvin Harrison'] && COMBINE_DATA['Marvin Harrison'].pb) {
+    // Save dad under Sr.
+    if (!COMBINE_DATA['Marvin Harrison Sr.']) {
+      COMBINE_DATA['Marvin Harrison Sr.'] = { yr: 1996, school: 'Syracuse', ht: '6-0', wt: 181, draft: 19, dt: 'IND', pb: 8, ap: 3, hof: 1 };
+    }
+    // Overwrite with Jr.'s clean data — remove dad's accolades
+    COMBINE_DATA['Marvin Harrison'] = { yr: 2024, school: 'Ohio St.', ht: '6-3', wt: 209, draft: 4, dt: 'ARI' };
+  }
 }
 </script>
 <script src="data/college_stats.js"></script>

@@ -4390,11 +4390,15 @@ function openPlayerCard(d) {
 
   // JM Score badge for player card
   let _cardJm = null;
+  let _cardJmLowConf = false;
   if (window._pmBuiltData && window._jmClass) {
     const _pmData = window._pmBuiltData();
     if (_pmData && _pmData.length) {
       const _pmMatch = _pmData.find(p => p.name === d.n);
-      if (_pmMatch && _pmMatch.jm != null) _cardJm = _pmMatch.jm;
+      if (_pmMatch && _pmMatch.jm != null) {
+        _cardJm = _pmMatch.jm;
+        _cardJmLowConf = !!_pmMatch.lowConfidence;
+      }
     }
   }
 
@@ -4404,7 +4408,7 @@ function openPlayerCard(d) {
       <div class="card-hero">
         ${d._slImg ? `<img src="${d._slImg}" alt="${d.n}" onerror="this.style.display='none'">` : ''}
         <div>
-          <div class="card-name">${d.n}${_cardJm != null ? ` <span class="pm-jm-badge ${window._jmClass(_cardJm)}" style="font-size:.65rem;vertical-align:middle;margin-left:6px" title="JM Score">JM ${_cardJm.toFixed(1)}</span>` : ''}</div>
+          <div class="card-name">${d.n}${_cardJm != null ? ` <span class="pm-jm-badge ${_cardJmLowConf ? 'pm-jm-avg" style="font-size:.65rem;vertical-align:middle;margin-left:6px;opacity:.45" title="JM Score (low data coverage)' : window._jmClass(_cardJm) + '" style="font-size:.65rem;vertical-align:middle;margin-left:6px" title="JM Score'}">JM ${_cardJm.toFixed(1)}${_cardJmLowConf ? '?' : ''}</span>` : ''}</div>
           <div class="card-meta">
             <span class="pos-badge ${d.s}">${d.s}</span>
             <span class="card-team">${d.t}</span>
@@ -13847,13 +13851,20 @@ window.fmtHeight = fmtHeight;
 
     // Calculate floor score (starter rate calibrated)
     let floorWeight = 0, floorSum = 0;
+    let totalPossibleWeight = 0;
     scores.forEach(s => {
+      totalPossibleWeight += wFloor[s.key];
       if (s.score != null) {
         const w = wFloor[s.key];
         floorWeight += w;
         floorSum += s.score * w;
       }
     });
+
+    // Data coverage: what % of the total weight do we actually have data for?
+    const dataCoverage = totalPossibleWeight > 0 ? Math.round((floorWeight / totalPossibleWeight) * 100) : 0;
+    // Count how many of the 9 components have data
+    const dataCount = scores.filter(s => s.score != null).length;
 
     // Calculate ceiling score (elite rate calibrated)
     let ceilWeight = 0, ceilSum = 0;
@@ -14015,7 +14026,10 @@ window.fmtHeight = fmtHeight;
     }
 
     const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj) * 10) / 10));
-    return { jm: final, bustAdj, sleeperAdj };
+    // Low confidence if less than 60% of weight has data, or fewer than 5 of 9 components
+    const lowConfidence = dataCoverage < 60 || dataCount < 5;
+
+    return { jm: final, bustAdj, sleeperAdj, dataCoverage, dataCount, lowConfidence };
   }
 
   // JM Score display class
@@ -14310,6 +14324,9 @@ window.fmtHeight = fmtHeight;
       if (!pos || !['QB','RB','WR','TE'].includes(pos)) return;
 
       const draftYr = getDraftYear(name);
+      // Skip pre-2010 draft classes — college stats data doesn't cover them reliably,
+      // producing low-confidence scores that clutter the model
+      if (draftYr != null && draftYr < 2010) return;
       // Get exact birthday ONLY — no integer approximations
       let birth = null;
       if (typeof LEGEND_BIRTH_YEARS !== 'undefined' && typeof LEGEND_BIRTH_YEARS[name] === 'string' && LEGEND_BIRTH_YEARS[name].includes('-')) {
@@ -14561,10 +14578,14 @@ window.fmtHeight = fmtHeight;
         prospectRecord.jm = _jmResult.jm;
         prospectRecord.bustAdj = _jmResult.bustAdj;
         prospectRecord.sleeperAdj = _jmResult.sleeperAdj;
+        prospectRecord.dataCoverage = _jmResult.dataCoverage;
+        prospectRecord.lowConfidence = _jmResult.lowConfidence;
       } else {
         prospectRecord.jm = _jmResult;
         prospectRecord.bustAdj = 0;
         prospectRecord.sleeperAdj = 0;
+        prospectRecord.dataCoverage = 0;
+        prospectRecord.lowConfidence = true;
       }
       results.push(prospectRecord);
     });
@@ -14729,7 +14750,11 @@ window.fmtHeight = fmtHeight;
             break;
           case 'jm':
             if (p.jm != null) {
-              rows += `<td class="pm-jm"><span class="pm-jm-badge ${jmClass(p.jm)}">${p.jm.toFixed(1)}</span></td>`;
+              if (p.lowConfidence) {
+                rows += `<td class="pm-jm" title="Low data coverage (${p.dataCoverage}%) — score may not be reliable"><span class="pm-jm-badge pm-jm-avg" style="opacity:.45">${p.jm.toFixed(1)}</span> <span style="font-size:.5rem;color:var(--text2);opacity:.6">?</span></td>`;
+              } else {
+                rows += `<td class="pm-jm"><span class="pm-jm-badge ${jmClass(p.jm)}">${p.jm.toFixed(1)}</span></td>`;
+              }
             } else {
               rows += `<td class="pm-jm" style="color:var(--text2);opacity:.4">—</td>`;
             }

@@ -4381,18 +4381,21 @@ function _filterCollegeWeeks(weeks) {
 }
 
 function openPlayerCard(d) {
-  if (!h) return '—';
-  const inches = parseInt(h);
-  if (isNaN(inches)) return h;
-  return Math.floor(inches/12) + "'" + (inches%12) + '"';
-}
-
-function openPlayerCard(d) {
   const best = bestPpg(d);
   const _cardAdp = rnkAdp(d);
   const diffVal = _cardAdp != null ? _cardAdp - d.myRank : 0;
   const diffClass = _cardAdp == null ? 'accent' : Math.abs(diffVal) < 0.5 ? 'accent' : diffVal > 0 ? 'green' : 'red';
   const diffText = _cardAdp == null ? '—' : Math.abs(diffVal) < 0.5 ? '—' : (diffVal > 0 ? '▲ ' : '▼ ') + Math.abs(diffVal).toFixed(0);
+
+  // JM Score badge for player card
+  let _cardJm = null;
+  if (window._pmBuiltData && window._jmClass) {
+    const _pmData = window._pmBuiltData();
+    if (_pmData && _pmData.length) {
+      const _pmMatch = _pmData.find(p => p.name === d.n);
+      if (_pmMatch && _pmMatch.jm != null) _cardJm = _pmMatch.jm;
+    }
+  }
 
   cardEl.innerHTML = `
     <div class="card-header">
@@ -4400,7 +4403,7 @@ function openPlayerCard(d) {
       <div class="card-hero">
         ${d._slImg ? `<img src="${d._slImg}" alt="${d.n}" onerror="this.style.display='none'">` : ''}
         <div>
-          <div class="card-name">${d.n}</div>
+          <div class="card-name">${d.n}${_cardJm != null ? ` <span class="pm-jm-badge ${window._jmClass(_cardJm)}" style="font-size:.65rem;vertical-align:middle;margin-left:6px" title="JM Score">JM ${_cardJm.toFixed(1)}</span>` : ''}</div>
           <div class="card-meta">
             <span class="pos-badge ${d.s}">${d.s}</span>
             <span class="card-team">${d.t}</span>
@@ -13222,6 +13225,8 @@ window.fmtHeight = fmtHeight;
   let pmSearchVal = '';
   let pmTmMin = 0;
   let pmBuiltData = [];
+  window._pmBuiltData = function() { return pmBuiltData; };
+  window._jmClass = null; // set after jmClass is defined
 
   // Draft Capital: stored in Firestore, only editable for 2026 class by admin
   const _dcCache = {}; // {playerName: "1.04", ...}
@@ -13880,6 +13885,7 @@ window.fmtHeight = fmtHeight;
     if (v >= 35) return 'pm-jm-avg';
     return 'pm-jm-low';
   }
+  window._jmClass = jmClass;
 
   // Calculate age at draft to one decimal — ONLY for exact birthdays
   // Calculate age at draft — April 28 of draft year minus exact birthday
@@ -13975,17 +13981,6 @@ window.fmtHeight = fmtHeight;
   function _normSchool(s) { if (!s) return ''; const a = _SCHOOL_NORM[s] || s; return a.toLowerCase().replace(/[.\s]/g,''); }
 
   function buildProspectData() {
-    // DEBUG: log first player's birthday lookup
-    const _dbgName = 'Joe Burrow';
-    const _dbgLB = (typeof LEGEND_BIRTH_YEARS !== 'undefined') ? LEGEND_BIRTH_YEARS[_dbgName] : 'LEGEND_BIRTH_YEARS undefined';
-    const _dbgType = typeof _dbgLB;
-    const _dbgD = D.find(p => p.n === _dbgName);
-    const _dbgAge = _dbgD ? _dbgD.age : 'not in D';
-    const _dbgDr = _dbgD ? _dbgD.dr : 'not in D';
-    const _dbgCB = (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[_dbgName]) ? JSON.stringify(Object.keys(COMBINE_DATA[_dbgName])) : 'not in CB';
-    const _dbgBIO = (typeof LEGEND_BIO !== 'undefined' && LEGEND_BIO[_dbgName]) ? JSON.stringify(LEGEND_BIO[_dbgName]) : 'not in BIO';
-    console.log('[PM DEBUG] Joe Burrow:', {birth: _dbgLB, birthType: _dbgType, dAge: _dbgAge, dDr: _dbgDr, cbKeys: _dbgCB, bio: _dbgBIO});
-
     const allNames = new Set();
     if (typeof COMBINE_DATA !== 'undefined') Object.keys(COMBINE_DATA).forEach(n => allNames.add(n));
     if (typeof COLLEGE_STATS !== 'undefined') Object.keys(COLLEGE_STATS).forEach(n => allNames.add(n));
@@ -14257,7 +14252,7 @@ window.fmtHeight = fmtHeight;
       let totPy = 0, totRy = 0, totRcy = 0, totRec = 0, totPtd = 0, totRtd = 0, totRctd = 0, totInt = 0, totRa = 0;
 
       // Breakout age: earliest season with PPG above threshold
-      const _boThresh = { QB: 20, RB: 14, WR: 12, TE: 8.5 };
+      const _boThresh = { QB: 22, RB: 10, WR: 12, TE: 8.5 };
       const boThresh = _boThresh[pos] || 12;
       let breakoutYr = null;
 
@@ -14900,16 +14895,6 @@ window.fmtHeight = fmtHeight;
 
     const players = [];
     const _addedNames = new Set();
-    let _csDebugCount = 0;
-
-    // Direct test
-    if (typeof COLLEGE_STATS !== 'undefined') {
-      const _test = COLLEGE_STATS['A.J. Brown'];
-      console.log('[JM DEBUG DIRECT] COLLEGE_STATS["A.J. Brown"] = ' + (typeof _test) + ', isArray: ' + Array.isArray(_test) + ', length: ' + (_test ? _test.length : 'null'));
-      const _testD = D.find(p => p.n === 'A.J. Brown');
-      console.log('[JM DEBUG DIRECT] D "A.J. Brown" exists: ' + !!_testD + ', pos: ' + (_testD ? _testD.s : '—'));
-      if (_test && _test.length) console.log('[JM DEBUG DIRECT] First season: ' + JSON.stringify(_test[0]));
-    }
 
     D.forEach(d => {
       if (!d.n || !d.s || !['QB','RB','WR','TE'].includes(d.s)) return;
@@ -14979,19 +14964,12 @@ window.fmtHeight = fmtHeight;
       // Try direct name match, then normalized name match
       let collegePpg = null;
       let cs = null;
-      let _csSource = 'none';
       if (typeof COLLEGE_STATS !== 'undefined') {
         cs = COLLEGE_STATS[d.n] || null;
-        if (cs) _csSource = 'direct';
         if (!cs) {
           const csKey = Object.keys(_csNameToD).find(k => _csNameToD[k].n === d.n);
-          if (csKey) { cs = COLLEGE_STATS[csKey]; _csSource = 'reverse:' + csKey; }
+          if (csKey) { cs = COLLEGE_STATS[csKey]; }
         }
-      }
-      // Debug: log first 3 matches
-      if (cs && _csDebugCount < 3) {
-        console.log('[JM DEBUG CS] ' + d.n + ' → found via ' + _csSource + ', seasons: ' + cs.length);
-        _csDebugCount++;
       }
       if (cs && cs.length) {
         const rm = 0.5; // half PPR
@@ -15047,24 +15025,18 @@ window.fmtHeight = fmtHeight;
       });
     });
 
-    console.log('%c[JM ERA ANALYSIS] ' + players.length + ' total players', 'color: #f59e0b; font-weight: bold; font-size: 16px');
 
     // Diagnostic: how many players have college data?
     const withCS = players.filter(p => p.collegeSeasons && p.collegeSeasons.length > 0);
     const withCPpg = players.filter(p => p.collegePpg != null);
-    console.log('[JM DEBUG] Players with collegeSeasons: ' + withCS.length + ', with collegePpg: ' + withCPpg.length);
-    console.log('[JM DEBUG] _csNameToD entries: ' + Object.keys(_csNameToD).length);
     if (typeof COLLEGE_STATS !== 'undefined') {
       const csKeys = Object.keys(COLLEGE_STATS);
-      console.log('[JM DEBUG] COLLEGE_STATS has ' + csKeys.length + ' keys');
       // Show first 5 CS keys and whether they match D array
       csKeys.slice(0, 10).forEach(k => {
         const dMatch = D.find(p => p.n === k);
         const revMatch = _csNameToD[k];
-        console.log('[JM DEBUG]   CS key: "' + k + '" → D exact: ' + (dMatch ? dMatch.n : 'NO') + ', reverse: ' + (revMatch ? revMatch.n : 'NO'));
       });
     } else {
-      console.log('[JM DEBUG] COLLEGE_STATS is undefined!');
     }
 
     // === SECTION 1: DRAFT CAPITAL BY ERA ===
@@ -15618,7 +15590,6 @@ window.fmtHeight = fmtHeight;
 
     // === SECTION 11: BREAKOUT THRESHOLD OPTIMIZATION ===
     console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 11: BREAKOUT THRESHOLD OPTIMIZATION', 'color: #f59e0b; font-weight: bold; font-size: 14px');
     console.log('%c  Testing different PPG thresholds to find which best separates hits from busts', 'color: #f59e0b');
     console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
 
@@ -15708,8 +15679,188 @@ window.fmtHeight = fmtHeight;
       });
     });
 
+    // === SECTION 12: HIGH DRAFT CAPITAL BUST PROFILE ANALYSIS ===
     console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  [JM ERA ANALYSIS COMPLETE] — Copy all output and share to calibrate model', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c  SECTION 12: HIGH DRAFT CAPITAL BUST PROFILE ANALYSIS', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c  Compares prospect profiles of high-DC busts vs high-DC hits to find bust signals', 'color: #f59e0b');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    const bustTiers = new Set(['BUST', 'BACKUP/BUST', 'ROLE PLAYER', 'ONE-YEAR WONDER']);
+    const hitTiers = new Set(['GENERATIONAL', 'ELITE', 'FRANCHISE', 'STRONG RB1', 'STRONG WR1', 'STRONG TE1', 'SOLID STARTER']);
+
+    positions.forEach(pos => {
+      // High draft capital = rounds 1-2 (picks 1-64), modern era 2010-2022
+      const highDC = players.filter(p =>
+        p.pos === pos && p.pick != null && p.pick <= 64 &&
+        p.draftYr && p.draftYr >= 2010 && p.draftYr <= 2022 &&
+        p.tier != null
+      );
+      if (highDC.length < 5) return;
+
+      const busts = highDC.filter(p => bustTiers.has(p.tier));
+      const hits = highDC.filter(p => hitTiers.has(p.tier));
+
+      console.log('%c\n' + pos + ' — High Draft Capital (Rd 1-2, 2010-2022): ' +
+        highDC.length + ' total, ' + hits.length + ' hits, ' + busts.length + ' busts (' +
+        Math.round(busts.length / highDC.length * 100) + '% bust rate)',
+        'color: #22c55e; font-weight: bold; font-size: 13px');
+
+      if (busts.length < 3) {
+        console.log('  (Too few busts to analyze)');
+        return;
+      }
+
+      function grpAvg(arr, field) {
+        const v = arr.filter(p => p[field] != null);
+        return v.length >= 2 ? (v.reduce((s, p) => s + p[field], 0) / v.length) : null;
+      }
+      function grpPct(arr, field, threshold, dir) {
+        const v = arr.filter(p => p[field] != null);
+        if (v.length < 2) return null;
+        const matches = dir === 'below'
+          ? v.filter(p => p[field] < threshold).length
+          : v.filter(p => p[field] >= threshold).length;
+        return Math.round(matches / v.length * 100);
+      }
+
+      // ── Attribute comparison table ──
+      const attrs = [
+        { key: 'age', label: 'Draft Age' },
+        { key: 'collegePpg', label: 'College Best PPG' },
+        { key: 'breakoutAge', label: 'Breakout Age' },
+        { key: 'ras', label: 'RAS Score' },
+        { key: 'ht', label: 'Height (in)' },
+        { key: 'wt', label: 'Weight (lbs)' },
+        { key: 'pick', label: 'Draft Pick' }
+      ];
+      if (pos === 'RB') attrs.push({ key: 'ypc', label: 'College YPC' });
+      if (pos === 'WR' || pos === 'TE') attrs.push({ key: 'ypr', label: 'College YPR' });
+
+      console.log('\n  ── Average Prospect Profile: Busts vs Hits ──');
+      console.log('  Attribute            Busts      Hits       Δ        Signal');
+      attrs.forEach(a => {
+        const bAvg = grpAvg(busts, a.key);
+        const hAvg = grpAvg(hits, a.key);
+        if (bAvg == null || hAvg == null) return;
+        const diff = bAvg - hAvg;
+        const pctDiff = hAvg !== 0 ? Math.round(Math.abs(diff) / Math.abs(hAvg) * 100) : 0;
+        const higherIsBetter = ['collegePpg', 'ras', 'ht', 'wt', 'ypc', 'ypr'].includes(a.key);
+        const lowerIsBetter = ['age', 'breakoutAge', 'pick'].includes(a.key);
+        let signal = '';
+        if (Math.abs(pctDiff) >= 10) {
+          if (higherIsBetter) signal = diff < 0 ? '⚠️ BUSTS LOWER' : '';
+          else if (lowerIsBetter) signal = diff > 0 ? '⚠️ BUSTS HIGHER' : '';
+        }
+        if (Math.abs(pctDiff) >= 20) signal = signal.replace('⚠️', '🚨');
+        console.log('  ' + a.label.padEnd(22) +
+          bAvg.toFixed(1).padStart(7) +
+          hAvg.toFixed(1).padStart(10) +
+          ((diff >= 0 ? '+' : '') + diff.toFixed(1)).padStart(9) +
+          '    ' + signal);
+      });
+
+      // ── Conference breakdown ──
+      console.log('\n  ── Conference Distribution ──');
+      const p5Confs = new Set(['SEC', 'Big Ten', 'Big 12', 'ACC', 'Pac-12', 'Pac-10', 'Big East']);
+      function confDist(arr, label) {
+        const p5Count = arr.filter(p => p.conf && p5Confs.has(p.conf)).length;
+        const total = arr.filter(p => p.conf != null).length;
+        if (!total) return;
+        console.log('  ' + label.padEnd(10) + 'P5: ' + Math.round(p5Count/total*100) + '% (' + p5Count + '/' + total + ')' +
+          '    Non-P5: ' + Math.round((total-p5Count)/total*100) + '%');
+      }
+      confDist(busts, 'Busts');
+      confDist(hits, 'Hits');
+
+      // ── Breakout analysis ──
+      console.log('\n  ── Breakout Red Flags ──');
+      const bustNoBo = busts.filter(p => p.breakoutAge == null).length;
+      const hitNoBo = hits.filter(p => p.breakoutAge == null).length;
+      console.log('  No breakout:  Busts ' + Math.round(bustNoBo/busts.length*100) + '% (' + bustNoBo + '/' + busts.length + ')' +
+        '    Hits ' + Math.round(hitNoBo/hits.length*100) + '% (' + hitNoBo + '/' + hits.length + ')');
+
+      const bustLateBo = busts.filter(p => p.breakoutAge != null && p.breakoutAge >= 21.5).length;
+      const bustWithBo = busts.filter(p => p.breakoutAge != null).length;
+      const hitLateBo = hits.filter(p => p.breakoutAge != null && p.breakoutAge >= 21.5).length;
+      const hitWithBo = hits.filter(p => p.breakoutAge != null).length;
+      if (bustWithBo && hitWithBo) {
+        console.log('  Late breakout (≥21.5):  Busts ' + Math.round(bustLateBo/bustWithBo*100) + '%' +
+          '    Hits ' + Math.round(hitLateBo/hitWithBo*100) + '%');
+      }
+
+      // ── Combo Risk Factors ──
+      console.log('\n  ── Combo Risk Factors ──');
+      const bustOldLowProd = busts.filter(p => p.age != null && p.age >= 22.5 && p.collegePpg != null && p.collegePpg < 14).length;
+      const hitOldLowProd = hits.filter(p => p.age != null && p.age >= 22.5 && p.collegePpg != null && p.collegePpg < 14).length;
+      console.log('  Old (≥22.5) + Low Prod (<14 PPG):  Busts ' + bustOldLowProd + '/' + busts.length +
+        ' (' + Math.round(bustOldLowProd/busts.length*100) + '%)' +
+        '    Hits ' + hitOldLowProd + '/' + hits.length +
+        ' (' + Math.round(hitOldLowProd/hits.length*100) + '%)');
+
+      const bustOldNoBo = busts.filter(p => p.age != null && p.age >= 22 && p.breakoutAge == null).length;
+      const hitOldNoBo = hits.filter(p => p.age != null && p.age >= 22 && p.breakoutAge == null).length;
+      console.log('  Old (≥22) + No Breakout:  Busts ' + bustOldNoBo + '/' + busts.length +
+        ' (' + Math.round(bustOldNoBo/busts.length*100) + '%)' +
+        '    Hits ' + hitOldNoBo + '/' + hits.length +
+        ' (' + Math.round(hitOldNoBo/hits.length*100) + '%)');
+
+      const bustLowRas = busts.filter(p => p.ras != null && p.ras < 5).length;
+      const hitLowRas = hits.filter(p => p.ras != null && p.ras < 5).length;
+      const bustWithRas = busts.filter(p => p.ras != null).length;
+      const hitWithRas = hits.filter(p => p.ras != null).length;
+      if (bustWithRas && hitWithRas) {
+        console.log('  Low RAS (<5):  Busts ' + bustLowRas + '/' + bustWithRas +
+          ' (' + Math.round(bustLowRas/bustWithRas*100) + '%)' +
+          '    Hits ' + hitLowRas + '/' + hitWithRas +
+          ' (' + Math.round(hitLowRas/hitWithRas*100) + '%)');
+      }
+
+      const bustLateLow = busts.filter(p => p.breakoutAge != null && p.breakoutAge >= 21 && p.collegePpg != null && p.collegePpg < 12).length;
+      const hitLateLow = hits.filter(p => p.breakoutAge != null && p.breakoutAge >= 21 && p.collegePpg != null && p.collegePpg < 12).length;
+      console.log('  Late Breakout (≥21) + Low PPG (<12):  Busts ' + bustLateLow + '/' + busts.length +
+        ' (' + Math.round(bustLateLow/busts.length*100) + '%)' +
+        '    Hits ' + hitLateLow + '/' + hits.length +
+        ' (' + Math.round(hitLateLow/hits.length*100) + '%)');
+
+      // ── Individual Bust Profiles ──
+      console.log('\n  ── Individual Bust Profiles (Rd 1-2) ──');
+      console.log('  Name                      Pick  Age   BrkAge  ColPPG  RAS   Tier');
+      busts.sort((a, b) => (a.pick || 999) - (b.pick || 999)).forEach(p => {
+        console.log('  ' +
+          (p.name || '').padEnd(28) +
+          ('' + (p.pick || '—')).padStart(4) +
+          (p.age != null ? p.age.toFixed(1) : '  —').padStart(6) +
+          (p.breakoutAge != null ? p.breakoutAge.toFixed(1) : '   —').padStart(8) +
+          (p.collegePpg != null ? p.collegePpg.toFixed(1) : '  —').padStart(8) +
+          (p.ras != null ? p.ras.toFixed(1) : ' —').padStart(6) +
+          '   ' + p.tier);
+      });
+
+      // ── Summary: strongest bust indicators ──
+      console.log('\n  ── Strongest Bust Indicators for ' + pos + ' ──');
+      const indicators = [];
+      attrs.forEach(a => {
+        const bAvg = grpAvg(busts, a.key);
+        const hAvg = grpAvg(hits, a.key);
+        if (bAvg == null || hAvg == null) return;
+        const diff = bAvg - hAvg;
+        const pctDiff = hAvg !== 0 ? Math.abs(diff) / Math.abs(hAvg) * 100 : 0;
+        indicators.push({ label: a.label, pctDiff, diff, key: a.key });
+      });
+      if (busts.length && hits.length) {
+        const bustNoBoRate = bustNoBo / busts.length;
+        const hitNoBoRate = hitNoBo / hits.length;
+        if (bustNoBoRate > hitNoBoRate) {
+          indicators.push({ label: 'No Breakout Rate', pctDiff: (bustNoBoRate - hitNoBoRate) * 100, diff: bustNoBoRate - hitNoBoRate, key: '_nobo' });
+        }
+      }
+      indicators.sort((a, b) => b.pctDiff - a.pctDiff);
+      indicators.slice(0, 5).forEach((ind, i) => {
+        console.log('  ' + (i + 1) + '. ' + ind.label + ' — ' + ind.pctDiff.toFixed(1) + '% gap between busts and hits');
+      });
+    });
+
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
     console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
   }
 

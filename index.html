@@ -13396,22 +13396,89 @@ window.fmtHeight = fmtHeight;
 
   // Sub-score: Draft Capital → 0-100
   // Top-5 pick = 100, late round / UDFA = very low
-  function jmDraftCapital(dr) {
+  function jmDraftCapital(dr, pos) {
     if (dr == null) return null; // Missing = don't count
     if (dr === 'U') return 0; // Undrafted = lowest possible draft capital score
     const pick = typeof dr === 'number' ? dr : parseInt(dr);
     if (isNaN(pick) || pick < 1) return null;
-    // Piecewise mapping: pick → score
-    if (pick <= 1) return 100;
-    if (pick <= 5) return 98 - (pick - 1) * 2;          // 1-5: 100-90
-    if (pick <= 10) return 90 - (pick - 5) * 2;          // 5-10: 90-80
-    if (pick <= 20) return 80 - (pick - 10) * 1.5;       // 10-20: 80-65
-    if (pick <= 32) return 65 - (pick - 20) * 1.25;      // 20-32: 65-50
-    if (pick <= 64) return 50 - (pick - 32) * 0.6;       // 33-64: 50-31
-    if (pick <= 100) return 31 - (pick - 64) * 0.4;      // 65-100: 31-17
-    if (pick <= 150) return 17 - (pick - 100) * 0.2;     // 101-150: 17-7
-    if (pick <= 224) return 7 - (pick - 150) * 0.05;     // 151-224: 7-3
-    return Math.max(1, 3 - (pick - 224) * 0.03);         // 225+: 3-1
+
+    // === QB: Steepest curve — #1 overall is king, drops fast ===
+    // Burrow (#1), Lawrence (#1), Luck (#1) — #1 QB gets the keys immediately
+    // After round 1, QB hit rate craters (Dak, Cousins are extreme outliers)
+    if (pos === 'QB') {
+      if (pick === 1) return 100;
+      if (pick === 2) return 90;
+      if (pick === 3) return 82;
+      if (pick <= 5) return 82 - (pick - 3) * 5;           // 4-5: 77-72
+      if (pick <= 10) return 72 - (pick - 5) * 4;          // 6-10: 68-52
+      if (pick <= 15) return 52 - (pick - 10) * 3;         // 11-15: 49-37
+      if (pick <= 20) return 37 - (pick - 15) * 2;         // 16-20: 35-27
+      if (pick <= 32) return 27 - (pick - 20) * 1;         // 21-32: 26-15
+      if (pick <= 64) return 15 - (pick - 32) * 0.3;       // 33-64: 15-5
+      if (pick <= 100) return 5 - (pick - 64) * 0.1;       // 65-100: 5-1
+      return 1;
+    }
+
+    // === RB: Top 10 is massive — teams rarely spend this capital on RBs anymore ===
+    // === RB: Top 10 is massive, but ALL of round 1 has elite hit rate ===
+    // Barkley (#2), Zeke (#4), McCaffrey (#8), Jacobs (#24), Najee (#24), Bijan (#8)
+    // Teams rarely spend 1st-round capital on RBs anymore — when they do, they're almost always right
+    // Stay flat through round 1, then drop hard into round 2+
+    if (pos === 'RB') {
+      if (pick <= 2) return 100;                             // Top 2 RB = generational
+      if (pick <= 5) return 98 - (pick - 2) * 2;            // 3-5: 96-92
+      if (pick <= 10) return 92 - (pick - 5) * 2;           // 6-10: 90-82
+      if (pick <= 20) return 82 - (pick - 10) * 1.5;        // 11-20: 80.5-67
+      if (pick <= 32) return 67 - (pick - 20) * 1;          // 21-32: 66-55
+      // Round 2 — still viable but committee risk increases (Chubb #35, Henry #45)
+      if (pick <= 50) return 55 - (pick - 32) * 1.5;        // 33-50: 53.5-28
+      if (pick <= 64) return 28 - (pick - 50) * 0.8;        // 51-64: 27.2-16.8
+      // Day 3 — much lower hit rate for RBs
+      if (pick <= 100) return 17 - (pick - 64) * 0.3;       // 65-100: 16.7-6.9
+      if (pick <= 150) return 7 - (pick - 100) * 0.08;      // 101-150: 7-3
+      if (pick <= 224) return 3 - (pick - 150) * 0.02;      // 151-224: 3-1.5
+      return 1;
+    }
+
+    // === WR: More spread out — talent found throughout the draft ===
+    // Jefferson (#22), Lamb (#17), DK (#64), AJ Brown (#51), Tyreek (#165)
+    // WRs can hit from anywhere in the draft, but top picks still correlate
+    // Less steep than QB/RB at the top but more forgiving in middle rounds
+    if (pos === 'WR') {
+      if (pick <= 5) return 100 - (pick - 1) * 2;           // 1-5: 100-92
+      if (pick <= 10) return 92 - (pick - 5) * 2;           // 6-10: 90-82
+      if (pick <= 20) return 82 - (pick - 10) * 1.5;        // 11-20: 80.5-67
+      if (pick <= 32) return 67 - (pick - 20) * 1.2;        // 21-32: 65.8-52.6
+      if (pick <= 50) return 53 - (pick - 32) * 0.8;        // 33-50: 52.2-38.6
+      if (pick <= 64) return 39 - (pick - 50) * 0.7;        // 51-64: 38.3-28.5
+      if (pick <= 100) return 28 - (pick - 64) * 0.4;       // 65-100: 28-14
+      if (pick <= 150) return 14 - (pick - 100) * 0.15;     // 101-150: 14-6.5
+      if (pick <= 200) return 6 - (pick - 150) * 0.06;      // 151-200: 6-3
+      return Math.max(1, 3 - (pick - 200) * 0.03);          // 200+: 3-1
+    }
+
+    // === TE: Rare top picks are MASSIVE signal — Pitts (#4) was first TE top 10 since 2006 ===
+    // When a team breaks convention to draft a TE this high, they're saying he's generational
+    // But TEs can still hit from anywhere: Kelce (#63), Kittle (#146), Andrews (#86)
+    // So: huge premium at top, very forgiving in the middle/late rounds
+    if (pos === 'TE') {
+      if (pick <= 3) return 100;                             // Top 3 TE = generational (almost never happens)
+      if (pick <= 5) return 100 - (pick - 3) * 3;           // 4-5: 97-94
+      if (pick <= 10) return 94 - (pick - 5) * 4;           // 6-10: 90-74
+      if (pick <= 20) return 74 - (pick - 10) * 2.5;        // 11-20: 71.5-49
+      if (pick <= 32) return 49 - (pick - 20) * 1.5;        // 21-32: 47.5-31
+      if (pick <= 50) return 31 - (pick - 32) * 0.6;        // 33-50: 30.4-20.2
+      if (pick <= 64) return 20 - (pick - 50) * 0.4;        // 51-64: 19.6-14.4
+      if (pick <= 100) return 14 - (pick - 64) * 0.2;       // 65-100: 14-7 (Kelce zone)
+      if (pick <= 150) return 7 - (pick - 100) * 0.06;      // 101-150: 7-4 (Kittle zone)
+      if (pick <= 224) return 4 - (pick - 150) * 0.03;      // 151-224: 4-2
+      return Math.max(1, 2 - (pick - 224) * 0.02);          // 225+: 2-1
+    }
+
+    // Fallback (shouldn't hit)
+    if (pick <= 32) return 100 - (pick - 1) * 1.6;
+    if (pick <= 64) return 50 - (pick - 32) * 0.6;
+    return Math.max(1, 31 - (pick - 64) * 0.2);
   }
 
   // Sub-score: Size/Build → 0-100
@@ -13605,7 +13672,7 @@ window.fmtHeight = fmtHeight;
     const prodScore = jmProduction(p.bestPpg, p.pos);
     const confScore = jmConf(p.lastConf);
     const rasScore = jmRas(p.ras, p.pos);
-    const dcScore = jmDraftCapital(p.dr);
+    const dcScore = jmDraftCapital(p.dr, p.pos);
     // Teammate score is 0-10, scale to 0-100 for weighting
     const tmScore = p.tm != null ? Math.min(100, p.tm * 10) : null;
     const sizeScore = jmSize(p.ht, p.wt, p.pos);
@@ -14620,6 +14687,122 @@ window.fmtHeight = fmtHeight;
       });
     } catch(e) {}
   }
+
+  // === DRAFT CAPITAL ANALYSIS ===
+  // Computes actual success rates from the data at runtime
+  // Logs results to console so we can see the real numbers
+  function _analyzeDraftCapital() {
+    if (typeof D === 'undefined') return;
+
+    const positions = ['QB', 'RB', 'WR', 'TE'];
+    const thresholds = {
+      QB:  { elite: 20, hit: 16, starter: 13 },
+      RB:  { elite: 16, hit: 13, starter: 10 },
+      WR:  { elite: 14, hit: 11, starter: 8 },
+      TE:  { elite: 12, hit: 9, starter: 6 }
+    };
+
+    const pickRanges = [
+      { label: 'Pick 1', fn: p => p === 1 },
+      { label: 'Pick 2', fn: p => p === 2 },
+      { label: 'Pick 3', fn: p => p === 3 },
+      { label: 'Pick 4-5', fn: p => p >= 4 && p <= 5 },
+      { label: 'Pick 6-10', fn: p => p >= 6 && p <= 10 },
+      { label: 'Pick 11-15', fn: p => p >= 11 && p <= 15 },
+      { label: 'Pick 16-20', fn: p => p >= 16 && p <= 20 },
+      { label: 'Pick 21-32', fn: p => p >= 21 && p <= 32 },
+      { label: 'Pick 33-50', fn: p => p >= 33 && p <= 50 },
+      { label: 'Pick 51-64', fn: p => p >= 51 && p <= 64 },
+      { label: 'Pick 65-100', fn: p => p >= 65 && p <= 100 },
+      { label: 'Pick 101-150', fn: p => p >= 101 && p <= 150 },
+      { label: 'Pick 151+', fn: p => p >= 151 },
+      { label: 'UDFA', fn: null }
+    ];
+
+    const players = [];
+    D.forEach(d => {
+      if (!d.n || !d.s || !['QB','RB','WR','TE'].includes(d.s)) return;
+      const career = d.career || (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[d.n] ? LEGEND_CAREERS[d.n] : []);
+      if (!career.length) return;
+
+      let pick = null;
+      const cbO = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
+      const bio = (typeof LEGEND_BIO !== 'undefined') ? LEGEND_BIO[d.n] : null;
+
+      if (cbO && cbO.draft != null) {
+        if (cbO.draft === 'U' || cbO.draft === 'u') pick = 'U';
+        else { const v = parseInt(cbO.draft); if (!isNaN(v) && v > 0) pick = v; }
+      } else if (bio && bio.dr != null) {
+        if (bio.dr === 'U' || bio.dr === 'u') pick = 'U';
+        else { const v = parseInt(bio.dr); if (!isNaN(v) && v > 0) pick = v; }
+      } else if (d.dr != null) {
+        const rd = parseInt(d.dr);
+        if (!isNaN(rd) && rd >= 1 && rd <= 7) {
+          const MID = { 1: 16, 2: 48, 3: 80, 4: 112, 5: 144, 6: 176, 7: 208 };
+          pick = MID[rd] || 999;
+        } else if (d.dr === 'U' || d.dr === 'u' || d.dr === 0) pick = 'U';
+      }
+      if (pick == null && career.length > 0) pick = 'U';
+      if (pick == null) return;
+
+      let bestPpg = 0, bestFpts = 0;
+      career.forEach(s => {
+        const fpts = s.fpts || 0;
+        const gp = s.gp || 0;
+        if (fpts > bestFpts) bestFpts = fpts;
+        if (gp > 0) { const ppg = fpts / gp; if (ppg > bestPpg) bestPpg = ppg; }
+      });
+
+      players.push({ name: d.n, pos: d.s, pick, bestPpg: Math.round(bestPpg * 10) / 10, seasons: career.length });
+    });
+
+    console.log('%c[JM Draft Capital Analysis] ' + players.length + ' players analyzed', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+
+    positions.forEach(pos => {
+      const posPlayers = players.filter(p => p.pos === pos);
+      const t = thresholds[pos];
+
+      console.log('%c\n' + pos + ' — Draft Capital vs Fantasy Success (n=' + posPlayers.length + ')', 'color: #22c55e; font-weight: bold; font-size: 13px');
+      console.log('  Range            N    Elite(' + t.elite + '+)  Hit(' + t.hit + '+)  Start(' + t.starter + '+)  AvgPPG   Top Players');
+      console.log('  ——————————————— ———— ————————— ———————— ————————— ———————— ———————————————————');
+
+      pickRanges.forEach(range => {
+        let group;
+        if (range.label === 'UDFA') {
+          group = posPlayers.filter(p => p.pick === 'U');
+        } else {
+          group = posPlayers.filter(p => p.pick !== 'U' && range.fn(p.pick));
+        }
+        if (!group.length) return;
+
+        const n = group.length;
+        const elite = group.filter(p => p.bestPpg >= t.elite).length;
+        const hit = group.filter(p => p.bestPpg >= t.hit).length;
+        const starter = group.filter(p => p.bestPpg >= t.starter).length;
+        const avgPpg = (group.reduce((s, p) => s + p.bestPpg, 0) / n).toFixed(1);
+        const top3 = [...group].sort((a, b) => b.bestPpg - a.bestPpg).slice(0, 3).map(p => p.name + '(' + p.bestPpg + ')').join(', ');
+
+        console.log('  ' + range.label.padEnd(16) + ('' + n).padStart(4) + '    ' +
+          ((elite / n * 100).toFixed(0) + '%').padStart(5) + '      ' +
+          ((hit / n * 100).toFixed(0) + '%').padStart(5) + '     ' +
+          ((starter / n * 100).toFixed(0) + '%').padStart(5) + '     ' +
+          ('' + avgPpg).padStart(5) + '    ' + top3);
+      });
+    });
+
+    console.log('%c\n[JM] Draft capital analysis complete. Check rates above to calibrate curves.', 'color: #f59e0b; font-weight: bold');
+  }
+
+  // Run analysis once on first prospect page load
+  let _dcAnalysisRun = false;
+  const _origRebuild = rebuildAndRender;
+  rebuildAndRender = function() {
+    _origRebuild();
+    if (!_dcAnalysisRun) {
+      _dcAnalysisRun = true;
+      setTimeout(_analyzeDraftCapital, 1000);
+    }
+  };
 })();
 
 </script>

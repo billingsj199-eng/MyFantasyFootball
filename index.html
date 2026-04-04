@@ -13275,25 +13275,25 @@ window.fmtHeight = fmtHeight;
   // Predicts NFL fantasy success (0-100) based on prospect profile.
   // Built by studying common traits of elite NFL fantasy producers at each position.
   //
-  // COMPONENT WEIGHTS BY POSITION:
+  // COMPONENT WEIGHTS BY POSITION (data-driven DC calibration):
   //   Component      QB    RB    WR    TE    Rationale
   //   ─────────────────────────────────────────────────
   //   Draft Age      14%   16%   14%   10%   RBs degrade fastest; TEs bloom later
-  //   Breakout Age   11%   13%   16%   14%   Early WR breakouts strongly predictive
-  //   Production     27%   26%   25%   25%   Best-season PPG is king at every spot
+  //   Breakout Age   11%   13%   16%   15%   Early WR breakouts strongly predictive
+  //   Production     27%   25%   26%   28%   Best-season PPG is king at every spot
   //   Conference     10%    8%   10%   11%   TE scarcity means more non-P5 hits
-  //   RAS             7%   11%   10%   13%   Athleticism matters more for TEs/RBs
-  //   Draft Capital  23%   16%   15%   17%   NFL eval strongest signal for QBs
+  //   RAS             7%   11%   10%   14%   Athleticism matters more for TEs/RBs
+  //   Draft Capital  23%   18%   13%   11%   QB DC most predictive; TE DC barely matters (data)
   //   Teammates       5%    5%    5%    5%   Talent competition context
-  //   Size            3%    5%    5%    5%   Threshold for QBs, build for skill pos
+  //   Size            3%    4%    6%    6%   WR/TE size combos most predictive
   //
   // Each component outputs a 0-100 sub-score, then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
     QB:  { age: 0.14, breakout: 0.11, prod: 0.27, conf: 0.10, ras: 0.07, dc: 0.23, tm: 0.05, size: 0.03 },
-    RB:  { age: 0.16, breakout: 0.13, prod: 0.26, conf: 0.08, ras: 0.11, dc: 0.16, tm: 0.05, size: 0.05 },
-    WR:  { age: 0.14, breakout: 0.16, prod: 0.25, conf: 0.10, ras: 0.10, dc: 0.15, tm: 0.05, size: 0.05 },
-    TE:  { age: 0.10, breakout: 0.14, prod: 0.25, conf: 0.11, ras: 0.13, dc: 0.17, tm: 0.05, size: 0.05 }
+    RB:  { age: 0.16, breakout: 0.13, prod: 0.25, conf: 0.08, ras: 0.11, dc: 0.18, tm: 0.05, size: 0.04 },
+    WR:  { age: 0.14, breakout: 0.16, prod: 0.26, conf: 0.10, ras: 0.10, dc: 0.13, tm: 0.05, size: 0.06 },
+    TE:  { age: 0.10, breakout: 0.15, prod: 0.28, conf: 0.11, ras: 0.14, dc: 0.11, tm: 0.05, size: 0.06 }
   };
 
   // Conference tiers based on historical NFL production rates
@@ -13397,85 +13397,99 @@ window.fmtHeight = fmtHeight;
   // Sub-score: Draft Capital → 0-100
   // Top-5 pick = 100, late round / UDFA = very low
   function jmDraftCapital(dr, pos) {
-    if (dr == null) return null; // Missing = don't count
-    if (dr === 'U') return 0; // Undrafted = lowest possible draft capital score
+    if (dr == null) return null;
+    if (dr === 'U') return 0;
     const pick = typeof dr === 'number' ? dr : parseInt(dr);
     if (isNaN(pick) || pick < 1) return null;
 
-    // === QB: Steepest curve — #1 overall is king, drops fast ===
-    // Burrow (#1), Lawrence (#1), Luck (#1) — #1 QB gets the keys immediately
-    // After round 1, QB hit rate craters (Dak, Cousins are extreme outliers)
+    // === DATA-DRIVEN CURVES ===
+    // Built from actual fantasy success rates across 3,396 players in the database.
+    // Scores are calibrated from starter hit rates (best season PPG above position threshold).
+    // Each position has a unique curve shape reflecting real-world draft capital value.
+
+    // === QB (n=432) — Flat through top 15, then cliff after round 1 ===
+    // Data: Pick 1: 80% starter, Pick 2: 70%, Pick 3: 67%, 4-5: 100%, 6-10: 75%,
+    //   11-15: 73%, 16-20: 71%, 21-32: 56%, 33-50: 56%, 51-64: 31%,
+    //   65-100: 30%, 101-150: 24%, 151+: 26%
+    // Key insight: top 15 QBs are all strong (67-100%), drops to ~56% in back of R1,
+    //   then craters after round 2. Late-round QB hits (Dak, Brady) are extreme outliers.
     if (pos === 'QB') {
       if (pick === 1) return 100;
-      if (pick === 2) return 90;
-      if (pick === 3) return 82;
-      if (pick <= 5) return 82 - (pick - 3) * 5;           // 4-5: 77-72
-      if (pick <= 10) return 72 - (pick - 5) * 4;          // 6-10: 68-52
-      if (pick <= 15) return 52 - (pick - 10) * 3;         // 11-15: 49-37
-      if (pick <= 20) return 37 - (pick - 15) * 2;         // 16-20: 35-27
-      if (pick <= 32) return 27 - (pick - 20) * 1;         // 21-32: 26-15
-      if (pick <= 64) return 15 - (pick - 32) * 0.3;       // 33-64: 15-5
-      if (pick <= 100) return 5 - (pick - 64) * 0.1;       // 65-100: 5-1
-      return 1;
+      if (pick === 2) return 92;
+      if (pick === 3) return 86;
+      if (pick <= 5) return 86 - (pick - 3) * 2;            // 4-5: 84-82
+      if (pick <= 10) return 82 - (pick - 5) * 2;           // 6-10: 80-72
+      if (pick <= 15) return 72 - (pick - 10) * 1;          // 11-15: 71-67
+      if (pick <= 20) return 67 - (pick - 15) * 2.4;        // 16-20: 64.6-55 (data shows drop)
+      if (pick <= 32) return 55 - (pick - 20) * 1.25;       // 21-32: 53.75-40
+      if (pick <= 50) return 40 - (pick - 32) * 0.8;        // 33-50: 39.2-25.6
+      if (pick <= 64) return 26 - (pick - 50) * 0.7;        // 51-64: 25.3-16.1
+      if (pick <= 100) return 16 - (pick - 64) * 0.25;      // 65-100: 15.75-7
+      if (pick <= 150) return 7 - (pick - 100) * 0.06;      // 101-150: 7-4
+      return Math.max(1, 4 - (pick - 150) * 0.03);          // 151+: 4-1
     }
 
-    // === RB: Top 10 is massive — teams rarely spend this capital on RBs anymore ===
-    // === RB: Top 10 is massive, but ALL of round 1 has elite hit rate ===
-    // Barkley (#2), Zeke (#4), McCaffrey (#8), Jacobs (#24), Najee (#24), Bijan (#8)
-    // Teams rarely spend 1st-round capital on RBs anymore — when they do, they're almost always right
-    // Stay flat through round 1, then drop hard into round 2+
+    // === RB (n=1067) — Round 1 is elite (76-100%), massive cliff to round 2 ===
+    // Data: Pick 2: 100%, 4-5: 91%, 6-10: 82%, 11-15: 83%, 16-20: 57%,
+    //   21-32: 76%, 33-50: 60%, 51-64: 41%, 65-100: 40%,
+    //   101-150: 26%, 151+: 15%
+    // Key insight: ALL round 1 RBs hit at 57-100%. Even picks 21-32 are 76%.
+    //   Round 2 drops to 41-60%. Day 3 is 15-40%. UDFA 21%.
+    //   Pick 1 RBs are 0% (n=2) but that's noise — too small.
     if (pos === 'RB') {
-      if (pick <= 2) return 100;                             // Top 2 RB = generational
-      if (pick <= 5) return 98 - (pick - 2) * 2;            // 3-5: 96-92
-      if (pick <= 10) return 92 - (pick - 5) * 2;           // 6-10: 90-82
-      if (pick <= 20) return 82 - (pick - 10) * 1.5;        // 11-20: 80.5-67
-      if (pick <= 32) return 67 - (pick - 20) * 1;          // 21-32: 66-55
-      // Round 2 — still viable but committee risk increases (Chubb #35, Henry #45)
-      if (pick <= 50) return 55 - (pick - 32) * 1.5;        // 33-50: 53.5-28
-      if (pick <= 64) return 28 - (pick - 50) * 0.8;        // 51-64: 27.2-16.8
-      // Day 3 — much lower hit rate for RBs
-      if (pick <= 100) return 17 - (pick - 64) * 0.3;       // 65-100: 16.7-6.9
-      if (pick <= 150) return 7 - (pick - 100) * 0.08;      // 101-150: 7-3
-      if (pick <= 224) return 3 - (pick - 150) * 0.02;      // 151-224: 3-1.5
-      return 1;
+      if (pick <= 3) return 100;
+      if (pick <= 5) return 97 - (pick - 3) * 1.5;          // 4-5: 95.5-94
+      if (pick <= 10) return 94 - (pick - 5) * 2;           // 6-10: 92-84
+      if (pick <= 15) return 84 - (pick - 10) * 0.5;        // 11-15: 83.5-81.5 (data: flat)
+      if (pick <= 32) return 82 - (pick - 15) * 0.35;       // 16-32: 80.25-76 (data: 57-76%, smooth to ~78)
+      if (pick <= 50) return 76 - (pick - 32) * 1.5;        // 33-50: 74.5-49 (big cliff into R2)
+      if (pick <= 64) return 49 - (pick - 50) * 0.6;        // 51-64: 48.4-40.6
+      if (pick <= 100) return 41 - (pick - 64) * 0.35;      // 65-100: 40.65-28.05
+      if (pick <= 150) return 28 - (pick - 100) * 0.22;     // 101-150: 28-17
+      return Math.max(1, 17 - (pick - 150) * 0.12);         // 151+: 17-8
     }
 
-    // === WR: More spread out — talent found throughout the draft ===
-    // Jefferson (#22), Lamb (#17), DK (#64), AJ Brown (#51), Tyreek (#165)
-    // WRs can hit from anywhere in the draft, but top picks still correlate
-    // Less steep than QB/RB at the top but more forgiving in middle rounds
+    // === WR (n=1274) — Most forgiving, talent found everywhere ===
+    // Data: Pick 3: 100%, 4-5: 90%, 6-10: 87%, 11-15: 75%, 16-20: 79%,
+    //   21-32: 70%, 33-50: 61%, 51-64: 54%, 65-100: 42%,
+    //   101-150: 31%, 151+: 22%
+    // Key insight: even picks 151+ still have 22% starter rate! WR is wide open.
+    //   Top 10 is strong (87-100%) but even mid-rounds are viable (42-61%).
     if (pos === 'WR') {
-      if (pick <= 5) return 100 - (pick - 1) * 2;           // 1-5: 100-92
-      if (pick <= 10) return 92 - (pick - 5) * 2;           // 6-10: 90-82
-      if (pick <= 20) return 82 - (pick - 10) * 1.5;        // 11-20: 80.5-67
-      if (pick <= 32) return 67 - (pick - 20) * 1.2;        // 21-32: 65.8-52.6
-      if (pick <= 50) return 53 - (pick - 32) * 0.8;        // 33-50: 52.2-38.6
-      if (pick <= 64) return 39 - (pick - 50) * 0.7;        // 51-64: 38.3-28.5
-      if (pick <= 100) return 28 - (pick - 64) * 0.4;       // 65-100: 28-14
-      if (pick <= 150) return 14 - (pick - 100) * 0.15;     // 101-150: 14-6.5
-      if (pick <= 200) return 6 - (pick - 150) * 0.06;      // 151-200: 6-3
-      return Math.max(1, 3 - (pick - 200) * 0.03);          // 200+: 3-1
+      if (pick <= 3) return 100;
+      if (pick <= 5) return 96 - (pick - 3) * 3;            // 4-5: 93-90
+      if (pick <= 10) return 90 - (pick - 5) * 0.6;         // 6-10: 89.4-87
+      if (pick <= 15) return 87 - (pick - 10) * 2.4;        // 11-15: 84.6-75
+      if (pick <= 20) return 75 + (pick - 15) * 0.8;        // 16-20: 79 (data shows bump)
+      if (pick <= 32) return 79 - (pick - 20) * 0.75;       // 21-32: 78.25-70
+      if (pick <= 50) return 70 - (pick - 32) * 0.5;        // 33-50: 69.5-61
+      if (pick <= 64) return 61 - (pick - 50) * 0.5;        // 51-64: 60.5-54
+      if (pick <= 100) return 54 - (pick - 64) * 0.33;      // 65-100: 53.67-42.12
+      if (pick <= 150) return 42 - (pick - 100) * 0.22;     // 101-150: 42-31
+      return Math.max(5, 31 - (pick - 150) * 0.1);          // 151+: 31-22 (floor at 5)
     }
 
-    // === TE: Rare top picks are MASSIVE signal — Pitts (#4) was first TE top 10 since 2006 ===
-    // When a team breaks convention to draft a TE this high, they're saying he's generational
-    // But TEs can still hit from anywhere: Kelce (#63), Kittle (#146), Andrews (#86)
-    // So: huge premium at top, very forgiving in the middle/late rounds
+    // === TE (n=623) — Draft capital barely matters, chaos position ===
+    // Data: 4-5: 100%, 6-10: 100%, 11-15: 83%, 16-20: 100%, 21-32: 82%,
+    //   33-50: 62%, 51-64: 54%, 65-100: 52%, 101-150: 32%,
+    //   151+: 26%
+    // Key insight: round 1 TEs are 82-100% but samples are tiny (1-17 players).
+    //   Picks 65-100 still have 52% starter rate (Kelce, Andrews zone).
+    //   Even 101-150 is 32% (Kittle zone). DC matters least here.
     if (pos === 'TE') {
-      if (pick <= 3) return 100;                             // Top 3 TE = generational (almost never happens)
-      if (pick <= 5) return 100 - (pick - 3) * 3;           // 4-5: 97-94
-      if (pick <= 10) return 94 - (pick - 5) * 4;           // 6-10: 90-74
-      if (pick <= 20) return 74 - (pick - 10) * 2.5;        // 11-20: 71.5-49
-      if (pick <= 32) return 49 - (pick - 20) * 1.5;        // 21-32: 47.5-31
-      if (pick <= 50) return 31 - (pick - 32) * 0.6;        // 33-50: 30.4-20.2
-      if (pick <= 64) return 20 - (pick - 50) * 0.4;        // 51-64: 19.6-14.4
-      if (pick <= 100) return 14 - (pick - 64) * 0.2;       // 65-100: 14-7 (Kelce zone)
-      if (pick <= 150) return 7 - (pick - 100) * 0.06;      // 101-150: 7-4 (Kittle zone)
-      if (pick <= 224) return 4 - (pick - 150) * 0.03;      // 151-224: 4-2
-      return Math.max(1, 2 - (pick - 224) * 0.02);          // 225+: 2-1
+      if (pick <= 5) return 100;
+      if (pick <= 10) return 100;                            // Data: 100% starter rate
+      if (pick <= 15) return 95 - (pick - 10) * 2.4;        // 11-15: 92.6-83
+      if (pick <= 20) return 83 + (pick - 15) * 3.4;        // 16-20: ~100 (data shows 100%)
+      if (pick <= 32) return 100 - (pick - 20) * 1.5;       // 21-32: 98.5-82
+      if (pick <= 50) return 82 - (pick - 32) * 1.1;        // 33-50: 80.9-62.2
+      if (pick <= 64) return 62 - (pick - 50) * 0.6;        // 51-64: 61.4-53.6
+      if (pick <= 100) return 54 - (pick - 64) * 0.06;      // 65-100: 53.94-51.84 (data: 52%)
+      if (pick <= 150) return 52 - (pick - 100) * 0.4;      // 101-150: 52-32
+      return Math.max(3, 32 - (pick - 150) * 0.08);         // 151+: 32-26 (floor at 3)
     }
 
-    // Fallback (shouldn't hit)
+    // Fallback
     if (pick <= 32) return 100 - (pick - 1) * 1.6;
     if (pick <= 64) return 50 - (pick - 32) * 0.6;
     return Math.max(1, 31 - (pick - 64) * 0.2);
@@ -14702,33 +14716,41 @@ window.fmtHeight = fmtHeight;
       TE:  { elite: 12, hit: 9, starter: 6 }
     };
 
+    const eras = [
+      { label: 'Modern (2015+)', fn: yr => yr >= 2015, color: '#22c55e' },
+      { label: 'Middle (2005-2014)', fn: yr => yr >= 2005 && yr <= 2014, color: '#3b82f6' },
+      { label: 'Classic (Pre-2005)', fn: yr => yr < 2005, color: '#a78bfa' },
+      { label: 'ALL ERAS', fn: () => true, color: '#f59e0b' }
+    ];
+
     const pickRanges = [
-      { label: 'Pick 1', fn: p => p === 1 },
-      { label: 'Pick 2', fn: p => p === 2 },
-      { label: 'Pick 3', fn: p => p === 3 },
-      { label: 'Pick 4-5', fn: p => p >= 4 && p <= 5 },
-      { label: 'Pick 6-10', fn: p => p >= 6 && p <= 10 },
-      { label: 'Pick 11-15', fn: p => p >= 11 && p <= 15 },
-      { label: 'Pick 16-20', fn: p => p >= 16 && p <= 20 },
+      { label: 'Pick 1-3', fn: p => p >= 1 && p <= 3 },
+      { label: 'Pick 4-10', fn: p => p >= 4 && p <= 10 },
+      { label: 'Pick 11-20', fn: p => p >= 11 && p <= 20 },
       { label: 'Pick 21-32', fn: p => p >= 21 && p <= 32 },
-      { label: 'Pick 33-50', fn: p => p >= 33 && p <= 50 },
-      { label: 'Pick 51-64', fn: p => p >= 51 && p <= 64 },
+      { label: 'Pick 33-64', fn: p => p >= 33 && p <= 64 },
       { label: 'Pick 65-100', fn: p => p >= 65 && p <= 100 },
       { label: 'Pick 101-150', fn: p => p >= 101 && p <= 150 },
       { label: 'Pick 151+', fn: p => p >= 151 },
       { label: 'UDFA', fn: null }
     ];
 
+    // Gather all players with full context
     const players = [];
     D.forEach(d => {
       if (!d.n || !d.s || !['QB','RB','WR','TE'].includes(d.s)) return;
       const career = d.career || (typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[d.n] ? LEGEND_CAREERS[d.n] : []);
       if (!career.length) return;
 
+      // Draft year
+      let draftYr = null;
+      if (career.length) draftYr = Math.min(...career.map(s => s.yr).filter(Boolean));
+      if (d._debut && (!draftYr || d._debut < draftYr)) draftYr = d._debut;
+
+      // Draft pick
       let pick = null;
       const cbO = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
       const bio = (typeof LEGEND_BIO !== 'undefined') ? LEGEND_BIO[d.n] : null;
-
       if (cbO && cbO.draft != null) {
         if (cbO.draft === 'U' || cbO.draft === 'u') pick = 'U';
         else { const v = parseInt(cbO.draft); if (!isNaN(v) && v > 0) pick = v; }
@@ -14743,54 +14765,357 @@ window.fmtHeight = fmtHeight;
         } else if (d.dr === 'U' || d.dr === 'u' || d.dr === 0) pick = 'U';
       }
       if (pick == null && career.length > 0) pick = 'U';
-      if (pick == null) return;
 
-      let bestPpg = 0, bestFpts = 0;
+      // Best season PPG
+      let bestPpg = 0;
       career.forEach(s => {
         const fpts = s.fpts || 0;
         const gp = s.gp || 0;
-        if (fpts > bestFpts) bestFpts = fpts;
         if (gp > 0) { const ppg = fpts / gp; if (ppg > bestPpg) bestPpg = ppg; }
       });
 
-      players.push({ name: d.n, pos: d.s, pick, bestPpg: Math.round(bestPpg * 10) / 10, seasons: career.length });
-    });
-
-    console.log('%c[JM Draft Capital Analysis] ' + players.length + ' players analyzed', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-
-    positions.forEach(pos => {
-      const posPlayers = players.filter(p => p.pos === pos);
-      const t = thresholds[pos];
-
-      console.log('%c\n' + pos + ' — Draft Capital vs Fantasy Success (n=' + posPlayers.length + ')', 'color: #22c55e; font-weight: bold; font-size: 13px');
-      console.log('  Range            N    Elite(' + t.elite + '+)  Hit(' + t.hit + '+)  Start(' + t.starter + '+)  AvgPPG   Top Players');
-      console.log('  ——————————————— ———— ————————— ———————— ————————— ———————— ———————————————————');
-
-      pickRanges.forEach(range => {
-        let group;
-        if (range.label === 'UDFA') {
-          group = posPlayers.filter(p => p.pick === 'U');
-        } else {
-          group = posPlayers.filter(p => p.pick !== 'U' && range.fn(p.pick));
+      // Draft age
+      let age = null;
+      const birth = (typeof LEGEND_BIRTH_YEARS !== 'undefined') ? LEGEND_BIRTH_YEARS[d.n] : null;
+      if (birth && typeof birth === 'string' && birth.includes('-') && draftYr) {
+        const parts = birth.split('-');
+        const bY = parseInt(parts[0]), bM = parseInt(parts[1]) - 1, bD = parseInt(parts[2]);
+        if (bY && bM >= 0 && bD >= 1) {
+          const draftDays = draftYr * 365.25 + 3 * 30.44 + 28;
+          const birthDays = bY * 365.25 + bM * 30.44 + bD;
+          const a = (draftDays - birthDays) / 365.25;
+          if (a >= 18 && a <= 30) age = Math.round(a * 10) / 10;
         }
-        if (!group.length) return;
+      }
 
-        const n = group.length;
-        const elite = group.filter(p => p.bestPpg >= t.elite).length;
-        const hit = group.filter(p => p.bestPpg >= t.hit).length;
-        const starter = group.filter(p => p.bestPpg >= t.starter).length;
-        const avgPpg = (group.reduce((s, p) => s + p.bestPpg, 0) / n).toFixed(1);
-        const top3 = [...group].sort((a, b) => b.bestPpg - a.bestPpg).slice(0, 3).map(p => p.name + '(' + p.bestPpg + ')').join(', ');
+      // Height / weight
+      let ht = null, wt = null;
+      if (cbO && cbO.ht) {
+        const htParts = String(cbO.ht).replace(/'/g, '-').replace(/"/g, '').split('-');
+        if (htParts.length === 2) { const ft = parseInt(htParts[0]), inc = parseInt(htParts[1]); if (!isNaN(ft) && !isNaN(inc)) ht = ft * 12 + inc; }
+      }
+      if (ht == null && d._height) { ht = parseInt(d._height); if (isNaN(ht)) ht = null; }
+      wt = (cbO && cbO.wt) ? parseInt(cbO.wt) : (d._weight ? parseInt(d._weight) : null);
 
-        console.log('  ' + range.label.padEnd(16) + ('' + n).padStart(4) + '    ' +
-          ((elite / n * 100).toFixed(0) + '%').padStart(5) + '      ' +
-          ((hit / n * 100).toFixed(0) + '%').padStart(5) + '     ' +
-          ((starter / n * 100).toFixed(0) + '%').padStart(5) + '     ' +
-          ('' + avgPpg).padStart(5) + '    ' + top3);
+      // RAS
+      const ras = cbO ? cbO.ras : null;
+
+      // College production (best PPG)
+      let collegePpg = null;
+      const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[d.n] : null;
+      if (cs && cs.length) {
+        const rm = 0.5; // half PPR
+        cs.forEach(s => {
+          const fp = (s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*rm + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2;
+          const gp = s.gp || null;
+          if (gp && gp > 0) { const ppg = fp / gp; if (collegePpg == null || ppg > collegePpg) collegePpg = Math.round(ppg * 10) / 10; }
+        });
+      }
+
+      // Conference
+      let conf = null;
+      if (cs && cs.length) {
+        const last = cs.reduce((a, b) => (b.yr > a.yr) ? b : a, cs[0]);
+        conf = last.conf || null;
+        if (conf && CONF_ALIASES[conf]) conf = CONF_ALIASES[conf];
+      }
+
+      players.push({
+        name: d.n, pos: d.s, pick, draftYr,
+        bestPpg: Math.round(bestPpg * 10) / 10,
+        age, ht, wt, ras, collegePpg, conf,
+        seasons: career.length
       });
     });
 
-    console.log('%c\n[JM] Draft capital analysis complete. Check rates above to calibrate curves.', 'color: #f59e0b; font-weight: bold');
+    console.log('%c[JM ERA ANALYSIS] ' + players.length + ' total players', 'color: #f59e0b; font-weight: bold; font-size: 16px');
+
+    // === SECTION 1: DRAFT CAPITAL BY ERA ===
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 1: DRAFT CAPITAL BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    positions.forEach(pos => {
+      const t = thresholds[pos];
+      eras.forEach(era => {
+        const eraPlayers = players.filter(p => p.pos === pos && p.draftYr && era.fn(p.draftYr));
+        if (!eraPlayers.length) return;
+
+        console.log('%c\n' + pos + ' — ' + era.label + ' (n=' + eraPlayers.length + ')', 'color: ' + era.color + '; font-weight: bold');
+        console.log('  Range            N    Elite  Hit    Start  AvgPPG');
+
+        pickRanges.forEach(range => {
+          let group;
+          if (range.label === 'UDFA') group = eraPlayers.filter(p => p.pick === 'U');
+          else group = eraPlayers.filter(p => p.pick !== 'U' && range.fn(p.pick));
+          if (!group.length) return;
+
+          const n = group.length;
+          const elite = group.filter(p => p.bestPpg >= t.elite).length;
+          const hit = group.filter(p => p.bestPpg >= t.hit).length;
+          const starter = group.filter(p => p.bestPpg >= t.starter).length;
+          const avgPpg = (group.reduce((s, p) => s + p.bestPpg, 0) / n).toFixed(1);
+          const top = [...group].sort((a, b) => b.bestPpg - a.bestPpg).slice(0, 2).map(p => p.name).join(', ');
+
+          console.log('  ' + range.label.padEnd(16) + ('' + n).padStart(4) + '    ' +
+            ((elite / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((hit / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((starter / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ('' + avgPpg).padStart(6) + '  ' + top);
+        });
+      });
+    });
+
+    // === SECTION 2: DRAFT AGE BY ERA ===
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 2: DRAFT AGE vs SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    const ageRanges = [
+      { label: '≤20.5', fn: a => a <= 20.5 },
+      { label: '20.6-21.0', fn: a => a > 20.5 && a <= 21.0 },
+      { label: '21.1-21.5', fn: a => a > 21.0 && a <= 21.5 },
+      { label: '21.6-22.0', fn: a => a > 21.5 && a <= 22.0 },
+      { label: '22.1-22.5', fn: a => a > 22.0 && a <= 22.5 },
+      { label: '22.6-23.0', fn: a => a > 22.5 && a <= 23.0 },
+      { label: '23.1-23.5', fn: a => a > 23.0 && a <= 23.5 },
+      { label: '23.6+', fn: a => a > 23.5 }
+    ];
+
+    positions.forEach(pos => {
+      const t = thresholds[pos];
+      eras.forEach(era => {
+        const eraPlayers = players.filter(p => p.pos === pos && p.age != null && p.draftYr && era.fn(p.draftYr));
+        if (eraPlayers.length < 5) return;
+
+        console.log('%c\n' + pos + ' Age — ' + era.label + ' (n=' + eraPlayers.length + ')', 'color: ' + era.color + '; font-weight: bold');
+        console.log('  Age Range        N    Elite  Hit    Start  AvgPPG');
+
+        ageRanges.forEach(range => {
+          const group = eraPlayers.filter(p => range.fn(p.age));
+          if (!group.length) return;
+          const n = group.length;
+          const starter = group.filter(p => p.bestPpg >= t.starter).length;
+          const hit = group.filter(p => p.bestPpg >= t.hit).length;
+          const elite = group.filter(p => p.bestPpg >= t.elite).length;
+          const avgPpg = (group.reduce((s, p) => s + p.bestPpg, 0) / n).toFixed(1);
+          console.log('  ' + range.label.padEnd(16) + ('' + n).padStart(4) + '    ' +
+            ((elite / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((hit / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((starter / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ('' + avgPpg).padStart(6));
+        });
+      });
+    });
+
+    // === SECTION 3: COLLEGE PRODUCTION BY ERA ===
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 3: COLLEGE PRODUCTION (Best PPG) vs NFL SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    const prodRanges = {
+      QB: [
+        { label: '30+ PPG', fn: p => p >= 30 },
+        { label: '25-30', fn: p => p >= 25 && p < 30 },
+        { label: '20-25', fn: p => p >= 20 && p < 25 },
+        { label: '15-20', fn: p => p >= 15 && p < 20 },
+        { label: '10-15', fn: p => p >= 10 && p < 15 },
+        { label: '<10', fn: p => p < 10 }
+      ],
+      RB: [
+        { label: '20+ PPG', fn: p => p >= 20 },
+        { label: '16-20', fn: p => p >= 16 && p < 20 },
+        { label: '12-16', fn: p => p >= 12 && p < 16 },
+        { label: '8-12', fn: p => p >= 8 && p < 12 },
+        { label: '<8', fn: p => p < 8 }
+      ],
+      WR: [
+        { label: '18+ PPG', fn: p => p >= 18 },
+        { label: '14-18', fn: p => p >= 14 && p < 18 },
+        { label: '10-14', fn: p => p >= 10 && p < 14 },
+        { label: '6-10', fn: p => p >= 6 && p < 10 },
+        { label: '<6', fn: p => p < 6 }
+      ],
+      TE: [
+        { label: '14+ PPG', fn: p => p >= 14 },
+        { label: '10-14', fn: p => p >= 10 && p < 14 },
+        { label: '7-10', fn: p => p >= 7 && p < 10 },
+        { label: '4-7', fn: p => p >= 4 && p < 7 },
+        { label: '<4', fn: p => p < 4 }
+      ]
+    };
+
+    positions.forEach(pos => {
+      const t = thresholds[pos];
+      const ranges = prodRanges[pos];
+      eras.forEach(era => {
+        const eraPlayers = players.filter(p => p.pos === pos && p.collegePpg != null && p.draftYr && era.fn(p.draftYr));
+        if (eraPlayers.length < 5) return;
+
+        console.log('%c\n' + pos + ' College Prod — ' + era.label + ' (n=' + eraPlayers.length + ')', 'color: ' + era.color + '; font-weight: bold');
+        console.log('  College PPG      N    Elite  Hit    Start  NFL AvgPPG');
+
+        ranges.forEach(range => {
+          const group = eraPlayers.filter(p => range.fn(p.collegePpg));
+          if (!group.length) return;
+          const n = group.length;
+          const starter = group.filter(p => p.bestPpg >= t.starter).length;
+          const hit = group.filter(p => p.bestPpg >= t.hit).length;
+          const elite = group.filter(p => p.bestPpg >= t.elite).length;
+          const avgPpg = (group.reduce((s, p) => s + p.bestPpg, 0) / n).toFixed(1);
+          console.log('  ' + range.label.padEnd(16) + ('' + n).padStart(4) + '    ' +
+            ((elite / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((hit / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((starter / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ('' + avgPpg).padStart(6));
+        });
+      });
+    });
+
+    // === SECTION 4: RAS BY ERA ===
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 4: RAS (Athleticism) vs SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    const rasRanges = [
+      { label: '9.0+', fn: r => r >= 9.0 },
+      { label: '7.0-8.99', fn: r => r >= 7.0 && r < 9.0 },
+      { label: '5.0-6.99', fn: r => r >= 5.0 && r < 7.0 },
+      { label: '3.0-4.99', fn: r => r >= 3.0 && r < 5.0 },
+      { label: '<3.0', fn: r => r < 3.0 }
+    ];
+
+    positions.forEach(pos => {
+      const t = thresholds[pos];
+      eras.forEach(era => {
+        const eraPlayers = players.filter(p => p.pos === pos && p.ras != null && p.draftYr && era.fn(p.draftYr));
+        if (eraPlayers.length < 5) return;
+
+        console.log('%c\n' + pos + ' RAS — ' + era.label + ' (n=' + eraPlayers.length + ')', 'color: ' + era.color + '; font-weight: bold');
+        console.log('  RAS Range        N    Elite  Hit    Start  AvgPPG');
+
+        rasRanges.forEach(range => {
+          const group = eraPlayers.filter(p => range.fn(p.ras));
+          if (!group.length) return;
+          const n = group.length;
+          const starter = group.filter(p => p.bestPpg >= t.starter).length;
+          const hit = group.filter(p => p.bestPpg >= t.hit).length;
+          const elite = group.filter(p => p.bestPpg >= t.elite).length;
+          const avgPpg = (group.reduce((s, p) => s + p.bestPpg, 0) / n).toFixed(1);
+          console.log('  ' + range.label.padEnd(16) + ('' + n).padStart(4) + '    ' +
+            ((elite / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((hit / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((starter / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ('' + avgPpg).padStart(6));
+        });
+      });
+    });
+
+    // === SECTION 5: SIZE (Height) BY ERA ===
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 5: HEIGHT vs SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    const htRanges = {
+      QB: [
+        { label: '6\'4"+  (76+)', fn: h => h >= 76 },
+        { label: '6\'2"-6\'3 (74-75)', fn: h => h >= 74 && h <= 75 },
+        { label: '6\'0"-6\'1 (72-73)', fn: h => h >= 72 && h <= 73 },
+        { label: '<6\'0"  (<72)', fn: h => h < 72 }
+      ],
+      RB: [
+        { label: '6\'1"+  (73+)', fn: h => h >= 73 },
+        { label: '5\'11"-6\'0 (71-72)', fn: h => h >= 71 && h <= 72 },
+        { label: '5\'9"-5\'10 (69-70)', fn: h => h >= 69 && h <= 70 },
+        { label: '<5\'9"  (<69)', fn: h => h < 69 }
+      ],
+      WR: [
+        { label: '6\'4"+  (76+)', fn: h => h >= 76 },
+        { label: '6\'1"-6\'3 (73-75)', fn: h => h >= 73 && h <= 75 },
+        { label: '5\'11"-6\'0 (71-72)', fn: h => h >= 71 && h <= 72 },
+        { label: '5\'9"-5\'10 (69-70)', fn: h => h >= 69 && h <= 70 },
+        { label: '<5\'9"  (<69)', fn: h => h < 69 }
+      ],
+      TE: [
+        { label: '6\'6"+  (78+)', fn: h => h >= 78 },
+        { label: '6\'4"-6\'5 (76-77)', fn: h => h >= 76 && h <= 77 },
+        { label: '6\'2"-6\'3 (74-75)', fn: h => h >= 74 && h <= 75 },
+        { label: '<6\'2"  (<74)', fn: h => h < 74 }
+      ]
+    };
+
+    positions.forEach(pos => {
+      const t = thresholds[pos];
+      const ranges = htRanges[pos];
+      eras.forEach(era => {
+        const eraPlayers = players.filter(p => p.pos === pos && p.ht != null && p.draftYr && era.fn(p.draftYr));
+        if (eraPlayers.length < 5) return;
+
+        console.log('%c\n' + pos + ' Height — ' + era.label + ' (n=' + eraPlayers.length + ')', 'color: ' + era.color + '; font-weight: bold');
+        console.log('  Height Range     N    Elite  Hit    Start  AvgPPG');
+
+        ranges.forEach(range => {
+          const group = eraPlayers.filter(p => range.fn(p.ht));
+          if (!group.length) return;
+          const n = group.length;
+          const starter = group.filter(p => p.bestPpg >= t.starter).length;
+          const hit = group.filter(p => p.bestPpg >= t.hit).length;
+          const elite = group.filter(p => p.bestPpg >= t.elite).length;
+          const avgPpg = (group.reduce((s, p) => s + p.bestPpg, 0) / n).toFixed(1);
+          console.log('  ' + range.label.padEnd(16) + ('' + n).padStart(4) + '    ' +
+            ((elite / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((hit / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((starter / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ('' + avgPpg).padStart(6));
+        });
+      });
+    });
+
+    // === SECTION 6: CONFERENCE BY ERA ===
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  SECTION 6: CONFERENCE vs SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+
+    const confGroups = [
+      { label: 'SEC', fn: c => c === 'SEC' },
+      { label: 'Big Ten', fn: c => c === 'Big Ten' },
+      { label: 'Big 12', fn: c => c === 'Big 12' },
+      { label: 'ACC', fn: c => c === 'ACC' },
+      { label: 'Pac-12', fn: c => c === 'Pac-12' },
+      { label: 'Other P5', fn: c => c === 'Big East' || c === 'Independent' || c === 'Ind' },
+      { label: 'G5 (AAC/MW/SB/CUSA/MAC)', fn: c => ['AAC','Mountain West','Sun Belt','C-USA','MAC'].includes(c) },
+      { label: 'FCS/Other', fn: c => !['SEC','Big Ten','Big 12','ACC','Pac-12','Big East','Independent','Ind','AAC','Mountain West','Sun Belt','C-USA','MAC'].includes(c) }
+    ];
+
+    positions.forEach(pos => {
+      const t = thresholds[pos];
+      eras.forEach(era => {
+        const eraPlayers = players.filter(p => p.pos === pos && p.conf && p.draftYr && era.fn(p.draftYr));
+        if (eraPlayers.length < 5) return;
+
+        console.log('%c\n' + pos + ' Conference — ' + era.label + ' (n=' + eraPlayers.length + ')', 'color: ' + era.color + '; font-weight: bold');
+        console.log('  Conference       N    Elite  Hit    Start  AvgPPG');
+
+        confGroups.forEach(range => {
+          const group = eraPlayers.filter(p => range.fn(p.conf));
+          if (!group.length) return;
+          const n = group.length;
+          const starter = group.filter(p => p.bestPpg >= t.starter).length;
+          const hit = group.filter(p => p.bestPpg >= t.hit).length;
+          const elite = group.filter(p => p.bestPpg >= t.elite).length;
+          const avgPpg = (group.reduce((s, p) => s + p.bestPpg, 0) / n).toFixed(1);
+          console.log('  ' + range.label.padEnd(16) + ('' + n).padStart(4) + '    ' +
+            ((elite / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((hit / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ((starter / n * 100).toFixed(0) + '%').padStart(5) + '  ' +
+            ('' + avgPpg).padStart(6));
+        });
+      });
+    });
+
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c  [JM ERA ANALYSIS COMPLETE] — Copy all output and share to calibrate model', 'color: #f59e0b; font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
   }
 
   // Run analysis once on first prospect page load

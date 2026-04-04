@@ -13372,7 +13372,9 @@ window.fmtHeight = fmtHeight;
 
   // Sub-score: Breakout Age → 0-100
   // Era analysis confirms: earlier breakout = higher hit rate, especially in modern era
-  function jmBreakout(breakoutAge, age, pos) {
+  // Uses graduated confidence: a near-breakout (e.g., 11.9 WR PPG vs 12 threshold)
+  // still counts but at reduced weight, while a dominant breakout gets full credit.
+  function jmBreakout(breakoutAge, age, pos, breakoutPpg, boThresh) {
     if (breakoutAge == null) {
       return 20; // No breakout is a bigger red flag than before
     }
@@ -13383,10 +13385,34 @@ window.fmtHeight = fmtHeight;
       TE:  { elite: 20.0, good: 21.5, late: 23.0 }
     };
     const p = params[pos] || params.WR;
-    if (breakoutAge <= p.elite) return 100;
-    if (breakoutAge <= p.good) return 100 - ((breakoutAge - p.elite) / (p.good - p.elite)) * 25;
-    if (breakoutAge <= p.late) return 75 - ((breakoutAge - p.good) / (p.late - p.good)) * 40;
-    return Math.max(5, 35 - (breakoutAge - p.late) * 18);
+
+    // Base score from breakout age
+    let baseScore;
+    if (breakoutAge <= p.elite) baseScore = 100;
+    else if (breakoutAge <= p.good) baseScore = 100 - ((breakoutAge - p.elite) / (p.good - p.elite)) * 25;
+    else if (breakoutAge <= p.late) baseScore = 75 - ((breakoutAge - p.good) / (p.late - p.good)) * 40;
+    else baseScore = Math.max(5, 35 - (breakoutAge - p.late) * 18);
+
+    // Confidence multiplier based on how strong the breakout was relative to threshold
+    // At 100%+ of threshold → full credit (1.0)
+    // At 75% of threshold → partial credit (0.5)
+    // Smooth curve between them
+    if (breakoutPpg != null && boThresh != null && boThresh > 0) {
+      const ratio = breakoutPpg / boThresh;
+      if (ratio >= 1.0) {
+        // Full breakout or better — bonus for dominant breakouts
+        const dominanceBonus = Math.min(5, (ratio - 1.0) * 20); // up to +5 for 1.25x threshold
+        baseScore = Math.min(100, baseScore + dominanceBonus);
+      } else {
+        // Near breakout — scale confidence from 0.5 at 75% to 1.0 at 100%
+        // This is a smooth curve: confidence = 0.5 + 0.5 * ((ratio - 0.75) / 0.25)
+        const confidence = Math.max(0.5, 0.5 + 0.5 * ((ratio - 0.75) / 0.25));
+        // Blend toward the "no breakout" score (20) based on confidence
+        baseScore = 20 + (baseScore - 20) * confidence;
+      }
+    }
+
+    return Math.max(5, Math.min(100, Math.round(baseScore)));
   }
 
   // Sub-score: College Production (Best PPG) → 0-100
@@ -13798,7 +13824,7 @@ window.fmtHeight = fmtHeight;
     if (!wFloor || !wCeil) return null;
 
     const ageScore = jmAge(p.age, p.pos);
-    const breakoutScore = jmBreakout(p.breakoutAge, p.age, p.pos);
+    const breakoutScore = jmBreakout(p.breakoutAge, p.age, p.pos, p.breakoutPpg, p.boThresh);
     const prodScore = jmProduction(p.bestPpg, p.pos);
     const confScore = jmConf(p.lastConf);
     const rasScore = jmRas(p.ras, p.pos);
@@ -14360,10 +14386,14 @@ window.fmtHeight = fmtHeight;
       // Aggregated totals
       let totPy = 0, totRy = 0, totRcy = 0, totRec = 0, totPtd = 0, totRtd = 0, totRctd = 0, totInt = 0, totRa = 0;
 
-      // Breakout age: earliest season with PPG above threshold
+      // Breakout age: earliest season with PPG near or above threshold
+      // Uses a graduated curve instead of hard cutoff — a player at 11.9 WR PPG
+      // shouldn't be treated completely differently from one at 12.1
       const _boThresh = { QB: 22, RB: 10, WR: 12, TE: 8.5 };
       const boThresh = _boThresh[pos] || 12;
+      const boSoftFloor = boThresh * 0.75; // 75% of threshold = minimum for "near breakout"
       let breakoutYr = null;
+      let breakoutPpg = null; // track how strong the breakout was
 
       if (cs && cs.length) {
         cs.forEach(s => {
@@ -14376,8 +14406,16 @@ window.fmtHeight = fmtHeight;
           if (gp && gp > 0) {
             const ppg = Math.round((fp / gp) * 10) / 10;
             if (ppg > bestPpg) bestPpg = ppg;
-            // Track earliest breakout season
-            if (ppg >= boThresh && (!breakoutYr || s.yr < breakoutYr)) breakoutYr = s.yr;
+            // Track earliest breakout season using graduated threshold
+            // Full breakout: ppg >= threshold. Near breakout: ppg >= 75% of threshold.
+            // We record the earliest season that clears the soft floor, preferring
+            // full breakouts over near-breakouts at the same age.
+            if (ppg >= boSoftFloor && (!breakoutYr || s.yr < breakoutYr)) {
+              breakoutYr = s.yr;
+              breakoutPpg = ppg;
+            } else if (ppg >= boSoftFloor && breakoutYr === s.yr && ppg > (breakoutPpg || 0)) {
+              breakoutPpg = ppg; // same year, higher PPG
+            }
           }
           totPy += (s.py || 0);
           totRy += (s.ry || 0);
@@ -14499,7 +14537,7 @@ window.fmtHeight = fmtHeight;
 
       const prospectRecord = {
         name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,
-        dr, breakoutAge, tm: tmScore, ht: htInches, wt: wt,
+        dr, breakoutAge, breakoutPpg, boThresh, tm: tmScore, ht: htInches, wt: wt,
         bestPpg, bestFpts, totFpts, fptsPerGame,
         totPy, totRy, totRcy, totRec, totalTd, totRa,
         pasYpg, rushYpg, recYpg, recPg, tdPg,
@@ -15136,12 +15174,13 @@ window.fmtHeight = fmtHeight;
       const ypc = totRushAtt > 0 ? Math.round((totRushYds / totRushAtt) * 10) / 10 : null;
       const ypr = totRecs > 0 ? Math.round((totRecYds / totRecs) * 10) / 10 : null;
 
-      // Breakout age: earliest season exceeding position PPG threshold
+      // Breakout age: earliest season near or above position PPG threshold (graduated)
       const _dBoThresh = { QB: 22, RB: 10, WR: 12, TE: 8.5 };
       const boT = _dBoThresh[d.s] || 12;
+      const boTSoft = boT * 0.75;
       let breakoutYr = null;
       collegeSeasons.forEach(s => {
-        if (s.ppg >= boT && (!breakoutYr || s.yr < breakoutYr)) breakoutYr = s.yr;
+        if (s.ppg >= boTSoft && (!breakoutYr || s.yr < breakoutYr)) breakoutYr = s.yr;
       });
       let breakoutAge = null;
       if (breakoutYr && birth && typeof birth === 'string' && birth.includes('-')) {

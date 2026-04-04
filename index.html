@@ -14157,6 +14157,14 @@ window.fmtHeight = fmtHeight;
     const allNames = new Set();
     if (typeof COMBINE_DATA !== 'undefined') Object.keys(COMBINE_DATA).forEach(n => allNames.add(n));
     if (typeof COLLEGE_STATS !== 'undefined') Object.keys(COLLEGE_STATS).forEach(n => allNames.add(n));
+    // Add active/recent players from D array who might not be in COMBINE/COLLEGE data
+    // but still need to be in the prospect model (e.g., for teammate scoring, card display)
+    D.forEach(d => {
+      if (d.n && d.s && ['QB','RB','WR','TE'].includes(d.s) && !d.n.includes('D/ST')) {
+        // Only add if they have a draft year or are a current player (have a team)
+        if (d.dr || d.t) allNames.add(d.n);
+      }
+    });
 
     // === TEAMMATE INDEX ===
     // Build school+year → [{name, pos, dr}] map for teammate quality detection
@@ -14312,7 +14320,59 @@ window.fmtHeight = fmtHeight;
     allNames.forEach(name => {
       let cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
       const cbOrig = cb; // Save original for draft pick lookup (even if collision nulls cb)
-      const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[name] : null;
+      let cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[name] : null;
+
+      // College stats name alias fallback — handles transfers, name variations, etc.
+      // Some players are in COLLEGE_STATS under a different name than the D array
+      if (!cs && typeof COLLEGE_STATS !== 'undefined') {
+        // Explicit alias map for known mismatches
+        const _CS_ALIASES = {
+          'Mitchell Trubisky': 'Mitch Trubisky',
+          'Mitch Trubisky': 'Mitchell Trubisky',
+          'A.J. Green': 'AJ Green',
+          'AJ Green': 'A.J. Green',
+          'Marvin Harrison Jr.': 'Marvin Harrison Jr',
+          'Marvin Harrison Jr': 'Marvin Harrison Jr.',
+          'D.K. Metcalf': 'DK Metcalf',
+          'DK Metcalf': 'D.K. Metcalf',
+          'D.J. Moore': 'DJ Moore',
+          'DJ Moore': 'D.J. Moore',
+          'A.J. Brown': 'AJ Brown',
+          'AJ Brown': 'A.J. Brown',
+          'C.J. Stroud': 'CJ Stroud',
+          'CJ Stroud': 'C.J. Stroud',
+          'D.J. Uiagalelei': 'DJ Uiagalelei',
+          'DJ Uiagalelei': 'D.J. Uiagalelei',
+          'J.J. McCarthy': 'JJ McCarthy',
+          'JJ McCarthy': 'J.J. McCarthy'
+        };
+
+        // Try explicit alias
+        if (_CS_ALIASES[name]) cs = COLLEGE_STATS[_CS_ALIASES[name]] || null;
+
+        // Try with/without dots (A.J. → AJ, D.K. → DK, etc.)
+        if (!cs) {
+          const noDots = name.replace(/\./g, '');
+          if (noDots !== name) cs = COLLEGE_STATS[noDots] || null;
+        }
+        if (!cs) {
+          // Try adding dots to two-letter initials (AJ → A.J., DJ → D.J.)
+          const withDots = name.replace(/\b([A-Z])([A-Z])\b/g, '$1.$2.');
+          if (withDots !== name) cs = COLLEGE_STATS[withDots] || null;
+        }
+
+        // Try with/without Jr./Sr./III suffix
+        if (!cs) {
+          const noSuffix = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+          if (noSuffix !== name) cs = COLLEGE_STATS[noSuffix] || null;
+        }
+        if (!cs) {
+          // Try adding Jr. if no suffix present
+          if (!/\s+(Jr|Sr|II|III|IV|V)\.?$/i.test(name)) {
+            cs = COLLEGE_STATS[name + ' Jr.'] || COLLEGE_STATS[name + ' Jr'] || null;
+          }
+        }
+      }
 
       // Collision detection: if both CB and CS exist, check if schools match
       // If schools differ AND year gap > 2, they're different people — drop CB data

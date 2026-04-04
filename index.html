@@ -13738,15 +13738,16 @@ window.fmtHeight = fmtHeight;
 
   // Sub-score: School/Program Quality → 0-100
   // Dynamic scoring based on how many NFL draft picks the school produced
-  // in a window around the prospect's time there (their years ± 2).
-  // Replaces the static conference tier lookup with a data-driven measure
-  // that captures program strength changes over time.
-  // Formula: 100 * (1 - e^(-draftedCount/5))
-  // 0 picks → 0, 3 picks → 45, 7 picks → 75, 10 picks → 86, 15+ → 95+
+  // at the SAME POSITION in a window around the prospect's time there (± 2 years).
+  // Position-specific: a WR school that produces elite WRs (Ohio State WR pipeline)
+  // is different from one that produces elite defenders.
+  // QB counts all drafted skill position players (the talent around him).
   // Falls back to conference tier if no school data available.
   function jmSchoolQuality(schoolDraftCount, conf) {
     if (schoolDraftCount != null && schoolDraftCount >= 0) {
-      return Math.round(100 * (1 - Math.exp(-schoolDraftCount / 5)));
+      // Position-specific counts are smaller (e.g. 3-5 WRs vs 15 total players)
+      // so use a tighter curve: divisor of 2.5 instead of 5
+      return Math.round(100 * (1 - Math.exp(-schoolDraftCount / 2.5)));
     }
     // Fallback to conference tier if school data unavailable
     if (!conf || conf === '—') return 30;
@@ -15299,7 +15300,11 @@ window.fmtHeight = fmtHeight;
       const tmSeasons = tmResult.seasons;
 
       // School/Program Quality: count unique drafted players at the same school
-      // within a window of the prospect's years ± 2
+      // at the SAME POSITION GROUP within a window of the prospect's years ± 2
+      // QB: counts all skill positions (QB+WR+RB+TE — offensive talent around him)
+      // WR: counts drafted WRs only (WR pipeline)
+      // TE: counts drafted TEs only (TE pipeline)
+      // RB: counts drafted RBs only (RB pipeline)
       let schoolDraftCount = null;
       if (cs && cs.length) {
         const prospectYears = cs.map(s => s.yr).filter(y => y);
@@ -15308,14 +15313,15 @@ window.fmtHeight = fmtHeight;
           const maxYr = Math.max(...prospectYears) + 2;
           const schools = [...new Set(cs.map(s => s.tm).filter(t => t).map(t => _normSchool(t)))];
           const draftedNames = new Set();
-          // Count all unique drafted players at any of the prospect's schools in the window
+          // Position filter: which positions count for this prospect's school quality
+          const posFilter = pos === 'QB' ? ['QB','WR','RB','TE'] : [pos];
           schools.forEach(school => {
             for (let yr = minYr; yr <= maxYr; yr++) {
               const key = school + '::' + yr;
               const teammates = _tmIndex[key];
               if (teammates) {
                 teammates.forEach(t => {
-                  if (t.name !== name && t.drVal < 260) {
+                  if (t.name !== name && t.drVal < 260 && posFilter.includes(t.pos)) {
                     draftedNames.add(t.name);
                   }
                 });

@@ -13927,8 +13927,62 @@ window.fmtHeight = fmtHeight;
       if (isOld && !hasBo) bustAdj -= 5;
     }
 
-    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + bustAdj) * 10) / 10));
-    return { jm: final, bustAdj };
+    // ═══ SLEEPER BONUS SYSTEM ═══
+    // Derived from Section 13 analysis of Rd 3+/UDFA hits vs misses (2010-2022).
+    // Only applies to late-round picks (pick 65+ or UDFA) — these traits being present
+    // despite low draft capital is the actual signal. Bonuses stack.
+    let sleeperAdj = 0;
+    const isLateRound = (p.dr === 'U') || (typeof p.dr === 'number' && p.dr >= 65) || (typeof p.dr === 'string' && parseInt(p.dr) >= 65);
+
+    if (isLateRound) {
+      if (p.pos === 'QB') {
+        // QB: RAS is the #1 sleeper signal (13.8% gap). Dak 8.2, Russ 8.8, Tyrod 9.7
+        if (p.ras != null && p.ras >= 8.0) sleeperAdj += 3;
+        else if (p.ras != null && p.ras >= 7.0) sleeperAdj += 1;
+      }
+
+      if (p.pos === 'RB') {
+        // RB: Has breakout is #1 (23.1% gap!) — 93% of hits vs 70% of misses
+        if (hasBo) sleeperAdj += 3;
+        // Early breakout (≤20.5): 50% of hits vs 39% of misses
+        if (hasBo && boAge <= 20.5) sleeperAdj += 3;
+        // Young + has breakout: 47% hits vs 26% misses
+        if (p.age != null && p.age <= 22 && hasBo) sleeperAdj += 2;
+        // RAS ≥7 + breakout ≤21: 34% hits vs 20% misses
+        if (p.ras != null && p.ras >= 7.0 && hasBo && boAge <= 21) sleeperAdj += 2;
+        // High RAS + young: 21% hits vs 9% misses
+        if (p.ras != null && p.ras >= 8.0 && p.age != null && p.age <= 22) sleeperAdj += 2;
+      }
+
+      if (p.pos === 'WR') {
+        // WR: Has breakout = 84% hits vs 65% misses (19.3% gap)
+        if (hasBo) sleeperAdj += 3;
+        // Early breakout (≤20.5): 34% of hits vs 25% of misses
+        if (hasBo && boAge <= 20.5) sleeperAdj += 2;
+        // Young + has breakout: 26% hits vs 15% misses
+        if (p.age != null && p.age <= 22 && hasBo) sleeperAdj += 2;
+        // Young + early breakout: 18% hits vs 5% misses (3.6x!)
+        if (p.age != null && p.age <= 21.5 && hasBo && boAge <= 20.5) sleeperAdj += 2;
+        // RAS ≥7 + breakout ≤21: 20% hits vs 11% misses
+        if (p.ras != null && p.ras >= 7.0 && hasBo && boAge <= 21) sleeperAdj += 2;
+      }
+
+      if (p.pos === 'TE') {
+        // TE: Has breakout = 61% hits vs 42% misses; RAS is huge (15.1% gap)
+        if (hasBo) sleeperAdj += 3;
+        // Early breakout (≤20.5): 29% of hits vs 7% of misses (4x!)
+        if (hasBo && boAge <= 20.5) sleeperAdj += 4;
+        // RAS ≥7 + breakout ≤21: 29% hits vs 3% misses (nearly 10x!)
+        if (p.ras != null && p.ras >= 7.0 && hasBo && boAge <= 21) sleeperAdj += 5;
+        // High RAS + young: 19% hits vs 4% misses (4.8x)
+        if (p.ras != null && p.ras >= 8.0 && p.age != null && p.age <= 22) sleeperAdj += 3;
+        // Young + has breakout: 22% vs 6% (3.7x)
+        if (p.age != null && p.age <= 22 && hasBo) sleeperAdj += 3;
+      }
+    }
+
+    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + bustAdj + sleeperAdj) * 10) / 10));
+    return { jm: final, bustAdj, sleeperAdj };
   }
 
   // JM Score display class
@@ -14461,9 +14515,11 @@ window.fmtHeight = fmtHeight;
       if (_jmResult && typeof _jmResult === 'object') {
         prospectRecord.jm = _jmResult.jm;
         prospectRecord.bustAdj = _jmResult.bustAdj;
+        prospectRecord.sleeperAdj = _jmResult.sleeperAdj;
       } else {
         prospectRecord.jm = _jmResult;
         prospectRecord.bustAdj = 0;
+        prospectRecord.sleeperAdj = 0;
       }
       results.push(prospectRecord);
     });
@@ -14625,7 +14681,8 @@ window.fmtHeight = fmtHeight;
           case 'jm':
             if (p.jm != null) {
               const _bustFlag = p.bustAdj && p.bustAdj < 0 ? ` <span style="font-size:.55rem;color:#ef4444;opacity:.8" title="Bust penalty: ${p.bustAdj}">▼${Math.abs(p.bustAdj)}</span>` : '';
-              rows += `<td class="pm-jm"><span class="pm-jm-badge ${jmClass(p.jm)}">${p.jm.toFixed(1)}</span>${_bustFlag}</td>`;
+              const _sleeperFlag = p.sleeperAdj && p.sleeperAdj > 0 ? ` <span style="font-size:.55rem;color:#22c55e;opacity:.8" title="Sleeper bonus: +${p.sleeperAdj}">▲${p.sleeperAdj}</span>` : '';
+              rows += `<td class="pm-jm"><span class="pm-jm-badge ${jmClass(p.jm)}">${p.jm.toFixed(1)}</span>${_bustFlag}${_sleeperFlag}</td>`;
             } else {
               rows += `<td class="pm-jm" style="color:var(--text2);opacity:.4">—</td>`;
             }

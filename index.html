@@ -2789,6 +2789,13 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Jam Miller']) COMBINE_DATA['Jam Miller'] = { school: 'Alabama', pos: 'RB', yr: 2026 };
   if (COMBINE_DATA['Jam Miller'] && !COMBINE_DATA['Jam Miller'].pos) COMBINE_DATA['Jam Miller'].pos = 'RB';
   if (!COMBINE_DATA['Gunner Gray']) COMBINE_DATA['Gunner Gray'] = { school: 'Buffalo', pos: 'QB', yr: 2026, ht: '6-2', wt: 215 };
+  // Merge Brian Thomas Jr. RAS into Brian Thomas entry
+  if (COMBINE_DATA['Brian Thomas'] && COMBINE_DATA['Brian Thomas Jr.']) {
+    if (!COMBINE_DATA['Brian Thomas'].ras && COMBINE_DATA['Brian Thomas Jr.'].ras) {
+      COMBINE_DATA['Brian Thomas'].ras = COMBINE_DATA['Brian Thomas Jr.'].ras;
+    }
+  }
+
   // === DEVY BIO DATA (height/weight from ESPN college rosters) ===
   if (COMBINE_DATA['AK Dear']) { COMBINE_DATA['AK Dear'].ht='6-1'; COMBINE_DATA['AK Dear'].wt=212; }
   if (COMBINE_DATA['Ahmad Hardy']) { COMBINE_DATA['Ahmad Hardy'].ht='5-10'; COMBINE_DATA['Ahmad Hardy'].wt=206; }
@@ -15460,10 +15467,38 @@ window.fmtHeight = fmtHeight;
   const _SCHOOL_NORM={"App State":"Appalachian State","Arizona State":"Arizona St.","Arkansas State":"Arkansas St.","Boise State":"Boise St.","Boston College":"Boston Col.","Colorado State":"Colorado St.","Eastern Illinois":"East. Illinois","Eastern Washington":"East. Washington","Florida State":"Florida St.","Fresno State":"Fresno St.","Georgia State":"Georgia St.","Illinois State":"Illinois St.","Iowa State":"Iowa St.","Kansas State":"Kansas St.","Kent State":"Kent St.","Louisiana":"Louisiana-Lafayette","Miami":"Miami (FL)","Michigan State":"Michigan St.","Middle Tennessee":"Middle Tennessee State","Mississippi State":"Mississippi St.","NC State":"North Carolina State","North Dakota State":"North Dakota St.","Northwestern State":"Northwestern St. (LA)","Ohio State":"Ohio St.","Oklahoma State":"Oklahoma St.","Ole Miss":"Mississippi","Oregon State":"Oregon St.","Penn State":"Penn St.","Prairie View A&M":"Prairie View","SE Louisiana":"Southeastern Louisiana","San Diego State":"San Diego St.","San José State":"San Jose State","South Dakota State":"South Dakota St.","Southeast Missouri State":"Southeast Missouri St.","Southern Miss":"Southern Mississippi","UAB":"Ala-Birmingham","UCF":"Central Florida","UConn":"Connecticut","UTEP":"Texas-El Paso","Utah State":"Utah St.","Washington State":"Washington St.","Western Michigan":"West. Michigan"};
   function _normSchool(s) { if (!s) return ''; const a = _SCHOOL_NORM[s] || s; return a.toLowerCase().replace(/[.\s]/g,''); }
 
+  // Suffix alias map for dedup — maps base name to canonical name
+  const _PROSPECT_ALIASES = {
+    'Brian Thomas': 'Brian Thomas Jr.', 'DJ Moore': 'D.J. Moore',
+    'Michael Pittman': 'Michael Pittman Jr.', 'Kenneth Walker': 'Kenneth Walker III',
+    'Calvin Austin': 'Calvin Austin III', 'Benny Snell': 'Benny Snell Jr.',
+    'Irv Smith': 'Irv Smith Jr.', 'Lynn Bowden': 'Lynn Bowden Jr.',
+    'Velus Jones': 'Velus Jones Jr.', 'JJ Arcega-Whiteside': 'J.J. Arcega-Whiteside',
+    'Marvin Harrison': 'Marvin Harrison Jr.'
+  };
+  // Reverse map too
+  Object.entries(_PROSPECT_ALIASES).forEach(([k,v]) => { if (!_PROSPECT_ALIASES[v]) _PROSPECT_ALIASES[v] = v; });
+
   function buildProspectData() {
     const allNames = new Set();
+    const _skipNames = new Set(); // names to skip (suffix duplicates)
     if (typeof COMBINE_DATA !== 'undefined') Object.keys(COMBINE_DATA).forEach(n => allNames.add(n));
-    if (typeof COLLEGE_STATS !== 'undefined') Object.keys(COLLEGE_STATS).forEach(n => allNames.add(n));
+    if (typeof COLLEGE_STATS !== 'undefined') Object.keys(COLLEGE_STATS).forEach(n => {
+      // Skip adding if the canonical version is already in allNames
+      const canonical = _PROSPECT_ALIASES[n];
+      if (canonical && canonical !== n && allNames.has(canonical)) {
+        _skipNames.add(n);
+        return;
+      }
+      // Skip adding if this IS the canonical and the base name is already there
+      const base = Object.entries(_PROSPECT_ALIASES).find(([k,v]) => v === n && k !== n);
+      if (base && allNames.has(base[0])) {
+        _skipNames.add(base[0]); // skip the base, keep canonical
+      }
+      allNames.add(n);
+    });
+    // Remove skipped names
+    _skipNames.forEach(n => allNames.delete(n));
     // Add active/recent players from D array who might not be in COMBINE/COLLEGE data
     // but still need to be in the prospect model (e.g., for teammate scoring, card display)
     D.forEach(d => {

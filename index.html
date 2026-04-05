@@ -2308,17 +2308,6 @@ CLEAR
 <svg class="pm-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
 <input type="text" class="pm-search" id="pmSearch" placeholder="Search player...">
 </div>
-<div class="pm-filter-wrap">
-<label class="pm-filter-label">TM ≥</label>
-<select class="pm-filter-select" id="pmTmFilter">
-<option value="0">All</option>
-<option value="5.5">5.5+</option>
-<option value="6">6+</option>
-<option value="6.5">6.5+</option>
-<option value="7">7+</option>
-<option value="8">8+</option>
-</select>
-</div>
 </div>
 <div class="pm-table-wrap">
 <table class="pm-table" id="pmTable">
@@ -2679,6 +2668,14 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Roman Hemby'] && !COMBINE_DATA['Roman Hemby'].ras) COMBINE_DATA['Roman Hemby'].ras = 6.24;
   if (COMBINE_DATA['Roydell Williams'] && !COMBINE_DATA['Roydell Williams'].ras) COMBINE_DATA['Roydell Williams'].ras = 7.01;
   if (COMBINE_DATA['Sebastian Brown'] && !COMBINE_DATA['Sebastian Brown'].ras) COMBINE_DATA['Sebastian Brown'].ras = 4.72;
+  // Michael Penix: D array + LEGEND_BIRTH_YEARS use "Michael Penix" (no Jr.)
+  // but COMBINE_DATA has good data under "Michael Penix Jr." and bad data under "Michael Penix" (yr:2000)
+  // Fix: overwrite the non-Jr. entry with Jr.'s correct data
+  if (COMBINE_DATA['Michael Penix Jr.'] && COMBINE_DATA['Michael Penix Jr.'].draft) {
+    COMBINE_DATA['Michael Penix'] = Object.assign({}, COMBINE_DATA['Michael Penix Jr.']);
+  } else if (COMBINE_DATA['Michael Penix'] && COMBINE_DATA['Michael Penix'].yr === 2000) {
+    COMBINE_DATA['Michael Penix'] = { yr: 2024, school: 'Washington', pos: 'QB', ht: '6-2', wt: 216, draft: 8, ras: 9.75, dt: 'ATL' };
+  }
 }
 </script>
 <script src="data/college_stats.js"></script>
@@ -9314,7 +9311,7 @@ window.LEGEND_BIRTH_YEARS={
 "Marvin Mims Jr.":"2002-09-20",
 "Matthew Golden":"2003-10-06",
 "Max Klare":"2003-10-31",
-"Michael Penix":"1999-03-14",
+"Michael Penix":"2000-05-08",
 "Michael Trigg":"2002-10-17",
 "Michael Wilson":"2000-08-05",
 "Mike Gesicki":"1995-10-03",
@@ -14674,6 +14671,11 @@ window.fmtHeight = fmtHeight;
       }
     }
 
+    // 0. TOP PRIORITY: If player has a known draft pick in COMBINE_DATA, use cb.yr
+    // This is the actual draft year, not the first playing year (which can differ
+    // if the player was injured their rookie season, e.g. JJ McCarthy 2024 draft but 2025 debut)
+    if (cb && cb.yr && cb.draft) return cb.yr;
+
     // Career first year from D — use _debut if it's earlier than career stats
     // (stats data starts in 1999, so pre-1999 players have career arrays that start too late)
     let careerFirst = (d && d.career && d.career.length) ? Math.min(...d.career.map(s => s.yr)) : null;
@@ -14831,7 +14833,7 @@ window.fmtHeight = fmtHeight;
         const others = teammates.filter(t => t.name !== name);
         if (!others.length) return;
 
-        let seasonScore = 5.0; // baseline: average teammates
+        let seasonScore = 0; // baseline: 0 = no bonus (neutral, no notable teammates)
 
         // Helper: count teammates by draft tier
         function countByTier(list) {
@@ -14844,31 +14846,16 @@ window.fmtHeight = fmtHeight;
         }
 
         if (pos === 'QB') {
-          // QB with elite WRs/TEs → NEGATIVE (stats were inflated by weapons)
-          const receivers = others.filter(t => ['WR','TE'].includes(t.pos));
-          const rc = countByTier(receivers);
-          seasonScore -= rc.r1 * 1.5 + rc.r2 * 0.7 + rc.r3 * 0.3 + rc.mid * 0.1;
-
-          // Elite RB means offense may lean on run game
-          const backs = others.filter(t => t.pos === 'RB');
-          const bc = countByTier(backs);
-          seasonScore -= bc.r1 * 0.4 + bc.r2 * 0.2;
+          // QB: bonus for sharing the field with elite weapons
+          // Having great weapons means the QB had a better supporting cast,
+          // but we treat this as a bonus (good situation) not a penalty
+          // The actual stat inflation concern is handled elsewhere
+          // For now QBs get no teammate bonus — their situation is captured by other components
+          seasonScore = 0;
 
         } else if (pos === 'WR' || pos === 'TE') {
-          // WR/TE with elite QB → very mild negative (slight stat inflation)
-          // Kept minimal because the separate QB Context component handles this precisely
-          const qbs = others.filter(t => t.pos === 'QB');
-          qbs.forEach(t => {
-            // Continuous scale: pick 1 QB = -0.4, pick 32 = -0.15, pick 64 = -0.05, 150+ = ~0
-            if (t.drVal <= 260) seasonScore -= Math.max(0.02, 0.4 * Math.pow(0.99, t.drVal - 1));
-          });
-
-          // WR/TE with other elite WRs/TEs → MAJOR POSITIVE (production suppressed)
-          // Continuous scale based on actual draft capital — pick 1 WR teammate is
-          // far more impactful than pick 32 because they commanded way more targets.
-          // Formula: bonus = 4.0 * (1 - pick/300)^2 for each WR/TE teammate
-          // Pick 1 = 4.0, Pick 5 = 3.7, Pick 10 = 3.5, Pick 20 = 3.1,
-          // Pick 32 = 2.6, Pick 50 = 2.1, Pick 64 = 1.8, Pick 100 = 1.2, Pick 150 = 0.6
+          // WR/TE with other elite WRs/TEs → BONUS (production was suppressed)
+          // Having no notable WR/TE teammates = 0 (neutral, not penalized)
           const receiversTEs = others.filter(t => ['WR','TE'].includes(t.pos));
           receiversTEs.forEach(t => {
             if (t.drVal < 260) {
@@ -14878,20 +14865,18 @@ window.fmtHeight = fmtHeight;
           });
 
         } else if (pos === 'RB') {
-          // RB with other elite RBs → POSITIVE (production suppressed)
+          // RB with other drafted RBs → POSITIVE (production suppressed, shared backfield)
+          // Uses continuous draft-capital curve — same approach as WR/TE teammates
+          // An early R2 RB sharing carries with another early R2 RB is a big deal
           const otherBacks = others.filter(t => t.pos === 'RB');
-          const bc = countByTier(otherBacks);
-          seasonScore += bc.r1 * 1.8 + bc.r2 * 1.0 + bc.r3 * 0.5 + bc.mid * 0.15;
-
-          // RB with elite QB → slight NEGATIVE (team likely pass-heavy)
-          const qbs = others.filter(t => t.pos === 'QB');
-          const qc = countByTier(qbs);
-          seasonScore -= qc.r1 * 0.5 + qc.r2 * 0.2;
-
-          // Check for bad QBs — late round or undrafted QBs mean run-heavy offense
-          const badQBs = qbs.filter(t => t.drVal >= 150).length;
-          const terribleQBs = qbs.filter(t => t.drVal >= 260).length;
-          seasonScore -= terribleQBs * 1.2 + Math.max(0, badQBs - terribleQBs) * 0.6;
+          otherBacks.forEach(t => {
+            if (t.drVal < 260) {
+              const bonus = 4.0 * Math.pow(1 - t.drVal / 300, 2);
+              seasonScore += Math.max(0.05, bonus);
+            }
+          });
+          // No QB penalty for RBs — QB draft capital has little correlation
+          // with RB production. RBs share carries with other RBs, not QBs.
         }
 
         seasonScores.push({
@@ -14900,21 +14885,15 @@ window.fmtHeight = fmtHeight;
         });
       });
 
-      if (!seasonScores.length) return { overall: 5.0, seasons: [] };
+      if (!seasonScores.length) return { overall: null, seasons: [] };
 
-      // Overall: use the most impactful season (furthest from 5.0)
-      let mostImpactful = 5.0;
-      let biggestDelta = 0;
-      seasonScores.forEach(ss => {
-        const delta = Math.abs(ss.score - 5.0);
-        if (delta > biggestDelta) {
-          biggestDelta = delta;
-          mostImpactful = ss.score;
-        }
-      });
+      // Overall: use the highest bonus season (bonus-only, so max score wins)
+      // If all seasons are 0 (no notable teammates), return null so weight redistributes
+      const maxScore = Math.max(...seasonScores.map(ss => ss.score));
+      if (maxScore <= 0) return { overall: null, seasons: seasonScores };
 
       return {
-        overall: Math.max(0, Math.min(10, Math.round(mostImpactful * 10) / 10)),
+        overall: Math.max(0, Math.min(10, Math.round(maxScore * 10) / 10)),
         seasons: seasonScores
       };
     }
@@ -14956,7 +14935,9 @@ window.fmtHeight = fmtHeight;
           'D.J. Uiagalelei': 'DJ Uiagalelei',
           'DJ Uiagalelei': 'D.J. Uiagalelei',
           'J.J. McCarthy': 'JJ McCarthy',
-          'JJ McCarthy': 'J.J. McCarthy'
+          'JJ McCarthy': 'J.J. McCarthy',
+          'Michael Penix': 'Michael Penix Jr.',
+          'Michael Penix Jr.': 'Michael Penix'
         };
 
         // Try explicit alias
@@ -15844,7 +15825,7 @@ window.fmtHeight = fmtHeight;
           case 'tm':
             if (p.tm != null && p.tm !== 5.0) {
               // Above 5 = production was suppressed (good signal), below 5 = stats were inflated (caution)
-              const tmCls = p.tm >= 8 ? 'pm-jm-elite' : p.tm >= 6.5 ? 'pm-jm-great' : p.tm >= 5.5 ? 'pm-jm-good' : p.tm >= 4.5 ? 'pm-jm-avg' : p.tm >= 3.5 ? 'pm-jm-low' : 'pm-jm-low';
+              const tmCls = p.tm >= 6 ? 'pm-jm-elite' : p.tm >= 4 ? 'pm-jm-great' : p.tm >= 2 ? 'pm-jm-good' : p.tm > 0 ? 'pm-jm-avg' : 'pm-jm-low';
               rows += `<td class="pm-jm"><span class="pm-jm-badge ${tmCls}">${p.tm.toFixed(1)}</span></td>`;
             } else {
               rows += `<td style="color:var(--text2);opacity:.4;text-align:center">5.0</td>`;
@@ -16012,12 +15993,6 @@ window.fmtHeight = fmtHeight;
   // Search
   pmSearch.addEventListener('input', function() {
     pmSearchVal = this.value.trim();
-    renderTable();
-  });
-
-  // TM filter
-  document.getElementById('pmTmFilter').addEventListener('change', function() {
-    pmTmMin = parseFloat(this.value) || 0;
     renderTable();
   });
 

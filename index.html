@@ -13643,10 +13643,10 @@ window.fmtHeight = fmtHeight;
   // Each component outputs a 0-100 sub-score (except DC: 0-1000), then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.12, breakout: 0.09, prod: 0.16, conf: 0.04, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.00, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.02, qbCtx: 0.00 },
-    RB:  { age: 0.11, breakout: 0.08, prod: 0.10, conf: 0.04, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.03, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.00 },
-    WR:  { age: 0.10, breakout: 0.10, prod: 0.13, conf: 0.04, ras: 0.04, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.05, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 },
-    TE:  { age: 0.07, breakout: 0.10, prod: 0.09, conf: 0.04, ras: 0.10, dc: 0.33, tm: 0.03, size: 0.04, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 }
+    QB:  { age: 0.11, breakout: 0.09, prod: 0.16, conf: 0.04, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.00, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00 },
+    RB:  { age: 0.09, breakout: 0.08, prod: 0.11, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00 },
+    WR:  { age: 0.08, breakout: 0.12, prod: 0.13, conf: 0.04, ras: 0.04, dc: 0.33, tm: 0.03, size: 0.02, eff: 0.03, mktShare: 0.05, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03 },
+    TE:  { age: 0.06, breakout: 0.10, prod: 0.09, conf: 0.04, ras: 0.10, dc: 0.33, tm: 0.03, size: 0.04, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03 }
   };
 
   // Conference tiers — DATA-DRIVEN from era analysis
@@ -14355,10 +14355,10 @@ window.fmtHeight = fmtHeight;
   //   TE: YPR 41% gap (#1!), RAS 11% gap, DC only 31%
 
   const JM_CEILING_WEIGHTS = {
-    QB:  { age: 0.08, breakout: 0.08, prod: 0.13, conf: 0.03, ras: 0.13, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.07, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.02, qbCtx: 0.00 },
-    RB:  { age: 0.11, breakout: 0.09, prod: 0.08, conf: 0.02, ras: 0.12, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.02, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.00 },
-    WR:  { age: 0.06, breakout: 0.14, prod: 0.14, conf: 0.03, ras: 0.03, dc: 0.33, tm: 0.03, size: 0.02, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.02, qbCtx: 0.04 },
-    TE:  { age: 0.05, breakout: 0.10, prod: 0.10, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.09, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.02, qbCtx: 0.03 }
+    QB:  { age: 0.07, breakout: 0.08, prod: 0.13, conf: 0.03, ras: 0.13, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.07, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00 },
+    RB:  { age: 0.08, breakout: 0.09, prod: 0.08, conf: 0.01, ras: 0.12, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.05, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00 },
+    WR:  { age: 0.04, breakout: 0.16, prod: 0.14, conf: 0.03, ras: 0.03, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.03, qbCtx: 0.04 },
+    TE:  { age: 0.03, breakout: 0.12, prod: 0.10, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.02, eff: 0.09, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03 }
   };
 
   function calcJM(p) {

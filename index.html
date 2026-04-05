@@ -7898,6 +7898,16 @@ document.addEventListener('click', function(e) {
       if (!pool || !pool.length) return;
       target = pickDailyTarget(pool, config.seedOffset || 0);
       loadState();
+
+      // ALWAYS reset UI first — prevents stale completed state from prior day
+      guessRows.innerHTML = '';
+      result.style.display = 'none';
+      result.innerHTML = '';
+      input.disabled = false;
+      input.value = '';
+      guessBtn.disabled = false;
+      giveUpBtn.style.display = '';
+
       // Replay saved guesses
       if (guesses.length > 0) {
         guesses.forEach(gName => {

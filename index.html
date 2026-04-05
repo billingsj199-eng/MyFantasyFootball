@@ -3263,6 +3263,7 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
 <script src="data/college_weekly_2.js"></script>
 <script src="data/college_weekly_3.js"></script>
 <script src="data/college_weekly_devy.js"></script>
+<script src="data/wr_yprr.js"></script>
 <script src="data/all_players_weekly_1.js"></script>
 <script src="data/all_players_weekly_2.js"></script>
 <script src="data/all_players_weekly_3.js"></script>
@@ -14235,10 +14236,10 @@ window.fmtHeight = fmtHeight;
   // Each component outputs a 0-100 sub-score (except DC: 0-1000), then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.08, breakout: 0.08, prod: 0.11, conf: 0.04, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.00, eff: 0.00, mktShare: 0.00, improve: 0.03, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.06 },
-    RB:  { age: 0.09, breakout: 0.08, prod: 0.10, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.03, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02 },
-    WR:  { age: 0.08, breakout: 0.11, prod: 0.12, conf: 0.04, ras: 0.04, dc: 0.33, tm: 0.03, size: 0.02, eff: 0.03, mktShare: 0.05, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02 },
-    TE:  { age: 0.06, breakout: 0.09, prod: 0.06, conf: 0.04, ras: 0.10, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.03, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.04, pff: 0.02 }
+    QB:  { age: 0.08, breakout: 0.08, prod: 0.11, conf: 0.04, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.00, eff: 0.00, mktShare: 0.00, improve: 0.03, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.06, yprr: 0.00 },
+    RB:  { age: 0.09, breakout: 0.08, prod: 0.10, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.03, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.00 },
+    WR:  { age: 0.08, breakout: 0.11, prod: 0.12, conf: 0.04, ras: 0.04, dc: 0.33, tm: 0.03, size: 0.02, eff: 0.01, mktShare: 0.03, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.04 },
+    TE:  { age: 0.06, breakout: 0.09, prod: 0.06, conf: 0.04, ras: 0.10, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.03, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.04, pff: 0.02, yprr: 0.00 }
   };
 
   // Conference tiers — DATA-DRIVEN from era analysis
@@ -14891,6 +14892,22 @@ window.fmtHeight = fmtHeight;
     return Math.max(0, raw / 60 * 20);
   }
 
+  // Sub-score: WR Yards Per Route Run (YPRR) → 0-100
+  // Data shows 21% gap between great WRs (3.04 avg) and bad WRs (2.52 avg).
+  // Strongest WR-specific predictor found — better signal than dominator or market share.
+  // Uses best qualified season (min 150 routes). WR only.
+  function jmYprr(name, pos) {
+    if (pos !== 'WR' || typeof _WR_YPRR === 'undefined') return null;
+    const yprr = _WR_YPRR[name];
+    if (yprr == null) return null;
+    if (yprr >= 3.5) return Math.min(100, 85 + (yprr - 3.5) / 0.5 * 15);
+    if (yprr >= 3.0) return 70 + (yprr - 3.0) / 0.5 * 15;
+    if (yprr >= 2.5) return 50 + (yprr - 2.5) / 0.5 * 20;
+    if (yprr >= 2.0) return 30 + (yprr - 2.0) / 0.5 * 20;
+    if (yprr >= 1.5) return 15 + (yprr - 1.5) / 0.5 * 15;
+    return Math.max(5, yprr / 1.5 * 15);
+  }
+
   // Sub-score: Dominator Rating (% of team TDs scored by prospect) → 0-100
   // Different from market share (yards). A player who scores 40%+ of his team's
   // touchdowns is the undisputed red zone weapon — translates directly to fantasy.
@@ -14984,10 +15001,10 @@ window.fmtHeight = fmtHeight;
   //   TE: YPR 41% gap (#1!), RAS 11% gap, DC only 31%
 
   const JM_CEILING_WEIGHTS = {
-    QB:  { age: 0.05, breakout: 0.08, prod: 0.08, conf: 0.03, ras: 0.14, dc: 0.33, tm: 0.03, size: 0.00, eff: 0.03, mktShare: 0.00, improve: 0.03, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.04 },
-    RB:  { age: 0.08, breakout: 0.09, prod: 0.07, conf: 0.01, ras: 0.12, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.03, rbRec: 0.05, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02 },
-    WR:  { age: 0.04, breakout: 0.15, prod: 0.13, conf: 0.03, ras: 0.03, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.03, qbCtx: 0.04, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02 },
-    TE:  { age: 0.03, breakout: 0.11, prod: 0.06, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.09, mktShare: 0.04, improve: 0.03, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.05, pff: 0.02 }
+    QB:  { age: 0.05, breakout: 0.08, prod: 0.08, conf: 0.03, ras: 0.14, dc: 0.33, tm: 0.03, size: 0.00, eff: 0.03, mktShare: 0.00, improve: 0.03, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.04, yprr: 0.00 },
+    RB:  { age: 0.08, breakout: 0.09, prod: 0.07, conf: 0.01, ras: 0.12, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.03, rbRec: 0.05, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.00 },
+    WR:  { age: 0.04, breakout: 0.15, prod: 0.13, conf: 0.03, ras: 0.03, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.02, mktShare: 0.02, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.03, qbCtx: 0.04, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.04 },
+    TE:  { age: 0.03, breakout: 0.11, prod: 0.06, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.09, mktShare: 0.04, improve: 0.03, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.05, pff: 0.02, yprr: 0.00 }
   };
 
   function calcJM(p) {
@@ -15020,6 +15037,7 @@ window.fmtHeight = fmtHeight;
     const qbIntRateScore = jmQbIntRate(p.qbIntRate, p.pos);
     const teRecScore = jmTeReceiving(p.teRecPg, p.pos);
     const pffScore = jmPffGrade(p.pffGrade, p.pffRush, p.pos);
+    const yprrScore = jmYprr(p.name, p.pos);
 
     // === ELITE PROSPECT MISSING DATA HANDLING ===
     // High draft capital players who skip the combine or have limited college data
@@ -15052,7 +15070,8 @@ window.fmtHeight = fmtHeight;
       { key: 'qbAccuracy', score: qbAccuracyScore },
       { key: 'qbIntRate', score: qbIntRateScore },
       { key: 'teRec', score: teRecScore },
-      { key: 'pff', score: pffScore }
+      { key: 'pff', score: pffScore },
+      { key: 'yprr', score: yprrScore }
     ];
 
     // Calculate floor score (starter rate calibrated)

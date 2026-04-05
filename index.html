@@ -13995,7 +13995,7 @@ window.fmtHeight = fmtHeight;
   // Each component outputs a 0-100 sub-score (except DC: 0-1000), then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.08, breakout: 0.08, prod: 0.10, conf: 0.04, ras: 0.07, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.00, mktShare: 0.00, improve: 0.03, rbRec: 0.00, qbRush: 0.05, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.06 },
+    QB:  { age: 0.08, breakout: 0.08, prod: 0.11, conf: 0.04, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.00, eff: 0.00, mktShare: 0.00, improve: 0.03, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.06 },
     RB:  { age: 0.09, breakout: 0.08, prod: 0.10, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.03, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02 },
     WR:  { age: 0.08, breakout: 0.11, prod: 0.12, conf: 0.04, ras: 0.04, dc: 0.33, tm: 0.03, size: 0.02, eff: 0.03, mktShare: 0.05, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02 },
     TE:  { age: 0.06, breakout: 0.09, prod: 0.06, conf: 0.04, ras: 0.10, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.03, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.04, pff: 0.02 }
@@ -14284,19 +14284,17 @@ window.fmtHeight = fmtHeight;
       // Ideal builds: Mahomes 6'3"/225, Allen 6'5"/237, Burrow 6'4"/215, Herbert 6'6"/236
       if (ht == null) return wt != null && wt >= 210 && wt <= 240 ? 60 : null;
 
-      // Height score — steep curve reflecting real NFL bias and hit rate data
-      // DATA: Modern QB - 6'4"+ at 58% starter, 6'2"-6'3" at 37%, 6'0"-6'1" at 28%
-      // The 6'4"+ hit rate is 2x the 6'0"-6'1" rate — the curve should reflect that
+      // Height score — THRESHOLD model, not a curve
+      // Data shows being 6'5" is NOT better than 6'2" for QB success
+      // 6'1"+ all have similar hit rates (50-71%)
+      // Only matters when you're TOO SHORT — that's where the risk is
+      // 6'0" and under: only Brees (6'0") and Wilson (5'11") in modern era
       let htScore;
-      if (ht >= 78) htScore = 100;       // 6'6"+ — elite size (Herbert, Allen frame)
-      else if (ht >= 77) htScore = 97;   // 6'5" — ideal (Allen 6'5")
-      else if (ht >= 76) htScore = 93;   // 6'4" — premium (Burrow, Lawrence)
-      else if (ht >= 75) htScore = 85;   // 6'3" — strong (Mahomes, Stroud)
-      else if (ht >= 74) htScore = 72;   // 6'2" — acceptable (Ward)
-      else if (ht >= 73) htScore = 55;   // 6'1" — below ideal, workable (Lamar)
-      else if (ht >= 72) htScore = 38;   // 6'0" — real concern
-      else if (ht >= 70) htScore = 20;   // 5'10"-5'11" — major red flag (Kyler exception)
-      else htScore = 8;                   // Under 5'10" — historically almost never works
+      if (ht >= 73) htScore = 75;         // 6'1"+ — height is irrelevant, neutral score
+      else if (ht >= 72) htScore = 40;    // 6'0" — significant risk (only Brees)
+      else if (ht >= 71) htScore = 22;    // 5'11" — extreme outlier (only Wilson)
+      else if (ht >= 70) htScore = 10;    // 5'10" — no sustained success ever (Kyler)
+      else htScore = 5;                    // Under 5'10" — historically never works
 
       if (wt == null) return htScore;
 
@@ -14746,7 +14744,7 @@ window.fmtHeight = fmtHeight;
   //   TE: YPR 41% gap (#1!), RAS 11% gap, DC only 31%
 
   const JM_CEILING_WEIGHTS = {
-    QB:  { age: 0.05, breakout: 0.07, prod: 0.08, conf: 0.03, ras: 0.12, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.00, improve: 0.03, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.04 },
+    QB:  { age: 0.05, breakout: 0.08, prod: 0.08, conf: 0.03, ras: 0.14, dc: 0.33, tm: 0.03, size: 0.00, eff: 0.03, mktShare: 0.00, improve: 0.03, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.04 },
     RB:  { age: 0.08, breakout: 0.09, prod: 0.07, conf: 0.01, ras: 0.12, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.03, rbRec: 0.05, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02 },
     WR:  { age: 0.04, breakout: 0.15, prod: 0.13, conf: 0.03, ras: 0.03, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.03, qbCtx: 0.04, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02 },
     TE:  { age: 0.03, breakout: 0.11, prod: 0.06, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.09, mktShare: 0.04, improve: 0.03, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.05, pff: 0.02 }
@@ -15028,7 +15026,21 @@ window.fmtHeight = fmtHeight;
       sleeperAdj = Math.min(sleeperAdj, sleeperCap[p.pos] || 4);
     }
 
-    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj) * 10) / 10));
+    // ═══ QB SHORT HEIGHT PENALTY ═══
+    // Data shows height is purely a threshold for QBs, not a curve.
+    // 6'1"+ all have similar success rates (50-71%) — no advantage to being taller.
+    // Below 6'1" the risk climbs sharply: only Brees (6'0") and Wilson (5'11") succeeded.
+    // Applied as a flat penalty rather than a weighted component.
+    let htPenalty = 0;
+    if (p.pos === 'QB' && p.ht != null) {
+      if (p.ht <= 69) htPenalty = -8;       // <5'10" — never works
+      else if (p.ht <= 70) htPenalty = -6;   // 5'10" — no sustained success (Kyler)
+      else if (p.ht <= 71) htPenalty = -4;   // 5'11" — extreme outlier (only Wilson)
+      else if (p.ht <= 72) htPenalty = -2;   // 6'0" — significant risk (only Brees)
+      // 6'1"+ (73+) = no penalty
+    }
+
+    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + htPenalty) * 10) / 10));
     // Low confidence if less than 50% of weight has data, or fewer than 5 of 17 components
     const lowConfidence = dataCoverage < 50 || dataCount < 5;
 

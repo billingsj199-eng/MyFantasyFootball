@@ -15635,6 +15635,7 @@ window.fmtHeight = fmtHeight;
     const cols = [
       { key: 'name', label: 'PLAYER', sortable: true },
       { key: 'jm', label: 'JM', sortable: true },
+      { key: 'tier', label: 'TIER', sortable: true },
       { key: 'risk', label: 'RISK', sortable: true },
       { key: 'dc', label: 'DC', sortable: true },
       { key: 'age', label: 'DRAFT AGE', sortable: true },
@@ -15803,6 +15804,24 @@ window.fmtHeight = fmtHeight;
               rows += `<td class="pm-jm" style="color:var(--text2);opacity:.4">—</td>`;
             }
             break;
+          case 'tier': {
+            // Prospect tier description based on JM score
+            let tierLabel = '—', tierColor = 'var(--text2)';
+            if (p.jm != null && !p.lowConfidence) {
+              if (p.jm >= 80)      { tierLabel = 'Generational'; tierColor = '#fbbf24'; }
+              else if (p.jm >= 72) { tierLabel = 'Blue Chip';    tierColor = '#60a5fa'; }
+              else if (p.jm >= 65) { tierLabel = 'Elite';        tierColor = '#34d399'; }
+              else if (p.jm >= 58) { tierLabel = 'Starter';      tierColor = '#a78bfa'; }
+              else if (p.jm >= 50) { tierLabel = 'Contributor';  tierColor = '#fb923c'; }
+              else if (p.jm >= 42) { tierLabel = 'Depth';        tierColor = '#94a3b8'; }
+              else if (p.jm >= 34) { tierLabel = 'Lottery Ticket'; tierColor = '#f87171'; }
+              else                 { tierLabel = 'Long Shot';    tierColor = '#64748b'; }
+            } else if (p.jm != null) {
+              tierLabel = 'Incomplete'; tierColor = '#64748b';
+            }
+            rows += `<td style="text-align:center"><span style="font-size:.65rem;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:10px;background:${tierColor}22;color:${tierColor};white-space:nowrap">${tierLabel}</span></td>`;
+            break;
+          }
           case 'risk': {
             const _riskVal = (p.bustAdj || 0) + (p.sleeperAdj || 0);
             if (_riskVal < 0) {

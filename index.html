@@ -11107,17 +11107,31 @@ window.fmtHeight = fmtHeight;
     SYNC_KEYS_MAX.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = parseFloat(v) || 0; });
     SYNC_KEYS_STR.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
     SYNC_KEYS_JSON.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
-    // Save today's daily game states — only include if the state's target is from today's seed
+    // Save today's daily game states — only include if the state's target matches today's seed
     const keys = _syncDailyKeys();
     const dailyStates = { date: keys.dateStr };
     const epState = localStorage.getItem(keys.ep);
     const gwCState = localStorage.getItem(keys.gwC);
     const gwATState = localStorage.getItem(keys.gwAT);
-    // Only sync daily states that actually exist (avoids pushing empty object that overwrites real data)
+    // Verify each state's target matches today's actual target before syncing
+    // This prevents stale game data (wrong player) from being saved with today's date
+    function _saveVerifyTarget(stateJson, poolGetter, seedOffset) {
+      try {
+        const state = JSON.parse(stateJson);
+        if (!state.targetName) return true;
+        const pool = (typeof poolGetter === 'function') ? poolGetter() : null;
+        if (!pool || !pool.length) return false; // can't verify, don't sync
+        const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+        const seed = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate() + (seedOffset || 0);
+        const todayTarget = pool[Math.abs(seed * 2654435761 >>> 0) % pool.length];
+        return todayTarget && state.targetName === todayTarget.name;
+      } catch(e) { return false; }
+    }
+    // Only sync daily states that actually exist AND match today's target
     if (epState) dailyStates.ep = epState;
-    if (gwCState) dailyStates.gwC = gwCState;
-    if (gwATState) dailyStates.gwAT = gwATState;
-    if (epState || gwCState || gwATState) data.dailyStates = dailyStates;
+    if (gwCState && _saveVerifyTarget(gwCState, window._gwGetPoolCurrent, 0)) dailyStates.gwC = gwCState;
+    if (gwATState && _saveVerifyTarget(gwATState, window._gwGetPoolAlltime, 7919)) dailyStates.gwAT = gwATState;
+    if (dailyStates.ep || dailyStates.gwC || dailyStates.gwAT) data.dailyStates = dailyStates;
     data.syncedAt = new Date().toISOString();
     db.collection('user_game_data').doc(user.uid).set(data, { merge: true }).catch(e => console.warn('[Sync] save error:', e));
   }
@@ -11164,20 +11178,42 @@ window.fmtHeight = fmtHeight;
       if (cloud.dailyStates) {
         const keys = _syncDailyKeys();
         if (cloud.dailyStates.date === keys.dateStr) {
+          // Additional verification: check that the cloud state's target matches today's seed
+          // This prevents stale game data that got stamped with today's date from being restored
+          function _verifyDailyTarget(stateJson, poolGetter, seedOffset) {
+            try {
+              const state = JSON.parse(stateJson);
+              if (!state.targetName) return true; // no target to verify
+              const pool = (typeof poolGetter === 'function') ? poolGetter() : null;
+              if (!pool || !pool.length) return true; // can't verify without pool, allow it
+              const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+              const seed = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate() + (seedOffset || 0);
+              const todayTarget = pool[Math.abs(seed * 2654435761 >>> 0) % pool.length];
+              return todayTarget && state.targetName === todayTarget.name;
+            } catch(e) { return false; }
+          }
           // Elite Pull daily — only restore if no local state exists
           if (cloud.dailyStates.ep && !localStorage.getItem(keys.ep)) {
             localStorage.setItem(keys.ep, cloud.dailyStates.ep);
             _dailyRestored = true;
           }
-          // Guess Who daily current
+          // Guess Who daily current — verify target matches today's seed
           if (cloud.dailyStates.gwC && !localStorage.getItem(keys.gwC)) {
-            localStorage.setItem(keys.gwC, cloud.dailyStates.gwC);
-            _dailyRestored = true;
+            if (_verifyDailyTarget(cloud.dailyStates.gwC, window._gwGetPoolCurrent, 0)) {
+              localStorage.setItem(keys.gwC, cloud.dailyStates.gwC);
+              _dailyRestored = true;
+            } else {
+              console.log('[Sync] Skipped stale gwC state — target does not match today');
+            }
           }
-          // Guess Who daily all-time
+          // Guess Who daily all-time — verify target matches today's seed
           if (cloud.dailyStates.gwAT && !localStorage.getItem(keys.gwAT)) {
-            localStorage.setItem(keys.gwAT, cloud.dailyStates.gwAT);
-            _dailyRestored = true;
+            if (_verifyDailyTarget(cloud.dailyStates.gwAT, window._gwGetPoolAlltime, 7919)) {
+              localStorage.setItem(keys.gwAT, cloud.dailyStates.gwAT);
+              _dailyRestored = true;
+            } else {
+              console.log('[Sync] Skipped stale gwAT state — target does not match today');
+            }
           }
         }
       }

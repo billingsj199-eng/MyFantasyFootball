@@ -2894,7 +2894,11 @@ if (typeof COMBINE_DATA !== 'undefined') {
 <script>
 // === 2025 COLLEGE QB STATS (from PFF passing_summary) ===
 if (typeof COLLEGE_STATS !== 'undefined') {
-  if (!COLLEGE_STATS['Darian Mensah']) COLLEGE_STATS['Darian Mensah'] = [];
+    if (!COLLEGE_STATS['D.J. Moore']) COLLEGE_STATS['D.J. Moore'] = [];
+  COLLEGE_STATS['D.J. Moore'].push({yr:2015,tm:"Maryland",conf:"Big Ten",gp:11,py:0,ptd:0,int:0,pc:0,pa:1,ry:9,rtd:0,ra:1,rec:29,rcy:357,rctd:3,fl:0,fpts:52.6});
+  COLLEGE_STATS['D.J. Moore'].push({yr:2016,tm:"Maryland",conf:"Big Ten",gp:12,py:21,ptd:0,int:0,pc:1,pa:2,ry:48,rtd:0,ra:9,rec:38,rcy:597,rctd:6,fl:0,fpts:101.8});
+  COLLEGE_STATS['D.J. Moore'].push({yr:2017,tm:"Maryland",conf:"Big Ten",gp:12,py:15,ptd:0,int:0,pc:2,pa:3,ry:61,rtd:1,ra:5,rec:80,rcy:1033,rctd:8,fl:0,fpts:171.8});
+if (!COLLEGE_STATS['Darian Mensah']) COLLEGE_STATS['Darian Mensah'] = [];
   COLLEGE_STATS['Darian Mensah'].push({yr:2025,tm:"DUKE",conf:"ACC",gp:14,py:3951,ptd:34,int:6,pc:335,pa:503,ry:147,rtd:3,ra:21,rec:0,rcy:0,rctd:0,fl:0,fpts:314.7,pff:85.0});
   if (!COLLEGE_STATS['Jaron-Keawe Sagapolutele']) COLLEGE_STATS['Jaron-Keawe Sagapolutele'] = [];
   COLLEGE_STATS['Jaron-Keawe Sagapolutele'].push({yr:2025,tm:"CAL",conf:"ACC",gp:13,py:3454,ptd:18,int:9,pc:315,pa:495,ry:112,rtd:2,ra:16,rec:0,rcy:0,rctd:0,fl:0,fpts:215.4,pff:79.4});
@@ -15492,6 +15496,10 @@ window.fmtHeight = fmtHeight;
       }
     });
 
+    // Pre-build D array lookup map for O(1) access (avoids 11K * 500 = 5.7M comparisons)
+    const _dMap = {};
+    D.forEach(d => { if (d.n) _dMap[d.n] = d; });
+
     // POST-MERGE DEDUP: remove alternate names, keep canonical versions
     // e.g., if both "Brian Thomas" and "Brian Thomas Jr." exist, remove "Brian Thomas"
     Object.keys(_PROSPECT_ALIASES).forEach(altName => {
@@ -15509,7 +15517,7 @@ window.fmtHeight = fmtHeight;
       // Helper: get position for a name
       function _getPos(n) {
         if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[n] && COMBINE_DATA[n].pos) return COMBINE_DATA[n].pos;
-        const d = D.find(p => p.n === n);
+        const d = _dMap[n];
         return d ? d.s : null;
       }
       // Helper: get overall pick estimate for a name
@@ -15531,7 +15539,7 @@ window.fmtHeight = fmtHeight;
           if (lb === 'U' || lb === 'u') return 300;
           const v = parseInt(lb); if (!isNaN(v) && v > 0) return v;
         }
-        const d = D.find(p => p.n === n);
+        const d = _dMap[n];
         if (d && d.dr != null) {
           const rd = parseInt(d.dr);
           if (!isNaN(rd) && rd >= 1 && rd <= 7) {
@@ -15658,12 +15666,16 @@ window.fmtHeight = fmtHeight;
       const cbOrig = cb; // Save original for draft pick lookup (even if collision nulls cb)
       let cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[name] : null;
 
-      // EARLY SKIP: if no combine data AND no college stats, player has nothing to score
-      if (!cb && !cs) {
-        // Check D array as last resort
-        const _dEntry = D.find(d => d.n === name);
-        if (!_dEntry) return; // Skip entirely — no data anywhere
-      }
+      // EARLY SKIP: if no combine data AND no college stats AND not in D array, skip
+      if (!cb && !cs && !_dMap[name]) return;
+
+      // EARLY POSITION CHECK: skip non-skill positions immediately
+      // Most of the 11,400 COMBINE_DATA entries are OL/DL/LB/DB with no pos field
+      // If we can determine position early, skip non-skill positions before expensive processing
+      let _earlyPos = null;
+      if (cb && cb.pos) _earlyPos = cb.pos;
+      if (!_earlyPos && _dMap[name] && _dMap[name].s) _earlyPos = _dMap[name].s;
+      if (_earlyPos && !['QB','RB','WR','TE'].includes(_earlyPos)) return;
 
       // College stats name alias fallback — handles transfers, name variations, etc.
       // Some players are in COLLEGE_STATS under a different name than the D array
@@ -15738,7 +15750,7 @@ window.fmtHeight = fmtHeight;
 
       // Draft pick cross-check: if D array player has a known draft pick and cb.dr differs, wrong person
       if (cb && cb.dr) {
-        const dPlayer = D.find(p => p.n === name);
+        const dPlayer = _dMap[name];
         if (dPlayer && dPlayer.dr && typeof dPlayer.dr === 'number' && cb.dr !== dPlayer.dr) {
           cb = null;
         }
@@ -15747,7 +15759,7 @@ window.fmtHeight = fmtHeight;
       // College stats collision detection: verify CS belongs to this player
       // Handles cases like "Lamar Jackson" QB (Louisville) vs WR (same name, different school)
       if (cs && cs.length) {
-        const dPlayer = D.find(p => p.n === name);
+        const dPlayer = _dMap[name];
         const knownSchool = (cb && cb.school) ? cb.school
           : (typeof LEGEND_BIO !== 'undefined' && LEGEND_BIO[name] && LEGEND_BIO[name].c) ? LEGEND_BIO[name].c
           : (dPlayer && dPlayer._college) ? dPlayer._college
@@ -15802,7 +15814,7 @@ window.fmtHeight = fmtHeight;
       } else if (cb && cb.pos) {
         pos = cb.pos;
       } else {
-        const d = D.find(p => p.n === name);
+        const d = _dMap[name];
         if (d && d.s) pos = d.s;
       }
       // Infer position from college stats for players not in COMBINE_DATA or D array
@@ -16043,7 +16055,7 @@ window.fmtHeight = fmtHeight;
       // Draft capital — overall pick number
       // COMBINE_DATA.draft and LEGEND_BIO.dr store OVERALL PICK (1-262)
       // D[].dr stores ROUND NUMBER (1-7) — must be converted to estimated overall pick
-      const dPlayer = D.find(p => p.n === name);
+      const dPlayer = _dMap[name];
       let dr = null;
       const rawPick = (cbOrig && cbOrig.draft != null) ? cbOrig.draft
         : (LEGEND_BIO && LEGEND_BIO[name] && LEGEND_BIO[name].dr != null) ? LEGEND_BIO[name].dr
@@ -16308,6 +16320,17 @@ window.fmtHeight = fmtHeight;
         const _qbG = window._PFF_QB_GRADES[name];
         if (pffGrade == null || _qbG > pffGrade) pffGrade = _qbG;
       }
+      // Cross-position fallback: some players are miscategorized in PFF data
+      // (e.g., KC Concepcion listed as RB but is a WR). Check all maps if still null.
+      if (pffGrade == null) {
+        if (window._PFF_WR_GRADES && window._PFF_WR_GRADES[name]) pffGrade = window._PFF_WR_GRADES[name];
+        else if (window._PFF_QB_GRADES && window._PFF_QB_GRADES[name]) pffGrade = window._PFF_QB_GRADES[name];
+        else if (window._PFF_TE_GRADES && window._PFF_TE_GRADES[name]) pffGrade = window._PFF_TE_GRADES[name];
+        else if (window._PFF_RB_GRADES && window._PFF_RB_GRADES[name]) {
+          const _rbF = window._PFF_RB_GRADES[name];
+          pffGrade = (_rbF[1] != null) ? _rbF[1] : _rbF[0];
+        }
+      }
 
       // 6) Dominator Rating: % of team TDs scored by this prospect
       // Uses _tmIndex to find all teammates, cross-references COLLEGE_STATS for their TDs
@@ -16364,7 +16387,7 @@ window.fmtHeight = fmtHeight;
 
       // Detect college-only players: in COLLEGE_STATS but not drafted/in NFL
       // Must have recent stats (last 2 years) to filter out old college players who never made it
-      const _dPlayer = D.find(p => p.n === name);
+      const _dPlayer = _dMap[name];
       const _inD = !!_dPlayer;
       const _inCB = !!(typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name]);
       const _lastCollegeYr = (cs && cs.length) ? Math.max(...cs.map(s => s.yr)) : 0;

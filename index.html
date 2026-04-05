@@ -15823,12 +15823,11 @@ window.fmtHeight = fmtHeight;
             break;
           }
           case 'tm':
-            if (p.tm != null && p.tm !== 5.0) {
-              // Above 5 = production was suppressed (good signal), below 5 = stats were inflated (caution)
+            if (p.tm != null && p.tm > 0) {
               const tmCls = p.tm >= 6 ? 'pm-jm-elite' : p.tm >= 4 ? 'pm-jm-great' : p.tm >= 2 ? 'pm-jm-good' : p.tm > 0 ? 'pm-jm-avg' : 'pm-jm-low';
               rows += `<td class="pm-jm"><span class="pm-jm-badge ${tmCls}">${p.tm.toFixed(1)}</span></td>`;
             } else {
-              rows += `<td style="color:var(--text2);opacity:.4;text-align:center">5.0</td>`;
+              rows += `<td style="color:var(--text2);opacity:.4;text-align:center">—</td>`;
             }
             break;
           case 'gp':

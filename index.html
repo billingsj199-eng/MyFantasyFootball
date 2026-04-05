@@ -2277,6 +2277,7 @@ CLEAR
 <button class="pm-pos-tab" data-pmpos="WR">WR</button>
 <button class="pm-pos-tab" data-pmpos="TE">TE</button>
 <button class="pm-pos-tab" data-pmpos="ALL">ALL</button>
+<button class="pm-pos-tab" data-pmpos="COLLEGE">COLLEGE</button>
 </div>
 <select id="pmDraftClassFilter" style="padding:5px 10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.78rem;cursor:pointer;margin-left:6px">
 <option value="all">All Classes</option>
@@ -15080,6 +15081,23 @@ window.fmtHeight = fmtHeight;
         const d = D.find(p => p.n === name);
         if (d && d.s) pos = d.s;
       }
+      // Infer position from college stats for players not in COMBINE_DATA or D array
+      // (e.g., current college players who haven't declared)
+      if (!pos && cs && cs.length) {
+        const totCs = cs.reduce((a, s) => ({
+          py: a.py + (s.py||0), pa: a.pa + (s.pa||0),
+          ry: a.ry + (s.ry||0), ra: a.ra + (s.ra||0),
+          rcy: a.rcy + (s.rcy||0), rec: a.rec + (s.rec||0)
+        }), {py:0, pa:0, ry:0, ra:0, rcy:0, rec:0});
+        if (totCs.pa >= 50) pos = 'QB';
+        else if (totCs.ra >= 30 && totCs.ry > totCs.rcy) pos = 'RB';
+        else if (totCs.rec >= 10) {
+          // WR vs TE — tricky without explicit position data
+          // Heuristic: TEs tend to have fewer receptions and more YPR
+          // For now, default to WR since we can't distinguish reliably
+          pos = 'WR';
+        }
+      }
       if (!pos || !['QB','RB','WR','TE'].includes(pos)) return;
 
       const draftYr = getDraftYear(name);
@@ -15577,6 +15595,14 @@ window.fmtHeight = fmtHeight;
         if (bestQbDr < 999) qbDrVal = bestQbDr;
       }
 
+      // Detect college-only players: in COLLEGE_STATS but not drafted/in NFL
+      // Must have recent stats (last 2 years) to filter out old college players who never made it
+      const _dPlayer = D.find(p => p.n === name);
+      const _inD = !!_dPlayer;
+      const _inCB = !!(typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name]);
+      const _lastCollegeYr = (cs && cs.length) ? Math.max(...cs.map(s => s.yr)) : 0;
+      const isCollege = !_inD && !_inCB && cs && cs.length > 0 && _lastCollegeYr >= 2024;
+
       const prospectRecord = {
         name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,
         dr, breakoutAge, breakoutPpg, boThresh, tm: tmScore, preBreakoutTm, ht: htInches, wt: wt,
@@ -15587,7 +15613,8 @@ window.fmtHeight = fmtHeight;
         ypc, ypr,
         mktShare, improvSlope, qbRushFppg,
         domRate, numSeasons, qbDrVal, schoolDraftCount,
-        qbCompPct, qbIntRate, teRecPg
+        qbCompPct, qbIntRate, teRecPg,
+        isCollege
       };
       // For 2026 prospects, use Firestore draft capital if available
       if (draftYr === 2026 && _dcCache[name]) {
@@ -15656,10 +15683,10 @@ window.fmtHeight = fmtHeight;
     }
 
     // Position-specific efficiency columns
-    if (pos === 'RB' || pos === 'ALL') {
+    if (pos === 'RB' || pos === 'ALL' || pos === 'COLLEGE') {
       cols.push({ key: 'ypc', label: 'YPC', sortable: true });
     }
-    if (pos === 'WR' || pos === 'TE' || pos === 'ALL') {
+    if (pos === 'WR' || pos === 'TE' || pos === 'ALL' || pos === 'COLLEGE') {
       cols.push({ key: 'ypr', label: 'YPR', sortable: true });
     }
 
@@ -15697,14 +15724,17 @@ window.fmtHeight = fmtHeight;
   function renderTable() {
     // Filter by position
     let data;
-    if (pmPos === 'ALL') {
-      data = pmBuiltData.slice(); // all positions
+    if (pmPos === 'COLLEGE') {
+      // Show only college-only players (not yet drafted/in NFL)
+      data = pmBuiltData.filter(p => p.isCollege);
+    } else if (pmPos === 'ALL') {
+      data = pmBuiltData.filter(p => !p.isCollege); // exclude college from ALL
     } else {
-      data = pmBuiltData.filter(p => p.pos === pmPos);
+      data = pmBuiltData.filter(p => p.pos === pmPos && !p.isCollege);
     }
 
-    // Draft class filter
-    if (pmDraftClass !== 'all') {
+    // Draft class filter (skip for COLLEGE tab — they don't have draft classes)
+    if (pmDraftClass !== 'all' && pmPos !== 'COLLEGE') {
       if (pmDraftClass === 'older') {
         data = data.filter(p => p.draftYr != null && p.draftYr < 2015);
       } else {

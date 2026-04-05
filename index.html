@@ -3256,6 +3256,13 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
 <script src="data/college_weekly_devy.js"></script>
 <script src="data/wr_yprr.js"></script>
 <script src="data/pff_grades.js"></script>
+<script>
+// PFF grade patches for players missing from generated file
+if (typeof _PFF_WR_GRADES !== 'undefined') {
+  if (!_PFF_WR_GRADES['DJ Moore']) _PFF_WR_GRADES['DJ Moore'] = 83.2;
+  if (!_PFF_WR_GRADES['D.J. Moore']) _PFF_WR_GRADES['D.J. Moore'] = 83.2;
+}
+</script>
 <script src="data/all_players_weekly_1.js"></script>
 <script src="data/all_players_weekly_2.js"></script>
 <script src="data/all_players_weekly_3.js"></script>
@@ -16328,7 +16335,7 @@ window.fmtHeight = fmtHeight;
         else if (window._PFF_TE_GRADES && window._PFF_TE_GRADES[name]) pffGrade = window._PFF_TE_GRADES[name];
         else if (window._PFF_RB_GRADES && window._PFF_RB_GRADES[name]) {
           const _rbF = window._PFF_RB_GRADES[name];
-          pffGrade = (_rbF[1] != null) ? _rbF[1] : _rbF[0];
+          pffGrade = Array.isArray(_rbF) ? (_rbF[1] != null ? _rbF[1] : _rbF[0]) : _rbF;
         }
       }
 

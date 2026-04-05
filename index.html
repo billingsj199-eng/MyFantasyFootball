@@ -7442,6 +7442,11 @@ document.addEventListener('click', function(e) {
   gwModeAlltime.addEventListener('click', () => _gwSetMode('alltime'));
   gwModeCollege.addEventListener('click', () => _gwSetMode('college'));
 
+  // Initialize pools immediately on load so daily GW games can pick today's player
+  // Without this, pools only init when user opens unlimited GW tab,
+  // leaving daily games stuck showing stale completed state
+  setTimeout(initGwPool, 100);
+
   // === Random / Custom mode toggle ===
   let gwPlayMode = 'random'; // 'random' or 'custom'
   const gwPlayRandomBtn = document.getElementById('gwPlayRandom');

@@ -13640,10 +13640,10 @@ window.fmtHeight = fmtHeight;
   // Each component outputs a 0-100 sub-score (except DC: 0-1000), then the weighted sum is the JM Score.
 
   const JM_WEIGHTS = {
-    QB:  { age: 0.11, breakout: 0.09, prod: 0.16, conf: 0.04, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.00, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00 },
-    RB:  { age: 0.09, breakout: 0.08, prod: 0.11, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00 },
-    WR:  { age: 0.08, breakout: 0.12, prod: 0.13, conf: 0.04, ras: 0.04, dc: 0.33, tm: 0.03, size: 0.02, eff: 0.03, mktShare: 0.05, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03 },
-    TE:  { age: 0.06, breakout: 0.10, prod: 0.09, conf: 0.04, ras: 0.10, dc: 0.33, tm: 0.03, size: 0.04, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03 }
+    QB:  { age: 0.09, breakout: 0.09, prod: 0.11, conf: 0.04, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.00, mktShare: 0.00, improve: 0.03, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.05, qbIntRate: 0.03, teRec: 0.00 },
+    RB:  { age: 0.09, breakout: 0.08, prod: 0.11, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00 },
+    WR:  { age: 0.08, breakout: 0.12, prod: 0.13, conf: 0.04, ras: 0.04, dc: 0.33, tm: 0.03, size: 0.02, eff: 0.03, mktShare: 0.05, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00 },
+    TE:  { age: 0.06, breakout: 0.10, prod: 0.06, conf: 0.04, ras: 0.10, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.04 }
   };
 
   // Conference tiers — DATA-DRIVEN from era analysis
@@ -14237,26 +14237,48 @@ window.fmtHeight = fmtHeight;
     return Math.max(0, qbRushFppg / 0.5 * 10);
   }
 
-  // Sub-score: NFL Yards Per Route Run (from D array _yrr, WR/TE only) → 0-100
-  // YROO is a per-snap efficiency metric that correlates with elite WR/TE fantasy output.
-  // Only available for players with NFL data (historical/active, not incoming prospects).
-  // Elite: 2.5+ (Adams, Jefferson), Good: 2.0-2.5, Average: 1.5-2.0
-  function jmNflYrr(yrr, pos) {
-    if ((pos !== 'WR' && pos !== 'TE') || yrr == null) return null;
-    if (pos === 'WR') {
-      if (yrr >= 2.8) return 100;
-      if (yrr >= 2.5) return 90 + (yrr - 2.5) / 0.3 * 10;
-      if (yrr >= 2.0) return 70 + (yrr - 2.0) / 0.5 * 20;
-      if (yrr >= 1.5) return 40 + (yrr - 1.5) / 0.5 * 30;
-      if (yrr >= 1.0) return 15 + (yrr - 1.0) / 0.5 * 25;
-      return Math.max(0, yrr / 1.0 * 15);
-    }
-    // TE Y/RR — slightly different scale, TEs typically lower
-    if (yrr >= 2.5) return 100;
-    if (yrr >= 2.0) return 85 + (yrr - 2.0) / 0.5 * 15;
-    if (yrr >= 1.5) return 60 + (yrr - 1.5) / 0.5 * 25;
-    if (yrr >= 1.0) return 30 + (yrr - 1.0) / 0.5 * 30;
-    return Math.max(0, yrr / 1.0 * 30);
+  // Sub-score: NFL Yards Per Route Run (REMOVED — weight=0)
+  function jmNflYrr(yrr, pos) { return null; }
+
+  // Sub-score: QB Completion Percentage → 0-100
+  // One of the most predictive college QB stats for NFL success.
+  // Elite: 68%+ (Burrow 76%, Stroud 69%), Good: 63-67%, Avg: 58-62%, Poor: <58%
+  function jmQbAccuracy(compPct, pos) {
+    if (pos !== 'QB' || compPct == null) return null;
+    if (compPct >= 72) return 100;
+    if (compPct >= 68) return 85 + (compPct - 68) / 4 * 15;
+    if (compPct >= 65) return 70 + (compPct - 65) / 3 * 15;
+    if (compPct >= 62) return 55 + (compPct - 62) / 3 * 15;
+    if (compPct >= 58) return 35 + (compPct - 58) / 4 * 20;
+    if (compPct >= 54) return 15 + (compPct - 54) / 4 * 20;
+    return Math.max(0, compPct / 54 * 15);
+  }
+
+  // Sub-score: QB INT Rate (INTs per attempt) → 0-100 (lower INT rate = higher score)
+  // Elite: <1.5% (Burrow 1.0%, Stroud 1.2%), Good: 1.5-2.5%, Avg: 2.5-3.5%, Risky: >3.5%
+  function jmQbIntRate(intRate, pos) {
+    if (pos !== 'QB' || intRate == null) return null;
+    if (intRate <= 0.8) return 100;
+    if (intRate <= 1.5) return 85 + (1.5 - intRate) / 0.7 * 15;
+    if (intRate <= 2.0) return 70 + (2.0 - intRate) / 0.5 * 15;
+    if (intRate <= 2.5) return 55 + (2.5 - intRate) / 0.5 * 15;
+    if (intRate <= 3.0) return 40 + (3.0 - intRate) / 0.5 * 15;
+    if (intRate <= 4.0) return 20 + (4.0 - intRate) / 1.0 * 20;
+    return Math.max(0, 20 - (intRate - 4.0) * 10);
+  }
+
+  // Sub-score: TE Receiving Profile (receptions per game in college) → 0-100
+  // Separates receiving TEs (Pitts, Hockenson, Kittle) from blocking TEs
+  // who were drafted for their blocking but have low fantasy ceilings.
+  // Elite: 4.5+ rec/g (Pitts 3.7, Hockenson 4.1), Good: 3.0-4.0, Avg: 2.0-3.0
+  function jmTeReceiving(recPerGame, pos) {
+    if (pos !== 'TE' || recPerGame == null) return null;
+    if (recPerGame >= 5.0) return 100;
+    if (recPerGame >= 4.0) return 85 + (recPerGame - 4.0) / 1.0 * 15;
+    if (recPerGame >= 3.0) return 65 + (recPerGame - 3.0) / 1.0 * 20;
+    if (recPerGame >= 2.0) return 40 + (recPerGame - 2.0) / 1.0 * 25;
+    if (recPerGame >= 1.0) return 15 + (recPerGame - 1.0) / 1.0 * 25;
+    return Math.max(0, recPerGame / 1.0 * 15);
   }
 
   // Sub-score: Dominator Rating (% of team TDs scored by prospect) → 0-100
@@ -14352,10 +14374,10 @@ window.fmtHeight = fmtHeight;
   //   TE: YPR 41% gap (#1!), RAS 11% gap, DC only 31%
 
   const JM_CEILING_WEIGHTS = {
-    QB:  { age: 0.07, breakout: 0.08, prod: 0.13, conf: 0.03, ras: 0.13, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.07, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00 },
-    RB:  { age: 0.08, breakout: 0.09, prod: 0.08, conf: 0.01, ras: 0.12, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.05, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00 },
-    WR:  { age: 0.04, breakout: 0.16, prod: 0.14, conf: 0.03, ras: 0.03, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.03, qbCtx: 0.04 },
-    TE:  { age: 0.03, breakout: 0.12, prod: 0.10, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.02, eff: 0.09, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03 }
+    QB:  { age: 0.05, breakout: 0.08, prod: 0.09, conf: 0.03, ras: 0.13, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.03, mktShare: 0.00, improve: 0.03, rbRec: 0.00, qbRush: 0.07, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00 },
+    RB:  { age: 0.08, breakout: 0.09, prod: 0.08, conf: 0.01, ras: 0.12, dc: 0.33, tm: 0.03, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.05, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00 },
+    WR:  { age: 0.04, breakout: 0.16, prod: 0.14, conf: 0.03, ras: 0.03, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.03, qbCtx: 0.04, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00 },
+    TE:  { age: 0.03, breakout: 0.12, prod: 0.06, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.09, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.05 }
   };
 
   function calcJM(p) {
@@ -14384,6 +14406,9 @@ window.fmtHeight = fmtHeight;
     const dominatorScore = jmDominator(p.domRate, p.pos);
     const earlyDecScore = jmEarlyDeclare(p.numSeasons, p.age, p.bestPpg, p.pos);
     const qbCtxScore = jmQbContext(p.qbDrVal, p.pos);
+    const qbAccuracyScore = jmQbAccuracy(p.qbCompPct, p.pos);
+    const qbIntRateScore = jmQbIntRate(p.qbIntRate, p.pos);
+    const teRecScore = jmTeReceiving(p.teRecPg, p.pos);
 
     // === ELITE PROSPECT MISSING DATA HANDLING ===
     // High draft capital players who skip the combine or have limited college data
@@ -14412,7 +14437,10 @@ window.fmtHeight = fmtHeight;
       { key: 'nflYrr', score: nflYrrScore },
       { key: 'dominator', score: dominatorScore },
       { key: 'earlyDec', score: earlyDecScore },
-      { key: 'qbCtx', score: qbCtxScore }
+      { key: 'qbCtx', score: qbCtxScore },
+      { key: 'qbAccuracy', score: qbAccuracyScore },
+      { key: 'qbIntRate', score: qbIntRateScore },
+      { key: 'teRec', score: teRecScore }
     ];
 
     // Calculate floor score (starter rate calibrated)
@@ -15148,6 +15176,7 @@ window.fmtHeight = fmtHeight;
       let totFpts = 0;
       // Aggregated totals
       let totPy = 0, totRy = 0, totRcy = 0, totRec = 0, totPtd = 0, totRtd = 0, totRctd = 0, totInt = 0, totRa = 0;
+      let totPc = 0, totPa = 0; // completions and attempts for QB completion %
 
       // Breakout age: earliest season with PPG near or above threshold
       // Uses a graduated curve instead of hard cutoff — a player at 11.9 WR PPG
@@ -15189,6 +15218,8 @@ window.fmtHeight = fmtHeight;
           totRtd += (s.rtd || 0);
           totRctd += (s.rctd || 0);
           totInt += (s.int || 0);
+          totPc += (s.pc || 0);
+          totPa += (s.pa || 0);
         });
       }
 
@@ -15475,6 +15506,24 @@ window.fmtHeight = fmtHeight;
 
       // 5) (NFL Y/RR removed — JM model uses college/athletic data only, no NFL stats)
 
+      // 5a) QB Completion Percentage (career)
+      let qbCompPct = null;
+      if (pos === 'QB' && totPa >= 100) {
+        qbCompPct = Math.round((totPc / totPa) * 1000) / 10; // e.g. 67.2%
+      }
+
+      // 5b) QB INT Rate (INTs per attempt, career)
+      let qbIntRate = null;
+      if (pos === 'QB' && totPa >= 100) {
+        qbIntRate = Math.round((totInt / totPa) * 1000) / 10; // e.g. 2.3%
+      }
+
+      // 5c) TE Receiving Profile (receptions per game)
+      let teRecPg = null;
+      if (pos === 'TE' && totalGp > 0 && !_tooFewGames) {
+        teRecPg = Math.round((totRec / totalGp) * 10) / 10;
+      }
+
       // 6) Dominator Rating: % of team TDs scored by this prospect
       // Uses _tmIndex to find all teammates, cross-references COLLEGE_STATS for their TDs
       let domRate = null;
@@ -15537,7 +15586,8 @@ window.fmtHeight = fmtHeight;
         totPtd, totRtd, totRctd, totInt,
         ypc, ypr,
         mktShare, improvSlope, qbRushFppg,
-        domRate, numSeasons, qbDrVal, schoolDraftCount
+        domRate, numSeasons, qbDrVal, schoolDraftCount,
+        qbCompPct, qbIntRate, teRecPg
       };
       // For 2026 prospects, use Firestore draft capital if available
       if (draftYr === 2026 && _dcCache[name]) {

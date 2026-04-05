@@ -3313,7 +3313,7 @@ function validateImportData(obj) {
 (function() {
   const IMG_BASE = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/';
   const IMG_SUFFIX = '.png&w=350&h=254';
-  const CACHE_KEY = 'espnIdCache6';
+  const CACHE_KEY = 'espnIdCache7';
   let cache = {};
   try { cache = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '{}'); } catch(e) {}
 
@@ -3396,7 +3396,7 @@ function validateImportData(obj) {
         const short = nn.replace(/ Jr\.?$| Sr\.?$| III$| II$| IV$| V$/i, '').trim();
         id = nameToId[short];
       }
-      // Try last name + first initial match
+      // Try last name + first name match (not just first letter — that causes B.Robinson/B.Robinson collisions)
       if (!id) {
         const parts = nn.split(' ');
         if (parts.length >= 2) {
@@ -3404,7 +3404,7 @@ function validateImportData(obj) {
           const last = parts[parts.length - 1].toLowerCase();
           for (const [k, v] of Object.entries(nameToId)) {
             const kp = k.toLowerCase().split(' ');
-            if (kp.length >= 2 && kp[kp.length-1] === last && kp[0].startsWith(first.charAt(0))) {
+            if (kp.length >= 2 && kp[kp.length-1] === last && kp[0] === first) {
               id = v; break;
             }
           }
@@ -6036,7 +6036,7 @@ document.addEventListener('click', function(e) {
   ];
 
   function getHeadshotUrl(id) {
-    const cache = JSON.parse(sessionStorage.getItem('espnIdCache6') || '{}');
+    const cache = JSON.parse(sessionStorage.getItem('espnIdCache7') || '{}');
     const poolPlayer = EP_PLAYERS.find(p => p.id === id);
     if (poolPlayer) {
       if (window.FALLBACK_IDS && window.FALLBACK_IDS[poolPlayer.name]) {
@@ -6352,7 +6352,7 @@ document.addEventListener('click', function(e) {
   setTimeout(_buildUnlimitedPool, 15000);
 
     function getHeadshotUrlU(id, playerName) {
-    const cache = JSON.parse(sessionStorage.getItem('espnIdCache6') || '{}');
+    const cache = JSON.parse(sessionStorage.getItem('espnIdCache7') || '{}');
     if (playerName) {
       if (window.FALLBACK_IDS && window.FALLBACK_IDS[playerName]) {
         id = window.FALLBACK_IDS[playerName];

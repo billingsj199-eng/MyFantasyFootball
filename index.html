@@ -15487,10 +15487,19 @@ window.fmtHeight = fmtHeight;
     'Velus Jones': 'Velus Jones Jr.', 'JJ Arcega-Whiteside': 'J.J. Arcega-Whiteside',
     'Marvin Harrison': 'Marvin Harrison Jr.'
   };
-  // Reverse map too
-  Object.entries(_PROSPECT_ALIASES).forEach(([k,v]) => { if (!_PROSPECT_ALIASES[v]) _PROSPECT_ALIASES[v] = v; });
+  // Reverse map: canonical name -> alternate name (for birthday/data lookups)
+  const _PROSPECT_REVERSE = {};
+  Object.entries(_PROSPECT_ALIASES).forEach(([alt, canonical]) => {
+    if (alt !== canonical) _PROSPECT_REVERSE[canonical] = alt;
+  });
 
+  let _pmBuildCache = null;
+  let _pmBuildCacheKey = null;
   function buildProspectData() {
+    // Cache: skip rebuild if inputs haven't changed
+    const cacheKey = pmScoring + '::' + JSON.stringify(_dcCache);
+    if (_pmBuildCache && _pmBuildCacheKey === cacheKey) return _pmBuildCache;
+    _pmBuildCacheKey = cacheKey;
     const allNames = new Set();
     if (typeof COMBINE_DATA !== 'undefined') Object.keys(COMBINE_DATA).forEach(n => allNames.add(n));
     if (typeof COLLEGE_STATS !== 'undefined') Object.keys(COLLEGE_STATS).forEach(n => allNames.add(n));
@@ -15854,9 +15863,9 @@ window.fmtHeight = fmtHeight;
           birth = LEGEND_BIRTH_YEARS[name];
         }
         // Fallback: check alias names (e.g., "Brian Thomas Jr." -> "Brian Thomas")
-        if (!birth) {
-          const altName = Object.keys(_PROSPECT_ALIASES).find(k => _PROSPECT_ALIASES[k] === name && k !== name);
-          if (altName && typeof LEGEND_BIRTH_YEARS[altName] === 'string' && LEGEND_BIRTH_YEARS[altName].includes('-')) {
+        if (!birth && _PROSPECT_REVERSE[name]) {
+          const altName = _PROSPECT_REVERSE[name];
+          if (typeof LEGEND_BIRTH_YEARS[altName] === 'string' && LEGEND_BIRTH_YEARS[altName].includes('-')) {
             birth = LEGEND_BIRTH_YEARS[altName];
           }
         }
@@ -16439,6 +16448,7 @@ window.fmtHeight = fmtHeight;
       results.push(prospectRecord);
     });
 
+    _pmBuildCache = results;
     return results;
   }
 
@@ -16876,18 +16886,24 @@ window.fmtHeight = fmtHeight;
   }
 
   function rebuildAndRender() {
-    try {
-      _dcLoad().then(function() {
-        pmBuiltData = buildProspectData();
-        _pmDiagnostic(pmBuiltData);
-        renderTable();
-      }).catch(function() {
-        pmBuiltData = buildProspectData();
-        renderTable();
-      });
-    } catch(e) {
+    // Show loading state immediately so page is interactive
+    pmTbody.innerHTML = '<tr><td colspan="20" style="text-align:center;padding:20px;color:var(--text2)">Loading prospects...</td></tr>';
+    
+    function _doBuild() {
       pmBuiltData = buildProspectData();
       renderTable();
+    }
+    
+    try {
+      _dcLoad().then(function() {
+        _pmDiagnostic(pmBuiltData);
+        // Defer heavy computation so browser can paint and handle events
+        setTimeout(_doBuild, 50);
+      }).catch(function() {
+        setTimeout(_doBuild, 50);
+      });
+    } catch(e) {
+      setTimeout(_doBuild, 50);
     }
   }
 
@@ -16931,6 +16947,8 @@ window.fmtHeight = fmtHeight;
     this.querySelectorAll('.pm-scoring-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     pmScoring = btn.dataset.pmscoring;
+    _pmBuildCache = null; // Force rebuild on scoring mode change
+    if (typeof _jmCache !== 'undefined') Object.keys(_jmCache).forEach(k => delete _jmCache[k]);
     rebuildAndRender();
   });
 

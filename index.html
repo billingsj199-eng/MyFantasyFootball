@@ -3313,7 +3313,7 @@ function validateImportData(obj) {
 (function() {
   const IMG_BASE = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/';
   const IMG_SUFFIX = '.png&w=350&h=254';
-  const CACHE_KEY = 'espnIdCache5';
+  const CACHE_KEY = 'espnIdCache6';
   let cache = {};
   try { cache = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '{}'); } catch(e) {}
 
@@ -3342,16 +3342,14 @@ function validateImportData(obj) {
     "JuJu Smith-Schuster":"3116164",
     "Keenan Allen":"15818","DK Metcalf":"4047650","Cooper Kupp":"3046779",
     "Jaylen Waddle":"4372016","Mike Evans":"2508061","Davante Adams":"2543495",
-    "George Pickens":"4432577","DJ Moore":"3116406","Darnell Mooney":"4360438",
-    "Romeo Doubs":"4569618","Michael Pittman Jr.":"4241389","Jakobi Meyers":"3929924",
-    "Rashid Shaheed":"4567298","Adonai Mitchell":"4601460","Isaiah Likely":"4567048",
-    "Tyler Warren":"4565898","Evan Engram":"3051876","Jonnu Smith":"3040151",
-    "Geno Smith":"15168","Daniel Jones":"4040715","Sam Darnold":"3912547",
+    "George Pickens":"4432577","Darnell Mooney":"4360438",
+    "Romeo Doubs":"4569618","Jakobi Meyers":"3929924",
+    "Rashid Shaheed":"4567298","Adonai Mitchell":"4601460","Tyler Warren":"4565898","Evan Engram":"3051876","Geno Smith":"15168","Sam Darnold":"3912547",
     "Kyler Murray":"3917315","Tua Tagovailoa":"4241479","Baker Mayfield":"3052587",
     "Mac Jones":"4361741","Malik Willis":"4567018","Jacoby Brissett":"2574511",
-    "Kenneth Walker III":"4567048","Travis Etienne Jr.":"4239996","Jordan Mason":"4374302",
-    "Isiah Pacheco":"4362628","Rico Dowdle":"4038815","Rachaad White":"4426354",
-    "Kenneth Gainwell":"4360310","J.K. Dobbins":"4242335","Tyler Allgeier":"4371985",
+    "Travis Etienne Jr.":"4239996","Jordan Mason":"4374302",
+    "Rico Dowdle":"4038815","Rachaad White":"4426354",
+    "Kenneth Gainwell":"4360310","Tyler Allgeier":"4371985",
     "Javonte Williams":"4361579","David Montgomery":"3916148","Cam Skattebo":"4685038",
     "Tyreek Hill":"3116406","Derrick Henry":"3043078","Saquon Barkley":"3929630",
     "Josh Jacobs":"4241457","Travis Kelce":"15847","Mark Andrews":"3116365",
@@ -3360,9 +3358,8 @@ function validateImportData(obj) {
     "Justin Jefferson":"4262921","Ja'Marr Chase":"4362628","Amon-Ra St. Brown":"4360939",
     "Bijan Robinson":"4426348","Breece Hall":"4430737","Jonathan Taylor":"4242335",
     "Nick Chubb":"3128720","Alvin Kamara":"3054212","Austin Ekeler":"3068267",
-    "Christian McCaffrey":"3117251","Dalvin Cook":"3045147","Leonard Fournette":"3126486",
-    "Todd Gurley":"2977644","Odell Beckham Jr.":"16733","Calvin Ridley":"3128429",
-    "Russell Wilson":"14881","Deshaun Watson":"3122840","Dak Prescott":"2577417",
+    "Christian McCaffrey":"3117251","Dalvin Cook":"3045147","Todd Gurley":"2977644","Odell Beckham Jr.":"16733","Calvin Ridley":"3128429",
+    "Russell Wilson":"14881","Dak Prescott":"2577417",
     "Tee Higgins":"4239993","Puka Nacua":"4432688","Jahmyr Gibbs":"4427366",
     "De'Von Achane":"4430807","Rashee Rice":"4430027","Drake London":"4567048",
     "Garrett Wilson":"4567178","Chris Olave":"4362897","Tank Dell":"4432811",
@@ -6039,7 +6036,7 @@ document.addEventListener('click', function(e) {
   ];
 
   function getHeadshotUrl(id) {
-    const cache = JSON.parse(sessionStorage.getItem('espnIdCache5') || '{}');
+    const cache = JSON.parse(sessionStorage.getItem('espnIdCache6') || '{}');
     const poolPlayer = EP_PLAYERS.find(p => p.id === id);
     if (poolPlayer) {
       if (window.FALLBACK_IDS && window.FALLBACK_IDS[poolPlayer.name]) {
@@ -6355,7 +6352,7 @@ document.addEventListener('click', function(e) {
   setTimeout(_buildUnlimitedPool, 15000);
 
     function getHeadshotUrlU(id, playerName) {
-    const cache = JSON.parse(sessionStorage.getItem('espnIdCache5') || '{}');
+    const cache = JSON.parse(sessionStorage.getItem('espnIdCache6') || '{}');
     if (playerName) {
       if (window.FALLBACK_IDS && window.FALLBACK_IDS[playerName]) {
         id = window.FALLBACK_IDS[playerName];
@@ -6830,8 +6827,8 @@ document.addEventListener('click', function(e) {
           'Ravens':'Baltimore Ravens','Panthers':'Carolina Panthers',
           'Texans':'Houston Texans','Bills':'Buffalo Bills',
           'Bengals':'Cincinnati Bengals','Browns':'Cleveland Browns',
-          'Jaguars':'Jacksonville Jaguars','Commanders':'Washington Commanders',
-        };
+          'Jaguars':'Jacksonville Jaguars','Commanders':'Washington Commanders'
+  };
         const fullTeams = teamNames.map(t => gwModernTeam(mapping[t] || t));
 
         seasons.forEach(s => {
@@ -8065,7 +8062,7 @@ document.addEventListener('click', function(e) {
     'St. Louis Cardinals': 'Arizona Cardinals',
     'Los Angeles Raiders': 'Las Vegas Raiders',
     'Baltimore Colts': 'Indianapolis Colts',
-    'Boston Patriots': 'New England Patriots',
+    'Boston Patriots': 'New England Patriots'
   };
 
   // Build reverse abbreviation -> full name lookup
@@ -8171,8 +8168,8 @@ document.addEventListener('click', function(e) {
           'Ravens':'Baltimore Ravens','Panthers':'Carolina Panthers',
           'Texans':'Houston Texans','Bills':'Buffalo Bills',
           'Bengals':'Cincinnati Bengals','Browns':'Cleveland Browns',
-          'Jaguars':'Jacksonville Jaguars','Commanders':'Washington Commanders',
-        };
+          'Jaguars':'Jacksonville Jaguars','Commanders':'Washington Commanders'
+  };
         return mapping[t] || t;
       });
       FG_POOL.push({

@@ -9672,7 +9672,7 @@ window.LEGEND_BIRTH_YEARS={
 "Brenen Thompson":"2004-04-18",
 "Brenton Strange":"2001-01-28",
 "Brian Robinson":"1999-03-22",
-"Brian Thomas":"2002-06-26",
+"Brian Thomas":"2002-06-26","Brian Thomas Jr.":"2002-06-26",
 "Brock Bowers":"2002-12-20",
 "Brock Purdy":"1999-12-09",
 "Brock Wright":"1999-05-02",
@@ -15644,11 +15644,15 @@ window.fmtHeight = fmtHeight;
     allNames.forEach(name => {
       let cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
       // Combine data name alias fallback — try Jr./Sr. suffix variations
-      if (!cb && typeof COMBINE_DATA !== 'undefined') {
+      if (typeof COMBINE_DATA !== 'undefined') {
         const noSuffix = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
-        if (noSuffix !== name) cb = COMBINE_DATA[noSuffix] || null;
-        if (!cb && !/\s+(Jr|Sr|II|III|IV|V)\.?$/i.test(name)) {
-          cb = COMBINE_DATA[name + ' Jr.'] || COMBINE_DATA[name + ' Jr'] || null;
+        const withSuffix = name + ' Jr.';
+        const altCb = (noSuffix !== name) ? (COMBINE_DATA[noSuffix] || null) : (COMBINE_DATA[withSuffix] || COMBINE_DATA[name + ' Jr'] || null);
+        if (!cb && altCb) {
+          cb = altCb;
+        } else if (cb && altCb && cb !== altCb) {
+          // MERGE: combine both entries (e.g., "Brian Thomas" has measurables, "Brian Thomas Jr." has ras)
+          Object.keys(altCb).forEach(k => { if (cb[k] == null) cb[k] = altCb[k]; });
         }
       }
       const cbOrig = cb; // Save original for draft pick lookup (even if collision nulls cb)
@@ -15826,8 +15830,17 @@ window.fmtHeight = fmtHeight;
       if (draftYr != null && draftYr < 2010) return;
       // Get exact birthday ONLY — no integer approximations
       let birth = null;
-      if (typeof LEGEND_BIRTH_YEARS !== 'undefined' && typeof LEGEND_BIRTH_YEARS[name] === 'string' && LEGEND_BIRTH_YEARS[name].includes('-')) {
-        birth = LEGEND_BIRTH_YEARS[name];
+      if (typeof LEGEND_BIRTH_YEARS !== 'undefined') {
+        if (typeof LEGEND_BIRTH_YEARS[name] === 'string' && LEGEND_BIRTH_YEARS[name].includes('-')) {
+          birth = LEGEND_BIRTH_YEARS[name];
+        }
+        // Fallback: check alias names (e.g., "Brian Thomas Jr." -> "Brian Thomas")
+        if (!birth) {
+          const altName = Object.keys(_PROSPECT_ALIASES).find(k => _PROSPECT_ALIASES[k] === name && k !== name);
+          if (altName && typeof LEGEND_BIRTH_YEARS[altName] === 'string' && LEGEND_BIRTH_YEARS[altName].includes('-')) {
+            birth = LEGEND_BIRTH_YEARS[altName];
+          }
+        }
       }
       const age = draftAge(birth, draftYr);
 
@@ -16781,7 +16794,14 @@ window.fmtHeight = fmtHeight;
     pmTbody.querySelectorAll('.pm-name[data-pmplayer]').forEach(el => {
       el.addEventListener('click', function() {
         const name = this.dataset.pmplayer;
-        const d = D.find(p => p.n === name);
+        let d = D.find(p => p.n === name);
+        // Try alias names if not found (e.g., "Brian Thomas Jr." -> "Brian Thomas")
+        if (!d && _PROSPECT_ALIASES) {
+          const altName = Object.keys(_PROSPECT_ALIASES).find(k => _PROSPECT_ALIASES[k] === name && k !== name);
+          if (altName) d = D.find(p => p.n === altName);
+          // Also try reverse: if name itself is an alias key
+          if (!d && _PROSPECT_ALIASES[name]) d = D.find(p => p.n === _PROSPECT_ALIASES[name]);
+        }
         if (d && typeof openPlayerCard === 'function') {
           openPlayerCard(d);
         }

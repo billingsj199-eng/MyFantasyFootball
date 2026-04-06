@@ -17191,23 +17191,30 @@ window.fmtHeight = fmtHeight;
 
     if (pmDraftClass === 'all') {
       // Show all classes as chips sorted by grade — only 2015+ with full data
+      // When filtering by position, show that position's grade instead of overall
+      const usePos = ['QB','RB','WR','TE'].includes(pmPos) ? pmPos : null;
       const sorted = years.map(yr => ({ yr, ...grades[yr] }))
-        .filter(c => c.yr >= 2015 && c.playerCount >= 8)
-        .sort((a, b) => b.overall - a.overall);
+        .filter(c => c.yr >= 2015 && c.playerCount >= 8 && (!usePos || (c.positions[usePos] && c.positions[usePos].grade != null)))
+        .sort((a, b) => {
+          const aG = usePos ? (a.positions[usePos] ? a.positions[usePos].grade : 0) : a.overall;
+          const bG = usePos ? (b.positions[usePos] ? b.positions[usePos].grade : 0) : b.overall;
+          return bG - aG;
+        });
 
       let html = '<div class="pm-class-grade-header">';
-      html += '<span class="pm-class-grade-title">DRAFT CLASS GRADES</span>';
+      html += `<span class="pm-class-grade-title">${usePos ? usePos + ' ' : ''}DRAFT CLASS GRADES</span>`;
       html += '<span style="font-size:.65rem;color:var(--text2)">Click a class to filter</span>';
       html += '</div>';
       html += '<div class="pm-class-all-wrap">';
       sorted.forEach((c, i) => {
-        const color = jmGradeColor(c.overall);
-        const bg = jmGradeBg(c.overall);
-        const label = jmGradeLabel(c.overall);
+        const gradeVal = usePos ? c.positions[usePos].grade : c.overall;
+        const color = jmGradeColor(gradeVal);
+        const bg = jmGradeBg(gradeVal);
+        const label = jmGradeLabel(gradeVal);
         const rank = i + 1;
-        html += `<div class="pm-class-chip" data-classyr="${c.yr}" title="${label} — ${c.playerCount} players">`;
+        html += `<div class="pm-class-chip" data-classyr="${c.yr}" title="${label} — ${usePos ? c.positions[usePos].count + ' ' + usePos + 's' : c.playerCount + ' players'}">`;
         html += `<span class="pm-class-chip-yr">${c.yr}</span>`;
-        html += `<span class="pm-class-chip-grade" style="color:${color};background:${bg};padding:2px 8px;border-radius:5px">${c.overall.toFixed(1)}</span>`;
+        html += `<span class="pm-class-chip-grade" style="color:${color};background:${bg};padding:2px 8px;border-radius:5px">${gradeVal.toFixed(1)}</span>`;
         html += '</div>';
       });
       html += '</div>';
@@ -17233,22 +17240,29 @@ window.fmtHeight = fmtHeight;
       }
 
       const g = grades[yr];
-      const color = jmGradeColor(g.overall);
-      const bg = jmGradeBg(g.overall);
-      const label = jmGradeLabel(g.overall);
+      // When filtering by a specific position, show that position's grade as the headline
+      const usePos = ['QB','RB','WR','TE'].includes(pmPos) ? pmPos : null;
+      const headlineGrade = usePos && g.positions[usePos] ? g.positions[usePos].grade : g.overall;
+      const color = jmGradeColor(headlineGrade);
+      const bg = jmGradeBg(headlineGrade);
+      const label = jmGradeLabel(headlineGrade);
 
       // Rank this class among 2015+ classes only (full data era)
-      const allGrades = years.map(y => ({ yr: y, overall: grades[y].overall }))
-        .filter(c => c.yr >= 2015 && grades[c.yr].playerCount >= 8)
-        .sort((a, b) => b.overall - a.overall);
+      const allGrades = years.map(y => {
+          const gg = grades[y];
+          const gv = usePos && gg.positions[usePos] ? gg.positions[usePos].grade : gg.overall;
+          return { yr: y, gradeVal: gv };
+        })
+        .filter(c => c.yr >= 2015 && grades[c.yr].playerCount >= 8 && (!usePos || (grades[c.yr].positions[usePos] && grades[c.yr].positions[usePos].grade != null)))
+        .sort((a, b) => b.gradeVal - a.gradeVal);
       const rank = allGrades.findIndex(c => c.yr === yr) + 1;
       const totalClasses = allGrades.length;
 
       let html = '<div class="pm-class-grade-header">';
-      html += `<span class="pm-class-grade-title">${yr} DRAFT CLASS</span>`;
+      html += `<span class="pm-class-grade-title">${yr} ${usePos ? usePos + ' ' : ''}DRAFT CLASS</span>`;
       html += `<div style="display:flex;align-items:center;gap:10px">`;
       html += `<span style="font-size:.7rem;color:var(--text2)">#${rank} of ${totalClasses} classes</span>`;
-      html += `<span class="pm-class-grade-score" style="color:${color};background:${bg};padding:2px 12px;border-radius:6px">${g.overall.toFixed(1)}</span>`;
+      html += `<span class="pm-class-grade-score" style="color:${color};background:${bg};padding:2px 12px;border-radius:6px">${headlineGrade.toFixed(1)}</span>`;
       html += `</div></div>`;
 
       html += '<div class="pm-class-grade-body">';

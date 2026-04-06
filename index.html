@@ -2792,6 +2792,18 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Chris Bell']) COMBINE_DATA['Chris Bell'] = { school: 'Ohio State', pos: 'WR', yr: 2026, ht: '6-2', wt: 200 };
   if (COMBINE_DATA['Chris Bell'] && !COMBINE_DATA['Chris Bell'].pos) COMBINE_DATA['Chris Bell'].pos = 'WR';
   if (COMBINE_DATA['Chris Bell'] && COMBINE_DATA['Chris Bell'].yr !== 2026) COMBINE_DATA['Chris Bell'].yr = 2026;
+  if (!COLLEGE_STATS['Bucky Irving']) COLLEGE_STATS['Bucky Irving'] = [];
+  COLLEGE_STATS['Bucky Irving'].push({yr:2021,tm:"Minnesota",conf:"Big Ten",gp:9,ra:81,ry:380,rtd:3,rec:5,rcy:35,fpts:62.0});
+  COLLEGE_STATS['Bucky Irving'].push({yr:2022,tm:"Oregon",conf:"Pac-12",gp:13,ra:152,ry:832,rtd:8,rec:19,rcy:157,rctd:1,fpts:162.4});
+  COLLEGE_STATS['Bucky Irving'].push({yr:2023,tm:"Oregon",conf:"Pac-12",gp:14,ra:252,ry:1180,rtd:11,rec:30,rcy:280,rctd:2,fl:2,fpts:235.0});
+  if (!COLLEGE_STATS['Christian Watson']) COLLEGE_STATS['Christian Watson'] = [];
+  COLLEGE_STATS['Christian Watson'].push({yr:2019,tm:"North Dakota State",conf:"MVFC",gp:10,rec:7,rcy:85,rctd:0,fpts:12.0});
+  COLLEGE_STATS['Christian Watson'].push({yr:2020,tm:"North Dakota State",conf:"MVFC",gp:6,rec:22,rcy:360,rctd:4,fpts:71.0});
+  COLLEGE_STATS['Christian Watson'].push({yr:2021,tm:"North Dakota State",conf:"MVFC",gp:12,ra:21,ry:152,rtd:1,rec:43,rcy:800,rctd:7,fpts:164.7});
+  if (!COLLEGE_STATS['Trey Lance']) COLLEGE_STATS['Trey Lance'] = [];
+  COLLEGE_STATS['Trey Lance'].push({yr:2019,tm:"North Dakota State",conf:"MVFC",gp:16,pa:287,pc:192,py:2786,ptd:28,int:0,ra:169,ry:1100,rtd:14,fl:1,fpts:415.4});
+  if (!COLLEGE_STATS['Travis Hunter']) COLLEGE_STATS['Travis Hunter'] = [];
+  COLLEGE_STATS['Travis Hunter'].push({yr:2021,tm:"Jackson State",conf:"SWAC",gp:6,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:15,rcy:190,rctd:2,fl:0,fpts:31.5});
   if (COMBINE_DATA['Elijah Moore']) { if (!COMBINE_DATA['Elijah Moore'].ht) COMBINE_DATA['Elijah Moore'].ht = '5-10'; if (!COMBINE_DATA['Elijah Moore'].wt) COMBINE_DATA['Elijah Moore'].wt = 178; }
   if (COMBINE_DATA['Kenneth Gainwell']) { if (!COMBINE_DATA['Kenneth Gainwell'].ht) COMBINE_DATA['Kenneth Gainwell'].ht = '5-9'; if (!COMBINE_DATA['Kenneth Gainwell'].wt) COMBINE_DATA['Kenneth Gainwell'].wt = 201; }
   if (COMBINE_DATA['Larry Rountree']) { if (!COMBINE_DATA['Larry Rountree'].ht) COMBINE_DATA['Larry Rountree'].ht = '5-10'; if (!COMBINE_DATA['Larry Rountree'].wt) COMBINE_DATA['Larry Rountree'].wt = 211; }
@@ -9010,7 +9022,10 @@ document.addEventListener('click', function(e) {
     const isWeek = fgMode === 'week';
     let currentHS;
     if (fgLeague === 'college') {
-      currentHS = isWeek ? highScoreCollegeWeek : highScoreCollegeSeason;
+      // Read from localStorage at comparison time to avoid stale in-memory values
+      currentHS = isWeek 
+        ? Math.max(highScoreCollegeWeek, parseFloat(localStorage.getItem('fg_highscore_college_week')) || 0)
+        : Math.max(highScoreCollegeSeason, parseFloat(localStorage.getItem('fg_highscore_college_season')) || 0);
       if (total > currentHS) {
         if (isWeek) { highScoreCollegeWeek = total; localStorage.setItem('fg_highscore_college_week', highScoreCollegeWeek); }
         else { highScoreCollegeSeason = total; localStorage.setItem('fg_highscore_college_season', highScoreCollegeSeason); }
@@ -9021,7 +9036,10 @@ document.addEventListener('click', function(e) {
         goSubEl.style.color = 'var(--text2)';
       }
     } else {
-      currentHS = isWeek ? highScoreWeek : highScore;
+      // Read from localStorage at comparison time to avoid stale in-memory values
+      currentHS = isWeek
+        ? Math.max(highScoreWeek, parseFloat(localStorage.getItem('fg_highscore_week')) || 0)
+        : Math.max(highScore, parseFloat(localStorage.getItem('fg_highscore')) || 0);
       if (total > currentHS) {
         if (isWeek) { highScoreWeek = total; localStorage.setItem('fg_highscore_week', highScoreWeek); }
         else { highScore = total; localStorage.setItem('fg_highscore', highScore); }
@@ -14978,7 +14996,7 @@ window.fmtHeight = fmtHeight;
   // Strongest WR-specific predictor found — better signal than dominator or market share.
   // Uses best qualified season (min 150 routes). WR only.
   function jmYprr(name, pos) {
-    if (pos !== 'WR' || typeof _WR_YPRR === 'undefined') return null;
+    if ((pos !== 'WR' && pos !== 'TE') || typeof _WR_YPRR === 'undefined') return null;
     const yprr = _WR_YPRR[name];
     if (yprr == null) return null;
     if (yprr >= 3.5) return Math.min(100, 85 + (yprr - 3.5) / 0.5 * 15);
@@ -15884,7 +15902,7 @@ window.fmtHeight = fmtHeight;
       // shouldn't appear at a position they never played in college)
       const _COLLEGE_POS_OVERRIDE = {
         'Tim Tebow': 'QB'  // Played QB at Florida, briefly attempted TE conversion in NFL
-      };
+      ,'Cam Edwards':'RB'};
       let pos = null;
       if (_COLLEGE_POS_OVERRIDE[name]) {
         pos = _COLLEGE_POS_OVERRIDE[name];

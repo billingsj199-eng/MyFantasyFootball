@@ -16968,9 +16968,9 @@ window.fmtHeight = fmtHeight;
   // Heavy emphasis on top-end talent via position-specific rank weights
   function computeClassGrades(data, posFilter) {
     const MIN_YEAR = 2015; // Only compare classes with full data (PFF, CFBD, combine all reliable)
-    const MAX_PLAYERS = 48; // 4-round rookie draft cap
-    // Per-position caps matching realistic dynasty draft allocation
-    const posCaps = { QB: 6, RB: 14, WR: 18, TE: 10 };
+    // Per-position caps = rank weight array length. Players beyond this are valueless for grading.
+    // 6+12+12+8 = 38 total — roughly a 3-round rookie draft with a few extra.
+    const posCaps = { QB: 6, RB: 12, WR: 12, TE: 8 };
     // Min players needed to grade a position for a class
     const posMinPlayers = { QB: 2, RB: 3, WR: 3, TE: 2 };
 
@@ -16982,18 +16982,19 @@ window.fmtHeight = fmtHeight;
       byYear[p.draftYr].push(p);
     });
 
-    // Cap each class at 48 players (sorted by JM descending, take top 48)
+    // Sort each class by JM descending (position caps applied later)
     Object.keys(byYear).forEach(yr => {
       byYear[yr].sort((a, b) => b.jm - a.jm);
-      if (byYear[yr].length > MAX_PLAYERS) byYear[yr] = byYear[yr].slice(0, MAX_PLAYERS);
     });
 
-    // Data-driven rank weights per position (from Study 4: actual career fpts share by rank)
+    // Data-driven rank weights: actual first-5-year career fpts share by positional rank
+    // Source: ALL_PLAYERS_DB analysis of 2015-2021 draft classes (7 classes, PPR scoring)
+    // Arrays are hard-capped: players beyond these slots get ZERO weight (valueless depth)
     const rankWeights = {
-      QB: [0.36, 0.24, 0.16, 0.11, 0.05, 0.04, 0.02, 0.01, 0.01],
-      RB: [0.15, 0.14, 0.10, 0.08, 0.07, 0.06, 0.06, 0.05, 0.05, 0.04, 0.04, 0.03],
-      WR: [0.13, 0.11, 0.09, 0.08, 0.07, 0.06, 0.05, 0.05, 0.04, 0.04, 0.03, 0.03],
-      TE: [0.22, 0.17, 0.12, 0.09, 0.07, 0.06, 0.05, 0.04, 0.03, 0.03]
+      QB: [0.33, 0.27, 0.19, 0.11, 0.06, 0.04],                         // top 6
+      RB: [0.18, 0.15, 0.11, 0.10, 0.09, 0.07, 0.07, 0.06, 0.05, 0.04, 0.04, 0.04], // top 12
+      WR: [0.16, 0.14, 0.11, 0.10, 0.09, 0.08, 0.07, 0.06, 0.06, 0.05, 0.04, 0.04], // top 12
+      TE: [0.26, 0.21, 0.15, 0.10, 0.09, 0.08, 0.07, 0.04]              // top 8
     };
 
     // Step 1: Compute raw weighted-average JM scores per position per class
@@ -17012,19 +17013,21 @@ window.fmtHeight = fmtHeight;
         posPlayers.sort((a, b) => b.jm - a.jm);
         const weights = rankWeights[pos];
         let totalWeight = 0, weightedSum = 0;
-        posPlayers.forEach((p, i) => {
-          const w = i < weights.length ? weights[i] : 0.02;
-          weightedSum += p.jm * w;
-          totalWeight += w;
-        });
+        // Only grade players within the rank weight array — everyone beyond is valueless
+        const gradeCount = Math.min(posPlayers.length, weights.length);
+        for (let i = 0; i < gradeCount; i++) {
+          weightedSum += posPlayers[i].jm * weights[i];
+          totalWeight += weights[i];
+        }
         const rawGrade = totalWeight > 0 ? weightedSum / totalWeight : 0;
 
-        const elite = posPlayers.filter(p => p.jm >= 74).length;
-        const good = posPlayers.filter(p => p.jm >= 58 && p.jm < 74).length;
+        const gradedPlayers = posPlayers.slice(0, gradeCount);
+        const elite = gradedPlayers.filter(p => p.jm >= 74).length;
+        const good = gradedPlayers.filter(p => p.jm >= 58 && p.jm < 74).length;
 
         posGrades[pos] = {
           rawGrade,
-          count: posPlayers.length,
+          count: gradeCount,
           top: posPlayers[0],
           elite,
           good,

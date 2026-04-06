@@ -15110,14 +15110,27 @@ window.fmtHeight = fmtHeight;
     TE:  { age: 0.03, breakout: 0.11, prod: 0.06, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.03, size: 0.01, eff: 0.09, mktShare: 0.04, improve: 0.03, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.05, pff: 0.02, yprr: 0.00 }
   };
 
-  const _jmCache = {};
+  // DEVY WEIGHTS — for college players who haven't been drafted yet
+  // No DC (33%), no RAS (4-10%), no earlyDec (3%) — redistributed to production/film metrics
+  const JM_DEVY_FLOOR = {
+    QB:  { age: 0.08, breakout: 0.18, prod: 0.20, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.05, eff: 0.05, mktShare: 0.00, improve: 0.08, rbRec: 0.00, qbRush: 0.10, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.05, qbIntRate: 0.08, teRec: 0.00, pff: 0.05, yprr: 0.00 },
+    RB:  { age: 0.08, breakout: 0.18, prod: 0.20, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.05, size: 0.05, eff: 0.10, mktShare: 0.05, improve: 0.06, rbRec: 0.10, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.05, yprr: 0.00 },
+    WR:  { age: 0.08, breakout: 0.18, prod: 0.20, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.05, size: 0.04, eff: 0.04, mktShare: 0.00, improve: 0.06, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.06, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.05, yprr: 0.10 },
+    TE:  { age: 0.08, breakout: 0.18, prod: 0.15, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.05, size: 0.05, eff: 0.05, mktShare: 0.00, improve: 0.06, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.10, pff: 0.05, yprr: 0.05 }
+  };
+  const JM_DEVY_CEILING = {
+    QB:  { age: 0.05, breakout: 0.22, prod: 0.18, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.03, eff: 0.05, mktShare: 0.00, improve: 0.10, rbRec: 0.00, qbRush: 0.10, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.05, qbIntRate: 0.08, teRec: 0.00, pff: 0.08, yprr: 0.00 },
+    RB:  { age: 0.05, breakout: 0.22, prod: 0.18, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.05, size: 0.03, eff: 0.12, mktShare: 0.05, improve: 0.08, rbRec: 0.08, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.08, yprr: 0.00 },
+    WR:  { age: 0.05, breakout: 0.22, prod: 0.18, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.05, size: 0.02, eff: 0.04, mktShare: 0.00, improve: 0.08, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.06, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.08, yprr: 0.10 },
+    TE:  { age: 0.05, breakout: 0.22, prod: 0.13, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.05, size: 0.03, eff: 0.05, mktShare: 0.00, improve: 0.08, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.10, pff: 0.08, yprr: 0.05 }
+  };
   function calcJM(p) {
     // Cache key: player name + position (scores don't change within a session)
     const cacheKey = p.name + '::' + p.pos;
     if (_jmCache[cacheKey]) return _jmCache[cacheKey];
 
-    const wFloor = JM_WEIGHTS[p.pos];
-    const wCeil = JM_CEILING_WEIGHTS[p.pos];
+    const wFloor = p.isDevy ? (JM_DEVY_FLOOR[p.pos] || JM_WEIGHTS[p.pos]) : JM_WEIGHTS[p.pos];
+    const wCeil = p.isDevy ? (JM_DEVY_CEILING[p.pos] || JM_CEILING_WEIGHTS[p.pos]) : JM_CEILING_WEIGHTS[p.pos];
     if (!wFloor || !wCeil) return null;
 
     const ageScore = jmAge(p.age, p.pos);
@@ -16507,6 +16520,7 @@ window.fmtHeight = fmtHeight;
         qbCompPct, qbIntRate, teRecPg, pffGrade, pffRush,
         pffRisk: (pos === 'QB' && window._PFF_QB_RISK && window._PFF_QB_RISK[name]) ? window._PFF_QB_RISK[name] : 0,
         isCollege,
+        isDevy: _isDevy,
         eligYr: (_cbEntry && _cbEntry.eligYr) || null
       };
       // For 2026 prospects, use Firestore draft capital if available
@@ -16933,6 +16947,44 @@ window.fmtHeight = fmtHeight;
           if (altName) d = D.find(p => p.n === altName);
           // Also try reverse: if name itself is an alias key
           if (!d && _PROSPECT_ALIASES[name]) d = D.find(p => p.n === _PROSPECT_ALIASES[name]);
+        }
+        // For devy/college players not in D array, build a synthetic entry
+        if (!d && typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name]) {
+          const cb = COMBINE_DATA[name];
+          const pmP = pmBuiltData ? pmBuiltData.find(p => p.name === name) : null;
+          d = {
+            n: name, s: cb.pos || (pmP ? pmP.pos : 'WR'),
+            t: cb.school || '—', age: pmP ? pmP.age : null,
+            _retired: false, _college: cb.school,
+            _isDevy: true, dr: null, r: '—',
+            p25: null, p24: null, p23: null
+          };
+          // Add college weekly stats as career seasons if available
+          if (typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[name]) {
+            d.career = [];
+            Object.keys(COLLEGE_WEEKLY[name]).forEach(yr => {
+              const games = COLLEGE_WEEKLY[name][yr];
+              if (!games || !games.length) return;
+              let totFpts = 0;
+              games.forEach(g => {
+                totFpts += (g.py||0)*0.04 + (g.ptd||0)*4 + (g.ry||0)*0.1 + (g.rtd||0)*6 +
+                  (g.rcy||0)*0.1 + (g.rctd||0)*6 + (g.rec||0)*0.5 - (g.int||0)*2 - (g.fl||0)*2;
+              });
+              d.career.push({ yr: parseInt(yr), gp: games.length, fpts: Math.round(totFpts*10)/10, ppg: Math.round(totFpts/games.length*10)/10 });
+            });
+          }
+          // Fallback: use COLLEGE_STATS seasons
+          if ((!d.career || !d.career.length) && typeof COLLEGE_STATS !== 'undefined') {
+            const cs = COLLEGE_STATS[name];
+            if (cs && cs.length) {
+              d.career = cs.map(s => ({
+                yr: s.yr, gp: s.gp || 13, tm: s.tm,
+                fpts: s.fpts || ((s.py||0)*0.04 + (s.ptd||0)*4 + (s.ry||0)*0.1 + (s.rtd||0)*6 + (s.rcy||0)*0.1 + (s.rctd||0)*6 + (s.rec||0)*0.5 - (s.int||0)*2),
+                ppg: s.fpts ? Math.round(s.fpts / (s.gp||13) * 10)/10 : null,
+                py: s.py, ptd: s.ptd, ry: s.ry, rtd: s.rtd, rcy: s.rcy, rctd: s.rctd, rec: s.rec, ra: s.ra
+              }));
+            }
+          }
         }
         if (d && typeof openPlayerCard === 'function') {
           openPlayerCard(d);

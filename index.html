@@ -3219,6 +3219,38 @@ if (typeof COMBINE_DATA !== 'undefined') {
   _udfa25('Keleki Latu', 'BUF', 'TE', 'Washington');
   _udfa25('Lan Larison', 'NE', 'RB', 'UC Davis');
   _udfa25('Marcus Yarns', 'NO', 'RB', 'Delaware');
+
+  // === BACKFILL D[] draft capital from COMBINE_DATA ===
+  // Many D[] entries are missing the dr field (184 skill players). COMBINE_DATA has
+  // draft pick info for most of them. Merge it back so player cards, prospect table DC
+  // column, and all other displays have access to draft capital.
+  if (typeof D !== 'undefined' && typeof COMBINE_DATA !== 'undefined') {
+    // Name alias map: D[] name → COMBINE_DATA name (for known mismatches)
+    const _drAliases = {
+      "Tre' Harris": "Tre Harris", "Joshua Palmer": "Josh Palmer",
+      "Mitch Tinsley": "Mitchell Tinsley", "Chris Brooks": "Christopher Brooks",
+      "John Metchie III": "John Metchie", "Mitch Trubisky": "Mitchell Trubisky"
+    };
+    D.forEach(function(d) {
+      if (d.dr != null || !d.n) return; // already has dr
+      // Try exact name, then alias, then suffix variations
+      var cb = COMBINE_DATA[d.n] || (_drAliases[d.n] ? COMBINE_DATA[_drAliases[d.n]] : null);
+      if (!cb) {
+        // Try Jr./Sr. suffix variations
+        var noSuffix = d.n.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+        var withSuffix = d.n + ' Jr.';
+        cb = (noSuffix !== d.n) ? COMBINE_DATA[noSuffix] : (COMBINE_DATA[withSuffix] || COMBINE_DATA[d.n + ' Jr']);
+      }
+      if (!cb) {
+        // Try stripping apostrophes/special chars
+        var cleaned = d.n.replace(/[''`]/g, '');
+        if (cleaned !== d.n) cb = COMBINE_DATA[cleaned];
+      }
+      if (cb && cb.draft != null) {
+        d.dr = (cb.draft === 'U' || cb.draft === 'u') ? 'U' : parseInt(cb.draft) || cb.draft;
+      }
+    });
+  }
 }
 </script>
 <script src="data/college_stats.js"></script>

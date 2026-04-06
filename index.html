@@ -17195,6 +17195,64 @@ window.fmtHeight = fmtHeight;
     });
 
     _pmBuildCache = results;
+
+    // === TIER HIT RATE COMPUTATION ===
+    // Computes historical hit rates for each JM tier using 2015-2022 draft classes.
+    // "Hit" = top-12 QB season, top-24 RB/WR season, or top-12 TE season within first 5 NFL years.
+    // Uses D[] career data (fpts per season). Only counts non-lowConfidence, non-2026, non-devy.
+    const _tierDefs = [
+      { min: 90, label: 'Generational' },
+      { min: 82, label: 'Blue Chip' },
+      { min: 74, label: 'Elite' },
+      { min: 66, label: 'Starter' },
+      { min: 58, label: 'Contributor' },
+      { min: 50, label: 'Depth' },
+      { min: 42, label: 'Lottery Ticket' },
+      { min: 0,  label: 'Long Shot' }
+    ];
+    const _hitThresh = { QB: 200, RB: 170, WR: 170, TE: 140 }; // approx top-12/24 season fpts (half PPR)
+    const _tierStats = {};
+    _tierDefs.forEach(t => { _tierStats[t.label] = { total: 0, hits: 0 }; });
+
+    const _dMapHit = {};
+    D.forEach(d => { if (d.n) _dMapHit[d.n] = d; });
+
+    results.forEach(p => {
+      if (p.jm == null || p.lowConfidence || p.draftYr == null) return;
+      if (p.draftYr < 2015 || p.draftYr > 2022) return; // need 3+ NFL seasons of data
+      if (p.isDevy || p.isCollege) return;
+
+      const d = _dMapHit[p.name];
+      if (!d || !d.career || !d.career.length) return;
+
+      // Only count first 5 NFL seasons
+      const draftYr = p.draftYr;
+      const earlyCar = d.career.filter(s => s.yr >= draftYr && s.yr < draftYr + 5);
+      if (!earlyCar.length) return;
+
+      const bestSzn = Math.max(...earlyCar.map(s => s.fpts || 0));
+      const thresh = _hitThresh[p.pos] || 170;
+      const isHit = bestSzn >= thresh;
+
+      // Find tier
+      for (const t of _tierDefs) {
+        if (p.jm >= t.min) {
+          _tierStats[t.label].total++;
+          if (isHit) _tierStats[t.label].hits++;
+          break;
+        }
+      }
+    });
+
+    // Store hit rates globally for display
+    window._jmTierHitRates = {};
+    _tierDefs.forEach(t => {
+      const s = _tierStats[t.label];
+      window._jmTierHitRates[t.label] = s.total >= 3
+        ? { rate: Math.round(s.hits / s.total * 100), hits: s.hits, total: s.total }
+        : null; // too few players to be meaningful
+    });
+
     return results;
   }
 
@@ -17741,7 +17799,13 @@ window.fmtHeight = fmtHeight;
             } else if (p.jm != null) {
               tierLabel = 'Incomplete'; tierColor = '#64748b';
             }
-            rows += `<td style="text-align:center"><span style="font-size:.65rem;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:10px;background:${tierColor}22;color:${tierColor};white-space:nowrap">${tierLabel}</span></td>`;
+            // Hit rate tooltip from historical data
+            let hitRateText = '';
+            if (window._jmTierHitRates && window._jmTierHitRates[tierLabel]) {
+              const hr = window._jmTierHitRates[tierLabel];
+              hitRateText = ` title="${hr.rate}% hit rate (${hr.hits}/${hr.total} from 2015-2022 classes)"`;
+            }
+            rows += `<td style="text-align:center"><span${hitRateText} style="font-size:.65rem;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:10px;background:${tierColor}22;color:${tierColor};white-space:nowrap;cursor:${hitRateText ? 'help' : 'default'}">${tierLabel}${window._jmTierHitRates && window._jmTierHitRates[tierLabel] ? ' <span style=\"opacity:.6;font-size:.6rem\">(' + window._jmTierHitRates[tierLabel].rate + '%)</span>' : ''}</span></td>`;
             break;
           }
           case 'risk': {

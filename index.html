@@ -2810,12 +2810,9 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Jam Miller']) COMBINE_DATA['Jam Miller'] = { school: 'Alabama', pos: 'RB', yr: 2026 };
   if (COMBINE_DATA['Jam Miller'] && !COMBINE_DATA['Jam Miller'].pos) COMBINE_DATA['Jam Miller'].pos = 'RB';
   if (!COMBINE_DATA['Gunner Gray']) COMBINE_DATA['Gunner Gray'] = { school: 'Buffalo', pos: 'QB', yr: 2026, ht: '6-2', wt: 215 };
-  if (!COMBINE_DATA['Chris Bell']) COMBINE_DATA['Chris Bell'] = { school: 'Louisville', pos: 'WR', yr: 2026, ht: '6-2', wt: 220 };
-  if (COMBINE_DATA['Chris Bell'] && !COMBINE_DATA['Chris Bell'].pos) COMBINE_DATA['Chris Bell'].pos = 'WR';
-  if (COMBINE_DATA['Chris Bell'] && COMBINE_DATA['Chris Bell'].yr !== 2026) COMBINE_DATA['Chris Bell'].yr = 2026;
-  if (COMBINE_DATA['Chris Bell'] && COMBINE_DATA['Chris Bell'].school !== 'Louisville') COMBINE_DATA['Chris Bell'].school = 'Louisville';
-  if (COMBINE_DATA['Chris Bell']) COMBINE_DATA['Chris Bell'].wt = 220;
-  if (!COLLEGE_STATS['Chris Bell']) COLLEGE_STATS['Chris Bell'] = [];
+  // Chris Bell — WR, Louisville, 2026 class. Force ALL fields unconditionally
+  // in case combine_data.js has a different Chris Bell (e.g. DB from older class).
+  COMBINE_DATA['Chris Bell'] = { school: 'Louisville', pos: 'WR', yr: 2026, ht: '6-2', wt: 220 };
   COLLEGE_STATS['Chris Bell'] = [
     {yr:2022,tm:"Louisville",conf:"ACC",gp:7,rec:7,rcy:105,rypr:15.0},
     {yr:2023,tm:"Louisville",conf:"ACC",gp:14,rec:29,rcy:407,rctd:2,rypr:14.0},

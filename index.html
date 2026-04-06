@@ -17169,12 +17169,12 @@ window.fmtHeight = fmtHeight;
       // Skip incomplete players: missing draft capital OR college stats
       // Both are core inputs to the JM model — without either, the score is unreliable.
       // Exceptions: devy players, college-only prospects.
-      // 2026 class: DC not yet assigned, so only require college stats.
+      // 2026 class: DC not yet assigned, so only require college stats + birthday.
       if (!isCollege && !_isDevy) {
         const hasDC = (dr != null);
         const hasCS = (cs && cs.length > 0);
         if (draftYr === 2026) {
-          if (!hasCS) return; // 2026: need college stats (DC not required — pre-draft)
+          if (!hasCS || !birth) return; // 2026: need college stats + birthday
         } else {
           if (!hasDC || !hasCS) return; // All others: need BOTH
         }

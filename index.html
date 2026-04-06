@@ -16682,7 +16682,17 @@ window.fmtHeight = fmtHeight;
   }
 
   // === DRAFT CLASS GRADES ===
+  // Comparative system: grades each class relative to all other classes (2010+)
+  // Capped at 48 players per class (4-round dynasty rookie draft depth)
+  // Heavy emphasis on top-end talent via position-specific rank weights
   function computeClassGrades(data, posFilter) {
+    const MIN_YEAR = 2010; // Only compare classes with reliable data
+    const MAX_PLAYERS = 48; // 4-round rookie draft cap
+    // Per-position caps matching realistic dynasty draft allocation
+    const posCaps = { QB: 6, RB: 14, WR: 18, TE: 10 };
+    // Min players needed to grade a position for a class
+    const posMinPlayers = { QB: 2, RB: 3, WR: 3, TE: 2 };
+
     // Group by draft year
     const byYear = {};
     data.forEach(p => {
@@ -16691,8 +16701,13 @@ window.fmtHeight = fmtHeight;
       byYear[p.draftYr].push(p);
     });
 
+    // Cap each class at 48 players (sorted by JM descending, take top 48)
+    Object.keys(byYear).forEach(yr => {
+      byYear[yr].sort((a, b) => b.jm - a.jm);
+      if (byYear[yr].length > MAX_PLAYERS) byYear[yr] = byYear[yr].slice(0, MAX_PLAYERS);
+    });
+
     // Data-driven rank weights per position (from Study 4: actual career fpts share by rank)
-    // QB is very top-heavy (QB1=36% of class value), WR is flattest (depth matters)
     const rankWeights = {
       QB: [0.36, 0.24, 0.16, 0.11, 0.05, 0.04, 0.02, 0.01, 0.01],
       RB: [0.15, 0.14, 0.10, 0.08, 0.07, 0.06, 0.06, 0.05, 0.05, 0.04, 0.04, 0.03],
@@ -16700,20 +16715,20 @@ window.fmtHeight = fmtHeight;
       TE: [0.22, 0.17, 0.12, 0.09, 0.07, 0.06, 0.05, 0.04, 0.03, 0.03]
     };
 
-    const results = {};
+    // Step 1: Compute raw weighted-average JM scores per position per class
+    const rawResults = {};
     Object.keys(byYear).forEach(yr => {
       const players = byYear[yr];
       const positions = ['QB', 'RB', 'WR', 'TE'];
       const posGrades = {};
 
       positions.forEach(pos => {
-        const posPlayers = players.filter(p => p.pos === pos);
-        if (!posPlayers.length) { posGrades[pos] = null; return; }
+        let posPlayers = players.filter(p => p.pos === pos);
+        // Cap per position
+        if (posPlayers.length > posCaps[pos]) posPlayers = posPlayers.slice(0, posCaps[pos]);
+        if (posPlayers.length < (posMinPlayers[pos] || 2)) { posGrades[pos] = null; return; }
 
-        // Sort by JM score descending
         posPlayers.sort((a, b) => b.jm - a.jm);
-
-        // Use position-specific rank weights from actual career value data
         const weights = rankWeights[pos];
         let totalWeight = 0, weightedSum = 0;
         posPlayers.forEach((p, i) => {
@@ -16721,14 +16736,13 @@ window.fmtHeight = fmtHeight;
           weightedSum += p.jm * w;
           totalWeight += w;
         });
-        const grade = totalWeight > 0 ? Math.round(weightedSum / totalWeight * 10) / 10 : 0;
+        const rawGrade = totalWeight > 0 ? weightedSum / totalWeight : 0;
 
-        // Tier counts
         const elite = posPlayers.filter(p => p.jm >= 74).length;
         const good = posPlayers.filter(p => p.jm >= 58 && p.jm < 74).length;
 
         posGrades[pos] = {
-          grade,
+          rawGrade,
           count: posPlayers.length,
           top: posPlayers[0],
           elite,
@@ -16737,25 +16751,112 @@ window.fmtHeight = fmtHeight;
         };
       });
 
-      // Overall class grade — position weights from career fpts share (Study 2)
-      // WR produces 39% of all fantasy points, RB 28%, QB 19%, TE 14%
-      const posWeights = { QB: 0.19, RB: 0.28, WR: 0.39, TE: 0.14 };
-      let overallW = 0, overallS = 0;
-      positions.forEach(pos => {
-        if (posGrades[pos]) {
-          overallS += posGrades[pos].grade * posWeights[pos];
-          overallW += posWeights[pos];
+      rawResults[yr] = { positions: posGrades, playerCount: players.length };
+    });
+
+    // Step 2: Percentile-rank each position group against 2010+ classes only
+    // Map percentile to ~40-92 scale: best class ≈ 90-92, worst ≈ 40-45, median ≈ 63-65
+    function percentileToGrade(pctile) {
+      // Linear map: 0th percentile → 40, 100th percentile → 92
+      return Math.round((40 + pctile * 0.52) * 10) / 10;
+    }
+
+    const positions = ['QB', 'RB', 'WR', 'TE'];
+    // Collect raw grades for 2010+ classes per position (for percentile comparison)
+    const refGrades = {};
+    positions.forEach(pos => {
+      refGrades[pos] = [];
+      Object.keys(rawResults).forEach(yr => {
+        if (parseInt(yr) < MIN_YEAR) return;
+        if (rawResults[yr].positions[pos] && rawResults[yr].playerCount >= 8) {
+          refGrades[pos].push({ yr: parseInt(yr), raw: rawResults[yr].positions[pos].rawGrade });
         }
       });
-      const overall = overallW > 0 ? Math.round(overallS / overallW * 10) / 10 : 0;
+      refGrades[pos].sort((a, b) => a.raw - b.raw); // ascending for percentile calc
+    });
 
-      results[yr] = { overall, positions: posGrades, playerCount: players.length };
+    // Also collect raw overall grades for 2010+ for overall percentile
+    const posWeights = { QB: 0.19, RB: 0.28, WR: 0.39, TE: 0.14 };
+    const refOverall = [];
+    Object.keys(rawResults).forEach(yr => {
+      if (parseInt(yr) < MIN_YEAR || rawResults[yr].playerCount < 8) return;
+      let oW = 0, oS = 0;
+      positions.forEach(pos => {
+        if (rawResults[yr].positions[pos]) {
+          oS += rawResults[yr].positions[pos].rawGrade * posWeights[pos];
+          oW += posWeights[pos];
+        }
+      });
+      if (oW > 0) refOverall.push({ yr: parseInt(yr), raw: oS / oW });
+    });
+    refOverall.sort((a, b) => a.raw - b.raw);
+
+    // Helper: compute percentile rank within a sorted array
+    function getPctile(sortedArr, value) {
+      if (sortedArr.length <= 1) return 50;
+      let below = 0;
+      sortedArr.forEach(item => { if (item.raw < value) below++; });
+      return (below / (sortedArr.length - 1)) * 100;
+    }
+
+    // Step 3: Build final results with mapped grades
+    const results = {};
+    Object.keys(rawResults).forEach(yr => {
+      const r = rawResults[yr];
+      const posGrades = {};
+
+      positions.forEach(pos => {
+        if (!r.positions[pos]) { posGrades[pos] = null; return; }
+        const rawG = r.positions[pos].rawGrade;
+
+        // Percentile against 2010+ reference classes
+        let grade;
+        if (parseInt(yr) >= MIN_YEAR && refGrades[pos].length >= 3) {
+          const pctile = getPctile(refGrades[pos], rawG);
+          grade = percentileToGrade(pctile);
+        } else {
+          // Pre-2010 classes: still show them but use overall ref to approximate
+          // These will naturally rank lower due to missing data — that's OK
+          const pctile = getPctile(refGrades[pos], rawG);
+          grade = percentileToGrade(pctile);
+        }
+
+        posGrades[pos] = {
+          grade,
+          rawGrade: Math.round(rawG * 10) / 10,
+          count: r.positions[pos].count,
+          top: r.positions[pos].top,
+          elite: r.positions[pos].elite,
+          good: r.positions[pos].good,
+          topN: r.positions[pos].topN
+        };
+      });
+
+      // Overall: percentile-rank the raw overall against 2010+ reference
+      let oW = 0, oS = 0;
+      positions.forEach(pos => {
+        if (r.positions[pos]) {
+          oS += r.positions[pos].rawGrade * posWeights[pos];
+          oW += posWeights[pos];
+        }
+      });
+      const rawOverall = oW > 0 ? oS / oW : 0;
+      let overall;
+      if (refOverall.length >= 3) {
+        const pctile = getPctile(refOverall, rawOverall);
+        overall = percentileToGrade(pctile);
+      } else {
+        overall = Math.round(rawOverall * 10) / 10;
+      }
+
+      results[yr] = { overall, positions: posGrades, playerCount: r.playerCount };
     });
 
     return results;
   }
 
   function jmGradeColor(score) {
+    if (score >= 90) return '#a855f7';
     if (score >= 74) return '#22c55e';
     if (score >= 66) return '#60a5fa';
     if (score >= 58) return '#eab308';
@@ -16764,6 +16865,7 @@ window.fmtHeight = fmtHeight;
   }
 
   function jmGradeBg(score) {
+    if (score >= 90) return 'rgba(168,85,247,.18)';
     if (score >= 74) return 'rgba(34,197,94,.18)';
     if (score >= 66) return 'rgba(59,130,246,.15)';
     if (score >= 58) return 'rgba(234,179,8,.12)';
@@ -16772,6 +16874,7 @@ window.fmtHeight = fmtHeight;
   }
 
   function jmGradeLabel(score) {
+    if (score >= 90) return 'GENERATIONAL';
     if (score >= 82) return 'BLUE CHIP';
     if (score >= 74) return 'ELITE';
     if (score >= 66) return 'STARTER';

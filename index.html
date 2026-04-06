@@ -15932,7 +15932,7 @@ window.fmtHeight = fmtHeight;
     'Calvin Austin': 'Calvin Austin III', 'Benny Snell': 'Benny Snell Jr.',
     'Irv Smith': 'Irv Smith Jr.', 'Lynn Bowden': 'Lynn Bowden Jr.',
     'Velus Jones': 'Velus Jones Jr.', 'JJ Arcega-Whiteside': 'J.J. Arcega-Whiteside',
-    'Marvin Harrison': 'Marvin Harrison Jr.'
+    'Marvin Harrison': 'Marvin Harrison Jr.', 'Michael Penix': 'Michael Penix Jr.'
   };
   // Reverse map: canonical name -> alternate name (for birthday/data lookups)
   const _PROSPECT_REVERSE = {};
@@ -15962,6 +15962,11 @@ window.fmtHeight = fmtHeight;
     // Pre-build D array lookup map for O(1) access (avoids 11K * 500 = 5.7M comparisons)
     const _dMap = {};
     D.forEach(d => { if (d.n) _dMap[d.n] = d; });
+    // Add alias entries so "Michael Penix Jr." finds D["Michael Penix"], etc.
+    Object.entries(_PROSPECT_ALIASES).forEach(([alt, canonical]) => {
+      if (!_dMap[canonical] && _dMap[alt]) _dMap[canonical] = _dMap[alt];
+      if (!_dMap[alt] && _dMap[canonical]) _dMap[alt] = _dMap[canonical];
+    });
 
     // POST-MERGE DEDUP: automatically remove suffix/dot duplicates
     // Handles Jr./Sr./II/III/IV and D.J./DJ dot variants

@@ -2810,10 +2810,18 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Jam Miller']) COMBINE_DATA['Jam Miller'] = { school: 'Alabama', pos: 'RB', yr: 2026 };
   if (COMBINE_DATA['Jam Miller'] && !COMBINE_DATA['Jam Miller'].pos) COMBINE_DATA['Jam Miller'].pos = 'RB';
   if (!COMBINE_DATA['Gunner Gray']) COMBINE_DATA['Gunner Gray'] = { school: 'Buffalo', pos: 'QB', yr: 2026, ht: '6-2', wt: 215 };
-  if (!COMBINE_DATA['Chris Bell']) COMBINE_DATA['Chris Bell'] = { school: 'Louisville', pos: 'WR', yr: 2026, ht: '6-2', wt: 200 };
+  if (!COMBINE_DATA['Chris Bell']) COMBINE_DATA['Chris Bell'] = { school: 'Louisville', pos: 'WR', yr: 2026, ht: '6-2', wt: 220 };
   if (COMBINE_DATA['Chris Bell'] && !COMBINE_DATA['Chris Bell'].pos) COMBINE_DATA['Chris Bell'].pos = 'WR';
   if (COMBINE_DATA['Chris Bell'] && COMBINE_DATA['Chris Bell'].yr !== 2026) COMBINE_DATA['Chris Bell'].yr = 2026;
   if (COMBINE_DATA['Chris Bell'] && COMBINE_DATA['Chris Bell'].school !== 'Louisville') COMBINE_DATA['Chris Bell'].school = 'Louisville';
+  if (COMBINE_DATA['Chris Bell']) COMBINE_DATA['Chris Bell'].wt = 220;
+  if (!COLLEGE_STATS['Chris Bell']) COLLEGE_STATS['Chris Bell'] = [];
+  COLLEGE_STATS['Chris Bell'] = [
+    {yr:2022,tm:"Louisville",conf:"ACC",gp:7,rec:7,rcy:105,rypr:15.0},
+    {yr:2023,tm:"Louisville",conf:"ACC",gp:14,rec:29,rcy:407,rctd:2,rypr:14.0},
+    {yr:2024,tm:"Louisville",conf:"ACC",gp:13,rec:43,rcy:737,rctd:4,rypr:17.1},
+    {yr:2025,tm:"Louisville",conf:"ACC",gp:11,rec:72,rcy:917,rctd:6,rypr:12.7}
+  ];
   if (!COLLEGE_STATS['Bucky Irving']) COLLEGE_STATS['Bucky Irving'] = [];
   COLLEGE_STATS['Bucky Irving'].push({yr:2021,tm:"Minnesota",conf:"Big Ten",gp:9,ra:81,ry:380,rtd:3,rec:5,rcy:35,fpts:62.0});
   COLLEGE_STATS['Bucky Irving'].push({yr:2022,tm:"Oregon",conf:"Pac-12",gp:13,ra:152,ry:832,rtd:8,rec:19,rcy:157,rctd:1,fpts:162.4});
@@ -10105,7 +10113,7 @@ window.LEGEND_BIRTH_YEARS={"Tyler Huntley":"1998-02-03",
 "Chase Brown":"2000-12-18",
 "Chig Okonkwo":"2000-02-14",
 "Chimere Dike":"2001-05-26",
-"Chris Bell":"2003-05-29",
+"Chris Bell":"2004-06-07",
 "Chris Brazzell II":"2003-12-18",
 "Chris Brooks":"1999-09-15",
 "Chris Godwin":"1996-02-27",

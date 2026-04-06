@@ -15159,7 +15159,7 @@ window.fmtHeight = fmtHeight;
     // range so the weighted average stays in 0-100 and scores distribute properly.
     // The 1000-scale precision is preserved: pick 6 WR = 88.0, pick 90 = 15.8
     const dcScore = dcScoreRaw != null ? dcScoreRaw / 10 : null;
-    const tmScore = p.tm != null ? Math.min(100, p.tm * 10) : null; // Uncapped raw scores now spread above old 10 ceiling
+    const tmScore = null; // Teammate is bonus-only (flat bonus), not a weighted component
     const sizeScore = jmSize(p.ht, p.wt, p.pos);
     const effScore = jmEfficiency(p.pos, p.ypc, p.ypr);
     const mktShareScore = jmMarketShare(p.mktShare, p.pos);
@@ -15440,10 +15440,10 @@ window.fmtHeight = fmtHeight;
     // Applied as a flat bonus rather than a weighted component.
     // Having elite same-position teammates means production was suppressed.
     // Bonus-only: no teammates = +0 (neutral), never penalizes.
-    // p.tm is the raw uncapped score (0-14+). Bonus = raw * 0.2, cap +3.0
+    // p.tm is now pre-computed as the bonus value (raw * 0.3), uncapped.
     let tmBonus = 0;
     if (p.tm != null && p.tm > 0) {
-      tmBonus = Math.min(3.0, p.tm * 0.2);
+      tmBonus = p.tm;
     }
 
     const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + htPenalty + tmBonus) * 10) / 10));
@@ -15772,7 +15772,7 @@ window.fmtHeight = fmtHeight;
 
         seasonScores.push({
           yr: s.yr,
-          score: Math.max(0, Math.min(10, Math.round(seasonScore * 10) / 10))
+          score: Math.max(0, Math.round(seasonScore * 10) / 10)
         });
       });
 
@@ -15784,7 +15784,7 @@ window.fmtHeight = fmtHeight;
       if (maxScore <= 0) return { overall: null, seasons: seasonScores };
 
       return {
-        overall: Math.max(0, Math.min(10, Math.round(maxScore * 10) / 10)),
+        overall: Math.max(0, Math.round(maxScore * 10) / 10),
         seasons: seasonScores
       };
     }
@@ -16248,7 +16248,8 @@ window.fmtHeight = fmtHeight;
       }
 
       const tmResult = calcTeammate(name, pos, cs);
-      const tmScore = tmResult.overall;
+      const tmScoreRaw = tmResult.overall;
+      const tmScore = (tmScoreRaw != null && tmScoreRaw > 0) ? Math.round(tmScoreRaw * 0.3 * 10) / 10 : tmScoreRaw;
       const tmSeasons = tmResult.seasons;
 
       // School/Program Quality: count unique drafted players at the same school
@@ -16877,8 +16878,8 @@ window.fmtHeight = fmtHeight;
           }
           case 'tm':
             if (p.tm != null && p.tm > 0) {
-              const tmCls = p.tm >= 6 ? 'pm-jm-elite' : p.tm >= 4 ? 'pm-jm-great' : p.tm >= 2 ? 'pm-jm-good' : p.tm > 0 ? 'pm-jm-avg' : 'pm-jm-low';
-              rows += `<td class="pm-jm"><span class="pm-jm-badge ${tmCls}">${p.tm.toFixed(1)}</span></td>`;
+              const tmCls = p.tm >= 1.8 ? 'pm-jm-elite' : p.tm >= 1.2 ? 'pm-jm-great' : p.tm >= 0.6 ? 'pm-jm-good' : p.tm > 0 ? 'pm-jm-avg' : 'pm-jm-low';
+              rows += `<td class="pm-jm"><span class="pm-jm-badge ${tmCls}">+${p.tm.toFixed(1)}</span></td>`;
             } else {
               rows += `<td style="color:var(--text2);opacity:.4;text-align:center">—</td>`;
             }

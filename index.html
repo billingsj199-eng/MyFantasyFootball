@@ -15124,6 +15124,8 @@ window.fmtHeight = fmtHeight;
     WR:  { age: 0.05, breakout: 0.22, prod: 0.18, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.05, size: 0.02, eff: 0.04, mktShare: 0.00, improve: 0.08, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.06, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.08, yprr: 0.10 },
     TE:  { age: 0.05, breakout: 0.22, prod: 0.13, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.05, size: 0.03, eff: 0.05, mktShare: 0.00, improve: 0.08, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.10, pff: 0.08, yprr: 0.05 }
   };
+
+  const _jmCache = {};
   function calcJM(p) {
     // Cache key: player name + position (scores don't change within a session)
     const cacheKey = p.name + '::' + p.pos;

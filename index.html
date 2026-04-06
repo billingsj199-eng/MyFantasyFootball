@@ -15126,7 +15126,7 @@ window.fmtHeight = fmtHeight;
     // range so the weighted average stays in 0-100 and scores distribute properly.
     // The 1000-scale precision is preserved: pick 6 WR = 88.0, pick 90 = 15.8
     const dcScore = dcScoreRaw != null ? dcScoreRaw / 10 : null;
-    const tmScore = p.tm != null ? Math.min(100, p.tm * 10) : null;
+    const tmScore = p.tm != null ? Math.min(100, p.tm * 7) : null; // Rescaled: 14+ = 100, was *10 with 10 cap
     const sizeScore = jmSize(p.ht, p.wt, p.pos);
     const effScore = jmEfficiency(p.pos, p.ypc, p.ypr);
     const mktShareScore = jmMarketShare(p.mktShare, p.pos);

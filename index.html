@@ -1268,6 +1268,22 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .pm-scoring-btn{padding:4px 10px;border:none;background:none;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;cursor:pointer;border-radius:4px;transition:all .15s}
 .pm-scoring-btn:hover{color:var(--text)}
 .pm-scoring-btn.active{background:var(--accent);color:var(--bg)}
+.pm-class-grade{margin-bottom:12px;border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.pm-class-grade-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.pm-class-grade-title{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text)}
+.pm-class-grade-score{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:1px}
+.pm-class-grade-body{display:flex;flex-wrap:wrap;gap:0;padding:0}
+.pm-class-pos{flex:1;min-width:120px;padding:10px 14px;border-right:1px solid var(--border);text-align:center}
+.pm-class-pos:last-child{border-right:none}
+.pm-class-pos-label{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:4px}
+.pm-class-pos-grade{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.5px;margin-bottom:2px}
+.pm-class-pos-top{font-size:.68rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm-class-pos-depth{font-size:.62rem;color:var(--text2);opacity:.7;margin-top:2px}
+.pm-class-all-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;justify-content:center}
+.pm-class-chip{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all .15s;min-width:100px}
+.pm-class-chip:hover{border-color:var(--accent);background:rgba(245,158,11,.04)}
+.pm-class-chip-yr{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text)}
+.pm-class-chip-grade{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.5px}
 .pm-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
 .pm-table{width:100%;border-collapse:collapse;font-size:.78rem;white-space:nowrap}
 .pm-table thead{position:sticky;top:0;z-index:5}
@@ -1321,6 +1337,10 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .pm-search{width:100%}
   .pm-table{font-size:.68rem}
   .pm-table th,.pm-table td{padding:4px 5px}
+  .pm-class-pos{min-width:70px;padding:8px 6px}
+  .pm-class-pos-grade{font-size:1rem}
+  .pm-class-all-wrap{gap:4px;padding:6px 8px}
+  .pm-class-chip{min-width:80px;padding:4px 8px}
 }
 </style>
 
@@ -2310,6 +2330,7 @@ CLEAR
 <input type="text" class="pm-search" id="pmSearch" placeholder="Search player...">
 </div>
 </div>
+<div id="pmClassGrade" class="pm-class-grade" style="display:none"></div>
 <div class="pm-table-wrap">
 <table class="pm-table" id="pmTable">
 <thead id="pmThead"></thead>
@@ -16660,6 +16681,216 @@ window.fmtHeight = fmtHeight;
     return v;
   }
 
+  // === DRAFT CLASS GRADES ===
+  function computeClassGrades(data, posFilter) {
+    // Group by draft year
+    const byYear = {};
+    data.forEach(p => {
+      if (p.draftYr == null || p.jm == null || p.isCollege) return;
+      if (!byYear[p.draftYr]) byYear[p.draftYr] = [];
+      byYear[p.draftYr].push(p);
+    });
+
+    // Data-driven rank weights per position (from Study 4: actual career fpts share by rank)
+    // QB is very top-heavy (QB1=36% of class value), WR is flattest (depth matters)
+    const rankWeights = {
+      QB: [0.36, 0.24, 0.16, 0.11, 0.05, 0.04, 0.02, 0.01, 0.01],
+      RB: [0.15, 0.14, 0.10, 0.08, 0.07, 0.06, 0.06, 0.05, 0.05, 0.04, 0.04, 0.03],
+      WR: [0.13, 0.11, 0.09, 0.08, 0.07, 0.06, 0.05, 0.05, 0.04, 0.04, 0.03, 0.03],
+      TE: [0.22, 0.17, 0.12, 0.09, 0.07, 0.06, 0.05, 0.04, 0.03, 0.03]
+    };
+
+    const results = {};
+    Object.keys(byYear).forEach(yr => {
+      const players = byYear[yr];
+      const positions = ['QB', 'RB', 'WR', 'TE'];
+      const posGrades = {};
+
+      positions.forEach(pos => {
+        const posPlayers = players.filter(p => p.pos === pos);
+        if (!posPlayers.length) { posGrades[pos] = null; return; }
+
+        // Sort by JM score descending
+        posPlayers.sort((a, b) => b.jm - a.jm);
+
+        // Use position-specific rank weights from actual career value data
+        const weights = rankWeights[pos];
+        let totalWeight = 0, weightedSum = 0;
+        posPlayers.forEach((p, i) => {
+          const w = i < weights.length ? weights[i] : 0.02;
+          weightedSum += p.jm * w;
+          totalWeight += w;
+        });
+        const grade = totalWeight > 0 ? Math.round(weightedSum / totalWeight * 10) / 10 : 0;
+
+        // Tier counts
+        const elite = posPlayers.filter(p => p.jm >= 74).length;
+        const good = posPlayers.filter(p => p.jm >= 58 && p.jm < 74).length;
+
+        posGrades[pos] = {
+          grade,
+          count: posPlayers.length,
+          top: posPlayers[0],
+          elite,
+          good,
+          topN: posPlayers.slice(0, 3)
+        };
+      });
+
+      // Overall class grade — position weights from career fpts share (Study 2)
+      // WR produces 39% of all fantasy points, RB 28%, QB 19%, TE 14%
+      const posWeights = { QB: 0.19, RB: 0.28, WR: 0.39, TE: 0.14 };
+      let overallW = 0, overallS = 0;
+      positions.forEach(pos => {
+        if (posGrades[pos]) {
+          overallS += posGrades[pos].grade * posWeights[pos];
+          overallW += posWeights[pos];
+        }
+      });
+      const overall = overallW > 0 ? Math.round(overallS / overallW * 10) / 10 : 0;
+
+      results[yr] = { overall, positions: posGrades, playerCount: players.length };
+    });
+
+    return results;
+  }
+
+  function jmGradeColor(score) {
+    if (score >= 74) return '#22c55e';
+    if (score >= 66) return '#60a5fa';
+    if (score >= 58) return '#eab308';
+    if (score >= 50) return 'var(--text2)';
+    return '#ef4444';
+  }
+
+  function jmGradeBg(score) {
+    if (score >= 74) return 'rgba(34,197,94,.18)';
+    if (score >= 66) return 'rgba(59,130,246,.15)';
+    if (score >= 58) return 'rgba(234,179,8,.12)';
+    if (score >= 50) return 'rgba(168,162,158,.1)';
+    return 'rgba(239,68,68,.08)';
+  }
+
+  function jmGradeLabel(score) {
+    if (score >= 82) return 'BLUE CHIP';
+    if (score >= 74) return 'ELITE';
+    if (score >= 66) return 'STARTER';
+    if (score >= 58) return 'CONTRIBUTOR';
+    if (score >= 50) return 'DEPTH';
+    if (score >= 42) return 'LOTTERY';
+    return 'WEAK';
+  }
+
+  function renderClassGrade() {
+    const container = document.getElementById('pmClassGrade');
+    if (!container) return;
+
+    // Don't show for COLLEGE tab or when searching
+    if (pmPos === 'COLLEGE' || pmSearchVal) {
+      container.style.display = 'none';
+      return;
+    }
+
+    const allNonCollege = pmBuiltData.filter(p => !p.isCollege);
+    const grades = computeClassGrades(allNonCollege, pmPos);
+    const years = Object.keys(grades).map(Number).sort((a, b) => b - a);
+
+    if (!years.length) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = '';
+
+    if (pmDraftClass === 'all') {
+      // Show all classes as chips sorted by grade
+      const sorted = years.map(yr => ({ yr, ...grades[yr] }))
+        .filter(c => c.playerCount >= 3)
+        .sort((a, b) => b.overall - a.overall);
+
+      let html = '<div class="pm-class-grade-header">';
+      html += '<span class="pm-class-grade-title">DRAFT CLASS GRADES</span>';
+      html += '<span style="font-size:.65rem;color:var(--text2)">Click a class to filter</span>';
+      html += '</div>';
+      html += '<div class="pm-class-all-wrap">';
+      sorted.forEach((c, i) => {
+        const color = jmGradeColor(c.overall);
+        const bg = jmGradeBg(c.overall);
+        const label = jmGradeLabel(c.overall);
+        const rank = i + 1;
+        html += `<div class="pm-class-chip" data-classyr="${c.yr}" title="${label} — ${c.playerCount} players">`;
+        html += `<span class="pm-class-chip-yr">${c.yr}</span>`;
+        html += `<span class="pm-class-chip-grade" style="color:${color};background:${bg};padding:2px 8px;border-radius:5px">${c.overall.toFixed(1)}</span>`;
+        html += '</div>';
+      });
+      html += '</div>';
+      container.innerHTML = html;
+
+      // Click chips to filter
+      container.querySelectorAll('.pm-class-chip[data-classyr]').forEach(chip => {
+        chip.addEventListener('click', function() {
+          const yr = this.getAttribute('data-classyr');
+          document.getElementById('pmDraftClassFilter').value = yr;
+          pmDraftClass = yr;
+          renderTable();
+        });
+      });
+
+    } else {
+      // Show single class detail
+      const yr = pmDraftClass === 'older' ? null : parseInt(pmDraftClass);
+      if (!yr || !grades[yr]) {
+        // For 'older' or missing year, show nothing
+        container.style.display = 'none';
+        return;
+      }
+
+      const g = grades[yr];
+      const color = jmGradeColor(g.overall);
+      const bg = jmGradeBg(g.overall);
+      const label = jmGradeLabel(g.overall);
+
+      // Rank this class among all classes
+      const allGrades = years.map(y => ({ yr: y, overall: grades[y].overall }))
+        .filter(c => grades[c.yr].playerCount >= 3)
+        .sort((a, b) => b.overall - a.overall);
+      const rank = allGrades.findIndex(c => c.yr === yr) + 1;
+      const totalClasses = allGrades.length;
+
+      let html = '<div class="pm-class-grade-header">';
+      html += `<span class="pm-class-grade-title">${yr} DRAFT CLASS</span>`;
+      html += `<div style="display:flex;align-items:center;gap:10px">`;
+      html += `<span style="font-size:.7rem;color:var(--text2)">#${rank} of ${totalClasses} classes</span>`;
+      html += `<span class="pm-class-grade-score" style="color:${color};background:${bg};padding:2px 12px;border-radius:6px">${g.overall.toFixed(1)}</span>`;
+      html += `</div></div>`;
+
+      html += '<div class="pm-class-grade-body">';
+      ['QB', 'RB', 'WR', 'TE'].forEach(pos => {
+        const pg = g.positions[pos];
+        const isActive = (pmPos === pos);
+        const activeStyle = isActive ? 'background:rgba(245,158,11,.06);' : '';
+        html += `<div class="pm-class-pos" style="${activeStyle}">`;
+        html += `<div class="pm-class-pos-label" style="${isActive ? 'color:var(--accent)' : ''}">${pos}</div>`;
+        if (pg) {
+          const pColor = jmGradeColor(pg.grade);
+          const pBg = jmGradeBg(pg.grade);
+          html += `<div class="pm-class-pos-grade" style="color:${pColor};background:${pBg};display:inline-block;padding:1px 10px;border-radius:5px">${pg.grade.toFixed(1)}</div>`;
+          html += `<div class="pm-class-pos-top">${pg.top.name.split(' ').pop()} ${pg.top.jm.toFixed(1)}</div>`;
+          const depthParts = [];
+          if (pg.elite > 0) depthParts.push(pg.elite + ' elite');
+          if (pg.good > 0) depthParts.push(pg.good + ' starter');
+          html += `<div class="pm-class-pos-depth">${depthParts.length ? depthParts.join(', ') : pg.count + ' total'}</div>`;
+        } else {
+          html += '<div class="pm-class-pos-grade" style="color:var(--text2);opacity:.4">—</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+
+      container.innerHTML = html;
+    }
+  }
+
   function renderTable() {
     // Filter by position
     let data;
@@ -16948,6 +17179,7 @@ window.fmtHeight = fmtHeight;
       rows += '</tr>';
     });
     pmTbody.innerHTML = rows;
+    renderClassGrade();
     pmCount.textContent = (_pmShowAll ? data.length : _pmRenderLimit + ' of ' + data.length) + ' prospect' + (data.length !== 1 ? 's' : '');
 
     // Add "Show More" button if data was truncated

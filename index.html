@@ -3639,6 +3639,11 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
 <script src="data/college_weekly_3.js"></script>
 <script src="data/college_weekly_devy.js"></script>
 <script src="data/wr_yprr.js"></script>
+<script src="data/wr_drop_rate.js"></script>
+<script src="data/wr_contested.js"></script>
+<script src="data/wr_yac.js"></script>
+<script src="data/wr_route_grade.js"></script>
+<script src="data/wr_adot.js"></script>
 <script src="data/pff_grades.js"></script>
 <script>
 // PFF grade patches for players missing from generated file
@@ -14707,10 +14712,10 @@ window.fmtHeight = fmtHeight;
   //     RAS within Rd1-2: r=0.002 (ZERO!). WR busts all had high RAS (Ruggs 9.54, Toney 9.0).
   // TE: DC r²=39.1% → dc 31%. RAS r=0.430 (strongest TE signal after DC) → ras 12%.
   const JM_WEIGHTS = {
-    QB:  { age: 0.08, breakout: 0.09, prod: 0.12, conf: 0.02, ras: 0.08, dc: 0.37, tm: 0.00, size: 0.00, eff: 0.00, mktShare: 0.00, improve: 0.02, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.06, yprr: 0.00 },
-    RB:  { age: 0.09, breakout: 0.09, prod: 0.12, conf: 0.03, ras: 0.06, dc: 0.36, tm: 0.00, size: 0.03, eff: 0.03, mktShare: 0.04, improve: 0.04, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.01, yprr: 0.00 },
-    WR:  { age: 0.08, breakout: 0.16, prod: 0.18, conf: 0.04, ras: 0.03, dc: 0.26, tm: 0.00, size: 0.00, eff: 0.04, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.08 },
-    TE:  { age: 0.06, breakout: 0.11, prod: 0.07, conf: 0.03, ras: 0.12, dc: 0.31, tm: 0.00, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.04, pff: 0.02, yprr: 0.00 }
+    QB:  { age: 0.08, breakout: 0.09, prod: 0.12, conf: 0.02, ras: 0.08, dc: 0.37, tm: 0.00, size: 0.00, eff: 0.00, mktShare: 0.00, improve: 0.02, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.06, yprr: 0.00, dropRate: 0.00, contested: 0.00, yac: 0.00, routeGrade: 0.00 },
+    RB:  { age: 0.09, breakout: 0.09, prod: 0.12, conf: 0.03, ras: 0.06, dc: 0.36, tm: 0.00, size: 0.03, eff: 0.03, mktShare: 0.04, improve: 0.04, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.01, yprr: 0.00, dropRate: 0.00, contested: 0.00, yac: 0.00, routeGrade: 0.00 },
+    WR:  { age: 0.08, breakout: 0.16, prod: 0.18, conf: 0.02, ras: 0.03, dc: 0.26, tm: 0.00, size: 0.00, eff: 0.02, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.01, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.00, yprr: 0.08, dropRate: 0.02, contested: 0.02, yac: 0.02, routeGrade: 0.03 },
+    TE:  { age: 0.06, breakout: 0.11, prod: 0.07, conf: 0.01, ras: 0.12, dc: 0.31, tm: 0.00, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.01, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.04, pff: 0.00, yprr: 0.00, dropRate: 0.01, contested: 0.02, yac: 0.01, routeGrade: 0.02 }
   };
 
   // Conference tiers — DATA-DRIVEN from era analysis
@@ -15373,6 +15378,78 @@ window.fmtHeight = fmtHeight;
     return Math.max(5, yprr / 1.5 * 15);
   }
 
+  // Sub-score: WR/TE Drop Rate → 0-100 (lower drops = higher score)
+  // College drop rate is sticky — high droppers in college tend to drop in the NFL.
+  // Uses best (lowest) qualified season. Min 30 targets.
+  function jmDropRate(name, pos) {
+    if ((pos !== 'WR' && pos !== 'TE') || typeof _WR_DROP_RATE === 'undefined') return null;
+    const dr = _WR_DROP_RATE[name];
+    if (dr == null) return null;
+    // Scale: 0-2% elite (100-85), 2-4% good (85-65), 4-7% avg (65-40),
+    //        7-10% concerning (40-20), 10%+ drop-prone (20-5)
+    if (dr <= 0.02) return Math.min(100, 85 + (0.02 - dr) / 0.02 * 15);
+    if (dr <= 0.04) return 65 + (0.04 - dr) / 0.02 * 20;
+    if (dr <= 0.07) return 40 + (0.07 - dr) / 0.03 * 25;
+    if (dr <= 0.10) return 20 + (0.10 - dr) / 0.03 * 20;
+    if (dr <= 0.15) return 5 + (0.15 - dr) / 0.05 * 15;
+    return 5;
+  }
+
+  // Sub-score: WR/TE Contested Catch Rate → 0-100
+  // Measures ability to win 50/50 balls. Separates alpha WRs from scheme-dependent.
+  // Jefferson 92%, Bowers 77%, Chase 50%, Ruggs 47% — clear separator.
+  // Uses best qualified season. Min 5 contested targets.
+  function jmContested(name, pos) {
+    if ((pos !== 'WR' && pos !== 'TE') || typeof _WR_CONTESTED === 'undefined') return null;
+    const ccr = _WR_CONTESTED[name];
+    if (ccr == null) return null;
+    // Scale: 75%+ elite, 60% good, 45% avg, 30% below avg
+    if (ccr >= 0.75) return Math.min(100, 90 + (ccr - 0.75) / 0.15 * 10);
+    if (ccr >= 0.60) return 70 + (ccr - 0.60) / 0.15 * 20;
+    if (ccr >= 0.45) return 45 + (ccr - 0.45) / 0.15 * 25;
+    if (ccr >= 0.30) return 20 + (ccr - 0.30) / 0.15 * 25;
+    return Math.max(5, ccr / 0.30 * 20);
+  }
+
+  // Sub-score: WR/TE YAC per Reception → 0-100
+  // Explosiveness with ball in hands. Deebo/Tyreek types vs possession receivers.
+  // CeeDee 11.0, Ruggs 10.5, Toney 9.5 (high), Olave 4.2, Pickens 3.8 (low).
+  function jmYac(name, pos) {
+    if ((pos !== 'WR' && pos !== 'TE') || typeof _WR_YAC === 'undefined') return null;
+    const yac = _WR_YAC[name];
+    if (yac == null) return null;
+    if (pos === 'TE') {
+      // TEs have lower YAC — shifted thresholds
+      if (yac >= 9) return Math.min(100, 85 + (yac - 9) / 3 * 15);
+      if (yac >= 7) return 65 + (yac - 7) / 2 * 20;
+      if (yac >= 5) return 40 + (yac - 5) / 2 * 25;
+      if (yac >= 3) return 15 + (yac - 3) / 2 * 25;
+      return Math.max(5, yac / 3 * 15);
+    }
+    // WR thresholds
+    if (yac >= 10) return Math.min(100, 85 + (yac - 10) / 4 * 15);
+    if (yac >= 7.5) return 65 + (yac - 7.5) / 2.5 * 20;
+    if (yac >= 5.5) return 40 + (yac - 5.5) / 2 * 25;
+    if (yac >= 3.5) return 15 + (yac - 3.5) / 2 * 25;
+    return Math.max(5, yac / 3.5 * 15);
+  }
+
+  // Sub-score: WR/TE Route Running Grade (PFF) → 0-100
+  // PFF's film-graded route quality. Distinct from overall receiving grade.
+  // Pitts 96.1, DeVonta 95.6, Cooper 93.3 (elite), Kittle 63.8 (raw).
+  // 99% coverage in PFF data — very reliable metric.
+  function jmRouteGrade(name, pos) {
+    if ((pos !== 'WR' && pos !== 'TE') || typeof _WR_ROUTE_GRADE === 'undefined') return null;
+    const rg = _WR_ROUTE_GRADE[name];
+    if (rg == null) return null;
+    // PFF grade scale: 90+ elite, 80-89 great, 70-79 good, 60-69 avg, <60 below
+    if (rg >= 90) return 90 + (rg - 90) / 10 * 10;
+    if (rg >= 80) return 70 + (rg - 80) / 10 * 20;
+    if (rg >= 70) return 45 + (rg - 70) / 10 * 25;
+    if (rg >= 60) return 20 + (rg - 60) / 10 * 25;
+    return Math.max(5, rg / 60 * 20);
+  }
+
   // Sub-score: Dominator Rating (% of team TDs scored by prospect) → 0-100
   // Different from market share (yards). A player who scores 40%+ of his team's
   // touchdowns is the undisputed red zone weapon — translates directly to fantasy.
@@ -15466,25 +15543,25 @@ window.fmtHeight = fmtHeight;
   //   TE: YPR 41% gap (#1!), RAS 11% gap, DC only 31%
 
   const JM_CEILING_WEIGHTS = {
-    QB:  { age: 0.05, breakout: 0.09, prod: 0.09, conf: 0.01, ras: 0.14, dc: 0.37, tm: 0.00, size: 0.00, eff: 0.03, mktShare: 0.00, improve: 0.02, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.04, yprr: 0.00 },
-    RB:  { age: 0.08, breakout: 0.10, prod: 0.08, conf: 0.01, ras: 0.10, dc: 0.36, tm: 0.00, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.05, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.01, yprr: 0.00 },
-    WR:  { age: 0.04, breakout: 0.19, prod: 0.18, conf: 0.03, ras: 0.03, dc: 0.26, tm: 0.00, size: 0.00, eff: 0.04, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.05, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.08 },
-    TE:  { age: 0.03, breakout: 0.12, prod: 0.07, conf: 0.03, ras: 0.10, dc: 0.31, tm: 0.00, size: 0.01, eff: 0.09, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.05, pff: 0.02, yprr: 0.00 }
+    QB:  { age: 0.05, breakout: 0.09, prod: 0.09, conf: 0.01, ras: 0.14, dc: 0.37, tm: 0.00, size: 0.00, eff: 0.03, mktShare: 0.00, improve: 0.02, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.04, yprr: 0.00, dropRate: 0.00, contested: 0.00, yac: 0.00, routeGrade: 0.00 },
+    RB:  { age: 0.08, breakout: 0.10, prod: 0.08, conf: 0.01, ras: 0.10, dc: 0.36, tm: 0.00, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.05, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.01, yprr: 0.00, dropRate: 0.00, contested: 0.00, yac: 0.00, routeGrade: 0.00 },
+    WR:  { age: 0.04, breakout: 0.19, prod: 0.18, conf: 0.01, ras: 0.03, dc: 0.26, tm: 0.00, size: 0.00, eff: 0.02, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.01, qbCtx: 0.05, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.00, yprr: 0.08, dropRate: 0.02, contested: 0.02, yac: 0.03, routeGrade: 0.02 },
+    TE:  { age: 0.03, breakout: 0.12, prod: 0.07, conf: 0.01, ras: 0.10, dc: 0.31, tm: 0.00, size: 0.01, eff: 0.09, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.01, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.05, pff: 0.00, yprr: 0.00, dropRate: 0.01, contested: 0.02, yac: 0.01, routeGrade: 0.02 }
   };
 
   // DEVY WEIGHTS — for college players who haven't been drafted yet
   // No DC (33%), no RAS (4-10%), no earlyDec (3%) — redistributed to production/film metrics
   const JM_DEVY_FLOOR = {
-    QB:  { age: 0.08, breakout: 0.18, prod: 0.20, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.05, eff: 0.05, mktShare: 0.00, improve: 0.08, rbRec: 0.00, qbRush: 0.10, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.05, qbIntRate: 0.08, teRec: 0.00, pff: 0.05, yprr: 0.00 },
-    RB:  { age: 0.08, breakout: 0.20, prod: 0.22, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.05, eff: 0.10, mktShare: 0.05, improve: 0.07, rbRec: 0.10, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.05, yprr: 0.00 },
-    WR:  { age: 0.08, breakout: 0.22, prod: 0.24, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.00, eff: 0.04, mktShare: 0.00, improve: 0.07, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.06, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.05, yprr: 0.10 },
-    TE:  { age: 0.08, breakout: 0.20, prod: 0.17, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.05, eff: 0.05, mktShare: 0.00, improve: 0.07, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.10, pff: 0.05, yprr: 0.05 }
+    QB:  { age: 0.08, breakout: 0.18, prod: 0.20, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.05, eff: 0.05, mktShare: 0.00, improve: 0.08, rbRec: 0.00, qbRush: 0.10, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.05, qbIntRate: 0.08, teRec: 0.00, pff: 0.05, yprr: 0.00, dropRate: 0.00, contested: 0.00, yac: 0.00, routeGrade: 0.00 },
+    RB:  { age: 0.08, breakout: 0.20, prod: 0.22, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.05, eff: 0.10, mktShare: 0.05, improve: 0.07, rbRec: 0.10, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.05, yprr: 0.00, dropRate: 0.00, contested: 0.00, yac: 0.00, routeGrade: 0.00 },
+    WR:  { age: 0.08, breakout: 0.22, prod: 0.22, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.00, eff: 0.02, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.04, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.00, yprr: 0.10, dropRate: 0.04, contested: 0.04, yac: 0.04, routeGrade: 0.05 },
+    TE:  { age: 0.08, breakout: 0.20, prod: 0.17, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.05, eff: 0.05, mktShare: 0.00, improve: 0.07, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.05, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.10, pff: 0.00, yprr: 0.04, dropRate: 0.02, contested: 0.03, yac: 0.02, routeGrade: 0.02 }
   };
   const JM_DEVY_CEILING = {
-    QB:  { age: 0.05, breakout: 0.22, prod: 0.18, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.03, eff: 0.05, mktShare: 0.00, improve: 0.10, rbRec: 0.00, qbRush: 0.10, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.05, qbIntRate: 0.08, teRec: 0.00, pff: 0.08, yprr: 0.00 },
-    RB:  { age: 0.05, breakout: 0.24, prod: 0.20, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.03, eff: 0.12, mktShare: 0.05, improve: 0.09, rbRec: 0.08, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.08, yprr: 0.00 },
-    WR:  { age: 0.05, breakout: 0.26, prod: 0.22, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.00, eff: 0.04, mktShare: 0.00, improve: 0.09, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.06, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.06, yprr: 0.10 },
-    TE:  { age: 0.05, breakout: 0.24, prod: 0.15, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.03, eff: 0.05, mktShare: 0.00, improve: 0.09, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.10, pff: 0.08, yprr: 0.05 }
+    QB:  { age: 0.05, breakout: 0.22, prod: 0.18, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.03, eff: 0.05, mktShare: 0.00, improve: 0.10, rbRec: 0.00, qbRush: 0.10, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.05, qbIntRate: 0.08, teRec: 0.00, pff: 0.08, yprr: 0.00, dropRate: 0.00, contested: 0.00, yac: 0.00, routeGrade: 0.00 },
+    RB:  { age: 0.05, breakout: 0.24, prod: 0.20, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.03, eff: 0.12, mktShare: 0.05, improve: 0.09, rbRec: 0.08, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.08, yprr: 0.00, dropRate: 0.00, contested: 0.00, yac: 0.00, routeGrade: 0.00 },
+    WR:  { age: 0.05, breakout: 0.24, prod: 0.20, conf: 0.04, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.00, eff: 0.02, mktShare: 0.00, improve: 0.06, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.04, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.00, yprr: 0.10, dropRate: 0.04, contested: 0.04, yac: 0.05, routeGrade: 0.08 },
+    TE:  { age: 0.05, breakout: 0.22, prod: 0.15, conf: 0.04, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.03, eff: 0.05, mktShare: 0.00, improve: 0.07, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.05, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.10, pff: 0.00, yprr: 0.05, dropRate: 0.03, contested: 0.04, yac: 0.03, routeGrade: 0.05 }
   };
 
   const _jmCache = {};
@@ -15523,6 +15600,10 @@ window.fmtHeight = fmtHeight;
     const teRecScore = jmTeReceiving(p.teRecPg, p.pos);
     const pffScore = jmPffGrade(p.pffGrade, p.pffRush, p.pos);
     const yprrScore = jmYprr(p.name, p.pos);
+    const dropRateScore = jmDropRate(p.name, p.pos);
+    const contestedScore = jmContested(p.name, p.pos);
+    const yacScore = jmYac(p.name, p.pos);
+    const routeGradeScore = jmRouteGrade(p.name, p.pos);
 
     // === ELITE PROSPECT MISSING DATA HANDLING ===
     // High draft capital players who skip the combine or have limited college data
@@ -15556,7 +15637,11 @@ window.fmtHeight = fmtHeight;
       { key: 'qbIntRate', score: qbIntRateScore },
       { key: 'teRec', score: teRecScore },
       { key: 'pff', score: pffScore },
-      { key: 'yprr', score: yprrScore }
+      { key: 'yprr', score: yprrScore },
+      { key: 'dropRate', score: dropRateScore },
+      { key: 'contested', score: contestedScore },
+      { key: 'yac', score: yacScore },
+      { key: 'routeGrade', score: routeGradeScore }
     ];
 
     // Calculate floor score (starter rate calibrated)

@@ -16343,8 +16343,9 @@ window.fmtHeight = fmtHeight;
       }
 
       // RAS — use official RAS if available, otherwise estimate from raw combine drills
-      let ras = cb ? cb.ras : null;
-      if (ras == null && cb) {
+      let ras = cb ? cb.ras : (cbOrig ? cbOrig.ras : null);
+      if (ras == null && (cb || cbOrig)) {
+        const _rasSrc = cb || cbOrig;
         // Build a makeshift athleticism score (0-10 scale like RAS) from available drills
         // Uses position-specific thresholds: [elite, good, avg] where elite is best
         const _cbTh = {
@@ -16383,12 +16384,12 @@ window.fmtHeight = fmtHeight;
         };
         const dw = _drillWeights[pos] || _drillWeights.WR;
         const drillEntries = [
-          { score: _scoreLow(cb.forty, th.forty), weight: dw.forty },
-          { score: _scoreHigh(cb.vert, th.vert), weight: dw.vert },
-          { score: _scoreHigh(cb.broad, th.broad), weight: dw.broad },
-          { score: _scoreHigh(cb.bench, th.bench), weight: dw.bench },
-          { score: _scoreLow(cb.cone, th.cone), weight: dw.cone },
-          { score: _scoreLow(cb.shuttle, th.shuttle), weight: dw.shuttle }
+          { score: _scoreLow(_rasSrc.forty, th.forty), weight: dw.forty },
+          { score: _scoreHigh(_rasSrc.vert, th.vert), weight: dw.vert },
+          { score: _scoreHigh(_rasSrc.broad, th.broad), weight: dw.broad },
+          { score: _scoreHigh(_rasSrc.bench, th.bench), weight: dw.bench },
+          { score: _scoreLow(_rasSrc.cone, th.cone), weight: dw.cone },
+          { score: _scoreLow(_rasSrc.shuttle, th.shuttle), weight: dw.shuttle }
         ].filter(d => d.score != null);
         if (drillEntries.length >= 2) {
           // Weighted average of available drills
@@ -16635,10 +16636,13 @@ window.fmtHeight = fmtHeight;
       // Height & weight — prefer combine data, fall back to D array
       // cb.ht is a string like "6-2", d._height is inches (e.g. 74)
       // cb.wt is a number (lbs), d._weight is a number (lbs)
+      // Use cbOrig as fallback — cb may have been nulled by collision detection
+      // but cbOrig preserves the original COMBINE_DATA entry for this exact name
+      const _htWtSrc = cb || cbOrig;
       let htInches = null;
-      if (cb && cb.ht) {
+      if (_htWtSrc && _htWtSrc.ht) {
         // Parse "6-2" or "6'2" format to total inches
-        const htParts = String(cb.ht).replace(/'/g, '-').replace(/"/g, '').split('-');
+        const htParts = String(_htWtSrc.ht).replace(/'/g, '-').replace(/"/g, '').split('-');
         if (htParts.length === 2) {
           const ft = parseInt(htParts[0]), inc = parseInt(htParts[1]);
           if (!isNaN(ft) && !isNaN(inc)) htInches = ft * 12 + inc;
@@ -16648,7 +16652,7 @@ window.fmtHeight = fmtHeight;
         htInches = parseInt(dPlayer._height);
         if (isNaN(htInches)) htInches = null;
       }
-      let wt = (cb && cb.wt) ? cb.wt : (dPlayer && dPlayer._weight ? dPlayer._weight : null);
+      let wt = (_htWtSrc && _htWtSrc.wt) ? _htWtSrc.wt : (dPlayer && dPlayer._weight ? dPlayer._weight : null);
       if (wt != null) wt = parseInt(wt) || null;
 
       // Efficiency stats
@@ -17643,17 +17647,28 @@ window.fmtHeight = fmtHeight;
           // Also try reverse: if name itself is an alias key
           if (!d && _PROSPECT_ALIASES[name]) d = D.find(p => p.n === _PROSPECT_ALIASES[name]);
         }
-        // For devy/college players not in D array, build a synthetic entry
+        // For devy/college players OR NFL players not in D array, build a synthetic entry
         if (!d && typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name]) {
           const cb = COMBINE_DATA[name];
           const pmP = pmBuiltData ? pmBuiltData.find(p => p.name === name) : null;
+          const isDevy = cb.devy || false;
+          const apDb = (typeof ALL_PLAYERS_DB !== 'undefined') ? ALL_PLAYERS_DB.find(p => p.name === name) : null;
           d = {
-            n: name, s: cb.pos || (pmP ? pmP.pos : 'WR'),
-            t: cb.school || '—', age: pmP ? pmP.age : null,
+            n: name, s: cb.pos || (pmP ? pmP.pos : (apDb ? apDb.pos : 'WR')),
+            t: isDevy ? (cb.school || '—') : (apDb && apDb.career && apDb.career.length ? apDb.career[apDb.career.length-1].tm || '—' : cb.school || '—'),
+            age: pmP ? pmP.age : (apDb ? apDb.age : null),
             _retired: false, _college: cb.school,
-            _isDevy: true, dr: null, r: '—',
+            _isDevy: isDevy,
+            dr: pmP ? pmP.dr : (cb.draft != null ? (cb.draft === 'U' ? 'U' : parseInt(cb.draft) || null) : null),
+            r: '—',
+            _height: pmP ? (pmP.ht ? String(pmP.ht) : null) : null,
+            _weight: pmP ? pmP.wt : (cb.wt || null),
             p25: null, p24: null, p23: null
           };
+          // Use ALL_PLAYERS_DB career if available (for NFL players not in D[])
+          if (apDb && apDb.career && apDb.career.length) {
+            d.career = apDb.career;
+          }
           // Add college weekly stats as career seasons if available
           if (typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[name]) {
             d.career = [];

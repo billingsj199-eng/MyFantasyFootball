@@ -14700,11 +14700,17 @@ window.fmtHeight = fmtHeight;
   //
   // Each component outputs a 0-100 sub-score (except DC: 0-1000), then the weighted sum is the JM Score.
 
+  // Data-driven JM floor weights — position-specific DC weights from 2018-2022 era analysis
+  // QB: DC r²=34.8% (strongest signal) → dc 37%. Conf/improve have near-zero predictive value.
+  // RB: DC r²=40.3% (strongest signal) → dc 36%. RAS r=0.173 (weak) → ras 6%. PFF minimal value.
+  // WR: DC r²=22.5% (weakest!) → dc 26%. Breakout/prod/YPRR matter much more. Size r=-0.015 (zero) → 0%.
+  //     RAS within Rd1-2: r=0.002 (ZERO!). WR busts all had high RAS (Ruggs 9.54, Toney 9.0).
+  // TE: DC r²=39.1% → dc 31%. RAS r=0.430 (strongest TE signal after DC) → ras 12%.
   const JM_WEIGHTS = {
-    QB:  { age: 0.08, breakout: 0.09, prod: 0.12, conf: 0.04, ras: 0.08, dc: 0.33, tm: 0.00, size: 0.00, eff: 0.00, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.06, yprr: 0.00 },
-    RB:  { age: 0.09, breakout: 0.09, prod: 0.11, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.00, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.00 },
-    WR:  { age: 0.08, breakout: 0.13, prod: 0.15, conf: 0.04, ras: 0.04, dc: 0.33, tm: 0.00, size: 0.02, eff: 0.02, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.06 },
-    TE:  { age: 0.06, breakout: 0.10, prod: 0.07, conf: 0.04, ras: 0.10, dc: 0.33, tm: 0.00, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.04, pff: 0.02, yprr: 0.00 }
+    QB:  { age: 0.08, breakout: 0.09, prod: 0.12, conf: 0.02, ras: 0.08, dc: 0.37, tm: 0.00, size: 0.00, eff: 0.00, mktShare: 0.00, improve: 0.02, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.06, yprr: 0.00 },
+    RB:  { age: 0.09, breakout: 0.09, prod: 0.12, conf: 0.03, ras: 0.06, dc: 0.36, tm: 0.00, size: 0.03, eff: 0.03, mktShare: 0.04, improve: 0.04, rbRec: 0.04, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.01, yprr: 0.00 },
+    WR:  { age: 0.08, breakout: 0.16, prod: 0.18, conf: 0.04, ras: 0.03, dc: 0.26, tm: 0.00, size: 0.00, eff: 0.04, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.08 },
+    TE:  { age: 0.06, breakout: 0.11, prod: 0.07, conf: 0.03, ras: 0.12, dc: 0.31, tm: 0.00, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.04, pff: 0.02, yprr: 0.00 }
   };
 
   // Conference tiers — DATA-DRIVEN from era analysis
@@ -14898,12 +14904,8 @@ window.fmtHeight = fmtHeight;
     }
 
     // === RB (n=237) — Picks 2-15 elite, smooth monotonic decrease ===
-    // Data: Pick 2: 80%/60% (Barkley, Faulk), 4-5: 90%/60% (Edgerrin, LT, Ricky Williams)
-    //   6-10: 90%/40% (CMC, Bijan), 11-15: 82%/36%, 16-20: 100%/67% (small n=3)
-    //   21-25: 82%/27%, 26-32: 60%/13% ← cliff, 33-40: 53%/6%
-    //   41-50: 57%/29% (JT, Forte, Henry), 51-64: 40%/16%, 65+: mixed
-    // Note: Pick 1 RB data (n=2) shows 0% SR but that's 2 players — not meaningful.
-    // Curve is forced monotonically decreasing: pick 1 is always the best pick.
+    // Modern data (2018-2022): Rd3 RBs avg 484 fpts5 with 45% hit rate — nearly as good as Rd2.
+    // Curve revised: gentler slope through Rd2-3, reflecting that mid-round RBs produce well.
     if (pos === 'RB') {
       if (pick === 1) return 1000;
       if (pick <= 3) return 990 - (pick - 1) * 10;              // 2-3: 980-970
@@ -14912,13 +14914,13 @@ window.fmtHeight = fmtHeight;
       if (pick <= 15) return 880 - (pick - 10) * 8;             // 11-15: 872-840
       if (pick <= 20) return 840 - (pick - 15) * 12;            // 16-20: 828-780
       if (pick <= 25) return 780 - (pick - 20) * 16;            // 21-25: 764-700
-      if (pick <= 32) return 700 - (pick - 25) * 22;            // 26-32: 678-546 ← cliff
-      if (pick <= 50) return 546 - (pick - 32) * 10;            // 33-50: 536-366
-      if (pick <= 64) return 366 - (pick - 50) * 6;             // 51-64: 360-282
-      if (pick <= 100) return 282 - (pick - 64) * 3.5;          // 65-100: 278-156
-      if (pick <= 150) return 156 - (pick - 100) * 1.5;         // 101-150: 156-81
-      if (pick <= 220) return 81 - (pick - 150) * 0.6;          // 151-220: 81-39
-      return Math.max(3, 39 - (pick - 220) * 0.4);              // 221+: 39→22
+      if (pick <= 32) return 700 - (pick - 25) * 20;            // 26-32: 680-560
+      if (pick <= 50) return 560 - (pick - 32) * 8;             // 33-50: 552-416
+      if (pick <= 64) return 416 - (pick - 50) * 6;             // 51-64: 410-332
+      if (pick <= 100) return 332 - (pick - 64) * 2.5;          // 65-100: 330-242 (gentler — Rd3 RBs hit)
+      if (pick <= 150) return 242 - (pick - 100) * 2;           // 101-150: 242-142
+      if (pick <= 220) return 142 - (pick - 150) * 0.8;         // 151-220: 142-86
+      return Math.max(5, 86 - (pick - 220) * 0.5);              // 221+: 86→65
     }
 
     // === WR (n=325) — Picks 3-10 elite, strong through 25, cliff at 26 ===
@@ -14944,25 +14946,23 @@ window.fmtHeight = fmtHeight;
       return Math.max(3, 25 - (pick - 220) * 0.3);              // 221+: 25→12
     }
 
-    // === TE (n=114) — Incredibly flat through picks 4-35, cliff at 41 ===
-    // Data: 4-10: 100% SR, 11-15: 80%, 16-32: 85-100% (all elite zone)
-    //   33-40: 80%/10%, 41-50: 56%/11% ← cliff starts
-    //   51-64: 38%/15%, 65-100: flat ~50%/25% (Kelce, Witten, Graham zone)
-    //   101+: 43-56% — TE is the most forgiving position for late picks
+    // === TE (n=114) — Top 10 elite, meaningful dropoff 20-40, cliff at 50+ ===
+    // Modern data: TE picks 4-10 produce well (~544 avg), but 20-32 drops to ~400.
+    // Old curve was too flat through Rd1 (all 85-100). Data warrants more differentiation.
     if (pos === 'TE') {
       if (pick <= 5) return 1000;
-      if (pick <= 10) return 1000;                                // Data: 100% SR, 33% ER
-      if (pick <= 15) return 960 - (pick - 10) * 10;            // 11-15: 950-910
-      if (pick <= 20) return 910 - (pick - 15) * 4;             // 16-20: 906-890
-      if (pick <= 25) return 890 - (pick - 20) * 4;             // 21-25: 886-870
-      if (pick <= 32) return 870 - (pick - 25) * 6;             // 26-32: 864-828
-      if (pick <= 40) return 828 - (pick - 32) * 12;            // 33-40: 816-732
-      if (pick <= 50) return 732 - (pick - 40) * 16;            // 41-50: 716-572 ← cliff
-      if (pick <= 64) return 572 - (pick - 50) * 8;             // 51-64: 564-460
-      if (pick <= 100) return 460 - (pick - 64) * 4;            // 65-100: 456-316
-      if (pick <= 150) return 316 - (pick - 100) * 2;           // 101-150: 316-216
-      if (pick <= 220) return 216 - (pick - 150) * 1;           // 151-220: 216-146
-      return Math.max(5, 146 - (pick - 220) * 1.5);             // 221+: 146-83
+      if (pick <= 10) return 1000 - (pick - 5) * 8;             // 6-10: 992-960
+      if (pick <= 15) return 960 - (pick - 10) * 14;            // 11-15: 946-890
+      if (pick <= 20) return 890 - (pick - 15) * 10;            // 16-20: 880-840
+      if (pick <= 25) return 840 - (pick - 20) * 10;            // 21-25: 830-790
+      if (pick <= 32) return 790 - (pick - 25) * 10;            // 26-32: 780-720
+      if (pick <= 40) return 720 - (pick - 32) * 14;            // 33-40: 706-608
+      if (pick <= 50) return 608 - (pick - 40) * 16;            // 41-50: 592-448
+      if (pick <= 64) return 448 - (pick - 50) * 8;             // 51-64: 440-336
+      if (pick <= 100) return 336 - (pick - 64) * 3.5;          // 65-100: 332-210
+      if (pick <= 150) return 210 - (pick - 100) * 2;           // 101-150: 210-110
+      if (pick <= 220) return 110 - (pick - 150) * 0.8;         // 151-220: 110-54
+      return Math.max(4, 54 - (pick - 220) * 0.5);              // 221+: 54→34
     }
 
     // Fallback
@@ -15466,10 +15466,10 @@ window.fmtHeight = fmtHeight;
   //   TE: YPR 41% gap (#1!), RAS 11% gap, DC only 31%
 
   const JM_CEILING_WEIGHTS = {
-    QB:  { age: 0.05, breakout: 0.09, prod: 0.09, conf: 0.03, ras: 0.14, dc: 0.33, tm: 0.00, size: 0.00, eff: 0.03, mktShare: 0.00, improve: 0.04, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.04, yprr: 0.00 },
-    RB:  { age: 0.08, breakout: 0.10, prod: 0.08, conf: 0.01, ras: 0.12, dc: 0.33, tm: 0.00, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.05, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.00 },
-    WR:  { age: 0.04, breakout: 0.17, prod: 0.16, conf: 0.03, ras: 0.04, dc: 0.33, tm: 0.00, size: 0.01, eff: 0.02, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.04, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.06 },
-    TE:  { age: 0.03, breakout: 0.12, prod: 0.07, conf: 0.03, ras: 0.08, dc: 0.33, tm: 0.00, size: 0.01, eff: 0.09, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.05, pff: 0.02, yprr: 0.00 }
+    QB:  { age: 0.05, breakout: 0.09, prod: 0.09, conf: 0.01, ras: 0.14, dc: 0.37, tm: 0.00, size: 0.00, eff: 0.03, mktShare: 0.00, improve: 0.02, rbRec: 0.00, qbRush: 0.06, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.04, qbIntRate: 0.03, teRec: 0.00, pff: 0.04, yprr: 0.00 },
+    RB:  { age: 0.08, breakout: 0.10, prod: 0.08, conf: 0.01, ras: 0.10, dc: 0.36, tm: 0.00, size: 0.03, eff: 0.04, mktShare: 0.04, improve: 0.04, rbRec: 0.05, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.01, yprr: 0.00 },
+    WR:  { age: 0.04, breakout: 0.19, prod: 0.18, conf: 0.03, ras: 0.03, dc: 0.26, tm: 0.00, size: 0.00, eff: 0.04, mktShare: 0.00, improve: 0.05, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.03, qbCtx: 0.05, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.02, yprr: 0.08 },
+    TE:  { age: 0.03, breakout: 0.12, prod: 0.07, conf: 0.03, ras: 0.10, dc: 0.31, tm: 0.00, size: 0.01, eff: 0.09, mktShare: 0.04, improve: 0.04, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.03, earlyDec: 0.03, qbCtx: 0.03, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.05, pff: 0.02, yprr: 0.00 }
   };
 
   // DEVY WEIGHTS — for college players who haven't been drafted yet
@@ -15477,13 +15477,13 @@ window.fmtHeight = fmtHeight;
   const JM_DEVY_FLOOR = {
     QB:  { age: 0.08, breakout: 0.18, prod: 0.20, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.05, eff: 0.05, mktShare: 0.00, improve: 0.08, rbRec: 0.00, qbRush: 0.10, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.05, qbIntRate: 0.08, teRec: 0.00, pff: 0.05, yprr: 0.00 },
     RB:  { age: 0.08, breakout: 0.20, prod: 0.22, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.05, eff: 0.10, mktShare: 0.05, improve: 0.07, rbRec: 0.10, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.05, yprr: 0.00 },
-    WR:  { age: 0.08, breakout: 0.20, prod: 0.22, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.04, eff: 0.04, mktShare: 0.00, improve: 0.07, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.06, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.05, yprr: 0.10 },
+    WR:  { age: 0.08, breakout: 0.22, prod: 0.24, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.00, eff: 0.04, mktShare: 0.00, improve: 0.07, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.06, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.05, yprr: 0.10 },
     TE:  { age: 0.08, breakout: 0.20, prod: 0.17, conf: 0.08, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.05, eff: 0.05, mktShare: 0.00, improve: 0.07, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.10, pff: 0.05, yprr: 0.05 }
   };
   const JM_DEVY_CEILING = {
     QB:  { age: 0.05, breakout: 0.22, prod: 0.18, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.03, eff: 0.05, mktShare: 0.00, improve: 0.10, rbRec: 0.00, qbRush: 0.10, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.05, qbIntRate: 0.08, teRec: 0.00, pff: 0.08, yprr: 0.00 },
     RB:  { age: 0.05, breakout: 0.24, prod: 0.20, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.03, eff: 0.12, mktShare: 0.05, improve: 0.09, rbRec: 0.08, qbRush: 0.00, nflYrr: 0.00, dominator: 0.00, earlyDec: 0.00, qbCtx: 0.00, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.08, yprr: 0.00 },
-    WR:  { age: 0.05, breakout: 0.24, prod: 0.20, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.02, eff: 0.04, mktShare: 0.00, improve: 0.09, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.06, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.08, yprr: 0.10 },
+    WR:  { age: 0.05, breakout: 0.26, prod: 0.22, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.00, eff: 0.04, mktShare: 0.00, improve: 0.09, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.06, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.00, pff: 0.06, yprr: 0.10 },
     TE:  { age: 0.05, breakout: 0.24, prod: 0.15, conf: 0.06, ras: 0.00, dc: 0.00, tm: 0.00, size: 0.03, eff: 0.05, mktShare: 0.00, improve: 0.09, rbRec: 0.00, qbRush: 0.00, nflYrr: 0.00, dominator: 0.04, earlyDec: 0.00, qbCtx: 0.06, qbAccuracy: 0.00, qbIntRate: 0.00, teRec: 0.10, pff: 0.08, yprr: 0.05 }
   };
 
@@ -17064,12 +17064,13 @@ window.fmtHeight = fmtHeight;
 
     // Data-driven rank weights: actual first-5-year career fpts share by positional rank
     // Source: ALL_PLAYERS_DB analysis of 2015-2021 draft classes (7 classes, PPR scoring)
+    // Filtered: only players with draft capital (matching model's data quality filter)
     // Arrays are hard-capped: players beyond these slots get ZERO weight (valueless depth)
     const rankWeights = {
-      QB: [0.33, 0.27, 0.19, 0.11, 0.06, 0.04],                         // top 6
-      RB: [0.18, 0.15, 0.11, 0.10, 0.09, 0.07, 0.07, 0.06, 0.05, 0.04, 0.04, 0.04], // top 12
-      WR: [0.16, 0.14, 0.11, 0.10, 0.09, 0.08, 0.07, 0.06, 0.06, 0.05, 0.04, 0.04], // top 12
-      TE: [0.26, 0.21, 0.15, 0.10, 0.09, 0.08, 0.07, 0.04]              // top 8
+      QB: [0.34, 0.28, 0.18, 0.11, 0.06, 0.03],                         // top 6
+      RB: [0.19, 0.16, 0.12, 0.11, 0.09, 0.08, 0.07, 0.06, 0.04, 0.04, 0.03, 0.01], // top 12
+      WR: [0.17, 0.15, 0.12, 0.10, 0.10, 0.08, 0.07, 0.05, 0.05, 0.04, 0.04, 0.03], // top 12
+      TE: [0.28, 0.22, 0.15, 0.11, 0.09, 0.07, 0.05, 0.03]              // top 8
     };
 
     // Step 1: Compute raw weighted-average JM scores per position per class

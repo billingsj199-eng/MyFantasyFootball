@@ -3220,6 +3220,19 @@ if (typeof COMBINE_DATA !== 'undefined') {
   _udfa25('Lan Larison', 'NE', 'RB', 'UC Davis');
   _udfa25('Marcus Yarns', 'NO', 'RB', 'Delaware');
 
+  // === NAME ALIASES: create COMBINE_DATA entries under alternate name spellings ===
+  // D[] uses curly apostrophes, COMBINE_DATA uses plain names. Create cross-references.
+  var _cbNameAliases = {
+    "Tre' Harris": "Tre Harris", "Joshua Palmer": "Josh Palmer",
+    "Mitch Tinsley": "Mitchell Tinsley", "Chris Brooks": "Christopher Brooks",
+    "John Metchie III": "John Metchie", "Mitch Trubisky": "Mitchell Trubisky"
+  };
+  Object.keys(_cbNameAliases).forEach(function(alt) {
+    var canonical = _cbNameAliases[alt];
+    if (COMBINE_DATA[canonical] && !COMBINE_DATA[alt]) COMBINE_DATA[alt] = COMBINE_DATA[canonical];
+    if (COMBINE_DATA[alt] && !COMBINE_DATA[canonical]) COMBINE_DATA[canonical] = COMBINE_DATA[alt];
+  });
+
   // === BACKFILL D[] draft capital from COMBINE_DATA ===
   // Many D[] entries are missing the dr field (184 skill players). COMBINE_DATA has
   // draft pick info for most of them. Merge it back so player cards, prospect table DC
@@ -9541,6 +9554,7 @@ HP.forEach(p => {
   });
 });
 window.LEGEND_BIRTH_YEARS={"Tyler Huntley":"1998-02-03",
+"Trent Richardson":"1990-07-10",
 "A.J. Green":"1988-07-31",
 "Aaron Brooks":"1976-03-24",
 "Adam Thielen":"1990-08-22",
@@ -15932,7 +15946,8 @@ window.fmtHeight = fmtHeight;
     'Calvin Austin': 'Calvin Austin III', 'Benny Snell': 'Benny Snell Jr.',
     'Irv Smith': 'Irv Smith Jr.', 'Lynn Bowden': 'Lynn Bowden Jr.',
     'Velus Jones': 'Velus Jones Jr.', 'JJ Arcega-Whiteside': 'J.J. Arcega-Whiteside',
-    'Marvin Harrison': 'Marvin Harrison Jr.', 'Michael Penix': 'Michael Penix Jr.'
+    'Marvin Harrison': 'Marvin Harrison Jr.', 'Michael Penix': 'Michael Penix Jr.',
+    "Tre' Harris": 'Tre Harris', 'Tre Harris': "Tre' Harris"
   };
   // Reverse map: canonical name -> alternate name (for birthday/data lookups)
   const _PROSPECT_REVERSE = {};
@@ -15968,8 +15983,8 @@ window.fmtHeight = fmtHeight;
       if (!_dMap[alt] && _dMap[canonical]) _dMap[alt] = _dMap[canonical];
     });
 
-    // POST-MERGE DEDUP: automatically remove suffix/dot duplicates
-    // Handles Jr./Sr./II/III/IV and D.J./DJ dot variants
+    // POST-MERGE DEDUP: automatically remove suffix/dot/apostrophe duplicates
+    // Handles Jr./Sr./II/III/IV, D.J./DJ dot variants, and Tre'/Tre apostrophe variants
     const _namesToRemove = new Set();
     allNames.forEach(name => {
       // Check suffix: if "Name Jr." exists and "Name" also exists, remove "Name"
@@ -15981,6 +15996,12 @@ window.fmtHeight = fmtHeight;
       const noDots = name.replace(/\./g, '');
       if (noDots !== name && allNames.has(noDots)) {
         _namesToRemove.add(noDots); // keep dotted version
+      }
+      // Check apostrophe variants: if "Tre' Harris" and "Tre Harris" both exist
+      const noApos = name.replace(/[''`]/g, '');
+      if (noApos !== name && allNames.has(noApos)) {
+        // Keep the version that's in D[] (has NFL data), remove the other
+        _namesToRemove.add(_dMap[name] ? noApos : name);
       }
       // Also handle "Jr" vs "Jr." (no period)
       if (name.endsWith(' Jr') && allNames.has(name + '.')) {

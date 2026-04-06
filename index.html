@@ -17195,8 +17195,7 @@ window.fmtHeight = fmtHeight;
     });
 
     _pmBuildCache = results;
-
-    // === TIER HIT RATE COMPUTATION ===
+    window._pmBuildCache = results; // Expose for console backtest access
     // Computes historical hit rates for each JM tier using 2015-2022 draft classes.
     // "Hit" = top-12 QB season, top-24 RB/WR season, or top-12 TE season within first 5 NFL years.
     // Uses D[] career data (fpts per season). Only counts non-lowConfidence, non-2026, non-devy.

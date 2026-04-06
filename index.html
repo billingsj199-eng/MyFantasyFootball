@@ -16343,9 +16343,10 @@ window.fmtHeight = fmtHeight;
       }
 
       // RAS — use official RAS if available, otherwise estimate from raw combine drills
-      let ras = cb ? cb.ras : (cbOrig ? cbOrig.ras : null);
-      if (ras == null && (cb || cbOrig)) {
-        const _rasSrc = cb || cbOrig;
+      const _cbAny = cb || cbOrig || ((typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null);
+      let ras = _cbAny ? _cbAny.ras : null;
+      if (ras == null && _cbAny) {
+        const _rasSrc = _cbAny;
         // Build a makeshift athleticism score (0-10 scale like RAS) from available drills
         // Uses position-specific thresholds: [elite, good, avg] where elite is best
         const _cbTh = {
@@ -16533,7 +16534,9 @@ window.fmtHeight = fmtHeight;
       // D[].dr stores ROUND NUMBER (1-7) — must be converted to estimated overall pick
       const dPlayer = _dMap[name];
       let dr = null;
-      const rawPick = (cbOrig && cbOrig.draft != null) ? cbOrig.draft
+      // Nuclear fallback: if cbOrig got lost (collision edge case), re-check COMBINE_DATA directly
+      const _cbForDraft = cbOrig || ((typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null);
+      const rawPick = (_cbForDraft && _cbForDraft.draft != null) ? _cbForDraft.draft
         : (LEGEND_BIO && LEGEND_BIO[name] && LEGEND_BIO[name].dr != null) ? LEGEND_BIO[name].dr
         : null;
       if (rawPick != null) {
@@ -16637,8 +16640,8 @@ window.fmtHeight = fmtHeight;
       // cb.ht is a string like "6-2", d._height is inches (e.g. 74)
       // cb.wt is a number (lbs), d._weight is a number (lbs)
       // Use cbOrig as fallback — cb may have been nulled by collision detection
-      // but cbOrig preserves the original COMBINE_DATA entry for this exact name
-      const _htWtSrc = cb || cbOrig;
+      // Nuclear fallback: re-check COMBINE_DATA directly if both cb and cbOrig are null
+      const _htWtSrc = cb || cbOrig || ((typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null);
       let htInches = null;
       if (_htWtSrc && _htWtSrc.ht) {
         // Parse "6-2" or "6'2" format to total inches
@@ -16910,6 +16913,16 @@ window.fmtHeight = fmtHeight;
         prospectRecord.dataCoverage = 0;
         prospectRecord.lowConfidence = true;
       }
+
+      // Skip incomplete players: missing draft capital OR college stats
+      // Both are core inputs to the JM model — without either, the score is unreliable.
+      // Exceptions: 2026 class (pre-draft, DC unknown), devy players, college-only prospects.
+      if (!isCollege && !_isDevy && draftYr !== 2026) {
+        const hasDC = (dr != null);
+        const hasCS = (cs && cs.length > 0);
+        if (!hasDC || !hasCS) return; // skip — need BOTH draft capital AND college stats
+      }
+
       results.push(prospectRecord);
     });
 

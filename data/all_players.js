@@ -2821,7 +2821,7 @@ const ALL_PLAYERS_DB = [
 {yr:2019,gp:15,tm:"BUF",py:0,ptd:0,int:0,ra:166,ry:599,rtd:2,rc:13,rcy:100,rctd:0,fl:0,fpts:88.4,ppg:5.9,pc:0,pa:0,tgt:16},
 {yr:2020,gp:15,tm:"NYJ",py:0,ptd:0,int:0,ra:187,ry:653,rtd:2,rc:16,rcy:89,rctd:0,fl:1,fpts:92.2,ppg:6.1,pc:0,pa:0,tgt:19}
 ]},
-    {name:"Adrian Peterson",pos:"RB",debut:2007,last:2021,birthYear:"1979-07-01",career:[
+    {name:"Adrian Peterson",pos:"RB",debut:2007,last:2021,birthYear:"1985-03-21",career:[
 {yr:2007,gp:14,tm:"MIN",py:0,ptd:0,int:0,ra:238,ry:1341,rtd:12,rc:19,rcy:268,rctd:1,fl:3,fpts:242.4,ppg:17.3,pc:0,pa:0,tgt:19},
 {yr:2008,gp:16,tm:"MIN",py:0,ptd:0,int:0,ra:364,ry:1757,rtd:10,rc:21,rcy:125,rctd:0,fl:4,fpts:250.7,ppg:15.7,pc:0,pa:0,tgt:21},
 {yr:2009,gp:16,tm:"MIN",py:0,ptd:0,int:0,ra:315,ry:1389,rtd:18,rc:43,rcy:436,rctd:0,fl:6,fpts:300.0,ppg:18.8,pc:0,pa:0,tgt:57},
@@ -5331,7 +5331,7 @@ const ALL_PLAYERS_DB = [
 {yr:2008,gp:6,tm:"LV",py:0,ptd:0,int:0,ra:2,ry:2,rtd:0,rc:9,rcy:85,rctd:1,fl:0,fpts:19.2,ppg:3.2,pc:0,pa:0,tgt:9},
 {yr:2009,gp:12,tm:"SEA",py:0,ptd:0,int:0,ra:4,ry:6,rtd:0,rc:19,rcy:118,rctd:1,fl:1,fpts:25.9,ppg:2.2,pc:0,pa:0,tgt:27}
 ]},
-    {name:"Adrian Peterson",pos:"RB",debut:2002,last:2009,birthYear:"1979-07-01",career:[
+    {name:"Adrian Peterson (CHI)",pos:"RB",debut:2002,last:2009,birthYear:"1979-07-01",career:[
 {yr:2002,gp:4,tm:"CHI",py:0,ptd:0,int:0,ra:19,ry:101,rtd:1,rc:3,rcy:18,rctd:0,fl:0,fpts:19.4,ppg:4.8,pc:0,pa:0,tgt:4},
 {yr:2003,gp:3,tm:"CHI",py:0,ptd:0,int:0,ra:22,ry:70,rtd:0,rc:1,rcy:5,rctd:0,fl:0,fpts:8.0,ppg:2.7,pc:0,pa:0,tgt:1},
 {yr:2004,gp:2,tm:"CHI",py:0,ptd:0,int:0,ra:6,ry:19,rtd:0,rc:2,rcy:30,rctd:0,fl:0,fpts:5.9,ppg:3.0,pc:0,pa:0,tgt:2},
@@ -21691,7 +21691,7 @@ ALL_PLAYERS_TEAMS["Malcolm Brown"]=[{y1:2015,y2:2020,t:"LA"},{y1:2021,y2:2021,t:
 ALL_PLAYERS_TEAMS["Daniel Thomas"]=[{y1:2011,y2:2014,t:"MIA"}];
 ALL_PLAYERS_TEAMS["Terry Allen"]=[{y1:1999,y2:1999,t:"NE"},{y1:2000,y2:2000,t:"NO"},{y1:2001,y2:2001,t:"BAL"}];
 ALL_PLAYERS_TEAMS["Justin Griffith"]=[{y1:2003,y2:2006,t:"ATL"},{y1:2007,y2:2008,t:"LV"},{y1:2009,y2:2009,t:"SEA"}];
-ALL_PLAYERS_TEAMS["Adrian Peterson"]=[{y1:2002,y2:2009,t:"CHI"}];
+ALL_PLAYERS_TEAMS["Adrian Peterson (CHI)"]=[{y1:2002,y2:2009,t:"CHI"}];
 ALL_PLAYERS_TEAMS["Benny Cunningham"]=[{y1:2013,y2:2016,t:"LA"},{y1:2017,y2:2018,t:"CHI"}];
 ALL_PLAYERS_TEAMS["Chase Brown"]=[{y1:2023,y2:2024,t:"CIN"}];
 ALL_PLAYERS_TEAMS["DeAndre Washington"]=[{y1:2016,y2:2019,t:"LV"},{y1:2020,y2:2020,t:"MIA"}];
@@ -24535,6 +24535,7 @@ const ALL_PLAYERS_BIO = {
 "Adrian Madise":{h:71,w:215,dr:158,c:"TCU; Middle Georgia College",j:12,b:"1980-03-23",e:"4616"},
 "Adrian Murrell":{h:71,w:210,dr:120,c:"West Virginia",j:29,b:"1970-10-16",e:"457"},
 "Adrian Peterson":{h:73,w:220,dr:7,c:"Oklahoma",j:21,b:"1985-03-21",e:"10452"},
+"Adrian Peterson (CHI)":{h:72,w:210,dr:6,c:"Georgia Southern",j:21,b:"1979-07-01"},
 "Adrien Robinson":{h:76,w:264,dr:127,c:"Cincinnati",j:81,b:"1988-09-23",e:"14905"},
 "Ahmad Bradshaw":{h:70,w:217,dr:250,c:"Marshall",j:44,b:"1986-03-19",e:"10693"},
 "Ahmad Merritt":{h:70,w:195,c:"Wisconsin",j:86,b:"1977-02-05",e:"2984"},

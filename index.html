@@ -17443,7 +17443,7 @@ window.fmtHeight = fmtHeight;
       }
     }
 
-    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
+    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + htPenalty + tmBonus + dcRasBonus + bustAdj + sleeperAdj) * 10) / 10));
     // Low confidence if less than 50% of weight has data, or fewer than 5 of 22 components
     // For devy players, lower the threshold since DC/RAS/earlyDec are expected to be missing
     const _minDataCount = p.isDevy ? 3 : 5;
@@ -17451,8 +17451,8 @@ window.fmtHeight = fmtHeight;
     const lowConfidence = dataCoverage < _minCoverage || dataCount < _minDataCount;
 
     // Expose raw floor/ceiling (with adjustments) for blend ratio analysis
-    const floorFinal = Math.max(0, Math.min(100, Math.round((floorRaw + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
-    const ceilFinal = Math.max(0, Math.min(100, Math.round((ceilRaw + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
+    const floorFinal = Math.max(0, Math.min(100, Math.round((floorRaw + gpAdj + htPenalty + tmBonus + dcRasBonus + bustAdj + sleeperAdj) * 10) / 10));
+    const ceilFinal = Math.max(0, Math.min(100, Math.round((ceilRaw + gpAdj + htPenalty + tmBonus + dcRasBonus + bustAdj + sleeperAdj) * 10) / 10));
     // Expose component scores for correlation analysis
     const _compScores = {};
     scores.forEach(s => { _compScores[s.key] = s.score; });

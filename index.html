@@ -1791,6 +1791,10 @@ PREMIUM ACTIVE
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
 <div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — ALL-TIME</div>
+<div class="fg-mode-toggle" style="display:flex;gap:0;margin:6px auto 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<button class="fg-mode-btn active" data-dtoggle="gwDailyAT" data-dmin="all" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">ALL</button>
+<button class="fg-mode-btn" data-dtoggle="gwDailyAT" data-dmin="150" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">150+</button>
+</div>
 <div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's retired legend &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
 <strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery legend in 8 tries. Each guess reveals clues:<br><br>
 <span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
@@ -1805,7 +1809,7 @@ PREMIUM ACTIVE
 </div></span></div>
 <div id="gwDailyATStreak" class="ep-streak-display" style="margin-top:4px"></div>
 </div>
-<div class="gw-body">
+<div id="gwDailyAT_all" class="gw-body">
 <div class="gw-categories">
 <div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDailyATGuessRows"></div>
@@ -1820,6 +1824,21 @@ PREMIUM ACTIVE
 <div id="gwDailyATResult" class="ep-result" style="display:none"></div>
 <button id="gwDailyATGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
 </div>
+<div id="gwDailyAT_150" class="gw-body" style="display:none">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDailyAT150GuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDailyAT150Suggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDailyAT150Input" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDailyAT150GuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDailyAT150Result" class="ep-result" style="display:none"></div>
+<button id="gwDailyAT150GiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
 </div>
 </div>
 
@@ -1829,6 +1848,10 @@ PREMIUM ACTIVE
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
 <div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — 2000s</div>
+<div class="fg-mode-toggle" style="display:flex;gap:0;margin:6px auto 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<button class="fg-mode-btn active" data-dtoggle="gwDaily00s" data-dmin="all" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">ALL</button>
+<button class="fg-mode-btn" data-dtoggle="gwDaily00s" data-dmin="150" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">150+</button>
+</div>
 <div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's 2000s-era player &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
 <strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery player whose best fantasy season was 2000-2009. 8 tries. Each guess reveals clues:<br><br>
 <span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
@@ -1843,7 +1866,7 @@ PREMIUM ACTIVE
 </div></span></div>
 <div id="gwDaily00sStreak" class="ep-streak-display" style="margin-top:4px"></div>
 </div>
-<div class="gw-body">
+<div id="gwDaily00s_all" class="gw-body">
 <div class="gw-categories">
 <div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDaily00sGuessRows"></div>
@@ -1858,6 +1881,21 @@ PREMIUM ACTIVE
 <div id="gwDaily00sResult" class="ep-result" style="display:none"></div>
 <button id="gwDaily00sGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
 </div>
+<div id="gwDaily00s_150" class="gw-body" style="display:none">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDaily00s150GuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDaily00s150Suggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDaily00s150Input" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDaily00s150GuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDaily00s150Result" class="ep-result" style="display:none"></div>
+<button id="gwDaily00s150GiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
 </div>
 </div>
 
@@ -1866,6 +1904,10 @@ PREMIUM ACTIVE
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
 <div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — 2010s</div>
+<div class="fg-mode-toggle" style="display:flex;gap:0;margin:6px auto 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<button class="fg-mode-btn active" data-dtoggle="gwDaily10s" data-dmin="all" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">ALL</button>
+<button class="fg-mode-btn" data-dtoggle="gwDaily10s" data-dmin="150" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">150+</button>
+</div>
 <div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's 2010s-era player &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
 <strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery player whose best fantasy season was 2010-2019. 8 tries. Each guess reveals clues:<br><br>
 <span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
@@ -1880,7 +1922,7 @@ PREMIUM ACTIVE
 </div></span></div>
 <div id="gwDaily10sStreak" class="ep-streak-display" style="margin-top:4px"></div>
 </div>
-<div class="gw-body">
+<div id="gwDaily10s_all" class="gw-body">
 <div class="gw-categories">
 <div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDaily10sGuessRows"></div>
@@ -1894,6 +1936,21 @@ PREMIUM ACTIVE
 </div>
 <div id="gwDaily10sResult" class="ep-result" style="display:none"></div>
 <button id="gwDaily10sGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+<div id="gwDaily10s_150" class="gw-body" style="display:none">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDaily10s150GuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDaily10s150Suggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDaily10s150Input" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDaily10s150GuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDaily10s150Result" class="ep-result" style="display:none"></div>
+<button id="gwDaily10s150GiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
 </div>
 </div>
 </div>
@@ -2028,16 +2085,34 @@ PREMIUM ACTIVE
 <div class="lb-empty" id="lbDailyEpAlltimeEmpty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — All-Time 150+</div>
+<div class="lb-list" id="lbDailyEpAT150List" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEpAT150Loading">Loading...</div>
+<div class="lb-empty" id="lbDailyEpAT150Empty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2000s</div>
 <div class="lb-list" id="lbDailyEp00sList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbDailyEp00sLoading">Loading...</div>
 <div class="lb-empty" id="lbDailyEp00sEmpty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2000s 150+</div>
+<div class="lb-list" id="lbDailyEp00s150List" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEp00s150Loading">Loading...</div>
+<div class="lb-empty" id="lbDailyEp00s150Empty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2010s</div>
 <div class="lb-list" id="lbDailyEp10sList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbDailyEp10sLoading">Loading...</div>
 <div class="lb-empty" id="lbDailyEp10sEmpty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2010s 150+</div>
+<div class="lb-list" id="lbDailyEp10s150List" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEp10s150Loading">Loading...</div>
+<div class="lb-empty" id="lbDailyEp10s150Empty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — College</div>
@@ -2331,13 +2406,12 @@ CLEAR
 <button class="fg-mode-btn active" id="gwPlayRandom" style="padding:5px 14px;font-size:.68rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">RANDOM</button>
 <button class="fg-mode-btn" id="gwPlayCustom" style="padding:5px 14px;font-size:.68rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">CUSTOM</button>
 </div>
-<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:2px auto 4px">
+<div id="gwMinSznRow" style="display:none;align-items:center;justify-content:center;gap:6px;margin:2px auto 4px">
 <span style="font-size:.65rem;color:var(--text2);font-weight:600;letter-spacing:.5px">MIN SZN:</span>
 <div class="fg-mode-toggle" style="display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
 <button class="fg-mode-btn active" data-gwmin="0" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">ALL</button>
 <button class="fg-mode-btn" data-gwmin="100" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">100+</button>
 <button class="fg-mode-btn" data-gwmin="150" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">150+</button>
-<button class="fg-mode-btn" data-gwmin="200" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">200+</button>
 </div>
 </div>
 <!-- Custom mode: pick a player to challenge a friend -->
@@ -7940,6 +8014,14 @@ document.addEventListener('click', function(e) {
     gwMode2010sBtn.classList.toggle('active', mode === '2010s');
     gwModeAlltime.classList.toggle('active', mode === 'alltime');
     gwModeCollege.classList.toggle('active', mode === 'college');
+    // Hide MIN SZN filter for Current mode (not needed), show for all others
+    const minRow = document.getElementById('gwMinSznRow');
+    if (minRow) minRow.style.display = mode === 'current' ? 'none' : 'flex';
+    // Reset min filter when switching to Current
+    if (mode === 'current' && gwMinSzn !== 0) {
+      gwMinSzn = 0;
+      document.querySelectorAll('[data-gwmin]').forEach(b => b.classList.toggle('active', b.dataset.gwmin === '0'));
+    }
     if (gwPlayMode === 'custom') {
       gwCustomTarget = null; gwCustomInput.value = ''; gwCustomSelected.style.display = 'none';
       gwGuessRows.innerHTML = ''; gwResult.style.display = 'none'; gwNextBtn.style.display = 'none';
@@ -8591,6 +8673,91 @@ document.addEventListener('click', function(e) {
       });
       if (daily10s) daily10s.init();
     }
+
+    // === 150+ variants for All-Time, 2000s, 2010s ===
+    const _pool150 = (base) => base ? base.filter(p => p.bestSzn != null && p.bestSzn >= 150) : null;
+
+    const _poolAT150 = _pool150(_poolAlltime);
+    if (_poolAT150 && _poolAT150.length) {
+      const dailyAT150 = createDailyGW({
+        statePrefix: 'gwd_at150',
+        streakKey: 'gw_daily_at150_streak',
+        lastWinKey: 'gw_daily_at150_last_win',
+        seedOffset: 31501,
+        modeLabel: 'All-Time',
+        maxGuesses: 8,
+        inputId: 'gwDailyAT150Input',
+        guessBtnId: 'gwDailyAT150GuessBtn',
+        resultId: 'gwDailyAT150Result',
+        giveUpBtnId: 'gwDailyAT150GiveUpBtn',
+        suggestionsId: 'gwDailyAT150Suggestions',
+        guessRowsId: 'gwDailyAT150GuessRows',
+        streakElId: 'gwDailyATStreak',
+        getPool: () => _poolAT150,
+        lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDailyAT150 === 'function') window._lbUpdateGwDailyAT150(won, streak); }
+      });
+      if (dailyAT150) dailyAT150.init();
+    }
+
+    const _pool00s150 = _pool150(_pool2000s);
+    if (_pool00s150 && _pool00s150.length) {
+      const daily00s150 = createDailyGW({
+        statePrefix: 'gwd_00s150',
+        streakKey: 'gw_daily_00s150_streak',
+        lastWinKey: 'gw_daily_00s150_last_win',
+        seedOffset: 31502,
+        modeLabel: '2000s',
+        maxGuesses: 8,
+        inputId: 'gwDaily00s150Input',
+        guessBtnId: 'gwDaily00s150GuessBtn',
+        resultId: 'gwDaily00s150Result',
+        giveUpBtnId: 'gwDaily00s150GiveUpBtn',
+        suggestionsId: 'gwDaily00s150Suggestions',
+        guessRowsId: 'gwDaily00s150GuessRows',
+        streakElId: 'gwDaily00sStreak',
+        getPool: () => _pool00s150,
+        lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily00s150 === 'function') window._lbUpdateGwDaily00s150(won, streak); }
+      });
+      if (daily00s150) daily00s150.init();
+    }
+
+    const _pool10s150 = _pool150(_pool2010s);
+    if (_pool10s150 && _pool10s150.length) {
+      const daily10s150 = createDailyGW({
+        statePrefix: 'gwd_10s150',
+        streakKey: 'gw_daily_10s150_streak',
+        lastWinKey: 'gw_daily_10s150_last_win',
+        seedOffset: 31503,
+        modeLabel: '2010s',
+        maxGuesses: 8,
+        inputId: 'gwDaily10s150Input',
+        guessBtnId: 'gwDaily10s150GuessBtn',
+        resultId: 'gwDaily10s150Result',
+        giveUpBtnId: 'gwDaily10s150GiveUpBtn',
+        suggestionsId: 'gwDaily10s150Suggestions',
+        guessRowsId: 'gwDaily10s150GuessRows',
+        streakElId: 'gwDaily10sStreak',
+        getPool: () => _pool10s150,
+        lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily10s150 === 'function') window._lbUpdateGwDaily10s150(won, streak); }
+      });
+      if (daily10s150) daily10s150.init();
+    }
+
+    // === Wire up ALL/150+ toggle buttons ===
+    document.querySelectorAll('[data-dtoggle]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const group = this.dataset.dtoggle;
+        const min = this.dataset.dmin;
+        // Toggle active state on sibling buttons
+        document.querySelectorAll('[data-dtoggle="' + group + '"]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        // Show/hide game bodies
+        const allBody = document.getElementById(group + '_all');
+        const body150 = document.getElementById(group + '_150');
+        if (allBody) allBody.style.display = min === 'all' ? '' : 'none';
+        if (body150) body150.style.display = min === '150' ? '' : 'none';
+      });
+    });
 
     if (_poolCollege && _poolCollege.length) {
       const dailyCollege = createDailyGW({
@@ -11637,6 +11804,21 @@ window.fmtHeight = fmtHeight;
     if (_origLbGwDaily10s) _origLbGwDaily10s(won, streak);
     getUnlockedBadges();
   };
+  const _origLbGwDailyAT150 = window._lbUpdateGwDailyAT150;
+  window._lbUpdateGwDailyAT150 = function(won, streak) {
+    if (_origLbGwDailyAT150) _origLbGwDailyAT150(won, streak);
+    getUnlockedBadges();
+  };
+  const _origLbGwDaily00s150 = window._lbUpdateGwDaily00s150;
+  window._lbUpdateGwDaily00s150 = function(won, streak) {
+    if (_origLbGwDaily00s150) _origLbGwDaily00s150(won, streak);
+    getUnlockedBadges();
+  };
+  const _origLbGwDaily10s150 = window._lbUpdateGwDaily10s150;
+  window._lbUpdateGwDaily10s150 = function(won, streak) {
+    if (_origLbGwDaily10s150) _origLbGwDaily10s150(won, streak);
+    getUnlockedBadges();
+  };
 
   // Render badge avatars on page load
   window._renderBadgeAvatars = renderAllAvatars;
@@ -11669,8 +11851,8 @@ window.fmtHeight = fmtHeight;
 
 // === CLOUD SYNC — Game data across devices ===
 (function(){
-  const SYNC_KEYS_MAX = ['ep_streak','epu_played','epu_correct','epu_streak','epu_best_streak','fg_games_played','fg_highscore','fg_highscore_week','md_games_played','gw_daily_streak','gw_daily_at_streak','gw_daily_00s_streak','gw_daily_10s_streak'];
-  const SYNC_KEYS_STR = ['ep_last_win','jb_active_badge','jb_is_founder','gw_daily_last_win','gw_daily_at_last_win','gw_daily_00s_last_win','gw_daily_10s_last_win'];
+  const SYNC_KEYS_MAX = ['ep_streak','epu_played','epu_correct','epu_streak','epu_best_streak','fg_games_played','fg_highscore','fg_highscore_week','md_games_played','gw_daily_streak','gw_daily_at_streak','gw_daily_00s_streak','gw_daily_10s_streak','gw_daily_at150_streak','gw_daily_00s150_streak','gw_daily_10s150_streak'];
+  const SYNC_KEYS_STR = ['ep_last_win','jb_active_badge','jb_is_founder','gw_daily_last_win','gw_daily_at_last_win','gw_daily_00s_last_win','gw_daily_10s_last_win','gw_daily_at150_last_win','gw_daily_00s150_last_win','gw_daily_10s150_last_win'];
   const SYNC_KEYS_JSON = ['jb_unlocked_badges'];
 
   // Helper: get today's Eastern date key parts
@@ -11687,6 +11869,9 @@ window.fmtHeight = fmtHeight;
       gwAT: `gwd_at_${e.y}_${e.m}_${e.d}`,
       gw00s: `gwd_00s_${e.y}_${e.m}_${e.d}`,
       gw10s: `gwd_10s_${e.y}_${e.m}_${e.d}`,
+      gwAT150: `gwd_at150_${e.y}_${e.m}_${e.d}`,
+      gw00s150: `gwd_00s150_${e.y}_${e.m}_${e.d}`,
+      gw10s150: `gwd_10s150_${e.y}_${e.m}_${e.d}`,
       dateStr: `${e.y}-${e.m}-${e.d}`
     };
   }
@@ -11707,6 +11892,9 @@ window.fmtHeight = fmtHeight;
     const gwATState = localStorage.getItem(keys.gwAT);
     const gw00sState = localStorage.getItem(keys.gw00s);
     const gw10sState = localStorage.getItem(keys.gw10s);
+    const gwAT150State = localStorage.getItem(keys.gwAT150);
+    const gw00s150State = localStorage.getItem(keys.gw00s150);
+    const gw10s150State = localStorage.getItem(keys.gw10s150);
     // Verify each state's target matches today's actual target before syncing
     // This prevents stale game data (wrong player) from being saved with today's date
     function _saveVerifyTarget(stateJson, poolGetter, seedOffset) {
@@ -11721,13 +11909,17 @@ window.fmtHeight = fmtHeight;
         return todayTarget && state.targetName === todayTarget.name;
       } catch(e) { return false; }
     }
+    const _pool150Sync = (getter) => { const p = (typeof getter === 'function') ? getter() : null; return p ? p.filter(x => x.bestSzn != null && x.bestSzn >= 150) : null; };
     // Only sync daily states that actually exist AND match today's target
     if (epState) dailyStates.ep = epState;
     if (gwCState && _saveVerifyTarget(gwCState, window._gwGetPoolCurrent, 0)) dailyStates.gwC = gwCState;
     if (gwATState && _saveVerifyTarget(gwATState, window._gwGetPoolAlltime, 7919)) dailyStates.gwAT = gwATState;
     if (gw00sState && _saveVerifyTarget(gw00sState, window._gwGetPool2000s, 20003)) dailyStates.gw00s = gw00sState;
     if (gw10sState && _saveVerifyTarget(gw10sState, window._gwGetPool2010s, 20107)) dailyStates.gw10s = gw10sState;
-    if (dailyStates.ep || dailyStates.gwC || dailyStates.gwAT || dailyStates.gw00s || dailyStates.gw10s) data.dailyStates = dailyStates;
+    if (gwAT150State && _saveVerifyTarget(gwAT150State, () => _pool150Sync(window._gwGetPoolAlltime), 31501)) dailyStates.gwAT150 = gwAT150State;
+    if (gw00s150State && _saveVerifyTarget(gw00s150State, () => _pool150Sync(window._gwGetPool2000s), 31502)) dailyStates.gw00s150 = gw00s150State;
+    if (gw10s150State && _saveVerifyTarget(gw10s150State, () => _pool150Sync(window._gwGetPool2010s), 31503)) dailyStates.gw10s150 = gw10s150State;
+    if (dailyStates.ep || dailyStates.gwC || dailyStates.gwAT || dailyStates.gw00s || dailyStates.gw10s || dailyStates.gwAT150 || dailyStates.gw00s150 || dailyStates.gw10s150) data.dailyStates = dailyStates;
     data.syncedAt = new Date().toISOString();
     db.collection('user_game_data').doc(user.uid).set(data, { merge: true }).catch(e => console.warn('[Sync] save error:', e));
   }
@@ -11827,6 +12019,26 @@ window.fmtHeight = fmtHeight;
               _dailyRestored = true;
             } else {
               console.log('[Sync] Skipped stale gw10s state — target does not match today');
+            }
+          }
+          // 150+ variants
+          const _pool150R = (getter) => { const p = (typeof getter === 'function') ? getter() : null; return p ? p.filter(x => x.bestSzn != null && x.bestSzn >= 150) : null; };
+          if (cloud.dailyStates.gwAT150 && !localStorage.getItem(keys.gwAT150)) {
+            if (_verifyDailyTarget(cloud.dailyStates.gwAT150, () => _pool150R(window._gwGetPoolAlltime), 31501)) {
+              localStorage.setItem(keys.gwAT150, cloud.dailyStates.gwAT150);
+              _dailyRestored = true;
+            }
+          }
+          if (cloud.dailyStates.gw00s150 && !localStorage.getItem(keys.gw00s150)) {
+            if (_verifyDailyTarget(cloud.dailyStates.gw00s150, () => _pool150R(window._gwGetPool2000s), 31502)) {
+              localStorage.setItem(keys.gw00s150, cloud.dailyStates.gw00s150);
+              _dailyRestored = true;
+            }
+          }
+          if (cloud.dailyStates.gw10s150 && !localStorage.getItem(keys.gw10s150)) {
+            if (_verifyDailyTarget(cloud.dailyStates.gw10s150, () => _pool150R(window._gwGetPool2010s), 31503)) {
+              localStorage.setItem(keys.gw10s150, cloud.dailyStates.gw10s150);
+              _dailyRestored = true;
             }
           }
         }
@@ -14436,6 +14648,28 @@ window.fmtHeight = fmtHeight;
     });
   };
 
+  // 150+ daily variants
+  function _lbSaveDaily150(fieldName, won, streak) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    const docRef = db.collection('leaderboard').doc(user.uid);
+    docRef.get().then(doc => {
+      const existing = doc.exists && doc.data()[fieldName] ? (doc.data()[fieldName].bestStreak || 0) : 0;
+      const newBest = Math.max(existing, streak);
+      const update = { name: name, email: (user.email||''), ...getLbBadge(), updatedAt: new Date().toISOString() };
+      update[fieldName] = { date: todayKey(), won: won, streak: streak, bestStreak: newBest };
+      docRef.set(update, { merge: true });
+    }).catch(() => {
+      const update = { name: name, email: (user.email||''), ...getLbBadge(), updatedAt: new Date().toISOString() };
+      update[fieldName] = { date: todayKey(), won: won, streak: streak, bestStreak: streak };
+      docRef.set(update, { merge: true }).catch(e => console.warn('[LB] ' + fieldName + ' save error:', e));
+    });
+  }
+  window._lbUpdateGwDailyAT150 = function(won, streak) { _lbSaveDaily150('gwDailyAT150', won, streak); };
+  window._lbUpdateGwDaily00s150 = function(won, streak) { _lbSaveDaily150('gwDaily00s150', won, streak); };
+  window._lbUpdateGwDaily10s150 = function(won, streak) { _lbSaveDaily150('gwDaily10s150', won, streak); };
+
   // === LOAD & RENDER LEADERBOARDS ===
   function renderRow(rank, name, statHtml, isMe, badgeIcon) {
     const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -14700,11 +14934,20 @@ window.fmtHeight = fmtHeight;
       // Daily Elite Pull — All-Time (gwDailyAT)
       renderStreakSection('lbDailyEpAlltimeList', 'lbDailyEpAlltimeLoading', 'lbDailyEpAlltimeEmpty', 'gwDailyAT');
 
+      // Daily Elite Pull — All-Time 150+ (gwDailyAT150)
+      renderStreakSection('lbDailyEpAT150List', 'lbDailyEpAT150Loading', 'lbDailyEpAT150Empty', 'gwDailyAT150');
+
       // Daily Elite Pull — 2000s (gwDaily00s)
       renderStreakSection('lbDailyEp00sList', 'lbDailyEp00sLoading', 'lbDailyEp00sEmpty', 'gwDaily00s');
 
+      // Daily Elite Pull — 2000s 150+ (gwDaily00s150)
+      renderStreakSection('lbDailyEp00s150List', 'lbDailyEp00s150Loading', 'lbDailyEp00s150Empty', 'gwDaily00s150');
+
       // Daily Elite Pull — 2010s (gwDaily10s)
       renderStreakSection('lbDailyEp10sList', 'lbDailyEp10sLoading', 'lbDailyEp10sEmpty', 'gwDaily10s');
+
+      // Daily Elite Pull — 2010s 150+ (gwDaily10s150)
+      renderStreakSection('lbDailyEp10s150List', 'lbDailyEp10s150Loading', 'lbDailyEp10s150Empty', 'gwDaily10s150');
 
       // Daily Elite Pull — College (gwDailyCol)
       renderStreakSection('lbDailyEpCollegeList', 'lbDailyEpCollegeLoading', 'lbDailyEpCollegeEmpty', 'gwDailyCol');

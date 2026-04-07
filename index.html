@@ -2234,13 +2234,24 @@ CLEAR
 <div class="gw-header">
 <div class="gw-title">ELITE PULL</div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:8px auto 4px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" id="gwModeCurrent" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">CURRENT</button>
-<button class="fg-mode-btn" id="gwModeAlltime" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">ALL-TIME</button>
-<button class="fg-mode-btn" id="gwModeCollege" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">COLLEGE</button>
+<button class="fg-mode-btn active" id="gwModeCurrent" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">CURRENT</button>
+<button class="fg-mode-btn" id="gwMode2000s" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">2000s</button>
+<button class="fg-mode-btn" id="gwMode2010s" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">2010s</button>
+<button class="fg-mode-btn" id="gwModeAlltime" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">ALL-TIME</button>
+<button class="fg-mode-btn" id="gwModeCollege" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">COLLEGE</button>
 </div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px auto 4px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
 <button class="fg-mode-btn active" id="gwPlayRandom" style="padding:5px 14px;font-size:.68rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">RANDOM</button>
 <button class="fg-mode-btn" id="gwPlayCustom" style="padding:5px 14px;font-size:.68rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">CUSTOM</button>
+</div>
+<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:2px auto 4px">
+<span style="font-size:.65rem;color:var(--text2);font-weight:600;letter-spacing:.5px">MIN SZN:</span>
+<div class="fg-mode-toggle" style="display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<button class="fg-mode-btn active" data-gwmin="0" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">ALL</button>
+<button class="fg-mode-btn" data-gwmin="100" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">100+</button>
+<button class="fg-mode-btn" data-gwmin="150" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">150+</button>
+<button class="fg-mode-btn" data-gwmin="200" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">200+</button>
+</div>
 </div>
 <!-- Custom mode: pick a player to challenge a friend -->
 <div id="gwCustomPanel" style="display:none;margin:8px 0 4px;text-align:center">
@@ -2255,7 +2266,7 @@ CLEAR
 <div id="gwCustomCopied" style="font-size:.7rem;color:var(--green);margin-top:4px;opacity:0;transition:opacity .2s"></div>
 </div>
 </div>
-<div class="gw-subtitle">Guess the mystery player using the clues<span class="gw-help-icon">?<div class="gw-tooltip"><strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player. Each guess reveals clues:<br><br><span style="color:var(--green)">&#9632; Green</span> = Exact match<br><span style="color:#facc15">&#9632; Yellow</span> = Close<br><span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br><strong>Team:</strong> Green if correct, red if wrong<br><strong>Division:</strong> Green if exact, yellow if same conference, red if wrong<br><strong>Position:</strong> Green if correct, red if wrong<br><strong>Year (All-Time only):</strong> Year of best season. Green if exact, yellow if within 2 years, red otherwise<br><strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30, red otherwise. Arrows show if answer is ↑ higher or ↓ lower<br><strong>Wk High:</strong> Best single-week score (data back to 1999). Green if within 0.5 pts, yellow if within 5, red otherwise. Arrows show direction. Shows — if no weekly data available for that player<br><br><strong>Current:</strong> Active players only &middot; 6 attempts<br><strong>All-Time:</strong> Legends &middot; 8 attempts<br><br><strong style="color:var(--accent)">Game Modes</strong><br><strong>Random:</strong> A random player is picked each round<br><strong>Custom:</strong> Pick any player and create a challenge link to send to friends — they'll get the same player to guess<br><br>After finishing a game, tap <strong>Challenge a Friend</strong> to share a link with your results</div></span></div>
+<div class="gw-subtitle">Guess the mystery player using the clues<span class="gw-help-icon">?<div class="gw-tooltip"><strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player. Each guess reveals clues:<br><br><span style="color:var(--green)">&#9632; Green</span> = Exact match<br><span style="color:#facc15">&#9632; Yellow</span> = Close<br><span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br><strong>Team:</strong> Green if correct, red if wrong<br><strong>Division:</strong> Green if exact, yellow if same conference, red if wrong<br><strong>Position:</strong> Green if correct, red if wrong<br><strong>Year (All-Time only):</strong> Year of best season. Green if exact, yellow if within 2 years, red otherwise<br><strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30, red otherwise. Arrows show if answer is ↑ higher or ↓ lower<br><strong>Wk High:</strong> Best single-week score (data back to 1999). Green if within 0.5 pts, yellow if within 5, red otherwise. Arrows show direction. Shows — if no weekly data available for that player<br><br><strong>Current:</strong> Active players only &middot; 6 attempts<br><strong>2000s:</strong> Players whose best season was 2000-2009 &middot; 8 attempts<br><strong>2010s:</strong> Players whose best season was 2010-2019 &middot; 8 attempts<br><strong>All-Time:</strong> Legends &middot; 8 attempts<br><br><strong style="color:var(--accent)">Game Modes</strong><br><strong>Random:</strong> A random player is picked each round<br><strong>Custom:</strong> Pick any player and create a challenge link to send to friends — they'll get the same player to guess<br><br>After finishing a game, tap <strong>Challenge a Friend</strong> to share a link with your results</div></span></div>
 <div id="gwStreak" class="ep-streak-display" style="margin-top:6px"></div>
 </div>
 <div class="gw-body">
@@ -7014,11 +7025,18 @@ document.addEventListener('click', function(e) {
   // Build player pool from FG_POOL (available after Fantasy Game IIFE runs) — we'll lazy-init
   let gwPoolCurrent = null;
   let gwPoolAlltime = null;
+  let gwPool2000s = null;
+  let gwPool2010s = null;
   let gwPoolCollege = null;
   let gwAbbrToFull = {};
-  let gwMode = 'current'; // 'current', 'alltime', or 'college'
+  let gwMode = 'current'; // 'current', '2000s', '2010s', 'alltime', or 'college'
+  let gwMinSzn = 0; // minimum best-season fpts filter (0 = no filter)
 
-  function getGwPool() { return gwMode === 'college' ? gwPoolCollege : gwMode === 'alltime' ? gwPoolAlltime : gwPoolCurrent; }
+  function getGwPool() {
+    const raw = gwMode === 'college' ? gwPoolCollege : gwMode === '2000s' ? gwPool2000s : gwMode === '2010s' ? gwPool2010s : gwMode === 'alltime' ? gwPoolAlltime : gwPoolCurrent;
+    if (!raw || gwMinSzn <= 0) return raw;
+    return raw.filter(p => p.bestSzn != null && p.bestSzn >= gwMinSzn);
+  }
 
   // Helper: look up WEEKLY_STATS with name normalization
   // Handles mismatches like "AJ Brown" vs "A.J. Brown", "TJ Hockenson" vs "T.J. Hockenson", etc.
@@ -7100,6 +7118,8 @@ document.addEventListener('click', function(e) {
     _gwPoolBuiltWithWeekly = (typeof WEEKLY_STATS !== 'undefined');
     gwPoolCurrent = null;
     gwPoolAlltime = null;
+    gwPool2000s = null;
+    gwPool2010s = null;
     gwPoolCollege = null;
     // Build abbreviation lookup
     if (typeof TEAM_ABBR_MAP !== 'undefined') {
@@ -7330,6 +7350,10 @@ document.addEventListener('click', function(e) {
     gwPoolCurrent = currentWithWeekly.length >= 50 ? currentWithWeekly : currentAll;
     gwPoolAlltime = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && !p._active);
 
+    // Era pools — filter by best season year range (include both active and retired)
+    gwPool2000s = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && p.bestSznYear >= 2000 && p.bestSznYear <= 2009);
+    gwPool2010s = allPool.filter(p => p.bestSzn !== null && p._hasWeekly && p.bestSznYear >= 2010 && p.bestSznYear <= 2019);
+
     // Build college pool from COLLEGE_STATS + COLLEGE_WEEKLY
     if (typeof COLLEGE_STATS !== 'undefined') {
       const _gwGetPos = (name) => {
@@ -7410,12 +7434,13 @@ document.addEventListener('click', function(e) {
   const GW_MAX_GUESSES_CURRENT = 6;
   const GW_MAX_GUESSES_ALLTIME = 8;
   const GW_MAX_GUESSES_COLLEGE = 8;
-  function gwMaxGuesses() { return gwMode === 'college' ? GW_MAX_GUESSES_COLLEGE : gwMode === 'alltime' ? GW_MAX_GUESSES_ALLTIME : GW_MAX_GUESSES_CURRENT; }
+  function gwMaxGuesses() { return gwMode === 'current' ? GW_MAX_GUESSES_CURRENT : gwMode === 'college' ? GW_MAX_GUESSES_COLLEGE : GW_MAX_GUESSES_ALLTIME; }
+  function _gwIsEraMode() { return gwMode === 'alltime' || gwMode === '2000s' || gwMode === '2010s'; }
   let gwTarget = null;
   let gwGuesses = [];
   let gwGameOver = false;
 
-  function gwStatsKey(suffix) { return gwMode === 'college' ? 'gw_col_' + suffix : gwMode === 'alltime' ? 'gw_at_' + suffix : 'gw_' + suffix; }
+  function gwStatsKey(suffix) { return gwMode === 'college' ? 'gw_col_' + suffix : gwMode === '2000s' ? 'gw_00s_' + suffix : gwMode === '2010s' ? 'gw_10s_' + suffix : gwMode === 'alltime' ? 'gw_at_' + suffix : 'gw_' + suffix; }
   function getGwWins() { return parseInt(localStorage.getItem(gwStatsKey('wins')) || '0'); }
   function getGwGames() { return parseInt(localStorage.getItem(gwStatsKey('games')) || '0'); }
 
@@ -7526,8 +7551,8 @@ document.addEventListener('click', function(e) {
     // Position
     result.cells.push({ label: g.pos, match: g.pos === t.pos ? 'correct' : 'wrong' });
 
-    // Year of best season (all-time mode only)
-    if (gwMode === 'alltime') {
+    // Year of best season (all-time and era modes)
+    if (_gwIsEraMode()) {
       if (g.bestSznYear != null && t.bestSznYear != null) {
         const diff = Math.abs(g.bestSznYear - t.bestSznYear);
         if (diff === 0) {
@@ -7591,7 +7616,7 @@ document.addEventListener('click', function(e) {
     gwGuessRows.appendChild(nameDiv);
 
     const row = document.createElement('div');
-    row.className = 'gw-cat-row' + (gwMode === 'alltime' || gwMode === 'college' ? ' gw-6col' : '');
+    row.className = 'gw-cat-row' + (_gwIsEraMode() || gwMode === 'college' ? ' gw-6col' : '');
     result.cells.forEach(c => {
       const cell = document.createElement('div');
       cell.className = 'gw-cat-cell ' + c.match;
@@ -7696,7 +7721,7 @@ document.addEventListener('click', function(e) {
     gwGiveUpBtn.style.display = 'none';
     gwRenderStats();
     // Show share popup
-    const modeLabel = gwMode === 'alltime' ? 'All-Time' : 'Current';
+    const modeLabel = gwMode === 'alltime' ? 'All-Time' : gwMode === '2000s' ? '2000s' : gwMode === '2010s' ? '2010s' : gwMode === 'college' ? 'College' : 'Current';
     const shareTitle = 'ELITE PULL — ' + modeLabel;
     const shareSub = won ? ('Guessed in ' + gwGuesses.length + '/' + gwMaxGuesses()) : ('X/' + gwMaxGuesses());
     const challengeLink = gwChallengeUrl(gwTarget, gwMode);
@@ -7741,7 +7766,7 @@ document.addEventListener('click', function(e) {
     if (gwMode === 'college') {
       hdr.classList.add('gw-6col');
       hdr.innerHTML = '<div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">CONF</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div>';
-    } else if (gwMode === 'alltime') {
+    } else if (_gwIsEraMode()) {
       hdr.classList.add('gw-6col');
       hdr.innerHTML = '<div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div>';
     } else {
@@ -7815,11 +7840,15 @@ document.addEventListener('click', function(e) {
   // Mode toggle
   const gwModeCurrent = document.getElementById('gwModeCurrent');
   const gwModeAlltime = document.getElementById('gwModeAlltime');
+  const gwMode2000sBtn = document.getElementById('gwMode2000s');
+  const gwMode2010sBtn = document.getElementById('gwMode2010s');
   const gwModeCollege = document.getElementById('gwModeCollege');
   function _gwSetMode(mode) {
     if (gwMode === mode) return;
     gwMode = mode;
     gwModeCurrent.classList.toggle('active', mode === 'current');
+    gwMode2000sBtn.classList.toggle('active', mode === '2000s');
+    gwMode2010sBtn.classList.toggle('active', mode === '2010s');
     gwModeAlltime.classList.toggle('active', mode === 'alltime');
     gwModeCollege.classList.toggle('active', mode === 'college');
     if (gwPlayMode === 'custom') {
@@ -7830,6 +7859,8 @@ document.addEventListener('click', function(e) {
     } else { gwStartRound(); }
   }
   gwModeCurrent.addEventListener('click', () => _gwSetMode('current'));
+  gwMode2000sBtn.addEventListener('click', () => _gwSetMode('2000s'));
+  gwMode2010sBtn.addEventListener('click', () => _gwSetMode('2010s'));
   gwModeAlltime.addEventListener('click', () => _gwSetMode('alltime'));
   gwModeCollege.addEventListener('click', () => _gwSetMode('college'));
 
@@ -7876,6 +7907,25 @@ document.addEventListener('click', function(e) {
     gwGiveUpBtn.style.display = 'none';
     gwInput.disabled = true;
     gwGuessBtn.disabled = true;
+  });
+
+  // === Min Season filter toggle ===
+  const gwMinBtns = document.querySelectorAll('[data-gwmin]');
+  gwMinBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = parseInt(btn.dataset.gwmin);
+      if (gwMinSzn === val) return;
+      gwMinSzn = val;
+      gwMinBtns.forEach(b => b.classList.toggle('active', b === btn));
+      // Check pool has enough players — if not, warn and revert
+      const pool = getGwPool();
+      if (!pool || pool.length < 5) {
+        gwMinSzn = 0;
+        gwMinBtns.forEach(b => b.classList.toggle('active', b.dataset.gwmin === '0'));
+        return;
+      }
+      if (gwPlayMode === 'random') gwStartRound();
+    });
   });
 
   // Custom mode: player search autocomplete
@@ -7956,19 +8006,17 @@ document.addEventListener('click', function(e) {
       const decoded = decodeURIComponent(epParam);
       const json = JSON.parse(decodeURIComponent(escape(atob(decoded))));
       if (json && json.n) {
-        // Set mode
-        if (json.m === 'alltime' && gwMode !== 'alltime') {
-          gwMode = 'alltime';
-          const atBtn = document.getElementById('gwModeAlltime');
-          const cBtn = document.getElementById('gwModeCurrent');
-          if (atBtn) atBtn.classList.add('active');
-          if (cBtn) cBtn.classList.remove('active');
-        } else if (json.m === 'current' && gwMode !== 'current') {
-          gwMode = 'current';
-          const cBtn = document.getElementById('gwModeCurrent');
-          const atBtn = document.getElementById('gwModeAlltime');
-          if (cBtn) cBtn.classList.add('active');
-          if (atBtn) atBtn.classList.remove('active');
+        // Set mode from challenge link
+        const validModes = ['current', 'alltime', '2000s', '2010s', 'college'];
+        if (json.m && validModes.includes(json.m) && gwMode !== json.m) {
+          gwMode = json.m;
+          // Update all toggle buttons
+          [gwModeCurrent, gwMode2000sBtn, gwMode2010sBtn, gwModeAlltime, gwModeCollege].forEach(btn => {
+            if (btn) btn.classList.remove('active');
+          });
+          const modeToBtn = { current: gwModeCurrent, '2000s': gwMode2000sBtn, '2010s': gwMode2010sBtn, alltime: gwModeAlltime, college: gwModeCollege };
+          const activeBtn = modeToBtn[json.m];
+          if (activeBtn) activeBtn.classList.add('active');
         }
         initGwPool();
         const pool = getGwPool();

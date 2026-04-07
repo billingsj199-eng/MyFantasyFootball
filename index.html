@@ -5215,31 +5215,67 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     scored.forEach(function(p) { if (byPos[p.pos]) byPos[p.pos].push(p); });
     for (var pos in byPos) byPos[pos].sort(function(a,b) { return b.fpts_season - a.fpts_season; });
 
-    // Effective starters (flex adds fractional demand)
-    var flex = roster.FLEX || 0;
-    var sflex = roster.SFLEX || 0;
-    var effStarters = {
-      QB: roster.QB + sflex,
-      RB: roster.RB + flex * 0.50,
-      WR: roster.WR + flex * 0.35,
-      TE: roster.TE + flex * 0.15
-    };
-
-    // Replacement level
+    // Replacement level — position-accurate approach
+    // QBs: only compete for QB slot, not flex. Use pure QB starters × teams.
+    // RBs/WRs: compete for position slots AND flex. Flex is RB/WR only.
+    // TEs: only compete for TE slot. TEs never realistically go in flex
+    //       over a WR30/RB30, so no flex inflation.
     var replacement = {};
-    for (var pos in effStarters) {
-      var replIdx = Math.ceil(effStarters[pos] * teams);
-      var list = byPos[pos] || [];
-      replacement[pos] = replIdx < list.length ? list[replIdx].fpts_season : (list.length ? list[list.length-1].fpts_season : 0);
+    
+    // QB: pure starter count (1QB or 2QB), no flex
+    var qbRepl = Math.ceil(roster.QB * teams);
+    replacement['QB'] = (byPos.QB.length > qbRepl) ? byPos.QB[qbRepl].fpts_season : 0;
+    
+    // RB/WR: share the flex pool between them
+    var rbStarters = Math.ceil((roster.RB + flex * 0.55) * teams);  // RBs get 55% of flex
+    var wrStarters = Math.ceil((roster.WR + flex * 0.45) * teams);  // WRs get 45% of flex
+    replacement['RB'] = (byPos.RB.length > rbStarters) ? byPos.RB[rbStarters].fpts_season : 0;
+    replacement['WR'] = (byPos.WR.length > wrStarters) ? byPos.WR[wrStarters].fpts_season : 0;
+    
+    // TE: pure starter count, no flex inflation
+    var teRepl = Math.ceil(roster.TE * teams);
+    replacement['TE'] = (byPos.TE.length > teRepl) ? byPos.TE[teRepl].fpts_season : 0;
+    
+    // Superflex: if sflex > 0, QBs get additional demand
+    if (sflex > 0) {
+      qbRepl = Math.ceil((roster.QB + sflex) * teams);
+      replacement['QB'] = (byPos.QB.length > qbRepl) ? byPos.QB[qbRepl].fpts_season : 0;
     }
 
-    // Compute VOR
+    // Compute VOR with PPG weighting
+    // Raw VOR = season_total - replacement_level
+    // But we want to value PPG more than total points because:
+    // 1. High PPG + moderate GP is better in best-ball/playoffs than moderate PPG + high GP
+    // 2. Availability matters but a guy playing 16 games of 8 PPG shouldn't rank above
+    //    a guy playing 14 games of 12 PPG
+    // Approach: VOR = (ppg_component × 0.6) + (season_total_component × 0.4)
+    
+    // First compute replacement PPG for each position
+    var replacementPPG = {};
+    var replIdxMap = {QB: qbRepl, RB: rbStarters, WR: wrStarters, TE: teRepl};
+    for (var pos in replIdxMap) {
+      var ri = replIdxMap[pos];
+      var list = byPos[pos] || [];
+      replacementPPG[pos] = (list.length > ri) ? list[ri].fpts_pg : 0;
+    }
+    
     scored.forEach(function(p) {
-      p.vor = p.fpts_season - (replacement[p.pos] || 0);
-      // TE VOR discount: elite TEs produce outsized VOR because the 
-      // position is top-heavy. Apply 0.75x multiplier to compress TE VOR
-      // to match real-world draft capital allocation.
-      if (p.pos === 'TE') p.vor *= 0.75;
+      var sznVor = p.fpts_season - (replacement[p.pos] || 0);
+      var ppgVor = (p.fpts_pg - (replacementPPG[p.pos] || 0)) * 16; // normalize to 16-game scale
+      
+      // Blend: 55% PPG-based, 45% season-total-based
+      p.vor = sznVor * 0.45 + ppgVor * 0.55;
+      
+      // QB discount in 1QB: QBs are highly replaceable via streaming
+      // In 1QB, the difference between QB1 and QB12 matters less than RB1 vs RB30
+      if (p.pos === 'QB' && roster.QB === 1 && sflex === 0) {
+        p.vor *= 0.55; // 45% discount for 1QB replaceability
+      }
+      
+      // TE compression: still needed because TE1-2 produce outsized PPG VOR
+      if (p.pos === 'TE') {
+        p.vor *= 0.80;
+      }
     });
 
     // Sort by VOR descending

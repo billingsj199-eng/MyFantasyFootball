@@ -4987,7 +4987,72 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
   });
 
   var _jsMatched = Object.keys(_jsPlayerProj).length;
-  console.log('[JS Model] Matched ' + _jsMatched + '/' + D.length + ' players to projections');
+
+  // --- Generate rookie projections for unmatched players using JM + draft capital ---
+  (function() {
+    if (typeof _JS_ROOKIE_TEMPLATES === 'undefined') return;
+    var _pmData = (typeof window._pmBuiltData === 'function') ? window._pmBuiltData() : [];
+    var _pmMap = {};
+    _pmData.forEach(function(p) { _pmMap[p.name] = p; });
+
+    var rookieCount = 0;
+    D.forEach(function(d, idx) {
+      if (_jsPlayerProj[idx]) return; // already has PFF projection
+      if (d.s === 'K' || d.s === 'DST') return;
+      var pos = d.s;
+      if (pos !== 'QB' && pos !== 'RB' && pos !== 'WR' && pos !== 'TE') return;
+      
+      // Get draft capital from COMBINE_DATA or D array
+      var dr = d.dr; // draft round from D array
+      var cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
+      if (!dr && cb && cb.draft) dr = Math.ceil(cb.draft / 32); // pick → round
+      if (!dr && cb && cb.draft) dr = cb.draft <= 32 ? 1 : cb.draft <= 64 ? 2 : cb.draft <= 100 ? 3 : 4;
+      
+      // Estimate draft round from ADP if no draft data (pre-draft prospects)
+      if (!dr && d.a) {
+        if (d.a < 40) dr = 1;
+        else if (d.a < 80) dr = 2;
+        else if (d.a < 150) dr = 3;
+        else dr = 4;
+      }
+      if (!dr) dr = 4; // default to late round
+
+      var rdKey = String(Math.min(dr, 4));
+      var tmpl = (_JS_ROOKIE_TEMPLATES[pos] || {})[rdKey];
+      if (!tmpl) return;
+
+      // Get JM score for quality scaling
+      var jmScore = null;
+      var pm = _pmMap[d.n];
+      if (pm && pm.jm != null) jmScore = pm.jm;
+
+      // Scale template by JM score: JM 90+ = 1.25x, JM 75 = 1.0x, JM 60 = 0.85x, JM 45 = 0.7x
+      var scale = 1.0;
+      if (jmScore != null) {
+        scale = 0.55 + (jmScore / 100) * 0.9; // maps 0→0.55, 50→1.0, 75→1.225, 90→1.36, 100→1.45
+        scale = Math.max(0.5, Math.min(1.5, scale));
+      }
+
+      _jsPlayerProj[idx] = {
+        gp: tmpl[9],
+        pass_yds: Math.round(tmpl[0] * scale * 10) / 10,
+        pass_td: Math.round(tmpl[1] * scale * 100) / 100,
+        ints: Math.round(tmpl[2] * 100) / 100, // don't scale INTs up for good prospects
+        rush_yds: Math.round(tmpl[3] * scale * 10) / 10,
+        rush_td: Math.round(tmpl[4] * scale * 100) / 100,
+        rec: Math.round(tmpl[5] * scale * 10) / 10,
+        rec_yds: Math.round(tmpl[6] * scale * 10) / 10,
+        rec_td: Math.round(tmpl[7] * scale * 100) / 100,
+        fumbles: Math.round(tmpl[8] * 100) / 100,
+        _isRookie: true,
+        _jmScore: jmScore
+      };
+      rookieCount++;
+    });
+    console.log('[JS Model] Generated ' + rookieCount + ' rookie projections from JM + draft capital');
+  })();
+
+  console.log('[JS Model] Total projections: ' + Object.keys(_jsPlayerProj).length + '/' + D.length + ' players');
 
   // --- Scoring presets ---
   var _jsScoringPresets = {
@@ -5037,15 +5102,71 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     // Score all players
     var scored = []; // [{idx, pos, fpts_pg, fpts_season}]
     var _ageCurves = typeof _JS_AGE_CURVES !== 'undefined' ? _JS_AGE_CURVES : null;
+
+    // Empirical JM/talent blend weights by position and experience
+    // talent_wt = how much JM score influences the projection (remainder = NFL production)
+    // From backtest: early-career PFF grade (proxy for JM) vs prior year production
+    var _jmBlendWeights = {
+      QB:  {0:0.90, 1:0.65, 2:0.30, 3:0.30, 4:0.15, 5:0.15, 6:0.10},
+      WR:  {0:0.90, 1:0.75, 2:0.45, 3:0.25, 4:0.20, 5:0.15, 6:0.00},
+      TE:  {0:0.90, 1:0.70, 2:0.30, 3:0.15, 4:0.30, 5:0.20, 6:0.15},
+      RB:  {0:0.90, 1:0.30, 2:0.00, 3:0.10, 4:0.10, 5:0.05, 6:0.00}
+    };
+
+    // Get JM scores from prospect model (if available)
+    var _pmData = (typeof window._pmBuiltData === 'function') ? window._pmBuiltData() : [];
+    var _pmMap = {};
+    _pmData.forEach(function(p) { _pmMap[p.name] = p; });
+
+    // Compute positional average fpts for JM scaling baseline
+    var _posAvgFpts = {QB:0, WR:0, TE:0, RB:0};
+    var _posAvgN = {QB:0, WR:0, TE:0, RB:0};
+
+    D.forEach(function(d, idx) {
+      var proj = _jsPlayerProj[idx];
+      if (!proj) return;
+      var pos = d.s;
+      if (!_posAvgFpts[pos] && _posAvgFpts[pos] !== 0) return;
+      var f = _jsScore(proj, scoring);
+      if (f > 2) { _posAvgFpts[pos] += f; _posAvgN[pos]++; }
+    });
+    for (var p in _posAvgFpts) {
+      _posAvgFpts[p] = _posAvgN[p] > 0 ? _posAvgFpts[p] / _posAvgN[p] : 8;
+    }
+
     D.forEach(function(d, idx) {
       var proj = _jsPlayerProj[idx];
       if (!proj) return;
       var pos = d.s;
       if (pos !== 'QB' && pos !== 'RB' && pos !== 'WR' && pos !== 'TE') return;
       var fpts_pg = _jsScore(proj, scoring);
+
+      // JM talent blending for young players
+      var exp = d.exp != null ? d.exp : 99;
+      var blendWeights = _jmBlendWeights[pos];
+      var talentWt = blendWeights ? (blendWeights[Math.min(exp, 6)] || 0) : 0;
+
+      if (talentWt > 0) {
+        var pm = _pmMap[d.n];
+        var jmScore = pm ? pm.jm : null;
+        if (jmScore != null) {
+          // Convert JM score to expected fpts/gm
+          // JM 90 → ~top-5 at position → ~1.8x positional average
+          // JM 75 → strong starter → ~1.3x average
+          // JM 60 → starter → ~1.0x average
+          // JM 45 → depth → ~0.7x average
+          // JM 30 → long shot → ~0.4x average
+          var jmMult = 0.4 + (jmScore / 100) * 1.4; // maps 0→0.4, 50→1.1, 75→1.45, 90→1.66
+          var jmExpected = _posAvgFpts[pos] * jmMult;
+
+          // Blend: talentWt * jmExpected + (1-talentWt) * nflProjection
+          fpts_pg = talentWt * jmExpected + (1 - talentWt) * fpts_pg;
+        }
+      }
+
       // Age curve adjustment: multiply by retention factor for player's age next season
       if (_ageCurves && _ageCurves[pos] && d.age != null) {
-        var nextAge = d.age + 1; // projecting for next season
+        var nextAge = d.age + 1;
         var ageMult = _ageCurves[pos][String(nextAge)];
         if (ageMult != null) fpts_pg *= ageMult;
       }

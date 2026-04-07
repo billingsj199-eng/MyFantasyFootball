@@ -5026,11 +5026,12 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
       var pm = _pmMap[d.n];
       if (pm && pm.jm != null) jmScore = pm.jm;
 
-      // Scale template by JM score: JM 90+ = 1.25x, JM 75 = 1.0x, JM 60 = 0.85x, JM 45 = 0.7x
+      // Scale template by JM score: calibrated to actual historical rookie production
+      // JM 90 → 1.24x, JM 75 → 1.15x, JM 65 → 1.09x (baseline), JM 50 → 1.0x, JM 35 → 0.91x
       var scale = 1.0;
       if (jmScore != null) {
-        scale = 0.55 + (jmScore / 100) * 0.9; // maps 0→0.55, 50→1.0, 75→1.225, 90→1.36, 100→1.45
-        scale = Math.max(0.5, Math.min(1.5, scale));
+        scale = 0.7 + (jmScore / 100) * 0.6; // maps 50→1.0, 65→1.09, 80→1.18, 90→1.24
+        scale = Math.max(0.6, Math.min(1.35, scale));
       }
 
       _jsPlayerProj[idx] = {
@@ -5150,13 +5151,9 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
         var pm = _pmMap[d.n];
         var jmScore = pm ? pm.jm : null;
         if (jmScore != null) {
-          // Convert JM score to expected fpts/gm
-          // JM 90 → ~top-5 at position → ~1.8x positional average
-          // JM 75 → strong starter → ~1.3x average
-          // JM 60 → starter → ~1.0x average
-          // JM 45 → depth → ~0.7x average
-          // JM 30 → long shot → ~0.4x average
-          var jmMult = 0.4 + (jmScore / 100) * 1.4; // maps 0→0.4, 50→1.1, 75→1.45, 90→1.66
+          // Convert JM score to expected fpts/gm for this season
+          // Calibrated: JM 90 → ~1.24x positional average, JM 50 → ~1.0x, JM 30 → ~0.88x
+          var jmMult = 0.7 + (jmScore / 100) * 0.6;
           var jmExpected = _posAvgFpts[pos] * jmMult;
 
           // Blend: talentWt * jmExpected + (1-talentWt) * nflProjection

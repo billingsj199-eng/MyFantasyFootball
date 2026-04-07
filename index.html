@@ -19278,6 +19278,7 @@ window.fmtHeight = fmtHeight;
 
     let rows = '';
     const _pmIsPremium = typeof hasPremium === 'function' && hasPremium();
+    const _pmIsAdmin = typeof window.isAdmin === 'function' && window.isAdmin();
     const _pmIsSignedIn = !!window._authCurrentUser;
     const _pmBlurCutoff = 10;
     const _pmShouldBlur = !_pmIsPremium;
@@ -19387,7 +19388,7 @@ window.fmtHeight = fmtHeight;
             }
             break;
           case 'ht':
-            if (_pmIsPremium && p.draftYr === 2026) {
+            if (_pmIsAdmin) {
               const htStr = p.ht ? Math.floor(p.ht/12) + "'" + (p.ht%12) + '"' : '—';
               rows += `<td style="white-space:nowrap;cursor:pointer" class="pm-bio-edit" data-bioname="${p.name}" data-biofield="ht" title="Click to edit">${htStr}</td>`;
             } else {
@@ -19395,7 +19396,7 @@ window.fmtHeight = fmtHeight;
             }
             break;
           case 'wt':
-            if (_pmIsPremium && p.draftYr === 2026) {
+            if (_pmIsAdmin) {
               rows += `<td style="cursor:pointer" class="pm-bio-edit" data-bioname="${p.name}" data-biofield="wt" title="Click to edit">${p.wt ? p.wt : '—'}</td>`;
             } else {
               rows += `<td>${p.wt ? p.wt : '—'}</td>`;

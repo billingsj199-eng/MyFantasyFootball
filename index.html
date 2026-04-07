@@ -106,7 +106,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .ep-sug-item .ep-sug-team{color:var(--text2);font-size:.72rem}
 .ep-guess-wrap{position:relative}
 
-/* Guess Who game */
+/* Guess Who game — HIDDEN */
+#gamesElitepull{display:none !important}
+#lbDailyGuesswhoList,#lbDailyGuesswhoLoading,#lbDailyGuesswhoEmpty{display:none !important}
+#lbAlltimeList,#lbAlltimeLoading,#lbAlltimeEmpty{display:none !important}
 .gw-section{width:100%}
 .gw-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3)}
 .gw-header{padding:1.25rem 1.5rem .75rem;text-align:center;border-bottom:1px solid var(--border)}
@@ -1999,8 +2002,8 @@ PREMIUM ACTIVE
 </div>
 
 
-<!-- GUESS WHO Daily Game -->
-<div class="elite-pull-section" style="max-width:480px;margin-top:12px">
+<!-- GUESS WHO Daily Game — HIDDEN -->
+<div class="elite-pull-section" style="max-width:480px;margin-top:12px;display:none">
 <div class="elite-pull-card">
 <div class="elite-pull-header">
 <div class="elite-pull-title">GUESS WHO</div>
@@ -2066,12 +2069,14 @@ PREMIUM ACTIVE
 <div class="lb-list" id="lbCollegeWeekList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbCollegeWeekLoading">Loading...</div>
 <div class="lb-empty" id="lbCollegeWeekEmpty" style="display:none">No scores yet</div>
+<div style="display:none">
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">GUESS WHO Unlimited</div>
-<div class="lb-list" id="lbAlltimeList" style="margin-bottom:4px"></div>
+<div class="lb-section-title">GUESS WHO Unlimited</div>
+<div class="lb-list" id="lbAlltimeList"></div>
 <div class="lb-loading" id="lbAlltimeLoading">Loading...</div>
 <div class="lb-empty" id="lbAlltimeEmpty" style="display:none">No data yet</div>
+</div>
 
 </div><!-- end lbPanelGames -->
 
@@ -2126,10 +2131,14 @@ PREMIUM ACTIVE
 <div class="lb-empty" id="lbDailyEpCollegeEmpty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
+<div style="display:none">
+
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Guess Who</div>
 <div class="lb-list" id="lbDailyGuesswhoList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbDailyGuesswhoLoading">Loading...</div>
 <div class="lb-empty" id="lbDailyGuesswhoEmpty" style="display:none">No data yet</div>
+
+</div>
 
 </div><!-- end lbPanelDaily -->
 
@@ -2333,7 +2342,6 @@ CLEAR
 <div class="games-tabs">
 <button class="games-tab active" data-games-tab="guesswho">ELITE PULL</button>
 <button class="games-tab" data-games-tab="fantasygame">Fantasy Game</button>
-<button class="games-tab" data-games-tab="elitepull">GUESS WHO</button>
 </div>
 
 <!-- Fantasy Game Sub-page -->

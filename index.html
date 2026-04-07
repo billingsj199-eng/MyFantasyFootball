@@ -2515,7 +2515,7 @@ CLEAR
 <div class="pm-wrapper">
 <div class="pm-header">
 <div class="pm-title">Prospect Model</div>
-<div class="pm-subtitle">JM Score (0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS, draft capital, size &amp; teammate quality <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text2);font-size:.65rem;text-align:center;line-height:16px;cursor:help;vertical-align:middle;margin-left:4px" title="HIT RATE METHODOLOGY&#10;&#10;Hit = top fantasy season within first 3 NFL years&#10;&#10;Thresholds (half-PPR):&#10;• QB: 200+ fpts (≈ top-12 finish)&#10;• RB: 170+ fpts (≈ top-24 finish)&#10;• WR: 170+ fpts (≈ top-24 finish)&#10;• TE: 120+ fpts (≈ top-12 finish)&#10;&#10;Tiers: 92+ Gen, 86+ Blue Chip, 73+ Elite, 60+ Starter, 50+ Contributor, 42+ Depth, 35+ Lottery Ticket&#10;&#10;Sample: 2017-2024 draft classes&#10;&#10;Tier hit rates are shown as percentages next to each tier badge. Hover a badge for exact counts.">?</span></div>
+<div class="pm-subtitle">JM Score (0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS, draft capital, size &amp; teammate quality <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text2);font-size:.65rem;text-align:center;line-height:16px;cursor:help;vertical-align:middle;margin-left:4px" title="HIT RATE METHODOLOGY&#10;&#10;Hit = top fantasy season within first 3 NFL years&#10;&#10;Thresholds (half-PPR):&#10;• QB: 200+ fpts (≈ top-12 finish)&#10;• RB: 170+ fpts (≈ top-24 finish)&#10;• WR: 170+ fpts (≈ top-24 finish)&#10;• TE: 120+ fpts (≈ top-12 finish)&#10;&#10;Tiers: 92+ Gen, 86+ Blue Chip, 72+ Elite, 60+ Starter, 50+ Contributor, 42+ Depth, 35+ Lottery Ticket&#10;&#10;Sample: 2017-2024 draft classes&#10;&#10;Tier hit rates are shown as percentages next to each tier badge. Hover a badge for exact counts.">?</span></div>
 </div>
 <div class="pm-controls">
 <div class="pm-pos-tabs" id="pmPosTabs">
@@ -6529,7 +6529,7 @@ function openPlayerCard(d) {
         if (!_pmD2 || _pmD2.jm == null) return '';
         const _jmV = _pmD2.jm;
         const _jmCls = window._jmClass ? window._jmClass(_jmV) : 'pm-jm-avg';
-        const _tierName = _jmV >= 92 ? 'Generational' : _jmV >= 86 ? 'Blue Chip' : _jmV >= 73 ? 'Elite' : _jmV >= 60 ? 'Starter' : _jmV >= 50 ? 'Contributor' : _jmV >= 42 ? 'Depth' : _jmV >= 35 ? 'Lottery Ticket' : 'Long Shot';
+        const _tierName = _jmV >= 92 ? 'Generational' : _jmV >= 86 ? 'Blue Chip' : _jmV >= 72 ? 'Elite' : _jmV >= 60 ? 'Starter' : _jmV >= 50 ? 'Contributor' : _jmV >= 42 ? 'Depth' : _jmV >= 35 ? 'Lottery Ticket' : 'Long Shot';
         const _compLabels = {dc:'Draft Cap',prod:'Production',age:'Draft Age',breakout:'Breakout',ras:'RAS',conf:'Conference',size:'Size',pff:'Film Grade',qbRush:'QB Rush',qbAccuracy:'Accuracy',qbIntRate:'INT Rate',bigTime:'Big Time',turnoverRate:'TO Rate',rbRec:'RB Receiv.',dominator:'Dominator',mktShare:'Mkt Share',yaco:'YACo',forcedMissed:'Forced Miss',elusive:'Elusive',breakaway:'Breakaway',yprr:'YPRR',dropRate:'Drop Rate',contested:'Contested',yac:'YAC',routeGrade:'Route Grade',qbCtx:'QB Context',eff:'Efficiency',teRec:'TE Receiv.',improve:'Improve',earlyDec:'Early Dec',tm:'Teammate'};
         const _compColor = (v) => v == null ? 'color:var(--text2)' : v >= 80 ? 'color:#34d399' : v >= 60 ? 'color:#60a5fa' : v >= 40 ? 'color:#fb923c' : 'color:#f87171';
         // Get weights for this position to filter relevant components
@@ -17443,7 +17443,7 @@ window.fmtHeight = fmtHeight;
       }
     }
 
-    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + htPenalty + tmBonus + dcRasBonus + bustAdj + sleeperAdj) * 10) / 10));
+    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
     // Low confidence if less than 50% of weight has data, or fewer than 5 of 22 components
     // For devy players, lower the threshold since DC/RAS/earlyDec are expected to be missing
     const _minDataCount = p.isDevy ? 3 : 5;
@@ -17451,8 +17451,8 @@ window.fmtHeight = fmtHeight;
     const lowConfidence = dataCoverage < _minCoverage || dataCount < _minDataCount;
 
     // Expose raw floor/ceiling (with adjustments) for blend ratio analysis
-    const floorFinal = Math.max(0, Math.min(100, Math.round((floorRaw + gpAdj + htPenalty + tmBonus + dcRasBonus + bustAdj + sleeperAdj) * 10) / 10));
-    const ceilFinal = Math.max(0, Math.min(100, Math.round((ceilRaw + gpAdj + htPenalty + tmBonus + dcRasBonus + bustAdj + sleeperAdj) * 10) / 10));
+    const floorFinal = Math.max(0, Math.min(100, Math.round((floorRaw + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
+    const ceilFinal = Math.max(0, Math.min(100, Math.round((ceilRaw + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
     // Expose component scores for correlation analysis
     const _compScores = {};
     scores.forEach(s => { _compScores[s.key] = s.score; });
@@ -17466,7 +17466,7 @@ window.fmtHeight = fmtHeight;
     if (v == null) return 'pm-jm-avg';
     if (v >= 92) return 'pm-jm-gen';
     if (v >= 86) return 'pm-jm-bc';
-    if (v >= 73) return 'pm-jm-elite';
+    if (v >= 72) return 'pm-jm-elite';
     if (v >= 60) return 'pm-jm-starter';
     if (v >= 50) return 'pm-jm-contr';
     if (v >= 42) return 'pm-jm-depth';
@@ -18631,7 +18631,7 @@ window.fmtHeight = fmtHeight;
     const _tierDefs = [
       { min: 92, label: 'Generational' },
       { min: 86, label: 'Blue Chip' },
-      { min: 73, label: 'Elite' },
+      { min: 72, label: 'Elite' },
       { min: 60, label: 'Starter' },
       { min: 50, label: 'Contributor' },
       { min: 42, label: 'Depth' },
@@ -18929,8 +18929,8 @@ window.fmtHeight = fmtHeight;
         const rawGrade = totalWeight > 0 ? weightedSum / totalWeight : 0;
 
         const gradedPlayers = posPlayers.slice(0, gradeCount);
-        const elite = gradedPlayers.filter(p => p.jm >= 73).length;
-        const good = gradedPlayers.filter(p => p.jm >= 50 && p.jm < 73).length;
+        const elite = gradedPlayers.filter(p => p.jm >= 72).length;
+        const good = gradedPlayers.filter(p => p.jm >= 50 && p.jm < 72).length;
 
         posGrades[pos] = {
           rawGrade,
@@ -19317,7 +19317,7 @@ window.fmtHeight = fmtHeight;
             if (p.jm != null && !p.lowConfidence) {
               if (p.jm >= 92)      { tierLabel = 'Generational'; tierColor = '#fbbf24'; }
               else if (p.jm >= 86) { tierLabel = 'Blue Chip';    tierColor = '#60a5fa'; }
-              else if (p.jm >= 73) { tierLabel = 'Elite';        tierColor = '#34d399'; }
+              else if (p.jm >= 72) { tierLabel = 'Elite';        tierColor = '#34d399'; }
               else if (p.jm >= 60) { tierLabel = 'Starter';      tierColor = '#a78bfa'; }
               else if (p.jm >= 50) { tierLabel = 'Contributor';  tierColor = '#fb923c'; }
               else if (p.jm >= 42) { tierLabel = 'Depth';        tierColor = '#94a3b8'; }

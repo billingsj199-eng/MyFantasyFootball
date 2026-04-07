@@ -5197,6 +5197,10 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     // Compute VOR
     scored.forEach(function(p) {
       p.vor = p.fpts_season - (replacement[p.pos] || 0);
+      // TE VOR discount: elite TEs produce outsized VOR because the 
+      // position is top-heavy. Apply 0.75x multiplier to compress TE VOR
+      // to match real-world draft capital allocation.
+      if (p.pos === 'TE') p.vor *= 0.75;
     });
 
     // Sort by VOR descending

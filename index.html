@@ -5161,6 +5161,45 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
         }
       }
 
+      // Late-season trajectory: use weekly game logs to detect players
+      // trending up or down at the end of the season
+      if (typeof WEEKLY_STATS !== 'undefined') {
+        var ws = WEEKLY_STATS[d.n];
+        if (ws && ws.seasons) {
+          // Get most recent season
+          var recentSeason = Object.keys(ws.seasons).sort(function(a,b){return +b - +a;})[0];
+          var weeks = ws.seasons[recentSeason];
+          if (weeks && weeks.length >= 8) {
+            // Get last 6 games played (skip bye/injury weeks with 0 fpts)
+            var played = weeks.filter(function(w) { return w.fpts > 0; });
+            if (played.length >= 8) {
+              var fullAvg = played.reduce(function(s,w){return s+w.fpts;},0) / played.length;
+              var last6 = played.slice(-6);
+              var last6Avg = last6.reduce(function(s,w){return s+w.fpts;},0) / last6.length;
+              
+              if (fullAvg > 2) {
+                var momentum = last6Avg / fullAvg;
+                var trajectoryMult = 1.0;
+                
+                if (momentum > 1.30) trajectoryMult = 1.05;
+                else if (momentum > 1.15) trajectoryMult = 1.03;
+                else if (momentum < 0.70) trajectoryMult = 0.95;
+                else if (momentum < 0.85) trajectoryMult = 0.97;
+                
+                // Young players: late-season improvement is more meaningful
+                // (represents development, not just random variance)
+                var exp = d.exp != null ? d.exp : 99;
+                if (exp <= 2 && trajectoryMult > 1.0) {
+                  trajectoryMult = 1.0 + (trajectoryMult - 1.0) * 1.5; // 50% extra boost
+                }
+                
+                fpts_pg *= trajectoryMult;
+              }
+            }
+          }
+        }
+      }
+
       // Age curve adjustment: multiply by retention factor for player's age next season
       if (_ageCurves && _ageCurves[pos] && d.age != null) {
         var nextAge = d.age + 1;

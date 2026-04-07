@@ -16041,7 +16041,10 @@ window.fmtHeight = fmtHeight;
     // Expose raw floor/ceiling (with adjustments) for blend ratio analysis
     const floorFinal = Math.max(0, Math.min(100, Math.round((floorRaw + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
     const ceilFinal = Math.max(0, Math.min(100, Math.round((ceilRaw + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
-    const result = { jm: final, floorFinal, ceilFinal, bustAdj, sleeperAdj, dataCoverage, dataCount, lowConfidence };
+    // Expose component scores for correlation analysis
+    const _compScores = {};
+    scores.forEach(s => { _compScores[s.key] = s.score; });
+    const result = { jm: final, floorFinal, ceilFinal, bustAdj, sleeperAdj, dataCoverage, dataCount, lowConfidence, compScores: _compScores };
     _jmCache[cacheKey] = result;
     return result;
   }
@@ -17175,6 +17178,7 @@ window.fmtHeight = fmtHeight;
         prospectRecord.jm = _jmResult.jm;
         prospectRecord.jmFloor = _jmResult.floorFinal;
         prospectRecord.jmCeil = _jmResult.ceilFinal;
+        prospectRecord.compScores = _jmResult.compScores;
         prospectRecord.bustAdj = _jmResult.bustAdj;
         prospectRecord.sleeperAdj = _jmResult.sleeperAdj;
         prospectRecord.dataCoverage = _jmResult.dataCoverage;

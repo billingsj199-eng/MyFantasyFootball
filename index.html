@@ -6730,6 +6730,73 @@ function openPlayerCard(d) {
 
         return html;
       })()}
+      ${(function(){
+        // === PROSPECT COMPS ===
+        if (!window._pmBuiltData) return '';
+        var allPm = window._pmBuiltData();
+        var me = allPm.find(function(p){ return p.name === d.n; });
+        if (!me || me.jm == null) return '';
+        
+        var pos = d.s;
+        var myJm = me.jm;
+        var myAge = me.age;
+        var myDr = (typeof me.dr === 'number') ? me.dr : parseInt(me.dr);
+        
+        var candidates = allPm.filter(function(p){
+          if (p.name === d.n) return false;
+          if (p.pos !== pos) return false;
+          if (p.jm == null || p.isDevy || p.isCollege) return false;
+          if (p.draftYr == null || p.draftYr < 2015 || p.draftYr > 2024) return false;
+          return true;
+        });
+        
+        var scored2 = candidates.map(function(p){
+          var dist = 0;
+          dist += Math.abs((p.jm || 0) - myJm) * 3;
+          if (myAge && p.age) dist += Math.abs(p.age - myAge) * 5;
+          var pDr = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+          if (!isNaN(myDr) && !isNaN(pDr)) dist += Math.abs(pDr - myDr) * 0.3;
+          if (me.bestPpg && p.bestPpg) dist += Math.abs(p.bestPpg - me.bestPpg) * 0.5;
+          return { name:p.name, jm:p.jm, age:p.age, dr:p.dr, draftYr:p.draftYr, bestPpg:p.bestPpg, dist:dist };
+        }).sort(function(a,b){ return a.dist - b.dist; }).slice(0, 5);
+        
+        if (!scored2.length) return '';
+        
+        var dMap2 = {};
+        D.forEach(function(dd){ if (dd.n) dMap2[dd.n] = dd; });
+        
+        var html2 = '<div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">';
+        html2 += '<div class="card-section"><div class="card-section-title">Prospect Comps <span style="font-size:.55rem;color:var(--text2);font-weight:400">· Similar Draft Profiles → NFL Outcome</span></div>';
+        html2 += '<div style="font-size:.55rem;color:var(--text2);margin-bottom:6px">Matched on JM score, draft age, draft capital, and college production</div>';
+        html2 += '<table class="career-table"><thead><tr><th style="text-align:left">Prospect</th><th>Class</th><th>JM</th><th>Pick</th><th>PPG</th><th>Best Szn</th></tr></thead><tbody>';
+        
+        var hitCount2 = 0;
+        scored2.forEach(function(p){
+          var dd = dMap2[p.name];
+          var nflBest = '—', nflPpg = '—', nflColor = 'var(--text2)';
+          if (dd && dd.career && dd.career.length) {
+            var early = dd.career.filter(function(s){ return s.yr >= p.draftYr && s.yr < p.draftYr + 3; });
+            if (early.length) {
+              var best = Math.max.apply(null, early.map(function(s){ return s.fpts || 0; }));
+              var bestS = early.find(function(s){ return s.fpts === best; });
+              nflBest = best.toFixed(0);
+              nflPpg = (bestS && bestS.gp > 0) ? (bestS.fpts / bestS.gp).toFixed(1) : '—';
+              var thresh = {QB:200,RB:170,WR:170,TE:120}[pos] || 170;
+              nflColor = best >= thresh ? 'var(--green)' : best >= thresh * 0.7 ? 'var(--accent)' : 'var(--red)';
+              if (best >= thresh) hitCount2++;
+            }
+          }
+          var pDr2 = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+          html2 += '<tr><td style="text-align:left;font-weight:600">'+p.name+'</td><td>'+(p.draftYr||'—')+'</td><td>'+(p.jm!=null?p.jm.toFixed(0):'—')+'</td><td>'+(!isNaN(pDr2)?pDr2:'—')+'</td><td style="font-weight:700;color:'+nflColor+'">'+nflPpg+'</td><td style="color:'+nflColor+'">'+nflBest+'</td></tr>';
+        });
+        
+        html2 += '</tbody></table>';
+        html2 += '<div style="text-align:center;padding:6px;margin-top:4px;border-radius:6px;background:rgba(255,255,255,.03);font-size:.7rem;color:var(--text2)">';
+        html2 += '<span style="font-weight:700;color:'+(hitCount2>=3?'var(--green)':hitCount2>=2?'var(--accent)':'var(--red)')+'">'+hitCount2+'/'+scored2.length+'</span> similar prospects became fantasy-relevant';
+        html2 += '</div></div></div>';
+        
+        return html2;
+      })()}
       </div>
     </div>
   `;

@@ -17298,6 +17298,90 @@ window.fmtHeight = fmtHeight;
     }
   }
 
+  // === BLEND RATIO OPTIMIZER ===
+  // Tests every floor% from 40-75 in 1% steps, rebuilds all JM scores, measures hit rates.
+  // Run from console: window._optimizeBlend()
+  window._optimizeBlend = function() {
+    const _dMapOpt = {};
+    D.forEach(d => { if (d.n) _dMapOpt[d.n] = d; });
+    const hitTh = { QB: 200, RB: 170, WR: 170, TE: 120 };
+    const tierMins = [92, 86, 73, 60, 50, 42, 35, 0];
+    const tierNames = ['Gen', 'BC', 'Eli', 'Str', 'Con', 'Dep', 'Lot', 'LS'];
+    const savedFloor = window._jmFloorPct;
+
+    // Get floor-only scores (100% floor)
+    window._jmFloorPct = 1.0;
+    Object.keys(_jmCache).forEach(k => delete _jmCache[k]);
+    _pmBuildCache = null; _pmBuildCacheKey = null;
+    const floorScores = {};
+    buildProspectData().forEach(p => { if (p.jm != null) floorScores[p.name] = p.jm; });
+
+    // Get ceiling-only scores (0% floor)
+    window._jmFloorPct = 0.0;
+    Object.keys(_jmCache).forEach(k => delete _jmCache[k]);
+    _pmBuildCache = null; _pmBuildCacheKey = null;
+    const ceilScores = {};
+    buildProspectData().forEach(p => { if (p.jm != null) ceilScores[p.name] = p.jm; });
+
+    // Restore and get base data for prospect list
+    window._jmFloorPct = 0.60;
+    Object.keys(_jmCache).forEach(k => delete _jmCache[k]);
+    _pmBuildCache = null; _pmBuildCacheKey = null;
+    const baseData = buildProspectData();
+
+    // Collect testable prospects
+    const prospects = [];
+    baseData.forEach(p => {
+      if (p.jm == null || p.lowConfidence || !p.draftYr) return;
+      if (p.draftYr < 2017 || p.draftYr > 2024 || p.isDevy || p.isCollege) return;
+      const d = _dMapOpt[p.name];
+      if (!d || !d.career || !d.career.length) return;
+      const earlyCar = d.career.filter(s => s.yr >= p.draftYr && s.yr < p.draftYr + 3);
+      if (!earlyCar.length) return;
+      const bestSzn = Math.max(...earlyCar.map(s => s.fpts || 0));
+      const isHit = bestSzn >= (hitTh[p.pos] || 170);
+      if (floorScores[p.name] != null && ceilScores[p.name] != null) {
+        prospects.push({ name: p.name, pos: p.pos, fs: floorScores[p.name], cs: ceilScores[p.name], isHit });
+      }
+    });
+
+    console.log('Testing ' + prospects.length + ' prospects across blend ratios 40-75%...\n');
+
+    let bestPct = 60, bestScore = 0;
+    for (let pct = 40; pct <= 75; pct++) {
+      const fp = pct / 100;
+      const g = [0,0,0,0,0,0,0,0], tt = [0,0,0,0,0,0,0,0];
+      prospects.forEach(pr => {
+        const jm = pr.fs * fp + pr.cs * (1 - fp);
+        let i = 0;
+        while (i < 7 && jm < tierMins[i]) i++;
+        tt[i]++; if (pr.isHit) g[i]++;
+      });
+      const weights = [10, 8, 6, 4, 3, 2, 1, 0.5];
+      let score = 0, mono = true, prev = 101;
+      const rates = [];
+      for (let i = 0; i < 8; i++) {
+        const rate = tt[i] ? Math.round(g[i] / tt[i] * 100) : 0;
+        rates.push(rate);
+        score += rate * weights[i] * (tt[i] >= 3 ? 1 : 0.3);
+        if (rate > prev && tt[i] >= 3) mono = false;
+        if (tt[i] >= 3) prev = rate;
+      }
+      if (mono) score += 50;
+      const line = pct + '%: ' + tierNames.map((n, i) => n + ':' + (tt[i] ? rates[i] + '%(' + g[i] + '/' + tt[i] + ')' : '-')).join(' ') + (mono ? ' MONO' : ' BROKE') + ' score=' + Math.round(score);
+      if (score > bestScore) { bestScore = score; bestPct = pct; }
+      console.log(line);
+    }
+
+    console.log('\n=== OPTIMAL: ' + bestPct + '% floor / ' + (100 - bestPct) + '% ceiling (score=' + Math.round(bestScore) + ') ===');
+
+    // Restore
+    window._jmFloorPct = savedFloor || 0.60;
+    Object.keys(_jmCache).forEach(k => delete _jmCache[k]);
+    _pmBuildCache = null; _pmBuildCacheKey = null;
+    window._pmBuildCache = buildProspectData();
+  };
+
   // Column definitions per position
   function getColumns(pos, isTotals) {
     const cols = [

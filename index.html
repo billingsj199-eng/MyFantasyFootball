@@ -5220,26 +5220,33 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     // RBs/WRs: compete for position slots AND flex. Flex is RB/WR only.
     // TEs: only compete for TE slot. TEs never realistically go in flex
     //       over a WR30/RB30, so no flex inflation.
+    var flex = roster.FLEX || 0;
+    var sflex = roster.SFLEX || 0;
     var replacement = {};
     
     // QB: pure starter count (1QB or 2QB), no flex
-    var qbRepl = Math.ceil(roster.QB * teams);
-    replacement['QB'] = (byPos.QB.length > qbRepl) ? byPos.QB[qbRepl].fpts_season : 0;
+    var qbRepl = Math.min(Math.ceil(roster.QB * teams), byPos.QB.length - 1);
+    if (qbRepl < 0) qbRepl = 0;
+    replacement['QB'] = byPos.QB.length > 0 ? byPos.QB[qbRepl].fpts_season : 0;
     
     // RB/WR: share the flex pool between them
-    var rbStarters = Math.ceil((roster.RB + flex * 0.55) * teams);  // RBs get 55% of flex
-    var wrStarters = Math.ceil((roster.WR + flex * 0.45) * teams);  // WRs get 45% of flex
-    replacement['RB'] = (byPos.RB.length > rbStarters) ? byPos.RB[rbStarters].fpts_season : 0;
-    replacement['WR'] = (byPos.WR.length > wrStarters) ? byPos.WR[wrStarters].fpts_season : 0;
+    var rbStarters = Math.min(Math.ceil((roster.RB + flex * 0.55) * teams), byPos.RB.length - 1);
+    var wrStarters = Math.min(Math.ceil((roster.WR + flex * 0.45) * teams), byPos.WR.length - 1);
+    if (rbStarters < 0) rbStarters = 0;
+    if (wrStarters < 0) wrStarters = 0;
+    replacement['RB'] = byPos.RB.length > 0 ? byPos.RB[rbStarters].fpts_season : 0;
+    replacement['WR'] = byPos.WR.length > 0 ? byPos.WR[wrStarters].fpts_season : 0;
     
     // TE: pure starter count, no flex inflation
-    var teRepl = Math.ceil(roster.TE * teams);
-    replacement['TE'] = (byPos.TE.length > teRepl) ? byPos.TE[teRepl].fpts_season : 0;
+    var teRepl = Math.min(Math.ceil(roster.TE * teams), byPos.TE.length - 1);
+    if (teRepl < 0) teRepl = 0;
+    replacement['TE'] = byPos.TE.length > 0 ? byPos.TE[teRepl].fpts_season : 0;
     
     // Superflex: if sflex > 0, QBs get additional demand
     if (sflex > 0) {
-      qbRepl = Math.ceil((roster.QB + sflex) * teams);
-      replacement['QB'] = (byPos.QB.length > qbRepl) ? byPos.QB[qbRepl].fpts_season : 0;
+      qbRepl = Math.min(Math.ceil((roster.QB + sflex) * teams), byPos.QB.length - 1);
+      if (qbRepl < 0) qbRepl = 0;
+      replacement['QB'] = byPos.QB.length > 0 ? byPos.QB[qbRepl].fpts_season : 0;
     }
 
     // Compute VOR with PPG weighting
@@ -5254,9 +5261,10 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     var replacementPPG = {};
     var replIdxMap = {QB: qbRepl, RB: rbStarters, WR: wrStarters, TE: teRepl};
     for (var pos in replIdxMap) {
-      var ri = replIdxMap[pos];
       var list = byPos[pos] || [];
-      replacementPPG[pos] = (list.length > ri) ? list[ri].fpts_pg : 0;
+      var ri = Math.min(replIdxMap[pos], list.length - 1);
+      if (ri < 0) ri = 0;
+      replacementPPG[pos] = list.length > 0 ? list[ri].fpts_pg : 0;
     }
     
     scored.forEach(function(p) {
@@ -5327,51 +5335,52 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
       if (vor != null) vorValues.push({rank: rank+1, vor: vor});
     });
 
-    // Define tier breakpoints by VOR value
-    // S = VOR > 80, A = VOR > 50, B = VOR > 30, C = VOR > 15, D = VOR > 5, E = VOR > -5, F = rest
-    var tierDefs = [
-      {label:'S', name:'ELITE', minVor:80},
-      {label:'A', name:'TIER 1', minVor:50},
-      {label:'B', name:'TIER 2', minVor:30},
-      {label:'C', name:'TIER 3', minVor:15},
-      {label:'D', name:'TIER 4', minVor:5},
-      {label:'E', name:'TIER 5', minVor:-5},
-      {label:'F', name:'TIER 6', minVor:-20},
-    ];
-
-    // Find the rank where each tier starts
-    var tierRanks = [];
-    tierDefs.forEach(function(td) {
-      // Find first rank where VOR drops below this threshold
-      var afterRank = 0;
-      for (var i = 0; i < vorValues.length; i++) {
-        if (vorValues[i].vor >= td.minVor) {
-          afterRank = vorValues[i].rank;
-        } else {
-          break;
-        }
-      }
-      // afterRank = last rank still IN this tier → tier line goes AFTER this rank
-      if (afterRank > 0) {
-        tierRanks.push({afterRank: afterRank, label: td.label, name: td.name});
-      }
-    });
-
-    // Remove tier if it would be at same rank as previous (no players in that tier)
-    var seen = {};
-    var finalTiers = [];
-    // Also add tier at rank 1 for the top tier
-    if (tierRanks.length > 0) {
-      finalTiers.push({afterRank: 1, label: 'S', name: 'ELITE'});
-      seen[1] = true;
+    // Dynamic tier generation based on natural VOR gaps
+    // Instead of fixed thresholds, find clusters of similar VOR values
+    // and put tier breaks where the biggest gaps are.
+    // This creates tiers where players within a tier are truly comparable.
+    
+    if (vorValues.length < 10) return jsBoard;
+    
+    // Compute VOR gaps between consecutive players
+    var gaps = [];
+    for (var gi = 0; gi < Math.min(vorValues.length - 1, 120); gi++) {
+      gaps.push({
+        rank: vorValues[gi].rank,
+        gap: vorValues[gi].vor - vorValues[gi+1].vor,
+        vor: vorValues[gi].vor
+      });
     }
-    tierRanks.forEach(function(t) {
-      var ar = t.afterRank + 1; // tier row appears BEFORE the next group
-      if (ar > 1 && !seen[ar]) {
-        finalTiers.push({afterRank: ar, label: t.label, name: t.name});
-        seen[ar] = true;
+    
+    // Find the largest gaps — these are natural tier breaks
+    // We want 8-12 tiers in the top 100 players
+    var sortedGaps = gaps.slice().sort(function(a,b) { return b.gap - a.gap; });
+    
+    // Take top 10 gaps as tier breaks, but enforce minimum tier size of 3 players
+    var tierBreaks = [];
+    var usedRanks = {};
+    for (var tgi = 0; tgi < sortedGaps.length && tierBreaks.length < 10; tgi++) {
+      var gapRank = sortedGaps[tgi].rank;
+      // Don't put breaks too close together (min 3 players per tier)
+      var tooClose = false;
+      for (var tb = 0; tb < tierBreaks.length; tb++) {
+        if (Math.abs(tierBreaks[tb] - gapRank) < 3) { tooClose = true; break; }
       }
-    });
+      if (!tooClose && sortedGaps[tgi].gap > 2) {
+        tierBreaks.push(gapRank);
+      }
+    }
+    tierBreaks.sort(function(a,b) { return a - b; });
+    
+    // Build tier labels
+    var tierLabels = ['S','A','B','C','D','E','F','G','H','I','J'];
+    var tierNames = ['ELITE','TIER 1','TIER 2','TIER 3','TIER 4','TIER 5','TIER 6','TIER 7','TIER 8','TIER 9','TIER 10'];
+    
+    var finalTiers = [];
+    finalTiers.push({afterRank: 1, label: tierLabels[0], name: tierNames[0]});
+    for (var ti = 0; ti < tierBreaks.length && ti < tierLabels.length - 1; ti++) {
+      finalTiers.push({afterRank: tierBreaks[ti] + 1, label: tierLabels[ti+1], name: tierNames[ti+1]});
+    }
 
     // Apply tiers to all modes
     var _tc = 0;

@@ -17197,7 +17197,8 @@ window.fmtHeight = fmtHeight;
     // "Hit" = best season fpts within first 3 NFL years above position threshold.
     // QB: 200+ fpts (~top-12), RB/WR: 170+ fpts (~top-24), TE: 120+ fpts (~top-12, lower for slow development).
     // Uses D[] career data (fpts per season). Only counts non-lowConfidence, non-2026, non-devy.
-    // Config: 2017-2023 classes, 3-year window, TE threshold 120 (TEs develop slower).
+    // Config: 2017-2024 classes, 3-year window, TE threshold 120 (TEs develop slower).
+    // Tracks BOTH overall and per-position hit rates.
     const _tierDefs = [
       { min: 92, label: 'Generational' },
       { min: 86, label: 'Blue Chip' },
@@ -17209,8 +17210,15 @@ window.fmtHeight = fmtHeight;
       { min: 0,  label: 'Long Shot' }
     ];
     const _hitThresh = { QB: 200, RB: 170, WR: 170, TE: 120 };
-    const _tierStats = {};
-    _tierDefs.forEach(t => { _tierStats[t.label] = { total: 0, hits: 0 }; });
+    const _tierStats = {};    // overall
+    const _tierStatsByPos = {}; // per position
+    _tierDefs.forEach(t => {
+      _tierStats[t.label] = { total: 0, hits: 0 };
+      _tierStatsByPos[t.label] = {};
+      ['QB','RB','WR','TE'].forEach(pos => {
+        _tierStatsByPos[t.label][pos] = { total: 0, hits: 0 };
+      });
+    });
 
     const _dMapHit = {};
     D.forEach(d => { if (d.n) _dMapHit[d.n] = d; });
@@ -17237,18 +17245,30 @@ window.fmtHeight = fmtHeight;
         if (p.jm >= t.min) {
           _tierStats[t.label].total++;
           if (isHit) _tierStats[t.label].hits++;
+          if (_tierStatsByPos[t.label][p.pos]) {
+            _tierStatsByPos[t.label][p.pos].total++;
+            if (isHit) _tierStatsByPos[t.label][p.pos].hits++;
+          }
           break;
         }
       }
     });
 
-    // Store hit rates globally for display
+    // Store hit rates globally for display — both overall and per-position
     window._jmTierHitRates = {};
+    window._jmTierHitRatesByPos = {};
     _tierDefs.forEach(t => {
       const s = _tierStats[t.label];
       window._jmTierHitRates[t.label] = s.total >= 3
         ? { rate: Math.round(s.hits / s.total * 100), hits: s.hits, total: s.total }
-        : null; // too few players to be meaningful
+        : null;
+      window._jmTierHitRatesByPos[t.label] = {};
+      ['QB','RB','WR','TE'].forEach(pos => {
+        const sp = _tierStatsByPos[t.label][pos];
+        window._jmTierHitRatesByPos[t.label][pos] = sp.total >= 2
+          ? { rate: Math.round(sp.hits / sp.total * 100), hits: sp.hits, total: sp.total }
+          : null;
+      });
     });
 
     return results;
@@ -17793,13 +17813,18 @@ window.fmtHeight = fmtHeight;
             } else if (p.jm != null) {
               tierLabel = 'Incomplete'; tierColor = '#64748b';
             }
-            // Hit rate tooltip from historical data
+            // Hit rate — use position-specific rate when available, fall back to overall
             let hitRateText = '';
-            if (window._jmTierHitRates && window._jmTierHitRates[tierLabel]) {
-              const hr = window._jmTierHitRates[tierLabel];
-              hitRateText = ` title="${hr.rate}% hit rate (${hr.hits}/${hr.total} from 2015-2022 classes)"`;
+            let hitRateDisplay = '';
+            const _posHr = window._jmTierHitRatesByPos && window._jmTierHitRatesByPos[tierLabel] ? window._jmTierHitRatesByPos[tierLabel][p.pos] : null;
+            const _allHr = window._jmTierHitRates ? window._jmTierHitRates[tierLabel] : null;
+            const _hr = _posHr || _allHr;
+            if (_hr) {
+              const _posLabel = _posHr ? p.pos + ' ' : '';
+              hitRateText = ` title="${_posLabel}${_hr.rate}% hit rate (${_hr.hits}/${_hr.total} from 2017-2024 classes)"`;
+              hitRateDisplay = ' <span style=\"opacity:.6;font-size:.6rem\">(' + _hr.rate + '%)</span>';
             }
-            rows += `<td style="text-align:center"><span${hitRateText} style="font-size:.65rem;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:10px;background:${tierColor}22;color:${tierColor};white-space:nowrap;cursor:${hitRateText ? 'help' : 'default'}">${tierLabel}${window._jmTierHitRates && window._jmTierHitRates[tierLabel] ? ' <span style=\"opacity:.6;font-size:.6rem\">(' + window._jmTierHitRates[tierLabel].rate + '%)</span>' : ''}</span></td>`;
+            rows += `<td style="text-align:center"><span${hitRateText} style="font-size:.65rem;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:10px;background:${tierColor}22;color:${tierColor};white-space:nowrap;cursor:${hitRateText ? 'help' : 'default'}">${tierLabel}${hitRateDisplay}</span></td>`;
             break;
           }
           case 'risk': {

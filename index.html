@@ -1310,11 +1310,15 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .pm-ras.ras-below{color:var(--text2)}
 .pm-jm{font-family:'Bebas Neue',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:.5px;text-align:center;min-width:42px}
 .pm-jm-badge{display:inline-block;padding:2px 8px;border-radius:5px;min-width:36px;text-align:center;white-space:nowrap}
-.pm-jm-elite{background:rgba(34,197,94,.18);color:#22c55e}
-.pm-jm-great{background:rgba(59,130,246,.15);color:#60a5fa}
-.pm-jm-good{background:rgba(234,179,8,.12);color:#eab308}
-.pm-jm-avg{background:rgba(168,162,158,.1);color:var(--text2)}
-.pm-jm-low{background:rgba(239,68,68,.08);color:#ef4444;opacity:.7}
+.pm-jm-gen{background:rgba(251,191,36,.2);color:#fbbf24}
+.pm-jm-bc{background:rgba(96,165,250,.18);color:#60a5fa}
+.pm-jm-elite{background:rgba(52,211,153,.18);color:#34d399}
+.pm-jm-starter{background:rgba(167,139,250,.15);color:#a78bfa}
+.pm-jm-contr{background:rgba(251,146,60,.12);color:#fb923c}
+.pm-jm-depth{background:rgba(148,163,184,.1);color:#94a3b8}
+.pm-jm-lot{background:rgba(248,113,113,.1);color:#f87171;opacity:.8}
+.pm-jm-low{background:rgba(100,116,139,.08);color:#64748b;opacity:.7}
+.pm-jm-avg{background:rgba(148,163,184,.1);color:var(--text2)}
 .pm-empty{text-align:center;padding:3rem 1rem;color:var(--text2);font-size:.9rem}
 .pm-count{font-size:.72rem;color:var(--text2);text-align:center;margin-top:8px}
 .pm-fpts-good{color:#22c55e;font-weight:600}
@@ -15810,11 +15814,10 @@ window.fmtHeight = fmtHeight;
     const floorRaw = floorSum / floorWeight;
     const ceilRaw = ceilWeight > 0 ? ceilSum / ceilWeight : floorRaw;
 
-    // Blend: 60% floor, 40% ceiling
-    // Fantasy is about finding league-winners, not just starters.
-    // The ceiling factors (RAS for QB/RB, YPR for TE, breakout for WR) showed
-    // clear separation between generational and merely good in the tier analysis.
-    const blended = floorRaw * 0.60 + ceilRaw * 0.40;
+    // Blend: floor vs ceiling (configurable via window._jmFloorPct for testing)
+    // Default 60% floor, 40% ceiling.
+    const _floorPct = window._jmFloorPct || 0.60;
+    const blended = floorRaw * _floorPct + ceilRaw * (1 - _floorPct);
 
     // Games played bonus/penalty
     // Only penalize very low GP (small sample concern) — this is defensible even with
@@ -16043,13 +16046,18 @@ window.fmtHeight = fmtHeight;
   // JM Score display class
   function jmClass(v) {
     if (v == null) return 'pm-jm-avg';
-    if (v >= 80) return 'pm-jm-elite';
-    if (v >= 65) return 'pm-jm-great';
-    if (v >= 50) return 'pm-jm-good';
-    if (v >= 35) return 'pm-jm-avg';
+    if (v >= 92) return 'pm-jm-gen';
+    if (v >= 86) return 'pm-jm-bc';
+    if (v >= 73) return 'pm-jm-elite';
+    if (v >= 60) return 'pm-jm-starter';
+    if (v >= 50) return 'pm-jm-contr';
+    if (v >= 42) return 'pm-jm-depth';
+    if (v >= 35) return 'pm-jm-lot';
     return 'pm-jm-low';
   }
   window._jmClass = jmClass;
+  // Expose cache clear for blend ratio testing
+  window._jmClearCache = function() { Object.keys(_jmCache).forEach(k => delete _jmCache[k]); _pmBuildCache = null; };
 
   // Calculate age at draft to one decimal — ONLY for exact birthdays
   // Calculate age at draft — April 28 of draft year minus exact birthday
@@ -17911,7 +17919,7 @@ window.fmtHeight = fmtHeight;
           }
           case 'tm':
             if (p.tm != null && p.tm > 0) {
-              const tmCls = p.tm >= 1.8 ? 'pm-jm-elite' : p.tm >= 1.2 ? 'pm-jm-great' : p.tm >= 0.6 ? 'pm-jm-good' : p.tm > 0 ? 'pm-jm-avg' : 'pm-jm-low';
+              const tmCls = p.tm >= 1.8 ? 'pm-jm-elite' : p.tm >= 1.2 ? 'pm-jm-starter' : p.tm >= 0.6 ? 'pm-jm-contr' : p.tm > 0 ? 'pm-jm-depth' : 'pm-jm-low';
               rows += `<td class="pm-jm"><span class="pm-jm-badge ${tmCls}">+${p.tm.toFixed(1)}</span></td>`;
             } else {
               rows += `<td style="color:var(--text2);opacity:.4;text-align:center">—</td>`;
@@ -17922,7 +17930,7 @@ window.fmtHeight = fmtHeight;
             // For all others: show overall/offensive grade
             const _pffVal = (p.pos === 'RB' && p.pffRush != null) ? p.pffRush : p.pffGrade;
             if (_pffVal != null) {
-              const pffCls = _pffVal >= 90 ? 'pm-jm-elite' : _pffVal >= 80 ? 'pm-jm-great' : _pffVal >= 70 ? 'pm-jm-good' : _pffVal >= 60 ? 'pm-jm-avg' : 'pm-jm-low';
+              const pffCls = _pffVal >= 90 ? 'pm-jm-gen' : _pffVal >= 80 ? 'pm-jm-elite' : _pffVal >= 70 ? 'pm-jm-starter' : _pffVal >= 60 ? 'pm-jm-contr' : 'pm-jm-low';
               rows += `<td class="pm-jm"><span class="pm-jm-badge ${pffCls}">${_pffVal.toFixed(1)}</span></td>`;
             } else {
               rows += `<td style="color:var(--text2);opacity:.4;text-align:center">—</td>`;

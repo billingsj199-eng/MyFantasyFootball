@@ -6110,6 +6110,7 @@ function openPlayerCard(d) {
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         <button class="card-view-btn active" data-cardview="fantasy">FANTASY</button>
         <button class="card-view-btn" data-cardview="prospect">PROSPECT</button>
+        <button class="card-view-btn" data-cardview="comps">COMPS</button>
       </div>` : ''}
       <div class="card-fantasy-view" id="cardFantasyView">
       ${!d._retired ? `<div class="card-section">
@@ -6181,31 +6182,6 @@ function openPlayerCard(d) {
           </div>
         </div>
       </div>` : ''}
-
-      ${(function(){
-        if (typeof _PLAYER_COMPS === 'undefined' || !_PLAYER_COMPS[d.n]) return '';
-        var pc = _PLAYER_COMPS[d.n];
-        var comps = pc.c || [];
-        if (!comps.length) return '';
-        var avgNext = comps.reduce(function(s,c){return s+c[4];},0)/comps.length;
-        var bestNext = Math.max.apply(null,comps.map(function(c){return c[4];}));
-        var worstNext = Math.min.apply(null,comps.map(function(c){return c[4];}));
-        var html = '<div class="card-section"><div class="card-section-title">Historical Comparisons</div>';
-        html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">';
-        html += '<div class="card-rank-box"><div class="lbl">Comp Avg Next</div><div class="num green">'+avgNext.toFixed(1)+'</div></div>';
-        html += '<div class="card-rank-box"><div class="lbl">Ceiling</div><div class="num accent">'+bestNext.toFixed(1)+'</div></div>';
-        html += '<div class="card-rank-box"><div class="lbl">Floor</div><div class="num" style="color:var(--red)">'+worstNext.toFixed(1)+'</div></div>';
-        html += '</div>';
-        html += '<div style="font-size:.6rem;color:var(--text2);margin-bottom:4px;letter-spacing:.5px;font-family:\'Bebas Neue\',sans-serif">MOST SIMILAR SEASONS → WHAT HAPPENED NEXT</div>';
-        html += '<table class="career-table"><thead><tr><th style="text-align:left">Player</th><th>Year</th><th>Age</th><th>PPG</th><th>→ Next</th><th>Δ</th></tr></thead><tbody>';
-        comps.forEach(function(c){
-          var delta = c[4] - c[3];
-          var color = delta >= 0 ? 'var(--green)' : 'var(--red)';
-          html += '<tr><td style="text-align:left;font-weight:600">'+c[0]+'</td><td>'+c[1]+'</td><td>'+c[2]+'</td><td>'+c[3].toFixed(1)+'</td><td style="font-weight:700;color:'+color+'">'+c[4].toFixed(1)+'</td><td style="color:'+color+'">'+(delta>=0?'+':'')+delta.toFixed(1)+'</td></tr>';
-        });
-        html += '</tbody></table></div>';
-        return html;
-      })()}
 
       ${d.career && d.career.length > 0 ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
@@ -6487,23 +6463,57 @@ function openPlayerCard(d) {
         </div>
         <div id="collegeLogContent">${buildCollegeTable(d, 'half')}</div>
       </div>` : ''}`; })()}
+      </div>
+      <div class="card-prospect-view" id="cardCompsView" style="display:none">
       ${(function(){
-        if (typeof _PLAYER_COMPS === 'undefined' || !_PLAYER_COMPS[d.n]) return '';
+        if (typeof _PLAYER_COMPS === 'undefined' || !_PLAYER_COMPS[d.n]) return '<div style="text-align:center;padding:2rem;color:var(--text2);font-size:.8rem">No historical comparisons available for this player.</div>';
         var pc = _PLAYER_COMPS[d.n];
         var comps = pc.c || [];
-        if (!comps.length) return '';
+        if (!comps.length) return '<div style="text-align:center;padding:2rem;color:var(--text2);font-size:.8rem">No historical comparisons available.</div>';
         var avgNext = comps.reduce(function(s,c){return s+c[4];},0)/comps.length;
-        var html = '<div class="card-section"><div class="card-section-title">NFL Season Comps <span style="font-size:.55rem;color:var(--text2);font-weight:400">· What Similar Seasons Produced Next</span></div>';
-        html += '<div style="font-size:.55rem;color:var(--text2);margin-bottom:6px">Based on age, PPG, and PFF grade from most recent season</div>';
-        html += '<table class="career-table"><thead><tr><th style="text-align:left">Comp</th><th>Year</th><th>Age</th><th>PPG</th><th>→ Next</th><th>Δ</th></tr></thead><tbody>';
+        var bestNext = Math.max.apply(null,comps.map(function(c){return c[4];}));
+        var worstNext = Math.min.apply(null,comps.map(function(c){return c[4];}));
+
+        var html = '<div class="card-section"><div class="card-section-title">Season Outlook</div>';
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">';
+        html += '<div class="card-rank-box"><div class="lbl">Comp Avg</div><div class="num green">'+avgNext.toFixed(1)+'</div></div>';
+        html += '<div class="card-rank-box"><div class="lbl">Ceiling</div><div class="num accent">'+bestNext.toFixed(1)+'</div></div>';
+        html += '<div class="card-rank-box"><div class="lbl">Floor</div><div class="num" style="color:var(--red)">'+worstNext.toFixed(1)+'</div></div>';
+        html += '</div>';
+
+        // Range bar visualization
+        var rangeMin = Math.max(0, worstNext - 1);
+        var rangeMax = bestNext + 1;
+        var rangeSpan = rangeMax - rangeMin || 1;
+        var avgPct = ((avgNext - rangeMin) / rangeSpan * 100);
+        var curPct = ((pc.f - rangeMin) / rangeSpan * 100);
+        html += '<div style="margin:8px 0 12px;position:relative;height:24px;background:linear-gradient(90deg,rgba(239,68,68,.15),rgba(245,158,11,.15),rgba(34,197,94,.15));border-radius:12px;overflow:hidden">';
+        html += '<div style="position:absolute;left:'+avgPct+'%;top:0;bottom:0;width:2px;background:var(--accent);z-index:2" title="Comp avg: '+avgNext.toFixed(1)+'"></div>';
+        html += '<div style="position:absolute;left:'+Math.max(0,Math.min(100,curPct))+'%;top:2px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);z-index:3;display:flex;align-items:center;justify-content:center;font-size:.5rem;font-weight:700;color:var(--bg)">'+pc.f.toFixed(0)+'</div>';
+        html += '</div>';
+        html += '<div style="display:flex;justify-content:space-between;font-size:.5rem;color:var(--text2);margin-top:-6px;margin-bottom:8px"><span>Floor '+worstNext.toFixed(1)+'</span><span>Current '+pc.f.toFixed(1)+'</span><span>Ceiling '+bestNext.toFixed(1)+'</span></div>';
+        html += '</div>';
+
+        // NFL Season comps table
+        html += '<div class="card-section"><div class="card-section-title">Most Similar NFL Seasons <span style="font-size:.55rem;color:var(--text2);font-weight:400">→ What Happened Next</span></div>';
+        html += '<div style="font-size:.55rem;color:var(--text2);margin-bottom:6px">Matched on position, age, PPG, and PFF grade</div>';
+        html += '<table class="career-table"><thead><tr><th style="text-align:left">Player</th><th>Year</th><th>Age</th><th>PPG</th><th>→ Next</th><th>Δ</th></tr></thead><tbody>';
         comps.forEach(function(c){
           var delta = c[4] - c[3];
           var color = delta >= 0 ? 'var(--green)' : 'var(--red)';
           html += '<tr><td style="text-align:left;font-weight:600">'+c[0]+'</td><td>'+c[1]+'</td><td>'+c[2]+'</td><td>'+c[3].toFixed(1)+'</td><td style="font-weight:700;color:'+color+'">'+c[4].toFixed(1)+'</td><td style="color:'+color+'">'+(delta>=0?'+':'')+delta.toFixed(1)+'</td></tr>';
         });
-        html += '</tbody></table>';
-        html += '<div style="font-size:.5rem;color:var(--text2);margin-top:4px">Comp avg next yr: <span style="color:var(--accent);font-weight:700">'+avgNext.toFixed(1)+' fpts/gm</span></div>';
+        html += '</tbody></table></div>';
+
+        // Summary insight
+        var improvedCount = comps.filter(function(c){return c[4]>=c[3];}).length;
+        var declinedCount = comps.length - improvedCount;
+        var trend = improvedCount > declinedCount ? 'improved' : improvedCount === declinedCount ? 'split' : 'declined';
+        var trendColor = trend === 'improved' ? 'var(--green)' : trend === 'declined' ? 'var(--red)' : 'var(--accent)';
+        html += '<div style="text-align:center;padding:8px;margin-top:4px;border-radius:6px;background:rgba(255,255,255,.03);font-size:.7rem;color:var(--text2)">';
+        html += '<span style="font-weight:700;color:'+trendColor+'">'+improvedCount+'/'+comps.length+'</span> similar seasons '+trend+' the following year';
         html += '</div>';
+
         return html;
       })()}
       </div>
@@ -6523,12 +6533,16 @@ function openPlayerCard(d) {
         const view = this.dataset.cardview;
         const fv = document.getElementById('cardFantasyView');
         const pv = document.getElementById('cardProspectView');
+        const cv = document.getElementById('cardCompsView');
+        fv.classList.add('hidden');
+        pv.classList.remove('active');
+        if (cv) cv.style.display = 'none';
         if (view === 'prospect') {
-          fv.classList.add('hidden');
           pv.classList.add('active');
+        } else if (view === 'comps') {
+          if (cv) cv.style.display = 'block';
         } else {
           fv.classList.remove('hidden');
-          pv.classList.remove('active');
         }
       });
     });

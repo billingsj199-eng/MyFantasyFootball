@@ -2288,7 +2288,7 @@ CLEAR
 <div class="pm-wrapper">
 <div class="pm-header">
 <div class="pm-title">Prospect Model</div>
-<div class="pm-subtitle">JM Score (0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS, draft capital, size &amp; teammate quality</div>
+<div class="pm-subtitle">JM Score (0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS, draft capital, size &amp; teammate quality <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text2);font-size:.65rem;text-align:center;line-height:16px;cursor:help;vertical-align:middle;margin-left:4px" title="HIT RATE METHODOLOGY&#10;&#10;Hit = top fantasy season within first 3 NFL years&#10;&#10;Thresholds (half-PPR):&#10;• QB: 200+ fpts (≈ top-12 finish)&#10;• RB: 170+ fpts (≈ top-24 finish)&#10;• WR: 170+ fpts (≈ top-24 finish)&#10;• TE: 120+ fpts (≈ top-12 finish)&#10;&#10;Sample: 2017-2023 draft classes (530 prospects)&#10;&#10;Tier hit rates are shown as percentages next to each tier badge. Hover a badge for exact counts.">?</span></div>
 </div>
 <div class="pm-controls">
 <div class="pm-pos-tabs" id="pmPosTabs">
@@ -2311,9 +2311,6 @@ CLEAR
 <option value="2019">2019</option>
 <option value="2018">2018</option>
 <option value="2017">2017</option>
-<option value="2016">2016</option>
-<option value="2015">2015</option>
-<option value="older">Pre-2015</option>
 </select>
 <div class="pm-toggle-wrap">
 <span class="pm-toggle-label">PPG</span>
@@ -16577,7 +16574,7 @@ window.fmtHeight = fmtHeight;
       const draftYr = getDraftYear(name);
       // Skip pre-2010 draft classes — college stats data doesn't cover them reliably,
       // producing low-confidence scores that clutter the model
-      if (draftYr != null && draftYr < 2010) return;
+      if (draftYr != null && draftYr < 2017) return;
       // Get exact birthday ONLY — no integer approximations
       let birth = null;
       if (typeof LEGEND_BIRTH_YEARS !== 'undefined') {
@@ -17196,9 +17193,11 @@ window.fmtHeight = fmtHeight;
 
     _pmBuildCache = results;
     window._pmBuildCache = results; // Expose for console backtest access
-    // Computes historical hit rates for each JM tier using 2015-2022 draft classes.
-    // "Hit" = top-12 QB season, top-24 RB/WR season, or top-12 TE season within first 5 NFL years.
+    // Computes historical hit rates for each JM tier using 2017-2023 draft classes (3yr window).
+    // "Hit" = best season fpts within first 3 NFL years above position threshold.
+    // QB: 200+ fpts (~top-12), RB/WR: 170+ fpts (~top-24), TE: 120+ fpts (~top-12, lower for slow development).
     // Uses D[] career data (fpts per season). Only counts non-lowConfidence, non-2026, non-devy.
+    // Config: 2017-2023 classes, 3-year window, TE threshold 120 (TEs develop slower).
     const _tierDefs = [
       { min: 90, label: 'Generational' },
       { min: 82, label: 'Blue Chip' },
@@ -17209,7 +17208,7 @@ window.fmtHeight = fmtHeight;
       { min: 42, label: 'Lottery Ticket' },
       { min: 0,  label: 'Long Shot' }
     ];
-    const _hitThresh = { QB: 200, RB: 170, WR: 170, TE: 140 }; // approx top-12/24 season fpts (half PPR)
+    const _hitThresh = { QB: 200, RB: 170, WR: 170, TE: 120 };
     const _tierStats = {};
     _tierDefs.forEach(t => { _tierStats[t.label] = { total: 0, hits: 0 }; });
 
@@ -17218,15 +17217,15 @@ window.fmtHeight = fmtHeight;
 
     results.forEach(p => {
       if (p.jm == null || p.lowConfidence || p.draftYr == null) return;
-      if (p.draftYr < 2015 || p.draftYr > 2022) return; // need 3+ NFL seasons of data
+      if (p.draftYr < 2017 || p.draftYr > 2023) return;
       if (p.isDevy || p.isCollege) return;
 
       const d = _dMapHit[p.name];
       if (!d || !d.career || !d.career.length) return;
 
-      // Only count first 5 NFL seasons
+      // Only count first 3 NFL seasons
       const draftYr = p.draftYr;
-      const earlyCar = d.career.filter(s => s.yr >= draftYr && s.yr < draftYr + 5);
+      const earlyCar = d.career.filter(s => s.yr >= draftYr && s.yr < draftYr + 3);
       if (!earlyCar.length) return;
 
       const bestSzn = Math.max(...earlyCar.map(s => s.fpts || 0));
@@ -17569,7 +17568,7 @@ window.fmtHeight = fmtHeight;
       // When filtering by position, show that position's grade instead of overall
       const usePos = ['QB','RB','WR','TE'].includes(pmPos) ? pmPos : null;
       const sorted = years.map(yr => ({ yr, ...grades[yr] }))
-        .filter(c => c.yr >= 2015 && c.playerCount >= 8 && (!usePos || (c.positions[usePos] && c.positions[usePos].grade != null)))
+        .filter(c => c.yr >= 2017 && c.playerCount >= 8 && (!usePos || (c.positions[usePos] && c.positions[usePos].grade != null)))
         .sort((a, b) => {
           const aG = usePos ? (a.positions[usePos] ? a.positions[usePos].grade : 0) : a.overall;
           const bG = usePos ? (b.positions[usePos] ? b.positions[usePos].grade : 0) : b.overall;
@@ -17608,7 +17607,7 @@ window.fmtHeight = fmtHeight;
     } else {
       // Show single class detail
       const yr = pmDraftClass === 'older' ? null : parseInt(pmDraftClass);
-      if (!yr || !grades[yr] || yr < 2015) {
+      if (!yr || !grades[yr] || yr < 2017) {
         // For 'older', missing year, or pre-2015 (incomplete data), show nothing
         container.style.display = 'none';
         return;
@@ -17628,7 +17627,7 @@ window.fmtHeight = fmtHeight;
           const gv = usePos && gg.positions[usePos] ? gg.positions[usePos].grade : gg.overall;
           return { yr: y, gradeVal: gv };
         })
-        .filter(c => c.yr >= 2015 && grades[c.yr].playerCount >= 8 && (!usePos || (grades[c.yr].positions[usePos] && grades[c.yr].positions[usePos].grade != null)))
+        .filter(c => c.yr >= 2017 && grades[c.yr].playerCount >= 8 && (!usePos || (grades[c.yr].positions[usePos] && grades[c.yr].positions[usePos].grade != null)))
         .sort((a, b) => b.gradeVal - a.gradeVal);
       const rank = allGrades.findIndex(c => c.yr === yr) + 1;
       const totalClasses = allGrades.length;
@@ -17681,12 +17680,8 @@ window.fmtHeight = fmtHeight;
 
     // Draft class filter (skip for COLLEGE tab — they don't have draft classes)
     if (pmDraftClass !== 'all' && pmPos !== 'COLLEGE') {
-      if (pmDraftClass === 'older') {
-        data = data.filter(p => p.draftYr != null && p.draftYr < 2015);
-      } else {
-        const yr = parseInt(pmDraftClass);
-        data = data.filter(p => p.draftYr === yr);
-      }
+      const yr = parseInt(pmDraftClass);
+      data = data.filter(p => p.draftYr === yr);
     }
 
     // Search filter
@@ -18926,7 +18921,7 @@ window.fmtHeight = fmtHeight;
     // Now for each position, show the average prospect profile per tier
     positions.forEach(pos => {
       const td = tierDefs[pos];
-      const modernPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2015);
+      const modernPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2017);
 
       console.log('%c\n' + pos + ' NFL TIERS — Modern Era (n=' + modernPlayers.length + ')', 'color: #22c55e; font-weight: bold; font-size: 13px');
 
@@ -18971,7 +18966,7 @@ window.fmtHeight = fmtHeight;
 
     positions.forEach(pos => {
       const td = tierDefs[pos];
-      const modernPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2015);
+      const modernPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2017);
       const fields = pos === 'RB' ? ['pick', 'age', 'collegePpg', 'ras', 'ht', 'wt', 'ypc']
         : (pos === 'WR' || pos === 'TE') ? ['pick', 'age', 'collegePpg', 'ras', 'ht', 'wt', 'ypr']
         : ['pick', 'age', 'collegePpg', 'ras', 'ht', 'wt'];
@@ -19048,7 +19043,7 @@ window.fmtHeight = fmtHeight;
       const t = thresholds[pos];
       const threshList = testThresholds[pos];
       // Get players with college stats (required for breakout analysis)
-      const posPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2010 && p.collegeSeasons && p.collegeSeasons.length > 0);
+      const posPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2017 && p.collegeSeasons && p.collegeSeasons.length > 0);
 
       console.log('%c\n' + pos + ' Breakout Threshold Test (n=' + posPlayers.length + ' with college stats, 2010+)', 'color: #22c55e; font-weight: bold; font-size: 13px');
       if (!posPlayers.length) { console.log('  No players with college season data found'); return; }
@@ -19132,7 +19127,7 @@ window.fmtHeight = fmtHeight;
       // High draft capital = rounds 1-2 (picks 1-64), modern era 2010-2022
       const highDC = players.filter(p =>
         p.pos === pos && p.pick != null && p.pick <= 64 &&
-        p.draftYr && p.draftYr >= 2010 && p.draftYr <= 2022 &&
+        p.draftYr && p.draftYr >= 2017 && p.draftYr <= 2023 &&
         p.tier != null
       );
       if (highDC.length < 5) return;
@@ -19315,7 +19310,7 @@ window.fmtHeight = fmtHeight;
     positions.forEach(pos => {
       // Late draft capital = Rd 3+ (pick 65+), modern era 2010-2022
       const lateDC = players.filter(p =>
-        p.pos === pos && p.draftYr && p.draftYr >= 2010 && p.draftYr <= 2022 &&
+        p.pos === pos && p.draftYr && p.draftYr >= 2017 && p.draftYr <= 2023 &&
         p.tier != null &&
         ((p.pick != null && p.pick >= 65) || (p.pick == null))
       );

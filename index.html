@@ -3868,6 +3868,7 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
 <script src="data/college_weekly_devy.js"></script>
 <script src="data/wr_yprr.js"></script>
 <script src="data/js_model_data.js"></script>
+<script src="data/player_comps.js"></script>
 <script src="data/wr_drop_rate.js"></script>
 <script src="data/wr_contested.js"></script>
 <script src="data/wr_yac.js"></script>
@@ -6109,6 +6110,31 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
 
+      ${(function(){
+        if (typeof _PLAYER_COMPS === 'undefined' || !_PLAYER_COMPS[d.n]) return '';
+        var pc = _PLAYER_COMPS[d.n];
+        var comps = pc.c || [];
+        if (!comps.length) return '';
+        var avgNext = comps.reduce(function(s,c){return s+c[4];},0)/comps.length;
+        var bestNext = Math.max.apply(null,comps.map(function(c){return c[4];}));
+        var worstNext = Math.min.apply(null,comps.map(function(c){return c[4];}));
+        var html = '<div class="card-section"><div class="card-section-title">Historical Comparisons</div>';
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">';
+        html += '<div class="card-rank-box"><div class="lbl">Comp Avg Next</div><div class="num green">'+avgNext.toFixed(1)+'</div></div>';
+        html += '<div class="card-rank-box"><div class="lbl">Ceiling</div><div class="num accent">'+bestNext.toFixed(1)+'</div></div>';
+        html += '<div class="card-rank-box"><div class="lbl">Floor</div><div class="num" style="color:var(--red)">'+worstNext.toFixed(1)+'</div></div>';
+        html += '</div>';
+        html += '<div style="font-size:.6rem;color:var(--text2);margin-bottom:4px;letter-spacing:.5px;font-family:\'Bebas Neue\',sans-serif">MOST SIMILAR SEASONS → WHAT HAPPENED NEXT</div>';
+        html += '<table class="career-table"><thead><tr><th style="text-align:left">Player</th><th>Year</th><th>Age</th><th>PPG</th><th>→ Next</th><th>Δ</th></tr></thead><tbody>';
+        comps.forEach(function(c){
+          var delta = c[4] - c[3];
+          var color = delta >= 0 ? 'var(--green)' : 'var(--red)';
+          html += '<tr><td style="text-align:left;font-weight:600">'+c[0]+'</td><td>'+c[1]+'</td><td>'+c[2]+'</td><td>'+c[3].toFixed(1)+'</td><td style="font-weight:700;color:'+color+'">'+c[4].toFixed(1)+'</td><td style="color:'+color+'">'+(delta>=0?'+':'')+delta.toFixed(1)+'</td></tr>';
+        });
+        html += '</tbody></table></div>';
+        return html;
+      })()}
+
       ${d.career && d.career.length > 0 ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="clScoringLabel">Career Log (Half PPR)${d._retired && d.career && d._debut && d._last && d.career.length < (d._last - d._debut + 1) * 0.5 ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : ''}</span>
@@ -6389,6 +6415,25 @@ function openPlayerCard(d) {
         </div>
         <div id="collegeLogContent">${buildCollegeTable(d, 'half')}</div>
       </div>` : ''}`; })()}
+      ${(function(){
+        if (typeof _PLAYER_COMPS === 'undefined' || !_PLAYER_COMPS[d.n]) return '';
+        var pc = _PLAYER_COMPS[d.n];
+        var comps = pc.c || [];
+        if (!comps.length) return '';
+        var avgNext = comps.reduce(function(s,c){return s+c[4];},0)/comps.length;
+        var html = '<div class="card-section"><div class="card-section-title">NFL Season Comps <span style="font-size:.55rem;color:var(--text2);font-weight:400">· What Similar Seasons Produced Next</span></div>';
+        html += '<div style="font-size:.55rem;color:var(--text2);margin-bottom:6px">Based on age, PPG, and PFF grade from most recent season</div>';
+        html += '<table class="career-table"><thead><tr><th style="text-align:left">Comp</th><th>Year</th><th>Age</th><th>PPG</th><th>→ Next</th><th>Δ</th></tr></thead><tbody>';
+        comps.forEach(function(c){
+          var delta = c[4] - c[3];
+          var color = delta >= 0 ? 'var(--green)' : 'var(--red)';
+          html += '<tr><td style="text-align:left;font-weight:600">'+c[0]+'</td><td>'+c[1]+'</td><td>'+c[2]+'</td><td>'+c[3].toFixed(1)+'</td><td style="font-weight:700;color:'+color+'">'+c[4].toFixed(1)+'</td><td style="color:'+color+'">'+(delta>=0?'+':'')+delta.toFixed(1)+'</td></tr>';
+        });
+        html += '</tbody></table>';
+        html += '<div style="font-size:.5rem;color:var(--text2);margin-top:4px">Comp avg next yr: <span style="color:var(--accent);font-weight:700">'+avgNext.toFixed(1)+' fpts/gm</span></div>';
+        html += '</div>';
+        return html;
+      })()}
       </div>
     </div>
   `;

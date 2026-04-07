@@ -5110,11 +5110,83 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
   // --- Rebuild and apply board ---
   function _jsRebuild() {
     var jsBoard = _jsComputeBoard();
-    // Apply to all modes (JS Model doesn't differentiate redraft/dynasty/etc — it's its own thing)
+    // Apply to all modes
     versionBoards.jsmodel.redraft = jsBoard;
     versionBoards.jsmodel.superflex = jsBoard;
     versionBoards.jsmodel.dynasty = jsBoard;
     versionBoards.jsmodel.dynastysf = jsBoard;
+
+    // Auto-generate tiers based on VOR breakpoints
+    var modes = ['redraft','superflex','dynasty','dynastysf'];
+    modes.forEach(function(mode) {
+      versionTiers.jsmodel[mode].ALL = [];
+      versionTierCounters.jsmodel[mode].ALL = 0;
+    });
+
+    // Get VOR values in board order
+    var vorValues = [];
+    jsBoard.forEach(function(idx, rank) {
+      var vor = D[idx]._jsModelVor;
+      if (vor != null) vorValues.push({rank: rank+1, vor: vor});
+    });
+
+    // Define tier breakpoints by VOR value
+    // S = VOR > 80, A = VOR > 50, B = VOR > 30, C = VOR > 15, D = VOR > 5, E = VOR > -5, F = rest
+    var tierDefs = [
+      {label:'S', name:'ELITE', minVor:80},
+      {label:'A', name:'TIER 1', minVor:50},
+      {label:'B', name:'TIER 2', minVor:30},
+      {label:'C', name:'TIER 3', minVor:15},
+      {label:'D', name:'TIER 4', minVor:5},
+      {label:'E', name:'TIER 5', minVor:-5},
+      {label:'F', name:'TIER 6', minVor:-20},
+    ];
+
+    // Find the rank where each tier starts
+    var tierRanks = [];
+    tierDefs.forEach(function(td) {
+      // Find first rank where VOR drops below this threshold
+      var afterRank = 0;
+      for (var i = 0; i < vorValues.length; i++) {
+        if (vorValues[i].vor >= td.minVor) {
+          afterRank = vorValues[i].rank;
+        } else {
+          break;
+        }
+      }
+      // afterRank = last rank still IN this tier → tier line goes AFTER this rank
+      if (afterRank > 0) {
+        tierRanks.push({afterRank: afterRank, label: td.label, name: td.name});
+      }
+    });
+
+    // Remove tier if it would be at same rank as previous (no players in that tier)
+    var seen = {};
+    var finalTiers = [];
+    // Also add tier at rank 1 for the top tier
+    if (tierRanks.length > 0) {
+      finalTiers.push({afterRank: 1, label: 'S', name: 'ELITE'});
+      seen[1] = true;
+    }
+    tierRanks.forEach(function(t) {
+      var ar = t.afterRank + 1; // tier row appears BEFORE the next group
+      if (ar > 1 && !seen[ar]) {
+        finalTiers.push({afterRank: ar, label: t.label, name: t.name});
+        seen[ar] = true;
+      }
+    });
+
+    // Apply tiers to all modes
+    var _tc = 0;
+    modes.forEach(function(mode) {
+      _tc = 0;
+      finalTiers.forEach(function(t) {
+        _tc++;
+        versionTiers.jsmodel[mode].ALL.push({id: _tc, label: t.label, name: t.name, afterRank: t.afterRank});
+      });
+      versionTierCounters.jsmodel[mode].ALL = _tc;
+    });
+
     if (currentVersion === 'jsmodel') {
       syncMode();
       renumber();

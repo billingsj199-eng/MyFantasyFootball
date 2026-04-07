@@ -16038,7 +16038,10 @@ window.fmtHeight = fmtHeight;
     const _minCoverage = p.isDevy ? 30 : 50;
     const lowConfidence = dataCoverage < _minCoverage || dataCount < _minDataCount;
 
-    const result = { jm: final, bustAdj, sleeperAdj, dataCoverage, dataCount, lowConfidence };
+    // Expose raw floor/ceiling (with adjustments) for blend ratio analysis
+    const floorFinal = Math.max(0, Math.min(100, Math.round((floorRaw + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
+    const ceilFinal = Math.max(0, Math.min(100, Math.round((ceilRaw + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
+    const result = { jm: final, floorFinal, ceilFinal, bustAdj, sleeperAdj, dataCoverage, dataCount, lowConfidence };
     _jmCache[cacheKey] = result;
     return result;
   }
@@ -17170,6 +17173,8 @@ window.fmtHeight = fmtHeight;
       const _jmResult = calcJM(prospectRecord);
       if (_jmResult && typeof _jmResult === 'object') {
         prospectRecord.jm = _jmResult.jm;
+        prospectRecord.jmFloor = _jmResult.floorFinal;
+        prospectRecord.jmCeil = _jmResult.ceilFinal;
         prospectRecord.bustAdj = _jmResult.bustAdj;
         prospectRecord.sleeperAdj = _jmResult.sleeperAdj;
         prospectRecord.dataCoverage = _jmResult.dataCoverage;

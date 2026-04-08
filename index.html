@@ -2512,7 +2512,16 @@ CLEAR
 <!-- TRADE CALCULATOR PAGE -->
 <div class="page page-prospect" id="pageProspect">
 <div class="auth-anchor" id="authAnchorProspect"></div>
-<div class="pm-wrapper">
+<!-- Coming Soon overlay for non-admins -->
+<div id="pmComingSoonOverlay" style="display:none;position:absolute;inset:0;z-index:50;align-items:flex-start;justify-content:center;padding-top:18vh;pointer-events:all">
+<div style="text-align:center;padding:2.5rem 2rem;border-radius:16px;background:rgba(15,15,20,.92);border:1px solid rgba(245,158,11,.25);box-shadow:0 8px 32px rgba(0,0,0,.5);max-width:400px;pointer-events:auto">
+<div style="font-size:2.5rem;margin-bottom:.75rem">🔬</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:3px;color:var(--accent);margin-bottom:.5rem">COMING SOON</div>
+<div style="font-size:.88rem;color:var(--text2);line-height:1.6;margin-bottom:.25rem">The JM Prospect Model is currently being calibrated and will be available soon.</div>
+<div style="font-size:.75rem;color:var(--text3);margin-top:.75rem">Predictive scoring for every NFL draft prospect — powered by age, production, athleticism, film grades & more.</div>
+</div>
+</div>
+<div class="pm-wrapper" id="pmWrapperContent">
 <div class="pm-header">
 <div class="pm-title">Prospect Model</div>
 <div class="pm-subtitle">JM Score (0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS, draft capital, size &amp; teammate quality <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text2);font-size:.65rem;text-align:center;line-height:16px;cursor:help;vertical-align:middle;margin-left:4px" title="HIT RATE METHODOLOGY&#10;&#10;Hit = top fantasy season within first 3 NFL years&#10;&#10;Thresholds (half-PPR):&#10;• QB: 200+ fpts (≈ top-12 finish)&#10;• RB: 170+ fpts (≈ top-24 finish)&#10;• WR: 170+ fpts (≈ top-24 finish)&#10;• TE: 120+ fpts (≈ top-12 finish)&#10;&#10;Tiers: 92+ Gen, 86+ Blue Chip, 72+ Elite, 60+ Starter, 50+ Contributor, 42+ Depth, 35+ Lottery Ticket&#10;&#10;Sample: 2017-2024 draft classes&#10;&#10;Tier hit rates are shown as percentages next to each tier badge. Hover a badge for exact counts.">?</span></div>
@@ -3034,6 +3043,9 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['John Michael Gyllenborg'] && !COMBINE_DATA['John Michael Gyllenborg'].pos) COMBINE_DATA['John Michael Gyllenborg'].pos = 'WR';
   if (!COMBINE_DATA['Jam Miller']) COMBINE_DATA['Jam Miller'] = { school: 'Alabama', pos: 'RB', yr: 2026 };
   if (COMBINE_DATA['Jam Miller'] && !COMBINE_DATA['Jam Miller'].pos) COMBINE_DATA['Jam Miller'].pos = 'RB';
+  // Harold Fannin Jr. — TE, not WR. Fix pos in both name variants.
+  if (COMBINE_DATA['Harold Fannin']) COMBINE_DATA['Harold Fannin'].pos = 'TE';
+  if (COMBINE_DATA['Harold Fannin Jr.']) COMBINE_DATA['Harold Fannin Jr.'].pos = 'TE';
   if (!COMBINE_DATA['Gunner Gray']) COMBINE_DATA['Gunner Gray'] = { school: 'Buffalo', pos: 'QB', yr: 2026, ht: '6-2', wt: 215 };
   // Chris Bell — WR, Louisville, 2026 class. Force ALL fields unconditionally
   // in case combine_data.js has a different Chris Bell (e.g. DB from older class).
@@ -15938,10 +15950,27 @@ window.fmtHeight = fmtHeight;
       // Apply bio edits to COMBINE_DATA
       Object.keys(_bioCache).forEach(function(name) {
         const bio = _bioCache[name];
-        if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name]) {
+        if (typeof COMBINE_DATA !== 'undefined') {
+          if (!COMBINE_DATA[name]) COMBINE_DATA[name] = {};
           if (bio.ht) COMBINE_DATA[name].ht = bio.ht;
           if (bio.wt) COMBINE_DATA[name].wt = parseInt(bio.wt);
           if (bio.pos) COMBINE_DATA[name].pos = bio.pos;
+          if (bio.ras) COMBINE_DATA[name].ras = parseFloat(bio.ras);
+          if (bio.school) COMBINE_DATA[name].school = bio.school;
+          if (bio.yr) COMBINE_DATA[name].yr = parseInt(bio.yr);
+          if (bio.draft) { COMBINE_DATA[name].draft = bio.draft === 'U' ? 'U' : parseInt(bio.draft) || bio.draft; }
+        }
+        // Apply birth date edits
+        if (bio.birth && typeof LEGEND_BIRTH_YEARS !== 'undefined') {
+          LEGEND_BIRTH_YEARS[name] = bio.birth;
+        }
+        // Apply PFF grade override
+        if (bio.pff != null && bio.pff !== '') {
+          const pffVal = parseFloat(bio.pff);
+          if (!isNaN(pffVal)) {
+            if (!window._PFF_OVERRIDES) window._PFF_OVERRIDES = {};
+            window._PFF_OVERRIDES[name] = pffVal;
+          }
         }
       });
     }).catch(function(e) { _bioLoaded = false; console.warn('[Bio] Load failed, will retry', e); });
@@ -15954,9 +15983,24 @@ window.fmtHeight = fmtHeight;
     if (!_bioCache[playerName]) _bioCache[playerName] = {};
     _bioCache[playerName][field] = clean;
     // Apply immediately to COMBINE_DATA
-    if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[playerName]) {
+    if (typeof COMBINE_DATA !== 'undefined') {
+      if (!COMBINE_DATA[playerName]) COMBINE_DATA[playerName] = {};
       if (field === 'wt') COMBINE_DATA[playerName].wt = parseInt(clean) || null;
-      else COMBINE_DATA[playerName][field] = clean || null;
+      else if (field === 'ras') COMBINE_DATA[playerName].ras = parseFloat(clean) || null;
+      else if (field === 'yr') COMBINE_DATA[playerName].yr = parseInt(clean) || null;
+      else if (field === 'draft') { COMBINE_DATA[playerName].draft = clean === 'U' ? 'U' : parseInt(clean) || clean; }
+      else if (field === 'ht' || field === 'pos' || field === 'school') COMBINE_DATA[playerName][field] = clean || null;
+    }
+    // Birth date → LEGEND_BIRTH_YEARS
+    if (field === 'birth' && typeof LEGEND_BIRTH_YEARS !== 'undefined') {
+      LEGEND_BIRTH_YEARS[playerName] = clean;
+    }
+    // PFF override
+    if (field === 'pff') {
+      if (!window._PFF_OVERRIDES) window._PFF_OVERRIDES = {};
+      const pv = parseFloat(clean);
+      if (!isNaN(pv)) window._PFF_OVERRIDES[playerName] = pv;
+      else delete window._PFF_OVERRIDES[playerName];
     }
     db.collection('prospect_bio').doc(playerName).set(
       Object.assign({}, _bioCache[playerName], { ts: new Date().toISOString() }),
@@ -17607,7 +17651,8 @@ window.fmtHeight = fmtHeight;
     'Irv Smith': 'Irv Smith Jr.', 'Lynn Bowden': 'Lynn Bowden Jr.',
     'Velus Jones': 'Velus Jones Jr.', 'JJ Arcega-Whiteside': 'J.J. Arcega-Whiteside',
     'Marvin Harrison': 'Marvin Harrison Jr.', 'Michael Penix': 'Michael Penix Jr.',
-    "Tre' Harris": 'Tre Harris', 'Tre Harris': "Tre' Harris"
+    "Tre' Harris": 'Tre Harris', 'Tre Harris': "Tre' Harris",
+    'Harold Fannin': 'Harold Fannin Jr.'
   };
   // Reverse map: canonical name -> alternate name (for birthday/data lookups)
   const _PROSPECT_REVERSE = {};
@@ -18461,6 +18506,10 @@ window.fmtHeight = fmtHeight;
       // pffRush = rushing grade (used for RB on main page, both shown on card)
       let pffGrade = null;
       let pffRush = null;
+      // Admin PFF override (from prospect_bio edits)
+      if (window._PFF_OVERRIDES && window._PFF_OVERRIDES[name] != null) {
+        pffGrade = window._PFF_OVERRIDES[name];
+      }
       if (cs && cs.length) {
         cs.forEach(s => {
           if (s.pff && s.pff > 0 && (pffGrade == null || s.pff > pffGrade)) {
@@ -18498,6 +18547,20 @@ window.fmtHeight = fmtHeight;
         else if (window._PFF_RB_GRADES && window._PFF_RB_GRADES[name]) {
           const _rbF = window._PFF_RB_GRADES[name];
           pffGrade = Array.isArray(_rbF) ? (_rbF[1] != null ? _rbF[1] : _rbF[0]) : _rbF;
+        }
+      }
+      // Alias-aware PFF fallback: try alternate name (Jr./no Jr., dots, etc.)
+      if (pffGrade == null) {
+        const _altN = _PROSPECT_ALIASES[name] || _PROSPECT_REVERSE[name] || null;
+        if (_altN) {
+          const _pffMaps = [window._PFF_TE_GRADES, window._PFF_WR_GRADES, window._PFF_QB_GRADES, window._PFF_RB_GRADES];
+          for (let _pm of _pffMaps) {
+            if (_pm && _pm[_altN]) {
+              const _v = _pm[_altN];
+              pffGrade = Array.isArray(_v) ? (_v[1] != null ? _v[1] : _v[0]) : _v;
+              break;
+            }
+          }
         }
       }
 
@@ -19363,7 +19426,7 @@ window.fmtHeight = fmtHeight;
               if (v === 'U') return 'UDFA';
               return '#' + v;
             }
-            if (is2026 && admin) {
+            if (admin) {
               const cls = dcVal ? _dcRoundClass(dcVal) : '';
               rows += `<td class="pm-dc"><span class="pm-dc-edit" data-dcname="${p.name}" title="Click to edit draft capital">${dcVal ? `<span class="pm-dc-badge ${cls}">${dcLabel(dcVal)}</span>` : '<span style="color:var(--text2);opacity:.4">—</span>'}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span></td>`;
             } else if (dcVal) {
@@ -19375,16 +19438,29 @@ window.fmtHeight = fmtHeight;
             break;
           }
           case 'age':
-            rows += `<td>${p.age != null ? p.age.toFixed(1) : '—'}</td>`;
+            if (_pmIsAdmin) {
+              const _birthStr = (typeof LEGEND_BIRTH_YEARS !== 'undefined' && LEGEND_BIRTH_YEARS[p.name]) ? LEGEND_BIRTH_YEARS[p.name] : '';
+              rows += `<td style="cursor:pointer" class="pm-bio-edit" data-bioname="${p.name}" data-biofield="birth" title="Click to edit birth date (YYYY-MM-DD)${_birthStr ? '\nCurrent: ' + _birthStr : ''}">${p.age != null ? p.age.toFixed(1) : '—'}</td>`;
+            } else {
+              rows += `<td>${p.age != null ? p.age.toFixed(1) : '—'}</td>`;
+            }
             break;
           case 'breakoutAge':
             rows += `<td${p.breakoutAge != null ? '' : ' style="color:var(--text2);opacity:.4"'}>${p.breakoutAge != null ? p.breakoutAge.toFixed(1) : '—'}</td>`;
             break;
           case 'draftYr':
-            if (p.isCollege && p.eligYr) {
-              rows += `<td style="color:var(--accent)">${p.eligYr}*</td>`;
+            if (_pmIsAdmin) {
+              if (p.isCollege && p.eligYr) {
+                rows += `<td style="color:var(--accent);cursor:pointer" class="pm-bio-edit" data-bioname="${p.name}" data-biofield="yr" title="Click to edit draft year">${p.eligYr}*</td>`;
+              } else {
+                rows += `<td style="cursor:pointer" class="pm-bio-edit" data-bioname="${p.name}" data-biofield="yr" title="Click to edit draft year">${p.draftYr || '—'}</td>`;
+              }
             } else {
-              rows += `<td>${p.draftYr || '—'}</td>`;
+              if (p.isCollege && p.eligYr) {
+                rows += `<td style="color:var(--accent)">${p.eligYr}*</td>`;
+              } else {
+                rows += `<td>${p.draftYr || '—'}</td>`;
+              }
             }
             break;
           case 'ht':
@@ -19403,13 +19479,21 @@ window.fmtHeight = fmtHeight;
             }
             break;
           case 'lastCollege':
-            rows += `<td class="pm-team">${p.lastCollege}</td>`;
+            if (_pmIsAdmin) {
+              rows += `<td class="pm-team pm-bio-edit" style="cursor:pointer" data-bioname="${p.name}" data-biofield="school" title="Click to edit school">${p.lastCollege}</td>`;
+            } else {
+              rows += `<td class="pm-team">${p.lastCollege}</td>`;
+            }
             break;
           case 'lastConf':
             rows += `<td>${p.lastConf !== '—' ? `<span class="pm-conf">${p.lastConf}</span>` : '—'}</td>`;
             break;
           case 'ras':
-            rows += `<td class="pm-ras ${rasClass(p.ras)}">${p.ras != null ? p.ras.toFixed(2) : '—'}</td>`;
+            if (_pmIsAdmin) {
+              rows += `<td class="pm-ras ${rasClass(p.ras)} pm-bio-edit" style="cursor:pointer" data-bioname="${p.name}" data-biofield="ras" title="Click to edit RAS">${p.ras != null ? p.ras.toFixed(2) : '—'}</td>`;
+            } else {
+              rows += `<td class="pm-ras ${rasClass(p.ras)}">${p.ras != null ? p.ras.toFixed(2) : '—'}</td>`;
+            }
             break;
           case 'ypc': {
             const v = p.ypc;
@@ -19435,11 +19519,20 @@ window.fmtHeight = fmtHeight;
             // For RBs: show rushing grade on the main table
             // For all others: show overall/offensive grade
             const _pffVal = (p.pos === 'RB' && p.pffRush != null) ? p.pffRush : p.pffGrade;
-            if (_pffVal != null) {
-              const pffCls = _pffVal >= 90 ? 'pm-jm-gen' : _pffVal >= 80 ? 'pm-jm-elite' : _pffVal >= 70 ? 'pm-jm-starter' : _pffVal >= 60 ? 'pm-jm-contr' : 'pm-jm-low';
-              rows += `<td class="pm-jm"><span class="pm-jm-badge ${pffCls}">${_pffVal.toFixed(1)}</span></td>`;
+            if (_pmIsAdmin) {
+              if (_pffVal != null) {
+                const pffCls = _pffVal >= 90 ? 'pm-jm-gen' : _pffVal >= 80 ? 'pm-jm-elite' : _pffVal >= 70 ? 'pm-jm-starter' : _pffVal >= 60 ? 'pm-jm-contr' : 'pm-jm-low';
+                rows += `<td class="pm-jm" style="cursor:pointer" data-bioname="${p.name}" data-biofield="pff" title="Click to edit PFF grade"><span class="pm-jm-badge ${pffCls}">${_pffVal.toFixed(1)}</span></td>`;
+              } else {
+                rows += `<td style="color:var(--text2);opacity:.4;text-align:center;cursor:pointer" data-bioname="${p.name}" data-biofield="pff" title="Click to add PFF grade">—</td>`;
+              }
             } else {
-              rows += `<td style="color:var(--text2);opacity:.4;text-align:center">—</td>`;
+              if (_pffVal != null) {
+                const pffCls = _pffVal >= 90 ? 'pm-jm-gen' : _pffVal >= 80 ? 'pm-jm-elite' : _pffVal >= 70 ? 'pm-jm-starter' : _pffVal >= 60 ? 'pm-jm-contr' : 'pm-jm-low';
+                rows += `<td class="pm-jm"><span class="pm-jm-badge ${pffCls}">${_pffVal.toFixed(1)}</span></td>`;
+              } else {
+                rows += `<td style="color:var(--text2);opacity:.4;text-align:center">—</td>`;
+              }
             }
             break;
           }
@@ -19605,7 +19698,10 @@ window.fmtHeight = fmtHeight;
               else val = String(n);
             }
             _dcSave(name, val);
+            // Also save to bio collection so it persists for all draft classes
+            if (val) _bioSave(name, 'draft', val);
             _pmBuildCache = null;
+            if (typeof _jmCache !== 'undefined') delete _jmCache[name + '::' + (COMBINE_DATA[name] && COMBINE_DATA[name].pos || '')];
             pmBuiltData = buildProspectData();
             renderTable();
           }
@@ -19617,23 +19713,25 @@ window.fmtHeight = fmtHeight;
         });
       });
 
-      // Bio edit (ht/wt) for admin on 2026 prospects
-      pmTbody.querySelectorAll('.pm-bio-edit[data-bioname]').forEach(el => {
+      // Bio edit (ht/wt/birth/yr/school/ras/pff) for admin
+      pmTbody.querySelectorAll('[data-bioname][data-biofield]').forEach(el => {
         el.addEventListener('click', function(e) {
           e.stopPropagation();
           const name = this.dataset.bioname;
           const field = this.dataset.biofield;
-          const td = this;
-          let placeholder = field === 'ht' ? "6-2" : "210";
-          let curVal = '';
-          if (field === 'ht') {
-            const cb = COMBINE_DATA[name];
-            curVal = (cb && cb.ht) ? cb.ht : '';
-          } else {
-            const cb = COMBINE_DATA[name];
-            curVal = (cb && cb.wt) ? String(cb.wt) : '';
-          }
-          td.innerHTML = `<input type="text" class="pm-dc-input" value="${curVal}" placeholder="${placeholder}" maxlength="5" style="width:44px">`;
+          const td = this.tagName === 'TD' ? this : this.closest('td');
+          const _fieldConfig = {
+            ht:     { placeholder: '6-2',        width: '44px', maxlen: 5,  getCur: () => { const cb = COMBINE_DATA[name]; return (cb && cb.ht) ? cb.ht : ''; } },
+            wt:     { placeholder: '210',        width: '44px', maxlen: 5,  getCur: () => { const cb = COMBINE_DATA[name]; return (cb && cb.wt) ? String(cb.wt) : ''; } },
+            birth:  { placeholder: '2000-01-15', width: '88px', maxlen: 10, getCur: () => (typeof LEGEND_BIRTH_YEARS !== 'undefined' && LEGEND_BIRTH_YEARS[name]) ? LEGEND_BIRTH_YEARS[name] : '' },
+            yr:     { placeholder: '2020',       width: '48px', maxlen: 4,  getCur: () => { const cb = COMBINE_DATA[name]; return (cb && cb.yr) ? String(cb.yr) : ''; } },
+            school: { placeholder: 'Alabama',    width: '100px',maxlen: 30, getCur: () => { const cb = COMBINE_DATA[name]; return (cb && cb.school) ? cb.school : ''; } },
+            ras:    { placeholder: '8.50',       width: '48px', maxlen: 5,  getCur: () => { const cb = COMBINE_DATA[name]; return (cb && cb.ras) ? String(cb.ras) : ''; } },
+            pff:    { placeholder: '75.0',       width: '48px', maxlen: 5,  getCur: () => { return (window._PFF_OVERRIDES && window._PFF_OVERRIDES[name]) ? String(window._PFF_OVERRIDES[name]) : ''; } },
+          };
+          const cfg = _fieldConfig[field] || { placeholder: '', width: '48px', maxlen: 10, getCur: () => '' };
+          const curVal = cfg.getCur();
+          td.innerHTML = `<input type="text" class="pm-dc-input" value="${curVal}" placeholder="${cfg.placeholder}" maxlength="${cfg.maxlen}" style="width:${cfg.width}">`;
           const inp = td.querySelector('.pm-dc-input');
           inp.focus();
           inp.select();
@@ -19750,9 +19848,26 @@ window.fmtHeight = fmtHeight;
   const origSwitchPage = window.switchPage || (typeof switchPage === 'function' ? switchPage : null);
   // Use a MutationObserver to detect when prospect page becomes active
   const prospectPage = document.getElementById('pageProspect');
+  const _pmOverlay = document.getElementById('pmComingSoonOverlay');
+  const _pmContent = document.getElementById('pmWrapperContent');
+
+  function _pmUpdateGate() {
+    const admin = typeof window.isAdmin === 'function' && window.isAdmin();
+    if (admin) {
+      _pmOverlay.style.display = 'none';
+      _pmContent.style.filter = '';
+      _pmContent.style.pointerEvents = '';
+    } else {
+      _pmOverlay.style.display = 'flex';
+      _pmContent.style.filter = 'blur(8px)';
+      _pmContent.style.pointerEvents = 'none';
+    }
+  }
+
   let pmInitialized = false;
   const pmObserver = new MutationObserver(function() {
     if (prospectPage.classList.contains('active')) {
+      _pmUpdateGate();
       if (!pmInitialized) {
         pmInitialized = true;
         rebuildAndRender();
@@ -19771,6 +19886,7 @@ window.fmtHeight = fmtHeight;
         // Reset DC + bio caches so admin can load from Firestore after login
         _dcLoaded = false;
         _bioLoaded = false;
+        _pmUpdateGate();
         if (pmInitialized && prospectPage.classList.contains('active')) {
           rebuildAndRender();
         }

@@ -24762,15 +24762,37 @@ Rules:
     return { grade: 'F', color: '#dc2626' };
   }
 
+  // Map league format to ranking mode
+  function _mtGetRankingMode() {
+    if (_mtFormat.type === 'dynasty' && _mtFormat.sf) return 'dynastysf';
+    if (_mtFormat.type === 'dynasty') return 'dynasty';
+    if (_mtFormat.sf) return 'superflex';
+    return 'redraft';
+  }
+
   function _mtGetPlayerRank(name) {
     if (typeof D === 'undefined') return 999;
     const d = D.find(p => p.n === name);
     if (!d) return 999;
-    // In SF, boost QBs significantly
-    let rank = d.myRank || d.idx || 999;
-    if (_mtFormat.sf && d.s === 'QB' && rank > 0) {
-      rank = Math.max(1, Math.round(rank * 0.55)); // QBs ~1.8x more valuable in SF
+
+    // Get the correct board for this league's format
+    const mode = _mtGetRankingMode();
+    let rank = 999;
+
+    // Try to read rank from the mode-specific board order
+    if (typeof versionBoards !== 'undefined' && typeof currentVersion !== 'undefined') {
+      const board = versionBoards[currentVersion] && versionBoards[currentVersion][mode];
+      if (board && board.length) {
+        const pos = board.indexOf(d.idx);
+        if (pos >= 0) rank = pos + 1;
+      }
     }
+
+    // Fallback to myRank if board lookup failed
+    if (rank === 999) {
+      rank = d.myRank || d.idx || 999;
+    }
+
     return rank;
   }
 
@@ -25070,6 +25092,8 @@ Rules:
       labels.push(_mtFormat.type.charAt(0).toUpperCase() + _mtFormat.type.slice(1));
       if (_mtFormat.sf) labels.push('SF');
       labels.push(_mtFormat.ppr === 1 ? 'PPR' : _mtFormat.ppr === 0.5 ? '.5 PPR' : 'STD');
+      const modeNames = { redraft: 'Redraft', superflex: 'Superflex', dynasty: 'Dynasty 1QB', dynastysf: 'Dynasty SF' };
+      labels.push('Using: ' + (modeNames[_mtGetRankingMode()] || 'Redraft') + ' Rankings');
       fmtEl.textContent = labels.join(' · ');
     }
   }

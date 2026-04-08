@@ -15944,7 +15944,7 @@ window.fmtHeight = fmtHeight;
           if (bio.pos) COMBINE_DATA[name].pos = bio.pos;
         }
       });
-    }).catch(function(){});
+    }).catch(function(e) { _bioLoaded = false; console.warn('[Bio] Load failed, will retry', e); });
   }
 
   function _bioSave(playerName, field, val) {
@@ -15961,7 +15961,7 @@ window.fmtHeight = fmtHeight;
     db.collection('prospect_bio').doc(playerName).set(
       Object.assign({}, _bioCache[playerName], { ts: new Date().toISOString() }),
       { merge: true }
-    );
+    ).catch(function(e) { console.warn('[Bio] Save failed for', playerName, e); });
   }
 
   const pmThead = document.getElementById('pmThead');
@@ -19768,8 +19768,9 @@ window.fmtHeight = fmtHeight;
   if (typeof firebase !== 'undefined' && firebase.auth) {
     try {
       firebase.auth().onAuthStateChanged(function() {
-        // Reset DC cache so admin can load from Firestore after login
+        // Reset DC + bio caches so admin can load from Firestore after login
         _dcLoaded = false;
+        _bioLoaded = false;
         if (pmInitialized && prospectPage.classList.contains('active')) {
           rebuildAndRender();
         }

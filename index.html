@@ -10195,6 +10195,14 @@ document.addEventListener('click', function(e) {
       var modeLabel = config.modeLabel || 'Current';
       var shareTitle = 'ELITE PULL DAILY — ' + modeLabel;
       var shareSub = won ? ('Guessed in ' + guesses.length + '/' + MAX) : ('X/' + MAX);
+      // Rebuild resultRows from guesses if empty (safety net)
+      if (resultRows.length === 0 && guesses.length > 0 && target) {
+        var pool = getPool();
+        guesses.forEach(function(gName) {
+          var p = pool.find(function(x) { return x.name === gName; });
+          if (p) resultRows.push(compare(p, target).cells.map(function(c) { return c.match; }));
+        });
+      }
       if (typeof window._gwShowSharePopup === 'function' && resultRows.length > 0) {
         window._gwShowSharePopup(shareTitle, shareSub, resultRows);
       }
@@ -10270,6 +10278,14 @@ document.addEventListener('click', function(e) {
         var modeLabel2 = config.modeLabel || 'Current';
         var shareTitle2 = 'ELITE PULL DAILY — ' + modeLabel2;
         var shareSub2 = won ? ('Guessed in ' + guesses.length + '/' + MAX) : ('X/' + MAX);
+        // Rebuild resultRows if replay didn't populate them
+        if (resultRows.length === 0 && guesses.length > 0 && target) {
+          var pool2 = getPool();
+          guesses.forEach(function(gName) {
+            var p2 = pool2.find(function(x) { return x.name === gName; });
+            if (p2) resultRows.push(compare(p2, target).cells.map(function(c) { return c.match; }));
+          });
+        }
         var reBtn2 = result.querySelector('.gw-share-reopen');
         if (reBtn2) {
           reBtn2.addEventListener('click', function() {
@@ -26604,6 +26620,7 @@ Rules:
 })();
 
 </script>
+</div></div><!-- close pageTrivia -->
 <div class="gw-share-overlay" id="gwShareOverlay">
 <div class="gw-share-box">
 <div class="gw-share-title" id="gwShareTitle">ELITE PULL</div>

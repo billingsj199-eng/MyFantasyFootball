@@ -25603,6 +25603,7 @@ Rules:
     const tabs = [
       { id: 'exposure', label: 'EXPOSURE' },
       { id: 'teams', label: 'TEAM SCORES' },
+      { id: 'adp', label: 'ADP VALUE' },
       { id: 'value', label: 'VALUE PICKS' },
       { id: 'builds', label: 'BUILD ANALYSIS' }
     ];
@@ -25687,6 +25688,98 @@ Rules:
         html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:3px 6px;color:var(--text2)">${pi + 1}</td><td style="padding:3px 6px;color:var(--text2)">${p.pick}</td><td style="padding:3px 6px;color:var(--text)">${_esc(p.name)}</td><td style="padding:3px 6px;color:var(--text2)">${p.pos}</td><td style="padding:3px 6px;font-weight:700;color:${rankColor}">${rank < 500 ? rank : '—'}</td><td style="text-align:center;padding:3px 6px;font-weight:700;color:${valColor}">${tradeVal}</td><td style="padding:3px 6px;font-weight:700;color:${diffColor}">${diffStr}</td></tr>`;
       });
       html += `</tbody></table>`;
+      html += `</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    // ADP VALUE TAB
+    html += `<div id="udTab_adp" style="display:none">`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">ADP VALUE</div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Teams ranked by total draft value vs Underdog ADP. Positive value = you got players later than their ADP (steal). Negative = reached.</div>`;
+
+    // Score each draft by ADP
+    const adpTeams = [];
+    Object.values(data.drafts).forEach(d => {
+      let totalAdpVal = 0;
+      let totalAdp = 0;
+      let matchedCount = 0;
+      const playerDetails = d.picks.map((p, pi) => {
+        const matched = _udMatchPlayer(p.name);
+        const adp = matched && matched.a && matched.a < 900 ? matched.a : null;
+        const pickNum = p.pick;
+        const diff = adp != null ? Math.round(adp - pickNum) : null; // positive = got them later than ADP (steal)
+        if (adp != null) { totalAdpVal += diff; totalAdp += adp; matchedCount++; }
+        return { name: p.name, pos: p.pos, team: p.team, pick: pickNum, adp, diff, round: pi + 1 };
+      });
+      adpTeams.push({ draft: d, players: playerDetails, totalValue: totalAdpVal, avgAdp: matchedCount > 0 ? Math.round(totalAdp / matchedCount) : 999, matched: matchedCount });
+    });
+    adpTeams.sort((a, b) => b.totalValue - a.totalValue);
+
+    // Summary row
+    const allAdpVals = adpTeams.map(t => t.totalValue);
+    const bestAdpVal = Math.max(...allAdpVals);
+    const worstAdpVal = Math.min(...allAdpVals);
+    const avgAdpVal = allAdpVals.length ? Math.round(allAdpVals.reduce((s, v) => s + v, 0) / allAdpVals.length) : 0;
+    html += `<div style="display:flex;gap:10px;margin-bottom:14px">`;
+    html += `<div style="flex:1;text-align:center;padding:8px;background:#22c55e10;border:1px solid #22c55e40;border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">BEST VALUE</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#22c55e">${bestAdpVal > 0 ? '+' : ''}${bestAdpVal}</div></div>`;
+    html += `<div style="flex:1;text-align:center;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">AVERAGE</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--accent)">${avgAdpVal > 0 ? '+' : ''}${avgAdpVal}</div></div>`;
+    html += `<div style="flex:1;text-align:center;padding:8px;background:#ef444410;border:1px solid #ef444440;border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">WORST VALUE</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#ef4444">${worstAdpVal > 0 ? '+' : ''}${worstAdpVal}</div></div>`;
+    html += `</div>`;
+
+    adpTeams.forEach((at, i) => {
+      const d = at.draft;
+      const valColor = at.totalValue > 20 ? '#22c55e' : at.totalValue > 0 ? '#4ade80' : at.totalValue > -20 ? '#f59e0b' : '#ef4444';
+      const valSign = at.totalValue > 0 ? '+' : '';
+      html += `<div onclick="window._udToggleAdpDetail(${i})" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
+      html += `<div style="display:flex;align-items:center;gap:10px">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--text2);width:20px;text-align:center">${i + 1}</div>`;
+      html += `<div style="width:48px;height:44px;border-radius:8px;background:${valColor}15;border:2px solid ${valColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${valColor}">${valSign}${at.totalValue}</div>`;
+      html += `<div style="flex:1;min-width:0">`;
+      html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">Draft ${i + 1} <span style="font-weight:400;color:var(--text2)">· ${d.tournament} · $${d.fee.toFixed(0)}</span></div>`;
+      html += `<div style="font-size:.65rem;color:var(--text2)">R1: ${_esc(d.picks[0] ? d.picks[0].name : '?')} (pick ${d.picks[0] ? d.picks[0].pick : '?'})</div>`;
+      html += `</div>`;
+      html += `</div>`;
+      // Expandable detail
+      html += `<div id="udAdpDetail_${i}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">`;
+      html += `<table style="width:100%;border-collapse:collapse;font-size:.7rem"><thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px 6px;color:var(--text2)">RD</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">POS</th><th style="text-align:center;padding:4px 6px;color:var(--text2)">PICK</th><th style="text-align:center;padding:4px 6px;color:var(--text2)">ADP</th><th style="text-align:center;padding:4px 6px;color:var(--text2)">VALUE</th></tr></thead><tbody>`;
+      at.players.forEach(p => {
+        const diffColor = p.diff == null ? 'var(--text2)' : p.diff > 20 ? '#22c55e' : p.diff > 0 ? '#4ade80' : p.diff > -20 ? '#f59e0b' : '#ef4444';
+        const diffStr = p.diff != null ? (p.diff > 0 ? '+' + p.diff : String(p.diff)) : '—';
+        const adpStr = p.adp != null ? Math.round(p.adp) : '—';
+        const adpColor = p.adp != null ? (p.adp <= 24 ? '#22c55e' : p.adp <= 60 ? '#4ade80' : p.adp <= 120 ? '#facc15' : p.adp <= 200 ? '#f59e0b' : 'var(--text2)') : 'var(--text2)';
+        const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+        html += `<tr style="border-bottom:1px solid var(--border)">`;
+        html += `<td style="padding:3px 6px;color:var(--text2)">${p.round}</td>`;
+        html += `<td style="padding:3px 6px;color:var(--text)">${_esc(p.name)}</td>`;
+        html += `<td style="padding:3px 6px;color:${posColors[p.pos] || 'var(--text2)'}">${p.pos}</td>`;
+        html += `<td style="text-align:center;padding:3px 6px;color:var(--text)">${p.pick}</td>`;
+        html += `<td style="text-align:center;padding:3px 6px;font-weight:700;color:${adpColor}">${adpStr}</td>`;
+        html += `<td style="text-align:center;padding:3px 6px;font-weight:700;color:${diffColor}">${diffStr}</td>`;
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      // Draft summary
+      const steals = at.players.filter(p => p.diff != null && p.diff > 10).sort((a, b) => b.diff - a.diff);
+      const reaches = at.players.filter(p => p.diff != null && p.diff < -10).sort((a, b) => a.diff - b.diff);
+      if (steals.length || reaches.length) {
+        html += `<div style="display:flex;gap:10px;margin-top:8px">`;
+        if (steals.length) {
+          html += `<div style="flex:1"><div style="font-size:.6rem;color:#22c55e;font-weight:700;margin-bottom:3px">STEALS</div>`;
+          steals.slice(0, 3).forEach(s => {
+            html += `<div style="font-size:.65rem;color:var(--text)">${_esc(s.name)} <span style="color:#22c55e;font-weight:700">+${s.diff}</span></div>`;
+          });
+          html += `</div>`;
+        }
+        if (reaches.length) {
+          html += `<div style="flex:1"><div style="font-size:.6rem;color:#ef4444;font-weight:700;margin-bottom:3px">REACHES</div>`;
+          reaches.slice(0, 3).forEach(r => {
+            html += `<div style="font-size:.65rem;color:var(--text)">${_esc(r.name)} <span style="color:#ef4444;font-weight:700">${r.diff}</span></div>`;
+          });
+          html += `</div>`;
+        }
+        html += `</div>`;
+      }
       html += `</div>`;
       html += `</div>`;
     });
@@ -25846,7 +25939,7 @@ Rules:
   };
 
   window._udSwitchTab = function(tabId) {
-    const tabs = ['exposure', 'teams', 'value', 'builds'];
+    const tabs = ['exposure', 'teams', 'adp', 'value', 'builds'];
     tabs.forEach(t => {
       const el = document.getElementById('udTab_' + t);
       if (el) el.style.display = t === tabId ? '' : 'none';
@@ -25861,6 +25954,11 @@ Rules:
 
   window._udToggleTeamDetail = function(idx) {
     const el = document.getElementById('udTeamDetail_' + idx);
+    if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+  };
+
+  window._udToggleAdpDetail = function(idx) {
+    const el = document.getElementById('udAdpDetail_' + idx);
     if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
   };
 

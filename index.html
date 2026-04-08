@@ -13742,6 +13742,13 @@ window.fmtHeight = fmtHeight;
     return Math.round(base * (YEAR_MULT[year] || 0.7) * (SLOT_MULT[slot] || 1.0));
   }
 
+  // Expose pick value function globally for My Teams
+  window._getPickValue = function(round, year, slot, mode) {
+    const m = mode || tradeMode;
+    const base = PICK_BASE[round] ? PICK_BASE[round][m] : 0;
+    return Math.round(base * (YEAR_MULT[year] || 0.7) * (SLOT_MULT[slot] || 1.0));
+  };
+
   // Tier multipliers — players in higher tiers are worth significantly more
   const TIER_MULT = {
     'S': 1.5,   // Elite — massive premium
@@ -24845,24 +24852,44 @@ Rules:
     return d.age;
   }
 
-  // Grade a roster with format awareness
-  function _mtGradeRoster(players) {
-    const ranked = players.map(name => ({
-      name,
-      rank: _mtGetPlayerRank(name),
-      pos: _mtGetPlayerPos(name),
-      team: _mtGetPlayerTeam(name),
-      age: _mtGetPlayerAge(name)
-    }));
-    ranked.sort((a, b) => a.rank - b.rank);
+  // Score a roster using the trade value system (same curve as trade calc)
+  function _mtScoreRoster(players, draftPicks) {
+    const mode = _mtGetRankingMode();
+    const ranked = players.map(name => {
+      const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
+      const rank = _mtGetPlayerRank(name);
+      const val = (d && typeof window._getTradeValue === 'function') ? window._getTradeValue(d, 'jacks', mode) : 1;
+      return {
+        name, rank, val,
+        pos: _mtGetPlayerPos(name),
+        team: _mtGetPlayerTeam(name),
+        age: _mtGetPlayerAge(name)
+      };
+    });
+    ranked.sort((a, b) => b.val - a.val || a.rank - b.rank);
 
-    // Starters = top N based on format
-    const numStarters = _mtFormat.starters || 10;
-    const starters = ranked.slice(0, Math.min(numStarters, ranked.length));
-    const avgRank = starters.length > 0 ? starters.reduce((s, p) => s + p.rank, 0) / starters.length : 999;
-    const grade = _mtGrade(avgRank);
+    const playerTotal = ranked.reduce((s, p) => s + p.val, 0);
 
-    // Dynasty bonus: younger rosters get a boost
+    // Draft pick values (dynasty only)
+    let pickTotal = 0;
+    const scoredPicks = (draftPicks || []).map(p => {
+      const val = (typeof window._getPickValue === 'function') ? window._getPickValue(p.round, p.year, p.slot, mode) : 0;
+      pickTotal += val;
+      return { ...p, val };
+    });
+    scoredPicks.sort((a, b) => b.val - a.val);
+
+    const total = playerTotal + pickTotal;
+
+    // Position scores
+    const posScores = {};
+    ['QB','RB','WR','TE'].forEach(pos => {
+      const group = ranked.filter(p => p.pos === pos);
+      const pts = group.reduce((s, p) => s + p.val, 0);
+      posScores[pos] = { pts, count: group.length };
+    });
+
+    // Dynasty age note
     let dynastyNote = '';
     if (_mtFormat.type === 'dynasty') {
       const ages = ranked.filter(p => p.age).map(p => p.age);
@@ -24870,24 +24897,7 @@ Rules:
       if (avgAge) dynastyNote = `Avg Age: ${avgAge}`;
     }
 
-    // Position grades with SF-awareness
-    const posGroups = {};
-    ranked.forEach(p => {
-      if (!posGroups[p.pos]) posGroups[p.pos] = [];
-      posGroups[p.pos].push(p);
-    });
-    const posGrades = {};
-    const qbStarters = _mtFormat.sf ? 2 : 1;
-    ['QB','RB','WR','TE'].forEach(pos => {
-      const group = posGroups[pos] || [];
-      if (group.length === 0) { posGrades[pos] = { grade: 'F', color: '#dc2626', count: 0 }; return; }
-      const topN = pos === 'QB' ? qbStarters : (pos === 'TE' ? 1 : 3);
-      const top = group.slice(0, topN);
-      const avg = top.reduce((s, p) => s + p.rank, 0) / top.length;
-      posGrades[pos] = { ..._mtGrade(avg), count: group.length };
-    });
-
-    return { grade, avgRank: Math.round(avgRank), players: ranked, posGrades, dynastyNote };
+    return { total, playerTotal, pickTotal, players: ranked, picks: scoredPicks, posScores, dynastyNote };
   }
 
   // Detect format from Sleeper league data
@@ -25026,31 +25036,77 @@ Rules:
           ownerId: r.owner_id,
           isMyTeam: r.owner_id === _mtMyUserId,
           players: playerNames,
+          draftPicks: [],
           wins: r.settings ? r.settings.wins : 0,
           losses: r.settings ? r.settings.losses : 0,
           fpts: r.settings ? (r.settings.fpts || 0) + (r.settings.fpts_decimal || 0) / 100 : 0,
         };
       });
 
-      // Grade all teams
+      // 5b. Fetch traded draft picks for dynasty leagues
+      if (_mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper') {
+        try {
+          status.textContent = 'Fetching draft picks...';
+          const picksResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/traded_picks`);
+          if (picksResp.ok) {
+            const tradedPicks = await picksResp.json();
+            // Build a map of pick ownership: {rosterId -> [{round, year, originalOwner}]}
+            // Start: each team owns their own 1st-4th for current + next 2 years
+            const season = parseInt(league.season || new Date().getFullYear());
+            const pickYears = [season + 1, season + 2, season + 3];
+            const rounds = ['1st', '2nd', '3rd', '4th'];
+            const ownershipMap = {}; // key: "year-round-originalRosterId" -> currentOwnerId
+            rosters.forEach(r => {
+              pickYears.forEach(yr => {
+                rounds.forEach(rd => {
+                  ownershipMap[`${yr}-${rd}-${r.roster_id}`] = r.roster_id;
+                });
+              });
+            });
+            // Apply trades
+            (tradedPicks || []).forEach(tp => {
+              const rd = tp.round ? (tp.round === 1 ? '1st' : tp.round === 2 ? '2nd' : tp.round === 3 ? '3rd' : '4th') : null;
+              if (rd && tp.season && tp.roster_id && tp.owner_id) {
+                const key = `${tp.season}-${rd}-${tp.roster_id}`;
+                ownershipMap[key] = tp.owner_id;
+              }
+            });
+            // Build pick arrays per team
+            const rosterIdToTeamIdx = {};
+            teams.forEach((t, i) => { rosterIdToTeamIdx[t.id] = i; });
+            Object.entries(ownershipMap).forEach(([key, ownerId]) => {
+              const [year, round, origRosterId] = key.split('-');
+              const origIdx = rosterIdToTeamIdx[parseInt(origRosterId)];
+              const ownerIdx = rosterIdToTeamIdx[ownerId];
+              if (ownerIdx !== undefined) {
+                // Estimate slot based on original owner's standing
+                const origTeam = origIdx !== undefined ? teams[origIdx] : null;
+                const slot = origTeam ? (origTeam.wins <= 4 ? 'early' : origTeam.wins >= 9 ? 'late' : 'mid') : 'mid';
+                teams[ownerIdx].draftPicks.push({ round, year, slot, original: origTeam ? origTeam.owner : '?' });
+              }
+            });
+          }
+        } catch(e) { console.warn('[MyTeams] Draft picks fetch error:', e); }
+      }
+
+      // Score all teams
       teams.forEach(t => {
-        const result = _mtGradeRoster(t.players);
-        t.grade = result.grade;
-        t.avgRank = result.avgRank;
-        t.graded = result.players;
-        t.posGrades = result.posGrades;
-        t.dynastyNote = result.dynastyNote;
+        const result = _mtScoreRoster(t.players, _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper' ? t.draftPicks : []);
+        t.score = result;
       });
 
-      // Sort by grade (avgRank)
-      teams.sort((a, b) => a.avgRank - b.avgRank);
+      // Sort by total score (highest first)
+      teams.sort((a, b) => b.score.total - a.score.total);
 
       // Render
       _mtRenderLeague(league, teams);
       status.textContent = `Imported ${teams.length} teams from "${league.name}"`;
 
-      // Save to localStorage
+      // Save to localStorage (league ID for quick re-import)
       localStorage.setItem('mt_last_league', JSON.stringify({ id: leagueId, name: league.name, ts: Date.now() }));
+
+      // Save full league to Firestore
+      _mtSaveLeagueToCloud(leagueId, league, teams);
 
     } catch (err) {
       status.textContent = 'Error: ' + err.message;
@@ -25092,22 +25148,27 @@ Rules:
     html += `</div>`;
 
     teams.forEach((t, i) => {
-      const g = t.grade;
+      const sc = t.score;
       const isMe = t.isMyTeam;
       const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
+      const allScores = teams.map(x => x.score.total);
+      const maxScore = Math.max(...allScores);
+      const avgScore = Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length);
+      const scoreColor = sc.total >= maxScore ? '#22c55e' : sc.total >= avgScore ? '#4ade80' : sc.total >= avgScore * 0.7 ? '#f59e0b' : '#ef4444';
       html += `<div onclick="window._mtShowTeam(${i})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;${meStyle};border-radius:8px;cursor:pointer;transition:all .15s;position:relative" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">`;
       if (isMe) html += `<div style="position:absolute;top:-6px;right:10px;font-size:.5rem;background:var(--accent);color:#000;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px">MY TEAM</div>`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--text2);width:24px;text-align:center">${i + 1}</div>`;
-      html += `<div style="width:48px;height:48px;border-radius:10px;background:${g.color}15;border:2px solid ${g.color};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:${g.color};letter-spacing:1px">${g.grade}</div>`;
+      html += `<div style="width:48px;height:48px;border-radius:10px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor};letter-spacing:1px">${sc.total}</div>`;
       html += `<div style="flex:1;min-width:0">`;
       html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}</div>`;
-      html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · Avg Rank: ${t.avgRank} · ${t.players.length} players${t.dynastyNote ? ' · ' + t.dynastyNote : ''}</div>`;
+      html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div>`;
       html += `</div>`;
-      // Position grades mini
+      // Position scores mini
       html += `<div style="display:flex;gap:4px">`;
+      const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
       ['QB','RB','WR','TE'].forEach(pos => {
-        const pg = t.posGrades[pos];
-        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">${pos}</div><div style="font-size:.7rem;font-weight:700;color:${pg.color}">${pg.grade}</div></div>`;
+        const ps = sc.posScores[pos] || { pts: 0 };
+        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">${pos}</div><div style="font-size:.7rem;font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
       });
       html += `</div>`;
       html += `</div>`;
@@ -25142,44 +25203,73 @@ Rules:
     const teams = window._mtTeams;
     if (!teams || !teams[idx]) return;
     const t = teams[idx];
+    const sc = t.score;
     const detail = document.getElementById('mtTeamDetail');
     detail.style.display = '';
 
+    const allScores = teams.map(x => x.score.total);
+    const maxScore = Math.max(...allScores);
+    const avgScore = Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length);
+    const scoreColor = sc.total >= maxScore ? '#22c55e' : sc.total >= avgScore ? '#4ade80' : sc.total >= avgScore * 0.7 ? '#f59e0b' : '#ef4444';
+
     let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">`;
-    html += `<div style="width:56px;height:56px;border-radius:12px;background:${t.grade.color}15;border:3px solid ${t.grade.color};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:${t.grade.color}">${t.grade.grade}</div>`;
+    html += `<div style="width:56px;height:56px;border-radius:12px;background:${scoreColor}15;border:3px solid ${scoreColor};display:flex;flex-direction:column;align-items:center;justify-content:center">`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${scoreColor};line-height:1">${sc.total}</div>`;
+    if (sc.pickTotal) html += `<div style="font-size:.5rem;color:var(--text2)">+${sc.pickTotal} picks</div>`;
+    html += `</div>`;
     html += `<div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text)">${_esc(t.owner)}${t.isMyTeam ? ' <span style="font-size:.7rem;color:var(--accent)">⭐ MY TEAM</span>' : ''}</div>`;
-    html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Avg Rank: ${t.avgRank}${t.dynastyNote ? ' · ' + t.dynastyNote : ''}</div></div>`;
+    html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Players: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div></div>`;
     html += `<button onclick="document.getElementById('mtTeamDetail').style.display='none'" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕ Close</button>`;
     html += `</div>`;
 
     // Position breakdown
     html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">`;
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
     ['QB','RB','WR','TE'].forEach(pos => {
-      const pg = t.posGrades[pos];
-      html += `<div style="text-align:center;padding:8px;background:${pg.color}10;border:1px solid ${pg.color}40;border-radius:8px">`;
+      const ps = sc.posScores[pos] || { pts: 0, count: 0 };
+      html += `<div style="text-align:center;padding:8px;background:${posColors[pos]}10;border:1px solid ${posColors[pos]}40;border-radius:8px">`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;color:var(--text2)">${pos}</div>`;
-      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${pg.color}">${pg.grade}</div>`;
-      html += `<div style="font-size:.6rem;color:var(--text2)">${pg.count} player${pg.count !== 1 ? 's' : ''}</div>`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${posColors[pos]}">${ps.pts}</div>`;
+      html += `<div style="font-size:.6rem;color:var(--text2)">${ps.count} player${ps.count !== 1 ? 's' : ''}</div>`;
       html += `</div>`;
     });
     html += `</div>`;
 
     // Full roster table
     html += `<table style="width:100%;border-collapse:collapse;font-size:.75rem">`;
-    html += `<thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--text2)">RANK</th><th style="text-align:left;padding:6px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:6px 8px;color:var(--text2)">POS</th><th style="text-align:left;padding:6px 8px;color:var(--text2)">TEAM</th>`;
-    if (_mtFormat.type === 'dynasty') html += `<th style="text-align:left;padding:6px 8px;color:var(--text2)">AGE</th>`;
+    html += `<thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:6px 8px;color:var(--text2)">POS</th><th style="text-align:left;padding:6px 8px;color:var(--text2)">TEAM</th><th style="text-align:center;padding:6px 8px;color:var(--text2)">RANK</th><th style="text-align:center;padding:6px 8px;color:var(--text2)">VAL</th>`;
+    if (_mtFormat.type === 'dynasty') html += `<th style="text-align:center;padding:6px 8px;color:var(--text2)">AGE</th>`;
     html += `</tr></thead><tbody>`;
-    t.graded.forEach(p => {
+    sc.players.forEach(p => {
       const rankColor = p.rank <= 24 ? '#22c55e' : p.rank <= 60 ? '#4ade80' : p.rank <= 120 ? '#facc15' : p.rank <= 200 ? '#f59e0b' : '#ef4444';
+      const valColor = p.val >= 60 ? '#22c55e' : p.val >= 30 ? '#4ade80' : p.val >= 10 ? '#facc15' : p.val >= 3 ? '#f59e0b' : 'var(--text2)';
       html += `<tr style="border-bottom:1px solid var(--border)">`;
-      html += `<td style="padding:5px 8px;font-weight:700;color:${rankColor}">${p.rank <= 500 ? p.rank : '—'}</td>`;
       html += `<td style="padding:5px 8px;color:var(--text)">${_esc(p.name)}</td>`;
       html += `<td style="padding:5px 8px;color:var(--text2)">${p.pos}</td>`;
       html += `<td style="padding:5px 8px;color:var(--text2)">${p.team}</td>`;
-      if (_mtFormat.type === 'dynasty') html += `<td style="padding:5px 8px;color:var(--text2)">${p.age || '—'}</td>`;
+      html += `<td style="text-align:center;padding:5px 8px;font-weight:700;color:${rankColor}">${p.rank <= 500 ? p.rank : '—'}</td>`;
+      html += `<td style="text-align:center;padding:5px 8px;font-weight:700;color:${valColor}">${p.val}</td>`;
+      if (_mtFormat.type === 'dynasty') html += `<td style="text-align:center;padding:5px 8px;color:var(--text2)">${p.age || '—'}</td>`;
       html += `</tr>`;
     });
     html += `</tbody></table>`;
+
+    // Draft picks section (dynasty only)
+    if (sc.picks && sc.picks.length > 0) {
+      html += `<div style="margin-top:16px">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">DRAFT PICKS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(+${sc.pickTotal} total value)</span></div>`;
+      html += `<div style="display:flex;flex-wrap:wrap;gap:6px">`;
+      sc.picks.forEach(pk => {
+        const valColor = pk.val >= 60 ? '#22c55e' : pk.val >= 30 ? '#4ade80' : pk.val >= 10 ? '#facc15' : '#f59e0b';
+        html += `<div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.72rem">`;
+        html += `<span style="font-weight:700;color:var(--accent)">${pk.year} ${pk.round}</span>`;
+        html += `<span style="color:var(--text2)"> ${pk.slot}</span>`;
+        if (pk.original && pk.original !== t.owner) html += `<span style="color:var(--text2)"> (via ${_esc(pk.original)})</span>`;
+        html += `<span style="font-weight:700;color:${valColor};margin-left:6px">${pk.val}</span>`;
+        html += `</div>`;
+      });
+      html += `</div></div>`;
+    }
 
     detail.innerHTML = html;
     detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -25220,9 +25310,148 @@ Rules:
   }
   window._mtCreateManualTeam = function() {
     if (!window._mtManualRoster.length) return;
-    const result = _mtGradeRoster(window._mtManualRoster);
-    alert(`Team Grade: ${result.grade.grade} (Avg Rank: ${result.avgRank})\n\nQB: ${result.posGrades.QB.grade}  RB: ${result.posGrades.RB.grade}  WR: ${result.posGrades.WR.grade}  TE: ${result.posGrades.TE.grade}`);
+    const result = _mtScoreRoster(window._mtManualRoster, []);
+    const posLines = ['QB','RB','WR','TE'].map(pos => {
+      const ps = result.posScores[pos] || { pts: 0 };
+      return `${pos}: ${ps.pts}`;
+    }).join('  ');
+    alert(`Team Score: ${result.total}\n\n${posLines}`);
   };
+
+  // ═══════════════════════════════════════════════════════════
+  // FIRESTORE TEAM PERSISTENCE
+  // ═══════════════════════════════════════════════════════════
+
+  function _mtSaveLeagueToCloud(leagueId, league, teams) {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+
+    const payload = {
+      leagueId: leagueId,
+      name: league.name || 'League',
+      season: league.season || '',
+      format: { ..._mtFormat },
+      teams: teams.map(t => ({
+        id: t.id,
+        owner: t.owner,
+        ownerId: t.ownerId || '',
+        isMyTeam: t.isMyTeam || false,
+        players: t.players,
+        draftPicks: t.draftPicks || [],
+        wins: t.wins || 0,
+        losses: t.losses || 0,
+        fpts: t.fpts || 0
+      })),
+      savedAt: new Date().toISOString()
+    };
+
+    db.collection('user_teams').doc(user.uid).collection('leagues').doc(leagueId).set(payload)
+      .then(() => { console.log('[MyTeams] Saved league to cloud'); _mtLoadSavedLeagues(); })
+      .catch(e => { console.warn('[MyTeams] Save error:', e); });
+  }
+
+  function _mtLoadSavedLeagues() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+
+    db.collection('user_teams').doc(user.uid).collection('leagues').get().then(snap => {
+      if (snap.empty) { _mtRenderSavedTeams([]); return; }
+      const leagues = [];
+      snap.forEach(doc => { leagues.push(doc.data()); });
+      leagues.sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
+      window._mtSavedLeagues = leagues;
+      _mtRenderSavedTeams(leagues);
+    }).catch(e => { console.warn('[MyTeams] Load error:', e); });
+  }
+
+  function _mtRenderSavedTeams(leagues) {
+    const container = document.getElementById('mtSavedTeams');
+    if (!container) return;
+    if (!leagues.length) { container.innerHTML = ''; return; }
+
+    let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">SAVED LEAGUES</div>';
+    leagues.forEach((lg, i) => {
+      const teamCount = lg.teams ? lg.teams.length : 0;
+      const fmtParts = [];
+      if (lg.format) {
+        fmtParts.push(lg.format.type ? lg.format.type.charAt(0).toUpperCase() + lg.format.type.slice(1) : '');
+        if (lg.format.sf) fmtParts.push('SF');
+        fmtParts.push(lg.format.ppr === 1 ? 'PPR' : lg.format.ppr === 0.5 ? '.5 PPR' : 'STD');
+      }
+      const savedDate = lg.savedAt ? new Date(lg.savedAt).toLocaleDateString() : '';
+
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">`;
+      html += `<div style="flex:1;min-width:0">`;
+      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(lg.name || 'League')}</div>`;
+      html += `<div style="font-size:.65rem;color:var(--text2)">${teamCount} teams · ${fmtParts.join(' · ')}${lg.season ? ' · ' + lg.season : ''} · Saved ${savedDate}</div>`;
+      html += `</div>`;
+      html += `<button onclick="window._mtLoadSavedLeague(${i})" style="padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;cursor:pointer">LOAD</button>`;
+      html += `<button onclick="window._mtDeleteSavedLeague('${_esc(lg.leagueId)}')" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;color:#ef4444;cursor:pointer;font-weight:700">✕</button>`;
+      html += `</div>`;
+    });
+    container.innerHTML = html;
+  }
+
+  window._mtLoadSavedLeague = function(idx) {
+    const leagues = window._mtSavedLeagues;
+    if (!leagues || !leagues[idx]) return;
+    const lg = leagues[idx];
+
+    // Restore format
+    if (lg.format) _mtFormat = { ...lg.format };
+
+    // Re-score teams with current rankings
+    const teams = (lg.teams || []).map(t => ({
+      ...t,
+      players: t.players || [],
+      draftPicks: t.draftPicks || []
+    }));
+
+    teams.forEach(t => {
+      const isDynasty = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
+      const result = _mtScoreRoster(t.players, isDynasty ? t.draftPicks : []);
+      t.score = result;
+    });
+
+    teams.sort((a, b) => b.score.total - a.score.total);
+
+    // Render using a fake league object
+    const fakeLg = { name: lg.name || 'League', season: lg.season || '' };
+    _mtRenderLeague(fakeLg, teams);
+
+    // Update league ID field
+    if (lg.leagueId) document.getElementById('mtSleeperLeagueId').value = lg.leagueId;
+    const status = document.getElementById('mtSleeperStatus');
+    if (status) {
+      status.textContent = `Loaded "${lg.name}" from saved data (${lg.savedAt ? new Date(lg.savedAt).toLocaleDateString() : ''})`;
+      status.style.color = '#22c55e';
+    }
+  };
+
+  window._mtDeleteSavedLeague = function(leagueId) {
+    if (!confirm('Remove this saved league?')) return;
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+
+    db.collection('user_teams').doc(user.uid).collection('leagues').doc(leagueId).delete()
+      .then(() => {
+        console.log('[MyTeams] Deleted league:', leagueId);
+        _mtLoadSavedLeagues();
+      })
+      .catch(e => { console.warn('[MyTeams] Delete error:', e); });
+  };
+
+  // Auto-load saved leagues on auth
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try {
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) { setTimeout(_mtLoadSavedLeagues, 300); }
+      });
+    } catch(e) {}
+  }
 
   // ═══════════════════════════════════════════════════════════
   // UNDERDOG PORTFOLIO ANALYZER

@@ -22865,6 +22865,11 @@ window.fmtHeight = fmtHeight;
         } else {
           input.placeholder = 'try again...';
         }
+        // In multiplayer, advance to next team on wrong guess
+        if (_triviaGame.active && _triviaGame.teams > 1) {
+          _triviaGame.currentTeam = (_triviaGame.currentTeam + 1) % _triviaGame.teams;
+          _triviaUpdateScore();
+        }
       }
     }
   };

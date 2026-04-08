@@ -13867,9 +13867,9 @@ window.fmtHeight = fmtHeight;
   let pendingPick = null;
 
   const PICK_BASE = {
-    '1st': { redraft: 60, superflex: 65, dynasty: 80, dynastysf: 85 },
-    '2nd': { redraft: 30, superflex: 35, dynasty: 45, dynastysf: 50 },
-    '3rd': { redraft: 15, superflex: 18, dynasty: 22, dynastysf: 25 },
+    '1st': { redraft: 80, superflex: 90, dynasty: 120, dynastysf: 130 },
+    '2nd': { redraft: 35, superflex: 40, dynasty: 55, dynastysf: 60 },
+    '3rd': { redraft: 15, superflex: 18, dynasty: 25, dynastysf: 28 },
     '4th': { redraft: 5, superflex: 7, dynasty: 10, dynastysf: 12 }
   };
   const YEAR_MULT = { '2027': 1.0, '2028': 0.85, '2029': 0.7 };
@@ -13887,15 +13887,15 @@ window.fmtHeight = fmtHeight;
     return Math.round(base * (YEAR_MULT[year] || 0.7) * (SLOT_MULT[slot] || 1.0));
   };
 
-  // Tier multipliers — players in higher tiers are worth significantly more
+  // Tier multipliers — steeper separation between tiers
   const TIER_MULT = {
-    'S': 1.5,   // Elite — massive premium
-    'A': 1.25,  // Top tier — strong premium
-    'B': 1.1,   // Above average — slight boost
+    'S': 1.8,   // Elite — massive premium
+    'A': 1.4,   // Top tier — strong premium
+    'B': 1.15,  // Above average — slight boost
     'C': 1.0,   // Average — baseline
-    'D': 0.85,  // Below average — discounted
-    'E': 0.7,   // Low tier — heavily discounted
-    'F': 0.55   // Bottom — near worthless
+    'D': 0.8,   // Below average — discounted
+    'E': 0.6,   // Low tier — heavily discounted
+    'F': 0.4    // Bottom — near worthless
   };
 
   function _getTierForPlayerFull(d, src, mode) {
@@ -13917,7 +13917,7 @@ window.fmtHeight = fmtHeight;
   }
 
   // Global trade value function — single source of truth for rankings, trade calc, My Teams, portfolio
-  // Accepts a D entry + optional source/mode override (defaults to trade calc's current settings)
+  // Curve: 1000 / (rank^0.8 + 3) — power law with superstar premium and long tail
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
     const m = mode || tradeMode;
@@ -13926,7 +13926,7 @@ window.fmtHeight = fmtHeight;
     const boardPos = srcBoard.indexOf(d.idx);
     const rank = boardPos >= 0 ? boardPos + 1 : 999;
     if (rank >= 400) return 1;
-    let val = Math.max(Math.round(100 * Math.pow(0.988, rank - 1)), 1);
+    let val = Math.max(Math.round(1000 / (Math.pow(rank, 0.8) + 3)), 1);
     const tierLabel = _getTierForPlayerFull(d, s, m);
     if (tierLabel && TIER_MULT[tierLabel] !== undefined) {
       val = Math.round(val * TIER_MULT[tierLabel]);
@@ -25481,7 +25481,7 @@ Rules:
     html += `</tr></thead><tbody>`;
     sc.players.forEach(p => {
       const rankColor = p.rank <= 24 ? '#22c55e' : p.rank <= 60 ? '#4ade80' : p.rank <= 120 ? '#facc15' : p.rank <= 200 ? '#f59e0b' : '#ef4444';
-      const valColor = p.val >= 60 ? '#22c55e' : p.val >= 30 ? '#4ade80' : p.val >= 10 ? '#facc15' : p.val >= 3 ? '#f59e0b' : 'var(--text2)';
+      const valColor = p.val >= 150 ? '#22c55e' : p.val >= 75 ? '#4ade80' : p.val >= 30 ? '#facc15' : p.val >= 10 ? '#f59e0b' : 'var(--text2)';
       html += `<tr style="border-bottom:1px solid var(--border)">`;
       html += `<td style="padding:5px 8px;color:var(--text)">${_esc(p.name)}</td>`;
       html += `<td style="padding:5px 8px;color:var(--text2)">${p.pos}</td>`;
@@ -25499,7 +25499,7 @@ Rules:
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">DRAFT PICKS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(+${sc.pickTotal} total value)</span></div>`;
       html += `<div style="display:flex;flex-wrap:wrap;gap:6px">`;
       sc.picks.forEach(pk => {
-        const valColor = pk.val >= 60 ? '#22c55e' : pk.val >= 30 ? '#4ade80' : pk.val >= 10 ? '#facc15' : '#f59e0b';
+        const valColor = pk.val >= 150 ? '#22c55e' : pk.val >= 75 ? '#4ade80' : pk.val >= 30 ? '#facc15' : '#f59e0b';
         html += `<div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.72rem">`;
         html += `<span style="font-weight:700;color:var(--accent)">${pk.year} ${pk.round}</span>`;
         html += `<span style="color:var(--text2)"> ${pk.slot}</span>`;
@@ -26174,7 +26174,7 @@ Rules:
         const diffColor = diff > 20 ? '#22c55e' : diff > 0 ? '#4ade80' : diff < -20 ? '#ef4444' : diff < 0 ? '#f59e0b' : 'var(--text2)';
         const diffStr = rank < 500 ? (diff > 0 ? '+' + diff : String(diff)) : '—';
         const rankColor = rank <= 24 ? '#22c55e' : rank <= 60 ? '#4ade80' : rank <= 120 ? '#facc15' : rank <= 200 ? '#f59e0b' : rank < 500 ? '#ef4444' : 'var(--text2)';
-        const valColor = tradeVal >= 60 ? '#22c55e' : tradeVal >= 30 ? '#4ade80' : tradeVal >= 10 ? '#facc15' : tradeVal >= 3 ? '#f59e0b' : 'var(--text2)';
+        const valColor = tradeVal >= 150 ? '#22c55e' : tradeVal >= 75 ? '#4ade80' : tradeVal >= 30 ? '#facc15' : tradeVal >= 10 ? '#f59e0b' : 'var(--text2)';
         html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:3px 6px;color:var(--text2)">${pi + 1}</td><td style="padding:3px 6px;color:var(--text2)">${p.pick}</td><td style="padding:3px 6px;color:var(--text)">${_esc(p.name)}</td><td style="padding:3px 6px;color:var(--text2)">${p.pos}</td><td style="padding:3px 6px;font-weight:700;color:${rankColor}">${rank < 500 ? rank : '—'}</td><td style="text-align:center;padding:3px 6px;font-weight:700;color:${valColor}">${tradeVal}</td><td style="padding:3px 6px;font-weight:700;color:${diffColor}">${diffStr}</td></tr>`;
       });
       html += `</tbody></table>`;

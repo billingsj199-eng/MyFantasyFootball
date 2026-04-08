@@ -2895,7 +2895,7 @@ CLEAR
 </select>
 </label>
 
-<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Wrong Guesses Per Cell
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Wrong Guesses (Per Team)
 <select id="triviaMaxWrong" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
 <option value="1">1 (hard)</option>
 <option value="2">2</option>
@@ -2970,7 +2970,7 @@ CLEAR
 <div id="triviaTeamRows" style="display:flex;flex-direction:column;gap:8px"></div>
 </div>
 
-<div id="triviaScoreBar" style="display:none"></div>
+<div id="triviaScoreBar" style="display:none;margin-bottom:10px;padding:10px 14px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)"></div>
 <div id="triviaBoardArea"></div>
 <div class="trivia-export-bar" id="triviaExportBar" style="display:none">
 <button class="trivia-export-btn" onclick="window._triviaResetReveals()">Reset Board</button>
@@ -22204,6 +22204,8 @@ window.fmtHeight = fmtHeight;
     teams: 1,
     currentTeam: 0,
     scores: [0,0,0,0,0,0],
+    wrongCounts: [0,0,0,0,0,0],
+    eliminated: [false,false,false,false,false,false],
     maxWrong: 3,
     timer: 0,
     timerInterval: null,
@@ -22240,6 +22242,7 @@ window.fmtHeight = fmtHeight;
 
     if (s.mode === 'reveal' || !_triviaGame.active) {
       if (s.teams <= 1) {
+        bar.style.display = '';
         bar.innerHTML = `<div class="trivia-score-bar"><span class="correct">✓ ${_triviaScore.correct}</span><span class="wrong">✗ ${_triviaScore.wrong}</span><span class="remaining">${remaining} remaining</span></div>`;
       } else {
         bar.style.display = 'none';
@@ -22247,28 +22250,47 @@ window.fmtHeight = fmtHeight;
       return;
     }
 
-    // Multiplayer scoreboard
-    let html = '<div class="trivia-score-bar" style="flex-wrap:wrap;gap:8px 16px">';
-    for (let i = 0; i < _triviaGame.teams; i++) {
-      const isCur = i === _triviaGame.currentTeam;
-      const tc = _triviaTeamConfig[i];
-      const clr = tc.color;
-      const logoUrl = tc.logo ? _triviaLogoUrl(tc.logo) : '';
-      html += `<span style="color:${clr};display:inline-flex;align-items:center;gap:4px;${isCur ? 'text-decoration:underline;font-size:1.3rem' : 'opacity:.7'}">`;
-      if (logoUrl) html += `<img src="${logoUrl}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle">`;
-      html += `${_esc(tc.name)}: ${_triviaGame.scores[i]}`;
-      if (isCur) html += ' ◀';
-      html += `</span>`;
-    }
-    html += `<span class="remaining">${remaining} left</span>`;
+    bar.style.display = '';
+
+    // Multiplayer scoreboard — card style per team
+    let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">';
+    html += '<span>SCOREBOARD</span>';
+    html += `<span style="font-size:.7rem;letter-spacing:1px;color:var(--text2)">${remaining} cells remaining</span>`;
     // Timer display
     if (_triviaGame.timer > 0 && _triviaGame.timerRemaining > 0) {
       const pct = _triviaGame.timerRemaining / _triviaGame.timer * 100;
       const clr = pct > 50 ? '#22c55e' : pct > 25 ? '#f59e0b' : '#ef4444';
-      html += `<span style="color:${clr};font-variant-numeric:tabular-nums">${_triviaGame.timerRemaining}s</span>`;
+      html += `<span style="color:${clr};font-variant-numeric:tabular-nums;font-size:.9rem">${_triviaGame.timerRemaining}s</span>`;
     }
     if (_triviaGame.stealActive) {
-      html += `<span style="color:#f59e0b;animation:triviaShake .5s infinite">STEAL!</span>`;
+      html += `<span style="color:#f59e0b;animation:triviaShake .5s infinite;font-size:.9rem">STEAL!</span>`;
+    }
+    html += '</div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    for (let i = 0; i < _triviaGame.teams; i++) {
+      const isCur = i === _triviaGame.currentTeam && !_triviaGame.eliminated[i];
+      const isElim = _triviaGame.eliminated[i];
+      const tc = _triviaTeamConfig[i];
+      const clr = tc.color;
+      const logoUrl = tc.logo ? _triviaLogoUrl(tc.logo) : '';
+      const wrongsLeft = _triviaGame.maxWrong > 0 ? Math.max(0, _triviaGame.maxWrong - (_triviaGame.wrongCounts[i] || 0)) : null;
+      const borderStyle = isCur ? `3px solid ${clr}` : isElim ? '1px solid var(--border)' : `1px solid ${clr}50`;
+      const bgStyle = isCur ? `${clr}15` : isElim ? 'transparent' : 'transparent';
+      html += `<div style="flex:1;min-width:100px;padding:8px 10px;border-radius:8px;border:${borderStyle};background:${bgStyle};${isElim ? 'opacity:.35;' : ''}text-align:center;position:relative">`;
+      if (isCur) html += '<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface2);padding:0 6px;font-size:.55rem;color:' + clr + ';letter-spacing:1px;font-family:\'Bebas Neue\',sans-serif">YOUR TURN</div>';
+      if (logoUrl) html += `<img src="${logoUrl}" style="width:28px;height:28px;object-fit:contain;margin-bottom:4px;${isElim ? 'filter:grayscale(1);' : ''}">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;color:${isElim ? 'var(--text2)' : clr};${isElim ? 'text-decoration:line-through;' : ''}">${_esc(tc.name)}</div>`;
+      html += `<div style="font-size:1.4rem;font-weight:700;color:${isElim ? 'var(--text2)' : clr};font-family:'Bebas Neue',sans-serif">${_triviaGame.scores[i]} pts</div>`;
+      if (isElim) {
+        html += '<div style="font-size:.6rem;color:#ef4444;font-weight:700;letter-spacing:1px">ELIMINATED</div>';
+      } else if (wrongsLeft != null) {
+        let livesHtml = '';
+        for (let j = 0; j < _triviaGame.maxWrong; j++) {
+          livesHtml += j < wrongsLeft ? '❤️' : '🖤';
+        }
+        html += `<div style="font-size:.65rem;margin-top:2px">${livesHtml}</div>`;
+      }
+      html += '</div>';
     }
     html += '</div>';
     bar.innerHTML = html;
@@ -22305,9 +22327,8 @@ window.fmtHeight = fmtHeight;
 
   function _triviaNextTurn() {
     _triviaGame.stealActive = false;
-    _triviaGame.currentTeam = (_triviaGame.currentTeam + 1) % _triviaGame.teams;
+    _triviaAdvanceTeam();
     _triviaUpdateScore();
-    // In sequential/random mode, highlight next cell
     if (_triviaGame.cellSelect !== 'free') {
       _triviaHighlightNext();
     }
@@ -22316,11 +22337,9 @@ window.fmtHeight = fmtHeight;
   function _triviaHandleWrongTurn(idx) {
     const s = _triviaGetSettings();
     if (s.steal && s.teams > 1 && !_triviaGame.stealActive) {
-      // Steal opportunity
       _triviaGame.stealActive = true;
       _triviaGame.stealTeam = _triviaGame.currentTeam;
-      // Move to next team for steal attempt
-      _triviaGame.currentTeam = (_triviaGame.currentTeam + 1) % _triviaGame.teams;
+      _triviaAdvanceTeam();
       // Re-open the cell for steal
       const cell = document.querySelector(`.trivia-cell[data-idx="${idx}"]`);
       if (cell) {
@@ -22845,8 +22864,22 @@ window.fmtHeight = fmtHeight;
       const attempts = (parseInt(cell.dataset.attempts || '0')) + 1;
       cell.dataset.attempts = attempts;
 
-      if (maxWrong > 0 && attempts >= maxWrong) {
-        // Out of attempts — show answer as text only, no headshot flip
+      // Track per-team wrong count in multiplayer
+      if (_triviaGame.active && _triviaGame.teams > 1) {
+        _triviaGame.wrongCounts[_triviaGame.currentTeam]++;
+        // Check if this team is now eliminated
+        if (_triviaGame.maxWrong > 0 && _triviaGame.wrongCounts[_triviaGame.currentTeam] >= _triviaGame.maxWrong) {
+          _triviaGame.eliminated[_triviaGame.currentTeam] = true;
+        }
+        // Advance to next non-eliminated team
+        _triviaAdvanceTeam();
+        _triviaUpdateScore();
+        // Check if all teams eliminated or only 1 left
+        _triviaCheckTeamElimination();
+      }
+
+      if (maxWrong > 0 && attempts >= maxWrong && _triviaGame.teams <= 1) {
+        // Solo mode: out of attempts on this cell
         _triviaClearTimer();
         _triviaMarkWrong(cell, idx);
         delete cell.dataset.stealAttempt;
@@ -22858,21 +22891,67 @@ window.fmtHeight = fmtHeight;
         }
         _triviaUpdateScore();
         _triviaCheckGameOver();
-      } else {
+      } else if (_triviaGame.teams <= 1) {
+        // Solo mode: still has attempts
         input.value = '';
         if (maxWrong > 0) {
-          input.placeholder = `${maxWrong - attempts} ${cell.dataset.stealAttempt ? 'steal' : 'tries'} left...`;
+          input.placeholder = `${maxWrong - attempts} tries left...`;
         } else {
           input.placeholder = 'try again...';
         }
-        // In multiplayer, advance to next team on wrong guess
-        if (_triviaGame.active && _triviaGame.teams > 1) {
-          _triviaGame.currentTeam = (_triviaGame.currentTeam + 1) % _triviaGame.teams;
-          _triviaUpdateScore();
-        }
+      } else {
+        // Multiplayer: clear input for next team
+        input.value = '';
+        input.placeholder = 'guess...';
       }
     }
   };
+
+  // Advance to next non-eliminated team
+  function _triviaAdvanceTeam() {
+    if (_triviaGame.teams <= 1) return;
+    let attempts = 0;
+    do {
+      _triviaGame.currentTeam = (_triviaGame.currentTeam + 1) % _triviaGame.teams;
+      attempts++;
+    } while (_triviaGame.eliminated[_triviaGame.currentTeam] && attempts < _triviaGame.teams);
+  }
+
+  // Check if all teams eliminated or only 1 remains — end game
+  function _triviaCheckTeamElimination() {
+    if (_triviaGame.teams <= 1) return;
+    const alive = [];
+    for (let i = 0; i < _triviaGame.teams; i++) {
+      if (!_triviaGame.eliminated[i]) alive.push(i);
+    }
+    if (alive.length <= 1) {
+      // Game over — either all eliminated or 1 winner
+      _triviaClearTimer();
+      _triviaGame.active = false;
+      _triviaGame.gameOver = true;
+      document.getElementById('triviaGiveUpBtn').style.display = 'none';
+      const bar = document.getElementById('triviaScoreBar');
+      if (bar) {
+        let html = '<div class="trivia-score-bar" style="flex-wrap:wrap;gap:8px 16px;border:2px solid var(--accent)">';
+        html += '<span style="font-size:1.3rem;color:var(--accent)">GAME OVER!</span>';
+        for (let i = 0; i < _triviaGame.teams; i++) {
+          const tc = _triviaTeamConfig[i];
+          const isElim = _triviaGame.eliminated[i];
+          const isWinner = alive.includes(i);
+          const logoUrl = tc.logo ? _triviaLogoUrl(tc.logo) : '';
+          html += `<span style="color:${tc.color};display:inline-flex;align-items:center;gap:4px;${isElim ? 'opacity:.4;text-decoration:line-through' : ''}${isWinner ? ';font-size:1.3rem' : ''}">`;
+          if (isWinner) html += '👑 ';
+          if (logoUrl) html += `<img src="${logoUrl}" style="width:22px;height:22px;object-fit:contain">`;
+          html += `${_esc(tc.name)}: ${_triviaGame.scores[i]}`;
+          if (isElim) html += ' (eliminated)';
+          html += '</span>';
+        }
+        html += '</div>';
+        bar.innerHTML = html;
+        bar.style.display = '';
+      }
+    }
+  }
 
   function _triviaCheckGameOver() {
     if (!_triviaData) return;
@@ -23137,6 +23216,8 @@ window.fmtHeight = fmtHeight;
     document.getElementById('triviaGiveUpBtn').style.display = 'none';
     _triviaGame.currentTeam = 0;
     _triviaGame.scores = [0,0,0,0,0,0];
+    _triviaGame.wrongCounts = [0,0,0,0,0,0];
+    _triviaGame.eliminated = [false,false,false,false,false,false];
     _triviaGame.cellIndex = 0;
     document.querySelectorAll('.trivia-cell').forEach(c => {
       c.classList.remove('revealed', 'wrong', 'next-up');

@@ -6305,6 +6305,17 @@ function buildWeeklyTable(d, season, scoringFormat) {
 function buildCareerTable(d, scoringFormat) {
   const c = d.career;
   if (!c || !c.length) return '';
+
+  // Helper: get actual team from WEEKLY_STATS game data (more reliable than career array)
+  function _getWeeklyTeam(name, yr) {
+    if (typeof WEEKLY_STATS === 'undefined') return null;
+    const ws = WEEKLY_STATS[name];
+    if (!ws || !ws.seasons) return null;
+    const szn = ws.seasons[String(yr)];
+    if (!szn || !szn.length) return null;
+    const played = szn.filter(w => w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
+    return (played.length > 0 && played[0].tm) ? played[0].tm : null;
+  }
   const isQB = d.s === 'QB';
   const isRB = d.s === 'RB';
   const isK  = d.s === 'K' || d.s === 'DST';
@@ -6347,7 +6358,7 @@ function buildCareerTable(d, scoringFormat) {
   let rows = filled.map(y => {
     const isGap = y._gap;
     const isBest = !isGap && y.ppg === bestPPG ? ' class="best-yr"' : '';
-    const tm = isGap ? getCareerTeamAbbr(d.n, y.yr, curAbbr) : (y.tm || getCareerTeamAbbr(d.n, y.yr, curAbbr));
+    const tm = isGap ? getCareerTeamAbbr(d.n, y.yr, curAbbr) : (_getWeeklyTeam(d.n, y.yr) || y.tm || getCareerTeamAbbr(d.n, y.yr, curAbbr));
     const dimStyle = isGap ? ' style="color:var(--text2);opacity:.45"' : '';
     let row = '<tr' + dimStyle + '>';
     row += '<td' + isBest + '>' + y.yr + '</td>';
@@ -23291,7 +23302,7 @@ The user will give you a trivia prompt. You must return ONLY a JSON object (no m
 
 Rules:
 - "answer" is the revealed answer (player name + year or context). Keep it concise.
-- "team" is the NFL team abbreviation the player was on THAT season (ARI,ATL,BAL,BUF,CAR,CHI,CIN,CLE,DAL,DEN,DET,GB,HOU,IND,JAX,KC,LAC,LAR,LV,MIA,MIN,NE,NO,NYG,NYJ,PHI,PIT,SF,SEA,TB,TEN,WAS,STL,SD,OAK)
+- "team" is the NFL team abbreviation the player was on THAT specific season — NOT their current team. Use the team shown in the data above. For example, Tom Brady in 2020 should be TB (Tampa Bay), not NE. Wandale Robinson in 2025 should be NYG, not TEN. CRITICAL: Match the team abbreviation exactly from the data rows provided.
 - "hint" is a stat clue shown BEFORE revealing (e.g., "328.4 fpts" or "1,847 yds" or "16 TDs"). Use the real numbers from the data.
 - "category" is a short rank/label on each cell header (e.g., "#1", "#2", "WR", "2023"). Keep it under 10 chars.
 - Return EXACTLY the number of items requested (or 20 if unspecified)
@@ -23354,16 +23365,39 @@ Rules:
         const clean = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
         // Find the JSON object in the text (AI might add text around it)
         const jsonMatch = clean.match(/\{[\s\S]*"items"\s*:\s*\[[\s\S]*\]\s*\}/);
+        let parsed;
         if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          parsed._prompt = prompt;
-          _renderBoard(parsed);
+          parsed = JSON.parse(jsonMatch[0]);
         } else {
-          // Try parsing the whole thing
-          const parsed = JSON.parse(clean);
-          parsed._prompt = prompt;
-          _renderBoard(parsed);
+          parsed = JSON.parse(clean);
         }
+        parsed._prompt = prompt;
+
+        // === POST-PROCESS: Fix team assignments from actual data ===
+        if (parsed.items && typeof WEEKLY_STATS !== 'undefined') {
+          parsed.items.forEach(item => {
+            if (!item.answer) return;
+            // Extract player name and year from answer like "Ja'Marr Chase (2025)"
+            const nameMatch = item.answer.match(/^(.+?)\s*[\(\,]/);
+            const yearMatch = item.answer.match(/\b(20\d{2})\b/);
+            const pName = nameMatch ? nameMatch[1].trim() : item.answer.trim();
+            const pYear = yearMatch ? parseInt(yearMatch[1]) : null;
+            // Look up in WEEKLY_STATS
+            const ws = WEEKLY_STATS[pName];
+            if (ws && ws.seasons && pYear) {
+              const szn = ws.seasons[pYear];
+              if (szn && szn.length > 0) {
+                // Get the team they actually played for that season
+                const played = szn.filter(w => w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
+                if (played.length > 0 && played[0].tm) {
+                  item.team = played[0].tm;
+                }
+              }
+            }
+          });
+        }
+
+        _renderBoard(parsed);
       } else {
         area.innerHTML = '<div class="trivia-loading" style="color:#ef4444">No response text received. Check console.</div>';
       }

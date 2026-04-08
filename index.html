@@ -21913,6 +21913,25 @@ window.fmtHeight = fmtHeight;
     for (let i = 0; i < totalCells; i++) {
       if (i < items.length) {
         const it = items[i];
+        // Last-resort team lookup if team is empty
+        if (!it.team) {
+          const nameMatch = (it.answer || '').match(/^(.+?)\s*[\(\,]/);
+          const yearMatch = (it.answer || '').match(/\b((?:19|20)\d{2})\b/);
+          const pName = nameMatch ? nameMatch[1].trim() : (it.answer || '').trim();
+          const pYear = yearMatch ? parseInt(yearMatch[1]) : null;
+          if (pName) {
+            // Try _getTeamForPlayerYear
+            const tm = pYear ? (typeof _getTeamForPlayerYear === 'function' ? _getTeamForPlayerYear(pName, pYear) : null) : null;
+            if (tm) { it.team = tm; }
+            else {
+              // Try D array current team as absolute last resort
+              if (typeof D !== 'undefined') {
+                const dEntry = D.find(p => p.n === pName);
+                if (dEntry && dEntry.t) it.team = dEntry.t;
+              }
+            }
+          }
+        }
         const logoUrl = _triviaLogoUrl(it.team || '');
         if (mode === 'reveal') {
           html += `<div class="trivia-cell" data-idx="${i}" onclick="window._triviaCellClick(${i})">`;
@@ -23179,7 +23198,21 @@ window.fmtHeight = fmtHeight;
 
             if (gp === 0) return;
 
-            const correctTeam = _getTeamForPlayerYear(name, yr) || '';
+            // Get team — try multiple sources
+            let correctTeam = _getTeamForPlayerYear(name, yr) || '';
+            if (!correctTeam) {
+              // Try from game-level tm field
+              const played = weeks.filter(w => w.tm && (w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0));
+              if (played.length > 0) correctTeam = played[0].tm;
+            }
+            if (!correctTeam) {
+              // Try from D array
+              const dEntry = typeof D !== 'undefined' ? D.find(p => p.n === name) : null;
+              if (dEntry) {
+                const careerSzn = dEntry.career ? dEntry.career.find(s => s.yr === yr) : null;
+                correctTeam = (careerSzn && careerSzn.tm) ? careerSzn.tm : (dEntry.t || '');
+              }
+            }
             // Conference filter
             if (conf !== 'all') {
               const tmConf = _teamConf[correctTeam];

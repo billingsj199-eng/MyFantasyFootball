@@ -1442,6 +1442,36 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   #triviaBoardFilters > div:nth-child(2){grid-template-columns:1fr!important}
   #triviaGameSettings > div:nth-child(2){grid-template-columns:1fr!important}
 }
+/* My Teams mobile responsiveness */
+@media(max-width:600px){
+  #mtImportGrid{
+    grid-template-columns:1fr!important;
+  }
+  #mtSrcSleeper,#mtSrcUnderdog{
+    padding:6px 14px!important;font-size:.8rem!important;
+  }
+  #udTabBar{
+    gap:3px!important;
+  }
+  #udTabBar button{
+    padding:5px 8px!important;font-size:.65rem!important;
+  }
+  #rookiePickToggle{
+    font-size:.6rem!important;padding:3px 7px!important;
+  }
+  #pageMyTeams table{
+    display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  }
+  #mtUnderdogDashboard table{
+    display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  }
+  #mtTeamDetail table{
+    display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  }
+  #mtPowerRankings > div{
+    font-size:.95em;
+  }
+}
 </style>
 
 <!-- Firebase SDK (optional — page works without it if blocked by privacy settings) -->
@@ -2689,7 +2719,7 @@ CLEAR
 <div id="mtSectionSleeper">
 
 <!-- Import Section -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+<div id="mtImportGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
 
 <!-- Sleeper League Import -->
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">
@@ -25462,7 +25492,7 @@ Rules:
     html += `</div>`;
 
     // Position breakdown
-    html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(65px,1fr));gap:8px;margin-bottom:16px">`;
     const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
     ['QB','RB','WR','TE'].forEach(pos => {
       const ps = sc.posScores[pos] || { pts: 0, count: 0 };
@@ -26063,7 +26093,7 @@ Rules:
     let html = '';
 
     // ── SUMMARY CARDS ──
-    html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px">`;
     const cards = [
       { label: 'DRAFTS', val: numDrafts, sub: Object.entries(tourneyGroups).map(([k,v]) => `${v.count} ${k}`).join(', ') },
       { label: 'INVESTED', val: '$' + data.totalInvestment.toFixed(0), sub: '$' + (data.totalInvestment / numDrafts).toFixed(2) + ' avg entry' },
@@ -26154,7 +26184,7 @@ Rules:
       html += `</div>`;
       // Detail (hidden)
       html += `<div id="udTeamDetail_${i}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">`;
-      html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(60px,1fr));gap:6px;margin-bottom:10px">`;
       ['QB','RB','WR','TE'].forEach(pos => {
         const ps = sc.posScores[pos] || { pts: 0, count: 0 };
         const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
@@ -26284,8 +26314,7 @@ Rules:
     html += `<span style="color:var(--text2)">OWNERSHIP:</span>`;
     html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e"></span> 11%+</span>`;
     html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#facc15"></span> 5–11%</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444"></span> &lt;5%</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:var(--surface2)"></span> 0%</span>`;
+    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444"></span> 0–5%</span>`;
     html += `</div>`;
     html += _udRenderDraftBoard(data);
     html += `</div>`;
@@ -26323,7 +26352,7 @@ Rules:
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:12px">DRAFT BUILD ANALYSIS</div>`;
 
     // Build pattern breakdown
-    html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px">`;
     Object.entries(buildPatterns).forEach(([label, count]) => {
       const pct = numDrafts > 0 ? Math.round(100 * count / numDrafts) : 0;
       html += `<div style="text-align:center;padding:12px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
@@ -26426,10 +26455,6 @@ Rules:
       if (matched && matched.n !== name) ownershipMap[matched.n] = Math.round(info.exposure * 100);
     });
 
-    // Position colors
-    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-    const posBg = { QB: 'rgba(239,68,68,.1)', RB: 'rgba(34,197,94,.1)', WR: 'rgba(59,130,246,.1)', TE: 'rgba(245,158,11,.1)' };
-
     let html = '';
     html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">`;
     html += `<table style="border-collapse:collapse;font-size:.6rem;min-width:${teamCount * 75}px;width:100%">`;
@@ -26459,21 +26484,17 @@ Rules:
 
         const own = ownershipMap[player.name] || 0;
         let ownColor, ownBg;
-        if (own === 0) { ownColor = 'var(--text2)'; ownBg = 'var(--surface2)'; }
-        else if (own < 5) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.12)'; }
-        else if (own <= 11) { ownColor = '#facc15'; ownBg = 'rgba(250,204,21,.12)'; }
-        else { ownColor = '#22c55e'; ownBg = 'rgba(34,197,94,.15)'; }
-
-        const borderColor = own > 0 ? ownColor : 'var(--border)';
+        if (own === 0) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.1)'; }
+        else if (own < 5) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.15)'; }
+        else if (own <= 11) { ownColor = '#facc15'; ownBg = 'rgba(250,204,21,.15)'; }
+        else { ownColor = '#22c55e'; ownBg = 'rgba(34,197,94,.18)'; }
 
         html += `<td style="padding:2px;border:1px solid var(--border)">`;
-        html += `<div style="padding:3px 4px;background:${ownBg};border-radius:3px;border-left:3px solid ${posColors[player.pos] || 'var(--text2)'};min-height:32px;position:relative">`;
-        html += `<div style="font-size:.58rem;font-weight:600;color:var(--text);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(player.name)}</div>`;
+        html += `<div style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownColor}30;min-height:32px">`;
+        html += `<div style="font-size:.58rem;font-weight:600;color:${ownColor};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(player.name)}</div>`;
         html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:1px">`;
-        html += `<span style="font-size:.5rem;color:${posColors[player.pos] || 'var(--text2)'}">${player.pos}</span>`;
-        if (own > 0) {
-          html += `<span style="font-size:.55rem;font-weight:700;color:${ownColor}">${own}%</span>`;
-        }
+        html += `<span style="font-size:.48rem;color:var(--text2)">${player.pos}</span>`;
+        html += `<span style="font-size:.55rem;font-weight:700;color:${ownColor}">${own}%</span>`;
         html += `</div>`;
         html += `</div></td>`;
       }

@@ -23072,6 +23072,15 @@ Rules:
           messages: [{ role: 'user', content: prompt }]
         })
       });
+
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => 'Unknown error');
+        console.error('[Trivia] API HTTP error:', resp.status, errText);
+        area.innerHTML = `<div class="trivia-loading" style="color:#ef4444">API error (${resp.status}). Check console.<br><span style="font-size:.7rem;opacity:.6">${_esc(errText.slice(0,200))}</span></div>`;
+        btn.disabled = false; btn.textContent = 'GENERATE';
+        return;
+      }
+
       const data = await resp.json();
       console.log('[Trivia] API response:', data);
 
@@ -23114,7 +23123,7 @@ Rules:
       }
     } catch(err) {
       console.error('[Trivia] Generation failed:', err);
-      area.innerHTML = `<div class="trivia-loading" style="color:#ef4444">Error generating board. Check console for details.</div>`;
+      area.innerHTML = `<div class="trivia-loading" style="color:#ef4444">Error generating board: ${_esc(err.message || String(err))}<br><span style="font-size:.7rem;opacity:.6">Check browser console for details.</span></div>`;
     }
 
     btn.disabled = false;

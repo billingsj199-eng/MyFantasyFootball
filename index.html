@@ -2677,6 +2677,15 @@ CLEAR
 <div style="color:var(--text2);font-size:.82rem;margin-top:4px">Import your fantasy teams, analyze rosters, and track your portfolio</div>
 </div>
 
+<!-- Source Toggle -->
+<div style="display:flex;gap:4px;margin-bottom:16px;justify-content:center">
+<button onclick="window._mtSwitchSource('sleeper')" id="mtSrcSleeper" style="padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;border-radius:6px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#000">SLEEPER</button>
+<button onclick="window._mtSwitchSource('underdog')" id="mtSrcUnderdog" style="padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)">UNDERDOG</button>
+</div>
+
+<!-- SLEEPER SECTION -->
+<div id="mtSectionSleeper">
+
 <!-- Import Section -->
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
 
@@ -2705,24 +2714,6 @@ CLEAR
 
 </div>
 
-<!-- Underdog Portfolio Import -->
-<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent)">UNDERDOG PORTFOLIO</div>
-<span style="font-size:.55rem;padding:2px 6px;border-radius:3px;background:var(--accent);color:#000;font-weight:700;letter-spacing:.5px">NEW</span>
-</div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Upload your Underdog best ball CSV to analyze your full portfolio</div>
-<div style="display:flex;gap:6px;align-items:center">
-<label for="mtUnderdogCSV" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</label>
-<input type="file" id="mtUnderdogCSV" accept=".csv" onchange="window._mtParseUnderdogCSV(this)" style="display:none">
-<button onclick="window._udClearPortfolio()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;color:var(--text2);cursor:pointer;white-space:nowrap">CLEAR</button>
-<span id="mtUnderdogStatus" style="font-size:.7rem;color:var(--text2)">Export from Underdog → My Drafts → Download CSV</span>
-</div>
-</div>
-
-<!-- Underdog Portfolio Dashboard (hidden until CSV loaded) -->
-<div id="mtUnderdogDashboard" style="display:none"></div>
-
 <!-- Ranking Source Selector -->
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
 <span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text)">VALUE SOURCE:</span>
@@ -2747,8 +2738,33 @@ CLEAR
 <div id="mtTeamDetail" style="display:none;margin-top:12px"></div>
 </div>
 
-<!-- Saved Teams (localStorage) -->
+<!-- Saved Teams -->
 <div id="mtSavedTeams" style="margin-top:20px"></div>
+
+</div><!-- end mtSectionSleeper -->
+
+<!-- UNDERDOG SECTION -->
+<div id="mtSectionUnderdog" style="display:none">
+
+<!-- Underdog Portfolio Import -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent)">UNDERDOG PORTFOLIO</div>
+<span style="font-size:.55rem;padding:2px 6px;border-radius:3px;background:var(--accent);color:#000;font-weight:700;letter-spacing:.5px">NEW</span>
+</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Upload your Underdog best ball CSV to analyze your full portfolio</div>
+<div style="display:flex;gap:6px;align-items:center">
+<label for="mtUnderdogCSV" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</label>
+<input type="file" id="mtUnderdogCSV" accept=".csv" onchange="window._mtParseUnderdogCSV(this)" style="display:none">
+<button onclick="window._udClearPortfolio()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;color:var(--text2);cursor:pointer;white-space:nowrap">CLEAR</button>
+<span id="mtUnderdogStatus" style="font-size:.7rem;color:var(--text2)">Export from Underdog → My Drafts → Download CSV</span>
+</div>
+</div>
+
+<!-- Underdog Portfolio Dashboard (hidden until CSV loaded) -->
+<div id="mtUnderdogDashboard" style="display:none"></div>
+
+</div><!-- end mtSectionUnderdog -->
 
 </div>
 </div>
@@ -24777,6 +24793,25 @@ Rules:
     try { firebase.auth().onAuthStateChanged(_mtCheckAdmin); } catch(e) {}
   }
 
+  // Source toggle: Sleeper vs Underdog
+  window._mtSwitchSource = function(src) {
+    const sleeper = document.getElementById('mtSectionSleeper');
+    const underdog = document.getElementById('mtSectionUnderdog');
+    const btnS = document.getElementById('mtSrcSleeper');
+    const btnU = document.getElementById('mtSrcUnderdog');
+    if (src === 'underdog') {
+      if (sleeper) sleeper.style.display = 'none';
+      if (underdog) underdog.style.display = '';
+      if (btnS) { btnS.style.background = 'var(--surface)'; btnS.style.color = 'var(--text2)'; btnS.style.borderColor = 'var(--border)'; }
+      if (btnU) { btnU.style.background = 'var(--accent)'; btnU.style.color = '#000'; btnU.style.borderColor = 'var(--accent)'; }
+    } else {
+      if (sleeper) sleeper.style.display = '';
+      if (underdog) underdog.style.display = 'none';
+      if (btnS) { btnS.style.background = 'var(--accent)'; btnS.style.color = '#000'; btnS.style.borderColor = 'var(--accent)'; }
+      if (btnU) { btnU.style.background = 'var(--surface)'; btnU.style.color = 'var(--text2)'; btnU.style.borderColor = 'var(--border)'; }
+    }
+  };
+
   // League format state
   let _mtFormat = { type: 'redraft', sf: false, ppr: 1, starters: 10 };
   let _mtMyUserId = null; // auto-detected Sleeper user ID
@@ -25847,12 +25882,20 @@ Rules:
 
     // EXPOSURE TAB
     html += `<div id="udTab_exposure">`;
-    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">`;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">`;
     html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">PLAYER EXPOSURE</span>`;
+    // Position filter buttons
+    html += `<div style="display:flex;gap:3px">`;
+    const posFilterColors = { ALL: 'var(--accent)', QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    ['ALL','QB','RB','WR','TE'].forEach((pos, pi) => {
+      const active = pi === 0;
+      html += `<button onclick="window._udFilterExposurePos('${pos}')" data-udposfilter="${pos}" style="padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? posFilterColors[pos] : 'var(--border)'};background:${active ? posFilterColors[pos] : 'var(--surface)'};color:${active ? (pos === 'ALL' ? '#000' : '#fff') : 'var(--text2)'}">${pos}</button>`;
+    });
+    html += `</div>`;
     html += `<input id="udExpFilter" oninput="window._udFilterExposure(this.value)" placeholder="Filter players..." style="margin-left:auto;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem;font-family:'DM Sans',sans-serif;width:150px">`;
     html += `</div>`;
     html += `<div id="udExposureList">`;
-    html += _udRenderExposureRows(playerList, numDrafts, '');
+    html += _udRenderExposureRows(playerList, numDrafts, '', 'ALL');
     html += `</div>`;
     html += `</div>`;
 
@@ -25937,7 +25980,7 @@ Rules:
         const matched = _udMatchPlayer(p.name);
         const adp = matched && matched.a && matched.a < 900 ? matched.a : null;
         const pickNum = p.pick;
-        const diff = adp != null ? Math.round(adp - pickNum) : null; // positive = got them later than ADP (steal)
+        const diff = adp != null ? Math.round(pickNum - adp) : null; // positive = picked later than ADP (steal), negative = reached
         if (adp != null) { totalAdpVal += diff; totalAdp += adp; matchedCount++; }
         return { name: p.name, pos: p.pos, team: p.team, pick: pickNum, adp, diff, round: pi + 1 };
       });
@@ -26125,12 +26168,11 @@ Rules:
     window._udNumDrafts = numDrafts;
   }
 
-  function _udRenderExposureRows(playerList, numDrafts, filter) {
-    const filtered = filter ? playerList.filter(([name]) => name.toLowerCase().includes(filter.toLowerCase())) : playerList;
+  function _udRenderExposureRows(playerList, numDrafts, filter, posFilter) {
+    let filtered = playerList;
+    if (filter) filtered = filtered.filter(([name]) => name.toLowerCase().includes(filter.toLowerCase()));
+    if (posFilter && posFilter !== 'ALL') filtered = filtered.filter(([, info]) => info.pos === posFilter);
     let html = '';
-    // Position filter counts
-    const posFilters = { ALL: filtered.length, QB: 0, RB: 0, WR: 0, TE: 0 };
-    filtered.forEach(([, info]) => { if (posFilters[info.pos] !== undefined) posFilters[info.pos]++; });
 
     filtered.forEach(([name, info], idx) => {
       const pct = Math.round(info.exposure * 100);
@@ -26161,10 +26203,29 @@ Rules:
     return html;
   }
 
+  window._udExpPosFilter = 'ALL';
+
+  window._udFilterExposurePos = function(pos) {
+    window._udExpPosFilter = pos;
+    // Update button styles
+    const posFilterColors = { ALL: 'var(--accent)', QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    document.querySelectorAll('[data-udposfilter]').forEach(btn => {
+      const p = btn.dataset.udposfilter;
+      const active = p === pos;
+      btn.style.background = active ? posFilterColors[p] : 'var(--surface)';
+      btn.style.color = active ? (p === 'ALL' ? '#000' : '#fff') : 'var(--text2)';
+      btn.style.borderColor = active ? posFilterColors[p] : 'var(--border)';
+    });
+    // Re-render with both text and pos filter
+    const textFilter = document.getElementById('udExpFilter') ? document.getElementById('udExpFilter').value : '';
+    const el = document.getElementById('udExposureList');
+    if (el && window._udPlayerList) el.innerHTML = _udRenderExposureRows(window._udPlayerList, window._udNumDrafts, textFilter, pos);
+  };
+
   window._udFilterExposure = function(val) {
     if (!window._udPlayerList) return;
     const el = document.getElementById('udExposureList');
-    if (el) el.innerHTML = _udRenderExposureRows(window._udPlayerList, window._udNumDrafts, val);
+    if (el) el.innerHTML = _udRenderExposureRows(window._udPlayerList, window._udNumDrafts, val, window._udExpPosFilter || 'ALL');
   };
 
   window._udSwitchTab = function(tabId) {

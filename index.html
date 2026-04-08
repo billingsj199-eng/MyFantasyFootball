@@ -2715,6 +2715,7 @@ CLEAR
 <div style="display:flex;gap:6px;align-items:center">
 <label for="mtUnderdogCSV" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</label>
 <input type="file" id="mtUnderdogCSV" accept=".csv" onchange="window._mtParseUnderdogCSV(this)" style="display:none">
+<button onclick="window._udClearPortfolio()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;color:var(--text2);cursor:pointer;white-space:nowrap">CLEAR</button>
 <span id="mtUnderdogStatus" style="font-size:.7rem;color:var(--text2)">Export from Underdog → My Drafts → Download CSV</span>
 </div>
 </div>
@@ -25248,6 +25249,7 @@ Rules:
         status.textContent = `Loaded ${Object.keys(parsed.drafts).length} drafts, ${parsed.totalPicks} picks, ${Object.keys(parsed.players).length} unique players`;
         status.style.color = '#22c55e';
         _udRenderDashboard(parsed);
+        _udSaveToCloud(parsed);
       } catch(err) {
         status.textContent = 'Error parsing CSV: ' + err.message;
         status.style.color = '#ef4444';
@@ -25255,6 +25257,119 @@ Rules:
     };
     reader.readAsText(file);
   };
+
+  // Save portfolio to Firestore
+  function _udSaveToCloud(parsed) {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+
+    // Serialize drafts — convert picks arrays, strip Sets from players
+    const draftsArr = Object.values(parsed.drafts).map(d => ({
+      id: d.id, tournament: d.tournament, fee: d.fee, size: d.size, date: d.date || '',
+      picks: d.picks.map(p => ({ name: p.name, pos: p.pos, team: p.team, pick: p.pick }))
+    }));
+
+    const payload = {
+      drafts: draftsArr,
+      totalPicks: parsed.totalPicks,
+      numDrafts: parsed.numDrafts,
+      totalInvestment: parsed.totalInvestment,
+      savedAt: new Date().toISOString()
+    };
+
+    db.collection('user_portfolios').doc(user.uid).set(payload, { merge: true })
+      .then(() => { console.log('[Portfolio] Saved to cloud'); })
+      .catch(e => { console.warn('[Portfolio] Save error:', e); });
+  }
+
+  // Load portfolio from Firestore on page load
+  function _udLoadFromCloud() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+
+    db.collection('user_portfolios').doc(user.uid).get().then(doc => {
+      if (!doc.exists) return;
+      const cloud = doc.data();
+      if (!cloud.drafts || !cloud.drafts.length) return;
+
+      // Rebuild parsed format from cloud data
+      const drafts = {};
+      const players = {};
+      let totalPicks = 0;
+
+      cloud.drafts.forEach(d => {
+        drafts[d.id] = { id: d.id, tournament: d.tournament, fee: d.fee || 0, size: d.size || 12, date: d.date || '', picks: d.picks || [] };
+        drafts[d.id].picks.sort((a, b) => a.pick - b.pick);
+        d.picks.forEach(p => {
+          totalPicks++;
+          if (!players[p.name]) {
+            players[p.name] = { pos: p.pos, team: p.team, draftIds: new Set(), picks: [] };
+          }
+          players[p.name].draftIds.add(d.id);
+          players[p.name].picks.push(p.pick);
+          if (p.team && !players[p.name].team) players[p.name].team = p.team;
+        });
+      });
+
+      const numDrafts = Object.keys(drafts).length;
+      Object.values(players).forEach(p => {
+        p.exposure = p.draftIds.size / numDrafts;
+        p.avgPick = p.picks.reduce((s, v) => s + v, 0) / p.picks.length;
+        p.minPick = Math.min(...p.picks);
+        p.maxPick = Math.max(...p.picks);
+        p.count = p.draftIds.size;
+      });
+
+      const parsed = {
+        drafts, players, totalPicks, numDrafts,
+        totalInvestment: cloud.totalInvestment || Object.values(drafts).reduce((s, d) => s + (d.fee || 0), 0)
+      };
+
+      window._udPortfolio = parsed;
+      const status = document.getElementById('mtUnderdogStatus');
+      if (status) {
+        status.textContent = `Loaded ${numDrafts} drafts from your account (saved ${new Date(cloud.savedAt).toLocaleDateString()})`;
+        status.style.color = '#22c55e';
+      }
+      _udRenderDashboard(parsed);
+    }).catch(e => { console.warn('[Portfolio] Load error:', e); });
+  }
+
+  // Clear saved portfolio
+  window._udClearPortfolio = function() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+
+    if (!confirm('Clear your saved portfolio? You can re-upload anytime.')) return;
+
+    db.collection('user_portfolios').doc(user.uid).delete()
+      .then(() => {
+        window._udPortfolio = null;
+        document.getElementById('mtUnderdogDashboard').style.display = 'none';
+        document.getElementById('mtUnderdogDashboard').innerHTML = '';
+        const status = document.getElementById('mtUnderdogStatus');
+        if (status) {
+          status.textContent = 'Portfolio cleared. Upload a new CSV to start fresh.';
+          status.style.color = '';
+        }
+      })
+      .catch(e => { console.warn('[Portfolio] Clear error:', e); });
+  };
+
+  // Auto-load on auth state change
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try {
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user && !window._udPortfolio) {
+          // Small delay to let page render first
+          setTimeout(_udLoadFromCloud, 500);
+        }
+      });
+    } catch(e) {}
+  }
 
   function _udParseCSV(text) {
     const lines = text.split('\n');

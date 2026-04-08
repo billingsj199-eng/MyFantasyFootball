@@ -2705,6 +2705,23 @@ CLEAR
 
 </div>
 
+<!-- Underdog Portfolio Import -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent)">UNDERDOG PORTFOLIO</div>
+<span style="font-size:.55rem;padding:2px 6px;border-radius:3px;background:var(--accent);color:#000;font-weight:700;letter-spacing:.5px">NEW</span>
+</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Upload your Underdog best ball CSV to analyze your full portfolio</div>
+<div style="display:flex;gap:6px;align-items:center">
+<label for="mtUnderdogCSV" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</label>
+<input type="file" id="mtUnderdogCSV" accept=".csv" onchange="window._mtParseUnderdogCSV(this)" style="display:none">
+<span id="mtUnderdogStatus" style="font-size:.7rem;color:var(--text2)">Export from Underdog → My Drafts → Download CSV</span>
+</div>
+</div>
+
+<!-- Underdog Portfolio Dashboard (hidden until CSV loaded) -->
+<div id="mtUnderdogDashboard" style="display:none"></div>
+
 <!-- Ranking Source Selector -->
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
 <span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text)">VALUE SOURCE:</span>
@@ -13735,10 +13752,9 @@ window.fmtHeight = fmtHeight;
     'F': 0.55   // Bottom — near worthless
   };
 
-  function getTierForPlayer(d) {
-    // Get the tier label for a player based on the selected source and mode
-    const srcTiers = versionTiers[tradeSource][tradeMode].ALL || [];
-    const srcBoard = versionBoards[tradeSource][tradeMode];
+  function _getTierForPlayerFull(d, src, mode) {
+    const srcTiers = versionTiers[src][mode].ALL || [];
+    const srcBoard = versionBoards[src][mode];
     const boardPos = srcBoard.indexOf(d.idx);
     const rank = boardPos >= 0 ? boardPos + 1 : 999;
     let currentTier = null;
@@ -13750,20 +13766,33 @@ window.fmtHeight = fmtHeight;
     return currentTier ? currentTier.label : '';
   }
 
-  function getPlayerValue(d) {
-    // Use board position from selected source
-    const srcBoard = versionBoards[tradeSource][tradeMode];
+  function getTierForPlayer(d) {
+    return _getTierForPlayerFull(d, tradeSource, tradeMode);
+  }
+
+  // Global trade value function — single source of truth for rankings, trade calc, My Teams, portfolio
+  // Accepts a D entry + optional source/mode override (defaults to trade calc's current settings)
+  window._getTradeValue = function(d, src, mode) {
+    const s = src || tradeSource;
+    const m = mode || tradeMode;
+    const srcBoard = versionBoards[s] && versionBoards[s][m];
+    if (!srcBoard) return 1;
     const boardPos = srcBoard.indexOf(d.idx);
     const rank = boardPos >= 0 ? boardPos + 1 : 999;
     if (rank >= 400) return 1;
-    // Base value from rank curve
     let val = Math.max(Math.round(100 * Math.pow(0.988, rank - 1)), 1);
-    // Apply tier multiplier — this creates big gaps between tiers
-    const tierLabel = getTierForPlayer(d);
+    const tierLabel = _getTierForPlayerFull(d, s, m);
     if (tierLabel && TIER_MULT[tierLabel] !== undefined) {
       val = Math.round(val * TIER_MULT[tierLabel]);
     }
     return Math.max(val, 1);
+  };
+
+  // Expose TIER_MULT globally so other IIFEs can read it
+  window._TIER_MULT = TIER_MULT;
+
+  function getPlayerValue(d) {
+    return window._getTradeValue(d, tradeSource, tradeMode);
   }
 
   function calcSideTotal(side) {
@@ -25193,6 +25222,534 @@ Rules:
     const result = _mtGradeRoster(window._mtManualRoster);
     alert(`Team Grade: ${result.grade.grade} (Avg Rank: ${result.avgRank})\n\nQB: ${result.posGrades.QB.grade}  RB: ${result.posGrades.RB.grade}  WR: ${result.posGrades.WR.grade}  TE: ${result.posGrades.TE.grade}`);
   };
+
+  // ═══════════════════════════════════════════════════════════
+  // UNDERDOG PORTFOLIO ANALYZER
+  // ═══════════════════════════════════════════════════════════
+
+  window._mtParseUnderdogCSV = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const status = document.getElementById('mtUnderdogStatus');
+    status.textContent = 'Reading CSV...';
+    status.style.color = '';
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const text = e.target.result;
+        const parsed = _udParseCSV(text);
+        if (!parsed.drafts || Object.keys(parsed.drafts).length === 0) {
+          status.textContent = 'No draft data found in CSV. Make sure this is an Underdog export.';
+          status.style.color = '#ef4444';
+          return;
+        }
+        window._udPortfolio = parsed;
+        status.textContent = `Loaded ${Object.keys(parsed.drafts).length} drafts, ${parsed.totalPicks} picks, ${Object.keys(parsed.players).length} unique players`;
+        status.style.color = '#22c55e';
+        _udRenderDashboard(parsed);
+      } catch(err) {
+        status.textContent = 'Error parsing CSV: ' + err.message;
+        status.style.color = '#ef4444';
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  function _udParseCSV(text) {
+    const lines = text.split('\n');
+    if (lines.length < 2) throw new Error('Empty CSV');
+    const headers = _udSplitCSVLine(lines[0]);
+    const colIdx = {};
+    headers.forEach((h, i) => { colIdx[h.trim()] = i; });
+
+    // Required columns
+    const reqCols = ['Pick Number','First Name','Last Name','Position','Draft','Tournament Title','Tournament Entry Fee','Draft Size'];
+    for (const c of reqCols) {
+      if (colIdx[c] === undefined) throw new Error('Missing column: ' + c);
+    }
+
+    const drafts = {};
+    const players = {}; // name -> {pos, team, draftIds: Set, picks: [pickNum,...]}
+    let totalPicks = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const cols = _udSplitCSVLine(line);
+      const draftId = (cols[colIdx['Draft']] || '').trim();
+      if (!draftId) continue;
+
+      const firstName = (cols[colIdx['First Name']] || '').trim();
+      const lastName = (cols[colIdx['Last Name']] || '').trim();
+      const name = (firstName + ' ' + lastName).trim();
+      if (!name) continue;
+
+      const pickNum = parseInt(cols[colIdx['Pick Number']] || '0');
+      const pos = (cols[colIdx['Position']] || '').trim();
+      const team = (cols[colIdx['Team']] || '').trim();
+      const tournament = (cols[colIdx['Tournament Title']] || '').trim();
+      const fee = parseFloat(cols[colIdx['Tournament Entry Fee']] || '0') || 0;
+      const draftSize = parseInt(cols[colIdx['Draft Size']] || '12');
+      const pickedAt = (cols[colIdx['Picked At']] || '').trim();
+
+      if (!drafts[draftId]) {
+        drafts[draftId] = { id: draftId, tournament, fee, size: draftSize, picks: [], date: pickedAt };
+      }
+      drafts[draftId].picks.push({ name, pos, team, pick: pickNum });
+      totalPicks++;
+
+      if (!players[name]) {
+        players[name] = { pos, team, draftIds: new Set(), picks: [] };
+      }
+      players[name].draftIds.add(draftId);
+      players[name].picks.push(pickNum);
+      if (team && !players[name].team) players[name].team = team;
+    }
+
+    // Sort each draft's picks
+    Object.values(drafts).forEach(d => d.picks.sort((a, b) => a.pick - b.pick));
+
+    // Compute per-player stats
+    const numDrafts = Object.keys(drafts).length;
+    Object.values(players).forEach(p => {
+      p.exposure = p.draftIds.size / numDrafts;
+      p.avgPick = p.picks.reduce((s, v) => s + v, 0) / p.picks.length;
+      p.minPick = Math.min(...p.picks);
+      p.maxPick = Math.max(...p.picks);
+      p.count = p.draftIds.size;
+    });
+
+    // Total investment
+    const totalInvestment = Object.values(drafts).reduce((s, d) => s + d.fee, 0);
+
+    return { drafts, players, totalPicks, numDrafts, totalInvestment };
+  }
+
+  function _udSplitCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQuotes = !inQuotes; continue; }
+      if (c === ',' && !inQuotes) { result.push(current); current = ''; continue; }
+      current += c;
+    }
+    result.push(current);
+    return result;
+  }
+
+  // Match Underdog player name to D array
+  function _udMatchPlayer(name) {
+    if (typeof D === 'undefined') return null;
+    // Exact match first
+    let match = D.find(p => p.n === name);
+    if (match) return match;
+    // Try without Jr./Sr./III etc
+    const stripped = name.replace(/\s+(Jr\.?|Sr\.?|III|II|IV|V)$/i, '').trim();
+    match = D.find(p => p.n === stripped || p.n.replace(/\s+(Jr\.?|Sr\.?|III|II|IV|V)$/i, '').trim() === stripped);
+    if (match) return match;
+    // Case-insensitive
+    const lower = name.toLowerCase();
+    match = D.find(p => p.n && p.n.toLowerCase() === lower);
+    if (match) return match;
+    // Last name + first initial
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      const firstInitial = parts[0][0].toLowerCase();
+      const lastName = parts[parts.length - 1].toLowerCase().replace(/[.]/g, '');
+      match = D.find(p => {
+        if (!p.n) return false;
+        const pp = p.n.split(' ');
+        return pp.length >= 2 && pp[0][0].toLowerCase() === firstInitial &&
+               pp[pp.length - 1].toLowerCase().replace(/[.]/g, '') === lastName;
+      });
+    }
+    return match || null;
+  }
+
+  // Get trade value for a player by name — uses the global trade value curve
+  function _udGetValue(name) {
+    const matched = _udMatchPlayer(name);
+    if (!matched) return 1;
+    // Use Jack's rankings in redraft mode for portfolio scoring
+    return typeof window._getTradeValue === 'function' ? window._getTradeValue(matched, 'jacks', 'redraft') : 1;
+  }
+
+  function _udScoreTeam(playerNames) {
+    const players = playerNames.map(name => {
+      const matched = _udMatchPlayer(name);
+      const rank = matched ? _mtGetPlayerRank(matched.n) : 999;
+      const val = _udGetValue(name);
+      const pos = matched ? (matched.s || '') : '';
+      const team = matched ? (matched.t || '') : '';
+      return { name: matched ? matched.n : name, rank, val, pos, team };
+    });
+    players.sort((a, b) => b.val - a.val || a.rank - b.rank);
+
+    const total = players.reduce((s, p) => s + p.val, 0);
+
+    // Position scores
+    const posScores = {};
+    ['QB','RB','WR','TE'].forEach(pos => {
+      const group = players.filter(p => p.pos === pos);
+      const pts = group.reduce((s, p) => s + p.val, 0);
+      posScores[pos] = { pts, count: group.length };
+    });
+
+    return { total, players, posScores };
+  }
+
+  function _udRenderDashboard(data) {
+    const dash = document.getElementById('mtUnderdogDashboard');
+    dash.style.display = '';
+
+    const numDrafts = data.numDrafts;
+    const playerList = Object.entries(data.players).sort((a, b) => b[1].exposure - a[1].exposure);
+
+    // Compute team scores (point-based system by rank tier)
+    const draftScores = [];
+    Object.values(data.drafts).forEach(d => {
+      const names = d.picks.map(p => p.name);
+      const scored = _udScoreTeam(names);
+      draftScores.push({ draft: d, score: scored });
+    });
+    draftScores.sort((a, b) => b.score.total - a.score.total);
+
+    // Compute value picks (Jack's rank vs pick position)
+    const valuePicks = [];
+    const bustPicks = [];
+    playerList.forEach(([name, info]) => {
+      const d = _udMatchPlayer(name);
+      if (!d) return;
+      const rank = _mtGetPlayerRank(d.n);
+      if (rank >= 500) return;
+      // In a 12-team, 20-round draft, pick 1 = rank ~1, pick 240 = rank ~240
+      const avgPick = info.avgPick;
+      const value = avgPick - rank; // positive = got them later than rank = steal
+      if (value > 15) valuePicks.push({ name: d.n, pos: d.s, team: d.t, rank, avgPick: Math.round(avgPick), value: Math.round(value), count: info.count });
+      if (value < -15) bustPicks.push({ name: d.n, pos: d.s, team: d.t, rank, avgPick: Math.round(avgPick), value: Math.round(value), count: info.count });
+    });
+    valuePicks.sort((a, b) => b.value - a.value);
+    bustPicks.sort((a, b) => a.value - b.value);
+
+    // Position build analysis
+    const buildPatterns = { 'RB-heavy': 0, 'WR-heavy': 0, 'Balanced': 0, 'Zero RB': 0 };
+    const r1Positions = { QB: 0, RB: 0, WR: 0, TE: 0 };
+    Object.values(data.drafts).forEach(d => {
+      const first3 = d.picks.slice(0, 3);
+      const rbIn3 = first3.filter(p => p.pos === 'RB').length;
+      const wrIn3 = first3.filter(p => p.pos === 'WR').length;
+      if (rbIn3 >= 2) buildPatterns['RB-heavy']++;
+      else if (wrIn3 >= 2) buildPatterns['WR-heavy']++;
+      else if (rbIn3 === 0) buildPatterns['Zero RB']++;
+      else buildPatterns['Balanced']++;
+      if (d.picks[0]) r1Positions[d.picks[0].pos] = (r1Positions[d.picks[0].pos] || 0) + 1;
+    });
+
+    // Tournament breakdown
+    const tourneyGroups = {};
+    Object.values(data.drafts).forEach(d => {
+      const key = d.tournament || 'Unknown';
+      if (!tourneyGroups[key]) tourneyGroups[key] = { count: 0, fee: 0 };
+      tourneyGroups[key].count++;
+      tourneyGroups[key].fee += d.fee;
+    });
+
+    // Avg position counts across all drafts
+    const avgPos = { QB: 0, RB: 0, WR: 0, TE: 0 };
+    Object.values(data.drafts).forEach(d => {
+      d.picks.forEach(p => { if (avgPos[p.pos] !== undefined) avgPos[p.pos]++; });
+    });
+    Object.keys(avgPos).forEach(k => { avgPos[k] = (avgPos[k] / numDrafts).toFixed(1); });
+
+    let html = '';
+
+    // ── SUMMARY CARDS ──
+    html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">`;
+    const cards = [
+      { label: 'DRAFTS', val: numDrafts, sub: Object.entries(tourneyGroups).map(([k,v]) => `${v.count} ${k}`).join(', ') },
+      { label: 'INVESTED', val: '$' + data.totalInvestment.toFixed(0), sub: '$' + (data.totalInvestment / numDrafts).toFixed(2) + ' avg entry' },
+      { label: 'PLAYERS', val: Object.keys(data.players).length, sub: data.totalPicks + ' total picks' },
+      { label: 'AVG BUILD', val: `${avgPos.QB}/${avgPos.RB}/${avgPos.WR}/${avgPos.TE}`, sub: 'QB/RB/WR/TE per team' }
+    ];
+    cards.forEach(c => {
+      html += `<div style="text-align:center;padding:14px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">${c.label}</div>`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:var(--accent);margin:2px 0">${c.val}</div>`;
+      html += `<div style="font-size:.6rem;color:var(--text2)">${c.sub}</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    // ── TAB BAR ──
+    html += `<div id="udTabBar" style="display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px">`;
+    const tabs = [
+      { id: 'exposure', label: 'EXPOSURE' },
+      { id: 'teams', label: 'TEAM SCORES' },
+      { id: 'value', label: 'VALUE PICKS' },
+      { id: 'builds', label: 'BUILD ANALYSIS' }
+    ];
+    tabs.forEach((t, i) => {
+      const active = i === 0;
+      html += `<button onclick="window._udSwitchTab('${t.id}')" data-udtab="${t.id}" style="padding:6px 14px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;border-radius:6px;cursor:pointer;white-space:nowrap;border:1px solid ${active ? 'var(--accent)' : 'var(--border)'};background:${active ? 'var(--accent)' : 'var(--surface)'};color:${active ? '#000' : 'var(--text2)'}">${t.label}</button>`;
+    });
+    html += `</div>`;
+
+    // ── TAB CONTENT ──
+    html += `<div id="udTabContent">`;
+
+    // EXPOSURE TAB
+    html += `<div id="udTab_exposure">`;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">PLAYER EXPOSURE</span>`;
+    html += `<input id="udExpFilter" oninput="window._udFilterExposure(this.value)" placeholder="Filter players..." style="margin-left:auto;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem;font-family:'DM Sans',sans-serif;width:150px">`;
+    html += `</div>`;
+    html += `<div id="udExposureList">`;
+    html += _udRenderExposureRows(playerList, numDrafts, '');
+    html += `</div>`;
+    html += `</div>`;
+
+    // TEAM SCORES TAB
+    html += `<div id="udTab_teams" style="display:none">`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAM SCORES <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(ranked best → worst)</span></div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Scored using trade calculator values (same curve as rankings + trade calc)</div>`;
+    // Best/worst/avg summary
+    const allTotals = draftScores.map(ds => ds.score.total);
+    const avgTotal = allTotals.length ? Math.round(allTotals.reduce((s, v) => s + v, 0) / allTotals.length) : 0;
+    const bestTotal = Math.max(...allTotals);
+    const worstTotal = Math.min(...allTotals);
+    html += `<div style="display:flex;gap:10px;margin-bottom:14px">`;
+    html += `<div style="flex:1;text-align:center;padding:8px;background:#22c55e10;border:1px solid #22c55e40;border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">BEST</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#22c55e">${bestTotal}</div></div>`;
+    html += `<div style="flex:1;text-align:center;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">AVERAGE</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--accent)">${avgTotal}</div></div>`;
+    html += `<div style="flex:1;text-align:center;padding:8px;background:#ef444410;border:1px solid #ef444440;border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">WORST</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#ef4444">${worstTotal}</div></div>`;
+    html += `</div>`;
+    draftScores.forEach((ds, i) => {
+      const d = ds.draft;
+      const sc = ds.score;
+      const scoreColor = sc.total >= bestTotal ? '#22c55e' : sc.total >= avgTotal ? '#4ade80' : sc.total >= worstTotal + 5 ? '#f59e0b' : '#ef4444';
+      html += `<div onclick="window._udToggleTeamDetail(${i})" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
+      html += `<div style="display:flex;align-items:center;gap:10px">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--text2);width:20px;text-align:center">${i + 1}</div>`;
+      html += `<div style="width:44px;height:44px;border-radius:8px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor}">${sc.total}</div>`;
+      html += `<div style="flex:1;min-width:0">`;
+      html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">Draft ${i + 1} <span style="font-weight:400;color:var(--text2)">· ${d.tournament} · $${d.fee.toFixed(0)}</span></div>`;
+      html += `<div style="font-size:.65rem;color:var(--text2)">R1: ${_esc(d.picks[0] ? d.picks[0].name : '?')} (${d.picks[0] ? d.picks[0].pick : '?'})</div>`;
+      html += `</div>`;
+      // Mini pos scores
+      html += `<div style="display:flex;gap:3px">`;
+      ['QB','RB','WR','TE'].forEach(pos => {
+        const ps = sc.posScores[pos] || { pts: 0 };
+        const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.45rem;color:var(--text2)">${pos}</div><div style="font-size:.65rem;font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
+      });
+      html += `</div>`;
+      html += `</div>`;
+      // Detail (hidden)
+      html += `<div id="udTeamDetail_${i}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">`;
+      html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">`;
+      ['QB','RB','WR','TE'].forEach(pos => {
+        const ps = sc.posScores[pos] || { pts: 0, count: 0 };
+        const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+        html += `<div style="text-align:center;padding:6px;background:${posColors[pos]}10;border:1px solid ${posColors[pos]}40;border-radius:6px">`;
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;color:var(--text2)">${pos}</div>`;
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:${posColors[pos]}">${ps.pts} pts</div>`;
+        html += `<div style="font-size:.55rem;color:var(--text2)">${ps.count} player${ps.count !== 1 ? 's' : ''}</div>`;
+        html += `</div>`;
+      });
+      html += `</div>`;
+      html += `<table style="width:100%;border-collapse:collapse;font-size:.7rem"><thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px 6px;color:var(--text2)">RD</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">PICK</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">POS</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">RANK</th><th style="text-align:center;padding:4px 6px;color:var(--text2)">VAL</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">+/-</th></tr></thead><tbody>`;
+      d.picks.forEach((p, pi) => {
+        const matched = _udMatchPlayer(p.name);
+        const rank = matched ? _mtGetPlayerRank(matched.n) : 999;
+        const tradeVal = _udGetValue(p.name);
+        const diff = rank < 500 ? p.pick - rank : 0;
+        const diffColor = diff > 20 ? '#22c55e' : diff > 0 ? '#4ade80' : diff < -20 ? '#ef4444' : diff < 0 ? '#f59e0b' : 'var(--text2)';
+        const diffStr = rank < 500 ? (diff > 0 ? '+' + diff : String(diff)) : '—';
+        const rankColor = rank <= 24 ? '#22c55e' : rank <= 60 ? '#4ade80' : rank <= 120 ? '#facc15' : rank <= 200 ? '#f59e0b' : rank < 500 ? '#ef4444' : 'var(--text2)';
+        const valColor = tradeVal >= 60 ? '#22c55e' : tradeVal >= 30 ? '#4ade80' : tradeVal >= 10 ? '#facc15' : tradeVal >= 3 ? '#f59e0b' : 'var(--text2)';
+        html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:3px 6px;color:var(--text2)">${pi + 1}</td><td style="padding:3px 6px;color:var(--text2)">${p.pick}</td><td style="padding:3px 6px;color:var(--text)">${_esc(p.name)}</td><td style="padding:3px 6px;color:var(--text2)">${p.pos}</td><td style="padding:3px 6px;font-weight:700;color:${rankColor}">${rank < 500 ? rank : '—'}</td><td style="text-align:center;padding:3px 6px;font-weight:700;color:${valColor}">${tradeVal}</td><td style="padding:3px 6px;font-weight:700;color:${diffColor}">${diffStr}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+      html += `</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    // VALUE PICKS TAB
+    html += `<div id="udTab_value" style="display:none">`;
+    // Steals
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#22c55e;margin-bottom:8px">🔥 BIGGEST STEALS</div>`;
+    html += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted well below Jack's ranking (great value)</div>`;
+    if (valuePicks.length === 0) {
+      html += `<div style="padding:12px;color:var(--text2);font-size:.78rem">No major value picks found</div>`;
+    } else {
+      html += `<table style="width:100%;border-collapse:collapse;font-size:.75rem;margin-bottom:20px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">RANK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
+      valuePicks.slice(0, 20).forEach(vp => {
+        html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(vp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.rank}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e">+${vp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${numDrafts}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+    }
+    // Reaches
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#ef4444;margin-bottom:8px">📉 BIGGEST REACHES</div>`;
+    html += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted well above Jack's ranking (overpay)</div>`;
+    if (bustPicks.length === 0) {
+      html += `<div style="padding:12px;color:var(--text2);font-size:.78rem">No major reaches found</div>`;
+    } else {
+      html += `<table style="width:100%;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">RANK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
+      bustPicks.slice(0, 20).forEach(bp => {
+        html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(bp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.rank}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444">${bp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${numDrafts}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+    }
+    html += `</div>`;
+
+    // BUILD ANALYSIS TAB
+    html += `<div id="udTab_builds" style="display:none">`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:12px">DRAFT BUILD ANALYSIS</div>`;
+
+    // Build pattern breakdown
+    html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">`;
+    Object.entries(buildPatterns).forEach(([label, count]) => {
+      const pct = numDrafts > 0 ? Math.round(100 * count / numDrafts) : 0;
+      html += `<div style="text-align:center;padding:12px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent)">${pct}%</div>`;
+      html += `<div style="font-size:.7rem;color:var(--text)">${label}</div>`;
+      html += `<div style="font-size:.6rem;color:var(--text2)">${count} of ${numDrafts}</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    // Round 1 position breakdown
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text);margin-bottom:8px">ROUND 1 POSITION PICKS</div>`;
+    html += `<div style="display:flex;gap:8px;margin-bottom:20px">`;
+    ['RB','WR','TE','QB'].forEach(pos => {
+      const count = r1Positions[pos] || 0;
+      const pct = numDrafts > 0 ? Math.round(100 * count / numDrafts) : 0;
+      const colors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+      html += `<div style="flex:1;text-align:center;padding:10px;background:${colors[pos]}10;border:1px solid ${colors[pos]}40;border-radius:8px">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:${colors[pos]}">${pct}%</div>`;
+      html += `<div style="font-size:.75rem;font-weight:600;color:var(--text)">${pos}</div>`;
+      html += `<div style="font-size:.6rem;color:var(--text2)">${count} times</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    // Most common R1 picks
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text);margin-bottom:8px">MOST COMMON ROUND 1 PICKS</div>`;
+    const r1Picks = {};
+    Object.values(data.drafts).forEach(d => {
+      if (d.picks[0]) { const n = d.picks[0].name; r1Picks[n] = (r1Picks[n] || 0) + 1; }
+    });
+    const r1Sorted = Object.entries(r1Picks).sort((a, b) => b[1] - a[1]);
+    html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px">`;
+    r1Sorted.forEach(([name, count]) => {
+      const info = data.players[name];
+      html += `<div style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.72rem">`;
+      html += `<span style="font-weight:600;color:var(--text)">${_esc(name)}</span> <span style="color:var(--text2)">${info ? info.pos : ''} · ${count}x</span>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    // Avg position counts per round
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text);margin-bottom:8px">POSITION ALLOCATION BY ROUND</div>`;
+    const roundPos = {};
+    Object.values(data.drafts).forEach(d => {
+      d.picks.forEach((p, i) => {
+        const rd = i + 1;
+        if (!roundPos[rd]) roundPos[rd] = { QB: 0, RB: 0, WR: 0, TE: 0 };
+        if (roundPos[rd][p.pos] !== undefined) roundPos[rd][p.pos]++;
+      });
+    });
+    html += `<table style="width:100%;border-collapse:collapse;font-size:.7rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:4px 8px;color:var(--text2)">RD</th><th style="text-align:center;padding:4px 8px;color:#ef4444">QB</th><th style="text-align:center;padding:4px 8px;color:#22c55e">RB</th><th style="text-align:center;padding:4px 8px;color:#3b82f6">WR</th><th style="text-align:center;padding:4px 8px;color:#f59e0b">TE</th></tr></thead><tbody>`;
+    Object.keys(roundPos).sort((a, b) => Number(a) - Number(b)).forEach(rd => {
+      const rp = roundPos[rd];
+      const total = rp.QB + rp.RB + rp.WR + rp.TE;
+      html += `<tr style="border-bottom:1px solid var(--border)">`;
+      html += `<td style="padding:3px 8px;font-weight:700;color:var(--text)">${rd}</td>`;
+      ['QB','RB','WR','TE'].forEach(pos => {
+        const pct = total > 0 ? Math.round(100 * rp[pos] / total) : 0;
+        const barW = Math.max(pct, 2);
+        const colors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+        html += `<td style="text-align:center;padding:3px 8px"><div style="display:flex;align-items:center;gap:4px;justify-content:center"><div style="width:${barW}px;height:10px;background:${colors[pos]};border-radius:2px"></div><span style="color:var(--text2)">${pct}%</span></div></td>`;
+      });
+      html += `</tr>`;
+    });
+    html += `</tbody></table>`;
+    html += `</div>`;
+
+    html += `</div>`; // close udTabContent
+
+    dash.innerHTML = html;
+
+    // Store data for filtering
+    window._udPlayerList = playerList;
+    window._udNumDrafts = numDrafts;
+  }
+
+  function _udRenderExposureRows(playerList, numDrafts, filter) {
+    const filtered = filter ? playerList.filter(([name]) => name.toLowerCase().includes(filter.toLowerCase())) : playerList;
+    let html = '';
+    // Position filter counts
+    const posFilters = { ALL: filtered.length, QB: 0, RB: 0, WR: 0, TE: 0 };
+    filtered.forEach(([, info]) => { if (posFilters[info.pos] !== undefined) posFilters[info.pos]++; });
+
+    filtered.forEach(([name, info], idx) => {
+      const pct = Math.round(info.exposure * 100);
+      const matched = _udMatchPlayer(name);
+      const rank = matched ? _mtGetPlayerRank(matched.n) : null;
+      const barColor = pct >= 30 ? 'var(--accent)' : pct >= 15 ? '#3b82f6' : 'var(--text2)';
+      const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;${idx > 0 ? 'border-top:1px solid var(--border)' : ''}">`;
+      html += `<div style="width:24px;text-align:center;font-size:.65rem;color:var(--text2)">${idx + 1}</div>`;
+      html += `<span style="font-size:.55rem;padding:1px 4px;border-radius:3px;background:${posColors[info.pos] || 'var(--text2)'}20;color:${posColors[info.pos] || 'var(--text2)'};font-weight:600">${info.pos}</span>`;
+      html += `<div style="flex:1;min-width:0">`;
+      html += `<div style="font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(name)} <span style="font-weight:400;color:var(--text2);font-size:.65rem">${info.team || ''}</span></div>`;
+      html += `<div style="display:flex;align-items:center;gap:6px;margin-top:2px">`;
+      html += `<div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;max-width:120px"><div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px"></div></div>`;
+      html += `<span style="font-size:.65rem;color:var(--text2)">Avg pick: ${Math.round(info.avgPick)} (${info.minPick}–${info.maxPick})</span>`;
+      html += `</div>`;
+      html += `</div>`;
+      html += `<div style="text-align:right;min-width:50px">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${barColor}">${pct}%</div>`;
+      html += `<div style="font-size:.55rem;color:var(--text2)">${info.count}/${numDrafts}</div>`;
+      html += `</div>`;
+      if (rank && rank < 500) {
+        html += `<div style="text-align:right;min-width:36px"><div style="font-size:.55rem;color:var(--text2)">RANK</div><div style="font-size:.75rem;font-weight:700;color:${rank <= 24 ? '#22c55e' : rank <= 60 ? '#4ade80' : rank <= 120 ? '#facc15' : '#f59e0b'}">${rank}</div></div>`;
+      }
+      html += `</div>`;
+    });
+    return html;
+  }
+
+  window._udFilterExposure = function(val) {
+    if (!window._udPlayerList) return;
+    const el = document.getElementById('udExposureList');
+    if (el) el.innerHTML = _udRenderExposureRows(window._udPlayerList, window._udNumDrafts, val);
+  };
+
+  window._udSwitchTab = function(tabId) {
+    const tabs = ['exposure', 'teams', 'value', 'builds'];
+    tabs.forEach(t => {
+      const el = document.getElementById('udTab_' + t);
+      if (el) el.style.display = t === tabId ? '' : 'none';
+      const btn = document.querySelector(`[data-udtab="${t}"]`);
+      if (btn) {
+        btn.style.background = t === tabId ? 'var(--accent)' : 'var(--surface)';
+        btn.style.color = t === tabId ? '#000' : 'var(--text2)';
+        btn.style.borderColor = t === tabId ? 'var(--accent)' : 'var(--border)';
+      }
+    });
+  };
+
+  window._udToggleTeamDetail = function(idx) {
+    const el = document.getElementById('udTeamDetail_' + idx);
+    if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+  };
+
+  // ═══════════════════════════════════════════════════════════
 
   function _esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 

@@ -21501,6 +21501,10 @@ window.fmtHeight = fmtHeight;
     try { firebase.auth().onAuthStateChanged(_triviaCheckAdmin); } catch(e) {}
   }
 
+  // === CONFIG: Set this to your Cloudflare Worker URL after deploying ===
+  const TRIVIA_API_URL = 'https://late-wind-6322.billingsj199.workers.dev';
+  // =====================================================================
+
   let _triviaData = null; // current board data
 
   function _autoLayout(count) {
@@ -22628,36 +22632,28 @@ window.fmtHeight = fmtHeight;
       dataCtx += 'NFL teams: ARI,ATL,BAL,BUF,CAR,CHI,CIN,CLE,DAL,DEN,DET,GB,HOU,IND,JAX,KC,LAC,LAR,LV,MIA,MIN,NE,NO,NYG,NYJ,PHI,PIT,SF,SEA,TB,TEN,WAS. Historical: STL,SD,OAK.';
       dataCtx += '\nHalf-PPR: 0.04/py, 4/ptd, -2/int, 0.1/ry, 6/rtd, 0.5/rec, 0.1/rcy, 6/rctd, -2/fl';
 
-      // === BUILD ALL SEASON TOTALS FROM WEEKLY_STATS ===
-      const hasWeekly = typeof WEEKLY_STATS !== 'undefined';
-      if (hasWeekly) {
-        // Build D-array lookup for position
-        const _dPosMap = {};
-        if (typeof D !== 'undefined') D.forEach(d => { if (d.n && d.s) _dPosMap[d.n] = d.s; });
+      // Position lookup for weekly stats section
+      const _dPosMap = {};
+      if (typeof D !== 'undefined') D.forEach(d => { if (d.n && d.s) _dPosMap[d.n] = d.s; });
 
+      // === BUILD ALL SEASON TOTALS FROM D[].career (sourced from ALL_PLAYERS_DB) ===
+      const hasCareer = typeof D !== 'undefined' && D.some(d => d.career && d.career.length);
+      if (hasCareer) {
         const allSeasons = [];
-        Object.keys(WEEKLY_STATS).forEach(name => {
-          const ws = WEEKLY_STATS[name];
-          if (!ws || !ws.seasons) return;
-          const pos = _dPosMap[name] || '';
-          Object.keys(ws.seasons).forEach(yr => {
-            const weeks = ws.seasons[yr];
-            if (!weeks || !weeks.length) return;
-            const played = weeks.filter(w => w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
-            if (!played.length) return;
-            const t = { py:0, ptd:0, int:0, ry:0, rtd:0, rec:0, rcy:0, rctd:0, ra:0, tgt:0, fl:0, fpts:0, pc:0, pa:0 };
-            played.forEach(w => {
-              t.py+=(w.py||0); t.ptd+=(w.ptd||0); t.int+=(w.int||0); t.ry+=(w.ry||0);
-              t.rtd+=(w.rtd||0); t.rec+=(w.rec||0); t.rcy+=(w.rcy||0); t.rctd+=(w.rctd||0);
-              t.ra+=(w.ra||0); t.tgt+=(w.tgt||0); t.fl+=(w.fl||0); t.fpts+=(w.fpts||0);
-              t.pc+=(w.pc||0); t.pa+=(w.pa||0);
-            });
+        D.forEach(d => {
+          if (!d.career || !d.career.length) return;
+          const pos = d.s || '';
+          d.career.forEach(s => {
+            if (!s.yr) return;
+            const fpts = s.fpts || 0;
+            if (fpts <= 0) return;
             allSeasons.push({
-              name, pos, team: played[0].tm || '', yr: parseInt(yr), gp: played.length,
-              fpts: Math.round(t.fpts*10)/10, py:t.py, ptd:t.ptd, int:t.int,
-              ry:t.ry, rtd:t.rtd, rec:t.rec, rcy:t.rcy, rctd:t.rctd, ra:t.ra,
-              tgt:t.tgt, fl:t.fl, pc:t.pc, pa:t.pa,
-              totalTd: t.ptd + t.rtd + t.rctd
+              name: d.n, pos, team: s.tm || d.t || '', yr: s.yr, gp: s.gp || 0,
+              fpts: Math.round(fpts*10)/10,
+              py: s.py||0, ptd: s.ptd||0, int: s.int||0,
+              ry: s.ry||0, rtd: s.rtd||0, rec: s.rc||0, rcy: s.rcy||0, rctd: s.rctd||0,
+              ra: s.ra||0, tgt: s.tgt||0, fl: s.fl||0, pc: s.pc||0, pa: s.pa||0,
+              totalTd: (s.ptd||0) + (s.rtd||0) + (s.rctd||0)
             });
           });
         });
@@ -23061,7 +23057,7 @@ Rules:
     console.log('[Trivia] Data context size:', dataCtx.length, 'chars');
 
     try {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      const resp = await fetch(TRIVIA_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -23276,47 +23272,53 @@ Rules:
         });
       }
     } else {
-      // NFL stats — use WEEKLY_STATS for both season and weekly
-      if (typeof WEEKLY_STATS === 'undefined') return pool;
-      const currentNames = typeof D !== 'undefined' ? D.map(p => p.n) : [];
-      Object.keys(WEEKLY_STATS).forEach(name => {
-        const years = WEEKLY_STATS[name];
-        if (!years) return;
-        // Era filter
-        if (era === 'current' && !currentNames.includes(name)) return;
-        // Get position from D array
-        let pos = '';
-        if (typeof D !== 'undefined') { const d = D.find(p => p.n === name); if (d) pos = d.s; }
-        if (!pos) return; // skip if no position
-        if (!['QB','RB','WR','TE'].includes(pos)) return;
+      // NFL stats
+      const currentNames = typeof D !== 'undefined' ? new Set(D.filter(d => !d._retired).map(p => p.n)) : new Set();
 
-        Object.keys(years).forEach(yr => {
-          const yrInt = parseInt(yr);
-          if (era === 'season' && yrInt !== parseInt(seasonYear)) return;
-          const games = years[yr];
-          if (!games || !games.length) return;
+      if (statType === 'weekly') {
+        // Weekly mode — must use WEEKLY_STATS
+        if (typeof WEEKLY_STATS === 'undefined') return pool;
+        Object.keys(WEEKLY_STATS).forEach(name => {
+          const ws = WEEKLY_STATS[name];
+          if (!ws || !ws.seasons) return;
+          if (era === 'current' && !currentNames.has(name)) return;
+          let pos = '';
+          if (typeof D !== 'undefined') { const d = D.find(p => p.n === name); if (d) pos = d.s; }
+          if (!pos || !['QB','RB','WR','TE'].includes(pos)) return;
 
-          // Get team from D array or first game
-          let team = '';
-          if (typeof D !== 'undefined') { const d = D.find(p => p.n === name); if (d) team = d.t; }
-
-          if (statType === 'weekly') {
+          Object.keys(ws.seasons).forEach(yr => {
+            const yrInt = parseInt(yr);
+            if (era === 'season' && yrInt !== parseInt(seasonYear)) return;
+            const games = ws.seasons[yr];
+            if (!games || !games.length) return;
             games.forEach(g => {
               if (week && parseInt(g.wk) !== parseInt(week)) return;
               const fpts = _cfgCalcFpts(g, scoring, true);
               if (fpts <= 0) return;
-              pool.push({name, pos, team: g.tm||team, fpts: Math.round(fpts*10)/10, year: yrInt, week: g.wk, stat: g});
+              pool.push({name, pos, team: g.tm||'', fpts: Math.round(fpts*10)/10, year: yrInt, week: g.wk, stat: g});
             });
-          } else {
-            // Aggregate season
-            let sAgg = {py:0,ptd:0,int:0,ry:0,rtd:0,ra:0,rec:0,rcy:0,rctd:0,fl:0};
-            games.forEach(g => { Object.keys(sAgg).forEach(k => { sAgg[k] += parseFloat(g[k]||0); }); });
-            const fpts = _cfgCalcFpts(sAgg, scoring, false);
-            if (fpts <= 0) return;
-            pool.push({name, pos, team, fpts: Math.round(fpts*10)/10, year: yrInt, stat: sAgg});
-          }
+          });
         });
-      });
+      } else {
+        // Season mode — use D[].career (from ALL_PLAYERS_DB), much faster and more complete
+        if (typeof D === 'undefined') return pool;
+        const recAdj = scoring === 'ppr' ? 0.5 : scoring === 'std' ? -0.5 : 0;
+        D.forEach(d => {
+          if (!d.career || !d.career.length) return;
+          if (!d.s || !['QB','RB','WR','TE'].includes(d.s)) return;
+          if (era === 'current' && d._retired) return;
+          d.career.forEach(s => {
+            if (!s.yr) return;
+            if (era === 'season' && s.yr !== parseInt(seasonYear)) return;
+            // Adjust fpts for scoring format (career data is half-PPR)
+            const baseFpts = s.fpts || 0;
+            const recs = s.rc || 0;
+            const fpts = Math.round((baseFpts + recs * recAdj) * 10) / 10;
+            if (fpts <= 0) return;
+            pool.push({name: d.n, pos: d.s, team: s.tm||d.t||'', fpts, year: s.yr, stat: s});
+          });
+        });
+      }
     }
 
     // Apply team/division/conference filter

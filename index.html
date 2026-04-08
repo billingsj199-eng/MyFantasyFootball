@@ -2355,12 +2355,40 @@ CLEAR
 <div class="fg-header">
 <div class="fg-title">FANTASY GAME</div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:8px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<button class="fg-mode-btn active" id="fgTypeRegular" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">REGULAR</button>
+<button class="fg-mode-btn" id="fgTypeCustom" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">CUSTOM</button>
+</div>
+<div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
 <button class="fg-mode-btn active" id="fgLeagueNFL" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">NFL</button>
 <button class="fg-mode-btn" id="fgLeagueCollege" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">COLLEGE</button>
 </div>
-<div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px 0 4px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
 <button class="fg-mode-btn active" id="fgModeSeason" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">BEST SEASON</button>
 <button class="fg-mode-btn" id="fgModeWeek" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">BEST WEEK</button>
+</div>
+<div id="fgCustomSettings" style="display:none;margin:2px 0 4px">
+<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+<select id="fgYearSelect" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1px;cursor:pointer">
+<option value="best">BEST (ALL-TIME)</option>
+<option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
+<option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option>
+<option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option>
+<option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option>
+<option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option>
+<option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option>
+<option value="2007">2007</option><option value="2006">2006</option>
+</select>
+<select id="fgWeekSelect" style="display:none;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1px;cursor:pointer">
+<option value="best">BEST WEEK</option>
+<option value="1">WK 1</option><option value="2">WK 2</option><option value="3">WK 3</option>
+<option value="4">WK 4</option><option value="5">WK 5</option><option value="6">WK 6</option>
+<option value="7">WK 7</option><option value="8">WK 8</option><option value="9">WK 9</option>
+<option value="10">WK 10</option><option value="11">WK 11</option><option value="12">WK 12</option>
+<option value="13">WK 13</option><option value="14">WK 14</option><option value="15">WK 15</option>
+<option value="16">WK 16</option><option value="17">WK 17</option><option value="18">WK 18</option>
+</select>
+</div>
+<div style="font-size:.6rem;color:var(--text2);margin-top:3px;font-style:italic">Custom games do not save to the leaderboard</div>
 </div>
 <div class="fg-subtitle" id="fgSubtitle">A random NFL team appears — pick from their ALL-TIME roster of players across every era. Their best career fantasy season scores for you. Can you draft the legends?</div>
 </div>
@@ -2645,7 +2673,6 @@ CLEAR
 <!-- Tabs -->
 <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
 <button class="trivia-tab active" data-tab="builder" onclick="window._triviaTabSwitch('builder')" style="padding:8px 18px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);background:none;border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;cursor:pointer">Board Builder</button>
-<button class="trivia-tab" data-tab="customfg" onclick="window._triviaTabSwitch('customfg')" style="padding:8px 18px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer">Custom Fantasy Game</button>
 </div>
 
 <!-- Board Builder Tab -->
@@ -10199,6 +10226,38 @@ document.addEventListener('click', function(e) {
   let pendingPlayer = null; // player waiting for slot assignment
   let skipsLeft = 2;
   let fgMode = 'season'; // 'season' or 'week'
+  let fgYear = 'best'; // 'best' or a year like '2024'
+  let fgWeekFilter = 'best'; // 'best' or a week number like '1'
+  let fgType = 'regular'; // 'regular' or 'custom'
+
+  // REGULAR/CUSTOM toggle
+  const fgTypeRegular = document.getElementById('fgTypeRegular');
+  const fgTypeCustom = document.getElementById('fgTypeCustom');
+  function setFgType(type) {
+    if (fgType === type) return;
+    if (Object.keys(roster).length > 0 && !gameOver) return; // don't switch mid-game
+    fgType = type;
+    fgTypeRegular.classList.toggle('active', type === 'regular');
+    fgTypeCustom.classList.toggle('active', type === 'custom');
+    const customPanel = document.getElementById('fgCustomSettings');
+    customPanel.style.display = type === 'custom' ? '' : 'none';
+    // Update mode button labels
+    const seasonBtn = document.getElementById('fgModeSeason');
+    const weekBtn = document.getElementById('fgModeWeek');
+    seasonBtn.textContent = type === 'custom' ? 'SEASON' : 'BEST SEASON';
+    weekBtn.textContent = type === 'custom' ? 'WEEK' : 'BEST WEEK';
+    // Reset custom filters when switching back to regular
+    if (type === 'regular') {
+      fgYear = 'best';
+      fgWeekFilter = 'best';
+      document.getElementById('fgYearSelect').value = 'best';
+      document.getElementById('fgWeekSelect').value = 'best';
+    }
+    updateFgSubtitle();
+    resetGame();
+  }
+  fgTypeRegular.addEventListener('click', () => setFgType('regular'));
+  fgTypeCustom.addEventListener('click', () => setFgType('custom'));
 
   // Abbreviation -> modern full team name mapping for weekly stats
   const ABBR_TO_FULL = {};
@@ -10222,7 +10281,11 @@ document.addEventListener('click', function(e) {
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
     let best = null;
     for (const [szn, weeks] of Object.entries(ws.seasons)) {
+      // Year filter
+      if (fgYear !== 'best' && +szn !== +fgYear) continue;
       for (const w of weeks) {
+        // Week filter
+        if (fgWeekFilter !== 'best' && +w.wk !== +fgWeekFilter) continue;
         // Check if this week was played for the matching team
         if (modernTeam && w.tm) {
           const weekTeam = ABBR_TO_FULL[w.tm] || w.tm;
@@ -10254,19 +10317,58 @@ document.addEventListener('click', function(e) {
     fgMode = mode;
     fgModeSeason.classList.toggle('active', mode === 'season');
     fgModeWeek.classList.toggle('active', mode === 'week');
-    if (fgLeague === 'college') {
-      fgSubtitle.textContent = mode === 'season'
-        ? "A random college conference appears — pick from ALL-TIME players who played in that conference. Their best college fantasy season scores for you!"
-        : "A random college conference appears — pick from ALL-TIME players. Their single best college fantasy WEEK scores for you. One monster game is all it takes!";
-    } else {
-      fgSubtitle.textContent = mode === 'season'
-        ? "A random NFL team appears — pick from their ALL-TIME roster of players across every era. Their best career fantasy season scores for you. Can you draft the legends?"
-        : "A random NFL team appears — pick from their ALL-TIME roster. Their single best fantasy WEEK scores for you. One monster game is all it takes!";
-    }
+    // Show/hide week select
+    document.getElementById('fgWeekSelect').style.display = mode === 'week' ? '' : 'none';
+    updateFgSubtitle();
     resetGame();
   }
+
+  function updateFgSubtitle() {
+    if (fgType === 'regular') {
+      // Original subtitles
+      if (fgLeague === 'college') {
+        fgSubtitle.textContent = fgMode === 'season'
+          ? "A random college conference appears — pick from ALL-TIME players who played in that conference. Their best college fantasy season scores for you!"
+          : "A random college conference appears — pick from ALL-TIME players. Their single best college fantasy WEEK scores for you. One monster game is all it takes!";
+      } else {
+        fgSubtitle.textContent = fgMode === 'season'
+          ? "A random NFL team appears — pick from their ALL-TIME roster of players across every era. Their best career fantasy season scores for you. Can you draft the legends?"
+          : "A random NFL team appears — pick from their ALL-TIME roster. Their single best fantasy WEEK scores for you. One monster game is all it takes!";
+      }
+      return;
+    }
+    // Custom subtitles
+    const yearLabel = fgYear === 'best' ? 'ALL-TIME' : fgYear;
+    const weekLabel = fgWeekFilter === 'best' ? 'best' : 'Week ' + fgWeekFilter;
+    if (fgLeague === 'college') {
+      fgSubtitle.textContent = fgMode === 'season'
+        ? `CUSTOM — Pick from ${yearLabel} college players. Their ${fgYear === 'best' ? 'best career fantasy season' : fgYear + ' fantasy season'} scores for you!`
+        : `CUSTOM — Pick from ${yearLabel} college players. Their ${weekLabel} fantasy performance scores for you!`;
+    } else {
+      fgSubtitle.textContent = fgMode === 'season'
+        ? `CUSTOM — Pick from ${yearLabel} NFL rosters. ${fgYear === 'best' ? 'Their best career fantasy season' : 'Their ' + fgYear + ' fantasy season'} scores for you.`
+        : `CUSTOM — Pick from ${yearLabel} NFL rosters. Their ${weekLabel} fantasy performance scores for you!`;
+    }
+  }
+
   fgModeSeason.addEventListener('click', () => { if (fgMode !== 'season' && (Object.keys(roster).length === 0 || gameOver)) setFgMode('season'); });
   fgModeWeek.addEventListener('click', () => { if (fgMode !== 'week' && (Object.keys(roster).length === 0 || gameOver)) setFgMode('week'); });
+
+  // Year select
+  document.getElementById('fgYearSelect').addEventListener('change', function() {
+    if (Object.keys(roster).length > 0 && !gameOver) return; // don't change mid-game
+    fgYear = this.value;
+    updateFgSubtitle();
+    resetGame();
+  });
+
+  // Week select
+  document.getElementById('fgWeekSelect').addEventListener('change', function() {
+    if (Object.keys(roster).length > 0 && !gameOver) return;
+    fgWeekFilter = this.value;
+    updateFgSubtitle();
+    resetGame();
+  });
 
   // NFL/COLLEGE toggle
   const fgLeagueNFL = document.getElementById('fgLeagueNFL');
@@ -10278,7 +10380,8 @@ document.addEventListener('click', function(e) {
     fgLeagueNFL.classList.toggle('active', league === 'nfl');
     fgLeagueCollege.classList.toggle('active', league === 'college');
     if (fgDraftEmptyText) fgDraftEmptyText.textContent = league === 'college' ? 'Press START to get a random college conference' : 'Press START to get a random NFL team';
-    setFgMode(fgMode);
+    updateFgSubtitle();
+    resetGame();
   }
   fgLeagueNFL.addEventListener('click', () => { if (fgLeague !== 'nfl' && (Object.keys(roster).length === 0 || gameOver)) setFgLeague('nfl'); });
   fgLeagueCollege.addEventListener('click', () => { if (fgLeague !== 'college' && (Object.keys(roster).length === 0 || gameOver)) setFgLeague('college'); });
@@ -10303,6 +10406,7 @@ document.addEventListener('click', function(e) {
 
   function getBestSeason(player, forTeam) {
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
+    const yearFilter = fgYear !== 'best' ? +fgYear : null;
 
     // Build reverse lookup: abbreviation -> modern full name
     const _abbrToModern = {};
@@ -10320,17 +10424,18 @@ document.addEventListener('click', function(e) {
       const playerHist = (typeof PLAYER_TEAM_HISTORY !== 'undefined') ? PLAYER_TEAM_HISTORY[player.n] : null;
 
       career.forEach(s => {
+        // Year filter
+        if (yearFilter && s.yr !== yearFilter) return;
+
         let onTeam = true; // default: include season
 
         if (activeHist) {
-          // ACTIVE_TEAM_HISTORY uses full team names
           const st = getTeamForYear(player.n, s.yr);
           if (st) {
             const stModern = TEAM_ALIASES[st] || st;
             if (stModern !== modernTeam) onTeam = false;
           }
         } else if (playerHist) {
-          // PLAYER_TEAM_HISTORY uses abbreviations
           let abbr = null;
           for (const h of playerHist) {
             if (s.yr >= h.y1 && s.yr <= h.y2) { abbr = h.t; break; }
@@ -10344,27 +10449,35 @@ document.addEventListener('click', function(e) {
         if (onTeam && (!best || s.fpts > best.fpts)) best = s;
       });
       if (best) return best;
-      // If no season matched this team, fall through to _bestByTeam
     } else if (career.length && !modernTeam) {
-      // No team filter, just return overall career best
       let best = null;
-      career.forEach(s => { if (!best || s.fpts > best.fpts) best = s; });
+      career.forEach(s => {
+        if (yearFilter && s.yr !== yearFilter) return;
+        if (!best || s.fpts > best.fpts) best = s;
+      });
       if (best) return best;
     }
 
     // Historical/HP players: use per-team lookup
     if (player._bestByTeam && Object.keys(player._bestByTeam).length > 0) {
+      // For year filter on HP players, check if the stored year matches
+      if (yearFilter) {
+        let best = null;
+        Object.values(player._bestByTeam).forEach(s => {
+          if (s.yr === yearFilter && (!best || s.fpts > best.fpts)) best = s;
+        });
+        if (best) return best;
+        return null; // no matching year for this HP player
+      }
       if (modernTeam && player._bestByTeam[modernTeam]) {
         return player._bestByTeam[modernTeam];
       }
-      // Fallback: try alias matching
       if (modernTeam) {
         for (const [tk, tv] of Object.entries(player._bestByTeam)) {
           const tkModern = TEAM_ALIASES[tk] || tk;
           if (tkModern === modernTeam) return tv;
         }
       }
-      // Last resort: return first available (career best)
       const vals = Object.values(player._bestByTeam);
       return vals.length ? vals[0] : null;
     }
@@ -10570,6 +10683,7 @@ document.addEventListener('click', function(e) {
   }
 
   function renderHighScore() {
+    if (fgType === 'custom') { highScoreEl.textContent = ''; return; }
     let hs;
     if (fgLeague === 'college') {
       hs = fgMode === 'week' ? highScoreCollegeWeek : highScoreCollegeSeason;
@@ -10850,8 +10964,10 @@ document.addEventListener('click', function(e) {
 
   function endGame() {
     gameOver = true;
-    const gamesPlayed = parseInt(localStorage.getItem('fg_games_played')||'0') + 1;
-    localStorage.setItem('fg_games_played', gamesPlayed);
+    if (fgType === 'regular') {
+      const gamesPlayed = parseInt(localStorage.getItem('fg_games_played')||'0') + 1;
+      localStorage.setItem('fg_games_played', gamesPlayed);
+    }
     if (spinnerInterval) { cancelAnimationFrame(spinnerInterval); spinnerInterval = null; }
     spinnerWrap.style.display = 'none';
     spinnerResult.style.display = 'none';
@@ -10860,6 +10976,12 @@ document.addEventListener('click', function(e) {
     gameOverEl.style.display = 'block';
     const total = Object.values(roster).reduce((s,r) => s + r.pts, 0);
     finalScoreEl.textContent = total.toFixed(1) + ' PTS';
+
+    if (fgType === 'custom') {
+      // Custom games: show score but no high score tracking or leaderboard save
+      goSubEl.textContent = 'Custom Game (not saved to leaderboard)';
+      goSubEl.style.color = 'var(--text2)';
+    } else {
     const isWeek = fgMode === 'week';
     let currentHS;
     if (fgLeague === 'college') {
@@ -10906,6 +11028,7 @@ document.addEventListener('click', function(e) {
       if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
     }
     setTimeout(() => { if (typeof window._lbRenderFgInline === 'function') window._lbRenderFgInline(total, isWeek); }, 500);
+    } // end regular-only block
     renderRoster();
   }
 

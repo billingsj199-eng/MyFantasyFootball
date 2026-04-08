@@ -25151,6 +25151,8 @@ Rules:
     btn.textContent = 'IMPORT';
   };
 
+  let _mtSortBy = 'total'; // current sort key
+
   function _mtRenderLeague(league, teams) {
     const view = document.getElementById('mtLeagueView');
     view.style.display = '';
@@ -25165,51 +25167,9 @@ Rules:
     fmtParts.push(league.season || '');
     document.getElementById('mtLeagueInfo').textContent = fmtParts.join(' · ');
 
-    // Power rankings
-    const pr = document.getElementById('mtPowerRankings');
-    let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">POWER RANKINGS</div>';
-
-    // "Pick Your Team" dropdown if not auto-detected
-    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
-    html += `<span style="font-size:.75rem;color:var(--text2)">My Team:</span>`;
-    html += `<select id="mtMyTeamSelect" onchange="window._mtSelectMyTeam(this.value)" style="padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem">`;
-    html += `<option value="">— Select your team —</option>`;
-    teams.forEach((t, i) => {
-      const sel = t.isMyTeam ? 'selected' : '';
-      html += `<option value="${i}" ${sel}>${_esc(t.owner)}</option>`;
-    });
-    html += `</select>`;
-    html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)"></span>`;
-    html += `</div>`;
-
-    teams.forEach((t, i) => {
-      const sc = t.score;
-      const isMe = t.isMyTeam;
-      const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
-      const allScores = teams.map(x => x.score.total);
-      const maxScore = Math.max(...allScores);
-      const avgScore = Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length);
-      const scoreColor = sc.total >= maxScore ? '#22c55e' : sc.total >= avgScore ? '#4ade80' : sc.total >= avgScore * 0.7 ? '#f59e0b' : '#ef4444';
-      html += `<div onclick="window._mtShowTeam(${i})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;${meStyle};border-radius:8px;cursor:pointer;transition:all .15s;position:relative" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">`;
-      if (isMe) html += `<div style="position:absolute;top:-6px;right:10px;font-size:.5rem;background:var(--accent);color:#000;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px">MY TEAM</div>`;
-      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--text2);width:24px;text-align:center">${i + 1}</div>`;
-      html += `<div style="width:48px;height:48px;border-radius:10px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor};letter-spacing:1px">${sc.total}</div>`;
-      html += `<div style="flex:1;min-width:0">`;
-      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}</div>`;
-      html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div>`;
-      html += `</div>`;
-      // Position scores mini
-      html += `<div style="display:flex;gap:4px">`;
-      const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-      ['QB','RB','WR','TE'].forEach(pos => {
-        const ps = sc.posScores[pos] || { pts: 0 };
-        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">${pos}</div><div style="font-size:.7rem;font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
-      });
-      html += `</div>`;
-      html += `</div>`;
-    });
-    pr.innerHTML = html;
     window._mtTeams = teams;
+    window._mtLeague = league;
+    _mtRenderTeamList(teams);
 
     // Update format display
     const fmtEl = document.getElementById('mtFormatDisplay');
@@ -25223,6 +25183,89 @@ Rules:
       fmtEl.textContent = labels.join(' · ');
     }
   }
+
+  function _mtRenderTeamList(teams) {
+    const pr = document.getElementById('mtPowerRankings');
+    let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">POWER RANKINGS</div>';
+
+    // "Pick Your Team" dropdown
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<span style="font-size:.75rem;color:var(--text2)">My Team:</span>`;
+    html += `<select id="mtMyTeamSelect" onchange="window._mtSelectMyTeam(this.value)" style="padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem">`;
+    html += `<option value="">— Select your team —</option>`;
+    teams.forEach((t, i) => {
+      const sel = t.isMyTeam ? 'selected' : '';
+      html += `<option value="${i}" ${sel}>${_esc(t.owner)}</option>`;
+    });
+    html += `</select>`;
+    html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)"></span>`;
+    html += `</div>`;
+
+    // Sort buttons
+    html += `<div style="display:flex;gap:3px;margin-bottom:10px;align-items:center">`;
+    html += `<span style="font-size:.65rem;color:var(--text2);margin-right:4px">SORT BY:</span>`;
+    const sortOpts = [
+      { key: 'total', label: 'TOTAL', color: 'var(--accent)' },
+      { key: 'QB', label: 'QB', color: '#ef4444' },
+      { key: 'RB', label: 'RB', color: '#22c55e' },
+      { key: 'WR', label: 'WR', color: '#3b82f6' },
+      { key: 'TE', label: 'TE', color: '#f59e0b' }
+    ];
+    sortOpts.forEach(o => {
+      const active = _mtSortBy === o.key;
+      html += `<button onclick="window._mtSortTeams('${o.key}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? o.color : 'var(--border)'};background:${active ? o.color : 'var(--surface)'};color:${active ? (o.key === 'total' ? '#000' : '#fff') : 'var(--text2)'}">${o.label}</button>`;
+    });
+    html += `</div>`;
+
+    // Sort teams
+    const sorted = teams.slice().sort((a, b) => {
+      if (_mtSortBy === 'total') return b.score.total - a.score.total;
+      const posA = (a.score.posScores[_mtSortBy] || { pts: 0 }).pts;
+      const posB = (b.score.posScores[_mtSortBy] || { pts: 0 }).pts;
+      return posB - posA;
+    });
+
+    const allScores = sorted.map(x => {
+      if (_mtSortBy === 'total') return x.score.total;
+      return (x.score.posScores[_mtSortBy] || { pts: 0 }).pts;
+    });
+    const maxScore = Math.max(...allScores);
+    const avgScore = allScores.length ? Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length) : 0;
+
+    sorted.forEach((t, i) => {
+      const sc = t.score;
+      const isMe = t.isMyTeam;
+      const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
+      const displayScore = _mtSortBy === 'total' ? sc.total : (sc.posScores[_mtSortBy] || { pts: 0 }).pts;
+      const scoreColor = displayScore >= maxScore ? '#22c55e' : displayScore >= avgScore ? '#4ade80' : displayScore >= avgScore * 0.7 ? '#f59e0b' : '#ef4444';
+      // Find original index for click handler
+      const origIdx = teams.indexOf(t);
+      html += `<div onclick="window._mtShowTeam(${origIdx})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;${meStyle};border-radius:8px;cursor:pointer;transition:all .15s;position:relative" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">`;
+      if (isMe) html += `<div style="position:absolute;top:-6px;right:10px;font-size:.5rem;background:var(--accent);color:#000;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px">MY TEAM</div>`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--text2);width:24px;text-align:center">${i + 1}</div>`;
+      html += `<div style="width:48px;height:48px;border-radius:10px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor};letter-spacing:1px">${displayScore}</div>`;
+      html += `<div style="flex:1;min-width:0">`;
+      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}</div>`;
+      html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div>`;
+      html += `</div>`;
+      // Position scores mini
+      html += `<div style="display:flex;gap:4px">`;
+      const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+      ['QB','RB','WR','TE'].forEach(pos => {
+        const ps = sc.posScores[pos] || { pts: 0 };
+        const highlight = _mtSortBy === pos ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
+        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">${pos}</div><div style="${highlight};font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
+      });
+      html += `</div>`;
+      html += `</div>`;
+    });
+    pr.innerHTML = html;
+  }
+
+  window._mtSortTeams = function(key) {
+    _mtSortBy = key;
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+  };
 
   window._mtSelectMyTeam = function(idx) {
     if (!window._mtTeams) return;
@@ -25362,28 +25405,34 @@ Rules:
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
 
-    const payload = {
-      leagueId: leagueId,
-      name: league.name || 'League',
-      season: league.season || '',
-      format: { ..._mtFormat },
-      teams: teams.map(t => ({
-        id: t.id,
-        owner: t.owner,
-        ownerId: t.ownerId || '',
-        isMyTeam: t.isMyTeam || false,
-        players: t.players,
-        draftPicks: t.draftPicks || [],
-        wins: t.wins || 0,
-        losses: t.losses || 0,
-        fpts: t.fpts || 0
-      })),
-      savedAt: new Date().toISOString()
-    };
+    // Load existing saved leagues first, then add/update this one
+    const docRef = db.collection('user_game_data').doc(user.uid);
+    docRef.get().then(doc => {
+      const existing = doc.exists && doc.data().savedLeagues ? doc.data().savedLeagues : {};
 
-    db.collection('user_teams').doc(user.uid).collection('leagues').doc(leagueId).set(payload)
-      .then(() => { console.log('[MyTeams] Saved league to cloud'); _mtLoadSavedLeagues(); })
-      .catch(e => { console.warn('[MyTeams] Save error:', e); });
+      existing[leagueId] = {
+        leagueId: leagueId,
+        name: league.name || 'League',
+        season: league.season || '',
+        format: { ..._mtFormat },
+        teams: teams.map(t => ({
+          id: t.id,
+          owner: t.owner,
+          ownerId: t.ownerId || '',
+          isMyTeam: t.isMyTeam || false,
+          players: t.players,
+          draftPicks: t.draftPicks || [],
+          wins: t.wins || 0,
+          losses: t.losses || 0,
+          fpts: t.fpts || 0
+        })),
+        savedAt: new Date().toISOString()
+      };
+
+      return docRef.set({ savedLeagues: existing }, { merge: true });
+    })
+    .then(() => { console.log('[MyTeams] Saved league to cloud'); _mtLoadSavedLeagues(); })
+    .catch(e => { console.warn('[MyTeams] Save error:', e); });
   }
 
   function _mtLoadSavedLeagues() {
@@ -25391,10 +25440,10 @@ Rules:
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
 
-    db.collection('user_teams').doc(user.uid).collection('leagues').get().then(snap => {
-      if (snap.empty) { _mtRenderSavedTeams([]); return; }
-      const leagues = [];
-      snap.forEach(doc => { leagues.push(doc.data()); });
+    db.collection('user_game_data').doc(user.uid).get().then(doc => {
+      if (!doc.exists || !doc.data().savedLeagues) { _mtRenderSavedTeams([]); return; }
+      const saved = doc.data().savedLeagues;
+      const leagues = Object.values(saved);
       leagues.sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
       window._mtSavedLeagues = leagues;
       _mtRenderSavedTeams(leagues);
@@ -25471,12 +25520,19 @@ Rules:
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
 
-    db.collection('user_teams').doc(user.uid).collection('leagues').doc(leagueId).delete()
-      .then(() => {
-        console.log('[MyTeams] Deleted league:', leagueId);
-        _mtLoadSavedLeagues();
-      })
-      .catch(e => { console.warn('[MyTeams] Delete error:', e); });
+    // Load, remove the key, re-save
+    const docRef = db.collection('user_game_data').doc(user.uid);
+    docRef.get().then(doc => {
+      if (!doc.exists || !doc.data().savedLeagues) return;
+      const saved = doc.data().savedLeagues;
+      delete saved[leagueId];
+      return docRef.set({ savedLeagues: saved }, { merge: true });
+    })
+    .then(() => {
+      console.log('[MyTeams] Deleted league:', leagueId);
+      _mtLoadSavedLeagues();
+    })
+    .catch(e => { console.warn('[MyTeams] Delete error:', e); });
   };
 
   // Auto-load saved leagues on auth
@@ -25542,7 +25598,7 @@ Rules:
       savedAt: new Date().toISOString()
     };
 
-    db.collection('user_portfolios').doc(user.uid).set(payload, { merge: true })
+    db.collection('user_game_data').doc(user.uid).set({ underdogPortfolio: payload }, { merge: true })
       .then(() => { console.log('[Portfolio] Saved to cloud'); })
       .catch(e => { console.warn('[Portfolio] Save error:', e); });
   }
@@ -25553,10 +25609,10 @@ Rules:
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
 
-    db.collection('user_portfolios').doc(user.uid).get().then(doc => {
+    db.collection('user_game_data').doc(user.uid).get().then(doc => {
       if (!doc.exists) return;
-      const cloud = doc.data();
-      if (!cloud.drafts || !cloud.drafts.length) return;
+      const cloud = doc.data().underdogPortfolio;
+      if (!cloud || !cloud.drafts || !cloud.drafts.length) return;
 
       // Rebuild parsed format from cloud data
       const drafts = {};
@@ -25609,7 +25665,7 @@ Rules:
 
     if (!confirm('Clear your saved portfolio? You can re-upload anytime.')) return;
 
-    db.collection('user_portfolios').doc(user.uid).delete()
+    db.collection('user_game_data').doc(user.uid).set({ underdogPortfolio: null }, { merge: true })
       .then(() => {
         window._udPortfolio = null;
         document.getElementById('mtUnderdogDashboard').style.display = 'none';

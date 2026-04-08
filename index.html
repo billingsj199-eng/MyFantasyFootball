@@ -6116,6 +6116,17 @@ function bestPpg(d) {
 }
 
 // Team history for career log display (player name -> [{t:teamName, y1:startYr, y2:endYr}])
+// Override map: players whose 2025 team was retroactively changed by Sleeper after 2026 free agency
+const _2025_TEAM_FIX = {
+  'Kenneth Walker III':'SEA','Wan\'Dale Robinson':'NYG','Jauan Jennings':'SF','Mike Evans':'TB',
+  'Isiah Pacheco':'KC','Romeo Doubs':'GB','Tua Tagovailoa':'MIA','Geno Smith':'SEA',
+  'Kyler Murray':'ARI','Michael Pittman Jr.':'IND','DJ Moore':'CHI','Jaylen Waddle':'MIA',
+  'Kenneth Gainwell':'PHI','Rashid Shaheed':'NO','Rico Dowdle':'DAL','Trey Hendrickson':'CIN',
+  'Tyler Linderbaum':'BAL','Malik Willis':'GB','Baker Mayfield':'TB','Daniel Jones':'NYG',
+  'Rachaad White':'TB','Chig Okonkwo':'TEN','Jamel Dean':'TB','Reed Blankenship':'PHI',
+  'Zion Johnson':'LAC','Demario Davis':'NO','Minkah Fitzpatrick':'PIT','Tariq Woolen':'SEA',
+  'Devin Bush':'CLE','Brandon Aiyuk':'SF','Ricky Pearsall':'SF',
+};
 // Get team abbreviation for a player's career season year
 function getCareerTeamAbbr(playerName, yr, currentTeamAbbr) {
   const hist = PLAYER_TEAM_HISTORY[playerName];
@@ -6308,6 +6319,10 @@ function buildCareerTable(d, scoringFormat) {
 
   // Helper: get actual team from WEEKLY_STATS game data (more reliable than career array)
   function _getWeeklyTeam(name, yr) {
+    // Check hardcoded override map for 2025 (players who changed teams in 2026 offseason)
+    if (yr === 2025 && typeof _2025_TEAM_FIX !== 'undefined' && _2025_TEAM_FIX[name]) {
+      return _2025_TEAM_FIX[name];
+    }
     if (typeof WEEKLY_STATS === 'undefined') return null;
     const ws = WEEKLY_STATS[name];
     if (!ws || !ws.seasons) return null;
@@ -23374,23 +23389,28 @@ Rules:
         parsed._prompt = prompt;
 
         // === POST-PROCESS: Fix team assignments from actual data ===
-        if (parsed.items && typeof WEEKLY_STATS !== 'undefined') {
+        if (parsed.items) {
           parsed.items.forEach(item => {
             if (!item.answer) return;
-            // Extract player name and year from answer like "Ja'Marr Chase (2025)"
             const nameMatch = item.answer.match(/^(.+?)\s*[\(\,]/);
             const yearMatch = item.answer.match(/\b(20\d{2})\b/);
             const pName = nameMatch ? nameMatch[1].trim() : item.answer.trim();
             const pYear = yearMatch ? parseInt(yearMatch[1]) : null;
-            // Look up in WEEKLY_STATS
-            const ws = WEEKLY_STATS[pName];
-            if (ws && ws.seasons && pYear) {
-              const szn = ws.seasons[pYear];
-              if (szn && szn.length > 0) {
-                // Get the team they actually played for that season
-                const played = szn.filter(w => w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
-                if (played.length > 0 && played[0].tm) {
-                  item.team = played[0].tm;
+            // Check hardcoded 2025 override map first
+            if (pYear === 2025 && typeof _2025_TEAM_FIX !== 'undefined' && _2025_TEAM_FIX[pName]) {
+              item.team = _2025_TEAM_FIX[pName];
+              return;
+            }
+            // Then check WEEKLY_STATS
+            if (typeof WEEKLY_STATS !== 'undefined') {
+              const ws = WEEKLY_STATS[pName];
+              if (ws && ws.seasons && pYear) {
+                const szn = ws.seasons[pYear];
+                if (szn && szn.length > 0) {
+                  const played = szn.filter(w => w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
+                  if (played.length > 0 && played[0].tm) {
+                    item.team = played[0].tm;
+                  }
                 }
               }
             }

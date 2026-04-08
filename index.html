@@ -21855,8 +21855,7 @@ window.fmtHeight = fmtHeight;
   const TRIVIA_API_URL = 'https://late-wind-6322.billingsj199.workers.dev';
   // =====================================================================
 
-  let _triviaData = null; // current board data
-  window._triviaData = null; // expose for debugging
+  let _triviaData = null;
 
   function _autoLayout(count) {
     const layouts = {
@@ -22200,7 +22199,7 @@ window.fmtHeight = fmtHeight;
     }, 10);
   };
 
-  let _triviaGame = {
+  window._triviaGame = {
     active: false,
     teams: 1,
     currentTeam: 0,
@@ -22218,7 +22217,7 @@ window.fmtHeight = fmtHeight;
     stealActive: false,
     stealTeam: -1,
   };
-  window._triviaGame = _triviaGame;
+  const _triviaGame = window._triviaGame;
 
   function _triviaGetSettings() {
     return {
@@ -22382,11 +22381,13 @@ window.fmtHeight = fmtHeight;
   }
 
   window._triviaStartGame = function() {
-    if (!_triviaData) return;
+    try {
+    if (!_triviaData) { console.warn('[Trivia] No data loaded'); return; }
     const s = _triviaGetSettings();
     _triviaGame.active = true;
     _triviaGame.gameOver = false;
     _triviaGame.teams = s.teams;
+    console.log('[Trivia] Game started — active:', _triviaGame.active, 'teams:', _triviaGame.teams);
     document.getElementById('triviaGiveUpBtn').style.display = (s.mode === 'guess') ? '' : 'none';
     _triviaGame.currentTeam = 0;
     _triviaGame.scores = [0,0,0,0,0,0];
@@ -22423,6 +22424,7 @@ window.fmtHeight = fmtHeight;
 
     // Start first cell if sequential/random
     if (s.cellSelect !== 'free') _triviaHighlightNext();
+    } catch(err) { console.error('[Trivia] StartGame error:', err); }
   };
 
   // Fuzzy name matching: normalize and check if guess matches answer

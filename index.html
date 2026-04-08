@@ -6127,6 +6127,59 @@ const _2025_TEAM_FIX = {
   'Zion Johnson':'LAC','Demario Davis':'NO','Minkah Fitzpatrick':'PIT','Tariq Woolen':'SEA',
   'Devin Bush':'CLE','Brandon Aiyuk':'SF','Ricky Pearsall':'SF',
 };
+
+// Universal: get the team a player was on for a specific year
+// Checks: _2025_TEAM_FIX → ACTIVE_TEAM_HISTORY → PLAYER_TEAM_HISTORY → WEEKLY_STATS → D array
+function _getTeamForPlayerYear(playerName, yr) {
+  if (!playerName || !yr) return null;
+  // 1. Hardcoded 2025 overrides
+  if (yr === 2025 && _2025_TEAM_FIX[playerName]) return _2025_TEAM_FIX[playerName];
+  // 2. ACTIVE_TEAM_HISTORY (full team names → convert to abbr)
+  if (typeof ACTIVE_TEAM_HISTORY !== 'undefined' && ACTIVE_TEAM_HISTORY[playerName]) {
+    for (const h of ACTIVE_TEAM_HISTORY[playerName]) {
+      if (yr >= h.y1 && yr <= h.y2) return TEAM_ABBR_MAP[h.t] || h.t;
+    }
+  }
+  // 3. PLAYER_TEAM_HISTORY (abbreviations)
+  if (typeof PLAYER_TEAM_HISTORY !== 'undefined' && PLAYER_TEAM_HISTORY[playerName]) {
+    for (const h of PLAYER_TEAM_HISTORY[playerName]) {
+      if (yr >= h.y1 && yr <= h.y2) return h.t;
+    }
+  }
+  // 4. WEEKLY_STATS per-game tm field
+  if (typeof WEEKLY_STATS !== 'undefined') {
+    const ws = WEEKLY_STATS[playerName];
+    if (ws && ws.seasons && ws.seasons[String(yr)]) {
+      const played = ws.seasons[String(yr)].filter(w => w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
+      if (played.length > 0 && played[0].tm) return played[0].tm;
+    }
+  }
+  // 5. D array career data
+  if (typeof D !== 'undefined') {
+    const d = D.find(p => p.n === playerName);
+    if (d && d.career) {
+      const szn = d.career.find(s => s.yr === yr);
+      if (szn && szn.tm) return szn.tm;
+    }
+  }
+  return null;
+}
+
+// Helper used in trivia: fix team for all items on a board
+function _triviaFixItemTeams(items) {
+  if (!items) return;
+  items.forEach(item => {
+    if (!item.answer) return;
+    const nameMatch = item.answer.match(/^(.+?)\s*[\(\,]/);
+    const yearMatch = item.answer.match(/\b((?:19|20)\d{2})\b/);
+    const pName = nameMatch ? nameMatch[1].trim() : item.answer.trim();
+    const pYear = yearMatch ? parseInt(yearMatch[1]) : null;
+    if (pName && pYear) {
+      const correctTeam = _getTeamForPlayerYear(pName, pYear);
+      if (correctTeam) item.team = correctTeam;
+    }
+  });
+}
 // Get team abbreviation for a player's career season year
 function getCareerTeamAbbr(playerName, yr, currentTeamAbbr) {
   const hist = PLAYER_TEAM_HISTORY[playerName];
@@ -6317,19 +6370,9 @@ function buildCareerTable(d, scoringFormat) {
   const c = d.career;
   if (!c || !c.length) return '';
 
-  // Helper: get actual team from WEEKLY_STATS game data (more reliable than career array)
+  // Helper: get actual team for a player-year using universal lookup
   function _getWeeklyTeam(name, yr) {
-    // Check hardcoded override map for 2025 (players who changed teams in 2026 offseason)
-    if (yr === 2025 && typeof _2025_TEAM_FIX !== 'undefined' && _2025_TEAM_FIX[name]) {
-      return _2025_TEAM_FIX[name];
-    }
-    if (typeof WEEKLY_STATS === 'undefined') return null;
-    const ws = WEEKLY_STATS[name];
-    if (!ws || !ws.seasons) return null;
-    const szn = ws.seasons[String(yr)];
-    if (!szn || !szn.length) return null;
-    const played = szn.filter(w => w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
-    return (played.length > 0 && played[0].tm) ? played[0].tm : null;
+    return _getTeamForPlayerYear(name, yr);
   }
   const isQB = d.s === 'QB';
   const isRB = d.s === 'RB';
@@ -22766,13 +22809,15 @@ window.fmtHeight = fmtHeight;
       if (d.layout) document.getElementById('triviaLayout').value = d.layout;
       // Build data and render
       const data = { title: d.title, items: d.items, _prompt: d.prompt || '' };
+      // Fix team assignments for all years
+      _triviaFixItemTeams(data.items);
       _renderBoard(data);
       document.getElementById('triviaExportBar').style.display = '';
       // Reset save button
       const btn = document.getElementById('triviaSaveCatalogBtn');
       btn.style.display = '';
       btn.textContent = '💾 Save to Catalog';
-      btn.dataset.saved = '1'; // mark as already saved since it came from catalog
+      btn.dataset.saved = '1';
       btn.style.opacity = '.5';
     }).catch(err => console.error('[TriviaCatalog] Load error:', err));
   };
@@ -23389,33 +23434,7 @@ Rules:
         parsed._prompt = prompt;
 
         // === POST-PROCESS: Fix team assignments from actual data ===
-        if (parsed.items) {
-          parsed.items.forEach(item => {
-            if (!item.answer) return;
-            const nameMatch = item.answer.match(/^(.+?)\s*[\(\,]/);
-            const yearMatch = item.answer.match(/\b(20\d{2})\b/);
-            const pName = nameMatch ? nameMatch[1].trim() : item.answer.trim();
-            const pYear = yearMatch ? parseInt(yearMatch[1]) : null;
-            // Check hardcoded 2025 override map first
-            if (pYear === 2025 && typeof _2025_TEAM_FIX !== 'undefined' && _2025_TEAM_FIX[pName]) {
-              item.team = _2025_TEAM_FIX[pName];
-              return;
-            }
-            // Then check WEEKLY_STATS
-            if (typeof WEEKLY_STATS !== 'undefined') {
-              const ws = WEEKLY_STATS[pName];
-              if (ws && ws.seasons && pYear) {
-                const szn = ws.seasons[pYear];
-                if (szn && szn.length > 0) {
-                  const played = szn.filter(w => w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
-                  if (played.length > 0 && played[0].tm) {
-                    item.team = played[0].tm;
-                  }
-                }
-              }
-            }
-          });
-        }
+        _triviaFixItemTeams(parsed.items);
 
         _renderBoard(parsed);
       } else {

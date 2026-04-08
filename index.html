@@ -2097,7 +2097,7 @@ PREMIUM ACTIVE
 </div></span></div>
 <div id="gwDailyColStreak" class="ep-streak-display" style="margin-top:4px"></div>
 </div>
-<div class="gw-body">
+<div id="gwDailyCol_all" class="gw-body" style="display:none">
 <div class="gw-categories">
 <div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">CONF</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDailyColGuessRows"></div>
@@ -2111,6 +2111,21 @@ PREMIUM ACTIVE
 </div>
 <div id="gwDailyColResult" class="ep-result" style="display:none"></div>
 <button id="gwDailyColGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+<div id="gwDailyCol_150" class="gw-body">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">CONF</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDailyCol150GuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDailyCol150Suggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDailyCol150Input" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDailyCol150GuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDailyCol150Result" class="ep-result" style="display:none"></div>
+<button id="gwDailyCol150GiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
 </div>
 </div>
 </div>
@@ -10519,6 +10534,28 @@ document.addEventListener('click', function(e) {
         lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDailyCol === 'function') window._lbUpdateGwDailyCol(won, streak); }
       });
       if (dailyCollege) dailyCollege.init();
+
+      const _poolCol150 = _pool150(_poolCollege);
+      if (_poolCol150 && _poolCol150.length) {
+        const dailyCol150 = createDailyGW({
+          statePrefix: 'gwd_col150',
+          streakKey: 'gw_daily_col150_streak',
+          lastWinKey: 'gw_daily_col150_last_win',
+          seedOffset: 31504,
+          modeLabel: 'College',
+          maxGuesses: 8,
+          inputId: 'gwDailyCol150Input',
+          guessBtnId: 'gwDailyCol150GuessBtn',
+          resultId: 'gwDailyCol150Result',
+          giveUpBtnId: 'gwDailyCol150GiveUpBtn',
+          suggestionsId: 'gwDailyCol150Suggestions',
+          guessRowsId: 'gwDailyCol150GuessRows',
+          streakElId: 'gwDailyColStreak',
+          getPool: () => _poolCol150,
+          lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDailyCol150 === 'function') window._lbUpdateGwDailyCol150(won, streak); }
+        });
+        if (dailyCol150) dailyCol150.init();
+      }
     }
   });
 })();
@@ -13709,6 +13746,8 @@ window.fmtHeight = fmtHeight;
       gwAT150: `gwd_at150_${e.y}_${e.m}_${e.d}`,
       gw00s150: `gwd_00s150_${e.y}_${e.m}_${e.d}`,
       gw10s150: `gwd_10s150_${e.y}_${e.m}_${e.d}`,
+      gwCol: `gwd_col_${e.y}_${e.m}_${e.d}`,
+      gwCol150: `gwd_col150_${e.y}_${e.m}_${e.d}`,
       dateStr: `${e.y}-${e.m}-${e.d}`
     };
   }
@@ -13732,6 +13771,8 @@ window.fmtHeight = fmtHeight;
     const gwAT150State = localStorage.getItem(keys.gwAT150);
     const gw00s150State = localStorage.getItem(keys.gw00s150);
     const gw10s150State = localStorage.getItem(keys.gw10s150);
+    const gwColState = localStorage.getItem(keys.gwCol);
+    const gwCol150State = localStorage.getItem(keys.gwCol150);
     // Verify each state's target matches today's actual target before syncing
     // This prevents stale game data (wrong player) from being saved with today's date
     function _saveVerifyTarget(stateJson, poolGetter, seedOffset) {
@@ -13756,7 +13797,9 @@ window.fmtHeight = fmtHeight;
     if (gwAT150State && _saveVerifyTarget(gwAT150State, () => _pool150Sync(window._gwGetPoolAlltime), 31501)) dailyStates.gwAT150 = gwAT150State;
     if (gw00s150State && _saveVerifyTarget(gw00s150State, () => _pool150Sync(window._gwGetPool2000s), 31502)) dailyStates.gw00s150 = gw00s150State;
     if (gw10s150State && _saveVerifyTarget(gw10s150State, () => _pool150Sync(window._gwGetPool2010s), 31503)) dailyStates.gw10s150 = gw10s150State;
-    if (dailyStates.ep || dailyStates.gwC || dailyStates.gwAT || dailyStates.gw00s || dailyStates.gw10s || dailyStates.gwAT150 || dailyStates.gw00s150 || dailyStates.gw10s150) data.dailyStates = dailyStates;
+    if (gwColState && _saveVerifyTarget(gwColState, window._gwGetPoolCollege, 13337)) dailyStates.gwCol = gwColState;
+    if (gwCol150State && _saveVerifyTarget(gwCol150State, () => _pool150Sync(window._gwGetPoolCollege), 31504)) dailyStates.gwCol150 = gwCol150State;
+    if (dailyStates.ep || dailyStates.gwC || dailyStates.gwAT || dailyStates.gw00s || dailyStates.gw10s || dailyStates.gwAT150 || dailyStates.gw00s150 || dailyStates.gw10s150 || dailyStates.gwCol || dailyStates.gwCol150) data.dailyStates = dailyStates;
     data.syncedAt = new Date().toISOString();
     db.collection('user_game_data').doc(user.uid).set(data, { merge: true }).catch(e => console.warn('[Sync] save error:', e));
   }
@@ -13875,6 +13918,18 @@ window.fmtHeight = fmtHeight;
           if (cloud.dailyStates.gw10s150 && !localStorage.getItem(keys.gw10s150)) {
             if (_verifyDailyTarget(cloud.dailyStates.gw10s150, () => _pool150R(window._gwGetPool2010s), 31503)) {
               localStorage.setItem(keys.gw10s150, cloud.dailyStates.gw10s150);
+              _dailyRestored = true;
+            }
+          }
+          if (cloud.dailyStates.gwCol && !localStorage.getItem(keys.gwCol)) {
+            if (_verifyDailyTarget(cloud.dailyStates.gwCol, window._gwGetPoolCollege, 13337)) {
+              localStorage.setItem(keys.gwCol, cloud.dailyStates.gwCol);
+              _dailyRestored = true;
+            }
+          }
+          if (cloud.dailyStates.gwCol150 && !localStorage.getItem(keys.gwCol150)) {
+            if (_verifyDailyTarget(cloud.dailyStates.gwCol150, () => _pool150R(window._gwGetPoolCollege), 31504)) {
+              localStorage.setItem(keys.gwCol150, cloud.dailyStates.gwCol150);
               _dailyRestored = true;
             }
           }

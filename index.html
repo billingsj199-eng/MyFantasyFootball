@@ -2699,6 +2699,10 @@ CLEAR
 <label>Color:
 <input type="color" id="triviaColor" value="#a855f7" style="width:32px;height:26px;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer">
 </label>
+<label style="display:flex;align-items:center;gap:6px">Size:
+<input type="range" id="triviaBoardSize" min="50" max="150" value="100" style="width:80px;accent-color:var(--accent);cursor:pointer">
+<span id="triviaBoardSizeLabel" style="font-size:.7rem;min-width:28px">100%</span>
+</label>
 </div>
 
 <!-- Game Settings Panel -->
@@ -2791,6 +2795,13 @@ CLEAR
 <option value="always">Always shown</option>
 <option value="hover">On hover only</option>
 <option value="hidden">Hidden until reveal</option>
+</select>
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Cell Header
+<select id="triviaCellHeader" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="stat">Stat (e.g. 328.4 fpts)</option>
+<option value="rank">Rank (e.g. #1, #2)</option>
 </select>
 </label>
 
@@ -21708,6 +21719,8 @@ window.fmtHeight = fmtHeight;
     html += `<div class="trivia-board-title" contenteditable="true" id="triviaBoardTitle" style="background:linear-gradient(135deg,${color},${_darken(color,.2)})">${_esc(titleText)}</div>`;
     html += `<div class="trivia-grid" style="grid-template-columns:repeat(${cols},1fr);background:${boardBg}">`;
 
+    const cellHeaderMode = document.getElementById('triviaCellHeader').value;
+
     for (let i = 0; i < totalCells; i++) {
       if (i < items.length) {
         const it = items[i];
@@ -21717,7 +21730,8 @@ window.fmtHeight = fmtHeight;
         } else {
           html += `<div class="trivia-cell" data-idx="${i}" onclick="window._triviaCellFocus(${i})">`;
         }
-        html += `<div class="trivia-cell-cat" style="background:linear-gradient(135deg,${color},${_darken(color,.2)})">${_esc(it.category || it.hint || '')}</div>`;
+        const headerText = cellHeaderMode === 'stat' ? (it.hint || it.category || '') : (it.category || it.hint || '');
+        html += `<div class="trivia-cell-cat" style="background:linear-gradient(135deg,${color},${_darken(color,.2)})">${_esc(headerText)}</div>`;
         html += `<div class="trivia-cell-body">`;
         if (logoUrl) {
           html += `<img class="trivia-cell-logo" src="${logoUrl}" alt="${_esc(it.team)}" loading="lazy">`;
@@ -21728,7 +21742,7 @@ window.fmtHeight = fmtHeight;
         html += `<div class="trivia-cell-hint">${_esc(it.hint || '')}</div>`;
         html += `<div class="trivia-cell-answer">${_esc(it.answer || '')}</div>`;
         if (mode === 'guess') {
-          html += `<input type="text" class="trivia-guess-input" data-idx="${i}" placeholder="guess..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(${i})}">`;
+          html += `<input type="text" class="trivia-guess-input" data-idx="${i}" placeholder="guess..." autocomplete="off" oninput="window._triviaOnInput(${i},this)" onfocus="window._triviaOnInput(${i},this)" onblur="setTimeout(window._triviaHideAC,150)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(${i})}">`;
         }
         html += `</div>`;
       } else {
@@ -21758,6 +21772,13 @@ window.fmtHeight = fmtHeight;
     }
 
     area.innerHTML = html;
+    // Apply board size
+    const sizePct = document.getElementById('triviaBoardSize').value;
+    const boardEl = area.querySelector('.trivia-board-outer');
+    if (boardEl && sizePct !== '100') {
+      boardEl.style.maxWidth = sizePct + '%';
+      boardEl.style.margin = '0 auto';
+    }
     document.getElementById('triviaExportBar').style.display = 'flex';
     // Show and reset save button
     const saveBtn = document.getElementById('triviaSaveCatalogBtn');
@@ -21797,23 +21818,30 @@ window.fmtHeight = fmtHeight;
     'Bowling Green':189,'Western Kentucky':98,'Jackson State':2296
   };
 
+  const _NFL_LOGO_MAP = {
+    'ARI':'22','ATL':'1','BAL':'33','BUF':'2','CAR':'29','CHI':'3','CIN':'4','CLE':'5',
+    'DAL':'6','DEN':'7','DET':'8','GB':'9','HOU':'34','IND':'11','JAX':'30','KC':'12',
+    'LV':'13','LAC':'24','LAR':'14','MIA':'15','MIN':'16','NE':'17','NO':'18','NYG':'19',
+    'NYJ':'20','PHI':'21','PIT':'23','SF':'25','SEA':'26','TB':'27','TEN':'10','WAS':'28',
+    'OAK':'13','SD':'24','STL':'14',
+    'Arizona Cardinals':'22','Atlanta Falcons':'1','Baltimore Ravens':'33','Buffalo Bills':'2',
+    'Carolina Panthers':'29','Chicago Bears':'3','Cincinnati Bengals':'4','Cleveland Browns':'5',
+    'Dallas Cowboys':'6','Denver Broncos':'7','Detroit Lions':'8','Green Bay Packers':'9',
+    'Houston Texans':'34','Indianapolis Colts':'11','Jacksonville Jaguars':'30','Kansas City Chiefs':'12',
+    'Las Vegas Raiders':'13','Los Angeles Chargers':'24','Los Angeles Rams':'14','Miami Dolphins':'15',
+    'Minnesota Vikings':'16','New England Patriots':'17','New Orleans Saints':'18','New York Giants':'19',
+    'New York Jets':'20','Philadelphia Eagles':'21','Pittsburgh Steelers':'23','San Francisco 49ers':'25',
+    'Seattle Seahawks':'26','Tampa Bay Buccaneers':'27','Tennessee Titans':'10','Washington Commanders':'28'
+  };
+
   function _triviaLogoUrl(team) {
     if (!team) return '';
-    // Try NFL first
-    const nflFull = _abbrToFull(team);
-    const nflId = (typeof TEAM_LOGO_IDS !== 'undefined' && TEAM_LOGO_IDS[nflFull]) ? TEAM_LOGO_IDS[nflFull] : '';
+    // Try NFL (abbreviation or full name)
+    const nflId = _NFL_LOGO_MAP[team] || _NFL_LOGO_MAP[team.toUpperCase()];
     if (nflId) return `https://a.espncdn.com/i/teamlogos/nfl/500/${nflId}.png`;
     // Try college
     const colId = _COLLEGE_LOGO_IDS[team] || _COLLEGE_LOGO_IDS[team.toUpperCase()] || null;
     if (colId) return `https://a.espncdn.com/i/teamlogos/ncaa/500/${colId}.png`;
-    return '';
-  }
-
-  function _abbrToFull(abbr) {
-    if (!abbr) return '';
-    if (typeof _ABBR_TO_FULL !== 'undefined' && _ABBR_TO_FULL[abbr]) return _ABBR_TO_FULL[abbr];
-    // Maybe it's already a full name
-    if (typeof TEAM_LOGO_IDS !== 'undefined' && TEAM_LOGO_IDS[abbr]) return abbr;
     return '';
   }
 
@@ -22274,6 +22302,97 @@ window.fmtHeight = fmtHeight;
     setTimeout(_triviaPlayIncorrect, 1200);
   };
 
+  // Unlock audio on first interaction (browsers block autoplay until user gesture)
+  let _triviaAudioUnlocked = false;
+  function _triviaUnlockAudio() {
+    if (_triviaAudioUnlocked) return;
+    _triviaAudioUnlocked = true;
+    [_triviaCorrectAudio, _triviaIncorrectAudio, _triviaSwooshAudio].forEach(a => {
+      a.volume = 0;
+      a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = 1; }).catch(() => {});
+    });
+  }
+  document.addEventListener('click', _triviaUnlockAudio, { once: true });
+  document.addEventListener('keydown', _triviaUnlockAudio, { once: true });
+
+  // === AUTOCOMPLETE DROPDOWN ===
+  let _triviaACActive = null; // currently active autocomplete {idx, el}
+
+  function _triviaBuildPlayerList() {
+    if (!_triviaData || !_triviaData.items) return [];
+    return _triviaData.items.map(it => {
+      // Extract just the player name (strip year/parenthetical)
+      const name = (it.answer || '').split(/[\(\,]/)[0].trim();
+      return name;
+    }).filter(Boolean);
+  }
+
+  function _triviaShowAutocomplete(inputEl, idx) {
+    _triviaHideAutocomplete();
+    const query = inputEl.value.trim().toLowerCase();
+    if (query.length < 1) return;
+
+    const allNames = _triviaBuildPlayerList();
+    // Filter to unanswered names that match the query
+    const answeredNames = new Set();
+    document.querySelectorAll('.trivia-cell.revealed').forEach(c => {
+      const ci = parseInt(c.dataset.idx);
+      if (_triviaData && _triviaData.items[ci]) {
+        answeredNames.add(_triviaData.items[ci].answer);
+      }
+    });
+
+    const matches = [];
+    const seen = new Set();
+    allNames.forEach(name => {
+      if (seen.has(name.toLowerCase())) return;
+      const nameLow = name.toLowerCase();
+      // Match start of first or last name, or anywhere in name
+      if (nameLow.includes(query)) {
+        seen.add(nameLow);
+        matches.push(name);
+      }
+    });
+
+    if (!matches.length) return;
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'trivia-ac-dropdown';
+    dropdown.style.cssText = 'position:absolute;bottom:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px 6px 0 0;max-height:120px;overflow-y:auto;z-index:50;box-shadow:0 -4px 12px rgba(0,0,0,.3)';
+
+    matches.slice(0, 8).forEach(name => {
+      const opt = document.createElement('div');
+      opt.style.cssText = 'padding:5px 8px;font-size:.72rem;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)';
+      opt.textContent = name;
+      opt.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // don't blur the input
+        inputEl.value = name;
+        _triviaHideAutocomplete();
+        window._triviaGuess(idx);
+      });
+      opt.addEventListener('mouseenter', () => { opt.style.background = 'rgba(168,85,247,.15)'; });
+      opt.addEventListener('mouseleave', () => { opt.style.background = ''; });
+      dropdown.appendChild(opt);
+    });
+
+    // Position relative to the cell
+    const cell = inputEl.closest('.trivia-cell');
+    if (cell) {
+      cell.style.position = 'relative';
+      cell.appendChild(dropdown);
+      _triviaACActive = { idx, el: dropdown };
+    }
+  }
+
+  function _triviaHideAutocomplete() {
+    if (_triviaACActive) {
+      _triviaACActive.el.remove();
+      _triviaACActive = null;
+    }
+    // Also clean up any stale dropdowns
+    document.querySelectorAll('.trivia-ac-dropdown').forEach(d => d.remove());
+  }
+
   // Look up ESPN headshot for a player name
   function _triviaGetHeadshot(answerText) {
     // Extract player name from answer like "Calvin Johnson (2012)"
@@ -22375,7 +22494,15 @@ window.fmtHeight = fmtHeight;
     if (input) input.focus();
   };
 
+  window._triviaOnInput = function(idx, inputEl) {
+    _triviaShowAutocomplete(inputEl, idx);
+  };
+  window._triviaHideAC = function() {
+    _triviaHideAutocomplete();
+  };
+
   window._triviaGuess = function(idx) {
+    _triviaHideAutocomplete();
     const cell = document.querySelector(`.trivia-cell[data-idx="${idx}"]`);
     if (!cell || !_triviaData || cell.classList.contains('revealed') || cell.classList.contains('wrong')) return;
     const input = cell.querySelector('.trivia-guess-input');
@@ -23258,6 +23385,18 @@ Rules:
   });
   document.getElementById('triviaMode').addEventListener('change', function() {
     if (_triviaData) _renderBoard(_triviaData);
+  });
+  document.getElementById('triviaCellHeader').addEventListener('change', function() {
+    if (_triviaData) _renderBoard(_triviaData);
+  });
+  document.getElementById('triviaBoardSize').addEventListener('input', function() {
+    const pct = this.value;
+    document.getElementById('triviaBoardSizeLabel').textContent = pct + '%';
+    const board = document.querySelector('.trivia-board-outer');
+    if (board) {
+      board.style.maxWidth = pct + '%';
+      board.style.margin = '0 auto';
+    }
   });
   document.getElementById('triviaColorway').addEventListener('change', function() {
     // Show/hide custom color picker

@@ -2677,9 +2677,99 @@ CLEAR
 
 <!-- Board Builder Tab -->
 <div id="triviaTabBuilder">
+
+<!-- Board Filter Panel -->
+<div id="triviaBoardFilters" style="margin-bottom:12px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">BOARD FILTERS</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 12px">
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Stat Category
+<select id="triviaFilterStat" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="fpts">Fantasy Pts (Season)</option>
+<option value="ppg">Fantasy PPG</option>
+<option value="rcy">Receiving Yards</option>
+<option value="rec">Receptions</option>
+<option value="rctd">Receiving TDs</option>
+<option value="ry">Rushing Yards</option>
+<option value="rtd">Rushing TDs</option>
+<option value="py">Passing Yards</option>
+<option value="ptd">Passing TDs</option>
+<option value="totalTd">Total TDs</option>
+<option value="tgt">Targets</option>
+</select>
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Year
+<select id="triviaFilterYear" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="all">All-Time</option>
+<option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
+<option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option>
+<option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option>
+<option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option>
+<option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option>
+<option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option>
+<option value="2007">2007</option><option value="2006">2006</option>
+</select>
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Count
+<select id="triviaFilterCount" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="9">Top 9</option>
+<option value="12">Top 12</option>
+<option value="16">Top 16</option>
+<option value="20" selected>Top 20</option>
+<option value="25">Top 25</option>
+<option value="30">Top 30</option>
+</select>
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Conference
+<select id="triviaFilterConf" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="all">All NFL</option>
+<option value="AFC">AFC</option>
+<option value="NFC">NFC</option>
+</select>
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Team
+<select id="triviaFilterTeam" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="all">All Teams</option>
+<option value="ARI">Cardinals</option><option value="ATL">Falcons</option><option value="BAL">Ravens</option>
+<option value="BUF">Bills</option><option value="CAR">Panthers</option><option value="CHI">Bears</option>
+<option value="CIN">Bengals</option><option value="CLE">Browns</option><option value="DAL">Cowboys</option>
+<option value="DEN">Broncos</option><option value="DET">Lions</option><option value="GB">Packers</option>
+<option value="HOU">Texans</option><option value="IND">Colts</option><option value="JAX">Jaguars</option>
+<option value="KC">Chiefs</option><option value="LAC">Chargers</option><option value="LAR">Rams</option>
+<option value="LV">Raiders</option><option value="MIA">Dolphins</option><option value="MIN">Vikings</option>
+<option value="NE">Patriots</option><option value="NO">Saints</option><option value="NYG">Giants</option>
+<option value="NYJ">Jets</option><option value="PHI">Eagles</option><option value="PIT">Steelers</option>
+<option value="SF">49ers</option><option value="SEA">Seahawks</option><option value="TB">Buccaneers</option>
+<option value="TEN">Titans</option><option value="WAS">Commanders</option>
+</select>
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Position
+<select id="triviaFilterPos" multiple size="4" style="padding:3px 6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.72rem">
+<option value="QB" selected>QB</option>
+<option value="RB" selected>RB</option>
+<option value="WR" selected>WR</option>
+<option value="TE" selected>TE</option>
+</select>
+</label>
+
+</div>
+<div style="display:flex;gap:10px;margin-top:10px;align-items:center">
+<button class="trivia-gen-btn" id="triviaGenBtn" onclick="window._triviaGenerate()" style="flex:0 0 auto">GENERATE</button>
+<label style="font-size:.7rem;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
+<input type="checkbox" id="triviaCustomPromptToggle" onchange="document.getElementById('triviaCustomPromptWrap').style.display=this.checked?'':'none'"> Use custom AI prompt instead
+</label>
+</div>
+<div id="triviaCustomPromptWrap" style="display:none;margin-top:8px">
 <div class="trivia-prompt-bar">
 <input type="text" id="triviaPrompt" placeholder="e.g. Best 20 fantasy WR seasons since 1999, Top 24 rushing TDs in a season...">
-<button class="trivia-gen-btn" id="triviaGenBtn" onclick="window._triviaGenerate()">GENERATE</button>
+</div>
+<div style="font-size:.6rem;color:var(--text2);margin-top:3px;font-style:italic">Custom prompts bypass filters and rely on AI — results may be less accurate</div>
+</div>
 </div>
 <div class="trivia-opts">
 <label>Layout:
@@ -22950,10 +23040,123 @@ window.fmtHeight = fmtHeight;
   };
 
   window._triviaGenerate = async function() {
-    const prompt = document.getElementById('triviaPrompt').value.trim();
-    if (!prompt) return;
+    const useCustom = document.getElementById('triviaCustomPromptToggle').checked;
     const btn = document.getElementById('triviaGenBtn');
     const area = document.getElementById('triviaBoardArea');
+
+    // === STRUCTURED FILTER MODE (no AI needed) ===
+    if (!useCustom) {
+      const stat = document.getElementById('triviaFilterStat').value;
+      const year = document.getElementById('triviaFilterYear').value;
+      const count = parseInt(document.getElementById('triviaFilterCount').value);
+      const conf = document.getElementById('triviaFilterConf').value;
+      const team = document.getElementById('triviaFilterTeam').value;
+      const posSelect = document.getElementById('triviaFilterPos');
+      const positions = Array.from(posSelect.selectedOptions).map(o => o.value);
+
+      if (!positions.length) { alert('Select at least one position'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'BUILDING...';
+      area.innerHTML = '<div class="trivia-loading"><span class="spin"></span>Building board from stats...</div>';
+
+      // AFC/NFC team lists
+      const _AFC = ['BUF','MIA','NE','NYJ','BAL','CIN','CLE','PIT','HOU','IND','JAX','TEN','DEN','KC','LAC','LV'];
+      const _NFC = ['DAL','NYG','PHI','WAS','CHI','DET','GB','MIN','ATL','CAR','NO','TB','ARI','LAR','SF','SEA'];
+      // Historical mappings
+      const _teamConf = {};
+      _AFC.forEach(t => _teamConf[t] = 'AFC');
+      _NFC.forEach(t => _teamConf[t] = 'NFC');
+      _teamConf['OAK'] = 'AFC'; _teamConf['SD'] = 'AFC'; _teamConf['STL'] = 'NFC';
+
+      // Build position map from D
+      const _dPosMap = {};
+      if (typeof D !== 'undefined') D.forEach(d => { if (d.n && d.s) _dPosMap[d.n] = d.s; });
+
+      // Build all season data
+      const allSeasons = [];
+      if (typeof D !== 'undefined') {
+        D.forEach(d => {
+          if (!d.career || !d.career.length) return;
+          const pos = d.s || '';
+          if (!positions.includes(pos)) return;
+          d.career.forEach(s => {
+            if (!s.yr) return;
+            if (year !== 'all' && s.yr !== parseInt(year)) return;
+            const fpts = s.fpts || 0;
+            if (fpts <= 0 && stat === 'fpts') return;
+            // Get correct team for that year
+            const correctTeam = _getTeamForPlayerYear(d.n, s.yr) || s.tm || d.t || '';
+            // Conference filter
+            if (conf !== 'all') {
+              const tmConf = _teamConf[correctTeam];
+              if (tmConf !== conf) return;
+            }
+            // Team filter
+            if (team !== 'all' && correctTeam !== team) return;
+            const ppg = s.gp > 0 ? Math.round((fpts / s.gp) * 10) / 10 : 0;
+            allSeasons.push({
+              name: d.n, pos, team: correctTeam, yr: s.yr, gp: s.gp || 0,
+              fpts: Math.round(fpts*10)/10, ppg,
+              py: s.py||0, ptd: s.ptd||0, int: s.int||0,
+              ry: s.ry||0, rtd: s.rtd||0, rec: s.rc||0, rcy: s.rcy||0, rctd: s.rctd||0,
+              ra: s.ra||0, tgt: s.tgt||0, fl: s.fl||0,
+              totalTd: (s.ptd||0) + (s.rtd||0) + (s.rctd||0)
+            });
+          });
+        });
+      }
+
+      // Sort by selected stat
+      allSeasons.sort((a, b) => (b[stat]||0) - (a[stat]||0));
+
+      // Take top N
+      const topN = allSeasons.slice(0, count);
+
+      if (topN.length === 0) {
+        area.innerHTML = '<div class="trivia-loading" style="color:#ef4444">No matching data found. Try different filters.</div>';
+        btn.disabled = false; btn.textContent = 'GENERATE';
+        return;
+      }
+
+      // Stat label map
+      const _statLabels = {
+        fpts:'fpts', ppg:'ppg', rcy:'rec yds', rec:'rec', rctd:'rec td',
+        ry:'rush yds', rtd:'rush td', py:'pass yds', ptd:'pass td',
+        totalTd:'total td', tgt:'tgt'
+      };
+      const statLabel = _statLabels[stat] || stat;
+
+      // Build title
+      const yearLabel = year === 'all' ? 'All-Time' : year;
+      const confLabel = conf === 'all' ? 'NFL' : conf;
+      const teamLabel = team === 'all' ? '' : ' ' + team;
+      const posLabel = positions.length === 4 ? '' : ' ' + positions.join('/');
+      const gameName = document.getElementById('triviaGameName').value.trim();
+      const title = gameName || `${yearLabel} Top ${topN.length}${posLabel} ${statLabel.toUpperCase()} in ${confLabel}${teamLabel}`;
+
+      // Build items
+      const items = topN.map((s, i) => {
+        const statVal = s[stat] || 0;
+        const hint = typeof statVal === 'number' ? (Number.isInteger(statVal) ? statVal.toLocaleString() : statVal.toFixed(1)) + ' ' + statLabel : statVal + ' ' + statLabel;
+        return {
+          answer: s.name + (year !== 'all' ? '' : ' (' + s.yr + ')'),
+          team: s.team,
+          category: '#' + (i + 1),
+          hint: hint
+        };
+      });
+
+      const parsed = { title, items, _prompt: 'structured-filter' };
+      _triviaFixItemTeams(parsed.items);
+      _renderBoard(parsed);
+      btn.disabled = false; btn.textContent = 'GENERATE';
+      return;
+    }
+
+    // === CUSTOM AI PROMPT MODE (original behavior) ===
+    const prompt = document.getElementById('triviaPrompt').value.trim();
+    if (!prompt) return;
     btn.disabled = true;
     btn.textContent = 'GENERATING...';
     area.innerHTML = '<div class="trivia-loading"><span class="spin"></span>Building trivia board...</div>';
@@ -23471,6 +23674,18 @@ Rules:
     if (_triviaData) _renderBoard(_triviaData);
   });
   document.getElementById('triviaCellHeader').addEventListener('change', function() {
+    if (_triviaData) _renderBoard(_triviaData);
+  });
+  // Live re-render for all game settings
+  ['triviaPlayers','triviaMaxWrong','triviaTimer','triviaCellSelect','triviaScoring','triviaSteal','triviaHintsVisible'].forEach(function(id) {
+    document.getElementById(id).addEventListener('change', function() {
+      if (_triviaData) _renderBoard(_triviaData);
+    });
+  });
+  document.getElementById('triviaColor').addEventListener('input', function() {
+    if (_triviaData) _renderBoard(_triviaData);
+  });
+  document.getElementById('triviaGameName').addEventListener('input', function() {
     if (_triviaData) _renderBoard(_triviaData);
   });
   document.getElementById('triviaBoardSize').addEventListener('input', function() {

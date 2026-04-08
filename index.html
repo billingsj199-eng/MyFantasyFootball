@@ -23149,8 +23149,59 @@ window.fmtHeight = fmtHeight;
       const _dPosMap = {};
       if (typeof D !== 'undefined') D.forEach(d => { if (d.n && d.s) _dPosMap[d.n] = d.s; });
 
-      // Build all season data
+      // Build all season data — prefer WEEKLY_STATS (more accurate) then fallback to D[].career
       const allSeasons = [];
+      const _seenKey = new Set();
+
+      // 1. Build from WEEKLY_STATS (aggregated per season, most accurate)
+      if (typeof WEEKLY_STATS !== 'undefined') {
+        Object.keys(WEEKLY_STATS).forEach(name => {
+          const ws = WEEKLY_STATS[name];
+          if (!ws || !ws.seasons) return;
+          const pos = _dPosMap[name] || ws.pos || '';
+          if (!positions.includes(pos)) return;
+
+          Object.keys(ws.seasons).forEach(szn => {
+            const yr = parseInt(szn);
+            if (year !== 'all' && yr !== parseInt(year)) return;
+            const weeks = ws.seasons[szn];
+            if (!weeks || !weeks.length) return;
+
+            // Aggregate season totals from weekly data
+            let py=0, ptd=0, pint=0, ry=0, rtd=0, ra=0, rec=0, rcy=0, rctd=0, tgt=0, fl=0, fpts=0, gp=0;
+            weeks.forEach(w => {
+              if (w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0) gp++;
+              py += w.py||0; ptd += w.ptd||0; pint += w.int||0;
+              ry += w.ry||0; rtd += w.rtd||0; ra += w.ra||0;
+              rec += w.rec||0; rcy += w.rcy||0; rctd += w.rctd||0;
+              tgt += w.tgt||0; fl += w.fl||0; fpts += w.fpts||0;
+            });
+
+            if (gp === 0) return;
+
+            const correctTeam = _getTeamForPlayerYear(name, yr) || '';
+            // Conference filter
+            if (conf !== 'all') {
+              const tmConf = _teamConf[correctTeam];
+              if (tmConf !== conf) return;
+            }
+            // Team filter
+            if (team !== 'all' && correctTeam !== team) return;
+
+            const ppg = gp > 0 ? Math.round((fpts / gp) * 10) / 10 : 0;
+            const key = name + '|' + yr;
+            _seenKey.add(key);
+            allSeasons.push({
+              name, pos, team: correctTeam, yr, gp,
+              fpts: Math.round(fpts*10)/10, ppg,
+              py, ptd, 'int': pint, ry, rtd, rec, rcy, rctd, ra, tgt, fl,
+              totalTd: ptd + rtd + rctd
+            });
+          });
+        });
+      }
+
+      // 2. Fill in from D[].career for players/seasons not in WEEKLY_STATS
       if (typeof D !== 'undefined') {
         D.forEach(d => {
           if (!d.career || !d.career.length) return;
@@ -23159,22 +23210,21 @@ window.fmtHeight = fmtHeight;
           d.career.forEach(s => {
             if (!s.yr) return;
             if (year !== 'all' && s.yr !== parseInt(year)) return;
+            const key = d.n + '|' + s.yr;
+            if (_seenKey.has(key)) return; // already have from WEEKLY_STATS
             const fpts = s.fpts || 0;
             if (fpts <= 0 && stat === 'fpts') return;
-            // Get correct team for that year
             const correctTeam = _getTeamForPlayerYear(d.n, s.yr) || s.tm || d.t || '';
-            // Conference filter
             if (conf !== 'all') {
               const tmConf = _teamConf[correctTeam];
               if (tmConf !== conf) return;
             }
-            // Team filter
             if (team !== 'all' && correctTeam !== team) return;
             const ppg = s.gp > 0 ? Math.round((fpts / s.gp) * 10) / 10 : 0;
             allSeasons.push({
               name: d.n, pos, team: correctTeam, yr: s.yr, gp: s.gp || 0,
               fpts: Math.round(fpts*10)/10, ppg,
-              py: s.py||0, ptd: s.ptd||0, int: s.int||0,
+              py: s.py||0, ptd: s.ptd||0, 'int': s.int||0,
               ry: s.ry||0, rtd: s.rtd||0, rec: s.rc||0, rcy: s.rcy||0, rctd: s.rctd||0,
               ra: s.ra||0, tgt: s.tgt||0, fl: s.fl||0,
               totalTd: (s.ptd||0) + (s.rtd||0) + (s.rctd||0)

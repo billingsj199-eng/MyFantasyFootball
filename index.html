@@ -422,6 +422,7 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 .pos-badge.RB{background:var(--rb-bg);color:var(--rb)}
 .pos-badge.WR{background:var(--wr-bg);color:var(--wr)}
 .pos-badge.TE{background:var(--te-bg);color:var(--te)}
+.pos-badge.PICK{background:rgba(168,85,247,.12);color:#a855f7}
 .pos-badge.K{background:rgba(107,114,128,.12);color:#6b7280}
 .pos-badge.DST{background:rgba(107,114,128,.12);color:#6b7280}
 .adp-cell{font-weight:700;color:var(--accent);font-size:.85rem}
@@ -2287,6 +2288,7 @@ CLEAR
 <button class="pos-btn" data-pos="K">K</button>
 <button class="pos-btn" data-pos="DST">D/ST</button>
 </div>
+<button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);margin-left:4px" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
 </div>
 
 </div>
@@ -4840,6 +4842,64 @@ function validateImportData(obj) {
 })();
 // === END ESPN HEADSHOT ID FIX ===
 
+// === FUTURE DRAFT PICKS (dynasty/SF rankings) ===
+// 2027 picks: Early/Mid 1st, Mid/Late 1st, Early/Mid 2nd, Mid/Late 2nd, 3rd, 4th
+// 2028 picks: same structure
+// 2029, 2030: available for trade calc but not ranked by default
+(function() {
+  const pickDefs = [
+    // 2027
+    { n: "2027 Early 1st",  s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '1st', _pickSlot: 'early',  da: 25, sa: 22 },
+    { n: "2027 Mid 1st",    s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '1st', _pickSlot: 'mid',    da: 40, sa: 35 },
+    { n: "2027 Late 1st",   s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '1st', _pickSlot: 'late',   da: 55, sa: 50 },
+    { n: "2027 Early 2nd",  s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '2nd', _pickSlot: 'early',  da: 80, sa: 75 },
+    { n: "2027 Mid 2nd",    s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '2nd', _pickSlot: 'mid',    da: 100, sa: 95 },
+    { n: "2027 Late 2nd",   s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '2nd', _pickSlot: 'late',   da: 120, sa: 115 },
+    { n: "2027 3rd",        s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '3rd', _pickSlot: 'mid',    da: 160, sa: 155 },
+    { n: "2027 4th",        s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '4th', _pickSlot: 'mid',    da: 220, sa: 215 },
+    // 2028
+    { n: "2028 Early 1st",  s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '1st', _pickSlot: 'early',  da: 45, sa: 40 },
+    { n: "2028 Mid 1st",    s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '1st', _pickSlot: 'mid',    da: 65, sa: 60 },
+    { n: "2028 Late 1st",   s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '1st', _pickSlot: 'late',   da: 85, sa: 80 },
+    { n: "2028 Early 2nd",  s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '2nd', _pickSlot: 'early',  da: 115, sa: 110 },
+    { n: "2028 Mid 2nd",    s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '2nd', _pickSlot: 'mid',    da: 140, sa: 135 },
+    { n: "2028 Late 2nd",   s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '2nd', _pickSlot: 'late',   da: 165, sa: 160 },
+    { n: "2028 3rd",        s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '3rd', _pickSlot: 'mid',    da: 210, sa: 205 },
+    { n: "2028 4th",        s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '4th', _pickSlot: 'mid',    da: 270, sa: 265 },
+    // 2029 (not ranked, high ADP = off board by default)
+    { n: "2029 Early 1st",  s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
+    { n: "2029 Mid 1st",    s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2029 Late 1st",   s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'late',   da: 900, sa: 900, _unranked: true },
+    { n: "2029 Early 2nd",  s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
+    { n: "2029 Mid 2nd",    s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2029 Late 2nd",   s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'late',   da: 900, sa: 900, _unranked: true },
+    { n: "2029 3rd",        s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '3rd', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2029 4th",        s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '4th', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    // 2030
+    { n: "2030 Early 1st",  s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '1st', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
+    { n: "2030 Mid 1st",    s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '1st', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2030 Late 1st",   s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '1st', _pickSlot: 'late',   da: 900, sa: 900, _unranked: true },
+    { n: "2030 Early 2nd",  s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '2nd', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
+    { n: "2030 Mid 2nd",    s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '2nd', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2030 Late 2nd",   s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '2nd', _pickSlot: 'late',   da: 900, sa: 900, _unranked: true },
+    { n: "2030 3rd",        s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '3rd', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2030 4th",        s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '4th', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+  ];
+  pickDefs.forEach(pk => {
+    if (!D.find(d => d.n === pk.n)) {
+      D.push({
+        n: pk.n, a: 999, p: 0, s: pk.s, r: 'PICK', t: pk.t,
+        p25: null, p24: null, p23: null, age: null, cyr: null, out: null, sal: null,
+        dr: null, exp: null, role: null, inj: null, s25: null, career: [],
+        da: pk.da, sa: pk.sa, sfa: pk._unranked ? 900 : (pk.sa || 999),
+        idx: D.length, myRank: D.length + 1, round: 99, notes: '',
+        _isFuturePick: true, _pickYr: pk._pickYr, _pickRd: pk._pickRd, _pickSlot: pk._pickSlot,
+        _unranked: pk._unranked || false
+      });
+    }
+  });
+})();
+
 // === MASTER BOARD: ordered array of idx values. This IS the ranking. ===
 // Initialize sorted by ADP (the default board order)
 function kickerRank(d) { return d.s === 'K' ? (parseInt((d.r||'K99').replace('K',''))||99) : 0; }
@@ -5184,6 +5244,16 @@ function getFiltered() {
   let f = board.map(idx => D[idx]);
   // Hide retired players from rankings
   f = f.filter(d => !d._retired);
+  // Hide future picks from redraft/superflex modes
+  const isDynastyMode = currentMode === 'dynasty' || currentMode === 'dynastysf';
+  f = f.filter(d => {
+    if (d._isFuturePick) {
+      if (!isDynastyMode) return false;
+      // Hide unranked (2029/2030) picks unless user is searching for them
+      if (d._unranked && !query) return false;
+    }
+    return true;
+  });
   f = f.filter(d => {
     if (filter === 'ROOKIE') {
       if ((d.career && d.career.length > 0) || (d.t && d.t !== 'TBD')) return false;
@@ -5277,6 +5347,30 @@ function render() {
     tiers.forEach(t => { tierMap[t.afterRank] = t; });
   }
 
+  // Build rookie pick label map for dynasty pick view
+  const rookiePickMap = {};
+  const isDynMode = currentMode === 'dynasty' || currentMode === 'dynastysf';
+  if (window._rookiePickView && isDynMode) {
+    // Get all players on the board sorted by board position, filter to 2026 rookies
+    const fullBoard = getBoard();
+    const rookies2026 = [];
+    fullBoard.forEach((dIdx, pos) => {
+      const p = D[dIdx];
+      if (!p) return;
+      // Identify as 2026 rookie: no career data and no NFL team (or TBD)
+      const isRookie = (!p.career || p.career.length === 0) && (!p.t || p.t === 'TBD' || p.t === 'FA');
+      if (isRookie && p.s !== 'K' && p.s !== 'DST') {
+        rookies2026.push({ idx: dIdx, boardPos: pos });
+      }
+    });
+    // Assign pick labels: 1.01-1.12, 2.01-2.12, 3.01-3.12, 4.01-4.12 (48 picks max)
+    rookies2026.slice(0, 48).forEach((r, i) => {
+      const round = Math.floor(i / 12) + 1;
+      const pick = (i % 12) + 1;
+      rookiePickMap[r.idx] = `26' ${round}.${String(pick).padStart(2, '0')}`;
+    });
+  }
+
   let html = '';
   data.forEach((d, i) => {
     const displayRank = useFilteredRank ? (i + 1) : d.myRank;
@@ -5318,7 +5412,7 @@ function render() {
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}">
       <td><div class="drag-handle"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(getTierForRank(displayRank))}">${d.myRank}</span></td>
-      <td><div class="player-cell" style="flex-direction:row;align-items:center;gap:6px">${d._slImg ? `<img class="player-headshot-sm" src="${d._slImg}" alt="" onerror="this.style.display='none'">` : ''}<div style="display:flex;flex-direction:column;gap:1px"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}</span><span class="player-team">${d.t}</span></div></div></td>
+      <td><div class="player-cell" style="flex-direction:row;align-items:center;gap:6px">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${d._slImg}" alt="" onerror="this.style.display='none'">` : ''}<div style="display:flex;flex-direction:column;gap:1px">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}</span><span class="player-team">${d.t}</span>`}</div></div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       <td class="adp-cell">${rnkAdp(d) != null ? rnkAdp(d) : '—'}</td>
@@ -6239,8 +6333,36 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     updateRnkAdpForMode();
     render();
     toast(currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : 'Redraft');
+    // Show/hide rookie pick toggle
+    const rpToggle = document.getElementById('rookiePickToggle');
+    if (rpToggle) rpToggle.style.display = (currentMode === 'dynasty' || currentMode === 'dynastysf') ? '' : 'none';
+    if (rpToggle && currentMode !== 'dynasty' && currentMode !== 'dynastysf') {
+      window._rookiePickView = false;
+      rpToggle.style.background = 'var(--surface)';
+      rpToggle.style.color = 'var(--text2)';
+      rpToggle.style.borderColor = 'var(--border)';
+    }
   });
 });
+
+// Rookie Pick View toggle
+window._rookiePickView = false;
+window._toggleRookiePickView = function() {
+  window._rookiePickView = !window._rookiePickView;
+  const btn = document.getElementById('rookiePickToggle');
+  if (btn) {
+    btn.style.background = window._rookiePickView ? 'var(--accent)' : 'var(--surface)';
+    btn.style.color = window._rookiePickView ? '#000' : 'var(--text2)';
+    btn.style.borderColor = window._rookiePickView ? 'var(--accent)' : 'var(--border)';
+  }
+  render();
+};
+
+// Show toggle on load if already in dynasty mode
+(function() {
+  const rpToggle = document.getElementById('rookiePickToggle');
+  if (rpToggle && (currentMode === 'dynasty' || currentMode === 'dynastysf')) rpToggle.style.display = '';
+})();
 
 // Hide non-applicable ADP tabs based on mode
 // Dynasty: only Consensus + Sleeper (locked) + KTC
@@ -24815,6 +24937,7 @@ Rules:
   // League format state
   let _mtFormat = { type: 'redraft', sf: false, ppr: 1, starters: 10 };
   let _mtMyUserId = null; // auto-detected Sleeper user ID
+  let _mtViewMode = 'value'; // 'value' = dynasty rankings, 'contender' = redraft rankings (win-now)
 
   // Grade thresholds — adjusted for format
   function _mtGrade(avgRank) {
@@ -24888,8 +25011,9 @@ Rules:
   }
 
   // Score a roster using the trade value system (same curve as trade calc)
-  function _mtScoreRoster(players, draftPicks) {
-    const mode = _mtGetRankingMode();
+  function _mtScoreRoster(players, draftPicks, modeOverride) {
+    const mode = modeOverride || _mtGetRankingMode();
+    const includePicks = !modeOverride; // contender mode skips picks
     const ranked = players.map(name => {
       const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
       const rank = _mtGetPlayerRank(name);
@@ -24905,14 +25029,14 @@ Rules:
 
     const playerTotal = ranked.reduce((s, p) => s + p.val, 0);
 
-    // Draft pick values (dynasty only)
+    // Draft pick values (dynasty only, skip in contender mode)
     let pickTotal = 0;
-    const scoredPicks = (draftPicks || []).map(p => {
+    const scoredPicks = includePicks ? (draftPicks || []).map(p => {
       const val = (typeof window._getPickValue === 'function') ? window._getPickValue(p.round, p.year, p.slot, mode) : 0;
       pickTotal += val;
       return { ...p, val };
-    });
-    scoredPicks.sort((a, b) => b.val - a.val);
+    }) : [];
+    if (includePicks) scoredPicks.sort((a, b) => b.val - a.val);
 
     const total = playerTotal + pickTotal;
 
@@ -25201,6 +25325,19 @@ Rules:
     html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)"></span>`;
     html += `</div>`;
 
+    // Value vs Contender toggle (dynasty only)
+    const isDynasty = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
+    if (isDynasty) {
+      html += `<div style="display:flex;gap:3px;margin-bottom:10px;align-items:center">`;
+      html += `<span style="font-size:.65rem;color:var(--text2);margin-right:4px">VIEW:</span>`;
+      const valActive = _mtViewMode === 'value';
+      const conActive = _mtViewMode === 'contender';
+      html += `<button onclick="window._mtSetViewMode('value')" style="padding:4px 12px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${valActive ? '#3b82f6' : 'var(--border)'};background:${valActive ? '#3b82f6' : 'var(--surface)'};color:${valActive ? '#fff' : 'var(--text2)'}">DYNASTY VALUE</button>`;
+      html += `<button onclick="window._mtSetViewMode('contender')" style="padding:4px 12px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${conActive ? '#22c55e' : 'var(--border)'};background:${conActive ? '#22c55e' : 'var(--surface)'};color:${conActive ? '#000' : 'var(--text2)'}">CONTENDER</button>`;
+      html += `<span style="font-size:.55rem;color:var(--text2);margin-left:6px">${conActive ? 'Scored by win-now redraft value (picks excluded)' : 'Scored by dynasty asset value (picks included)'}</span>`;
+      html += `</div>`;
+    }
+
     // Sort buttons
     html += `<div style="display:flex;gap:3px;margin-bottom:10px;align-items:center">`;
     html += `<span style="font-size:.65rem;color:var(--text2);margin-right:4px">SORT BY:</span>`;
@@ -25211,15 +25348,18 @@ Rules:
       { key: 'WR', label: 'WR', color: '#3b82f6' },
       { key: 'TE', label: 'TE', color: '#f59e0b' }
     ];
+    // Add PICKS sort for dynasty/keeper leagues (only in value mode)
+    if (isDynasty && _mtViewMode === 'value') sortOpts.push({ key: 'picks', label: 'PICKS', color: '#a855f7' });
     sortOpts.forEach(o => {
       const active = _mtSortBy === o.key;
-      html += `<button onclick="window._mtSortTeams('${o.key}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? o.color : 'var(--border)'};background:${active ? o.color : 'var(--surface)'};color:${active ? (o.key === 'total' ? '#000' : '#fff') : 'var(--text2)'}">${o.label}</button>`;
+      html += `<button onclick="window._mtSortTeams('${o.key}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? o.color : 'var(--border)'};background:${active ? o.color : 'var(--surface)'};color:${active ? (o.key === 'total' || o.key === 'picks' ? '#000' : '#fff') : 'var(--text2)'}">${o.label}</button>`;
     });
     html += `</div>`;
 
     // Sort teams
     const sorted = teams.slice().sort((a, b) => {
       if (_mtSortBy === 'total') return b.score.total - a.score.total;
+      if (_mtSortBy === 'picks') return (b.score.pickTotal || 0) - (a.score.pickTotal || 0);
       const posA = (a.score.posScores[_mtSortBy] || { pts: 0 }).pts;
       const posB = (b.score.posScores[_mtSortBy] || { pts: 0 }).pts;
       return posB - posA;
@@ -25227,6 +25367,7 @@ Rules:
 
     const allScores = sorted.map(x => {
       if (_mtSortBy === 'total') return x.score.total;
+      if (_mtSortBy === 'picks') return x.score.pickTotal || 0;
       return (x.score.posScores[_mtSortBy] || { pts: 0 }).pts;
     });
     const maxScore = Math.max(...allScores);
@@ -25236,7 +25377,7 @@ Rules:
       const sc = t.score;
       const isMe = t.isMyTeam;
       const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
-      const displayScore = _mtSortBy === 'total' ? sc.total : (sc.posScores[_mtSortBy] || { pts: 0 }).pts;
+      const displayScore = _mtSortBy === 'total' ? sc.total : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : (sc.posScores[_mtSortBy] || { pts: 0 }).pts;
       const scoreColor = displayScore >= maxScore ? '#22c55e' : displayScore >= avgScore ? '#4ade80' : displayScore >= avgScore * 0.7 ? '#f59e0b' : '#ef4444';
       // Find original index for click handler
       const origIdx = teams.indexOf(t);
@@ -25248,7 +25389,7 @@ Rules:
       html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}</div>`;
       html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div>`;
       html += `</div>`;
-      // Position scores mini
+      // Position scores mini + picks for dynasty
       html += `<div style="display:flex;gap:4px">`;
       const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
       ['QB','RB','WR','TE'].forEach(pos => {
@@ -25256,6 +25397,10 @@ Rules:
         const highlight = _mtSortBy === pos ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
         html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">${pos}</div><div style="${highlight};font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
       });
+      if (isDynasty && _mtViewMode === 'value') {
+        const pickHighlight = _mtSortBy === 'picks' ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
+        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">PICKS</div><div style="${pickHighlight};font-weight:700;color:#a855f7">${sc.pickTotal || 0}</div></div>`;
+      }
       html += `</div>`;
       html += `</div>`;
     });
@@ -25265,6 +25410,22 @@ Rules:
   window._mtSortTeams = function(key) {
     _mtSortBy = key;
     if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+  };
+
+  window._mtSetViewMode = function(mode) {
+    _mtViewMode = mode;
+    // Reset sort if switching away from picks
+    if (mode === 'contender' && _mtSortBy === 'picks') _mtSortBy = 'total';
+    // Re-score all teams with the appropriate mode
+    if (window._mtTeams) {
+      const contenderMode = mode === 'contender' ? (_mtFormat.sf ? 'superflex' : 'redraft') : null;
+      window._mtTeams.forEach(t => {
+        const isDyn = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
+        const result = _mtScoreRoster(t.players, isDyn ? t.draftPicks : [], contenderMode);
+        t.score = result;
+      });
+      _mtRenderTeamList(window._mtTeams);
+    }
   };
 
   window._mtSelectMyTeam = function(idx) {
@@ -25924,6 +26085,7 @@ Rules:
       { id: 'exposure', label: 'EXPOSURE' },
       { id: 'teams', label: 'TEAM SCORES' },
       { id: 'adp', label: 'ADP VALUE' },
+      { id: 'board', label: 'DRAFT BOARD' },
       { id: 'value', label: 'VALUE PICKS' },
       { id: 'builds', label: 'BUILD ANALYSIS' }
     ];
@@ -26113,6 +26275,21 @@ Rules:
     });
     html += `</div>`;
 
+    // DRAFT BOARD TAB
+    html += `<div id="udTab_board" style="display:none">`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">DRAFT BOARD</div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by Underdog ADP in a 12-team grid. Color = your ownership%.</div>`;
+    // Legend
+    html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center">`;
+    html += `<span style="color:var(--text2)">OWNERSHIP:</span>`;
+    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e"></span> 11%+</span>`;
+    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#facc15"></span> 5–11%</span>`;
+    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444"></span> &lt;5%</span>`;
+    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:var(--surface2)"></span> 0%</span>`;
+    html += `</div>`;
+    html += _udRenderDraftBoard(data);
+    html += `</div>`;
+
     // VALUE PICKS TAB
     html += `<div id="udTab_value" style="display:none">`;
     // Steals
@@ -26224,6 +26401,89 @@ Rules:
     window._udNumDrafts = numDrafts;
   }
 
+  function _udRenderDraftBoard(data) {
+    if (typeof D === 'undefined') return '<div style="color:var(--text2);font-size:.78rem">Player data not loaded</div>';
+
+    // Determine grid size from drafts
+    const firstDraft = Object.values(data.drafts)[0];
+    const teamCount = firstDraft ? (firstDraft.size || 12) : 12;
+    const roundCount = firstDraft ? firstDraft.picks.length : 20;
+    const totalSlots = teamCount * roundCount;
+
+    // Build ADP-sorted player list from D array
+    const adpPlayers = D.filter(d => d.a && d.a < 900 && d.s && !d.s.includes('D/ST') && d.s !== 'K')
+      .map(d => ({ name: d.n, pos: d.s, team: d.t || '', adp: d.a }))
+      .sort((a, b) => a.adp - b.adp)
+      .slice(0, totalSlots);
+
+    // Build ownership map from portfolio
+    const numDrafts = data.numDrafts;
+    const ownershipMap = {};
+    Object.entries(data.players).forEach(([name, info]) => {
+      ownershipMap[name] = Math.round(info.exposure * 100);
+      // Also try matching against D names
+      const matched = _udMatchPlayer(name);
+      if (matched && matched.n !== name) ownershipMap[matched.n] = Math.round(info.exposure * 100);
+    });
+
+    // Position colors
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    const posBg = { QB: 'rgba(239,68,68,.1)', RB: 'rgba(34,197,94,.1)', WR: 'rgba(59,130,246,.1)', TE: 'rgba(245,158,11,.1)' };
+
+    let html = '';
+    html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">`;
+    html += `<table style="border-collapse:collapse;font-size:.6rem;min-width:${teamCount * 75}px;width:100%">`;
+
+    // Header row
+    html += `<thead><tr>`;
+    html += `<th style="padding:4px 3px;color:var(--text2);font-size:.55rem;text-align:center;position:sticky;left:0;background:var(--bg);z-index:1">RD</th>`;
+    for (let c = 1; c <= teamCount; c++) {
+      html += `<th style="padding:4px 3px;color:var(--text2);font-size:.55rem;text-align:center">${c}</th>`;
+    }
+    html += `</tr></thead><tbody>`;
+
+    // Build grid rows
+    for (let rd = 0; rd < roundCount; rd++) {
+      html += `<tr>`;
+      html += `<td style="padding:3px;font-weight:700;color:var(--text2);text-align:center;font-size:.6rem;position:sticky;left:0;background:var(--bg);z-index:1">${rd + 1}</td>`;
+
+      for (let col = 0; col < teamCount; col++) {
+        // Snake draft: even rounds L→R, odd rounds R→L
+        const slotIdx = rd % 2 === 0 ? rd * teamCount + col : rd * teamCount + (teamCount - 1 - col);
+        const player = adpPlayers[slotIdx];
+
+        if (!player) {
+          html += `<td style="padding:2px;border:1px solid var(--border)"><div style="padding:3px;background:var(--surface2);border-radius:3px;min-height:32px"></div></td>`;
+          continue;
+        }
+
+        const own = ownershipMap[player.name] || 0;
+        let ownColor, ownBg;
+        if (own === 0) { ownColor = 'var(--text2)'; ownBg = 'var(--surface2)'; }
+        else if (own < 5) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.12)'; }
+        else if (own <= 11) { ownColor = '#facc15'; ownBg = 'rgba(250,204,21,.12)'; }
+        else { ownColor = '#22c55e'; ownBg = 'rgba(34,197,94,.15)'; }
+
+        const borderColor = own > 0 ? ownColor : 'var(--border)';
+
+        html += `<td style="padding:2px;border:1px solid var(--border)">`;
+        html += `<div style="padding:3px 4px;background:${ownBg};border-radius:3px;border-left:3px solid ${posColors[player.pos] || 'var(--text2)'};min-height:32px;position:relative">`;
+        html += `<div style="font-size:.58rem;font-weight:600;color:var(--text);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(player.name)}</div>`;
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:1px">`;
+        html += `<span style="font-size:.5rem;color:${posColors[player.pos] || 'var(--text2)'}">${player.pos}</span>`;
+        if (own > 0) {
+          html += `<span style="font-size:.55rem;font-weight:700;color:${ownColor}">${own}%</span>`;
+        }
+        html += `</div>`;
+        html += `</div></td>`;
+      }
+      html += `</tr>`;
+    }
+
+    html += `</tbody></table></div>`;
+    return html;
+  }
+
   function _udRenderExposureRows(playerList, numDrafts, filter, posFilter) {
     let filtered = playerList;
     if (filter) filtered = filtered.filter(([name]) => name.toLowerCase().includes(filter.toLowerCase()));
@@ -26285,7 +26545,7 @@ Rules:
   };
 
   window._udSwitchTab = function(tabId) {
-    const tabs = ['exposure', 'teams', 'adp', 'value', 'builds'];
+    const tabs = ['exposure', 'teams', 'adp', 'board', 'value', 'builds'];
     tabs.forEach(t => {
       const el = document.getElementById('udTab_' + t);
       if (el) el.style.display = t === tabId ? '' : 'none';

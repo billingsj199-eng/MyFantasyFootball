@@ -2748,14 +2748,44 @@ CLEAR
 </select>
 </label>
 
-<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Position
-<select id="triviaFilterPos" multiple size="4" style="padding:3px 6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.72rem">
-<option value="QB" selected>QB</option>
-<option value="RB" selected>RB</option>
-<option value="WR" selected>WR</option>
-<option value="TE" selected>TE</option>
-</select>
+<div style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">
+<span>Position</span>
+<div id="triviaFilterPos" style="display:flex;gap:4px;flex-wrap:wrap">
+<label class="trivia-pos-label" style="display:flex;align-items:center;gap:2px;padding:3px 8px;background:var(--accent);border:1px solid var(--accent);border-radius:5px;cursor:pointer;font-size:.72rem;color:#000;font-weight:600;user-select:none">
+<input type="checkbox" value="QB" checked style="display:none"> ✓ QB
 </label>
+<label class="trivia-pos-label" style="display:flex;align-items:center;gap:2px;padding:3px 8px;background:var(--accent);border:1px solid var(--accent);border-radius:5px;cursor:pointer;font-size:.72rem;color:#000;font-weight:600;user-select:none">
+<input type="checkbox" value="RB" checked style="display:none"> ✓ RB
+</label>
+<label class="trivia-pos-label" style="display:flex;align-items:center;gap:2px;padding:3px 8px;background:var(--accent);border:1px solid var(--accent);border-radius:5px;cursor:pointer;font-size:.72rem;color:#000;font-weight:600;user-select:none">
+<input type="checkbox" value="WR" checked style="display:none"> ✓ WR
+</label>
+<label class="trivia-pos-label" style="display:flex;align-items:center;gap:2px;padding:3px 8px;background:var(--accent);border:1px solid var(--accent);border-radius:5px;cursor:pointer;font-size:.72rem;color:#000;font-weight:600;user-select:none">
+<input type="checkbox" value="TE" checked style="display:none"> ✓ TE
+</label>
+</div>
+<script>
+(function(){
+  document.getElementById('triviaFilterPos').addEventListener('change', function(e) {
+    if (e.target.type !== 'checkbox') return;
+    var lbl = e.target.closest('.trivia-pos-label');
+    if (!lbl) return;
+    var pos = e.target.value;
+    if (e.target.checked) {
+      lbl.style.background = 'var(--accent)';
+      lbl.style.borderColor = 'var(--accent)';
+      lbl.style.color = '#000';
+      lbl.innerHTML = '<input type="checkbox" value="' + pos + '" checked style="display:none"> ✓ ' + pos;
+    } else {
+      lbl.style.background = 'var(--bg)';
+      lbl.style.borderColor = 'var(--border)';
+      lbl.style.color = 'var(--text2)';
+      lbl.innerHTML = '<input type="checkbox" value="' + pos + '" style="display:none"> ' + pos;
+    }
+  });
+})();
+</script>
+</div>
 
 </div>
 <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
@@ -22430,59 +22460,105 @@ window.fmtHeight = fmtHeight;
     return _triviaAudioCtx;
   }
 
-  function _triviaPlayTone(freqs, durations, type) {
+  function _triviaPlayCorrect() {
+    // Quick bright "ding-ding!" — two fast rising notes, very recognizable
     const vol = parseInt(document.getElementById('triviaVolume').value || '50') / 100;
     if (vol <= 0) return;
     const ctx = _triviaGetAudioCtx();
-    const gain = ctx.createGain();
-    gain.connect(ctx.destination);
-    gain.gain.value = vol * 0.3;
-    let t = ctx.currentTime;
-    freqs.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      osc.type = type || 'sine';
-      osc.frequency.value = freq;
-      osc.connect(gain);
-      osc.start(t);
-      osc.stop(t + durations[i]);
-      t += durations[i];
-    });
-    // Fade out
-    gain.gain.setValueAtTime(vol * 0.3, t - 0.05);
-    gain.gain.linearRampToValueAtTime(0, t);
-  }
+    const t = ctx.currentTime;
 
-  function _triviaPlayCorrect() {
-    // Rising happy chime: C5 -> E5 -> G5
-    _triviaPlayTone([523.25, 659.25, 783.99], [0.12, 0.12, 0.2], 'sine');
+    // Note 1: bright ding
+    const g1 = ctx.createGain();
+    g1.connect(ctx.destination);
+    g1.gain.setValueAtTime(vol * 0.25, t);
+    g1.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    const o1 = ctx.createOscillator();
+    o1.type = 'sine';
+    o1.frequency.value = 880; // A5
+    o1.connect(g1);
+    o1.start(t);
+    o1.stop(t + 0.15);
+
+    // Note 2: higher ding (the "success" feel)
+    const g2 = ctx.createGain();
+    g2.connect(ctx.destination);
+    g2.gain.setValueAtTime(0.001, t);
+    g2.gain.setValueAtTime(vol * 0.3, t + 0.1);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    const o2 = ctx.createOscillator();
+    o2.type = 'sine';
+    o2.frequency.value = 1318.5; // E6
+    o2.connect(g2);
+    o2.start(t + 0.1);
+    o2.stop(t + 0.3);
   }
 
   function _triviaPlayIncorrect() {
-    // Descending buzz: E4 -> C4
-    _triviaPlayTone([329.63, 261.63], [0.15, 0.3], 'square');
-  }
-
-  function _triviaPlaySwoosh() {
-    // Quick swoosh using noise-like oscillator
+    // Short low "buzz-buzz" — two quick low tones, unmistakably wrong
     const vol = parseInt(document.getElementById('triviaVolume').value || '50') / 100;
     if (vol <= 0) return;
     const ctx = _triviaGetAudioCtx();
+    const t = ctx.currentTime;
+
+    // Buzz 1
+    const g1 = ctx.createGain();
+    g1.connect(ctx.destination);
+    g1.gain.setValueAtTime(vol * 0.15, t);
+    g1.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    const o1 = ctx.createOscillator();
+    o1.type = 'square';
+    o1.frequency.value = 185; // F#3 - low buzzy
+    o1.connect(g1);
+    o1.start(t);
+    o1.stop(t + 0.1);
+
+    // Buzz 2 (slightly lower)
+    const g2 = ctx.createGain();
+    g2.connect(ctx.destination);
+    g2.gain.setValueAtTime(0.001, t);
+    g2.gain.setValueAtTime(vol * 0.18, t + 0.12);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+    const o2 = ctx.createOscillator();
+    o2.type = 'square';
+    o2.frequency.value = 155; // Eb3 - lower, feels "wrong"
+    o2.connect(g2);
+    o2.start(t + 0.12);
+    o2.stop(t + 0.28);
+  }
+
+  function _triviaPlaySwoosh() {
+    // Quick breathy swoosh — frequency sweep with filtered noise feel
+    const vol = parseInt(document.getElementById('triviaVolume').value || '50') / 100;
+    if (vol <= 0) return;
+    const ctx = _triviaGetAudioCtx();
+    const t = ctx.currentTime;
+
     const gain = ctx.createGain();
     gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(vol * 0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+
+    // Main sweep
     const osc = ctx.createOscillator();
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(800, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15);
-    osc.connect(gain);
-    gain.gain.setValueAtTime(vol * 0.2, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.15);
+    osc.frequency.setValueAtTime(1200, t);
+    osc.frequency.exponentialRampToValueAtTime(150, t + 0.18);
+
+    // Filter to soften
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(3000, t);
+    filter.frequency.exponentialRampToValueAtTime(300, t + 0.18);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    osc.start(t);
+    osc.stop(t + 0.18);
   }
 
   window._triviaTestSound = function() {
     _triviaPlayCorrect();
-    setTimeout(_triviaPlayIncorrect, 600);
+    setTimeout(_triviaPlayIncorrect, 500);
   };
 
   // === AUTOCOMPLETE DROPDOWN ===
@@ -23052,7 +23128,7 @@ window.fmtHeight = fmtHeight;
       const conf = document.getElementById('triviaFilterConf').value;
       const team = document.getElementById('triviaFilterTeam').value;
       const posSelect = document.getElementById('triviaFilterPos');
-      const positions = Array.from(posSelect.selectedOptions).map(o => o.value);
+      const positions = Array.from(posSelect.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
 
       if (!positions.length) { alert('Select at least one position'); return; }
 

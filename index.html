@@ -2642,7 +2642,14 @@ CLEAR
 .trivia-logo-picker img:hover{border-color:var(--accent);background:rgba(168,85,247,.1)}
 </style>
 <div class="trivia-wrap">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;color:var(--text);margin-bottom:12px">Trivia Board Builder</div>
+<!-- Tabs -->
+<div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
+<button class="trivia-tab active" data-tab="builder" onclick="window._triviaTabSwitch('builder')" style="padding:8px 18px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);background:none;border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;cursor:pointer">Board Builder</button>
+<button class="trivia-tab" data-tab="customfg" onclick="window._triviaTabSwitch('customfg')" style="padding:8px 18px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer">Custom Fantasy Game</button>
+</div>
+
+<!-- Board Builder Tab -->
+<div id="triviaTabBuilder">
 <div class="trivia-prompt-bar">
 <input type="text" id="triviaPrompt" placeholder="e.g. Best 20 fantasy WR seasons since 1999, Top 24 rushing TDs in a season...">
 <button class="trivia-gen-btn" id="triviaGenBtn" onclick="window._triviaGenerate()">GENERATE</button>
@@ -2797,8 +2804,97 @@ CLEAR
 <div id="triviaCatalogList" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"></div>
 </div>
 
+</div><!-- end triviaTabBuilder -->
+
+<!-- Custom Fantasy Game Tab -->
+<div id="triviaTabCustomfg" style="display:none">
+
+<div style="padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);margin-bottom:16px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:12px">CUSTOM FANTASY GAME</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px">
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Stat Type
+<select id="cfgStatType" onchange="window._cfgStatTypeChange()" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="season">Best Season</option>
+<option value="weekly">Best Single Week</option>
+</select>
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Era
+<select id="cfgEra" onchange="window._cfgEraChange()" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="alltime">All-Time</option>
+<option value="current">Current Players Only</option>
+<option value="college">College</option>
+<option value="season">Specific Season</option>
+</select>
+</label>
+
+<label id="cfgSeasonLabel" style="font-size:.78rem;color:var(--text2);display:none;flex-direction:column;gap:3px">Season Year
+<input type="number" id="cfgSeasonYear" value="2024" min="2000" max="2025" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+</label>
+
+<label id="cfgWeekLabel" style="font-size:.78rem;color:var(--text2);display:none;flex-direction:column;gap:3px">Specific Week (blank = any)
+<input type="number" id="cfgWeek" placeholder="e.g. 1, 2, 3..." min="1" max="18" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Filter By
+<select id="cfgFilter" onchange="window._cfgFilterChange()" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="all">All (Random)</option>
+<option value="team">NFL Team</option>
+<option value="division">NFL Division</option>
+<option value="conference">NFL Conference</option>
+<option value="college_conf">College Conference</option>
+</select>
+</label>
+
+<label id="cfgFilterValueLabel" style="font-size:.78rem;color:var(--text2);display:none;flex-direction:column;gap:3px">
+<span id="cfgFilterValueTitle">Team</span>
+<select id="cfgFilterValue" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+</select>
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Scoring
+<select id="cfgScoring" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="ppr">PPR</option>
+<option value="hppr">Half PPR</option>
+<option value="std">Standard</option>
+</select>
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Difficulty
+<select id="cfgDifficulty" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="easy">Easy (Top 50)</option>
+<option value="medium" selected>Medium (Top 150)</option>
+<option value="hard">Hard (Top 300)</option>
+<option value="extreme">Extreme (All Qualifiers)</option>
+</select>
+</label>
+
+</div>
+
+<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;color:var(--text);margin-bottom:8px">ROSTER SLOTS</div>
+<div id="cfgRosterInputs" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+<label style="font-size:.78rem;color:var(--text2);display:flex;align-items:center;gap:4px">QB<input type="number" id="cfgQB" value="1" min="0" max="5" onchange="window._cfgUpdateRosterSummary()" style="width:42px;padding:4px 6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem;text-align:center"></label>
+<label style="font-size:.78rem;color:var(--text2);display:flex;align-items:center;gap:4px">RB<input type="number" id="cfgRB" value="2" min="0" max="5" onchange="window._cfgUpdateRosterSummary()" style="width:42px;padding:4px 6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem;text-align:center"></label>
+<label style="font-size:.78rem;color:var(--text2);display:flex;align-items:center;gap:4px">WR<input type="number" id="cfgWR" value="2" min="0" max="5" onchange="window._cfgUpdateRosterSummary()" style="width:42px;padding:4px 6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem;text-align:center"></label>
+<label style="font-size:.78rem;color:var(--text2);display:flex;align-items:center;gap:4px">TE<input type="number" id="cfgTE" value="1" min="0" max="5" onchange="window._cfgUpdateRosterSummary()" style="width:42px;padding:4px 6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem;text-align:center"></label>
+<label style="font-size:.78rem;color:var(--text2);display:flex;align-items:center;gap:4px">FLEX<input type="number" id="cfgFLEX" value="2" min="0" max="5" onchange="window._cfgUpdateRosterSummary()" style="width:42px;padding:4px 6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem;text-align:center"></label>
+<label style="font-size:.78rem;color:var(--text2);display:flex;align-items:center;gap:4px">SF<input type="number" id="cfgSF" value="0" min="0" max="3" onchange="window._cfgUpdateRosterSummary()" style="width:42px;padding:4px 6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem;text-align:center"></label>
+</div>
+<div id="cfgRosterSummary" style="font-size:.7rem;color:var(--text2);margin-top:6px">8 total picks</div>
+</div>
+
+<div style="margin-top:14px;text-align:center">
+<button id="cfgStartBtn" onclick="window._cfgStartGame()" style="padding:10px 32px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;cursor:pointer">START DRAFT</button>
 </div>
 </div>
+
+<div id="cfgGameArea"></div>
+</div><!-- end triviaTabCustomfg -->
+
+</div><!-- end trivia-wrap -->
 
 <div class="page page-trade" id="pageTrade">
 <div class="auth-anchor" id="authAnchorTrade"></div>
@@ -23046,6 +23142,345 @@ Rules:
     const colorLabel = document.getElementById('triviaColor').closest('label');
     if (colorLabel) colorLabel.style.display = 'none';
   })();
+
+  // === TAB SWITCHING ===
+  window._triviaTabSwitch = function(tab) {
+    document.querySelectorAll('.trivia-tab').forEach(t => {
+      const isActive = t.dataset.tab === tab;
+      t.style.color = isActive ? 'var(--accent)' : 'var(--text2)';
+      t.style.borderBottomColor = isActive ? 'var(--accent)' : 'transparent';
+      t.classList.toggle('active', isActive);
+    });
+    document.getElementById('triviaTabBuilder').style.display = tab === 'builder' ? '' : 'none';
+    document.getElementById('triviaTabCustomfg').style.display = tab === 'customfg' ? '' : 'none';
+  };
+
+  // === CUSTOM FANTASY GAME ===
+  const _CFG_DIVISIONS = {
+    'AFC East':['BUF','MIA','NE','NYJ'],'AFC North':['BAL','CIN','CLE','PIT'],
+    'AFC South':['HOU','IND','JAX','TEN'],'AFC West':['DEN','KC','LV','LAC'],
+    'NFC East':['DAL','NYG','PHI','WAS'],'NFC North':['CHI','DET','GB','MIN'],
+    'NFC South':['ATL','CAR','NO','TB'],'NFC West':['ARI','LAR','SF','SEA']
+  };
+  const _CFG_CONFERENCES = {'AFC':['BUF','MIA','NE','NYJ','BAL','CIN','CLE','PIT','HOU','IND','JAX','TEN','DEN','KC','LV','LAC'],'NFC':['DAL','NYG','PHI','WAS','CHI','DET','GB','MIN','ATL','CAR','NO','TB','ARI','LAR','SF','SEA']};
+  const _CFG_COLLEGE_CONFS = ['SEC','Big Ten','ACC','Big 12','Pac-12','AAC','Mountain West','C-USA','MAC','Sun Belt','Independent'];
+
+  window._cfgStatTypeChange = function() {
+    const v = document.getElementById('cfgStatType').value;
+    document.getElementById('cfgWeekLabel').style.display = v === 'weekly' ? 'flex' : 'none';
+  };
+
+  window._cfgEraChange = function() {
+    const v = document.getElementById('cfgEra').value;
+    document.getElementById('cfgSeasonLabel').style.display = v === 'season' ? 'flex' : 'none';
+    // If college, switch filter options
+    const filterSel = document.getElementById('cfgFilter');
+    if (v === 'college') {
+      // Only allow college conf or all
+      filterSel.innerHTML = '<option value="all">All (Random)</option><option value="college_conf">College Conference</option>';
+    } else {
+      filterSel.innerHTML = '<option value="all">All (Random)</option><option value="team">NFL Team</option><option value="division">NFL Division</option><option value="conference">NFL Conference</option><option value="college_conf">College Conference</option>';
+    }
+    window._cfgFilterChange();
+  };
+
+  window._cfgFilterChange = function() {
+    const filter = document.getElementById('cfgFilter').value;
+    const label = document.getElementById('cfgFilterValueLabel');
+    const sel = document.getElementById('cfgFilterValue');
+    const title = document.getElementById('cfgFilterValueTitle');
+    if (filter === 'all') { label.style.display = 'none'; return; }
+    label.style.display = 'flex';
+    let opts = '';
+    if (filter === 'team') {
+      title.textContent = 'Team';
+      const teams = typeof ALL_NFL_TEAMS !== 'undefined' ? ALL_NFL_TEAMS : [];
+      teams.forEach(t => { const abbr = typeof TEAM_ABBR_MAP !== 'undefined' ? TEAM_ABBR_MAP[t] : t; opts += `<option value="${abbr}">${t}</option>`; });
+    } else if (filter === 'division') {
+      title.textContent = 'Division';
+      Object.keys(_CFG_DIVISIONS).forEach(d => { opts += `<option value="${d}">${d}</option>`; });
+    } else if (filter === 'conference') {
+      title.textContent = 'Conference';
+      opts = '<option value="AFC">AFC</option><option value="NFC">NFC</option>';
+    } else if (filter === 'college_conf') {
+      title.textContent = 'Conference';
+      _CFG_COLLEGE_CONFS.forEach(c => { opts += `<option value="${c}">${c}</option>`; });
+    }
+    sel.innerHTML = opts;
+  };
+
+  window._cfgUpdateRosterSummary = function() {
+    const qb=parseInt(document.getElementById('cfgQB').value)||0,rb=parseInt(document.getElementById('cfgRB').value)||0,
+      wr=parseInt(document.getElementById('cfgWR').value)||0,te=parseInt(document.getElementById('cfgTE').value)||0,
+      flex=parseInt(document.getElementById('cfgFLEX').value)||0,sf=parseInt(document.getElementById('cfgSF').value)||0;
+    document.getElementById('cfgRosterSummary').textContent = (qb+rb+wr+te+flex+sf) + ' total picks';
+  };
+
+  function _cfgCalcFpts(row, scoring, isWeekly) {
+    const rec = parseFloat(row.rec||0), rcy = parseFloat(row.rcy||0), rctd = parseFloat(row.rctd||0);
+    const ry = parseFloat(row.ry||0), rtd = parseFloat(row.rtd||0);
+    const py = parseFloat(row.py||0), ptd = parseFloat(row.ptd||0), pint = parseFloat(row.int||0);
+    const fl = parseFloat(row.fl||0);
+    const ra = parseFloat(row.ra||0);
+    const recPts = scoring === 'ppr' ? 1 : scoring === 'hppr' ? 0.5 : 0;
+    return (py * 0.04) + (ptd * 4) + (pint * -2) + (ry * 0.1) + (rtd * 6) + (rec * recPts) + (rcy * 0.1) + (rctd * 6) + (fl * -2);
+  }
+
+  function _cfgBuildPool(settings) {
+    const {statType, era, seasonYear, week, filter, filterValue, scoring, difficulty} = settings;
+    const isCollege = era === 'college';
+    let pool = []; // [{name, pos, team, fpts, year, week?, stat}]
+
+    if (isCollege) {
+      // Use COLLEGE_STATS for season, COLLEGE_WEEKLY for weekly
+      if (typeof COLLEGE_STATS === 'undefined') return pool;
+      if (statType === 'weekly' && typeof COLLEGE_WEEKLY !== 'undefined') {
+        Object.keys(COLLEGE_WEEKLY).forEach(name => {
+          const years = COLLEGE_WEEKLY[name];
+          if (!years) return;
+          Object.keys(years).forEach(yr => {
+            const games = years[yr];
+            if (!games || !games.length) return;
+            games.forEach(g => {
+              if (week && parseInt(g.wk) !== parseInt(week)) return;
+              const fpts = _cfgCalcFpts(g, scoring, true);
+              if (fpts <= 0) return;
+              // Determine position from COMBINE_DATA
+              let pos = 'FLEX';
+              if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name]) pos = COMBINE_DATA[name].pos || 'FLEX';
+              const tm = g.tm || '';
+              pool.push({name, pos, team: tm, fpts: Math.round(fpts*10)/10, year: parseInt(yr), week: g.wk, stat: g});
+            });
+          });
+        });
+      } else {
+        Object.keys(COLLEGE_STATS).forEach(name => {
+          const seasons = COLLEGE_STATS[name];
+          if (!seasons || !seasons.length) return;
+          seasons.forEach(s => {
+            const fpts = s.fpts || _cfgCalcFpts(s, scoring, false);
+            if (fpts <= 0) return;
+            let pos = 'FLEX';
+            if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name]) pos = COMBINE_DATA[name].pos || 'FLEX';
+            pool.push({name, pos, team: s.tm||'', fpts: Math.round(fpts*10)/10, year: s.yr, stat: s});
+          });
+        });
+      }
+    } else {
+      // NFL stats — use WEEKLY_STATS for both season and weekly
+      if (typeof WEEKLY_STATS === 'undefined') return pool;
+      const currentNames = typeof D !== 'undefined' ? D.map(p => p.n) : [];
+      Object.keys(WEEKLY_STATS).forEach(name => {
+        const years = WEEKLY_STATS[name];
+        if (!years) return;
+        // Era filter
+        if (era === 'current' && !currentNames.includes(name)) return;
+        // Get position from D array
+        let pos = '';
+        if (typeof D !== 'undefined') { const d = D.find(p => p.n === name); if (d) pos = d.s; }
+        if (!pos) return; // skip if no position
+        if (!['QB','RB','WR','TE'].includes(pos)) return;
+
+        Object.keys(years).forEach(yr => {
+          const yrInt = parseInt(yr);
+          if (era === 'season' && yrInt !== parseInt(seasonYear)) return;
+          const games = years[yr];
+          if (!games || !games.length) return;
+
+          // Get team from D array or first game
+          let team = '';
+          if (typeof D !== 'undefined') { const d = D.find(p => p.n === name); if (d) team = d.t; }
+
+          if (statType === 'weekly') {
+            games.forEach(g => {
+              if (week && parseInt(g.wk) !== parseInt(week)) return;
+              const fpts = _cfgCalcFpts(g, scoring, true);
+              if (fpts <= 0) return;
+              pool.push({name, pos, team: g.tm||team, fpts: Math.round(fpts*10)/10, year: yrInt, week: g.wk, stat: g});
+            });
+          } else {
+            // Aggregate season
+            let sAgg = {py:0,ptd:0,int:0,ry:0,rtd:0,ra:0,rec:0,rcy:0,rctd:0,fl:0};
+            games.forEach(g => { Object.keys(sAgg).forEach(k => { sAgg[k] += parseFloat(g[k]||0); }); });
+            const fpts = _cfgCalcFpts(sAgg, scoring, false);
+            if (fpts <= 0) return;
+            pool.push({name, pos, team, fpts: Math.round(fpts*10)/10, year: yrInt, stat: sAgg});
+          }
+        });
+      });
+    }
+
+    // Apply team/division/conference filter
+    if (filter === 'team' && filterValue) {
+      pool = pool.filter(p => p.team === filterValue);
+    } else if (filter === 'division' && filterValue && _CFG_DIVISIONS[filterValue]) {
+      const teams = _CFG_DIVISIONS[filterValue];
+      pool = pool.filter(p => teams.includes(p.team));
+    } else if (filter === 'conference' && filterValue && _CFG_CONFERENCES[filterValue]) {
+      const teams = _CFG_CONFERENCES[filterValue];
+      pool = pool.filter(p => teams.includes(p.team));
+    }
+
+    // Sort by fpts desc
+    pool.sort((a, b) => b.fpts - a.fpts);
+
+    // Difficulty limit
+    const limits = {easy: 50, medium: 150, hard: 300, extreme: 99999};
+    const limit = limits[difficulty] || 150;
+    pool = pool.slice(0, limit);
+
+    return pool;
+  }
+
+  window._cfgStartGame = function() {
+    const settings = {
+      statType: document.getElementById('cfgStatType').value,
+      era: document.getElementById('cfgEra').value,
+      seasonYear: document.getElementById('cfgSeasonYear').value,
+      week: document.getElementById('cfgWeek').value,
+      filter: document.getElementById('cfgFilter').value,
+      filterValue: document.getElementById('cfgFilterValue').value,
+      scoring: document.getElementById('cfgScoring').value,
+      difficulty: document.getElementById('cfgDifficulty').value,
+    };
+
+    const roster = {
+      QB: parseInt(document.getElementById('cfgQB').value)||0,
+      RB: parseInt(document.getElementById('cfgRB').value)||0,
+      WR: parseInt(document.getElementById('cfgWR').value)||0,
+      TE: parseInt(document.getElementById('cfgTE').value)||0,
+      FLEX: parseInt(document.getElementById('cfgFLEX').value)||0,
+      SF: parseInt(document.getElementById('cfgSF').value)||0,
+    };
+    const totalPicks = roster.QB + roster.RB + roster.WR + roster.TE + roster.FLEX + roster.SF;
+    if (totalPicks < 1) { alert('Set at least 1 roster slot.'); return; }
+
+    const pool = _cfgBuildPool(settings);
+    if (pool.length < totalPicks * 2) {
+      document.getElementById('cfgGameArea').innerHTML = `<div style="text-align:center;color:#ef4444;padding:20px;font-size:.9rem">Not enough players found (${pool.length}). Try different settings or a wider filter.</div>`;
+      return;
+    }
+
+    // Build slot order
+    const slots = [];
+    for (let i = 0; i < roster.QB; i++) slots.push({pos:'QB', label:'QB'+(roster.QB>1?` ${i+1}`:'')});
+    for (let i = 0; i < roster.RB; i++) slots.push({pos:'RB', label:'RB'+(roster.RB>1?` ${i+1}`:'')});
+    for (let i = 0; i < roster.WR; i++) slots.push({pos:'WR', label:'WR'+(roster.WR>1?` ${i+1}`:'')});
+    for (let i = 0; i < roster.TE; i++) slots.push({pos:'TE', label:'TE'+(roster.TE>1?` ${i+1}`:'')});
+    for (let i = 0; i < roster.FLEX; i++) slots.push({pos:'FLEX', label:'FLEX'+(roster.FLEX>1?` ${i+1}`:'')});
+    for (let i = 0; i < roster.SF; i++) slots.push({pos:'SF', label:'SF'+(roster.SF>1?` ${i+1}`:'')});
+
+    // Game state
+    const game = { pool, slots, picks: [], currentSlot: 0, options: [], score: 0, settings };
+
+    function getOptions() {
+      const slot = slots[game.currentSlot];
+      const eligible = pool.filter(p => {
+        if (game.picks.find(pk => pk.name === p.name && pk.year === p.year && pk.week === p.week)) return false;
+        if (slot.pos === 'FLEX') return ['RB','WR','TE'].includes(p.pos);
+        if (slot.pos === 'SF') return ['QB','RB','WR','TE'].includes(p.pos);
+        return p.pos === slot.pos;
+      });
+      // Pick 4 random options from eligible
+      const shuffled = eligible.sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 4);
+    }
+
+    function renderGame() {
+      const area = document.getElementById('cfgGameArea');
+      if (game.currentSlot >= slots.length) {
+        // Game over
+        let html = '<div style="text-align:center;padding:20px">';
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;color:var(--accent);margin-bottom:8px">FINAL ROSTER</div>`;
+        html += `<div style="font-size:1.1rem;color:var(--text);margin-bottom:16px">Total: <strong style="color:var(--accent)">${game.score.toFixed(1)} pts</strong></div>`;
+        html += '<div style="display:flex;flex-direction:column;gap:6px;max-width:400px;margin:0 auto">';
+        game.picks.forEach((p, i) => {
+          const slotLabel = slots[i].label;
+          const yearLabel = p.week ? `Wk ${p.week}, ${p.year}` : `${p.year}`;
+          const headshot = _triviaGetHeadshot(p.name);
+          html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)">`;
+          if (headshot) html += `<img src="${headshot}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)" onerror="this.style.display='none'">`;
+          html += `<div style="flex:1;min-width:0"><div style="font-size:.82rem;color:var(--text)">${_esc(p.name)}</div><div style="font-size:.65rem;color:var(--text2)">${slotLabel} · ${p.team} · ${yearLabel}</div></div>`;
+          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--accent)">${p.fpts}</div>`;
+          html += '</div>';
+        });
+        html += '</div>';
+        html += `<button onclick="window._cfgStartGame()" style="margin-top:16px;padding:8px 24px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:.95rem;cursor:pointer">PLAY AGAIN</button>`;
+        html += '</div>';
+        area.innerHTML = html;
+        return;
+      }
+
+      game.options = getOptions();
+      if (game.options.length === 0) {
+        area.innerHTML = '<div style="text-align:center;color:#ef4444;padding:20px">No more eligible players for this slot.</div>';
+        return;
+      }
+
+      const slot = slots[game.currentSlot];
+      let html = '<div style="padding:16px">';
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text)">Pick ${game.currentSlot+1}/${slots.length}: <span style="color:var(--accent)">${slot.label}</span></div>`;
+      html += `<div style="font-size:.85rem;color:var(--text2)">Score: <strong style="color:var(--accent)">${game.score.toFixed(1)}</strong></div>`;
+      html += '</div>';
+
+      // Filled slots
+      if (game.picks.length > 0) {
+        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">';
+        game.picks.forEach((p, i) => {
+          html += `<div style="font-size:.6rem;padding:2px 6px;border-radius:4px;background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)">${slots[i].label}: ${p.name.split(' ').pop()} ${p.fpts}</div>`;
+        });
+        html += '</div>';
+      }
+
+      // Options
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+      game.options.forEach((opt, i) => {
+        const yearLabel = opt.week ? `Wk ${opt.week}, ${opt.year}` : `${opt.year}`;
+        const headshot = _triviaGetHeadshot(opt.name);
+        html += `<div onclick="window._cfgPick(${i})" style="padding:12px;border-radius:10px;background:var(--surface2);border:2px solid var(--border);cursor:pointer;transition:all .15s;text-align:center" onmouseenter="this.style.borderColor='var(--accent)';this.style.transform='scale(1.02)'" onmouseleave="this.style.borderColor='var(--border)';this.style.transform='scale(1)'">`;
+        if (headshot) html += `<img src="${headshot}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);margin-bottom:6px" onerror="this.style.display='none'">`;
+        html += `<div style="font-size:.85rem;color:var(--text);font-weight:600">${_esc(opt.name)}</div>`;
+        html += `<div style="font-size:.7rem;color:var(--text2)">${opt.pos} · ${opt.team} · ${yearLabel}</div>`;
+        html += `<div style="font-size:.65rem;color:var(--text2);margin-top:2px">? pts</div>`;
+        html += '</div>';
+      });
+      html += '</div></div>';
+      area.innerHTML = html;
+    }
+
+    window._cfgPick = function(idx) {
+      const picked = game.options[idx];
+      if (!picked) return;
+      game.picks.push(picked);
+      game.score += picked.fpts;
+      game.currentSlot++;
+
+      // Brief reveal of points
+      const area = document.getElementById('cfgGameArea');
+      const cards = area.querySelectorAll('[onclick]');
+      if (cards[idx]) {
+        const ptsEl = cards[idx].querySelector('div:last-child');
+        if (ptsEl) { ptsEl.textContent = picked.fpts + ' pts'; ptsEl.style.color = 'var(--accent)'; ptsEl.style.fontWeight = '700'; }
+        // Highlight picked
+        cards[idx].style.borderColor = '#22c55e';
+        cards[idx].style.background = 'rgba(34,197,94,.1)';
+        // Reveal others
+        game.options.forEach((opt, i) => {
+          if (i !== idx && cards[i]) {
+            const el = cards[i].querySelector('div:last-child');
+            if (el) { el.textContent = opt.fpts + ' pts'; el.style.color = 'var(--text2)'; }
+            cards[i].style.opacity = '.5';
+          }
+        });
+      }
+      setTimeout(renderGame, 1200);
+    };
+
+    renderGame();
+  };
+
+  window._cfgUpdateRosterSummary();
 })();
 
 </script>

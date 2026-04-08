@@ -1354,6 +1354,93 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .pm-class-all-wrap{gap:4px;padding:6px 8px}
   .pm-class-chip{min-width:80px;padding:4px 8px}
 }
+
+/* === COMPREHENSIVE MOBILE RESPONSIVE STYLES === */
+@media(max-width:600px){
+  /* Trivia Board Builder - Filter panel */
+  #triviaBoardFilters .trivia-opts{gap:6px}
+  #triviaBoardFilters > div:nth-child(2){grid-template-columns:1fr 1fr!important;gap:8px!important}
+  
+  /* Trivia board */
+  .trivia-board-outer{border-width:2px!important;border-radius:8px!important}
+  .trivia-board-title{font-size:1.2rem!important;padding:10px 12px 8px!important;letter-spacing:1.5px!important}
+  .trivia-board-grid{gap:3px!important;padding:6px!important}
+  .trivia-cell{border-radius:3px!important}
+  .trivia-cell-cat{font-size:.5rem!important;padding:2px 1px!important;letter-spacing:.5px!important}
+  .trivia-cell-logo{max-width:40px!important}
+  .trivia-cell-hint{font-size:.45rem!important;padding:0 1px 2px!important}
+  .trivia-cell-reveal img{max-width:40px!important}
+  .trivia-cell-reveal .reveal-name{font-size:.5rem!important}
+  .trivia-guess-input{font-size:.55rem!important;padding:3px 2px!important}
+  .trivia-guess-input::placeholder{font-size:.5rem!important}
+  
+  /* Trivia game settings */
+  .trivia-opts{gap:6px 8px!important;font-size:.7rem!important}
+  .trivia-opts select,.trivia-opts input{font-size:.7rem!important;padding:4px 6px!important}
+  
+  /* Trivia export bar */
+  .trivia-export-bar{flex-wrap:wrap!important;gap:4px!important}
+  .trivia-export-btn{font-size:.6rem!important;padding:4px 8px!important}
+  
+  /* Trivia scoreboard */
+  #triviaScoreBar{padding:8px 10px!important}
+  #triviaScoreBar > div:last-child{gap:4px!important}
+  #triviaScoreBar > div:last-child > div{min-width:70px!important;padding:6px 6px!important}
+  
+  /* Trivia team setup */
+  .trivia-team-row{flex-wrap:wrap!important}
+  .trivia-team-row input[type=text]{max-width:100px!important;font-size:.7rem!important}
+  
+  /* Trivia autocomplete */
+  .trivia-ac-dropdown{font-size:.6rem!important}
+  
+  /* Prompt bar */
+  .trivia-prompt-bar input{font-size:.75rem!important;padding:8px 10px!important}
+  
+  /* Elite Pull games */
+  .gw-card{border-radius:8px!important}
+  .gw-title{font-size:1.2rem!important;letter-spacing:1px!important}
+  .gw-cat-cell{font-size:.5rem!important;padding:4px 2px!important}
+  .ep-guess-input{font-size:.8rem!important}
+  .ep-result{font-size:.8rem!important}
+  
+  /* Fantasy Game */
+  .fg-title{font-size:1.8rem!important;letter-spacing:2px!important}
+  .fg-subtitle{font-size:.7rem!important}
+  .fg-spinner-viewport{width:90px!important;height:90px!important}
+  
+  /* Rankings table */
+  .rankings-table th,.rankings-table td{padding:4px 3px!important;font-size:.65rem!important}
+  
+  /* Player cards */
+  .player-card-inner{padding:.75rem!important}
+  
+  /* Trade calculator */
+  .trade-side{min-width:0!important}
+  
+  /* Mock draft */
+  .md-setup-card{padding:1rem!important}
+  
+  /* Leaderboard */
+  .lb-card{border-radius:8px!important}
+  .lb-section-title{font-size:.8rem!important}
+  
+  /* General page padding */
+  .page-rankings,.page-games,.page-mock,.page-trade,.page-prospect{padding:.75rem .5rem!important}
+}
+
+@media(max-width:400px){
+  /* Extra small screens */
+  .trivia-board-title{font-size:1rem!important}
+  .trivia-cell-cat{font-size:.42rem!important}
+  .trivia-cell-hint{font-size:.38rem!important}
+  .trivia-cell-logo{max-width:30px!important}
+  .trivia-guess-input{font-size:.5rem!important}
+  .gw-title{font-size:1rem!important}
+  .fg-title{font-size:1.5rem!important}
+  #triviaBoardFilters > div:nth-child(2){grid-template-columns:1fr!important}
+  #triviaGameSettings > div:nth-child(2){grid-template-columns:1fr!important}
+}
 </style>
 
 <!-- Firebase SDK (optional — page works without it if blocked by privacy settings) -->
@@ -1428,6 +1515,10 @@ Continue with Google
 <button class="nav-btn" data-page="games" title="Games">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
 <span class="nav-label">Games</span>
+</button>
+<button class="nav-btn" data-page="myteams" id="navMyTeamsBtn" title="My Teams" style="display:none">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+<span class="nav-label">My<br>Teams</span>
 </button>
 <button class="nav-btn" data-page="trivia" id="navTriviaBtn" title="Trivia Builder" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
@@ -1803,10 +1894,6 @@ PREMIUM ACTIVE
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
 <div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — ALL-TIME</div>
-<div class="fg-mode-toggle" style="display:flex;gap:0;margin:6px auto 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" data-dtoggle="gwDailyAT" data-dmin="all" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">ALL</button>
-<button class="fg-mode-btn" data-dtoggle="gwDailyAT" data-dmin="150" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">150+</button>
-</div>
 <div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's retired legend &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
 <strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery legend in 8 tries. Each guess reveals clues:<br><br>
 <span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
@@ -1821,7 +1908,7 @@ PREMIUM ACTIVE
 </div></span></div>
 <div id="gwDailyATStreak" class="ep-streak-display" style="margin-top:4px"></div>
 </div>
-<div id="gwDailyAT_all" class="gw-body">
+<div id="gwDailyAT_all" class="gw-body" style="display:none">
 <div class="gw-categories">
 <div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDailyATGuessRows"></div>
@@ -1836,7 +1923,7 @@ PREMIUM ACTIVE
 <div id="gwDailyATResult" class="ep-result" style="display:none"></div>
 <button id="gwDailyATGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
 </div>
-<div id="gwDailyAT_150" class="gw-body" style="display:none">
+<div id="gwDailyAT_150" class="gw-body">
 <div class="gw-categories">
 <div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDailyAT150GuessRows"></div>
@@ -1860,10 +1947,6 @@ PREMIUM ACTIVE
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
 <div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — 2000s</div>
-<div class="fg-mode-toggle" style="display:flex;gap:0;margin:6px auto 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" data-dtoggle="gwDaily00s" data-dmin="all" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">ALL</button>
-<button class="fg-mode-btn" data-dtoggle="gwDaily00s" data-dmin="150" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">150+</button>
-</div>
 <div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's 2000s-era player &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
 <strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery player whose best fantasy season was 2000-2009. 8 tries. Each guess reveals clues:<br><br>
 <span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
@@ -1878,7 +1961,7 @@ PREMIUM ACTIVE
 </div></span></div>
 <div id="gwDaily00sStreak" class="ep-streak-display" style="margin-top:4px"></div>
 </div>
-<div id="gwDaily00s_all" class="gw-body">
+<div id="gwDaily00s_all" class="gw-body" style="display:none">
 <div class="gw-categories">
 <div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDaily00sGuessRows"></div>
@@ -1893,7 +1976,7 @@ PREMIUM ACTIVE
 <div id="gwDaily00sResult" class="ep-result" style="display:none"></div>
 <button id="gwDaily00sGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
 </div>
-<div id="gwDaily00s_150" class="gw-body" style="display:none">
+<div id="gwDaily00s_150" class="gw-body">
 <div class="gw-categories">
 <div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDaily00s150GuessRows"></div>
@@ -1916,10 +1999,6 @@ PREMIUM ACTIVE
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
 <div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — 2010s</div>
-<div class="fg-mode-toggle" style="display:flex;gap:0;margin:6px auto 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" data-dtoggle="gwDaily10s" data-dmin="all" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">ALL</button>
-<button class="fg-mode-btn" data-dtoggle="gwDaily10s" data-dmin="150" style="padding:4px 14px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">150+</button>
-</div>
 <div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's 2010s-era player &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
 <strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery player whose best fantasy season was 2010-2019. 8 tries. Each guess reveals clues:<br><br>
 <span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
@@ -1934,7 +2013,7 @@ PREMIUM ACTIVE
 </div></span></div>
 <div id="gwDaily10sStreak" class="ep-streak-display" style="margin-top:4px"></div>
 </div>
-<div id="gwDaily10s_all" class="gw-body">
+<div id="gwDaily10s_all" class="gw-body" style="display:none">
 <div class="gw-categories">
 <div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDaily10sGuessRows"></div>
@@ -1949,7 +2028,7 @@ PREMIUM ACTIVE
 <div id="gwDaily10sResult" class="ep-result" style="display:none"></div>
 <button id="gwDaily10sGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
 </div>
-<div id="gwDaily10s_150" class="gw-body" style="display:none">
+<div id="gwDaily10s_150" class="gw-body">
 <div class="gw-categories">
 <div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
 <div id="gwDaily10s150GuessRows"></div>
@@ -2094,36 +2173,18 @@ PREMIUM ACTIVE
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — All-Time</div>
-<div class="lb-list" id="lbDailyEpAlltimeList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbDailyEpAlltimeLoading">Loading...</div>
-<div class="lb-empty" id="lbDailyEpAlltimeEmpty" style="display:none">No data yet</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — All-Time 150+</div>
 <div class="lb-list" id="lbDailyEpAT150List" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbDailyEpAT150Loading">Loading...</div>
 <div class="lb-empty" id="lbDailyEpAT150Empty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2000s</div>
-<div class="lb-list" id="lbDailyEp00sList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbDailyEp00sLoading">Loading...</div>
-<div class="lb-empty" id="lbDailyEp00sEmpty" style="display:none">No data yet</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2000s 150+</div>
 <div class="lb-list" id="lbDailyEp00s150List" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbDailyEp00s150Loading">Loading...</div>
 <div class="lb-empty" id="lbDailyEp00s150Empty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2010s</div>
-<div class="lb-list" id="lbDailyEp10sList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbDailyEp10sLoading">Loading...</div>
-<div class="lb-empty" id="lbDailyEp10sEmpty" style="display:none">No data yet</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2010s 150+</div>
 <div class="lb-list" id="lbDailyEp10s150List" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbDailyEp10s150Loading">Loading...</div>
 <div class="lb-empty" id="lbDailyEp10s150Empty" style="display:none">No data yet</div>
@@ -2606,6 +2667,74 @@ CLEAR
 </div>
 </div>
 
+<!-- MY TEAMS PAGE -->
+<div class="page" id="pageMyTeams" style="padding:0;overflow-y:auto">
+<div class="auth-anchor" id="authAnchorMyTeams"></div>
+<div style="max-width:800px;margin:0 auto;padding:20px 16px">
+
+<div style="text-align:center;margin-bottom:1.5rem">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1">MY TEAMS</div>
+<div style="color:var(--text2);font-size:.82rem;margin-top:4px">Import your fantasy teams, analyze rosters, and track your portfolio</div>
+</div>
+
+<!-- Import Section -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+
+<!-- Sleeper League Import -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">SLEEPER LEAGUE</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Paste your Sleeper league ID to import all teams</div>
+<div style="display:flex;gap:6px">
+<input type="text" id="mtSleeperLeagueId" placeholder="League ID (e.g. 1312075626064134144)" style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem">
+<button id="mtSleeperImportBtn" onclick="window._mtImportSleeper()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">IMPORT</button>
+</div>
+<div id="mtSleeperStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
+</div>
+
+<!-- Manual Team Builder -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">BUILD A TEAM</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Search and add players manually</div>
+<div style="display:flex;gap:6px">
+<input type="text" id="mtManualSearch" placeholder="Search player..." oninput="window._mtSearchPlayer(this.value)" style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem">
+<button onclick="window._mtCreateManualTeam()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">NEW TEAM</button>
+</div>
+<div id="mtManualSuggestions" style="max-height:150px;overflow-y:auto;display:none;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-top:4px"></div>
+<div id="mtManualRoster" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"></div>
+</div>
+
+</div>
+
+<!-- Ranking Source Selector -->
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+<span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text)">VALUE SOURCE:</span>
+<select id="mtValueSource" style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem;font-family:'DM Sans',sans-serif">
+<option value="jacks">Jack's Rankings</option>
+<option value="adp">Underdog ADP</option>
+</select>
+<span style="font-size:.65rem;color:var(--text2)">Used for team grades and player values</span>
+</div>
+
+<!-- League View (populated after import) -->
+<div id="mtLeagueView" style="display:none">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text);margin-bottom:4px">
+<span id="mtLeagueName">LEAGUE</span>
+<span id="mtLeagueInfo" style="font-size:.7rem;color:var(--text2);letter-spacing:0;font-family:'DM Sans',sans-serif;margin-left:8px"></span>
+</div>
+
+<!-- Power Rankings -->
+<div id="mtPowerRankings" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+
+<!-- Expanded Team View -->
+<div id="mtTeamDetail" style="display:none;margin-top:12px"></div>
+</div>
+
+<!-- Saved Teams (localStorage) -->
+<div id="mtSavedTeams" style="margin-top:20px"></div>
+
+</div>
+</div>
+
 <!-- TRIVIA BOARD BUILDER (Admin Only) -->
 <div class="page" id="pageTrivia" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorTrivia"></div>
@@ -2688,6 +2817,7 @@ CLEAR
 <option value="career">Career Totals</option>
 <option value="season" selected>Season Totals</option>
 <option value="game">Single Game</option>
+<option value="draft">NFL Draft</option>
 </select>
 </label>
 
@@ -2729,6 +2859,20 @@ CLEAR
 <option value="10">Week 10</option><option value="11">Week 11</option><option value="12">Week 12</option>
 <option value="13">Week 13</option><option value="14">Week 14</option><option value="15">Week 15</option>
 <option value="16">Week 16</option><option value="17">Week 17</option><option value="18">Week 18</option>
+</select>
+</label>
+
+<label id="triviaFilterDraftRoundLabel" style="font-size:.78rem;color:var(--text2);display:none;flex-direction:column;gap:3px">Draft Round
+<select id="triviaFilterDraftRound" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="all">All Rounds</option>
+<option value="1">Round 1</option>
+<option value="2">Round 2</option>
+<option value="3">Round 3</option>
+<option value="4">Round 4</option>
+<option value="5">Round 5</option>
+<option value="6">Round 6</option>
+<option value="7">Round 7</option>
+<option value="U">Undrafted</option>
 </select>
 </label>
 
@@ -2803,12 +2947,17 @@ CLEAR
       lbl.innerHTML = '<input type="checkbox" value="' + pos + '" style="display:none"> ' + pos;
     }
   });
-  // Show/hide week/year filter based on type
+  // Show/hide filters based on type
   document.getElementById('triviaFilterType').addEventListener('change', function() {
-    document.getElementById('triviaFilterWeekLabel').style.display = this.value === 'game' ? 'flex' : 'none';
-    // Hide year for career mode (aggregates all years)
+    var t = this.value;
+    document.getElementById('triviaFilterWeekLabel').style.display = t === 'game' ? 'flex' : 'none';
+    document.getElementById('triviaFilterDraftRoundLabel').style.display = t === 'draft' ? 'flex' : 'none';
+    // Hide year for career mode
     var yearEl = document.getElementById('triviaFilterYear').closest('label');
-    if (yearEl) yearEl.style.display = this.value === 'career' ? 'none' : '';
+    if (yearEl) yearEl.style.display = t === 'career' ? 'none' : '';
+    // Hide stat category for draft mode (not needed)
+    var statEl = document.getElementById('triviaFilterStat').closest('label');
+    if (statEl) statEl.style.display = t === 'draft' ? 'none' : '';
   });
 })();
 </script>
@@ -4479,26 +4628,33 @@ function validateImportData(obj) {
   // Initialize retired player ESPN IDs (common trivia/historical players)
   if (!window.RETIRED_ESPN_IDS) window.RETIRED_ESPN_IDS = {};
   const _BASE_RETIRED_IDS = {
-    'Calvin Johnson':'13981','Andre Johnson':'5765','Larry Fitzgerald':'10447','Steve Smith':'5638',
-    'Brandon Marshall':'10476','Dez Bryant':'13934','Jordy Nelson':'12468','Wes Welker':'9488',
-    'DeSean Jackson':'11247','Pierre Garcon':'11256','Vincent Jackson':'10456','Eric Decker':'13236',
-    'Kenny Golladay':'3116164','Allen Robinson':'2976499','Alshon Jeffery':'14888','Torrey Smith':'14159',
-    'Josh Gordon':'15864','Kendall Wright':'14920','Harry Douglas':'11305',
-    'Rob Gronkowski':'13229','Jason Witten':'5765','Antonio Gates':'5741','Jimmy Graham':'13232',
-    'Julio Jones':'13982','A.J. Green':'13983','Demaryius Thomas':'13984',
-    'Le\'Veon Bell':'16726','DeMarco Murray':'13969','Marshawn Lynch':'10456','Adrian Peterson':'10452',
-    'LeSean McCoy':'12514','Arian Foster':'12476','Jamaal Charles':'11352','Matt Forte':'11254',
-    'Drew Brees':'2580','Peyton Manning':'1428','Tom Brady':'2330','Aaron Rodgers':'8439',
-    'Ben Roethlisberger':'5536','Philip Rivers':'5529','Eli Manning':'5526','Matt Ryan':'11237',
-    'Tony Romo':'8425','Andrew Luck':'14874','Cam Newton':'13994','Russell Wilson':'14881',
+    // 2013 Top 20 Rec Yds board players (verified from ESPN URLs)
+    'Josh Gordon':'15705','Antonio Brown':'13934','Calvin Johnson':'10447',
+    'Demaryius Thomas':'13216','A.J. Green':'13983','Alshon Jeffery':'14888',
+    'Andre Johnson':'4459','Pierre Garcon':'11256','DeSean Jackson':'11252',
+    'Jordy Nelson':'12483','Brandon Marshall':'10475','Eric Decker':'13236',
+    'Dez Bryant':'13215','Vincent Jackson':'10453','Jimmy Graham':'13232',
+    'Anquan Boldin':'5554','Torrey Smith':'14159','T.Y. Hilton':'15076',
+    'Kendall Wright':'14920','Harry Douglas':'11305',
+    // Other common retired/historical players
+    'Larry Fitzgerald':'10447','Steve Smith':'4457','Wes Welker':'9488',
+    'Rob Gronkowski':'13229','Jason Witten':'5765','Antonio Gates':'4454',
+    'Julio Jones':'13982','Le\'Veon Bell':'16726','DeMarco Murray':'13955',
+    'Marshawn Lynch':'10456','Adrian Peterson':'10452','LeSean McCoy':'12514',
+    'Arian Foster':'12491','Jamaal Charles':'11327','Matt Forte':'11254',
+    'Drew Brees':'2580','Peyton Manning':'1428','Tom Brady':'2330',
+    'Aaron Rodgers':'8439','Ben Roethlisberger':'5536','Philip Rivers':'5529',
+    'Eli Manning':'5526','Matt Ryan':'11237','Tony Romo':'8425',
+    'Andrew Luck':'14874','Cam Newton':'13994','Russell Wilson':'14881',
     'Odell Beckham Jr.':'16733','Mike Evans':'16737','Brandin Cooks':'16730',
     'Stefon Diggs':'2976212','DeAndre Hopkins':'15795','Keenan Allen':'15818',
     'Amari Cooper':'2976499','Cooper Kupp':'3046779','Robert Woods':'16782',
     'Julian Edelman':'12649','Golden Tate':'13202','Emmanuel Sanders':'13295',
     'Todd Gurley':'2977644','David Johnson':'2979477','Ezekiel Elliott':'3051392',
-    'Melvin Gordon':'2976516','Carlos Hyde':'16958','Devonta Freeman':'2969939',
-    'Anquan Boldin':'5554','Reggie Wayne':'4585','Terrell Owens':'3572','Randy Moss':'2438',
+    'Melvin Gordon':'2976516','Devonta Freeman':'2969939',
+    'Reggie Wayne':'4585','Terrell Owens':'3572','Randy Moss':'2438',
     'Darren Waller':'3045144','Mark Andrews':'3916148',
+    'Kenny Golladay':'3115364','Allen Robinson':'2976212',
   };
   Object.keys(_BASE_RETIRED_IDS).forEach(k => {
     if (!window.RETIRED_ESPN_IDS[k]) window.RETIRED_ESPN_IDS[k] = _BASE_RETIRED_IDS[k];
@@ -7862,8 +8018,8 @@ function renderSearchChips() {
 render();
 
 // === Page Navigation ===
-const pageMap = { home: 'pageHome', rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia' };
-const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia' };
+const pageMap = { home: 'pageHome', rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams' };
+const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams' };
 function switchPage(page) {
   Object.values(pageMap).forEach(id => {
     const el = document.getElementById(id);
@@ -22744,40 +22900,23 @@ window.fmtHeight = fmtHeight;
 
   // Look up ESPN headshot for a player name
   function _triviaGetHeadshot(answerText) {
-    // Extract player name from answer like "Calvin Johnson (2012)"
     const name = (answerText || '').split(/[\(\,\-–—]/)[0].trim();
     if (!name) return '';
 
-    // 1. Check FALLBACK_IDS first (manually verified correct)
+    // Only use sources we trust completely:
+
+    // 1. FALLBACK_IDS (manually verified)
     if (window.FALLBACK_IDS && window.FALLBACK_IDS[name]) {
       return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.FALLBACK_IDS[name]}.png&w=350&h=254`;
     }
 
-    // 2. Check D array for _slImg (Sleeper/ESPN headshot for active players)
+    // 2. D array _slImg (active players with Sleeper headshots — these are reliable)
     if (typeof D !== 'undefined') {
       const d = D.find(p => p.n === name || p.n === name + ' Jr.' || p.n === name + ' III' || p.n === name.replace(/ Jr\.?$/i, '').replace(/ III$/i, '').trim());
       if (d && d._slImg) return d._slImg;
     }
 
-    // 3. Check RETIRED_ESPN_IDS (verified retired player IDs)
-    if (typeof RETIRED_ESPN_IDS !== 'undefined') {
-      const rid = RETIRED_ESPN_IDS[name] || RETIRED_ESPN_IDS[name.replace(/ Jr\.?$/i, '').trim()];
-      if (rid) return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${rid}.png&w=350&h=254`;
-    }
-
-    // 4. Check ESPN ID cache (from player card views) — but verify it's reasonable
-    try {
-      const cache = JSON.parse(sessionStorage.getItem('espnIdCache8') || '{}');
-      const id = cache[name];
-      if (id) return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350&h=254`;
-      const noJr = name.replace(/ Jr\.?$/i, '').replace(/ III$/i, '').trim();
-      if (noJr !== name) {
-        const id2 = cache[noJr];
-        if (id2) return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id2}.png&w=350&h=254`;
-      }
-    } catch(e) {}
-
-    // 5. No verified headshot found — return empty (shows initials instead of risking wrong photo)
+    // 3. Return empty — shows clean initials (better than wrong photo)
     return '';
   }
 
@@ -23336,7 +23475,84 @@ window.fmtHeight = fmtHeight;
       const allEntries = [];
       const _seenKey = new Set();
 
-      if (filterType === 'career') {
+      if (filterType === 'draft') {
+        // === NFL DRAFT MODE — uses COMBINE_DATA ===
+        const draftRound = document.getElementById('triviaFilterDraftRound').value;
+        const draftEntries = [];
+
+        if (typeof COMBINE_DATA !== 'undefined') {
+          Object.keys(COMBINE_DATA).forEach(name => {
+            const cd = COMBINE_DATA[name];
+            if (!cd || !cd.yr || !cd.draft) return;
+            // Year filter
+            if (year !== 'all' && cd.yr !== parseInt(year)) return;
+            // Draft round filter
+            const pick = cd.draft;
+            const pickNum = (pick === 'U' || pick === 'UDFA') ? 999 : parseInt(pick);
+            let round;
+            if (pick === 'U' || pick === 'UDFA') round = 'U';
+            else if (pickNum <= 32) round = '1';
+            else if (pickNum <= 64) round = '2';
+            else if (pickNum <= 100) round = '3';
+            else if (pickNum <= 135) round = '4';
+            else if (pickNum <= 176) round = '5';
+            else if (pickNum <= 220) round = '6';
+            else if (pickNum <= 262) round = '7';
+            else round = '7';
+            if (draftRound !== 'all' && round !== draftRound) return;
+            // Position filter
+            const pos = cd.pos || _dPosMap[name] || '';
+            if (pos && positions.length < 4 && !positions.includes(pos)) return;
+            // Team filter (draft team)
+            const draftTeam = cd.dt || '';
+            if (conf !== 'all') {
+              const tmConf = _teamConf[draftTeam];
+              if (tmConf !== conf) return;
+            }
+            if (team !== 'all' && draftTeam !== team) return;
+
+            draftEntries.push({
+              name, pos, team: draftTeam, yr: cd.yr,
+              pick: pickNum, round, school: cd.school || '',
+              _isDraft: true
+            });
+          });
+        }
+
+        // Sort by pick number (earliest first)
+        draftEntries.sort((a, b) => a.pick - b.pick);
+        const topN = draftEntries.slice(0, count);
+
+        if (topN.length === 0) {
+          area.innerHTML = '<div class="trivia-loading" style="color:#ef4444">No draft data found. Try different filters.</div>';
+          btn.disabled = false; btn.textContent = 'GENERATE';
+          return;
+        }
+
+        const yearLabel = year === 'all' ? 'All-Time' : year;
+        const confLabel = conf === 'all' ? 'NFL' : conf;
+        const teamLabel = team === 'all' ? '' : ' ' + team;
+        const roundLabel = draftRound === 'all' ? '' : (draftRound === 'U' ? ' UDFA' : ' Rd ' + draftRound);
+        const gameName = document.getElementById('triviaGameName').value.trim();
+        const title = gameName || `${yearLabel}${roundLabel} ${confLabel}${teamLabel} Draft Picks`.replace(/\s+/g,' ').trim();
+
+        const items = topN.map((s, i) => {
+          const pickLabel = s.pick === 999 ? 'UDFA' : 'Pick #' + s.pick;
+          return {
+            answer: s.name,
+            team: s.team,
+            category: pickLabel,
+            hint: (s.school ? s.school : '') + (s.pos ? ' · ' + s.pos : '')
+          };
+        });
+
+        const parsed = { title, items, _prompt: 'structured-filter-draft' };
+        _triviaFixItemTeams(parsed.items);
+        _renderBoard(parsed);
+        btn.disabled = false; btn.textContent = 'GENERATE';
+        return;
+
+      } else if (filterType === 'career') {
         // === CAREER TOTALS MODE — aggregate all seasons per player ===
         const _careerMap = {}; // name -> aggregated stats
 
@@ -24508,6 +24724,412 @@ Rules:
   };
 
   window._cfgUpdateRosterSummary();
+})();
+
+// === MY TEAMS MODULE (Admin Only — Coming Soon) ===
+(function() {
+  'use strict';
+
+  // Show My Teams nav button only for admin
+  function _mtCheckAdmin() {
+    const btn = document.getElementById('navMyTeamsBtn');
+    if (!btn) return;
+    btn.style.display = (typeof window.isAdmin === 'function' && window.isAdmin()) ? '' : 'none';
+  }
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try { firebase.auth().onAuthStateChanged(_mtCheckAdmin); } catch(e) {}
+  }
+
+  // League format state
+  let _mtFormat = { type: 'redraft', sf: false, ppr: 1, starters: 10 };
+  let _mtMyUserId = null; // auto-detected Sleeper user ID
+
+  // Grade thresholds — adjusted for format
+  function _mtGrade(avgRank) {
+    // Dynasty/SF shifts thresholds slightly
+    const shift = _mtFormat.type === 'dynasty' ? -10 : 0;
+    const a = avgRank + shift;
+    if (a <= 40) return { grade: 'A+', color: '#22c55e' };
+    if (a <= 60) return { grade: 'A', color: '#22c55e' };
+    if (a <= 80) return { grade: 'A-', color: '#4ade80' };
+    if (a <= 100) return { grade: 'B+', color: '#86efac' };
+    if (a <= 120) return { grade: 'B', color: '#facc15' };
+    if (a <= 150) return { grade: 'B-', color: '#fbbf24' };
+    if (a <= 180) return { grade: 'C+', color: '#f59e0b' };
+    if (a <= 210) return { grade: 'C', color: '#fb923c' };
+    if (a <= 250) return { grade: 'C-', color: '#f97316' };
+    if (a <= 300) return { grade: 'D', color: '#ef4444' };
+    return { grade: 'F', color: '#dc2626' };
+  }
+
+  function _mtGetPlayerRank(name) {
+    if (typeof D === 'undefined') return 999;
+    const d = D.find(p => p.n === name);
+    if (!d) return 999;
+    // In SF, boost QBs significantly
+    let rank = d.myRank || d.idx || 999;
+    if (_mtFormat.sf && d.s === 'QB' && rank > 0) {
+      rank = Math.max(1, Math.round(rank * 0.55)); // QBs ~1.8x more valuable in SF
+    }
+    return rank;
+  }
+
+  function _mtGetPlayerPos(name) {
+    if (typeof D === 'undefined') return '';
+    const d = D.find(p => p.n === name);
+    return d ? (d.s || '') : '';
+  }
+
+  function _mtGetPlayerTeam(name) {
+    if (typeof D === 'undefined') return '';
+    const d = D.find(p => p.n === name);
+    return d ? (d.t || '') : '';
+  }
+
+  function _mtGetPlayerAge(name) {
+    if (typeof D === 'undefined') return null;
+    const d = D.find(p => p.n === name);
+    if (!d || !d.age) return null;
+    return d.age;
+  }
+
+  // Grade a roster with format awareness
+  function _mtGradeRoster(players) {
+    const ranked = players.map(name => ({
+      name,
+      rank: _mtGetPlayerRank(name),
+      pos: _mtGetPlayerPos(name),
+      team: _mtGetPlayerTeam(name),
+      age: _mtGetPlayerAge(name)
+    }));
+    ranked.sort((a, b) => a.rank - b.rank);
+
+    // Starters = top N based on format
+    const numStarters = _mtFormat.starters || 10;
+    const starters = ranked.slice(0, Math.min(numStarters, ranked.length));
+    const avgRank = starters.length > 0 ? starters.reduce((s, p) => s + p.rank, 0) / starters.length : 999;
+    const grade = _mtGrade(avgRank);
+
+    // Dynasty bonus: younger rosters get a boost
+    let dynastyNote = '';
+    if (_mtFormat.type === 'dynasty') {
+      const ages = ranked.filter(p => p.age).map(p => p.age);
+      const avgAge = ages.length ? (ages.reduce((s, a) => s + a, 0) / ages.length).toFixed(1) : null;
+      if (avgAge) dynastyNote = `Avg Age: ${avgAge}`;
+    }
+
+    // Position grades with SF-awareness
+    const posGroups = {};
+    ranked.forEach(p => {
+      if (!posGroups[p.pos]) posGroups[p.pos] = [];
+      posGroups[p.pos].push(p);
+    });
+    const posGrades = {};
+    const qbStarters = _mtFormat.sf ? 2 : 1;
+    ['QB','RB','WR','TE'].forEach(pos => {
+      const group = posGroups[pos] || [];
+      if (group.length === 0) { posGrades[pos] = { grade: 'F', color: '#dc2626', count: 0 }; return; }
+      const topN = pos === 'QB' ? qbStarters : (pos === 'TE' ? 1 : 3);
+      const top = group.slice(0, topN);
+      const avg = top.reduce((s, p) => s + p.rank, 0) / top.length;
+      posGrades[pos] = { ..._mtGrade(avg), count: group.length };
+    });
+
+    return { grade, avgRank: Math.round(avgRank), players: ranked, posGrades, dynastyNote };
+  }
+
+  // Detect format from Sleeper league data
+  function _mtDetectFormat(league) {
+    const rp = league.roster_positions || [];
+    const sf = rp.includes('SUPER_FLEX') || rp.filter(p => p === 'QB').length >= 2;
+    const type = league.settings && league.settings.type === 2 ? 'dynasty' : (league.settings && league.settings.type === 1 ? 'keeper' : 'redraft');
+    const ppr = league.scoring_settings ? (league.scoring_settings.rec || 0) : 1;
+    const starters = rp.filter(p => p !== 'BN').length;
+
+    _mtFormat = { type, sf, ppr, starters };
+
+    // Update format display
+    const fmtEl = document.getElementById('mtFormatDisplay');
+    if (fmtEl) {
+      const labels = [];
+      labels.push(type.charAt(0).toUpperCase() + type.slice(1));
+      if (sf) labels.push('Superflex');
+      labels.push(ppr === 1 ? 'PPR' : ppr === 0.5 ? 'Half PPR' : ppr === 0 ? 'Standard' : ppr + ' PPR');
+      labels.push(starters + ' starters');
+      fmtEl.textContent = labels.join(' · ');
+    }
+  }
+
+  // Sleeper League Import
+  window._mtImportSleeper = async function() {
+    const leagueId = document.getElementById('mtSleeperLeagueId').value.trim();
+    if (!leagueId) return;
+    const status = document.getElementById('mtSleeperStatus');
+    const btn = document.getElementById('mtSleeperImportBtn');
+    btn.disabled = true;
+    btn.textContent = 'LOADING...';
+    status.textContent = 'Fetching league data...';
+    status.style.color = '';
+
+    try {
+      // 1. Get league info
+      const leagueResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}`);
+      if (!leagueResp.ok) throw new Error('League not found');
+      const league = await leagueResp.json();
+
+      // Detect format
+      _mtDetectFormat(league);
+
+      // 2. Get rosters
+      const rostersResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/rosters`);
+      const rosters = await rostersResp.json();
+
+      // 3. Get users (for team names + detect "my" team)
+      const usersResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/users`);
+      const users = await usersResp.json();
+      const userMap = {};
+      users.forEach(u => {
+        userMap[u.user_id] = u.display_name || u.username || 'Team';
+        // Auto-detect if current Firebase user matches any Sleeper user
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+          const fbUser = firebase.auth().currentUser;
+          if (fbUser) {
+            const fbName = (fbUser.displayName || fbUser.email || '').toLowerCase();
+            const slName = (u.display_name || u.username || '').toLowerCase();
+            if (fbName && slName && (fbName.includes(slName) || slName.includes(fbName))) {
+              _mtMyUserId = u.user_id;
+            }
+          }
+        }
+      });
+
+      // 4. Get all NFL players (for name mapping)
+      status.textContent = 'Loading player data...';
+      const playersResp = await fetch('https://api.sleeper.app/v1/players/nfl');
+      const allPlayers = await playersResp.json();
+
+      // 5. Build teams
+      const teams = rosters.map(r => {
+        const playerIds = r.players || [];
+        const playerNames = playerIds.map(id => {
+          const p = allPlayers[id];
+          if (!p) return null;
+          return p.full_name || (p.first_name + ' ' + p.last_name);
+        }).filter(Boolean);
+
+        const ownerName = userMap[r.owner_id] || 'Team ' + r.roster_id;
+        return {
+          id: r.roster_id,
+          owner: ownerName,
+          ownerId: r.owner_id,
+          isMyTeam: r.owner_id === _mtMyUserId,
+          players: playerNames,
+          wins: r.settings ? r.settings.wins : 0,
+          losses: r.settings ? r.settings.losses : 0,
+          fpts: r.settings ? (r.settings.fpts || 0) + (r.settings.fpts_decimal || 0) / 100 : 0,
+        };
+      });
+
+      // Grade all teams
+      teams.forEach(t => {
+        const result = _mtGradeRoster(t.players);
+        t.grade = result.grade;
+        t.avgRank = result.avgRank;
+        t.graded = result.players;
+        t.posGrades = result.posGrades;
+        t.dynastyNote = result.dynastyNote;
+      });
+
+      // Sort by grade (avgRank)
+      teams.sort((a, b) => a.avgRank - b.avgRank);
+
+      // Render
+      _mtRenderLeague(league, teams);
+      status.textContent = `Imported ${teams.length} teams from "${league.name}"`;
+
+      // Save to localStorage
+      localStorage.setItem('mt_last_league', JSON.stringify({ id: leagueId, name: league.name, ts: Date.now() }));
+
+    } catch (err) {
+      status.textContent = 'Error: ' + err.message;
+      status.style.color = '#ef4444';
+    }
+    btn.disabled = false;
+    btn.textContent = 'IMPORT';
+  };
+
+  function _mtRenderLeague(league, teams) {
+    const view = document.getElementById('mtLeagueView');
+    view.style.display = '';
+    document.getElementById('mtLeagueName').textContent = league.name || 'LEAGUE';
+
+    // Format info
+    const fmtParts = [];
+    fmtParts.push(teams.length + ' teams');
+    fmtParts.push(_mtFormat.type.charAt(0).toUpperCase() + _mtFormat.type.slice(1));
+    if (_mtFormat.sf) fmtParts.push('Superflex');
+    fmtParts.push(_mtFormat.ppr === 1 ? 'PPR' : _mtFormat.ppr === 0.5 ? 'Half PPR' : 'Standard');
+    fmtParts.push(league.season || '');
+    document.getElementById('mtLeagueInfo').textContent = fmtParts.join(' · ');
+
+    // Power rankings
+    const pr = document.getElementById('mtPowerRankings');
+    let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">POWER RANKINGS</div>';
+
+    // "Pick Your Team" dropdown if not auto-detected
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<span style="font-size:.75rem;color:var(--text2)">My Team:</span>`;
+    html += `<select id="mtMyTeamSelect" onchange="window._mtSelectMyTeam(this.value)" style="padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem">`;
+    html += `<option value="">— Select your team —</option>`;
+    teams.forEach((t, i) => {
+      const sel = t.isMyTeam ? 'selected' : '';
+      html += `<option value="${i}" ${sel}>${_esc(t.owner)}</option>`;
+    });
+    html += `</select>`;
+    html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)"></span>`;
+    html += `</div>`;
+
+    teams.forEach((t, i) => {
+      const g = t.grade;
+      const isMe = t.isMyTeam;
+      const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
+      html += `<div onclick="window._mtShowTeam(${i})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;${meStyle};border-radius:8px;cursor:pointer;transition:all .15s;position:relative" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">`;
+      if (isMe) html += `<div style="position:absolute;top:-6px;right:10px;font-size:.5rem;background:var(--accent);color:#000;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px">MY TEAM</div>`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--text2);width:24px;text-align:center">${i + 1}</div>`;
+      html += `<div style="width:48px;height:48px;border-radius:10px;background:${g.color}15;border:2px solid ${g.color};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:${g.color};letter-spacing:1px">${g.grade}</div>`;
+      html += `<div style="flex:1;min-width:0">`;
+      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}</div>`;
+      html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · Avg Rank: ${t.avgRank} · ${t.players.length} players${t.dynastyNote ? ' · ' + t.dynastyNote : ''}</div>`;
+      html += `</div>`;
+      // Position grades mini
+      html += `<div style="display:flex;gap:4px">`;
+      ['QB','RB','WR','TE'].forEach(pos => {
+        const pg = t.posGrades[pos];
+        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">${pos}</div><div style="font-size:.7rem;font-weight:700;color:${pg.color}">${pg.grade}</div></div>`;
+      });
+      html += `</div>`;
+      html += `</div>`;
+    });
+    pr.innerHTML = html;
+    window._mtTeams = teams;
+
+    // Update format display
+    const fmtEl = document.getElementById('mtFormatDisplay');
+    if (fmtEl) {
+      const labels = [];
+      labels.push(_mtFormat.type.charAt(0).toUpperCase() + _mtFormat.type.slice(1));
+      if (_mtFormat.sf) labels.push('SF');
+      labels.push(_mtFormat.ppr === 1 ? 'PPR' : _mtFormat.ppr === 0.5 ? '.5 PPR' : 'STD');
+      fmtEl.textContent = labels.join(' · ');
+    }
+  }
+
+  window._mtSelectMyTeam = function(idx) {
+    if (!window._mtTeams) return;
+    window._mtTeams.forEach((t, i) => { t.isMyTeam = (String(i) === String(idx)); });
+    // Re-render just updates the badges
+    document.querySelectorAll('#mtPowerRankings [style*="MY TEAM"]').forEach(el => el.remove());
+    // Simple: just re-import from stored data
+    const leagueId = document.getElementById('mtSleeperLeagueId').value.trim();
+    if (leagueId) window._mtImportSleeper();
+  };
+
+  window._mtShowTeam = function(idx) {
+    const teams = window._mtTeams;
+    if (!teams || !teams[idx]) return;
+    const t = teams[idx];
+    const detail = document.getElementById('mtTeamDetail');
+    detail.style.display = '';
+
+    let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">`;
+    html += `<div style="width:56px;height:56px;border-radius:12px;background:${t.grade.color}15;border:3px solid ${t.grade.color};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:${t.grade.color}">${t.grade.grade}</div>`;
+    html += `<div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text)">${_esc(t.owner)}${t.isMyTeam ? ' <span style="font-size:.7rem;color:var(--accent)">⭐ MY TEAM</span>' : ''}</div>`;
+    html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Avg Rank: ${t.avgRank}${t.dynastyNote ? ' · ' + t.dynastyNote : ''}</div></div>`;
+    html += `<button onclick="document.getElementById('mtTeamDetail').style.display='none'" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕ Close</button>`;
+    html += `</div>`;
+
+    // Position breakdown
+    html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">`;
+    ['QB','RB','WR','TE'].forEach(pos => {
+      const pg = t.posGrades[pos];
+      html += `<div style="text-align:center;padding:8px;background:${pg.color}10;border:1px solid ${pg.color}40;border-radius:8px">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;color:var(--text2)">${pos}</div>`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${pg.color}">${pg.grade}</div>`;
+      html += `<div style="font-size:.6rem;color:var(--text2)">${pg.count} player${pg.count !== 1 ? 's' : ''}</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    // Full roster table
+    html += `<table style="width:100%;border-collapse:collapse;font-size:.75rem">`;
+    html += `<thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--text2)">RANK</th><th style="text-align:left;padding:6px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:6px 8px;color:var(--text2)">POS</th><th style="text-align:left;padding:6px 8px;color:var(--text2)">TEAM</th>`;
+    if (_mtFormat.type === 'dynasty') html += `<th style="text-align:left;padding:6px 8px;color:var(--text2)">AGE</th>`;
+    html += `</tr></thead><tbody>`;
+    t.graded.forEach(p => {
+      const rankColor = p.rank <= 24 ? '#22c55e' : p.rank <= 60 ? '#4ade80' : p.rank <= 120 ? '#facc15' : p.rank <= 200 ? '#f59e0b' : '#ef4444';
+      html += `<tr style="border-bottom:1px solid var(--border)">`;
+      html += `<td style="padding:5px 8px;font-weight:700;color:${rankColor}">${p.rank <= 500 ? p.rank : '—'}</td>`;
+      html += `<td style="padding:5px 8px;color:var(--text)">${_esc(p.name)}</td>`;
+      html += `<td style="padding:5px 8px;color:var(--text2)">${p.pos}</td>`;
+      html += `<td style="padding:5px 8px;color:var(--text2)">${p.team}</td>`;
+      if (_mtFormat.type === 'dynasty') html += `<td style="padding:5px 8px;color:var(--text2)">${p.age || '—'}</td>`;
+      html += `</tr>`;
+    });
+    html += `</tbody></table>`;
+
+    detail.innerHTML = html;
+    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // Manual search
+  window._mtSearchPlayer = function(query) {
+    const box = document.getElementById('mtManualSuggestions');
+    if (!query || query.length < 2 || typeof D === 'undefined') { box.style.display = 'none'; return; }
+    const q = query.toLowerCase();
+    const matches = D.filter(p => p.n && p.n.toLowerCase().includes(q) && !p.n.includes('D/ST')).slice(0, 8);
+    if (!matches.length) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    box.innerHTML = matches.map(p =>
+      `<div onclick="window._mtAddManualPlayer('${p.n.replace(/'/g, "\\'")}')" style="padding:6px 10px;cursor:pointer;font-size:.75rem;color:var(--text);border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">${_esc(p.n)} <span style="color:var(--text2)">${p.s || ''} · ${p.t || ''}</span></div>`
+    ).join('');
+  };
+
+  window._mtManualRoster = [];
+  window._mtAddManualPlayer = function(name) {
+    if (!window._mtManualRoster.includes(name)) {
+      window._mtManualRoster.push(name);
+      _mtRenderManualRoster();
+    }
+    document.getElementById('mtManualSearch').value = '';
+    document.getElementById('mtManualSuggestions').style.display = 'none';
+  };
+  window._mtRemoveManualPlayer = function(name) {
+    window._mtManualRoster = window._mtManualRoster.filter(n => n !== name);
+    _mtRenderManualRoster();
+  };
+  function _mtRenderManualRoster() {
+    const el = document.getElementById('mtManualRoster');
+    el.innerHTML = window._mtManualRoster.map(name => {
+      const pos = _mtGetPlayerPos(name);
+      return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;font-size:.7rem;color:var(--text)"><span style="color:var(--text2)">${pos}</span> ${_esc(name)} <span onclick="window._mtRemoveManualPlayer('${name.replace(/'/g, "\\'")}')" style="cursor:pointer;color:#ef4444;font-weight:700">✕</span></span>`;
+    }).join('');
+  }
+  window._mtCreateManualTeam = function() {
+    if (!window._mtManualRoster.length) return;
+    const result = _mtGradeRoster(window._mtManualRoster);
+    alert(`Team Grade: ${result.grade.grade} (Avg Rank: ${result.avgRank})\n\nQB: ${result.posGrades.QB.grade}  RB: ${result.posGrades.RB.grade}  WR: ${result.posGrades.WR.grade}  TE: ${result.posGrades.TE.grade}`);
+  };
+
+  function _esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+  // Load last league ID on page load
+  try {
+    const saved = JSON.parse(localStorage.getItem('mt_last_league') || 'null');
+    if (saved && saved.id) {
+      document.getElementById('mtSleeperLeagueId').value = saved.id;
+    }
+  } catch(e) {}
+
 })();
 
 </script>

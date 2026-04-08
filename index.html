@@ -24903,18 +24903,68 @@ Rules:
         }
       });
 
-      // 4. Get all NFL players (for name mapping)
-      status.textContent = 'Loading player data...';
-      const playersResp = await fetch('https://api.sleeper.app/v1/players/nfl');
-      const allPlayers = await playersResp.json();
+      // 4. Map player IDs to names — cached Sleeper player map
+      status.textContent = 'Mapping players...';
+
+      // Collect all player IDs from rosters
+      const allIds = new Set();
+      rosters.forEach(r => { (r.players || []).forEach(id => allIds.add(String(id))); });
+
+      // Try cached Sleeper player name map (saves the huge 30MB download)
+      let sleeperNameMap = {};
+      try {
+        const cached = localStorage.getItem('mt_sleeper_players');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          // Cache for 7 days
+          if (parsed.ts && Date.now() - parsed.ts < 7 * 24 * 60 * 60 * 1000) {
+            sleeperNameMap = parsed.map;
+          }
+        }
+      } catch(e) {}
+
+      // Check if we can resolve all IDs from cache
+      const unresolvedIds = [...allIds].filter(id => !sleeperNameMap[id]);
+
+      if (unresolvedIds.length > 0) {
+        // Need to fetch from Sleeper
+        try {
+          status.textContent = 'Downloading player database (one-time, may take a moment)...';
+          const ctrl = new AbortController();
+          const timeoutId = setTimeout(() => ctrl.abort(), 30000); // 30s timeout
+          const playersResp = await fetch('https://api.sleeper.app/v1/players/nfl', { signal: ctrl.signal });
+          clearTimeout(timeoutId);
+          if (playersResp.ok) {
+            const allPlayers = await playersResp.json();
+            // Build a slim name map (ID → name only, much smaller than full data)
+            Object.keys(allPlayers).forEach(id => {
+              const p = allPlayers[id];
+              if (p && (p.full_name || p.first_name)) {
+                sleeperNameMap[id] = p.full_name || (p.first_name + ' ' + p.last_name);
+              }
+            });
+            // Cache the slim map
+            try {
+              localStorage.setItem('mt_sleeper_players', JSON.stringify({ map: sleeperNameMap, ts: Date.now() }));
+            } catch(e) { /* localStorage full — still works for this session */ }
+          }
+        } catch(e) {
+          console.warn('[MyTeams] Sleeper players API failed:', e.message);
+          status.textContent = 'Player database download failed — using available data...';
+          // Fallback: try to match IDs from D array by searching for any stored sleeper references
+          if (typeof D !== 'undefined') {
+            D.forEach(d => {
+              if (d._slId) sleeperNameMap[String(d._slId)] = d.n;
+            });
+          }
+        }
+      }
 
       // 5. Build teams
       const teams = rosters.map(r => {
         const playerIds = r.players || [];
         const playerNames = playerIds.map(id => {
-          const p = allPlayers[id];
-          if (!p) return null;
-          return p.full_name || (p.first_name + ' ' + p.last_name);
+          return sleeperNameMap[String(id)] || null;
         }).filter(Boolean);
 
         const ownerName = userMap[r.owner_id] || 'Team ' + r.roster_id;

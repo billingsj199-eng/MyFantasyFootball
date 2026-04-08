@@ -22384,10 +22384,14 @@ window.fmtHeight = fmtHeight;
     try {
     if (!_triviaData) { console.warn('[Trivia] No data loaded'); return; }
     const s = _triviaGetSettings();
+
+    // Reset board FIRST (this sets active=false)
+    window._triviaResetReveals();
+
+    // THEN activate the game
     _triviaGame.active = true;
     _triviaGame.gameOver = false;
     _triviaGame.teams = s.teams;
-    console.log('[Trivia] Game started — active:', _triviaGame.active, 'teams:', _triviaGame.teams);
     document.getElementById('triviaGiveUpBtn').style.display = (s.mode === 'guess') ? '' : 'none';
     _triviaGame.currentTeam = 0;
     _triviaGame.scores = [0,0,0,0,0,0];
@@ -22418,8 +22422,6 @@ window.fmtHeight = fmtHeight;
       else el.style.visibility = 'visible';
     });
 
-    // Reset board
-    window._triviaResetReveals();
     _triviaUpdateScore();
 
     // Start first cell if sequential/random

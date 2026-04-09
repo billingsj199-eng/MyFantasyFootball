@@ -19656,7 +19656,8 @@ window.fmtHeight = fmtHeight;
           { score: _scoreLow(_rasSrc.cone, th.cone), weight: dw.cone },
           { score: _scoreLow(_rasSrc.shuttle, th.shuttle), weight: dw.shuttle }
         ].filter(d => d.score != null);
-        const _minDrills = (_cbAny && _cbAny.devy) ? 1 : 2;
+        const _isRecentProspect = (_cbAny && _cbAny.devy) || (_cbAny && _cbAny.yr && _cbAny.yr >= 2024) || (draftYr && draftYr >= 2024);
+        const _minDrills = _isRecentProspect ? 1 : 2;
         if (drillEntries.length >= _minDrills) {
           // Weighted average of available drills
           const totalW = drillEntries.reduce((s, d) => s + d.weight, 0);

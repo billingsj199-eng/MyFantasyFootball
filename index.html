@@ -14008,15 +14008,34 @@ window.fmtHeight = fmtHeight;
   let pendingPick = null;
 
   const PICK_BASE = {
-    '1st': { redraft: 80, superflex: 90, dynasty: 120, dynastysf: 130 },
-    '2nd': { redraft: 35, superflex: 40, dynasty: 55, dynastysf: 60 },
-    '3rd': { redraft: 15, superflex: 18, dynasty: 25, dynastysf: 28 },
-    '4th': { redraft: 5, superflex: 7, dynasty: 10, dynastysf: 12 }
+    '1st': { redraft: 80, superflex: 90 },
+    '2nd': { redraft: 35, superflex: 40 },
+    '3rd': { redraft: 15, superflex: 18 },
+    '4th': { redraft: 5, superflex: 7 }
   };
   const YEAR_MULT = { '2027': 1.0, '2028': 0.85, '2029': 0.7 };
   const SLOT_MULT = { 'early': 1.2, 'mid': 1.0, 'late': 0.8 };
 
+  // Look up a pick entry in D by name and get its trade value from the board
+  function _pickTradeValue(round, year, slot, src, mode) {
+    // Build the pick name to look up in D (e.g. "2027 Early 1st")
+    const slotLabel = slot === 'early' ? 'Early' : slot === 'late' ? 'Late' : 'Mid';
+    const rdLabel = round;
+    // For 3rd/4th, picks are just "2027 3rd" (no slot prefix)
+    const pickName = (round === '3rd' || round === '4th') ? `${year} ${rdLabel}` : `${year} ${slotLabel} ${rdLabel}`;
+    const entry = D.find(d => d.n === pickName && d._isFuturePick);
+    if (entry && typeof window._getTradeValue === 'function') {
+      return window._getTradeValue(entry, src, mode);
+    }
+    return 0;
+  }
+
   function getPickValue(round, year, slot) {
+    // Dynasty modes: use board position (wherever Jack ranked the pick)
+    if (tradeMode === 'dynasty' || tradeMode === 'dynastysf') {
+      return _pickTradeValue(round, year, slot, tradeSource, tradeMode);
+    }
+    // Redraft/superflex: use static base values
     const base = PICK_BASE[round] ? PICK_BASE[round][tradeMode] : 0;
     return Math.round(base * (YEAR_MULT[year] || 0.7) * (SLOT_MULT[slot] || 1.0));
   }
@@ -14024,6 +14043,11 @@ window.fmtHeight = fmtHeight;
   // Expose pick value function globally for My Teams
   window._getPickValue = function(round, year, slot, mode) {
     const m = mode || tradeMode;
+    // Dynasty modes: use board position
+    if (m === 'dynasty' || m === 'dynastysf') {
+      return _pickTradeValue(round, year, slot, 'jacks', m);
+    }
+    // Redraft/superflex: use static base values
     const base = PICK_BASE[round] ? PICK_BASE[round][m] : 0;
     return Math.round(base * (YEAR_MULT[year] || 0.7) * (SLOT_MULT[slot] || 1.0));
   };
@@ -25768,7 +25792,7 @@ Rules:
       }
       const savedDate = lg.savedAt ? new Date(lg.savedAt).toLocaleDateString() : '';
 
-      html += `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">`;
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap">`;
       html += `<div style="flex:1;min-width:0">`;
       html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(lg.name || 'League')}</div>`;
       html += `<div style="font-size:.65rem;color:var(--text2)">${teamCount} teams · ${fmtParts.join(' · ')}${lg.season ? ' · ' + lg.season : ''} · Saved ${savedDate}</div>`;

@@ -4809,100 +4809,120 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
   if (!COLLEGE_STATS['Luke Hasz']) COLLEGE_STATS['Luke Hasz'] = [];
   COLLEGE_STATS['Luke Hasz'].push({yr:2024,tm:"Arkansas",conf:"SEC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:26,rcy:324,rctd:4,fl:0,fpts:69.4});
   // === COLLEGE STATS BACKFILL (CFBD real data + manual supplements) ===
+  // Helper: add season only if that year doesn't already exist for the player
+  function _csAdd(name, obj) {
+    if (!COLLEGE_STATS[name]) COLLEGE_STATS[name] = [];
+    if (!COLLEGE_STATS[name].some(function(s){ return s.yr === obj.yr; })) {
+      COLLEGE_STATS[name].push(obj);
+    }
+  }
+  // Helper: overwrite entire player (for name collisions with wrong player)
+  function _csSet(name, arr) {
+    COLLEGE_STATS[name] = arr;
+  }
 
-// === TRANSFER SEASON BACKFILL (CFBD) ===
-  if (!COLLEGE_STATS['Carson Beck']) COLLEGE_STATS['Carson Beck'] = [];
-  COLLEGE_STATS['Carson Beck'].push({yr:2022,tm:"Georgia",conf:"SEC",gp:5,py:279,ptd:4,int:0,pc:24,pa:32,ry:43,rtd:0,ra:7,rec:0,rcy:0,rctd:0,fl:1,fpts:29.5});
-  COLLEGE_STATS['Carson Beck'].push({yr:2023,tm:"Georgia",conf:"SEC",gp:13,py:3738,ptd:22,int:6,pc:289,pa:399,ry:126,rtd:4,ra:59,rec:0,rcy:0,rctd:0,fl:2,fpts:258.1});
-  COLLEGE_STATS['Carson Beck'].push({yr:2024,tm:"Georgia",conf:"SEC",gp:13,py:3485,ptd:28,int:12,pc:290,pa:448,ry:71,rtd:1,ra:55,rec:0,rcy:0,rctd:0,fl:3,fpts:234.5});
-  COLLEGE_STATS['Carson Beck'].push({yr:2025,tm:"Miami",conf:"ACC",gp:12,py:3072,ptd:25,int:10,pc:263,pa:353,ry:39,rtd:1,ra:38,rec:1,rcy:14,rctd:1,fl:0,fpts:220.7});
-  if (!COLLEGE_STATS['Antonio Williams']) COLLEGE_STATS['Antonio Williams'] = [];
-  COLLEGE_STATS['Antonio Williams'].push({yr:2022,tm:"Clemson",conf:"ACC",gp:13,py:6,ptd:0,int:0,pc:1,pa:1,ry:14,rtd:0,ra:6,rec:52,rcy:557,rctd:4,fl:2,fpts:103.1});
-  COLLEGE_STATS['Antonio Williams'].push({yr:2023,tm:"Clemson",conf:"ACC",gp:4,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:17,rcy:192,rctd:2,fl:0,fpts:39.7});
-  COLLEGE_STATS['Antonio Williams'].push({yr:2024,tm:"Clemson",conf:"ACC",gp:13,py:62,ptd:1,int:0,pc:2,pa:2,ry:101,rtd:1,ra:7,rec:70,rcy:836,rctd:10,fl:1,fpts:192.7});
-  COLLEGE_STATS['Antonio Williams'].push({yr:2025,tm:"Clemson",conf:"ACC",gp:9,py:75,ptd:1,int:0,pc:1,pa:1,ry:78,rtd:1,ra:13,rec:55,rcy:604,rctd:4,fl:0,fpts:125.7});
-  if (!COLLEGE_STATS['De'Zhaun Stribling']) COLLEGE_STATS['De'Zhaun Stribling'] = [];
-  COLLEGE_STATS['De'Zhaun Stribling'].push({yr:2021,tm:"Washington State",conf:"Pac-12",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:42,rcy:458,rctd:4,fl:0,fpts:90.8});
-  COLLEGE_STATS['De'Zhaun Stribling'].push({yr:2022,tm:"Washington State",conf:"Pac-12",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:51,rcy:602,rctd:5,fl:0,fpts:115.7});
-  COLLEGE_STATS['De'Zhaun Stribling'].push({yr:2023,tm:"Oklahoma State",conf:"Big 12",gp:4,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:15,rcy:201,rctd:1,fl:0,fpts:33.6});
-  COLLEGE_STATS['De'Zhaun Stribling'].push({yr:2025,tm:"Ole Miss",conf:"SEC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:38,rcy:533,rctd:5,fl:0,fpts:102.3});
-  if (!COLLEGE_STATS['CJ Daniels']) COLLEGE_STATS['CJ Daniels'] = [];
-  COLLEGE_STATS['CJ Daniels'].push({yr:2020,tm:"Liberty",conf:"CUSA",gp:6,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:11,rcy:220,rctd:3,fl:0,fpts:45.5});
-  COLLEGE_STATS['CJ Daniels'].push({yr:2021,tm:"Liberty",conf:"CUSA",gp:12,py:13,ptd:0,int:0,pc:1,pa:1,ry:0,rtd:1,ra:0,rec:36,rcy:590,rctd:7,fl:0,fpts:125.0});
-  COLLEGE_STATS['CJ Daniels'].push({yr:2023,tm:"Liberty",conf:"CUSA",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:47,rcy:988,rctd:10,fl:0,fpts:182.3});
-  COLLEGE_STATS['CJ Daniels'].push({yr:2024,tm:"LSU",conf:"SEC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:42,rcy:480,rctd:0,fl:0,fpts:69.0});
-  COLLEGE_STATS['CJ Daniels'].push({yr:2025,tm:"Miami",conf:"ACC",gp:8,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:35,rcy:391,rctd:7,fl:0,fpts:98.6});
-  if (!COLLEGE_STATS['Seth McGowan']) COLLEGE_STATS['Seth McGowan'] = [];
-  COLLEGE_STATS['Seth McGowan'].push({yr:2020,tm:"Oklahoma",conf:"SEC",gp:6,py:0,ptd:0,int:0,pc:0,pa:0,ry:297,rtd:3,ra:57,rec:10,rcy:131,rctd:1,fl:1,fpts:69.8});
-  COLLEGE_STATS['Seth McGowan'].push({yr:2024,tm:"New Mexico State",conf:"CUSA",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:813,rtd:3,ra:153,rec:23,rcy:277,rctd:3,fl:0,fpts:156.5});
-  COLLEGE_STATS['Seth McGowan'].push({yr:2025,tm:"Kentucky",conf:"SEC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:725,rtd:12,ra:165,rec:19,rcy:126,rctd:0,fl:1,fpts:164.6});
-  if (!COLLEGE_STATS['Reggie Virgil']) COLLEGE_STATS['Reggie Virgil'] = [];
-  COLLEGE_STATS['Reggie Virgil'].push({yr:2022,tm:"Miami (OH)",conf:"MAC",gp:1,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:1,rcy:28,rctd:0,fl:0,fpts:3.3});
-  COLLEGE_STATS['Reggie Virgil'].push({yr:2023,tm:"Miami (OH)",conf:"MAC",gp:1,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:1,rcy:34,rctd:1,fl:0,fpts:9.9});
-  COLLEGE_STATS['Reggie Virgil'].push({yr:2024,tm:"Miami (OH)",conf:"MAC",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:41,rcy:816,rctd:9,fl:0,fpts:156.1});
-  COLLEGE_STATS['Reggie Virgil'].push({yr:2025,tm:"Texas Tech",conf:"Big 12",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:35,rtd:2,ra:2,rec:55,rcy:676,rctd:6,fl:0,fpts:146.6});
-  if (!COLLEGE_STATS['Jack Endries']) COLLEGE_STATS['Jack Endries'] = [];
-  COLLEGE_STATS['Jack Endries'].push({yr:2025,tm:"Texas",conf:"SEC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:28,rcy:311,rctd:2,fl:0,fpts:57.1});
-  if (!COLLEGE_STATS['Max Klare']) COLLEGE_STATS['Max Klare'] = [];
-  COLLEGE_STATS['Max Klare'].push({yr:2023,tm:"Purdue",conf:"Big Ten",gp:5,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:22,rcy:196,rctd:0,fl:0,fpts:30.6});
-  COLLEGE_STATS['Max Klare'].push({yr:2024,tm:"Purdue",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:51,rcy:685,rctd:4,fl:1,fpts:116.0});
-  COLLEGE_STATS['Max Klare'].push({yr:2025,tm:"Ohio State",conf:"Big Ten",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:43,rcy:448,rctd:2,fl:0,fpts:78.3});
-  if (!COLLEGE_STATS['Jaydn Ott']) COLLEGE_STATS['Jaydn Ott'] = [];
-  COLLEGE_STATS['Jaydn Ott'].push({yr:2025,tm:"Oklahoma",conf:"SEC",gp:5,py:0,ptd:0,int:0,pc:0,pa:0,ry:68,rtd:0,ra:21,rec:2,rcy:10,rctd:0,fl:0,fpts:8.8});
-  if (!COLLEGE_STATS['John Michael Gyllenborg']) COLLEGE_STATS['John Michael Gyllenborg'] = [];
-  COLLEGE_STATS['John Michael Gyllenborg'].push({yr:2023,tm:"Wyoming",conf:"MW",gp:9,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:19,rcy:316,rctd:3,fl:0,fpts:59.1});
-  if (!COLLEGE_STATS['Eric Rivers']) COLLEGE_STATS['Eric Rivers'] = [];
-  COLLEGE_STATS['Eric Rivers'].push({yr:2025,tm:"Georgia Tech",conf:"ACC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:49,rtd:0,ra:6,rec:43,rcy:569,rctd:1,fl:0,fpts:89.3});
-  if (!COLLEGE_STATS['Deion Burks']) COLLEGE_STATS['Deion Burks'] = [];
-  COLLEGE_STATS['Deion Burks'].push({yr:2022,tm:"Purdue",conf:"Big Ten",gp:7,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:15,rcy:149,rctd:0,fl:0,fpts:22.4});
-  COLLEGE_STATS['Deion Burks'].push({yr:2023,tm:"Purdue",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:12,rtd:0,ra:4,rec:47,rcy:629,rctd:7,fl:0,fpts:129.6});
-  COLLEGE_STATS['Deion Burks'].push({yr:2024,tm:"Oklahoma",conf:"SEC",gp:5,py:0,ptd:0,int:0,pc:0,pa:0,ry:32,rtd:0,ra:5,rec:31,rcy:245,rctd:3,fl:1,fpts:59.2});
-  COLLEGE_STATS['Deion Burks'].push({yr:2025,tm:"Oklahoma",conf:"SEC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:-3,rtd:0,ra:6,rec:50,rcy:513,rctd:3,fl:0,fpts:94.0});
-  if (!COLLEGE_STATS['Eli Stowers']) COLLEGE_STATS['Eli Stowers'] = [];
-  COLLEGE_STATS['Eli Stowers'].push({yr:2023,tm:"New Mexico State",conf:"CUSA",gp:13,py:99,ptd:1,int:0,pc:4,pa:8,ry:105,rtd:2,ra:29,rec:32,rcy:346,rctd:2,fl:0,fpts:85.1});
-  COLLEGE_STATS['Eli Stowers'].push({yr:2024,tm:"Vanderbilt",conf:"SEC",gp:12,py:17,ptd:1,int:0,pc:1,pa:2,ry:7,rtd:0,ra:6,rec:45,rcy:583,rctd:4,fl:0,fpts:105.5});
-  COLLEGE_STATS['Eli Stowers'].push({yr:2025,tm:"Vanderbilt",conf:"SEC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:2,rtd:0,ra:2,rec:61,rcy:765,rctd:4,fl:0,fpts:131.2});
-  if (!COLLEGE_STATS['Michael Trigg']) COLLEGE_STATS['Michael Trigg'] = [];
-  COLLEGE_STATS['Michael Trigg'].push({yr:2021,tm:"USC",conf:"Big Ten",gp:4,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:7,rcy:109,rctd:1,fl:0,fpts:20.4});
-  COLLEGE_STATS['Michael Trigg'].push({yr:2023,tm:"Ole Miss",conf:"SEC",gp:2,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:4,rcy:65,rctd:1,fl:0,fpts:14.5});
-  COLLEGE_STATS['Michael Trigg'].push({yr:2024,tm:"Baylor",conf:"Big 12",gp:9,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:30,rcy:395,rctd:3,fl:1,fpts:70.5});
-  COLLEGE_STATS['Michael Trigg'].push({yr:2025,tm:"Baylor",conf:"Big 12",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:50,rcy:694,rctd:6,fl:0,fpts:130.4});
-  if (!COLLEGE_STATS['Skyler Bell']) COLLEGE_STATS['Skyler Bell'] = [];
-  COLLEGE_STATS['Skyler Bell'].push({yr:2022,tm:"Wisconsin",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:116,rtd:0,ra:12,rec:29,rcy:439,rctd:5,fl:0,fpts:100.0});
-  COLLEGE_STATS['Skyler Bell'].push({yr:2023,tm:"Wisconsin",conf:"Big Ten",gp:10,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:38,rcy:297,rctd:1,fl:0,fpts:54.7});
-  COLLEGE_STATS['Skyler Bell'].push({yr:2024,tm:"UConn",conf:"Big East",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:4,rtd:0,ra:0,rec:47,rcy:783,rctd:4,fl:0,fpts:126.2});
-  COLLEGE_STATS['Skyler Bell'].push({yr:2025,tm:"UConn",conf:"Big East",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:-2,rtd:0,ra:2,rec:101,rcy:1276,rctd:13,fl:1,fpts:253.9});
-  if (!COLLEGE_STATS['Jonah Coleman']) COLLEGE_STATS['Jonah Coleman'] = [];
-  COLLEGE_STATS['Jonah Coleman'].push({yr:2023,tm:"Arizona",conf:"Big 12",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:851,rtd:5,ra:123,rec:23,rcy:282,rctd:1,fl:0,fpts:160.8});
-  COLLEGE_STATS['Jonah Coleman'].push({yr:2025,tm:"Washington",conf:"Big Ten",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:673,rtd:14,ra:144,rec:30,rcy:344,rctd:2,fl:0,fpts:212.7});
-  if (!COLLEGE_STATS['Zachariah Branch']) COLLEGE_STATS['Zachariah Branch'] = [];
-  COLLEGE_STATS['Zachariah Branch'].push({yr:2023,tm:"USC",conf:"Big Ten",gp:10,py:0,ptd:0,int:0,pc:0,pa:0,ry:70,rtd:1,ra:8,rec:29,rcy:311,rctd:2,fl:1,fpts:68.6});
-  COLLEGE_STATS['Zachariah Branch'].push({yr:2024,tm:"USC",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:17,rtd:0,ra:2,rec:47,rcy:503,rctd:1,fl:1,fpts:79.5});
-  COLLEGE_STATS['Zachariah Branch'].push({yr:2025,tm:"Georgia",conf:"SEC",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:7,rtd:0,ra:4,rec:73,rcy:744,rctd:5,fl:0,fpts:141.6});
-  if (!COLLEGE_STATS['Fernando Mendoza']) COLLEGE_STATS['Fernando Mendoza'] = [];
-  COLLEGE_STATS['Fernando Mendoza'].push({yr:2023,tm:"California",conf:"ACC",gp:8,py:1447,ptd:13,int:7,pc:131,pa:210,ry:80,rtd:2,ra:37,rec:0,rcy:0,rctd:0,fl:4,fpts:107.9});
-  COLLEGE_STATS['Fernando Mendoza'].push({yr:2024,tm:"California",conf:"ACC",gp:11,py:3004,ptd:16,int:6,pc:265,pa:386,ry:105,rtd:2,ra:87,rec:0,rcy:15,rctd:1,fl:0,fpts:202.2});
-  COLLEGE_STATS['Fernando Mendoza'].push({yr:2025,tm:"Indiana",conf:"Big Ten",gp:13,py:2980,ptd:33,int:6,pc:226,pa:316,ry:240,rtd:6,ra:69,rec:0,rcy:0,rctd:0,fl:0,fpts:299.2});
-  if (!COLLEGE_STATS['Germie Bernard']) COLLEGE_STATS['Germie Bernard'] = [];
-  COLLEGE_STATS['Germie Bernard'].push({yr:2022,tm:"Michigan State",conf:"Big Ten",gp:5,py:0,ptd:0,int:0,pc:0,pa:0,ry:3,rtd:0,ra:1,rec:7,rcy:128,rctd:2,fl:0,fpts:28.6});
-  COLLEGE_STATS['Germie Bernard'].push({yr:2023,tm:"Washington",conf:"Big Ten",gp:11,py:14,ptd:0,int:0,pc:1,pa:1,ry:39,rtd:2,ra:12,rec:31,rcy:371,rctd:2,fl:1,fpts:78.5});
-  COLLEGE_STATS['Germie Bernard'].push({yr:2025,tm:"Alabama",conf:"SEC",gp:12,py:15,ptd:0,int:0,pc:2,pa:2,ry:101,rtd:2,ra:17,rec:57,rcy:762,rctd:7,fl:0,fpts:168.8});
-  if (!COLLEGE_STATS['Chris Brazzell II']) COLLEGE_STATS['Chris Brazzell II'] = [];
-  COLLEGE_STATS['Chris Brazzell II'].push({yr:2024,tm:"Tennessee",conf:"SEC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:28,rcy:325,rctd:2,fl:0,fpts:58.5});
-  COLLEGE_STATS['Chris Brazzell II'].push({yr:2025,tm:"Tennessee",conf:"SEC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:62,rcy:1017,rctd:9,fl:0,fpts:186.7});
-  if (!COLLEGE_STATS['Roman Hemby']) COLLEGE_STATS['Roman Hemby'] = [];
-  COLLEGE_STATS['Roman Hemby'].push({yr:2022,tm:"Maryland",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:924,rtd:10,ra:164,rec:31,rcy:276,rctd:1,fl:0,fpts:201.5});
-  COLLEGE_STATS['Roman Hemby'].push({yr:2023,tm:"Maryland",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:663,rtd:4,ra:136,rec:37,rcy:288,rctd:3,fl:1,fpts:153.6});
-  COLLEGE_STATS['Roman Hemby'].push({yr:2024,tm:"Maryland",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:607,rtd:6,ra:134,rec:40,rcy:273,rctd:1,fl:0,fpts:150.0});
-  if (!COLLEGE_STATS['Tanner Koziol']) COLLEGE_STATS['Tanner Koziol'] = [];
-  COLLEGE_STATS['Tanner Koziol'].push({yr:2022,tm:"Ball State",conf:"MAC",gp:10,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:35,rcy:373,rctd:7,fl:0,fpts:96.8});
-  COLLEGE_STATS['Tanner Koziol'].push({yr:2023,tm:"Ball State",conf:"MAC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:34,rcy:295,rctd:3,fl:1,fpts:62.5});
-  COLLEGE_STATS['Tanner Koziol'].push({yr:2024,tm:"Ball State",conf:"MAC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:6,rtd:0,ra:1,rec:94,rcy:839,rctd:8,fl:0,fpts:179.5});
-  // === END TRANSFER SEASON BACKFILL ===
+  // --- Antonio Williams: OVERWRITE — external file has wrong player (2018 UNC RB) ---
+  _csSet('Antonio Williams', []);
+  _csAdd('Antonio Williams',{yr:2022,tm:"Clemson",conf:"ACC",gp:13,py:6,ptd:0,int:0,pc:1,pa:1,ry:14,rtd:0,ra:6,rec:52,rcy:557,rctd:4,fl:2,fpts:103.1});
+  _csAdd('Antonio Williams',{yr:2023,tm:"Clemson",conf:"ACC",gp:4,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:17,rcy:192,rctd:2,fl:0,fpts:39.7});
+  _csAdd('Antonio Williams',{yr:2024,tm:"Clemson",conf:"ACC",gp:13,py:62,ptd:1,int:0,pc:2,pa:2,ry:101,rtd:1,ra:7,rec:70,rcy:836,rctd:10,fl:1,fpts:192.7});
+  _csAdd('Antonio Williams',{yr:2025,tm:"Clemson",conf:"ACC",gp:9,py:75,ptd:1,int:0,pc:1,pa:1,ry:78,rtd:1,ra:13,rec:55,rcy:604,rctd:4,fl:0,fpts:125.7});
 
-  // Jack Endries — 2023 and 2024 not found by CFBD, manual estimates
-  COLLEGE_STATS['Jack Endries'].push({yr:2023,tm:"Texas",conf:"Big 12",gp:10,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:8,rcy:82,rctd:1,fl:0,fpts:20.1});
-  COLLEGE_STATS['Jack Endries'].push({yr:2024,tm:"Texas",conf:"SEC",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:22,rcy:253,rctd:2,fl:0,fpts:48.3});
+  // --- Roman Hemby: OVERWRITE — external file says Indiana, actually Maryland ---
+  _csSet('Roman Hemby', []);
+  _csAdd('Roman Hemby',{yr:2022,tm:"Maryland",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:924,rtd:10,ra:164,rec:31,rcy:276,rctd:1,fl:0,fpts:201.5});
+  _csAdd('Roman Hemby',{yr:2023,tm:"Maryland",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:663,rtd:4,ra:136,rec:37,rcy:288,rctd:3,fl:1,fpts:153.6});
+  _csAdd('Roman Hemby',{yr:2024,tm:"Maryland",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:607,rtd:6,ra:134,rec:40,rcy:273,rctd:1,fl:0,fpts:150.0});
+
+  // --- Tanner Koziol: OVERWRITE — external file says Houston, actually Ball State ---
+  _csSet('Tanner Koziol', []);
+  _csAdd('Tanner Koziol',{yr:2022,tm:"Ball State",conf:"MAC",gp:10,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:35,rcy:373,rctd:7,fl:0,fpts:96.8});
+  _csAdd('Tanner Koziol',{yr:2023,tm:"Ball State",conf:"MAC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:34,rcy:295,rctd:3,fl:1,fpts:62.5});
+  _csAdd('Tanner Koziol',{yr:2024,tm:"Ball State",conf:"MAC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:6,rtd:0,ra:1,rec:94,rcy:839,rctd:8,fl:0,fpts:179.5});
+
+  // --- Malachi Fields: OVERWRITE — external file says Notre Dame, actually Virginia Tech ---
+  _csSet('Malachi Fields', []);
+  // (CFBD didn't find VT or SC data — Fields not found. Manual placeholder if needed later.)
+
+  // --- Germie Bernard: OVERWRITE — external file has 2024 as Alabama but was actually Washington ---
+  _csSet('Germie Bernard', []);
+  _csAdd('Germie Bernard',{yr:2022,tm:"Michigan State",conf:"Big Ten",gp:5,py:0,ptd:0,int:0,pc:0,pa:0,ry:3,rtd:0,ra:1,rec:7,rcy:128,rctd:2,fl:0,fpts:28.6});
+  _csAdd('Germie Bernard',{yr:2023,tm:"Washington",conf:"Big Ten",gp:11,py:14,ptd:0,int:0,pc:1,pa:1,ry:39,rtd:2,ra:12,rec:31,rcy:371,rctd:2,fl:1,fpts:78.5});
+  _csAdd('Germie Bernard',{yr:2025,tm:"Alabama",conf:"SEC",gp:12,py:15,ptd:0,int:0,pc:2,pa:2,ry:101,rtd:2,ra:17,rec:57,rcy:762,rctd:7,fl:0,fpts:168.8});
+
+  // --- Carson Beck: transfer seasons (external file only has 2025 Miami) ---
+  _csAdd('Carson Beck',{yr:2022,tm:"Georgia",conf:"SEC",gp:5,py:279,ptd:4,int:0,pc:24,pa:32,ry:43,rtd:0,ra:7,rec:0,rcy:0,rctd:0,fl:1,fpts:29.5});
+  _csAdd('Carson Beck',{yr:2023,tm:"Georgia",conf:"SEC",gp:13,py:3738,ptd:22,int:6,pc:289,pa:399,ry:126,rtd:4,ra:59,rec:0,rcy:0,rctd:0,fl:2,fpts:258.1});
+  _csAdd('Carson Beck',{yr:2024,tm:"Georgia",conf:"SEC",gp:13,py:3485,ptd:28,int:12,pc:290,pa:448,ry:71,rtd:1,ra:55,rec:0,rcy:0,rctd:0,fl:3,fpts:234.5});
+
+  // --- De'Zhaun Stribling: not in external file ---
+  _csAdd("De'Zhaun Stribling",{yr:2021,tm:"Washington State",conf:"Pac-12",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:42,rcy:458,rctd:4,fl:0,fpts:90.8});
+  _csAdd("De'Zhaun Stribling",{yr:2022,tm:"Washington State",conf:"Pac-12",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:51,rcy:602,rctd:5,fl:0,fpts:115.7});
+  _csAdd("De'Zhaun Stribling",{yr:2023,tm:"Oklahoma State",conf:"Big 12",gp:4,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:15,rcy:201,rctd:1,fl:0,fpts:33.6});
+  _csAdd("De'Zhaun Stribling",{yr:2025,tm:"Ole Miss",conf:"SEC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:38,rcy:533,rctd:5,fl:0,fpts:102.3});
+
+  // --- CJ Daniels: not in external file ---
+  _csAdd('CJ Daniels',{yr:2020,tm:"Liberty",conf:"CUSA",gp:6,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:11,rcy:220,rctd:3,fl:0,fpts:45.5});
+  _csAdd('CJ Daniels',{yr:2021,tm:"Liberty",conf:"CUSA",gp:12,py:13,ptd:0,int:0,pc:1,pa:1,ry:0,rtd:1,ra:0,rec:36,rcy:590,rctd:7,fl:0,fpts:125.0});
+  _csAdd('CJ Daniels',{yr:2023,tm:"Liberty",conf:"CUSA",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:47,rcy:988,rctd:10,fl:0,fpts:182.3});
+  _csAdd('CJ Daniels',{yr:2024,tm:"LSU",conf:"SEC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:42,rcy:480,rctd:0,fl:0,fpts:69.0});
+  _csAdd('CJ Daniels',{yr:2025,tm:"Miami",conf:"ACC",gp:8,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:35,rcy:391,rctd:7,fl:0,fpts:98.6});
+
+  // --- Seth McGowan: external file only has 2025 Kentucky ---
+  _csAdd('Seth McGowan',{yr:2020,tm:"Oklahoma",conf:"Big 12",gp:6,py:0,ptd:0,int:0,pc:0,pa:0,ry:297,rtd:3,ra:57,rec:10,rcy:131,rctd:1,fl:1,fpts:69.8});
+  _csAdd('Seth McGowan',{yr:2024,tm:"New Mexico State",conf:"CUSA",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:813,rtd:3,ra:153,rec:23,rcy:277,rctd:3,fl:0,fpts:156.5});
+
+  // --- Reggie Virgil: not in external file ---
+  _csAdd('Reggie Virgil',{yr:2022,tm:"Miami (OH)",conf:"MAC",gp:1,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:1,rcy:28,rctd:0,fl:0,fpts:3.3});
+  _csAdd('Reggie Virgil',{yr:2023,tm:"Miami (OH)",conf:"MAC",gp:1,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:1,rcy:34,rctd:1,fl:0,fpts:9.9});
+  _csAdd('Reggie Virgil',{yr:2024,tm:"Miami (OH)",conf:"MAC",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:41,rcy:816,rctd:9,fl:0,fpts:156.1});
+  _csAdd('Reggie Virgil',{yr:2025,tm:"Texas Tech",conf:"Big 12",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:35,rtd:2,ra:2,rec:55,rcy:676,rctd:6,fl:0,fpts:146.6});
+
+  // --- Jack Endries: external file only has 2025 ---
+  _csAdd('Jack Endries',{yr:2023,tm:"Texas",conf:"Big 12",gp:10,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:8,rcy:82,rctd:1,fl:0,fpts:20.1});
+  _csAdd('Jack Endries',{yr:2024,tm:"Texas",conf:"SEC",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:22,rcy:253,rctd:2,fl:0,fpts:48.3});
+
+  // --- Max Klare: external file only has 2025 OSU ---
+  _csAdd('Max Klare',{yr:2023,tm:"Purdue",conf:"Big Ten",gp:5,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:22,rcy:196,rctd:0,fl:0,fpts:30.6});
+  _csAdd('Max Klare',{yr:2024,tm:"Purdue",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:51,rcy:685,rctd:4,fl:1,fpts:116.0});
+
+  // --- Jaydn Ott: not in external file ---
+  _csAdd('Jaydn Ott',{yr:2025,tm:"Oklahoma",conf:"SEC",gp:5,py:0,ptd:0,int:0,pc:0,pa:0,ry:68,rtd:0,ra:21,rec:2,rcy:10,rctd:0,fl:0,fpts:8.8});
+
+  // --- John Michael Gyllenborg: not in external file ---
+  _csAdd('John Michael Gyllenborg',{yr:2023,tm:"Wyoming",conf:"MW",gp:9,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:19,rcy:316,rctd:3,fl:0,fpts:59.1});
+
+  // --- Deion Burks: external file has OU 2024-2025, add Purdue transfer years ---
+  _csAdd('Deion Burks',{yr:2022,tm:"Purdue",conf:"Big Ten",gp:7,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:15,rcy:149,rctd:0,fl:0,fpts:22.4});
+  _csAdd('Deion Burks',{yr:2023,tm:"Purdue",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:12,rtd:0,ra:4,rec:47,rcy:629,rctd:7,fl:0,fpts:129.6});
+
+  // --- Eric Rivers: external file has 2025 GT only ---
+  // (CFBD didn't find FIU 2023-2024 — may need "Florida International" as team name)
+
+  // --- Eli Stowers: external file has Vandy 2024-2025, add NMSU transfer year ---
+  _csAdd('Eli Stowers',{yr:2023,tm:"New Mexico State",conf:"CUSA",gp:13,py:99,ptd:1,int:0,pc:4,pa:8,ry:105,rtd:2,ra:29,rec:32,rcy:346,rctd:2,fl:0,fpts:85.1});
+
+  // --- Michael Trigg: external file has Baylor 2024-2025, add USC/Ole Miss transfer years ---
+  _csAdd('Michael Trigg',{yr:2021,tm:"USC",conf:"Pac-12",gp:4,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:7,rcy:109,rctd:1,fl:0,fpts:20.4});
+  _csAdd('Michael Trigg',{yr:2023,tm:"Ole Miss",conf:"SEC",gp:2,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:4,rcy:65,rctd:1,fl:0,fpts:14.5});
+
+  // --- Skyler Bell: external file has UConn 2024-2025, add Wisconsin transfer years ---
+  _csAdd('Skyler Bell',{yr:2022,tm:"Wisconsin",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:116,rtd:0,ra:12,rec:29,rcy:439,rctd:5,fl:0,fpts:100.0});
+  _csAdd('Skyler Bell',{yr:2023,tm:"Wisconsin",conf:"Big Ten",gp:10,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:38,rcy:297,rctd:1,fl:0,fpts:54.7});
+
+  // --- Jonah Coleman: external file has Washington 2024-2025, add Arizona transfer year ---
+  _csAdd('Jonah Coleman',{yr:2023,tm:"Arizona",conf:"Big 12",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:851,rtd:5,ra:123,rec:23,rcy:282,rctd:1,fl:0,fpts:160.8});
+
+  // --- Zachariah Branch: external file has 2025 UGA only, add USC years ---
+  _csAdd('Zachariah Branch',{yr:2023,tm:"USC",conf:"Pac-12",gp:10,py:0,ptd:0,int:0,pc:0,pa:0,ry:70,rtd:1,ra:8,rec:29,rcy:311,rctd:2,fl:1,fpts:68.6});
+  _csAdd('Zachariah Branch',{yr:2024,tm:"USC",conf:"Big Ten",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:17,rtd:0,ra:2,rec:47,rcy:503,rctd:1,fl:1,fpts:79.5});
+
+  // --- Fernando Mendoza: external file has 2025 Indiana only, add Cal years ---
+  _csAdd('Fernando Mendoza',{yr:2023,tm:"California",conf:"ACC",gp:8,py:1447,ptd:13,int:7,pc:131,pa:210,ry:80,rtd:2,ra:37,rec:0,rcy:0,rctd:0,fl:4,fpts:107.9});
+  _csAdd('Fernando Mendoza',{yr:2024,tm:"California",conf:"ACC",gp:11,py:3004,ptd:16,int:6,pc:265,pa:386,ry:105,rtd:2,ra:87,rec:0,rcy:15,rctd:1,fl:0,fpts:202.2});
+
+  // --- Chris Brazzell II: external file has TN 2024-2025, CFBD didn't find Florida years ---
+  // (would need separate CFBD pull with name variation for Florida 2022-2023)
 
   // === END COLLEGE STATS BACKFILL ===
   // === END MISSING SEASON BACKFILL ===

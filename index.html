@@ -1443,18 +1443,32 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   #triviaGameSettings > div:nth-child(2){grid-template-columns:1fr!important}
 }
 /* My Teams mobile responsiveness */
+@media(max-width:768px){
+  #pageMyTeams{
+    overflow:auto!important;
+  }
+  #pageMyTeams > div:nth-child(2){
+    padding:12px 10px!important;
+  }
+}
 @media(max-width:600px){
   #mtImportGrid{
     grid-template-columns:1fr!important;
   }
+  #pageMyTeams{
+    overflow:auto!important;
+  }
+  #pageMyTeams > div:nth-child(2){
+    padding:10px 8px!important;
+  }
   #mtSrcSleeper,#mtSrcUnderdog{
-    padding:6px 14px!important;font-size:.8rem!important;
+    padding:6px 14px!important;font-size:.8rem!important;flex:1;text-align:center;
   }
   #udTabBar{
-    gap:3px!important;
+    gap:2px!important;flex-wrap:wrap;
   }
   #udTabBar button{
-    padding:5px 8px!important;font-size:.65rem!important;
+    padding:5px 7px!important;font-size:.6rem!important;
   }
   #rookiePickToggle{
     font-size:.6rem!important;padding:3px 7px!important;
@@ -1469,7 +1483,33 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
     display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
   }
   #mtPowerRankings > div{
-    font-size:.95em;
+    font-size:.9em;
+  }
+  /* Tighten team rows on mobile */
+  #mtPowerRankings [onclick*="_mtShowTeam"]{
+    padding:8px 8px!important;gap:8px!important;
+  }
+  #mtPowerRankings [onclick*="_mtShowTeam"] > div:first-child{
+    font-size:1rem!important;width:18px!important;
+  }
+  #mtPowerRankings [onclick*="_mtShowTeam"] > div:nth-child(2){
+    width:38px!important;height:38px!important;font-size:.9rem!important;
+  }
+  /* Team detail close button */
+  #mtTeamDetail button[onclick*="display"]{
+    padding:4px 8px!important;font-size:.6rem!important;
+  }
+  /* Portfolio summary cards */
+  #mtUnderdogDashboard [style*="auto-fit"]{
+    gap:6px!important;
+  }
+  /* Sleeper import inputs */
+  #mtSleeperLeagueId{
+    font-size:.7rem!important;min-width:0!important;
+  }
+  /* Value source bar */
+  #mtValueSource{
+    font-size:.7rem!important;
   }
 }
 </style>
@@ -2715,9 +2755,9 @@ CLEAR
 </div>
 
 <!-- MY TEAMS PAGE -->
-<div class="page" id="pageMyTeams" style="padding:0;overflow-y:auto">
+<div class="page" id="pageMyTeams" style="padding:0;overflow:auto">
 <div class="auth-anchor" id="authAnchorMyTeams"></div>
-<div style="max-width:800px;margin:0 auto;padding:20px 16px">
+<div style="max-width:800px;margin:0 auto;padding:20px 16px;min-width:0">
 
 <div style="text-align:center;margin-bottom:1.5rem">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1">MY TEAMS</div>
@@ -2762,7 +2802,7 @@ CLEAR
 </div>
 
 <!-- Ranking Source Selector -->
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
 <span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text)">VALUE SOURCE:</span>
 <select id="mtValueSource" style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem;font-family:'DM Sans',sans-serif">
 <option value="jacks">Jack's Rankings</option>
@@ -2800,7 +2840,7 @@ CLEAR
 <span style="font-size:.55rem;padding:2px 6px;border-radius:3px;background:var(--accent);color:#000;font-weight:700;letter-spacing:.5px">NEW</span>
 </div>
 <div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Upload your Underdog best ball CSV to analyze your full portfolio</div>
-<div style="display:flex;gap:6px;align-items:center">
+<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
 <label for="mtUnderdogCSV" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</label>
 <input type="file" id="mtUnderdogCSV" accept=".csv" onchange="window._mtParseUnderdogCSV(this)" style="display:none">
 <button onclick="window._udClearPortfolio()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;color:var(--text2);cursor:pointer;white-space:nowrap">CLEAR</button>
@@ -25414,7 +25454,7 @@ Rules:
     let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">POWER RANKINGS</div>';
 
     // "Pick Your Team" dropdown
-    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">`;
     html += `<span style="font-size:.75rem;color:var(--text2)">My Team:</span>`;
     html += `<select id="mtMyTeamSelect" onchange="window._mtSelectMyTeam(this.value)" style="padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem">`;
     html += `<option value="">— Select your team —</option>`;
@@ -25429,18 +25469,18 @@ Rules:
     // Value vs Contender toggle (dynasty only)
     const isDynasty = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
     if (isDynasty) {
-      html += `<div style="display:flex;gap:3px;margin-bottom:10px;align-items:center">`;
+      html += `<div style="display:flex;gap:3px;margin-bottom:10px;align-items:center;flex-wrap:wrap">`;
       html += `<span style="font-size:.65rem;color:var(--text2);margin-right:4px">VIEW:</span>`;
       const valActive = _mtViewMode === 'value';
       const conActive = _mtViewMode === 'contender';
       html += `<button onclick="window._mtSetViewMode('value')" style="padding:4px 12px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${valActive ? '#3b82f6' : 'var(--border)'};background:${valActive ? '#3b82f6' : 'var(--surface)'};color:${valActive ? '#fff' : 'var(--text2)'}">DYNASTY VALUE</button>`;
       html += `<button onclick="window._mtSetViewMode('contender')" style="padding:4px 12px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${conActive ? '#22c55e' : 'var(--border)'};background:${conActive ? '#22c55e' : 'var(--surface)'};color:${conActive ? '#000' : 'var(--text2)'}">CONTENDER</button>`;
-      html += `<span style="font-size:.55rem;color:var(--text2);margin-left:6px">${conActive ? 'Scored by win-now redraft value (picks excluded)' : 'Scored by dynasty asset value (picks included)'}</span>`;
+      html += `<span style="font-size:.55rem;color:var(--text2);margin-left:6px">${conActive ? 'Win-now value (no picks)' : 'Dynasty value (with picks)'}</span>`;
       html += `</div>`;
     }
 
     // Sort buttons
-    html += `<div style="display:flex;gap:3px;margin-bottom:10px;align-items:center">`;
+    html += `<div style="display:flex;gap:3px;margin-bottom:10px;align-items:center;flex-wrap:wrap">`;
     html += `<span style="font-size:.65rem;color:var(--text2);margin-right:4px">SORT BY:</span>`;
     const sortOpts = [
       { key: 'total', label: 'TOTAL', color: 'var(--accent)' },
@@ -26211,7 +26251,7 @@ Rules:
       html += `<button onclick="window._udFilterExposurePos('${pos}')" data-udposfilter="${pos}" style="padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? posFilterColors[pos] : 'var(--border)'};background:${active ? posFilterColors[pos] : 'var(--surface)'};color:${active ? (pos === 'ALL' ? '#000' : '#fff') : 'var(--text2)'}">${pos}</button>`;
     });
     html += `</div>`;
-    html += `<input id="udExpFilter" oninput="window._udFilterExposure(this.value)" placeholder="Filter players..." style="margin-left:auto;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem;font-family:'DM Sans',sans-serif;width:150px">`;
+    html += `<input id="udExpFilter" oninput="window._udFilterExposure(this.value)" placeholder="Filter players..." style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem;font-family:'DM Sans',sans-serif;width:150px;flex:1;min-width:100px;max-width:200px">`;
     html += `</div>`;
     html += `<div id="udExposureList">`;
     html += _udRenderExposureRows(playerList, numDrafts, '', 'ALL');

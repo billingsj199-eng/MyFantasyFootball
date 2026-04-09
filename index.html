@@ -7607,11 +7607,11 @@ function openPlayerCard(d) {
     </div>
     <div class="card-body">
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
-        <button class="card-view-btn active" data-cardview="fantasy">FANTASY</button>
-        <button class="card-view-btn" data-cardview="prospect">PROSPECT</button>
+        ${!d._isDevy ? '<button class="card-view-btn active" data-cardview="fantasy">FANTASY</button>' : ''}
+        <button class="card-view-btn${d._isDevy ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
         <button class="card-view-btn" data-cardview="comps">COMPS</button>
       </div>` : ''}
-      <div class="card-fantasy-view" id="cardFantasyView">
+      <div class="card-fantasy-view${d._isDevy ? ' hidden' : ''}" id="cardFantasyView">
       ${!d._retired ? `<div class="card-section">
         <div class="card-section-title">Rankings</div>
         <div class="card-rank-row" style="grid-template-columns:1fr 1fr">
@@ -7789,7 +7789,7 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
       </div>
-      <div class="card-prospect-view" id="cardProspectView">
+      <div class="card-prospect-view${d._isDevy ? ' active' : ''}" id="cardProspectView">
       ${(() => {
         const _pmD2 = window._pmBuiltData ? window._pmBuiltData().find(p => p.name === d.n) : null;
         if (!_pmD2 || _pmD2.jm == null) return '';
@@ -17342,13 +17342,12 @@ window.fmtHeight = fmtHeight;
         snap.forEach(function(doc) {
           _dcCache[doc.id] = doc.data().dc || '';
         });
-        // Override old manual DC edits with DraftBuzz projections for devy players.
-        // This ensures DraftBuzz data takes priority over stale manual entries.
-        // New manual edits made via the admin UI will save to Firestore and
-        // override again on next page load — until this code block is updated.
+        // Apply DraftBuzz draft projections for devy players ONLY if no manual
+        // Firestore edit exists. This way your manual DC edits always take priority,
+        // but DraftBuzz fills in the gaps for players you haven't manually set.
         if (typeof COMBINE_DATA !== 'undefined') {
           Object.keys(COMBINE_DATA).forEach(function(n) {
-            if (COMBINE_DATA[n].devy && COMBINE_DATA[n].draft != null) {
+            if (COMBINE_DATA[n].devy && COMBINE_DATA[n].draft != null && !_dcCache[n]) {
               _dcCache[n] = String(COMBINE_DATA[n].draft);
             }
           });

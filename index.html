@@ -1960,7 +1960,57 @@ PREMIUM ACTIVE
 </div>
 </div>
 
-
+<!-- Daily ELITE PULL — All-Time -->
+<div style="margin-top:12px;max-width:480px">
+<div class="gw-card">
+<div class="gw-header" style="padding:1rem 1.25rem .5rem">
+<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — ALL-TIME</div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's retired legend &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
+<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery legend in 8 tries. Each guess reveals clues:<br><br>
+<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
+<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
+<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
+<strong>Team:</strong> Green if correct, red if wrong<br>
+<strong>Division:</strong> Green if exact, yellow if same conference<br>
+<strong>Position:</strong> Green if correct, red if wrong<br>
+<strong>Year:</strong> Year of best season. Green if exact, yellow if within 2 years, red otherwise. Arrows show direction<br>
+<strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
+<strong>Wk High:</strong> Best single-week score (data back to 1999). Green if within 0.5 pts, yellow if within 5. Arrows show direction. Shows — if no weekly data available for that player
+</div></span></div>
+<div id="gwDailyATStreak" class="ep-streak-display" style="margin-top:4px"></div>
+</div>
+<div id="gwDailyAT_all" class="gw-body" style="display:none">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDailyATGuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDailyATSuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDailyATInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDailyATGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDailyATResult" class="ep-result" style="display:none"></div>
+<button id="gwDailyATGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+<div id="gwDailyAT_150" class="gw-body">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDailyAT150GuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDailyAT150Suggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDailyAT150Input" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDailyAT150GuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDailyAT150Result" class="ep-result" style="display:none"></div>
+<button id="gwDailyAT150GiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+</div>
+</div>
 
 
 <!-- Daily ELITE PULL — 2000s Era -->
@@ -2068,7 +2118,57 @@ PREMIUM ACTIVE
 </div>
 
 
-
+<!-- Daily ELITE PULL — College -->
+<div style="margin-top:12px;max-width:480px">
+<div class="gw-card">
+<div class="gw-header" style="padding:1rem 1.25rem .5rem">
+<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — COLLEGE</div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's college player &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
+<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery college player in 8 tries. Each guess reveals clues:<br><br>
+<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
+<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
+<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
+<strong>Team:</strong> College team. Green if correct, red if wrong<br>
+<strong>Conf:</strong> Conference. Green if correct, red if wrong<br>
+<strong>Position:</strong> Green if correct, red if wrong<br>
+<strong>Year:</strong> Year of best college season. Green if exact, yellow if within 2 years, red otherwise. Arrows show direction<br>
+<strong>Szn High:</strong> Best college fantasy season (half PPR). Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
+<strong>Wk High:</strong> Best single college game. Green if within 0.5 pts, yellow if within 5. Arrows show direction
+</div></span></div>
+<div id="gwDailyColStreak" class="ep-streak-display" style="margin-top:4px"></div>
+</div>
+<div id="gwDailyCol_all" class="gw-body" style="display:none">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">CONF</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDailyColGuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDailyColSuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDailyColInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDailyColGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDailyColResult" class="ep-result" style="display:none"></div>
+<button id="gwDailyColGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+<div id="gwDailyCol_150" class="gw-body">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">CONF</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDailyCol150GuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDailyCol150Suggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDailyCol150Input" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDailyCol150GuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDailyCol150Result" class="ep-result" style="display:none"></div>
+<button id="gwDailyCol150GiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+</div>
+</div>
 
 
 <!-- GUESS WHO Daily Game — HIDDEN -->
@@ -2158,6 +2258,10 @@ PREMIUM ACTIVE
 <div class="lb-empty" id="lbDailyEpCurrentEmpty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — All-Time</div>
+<div class="lb-list" id="lbDailyEpAT150List" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEpAT150Loading">Loading...</div>
+<div class="lb-empty" id="lbDailyEpAT150Empty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2000s</div>
@@ -2172,7 +2276,11 @@ PREMIUM ACTIVE
 <div class="lb-empty" id="lbDailyEp10s150Empty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
-
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — College</div>
+<div class="lb-list" id="lbDailyEpCollegeList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEpCollegeLoading">Loading...</div>
+<div class="lb-empty" id="lbDailyEpCollegeEmpty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
 
 <div style="display:none">
 
@@ -2359,6 +2467,7 @@ CLEAR
 </div>
 </div>
 
+
 <!-- DEVY RANKINGS SECTION -->
 <div id="devyRankingsSection" style="margin-top:2rem;padding:0 2rem 2rem;display:none">
 <div style="border-top:2px solid var(--border);padding-top:1.5rem">
@@ -2395,7 +2504,6 @@ CLEAR
 </table>
 </div>
 </div>
-
 </div>
 
 </div>
@@ -10605,7 +10713,24 @@ document.addEventListener('click', function(e) {
     });
     if (dailyCurrent) dailyCurrent.init();
 
-
+    const dailyAT = createDailyGW({
+      statePrefix: 'gwd_at',
+      streakKey: 'gw_daily_at_streak',
+      lastWinKey: 'gw_daily_at_last_win',
+      seedOffset: 7919,
+      modeLabel: 'All-Time',
+      maxGuesses: 8,
+      inputId: 'gwDailyATInput',
+      guessBtnId: 'gwDailyATGuessBtn',
+      resultId: 'gwDailyATResult',
+      giveUpBtnId: 'gwDailyATGiveUpBtn',
+      suggestionsId: 'gwDailyATSuggestions',
+      guessRowsId: 'gwDailyATGuessRows',
+      streakElId: 'gwDailyATStreak',
+      getPool: () => _poolAlltime,
+      lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDailyAT === 'function') window._lbUpdateGwDailyAT(won, streak); }
+    });
+    if (dailyAT) dailyAT.init();
 
     const _pool2000s = typeof window._gwGetPool2000s === 'function' ? window._gwGetPool2000s() : null;
     const _pool2010s = typeof window._gwGetPool2010s === 'function' ? window._gwGetPool2010s() : null;
@@ -10655,7 +10780,27 @@ document.addEventListener('click', function(e) {
     // === 150+ variants for All-Time, 2000s, 2010s ===
     const _pool150 = (base) => base ? base.filter(p => p.bestSzn != null && p.bestSzn >= 150) : null;
 
-
+    const _poolAT150 = _pool150(_poolAlltime);
+    if (_poolAT150 && _poolAT150.length) {
+      const dailyAT150 = createDailyGW({
+        statePrefix: 'gwd_at150',
+        streakKey: 'gw_daily_at150_streak',
+        lastWinKey: 'gw_daily_at150_last_win',
+        seedOffset: 31501,
+        modeLabel: 'All-Time',
+        maxGuesses: 8,
+        inputId: 'gwDailyAT150Input',
+        guessBtnId: 'gwDailyAT150GuessBtn',
+        resultId: 'gwDailyAT150Result',
+        giveUpBtnId: 'gwDailyAT150GiveUpBtn',
+        suggestionsId: 'gwDailyAT150Suggestions',
+        guessRowsId: 'gwDailyAT150GuessRows',
+        streakElId: 'gwDailyATStreak',
+        getPool: () => _poolAT150,
+        lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDailyAT150 === 'function') window._lbUpdateGwDailyAT150(won, streak); }
+      });
+      if (dailyAT150) dailyAT150.init();
+    }
 
     const _pool00s150 = _pool150(_pool2000s);
     if (_pool00s150 && _pool00s150.length) {
@@ -10717,8 +10862,48 @@ document.addEventListener('click', function(e) {
       });
     });
 
+    if (_poolCollege && _poolCollege.length) {
+      const dailyCollege = createDailyGW({
+        statePrefix: 'gwd_col',
+        streakKey: 'gw_daily_col_streak',
+        lastWinKey: 'gw_daily_col_last_win',
+        seedOffset: 13337,
+        modeLabel: 'College',
+        maxGuesses: 8,
+        inputId: 'gwDailyColInput',
+        guessBtnId: 'gwDailyColGuessBtn',
+        resultId: 'gwDailyColResult',
+        giveUpBtnId: 'gwDailyColGiveUpBtn',
+        suggestionsId: 'gwDailyColSuggestions',
+        guessRowsId: 'gwDailyColGuessRows',
+        streakElId: 'gwDailyColStreak',
+        getPool: () => _poolCollege,
+        lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDailyCol === 'function') window._lbUpdateGwDailyCol(won, streak); }
+      });
+      if (dailyCollege) dailyCollege.init();
 
-
+      const _poolCol150 = _pool150(_poolCollege);
+      if (_poolCol150 && _poolCol150.length) {
+        const dailyCol150 = createDailyGW({
+          statePrefix: 'gwd_col150',
+          streakKey: 'gw_daily_col150_streak',
+          lastWinKey: 'gw_daily_col150_last_win',
+          seedOffset: 31504,
+          modeLabel: 'College',
+          maxGuesses: 8,
+          inputId: 'gwDailyCol150Input',
+          guessBtnId: 'gwDailyCol150GuessBtn',
+          resultId: 'gwDailyCol150Result',
+          giveUpBtnId: 'gwDailyCol150GiveUpBtn',
+          suggestionsId: 'gwDailyCol150Suggestions',
+          guessRowsId: 'gwDailyCol150GuessRows',
+          streakElId: 'gwDailyColStreak',
+          getPool: () => _poolCol150,
+          lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDailyCol150 === 'function') window._lbUpdateGwDailyCol150(won, streak); }
+        });
+        if (dailyCol150) dailyCol150.init();
+      }
+    }
   });
 })();
 
@@ -10726,244 +10911,194 @@ document.addEventListener('click', function(e) {
 
 // ===== DEVY RANKINGS =====
 (function(){
-  let devyMode = 'dynastysf';
-  let devyPosFilter = 'ALL';
-  let devyOrder = { dynastysf: null, dynasty: null }; // null = use default KTC order
-  let devyDirty = false;
-  let devyDragRow = null;
+  var devyMode = 'dynastysf';
+  var devyPosFilter = 'ALL';
+  var devyOrder = { dynastysf: null, dynasty: null };
+  var devyDragRow = null;
 
   function getDevyPlayers() {
     if (typeof COMBINE_DATA === 'undefined') return [];
-    const players = [];
-    Object.keys(COMBINE_DATA).forEach(name => {
-      const cb = COMBINE_DATA[name];
+    var players = [];
+    Object.keys(COMBINE_DATA).forEach(function(name) {
+      var cb = COMBINE_DATA[name];
       if (!cb.devy) return;
-      const ktcSf = (typeof KTC_SF !== 'undefined' ? KTC_SF[name] : null) || 0;
-      const ktc1qb = (typeof KTC_1QB !== 'undefined' ? KTC_1QB[name] : null) || 0;
-      players.push({ name, pos: cb.pos || '??', school: cb.school || '—', eligYr: cb.eligYr || '—', ktcSf, ktc1qb });
+      var ktcSf = (typeof KTC_SF !== 'undefined' && KTC_SF[name]) ? KTC_SF[name] : 0;
+      var ktc1qb = (typeof KTC_1QB !== 'undefined' && KTC_1QB[name]) ? KTC_1QB[name] : 0;
+      players.push({ name: name, pos: cb.pos || '??', school: cb.school || '\u2014', eligYr: cb.eligYr || '\u2014', ktcSf: ktcSf, ktc1qb: ktc1qb });
     });
     return players;
   }
 
   function getOrderedDevyPlayers() {
-    const all = getDevyPlayers();
-    const saved = devyOrder[devyMode];
+    var all = getDevyPlayers();
+    var saved = devyOrder[devyMode];
     if (saved && saved.length) {
-      // Sort by saved order; any new players not in saved go at the end sorted by KTC
-      const orderMap = {};
-      saved.forEach((n, i) => orderMap[n] = i);
-      const inOrder = all.filter(p => orderMap[p.name] != null).sort((a, b) => orderMap[a.name] - orderMap[b.name]);
-      const notInOrder = all.filter(p => orderMap[p.name] == null).sort((a, b) => {
-        const av = devyMode === 'dynastysf' ? b.ktcSf - a.ktcSf : b.ktc1qb - a.ktc1qb;
-        return av;
+      var orderMap = {};
+      saved.forEach(function(n, i) { orderMap[n] = i; });
+      var inOrder = all.filter(function(p) { return orderMap[p.name] != null; }).sort(function(a, b) { return orderMap[a.name] - orderMap[b.name]; });
+      var notInOrder = all.filter(function(p) { return orderMap[p.name] == null; }).sort(function(a, b) {
+        return devyMode === 'dynastysf' ? b.ktcSf - a.ktcSf : b.ktc1qb - a.ktc1qb;
       });
-      return [...inOrder, ...notInOrder];
+      return inOrder.concat(notInOrder);
     }
-    // Default: sort by KTC value desc
-    const key = devyMode === 'dynastysf' ? 'ktcSf' : 'ktc1qb';
-    return all.sort((a, b) => b[key] - a[key]);
+    var key = devyMode === 'dynastysf' ? 'ktcSf' : 'ktc1qb';
+    return all.sort(function(a, b) { return b[key] - a[key]; });
   }
 
   function renderDevy() {
-    const tbody = document.getElementById('devyTbody');
+    var tbody = document.getElementById('devyTbody');
     if (!tbody) return;
-    const players = getOrderedDevyPlayers();
-    const filtered = devyPosFilter === 'ALL' ? players : players.filter(p => p.pos === devyPosFilter);
-    const ktcKey = devyMode === 'dynastysf' ? 'ktcSf' : 'ktc1qb';
-    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-    let rank = 0;
-    let overallIdx = 0;
-    tbody.innerHTML = filtered.map((p, i) => {
-      // Find overall rank (position in full unfiltered list)
-      const allPlayers = getOrderedDevyPlayers();
-      const oIdx = allPlayers.findIndex(x => x.name === p.name);
-      rank = devyPosFilter === 'ALL' ? i + 1 : oIdx + 1;
-      const posRank = devyPosFilter !== 'ALL' ? (i + 1) : '';
-      const ktcVal = p[ktcKey];
-      const posColor = posColors[p.pos] || 'var(--text2)';
-      return `<tr data-devyname="${p.name}" draggable="true" style="border-bottom:1px solid rgba(30,42,66,.4);cursor:grab;transition:background .15s">
-        <td style="padding:.45rem .3rem;color:var(--text2);font-size:.65rem;cursor:grab">⠿</td>
-        <td style="padding:.45rem .4rem;font-size:.75rem;color:var(--text2);font-family:'Bebas Neue',sans-serif">${devyPosFilter === 'ALL' ? oIdx + 1 : (oIdx + 1) + ' <span style="font-size:.6rem;color:var(--accent)">' + p.pos + posRank + '</span>'}</td>
-        <td style="padding:.45rem .4rem;font-size:.8rem;color:var(--text1);font-weight:600">${p.name}</td>
-        <td style="padding:.45rem .4rem;font-size:.7rem;color:${posColor};font-weight:700">${p.pos}</td>
-        <td style="padding:.45rem .4rem;font-size:.7rem;color:var(--text2)">${p.school}</td>
-        <td style="padding:.45rem .4rem;font-size:.7rem;color:var(--text2)">${p.eligYr}</td>
-        <td style="padding:.45rem .4rem;font-size:.7rem;color:var(--text2);text-align:right">${ktcVal > 0 ? ktcVal.toLocaleString() : '—'}</td>
-      </tr>`;
+    var players = getOrderedDevyPlayers();
+    var filtered = devyPosFilter === 'ALL' ? players : players.filter(function(p) { return p.pos === devyPosFilter; });
+    var ktcKey = devyMode === 'dynastysf' ? 'ktcSf' : 'ktc1qb';
+    var posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    tbody.innerHTML = filtered.map(function(p, i) {
+      var oIdx = players.indexOf(p);
+      var posColor = posColors[p.pos] || 'var(--text2)';
+      var ktcVal = p[ktcKey];
+      return '<tr data-devyname="' + p.name + '" draggable="true" style="border-bottom:1px solid rgba(30,42,66,.4);cursor:grab;transition:background .15s">' +
+        '<td style="padding:.45rem .3rem;color:var(--text2);font-size:.65rem;cursor:grab">\u2807</td>' +
+        '<td style="padding:.45rem .4rem;font-size:.75rem;color:var(--text2);font-family:\'Bebas Neue\',sans-serif">' + (oIdx + 1) + '</td>' +
+        '<td style="padding:.45rem .4rem;font-size:.8rem;color:var(--text1);font-weight:600">' + p.name + '</td>' +
+        '<td style="padding:.45rem .4rem;font-size:.7rem;color:' + posColor + ';font-weight:700">' + p.pos + '</td>' +
+        '<td style="padding:.45rem .4rem;font-size:.7rem;color:var(--text2)">' + p.school + '</td>' +
+        '<td style="padding:.45rem .4rem;font-size:.7rem;color:var(--text2)">' + p.eligYr + '</td>' +
+        '<td style="padding:.45rem .4rem;font-size:.7rem;color:var(--text2);text-align:right">' + (ktcVal > 0 ? ktcVal.toLocaleString() : '\u2014') + '</td>' +
+      '</tr>';
     }).join('');
-    // Wire drag events
-    tbody.querySelectorAll('tr').forEach(row => {
-      row.addEventListener('dragstart', e => {
+    wireDevyDrag(tbody);
+  }
+
+  function wireDevyDrag(tbody) {
+    tbody.querySelectorAll('tr').forEach(function(row) {
+      row.addEventListener('dragstart', function(e) {
         devyDragRow = row;
         row.style.opacity = '.3';
         e.dataTransfer.effectAllowed = 'move';
       });
-      row.addEventListener('dragend', () => {
+      row.addEventListener('dragend', function() {
         if (devyDragRow) devyDragRow.style.opacity = '';
         devyDragRow = null;
-        tbody.querySelectorAll('tr').forEach(r => r.style.borderTop = '');
+        tbody.querySelectorAll('tr').forEach(function(r) { r.style.borderTop = ''; });
       });
-      row.addEventListener('dragover', e => {
+      row.addEventListener('dragover', function(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        tbody.querySelectorAll('tr').forEach(r => r.style.borderTop = '');
+        tbody.querySelectorAll('tr').forEach(function(r) { r.style.borderTop = ''; });
         row.style.borderTop = '2px solid var(--accent)';
       });
-      row.addEventListener('drop', e => {
+      row.addEventListener('drop', function(e) {
         e.preventDefault();
         row.style.borderTop = '';
         if (!devyDragRow || devyDragRow === row) return;
-        // Only allow reorder when showing ALL positions
         if (devyPosFilter !== 'ALL') return;
         tbody.insertBefore(devyDragRow, row);
-        // Read new order from DOM
-        const newOrder = [];
-        tbody.querySelectorAll('tr').forEach(r => { if (r.dataset.devyname) newOrder.push(r.dataset.devyname); });
+        var newOrder = [];
+        tbody.querySelectorAll('tr').forEach(function(r) { if (r.dataset.devyname) newOrder.push(r.dataset.devyname); });
         devyOrder[devyMode] = newOrder;
-        devyDirty = true;
-        const saveBtn = document.getElementById('devySaveBtn');
+        var saveBtn = document.getElementById('devySaveBtn');
         if (saveBtn) saveBtn.style.display = '';
-        // Re-render to update rank numbers
         renderDevy();
       });
     });
   }
 
   function showDevySection() {
-    const sec = document.getElementById('devyRankingsSection');
-    if (sec) sec.style.display = (currentMode === 'dynasty' || currentMode === 'dynastysf') ? '' : 'none';
+    var sec = document.getElementById('devyRankingsSection');
+    if (sec) sec.style.display = (typeof currentMode !== 'undefined' && (currentMode === 'dynasty' || currentMode === 'dynastysf')) ? '' : 'none';
   }
 
-  // Save devy rankings to Firestore
-  async function saveDevyRankings() {
-    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
-    if (!db || !user) { console.warn('[Devy] No db/user'); return; }
-    const data = {};
+  function saveDevyRankings() {
+    var db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    var user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return Promise.resolve();
+    var data = {};
     if (devyOrder.dynastysf) data.dynastysf = devyOrder.dynastysf;
     if (devyOrder.dynasty) data.dynasty = devyOrder.dynasty;
-    try {
-      await db.collection('devy_rankings').doc(user.uid).set({
-        data: JSON.stringify(data),
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-      devyDirty = false;
-      const saveBtn = document.getElementById('devySaveBtn');
+    return db.collection('devy_rankings').doc(user.uid).set({
+      data: JSON.stringify(data), updatedAt: new Date().toISOString()
+    }, { merge: true }).then(function() {
+      var saveBtn = document.getElementById('devySaveBtn');
       if (saveBtn) saveBtn.style.display = 'none';
-      if (typeof toast === 'function') toast('Devy rankings saved');
-    } catch(e) {
-      console.warn('[Devy] save error:', e);
-    }
+    }).catch(function(e) { console.warn('[Devy] save error:', e); });
   }
 
-  // Load devy rankings from Firestore
-  async function loadDevyRankings() {
-    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+  function saveJacksDevyRankings() {
+    var db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    var user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user || typeof isAdmin !== 'function' || !isAdmin()) return Promise.resolve();
+    var data = {};
+    if (devyOrder.dynastysf) data.dynastysf = devyOrder.dynastysf;
+    if (devyOrder.dynasty) data.dynasty = devyOrder.dynasty;
+    return db.collection('devy_rankings').doc('jacks-official').set({
+      data: JSON.stringify(data), updatedBy: user.email || '', updatedAt: new Date().toISOString()
+    }, { merge: true }).catch(function(e) { console.warn('[Devy] admin save error:', e); });
+  }
+
+  function loadDevyRankings() {
+    var db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    var user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
-    try {
-      const doc = await db.collection('devy_rankings').doc(user.uid).get();
+    db.collection('devy_rankings').doc(user.uid).get().then(function(doc) {
       if (doc.exists && doc.data().data) {
-        const parsed = JSON.parse(doc.data().data);
+        var parsed = JSON.parse(doc.data().data);
         if (parsed.dynastysf) devyOrder.dynastysf = parsed.dynastysf;
         if (parsed.dynasty) devyOrder.dynasty = parsed.dynasty;
         renderDevy();
       }
-    } catch(e) {
-      console.warn('[Devy] load error:', e);
-    }
+    }).catch(function(e) { console.warn('[Devy] load error:', e); });
   }
 
-  // Also support admin saving shared devy rankings (Jack's rankings)
-  async function saveJacksDevyRankings() {
-    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
-    if (!db || !user || typeof isAdmin !== 'function' || !isAdmin()) return;
-    const data = {};
-    if (devyOrder.dynastysf) data.dynastysf = devyOrder.dynastysf;
-    if (devyOrder.dynasty) data.dynasty = devyOrder.dynasty;
-    try {
-      await db.collection('devy_rankings').doc('jacks-official').set({
-        data: JSON.stringify(data),
-        updatedBy: user.email || '',
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-      if (typeof toast === 'function') toast("Jack's devy rankings saved");
-    } catch(e) {
-      console.warn('[Devy] admin save error:', e);
-    }
-  }
-
-  // Load Jack's devy rankings for non-admin users
-  async function loadJacksDevyRankings() {
-    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+  function loadJacksDevyRankings() {
+    var db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     if (!db) return;
-    try {
-      const doc = await db.collection('devy_rankings').doc('jacks-official').get();
+    db.collection('devy_rankings').doc('jacks-official').get().then(function(doc) {
       if (doc.exists && doc.data().data) {
-        const parsed = JSON.parse(doc.data().data);
-        // Only set defaults — don't overwrite user's custom order
+        var parsed = JSON.parse(doc.data().data);
         if (parsed.dynastysf && !devyOrder.dynastysf) devyOrder.dynastysf = parsed.dynastysf;
         if (parsed.dynasty && !devyOrder.dynasty) devyOrder.dynasty = parsed.dynasty;
         renderDevy();
       }
-    } catch(e) {
-      console.warn('[Devy] load jacks error:', e);
-    }
+    }).catch(function(e) { console.warn('[Devy] load jacks error:', e); });
   }
 
-  // Wire up UI
-  document.addEventListener('DOMContentLoaded', () => {
-    // Mode tabs
-    document.querySelectorAll('.devy-mode-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.devy-mode-tab').forEach(b => {
-          b.style.background = 'var(--surface)';
-          b.style.color = 'var(--text2)';
-          b.classList.remove('active');
+  window._saveDevyRankings = saveDevyRankings;
+  window._saveJacksDevyRankings = saveJacksDevyRankings;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.devy-mode-tab').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.devy-mode-tab').forEach(function(b) {
+          b.style.background = 'var(--surface)'; b.style.color = 'var(--text2)'; b.classList.remove('active');
         });
-        btn.style.background = 'var(--accent)';
-        btn.style.color = '#000';
-        btn.classList.add('active');
+        btn.style.background = 'var(--accent)'; btn.style.color = '#000'; btn.classList.add('active');
         devyMode = btn.dataset.devymode;
         renderDevy();
       });
     });
-    // Position filters
-    document.querySelectorAll('.devy-pos-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.devy-pos-btn').forEach(b => {
-          b.style.background = 'var(--surface)';
-          b.style.color = 'var(--text2)';
-          b.classList.remove('active');
+    document.querySelectorAll('.devy-pos-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.devy-pos-btn').forEach(function(b) {
+          b.style.background = 'var(--surface)'; b.style.color = 'var(--text2)'; b.classList.remove('active');
         });
-        btn.style.background = 'var(--accent)';
-        btn.style.color = '#000';
-        btn.classList.add('active');
+        btn.style.background = 'var(--accent)'; btn.style.color = '#000'; btn.classList.add('active');
         devyPosFilter = btn.dataset.devypos;
         renderDevy();
       });
     });
-    // Save button
-    const saveBtn = document.getElementById('devySaveBtn');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', async () => {
-        if (typeof isAdmin === 'function' && isAdmin()) {
-          await saveJacksDevyRankings();
-        }
-        await saveDevyRankings();
-      });
-    }
-    // Show/hide based on mode
-    document.querySelectorAll('.mode-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        setTimeout(() => {
+    var saveBtn = document.getElementById('devySaveBtn');
+    if (saveBtn) saveBtn.addEventListener('click', function() {
+      if (typeof isAdmin === 'function' && isAdmin()) saveJacksDevyRankings();
+      saveDevyRankings();
+    });
+    document.querySelectorAll('.mode-tab').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        setTimeout(function() {
           showDevySection();
-          // Sync the devy mode tab to match the main mode
-          if (currentMode === 'dynasty' || currentMode === 'dynastysf') {
+          if (typeof currentMode !== 'undefined' && (currentMode === 'dynasty' || currentMode === 'dynastysf')) {
             devyMode = currentMode;
-            document.querySelectorAll('.devy-mode-tab').forEach(b => {
-              const isActive = b.dataset.devymode === devyMode;
+            document.querySelectorAll('.devy-mode-tab').forEach(function(b) {
+              var isActive = b.dataset.devymode === devyMode;
               b.style.background = isActive ? 'var(--accent)' : 'var(--surface)';
               b.style.color = isActive ? '#000' : 'var(--text2)';
               isActive ? b.classList.add('active') : b.classList.remove('active');
@@ -10973,19 +11108,12 @@ document.addEventListener('click', function(e) {
         }, 50);
       });
     });
-    // Initial render
     showDevySection();
     renderDevy();
   });
-
-  // Hook into auth state to load devy rankings when user logs in
-  window._saveDevyRankings = saveDevyRankings;
-  window._saveJacksDevyRankings = saveJacksDevyRankings;
   if (typeof firebase !== 'undefined' && firebase.auth) {
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        loadJacksDevyRankings().then(() => loadDevyRankings());
-      }
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) { loadJacksDevyRankings(); loadDevyRankings(); }
     });
   }
 })();
@@ -13686,13 +13814,14 @@ window.fmtHeight = fmtHeight;
     { id:'premium', icon:'👑', name:'Premium', desc:'Become a premium member', check:()=> typeof hasPremium==='function' && hasPremium() },
     { id:'mock_master', icon:'📋', name:'Draft Master', desc:'Complete 100 mock drafts', check:()=> parseInt(localStorage.getItem('md_games_played')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('md_games_played')||'0') },
     { id:'gw_first_win', icon:'🔍', name:'Detective', desc:'Win your first ELITE PULL game', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') + parseInt(localStorage.getItem('gw_col_wins')||'0') > 0 },
-    { id:'gw_streak_7', icon:'🕵️', name:'Sleuth', desc:'7 day Daily ELITE PULL streak (any mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_00s_streak')||'0'), parseInt(localStorage.getItem('gw_daily_10s_streak')||'0')) >= 7, goal:7, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_00s_streak')||'0'), parseInt(localStorage.getItem('gw_daily_10s_streak')||'0')) },
-    { id:'gw_streak_30', icon:'🔮', name:'Oracle', desc:'30 day Daily ELITE PULL streak (any mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_00s_streak')||'0'), parseInt(localStorage.getItem('gw_daily_10s_streak')||'0')) >= 30, goal:30, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_00s_streak')||'0'), parseInt(localStorage.getItem('gw_daily_10s_streak')||'0')) },
+    { id:'gw_streak_7', icon:'🕵️', name:'Sleuth', desc:'7 day Daily ELITE PULL streak (any mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0'), parseInt(localStorage.getItem('gw_daily_col_streak')||'0')) >= 7, goal:7, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0'), parseInt(localStorage.getItem('gw_daily_col_streak')||'0')) },
+    { id:'gw_streak_30', icon:'🔮', name:'Oracle', desc:'30 day Daily ELITE PULL streak (any mode)', check:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0'), parseInt(localStorage.getItem('gw_daily_col_streak')||'0')) >= 30, goal:30, getCurrent:()=> Math.max(parseInt(localStorage.getItem('gw_daily_streak')||'0'), parseInt(localStorage.getItem('gw_daily_at_streak')||'0'), parseInt(localStorage.getItem('gw_daily_col_streak')||'0')) },
     { id:'gw_master', icon:'🧩', name:'ELITE PULL Master', desc:'Win 100 ELITE PULL games (any mode)', check:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') + parseInt(localStorage.getItem('gw_col_wins')||'0') >= 100, goal:100, getCurrent:()=> parseInt(localStorage.getItem('gw_wins')||'0') + parseInt(localStorage.getItem('gw_at_wins')||'0') + parseInt(localStorage.getItem('gw_col_wins')||'0') },
     { id:'college_first', icon:'🎓', name:'Scholar', desc:'Play your first College Fantasy Game', check:()=> parseFloat(localStorage.getItem('fg_highscore_college_season')||'0') > 0 || parseFloat(localStorage.getItem('fg_highscore_college_week')||'0') > 0 },
     { id:'college_300', icon:'🏫', name:'Dean\'s List', desc:'Score 300+ in College Fantasy Game (Season)', check:()=> parseFloat(localStorage.getItem('fg_highscore_college_season')||'0') >= 300, goal:300, getCurrent:()=> parseFloat(localStorage.getItem('fg_highscore_college_season')||'0') },
     { id:'college_400', icon:'🎓', name:'Valedictorian', desc:'Score 400+ in College Fantasy Game (Season)', check:()=> parseFloat(localStorage.getItem('fg_highscore_college_season')||'0') >= 400, goal:400, getCurrent:()=> parseFloat(localStorage.getItem('fg_highscore_college_season')||'0') },
-    { id:'college_sweep', icon:'🏆', name:'Triple Threat', desc:'Complete all 3 daily ELITE PULL games in one day', check:()=> { const t = new Date().toLocaleDateString('en-CA', {timeZone:'America/New_York'}); return localStorage.getItem('gw_daily_last_win')===t && localStorage.getItem('gw_daily_00s_last_win')===t && localStorage.getItem('gw_daily_10s_last_win')===t; } },
+    { id:'college_ep_streak_7', icon:'📚', name:'Study Streak', desc:'7 day Daily College ELITE PULL streak', check:()=> parseInt(localStorage.getItem('gw_daily_col_streak')||'0') >= 7, goal:7, getCurrent:()=> parseInt(localStorage.getItem('gw_daily_col_streak')||'0') },
+    { id:'college_sweep', icon:'🏆', name:'Triple Threat', desc:'Complete all 3 daily ELITE PULL games in one day', check:()=> { const t = new Date().toLocaleDateString('en-CA', {timeZone:'America/New_York'}); return localStorage.getItem('gw_daily_last_win')===t && localStorage.getItem('gw_daily_at_last_win')===t && localStorage.getItem('gw_daily_col_last_win')===t; } },
   ];
 
   const BADGE_STORAGE_KEY = 'jb_active_badge';
@@ -14090,6 +14219,11 @@ window.fmtHeight = fmtHeight;
     if (_origLbGwDaily) _origLbGwDaily(won, streak);
     getUnlockedBadges();
   };
+  const _origLbGwDailyAT = window._lbUpdateGwDailyAT;
+  window._lbUpdateGwDailyAT = function(won, streak) {
+    if (_origLbGwDailyAT) _origLbGwDailyAT(won, streak);
+    getUnlockedBadges();
+  };
   const _origLbGwDaily00s = window._lbUpdateGwDaily00s;
   window._lbUpdateGwDaily00s = function(won, streak) {
     if (_origLbGwDaily00s) _origLbGwDaily00s(won, streak);
@@ -14098,6 +14232,11 @@ window.fmtHeight = fmtHeight;
   const _origLbGwDaily10s = window._lbUpdateGwDaily10s;
   window._lbUpdateGwDaily10s = function(won, streak) {
     if (_origLbGwDaily10s) _origLbGwDaily10s(won, streak);
+    getUnlockedBadges();
+  };
+  const _origLbGwDailyAT150 = window._lbUpdateGwDailyAT150;
+  window._lbUpdateGwDailyAT150 = function(won, streak) {
+    if (_origLbGwDailyAT150) _origLbGwDailyAT150(won, streak);
     getUnlockedBadges();
   };
   const _origLbGwDaily00s150 = window._lbUpdateGwDaily00s150;
@@ -14142,8 +14281,8 @@ window.fmtHeight = fmtHeight;
 
 // === CLOUD SYNC — Game data across devices ===
 (function(){
-  const SYNC_KEYS_MAX = ['ep_streak','epu_played','epu_correct','epu_streak','epu_best_streak','fg_games_played','fg_highscore','fg_highscore_week','md_games_played','gw_daily_streak','gw_daily_00s_streak','gw_daily_10s_streak','gw_daily_00s150_streak','gw_daily_10s150_streak'];
-  const SYNC_KEYS_STR = ['ep_last_win','jb_active_badge','jb_is_founder','gw_daily_last_win','gw_daily_00s_last_win','gw_daily_10s_last_win','gw_daily_00s150_last_win','gw_daily_10s150_last_win'];
+  const SYNC_KEYS_MAX = ['ep_streak','epu_played','epu_correct','epu_streak','epu_best_streak','fg_games_played','fg_highscore','fg_highscore_week','md_games_played','gw_daily_streak','gw_daily_at_streak','gw_daily_00s_streak','gw_daily_10s_streak','gw_daily_at150_streak','gw_daily_00s150_streak','gw_daily_10s150_streak'];
+  const SYNC_KEYS_STR = ['ep_last_win','jb_active_badge','jb_is_founder','gw_daily_last_win','gw_daily_at_last_win','gw_daily_00s_last_win','gw_daily_10s_last_win','gw_daily_at150_last_win','gw_daily_00s150_last_win','gw_daily_10s150_last_win'];
   const SYNC_KEYS_JSON = ['jb_unlocked_badges'];
 
   // Helper: get today's Eastern date key parts
@@ -14157,10 +14296,14 @@ window.fmtHeight = fmtHeight;
     return {
       ep: `ep_v3_${e.y}_${e.m}_${e.d}`,
       gwC: `gwd_c_${e.y}_${e.m}_${e.d}`,
+      gwAT: `gwd_at_${e.y}_${e.m}_${e.d}`,
       gw00s: `gwd_00s_${e.y}_${e.m}_${e.d}`,
       gw10s: `gwd_10s_${e.y}_${e.m}_${e.d}`,
+      gwAT150: `gwd_at150_${e.y}_${e.m}_${e.d}`,
       gw00s150: `gwd_00s150_${e.y}_${e.m}_${e.d}`,
       gw10s150: `gwd_10s150_${e.y}_${e.m}_${e.d}`,
+      gwCol: `gwd_col_${e.y}_${e.m}_${e.d}`,
+      gwCol150: `gwd_col150_${e.y}_${e.m}_${e.d}`,
       dateStr: `${e.y}-${e.m}-${e.d}`
     };
   }
@@ -14178,10 +14321,14 @@ window.fmtHeight = fmtHeight;
     const dailyStates = { date: keys.dateStr };
     const epState = localStorage.getItem(keys.ep);
     const gwCState = localStorage.getItem(keys.gwC);
+    const gwATState = localStorage.getItem(keys.gwAT);
     const gw00sState = localStorage.getItem(keys.gw00s);
     const gw10sState = localStorage.getItem(keys.gw10s);
+    const gwAT150State = localStorage.getItem(keys.gwAT150);
     const gw00s150State = localStorage.getItem(keys.gw00s150);
     const gw10s150State = localStorage.getItem(keys.gw10s150);
+    const gwColState = localStorage.getItem(keys.gwCol);
+    const gwCol150State = localStorage.getItem(keys.gwCol150);
     // Verify each state's target matches today's actual target before syncing
     // This prevents stale game data (wrong player) from being saved with today's date
     function _saveVerifyTarget(stateJson, poolGetter, seedOffset) {
@@ -14200,11 +14347,15 @@ window.fmtHeight = fmtHeight;
     // Only sync daily states that actually exist AND match today's target
     if (epState) dailyStates.ep = epState;
     if (gwCState && _saveVerifyTarget(gwCState, window._gwGetPoolCurrent, 0)) dailyStates.gwC = gwCState;
+    if (gwATState && _saveVerifyTarget(gwATState, window._gwGetPoolAlltime, 7919)) dailyStates.gwAT = gwATState;
     if (gw00sState && _saveVerifyTarget(gw00sState, window._gwGetPool2000s, 20003)) dailyStates.gw00s = gw00sState;
     if (gw10sState && _saveVerifyTarget(gw10sState, window._gwGetPool2010s, 20107)) dailyStates.gw10s = gw10sState;
+    if (gwAT150State && _saveVerifyTarget(gwAT150State, () => _pool150Sync(window._gwGetPoolAlltime), 31501)) dailyStates.gwAT150 = gwAT150State;
     if (gw00s150State && _saveVerifyTarget(gw00s150State, () => _pool150Sync(window._gwGetPool2000s), 31502)) dailyStates.gw00s150 = gw00s150State;
     if (gw10s150State && _saveVerifyTarget(gw10s150State, () => _pool150Sync(window._gwGetPool2010s), 31503)) dailyStates.gw10s150 = gw10s150State;
-    if (dailyStates.ep || dailyStates.gwC || dailyStates.gw00s || dailyStates.gw10s || dailyStates.gw00s150 || dailyStates.gw10s150) data.dailyStates = dailyStates;
+    if (gwColState && _saveVerifyTarget(gwColState, window._gwGetPoolCollege, 13337)) dailyStates.gwCol = gwColState;
+    if (gwCol150State && _saveVerifyTarget(gwCol150State, () => _pool150Sync(window._gwGetPoolCollege), 31504)) dailyStates.gwCol150 = gwCol150State;
+    if (dailyStates.ep || dailyStates.gwC || dailyStates.gwAT || dailyStates.gw00s || dailyStates.gw10s || dailyStates.gwAT150 || dailyStates.gw00s150 || dailyStates.gw10s150 || dailyStates.gwCol || dailyStates.gwCol150) data.dailyStates = dailyStates;
     data.syncedAt = new Date().toISOString();
     db.collection('user_game_data').doc(user.uid).set(data, { merge: true }).catch(e => console.warn('[Sync] save error:', e));
   }
@@ -14279,6 +14430,15 @@ window.fmtHeight = fmtHeight;
               console.log('[Sync] Skipped stale gwC state — target does not match today');
             }
           }
+          // Guess Who daily all-time — verify target matches today's seed
+          if (cloud.dailyStates.gwAT && !localStorage.getItem(keys.gwAT)) {
+            if (_verifyDailyTarget(cloud.dailyStates.gwAT, window._gwGetPoolAlltime, 7919)) {
+              localStorage.setItem(keys.gwAT, cloud.dailyStates.gwAT);
+              _dailyRestored = true;
+            } else {
+              console.log('[Sync] Skipped stale gwAT state — target does not match today');
+            }
+          }
           // Guess Who daily 2000s — verify target matches today's seed
           if (cloud.dailyStates.gw00s && !localStorage.getItem(keys.gw00s)) {
             if (_verifyDailyTarget(cloud.dailyStates.gw00s, window._gwGetPool2000s, 20003)) {
@@ -14299,6 +14459,12 @@ window.fmtHeight = fmtHeight;
           }
           // 150+ variants
           const _pool150R = (getter) => { const p = (typeof getter === 'function') ? getter() : null; return p ? p.filter(x => x.bestSzn != null && x.bestSzn >= 150) : null; };
+          if (cloud.dailyStates.gwAT150 && !localStorage.getItem(keys.gwAT150)) {
+            if (_verifyDailyTarget(cloud.dailyStates.gwAT150, () => _pool150R(window._gwGetPoolAlltime), 31501)) {
+              localStorage.setItem(keys.gwAT150, cloud.dailyStates.gwAT150);
+              _dailyRestored = true;
+            }
+          }
           if (cloud.dailyStates.gw00s150 && !localStorage.getItem(keys.gw00s150)) {
             if (_verifyDailyTarget(cloud.dailyStates.gw00s150, () => _pool150R(window._gwGetPool2000s), 31502)) {
               localStorage.setItem(keys.gw00s150, cloud.dailyStates.gw00s150);
@@ -14308,6 +14474,18 @@ window.fmtHeight = fmtHeight;
           if (cloud.dailyStates.gw10s150 && !localStorage.getItem(keys.gw10s150)) {
             if (_verifyDailyTarget(cloud.dailyStates.gw10s150, () => _pool150R(window._gwGetPool2010s), 31503)) {
               localStorage.setItem(keys.gw10s150, cloud.dailyStates.gw10s150);
+              _dailyRestored = true;
+            }
+          }
+          if (cloud.dailyStates.gwCol && !localStorage.getItem(keys.gwCol)) {
+            if (_verifyDailyTarget(cloud.dailyStates.gwCol, window._gwGetPoolCollege, 13337)) {
+              localStorage.setItem(keys.gwCol, cloud.dailyStates.gwCol);
+              _dailyRestored = true;
+            }
+          }
+          if (cloud.dailyStates.gwCol150 && !localStorage.getItem(keys.gwCol150)) {
+            if (_verifyDailyTarget(cloud.dailyStates.gwCol150, () => _pool150R(window._gwGetPoolCollege), 31504)) {
+              localStorage.setItem(keys.gwCol150, cloud.dailyStates.gwCol150);
               _dailyRestored = true;
             }
           }
@@ -15042,11 +15220,8 @@ window.fmtHeight = fmtHeight;
   // Main save dispatcher — routes to the right save function
   async function saveToCloud() {
     if (!currentUser || !db) return;
-    // Always save user's personal rankings
     await saveUserRankings();
-    // Save devy rankings if they've been modified
     if (typeof window._saveDevyRankings === 'function') await window._saveDevyRankings();
-    // If admin, also save Jack's rankings to the shared document
     if (isAdmin()) {
       await saveJacksRankings();
       if (typeof window._saveJacksDevyRankings === 'function') await window._saveJacksDevyRankings();
@@ -16879,6 +17054,50 @@ window.fmtHeight = fmtHeight;
     });
   };
 
+  // Guess Who — All-Time daily
+  window._lbUpdateGwDailyAT = function(won, streak) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    const docRef = db.collection('leaderboard').doc(user.uid);
+    docRef.get().then(doc => {
+      const existing = doc.exists && doc.data().gwDailyAT ? (doc.data().gwDailyAT.bestStreak || 0) : 0;
+      const newBest = Math.max(existing, streak);
+      docRef.set({
+        name: name, email: (user.email||''), ...getLbBadge(),
+        gwDailyAT: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }).catch(() => {
+      docRef.set({
+        name: name, email: (user.email||''), ...getLbBadge(),
+        gwDailyAT: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(e => console.warn('[LB] gw daily AT save error:', e));
+    });
+  };
+
+  window._lbUpdateGwDailyCol = function(won, streak) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    const docRef = db.collection('leaderboard').doc(user.uid);
+    docRef.get().then(doc => {
+      const existing = doc.exists && doc.data().gwDailyCol ? (doc.data().gwDailyCol.bestStreak || 0) : 0;
+      const newBest = Math.max(existing, streak);
+      docRef.set({
+        name: name, email: (user.email||''), ...getLbBadge(),
+        gwDailyCol: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }).catch(() => {
+      docRef.set({
+        name: name, email: (user.email||''), ...getLbBadge(),
+        gwDailyCol: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(e => console.warn('[LB] gw daily college save error:', e));
+    });
+  };
 
   // Guess Who — 2000s daily
   window._lbUpdateGwDaily00s = function(won, streak) {
@@ -16944,6 +17163,7 @@ window.fmtHeight = fmtHeight;
       docRef.set(update, { merge: true }).catch(e => console.warn('[LB] ' + fieldName + ' save error:', e));
     });
   }
+  window._lbUpdateGwDailyAT150 = function(won, streak) { _lbSaveDaily150('gwDailyAT150', won, streak); };
   window._lbUpdateGwDaily00s150 = function(won, streak) { _lbSaveDaily150('gwDaily00s150', won, streak); };
   window._lbUpdateGwDaily10s150 = function(won, streak) { _lbSaveDaily150('gwDaily10s150', won, streak); };
 
@@ -17208,6 +17428,12 @@ window.fmtHeight = fmtHeight;
       // Daily Elite Pull — Current (gwDaily)
       renderStreakSection('lbDailyEpCurrentList', 'lbDailyEpCurrentLoading', 'lbDailyEpCurrentEmpty', 'gwDaily');
 
+      // Daily Elite Pull — All-Time (gwDailyAT)
+      renderStreakSection('lbDailyEpAlltimeList', 'lbDailyEpAlltimeLoading', 'lbDailyEpAlltimeEmpty', 'gwDailyAT');
+
+      // Daily Elite Pull — All-Time 150+ (gwDailyAT150)
+      renderStreakSection('lbDailyEpAT150List', 'lbDailyEpAT150Loading', 'lbDailyEpAT150Empty', 'gwDailyAT150');
+
       // Daily Elite Pull — 2000s (gwDaily00s)
       renderStreakSection('lbDailyEp00sList', 'lbDailyEp00sLoading', 'lbDailyEp00sEmpty', 'gwDaily00s');
 
@@ -17220,6 +17446,8 @@ window.fmtHeight = fmtHeight;
       // Daily Elite Pull — 2010s 150+ (gwDaily10s150)
       renderStreakSection('lbDailyEp10s150List', 'lbDailyEp10s150Loading', 'lbDailyEp10s150Empty', 'gwDaily10s150');
 
+      // Daily Elite Pull — College (gwDailyCol)
+      renderStreakSection('lbDailyEpCollegeList', 'lbDailyEpCollegeLoading', 'lbDailyEpCollegeEmpty', 'gwDailyCol');
 
       // Daily Guess Who (daily)
       renderStreakSection('lbDailyGuesswhoList', 'lbDailyGuesswhoLoading', 'lbDailyGuesswhoEmpty', 'daily');
@@ -19511,7 +19739,7 @@ window.fmtHeight = fmtHeight;
             // Schools don't match — check if ANY season matches (for transfers)
             const anyMatch = cs.some(s => s.tm && _normSchool(s.tm) === known);
             if (!anyMatch) {
-              // Exception: 2026 class / devy players may have transferred — school change
+              // Exception: current prospects may have transferred — school change
               // via admin editor shouldn't wipe their college stats
               const _isCurrent = cb && (cb.yr >= 2025 || cb.devy);
               if (!_isCurrent) {

@@ -3715,7 +3715,8 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Jeremiah Smith']) COMBINE_DATA['Jeremiah Smith'] = { school: 'Ohio St.', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Malachi Toney']) COMBINE_DATA['Malachi Toney'] = { school: 'Miami (FL)', pos: 'WR', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Cam Coleman']) COMBINE_DATA['Cam Coleman'] = { school: 'Texas', pos: 'WR', devy: true, eligYr: 2027 };
-  if (!COMBINE_DATA['Ryan Williams']) COMBINE_DATA['Ryan Williams'] = { school: 'Alabama', pos: 'WR', devy: true, eligYr: 2027 };
+  // Ryan Williams — Alabama WR devy. Force overwrite old Virginia Tech RB (2011) from combine_data.js.
+  COMBINE_DATA['Ryan Williams'] = { school: 'Alabama', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Bryant Wesco Jr.']) COMBINE_DATA['Bryant Wesco Jr.'] = { school: 'Clemson', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Bo Jackson']) COMBINE_DATA['Bo Jackson'] = { school: 'Ohio St.', pos: 'RB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Kewan Lacy']) COMBINE_DATA['Kewan Lacy'] = { school: 'Mississippi', pos: 'RB', devy: true, eligYr: 2027 };
@@ -3805,6 +3806,47 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Kam Davis']) COMBINE_DATA['Kam Davis'] = { school: 'Liberty', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Joshisa Trader']) COMBINE_DATA['Joshisa Trader'] = { school: 'NC State', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['CJ Bailey']) COMBINE_DATA['CJ Bailey'] = { school: 'NC State', pos: 'QB', devy: true, eligYr: 2027 };
+  // === NFLDRAFTBUZZ 2027 DATA UPDATE ===
+  // --- New 2027 devy prospects ---
+  if (!COMBINE_DATA['Barion Brown']) COMBINE_DATA['Barion Brown'] = { school: 'Kentucky', pos: 'WR', devy: true, eligYr: 2027, ht: '5-11', wt: 177 };
+  if (!COMBINE_DATA['Braylon Staley']) COMBINE_DATA['Braylon Staley'] = { school: 'Tennessee', pos: 'WR', devy: true, eligYr: 2027, ht: '6-0', wt: 190 };
+  if (!COMBINE_DATA['Corey Kiner']) COMBINE_DATA['Corey Kiner'] = { school: 'LSU', pos: 'RB', devy: true, eligYr: 2027, ht: '5-9', wt: 209 };
+  if (!COMBINE_DATA['Dane Key']) COMBINE_DATA['Dane Key'] = { school: 'Kentucky', pos: 'WR', devy: true, eligYr: 2027, ht: '6-2', wt: 203 };
+  if (!COMBINE_DATA['Ian Strong']) COMBINE_DATA['Ian Strong'] = { school: 'Rutgers', pos: 'WR', devy: true, eligYr: 2027, ht: '6-3', wt: 211 };
+  if (!COMBINE_DATA['Johntay Cook II']) COMBINE_DATA['Johntay Cook II'] = { school: 'Texas', pos: 'WR', devy: true, eligYr: 2027, ht: '6-0', wt: 198 };
+  if (!COMBINE_DATA['Mario Craver']) COMBINE_DATA['Mario Craver'] = { school: 'Mississippi St.', pos: 'WR', devy: true, eligYr: 2027, ht: '5-9', wt: 165 };
+  if (!COMBINE_DATA['Mike Matthews']) COMBINE_DATA['Mike Matthews'] = { school: 'Tennessee', pos: 'WR', devy: true, eligYr: 2027, ht: '6-1', wt: 200 };
+  if (!COMBINE_DATA['Moliki Matavao']) COMBINE_DATA['Moliki Matavao'] = { school: 'Oregon', pos: 'TE', devy: true, eligYr: 2027, ht: '6-6', wt: 260 };
+  // --- Measurables updates (ht/wt from NFLDraftBuzz) ---
+  if (COMBINE_DATA['Arch Manning']) { COMBINE_DATA['Arch Manning'].ht='6-4'; COMBINE_DATA['Arch Manning'].wt=219; }
+  if (COMBINE_DATA['Brandon Inniss']) { COMBINE_DATA['Brandon Inniss'].ht='6-0'; COMBINE_DATA['Brandon Inniss'].wt=199; }
+  if (COMBINE_DATA['Bryant Wesco Jr.']) { COMBINE_DATA['Bryant Wesco Jr.'].ht='6-2'; COMBINE_DATA['Bryant Wesco Jr.'].wt=185; }
+  if (COMBINE_DATA['Cam Coleman']) { COMBINE_DATA['Cam Coleman'].ht='6-3'; COMBINE_DATA['Cam Coleman'].wt=201; }
+  if (COMBINE_DATA['DJ Lagway']) { COMBINE_DATA['DJ Lagway'].ht='6-3'; COMBINE_DATA['DJ Lagway'].wt=247; }
+  if (COMBINE_DATA['Dante Moore']) { COMBINE_DATA['Dante Moore'].ht='6-3'; COMBINE_DATA['Dante Moore'].wt=206; }
+  if (COMBINE_DATA['Dylan Raiola']) { COMBINE_DATA['Dylan Raiola'].ht='6-3'; COMBINE_DATA['Dylan Raiola'].wt=230; }
+  if (COMBINE_DATA['Eugene Wilson III']) { COMBINE_DATA['Eugene Wilson III'].ht='5-10'; COMBINE_DATA['Eugene Wilson III'].wt=194; }
+  if (COMBINE_DATA['Isaac Brown']) { COMBINE_DATA['Isaac Brown'].ht='5-9'; COMBINE_DATA['Isaac Brown'].wt=190; }
+  if (COMBINE_DATA['Jadan Baugh']) { COMBINE_DATA['Jadan Baugh'].ht='6-1'; COMBINE_DATA['Jadan Baugh'].wt=231; }
+  if (COMBINE_DATA['Jeremiah Smith']) { COMBINE_DATA['Jeremiah Smith'].ht='6-3'; COMBINE_DATA['Jeremiah Smith'].wt=223; }
+  if (COMBINE_DATA['John Mateer']) { COMBINE_DATA['John Mateer'].ht='6-1'; COMBINE_DATA['John Mateer'].wt=224; }
+  if (COMBINE_DATA['Jordan Marshall']) { COMBINE_DATA['Jordan Marshall'].ht='5-11'; COMBINE_DATA['Jordan Marshall'].wt=216; }
+  if (COMBINE_DATA['Julian Sayin']) { COMBINE_DATA['Julian Sayin'].ht='6-1'; COMBINE_DATA['Julian Sayin'].wt=208; }
+  if (COMBINE_DATA['Justice Haynes']) { COMBINE_DATA['Justice Haynes'].ht='5-11'; COMBINE_DATA['Justice Haynes'].wt=210; }
+  if (COMBINE_DATA['Kewan Lacy']) { COMBINE_DATA['Kewan Lacy'].ht='5-11'; COMBINE_DATA['Kewan Lacy'].wt=200; }
+  if (COMBINE_DATA['LaNorris Sellers']) { COMBINE_DATA['LaNorris Sellers'].ht='6-3'; COMBINE_DATA['LaNorris Sellers'].wt=240; }
+  if (COMBINE_DATA['Luke Reynolds']) { COMBINE_DATA['Luke Reynolds'].ht='6-4'; COMBINE_DATA['Luke Reynolds'].wt=250; }
+  if (COMBINE_DATA['Nate Frazier']) { COMBINE_DATA['Nate Frazier'].ht='5-10'; COMBINE_DATA['Nate Frazier'].wt=210; }
+  if (COMBINE_DATA['Nic Anderson']) { COMBINE_DATA['Nic Anderson'].ht='6-4'; COMBINE_DATA['Nic Anderson'].wt=208; }
+  if (COMBINE_DATA['Nick Marsh']) { COMBINE_DATA['Nick Marsh'].ht='6-3'; COMBINE_DATA['Nick Marsh'].wt=203; }
+  if (COMBINE_DATA['Nico Iamaleava']) { COMBINE_DATA['Nico Iamaleava'].ht='6-6'; COMBINE_DATA['Nico Iamaleava'].wt=215; }
+  if (COMBINE_DATA['Nyck Harbor']) { COMBINE_DATA['Nyck Harbor'].ht='6-5'; COMBINE_DATA['Nyck Harbor'].wt=235; }
+  if (COMBINE_DATA['Ryan Williams']) { COMBINE_DATA['Ryan Williams'].ht='6-0'; COMBINE_DATA['Ryan Williams'].wt=175; }
+  if (COMBINE_DATA['Ryan Wingo']) { COMBINE_DATA['Ryan Wingo'].ht='6-2'; COMBINE_DATA['Ryan Wingo'].wt=214; }
+  if (COMBINE_DATA['Sam Leavitt']) { COMBINE_DATA['Sam Leavitt'].ht='6-2'; COMBINE_DATA['Sam Leavitt'].wt=205; }
+  if (COMBINE_DATA['T.J. Moore']) { COMBINE_DATA['T.J. Moore'].ht='6-3'; COMBINE_DATA['T.J. Moore'].wt=200; }
+  if (COMBINE_DATA["Trey'Dez Green"]) { COMBINE_DATA["Trey'Dez Green"].ht='6-7'; COMBINE_DATA["Trey'Dez Green"].wt=240; }
+  // === END NFLDRAFTBUZZ UPDATE ===
   if (!COMBINE_DATA['Keelon Russell']) COMBINE_DATA['Keelon Russell'] = { school: 'Alabama', pos: 'QB', devy: true, eligYr: 2028 };
   // === 2026 DRAFT CLASS ADDITIONS ===
   if (!COMBINE_DATA['KC Concepcion']) COMBINE_DATA['KC Concepcion'] = { school: 'Texas A&M', pos: 'WR', yr: 2026 };
@@ -4361,6 +4403,7 @@ if (!COLLEGE_STATS['Darian Mensah']) COLLEGE_STATS['Darian Mensah'] = [];
   if (!COLLEGE_STATS['Bryant Wesco Jr.']) COLLEGE_STATS['Bryant Wesco Jr.'] = [];
   COLLEGE_STATS['Bryant Wesco Jr.'].push({yr:2025,tm:"CLEMSON",conf:"ACC",gp:7,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:31,rcy:537,rctd:6,fl:0,fpts:105.2,pff:74.8});
   if (!COLLEGE_STATS['Ryan Wingo']) COLLEGE_STATS['Ryan Wingo'] = [];
+  COLLEGE_STATS['Ryan Wingo'].push({yr:2024,tm:"Texas",conf:"SEC",gp:16,py:0,ptd:0,int:0,pc:0,pa:0,ry:100,rtd:0,ra:10,rec:29,rcy:472,rctd:2,fl:0,fpts:83.7});
   COLLEGE_STATS['Ryan Wingo'].push({yr:2025,tm:"TEXAS",conf:"SEC",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:54,rcy:834,rctd:7,fl:0,fpts:152.4,pff:70.9});
   if (!COLLEGE_STATS['Danny Scudero']) COLLEGE_STATS['Danny Scudero'] = [];
   COLLEGE_STATS['Danny Scudero'].push({yr:2025,tm:"S JOSE ST",conf:"MWC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:88,rcy:1299,rctd:10,fl:0,fpts:233.9,pff:74.3});
@@ -4577,7 +4620,7 @@ if (!COLLEGE_STATS['Antonio Gibson']) COLLEGE_STATS['Antonio Gibson'] = [];
   COLLEGE_STATS['Cedrick Wilson'].push({yr:2016,tm:"Boise State",conf:"MWC",gp:11,py:84,ptd:1,int:0,pc:2,pa:2,ry:1,rtd:0,ra:2,rec:50,rcy:1041,rctd:10,fl:0,fpts:196.6});
   COLLEGE_STATS['Cedrick Wilson'].push({yr:2017,tm:"Boise State",conf:"MWC",gp:13,py:46,ptd:0,int:0,pc:2,pa:2,ry:9,rtd:0,ra:7,rec:73,rcy:1290,rctd:6,fl:0,fpts:204.2});
   if (!COLLEGE_STATS['Dan Vitale']) COLLEGE_STATS['Dan Vitale'] = [];
-  // Ryan Williams — Alabama WR devy. Overwrite to clear old Virginia Tech RB (2009-2010) name collision.
+  // Ryan Williams — overwrite to clear old Virginia Tech RB name collision
   COLLEGE_STATS['Ryan Williams'] = [];
   COLLEGE_STATS['Ryan Williams'].push({yr:2024,tm:"Alabama",conf:"SEC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:48,rtd:2,ra:4,rec:48,rcy:865,rctd:8,fl:0,fpts:169.0});
   COLLEGE_STATS['Ryan Williams'].push({yr:2025,tm:"Alabama",conf:"SEC",gp:14,py:0,ptd:0,int:0,pc:0,pa:0,ry:21,rtd:0,ra:2,rec:49,rcy:689,rctd:4,fl:0,fpts:117.4});
@@ -4661,7 +4704,7 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
   COLLEGE_STATS['Tetairoa McMillan'].push({yr:2022,tm:"Arizona",conf:"Pac-12",gp:12,py:8,ptd:0,int:0,pc:2,pa:2,ry:0,rtd:0,ra:0,rec:39,rcy:702,rctd:8,fl:0,fpts:138.0});
   COLLEGE_STATS['Tetairoa McMillan'].push({yr:2023,tm:"Arizona",conf:"Pac-12",gp:12,py:21,ptd:1,int:0,pc:1,pa:1,ry:3,rtd:0,ra:1,rec:80,rcy:1242,rctd:10,fl:1,fpts:227.3});
   COLLEGE_STATS['Tetairoa McMillan'].push({yr:2024,tm:"Arizona",conf:"Pac-12",gp:12,py:14,ptd:0,int:0,pc:1,pa:2,ry:0,rtd:0,ra:0,rec:84,rcy:1319,rctd:8,fl:0,fpts:222.5});
-  // === MISSING SEASON BACKFILL (CFBD pull — Apr 2026) ===
+  // === MISSING SEASON BACKFILL (CFBD pull) ===
   if (!COLLEGE_STATS['Brendan Sorsby']) COLLEGE_STATS['Brendan Sorsby'] = [];
   COLLEGE_STATS['Brendan Sorsby'].push({yr:2023,tm:"Ohio State",conf:"Big Ten",gp:1,py:58,ptd:0,int:0,pc:8,pa:15,ry:-2,rtd:0,ra:6,rec:0,rcy:0,rctd:0,fl:0,fpts:2.1});
   if (!COLLEGE_STATS['Cam Cook']) COLLEGE_STATS['Cam Cook'] = [];
@@ -12697,7 +12740,7 @@ window.LEGEND_BIRTH_YEARS={"Tyler Huntley":"1998-02-03",
 "Zamir White":"2000-01-19",
 "Zay Flowers":"2000-09-23",
 "Travis Hunter":"2003-05-18"
-,"Josh Rosen":"1997-02-10","Hayden Hurst":"1993-08-24","Rashaad Penny":"1996-02-12","D.J. Chark":"1996-09-23","Christian Kirk":"1996-11-18","Royce Freeman":"1996-02-24","Dante Pettis":"1995-10-27","Anthony Miller":"1994-10-09","James Washington":"1996-04-02","Michael Gallup":"1996-03-19","Mason Rudolph":"1995-07-17","Derrius Guice":"1997-06-14","Chase Edmonds":"1996-04-20","Keke Coutee":"1996-07-14","Nyheim Hines":"1996-10-12","Antonio Callaway":"1997-01-09","Dalton Schultz":"1996-07-11","Marquez Valdes-Scantling":"1994-10-20","Jordan Akins":"1992-10-07","Bryan Edwards":"1998-11-13","Kyler Murray":"1997-08-07","Daniel Jones":"1997-05-27","Dwayne Haskins":"1997-05-03","Drew Lock":"1996-11-10","Mecole Hardman":"1998-03-12","J.J. Arcega-Whiteside":"1996-12-31","Parris Campbell":"1997-07-16","Miles Boykin":"1996-10-11","Andy Isabella":"1996-11-18","Darrell Henderson":"1997-08-19","Alexander Mattison":"1998-06-19","Irv Smith":"1998-08-09","Hunter Renfrow":"1996-01-11","Riley Ridley":"1996-12-21","Travis Homer":"1998-03-07","Kahale Warring":"1996-07-04","Jace Sternberger":"1996-06-26","Drew Sample":"1996-08-14","Will Grier":"1995-04-03","Ryan Finley":"1994-12-26","Hakeem Butler":"1996-05-17","Henry Ruggs III":"1999-01-24","Jalen Reagor":"1999-01-02","Michael Pittman":"1997-10-05","Laviska Shenault Jr.":"1999-10-05","Denzel Mims":"1997-10-10","Chase Claypool":"1998-06-07","Clyde Edwards-Helaire":"1999-04-11","Cam Akers":"1999-06-22","Zack Moss":"1998-01-21","Antonio Gibson":"1998-06-24","Cole Kmet":"1999-03-10","Lynn Bowden":"1997-10-13","Donovan Peoples-Jones":"1999-02-05","Darnell Mooney":"1997-09-05","K.J. Osborn":"1997-05-15","Devin Duvernay":"1997-09-12","Quez Watkins":"1998-06-09","K.J. Hill":"1996-01-01","Albert Okwuegbunam":"1998-04-25","Adam Trautman":"1997-04-14","Harrison Bryant":"1998-02-25","Eno Benjamin":"1999-04-12","Joshua Kelley":"1997-11-20","Anthony McFarland":"1999-08-20","DeeJay Dallas":"1998-08-28","Malcolm Perry":"1997-06-02","Darrynton Evans":"1998-01-01","Freddie Swain":"1998-05-17","Trevor Lawrence":"1999-10-06","Zach Wilson":"1999-08-03","Trey Lance":"2000-05-09","Justin Fields":"1999-03-05","Mac Jones":"1998-09-05","Kadarius Toney":"1999-01-27","Rashod Bateman":"1999-11-15","Rondale Moore":"2000-06-09","Elijah Moore":"2000-03-27","Travis Etienne":"1999-01-26","Michael Carter":"1999-04-11","Trey Sermon":"1999-03-30","Kyle Trask":"1998-03-06","Amari Rodgers":"1999-04-20","Tylan Wallace":"1999-01-01","Dez Fitzpatrick":"1999-01-20","Ihmir Smith-Marsette":"1998-05-26","Anthony Schwartz":"2000-02-20","Khalil Herbert":"1998-05-07","Sam Ehlinger":"1999-05-11","Kylin Hill":"1999-10-07","Jermar Jefferson":"2000-02-21","Demetric Felton":"1999-03-23","Rountree":"1999-02-13","Dax Milne":"1999-06-23","Ian Book":"1998-03-30","Kenny Pickett":"1998-06-06","Skyy Moore":"2000-07-28","Christian Watson":"1999-08-12","John Metchie":"2000-08-03","Kenneth Walker":"2000-10-27","Tyler Allgeier":"1999-08-05","Dameon Pierce":"2000-04-06","Isaiah Spiller":"2001-02-04","Hassan Haskins":"1999-02-13","Pierre Strong":"1999-03-02","Snoop Conner":"2001-07-12","Tyrion Davis-Price":"2000-10-18","Velus Jones":"1997-05-11","David Bell":"2000-11-01","Calvin Austin":"1999-11-29","Danny Gray":"1999-06-30","Bo Melton":"2000-07-27","Jelani Woods":"1999-05-24","Isaiah Likely":"2000-04-24","Cade Otton":"1999-03-15","Jake Ferguson":"2000-04-19","Jeremy Ruckert":"1999-09-03","Chigoziem Okonkwo":"2000-01-16","Desmond Ridder":"1999-08-31","Sam Howell":"2000-09-16","Bailey Zappe":"1999-04-26","Skylar Thompson":"1997-06-04","Wan'Dale Robinson":"2001-09-17","Erik Ezukanma":"2000-04-29","Kyle Philips":"1999-09-15","Will Levis":"1999-06-27","Hendon Hooker":"1998-01-20","Devon Achane":"2002-02-22","Roschon Johnson":"2000-10-10","Israel Abanikanda":"2002-07-19","Deuce Vaughn":"2001-09-30","Quentin Johnston":"2001-04-28","Jordan Addison":"2001-05-17","Jonathan Mingo":"2001-10-01","Marvin Mims":"2003-02-22","Jalin Hyatt":"2001-12-11","Charlie Jones":"1998-12-17","Michael Mayer":"2002-07-06","Luke Musgrave":"2000-03-17","Tucker Kraft":"2001-02-04","Trey Palmer":"2001-05-17","Derius Davis":"2000-07-26","Xavier Legette":"2000-11-14","Adonai Mitchell":"2002-03-07","Jonathon Brooks":"2002-02-04","Trey Benson":"2001-04-11","Bucky Irving":"2002-05-05","Tyler Warren":"2002-01-25","Spencer Rattler":"2000-09-28","Jermaine Burton":"2002-04-21","Tip Reiman":"2002-04-16","Ainias Smith":"2001-12-09","Johnny Wilson":"2001-02-14","Javon Baker":"2001-08-01","Jacob Cowing":"2000-12-21","Jeremiah Smith":"2005-08-10","Arch Manning":"2005-03-19","Dante Moore":"2004-11-10","Julian Sayin":"2005-02-26","Dylan Raiola":"2005-07-05","Nico Iamaleava":"2004-11-17","Ryan Williams":"2007-02-09","Cam Coleman":"2005-11-22","Bryce Underwood":"2006-10-25","CJ Carr":"2005-11-01","DJ Lagway":"2006-01-12","Dakorien Moore":"2006-04-19","Caleb Cunningham":"2006-06-15","Deuce Knight":"2006-04-21","Julian Lewis":"2006-11-10","Tavien St. Clair":"2005-11-25","Keelon Russell":"2006-12-10","LaNorris Sellers":"2004-10-26","Jayden Maiava":"2003-04-03","Darian Mensah":"2004-10-23","Brendan Sorsby":"2001-12-18","Josh Hoover":"2003-11-17","Byrum Brown":"2001-11-09","Marcel Reed":"2004-11-22","John Mateer":"2003-09-15","CJ Bailey":"2004-06-30","Demond Williams Jr.":"2005-01-15","Bryant Wesco Jr.":"2005-12-07","Nick Marsh":"2005-09-17","Brandon Inniss":"2004-12-20","T.J. Moore":"2005-02-14","Quincy Porter":"2006-02-28","Kaliq Lockett":"2006-05-15","Andrew Marsh":"2006-01-22","Talyn Taylor":"2006-03-10","Bo Jackson":"2005-07-22","Justice Haynes":"2004-08-30","Isaac Brown":"2004-05-15","Nate Frazier":"2004-08-18","Caden Durham":"2005-06-12","Mark Fletcher Jr.":"2004-01-15","Jordon Davison":"2005-06-20","Kewan Lacy":"2004-03-22","Jordan Marshall":"2004-12-05","Taylor Tatum":"2004-11-30","Jadan Baugh":"2005-06-25","Dierre Hill Jr.":"2005-08-15","Harlem Berry":"2006-01-30","Nate Sheppard":"2006-02-15","Caleb Hawkins":"2005-11-10","Ousmane Kromah":"2005-09-22","Gideon Davidson":"2006-03-08","Ahmad Hardy":"2005-03-18","LJ Martin":"2004-01-28","Jerrick Gibson":"2004-10-12","Quinten Joyner":"2005-04-20","Micah Hudson":"2005-08-05","Sam Leavitt":"2003-12-15","Cam Cook":"2003-08-20"};
+,"Josh Rosen":"1997-02-10","Hayden Hurst":"1993-08-24","Rashaad Penny":"1996-02-12","D.J. Chark":"1996-09-23","Christian Kirk":"1996-11-18","Royce Freeman":"1996-02-24","Dante Pettis":"1995-10-27","Anthony Miller":"1994-10-09","James Washington":"1996-04-02","Michael Gallup":"1996-03-19","Mason Rudolph":"1995-07-17","Derrius Guice":"1997-06-14","Chase Edmonds":"1996-04-20","Keke Coutee":"1996-07-14","Nyheim Hines":"1996-10-12","Antonio Callaway":"1997-01-09","Dalton Schultz":"1996-07-11","Marquez Valdes-Scantling":"1994-10-20","Jordan Akins":"1992-10-07","Bryan Edwards":"1998-11-13","Kyler Murray":"1997-08-07","Daniel Jones":"1997-05-27","Dwayne Haskins":"1997-05-03","Drew Lock":"1996-11-10","Mecole Hardman":"1998-03-12","J.J. Arcega-Whiteside":"1996-12-31","Parris Campbell":"1997-07-16","Miles Boykin":"1996-10-11","Andy Isabella":"1996-11-18","Darrell Henderson":"1997-08-19","Alexander Mattison":"1998-06-19","Irv Smith":"1998-08-09","Hunter Renfrow":"1996-01-11","Riley Ridley":"1996-12-21","Travis Homer":"1998-03-07","Kahale Warring":"1996-07-04","Jace Sternberger":"1996-06-26","Drew Sample":"1996-08-14","Will Grier":"1995-04-03","Ryan Finley":"1994-12-26","Hakeem Butler":"1996-05-17","Henry Ruggs III":"1999-01-24","Jalen Reagor":"1999-01-02","Michael Pittman":"1997-10-05","Laviska Shenault Jr.":"1999-10-05","Denzel Mims":"1997-10-10","Chase Claypool":"1998-06-07","Clyde Edwards-Helaire":"1999-04-11","Cam Akers":"1999-06-22","Zack Moss":"1998-01-21","Antonio Gibson":"1998-06-24","Cole Kmet":"1999-03-10","Lynn Bowden":"1997-10-13","Donovan Peoples-Jones":"1999-02-05","Darnell Mooney":"1997-09-05","K.J. Osborn":"1997-05-15","Devin Duvernay":"1997-09-12","Quez Watkins":"1998-06-09","K.J. Hill":"1996-01-01","Albert Okwuegbunam":"1998-04-25","Adam Trautman":"1997-04-14","Harrison Bryant":"1998-02-25","Eno Benjamin":"1999-04-12","Joshua Kelley":"1997-11-20","Anthony McFarland":"1999-08-20","DeeJay Dallas":"1998-08-28","Malcolm Perry":"1997-06-02","Darrynton Evans":"1998-01-01","Freddie Swain":"1998-05-17","Trevor Lawrence":"1999-10-06","Zach Wilson":"1999-08-03","Trey Lance":"2000-05-09","Justin Fields":"1999-03-05","Mac Jones":"1998-09-05","Kadarius Toney":"1999-01-27","Rashod Bateman":"1999-11-15","Rondale Moore":"2000-06-09","Elijah Moore":"2000-03-27","Travis Etienne":"1999-01-26","Michael Carter":"1999-04-11","Trey Sermon":"1999-03-30","Kyle Trask":"1998-03-06","Amari Rodgers":"1999-04-20","Tylan Wallace":"1999-01-01","Dez Fitzpatrick":"1999-01-20","Ihmir Smith-Marsette":"1998-05-26","Anthony Schwartz":"2000-02-20","Khalil Herbert":"1998-05-07","Sam Ehlinger":"1999-05-11","Kylin Hill":"1999-10-07","Jermar Jefferson":"2000-02-21","Demetric Felton":"1999-03-23","Rountree":"1999-02-13","Dax Milne":"1999-06-23","Ian Book":"1998-03-30","Kenny Pickett":"1998-06-06","Skyy Moore":"2000-07-28","Christian Watson":"1999-08-12","John Metchie":"2000-08-03","Kenneth Walker":"2000-10-27","Tyler Allgeier":"1999-08-05","Dameon Pierce":"2000-04-06","Isaiah Spiller":"2001-02-04","Hassan Haskins":"1999-02-13","Pierre Strong":"1999-03-02","Snoop Conner":"2001-07-12","Tyrion Davis-Price":"2000-10-18","Velus Jones":"1997-05-11","David Bell":"2000-11-01","Calvin Austin":"1999-11-29","Danny Gray":"1999-06-30","Bo Melton":"2000-07-27","Jelani Woods":"1999-05-24","Isaiah Likely":"2000-04-24","Cade Otton":"1999-03-15","Jake Ferguson":"2000-04-19","Jeremy Ruckert":"1999-09-03","Chigoziem Okonkwo":"2000-01-16","Desmond Ridder":"1999-08-31","Sam Howell":"2000-09-16","Bailey Zappe":"1999-04-26","Skylar Thompson":"1997-06-04","Wan'Dale Robinson":"2001-09-17","Erik Ezukanma":"2000-04-29","Kyle Philips":"1999-09-15","Will Levis":"1999-06-27","Hendon Hooker":"1998-01-20","Devon Achane":"2002-02-22","Roschon Johnson":"2000-10-10","Israel Abanikanda":"2002-07-19","Deuce Vaughn":"2001-09-30","Quentin Johnston":"2001-04-28","Jordan Addison":"2001-05-17","Jonathan Mingo":"2001-10-01","Marvin Mims":"2003-02-22","Jalin Hyatt":"2001-12-11","Charlie Jones":"1998-12-17","Michael Mayer":"2002-07-06","Luke Musgrave":"2000-03-17","Tucker Kraft":"2001-02-04","Trey Palmer":"2001-05-17","Derius Davis":"2000-07-26","Xavier Legette":"2000-11-14","Adonai Mitchell":"2002-03-07","Jonathon Brooks":"2002-02-04","Trey Benson":"2001-04-11","Bucky Irving":"2002-05-05","Tyler Warren":"2002-01-25","Spencer Rattler":"2000-09-28","Jermaine Burton":"2002-04-21","Tip Reiman":"2002-04-16","Ainias Smith":"2001-12-09","Johnny Wilson":"2001-02-14","Javon Baker":"2001-08-01","Jacob Cowing":"2000-12-21","Jeremiah Smith":"2005-08-10","Arch Manning":"2005-03-19","Dante Moore":"2004-11-10","Julian Sayin":"2005-02-26","Dylan Raiola":"2005-07-05","Nico Iamaleava":"2004-11-17","Ryan Williams":"2007-02-09","Cam Coleman":"2005-11-22","Bryce Underwood":"2006-10-25","CJ Carr":"2005-11-01","DJ Lagway":"2006-01-12","Dakorien Moore":"2006-04-19","Caleb Cunningham":"2006-06-15","Deuce Knight":"2006-04-21","Julian Lewis":"2006-11-10","Tavien St. Clair":"2005-11-25","Keelon Russell":"2006-12-10","LaNorris Sellers":"2004-10-26","Jayden Maiava":"2003-04-03","Darian Mensah":"2004-10-23","Brendan Sorsby":"2001-12-18","Josh Hoover":"2003-11-17","Byrum Brown":"2001-11-09","Marcel Reed":"2004-11-22","John Mateer":"2003-09-15","CJ Bailey":"2004-06-30","Demond Williams Jr.":"2005-01-15","Bryant Wesco Jr.":"2005-12-07","Nick Marsh":"2005-09-17","Brandon Inniss":"2004-12-20","T.J. Moore":"2005-02-14","Quincy Porter":"2006-02-28","Kaliq Lockett":"2006-05-15","Andrew Marsh":"2006-01-22","Talyn Taylor":"2006-03-10","Bo Jackson":"2005-07-22","Justice Haynes":"2004-08-30","Isaac Brown":"2004-05-15","Nate Frazier":"2004-08-18","Caden Durham":"2005-06-12","Mark Fletcher Jr.":"2004-01-15","Jordon Davison":"2005-06-20","Kewan Lacy":"2004-03-22","Jordan Marshall":"2004-12-05","Taylor Tatum":"2004-11-30","Jadan Baugh":"2005-06-25","Dierre Hill Jr.":"2005-08-15","Harlem Berry":"2006-01-30","Nate Sheppard":"2006-02-15","Caleb Hawkins":"2005-11-10","Ousmane Kromah":"2005-09-22","Gideon Davidson":"2006-03-08","Ahmad Hardy":"2005-03-18","LJ Martin":"2004-01-28","Jerrick Gibson":"2004-10-12","Quinten Joyner":"2005-04-20","Micah Hudson":"2005-08-05","Sam Leavitt":"2003-12-15","Cam Cook":"2003-08-20","Ryan Wingo":"2006-02-15"};
 LDB.forEach(p => { if (LEGEND_BIRTH_YEARS[p.n]) p.birthYear = typeof LEGEND_BIRTH_YEARS[p.n] === 'string' ? parseInt(LEGEND_BIRTH_YEARS[p.n]) : LEGEND_BIRTH_YEARS[p.n]; });
 
 // === 2025 ROOKIE BIRTHDAYS PATCH ===
@@ -17202,7 +17245,12 @@ window.fmtHeight = fmtHeight;
       if (field === 'wt') COMBINE_DATA[playerName].wt = parseInt(clean) || null;
       else if (field === 'ras') COMBINE_DATA[playerName].ras = parseFloat(clean) || null;
       else if (field === 'forty') COMBINE_DATA[playerName].forty = parseFloat(clean) || null;
-      else if (field === 'yr') COMBINE_DATA[playerName].yr = parseInt(clean) || null;
+      else if (field === 'yr') {
+        COMBINE_DATA[playerName].yr = parseInt(clean) || null;
+        if (COMBINE_DATA[playerName].devy && COMBINE_DATA[playerName].eligYr) {
+          COMBINE_DATA[playerName].eligYr = parseInt(clean) || COMBINE_DATA[playerName].eligYr;
+        }
+      }
       else if (field === 'draft') { COMBINE_DATA[playerName].draft = clean === 'U' ? 'U' : parseInt(clean) || clean; }
       else if (field === 'ht' || field === 'pos' || field === 'school') COMBINE_DATA[playerName][field] = clean || null;
     }
@@ -18760,9 +18808,12 @@ window.fmtHeight = fmtHeight;
 
     // -1. DEVY OVERRIDE: If player has eligYr (devy/college prospect), use that as projected draft year
     // Must run BEFORE school collision check — devy players often have uppercase team names
-    // in stats (e.g., "OHIO STATE") that don't match COMBINE_DATA school ("Ohio St."),
-    // which would cause the collision check to null out cb and lose the eligYr.
-    if (cb && cb.devy && cb.eligYr) return cb.eligYr;
+    // in stats that don't match COMBINE_DATA school, which would null out cb.
+    // If cb.yr was manually set (admin override), prefer that over eligYr.
+    if (cb && cb.devy && cb.eligYr) {
+      if (cb.yr && cb.yr !== cb.eligYr) return cb.yr;
+      return cb.eligYr;
+    }
 
     // School-based collision check: if CS and CB have different schools with year gap > 2, drop CB
     if (cb && cs && cs.length && cb.school && typeof _normSchool === 'function') {
@@ -19344,7 +19395,6 @@ window.fmtHeight = fmtHeight;
           { score: _scoreLow(_rasSrc.cone, th.cone), weight: dw.cone },
           { score: _scoreLow(_rasSrc.shuttle, th.shuttle), weight: dw.shuttle }
         ].filter(d => d.score != null);
-        // For devy players with only a projected 40 time, allow estimation from 1 drill
         const _minDrills = (_cbAny && _cbAny.devy) ? 1 : 2;
         if (drillEntries.length >= _minDrills) {
           // Weighted average of available drills
@@ -20714,9 +20764,8 @@ window.fmtHeight = fmtHeight;
           case 'ras':
             if (_pmIsAdmin) {
               if (p.isDevy && !p.ras) {
-                // Devy with no RAS — show forty edit (will auto-estimate RAS from forty)
                 const _fortyVal = (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[p.name] && COMBINE_DATA[p.name].forty) ? COMBINE_DATA[p.name].forty : null;
-                const _estRas = p.ras; // may have been estimated from forty already
+                const _estRas = p.ras;
                 if (_estRas != null) {
                   rows += `<td class="pm-ras ${rasClass(_estRas)} pm-bio-edit" style="cursor:pointer" data-bioname="${p.name}" data-biofield="forty" title="Click to edit projected 40 time\nCurrent forty: ${_fortyVal || '—'}\nEstimated RAS: ${_estRas.toFixed(2)}">${_estRas.toFixed(2)}</td>`;
                 } else {

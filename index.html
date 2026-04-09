@@ -19510,8 +19510,13 @@ window.fmtHeight = fmtHeight;
             // Schools don't match — check if ANY season matches (for transfers)
             const anyMatch = cs.some(s => s.tm && _normSchool(s.tm) === known);
             if (!anyMatch) {
-              // No season from the known school — likely a different player, drop CS
-              cs = null;
+              // Exception: 2026 class / devy players may have transferred — school change
+              // via admin editor shouldn't wipe their college stats
+              const _isCurrent = cb && (cb.yr >= 2025 || cb.devy);
+              if (!_isCurrent) {
+                // No season from the known school — likely a different player, drop CS
+                cs = null;
+              }
             }
           }
         }

@@ -2359,6 +2359,44 @@ CLEAR
 </div>
 </div>
 
+<!-- DEVY RANKINGS SECTION -->
+<div id="devyRankingsSection" style="margin-top:2rem;padding:0 2rem 2rem;display:none">
+<div style="border-top:2px solid var(--border);padding-top:1.5rem">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;flex-wrap:wrap">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text1)">DEVY RANKINGS</div>
+<div class="devy-mode-tabs" style="display:flex;gap:4px">
+<button class="devy-mode-tab active" data-devymode="dynastysf" style="padding:4px 12px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;border-radius:6px;border:1px solid var(--border);background:var(--accent);color:#000;cursor:pointer;transition:all .15s">DYNASTY SF</button>
+<button class="devy-mode-tab" data-devymode="dynasty" style="padding:4px 12px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .15s">DYNASTY 1QB</button>
+</div>
+<button id="devySaveBtn" style="padding:4px 14px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;display:none;transition:all .15s" title="Save devy rankings">SAVE</button>
+<div style="font-size:.65rem;color:var(--text2);margin-left:auto">Drag to reorder &middot; Separate from main rankings</div>
+</div>
+<div class="devy-pos-filters" style="display:flex;gap:4px;margin-bottom:.75rem">
+<button class="devy-pos-btn active" data-devypos="ALL" style="padding:3px 10px;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;border-radius:4px;border:1px solid var(--border);background:var(--accent);color:#000;cursor:pointer">ALL</button>
+<button class="devy-pos-btn" data-devypos="QB" style="padding:3px 10px;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer">QB</button>
+<button class="devy-pos-btn" data-devypos="RB" style="padding:3px 10px;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer">RB</button>
+<button class="devy-pos-btn" data-devypos="WR" style="padding:3px 10px;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer">WR</button>
+<button class="devy-pos-btn" data-devypos="TE" style="padding:3px 10px;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer">TE</button>
+</div>
+<div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
+<table style="width:100%;border-collapse:collapse">
+<thead>
+<tr style="background:var(--surface)">
+<th style="width:28px;padding:.5rem .3rem;font-size:.6rem;color:var(--text2);text-align:left"></th>
+<th style="padding:.5rem .4rem;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--text2);text-align:left">#</th>
+<th style="padding:.5rem .4rem;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--text2);text-align:left">Player</th>
+<th style="padding:.5rem .4rem;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--text2);text-align:left">Pos</th>
+<th style="padding:.5rem .4rem;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--text2);text-align:left">School</th>
+<th style="padding:.5rem .4rem;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--text2);text-align:left">Elig</th>
+<th style="padding:.5rem .4rem;font-size:.65rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--text2);text-align:right">KTC</th>
+</tr>
+</thead>
+<tbody id="devyTbody"></tbody>
+</table>
+</div>
+</div>
+</div>
+
 </div>
 
 <!-- COMPARE PAGE -->
@@ -10685,6 +10723,272 @@ document.addEventListener('click', function(e) {
 
 // Dynamic sticky offsets no longer needed - flex layout handles it
 
+// ===== DEVY RANKINGS =====
+(function(){
+  let devyMode = 'dynastysf';
+  let devyPosFilter = 'ALL';
+  let devyOrder = { dynastysf: null, dynasty: null }; // null = use default KTC order
+  let devyDirty = false;
+  let devyDragRow = null;
+
+  function getDevyPlayers() {
+    if (typeof COMBINE_DATA === 'undefined') return [];
+    const players = [];
+    Object.keys(COMBINE_DATA).forEach(name => {
+      const cb = COMBINE_DATA[name];
+      if (!cb.devy) return;
+      const ktcSf = (typeof KTC_SF !== 'undefined' ? KTC_SF[name] : null) || 0;
+      const ktc1qb = (typeof KTC_1QB !== 'undefined' ? KTC_1QB[name] : null) || 0;
+      players.push({ name, pos: cb.pos || '??', school: cb.school || '—', eligYr: cb.eligYr || '—', ktcSf, ktc1qb });
+    });
+    return players;
+  }
+
+  function getOrderedDevyPlayers() {
+    const all = getDevyPlayers();
+    const saved = devyOrder[devyMode];
+    if (saved && saved.length) {
+      // Sort by saved order; any new players not in saved go at the end sorted by KTC
+      const orderMap = {};
+      saved.forEach((n, i) => orderMap[n] = i);
+      const inOrder = all.filter(p => orderMap[p.name] != null).sort((a, b) => orderMap[a.name] - orderMap[b.name]);
+      const notInOrder = all.filter(p => orderMap[p.name] == null).sort((a, b) => {
+        const av = devyMode === 'dynastysf' ? b.ktcSf - a.ktcSf : b.ktc1qb - a.ktc1qb;
+        return av;
+      });
+      return [...inOrder, ...notInOrder];
+    }
+    // Default: sort by KTC value desc
+    const key = devyMode === 'dynastysf' ? 'ktcSf' : 'ktc1qb';
+    return all.sort((a, b) => b[key] - a[key]);
+  }
+
+  function renderDevy() {
+    const tbody = document.getElementById('devyTbody');
+    if (!tbody) return;
+    const players = getOrderedDevyPlayers();
+    const filtered = devyPosFilter === 'ALL' ? players : players.filter(p => p.pos === devyPosFilter);
+    const ktcKey = devyMode === 'dynastysf' ? 'ktcSf' : 'ktc1qb';
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    let rank = 0;
+    let overallIdx = 0;
+    tbody.innerHTML = filtered.map((p, i) => {
+      // Find overall rank (position in full unfiltered list)
+      const allPlayers = getOrderedDevyPlayers();
+      const oIdx = allPlayers.findIndex(x => x.name === p.name);
+      rank = devyPosFilter === 'ALL' ? i + 1 : oIdx + 1;
+      const posRank = devyPosFilter !== 'ALL' ? (i + 1) : '';
+      const ktcVal = p[ktcKey];
+      const posColor = posColors[p.pos] || 'var(--text2)';
+      return `<tr data-devyname="${p.name}" draggable="true" style="border-bottom:1px solid rgba(30,42,66,.4);cursor:grab;transition:background .15s">
+        <td style="padding:.45rem .3rem;color:var(--text2);font-size:.65rem;cursor:grab">⠿</td>
+        <td style="padding:.45rem .4rem;font-size:.75rem;color:var(--text2);font-family:'Bebas Neue',sans-serif">${devyPosFilter === 'ALL' ? oIdx + 1 : (oIdx + 1) + ' <span style="font-size:.6rem;color:var(--accent)">' + p.pos + posRank + '</span>'}</td>
+        <td style="padding:.45rem .4rem;font-size:.8rem;color:var(--text1);font-weight:600">${p.name}</td>
+        <td style="padding:.45rem .4rem;font-size:.7rem;color:${posColor};font-weight:700">${p.pos}</td>
+        <td style="padding:.45rem .4rem;font-size:.7rem;color:var(--text2)">${p.school}</td>
+        <td style="padding:.45rem .4rem;font-size:.7rem;color:var(--text2)">${p.eligYr}</td>
+        <td style="padding:.45rem .4rem;font-size:.7rem;color:var(--text2);text-align:right">${ktcVal > 0 ? ktcVal.toLocaleString() : '—'}</td>
+      </tr>`;
+    }).join('');
+    // Wire drag events
+    tbody.querySelectorAll('tr').forEach(row => {
+      row.addEventListener('dragstart', e => {
+        devyDragRow = row;
+        row.style.opacity = '.3';
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      row.addEventListener('dragend', () => {
+        if (devyDragRow) devyDragRow.style.opacity = '';
+        devyDragRow = null;
+        tbody.querySelectorAll('tr').forEach(r => r.style.borderTop = '');
+      });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        tbody.querySelectorAll('tr').forEach(r => r.style.borderTop = '');
+        row.style.borderTop = '2px solid var(--accent)';
+      });
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        row.style.borderTop = '';
+        if (!devyDragRow || devyDragRow === row) return;
+        // Only allow reorder when showing ALL positions
+        if (devyPosFilter !== 'ALL') return;
+        tbody.insertBefore(devyDragRow, row);
+        // Read new order from DOM
+        const newOrder = [];
+        tbody.querySelectorAll('tr').forEach(r => { if (r.dataset.devyname) newOrder.push(r.dataset.devyname); });
+        devyOrder[devyMode] = newOrder;
+        devyDirty = true;
+        const saveBtn = document.getElementById('devySaveBtn');
+        if (saveBtn) saveBtn.style.display = '';
+        // Re-render to update rank numbers
+        renderDevy();
+      });
+    });
+  }
+
+  function showDevySection() {
+    const sec = document.getElementById('devyRankingsSection');
+    if (sec) sec.style.display = (currentMode === 'dynasty' || currentMode === 'dynastysf') ? '' : 'none';
+  }
+
+  // Save devy rankings to Firestore
+  async function saveDevyRankings() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) { console.warn('[Devy] No db/user'); return; }
+    const data = {};
+    if (devyOrder.dynastysf) data.dynastysf = devyOrder.dynastysf;
+    if (devyOrder.dynasty) data.dynasty = devyOrder.dynasty;
+    try {
+      await db.collection('devy_rankings').doc(user.uid).set({
+        data: JSON.stringify(data),
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      devyDirty = false;
+      const saveBtn = document.getElementById('devySaveBtn');
+      if (saveBtn) saveBtn.style.display = 'none';
+      if (typeof toast === 'function') toast('Devy rankings saved');
+    } catch(e) {
+      console.warn('[Devy] save error:', e);
+    }
+  }
+
+  // Load devy rankings from Firestore
+  async function loadDevyRankings() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+    try {
+      const doc = await db.collection('devy_rankings').doc(user.uid).get();
+      if (doc.exists && doc.data().data) {
+        const parsed = JSON.parse(doc.data().data);
+        if (parsed.dynastysf) devyOrder.dynastysf = parsed.dynastysf;
+        if (parsed.dynasty) devyOrder.dynasty = parsed.dynasty;
+        renderDevy();
+      }
+    } catch(e) {
+      console.warn('[Devy] load error:', e);
+    }
+  }
+
+  // Also support admin saving shared devy rankings (Jack's rankings)
+  async function saveJacksDevyRankings() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user || typeof isAdmin !== 'function' || !isAdmin()) return;
+    const data = {};
+    if (devyOrder.dynastysf) data.dynastysf = devyOrder.dynastysf;
+    if (devyOrder.dynasty) data.dynasty = devyOrder.dynasty;
+    try {
+      await db.collection('devy_rankings').doc('jacks-official').set({
+        data: JSON.stringify(data),
+        updatedBy: user.email || '',
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      if (typeof toast === 'function') toast("Jack's devy rankings saved");
+    } catch(e) {
+      console.warn('[Devy] admin save error:', e);
+    }
+  }
+
+  // Load Jack's devy rankings for non-admin users
+  async function loadJacksDevyRankings() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    if (!db) return;
+    try {
+      const doc = await db.collection('devy_rankings').doc('jacks-official').get();
+      if (doc.exists && doc.data().data) {
+        const parsed = JSON.parse(doc.data().data);
+        // Only set defaults — don't overwrite user's custom order
+        if (parsed.dynastysf && !devyOrder.dynastysf) devyOrder.dynastysf = parsed.dynastysf;
+        if (parsed.dynasty && !devyOrder.dynasty) devyOrder.dynasty = parsed.dynasty;
+        renderDevy();
+      }
+    } catch(e) {
+      console.warn('[Devy] load jacks error:', e);
+    }
+  }
+
+  // Wire up UI
+  document.addEventListener('DOMContentLoaded', () => {
+    // Mode tabs
+    document.querySelectorAll('.devy-mode-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.devy-mode-tab').forEach(b => {
+          b.style.background = 'var(--surface)';
+          b.style.color = 'var(--text2)';
+          b.classList.remove('active');
+        });
+        btn.style.background = 'var(--accent)';
+        btn.style.color = '#000';
+        btn.classList.add('active');
+        devyMode = btn.dataset.devymode;
+        renderDevy();
+      });
+    });
+    // Position filters
+    document.querySelectorAll('.devy-pos-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.devy-pos-btn').forEach(b => {
+          b.style.background = 'var(--surface)';
+          b.style.color = 'var(--text2)';
+          b.classList.remove('active');
+        });
+        btn.style.background = 'var(--accent)';
+        btn.style.color = '#000';
+        btn.classList.add('active');
+        devyPosFilter = btn.dataset.devypos;
+        renderDevy();
+      });
+    });
+    // Save button
+    const saveBtn = document.getElementById('devySaveBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async () => {
+        if (typeof isAdmin === 'function' && isAdmin()) {
+          await saveJacksDevyRankings();
+        }
+        await saveDevyRankings();
+      });
+    }
+    // Show/hide based on mode
+    document.querySelectorAll('.mode-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setTimeout(() => {
+          showDevySection();
+          // Sync the devy mode tab to match the main mode
+          if (currentMode === 'dynasty' || currentMode === 'dynastysf') {
+            devyMode = currentMode;
+            document.querySelectorAll('.devy-mode-tab').forEach(b => {
+              const isActive = b.dataset.devymode === devyMode;
+              b.style.background = isActive ? 'var(--accent)' : 'var(--surface)';
+              b.style.color = isActive ? '#000' : 'var(--text2)';
+              isActive ? b.classList.add('active') : b.classList.remove('active');
+            });
+            renderDevy();
+          }
+        }, 50);
+      });
+    });
+    // Initial render
+    showDevySection();
+    renderDevy();
+  });
+
+  // Hook into auth state to load devy rankings when user logs in
+  window._saveDevyRankings = saveDevyRankings;
+  window._saveJacksDevyRankings = saveJacksDevyRankings;
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        loadJacksDevyRankings().then(() => loadDevyRankings());
+      }
+    });
+  }
+})();
+
 // ===== FANTASY GAME =====
 (function(){
   // Historical players database (all-time NFL players)
@@ -14739,9 +15043,12 @@ window.fmtHeight = fmtHeight;
     if (!currentUser || !db) return;
     // Always save user's personal rankings
     await saveUserRankings();
+    // Save devy rankings if they've been modified
+    if (typeof window._saveDevyRankings === 'function') await window._saveDevyRankings();
     // If admin, also save Jack's rankings to the shared document
     if (isAdmin()) {
       await saveJacksRankings();
+      if (typeof window._saveJacksDevyRankings === 'function') await window._saveJacksDevyRankings();
     }
   }
 
@@ -19368,8 +19675,7 @@ window.fmtHeight = fmtHeight;
           { score: _scoreLow(_rasSrc.cone, th.cone), weight: dw.cone },
           { score: _scoreLow(_rasSrc.shuttle, th.shuttle), weight: dw.shuttle }
         ].filter(d => d.score != null);
-        const _isRecentProspect = (_cbAny && _cbAny.devy) || (_cbAny && _cbAny.yr && _cbAny.yr >= 2024) || (draftYr && draftYr >= 2024);
-        const _minDrills = _isRecentProspect ? 1 : 2;
+        const _minDrills = 1;
         if (drillEntries.length >= _minDrills) {
           // Weighted average of available drills
           const totalW = drillEntries.reduce((s, d) => s + d.weight, 0);

@@ -7318,7 +7318,9 @@ function _getCollegeStats(name, pos) {
 
   // --- School-based collision detection ---
   // Find the player's known college from any available source
-  const dEntry = (typeof D !== 'undefined') ? D.find(x => x.n === name) : null;
+  // Skip D[] lookup for devy players to avoid old NFL name collisions (e.g., Ryan Williams)
+  const _isDevyCS = (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].devy);
+  const dEntry = (typeof D !== 'undefined' && !_isDevyCS) ? D.find(x => x.n === name) : null;
   const knownCollege = (dEntry && dEntry._college) ? dEntry._college
     : (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].c) ? COMBINE_DATA[name].c
     : (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].school) ? COMBINE_DATA[name].school
@@ -17340,6 +17342,17 @@ window.fmtHeight = fmtHeight;
         snap.forEach(function(doc) {
           _dcCache[doc.id] = doc.data().dc || '';
         });
+        // Override old manual DC edits with DraftBuzz projections for devy players.
+        // This ensures DraftBuzz data takes priority over stale manual entries.
+        // New manual edits made via the admin UI will save to Firestore and
+        // override again on next page load — until this code block is updated.
+        if (typeof COMBINE_DATA !== 'undefined') {
+          Object.keys(COMBINE_DATA).forEach(function(n) {
+            if (COMBINE_DATA[n].devy && COMBINE_DATA[n].draft != null) {
+              _dcCache[n] = String(COMBINE_DATA[n].draft);
+            }
+          });
+        }
         _dcLoaded = true;
       }).catch(function(err) { _dcLoaded = true; });
     } catch(e) {
@@ -21133,7 +21146,9 @@ window.fmtHeight = fmtHeight;
     pmTbody.querySelectorAll('.pm-name[data-pmplayer]').forEach(el => {
       el.addEventListener('click', function() {
         const name = this.dataset.pmplayer;
-        let d = D.find(p => p.n === name);
+        // Skip D[] lookup if this name belongs to a devy player (avoid old NFL name collisions)
+        const _isDevyPlayer = typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].devy;
+        let d = _isDevyPlayer ? null : D.find(p => p.n === name);
         // Try alias names if not found (e.g., "Brian Thomas Jr." -> "Brian Thomas")
         if (!d && _PROSPECT_ALIASES) {
           const altName = Object.keys(_PROSPECT_ALIASES).find(k => _PROSPECT_ALIASES[k] === name && k !== name);

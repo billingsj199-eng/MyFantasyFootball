@@ -3829,8 +3829,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA["Ja'Kobi Lane"]) COMBINE_DATA["Ja'Kobi Lane"] = { school: 'USC', pos: 'WR', yr: 2026, ht: '6-1', wt: 200 };
   if (!COMBINE_DATA['Mike Washington Jr.']) COMBINE_DATA['Mike Washington Jr.'] = { school: 'Arkansas', pos: 'RB', yr: 2026 };
   if (COMBINE_DATA['Mike Washington Jr.'] && !COMBINE_DATA['Mike Washington Jr.'].pos) COMBINE_DATA['Mike Washington Jr.'].pos = 'RB';
-  if (!COMBINE_DATA['Justin Joly']) COMBINE_DATA['Justin Joly'] = { school: 'NC State', pos: 'TE', yr: 2026 };
-  if (COMBINE_DATA['Justin Joly']) COMBINE_DATA['Justin Joly'].pos = 'TE';
+  COMBINE_DATA['Justin Joly'] = { school: 'NC State', pos: 'TE', yr: 2026 };
   if (!COMBINE_DATA['John Michael Gyllenborg']) COMBINE_DATA['John Michael Gyllenborg'] = { school: 'Wyoming', pos: 'WR', yr: 2026 };
   if (COMBINE_DATA['John Michael Gyllenborg'] && !COMBINE_DATA['John Michael Gyllenborg'].pos) COMBINE_DATA['John Michael Gyllenborg'].pos = 'WR';
   if (!COMBINE_DATA['Jam Miller']) COMBINE_DATA['Jam Miller'] = { school: 'Alabama', pos: 'RB', yr: 2026 };
@@ -3842,20 +3841,14 @@ if (typeof COMBINE_DATA !== 'undefined') {
   // Chris Bell — WR, Louisville, 2026 class. Force ALL fields unconditionally
   // in case combine_data.js has a different Chris Bell (e.g. DB from older class).
   COMBINE_DATA['Chris Bell'] = { school: 'Louisville', pos: 'WR', yr: 2026, ht: '6-2', wt: 220 };
-  // 2026 class additions
-  if (!COMBINE_DATA['Antonio Williams']) COMBINE_DATA['Antonio Williams'] = { school: 'Clemson', pos: 'WR', yr: 2026 };
-  if (COMBINE_DATA['Antonio Williams'] && COMBINE_DATA['Antonio Williams'].yr !== 2026) COMBINE_DATA['Antonio Williams'] = { school: 'Clemson', pos: 'WR', yr: 2026 };
-  if (!COMBINE_DATA["De'Zhaun Stribling"]) COMBINE_DATA["De'Zhaun Stribling"] = { school: 'Ole Miss', pos: 'WR', yr: 2026 };
-  if (!COMBINE_DATA['Carson Beck']) COMBINE_DATA['Carson Beck'] = { school: 'Miami', pos: 'QB', yr: 2026 };
-  if (COMBINE_DATA['Carson Beck']) { COMBINE_DATA['Carson Beck'].school = 'Miami'; COMBINE_DATA['Carson Beck'].pos = 'QB'; COMBINE_DATA['Carson Beck'].yr = 2026; }
-  if (!COMBINE_DATA['CJ Daniels']) COMBINE_DATA['CJ Daniels'] = { school: 'Miami', pos: 'WR', yr: 2026 };
-  if (COMBINE_DATA['CJ Daniels'] && COMBINE_DATA['CJ Daniels'].yr !== 2026) COMBINE_DATA['CJ Daniels'] = { school: 'Miami', pos: 'WR', yr: 2026 };
-  if (!COMBINE_DATA['Seth McGowan']) COMBINE_DATA['Seth McGowan'] = { school: 'Kentucky', pos: 'RB', yr: 2026 };
-  if (COMBINE_DATA['Seth McGowan'] && COMBINE_DATA['Seth McGowan'].yr !== 2026) COMBINE_DATA['Seth McGowan'] = { school: 'Kentucky', pos: 'RB', yr: 2026 };
-  if (!COMBINE_DATA['Reggie Virgil']) COMBINE_DATA['Reggie Virgil'] = { school: 'Texas Tech', pos: 'WR', yr: 2026 };
-  if (COMBINE_DATA['Reggie Virgil'] && COMBINE_DATA['Reggie Virgil'].yr !== 2026) COMBINE_DATA['Reggie Virgil'] = { school: 'Texas Tech', pos: 'WR', yr: 2026 };
-  if (!COMBINE_DATA['Jack Endries']) COMBINE_DATA['Jack Endries'] = { school: 'Texas', pos: 'TE', yr: 2026 };
-  if (COMBINE_DATA['Jack Endries'] && COMBINE_DATA['Jack Endries'].yr !== 2026) COMBINE_DATA['Jack Endries'] = { school: 'Texas', pos: 'TE', yr: 2026 };
+  // 2026 class additions — force overwrite to handle name collisions with old NFL players
+  COMBINE_DATA['Antonio Williams'] = { school: 'Clemson', pos: 'WR', yr: 2026 };
+  COMBINE_DATA["De'Zhaun Stribling"] = { school: 'Ole Miss', pos: 'WR', yr: 2026 };
+  COMBINE_DATA['Carson Beck'] = { school: 'Miami', pos: 'QB', yr: 2026 };
+  COMBINE_DATA['CJ Daniels'] = { school: 'Miami', pos: 'WR', yr: 2026 };
+  COMBINE_DATA['Seth McGowan'] = { school: 'Kentucky', pos: 'RB', yr: 2026 };
+  COMBINE_DATA['Reggie Virgil'] = { school: 'Texas Tech', pos: 'WR', yr: 2026 };
+  COMBINE_DATA['Jack Endries'] = { school: 'Texas', pos: 'TE', yr: 2026 };
   // NOTE: COLLEGE_STATS patch is BELOW, after college_stats.js loads
   if (!COLLEGE_STATS['Bucky Irving']) COLLEGE_STATS['Bucky Irving'] = [];
   COLLEGE_STATS['Bucky Irving'].push({yr:2021,tm:"Minnesota",conf:"Big Ten",gp:9,ra:81,ry:380,rtd:3,rec:5,rcy:35,fpts:62.0});

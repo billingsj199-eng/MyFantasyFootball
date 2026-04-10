@@ -197,3 +197,52 @@ var MIKE_CLAY_PROJ = {
   "Zach Charbonnet":{pos:"RB",tm:"SEA",pts:158,gm:11,ryds:719,rtd:8,recyds:140,rectd:0,car:174,tgt:25,rec:19,ppg:14.4},
   "Zay Flowers":{pos:"WR",tm:"BLT",pts:238,gm:17,tgt:118,rec:82,recyds:1154,rectd:6,ppg:14.0},
 };
+// Team-level data from Mike Clay 2026 projections
+// offRk = offensive rank (1=best), defRk = defensive rank (1=best), projWins, totalPF, totalPA
+// ovrGrade = overall unit grade (1-10 scale), schedRk = strength of schedule (1=easiest, 32=hardest)
+var MIKE_CLAY_TEAMS = {
+  "ARZ":{offRk:25,defRk:31,ovrRk:31,projWins:3.7,pf:310,pa:463,schedRk:32,oGrade:4.6},
+  "ATL":{offRk:27,defRk:29,ovrRk:28,projWins:6.1,pf:347,pa:415,schedRk:7,oGrade:4.9},
+  "BLT":{offRk:8,defRk:3,ovrRk:2,projWins:11.1,pf:423,pa:345,schedRk:5,oGrade:7.4},
+  "BUF":{offRk:2,defRk:22,ovrRk:4,projWins:10.5,pf:458,pa:397,schedRk:14,oGrade:7.1},
+  "CAR":{offRk:21,defRk:11,ovrRk:22,projWins:7.3,pf:341,pa:376,schedRk:15,oGrade:5.8},
+  "CHI":{offRk:13,defRk:16,ovrRk:14,projWins:9.4,pf:417,pa:391,schedRk:20,oGrade:6.3},
+  "CIN":{offRk:5,defRk:26,ovrRk:12,projWins:9.9,pf:433,pa:393,schedRk:2,oGrade:6.4},
+  "CLV":{offRk:31,defRk:9,ovrRk:30,projWins:6.0,pf:281,pa:354,schedRk:4,oGrade:4.8},
+  "DAL":{offRk:4,defRk:17,ovrRk:7,projWins:10.2,pf:457,pa:405,schedRk:23,oGrade:6.8},
+  "DEN":{offRk:7,defRk:10,ovrRk:5,projWins:10.5,pf:401,pa:340,schedRk:17,oGrade:6.9},
+  "DET":{offRk:12,defRk:6,ovrRk:8,projWins:11.3,pf:445,pa:362,schedRk:1,oGrade:6.8},
+  "GB":{offRk:14,defRk:19,ovrRk:17,projWins:9.2,pf:415,pa:393,schedRk:17,oGrade:6.2},
+  "HST":{offRk:23,defRk:2,ovrRk:11,projWins:9.3,pf:363,pa:339,schedRk:21,oGrade:6.5},
+  "IND":{offRk:20,defRk:13,ovrRk:21,projWins:9.3,pf:394,pa:370,schedRk:6,oGrade:5.8},
+  "JAX":{offRk:16,defRk:19,ovrRk:19,projWins:9.1,pf:409,pa:390,schedRk:10,oGrade:6.1},
+  "KC":{offRk:10,defRk:21,ovrRk:13,projWins:9.6,pf:414,pa:380,schedRk:22,oGrade:6.3},
+  "LAC":{offRk:11,defRk:23,ovrRk:18,projWins:9.8,pf:409,pa:369,schedRk:25,oGrade:6.2},
+  "LAR":{offRk:1,defRk:1,ovrRk:1,projWins:12.9,pf:482,pa:346,schedRk:31,oGrade:8.4},
+  "LV":{offRk:26,defRk:25,ovrRk:25,projWins:5.2,pf:315,pa:414,schedRk:24,oGrade:5.1},
+  "MIA":{offRk:32,defRk:32,ovrRk:32,projWins:2.5,pf:275,pa:469,schedRk:30,oGrade:3.2},
+  "MIN":{offRk:19,defRk:14,ovrRk:20,projWins:8.8,pf:379,pa:370,schedRk:11,oGrade:6.0},
+  "NE":{offRk:17,defRk:7,ovrRk:10,projWins:9.7,pf:402,pa:362,schedRk:19,oGrade:6.5},
+  "NO":{offRk:28,defRk:27,ovrRk:27,projWins:6.6,pf:335,pa:390,schedRk:3,oGrade:4.9},
+  "NYG":{offRk:22,defRk:14,ovrRk:23,projWins:7.8,pf:369,pa:390,schedRk:27,oGrade:5.6},
+  "NYJ":{offRk:30,defRk:12,ovrRk:26,projWins:6.3,pf:317,pa:382,schedRk:8,oGrade:5.0},
+  "PHI":{offRk:3,defRk:8,ovrRk:3,projWins:10.0,pf:418,pa:375,schedRk:16,oGrade:7.3},
+  "PIT":{offRk:24,defRk:4,ovrRk:15,projWins:8.3,pf:342,pa:348,schedRk:9,oGrade:6.3},
+  "SEA":{offRk:14,defRk:5,ovrRk:6,projWins:11.4,pf:429,pa:343,schedRk:28,oGrade:6.8},
+  "SF":{offRk:6,defRk:18,ovrRk:9,projWins:9.3,pf:433,pa:407,schedRk:25,oGrade:6.7},
+  "TB":{offRk:9,defRk:23,ovrRk:16,projWins:9.0,pf:414,pa:399,schedRk:12,oGrade:6.3},
+  "TEN":{offRk:29,defRk:28,ovrRk:29,projWins:5.0,pf:313,pa:417,schedRk:13,oGrade:4.9},
+  "WAS":{offRk:18,defRk:30,ovrRk:24,projWins:6.8,pf:405,pa:454,schedRk:29,oGrade:5.3}
+};
+
+// Opponent defensive PPG allowed by position (derived from Clay's team defensive rankings)
+// Scale: 1.0 = league average. >1.0 = softer schedule (more points allowed), <1.0 = harder schedule
+// Built from Clay's weekly matchup projections and defensive unit grades
+var MIKE_CLAY_DEF_SOS = {
+  "ARZ":0.925,"ATL":1.046,"BLT":1.056,"BUF":1.012,"CAR":1.007,"CHI":0.983,
+  "CIN":1.070,"CLV":1.061,"DAL":0.968,"DEN":0.998,"DET":1.075,"GB":0.998,
+  "HST":0.978,"IND":1.051,"JAX":1.032,"KC":0.973,"LAC":0.959,"LAR":0.930,
+  "LV":0.964,"MIA":0.935,"MIN":1.027,"NE":0.988,"NO":1.065,"NYG":0.949,
+  "NYJ":1.041,"PHI":1.002,"PIT":1.036,"SEA":0.944,"SF":0.959,"TB":1.022,
+  "TEN":1.017,"WAS":0.939
+};

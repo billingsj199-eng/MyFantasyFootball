@@ -5475,11 +5475,21 @@ function validateImportData(obj) {
 // === END ESPN HEADSHOT ID FIX ===
 
 // === FUTURE DRAFT PICKS (dynasty/SF rankings) ===
+// 2026 picks: current year — still tradeable in dynasty leagues
 // 2027 picks: Early/Mid 1st, Mid/Late 1st, Early/Mid 2nd, Mid/Late 2nd, 3rd, 4th
 // 2028 picks: same structure
 // 2029, 2030: available for trade calc but not ranked by default
 (function() {
   const pickDefs = [
+    // 2026
+    { n: "2026 Early 1st",  s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '1st', _pickSlot: 'early',  da: 15, sa: 12 },
+    { n: "2026 Mid 1st",    s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '1st', _pickSlot: 'mid',    da: 30, sa: 25 },
+    { n: "2026 Late 1st",   s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '1st', _pickSlot: 'late',   da: 45, sa: 40 },
+    { n: "2026 Early 2nd",  s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '2nd', _pickSlot: 'early',  da: 65, sa: 60 },
+    { n: "2026 Mid 2nd",    s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '2nd', _pickSlot: 'mid',    da: 85, sa: 80 },
+    { n: "2026 Late 2nd",   s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '2nd', _pickSlot: 'late',   da: 105, sa: 100 },
+    { n: "2026 3rd",        s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '3rd', _pickSlot: 'mid',    da: 140, sa: 135 },
+    { n: "2026 4th",        s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '4th', _pickSlot: 'mid',    da: 200, sa: 195 },
     // 2027
     { n: "2027 Early 1st",  s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '1st', _pickSlot: 'early',  da: 25, sa: 22 },
     { n: "2027 Mid 1st",    s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '1st', _pickSlot: 'mid',    da: 40, sa: 35 },
@@ -14648,7 +14658,7 @@ window.fmtHeight = fmtHeight;
     '3rd': { redraft: 15, superflex: 18 },
     '4th': { redraft: 5, superflex: 7 }
   };
-  const YEAR_MULT = { '2027': 1.0, '2028': 0.85, '2029': 0.7 };
+  const YEAR_MULT = { '2026': 1.15, '2027': 1.0, '2028': 0.85, '2029': 0.7 };
   const SLOT_MULT = { 'early': 1.2, 'mid': 1.0, 'late': 0.8 };
 
   // Look up a pick entry in D by name and get its trade value from the board
@@ -27137,6 +27147,9 @@ Rules:
       const isDynasty = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
       const result = _mtScoreRoster(t.players, isDynasty ? t.draftPicks : []);
       t.score = result;
+      // Compute best lineup projected PPG
+      const lineup = _mtBestLineup(t.players);
+      t.lineupPpg = lineup ? lineup.totalPpg : 0;
     });
 
     teams.sort((a, b) => b.score.total - a.score.total);

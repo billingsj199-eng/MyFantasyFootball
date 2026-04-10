@@ -15861,19 +15861,13 @@ window.fmtHeight = fmtHeight;
     if (d.career && d.career.length > 0) return false;
     if (d._retired) return false;
     if (d._isFuturePick) return false;
-    // Exclude 2025 class (already drafted, have yr:2025 in COMBINE_DATA)
-    const cb = typeof COMBINE_DATA !== 'undefined' ? COMBINE_DATA[d.n] : null;
-    if (cb && cb.yr === 2025) return false;
-    // Include anyone with: KTC value, COMBINE_DATA entry (yr:2026 or devy), or in prospect model
-    // This catches the full 2026 class including deeper prospects without KTC values
-    const hasKtc = (typeof KTC_1QB !== 'undefined' && KTC_1QB[d.n]) || (typeof KTC_SF !== 'undefined' && KTC_SF[d.n]);
-    const hasCb = cb && (cb.yr === 2026 || (cb.devy && cb.eligYr === 2026));
     const hasPos = d.s === 'QB' || d.s === 'RB' || d.s === 'WR' || d.s === 'TE';
     if (!hasPos) return false;
-    // Must have at least one signal they're a 2026 prospect
-    if (hasKtc || hasCb) return true;
-    // Fallback: no career, no 2025 tag, no team = likely 2026 undrafted prospect in D
-    if (!d.t || d.t === 'TBD' || d.t === 'FA') return true;
+    const cb = typeof COMBINE_DATA !== 'undefined' ? COMBINE_DATA[d.n] : null;
+    // 2026 class = COMBINE_DATA yr:2026. This is the definitive signal.
+    // All real 2026 prospects have yr:2026 set manually.
+    // Devy players (2027/2028) have devy:true + eligYr but NOT yr:2026.
+    if (cb && cb.yr === 2026) return true;
     return false;
   }
 

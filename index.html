@@ -1457,10 +1457,10 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
     grid-template-columns:1fr!important;
   }
   #pageMyTeams{
-    overflow:auto!important;
+    overflow-y:auto!important;overflow-x:hidden!important;
   }
   #pageMyTeams > div:nth-child(2){
-    padding:10px 8px!important;
+    padding:10px 8px!important;max-width:100%;box-sizing:border-box;
   }
   #mtSrcSleeper,#mtSrcUnderdog{
     padding:6px 14px!important;font-size:.8rem!important;flex:1;text-align:center;
@@ -1474,19 +1474,23 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   #rookiePickToggle{
     font-size:.5rem!important;padding:2px 5px!important;
   }
-  #pageMyTeams table{
-    display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  /* Tables: fit to width instead of horizontal scroll */
+  #pageMyTeams table,#mtUnderdogDashboard table,#mtTeamDetail table{
+    display:table!important;width:100%!important;table-layout:fixed;overflow:hidden;
   }
-  #mtUnderdogDashboard table{
-    display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  #pageMyTeams table th,#pageMyTeams table td,
+  #mtUnderdogDashboard table th,#mtUnderdogDashboard table td,
+  #mtTeamDetail table th,#mtTeamDetail table td{
+    padding:4px 4px!important;font-size:.65rem!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
-  #mtTeamDetail table{
-    display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  /* Hide TEAM column on mobile to save space */
+  #mtTeamDetail table th:nth-child(3),#mtTeamDetail table td:nth-child(3){
+    display:none;
   }
   #mtPowerRankings > div{
     font-size:.9em;
   }
-  /* Tighten team rows on mobile */
+  /* Power rankings rows: hide pos mini-scores, they're in detail view */
   #mtPowerRankings [onclick*="_mtShowTeam"]{
     padding:8px 8px!important;gap:8px!important;
   }
@@ -1496,13 +1500,29 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   #mtPowerRankings [onclick*="_mtShowTeam"] > div:nth-child(2){
     width:38px!important;height:38px!important;font-size:.9rem!important;
   }
+  #mtPowerRankings [onclick*="_mtShowTeam"] > div:last-child{
+    display:none!important;
+  }
   /* Team detail close button */
   #mtTeamDetail button[onclick*="display"]{
     padding:4px 8px!important;font-size:.6rem!important;
   }
+  /* Team detail header */
+  #mtTeamDetail > div:first-child{
+    flex-wrap:wrap!important;gap:8px!important;
+  }
   /* Portfolio summary cards */
   #mtUnderdogDashboard [style*="auto-fit"]{
     gap:6px!important;
+  }
+  /* UD team score rows: hide pos mini-scores on mobile */
+  #mtUnderdogDashboard [onclick*="_udToggleTeamDetail"] > div:first-child > div:last-child,
+  #mtUnderdogDashboard [onclick*="_udToggleAdpDetail"] > div:first-child > div:last-child{
+    display:none!important;
+  }
+  #mtUnderdogDashboard [onclick*="_udToggleTeamDetail"],
+  #mtUnderdogDashboard [onclick*="_udToggleAdpDetail"]{
+    padding:8px 8px!important;
   }
   /* Sleeper import inputs */
   #mtSleeperLeagueId{
@@ -1511,6 +1531,17 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   /* Value source bar */
   #mtValueSource{
     font-size:.7rem!important;
+  }
+  /* UD exposure rows tighten on mobile */
+  #udExposureList > div{
+    gap:5px!important;
+  }
+  #udExposureList > div > div:first-child{
+    width:18px!important;font-size:.58rem!important;
+  }
+  /* Sort buttons wrap tighter */
+  #mtPowerRankings > div:nth-child(n) button{
+    font-size:.6rem!important;padding:3px 7px!important;
   }
 }
 </style>

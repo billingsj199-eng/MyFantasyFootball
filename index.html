@@ -5991,6 +5991,12 @@ function hasPremium() {
 }
 
 function render() {
+  // Attach JM scores to D entries on demand for dynasty rankings
+  const _isDynRender = currentMode === 'dynasty' || currentMode === 'dynastysf';
+  if (_isDynRender && typeof window._attachJmScores === 'function' && !window._jmScoresAttached) {
+    window._attachJmScores();
+    window._jmScoresAttached = true;
+  }
   const data = getFiltered();
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
@@ -17856,6 +17862,25 @@ window.fmtHeight = fmtHeight;
   window._pmBuiltData = function() { return pmBuiltData; };
   window._jmClass = null; // set after jmClass is defined
 
+  // Attach JM scores from prospect model to D entries for dynasty rankings column
+  // Called lazily from render() when dynasty mode is active
+  window._attachJmScores = function() {
+    let data = pmBuiltData;
+    if (!data || !data.length) {
+      // Prospect page not yet visited — build on demand
+      if (typeof buildProspectData === 'function') {
+        data = buildProspectData();
+        pmBuiltData = data;
+      }
+    }
+    if (!data || !data.length) return;
+    data.forEach(function(p) {
+      if (p.jm == null) return;
+      var match = D.find(function(d) { return d.n === p.name; });
+      if (match) match._pmJm = p.jm;
+    });
+  };
+
   // Draft Capital: stored in Firestore, only editable for 2026 class by admin
   const _dcCache = {}; // {playerName: "1.04", ...}
   let _dcLoaded = false;
@@ -21848,6 +21873,7 @@ window.fmtHeight = fmtHeight;
     function _doBuild() {
       pmBuiltData = buildProspectData();
       // Attach JM scores to D entries for dynasty rankings column
+      window._jmScoresAttached = false; // Reset so render() re-attaches
       pmBuiltData.forEach(function(p) {
         if (p.jm == null) return;
         var match = D.find(function(d) { return d.n === p.name; });

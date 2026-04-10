@@ -3876,6 +3876,24 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Luke Hasz']) COMBINE_DATA['Luke Hasz'].forty = 4.68;
   // === END NFLDRAFTBUZZ UPDATE ===
   if (!COMBINE_DATA['Keelon Russell']) COMBINE_DATA['Keelon Russell'] = { school: 'Alabama', pos: 'QB', devy: true, eligYr: 2028 };
+
+  // === DEVY DRAFT YEAR CLEANUP ===
+  // combine_data.js may have stale yr values for devy players (e.g. yr:2026 when they're 2027/2028 class).
+  // For any player with devy:true, force yr to match eligYr so getDraftYear and the PM class filter
+  // use the correct draft class. If no eligYr, delete yr so they stay in the college tab.
+  if (typeof COMBINE_DATA !== 'undefined') {
+    Object.keys(COMBINE_DATA).forEach(function(name) {
+      const cb = COMBINE_DATA[name];
+      if (cb && cb.devy) {
+        if (cb.eligYr) {
+          cb.yr = cb.eligYr; // force yr to match eligibility year
+        } else {
+          delete cb.yr; // no eligYr → remove yr so they go to college tab
+        }
+      }
+    });
+  }
+
   // === 2026 DRAFT CLASS ADDITIONS ===
   if (!COMBINE_DATA['KC Concepcion']) COMBINE_DATA['KC Concepcion'] = { school: 'Texas A&M', pos: 'WR', yr: 2026 };
   if (COMBINE_DATA['KC Concepcion'] && !COMBINE_DATA['KC Concepcion'].pos) COMBINE_DATA['KC Concepcion'].pos = 'WR';

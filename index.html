@@ -1472,7 +1472,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
     padding:5px 7px!important;font-size:.6rem!important;
   }
   #rookiePickToggle{
-    font-size:.6rem!important;padding:3px 7px!important;
+    font-size:.5rem!important;padding:2px 5px!important;
   }
   #pageMyTeams table{
     display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
@@ -2260,8 +2260,8 @@ CLEAR
 <button class="pos-btn" data-pos="DEVY" id="devyPosBtn" style="display:none">DEVY</button>
 <button class="pos-btn" data-pos="K">K</button>
 <button class="pos-btn" data-pos="DST">D/ST</button>
+<button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
 </div>
-<button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);margin-left:4px" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
 </div>
 
 </div>
@@ -2343,6 +2343,7 @@ CLEAR
 <th data-sort="pts">Proj PPG (Half PPR) <span class="arrow"></span></th>
 <th data-sort="fpts25"><span id="ppg25Header">'25 PPG (Half PPR)</span> <span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" style="display:none">Y/RR <span class="arrow"></span></th>
+<th data-sort="jm" id="jmHeader" style="display:none">JM <span class="arrow"></span></th>
 <th data-sort="age" id="ageHeader">Age <span class="arrow"></span></th>
 <th data-sort="diff">+/- <span class="arrow"></span></th>
 </tr>
@@ -5863,24 +5864,45 @@ function adjProjPpg(d) {
 }
 
 function getFiltered() {
-  // DEVY filter: build synthetic list from COMBINE_DATA devy players, sorted by KTC
+  // DEVY filter: build list from COMBINE_DATA devy players, with custom ordering
   if (filter === 'DEVY') {
     if (typeof COMBINE_DATA === 'undefined') return [];
     const ktcMap = currentMode === 'dynastysf' ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {}) : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
-    const devyPlayers = [];
+    const devyMap = {};
     Object.keys(COMBINE_DATA).forEach(name => {
       const cb = COMBINE_DATA[name];
       if (!cb.devy) return;
       const ktcVal = ktcMap[name] || 0;
-      devyPlayers.push({
+      devyMap[name] = {
         n: name, s: cb.pos || '??', t: cb.school || '—',
         _isDevy: true, _devyEligYr: cb.eligYr || '—', _devyKtc: ktcVal,
         myRank: 0, adp: null, p: null, career: null, s25: null
-      });
+      };
     });
-    devyPlayers.sort((a, b) => b._devyKtc - a._devyKtc);
-    // Assign ranks
-    devyPlayers.forEach((p, i) => { p.myRank = i + 1; });
+    // Load saved order or default to KTC sort
+    const devyKey = 'devy_board_' + currentVersion + '_' + currentMode;
+    let savedOrder = null;
+    try { savedOrder = JSON.parse(localStorage.getItem(devyKey)); } catch(e) {}
+    let devyPlayers;
+    if (savedOrder && Array.isArray(savedOrder) && savedOrder.length > 0) {
+      devyPlayers = [];
+      // Add saved players in order
+      savedOrder.forEach(name => { if (devyMap[name]) { devyPlayers.push(devyMap[name]); delete devyMap[name]; } });
+      // Add any new devy players not in saved order (appended at end, sorted by KTC)
+      const remaining = Object.values(devyMap);
+      remaining.sort((a, b) => b._devyKtc - a._devyKtc);
+      devyPlayers = devyPlayers.concat(remaining);
+    } else {
+      devyPlayers = Object.values(devyMap);
+      devyPlayers.sort((a, b) => b._devyKtc - a._devyKtc);
+    }
+    // Assign ranks and attach JM scores from prospect model
+    const _devyPmData = (typeof window._pmBuiltData === 'function') ? window._pmBuiltData() : [];
+    const _devyPmMap = {};
+    _devyPmData.forEach(p => { if (p.jm != null) _devyPmMap[p.name] = p.jm; });
+    devyPlayers.forEach((p, i) => { p.myRank = i + 1; p._devyIdx = i; p._pmJm = _devyPmMap[p.n] != null ? _devyPmMap[p.n] : null; });
+    // Store on window for drag handler access
+    window._devyList = devyPlayers;
     if (query) {
       const q = query.toLowerCase();
       return devyPlayers.filter(p => p.n.toLowerCase().includes(q) || p.t.toLowerCase().includes(q));
@@ -5928,7 +5950,8 @@ function getFiltered() {
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': av = a._yrr||0; bv = b._yrr||0; break;
+        case 'yrr': if(filter==='RB'){const _ac=a.career&&a.career.length?a.career[a.career.length-1]:null;const _bc=b.career&&b.career.length?b.career[b.career.length-1]:null;av=_ac&&_ac.gp?(_ac.ry||0)/_ac.gp:0;bv=_bc&&_bc.gp?(_bc.ry||0)/_bc.gp:0;}else{av=a._yrr||0;bv=b._yrr||0;} break;
+        case 'jm': av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'diff': av = (rnkAdp(a)??a.myRank) - a.myRank; bv = (rnkAdp(b)??b.myRank) - b.myRank; break;
         default: av = a.myRank; bv = b.myRank;
       }
@@ -6024,8 +6047,9 @@ function render() {
     if (d._isDevy) {
       const posColors = { QB: 'var(--qb)', RB: 'var(--rb)', WR: 'var(--wr)', TE: 'var(--te)' };
       const pc = posColors[d.s] || 'var(--text2)';
-      html += `<tr style="border-bottom:1px solid rgba(30,42,66,.4)">
-        <td></td>
+      const editable = canEdit();
+      html += `<tr style="border-bottom:1px solid rgba(30,42,66,.4)" data-devy-idx="${d._devyIdx}" data-devy-name="${d.n.replace(/"/g,'&quot;')}">
+        <td>${editable ? '<div class="drag-handle devy-drag"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div>' : ''}</td>
         <td class="myrank-cell"><span class="myrank-num">${d.myRank}</span></td>
         <td><div class="player-cell"><span class="player-name">${d.n}</span><span class="player-team">${d.t}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
@@ -6034,6 +6058,7 @@ function render() {
         <td>—</td>
         <td>—</td>
         <td class="pts-cell yrr-cell" style="display:none">—</td>
+        <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=jm>=82?'#34d399':jm>=66?'#60a5fa':jm>=50?'#fbbf24':'#f87171';return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})()}</td>
         <td>—</td>
         <td>—</td>
       </tr>`;
@@ -6046,7 +6071,7 @@ function render() {
       tiers.forEach(t => {
         if (t.afterRank > prevDisplayRank && t.afterRank <= displayRank) {
           html += `<tr class="tier-row" data-tier-id="${t.id}">
-            <td colspan="10"><div class="tier-inner">
+            <td colspan="12"><div class="tier-inner">
               <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
               ${editable ? `<span class="tier-name-static">${t.name}</span>
               <div class="tier-controls">
@@ -6067,11 +6092,11 @@ function render() {
     if (shouldBlur && i === blurCutoff && data.length > blurCutoff) {
       const _isSignedIn = !!window._authCurrentUser;
       if (isMine && !_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="11" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="12" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else if (!_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="11" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="12" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else {
-        html += '<tr id="premiumWallRow"><td colspan="11" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="12" style="padding:0;border:none"><div style="text-align:center;padding:2rem 1rem;background:var(--bg)"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       }
     }
 
@@ -6084,14 +6109,15 @@ function render() {
       <td class="adp-cell">${rnkAdp(d) != null ? rnkAdp(d) : '—'}</td>
       <td class="pts-cell"${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);return v!=null?v:'—';})()}</td>
       <td class="pts-cell"${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null){return jv>0?' style="color:#22c55e;font-weight:700"':jv<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"';}const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null)return jv>0?'+'+jv:jv;const v=adj25ppg(d);return v!=null?v:'—';})()}</td>
-      <td class="pts-cell yrr-cell" style="display:none">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</td>
+      <td class="pts-cell yrr-cell" style="display:none">${d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')}</td>
+      <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=jm>=82?'#34d399':jm>=66?'#60a5fa':jm>=50?'#fbbf24':'#f87171';return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})()}</td>
       <td class="age-cell ${d.s==='DST' ? (d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '') : d.age!=null ? (d.s==='RB' ? (d.age>=30?'age-red':d.age>=28?'age-yellow':'age-green') : d.s==='QB' ? (d.age>=35?'age-red':d.age>=32?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='WR' ? (d.age>=32?'age-red':d.age>=29?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='TE' ? (d.age>=33?'age-red':d.age>=31?'age-orange':d.age>=25?'age-green':'age-yellow') : '') : ''}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (d.age != null ? d.age : '—')}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
     </tr>`;
 
     // "Add tier" mini-button between rows (only show on hover via CSS)
     if (editable && showTiers && !tierMap[displayRank]) {
-      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="10"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
+      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="12"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
     }
   });
 
@@ -6101,7 +6127,7 @@ function render() {
     tiers.forEach(t => {
       if (t.afterRank > lastDisplayRank) {
         html += `<tr class="tier-row" data-tier-id="${t.id}">
-          <td colspan="10"><div class="tier-inner">
+          <td colspan="12"><div class="tier-inner">
             <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
             ${editable ? `<span class="tier-name-static">${t.name}</span>
             <div class="tier-controls">
@@ -6120,8 +6146,13 @@ function render() {
   attachRowListeners();
   attachTierListeners();
   const showYrr = filter === 'WR' || filter === 'TE' || filter === 'RB';
-  document.getElementById('yrrHeader').style.display = showYrr ? '' : 'none';
+  const yrrH = document.getElementById('yrrHeader');
+  yrrH.style.display = showYrr ? '' : 'none';
+  yrrH.childNodes[0].textContent = filter === 'RB' ? 'Rush YPG ' : 'Y/RR ';
   document.querySelectorAll('.yrr-cell').forEach(c => c.style.display = showYrr ? '' : 'none');
+  const showJm = currentMode === 'dynasty' || currentMode === 'dynastysf';
+  document.getElementById('jmHeader').style.display = showJm ? '' : 'none';
+  document.querySelectorAll('.jm-cell').forEach(c => c.style.display = showJm ? '' : 'none');
 }
 
 function updateStats(data) {
@@ -6199,7 +6230,7 @@ function attachTierListeners() {
   });
 
   // === Optimized drag & drop ===
-  let dragRow = null, dragIdx = null, clone = null, lastIndicatorRow = null;
+  let dragRow = null, dragIdx = null, clone = null, lastIndicatorRow = null, _devyDragName = null;
   let pointerY = 0, cloneX = 0, cloneOffsetY = 0;
   let rafId = null, isDragging = false;
   let _rowRects = [];
@@ -6228,7 +6259,7 @@ function attachTierListeners() {
 
   function cacheRowRects() {
     _rowRects = [];
-    const rows = tbody.querySelectorAll('tr[data-idx]');
+    const rows = tbody.querySelectorAll('tr[data-idx], tr[data-devy-idx]');
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i].getBoundingClientRect();
       _rowRects.push({ row: rows[i], top: r.top, bottom: r.bottom });
@@ -6274,12 +6305,13 @@ function attachTierListeners() {
     if (currentVersion === 'jsmodel') return;
     const handle = e.target.closest('.drag-handle');
     if (!handle) return;
-    const row = handle.closest('tr[data-idx]');
+    const row = handle.closest('tr[data-idx]') || handle.closest('tr[data-devy-idx]');
     if (!row) return;
     e.preventDefault();
 
     dragRow = row;
-    dragIdx = +row.dataset.idx;
+    dragIdx = row.dataset.idx != null ? +row.dataset.idx : null;
+    _devyDragName = row.dataset.devyName || null;
     pointerY = e.clientY;
 
     const rowRect = row.getBoundingClientRect();
@@ -6319,7 +6351,28 @@ function attachTierListeners() {
     document.removeEventListener('pointerup', onPointerUp);
 
     const target = getRowAtY(e.clientY);
-    if (target && target !== dragRow && target.dataset.idx !== undefined) {
+    // Devy drag-and-drop
+    if (_devyDragName && target && target !== dragRow && target.dataset.devyIdx !== undefined) {
+      const fromIdx = +dragRow.dataset.devyIdx;
+      const toIdx = +target.dataset.devyIdx;
+      const targetRect = target.getBoundingClientRect();
+      const dropAbove = e.clientY < targetRect.top + targetRect.height / 2;
+      let targetPos = toIdx;
+      if (!dropAbove && fromIdx < toIdx) { /* stays */ }
+      else if (!dropAbove) targetPos = toIdx + 1;
+      else if (dropAbove && fromIdx < toIdx) targetPos = toIdx - 1;
+      if (window._devyList && fromIdx !== targetPos) {
+        const list = window._devyList;
+        const item = list.splice(fromIdx, 1)[0];
+        list.splice(targetPos, 0, item);
+        // Save order to localStorage
+        const devyKey = 'devy_board_' + currentVersion + '_' + currentMode;
+        try { localStorage.setItem(devyKey, JSON.stringify(list.map(p => p.n))); } catch(e2) {}
+        render();
+      }
+    }
+    // Normal drag-and-drop
+    else if (target && target !== dragRow && target.dataset.idx !== undefined) {
       const targetIdx = +target.dataset.idx;
       const targetRect = target.getBoundingClientRect();
       const dropAbove = e.clientY < targetRect.top + targetRect.height / 2;
@@ -6337,7 +6390,7 @@ function attachTierListeners() {
         droppedRow.addEventListener('animationend', () => droppedRow.classList.remove('just-dropped'), {once:true});
       }
     }
-    dragRow = null; dragIdx = null;
+    dragRow = null; dragIdx = null; _devyDragName = null;
     _rowRects = [];
   }
 
@@ -7094,7 +7147,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   th.addEventListener('click', () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; sortDir = (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr') ? -1 : 1; }
+    else { sortKey = key; sortDir = (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm') ? -1 : 1; }
     document.querySelectorAll('thead th').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
@@ -21794,6 +21847,12 @@ window.fmtHeight = fmtHeight;
     
     function _doBuild() {
       pmBuiltData = buildProspectData();
+      // Attach JM scores to D entries for dynasty rankings column
+      pmBuiltData.forEach(function(p) {
+        if (p.jm == null) return;
+        var match = D.find(function(d) { return d.n === p.name; });
+        if (match) match._pmJm = p.jm;
+      });
       renderTable();
     }
     

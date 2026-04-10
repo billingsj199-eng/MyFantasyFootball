@@ -2276,6 +2276,13 @@ CLEAR
 </div>
 </div>
 <div style="display:flex;align-items:center;gap:8px">
+<span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">PROJ:</span>
+<div class="career-log-toggle" id="rnkProjSrcToggle">
+<button class="rnk-proj-btn active" data-rnkproj="default">DEFAULT</button>
+<button class="rnk-proj-btn" data-rnkproj="clay">CLAY</button>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">ADP:</span>
 <div class="md-rank-src-tabs" id="rnkAdpSrcTabs" style="border:none;background:rgba(255,255,255,.04);padding:1px">
 <button class="md-rank-src-tab active" data-rnkadp="consensus" style="font-size:.65rem;padding:3px 10px">CONSENSUS</button>
@@ -3586,6 +3593,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/weekly_stats_retired.js"></script>
 <script src="data/all_players.js"></script>
 <script src="data/combine_data.js"></script>
+<script src="data/mike_clay_projections.js"></script>
 <script>
 // Fix combine data errors from external file
 if (typeof COMBINE_DATA !== 'undefined') {
@@ -5826,6 +5834,7 @@ function movePlayer(fromIdx, toPosition) {
 // State
 let filter = 'ALL', sortKey = 'myrank', sortDir = 1, query = '', viewMode = 'all';
 let rankingScoringFmt = 'half';
+let rankingProjSrc = 'default'; // 'default' or 'clay'
 let rnkAdpSrc = 'consensus';
 
 // Get ADP for a player based on the selected ranking ADP source
@@ -5864,6 +5873,17 @@ function adj25ppg(d) {
 
 function adjProjPpg(d) {
   if (d.s === 'K' || d.s === 'DST') return null;
+  // Clay projections mode
+  if (rankingProjSrc === 'clay' && typeof MIKE_CLAY_PROJ !== 'undefined') {
+    const cp = MIKE_CLAY_PROJ[d.n];
+    if (cp) {
+      // Clay pts = full PPR. To adjust: half = pts - 0.5*rec, std = pts - 1.0*rec
+      const recs = cp.rec || 0;
+      const adj = rankingScoringFmt === 'ppr' ? 0 : rankingScoringFmt === 'std' ? -1.0 : -0.5;
+      return Math.round(((cp.pts + recs * adj) / cp.gm) * 10) / 10;
+    }
+    return null;
+  }
   // d.p is total projected half-PPR points; estimate receptions from s25 or career
   const recs = d.s25 ? d.s25.rc : (d.career && d.career.length ? d.career[d.career.length - 1].rc || 0 : 0);
   const adj = rankingScoringFmt === 'ppr' ? 0.5 : rankingScoringFmt === 'std' ? -0.5 : 0;
@@ -6456,9 +6476,23 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
     btn.classList.add('active');
     rankingScoringFmt = btn.dataset.rnkscoring;
     const projTh = document.querySelector('th[data-sort="pts"]');
-    if (projTh) projTh.firstChild.textContent = 'Proj PPG (' + _scoringLabelsRnk[rankingScoringFmt] + ') ';
+    const srcLabel = rankingProjSrc === 'clay' ? 'Clay ' : '';
+    if (projTh) projTh.firstChild.textContent = srcLabel + 'Proj PPG (' + _scoringLabelsRnk[rankingScoringFmt] + ') ';
     const ppg25Hdr = document.getElementById('ppg25Header');
     if (ppg25Hdr) ppg25Hdr.textContent = "'25 PPG (" + _scoringLabelsRnk[rankingScoringFmt] + ")";
+    render();
+  });
+});
+
+// Projection source toggle (Default / Clay)
+document.querySelectorAll('.rnk-proj-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.rnk-proj-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    rankingProjSrc = btn.dataset.rnkproj;
+    const projTh = document.querySelector('th[data-sort="pts"]');
+    const srcLabel = rankingProjSrc === 'clay' ? 'Clay ' : '';
+    if (projTh) projTh.firstChild.textContent = srcLabel + 'Proj PPG (' + _scoringLabelsRnk[rankingScoringFmt] + ') ';
     render();
   });
 });
@@ -6958,7 +6992,6 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     // Build tier labels
     var tierLabels = ['S','A','B','C','D','E','F','G','H','I','J'];
     var tierNames = ['ELITE','TIER 1','TIER 2','TIER 3','TIER 4','TIER 5','TIER 6','TIER 7','TIER 8','TIER 9','TIER 10'];
-    
     var finalTiers = [];
     finalTiers.push({afterRank: 1, label: tierLabels[0], name: tierNames[0]});
     for (var ti = 0; ti < tierBreaks.length && ti < tierLabels.length - 1; ti++) {
@@ -7006,7 +7039,8 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     } else {
       var _scoringLabelsRnk2 = {ppr:'PPR',half:'Half PPR',std:'Standard'};
       var fmt = typeof rankingScoringFmt !== 'undefined' ? rankingScoringFmt : 'half';
-      if (projTh) projTh.innerHTML = 'Proj PPG (' + (_scoringLabelsRnk2[fmt]||'Half PPR') + ') <span class="arrow"></span>';
+      var _srcLabel = typeof rankingProjSrc !== 'undefined' && rankingProjSrc === 'clay' ? 'Clay ' : '';
+      if (projTh) projTh.innerHTML = _srcLabel + 'Proj PPG (' + (_scoringLabelsRnk2[fmt]||'Half PPR') + ') <span class="arrow"></span>';
       if (vorTh) vorTh.innerHTML = '<span id="ppg25Header">\'25 PPG (' + (_scoringLabelsRnk2[fmt]||'Half PPR') + ')</span> <span class="arrow"></span>';
     }
     // Rebuild board when switching to JS Model
@@ -7183,7 +7217,7 @@ document.getElementById('btnExport').addEventListener('click', () => {
   const _sl = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
   const headers = _isJSM
     ? ['Rank', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', 'JS Proj PPG', 'VOR', 'Proj Season', 'Age']
-    : ['Rank', 'Tier', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', 'PPG Proj (' + _sl[rankingScoringFmt] + ')', 'PPG 2025 (' + _sl[rankingScoringFmt] + ')', 'Age', 'ADP Diff'];
+    : ['Rank', 'Tier', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', (rankingProjSrc==='clay'?'Clay ':'') + 'PPG Proj (' + _sl[rankingScoringFmt] + ')', 'PPG 2025 (' + _sl[rankingScoringFmt] + ')', 'Age', 'ADP Diff'];
   const rows = [headers.join(',')];
   
   data.forEach((d, i) => {
@@ -8048,7 +8082,7 @@ function openPlayerCard(d) {
         </div>
         <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr':'1fr 1fr'};margin-top:.4rem">
           <div class="card-rank-box">
-            <div class="lbl">Proj PPG</div>
+            <div class="lbl">${rankingProjSrc==='clay'?'Clay PPG':'Proj PPG'}</div>
             <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div>
           </div>
           <div class="card-rank-box">
@@ -8805,7 +8839,7 @@ function renderCompareGrid() {
             <div class="card-rank-box"><div class="lbl">+/- ADP</div><div class="num ${diffClass}">${diffText}</div></div>
           </div>
           <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr':'1fr 1fr'};margin-top:.4rem">
-            <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div></div>
+            <div class="card-rank-box"><div class="lbl">${rankingProjSrc==='clay'?'Clay PPG':'Proj PPG'}</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div></div>
             <div class="card-rank-box"><div class="lbl">'25 PPG</div><div class="num green">${(()=>{const v=adj25ppg(d);return v!=null?v.toFixed(1):'—';})()}</div></div>
             ${(d.s==='RB'||d.s==='WR'||d.s==='TE') ? `<div class="card-rank-box"><div class="lbl">'${d._yrr_yr ? String(d._yrr_yr).slice(-2) : '25'} Y/RR</div><div class="num" style="color:${d._yrr!=null?(d._yrr>=2.0?'var(--green)':d._yrr>=1.5?'var(--accent)':'var(--text2)'):'var(--text2)'}">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</div></div>` : ''}
           </div>
@@ -26588,6 +26622,10 @@ Rules:
       html += `</div>`;
       // Position scores mini + picks for dynasty
       html += `<div style="display:flex;gap:4px">`;
+      // PPG mini display
+      const ppgVal = t.lineupPpg || 0;
+      const ppgHighlight = _mtSortBy === 'ppg' ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
+      html += `<div style="text-align:center;min-width:32px"><div style="font-size:.5rem;color:var(--text2)">${typeof rankingProjSrc !== 'undefined' && rankingProjSrc === 'clay' ? 'CLAY' : 'PPG'}</div><div style="${ppgHighlight};font-weight:700;color:#22c55e">${ppgVal}</div></div>`;
       const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
       ['QB','RB','WR','TE'].forEach(pos => {
         const ps = sc.posScores[pos] || { pts: 0 };
@@ -26640,7 +26678,16 @@ Rules:
   // === BEST LINEUP OPTIMIZER ===
   // Slots players into the actual league roster positions to maximize projected PPG
   function _mtBestLineup(playerNames) {
-    const rp = _mtFormat.rosterPositions || [];
+    let rp = _mtFormat.rosterPositions || [];
+    // Fallback: if rosterPositions wasn't stored, build a default from format info
+    if (!rp.length && _mtFormat.starters) {
+      // Common default: 1QB, 2RB, 2WR, 1TE, 2FLEX (+ SF if superflex)
+      rp = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX'];
+      if (_mtFormat.sf) rp.push('SUPER_FLEX');
+      // Adjust to match actual starter count
+      while (rp.length < _mtFormat.starters) rp.push('FLEX');
+      while (rp.length > _mtFormat.starters && rp.length > 1) rp.pop();
+    }
     const slots = rp.filter(p => p !== 'BN'); // starting slots only
     console.log('[BestLineup] rosterPositions:', rp.length, 'slots:', slots.length, 'players:', playerNames.length);
     if (!slots.length) {
@@ -26659,8 +26706,17 @@ Rules:
       if (d.s === 'K' || d.s === 'DST') return { name, pos: d.s, ppg: 0, d };
       _dbgFound++;
       let ppg = 0;
+      // Priority 0: Clay projections (when toggle active)
+      if (typeof rankingProjSrc !== 'undefined' && rankingProjSrc === 'clay' && typeof MIKE_CLAY_PROJ !== 'undefined') {
+        const cp = MIKE_CLAY_PROJ[name];
+        if (cp) {
+          const recs = cp.rec || 0;
+          const clayAdj = pprVal === 1 ? 0 : pprVal === 0 ? -1.0 : -0.5; // Clay pts = full PPR base
+          ppg = Math.round(((cp.pts + recs * clayAdj) / cp.gm) * 10) / 10;
+        }
+      }
       // Priority 1: projected total points (d.p = season total half-PPR projection)
-      if (d.p && d.p > 0) {
+      if (!ppg && d.p && d.p > 0) {
         const recs = d.s25 ? (d.s25.rc || 0) : (d.career && d.career.length ? d.career[d.career.length - 1].rc || 0 : 0);
         ppg = Math.round(((d.p + recs * adj) / 17) * 10) / 10;
       }
@@ -26769,7 +26825,7 @@ Rules:
     let html = `<div style="margin-top:18px;margin-bottom:8px">`;
     html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)">BEST LINEUP</div>`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#22c55e">${lineup.totalPpg} <span style="font-size:.65rem;color:var(--text2);font-weight:400">PROJ PPG</span></div>`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#22c55e">${lineup.totalPpg} <span style="font-size:.65rem;color:var(--text2);font-weight:400">${typeof rankingProjSrc !== 'undefined' && rankingProjSrc === 'clay' ? 'CLAY' : 'PROJ'} PPG</span></div>`;
     html += `</div>`;
 
     // Starter slots

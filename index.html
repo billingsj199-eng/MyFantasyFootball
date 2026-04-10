@@ -4447,6 +4447,50 @@ if (typeof COLLEGE_STATS !== 'undefined') {
     // Colorado 2024 Heisman (PFF OFF 86.3, PASS 89.0 — 13 GP)
     {yr:2024,tm:"Colorado",conf:"Big 12",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:54,rtd:0,ra:8,rec:96,rcy:1258,rctd:15,fl:0,fpts:269.2,pff:86.3}
   ];
+
+  // === Tetairoa McMillan — add PFF per-season grades from PFF receiving_summary CSVs ===
+  // 2024: 84.8, 2023: 87.4, 2022: 66.5
+  if (COLLEGE_STATS['Tetairoa McMillan']) {
+    COLLEGE_STATS['Tetairoa McMillan'].forEach(function(s) {
+      if (s.yr === 2024) s.pff = 84.8;
+      else if (s.yr === 2023) s.pff = 87.4;
+      else if (s.yr === 2022) s.pff = 66.5;
+    });
+  }
+
+  // === Quinshon Judkins — complete college stats (Ole Miss + Ohio State) ===
+  COLLEGE_STATS['Quinshon Judkins'] = [
+    // Ole Miss 2022 (true freshman — immediate starter, 1567 rush yds)
+    {yr:2022,tm:"Ole Miss",conf:"SEC",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:1567,rtd:16,ra:219,rec:22,rcy:132,rctd:1,fl:0,fpts:282.9},
+    // Ole Miss 2023 (sophomore — 1158 rush yds, declared after season)
+    {yr:2023,tm:"Ole Miss",conf:"SEC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:1158,rtd:15,ra:194,rec:22,rcy:149,rctd:2,fl:0,fpts:243.7},
+    // Ohio State 2024 (transfer — split carries with TreVeyon Henderson)
+    {yr:2024,tm:"Ohio State",conf:"Big Ten",gp:16,py:0,ptd:0,int:0,pc:0,pa:0,ry:995,rtd:11,ra:193,rec:22,rcy:161,rctd:2,fl:0,fpts:204.6}
+  ];
+
+  // === Matthew Golden — complete college stats (Houston + Texas) from PFF CSVs ===
+  COLLEGE_STATS['Matthew Golden'] = [
+    // Houston 2022 (true freshman — PFF offense 65.3)
+    {yr:2022,tm:"Houston",conf:"AAC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:38,rcy:584,rctd:7,fl:0,fpts:119.4,pff:65.3},
+    // Houston 2023 (sophomore — 9 GP, PFF offense 68.4)
+    {yr:2023,tm:"Houston",conf:"Big 12",gp:9,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:39,rcy:419,rctd:6,fl:0,fpts:97.4,pff:68.4},
+    // Texas 2024 (transfer — breakout, PFF offense 74.0, 16 GP playoff run)
+    {yr:2024,tm:"Texas",conf:"SEC",gp:16,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:58,rcy:987,rctd:9,fl:0,fpts:181.7,pff:74.0}
+  ];
+
+  // === Kyle Williams — complete college stats (UNLV + Washington State) from PFF CSVs ===
+  COLLEGE_STATS['Kyle Williams'] = [
+    // UNLV 2020 (true freshman — 6 GP COVID season, PFF offense 73.3)
+    {yr:2020,tm:"UNLV",conf:"Mountain West",gp:6,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:35,rcy:426,rctd:2,fl:0,fpts:72.1,pff:73.3},
+    // UNLV 2021 (PFF offense 71.7)
+    {yr:2021,tm:"UNLV",conf:"Mountain West",gp:10,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:42,rcy:601,rctd:2,fl:0,fpts:93.1,pff:71.7},
+    // UNLV 2022 (PFF offense 71.4, 9 GP)
+    {yr:2022,tm:"UNLV",conf:"Mountain West",gp:9,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:40,rcy:541,rctd:5,fl:0,fpts:104.1,pff:71.4},
+    // Washington State 2023 (transfer — PFF offense 67.3)
+    {yr:2023,tm:"Washington State",conf:"Pac-12",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:61,rcy:842,rctd:6,fl:0,fpts:150.7,pff:67.3},
+    // Washington State 2024 (breakout — 14 TD, PFF offense 79.8)
+    {yr:2024,tm:"Washington State",conf:"Pac-12",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:70,rcy:1196,rctd:14,fl:0,fpts:238.6,pff:79.8}
+  ];
 }
 </script>
 <script>
@@ -5103,6 +5147,15 @@ if (typeof _PFF_WR_GRADES !== 'undefined') {
   // Travis Hunter: PFF OFF grade avg from PFF season grades page
   // 2024: 86.3, 2023: 77.6, 2022 Jackson St: 85.8 → avg 83.2
   _PFF_WR_GRADES['Travis Hunter'] = 83.2;
+  // Tetairoa McMillan: PFF grades_offense avg from receiving_summary CSVs
+  // 2024: 84.8, 2023: 87.4, 2022: 66.5 → avg 79.6
+  _PFF_WR_GRADES['Tetairoa McMillan'] = 79.6;
+  // Matthew Golden: PFF grades_offense avg from receiving_summary CSVs
+  // 2024 Texas: 74.0, 2023 Houston: 68.4, 2022 Houston: 65.3 → avg 69.2
+  _PFF_WR_GRADES['Matthew Golden'] = 69.2;
+  // Kyle Williams: PFF grades_offense avg from receiving_summary CSVs
+  // 2024 WSU: 79.8, 2023 WSU: 67.3, 2022 UNLV: 71.4, 2021 UNLV: 71.7, 2020 UNLV: 73.3 → avg 72.7
+  _PFF_WR_GRADES['Kyle Williams'] = 72.7;
 }
 </script>
 <script src="data/all_players_weekly_1.js"></script>
@@ -12231,6 +12284,17 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   });
   console.log('[ALL_PLAYERS_DB] Enriched career stats, added ' + _apAdded + ' new retired players');
 }
+
+// === NAME COLLISION FIX: Clear old career data for 2025 rookies with same name as retired NFL players ===
+(function() {
+  // Kyle Williams (2025 WR, Washington State) — collides with old Kyle Williams (49ers WR 2010-2015)
+  var kw = D.find(function(d) { return d.n === 'Kyle Williams' && d.s === 'WR'; });
+  if (kw && kw.career && kw.career.length > 0) {
+    // Check if career has old seasons (pre-2025 NFL). If so, clear it — he's a rookie.
+    var hasOldNFL = kw.career.some(function(s) { return s.yr < 2025; });
+    if (hasOldNFL) { kw.career = []; kw._retired = false; }
+  }
+})();
 
 
 // Add HP players with LEGEND_CAREERS data to D so they get full career log cards

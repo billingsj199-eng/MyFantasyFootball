@@ -26216,7 +26216,7 @@ Rules:
     const ppr = league.scoring_settings ? (league.scoring_settings.rec || 0) : 1;
     const starters = rp.filter(p => p !== 'BN').length;
 
-    _mtFormat = { type, sf, ppr, starters };
+    _mtFormat = { type, sf, ppr, starters, rosterPositions: rp };
 
     // Update format display
     const fmtEl = document.getElementById('mtFormatDisplay');
@@ -26387,10 +26387,9 @@ Rules:
               const origIdx = rosterIdToTeamIdx[parseInt(origRosterId)];
               const ownerIdx = rosterIdToTeamIdx[ownerId];
               if (ownerIdx !== undefined) {
-                // Estimate slot based on original owner's standing
                 const origTeam = origIdx !== undefined ? teams[origIdx] : null;
-                const slot = origTeam ? (origTeam.wins <= 4 ? 'early' : origTeam.wins >= 9 ? 'late' : 'mid') : 'mid';
-                teams[ownerIdx].draftPicks.push({ round, year, slot, original: origTeam ? origTeam.owner : '?' });
+                // Slot will be reassigned after PPG computation
+                teams[ownerIdx].draftPicks.push({ round, year, slot: 'mid', original: origTeam ? origTeam.owner : '?', _origIdx: origIdx });
               }
             });
           }
@@ -26398,6 +26397,52 @@ Rules:
       }
 
       // Score all teams
+      teams.forEach(t => {
+        const result = _mtScoreRoster(t.players, _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper' ? t.draftPicks : []);
+        t.score = result;
+        // Compute best lineup projected PPG
+        const lineup = _mtBestLineup(t.players);
+        t.lineupPpg = lineup ? lineup.totalPpg : 0;
+      });
+
+      // Reassign pick slots based on original owner's projected PPG
+      // Top 3 PPG = late, Bottom 3 PPG = early, everyone else = mid
+      // With gap detection: if 3rd best/worst is far from 2nd, demote to mid
+      (function() {
+        const ppgRanked = teams.slice().sort((a, b) => b.lineupPpg - a.lineupPpg);
+        const n = ppgRanked.length;
+        if (n < 4) return; // too few teams for meaningful tiers
+
+        // Build a map: team index → slot
+        const slotMap = {}; // teamIdx → 'early'|'mid'|'late'
+        const GAP_THRESHOLD = 8; // PPG gap that's "far away"
+
+        // Top teams = late picks
+        slotMap[teams.indexOf(ppgRanked[0])] = 'late';
+        slotMap[teams.indexOf(ppgRanked[1])] = 'late';
+        // 3rd best: late unless far gap from 2nd
+        const topGap = ppgRanked[1].lineupPpg - ppgRanked[2].lineupPpg;
+        slotMap[teams.indexOf(ppgRanked[2])] = topGap >= GAP_THRESHOLD ? 'mid' : 'late';
+
+        // Bottom teams = early picks
+        slotMap[teams.indexOf(ppgRanked[n - 1])] = 'early';
+        slotMap[teams.indexOf(ppgRanked[n - 2])] = 'early';
+        // 3rd worst: early unless far gap from 2nd worst
+        const botGap = ppgRanked[n - 3].lineupPpg - ppgRanked[n - 2].lineupPpg;
+        slotMap[teams.indexOf(ppgRanked[n - 3])] = botGap >= GAP_THRESHOLD ? 'mid' : 'early';
+
+        // Apply slots to all picks based on original owner
+        teams.forEach(t => {
+          t.draftPicks.forEach(pk => {
+            if (pk._origIdx !== undefined && slotMap[pk._origIdx] !== undefined) {
+              pk.slot = slotMap[pk._origIdx];
+            }
+            // else stays 'mid'
+          });
+        });
+      })();
+
+      // Re-score rosters now that pick slots are finalized
       teams.forEach(t => {
         const result = _mtScoreRoster(t.players, _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper' ? t.draftPicks : []);
         t.score = result;
@@ -26492,6 +26537,7 @@ Rules:
     html += `<span style="font-size:.65rem;color:var(--text2);margin-right:4px">SORT BY:</span>`;
     const sortOpts = [
       { key: 'total', label: 'TOTAL', color: 'var(--accent)' },
+      { key: 'ppg', label: 'PROJ PPG', color: '#22c55e' },
       { key: 'QB', label: 'QB', color: '#ef4444' },
       { key: 'RB', label: 'RB', color: '#22c55e' },
       { key: 'WR', label: 'WR', color: '#3b82f6' },
@@ -26508,6 +26554,7 @@ Rules:
     // Sort teams
     const sorted = teams.slice().sort((a, b) => {
       if (_mtSortBy === 'total') return b.score.total - a.score.total;
+      if (_mtSortBy === 'ppg') return (b.lineupPpg || 0) - (a.lineupPpg || 0);
       if (_mtSortBy === 'picks') return (b.score.pickTotal || 0) - (a.score.pickTotal || 0);
       const posA = (a.score.posScores[_mtSortBy] || { pts: 0 }).pts;
       const posB = (b.score.posScores[_mtSortBy] || { pts: 0 }).pts;
@@ -26516,6 +26563,7 @@ Rules:
 
     const allScores = sorted.map(x => {
       if (_mtSortBy === 'total') return x.score.total;
+      if (_mtSortBy === 'ppg') return x.lineupPpg || 0;
       if (_mtSortBy === 'picks') return x.score.pickTotal || 0;
       return (x.score.posScores[_mtSortBy] || { pts: 0 }).pts;
     });
@@ -26526,7 +26574,7 @@ Rules:
       const sc = t.score;
       const isMe = t.isMyTeam;
       const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
-      const displayScore = _mtSortBy === 'total' ? sc.total : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : (sc.posScores[_mtSortBy] || { pts: 0 }).pts;
+      const displayScore = _mtSortBy === 'total' ? sc.total : _mtSortBy === 'ppg' ? (t.lineupPpg || 0) : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : (sc.posScores[_mtSortBy] || { pts: 0 }).pts;
       const scoreColor = displayScore >= maxScore ? '#22c55e' : displayScore >= avgScore ? '#4ade80' : displayScore >= avgScore * 0.7 ? '#f59e0b' : '#ef4444';
       // Find original index for click handler
       const origIdx = teams.indexOf(t);
@@ -26572,6 +26620,8 @@ Rules:
         const isDyn = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
         const result = _mtScoreRoster(t.players, isDyn ? t.draftPicks : [], contenderMode);
         t.score = result;
+        const lineup = _mtBestLineup(t.players);
+        t.lineupPpg = lineup ? lineup.totalPpg : 0;
       });
       _mtRenderTeamList(window._mtTeams);
     }
@@ -26586,6 +26636,147 @@ Rules:
     const leagueId = document.getElementById('mtSleeperLeagueId').value.trim();
     if (leagueId) window._mtImportSleeper();
   };
+
+  // === BEST LINEUP OPTIMIZER ===
+  // Slots players into the actual league roster positions to maximize projected PPG
+  function _mtBestLineup(playerNames) {
+    const rp = _mtFormat.rosterPositions || [];
+    const slots = rp.filter(p => p !== 'BN'); // starting slots only
+    if (!slots.length) return null;
+
+    // Get projected PPG for each player, adjusted for league scoring
+    const pprVal = _mtFormat.ppr != null ? _mtFormat.ppr : 0.5;
+    const adj = pprVal === 1 ? 0.5 : pprVal === 0 ? -0.5 : 0; // adjustment from half-PPR base
+
+    const pool = playerNames.map(name => {
+      const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
+      if (!d || !d.p || d.s === 'K' || d.s === 'DST') return { name, pos: d ? d.s : '?', ppg: 0, d };
+      const recs = d.s25 ? (d.s25.rc || 0) : (d.career && d.career.length ? d.career[d.career.length - 1].rc || 0 : 0);
+      const ppg = Math.round(((d.p + recs * adj) / 17) * 10) / 10;
+      return { name, pos: d.s, ppg, d };
+    }).filter(p => p.ppg > 0);
+
+    // Sort by PPG descending for greedy assignment
+    pool.sort((a, b) => b.ppg - a.ppg);
+
+    // Map Sleeper slot names to which positions can fill them
+    function canFill(slot, pos) {
+      if (slot === pos) return true;
+      if (slot === 'FLEX' && (pos === 'RB' || pos === 'WR' || pos === 'TE')) return true;
+      if (slot === 'SUPER_FLEX' && (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE')) return true;
+      if (slot === 'REC_FLEX' && (pos === 'WR' || pos === 'TE')) return true;
+      if (slot === 'WRRB_FLEX' && (pos === 'WR' || pos === 'RB')) return true;
+      if (slot === 'IDP_FLEX') return false; // skip IDP
+      return false;
+    }
+
+    // Greedy assignment: fill required slots first (QB, RB, WR, TE), then flex
+    const filled = new Array(slots.length).fill(null);
+    const used = new Set();
+
+    // Pass 1: fill exact position slots (QB, RB, WR, TE)
+    const exactSlots = ['QB', 'RB', 'WR', 'TE'];
+    for (let si = 0; si < slots.length; si++) {
+      if (!exactSlots.includes(slots[si])) continue;
+      for (const p of pool) {
+        if (used.has(p.name)) continue;
+        if (p.pos === slots[si]) {
+          filled[si] = p;
+          used.add(p.name);
+          break;
+        }
+      }
+    }
+
+    // Pass 2: fill flex/superflex with best remaining
+    for (let si = 0; si < slots.length; si++) {
+      if (filled[si]) continue;
+      if (exactSlots.includes(slots[si])) continue; // already handled
+      for (const p of pool) {
+        if (used.has(p.name)) continue;
+        if (canFill(slots[si], p.pos)) {
+          filled[si] = p;
+          used.add(p.name);
+          break;
+        }
+      }
+    }
+
+    // Bench: everyone not starting
+    const bench = pool.filter(p => !used.has(p.name));
+
+    // Compute totals
+    const starters = filled.filter(Boolean);
+    const totalPpg = starters.reduce((s, p) => s + p.ppg, 0);
+    const avgPpg = Math.round(totalPpg * 10) / 10;
+
+    return {
+      slots: slots.map((slot, i) => ({ slot, player: filled[i] })),
+      bench,
+      totalPpg: avgPpg,
+      starterCount: starters.length,
+      slotCount: slots.length
+    };
+  }
+
+  // Render best lineup HTML
+  function _mtRenderBestLineup(lineup) {
+    if (!lineup) return '';
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    const slotLabels = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLX', SUPER_FLEX: 'SF', REC_FLEX: 'RF', WRRB_FLEX: 'WF', BN: 'BN' };
+
+    let html = `<div style="margin-top:18px;margin-bottom:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)">BEST LINEUP</div>`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#22c55e">${lineup.totalPpg} <span style="font-size:.65rem;color:var(--text2);font-weight:400">PROJ PPG</span></div>`;
+    html += `</div>`;
+
+    // Starter slots
+    html += `<div style="display:flex;flex-direction:column;gap:3px">`;
+    lineup.slots.forEach(s => {
+      const p = s.player;
+      const slotLbl = slotLabels[s.slot] || s.slot;
+      const slotColor = posColors[s.slot] || (s.slot === 'FLEX' ? '#a78bfa' : s.slot === 'SUPER_FLEX' ? '#f472b6' : s.slot === 'REC_FLEX' ? '#38bdf8' : '#94a3b8');
+
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px">`;
+      html += `<div style="min-width:28px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;color:${slotColor};padding:2px 4px;border-radius:3px;background:${slotColor}15">${slotLbl}</div>`;
+
+      if (p) {
+        const ppgColor = p.ppg >= 15 ? '#22c55e' : p.ppg >= 10 ? '#4ade80' : p.ppg >= 6 ? '#facc15' : '#f59e0b';
+        html += `<div style="flex:1;display:flex;align-items:center;gap:6px">`;
+        html += `<span style="font-size:.55rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'};padding:1px 4px;border-radius:3px;background:${(posColors[p.pos] || '#666')}20">${p.pos}</span>`;
+        html += `<span style="font-size:.78rem;font-weight:600;color:var(--text)">${_esc(p.name)}</span>`;
+        html += `</div>`;
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${ppgColor}">${p.ppg}</div>`;
+      } else {
+        html += `<div style="flex:1;font-size:.72rem;color:var(--text2);opacity:.5">EMPTY</div>`;
+        html += `<div style="font-size:.72rem;color:var(--text2);opacity:.4">—</div>`;
+      }
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    // Bench (collapsed by default)
+    if (lineup.bench.length > 0) {
+      const benchPpg = lineup.bench.reduce((s, p) => s + p.ppg, 0);
+      html += `<div style="margin-top:8px">`;
+      html += `<div onclick="var el=document.getElementById('mtBenchList');el.style.display=el.style.display==='none'?'':'none'" style="cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:var(--text2);padding:4px 0">BENCH (${lineup.bench.length}) · ${Math.round(benchPpg * 10) / 10} PPG ▾</div>`;
+      html += `<div id="mtBenchList" style="display:none;display:flex;flex-direction:column;gap:2px">`;
+      lineup.bench.forEach(p => {
+        const ppgColor = p.ppg >= 10 ? '#4ade80' : p.ppg >= 6 ? '#facc15' : 'var(--text2)';
+        html += `<div style="display:flex;align-items:center;gap:8px;padding:3px 8px;opacity:.65">`;
+        html += `<div style="min-width:28px;text-align:center;font-size:.55rem;color:var(--text2)">BN</div>`;
+        html += `<span style="font-size:.5rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'}">${p.pos}</span>`;
+        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)">${_esc(p.name)}</span>`;
+        html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg}</span>`;
+        html += `</div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    html += `</div>`;
+    return html;
+  }
 
   window._mtShowTeam = function(idx) {
     const teams = window._mtTeams;
@@ -26622,6 +26813,10 @@ Rules:
       html += `</div>`;
     });
     html += `</div>`;
+
+    // Best Lineup
+    const lineup = _mtBestLineup(t.players);
+    html += _mtRenderBestLineup(lineup);
 
     // Full roster table
     html += `<table style="width:100%;border-collapse:collapse;font-size:.75rem">`;

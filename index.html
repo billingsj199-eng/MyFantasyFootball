@@ -26650,9 +26650,27 @@ Rules:
 
     const pool = playerNames.map(name => {
       const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
-      if (!d || !d.p || d.s === 'K' || d.s === 'DST') return { name, pos: d ? d.s : '?', ppg: 0, d };
-      const recs = d.s25 ? (d.s25.rc || 0) : (d.career && d.career.length ? d.career[d.career.length - 1].rc || 0 : 0);
-      const ppg = Math.round(((d.p + recs * adj) / 17) * 10) / 10;
+      if (!d || d.s === 'K' || d.s === 'DST') return { name, pos: d ? d.s : '?', ppg: 0, d };
+      let ppg = 0;
+      // Priority 1: projected total points (d.p = season total half-PPR projection)
+      if (d.p && d.p > 0) {
+        const recs = d.s25 ? (d.s25.rc || 0) : (d.career && d.career.length ? d.career[d.career.length - 1].rc || 0 : 0);
+        ppg = Math.round(((d.p + recs * adj) / 17) * 10) / 10;
+      }
+      // Priority 2: 2025 actual season PPG
+      if (!ppg && d.s25 && d.s25.gp > 0 && d.s25.fpts > 0) {
+        const recs = d.s25.rc || 0;
+        ppg = Math.round(((d.s25.fpts + recs * adj) / d.s25.gp) * 10) / 10;
+      }
+      // Priority 3: last career season PPG
+      if (!ppg && d.career && d.career.length) {
+        const last = d.career[d.career.length - 1];
+        if (last.gp > 0 && last.fpts > 0) {
+          ppg = Math.round((last.fpts / last.gp) * 10) / 10;
+        }
+      }
+      // Priority 4: JS model projection
+      if (!ppg && d._jsModelPpg) ppg = d._jsModelPpg;
       return { name, pos: d.s, ppg, d };
     }).filter(p => p.ppg > 0);
 

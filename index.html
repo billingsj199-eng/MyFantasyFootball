@@ -26332,15 +26332,26 @@ Rules:
         totalPicks++;
         const origIdx = pk._origIdx !== undefined ? pk._origIdx : tIdx;
         if (pk.year === currentDraftYear) {
-          const pos = pickOrderMap[origIdx] || Math.ceil(n / 2);
-          const rdNum = pk.round === '1st' ? 1 : pk.round === '2nd' ? 2 : pk.round === '3rd' ? 3 : 4;
-          pk._pickNum = rdNum + '.' + String(pos).padStart(2, '0');
-          const overallIdx = (rdNum - 1) * n + (pos - 1);
-          if (_rookieNames[overallIdx]) pk._rookieName = _rookieNames[overallIdx];
-          const third = Math.ceil(n / 3);
-          if (pos <= third) pk.slot = 'early';
-          else if (pos > n - third) pk.slot = 'late';
-          else pk.slot = 'mid';
+          // If Sleeper already gave us an exact pick number, keep it; otherwise compute from PPG
+          if (!pk._pickNum) {
+            const pos = pickOrderMap[origIdx] || Math.ceil(n / 2);
+            const rdNum = pk.round === '1st' ? 1 : pk.round === '2nd' ? 2 : pk.round === '3rd' ? 3 : 4;
+            pk._pickNum = rdNum + '.' + String(pos).padStart(2, '0');
+            const third = Math.ceil(n / 3);
+            if (pos <= third) pk.slot = 'early';
+            else if (pos > n - third) pk.slot = 'late';
+            else pk.slot = 'mid';
+          }
+          // Look up rookie name from board
+          if (pk._pickNum) {
+            const parts = pk._pickNum.split('.');
+            const rdNum = parseInt(parts[0]);
+            const pickInRound = parseInt(parts[1]);
+            if (rdNum && pickInRound) {
+              const overallIdx = (rdNum - 1) * n + (pickInRound - 1);
+              if (_rookieNames[overallIdx]) pk._rookieName = _rookieNames[overallIdx];
+            }
+          }
           assigned2026++;
         } else {
           if (slotMap[origIdx] !== undefined) pk.slot = slotMap[origIdx];
@@ -26551,12 +26562,29 @@ Rules:
         try {
           status.textContent = 'Fetching draft picks...';
           const picksResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/traded_picks`);
+          const season = parseInt(league.season || new Date().getFullYear());
+          const currentDraftYear = season + 1; // 2026 for 2025 leagues
+
+          // Also fetch league drafts to get actual draft order for current year
+          let draftSlotMap = null; // slot (1-based) → roster_id for the current year draft
+          try {
+            const draftsResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/drafts`);
+            if (draftsResp.ok) {
+              const drafts = await draftsResp.json();
+              // Find the rookie draft for the current draft year (status may be 'pre_draft' or 'drafting' or 'complete')
+              const rookieDraft = drafts.find(d => d.type === 'snake' || d.type === 'linear');
+              if (rookieDraft && rookieDraft.slot_to_roster_id) {
+                draftSlotMap = rookieDraft.slot_to_roster_id; // { "1": roster_id, "2": roster_id, ... }
+                console.log('[MyTeams] Draft order found:', JSON.stringify(draftSlotMap));
+              }
+            }
+          } catch(e) { console.warn('[MyTeams] Drafts API error:', e); }
+
           if (picksResp.ok) {
             const tradedPicks = await picksResp.json();
             // Build a map of pick ownership: {rosterId -> [{round, year, originalOwner}]}
             // Start: each team owns their own 1st-4th for current + next 2 years
-            const season = parseInt(league.season || new Date().getFullYear());
-            const pickYears = [season + 1, season + 2, season + 3];
+            const pickYears = [currentDraftYear, currentDraftYear + 1, currentDraftYear + 2];
             const rounds = ['1st', '2nd', '3rd', '4th'];
             const ownershipMap = {}; // key: "year-round-originalRosterId" -> currentOwnerId
             rosters.forEach(r => {
@@ -26574,6 +26602,15 @@ Rules:
                 ownershipMap[key] = tp.owner_id;
               }
             });
+
+            // Build reverse map: roster_id → draft slot (1-based pick position) for current year
+            const rosterToDraftSlot = {}; // roster_id → pick-in-round (1-based)
+            if (draftSlotMap) {
+              Object.entries(draftSlotMap).forEach(([slot, rosterId]) => {
+                rosterToDraftSlot[rosterId] = parseInt(slot); // slot "1" → pick 1 in each round
+              });
+            }
+
             // Build pick arrays per team
             const rosterIdToTeamIdx = {};
             teams.forEach((t, i) => { rosterIdToTeamIdx[t.id] = i; });
@@ -26583,8 +26620,22 @@ Rules:
               const ownerIdx = rosterIdToTeamIdx[ownerId];
               if (ownerIdx !== undefined) {
                 const origTeam = origIdx !== undefined ? teams[origIdx] : null;
-                // Slot will be reassigned after PPG computation
-                teams[ownerIdx].draftPicks.push({ round, year, slot: 'mid', original: origTeam ? origTeam.owner : '?', _origIdx: origIdx });
+                const pk = { round, year, slot: 'mid', original: origTeam ? origTeam.owner : '?', _origIdx: origIdx };
+
+                // For current draft year: assign exact pick number from draft order
+                if (parseInt(year) === currentDraftYear && rosterToDraftSlot[parseInt(origRosterId)]) {
+                  const pickInRound = rosterToDraftSlot[parseInt(origRosterId)];
+                  const rdNum = round === '1st' ? 1 : round === '2nd' ? 2 : round === '3rd' ? 3 : 4;
+                  pk._pickNum = rdNum + '.' + String(pickInRound).padStart(2, '0');
+                  // Map to Early/Mid/Late for fallback
+                  const leagueSize = teams.length;
+                  const third = Math.ceil(leagueSize / 3);
+                  if (pickInRound <= third) pk.slot = 'early';
+                  else if (pickInRound > leagueSize - third) pk.slot = 'late';
+                  else pk.slot = 'mid';
+                }
+
+                teams[ownerIdx].draftPicks.push(pk);
               }
             });
           }

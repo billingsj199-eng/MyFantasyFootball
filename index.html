@@ -19623,6 +19623,13 @@ window.fmtHeight = fmtHeight;
       return cb.eligYr;
     }
 
+    // 0. TOP PRIORITY: If player has a known draft pick in COMBINE_DATA, use cb.yr
+    // This is the actual draft year, not the first playing year (which can differ
+    // if the player was injured their rookie season, e.g. JJ McCarthy 2024 draft but 2025 debut)
+    // Must run BEFORE school collision check — drafted players with name collisions in
+    // college_stats should still use their real draft year.
+    if (cb && cb.yr && cb.draft) return cb.yr;
+
     // School-based collision check: if CS and CB have different schools with year gap > 2, drop CB
     if (cb && cs && cs.length && cb.school && typeof _normSchool === 'function') {
       const csLast = cs.reduce((a, b) => (b.yr > a.yr) ? b : a, cs[0]);
@@ -19631,11 +19638,6 @@ window.fmtHeight = fmtHeight;
         cb = null;
       }
     }
-
-    // 0. TOP PRIORITY: If player has a known draft pick in COMBINE_DATA, use cb.yr
-    // This is the actual draft year, not the first playing year (which can differ
-    // if the player was injured their rookie season, e.g. JJ McCarthy 2024 draft but 2025 debut)
-    if (cb && cb.yr && cb.draft) return cb.yr;
 
     // Career first year from D — use _debut if it's earlier than career stats
     // (stats data starts in 1999, so pre-1999 players have career arrays that start too late)

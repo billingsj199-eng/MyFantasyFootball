@@ -3238,6 +3238,7 @@ CLEAR
 </div><!-- end triviaTabCustomfg -->
 
 </div><!-- end trivia-wrap -->
+</div><!-- close pageTrivia -->
 
 <div class="page page-trade" id="pageTrade">
 <div class="auth-anchor" id="authAnchorTrade"></div>
@@ -3951,6 +3952,10 @@ if (typeof COMBINE_DATA !== 'undefined') {
     cb=COMBINE_DATA['Mike Matthews']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
   })();
 
+  // === NAME COLLISION FIXES: Veterans appearing in wrong draft class ===
+  // Deebo Samuel was drafted in 2019 — combine_data.js may have wrong yr
+  if (COMBINE_DATA['Deebo Samuel']) COMBINE_DATA['Deebo Samuel'].yr = 2019;
+
   // === 2026 DRAFT CLASS ADDITIONS ===
   if (!COMBINE_DATA['KC Concepcion']) COMBINE_DATA['KC Concepcion'] = { school: 'Texas A&M', pos: 'WR', yr: 2026 };
   if (COMBINE_DATA['KC Concepcion'] && !COMBINE_DATA['KC Concepcion'].pos) COMBINE_DATA['KC Concepcion'].pos = 'WR';
@@ -4387,6 +4392,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   _udfa25('Keleki Latu', 'BUF', 'TE', 'Washington');
   _udfa25('Lan Larison', 'NE', 'RB', 'UC Davis');
   _udfa25('Marcus Yarns', 'NO', 'RB', 'Delaware');
+  _udfa25('Tanner Koziol', 'HOU', 'TE', 'Ball State');
 
   // === NAME ALIASES: create COMBINE_DATA entries under alternate name spellings ===
   // D[] uses curly apostrophes, COMBINE_DATA uses plain names. Create cross-references.
@@ -4490,6 +4496,57 @@ if (typeof COLLEGE_STATS !== 'undefined') {
     {yr:2023,tm:"Washington State",conf:"Pac-12",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:61,rcy:842,rctd:6,fl:0,fpts:150.7,pff:67.3},
     // Washington State 2024 (breakout — 14 TD, PFF offense 79.8)
     {yr:2024,tm:"Washington State",conf:"Pac-12",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:70,rcy:1196,rctd:14,fl:0,fpts:238.6,pff:79.8}
+  ];
+
+  // === Elijah Sarratt — complete college stats (James Madison + Indiana) from PFF CSVs ===
+  COLLEGE_STATS['Elijah Sarratt'] = [
+    // James Madison 2023 (PFF offense 89.9, route 90.2 — elite production at FBS level)
+    {yr:2023,tm:"James Madison",conf:"Sun Belt",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:82,rcy:1199,rctd:8,fl:0,fpts:208.9,pff:89.9},
+    // Indiana 2024 (transfer — PFF offense 80.0)
+    {yr:2024,tm:"Indiana",conf:"Big Ten",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:53,rcy:957,rctd:8,fl:0,fpts:170.2,pff:80.0},
+    // Indiana 2025 (PFF offense 86.1, 15 TD breakout)
+    {yr:2025,tm:"Indiana",conf:"Big Ten",gp:14,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:64,rcy:824,rctd:15,fl:0,fpts:204.4,pff:86.1}
+  ];
+
+  // === Tanner Koziol — complete college stats (Ball State + Houston) from PFF CSVs ===
+  COLLEGE_STATS['Tanner Koziol'] = [
+    // Ball State 2022 (PFF offense 65.3)
+    {yr:2022,tm:"Ball State",conf:"MAC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:35,rcy:379,rctd:7,fl:0,fpts:97.4,pff:65.3},
+    // Ball State 2023 (PFF offense 59.9)
+    {yr:2023,tm:"Ball State",conf:"MAC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:34,rcy:290,rctd:3,fl:0,fpts:64.0,pff:59.9},
+    // Ball State 2024 (breakout — PFF offense 87.9, 94 rec)
+    {yr:2024,tm:"Ball State",conf:"MAC",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:94,rcy:840,rctd:8,fl:0,fpts:179.0,pff:87.9},
+    // Houston 2025 (transfer — PFF offense 78.9)
+    {yr:2025,tm:"Houston",conf:"Big 12",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:74,rcy:727,rctd:6,fl:0,fpts:145.7,pff:78.9}
+  ];
+
+  // === Tyler Shough — complete college stats (Oregon + Texas Tech + Louisville) ===
+  // Sources: Saints.com bio, SI draft profile, sports-reference
+  COLLEGE_STATS['Tyler Shough'] = [
+    // Oregon 2020 (COVID season, 7 GP starter — Pac-12 champ)
+    {yr:2020,tm:"Oregon",conf:"Pac-12",gp:7,py:1559,ptd:13,int:6,pc:106,pa:167,ry:271,rtd:2,ra:66,rec:0,rcy:0,rctd:0,fl:0,fpts:147.5},
+    // Texas Tech 2021 (4 GP — broken collarbone in conference opener)
+    {yr:2021,tm:"Texas Tech",conf:"Big 12",gp:4,py:872,ptd:6,int:3,pc:59,pa:83,ry:50,rtd:2,ra:20,rec:0,rcy:0,rctd:0,fl:0,fpts:72.9},
+    // Texas Tech 2022 (7 GP — Texas Bowl MVP, 111 rush yds in bowl game)
+    {yr:2022,tm:"Texas Tech",conf:"Big 12",gp:7,py:1304,ptd:7,int:5,pc:0,pa:0,ry:130,rtd:2,ra:40,rec:0,rcy:0,rctd:0,fl:0,fpts:100.2},
+    // Texas Tech 2023 (4 GP — broken fibula W4 vs West Virginia)
+    {yr:2023,tm:"Texas Tech",conf:"Big 12",gp:4,py:746,ptd:7,int:4,pc:0,pa:0,ry:149,rtd:2,ra:48,rec:0,rcy:0,rctd:0,fl:0,fpts:80.7},
+    // Louisville 2024 (12 GP — Comeback Player of Year, full healthy season)
+    {yr:2024,tm:"Louisville",conf:"ACC",gp:12,py:3195,ptd:23,int:6,pc:244,pa:389,ry:19,rtd:1,ra:42,rec:0,rcy:0,rctd:0,fl:0,fpts:221.7}
+  ];
+
+  // === Chimere Dike — complete college stats (Wisconsin + Florida) from PFF CSVs ===
+  COLLEGE_STATS['Chimere Dike'] = [
+    // Wisconsin 2020 (COVID season — 7 GP, PFF offense 63.3)
+    {yr:2020,tm:"Wisconsin",conf:"Big Ten",gp:7,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:12,rcy:189,rctd:1,fl:0,fpts:30.9,pff:63.3},
+    // Wisconsin 2021 (PFF offense 65.5)
+    {yr:2021,tm:"Wisconsin",conf:"Big Ten",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:19,rcy:272,rctd:1,fl:0,fpts:42.7,pff:65.5},
+    // Wisconsin 2022 (best Badger season — 47 rec, 6 TD, PFF offense 74.4)
+    {yr:2022,tm:"Wisconsin",conf:"Big Ten",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:47,rcy:689,rctd:6,fl:0,fpts:128.4,pff:74.4},
+    // Wisconsin 2023 (down year — PFF offense 58.0, 11 GP)
+    {yr:2023,tm:"Wisconsin",conf:"Big Ten",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:19,rcy:328,rctd:1,fl:0,fpts:48.3,pff:58.0},
+    // Florida 2024 (transfer — PFF offense 72.9, 13 GP)
+    {yr:2024,tm:"Florida",conf:"SEC",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:42,rcy:783,rctd:2,fl:0,fpts:111.3,pff:72.9}
   ];
 }
 </script>
@@ -5156,6 +5213,17 @@ if (typeof _PFF_WR_GRADES !== 'undefined') {
   // Kyle Williams: PFF grades_offense avg from receiving_summary CSVs
   // 2024 WSU: 79.8, 2023 WSU: 67.3, 2022 UNLV: 71.4, 2021 UNLV: 71.7, 2020 UNLV: 73.3 → avg 72.7
   _PFF_WR_GRADES['Kyle Williams'] = 72.7;
+  // Elijah Sarratt: PFF grades_offense avg from receiving_summary CSVs
+  // 2025 Indiana: 86.1, 2024 Indiana: 80.0, 2023 JMU: 89.9 → avg 85.3
+  _PFF_WR_GRADES['Elijah Sarratt'] = 85.3;
+  // Chimere Dike: PFF grades_offense avg from receiving_summary CSVs
+  // 2024 Fla: 72.9, 2023 Wisc: 58.0, 2022 Wisc: 74.4, 2021 Wisc: 65.5, 2020 Wisc: 63.3 → avg 66.8
+  _PFF_WR_GRADES['Chimere Dike'] = 66.8;
+}
+if (typeof _PFF_TE_GRADES !== 'undefined') {
+  // Tanner Koziol: PFF grades_offense avg from receiving_summary CSVs
+  // 2025 Houston: 78.9, 2024 Ball St: 87.9, 2023 Ball St: 59.9, 2022 Ball St: 65.3 → avg 73.0
+  _PFF_TE_GRADES['Tanner Koziol'] = 73.0;
 }
 </script>
 <script src="data/all_players_weekly_1.js"></script>
@@ -27508,7 +27576,7 @@ Rules:
 })();
 
 </script>
-</div></div><!-- close pageTrivia -->
+</div><!-- close main-content -->
 <div class="gw-share-overlay" id="gwShareOverlay">
 <div class="gw-share-box">
 <div class="gw-share-title" id="gwShareTitle">ELITE PULL</div>

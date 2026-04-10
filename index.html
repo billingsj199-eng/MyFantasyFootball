@@ -26281,7 +26281,7 @@ Rules:
   function _mtAssignPickSlots(teams, season) {
     const n = teams.length;
     if (n < 2) return;
-    const currentDraftYear = String((season || 2025) + 1); // 2026 for 2025 season
+    const currentDraftYear = String(season || 2026); // league.season IS the draft year
     console.log('[PickSlots] season:', season, 'currentDraftYear:', currentDraftYear, 'teams:', n);
 
     // Rank teams by PPG (worst first = pick 1)
@@ -26563,24 +26563,24 @@ Rules:
           status.textContent = 'Fetching draft picks...';
           const picksResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/traded_picks`);
           const season = parseInt(league.season || new Date().getFullYear());
-          const currentDraftYear = season + 1; // 2026 for 2025 leagues
+          // The rookie draft for this league season happens IN this season year
+          // e.g., league.season = "2026" means the 2026 rookie draft is the current one
+          const currentDraftYear = season;
 
           // Compute draft order from previous season standings (worst team = pick 1)
-          // Sort rosters by wins ASC, then fpts ASC (worst teams get earliest picks)
           const rostersByRecord = rosters.slice().sort((a, b) => {
             const aW = a.settings ? a.settings.wins || 0 : 0;
             const bW = b.settings ? b.settings.wins || 0 : 0;
-            if (aW !== bW) return aW - bW; // fewer wins = earlier pick
+            if (aW !== bW) return aW - bW;
             const aF = a.settings ? (a.settings.fpts || 0) + (a.settings.fpts_decimal || 0) / 100 : 0;
             const bF = b.settings ? (b.settings.fpts || 0) + (b.settings.fpts_decimal || 0) / 100 : 0;
-            return aF - bF; // fewer points = earlier pick
+            return aF - bF;
           });
-          // roster_id → draft slot (1-based)
           const rosterToDraftSlot = {};
           rostersByRecord.forEach((r, i) => {
             rosterToDraftSlot[r.roster_id] = i + 1;
           });
-          console.log('[MyTeams] Draft order from standings:', JSON.stringify(rosterToDraftSlot));
+          console.log('[MyTeams] season:', season, 'currentDraftYear:', currentDraftYear, 'Draft order:', JSON.stringify(rosterToDraftSlot));
 
           if (picksResp.ok) {
             const tradedPicks = await picksResp.json();

@@ -741,6 +741,11 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .version-tab{font-size:.68rem;padding:4px 8px}
   .mode-tabs{margin-right:4px;flex-shrink:0}
   .mode-tab{font-size:.72rem;padding:4px 10px}
+  .sync-toggle-wrap{margin-left:2px!important;gap:3px!important;flex-shrink:0}
+  .sync-toggle-wrap .pm-toggle{width:32px;height:18px}
+  .sync-toggle-wrap .pm-toggle::after{width:12px;height:12px;top:2px;left:2px}
+  .sync-toggle-wrap .pm-toggle.on::after{left:16px}
+  .sync-toggle-wrap span{font-size:.5rem!important}
   .view-toggle{display:none}
 
   .stats-bar{padding:.25rem .75rem;gap:.75rem}
@@ -1457,10 +1462,10 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
     grid-template-columns:1fr!important;
   }
   #pageMyTeams{
-    overflow-y:auto!important;overflow-x:hidden!important;
+    overflow:auto!important;
   }
   #pageMyTeams > div:nth-child(2){
-    padding:10px 8px!important;max-width:100%;box-sizing:border-box;
+    padding:10px 8px!important;
   }
   #mtSrcSleeper,#mtSrcUnderdog{
     padding:6px 14px!important;font-size:.8rem!important;flex:1;text-align:center;
@@ -1474,23 +1479,19 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   #rookiePickToggle{
     font-size:.5rem!important;padding:2px 5px!important;
   }
-  /* Tables: fit to width instead of horizontal scroll */
-  #pageMyTeams table,#mtUnderdogDashboard table,#mtTeamDetail table{
-    display:table!important;width:100%!important;table-layout:fixed;overflow:hidden;
+  #pageMyTeams table{
+    display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
   }
-  #pageMyTeams table th,#pageMyTeams table td,
-  #mtUnderdogDashboard table th,#mtUnderdogDashboard table td,
-  #mtTeamDetail table th,#mtTeamDetail table td{
-    padding:4px 4px!important;font-size:.65rem!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  #mtUnderdogDashboard table{
+    display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
   }
-  /* Hide TEAM column on mobile to save space */
-  #mtTeamDetail table th:nth-child(3),#mtTeamDetail table td:nth-child(3){
-    display:none;
+  #mtTeamDetail table{
+    display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;
   }
   #mtPowerRankings > div{
     font-size:.9em;
   }
-  /* Power rankings rows: hide pos mini-scores, they're in detail view */
+  /* Tighten team rows on mobile */
   #mtPowerRankings [onclick*="_mtShowTeam"]{
     padding:8px 8px!important;gap:8px!important;
   }
@@ -1500,29 +1501,13 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   #mtPowerRankings [onclick*="_mtShowTeam"] > div:nth-child(2){
     width:38px!important;height:38px!important;font-size:.9rem!important;
   }
-  #mtPowerRankings [onclick*="_mtShowTeam"] > div:last-child{
-    display:none!important;
-  }
   /* Team detail close button */
   #mtTeamDetail button[onclick*="display"]{
     padding:4px 8px!important;font-size:.6rem!important;
   }
-  /* Team detail header */
-  #mtTeamDetail > div:first-child{
-    flex-wrap:wrap!important;gap:8px!important;
-  }
   /* Portfolio summary cards */
   #mtUnderdogDashboard [style*="auto-fit"]{
     gap:6px!important;
-  }
-  /* UD team score rows: hide pos mini-scores on mobile */
-  #mtUnderdogDashboard [onclick*="_udToggleTeamDetail"] > div:first-child > div:last-child,
-  #mtUnderdogDashboard [onclick*="_udToggleAdpDetail"] > div:first-child > div:last-child{
-    display:none!important;
-  }
-  #mtUnderdogDashboard [onclick*="_udToggleTeamDetail"],
-  #mtUnderdogDashboard [onclick*="_udToggleAdpDetail"]{
-    padding:8px 8px!important;
   }
   /* Sleeper import inputs */
   #mtSleeperLeagueId{
@@ -1531,17 +1516,6 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   /* Value source bar */
   #mtValueSource{
     font-size:.7rem!important;
-  }
-  /* UD exposure rows tighten on mobile */
-  #udExposureList > div{
-    gap:5px!important;
-  }
-  #udExposureList > div > div:first-child{
-    width:18px!important;font-size:.58rem!important;
-  }
-  /* Sort buttons wrap tighter */
-  #mtPowerRankings > div:nth-child(n) button{
-    font-size:.6rem!important;padding:3px 7px!important;
   }
 }
 </style>
@@ -2279,6 +2253,10 @@ CLEAR
 <button class="mode-tab" data-mode="superflex">SUPERFLEX</button>
 <button class="mode-tab" data-mode="dynasty">DYNASTY 1QB</button>
 <button class="mode-tab" data-mode="dynastysf">DYNASTY SF</button>
+</div>
+<div class="sync-toggle-wrap" id="syncToggleWrap" style="display:flex;align-items:center;gap:5px;margin-left:4px;position:relative">
+<div class="pm-toggle" id="syncToggle" onclick="window._togglePosSync()" title="When ON, positional rankings (RB1, RB2, etc.) stay synced between 1QB ↔ SF pairs. Only the overall interleaving changes."></div>
+<span style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.55rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced between paired modes:<br><br>• <b>Redraft ↔ Superflex</b><br>• <b>Dynasty 1QB ↔ Dynasty SF</b><br><br>Only the <em>overall</em> interleaving changes between formats (QBs rank higher in SF). Your within-position order and tiers stay identical across both.<br><br>Move any player or add/remove a tier in one mode and the paired mode updates instantly. Toggle ON to also do an initial sync from your current mode right now.</div></span></span>
 </div>
 </div>
 <div class="pos-filters">
@@ -3560,7 +3538,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <div class="help-section">
 <div class="help-section-icon">📋</div>
 <div class="help-section-title">MY RANKINGS</div>
-<div class="help-section-desc">Your personal custom rankings. Drag and drop players to reorder them, add and remove tiers to organize by position group, export your rankings to a spreadsheet, use the trade calculator powered by your custom values, and mock draft using your personal board.</div>
+<div class="help-section-desc">Your personal custom rankings. Drag and drop players to reorder them, add and remove tiers to organize by position group, export your rankings to a spreadsheet, use the trade calculator powered by your custom values, and mock draft using your personal board.<br><br><b style="color:var(--accent)">Position Sync:</b> Toggle the SYNC switch next to the mode tabs to keep your positional rankings (RB1, RB2, WR1, etc.) and position-specific tiers identical between paired formats — Redraft ↔ Superflex and Dynasty 1QB ↔ Dynasty SF. Only the overall interleaving changes (QBs rank higher in SF). Move a player or add a tier in either mode and the other updates automatically.</div>
 </div>
 
 <div class="help-section">
@@ -5861,8 +5839,98 @@ function movePlayer(fromIdx, toPosition) {
   if (curPos === -1 || curPos === toPosition) return;
   board.splice(curPos, 1);
   board.splice(toPosition, 0, fromIdx);
+  // If position sync is on, mirror positional order to paired mode
+  if (window._posSyncEnabled) _syncPairedMode();
   renumber();
   saveLocal();
+}
+
+// === Position Sync: keep within-position order identical across 1QB ↔ SF pairs ===
+// Pairs: redraft ↔ superflex, dynasty ↔ dynastysf
+window._posSyncEnabled = false;
+try { window._posSyncEnabled = localStorage.getItem('_posSyncEnabled') === '1'; } catch(e) {}
+
+// Apply the sync toggle UI state on load
+(function() {
+  const el = document.getElementById('syncToggle');
+  if (el && window._posSyncEnabled) el.classList.add('on');
+})();
+
+window._togglePosSync = function() {
+  window._posSyncEnabled = !window._posSyncEnabled;
+  const el = document.getElementById('syncToggle');
+  if (el) el.classList.toggle('on', window._posSyncEnabled);
+  try { localStorage.setItem('_posSyncEnabled', window._posSyncEnabled ? '1' : '0'); } catch(e) {}
+  if (window._posSyncEnabled) {
+    // Do an immediate sync from current mode to its pair
+    _syncPairedMode();
+    saveLocal();
+    toast('Position sync ON — paired mode updated');
+  } else {
+    toast('Position sync OFF');
+  }
+};
+
+window._showSyncHelp = function() {
+  // Tooltip shows on hover/tap via CSS; this is a no-op fallback
+};
+
+function _syncPairedMode() {
+  const pairMap = { redraft: 'superflex', superflex: 'redraft', dynasty: 'dynastysf', dynastysf: 'dynasty' };
+  const pairedMode = pairMap[currentMode];
+  if (!pairedMode) return;
+  const srcBoard = versionBoards[currentVersion][currentMode];
+  const dstBoard = versionBoards[currentVersion][pairedMode];
+  if (!srcBoard || !dstBoard) return;
+
+  // Build position order from source board
+  const posOrder = {};
+  srcBoard.forEach(idx => {
+    const pos = D[idx].s;
+    if (!posOrder[pos]) posOrder[pos] = [];
+    posOrder[pos].push(idx);
+  });
+
+  // Build set of players in dst for each position
+  const dstPosSet = {};
+  dstBoard.forEach(idx => {
+    const pos = D[idx].s;
+    if (!dstPosSet[pos]) dstPosSet[pos] = new Set();
+    dstPosSet[pos].add(idx);
+  });
+
+  // Walk dstBoard and replace each slot with the next player from
+  // that position's source order (preserving overall position interleaving)
+  const posCursors = {};
+  Object.keys(posOrder).forEach(pos => { posCursors[pos] = 0; });
+
+  for (let i = 0; i < dstBoard.length; i++) {
+    const pos = D[dstBoard[i]].s;
+    if (!posOrder[pos]) continue;
+    while (posCursors[pos] < posOrder[pos].length) {
+      const candidate = posOrder[pos][posCursors[pos]];
+      if (dstPosSet[pos] && dstPosSet[pos].has(candidate)) {
+        dstBoard[i] = candidate;
+        dstPosSet[pos].delete(candidate);
+        posCursors[pos]++;
+        break;
+      }
+      posCursors[pos]++;
+    }
+  }
+
+  // Sync position-specific tiers (QB, RB, WR, TE, K, DST, ROOKIE) — NOT the ALL tier
+  // since ALL tiers depend on overall rank which differs between 1QB and SF
+  const syncTierKeys = ['QB','RB','WR','TE','K','DST','ROOKIE'];
+  const srcTiers = versionTiers[currentVersion][currentMode];
+  const dstTiers = versionTiers[currentVersion][pairedMode];
+  const srcCtrs = versionTierCounters[currentVersion][currentMode];
+  const dstCtrs = versionTierCounters[currentVersion][pairedMode];
+  syncTierKeys.forEach(pk => {
+    // Deep copy the tiers from source to destination
+    dstTiers[pk] = (srcTiers[pk] || []).map(t => ({id: t.id, label: t.label, name: t.name, afterRank: t.afterRank}));
+    dstCtrs[pk] = srcCtrs[pk] || 0;
+  });
 }
 
 // State
@@ -6276,10 +6344,10 @@ function attachTierListeners() {
     if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
     // Add tier
     const addBtn = e.target.closest('[data-add-tier]');
-    if (addBtn) { addTier(+addBtn.dataset.addTier); saveLocal(); render(); toast('Tier added'); return; }
+    if (addBtn) { addTier(+addBtn.dataset.addTier); if (window._posSyncEnabled) _syncPairedMode(); saveLocal(); render(); toast('Tier added'); return; }
     // Delete tier
     const delBtn = e.target.closest('[data-tier-del]');
-    if (delBtn) { removeTier(+delBtn.dataset.tierDel); saveLocal(); render(); toast('Tier removed'); return; }
+    if (delBtn) { removeTier(+delBtn.dataset.tierDel); if (window._posSyncEnabled) _syncPairedMode(); saveLocal(); render(); toast('Tier removed'); return; }
   });
 
   // Compare checkboxes + tier name editing
@@ -7176,6 +7244,19 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
+    // If sync is on, sync from the paired 1QB mode into the SF mode (or vice versa)
+    if (window._posSyncEnabled) {
+      const pairMap = { redraft: 'superflex', superflex: 'redraft', dynasty: 'dynastysf', dynastysf: 'dynasty' };
+      const partner = pairMap[currentMode];
+      if (partner) {
+        // Temporarily set to partner, sync from partner → current, then restore
+        const target = currentMode;
+        currentMode = partner;
+        syncMode();
+        _syncPairedMode(); // this syncs partner → target
+        currentMode = target;
+      }
+    }
     syncMode();
     renumber();
     compareSet.clear();

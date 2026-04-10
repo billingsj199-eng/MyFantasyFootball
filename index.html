@@ -14662,8 +14662,37 @@ window.fmtHeight = fmtHeight;
   const SLOT_MULT = { 'early': 1.2, 'mid': 1.0, 'late': 0.8 };
 
   // Look up a pick entry in D by name and get its trade value from the board
-  function _pickTradeValue(round, year, slot, src, mode) {
-    // Build the pick name to look up in D (e.g. "2027 Early 1st")
+  function _pickTradeValue(round, year, slot, src, mode, pickNum) {
+    // For current-year picks with exact pick numbers (e.g. "1.03"),
+    // find the actual rookie player at that board position and use THEIR trade value.
+    if (pickNum) {
+      const rdNum = parseInt(pickNum.split('.')[0]);
+      const pickInRound = parseInt(pickNum.split('.')[1]);
+      if (rdNum && pickInRound) {
+        // Determine league size from the pick number format (pick 1.12 → 12-team league)
+        // Default to 12 if unclear
+        const leagueSize = (typeof window._mtTeams !== 'undefined' && window._mtTeams) ? window._mtTeams.length : 12;
+        const overallIdx = (rdNum - 1) * leagueSize + (pickInRound - 1);
+        // Find rookies on the board in order (same logic as rookiePickMap)
+        const board = versionBoards[src] ? versionBoards[src][mode] : null;
+        if (board) {
+          const rookies = [];
+          board.forEach(function(dIdx) {
+            const p = D[dIdx];
+            if (!p || p.s === 'K' || p.s === 'DST' || p._isFuturePick) return;
+            const isRookie = (!p.career || p.career.length === 0) && (!p.t || p.t === 'TBD' || p.t === 'FA');
+            if (isRookie) rookies.push(dIdx);
+          });
+          if (overallIdx < rookies.length) {
+            const rookieEntry = D[rookies[overallIdx]];
+            if (rookieEntry && typeof window._getTradeValue === 'function') {
+              return window._getTradeValue(rookieEntry, src, mode);
+            }
+          }
+        }
+      }
+    }
+    // Fallback: generic Early/Mid/Late pick entry
     const slotLabel = slot === 'early' ? 'Early' : slot === 'late' ? 'Late' : 'Mid';
     const rdLabel = round;
     // For 3rd/4th, picks are just "2027 3rd" (no slot prefix)
@@ -14686,11 +14715,11 @@ window.fmtHeight = fmtHeight;
   }
 
   // Expose pick value function globally for My Teams
-  window._getPickValue = function(round, year, slot, mode) {
+  window._getPickValue = function(round, year, slot, mode, pickNum) {
     const m = mode || tradeMode;
     // Dynasty modes: use board position
     if (m === 'dynasty' || m === 'dynastysf') {
-      return _pickTradeValue(round, year, slot, 'jacks', m);
+      return _pickTradeValue(round, year, slot, 'jacks', m, pickNum);
     }
     // Redraft/superflex: use static base values
     const base = PICK_BASE[round] ? PICK_BASE[round][m] : 0;
@@ -26268,7 +26297,7 @@ Rules:
     // Draft pick values (dynasty only, skip in contender mode)
     let pickTotal = 0;
     const scoredPicks = includePicks ? (draftPicks || []).map(p => {
-      const val = (typeof window._getPickValue === 'function') ? window._getPickValue(p.round, p.year, p.slot, mode) : 0;
+      const val = (typeof window._getPickValue === 'function') ? window._getPickValue(p.round, p.year, p.slot, mode, p._pickNum) : 0;
       pickTotal += val;
       return { ...p, val };
     }) : [];
@@ -26493,38 +26522,80 @@ Rules:
       });
 
       // Reassign pick slots based on original owner's projected PPG
-      // Top 3 PPG = late, Bottom 3 PPG = early, everyone else = mid
-      // With gap detection: if 3rd best/worst is far from 2nd, demote to mid
+      // For current year (season+1): compute exact pick numbers (1.01, 1.02, etc.)
+      // For future years (season+2, season+3): use Early/Mid/Late tiers
       (function() {
-        const ppgRanked = teams.slice().sort((a, b) => b.lineupPpg - a.lineupPpg);
+        const ppgRanked = teams.slice().sort((a, b) => (a.lineupPpg || 0) - (b.lineupPpg || 0)); // worst first = pick 1
         const n = ppgRanked.length;
-        if (n < 4) return; // too few teams for meaningful tiers
+        if (n < 2) return;
+        const season = parseInt(league.season || new Date().getFullYear());
+        const currentDraftYear = String(season + 1); // 2026 for 2025 season leagues
 
-        // Build a map: team index → slot
+        // Build exact pick order map for current year: teamIdx → pickPosition (1-based)
+        const pickOrderMap = {}; // teamIdx → 1, 2, 3...
+        ppgRanked.forEach((t, i) => {
+          pickOrderMap[teams.indexOf(t)] = i + 1; // worst team = pick 1
+        });
+
+        // Build Early/Mid/Late slot map for future years
         const slotMap = {}; // teamIdx → 'early'|'mid'|'late'
-        const GAP_THRESHOLD = 8; // PPG gap that's "far away"
+        const GAP_THRESHOLD = 8;
+        // Reverse sort for slot assignment (best PPG first)
+        const ppgBest = ppgRanked.slice().reverse();
+        slotMap[teams.indexOf(ppgBest[0])] = 'late';
+        slotMap[teams.indexOf(ppgBest[1])] = 'late';
+        if (n >= 3) {
+          const topGap = ppgBest[1].lineupPpg - ppgBest[2].lineupPpg;
+          slotMap[teams.indexOf(ppgBest[2])] = topGap >= GAP_THRESHOLD ? 'mid' : 'late';
+        }
+        slotMap[teams.indexOf(ppgBest[n - 1])] = 'early';
+        if (n >= 4) slotMap[teams.indexOf(ppgBest[n - 2])] = 'early';
+        if (n >= 5) {
+          const botGap = ppgBest[n - 3].lineupPpg - ppgBest[n - 2].lineupPpg;
+          slotMap[teams.indexOf(ppgBest[n - 3])] = botGap >= GAP_THRESHOLD ? 'mid' : 'early';
+        }
 
-        // Top teams = late picks
-        slotMap[teams.indexOf(ppgRanked[0])] = 'late';
-        slotMap[teams.indexOf(ppgRanked[1])] = 'late';
-        // 3rd best: late unless far gap from 2nd
-        const topGap = ppgRanked[1].lineupPpg - ppgRanked[2].lineupPpg;
-        slotMap[teams.indexOf(ppgRanked[2])] = topGap >= GAP_THRESHOLD ? 'mid' : 'late';
+        // Build rookie name lookup from Jack's dynasty board (same logic as rookiePickMap)
+        // so we can show "2026 1.03 (Player Name)" in the UI
+        const _rookieNames = {}; // overallIdx → player name
+        const dynBoard = (typeof versionBoards !== 'undefined' && versionBoards.jacks) ?
+          (versionBoards.jacks.dynasty || versionBoards.jacks.dynastysf) : null;
+        if (dynBoard) {
+          let rIdx = 0;
+          dynBoard.forEach(function(dIdx) {
+            const p = D[dIdx];
+            if (!p || p.s === 'K' || p.s === 'DST' || p._isFuturePick) return;
+            const isRookie = (!p.career || p.career.length === 0) && (!p.t || p.t === 'TBD' || p.t === 'FA');
+            if (isRookie) {
+              _rookieNames[rIdx] = p.n;
+              rIdx++;
+            }
+          });
+        }
 
-        // Bottom teams = early picks
-        slotMap[teams.indexOf(ppgRanked[n - 1])] = 'early';
-        slotMap[teams.indexOf(ppgRanked[n - 2])] = 'early';
-        // 3rd worst: early unless far gap from 2nd worst
-        const botGap = ppgRanked[n - 3].lineupPpg - ppgRanked[n - 2].lineupPpg;
-        slotMap[teams.indexOf(ppgRanked[n - 3])] = botGap >= GAP_THRESHOLD ? 'mid' : 'early';
-
-        // Apply slots to all picks based on original owner
+        // Apply to all picks
         teams.forEach(t => {
           t.draftPicks.forEach(pk => {
-            if (pk._origIdx !== undefined && slotMap[pk._origIdx] !== undefined) {
-              pk.slot = slotMap[pk._origIdx];
+            if (pk._origIdx === undefined) return;
+            if (pk.year === currentDraftYear) {
+              // Current year: compute exact pick number
+              const pos = pickOrderMap[pk._origIdx] || Math.ceil(n / 2);
+              const rdNum = pk.round === '1st' ? 1 : pk.round === '2nd' ? 2 : pk.round === '3rd' ? 3 : 4;
+              pk._pickNum = rdNum + '.' + String(pos).padStart(2, '0'); // e.g. "1.03"
+              // Look up the actual rookie at this position
+              const overallIdx = (rdNum - 1) * n + (pos - 1);
+              if (_rookieNames[overallIdx]) pk._rookieName = _rookieNames[overallIdx];
+              // Map to Early/Mid/Late for fallback valuation
+              const third = Math.ceil(n / 3);
+              if (pos <= third) pk.slot = 'early';
+              else if (pos > n - third) pk.slot = 'late';
+              else pk.slot = 'mid';
+            } else {
+              // Future years: use PPG tier
+              if (slotMap[pk._origIdx] !== undefined) {
+                pk.slot = slotMap[pk._origIdx];
+              }
             }
-            // else stays 'mid'
           });
         });
       })();
@@ -26990,8 +27061,12 @@ Rules:
       sc.picks.forEach(pk => {
         const valColor = pk.val >= 150 ? '#22c55e' : pk.val >= 75 ? '#4ade80' : pk.val >= 30 ? '#facc15' : '#f59e0b';
         html += `<div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.72rem">`;
-        html += `<span style="font-weight:700;color:var(--accent)">${pk.year} ${pk.round}</span>`;
-        html += `<span style="color:var(--text2)"> ${pk.slot}</span>`;
+        html += `<span style="font-weight:700;color:var(--accent)">${pk._pickNum ? pk.year + ' ' + pk._pickNum : pk.year + ' ' + pk.round}</span>`;
+        html += `${pk._pickNum ? '' : '<span style=\"color:var(--text2)\"> ' + pk.slot + '</span>'}`;
+        // Show rookie player name for exact picks
+        if (pk._pickNum && pk._rookieName) {
+          html += `<span style="color:var(--text2);font-size:.6rem;margin-left:4px">(${_esc(pk._rookieName)})</span>`;
+        }
         if (pk.original && pk.original !== t.owner) html += `<span style="color:var(--text2)"> (via ${_esc(pk.original)})</span>`;
         html += `<span style="font-weight:700;color:${valColor};margin-left:6px">${pk.val}</span>`;
         html += `</div>`;

@@ -6140,7 +6140,7 @@ function render() {
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       <td class="adp-cell">${rnkAdp(d) != null ? rnkAdp(d) : '—'}</td>
-      <td class="pts-cell"${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);return v!=null?v:'—';})()}</td>
+      <td class="pts-cell"${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);if(v==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return v+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return v;})()}</td>
       <td class="pts-cell"${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null){return jv>0?' style="color:#22c55e;font-weight:700"':jv<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"';}const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null)return jv>0?'+'+jv:jv;const v=adj25ppg(d);return v!=null?v:'—';})()}</td>
       <td class="pts-cell yrr-cell" style="display:none">${d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')}</td>
       <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=jm>=82?'#34d399':jm>=66?'#60a5fa':jm>=50?'#fbbf24':'#f87171';return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})()}</td>
@@ -6823,8 +6823,81 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
         var ageMult = _ageCurves[pos][String(nextAge)];
         if (ageMult != null) fpts_pg *= ageMult;
       }
+
+      // --- Clay Expert Blend + Divergence Adjustment ---
+      // Clay's projections capture coaching changes, offseason moves, and opportunity shifts
+      // that historical stats alone can't predict.
+      // Base blend: 25% Clay / 75% JS Model (35% Clay for rookies/2nd-year).
+      // Divergence bonus: when Clay and the JS Model disagree by a large margin,
+      // Clay likely knows something the model doesn't (new team, injury return, role change).
+      // In those cases, increase Clay's weight proportionally to the gap.
+      if (typeof MIKE_CLAY_PROJ !== 'undefined') {
+        var clayProj = MIKE_CLAY_PROJ[d.n];
+        if (clayProj) {
+          // Convert Clay PPR pts to current scoring format
+          var clayRec = clayProj.rec || 0;
+          var clayAdj = scoring.rec === 1 ? 0 : scoring.rec === 0 ? -1.0 : -0.5;
+          var clayPpg = (clayProj.pts + clayRec * clayAdj) / clayProj.gm;
+
+          // Measure divergence: how far apart are the two projections?
+          var jsPpg = fpts_pg; // current JS Model PPG (before Clay blend)
+          var baseClayWt = (exp != null && exp <= 1) ? 0.35 : 0.25;
+
+          if (jsPpg > 1) {
+            var divergence = Math.abs(clayPpg - jsPpg) / jsPpg; // as % of JS PPG
+            var divDirection = clayPpg > jsPpg ? 1 : -1; // +1 = Clay higher, -1 = Clay lower
+            // divergence 0% → base weight, 30%+ → up to double the base weight
+            var divBonus = Math.min(divergence / 0.30, 1.0) * baseClayWt;
+            var clayWt = Math.min(baseClayWt + divBonus, 0.55); // hard cap at 55% Clay
+
+            fpts_pg = fpts_pg * (1 - clayWt) + clayPpg * clayWt;
+
+            // Store divergence info for UI (only if significant: >15% gap)
+            if (divergence >= 0.15) {
+              d._clayDiv = {
+                jsPpg: Math.round(jsPpg * 10) / 10,
+                clayPpg: Math.round(clayPpg * 10) / 10,
+                pct: Math.round(divergence * 100),
+                dir: divDirection, // +1 Clay bullish, -1 Clay bearish
+                wt: Math.round(clayWt * 100) // actual Clay weight used
+              };
+            } else {
+              d._clayDiv = null;
+            }
+          } else {
+            // JS Model has no real projection — lean heavily on Clay
+            fpts_pg = clayPpg * 0.85;
+          }
+        }
+      }
+
+      // --- Team Efficiency Context ---
+      // Players on better offenses produce more fantasy points. Clay's offensive rankings
+      // capture projected team strength. Slight multiplier: top offenses get a boost,
+      // bottom offenses get a penalty. Capped at ±5% to avoid overweighting.
+      if (typeof MIKE_CLAY_TEAMS !== 'undefined' && d.t) {
+        var tmData = MIKE_CLAY_TEAMS[d.t];
+        if (tmData) {
+          // offRk 1 = best, 32 = worst. Center at 16.5, scale to multiplier.
+          // Rk 1 → +5%, Rk 16 → ~0%, Rk 32 → -5%
+          var offEff = 1.0 + (16.5 - tmData.offRk) / 16.5 * 0.05;
+          fpts_pg *= offEff;
+        }
+      }
+
+      // --- Defensive Strength of Schedule ---
+      // Adjust based on how tough the defenses this player will face are.
+      // Clay's defensive SOS multiplier: >1.0 means softer schedule (opponent defenses allow more),
+      // <1.0 means harder schedule. Applied as a direct multiplier on PPG.
+      if (typeof MIKE_CLAY_DEF_SOS !== 'undefined' && d.t) {
+        var sosMult = MIKE_CLAY_DEF_SOS[d.t];
+        if (sosMult != null) {
+          fpts_pg *= sosMult;
+        }
+      }
+
       var fpts_season = fpts_pg * proj.gp;
-      scored.push({ idx: idx, pos: pos, fpts_pg: fpts_pg, fpts_season: fpts_season, gp: proj.gp });
+      scored.push({ idx: idx, pos: pos, fpts_pg: fpts_pg, fpts_season: fpts_season, gp: proj.gp, _clayDiv: d._clayDiv || null });
     });
 
     // Sort each position by fpts_season
@@ -6923,7 +6996,7 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     });
     // Clear for unmatched
     D.forEach(function(d, idx) {
-      if (!_jsPlayerProj[idx]) { d._jsModelPpg = null; d._jsModelVor = null; d._jsModelSeason = null; }
+      if (!_jsPlayerProj[idx]) { d._jsModelPpg = null; d._jsModelVor = null; d._jsModelSeason = null; d._clayDiv = null; }
     });
 
     return jsBoard;

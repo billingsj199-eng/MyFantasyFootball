@@ -26642,15 +26642,22 @@ Rules:
   function _mtBestLineup(playerNames) {
     const rp = _mtFormat.rosterPositions || [];
     const slots = rp.filter(p => p !== 'BN'); // starting slots only
-    if (!slots.length) return null;
+    console.log('[BestLineup] rosterPositions:', rp.length, 'slots:', slots.length, 'players:', playerNames.length);
+    if (!slots.length) {
+      console.log('[BestLineup] No slots found — rosterPositions empty');
+      return null;
+    }
 
     // Get projected PPG for each player, adjusted for league scoring
     const pprVal = _mtFormat.ppr != null ? _mtFormat.ppr : 0.5;
     const adj = pprVal === 1 ? 0.5 : pprVal === 0 ? -0.5 : 0; // adjustment from half-PPR base
 
+    let _dbgFound = 0, _dbgNoD = 0, _dbgNoPpg = 0;
     const pool = playerNames.map(name => {
       const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
-      if (!d || d.s === 'K' || d.s === 'DST') return { name, pos: d ? d.s : '?', ppg: 0, d };
+      if (!d) { _dbgNoD++; return { name, pos: '?', ppg: 0, d: null }; }
+      if (d.s === 'K' || d.s === 'DST') return { name, pos: d.s, ppg: 0, d };
+      _dbgFound++;
       let ppg = 0;
       // Priority 1: projected total points (d.p = season total half-PPR projection)
       if (d.p && d.p > 0) {
@@ -26671,8 +26678,24 @@ Rules:
       }
       // Priority 4: JS model projection
       if (!ppg && d._jsModelPpg) ppg = d._jsModelPpg;
+      if (!ppg) _dbgNoPpg++;
       return { name, pos: d.s, ppg, d };
     }).filter(p => p.ppg > 0);
+    console.log('[BestLineup] Found in D:', _dbgFound, 'Not in D:', _dbgNoD, 'No PPG:', _dbgNoPpg, 'Pool after filter:', pool.length);
+    if (pool.length > 0) {
+      console.log('[BestLineup] Top 3:', pool.slice(0,3).map(p => p.name + '=' + p.ppg).join(', '));
+    } else if (_dbgFound > 0) {
+      // Debug: show what a sample player looks like
+      const sampleName = playerNames.find(n => { const d = D.find(p => p.n === n); return d && d.s !== 'K' && d.s !== 'DST'; });
+      if (sampleName) {
+        const sd = D.find(p => p.n === sampleName);
+        console.log('[BestLineup] Sample player:', sampleName, 'p:', sd.p, 's25:', !!sd.s25, 'career:', sd.career ? sd.career.length : 0, '_jsModelPpg:', sd._jsModelPpg);
+        if (sd.career && sd.career.length) {
+          const last = sd.career[sd.career.length - 1];
+          console.log('[BestLineup] Last career season:', JSON.stringify(last));
+        }
+      }
+    }
 
     // Sort by PPG descending for greedy assignment
     pool.sort((a, b) => b.ppg - a.ppg);

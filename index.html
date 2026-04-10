@@ -19550,6 +19550,45 @@ window.fmtHeight = fmtHeight;
     return 'pm-jm-low';
   }
   window._jmClass = jmClass;
+
+  // Prospect archetype based on floor/ceiling spread and component profile
+  function jmArchetype(p) {
+    if (p.jm == null || p.lowConfidence) return null;
+    const floor = p.jmFloor, ceil = p.jmCeil;
+    if (floor == null || ceil == null) return null;
+    const spread = ceil - floor;
+    const jm = p.jm;
+
+    // Complete Prospect: both floor and ceiling are high, close together
+    if (floor >= 70 && ceil >= 70 && spread <= 8) return { label: 'Complete', icon: '💎', color: '#34d399', tip: 'High floor (' + floor.toFixed(0) + ') + high ceiling (' + ceil.toFixed(0) + ') — elite all-around profile', sort: 1 };
+    if (floor >= 60 && ceil >= 65 && spread <= 6) return { label: 'Complete', icon: '💎', color: '#34d399', tip: 'Strong floor (' + floor.toFixed(0) + ') and ceiling (' + ceil.toFixed(0) + ') with balanced profile', sort: 1 };
+
+    // Safe Floor: floor is significantly higher than ceiling — reliable but capped
+    if (floor > ceil + 3 && floor >= 55) return { label: 'Safe Floor', icon: '🛡️', color: '#60a5fa', tip: 'Floor ' + floor.toFixed(0) + ' > Ceil ' + ceil.toFixed(0) + ' — reliable floor, limited upside', sort: 2 };
+    if (floor >= ceil && floor >= 50 && jm >= 55) return { label: 'Safe Floor', icon: '🛡️', color: '#60a5fa', tip: 'Floor-driven score (' + floor.toFixed(0) + '/' + ceil.toFixed(0) + ') — consistent but ceiling-limited', sort: 2 };
+
+    // Boom/Bust: ceiling much higher than floor — high variance
+    if (spread >= 12 && ceil >= 65) return { label: 'Boom/Bust', icon: '🎰', color: '#f59e0b', tip: 'Ceil ' + ceil.toFixed(0) + ' vs Floor ' + floor.toFixed(0) + ' — high variance prospect', sort: 4 };
+    if (spread >= 8 && ceil >= 70 && floor < 65) return { label: 'Boom/Bust', icon: '🎰', color: '#f59e0b', tip: 'Elite ceiling (' + ceil.toFixed(0) + ') but shaky floor (' + floor.toFixed(0) + ')', sort: 4 };
+
+    // Upside Project: both scores mid-range but ceiling leads
+    if (ceil > floor + 3 && jm >= 45 && jm < 65 && ceil >= 55) return { label: 'Upside', icon: '📈', color: '#a78bfa', tip: 'Ceiling-driven (' + ceil.toFixed(0) + ') with development needed (floor ' + floor.toFixed(0) + ')', sort: 5 };
+
+    // Raw Talent: low floor, decent ceiling, high RAS
+    if (floor < 50 && ceil >= 55 && p.ras != null && p.ras >= 8.0) return { label: 'Raw', icon: '⚡', color: '#fb923c', tip: 'Athletic upside (RAS ' + p.ras.toFixed(1) + ') but unrefined — development play', sort: 6 };
+
+    // Steady: mid-range scores, tight spread — what you see is what you get
+    if (spread <= 5 && jm >= 45 && jm < 70) return { label: 'Steady', icon: '📊', color: '#94a3b8', tip: 'Floor ' + floor.toFixed(0) + ' / Ceil ' + ceil.toFixed(0) + ' — predictable outcome range', sort: 3 };
+
+    // Fallback labels for uncategorized
+    if (jm >= 70 && spread > 8) return { label: 'Boom/Bust', icon: '🎰', color: '#f59e0b', tip: 'Ceil ' + ceil.toFixed(0) + ' vs Floor ' + floor.toFixed(0) + ' — high upside but variable', sort: 4 };
+    if (jm >= 55 && floor >= 50 && spread <= 8) return { label: 'Steady', icon: '📊', color: '#94a3b8', tip: 'Floor ' + floor.toFixed(0) + ' / Ceil ' + ceil.toFixed(0) + ' — moderate predictable range', sort: 3 };
+    if (ceil > floor + 5 && jm >= 35) return { label: 'Upside', icon: '📈', color: '#a78bfa', tip: 'Ceiling-leaning (' + ceil.toFixed(0) + ') over floor (' + floor.toFixed(0) + ')', sort: 5 };
+    if (jm < 45 && spread <= 5) return { label: 'Longshot', icon: '🎲', color: '#6b7280', tip: 'Floor ' + floor.toFixed(0) + ' / Ceil ' + ceil.toFixed(0) + ' — low probability outcome', sort: 7 };
+
+    return null;
+  }
+
   // Expose cache clear for blend ratio testing
   window._jmClearCache = function() { Object.keys(_jmCache).forEach(k => delete _jmCache[k]); _pmBuildCache = null; };
 
@@ -20737,6 +20776,7 @@ window.fmtHeight = fmtHeight;
         prospectRecord.sleeperAdj = _jmResult.sleeperAdj;
         prospectRecord.dataCoverage = _jmResult.dataCoverage;
         prospectRecord.lowConfidence = _jmResult.lowConfidence;
+        prospectRecord._archetype = jmArchetype(prospectRecord);
       } else {
         prospectRecord.jm = _jmResult;
         prospectRecord.bustAdj = 0;
@@ -20952,6 +20992,7 @@ window.fmtHeight = fmtHeight;
       { key: 'jm', label: 'JM', sortable: true },
       { key: 'tier', label: 'TIER', sortable: true },
       { key: 'risk', label: 'RISK', sortable: true },
+      { key: 'archetype', label: 'TYPE', sortable: true },
       { key: 'dc', label: 'DC', sortable: true },
       { key: 'age', label: 'DRAFT AGE', sortable: true },
       { key: 'breakoutAge', label: 'BREAKOUT', sortable: true },
@@ -21386,6 +21427,9 @@ window.fmtHeight = fmtHeight;
         } else if (pmSort.col === 'risk') {
           av = (a.bustAdj || 0) + (a.sleeperAdj || 0);
           bv = (b.bustAdj || 0) + (b.sleeperAdj || 0);
+        } else if (pmSort.col === 'archetype') {
+          av = a._archetype ? a._archetype.sort : 99;
+          bv = b._archetype ? b._archetype.sort : 99;
         } else {
           av = a[pmSort.col]; bv = b[pmSort.col];
         }
@@ -21489,6 +21533,15 @@ window.fmtHeight = fmtHeight;
               rows += `<td style="text-align:center"><span style="font-size:.75rem;font-weight:700;color:#ef4444" title="Bust penalty: ${p.bustAdj}${p.sleeperAdj ? ', Sleeper: +' + p.sleeperAdj : ''}">▼${Math.abs(_riskVal)}</span></td>`;
             } else if (_riskVal > 0) {
               rows += `<td style="text-align:center"><span style="font-size:.75rem;font-weight:700;color:#22c55e" title="Sleeper bonus: +${p.sleeperAdj}${p.bustAdj ? ', Bust: ' + p.bustAdj : ''}">▲${_riskVal}</span></td>`;
+            } else {
+              rows += `<td style="text-align:center;color:var(--text2);opacity:.4">—</td>`;
+            }
+            break;
+          }
+          case 'archetype': {
+            const arch = p._archetype;
+            if (arch) {
+              rows += `<td style="text-align:center" title="${arch.tip}"><span style="font-size:.65rem;font-weight:700;color:${arch.color};white-space:nowrap">${arch.icon} ${arch.label}</span></td>`;
             } else {
               rows += `<td style="text-align:center;color:var(--text2);opacity:.4">—</td>`;
             }

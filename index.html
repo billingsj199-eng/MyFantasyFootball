@@ -26282,6 +26282,7 @@ Rules:
     const n = teams.length;
     if (n < 2) return;
     const currentDraftYear = String((season || 2025) + 1); // 2026 for 2025 season
+    console.log('[PickSlots] season:', season, 'currentDraftYear:', currentDraftYear, 'teams:', n);
 
     // Rank teams by PPG (worst first = pick 1)
     const ppgRanked = teams.slice().sort((a, b) => (a.lineupPpg || 0) - (b.lineupPpg || 0));
@@ -26319,12 +26320,16 @@ Rules:
         const isRookie = (!p.career || p.career.length === 0) && (!p.t || p.t === 'TBD' || p.t === 'FA');
         if (isRookie) { _rookieNames[rIdx] = p.n; rIdx++; }
       });
+      console.log('[PickSlots] Found', Object.keys(_rookieNames).length, 'rookies. First 5:', _rookieNames[0], _rookieNames[1], _rookieNames[2], _rookieNames[3], _rookieNames[4]);
+    } else {
+      console.log('[PickSlots] No dynasty board found');
     }
 
-    // Apply to all picks
+    // Count picks before assignment
+    let totalPicks = 0, assigned2026 = 0;
     teams.forEach((t, tIdx) => {
       t.draftPicks.forEach(pk => {
-        // For saved leagues, _origIdx may not exist — use tIdx as fallback (own pick)
+        totalPicks++;
         const origIdx = pk._origIdx !== undefined ? pk._origIdx : tIdx;
         if (pk.year === currentDraftYear) {
           const pos = pickOrderMap[origIdx] || Math.ceil(n / 2);
@@ -26336,11 +26341,17 @@ Rules:
           if (pos <= third) pk.slot = 'early';
           else if (pos > n - third) pk.slot = 'late';
           else pk.slot = 'mid';
+          assigned2026++;
         } else {
           if (slotMap[origIdx] !== undefined) pk.slot = slotMap[origIdx];
         }
       });
     });
+    console.log('[PickSlots] Total picks:', totalPicks, '2026 assigned:', assigned2026);
+    // Log first team's picks as sample
+    if (teams[0] && teams[0].draftPicks.length) {
+      console.log('[PickSlots] Sample picks (team 0):', JSON.stringify(teams[0].draftPicks.slice(0, 4).map(p => ({yr:p.year,rd:p.round,slot:p.slot,num:p._pickNum,name:p._rookieName}))));
+    }
   }
 
   // Score a roster using the trade value system (same curve as trade calc)

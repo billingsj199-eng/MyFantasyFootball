@@ -3605,15 +3605,15 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Travis Hunter']) {
     COMBINE_DATA['Travis Hunter'] = { yr: 2025, school: 'Colorado', pos: 'WR', ht: '6-1', wt: 188, draft: 2, dt: 'JAX' };
   } else {
-    // Fill in any missing fields on existing entry
+    // Force critical fields — combine_data.js may have stale values
     const th = COMBINE_DATA['Travis Hunter'];
-    if (!th.draft) th.draft = 2;
-    if (!th.yr) th.yr = 2025;
+    th.draft = 2;
+    th.yr = 2025;
+    th.dt = 'JAX';
+    th.pos = 'WR';
     if (!th.ht) th.ht = '6-1';
     if (!th.wt) th.wt = 188;
-    if (!th.pos) th.pos = 'WR';
     if (!th.school) th.school = 'Colorado';
-    if (!th.dt) th.dt = 'JAX';
   }
   // Travis Hunter combine/pro day measurables + RAS
   (function() {
@@ -4183,9 +4183,9 @@ if (typeof COMBINE_DATA !== 'undefined') {
   // Helper: set draft pick if player exists and doesn't already have it
   function _sd25(name, pick, team, pos, school) {
     if (!COMBINE_DATA[name]) COMBINE_DATA[name] = { yr: 2025, pos: pos, school: school };
-    if (!COMBINE_DATA[name].draft) COMBINE_DATA[name].draft = pick;
+    COMBINE_DATA[name].draft = pick;   // force — this is confirmed draft capital
+    COMBINE_DATA[name].yr = 2025;      // force — this is a 2025 drafted player
     if (!COMBINE_DATA[name].dt) COMBINE_DATA[name].dt = team;
-    if (!COMBINE_DATA[name].yr) COMBINE_DATA[name].yr = 2025;
   }
   // Round 1
   _sd25('Cam Ward', 1, 'TEN', 'QB', 'Miami (FL)');
@@ -4282,9 +4282,9 @@ if (typeof COMBINE_DATA !== 'undefined') {
   // Players likely in COLLEGE_STATS/COMBINE_DATA who went undrafted
   function _udfa25(name, team, pos, school) {
     if (!COMBINE_DATA[name]) COMBINE_DATA[name] = { yr: 2025, pos: pos, school: school };
-    if (!COMBINE_DATA[name].draft) COMBINE_DATA[name].draft = 'U';
+    COMBINE_DATA[name].draft = 'U';    // force — confirmed UDFA
+    COMBINE_DATA[name].yr = 2025;      // force — 2025 class
     if (!COMBINE_DATA[name].dt) COMBINE_DATA[name].dt = team;
-    if (!COMBINE_DATA[name].yr) COMBINE_DATA[name].yr = 2025;
   }
   _udfa25('Xavier Restrepo', 'TB', 'WR', 'Miami (FL)');
   _udfa25('Raheim Sanders', 'LAC', 'RB', 'South Carolina');

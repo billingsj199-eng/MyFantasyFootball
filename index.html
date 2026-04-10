@@ -4440,9 +4440,12 @@ if (typeof COMBINE_DATA !== 'undefined') {
 // Must be after college_stats.js to override any partial data from CFBD pulls
 if (typeof COLLEGE_STATS !== 'undefined') {
   COLLEGE_STATS['Travis Hunter'] = [
-    {yr:2022,tm:"Jackson State",conf:"SWAC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:8,rtd:0,ra:2,rec:32,rcy:522,rctd:3,fl:0,fpts:87.0},
-    {yr:2023,tm:"Colorado",conf:"Big 12",gp:12,py:0,ptd:0,int:0,pc:0,pa:0,ry:19,rtd:0,ra:4,rec:57,rcy:721,rctd:5,fl:0,fpts:132.5},
-    {yr:2024,tm:"Colorado",conf:"Big 12",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:54,rtd:0,ra:8,rec:96,rcy:1258,rctd:15,fl:1,fpts:267.2}
+    // Jackson State 2022 (PFF OFF 85.8, PASS 85.8 — 18 rec, 190 yds, 4 TD per PFF)
+    {yr:2022,tm:"Jackson State",conf:"SWAC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:8,rtd:0,ra:2,rec:18,rcy:190,rctd:4,fl:0,fpts:52.8,pff:85.8},
+    // Colorado 2023 (PFF OFF 77.6, PASS 78.9 — 9 GP, broke foot)
+    {yr:2023,tm:"Colorado",conf:"Big 12",gp:9,py:0,ptd:0,int:0,pc:0,pa:0,ry:19,rtd:0,ra:4,rec:57,rcy:721,rctd:5,fl:1,fpts:130.5,pff:77.6},
+    // Colorado 2024 Heisman (PFF OFF 86.3, PASS 89.0 — 13 GP)
+    {yr:2024,tm:"Colorado",conf:"Big 12",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:54,rtd:0,ra:8,rec:96,rcy:1258,rctd:15,fl:0,fpts:269.2,pff:86.3}
   ];
 }
 </script>
@@ -5097,8 +5100,9 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
 if (typeof _PFF_WR_GRADES !== 'undefined') {
   if (!_PFF_WR_GRADES['DJ Moore']) _PFF_WR_GRADES['DJ Moore'] = 83.2;
   if (!_PFF_WR_GRADES['D.J. Moore']) _PFF_WR_GRADES['D.J. Moore'] = 83.2;
-  // Travis Hunter: avg of Colorado 2023 (~82.0) + 2024 Heisman (~92.5) = 87.3
-  if (!_PFF_WR_GRADES['Travis Hunter']) _PFF_WR_GRADES['Travis Hunter'] = 87.3;
+  // Travis Hunter: PFF OFF grade avg from PFF season grades page
+  // 2024: 86.3, 2023: 77.6, 2022 Jackson St: 85.8 → avg 83.2
+  _PFF_WR_GRADES['Travis Hunter'] = 83.2;
 }
 </script>
 <script src="data/all_players_weekly_1.js"></script>

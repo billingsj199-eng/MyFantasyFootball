@@ -7010,45 +7010,83 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
       if (d.inj) {
         var injTag = d.inj.toLowerCase().trim();
 
-        // Pattern 1: Full-season out — tag is a future year like "2027", "2028"
-        // or contains "out for season", "season-ending", "torn" + major
-        var futureYearMatch = injTag.match(/^(20\d{2})/);
-        if (futureYearMatch) {
-          var injYear = parseInt(futureYearMatch[1]);
+        // --- Pre-check: "healthy" / "full go" / "cleared" override ---
+        // If the tag explicitly says the player is healthy, skip all discounts.
+        // e.g. "Foot, Healthy", "ACL — Cleared", "Full Go"
+        var isCleared = /\bhealthy\b|\bfull go\b|\bcleared\b|\b100%\b|\bno concern/.test(injTag);
+
+        if (isCleared) {
+          // No discount — tag is informational only (prior injury, now recovered)
+          _injMult = 1.0;
+        }
+        // Pattern 1: Year-based timeline ANYWHERE in tag — "2027", "Mid-Late 2026"
+        // Matches tags like "ACL, Mid-Late 2026" or "2027" or "Out until 2027"
+        else if (/(20\d{2})/.test(injTag)) {
+          var yearMatch = injTag.match(/(20\d{2})/);
+          var injYear = parseInt(yearMatch[1]);
           if (injYear >= 2027) {
-            // Out for 2026 season entirely AND beyond
+            // Out past 2026 season entirely
             _injMult = isDynasty ? 0.55 : 0.03;
           } else if (injYear === 2026) {
-            // Out this full season — worthless in redraft, dinged in dynasty
-            _injMult = isDynasty ? 0.70 : 0.05;
+            // Returning sometime in 2026 season
+            // Check for timing hints: "early", "mid", "late", "week X"
+            var weekInTag = injTag.match(/week\s*(\d+)/i);
+            if (weekInTag) {
+              var retWk = parseInt(weekInTag[1]);
+              var gpLeft = Math.max(1, 17 - (retWk - 1));
+              _injMult = isDynasty ? 0.85 : (gpLeft / 17) * 0.92;
+            } else if (/late/.test(injTag)) {
+              // "Late 2026" → assume ~Week 12 return
+              _injMult = isDynasty ? 0.78 : (6 / 17) * 0.90;
+            } else if (/mid/.test(injTag)) {
+              // "Mid 2026" or "Mid-Late 2026" → assume ~Week 8 return
+              _injMult = isDynasty ? 0.83 : (10 / 17) * 0.90;
+            } else if (/early/.test(injTag)) {
+              // "Early 2026" → assume ~Week 3 return
+              _injMult = isDynasty ? 0.90 : (15 / 17) * 0.95;
+            } else {
+              // Just "2026" with no timing → assume mid-season
+              _injMult = isDynasty ? 0.80 : (10 / 17) * 0.90;
+            }
           }
         }
-        // Pattern 2: Major injury with timeline — "ACL, Week 1", "Achilles, Week 4"
+        // Pattern 2: ACL/Achilles with return week — "ACL, LCL, Week 1", "Achilles, Week 4"
         else if (/acl|achilles/.test(injTag) && /week\s*\d/i.test(injTag)) {
           var weekMatch = injTag.match(/week\s*(\d+)/i);
           var returnWeek = weekMatch ? parseInt(weekMatch[1]) : 8;
-          // Miss returnWeek-1 games out of 17. PPG when playing is still full,
-          // but season value is reduced by missed time + rust discount
           var gamesPlayed = Math.max(1, 17 - (returnWeek - 1));
-          var rustDiscount = returnWeek >= 8 ? 0.90 : returnWeek >= 4 ? 0.95 : 1.0;
+          // ACL/Achilles ALWAYS gets a rust discount, even for Week 1 returns.
+          // Coming back from major surgery → at minimum 5% rust penalty.
+          var rustDiscount = returnWeek >= 10 ? 0.88 : returnWeek >= 6 ? 0.92 : returnWeek >= 3 ? 0.95 : 0.95;
           _injMult = isDynasty ? 0.88 : (gamesPlayed / 17) * rustDiscount;
         }
-        // Pattern 3: Major injury, no timeline — "ACL", "Achilles", "torn ACL"
+        // Pattern 3: ACL/Achilles/major ligament, no timeline — "ACL", "Achilles", "torn ACL", "ACL and Meniscus"
         else if (/acl|achilles/.test(injTag)) {
-          _injMult = isDynasty ? 0.82 : 0.30;
+          // Check for multi-injury (e.g. "ACL and Meniscus") → worse prognosis
+          var isMulti = /and|plus|\+|meniscus|mcl|lcl|pcl/.test(injTag);
+          if (isMulti) {
+            _injMult = isDynasty ? 0.75 : 0.20;
+          } else {
+            _injMult = isDynasty ? 0.82 : 0.30;
+          }
         }
         // Pattern 4: Season-ending / out for season
         else if (/season.?ending|out for season|out for year|done for year/.test(injTag)) {
           _injMult = isDynasty ? 0.70 : 0.05;
         }
-        // Pattern 5: Significant injury — "knee", "ankle", "shoulder", "back", "hip", "foot"
-        else if (/knee|ankle|shoulder|back|hip|foot|hamstring|quad/.test(injTag)) {
-          // Check if it mentions a return timeline
+        // Pattern 5: Significant injury keywords (includes MCL, LCL, fibula, etc.)
+        else if (/knee|ankle|shoulder|back|hip|foot|hamstring|quad|mcl|lcl|pcl|fibul|tibia|meniscus|labrum|pec|bicep|tricep|elbow|wrist|calf|groin|oblique|rib|concussion/.test(injTag)) {
+          // Check for surgery mention → more serious
+          var hasSurgery = /surgery|procedure|repair|reconstruction|scope/.test(injTag);
+          // Check for return timeline
           var sigWeek = injTag.match(/week\s*(\d+)/i);
           if (sigWeek) {
             var sigReturn = parseInt(sigWeek[1]);
             var sigGames = Math.max(1, 17 - (sigReturn - 1));
-            _injMult = isDynasty ? 0.95 : (sigGames / 17) * 0.97;
+            var sigRust = hasSurgery ? 0.93 : 0.97;
+            _injMult = isDynasty ? 0.95 : (sigGames / 17) * sigRust;
+          } else if (hasSurgery) {
+            _injMult = isDynasty ? 0.90 : 0.70;
           } else {
             _injMult = isDynasty ? 0.95 : 0.85;
           }
@@ -7234,13 +7272,19 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
         // For significant injuries in redraft: cap GP to reflect actual expected games
         // The fpts_pg discount already handles per-game reduction (rust etc),
         // but we also need to reduce total games for season value
-        var injTag = d.inj ? d.inj.toLowerCase() : '';
-        var _injWeekMatch = injTag.match(/week\s*(\d+)/i);
+        var _injTagLc = d.inj ? d.inj.toLowerCase() : '';
+        var _injWeekMatch = _injTagLc.match(/week\s*(\d+)/i);
         if (_injWeekMatch) {
           var _retWk = parseInt(_injWeekMatch[1]);
           _injGpAdj = Math.min(proj.gp, Math.max(1, 17 - (_retWk - 1)));
+        } else if (/2026/.test(_injTagLc)) {
+          // Year-based tag with 2026 — estimate GP from timing hint
+          if (/late/.test(_injTagLc)) _injGpAdj = Math.min(proj.gp, 6);
+          else if (/mid/.test(_injTagLc)) _injGpAdj = Math.min(proj.gp, 10);
+          else if (/early/.test(_injTagLc)) _injGpAdj = Math.min(proj.gp, 15);
+          else _injGpAdj = Math.min(proj.gp, 10); // generic "2026" → mid-season
         } else if (d._injDiscount.mult <= 0.10) {
-          // Season-ending: essentially 0 games, but keep 1 for math stability
+          // Season-ending or out until 2027+: essentially 0 games
           _injGpAdj = 1;
         }
       }

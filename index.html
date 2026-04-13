@@ -7136,6 +7136,72 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
       // Store injury discount info on player for UI/diagnostic access
       d._injDiscount = d.inj ? { tag: d.inj, mult: Math.round(_injMult * 100) / 100, mode: currentMode } : null;
 
+      // --- Auto Injury Detection (GP Drop Method) ---
+      // If no manual inj tag, detect likely injuries from career GP drops.
+      // Player who went from 13+ GP to ≤10 GP in their most recent season likely got hurt.
+      // Apply position-specific recovery multipliers from historical backtest data.
+      if (!d.inj && d.career && d.career.length >= 2) {
+        var _careerSorted = d.career.slice().sort(function(a,b) { return (a.yr||0) - (b.yr||0); });
+        var _lastSzn = _careerSorted[_careerSorted.length - 1];
+        var _prevSzn = _careerSorted[_careerSorted.length - 2];
+
+        if (_lastSzn && _prevSzn && _lastSzn.gp != null && _prevSzn.gp != null) {
+          var _lastGp = _lastSzn.gp;
+          var _prevGp = _prevSzn.gp;
+          var _lastYr = _lastSzn.yr || 0;
+
+          // Only apply if the injury season is recent (2025 or 2024)
+          // and the previous season was healthy (13+ GP)
+          if (_lastYr >= 2024 && _prevGp >= 13 && _lastGp <= 10) {
+            var _autoAge = d.age || 27;
+            var _autoYoung = _autoAge < 27;
+
+            // Determine severity: ≤5 GP = severe, 6-10 = moderate
+            var _autoSevere = _lastGp <= 5;
+            var _autoRecovery;
+            if (_autoSevere) {
+              _autoRecovery = {
+                QB:  { redraft: _autoYoung ? 0.85 : 0.75, dynasty: 0.78 },
+                RB:  { redraft: _autoYoung ? 0.85 : 0.69, dynasty: 0.62 },
+                WR:  { redraft: _autoYoung ? 0.90 : 0.74, dynasty: 0.63 },
+                TE:  { redraft: _autoYoung ? 0.82 : 0.79, dynasty: 0.87 }
+              };
+            } else {
+              _autoRecovery = {
+                QB:  { redraft: _autoYoung ? 0.92 : 0.85, dynasty: 0.81 },
+                RB:  { redraft: _autoYoung ? 0.88 : 0.75, dynasty: 0.74 },
+                WR:  { redraft: _autoYoung ? 0.92 : 0.82, dynasty: 0.74 },
+                TE:  { redraft: _autoYoung ? 0.85 : 0.78, dynasty: 0.82 }
+              };
+            }
+
+            var _autoRec = _autoRecovery[pos] || _autoRecovery['WR'];
+            var _autoMult = isDynasty ? _autoRec.dynasty : _autoRec.redraft;
+
+            // If it was 2024 and they're now a year removed (2026 season),
+            // they get partial credit — Y2 recovery is better than Y1.
+            // Data: Y2 recovery is roughly midway between Y1 and 100%.
+            if (_lastYr === 2024) {
+              // 2024 injury → 2025 was Y1 recovery → 2026 is Y2
+              // Blend toward full recovery: mult = 1.0 - (1.0 - Y1_mult) * 0.5
+              _autoMult = 1.0 - (1.0 - _autoMult) * 0.50;
+            }
+
+            fpts_pg *= _autoMult;
+
+            // Store for diagnostic
+            d._injDiscount = {
+              tag: 'AUTO: ' + _lastGp + ' GP in ' + _lastYr + ' (was ' + _prevGp + ' GP)',
+              mult: Math.round(_autoMult * 100) / 100,
+              mode: currentMode,
+              auto: true,
+              severity: _autoSevere ? 'severe' : 'moderate',
+              injYear: _lastYr
+            };
+          }
+        }
+      }
+
       // JM talent blending for young players
       var exp = d.exp != null ? d.exp : 99;
       var blendWeights = _jmBlendWeights[pos];
@@ -7567,19 +7633,24 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
   });
 
   // Expose injury discount diagnostic on window for console inspection
-  window._injDiagnostic = function() {
+  window._injDiagnostic = function(autoOnly) {
     var results = [];
     D.forEach(function(d) {
       if (d._injDiscount) {
+        if (autoOnly && !d._injDiscount.auto) return;
         results.push({
           name: d.n, pos: d.s, team: d.t, injury: d._injDiscount.tag,
           mult: d._injDiscount.mult, mode: d._injDiscount.mode,
+          auto: d._injDiscount.auto ? 'YES' : '',
+          severity: d._injDiscount.severity || '',
           ppg: d._jsModelPpg, vor: d._jsModelVor
         });
       }
     });
     results.sort(function(a,b) { return a.mult - b.mult; });
     console.table(results);
+    console.log('Total: ' + results.length + ' (' + results.filter(function(r){return r.auto==='YES';}).length + ' auto-detected, ' + results.filter(function(r){return r.auto==='';}).length + ' manual tags)');
+    console.log('Tip: _injDiagnostic(true) to show only auto-detected');
     return results;
   };
 
@@ -13018,6 +13089,39 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   });
   console.log('[ALL_PLAYERS_DB] Enriched career stats, added ' + _apAdded + ' new retired players');
 }
+
+// === LIVE INJURY UPDATES: Load from Firestore and merge into D array ===
+// The injury_scanner.py script pushes injury data to Firestore doc 'site_data/injury_updates'.
+// This loads it on page load so the JS model injury discount system has fresh data.
+(function() {
+  if (typeof firebase === 'undefined' || typeof D === 'undefined') return;
+  try {
+    firebase.firestore().collection('site_data').doc('injury_updates').get().then(function(doc) {
+      if (!doc.exists) return;
+      var data = doc.data();
+      if (!data || !data.players) return;
+      var updated = 0;
+      var players = data.players;
+      D.forEach(function(d) {
+        if (!d.n || !players[d.n]) return;
+        var p = players[d.n];
+        // Only apply if player doesn't already have a manual inj tag
+        // OR if the Firestore data is newer (during season, statuses change frequently)
+        if (!d.inj || d._injFromFirestore) {
+          d.inj = p.inj;
+          d._injFromFirestore = true;
+          updated++;
+        }
+      });
+      if (updated > 0) {
+        console.log('[InjuryUpdates] Applied ' + updated + ' injury tags from Firestore (updated: ' + (data.updated || 'unknown') + ')');
+      }
+    }).catch(function(e) {
+      // Silently fail — injuries are optional enhancement
+      console.log('[InjuryUpdates] Could not load:', e.message || e);
+    });
+  } catch(e) {}
+})();
 
 // === NAME COLLISION FIX: Clear old career data for 2025 rookies with same name as retired NFL players ===
 (function() {

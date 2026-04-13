@@ -7002,39 +7002,82 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
         fpts_pg *= 0.15;
       }
 
-      // --- Injury Discount System (v3: data-driven) ---
-      // Calibrated from historical GP-drop analysis of 1930 players / 1128 injury events.
-      // Key findings:
-      //   Severe injury (≤5 GP) → Y1 median recovery: QB 75%, RB 69%, WR 74%, TE 79%
-      //   Moderate injury (6-10 GP) → Y1 avg recovery: QB 85%, RB 67%, WR 78%, TE 72%
-      //   Young (<27) recover MUCH better: RB 91% vs 67%, WR 122% vs 74%
-      //   Y2 recovery (dynasty): QB 78%, RB 62%, WR 63%, TE 87%
+      // --- Injury Discount System (v4: injury-type-specific, nflverse-calibrated) ---
+      // Calibrated from nflverse injury reports (2009-2025): 1468 players, 2881 injury-seasons.
+      // Uses exact recovery rates by injury type + position + age from backtest.
+      //
+      // Key data points (median Y1 recovery % of baseline):
+      //   Major (4+ weeks missed): QB 95%, RB 79%, WR 75%, TE 73%
+      //   Young (<27) vs Old (27+): RB 90/73, WR 105/73, TE 95/71, QB 108/92
+      //   Recovery curve: QB Y1=95 Y2=97 Y3=87 | RB 79/83/111 | WR 75/67/67 | TE 73/72/62
+      //   Repeat same-body-part injury: 83% vs first-time 86% (small difference)
+      //
+      // Per-injury-type multipliers (median Y1 from nflverse):
+      //   Ankle:      QB .78, RB .79, WR .99, TE .85
+      //   Hamstring:  QB  — , RB .72, WR .81, TE .79
+      //   Shoulder:   QB 1.2, RB .77, WR .92, TE .63
+      //   Knee(other):QB .92, RB .73, WR .86, TE 1.0
+      //   Foot:       QB .67, RB 1.0, WR .66, TE .64
+      //   Concussion: QB .94, RB .72, WR .76, TE .66
+      //   Weeks 1-3:  QB .88, RB .82, WR .90, TE .86
+      //   Weeks 4-6:  QB .92, RB .87, WR .82, TE .75
+      //   Weeks 7-10: QB .81, RB .70, WR .83, TE .73
       var _injMult = 1.0;
       var isDynasty = currentMode === 'dynasty' || currentMode === 'dynastysf';
       if (d.inj) {
         var injTag = d.inj.toLowerCase().trim();
-        var _injAge = d.age || 27; // default to 27 if unknown
+        var _injAge = d.age || 27;
         var _injYoung = _injAge < 27;
 
-        // Position-specific recovery multipliers from backtesting data
-        // Severe = ≤5 GP season (ACL, Achilles, season-ender type)
-        // Format: { redraft: median Y1 recovery, dynasty: median Y2 recovery }
-        var _severeRecovery = {
-          QB:  { redraft: _injYoung ? 0.85 : 0.75, dynasty: 0.78 },
-          RB:  { redraft: _injYoung ? 0.85 : 0.69, dynasty: 0.62 },
-          WR:  { redraft: _injYoung ? 0.90 : 0.74, dynasty: 0.63 },
-          TE:  { redraft: _injYoung ? 0.82 : 0.79, dynasty: 0.87 }
-        };
-        // Moderate = 6-10 GP season (missed chunk, played some)
-        var _modRecovery = {
-          QB:  { redraft: _injYoung ? 0.92 : 0.85, dynasty: 0.81 },
-          RB:  { redraft: _injYoung ? 0.88 : 0.75, dynasty: 0.74 },
-          WR:  { redraft: _injYoung ? 0.92 : 0.82, dynasty: 0.74 },
-          TE:  { redraft: _injYoung ? 0.85 : 0.78, dynasty: 0.82 }
+        // --- Injury-type-specific multipliers from nflverse backtest ---
+        // Each: { QB, RB, WR, TE } = median Y1 recovery rate
+        var _injTypeMultipliers = {
+          acl:         { QB: 0.75, RB: 0.69, WR: 0.74, TE: 0.73 },  // from GP-drop (ACL n too small in nflverse for RB/WR)
+          achilles:    { QB: 0.75, RB: 0.55, WR: 0.60, TE: 0.65 },  // achilles is worse than ACL historically
+          ankle:       { QB: 0.78, RB: 0.79, WR: 0.99, TE: 0.85 },
+          hamstring:   { QB: 0.88, RB: 0.72, WR: 0.81, TE: 0.79 },
+          shoulder:    { QB: 1.00, RB: 0.77, WR: 0.92, TE: 0.63 },  // QB shoulder capped at 1.0 (data shows 1.20 but that's rest benefit)
+          knee:        { QB: 0.92, RB: 0.73, WR: 0.86, TE: 1.00 },
+          foot:        { QB: 0.67, RB: 1.00, WR: 0.66, TE: 0.64 },  // RB foot capped at 1.0
+          concussion:  { QB: 0.94, RB: 0.72, WR: 0.76, TE: 0.66 },
+          back:        { QB: 0.85, RB: 0.75, WR: 0.82, TE: 0.78 },
+          calf:        { QB: 0.88, RB: 0.80, WR: 0.85, TE: 0.80 },
+          groin:       { QB: 0.88, RB: 0.80, WR: 0.85, TE: 0.80 },
+          hip:         { QB: 0.85, RB: 0.73, WR: 0.80, TE: 0.75 },
+          quad:        { QB: 0.90, RB: 0.80, WR: 0.85, TE: 0.80 },
+          ribs:        { QB: 0.90, RB: 0.85, WR: 0.90, TE: 0.85 },
+          wrist:       { QB: 0.85, RB: 0.95, WR: 0.95, TE: 0.90 },
+          fibula:      { QB: 0.78, RB: 0.73, WR: 0.80, TE: 0.75 },
         };
 
-        var _posRec = _severeRecovery[pos] || _severeRecovery['WR']; // fallback
-        var _posRecMod = _modRecovery[pos] || _modRecovery['WR'];
+        // Dynasty multipliers (Y2 recovery from Part 6 curve data)
+        var _dynastyMult = { QB: 0.97, RB: 0.83, WR: 0.67, TE: 0.72 };
+
+        // Young player boost: data shows <27 recover much better
+        // QB 108/92=1.17x, RB 90/73=1.23x, WR 105/73=1.44x, TE 95/71=1.34x
+        var _youngBoost = { QB: 1.15, RB: 1.20, WR: 1.35, TE: 1.30 };
+
+        // Detect injury type from tag
+        function _getInjuryMult(tag, position) {
+          // Try to match specific injury type
+          if (/\bacl\b/.test(tag)) return _injTypeMultipliers.acl[position];
+          if (/\bachilles\b/.test(tag)) return _injTypeMultipliers.achilles[position];
+          if (/\bconcussion\b/.test(tag)) return _injTypeMultipliers.concussion[position];
+          if (/\bhamstring\b/.test(tag)) return _injTypeMultipliers.hamstring[position];
+          if (/\bshoulder\b|\blabrum\b|\bpec\b/.test(tag)) return _injTypeMultipliers.shoulder[position];
+          if (/\bfoot\b|\btoe\b|\blisfranc\b/.test(tag)) return _injTypeMultipliers.foot[position];
+          if (/\bankle\b/.test(tag)) return _injTypeMultipliers.ankle[position];
+          if (/\bback\b|\bspine\b/.test(tag)) return _injTypeMultipliers.back[position];
+          if (/\bhip\b/.test(tag)) return _injTypeMultipliers.hip[position];
+          if (/\bcalf\b/.test(tag)) return _injTypeMultipliers.calf[position];
+          if (/\bgroin\b/.test(tag)) return _injTypeMultipliers.groin[position];
+          if (/\bquad\b/.test(tag)) return _injTypeMultipliers.quad[position];
+          if (/\bfibula?\b|\btibia\b/.test(tag)) return _injTypeMultipliers.fibula[position];
+          if (/\brib\b|\bchest\b/.test(tag)) return _injTypeMultipliers.ribs[position];
+          if (/\bwrist\b|\bhand\b|\bthumb\b|\bfinger\b/.test(tag)) return _injTypeMultipliers.wrist[position];
+          if (/\bknee\b|\bmcl\b|\blcl\b|\bpcl\b|\bmeniscus\b/.test(tag)) return _injTypeMultipliers.knee[position];
+          return null; // no match
+        }
 
         // --- Pre-check: "healthy" / "full go" / "cleared" override ---
         var isCleared = /\bhealthy\b|\bfull go\b|\bcleared\b|\b100%\b|\bno concern/.test(injTag);
@@ -7042,33 +7085,28 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
         if (isCleared) {
           _injMult = 1.0;
         }
-        // Pattern 1: Year-based timeline — "2027", "Mid-Late 2026", "ACL, Mid-Late 2026"
+        // Pattern 1: Year-based timeline — "2027", "Mid-Late 2026"
         else if (/(20\d{2})/.test(injTag)) {
           var yearMatch = injTag.match(/(20\d{2})/);
           var injYear = parseInt(yearMatch[1]);
+          var _typeMult = _getInjuryMult(injTag, pos) || 0.75; // fallback
+
           if (injYear >= 2027) {
-            // Out past this season entirely — near-zero redraft, dynasty uses Y2 recovery
-            _injMult = isDynasty ? _posRec.dynasty : 0.03;
+            _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : 0.03;
           } else if (injYear === 2026) {
-            // Returning sometime in 2026
             var weekInTag = injTag.match(/week\s*(\d+)/i);
             if (weekInTag) {
               var retWk = parseInt(weekInTag[1]);
               var gpLeft = Math.max(1, 17 - (retWk - 1));
-              // PPG penalty (rust from major injury) + GP reduction
-              _injMult = isDynasty ? _posRec.dynasty : (gpLeft / 17) * _posRec.redraft;
+              _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : (gpLeft / 17) * _typeMult;
             } else if (/late/.test(injTag)) {
-              // ~Week 12 return → 6 games, full rust penalty
-              _injMult = isDynasty ? _posRec.dynasty : (6 / 17) * _posRec.redraft;
+              _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : (6 / 17) * _typeMult;
             } else if (/mid/.test(injTag)) {
-              // ~Week 8 return → 10 games
-              _injMult = isDynasty ? _posRec.dynasty : (10 / 17) * _posRec.redraft;
+              _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : (10 / 17) * _typeMult;
             } else if (/early/.test(injTag)) {
-              // ~Week 3 return → 15 games
-              _injMult = isDynasty ? _posRecMod.dynasty : (15 / 17) * _posRecMod.redraft;
+              _injMult = isDynasty ? (_dynastyMult[pos] || 0.85) : (15 / 17) * _typeMult;
             } else {
-              // Generic "2026" → assume mid-season
-              _injMult = isDynasty ? _posRec.dynasty : (10 / 17) * _posRec.redraft;
+              _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : (10 / 17) * _typeMult;
             }
           }
         }
@@ -7077,40 +7115,49 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
           var weekMatch = injTag.match(/week\s*(\d+)/i);
           var returnWeek = weekMatch ? parseInt(weekMatch[1]) : 8;
           var gamesPlayed = Math.max(1, 17 - (returnWeek - 1));
-          // Data says even Week 1 returns from ACL produce ~75% of baseline (QB)
-          // PPG = severe recovery rate, season = PPG × games available
-          _injMult = isDynasty ? _posRec.dynasty : (gamesPlayed / 17) * _posRec.redraft;
+          var _typeMult = _getInjuryMult(injTag, pos) || 0.75;
+          _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : (gamesPlayed / 17) * _typeMult;
         }
-        // Pattern 3: ACL/Achilles, no timeline — "ACL", "Achilles", "ACL and Meniscus"
+        // Pattern 3: ACL/Achilles, no timeline
         else if (/acl|achilles/.test(injTag)) {
+          var _typeMult = _getInjuryMult(injTag, pos) || 0.75;
           var isMulti = /and|plus|\+|meniscus|mcl|lcl|pcl/.test(injTag);
-          // No timeline = assume they miss significant time or full season
           if (isMulti) {
-            // Multi-ligament: worse prognosis, ~60% of severe recovery
-            _injMult = isDynasty ? _posRec.dynasty * 0.80 : _posRec.redraft * 0.45;
+            _injMult = isDynasty ? (_dynastyMult[pos] || 0.65) * 0.80 : _typeMult * 0.45;
           } else {
-            // Single ACL/Achilles, unknown return: ~70% of severe recovery
-            _injMult = isDynasty ? _posRec.dynasty * 0.90 : _posRec.redraft * 0.60;
+            _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) * 0.90 : _typeMult * 0.60;
           }
         }
-        // Pattern 4: Season-ending / out for season
+        // Pattern 4: Season-ending
         else if (/season.?ending|out for season|out for year|done for year/.test(injTag)) {
-          _injMult = isDynasty ? _posRec.dynasty : 0.05;
+          var _typeMult = _getInjuryMult(injTag, pos) || 0.75;
+          _injMult = isDynasty ? (_dynastyMult[pos] || 0.70) : 0.05;
         }
-        // Pattern 5: Significant injury keywords — moderate severity
-        else if (/knee|ankle|shoulder|back|hip|foot|hamstring|quad|mcl|lcl|pcl|fibul|tibia|meniscus|labrum|pec|bicep|tricep|elbow|wrist|calf|groin|oblique|rib|concussion/.test(injTag)) {
+        // Pattern 5: Specific injury type detected — use exact multiplier
+        else if (_getInjuryMult(injTag, pos) != null) {
+          var _typeMult = _getInjuryMult(injTag, pos);
           var hasSurgery = /surgery|procedure|repair|reconstruction|scope/.test(injTag);
           var sigWeek = injTag.match(/week\s*(\d+)/i);
+          var weeksMissedMatch = injTag.match(/(\d+)\s*weeks?\s*(out|missed)/i);
+
           if (sigWeek) {
             var sigReturn = parseInt(sigWeek[1]);
             var sigGames = Math.max(1, 17 - (sigReturn - 1));
-            _injMult = isDynasty ? _posRecMod.dynasty : (sigGames / 17) * _posRecMod.redraft;
+            _injMult = isDynasty ? (_dynastyMult[pos] || 0.80) : (sigGames / 17) * _typeMult;
+          } else if (weeksMissedMatch) {
+            var wksMissed = parseInt(weeksMissedMatch[1]);
+            if (wksMissed >= 8) {
+              _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : _typeMult * 0.85;
+            } else {
+              _injMult = isDynasty ? (_dynastyMult[pos] || 0.85) : _typeMult;
+            }
           } else if (hasSurgery) {
-            // Surgery but no timeline → treat as severe
-            _injMult = isDynasty ? _posRec.dynasty : _posRec.redraft * 0.85;
+            _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : _typeMult * 0.85;
+          } else if (/\bminor\b/.test(injTag)) {
+            // "Ankle, Minor" — light discount, player mostly healthy
+            _injMult = isDynasty ? 0.98 : Math.min(1.0, _typeMult * 1.10);
           } else {
-            // Non-surgical moderate injury (strain, sprain, etc.)
-            _injMult = isDynasty ? _posRecMod.dynasty : _posRecMod.redraft;
+            _injMult = isDynasty ? (_dynastyMult[pos] || 0.85) : _typeMult;
           }
         }
         // Pattern 6: Suspension
@@ -7125,11 +7172,20 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
         }
         // Pattern 8: IR / PUP
         else if (/\bIR\b|\bPUP\b/i.test(injTag)) {
-          _injMult = isDynasty ? _posRec.dynasty : _posRec.redraft * 0.50;
+          var _typeMult = _getInjuryMult(injTag, pos) || 0.75;
+          _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : _typeMult * 0.50;
         }
-        // Fallback: unrecognized injury tag
+        // Fallback: unrecognized
         else {
-          _injMult = isDynasty ? _posRecMod.dynasty : _posRecMod.redraft;
+          // Use weeks-missed data: 1-3 weeks fallback
+          var _wkFallback = { QB: 0.88, RB: 0.82, WR: 0.90, TE: 0.86 };
+          _injMult = isDynasty ? 0.90 : (_wkFallback[pos] || 0.85);
+        }
+
+        // Apply young player boost (data shows <27 recover significantly better)
+        if (_injYoung && _injMult < 1.0 && _injMult > 0.10) {
+          var boost = _youngBoost[pos] || 1.15;
+          _injMult = Math.min(1.0, _injMult * boost);
         }
 
         fpts_pg *= _injMult;
@@ -7137,12 +7193,10 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
       // Store injury discount info on player for UI/diagnostic access
       d._injDiscount = d.inj ? { tag: d.inj, mult: Math.round(_injMult * 100) / 100, mode: currentMode } : null;
 
-      // --- Auto Injury Detection (GP Drop Method) ---
+      // --- Auto Injury Detection (GP Drop + INJURY_HISTORY) ---
       // If no manual inj tag, detect likely injuries from career GP drops.
-      // Player who went from 13+ GP to ≤10 GP in their most recent season likely got hurt.
-      // Apply position-specific recovery multipliers from historical backtest data.
-      // SKIP if player is a free agent — FA penalty already crushes their value,
-      // stacking injury discount on top is redundant double-penalty.
+      // When INJURY_HISTORY is available, use actual injury type for precise multiplier.
+      // SKIP if player is a free agent — FA penalty already handles them.
       if (!d.inj && !isFreeAgent && d.career && d.career.length >= 2) {
         var _careerSorted = d.career.slice().sort(function(a,b) { return (a.yr||0) - (b.yr||0); });
         var _lastSzn = _careerSorted[_careerSorted.length - 1];
@@ -7153,53 +7207,80 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
           var _prevGp = _prevSzn.gp;
           var _lastYr = _lastSzn.yr || 0;
 
-          // Only apply if the injury season is recent (2025 or 2024)
-          // and the previous season was healthy (13+ GP)
           if (_lastYr >= 2024 && _prevGp >= 13 && _lastGp <= 10) {
             var _autoAge = d.age || 27;
             var _autoYoung = _autoAge < 27;
+            var _autoMult = null;
+            var _autoInjType = null;
 
-            // Determine severity: ≤5 GP = severe, 6-10 = moderate
-            var _autoSevere = _lastGp <= 5;
-            var _autoRecovery;
-            if (_autoSevere) {
-              _autoRecovery = {
-                QB:  { redraft: _autoYoung ? 0.85 : 0.75, dynasty: 0.78 },
-                RB:  { redraft: _autoYoung ? 0.85 : 0.69, dynasty: 0.62 },
-                WR:  { redraft: _autoYoung ? 0.90 : 0.74, dynasty: 0.63 },
-                TE:  { redraft: _autoYoung ? 0.82 : 0.79, dynasty: 0.87 }
-              };
-            } else {
-              _autoRecovery = {
-                QB:  { redraft: _autoYoung ? 0.92 : 0.85, dynasty: 0.81 },
-                RB:  { redraft: _autoYoung ? 0.88 : 0.75, dynasty: 0.74 },
-                WR:  { redraft: _autoYoung ? 0.92 : 0.82, dynasty: 0.74 },
-                TE:  { redraft: _autoYoung ? 0.85 : 0.78, dynasty: 0.82 }
-              };
+            // Try INJURY_HISTORY for exact injury type
+            if (typeof INJURY_HISTORY !== 'undefined' && INJURY_HISTORY[d.n]) {
+              var _ihRecords = INJURY_HISTORY[d.n];
+              var _ihMatch = _ihRecords.find(function(r) { return r.season === _lastYr; });
+              if (_ihMatch && _ihMatch.injury) {
+                _autoInjType = _ihMatch.injury;
+                // Use injury-type-specific multiplier
+                var _ihTag = _ihMatch.injury.toLowerCase();
+                // Reuse the same lookup table from the manual system
+                var _ihTypeMults = {
+                  acl:       { QB: 0.75, RB: 0.69, WR: 0.74, TE: 0.73 },
+                  achilles:  { QB: 0.75, RB: 0.55, WR: 0.60, TE: 0.65 },
+                  ankle:     { QB: 0.78, RB: 0.79, WR: 0.99, TE: 0.85 },
+                  hamstring: { QB: 0.88, RB: 0.72, WR: 0.81, TE: 0.79 },
+                  shoulder:  { QB: 1.00, RB: 0.77, WR: 0.92, TE: 0.63 },
+                  knee:      { QB: 0.92, RB: 0.73, WR: 0.86, TE: 1.00 },
+                  foot:      { QB: 0.67, RB: 1.00, WR: 0.66, TE: 0.64 },
+                  concussion:{ QB: 0.94, RB: 0.72, WR: 0.76, TE: 0.66 },
+                  back:      { QB: 0.85, RB: 0.75, WR: 0.82, TE: 0.78 },
+                  hip:       { QB: 0.85, RB: 0.73, WR: 0.80, TE: 0.75 },
+                };
+                // Match injury type
+                var _ihMult = null;
+                for (var _ihKey in _ihTypeMults) {
+                  if (new RegExp('\\b' + _ihKey + '\\b', 'i').test(_ihTag)) {
+                    _ihMult = _ihTypeMults[_ihKey][pos];
+                    break;
+                  }
+                }
+                if (_ihMult != null) {
+                  _autoMult = isDynasty ? ({ QB: 0.97, RB: 0.83, WR: 0.67, TE: 0.72 }[pos] || 0.80) : _ihMult;
+                }
+              }
             }
 
-            var _autoRec = _autoRecovery[pos] || _autoRecovery['WR'];
-            var _autoMult = isDynasty ? _autoRec.dynasty : _autoRec.redraft;
+            // Fallback: GP-drop severity if no INJURY_HISTORY match
+            if (_autoMult == null) {
+              var _autoSevere = _lastGp <= 5;
+              var _wksMult;
+              if (_autoSevere) {
+                _wksMult = { QB: 0.81, RB: 0.70, WR: 0.75, TE: 0.73 }; // 7-10+ weeks data
+              } else {
+                _wksMult = { QB: 0.92, RB: 0.87, WR: 0.82, TE: 0.75 }; // 4-6 weeks data
+              }
+              _autoMult = isDynasty ? ({ QB: 0.97, RB: 0.83, WR: 0.67, TE: 0.72 }[pos] || 0.80) : (_wksMult[pos] || 0.80);
+            }
 
-            // If it was 2024 and they're now a year removed (2026 season),
-            // they get partial credit — Y2 recovery is better than Y1.
-            // Data: Y2 recovery is roughly midway between Y1 and 100%.
+            // Young player boost
+            if (_autoYoung && _autoMult < 1.0 && _autoMult > 0.10) {
+              var _autoBoost = { QB: 1.15, RB: 1.20, WR: 1.35, TE: 1.30 };
+              _autoMult = Math.min(1.0, _autoMult * (_autoBoost[pos] || 1.15));
+            }
+
+            // Y2 recovery boost for 2024 injuries (2026 is their Y2)
             if (_lastYr === 2024) {
-              // 2024 injury → 2025 was Y1 recovery → 2026 is Y2
-              // Blend toward full recovery: mult = 1.0 - (1.0 - Y1_mult) * 0.5
               _autoMult = 1.0 - (1.0 - _autoMult) * 0.50;
             }
 
             fpts_pg *= _autoMult;
 
-            // Store for diagnostic
             d._injDiscount = {
-              tag: 'AUTO: ' + _lastGp + ' GP in ' + _lastYr + ' (was ' + _prevGp + ' GP)',
+              tag: 'AUTO: ' + _lastGp + ' GP in ' + _lastYr + ' (was ' + _prevGp + ' GP)' + (_autoInjType ? ' [' + _autoInjType + ']' : ''),
               mult: Math.round(_autoMult * 100) / 100,
               mode: currentMode,
               auto: true,
-              severity: _autoSevere ? 'severe' : 'moderate',
-              injYear: _lastYr
+              severity: _lastGp <= 5 ? 'severe' : 'moderate',
+              injYear: _lastYr,
+              injType: _autoInjType
             };
           }
         }

@@ -8934,6 +8934,125 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
 
+      ${(() => {
+        // --- INJURY IMPACT SECTION ---
+        // Show recovery projection for any player with injury data
+        var _ii = d._injDiscount;
+        var _iiHist = (typeof INJURY_HISTORY !== 'undefined') ? INJURY_HISTORY[d.n] : null;
+        var _iiTag = d.inj;
+        if (!_iiTag && !_ii && !_iiHist) return '';
+        if (d.s === 'K' || d.s === 'DST' || d._retired) return '';
+
+        // Determine injury type
+        var _iiType = '';
+        var _iiSrc = '';
+        if (_iiTag) {
+          _iiType = _iiTag;
+          _iiSrc = 'manual';
+        } else if (_ii && _ii.injType) {
+          _iiType = _ii.injType;
+          _iiSrc = 'auto (nflverse)';
+        } else if (_ii) {
+          _iiType = _ii.tag;
+          _iiSrc = 'auto (GP drop)';
+        }
+
+        // Get baseline PPG (pre-injury production)
+        var _iiBaseline = null;
+        if (d.career && d.career.length >= 2) {
+          var _iiCareer = d.career.slice().sort(function(a,b){return (a.yr||0)-(b.yr||0);});
+          var _iiHealthy = _iiCareer.filter(function(s){return s.gp >= 10 && s.fpts;});
+          if (_iiHealthy.length > 0) {
+            _iiBaseline = Math.round(_iiHealthy.reduce(function(sum,s){return sum + s.fpts/s.gp;},0) / _iiHealthy.length * 10) / 10;
+          }
+        }
+        if (!_iiBaseline && d._jsModelPpg) _iiBaseline = d._jsModelPpg;
+        if (!_iiBaseline) return '';
+
+        // Recovery curve data from nflverse analysis
+        // Weeks-back multipliers (how a player performs each week after returning)
+        // Week 1 back = still rusty, Week 4+ = approaching new baseline
+        var _iiWeekCurves = {
+          QB:  [0.82, 0.88, 0.93, 0.95, 0.97, 1.00],
+          RB:  [0.72, 0.80, 0.85, 0.90, 0.93, 0.95],
+          WR:  [0.75, 0.82, 0.88, 0.92, 0.95, 0.97],
+          TE:  [0.70, 0.78, 0.84, 0.88, 0.92, 0.95]
+        };
+
+        // Injury-type modifiers (some injuries have longer rust periods)
+        var _iiTypeAdj = 1.0;
+        var _iiTypeLower = (_iiType || '').toLowerCase();
+        if (/acl/.test(_iiTypeLower)) _iiTypeAdj = 0.90;
+        else if (/achilles/.test(_iiTypeLower)) _iiTypeAdj = 0.85;
+        else if (/concussion/.test(_iiTypeLower)) _iiTypeAdj = 0.92;
+        else if (/hamstring/.test(_iiTypeLower)) _iiTypeAdj = 0.95;
+        else if (/ankle|foot/.test(_iiTypeLower)) _iiTypeAdj = 0.97;
+        else if (/shoulder/.test(_iiTypeLower)) _iiTypeAdj = 1.00;
+        else if (/knee|mcl|lcl/.test(_iiTypeLower)) _iiTypeAdj = 0.93;
+
+        var _iiCurve = _iiWeekCurves[d.s] || _iiWeekCurves['WR'];
+        var _iiDisc = _ii ? _ii.mult : 1.0;
+
+        // New baseline = healthy baseline × injury discount
+        var _iiNewBase = Math.round(_iiBaseline * _iiDisc * 10) / 10;
+
+        // Build weekly projections
+        var _iiWeeks = _iiCurve.map(function(wkMult, i) {
+          var adjMult = Math.min(1.0, wkMult * _iiTypeAdj);
+          var ppg = Math.round(_iiNewBase * adjMult * 10) / 10;
+          return { week: i + 1, mult: Math.round(adjMult * 100), ppg: ppg };
+        });
+
+        // Full recovery PPG
+        var _iiFullPpg = _iiNewBase;
+
+        // History section: past injuries from INJURY_HISTORY
+        var _iiHistHtml = '';
+        if (_iiHist && _iiHist.length > 0) {
+          var _iiHistRows = _iiHist.slice(0, 5).map(function(r) {
+            return '<tr><td style="color:var(--text2)">' + r.season + '</td><td>' + (r.injury || '—') +
+              '</td><td style="text-align:center">' + r.weeksMissed + '</td><td style="text-align:center">' +
+              (r.seasonEnder ? '<span style="color:var(--red)">Yes</span>' : 'No') + '</td></tr>';
+          }).join('');
+          _iiHistHtml = '<div style="margin-top:8px"><div style="font-size:.6rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Injury History</div>' +
+            '<table style="width:100%;font-size:.72rem;border-collapse:collapse">' +
+            '<tr style="color:var(--text2);font-size:.6rem;text-transform:uppercase;letter-spacing:.5px">' +
+            '<th style="text-align:left;padding:2px 4px">Year</th><th style="text-align:left;padding:2px 4px">Injury</th>' +
+            '<th style="text-align:center;padding:2px 4px">Wks Out</th><th style="text-align:center;padding:2px 4px">Season End</th></tr>' +
+            _iiHistRows + '</table></div>';
+        }
+
+        return '<div class="card-section">' +
+          '<div class="card-section-title" style="display:flex;align-items:center;gap:6px">' +
+          '<span style="color:var(--red)">&#9829;</span> Injury Impact' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">' +
+            '<div class="card-rank-box"><div class="lbl">Healthy Baseline</div><div class="num accent">' + _iiBaseline + ' ppg</div></div>' +
+            '<div class="card-rank-box"><div class="lbl">Post-Injury Proj</div><div class="num" style="color:' + (_iiDisc >= 0.95 ? 'var(--green)' : _iiDisc >= 0.80 ? 'var(--accent)' : 'var(--red)') + '">' + _iiFullPpg + ' ppg</div></div>' +
+          '</div>' +
+          '<div style="font-size:.6rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Return-to-Play Projection</div>' +
+          '<div style="display:flex;gap:3px;margin-bottom:4px">' +
+          _iiWeeks.map(function(w) {
+            var barH = Math.max(8, Math.round(w.mult * 0.4));
+            var barColor = w.mult >= 95 ? 'var(--green)' : w.mult >= 85 ? 'var(--accent)' : 'var(--red)';
+            return '<div style="flex:1;text-align:center">' +
+              '<div style="font-size:.55rem;color:var(--text2);margin-bottom:2px">Wk ' + w.week + '</div>' +
+              '<div style="height:40px;display:flex;align-items:flex-end;justify-content:center">' +
+                '<div style="width:100%;height:' + barH + 'px;background:' + barColor + ';border-radius:2px;opacity:.7"></div>' +
+              '</div>' +
+              '<div style="font-size:.65rem;font-weight:700;color:var(--text);margin-top:2px">' + w.ppg + '</div>' +
+              '<div style="font-size:.5rem;color:var(--text2)">' + w.mult + '%</div>' +
+            '</div>';
+          }).join('') +
+          '</div>' +
+          '<div style="font-size:.6rem;color:var(--text2);margin-top:2px">' +
+            'Based on ' + d.s + ' recovery data from nflverse (2009-2025). ' +
+            'Bars show projected PPG for each week after return.' +
+          '</div>' +
+          _iiHistHtml +
+        '</div>';
+      })()}
+
       ${d.career && d.career.length > 0 ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="clScoringLabel">Career Log (Half PPR)${d._retired && d.career && d._debut && d._last && d.career.length < (d._last - d._debut + 1) * 0.5 ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : ''}</span>

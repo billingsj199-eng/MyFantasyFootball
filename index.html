@@ -7,7 +7,19 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.firebaseio.com https://*.googleapis.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src * data: blob:; connect-src https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firestore.googleapis.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com https://lm-api-reads.lazydays.host https://a.espncdn.com https://site.api.espn.com https://sports.core.api.espn.com https://late-wind-6322.billingsj199.workers.dev https://api.sleeper.app; frame-src https://*.firebaseapp.com https://*.googleapis.com https://accounts.google.com;">
-<title>MyFantasyFootball</title>
+<title>MyFantasyFootball — Dynasty Rankings, Prospect Model & Mock Drafts</title>
+<meta name="description" content="Free dynasty and redraft fantasy football rankings, JM prospect model, mock draft simulator, trade calculator, and daily games. Built for serious fantasy managers.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://myfantasyfootball.org/">
+<meta property="og:title" content="MyFantasyFootball — Dynasty Rankings, Prospect Model & Mock Drafts">
+<meta property="og:description" content="Free dynasty and redraft fantasy football rankings, JM prospect model, mock draft simulator, trade calculator, and daily games. Built for serious fantasy managers.">
+<meta property="og:image" content="https://myfantasyfootball.org/og-image.png">
+<meta property="og:site_name" content="MyFantasyFootball">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MyFantasyFootball — Dynasty Rankings & Prospect Model">
+<meta name="twitter:description" content="Free dynasty and redraft fantasy football rankings, JM prospect model, mock draft simulator, trade calculator, and daily games.">
+<meta name="twitter:image" content="https://myfantasyfootball.org/og-image.png">
+<meta name="theme-color" content="#0a0e17">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%230f0f1a'/%3E%3Crect x='8' y='32' width='7' height='9' rx='1.5' fill='%23f59e0b' opacity='.3'/%3E%3Crect x='17' y='25' width='7' height='16' rx='1.5' fill='%23f59e0b' opacity='.5'/%3E%3Crect x='26' y='17' width='7' height='24' rx='1.5' fill='%23f59e0b' opacity='.7'/%3E%3Crect x='35' y='9' width='7' height='32' rx='1.5' fill='%23f59e0b'/%3E%3Cpolyline points='11.5,29 20.5,22 29.5,14 38.5,6' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='38.5' cy='6' r='3' fill='%23f59e0b'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -6989,6 +7001,82 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
         fpts_pg *= 0.15;
       }
 
+      // --- Injury Discount System ---
+      // Parse d.inj tag and apply appropriate multiplier.
+      // Dynasty modes get smaller discounts (injured players retain long-term value).
+      // Redraft/superflex modes get heavier discounts (need production THIS season).
+      var _injMult = 1.0;
+      var isDynasty = currentMode === 'dynasty' || currentMode === 'dynastysf';
+      if (d.inj) {
+        var injTag = d.inj.toLowerCase().trim();
+
+        // Pattern 1: Full-season out — tag is a future year like "2027", "2028"
+        // or contains "out for season", "season-ending", "torn" + major
+        var futureYearMatch = injTag.match(/^(20\d{2})/);
+        if (futureYearMatch) {
+          var injYear = parseInt(futureYearMatch[1]);
+          if (injYear >= 2027) {
+            // Out for 2026 season entirely AND beyond
+            _injMult = isDynasty ? 0.55 : 0.03;
+          } else if (injYear === 2026) {
+            // Out this full season — worthless in redraft, dinged in dynasty
+            _injMult = isDynasty ? 0.70 : 0.05;
+          }
+        }
+        // Pattern 2: Major injury with timeline — "ACL, Week 1", "Achilles, Week 4"
+        else if (/acl|achilles/.test(injTag) && /week\s*\d/i.test(injTag)) {
+          var weekMatch = injTag.match(/week\s*(\d+)/i);
+          var returnWeek = weekMatch ? parseInt(weekMatch[1]) : 8;
+          // Miss returnWeek-1 games out of 17. PPG when playing is still full,
+          // but season value is reduced by missed time + rust discount
+          var gamesPlayed = Math.max(1, 17 - (returnWeek - 1));
+          var rustDiscount = returnWeek >= 8 ? 0.90 : returnWeek >= 4 ? 0.95 : 1.0;
+          _injMult = isDynasty ? 0.88 : (gamesPlayed / 17) * rustDiscount;
+        }
+        // Pattern 3: Major injury, no timeline — "ACL", "Achilles", "torn ACL"
+        else if (/acl|achilles/.test(injTag)) {
+          _injMult = isDynasty ? 0.82 : 0.30;
+        }
+        // Pattern 4: Season-ending / out for season
+        else if (/season.?ending|out for season|out for year|done for year/.test(injTag)) {
+          _injMult = isDynasty ? 0.70 : 0.05;
+        }
+        // Pattern 5: Significant injury — "knee", "ankle", "shoulder", "back", "hip", "foot"
+        else if (/knee|ankle|shoulder|back|hip|foot|hamstring|quad/.test(injTag)) {
+          // Check if it mentions a return timeline
+          var sigWeek = injTag.match(/week\s*(\d+)/i);
+          if (sigWeek) {
+            var sigReturn = parseInt(sigWeek[1]);
+            var sigGames = Math.max(1, 17 - (sigReturn - 1));
+            _injMult = isDynasty ? 0.95 : (sigGames / 17) * 0.97;
+          } else {
+            _injMult = isDynasty ? 0.95 : 0.85;
+          }
+        }
+        // Pattern 6: Suspension — "suspended X games", "suspension"
+        else if (/suspen/.test(injTag)) {
+          var suspGames = injTag.match(/(\d+)\s*game/i);
+          var missedGames = suspGames ? parseInt(suspGames[1]) : 4;
+          _injMult = isDynasty ? 1.0 : Math.max(0.20, (17 - missedGames) / 17);
+        }
+        // Pattern 7: Minor / game-time — "questionable", "doubtful", "day-to-day", "GTD"
+        else if (/questionable|doubtful|day.?to.?day|gtd|probable/.test(injTag)) {
+          _injMult = isDynasty ? 1.0 : 0.97;
+        }
+        // Pattern 8: IR / PUP — "IR", "PUP"
+        else if (/\bIR\b|\bPUP\b/i.test(injTag)) {
+          _injMult = isDynasty ? 0.80 : 0.25;
+        }
+        // Fallback: unrecognized injury tag — apply a small caution discount
+        else {
+          _injMult = isDynasty ? 0.95 : 0.90;
+        }
+
+        fpts_pg *= _injMult;
+      }
+      // Store injury discount info on player for UI/diagnostic access
+      d._injDiscount = d.inj ? { tag: d.inj, mult: Math.round(_injMult * 100) / 100, mode: currentMode } : null;
+
       // JM talent blending for young players
       var exp = d.exp != null ? d.exp : 99;
       var blendWeights = _jmBlendWeights[pos];
@@ -7141,8 +7229,23 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
         }
       }
 
-      var fpts_season = fpts_pg * proj.gp;
-      scored.push({ idx: idx, pos: pos, fpts_pg: fpts_pg, fpts_season: fpts_season, gp: proj.gp, _clayDiv: d._clayDiv || null });
+      var _injGpAdj = proj.gp; // adjusted games played for injury
+      if (d._injDiscount && d._injDiscount.mult < 0.90 && !isDynasty) {
+        // For significant injuries in redraft: cap GP to reflect actual expected games
+        // The fpts_pg discount already handles per-game reduction (rust etc),
+        // but we also need to reduce total games for season value
+        var injTag = d.inj ? d.inj.toLowerCase() : '';
+        var _injWeekMatch = injTag.match(/week\s*(\d+)/i);
+        if (_injWeekMatch) {
+          var _retWk = parseInt(_injWeekMatch[1]);
+          _injGpAdj = Math.min(proj.gp, Math.max(1, 17 - (_retWk - 1)));
+        } else if (d._injDiscount.mult <= 0.10) {
+          // Season-ending: essentially 0 games, but keep 1 for math stability
+          _injGpAdj = 1;
+        }
+      }
+      var fpts_season = fpts_pg * _injGpAdj;
+      scored.push({ idx: idx, pos: pos, fpts_pg: fpts_pg, fpts_season: fpts_season, gp: _injGpAdj, _clayDiv: d._clayDiv || null });
     });
 
     // Sort each position by fpts_season
@@ -7397,6 +7500,23 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     _jsRoster = this.value;
     _jsRebuild();
   });
+
+  // Expose injury discount diagnostic on window for console inspection
+  window._injDiagnostic = function() {
+    var results = [];
+    D.forEach(function(d) {
+      if (d._injDiscount) {
+        results.push({
+          name: d.n, pos: d.s, team: d.t, injury: d._injDiscount.tag,
+          mult: d._injDiscount.mult, mode: d._injDiscount.mode,
+          ppg: d._jsModelPpg, vor: d._jsModelVor
+        });
+      }
+    });
+    results.sort(function(a,b) { return a.mult - b.mult; });
+    console.table(results);
+    return results;
+  };
 
   // Initial build
   _jsComputeBoard();

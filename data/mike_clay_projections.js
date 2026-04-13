@@ -1,8 +1,14 @@
 // Mike Clay 2026 NFL Projection Guide (Updated 4/2/2026)
 // Source: ESPN
-// 413 player entries, 32 teams
+// 419 player entries, 32 teams
 
 var MIKE_CLAY_PROJ = {
+  "Tre' Harris": {pos:"WR",tm:"LAC",gm:17,pts:111,rec:44},
+  "Hollywood Brown": {pos:"WR",tm:"PHI",gm:17,pts:67,rec:25},
+  "Michael Penix": {pos:"QB",tm:"ATL",gm:17,pts:117,rec:0},
+  "Chig Okonkwo": {pos:"TE",tm:"WAS",gm:17,pts:124,rec:53},
+  "Brian Thomas": {pos:"WR",tm:"JAX",gm:17,pts:173,rec:55},
+  "Marvin Harrison": {pos:"WR",tm:"ARZ",gm:17,pts:202,rec:70},
   "Bijan Robinson": {pos:"RB",tm:"ATL",gm:17,pts:358.0,rec:77},
   "Jahmyr Gibbs": {pos:"RB",tm:"DET",gm:17,pts:357.0,rec:64},
   "Christian McCaffrey": {pos:"RB",tm:"SF",gm:17,pts:355.0,rec:79},

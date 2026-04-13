@@ -3613,6 +3613,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/all_players.js"></script>
 <script src="data/combine_data.js"></script>
 <script src="data/mike_clay_projections.js"></script>
+<script src="data/injury_history.js"></script>
 <script>
 // Fix combine data errors from external file
 if (typeof COMBINE_DATA !== 'undefined') {
@@ -7140,7 +7141,9 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
       // If no manual inj tag, detect likely injuries from career GP drops.
       // Player who went from 13+ GP to ≤10 GP in their most recent season likely got hurt.
       // Apply position-specific recovery multipliers from historical backtest data.
-      if (!d.inj && d.career && d.career.length >= 2) {
+      // SKIP if player is a free agent — FA penalty already crushes their value,
+      // stacking injury discount on top is redundant double-penalty.
+      if (!d.inj && !isFreeAgent && d.career && d.career.length >= 2) {
         var _careerSorted = d.career.slice().sort(function(a,b) { return (a.yr||0) - (b.yr||0); });
         var _lastSzn = _careerSorted[_careerSorted.length - 1];
         var _prevSzn = _careerSorted[_careerSorted.length - 2];
@@ -7656,6 +7659,9 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
 
   // Initial build
   _jsComputeBoard();
+
+  // Expose rebuild for external triggers (e.g. Firestore injury updates arriving async)
+  window._jsRebuild = _jsRebuild;
 })();
 
 // Mode tabs: switch between redraft and dynasty
@@ -8660,6 +8666,78 @@ function _filterCollegeWeeks(weeks) {
   return weeks.filter(_isValidCollegeWeek);
 }
 
+// --- Injury Badge Helper: builds enhanced injury display for player cards ---
+function _buildInjuryBadge(d) {
+  if (!d.inj) return '';
+  var tag = d.inj;
+  var disc = d._injDiscount;
+  
+  // Build tooltip with details
+  var tooltipParts = [tag];
+  if (disc) {
+    var pctImpact = Math.round((1 - disc.mult) * 100);
+    if (pctImpact > 0) tooltipParts.push('Projection impact: -' + pctImpact + '%');
+    if (disc.auto) tooltipParts.push('Source: Auto-detected from GP drop');
+    if (disc.severity) tooltipParts.push('Severity: ' + disc.severity);
+  }
+  
+  // Estimate return text based on tag patterns
+  var returnText = '';
+  var injLower = tag.toLowerCase();
+  if (/\bhealthy\b|\bfull go\b|\bcleared\b|\b100%\b/.test(injLower)) {
+    returnText = 'Cleared';
+  } else if (/week\s*(\d+)/i.test(injLower)) {
+    var wk = injLower.match(/week\s*(\d+)/i);
+    returnText = 'Est. return: Week ' + wk[1];
+  } else if (/(20\d{2})/.test(injLower)) {
+    var yr = injLower.match(/(20\d{2})/);
+    if (/late/.test(injLower)) returnText = 'Est. return: Late ' + yr[1];
+    else if (/mid/.test(injLower)) returnText = 'Est. return: Mid ' + yr[1];
+    else if (/early/.test(injLower)) returnText = 'Est. return: Early ' + yr[1];
+    else if (parseInt(yr[1]) >= 2027) returnText = 'Out until ' + yr[1] + '+';
+    else returnText = 'Est. return: ' + yr[1];
+  } else if (/\bIR\b/i.test(injLower)) {
+    returnText = 'On IR — return TBD';
+  } else if (/\bPUP\b/i.test(injLower)) {
+    returnText = 'On PUP — return TBD';
+  } else if (/acl|achilles/.test(injLower)) {
+    returnText = 'Major — return TBD';
+  } else if (/season.?ending|out for season/.test(injLower)) {
+    returnText = 'Out for season';
+  } else if (/questionable|doubtful|day.?to.?day|gtd/.test(injLower)) {
+    returnText = 'Game-time decision';
+  } else if (disc && disc.auto) {
+    // Auto-detected: show the GP info
+    returnText = 'Missed time in ' + (disc.injYear || 'recent season');
+  }
+  
+  // Determine badge color intensity by severity
+  var badgeBg = 'rgba(239,68,68,.1)';
+  var badgeColor = 'var(--red)';
+  if (disc && disc.mult >= 0.95) {
+    badgeBg = 'rgba(245,158,11,.1)';
+    badgeColor = 'var(--accent)';
+  } else if (/\bhealthy\b|\bcleared\b|\bfull go\b/.test(injLower)) {
+    badgeBg = 'rgba(34,197,94,.1)';
+    badgeColor = 'var(--green)';
+  }
+  
+  var tooltip = tooltipParts.join(' | ');
+  var html = '<span class="card-injury" style="background:' + badgeBg + ';color:' + badgeColor + '" title="' + tooltip.replace(/"/g, '&quot;') + '">' + tag + '</span>';
+  
+  // Add return estimate as a subtle sub-line if we have one
+  if (returnText) {
+    html += '<span style="display:block;font-size:.6rem;color:var(--text2);margin-top:1px;opacity:.8">' + returnText;
+    if (disc && disc.mult < 1.0 && disc.mult > 0) {
+      var pctDown = Math.round((1 - disc.mult) * 100);
+      html += ' <span style="color:var(--red);font-weight:600">(-' + pctDown + '% proj)</span>';
+    }
+    html += '</span>';
+  }
+  
+  return html;
+}
+
 function openPlayerCard(d) {
   const best = bestPpg(d);
   const _cardAdp = rnkAdp(d);
@@ -8693,7 +8771,7 @@ function openPlayerCard(d) {
             <span class="card-team">${d.t}</span>
             ${d.s==='DST' ? (d.oppg!=null ? `<span class="card-team">Opp PPG ${d.oppg}</span>` : '') : (d.age != null ? `<span class="card-team">Age ${d.age}</span>` : '')}
             ${d._number != null ? `<span class="card-team">#${d._number}</span>` : ''}
-            ${d.inj ? `<span class="card-injury">${d.inj}</span>` : ''}
+            ${_buildInjuryBadge(d)}
           </div>
         </div>
       </div>
@@ -9461,7 +9539,7 @@ function renderCompareGrid() {
               ${d.s==='DST' ? (d.oppg!=null ? `<span class="card-team">Opp PPG ${d.oppg}</span>` : '') : (d.age != null ? `<span class="card-team">Age ${d.age}</span>` : '')}
               ${d._number != null ? `<span class="card-team">#${d._number}</span>` : ''}
               ${activeTag}
-              ${d.inj ? `<span class="card-injury">${d.inj}</span>` : ''}
+              ${_buildInjuryBadge(d)}
             </div>
           </div>
         </div>
@@ -13093,34 +13171,95 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
 // === LIVE INJURY UPDATES: Load from Firestore and merge into D array ===
 // The injury_scanner.py script pushes injury data to Firestore doc 'site_data/injury_updates'.
 // This loads it on page load so the JS model injury discount system has fresh data.
+// Also loads team/roster updates from 'site_data/roster_updates' for FA signings, trades, etc.
 (function() {
   if (typeof firebase === 'undefined' || typeof D === 'undefined') return;
+  var _pendingUpdates = 0;
+  var _completedUpdates = 0;
+
+  function _rebuildIfDone() {
+    _completedUpdates++;
+    if (_completedUpdates >= _pendingUpdates && typeof window._jsRebuild === 'function') {
+      window._jsRebuild();
+      console.log('[LiveUpdates] JS model rebuilt with latest data');
+    }
+  }
+
+  // --- Injury Updates ---
+  _pendingUpdates++;
   try {
     firebase.firestore().collection('site_data').doc('injury_updates').get().then(function(doc) {
-      if (!doc.exists) return;
+      if (!doc.exists) { _rebuildIfDone(); return; }
       var data = doc.data();
-      if (!data || !data.players) return;
+      if (!data || !data.players) { _rebuildIfDone(); return; }
+      var updated = 0;
+      var cleared = 0;
+      var players = data.players;
+      var clearedList = data.cleared || []; // players Sleeper shows as healthy now
+      
+      // Apply injury tags
+      D.forEach(function(d) {
+        if (!d.n) return;
+        if (players[d.n]) {
+          var p = players[d.n];
+          if (!d.inj || d._injFromFirestore) {
+            d.inj = p.inj;
+            d._injFromFirestore = true;
+            updated++;
+          }
+        }
+      });
+      
+      // Clear injuries for players Sleeper now shows as healthy
+      if (clearedList.length > 0) {
+        var clearedSet = {};
+        clearedList.forEach(function(name) { clearedSet[name] = true; });
+        D.forEach(function(d) {
+          if (d.n && d._injFromFirestore && clearedSet[d.n]) {
+            d.inj = null;
+            d._injFromFirestore = false;
+            d._injDiscount = null;
+            cleared++;
+          }
+        });
+      }
+      
+      if (updated > 0 || cleared > 0) {
+        console.log('[InjuryUpdates] Applied ' + updated + ' injuries, cleared ' + cleared + ' (updated: ' + (data.updated || 'unknown') + ')');
+      }
+      _rebuildIfDone();
+    }).catch(function(e) {
+      console.log('[InjuryUpdates] Could not load:', e.message || e);
+      _rebuildIfDone();
+    });
+  } catch(e) { _rebuildIfDone(); }
+
+  // --- Roster/Team Updates ---
+  _pendingUpdates++;
+  try {
+    firebase.firestore().collection('site_data').doc('roster_updates').get().then(function(doc) {
+      if (!doc.exists) { _rebuildIfDone(); return; }
+      var data = doc.data();
+      if (!data || !data.players) { _rebuildIfDone(); return; }
       var updated = 0;
       var players = data.players;
       D.forEach(function(d) {
         if (!d.n || !players[d.n]) return;
-        var p = players[d.n];
-        // Only apply if player doesn't already have a manual inj tag
-        // OR if the Firestore data is newer (during season, statuses change frequently)
-        if (!d.inj || d._injFromFirestore) {
-          d.inj = p.inj;
-          d._injFromFirestore = true;
+        var newTeam = players[d.n];
+        if (newTeam && d.t !== newTeam) {
+          d.t = newTeam;
           updated++;
         }
       });
       if (updated > 0) {
-        console.log('[InjuryUpdates] Applied ' + updated + ' injury tags from Firestore (updated: ' + (data.updated || 'unknown') + ')');
+        console.log('[RosterUpdates] Updated ' + updated + ' team assignments (updated: ' + (data.updated || 'unknown') + ')');
       }
+      _rebuildIfDone();
     }).catch(function(e) {
-      // Silently fail — injuries are optional enhancement
-      console.log('[InjuryUpdates] Could not load:', e.message || e);
+      console.log('[RosterUpdates] Could not load:', e.message || e);
+      _rebuildIfDone();
     });
-  } catch(e) {}
+  } catch(e) { _rebuildIfDone(); }
 })();
 
 // === NAME COLLISION FIX: Clear old career data for 2025 rookies with same name as retired NFL players ===

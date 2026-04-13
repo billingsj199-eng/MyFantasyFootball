@@ -5736,11 +5736,33 @@ function addTier(afterRank, label, name, _pk) {
   }
   const pk = _pk || _tierPK();
   const arr = versionTiers[currentVersion][currentMode][pk];
+  const userInitiated = !label; // no label = user clicked "+ ADD TIER"
   if (!label) { const used = arr.map(t => t.label); label = TIER_LABELS.find(l => !used.includes(l)) || ('T' + arr.length); }
   if (!name) name = label === 'S' ? 'ELITE' : 'TIER ' + label;
   const id = ++versionTierCounters[currentVersion][currentMode][pk];
   arr.push({id, label, name, afterRank});
   arr.sort((a,b) => a.afterRank - b.afterRank);
+
+  // When user inserts a tier between existing tiers, relabel all tiers
+  // sequentially so the new one gets the correct letter and everything
+  // below shifts down. E.g. inserting between A and B → new one becomes B,
+  // old B becomes C, old C becomes D, etc.
+  if (userInitiated && arr.length > 1) {
+    for (let i = 0; i < arr.length; i++) {
+      const newLabel = TIER_LABELS[i] || ('T' + i);
+      if (arr[i].label !== newLabel) {
+        // Update name if it was auto-generated (e.g. "TIER B" → "TIER C")
+        // but preserve custom user-edited names
+        const oldLabel = arr[i].label;
+        const wasAutoName = arr[i].name === 'ELITE' || arr[i].name === 'TIER ' + oldLabel;
+        arr[i].label = newLabel;
+        if (wasAutoName) {
+          arr[i].name = newLabel === 'S' ? 'ELITE' : 'TIER ' + newLabel;
+        }
+      }
+    }
+  }
+
   tiers = versionTiers[currentVersion][currentMode][_tierPK()];
   tierCounter = versionTierCounters[currentVersion][currentMode][_tierPK()];
   return id;
@@ -5841,6 +5863,39 @@ function movePlayer(fromIdx, toPosition) {
   }
   const curPos = board.indexOf(fromIdx);
   if (curPos === -1 || curPos === toPosition) return;
+
+  // --- Adjust tier breaks to prevent bumping players out of their tier ---
+  // When moving a player UP (from lower tier to higher tier), the tier break(s)
+  // between the source and destination need to shift down by 1 to keep the
+  // other players in their original tiers.
+  // When moving DOWN, shift tier breaks up by 1 in the affected range.
+  const pk = _tierPK();
+  const tierArr = versionTiers[currentVersion][currentMode][pk];
+  if (tierArr && tierArr.length > 0) {
+    const fromRank = curPos + 1;  // 1-based rank before move
+    const toRank = toPosition + 1;
+    
+    if (fromRank > toRank) {
+      // Moving UP: player goes from lower rank to higher rank
+      // Tier breaks between toRank and fromRank-1 need to shift DOWN by 1
+      // (because inserting a player above them pushes everything below down)
+      tierArr.forEach(t => {
+        if (t.afterRank >= toRank && t.afterRank < fromRank) {
+          t.afterRank += 1;
+        }
+      });
+    } else {
+      // Moving DOWN: player goes from higher rank to lower rank
+      // Tier breaks between fromRank and toRank need to shift UP by 1
+      // (because removing a player above them pulls everything up)
+      tierArr.forEach(t => {
+        if (t.afterRank > fromRank && t.afterRank <= toRank) {
+          t.afterRank -= 1;
+        }
+      });
+    }
+  }
+
   board.splice(curPos, 1);
   board.splice(toPosition, 0, fromIdx);
   // If position sync is on, mirror positional order to paired mode

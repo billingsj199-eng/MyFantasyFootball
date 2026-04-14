@@ -3,170 +3,170 @@
 // =====================================================
 
 // === DEVY BIO PATCHES (from CFBD) ===
-  if (COMBINE_DATA['AK Dear']) { COMBINE_DATA['AK Dear'].ht='6-1'; COMBINE_DATA['AK Dear'].wt=212; }
-  if (COMBINE_DATA['Aaron Anderson']) { COMBINE_DATA['Aaron Anderson'].ht='5-8'; COMBINE_DATA['Aaron Anderson'].wt=188; }
-  if (COMBINE_DATA['Adam Randall']) { COMBINE_DATA['Adam Randall'].ht='6-2'; COMBINE_DATA['Adam Randall'].wt=230; }
-  if (COMBINE_DATA['Ahmad Hardy']) { COMBINE_DATA['Ahmad Hardy'].ht='5-10'; COMBINE_DATA['Ahmad Hardy'].wt=206; }
-  if (COMBINE_DATA['Amare Thomas']) { COMBINE_DATA['Amare Thomas'].ht='6-0'; COMBINE_DATA['Amare Thomas'].wt=205; }
-  if (COMBINE_DATA['Andrew Marsh']) { COMBINE_DATA['Andrew Marsh'].ht='6-0'; COMBINE_DATA['Andrew Marsh'].wt=190; }
-  if (COMBINE_DATA['Arch Manning']) { COMBINE_DATA['Arch Manning'].ht='6-4'; COMBINE_DATA['Arch Manning'].wt=219; }
-  if (COMBINE_DATA['Bear Bachmeier']) { COMBINE_DATA['Bear Bachmeier'].ht='6-2'; COMBINE_DATA['Bear Bachmeier'].wt=220; }
-  if (COMBINE_DATA['Bo Jackson']) { COMBINE_DATA['Bo Jackson'].ht='6-0'; COMBINE_DATA['Bo Jackson'].wt=217; }
-  if (COMBINE_DATA['Brandon Inniss']) { COMBINE_DATA['Brandon Inniss'].ht='6-0'; COMBINE_DATA['Brandon Inniss'].wt=199; }
-  if (COMBINE_DATA['Brendan Sorsby']) { COMBINE_DATA['Brendan Sorsby'].ht='6-3'; COMBINE_DATA['Brendan Sorsby'].wt=235; }
-  if (COMBINE_DATA['Brenen Thompson']) { COMBINE_DATA['Brenen Thompson'].ht='5-9'; COMBINE_DATA['Brenen Thompson'].wt=170; }
-  if (COMBINE_DATA['Bryant Wesco Jr.']) { COMBINE_DATA['Bryant Wesco Jr.'].ht='6-2'; COMBINE_DATA['Bryant Wesco Jr.'].wt=185; }
-  if (COMBINE_DATA['Bryce Lance']) { COMBINE_DATA['Bryce Lance'].ht='6-3'; COMBINE_DATA['Bryce Lance'].wt=209; }
-  if (COMBINE_DATA['Bryce Underwood']) { COMBINE_DATA['Bryce Underwood'].ht='6-4'; COMBINE_DATA['Bryce Underwood'].wt=228; }
-  if (COMBINE_DATA['Byrum Brown']) { COMBINE_DATA['Byrum Brown'].ht='6-3'; COMBINE_DATA['Byrum Brown'].wt=231; }
-  if (COMBINE_DATA['CJ Bailey']) { COMBINE_DATA['CJ Bailey'].ht='6-6'; COMBINE_DATA['CJ Bailey'].wt=210; }
-  if (COMBINE_DATA['CJ Baxter Jr.']) { COMBINE_DATA['CJ Baxter Jr.'].ht='6-1'; COMBINE_DATA['CJ Baxter Jr.'].wt=227; }
-  if (COMBINE_DATA['CJ Donaldson']) { COMBINE_DATA['CJ Donaldson'].ht='6-2'; COMBINE_DATA['CJ Donaldson'].wt=232; }
-  if (COMBINE_DATA['Cade Klubnik']) { COMBINE_DATA['Cade Klubnik'].ht='6-2'; COMBINE_DATA['Cade Klubnik'].wt=210; }
-  if (COMBINE_DATA['Caden Durham']) { COMBINE_DATA['Caden Durham'].ht='5-9'; COMBINE_DATA['Caden Durham'].wt=205; }
-  if (COMBINE_DATA['Caleb Cunningham']) { COMBINE_DATA['Caleb Cunningham'].ht='6-3'; COMBINE_DATA['Caleb Cunningham'].wt=190; }
-  if (COMBINE_DATA['Caleb Douglas']) { COMBINE_DATA['Caleb Douglas'].ht='6-4'; COMBINE_DATA['Caleb Douglas'].wt=210; }
-  if (COMBINE_DATA['Caleb Hawkins']) { COMBINE_DATA['Caleb Hawkins'].ht='6-2'; COMBINE_DATA['Caleb Hawkins'].wt=200; }
-  if (COMBINE_DATA['Cam Coleman']) { COMBINE_DATA['Cam Coleman'].ht='6-3'; COMBINE_DATA['Cam Coleman'].wt=201; }
-  if (COMBINE_DATA['Cam Cook']) { COMBINE_DATA['Cam Cook'].ht='5-11'; COMBINE_DATA['Cam Cook'].wt=195; }
-  if (COMBINE_DATA['Cam Edwards']) { COMBINE_DATA['Cam Edwards'].ht='6-4'; COMBINE_DATA['Cam Edwards'].wt=200; }
-  if (COMBINE_DATA['Carnell Tate']) { COMBINE_DATA['Carnell Tate'].ht='6-3'; COMBINE_DATA['Carnell Tate'].wt=195; }
-  if (COMBINE_DATA['Caullin Lacy']) { COMBINE_DATA['Caullin Lacy'].ht='5-10'; COMBINE_DATA['Caullin Lacy'].wt=190; }
-  if (COMBINE_DATA['Chase Roberts']) { COMBINE_DATA['Chase Roberts'].ht='6-4'; COMBINE_DATA['Chase Roberts'].wt=210; }
-  if (COMBINE_DATA['Chris Brazzell II']) { COMBINE_DATA['Chris Brazzell II'].ht='6-5'; COMBINE_DATA['Chris Brazzell II'].wt=200; }
-  if (COMBINE_DATA['Colbie Young']) { COMBINE_DATA['Colbie Young'].ht='6-3'; COMBINE_DATA['Colbie Young'].wt=215; }
-  if (COMBINE_DATA['Cole Payton']) { COMBINE_DATA['Cole Payton'].ht='6-3'; COMBINE_DATA['Cole Payton'].wt=233; }
+  if (COMBINE_DATA['AK Dear']) { if(!COMBINE_DATA['AK Dear'].ht)COMBINE_DATA['AK Dear'].ht='6-1'; if(!COMBINE_DATA['AK Dear'].wt)COMBINE_DATA['AK Dear'].wt=212; }
+  if (COMBINE_DATA['Aaron Anderson']) { if(!COMBINE_DATA['Aaron Anderson'].ht)COMBINE_DATA['Aaron Anderson'].ht='5-8'; if(!COMBINE_DATA['Aaron Anderson'].wt)COMBINE_DATA['Aaron Anderson'].wt=188; }
+  if (COMBINE_DATA['Adam Randall']) { if(!COMBINE_DATA['Adam Randall'].ht)COMBINE_DATA['Adam Randall'].ht='6-2'; if(!COMBINE_DATA['Adam Randall'].wt)COMBINE_DATA['Adam Randall'].wt=230; }
+  if (COMBINE_DATA['Ahmad Hardy']) { if(!COMBINE_DATA['Ahmad Hardy'].ht)COMBINE_DATA['Ahmad Hardy'].ht='5-10'; if(!COMBINE_DATA['Ahmad Hardy'].wt)COMBINE_DATA['Ahmad Hardy'].wt=206; }
+  if (COMBINE_DATA['Amare Thomas']) { if(!COMBINE_DATA['Amare Thomas'].ht)COMBINE_DATA['Amare Thomas'].ht='6-0'; if(!COMBINE_DATA['Amare Thomas'].wt)COMBINE_DATA['Amare Thomas'].wt=205; }
+  if (COMBINE_DATA['Andrew Marsh']) { if(!COMBINE_DATA['Andrew Marsh'].ht)COMBINE_DATA['Andrew Marsh'].ht='6-0'; if(!COMBINE_DATA['Andrew Marsh'].wt)COMBINE_DATA['Andrew Marsh'].wt=190; }
+  if (COMBINE_DATA['Arch Manning']) { if(!COMBINE_DATA['Arch Manning'].ht)COMBINE_DATA['Arch Manning'].ht='6-4'; if(!COMBINE_DATA['Arch Manning'].wt)COMBINE_DATA['Arch Manning'].wt=219; }
+  if (COMBINE_DATA['Bear Bachmeier']) { if(!COMBINE_DATA['Bear Bachmeier'].ht)COMBINE_DATA['Bear Bachmeier'].ht='6-2'; if(!COMBINE_DATA['Bear Bachmeier'].wt)COMBINE_DATA['Bear Bachmeier'].wt=220; }
+  if (COMBINE_DATA['Bo Jackson']) { if(!COMBINE_DATA['Bo Jackson'].ht)COMBINE_DATA['Bo Jackson'].ht='6-0'; if(!COMBINE_DATA['Bo Jackson'].wt)COMBINE_DATA['Bo Jackson'].wt=217; }
+  if (COMBINE_DATA['Brandon Inniss']) { if(!COMBINE_DATA['Brandon Inniss'].ht)COMBINE_DATA['Brandon Inniss'].ht='6-0'; if(!COMBINE_DATA['Brandon Inniss'].wt)COMBINE_DATA['Brandon Inniss'].wt=199; }
+  if (COMBINE_DATA['Brendan Sorsby']) { if(!COMBINE_DATA['Brendan Sorsby'].ht)COMBINE_DATA['Brendan Sorsby'].ht='6-3'; if(!COMBINE_DATA['Brendan Sorsby'].wt)COMBINE_DATA['Brendan Sorsby'].wt=235; }
+  if (COMBINE_DATA['Brenen Thompson']) { if(!COMBINE_DATA['Brenen Thompson'].ht)COMBINE_DATA['Brenen Thompson'].ht='5-9'; if(!COMBINE_DATA['Brenen Thompson'].wt)COMBINE_DATA['Brenen Thompson'].wt=170; }
+  if (COMBINE_DATA['Bryant Wesco Jr.']) { if(!COMBINE_DATA['Bryant Wesco Jr.'].ht)COMBINE_DATA['Bryant Wesco Jr.'].ht='6-2'; if(!COMBINE_DATA['Bryant Wesco Jr.'].wt)COMBINE_DATA['Bryant Wesco Jr.'].wt=185; }
+  if (COMBINE_DATA['Bryce Lance']) { if(!COMBINE_DATA['Bryce Lance'].ht)COMBINE_DATA['Bryce Lance'].ht='6-3'; if(!COMBINE_DATA['Bryce Lance'].wt)COMBINE_DATA['Bryce Lance'].wt=209; }
+  if (COMBINE_DATA['Bryce Underwood']) { if(!COMBINE_DATA['Bryce Underwood'].ht)COMBINE_DATA['Bryce Underwood'].ht='6-4'; if(!COMBINE_DATA['Bryce Underwood'].wt)COMBINE_DATA['Bryce Underwood'].wt=228; }
+  if (COMBINE_DATA['Byrum Brown']) { if(!COMBINE_DATA['Byrum Brown'].ht)COMBINE_DATA['Byrum Brown'].ht='6-3'; if(!COMBINE_DATA['Byrum Brown'].wt)COMBINE_DATA['Byrum Brown'].wt=231; }
+  if (COMBINE_DATA['CJ Bailey']) { if(!COMBINE_DATA['CJ Bailey'].ht)COMBINE_DATA['CJ Bailey'].ht='6-6'; if(!COMBINE_DATA['CJ Bailey'].wt)COMBINE_DATA['CJ Bailey'].wt=210; }
+  if (COMBINE_DATA['CJ Baxter Jr.']) { if(!COMBINE_DATA['CJ Baxter Jr.'].ht)COMBINE_DATA['CJ Baxter Jr.'].ht='6-1'; if(!COMBINE_DATA['CJ Baxter Jr.'].wt)COMBINE_DATA['CJ Baxter Jr.'].wt=227; }
+  if (COMBINE_DATA['CJ Donaldson']) { if(!COMBINE_DATA['CJ Donaldson'].ht)COMBINE_DATA['CJ Donaldson'].ht='6-2'; if(!COMBINE_DATA['CJ Donaldson'].wt)COMBINE_DATA['CJ Donaldson'].wt=232; }
+  if (COMBINE_DATA['Cade Klubnik']) { if(!COMBINE_DATA['Cade Klubnik'].ht)COMBINE_DATA['Cade Klubnik'].ht='6-2'; if(!COMBINE_DATA['Cade Klubnik'].wt)COMBINE_DATA['Cade Klubnik'].wt=210; }
+  if (COMBINE_DATA['Caden Durham']) { if(!COMBINE_DATA['Caden Durham'].ht)COMBINE_DATA['Caden Durham'].ht='5-9'; if(!COMBINE_DATA['Caden Durham'].wt)COMBINE_DATA['Caden Durham'].wt=205; }
+  if (COMBINE_DATA['Caleb Cunningham']) { if(!COMBINE_DATA['Caleb Cunningham'].ht)COMBINE_DATA['Caleb Cunningham'].ht='6-3'; if(!COMBINE_DATA['Caleb Cunningham'].wt)COMBINE_DATA['Caleb Cunningham'].wt=190; }
+  if (COMBINE_DATA['Caleb Douglas']) { if(!COMBINE_DATA['Caleb Douglas'].ht)COMBINE_DATA['Caleb Douglas'].ht='6-4'; if(!COMBINE_DATA['Caleb Douglas'].wt)COMBINE_DATA['Caleb Douglas'].wt=210; }
+  if (COMBINE_DATA['Caleb Hawkins']) { if(!COMBINE_DATA['Caleb Hawkins'].ht)COMBINE_DATA['Caleb Hawkins'].ht='6-2'; if(!COMBINE_DATA['Caleb Hawkins'].wt)COMBINE_DATA['Caleb Hawkins'].wt=200; }
+  if (COMBINE_DATA['Cam Coleman']) { if(!COMBINE_DATA['Cam Coleman'].ht)COMBINE_DATA['Cam Coleman'].ht='6-3'; if(!COMBINE_DATA['Cam Coleman'].wt)COMBINE_DATA['Cam Coleman'].wt=201; }
+  if (COMBINE_DATA['Cam Cook']) { if(!COMBINE_DATA['Cam Cook'].ht)COMBINE_DATA['Cam Cook'].ht='5-11'; if(!COMBINE_DATA['Cam Cook'].wt)COMBINE_DATA['Cam Cook'].wt=195; }
+  if (COMBINE_DATA['Cam Edwards']) { if(!COMBINE_DATA['Cam Edwards'].ht)COMBINE_DATA['Cam Edwards'].ht='6-4'; if(!COMBINE_DATA['Cam Edwards'].wt)COMBINE_DATA['Cam Edwards'].wt=200; }
+  if (COMBINE_DATA['Carnell Tate']) { if(!COMBINE_DATA['Carnell Tate'].ht)COMBINE_DATA['Carnell Tate'].ht='6-3'; if(!COMBINE_DATA['Carnell Tate'].wt)COMBINE_DATA['Carnell Tate'].wt=195; }
+  if (COMBINE_DATA['Caullin Lacy']) { if(!COMBINE_DATA['Caullin Lacy'].ht)COMBINE_DATA['Caullin Lacy'].ht='5-10'; if(!COMBINE_DATA['Caullin Lacy'].wt)COMBINE_DATA['Caullin Lacy'].wt=190; }
+  if (COMBINE_DATA['Chase Roberts']) { if(!COMBINE_DATA['Chase Roberts'].ht)COMBINE_DATA['Chase Roberts'].ht='6-4'; if(!COMBINE_DATA['Chase Roberts'].wt)COMBINE_DATA['Chase Roberts'].wt=210; }
+  if (COMBINE_DATA['Chris Brazzell II']) { if(!COMBINE_DATA['Chris Brazzell II'].ht)COMBINE_DATA['Chris Brazzell II'].ht='6-5'; if(!COMBINE_DATA['Chris Brazzell II'].wt)COMBINE_DATA['Chris Brazzell II'].wt=200; }
+  if (COMBINE_DATA['Colbie Young']) { if(!COMBINE_DATA['Colbie Young'].ht)COMBINE_DATA['Colbie Young'].ht='6-3'; if(!COMBINE_DATA['Colbie Young'].wt)COMBINE_DATA['Colbie Young'].wt=215; }
+  if (COMBINE_DATA['Cole Payton']) { if(!COMBINE_DATA['Cole Payton'].ht)COMBINE_DATA['Cole Payton'].ht='6-3'; if(!COMBINE_DATA['Cole Payton'].wt)COMBINE_DATA['Cole Payton'].wt=233; }
   if (COMBINE_DATA['Dae\'quan Wright']) { COMBINE_DATA['Dae\'quan Wright'].ht='6-4'; COMBINE_DATA['Dae\'quan Wright'].wt=255; }
-  if (COMBINE_DATA['Dakorien Moore']) { COMBINE_DATA['Dakorien Moore'].ht='5-11'; COMBINE_DATA['Dakorien Moore'].wt=195; }
-  if (COMBINE_DATA['Dallas Wilson']) { COMBINE_DATA['Dallas Wilson'].ht='6-3'; COMBINE_DATA['Dallas Wilson'].wt=213; }
-  if (COMBINE_DATA['Dallen Bentley']) { COMBINE_DATA['Dallen Bentley'].ht='6-4'; COMBINE_DATA['Dallen Bentley'].wt=264; }
-  if (COMBINE_DATA['Danny Scudero']) { COMBINE_DATA['Danny Scudero'].ht='5-9'; COMBINE_DATA['Danny Scudero'].wt=174; }
-  if (COMBINE_DATA['Dante Moore']) { COMBINE_DATA['Dante Moore'].ht='6-3'; COMBINE_DATA['Dante Moore'].wt=206; }
-  if (COMBINE_DATA['Darian Mensah']) { COMBINE_DATA['Darian Mensah'].ht='6-3'; COMBINE_DATA['Darian Mensah'].wt=205; }
+  if (COMBINE_DATA['Dakorien Moore']) { if(!COMBINE_DATA['Dakorien Moore'].ht)COMBINE_DATA['Dakorien Moore'].ht='5-11'; if(!COMBINE_DATA['Dakorien Moore'].wt)COMBINE_DATA['Dakorien Moore'].wt=195; }
+  if (COMBINE_DATA['Dallas Wilson']) { if(!COMBINE_DATA['Dallas Wilson'].ht)COMBINE_DATA['Dallas Wilson'].ht='6-3'; if(!COMBINE_DATA['Dallas Wilson'].wt)COMBINE_DATA['Dallas Wilson'].wt=213; }
+  if (COMBINE_DATA['Dallen Bentley']) { if(!COMBINE_DATA['Dallen Bentley'].ht)COMBINE_DATA['Dallen Bentley'].ht='6-4'; if(!COMBINE_DATA['Dallen Bentley'].wt)COMBINE_DATA['Dallen Bentley'].wt=264; }
+  if (COMBINE_DATA['Danny Scudero']) { if(!COMBINE_DATA['Danny Scudero'].ht)COMBINE_DATA['Danny Scudero'].ht='5-9'; if(!COMBINE_DATA['Danny Scudero'].wt)COMBINE_DATA['Danny Scudero'].wt=174; }
+  if (COMBINE_DATA['Dante Moore']) { if(!COMBINE_DATA['Dante Moore'].ht)COMBINE_DATA['Dante Moore'].ht='6-3'; if(!COMBINE_DATA['Dante Moore'].wt)COMBINE_DATA['Dante Moore'].wt=206; }
+  if (COMBINE_DATA['Darian Mensah']) { if(!COMBINE_DATA['Darian Mensah'].ht)COMBINE_DATA['Darian Mensah'].ht='6-3'; if(!COMBINE_DATA['Darian Mensah'].wt)COMBINE_DATA['Darian Mensah'].wt=205; }
   if (COMBINE_DATA['De\'Zhaun Stribling']) { COMBINE_DATA['De\'Zhaun Stribling'].ht='6-2'; COMBINE_DATA['De\'Zhaun Stribling'].wt=200; }
-  if (COMBINE_DATA['Dean Connors']) { COMBINE_DATA['Dean Connors'].ht='6-0'; COMBINE_DATA['Dean Connors'].wt=206; }
-  if (COMBINE_DATA['Deion Burks']) { COMBINE_DATA['Deion Burks'].ht='5-9'; COMBINE_DATA['Deion Burks'].wt=188; }
-  if (COMBINE_DATA['Demond Claiborne']) { COMBINE_DATA['Demond Claiborne'].ht='5-10'; COMBINE_DATA['Demond Claiborne'].wt=195; }
-  if (COMBINE_DATA['Demond Williams Jr.']) { COMBINE_DATA['Demond Williams Jr.'].ht='5-11'; COMBINE_DATA['Demond Williams Jr.'].wt=190; }
-  if (COMBINE_DATA['Denzel Boston']) { COMBINE_DATA['Denzel Boston'].ht='6-4'; COMBINE_DATA['Denzel Boston'].wt=209; }
-  if (COMBINE_DATA['Desmond Reid']) { COMBINE_DATA['Desmond Reid'].ht='5-8'; COMBINE_DATA['Desmond Reid'].wt=175; }
-  if (COMBINE_DATA['Deuce Knight']) { COMBINE_DATA['Deuce Knight'].ht='6-4'; COMBINE_DATA['Deuce Knight'].wt=217; }
-  if (COMBINE_DATA['Diego Pavia']) { COMBINE_DATA['Diego Pavia'].ht='6-0'; COMBINE_DATA['Diego Pavia'].wt=207; }
-  if (COMBINE_DATA['Dierre Hill Jr.']) { COMBINE_DATA['Dierre Hill Jr.'].ht='5-11'; COMBINE_DATA['Dierre Hill Jr.'].wt=205; }
-  if (COMBINE_DATA['Dilin Jones']) { COMBINE_DATA['Dilin Jones'].ht='6-0'; COMBINE_DATA['Dilin Jones'].wt=205; }
-  if (COMBINE_DATA['Drew Allar']) { COMBINE_DATA['Drew Allar'].ht='6-5'; COMBINE_DATA['Drew Allar'].wt=235; }
-  if (COMBINE_DATA['Dylan Raiola']) { COMBINE_DATA['Dylan Raiola'].ht='6-3'; COMBINE_DATA['Dylan Raiola'].wt=230; }
-  if (COMBINE_DATA['Eli Heidenreich']) { COMBINE_DATA['Eli Heidenreich'].ht='6-0'; COMBINE_DATA['Eli Heidenreich'].wt=206; }
-  if (COMBINE_DATA['Eli Raridon']) { COMBINE_DATA['Eli Raridon'].ht='6-7'; COMBINE_DATA['Eli Raridon'].wt=251; }
-  if (COMBINE_DATA['Eli Stowers']) { COMBINE_DATA['Eli Stowers'].ht='6-4'; COMBINE_DATA['Eli Stowers'].wt=235; }
-  if (COMBINE_DATA['Elyiss Williams']) { COMBINE_DATA['Elyiss Williams'].ht='6-6'; COMBINE_DATA['Elyiss Williams'].wt=255; }
-  if (COMBINE_DATA['Emmanuel Henderson Jr']) { COMBINE_DATA['Emmanuel Henderson Jr'].ht='6-1'; COMBINE_DATA['Emmanuel Henderson Jr'].wt=190; }
-  if (COMBINE_DATA['Emmett Johnson']) { COMBINE_DATA['Emmett Johnson'].ht='5-11'; COMBINE_DATA['Emmett Johnson'].wt=200; }
-  if (COMBINE_DATA['Eric McAlister']) { COMBINE_DATA['Eric McAlister'].ht='6-3'; COMBINE_DATA['Eric McAlister'].wt=205; }
-  if (COMBINE_DATA['Eric Rivers']) { COMBINE_DATA['Eric Rivers'].ht='5-11'; COMBINE_DATA['Eric Rivers'].wt=180; }
-  if (COMBINE_DATA['Eric Singleton Jr.']) { COMBINE_DATA['Eric Singleton Jr.'].ht='5-10'; COMBINE_DATA['Eric Singleton Jr.'].wt=180; }
-  if (COMBINE_DATA['Fernando Mendoza']) { COMBINE_DATA['Fernando Mendoza'].ht='6-5'; COMBINE_DATA['Fernando Mendoza'].wt=225; }
-  if (COMBINE_DATA['Garrett Nussmeier']) { COMBINE_DATA['Garrett Nussmeier'].ht='6-1'; COMBINE_DATA['Garrett Nussmeier'].wt=205; }
-  if (COMBINE_DATA['Germie Bernard']) { COMBINE_DATA['Germie Bernard'].ht='6-1'; COMBINE_DATA['Germie Bernard'].wt=204; }
-  if (COMBINE_DATA['Gideon Davidson']) { COMBINE_DATA['Gideon Davidson'].ht='6-0'; COMBINE_DATA['Gideon Davidson'].wt=200; }
-  if (COMBINE_DATA['Harlem Berry']) { COMBINE_DATA['Harlem Berry'].ht='5-11'; COMBINE_DATA['Harlem Berry'].wt=190; }
-  if (COMBINE_DATA['Husan Longstreet']) { COMBINE_DATA['Husan Longstreet'].ht='6-0'; COMBINE_DATA['Husan Longstreet'].wt=200; }
-  if (COMBINE_DATA['Isaac Brown']) { COMBINE_DATA['Isaac Brown'].ht='5-9'; COMBINE_DATA['Isaac Brown'].wt=190; }
-  if (COMBINE_DATA['Isaiah Horton']) { COMBINE_DATA['Isaiah Horton'].ht='6-4'; COMBINE_DATA['Isaiah Horton'].wt=208; }
+  if (COMBINE_DATA['Dean Connors']) { if(!COMBINE_DATA['Dean Connors'].ht)COMBINE_DATA['Dean Connors'].ht='6-0'; if(!COMBINE_DATA['Dean Connors'].wt)COMBINE_DATA['Dean Connors'].wt=206; }
+  if (COMBINE_DATA['Deion Burks']) { if(!COMBINE_DATA['Deion Burks'].ht)COMBINE_DATA['Deion Burks'].ht='5-9'; if(!COMBINE_DATA['Deion Burks'].wt)COMBINE_DATA['Deion Burks'].wt=188; }
+  if (COMBINE_DATA['Demond Claiborne']) { if(!COMBINE_DATA['Demond Claiborne'].ht)COMBINE_DATA['Demond Claiborne'].ht='5-10'; if(!COMBINE_DATA['Demond Claiborne'].wt)COMBINE_DATA['Demond Claiborne'].wt=195; }
+  if (COMBINE_DATA['Demond Williams Jr.']) { if(!COMBINE_DATA['Demond Williams Jr.'].ht)COMBINE_DATA['Demond Williams Jr.'].ht='5-11'; if(!COMBINE_DATA['Demond Williams Jr.'].wt)COMBINE_DATA['Demond Williams Jr.'].wt=190; }
+  if (COMBINE_DATA['Denzel Boston']) { if(!COMBINE_DATA['Denzel Boston'].ht)COMBINE_DATA['Denzel Boston'].ht='6-4'; if(!COMBINE_DATA['Denzel Boston'].wt)COMBINE_DATA['Denzel Boston'].wt=209; }
+  if (COMBINE_DATA['Desmond Reid']) { if(!COMBINE_DATA['Desmond Reid'].ht)COMBINE_DATA['Desmond Reid'].ht='5-8'; if(!COMBINE_DATA['Desmond Reid'].wt)COMBINE_DATA['Desmond Reid'].wt=175; }
+  if (COMBINE_DATA['Deuce Knight']) { if(!COMBINE_DATA['Deuce Knight'].ht)COMBINE_DATA['Deuce Knight'].ht='6-4'; if(!COMBINE_DATA['Deuce Knight'].wt)COMBINE_DATA['Deuce Knight'].wt=217; }
+  if (COMBINE_DATA['Diego Pavia']) { if(!COMBINE_DATA['Diego Pavia'].ht)COMBINE_DATA['Diego Pavia'].ht='6-0'; if(!COMBINE_DATA['Diego Pavia'].wt)COMBINE_DATA['Diego Pavia'].wt=207; }
+  if (COMBINE_DATA['Dierre Hill Jr.']) { if(!COMBINE_DATA['Dierre Hill Jr.'].ht)COMBINE_DATA['Dierre Hill Jr.'].ht='5-11'; if(!COMBINE_DATA['Dierre Hill Jr.'].wt)COMBINE_DATA['Dierre Hill Jr.'].wt=205; }
+  if (COMBINE_DATA['Dilin Jones']) { if(!COMBINE_DATA['Dilin Jones'].ht)COMBINE_DATA['Dilin Jones'].ht='6-0'; if(!COMBINE_DATA['Dilin Jones'].wt)COMBINE_DATA['Dilin Jones'].wt=205; }
+  if (COMBINE_DATA['Drew Allar']) { if(!COMBINE_DATA['Drew Allar'].ht)COMBINE_DATA['Drew Allar'].ht='6-5'; if(!COMBINE_DATA['Drew Allar'].wt)COMBINE_DATA['Drew Allar'].wt=235; }
+  if (COMBINE_DATA['Dylan Raiola']) { if(!COMBINE_DATA['Dylan Raiola'].ht)COMBINE_DATA['Dylan Raiola'].ht='6-3'; if(!COMBINE_DATA['Dylan Raiola'].wt)COMBINE_DATA['Dylan Raiola'].wt=230; }
+  if (COMBINE_DATA['Eli Heidenreich']) { if(!COMBINE_DATA['Eli Heidenreich'].ht)COMBINE_DATA['Eli Heidenreich'].ht='6-0'; if(!COMBINE_DATA['Eli Heidenreich'].wt)COMBINE_DATA['Eli Heidenreich'].wt=206; }
+  if (COMBINE_DATA['Eli Raridon']) { if(!COMBINE_DATA['Eli Raridon'].ht)COMBINE_DATA['Eli Raridon'].ht='6-7'; if(!COMBINE_DATA['Eli Raridon'].wt)COMBINE_DATA['Eli Raridon'].wt=251; }
+  if (COMBINE_DATA['Eli Stowers']) { if(!COMBINE_DATA['Eli Stowers'].ht)COMBINE_DATA['Eli Stowers'].ht='6-4'; if(!COMBINE_DATA['Eli Stowers'].wt)COMBINE_DATA['Eli Stowers'].wt=235; }
+  if (COMBINE_DATA['Elyiss Williams']) { if(!COMBINE_DATA['Elyiss Williams'].ht)COMBINE_DATA['Elyiss Williams'].ht='6-6'; if(!COMBINE_DATA['Elyiss Williams'].wt)COMBINE_DATA['Elyiss Williams'].wt=255; }
+  if (COMBINE_DATA['Emmanuel Henderson Jr']) { if(!COMBINE_DATA['Emmanuel Henderson Jr'].ht)COMBINE_DATA['Emmanuel Henderson Jr'].ht='6-1'; if(!COMBINE_DATA['Emmanuel Henderson Jr'].wt)COMBINE_DATA['Emmanuel Henderson Jr'].wt=190; }
+  if (COMBINE_DATA['Emmett Johnson']) { if(!COMBINE_DATA['Emmett Johnson'].ht)COMBINE_DATA['Emmett Johnson'].ht='5-11'; if(!COMBINE_DATA['Emmett Johnson'].wt)COMBINE_DATA['Emmett Johnson'].wt=200; }
+  if (COMBINE_DATA['Eric McAlister']) { if(!COMBINE_DATA['Eric McAlister'].ht)COMBINE_DATA['Eric McAlister'].ht='6-3'; if(!COMBINE_DATA['Eric McAlister'].wt)COMBINE_DATA['Eric McAlister'].wt=205; }
+  if (COMBINE_DATA['Eric Rivers']) { if(!COMBINE_DATA['Eric Rivers'].ht)COMBINE_DATA['Eric Rivers'].ht='5-11'; if(!COMBINE_DATA['Eric Rivers'].wt)COMBINE_DATA['Eric Rivers'].wt=180; }
+  if (COMBINE_DATA['Eric Singleton Jr.']) { if(!COMBINE_DATA['Eric Singleton Jr.'].ht)COMBINE_DATA['Eric Singleton Jr.'].ht='5-10'; if(!COMBINE_DATA['Eric Singleton Jr.'].wt)COMBINE_DATA['Eric Singleton Jr.'].wt=180; }
+  if (COMBINE_DATA['Fernando Mendoza']) { if(!COMBINE_DATA['Fernando Mendoza'].ht)COMBINE_DATA['Fernando Mendoza'].ht='6-5'; if(!COMBINE_DATA['Fernando Mendoza'].wt)COMBINE_DATA['Fernando Mendoza'].wt=225; }
+  if (COMBINE_DATA['Garrett Nussmeier']) { if(!COMBINE_DATA['Garrett Nussmeier'].ht)COMBINE_DATA['Garrett Nussmeier'].ht='6-1'; if(!COMBINE_DATA['Garrett Nussmeier'].wt)COMBINE_DATA['Garrett Nussmeier'].wt=205; }
+  if (COMBINE_DATA['Germie Bernard']) { if(!COMBINE_DATA['Germie Bernard'].ht)COMBINE_DATA['Germie Bernard'].ht='6-1'; if(!COMBINE_DATA['Germie Bernard'].wt)COMBINE_DATA['Germie Bernard'].wt=204; }
+  if (COMBINE_DATA['Gideon Davidson']) { if(!COMBINE_DATA['Gideon Davidson'].ht)COMBINE_DATA['Gideon Davidson'].ht='6-0'; if(!COMBINE_DATA['Gideon Davidson'].wt)COMBINE_DATA['Gideon Davidson'].wt=200; }
+  if (COMBINE_DATA['Harlem Berry']) { if(!COMBINE_DATA['Harlem Berry'].ht)COMBINE_DATA['Harlem Berry'].ht='5-11'; if(!COMBINE_DATA['Harlem Berry'].wt)COMBINE_DATA['Harlem Berry'].wt=190; }
+  if (COMBINE_DATA['Husan Longstreet']) { if(!COMBINE_DATA['Husan Longstreet'].ht)COMBINE_DATA['Husan Longstreet'].ht='6-0'; if(!COMBINE_DATA['Husan Longstreet'].wt)COMBINE_DATA['Husan Longstreet'].wt=200; }
+  if (COMBINE_DATA['Isaac Brown']) { if(!COMBINE_DATA['Isaac Brown'].ht)COMBINE_DATA['Isaac Brown'].ht='5-9'; if(!COMBINE_DATA['Isaac Brown'].wt)COMBINE_DATA['Isaac Brown'].wt=190; }
+  if (COMBINE_DATA['Isaiah Horton']) { if(!COMBINE_DATA['Isaiah Horton'].ht)COMBINE_DATA['Isaiah Horton'].ht='6-4'; if(!COMBINE_DATA['Isaiah Horton'].wt)COMBINE_DATA['Isaiah Horton'].wt=208; }
   if (COMBINE_DATA['J\'Mari Taylor']) { COMBINE_DATA['J\'Mari Taylor'].ht='5-9'; COMBINE_DATA['J\'Mari Taylor'].wt=204; }
   if (COMBINE_DATA['Ja\'Kobi Lane']) { COMBINE_DATA['Ja\'Kobi Lane'].ht='6-4'; COMBINE_DATA['Ja\'Kobi Lane'].wt=200; }
-  if (COMBINE_DATA['Jadan Baugh']) { COMBINE_DATA['Jadan Baugh'].ht='6-1'; COMBINE_DATA['Jadan Baugh'].wt=231; }
-  if (COMBINE_DATA['Jadarian Price']) { COMBINE_DATA['Jadarian Price'].ht='5-11'; COMBINE_DATA['Jadarian Price'].wt=209; }
-  if (COMBINE_DATA['Jalen Walthall']) { COMBINE_DATA['Jalen Walthall'].ht='6-1'; COMBINE_DATA['Jalen Walthall'].wt=180; }
-  if (COMBINE_DATA['Jalon Daniels']) { COMBINE_DATA['Jalon Daniels'].ht='6-0'; COMBINE_DATA['Jalon Daniels'].wt=220; }
-  if (COMBINE_DATA['Jamal Haynes']) { COMBINE_DATA['Jamal Haynes'].ht='5-9'; COMBINE_DATA['Jamal Haynes'].wt=190; }
-  if (COMBINE_DATA['Jaron-Keawe Sagapolutele']) { COMBINE_DATA['Jaron-Keawe Sagapolutele'].ht='6-3'; COMBINE_DATA['Jaron-Keawe Sagapolutele'].wt=225; }
-  if (COMBINE_DATA['Jayce Brown']) { COMBINE_DATA['Jayce Brown'].ht='6-0'; COMBINE_DATA['Jayce Brown'].wt=179; }
-  if (COMBINE_DATA['Jayden Maiava']) { COMBINE_DATA['Jayden Maiava'].ht='6-4'; COMBINE_DATA['Jayden Maiava'].wt=230; }
-  if (COMBINE_DATA['Jeff Caldwell']) { COMBINE_DATA['Jeff Caldwell'].ht='6-5'; COMBINE_DATA['Jeff Caldwell'].wt=215; }
-  if (COMBINE_DATA['Jeremiah Smith']) { COMBINE_DATA['Jeremiah Smith'].ht='6-3'; COMBINE_DATA['Jeremiah Smith'].wt=223; }
-  if (COMBINE_DATA['Jeremiyah Love']) { COMBINE_DATA['Jeremiyah Love'].ht='6-0'; COMBINE_DATA['Jeremiyah Love'].wt=214; }
-  if (COMBINE_DATA['Jerrick Gibson']) { COMBINE_DATA['Jerrick Gibson'].ht='5-10'; COMBINE_DATA['Jerrick Gibson'].wt=206; }
-  if (COMBINE_DATA['Joe Royer']) { COMBINE_DATA['Joe Royer'].ht='6-5'; COMBINE_DATA['Joe Royer'].wt=250; }
-  if (COMBINE_DATA['John Mateer']) { COMBINE_DATA['John Mateer'].ht='6-1'; COMBINE_DATA['John Mateer'].wt=224; }
-  if (COMBINE_DATA['Jonah Coleman']) { COMBINE_DATA['Jonah Coleman'].ht='5-9'; COMBINE_DATA['Jonah Coleman'].wt=228; }
-  if (COMBINE_DATA['Jordan Hudson']) { COMBINE_DATA['Jordan Hudson'].ht='6-1'; COMBINE_DATA['Jordan Hudson'].wt=200; }
-  if (COMBINE_DATA['Jordan Marshall']) { COMBINE_DATA['Jordan Marshall'].ht='5-11'; COMBINE_DATA['Jordan Marshall'].wt=216; }
-  if (COMBINE_DATA['Jordon Davison']) { COMBINE_DATA['Jordon Davison'].ht='6-0'; COMBINE_DATA['Jordon Davison'].wt=236; }
-  if (COMBINE_DATA['Jordyn Tyson']) { COMBINE_DATA['Jordyn Tyson'].ht='6-2'; COMBINE_DATA['Jordyn Tyson'].wt=200; }
-  if (COMBINE_DATA['Josh Cameron']) { COMBINE_DATA['Josh Cameron'].ht='6-1'; COMBINE_DATA['Josh Cameron'].wt=224; }
-  if (COMBINE_DATA['Josh Cuevas']) { COMBINE_DATA['Josh Cuevas'].ht='6-3'; COMBINE_DATA['Josh Cuevas'].wt=256; }
-  if (COMBINE_DATA['Josh Hoover']) { COMBINE_DATA['Josh Hoover'].ht='6-2'; COMBINE_DATA['Josh Hoover'].wt=200; }
-  if (COMBINE_DATA['Joshisa Trader']) { COMBINE_DATA['Joshisa Trader'].ht='6-1'; COMBINE_DATA['Joshisa Trader'].wt=180; }
-  if (COMBINE_DATA['Julian Lewis']) { COMBINE_DATA['Julian Lewis'].ht='6-1'; COMBINE_DATA['Julian Lewis'].wt=190; }
-  if (COMBINE_DATA['Julian Sayin']) { COMBINE_DATA['Julian Sayin'].ht='6-1'; COMBINE_DATA['Julian Sayin'].wt=208; }
-  if (COMBINE_DATA['Justice Haynes']) { COMBINE_DATA['Justice Haynes'].ht='5-11'; COMBINE_DATA['Justice Haynes'].wt=210; }
-  if (COMBINE_DATA['Kaelan Chudzinski']) { COMBINE_DATA['Kaelan Chudzinski'].ht='6-3'; COMBINE_DATA['Kaelan Chudzinski'].wt=236; }
-  if (COMBINE_DATA['Kaelon Black']) { COMBINE_DATA['Kaelon Black'].ht='5-10'; COMBINE_DATA['Kaelon Black'].wt=210; }
-  if (COMBINE_DATA['Kaliq Lockett']) { COMBINE_DATA['Kaliq Lockett'].ht='6-2'; COMBINE_DATA['Kaliq Lockett'].wt=185; }
-  if (COMBINE_DATA['Kam Davis']) { COMBINE_DATA['Kam Davis'].ht='5-10'; COMBINE_DATA['Kam Davis'].wt=217; }
-  if (COMBINE_DATA['Kaytron Allen']) { COMBINE_DATA['Kaytron Allen'].ht='5-11'; COMBINE_DATA['Kaytron Allen'].wt=217; }
-  if (COMBINE_DATA['Keelon Russell']) { COMBINE_DATA['Keelon Russell'].ht='6-3'; COMBINE_DATA['Keelon Russell'].wt=194; }
-  if (COMBINE_DATA['Kendrick Law']) { COMBINE_DATA['Kendrick Law'].ht='6-0'; COMBINE_DATA['Kendrick Law'].wt=205; }
-  if (COMBINE_DATA['Kenny Johnson']) { COMBINE_DATA['Kenny Johnson'].ht='6-1'; COMBINE_DATA['Kenny Johnson'].wt=205; }
-  if (COMBINE_DATA['Kentrel Bullock']) { COMBINE_DATA['Kentrel Bullock'].ht='5-10'; COMBINE_DATA['Kentrel Bullock'].wt=205; }
-  if (COMBINE_DATA['Kenyon Sadiq']) { COMBINE_DATA['Kenyon Sadiq'].ht='6-3'; COMBINE_DATA['Kenyon Sadiq'].wt=245; }
-  if (COMBINE_DATA['Kevin Coleman Jr.']) { COMBINE_DATA['Kevin Coleman Jr.'].ht='5-11'; COMBINE_DATA['Kevin Coleman Jr.'].wt=180; }
-  if (COMBINE_DATA['Kewan Lacy']) { COMBINE_DATA['Kewan Lacy'].ht='5-11'; COMBINE_DATA['Kewan Lacy'].wt=200; }
-  if (COMBINE_DATA['LJ Martin']) { COMBINE_DATA['LJ Martin'].ht='6-2'; COMBINE_DATA['LJ Martin'].wt=220; }
-  if (COMBINE_DATA['LaNorris Sellers']) { COMBINE_DATA['LaNorris Sellers'].ht='6-3'; COMBINE_DATA['LaNorris Sellers'].wt=240; }
-  if (COMBINE_DATA['Lake McRee']) { COMBINE_DATA['Lake McRee'].ht='6-4'; COMBINE_DATA['Lake McRee'].wt=250; }
+  if (COMBINE_DATA['Jadan Baugh']) { if(!COMBINE_DATA['Jadan Baugh'].ht)COMBINE_DATA['Jadan Baugh'].ht='6-1'; if(!COMBINE_DATA['Jadan Baugh'].wt)COMBINE_DATA['Jadan Baugh'].wt=231; }
+  if (COMBINE_DATA['Jadarian Price']) { if(!COMBINE_DATA['Jadarian Price'].ht)COMBINE_DATA['Jadarian Price'].ht='5-11'; if(!COMBINE_DATA['Jadarian Price'].wt)COMBINE_DATA['Jadarian Price'].wt=209; }
+  if (COMBINE_DATA['Jalen Walthall']) { if(!COMBINE_DATA['Jalen Walthall'].ht)COMBINE_DATA['Jalen Walthall'].ht='6-1'; if(!COMBINE_DATA['Jalen Walthall'].wt)COMBINE_DATA['Jalen Walthall'].wt=180; }
+  if (COMBINE_DATA['Jalon Daniels']) { if(!COMBINE_DATA['Jalon Daniels'].ht)COMBINE_DATA['Jalon Daniels'].ht='6-0'; if(!COMBINE_DATA['Jalon Daniels'].wt)COMBINE_DATA['Jalon Daniels'].wt=220; }
+  if (COMBINE_DATA['Jamal Haynes']) { if(!COMBINE_DATA['Jamal Haynes'].ht)COMBINE_DATA['Jamal Haynes'].ht='5-9'; if(!COMBINE_DATA['Jamal Haynes'].wt)COMBINE_DATA['Jamal Haynes'].wt=190; }
+  if (COMBINE_DATA['Jaron-Keawe Sagapolutele']) { if(!COMBINE_DATA['Jaron-Keawe Sagapolutele'].ht)COMBINE_DATA['Jaron-Keawe Sagapolutele'].ht='6-3'; if(!COMBINE_DATA['Jaron-Keawe Sagapolutele'].wt)COMBINE_DATA['Jaron-Keawe Sagapolutele'].wt=225; }
+  if (COMBINE_DATA['Jayce Brown']) { if(!COMBINE_DATA['Jayce Brown'].ht)COMBINE_DATA['Jayce Brown'].ht='6-0'; if(!COMBINE_DATA['Jayce Brown'].wt)COMBINE_DATA['Jayce Brown'].wt=179; }
+  if (COMBINE_DATA['Jayden Maiava']) { if(!COMBINE_DATA['Jayden Maiava'].ht)COMBINE_DATA['Jayden Maiava'].ht='6-4'; if(!COMBINE_DATA['Jayden Maiava'].wt)COMBINE_DATA['Jayden Maiava'].wt=230; }
+  if (COMBINE_DATA['Jeff Caldwell']) { if(!COMBINE_DATA['Jeff Caldwell'].ht)COMBINE_DATA['Jeff Caldwell'].ht='6-5'; if(!COMBINE_DATA['Jeff Caldwell'].wt)COMBINE_DATA['Jeff Caldwell'].wt=215; }
+  if (COMBINE_DATA['Jeremiah Smith']) { if(!COMBINE_DATA['Jeremiah Smith'].ht)COMBINE_DATA['Jeremiah Smith'].ht='6-3'; if(!COMBINE_DATA['Jeremiah Smith'].wt)COMBINE_DATA['Jeremiah Smith'].wt=223; }
+  if (COMBINE_DATA['Jeremiyah Love']) { if(!COMBINE_DATA['Jeremiyah Love'].ht)COMBINE_DATA['Jeremiyah Love'].ht='6-0'; if(!COMBINE_DATA['Jeremiyah Love'].wt)COMBINE_DATA['Jeremiyah Love'].wt=214; }
+  if (COMBINE_DATA['Jerrick Gibson']) { if(!COMBINE_DATA['Jerrick Gibson'].ht)COMBINE_DATA['Jerrick Gibson'].ht='5-10'; if(!COMBINE_DATA['Jerrick Gibson'].wt)COMBINE_DATA['Jerrick Gibson'].wt=206; }
+  if (COMBINE_DATA['Joe Royer']) { if(!COMBINE_DATA['Joe Royer'].ht)COMBINE_DATA['Joe Royer'].ht='6-5'; if(!COMBINE_DATA['Joe Royer'].wt)COMBINE_DATA['Joe Royer'].wt=250; }
+  if (COMBINE_DATA['John Mateer']) { if(!COMBINE_DATA['John Mateer'].ht)COMBINE_DATA['John Mateer'].ht='6-1'; if(!COMBINE_DATA['John Mateer'].wt)COMBINE_DATA['John Mateer'].wt=224; }
+  if (COMBINE_DATA['Jonah Coleman']) { if(!COMBINE_DATA['Jonah Coleman'].ht)COMBINE_DATA['Jonah Coleman'].ht='5-9'; if(!COMBINE_DATA['Jonah Coleman'].wt)COMBINE_DATA['Jonah Coleman'].wt=228; }
+  if (COMBINE_DATA['Jordan Hudson']) { if(!COMBINE_DATA['Jordan Hudson'].ht)COMBINE_DATA['Jordan Hudson'].ht='6-1'; if(!COMBINE_DATA['Jordan Hudson'].wt)COMBINE_DATA['Jordan Hudson'].wt=200; }
+  if (COMBINE_DATA['Jordan Marshall']) { if(!COMBINE_DATA['Jordan Marshall'].ht)COMBINE_DATA['Jordan Marshall'].ht='5-11'; if(!COMBINE_DATA['Jordan Marshall'].wt)COMBINE_DATA['Jordan Marshall'].wt=216; }
+  if (COMBINE_DATA['Jordon Davison']) { if(!COMBINE_DATA['Jordon Davison'].ht)COMBINE_DATA['Jordon Davison'].ht='6-0'; if(!COMBINE_DATA['Jordon Davison'].wt)COMBINE_DATA['Jordon Davison'].wt=236; }
+  if (COMBINE_DATA['Jordyn Tyson']) { if(!COMBINE_DATA['Jordyn Tyson'].ht)COMBINE_DATA['Jordyn Tyson'].ht='6-2'; if(!COMBINE_DATA['Jordyn Tyson'].wt)COMBINE_DATA['Jordyn Tyson'].wt=200; }
+  if (COMBINE_DATA['Josh Cameron']) { if(!COMBINE_DATA['Josh Cameron'].ht)COMBINE_DATA['Josh Cameron'].ht='6-1'; if(!COMBINE_DATA['Josh Cameron'].wt)COMBINE_DATA['Josh Cameron'].wt=224; }
+  if (COMBINE_DATA['Josh Cuevas']) { if(!COMBINE_DATA['Josh Cuevas'].ht)COMBINE_DATA['Josh Cuevas'].ht='6-3'; if(!COMBINE_DATA['Josh Cuevas'].wt)COMBINE_DATA['Josh Cuevas'].wt=256; }
+  if (COMBINE_DATA['Josh Hoover']) { if(!COMBINE_DATA['Josh Hoover'].ht)COMBINE_DATA['Josh Hoover'].ht='6-2'; if(!COMBINE_DATA['Josh Hoover'].wt)COMBINE_DATA['Josh Hoover'].wt=200; }
+  if (COMBINE_DATA['Joshisa Trader']) { if(!COMBINE_DATA['Joshisa Trader'].ht)COMBINE_DATA['Joshisa Trader'].ht='6-1'; if(!COMBINE_DATA['Joshisa Trader'].wt)COMBINE_DATA['Joshisa Trader'].wt=180; }
+  if (COMBINE_DATA['Julian Lewis']) { if(!COMBINE_DATA['Julian Lewis'].ht)COMBINE_DATA['Julian Lewis'].ht='6-1'; if(!COMBINE_DATA['Julian Lewis'].wt)COMBINE_DATA['Julian Lewis'].wt=190; }
+  if (COMBINE_DATA['Julian Sayin']) { if(!COMBINE_DATA['Julian Sayin'].ht)COMBINE_DATA['Julian Sayin'].ht='6-1'; if(!COMBINE_DATA['Julian Sayin'].wt)COMBINE_DATA['Julian Sayin'].wt=208; }
+  if (COMBINE_DATA['Justice Haynes']) { if(!COMBINE_DATA['Justice Haynes'].ht)COMBINE_DATA['Justice Haynes'].ht='5-11'; if(!COMBINE_DATA['Justice Haynes'].wt)COMBINE_DATA['Justice Haynes'].wt=210; }
+  if (COMBINE_DATA['Kaelan Chudzinski']) { if(!COMBINE_DATA['Kaelan Chudzinski'].ht)COMBINE_DATA['Kaelan Chudzinski'].ht='6-3'; if(!COMBINE_DATA['Kaelan Chudzinski'].wt)COMBINE_DATA['Kaelan Chudzinski'].wt=236; }
+  if (COMBINE_DATA['Kaelon Black']) { if(!COMBINE_DATA['Kaelon Black'].ht)COMBINE_DATA['Kaelon Black'].ht='5-10'; if(!COMBINE_DATA['Kaelon Black'].wt)COMBINE_DATA['Kaelon Black'].wt=210; }
+  if (COMBINE_DATA['Kaliq Lockett']) { if(!COMBINE_DATA['Kaliq Lockett'].ht)COMBINE_DATA['Kaliq Lockett'].ht='6-2'; if(!COMBINE_DATA['Kaliq Lockett'].wt)COMBINE_DATA['Kaliq Lockett'].wt=185; }
+  if (COMBINE_DATA['Kam Davis']) { if(!COMBINE_DATA['Kam Davis'].ht)COMBINE_DATA['Kam Davis'].ht='5-10'; if(!COMBINE_DATA['Kam Davis'].wt)COMBINE_DATA['Kam Davis'].wt=217; }
+  if (COMBINE_DATA['Kaytron Allen']) { if(!COMBINE_DATA['Kaytron Allen'].ht)COMBINE_DATA['Kaytron Allen'].ht='5-11'; if(!COMBINE_DATA['Kaytron Allen'].wt)COMBINE_DATA['Kaytron Allen'].wt=217; }
+  if (COMBINE_DATA['Keelon Russell']) { if(!COMBINE_DATA['Keelon Russell'].ht)COMBINE_DATA['Keelon Russell'].ht='6-3'; if(!COMBINE_DATA['Keelon Russell'].wt)COMBINE_DATA['Keelon Russell'].wt=194; }
+  if (COMBINE_DATA['Kendrick Law']) { if(!COMBINE_DATA['Kendrick Law'].ht)COMBINE_DATA['Kendrick Law'].ht='6-0'; if(!COMBINE_DATA['Kendrick Law'].wt)COMBINE_DATA['Kendrick Law'].wt=205; }
+  if (COMBINE_DATA['Kenny Johnson']) { if(!COMBINE_DATA['Kenny Johnson'].ht)COMBINE_DATA['Kenny Johnson'].ht='6-1'; if(!COMBINE_DATA['Kenny Johnson'].wt)COMBINE_DATA['Kenny Johnson'].wt=205; }
+  if (COMBINE_DATA['Kentrel Bullock']) { if(!COMBINE_DATA['Kentrel Bullock'].ht)COMBINE_DATA['Kentrel Bullock'].ht='5-10'; if(!COMBINE_DATA['Kentrel Bullock'].wt)COMBINE_DATA['Kentrel Bullock'].wt=205; }
+  if (COMBINE_DATA['Kenyon Sadiq']) { if(!COMBINE_DATA['Kenyon Sadiq'].ht)COMBINE_DATA['Kenyon Sadiq'].ht='6-3'; if(!COMBINE_DATA['Kenyon Sadiq'].wt)COMBINE_DATA['Kenyon Sadiq'].wt=245; }
+  if (COMBINE_DATA['Kevin Coleman Jr.']) { if(!COMBINE_DATA['Kevin Coleman Jr.'].ht)COMBINE_DATA['Kevin Coleman Jr.'].ht='5-11'; if(!COMBINE_DATA['Kevin Coleman Jr.'].wt)COMBINE_DATA['Kevin Coleman Jr.'].wt=180; }
+  if (COMBINE_DATA['Kewan Lacy']) { if(!COMBINE_DATA['Kewan Lacy'].ht)COMBINE_DATA['Kewan Lacy'].ht='5-11'; if(!COMBINE_DATA['Kewan Lacy'].wt)COMBINE_DATA['Kewan Lacy'].wt=200; }
+  if (COMBINE_DATA['LJ Martin']) { if(!COMBINE_DATA['LJ Martin'].ht)COMBINE_DATA['LJ Martin'].ht='6-2'; if(!COMBINE_DATA['LJ Martin'].wt)COMBINE_DATA['LJ Martin'].wt=220; }
+  if (COMBINE_DATA['LaNorris Sellers']) { if(!COMBINE_DATA['LaNorris Sellers'].ht)COMBINE_DATA['LaNorris Sellers'].ht='6-3'; if(!COMBINE_DATA['LaNorris Sellers'].wt)COMBINE_DATA['LaNorris Sellers'].wt=240; }
+  if (COMBINE_DATA['Lake McRee']) { if(!COMBINE_DATA['Lake McRee'].ht)COMBINE_DATA['Lake McRee'].ht='6-4'; if(!COMBINE_DATA['Lake McRee'].wt)COMBINE_DATA['Lake McRee'].wt=250; }
   if (COMBINE_DATA['Le\'Veon Moss']) { COMBINE_DATA['Le\'Veon Moss'].ht='5-11'; COMBINE_DATA['Le\'Veon Moss'].wt=210; }
-  if (COMBINE_DATA['Lewis Bond']) { COMBINE_DATA['Lewis Bond'].ht='5-11'; COMBINE_DATA['Lewis Bond'].wt=190; }
-  if (COMBINE_DATA['Linkon Cure']) { COMBINE_DATA['Linkon Cure'].ht='6-5'; COMBINE_DATA['Linkon Cure'].wt=230; }
-  if (COMBINE_DATA['Luke Hasz']) { COMBINE_DATA['Luke Hasz'].ht='6-3'; COMBINE_DATA['Luke Hasz'].wt=240; }
-  if (COMBINE_DATA['Luke Reynolds']) { COMBINE_DATA['Luke Reynolds'].ht='6-4'; COMBINE_DATA['Luke Reynolds'].wt=250; }
-  if (COMBINE_DATA['Makai Lemon']) { COMBINE_DATA['Makai Lemon'].ht='5-11'; COMBINE_DATA['Makai Lemon'].wt=195; }
-  if (COMBINE_DATA['Malachi Fields']) { COMBINE_DATA['Malachi Fields'].ht='6-4'; COMBINE_DATA['Malachi Fields'].wt=223; }
-  if (COMBINE_DATA['Malachi Toney']) { COMBINE_DATA['Malachi Toney'].ht='5-11'; }
-  if (COMBINE_DATA['Malik Benson']) { COMBINE_DATA['Malik Benson'].ht='6-1'; COMBINE_DATA['Malik Benson'].wt=195; }
-  if (COMBINE_DATA['Malik Washington']) { COMBINE_DATA['Malik Washington'].ht='6-5'; COMBINE_DATA['Malik Washington'].wt=231; }
-  if (COMBINE_DATA['Marcel Reed']) { COMBINE_DATA['Marcel Reed'].ht='6-1'; COMBINE_DATA['Marcel Reed'].wt=185; }
-  if (COMBINE_DATA['Mark Fletcher Jr.']) { COMBINE_DATA['Mark Fletcher Jr.'].ht='6-2'; COMBINE_DATA['Mark Fletcher Jr.'].wt=225; }
-  if (COMBINE_DATA['Marlin Klein']) { COMBINE_DATA['Marlin Klein'].ht='6-6'; COMBINE_DATA['Marlin Klein'].wt=250; }
-  if (COMBINE_DATA['Micah Hudson']) { COMBINE_DATA['Micah Hudson'].ht='6-0'; COMBINE_DATA['Micah Hudson'].wt=195; }
-  if (COMBINE_DATA['Michael Trigg']) { COMBINE_DATA['Michael Trigg'].ht='6-4'; COMBINE_DATA['Michael Trigg'].wt=240; }
-  if (COMBINE_DATA['Nate Frazier']) { COMBINE_DATA['Nate Frazier'].ht='5-10'; COMBINE_DATA['Nate Frazier'].wt=210; }
-  if (COMBINE_DATA['Nate Sheppard']) { COMBINE_DATA['Nate Sheppard'].ht='5-10'; COMBINE_DATA['Nate Sheppard'].wt=195; }
-  if (COMBINE_DATA['Nic Anderson']) { COMBINE_DATA['Nic Anderson'].ht='6-4'; COMBINE_DATA['Nic Anderson'].wt=208; }
-  if (COMBINE_DATA['Nicholas Singleton']) { COMBINE_DATA['Nicholas Singleton'].ht='6-0'; COMBINE_DATA['Nicholas Singleton'].wt=224; }
-  if (COMBINE_DATA['Nick Marsh']) { COMBINE_DATA['Nick Marsh'].ht='6-3'; COMBINE_DATA['Nick Marsh'].wt=203; }
-  if (COMBINE_DATA['Nico Iamaleava']) { COMBINE_DATA['Nico Iamaleava'].ht='6-6'; COMBINE_DATA['Nico Iamaleava'].wt=215; }
-  if (COMBINE_DATA['Noah Whittington']) { COMBINE_DATA['Noah Whittington'].ht='5-8'; COMBINE_DATA['Noah Whittington'].wt=203; }
-  if (COMBINE_DATA['Nyck Harbor']) { COMBINE_DATA['Nyck Harbor'].ht='6-5'; COMBINE_DATA['Nyck Harbor'].wt=235; }
-  if (COMBINE_DATA['Omar Cooper Jr.']) { COMBINE_DATA['Omar Cooper Jr.'].ht='6-0'; COMBINE_DATA['Omar Cooper Jr.'].wt=201; }
-  if (COMBINE_DATA['Oscar Delp']) { COMBINE_DATA['Oscar Delp'].ht='6-5'; COMBINE_DATA['Oscar Delp'].wt=245; }
-  if (COMBINE_DATA['Ousmane Kromah']) { COMBINE_DATA['Ousmane Kromah'].ht='6-1'; COMBINE_DATA['Ousmane Kromah'].wt=214; }
-  if (COMBINE_DATA['Perry Thompson']) { COMBINE_DATA['Perry Thompson'].ht='6-3'; COMBINE_DATA['Perry Thompson'].wt=220; }
-  if (COMBINE_DATA['Quincy Porter']) { COMBINE_DATA['Quincy Porter'].ht='6-4'; COMBINE_DATA['Quincy Porter'].wt=210; }
-  if (COMBINE_DATA['Quinten Joyner']) { COMBINE_DATA['Quinten Joyner'].ht='5-11'; COMBINE_DATA['Quinten Joyner'].wt=205; }
-  if (COMBINE_DATA['Quinton Martin Jr.']) { COMBINE_DATA['Quinton Martin Jr.'].ht='6-1'; COMBINE_DATA['Quinton Martin Jr.'].wt=206; }
-  if (COMBINE_DATA['Rahsul Faison']) { COMBINE_DATA['Rahsul Faison'].ht='6-0'; COMBINE_DATA['Rahsul Faison'].wt=218; }
-  if (COMBINE_DATA['Raleek Brown']) { COMBINE_DATA['Raleek Brown'].ht='5-9'; COMBINE_DATA['Raleek Brown'].wt=195; }
-  if (COMBINE_DATA['Ryan Wingo']) { COMBINE_DATA['Ryan Wingo'].ht='6-2'; COMBINE_DATA['Ryan Wingo'].wt=214; }
-  if (COMBINE_DATA['Sam Leavitt']) { COMBINE_DATA['Sam Leavitt'].ht='6-2'; COMBINE_DATA['Sam Leavitt'].wt=205; }
-  if (COMBINE_DATA['Sam Roush']) { COMBINE_DATA['Sam Roush'].ht='6-5'; COMBINE_DATA['Sam Roush'].wt=260; }
-  if (COMBINE_DATA['Skyler Bell']) { COMBINE_DATA['Skyler Bell'].ht='6-0'; COMBINE_DATA['Skyler Bell'].wt=185; }
-  if (COMBINE_DATA['T.J. Moore']) { COMBINE_DATA['T.J. Moore'].ht='6-3'; COMBINE_DATA['T.J. Moore'].wt=200; }
-  if (COMBINE_DATA['Talyn Taylor']) { COMBINE_DATA['Talyn Taylor'].ht='6-0'; COMBINE_DATA['Talyn Taylor'].wt=190; }
-  if (COMBINE_DATA['Tanner Koziol']) { COMBINE_DATA['Tanner Koziol'].ht='6-7'; COMBINE_DATA['Tanner Koziol'].wt=240; }
-  if (COMBINE_DATA['Tavien St. Clair']) { COMBINE_DATA['Tavien St. Clair'].ht='6-4'; COMBINE_DATA['Tavien St. Clair'].wt=230; }
-  if (COMBINE_DATA['Taylen Green']) { COMBINE_DATA['Taylen Green'].ht='6-6'; COMBINE_DATA['Taylen Green'].wt=224; }
-  if (COMBINE_DATA['Taylor Tatum']) { COMBINE_DATA['Taylor Tatum'].ht='5-10'; COMBINE_DATA['Taylor Tatum'].wt=212; }
-  if (COMBINE_DATA['Ted Hurst']) { COMBINE_DATA['Ted Hurst'].ht='6-3'; COMBINE_DATA['Ted Hurst'].wt=185; }
-  if (COMBINE_DATA['Terion Stewart']) { COMBINE_DATA['Terion Stewart'].ht='5-9'; COMBINE_DATA['Terion Stewart'].wt=222; }
+  if (COMBINE_DATA['Lewis Bond']) { if(!COMBINE_DATA['Lewis Bond'].ht)COMBINE_DATA['Lewis Bond'].ht='5-11'; if(!COMBINE_DATA['Lewis Bond'].wt)COMBINE_DATA['Lewis Bond'].wt=190; }
+  if (COMBINE_DATA['Linkon Cure']) { if(!COMBINE_DATA['Linkon Cure'].ht)COMBINE_DATA['Linkon Cure'].ht='6-5'; if(!COMBINE_DATA['Linkon Cure'].wt)COMBINE_DATA['Linkon Cure'].wt=230; }
+  if (COMBINE_DATA['Luke Hasz']) { if(!COMBINE_DATA['Luke Hasz'].ht)COMBINE_DATA['Luke Hasz'].ht='6-3'; if(!COMBINE_DATA['Luke Hasz'].wt)COMBINE_DATA['Luke Hasz'].wt=240; }
+  if (COMBINE_DATA['Luke Reynolds']) { if(!COMBINE_DATA['Luke Reynolds'].ht)COMBINE_DATA['Luke Reynolds'].ht='6-4'; if(!COMBINE_DATA['Luke Reynolds'].wt)COMBINE_DATA['Luke Reynolds'].wt=250; }
+  if (COMBINE_DATA['Makai Lemon']) { if(!COMBINE_DATA['Makai Lemon'].ht)COMBINE_DATA['Makai Lemon'].ht='5-11'; if(!COMBINE_DATA['Makai Lemon'].wt)COMBINE_DATA['Makai Lemon'].wt=195; }
+  if (COMBINE_DATA['Malachi Fields']) { if(!COMBINE_DATA['Malachi Fields'].ht)COMBINE_DATA['Malachi Fields'].ht='6-4'; if(!COMBINE_DATA['Malachi Fields'].wt)COMBINE_DATA['Malachi Fields'].wt=223; }
+  if (COMBINE_DATA['Malachi Toney']) { if(!COMBINE_DATA['Malachi Toney'].ht)COMBINE_DATA['Malachi Toney'].ht='5-11'; }
+  if (COMBINE_DATA['Malik Benson']) { if(!COMBINE_DATA['Malik Benson'].ht)COMBINE_DATA['Malik Benson'].ht='6-1'; if(!COMBINE_DATA['Malik Benson'].wt)COMBINE_DATA['Malik Benson'].wt=195; }
+  if (COMBINE_DATA['Malik Washington']) { if(!COMBINE_DATA['Malik Washington'].ht)COMBINE_DATA['Malik Washington'].ht='6-5'; if(!COMBINE_DATA['Malik Washington'].wt)COMBINE_DATA['Malik Washington'].wt=231; }
+  if (COMBINE_DATA['Marcel Reed']) { if(!COMBINE_DATA['Marcel Reed'].ht)COMBINE_DATA['Marcel Reed'].ht='6-1'; if(!COMBINE_DATA['Marcel Reed'].wt)COMBINE_DATA['Marcel Reed'].wt=185; }
+  if (COMBINE_DATA['Mark Fletcher Jr.']) { if(!COMBINE_DATA['Mark Fletcher Jr.'].ht)COMBINE_DATA['Mark Fletcher Jr.'].ht='6-2'; if(!COMBINE_DATA['Mark Fletcher Jr.'].wt)COMBINE_DATA['Mark Fletcher Jr.'].wt=225; }
+  if (COMBINE_DATA['Marlin Klein']) { if(!COMBINE_DATA['Marlin Klein'].ht)COMBINE_DATA['Marlin Klein'].ht='6-6'; if(!COMBINE_DATA['Marlin Klein'].wt)COMBINE_DATA['Marlin Klein'].wt=250; }
+  if (COMBINE_DATA['Micah Hudson']) { if(!COMBINE_DATA['Micah Hudson'].ht)COMBINE_DATA['Micah Hudson'].ht='6-0'; if(!COMBINE_DATA['Micah Hudson'].wt)COMBINE_DATA['Micah Hudson'].wt=195; }
+  if (COMBINE_DATA['Michael Trigg']) { if(!COMBINE_DATA['Michael Trigg'].ht)COMBINE_DATA['Michael Trigg'].ht='6-4'; if(!COMBINE_DATA['Michael Trigg'].wt)COMBINE_DATA['Michael Trigg'].wt=240; }
+  if (COMBINE_DATA['Nate Frazier']) { if(!COMBINE_DATA['Nate Frazier'].ht)COMBINE_DATA['Nate Frazier'].ht='5-10'; if(!COMBINE_DATA['Nate Frazier'].wt)COMBINE_DATA['Nate Frazier'].wt=210; }
+  if (COMBINE_DATA['Nate Sheppard']) { if(!COMBINE_DATA['Nate Sheppard'].ht)COMBINE_DATA['Nate Sheppard'].ht='5-10'; if(!COMBINE_DATA['Nate Sheppard'].wt)COMBINE_DATA['Nate Sheppard'].wt=195; }
+  if (COMBINE_DATA['Nic Anderson']) { if(!COMBINE_DATA['Nic Anderson'].ht)COMBINE_DATA['Nic Anderson'].ht='6-4'; if(!COMBINE_DATA['Nic Anderson'].wt)COMBINE_DATA['Nic Anderson'].wt=208; }
+  if (COMBINE_DATA['Nicholas Singleton']) { if(!COMBINE_DATA['Nicholas Singleton'].ht)COMBINE_DATA['Nicholas Singleton'].ht='6-0'; if(!COMBINE_DATA['Nicholas Singleton'].wt)COMBINE_DATA['Nicholas Singleton'].wt=224; }
+  if (COMBINE_DATA['Nick Marsh']) { if(!COMBINE_DATA['Nick Marsh'].ht)COMBINE_DATA['Nick Marsh'].ht='6-3'; if(!COMBINE_DATA['Nick Marsh'].wt)COMBINE_DATA['Nick Marsh'].wt=203; }
+  if (COMBINE_DATA['Nico Iamaleava']) { if(!COMBINE_DATA['Nico Iamaleava'].ht)COMBINE_DATA['Nico Iamaleava'].ht='6-6'; if(!COMBINE_DATA['Nico Iamaleava'].wt)COMBINE_DATA['Nico Iamaleava'].wt=215; }
+  if (COMBINE_DATA['Noah Whittington']) { if(!COMBINE_DATA['Noah Whittington'].ht)COMBINE_DATA['Noah Whittington'].ht='5-8'; if(!COMBINE_DATA['Noah Whittington'].wt)COMBINE_DATA['Noah Whittington'].wt=203; }
+  if (COMBINE_DATA['Nyck Harbor']) { if(!COMBINE_DATA['Nyck Harbor'].ht)COMBINE_DATA['Nyck Harbor'].ht='6-5'; if(!COMBINE_DATA['Nyck Harbor'].wt)COMBINE_DATA['Nyck Harbor'].wt=235; }
+  if (COMBINE_DATA['Omar Cooper Jr.']) { if(!COMBINE_DATA['Omar Cooper Jr.'].ht)COMBINE_DATA['Omar Cooper Jr.'].ht='6-0'; if(!COMBINE_DATA['Omar Cooper Jr.'].wt)COMBINE_DATA['Omar Cooper Jr.'].wt=201; }
+  if (COMBINE_DATA['Oscar Delp']) { if(!COMBINE_DATA['Oscar Delp'].ht)COMBINE_DATA['Oscar Delp'].ht='6-5'; if(!COMBINE_DATA['Oscar Delp'].wt)COMBINE_DATA['Oscar Delp'].wt=245; }
+  if (COMBINE_DATA['Ousmane Kromah']) { if(!COMBINE_DATA['Ousmane Kromah'].ht)COMBINE_DATA['Ousmane Kromah'].ht='6-1'; if(!COMBINE_DATA['Ousmane Kromah'].wt)COMBINE_DATA['Ousmane Kromah'].wt=214; }
+  if (COMBINE_DATA['Perry Thompson']) { if(!COMBINE_DATA['Perry Thompson'].ht)COMBINE_DATA['Perry Thompson'].ht='6-3'; if(!COMBINE_DATA['Perry Thompson'].wt)COMBINE_DATA['Perry Thompson'].wt=220; }
+  if (COMBINE_DATA['Quincy Porter']) { if(!COMBINE_DATA['Quincy Porter'].ht)COMBINE_DATA['Quincy Porter'].ht='6-4'; if(!COMBINE_DATA['Quincy Porter'].wt)COMBINE_DATA['Quincy Porter'].wt=210; }
+  if (COMBINE_DATA['Quinten Joyner']) { if(!COMBINE_DATA['Quinten Joyner'].ht)COMBINE_DATA['Quinten Joyner'].ht='5-11'; if(!COMBINE_DATA['Quinten Joyner'].wt)COMBINE_DATA['Quinten Joyner'].wt=205; }
+  if (COMBINE_DATA['Quinton Martin Jr.']) { if(!COMBINE_DATA['Quinton Martin Jr.'].ht)COMBINE_DATA['Quinton Martin Jr.'].ht='6-1'; if(!COMBINE_DATA['Quinton Martin Jr.'].wt)COMBINE_DATA['Quinton Martin Jr.'].wt=206; }
+  if (COMBINE_DATA['Rahsul Faison']) { if(!COMBINE_DATA['Rahsul Faison'].ht)COMBINE_DATA['Rahsul Faison'].ht='6-0'; if(!COMBINE_DATA['Rahsul Faison'].wt)COMBINE_DATA['Rahsul Faison'].wt=218; }
+  if (COMBINE_DATA['Raleek Brown']) { if(!COMBINE_DATA['Raleek Brown'].ht)COMBINE_DATA['Raleek Brown'].ht='5-9'; if(!COMBINE_DATA['Raleek Brown'].wt)COMBINE_DATA['Raleek Brown'].wt=195; }
+  if (COMBINE_DATA['Ryan Wingo']) { if(!COMBINE_DATA['Ryan Wingo'].ht)COMBINE_DATA['Ryan Wingo'].ht='6-2'; if(!COMBINE_DATA['Ryan Wingo'].wt)COMBINE_DATA['Ryan Wingo'].wt=214; }
+  if (COMBINE_DATA['Sam Leavitt']) { if(!COMBINE_DATA['Sam Leavitt'].ht)COMBINE_DATA['Sam Leavitt'].ht='6-2'; if(!COMBINE_DATA['Sam Leavitt'].wt)COMBINE_DATA['Sam Leavitt'].wt=205; }
+  if (COMBINE_DATA['Sam Roush']) { if(!COMBINE_DATA['Sam Roush'].ht)COMBINE_DATA['Sam Roush'].ht='6-5'; if(!COMBINE_DATA['Sam Roush'].wt)COMBINE_DATA['Sam Roush'].wt=260; }
+  if (COMBINE_DATA['Skyler Bell']) { if(!COMBINE_DATA['Skyler Bell'].ht)COMBINE_DATA['Skyler Bell'].ht='6-0'; if(!COMBINE_DATA['Skyler Bell'].wt)COMBINE_DATA['Skyler Bell'].wt=185; }
+  if (COMBINE_DATA['T.J. Moore']) { if(!COMBINE_DATA['T.J. Moore'].ht)COMBINE_DATA['T.J. Moore'].ht='6-3'; if(!COMBINE_DATA['T.J. Moore'].wt)COMBINE_DATA['T.J. Moore'].wt=200; }
+  if (COMBINE_DATA['Talyn Taylor']) { if(!COMBINE_DATA['Talyn Taylor'].ht)COMBINE_DATA['Talyn Taylor'].ht='6-0'; if(!COMBINE_DATA['Talyn Taylor'].wt)COMBINE_DATA['Talyn Taylor'].wt=190; }
+  if (COMBINE_DATA['Tanner Koziol']) { if(!COMBINE_DATA['Tanner Koziol'].ht)COMBINE_DATA['Tanner Koziol'].ht='6-7'; if(!COMBINE_DATA['Tanner Koziol'].wt)COMBINE_DATA['Tanner Koziol'].wt=240; }
+  if (COMBINE_DATA['Tavien St. Clair']) { if(!COMBINE_DATA['Tavien St. Clair'].ht)COMBINE_DATA['Tavien St. Clair'].ht='6-4'; if(!COMBINE_DATA['Tavien St. Clair'].wt)COMBINE_DATA['Tavien St. Clair'].wt=230; }
+  if (COMBINE_DATA['Taylen Green']) { if(!COMBINE_DATA['Taylen Green'].ht)COMBINE_DATA['Taylen Green'].ht='6-6'; if(!COMBINE_DATA['Taylen Green'].wt)COMBINE_DATA['Taylen Green'].wt=224; }
+  if (COMBINE_DATA['Taylor Tatum']) { if(!COMBINE_DATA['Taylor Tatum'].ht)COMBINE_DATA['Taylor Tatum'].ht='5-10'; if(!COMBINE_DATA['Taylor Tatum'].wt)COMBINE_DATA['Taylor Tatum'].wt=212; }
+  if (COMBINE_DATA['Ted Hurst']) { if(!COMBINE_DATA['Ted Hurst'].ht)COMBINE_DATA['Ted Hurst'].ht='6-3'; if(!COMBINE_DATA['Ted Hurst'].wt)COMBINE_DATA['Ted Hurst'].wt=185; }
+  if (COMBINE_DATA['Terion Stewart']) { if(!COMBINE_DATA['Terion Stewart'].ht)COMBINE_DATA['Terion Stewart'].ht='5-9'; if(!COMBINE_DATA['Terion Stewart'].wt)COMBINE_DATA['Terion Stewart'].wt=222; }
   if (COMBINE_DATA['Trey\'Dez Green']) { COMBINE_DATA['Trey\'Dez Green'].ht='6-7'; COMBINE_DATA['Trey\'Dez Green'].wt=240; }
-  if (COMBINE_DATA['Ty Simpson']) { COMBINE_DATA['Ty Simpson'].ht='6-2'; COMBINE_DATA['Ty Simpson'].wt=208; }
-  if (COMBINE_DATA['Zachariah Branch']) { COMBINE_DATA['Zachariah Branch'].ht='5-10'; COMBINE_DATA['Zachariah Branch'].wt=180; }
-  if (COMBINE_DATA['Zavion Thomas']) { COMBINE_DATA['Zavion Thomas'].ht='5-10'; COMBINE_DATA['Zavion Thomas'].wt=192; }
+  if (COMBINE_DATA['Ty Simpson']) { if(!COMBINE_DATA['Ty Simpson'].ht)COMBINE_DATA['Ty Simpson'].ht='6-2'; if(!COMBINE_DATA['Ty Simpson'].wt)COMBINE_DATA['Ty Simpson'].wt=208; }
+  if (COMBINE_DATA['Zachariah Branch']) { if(!COMBINE_DATA['Zachariah Branch'].ht)COMBINE_DATA['Zachariah Branch'].ht='5-10'; if(!COMBINE_DATA['Zachariah Branch'].wt)COMBINE_DATA['Zachariah Branch'].wt=180; }
+  if (COMBINE_DATA['Zavion Thomas']) { if(!COMBINE_DATA['Zavion Thomas'].ht)COMBINE_DATA['Zavion Thomas'].ht='5-10'; if(!COMBINE_DATA['Zavion Thomas'].wt)COMBINE_DATA['Zavion Thomas'].wt=192; }
 
-  if (COMBINE_DATA['Ryan Williams']) { COMBINE_DATA['Ryan Williams'].ht='6-0'; COMBINE_DATA['Ryan Williams'].wt=178; }
-  if (COMBINE_DATA['Joshua Moore']) { COMBINE_DATA['Joshua Moore'].ht='6-4'; }
+  if (COMBINE_DATA['Ryan Williams']) { if(!COMBINE_DATA['Ryan Williams'].ht)COMBINE_DATA['Ryan Williams'].ht='6-0'; if(!COMBINE_DATA['Ryan Williams'].wt)COMBINE_DATA['Ryan Williams'].wt=178; }
+  if (COMBINE_DATA['Joshua Moore']) { if(!COMBINE_DATA['Joshua Moore'].ht)COMBINE_DATA['Joshua Moore'].ht='6-4'; }
 // === DEVY WEEKLY STATS (from CFBD) ===
 if (typeof COLLEGE_WEEKLY === 'undefined') var COLLEGE_WEEKLY = {};
 if (!COLLEGE_WEEKLY['AK Dear']) COLLEGE_WEEKLY['AK Dear'] = {};

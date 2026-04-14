@@ -98,7 +98,6 @@
   if (COMBINE_DATA['Josh Cuevas']) { COMBINE_DATA['Josh Cuevas'].ht='6-3'; COMBINE_DATA['Josh Cuevas'].wt=256; }
   if (COMBINE_DATA['Josh Hoover']) { COMBINE_DATA['Josh Hoover'].ht='6-2'; COMBINE_DATA['Josh Hoover'].wt=200; }
   if (COMBINE_DATA['Joshisa Trader']) { COMBINE_DATA['Joshisa Trader'].ht='6-1'; COMBINE_DATA['Joshisa Trader'].wt=180; }
-  if (COMBINE_DATA['Joshua Moore']) { COMBINE_DATA['Joshua Moore'].ht='6-2'; COMBINE_DATA['Joshua Moore'].wt=202; }
   if (COMBINE_DATA['Julian Lewis']) { COMBINE_DATA['Julian Lewis'].ht='6-1'; COMBINE_DATA['Julian Lewis'].wt=190; }
   if (COMBINE_DATA['Julian Sayin']) { COMBINE_DATA['Julian Sayin'].ht='6-1'; COMBINE_DATA['Julian Sayin'].wt=208; }
   if (COMBINE_DATA['Justice Haynes']) { COMBINE_DATA['Justice Haynes'].ht='5-11'; COMBINE_DATA['Justice Haynes'].wt=210; }
@@ -167,6 +166,7 @@
   if (COMBINE_DATA['Zavion Thomas']) { COMBINE_DATA['Zavion Thomas'].ht='5-10'; COMBINE_DATA['Zavion Thomas'].wt=192; }
 
   if (COMBINE_DATA['Ryan Williams']) { COMBINE_DATA['Ryan Williams'].ht='6-0'; COMBINE_DATA['Ryan Williams'].wt=178; }
+  if (COMBINE_DATA['Joshua Moore']) { COMBINE_DATA['Joshua Moore'].ht='6-4'; }
 // === DEVY WEEKLY STATS (from CFBD) ===
 if (typeof COLLEGE_WEEKLY === 'undefined') var COLLEGE_WEEKLY = {};
 if (!COLLEGE_WEEKLY['AK Dear']) COLLEGE_WEEKLY['AK Dear'] = {};
@@ -534,10 +534,6 @@ COLLEGE_WEEKLY['Josh Hoover'][2025] = [{wk:1,tm:"TCU",opp:"North Carolina",pc:27
 if (!COLLEGE_WEEKLY['Joshisa Trader']) COLLEGE_WEEKLY['Joshisa Trader'] = {};
 COLLEGE_WEEKLY['Joshisa Trader'][2024] = [{wk:1,tm:"Miami",opp:"Iowa State",rec:3,rcy:61,rctd:1},{wk:2,tm:"Miami",opp:"Florida A&M",rec:1,rcy:4},{wk:3,tm:"Miami",opp:"Ball State",rec:1,rcy:15},{wk:9,tm:"Miami",opp:"Florida State",rec:1,rcy:11}];
 COLLEGE_WEEKLY['Joshisa Trader'][2025] = [{wk:1,tm:"Miami",opp:"Ole Miss",rec:1,rcy:3},{wk:1,tm:"Miami",opp:"Ohio State",rec:1,rcy:7},{wk:10,tm:"Miami",opp:"SMU",rec:5,rcy:81,rctd:1},{wk:11,tm:"Miami",opp:"Syracuse",rec:3,rcy:19},{wk:12,tm:"Miami",opp:"NC State",rec:1,rcy:44},{wk:13,tm:"Miami",opp:"Virginia Tech",rec:1,rcy:14},{wk:14,tm:"Miami",opp:"Pittsburgh",rec:1,rcy:10}];
-if (!COLLEGE_WEEKLY['Joshua Moore']) COLLEGE_WEEKLY['Joshua Moore'] = {};
-COLLEGE_WEEKLY['Joshua Moore'][2023] = [{wk:1,tm:"Tulane",opp:"Virginia Tech"},{wk:4,tm:"Tulane",opp:"Nicholls"}];
-COLLEGE_WEEKLY['Joshua Moore'][2024] = [{wk:1,tm:"Tulane",opp:"SE Louisiana"},{wk:5,tm:"Tulane",opp:"South Florida"},{wk:6,tm:"Tulane",opp:"UAB"},{wk:9,tm:"Tulane",opp:"North Texas"}];
-COLLEGE_WEEKLY['Joshua Moore'][2025] = [{wk:1,tm:"Tulane",opp:"Ole Miss"},{wk:1,tm:"Tulane",opp:"Northwestern"},{wk:2,tm:"Tulane",opp:"South Alabama"},{wk:4,tm:"Tulane",opp:"Ole Miss"},{wk:5,tm:"Tulane",opp:"Tulsa"},{wk:8,tm:"Tulane",opp:"Army"},{wk:12,tm:"Tulane",opp:"Florida Atlantic"},{wk:14,tm:"Tulane",opp:"Charlotte"},{wk:15,tm:"Tulane",opp:"North Texas"}];
 if (!COLLEGE_WEEKLY['Julian Lewis']) COLLEGE_WEEKLY['Julian Lewis'] = {};
 COLLEGE_WEEKLY['Julian Lewis'][2025] = [{wk:2,tm:"Colorado",opp:"Delaware",pc:2,pa:4,py:8,ra:1,ry:-8},{wk:10,tm:"Colorado",opp:"Arizona",pc:9,pa:17,py:121,ptd:1,ra:1,ry:15},{wk:11,tm:"Colorado",opp:"West Virginia",pc:22,pa:35,py:299,ptd:2,ra:12,ry:-39},{wk:13,tm:"Colorado",opp:"Arizona State",pc:19,pa:38,py:161,ptd:1,ra:9,ry:-4}];
 if (!COLLEGE_WEEKLY['Julian Sayin']) COLLEGE_WEEKLY['Julian Sayin'] = {};
@@ -786,3 +782,5 @@ COLLEGE_WEEKLY['Zavion Thomas'][2025] = [{wk:1,tm:"LSU",opp:"Houston",rtd:1,ra:2
 if (!COLLEGE_WEEKLY['Ryan Williams']) COLLEGE_WEEKLY['Ryan Williams'] = {};
 COLLEGE_WEEKLY['Ryan Williams'][2024] = [{wk:1,tm:"Alabama",opp:"Western Kentucky",rec:2,rcy:139,rctd:2},{wk:1,tm:"Alabama",opp:"Michigan",rec:3,rcy:8},{wk:2,tm:"Alabama",opp:"South Florida",rec:4,rcy:68,rctd:1},{wk:3,tm:"Alabama",opp:"Wisconsin",rec:4,rcy:78,rctd:1},{wk:5,tm:"Alabama",opp:"Georgia",rec:6,rcy:177,rctd:1},{wk:6,tm:"Alabama",opp:"Vanderbilt",ra:1,ry:2,rtd:1,rec:3,rcy:82,rctd:1},{wk:7,tm:"Alabama",opp:"South Carolina",rec:4,rcy:32},{wk:8,tm:"Alabama",opp:"Tennessee",rec:8,rcy:73,rctd:1},{wk:9,tm:"Alabama",opp:"Missouri",rec:4,rcy:53},{wk:11,tm:"Alabama",opp:"LSU",ra:1,ry:22,rec:2,rcy:29},{wk:12,tm:"Alabama",opp:"Mercer",ra:1,ry:29,rtd:1,rec:3,rcy:36,rctd:1},{wk:13,tm:"Alabama",opp:"Oklahoma",rec:2,rcy:37},{wk:14,tm:"Alabama",opp:"Auburn",ra:1,ry:-5,rec:3,rcy:53,fl:1}];
 COLLEGE_WEEKLY['Ryan Williams'][2025] = [{wk:1,tm:"Alabama",opp:"Florida State",rec:5,rcy:30},{wk:1,tm:"Alabama",opp:"Indiana",rec:6,rcy:53},{wk:1,tm:"Alabama",opp:"Oklahoma",rec:1,rcy:5},{wk:3,tm:"Alabama",opp:"Wisconsin",rec:5,rcy:165,rctd:2},{wk:5,tm:"Alabama",opp:"Georgia",rec:5,rcy:43},{wk:6,tm:"Alabama",opp:"Vanderbilt",rec:6,rcy:98,rctd:1},{wk:8,tm:"Alabama",opp:"Tennessee",ra:1,ry:16,rec:5,rcy:87},{wk:9,tm:"Alabama",opp:"South Carolina",rec:7,rcy:72},{wk:11,tm:"Alabama",opp:"LSU",rec:3,rcy:33,rctd:1},{wk:12,tm:"Alabama",opp:"Oklahoma",rec:3,rcy:45,fl:1},{wk:13,tm:"Alabama",opp:"Eastern Illinois",rec:1,rcy:25},{wk:15,tm:"Alabama",opp:"Georgia",ra:1,ry:5,rec:2,rcy:33}];
+if (!COLLEGE_WEEKLY['Joshua Moore']) COLLEGE_WEEKLY['Joshua Moore'] = {};
+COLLEGE_WEEKLY['Joshua Moore'][2025] = [{wk:1,tm:"Miami",opp:"Notre Dame",rec:2,rcy:8},{wk:1,tm:"Miami",opp:"Indiana",rec:1,rcy:1},{wk:1,tm:"Miami",opp:"Ole Miss",rec:1,rcy:11},{wk:1,tm:"Miami",opp:"Texas A&M",rec:1,rcy:4},{wk:2,tm:"Miami",opp:"Bethune-Cookman",rec:1,rcy:7},{wk:3,tm:"Miami",opp:"South Florida",rec:3,rcy:61,rctd:2},{wk:9,tm:"Miami",opp:"Stanford",rec:4,rcy:38},{wk:11,tm:"Miami",opp:"Syracuse",rec:1,rcy:12},{wk:12,tm:"Miami",opp:"NC State",rec:2,rcy:56},{wk:13,tm:"Miami",opp:"Virginia Tech",rec:1,rcy:12}];

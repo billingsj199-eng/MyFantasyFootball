@@ -19110,7 +19110,27 @@ window.fmtHeight = fmtHeight;
 
   // === ADMIN BIO EDITS (ht/wt/pos) for 2026 prospects ===
   const _bioCache = {};
+  const _ORIGINAL_COMBINE = {}; // snapshot of original values before overrides, keyed name→field→val
+  const _ORIGINAL_BIRTH = {};   // original LEGEND_BIRTH_YEARS values
   let _bioLoaded = false;
+
+  // Snapshot current value for a (player, field) before it's overridden.
+  // Called once per field per player — after that, the original is preserved.
+  function _snapOriginal(name, field) {
+    if (!_ORIGINAL_COMBINE[name]) _ORIGINAL_COMBINE[name] = {};
+    if (_ORIGINAL_COMBINE[name][field] !== undefined) return; // already snapped
+    const src = (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name]) ? COMBINE_DATA[name] : {};
+    if (field === 'pff') {
+      // pff is not in COMBINE_DATA; original is "no override" sentinel
+      _ORIGINAL_COMBINE[name][field] = null;
+    } else {
+      _ORIGINAL_COMBINE[name][field] = (src[field] !== undefined) ? src[field] : null;
+    }
+  }
+
+  // Safe numeric parse — returns null on NaN/empty
+  function _safeFloat(v) { const n = parseFloat(v); return isFinite(n) ? n : null; }
+  function _safeInt(v)   { const n = parseInt(v);   return isFinite(n) ? n : null; }
 
   function _bioLoad() {
     if (_bioLoaded) return Promise.resolve();
@@ -19121,29 +19141,35 @@ window.fmtHeight = fmtHeight;
       snap.forEach(function(doc) {
         _bioCache[doc.id] = doc.data();
       });
-      // Apply bio edits to COMBINE_DATA
+      // Apply bio edits to COMBINE_DATA (with defensive parsing + original snapshots)
       Object.keys(_bioCache).forEach(function(name) {
-        const bio = _bioCache[name];
+        const bio = _bioCache[name] || {};
         if (typeof COMBINE_DATA !== 'undefined') {
           if (!COMBINE_DATA[name]) COMBINE_DATA[name] = {};
-          if (bio.ht) COMBINE_DATA[name].ht = bio.ht;
-          if (bio.wt) COMBINE_DATA[name].wt = parseInt(bio.wt);
-          if (bio.pos) COMBINE_DATA[name].pos = bio.pos;
-          if (bio.ras) COMBINE_DATA[name].ras = parseFloat(bio.ras);
-          if (bio.forty) COMBINE_DATA[name].forty = parseFloat(bio.forty);
-          if (bio.school) COMBINE_DATA[name].school = bio.school;
-          if (bio.conf) COMBINE_DATA[name].conf = bio.conf;
-          if (bio.yr) COMBINE_DATA[name].yr = parseInt(bio.yr);
-          if (bio.draft) { COMBINE_DATA[name].draft = bio.draft === 'U' ? 'U' : parseInt(bio.draft) || bio.draft; }
+          if (bio.ht)     { _snapOriginal(name,'ht');     COMBINE_DATA[name].ht = bio.ht; }
+          if (bio.wt)     { const v=_safeInt(bio.wt);    if(v!=null){ _snapOriginal(name,'wt');    COMBINE_DATA[name].wt = v; } }
+          if (bio.pos)    { _snapOriginal(name,'pos');    COMBINE_DATA[name].pos = bio.pos; }
+          if (bio.ras)    { const v=_safeFloat(bio.ras); if(v!=null){ _snapOriginal(name,'ras');   COMBINE_DATA[name].ras = v; } }
+          if (bio.forty)  { const v=_safeFloat(bio.forty);if(v!=null){ _snapOriginal(name,'forty'); COMBINE_DATA[name].forty = v; } }
+          if (bio.school) { _snapOriginal(name,'school'); COMBINE_DATA[name].school = bio.school; }
+          if (bio.conf)   { _snapOriginal(name,'conf');   COMBINE_DATA[name].conf = bio.conf; }
+          if (bio.yr)     { const v=_safeInt(bio.yr);    if(v!=null){ _snapOriginal(name,'yr');    COMBINE_DATA[name].yr = v; } }
+          if (bio.draft)  {
+            _snapOriginal(name,'draft');
+            if (bio.draft === 'U') COMBINE_DATA[name].draft = 'U';
+            else { const v=_safeInt(bio.draft); if(v!=null) COMBINE_DATA[name].draft = v; }
+          }
         }
         // Apply birth date edits
         if (bio.birth && typeof LEGEND_BIRTH_YEARS !== 'undefined') {
+          if (_ORIGINAL_BIRTH[name] === undefined) _ORIGINAL_BIRTH[name] = LEGEND_BIRTH_YEARS[name] || null;
           LEGEND_BIRTH_YEARS[name] = bio.birth;
         }
         // Apply PFF grade override
         if (bio.pff != null && bio.pff !== '') {
-          const pffVal = parseFloat(bio.pff);
-          if (!isNaN(pffVal)) {
+          const pffVal = _safeFloat(bio.pff);
+          if (pffVal != null) {
+            _snapOriginal(name,'pff');
             if (!window._PFF_OVERRIDES) window._PFF_OVERRIDES = {};
             window._PFF_OVERRIDES[name] = pffVal;
           }
@@ -19156,21 +19182,38 @@ window.fmtHeight = fmtHeight;
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     if (!db) return;
     const clean = (val || '').trim();
+    if (!clean) return; // empty → use _bioClear, never save blank
+    // Validate numeric fields up front so we don't poison COMBINE_DATA with NaN
+    if (field === 'wt' || field === 'yr' || field === 'draft') {
+      if (!(field === 'draft' && clean === 'U')) {
+        const n = _safeInt(clean);
+        if (n == null) { console.warn('[Bio] Rejecting non-numeric', field, '=', clean); return; }
+      }
+    }
+    if (field === 'ras' || field === 'forty' || field === 'pff') {
+      const n = _safeFloat(clean);
+      if (n == null) { console.warn('[Bio] Rejecting non-numeric', field, '=', clean); return; }
+    }
+    _snapOriginal(playerName, field);
+    if (field === 'birth' && typeof LEGEND_BIRTH_YEARS !== 'undefined' && _ORIGINAL_BIRTH[playerName] === undefined) {
+      _ORIGINAL_BIRTH[playerName] = LEGEND_BIRTH_YEARS[playerName] || null;
+    }
     if (!_bioCache[playerName]) _bioCache[playerName] = {};
     _bioCache[playerName][field] = clean;
     // Apply immediately to COMBINE_DATA
     if (typeof COMBINE_DATA !== 'undefined') {
       if (!COMBINE_DATA[playerName]) COMBINE_DATA[playerName] = {};
-      if (field === 'wt') COMBINE_DATA[playerName].wt = parseInt(clean) || null;
-      else if (field === 'ras') COMBINE_DATA[playerName].ras = parseFloat(clean) || null;
-      else if (field === 'forty') COMBINE_DATA[playerName].forty = parseFloat(clean) || null;
+      if (field === 'wt') COMBINE_DATA[playerName].wt = _safeInt(clean);
+      else if (field === 'ras') COMBINE_DATA[playerName].ras = _safeFloat(clean);
+      else if (field === 'forty') COMBINE_DATA[playerName].forty = _safeFloat(clean);
       else if (field === 'yr') {
-        COMBINE_DATA[playerName].yr = parseInt(clean) || null;
-        if (COMBINE_DATA[playerName].devy && COMBINE_DATA[playerName].eligYr) {
-          COMBINE_DATA[playerName].eligYr = parseInt(clean) || COMBINE_DATA[playerName].eligYr;
+        const v = _safeInt(clean);
+        COMBINE_DATA[playerName].yr = v;
+        if (COMBINE_DATA[playerName].devy && COMBINE_DATA[playerName].eligYr && v != null) {
+          COMBINE_DATA[playerName].eligYr = v;
         }
       }
-      else if (field === 'draft') { COMBINE_DATA[playerName].draft = clean === 'U' ? 'U' : parseInt(clean) || clean; }
+      else if (field === 'draft') { COMBINE_DATA[playerName].draft = clean === 'U' ? 'U' : (_safeInt(clean) != null ? _safeInt(clean) : clean); }
       else if (field === 'ht' || field === 'pos' || field === 'school') COMBINE_DATA[playerName][field] = clean || null;
       else if (field === 'conf') COMBINE_DATA[playerName].conf = clean || null;
     }
@@ -19181,8 +19224,8 @@ window.fmtHeight = fmtHeight;
     // PFF override
     if (field === 'pff') {
       if (!window._PFF_OVERRIDES) window._PFF_OVERRIDES = {};
-      const pv = parseFloat(clean);
-      if (!isNaN(pv)) window._PFF_OVERRIDES[playerName] = pv;
+      const pv = _safeFloat(clean);
+      if (pv != null) window._PFF_OVERRIDES[playerName] = pv;
       else delete window._PFF_OVERRIDES[playerName];
     }
     db.collection('prospect_bio').doc(playerName).set(
@@ -19190,6 +19233,41 @@ window.fmtHeight = fmtHeight;
       { merge: true }
     ).catch(function(e) { console.warn('[Bio] Save failed for', playerName, e); });
   }
+
+  // Clear a manually-applied override — restore original COMBINE_DATA value
+  // and remove the field from the Firestore bio doc.
+  function _bioClear(playerName, field) {
+    // Restore COMBINE_DATA value from snapshot (if any)
+    const orig = (_ORIGINAL_COMBINE[playerName] || {})[field];
+    if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[playerName]) {
+      if (field === 'pff') {
+        if (window._PFF_OVERRIDES) delete window._PFF_OVERRIDES[playerName];
+      } else if (orig === null || orig === undefined) {
+        delete COMBINE_DATA[playerName][field];
+      } else {
+        COMBINE_DATA[playerName][field] = orig;
+      }
+    }
+    // Restore birth date if cleared
+    if (field === 'birth' && typeof LEGEND_BIRTH_YEARS !== 'undefined') {
+      const ob = _ORIGINAL_BIRTH[playerName];
+      if (ob == null) delete LEGEND_BIRTH_YEARS[playerName];
+      else LEGEND_BIRTH_YEARS[playerName] = ob;
+    }
+    // Remove from local cache
+    if (_bioCache[playerName]) delete _bioCache[playerName][field];
+    // Remove from Firestore
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    if (db) {
+      try {
+        const upd = {};
+        upd[field] = firebase.firestore.FieldValue.delete();
+        db.collection('prospect_bio').doc(playerName).update(upd)
+          .catch(function(e) { console.warn('[Bio] Clear failed for', playerName, field, e); });
+      } catch(e) { console.warn('[Bio] Clear error', e); }
+    }
+  }
+  window._bioClear = _bioClear;
 
   const pmThead = document.getElementById('pmThead');
   const pmTbody = document.getElementById('pmTbody');
@@ -23058,12 +23136,21 @@ window.fmtHeight = fmtHeight;
           const inp = td.querySelector('.pm-dc-input');
           inp.focus();
           inp.select();
+          const _origVal = curVal;
           function commit() {
             const val = inp.value.trim();
+            const posKey = name + '::' + (COMBINE_DATA[name] && COMBINE_DATA[name].pos || '');
             if (val) {
-              _bioSave(name, field, val);
+              if (val !== _origVal) {
+                _bioSave(name, field, val);
+                _pmBuildCache = null;
+                if (typeof _jmCache !== 'undefined') delete _jmCache[posKey];
+              }
+            } else {
+              // Empty input → clear the override (restore original)
+              _bioClear(name, field);
               _pmBuildCache = null;
-              if (typeof _jmCache !== 'undefined') delete _jmCache[name + '::' + (COMBINE_DATA[name] && COMBINE_DATA[name].pos || '')];
+              if (typeof _jmCache !== 'undefined') delete _jmCache[posKey];
             }
             pmBuiltData = buildProspectData();
             renderTable();

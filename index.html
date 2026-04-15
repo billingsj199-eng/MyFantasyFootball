@@ -9990,11 +9990,19 @@ function renderCompareGrid() {
   compareGrid.innerHTML = allPlayers.map((d, i) => {
     const isSearch = i >= checkPlayers.length;
     const sr = isSearch ? searchAdded[i - checkPlayers.length] : null;
-    
+
     // For search-added players, try to find their D entry for consistent rendering
     if (isSearch && d && !d.myRank && d.n) {
       const dEntry = D.find(dd => dd.n === d.n);
       if (dEntry) d = dEntry;
+    }
+    // Retired-player headshot fallback: if _slImg is missing but we have an ESPN id lookup, fill it in
+    if (d && !d._slImg && d.n && window.RETIRED_ESPN_IDS) {
+      const rid = window.RETIRED_ESPN_IDS[d.n]
+        || window.RETIRED_ESPN_IDS[d.n + ' Jr.']
+        || window.RETIRED_ESPN_IDS[d.n + ' III']
+        || window.RETIRED_ESPN_IDS[(d.n || '').replace(/ Jr\.?$/i, '').replace(/ III$/i, '').trim()];
+      if (rid) d._slImg = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + rid + '.png&w=350&h=254';
     }
     
     // All retired players (from any source) use the same card
@@ -25765,13 +25773,22 @@ window.fmtHeight = fmtHeight;
       return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.FALLBACK_IDS[name]}.png&w=350&h=254`;
     }
 
-    // 2. D array _slImg (active players with Sleeper headshots — these are reliable)
+    // 2. RETIRED_ESPN_IDS (retired player lookup table)
+    if (window.RETIRED_ESPN_IDS) {
+      const rid = window.RETIRED_ESPN_IDS[name]
+        || window.RETIRED_ESPN_IDS[name + ' Jr.']
+        || window.RETIRED_ESPN_IDS[name + ' III']
+        || window.RETIRED_ESPN_IDS[name.replace(/ Jr\.?$/i, '').replace(/ III$/i, '').trim()];
+      if (rid) return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${rid}.png&w=350&h=254`;
+    }
+
+    // 3. D array _slImg (active players with Sleeper headshots — these are reliable)
     if (typeof D !== 'undefined') {
       const d = D.find(p => p.n === name || p.n === name + ' Jr.' || p.n === name + ' III' || p.n === name.replace(/ Jr\.?$/i, '').replace(/ III$/i, '').trim());
       if (d && d._slImg) return d._slImg;
     }
 
-    // 3. Return empty — shows clean initials (better than wrong photo)
+    // 4. Return empty — shows clean initials (better than wrong photo)
     return '';
   }
 

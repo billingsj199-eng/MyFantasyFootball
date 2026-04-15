@@ -5398,7 +5398,7 @@ function validateImportData(obj) {
 (function() {
   const IMG_BASE = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/';
   const IMG_SUFFIX = '.png&w=350&h=254';
-  const CACHE_KEY = 'espnIdCache9';
+  const CACHE_KEY = 'espnIdCache11';
   let cache = {};
   try { cache = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '{}'); } catch(e) {}
 
@@ -5529,7 +5529,7 @@ function validateImportData(obj) {
     'Greg Olsen':'10475','Greg Salas':'14106','Greg Ward':'3040035','Griff Whalen':'15360','Gunner Olszewski':'4424106','Hakeem Butler':'3917940',
     'Hakeem Nicks':'12586','Hakeem Valles':'2567213','Hale Hentges':'3925348','Hank Baskett':'9859','Harry Douglas':'11318','Heath Evans':'2630',
     'Heath Miller':'8444','Henry Hynoski':'2268575','Henry Krieger-Coble':'3144999','Henry Ruggs III':'4241475','Hines Ward':'1494','Hunter Bryant':'4243318',
-    'Hunter Renfrow':'3135321','Hunter Sharp':'3125354','Ian Book':'4046678','Ifeanyi Momah':'15775','Irv Smith':'4040980','Irv Smith Jr.':'4040980',
+    'Hunter Renfrow':'3135321','Hunter Sharp':'3125354','Ian Book':'4046678','Ifeanyi Momah':'15775','Irv Smith':'501','Irv Smith Sr.':'501','Irv Smith Jr.':'4040980',
     'Isaac Fruechte':'2970698','Isaac Nauta':'4035014','Isaac Redman':'12898','Isaac Whitney':'3894883','Isaiah Burse':'16972',
     'Isaiah Coulter':'4248504','Isaiah Crowell':'17133','Isaiah Ford':'3124069','Isaiah McKenzie':'3128724','Isaiah Pead':'14888','Isaiah Spiller':'4426891',
     'Isaiah Stanback':'10547','Isaiah Wright':'4044121','Isaiah Zuber':'3916129','Ishmael Hyman':'3039968','Israel Abanikanda':'4429202','Ito Smith':'3123969',
@@ -5621,10 +5621,10 @@ function validateImportData(obj) {
     'Mark Brunell':'445','Mark Clayton':'8437','Mark Ingram':'13981','Mark Jones':'5731','Mark Sanchez':'12482','Marko Mitchell':'12584',
     'Markus Wheaton':'15873','Marlon Brown':'16581','Marlon Mack':'3139605','Marlon Moore':'13616','Marqise Lee':'16787','Marques Colston':'9838',
     'Marques Hagans':'9730','Marquess Wilson':'16023','Marquez Callaway':'4035170','Marquez Williams':'2985288','Marquis Bundy':'2974198','Marquise Goodwin':'15839',
-    'Marshawn Lynch':'10456','Martavis Bryant':'16886','Martellus Bennett':'11295','Martin Rucker':'11345','Marvin Hall':'2578369','Marvin Jones Jr.':'15072',
+    'Marshawn Lynch':'10456','Martavis Bryant':'16886','Martellus Bennett':'11295','Martin Rucker':'11345','Marvin Hall':'2578369','Marvin Harrison':'939','Marvin Jones Jr.':'15072',
     'Marvin McNutt':'14915','Mason Schreck':'2972331','Matt Asiata':'14360','Matt Barkley':'15948','Matt Breida':'3049916','Matt Cassel':'8644',
     'Matt Dayes':'3051711','Matt Flanagan':'3047488','Matt Flynn':'11443','Matt Forte':'11278','Matt Hasselbeck':'1575',
-    'Matt Hazel':'16870','Matt Jones':'2980105','Matt Jones Jr.':'2980105','Matt LaCosse':'2576179','Matt Lawrence':'11801','Matt Leinart':'9596',
+    'Matt Hazel':'16870','Matt Jones':'8436','Matt Jones Jr.':'2980105','Matt LaCosse':'2576179','Matt Lawrence':'11801','Matt Leinart':'9596',
     'Matt Lengel':'2470916','Matt McGloin':'16593','Matt Moore':'11128','Matt Ryan':'11237','Matt Schaub':'5615','Matt Simms':'15407',
     'Matt Spaeth':'10521','Matt Willis':'10884','Matthew Mulligan':'11708','Matthew Stafford':'12483','Maurice Alexander':'3914307','Maurice Ffrench':'4036055',
     'Maurice Harris':'2576868','Maurice Jones-Drew':'9646','Maurice Morris':'3582','Maurice Purify':'11831','Maurice Smith':'3054859','Maurice Stovall':'9676',
@@ -5666,8 +5666,8 @@ function validateImportData(obj) {
     'Riley Ridley':'4035015','Rishard Matthews':'15102','Rob Gronkowski':'13229','Rob Housler':'14009','Rob Kelley':'2575408','Robert Davis':'3042373',
     'Robert Foster':'3054845','Robert Griffin III':'14875','Robert Herron':'16903','Robert Hughes':'14266','Robert Johnson':'13393','Robert Meachem':'10471',
     'Robert Royal':'3688','Robert Thomas':'5273','Robert Tonyan':'2975674','Robert Turbin':'14894',
-    'Robert Woods':'15880','Roberto Wallace':'13661','Roc Thomas':'3121583','Rock Cartwright':'3761','Rod Smith':'2512197','Rod Streater':'15391',
-    'Roddy White':'8442','Rodney Adams':'3059918','Rodney Smith':'2512197','Roger Lewis':'3125745','Ronald Jones':'3912550',
+    'Robert Woods':'15880','Roberto Wallace':'13661','Roc Thomas':'3121583','Rock Cartwright':'3761','Rod Smith':'866','Rod Streater':'15391',
+    'Roddy White':'8442','Rodney Adams':'3059918','Rodney Smith':'3116074','Roger Lewis':'3125745','Ronald Jones':'3912550',
     'Rondale Moore':'4372485','Ronnie Brown':'8417','Ronnie Hillman':'14895','Roosevelt Nix':'17223','Roscoe Parrish':'8469','Ross Travis':'3936647',
     'Roy Hall':'10612','Roy Helu':'14192','Roy Williams':'3536','Royce Freeman':'3122672','Roydell Williams':'8550','Rueben Randle':'14911',
     'Russell Gage':'3115378','Russell Shepard':'16227','Russell Wilson':'14881','Rusty Smith':'13459','Ruvell Martin':'9451','Ryan Broyles':'14919',
@@ -5743,7 +5743,7 @@ function validateImportData(obj) {
   // Hardcoded fallback IDs for players not on current team rosters
   // (free agents, recently traded, rookies with name mismatches, etc.)
   const FALLBACK_IDS = {
-    "Austin Ekeler":"3068267","Cam Skattebo":"4685038","Dalvin Cook":"3045147","Darren Waller":"3045144","Harold Fannin":"5083076","James Cook":"4379399","James Cook III":"4379399","Marvin Harrison":"4432708","Marvin Harrison Jr.":"4432708","Nick Chubb":"3128720","Odell Beckham Jr.":"16733","Russell Wilson":"14881","Todd Gurley":"2977644","Tyreek Hill":"3116406",
+    "Austin Ekeler":"3068267","Cam Skattebo":"4696981","Dalvin Cook":"3116593","D.J. Moore":"3915416","DJ Moore":"3915416","Darren Waller":"2576925","Harold Fannin":"5083076","James Cook":"4379399","James Cook III":"4379399","James Conner":"3045147","Marvin Harrison":"939","Marvin Harrison Jr.":"4432708","Nick Chubb":"3128720","Odell Beckham Jr.":"16733","Russell Wilson":"14881","Todd Gurley":"2977644","Tyreek Hill":"3116406",
     "Arian Foster":"12497","DeAndre Hopkins":"15795","Steve Smith Sr.":"2622","Steve Smith":"2622","Jamaal Charles":"11307","Devonta Freeman":"16944","Brandon Marshall":"9705","Allen Robinson":"16799","Matt Forte":"11278","Julio Jones":"13982","Antonio Brown":"13934","Le'Veon Bell":"15825","Keenan Allen":"15818","DeAndre Washington":"2577654","Julian Edelman":"12649","Sammy Watkins":"16725","Adrian Peterson":"10452","Mark Ingram":"13981","Mark Ingram II":"13981","Tyrell Williams":"2587819","Todd Gurley II":"2977644"
   };
   Object.assign(nameToId, FALLBACK_IDS);
@@ -10388,7 +10388,7 @@ document.addEventListener('click', function(e) {
   ];
 
   function getHeadshotUrl(id) {
-    const cache = JSON.parse(sessionStorage.getItem('espnIdCache9') || '{}');
+    const cache = JSON.parse(sessionStorage.getItem('espnIdCache11') || '{}');
     const poolPlayer = EP_PLAYERS.find(p => p.id === id);
     if (poolPlayer) {
       if (window.FALLBACK_IDS && window.FALLBACK_IDS[poolPlayer.name]) {
@@ -10704,7 +10704,7 @@ document.addEventListener('click', function(e) {
   setTimeout(_buildUnlimitedPool, 15000);
 
     function getHeadshotUrlU(id, playerName) {
-    const cache = JSON.parse(sessionStorage.getItem('espnIdCache9') || '{}');
+    const cache = JSON.parse(sessionStorage.getItem('espnIdCache11') || '{}');
     if (playerName) {
       if (window.FALLBACK_IDS && window.FALLBACK_IDS[playerName]) {
         id = window.FALLBACK_IDS[playerName];

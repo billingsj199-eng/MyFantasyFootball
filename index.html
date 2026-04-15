@@ -5398,7 +5398,7 @@ function validateImportData(obj) {
 (function() {
   const IMG_BASE = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/';
   const IMG_SUFFIX = '.png&w=350&h=254';
-  const CACHE_KEY = 'espnIdCache8';
+  const CACHE_KEY = 'espnIdCache9';
   let cache = {};
   try { cache = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '{}'); } catch(e) {}
 
@@ -5743,7 +5743,8 @@ function validateImportData(obj) {
   // Hardcoded fallback IDs for players not on current team rosters
   // (free agents, recently traded, rookies with name mismatches, etc.)
   const FALLBACK_IDS = {
-    "Austin Ekeler":"3068267","Cam Skattebo":"4685038","Dalvin Cook":"3045147","Darren Waller":"3045144","Harold Fannin":"5083076","James Cook":"4379399","James Cook III":"4379399","Marvin Harrison":"4432708","Marvin Harrison Jr.":"4432708","Nick Chubb":"3128720","Odell Beckham Jr.":"16733","Russell Wilson":"14881","Todd Gurley":"2977644","Tyreek Hill":"3116406"
+    "Austin Ekeler":"3068267","Cam Skattebo":"4685038","Dalvin Cook":"3045147","Darren Waller":"3045144","Harold Fannin":"5083076","James Cook":"4379399","James Cook III":"4379399","Marvin Harrison":"4432708","Marvin Harrison Jr.":"4432708","Nick Chubb":"3128720","Odell Beckham Jr.":"16733","Russell Wilson":"14881","Todd Gurley":"2977644","Tyreek Hill":"3116406",
+    "Arian Foster":"12497","DeAndre Hopkins":"15795","Steve Smith Sr.":"2622","Steve Smith":"2622","Jamaal Charles":"11307","Devonta Freeman":"16944","Brandon Marshall":"9705","Allen Robinson":"16799","Matt Forte":"11278","Julio Jones":"13982","Antonio Brown":"13934","Le'Veon Bell":"15825","Keenan Allen":"15818","DeAndre Washington":"2577654","Julian Edelman":"12649","Sammy Watkins":"16725","Adrian Peterson":"10452","Mark Ingram":"13981","Mark Ingram II":"13981","Tyrell Williams":"2587819","Todd Gurley II":"2977644"
   };
   Object.assign(nameToId, FALLBACK_IDS);
   window.FALLBACK_IDS = FALLBACK_IDS;
@@ -10387,7 +10388,7 @@ document.addEventListener('click', function(e) {
   ];
 
   function getHeadshotUrl(id) {
-    const cache = JSON.parse(sessionStorage.getItem('espnIdCache8') || '{}');
+    const cache = JSON.parse(sessionStorage.getItem('espnIdCache9') || '{}');
     const poolPlayer = EP_PLAYERS.find(p => p.id === id);
     if (poolPlayer) {
       if (window.FALLBACK_IDS && window.FALLBACK_IDS[poolPlayer.name]) {
@@ -10703,7 +10704,7 @@ document.addEventListener('click', function(e) {
   setTimeout(_buildUnlimitedPool, 15000);
 
     function getHeadshotUrlU(id, playerName) {
-    const cache = JSON.parse(sessionStorage.getItem('espnIdCache8') || '{}');
+    const cache = JSON.parse(sessionStorage.getItem('espnIdCache9') || '{}');
     if (playerName) {
       if (window.FALLBACK_IDS && window.FALLBACK_IDS[playerName]) {
         id = window.FALLBACK_IDS[playerName];
@@ -26346,6 +26347,10 @@ window.fmtHeight = fmtHeight;
       // Build all data entries
       const allEntries = [];
       const _seenKey = new Set();
+      // Canonical name aliases: merge variants under one canonical name to prevent
+      // duplicates like "Steve Smith" + "Steve Smith Sr." both appearing on the same board
+      const _NAME_ALIASES = { 'Steve Smith': 'Steve Smith Sr.' };
+      const _canonName = (n) => _NAME_ALIASES[n] || n;
 
       if (filterType === 'draft') {
         // === NFL DRAFT MODE — uses COMBINE_DATA ===
@@ -26640,6 +26645,23 @@ window.fmtHeight = fmtHeight;
 
       // Sort by selected stat
       allEntries.sort((a, b) => (b[stat]||0) - (a[stat]||0));
+
+      // Dedupe by canonical name + year (collapses aliases like "Steve Smith" / "Steve Smith Sr.")
+      // Keeps best-stat entry since allEntries is sorted descending
+      {
+        const _dedup = new Set();
+        const _out = [];
+        for (const e of allEntries) {
+          const k = _canonName(e.name) + '|' + (e.yr != null ? e.yr : '');
+          if (_dedup.has(k)) continue;
+          _dedup.add(k);
+          // Normalize displayed name to canonical form so trivia shows correct face
+          e.name = _canonName(e.name);
+          _out.push(e);
+        }
+        allEntries.length = 0;
+        Array.prototype.push.apply(allEntries, _out);
+      }
 
       // Take top N
       const topN = allEntries.slice(0, count);

@@ -23173,6 +23173,13 @@ window.fmtHeight = fmtHeight;
       try { pmBuiltData = buildProspectData(); }
       catch(e) { console.error('[PM] buildProspectData threw:', e); pmBuiltData = []; }
       console.log('[PM] pmBuiltData length =', (pmBuiltData||[]).length, 'sample:', (pmBuiltData||[]).slice(0,2));
+      window.pmBuiltData = pmBuiltData;
+      try {
+        const _byPos = (pmBuiltData||[]).reduce((a,p)=>{a[p.pos||'?']=(a[p.pos||'?']||0)+1;return a;},{});
+        const _byClass = (pmBuiltData||[]).reduce((a,p)=>{const c=p.draftClass||p.dClass||'?';a[c]=(a[c]||0)+1;return a;},{});
+        console.log('[PM] by pos:', _byPos);
+        console.log('[PM] by draftClass:', _byClass);
+      } catch(e) { console.error('[PM] diag:', e); }
       // Attach JM scores to D entries for dynasty rankings column
       window._jmScoresAttached = false; // Reset so render() re-attaches
       pmBuiltData.forEach(function(p) {

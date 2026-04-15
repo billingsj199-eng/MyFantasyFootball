@@ -23170,7 +23170,9 @@ window.fmtHeight = fmtHeight;
     pmTbody.innerHTML = '<tr><td colspan="20" style="text-align:center;padding:20px;color:var(--text2)">Loading prospects...</td></tr>';
     
     function _doBuild() {
-      pmBuiltData = buildProspectData();
+      try { pmBuiltData = buildProspectData(); }
+      catch(e) { console.error('[PM] buildProspectData threw:', e); pmBuiltData = []; }
+      console.log('[PM] pmBuiltData length =', (pmBuiltData||[]).length, 'sample:', (pmBuiltData||[]).slice(0,2));
       // Attach JM scores to D entries for dynasty rankings column
       window._jmScoresAttached = false; // Reset so render() re-attaches
       pmBuiltData.forEach(function(p) {

@@ -4551,6 +4551,10 @@ if (typeof COMBINE_DATA !== 'undefined') {
 }
 </script>
 <script src="data/college_stats.js"></script>
+<!-- Phase 1: nickname/alias recovery patches (CFBD stats that didn't match due to name variants) -->
+<script src="data/college_stats_patch.js"></script>
+<!-- Phase 2: hand-curated FCS/D2 stats (Wikipedia-sourced — replaces CFBD crossover junk) -->
+<script src="data/college_stats_manual_patch.js"></script>
 <script>
 // === Travis Hunter — complete college stats (Jackson State + Colorado) ===
 // Must be after college_stats.js to override any partial data from CFBD pulls

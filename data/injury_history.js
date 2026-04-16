@@ -27,7 +27,7 @@ var NFLVERSE_INJURY_TAGS = {
   "Breece Hall": "Knee, Minor",
   "Brenden Bates": "Ankle, Minor",
   "Brenton Strange": "Hip, Minor",
-  "Brian Thomas Jr.": "Ankle, Minor",
+  "Brian Thomas": "Ankle, Minor",
   "Brock Bowers": "Knee, Minor",
   "Brock Purdy": "Shoulder, 5 weeks out",
   "Brock Wright": "Ankle, Minor",
@@ -43,7 +43,7 @@ var NFLVERSE_INJURY_TAGS = {
   "Cedrick Wilson Jr.": "Knee, Minor",
   "CeeDee Lamb": "Ankle, 3 weeks out",
   "Charlie Jones": "Achilles, 3 weeks out",
-  "Chris Godwin Jr.": "Ankle, Missed 8 weeks",
+  "Chris Godwin": "Ankle, Missed 8 weeks",
   "Chris Olave": "Back, Minor",
   "Christian Kirk": "Hamstring, Minor",
   "Christian Watson": "Knee, Minor",
@@ -65,12 +65,12 @@ var NFLVERSE_INJURY_TAGS = {
   "David Njoku": "Knee, 5 weeks out",
   "De'Von Achane": "Shoulder, Minor",
   "Dee Eskridge": "Concussion, Minor",
-  "Deebo Samuel Sr.": "Heel, Minor",
+  "Deebo Samuel": "Heel, Minor",
   "Derius Davis": "Knee, 6 weeks out",
   "Deshaun Watson": "Achilles, 3 weeks out",
   "Devontez Walker": "Oblique, Minor",
   "Dillon Gabriel": "Concussion, Minor",
-  "Dont'e Thornton Jr.": "Concussion, Minor",
+  "Dont'e Thornton": "Concussion, Minor",
   "Dontayvion Wicks": "Calf, Minor",
   "Drake London": "Hip, 4 weeks out",
   "Dylan Sampson": "Calf, Minor",
@@ -86,7 +86,7 @@ var NFLVERSE_INJURY_TAGS = {
   "Grant Calcaterra": "Oblique, Minor",
   "Greg Dortch": "Collarbone, Minor",
   "Gunnar Helm": "Toe, Minor",
-  "Harold Fannin Jr.": "Hamstring, Minor",
+  "Harold Fannin": "Hamstring, Minor",
   "Harrison Bryant": "Shoulder, Minor",
   "Hassan Haskins": "Chest, Minor",
   "Hunter Long": "Hip, 3 weeks out",
@@ -141,7 +141,7 @@ var NFLVERSE_INJURY_TAGS = {
   "Kurtis Rourke": "Knee, 3 weeks out",
   "Lamar Jackson": "Hamstring, Minor",
   "Lucas Krull": "Foot, 3 weeks out",
-  "Luther Burden III": "Concussion, Minor",
+  "Luther Burden": "Concussion, Minor",
   "Mack Hollins": "Abdomen, Minor",
   "Malik Davis": "Calf, Minor",
   "Malik Heath": "Not injury related - personal matter, Minor",
@@ -208,7 +208,7 @@ var NFLVERSE_INJURY_TAGS = {
   "Tyquan Thornton": "Concussion, Minor",
   "Tyrell Shavers": "Knee, Minor",
   "Tyrod Taylor": "Knee, Minor",
-  "Tyrone Tracy Jr.": "Shoulder, Minor",
+  "Tyrone Tracy": "Shoulder, Minor",
   "Van Jefferson": "Ankle, Minor",
   "Wan'Dale Robinson": "Ankle, Minor",
   "Will Dissly": "Knee, Minor",
@@ -373,7 +373,7 @@ INJURY_HISTORY["Brian Hoyer"] = [{season:2015,injury:"Concussion",weeksMissed:2,
 INJURY_HISTORY["Brian Leonard"] = [{season:2010,injury:"Foot",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Brian Leonhardt"] = [{season:2014,injury:"Concussion",weeksMissed:3,major:false,seasonEnder:false}];
 INJURY_HISTORY["Brian Robinson"] = [{season:2024,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false},{season:2023,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false},{season:2022,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false}];
-INJURY_HISTORY["Brian Thomas Jr."] = [{season:2025,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false}];
+INJURY_HISTORY["Brian Thomas"] = [{season:2025,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Brian Westbrook"] = [{season:2009,injury:"Knee",weeksMissed:5,major:true,seasonEnder:false}];
 INJURY_HISTORY["Brice Butler"] = [{season:2015,injury:"Hamstring",weeksMissed:3,major:false,seasonEnder:false}];
 INJURY_HISTORY["Britain Covey"] = [{season:2024,injury:"Shoulder",weeksMissed:6,major:true,seasonEnder:false}];
@@ -448,7 +448,7 @@ INJURY_HISTORY["Chris Conley"] = [{season:2024,injury:"Oblique",weeksMissed:2,ma
 INJURY_HISTORY["Chris Cooley"] = [{season:2011,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false},{season:2009,injury:"Ankle",weeksMissed:4,major:true,seasonEnder:false}];
 INJURY_HISTORY["Chris Evans"] = [{season:2021,injury:"Hamstring",weeksMissed:3,major:false,seasonEnder:false}];
 INJURY_HISTORY["Chris Godwin"] = [{season:2022,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false},{season:2020,injury:"Concussion",weeksMissed:4,major:false,seasonEnder:false},{season:2019,injury:"Hip",weeksMissed:2,major:true,seasonEnder:false}];
-INJURY_HISTORY["Chris Godwin Jr."] = [{season:2025,injury:"Ankle",weeksMissed:8,major:true,seasonEnder:false}];
+INJURY_HISTORY["Chris Godwin"] = [{season:2025,injury:"Ankle",weeksMissed:8,major:true,seasonEnder:false}];
 INJURY_HISTORY["Chris Gragg"] = [{season:2014,injury:"Knee",weeksMissed:3,major:true,seasonEnder:false}];
 INJURY_HISTORY["Chris Hogan"] = [{season:2019,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false},{season:2017,injury:"Knee",weeksMissed:4,major:true,seasonEnder:false},{season:2016,injury:"Shoulder",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["Chris Ivory"] = [{season:2016,injury:"Calf",weeksMissed:2,major:false,seasonEnder:false},{season:2010,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false}];
@@ -732,7 +732,7 @@ INJURY_HISTORY["Hayden Hurst"] = [{season:2024,injury:"Groin",weeksMissed:2,majo
 INJURY_HISTORY["Heath Miller"] = [{season:2013,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false},{season:2010,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["Hendon Hooker"] = [{season:2023,injury:"Knee",weeksMissed:3,major:true,seasonEnder:false}];
 INJURY_HISTORY["Henry Hynoski"] = [{season:2011,injury:"Neck",weeksMissed:2,major:true,seasonEnder:false}];
-INJURY_HISTORY["Henry Ruggs"] = [{season:2020,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false}];
+INJURY_HISTORY["Henry Ruggs III"] = [{season:2020,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Hunter Bryant"] = [{season:2020,injury:"Hamstring",weeksMissed:3,major:false,seasonEnder:false}];
 INJURY_HISTORY["Hunter Henry"] = [{season:2023,injury:"Ankle",weeksMissed:1,major:true,seasonEnder:false},{season:2019,injury:"Knee",weeksMissed:4,major:true,seasonEnder:false}];
 INJURY_HISTORY["Hunter Long"] = [{season:2025,injury:"Hip",weeksMissed:3,major:true,seasonEnder:false},{season:2023,injury:"Thigh",weeksMissed:2,major:false,seasonEnder:false},{season:2022,injury:"Ankle",weeksMissed:3,major:true,seasonEnder:false}];
@@ -889,7 +889,7 @@ INJURY_HISTORY["John Conner"] = [{season:2012,injury:"Knee",weeksMissed:3,major:
 INJURY_HISTORY["John Gilmore"] = [{season:2011,injury:"Neck",weeksMissed:3,major:true,seasonEnder:false},{season:2009,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["John Kuhn"] = [{season:2012,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false}];
 INJURY_HISTORY["John Lovett"] = [{season:2020,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false}];
-INJURY_HISTORY["John Metchie"] = [{season:2024,injury:"Shoulder",weeksMissed:1,major:true,seasonEnder:false}];
+INJURY_HISTORY["John Metchie III"] = [{season:2024,injury:"Shoulder",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["John Ross"] = [{season:2021,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false},{season:2020,injury:"Illness",weeksMissed:3,major:false,seasonEnder:false},{season:2018,injury:"Groin",weeksMissed:2,major:false,seasonEnder:false},{season:2017,injury:"Knee",weeksMissed:3,major:true,seasonEnder:false}];
 INJURY_HISTORY["John Skelton"] = [{season:2012,injury:"Ankle",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["John Stephens"] = [{season:2024,injury:"Hamstring",weeksMissed:3,major:false,seasonEnder:false}];
@@ -990,7 +990,7 @@ INJURY_HISTORY["Kendre Miller"] = [{season:2024,injury:"Hamstring",weeksMissed:3
 INJURY_HISTORY["Kene Nwangwu"] = [{season:2025,injury:"Hamstring",weeksMissed:5,major:false,seasonEnder:false}];
 INJURY_HISTORY["Kenjon Barner"] = [{season:2019,injury:"Concussion",weeksMissed:2,major:false,seasonEnder:false},{season:2013,injury:"Foot",weeksMissed:4,major:true,seasonEnder:false}];
 INJURY_HISTORY["Kenneth Dixon"] = [{season:2018,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false},{season:2016,injury:"Knee",weeksMissed:4,major:true,seasonEnder:false}];
-INJURY_HISTORY["Kenneth Walker"] = [{season:2024,injury:"Oblique",weeksMissed:4,major:false,seasonEnder:false},{season:2023,injury:"Oblique",weeksMissed:2,major:false,seasonEnder:false}];
+INJURY_HISTORY["Kenneth Walker III"] = [{season:2024,injury:"Oblique",weeksMissed:4,major:false,seasonEnder:false},{season:2023,injury:"Oblique",weeksMissed:2,major:false,seasonEnder:false}];
 INJURY_HISTORY["Kenny Britt"] = [{season:2017,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false},{season:2010,injury:"Hamstring",weeksMissed:3,major:false,seasonEnder:false}];
 INJURY_HISTORY["Kenny Golladay"] = [{season:2022,injury:"Knee",weeksMissed:4,major:true,seasonEnder:false},{season:2021,injury:"Hip",weeksMissed:3,major:true,seasonEnder:false},{season:2020,injury:"Hamstring",weeksMissed:11,major:false,seasonEnder:false},{season:2017,injury:"Ankle",weeksMissed:3,major:true,seasonEnder:false}];
 INJURY_HISTORY["Kenny McIntosh"] = [{season:2023,injury:"Knee",weeksMissed:3,major:true,seasonEnder:false}];
@@ -1062,7 +1062,7 @@ INJURY_HISTORY["Lucas Krull"] = [{season:2025,injury:"Foot",weeksMissed:3,major:
 INJURY_HISTORY["Luke Musgrave"] = [{season:2024,injury:"Ankle",weeksMissed:1,major:true,seasonEnder:false},{season:2023,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Luke Stocker"] = [{season:2016,injury:"Back",weeksMissed:4,major:false,seasonEnder:false},{season:2015,injury:"Hip",weeksMissed:1,major:true,seasonEnder:false},{season:2011,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Luke Willson"] = [{season:2019,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false},{season:2018,injury:"Shoulder",weeksMissed:1,major:true,seasonEnder:false},{season:2016,injury:"Knee",weeksMissed:3,major:true,seasonEnder:false},{season:2015,injury:"Back",weeksMissed:2,major:false,seasonEnder:false}];
-INJURY_HISTORY["Luther Burden III"] = [{season:2025,injury:"Concussion",weeksMissed:2,major:false,seasonEnder:false}];
+INJURY_HISTORY["Luther Burden"] = [{season:2025,injury:"Concussion",weeksMissed:2,major:false,seasonEnder:false}];
 INJURY_HISTORY["Mac Jones"] = [{season:2022,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Mack Hollins"] = [{season:2023,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Madison Hedgecock"] = [{season:2010,injury:"Hamstring",weeksMissed:6,major:false,seasonEnder:false}];
@@ -1085,7 +1085,7 @@ INJURY_HISTORY["Mario Manningham"] = [{season:2013,injury:"Knee",weeksMissed:1,m
 INJURY_HISTORY["Marion Barber"] = [{season:2011,injury:"Calf",weeksMissed:4,major:false,seasonEnder:false},{season:2010,injury:"Calf",weeksMissed:2,major:false,seasonEnder:false}];
 INJURY_HISTORY["Mark Andrews"] = [{season:2022,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["Mark Clayton"] = [{season:2009,injury:"Shoulder",weeksMissed:2,major:true,seasonEnder:false}];
-INJURY_HISTORY["Mark Ingram"] = [{season:2022,injury:"Ankle",weeksMissed:3,major:true,seasonEnder:false},{season:2020,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false},{season:2019,injury:"Shoulder",weeksMissed:1,major:true,seasonEnder:false},{season:2014,injury:"Hand",weeksMissed:3,major:false,seasonEnder:false},{season:2011,injury:"Heel",weeksMissed:6,major:false,seasonEnder:false}];
+INJURY_HISTORY["Mark Ingram II"] = [{season:2022,injury:"Ankle",weeksMissed:3,major:true,seasonEnder:false},{season:2020,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false},{season:2019,injury:"Shoulder",weeksMissed:1,major:true,seasonEnder:false},{season:2014,injury:"Hand",weeksMissed:3,major:false,seasonEnder:false},{season:2011,injury:"Heel",weeksMissed:6,major:false,seasonEnder:false}];
 INJURY_HISTORY["Mark Sanchez"] = [{season:2013,injury:"right Shoulder",weeksMissed:2,major:true,seasonEnder:false},{season:2009,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["Markus Wheaton"] = [{season:2017,injury:"Finger",weeksMissed:3,major:false,seasonEnder:false},{season:2016,injury:"Shoulder",weeksMissed:5,major:true,seasonEnder:false},{season:2013,injury:"Finger",weeksMissed:4,major:false,seasonEnder:false}];
 INJURY_HISTORY["Marlon Brown"] = [{season:2015,injury:"Back",weeksMissed:5,major:false,seasonEnder:false}];
@@ -1103,7 +1103,7 @@ INJURY_HISTORY["Martavis Bryant"] = [{season:2018,injury:"Illness",weeksMissed:2
 INJURY_HISTORY["Martellus Bennett"] = [{season:2017,injury:"Shoulder",weeksMissed:2,major:true,seasonEnder:false},{season:2011,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false},{season:2009,injury:"Concussion",weeksMissed:2,major:false,seasonEnder:false}];
 INJURY_HISTORY["Marvin Hall"] = [{season:2019,injury:"Foot",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["Marvin Harrison Jr."] = [{season:2025,injury:"Illness",weeksMissed:4,major:false,seasonEnder:false}];
-INJURY_HISTORY["Marvin Jones"] = [{season:2018,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false},{season:2014,injury:"Foot",weeksMissed:4,major:true,seasonEnder:false},{season:2012,injury:"Knee",weeksMissed:3,major:true,seasonEnder:false}];
+INJURY_HISTORY["Marvin Jones Jr."] = [{season:2018,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false},{season:2014,injury:"Foot",weeksMissed:4,major:true,seasonEnder:false},{season:2012,injury:"Knee",weeksMissed:3,major:true,seasonEnder:false}];
 INJURY_HISTORY["Marvin Mims Jr."] = [{season:2025,injury:"Hip",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Mason Taylor"] = [{season:2025,injury:"Ankle",weeksMissed:4,major:true,seasonEnder:false}];
 INJURY_HISTORY["Matt Asiata"] = [{season:2013,injury:"Hamstring",weeksMissed:4,major:false,seasonEnder:false}];
@@ -1124,7 +1124,7 @@ INJURY_HISTORY["Maurice Jones-Drew"] = [{season:2013,injury:"Ankle",weeksMissed:
 INJURY_HISTORY["Maurice Stovall"] = [{season:2009,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["Maxx Williams"] = [{season:2020,injury:"Ankle",weeksMissed:1,major:true,seasonEnder:false},{season:2017,injury:"Ankle",weeksMissed:5,major:true,seasonEnder:false},{season:2015,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Mecole Hardman"] = [{season:2024,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false},{season:2023,injury:"Thumb",weeksMissed:2,major:false,seasonEnder:false},{season:2022,injury:"Abdomen",weeksMissed:2,major:false,seasonEnder:false}];
-INJURY_HISTORY["Melvin Gordon"] = [{season:2018,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false},{season:2016,injury:"Hip",weeksMissed:3,major:true,seasonEnder:false}];
+INJURY_HISTORY["Melvin Gordon III"] = [{season:2018,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false},{season:2016,injury:"Hip",weeksMissed:3,major:true,seasonEnder:false}];
 INJURY_HISTORY["Mewelde Moore"] = [{season:2011,injury:"Ankle",weeksMissed:5,major:true,seasonEnder:false}];
 INJURY_HISTORY["Michael Bennett"] = [{season:2010,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false}];
 INJURY_HISTORY["Michael Burton"] = [{season:2021,injury:"Pectoral",weeksMissed:1,major:true,seasonEnder:false}];
@@ -1198,7 +1198,7 @@ INJURY_HISTORY["Noah Brown"] = [{season:2025,injury:"Groin",weeksMissed:5,major:
 INJURY_HISTORY["Noah Fant"] = [{season:2025,injury:"Concussion",weeksMissed:2,major:false,seasonEnder:false},{season:2024,injury:"Groin",weeksMissed:2,major:false,seasonEnder:false}];
 INJURY_HISTORY["Nyheim Miller-Hines"] = [{season:2024,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["O.J. Howard"] = [{season:2019,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false}];
-INJURY_HISTORY["Odell Beckham"] = [{season:2023,injury:"Ankle",weeksMissed:3,major:true,seasonEnder:false},{season:2021,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false},{season:2018,injury:"Quadricep",weeksMissed:3,major:false,seasonEnder:false},{season:2014,injury:"Hamstring",weeksMissed:4,major:false,seasonEnder:false}];
+INJURY_HISTORY["Odell Beckham Jr."] = [{season:2023,injury:"Ankle",weeksMissed:3,major:true,seasonEnder:false},{season:2021,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false},{season:2018,injury:"Quadricep",weeksMissed:3,major:false,seasonEnder:false},{season:2014,injury:"Hamstring",weeksMissed:4,major:false,seasonEnder:false}];
 INJURY_HISTORY["Omarion Hampton"] = [{season:2025,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Oren O'Neal"] = [{season:2009,injury:"Ankle",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["Owen Daniels"] = [{season:2010,injury:"Knee",weeksMissed:4,major:true,seasonEnder:false}];
@@ -1270,7 +1270,7 @@ INJURY_HISTORY["River Cracraft"] = [{season:2022,injury:"Neck",weeksMissed:5,maj
 INJURY_HISTORY["Rob Gronkowski"] = [{season:2021,injury:"Ribs",weeksMissed:5,major:false,seasonEnder:false},{season:2016,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false},{season:2015,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false},{season:2013,injury:"Back",weeksMissed:2,major:false,seasonEnder:false},{season:2012,injury:"Hip",weeksMissed:3,major:true,seasonEnder:false}];
 INJURY_HISTORY["Rob Housler"] = [{season:2015,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false},{season:2013,injury:"Ankle",weeksMissed:3,major:true,seasonEnder:false},{season:2011,injury:"Groin",weeksMissed:2,major:false,seasonEnder:false}];
 INJURY_HISTORY["Robby Anderson"] = [{season:2018,injury:"Ankle",weeksMissed:2,major:true,seasonEnder:false}];
-INJURY_HISTORY["Robert Griffin"] = [{season:2014,injury:"Ankle",weeksMissed:5,major:true,seasonEnder:false}];
+INJURY_HISTORY["Robert Griffin III"] = [{season:2014,injury:"Ankle",weeksMissed:5,major:true,seasonEnder:false}];
 INJURY_HISTORY["Robert Royal"] = [{season:2010,injury:"Ankle",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["Robert Tonyan"] = [{season:2019,injury:"Hip",weeksMissed:4,major:true,seasonEnder:false}];
 INJURY_HISTORY["Robert Turbin"] = [{season:2018,injury:"Shoulder",weeksMissed:2,major:true,seasonEnder:false},{season:2015,injury:"Ankle",weeksMissed:4,major:true,seasonEnder:false}];
@@ -1452,7 +1452,7 @@ INJURY_HISTORY["Tyrell Williams"] = [{season:2019,injury:"Foot",weeksMissed:1,ma
 INJURY_HISTORY["Tyrie Cleveland"] = [{season:2022,injury:"Hamstring",weeksMissed:2,major:false,seasonEnder:false}];
 INJURY_HISTORY["Tyrion Davis-Price"] = [{season:2022,injury:"Ankle",weeksMissed:3,major:true,seasonEnder:false}];
 INJURY_HISTORY["Tyrod Taylor"] = [{season:2025,injury:"Knee",weeksMissed:2,major:true,seasonEnder:false},{season:2020,injury:"Ribs",weeksMissed:3,major:false,seasonEnder:false}];
-INJURY_HISTORY["Tyrone Tracy Jr."] = [{season:2025,injury:"Shoulder",weeksMissed:2,major:true,seasonEnder:false}];
+INJURY_HISTORY["Tyrone Tracy"] = [{season:2025,injury:"Shoulder",weeksMissed:2,major:true,seasonEnder:false}];
 INJURY_HISTORY["Van Jefferson"] = [{season:2025,injury:"Ankle",weeksMissed:1,major:true,seasonEnder:false},{season:2022,injury:"Knee",weeksMissed:3,major:true,seasonEnder:false}];
 INJURY_HISTORY["Vance McDonald"] = [{season:2019,injury:"Shoulder",weeksMissed:2,major:true,seasonEnder:false},{season:2018,injury:"Foot",weeksMissed:1,major:true,seasonEnder:false},{season:2017,injury:"Back",weeksMissed:4,major:false,seasonEnder:false},{season:2015,injury:"Knee",weeksMissed:1,major:true,seasonEnder:false}];
 INJURY_HISTORY["Velus Jones"] = [{season:2022,injury:"Hamstring",weeksMissed:3,major:false,seasonEnder:false}];

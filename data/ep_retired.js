@@ -1298,8 +1298,16 @@ const EP_RETIRED = [
 {yr:2015,gp:1,py:84,ptd:1,int:0,ra:1,ry:2,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:6.4,ppg:6.4},
 {yr:2016,gp:1,py:56,ptd:0,int:0,ra:1,ry:1,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:2.3,ppg:2.3}
 ]},
-    {name:"Mark Ingram",pos:"RB",debut:2011,last:2022,career:[
+    {name:"Mark Ingram II",pos:"RB",debut:2011,last:2022,career:[
 {yr:2011,gp:10,py:0,ptd:0,int:0,ra:122,ry:474,rtd:5,rc:11,rcy:46,rctd:0,fl:2,fpts:83.5,ppg:8.4},
+    {name:"Todd Gurley",pos:"RB",debut:2015,last:2020,career:[
+{yr:2015,gp:13,py:0,ptd:0,int:0,ra:229,ry:1106,rtd:10,rc:21,rcy:188,rctd:0,fl:1,fpts:205.4,ppg:15.8},
+{yr:2016,gp:16,py:0,ptd:0,int:0,ra:278,ry:885,rtd:6,rc:43,rcy:327,rctd:0,fl:1,fpts:196.2,ppg:12.3},
+{yr:2017,gp:15,py:0,ptd:0,int:0,ra:279,ry:1305,rtd:13,rc:64,rcy:788,rctd:6,fl:1,fpts:378.3,ppg:25.2},
+{yr:2018,gp:14,py:0,ptd:0,int:0,ra:256,ry:1251,rtd:17,rc:59,rcy:580,rctd:4,fl:1,fpts:371.1,ppg:26.5},
+{yr:2019,gp:15,py:0,ptd:0,int:0,ra:223,ry:857,rtd:12,rc:31,rcy:207,rctd:2,fl:2,fpts:216.4,ppg:14.4},
+{yr:2020,gp:15,py:0,ptd:0,int:0,ra:195,ry:678,rtd:9,rc:25,rcy:164,rctd:0,fl:0,fpts:161.2,ppg:10.7}]},
+
 {yr:2012,gp:16,py:0,ptd:0,int:0,ra:156,ry:602,rtd:5,rc:6,rcy:56,rctd:0,fl:2,fpts:91.3,ppg:5.7},
 {yr:2013,gp:11,py:0,ptd:0,int:0,ra:78,ry:386,rtd:1,rc:7,rcy:66,rctd:0,fl:0,fpts:55.7,ppg:5.1},
 {yr:2014,gp:16,py:0,ptd:0,int:0,ra:226,ry:964,rtd:9,rc:29,rcy:145,rctd:0,fl:1,fpts:182.4,ppg:11.4},
@@ -1785,7 +1793,7 @@ const EP_RETIRED = [
     {name:"Andre Johnson",pos:"WR",debut:2003,last:2016},
     {name:"Steve Smith Sr.",pos:"WR",debut:2001,last:2016},
     {name:"Dez Bryant",pos:"WR",debut:2010,last:2020},
-    {name:"Odell Beckham Jr.",pos:"WR",debut:2014,last:2023},
+    {name:"Odell Beckham Jr.",pos:"WR",debut:2014,last:2024},
     {name:"DeSean Jackson",pos:"WR",debut:2008,last:2022},
     {name:"Brandon Marshall",pos:"WR",debut:2006,last:2018},
     {name:"Wes Welker",pos:"WR",debut:2004,last:2015},

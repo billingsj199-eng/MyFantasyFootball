@@ -4553,6 +4553,8 @@ if (typeof COMBINE_DATA !== 'undefined') {
       }
       if (cb && cb.draft != null) {
         d.dr = (cb.draft === 'U' || cb.draft === 'u') ? 'U' : parseInt(cb.draft) || cb.draft;
+      } else if (cb && cb.draftProj != null) {
+        d.dr = (cb.draftProj === 'U' || cb.draftProj === 'u') ? 'U' : parseInt(cb.draftProj) || cb.draftProj;
       }
     });
   }
@@ -7149,8 +7151,9 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
       // Get draft capital from COMBINE_DATA or D array
       var dr = d.dr; // draft round from D array
       var cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
-      if (!dr && cb && cb.draft) dr = Math.ceil(cb.draft / 32); // pick → round
-      if (!dr && cb && cb.draft) dr = cb.draft <= 32 ? 1 : cb.draft <= 64 ? 2 : cb.draft <= 100 ? 3 : 4;
+      var draftPick = (cb && cb.draft) ? cb.draft : (cb && cb.draftProj) ? cb.draftProj : null;
+      if (!dr && draftPick) dr = Math.ceil(draftPick / 32); // pick → round
+      if (!dr && draftPick) dr = draftPick <= 32 ? 1 : draftPick <= 64 ? 2 : draftPick <= 100 ? 3 : 4;
       
       // Estimate draft round from ADP if no draft data (pre-draft prospects)
       if (!dr && d.a) {
@@ -9200,6 +9203,9 @@ function openPlayerCard(d) {
   const diffClass = _cardAdp == null ? 'accent' : Math.abs(diffVal) < 0.5 ? 'accent' : diffVal > 0 ? 'green' : 'red';
   const diffText = _cardAdp == null ? '—' : Math.abs(diffVal) < 0.5 ? '—' : (diffVal > 0 ? '▲ ' : '▼ ') + Math.abs(diffVal).toFixed(0);
 
+  // Detect 2026 draft class prospects (not yet in NFL)
+  const _is2026 = !d._isDevy && (d.t === 'TBD' || (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] && COMBINE_DATA[d.n].yr === 2026 && (!d.career || !d.career.length)));
+
   // JM Score badge for player card
   let _cardJm = null;
   let _cardJmLowConf = false;
@@ -9233,11 +9239,11 @@ function openPlayerCard(d) {
     </div>
     <div class="card-body">
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
-        ${!d._isDevy ? '<button class="card-view-btn active" data-cardview="fantasy">FANTASY</button>' : ''}
-        <button class="card-view-btn${d._isDevy ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
+        ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
+        <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
         <button class="card-view-btn" data-cardview="comps">COMPS</button>
       </div>` : ''}
-      <div class="card-fantasy-view${d._isDevy ? ' hidden' : ''}" id="cardFantasyView">
+      <div class="card-fantasy-view${(d._isDevy || _is2026) ? ' hidden' : ''}" id="cardFantasyView">
       ${!d._retired ? `<div class="card-section">
         <div class="card-section-title">Rankings</div>
         <div class="card-rank-row" style="grid-template-columns:1fr 1fr">
@@ -9266,7 +9272,7 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
 
-      ${d.career && d.career.length > 0 ? (() => {
+      ${!_is2026 && d.career && d.career.length > 0 ? (() => {
         const _cr = d.career;
         const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
         const _totalGp = _cr.reduce((sum, s) => sum + (s.gp || 0), 0);
@@ -9427,7 +9433,7 @@ function openPlayerCard(d) {
         '</div>';
       })()}
 
-      ${d.career && d.career.length > 0 ? `<div class="card-section">
+      ${!_is2026 && d.career && d.career.length > 0 ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="clScoringLabel">Career Log (Half PPR)${d._retired && d.career && d._debut && d._last && d.career.length < (d._last - d._debut + 1) * 0.5 ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : ''}</span>
           <div class="career-log-controls">
@@ -9468,7 +9474,7 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
 
-      ${!d._retired ? `<div class="card-section">
+      ${!d._retired && !_is2026 ? `<div class="card-section">
         <div class="card-section-title">Player Info</div>
         <div class="card-grid">
           <div class="card-stat">
@@ -9534,7 +9540,7 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
       </div>
-      <div class="card-prospect-view${d._isDevy ? ' active' : ''}" id="cardProspectView">
+      <div class="card-prospect-view${(d._isDevy || _is2026) ? ' active' : ''}" id="cardProspectView">
       ${(() => {
         const _pmD2 = window._pmBuiltData ? window._pmBuiltData().find(p => p.name === d.n) : null;
         if (!_pmD2 || _pmD2.jm == null) return '';
@@ -9645,7 +9651,7 @@ function openPlayerCard(d) {
           <div class="card-stat"><span class="card-stat-label">School</span><span class="card-stat-value">${cb.school || d._college || '—'}</span></div>
           <div class="card-stat"><span class="card-stat-label">Height</span><span class="card-stat-value">${cb.ht || fmtHeight(d._height)}</span></div>
           <div class="card-stat"><span class="card-stat-label">Weight</span><span class="card-stat-value">${cb.wt ? cb.wt + ' lbs' : (d._weight ? d._weight + ' lbs' : '—')}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Draft Pick</span><span class="card-stat-value">${cb.draft ? '#' + cb.draft + ' Overall' : (d.dr ? '#' + d.dr + ' Overall' : 'Undrafted')}</span></div>
+          <div class="card-stat"><span class="card-stat-label">Draft Pick</span><span class="card-stat-value">${cb.draft ? '#' + cb.draft + ' Overall' : cb.draftProj ? 'Proj #' + cb.draftProj : (d.dr ? '#' + d.dr + ' Overall' : 'Undrafted')}</span></div>
           <div class="card-stat"><span class="card-stat-label">Draft Team</span><span class="card-stat-value">${cb.dt || '—'}</span></div>
         </div>
       </div>
@@ -21270,7 +21276,7 @@ window.fmtHeight = fmtHeight;
     // if the player was injured their rookie season, e.g. JJ McCarthy 2024 draft but 2025 debut)
     // Must run BEFORE school collision check — drafted players with name collisions in
     // college_stats should still use their real draft year.
-    if (cb && cb.yr && cb.draft) return cb.yr;
+    if (cb && cb.yr && (cb.draft || cb.draftProj)) return cb.yr;
 
     // School-based collision check: if CS and CB have different schools with year gap > 2, drop CB
     if (cb && cs && cs.length && cb.school && typeof _normSchool === 'function') {
@@ -21478,6 +21484,11 @@ window.fmtHeight = fmtHeight;
         if (cbO && cbO.draft != null) {
           if (cbO.draft === 'U' || cbO.draft === 'u') return 300;
           const v = parseInt(cbO.draft); if (!isNaN(v) && v > 0) return v;
+        }
+        // Fallback: check draftProj for pre-draft projected pick (2026 class)
+        if (cbO && cbO.draftProj != null) {
+          if (cbO.draftProj === 'U' || cbO.draftProj === 'u') return 300;
+          const v = parseInt(cbO.draftProj); if (!isNaN(v) && v > 0) return v;
         }
         if (typeof LEGEND_BIO !== 'undefined' && LEGEND_BIO[n] && LEGEND_BIO[n].dr != null) {
           const lb = LEGEND_BIO[n].dr;
@@ -22030,6 +22041,7 @@ window.fmtHeight = fmtHeight;
       // Nuclear fallback: if cbOrig got lost (collision edge case), re-check COMBINE_DATA directly
       const _cbForDraft = cbOrig || ((typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null);
       const rawPick = (_cbForDraft && _cbForDraft.draft != null) ? _cbForDraft.draft
+        : (_cbForDraft && _cbForDraft.draftProj != null) ? _cbForDraft.draftProj
         : (LEGEND_BIO && LEGEND_BIO[name] && LEGEND_BIO[name].dr != null) ? LEGEND_BIO[name].dr
         : null;
       if (rawPick != null) {
@@ -23434,7 +23446,7 @@ window.fmtHeight = fmtHeight;
             age: pmP ? pmP.age : (apDb ? apDb.age : null),
             _retired: false, _college: cb.school,
             _isDevy: isDevy,
-            dr: pmP ? pmP.dr : (cb.draft != null ? (cb.draft === 'U' ? 'U' : parseInt(cb.draft) || null) : null),
+            dr: pmP ? pmP.dr : (cb.draft != null ? (cb.draft === 'U' ? 'U' : parseInt(cb.draft) || null) : cb.draftProj != null ? parseInt(cb.draftProj) || null : null),
             r: '—',
             _height: pmP ? (pmP.ht ? String(pmP.ht) : null) : null,
             _weight: pmP ? pmP.wt : (cb.wt || null),
@@ -23534,7 +23546,7 @@ window.fmtHeight = fmtHeight;
             ras:    { placeholder: '8.50',       width: '48px', maxlen: 5,  getCur: () => { const cb = COMBINE_DATA[name]; return (cb && cb.ras) ? String(cb.ras) : ''; } },
             forty:  { placeholder: '4.40',       width: '48px', maxlen: 5,  getCur: () => { const cb = COMBINE_DATA[name]; return (cb && cb.forty) ? String(cb.forty) : ''; } },
             pff:    { placeholder: '75.0',       width: '48px', maxlen: 5,  getCur: () => { return (window._PFF_OVERRIDES && window._PFF_OVERRIDES[name]) ? String(window._PFF_OVERRIDES[name]) : ''; } },
-            draft:  { placeholder: '16',         width: '48px', maxlen: 5,  getCur: () => { const cb = COMBINE_DATA[name]; return (cb && cb.draft != null) ? String(cb.draft) : ''; } },
+            draft:  { placeholder: '16',         width: '48px', maxlen: 5,  getCur: () => { const cb = COMBINE_DATA[name]; return (cb && cb.draft != null) ? String(cb.draft) : (cb && cb.draftProj != null) ? String(cb.draftProj) : ''; } },
             pos:    { placeholder: 'WR',         width: '40px', maxlen: 3,  getCur: () => { const cb = COMBINE_DATA[name]; return (cb && cb.pos) ? cb.pos : ''; } },
           };
           const cfg = _fieldConfig[field] || { placeholder: '', width: '48px', maxlen: 10, getCur: () => '' };
@@ -23789,6 +23801,9 @@ window.fmtHeight = fmtHeight;
       if (cbO && cbO.draft != null) {
         if (cbO.draft === 'U' || cbO.draft === 'u') pick = 'U';
         else { const v = parseInt(cbO.draft); if (!isNaN(v) && v > 0) pick = v; }
+      } else if (cbO && cbO.draftProj != null) {
+        if (cbO.draftProj === 'U' || cbO.draftProj === 'u') pick = 'U';
+        else { const v = parseInt(cbO.draftProj); if (!isNaN(v) && v > 0) pick = v; }
       } else if (bio && bio.dr != null) {
         if (bio.dr === 'U' || bio.dr === 'u') pick = 'U';
         else { const v = parseInt(bio.dr); if (!isNaN(v) && v > 0) pick = v; }

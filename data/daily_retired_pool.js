@@ -3,74 +3,74 @@
 // Only needed for players NOT on current NFL rosters (roster API handles active players)
 const RETIRED_ESPN_IDS = {
   // QBs
-  "Tom Brady":"2330","Peyton Manning":"1428","Drew Brees":"2580","Brett Favre":"110"
-  "Aaron Rodgers":"8439","Ben Roethlisberger":"5536","Eli Manning":"5526"
-  "Philip Rivers":"5529","Matt Ryan":"11237","Cam Newton":"13994"
-  "Russell Wilson":"14881","Andrew Luck":"14874","Michael Vick":"2549"
-  "Donovan McNabb":"1565","Tony Romo":"5209"
-  "Jay Cutler":"9597","Alex Smith":"8416","Nick Foles":"14877"
-  "Joe Flacco":"11252","Colin Kaepernick":"14001","Robert Griffin III":"14875"
-  "Carson Palmer":"2573","Kurt Warner":"4459","Drew Bledsoe":"2132"
-  "Matt Hasselbeck":"4588","Jake Delhomme":"4686","Steve McNair":"1619"
-  "Kerry Collins":"1552","Mark Brunell":"1554","Matt Cassel":"9609"
-  "Ryan Fitzpatrick":"8664","Charlie Batch":"2083","Jon Kitna":"1556"
-  "Brad Johnson":"1076","Matt Schaub":"8520","Trent Dilfer":"1094"
-  "Josh McCown":"4515","Chad Henne":"11284","Brian Hoyer":"13156"
-  "Chase Daniel":"12471","Blaine Gabbert":"14013","Geno Smith":"15168"
-  "Andy Dalton":"14012","Ryan Tannehill":"14876","Kirk Cousins":"14880"
-  "Teddy Bridgewater":"16728","Derek Carr":"16757","Tyrod Taylor":"14163"
-  "Matt Barkley":"15948","Colt McCoy":"13228","Derek Anderson":"9598"
-  "Kellen Clemens":"9822","Matt Moore":"10557","Shaun Hill":"8534"
-  "Luke McCown":"5546","Tommy Maddox":"727","Daunte Culpepper":"2161"
-  "Jeff George":"1285","Trent Green":"2214","Doug Pederson":"1600"
-  "Chris Redman":"2256","A.J. Feeley":"2553","David Carr":"5743"
-  "Vinny Testaverde":"9","Doug Flutie":"35","Rich Gannon":"33"
-  "Josh Johnson":"11394","Gus Frerotte":"1110","Jeff Blake":"1055"
-  "Chris Chandler":"202","Marcus Mariota":"2576980","Todd Collins":"1551"
-  "Jamie Martin":"622"
+  "Tom Brady":"2330","Peyton Manning":"1428","Drew Brees":"2580","Brett Favre":"110",
+  "Aaron Rodgers":"8439","Ben Roethlisberger":"5536","Eli Manning":"5526",
+  "Philip Rivers":"5529","Matt Ryan":"11237","Cam Newton":"13994",
+  "Russell Wilson":"14881","Andrew Luck":"14874","Michael Vick":"2549",
+  "Donovan McNabb":"1565","Tony Romo":"5209",
+  "Jay Cutler":"9597","Alex Smith":"8416","Nick Foles":"14877",
+  "Joe Flacco":"11252","Colin Kaepernick":"14001","Robert Griffin III":"14875",
+  "Carson Palmer":"2573","Kurt Warner":"4459","Drew Bledsoe":"2132",
+  "Matt Hasselbeck":"4588","Jake Delhomme":"4686","Steve McNair":"1619",
+  "Kerry Collins":"1552","Mark Brunell":"1554","Matt Cassel":"9609",
+  "Ryan Fitzpatrick":"8664","Charlie Batch":"2083","Jon Kitna":"1556",
+  "Brad Johnson":"1076","Matt Schaub":"8520","Trent Dilfer":"1094",
+  "Josh McCown":"4515","Chad Henne":"11284","Brian Hoyer":"13156",
+  "Chase Daniel":"12471","Blaine Gabbert":"14013","Geno Smith":"15168",
+  "Andy Dalton":"14012","Ryan Tannehill":"14876","Kirk Cousins":"14880",
+  "Teddy Bridgewater":"16728","Derek Carr":"16757","Tyrod Taylor":"14163",
+  "Matt Barkley":"15948","Colt McCoy":"13228","Derek Anderson":"9598",
+  "Kellen Clemens":"9822","Matt Moore":"10557","Shaun Hill":"8534",
+  "Luke McCown":"5546","Tommy Maddox":"727","Daunte Culpepper":"2161",
+  "Jeff George":"1285","Trent Green":"2214","Doug Pederson":"1600",
+  "Chris Redman":"2256","A.J. Feeley":"2553","David Carr":"5743",
+  "Vinny Testaverde":"9","Doug Flutie":"35","Rich Gannon":"33",
+  "Josh Johnson":"11394","Gus Frerotte":"1110","Jeff Blake":"1055",
+  "Chris Chandler":"202","Marcus Mariota":"2576980","Todd Collins":"1551",
+  "Jamie Martin":"622",
   // RBs
-  "Adrian Peterson":"10452","Marshawn Lynch":"10456","Frank Gore":"8479"
-  "LeSean McCoy":"12514","Jamaal Charles":"12460","Arian Foster":"12479"
-  "DeMarco Murray":"13960","Ezekiel Elliott":"3051392","Todd Gurley":"2977644"
-  "Le'Veon Bell":"16731","Mark Ingram II":"14054","Darren Sproles":"8606"
-  "Steven Jackson":"8524","Thomas Jones":"2297","Reggie Bush":"9592"
-  "Warrick Dunn":"1590","Fred Taylor":"2221","Ricky Williams":"2234"
-  "Mike Alstott":"1535","Stephen Davis":"1899","Ahman Green":"2207"
-  "Kevin Faulk":"2185","Kyle Juszczyk":"16392","Brandon Bolden":"14918"
-  "Taiwan Jones":"14167","John Kuhn":"9833","Shaun Alexander":"2139"
-  "Edgerrin James":"1404","Clinton Portis":"2565","Priest Holmes":"1469"
-  "Marshall Faulk":"109","Jerome Bettis":"32","Emmitt Smith":"802"
-  "LaDainian Tomlinson":"2554","Sammy Morris":"2286","Zack Crockett":"1573"
-  "Cory Schlesinger":"1646","William Henderson":"1258","Garrison Hearst":"1188"
-  "Richie Anderson":"1528","Mack Strong":"1644","Fred McAfee":"493"
-  "Lorenzo Neal":"490","Tony Richardson":"1636","Fred McCrary":"1603"
+  "Adrian Peterson":"10452","Marshawn Lynch":"10456","Frank Gore":"8479",
+  "LeSean McCoy":"12514","Jamaal Charles":"12460","Arian Foster":"12479",
+  "DeMarco Murray":"13960","Ezekiel Elliott":"3051392","Todd Gurley":"2977644",
+  "Le'Veon Bell":"16731","Mark Ingram II":"14054","Darren Sproles":"8606",
+  "Steven Jackson":"8524","Thomas Jones":"2297","Reggie Bush":"9592",
+  "Warrick Dunn":"1590","Fred Taylor":"2221","Ricky Williams":"2234",
+  "Mike Alstott":"1535","Stephen Davis":"1899","Ahman Green":"2207",
+  "Kevin Faulk":"2185","Kyle Juszczyk":"16392","Brandon Bolden":"14918",
+  "Taiwan Jones":"14167","John Kuhn":"9833","Shaun Alexander":"2139",
+  "Edgerrin James":"1404","Clinton Portis":"2565","Priest Holmes":"1469",
+  "Marshall Faulk":"109","Jerome Bettis":"32","Emmitt Smith":"802",
+  "LaDainian Tomlinson":"2554","Sammy Morris":"2286","Zack Crockett":"1573",
+  "Cory Schlesinger":"1646","William Henderson":"1258","Garrison Hearst":"1188",
+  "Richie Anderson":"1528","Mack Strong":"1644","Fred McAfee":"493",
+  "Lorenzo Neal":"490","Tony Richardson":"1636","Fred McCrary":"1603",
   
   // WRs
-  "Jerry Rice":"698","Randy Moss":"1557","Terrell Owens":"1588"
-  "Calvin Johnson":"9706","Larry Fitzgerald":"2508","Julio Jones":"13982"
-  "Antonio Brown":"13934","Andre Johnson":"2563","Steve Smith Sr.":"2140"
-  "Dez Bryant":"13215","Odell Beckham Jr.":"16733","DeAndre Hopkins":"16502"
-  "Stefon Diggs":"2976499","DeSean Jackson":"11283"
-  "Brandon Marshall":"9705","Wes Welker":"5941","Chad Johnson":"2552"
-  "Hines Ward":"2158","Victor Cruz":"14065"
-  "Julian Edelman":"12649","Emmanuel Sanders":"13295"
-  "Demaryius Thomas":"13216","Jordy Nelson":"11281","Randall Cobb":"14053"
-  "Golden Tate":"13217","Allen Robinson":"16799","Robert Woods":"16800"
-  "Adam Thielen":"16460","Michael Thomas":"2976316","JuJu Smith-Schuster":"3116164"
-  "Sammy Watkins":"16725","Jarvis Landry":"16790","Kenny Golladay":"3039925"
-  "Reggie Wayne":"4511","Anquan Boldin":"4512"
-  "Torry Holt":"2296","Isaac Bruce":"1056","Marques Colston":"9614"
-  "Eric Decker":"13271","Pierre Garcon":"11367","A.J. Green":"13983"
-  "T.Y. Hilton":"15072","Kelvin Benjamin":"16730","Michael Crabtree":"12568"
-  "Mohamed Sanu":"14922"
+  "Jerry Rice":"698","Randy Moss":"1557","Terrell Owens":"1588",
+  "Calvin Johnson":"9706","Larry Fitzgerald":"2508","Julio Jones":"13982",
+  "Antonio Brown":"13934","Andre Johnson":"2563","Steve Smith Sr.":"2140",
+  "Dez Bryant":"13215","Odell Beckham Jr.":"16733","DeAndre Hopkins":"16502",
+  "Stefon Diggs":"2976499","DeSean Jackson":"11283",
+  "Brandon Marshall":"9705","Wes Welker":"5941","Chad Johnson":"2552",
+  "Hines Ward":"2158","Victor Cruz":"14065",
+  "Julian Edelman":"12649","Emmanuel Sanders":"13295",
+  "Demaryius Thomas":"13216","Jordy Nelson":"11281","Randall Cobb":"14053",
+  "Golden Tate":"13217","Allen Robinson":"16799","Robert Woods":"16800",
+  "Adam Thielen":"16460","Michael Thomas":"2976316","JuJu Smith-Schuster":"3116164",
+  "Sammy Watkins":"16725","Jarvis Landry":"16790","Kenny Golladay":"3039925",
+  "Reggie Wayne":"4511","Anquan Boldin":"4512",
+  "Torry Holt":"2296","Isaac Bruce":"1056","Marques Colston":"9614",
+  "Eric Decker":"13271","Pierre Garcon":"11367","A.J. Green":"13983",
+  "T.Y. Hilton":"15072","Kelvin Benjamin":"16730","Michael Crabtree":"12568",
+  "Mohamed Sanu":"14922",
   // TEs
-  "Tony Gonzalez":"310","Rob Gronkowski":"13229","Shannon Sharpe":"766"
-  "Jason Witten":"4527","Antonio Gates":"5547","Jimmy Graham":"13232"
-  "Greg Olsen":"12616"
-  "Zach Ertz":"15835","Darren Waller":"3045144"
-  "Delanie Walker":"9650","Tyler Eifert":"16726","Jordan Reed":"15860"
-  "Jared Cook":"11272","Eric Ebron":"16732","Vernon Davis":"9618"
-  "Dallas Clark":"5564","Owen Daniels":"9589","Heath Miller":"8437"
+  "Tony Gonzalez":"310","Rob Gronkowski":"13229","Shannon Sharpe":"766",
+  "Jason Witten":"4527","Antonio Gates":"5547","Jimmy Graham":"13232",
+  "Greg Olsen":"12616",
+  "Zach Ertz":"15835","Darren Waller":"3045144",
+  "Delanie Walker":"9650","Tyler Eifert":"16726","Jordan Reed":"15860",
+  "Jared Cook":"11272","Eric Ebron":"16732","Vernon Davis":"9618",
+  "Dallas Clark":"5564","Owen Daniels":"9589","Heath Miller":"8437",
   "Benjamin Watson":"5563","Martellus Bennett":"11288"
 };
 
@@ -81,70 +81,70 @@ window.RETIRED_ESPN_IDS = RETIRED_ESPN_IDS;
 // Only include players whose last season >= 2004 (ESPN CDN headshot era)
 // Team abbreviations are derived from the player's era/name recognition
 const _RETIRED_TEAM_MAP = {
-  "Tom Brady":"NE/TB","Peyton Manning":"IND/DEN","Drew Brees":"NO","Brett Favre":"GB/MIN"
-  "Aaron Rodgers":"GB/NYJ","Ben Roethlisberger":"PIT","Eli Manning":"NYG"
-  "Philip Rivers":"LAC/IND","Matt Ryan":"ATL/IND","Cam Newton":"CAR/NE"
-  "Russell Wilson":"SEA/DEN/PIT","Andrew Luck":"IND","Michael Vick":"ATL/PHI"
-  "Donovan McNabb":"PHI","Tony Romo":"DAL"
-  "Jay Cutler":"CHI/DEN","Alex Smith":"KC/SF/WAS","Nick Foles":"PHI/JAX"
-  "Joe Flacco":"BAL","Colin Kaepernick":"SF","Robert Griffin III":"WAS"
-  "Carson Palmer":"ARI/CIN","Kurt Warner":"ARI/STL","Drew Bledsoe":"NE/DAL"
-  "Matt Hasselbeck":"SEA","Jake Delhomme":"CAR","Steve McNair":"TEN"
-  "Kerry Collins":"NYG/TEN","Mark Brunell":"JAX","Matt Cassel":"NE/KC"
-  "Ryan Fitzpatrick":"BUF/MIA","Charlie Batch":"PIT","Jon Kitna":"DET/CIN"
-  "Brad Johnson":"TB","Matt Schaub":"HOU","Trent Dilfer":"BAL"
-  "Josh McCown":"CLE/CHI","Chad Henne":"JAX/MIA","Brian Hoyer":"NE/CLE"
-  "Chase Daniel":"KC/CHI","Blaine Gabbert":"JAX/SF","Geno Smith":"NYJ/SEA"
-  "Andy Dalton":"CIN/DAL","Ryan Tannehill":"TEN/MIA","Kirk Cousins":"WAS/MIN/ATL"
-  "Teddy Bridgewater":"MIN/DEN","Derek Carr":"LV/NO","Tyrod Taylor":"BUF/CLE"
-  "Matt Barkley":"PHI","Colt McCoy":"CLE/WAS","Derek Anderson":"CLE"
-  "Kellen Clemens":"NYJ","Matt Moore":"MIA","Shaun Hill":"DET/MIN"
-  "Luke McCown":"NO","Tommy Maddox":"PIT","Daunte Culpepper":"MIN"
-  "Trent Green":"KC","Doug Pederson":"PHI","Chris Redman":"BAL"
-  "A.J. Feeley":"PHI","David Carr":"HOU","Vinny Testaverde":"NYJ/DAL"
-  "Doug Flutie":"BUF/SD","Rich Gannon":"OAK","Josh Johnson":"WAS"
-  "Gus Frerotte":"DET/MIN","Jeff Blake":"CIN","Chris Chandler":"ATL"
-  "Marcus Mariota":"TEN/ATL","Todd Collins":"WAS","Jeff George":"IND/ATL","Jamie Martin":"STL"
-  "Adrian Peterson":"MIN","Marshawn Lynch":"SEA/BUF","Frank Gore":"SF"
-  "LeSean McCoy":"PHI/BUF","Jamaal Charles":"KC","Arian Foster":"HOU"
-  "DeMarco Murray":"DAL/PHI","Ezekiel Elliott":"DAL","Todd Gurley":"LAR/ATL"
-  "Le'Veon Bell":"PIT","Mark Ingram II":"NO/BAL","Darren Sproles":"NO/PHI"
-  "Steven Jackson":"STL","Thomas Jones":"CHI/NYJ","Reggie Bush":"NO/DET"
-  "Warrick Dunn":"TB/ATL","Fred Taylor":"JAX","Ricky Williams":"MIA"
-  "Mike Alstott":"TB","Stephen Davis":"CAR/WAS","Ahman Green":"GB"
-  "Kevin Faulk":"NE","Kyle Juszczyk":"SF/BAL","Brandon Bolden":"NE/LV"
-  "Taiwan Jones":"BUF/HOU","John Kuhn":"GB","Shaun Alexander":"SEA"
-  "Edgerrin James":"IND","Clinton Portis":"WAS/DEN","Priest Holmes":"KC"
-  "Marshall Faulk":"STL/IND","Jerome Bettis":"PIT","Emmitt Smith":"DAL"
-  "LaDainian Tomlinson":"SD","Sammy Morris":"NE/MIA","Zack Crockett":"OAK"
-  "Cory Schlesinger":"DET","William Henderson":"GB","Garrison Hearst":"SF"
-  "Richie Anderson":"NYJ","Mack Strong":"SEA","Fred McAfee":"NO"
-  "Lorenzo Neal":"SD","Tony Richardson":"KC/MIN","Fred McCrary":"NO"
+  "Tom Brady":"NE/TB","Peyton Manning":"IND/DEN","Drew Brees":"NO","Brett Favre":"GB/MIN",
+  "Aaron Rodgers":"GB/NYJ","Ben Roethlisberger":"PIT","Eli Manning":"NYG",
+  "Philip Rivers":"LAC/IND","Matt Ryan":"ATL/IND","Cam Newton":"CAR/NE",
+  "Russell Wilson":"SEA/DEN/PIT","Andrew Luck":"IND","Michael Vick":"ATL/PHI",
+  "Donovan McNabb":"PHI","Tony Romo":"DAL",
+  "Jay Cutler":"CHI/DEN","Alex Smith":"KC/SF/WAS","Nick Foles":"PHI/JAX",
+  "Joe Flacco":"BAL","Colin Kaepernick":"SF","Robert Griffin III":"WAS",
+  "Carson Palmer":"ARI/CIN","Kurt Warner":"ARI/STL","Drew Bledsoe":"NE/DAL",
+  "Matt Hasselbeck":"SEA","Jake Delhomme":"CAR","Steve McNair":"TEN",
+  "Kerry Collins":"NYG/TEN","Mark Brunell":"JAX","Matt Cassel":"NE/KC",
+  "Ryan Fitzpatrick":"BUF/MIA","Charlie Batch":"PIT","Jon Kitna":"DET/CIN",
+  "Brad Johnson":"TB","Matt Schaub":"HOU","Trent Dilfer":"BAL",
+  "Josh McCown":"CLE/CHI","Chad Henne":"JAX/MIA","Brian Hoyer":"NE/CLE",
+  "Chase Daniel":"KC/CHI","Blaine Gabbert":"JAX/SF","Geno Smith":"NYJ/SEA",
+  "Andy Dalton":"CIN/DAL","Ryan Tannehill":"TEN/MIA","Kirk Cousins":"WAS/MIN/ATL",
+  "Teddy Bridgewater":"MIN/DEN","Derek Carr":"LV/NO","Tyrod Taylor":"BUF/CLE",
+  "Matt Barkley":"PHI","Colt McCoy":"CLE/WAS","Derek Anderson":"CLE",
+  "Kellen Clemens":"NYJ","Matt Moore":"MIA","Shaun Hill":"DET/MIN",
+  "Luke McCown":"NO","Tommy Maddox":"PIT","Daunte Culpepper":"MIN",
+  "Trent Green":"KC","Doug Pederson":"PHI","Chris Redman":"BAL",
+  "A.J. Feeley":"PHI","David Carr":"HOU","Vinny Testaverde":"NYJ/DAL",
+  "Doug Flutie":"BUF/SD","Rich Gannon":"OAK","Josh Johnson":"WAS",
+  "Gus Frerotte":"DET/MIN","Jeff Blake":"CIN","Chris Chandler":"ATL",
+  "Marcus Mariota":"TEN/ATL","Todd Collins":"WAS","Jeff George":"IND/ATL","Jamie Martin":"STL",
+  "Adrian Peterson":"MIN","Marshawn Lynch":"SEA/BUF","Frank Gore":"SF",
+  "LeSean McCoy":"PHI/BUF","Jamaal Charles":"KC","Arian Foster":"HOU",
+  "DeMarco Murray":"DAL/PHI","Ezekiel Elliott":"DAL","Todd Gurley":"LAR/ATL",
+  "Le'Veon Bell":"PIT","Mark Ingram II":"NO/BAL","Darren Sproles":"NO/PHI",
+  "Steven Jackson":"STL","Thomas Jones":"CHI/NYJ","Reggie Bush":"NO/DET",
+  "Warrick Dunn":"TB/ATL","Fred Taylor":"JAX","Ricky Williams":"MIA",
+  "Mike Alstott":"TB","Stephen Davis":"CAR/WAS","Ahman Green":"GB",
+  "Kevin Faulk":"NE","Kyle Juszczyk":"SF/BAL","Brandon Bolden":"NE/LV",
+  "Taiwan Jones":"BUF/HOU","John Kuhn":"GB","Shaun Alexander":"SEA",
+  "Edgerrin James":"IND","Clinton Portis":"WAS/DEN","Priest Holmes":"KC",
+  "Marshall Faulk":"STL/IND","Jerome Bettis":"PIT","Emmitt Smith":"DAL",
+  "LaDainian Tomlinson":"SD","Sammy Morris":"NE/MIA","Zack Crockett":"OAK",
+  "Cory Schlesinger":"DET","William Henderson":"GB","Garrison Hearst":"SF",
+  "Richie Anderson":"NYJ","Mack Strong":"SEA","Fred McAfee":"NO",
+  "Lorenzo Neal":"SD","Tony Richardson":"KC/MIN","Fred McCrary":"NO",
   
-  "Jerry Rice":"SF/OAK","Randy Moss":"MIN/NE","Terrell Owens":"SF/PHI/DAL"
-  "Calvin Johnson":"DET","Larry Fitzgerald":"ARI","Julio Jones":"ATL"
-  "Antonio Brown":"PIT","Andre Johnson":"HOU","Steve Smith Sr.":"CAR/BAL"
-  "Dez Bryant":"DAL","Odell Beckham Jr.":"NYG/CLE","DeAndre Hopkins":"HOU/ARI"
-  "Stefon Diggs":"BUF/MIN","DeSean Jackson":"PHI/WAS"
-  "Brandon Marshall":"CHI/NYJ","Wes Welker":"NE/DEN","Chad Johnson":"CIN"
-  "Hines Ward":"PIT","Victor Cruz":"NYG"
-  "Julian Edelman":"NE","Emmanuel Sanders":"DEN/SF","Demaryius Thomas":"DEN"
-  "Jordy Nelson":"GB","Randall Cobb":"GB/DAL","Golden Tate":"DET/SEA"
-  "Allen Robinson":"CHI/JAX","Robert Woods":"LAR/TEN","Adam Thielen":"MIN/CAR"
-  "Michael Thomas":"NO","JuJu Smith-Schuster":"PIT/KC","Sammy Watkins":"BUF/KC"
-  "Jarvis Landry":"MIA/CLE","Kenny Golladay":"DET/NYG"
-  "Reggie Wayne":"IND","Anquan Boldin":"ARI/BAL/SF"
-  "Torry Holt":"STL","Isaac Bruce":"STL","Marques Colston":"NO"
-  "Eric Decker":"DEN/NYJ","Pierre Garcon":"WAS/SF","A.J. Green":"CIN"
-  "T.Y. Hilton":"IND","Kelvin Benjamin":"CAR/BUF","Michael Crabtree":"SF/OAK"
-  "Mohamed Sanu":"ATL/NE"
-  "Rob Gronkowski":"NE/TB","Jason Witten":"DAL","Jimmy Graham":"NO/SEA"
-  "Antonio Gates":"SD","Greg Olsen":"CAR","Darren Waller":"LV/NYG"
-  "Zach Ertz":"PHI/ARI"
-  "Tony Gonzalez":"KC/ATL","Shannon Sharpe":"DEN/BAL"
-  "Delanie Walker":"TEN","Tyler Eifert":"CIN","Jordan Reed":"WAS"
-  "Jared Cook":"NO/LV","Eric Ebron":"DET/IND","Vernon Davis":"SF/WAS"
-  "Dallas Clark":"IND","Owen Daniels":"HOU/DEN","Heath Miller":"PIT"
+  "Jerry Rice":"SF/OAK","Randy Moss":"MIN/NE","Terrell Owens":"SF/PHI/DAL",
+  "Calvin Johnson":"DET","Larry Fitzgerald":"ARI","Julio Jones":"ATL",
+  "Antonio Brown":"PIT","Andre Johnson":"HOU","Steve Smith Sr.":"CAR/BAL",
+  "Dez Bryant":"DAL","Odell Beckham Jr.":"NYG/CLE","DeAndre Hopkins":"HOU/ARI",
+  "Stefon Diggs":"BUF/MIN","DeSean Jackson":"PHI/WAS",
+  "Brandon Marshall":"CHI/NYJ","Wes Welker":"NE/DEN","Chad Johnson":"CIN",
+  "Hines Ward":"PIT","Victor Cruz":"NYG",
+  "Julian Edelman":"NE","Emmanuel Sanders":"DEN/SF","Demaryius Thomas":"DEN",
+  "Jordy Nelson":"GB","Randall Cobb":"GB/DAL","Golden Tate":"DET/SEA",
+  "Allen Robinson":"CHI/JAX","Robert Woods":"LAR/TEN","Adam Thielen":"MIN/CAR",
+  "Michael Thomas":"NO","JuJu Smith-Schuster":"PIT/KC","Sammy Watkins":"BUF/KC",
+  "Jarvis Landry":"MIA/CLE","Kenny Golladay":"DET/NYG",
+  "Reggie Wayne":"IND","Anquan Boldin":"ARI/BAL/SF",
+  "Torry Holt":"STL","Isaac Bruce":"STL","Marques Colston":"NO",
+  "Eric Decker":"DEN/NYJ","Pierre Garcon":"WAS/SF","A.J. Green":"CIN",
+  "T.Y. Hilton":"IND","Kelvin Benjamin":"CAR/BUF","Michael Crabtree":"SF/OAK",
+  "Mohamed Sanu":"ATL/NE",
+  "Rob Gronkowski":"NE/TB","Jason Witten":"DAL","Jimmy Graham":"NO/SEA",
+  "Antonio Gates":"SD","Greg Olsen":"CAR","Darren Waller":"LV/NYG",
+  "Zach Ertz":"PHI/ARI",
+  "Tony Gonzalez":"KC/ATL","Shannon Sharpe":"DEN/BAL",
+  "Delanie Walker":"TEN","Tyler Eifert":"CIN","Jordan Reed":"WAS",
+  "Jared Cook":"NO/LV","Eric Ebron":"DET/IND","Vernon Davis":"SF/WAS",
+  "Dallas Clark":"IND","Owen Daniels":"HOU/DEN","Heath Miller":"PIT",
   "Benjamin Watson":"NE/NO","Martellus Bennett":"CHI/NE"
 };
 
@@ -152,8 +152,8 @@ const _RETIRED_TEAM_MAP = {
 const DAILY_RETIRED_POOL = EP_RETIRED
   .filter(p => p.last >= 2004 && RETIRED_ESPN_IDS[p.name])
   .map(p => ({
-    name: p.name
-    pos: p.pos
-    team: _RETIRED_TEAM_MAP[p.name] || "NFL"
+    name: p.name,
+    pos: p.pos,
+    team: _RETIRED_TEAM_MAP[p.name] || "NFL",
     id: RETIRED_ESPN_IDS[p.name]
   }));

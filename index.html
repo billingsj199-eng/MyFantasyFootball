@@ -4097,18 +4097,8 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Lake McRee']) COMBINE_DATA['Lake McRee'] = { school: 'USC', pos: 'TE', ht: '6-4', wt: 250, devy: true, eligYr: 2026, yr: 2026 };
   if (!COMBINE_DATA['J. Michael Sturdivant']) COMBINE_DATA['J. Michael Sturdivant'] = { pos: 'WR', devy: true, eligYr: 2026, yr: 2026 };
   if (!COMBINE_DATA['Kendrick Law']) COMBINE_DATA['Kendrick Law'] = { school: 'Alabama', pos: 'WR', devy: true, eligYr: 2026, yr: 2026 };
-  // NOTE: COLLEGE_STATS patch is BELOW, after college_stats.js loads
-  if (!COLLEGE_STATS['Bucky Irving']) COLLEGE_STATS['Bucky Irving'] = [];
-  COLLEGE_STATS['Bucky Irving'].push({yr:2021,tm:"Minnesota",conf:"Big Ten",gp:9,ra:81,ry:380,rtd:3,rec:5,rcy:35,fpts:62.0});
-  COLLEGE_STATS['Bucky Irving'].push({yr:2022,tm:"Oregon",conf:"Pac-12",gp:13,ra:152,ry:832,rtd:8,rec:19,rcy:157,rctd:1,fpts:162.4});
-  COLLEGE_STATS['Bucky Irving'].push({yr:2023,tm:"Oregon",conf:"Pac-12",gp:14,ra:252,ry:1180,rtd:11,rec:30,rcy:280,rctd:2,fl:2,fpts:235.0});
-  if (!COLLEGE_STATS['Christian Watson']) COLLEGE_STATS['Christian Watson'] = [];
-  COLLEGE_STATS['Christian Watson'].push({yr:2019,tm:"North Dakota State",conf:"MVFC",gp:10,rec:7,rcy:85,rctd:0,fpts:12.0});
-  COLLEGE_STATS['Christian Watson'].push({yr:2020,tm:"North Dakota State",conf:"MVFC",gp:6,rec:22,rcy:360,rctd:4,fpts:71.0});
-  COLLEGE_STATS['Christian Watson'].push({yr:2021,tm:"North Dakota State",conf:"MVFC",gp:12,ra:21,ry:152,rtd:1,rec:43,rcy:800,rctd:7,fpts:164.7});
-  if (!COLLEGE_STATS['Trey Lance']) COLLEGE_STATS['Trey Lance'] = [];
-  COLLEGE_STATS['Trey Lance'].push({yr:2019,tm:"North Dakota State",conf:"MVFC",gp:16,pa:287,pc:192,py:2786,ptd:28,int:0,ra:169,ry:1100,rtd:14,fl:1,fpts:415.4});
-  // Travis Hunter college stats set after college_stats.js loads (post line 4380)
+  // NOTE: COLLEGE_STATS patches moved BELOW, after college_stats.js loads (see post line ~4563)
+  // Travis Hunter college stats also set after college_stats.js loads
   COMBINE_DATA['Elijah Moore'] = { yr: 2021, school: 'Mississippi', pos: 'WR', ht: '5-10', wt: 178, draft: 34, dt: 'NYJ', forty: 4.35, bench: null, vert: 36.5, broad: 126, cone: 6.61, shuttle: 4.09 };
   if (COMBINE_DATA['Kenneth Gainwell']) { if (!COMBINE_DATA['Kenneth Gainwell'].ht) COMBINE_DATA['Kenneth Gainwell'].ht = '5-9'; if (!COMBINE_DATA['Kenneth Gainwell'].wt) COMBINE_DATA['Kenneth Gainwell'].wt = 201; }
   if (COMBINE_DATA['Larry Rountree']) { if (!COMBINE_DATA['Larry Rountree'].ht) COMBINE_DATA['Larry Rountree'].ht = '5-10'; if (!COMBINE_DATA['Larry Rountree'].wt) COMBINE_DATA['Larry Rountree'].wt = 211; }
@@ -4565,6 +4555,23 @@ if (typeof COMBINE_DATA !== 'undefined') {
 // === Travis Hunter — complete college stats (Jackson State + Colorado) ===
 // Must be after college_stats.js to override any partial data from CFBD pulls
 if (typeof COLLEGE_STATS !== 'undefined') {
+  // Bucky Irving, Christian Watson, Trey Lance patches (moved from earlier in file)
+  if (!COLLEGE_STATS['Bucky Irving']) COLLEGE_STATS['Bucky Irving'] = [];
+  if (COLLEGE_STATS['Bucky Irving'].length === 0) {
+    COLLEGE_STATS['Bucky Irving'].push({yr:2021,tm:"Minnesota",conf:"Big Ten",gp:9,ra:81,ry:380,rtd:3,rec:5,rcy:35,fpts:62.0});
+    COLLEGE_STATS['Bucky Irving'].push({yr:2022,tm:"Oregon",conf:"Pac-12",gp:13,ra:152,ry:832,rtd:8,rec:19,rcy:157,rctd:1,fpts:162.4});
+    COLLEGE_STATS['Bucky Irving'].push({yr:2023,tm:"Oregon",conf:"Pac-12",gp:14,ra:252,ry:1180,rtd:11,rec:30,rcy:280,rctd:2,fl:2,fpts:235.0});
+  }
+  if (!COLLEGE_STATS['Christian Watson']) COLLEGE_STATS['Christian Watson'] = [];
+  if (COLLEGE_STATS['Christian Watson'].length === 0) {
+    COLLEGE_STATS['Christian Watson'].push({yr:2019,tm:"North Dakota State",conf:"MVFC",gp:10,rec:7,rcy:85,rctd:0,fpts:12.0});
+    COLLEGE_STATS['Christian Watson'].push({yr:2020,tm:"North Dakota State",conf:"MVFC",gp:6,rec:22,rcy:360,rctd:4,fpts:71.0});
+    COLLEGE_STATS['Christian Watson'].push({yr:2021,tm:"North Dakota State",conf:"MVFC",gp:12,ra:21,ry:152,rtd:1,rec:43,rcy:800,rctd:7,fpts:164.7});
+  }
+  if (!COLLEGE_STATS['Trey Lance']) COLLEGE_STATS['Trey Lance'] = [];
+  if (COLLEGE_STATS['Trey Lance'].length === 0) {
+    COLLEGE_STATS['Trey Lance'].push({yr:2019,tm:"North Dakota State",conf:"MVFC",gp:16,pa:287,pc:192,py:2786,ptd:28,int:0,ra:169,ry:1100,rtd:14,fl:1,fpts:415.4});
+  }
   COLLEGE_STATS['Travis Hunter'] = [
     // Jackson State 2022 (PFF OFF 85.8, PASS 85.8 — 18 rec, 190 yds, 4 TD per PFF)
     {yr:2022,tm:"Jackson State",conf:"SWAC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:8,rtd:0,ra:2,rec:18,rcy:190,rctd:4,fl:0,fpts:52.8,pff:85.8},

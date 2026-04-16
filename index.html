@@ -22824,7 +22824,7 @@ window.fmtHeight = fmtHeight;
   const JM_WEIGHTS = {
     QB:  { dc: 0.34, prod: 0.14, breakout: 0.09, age: 0.07, ras: 0.07, qbRush: 0.07, colTrajectory: 0.06, bigTime: 0.05, size: 0.03, qbAccuracy: 0.03, pff: 0.02, turnoverRate: 0.02, conf: 0.01 },  // sum=1.00
     RB:  { dc: 0.30, prod: 0.14, breakout: 0.09, age: 0.08, dcAgeComposite: 0.06, rbRec: 0.05, ras: 0.05, pff: 0.04, totalColFpts: 0.04, mktShare: 0.02, improve: 0.02, elusive: 0.02, forcedMissed: 0.02, breakaway: 0.02, size: 0.01, yaco: 0.01, dominator: 0.01, colTrajectory: 0.01, conf: 0.01 },  // sum=1.00
-    WR:  { dc: 0.20, prod: 0.19, breakout: 0.18, yprr: 0.07, age: 0.07, routeGrade: 0.06, pff: 0.05, qbCtx: 0.03, contested: 0.03, dcAgeComposite: 0.03, colTrajectory: 0.03, totalColFpts: 0.02, conf: 0.02, ras: 0.01, yac: 0.01 },  // sum=1.00
+    WR:  { dc: 0.20, prod: 0.19, breakout: 0.18, yprr: 0.07, age: 0.07, routeGrade: 0.06, pff: 0.05, ras: 0.03, qbCtx: 0.03, contested: 0.03, dcAgeComposite: 0.03, colTrajectory: 0.02, conf: 0.02, totalColFpts: 0.02 },  // sum=1.00  // RAS 0.01→0.03 (low-RAS busts Burks/Reagor/Dotson); dropped yac 0.01, colTraj 0.03→0.02
     TE:  { dc: 0.26, ras: 0.10, breakout: 0.09, eff: 0.06, prod: 0.06, totalColFpts: 0.06, teRec: 0.05, contested: 0.05, teFinalRecYpg: 0.05, age: 0.05, yprr: 0.03, size: 0.03, qbCtx: 0.03, dcAgeComposite: 0.03, conf: 0.01, dropRate: 0.01, yac: 0.01, dominator: 0.01, colTrajectory: 0.01 }  // sum=1.00
   };
   window._JM_WEIGHTS = JM_WEIGHTS;
@@ -22887,7 +22887,7 @@ window.fmtHeight = fmtHeight;
     const params = {
       QB:  { elite: 20.0, good: 21.5, late: 23.5 },
       RB:  { elite: 19.5, good: 20.5, late: 22.0 },
-      WR:  { elite: 19.5, good: 20.5, late: 22.5 },
+      WR:  { elite: 19.5, good: 20.0, late: 22.5 },  // good tightened: 20.5→20.0 (busts avg 20.0, hits 19.1)
       TE:  { elite: 20.0, good: 21.5, late: 23.0 }
     };
     const p = params[pos] || params.WR;
@@ -22936,7 +22936,7 @@ window.fmtHeight = fmtHeight;
     const params = {
       QB:  { elite: 28, good: 22, avg: 16, floor: 8 },
       RB:  { elite: 22, good: 16, avg: 11, floor: 6 },
-      WR:  { elite: 18, good: 13, avg: 9,  floor: 5 },
+      WR:  { elite: 19.5, good: 13, avg: 9,  floor: 5 },  // elite raised: 18→19.5 (hits avg 20.15 ppg, busts 17.6)
       TE:  { elite: 14, good: 10, avg: 7,  floor: 3 }
     };
     const p = params[pos] || params.WR;
@@ -24108,11 +24108,19 @@ window.fmtHeight = fmtHeight;
       if (!hasBo) bustAdj -= 5;
       if (hasBo && boAge >= 22.5) bustAdj -= 6;
       else if (hasBo && boAge >= 21.5) bustAdj -= 4;
+      else if (hasBo && boAge >= 20.5) bustAdj -= 2;  // NEW: borderline late (Top-50 busts avg BO 20.0 vs hits 19.1)
       // "Athletic freak trap": high RAS + late/no breakout (Perriman, Kevin White, etc.)
       // Busts averaged 7.8 RAS vs hits 7.5 — busts are MORE athletic but can't produce
       if (p.ras != null && p.ras >= 9.0 && (!hasBo || boAge >= 21.5)) bustAdj -= 3;
       // Old + no breakout
       if (isOld && !hasBo) bustAdj -= 3;
+      // Day-2 WR with sub-threshold college production is a clean bust signal
+      // (Top-32 version audited out — caught hits Ridley/Aiyuk/Jeudy/Q.Johnston,
+      // only 1 bust N'Keal Harry. First-round capital too noisy for this rule.)
+      const _pickN = (typeof p.dr === 'number') ? p.dr : (p.dr === 'U' ? 999 : parseInt(p.dr));
+      if (!isNaN(_pickN) && p.bestPpg != null && p.bestPpg > 0) {
+        if (_pickN >= 33 && _pickN <= 50 && p.bestPpg < 15) bustAdj -= 2;
+      }
     }
 
     if (p.pos === 'TE') {
@@ -24245,7 +24253,22 @@ window.fmtHeight = fmtHeight;
       }
     }
 
-    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
+    // ═══ WR DC-PRODUCTION MISMATCH PENALTY (APPLIED) — Day-2 only ═══
+    // Pick 33-50 WRs with <15 college ppg is a high-confidence bust signal
+    // (Mingo, Thornton, Hamler; zero hits in audit).
+    // The Top-32 version was tested and REMOVED: it caught Ridley, Aiyuk, Jeudy,
+    // Q. Johnston (all hits) and only N'Keal Harry (bust). First-round capital
+    // papers over sub-threshold college production often enough that penalizing
+    // it is net harmful.
+    let dcProdPenalty = 0;
+    if (p.pos === 'WR' && p.bestPpg != null && p.bestPpg > 0) {
+      const _pickWr = (typeof p.dr === 'number') ? p.dr : (p.dr === 'U' ? 999 : parseInt(p.dr));
+      if (!isNaN(_pickWr)) {
+        if (_pickWr >= 33 && _pickWr <= 50 && p.bestPpg < 15) dcProdPenalty = -2;
+      }
+    }
+
+    const final = Math.max(0, Math.min(100, Math.round((blended + gpAdj + htPenalty + tmBonus + dcRasBonus + dcProdPenalty) * 10) / 10));
     // Low confidence if less than 50% of weight has data, or fewer than 5 of 22 components
     // For devy players, lower the threshold since DC/RAS/earlyDec are expected to be missing
     const _minDataCount = p.isDevy ? 3 : 5;
@@ -24253,8 +24276,8 @@ window.fmtHeight = fmtHeight;
     const lowConfidence = dataCoverage < _minCoverage || dataCount < _minDataCount;
 
     // Expose raw floor/ceiling (with adjustments) for blend ratio analysis
-    const floorFinal = Math.max(0, Math.min(100, Math.round((floorRaw + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
-    const ceilFinal = Math.max(0, Math.min(100, Math.round((ceilRaw + gpAdj + htPenalty + tmBonus + dcRasBonus) * 10) / 10));
+    const floorFinal = Math.max(0, Math.min(100, Math.round((floorRaw + gpAdj + htPenalty + tmBonus + dcRasBonus + dcProdPenalty) * 10) / 10));
+    const ceilFinal = Math.max(0, Math.min(100, Math.round((ceilRaw + gpAdj + htPenalty + tmBonus + dcRasBonus + dcProdPenalty) * 10) / 10));
     // Expose component scores for correlation analysis
     const _compScores = {};
     scores.forEach(s => { _compScores[s.key] = s.score; });

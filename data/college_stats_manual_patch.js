@@ -29,8 +29,11 @@
   // medium confidence — Wikipedia narrative; att/cmp not explicit
   _csReplace("Joe Flacco", [{yr:2004,tm:"Pittsburgh",conf:"Big East",gp:3,pa:4,pc:1,py:11,ptd:0,int:0},{yr:2006,tm:"Delaware",conf:"Colonial Athletic Association",gp:11,py:2783,ptd:18,int:10},{yr:2007,tm:"Delaware",conf:"Colonial Athletic Association",gp:15,py:4263,ptd:23,int:5}]);
 
+  // high confidence — Wikipedia per-season prose. Fixes CFBD wrong-identity bug (was matching Nebraska backup, not Louisville Heisman winner).
+  _csReplace("Lamar Jackson", [{yr:2015,tm:"Louisville",conf:"ACC",gp:12,pa:247,pc:135,py:1840,ptd:12,int:8,pct:0.55,ra:162,ry:960,rtd:11},{yr:2016,tm:"Louisville",conf:"ACC",gp:13,pa:409,pc:230,py:3543,ptd:30,int:9,pct:0.56,ra:260,ry:1571,rtd:21},{yr:2017,tm:"Louisville",conf:"ACC",gp:13,pa:430,pc:254,py:3660,ptd:27,int:10,pct:0.59,ra:232,ry:1601,rtd:18}]);
+
   // high confidence — Wikipedia per-season table
   _csReplace("Trey Lance", [{yr:2019,tm:"North Dakota State",conf:"Missouri Valley",gp:16,pa:287,pc:192,py:2786,ptd:28,int:0,ra:169,ry:1100,rtd:14,pct:0.67},{yr:2020,tm:"North Dakota State",conf:"Missouri Valley",gp:1,pa:30,pc:15,py:149,ptd:2,int:1,ra:15,ry:143,rtd:2,pct:0.5}]);
 
-  console.log('[college_stats_manual_patch] Replaced stats for 7 FCS/D2 players.');
+  console.log('[college_stats_manual_patch] Replaced stats for 8 FCS/D2 players.');
 })();

@@ -3715,7 +3715,9 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/active_team_history.js"></script>
 <script src="data/daily_retired_pool.js"></script>
 <script src="data/weekly_stats_active.js"></script>
-<script src="data/weekly_stats_retired.js"></script>
+<script src="data/weekly_stats_retired_1.js"></script>
+<script src="data/weekly_stats_retired_2.js"></script>
+<script src="data/weekly_stats_retired_3.js"></script>
 <script src="data/all_players.js"></script>
 <script src="data/combine_data.js"></script>
 <script src="data/historical_draft_picks.js"></script>
@@ -12725,6 +12727,11 @@ document.addEventListener('click', function(e) {
         const teams = pHist.map(h => toFullTeamName(h.t)).filter(Boolean);
         if (teams.length) return [...new Set(teams)];
       }
+    }
+    // Fallback: retired-player team map (uses "ABBR/ABBR/..." abbreviations)
+    if (window._RETIRED_TEAM_MAP && window._RETIRED_TEAM_MAP[name]) {
+      const teams = window._RETIRED_TEAM_MAP[name].split('/').map(t => toFullTeamName(t.trim())).filter(Boolean);
+      if (teams.length) return [...new Set(teams)];
     }
     // Last fallback: just current team (convert abbreviation to full name)
     const full = toFullTeamName(currentTeam);
@@ -26115,42 +26122,44 @@ window.fmtHeight = fmtHeight;
     _pmBuildCache = results;
     window._pmBuildCache = results; // Expose for console backtest access
 
-    // ═══ LANDING-SPOT v3 ADJUSTMENTS (data-driven decimals) ═══
-    // Three independent signals applied post-JM. Magnitudes are best-point-estimates
-    // of the within-round residual effect on first-3-season fpts (2017-2024 pool,
-    // n=174 RB / 260 WR), shrunk toward zero (n_prior=10) and scaled at 1 JM = 8 fpts.
+    // ═══ LANDING-SPOT v3 SIGNALS — WARNING CHIPS ONLY (no JM adjustment) ═══
+    // Three independent contextual signals surfaced as visual chips next to the
+    // prospect's name. They do NOT modify JM. Prior backtests found many historical
+    // "crowded" or "vacated" rooms still produced good fantasy players, so these are
+    // now short-term landing-context notes rather than model penalties/bonuses.
+    //
+    // Detection thresholds (unchanged — these gate the chip display):
     //
     // 1. ROOM (crowded depth chart, contextual + FA-aware):
-    //      RB crowd ≥ 0.2 → -2.3   (residual Δ -18.8 fpts, n=116; CI95 [-44.7, +2.1])
-    //      WR DROPPED — no residual signal at any threshold (best estimate ≈ 0)
+    //      RB crowd ≥ 0.2 → CROWDED chip
+    //      WR omitted — no residual signal was ever found.
     //    crowd = Σ (32/their_pick × contextual_weight) over same-pos same-team picks
     //    in prior 3 years, EXCLUDING players who departed via FA before draftYr.
     //
     // 2. BLOCK (prior-yr starter returning):
-    //      RB prior ≥ 100 fpts returning → -1.5  (residual Δ -12.0 fpts, n=41)
-    //      WR prior ≥ 170 fpts returning → -1.2  (residual Δ -9.3 fpts, n=54)
+    //      RB prior ≥ 100 fpts returning → BLOCKED chip
+    //      WR prior ≥ 170 fpts returning → BLOCKED chip
     //
     // 3. VACATE (prior-yr top performer ≥ threshold DEPARTED):
-    //      RB prior ≥ 100 fpts departed → +2.3  (residual Δ +18.6 fpts, n=5 — small sample!)
-    //      WR prior ≥ 100 fpts departed → +0.9  (residual Δ +7.2 fpts, n=17)
+    //      RB prior ≥ 100 fpts departed → VACATE chip
+    //      WR prior ≥ 100 fpts departed → VACATE chip
     //
-    // TE and QB excluded: no signals survived stratified analysis (small samples).
-    // None of the residual effects reach 95% statistical significance — these are
-    // best-point-estimates from shrunk stratified deltas, not certainties.
+    // TE and QB omitted from all three signals (no validated signals).
     //
-    // Stores: p.jmRaw (pre-adj), p.roomAdj/blockAdj/vacateAdj, p.totalLandingAdj
-    // plus p.crowdScore, p.blockerName/blockerFpts, p.vacatedName/vacatedFpts
+    // Stores: p.roomFlag/blockFlag/vacateFlag booleans; p.crowdScore,
+    // p.blockerName/blockerFpts, p.vacatedName/vacatedFpts for tooltip context.
+    // adj values are kept at 0 so the downstream JM-apply loop is a no-op.
     const _ROOM_THRESH_V2 = {
-      RB: { c: 0.2, adj: -2.3 }
+      RB: { c: 0.2, adj: 0 }
       // WR intentionally omitted — no residual signal
     };
     const _BLOCK_THRESH_V2 = {
-      RB: { starter: 100, adj: -1.5 },
-      WR: { starter: 170, adj: -1.2 }
+      RB: { starter: 100, adj: 0 },
+      WR: { starter: 170, adj: 0 }
     };
     const _VACATE_THRESH_V2 = {
-      RB: { vacated: 100, adj: +2.3 },
-      WR: { vacated: 100, adj: +0.9 }
+      RB: { vacated: 100, adj: 0 },
+      WR: { vacated: 100, adj: 0 }
     };
 
     // Build normalized PLAYER_TEAM_HISTORY lookup (if available)
@@ -26228,10 +26237,10 @@ window.fmtHeight = fmtHeight;
 
     // Compute S3-style contextual + FA-aware crowd score
     function _pmComputeRoomAdj(p) {
-      if (!p.nflTeam || !p.draftYr) return { crowd: 0, adj: 0 };
-      if (!_ROOM_THRESH_V2[p.pos]) return { crowd: 0, adj: 0 };
+      if (!p.nflTeam || !p.draftYr) return { crowd: 0, adj: 0, flag: false };
+      if (!_ROOM_THRESH_V2[p.pos]) return { crowd: 0, adj: 0, flag: false };
       const myPick = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
-      if (!myPick || myPick <= 0) return { crowd: 0, adj: 0 };
+      if (!myPick || myPick <= 0) return { crowd: 0, adj: 0, flag: false };
       let crowd = 0;
       // 1. Historical picks (HISTORICAL_DRAFT_PICKS), FA-aware + contextual-scaled
       if (typeof HISTORICAL_DRAFT_PICKS !== 'undefined') {
@@ -26270,37 +26279,37 @@ window.fmtHeight = fmtHeight;
         crowd += (32 / qPick) * wt;
       });
       const cfg = _ROOM_THRESH_V2[p.pos];
-      const adj = crowd >= cfg.c ? cfg.adj : 0;
-      return { crowd: Math.round(crowd * 10) / 10, adj };
+      const flag = crowd >= cfg.c;
+      return { crowd: Math.round(crowd * 10) / 10, adj: flag ? cfg.adj : 0, flag };
     }
 
-    // Compute block adjustment: prior-yr top performer still returning
+    // Compute block flag: prior-yr top performer still returning
     function _pmComputeBlockAdj(p) {
-      if (!p.nflTeam || !p.draftYr) return { adj: 0, name: null, fpts: 0 };
+      if (!p.nflTeam || !p.draftYr) return { adj: 0, name: null, fpts: 0, flag: false };
       const cfg = _BLOCK_THRESH_V2[p.pos];
-      if (!cfg) return { adj: 0, name: null, fpts: 0 };
+      if (!cfg) return { adj: 0, name: null, fpts: 0, flag: false };
       const priorYr = p.draftYr - 1;
       const top = _teamYearTop[p.nflTeam] && _teamYearTop[p.nflTeam][p.pos] && _teamYearTop[p.nflTeam][p.pos][priorYr];
-      if (!top) return { adj: 0, name: null, fpts: 0 };
-      if (top.fpts < cfg.starter) return { adj: 0, name: null, fpts: 0 };
-      if (top.name === p.name) return { adj: 0, name: null, fpts: 0 };
+      if (!top) return { adj: 0, name: null, fpts: 0, flag: false };
+      if (top.fpts < cfg.starter) return { adj: 0, name: null, fpts: 0, flag: false };
+      if (top.name === p.name) return { adj: 0, name: null, fpts: 0, flag: false };
       const returning = _pmOnTeamInYear(top.name, p.nflTeam, p.draftYr);
-      if (returning !== true) return { adj: 0, name: null, fpts: 0 };
-      return { adj: cfg.adj, name: top.name, fpts: Math.round(top.fpts) };
+      if (returning !== true) return { adj: 0, name: null, fpts: 0, flag: false };
+      return { adj: cfg.adj, name: top.name, fpts: Math.round(top.fpts), flag: true };
     }
 
-    // Compute vacate bonus: prior-yr top performer ≥ threshold DEPARTED
+    // Compute vacate flag: prior-yr top performer ≥ threshold DEPARTED
     function _pmComputeVacateAdj(p) {
-      if (!p.nflTeam || !p.draftYr) return { adj: 0, name: null, fpts: 0 };
+      if (!p.nflTeam || !p.draftYr) return { adj: 0, name: null, fpts: 0, flag: false };
       const cfg = _VACATE_THRESH_V2[p.pos];
-      if (!cfg) return { adj: 0, name: null, fpts: 0 };
+      if (!cfg) return { adj: 0, name: null, fpts: 0, flag: false };
       const priorYr = p.draftYr - 1;
       const top = _teamYearTop[p.nflTeam] && _teamYearTop[p.nflTeam][p.pos] && _teamYearTop[p.nflTeam][p.pos][priorYr];
-      if (!top) return { adj: 0, name: null, fpts: 0 };
-      if (top.fpts < cfg.vacated) return { adj: 0, name: null, fpts: 0 };
+      if (!top) return { adj: 0, name: null, fpts: 0, flag: false };
+      if (top.fpts < cfg.vacated) return { adj: 0, name: null, fpts: 0, flag: false };
       const returning = _pmOnTeamInYear(top.name, p.nflTeam, p.draftYr);
-      if (returning !== false) return { adj: 0, name: null, fpts: 0 };
-      return { adj: cfg.adj, name: top.name, fpts: Math.round(top.fpts) };
+      if (returning !== false) return { adj: 0, name: null, fpts: 0, flag: false };
+      return { adj: cfg.adj, name: top.name, fpts: Math.round(top.fpts), flag: true };
     }
 
     results.forEach(p => {
@@ -26309,16 +26318,20 @@ window.fmtHeight = fmtHeight;
       const v = _pmComputeVacateAdj(p);
       p.crowdScore = r.crowd;
       p.roomAdj = r.adj;
+      p.roomFlag = r.flag;
       p.blockAdj = b.adj;
       p.blockerName = b.name;
       p.blockerFpts = b.fpts;
+      p.blockFlag = b.flag;
       p.vacateAdj = v.adj;
       p.vacatedName = v.name;
       p.vacatedFpts = v.fpts;
+      p.vacateFlag = v.flag;
       const total = r.adj + b.adj + v.adj;
       p.totalLandingAdj = total;
+      // adj values are 0 in warning-only mode, so this block is a no-op.
+      // Kept for back-compat if thresholds ever regain non-zero values.
       if (total !== 0 && p.jm != null) {
-        // Preserve raw pre-adjustment JM
         if (p.jmRaw == null) p.jmRaw = p.jm;
         p.jm = Math.max(0, Math.min(100, Math.round((p.jm + total) * 10) / 10));
         if (p.jmFloor != null) p.jmFloor = Math.max(0, Math.min(100, Math.round((p.jmFloor + total) * 10) / 10));
@@ -28074,28 +28087,27 @@ window.fmtHeight = fmtHeight;
     function _pmRoomChip(p) {
       // Landing-spot v3 chips: ROOM (crowded), BLOCK (starter returning), VACATE (opportunity)
       // Only RB and WR show chips (positions where signals were validated).
-      // Magnitudes are decimals (data-driven residual effect sizes, see _ROOM_THRESH_V2 comment).
+      // Warning-only — these are short-term landing-context notes and do NOT affect JM.
       if (!p.nflTeam) return '';
       if (p.pos !== 'RB' && p.pos !== 'WR') return '';
       let out = '';
-      const fmt = (a) => (a>=0?'+':'') + (Math.abs(a) < 10 ? a.toFixed(1) : a.toFixed(0));
-      const mk = (label, adj, title, bg, fg) => {
-        return ' <span title="' + title + '" style="display:inline-block;font-size:.5rem;font-weight:700;letter-spacing:.3px;padding:1px 5px;border-radius:3px;background:' + bg + ';color:' + fg + ';vertical-align:middle;cursor:help">' + label + ' ' + fmt(adj) + '</span>';
+      const mk = (label, title, bg, fg) => {
+        return ' <span title="' + title + '" style="display:inline-block;font-size:.5rem;font-weight:700;letter-spacing:.3px;padding:1px 5px;border-radius:3px;background:' + bg + ';color:' + fg + ';vertical-align:middle;cursor:help">' + label + '</span>';
       };
       // Room (RB only in v3 — WR has no residual signal)
-      if (p.roomAdj && p.roomAdj !== 0) {
+      if (p.roomFlag) {
         const crowd = p.crowdScore != null ? p.crowdScore.toFixed(1) : '0';
-        out += mk('CROWDED', p.roomAdj, 'Crowded ' + p.pos + ' room at ' + p.nflTeam + ' (crowd=' + crowd + ') — prior 3yr draft capital overlaps, FA-adjusted. JM penalty derived from within-round residual effect (n=116).', 'rgba(251,146,60,.16)', '#fb923c');
+        out += mk('CROWDED', 'Crowded ' + p.pos + ' room at ' + p.nflTeam + ' (crowd=' + crowd + ') — prior 3yr draft capital overlaps, FA-adjusted. Context flag only — does not affect JM.', 'rgba(251,146,60,.16)', '#fb923c');
       }
       // Block
-      if (p.blockAdj && p.blockAdj !== 0) {
-        const title = 'Blocked by ' + (p.blockerName || 'returning starter') + ' (' + p.blockerFpts + ' fpts prior year, still on roster). JM penalty from within-round residual analysis.';
-        out += mk('BLOCKED', p.blockAdj, title, 'rgba(239,68,68,.18)', '#ef4444');
+      if (p.blockFlag) {
+        const title = 'Blocked by ' + (p.blockerName || 'returning starter') + ' (' + p.blockerFpts + ' fpts prior year, still on roster). Context flag only — does not affect JM.';
+        out += mk('BLOCKED', title, 'rgba(239,68,68,.18)', '#ef4444');
       }
       // Vacate
-      if (p.vacateAdj && p.vacateAdj !== 0) {
-        const title = 'Vacated opportunity: ' + (p.vacatedName || 'prior top performer') + ' (' + p.vacatedFpts + ' fpts) departed. JM bonus from within-round residual analysis.';
-        out += mk('VACATE', p.vacateAdj, title, 'rgba(34,197,94,.16)', '#22c55e');
+      if (p.vacateFlag) {
+        const title = 'Vacated opportunity: ' + (p.vacatedName || 'prior top performer') + ' (' + p.vacatedFpts + ' fpts) departed. Context flag only — does not affect JM.';
+        out += mk('VACATE', title, 'rgba(34,197,94,.16)', '#22c55e');
       }
       return out;
     }

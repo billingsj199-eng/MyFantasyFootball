@@ -28022,48 +28022,7 @@ window.fmtHeight = fmtHeight;
     const _pmIsSignedIn = !!window._authCurrentUser;
     const _pmBlurCutoff = 10;
     const _pmShouldBlur = !_pmIsPremium;
-    // Historical comp cache: for each 2026 prospect, find nearest historical
-    // match by same-position JM/age/DC/PPG distance. Cached per-render so we
-    // don't re-scan on every row.
-    const _pmCompCache = (function() {
-      const out = {};
-      try {
-        const all = (window._pmBuildCache && window._pmBuildCache.length) ? window._pmBuildCache : null;
-        if (!all) return out;
-        data.forEach(function(me) {
-          if (me.draftYr !== 2026 || me.jm == null || me.lowConfidence) return;
-          const candidates = all.filter(function(p) {
-            if (p.name === me.name || p.pos !== me.pos) return false;
-            if (p.jm == null || p.isDevy || p.isCollege || p.lowConfidence) return false;
-            if (p.draftYr == null || p.draftYr < 2015 || p.draftYr > 2024) return false;
-            return true;
-          });
-          if (!candidates.length) return;
-          const myDr = (typeof me.dr === 'number') ? me.dr : parseInt(me.dr);
-          const scored = candidates.map(function(p) {
-            let dist = 0;
-            dist += Math.abs((p.jm || 0) - me.jm) * 3;
-            if (me.age && p.age) dist += Math.abs(p.age - me.age) * 5;
-            const pDr = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
-            if (!isNaN(myDr) && !isNaN(pDr)) dist += Math.abs(pDr - myDr) * 0.3;
-            if (me.bestPpg && p.bestPpg) dist += Math.abs(p.bestPpg - me.bestPpg) * 0.5;
-            return { name: p.name, jm: p.jm, draftYr: p.draftYr, dist: dist };
-          }).sort(function(a, b) { return a.dist - b.dist; });
-          out[me.name] = scored.slice(0, 3);
-        });
-      } catch (_e) {}
-      return out;
-    })();
-    function _pmCompLine(p) {
-      const comps = _pmCompCache[p.name];
-      if (!comps || !comps.length) return '';
-      const top = comps[0];
-      const tipList = comps.map(function(c) {
-        return c.name + " '" + String(c.draftYr).slice(2) + ' (JM ' + c.jm.toFixed(0) + ')';
-      }).join(' · ');
-      const tip = 'Nearest JM comps: ' + tipList;
-      return '<div title="' + tip + '" style="font-size:.5rem;color:var(--text2);opacity:.75;margin-top:1px;cursor:help;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">≈ ' + top.name + " '" + String(top.draftYr).slice(2) + '</div>';
-    }
+    // (Inline comp line removed — player card modal has the full historical comp panel.)
 
     // Historical JM→pick distribution per position. Used for Steal/Reach
     // indicator once a 2026 prospect has DC entered. For each position, collect
@@ -28207,7 +28166,7 @@ window.fmtHeight = fmtHeight;
       cols.forEach(c => {
         switch (c.key) {
           case 'name':
-            rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span>${_pmTeamChip(p)}${_pmRoomChip(p)}${_pmStealReachBadge(p)}${_pmCoverageChip(p)}${_pmCompLine(p)}</td>`;
+            rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span>${_pmTeamChip(p)}${_pmRoomChip(p)}${_pmStealReachBadge(p)}${_pmCoverageChip(p)}</td>`;
             break;
           case 'jm':
             if (p.jm != null) {

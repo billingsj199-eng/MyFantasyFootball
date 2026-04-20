@@ -2670,8 +2670,8 @@ CLEAR
 <span class="pm-toggle-label">Season Pts</span>
 </div>
 <div class="pm-scoring-tabs" id="pmScoringTabs">
-<button class="pm-scoring-btn" data-pmscoring="ppr">PPR</button>
-<button class="pm-scoring-btn active" data-pmscoring="half">HALF</button>
+<button class="pm-scoring-btn active" data-pmscoring="ppr">PPR</button>
+<button class="pm-scoring-btn" data-pmscoring="half">HALF</button>
 <button class="pm-scoring-btn" data-pmscoring="std">STD</button>
 </div>
 <div class="pm-search-wrap">
@@ -3724,6 +3724,8 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Roman Hemby'] && !COMBINE_DATA['Roman Hemby'].ras) COMBINE_DATA['Roman Hemby'].ras = 6.24;
   if (COMBINE_DATA['Roydell Williams'] && !COMBINE_DATA['Roydell Williams'].ras) COMBINE_DATA['Roydell Williams'].ras = 7.01;
   if (COMBINE_DATA['Sebastian Brown'] && !COMBINE_DATA['Sebastian Brown'].ras) COMBINE_DATA['Sebastian Brown'].ras = 4.72;
+  // NOTE: PFF apostrophe-name alias fixes live in the pff_grades.js patch block
+  // (after the script tag loads), not here.
   // Michael Penix: D array + LEGEND_BIRTH_YEARS use "Michael Penix" (no Jr.)
   // but COMBINE_DATA has good data under "Michael Penix Jr." and bad data under "Michael Penix" (yr:2000)
   // Fix: overwrite the non-Jr. entry with Jr.'s correct data
@@ -5388,6 +5390,17 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
 <script src="data/pff_grades.js"></script>
 <script>
 // PFF grade patches for players missing from generated file
+// Apostrophe-name alias fixes: pff_grades.js truncated names with leading apostrophes
+// (e.g. "Le'Veon Moss" -> "Veon Moss", "Ja'Kobi Lane" -> "Kobi Lane"). Copy broken
+// keys over to the correct canonical names so JM lookups find them.
+if (typeof _PFF_RB_GRADES !== 'undefined') {
+  if (!_PFF_RB_GRADES["J'Mari Taylor"] && _PFF_RB_GRADES['Mari Taylor']) _PFF_RB_GRADES["J'Mari Taylor"] = _PFF_RB_GRADES['Mari Taylor'];
+  if (!_PFF_RB_GRADES["Le'Veon Moss"]  && _PFF_RB_GRADES['Veon Moss'])  _PFF_RB_GRADES["Le'Veon Moss"]  = _PFF_RB_GRADES['Veon Moss'];
+}
+if (typeof _PFF_WR_GRADES !== 'undefined') {
+  if (!_PFF_WR_GRADES["Ja'Kobi Lane"]       && _PFF_WR_GRADES['Kobi Lane'])       _PFF_WR_GRADES["Ja'Kobi Lane"]       = _PFF_WR_GRADES['Kobi Lane'];
+  if (!_PFF_WR_GRADES["De'Zhaun Stribling"] && _PFF_WR_GRADES['Zhaun Stribling']) _PFF_WR_GRADES["De'Zhaun Stribling"] = _PFF_WR_GRADES['Zhaun Stribling'];
+}
 if (typeof _PFF_WR_GRADES !== 'undefined') {
   if (!_PFF_WR_GRADES['DJ Moore']) _PFF_WR_GRADES['DJ Moore'] = 83.2;
   if (!_PFF_WR_GRADES['D.J. Moore']) _PFF_WR_GRADES['D.J. Moore'] = 83.2;
@@ -22570,7 +22583,7 @@ window.fmtHeight = fmtHeight;
   let pmPos = 'QB';
   let pmDraftClass = 'all'; // 'all', '2026', '2025', ... or 'older'
   let pmTotals = false; // false = per game, true = totals
-  let pmScoring = 'half';
+  let pmScoring = 'ppr';
   let pmSort = { col: 'jm', dir: 'desc' };
   let pmSearchVal = '';
   let pmTmMin = 0;
@@ -22994,15 +23007,31 @@ window.fmtHeight = fmtHeight;
 
   // Sub-score: College Production (Best PPG) → 0-100
   // Production thresholds remain similar — this is the most stable component across eras
+  // Scoring-mode factor for scaling production / breakout thresholds.
+  // Calibrated so JM's production sub-score stays stable across PPR / HALF / STD.
+  // Factors = avg bestPpg shift vs HALF baseline, measured on the 2026 class
+  // (QB +0%, RB +5.6%, WR +18.8%, TE +22.4% when moving HALF -> PPR).
+  function _jmScoringFactor(pos) {
+    const mode = (typeof pmScoring !== 'undefined') ? pmScoring : 'half';
+    const table = {
+      half: { QB:1.00, RB:1.00, WR:1.00, TE:1.00 },
+      ppr:  { QB:1.00, RB:1.06, WR:1.19, TE:1.22 },
+      std:  { QB:1.00, RB:0.94, WR:0.81, TE:0.78 }
+    };
+    return ((table[mode] || table.half)[pos]) || 1.0;
+  }
+
   function jmProduction(bestPpg, pos) {
     if (bestPpg == null || bestPpg === 0) return 0;
-    const params = {
+    const baseParams = {
       QB:  { elite: 28, good: 22, avg: 16, floor: 8 },
       RB:  { elite: 22, good: 16, avg: 11, floor: 6 },
       WR:  { elite: 19.5, good: 13, avg: 9,  floor: 5 },  // elite raised: 18→19.5 (hits avg 20.15 ppg, busts 17.6)
       TE:  { elite: 14, good: 10, avg: 7,  floor: 3 }
     };
-    const p = params[pos] || params.WR;
+    const b = baseParams[pos] || baseParams.WR;
+    const s = _jmScoringFactor(pos);
+    const p = { elite: b.elite * s, good: b.good * s, avg: b.avg * s, floor: b.floor * s };
     if (bestPpg >= p.elite) return Math.min(100, 85 + (bestPpg - p.elite) / (p.elite * 0.3) * 15);
     if (bestPpg >= p.good) return 65 + (bestPpg - p.good) / (p.elite - p.good) * 20;
     if (bestPpg >= p.avg) return 40 + (bestPpg - p.avg) / (p.good - p.avg) * 25;
@@ -23875,7 +23904,8 @@ window.fmtHeight = fmtHeight;
   function jmEarlyDeclare(numSeasons, age, bestPpg, pos) {
     if (numSeasons == null || numSeasons < 1) return null;
     const prodThresh = { QB: 18, RB: 12, WR: 10, TE: 7 };
-    const thresh = prodThresh[pos] || 10;
+    const _edScale = (typeof _jmScoringFactor === 'function') ? _jmScoringFactor(pos) : 1.0;
+    const thresh = (prodThresh[pos] || 10) * _edScale;
     const hadProd = bestPpg != null && bestPpg >= thresh;
     const wasYoung = age != null && age <= 21.5;
 
@@ -25107,8 +25137,9 @@ window.fmtHeight = fmtHeight;
       // Breakout age: earliest season with PPG near or above threshold
       // Uses a graduated curve instead of hard cutoff — a player at 11.9 WR PPG
       // shouldn't be treated completely differently from one at 12.1
-      const _boThresh = { QB: 22, RB: 10, WR: 12, TE: 8.5 };
-      const boThresh = _boThresh[pos] || 12;
+      const _boThreshBase = { QB: 22, RB: 10, WR: 12, TE: 8.5 };
+      const _boScale = (typeof _jmScoringFactor === 'function') ? _jmScoringFactor(pos) : 1.0;
+      const boThresh = (_boThreshBase[pos] || 12) * _boScale;
       const boSoftFloor = boThresh * 0.75; // 75% of threshold = minimum for "near breakout"
       let breakoutYr = null;
       let breakoutPpg = null; // track how strong the breakout was
@@ -25823,6 +25854,130 @@ window.fmtHeight = fmtHeight;
     window._pmBuildCache = buildProspectData();
   };
 
+  // === BUST/SLEEPER RETROSPECTIVE ===
+  // Measures whether applying bustAdj + sleeperAdj to JM scores improves hit
+  // prediction on recent held-out classes (2023-2024). Prints to console,
+  // returns summary object. Run from console: window._bustSleeperRetrospect()
+  //
+  // Methodology:
+  //   1. Take every 2023-2024 drafted non-devy/non-college prospect with JM + career data
+  //   2. Define HIT = best fpts in first 2 NFL seasons >= pos threshold
+  //      (2 yrs not 3 — 2024 class only has 1 NFL year yet; we use seasons
+  //      available and normalize)
+  //   3. Compare mean-hit-rate when top-N ranked by rawJM vs adjustedJM = rawJM + bustAdj + sleeperAdj
+  //   4. Also split: high-bust (bustAdj <= -5) hit rate vs rest of their JM tier
+  //      high-sleeper (sleeperAdj >= 3) hit rate vs rest of their JM tier
+  //   5. Report per-position results
+  window._bustSleeperRetrospect = function() {
+    if (!window._pmBuildCache || !window._pmBuildCache.length) {
+      console.error('[Retrospect] _pmBuildCache not ready. Visit the prospect model page first.');
+      return null;
+    }
+    const _hitThreshR = { QB: 200, RB: 170, WR: 170, TE: 120 };
+    const _dMapR = {};
+    D.forEach(d => { if (d.n) _dMapR[d.n] = d; });
+
+    // Build sample pool
+    const pool = [];
+    window._pmBuildCache.forEach(p => {
+      if (p.jm == null || p.lowConfidence) return;
+      if (p.isDevy || p.isCollege) return;
+      if (p.draftYr !== 2023 && p.draftYr !== 2024) return;
+      const d = _dMapR[p.name];
+      if (!d || !d.career || !d.career.length) return;
+      const early = d.career.filter(s => s.yr >= p.draftYr && s.yr < p.draftYr + 2);
+      if (!early.length) return;
+      const bestSzn = Math.max(...early.map(s => s.fpts || 0));
+      const thresh = _hitThreshR[p.pos] || 170;
+      // Normalize 2024 (1 yr) vs 2023 (2 yr) — allow 70% of threshold for 2024
+      const adjThresh = (p.draftYr === 2024) ? thresh * 0.70 : thresh;
+      const isHit = bestSzn >= adjThresh;
+      const rawJm = p.jm;
+      const adjJm = p.jm + (p.bustAdj || 0) + (p.sleeperAdj || 0);
+      pool.push({
+        name: p.name, pos: p.pos, draftYr: p.draftYr, dr: p.dr,
+        rawJm, adjJm, bustAdj: p.bustAdj || 0, sleeperAdj: p.sleeperAdj || 0,
+        bestSzn, adjThresh, isHit
+      });
+    });
+    if (!pool.length) {
+      console.error('[Retrospect] No qualifying prospects in 2023-2024 pool');
+      return null;
+    }
+
+    function topNHitRate(arr, scoreKey, nPct) {
+      const s = arr.slice().sort((a, b) => b[scoreKey] - a[scoreKey]);
+      const n = Math.max(1, Math.round(s.length * nPct));
+      const top = s.slice(0, n);
+      const hits = top.filter(x => x.isHit).length;
+      return { n: top.length, hits, rate: Math.round(hits / top.length * 1000) / 10 };
+    }
+    function splitRate(arr, predFn) {
+      const match = arr.filter(predFn);
+      const other = arr.filter(x => !predFn(x));
+      const rate = a => a.length ? Math.round(a.filter(x => x.isHit).length / a.length * 1000) / 10 : null;
+      return { match: { n: match.length, hits: match.filter(x => x.isHit).length, rate: rate(match) },
+               other: { n: other.length, hits: other.filter(x => x.isHit).length, rate: rate(other) } };
+    }
+
+    const positions = ['ALL', 'QB', 'RB', 'WR', 'TE'];
+    const summary = {};
+    console.log('\n═══ BUST/SLEEPER RETROSPECTIVE (2023-2024 CLASSES) ═══');
+    console.log('Sample: ' + pool.length + ' prospects | Hit = best first-2yr fpts >= pos threshold');
+    console.log('');
+
+    positions.forEach(pos => {
+      const subset = pos === 'ALL' ? pool : pool.filter(x => x.pos === pos);
+      if (subset.length < 6) {
+        console.log('[' + pos + '] n=' + subset.length + ' (too small, skipping)');
+        return;
+      }
+      const baseHit = Math.round(subset.filter(x => x.isHit).length / subset.length * 1000) / 10;
+      // Top quartile rank tests
+      const rawTop = topNHitRate(subset, 'rawJm', 0.25);
+      const adjTop = topNHitRate(subset, 'adjJm', 0.25);
+      const rawTop50 = topNHitRate(subset, 'rawJm', 0.50);
+      const adjTop50 = topNHitRate(subset, 'adjJm', 0.50);
+      // Bust/sleeper signal tests
+      const bustSplit = splitRate(subset, x => x.bustAdj <= -5);
+      const sleeperSplit = splitRate(subset, x => x.sleeperAdj >= 3);
+      summary[pos] = {
+        n: subset.length, baseHitRate: baseHit,
+        topQByRawJm: rawTop, topQByAdjJm: adjTop,
+        topHalfByRawJm: rawTop50, topHalfByAdjJm: adjTop50,
+        highBust: bustSplit, highSleeper: sleeperSplit
+      };
+      console.log('─── ' + pos + ' (n=' + subset.length + ', base hit rate ' + baseHit + '%) ───');
+      console.log('  Top 25% by rawJm:  ' + rawTop.hits + '/' + rawTop.n + ' = ' + rawTop.rate + '%');
+      console.log('  Top 25% by adjJm:  ' + adjTop.hits + '/' + adjTop.n + ' = ' + adjTop.rate + '% ' + (adjTop.rate > rawTop.rate ? '(↑ ' + (adjTop.rate - rawTop.rate).toFixed(1) + ')' : adjTop.rate < rawTop.rate ? '(↓ ' + (rawTop.rate - adjTop.rate).toFixed(1) + ')' : '(=)'));
+      console.log('  Top 50% by rawJm:  ' + rawTop50.hits + '/' + rawTop50.n + ' = ' + rawTop50.rate + '%');
+      console.log('  Top 50% by adjJm:  ' + adjTop50.hits + '/' + adjTop50.n + ' = ' + adjTop50.rate + '% ' + (adjTop50.rate > rawTop50.rate ? '(↑ ' + (adjTop50.rate - rawTop50.rate).toFixed(1) + ')' : adjTop50.rate < rawTop50.rate ? '(↓ ' + (rawTop50.rate - adjTop50.rate).toFixed(1) + ')' : '(=)'));
+      if (bustSplit.match.n >= 3) {
+        console.log('  High-bust (≤-5):  ' + bustSplit.match.hits + '/' + bustSplit.match.n + ' = ' + bustSplit.match.rate + '% vs rest ' + bustSplit.other.rate + '% (Δ ' + (bustSplit.match.rate - bustSplit.other.rate).toFixed(1) + ')');
+      }
+      if (sleeperSplit.match.n >= 3) {
+        console.log('  High-sleeper (≥3): ' + sleeperSplit.match.hits + '/' + sleeperSplit.match.n + ' = ' + sleeperSplit.match.rate + '% vs rest ' + sleeperSplit.other.rate + '% (Δ +' + (sleeperSplit.match.rate - sleeperSplit.other.rate).toFixed(1) + ')');
+      }
+      console.log('');
+    });
+
+    // Recommendation heuristic
+    const all = summary.ALL;
+    if (all) {
+      const diff25 = all.topQByAdjJm.rate - all.topQByRawJm.rate;
+      const diff50 = all.topHalfByAdjJm.rate - all.topHalfByRawJm.rate;
+      console.log('═══ VERDICT ═══');
+      if (diff25 >= 3 && diff50 >= 1) {
+        console.log('✓ APPLY: adjJm improves top-quartile hit rate by ' + diff25.toFixed(1) + 'pp and top-half by ' + diff50.toFixed(1) + 'pp');
+      } else if (diff25 <= -3 || diff50 <= -3) {
+        console.log('✗ DO NOT APPLY: adjJm materially worsens prediction (top-25: ' + diff25.toFixed(1) + 'pp, top-50: ' + diff50.toFixed(1) + 'pp)');
+      } else {
+        console.log('~ NEUTRAL: adjJm does not meaningfully shift prediction (top-25: ' + diff25.toFixed(1) + 'pp, top-50: ' + diff50.toFixed(1) + 'pp). Keep as diagnostic-only.');
+      }
+    }
+    return summary;
+  };
+
   // Column definitions per position
   function getColumns(pos, isTotals) {
     const cols = [
@@ -26314,6 +26469,142 @@ window.fmtHeight = fmtHeight;
     const _pmIsSignedIn = !!window._authCurrentUser;
     const _pmBlurCutoff = 10;
     const _pmShouldBlur = !_pmIsPremium;
+    // Historical comp cache: for each 2026 prospect, find nearest historical
+    // match by same-position JM/age/DC/PPG distance. Cached per-render so we
+    // don't re-scan on every row.
+    const _pmCompCache = (function() {
+      const out = {};
+      try {
+        const all = (window._pmBuildCache && window._pmBuildCache.length) ? window._pmBuildCache : null;
+        if (!all) return out;
+        data.forEach(function(me) {
+          if (me.draftYr !== 2026 || me.jm == null || me.lowConfidence) return;
+          const candidates = all.filter(function(p) {
+            if (p.name === me.name || p.pos !== me.pos) return false;
+            if (p.jm == null || p.isDevy || p.isCollege || p.lowConfidence) return false;
+            if (p.draftYr == null || p.draftYr < 2015 || p.draftYr > 2024) return false;
+            return true;
+          });
+          if (!candidates.length) return;
+          const myDr = (typeof me.dr === 'number') ? me.dr : parseInt(me.dr);
+          const scored = candidates.map(function(p) {
+            let dist = 0;
+            dist += Math.abs((p.jm || 0) - me.jm) * 3;
+            if (me.age && p.age) dist += Math.abs(p.age - me.age) * 5;
+            const pDr = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+            if (!isNaN(myDr) && !isNaN(pDr)) dist += Math.abs(pDr - myDr) * 0.3;
+            if (me.bestPpg && p.bestPpg) dist += Math.abs(p.bestPpg - me.bestPpg) * 0.5;
+            return { name: p.name, jm: p.jm, draftYr: p.draftYr, dist: dist };
+          }).sort(function(a, b) { return a.dist - b.dist; });
+          out[me.name] = scored.slice(0, 3);
+        });
+      } catch (_e) {}
+      return out;
+    })();
+    function _pmCompLine(p) {
+      const comps = _pmCompCache[p.name];
+      if (!comps || !comps.length) return '';
+      const top = comps[0];
+      const tipList = comps.map(function(c) {
+        return c.name + " '" + String(c.draftYr).slice(2) + ' (JM ' + c.jm.toFixed(0) + ')';
+      }).join(' · ');
+      const tip = 'Nearest JM comps: ' + tipList;
+      return '<div title="' + tip + '" style="font-size:.5rem;color:var(--text2);opacity:.75;margin-top:1px;cursor:help;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">≈ ' + top.name + " '" + String(top.draftYr).slice(2) + '</div>';
+    }
+
+    // Historical JM→pick distribution per position. Used for Steal/Reach
+    // indicator once a 2026 prospect has DC entered. For each position, collect
+    // all historical (2017-2024) (jm, pick) pairs; then k-nearest lookup by JM.
+    const _pmPickHist = (function() {
+      const byPos = { QB: [], RB: [], WR: [], TE: [] };
+      try {
+        const all = (window._pmBuildCache && window._pmBuildCache.length) ? window._pmBuildCache : [];
+        all.forEach(function(p) {
+          if (!byPos[p.pos]) return;
+          if (p.jm == null || p.lowConfidence || p.isDevy || p.isCollege) return;
+          if (p.draftYr == null || p.draftYr < 2017 || p.draftYr > 2024) return;
+          const pk = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+          if (isNaN(pk) || pk < 1 || pk > 262) return;
+          byPos[p.pos].push({ jm: p.jm, pk: pk });
+        });
+      } catch (_e) {}
+      return byPos;
+    })();
+    function _pmPctile(arr, q) {
+      if (!arr.length) return null;
+      const s = arr.slice().sort(function(a, b) { return a - b; });
+      const idx = Math.min(s.length - 1, Math.max(0, Math.floor(q * (s.length - 1))));
+      return s[idx];
+    }
+    function _pmExpectedPickRange(p) {
+      const pool = _pmPickHist[p.pos] || [];
+      if (p.jm == null || !pool.length) return null;
+      // Widen the JM window until we have enough neighbors (min 8).
+      let jmWin = 3;
+      let matches = pool.filter(function(h) { return Math.abs(h.jm - p.jm) <= jmWin; });
+      while (matches.length < 8 && jmWin < 20) {
+        jmWin += 2;
+        matches = pool.filter(function(h) { return Math.abs(h.jm - p.jm) <= jmWin; });
+      }
+      if (matches.length < 5) return null;
+      const picks = matches.map(function(h) { return h.pk; });
+      return {
+        p25: _pmPctile(picks, 0.25),
+        p50: _pmPctile(picks, 0.50),
+        p75: _pmPctile(picks, 0.75),
+        n: picks.length,
+        jmWin: jmWin
+      };
+    }
+    function _pmStealReachBadge(p) {
+      if (p.draftYr !== 2026) return '';
+      if (p.jm == null || p.lowConfidence) return '';
+      const actualPk = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+      if (isNaN(actualPk) || actualPk < 1 || actualPk > 262) return '';
+      const range = _pmExpectedPickRange(p);
+      if (!range) return '';
+      let label = '', bg = '', fg = '', tipExtra = '';
+      if (actualPk > range.p75) {
+        label = 'STEAL';
+        fg = '#22c55e';
+        bg = 'rgba(34,197,94,.14)';
+        tipExtra = ' — lasted longer than expected';
+      } else if (actualPk < range.p25) {
+        label = 'REACH';
+        fg = '#ef4444';
+        bg = 'rgba(239,68,68,.14)';
+        tipExtra = ' — taken earlier than expected';
+      } else {
+        label = 'FAIR';
+        fg = '#94a3b8';
+        bg = 'rgba(148,163,184,.12)';
+        tipExtra = '';
+      }
+      const tip = 'Actual pick ' + actualPk + ' vs expected range ' + range.p25 + '-' + range.p75 + ' (median ' + range.p50 + ', n=' + range.n + ')' + tipExtra;
+      return ' <span title="' + tip + '" style="display:inline-block;font-size:.5rem;font-weight:800;letter-spacing:.5px;padding:1px 5px;border-radius:3px;background:' + bg + ';color:' + fg + ';vertical-align:middle;cursor:help">' + label + '</span>';
+    }
+
+    // Coverage chip: show missing data sources for 2026 + devy prospects.
+    // Letters: R=RAS, P=PFF grade, B=Birthday (age), D=Draft Capital.
+    // DC check only applies post-draft for 2026 (gated by hasAnyDC flag).
+    const _pmHasAnyDC = (typeof _dcCache !== 'undefined') && Object.keys(_dcCache || {}).length > 0;
+    function _pmCoverageChip(p) {
+      const show2026 = (p.draftYr === 2026);
+      const showDevy = !!p.isDevy;
+      if (!show2026 && !showDevy) return '';
+      const miss = [];
+      if (p.ras == null) miss.push(['R', 'RAS']);
+      if (p.pffGrade == null && !showDevy) miss.push(['P', 'PFF grade']);
+      if (p.age == null) miss.push(['B', 'Birthday']);
+      // Only flag DC once at least one prospect has a DC assigned (post-draft)
+      if (show2026 && _pmHasAnyDC && (p.dr == null || p.dr === 'U')) miss.push(['D', 'Draft capital']);
+      if (!miss.length) return '';
+      const tip = 'Missing: ' + miss.map(m => m[1]).join(', ');
+      const chips = miss.map(m =>
+        '<span style="display:inline-block;font-size:.48rem;font-weight:700;width:10px;height:10px;line-height:10px;text-align:center;border-radius:3px;background:rgba(251,146,60,.18);color:#fb923c;border:1px solid rgba(251,146,60,.35);margin-left:2px">' + m[0] + '</span>'
+      ).join('');
+      return ' <span title="' + tip + '" style="cursor:help;white-space:nowrap">' + chips + '</span>';
+    }
     const _pmRenderLimit = window._pmNoLimit ? data.length : 100; // Initial render limit for performance
     const _pmShowAll = data.length <= _pmRenderLimit;
     const _pmRenderData = _pmShowAll ? data : data.slice(0, _pmRenderLimit);
@@ -26331,7 +26622,7 @@ window.fmtHeight = fmtHeight;
       cols.forEach(c => {
         switch (c.key) {
           case 'name':
-            rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span></td>`;
+            rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span>${_pmStealReachBadge(p)}${_pmCoverageChip(p)}${_pmCompLine(p)}</td>`;
             break;
           case 'jm':
             if (p.jm != null) {
@@ -27579,7 +27870,8 @@ window.fmtHeight = fmtHeight;
 
       // Breakout age: earliest season near or above position PPG threshold (graduated)
       const _dBoThresh = { QB: 22, RB: 10, WR: 12, TE: 8.5 };
-      const boT = _dBoThresh[d.s] || 12;
+      const _dBoScale = (typeof _jmScoringFactor === 'function') ? _jmScoringFactor(d.s) : 1.0;
+      const boT = (_dBoThresh[d.s] || 12) * _dBoScale;
       const boTSoft = boT * 0.75;
       let breakoutYr = null;
       collegeSeasons.forEach(s => {

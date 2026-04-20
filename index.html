@@ -1919,6 +1919,52 @@ PREMIUM ACTIVE
 <div class="acct-msg" id="adminGiftPremMsg"></div>
 </div>
 
+<div class="acct-section">
+<div class="acct-section-title">🔄 Roster Overrides (post-draft moves)</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
+Log trades, cuts, and retirements that happen AFTER the draft so landing-spot signals (BLOCKED / VACATE) recompute for 2026 rookies.<br>
+<span style="color:var(--text1);font-weight:600">Formats:</span> <code style="background:var(--surface2);padding:1px 4px;border-radius:3px">Player Name out</code>, <code style="background:var(--surface2);padding:1px 4px;border-radius:3px">Player Name → TEAM</code>, <code style="background:var(--surface2);padding:1px 4px;border-radius:3px">Player Name retired</code>. One per line.<br>
+<span style="font-style:italic;color:var(--text2)">Examples: "A.J. Brown → SF", "Tony Pollard out", "Aaron Rodgers retired"</span>
+</div>
+<div class="acct-field">
+<label class="acct-label">Bulk paste</label>
+<textarea id="adminRosterOverrideInput" class="acct-input" rows="5" style="font-family:monospace;font-size:.8rem;padding:.6rem" placeholder="A.J. Brown → SF&#10;Tony Pollard out&#10;Aaron Rodgers retired"></textarea>
+</div>
+<div style="display:flex;gap:8px;margin-top:.5rem;flex-wrap:wrap">
+<button class="acct-btn acct-btn-outline" id="adminRosterOverridePreviewBtn">PREVIEW</button>
+<button class="acct-btn acct-btn-primary" id="adminRosterOverrideApplyBtn" disabled>APPLY</button>
+</div>
+<div class="acct-msg" id="adminRosterOverrideMsg"></div>
+<div id="adminRosterOverridePreview" style="margin-top:.75rem;font-size:.75rem;display:none"></div>
+<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
+<div style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem;font-weight:600">Active overrides:</div>
+<div id="adminRosterOverrideList" style="font-size:.8rem;line-height:1.8">loading...</div>
+</div>
+</div>
+
+<div class="acct-section">
+<div class="acct-section-title">🎂 Bulk Birthday Entry (2026 prospects)</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
+Paste birthdays for 2026 prospects to fill missing age data. Age drives JM heavily for RB/WR/TE.<br>
+<span style="color:var(--text1);font-weight:600">Format:</span> <code style="background:var(--surface2);padding:1px 4px;border-radius:3px">Player Name: YYYY-MM-DD</code> (one per line).<br>
+<span style="font-style:italic;color:var(--text2)">Examples: "Carson Beck: 2002-12-12", "Cade Klubnik: 2004-03-31"</span>
+</div>
+<div class="acct-field">
+<label class="acct-label">Bulk paste</label>
+<textarea id="adminBirthdayInput" class="acct-input" rows="8" style="font-family:monospace;font-size:.8rem;padding:.6rem" placeholder="Carson Beck: 2002-12-12&#10;Cade Klubnik: 2004-03-31&#10;Barion Brown: 2004-04-20"></textarea>
+</div>
+<div style="display:flex;gap:8px;margin-top:.5rem;flex-wrap:wrap">
+<button class="acct-btn acct-btn-outline" id="adminBirthdayPreviewBtn">PREVIEW</button>
+<button class="acct-btn acct-btn-primary" id="adminBirthdayApplyBtn" disabled>APPLY</button>
+<button class="acct-btn acct-btn-outline" id="adminBirthdayMissingBtn" title="Show all 2026 prospects currently missing birthdays">SHOW MISSING</button>
+</div>
+<div class="acct-msg" id="adminBirthdayMsg"></div>
+<div id="adminBirthdayPreview" style="margin-top:.75rem;font-size:.75rem;display:none"></div>
+<div id="adminBirthdayMissing" style="margin-top:.75rem;font-size:.75rem;display:none"></div>
+</div>
+
+</div>
+
 </div>
 
 </div>
@@ -18853,6 +18899,278 @@ window.fmtHeight = fmtHeight;
         }
       });
     }
+
+    // ───────── Roster Override UI ─────────
+    const roInput   = document.getElementById('adminRosterOverrideInput');
+    const roPrevBtn = document.getElementById('adminRosterOverridePreviewBtn');
+    const roApplyBtn= document.getElementById('adminRosterOverrideApplyBtn');
+    const roMsg     = document.getElementById('adminRosterOverrideMsg');
+    const roPreview = document.getElementById('adminRosterOverridePreview');
+    const roList    = document.getElementById('adminRosterOverrideList');
+
+    function _roRenderList() {
+      if (!roList) return;
+      const keys = Object.keys(_rosterOverrides || {});
+      if (!keys.length) { roList.innerHTML = '<div style="color:#888;font-style:italic">No roster overrides yet. Use the textarea above to add post-draft FA/trade moves.</div>'; return; }
+      const rows = keys.sort((a,b) => (_rosterOverrides[a].player||'').localeCompare(_rosterOverrides[b].player||''))
+        .map(function(k) {
+          const ov = _rosterOverrides[k];
+          const desc = ov.action === 'traded'
+            ? (ov.originalTeam || '?') + ' → ' + (ov.newTeam || '?')
+            : (ov.action.toUpperCase() + ' from ' + (ov.originalTeam || '?'));
+          return '<div data-rokey="'+k+'" style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.25rem 0;border-bottom:1px solid rgba(255,255,255,0.06)">'
+            + '<span><strong>' + ov.player + '</strong> &middot; <span style="color:#9ca3af">' + desc + '</span> &middot; <span style="color:#6b7280;font-size:.7rem">'+ov.year+'</span></span>'
+            + '<button class="acct-btn acct-btn-outline" data-rodel="'+k+'" style="padding:.2rem .5rem;font-size:.7rem">×</button>'
+            + '</div>';
+        }).join('');
+      roList.innerHTML = rows;
+      // Wire delete buttons
+      roList.querySelectorAll('[data-rodel]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const k = btn.getAttribute('data-rodel');
+          const ov = _rosterOverrides[k];
+          if (!ov) return;
+          if (!confirm('Delete override for ' + ov.player + '?')) return;
+          btn.disabled = true;
+          _roDelete(k).then(function() {
+            showAdminMsg(roMsg, 'Deleted override for ' + ov.player, 'success');
+            if (typeof _pmBuildCache !== 'undefined') { _pmBuildCache = null; _pmBuildCacheKey = null; }
+            _roRenderList();
+          }).catch(function(e) {
+            btn.disabled = false;
+            showAdminMsg(roMsg, 'Delete failed: ' + e.message, 'error');
+          });
+        });
+      });
+    }
+
+    // Ensure overrides are loaded before rendering the list
+    if (roList && !roList._roBound) {
+      roList._roBound = true;
+      if (_roLoaded) {
+        _roRenderList();
+      } else {
+        roList.innerHTML = '<div style="color:#888">Loading overrides…</div>';
+        _roLoad().then(_roRenderList);
+      }
+    }
+
+    // PREVIEW button — parse lines, resolve originalTeam, show validation
+    let _roPending = []; // parsed+resolved entries, ready for APPLY
+    if (roPrevBtn && !roPrevBtn._bound) {
+      roPrevBtn._bound = true;
+      roPrevBtn.addEventListener('click', function() {
+        const lines = String(roInput.value || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        if (!lines.length) { showAdminMsg(roMsg, 'Enter at least one line', 'error'); return; }
+        _roPending = [];
+        const rows = [];
+        const yr = (new Date()).getFullYear();
+        lines.forEach(function(line) {
+          const parsed = _roParseLine(line);
+          if (!parsed.ok) {
+            rows.push('<div style="color:#ef4444">✗ ' + line + ' <span style="color:#9ca3af">— unrecognized (try "Name out" or "Name → SF")</span></div>');
+            return;
+          }
+          const origTeam = _roResolveOriginalTeam(parsed.player);
+          if (!origTeam) {
+            rows.push('<div style="color:#f59e0b">⚠ ' + parsed.player + ' — no current team found in PLAYER_TEAM_HISTORY. Will save anyway.</div>');
+          }
+          const entry = {
+            player: parsed.player,
+            originalTeam: origTeam || null,
+            newTeam: parsed.newTeam,
+            action: parsed.action,
+            year: yr
+          };
+          _roPending.push(entry);
+          const desc = parsed.action === 'traded'
+            ? (origTeam || '?') + ' → ' + parsed.newTeam
+            : (parsed.action.toUpperCase() + ' from ' + (origTeam || '?'));
+          rows.push('<div style="color:#10b981">✓ <strong>' + parsed.player + '</strong> <span style="color:#9ca3af">— ' + desc + '</span></div>');
+        });
+        roPreview.innerHTML = rows.join('');
+        roPreview.style.display = '';
+        roApplyBtn.disabled = _roPending.length === 0;
+        showAdminMsg(roMsg, 'Previewed ' + _roPending.length + ' of ' + lines.length + ' lines. Review above and click APPLY.', _roPending.length ? 'success' : 'error');
+      });
+
+      roApplyBtn.addEventListener('click', function() {
+        if (!_roPending.length) { showAdminMsg(roMsg, 'Nothing to apply — click PREVIEW first', 'error'); return; }
+        roApplyBtn.disabled = true;
+        roApplyBtn.textContent = 'SAVING…';
+        const tasks = _roPending.map(function(e) { return _roSave(e); });
+        Promise.all(tasks).then(function() {
+          roApplyBtn.textContent = 'APPLY';
+          roApplyBtn.disabled = true;
+          const n = _roPending.length;
+          _roPending = [];
+          roInput.value = '';
+          roPreview.innerHTML = '';
+          roPreview.style.display = 'none';
+          if (typeof _pmBuildCache !== 'undefined') { _pmBuildCache = null; _pmBuildCacheKey = null; }
+          _roRenderList();
+          showAdminMsg(roMsg, '✅ Saved ' + n + ' roster override' + (n===1?'':'s') + '. Prospect chips will refresh on next build.', 'success');
+        }).catch(function(e) {
+          roApplyBtn.textContent = 'APPLY';
+          roApplyBtn.disabled = false;
+          showAdminMsg(roMsg, 'Save failed: ' + e.message, 'error');
+        });
+      });
+    }
+
+    // ───────── Bulk Birthday Entry UI ─────────
+    const bdInput   = document.getElementById('adminBirthdayInput');
+    const bdPrevBtn = document.getElementById('adminBirthdayPreviewBtn');
+    const bdApplyBtn= document.getElementById('adminBirthdayApplyBtn');
+    const bdMissBtn = document.getElementById('adminBirthdayMissingBtn');
+    const bdMsg     = document.getElementById('adminBirthdayMsg');
+    const bdPreview = document.getElementById('adminBirthdayPreview');
+    const bdMissing = document.getElementById('adminBirthdayMissing');
+    let _bdPending = []; // {name, date, raw} entries ready for APPLY
+
+    // Resolve a raw name against COMBINE_DATA. Returns canonical name or null.
+    function _bdResolveName(raw) {
+      if (typeof COMBINE_DATA === 'undefined') return null;
+      if (COMBINE_DATA[raw]) return raw; // exact match
+      const normRaw = (typeof _pmNormName === 'function') ? _pmNormName(raw) : String(raw).toLowerCase().replace(/[^a-z0-9]/g,'');
+      // Search COMBINE_DATA for a normalized match (prefer 2026 non-devy)
+      const candidates = [];
+      for (const n in COMBINE_DATA) {
+        const nn = (typeof _pmNormName === 'function') ? _pmNormName(n) : String(n).toLowerCase().replace(/[^a-z0-9]/g,'');
+        if (nn === normRaw) candidates.push(n);
+      }
+      if (candidates.length === 1) return candidates[0];
+      if (candidates.length > 1) {
+        // Prefer 2026 non-devy
+        const yr2026 = candidates.filter(n => {
+          const cb = COMBINE_DATA[n];
+          return cb && cb.yr === 2026 && !cb.devy;
+        });
+        if (yr2026.length === 1) return yr2026[0];
+        return candidates[0]; // first wins
+      }
+      return null;
+    }
+
+    function _bdParseLine(line) {
+      // Accept: "Name: YYYY-MM-DD", "Name - YYYY-MM-DD", "Name YYYY-MM-DD", "Name, YYYY-MM-DD"
+      const m = line.match(/^(.+?)[\s,:\-–—]+(\d{4}-\d{1,2}-\d{1,2})\s*$/);
+      if (!m) return { ok:false, err:'format: "Name: YYYY-MM-DD"' };
+      const name = m[1].trim();
+      let date = m[2];
+      // Normalize to YYYY-MM-DD
+      const parts = date.split('-');
+      if (parts.length !== 3) return { ok:false, err:'bad date' };
+      const y = parseInt(parts[0], 10);
+      const mo = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      if (!y || !mo || !d) return { ok:false, err:'bad date numbers' };
+      if (y < 1990 || y > 2010) return { ok:false, err:'year out of range (1990-2010)' };
+      if (mo < 1 || mo > 12) return { ok:false, err:'month out of range' };
+      if (d < 1 || d > 31) return { ok:false, err:'day out of range' };
+      // Sanity: not in the future
+      const dt = new Date(y, mo-1, d);
+      if (isNaN(dt.getTime())) return { ok:false, err:'invalid date' };
+      if (dt > new Date()) return { ok:false, err:'future date' };
+      date = y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      return { ok:true, name, date };
+    }
+
+    // SHOW MISSING — list all 2026 non-devy prospects without birthdays
+    if (bdMissBtn && !bdMissBtn._bound) {
+      bdMissBtn._bound = true;
+      bdMissBtn.addEventListener('click', function() {
+        if (typeof COMBINE_DATA === 'undefined') { showAdminMsg(bdMsg, 'COMBINE_DATA not loaded yet', 'error'); return; }
+        const lby = (typeof LEGEND_BIRTH_YEARS !== 'undefined') ? LEGEND_BIRTH_YEARS : {};
+        const missing = [];
+        for (const n in COMBINE_DATA) {
+          const cb = COMBINE_DATA[n];
+          if (!cb || cb.yr !== 2026 || cb.devy) continue;
+          if (!lby[n]) missing.push({ name:n, pos:cb.pos||'?' });
+        }
+        missing.sort((a,b)=>a.name.localeCompare(b.name));
+        if (!missing.length) { bdMissing.innerHTML = '<div style="color:#10b981">🎉 Every 2026 prospect has a birthday on file.</div>'; bdMissing.style.display=''; return; }
+        const byPos = {};
+        missing.forEach(m => { byPos[m.pos] = byPos[m.pos] || []; byPos[m.pos].push(m.name); });
+        const rows = Object.keys(byPos).sort().map(pos => {
+          const list = byPos[pos].map(n => '<span style="display:inline-block;background:var(--surface2);padding:2px 6px;margin:2px;border-radius:3px;font-size:.72rem;cursor:pointer" data-bdadd="'+n.replace(/"/g,'&quot;')+'">'+n+'</span>').join('');
+          return '<div style="margin-top:.5rem"><span style="color:#9ca3af;font-weight:600">'+pos+' ('+byPos[pos].length+'):</span><br>'+list+'</div>';
+        }).join('');
+        bdMissing.innerHTML = '<div style="color:var(--text2);margin-bottom:.25rem">Missing birthdays: <strong>'+missing.length+'</strong> (click a name to add it to the textarea)</div>' + rows;
+        bdMissing.style.display = '';
+        // Click a chip to append "Name: " to the textarea
+        bdMissing.querySelectorAll('[data-bdadd]').forEach(function(chip) {
+          chip.addEventListener('click', function() {
+            const n = chip.getAttribute('data-bdadd');
+            const cur = bdInput.value.replace(/\s+$/,'');
+            bdInput.value = (cur ? cur + '\n' : '') + n + ': ';
+            bdInput.focus();
+            // Move caret to end
+            bdInput.setSelectionRange(bdInput.value.length, bdInput.value.length);
+          });
+        });
+      });
+    }
+
+    // PREVIEW — parse lines, resolve names, validate
+    if (bdPrevBtn && !bdPrevBtn._bound) {
+      bdPrevBtn._bound = true;
+      bdPrevBtn.addEventListener('click', function() {
+        const lines = String(bdInput.value || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        if (!lines.length) { showAdminMsg(bdMsg, 'Enter at least one line', 'error'); return; }
+        _bdPending = [];
+        const rows = [];
+        const lby = (typeof LEGEND_BIRTH_YEARS !== 'undefined') ? LEGEND_BIRTH_YEARS : {};
+        lines.forEach(function(line) {
+          const parsed = _bdParseLine(line);
+          if (!parsed.ok) {
+            rows.push('<div style="color:#ef4444">✗ ' + line + ' <span style="color:#9ca3af">— ' + parsed.err + '</span></div>');
+            return;
+          }
+          const canonical = _bdResolveName(parsed.name);
+          if (!canonical) {
+            rows.push('<div style="color:#f59e0b">⚠ <strong>' + parsed.name + '</strong> — not found in COMBINE_DATA. Will save anyway under the name as typed.</div>');
+            _bdPending.push({ name: parsed.name, date: parsed.date, matched: false });
+            return;
+          }
+          const existing = lby[canonical];
+          const note = existing ? ' <span style="color:#f59e0b">(overwriting existing: '+existing+')</span>' : '';
+          const renamed = (canonical !== parsed.name) ? ' <span style="color:#9ca3af">→ matched "'+canonical+'"</span>' : '';
+          rows.push('<div style="color:#10b981">✓ <strong>' + parsed.name + '</strong>' + renamed + ' &middot; ' + parsed.date + note + '</div>');
+          _bdPending.push({ name: canonical, date: parsed.date, matched: true });
+        });
+        bdPreview.innerHTML = rows.join('');
+        bdPreview.style.display = '';
+        bdApplyBtn.disabled = _bdPending.length === 0;
+        const valid = _bdPending.length;
+        showAdminMsg(bdMsg, 'Previewed ' + valid + ' of ' + lines.length + ' lines. Review above and click APPLY.', valid ? 'success' : 'error');
+      });
+
+      bdApplyBtn.addEventListener('click', function() {
+        if (!_bdPending.length) { showAdminMsg(bdMsg, 'Nothing to apply — click PREVIEW first', 'error'); return; }
+        if (typeof _bioSave !== 'function') { showAdminMsg(bdMsg, '_bioSave not available', 'error'); return; }
+        bdApplyBtn.disabled = true;
+        bdApplyBtn.textContent = 'SAVING…';
+        try {
+          _bdPending.forEach(function(e) {
+            _bioSave(e.name, 'birth', e.date);
+          });
+          const n = _bdPending.length;
+          _bdPending = [];
+          bdInput.value = '';
+          bdPreview.innerHTML = '';
+          bdPreview.style.display = 'none';
+          bdApplyBtn.textContent = 'APPLY';
+          bdApplyBtn.disabled = true;
+          if (typeof _pmBuildCache !== 'undefined') { _pmBuildCache = null; _pmBuildCacheKey = null; }
+          showAdminMsg(bdMsg, '✅ Saved ' + n + ' birthday' + (n===1?'':'s') + '. Prospect scores will refresh on next build.', 'success');
+        } catch (err) {
+          bdApplyBtn.textContent = 'APPLY';
+          bdApplyBtn.disabled = false;
+          showAdminMsg(bdMsg, 'Save failed: ' + (err && err.message || err), 'error');
+        }
+      });
+    }
   }
 
   // Load gifted premium on auth
@@ -22682,6 +23000,116 @@ window.fmtHeight = fmtHeight;
     return 999;
   }
 
+  // === ROSTER OVERRIDES ===
+  // Post-draft roster moves (trades/cuts/releases) that affect landing-spot v2 signals.
+  // E.g., if A.J. Brown gets traded after the 2026 draft, rookie WRs picked by PHI
+  // should no longer be marked "BLOCKED by A.J. Brown". Overrides are applied by
+  // intercepting _pmOnTeamInYear / _pmOnTeamAtDraftYear inside buildProspectData.
+  // Stored in Firestore collection 'roster_overrides', keyed by normalized player name.
+  //
+  // Override shape: { player, originalTeam, newTeam, action, year, ts, adminEmail }
+  //   action: 'traded' | 'released' | 'retired'
+  //   newTeam: 3-letter code (traded only, else null)
+  //   year: override applies starting this draft year (default current year)
+  const _rosterOverrides = {}; // {normalizedName: {player, originalTeam, newTeam, action, year}}
+  let _roLoaded = false;
+
+  function _roLoad() {
+    if (_roLoaded) return Promise.resolve();
+    try {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      if (!db) { _roLoaded = true; return Promise.resolve(); }
+      // Loaded for all users (publicly readable) so landing-spot signals are consistent
+      return db.collection('roster_overrides').get().then(function(snap) {
+        snap.forEach(function(doc) {
+          const d = doc.data();
+          _rosterOverrides[doc.id] = {
+            player: d.player || doc.id,
+            originalTeam: d.originalTeam || null,
+            newTeam: d.newTeam || null,
+            action: d.action || 'released',
+            year: d.year || (new Date()).getFullYear()
+          };
+        });
+        _roLoaded = true;
+      }).catch(function() { _roLoaded = true; });
+    } catch (e) {
+      _roLoaded = true;
+      return Promise.resolve();
+    }
+  }
+
+  // Parse a single override line. Supported formats:
+  //   "Name out"                       → released (leaves their current team)
+  //   "Name released"                  → released
+  //   "Name retired"                   → retired (same effect)
+  //   "Name cut"                       → released
+  //   "Name → SF"  or  "Name -> SF"    → traded to SF
+  //   "Name to SF" or "Name traded to SF" → traded to SF
+  // Returns { ok, player, action, newTeam, error }
+  function _roParseLine(line) {
+    const raw = String(line || '').trim();
+    if (!raw) return { ok: false };
+    // Trade patterns: Name (→|->|to|traded to) TEAM
+    let m = raw.match(/^(.+?)\s+(?:→|->|to|traded to)\s+([A-Z]{2,3})\s*$/i);
+    if (m) {
+      return { ok: true, player: m[1].trim(), action: 'traded', newTeam: m[2].toUpperCase() };
+    }
+    // Release patterns: Name (out|released|cut|waived|retired|retires)
+    m = raw.match(/^(.+?)\s+(out|released|cut|waived|retired|retires)\s*$/i);
+    if (m) {
+      const verb = m[2].toLowerCase();
+      const action = (verb === 'retired' || verb === 'retires') ? 'retired' : 'released';
+      return { ok: true, player: m[1].trim(), action: action, newTeam: null };
+    }
+    return { ok: false, error: 'unrecognized format' };
+  }
+
+  // Resolve a parsed player name to (originalTeam) using PLAYER_TEAM_HISTORY
+  // Returns null if no current team found.
+  function _roResolveOriginalTeam(playerName) {
+    if (typeof PLAYER_TEAM_HISTORY === 'undefined' || typeof _pmNormName !== 'function') return null;
+    const norm = _pmNormName(playerName);
+    let match = null;
+    for (const k in PLAYER_TEAM_HISTORY) {
+      if (_pmNormName(k) === norm) { match = PLAYER_TEAM_HISTORY[k]; break; }
+    }
+    if (!match || !match.length) return null;
+    // Current year — last stint with y2 >= current year
+    const now = (new Date()).getFullYear();
+    const cur = match.find(s => s.y1 <= now && now <= s.y2);
+    if (cur) return cur.t;
+    // Fallback to latest
+    return match[match.length - 1].t;
+  }
+
+  function _roSave(override) {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    if (!db) return Promise.reject(new Error('no db'));
+    const normKey = _pmNormName(override.player);
+    const adminEmail = (firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : 'admin';
+    const doc = {
+      player: override.player,
+      originalTeam: override.originalTeam,
+      newTeam: override.newTeam,
+      action: override.action,
+      year: override.year,
+      ts: new Date().toISOString(),
+      adminEmail
+    };
+    return db.collection('roster_overrides').doc(normKey).set(doc).then(function() {
+      _rosterOverrides[normKey] = { player: doc.player, originalTeam: doc.originalTeam, newTeam: doc.newTeam, action: doc.action, year: doc.year };
+    });
+  }
+
+  function _roDelete(normKey) {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    if (!db) return Promise.reject(new Error('no db'));
+    return db.collection('roster_overrides').doc(normKey).delete().then(function() {
+      delete _rosterOverrides[normKey];
+    });
+  }
+
   // === ADMIN BIO EDITS (ht/wt/pos) for 2026 prospects ===
   const _bioCache = {};
   const _ORIGINAL_COMBINE = {}; // snapshot of original values before overrides, keyed name→field→val
@@ -25688,42 +26116,42 @@ window.fmtHeight = fmtHeight;
     _pmBuildCache = results;
     window._pmBuildCache = results; // Expose for console backtest access
 
-    // ═══ LANDING-SPOT v2 ADJUSTMENTS ═══
-    // Three independent empirically-calibrated signals applied post-JM.
-    // Magnitudes derived from 2017-2024 draft-round-stratified analysis (n=203).
-    // Stratified Δ = residual hit-rate gap AFTER controlling for draft capital.
+    // ═══ LANDING-SPOT v3 ADJUSTMENTS (data-driven decimals) ═══
+    // Three independent signals applied post-JM. Magnitudes are best-point-estimates
+    // of the within-round residual effect on first-3-season fpts (2017-2024 pool,
+    // n=174 RB / 260 WR), shrunk toward zero (n_prior=10) and scaled at 1 JM = 8 fpts.
     //
     // 1. ROOM (crowded depth chart, contextual + FA-aware):
-    //      RB crowd ≥ 0.4 → -5  (stratΔ -22.8pp, n=19)
-    //      WR crowd ≥ 2.0 → -4  (stratΔ -19.1pp, n=13)
+    //      RB crowd ≥ 0.2 → -2.3   (residual Δ -18.8 fpts, n=116; CI95 [-44.7, +2.1])
+    //      WR DROPPED — no residual signal at any threshold (best estimate ≈ 0)
     //    crowd = Σ (32/their_pick × contextual_weight) over same-pos same-team picks
     //    in prior 3 years, EXCLUDING players who departed via FA before draftYr.
-    //    contextual_weight scales by myPick/theirPick ratio (0.2/0.5/0.8/1.0 tiers):
-    //    pick 12 replacing pick 35 weights 0.2 (they're clearly taking over).
     //
     // 2. BLOCK (prior-yr starter returning):
-    //      RB prior ≥ 170 fpts returning → -6  (stratΔ -42.9pp, n=12)
-    //      WR prior ≥ 170 fpts returning → -4  (stratΔ -20.5pp, n=13)
+    //      RB prior ≥ 100 fpts returning → -1.5  (residual Δ -12.0 fpts, n=41)
+    //      WR prior ≥ 170 fpts returning → -1.2  (residual Δ -9.3 fpts, n=54)
     //
     // 3. VACATE (prior-yr top performer ≥ threshold DEPARTED):
-    //      RB prior ≥ 100 fpts departed → +4  (stratΔ +22.0pp, n=7)
-    //      WR prior ≥ 100 fpts departed → +2  (stratΔ +7.5pp, n=12)
+    //      RB prior ≥ 100 fpts departed → +2.3  (residual Δ +18.6 fpts, n=5 — small sample!)
+    //      WR prior ≥ 100 fpts departed → +0.9  (residual Δ +7.2 fpts, n=17)
     //
-    // TE and QB dropped: no signals survived stratified analysis (small samples, noisy).
+    // TE and QB excluded: no signals survived stratified analysis (small samples).
+    // None of the residual effects reach 95% statistical significance — these are
+    // best-point-estimates from shrunk stratified deltas, not certainties.
     //
     // Stores: p.jmRaw (pre-adj), p.roomAdj/blockAdj/vacateAdj, p.totalLandingAdj
     // plus p.crowdScore, p.blockerName/blockerFpts, p.vacatedName/vacatedFpts
     const _ROOM_THRESH_V2 = {
-      RB: { c: 0.4, adj: -5 },
-      WR: { c: 2.0, adj: -4 }
+      RB: { c: 0.2, adj: -2.3 }
+      // WR intentionally omitted — no residual signal
     };
     const _BLOCK_THRESH_V2 = {
-      RB: { starter: 170, adj: -6 },
-      WR: { starter: 170, adj: -4 }
+      RB: { starter: 100, adj: -1.5 },
+      WR: { starter: 170, adj: -1.2 }
     };
     const _VACATE_THRESH_V2 = {
-      RB: { vacated: 100, adj: +4 },
-      WR: { vacated: 100, adj: +2 }
+      RB: { vacated: 100, adj: +2.3 },
+      WR: { vacated: 100, adj: +0.9 }
     };
 
     // Build normalized PLAYER_TEAM_HISTORY lookup (if available)
@@ -25735,14 +26163,36 @@ window.fmtHeight = fmtHeight;
       if (typeof _pmNormName !== 'function') return null;
       return _pthNorm[_pmNormName(name)] || null;
     }
+    // Override-aware check: has this player's status been manually overridden for yr?
+    // Returns null if no applicable override, otherwise { on: true/false } (team-specific result)
+    function _pmCheckOverride(name, team, yr) {
+      if (typeof _rosterOverrides === 'undefined' || !_rosterOverrides) return null;
+      const norm = (typeof _pmNormName === 'function') ? _pmNormName(name) : null;
+      if (!norm) return null;
+      const ov = _rosterOverrides[norm];
+      if (!ov || yr < ov.year) return null;
+      if (ov.action === 'released' || ov.action === 'retired') {
+        return { on: false }; // not on any team from ov.year onward
+      }
+      if (ov.action === 'traded') {
+        if (team === ov.newTeam) return { on: true };
+        if (ov.originalTeam && team === ov.originalTeam) return { on: false };
+        return { on: false }; // any other team: no
+      }
+      return null;
+    }
     // Player is "on team T going into year Y" if their stint covers year Y on T
     function _pmOnTeamInYear(name, team, yr) {
+      const ov = _pmCheckOverride(name, team, yr);
+      if (ov) return ov.on;
       const s = _pmStintsFor(name);
       if (!s) return null;
       return s.some(x => x.t === team && x.y1 <= yr && yr <= x.y2);
     }
     // Player will be on team T at draft of year Y — true/false/null (unknown)
     function _pmOnTeamAtDraftYear(name, team, draftYr) {
+      const ov = _pmCheckOverride(name, team, draftYr);
+      if (ov) return ov.on;
       const s = _pmStintsFor(name);
       if (!s) return null;
       const here = s.some(x => x.t === team && x.y1 <= draftYr && draftYr <= x.y2);
@@ -27664,31 +28114,29 @@ window.fmtHeight = fmtHeight;
       return ' <span title="' + p.nflTeam + '" style="display:inline-block;font-size:.5rem;font-weight:700;letter-spacing:.4px;padding:1px 5px;border-radius:3px;background:rgba(96,165,250,.14);color:#60a5fa;vertical-align:middle">' + p.nflTeam + '</span>';
     }
     function _pmRoomChip(p) {
-      // Landing-spot v2 chips: ROOM (crowded), BLOCK (starter returning), VACATE (opportunity)
+      // Landing-spot v3 chips: ROOM (crowded), BLOCK (starter returning), VACATE (opportunity)
       // Only RB and WR show chips (positions where signals were validated).
+      // Magnitudes are decimals (data-driven residual effect sizes, see _ROOM_THRESH_V2 comment).
       if (!p.nflTeam) return '';
       if (p.pos !== 'RB' && p.pos !== 'WR') return '';
       let out = '';
+      const fmt = (a) => (a>=0?'+':'') + (Math.abs(a) < 10 ? a.toFixed(1) : a.toFixed(0));
       const mk = (label, adj, title, bg, fg) => {
-        return ' <span title="' + title + '" style="display:inline-block;font-size:.5rem;font-weight:700;letter-spacing:.3px;padding:1px 5px;border-radius:3px;background:' + bg + ';color:' + fg + ';vertical-align:middle;cursor:help">' + label + ' ' + (adj>=0?'+':'') + adj + '</span>';
+        return ' <span title="' + title + '" style="display:inline-block;font-size:.5rem;font-weight:700;letter-spacing:.3px;padding:1px 5px;border-radius:3px;background:' + bg + ';color:' + fg + ';vertical-align:middle;cursor:help">' + label + ' ' + fmt(adj) + '</span>';
       };
-      // Room
+      // Room (RB only in v3 — WR has no residual signal)
       if (p.roomAdj && p.roomAdj !== 0) {
         const crowd = p.crowdScore != null ? p.crowdScore.toFixed(1) : '0';
-        const heavy = p.roomAdj <= -4;
-        const label = heavy ? 'CROWDED' : 'busy';
-        const bg = heavy ? 'rgba(239,68,68,.18)' : 'rgba(251,146,60,.16)';
-        const fg = heavy ? '#f87171' : '#fb923c';
-        out += mk(label, p.roomAdj, 'Crowded ' + p.pos + ' room at ' + p.nflTeam + ' (crowd=' + crowd + ') — prior 3yr draft capital overlaps, FA-adjusted', bg, fg);
+        out += mk('CROWDED', p.roomAdj, 'Crowded ' + p.pos + ' room at ' + p.nflTeam + ' (crowd=' + crowd + ') — prior 3yr draft capital overlaps, FA-adjusted. JM penalty derived from within-round residual effect (n=116).', 'rgba(251,146,60,.16)', '#fb923c');
       }
       // Block
       if (p.blockAdj && p.blockAdj !== 0) {
-        const title = 'Blocked by ' + (p.blockerName || 'returning starter') + ' (' + p.blockerFpts + ' fpts prior year, still on roster)';
-        out += mk('BLOCKED', p.blockAdj, title, 'rgba(239,68,68,.22)', '#ef4444');
+        const title = 'Blocked by ' + (p.blockerName || 'returning starter') + ' (' + p.blockerFpts + ' fpts prior year, still on roster). JM penalty from within-round residual analysis.';
+        out += mk('BLOCKED', p.blockAdj, title, 'rgba(239,68,68,.18)', '#ef4444');
       }
       // Vacate
       if (p.vacateAdj && p.vacateAdj !== 0) {
-        const title = 'Vacated opportunity: ' + (p.vacatedName || 'prior top performer') + ' (' + p.vacatedFpts + ' fpts) departed';
+        const title = 'Vacated opportunity: ' + (p.vacatedName || 'prior top performer') + ' (' + p.vacatedFpts + ' fpts) departed. JM bonus from within-round residual analysis.';
         out += mk('VACATE', p.vacateAdj, title, 'rgba(34,197,94,.16)', '#22c55e');
       }
       return out;
@@ -28231,7 +28679,7 @@ window.fmtHeight = fmtHeight;
     }
     
     try {
-      Promise.all([_dcLoad(), _bioLoad()]).then(function() {
+      Promise.all([_dcLoad(), _bioLoad(), _roLoad()]).then(function() {
         _pmDiagnostic(pmBuiltData);
         // Defer heavy computation so browser can paint and handle events
         setTimeout(_doBuild, 50);

@@ -26160,12 +26160,13 @@ window.fmtHeight = fmtHeight;
 
   function renderTable() {
     // Filter by position
-    // Devy prospects with eligYr for the upcoming draft class (2026+) should appear in
+    // Devy prospects with eligYr for the upcoming draft class (2026 only) should appear in
     // their draft-class tab (e.g. WR 2026) alongside the rest of that class — not be
     // siloed into COLLEGE-only. Without this, a devy-flagged 2026 declarant (e.g. Omar
     // Cooper Jr.) gets excluded from the WR 2026 view because isCollege=true.
+    // 2027+ devy players are kept out of the ALL and position tabs — they only show in COLLEGE.
     function _isUpcomingDevy(p) {
-      return p.isDevy && p.eligYr && p.eligYr >= 2026;
+      return p.isDevy && p.eligYr && p.eligYr === 2026;
     }
     let data;
     if (pmPos === 'COLLEGE') {

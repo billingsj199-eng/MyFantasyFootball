@@ -2691,6 +2691,7 @@ CLEAR
 <div class="pm-bulk-title">Bulk Draft Capital Entry</div>
 <div class="pm-bulk-subtitle">Paste one prospect per line. Accepted formats:<br>
 <code>1. Cam Ward</code> &nbsp;·&nbsp; <code>Cam Ward 1</code> &nbsp;·&nbsp; <code>Cam Ward, 1</code> &nbsp;·&nbsp; <code>Cam Ward&lt;tab&gt;1</code><br>
+Add optional NFL team: <code>Cam Ward 1 IND</code> &nbsp;·&nbsp; <code>1. Cam Ward IND</code><br>
 Use <b>U</b> for undrafted. Only 2026 class prospects are updated.</div>
 <textarea class="pm-bulk-input" id="pmBulkInput" placeholder="1. Cam Ward&#10;2. Travis Hunter&#10;3. Shedeur Sanders&#10;..."></textarea>
 <div class="pm-bulk-actions">
@@ -22725,6 +22726,7 @@ window.fmtHeight = fmtHeight;
           if (bio.forty)  { const v=_safeFloat(bio.forty);if(v!=null){ _snapOriginal(name,'forty'); COMBINE_DATA[name].forty = v; } }
           if (bio.school) { _snapOriginal(name,'school'); COMBINE_DATA[name].school = bio.school; }
           if (bio.conf)   { _snapOriginal(name,'conf');   COMBINE_DATA[name].conf = bio.conf; }
+          if (bio.team)   { _snapOriginal(name,'team');   COMBINE_DATA[name].team = String(bio.team).toUpperCase(); }
           if (bio.yr)     { const v=_safeInt(bio.yr);    if(v!=null){ _snapOriginal(name,'yr');    COMBINE_DATA[name].yr = v; } }
           if (bio.draft)  {
             _snapOriginal(name,'draft');
@@ -22788,6 +22790,7 @@ window.fmtHeight = fmtHeight;
       else if (field === 'draft') { COMBINE_DATA[playerName].draft = clean === 'U' ? 'U' : (_safeInt(clean) != null ? _safeInt(clean) : clean); }
       else if (field === 'ht' || field === 'pos' || field === 'school') COMBINE_DATA[playerName][field] = clean || null;
       else if (field === 'conf') COMBINE_DATA[playerName].conf = clean || null;
+      else if (field === 'team') COMBINE_DATA[playerName].team = clean.toUpperCase() || null;
     }
     // Birth date → LEGEND_BIRTH_YEARS
     if (field === 'birth' && typeof LEGEND_BIRTH_YEARS !== 'undefined') {
@@ -25628,7 +25631,8 @@ window.fmtHeight = fmtHeight;
         pffRisk: (pos === 'QB' && window._PFF_QB_RISK && window._PFF_QB_RISK[name]) ? window._PFF_QB_RISK[name] : 0,
         isCollege,
         isDevy: _isDevy,
-        eligYr: (_cbEntry && _cbEntry.eligYr) || null
+        eligYr: (_cbEntry && _cbEntry.eligYr) || null,
+        nflTeam: (_cbEntry && _cbEntry.team) || null
       };
       // For 2026 prospects, use Firestore draft capital if available
       if (draftYr === 2026 && _dcCache[name]) {
@@ -25974,6 +25978,257 @@ window.fmtHeight = fmtHeight;
       } else {
         console.log('~ NEUTRAL: adjJm does not meaningfully shift prediction (top-25: ' + diff25.toFixed(1) + 'pp, top-50: ' + diff50.toFixed(1) + 'pp). Keep as diagnostic-only.');
       }
+    }
+    return summary;
+  };
+
+  // === TEAM DRAFT GRADE ===
+  // Aggregate per-NFL-team draft results from the 2026 class.
+  // Inputs: prospects with both DC entered and team assigned (via bulk DC paste
+  // including a trailing team abbreviation, e.g. "Cam Ward 1 IND").
+  // Grade formula:
+  //   - For each pick, compute "expected JM" from same-position historical
+  //     median JM at that pick range (uses _pmPickHist-style lookup).
+  //   - Team's score = sum(actual JM - expected JM) across their picks.
+  //     Positive = drafted above expectation, negative = below.
+  //   - Letter grade thresholds tuned for typical 5-10 pick draft hauls.
+  // Run from console: window._teamGrades()
+  window._teamGrades = function() {
+    if (!window._pmBuildCache || !window._pmBuildCache.length) {
+      console.error('[TeamGrades] _pmBuildCache not ready. Visit the prospect model page first.');
+      return null;
+    }
+    // Build historical JM-by-pick tables per position from 2017-2024 hits/misses
+    const histByPos = { QB: [], RB: [], WR: [], TE: [] };
+    window._pmBuildCache.forEach(p => {
+      if (!histByPos[p.pos]) return;
+      if (p.jm == null || p.lowConfidence || p.isDevy || p.isCollege) return;
+      if (p.draftYr == null || p.draftYr < 2017 || p.draftYr > 2024) return;
+      const pk = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+      if (isNaN(pk) || pk < 1 || pk > 262) return;
+      histByPos[p.pos].push({ jm: p.jm, pk: pk });
+    });
+    function expectedJmAtPick(pos, pk) {
+      const pool = histByPos[pos] || [];
+      if (!pool.length) return null;
+      // K-nearest by pick: collect all hist with pick within ±15, scale window if thin
+      let pkWin = 15;
+      let matches = pool.filter(h => Math.abs(h.pk - pk) <= pkWin);
+      while (matches.length < 6 && pkWin < 60) { pkWin += 10; matches = pool.filter(h => Math.abs(h.pk - pk) <= pkWin); }
+      if (matches.length < 4) return null;
+      const jms = matches.map(h => h.jm).sort((a, b) => a - b);
+      return jms[Math.floor(jms.length / 2)]; // median
+    }
+
+    // Collect 2026 prospects with both DC entered and team assigned
+    const draftedByTeam = {};
+    window._pmBuildCache.forEach(p => {
+      if (p.draftYr !== 2026) return;
+      if (!p.nflTeam) return;
+      const pk = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+      if (isNaN(pk) || pk < 1 || pk > 262) return;
+      if (p.jm == null) return;
+      if (!draftedByTeam[p.nflTeam]) draftedByTeam[p.nflTeam] = [];
+      draftedByTeam[p.nflTeam].push({ name: p.name, pos: p.pos, pk, jm: p.jm, expJm: expectedJmAtPick(p.pos, pk) });
+    });
+    const teams = Object.keys(draftedByTeam);
+    if (!teams.length) {
+      console.warn('[TeamGrades] No 2026 prospects with both DC and team assigned. Use bulk DC with team token (e.g. "Cam Ward 1 IND").');
+      return null;
+    }
+
+    function letterGrade(scorePerPick) {
+      // Per-pick avg deviation from expected JM. JM range is 0-100, typical
+      // draft variance ~5-10 pts per pick around expected.
+      if (scorePerPick >= 8) return 'A+';
+      if (scorePerPick >= 5) return 'A';
+      if (scorePerPick >= 3) return 'A-';
+      if (scorePerPick >= 1.5) return 'B+';
+      if (scorePerPick >= 0.5) return 'B';
+      if (scorePerPick >= -0.5) return 'B-';
+      if (scorePerPick >= -1.5) return 'C+';
+      if (scorePerPick >= -3) return 'C';
+      if (scorePerPick >= -5) return 'D';
+      return 'F';
+    }
+
+    const summary = teams.map(tm => {
+      const picks = draftedByTeam[tm];
+      let totalDelta = 0, scoredCount = 0, totalJm = 0;
+      picks.forEach(p => {
+        totalJm += p.jm;
+        if (p.expJm != null) {
+          totalDelta += (p.jm - p.expJm);
+          scoredCount++;
+        }
+      });
+      const avgDelta = scoredCount > 0 ? totalDelta / scoredCount : 0;
+      const grade = scoredCount > 0 ? letterGrade(avgDelta) : '—';
+      return {
+        team: tm, picks: picks.length, scoredPicks: scoredCount,
+        totalJm: Math.round(totalJm * 10) / 10,
+        avgJm: Math.round((totalJm / picks.length) * 10) / 10,
+        deltaPerPick: Math.round(avgDelta * 10) / 10,
+        grade,
+        breakdown: picks.map(p => ({
+          name: p.name, pos: p.pos, pk: p.pk, jm: p.jm,
+          expJm: p.expJm != null ? Math.round(p.expJm * 10) / 10 : null,
+          delta: p.expJm != null ? Math.round((p.jm - p.expJm) * 10) / 10 : null
+        }))
+      };
+    }).sort((a, b) => b.deltaPerPick - a.deltaPerPick);
+
+    console.log('\n═══ 2026 TEAM DRAFT GRADES ═══');
+    console.log('Sample: ' + teams.length + ' teams, ' + summary.reduce((s, t) => s + t.picks, 0) + ' picks recorded');
+    console.log('Grade = avg JM above/below same-position median JM at that pick slot');
+    console.log('');
+    console.log('TEAM  GRADE  Δ/PICK   PICKS   TOTAL JM   AVG JM');
+    console.log('────  ─────  ──────   ─────   ────────   ──────');
+    summary.forEach(t => {
+      const tStr = (t.team + '    ').slice(0, 4);
+      const gStr = ('  ' + t.grade + '   ').slice(0, 6);
+      const dStr = ((t.deltaPerPick >= 0 ? '+' : '') + t.deltaPerPick.toFixed(1) + '     ').slice(0, 7);
+      const pStr = ('  ' + t.picks + '/' + t.scoredPicks + '   ').slice(0, 8);
+      console.log(tStr + '  ' + gStr + ' ' + dStr + '  ' + pStr + '  ' + (t.totalJm + '       ').slice(0, 9) + '  ' + t.avgJm);
+    });
+    return summary;
+  };
+
+  // === LANDING SPOT RETROSPECTIVE (shortcut: crowded-room signal) ===
+  // Tests whether rookies drafted into "crowded rooms" (teams that spent heavy
+  // recent draft capital at the same position) underperform JM expectations.
+  // First step before committing to a full nflverse landing-spot data pull.
+  //
+  // Methodology:
+  //   1. Sample pool: 2017-2024 non-devy non-college prospects with nflTeam populated.
+  //   2. For each prospect (year Y, pos P, team T), compute crowding score:
+  //        sum over same-pos same-team prospects drafted in years [Y-3, Y-1]
+  //        of (1 / (their_pick / 32))  — pick 1 = 32 units, pick 100 ≈ 0.32.
+  //   3. Bucket into "crowded" (top 40%) vs "open" (bottom 40%), drop middle 20%.
+  //   4. Report hit rate within each bucket, overall and conditional on JM tier.
+  //   5. If crowded-room rookies underperform by ≥5pp overall → landing spot matters.
+  //
+  // Run from console: window._landingSpotRetro()
+  window._landingSpotRetro = function() {
+    if (!window._pmBuildCache || !window._pmBuildCache.length) {
+      console.error('[LandingSpot] _pmBuildCache not ready. Visit the prospect model page first.');
+      return null;
+    }
+    const _hitThresh = { QB: 200, RB: 170, WR: 170, TE: 120 };
+    const _dMap = {};
+    D.forEach(d => { if (d.n) _dMap[d.n] = d; });
+
+    // Step 1: Coverage diagnostic
+    const coverage = {};
+    const allHist = []; // ALL 2014-2024 prospects with team+pos+pick (for crowding lookups)
+    window._pmBuildCache.forEach(p => {
+      if (p.isDevy || p.isCollege) return;
+      if (!p.draftYr || p.draftYr < 2014 || p.draftYr > 2024) return;
+      if (!p.pos || !p.dr) return; // dr = pick number
+      const yr = p.draftYr;
+      if (!coverage[yr]) coverage[yr] = { total: 0, withTeam: 0 };
+      coverage[yr].total++;
+      if (p.nflTeam) {
+        coverage[yr].withTeam++;
+        allHist.push({ yr, pos: p.pos, team: p.nflTeam, pick: p.dr });
+      }
+    });
+    console.log('\n═══ LANDING SPOT RETRO — COVERAGE DIAGNOSTIC ═══');
+    console.log('Year  Total  WithTeam  Coverage%');
+    const years = Object.keys(coverage).sort();
+    let totalSample = 0, totalWithTeam = 0;
+    years.forEach(y => {
+      const c = coverage[y];
+      const pct = c.total ? Math.round(c.withTeam / c.total * 100) : 0;
+      totalSample += c.total; totalWithTeam += c.withTeam;
+      console.log(y + '   ' + (c.total + '    ').slice(0,5) + (c.withTeam + '      ').slice(0,8) + '   ' + pct + '%');
+    });
+    console.log('───');
+    const overallPct = totalSample ? Math.round(totalWithTeam / totalSample * 100) : 0;
+    console.log('TOTAL ' + totalSample + '   ' + totalWithTeam + '      ' + overallPct + '%');
+    console.log('');
+
+    // Build testable pool: 2017-2024 prospects with team, JM, outcome
+    const pool = [];
+    window._pmBuildCache.forEach(p => {
+      if (p.isDevy || p.isCollege) return;
+      if (p.jm == null || p.lowConfidence) return;
+      if (!p.nflTeam) return;
+      if (p.draftYr < 2017 || p.draftYr > 2024) return;
+      const d = _dMap[p.name];
+      if (!d || !d.career || !d.career.length) return;
+      const early = d.career.filter(s => s.yr >= p.draftYr && s.yr < p.draftYr + 3);
+      if (!early.length) return;
+      const bestSzn = Math.max(...early.map(s => s.fpts || 0));
+      const thresh = _hitThresh[p.pos] || 170;
+      const adjThresh = (p.draftYr === 2024) ? thresh * 0.70 : thresh;
+      const isHit = bestSzn >= adjThresh;
+      // Compute crowding score: same-pos same-team prospects in years [Y-3, Y-1]
+      let crowd = 0;
+      allHist.forEach(h => {
+        if (h.team !== p.nflTeam || h.pos !== p.pos) return;
+        if (h.yr < p.draftYr - 3 || h.yr >= p.draftYr) return;
+        crowd += 32 / Math.max(h.pick, 1);
+      });
+      pool.push({ name: p.name, pos: p.pos, yr: p.draftYr, team: p.nflTeam,
+                  jm: p.jm, pick: p.dr, crowd, isHit, bestSzn });
+    });
+    if (pool.length < 40) {
+      console.error('[LandingSpot] Pool too small (n=' + pool.length + '). Need ≥40 for crowded-room test.');
+      console.error('  → nflTeam coverage is thin. Options:');
+      console.error('  1. Run bulk DC entry with team tokens on historical classes (slow).');
+      console.error('  2. Pull nflverse load_draft_picks() for 2017-2024, bake team map into index.html.');
+      return { coverage, pool: pool.length, verdict: 'INSUFFICIENT_DATA' };
+    }
+
+    console.log('═══ CROWDED-ROOM TEST (n=' + pool.length + ') ═══');
+    const baseHitRate = Math.round(pool.filter(x => x.isHit).length / pool.length * 1000) / 10;
+    console.log('Base hit rate: ' + baseHitRate + '%');
+    console.log('');
+
+    function reportSplit(arr, label) {
+      if (arr.length < 10) { console.log(label + ' n=' + arr.length + ' (too small)'); return null; }
+      const sorted = arr.slice().sort((a, b) => a.crowd - b.crowd);
+      const q = Math.round(sorted.length * 0.4);
+      const open = sorted.slice(0, q);
+      const crowded = sorted.slice(sorted.length - q);
+      const rate = a => a.length ? Math.round(a.filter(x => x.isHit).length / a.length * 1000) / 10 : 0;
+      const openRate = rate(open), crowdedRate = rate(crowded);
+      const delta = crowdedRate - openRate;
+      console.log(label + ' (n=' + arr.length + ')');
+      console.log('  Open rooms (bot 40%, crowd≤' + sorted[q-1].crowd.toFixed(1) + '):    ' + open.filter(x=>x.isHit).length + '/' + open.length + ' = ' + openRate + '%');
+      console.log('  Crowded rooms (top 40%, crowd≥' + sorted[sorted.length-q].crowd.toFixed(1) + '): ' + crowded.filter(x=>x.isHit).length + '/' + crowded.length + ' = ' + crowdedRate + '%');
+      console.log('  Δ crowded − open: ' + (delta >= 0 ? '+' : '') + delta.toFixed(1) + 'pp ' + (delta <= -5 ? '← crowded rooms HURT' : delta >= 5 ? '← crowded rooms HELP (unexpected)' : '(weak signal)'));
+      return { open: openRate, crowded: crowdedRate, delta };
+    }
+
+    const summary = { coverage, poolSize: pool.length, baseHitRate };
+    summary.overall = reportSplit(pool, 'OVERALL');
+    console.log('');
+    ['QB', 'RB', 'WR', 'TE'].forEach(pos => {
+      const sub = pool.filter(x => x.pos === pos);
+      if (sub.length >= 20) summary[pos] = reportSplit(sub, pos);
+    });
+    console.log('');
+
+    // Also: within-JM-tier split (is the signal real, or confounded with talent?)
+    console.log('─── JM-CONDITIONED (controls for talent) ───');
+    const byJm = pool.slice().sort((a, b) => b.jm - a.jm);
+    const top = byJm.slice(0, Math.round(byJm.length * 0.33));
+    const bot = byJm.slice(byJm.length - Math.round(byJm.length * 0.33));
+    summary.topJM = reportSplit(top, 'Top-JM tier');
+    summary.botJM = reportSplit(bot, 'Bot-JM tier');
+    console.log('');
+
+    // Verdict
+    console.log('═══ VERDICT ═══');
+    const o = summary.overall;
+    if (o && o.delta <= -5) {
+      console.log('✓ SIGNAL PRESENT: crowded rooms hurt by ' + Math.abs(o.delta).toFixed(1) + 'pp overall. Worth the full nflverse pull.');
+    } else if (o && o.delta <= -2) {
+      console.log('~ WEAK SIGNAL: ' + Math.abs(o.delta).toFixed(1) + 'pp effect. Marginal. Full pull probably adds value but not urgent.');
+    } else {
+      console.log('✗ NO SIGNAL: crowded-room proxy shows ' + (o ? o.delta.toFixed(1) : '?') + 'pp. Landing spot likely not worth adding to JM.');
     }
     return summary;
   };
@@ -26556,6 +26811,10 @@ window.fmtHeight = fmtHeight;
         jmWin: jmWin
       };
     }
+    function _pmTeamChip(p) {
+      if (!p.nflTeam) return '';
+      return ' <span title="' + p.nflTeam + '" style="display:inline-block;font-size:.5rem;font-weight:700;letter-spacing:.4px;padding:1px 5px;border-radius:3px;background:rgba(96,165,250,.14);color:#60a5fa;vertical-align:middle">' + p.nflTeam + '</span>';
+    }
     function _pmStealReachBadge(p) {
       if (p.draftYr !== 2026) return '';
       if (p.jm == null || p.lowConfidence) return '';
@@ -26622,7 +26881,7 @@ window.fmtHeight = fmtHeight;
       cols.forEach(c => {
         switch (c.key) {
           case 'name':
-            rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span>${_pmStealReachBadge(p)}${_pmCoverageChip(p)}${_pmCompLine(p)}</td>`;
+            rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span>${_pmTeamChip(p)}${_pmStealReachBadge(p)}${_pmCoverageChip(p)}${_pmCompLine(p)}</td>`;
             break;
           case 'jm':
             if (p.jm != null) {
@@ -27205,13 +27464,16 @@ window.fmtHeight = fmtHeight;
   }
 
   // Parse bulk-entry text. Accepted per-line formats:
-  //   "1. Cam Ward"     -> name="Cam Ward", pick="1"
-  //   "Cam Ward 1"      -> name="Cam Ward", pick="1"
-  //   "Cam Ward, 1"     -> same
-  //   "Cam Ward\t1"     -> same
-  //   "Cam Ward U"      -> undrafted
-  //   "Cam Ward"        -> unparsed (no pick)
-  // Returns an array of { lineNo, raw, name, pick, status, canonical }
+  //   "1. Cam Ward"         -> name="Cam Ward", pick="1"
+  //   "1. Cam Ward TEN"     -> name="Cam Ward", pick="1", team="TEN"
+  //   "Cam Ward 1"          -> name="Cam Ward", pick="1"
+  //   "Cam Ward 1 TEN"      -> name="Cam Ward", pick="1", team="TEN"
+  //   "Cam Ward, 1, TEN"    -> same
+  //   "Cam Ward\t1\tTEN"    -> same
+  //   "Cam Ward U"          -> undrafted
+  //   "Cam Ward"            -> unparsed (no pick)
+  // Team token: optional trailing 2-4 letter all-caps abbreviation (e.g. IND, NYG, JAX).
+  // Returns an array of { lineNo, raw, name, pick, team, status, canonical }
   //   status: 'ok' | 'unmatched' | 'bad-pick' | 'unparsed'
   function _pmParseBulk(text) {
     const { idx, lastFirst } = _pmBuild2026Index();
@@ -27221,20 +27483,28 @@ window.fmtHeight = fmtHeight;
       const raw = lines[i];
       const trimmed = raw.trim();
       if (!trimmed) continue;
-      let name = '', pick = '';
+      let name = '', pick = '', team = '';
+      // Strip and capture an optional trailing team abbreviation first
+      // (2-4 uppercase letters, preceded by whitespace/comma/tab).
+      let working = trimmed;
+      const teamM = working.match(/[\s,]+([A-Z]{2,4})$/);
+      if (teamM) {
+        team = teamM[1];
+        working = working.slice(0, teamM.index).trim().replace(/[,\t]+$/, '');
+      }
       // Pattern A: leading number-dot "1. Cam Ward"  (pick precedes name)
-      let m = trimmed.match(/^(\d+)\s*[.)\-]\s*(.+)$/);
+      let m = working.match(/^(\d+)\s*[.)\-]\s*(.+)$/);
       if (m) {
         pick = m[1];
         name = m[2].trim();
       } else {
         // Pattern B: trailing pick — "Cam Ward 1", "Cam Ward, 1", "Cam Ward\t1", "Cam Ward U"
-        m = trimmed.match(/^(.+?)[\s,\t]+([\dUu][\dUu\.\s\-]*)$/);
+        m = working.match(/^(.+?)[\s,\t]+([\dUu][\dUu\.\s\-]*)$/);
         if (m) {
           name = m[1].trim();
           pick = m[2].trim();
         } else {
-          out.push({ lineNo: i+1, raw, name: trimmed, pick: '', status: 'unparsed' });
+          out.push({ lineNo: i+1, raw, name: working, pick: '', team, status: 'unparsed' });
           continue;
         }
       }
@@ -27246,7 +27516,7 @@ window.fmtHeight = fmtHeight;
       } else if (/^\d+(\.\d+)?$/.test(pickRaw)) {
         pickClean = pickRaw;
       } else {
-        out.push({ lineNo: i+1, raw, name, pick: pickRaw, status: 'bad-pick' });
+        out.push({ lineNo: i+1, raw, name, pick: pickRaw, team, status: 'bad-pick' });
         continue;
       }
       // Resolve name -> canonical
@@ -27263,10 +27533,10 @@ window.fmtHeight = fmtHeight;
         }
       }
       if (!canonical) {
-        out.push({ lineNo: i+1, raw, name, pick: pickClean, status: 'unmatched' });
+        out.push({ lineNo: i+1, raw, name, pick: pickClean, team, status: 'unmatched' });
         continue;
       }
-      out.push({ lineNo: i+1, raw, name, pick: pickClean, status: 'ok', canonical });
+      out.push({ lineNo: i+1, raw, name, pick: pickClean, team, status: 'ok', canonical });
     }
     return out;
   }
@@ -27275,16 +27545,18 @@ window.fmtHeight = fmtHeight;
   // batch the Firestore writes + a single cache bust + one render.
   function _pmApplyBulk(parsed) {
     const okRows = parsed.filter(r => r.status === 'ok');
-    // Dedupe: last entry wins per canonical name
+    // Dedupe: last entry wins per canonical name (carry team alongside pick)
     const byName = {};
-    okRows.forEach(r => { byName[r.canonical] = r.pick; });
+    okRows.forEach(r => { byName[r.canonical] = { pick: r.pick, team: r.team || '' }; });
     const names = Object.keys(byName);
     if (!names.length) return 0;
     names.forEach(function(n) {
-      const val = byName[n];
-      _dcSave(n, val);
-      if (val) _bioSave(n, 'draft', val);
+      const entry = byName[n];
+      _dcSave(n, entry.pick);
+      if (entry.pick) _bioSave(n, 'draft', entry.pick);
       else _bioClear(n, 'draft');
+      // Save team (only when provided; never clear an existing team via blank)
+      if (entry.team) _bioSave(n, 'team', entry.team);
       // Clear the JM cache for this player (all positions + dr variants)
       if (typeof _jmCache !== 'undefined') {
         const prefix = n + '::';

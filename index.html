@@ -26162,6 +26162,252 @@ window.fmtHeight = fmtHeight;
     return summary;
   };
 
+  // === LANDING SPOT DEEP STUDY ===
+  // Quantifies all candidate landing-spot signals on 2017-2024 historical prospects:
+  //   S1: Crowded room (current shipped)
+  //   S2: Crowded room, FA-aware (skip prior picks who departed before the next draft)
+  //   S3: Crowded room, contextual-scaled (weight by newPick/oldPick ratio)
+  //   S4: Blocked by returning starter (prior-yr top pos+team performer still on roster)
+  //   S5: Vacated opportunity (prior-yr top pos+team performer DEPARTED before draft)
+  // Reports per-signal hit-rate gaps and calibration guidance.
+  // Run: window._landingSpotStudy()
+  window._landingSpotStudy = function() {
+    if (!window._pmBuildCache || !window._pmBuildCache.length) {
+      console.error('[LSStudy] _pmBuildCache not ready.');
+      return null;
+    }
+    if (typeof PLAYER_TEAM_HISTORY === 'undefined' || typeof HISTORICAL_DRAFT_PICKS === 'undefined') {
+      console.error('[LSStudy] Required data files missing.');
+      return null;
+    }
+    const _hit = { QB: 200, RB: 170, WR: 170, TE: 120 };
+    const _starterThresh = { QB: 250, RB: 200, WR: 200, TE: 150 };
+
+    // Build normalized PLAYER_TEAM_HISTORY lookup
+    const ptNorm = {};
+    Object.keys(PLAYER_TEAM_HISTORY).forEach(name => {
+      ptNorm[_pmNormName(name)] = PLAYER_TEAM_HISTORY[name];
+    });
+    function stintsFor(name) { return ptNorm[_pmNormName(name)]; }
+    function onTeamInYear(name, team, yr) {
+      const stints = stintsFor(name);
+      if (!stints) return null; // unknown
+      return stints.some(s => s.t === team && s.y1 <= yr && yr <= s.y2);
+    }
+    function onTeamAtDraftYear(name, team, draftYr) {
+      // At the draft (spring of draftYr), roster reflects upcoming season.
+      // Player is "on team" if their stint on team covers draftYr (they'll play in draftYr).
+      // If last stint ended draftYr-1 and they have a new-team stint starting ≤draftYr, gone.
+      const stints = stintsFor(name);
+      if (!stints) return null; // unknown → default caller behavior
+      const nowHere = stints.some(s => s.t === team && s.y1 <= draftYr && draftYr <= s.y2);
+      if (nowHere) return true;
+      const movedElsewhere = stints.some(s => s.t !== team && s.y1 <= draftYr && draftYr - 1 <= s.y2);
+      return movedElsewhere ? false : null;
+    }
+
+    // Build teamYearTop[team][pos][year] = {name, fpts}
+    const teamYearTop = {};
+    D.forEach(d => {
+      if (!d.n || !d.career || !d.s) return;
+      const stints = stintsFor(d.n);
+      const pos = d.s;
+      if (!_starterThresh[pos]) return;
+      d.career.forEach(s => {
+        if (!s.yr || s.fpts == null) return;
+        // Which team was d on in year s.yr?
+        let team = null;
+        if (stints) {
+          const st = stints.find(x => x.y1 <= s.yr && s.yr <= x.y2);
+          if (st) team = st.t;
+        }
+        if (!team) return;
+        teamYearTop[team] = teamYearTop[team] || {};
+        teamYearTop[team][pos] = teamYearTop[team][pos] || {};
+        const cur = teamYearTop[team][pos][s.yr];
+        if (!cur || s.fpts > cur.fpts) {
+          teamYearTop[team][pos][s.yr] = { name: d.n, fpts: s.fpts };
+        }
+      });
+    });
+
+    // Build sample pool with all 5 signal scores
+    const pool = [];
+    window._pmBuildCache.forEach(p => {
+      if (p.isDevy || p.isCollege) return;
+      if (p.jm == null || p.lowConfidence) return;
+      if (!p.nflTeam) return;
+      if (p.draftYr < 2017 || p.draftYr > 2024) return;
+      const pk = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+      if (!pk || pk <= 0) return;
+      const d = D.find(x => x.n === p.name);
+      if (!d || !d.career || !d.career.length) return;
+      const early = d.career.filter(s => s.yr >= p.draftYr && s.yr < p.draftYr + 3);
+      if (!early.length) return;
+      const bestSzn = Math.max(...early.map(s => s.fpts || 0));
+      const thresh = _hit[p.pos] || 170;
+      const adjThresh = (p.draftYr === 2024) ? thresh * 0.70 : thresh;
+      const isHit = bestSzn >= adjThresh;
+
+      // rawJm recovered from current adjusted jm
+      const rawJm = Math.max(0, Math.min(100, p.jm - (p.roomAdj || 0)));
+
+      // Signal 1: Crowded room (raw, no FA)
+      let s1 = 0;
+      // Signal 2: FA-aware crowded room
+      let s2 = 0;
+      // Signal 3: Contextual-scaled crowded room (also FA-aware)
+      let s3 = 0;
+      for (const k in HISTORICAL_DRAFT_PICKS) {
+        const h = HISTORICAL_DRAFT_PICKS[k];
+        if (h.t !== p.nflTeam || h.pos !== p.pos) continue;
+        if (h.y < p.draftYr - 3 || h.y >= p.draftYr) continue;
+        if (!h.p || h.p <= 0) continue;
+        const contribRaw = 32 / h.p;
+        s1 += contribRaw;
+        // FA check
+        const stillThere = onTeamAtDraftYear(h.n, p.nflTeam, p.draftYr);
+        if (stillThere === false) continue; // confirmed departed
+        s2 += contribRaw;
+        // Contextual scaling by new pick DC relative to old pick
+        const ratio = pk / h.p;
+        let wt;
+        if (ratio < 0.4) wt = 0.2;
+        else if (ratio < 1.0) wt = 0.5;
+        else if (ratio < 2.0) wt = 0.8;
+        else wt = 1.0;
+        s3 += contribRaw * wt;
+      }
+
+      // Signal 4: Blocked by returning starter
+      const priorYr = p.draftYr - 1;
+      const top = teamYearTop[p.nflTeam] && teamYearTop[p.nflTeam][p.pos] && teamYearTop[p.nflTeam][p.pos][priorYr];
+      let blocked = false, blockerName = null, blockerFpts = 0;
+      if (top && top.fpts >= _starterThresh[p.pos]) {
+        const returning = onTeamInYear(top.name, p.nflTeam, p.draftYr);
+        if (returning === true) {
+          blocked = true;
+          blockerName = top.name;
+          blockerFpts = top.fpts;
+        }
+      }
+
+      // Signal 5: Vacated opportunity (prior-yr top performer DEPARTED)
+      let vacatedFpts = 0, vacatedName = null;
+      if (top && top.fpts >= 50) {
+        const returning = onTeamInYear(top.name, p.nflTeam, p.draftYr);
+        if (returning === false) {
+          vacatedFpts = top.fpts;
+          vacatedName = top.name;
+        }
+      }
+
+      pool.push({
+        name: p.name, pos: p.pos, yr: p.draftYr, team: p.nflTeam,
+        pick: pk, rawJm, isHit,
+        s1: Math.round(s1*100)/100,
+        s2: Math.round(s2*100)/100,
+        s3: Math.round(s3*100)/100,
+        blocked, blockerName, blockerFpts,
+        vacatedFpts: Math.round(vacatedFpts), vacatedName
+      });
+    });
+    if (pool.length < 40) {
+      console.error('[LSStudy] Pool too small: ' + pool.length);
+      return null;
+    }
+
+    console.log('\n════════════════════════════════════════════════════════');
+    console.log('LANDING SPOT DEEP STUDY (2017-2024, n=' + pool.length + ')');
+    console.log('════════════════════════════════════════════════════════');
+    const baseRate = Math.round(pool.filter(x => x.isHit).length / pool.length * 1000) / 10;
+    console.log('Base hit rate: ' + baseRate + '%');
+    console.log('');
+
+    function rate(arr) {
+      if (!arr.length) return 0;
+      return Math.round(arr.filter(x => x.isHit).length / arr.length * 1000) / 10;
+    }
+    function reportFlag(label, flagFn, posFilter) {
+      const scope = posFilter ? pool.filter(x => x.pos === posFilter) : pool;
+      const flagged = scope.filter(flagFn);
+      const unflagged = scope.filter(x => !flagFn(x));
+      if (flagged.length < 3 || unflagged.length < 3) {
+        console.log('  ' + label + ': n too small (flagged=' + flagged.length + ', unflagged=' + unflagged.length + ')');
+        return null;
+      }
+      const fRate = rate(flagged);
+      const uRate = rate(unflagged);
+      const delta = fRate - uRate;
+      const sugPen = delta <= -3 ? Math.round(delta / 4 * 10) / 10 : 0; // rough: -4pp ≈ -1 JM
+      console.log('  ' + label + ': flagged ' + flagged.length + '/' + scope.length +
+        ' → hit ' + fRate + '% vs unflagged ' + uRate + '% | Δ ' + (delta>=0?'+':'') + delta.toFixed(1) + 'pp' +
+        (delta <= -5 ? '  ★ strong signal' : delta <= -3 ? '  · weak signal' : delta >= 5 ? '  ? reversed' : ''));
+      return { flagged: flagged.length, fRate, uRate, delta, suggestedPenalty: sugPen };
+    }
+
+    // ============================================
+    const results = {};
+    console.log('─── S1: CROWDED ROOM (raw draft capital) ───');
+    console.log('Threshold: crowd score >= 0.5');
+    ['RB','TE','WR','QB'].forEach(pos => { results['s1_'+pos] = reportFlag('S1 ['+pos+']', x => x.s1 >= 0.5, pos); });
+    console.log('');
+
+    console.log('─── S2: CROWDED ROOM, FA-AWARE ───');
+    console.log('Threshold: s2 >= 0.5 (excludes departed prior picks)');
+    ['RB','TE','WR','QB'].forEach(pos => { results['s2_'+pos] = reportFlag('S2 ['+pos+']', x => x.s2 >= 0.5, pos); });
+    console.log('');
+
+    console.log('─── S3: CROWDED ROOM, CONTEXTUAL + FA-AWARE ───');
+    console.log('Threshold: s3 >= 0.5 (also scales by newPick/oldPick ratio)');
+    ['RB','TE','WR','QB'].forEach(pos => { results['s3_'+pos] = reportFlag('S3 ['+pos+']', x => x.s3 >= 0.5, pos); });
+    console.log('');
+
+    console.log('─── S4: BLOCKED BY RETURNING STARTER ───');
+    console.log('Flag: prior-yr top pos+team performer ≥ starter threshold AND still on roster');
+    console.log('Starter thresholds: QB 250, RB 200, WR 200, TE 150 fpts');
+    ['QB','RB','WR','TE'].forEach(pos => { results['s4_'+pos] = reportFlag('S4 ['+pos+']', x => x.blocked, pos); });
+    console.log('');
+    // Show some example blocked cases
+    const blockedExamples = pool.filter(x => x.blocked).slice(0, 8);
+    if (blockedExamples.length) {
+      console.log('  Example blocked prospects:');
+      blockedExamples.forEach(x => {
+        console.log('    ' + x.name + ' (' + x.pos + ' ' + x.yr + ' → ' + x.team +
+          ') blocked by ' + x.blockerName + ' (' + x.blockerFpts + ' fpts) | ' + (x.isHit ? 'HIT' : 'miss'));
+      });
+    }
+    console.log('');
+
+    console.log('─── S5: VACATED OPPORTUNITY ───');
+    console.log('Flag: prior-yr top pos+team performer DEPARTED before next draft');
+    console.log('Tiers: mild (50-150 fpts vacated), heavy (150+ fpts)');
+    ['WR','RB','QB','TE'].forEach(pos => {
+      results['s5_mild_'+pos] = reportFlag('S5-mild ['+pos+']', x => x.vacatedFpts >= 50 && x.vacatedFpts < 150, pos);
+      results['s5_heavy_'+pos] = reportFlag('S5-heavy ['+pos+']', x => x.vacatedFpts >= 150, pos);
+    });
+    console.log('');
+    const vacExamples = pool.filter(x => x.vacatedFpts >= 150).slice(0, 8);
+    if (vacExamples.length) {
+      console.log('  Example heavy-vacancy landings:');
+      vacExamples.forEach(x => {
+        console.log('    ' + x.name + ' (' + x.pos + ' ' + x.yr + ' → ' + x.team +
+          ') vacated by ' + x.vacatedName + ' (' + x.vacatedFpts + ' fpts) | ' + (x.isHit ? 'HIT' : 'miss'));
+      });
+    }
+    console.log('');
+
+    // Calibration guide
+    console.log('════ CALIBRATION GUIDE ════');
+    console.log('Strong signal (Δ ≤ -5pp): ship as JM penalty, magnitude ~|Δ/3| rounded');
+    console.log('Weak signal (-5 < Δ ≤ -3pp): ship as small penalty (1-2 JM), monitor');
+    console.log('Noise (-3 < Δ < +3pp): do not ship');
+    console.log('Reversed (Δ ≥ +5pp): likely confounded with something else, skip');
+    console.log('');
+
+    return { pool, results };
+  };
+
   // === LANDING SPOT VALIDATION ===
   // Tests whether the SHIPPED roomAdj thresholds actually improve JM predictions
   // on historical data. Compares raw JM (pre-adjustment) vs adjusted JM (with

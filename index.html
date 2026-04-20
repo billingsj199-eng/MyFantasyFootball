@@ -1280,6 +1280,24 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .pm-dc-input{width:52px;padding:2px 6px;background:var(--surface2);border:1px solid var(--accent);border-radius:4px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.85rem;text-align:center;outline:none}
 .pm-dc-locked{color:var(--text2);opacity:.6}
 .pm-dc-badge{display:inline-block;padding:1px 8px;border-radius:4px;font-size:.8rem;letter-spacing:.5px}
+/* Bulk DC admin UI */
+.pm-admin-tools{display:inline-flex;gap:6px;margin-left:8px}
+.pm-admin-btn{padding:4px 10px;background:rgba(245,158,11,.12);color:var(--accent);border:1px solid rgba(245,158,11,.35);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;letter-spacing:.3px;cursor:pointer;white-space:nowrap;transition:background .15s}
+.pm-admin-btn:hover{background:rgba(245,158,11,.22)}
+.pm-admin-btn.danger{color:#ef4444;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.1)}
+.pm-admin-btn.danger:hover{background:rgba(239,68,68,.2)}
+.pm-bulk-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px}
+.pm-bulk-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px)}
+.pm-bulk-content{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.pm-bulk-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--accent);margin-bottom:.25rem}
+.pm-bulk-subtitle{font-size:.75rem;color:var(--text2);margin-bottom:1rem;line-height:1.5}
+.pm-bulk-input{width:100%;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.78rem;resize:vertical;min-height:200px}
+.pm-bulk-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pm-bulk-preview{margin-top:12px;padding:10px;background:var(--bg);border-radius:6px;font-size:.72rem;max-height:240px;overflow-y:auto}
+.pm-bulk-preview .match{color:#22c55e}
+.pm-bulk-preview .miss{color:#ef4444}
+.pm-bulk-preview .dup{color:#fb923c}
+.pm-bulk-preview-row{font-family:'JetBrains Mono',monospace;padding:2px 0}
 .pm-dc-r1{background:rgba(245,158,11,.15);color:var(--accent)}
 .pm-dc-r2{background:rgba(59,130,246,.12);color:#60a5fa}
 .pm-dc-r3{background:rgba(34,197,94,.1);color:#4ade80}
@@ -2659,6 +2677,45 @@ CLEAR
 <div class="pm-search-wrap">
 <svg class="pm-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
 <input type="text" class="pm-search" id="pmSearch" placeholder="Search player...">
+</div>
+<div class="pm-admin-tools" id="pmAdminTools" style="display:none">
+<button class="pm-admin-btn" id="pmBulkDcBtn" title="Paste the full draft order to update all prospects at once">Bulk DC</button>
+<button class="pm-admin-btn" id="pmBulkRasBtn" title="Paste a RAS.football CSV or list to bulk-update RAS values">Bulk RAS</button>
+<button class="pm-admin-btn danger" id="pmFillUdfaBtn" title="Mark all 2026 prospects without a DC set as UDFA">Fill UDFAs</button>
+</div>
+</div>
+<!-- Bulk DC entry modal (admin only) -->
+<div class="pm-bulk-modal" id="pmBulkModal" style="display:none">
+<div class="pm-bulk-backdrop" id="pmBulkBackdrop"></div>
+<div class="pm-bulk-content">
+<div class="pm-bulk-title">Bulk Draft Capital Entry</div>
+<div class="pm-bulk-subtitle">Paste one prospect per line. Accepted formats:<br>
+<code>1. Cam Ward</code> &nbsp;·&nbsp; <code>Cam Ward 1</code> &nbsp;·&nbsp; <code>Cam Ward, 1</code> &nbsp;·&nbsp; <code>Cam Ward&lt;tab&gt;1</code><br>
+Use <b>U</b> for undrafted. Only 2026 class prospects are updated.</div>
+<textarea class="pm-bulk-input" id="pmBulkInput" placeholder="1. Cam Ward&#10;2. Travis Hunter&#10;3. Shedeur Sanders&#10;..."></textarea>
+<div class="pm-bulk-actions">
+<button class="pm-admin-btn" id="pmBulkParseBtn">Parse &amp; Preview</button>
+<button class="pm-admin-btn" id="pmBulkApplyBtn" disabled>Apply</button>
+<button class="pm-admin-btn" id="pmBulkCloseBtn" style="margin-left:auto">Close</button>
+</div>
+<div class="pm-bulk-preview" id="pmBulkPreview" style="display:none"></div>
+</div>
+</div>
+<!-- Bulk RAS entry modal (admin only) -->
+<div class="pm-bulk-modal" id="pmBulkRasModal" style="display:none">
+<div class="pm-bulk-backdrop" id="pmBulkRasBackdrop"></div>
+<div class="pm-bulk-content">
+<div class="pm-bulk-title">Bulk RAS Entry</div>
+<div class="pm-bulk-subtitle">Paste a RAS.football CSV export (with Name/RAS columns) or one prospect per line.<br>
+Accepted line formats: <code>Carson Beck, 7.82</code> &nbsp;·&nbsp; <code>Carson Beck 7.82</code> &nbsp;·&nbsp; <code>Carson Beck&lt;tab&gt;7.82</code><br>
+Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
+<textarea class="pm-bulk-input" id="pmBulkRasInput" placeholder="Carson Beck, 7.82&#10;Drew Allar, 9.15&#10;..."></textarea>
+<div class="pm-bulk-actions">
+<button class="pm-admin-btn" id="pmBulkRasParseBtn">Parse &amp; Preview</button>
+<button class="pm-admin-btn" id="pmBulkRasApplyBtn" disabled>Apply</button>
+<button class="pm-admin-btn" id="pmBulkRasCloseBtn" style="margin-left:auto">Close</button>
+</div>
+<div class="pm-bulk-preview" id="pmBulkRasPreview" style="display:none"></div>
 </div>
 </div>
 <div id="pmClassGrade" class="pm-class-grade" style="display:none"></div>
@@ -26809,6 +26866,470 @@ window.fmtHeight = fmtHeight;
     window._pmNoLimit = false;
     renderTable();
   });
+
+  // ===== BULK DC ENTRY (admin-only) =====
+  // Show/hide the admin tools based on sign-in state
+  function _pmSyncAdminTools() {
+    const tools = document.getElementById('pmAdminTools');
+    if (!tools) return;
+    tools.style.display = _dcIsAdmin() ? 'inline-flex' : 'none';
+  }
+  _pmSyncAdminTools();
+  // Re-check whenever auth state changes (Firebase will re-run this)
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try { firebase.auth().onAuthStateChanged(_pmSyncAdminTools); } catch(e) {}
+  }
+
+  // Normalize a name for fuzzy matching: strip suffix, lowercase, remove non-alphanum
+  function _pmNormName(name) {
+    if (!name) return '';
+    return String(name)
+      .replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)\.?$/i, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+  }
+
+  // Build a normalized -> canonical name lookup for the 2026 class
+  function _pmBuild2026Index() {
+    const idx = {};        // exact-normalized key
+    const lastFirst = {};  // "lastname:firstinitial" key (fallback)
+    if (typeof COMBINE_DATA === 'undefined') return { idx, lastFirst };
+    Object.keys(COMBINE_DATA).forEach(function(n) {
+      const cb = COMBINE_DATA[n];
+      if (!cb || cb.yr !== 2026 || cb.devy) return;
+      const norm = _pmNormName(n);
+      if (norm) idx[norm] = n;
+      // last-name + first-initial fallback: "smithj"
+      const parts = n.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)\.?$/i, '').trim().split(/\s+/);
+      if (parts.length >= 2) {
+        const last = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]/g, '');
+        const firstInit = parts[0][0].toLowerCase();
+        const key = last + ':' + firstInit;
+        // Only set if unique (don't overwrite — ambiguous match gets filtered below)
+        if (lastFirst[key] === undefined) lastFirst[key] = n;
+        else lastFirst[key] = null; // mark ambiguous
+      }
+    });
+    return { idx, lastFirst };
+  }
+
+  // Parse bulk-entry text. Accepted per-line formats:
+  //   "1. Cam Ward"     -> name="Cam Ward", pick="1"
+  //   "Cam Ward 1"      -> name="Cam Ward", pick="1"
+  //   "Cam Ward, 1"     -> same
+  //   "Cam Ward\t1"     -> same
+  //   "Cam Ward U"      -> undrafted
+  //   "Cam Ward"        -> unparsed (no pick)
+  // Returns an array of { lineNo, raw, name, pick, status, canonical }
+  //   status: 'ok' | 'unmatched' | 'bad-pick' | 'unparsed'
+  function _pmParseBulk(text) {
+    const { idx, lastFirst } = _pmBuild2026Index();
+    const out = [];
+    const lines = String(text || '').split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i];
+      const trimmed = raw.trim();
+      if (!trimmed) continue;
+      let name = '', pick = '';
+      // Pattern A: leading number-dot "1. Cam Ward"  (pick precedes name)
+      let m = trimmed.match(/^(\d+)\s*[.)\-]\s*(.+)$/);
+      if (m) {
+        pick = m[1];
+        name = m[2].trim();
+      } else {
+        // Pattern B: trailing pick — "Cam Ward 1", "Cam Ward, 1", "Cam Ward\t1", "Cam Ward U"
+        m = trimmed.match(/^(.+?)[\s,\t]+([\dUu][\dUu\.\s\-]*)$/);
+        if (m) {
+          name = m[1].trim();
+          pick = m[2].trim();
+        } else {
+          out.push({ lineNo: i+1, raw, name: trimmed, pick: '', status: 'unparsed' });
+          continue;
+        }
+      }
+      // Clean pick: accept "1", "1.04", "2.15", "U", "UDFA"
+      const pickRaw = pick.replace(/\s/g, '');
+      let pickClean = '';
+      if (/^u(dfa)?$/i.test(pickRaw)) {
+        pickClean = 'U';
+      } else if (/^\d+(\.\d+)?$/.test(pickRaw)) {
+        pickClean = pickRaw;
+      } else {
+        out.push({ lineNo: i+1, raw, name, pick: pickRaw, status: 'bad-pick' });
+        continue;
+      }
+      // Resolve name -> canonical
+      const norm = _pmNormName(name);
+      let canonical = idx[norm] || null;
+      if (!canonical) {
+        // Try last-name + first-initial fallback
+        const parts = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)\.?$/i, '').trim().split(/\s+/);
+        if (parts.length >= 2) {
+          const last = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]/g, '');
+          const firstInit = parts[0][0].toLowerCase();
+          const key = last + ':' + firstInit;
+          if (lastFirst[key]) canonical = lastFirst[key];
+        }
+      }
+      if (!canonical) {
+        out.push({ lineNo: i+1, raw, name, pick: pickClean, status: 'unmatched' });
+        continue;
+      }
+      out.push({ lineNo: i+1, raw, name, pick: pickClean, status: 'ok', canonical });
+    }
+    return out;
+  }
+
+  // Apply parsed rows — dedupe last-write-wins on canonical name, then
+  // batch the Firestore writes + a single cache bust + one render.
+  function _pmApplyBulk(parsed) {
+    const okRows = parsed.filter(r => r.status === 'ok');
+    // Dedupe: last entry wins per canonical name
+    const byName = {};
+    okRows.forEach(r => { byName[r.canonical] = r.pick; });
+    const names = Object.keys(byName);
+    if (!names.length) return 0;
+    names.forEach(function(n) {
+      const val = byName[n];
+      _dcSave(n, val);
+      if (val) _bioSave(n, 'draft', val);
+      else _bioClear(n, 'draft');
+      // Clear the JM cache for this player (all positions + dr variants)
+      if (typeof _jmCache !== 'undefined') {
+        const prefix = n + '::';
+        Object.keys(_jmCache).forEach(k => { if (k.indexOf(prefix) === 0) delete _jmCache[k]; });
+      }
+    });
+    _pmBuildCache = null;
+    pmBuiltData = buildProspectData();
+    renderTable();
+    return names.length;
+  }
+
+  // Fill all remaining 2026 prospects without a _dcCache entry as UDFA
+  function _pmFillUdfas() {
+    if (typeof COMBINE_DATA === 'undefined') return 0;
+    const targets = [];
+    Object.keys(COMBINE_DATA).forEach(function(n) {
+      const cb = COMBINE_DATA[n];
+      if (!cb || cb.yr !== 2026 || cb.devy) return;
+      const existing = (_dcCache[n] || '').trim();
+      if (existing) return; // already set
+      targets.push(n);
+    });
+    if (!targets.length) return 0;
+    if (!confirm('Mark ' + targets.length + ' 2026 prospect(s) without a DC as UDFA (U)?\n\nThis writes to Firestore and is reversible only by editing each one.')) return 0;
+    targets.forEach(function(n) {
+      _dcSave(n, 'U');
+      _bioSave(n, 'draft', 'U');
+      if (typeof _jmCache !== 'undefined') {
+        const prefix = n + '::';
+        Object.keys(_jmCache).forEach(k => { if (k.indexOf(prefix) === 0) delete _jmCache[k]; });
+      }
+    });
+    _pmBuildCache = null;
+    pmBuiltData = buildProspectData();
+    renderTable();
+    return targets.length;
+  }
+
+  // Modal wiring
+  (function _pmBulkWire() {
+    const modal = document.getElementById('pmBulkModal');
+    const backdrop = document.getElementById('pmBulkBackdrop');
+    const openBtn = document.getElementById('pmBulkDcBtn');
+    const closeBtn = document.getElementById('pmBulkCloseBtn');
+    const parseBtn = document.getElementById('pmBulkParseBtn');
+    const applyBtn = document.getElementById('pmBulkApplyBtn');
+    const fillBtn = document.getElementById('pmFillUdfaBtn');
+    const input = document.getElementById('pmBulkInput');
+    const preview = document.getElementById('pmBulkPreview');
+    if (!modal || !openBtn) return;
+
+    let _lastParsed = null;
+
+    function open() {
+      modal.style.display = 'flex';
+      preview.style.display = 'none';
+      preview.innerHTML = '';
+      applyBtn.disabled = true;
+      _lastParsed = null;
+      setTimeout(() => input.focus(), 50);
+    }
+    function close() {
+      modal.style.display = 'none';
+    }
+
+    openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    backdrop.addEventListener('click', close);
+
+    parseBtn.addEventListener('click', function() {
+      const parsed = _pmParseBulk(input.value);
+      _lastParsed = parsed;
+      const ok = parsed.filter(r => r.status === 'ok');
+      const unm = parsed.filter(r => r.status === 'unmatched');
+      const bad = parsed.filter(r => r.status === 'bad-pick');
+      const unp = parsed.filter(r => r.status === 'unparsed');
+      let html = '<div style="margin-top:12px;font-family:\'JetBrains Mono\',monospace;font-size:.72rem;line-height:1.5">';
+      html += '<div class="match"><b>' + ok.length + '</b> matched</div>';
+      if (unm.length) html += '<div class="miss"><b>' + unm.length + '</b> unmatched (not in 2026 class)</div>';
+      if (bad.length) html += '<div class="miss"><b>' + bad.length + '</b> bad pick format</div>';
+      if (unp.length) html += '<div class="miss"><b>' + unp.length + '</b> unparsed</div>';
+      html += '<div style="margin-top:8px;max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px">';
+      parsed.forEach(function(r) {
+        if (r.status === 'ok') {
+          html += '<div class="match">&#10004; ' + r.canonical + '  &rarr;  ' + r.pick + '</div>';
+        } else if (r.status === 'unmatched') {
+          html += '<div class="miss">&#10007; UNMATCHED: "' + r.name + '" (pick ' + r.pick + ')</div>';
+        } else if (r.status === 'bad-pick') {
+          html += '<div class="miss">&#10007; BAD PICK: "' + r.name + '" &rarr; "' + r.pick + '"</div>';
+        } else {
+          html += '<div class="miss">&#10007; UNPARSED: ' + r.raw + '</div>';
+        }
+      });
+      html += '</div></div>';
+      preview.innerHTML = html;
+      preview.style.display = 'block';
+      applyBtn.disabled = !ok.length;
+    });
+
+    applyBtn.addEventListener('click', function() {
+      if (!_lastParsed) return;
+      const ok = _lastParsed.filter(r => r.status === 'ok');
+      if (!ok.length) return;
+      if (!confirm('Apply ' + ok.length + ' draft capital update(s) to Firestore?')) return;
+      const n = _pmApplyBulk(_lastParsed);
+      alert('Applied ' + n + ' update(s).');
+      input.value = '';
+      close();
+    });
+
+    fillBtn.addEventListener('click', function() {
+      const n = _pmFillUdfas();
+      if (n > 0) alert('Marked ' + n + ' prospect(s) as UDFA.');
+      else alert('No prospects needed the UDFA fill — all 2026 class already have a DC set.');
+    });
+  })();
+  // ===== END BULK DC ENTRY =====
+
+  // ===== BULK RAS ENTRY (admin-only) =====
+  // Parse a line or CSV row into {name, ras}. Accepts:
+  //   "Carson Beck, 7.82"
+  //   "Carson Beck\t7.82"
+  //   "Carson Beck 7.82"
+  //   RAS.football CSV rows: "Link,Name,Pos,Year,College,RAS,ALLTIME"
+  // Returns null if unparseable.
+  function _pmParseRasLine(raw) {
+    const trimmed = String(raw || '').trim();
+    if (!trimmed) return null;
+    // Skip RAS.football CSV header
+    if (/^"?Link"?\s*,/i.test(trimmed)) return null;
+    // CSV-style: at least 2 comma fields, try to find a name column and a RAS number
+    if (trimmed.indexOf(',') !== -1) {
+      // naive CSV split — handle quoted fields
+      const parts = [];
+      let cur = '', inQ = false;
+      for (let i = 0; i < trimmed.length; i++) {
+        const ch = trimmed[i];
+        if (ch === '"') { inQ = !inQ; continue; }
+        if (ch === ',' && !inQ) { parts.push(cur); cur = ''; continue; }
+        cur += ch;
+      }
+      parts.push(cur);
+      const cleaned = parts.map(s => s.trim());
+      // RAS.football format: [Link, Name, Pos, Year, College, RAS, ALLTIME]
+      if (cleaned.length >= 6 && /^20\d\d$/.test(cleaned[3])) {
+        const name = cleaned[1];
+        const ras = cleaned[5];
+        if (name && ras && !isNaN(parseFloat(ras))) {
+          return { name, ras: parseFloat(ras), year: cleaned[3] };
+        }
+        if (name && (ras === '' || isNaN(parseFloat(ras)))) {
+          return { name, ras: null, year: cleaned[3], reason: 'blank-ras' };
+        }
+      }
+      // Generic "Name, 7.82" or "Name, Pos, 7.82"
+      if (cleaned.length === 2 && !isNaN(parseFloat(cleaned[1]))) {
+        return { name: cleaned[0], ras: parseFloat(cleaned[1]) };
+      }
+      if (cleaned.length >= 3) {
+        // find the last numeric field as RAS
+        for (let k = cleaned.length - 1; k >= 1; k--) {
+          const v = parseFloat(cleaned[k]);
+          if (!isNaN(v)) {
+            return { name: cleaned[0], ras: v };
+          }
+        }
+      }
+    }
+    // Space/tab-delimited: "Name 7.82"
+    const m = trimmed.match(/^(.+?)[\s\t]+([\d.]+)$/);
+    if (m) {
+      const v = parseFloat(m[2]);
+      if (!isNaN(v)) return { name: m[1].trim(), ras: v };
+    }
+    return null;
+  }
+
+  // Parse full bulk-RAS paste. Returns array of {lineNo, raw, name, ras, status, canonical}
+  //   status: 'ok' | 'unmatched' | 'out-of-range' | 'blank-ras' | 'unparsed'
+  function _pmParseBulkRas(text) {
+    const { idx, lastFirst } = _pmBuild2026Index();
+    const out = [];
+    const lines = String(text || '').split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i];
+      if (!raw.trim()) continue;
+      const parsed = _pmParseRasLine(raw);
+      if (!parsed) {
+        out.push({ lineNo: i+1, raw, name: raw.trim(), ras: null, status: 'unparsed' });
+        continue;
+      }
+      if (parsed.reason === 'blank-ras') {
+        out.push({ lineNo: i+1, raw, name: parsed.name, ras: null, status: 'blank-ras' });
+        continue;
+      }
+      if (parsed.ras == null || parsed.ras < 0 || parsed.ras > 10) {
+        out.push({ lineNo: i+1, raw, name: parsed.name, ras: parsed.ras, status: 'out-of-range' });
+        continue;
+      }
+      // Match to canonical 2026 name
+      const norm = _pmNormName(parsed.name);
+      let canonical = idx[norm] || null;
+      if (!canonical) {
+        const parts = parsed.name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)\.?$/i, '').trim().split(/\s+/);
+        if (parts.length >= 2) {
+          const last = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]/g, '');
+          const firstInit = parts[0][0].toLowerCase();
+          const key = last + ':' + firstInit;
+          if (lastFirst[key]) canonical = lastFirst[key];
+        }
+      }
+      if (!canonical) {
+        out.push({ lineNo: i+1, raw, name: parsed.name, ras: parsed.ras, status: 'unmatched' });
+        continue;
+      }
+      out.push({ lineNo: i+1, raw, name: parsed.name, ras: parsed.ras, status: 'ok', canonical });
+    }
+    return out;
+  }
+
+  // Apply parsed RAS rows — dedupe last-write-wins on canonical name, then
+  // batch Firestore writes + single cache bust + one render.
+  function _pmApplyBulkRas(parsed) {
+    const okRows = parsed.filter(r => r.status === 'ok');
+    const byName = {};
+    okRows.forEach(r => { byName[r.canonical] = r.ras; });
+    const names = Object.keys(byName);
+    if (!names.length) return 0;
+    names.forEach(function(n) {
+      const val = byName[n];
+      // _bioSave stores the edit in Firestore AND updates COMBINE_DATA at runtime
+      _bioSave(n, 'ras', String(val));
+      // JM cache is keyed by name + pos + dr — clear all entries for this player
+      if (typeof _jmCache !== 'undefined') {
+        const prefix = n + '::';
+        Object.keys(_jmCache).forEach(k => { if (k.indexOf(prefix) === 0) delete _jmCache[k]; });
+      }
+    });
+    _pmBuildCache = null;
+    pmBuiltData = buildProspectData();
+    renderTable();
+    return names.length;
+  }
+
+  // RAS modal wiring
+  (function _pmBulkRasWire() {
+    const modal = document.getElementById('pmBulkRasModal');
+    const backdrop = document.getElementById('pmBulkRasBackdrop');
+    const openBtn = document.getElementById('pmBulkRasBtn');
+    const closeBtn = document.getElementById('pmBulkRasCloseBtn');
+    const parseBtn = document.getElementById('pmBulkRasParseBtn');
+    const applyBtn = document.getElementById('pmBulkRasApplyBtn');
+    const input = document.getElementById('pmBulkRasInput');
+    const preview = document.getElementById('pmBulkRasPreview');
+    if (!modal || !openBtn) return;
+
+    let _lastParsed = null;
+
+    function open() {
+      modal.style.display = 'flex';
+      preview.style.display = 'none';
+      preview.innerHTML = '';
+      applyBtn.disabled = true;
+      _lastParsed = null;
+      setTimeout(() => input.focus(), 50);
+    }
+    function close() {
+      modal.style.display = 'none';
+    }
+
+    openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    backdrop.addEventListener('click', close);
+
+    parseBtn.addEventListener('click', function() {
+      const parsed = _pmParseBulkRas(input.value);
+      _lastParsed = parsed;
+      const ok = parsed.filter(r => r.status === 'ok');
+      const unm = parsed.filter(r => r.status === 'unmatched');
+      const oor = parsed.filter(r => r.status === 'out-of-range');
+      const blk = parsed.filter(r => r.status === 'blank-ras');
+      const unp = parsed.filter(r => r.status === 'unparsed');
+      let html = '<div style="margin-top:12px;font-family:\'JetBrains Mono\',monospace;font-size:.72rem;line-height:1.5">';
+      html += '<div class="match"><b>' + ok.length + '</b> matched</div>';
+      if (unm.length) html += '<div class="miss"><b>' + unm.length + '</b> not in 2026 class (skipped)</div>';
+      if (blk.length) html += '<div class="miss"><b>' + blk.length + '</b> blank RAS (skipped)</div>';
+      if (oor.length) html += '<div class="miss"><b>' + oor.length + '</b> out-of-range value (skipped)</div>';
+      if (unp.length) html += '<div class="miss"><b>' + unp.length + '</b> unparsed (skipped)</div>';
+      html += '<div style="margin-top:8px;max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px">';
+      // Only show a trimmed view of unmatched/unparsed (usually 2000+ rows from RAS CSV)
+      const showMax = 200;
+      let shown = 0;
+      parsed.forEach(function(r) {
+        if (shown >= showMax) return;
+        if (r.status === 'ok') {
+          html += '<div class="match">&#10004; ' + r.canonical + '  &rarr;  ' + r.ras + '</div>';
+          shown++;
+        }
+      });
+      if (ok.length > shown) html += '<div class="match">... +' + (ok.length - shown) + ' more matched</div>';
+      // Show first few unmatched for diagnosis
+      if (unm.length) {
+        html += '<div style="margin-top:6px;opacity:.7">First few unmatched (2026-class only — these are usually non-skill-position players):</div>';
+        unm.slice(0, 10).forEach(function(r) {
+          html += '<div class="miss">&#10007; ' + r.name + ' (RAS ' + r.ras + ')</div>';
+        });
+      }
+      if (oor.length) {
+        oor.slice(0, 5).forEach(function(r) {
+          html += '<div class="miss">&#10007; OUT-OF-RANGE: ' + r.name + ' = ' + r.ras + '</div>';
+        });
+      }
+      if (unp.length) {
+        unp.slice(0, 5).forEach(function(r) {
+          html += '<div class="miss">&#10007; UNPARSED: ' + r.raw.substring(0, 80) + '</div>';
+        });
+      }
+      html += '</div></div>';
+      preview.innerHTML = html;
+      preview.style.display = 'block';
+      applyBtn.disabled = !ok.length;
+    });
+
+    applyBtn.addEventListener('click', function() {
+      if (!_lastParsed) return;
+      const ok = _lastParsed.filter(r => r.status === 'ok');
+      if (!ok.length) return;
+      if (!confirm('Apply ' + ok.length + ' RAS update(s) to Firestore?\n\n(This will overwrite existing RAS values for any player in the list.)')) return;
+      const n = _pmApplyBulkRas(_lastParsed);
+      alert('Applied ' + n + ' RAS update(s).');
+      input.value = '';
+      close();
+    });
+  })();
+  // ===== END BULK RAS ENTRY =====
 
   // Sort on header click
   document.getElementById('pmTable').addEventListener('click', function(e) {

@@ -25687,6 +25687,64 @@ window.fmtHeight = fmtHeight;
 
     _pmBuildCache = results;
     window._pmBuildCache = results; // Expose for console backtest access
+
+    // ═══ LANDING-SPOT ADJUSTMENT: crowded-room penalty (RB + TE) ═══
+    // Empirically calibrated from 2017-2024 retro (n=372):
+    //   RB: crowded rooms hit -9.1pp vs open rooms
+    //   TE: crowded rooms hit -12.5pp vs open rooms
+    //   Among top-JM prospects specifically: -8.1pp (talent doesn't overcome crowding)
+    //   WR: +1.6pp (noise — talent wins out)
+    //   QB: +21pp reversed (confounded: desperate teams start rookies immediately)
+    // Crowd score: sum over same-pos same-team prospects drafted in prior 3 years
+    //   of (32 / pick_number). Pick 1 = 32 units, pick 32 = 1 unit, pick 100 ≈ 0.32.
+    // Includes both historical (2023-2025 for the 2026 class) and in-flight 2026 picks.
+    const _ROOM_THRESH = {
+      RB: [{ c: 1.0, adj: -5 }, { c: 0.5, adj: -3 }],
+      TE: [{ c: 0.8, adj: -4 }, { c: 0.3, adj: -3 }]
+    };
+    function _pmComputeRoomAdj(p) {
+      if (!p.nflTeam || !p.draftYr) return { crowd: 0, adj: 0 };
+      if (!_ROOM_THRESH[p.pos]) return { crowd: 0, adj: 0 };
+      const myPick = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+      if (!myPick || myPick <= 0) return { crowd: 0, adj: 0 };
+      let crowd = 0;
+      // 1. Historical prospects (2014-2025) from HISTORICAL_DRAFT_PICKS
+      if (typeof HISTORICAL_DRAFT_PICKS !== 'undefined') {
+        for (const k in HISTORICAL_DRAFT_PICKS) {
+          const h = HISTORICAL_DRAFT_PICKS[k];
+          if (h.t !== p.nflTeam || h.pos !== p.pos) continue;
+          if (h.y < p.draftYr - 3 || h.y >= p.draftYr) continue;
+          if (!h.p || h.p <= 0) continue;
+          crowd += 32 / h.p;
+        }
+      }
+      // 2. In-flight same-year prospects picked EARLIER at same team+pos (2026 draft night)
+      results.forEach(q => {
+        if (q === p) return;
+        if (q.nflTeam !== p.nflTeam || q.pos !== p.pos) return;
+        if (q.draftYr !== p.draftYr) return;
+        const qPick = (typeof q.dr === 'number') ? q.dr : parseInt(q.dr);
+        if (!qPick || qPick <= 0 || qPick >= myPick) return; // only earlier picks crowd
+        crowd += 32 / qPick;
+      });
+      // Apply threshold table
+      let adj = 0;
+      for (const t of _ROOM_THRESH[p.pos]) {
+        if (crowd >= t.c) { adj = t.adj; break; }
+      }
+      return { crowd: Math.round(crowd * 10) / 10, adj };
+    }
+    results.forEach(p => {
+      const r = _pmComputeRoomAdj(p);
+      p.crowdScore = r.crowd;
+      p.roomAdj = r.adj;
+      if (r.adj !== 0 && p.jm != null) {
+        p.jm = Math.max(0, Math.min(100, Math.round((p.jm + r.adj) * 10) / 10));
+        if (p.jmFloor != null) p.jmFloor = Math.max(0, Math.min(100, Math.round((p.jmFloor + r.adj) * 10) / 10));
+        if (p.jmCeil != null) p.jmCeil = Math.max(0, Math.min(100, Math.round((p.jmCeil + r.adj) * 10) / 10));
+      }
+    });
+
     // Computes historical hit rates for each JM tier using 2017-2023 draft classes (3yr window).
     // "Hit" = best season fpts within first 3 NFL years above position threshold.
     // QB: 200+ fpts (~top-12), RB/WR: 170+ fpts (~top-24), TE: 120+ fpts (~top-12, lower for slow development).
@@ -26101,6 +26159,114 @@ window.fmtHeight = fmtHeight;
       const pStr = ('  ' + t.picks + '/' + t.scoredPicks + '   ').slice(0, 8);
       console.log(tStr + '  ' + gStr + ' ' + dStr + '  ' + pStr + '  ' + (t.totalJm + '       ').slice(0, 9) + '  ' + t.avgJm);
     });
+    return summary;
+  };
+
+  // === LANDING SPOT VALIDATION ===
+  // Tests whether the SHIPPED roomAdj thresholds actually improve JM predictions
+  // on historical data. Compares raw JM (pre-adjustment) vs adjusted JM (with
+  // roomAdj applied) at top-25%/50% cuts and splits by position.
+  // Run from console: window._landingSpotValidate()
+  window._landingSpotValidate = function() {
+    if (!window._pmBuildCache || !window._pmBuildCache.length) {
+      console.error('[LSValidate] _pmBuildCache not ready.');
+      return null;
+    }
+    const _hit = { QB: 200, RB: 170, WR: 170, TE: 120 };
+    const _dM = {};
+    D.forEach(d => { if (d.n) _dM[d.n] = d; });
+
+    const pool = [];
+    window._pmBuildCache.forEach(p => {
+      if (p.isDevy || p.isCollege) return;
+      if (p.jm == null || p.lowConfidence) return;
+      if (!p.nflTeam) return;
+      if (p.draftYr < 2017 || p.draftYr > 2024) return;
+      const pk = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+      if (!pk || pk <= 0) return;
+      const d = _dM[p.name];
+      if (!d || !d.career || !d.career.length) return;
+      const early = d.career.filter(s => s.yr >= p.draftYr && s.yr < p.draftYr + 3);
+      if (!early.length) return;
+      const bestSzn = Math.max(...early.map(s => s.fpts || 0));
+      const thresh = _hit[p.pos] || 170;
+      const adjThresh = (p.draftYr === 2024) ? thresh * 0.70 : thresh;
+      const isHit = bestSzn >= adjThresh;
+      // p.jm is already adjusted (mutated in buildProspectData)
+      // Recover raw by subtracting the adjustment
+      const adjJm = p.jm;
+      const rawJm = Math.max(0, Math.min(100, p.jm - (p.roomAdj || 0)));
+      pool.push({
+        name: p.name, pos: p.pos, yr: p.draftYr, team: p.nflTeam,
+        rawJm, adjJm, roomAdj: p.roomAdj || 0, crowd: p.crowdScore || 0, isHit
+      });
+    });
+    if (pool.length < 40) {
+      console.error('[LSValidate] Pool too small: ' + pool.length);
+      return null;
+    }
+
+    function topN(arr, key, pct) {
+      const s = arr.slice().sort((a,b) => b[key] - a[key]);
+      const n = Math.max(1, Math.round(s.length * pct));
+      const top = s.slice(0, n);
+      return { n: top.length, hits: top.filter(x => x.isHit).length,
+               rate: Math.round(top.filter(x => x.isHit).length / top.length * 1000) / 10 };
+    }
+
+    console.log('\n═══ LANDING SPOT VALIDATION (n=' + pool.length + ', 2017-2024) ═══');
+    console.log('Testing whether roomAdj thresholds improve ranking vs raw JM.');
+    console.log('');
+
+    const affected = pool.filter(x => x.roomAdj !== 0);
+    console.log('Prospects with roomAdj applied: ' + affected.length + '/' + pool.length + ' (' +
+      Math.round(affected.length / pool.length * 100) + '%)');
+    if (affected.length) {
+      const affHitRate = Math.round(affected.filter(x => x.isHit).length / affected.length * 1000) / 10;
+      const unaff = pool.filter(x => x.roomAdj === 0);
+      const unaffHit = Math.round(unaff.filter(x => x.isHit).length / unaff.length * 1000) / 10;
+      console.log('  Adjusted prospects hit rate:   ' + affHitRate + '% (' + affected.filter(x=>x.isHit).length + '/' + affected.length + ')');
+      console.log('  Unadjusted prospects hit rate: ' + unaffHit + '% (' + unaff.filter(x=>x.isHit).length + '/' + unaff.length + ')');
+      console.log('  → ' + (affHitRate < unaffHit ? 'CORRECT sign (penalized group underperforms by ' + (unaffHit-affHitRate).toFixed(1) + 'pp)' : 'WRONG sign (penalized group outperforms — bad)'));
+    }
+    console.log('');
+
+    const positions = ['ALL', 'RB', 'TE', 'WR', 'QB'];
+    const summary = {};
+    positions.forEach(pos => {
+      const sub = pos === 'ALL' ? pool : pool.filter(x => x.pos === pos);
+      if (sub.length < 8) { console.log('[' + pos + '] n=' + sub.length + ' too small'); return; }
+      const base = Math.round(sub.filter(x => x.isHit).length / sub.length * 1000) / 10;
+      const r25 = topN(sub, 'rawJm', 0.25);
+      const a25 = topN(sub, 'adjJm', 0.25);
+      const r50 = topN(sub, 'rawJm', 0.50);
+      const a50 = topN(sub, 'adjJm', 0.50);
+      summary[pos] = { n: sub.length, base, raw25: r25, adj25: a25, raw50: r50, adj50: a50 };
+      const d25 = a25.rate - r25.rate;
+      const d50 = a50.rate - r50.rate;
+      console.log('─── ' + pos + ' (n=' + sub.length + ', base ' + base + '%) ───');
+      console.log('  Top 25% rawJm: ' + r25.hits + '/' + r25.n + ' = ' + r25.rate + '%');
+      console.log('  Top 25% adjJm: ' + a25.hits + '/' + a25.n + ' = ' + a25.rate + '% ' + (d25 > 0 ? '(↑ ' + d25.toFixed(1) + ')' : d25 < 0 ? '(↓ ' + Math.abs(d25).toFixed(1) + ')' : '(=)'));
+      console.log('  Top 50% rawJm: ' + r50.hits + '/' + r50.n + ' = ' + r50.rate + '%');
+      console.log('  Top 50% adjJm: ' + a50.hits + '/' + a50.n + ' = ' + a50.rate + '% ' + (d50 > 0 ? '(↑ ' + d50.toFixed(1) + ')' : d50 < 0 ? '(↓ ' + Math.abs(d50).toFixed(1) + ')' : '(=)'));
+    });
+    console.log('');
+
+    // Verdict for RB+TE combined (the positions where we applied the adj)
+    const rbte = pool.filter(x => x.pos === 'RB' || x.pos === 'TE');
+    if (rbte.length >= 20) {
+      const r25 = topN(rbte, 'rawJm', 0.25);
+      const a25 = topN(rbte, 'adjJm', 0.25);
+      const r50 = topN(rbte, 'rawJm', 0.50);
+      const a50 = topN(rbte, 'adjJm', 0.50);
+      console.log('═══ VERDICT (RB+TE combined, n=' + rbte.length + ') ═══');
+      console.log('Top 25%: raw ' + r25.rate + '% → adj ' + a25.rate + '% (Δ ' + (a25.rate-r25.rate>=0?'+':'') + (a25.rate-r25.rate).toFixed(1) + 'pp)');
+      console.log('Top 50%: raw ' + r50.rate + '% → adj ' + a50.rate + '% (Δ ' + (a50.rate-r50.rate>=0?'+':'') + (a50.rate-r50.rate).toFixed(1) + 'pp)');
+      const avgLift = ((a25.rate-r25.rate) + (a50.rate-r50.rate)) / 2;
+      if (avgLift >= 2) console.log('✓ KEEP: avg lift ' + avgLift.toFixed(1) + 'pp, shipped thresholds are empirically justified.');
+      else if (avgLift >= 0) console.log('~ MARGINAL: avg lift ' + avgLift.toFixed(1) + 'pp. Works but effect is small.');
+      else console.log('✗ BACK OUT: avg lift ' + avgLift.toFixed(1) + 'pp. Thresholds worsen ranking — revert.');
+    }
     return summary;
   };
 
@@ -26829,6 +26995,20 @@ window.fmtHeight = fmtHeight;
       if (!p.nflTeam) return '';
       return ' <span title="' + p.nflTeam + '" style="display:inline-block;font-size:.5rem;font-weight:700;letter-spacing:.4px;padding:1px 5px;border-radius:3px;background:rgba(96,165,250,.14);color:#60a5fa;vertical-align:middle">' + p.nflTeam + '</span>';
     }
+    function _pmRoomChip(p) {
+      // Only show for RB/TE (the positions where crowded-room has an empirical effect)
+      if (p.pos !== 'RB' && p.pos !== 'TE') return '';
+      if (!p.nflTeam) return '';
+      if (p.roomAdj == null) return '';
+      const adj = p.roomAdj;
+      const crowd = p.crowdScore != null ? p.crowdScore.toFixed(1) : '0';
+      if (adj === 0) return ''; // open room: no chip, keep UI clean (absence = no penalty)
+      const isHeavy = adj <= -4;
+      const bg = isHeavy ? 'rgba(239,68,68,.18)' : 'rgba(251,146,60,.16)';
+      const fg = isHeavy ? '#f87171' : '#fb923c';
+      const label = isHeavy ? 'CROWDED' : 'busy';
+      return ' <span title="' + label + ' room (crowd ' + crowd + ', ' + adj + ' JM) — prior-3yr ' + p.pos + ' picks by ' + p.nflTeam + '" style="display:inline-block;font-size:.5rem;font-weight:700;letter-spacing:.3px;padding:1px 5px;border-radius:3px;background:' + bg + ';color:' + fg + ';vertical-align:middle">' + label + ' ' + adj + '</span>';
+    }
     function _pmStealReachBadge(p) {
       if (p.draftYr !== 2026) return '';
       if (p.jm == null || p.lowConfidence) return '';
@@ -26895,7 +27075,7 @@ window.fmtHeight = fmtHeight;
       cols.forEach(c => {
         switch (c.key) {
           case 'name':
-            rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span>${_pmTeamChip(p)}${_pmStealReachBadge(p)}${_pmCoverageChip(p)}${_pmCompLine(p)}</td>`;
+            rows += `<td><span class="pm-name" data-pmplayer="${p.name}">${p.name}</span> <span class="pm-pos ${p.pos}">${p.pos}</span>${_pmTeamChip(p)}${_pmRoomChip(p)}${_pmStealReachBadge(p)}${_pmCoverageChip(p)}${_pmCompLine(p)}</td>`;
             break;
           case 'jm':
             if (p.jm != null) {

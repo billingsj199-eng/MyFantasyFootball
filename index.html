@@ -3673,6 +3673,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/weekly_stats_retired.js"></script>
 <script src="data/all_players.js"></script>
 <script src="data/combine_data.js"></script>
+<script src="data/historical_draft_picks.js"></script>
 <script src="data/mike_clay_projections.js"></script>
 <script src="data/injury_history.js"></script>
 <script>
@@ -25632,7 +25633,16 @@ window.fmtHeight = fmtHeight;
         isCollege,
         isDevy: _isDevy,
         eligYr: (_cbEntry && _cbEntry.eligYr) || null,
-        nflTeam: (_cbEntry && _cbEntry.team) || null
+        nflTeam: (function() {
+          if (_cbEntry && _cbEntry.team) return _cbEntry.team;
+          // Fallback: historical draft picks map (2014-2024) keyed by normalized name
+          if (typeof HISTORICAL_DRAFT_PICKS !== 'undefined' && typeof _pmNormName === 'function') {
+            const _hk = _pmNormName(name);
+            const _h = HISTORICAL_DRAFT_PICKS[_hk];
+            if (_h && _h.y === draftYr && _h.pos === pos) return _h.t;
+          }
+          return null;
+        })()
       };
       // For 2026 prospects, use Firestore draft capital if available
       if (draftYr === 2026 && _dcCache[name]) {
@@ -26124,13 +26134,15 @@ window.fmtHeight = fmtHeight;
     window._pmBuildCache.forEach(p => {
       if (p.isDevy || p.isCollege) return;
       if (!p.draftYr || p.draftYr < 2014 || p.draftYr > 2024) return;
-      if (!p.pos || !p.dr) return; // dr = pick number
+      if (!p.pos) return;
+      const pickNum = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+      if (!pickNum || pickNum <= 0) return; // skip undrafted
       const yr = p.draftYr;
       if (!coverage[yr]) coverage[yr] = { total: 0, withTeam: 0 };
       coverage[yr].total++;
       if (p.nflTeam) {
         coverage[yr].withTeam++;
-        allHist.push({ yr, pos: p.pos, team: p.nflTeam, pick: p.dr });
+        allHist.push({ yr, pos: p.pos, team: p.nflTeam, pick: pickNum });
       }
     });
     console.log('\n═══ LANDING SPOT RETRO — COVERAGE DIAGNOSTIC ═══');
@@ -26155,6 +26167,8 @@ window.fmtHeight = fmtHeight;
       if (p.jm == null || p.lowConfidence) return;
       if (!p.nflTeam) return;
       if (p.draftYr < 2017 || p.draftYr > 2024) return;
+      const _pickN = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+      if (!_pickN || _pickN <= 0) return;
       const d = _dMap[p.name];
       if (!d || !d.career || !d.career.length) return;
       const early = d.career.filter(s => s.yr >= p.draftYr && s.yr < p.draftYr + 3);
@@ -26171,7 +26185,7 @@ window.fmtHeight = fmtHeight;
         crowd += 32 / Math.max(h.pick, 1);
       });
       pool.push({ name: p.name, pos: p.pos, yr: p.draftYr, team: p.nflTeam,
-                  jm: p.jm, pick: p.dr, crowd, isHit, bestSzn });
+                  jm: p.jm, pick: _pickN, crowd, isHit, bestSzn });
     });
     if (pool.length < 40) {
       console.error('[LandingSpot] Pool too small (n=' + pool.length + '). Need ≥40 for crowded-room test.');

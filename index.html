@@ -23897,12 +23897,17 @@ window.fmtHeight = fmtHeight;
 
   const _jmCache = {};
   function calcJM(p) {
-    // Cache key: player name + position (scores don't change within a session)
-    const cacheKey = p.name + '::' + p.pos;
+    // Cache key: player name + position + dr (so DC edits bust the cache correctly)
+    const cacheKey = p.name + '::' + p.pos + '::' + (p.dr == null ? '' : String(p.dr));
     if (_jmCache[cacheKey]) return _jmCache[cacheKey];
 
-    const wFloor = p.isDevy ? (JM_DEVY_FLOOR[p.pos] || JM_WEIGHTS[p.pos]) : JM_WEIGHTS[p.pos];
-    const wCeil = p.isDevy ? (JM_DEVY_CEILING[p.pos] || JM_CEILING_WEIGHTS[p.pos]) : JM_CEILING_WEIGHTS[p.pos];
+    // Devy players use devy weight tables (no DC component) — BUT once a DC is
+    // assigned (manually by admin, or via a DraftBuzz projection), switch back
+    // to the standard weight table so the DC actually counts. This fixes the
+    // bug where setting DC='U' for a devy player didn't lower their JM score.
+    const _useDevyWeights = p.isDevy && (p.dr == null);
+    const wFloor = _useDevyWeights ? (JM_DEVY_FLOOR[p.pos] || JM_WEIGHTS[p.pos]) : JM_WEIGHTS[p.pos];
+    const wCeil = _useDevyWeights ? (JM_DEVY_CEILING[p.pos] || JM_CEILING_WEIGHTS[p.pos]) : JM_CEILING_WEIGHTS[p.pos];
     if (!wFloor || !wCeil) return null;
 
     const ageScore = jmAge(p.age, p.pos);
@@ -26644,8 +26649,15 @@ window.fmtHeight = fmtHeight;
             _dcSave(name, val);
             // Also save to bio collection so it persists for all draft classes
             if (val) _bioSave(name, 'draft', val);
+            // If the user cleared the DC entirely, also clear it from bio so COMBINE_DATA.draft
+            // gets restored to its original (null) value — otherwise the old 'U'/pick persists.
+            else _bioClear(name, 'draft');
             _pmBuildCache = null;
-            if (typeof _jmCache !== 'undefined') delete _jmCache[name + '::' + (COMBINE_DATA[name] && COMBINE_DATA[name].pos || '')];
+            // Clear _jmCache for this player (key is name::pos::dr, so match by prefix)
+            if (typeof _jmCache !== 'undefined') {
+              const _prefix = name + '::';
+              Object.keys(_jmCache).forEach(k => { if (k.indexOf(_prefix) === 0) delete _jmCache[k]; });
+            }
             pmBuiltData = buildProspectData();
             renderTable();
           }
@@ -26686,18 +26698,23 @@ window.fmtHeight = fmtHeight;
           const _origVal = curVal;
           function commit() {
             const val = inp.value.trim();
-            const posKey = name + '::' + (COMBINE_DATA[name] && COMBINE_DATA[name].pos || '');
+            // _jmCache key is name::pos::dr, so match by name prefix
+            function _clearJmCache() {
+              if (typeof _jmCache === 'undefined') return;
+              const _prefix = name + '::';
+              Object.keys(_jmCache).forEach(k => { if (k.indexOf(_prefix) === 0) delete _jmCache[k]; });
+            }
             if (val) {
               if (val !== _origVal) {
                 _bioSave(name, field, val);
                 _pmBuildCache = null;
-                if (typeof _jmCache !== 'undefined') delete _jmCache[posKey];
+                _clearJmCache();
               }
             } else {
               // Empty input → clear the override (restore original)
               _bioClear(name, field);
               _pmBuildCache = null;
-              if (typeof _jmCache !== 'undefined') delete _jmCache[posKey];
+              _clearJmCache();
             }
             pmBuiltData = buildProspectData();
             renderTable();

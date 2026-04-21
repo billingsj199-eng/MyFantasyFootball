@@ -9199,6 +9199,17 @@ const EP_RETIRED = [
 {yr:2021,gp:1,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:2,rcy:41,rctd:0,fl:0,fpts:4.1,ppg:4.1},
 {yr:2022,gp:6,py:0,ptd:0,int:0,ra:4,ry:15,rtd:0,rc:6,rcy:62,rctd:0,fl:0,fpts:7.7,ppg:1.3},
 {yr:2023,gp:3,py:0,ptd:0,int:0,ra:1,ry:-2,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:-0.2,ppg:-0.1},
-{yr:2024,gp:1,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:1,rcy:11,rctd:0,fl:0,fpts:1.1,ppg:1.1}]}
+{yr:2024,gp:1,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:1,rcy:11,rctd:0,fl:0,fpts:1.1,ppg:1.1}]},
+    {name:"DeMarco Murray",pos:"RB",debut:2011,last:2017},
+    {name:"Amari Cooper",pos:"WR",debut:2015,last:2024},
+    {name:"Arian Foster",pos:"RB",debut:2009,last:2016},
+    {name:"Cam Newton",pos:"QB",debut:2011,last:2021},
+    {name:"Clinton Portis",pos:"RB",debut:2002,last:2010},
+    {name:"Colin Kaepernick",pos:"QB",debut:2011,last:2016},
+    {name:"Ezekiel Elliott",pos:"RB",debut:2016,last:2024},
+    {name:"LaDainian Tomlinson",pos:"RB",debut:2001,last:2011},
+    {name:"Le'Veon Bell",pos:"RB",debut:2013,last:2021},
+    {name:"Marcus Mariota",pos:"QB",debut:2015,last:2024},
+    {name:"Todd Gurley",pos:"RB",debut:2015,last:2020}
 ];
 

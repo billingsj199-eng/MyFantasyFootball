@@ -904,9 +904,13 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .trade-title{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
 .trade-subtitle{color:var(--text2);font-size:.82rem;margin-top:4px}
 .trade-mode-tabs{display:flex;gap:2px;justify-content:center;margin-bottom:1.25rem;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.15);width:fit-content;margin-left:auto;margin-right:auto}
-.trade-mode-tab,.trade-src-tab{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;padding:5px 14px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;white-space:nowrap}
+.trade-mode-tab,.trade-src-tab{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;padding:5px 14px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
 .trade-mode-tab:hover,.trade-src-tab:hover{color:var(--text)}
 .trade-mode-tab.active,.trade-src-tab.active{background:var(--accent);color:var(--bg);font-weight:700}
+.trade-src-tab.locked{opacity:.55;cursor:not-allowed}
+.trade-src-tab.locked:hover{color:var(--text2)}
+.trade-src-tab .lock-icon{width:11px;height:11px;opacity:.7}
+.trade-src-tab.active .lock-icon{opacity:1}
 .trade-layout{display:flex;gap:1.25rem;align-items:flex-start}
 @media(max-width:768px){.trade-layout{flex-direction:column;align-items:center}.trade-side{width:100%;max-width:420px}.trade-result{max-width:420px;margin-left:auto;margin-right:auto}.trade-vs{padding:.25rem 0}.trade-vs-icon{width:36px;height:36px;font-size:.9rem}}
 .trade-side{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;position:relative}
@@ -1615,6 +1619,10 @@ Continue with Google
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
 <span class="nav-label">Rankings</span>
 </button>
+<button class="nav-btn" data-page="myteams" id="navMyTeamsBtn" title="My Teams">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+<span class="nav-label">My<br>Teams</span>
+</button>
 <button class="nav-btn" data-page="trade" title="Trade Calculator">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
 <span class="nav-label">Trade<br>Calc</span>
@@ -1634,10 +1642,6 @@ Continue with Google
 <button class="nav-btn" data-page="games" title="Games">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
 <span class="nav-label">Games</span>
-</button>
-<button class="nav-btn" data-page="myteams" id="navMyTeamsBtn" title="My Teams">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-<span class="nav-label">My<br>Teams</span>
 </button>
 <button class="nav-btn" data-page="trivia" id="navTriviaBtn" title="Trivia Builder" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
@@ -2347,8 +2351,9 @@ CLEAR
 <div class="filter-rows">
 <div class="filter-row-top">
 <div class="version-tabs">
-<button class="version-tab active" data-version="jacks">JACK'S</button>
-<button class="version-tab" data-version="jsmodel">JS MODEL</button>
+<button class="version-tab active" data-version="consensus">CONSENSUS</button>
+<button class="version-tab" data-version="jacks">JACK'S</button>
+<button class="version-tab" data-version="jsmodel" id="jsModelVersionTab" style="display:none">JS MODEL</button>
 <button class="version-tab" data-version="mine">MY RANKINGS</button>
 </div>
 <div class="mode-tabs">
@@ -2393,7 +2398,7 @@ CLEAR
 <button class="md-rank-src-tab active" data-rnkadp="consensus" style="font-size:.65rem;padding:3px 10px">CONSENSUS</button>
 <button class="md-rank-src-tab locked" data-rnkadp="underdog" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
 <button class="md-rank-src-tab locked" data-rnkadp="espn" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
-<button class="md-rank-src-tab locked" data-rnkadp="sleeper" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>SLEEPER</button>
+<button class="md-rank-src-tab" data-rnkadp="sleeper" style="font-size:.65rem;padding:3px 10px">SLEEPER</button>
 <button class="md-rank-src-tab" data-rnkadp="ktc" style="font-size:.65rem;padding:3px 10px">KTC</button>
 <button class="md-rank-src-tab locked" data-rnkadp="yahoo" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
 </div>
@@ -2845,13 +2850,26 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- Ranking Source Selector -->
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
-<span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text)">VALUE SOURCE:</span>
-<select id="mtValueSource" style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem;font-family:'DM Sans',sans-serif">
-<option value="jacks">Jack's Rankings</option>
-<option value="adp">Underdog ADP</option>
-</select>
+<div style="margin-bottom:16px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+<span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text)">VALUE SOURCE</span>
 <span style="font-size:.65rem;color:var(--text2)">Used for team grades and player values</span>
+</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:4px">RANKINGS</div>
+<div class="trade-mode-tabs" style="margin-bottom:.5rem;background:var(--bg);padding:3px;border-radius:6px;display:inline-flex;flex-wrap:wrap">
+<button class="trade-src-tab mt-src-tab active" data-mtsrc="consensus">CONSENSUS</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
+<button class="trade-src-tab mt-src-tab jsmodel-src-tab" data-mtsrc="jsmodel" style="display:none">JS MODEL</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="mine">MY RANKS</button>
+</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1.5px;color:var(--text2);margin:6px 0 4px">ADP SOURCE</div>
+<div class="trade-mode-tabs" style="background:var(--bg);padding:3px;border-radius:6px;display:inline-flex;flex-wrap:wrap">
+<button class="trade-src-tab mt-src-tab" data-mtsrc="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
+<button class="trade-src-tab mt-src-tab locked" data-mtsrc="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="sleeper">SLEEPER</button>
+<button class="trade-src-tab mt-src-tab locked" data-mtsrc="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="ktc">KTC</button>
+</div>
 </div>
 
 <!-- League View (populated after import) -->
@@ -3408,9 +3426,20 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trade-mode-tab" data-tmode="dynasty">DYNASTY 1QB</button>
 <button class="trade-mode-tab" data-tmode="dynastysf">DYNASTY SF</button>
 </div>
-<div class="trade-mode-tabs" style="margin-bottom:1.25rem">
-<button class="trade-src-tab active" data-tsrc="jacks">JACK'S RANKS</button>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:4px;text-align:center">RANKINGS</div>
+<div class="trade-mode-tabs" style="margin-bottom:.5rem;flex-wrap:wrap">
+<button class="trade-src-tab active" data-tsrc="consensus">CONSENSUS</button>
+<button class="trade-src-tab" data-tsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
+<button class="trade-src-tab jsmodel-src-tab" data-tsrc="jsmodel" style="display:none">JS MODEL</button>
 <button class="trade-src-tab" data-tsrc="mine">MY RANKS</button>
+</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:4px;text-align:center">ADP SOURCE</div>
+<div class="trade-mode-tabs" style="margin-bottom:1.25rem;flex-wrap:wrap">
+<button class="trade-src-tab" data-tsrc="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
+<button class="trade-src-tab locked" data-tsrc="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
+<button class="trade-src-tab" data-tsrc="sleeper">SLEEPER</button>
+<button class="trade-src-tab locked" data-tsrc="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
+<button class="trade-src-tab" data-tsrc="ktc">KTC</button>
 </div>
 <div class="trade-layout">
 <!-- Side A -->
@@ -3527,8 +3556,10 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="md-setup-row">
 <label class="md-label">Rankings</label>
 <div class="md-rank-src-tabs" id="mdRankSrcTabs">
-<button class="md-rank-src-tab active" data-mdsrc="mine">MY RANKS</button>
+<button class="md-rank-src-tab active" data-mdsrc="consensus">CONSENSUS</button>
 <button class="md-rank-src-tab" data-mdsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
+<button class="md-rank-src-tab jsmodel-src-tab" data-mdsrc="jsmodel" style="display:none">JS MODEL</button>
+<button class="md-rank-src-tab" data-mdsrc="mine">MY RANKS</button>
 </div>
 </div>
 <div class="md-rank-premium-hint" id="mdRankPremiumHint">
@@ -3541,14 +3572,14 @@ Jack's Rankings require a <span class="md-premium-link" id="mdPremiumLink">Premi
 <button class="md-rank-src-tab active" data-mdadp="consensus">CONSENSUS</button>
 <button class="md-rank-src-tab locked" data-mdadp="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
 <button class="md-rank-src-tab locked" data-mdadp="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
-<button class="md-rank-src-tab locked" data-mdadp="sleeper"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>SLEEPER</button>
+<button class="md-rank-src-tab" data-mdadp="sleeper">SLEEPER</button>
 <button class="md-rank-src-tab" data-mdadp="ktc">KTC</button>
 <button class="md-rank-src-tab locked" data-mdadp="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
 </div>
 </div>
 <div class="md-rank-premium-hint" id="mdAdpPremiumHint">
 <svg style="width:16px;height:16px;color:var(--accent);vertical-align:middle;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumLink">Premium</span> account. ESPN, Sleeper, and Yahoo ADP coming soon.
+Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumLink">Premium</span> account. ESPN and Yahoo ADP coming soon.
 </div>
 <div class="md-setup-row">
 <label class="md-label">Number of Teams</label>
@@ -3593,7 +3624,8 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <div class="md-setup-row">
 <label class="md-label">Rankings</label>
 <div class="md-rank-src-tabs" id="mdRookieRankTabs">
-<button class="md-rank-src-tab active" data-rkranksrc="mine">MY RANKS</button>
+<button class="md-rank-src-tab active" data-rkranksrc="consensus">CONSENSUS</button>
+<button class="md-rank-src-tab" data-rkranksrc="mine">MY RANKS</button>
 <button class="md-rank-src-tab" data-rkranksrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
 <button class="md-rank-src-tab" data-rkranksrc="ktc">KTC</button>
 </div>
@@ -4627,9 +4659,25 @@ if (typeof COMBINE_DATA !== 'undefined') {
 
   // Sync 2025 draft/UDFA teams from COMBINE_DATA.dt back to D[].t
   // d.js may have pre-draft teams (e.g., Gadsden as MIA instead of LAC)
+  // NOTE: cb.dt stores ABBREVIATIONS (e.g., "TEN") but D[].t stores FULL NAMES
+  // (e.g., "Tennessee Titans"). Convert before assigning so the rankings UI
+  // doesn't display abbreviations for 2025 rookies.
+  var _SD25_ABBR_TO_FULL = {
+    'ARI':'Arizona Cardinals','ATL':'Atlanta Falcons','BAL':'Baltimore Ravens','BUF':'Buffalo Bills',
+    'CAR':'Carolina Panthers','CHI':'Chicago Bears','CIN':'Cincinnati Bengals','CLE':'Cleveland Browns',
+    'DAL':'Dallas Cowboys','DEN':'Denver Broncos','DET':'Detroit Lions','GB':'Green Bay Packers',
+    'HOU':'Houston Texans','IND':'Indianapolis Colts','JAX':'Jacksonville Jaguars','KC':'Kansas City Chiefs',
+    'LAC':'Los Angeles Chargers','LAR':'Los Angeles Rams','LV':'Las Vegas Raiders','MIA':'Miami Dolphins',
+    'MIN':'Minnesota Vikings','NE':'New England Patriots','NO':'New Orleans Saints','NYG':'New York Giants',
+    'NYJ':'New York Jets','PHI':'Philadelphia Eagles','PIT':'Pittsburgh Steelers','SF':'San Francisco 49ers',
+    'SEA':'Seattle Seahawks','TB':'Tampa Bay Buccaneers','TEN':'Tennessee Titans','WAS':'Washington Commanders'
+  };
   D.forEach(function(d) {
     var cb = COMBINE_DATA[d.n];
-    if (cb && cb.yr === 2025 && cb.dt && cb.dt !== d.t) d.t = cb.dt;
+    if (cb && cb.yr === 2025 && cb.dt) {
+      var fullTeam = _SD25_ABBR_TO_FULL[cb.dt] || cb.dt;
+      if (fullTeam !== d.t) d.t = fullTeam;
+    }
   });
 
   // === NAME ALIASES: create COMBINE_DATA entries under alternate name spellings ===
@@ -5508,8 +5556,8 @@ if (typeof _PFF_TE_GRADES !== 'undefined') {
 <script>const WEEKLY_STATS = Object.assign({}, WEEKLY_STATS_RETIRED, WEEKLY_STATS_ACTIVE);</script>
 <script id="ktcData">
 /* KeepTradeCut Dynasty Values (1QB + Superflex) — updated 03/31/26 */
-var KTC_1QB={"Bijan Robinson":9998,"Ja'Marr Chase":9991,"Jaxon Smith-Njigba":9991,"Jahmyr Gibbs":9983,"Puka Nacua":9564,"Malik Nabers":8057,"Brock Bowers":7970,"Amon-Ra St. Brown":7941,"Trey McBride":7894,"Ashton Jeanty":7893,"Justin Jefferson":7887,"CeeDee Lamb":7773,"Jeremiyah Love":7751,"Josh Allen":7615,"De'Von Achane":7426,"Drake London":7406,"Omarion Hampton":7307,"Tetairoa McMillan":7157,"2027 Early 1st":7082,"Emeka Egbuka":6827,"Jonathan Taylor":6802,"James Cook":6800,"George Pickens":6785,"Colston Loveland":6632,"Drake Maye":6631,"Chris Olave":6567,"Kenneth Walker III":6546,"Nico Collins":6530,"2026 Early 1st":6511,"Garrett Wilson":6483,"Tyler Warren":6439,"Jayden Daniels":6294,"Rome Odunze":6293,"Quinshon Judkins":6287,"TreVeyon Henderson":6262,"Lamar Jackson":6260,"Breece Hall":6247,"Ladd McConkey":6210,"Luther Burden":6179,"Carnell Tate":6029,"2027 Mid 1st":5961,"Christian McCaffrey":5933,"Bucky Irving":5888,"Makai Lemon":5852,"Chase Brown":5736,"Joe Burrow":5704,"Marvin Harrison Jr.":5704,"Tee Higgins":5699,"DeVonta Smith":5679,"Saquon Barkley":5643,"Kyren Williams":5639,"Brian Thomas Jr.":5628,"2028 Early 1st":5622,"Harold Fannin":5580,"A.J. Brown":5576,"Caleb Williams":5570,"Jordyn Tyson":5569,"Jaylen Waddle":5556,"Tucker Kraft":5542,"Rashee Rice":5539,"Travis Etienne":5522,"Zay Flowers":5522,"2027 Late 1st":5508,"Jameson Williams":5492,"Jaxson Dart":5480,"Javonte Williams":5478,"Patrick Mahomes":5476,"2026 Mid 1st":5461,"Jalen Hurts":5415,"Josh Jacobs":5387,"Justin Herbert":5376,"Cam Skattebo":5368,"Alec Pierce":5241,"Sam LaPorta":5239,"2028 Mid 1st":5172,"Kyle Pitts":5142,"Kenyon Sadiq":5097,"2026 Late 1st":5089,"Bo Nix":5063,"Bhayshul Tuten":5023,"D.J. Moore":4849,"Jordan Addison":4836,"Oronde Gadsden II":4810,"Derrick Henry":4796,"Fernando Mendoza":4787,"2028 Late 1st":4783,"RJ Harvey":4772,"Trevor Lawrence":4710,"Wan'Dale Robinson":4698,"Zach Charbonnet":4697,"Brock Purdy":4655,"KC Concepcion":4647,"Romeo Doubs":4601,"2027 Early 2nd":4589,"Michael Wilson":4567,"Jordan Love":4550,"DK Metcalf":4537,"Travis Hunter":4518,"Christian Watson":4514,"Ricky Pearsall":4508,"Jayden Higgins":4483,"Parker Washington":4473,"Dak Prescott":4459,"Kyle Monangai":4456,"D'Andre Swift":4395,"Tyler Allgeier":4380,"Matthew Golden":4378,"David Montgomery":4356,"Davante Adams":4349,"Michael Pittman":4322,"Isaiah Likely":4307,"Terry McLaurin":4258,"Baker Mayfield":4236,"Xavier Worthy":4219,"2026 Early 2nd":4216,"Jakobi Meyers":4208,"Kyler Murray":4150,"Omar Cooper Jr.":4148,"Denzel Boston":4145,"Josh Downs":4138,"Chuba Hubbard":4120,"Mike Evans":4119,"2027 Mid 2nd":4086,"Quentin Johnston":4067,"Blake Corum":4056,"Rico Dowdle":4051,"Dalton Kincaid":4050,"Jake Ferguson":4049,"Jaylen Warren":4046,"Jayden Reed":4033,"Cam Ward":4003,"George Kittle":3987,"C.J. Stroud":3945,"Malik Willis":3892,"Sam Darnold":3883,"Courtland Sutton":3879,"Jalen Coker":3832,"Jadarian Price":3825,"2028 Early 2nd":3782,"Jared Goff":3774,"Jalen McMillan":3764,"Khalil Shakir":3760,"2027 Late 2nd":3750,"2026 Mid 2nd":3747,"Brenton Strange":3730,"Kayshon Boutte":3705,"J.K. Dobbins":3688,"Rashid Shaheed":3684,"Rhamondre Stevenson":3683,"Jonathon Brooks":3662,"Kenneth Gainwell":3619,"Troy Franklin":3618,"Jonah Coleman":3604,"Mason Taylor":3591,"2028 Mid 2nd":3582,"2026 Late 2nd":3556,"Trey Benson":3549,"Isaac TeSlaa":3547,"Woody Marks":3541,"Bryce Young":3529,"Elic Ayomanor":3523,"Chris Godwin":3522,"Jauan Jennings":3520,"AJ Barner":3517,"Terrance Ferguson":3514,"Jaylin Noel":3512,"Pat Bryant":3510,"Tre Harris":3508,"Jacory Croskey-Merritt":3502,"Daniel Jones":3501,"Braelon Allen":3472,"Chimere Dike":3458,"Tory Horton":3440,"Matthew Stafford":3432,"Kyle Williams":3404,"Rachaad White":3402,"Dylan Sampson":3401,"2028 Late 2nd":3376,"Jordan Mason":3374,"Tony Pollard":3365,"T.J. Hockenson":3361,"Tyjae Spears":3359,"Adonai Mitchell":3335,"David Njoku":3326,"Jerry Jeudy":3307,"Chigoziem Okonkwo":3303,"Eli Stowers":3271,"Mark Andrews":3268,"Tyrone Tracy":3262,"Brandon Aiyuk":3258,"Dallas Goedert":3223,"Ollie Gordon":3197,"Elijah Arroyo":3188,"Sean Tucker":3161,"Nicholas Singleton":3149,"Marvin Mims":3111,"Michael Penix Jr.":3104,"Keon Coleman":3087,"Kimani Vidal":3081,"Tre Tucker":3081,"Tank Dell":3079,"Keaton Mitchell":3063,"Kaleb Johnson":3059,"Ty Simpson":3056,"Tank Bigsby":3040,"Gunnar Helm":3037,"Deebo Samuel":3026,"Tyler Shough":3025,"Jack Bech":3014,"Elijah Sarratt":3005,"Theo Johnson":3004,"J.J. McCarthy":2979,"Tez Johnson":2957,"2027 Early 3rd":2951,"Cade Otton":2945,"Juwan Johnson":2932,"Travis Kelce":2931,"Devin Neal":2922,"Jaylen Wright":2900,"Malik Washington":2883,"Dontayvion Wicks":2882,"Stefon Diggs":2869,"Isiah Pacheco":2868,"Mike Washington Jr.":2865,"Isaiah Bond":2855,"2026 Early 3rd":2852,"Emmett Johnson":2846,"Brian Robinson":2807,"Jake Tonges":2806,"Chris Brazzell II":2795,"Chris Rodriguez":2787,"Michael Mayer":2758,"Hunter Henry":2755,"Tyreek Hill":2754,"Zachariah Branch":2746,"Brashard Smith":2744,"2027 Mid 3rd":2716,"2026 Mid 3rd":2700,"Dalton Schultz":2675,"Jalen Nailor":2671,"Cedric Tillman":2662,"Emanuel Wilson":2654,"Demario Douglas":2651,"Alvin Kamara":2646,"Kendre Miller":2643,"Xavier Legette":2632,"2028 Early 3rd":2608,"Trevor Etienne":2601,"2027 Late 3rd":2595,"Dont'e Thornton":2595,"Chris Bell":2593,"Pat Freiermuth":2592,"Ja'Tavion Sanders":2584,"LeQuint Allen":2580,"Colby Parkinson":2576,"Rashod Bateman":2574,"James Conner":2548,"Darnell Mooney":2541,"Kaytron Allen":2538,"DJ Giddens":2535,"2026 Late 3rd":2526,"Malachi Fields":2507,"Jaydon Blue":2501,"Aaron Jones":2498,"Cole Kmet":2490,"Christian Kirk":2483,"Ray Davis":2431,"Marquise Brown":2428,"2028 Mid 3rd":2414,"Jalen Milroe":2400,"Isaiah Davis":2394,"Ryan Flournoy":2372,"Jaylin Lane":2363,"Ja'Kobi Lane":2352,"Germie Bernard":2342,"Trinidad Chambliss":2290,"Jordan James":2290,"Tua Tagovailoa":2288,"Mac Jones":2276,"2028 Late 3rd":2272,"Darnell Washington":2270,"Ben Sinnott":2264,"Shedeur Sanders":2259,"Tyquan Thornton":2254,"Luke Musgrave":2247,"Najee Harris":2239,"Justin Fields":2234,"Anthony Richardson":2224,"Xavier Hutchinson":2222,"Jalen Royals":2211,"Luke McCaffrey":2180,"MarShawn Lloyd":2144,"Tahj Brooks":2143,"John Metchie":2137,"Calvin Ridley":2125,"Jarquez Hunter":2114,"Evan Engram":2111,"Dawson Knox":2100,"Jahan Dotson":2081,"Devaughn Vele":2080,"2026 Early 4th":2076,"Calvin Austin III":2051,"Cooper Kupp":2047,"2027 Early 4th":2046,"Andrei Iosivas":2042,"Audric Estime":2038,"Roman Wilson":2035,"Keenan Allen":2025,"KeAndre Lambert-Smith":2024,"Savion Williams":2009,"2027 Mid 4th":1997,"Will Shipley":1997,"Jimmy Horn":1985,"Skyler Bell":1977,"Noah Gray":1970,"Darius Slayton":1966,"Isaac Guerendo":1964,"2026 Mid 4th":1961,"Jordan Whittington":1957,"Jalen Tolbert":1953,"Jerome Ford":1933,"Jaleel McLaughlin":1904,"2028 Early 4th":1893,"Tutu Atwell":1890,"Josh Palmer":1868,"2027 Late 4th":1864,"Daniel Bellinger":1862,"Max Klare":1858,"Bam Knight":1851,"Greg Dulcich":1846,"Treylon Burks":1828,"2026 Late 4th":1821,"Ja'Lynn Polk":1815,"Tommy Tremble":1813,"Kendrick Bourne":1812,"Konata Mumpfield":1803,"Xavier Restrepo":1800,"Efton Chism":1800,"Devin Singletary":1799,"Antonio Williams":1795,"Noah Fant":1783,"Dyami Brown":1780,"Raheim Sanders":1758,"Jonnu Smith":1746,"Roschon Johnson":1743,"Devontez Walker":1737,"Michael Trigg":1725,"Olamide Zaccheaus":1724,"2028 Mid 4th":1714,"Cade Stover":1700,"Kevin Coleman":1689,"Garrett Nussmeier":1684,"Malik Davis":1680,"Jacoby Brissett":1678,"Mike Gesicki":1675,"Jalin Hyatt":1668,"Michael Carter":1659,"Joe Mixon":1611,"Dillon Gabriel":1582,"Justice Hill":1582,"Tai Felton":1576,"Emari Demercado":1576,"Demond Claiborne":1559,"Ty Johnson":1553,"Trey Palmer":1551,"Phil Mafah":1545,"Quinn Ewers":1537,"Tyler Higbee":1528,"Rasheen Ali":1515,"2028 Late 4th":1501,"Tahj Washington":1499,"KaVontae Turpin":1494,"Joe Milton":1480,"Tyrell Shavers":1480,"Kalel Mullings":1477,"Will Howard":1476,"George Holani":1470,"Ted Hurst":1469,"Malachi Corley":1465,"Kameron Johnson":1463,"Greg Dortch":1457,"Erick All":1455,"Mack Hollins":1454,"Aaron Rodgers":1450,"Elijah Moore":1442,"Damien Martinez":1429,"Le'Veon Moss":1426,"Tyler Goodson":1411,"Geno Smith":1409,"Kareem Hunt":1409,"Elijah Higgins":1408,"Luke Schoonmaker":1402,"Darren Waller":1395,"Gabriel Davis":1370,"Jake Bobo":1360,"Seth McGowan":1359,"Jordan Watkins":1347,"Dameon Pierce":1334,"Chris Brooks":1334,"Tyler Badie":1319,"Spencer Rattler":1316,"Javon Baker":1316,"Davis Allen":1308,"Jack Endries":1304,"Lil'Jordan Humphrey":1299,"Jonathan Mingo":1296,"Jacob Cowing":1284,"Zach Ertz":1276,"Donovan Edwards":1275,"CJ Daniels":1266,"Mitchell Evans":1251,"Arian Smith":1236,"Jam Miller":1236,"Brevin Jordan":1231,"J'Mari Taylor":1231,"Bo Melton":1219,"Deion Burks":1216,"Hassan Haskins":1186,"Cam Akers":1185,"Skyy Moore":1183,"Israel Abanikanda":1183,"Jared Wiley":1171,"Isaiah Hodgins":1170,"Sione Vaki":1167,"Tyler Johnson":1164,"Mason Tipton":1161,"Cade Klubnik":1155,"Jameis Winston":1131,"Frank Gore Jr.":1115,"Charlie Kolar":1110,"Deuce Vaughn":1109,"Nick Westbrook-Ikhine":1106,"Brock Wright":1103,"Riley Leonard":1084,"Terrell Jennings":1083,"Tyler Scott":1074,"Joe Flacco":1072,"Jamari Thrash":1071,"Elijah Mitchell":1069,"Demarcus Robinson":1066,"Nick Chubb":1059,"Luke Altmyer":1050,"Xavier Gipson":1048,"Bub Means":1046,"Samaje Perine":1045,"Marcus Mariota":1029,"Jeremy McNichols":1027,"Ty Chandler":1026,"Barion Brown":1025,"Khalil Herbert":1017,"JuJu Smith-Schuster":1017,"Jawhar Jordan":1015,"Curtis Samuel":1008,"Brenden Rice":999,"Miles Sanders":994,"Jeremy Ruckert":992,"DeAndre Hopkins":983,"Alexander Mattison":982,"Ainias Smith":982,"Kirk Cousins":969,"Zavier Scott":962,"Kendall Milton":955,"AJ Dillon":951,"Grant Calcaterra":949,"Johnny Wilson":930,"Kenny McIntosh":927,"Antonio Gibson":922,"Mecole Hardman":915,"Zamir White":905,"Julius Chestnut":903,"Tylan Wallace":895,"Reggie Virgil":887,"LaJohntay Wester":879,"Van Jefferson":878,"Sterling Shepard":855,"Malik Heath":841,"Zay Jones":840,"Trey Lance":836,"Jermaine Burton":823,"Adam Trautman":820,"Tyler Conklin":806,"Noah Brown":792,"Josh Oliver":775,"Jake Browning":761,"Kenny Pickett":679,"Sam Howell":675,"Zach Wilson":649,"Carson Wentz":641,"Tyler Huntley":614,"Aidan O'Connell":535,"Will Levis":523,"Tanner McKee":464,"Deshaun Watson":437,"Mason Rudolph":404,"Drew Lock":400,"Gardner Minshew":381,"Tyson Bagent":271,"Davis Mills":259,"Kyle McCord":254,"Tyrod Taylor":234};
-var KTC_SF={"Josh Allen":9987,"Bijan Robinson":9981,"Ja'Marr Chase":9837,"Jaxon Smith-Njigba":9784,"Jahmyr Gibbs":9645,"Drake Maye":9367,"Puka Nacua":9249,"Caleb Williams":7756,"Jayden Daniels":7754,"Brock Bowers":7728,"Amon-Ra St. Brown":7713,"Malik Nabers":7709,"Justin Jefferson":7681,"Lamar Jackson":7679,"Trey McBride":7602,"Ashton Jeanty":7477,"Jeremiyah Love":7414,"Joe Burrow":7372,"CeeDee Lamb":7324,"Drake London":6947,"Justin Herbert":6921,"2027 Early 1st":6850,"De'Von Achane":6835,"Patrick Mahomes":6804,"Omarion Hampton":6760,"Jaxson Dart":6653,"Tetairoa McMillan":6645,"Jalen Hurts":6338,"Trevor Lawrence":6284,"Bo Nix":6254,"George Pickens":6070,"Emeka Egbuka":5996,"Colston Loveland":5992,"James Cook":5990,"Jonathan Taylor":5987,"Brock Purdy":5968,"2026 Early 1st":5841,"Garrett Wilson":5777,"Nico Collins":5772,"Kenneth Walker III":5761,"Tyler Warren":5755,"Jordan Love":5692,"Chris Olave":5675,"2027 Mid 1st":5630,"Fernando Mendoza":5595,"Rome Odunze":5542,"TreVeyon Henderson":5474,"Quinshon Judkins":5421,"Ladd McConkey":5399,"Luther Burden":5374,"Breece Hall":5354,"Carnell Tate":5201,"Cam Ward":5150,"Christian McCaffrey":5130,"Makai Lemon":5100,"Bucky Irving":5096,"Dak Prescott":5061,"Marvin Harrison Jr.":4999,"2028 Early 1st":4990,"Chase Brown":4965,"Harold Fannin":4954,"Brian Thomas Jr.":4929,"DeVonta Smith":4919,"Tee Higgins":4917,"Saquon Barkley":4911,"Jaylen Waddle":4867,"Kyren Williams":4845,"Jordyn Tyson":4814,"Rashee Rice":4801,"C.J. Stroud":4794,"Tucker Kraft":4787,"2027 Late 1st":4784,"A.J. Brown":4783,"Baker Mayfield":4782,"Jameson Williams":4773,"Sam Darnold":4768,"2026 Mid 1st":4746,"Travis Etienne":4697,"Zay Flowers":4695,"Jared Goff":4679,"Tyler Shough":4632,"Josh Jacobs":4594,"Javonte Williams":4576,"Sam LaPorta":4547,"2028 Mid 1st":4539,"Kyle Pitts":4537,"Cam Skattebo":4525,"Bryce Young":4518,"Kenyon Sadiq":4409,"Kyler Murray":4398,"Alec Pierce":4341,"Daniel Jones":4274,"Malik Willis":4120,"Bhayshul Tuten":3939,"2028 Late 1st":3938,"Jordan Addison":3929,"2026 Late 1st":3927,"D.J. Moore":3909,"Oronde Gadsden II":3863,"Derrick Henry":3772,"RJ Harvey":3761,"Matthew Stafford":3747,"KC Concepcion":3740,"2027 Early 2nd":3734,"Michael Wilson":3731,"Zach Charbonnet":3725,"Wan'Dale Robinson":3707,"Romeo Doubs":3688,"Travis Hunter":3671,"Christian Watson":3660,"DK Metcalf":3638,"Ricky Pearsall":3614,"Parker Washington":3598,"Jayden Higgins":3590,"Tyler Allgeier":3573,"Kyle Monangai":3559,"Davante Adams":3540,"Matthew Golden":3525,"D'Andre Swift":3524,"Michael Pittman":3522,"Isaiah Likely":3515,"David Montgomery":3499,"2027 Mid 2nd":3435,"Omar Cooper Jr.":3415,"Chuba Hubbard":3397,"Terry McLaurin":3391,"Xavier Worthy":3390,"Jakobi Meyers":3388,"Jake Ferguson":3364,"2026 Early 2nd":3360,"Denzel Boston":3356,"Josh Downs":3354,"Dalton Kincaid":3350,"Quentin Johnston":3349,"Mike Evans":3338,"Rico Dowdle":3310,"Jayden Reed":3307,"George Kittle":3282,"Blake Corum":3258,"Jaylen Warren":3236,"Courtland Sutton":3185,"2028 Early 2nd":3121,"Jalen McMillan":3099,"Brenton Strange":3078,"Michael Penix Jr.":3067,"2027 Late 2nd":3063,"J.K. Dobbins":3057,"Rashid Shaheed":3053,"Jalen Coker":3046,"Khalil Shakir":3037,"2026 Mid 2nd":3020,"Ty Simpson":3017,"Rhamondre Stevenson":2991,"Jadarian Price":2975,"Jonathon Brooks":2939,"Kenneth Gainwell":2927,"Mason Taylor":2927,"Mac Jones":2921,"2028 Mid 2nd":2913,"J.J. McCarthy":2903,"AJ Barner":2896,"Kayshon Boutte":2893,"2026 Late 2nd":2877,"Chris Godwin":2873,"Troy Franklin":2862,"Terrance Ferguson":2862,"Shedeur Sanders":2846,"Tre Harris":2843,"Isaac TeSlaa":2839,"Jacory Croskey-Merritt":2832,"Jauan Jennings":2823,"Woody Marks":2815,"Elic Ayomanor":2814,"Jaylin Noel":2805,"Pat Bryant":2790,"T.J. Hockenson":2786,"Jacoby Brissett":2772,"Jonah Coleman":2766,"Chigoziem Okonkwo":2758,"Tory Horton":2747,"Braelon Allen":2740,"Mark Andrews":2736,"Chimere Dike":2733,"2028 Late 2nd":2727,"Tua Tagovailoa":2722,"Trey Benson":2717,"Jerry Jeudy":2717,"Dylan Sampson":2716,"Jordan Mason":2714,"Adonai Mitchell":2712,"Rachaad White":2708,"David Njoku":2702,"Kyle Williams":2698,"Tony Pollard":2668,"Tyjae Spears":2651,"Dallas Goedert":2636,"Eli Stowers":2627,"Tyrone Tracy":2589,"Brandon Aiyuk":2579,"Gunnar Helm":2566,"2027 Early 3rd":2562,"Keon Coleman":2552,"Elijah Arroyo":2545,"Keaton Mitchell":2535,"Tank Bigsby":2529,"Ollie Gordon":2525,"Deebo Samuel":2517,"Cade Otton":2516,"Tank Dell":2511,"Anthony Richardson":2510,"Sean Tucker":2494,"Kimani Vidal":2469,"Tre Tucker":2460,"Jalen Milroe":2457,"Travis Kelce":2456,"Nicholas Singleton":2447,"Theo Johnson":2442,"Juwan Johnson":2437,"Malik Washington":2429,"Marvin Mims":2413,"Elijah Sarratt":2413,"2026 Early 3rd":2400,"Jake Tonges":2400,"Jack Bech":2397,"2027 Mid 3rd":2397,"Isiah Pacheco":2396,"Kaleb Johnson":2388,"Jalen Nailor":2377,"Jaylen Wright":2345,"Dontayvion Wicks":2342,"Hunter Henry":2342,"Devin Neal":2314,"Michael Mayer":2314,"Tyreek Hill":2305,"Justin Fields":2302,"Isaiah Bond":2290,"Dalton Schultz":2290,"Chris Rodriguez":2278,"Tez Johnson":2275,"Brian Robinson":2256,"2026 Mid 3rd":2250,"Mike Washington Jr.":2248,"Stefon Diggs":2246,"2027 Late 3rd":2219,"Pat Freiermuth":2199,"Dont'e Thornton":2194,"Emanuel Wilson":2188,"Colby Parkinson":2169,"2028 Early 3rd":2167,"Emmett Johnson":2166,"Brashard Smith":2160,"Demario Douglas":2158,"LeQuint Allen":2150,"Xavier Legette":2141,"James Conner":2138,"2026 Late 3rd":2135,"2028 Mid 3rd":2134,"Cedric Tillman":2132,"Alvin Kamara":2128,"Chris Brazzell II":2124,"Zachariah Branch":2122,"Ja'Tavion Sanders":2122,"Geno Smith":2122,"Trevor Etienne":2118,"Rashod Bateman":2111,"DJ Giddens":2111,"Darnell Mooney":2104,"Christian Kirk":2098,"Will Howard":2092,"Aaron Jones":2087,"Trinidad Chambliss":2053,"Cole Kmet":2050,"Garrett Nussmeier":2046,"Jaydon Blue":2021,"Kendre Miller":1991,"Ray Davis":1974,"2028 Late 3rd":1964,"Chris Bell":1961,"Quinn Ewers":1934,"Jordan James":1929,"Darnell Washington":1927,"Marquise Brown":1920,"Isaiah Davis":1919,"Ryan Flournoy":1912,"Luke Musgrave":1898,"Malachi Fields":1890,"Jaylin Lane":1886,"Tyquan Thornton":1881,"Ben Sinnott":1876,"Jalen Royals":1858,"Najee Harris":1851,"Xavier Hutchinson":1849,"Kaytron Allen":1848,"Calvin Ridley":1848,"Cooper Kupp":1847,"Jahan Dotson":1839,"Joe Milton":1838,"2027 Early 4th":1837,"Aaron Rodgers":1829,"Evan Engram":1828,"2026 Early 4th":1825,"MarShawn Lloyd":1811,"Spencer Rattler":1811,"Luke McCaffrey":1799,"Riley Leonard":1794,"2027 Mid 4th":1789,"John Metchie":1780,"Kirk Cousins":1752,"Keenan Allen":1749,"Ja'Kobi Lane":1748,"Dawson Knox":1745,"Devaughn Vele":1742,"Roman Wilson":1735,"Tahj Brooks":1734,"Isaac Guerendo":1731,"Andrei Iosivas":1728,"Germie Bernard":1727,"Noah Gray":1714,"Jarquez Hunter":1706,"Calvin Austin III":1684,"Will Shipley":1667,"Jalen Tolbert":1666,"2027 Late 4th":1663,"2026 Mid 4th":1652,"2028 Early 4th":1641,"KeAndre Lambert-Smith":1640,"Jimmy Horn":1637,"Audric Estime":1625,"Dillon Gabriel":1622,"Savion Williams":1620,"Jerome Ford":1615,"Tutu Atwell":1612,"Jordan Whittington":1603,"Ja'Lynn Polk":1603,"Davis Mills":1599,"Darius Slayton":1590,"Josh Palmer":1583,"Greg Dulcich":1580,"Daniel Bellinger":1578,"Treylon Burks":1572,"Jameis Winston":1556,"Kendrick Bourne":1540,"2028 Mid 4th":1530,"Marcus Mariota":1529,"2026 Late 4th":1527,"Tyson Bagent":1524,"Noah Fant":1512,"Konata Mumpfield":1509,"Xavier Restrepo":1507,"Jaleel McLaughlin":1497,"Efton Chism":1497,"Roschon Johnson":1489,"Tommy Tremble":1488,"Cade Stover":1475,"Devin Singletary":1457,"Devontez Walker":1450,"Raheim Sanders":1446,"Will Levis":1446,"Bam Knight":1445,"Dyami Brown":1439,"Malik Davis":1424,"Jonnu Smith":1423,"Olamide Zaccheaus":1422,"Skyler Bell":1416,"Michael Carter":1409,"Mike Gesicki":1404,"Max Klare":1390,"Tyler Higbee":1353,"Tahj Washington":1341,"2028 Late 4th":1338,"Tai Felton":1334,"Tanner McKee":1326,"Justice Hill":1321,"Joe Mixon":1320,"Antonio Williams":1319,"Jalin Hyatt":1315,"George Holani":1311,"Trey Lance":1293,"Phil Mafah":1289,"Gardner Minshew":1271,"Tyler Huntley":1266,"Ty Johnson":1258,"Luke Schoonmaker":1256,"Rasheen Ali":1253,"Kevin Coleman":1249,"KaVontae Turpin":1247,"Malachi Corley":1244,"Michael Trigg":1242,"Trey Palmer":1234,"Emari Demercado":1231,"Mack Hollins":1223,"Elijah Moore":1223,"Greg Dortch":1221,"Damien Martinez":1200,"Erick All":1198,"Kenny Pickett":1196,"Elijah Higgins":1187,"Gabriel Davis":1182,"Jake Bobo":1179,"Darren Waller":1177,"Kalel Mullings":1174,"Zach Wilson":1172,"Kameron Johnson":1165,"Demond Claiborne":1160,"Tyrell Shavers":1158,"Tyler Goodson":1147,"Dameon Pierce":1142,"Sam Howell":1141,"Kareem Hunt":1140,"Jonathan Mingo":1130,"Jordan Watkins":1126,"Javon Baker":1121,"Jacob Cowing":1120,"Mitchell Evans":1116,"Donovan Edwards":1094,"Bo Melton":1091,"Chris Brooks":1089,"Lil'Jordan Humphrey":1087,"Joe Flacco":1081,"Davis Allen":1076,"Sione Vaki":1074,"Arian Smith":1059,"Le'Veon Moss":1052,"Jared Wiley":1046,"Drew Lock":1044,"Brevin Jordan":1040,"Charlie Kolar":1040,"Tyler Badie":1038,"Ted Hurst":1028,"Zach Ertz":1026,"Jam Miller":1026,"Isaiah Hodgins":1025,"Skyy Moore":1023,"Hassan Haskins":1022,"Cade Klubnik":1008,"J'Mari Taylor":1004,"Aidan O'Connell":1002,"Israel Abanikanda":1000,"Seth McGowan":994,"Mason Tipton":994,"Brock Wright":983,"Cam Akers":982,"Tyler Johnson":970,"Deuce Vaughn":970,"Elijah Mitchell":966,"Deion Burks":963,"Tyler Scott":953,"Jawhar Jordan":952,"CJ Daniels":946,"Jack Endries":945,"Xavier Gipson":943,"Jamari Thrash":942,"Frank Gore Jr.":939,"Mason Rudolph":938,"Ty Chandler":930,"Nick Westbrook-Ikhine":928,"Samaje Perine":926,"Nick Chubb":911,"Demarcus Robinson":910,"Bub Means":905,"Terrell Jennings":904,"Jeremy McNichols":889,"Miles Sanders":889,"Jeremy Ruckert":885,"Kendall Milton":880,"Deshaun Watson":876,"Zavier Scott":872,"DeAndre Hopkins":867,"Grant Calcaterra":858,"Jake Browning":854,"Khalil Herbert":844,"Alexander Mattison":840,"Brenden Rice":830,"JuJu Smith-Schuster":827,"Kenny McIntosh":817,"Johnny Wilson":814,"Ainias Smith":807,"AJ Dillon":806,"Curtis Samuel":776,"Antonio Gibson":775,"Tylan Wallace":755,"Kyle McCord":752,"Van Jefferson":749,"Julius Chestnut":748,"Carson Wentz":744,"Mecole Hardman":742,"Zay Jones":741,"Josh Oliver":741,"Zamir White":740,"Tyler Conklin":737,"Barion Brown":722,"Malik Heath":716,"Noah Brown":712,"Tyrod Taylor":705,"LaJohntay Wester":700,"Luke Altmyer":699,"Sterling Shepard":690,"Jermaine Burton":690,"Reggie Virgil":686,"Adam Trautman":686};
+var KTC_1QB={"Ja'Marr Chase":9999,"Bijan Robinson":9997,"Jaxon Smith-Njigba":9994,"Jahmyr Gibbs":9986,"Puka Nacua":9006,"Malik Nabers":8094,"Brock Bowers":8079,"Amon-Ra St. Brown":8039,"Justin Jefferson":7971,"Trey McBride":7833,"Jeremiyah Love":7807,"Ashton Jeanty":7796,"CeeDee Lamb":7716,"Josh Allen":7650,"Drake London":7373,"De'Von Achane":7363,"Omarion Hampton":7335,"Tetairoa McMillan":7193,"2027 Early 1st":7189,"Jonathan Taylor":6766,"George Pickens":6739,"Emeka Egbuka":6723,"James Cook":6694,"Colston Loveland":6627,"Drake Maye":6576,"Chris Olave":6512,"2026 Early 1st":6486,"Tyler Warren":6483,"Garrett Wilson":6482,"Kenneth Walker III":6479,"Nico Collins":6454,"TreVeyon Henderson":6387,"Lamar Jackson":6288,"Jayden Daniels":6273,"Rome Odunze":6265,"Luther Burden":6259,"Quinshon Judkins":6227,"Breece Hall":6225,"Ladd McConkey":6114,"Carnell Tate":6107,"2027 Mid 1st":5969,"Makai Lemon":5888,"Rashee Rice":5853,"Marvin Harrison Jr.":5823,"Bucky Irving":5780,"DeVonta Smith":5758,"Christian McCaffrey":5749,"Joe Burrow":5747,"Tee Higgins":5687,"Kyren Williams":5684,"Chase Brown":5607,"Caleb Williams":5592,"2028 Early 1st":5591,"Saquon Barkley":5588,"Brian Thomas Jr.":5587,"Jordyn Tyson":5581,"Tucker Kraft":5579,"Zay Flowers":5557,"A.J. Brown":5553,"Harold Fannin":5550,"Jaylen Waddle":5536,"Travis Etienne":5534,"Jaxson Dart":5515,"2027 Late 1st":5510,"Jameson Williams":5496,"Patrick Mahomes":5491,"2026 Mid 1st":5460,"Jalen Hurts":5453,"Justin Herbert":5437,"Javonte Williams":5406,"Josh Jacobs":5399,"Sam LaPorta":5263,"Alec Pierce":5165,"Cam Skattebo":5159,"2028 Mid 1st":5155,"Kyle Pitts":5115,"Bo Nix":5053,"Bhayshul Tuten":5014,"2026 Late 1st":5013,"Kenyon Sadiq":4984,"KC Concepcion":4940,"Jordan Addison":4900,"RJ Harvey":4837,"Trevor Lawrence":4833,"D.J. Moore":4812,"2028 Late 1st":4795,"Derrick Henry":4776,"Fernando Mendoza":4767,"Oronde Gadsden":4755,"Christian Watson":4682,"Brock Purdy":4656,"Wan'Dale Robinson":4612,"2027 Early 2nd":4597,"Michael Wilson":4596,"Jordan Love":4586,"Parker Washington":4520,"Zach Charbonnet":4519,"Omar Cooper Jr.":4519,"DK Metcalf":4510,"Jayden Higgins":4509,"Kyle Monangai":4495,"Matthew Golden":4494,"Ricky Pearsall":4479,"D'Andre Swift":4406,"Dak Prescott":4404,"Romeo Doubs":4351,"Davante Adams":4341,"Terry McLaurin":4324,"Denzel Boston":4318,"Michael Pittman":4276,"Isaiah Likely":4274,"David Montgomery":4272,"Josh Downs":4221,"Baker Mayfield":4210,"2026 Early 2nd":4190,"Chuba Hubbard":4183,"Tyler Allgeier":4170,"Jayden Reed":4149,"Xavier Worthy":4144,"2027 Mid 2nd":4103,"Jakobi Meyers":4094,"Cam Ward":4091,"Quentin Johnston":4082,"Mike Evans":4081,"Jadarian Price":4081,"Jaylen Warren":4040,"Blake Corum":4035,"Kyler Murray":4029,"Dalton Kincaid":4022,"George Kittle":3996,"Jake Ferguson":3990,"C.J. Stroud":3954,"Travis Hunter":3938,"Rico Dowdle":3920,"Jalen McMillan":3903,"Sam Darnold":3872,"Courtland Sutton":3856,"Malik Willis":3843,"Jalen Coker":3831,"Jared Goff":3797,"2028 Early 2nd":3786,"2026 Mid 2nd":3767,"J.K. Dobbins":3760,"2027 Late 2nd":3742,"Brenton Strange":3733,"Khalil Shakir":3726,"Jonathon Brooks":3708,"Rhamondre Stevenson":3660,"Kayshon Boutte":3631,"Jonah Coleman":3619,"Kenneth Gainwell":3618,"Rashid Shaheed":3593,"Mason Taylor":3586,"Chris Godwin":3585,"Bryce Young":3581,"Eli Stowers":3557,"2028 Mid 2nd":3554,"Terrance Ferguson":3547,"Tre Harris":3545,"Troy Franklin":3541,"2026 Late 2nd":3536,"Isaac TeSlaa":3533,"Woody Marks":3526,"AJ Barner":3511,"Trey Benson":3506,"Jacory Croskey-Merritt":3502,"Elic Ayomanor":3501,"Daniel Jones":3500,"Matthew Stafford":3476,"Jaylin Noel":3471,"Chigoziem Okonkwo":3445,"Rachaad White":3436,"Chimere Dike":3435,"Jauan Jennings":3421,"Braelon Allen":3395,"Dylan Sampson":3392,"Pat Bryant":3385,"Adonai Mitchell":3379,"T.J. Hockenson":3377,"Jordan Mason":3372,"Tory Horton":3361,"2028 Late 2nd":3357,"Jerry Jeudy":3341,"Mark Andrews":3326,"Tony Pollard":3301,"Tyjae Spears":3296,"Dallas Goedert":3287,"Dontayvion Wicks":3281,"Kyle Williams":3239,"Tyler Shough":3201,"David Njoku":3194,"Tyrone Tracy":3172,"Brandon Aiyuk":3166,"Tank Dell":3144,"Keon Coleman":3136,"Elijah Arroyo":3133,"Ollie Gordon":3125,"Gunnar Helm":3114,"Tre Tucker":3113,"Kaleb Johnson":3112,"Nicholas Singleton":3098,"Michael Penix Jr.":3068,"Chris Rodriguez":3056,"Elijah Sarratt":3053,"Mike Washington Jr.":3052,"Keaton Mitchell":3050,"Malik Washington":3024,"Sean Tucker":3013,"Ty Simpson":3010,"Kimani Vidal":3003,"Jack Bech":2998,"Tank Bigsby":2995,"Tez Johnson":2973,"Travis Kelce":2970,"Theo Johnson":2958,"Jaylen Wright":2950,"2027 Early 3rd":2949,"Juwan Johnson":2939,"Marvin Mims":2935,"Brian Robinson":2932,"Deebo Samuel":2889,"2026 Early 3rd":2881,"Chris Brazzell II":2874,"Emmett Johnson":2869,"Cade Otton":2863,"J.J. McCarthy":2858,"Stefon Diggs":2838,"Devin Neal":2825,"Isiah Pacheco":2822,"Jake Tonges":2788,"Emanuel Wilson":2751,"Hunter Henry":2741,"Jalen Nailor":2726,"2027 Mid 3rd":2722,"Isaiah Bond":2721,"Michael Mayer":2712,"Tyreek Hill":2698,"2026 Mid 3rd":2692,"Pat Freiermuth":2689,"Cedric Tillman":2664,"Zachariah Branch":2660,"Brashard Smith":2645,"Dalton Schultz":2636,"James Conner":2633,"Demario Douglas":2632,"Chris Bell":2627,"Darnell Mooney":2617,"Rashod Bateman":2604,"Dont'e Thornton":2603,"Alvin Kamara":2600,"Kendre Miller":2599,"2028 Early 3rd":2592,"2027 Late 3rd":2588,"Trevor Etienne":2577,"LeQuint Allen":2576,"Aaron Jones":2572,"Jaydon Blue":2556,"Xavier Legette":2552,"Cole Kmet":2545,"Jordan James":2539,"Ja'Tavion Sanders":2532,"Colby Parkinson":2511,"Christian Kirk":2509,"DJ Giddens":2502,"2026 Late 3rd":2500,"Kaytron Allen":2489,"Ray Davis":2446,"Malachi Fields":2445,"2028 Mid 3rd":2440,"Germie Bernard":2409,"Jalen Milroe":2386,"Jaylin Lane":2376,"Isaiah Davis":2355,"Ryan Flournoy":2326,"Mac Jones":2325,"Shedeur Sanders":2309,"Marquise Brown":2304,"Darnell Washington":2293,"Ben Sinnott":2278,"Tua Tagovailoa":2275,"Ja'Kobi Lane":2274,"Luke Musgrave":2270,"2028 Late 3rd":2262,"Jalen Royals":2259,"Tyquan Thornton":2244,"Anthony Richardson":2234,"Trinidad Chambliss":2224,"Najee Harris":2220,"MarShawn Lloyd":2198,"Xavier Hutchinson":2193,"Calvin Ridley":2186,"Justin Fields":2185,"Tahj Brooks":2166,"Luke McCaffrey":2143,"Dawson Knox":2124,"John Metchie":2116,"Evan Engram":2114,"Jahan Dotson":2111,"Savion Williams":2104,"Jarquez Hunter":2097,"Cooper Kupp":2082,"Devaughn Vele":2070,"2027 Early 4th":2066,"Jalen Tolbert":2062,"Roman Wilson":2043,"2026 Early 4th":2035,"Skyler Bell":2024,"Isaac Guerendo":2022,"Andrei Iosivas":2006,"2027 Mid 4th":2003,"Audric Estime":1989,"Calvin Austin III":1982,"Tutu Atwell":1978,"Will Shipley":1958,"KeAndre Lambert-Smith":1955,"Keenan Allen":1952,"2026 Mid 4th":1940,"Greg Dulcich":1939,"Jimmy Horn":1937,"Darius Slayton":1933,"Ja'Lynn Polk":1920,"Jordan Whittington":1907,"Noah Gray":1896,"Jerome Ford":1893,"Joshua Palmer":1885,"Treylon Burks":1879,"Jaleel McLaughlin":1877,"2026 Late 4th":1870,"2028 Early 4th":1867,"2027 Late 4th":1852,"Daniel Bellinger":1844,"Dyami Brown":1833,"Konata Mumpfield":1827,"Roschon Johnson":1818,"Kendrick Bourne":1815,"Devin Singletary":1791,"Jacoby Brissett":1787,"Antonio Williams":1781,"Max Klare":1773,"Tommy Tremble":1764,"Devontez Walker":1751,"Bam Knight":1748,"Efton Chism":1745,"Xavier Restrepo":1738,"Noah Fant":1733,"Cade Stover":1732,"Raheim Sanders":1730,"2028 Mid 4th":1725,"Jalin Hyatt":1717,"Garrett Nussmeier":1708,"Mike Gesicki":1704,"Olamide Zaccheaus":1676,"Tahj Washington":1652,"George Holani":1632,"Malik Davis":1628,"Justice Hill":1626,"Ty Johnson":1622,"Michael Trigg":1621,"Jonnu Smith":1616,"Kevin Coleman":1603,"Quinn Ewers":1598,"Tai Felton":1592,"Tyler Higbee":1558,"Erick All":1557,"Emari Demercado":1554,"Michael Carter":1553,"Joe Mixon":1552,"Trey Palmer":1550,"Dillon Gabriel":1517,"Phil Mafah":1516,"Malachi Corley":1513,"Elijah Moore":1512,"Will Howard":1498,"Damien Martinez":1487,"Joe Milton":1484,"Rasheen Ali":1477,"Elijah Higgins":1471,"Demond Claiborne":1468,"Greg Dortch":1463,"2028 Late 4th":1462,"Mack Hollins":1460,"KaVontae Turpin":1458,"Luke Schoonmaker":1452,"Ted Hurst":1444,"Kalel Mullings":1443,"Jake Bobo":1432,"Aaron Rodgers":1431,"Tyler Goodson":1430,"Kameron Johnson":1427,"Geno Smith":1409,"Tyrell Shavers":1404,"Chris Brooks":1402,"Gabriel Davis":1401,"Jordan Watkins":1382,"Jonathan Mingo":1363,"Kareem Hunt":1351,"Jacob Cowing":1345,"Donovan Edwards":1337,"Javon Baker":1336,"Dameon Pierce":1333,"Le'Veon Moss":1330,"Darren Waller":1319,"Spencer Rattler":1316,"Mitchell Evans":1302,"Tyler Badie":1301,"Lil'Jordan Humphrey":1297,"Davis Allen":1293,"Arian Smith":1279,"Zach Ertz":1274,"Bo Melton":1262,"Cam Akers":1245,"Mason Tipton":1227,"Hassan Haskins":1226,"Skyy Moore":1221,"Brevin Jordan":1220,"Sione Vaki":1205,"Jared Wiley":1194,"Israel Abanikanda":1193,"Seth McGowan":1171,"J'Mari Taylor":1158,"Nick Westbrook-Ikhine":1151,"Tyler Johnson":1149,"Deuce Vaughn":1142,"Isaiah Hodgins":1141,"Deion Burks":1136,"Jam Miller":1133,"Cade Klubnik":1131,"Frank Gore Jr.":1120,"Riley Leonard":1118,"Charlie Kolar":1113,"Jameis Winston":1112,"Kenny McIntosh":1111,"Nick Chubb":1110,"CJ Daniels":1107,"Brock Wright":1092,"Tyler Scott":1090,"Bub Means":1086,"Jamari Thrash":1084,"Terrell Jennings":1066,"Elijah Mitchell":1059,"Jawhar Jordan":1058,"Alexander Mattison":1057,"Jack Endries":1057,"Samaje Perine":1057,"Xavier Gipson":1056,"Joe Flacco":1055,"JuJu Smith-Schuster":1047,"Jeremy McNichols":1045,"Zavier Scott":1034,"Grant Calcaterra":1026,"Kirk Cousins":1024,"Demarcus Robinson":1021,"Brenden Rice":1020,"Marcus Mariota":1020,"Jeremy Ruckert":1019,"DeAndre Hopkins":1018,"Ty Chandler":1015,"Mecole Hardman":1005,"Miles Sanders":996,"Ainias Smith":988,"AJ Dillon":984,"Khalil Herbert":983,"Luke Altmyer":962,"Johnny Wilson":946,"Kendall Milton":942,"Van Jefferson":922,"Julius Chestnut":915,"David Bell":909,"Antonio Gibson":908,"LaJohntay Wester":896,"Malik Heath":881,"Tylan Wallace":868,"Tyler Conklin":835,"Zay Jones":826,"Trey Lance":823,"Sterling Shepard":822,"Adam Trautman":816,"Noah Brown":812,"Hunter Long":801,"Jermaine Burton":798,"Josh Oliver":775,"Will Dissly":761,"Jake Browning":712,"Sam Howell":696,"Taysom Hill":694,"Kenny Pickett":675,"Zach Wilson":652,"Carson Wentz":637,"Tyler Huntley":613,"Deshaun Watson":601,"Aidan O'Connell":540,"Will Levis":526,"Tanner McKee":463,"Mason Rudolph":407,"Drew Lock":404,"Gardner Minshew":383,"Tyson Bagent":272,"Davis Mills":262,"Kyle McCord":253,"Tyrod Taylor":236};
+var KTC_SF={"Josh Allen":9995,"Ja'Marr Chase":9988,"Bijan Robinson":9986,"Jaxon Smith-Njigba":9890,"Jahmyr Gibbs":9654,"Drake Maye":9442,"Puka Nacua":8754,"Jayden Daniels":7843,"Caleb Williams":7812,"Brock Bowers":7811,"Malik Nabers":7805,"Amon-Ra St. Brown":7788,"Justin Jefferson":7765,"Lamar Jackson":7675,"Trey McBride":7503,"Jeremiyah Love":7495,"Ashton Jeanty":7445,"Joe Burrow":7425,"CeeDee Lamb":7283,"2027 Early 1st":6936,"Drake London":6931,"De'Von Achane":6871,"Justin Herbert":6859,"Patrick Mahomes":6786,"Omarion Hampton":6755,"Jaxson Dart":6703,"Tetairoa McMillan":6694,"Trevor Lawrence":6256,"Jalen Hurts":6204,"Bo Nix":6177,"Colston Loveland":6042,"Emeka Egbuka":6033,"Jonathan Taylor":6013,"George Pickens":5995,"James Cook":5972,"Brock Purdy":5970,"Garrett Wilson":5801,"Tyler Warren":5777,"2026 Early 1st":5765,"Jordan Love":5712,"Kenneth Walker III":5669,"Chris Olave":5655,"TreVeyon Henderson":5630,"Fernando Mendoza":5629,"Nico Collins":5615,"2027 Mid 1st":5612,"Rome Odunze":5483,"Luther Burden":5396,"Carnell Tate":5360,"Ladd McConkey":5359,"Breece Hall":5333,"Quinshon Judkins":5324,"Cam Ward":5150,"Rashee Rice":5139,"Makai Lemon":5105,"Marvin Harrison Jr.":5032,"Dak Prescott":5025,"Christian McCaffrey":5011,"Bucky Irving":5005,"DeVonta Smith":4980,"2028 Early 1st":4972,"Harold Fannin":4912,"2027 Late 1st":4911,"Saquon Barkley":4886,"Tee Higgins":4882,"Tucker Kraft":4879,"Brian Thomas Jr.":4878,"Kyren Williams":4862,"C.J. Stroud":4860,"Jordyn Tyson":4845,"Chase Brown":4843,"Jaylen Waddle":4842,"Baker Mayfield":4840,"A.J. Brown":4831,"Zay Flowers":4792,"Sam Darnold":4774,"Jameson Williams":4726,"Jared Goff":4701,"Tyler Shough":4679,"2026 Mid 1st":4663,"Travis Etienne":4634,"Josh Jacobs":4561,"Sam LaPorta":4542,"Javonte Williams":4521,"Bryce Young":4514,"2028 Mid 1st":4491,"Kyle Pitts":4426,"Kyler Murray":4344,"Cam Skattebo":4317,"Kenyon Sadiq":4304,"Daniel Jones":4226,"Malik Willis":4208,"Alec Pierce":4200,"KC Concepcion":4106,"Jordan Addison":3993,"Bhayshul Tuten":3975,"2026 Late 1st":3960,"RJ Harvey":3893,"2028 Late 1st":3877,"Oronde Gadsden":3876,"D.J. Moore":3857,"Derrick Henry":3813,"2027 Early 2nd":3804,"Christian Watson":3769,"Omar Cooper Jr.":3725,"Michael Wilson":3700,"Matthew Golden":3682,"Wan'Dale Robinson":3672,"DK Metcalf":3618,"Parker Washington":3617,"Matthew Stafford":3611,"Ricky Pearsall":3606,"Zach Charbonnet":3603,"Jayden Higgins":3596,"Kyle Monangai":3542,"D'Andre Swift":3500,"Isaiah Likely":3499,"Michael Pittman":3492,"Romeo Doubs":3485,"Davante Adams":3484,"Terry McLaurin":3479,"David Montgomery":3443,"2027 Mid 2nd":3442,"Denzel Boston":3439,"Josh Downs":3437,"Jayden Reed":3397,"Tyler Allgeier":3395,"Chuba Hubbard":3386,"Xavier Worthy":3375,"Quentin Johnston":3324,"Dalton Kincaid":3306,"Mike Evans":3300,"Jake Ferguson":3292,"Jakobi Meyers":3289,"Jadarian Price":3283,"George Kittle":3282,"2026 Early 2nd":3280,"Rico Dowdle":3214,"Blake Corum":3205,"Jaylen Warren":3200,"Travis Hunter":3175,"Michael Penix Jr.":3156,"Jalen McMillan":3144,"2028 Early 2nd":3142,"Jalen Coker":3141,"Courtland Sutton":3130,"Brenton Strange":3105,"Ty Simpson":3071,"2027 Late 2nd":3059,"J.K. Dobbins":3050,"Khalil Shakir":3002,"2026 Mid 2nd":2982,"Rashid Shaheed":2970,"Rhamondre Stevenson":2967,"Mason Taylor":2960,"Jonathon Brooks":2940,"Eli Stowers":2927,"2028 Mid 2nd":2926,"Tre Harris":2924,"Chris Godwin":2923,"J.J. McCarthy":2910,"Kenneth Gainwell":2886,"Kayshon Boutte":2862,"AJ Barner":2857,"Shedeur Sanders":2856,"Terrance Ferguson":2843,"Mac Jones":2825,"2026 Late 2nd":2824,"Woody Marks":2823,"Isaac TeSlaa":2819,"T.J. Hockenson":2818,"Jacory Croskey-Merritt":2818,"Jonah Coleman":2802,"Chigoziem Okonkwo":2783,"Jaylin Noel":2776,"Dylan Sampson":2769,"Tua Tagovailoa":2768,"Elic Ayomanor":2764,"Troy Franklin":2758,"Jacoby Brissett":2756,"Mark Andrews":2750,"Adonai Mitchell":2747,"2028 Late 2nd":2743,"Rachaad White":2742,"Trey Benson":2739,"Jerry Jeudy":2738,"Chimere Dike":2736,"Jauan Jennings":2725,"Pat Bryant":2711,"Jordan Mason":2701,"Dontayvion Wicks":2700,"Braelon Allen":2683,"Dallas Goedert":2681,"Tony Pollard":2668,"Tory Horton":2660,"Gunnar Helm":2641,"Tyjae Spears":2613,"David Njoku":2589,"Kyle Williams":2582,"Tre Tucker":2547,"Brandon Aiyuk":2544,"Elijah Arroyo":2539,"Tank Dell":2536,"Keon Coleman":2532,"Keaton Mitchell":2528,"Tyrone Tracy":2521,"Malik Washington":2520,"Chris Rodriguez":2517,"2027 Early 3rd":2500,"Elijah Sarratt":2498,"Tank Bigsby":2496,"Kaleb Johnson":2493,"Ollie Gordon":2488,"Anthony Richardson":2477,"Travis Kelce":2475,"Brian Robinson":2458,"Theo Johnson":2428,"Nicholas Singleton":2423,"Kimani Vidal":2422,"Sean Tucker":2418,"Mike Washington Jr.":2417,"Jalen Milroe":2412,"Juwan Johnson":2408,"Jack Bech":2403,"Deebo Samuel":2395,"2027 Mid 3rd":2393,"Cade Otton":2390,"Jaylen Wright":2361,"Marvin Mims":2337,"Isiah Pacheco":2336,"Michael Mayer":2311,"Jake Tonges":2308,"Chris Brazzell II":2307,"2026 Early 3rd":2305,"Hunter Henry":2304,"Jalen Nailor":2301,"Tez Johnson":2296,"Pat Freiermuth":2283,"Dalton Schultz":2273,"Justin Fields":2267,"2027 Late 3rd":2248,"Stefon Diggs":2233,"Emanuel Wilson":2232,"Devin Neal":2210,"Aaron Jones":2207,"James Conner":2206,"Tyreek Hill":2189,"Geno Smith":2181,"2028 Early 3rd":2179,"Darnell Mooney":2175,"2026 Mid 3rd":2172,"Emmett Johnson":2167,"Jordan James":2165,"Isaiah Bond":2160,"Rashod Bateman":2124,"LeQuint Allen":2116,"Dont'e Thornton":2113,"Demario Douglas":2112,"2026 Late 3rd":2111,"Christian Kirk":2111,"Trevor Etienne":2110,"Garrett Nussmeier":2101,"Chris Bell":2097,"Cedric Tillman":2096,"Brashard Smith":2095,"Colby Parkinson":2087,"Will Howard":2086,"Ja'Tavion Sanders":2083,"Alvin Kamara":2082,"DJ Giddens":2071,"2028 Mid 3rd":2069,"Xavier Legette":2066,"Zachariah Branch":2059,"Cole Kmet":2053,"Jaydon Blue":2046,"Ray Davis":2007,"Kendre Miller":2005,"2028 Late 3rd":1938,"Kirk Cousins":1930,"Darnell Washington":1927,"Luke Musgrave":1911,"Kaytron Allen":1910,"Isaiah Davis":1909,"Calvin Ridley":1906,"Aaron Rodgers":1904,"MarShawn Lloyd":1898,"Ben Sinnott":1889,"Malachi Fields":1885,"Ryan Flournoy":1881,"2027 Early 4th":1880,"Marquise Brown":1874,"Quinn Ewers":1869,"Trinidad Chambliss":1859,"Germie Bernard":1858,"Tyquan Thornton":1857,"Najee Harris":1857,"Jaylin Lane":1852,"Jalen Royals":1842,"Cooper Kupp":1838,"Evan Engram":1825,"Deshaun Watson":1813,"Luke McCaffrey":1803,"Riley Leonard":1802,"Jahan Dotson":1801,"Xavier Hutchinson":1799,"Jalen Tolbert":1798,"Spencer Rattler":1788,"Joe Milton":1771,"2026 Early 4th":1761,"Jarquez Hunter":1754,"2027 Mid 4th":1745,"John Metchie":1744,"Dawson Knox":1740,"Devaughn Vele":1739,"Savion Williams":1726,"Tutu Atwell":1715,"Tahj Brooks":1704,"Andrei Iosivas":1688,"Isaac Guerendo":1686,"Ja'Kobi Lane":1677,"Roman Wilson":1675,"Noah Gray":1672,"Will Shipley":1664,"Keenan Allen":1656,"Greg Dulcich":1642,"Calvin Austin III":1641,"Joshua Palmer":1640,"Audric Estime":1633,"Ja'Lynn Polk":1632,"2026 Mid 4th":1630,"2027 Late 4th":1629,"Treylon Burks":1627,"Jerome Ford":1611,"Jordan Whittington":1606,"2028 Early 4th":1595,"Jimmy Horn":1592,"Darius Slayton":1562,"KeAndre Lambert-Smith":1559,"2028 Mid 4th":1555,"Dillon Gabriel":1551,"Marcus Mariota":1539,"Davis Mills":1536,"Tyson Bagent":1531,"Skyler Bell":1528,"2026 Late 4th":1517,"Jameis Winston":1515,"Roschon Johnson":1513,"Kendrick Bourne":1499,"Will Levis":1495,"Daniel Bellinger":1491,"Cade Stover":1490,"Konata Mumpfield":1481,"Dyami Brown":1477,"Tahj Washington":1473,"Noah Fant":1469,"Jaleel McLaughlin":1449,"Tommy Tremble":1442,"Mike Gesicki":1441,"Devin Singletary":1441,"Xavier Restrepo":1422,"Efton Chism":1420,"Raheim Sanders":1412,"Devontez Walker":1395,"George Holani":1394,"Bam Knight":1391,"Jalin Hyatt":1372,"Olamide Zaccheaus":1371,"Malik Davis":1356,"Tyler Higbee":1354,"Tyler Huntley":1348,"Tanner McKee":1347,"Justice Hill":1343,"Tai Felton":1333,"Ty Johnson":1320,"Jonnu Smith":1313,"Max Klare":1306,"Erick All":1303,"2028 Late 4th":1292,"Antonio Williams":1276,"Elijah Moore":1275,"Luke Schoonmaker":1266,"Michael Carter":1263,"Malachi Corley":1261,"KaVontae Turpin":1260,"Gardner Minshew":1255,"Phil Mafah":1249,"Elijah Higgins":1245,"Mack Hollins":1244,"Trey Lance":1243,"Trey Palmer":1242,"Joe Mixon":1241,"Damien Martinez":1240,"Greg Dortch":1225,"Emari Demercado":1214,"Tyler Goodson":1205,"Gabriel Davis":1200,"Jake Bobo":1199,"Joe Flacco":1197,"Rasheen Ali":1196,"Kameron Johnson":1181,"Chris Brooks":1180,"Kenny Pickett":1177,"Kevin Coleman":1160,"Zach Wilson":1158,"Mitchell Evans":1155,"Michael Trigg":1153,"Sam Howell":1149,"Donovan Edwards":1141,"Jonathan Mingo":1138,"Kalel Mullings":1133,"Javon Baker":1129,"Jacob Cowing":1117,"Jordan Watkins":1116,"Bo Melton":1115,"Tyrell Shavers":1094,"Dameon Pierce":1093,"Lil'Jordan Humphrey":1091,"Demond Claiborne":1090,"Darren Waller":1078,"Ted Hurst":1064,"Kareem Hunt":1055,"Arian Smith":1054,"Mason Tipton":1053,"Jared Wiley":1050,"Cade Klubnik":1049,"Sione Vaki":1047,"Davis Allen":1042,"Hassan Haskins":1039,"Tyler Badie":1034,"Charlie Kolar":1032,"Zach Ertz":1030,"Skyy Moore":1029,"Drew Lock":1028,"Brevin Jordan":1015,"Israel Abanikanda":1013,"Cam Akers":1008,"Isaiah Hodgins":1005,"Le'Veon Moss":994,"Brock Wright":991,"Aidan O'Connell":985,"Deuce Vaughn":984,"Mason Rudolph":978,"Kenny McIntosh":971,"Nick Westbrook-Ikhine":969,"Jamari Thrash":964,"Elijah Mitchell":962,"J'Mari Taylor":952,"Jawhar Jordan":950,"Tyler Johnson":945,"Nick Chubb":944,"Tyler Scott":940,"Jam Miller":938,"Frank Gore Jr.":931,"Zavier Scott":930,"Xavier Gipson":926,"Grant Calcaterra":921,"Bub Means":920,"Ty Chandler":911,"Jeremy Ruckert":910,"Samaje Perine":909,"Deion Burks":902,"Alexander Mattison":891,"Jeremy McNichols":880,"Terrell Jennings":878,"Ainias Smith":877,"Demarcus Robinson":870,"Miles Sanders":869,"JuJu Smith-Schuster":866,"DeAndre Hopkins":861,"Kendall Milton":854,"Jake Browning":852,"Johnny Wilson":843,"Seth McGowan":836,"Carson Wentz":828,"Brenden Rice":813,"Mecole Hardman":811,"AJ Dillon":802,"Khalil Herbert":797,"Van Jefferson":780,"Malik Heath":779,"CJ Daniels":779,"David Bell":766,"Julius Chestnut":762,"Zay Jones":760,"Antonio Gibson":754,"Kyle McCord":748,"Tyler Conklin":739,"Noah Brown":738,"Adam Trautman":735,"Jermaine Burton":723,"Tylan Wallace":722,"Sterling Shepard":720,"Jack Endries":719,"Hunter Long":716,"LaJohntay Wester":705,"Tyrod Taylor":701,"Josh Oliver":693,"Luke Altmyer":677,"Will Dissly":675,"Taysom Hill":674};
 </script>
 <script>
 // Global auth state flag — used by canEdit() before Firebase auth module loads
@@ -5900,7 +5948,18 @@ function validateImportData(obj) {
   // (free agents, recently traded, rookies with name mismatches, etc.)
   const FALLBACK_IDS = {
     "Austin Ekeler":"3068267","Cam Skattebo":"4696981","Dalvin Cook":"3116593","D.J. Moore":"3915416","DJ Moore":"3915416","Darren Waller":"2576925","Harold Fannin":"5083076","Harold Fannin Jr.":"5083076","James Cook":"4379399","James Cook III":"4379399","James Conner":"3045147","Marvin Harrison Jr.":"4432708","Nick Chubb":"3128720","Odell Beckham Jr.":"16733","Russell Wilson":"14881","Todd Gurley":"2977644","Tyreek Hill":"3116406",
-    "Arian Foster":"12497","DeAndre Hopkins":"15795","Steve Smith Sr.":"2622","Steve Smith":"2622","Jamaal Charles":"11307","Devonta Freeman":"16944","Brandon Marshall":"9705","Allen Robinson":"16799","Matt Forte":"11278","Julio Jones":"13982","Antonio Brown":"13934","Le'Veon Bell":"15825","Keenan Allen":"15818","Julian Edelman":"12649","Sammy Watkins":"16725","Adrian Peterson":"10452","Mark Ingram":"13981","Mark Ingram II":"13981","Tyrell Williams":"2587819","Todd Gurley II":"2977644"
+    "Arian Foster":"12497","DeAndre Hopkins":"15795","Steve Smith Sr.":"2622","Steve Smith":"2622","Jamaal Charles":"11307","Devonta Freeman":"16944","Brandon Marshall":"9705","Allen Robinson":"16799","Matt Forte":"11278","Julio Jones":"13982","Antonio Brown":"13934","Le'Veon Bell":"15825","Keenan Allen":"15818","Julian Edelman":"12649","Sammy Watkins":"16725","Adrian Peterson":"10452","Mark Ingram":"13981","Mark Ingram II":"13981","Tyrell Williams":"2587819","Todd Gurley II":"2977644",
+    // === Corrected active-player IDs (d.js contained scrambled IDs; fixed via ESPN API audit) ===
+    "A.J. Brown":"4047646","Alvin Kamara":"3054850","Bijan Robinson":"4430807","Bo Nix":"4426338","Brandon Aiyuk":"4360438","Breece Hall":"4427366","Brian Robinson":"4241474","Brock Bowers":"4432665","Bryce Young":"4685720","Caleb Williams":"4431611",
+    "Calvin Ridley":"3925357","Carson Wentz":"2573079","Chris Olave":"4361370","Christian Watson":"4248528","Chuba Hubbard":"4241416","Colby Parkinson":"4242557","Cole Kmet":"4258595","Cooper Kupp":"2977187","Courtland Sutton":"3128429","D'Andre Swift":"4259545",
+    "Dallas Goedert":"3121023","Dalton Schultz":"3117256","David Montgomery":"4035538","David Njoku":"3123076","De'Von Achane":"4429160","DeVonta Smith":"4241478","Devin Singletary":"4040761","Drake London":"4426502","Evan Engram":"3051876","Garrett Wilson":"4569618",
+    "Geno Smith":"15864","George Pickens":"4426354","Hunter Henry":"3046439","Isaiah Likely":"4361050","Jacoby Brissett":"2578570","Jahmyr Gibbs":"4429795","Jakobi Meyers":"3916433","Jared Goff":"3046779","Jauan Jennings":"3886598","Jaxon Smith-Njigba":"4430878",
+    "Jayden Daniels":"4426348","Jaylen Waddle":"4372016","Jerry Jeudy":"4241463","Jonathan Taylor":"4242335","Jordan Addison":"4429205","Jordan Love":"4036378","JuJu Smith-Schuster":"3120348","Justin Fields":"4362887","Kareem Hunt":"3059915","Kenneth Gainwell":"4371733",
+    "Kirk Cousins":"14880","Kyle Pitts":"4360248","Kyren Williams":"4430737","Mac Jones":"4241464","Malik Willis":"4242512","Mark Andrews":"3116365","Michael Pittman Jr.":"4035687","Michael Wilson":"4360761","Mike Gesicki":"3116164","Najee Harris":"4241457",
+    "Nico Collins":"4258173","Pat Freiermuth":"4361411","Rashee Rice":"4428331","Rashod Bateman":"4360939","Rhamondre Stevenson":"4569173","Rico Dowdle":"4038815","T.J. Hockenson":"4036133","Terry McLaurin":"3121422","Tony Pollard":"3916148","Trey McBride":"4361307",
+    "Tyler Allgeier":"4373626","Tyler Higbee":"2573401","Tyler Shough":"4360689","Wan'Dale Robinson":"4569587","Zay Flowers":"4429615",
+    // Name-collision fixes (d.js id was a different player with the same name)
+    "Kenneth Walker III":"4567048"
   };
   Object.assign(nameToId, FALLBACK_IDS);
   window.FALLBACK_IDS = FALLBACK_IDS;
@@ -6162,9 +6221,10 @@ superflexDefaultBoard.splice(0, superflexDefaultBoard.length, ...sortKickersInBo
 // Quad mode: redraft + superflex + dynasty + dynastysf, each with independent board & tiers
 let currentMode = 'redraft';
 
-// === VERSION SYSTEM: "jacks" and "mine", each with independent boards/tiers per mode ===
-let currentVersion = 'jacks';
+// === VERSION SYSTEM: "consensus", "jacks", "jsmodel", "mine", each with independent boards/tiers per mode ===
+let currentVersion = 'consensus';
 const versionBoards = {
+  consensus: { redraft: defaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() },
   jacks: { redraft: defaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() },
   jsmodel: { redraft: defaultBoard.slice(), superflex: defaultBoard.slice(), dynasty: defaultBoard.slice(), dynastysf: defaultBoard.slice() },
   mine: { redraft: defaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() }
@@ -6173,15 +6233,138 @@ const POS_TIER_KEYS = ['ALL','QB','RB','WR','TE','K','DST','ROOKIE'];
 function _mkPosTiers() { return {ALL:[],QB:[],RB:[],WR:[],TE:[],K:[],DST:[],ROOKIE:[]}; }
 function _mkPosTierCtrs() { return {ALL:0,QB:0,RB:0,WR:0,TE:0,K:0,DST:0,ROOKIE:0}; }
 const versionTiers = {
+  consensus: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
   jacks: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
   jsmodel: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
   mine: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() }
 };
 const versionTierCounters = {
+  consensus: { redraft: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
   jacks: { redraft: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
   jsmodel: { redraft: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
   mine: { redraft: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() }
 };
+
+// === CONSENSUS RANKING ENGINE ===
+// Averages ranks from: Jack's + market ADP + Sleeper + FantasyPros (all modes) + Underdog (redraft) + KTC (dynasty)
+function _computeConsensusBoard(mode) {
+  const adpField = mode === 'dynastysf' ? 'sa' : mode === 'dynasty' ? 'da' : mode === 'superflex' ? 'sfa' : 'a';
+  const slField = mode === 'dynastysf' ? 'slDsf' : mode === 'dynasty' ? 'slDy' : mode === 'superflex' ? 'slSf' : 'slR';
+  const fpField = mode === 'dynastysf' ? 'fpDsf' : mode === 'dynasty' ? 'fpDy' : mode === 'superflex' ? 'fpSf' : 'fpR';
+
+  // Jack's rank map
+  const jacksBoard = (versionBoards.jacks && versionBoards.jacks[mode]) ? versionBoards.jacks[mode] : [];
+  const jRank = {};
+  jacksBoard.forEach((idx, r) => { jRank[idx] = r + 1; });
+
+  // Market ADP rank map (lower ADP = better rank)
+  const adpList = [];
+  for (let i = 0; i < D.length; i++) {
+    const v = D[i][adpField];
+    if (v != null && v < 900) adpList.push({ idx: i, v: v });
+  }
+  adpList.sort((a, b) => a.v - b.v);
+  const aRank = {};
+  adpList.forEach((x, r) => { aRank[x.idx] = r + 1; });
+
+  // Sleeper rank map
+  const slList = [];
+  for (let i = 0; i < D.length; i++) {
+    const v = D[i][slField];
+    if (v != null) slList.push({ idx: i, v: v });
+  }
+  slList.sort((a, b) => a.v - b.v);
+  const sRank = {};
+  slList.forEach((x, r) => { sRank[x.idx] = r + 1; });
+
+  // FantasyPros rank map (all 4 modes)
+  const fRank = {};
+  for (let i = 0; i < D.length; i++) {
+    const v = D[i][fpField];
+    if (v != null) fRank[i] = v;
+  }
+
+  // Underdog ADP rank map (redraft only — we only have Underdog redraft data)
+  const uRank = {};
+  if (mode === 'redraft') {
+    for (let i = 0; i < D.length; i++) {
+      const v = D[i].udR;
+      if (v != null) uRank[i] = v;
+    }
+  }
+
+  // KTC rank map (dynasty modes only — higher KTC = better rank)
+  const kRank = {};
+  if (mode === 'dynasty' || mode === 'dynastysf') {
+    const ktcMap = mode === 'dynastysf'
+      ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {})
+      : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
+    const kList = [];
+    for (let i = 0; i < D.length; i++) {
+      const v = ktcMap[D[i].n];
+      if (v != null && v > 0) kList.push({ idx: i, v: v });
+    }
+    kList.sort((a, b) => b.v - a.v);
+    kList.forEach((x, r) => { kRank[x.idx] = r + 1; });
+  }
+
+  // Score each player: simple average of available source ranks
+  const scored = [];
+  for (let i = 0; i < D.length; i++) {
+    const d = D[i];
+    if (d.s === 'K' || d.s === 'DST') continue;
+    const ranks = [];
+    if (jRank[i]) ranks.push(jRank[i]);
+    if (aRank[i]) ranks.push(aRank[i]);
+    if (sRank[i]) ranks.push(sRank[i]);
+    if (fRank[i]) ranks.push(fRank[i]);
+    if (uRank[i]) ranks.push(uRank[i]);
+    if (kRank[i]) ranks.push(kRank[i]);
+    if (ranks.length === 0) {
+      // No source data — use defaultBoard fallback position so they still appear
+      scored.push({ idx: i, avg: 9999, sources: 0 });
+    } else {
+      const avg = ranks.reduce((a, b) => a + b, 0) / ranks.length;
+      scored.push({ idx: i, avg: avg, sources: ranks.length });
+    }
+  }
+
+  // Players with zero sources: sort by their index (stable) at the end
+  scored.sort((a, b) => {
+    if (a.sources === 0 && b.sources !== 0) return 1;
+    if (b.sources === 0 && a.sources !== 0) return -1;
+    return a.avg - b.avg;
+  });
+
+  const nonKDST = scored.map(x => x.idx);
+  const kickers = [];
+  const dsts = [];
+  for (let i = 0; i < D.length; i++) {
+    if (D[i].s === 'K') kickers.push(i);
+    else if (D[i].s === 'DST') dsts.push(i);
+  }
+  kickers.sort((a, b) => kickerRank(D[a]) - kickerRank(D[b]));
+  dsts.sort((a, b) => dstRank(D[a]) - dstRank(D[b]));
+  return nonKDST.concat(kickers).concat(dsts);
+}
+
+function rebuildConsensusBoards() {
+  try {
+    ['redraft','superflex','dynasty','dynastysf'].forEach(m => {
+      versionBoards.consensus[m] = _computeConsensusBoard(m);
+    });
+    // If currently viewing consensus, re-render
+    if (typeof currentVersion !== 'undefined' && currentVersion === 'consensus') {
+      if (typeof syncMode === 'function') syncMode();
+      if (typeof renumber === 'function') renumber();
+      if (typeof render === 'function') render();
+    }
+  } catch(e) { console.warn('[Consensus] rebuild failed:', e); }
+}
+// Expose for snapshot listener
+window._rebuildConsensusBoards = rebuildConsensusBoards;
+// Initial build
+rebuildConsensusBoards();
 
 // (board/tiers aliases are managed via syncMode below)
 
@@ -6211,6 +6394,7 @@ function syncMode() {
 // Check if current user can edit the active version
 function canEdit() {
   if (typeof window._authCurrentUser !== 'undefined' && !window._authCurrentUser) return false;
+  if (currentVersion === 'consensus') return false;
   if (currentVersion === 'jsmodel') return false;
   if (currentVersion === 'mine') return true;
   return typeof window.isAdmin === 'function' && window.isAdmin();
@@ -6390,6 +6574,10 @@ function loadUserData(obj) {
     // Legacy: load into current mode
     loadModeData(currentMode, obj);
   }
+  // Rebuild consensus whenever Jack's rankings come in via import
+  if (obj.jacks && typeof window._rebuildConsensusBoards === 'function') {
+    try { window._rebuildConsensusBoards(); } catch(e) { console.warn('[Consensus] rebuild after loadUserData failed:', e); }
+  }
   syncMode();
   renumber();
 }
@@ -6541,6 +6729,14 @@ let filter = 'ALL', sortKey = 'myrank', sortDir = 1, query = '', viewMode = 'all
 let rankingScoringFmt = 'half';
 let rnkAdpSrc = 'consensus';
 
+// Get Sleeper rank for a player in the current mode
+function _sleeperRank(d) {
+  if (currentMode === 'dynastysf') return d.slDsf != null ? d.slDsf : null;
+  if (currentMode === 'dynasty') return d.slDy != null ? d.slDy : null;
+  if (currentMode === 'superflex') return d.slSf != null ? d.slSf : null;
+  return d.slR != null ? d.slR : null;
+}
+
 // Get ADP for a player based on the selected ranking ADP source
 function rnkAdp(d) {
   if (d.s === 'K' || d.s === 'DST') return null;
@@ -6549,20 +6745,21 @@ function rnkAdp(d) {
     const map = currentMode === 'dynastysf' ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {}) : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
     return map[d.n] != null ? map[d.n] : null;
   }
+  if (rnkAdpSrc === 'sleeper') return _sleeperRank(d);
   if (rnkAdpSrc === 'consensus') {
     // Average all available ADP sources for the current mode
     const vals = [];
     const base = modeAdp(d); // underdog (default)
     if (base != null && base < 900) vals.push(base);
-    // Future: add espn, sleeper, yahoo ADP fields here
-    // e.g. if (d.espnAdp != null) vals.push(d.espnAdp);
+    const sl = _sleeperRank(d);
+    if (sl != null) vals.push(sl);
+    // Future: add espn, yahoo ADP fields here
     if (vals.length === 0) return null;
     return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
   }
   if (rnkAdpSrc === 'underdog') return modeAdp(d);
   // Future sources
   // if (rnkAdpSrc === 'espn') return d.espnAdp || null;
-  // if (rnkAdpSrc === 'sleeper') return d.slpAdp || null;
   // if (rnkAdpSrc === 'yahoo') return d.yahooAdp || null;
   return modeAdp(d);
 }
@@ -6736,12 +6933,13 @@ function render() {
   const isJacks = currentVersion === 'jacks';
   const isMine = currentVersion === 'mine';
   const isJSModel = currentVersion === 'jsmodel';
+  const isConsensus = currentVersion === 'consensus';
   const isSignedOut = !window._authCurrentUser;
   const blurCutoff = (isMine && isSignedOut) ? 0
                    : (isMine && !isPremium) ? 12
                    : (filter === 'ALL' || filter === 'ROOKIE') ? 24
                    : 12;
-  const shouldBlur = !isJSModel && (
+  const shouldBlur = !isJSModel && !isConsensus && (
     (isJacks && !isPremium) ||
     (isMine && isSignedOut) ||
     (isMine && !isPremium)
@@ -6903,7 +7101,7 @@ function updateStats(data) {
   const moved = D.filter(d => rnkAdp(d) != null && Math.abs(rnkAdp(d) - d.myRank) >= 1).length;
   const rookies = data.filter(d=>(!d.career || d.career.length===0) && (!d.t || d.t==='TBD')).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : '🏈 REDRAFT';
-  const versionLabel = currentVersion === 'jacks' ? "📋 JACK'S" : '📋 MY RANKINGS';
+  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'jsmodel' ? '📋 JS MODEL' : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
@@ -7259,6 +7457,14 @@ updateRnkAdpLocks();
 // Version tabs: switch between Jack's, JS Model, and My Rankings
 document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
   btn.addEventListener('click', () => {
+    // JS Model is admin-only for now (coming soon to everyone else)
+    if (btn.dataset.version === 'jsmodel') {
+      const _isAdminNow = typeof window.isAdmin === 'function' && window.isAdmin();
+      if (!_isAdminNow) {
+        toast('JS Model — Coming Soon');
+        return;
+      }
+    }
     if (btn.dataset.version === currentVersion) return;
     document.querySelectorAll('.version-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -7270,9 +7476,36 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     updateCompareBtn();
     render();
     if (typeof updateToolbarVisibility === 'function') updateToolbarVisibility();
-    toast(currentVersion === 'jacks' ? "Jack's Rankings" : currentVersion === 'jsmodel' ? 'JS Model Rankings' : 'My Rankings');
+    toast(currentVersion === 'consensus' ? 'Consensus Rankings' : currentVersion === 'jacks' ? "Jack's Rankings" : currentVersion === 'jsmodel' ? 'JS Model Rankings' : 'My Rankings');
   });
 });
+
+// Show/hide the JS Model version tab based on admin state (it's hidden by default)
+function _jsModelCheckAdmin() {
+  const tab = document.getElementById('jsModelVersionTab');
+  const admin = typeof window.isAdmin === 'function' && window.isAdmin();
+  if (tab) {
+    tab.style.display = admin ? '' : 'none';
+    // If a non-admin somehow got switched to JS Model, reset them to Jack's
+    if (!admin && currentVersion === 'jsmodel') {
+      currentVersion = 'jacks';
+      document.querySelectorAll('.version-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.version === 'jacks');
+      });
+      try { if (typeof _jsModelUpdateUI === 'function') _jsModelUpdateUI(); } catch (_e) {}
+      try { syncMode(); renumber(); render(); } catch (_e) {}
+    }
+  }
+  // Also reveal/hide JS Model source tabs in Trade Calc, My Teams, and Mock Draft
+  document.querySelectorAll('.jsmodel-src-tab').forEach(t => {
+    t.style.display = admin ? '' : 'none';
+  });
+}
+window._jsModelCheckAdmin = _jsModelCheckAdmin;
+_jsModelCheckAdmin();
+if (typeof firebase !== 'undefined' && firebase.auth) {
+  try { firebase.auth().onAuthStateChanged(_jsModelCheckAdmin); } catch (_e) {}
+}
 
 // ============================================================
 // JS MODEL ENGINE — dynamic scoring, VOR-based rankings
@@ -8443,6 +8676,7 @@ window.UNDERDOG_IDS={"A.J. Brown":"d945c683-2b49-4442-bdab-dce9a47e0815","A.T. P
 function _exportCutoff() {
   const _isPrem = typeof hasPremium === 'function' && hasPremium();
   if (_isPrem) return Infinity;
+  if (currentVersion === 'consensus') return Infinity;
   if (currentVersion === 'jsmodel') return Infinity;
   // Not signed in on My Rankings should get 0, but canEdit gate already prevents that flow; still safe to return 0.
   if (currentVersion === 'mine' && !window._authCurrentUser) return 0;
@@ -8466,7 +8700,7 @@ document.getElementById('btnExport').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : 'Redraft';
-  const verLabel = currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   
   // Build CSV
@@ -8538,7 +8772,7 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : 'Redraft';
-  const verLabel = currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const esc = v => { const s = String(v ?? ''); return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
@@ -8613,10 +8847,12 @@ document.getElementById('fileImport').addEventListener('change', e => {
 
 // Clear = reset current mode to ADP order
 document.getElementById('btnClear').addEventListener('click', () => {
-  if (!canEdit()) { 
+  if (!canEdit()) {
     if (!window._authCurrentUser) { toast("Sign in to create your rankings"); if (typeof window.openAuthModal === 'function') window.openAuthModal(); }
-    else toast("Only admins can edit Jack's rankings"); 
-    return; 
+    else if (currentVersion === 'consensus') toast("Consensus rankings are auto-generated and can't be edited");
+    else if (currentVersion === 'jsmodel') toast("JS Model rankings are auto-generated");
+    else toast("Only admins can edit Jack's rankings");
+    return;
   }
   const label = currentMode === 'dynastysf' ? 'Dynasty SF' : currentMode === 'dynasty' ? 'Dynasty 1QB' : 'Redraft';
   const verLabel = currentVersion === 'jacks' ? "Jack's" : "My";
@@ -10634,6 +10870,53 @@ document.addEventListener('click', function(e) {
     }
   });
 
+  // Pre-audited set of ESPN IDs that return 404 — devy/college prospects whose NFL headshots
+  // don't exist yet. Derived from a full HEAD-check of every image URL in the Guess Who pool.
+  // Update this list when new prospects are added to D or when ESPN backfills headshots.
+  window.BAD_IMAGE_IDS = window.BAD_IMAGE_IDS || new Set([
+    "4247386","4430185","4430841","4430893","4430992","4431325","4431574","4432631","4565318",
+    "4565859","4566198","4567747","4594749","4596472","4602185","4605951","4611995","4635009",
+    "4682648","4683151","4683153","4683159","4685246","4685261","4685307","4685381","4685409",
+    "4685413","4685441","4685470","4685477","4685489","4685504","4685512","4685522","4685526",
+    "4685553","4685555","4686468","4686658","4688835","4691138","4695705","4696044","4698597",
+    "4702555","4702559","4702913","4708490","4710714","4713118","4713277","4714388","4714771",
+    "4723820","4808839","4831959","4832800","4832846","4832955","4833029","4837248","4838696",
+    "4869132","4869645","4869748","4869961","4870612","4870653","4870795","4870808","4870847",
+    "4871023","4875788","4876132","4879194","4879250","4879276","4880281","4885466","4912052",
+    "4917427","5077060","5081508","5081999","5082269","5083315","5084180","5085189","5088338",
+    "5089535","5091739","5092508","5150247","5151317","5156933","5159802","5220680"
+  ]);
+  // Union in any runtime-flagged bad IDs from prior sessions (localStorage).
+  try {
+    const extra = JSON.parse(localStorage.getItem('ep_bad_imgs') || '[]');
+    if (Array.isArray(extra)) extra.forEach(id => window.BAD_IMAGE_IDS.add(String(id)));
+  } catch(e) {}
+
+  // Build combined daily pool: retired players + ALL active players with valid headshots.
+  // Filter is "has a valid image id AND not in bad-images set".
+  let DAILY_COMBINED_POOL = DAILY_RETIRED_POOL.filter(p => !window.BAD_IMAGE_IDS.has(String(p.id)));
+  (function _buildDailyCombinedPool() {
+    const retiredNames = new Set(DAILY_RETIRED_POOL.map(p => p.name.toLowerCase()));
+    const actives = D.filter(d =>
+      !d._retired &&
+      d._slImg &&
+      d.n &&
+      !d.n.includes('D/ST') &&
+      !retiredNames.has(d.n.toLowerCase())
+    );
+    actives.forEach(d => {
+      const m = d._slImg && d._slImg.match(/full\/(\d+)\.png/);
+      if (!m) return;
+      if (window.BAD_IMAGE_IDS.has(m[1])) return;
+      DAILY_COMBINED_POOL.push({
+        name: d.n,
+        pos: d.s,
+        team: d.t || "NFL",
+        id: m[1]
+      });
+    });
+  })();
+
   // Get current date in Eastern Time (handles EST/EDT automatically)
   function getEasternDate() {
     const now = new Date();
@@ -10646,13 +10929,35 @@ document.addEventListener('click', function(e) {
     function getDailyPlayer() {
     const today = getEasternDate();
     const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
-    return DAILY_RETIRED_POOL[_epHash(seed) % DAILY_RETIRED_POOL.length];
+    return DAILY_COMBINED_POOL[_epHash(seed) % DAILY_COMBINED_POOL.length];
   }
 
   function getTodayKey() {
     const d = getEasternDate();
     return `ep_v3_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;
   }
+
+  // Name matcher that's forgiving of punctuation, spacing, and accents.
+  // Strips apostrophes, periods, hyphens, whitespace, and diacritics so:
+  //   "De'Von Achane" == "devon achane" == "de von achane"
+  //   "Amon-Ra St. Brown" == "amon ra st brown" == "amonrastbrown"
+  //   "Kiké Hernández" == "kike hernandez"
+  window._normalizeGuessWhoName = window._normalizeGuessWhoName || function(s) {
+    if (!s) return '';
+    try { s = String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch(e) { s = String(s); }
+    return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  };
+
+  // Reveal-card team display: normalize "Atlanta Falcons" → "ATL" so active and retired
+  // players share one format. Passes through already-abbreviated teams ("NE/TB", "DAL", "FA").
+  window._displayTeamForReveal = window._displayTeamForReveal || function(team) {
+    if (!team) return 'NFL';
+    // Slash-joined multi-team retirees ("NE/TB", "LAC/IND") already abbreviated — pass through
+    if (team.includes('/')) return team;
+    // Lookup full name in TEAM_ABBR_MAP, else return as-is
+    if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[team]) return TEAM_ABBR_MAP[team];
+    return team;
+  };
 
   // All players from the D array for autocomplete
   // For retired players, use pool team to avoid name collisions with active players
@@ -10667,6 +10972,13 @@ document.addEventListener('click', function(e) {
   DAILY_RETIRED_POOL.forEach(p => {
     if (!allNames.some(a => a.name.toLowerCase() === p.name.toLowerCase())) {
       allNames.push({name: p.name, team: p.team, pos: p.pos});
+    }
+  });
+  // Defensive catch-up: any name in the daily puzzle pool not yet searchable
+  DAILY_COMBINED_POOL.forEach(p => {
+    if (!p || !p.name) return;
+    if (!allNames.some(a => a.name.toLowerCase() === p.name.toLowerCase())) {
+      allNames.push({name: p.name, team: p.team || 'NFL', pos: p.pos});
     }
   });
 
@@ -10698,7 +11010,7 @@ document.addEventListener('click', function(e) {
       gameOver = state.gameOver || false;
       // Restore the actual player used (may differ from seed if image was skipped)
       if (state.playerName) {
-        const found = DAILY_RETIRED_POOL.find(p => p.name === state.playerName);
+        const found = DAILY_COMBINED_POOL.find(p => p.name === state.playerName);
         if (found) todayPlayer = found;
       }
     }
@@ -10772,9 +11084,9 @@ document.addEventListener('click', function(e) {
 
     epResult.style.display = 'block';
     if (won) {
-      epResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos} &mdash; Guessed in ${guesses.length}/${MAX_GUESSES}</div>`;
+      epResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${window._displayTeamForReveal(todayPlayer.team)} &middot; ${todayPlayer.pos} &mdash; Guessed in ${guesses.length}/${MAX_GUESSES}</div>`;
     } else {
-      epResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was ${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos}</div>`;
+      epResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was ${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${window._displayTeamForReveal(todayPlayer.team)} &middot; ${todayPlayer.pos}</div>`;
     }
     renderStreak();
   }
@@ -10783,8 +11095,9 @@ document.addEventListener('click', function(e) {
     const val = epInput.value.trim();
     if (!val || gameOver) return;
 
-    // Check if it matches a real player name from our database
-    const matched = allNames.find(p => p.name.toLowerCase() === val.toLowerCase());
+    // Check if it matches a real player name from our database (forgiving of punctuation/accents/spacing)
+    const _normVal = window._normalizeGuessWhoName(val);
+    const matched = allNames.find(p => window._normalizeGuessWhoName(p.name) === _normVal);
     if (!matched) {
       // Flash the input red briefly
       epInput.style.borderColor = 'var(--red)';
@@ -10815,11 +11128,12 @@ document.addEventListener('click', function(e) {
       epSuggestions.classList.remove('show');
       return;
     }
-    const lower = q.toLowerCase();
-    const matches = allNames.filter(p =>
-      p.name.toLowerCase().includes(lower) &&
-      !guesses.some(g => g.toLowerCase() === p.name.toLowerCase())
-    ).slice(0, 8);
+    const _normQ = window._normalizeGuessWhoName(q);
+    const _normGuesses = guesses.map(g => window._normalizeGuessWhoName(g));
+    const matches = allNames.filter(p => {
+      const _np = window._normalizeGuessWhoName(p.name);
+      return _np.includes(_normQ) && !_normGuesses.includes(_np);
+    }).slice(0, 8);
 
     if (!matches.length) {
       epSuggestions.classList.remove('show');
@@ -10883,10 +11197,10 @@ document.addEventListener('click', function(e) {
     }
     function _epSkipToNext() {
       _epSkipAttempts++;
-      if (_epSkipAttempts < DAILY_RETIRED_POOL.length) {
+      if (_epSkipAttempts < DAILY_COMBINED_POOL.length) {
         const today = getEasternDate();
         const baseSeed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
-        todayPlayer = DAILY_RETIRED_POOL[_epHash(baseSeed + _epSkipAttempts) % DAILY_RETIRED_POOL.length];
+        todayPlayer = DAILY_COMBINED_POOL[_epHash(baseSeed + _epSkipAttempts) % DAILY_COMBINED_POOL.length];
         _epTryLoadImage();
       } else {
         epPlaceholder.textContent = 'No player image available';
@@ -10904,9 +11218,9 @@ document.addEventListener('click', function(e) {
       const won = guesses.some(g => g.toLowerCase() === todayPlayer.name.toLowerCase());
       epResult.style.display = 'block';
       if (won) {
-        epResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos} &mdash; Guessed in ${guesses.length}/${MAX_GUESSES}</div>`;
+        epResult.innerHTML = `<div class="ep-result-text win">YOU GOT IT!</div><div class="ep-result-sub">${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${window._displayTeamForReveal(todayPlayer.team)} &middot; ${todayPlayer.pos} &mdash; Guessed in ${guesses.length}/${MAX_GUESSES}</div>`;
       } else {
-        epResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was ${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${todayPlayer.team} &middot; ${todayPlayer.pos}</div>`;
+        epResult.innerHTML = `<div class="ep-result-text lose">BETTER LUCK TOMORROW</div><div class="ep-result-sub">It was ${_epCardLink(todayPlayer.name, 'color:var(--accent)')} &middot; ${window._displayTeamForReveal(todayPlayer.team)} &middot; ${todayPlayer.pos}</div>`;
       }
     }
   }
@@ -10917,13 +11231,71 @@ document.addEventListener('click', function(e) {
 // === UNLIMITED GUESS WHO — Trivia Tab (picture + type name) ===
 // NOTE: HTML IDs use epu* prefix and localStorage uses epu_* keys — legacy from pre-swap naming.
 (function() {
-  // Build unlimited pool dynamically from ALL players with headshots
+  // Build unlimited pool dynamically from ALL players with headshots (active + retired).
+  // Filter is "has a valid image id AND not in BAD_IMAGE_IDS skip set".
   let EP_PLAYERS_U = [];
   function _buildUnlimitedPool() {
-    EP_PLAYERS_U = D.filter(d => d._slImg && d.n && !d.n.includes('D/ST') && d.s !== 'K' && d.s !== 'DST').map(d => {
+    const badIds = (window.BAD_IMAGE_IDS instanceof Set) ? window.BAD_IMAGE_IDS : new Set();
+    // Active players with Sleeper/ESPN headshot IDs
+    // Exclude devy/college prospects — their _slImg points to the college-football CDN
+    // and the NFL URL template at getHeadshotUrlU() below can't resolve college IDs,
+    // leading to 404s or wrong-player placeholder images at reveal time.
+    const active = D.filter(d =>
+      !d._retired &&
+      d._slImg &&
+      d.n &&
+      !d.n.includes('D/ST') &&
+      !String(d._slImg).includes('college-football') &&
+      d.t && d.t !== 'TBD'
+    ).map(d => {
       const idMatch = d._slImg.match(/full\/(\d+)\.png/);
       return {name: d.n, team: d.t, pos: d.s, id: idMatch ? idMatch[1] : ''};
-    }).filter(p => p.id);
+    }).filter(p => p.id && !badIds.has(p.id));
+    // Retired players with ESPN headshot IDs (pulled from DAILY_RETIRED_POOL)
+    const retired = (typeof DAILY_RETIRED_POOL !== 'undefined' ? DAILY_RETIRED_POOL : [])
+      .filter(p => p.name && p.id && !badIds.has(String(p.id)))
+      .map(p => ({name: p.name, team: p.team || 'NFL', pos: p.pos, id: String(p.id)}));
+    // Merge, deduping by name (active wins)
+    const seen = new Set(active.map(p => p.name.toLowerCase()));
+    EP_PLAYERS_U = active.concat(retired.filter(p => !seen.has(p.name.toLowerCase())));
+    // Rebuild search pool so every puzzle-pool name is guaranteed searchable.
+    _rebuildAllNamesU();
+  }
+  // Search pool for autocomplete + guess validation. Kept in lockstep with EP_PLAYERS_U.
+  const allNamesU = [];
+  function _rebuildAllNamesU() {
+    const seen = new Set();
+    const out = [];
+    // Base: everything in D (actives + retired players pushed into D by the daily IIFE)
+    D.forEach(d => {
+      if (!d || !d.n) return;
+      const k = d.n.toLowerCase();
+      if (seen.has(k)) return;
+      seen.add(k);
+      out.push({name: d.n, team: getCurrentTeamAbbr(d.n, d.t), pos: d.s});
+    });
+    // Defensive catch-up: any retired player in DAILY_RETIRED_POOL not yet in D
+    if (typeof DAILY_RETIRED_POOL !== 'undefined') {
+      DAILY_RETIRED_POOL.forEach(p => {
+        if (!p || !p.name) return;
+        const k = p.name.toLowerCase();
+        if (seen.has(k)) return;
+        seen.add(k);
+        out.push({name: p.name, team: p.team || 'NFL', pos: p.pos});
+      });
+    }
+    // Defensive catch-up: anything in the current puzzle pool not yet covered
+    if (typeof EP_PLAYERS_U !== 'undefined') {
+      EP_PLAYERS_U.forEach(p => {
+        if (!p || !p.name) return;
+        const k = p.name.toLowerCase();
+        if (seen.has(k)) return;
+        seen.add(k);
+        out.push({name: p.name, team: p.team || 'NFL', pos: p.pos});
+      });
+    }
+    allNamesU.length = 0;
+    for (let i = 0; i < out.length; i++) allNamesU.push(out[i]);
   }
   _buildUnlimitedPool();
   setTimeout(_buildUnlimitedPool, 8000);
@@ -10950,7 +11322,7 @@ document.addEventListener('click', function(e) {
     return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350&h=254`;
   }
 
-  const allNamesU = D.map(d => ({name: d.n, team: getCurrentTeamAbbr(d.n, d.t), pos: d.s}));
+  // allNamesU is declared and populated above in _rebuildAllNamesU (kept in sync with EP_PLAYERS_U)
   const MAX_GUESSES_U = 1;
 
   const epuImage = document.getElementById('epuImage');
@@ -11027,7 +11399,7 @@ document.addEventListener('click', function(e) {
       epuResult.style.display = 'block';
       epuResult.innerHTML = `
         <div class="ep-result-text lose">GAME OVER</div>
-        <div class="ep-result-sub" style="margin-bottom:8px">It was ${_epCardLink(currentPlayerU.name, 'color:var(--accent)')} · ${currentPlayerU.team} · ${currentPlayerU.pos}</div>
+        <div class="ep-result-sub" style="margin-bottom:8px">It was ${_epCardLink(currentPlayerU.name, 'color:var(--accent)')} · ${window._displayTeamForReveal(currentPlayerU.team)} · ${currentPlayerU.pos}</div>
         <div style="display:flex;gap:12px;justify-content:center;margin:12px 0">
           <div style="text-align:center;padding:8px 16px;border-radius:6px;background:var(--surface2);border:1px solid var(--border)">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:1px">${finalStreak}</div>
@@ -11055,7 +11427,7 @@ document.addEventListener('click', function(e) {
     if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
 
     epuResult.style.display = 'block';
-    epuResult.innerHTML = `<div class="ep-result-text win">CORRECT!</div><div class="ep-result-sub">${_epCardLink(currentPlayerU.name, 'color:var(--accent)')} · ${currentPlayerU.team} · ${currentPlayerU.pos}</div>`;
+    epuResult.innerHTML = `<div class="ep-result-text win">CORRECT!</div><div class="ep-result-sub">${_epCardLink(currentPlayerU.name, 'color:var(--accent)')} · ${window._displayTeamForReveal(currentPlayerU.team)} · ${currentPlayerU.pos}</div>`;
     epuNextBtn.style.display = 'inline-block';
     epuNextBtn.textContent = 'NEXT PLAYER';
     renderStatsU();
@@ -11064,7 +11436,8 @@ document.addEventListener('click', function(e) {
   function submitGuessU() {
     const val = epuInput.value.trim();
     if (!val || gameOverU) return;
-    const matched = allNamesU.find(p => p.name.toLowerCase() === val.toLowerCase());
+    const _normValU = window._normalizeGuessWhoName(val);
+    const matched = allNamesU.find(p => window._normalizeGuessWhoName(p.name) === _normValU);
     if (!matched) {
       epuInput.style.borderColor = 'var(--red)';
       setTimeout(() => { epuInput.style.borderColor = ''; }, 600);
@@ -11088,11 +11461,12 @@ document.addEventListener('click', function(e) {
 
   function showSuggestionsU(q) {
     if (!q || q.length < 2 || gameOverU) { epuSuggestions.classList.remove('show'); return; }
-    const lower = q.toLowerCase();
-    const matches = allNamesU.filter(p =>
-      p.name.toLowerCase().includes(lower) &&
-      !guessesU.some(g => g.toLowerCase() === p.name.toLowerCase())
-    ).slice(0, 8);
+    const _normQU = window._normalizeGuessWhoName(q);
+    const _normGuessesU = guessesU.map(g => window._normalizeGuessWhoName(g));
+    const matches = allNamesU.filter(p => {
+      const _np = window._normalizeGuessWhoName(p.name);
+      return _np.includes(_normQU) && !_normGuessesU.includes(_np);
+    }).slice(0, 8);
     if (!matches.length) { epuSuggestions.classList.remove('show'); return; }
     epuSuggestions.innerHTML = '';
     matches.forEach(m => {
@@ -19625,7 +19999,7 @@ window.fmtHeight = fmtHeight;
 // === TRADE CALCULATOR ===
 (function() {
   let tradeMode = 'redraft';
-  let tradeSource = hasPremium() ? 'jacks' : 'mine'; // default to mine for free users
+  let tradeSource = 'consensus'; // default to consensus (available to all users)
   const sideA = { players: [], picks: [] };
   const sideB = { players: [], picks: [] };
   let activeYearA = '2027';
@@ -19706,16 +20080,20 @@ window.fmtHeight = fmtHeight;
     return Math.round(base * (YEAR_MULT[year] || 0.7) * (SLOT_MULT[slot] || 1.0));
   };
 
-  // Tier multipliers — steeper separation between tiers
+  // Tier multipliers — sharper separation, elite scarcity premium
   const TIER_MULT = {
-    'S': 1.3,   // Elite — moderate premium
-    'A': 1.15,  // Top tier — slight boost
-    'B': 1.05,  // Above average — minimal boost
+    'S': 1.45,  // Elite — scarcity premium
+    'A': 1.20,  // Top tier
+    'B': 1.07,  // Above average
     'C': 1.0,   // Average — baseline
-    'D': 0.9,   // Below average — slight discount
-    'E': 0.75,  // Low tier — discounted
-    'F': 0.55   // Bottom — heavy discount
+    'D': 0.88,  // Below average
+    'E': 0.72,  // Low tier
+    'F': 0.50   // Bottom — heavy discount
   };
+
+  // Note: no age multiplier — age is already baked into every ranking source
+  // (Jack's, Consensus, JS Model, KTC, Sleeper dynasty ADP), so applying one
+  // on top of the rank would double-count age decay.
 
   function _getTierForPlayerFull(d, src, mode) {
     const srcTiers = versionTiers[src][mode].ALL || [];
@@ -19735,20 +20113,80 @@ window.fmtHeight = fmtHeight;
     return _getTierForPlayerFull(d, tradeSource, tradeMode);
   }
 
+  // ADP-source aware board cache. Builds a rank order from the chosen ADP source.
+  const _adpBoardsCache = {};
+  window._invalidateAdpBoards = function() { Object.keys(_adpBoardsCache).forEach(k => delete _adpBoardsCache[k]); };
+  function _getAdpBoard(src, mode) {
+    const key = src + ':' + mode;
+    if (_adpBoardsCache[key]) return _adpBoardsCache[key];
+    if (typeof D === 'undefined') return [];
+    const getVal = d => {
+      if (src === 'underdog') {
+        if (mode === 'dynastysf') return d.sa != null ? d.sa : null;
+        if (mode === 'dynasty') return d.da != null ? d.da : null;
+        if (mode === 'superflex') return d.sfa != null ? d.sfa : null;
+        return d.a != null ? d.a : null;
+      }
+      if (src === 'sleeper') {
+        // Sleeper fields: slR (redraft), slSf (superflex), slDy (dynasty), slDsf (dynasty SF)
+        if (mode === 'dynastysf') return d.slDsf != null ? d.slDsf : null;
+        if (mode === 'dynasty') return d.slDy != null ? d.slDy : null;
+        if (mode === 'superflex') return d.slSf != null ? d.slSf : null;
+        return d.slR != null ? d.slR : null;
+      }
+      if (src === 'ktc') {
+        const map = mode === 'dynastysf' ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {}) : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
+        return map[d.n] != null ? map[d.n] : null;
+      }
+      // espn/yahoo not yet implemented — fall back to underdog
+      if (mode === 'dynastysf') return d.sa != null ? d.sa : null;
+      if (mode === 'dynasty') return d.da != null ? d.da : null;
+      if (mode === 'superflex') return d.sfa != null ? d.sfa : null;
+      return d.a != null ? d.a : null;
+    };
+    const items = [];
+    D.forEach((d, idx) => {
+      const v = getVal(d);
+      if (v != null && v < 900) items.push({idx, v});
+    });
+    // KTC: higher value = better (descending). ADP: lower = better (ascending).
+    if (src === 'ktc') items.sort((a, b) => b.v - a.v);
+    else items.sort((a, b) => a.v - b.v);
+    const board = items.map(x => x.idx);
+    _adpBoardsCache[key] = board;
+    return board;
+  }
+  // Expose for other modules (My Teams, etc.)
+  window._getAdpBoard = _getAdpBoard;
+
   // Global trade value function — single source of truth for rankings, trade calc, My Teams, portfolio
-  // Curve: 1000 / (rank^0.8 + 3) — power law with superstar premium and long tail
+  // Mode-specific power law CALIBRATED against KeepTradeCut:
+  //   redraft/superflex:  1000 / (rank^0.8 + 3)   — steep top, rewards elite picks
+  //   dynasty/dynastysf:  7750 / (rank^0.8 + 30)  — KTC-shaped: flat top, long depth tail
+  // The dynasty offset of 30 flattens rank #1 vs #50 ratio to ~1.7x (matches KTC) instead of ~5x.
+  const _ADP_SRCS = ['underdog', 'ktc', 'espn', 'sleeper', 'yahoo'];
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
     const m = mode || tradeMode;
-    const srcBoard = versionBoards[s] && versionBoards[s][m];
+    const isAdpSrc = _ADP_SRCS.indexOf(s) >= 0;
+    const srcBoard = isAdpSrc ? _getAdpBoard(s, m) : (versionBoards[s] && versionBoards[s][m]);
     if (!srcBoard) return 1;
     const boardPos = srcBoard.indexOf(d.idx);
     const rank = boardPos >= 0 ? boardPos + 1 : 999;
     if (rank >= 400) return 1;
-    let val = Math.max(Math.round(1000 / (Math.pow(rank, 0.8) + 3)), 1);
-    const tierLabel = _getTierForPlayerFull(d, s, m);
-    if (tierLabel && TIER_MULT[tierLabel] !== undefined) {
-      val = Math.round(val * TIER_MULT[tierLabel]);
+    const isDyn = (m === 'dynasty' || m === 'dynastysf');
+    let val;
+    if (isDyn) {
+      val = Math.max(Math.round(7750 / (Math.pow(rank, 0.8) + 30)), 1);
+    } else {
+      val = Math.max(Math.round(1000 / (Math.pow(rank, 0.8) + 3)), 1);
+    }
+    // Tier multiplier only applies to version-based sources (consensus/jacks/jsmodel/mine)
+    if (!isAdpSrc) {
+      const tierLabel = _getTierForPlayerFull(d, s, m);
+      if (tierLabel && TIER_MULT[tierLabel] !== undefined) {
+        val = Math.round(val * TIER_MULT[tierLabel]);
+      }
     }
     return Math.max(val, 1);
   };
@@ -19821,10 +20259,15 @@ window.fmtHeight = fmtHeight;
       verdict.textContent = 'ADD PLAYERS TO EVALUATE';
       verdict.className = 'trade-verdict even'; sub.textContent = ''; return;
     }
-    const pctA = Math.max(8, Math.round((totalA / sum) * 100));
+    // Symmetric bar widths: clamp to [8, 92] so the losing side always shows a sliver,
+    // and swapping A↔B produces a mirror image rather than a vanishing bar.
+    const pctA = Math.max(8, Math.min(92, Math.round((totalA / sum) * 100)));
     barA.style.width = pctA + '%'; barB.style.width = (100 - pctA) + '%';
     const diff = Math.abs(totalA - totalB);
-    const diffPct = Math.round((diff / sum) * 100);
+    // Use diff / max(A,B) instead of diff / (A+B): symmetric, bounded [0,100%],
+    // and ~2x more resistant to "equal-value dilution" where adding identical
+    // filler to both sides used to collapse an unfair trade into a FAIR verdict.
+    const diffPct = Math.round((diff / Math.max(totalA, totalB)) * 100);
 
     if (diffPct <= 5) {
       verdict.textContent = 'FAIR TRADE'; verdict.className = 'trade-verdict even';
@@ -19987,12 +20430,21 @@ window.fmtHeight = fmtHeight;
   });
   updatePickVisibility();
 
-  // Ranking source tabs (Jack's vs My Rankings)
+  // Ranking source tabs (Consensus / Jack's / JS Model / My Ranks + ADP sources)
+  const LOCKED_ADP_SRCS = ['espn', 'yahoo'];
   document.querySelectorAll('.trade-src-tab').forEach(btn => {
     btn.addEventListener('click', () => {
+      const src = btn.dataset.tsrc;
+      // JS Model is admin-only for now (coming soon to everyone else)
+      if (src === 'jsmodel') {
+        const _isAdminNow = typeof window.isAdmin === 'function' && window.isAdmin();
+        if (!_isAdminNow) {
+          if (typeof toast === 'function') toast('JS Model — Coming Soon');
+          return;
+        }
+      }
       // Lock Jack's Ranks behind premium
-      if (btn.dataset.tsrc === 'jacks' && !hasPremium()) {
-        // Show lock message
+      if (src === 'jacks' && !hasPremium()) {
         const existing = document.getElementById('tradePremiumLock');
         if (existing) existing.remove();
         const lockMsg = document.createElement('div');
@@ -20006,12 +20458,22 @@ window.fmtHeight = fmtHeight;
         if (tradeLayout) tradeLayout.parentElement.insertBefore(lockMsg, tradeLayout);
         return;
       }
-      // Remove lock message if switching to My Ranks
+      // Locked ADP sources (ESPN/Sleeper/Yahoo) — not implemented yet
+      if (LOCKED_ADP_SRCS.indexOf(src) >= 0) {
+        if (typeof toast === 'function') toast(src.toUpperCase() + ' ADP coming soon — Premium only');
+        return;
+      }
+      // Underdog ADP is premium (matches Rankings + Mock Draft)
+      if (src === 'underdog' && !hasPremium()) {
+        if (typeof toast === 'function') toast('Underdog ADP requires Premium');
+        return;
+      }
+      // Remove lock message when switching to unlocked source
       const existing = document.getElementById('tradePremiumLock');
       if (existing) existing.remove();
       document.querySelectorAll('.trade-src-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      tradeSource = btn.dataset.tsrc;
+      tradeSource = src;
       renderAll();
     });
   });
@@ -20026,12 +20488,28 @@ window.fmtHeight = fmtHeight;
     renderAll();
   });
 
-  // Set correct initial active tab based on premium status
-  if (!hasPremium()) {
-    document.querySelectorAll('.trade-src-tab').forEach(b => {
-      b.classList.toggle('active', b.dataset.tsrc === 'mine');
+  // Set initial active tab to consensus (default, works for all users)
+  document.querySelectorAll('.trade-src-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.tsrc === tradeSource);
+  });
+
+  // Hide lock icon on Jack's + Underdog tabs for premium users (icons are hardcoded in HTML)
+  function _tradeUpdateJacksLock() {
+    const prem = typeof hasPremium === 'function' && hasPremium();
+    ['jacks', 'underdog'].forEach(function(srcKey) {
+      const tab = document.querySelector('.trade-src-tab[data-tsrc="' + srcKey + '"]');
+      if (!tab) return;
+      const icon = tab.querySelector('.lock-icon');
+      if (prem) {
+        tab.classList.remove('locked');
+        if (icon) icon.style.display = 'none';
+      } else {
+        if (icon) icon.style.display = '';
+      }
     });
   }
+  _tradeUpdateJacksLock();
+  window._tradeUpdateJacksLock = _tradeUpdateJacksLock;
 
   renderAll();
 })();
@@ -20379,6 +20857,10 @@ window.fmtHeight = fmtHeight;
           if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
           if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
           _bypassEditCheck = false;
+          // Rebuild consensus now that Jack's ranks are available
+          if (typeof window._rebuildConsensusBoards === 'function') {
+            try { window._rebuildConsensusBoards(); } catch(e) { console.warn('[Consensus] rebuild after Jack load failed:', e); }
+          }
           console.log('[Auth] Loaded Jack\'s official rankings from cloud');
         }
       }
@@ -20442,7 +20924,11 @@ window.fmtHeight = fmtHeight;
           if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
           if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
           _bypassEditCheck = false;
-          // Only re-render if currently viewing Jack's rankings
+          // Rebuild consensus using Jack's latest ranks (will re-render if currently viewing consensus)
+          if (typeof window._rebuildConsensusBoards === 'function') {
+            try { window._rebuildConsensusBoards(); } catch(e) { console.warn('[Consensus] rebuild on snapshot failed:', e); }
+          }
+          // Only re-render if currently viewing Jack's rankings (consensus already handled above)
           if (currentVersion === 'jacks') {
             syncMode();
             renumber();
@@ -20914,6 +21400,10 @@ window.fmtHeight = fmtHeight;
       }
       if (premiumActiveStatus) premiumActiveStatus.style.display = 'none';
       if (typeof updateRankSrcLock === 'function') updateRankSrcLock();
+      if (typeof window._tradeUpdateJacksLock === 'function') window._tradeUpdateJacksLock();
+      if (typeof window._mtUpdateJacksLock === 'function') window._mtUpdateJacksLock();
+      if (typeof updateRnkAdpLocks === 'function') updateRnkAdpLocks();
+      if (typeof updateAdpSrcLocks === 'function') updateAdpSrcLocks();
       return true;
     }
 
@@ -20937,6 +21427,10 @@ window.fmtHeight = fmtHeight;
       }
       if (premiumActiveStatus) premiumActiveStatus.style.display = 'none';
       if (typeof updateRankSrcLock === 'function') updateRankSrcLock();
+      if (typeof window._tradeUpdateJacksLock === 'function') window._tradeUpdateJacksLock();
+      if (typeof window._mtUpdateJacksLock === 'function') window._mtUpdateJacksLock();
+      if (typeof updateRnkAdpLocks === 'function') updateRnkAdpLocks();
+      if (typeof updateAdpSrcLocks === 'function') updateAdpSrcLocks();
       return true;
     }
 
@@ -20949,6 +21443,10 @@ window.fmtHeight = fmtHeight;
       premiumBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/></svg> FREE PLAN';
     }
     if (typeof updateRankSrcLock === 'function') updateRankSrcLock();
+    if (typeof window._tradeUpdateJacksLock === 'function') window._tradeUpdateJacksLock();
+    if (typeof window._mtUpdateJacksLock === 'function') window._mtUpdateJacksLock();
+    if (typeof updateRnkAdpLocks === 'function') updateRnkAdpLocks();
+    if (typeof updateAdpSrcLocks === 'function') updateAdpSrcLocks();
     return false;
   }
 
@@ -21018,8 +21516,8 @@ window.fmtHeight = fmtHeight;
 // === MOCK DRAFT ENGINE ===
 (function() {
   let mdMode = 'redraft', mdTeams = 12, mdUserPick = 1;
-  let mdRookieRounds = 4, mdRookieScoring = '1qb', mdRookieRankSrc = 'mine';
-  let mdRankSrc = 'mine';
+  let mdRookieRounds = 4, mdRookieScoring = '1qb', mdRookieRankSrc = 'consensus';
+  let mdRankSrc = 'consensus';
   let mdAdpSrc = 'consensus';
   let mdState = null;
 
@@ -21256,6 +21754,14 @@ window.fmtHeight = fmtHeight;
   const rankPremiumHint = document.getElementById('mdRankPremiumHint');
   rankSrcTabs.forEach(t => t.addEventListener('click', () => {
     const src = t.dataset.mdsrc;
+    // JS Model is admin-only for now (coming soon to everyone else)
+    if (src === 'jsmodel') {
+      const _isAdminNow = typeof window.isAdmin === 'function' && window.isAdmin();
+      if (!_isAdminNow) {
+        if (typeof toast === 'function') toast('JS Model — Coming Soon');
+        return;
+      }
+    }
     if (src === 'jacks' && !hasPremium()) {
       // Show premium hint, don't switch
       rankPremiumHint.classList.add('show');
@@ -21288,8 +21794,8 @@ window.fmtHeight = fmtHeight;
   });
 
   // ADP source tabs (Consensus / Underdog / ESPN / Sleeper / Yahoo)
-  // Underdog requires premium; ESPN, Sleeper, Yahoo are locked until data is added
-  const _ADP_ENABLED = { consensus: true, underdog: true, espn: false, sleeper: false, yahoo: false, ktc: true };
+  // Underdog requires premium; ESPN and Yahoo are locked until data is added
+  const _ADP_ENABLED = { consensus: true, underdog: true, espn: false, sleeper: true, yahoo: false, ktc: true };
   const adpSrcTabs = document.querySelectorAll('#mdAdpSrcTabs .md-rank-src-tab');
   const adpPremiumHint = document.getElementById('mdAdpPremiumHint');
   const _adpHintDefault = adpPremiumHint.innerHTML;
@@ -21352,7 +21858,9 @@ window.fmtHeight = fmtHeight;
   function getADPBoard() {
     // Rookie mode with user rankings: filter the ranking board to only 2026 rookies
     if (mdMode === 'rookie' && mdRookieRankSrc !== 'ktc') {
-      const src = mdRookieRankSrc; // 'mine' or 'jacks'
+      const src = mdRookieRankSrc; // 'consensus', 'mine', or 'jacks'
+      // Consensus draws from dynasty mode (matches rookie draft context);
+      // 'mine' / 'jacks' use their dynasty board (fallback to redraft).
       const rankBoard = versionBoards[src] ? (versionBoards[src].dynasty || versionBoards[src].redraft) : null;
       if (rankBoard && rankBoard.length) {
         const entries = [];
@@ -21378,8 +21886,8 @@ window.fmtHeight = fmtHeight;
     }
     // Rookie mode with KTC: use default KTC-sorted board
     if (mdMode === 'rookie') return getADPBoardDefault();
-    // If using "My Rankings" or "Jack's Rankings", use that board order
-    if (mdRankSrc === 'mine' || mdRankSrc === 'jacks') {
+    // If using a multi-source ranking board (Consensus / Mine / Jack's / JS Model), use that order
+    if (mdRankSrc === 'consensus' || mdRankSrc === 'mine' || mdRankSrc === 'jacks' || mdRankSrc === 'jsmodel') {
       const rankBoard = versionBoards[mdRankSrc] ? (versionBoards[mdRankSrc][mdMode] || versionBoards[mdRankSrc].redraft) : null;
       if (rankBoard && rankBoard.length) {
         const boardEntries = rankBoard.map((dIdx, rank) => {
@@ -21415,6 +21923,12 @@ window.fmtHeight = fmtHeight;
 
   function getADPBoardDefault() {
     const isRookie = mdMode === 'rookie';
+    // Precompute consensus rank lookup (multi-source: Jack's + ADP + Sleeper + FP + Underdog + KTC)
+    let consensusRankByIdx = null;
+    if (mdAdpSrc === 'consensus' && !isRookie && versionBoards.consensus && versionBoards.consensus[mdMode]) {
+      consensusRankByIdx = {};
+      versionBoards.consensus[mdMode].forEach((dIdx, r) => { consensusRankByIdx[dIdx] = r + 1; });
+    }
     return D.map((d, i) => {
       // In rookie mode, skip non-rookies
       if (isRookie && !_isRookiePlayer(d)) return null;
@@ -21430,15 +21944,18 @@ window.fmtHeight = fmtHeight;
         // For rookie mode, invert KTC values so higher KTC = lower ADP (picked first)
         // Players with no KTC value (0) get pushed to the bottom
         if (isRookie) adp = adp > 0 ? (10000 - adp) : 99999;
-      } else if (mdAdpSrc === 'consensus') {
-        // Average all available ADP sources for the current mode
-        const vals = [];
-        if (mdMode === 'superflex' && d.sfa) vals.push(d.sfa);
-        else if (mdMode === 'dynasty' && d.da) vals.push(d.da);
-        else if (mdMode === 'dynastysf' && d.sa) vals.push(d.sa);
-        else if (d.a && d.a < 900) vals.push(d.a);
-        // Future: add espn, sleeper, yahoo ADP fields here
-        adp = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 999;
+      } else if (mdAdpSrc === 'sleeper') {
+        // Sleeper ranks — use mode-specific slR/slSf/slDy/slDsf
+        const sv = mdMode === 'dynastysf' ? d.slDsf
+                 : mdMode === 'dynasty' ? d.slDy
+                 : mdMode === 'superflex' ? d.slSf
+                 : d.slR;
+        adp = sv != null ? sv : 999;
+      } else if (mdAdpSrc === 'consensus' && consensusRankByIdx) {
+        // True multi-source consensus: Jack's + Market ADP + Sleeper + FantasyPros + Underdog + KTC(dyn)
+        // Use the consensus board rank directly as the pick order.
+        const r = consensusRankByIdx[i];
+        adp = r != null ? r : 999;
       } else {
         adp = d.a || 999;
         if (mdMode === 'superflex' && d.sfa) adp = d.sfa;
@@ -23245,28 +23762,36 @@ window.fmtHeight = fmtHeight;
 
   function _dcLoad() {
     if (_dcLoaded) return Promise.resolve();
-    // Only load from Firestore if admin (avoids permissions errors for regular users)
-    if (!_dcIsAdmin()) { _dcLoaded = true; return Promise.resolve(); }
+    // Load manual draft capital for ALL users so the JM score reflects Jack's
+    // manual 2026 DC edits (e.g. Carson Beck at pick 12) on every visitor's view.
+    // Firestore rules should allow public reads on `prospect_draft_capital`;
+    // writes are still admin-only. If the read is blocked, we fall back to
+    // DraftBuzz projections for devy players so the model still works.
+    function _applyDevyFallback() {
+      if (typeof COMBINE_DATA !== 'undefined') {
+        Object.keys(COMBINE_DATA).forEach(function(n) {
+          if (COMBINE_DATA[n].devy && COMBINE_DATA[n].draft != null && !_dcCache[n]) {
+            _dcCache[n] = String(COMBINE_DATA[n].draft);
+          }
+        });
+      }
+    }
     try {
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-      if (!db) { _dcLoaded = true; return Promise.resolve(); }
+      if (!db) { _applyDevyFallback(); _dcLoaded = true; return Promise.resolve(); }
       return db.collection('prospect_draft_capital').get().then(function(snap) {
         snap.forEach(function(doc) {
           _dcCache[doc.id] = doc.data().dc || '';
         });
-        // Apply DraftBuzz draft projections for devy players ONLY if no manual
-        // Firestore edit exists. This way your manual DC edits always take priority,
-        // but DraftBuzz fills in the gaps for players you haven't manually set.
-        if (typeof COMBINE_DATA !== 'undefined') {
-          Object.keys(COMBINE_DATA).forEach(function(n) {
-            if (COMBINE_DATA[n].devy && COMBINE_DATA[n].draft != null && !_dcCache[n]) {
-              _dcCache[n] = String(COMBINE_DATA[n].draft);
-            }
-          });
-        }
+        _applyDevyFallback();
         _dcLoaded = true;
-      }).catch(function(err) { _dcLoaded = true; });
+      }).catch(function(err) {
+        // Firestore read blocked (e.g. permissions) — fall back to DraftBuzz projections
+        _applyDevyFallback();
+        _dcLoaded = true;
+      });
     } catch(e) {
+      _applyDevyFallback();
       _dcLoaded = true;
       return Promise.resolve();
     }
@@ -33634,6 +34159,10 @@ Rules:
   let _mtFormat = { type: 'redraft', sf: false, ppr: 1, starters: 10 };
   let _mtMyUserId = null; // auto-detected Sleeper user ID
   let _mtViewMode = 'value'; // 'value' = dynasty rankings, 'contender' = redraft rankings (win-now)
+  // Value source — which ranking/ADP source to use for team grades and player values.
+  // Supports: consensus, jacks, jsmodel, mine (version-based) + underdog, ktc, espn, sleeper, yahoo (ADP-based)
+  let _mtValueSrc = 'consensus';
+  window._mtGetValueSrc = function() { return _mtValueSrc; };
 
   // Grade thresholds — adjusted for format
   function _mtGrade(avgRank) {
@@ -33670,13 +34199,20 @@ Rules:
     const mode = _mtGetRankingMode();
     let rank = 999;
 
-    // Try to read rank from the mode-specific board order
-    if (typeof versionBoards !== 'undefined' && typeof currentVersion !== 'undefined') {
-      const board = versionBoards[currentVersion] && versionBoards[currentVersion][mode];
-      if (board && board.length) {
-        const pos = board.indexOf(d.idx);
-        if (pos >= 0) rank = pos + 1;
+    const ADP_SRCS = ['underdog', 'ktc', 'espn', 'sleeper', 'yahoo'];
+    const src = _mtValueSrc;
+    let board = null;
+    if (ADP_SRCS.indexOf(src) >= 0) {
+      // ADP-based board (reuses the shared cache from the trade calc module)
+      if (typeof window._getAdpBoard === 'function') {
+        board = window._getAdpBoard(src, mode);
       }
+    } else if (typeof versionBoards !== 'undefined') {
+      board = versionBoards[src] && versionBoards[src][mode];
+    }
+    if (board && board.length) {
+      const pos = board.indexOf(d.idx);
+      if (pos >= 0) rank = pos + 1;
     }
 
     // Fallback to myRank if board lookup failed
@@ -33803,7 +34339,7 @@ Rules:
     const ranked = players.map(name => {
       const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
       const rank = _mtGetPlayerRank(name);
-      const val = (d && typeof window._getTradeValue === 'function') ? window._getTradeValue(d, 'jacks', mode) : 1;
+      const val = (d && typeof window._getTradeValue === 'function') ? window._getTradeValue(d, _mtValueSrc, mode) : 1;
       return {
         name, rank, val,
         pos: _mtGetPlayerPos(name),
@@ -35024,8 +35560,9 @@ Rules:
   function _udGetValue(name) {
     const matched = _udMatchPlayer(name);
     if (!matched) return 1;
-    // Use Jack's rankings in redraft mode for portfolio scoring
-    return typeof window._getTradeValue === 'function' ? window._getTradeValue(matched, 'jacks', 'redraft') : 1;
+    // Use currently-selected value source (falls back to consensus) in redraft mode for portfolio scoring
+    const src = (typeof window._mtGetValueSrc === 'function') ? window._mtGetValueSrc() : 'consensus';
+    return typeof window._getTradeValue === 'function' ? window._getTradeValue(matched, src, 'redraft') : 1;
   }
 
   function _udScoreTeam(playerNames) {
@@ -35625,6 +36162,80 @@ Rules:
       document.getElementById('mtSleeperLeagueId').value = saved.id;
     }
   } catch(e) {}
+
+  // Value-source tabs (consensus / jacks / jsmodel / mine + underdog / espn / sleeper / yahoo / ktc)
+  try {
+    const savedSrc = localStorage.getItem('mt_value_src');
+    if (savedSrc) _mtValueSrc = savedSrc;
+  } catch(e) {}
+  const MT_LOCKED_ADP = ['espn', 'yahoo'];
+  function _mtRefreshAfterSrcChange() {
+    // Re-render anything that depends on values
+    if (window._mtTeams && typeof _mtRenderTeamList === 'function') {
+      try { _mtRenderTeamList(window._mtTeams); } catch(e) { console.warn('[MyTeams] re-render teams failed:', e); }
+    }
+    // Re-render manual roster if shown
+    if (typeof _mtRenderManualRoster === 'function') {
+      try { _mtRenderManualRoster(); } catch(e) {}
+    }
+    // Re-render Underdog dashboard if shown
+    if (typeof window._udRefreshDashboard === 'function') {
+      try { window._udRefreshDashboard(); } catch(e) {}
+    }
+  }
+  document.querySelectorAll('.mt-src-tab').forEach(btn => {
+    // Restore active state based on savedSrc
+    btn.classList.toggle('active', btn.dataset.mtsrc === _mtValueSrc);
+    btn.addEventListener('click', () => {
+      const src = btn.dataset.mtsrc;
+      // JS Model is admin-only for now (coming soon to everyone else)
+      if (src === 'jsmodel') {
+        const _isAdminNow = typeof window.isAdmin === 'function' && window.isAdmin();
+        if (!_isAdminNow) {
+          if (typeof toast === 'function') toast('JS Model — Coming Soon');
+          return;
+        }
+      }
+      // Locked ADP sources
+      if (MT_LOCKED_ADP.indexOf(src) >= 0) {
+        if (typeof toast === 'function') toast(src.toUpperCase() + ' ADP coming soon — Premium only');
+        return;
+      }
+      // Underdog ADP is premium (matches Rankings + Mock Draft)
+      if (src === 'underdog' && typeof hasPremium === 'function' && !hasPremium()) {
+        if (typeof toast === 'function') toast('Underdog ADP requires Premium');
+        return;
+      }
+      // Premium lock on Jack's rankings
+      if (src === 'jacks' && typeof hasPremium === 'function' && !hasPremium()) {
+        if (typeof toast === 'function') toast("Jack's Rankings require Premium");
+        return;
+      }
+      document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _mtValueSrc = src;
+      try { localStorage.setItem('mt_value_src', src); } catch(e) {}
+      _mtRefreshAfterSrcChange();
+    });
+  });
+
+  // Hide lock icon on Jack's + Underdog tabs for premium users (icons are hardcoded in HTML)
+  function _mtUpdateJacksLock() {
+    const prem = typeof hasPremium === 'function' && hasPremium();
+    ['jacks', 'underdog'].forEach(function(srcKey) {
+      const tab = document.querySelector('.mt-src-tab[data-mtsrc="' + srcKey + '"]');
+      if (!tab) return;
+      const icon = tab.querySelector('.lock-icon');
+      if (prem) {
+        tab.classList.remove('locked');
+        if (icon) icon.style.display = 'none';
+      } else {
+        if (icon) icon.style.display = '';
+      }
+    });
+  }
+  _mtUpdateJacksLock();
+  window._mtUpdateJacksLock = _mtUpdateJacksLock;
 
 })();
 

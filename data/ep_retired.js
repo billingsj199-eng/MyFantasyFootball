@@ -3291,7 +3291,7 @@ const EP_RETIRED = [
     {name:"Travis Fulgham",pos:"WR",debut:2019,last:2020,career:[
 {yr:2019,gp:2,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:0,ppg:0.0},
 {yr:2020,gp:12,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:38,rcy:539,rctd:4,fl:0,fpts:77.9,ppg:6.5}]},
-    {name:"Terrace Marshall",pos:"WR",debut:2021,last:2024,career:[
+    {name:"Terrace Marshall Jr.",pos:"WR",debut:2021,last:2024,career:[
 {yr:2021,gp:12,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:17,rcy:138,rctd:0,fl:0,fpts:15.8,ppg:1.3},
 {yr:2022,gp:13,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:28,rcy:490,rctd:1,fl:0,fpts:55.0,ppg:4.2},
 {yr:2024,gp:5,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:3,rcy:41,rctd:0,fl:0,fpts:4.1,ppg:0.8}]},
@@ -3475,7 +3475,7 @@ const EP_RETIRED = [
 {yr:2003,gp:12,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:19,rcy:159,rctd:3,fl:0,fpts:33.9,ppg:2.8},
 {yr:2004,gp:10,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:20,rcy:152,rctd:1,fl:0,fpts:21.2,ppg:2.1},
 {yr:2005,gp:6,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:9,rcy:76,rctd:0,fl:0,fpts:7.6,ppg:1.3}]},
-    {name:"Tony Jones",pos:"RB",debut:2020,last:2024,career:[
+    {name:"Tony Jones Jr.",pos:"RB",debut:2020,last:2024,career:[
 {yr:2020,gp:1,py:0,ptd:0,int:0,ra:3,ry:13,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:1.3,ppg:1.3},
 {yr:2021,gp:10,py:0,ptd:0,int:0,ra:54,ry:142,rtd:0,rc:5,rcy:29,rctd:0,fl:0,fpts:17.1,ppg:1.7},
 {yr:2022,gp:3,py:0,ptd:0,int:0,ra:10,ry:24,rtd:0,rc:5,rcy:30,rctd:0,fl:0,fpts:5.4,ppg:1.8},
@@ -6480,7 +6480,7 @@ const EP_RETIRED = [
 {yr:2022,gp:15,py:0,ptd:0,int:0,ra:188,ry:786,rtd:7,rc:13,rcy:117,rctd:0,fl:2,fpts:128.3,ppg:8.6},
 {yr:2023,gp:7,py:0,ptd:0,int:0,ra:60,ry:167,rtd:2,rc:11,rcy:70,rctd:0,fl:0,fpts:35.7,ppg:5.1},
 {yr:2024,gp:15,py:0,ptd:0,int:0,ra:104,ry:444,rtd:2,rc:14,rcy:68,rctd:3,fl:1,fpts:79.2,ppg:5.3}]},
-    {name:"Henry Ruggs",pos:"WR",debut:2020,last:2021,career:[
+    {name:"Henry Ruggs III",pos:"WR",debut:2020,last:2021,career:[
 {yr:2020,gp:13,py:0,ptd:0,int:0,ra:9,ry:49,rtd:0,rc:26,rcy:452,rctd:2,fl:2,fpts:58.1,ppg:4.5},
 {yr:2021,gp:7,py:0,ptd:0,int:0,ra:3,ry:16,rtd:0,rc:24,rcy:469,rctd:2,fl:0,fpts:60.5,ppg:8.6}]},
     {name:"Christian Fauria",pos:"TE",debut:1999,last:2007,career:[
@@ -6623,7 +6623,7 @@ const EP_RETIRED = [
 {yr:2003,gp:12,py:0,ptd:0,int:0,ra:3,ry:-9,rtd:0,rc:35,rcy:487,rctd:3,fl:0,fpts:65.8,ppg:5.5},
 {yr:2004,gp:15,py:0,ptd:0,int:0,ra:2,ry:2,rtd:0,rc:50,rcy:533,rctd:1,fl:2,fpts:55.5,ppg:3.7},
 {yr:2005,gp:1,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:2,rcy:15,rctd:0,fl:0,fpts:1.5,ppg:1.5}]},
-    {name:"Benny Snell",pos:"RB",debut:2019,last:2022,career:[
+    {name:"Benny Snell Jr.",pos:"RB",debut:2019,last:2022,career:[
 {yr:2019,gp:11,py:0,ptd:0,int:0,ra:108,ry:426,rtd:2,rc:3,rcy:23,rctd:0,fl:1,fpts:54.9,ppg:5.0},
 {yr:2020,gp:15,py:0,ptd:0,int:0,ra:111,ry:368,rtd:4,rc:10,rcy:61,rctd:0,fl:1,fpts:64.9,ppg:4.3},
 {yr:2021,gp:13,py:0,ptd:0,int:0,ra:36,ry:98,rtd:0,rc:2,rcy:13,rctd:0,fl:0,fpts:11.1,ppg:0.9},
@@ -6788,7 +6788,7 @@ const EP_RETIRED = [
     {name:"Elijah McGuire",pos:"RB",debut:2017,last:2018,career:[
 {yr:2017,gp:15,py:0,ptd:0,int:0,ra:88,ry:315,rtd:1,rc:17,rcy:177,rctd:1,fl:2,fpts:59.2,ppg:3.9},
 {yr:2018,gp:8,py:0,ptd:0,int:0,ra:92,ry:276,rtd:3,rc:19,rcy:193,rctd:1,fl:2,fpts:66.9,ppg:8.4}]},
-    {name:"Kellen Winslow",pos:"TE",debut:2004,last:2013,career:[
+    {name:"Kellen Winslow Jr.",pos:"TE",debut:2004,last:2013,career:[
 {yr:2004,gp:2,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:5,rcy:50,rctd:0,fl:0,fpts:5.0,ppg:2.5},
 {yr:2006,gp:16,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:89,rcy:875,rctd:3,fl:0,fpts:105.5,ppg:6.6},
 {yr:2007,gp:16,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:82,rcy:1106,rctd:5,fl:1,fpts:140.6,ppg:8.8},
@@ -7593,9 +7593,6 @@ const EP_RETIRED = [
 {yr:2020,gp:13,py:0,ptd:0,int:0,ra:39,ry:169,rtd:1,rc:18,rcy:116,rctd:0,fl:0,fpts:36.5,ppg:2.8},
 {yr:2021,gp:17,py:0,ptd:0,int:0,ra:144,ry:558,rtd:6,rc:47,rcy:452,rctd:2,fl:0,fpts:149.0,ppg:8.8},
 {yr:2022,gp:5,py:0,ptd:0,int:0,ra:21,ry:102,rtd:1,rc:4,rcy:9,rctd:0,fl:0,fpts:17.1,ppg:3.4}]},
-    {name:"Laviska Shenault",pos:"WR",debut:2021,last:2022,career:[
-{yr:2021,gp:16,py:0,ptd:0,int:0,ra:11,ry:41,rtd:0,rc:63,rcy:619,rctd:0,fl:1,fpts:64.0,ppg:4.0},
-{yr:2022,gp:13,py:0,ptd:0,int:0,ra:9,ry:65,rtd:1,rc:27,rcy:272,rctd:1,fl:0,fpts:45.7,ppg:3.5}]},
     {name:"Akili Smith",pos:"QB",debut:1999,last:2002,career:[
 {yr:1999,gp:7,py:793,ptd:2,int:6,ra:18,ry:105,rtd:1,rc:0,rcy:0,rctd:0,fl:0,fpts:44.8,ppg:6.4},
 {yr:2000,gp:11,py:1246,ptd:3,int:6,ra:38,ry:197,rtd:0,rc:0,rcy:0,rctd:0,fl:8,fpts:53.6,ppg:4.9},
@@ -7743,8 +7740,6 @@ const EP_RETIRED = [
     {name:"Jonas Gray",pos:"RB",debut:2014,last:2015,career:[
 {yr:2014,gp:8,py:0,ptd:0,int:0,ra:89,ry:412,rtd:5,rc:1,rcy:7,rctd:0,fl:0,fpts:71.9,ppg:9.0},
 {yr:2015,gp:7,py:0,ptd:0,int:0,ra:45,ry:176,rtd:0,rc:7,rcy:76,rctd:0,fl:0,fpts:25.2,ppg:3.6}]},
-    {name:"DJ Chark",pos:"WR",debut:2023,last:2023,career:[
-{yr:2023,gp:14,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:35,rcy:525,rctd:5,fl:1,fpts:80.5,ppg:5.7}]},
     {name:"Michael Bush",pos:"RB",debut:2008,last:2013,career:[
 {yr:2008,gp:11,py:0,ptd:0,int:0,ra:94,ry:419,rtd:3,rc:19,rcy:162,rctd:0,fl:1,fpts:74.4,ppg:6.8},
 {yr:2009,gp:15,py:0,ptd:0,int:0,ra:123,ry:589,rtd:3,rc:17,rcy:105,rctd:0,fl:2,fpts:83.4,ppg:5.6},
@@ -7846,7 +7841,7 @@ const EP_RETIRED = [
 {yr:2010,gp:6,py:694,ptd:4,int:2,ra:7,ry:9,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:41.6,ppg:6.9},
 {yr:2011,gp:6,py:567,ptd:2,int:2,ra:7,ry:70,rtd:0,rc:0,rcy:0,rctd:0,fl:1,fpts:33.8,ppg:5.6},
 {yr:2013,gp:2,py:139,ptd:0,int:1,ra:0,ry:0,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:3.6,ppg:1.8}]},
-    {name:"Greg Ward",pos:"WR",debut:2019,last:2021,career:[
+    {name:"Greg Ward Jr.",pos:"WR",debut:2019,last:2021,career:[
 {yr:2019,gp:6,py:0,ptd:0,int:0,ra:1,ry:5,rtd:0,rc:28,rcy:254,rctd:1,fl:0,fpts:31.9,ppg:5.3},
 {yr:2020,gp:16,py:0,ptd:0,int:0,ra:2,ry:-4,rtd:0,rc:53,rcy:419,rctd:6,fl:0,fpts:80.1,ppg:5.0},
 {yr:2021,gp:7,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:7,rcy:95,rctd:3,fl:0,fpts:27.6,ppg:3.9}]},
@@ -8482,7 +8477,7 @@ const EP_RETIRED = [
 {yr:2022,gp:15,py:0,ptd:0,int:0,ra:2,ry:0,rtd:0,rc:60,rcy:788,rctd:6,fl:0,fpts:114.8,ppg:7.7},
 {yr:2023,gp:13,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:23,rcy:311,rctd:1,fl:0,fpts:37.1,ppg:2.9},
 {yr:2024,gp:12,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:37,rcy:530,rctd:6,fl:0,fpts:89.0,ppg:7.4}]},
-    {name:"Marvin Jones",pos:"WR",debut:2012,last:2023,career:[
+    {name:"Marvin Jones Jr.",pos:"WR",debut:2012,last:2023,career:[
 {yr:2012,gp:8,py:0,ptd:0,int:0,ra:3,ry:47,rtd:0,rc:18,rcy:201,rctd:1,fl:0,fpts:30.8,ppg:3.8},
 {yr:2013,gp:16,py:0,ptd:0,int:0,ra:8,ry:65,rtd:0,rc:51,rcy:712,rctd:10,fl:0,fpts:137.7,ppg:8.6},
 {yr:2015,gp:16,py:0,ptd:0,int:0,ra:5,ry:33,rtd:0,rc:65,rcy:816,rctd:4,fl:0,fpts:108.9,ppg:6.8},

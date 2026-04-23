@@ -1652,7 +1652,7 @@ Continue with Google
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/><circle cx="12" cy="7" r="2"/><circle cx="18" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="6" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
 <span class="nav-label">Prospect</span>
 </button>
-<button class="nav-btn" data-page="backtest" title="Model Backtest">
+<button class="nav-btn" data-page="backtest" id="navBacktestBtn" title="Model Backtest" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
 <span class="nav-label">Back<br>test</span>
 </button>
@@ -3938,19 +3938,14 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script>
 // Fix combine data errors from external file
 if (typeof COMBINE_DATA !== 'undefined') {
-  // Marvin Harrison Jr.: yr was 2000, should be 2024
-  if (COMBINE_DATA['Marvin Harrison Jr.'] && COMBINE_DATA['Marvin Harrison Jr.'].yr === 2000) {
-    COMBINE_DATA['Marvin Harrison Jr.'].yr = 2024;
-  }
-  // 'Marvin Harrison' entry in external file mixes dad's accolades (pb:8, ap:3, hof:1, dt:IND)
-  // with Jr.'s draft data (school:Ohio St., draft:4, ht:6-3, wt:209). Clean it up:
-  if (COMBINE_DATA['Marvin Harrison'] && COMBINE_DATA['Marvin Harrison'].pb) {
-    // Save dad under Sr.
-    if (!COMBINE_DATA['Marvin Harrison Sr.']) {
-      COMBINE_DATA['Marvin Harrison Sr.'] = { yr: 1996, school: 'Syracuse', ht: '6-0', wt: 181, draft: 19, dt: 'IND', pb: 8, ap: 3, hof: 1 };
-    }
-    // Overwrite with Jr.'s clean data — remove dad's accolades
-    COMBINE_DATA['Marvin Harrison'] = { yr: 2024, school: 'Ohio St.', ht: '6-3', wt: 209, draft: 4, dt: 'ARI' };
+  // Name-audit cleanup: post-rename, the son's record ("Marvin Harrison Jr.") inherited
+  // dad's accolades (pb:8, ap:3, hof:1, dt:IND) from the original mixed record.
+  // Strip them and restore father's record under the base name.
+  if (COMBINE_DATA['Marvin Harrison Jr.'] && COMBINE_DATA['Marvin Harrison Jr.'].hof) {
+    // Save dad's career under the base name
+    COMBINE_DATA['Marvin Harrison'] = { yr: 1996, school: 'Syracuse', ht: '6-0', wt: 181, draft: 19, dt: 'IND', pb: 8, ap: 3, hof: 1 };
+    // Clean the son's record — keep only his draft info
+    COMBINE_DATA['Marvin Harrison Jr.'] = { yr: 2024, school: 'Ohio St.', ht: '6-3', wt: 209, draft: 4, dt: 'ARI' };
   }
   // Travis Hunter: 2025 draft, pick 2 overall — 2-way player, WR for fantasy
   if (!COMBINE_DATA['Travis Hunter']) {
@@ -3987,14 +3982,8 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Sebastian Brown'] && !COMBINE_DATA['Sebastian Brown'].ras) COMBINE_DATA['Sebastian Brown'].ras = 4.72;
   // NOTE: PFF apostrophe-name alias fixes live in the pff_grades.js patch block
   // (after the script tag loads), not here.
-  // Michael Penix: D array + LEGEND_BIRTH_YEARS use "Michael Penix" (no Jr.)
-  // but COMBINE_DATA has good data under "Michael Penix Jr." and bad data under "Michael Penix" (yr:2000)
-  // Fix: overwrite the non-Jr. entry with Jr.'s correct data
-  if (COMBINE_DATA['Michael Penix Jr.'] && COMBINE_DATA['Michael Penix Jr.'].draft) {
-    COMBINE_DATA['Michael Penix'] = Object.assign({}, COMBINE_DATA['Michael Penix Jr.']);
-  } else if (COMBINE_DATA['Michael Penix'] && COMBINE_DATA['Michael Penix'].yr === 2000) {
-    COMBINE_DATA['Michael Penix'] = { yr: 2024, school: 'Washington', pos: 'QB', ht: '6-2', wt: 216, draft: 8, ras: 9.75, dt: 'ATL' };
-  }
+  // [Name audit] Michael Penix Jr. — d.js, combine_data, college_stats, pff_grades
+  // now all use "Michael Penix Jr." consistently. Legacy aliasing no longer needed.
   // === TOP 50 DEVY PROSPECTS (from KTC devy rankings) ===
   // Added with pos and school so they appear in the COLLEGE tab.
   // No draft pick = college-only prospect.
@@ -6326,9 +6315,19 @@ function dstRank(d) { return d.s === 'DST' ? (parseInt((d.r||'DST99').replace('D
 const defaultBoard = D.map((d,i) => { d.round = Math.ceil(d.a / 12); d.idx = i; d.notes = ''; return i; });
 
 // === NAME-BASED STORAGE ===
-// Build a name→index lookup map for resilient storage
+// Build a name→index lookup map for resilient storage.
+// Also register suffix-stripped aliases (e.g. "Marvin Harrison" → the "Marvin Harrison Jr." index)
+// so that saved rankings made before we normalized names still resolve correctly.
+// d.js only contains active players, so stripped aliases don't collide with older HOFers.
 const nameToIdx = {};
-D.forEach((d, i) => { nameToIdx[d.n] = i; });
+const _jrSuffixRe = /\s+(Jr\.?|Sr\.?|II|III|IV|V)$/;
+D.forEach((d, i) => {
+  nameToIdx[d.n] = i;
+  const stripped = d.n.replace(_jrSuffixRe, '');
+  if (stripped !== d.n && nameToIdx[stripped] === undefined) {
+    nameToIdx[stripped] = i;
+  }
+});
 
 // Convert an index-based board to a name-based array for storage
 function boardToNames(board) {
@@ -6455,6 +6454,22 @@ function _computeConsensusBoard(mode) {
   }
 
   // KTC rank map (dynasty modes only — higher KTC = better rank)
+  // Name-robust lookup: tries exact name, then suffix-stripped, then common suffixes.
+  // This handles the case where KTC map and d.js disagree on Jr./II/III usage.
+  const _suffixRe = /\s+(Jr\.?|Sr\.?|II|III|IV|V)$/;
+  function _ktcLookup(map, name) {
+    if (!name) return null;
+    if (map[name] != null) return map[name];
+    // Strip suffix
+    const stripped = name.replace(_suffixRe, '');
+    if (stripped !== name && map[stripped] != null) return map[stripped];
+    // Try appending common suffixes
+    const SUF = [' Jr.', ' Jr', ' III', ' II', ' Sr.', ' Sr', ' IV', ' V'];
+    for (const s of SUF) {
+      if (map[stripped + s] != null) return map[stripped + s];
+    }
+    return null;
+  }
   const kRank = {};
   if (mode === 'dynasty' || mode === 'dynastysf') {
     const ktcMap = mode === 'dynastysf'
@@ -6462,7 +6477,7 @@ function _computeConsensusBoard(mode) {
       : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
     const kList = [];
     for (let i = 0; i < D.length; i++) {
-      const v = ktcMap[D[i].n];
+      const v = _ktcLookup(ktcMap, D[i].n);
       if (v != null && v > 0) kList.push({ idx: i, v: v });
     }
     kList.sort((a, b) => b.v - a.v);
@@ -10892,6 +10907,12 @@ render();
 const pageMap = { home: 'pageHome', rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest' };
 const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest' };
 function switchPage(page) {
+  // Admin-only pages — silently redirect non-admins to home
+  const ADMIN_ONLY_PAGES = ['backtest', 'trivia'];
+  if (ADMIN_ONLY_PAGES.includes(page)) {
+    const admin = typeof window.isAdmin === 'function' && window.isAdmin();
+    if (!admin) { page = 'home'; }
+  }
   Object.values(pageMap).forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
@@ -10910,6 +10931,20 @@ function switchPage(page) {
   // Render backtest when navigating to backtest page
   if (page === 'backtest' && typeof window._renderBacktest === 'function') window._renderBacktest();
 }
+// Show/hide admin-only nav buttons when auth state changes
+(function() {
+  function _navAdminCheck() {
+    const admin = typeof window.isAdmin === 'function' && window.isAdmin();
+    const btBtn = document.getElementById('navBacktestBtn');
+    if (btBtn) btBtn.style.display = admin ? '' : 'none';
+  }
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try { firebase.auth().onAuthStateChanged(_navAdminCheck); } catch(e) {}
+  }
+  // Also check on initial load in case auth already resolved
+  window.addEventListener('DOMContentLoaded', _navAdminCheck);
+  setTimeout(_navAdminCheck, 1500);
+})();
 document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
   btn.addEventListener('click', () => switchPage(btn.dataset.page));
 });

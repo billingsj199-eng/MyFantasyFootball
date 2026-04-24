@@ -27033,12 +27033,27 @@ window.fmtHeight = fmtHeight;
     // Formulas:
     //   WR: bonus = min(3, max(0, (raw_tm − 10) × 0.3)) — 0 below raw=10, +3 cap at raw=20
     //   RB: bonus = min(3, max(0, (raw_tm −  5) × 0.5)) — 0 below raw=5, +3 cap at raw=11
+    //
+    // RB OUTLIER KICKER (Apr 24 2026): +2 extra when the prospect fits the
+    // "NFL saw the talent despite backup role" profile:
+    //   • dcScore ≥ 55 (roughly pick ≤ 32 for RBs — real NFL validation)
+    //   • bestPpg < 14 (production was suppressed, not just average)
+    //   • raw_tm ≥ 15 (teammate was truly elite, not moderate)
+    // Only hits when all three gates fire. Designed for profiles like
+    // Jadarian Price (pk 32 behind Love pk 3). Day-3 RBs with elite teammates
+    // (Ford, Mason, Estime) don't qualify — NFL didn't validate them the same way.
     let tmBonus = 0;
     if (p.tm != null && p.tm > 0) {
       if (p.pos === 'WR') {
         tmBonus = Math.min(3, Math.max(0, (p.tm - 10) * 0.3));
       } else if (p.pos === 'RB') {
         tmBonus = Math.min(3, Math.max(0, (p.tm - 5) * 0.5));
+        // Outlier kicker: high-DC + suppressed production + elite teammate
+        if (dcScore != null && dcScore >= 55 &&
+            p.bestPpg != null && p.bestPpg < 14 &&
+            p.tm >= 15) {
+          tmBonus += 2;
+        }
       }
     }
 

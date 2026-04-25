@@ -4852,7 +4852,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
       "John Metchie III": "John Metchie", "Mitch Trubisky": "Mitchell Trubisky"
     };
     D.forEach(function(d) {
-      if (d.dr != null || !d.n) return; // already has dr
+      if (!d.n) return;
       // Try exact name, then alias, then suffix variations
       var cb = COMBINE_DATA[d.n] || (_drAliases[d.n] ? COMBINE_DATA[_drAliases[d.n]] : null);
       if (!cb) {
@@ -4866,6 +4866,10 @@ if (typeof COMBINE_DATA !== 'undefined') {
         var cleaned = d.n.replace(/[''`]/g, '');
         if (cleaned !== d.n) cb = COMBINE_DATA[cleaned];
       }
+      // For 2026 prospects, ALWAYS overwrite d.dr from COMBINE_DATA so post-draft
+      // updates flow through. For older years, preserve existing d.dr.
+      var force2026 = cb && cb.yr === 2026;
+      if (d.dr != null && !force2026) return; // already has dr
       if (cb && cb.draft != null) {
         d.dr = (cb.draft === 'U' || cb.draft === 'u') ? 'U' : parseInt(cb.draft) || cb.draft;
       } else if (cb && cb.draftProj != null) {

@@ -7143,8 +7143,11 @@ function render() {
     fullBoard.forEach((dIdx, pos) => {
       const p = D[dIdx];
       if (!p) return;
-      // Identify as 2026 rookie: no career data and no NFL team (or TBD)
-      const isRookie = (!p.career || p.career.length === 0) && (!p.t || p.t === 'TBD' || p.t === 'FA');
+      // Identify as 2026 rookie: no career data, AND either no NFL team yet OR
+      // marked as 2026 in COMBINE_DATA (post-draft they have a real team but
+      // are still rookies until they accrue NFL career stats).
+      const _cb2026 = (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[p.n] && COMBINE_DATA[p.n].yr === 2026);
+      const isRookie = (!p.career || p.career.length === 0) && (_cb2026 || !p.t || p.t === 'TBD' || p.t === 'FA');
       if (isRookie && p.s !== 'K' && p.s !== 'DST') {
         rookies2026.push({ idx: dIdx, boardPos: pos });
       }
@@ -7279,7 +7282,11 @@ function updateStats(data) {
   const wrs = data.filter(d=>d.s==='WR').length;
   const tes = data.filter(d=>d.s==='TE').length;
   const moved = D.filter(d => rnkAdp(d) != null && Math.abs(rnkAdp(d) - d.myRank) >= 1).length;
-  const rookies = data.filter(d=>(!d.career || d.career.length===0) && (!d.t || d.t==='TBD')).length;
+  const rookies = data.filter(d => {
+    if (d.career && d.career.length) return false;
+    const _cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
+    return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
+  }).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : '🏈 REDRAFT';
   const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'jsmodel' ? '📋 JS MODEL' : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
@@ -7661,9 +7668,21 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
 });
 
 // Show/hide the JS Model version tab based on admin state (it's hidden by default)
-function _jsModelCheckAdmin() {
+// IMPORTANT: this must work even when called BEFORE the auth IIFE finishes
+// initializing window.isAdmin/currentUser. We accept the user object directly
+// from onAuthStateChanged and check the email against the admin list.
+const _JSMODEL_ADMIN_EMAILS = ['billingsj199@gmail.com'];
+function _jsModelCheckAdmin(userArg) {
   const tab = document.getElementById('jsModelVersionTab');
-  const admin = typeof window.isAdmin === 'function' && window.isAdmin();
+  // Resolve user from any source — listener arg, firebase singleton, or window stash
+  let u = userArg || null;
+  if (!u && typeof firebase !== 'undefined' && firebase.auth) {
+    try { u = firebase.auth().currentUser; } catch (_e) {}
+  }
+  if (!u && typeof window._authCurrentUser !== 'undefined') u = window._authCurrentUser;
+  const adminByEmail = !!(u && u.email && _JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
+  const adminByFn = typeof window.isAdmin === 'function' && window.isAdmin();
+  const admin = adminByEmail || adminByFn;
   if (tab) {
     tab.style.display = admin ? '' : 'none';
     // If a non-admin somehow got switched to JS Model, reset them to Jack's
@@ -20239,7 +20258,8 @@ window.fmtHeight = fmtHeight;
           board.forEach(function(dIdx) {
             const p = D[dIdx];
             if (!p || p.s === 'K' || p.s === 'DST' || p._isFuturePick) return;
-            const isRookie = (!p.career || p.career.length === 0) && (!p.t || p.t === 'TBD' || p.t === 'FA');
+            const _cb2026 = (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[p.n] && COMBINE_DATA[p.n].yr === 2026);
+            const isRookie = (!p.career || p.career.length === 0) && (_cb2026 || !p.t || p.t === 'TBD' || p.t === 'FA');
             if (isRookie) rookies.push(dIdx);
           });
           if (overallIdx < rookies.length) {
@@ -21218,6 +21238,10 @@ window.fmtHeight = fmtHeight;
   function updateAccountUI(user) {
     currentUser = user;
     window._authCurrentUser = user;
+    // Re-check admin gating for the JS Model tab now that currentUser is set.
+    if (typeof window._jsModelCheckAdmin === 'function') {
+      try { window._jsModelCheckAdmin(user); } catch (_e) {}
+    }
     if (typeof render === 'function') render();
     if (user) {
       const initial = (user.email || user.displayName || '?')[0].toUpperCase();

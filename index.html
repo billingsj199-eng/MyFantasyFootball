@@ -24500,8 +24500,12 @@ window.fmtHeight = fmtHeight;
     function _applyDevyFallback() {
       if (typeof COMBINE_DATA !== 'undefined') {
         Object.keys(COMBINE_DATA).forEach(function(n) {
-          if (COMBINE_DATA[n].devy && COMBINE_DATA[n].draft != null && !_dcCache[n]) {
-            _dcCache[n] = String(COMBINE_DATA[n].draft);
+          // Auto-fill _dcCache from the player's draft pick number for:
+          //   - devy prospects with a projected/actual draft slot
+          //   - any 2026 prospect who has now been drafted (yr:2026 + draft set)
+          var c = COMBINE_DATA[n];
+          if (c && c.draft != null && !_dcCache[n] && (c.devy || c.yr === 2026)) {
+            _dcCache[n] = String(c.draft);
           }
         });
       }
@@ -24511,7 +24515,15 @@ window.fmtHeight = fmtHeight;
       if (!db) { _applyDevyFallback(); _dcLoaded = true; return Promise.resolve(); }
       return db.collection('prospect_draft_capital').get().then(function(snap) {
         snap.forEach(function(doc) {
-          _dcCache[doc.id] = doc.data().dc || '';
+          // Ignore ALL Firestore DC entries for 2026 prospects — those were
+          // pre-draft manual projections. Drafted 2026 players get their DC
+          // from COMBINE_DATA[name].draft via _applyDevyFallback below.
+          // Undrafted 2026 prospects should appear blank (or 'U'/UDFA later)
+          // rather than showing stale projections.
+          var name = doc.id;
+          var cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[name] : null;
+          if (cb && cb.yr === 2026) return;
+          _dcCache[name] = doc.data().dc || '';
         });
         _applyDevyFallback();
         _dcLoaded = true;

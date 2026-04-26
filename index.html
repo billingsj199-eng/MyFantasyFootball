@@ -6355,8 +6355,13 @@ function namesToBoard(arr, fallbackBoard) {
   const usedIndices = new Set();
   arr.forEach(name => {
     if (typeof name === 'string' && nameToIdx[name] !== undefined) {
-      resolved.push(nameToIdx[name]);
-      usedIndices.add(nameToIdx[name]);
+      const idx = nameToIdx[name];
+      // Dedupe: nameToIdx contains both "Michael Pittman" and "Michael Pittman Jr."
+      // pointing to the same D[] entry. If a saved order has both forms, the
+      // second one would create a phantom duplicate row. Drop it.
+      if (usedIndices.has(idx)) return;
+      resolved.push(idx);
+      usedIndices.add(idx);
     }
   });
   // Append any players not in the saved list (new players added since last save)
@@ -7014,6 +7019,18 @@ function getFiltered() {
   let f = board.map(idx => D[idx]);
   // Hide retired players from rankings
   f = f.filter(d => !d._retired);
+  // Defensive dedupe: a player should never appear twice in the rankings.
+  // Some board sync paths can occasionally produce duplicate indices pointing
+  // to the same D[] entry — keep the first occurrence and drop the rest.
+  {
+    const _seenNames = new Set();
+    f = f.filter(d => {
+      if (!d || !d.n) return true;
+      if (_seenNames.has(d.n)) return false;
+      _seenNames.add(d.n);
+      return true;
+    });
+  }
   // Hide future picks from redraft/superflex modes
   const isDynastyMode = currentMode === 'dynasty' || currentMode === 'dynastysf';
   f = f.filter(d => {
@@ -7026,7 +7043,13 @@ function getFiltered() {
   });
   f = f.filter(d => {
     if (filter === 'ROOKIE') {
-      if ((d.career && d.career.length > 0) || (d.t && d.t !== 'TBD')) return false;
+      // 2026 class = no NFL career stats yet, AND either still listed as TBD/FA
+      // OR explicitly tagged as yr:2026 in COMBINE_DATA (post-draft, has a real
+      // NFL team but is still a rookie until they accrue career stats).
+      if (d.career && d.career.length > 0) return false;
+      const _cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
+      const is2026 = (_cb && _cb.yr === 2026);
+      if (!is2026 && d.t && d.t !== 'TBD' && d.t !== 'FA') return false;
     } else if (filter === 'ALL' && (d.s === 'K' || d.s === 'DST')) return false;
     else if (filter !== 'ALL' && filter !== 'ROOKIE' && d.s !== filter) return false;
     if (query) {

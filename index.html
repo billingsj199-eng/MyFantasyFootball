@@ -1612,6 +1612,17 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 </button>
 </div>
 <div style="height:.65rem"></div>
+
+<!-- Creator attribution (signup only) -->
+<div id="authCreatorWrap" style="display:none;margin-bottom:.65rem">
+<label style="display:block;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:.3rem">HOW DID YOU HEAR ABOUT US?</label>
+<select id="authCreator" class="auth-input" style="padding:.55rem .75rem;cursor:pointer">
+<option value="jackb933">jackb933</option>
+<option value="dyl">dyl</option>
+</select>
+<div style="font-size:.62rem;color:var(--text2);margin-top:.25rem;line-height:1.4">For tracking only — does not affect price or apply a discount.</div>
+</div>
+
 <button class="auth-btn auth-btn-primary" id="authSubmit">SIGN IN</button>
 <div class="auth-divider">OR</div>
 <button class="auth-btn auth-btn-google" id="authGoogle">
@@ -21027,6 +21038,8 @@ window.fmtHeight = fmtHeight;
     authTitle.textContent = signUp ? 'CREATE ACCOUNT' : 'SIGN IN';
     authSub.textContent = signUp ? 'Create an account to build your own rankings' : 'Sign in to create and save your rankings';
     authSubmit.textContent = signUp ? 'CREATE ACCOUNT' : 'SIGN IN';
+    const creatorWrap = document.getElementById('authCreatorWrap');
+    if (creatorWrap) creatorWrap.style.display = signUp ? 'block' : 'none';
     authToggle.innerHTML = signUp
       ? 'Already have an account? <a id="authSwitchMode">Sign in</a>'
       : 'Don\'t have an account? <a id="authSwitchMode">Create one</a>';
@@ -21081,6 +21094,22 @@ window.fmtHeight = fmtHeight;
   // Switch sign in / sign up
   authSwitchMode.addEventListener('click', () => setAuthMode(!isSignUp));
 
+  // Helper: write creator attribution for a brand-new user.
+  // Stored in creator_attributions/{uid} so future analytics can join with users + Stripe data.
+  async function _writeCreatorAttribution(uid) {
+    if (!uid) return;
+    try {
+      const sel = document.getElementById('authCreator');
+      const creator = (sel && sel.value) || 'jackb933';
+      const fdb = firebase.firestore();
+      await fdb.collection('creator_attributions').doc(uid).set({
+        creator: creator,
+        signedUpAt: new Date().toISOString()
+      });
+      console.log('[Auth] Creator attribution saved:', creator);
+    } catch(e) { console.warn('[Auth] Could not save creator attribution:', e); }
+  }
+
   // Email/Password submit
   authSubmit.addEventListener('click', async () => {
     clearError();
@@ -21092,7 +21121,8 @@ window.fmtHeight = fmtHeight;
     authSubmit.textContent = 'PLEASE WAIT...';
     try {
       if (isSignUp) {
-        await auth.createUserWithEmailAndPassword(email, pass);
+        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        if (cred && cred.user) await _writeCreatorAttribution(cred.user.uid);
       } else {
         await auth.signInWithEmailAndPassword(email, pass);
       }
@@ -21119,7 +21149,11 @@ window.fmtHeight = fmtHeight;
     clearError();
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
-      await auth.signInWithPopup(provider);
+      const result = await auth.signInWithPopup(provider);
+      // Only attribute first-time Google sign-ups (existing users keep their original creator)
+      if (result && result.additionalUserInfo && result.additionalUserInfo.isNewUser && result.user) {
+        await _writeCreatorAttribution(result.user.uid);
+      }
       closeAuth();
     } catch(e) {
       if (e.code !== 'auth/popup-closed-by-user') {

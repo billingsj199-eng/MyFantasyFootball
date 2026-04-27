@@ -100,8 +100,9 @@
 .jt-card-empty{opacity:.6}
 .jt-card-empty:hover{opacity:.9}
 .jt-card-label{font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:4px}
-.jt-card-name{font-size:.92rem;font-weight:700;color:var(--text);margin-bottom:2px}
-.jt-card-meta{font-size:.68rem;color:var(--text2)}
+.jt-card-name{font-size:.92rem;font-weight:700;color:var(--text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jt-card-meta{font-size:.68rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jt-card{min-width:0}
 .jt-locked-wrap{position:relative;border-radius:8px;overflow:hidden}
 .jt-locked-content{filter:blur(4px);user-select:none;pointer-events:none;opacity:.55}
 .jt-locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,14,23,.55);text-align:center;padding:14px;gap:6px}
@@ -3992,7 +3993,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 </div>
 <input type="file" id="fileImport" accept=".json" style="display:none">
 
-<script src="data/d.js?v=2026-04-27d"></script>
+<script src="data/d.js?v=2026-04-27e"></script>
 <script src="data/hp.js"></script>
 <script src="data/ep_retired.js"></script>
 <script src="data/legend_careers.js"></script>
@@ -39331,8 +39332,9 @@ function renderJacksTeams(){
     }catch(e){}
     var udHtml='';
     var udP=window._udPortfolio;
-    if(udP&&udP.drafts&&udP.drafts.length){
-      var n=udP.drafts.length;
+    var udCount=(udP&&udP.drafts)?Object.keys(udP.drafts).length:0;
+    if(udCount>0){
+      var n=udCount;
       udHtml='<div class="jt-card" onclick="if(window._mtSwitchSource)window._mtSwitchSource(\'underdog\')"><div class="jt-card-label">UNDERDOG</div><div class="jt-card-name">'+n+' draft'+(n===1?'':'s')+'</div><div class="jt-card-meta">Portfolio loaded \u00b7 click to view</div></div>';
     }else{
       udHtml='<div class="jt-card jt-card-empty" onclick="if(window._mtSwitchSource)window._mtSwitchSource(\'underdog\')"><div class="jt-card-label">UNDERDOG</div><div class="jt-card-name">No portfolio</div><div class="jt-card-meta">Upload your CSV from the Underdog tab</div></div>';

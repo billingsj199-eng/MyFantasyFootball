@@ -19959,22 +19959,30 @@ window.fmtHeight = fmtHeight;
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user || !user.email) return;
+    const myUid = user.uid;
     const docId = user.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
     db.collection('gifted_premium').doc(docId).get().then(doc => {
+      // Bail if user switched accounts since query started
+      const stillCurrent = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+      if (!stillCurrent || stillCurrent.uid !== myUid) return;
+      // Wipe stale localStorage from a prior user before applying
+      const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+      if (existing && existing.uid && existing.uid !== myUid) {
+        localStorage.removeItem('jb_premium');
+      }
       if (doc.exists) {
         const data = doc.data();
         if (data.expires && data.expires > Date.now()) {
-          // Apply gifted premium to localStorage
-          const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
-          if (!existing || data.expires > (existing.expires || 0)) {
+          const refreshed = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+          if (!refreshed || (refreshed.uid === myUid && data.expires > (refreshed.expires || 0)) || !refreshed.uid) {
             localStorage.setItem('jb_premium', JSON.stringify({
               plan: 'Gifted: ' + (data.label || 'Admin Grant'),
               activated: Date.now(),
               expires: data.expires,
-              gifted: true
+              gifted: true,
+              uid: myUid
             }));
             console.log('[Premium] Gifted premium applied — expires', new Date(data.expires).toLocaleDateString());
-            // Refresh premium status display
             if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();
           }
         }
@@ -19986,36 +19994,51 @@ window.fmtHeight = fmtHeight;
   // Load Stripe-purchased premium on auth
   // Reads users/{uid}.premium (written by the stripeWebhook Cloud Function)
   // and mirrors active premium into localStorage so checkPremiumStatus() unlocks features.
+  // Helper: clear any stripe/gifted localStorage premium that doesn't belong
+  // to the currently signed-in user, so account switches don't carry premium.
+  function _clearStaleStripePremium(reason) {
+    const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+    if (existing && (existing.source === 'stripe' || existing.gifted)) {
+      localStorage.removeItem('jb_premium');
+      console.log('[Premium] Cleared stale localStorage premium (' + reason + ')');
+      if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();
+    }
+  }
+
   function loadStripePremium() {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
-    db.collection('users').doc(user.uid).get().then(doc => {
-      if (!doc.exists) return;
-      const data = doc.data() || {};
+    const myUid = user.uid;
+    db.collection('users').doc(myUid).get().then(doc => {
+      // Bail if the user has switched accounts since this query started
+      const stillCurrent = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+      if (!stillCurrent || stillCurrent.uid !== myUid) return;
+      const data = doc.exists ? (doc.data() || {}) : {};
       const prem = data.premium;
-      if (!prem) return;
-      const expires = prem.currentPeriodEnd || 0;
-      const isActive = (prem.status === 'active' || prem.status === 'trialing') && expires > Date.now();
+      const expires = (prem && prem.currentPeriodEnd) || 0;
+      const isActive = !!prem && (prem.status === 'active' || prem.status === 'trialing') && expires > Date.now();
+      // Tag localStorage with this user's uid so we can detect stale entries on the next sign-in
+      const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+      const existingForOtherUser = existing && existing.source === 'stripe' && existing.uid && existing.uid !== myUid;
+      if (existingForOtherUser) {
+        // Came from a previous sign-in on this device — wipe before deciding what to do
+        localStorage.removeItem('jb_premium');
+      }
       if (!isActive) {
-        // Subscription canceled or expired — clear any stripe-derived localStorage entry
-        const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
-        if (existing && existing.source === 'stripe') {
-          localStorage.removeItem('jb_premium');
-          if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();
-        }
+        _clearStaleStripePremium('no active stripe premium for this user');
         return;
       }
       const planLabel = prem.plan === 'yearly' ? 'Yearly' : prem.plan === 'monthly' ? 'Monthly' : 'Premium';
-      const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
-      const existingExpires = (existing && existing.expires) || 0;
-      // Only overwrite if this is at least as good as what's there
+      const refreshed = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+      const existingExpires = (refreshed && refreshed.uid === myUid && refreshed.expires) || 0;
       if (expires >= existingExpires) {
         localStorage.setItem('jb_premium', JSON.stringify({
           plan: planLabel,
           activated: Date.now(),
           expires: expires,
           source: 'stripe',
+          uid: myUid,
           subscriptionId: prem.stripeSubscriptionId || null,
           cancelAtPeriodEnd: !!prem.cancelAtPeriodEnd
         }));
@@ -21424,10 +21447,27 @@ window.fmtHeight = fmtHeight;
       updateAccountUI(user);
       if (user) {
         console.log('[Auth] Signed in as', user.email);
+        // If localStorage premium was set for a different user, clear it before
+        // load functions repopulate for the current user.
+        try {
+          const lp = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+          if (lp && lp.uid && lp.uid !== user.uid) {
+            localStorage.removeItem('jb_premium');
+            console.log('[Auth] Cleared localStorage premium from previous user on sign-in');
+          }
+        } catch (e) {}
         loadFromCloud();
         listenForJacksUpdates();
       } else {
         console.log('[Auth] Signed out');
+        // Wipe any cached premium so the next account starts clean
+        try {
+          const lp = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+          if (lp && (lp.source === 'stripe' || lp.gifted || lp.uid)) {
+            localStorage.removeItem('jb_premium');
+            if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();
+          }
+        } catch (e) {}
         // Stop listening for Jack's updates
         if (jacksUnsubscribe) { jacksUnsubscribe(); jacksUnsubscribe = null; }
       }

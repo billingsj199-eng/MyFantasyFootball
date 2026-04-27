@@ -1851,19 +1851,19 @@ Ad-free experience
 </div>
 <style>.plan-option.selected{border-color:var(--accent)!important;background:rgba(245,158,11,.08)!important}.plan-option:not(.selected){border-color:rgba(255,255,255,.1)!important;background:rgba(255,255,255,.02)!important}.plan-option:not(.selected):hover{border-color:rgba(245,158,11,.3)!important}</style>
 
-<!-- Promo code input -->
-<div style="margin-top:.85rem;display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap">
-<input type="text" id="premiumPromoInput" placeholder="Promo code" autocomplete="off" style="flex:1;max-width:180px;padding:.5rem .65rem;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">
-<button type="button" id="premiumPromoApply" style="padding:.5rem .9rem;border-radius:6px;border:1px solid rgba(245,158,11,.4);background:rgba(245,158,11,.12);color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;cursor:pointer">APPLY</button>
+<!-- Legacy promo input — hidden. Promo codes are now applied via Stripe Checkout's built-in field. -->
+<div style="display:none">
+<input type="text" id="premiumPromoInput" autocomplete="off">
+<button type="button" id="premiumPromoApply">APPLY</button>
+<div id="premiumPromoMsg"></div>
 </div>
-<div id="premiumPromoMsg" style="font-size:.7rem;margin-top:.35rem;min-height:1em;text-align:center"></div>
 
 <div class="premium-price" id="premiumPriceDisplay" style="margin-top:.5rem">$69.99 <span>/ year</span></div>
 
 <div style="margin-top:.75rem">
 <button class="premium-btn" id="premiumUpgradeBtn">UPGRADE NOW</button>
 </div>
-<div style="font-size:.68rem;color:var(--text2);margin-top:.75rem">Cancel anytime. No commitment.</div>
+<div style="font-size:.68rem;color:var(--text2);margin-top:.5rem">Cancel anytime. Have a promo code? Enter it on the next step.</div>
 
 <!-- Redeem free-premium code -->
 <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.08)">

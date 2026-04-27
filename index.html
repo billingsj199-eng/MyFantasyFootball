@@ -1585,7 +1585,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 
 <!-- Firebase SDK (optional — page works without it if blocked by privacy settings) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true;console.warn('[Firebase] SDK blocked — running in offline mode')"></script>
-<script>if(!window._fbBlocked){document.write('<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script>');}</script>
+<script>if(!window._fbBlocked){document.write('<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script>');}</script>
 </head>
 <body>
 <div class="noise"></div>
@@ -1837,7 +1837,7 @@ Ad-free experience
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$9.99</div>
 <div style="font-size:.65rem;color:var(--text2)">Billed monthly</div>
 </div>
-<div id="planSeason" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);cursor:pointer;text-align:center;transition:all .15s">
+<div id="planSeason" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="display:none;flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);cursor:pointer;text-align:center;transition:all .15s">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">SEASON PASS</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$29.99</div>
 <div style="font-size:.65rem;color:var(--text2)">One fantasy season</div>
@@ -1920,6 +1920,9 @@ Ad-free experience
 PREMIUM ACTIVE
 </div>
 <div style="font-size:.72rem;color:var(--text2)" id="premiumBillingDetails"></div>
+<div id="premiumManageWrap" style="margin-top:.75rem;display:none">
+<button type="button" id="premiumManageBtn" style="padding:.5rem .9rem;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;cursor:pointer">MANAGE SUBSCRIPTION</button>
+</div>
 </div>
 </div>
 
@@ -2482,6 +2485,7 @@ CLEAR
 <th data-sort="fpts25"><span id="ppg25Header">'25 PPG (Half PPR)</span> <span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" style="display:none">Y/RR <span class="arrow"></span></th>
 <th data-sort="jm" id="jmHeader" style="display:none">JM <span class="arrow"></span></th>
+<th data-sort="landing" id="landingHeader" style="display:none" title="Landing Spot — 0-100, higher = better fantasy opportunity. Separate from JM (prospect quality).">Land <span class="arrow"></span></th>
 <th data-sort="age" id="ageHeader">Age <span class="arrow"></span></th>
 <th data-sort="diff">+/- <span class="arrow"></span></th>
 </tr>
@@ -7076,6 +7080,7 @@ function getFiltered() {
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
         case 'yrr': if(filter==='RB'){const _ac=a.career&&a.career.length?a.career[a.career.length-1]:null;const _bc=b.career&&b.career.length?b.career[b.career.length-1]:null;av=_ac&&_ac.gp?(_ac.ry||0)/_ac.gp:0;bv=_bc&&_bc.gp?(_bc.ry||0)/_bc.gp:0;}else{av=a._yrr||0;bv=b._yrr||0;} break;
         case 'jm': av = a._pmJm||0; bv = b._pmJm||0; break;
+        case 'landing': av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'diff': av = (rnkAdp(a)??a.myRank) - a.myRank; bv = (rnkAdp(b)??b.myRank) - b.myRank; break;
         default: av = a.myRank; bv = b.myRank;
       }
@@ -7201,6 +7206,7 @@ function render() {
         <td>—</td>
         <td class="pts-cell yrr-cell" style="display:none">—</td>
         <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})()}</td>
+        <td class="pts-cell landing-cell" style="display:none">—</td>
         <td>—</td>
         <td>—</td>
       </tr>`;
@@ -7213,7 +7219,7 @@ function render() {
       tiers.forEach(t => {
         if (t.afterRank > prevDisplayRank && t.afterRank <= displayRank) {
           html += `<tr class="tier-row" data-tier-id="${t.id}">
-            <td colspan="12"><div class="tier-inner">
+            <td colspan="13"><div class="tier-inner">
               <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
               ${editable ? `<span class="tier-name-static">${t.name}</span>
               <div class="tier-controls">
@@ -7234,13 +7240,13 @@ function render() {
     if (shouldBlur && i === blurCutoff && data.length > blurCutoff) {
       const _isSignedIn = !!window._authCurrentUser;
       if (isMine && !_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="12" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="13" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else if (isMine && !isPremium) {
-        html += '<tr id="premiumWallRow"><td colspan="12" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in each filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="13" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in each filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       } else if (!_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="12" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="13" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else {
-        html += '<tr id="premiumWallRow"><td colspan="12" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="13" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       }
     }
 
@@ -7255,13 +7261,14 @@ function render() {
       <td class="pts-cell"${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null){return jv>0?' style="color:#22c55e;font-weight:700"':jv<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"';}const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null)return jv>0?'+'+jv:jv;const v=adj25ppg(d);return v!=null?v:'—';})()}</td>
       <td class="pts-cell yrr-cell" style="display:none">${d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')}</td>
       <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})()}</td>
+      <td class="pts-cell landing-cell" style="display:none">${(()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})()}</td>
       <td class="age-cell ${d.s==='DST' ? (d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '') : d.age!=null ? (d.s==='RB' ? (d.age>=30?'age-red':d.age>=28?'age-yellow':'age-green') : d.s==='QB' ? (d.age>=35?'age-red':d.age>=32?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='WR' ? (d.age>=32?'age-red':d.age>=29?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='TE' ? (d.age>=33?'age-red':d.age>=31?'age-orange':d.age>=25?'age-green':'age-yellow') : '') : ''}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (d.age != null ? d.age : '—')}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
     </tr>`;
 
     // "Add tier" mini-button between rows (only show on hover via CSS)
     if (editable && showTiers && !tierMap[displayRank]) {
-      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="12"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
+      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="13"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
     }
   });
 
@@ -7271,7 +7278,7 @@ function render() {
     tiers.forEach(t => {
       if (t.afterRank > lastDisplayRank) {
         html += `<tr class="tier-row" data-tier-id="${t.id}">
-          <td colspan="12"><div class="tier-inner">
+          <td colspan="13"><div class="tier-inner">
             <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
             ${editable ? `<span class="tier-name-static">${t.name}</span>
             <div class="tier-controls">
@@ -7297,6 +7304,11 @@ function render() {
   const showJm = currentMode === 'dynasty' || currentMode === 'dynastysf';
   document.getElementById('jmHeader').style.display = showJm ? '' : 'none';
   document.querySelectorAll('.jm-cell').forEach(c => c.style.display = showJm ? '' : 'none');
+  // Landing Spot column shown alongside JM (both are dynasty-only). Cells render '—'
+  // for non-rookies, so it's safe to show globally in dynasty modes.
+  const _landH = document.getElementById('landingHeader');
+  if (_landH) _landH.style.display = showJm ? '' : 'none';
+  document.querySelectorAll('.landing-cell').forEach(c => c.style.display = showJm ? '' : 'none');
 }
 
 function updateStats(data) {
@@ -19970,6 +19982,88 @@ window.fmtHeight = fmtHeight;
     }).catch(e => console.warn('[Premium] gifted load error:', e));
   }
   window._loadGiftedPremium = loadGiftedPremium;
+
+  // Load Stripe-purchased premium on auth
+  // Reads users/{uid}.premium (written by the stripeWebhook Cloud Function)
+  // and mirrors active premium into localStorage so checkPremiumStatus() unlocks features.
+  function loadStripePremium() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+    db.collection('users').doc(user.uid).get().then(doc => {
+      if (!doc.exists) return;
+      const data = doc.data() || {};
+      const prem = data.premium;
+      if (!prem) return;
+      const expires = prem.currentPeriodEnd || 0;
+      const isActive = (prem.status === 'active' || prem.status === 'trialing') && expires > Date.now();
+      if (!isActive) {
+        // Subscription canceled or expired — clear any stripe-derived localStorage entry
+        const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+        if (existing && existing.source === 'stripe') {
+          localStorage.removeItem('jb_premium');
+          if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();
+        }
+        return;
+      }
+      const planLabel = prem.plan === 'yearly' ? 'Yearly' : prem.plan === 'monthly' ? 'Monthly' : 'Premium';
+      const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+      const existingExpires = (existing && existing.expires) || 0;
+      // Only overwrite if this is at least as good as what's there
+      if (expires >= existingExpires) {
+        localStorage.setItem('jb_premium', JSON.stringify({
+          plan: planLabel,
+          activated: Date.now(),
+          expires: expires,
+          source: 'stripe',
+          subscriptionId: prem.stripeSubscriptionId || null,
+          cancelAtPeriodEnd: !!prem.cancelAtPeriodEnd
+        }));
+        console.log('[Premium] Stripe premium applied — plan ' + planLabel + ', expires ' + new Date(expires).toLocaleDateString());
+        if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();
+      }
+    }).catch(e => console.warn('[Premium] stripe load error:', e));
+  }
+  window._loadStripePremium = loadStripePremium;
+
+  // Detect ?premium_success=1 on page load — happens when Stripe redirects back after checkout.
+  // The webhook may take a few seconds to fire, so we poll Firestore briefly.
+  function handlePremiumSuccess() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('premium_success') !== '1') return;
+      // Clean the URL so refreshing doesn't re-trigger
+      const cleanUrl = window.location.pathname + (window.location.hash || '');
+      window.history.replaceState({}, '', cleanUrl);
+      if (typeof toast === 'function') toast('Payment received — activating premium…');
+      // Poll Firestore up to 6 times over ~30 seconds for the webhook to land
+      let attempts = 0;
+      const maxAttempts = 6;
+      const poll = () => {
+        attempts++;
+        loadStripePremium();
+        const data = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+        const active = data && data.expires > Date.now() && data.source === 'stripe';
+        if (active) {
+          if (typeof toast === 'function') toast('Welcome to Premium! Enjoy full access.');
+          return;
+        }
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 5000);
+        } else {
+          if (typeof toast === 'function') toast('Premium not yet active. If charged, refresh in a minute or contact support.');
+        }
+      };
+      setTimeout(poll, 2000); // Initial 2-second delay so the webhook has a chance to write
+    } catch(e) { console.warn('[Premium] success handler error:', e); }
+  }
+  // Wait for auth to be ready before polling
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    firebase.auth().onAuthStateChanged(u => {
+      if (u) handlePremiumSuccess();
+    });
+  }
+
   window._initAdminPanel = initAdminPanel;
 
   // Check for new unlocks whenever fantasy game or elite pull finishes
@@ -20030,7 +20124,7 @@ window.fmtHeight = fmtHeight;
     // Override only if not already done
   }
   // Render on load
-  setTimeout(() => { renderAllAvatars(); loadGiftedBadges(); checkFounderStatus(); loadGiftedPremium(); initAdminPanel(); }, 500);
+  setTimeout(() => { renderAllAvatars(); loadGiftedBadges(); checkFounderStatus(); loadGiftedPremium(); loadStripePremium(); initAdminPanel(); }, 500);
 
   // Hook badge tab to render
   function renderBadgeGridFull() {
@@ -21419,6 +21513,7 @@ window.fmtHeight = fmtHeight;
     if (typeof window._loadGiftedBadges === 'function') setTimeout(window._loadGiftedBadges, 200);
     if (typeof window._checkFounderStatus === 'function') setTimeout(window._checkFounderStatus, 300);
     if (typeof window._loadGiftedPremium === 'function') setTimeout(window._loadGiftedPremium, 250);
+    if (typeof window._loadStripePremium === 'function') setTimeout(window._loadStripePremium, 275);
     if (typeof window._initAdminPanel === 'function') setTimeout(window._initAdminPanel, 350);
     if (typeof window._loadGameDataFromCloud === 'function') setTimeout(window._loadGameDataFromCloud, 400);
   };
@@ -21646,6 +21741,8 @@ window.fmtHeight = fmtHeight;
       proView.style.display = 'block';
       proDesc.textContent = 'Admin account with permanent access to all premium features.';
       billingDetails.innerHTML = '<strong style="color:var(--text1)">Plan:</strong> Admin (Lifetime)&nbsp;&nbsp;•&nbsp;&nbsp;No billing required';
+      const manageWrapAdmin = document.getElementById('premiumManageWrap');
+      if (manageWrapAdmin) manageWrapAdmin.style.display = 'none';
       if (premiumBadge) {
         premiumBadge.className = 'premium-badge pro';
         premiumBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg> PRO PLAN';
@@ -21670,8 +21767,18 @@ window.fmtHeight = fmtHeight;
 
       let billingHtml = '<strong style="color:var(--text1)">Plan:</strong> Pro (' + (data.plan || 'Premium Access') + ')';
       billingHtml += '<br><strong style="color:var(--text1)">Activated:</strong> ' + actDate;
-      billingHtml += '<br><strong style="color:var(--text1)">Expires:</strong> ' + expDate + ' <span style="color:#22c55e">(' + days + ' day' + (days !== 1 ? 's' : '') + ' left)</span>';
+      if (data.source === 'stripe' && data.cancelAtPeriodEnd) {
+        billingHtml += '<br><strong style="color:var(--text1)">Access ends:</strong> ' + expDate + ' <span style="color:#f59e0b">(canceled — won’t renew)</span>';
+      } else if (data.source === 'stripe') {
+        billingHtml += '<br><strong style="color:var(--text1)">Renews:</strong> ' + expDate + ' <span style="color:#22c55e">(auto-renew on)</span>';
+      } else {
+        billingHtml += '<br><strong style="color:var(--text1)">Expires:</strong> ' + expDate + ' <span style="color:#22c55e">(' + days + ' day' + (days !== 1 ? 's' : '') + ' left)</span>';
+      }
       billingDetails.innerHTML = billingHtml;
+
+      // Show "Manage Subscription" only for Stripe-purchased premium
+      const manageWrap = document.getElementById('premiumManageWrap');
+      if (manageWrap) manageWrap.style.display = (data.source === 'stripe') ? 'block' : 'none';
 
       if (premiumBadge) {
         premiumBadge.className = 'premium-badge pro';
@@ -21706,53 +21813,99 @@ window.fmtHeight = fmtHeight;
   checkPremiumStatus();
   window.checkPremiumStatus = checkPremiumStatus;
 
-  // Premium upgrade button (placeholder)
-  premiumUpgradeBtn.addEventListener('click', () => {
+  // Manage Subscription button — opens Stripe Customer Portal
+  const premiumManageBtn = document.getElementById('premiumManageBtn');
+  if (premiumManageBtn) {
+    premiumManageBtn.addEventListener('click', async () => {
+      const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+      if (!user) { toast('Please sign in first.'); return; }
+      premiumManageBtn.disabled = true;
+      const _orig = premiumManageBtn.textContent;
+      premiumManageBtn.textContent = 'Loading…';
+      try {
+        if (typeof firebase === 'undefined' || !firebase.functions) throw new Error('Firebase Functions SDK not loaded.');
+        const fns = firebase.app().functions('us-central1');
+        const portal = fns.httpsCallable('createPortalSession');
+        const result = await portal({});
+        const url = result && result.data && result.data.url;
+        if (!url) throw new Error('No portal URL returned.');
+        window.location.href = url;
+      } catch (err) {
+        console.error('[Stripe] Portal error:', err);
+        toast('Could not open subscription manager: ' + (err.message || err));
+        premiumManageBtn.disabled = false;
+        premiumManageBtn.textContent = _orig;
+      }
+    });
+  }
+
+  // Premium upgrade button — real Stripe Checkout
+  premiumUpgradeBtn.addEventListener('click', async () => {
+    // Must be signed in to upgrade (we need a UID to attach to the Stripe customer)
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!user) {
+      toast('Please sign in or create an account first to upgrade.');
+      // Bounce them to account page so they can sign in
+      try {
+        const acctTab = document.querySelector('[data-page="account"]');
+        if (acctTab) acctTab.click();
+      } catch(e) {}
+      return;
+    }
+
+    // Determine selected plan
     const yearlySelected = document.querySelector('#planYearly.selected');
     const seasonSelected = document.querySelector('#planSeason.selected');
-    let expires, planName, basePrice, unit;
-    if (yearlySelected) {
-      expires = Date.now() + (365 * 24 * 60 * 60 * 1000);
-      planName = 'Yearly'; basePrice = 69.99; unit = 'year';
-    } else if (seasonSelected) {
-      expires = new Date('2026-12-31T23:59:59').getTime();
-      planName = 'Season Pass'; basePrice = 29.99; unit = 'season';
-    } else {
-      expires = Date.now() + (30 * 24 * 60 * 60 * 1000);
-      planName = 'Monthly'; basePrice = 9.99; unit = 'month';
-    }
+    let plan;
+    if (yearlySelected) plan = 'yearly';
+    else if (seasonSelected) {
+      // Season pass is hidden but defensive — fall back to yearly
+      plan = 'yearly';
+    } else plan = 'monthly';
+
+    // Log promo usage if a promo code is active (independent of Stripe — Stripe Checkout
+    // handles its own promo codes via allow_promotion_codes in the function).
     const promo = (typeof window._getActivePromo === 'function') ? window._getActivePromo() : null;
-    const finalPrice = promo ? (basePrice * (1 - promo.pct)) : basePrice;
-    const planPrice = '$' + finalPrice.toFixed(2) + '/' + unit;
-    const record = { plan: planName, price: planPrice, activated: Date.now(), expires: expires };
     if (promo) {
-      record.promoCode = promo.code;
-      record.promoPct = promo.pct;
-      record.promoRef = promo.ref;
-      record.basePrice = '$' + basePrice.toFixed(2) + '/' + unit;
-      // Log promo usage to Firestore so Jack can track referrals
       try {
-        const u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
         const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-        if (u && db) {
+        if (db) {
           db.collection('promo_uses').add({
-            uid: u.uid,
-            email: (u.email || ''),
+            uid: user.uid,
+            email: (user.email || ''),
             code: promo.code,
             ref: promo.ref,
             pct: promo.pct,
-            plan: planName,
-            basePrice: basePrice,
-            finalPrice: finalPrice,
+            plan: plan,
             at: new Date().toISOString()
           }).catch(e => console.warn('[Promo] log error:', e));
         }
       } catch(e) { console.warn('[Promo] log failed:', e); }
     }
-    localStorage.setItem('jb_premium', JSON.stringify(record));
-    checkPremiumStatus();
-    toast(promo ? ('Premium activated with ' + Math.round(promo.pct*100) + '% off! Enjoy full access.') : 'Premium activated! Enjoy full access.');
-    render();
+
+    // Disable button while we round-trip to the function
+    premiumUpgradeBtn.disabled = true;
+    const _origText = premiumUpgradeBtn.textContent;
+    premiumUpgradeBtn.textContent = 'Loading…';
+
+    try {
+      if (typeof firebase === 'undefined' || !firebase.functions) {
+        throw new Error('Firebase Functions SDK not loaded.');
+      }
+      const fns = firebase.app().functions('us-central1');
+      const createCheckout = fns.httpsCallable('createCheckoutSession');
+      const result = await createCheckout({ plan: plan });
+      const url = result && result.data && result.data.url;
+      if (!url) throw new Error('No checkout URL returned.');
+      // Redirect to Stripe-hosted checkout page
+      window.location.href = url;
+    } catch (err) {
+      console.error('[Stripe] Checkout error:', err);
+      const msg = (err && err.message) ? err.message : 'Checkout failed. Please try again.';
+      toast('Upgrade failed: ' + msg);
+      premiumUpgradeBtn.disabled = false;
+      premiumUpgradeBtn.textContent = _origText;
+    }
   });
 
   // Also add auth-anchor CSS rule for account page
@@ -24527,9 +24680,15 @@ window.fmtHeight = fmtHeight;
     }
     if (!data || !data.length) return;
     data.forEach(function(p) {
-      if (p.jm == null) return;
+      if (p.jm == null && p.landingSpot == null) return;
       var match = D.find(function(d) { return d.n === p.name; });
-      if (match) match._pmJm = p.jm;
+      if (match) {
+        if (p.jm != null) match._pmJm = p.jm;
+        if (p.landingSpot != null) {
+          match._pmLandingSpot = p.landingSpot;
+          match._pmLandingSpotParts = p.landingSpotParts;
+        }
+      }
     });
   };
 
@@ -28856,6 +29015,12 @@ window.fmtHeight = fmtHeight;
             const _h = HISTORICAL_DRAFT_PICKS[_hk];
             if (_h && _h.y === draftYr && _h.pos === pos) return _h.t;
           }
+          // Fallback for 2026+ classes: COMBINE_DATA.dt is 3-letter (BAL/GNB/KAN/LVR/NWE/NOR/SFO/TAM)
+          // Convert to 2-letter broadcast standard used by HISTORICAL_DRAFT_PICKS / PLAYER_TEAM_HISTORY.
+          if (_cbEntry && _cbEntry.dt) {
+            const _DT_MAP = {GNB:'GB',KAN:'KC',LVR:'LV',NWE:'NE',NOR:'NO',SFO:'SF',TAM:'TB'};
+            return _DT_MAP[_cbEntry.dt] || _cbEntry.dt;
+          }
           return null;
         })()
       };
@@ -28997,8 +29162,14 @@ window.fmtHeight = fmtHeight;
       const ov = _pmCheckOverride(name, team, yr);
       if (ov) return ov.on;
       const s = _pmStintsFor(name);
-      if (!s) return null;
-      return s.some(x => x.t === team && x.y1 <= yr && yr <= x.y2);
+      if (s) return s.some(x => x.t === team && x.y1 <= yr && yr <= x.y2);
+      // PTH fallback for 2024+: use D[].t (current team). PTH only catches movers,
+      // so franchise players (Mahomes, Burrow, Allen, etc.) and most newer guys are missing.
+      if (yr >= 2024 && typeof _dCurTeamByName !== 'undefined') {
+        const cur = _dCurTeamByName[name];
+        if (cur) return cur === team;
+      }
+      return null;
     }
     // Player will be on team T at draft of year Y — true/false/null (unknown)
     function _pmOnTeamAtDraftYear(name, team, draftYr) {
@@ -29012,7 +29183,73 @@ window.fmtHeight = fmtHeight;
       return gone ? false : null;
     }
 
+    // Full team name → 2-letter broadcast standard (matches PTH / HISTORICAL_DRAFT_PICKS).
+    // Used to bridge D[].t (full names) with PTH/HDP team codes.
+    const _FULL_TO_CODE = {
+      'Arizona Cardinals':'ARI','Atlanta Falcons':'ATL','Baltimore Ravens':'BAL',
+      'Buffalo Bills':'BUF','Carolina Panthers':'CAR','Chicago Bears':'CHI',
+      'Cincinnati Bengals':'CIN','Cleveland Browns':'CLE','Dallas Cowboys':'DAL',
+      'Denver Broncos':'DEN','Detroit Lions':'DET','Green Bay Packers':'GB',
+      'Houston Texans':'HOU','Indianapolis Colts':'IND','Jacksonville Jaguars':'JAX',
+      'Kansas City Chiefs':'KC','Las Vegas Raiders':'LV','Los Angeles Chargers':'LAC',
+      'Los Angeles Rams':'LAR','Miami Dolphins':'MIA','Minnesota Vikings':'MIN',
+      'New England Patriots':'NE','New Orleans Saints':'NO','New York Giants':'NYG',
+      'New York Jets':'NYJ','Philadelphia Eagles':'PHI','Pittsburgh Steelers':'PIT',
+      'San Francisco 49ers':'SF','Seattle Seahawks':'SEA','Tampa Bay Buccaneers':'TB',
+      'Tennessee Titans':'TEN','Washington Commanders':'WAS'
+    };
+    // Build a quick map: D player name → 2-letter current team code
+    const _dCurTeamByName = {};
+    if (typeof D !== 'undefined') {
+      D.forEach(d => {
+        if (!d || !d.n || !d.t) return;
+        const code = _FULL_TO_CODE[d.t];
+        if (code) _dCurTeamByName[d.n] = code;
+      });
+    }
+
+    // Build CURRENT roster snapshot per team+pos using D[].t (post-offseason rosters).
+    // Strength metric: max(2024 fpts, 2025 fpts) — protects established stars who had
+    // a down year (e.g., A.J. Brown 2024≈250 vs 2025≈181) from being graded as "weak."
+    // Tracks which year was used so the depth label can flag it ("(250, '24)") when 2024
+    // is the higher figure. Sorted by smoothed fpts desc.
+    // Source of truth for "who is on the team in 2026" — captures FA signings, trades,
+    // and departures from the 2026 offseason. Used by _pmComputeLandingSpot.
+    const _curRosterTop = {};
+    if (typeof D !== 'undefined') {
+      D.forEach(d => {
+        if (!d || !d.n || !d.s || !d.t) return;
+        if (!{QB:1,RB:1,WR:1,TE:1}[d.s]) return;
+        const code = _FULL_TO_CODE[d.t];
+        if (!code) return;
+        let f25 = 0, f24 = 0;
+        if (d.s25 && typeof d.s25.fpts === 'number') f25 = d.s25.fpts;
+        if (d.career && d.career.length) {
+          if (!f25) {
+            const c25 = d.career.find(c => c && c.yr === 2025);
+            if (c25 && typeof c25.fpts === 'number') f25 = c25.fpts;
+          }
+          const c24 = d.career.find(c => c && c.yr === 2024);
+          if (c24 && typeof c24.fpts === 'number') f24 = c24.fpts;
+        }
+        const fpts = Math.max(f25, f24);
+        const yrUsed = f24 > f25 ? 2024 : 2025;
+        _curRosterTop[code] = _curRosterTop[code] || {};
+        _curRosterTop[code][d.s] = _curRosterTop[code][d.s] || [];
+        _curRosterTop[code][d.s].push({ name: d.n, fpts, yrUsed });
+      });
+      Object.keys(_curRosterTop).forEach(t => {
+        Object.keys(_curRosterTop[t]).forEach(pos => {
+          _curRosterTop[t][pos].sort((a,b) => b.fpts - a.fpts);
+        });
+      });
+    }
+
     // Build teamYearTop[team][pos][year] = {name, fpts}
+    // Pass 1: PTH-driven (covers historical years where PTH knows the stint)
+    // Pass 2: D-current-team fallback (covers franchise QBs / new players missing from PTH).
+    //         Uses career[].fpts when team is unknown via PTH but the player is currently on team.
+    //         Important for 2025 (priorYr for 2026 rookies) where many starters lack PTH entries.
     const _teamYearTop = {};
     if (typeof D !== 'undefined') {
       const _starterMin = { QB: 100, RB: 100, WR: 100, TE: 80 }; // min to be "top performer"
@@ -29020,6 +29257,7 @@ window.fmtHeight = fmtHeight;
         if (!d.n || !d.career || !d.s) return;
         if (!_starterMin[d.s]) return;
         const st = _pmStintsFor(d.n);
+        const curCode = _dCurTeamByName[d.n] || null;
         d.career.forEach(s => {
           if (!s.yr || s.fpts == null) return;
           let team = null;
@@ -29027,6 +29265,10 @@ window.fmtHeight = fmtHeight;
             const stint = st.find(x => x.y1 <= s.yr && s.yr <= x.y2);
             if (stint) team = stint.t;
           }
+          // Fallback: if PTH has no stint for this year, assume current team
+          // (only safe for the most recent season — older years risk wrong team).
+          // We restrict this fallback to year >= 2024 to limit miss-attribution.
+          if (!team && curCode && s.yr >= 2024) team = curCode;
           if (!team) return;
           _teamYearTop[team] = _teamYearTop[team] || {};
           _teamYearTop[team][d.s] = _teamYearTop[team][d.s] || {};
@@ -29115,6 +29357,172 @@ window.fmtHeight = fmtHeight;
       return { adj: cfg.adj, name: top.name, fpts: Math.round(top.fpts), flag: true };
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // LANDING SPOT SCORE (0-100, higher = better fantasy opportunity)
+    // ═══════════════════════════════════════════════════════════════════════════
+    // A standalone metric measuring opportunity, NOT prospect quality. Companion
+    // to JM Score, not a replacement. 50 = neutral baseline; <40 bad spot,
+    // 60-70 good, 75+ elite.
+    //
+    // Components (each with position-tuned thresholds):
+    //   • DC opportunity   (-8 to +15): high picks get snaps regardless of room
+    //   • Depth chart      (-20 to +15): prior-yr top performer's strength + status
+    //   • Crowded room     (-15 to 0):   recent picks at same team+pos still here
+    //   • Offensive env    (-10 to +10): QB quality (skill) or weapons (QB)
+    //
+    // Only computed for QB/RB/WR/TE rookies with a known nflTeam and dr.
+    function _pmComputeLandingSpot(p) {
+      if (!p || !p.pos || !p.nflTeam || !p.draftYr) return null;
+      if (!{QB:1,RB:1,WR:1,TE:1}[p.pos]) return null;
+      const myPick = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+      const validPick = !!myPick && myPick > 0 && myPick <= 262;
+      const priorYr = p.draftYr - 1;
+      const team = p.nflTeam;
+      const pos = p.pos;
+
+      let score = 50;
+      const parts = [];
+
+      // ─── DC opportunity ───
+      let dc = 0, dcLabel;
+      if (!validPick) { dc = -8; dcLabel = 'UDFA'; }
+      else if (myPick <= 10)  { dc = 15; dcLabel = `Top-10 (${myPick})`; }
+      else if (myPick <= 32)  { dc = 12; dcLabel = `R1 (${myPick})`; }
+      else if (myPick <= 64)  { dc = 8;  dcLabel = `R2 (${myPick})`; }
+      else if (myPick <= 100) { dc = 5;  dcLabel = `R3 (${myPick})`; }
+      else if (myPick <= 140) { dc = 2;  dcLabel = `R4 (${myPick})`; }
+      else if (myPick <= 180) { dc = 0;  dcLabel = `R5 (${myPick})`; }
+      else if (myPick <= 220) { dc = -3; dcLabel = `R6 (${myPick})`; }
+      else                    { dc = -5; dcLabel = `R7 (${myPick})`; }
+      score += dc;
+      parts.push({ k: 'DC', v: dc, label: dcLabel });
+
+      // ─── Depth chart ───
+      // Smooth piecewise-linear curve over incumbent's prior-yr fpts (NOT a step
+      // function) — avoids 18-pt swings for 1-fpts differences and stops mis-grading
+      // down years from established stars (e.g., A.J. Brown 2025 @ 181 fpts).
+      // Anchors: [fpts, depthBase] tuned per position (RBs decay faster than QBs).
+      // Modifiers stack on the curved base:
+      //   • Age — older incumbents = closer to decline (RB 28/30, WR/TE 30/33, QB 33/36).
+      //   • Contract (D[].cyr) — expiring soon = bonus; 4+ yrs locked = penalty.
+      const _LS_DEPTH_CURVE = {
+        QB: [[0,12],[140,8],[200,2],[260,-6],[310,-12],[360,-18],[420,-22]],
+        RB: [[0,12],[80,8],[130,2],[180,-6],[230,-12],[280,-18],[340,-22]],
+        WR: [[0,12],[80,8],[140,2],[180,-4],[220,-10],[270,-16],[320,-20],[400,-22]],
+        TE: [[0,12],[60,8],[100,2],[130,-4],[165,-10],[200,-16],[240,-22]]
+      };
+      function _lsInterpFpts(fpts, anchors) {
+        if (fpts <= anchors[0][0]) return anchors[0][1];
+        const last = anchors[anchors.length-1];
+        if (fpts >= last[0]) return last[1];
+        for (let i = 0; i < anchors.length - 1; i++) {
+          const [x0,y0] = anchors[i], [x1,y1] = anchors[i+1];
+          if (fpts >= x0 && fpts <= x1) {
+            const t = (fpts - x0) / (x1 - x0);
+            return y0 + t * (y1 - y0);
+          }
+        }
+        return 0;
+      }
+      // Find blocker on the CURRENT post-offseason roster (excludes the rookie themselves).
+      // _curRosterTop is keyed off D[].t which reflects 2026 rosters AFTER trades/FA signings,
+      // so a vet who signed in March 2026 IS counted at their new team, and a vet who left
+      // is NOT counted on the old team.
+      const _candidates = (_curRosterTop[team] && _curRosterTop[team][pos]) || [];
+      const top = _candidates.find(c => c.name !== p.name) || null;
+      let depth = 0, depthLabel;
+      if (!top || top.fpts < 5) {
+        depth = 12;
+        depthLabel = `${pos} room wide open`;
+      } else {
+        const tFpts = Math.round(top.fpts);
+        // Smooth fpts-driven base
+        const base = _lsInterpFpts(top.fpts, _LS_DEPTH_CURVE[pos]);
+        // Compose label tier qualitatively from the curve value
+        const tierWord = base <= -16 ? 'Elite ' : base <= -2 ? '' : 'Weak ';
+        // Annotate the year if 2024 was higher than 2025 (down-year protection)
+        const yrTag = top.yrUsed === 2024 ? `, '24` : '';
+        depthLabel = `${tierWord}${top.name} (${tFpts}${yrTag}) here`.trim();
+
+        // Look up blocker age + contract from D array
+        const blocker = _dMap[top.name] || null;
+        let ageBonus = 0, ageNote = '';
+        if (blocker && typeof blocker.age === 'number') {
+          const age = blocker.age;
+          if      (pos === 'QB' && age >= 36) { ageBonus = 6; ageNote = `, age ${age}`; }
+          else if (pos === 'QB' && age >= 33) { ageBonus = 3; ageNote = `, age ${age}`; }
+          else if (pos === 'RB' && age >= 30) { ageBonus = 6; ageNote = `, age ${age}`; }
+          else if (pos === 'RB' && age >= 28) { ageBonus = 3; ageNote = `, age ${age}`; }
+          else if ((pos === 'WR' || pos === 'TE') && age >= 33) { ageBonus = 6; ageNote = `, age ${age}`; }
+          else if ((pos === 'WR' || pos === 'TE') && age >= 30) { ageBonus = 3; ageNote = `, age ${age}`; }
+        }
+        let contractBonus = 0, contractNote = '';
+        if (blocker && blocker.cyr != null && blocker.cyr !== 'FA' && typeof blocker.cyr === 'number') {
+          const yrsLeft = blocker.cyr - p.draftYr;
+          if      (yrsLeft <= 0) { contractBonus = 5;  contractNote = `, deal ends ${blocker.cyr}`; }
+          else if (yrsLeft === 1){ contractBonus = 3;  contractNote = `, thru ${blocker.cyr}`; }
+          else if (yrsLeft === 2){ contractBonus = 1;  contractNote = `, thru ${blocker.cyr}`; }
+          else if (yrsLeft >= 4) { contractBonus = -5; contractNote = `, locked thru ${blocker.cyr}`; }
+          else                   { contractBonus = 0;  contractNote = `, thru ${blocker.cyr}`; }
+        } else if (blocker && blocker.cyr === 'FA') {
+          contractBonus = 5; contractNote = `, FA`;
+        }
+
+        depth = Math.max(-22, Math.min(18, Math.round(base + ageBonus + contractBonus)));
+        depthLabel += ageNote + contractNote;
+      }
+      score += depth;
+      parts.push({ k: 'Depth', v: depth, label: depthLabel });
+
+      // ─── Crowded room (uses already-computed crowdScore, FA-aware + contextual) ───
+      let crowd = 0, crowdLabel = 'Clean position room';
+      const cs = p.crowdScore || 0;
+      if (cs >= 1.5)      { crowd = -15; crowdLabel = `Heavy DC stack (${cs.toFixed(1)})`; }
+      else if (cs >= 0.8) { crowd = -10; crowdLabel = `Crowded room (${cs.toFixed(1)})`; }
+      else if (cs >= 0.4) { crowd = -5;  crowdLabel = `Some prior picks (${cs.toFixed(1)})`; }
+      score += crowd;
+      parts.push({ k: 'Room', v: crowd, label: crowdLabel });
+
+      // ─── Offensive environment ───
+      // Uses CURRENT roster (post-offseason) — so a QB who got traded TO this team in March
+      // is properly recognized as the rookie WR's QB, and a WR who signed in FA shows up
+      // as a weapon for the rookie QB.
+      let env = 0, envLabel;
+      if (pos === 'QB') {
+        const wrCands = (_curRosterTop[team] && _curRosterTop[team].WR) || [];
+        const teCands = (_curRosterTop[team] && _curRosterTop[team].TE) || [];
+        const wrTop = wrCands.find(c => c.name !== p.name);
+        const teTop = teCands.find(c => c.name !== p.name);
+        const wrFp = wrTop ? wrTop.fpts : 0;
+        const teFp = teTop ? teTop.fpts : 0;
+        const weapons = wrFp + teFp;
+        if (weapons >= 400)      { env = 10; envLabel = `Elite weapons (${wrTop?wrTop.name:'?'} + ${teTop?teTop.name:'?'}, ${Math.round(weapons)})`; }
+        else if (weapons >= 280) { env = 5;  envLabel = `Good weapons (${Math.round(weapons)})`; }
+        else if (weapons >= 180) { env = 0;  envLabel = `Average weapons (${Math.round(weapons)})`; }
+        else if (weapons >= 80)  { env = -5; envLabel = `Light weapons (${Math.round(weapons)})`; }
+        else                     { env = -10;envLabel = 'Bare cupboard'; }
+      } else {
+        // Skill positions: QB quality from current roster
+        const qbCands = (_curRosterTop[team] && _curRosterTop[team].QB) || [];
+        const qbTop = qbCands.find(c => c.name !== p.name);
+        if (qbTop && qbTop.fpts > 0) {
+          if (qbTop.fpts >= 380)      { env = 10; envLabel = `Elite QB (${qbTop.name})`; }
+          else if (qbTop.fpts >= 300) { env = 5;  envLabel = `Good QB (${qbTop.name})`; }
+          else if (qbTop.fpts >= 200) { env = 0;  envLabel = `Mid QB (${qbTop.name})`; }
+          else                        { env = -8; envLabel = `Weak QB (${qbTop.name}, ${Math.round(qbTop.fpts)})`; }
+        } else if (qbTop) {
+          env = -5; envLabel = `Unproven QB (${qbTop.name})`;
+        } else {
+          env = -5; envLabel = 'Unknown QB';
+        }
+      }
+      score += env;
+      parts.push({ k: pos === 'QB' ? 'Weapons' : 'QB', v: env, label: envLabel });
+
+      score = Math.max(0, Math.min(100, Math.round(score)));
+      return { score, parts };
+    }
+
     results.forEach(p => {
       const r = _pmComputeRoomAdj(p);
       const b = _pmComputeBlockAdj(p);
@@ -29140,6 +29548,9 @@ window.fmtHeight = fmtHeight;
         if (p.jmFloor != null) p.jmFloor = Math.max(0, Math.min(100, Math.round((p.jmFloor + total) * 10) / 10));
         if (p.jmCeil != null) p.jmCeil = Math.max(0, Math.min(100, Math.round((p.jmCeil + total) * 10) / 10));
       }
+      // Standalone Landing Spot 0-100 score (separate from JM, opportunity-only)
+      const ls = _pmComputeLandingSpot(p);
+      if (ls) { p.landingSpot = ls.score; p.landingSpotParts = ls.parts; }
     });
 
     // Computes historical hit rates for each JM tier using 2017-2023 draft classes (3yr window).

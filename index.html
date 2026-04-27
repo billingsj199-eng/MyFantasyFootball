@@ -38605,10 +38605,102 @@ Rules:
     return { total, players, posScores };
   }
 
-  function _udRenderDashboard(data) {
+  // === Contest filter (multi-select toggle) ===
+  // window._udContestFilter is a Set of selected tournament names. null = all selected.
+  function _udApplyContestFilter(data) {
+    const sel = window._udContestFilter;
+    if (!sel) return data;
+    // Filter drafts to only those whose tournament is in the selected set
+    const drafts = {};
+    Object.entries(data.drafts).forEach(([id, d]) => {
+      if (sel.has(d.tournament || 'Unknown')) drafts[id] = d;
+    });
+    // Rebuild player aggregates from filtered drafts
+    const players = {};
+    Object.values(drafts).forEach(d => {
+      d.picks.forEach(p => {
+        if (!players[p.name]) players[p.name] = { pos: p.pos, team: p.team, draftIds: new Set(), picks: [] };
+        players[p.name].draftIds.add(d.id);
+        players[p.name].picks.push(p.pick);
+        if (p.team && !players[p.name].team) players[p.name].team = p.team;
+      });
+    });
+    const numDrafts = Object.keys(drafts).length;
+    Object.values(players).forEach(p => {
+      p.exposure = numDrafts > 0 ? p.draftIds.size / numDrafts : 0;
+      p.avgPick = p.picks.length > 0 ? p.picks.reduce((s,v)=>s+v,0) / p.picks.length : 0;
+      p.minPick = p.picks.length > 0 ? Math.min(...p.picks) : 0;
+      p.maxPick = p.picks.length > 0 ? Math.max(...p.picks) : 0;
+      p.count = p.draftIds.size;
+    });
+    const totalInvestment = Object.values(drafts).reduce((s, d) => s + d.fee, 0);
+    const totalPicks = Object.values(drafts).reduce((s, d) => s + d.picks.length, 0);
+    return { drafts, players, numDrafts, totalInvestment, totalPicks };
+  }
+
+  window._udToggleContest = function(name) {
+    if (!window._udPortfolio) return;
+    const allContests = Array.from(new Set(Object.values(window._udPortfolio.drafts).map(d => d.tournament || 'Unknown')));
+    if (!window._udContestFilter) window._udContestFilter = new Set(allContests);
+    if (window._udContestFilter.has(name)) {
+      // Don't allow deselecting the last one
+      if (window._udContestFilter.size === 1) return;
+      window._udContestFilter.delete(name);
+    } else {
+      window._udContestFilter.add(name);
+    }
+    // If all selected, clear filter (null = no filter applied)
+    if (window._udContestFilter.size === allContests.length) window._udContestFilter = null;
+    _udRenderDashboard(window._udPortfolio);
+  };
+
+  window._udSelectOnlyContest = function(name) {
+    window._udContestFilter = new Set([name]);
+    _udRenderDashboard(window._udPortfolio);
+  };
+
+  window._udSelectAllContests = function() {
+    window._udContestFilter = null;
+    _udRenderDashboard(window._udPortfolio);
+  };
+
+  function _udRenderContestFilter(originalData, filteredData) {
+    const allContests = Array.from(new Set(Object.values(originalData.drafts).map(d => d.tournament || 'Unknown'))).sort();
+    if (allContests.length <= 1) return ''; // no point filtering one contest
+    const sel = window._udContestFilter; // null means all
+    const isAll = !sel;
+    let html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">';
+    html += '<div style="display:flex;align-items:center;gap:8px">';
+    html += '<span style="font-family:Bebas Neue,sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--accent)">CONTEST FILTER</span>';
+    const showCount = filteredData.numDrafts;
+    const totalCount = Object.keys(originalData.drafts).length;
+    html += '<span style="font-size:.7rem;color:var(--text2)">showing ' + showCount + ' of ' + totalCount + ' drafts</span>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:6px">';
+    html += '<button onclick="window._udSelectAllContests()" style="padding:4px 10px;font-family:Bebas Neue,sans-serif;font-size:.65rem;letter-spacing:1px;cursor:pointer;border:1px solid ' + (isAll ? 'var(--accent)' : 'var(--border)') + ';background:' + (isAll ? 'var(--accent)' : 'var(--surface2)') + ';color:' + (isAll ? '#000' : 'var(--text2)') + ';border-radius:4px">ALL</button>';
+    html += '</div></div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    allContests.forEach(c => {
+      const active = isAll || (sel && sel.has(c));
+      const safeC = String(c).replace(/'/g,"\\'");
+      const draftCount = Object.values(originalData.drafts).filter(d => (d.tournament || 'Unknown') === c).length;
+      html += '<button onclick="window._udToggleContest(\'' + safeC + '\')" oncontextmenu="event.preventDefault();window._udSelectOnlyContest(\'' + safeC + '\')" title="Click to toggle. Right-click to select only this contest." style="padding:5px 11px;font-family:Bebas Neue,sans-serif;font-size:.7rem;letter-spacing:1px;cursor:pointer;border:1px solid ' + (active ? 'var(--accent)' : 'var(--border)') + ';background:' + (active ? 'var(--accent)' : 'var(--surface2)') + ';color:' + (active ? '#000' : 'var(--text2)') + ';border-radius:4px;display:inline-flex;align-items:center;gap:6px">';
+      html += (active ? '\u2713 ' : '') + c + ' <span style="opacity:.7;font-size:.6rem">' + draftCount + '</span>';
+      html += '</button>';
+    });
+    html += '</div>';
+    html += '<div style="font-size:.6rem;color:var(--text2);margin-top:8px;font-style:italic">Tip: right-click any chip to view that contest only.</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function _udRenderDashboard(originalData) {
     const dash = document.getElementById('mtUnderdogDashboard');
     dash.style.display = '';
 
+    // Apply contest filter (returns subset of data; or original if no filter)
+    const data = _udApplyContestFilter(originalData);
     const numDrafts = data.numDrafts;
     const playerList = Object.entries(data.players).sort((a, b) => b[1].exposure - a[1].exposure);
 
@@ -38669,6 +38761,9 @@ Rules:
     Object.keys(avgPos).forEach(k => { avgPos[k] = (avgPos[k] / numDrafts).toFixed(1); });
 
     let html = '';
+
+    // ── CONTEST FILTER ──
+    html += _udRenderContestFilter(originalData, data);
 
     // ── SUMMARY CARDS ──
     html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px">`;

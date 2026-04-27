@@ -33,7 +33,87 @@
 --qb:#e74c3c;--rb:#22c55e;--wr:#3b82f6;--te:#a855f7;
 --qb-bg:rgba(231,76,60,.12);--rb-bg:rgba(34,197,94,.12);--wr-bg:rgba(59,130,246,.12);--te-bg:rgba(168,85,247,.12);
 --green:#22c55e;--red:#ef4444;
+/* === HOME REDESIGN ADDITIONS === */
+--accent-blue:#38bdf8;--accent-purple:#c084fc;--accent-pink:#f472b6;--accent-emerald:#10b981;--ticker-bg:#06060c;
 }
+/* === HOME REDESIGN STYLES === */
+.live-ticker{width:100%;align-self:stretch;background:var(--ticker-bg);border-bottom:1px solid var(--border);overflow:hidden;white-space:nowrap;padding:7px 0;font-size:.7rem;letter-spacing:.5px;flex-shrink:0}
+.live-ticker-inner{display:inline-block;animation:tickerScroll 35s linear infinite;padding-left:100%}
+.live-ticker .lt-label{color:var(--accent);font-weight:700;padding:0 14px;letter-spacing:.8px}
+.live-ticker .lt-name{padding-right:6px;color:var(--text)}
+.live-ticker .lt-up{color:var(--green);font-weight:600;padding-right:18px}
+.live-ticker .lt-down{color:var(--red);font-weight:600;padding-right:18px}
+.live-ticker .lt-flat{color:var(--accent);font-weight:600;padding-right:18px}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+.home-teams-hero{background:linear-gradient(135deg,rgba(13,26,38,.6) 0%,var(--surface) 100%);border:1px solid var(--border);border-radius:12px;padding:18px}
+.home-teams-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.home-teams-chips{display:flex;align-items:center;gap:6px}
+.home-chip{font-size:.62rem;font-weight:800;padding:3px 8px;border-radius:3px;letter-spacing:.7px;text-transform:uppercase}
+.home-chip-amber{background:var(--accent);color:#0a0a14}
+.home-chip-muted{background:var(--surface2);color:var(--text)}
+.home-teams-link{color:var(--accent);font-size:.7rem;font-weight:700;letter-spacing:.4px;cursor:pointer;text-transform:uppercase;background:none;border:none}
+.home-teams-link:hover{filter:brightness(1.15)}
+.home-team-list{display:flex;flex-direction:column;gap:7px}
+.home-team-row{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .15s,border-color .15s}
+.home-team-row:hover{background:var(--surface2);border-color:rgba(245,158,11,.3)}
+.home-team-bar{width:5px;height:34px;border-radius:3px;flex-shrink:0}
+.home-team-name{font-size:.82rem;font-weight:700;color:var(--text)}
+.home-team-meta{font-size:.7rem;color:var(--text2);margin-top:1px}
+.home-team-rank{font-size:1rem;font-weight:800;font-family:'DM Sans',sans-serif}
+.home-team-value{font-size:.6rem;color:var(--text2);font-weight:600;letter-spacing:.4px;margin-top:1px}
+.home-teams-empty{text-align:center;padding:18px 8px;color:var(--text2)}
+.home-teams-empty-title{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px}
+.home-teams-empty-desc{font-size:.78rem;line-height:1.5;margin-bottom:12px}
+.home-teams-empty-btn{background:var(--accent);color:#0a0a14;border:none;padding:9px 18px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.2px;cursor:pointer;font-weight:700}
+.home-teams-empty-btn:hover{filter:brightness(1.1)}
+.home-action-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+.home-action-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 12px;cursor:pointer;transition:transform .15s,background .15s}
+.home-action-card:hover{transform:translateY(-2px);background:var(--surface2)}
+.home-action-card.act-rankings{border-left:3px solid var(--accent)}
+.home-action-card.act-teams{border-left:3px solid var(--accent-blue)}
+.home-action-card.act-prospects{border-left:3px solid var(--accent-purple)}
+.home-action-card.act-mock{border-left:3px solid var(--accent-pink)}
+.home-action-card.act-trade{border-left:3px solid var(--accent-emerald)}
+.home-action-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.home-action-title{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text)}
+.home-action-arrow{font-size:.85rem;font-weight:800}
+.act-rankings .home-action-arrow{color:var(--accent)}
+.act-teams .home-action-arrow{color:var(--accent-blue)}
+.act-prospects .home-action-arrow{color:var(--accent-purple)}
+.act-mock .home-action-arrow{color:var(--accent-pink)}
+.act-trade .home-action-arrow{color:var(--accent-emerald)}
+.home-action-desc{font-size:.65rem;color:var(--text2);margin:0;line-height:1.4}
+.dc-tabs{display:flex;gap:3px;margin-bottom:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px;max-width:480px}
+.dc-tab{flex:1;background:none;border:none;padding:8px 4px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;color:var(--text2);cursor:pointer;border-radius:5px;transition:all .15s}
+.dc-tab:hover{color:var(--text)}
+.dc-tab.active{background:var(--accent);color:#0a0a14;font-weight:700}
+.dc-pane{display:none}
+.dc-pane.active{display:block}
+.jt-section{display:none;background:linear-gradient(135deg,rgba(245,158,11,.06) 0%,var(--surface) 100%);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.jt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.jt-title{display:flex;align-items:center;gap:8px}
+.jt-badge{background:var(--accent);color:#0a0a14;font-size:.6rem;font-weight:800;padding:3px 8px;border-radius:3px;letter-spacing:.7px;text-transform:uppercase}
+.jt-name{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;color:var(--text)}
+.jt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.jt-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:transform .15s,border-color .15s,background .15s}
+.jt-card:hover{transform:translateY(-2px);border-color:rgba(245,158,11,.4);background:var(--surface2)}
+.jt-card-empty{opacity:.6}
+.jt-card-empty:hover{opacity:.9}
+.jt-card-label{font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:4px}
+.jt-card-name{font-size:.92rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.jt-card-meta{font-size:.68rem;color:var(--text2)}
+.jt-locked-wrap{position:relative;border-radius:8px;overflow:hidden}
+.jt-locked-content{filter:blur(4px);user-select:none;pointer-events:none;opacity:.55}
+.jt-locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,14,23,.55);text-align:center;padding:14px;gap:6px}
+.jt-locked-icon{font-size:1.4rem}
+.jt-locked-label{font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--accent)}
+.jt-locked-desc{font-size:.68rem;color:var(--text2);max-width:300px;line-height:1.4}
+.jt-locked-btn{margin-top:6px;background:var(--accent);color:#0a0a14;border:none;padding:7px 16px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;cursor:pointer;font-weight:700}
+.jt-locked-btn:hover{filter:brightness(1.1)}
+@media (max-width:560px){.jt-grid{grid-template-columns:1fr}}
+
+@media (max-width:760px){.home-action-row{grid-template-columns:repeat(2,1fr)}.live-ticker{font-size:.62rem;padding:5px 0}}
+
 html{overflow:hidden;width:100%;height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:row;width:100%;max-width:100vw}
 *{scrollbar-width:thin;scrollbar-color:rgba(245,158,11,.3) transparent}
@@ -1639,11 +1719,7 @@ Continue with Google
 <!-- Sidebar Navigation -->
 <nav class="sidebar">
 <div class="sidebar-logo"><svg viewBox="0 0 44 44" width="32" height="32" style="display:block"><rect x="7" y="28" width="6" height="9" rx="1.5" fill="#f59e0b" opacity=".25"/><rect x="15" y="22" width="6" height="15" rx="1.5" fill="#f59e0b" opacity=".4"/><rect x="23" y="15" width="6" height="22" rx="1.5" fill="#f59e0b" opacity=".65"/><rect x="31" y="8" width="6" height="29" rx="1.5" fill="#f59e0b" opacity=".9"/><polyline points="10,25 18,19 26,12 34,5" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/><circle cx="34" cy="5" r="2.5" fill="#f59e0b"/></svg></div>
-<button class="nav-btn active" data-page="home" title="Home">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M9 21V12h6v9"/></svg>
-<span class="nav-label">Home</span>
-</button>
-<button class="nav-btn" data-page="rankings" title="Rankings">
+<button class="nav-btn active" data-page="rankings" title="Rankings">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
 <span class="nav-label">Rankings</span>
 </button>
@@ -2035,317 +2111,21 @@ Paste birthdays for 2026 prospects to fill missing age data. Age drives JM heavi
 </div>
 
 <!-- HOME PAGE -->
-<div class="page page-home active" id="pageHome">
-
-<div class="home-hero">
-<div class="auth-anchor" id="authAnchorHome"></div>
-<div class="home-title"><svg viewBox="0 0 142 100" width="142" height="100" style="display:block;margin:0 auto .5rem"><rect x="0" y="68" width="22" height="32" rx="3" fill="#f59e0b" opacity=".2"/><rect x="30" y="50" width="22" height="50" rx="3" fill="#f59e0b" opacity=".3"/><rect x="60" y="30" width="22" height="70" rx="3" fill="#f59e0b" opacity=".5"/><rect x="90" y="12" width="22" height="88" rx="3" fill="#f59e0b" opacity=".7"/><rect x="120" y="0" width="22" height="100" rx="3" fill="#f59e0b" opacity=".9"/><polyline points="11,63 41,45 71,25 101,7 131,-5" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="131" cy="-5" r="4.5" fill="#f59e0b"/></svg>MYFANTASYFOOTBALL</div>
-<div class="home-subtitle">Fantasy football rankings, tools, and mini-games — all in one place.</div>
-<div class="home-nav-bar">
-<button class="home-nav-btn" data-goto="rankings">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-<span>Rankings</span>
-</button>
-<button class="home-nav-btn" data-goto="trade">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-<span>Trade Calc</span>
-</button>
-<button class="home-nav-btn" data-goto="mockdraft">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
-<span>Mock Draft</span>
-</button>
-<button class="home-nav-btn" data-goto="prospect">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
-<span>Prospect</span>
-</button>
-<button class="home-nav-btn" data-goto="compare">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
-<span>Compare</span>
-</button>
-<button class="home-nav-btn" data-goto="games">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
-<span>Games</span>
-</button>
-</div>
-</div>
-
-<div class="home-body">
-
-<div class="home-two-col">
-<div class="home-col-left">
-<div class="home-section-label">Daily Challenge</div>
-<!-- Daily ELITE PULL — Current -->
-<div style="max-width:480px">
-<div class="gw-card">
-<div class="gw-header" style="padding:1rem 1.25rem .5rem">
-<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — CURRENT</div>
-<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's active player &middot; 6 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
-<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player in 6 tries. Each guess reveals clues:<br><br>
-<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
-<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
-<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
-<strong>Team:</strong> Green if correct, red if wrong<br>
-<strong>Division:</strong> Green if exact, yellow if same conference<br>
-<strong>Position:</strong> Green if correct, red if wrong<br>
-<strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
-<strong>Wk High:</strong> Best single-week score (data back to 1999). Green if within 0.5 pts, yellow if within 5. Arrows show direction. Shows — if no weekly data available for that player
-</div></span></div>
-<div id="gwDailyStreak" class="ep-streak-display" style="margin-top:4px"></div>
-</div>
-<div class="gw-body">
-<div class="gw-categories">
-<div class="gw-cat-row gw-cat-header"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
-<div id="gwDailyGuessRows"></div>
-</div>
-<div class="ep-guess-wrap">
-<div id="gwDailySuggestions" class="ep-suggestions"></div>
-<div class="ep-guess-row">
-<input type="text" id="gwDailyInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
-<button id="gwDailyGuessBtn" class="ep-guess-btn">GUESS</button>
-</div>
-</div>
-<div id="gwDailyResult" class="ep-result" style="display:none"></div>
-<button id="gwDailyGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
-</div>
-</div>
-</div>
-
-<!-- Daily ELITE PULL — 2000s Era -->
-<div style="margin-top:12px;max-width:480px">
-<div class="gw-card">
-<div class="gw-header" style="padding:1rem 1.25rem .5rem">
-<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — 2000s</div>
-<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's 2000s-era player &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
-<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery player whose best fantasy season was 2000-2009. 8 tries. Each guess reveals clues:<br><br>
-<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
-<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
-<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
-<strong>Team:</strong> Green if correct, red if wrong<br>
-<strong>Division:</strong> Green if exact, yellow if same conference<br>
-<strong>Position:</strong> Green if correct, red if wrong<br>
-<strong>Year:</strong> Year of best season. Green if exact, yellow if within 2 years. Arrows show direction<br>
-<strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
-<strong>Wk High:</strong> Best single-week score. Green if within 0.5 pts, yellow if within 5. Arrows show direction
-</div></span></div>
-<div id="gwDaily00sStreak" class="ep-streak-display" style="margin-top:4px"></div>
-</div>
-<div id="gwDaily00s_all" class="gw-body" style="display:none">
-<div class="gw-categories">
-<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
-<div id="gwDaily00sGuessRows"></div>
-</div>
-<div class="ep-guess-wrap">
-<div id="gwDaily00sSuggestions" class="ep-suggestions"></div>
-<div class="ep-guess-row">
-<input type="text" id="gwDaily00sInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
-<button id="gwDaily00sGuessBtn" class="ep-guess-btn">GUESS</button>
-</div>
-</div>
-<div id="gwDaily00sResult" class="ep-result" style="display:none"></div>
-<button id="gwDaily00sGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
-</div>
-<div id="gwDaily00s_150" class="gw-body">
-<div class="gw-categories">
-<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
-<div id="gwDaily00s150GuessRows"></div>
-</div>
-<div class="ep-guess-wrap">
-<div id="gwDaily00s150Suggestions" class="ep-suggestions"></div>
-<div class="ep-guess-row">
-<input type="text" id="gwDaily00s150Input" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
-<button id="gwDaily00s150GuessBtn" class="ep-guess-btn">GUESS</button>
-</div>
-</div>
-<div id="gwDaily00s150Result" class="ep-result" style="display:none"></div>
-<button id="gwDaily00s150GiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
-</div>
-</div>
-</div>
-
-<!-- Daily ELITE PULL — 2010s Era -->
-<div style="margin-top:12px;max-width:480px">
-<div class="gw-card">
-<div class="gw-header" style="padding:1rem 1.25rem .5rem">
-<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — 2010s</div>
-<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's 2010s-era player &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
-<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery player whose best fantasy season was 2010-2019. 8 tries. Each guess reveals clues:<br><br>
-<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
-<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
-<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
-<strong>Team:</strong> Green if correct, red if wrong<br>
-<strong>Division:</strong> Green if exact, yellow if same conference<br>
-<strong>Position:</strong> Green if correct, red if wrong<br>
-<strong>Year:</strong> Year of best season. Green if exact, yellow if within 2 years. Arrows show direction<br>
-<strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
-<strong>Wk High:</strong> Best single-week score. Green if within 0.5 pts, yellow if within 5. Arrows show direction
-</div></span></div>
-<div id="gwDaily10sStreak" class="ep-streak-display" style="margin-top:4px"></div>
-</div>
-<div id="gwDaily10s_all" class="gw-body" style="display:none">
-<div class="gw-categories">
-<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
-<div id="gwDaily10sGuessRows"></div>
-</div>
-<div class="ep-guess-wrap">
-<div id="gwDaily10sSuggestions" class="ep-suggestions"></div>
-<div class="ep-guess-row">
-<input type="text" id="gwDaily10sInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
-<button id="gwDaily10sGuessBtn" class="ep-guess-btn">GUESS</button>
-</div>
-</div>
-<div id="gwDaily10sResult" class="ep-result" style="display:none"></div>
-<button id="gwDaily10sGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
-</div>
-<div id="gwDaily10s_150" class="gw-body">
-<div class="gw-categories">
-<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
-<div id="gwDaily10s150GuessRows"></div>
-</div>
-<div class="ep-guess-wrap">
-<div id="gwDaily10s150Suggestions" class="ep-suggestions"></div>
-<div class="ep-guess-row">
-<input type="text" id="gwDaily10s150Input" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
-<button id="gwDaily10s150GuessBtn" class="ep-guess-btn">GUESS</button>
-</div>
-</div>
-<div id="gwDaily10s150Result" class="ep-result" style="display:none"></div>
-<button id="gwDaily10s150GiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
-</div>
-</div>
-</div>
-
-
-<!-- GUESS WHO Daily Game (picture + type name). CSS class .elite-pull-section is legacy from pre-swap naming. -->
-<div class="elite-pull-section" style="max-width:480px;margin-top:12px">
-<div class="elite-pull-card">
-<div class="elite-pull-header">
-<div class="elite-pull-title">GUESS WHO</div>
-<div class="elite-pull-subtitle">Guess today's player from their picture &middot; 1 attempt</div>
-</div>
-<div class="elite-pull-img-wrap">
-<img id="epImage" class="ep-blur" src="" alt="Mystery player" style="display:none">
-<div id="epPlaceholder" class="ep-placeholder">Loading today's player...</div>
-</div>
-<div class="elite-pull-body">
-<div id="epAttempts" class="ep-attempts"></div>
-<div class="ep-guess-wrap">
-<div id="epSuggestions" class="ep-suggestions"></div>
-<div class="ep-guess-row">
-<input type="text" id="epInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
-<button id="epGuessBtn" class="ep-guess-btn">GUESS</button>
-</div>
-</div>
-<div id="epResult" class="ep-result" style="display:none"></div>
-<div id="epStreak" class="ep-streak-display"></div>
-</div>
-</div>
-</div>
-</div>
-
-<div class="home-col-right">
-<div class="home-section-label">Leaderboard</div>
-<div class="lb-card" style="padding:12px 16px">
-
-<div class="fg-mode-toggle" style="display:flex;gap:0;margin-bottom:8px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content;margin-left:auto;margin-right:auto">
-<button class="fg-mode-btn active" id="lbTabGames" style="padding:6px 18px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">GAMES</button>
-<button class="fg-mode-btn" id="lbTabDaily" style="padding:6px 18px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">DAILY</button>
-</div>
-
-<!-- GAMES TAB -->
-<div id="lbPanelGames">
-<div class="lb-time-filter" id="lbTimeFilter" style="display:flex;gap:0;margin-bottom:12px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content;margin-left:auto;margin-right:auto">
-<button class="lb-time-btn active" data-lbt="alltime" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">All-Time</button>
-<button class="lb-time-btn" data-lbt="month" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">Month</button>
-<button class="lb-time-btn" data-lbt="week" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">Week</button>
-<button class="lb-time-btn" data-lbt="today" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">Today</button>
-</div>
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Fantasy Game — Season</div>
-<div class="lb-list" id="lbFantasygameList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbFantasygameLoading">Loading...</div>
-<div class="lb-empty" id="lbFantasygameEmpty" style="display:none">No scores yet</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Fantasy Game — Week</div>
-<div class="lb-list" id="lbFantasygameWeekList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbFantasygameWeekLoading">Loading...</div>
-<div class="lb-empty" id="lbFantasygameWeekEmpty" style="display:none">No scores yet</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">College Fantasy — Season</div>
-<div class="lb-list" id="lbCollegeSeasonList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbCollegeSeasonLoading">Loading...</div>
-<div class="lb-empty" id="lbCollegeSeasonEmpty" style="display:none">No scores yet</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">College Fantasy — Week</div>
-<div class="lb-list" id="lbCollegeWeekList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbCollegeWeekLoading">Loading...</div>
-<div class="lb-empty" id="lbCollegeWeekEmpty" style="display:none">No scores yet</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-<div class="lb-section-title">GUESS WHO Unlimited</div>
-<div class="lb-list" id="lbAlltimeList"></div>
-<div class="lb-loading" id="lbAlltimeLoading">Loading...</div>
-<div class="lb-empty" id="lbAlltimeEmpty" style="display:none">No data yet</div>
-
-</div><!-- end lbPanelGames -->
-
-<!-- DAILY TAB -->
-<div id="lbPanelDaily" style="display:none">
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — Current</div>
-<div class="lb-list" id="lbDailyEpCurrentList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbDailyEpCurrentLoading">Loading...</div>
-<div class="lb-empty" id="lbDailyEpCurrentEmpty" style="display:none">No data yet</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2000s</div>
-<div class="lb-list" id="lbDailyEp00s150List" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbDailyEp00s150Loading">Loading...</div>
-<div class="lb-empty" id="lbDailyEp00s150Empty" style="display:none">No data yet</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2010s</div>
-<div class="lb-list" id="lbDailyEp10s150List" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbDailyEp10s150Loading">Loading...</div>
-<div class="lb-empty" id="lbDailyEp10s150Empty" style="display:none">No data yet</div>
-<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
-
-
-
-<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Guess Who</div>
-<div class="lb-list" id="lbDailyGuesswhoList" style="margin-bottom:4px"></div>
-<div class="lb-loading" id="lbDailyGuesswhoLoading">Loading...</div>
-<div class="lb-empty" id="lbDailyGuesswhoEmpty" style="display:none">No data yet</div>
-
-</div><!-- end lbPanelDaily -->
-
-</div>
-</div>
-</div>
-
-<!-- Hidden auth card — kept for JS references -->
-<div class="home-auth-card" id="homeAuthCard" style="display:none">
-<div class="home-auth-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-<div class="home-auth-title">SAVE YOUR RANKINGS</div>
-<div class="home-auth-desc">Sign in to save your custom rankings to the cloud and access them from any device.</div>
-<div class="home-auth-btns" id="homeAuthBtns">
-<button class="home-auth-btn" id="homeSigninBtn">SIGN IN</button>
-<button class="home-auth-google" id="homeGoogleBtn"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">Google</button>
-</div>
-<div class="home-auth-signed-in" id="homeAuthSignedIn">
-<div class="global-acct-avatar" id="homeAcctAvatar">?</div>
-<div class="home-auth-signed-text">Signed in as <strong id="homeAcctEmail">—</strong></div>
-</div>
-</div>
-</div>
-</div>
-
 <!-- RANKINGS PAGE (existing content) -->
-<div class="page" id="pageRankings">
+<div class="page active" id="pageRankings">
+<!-- === HOME REDESIGN: ticker + teams hero + action row === -->
+<div class="live-ticker" id="liveTicker">
+<div class="live-ticker-inner">
+<span class="lt-label">LIVE BOARD</span>
+<span class="lt-name">Marvin Harrison Jr.</span><span class="lt-up">▲ +4</span>
+<span class="lt-name">Brock Bowers</span><span class="lt-up">▲ +2</span>
+<span class="lt-name">Rashee Rice</span><span class="lt-down">▼ −6</span>
+<span class="lt-name">KC Concepcion</span><span class="lt-up">▲ +9</span>
+<span class="lt-name">Jaydn Ott</span><span class="lt-flat">JM 78.4</span>
+<span class="lt-name">Saquon Barkley</span><span class="lt-up">▲ +1</span>
+<span class="lt-name">Carson Beck</span><span class="lt-down">▼ −3</span>
+</div>
+</div>
 <header>
 <div class="logo-row">
 <h1><svg viewBox="0 0 42 32" width="28" height="22" style="display:inline-block;vertical-align:middle;margin-right:6px;margin-top:-2px"><rect x="0" y="20" width="8" height="12" rx="1.5" fill="#f59e0b" opacity=".25"/><rect x="11" y="14" width="8" height="18" rx="1.5" fill="#f59e0b" opacity=".4"/><rect x="22" y="7" width="8" height="25" rx="1.5" fill="#f59e0b" opacity=".6"/><rect x="33" y="0" width="8" height="32" rx="1.5" fill="#f59e0b" opacity=".85"/><polyline points="4,17 15,11 26,4 37,-3" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/><circle cx="37" cy="-3" r="3" fill="#f59e0b"/></svg>FANTASY FOOTBALL RANKINGS</h1>
@@ -2539,6 +2319,8 @@ CLEAR
 <button class="games-tab active" data-games-tab="guesswho">ELITE PULL</button>
 <button class="games-tab" data-games-tab="elitepull">GUESS WHO</button>
 <button class="games-tab" data-games-tab="fantasygame">Fantasy Game</button>
+<button class="games-tab" data-games-tab="daily">DAILY</button>
+<button class="games-tab" data-games-tab="leaderboard">LEADERBOARD</button>
 </div>
 
 <!-- Fantasy Game Sub-page -->
@@ -2726,6 +2508,272 @@ CLEAR
 <div id="gwResult" class="ep-result" style="display:none"></div>
 <button id="gwGiveUpBtn" style="margin-top:.75rem;width:100%;padding:10px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
 <button id="gwNextBtn" class="trivia-next" style="display:none;margin-top:1rem;width:100%">NEXT PLAYER</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- LEADERBOARD Sub-page (moved from home page) -->
+<div class="games-subpage" id="gamesLeaderboard">
+<div style="max-width:520px;margin:0 auto">
+<div class="home-section-label">Leaderboard</div>
+<div class="lb-card" style="padding:12px 16px">
+
+<div class="fg-mode-toggle" style="display:flex;gap:0;margin-bottom:8px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content;margin-left:auto;margin-right:auto">
+<button class="fg-mode-btn active" id="lbTabGames" style="padding:6px 18px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">GAMES</button>
+<button class="fg-mode-btn" id="lbTabDaily" style="padding:6px 18px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">DAILY</button>
+</div>
+
+<!-- GAMES TAB -->
+<div id="lbPanelGames">
+<div class="lb-time-filter" id="lbTimeFilter" style="display:flex;gap:0;margin-bottom:12px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content;margin-left:auto;margin-right:auto">
+<button class="lb-time-btn active" data-lbt="alltime" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">All-Time</button>
+<button class="lb-time-btn" data-lbt="month" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">Month</button>
+<button class="lb-time-btn" data-lbt="week" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">Week</button>
+<button class="lb-time-btn" data-lbt="today" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">Today</button>
+</div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Fantasy Game — Season</div>
+<div class="lb-list" id="lbFantasygameList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbFantasygameLoading">Loading...</div>
+<div class="lb-empty" id="lbFantasygameEmpty" style="display:none">No scores yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Fantasy Game — Week</div>
+<div class="lb-list" id="lbFantasygameWeekList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbFantasygameWeekLoading">Loading...</div>
+<div class="lb-empty" id="lbFantasygameWeekEmpty" style="display:none">No scores yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">College Fantasy — Season</div>
+<div class="lb-list" id="lbCollegeSeasonList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbCollegeSeasonLoading">Loading...</div>
+<div class="lb-empty" id="lbCollegeSeasonEmpty" style="display:none">No scores yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">College Fantasy — Week</div>
+<div class="lb-list" id="lbCollegeWeekList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbCollegeWeekLoading">Loading...</div>
+<div class="lb-empty" id="lbCollegeWeekEmpty" style="display:none">No scores yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title">GUESS WHO Unlimited</div>
+<div class="lb-list" id="lbAlltimeList"></div>
+<div class="lb-loading" id="lbAlltimeLoading">Loading...</div>
+<div class="lb-empty" id="lbAlltimeEmpty" style="display:none">No data yet</div>
+
+</div><!-- end lbPanelGames -->
+
+<!-- DAILY TAB -->
+<div id="lbPanelDaily" style="display:none">
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — Current</div>
+<div class="lb-list" id="lbDailyEpCurrentList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEpCurrentLoading">Loading...</div>
+<div class="lb-empty" id="lbDailyEpCurrentEmpty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2000s</div>
+<div class="lb-list" id="lbDailyEp00s150List" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEp00s150Loading">Loading...</div>
+<div class="lb-empty" id="lbDailyEp00s150Empty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — 2010s</div>
+<div class="lb-list" id="lbDailyEp10s150List" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyEp10s150Loading">Loading...</div>
+<div class="lb-empty" id="lbDailyEp10s150Empty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+
+
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Guess Who</div>
+<div class="lb-list" id="lbDailyGuesswhoList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyGuesswhoLoading">Loading...</div>
+<div class="lb-empty" id="lbDailyGuesswhoEmpty" style="display:none">No data yet</div>
+
+</div><!-- end lbPanelDaily -->
+
+</div>
+</div>
+</div>
+
+<!-- DAILY CHALLENGES Sub-page (moved from home page) -->
+<div class="games-subpage" id="gamesDaily">
+<div style="max-width:520px;margin:0 auto">
+<div class="home-section-label" style="margin-bottom:8px">Daily Challenge</div>
+<div class="dc-tabs">
+<button class="dc-tab active" data-dc="current">CURRENT</button>
+<button class="dc-tab" data-dc="2000s">2000s</button>
+<button class="dc-tab" data-dc="2010s">2010s</button>
+<button class="dc-tab" data-dc="guesswho">PHOTO</button>
+</div>
+<!-- Daily ELITE PULL — Current -->
+<div class="dc-pane active" data-dc="current" style="max-width:480px">
+<div class="gw-card">
+<div class="gw-header" style="padding:1rem 1.25rem .5rem">
+<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — CURRENT</div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's active player &middot; 6 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
+<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery NFL player in 6 tries. Each guess reveals clues:<br><br>
+<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
+<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
+<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
+<strong>Team:</strong> Green if correct, red if wrong<br>
+<strong>Division:</strong> Green if exact, yellow if same conference<br>
+<strong>Position:</strong> Green if correct, red if wrong<br>
+<strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
+<strong>Wk High:</strong> Best single-week score (data back to 1999). Green if within 0.5 pts, yellow if within 5. Arrows show direction. Shows — if no weekly data available for that player
+</div></span></div>
+<div id="gwDailyStreak" class="ep-streak-display" style="margin-top:4px"></div>
+</div>
+<div class="gw-body">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDailyGuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDailySuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDailyInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDailyGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDailyResult" class="ep-result" style="display:none"></div>
+<button id="gwDailyGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+</div>
+</div>
+
+<!-- Daily ELITE PULL — 2000s Era -->
+<div class="dc-pane" data-dc="2000s" style="max-width:480px">
+<div class="gw-card">
+<div class="gw-header" style="padding:1rem 1.25rem .5rem">
+<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — 2000s</div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's 2000s-era player &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
+<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery player whose best fantasy season was 2000-2009. 8 tries. Each guess reveals clues:<br><br>
+<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
+<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
+<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
+<strong>Team:</strong> Green if correct, red if wrong<br>
+<strong>Division:</strong> Green if exact, yellow if same conference<br>
+<strong>Position:</strong> Green if correct, red if wrong<br>
+<strong>Year:</strong> Year of best season. Green if exact, yellow if within 2 years. Arrows show direction<br>
+<strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
+<strong>Wk High:</strong> Best single-week score. Green if within 0.5 pts, yellow if within 5. Arrows show direction
+</div></span></div>
+<div id="gwDaily00sStreak" class="ep-streak-display" style="margin-top:4px"></div>
+</div>
+<div id="gwDaily00s_all" class="gw-body" style="display:none">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDaily00sGuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDaily00sSuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDaily00sInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDaily00sGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDaily00sResult" class="ep-result" style="display:none"></div>
+<button id="gwDaily00sGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+<div id="gwDaily00s_150" class="gw-body">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDaily00s150GuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDaily00s150Suggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDaily00s150Input" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDaily00s150GuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDaily00s150Result" class="ep-result" style="display:none"></div>
+<button id="gwDaily00s150GiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+</div>
+</div>
+
+<!-- Daily ELITE PULL — 2010s Era -->
+<div class="dc-pane" data-dc="2010s" style="max-width:480px">
+<div class="gw-card">
+<div class="gw-header" style="padding:1rem 1.25rem .5rem">
+<div class="gw-title" style="font-size:1.5rem">DAILY ELITE PULL — 2010s</div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">Guess today's 2010s-era player &middot; 8 attempts<span class="gw-help-icon gw-help-daily">?<div class="gw-tooltip">
+<strong style="color:var(--accent)">How to Play</strong><br>Guess the mystery player whose best fantasy season was 2010-2019. 8 tries. Each guess reveals clues:<br><br>
+<span style="color:var(--green)">&#9632; Green</span> = Exact match<br>
+<span style="color:#facc15">&#9632; Yellow</span> = Close<br>
+<span style="color:var(--red)">&#9632; Red</span> = Wrong<br><br>
+<strong>Team:</strong> Green if correct, red if wrong<br>
+<strong>Division:</strong> Green if exact, yellow if same conference<br>
+<strong>Position:</strong> Green if correct, red if wrong<br>
+<strong>Year:</strong> Year of best season. Green if exact, yellow if within 2 years. Arrows show direction<br>
+<strong>Szn High:</strong> Green if within 0.5 pts, yellow if within 30. Arrows show direction<br>
+<strong>Wk High:</strong> Best single-week score. Green if within 0.5 pts, yellow if within 5. Arrows show direction
+</div></span></div>
+<div id="gwDaily10sStreak" class="ep-streak-display" style="margin-top:4px"></div>
+</div>
+<div id="gwDaily10s_all" class="gw-body" style="display:none">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDaily10sGuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDaily10sSuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDaily10sInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDaily10sGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDaily10sResult" class="ep-result" style="display:none"></div>
+<button id="gwDaily10sGiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+<div id="gwDaily10s_150" class="gw-body">
+<div class="gw-categories">
+<div class="gw-cat-row gw-cat-header gw-6col"><div class="gw-cat-cell">TEAM</div><div class="gw-cat-cell">DIV</div><div class="gw-cat-cell">POS</div><div class="gw-cat-cell">YEAR</div><div class="gw-cat-cell">SZN</div><div class="gw-cat-cell">WK</div></div>
+<div id="gwDaily10s150GuessRows"></div>
+</div>
+<div class="ep-guess-wrap">
+<div id="gwDaily10s150Suggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="gwDaily10s150Input" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="gwDaily10s150GuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="gwDaily10s150Result" class="ep-result" style="display:none"></div>
+<button id="gwDaily10s150GiveUpBtn" style="margin-top:.75rem;width:100%;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .15s">GIVE UP</button>
+</div>
+</div>
+</div>
+
+
+<!-- GUESS WHO Daily Game (picture + type name). CSS class .elite-pull-section is legacy from pre-swap naming. -->
+<div class="dc-pane elite-pull-section" data-dc="guesswho" style="max-width:480px">
+<div class="elite-pull-card">
+<div class="elite-pull-header">
+<div class="elite-pull-title">GUESS WHO</div>
+<div class="elite-pull-subtitle">Guess today's player from their picture &middot; 1 attempt</div>
+</div>
+<div class="elite-pull-img-wrap">
+<img id="epImage" class="ep-blur" src="" alt="Mystery player" style="display:none">
+<div id="epPlaceholder" class="ep-placeholder">Loading today's player...</div>
+</div>
+<div class="elite-pull-body">
+<div id="epAttempts" class="ep-attempts"></div>
+<div class="ep-guess-wrap">
+<div id="epSuggestions" class="ep-suggestions"></div>
+<div class="ep-guess-row">
+<input type="text" id="epInput" class="ep-guess-input" placeholder="Type a player name..." autocomplete="off">
+<button id="epGuessBtn" class="ep-guess-btn">GUESS</button>
+</div>
+</div>
+<div id="epResult" class="ep-result" style="display:none"></div>
+<div id="epStreak" class="ep-streak-display"></div>
+</div>
 </div>
 </div>
 </div>
@@ -2980,6 +3028,18 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="text-align:center;margin-bottom:1.5rem">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1">MY TEAMS</div>
 <div style="color:var(--text2);font-size:.82rem;margin-top:4px">Import your fantasy teams, analyze rosters, and track your portfolio</div>
+</div>
+
+<!-- JACKS TEAMS — admin only, populated by JS at runtime -->
+<div class="jt-section" id="mtJacksTeams">
+<div class="jt-head">
+<div class="jt-title">
+<span class="jt-badge">PREMIUM</span>
+<span class="jt-name">JACK'S TEAMS</span>
+</div>
+<span style="font-size:.65rem;color:var(--text2);font-style:italic">visible to premium members</span>
+</div>
+<div class="jt-grid"></div>
 </div>
 
 <!-- Source Toggle -->
@@ -7129,6 +7189,8 @@ function hasPremium() {
   const data = JSON.parse(localStorage.getItem('jb_premium') || 'null');
   return data && data.expires > Date.now();
 }
+// Expose globally so external code (e.g. Jack's Teams panel) can check
+window.hasPremium = hasPremium;
 
 function render() {
   // Attach JM scores to D entries on demand for dynasty rankings
@@ -10973,7 +11035,7 @@ function renderSearchChips() {
 render();
 
 // === Page Navigation ===
-const pageMap = { home: 'pageHome', rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest' };
+const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest' };
 const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest' };
 function switchPage(page) {
   // Admin-only pages — silently redirect non-admins to home
@@ -21077,19 +21139,23 @@ window.fmtHeight = fmtHeight;
     if (confirm('Sign out?')) { auth.signOut(); acctOverlay.style.display = 'none'; }
   });
 
-  // Home page sign in buttons
-  homeSigninBtn.addEventListener('click', () => openAuth());
-  homeGoogleBtn.addEventListener('click', async () => {
-    if (!isConfigured) { openAuth(); return; }
-    try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await auth.signInWithPopup(provider);
-    } catch(e) {
-      if (e.code !== 'auth/popup-closed-by-user') {
-        alert(e.message || 'Google sign-in failed.');
+  // Home page sign in buttons (skip if home page was removed)
+  if (homeSigninBtn) {
+    homeSigninBtn.addEventListener('click', () => openAuth());
+  }
+  if (homeGoogleBtn) {
+    homeGoogleBtn.addEventListener('click', async () => {
+      if (!isConfigured) { openAuth(); return; }
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await auth.signInWithPopup(provider);
+      } catch(e) {
+        if (e.code !== 'auth/popup-closed-by-user') {
+          alert(e.message || 'Google sign-in failed.');
+        }
       }
-    }
-  });
+    });
+  }
 
   // Switch sign in / sign up
   authSwitchMode.addEventListener('click', () => setAuthMode(!isSignUp));
@@ -21428,15 +21494,17 @@ window.fmtHeight = fmtHeight;
       globalAcctPill.classList.add('show');
       globalAcctAvatar.textContent = initial;
 
-      // Home page card
-      homeAuthBtns.style.display = 'none';
-      homeAuthSignedIn.classList.add('show');
-      homeAcctAvatar.textContent = initial;
-      homeAcctEmail.textContent = displayEmail;
-      homeAuthCard.querySelector('.home-auth-title').textContent = 'CONNECTED';
-      homeAuthCard.querySelector('.home-auth-desc').textContent = isAdmin()
-        ? 'Admin account — you can edit all rankings.'
-        : 'Your rankings sync to the cloud when you hit Save.';
+      // Home page card (guarded — element may not exist after home page removal)
+      if (homeAuthCard) {
+        homeAuthBtns.style.display = 'none';
+        homeAuthSignedIn.classList.add('show');
+        homeAcctAvatar.textContent = initial;
+        homeAcctEmail.textContent = displayEmail;
+        homeAuthCard.querySelector('.home-auth-title').textContent = 'CONNECTED';
+        homeAuthCard.querySelector('.home-auth-desc').textContent = isAdmin()
+          ? 'Admin account — you can edit all rankings.'
+          : 'Your rankings sync to the cloud when you hit Save.';
+      }
     } else {
       // Sidebar
       acctBar.style.display = 'none';
@@ -21446,11 +21514,13 @@ window.fmtHeight = fmtHeight;
       globalSigninBtn.style.display = '';
       globalAcctPill.classList.remove('show');
 
-      // Home page card
-      homeAuthBtns.style.display = '';
-      homeAuthSignedIn.classList.remove('show');
-      homeAuthCard.querySelector('.home-auth-title').textContent = 'SAVE YOUR RANKINGS';
-      homeAuthCard.querySelector('.home-auth-desc').textContent = 'Sign in to save your custom rankings to the cloud and access them from any device.';
+      // Home page card (guarded — element may not exist after home page removal)
+      if (homeAuthCard) {
+        homeAuthBtns.style.display = '';
+        homeAuthSignedIn.classList.remove('show');
+        homeAuthCard.querySelector('.home-auth-title').textContent = 'SAVE YOUR RANKINGS';
+        homeAuthCard.querySelector('.home-auth-desc').textContent = 'Sign in to save your custom rankings to the cloud and access them from any device.';
+      }
     }
     // Re-render rankings to update edit controls visibility
     if (typeof render === 'function') {
@@ -21602,7 +21672,7 @@ window.fmtHeight = fmtHeight;
       const initial = newName[0].toUpperCase();
       acctPageAvatar.textContent = initial;
       globalAcctAvatar.textContent = initial;
-      homeAcctAvatar.textContent = initial;
+      if (homeAcctAvatar) homeAcctAvatar.textContent = initial;
       // Render badge avatars if a badge is active
       if (typeof window._renderBadgeAvatars === 'function') window._renderBadgeAvatars();
       showMsg(acctUsernameMsg, 'Username updated!', 'success');
@@ -21788,7 +21858,7 @@ window.fmtHeight = fmtHeight;
   acctPageSignoutBtn.addEventListener('click', () => {
     if (confirm('Sign out?')) {
       auth.signOut();
-      switchPage('home');
+      switchPage('rankings');
     }
   });
 
@@ -31745,7 +31815,12 @@ window.fmtHeight = fmtHeight;
     // Cooper Jr.) gets excluded from the WR 2026 view because isCollege=true.
     // 2027+ devy players are kept out of the ALL and position tabs — they only show in COLLEGE.
     function _isUpcomingDevy(p) {
-      return p.isDevy && p.eligYr && p.eligYr === 2026;
+      // Devy / in-college players are excluded entirely from ALL and position tabs.
+      // Reasoning: 2027+ classes haven't declared. And after the 2026 draft passed,
+      // any player still flagged isDevy=true with eligYr=2026 is one who stayed in
+      // college rather than declaring — those should also be hidden from ALL.
+      // Devy players still appear in the COLLEGE tab.
+      return false;
     }
     let data;
     if (pmPos === 'COLLEGE') {
@@ -39194,5 +39269,96 @@ Rules:
 <div class="gw-share-copied" id="gwShareCopied">Copied to clipboard!</div>
 </div>
 </div>
+
+<!-- === HOME REDESIGN BOOTSTRAP === -->
+<script>
+(function(){
+  function setupDcTabs(){
+    var tabs=document.querySelectorAll('.dc-tab');
+    var panes=document.querySelectorAll('.dc-pane');
+    if(!tabs.length||!panes.length)return;
+    function show(name){
+      tabs.forEach(function(t){t.classList.toggle('active',t.dataset.dc===name);});
+      panes.forEach(function(p){
+        var on=p.dataset.dc===name;
+        p.classList.toggle('active',on);
+        p.style.display=on?'block':'none';
+      });
+    }
+    tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.dc);});});
+    show('current');
+  }
+  function hydrateTeamsHero(){
+    var list=document.getElementById('homeTeamList');
+    var empty=document.getElementById('homeTeamsEmpty');
+    var count=document.getElementById('homeTeamsCount');
+    if(!list||!empty)return;
+    var last=null;
+    try{last=JSON.parse(localStorage.getItem('mt_last_league')||'null');}catch(e){}
+    if(!last||!last.id||!last.name)return;
+    var name=String(last.name).replace(/[<>&]/g,'');
+    list.innerHTML='<div class="home-team-row" data-goto="myteams"><div style="display:flex;align-items:center;gap:10px"><div class="home-team-bar" style="background:var(--accent)"></div><div><div class="home-team-name">'+name+'</div><div class="home-team-meta">Sleeper league \u00b7 last imported</div></div></div><div style="text-align:right"><div class="home-team-rank" style="color:var(--accent)">\u2192</div><div class="home-team-value">VIEW LEAGUE</div></div></div>';
+    list.style.display='flex';
+    empty.style.display='none';
+    if(count)count.textContent='1 LEAGUE';
+    list.querySelectorAll('[data-goto]').forEach(function(el){
+      el.addEventListener('click',function(){if(typeof window.switchPage==='function')window.switchPage(el.dataset.goto);});
+    });
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){setupDcTabs();hydrateTeamsHero();});
+  }else{
+    setupDcTabs();hydrateTeamsHero();
+  }
+
+function renderJacksTeams(){
+  var section=document.getElementById('mtJacksTeams');
+  if(!section)return;
+  var grid=section.querySelector('.jt-grid');
+  var canSee=(typeof window.hasPremium==='function'&&window.hasPremium());
+  // Always show the section so non-premium users see the feature exists
+  section.style.display='block';
+  if(canSee){
+    var sleeperHtml='';
+    try{
+      var last=JSON.parse(localStorage.getItem('mt_last_league')||'null');
+      if(last&&last.id&&last.name){
+        var safeName=String(last.name).replace(/[<>&]/g,'');
+        sleeperHtml='<div class="jt-card" onclick="if(window._mtSwitchSource)window._mtSwitchSource(\'sleeper\')"><div class="jt-card-label">SLEEPER</div><div class="jt-card-name">'+safeName+'</div><div class="jt-card-meta">League imported \u00b7 click to view</div></div>';
+      }else{
+        sleeperHtml='<div class="jt-card jt-card-empty"><div class="jt-card-label">SLEEPER</div><div class="jt-card-name">No league</div><div class="jt-card-meta">Import a Sleeper league below</div></div>';
+      }
+    }catch(e){}
+    var udHtml='';
+    var udP=window._udPortfolio;
+    if(udP&&udP.drafts&&udP.drafts.length){
+      var n=udP.drafts.length;
+      udHtml='<div class="jt-card" onclick="if(window._mtSwitchSource)window._mtSwitchSource(\'underdog\')"><div class="jt-card-label">UNDERDOG</div><div class="jt-card-name">'+n+' draft'+(n===1?'':'s')+'</div><div class="jt-card-meta">Portfolio loaded \u00b7 click to view</div></div>';
+    }else{
+      udHtml='<div class="jt-card jt-card-empty" onclick="if(window._mtSwitchSource)window._mtSwitchSource(\'underdog\')"><div class="jt-card-label">UNDERDOG</div><div class="jt-card-name">No portfolio</div><div class="jt-card-meta">Upload your CSV from the Underdog tab</div></div>';
+    }
+    grid.innerHTML=sleeperHtml+udHtml;
+  }else{
+    var fakeCards='<div class="jt-card jt-locked-content"><div class="jt-card-label">SLEEPER</div><div class="jt-card-name">Dynasty Warlords</div><div class="jt-card-meta">Imported league \u00b7 click to view</div></div>'+
+      '<div class="jt-card jt-locked-content"><div class="jt-card-label">UNDERDOG</div><div class="jt-card-name">42 drafts</div><div class="jt-card-meta">Portfolio loaded \u00b7 click to view</div></div>';
+    var overlay='<div class="jt-locked-overlay">'+
+      '<div class="jt-locked-icon">\ud83d\udd12</div>'+
+      '<div class="jt-locked-label">PREMIUM FEATURE</div>'+
+      '<div class="jt-locked-desc">See Jack\'s imported Sleeper league and live Underdog portfolio. Upgrade to unlock.</div>'+
+      '<button class="jt-locked-btn" onclick="var b=document.querySelector(\'.nav-btn[data-page=account]\');if(b)b.click();setTimeout(function(){var t=document.querySelector(\'[data-acct-tab=premium]\');if(t)t.click();},150)">GET PREMIUM</button>'+
+    '</div>';
+    grid.innerHTML='<div class="jt-locked-wrap" style="grid-column:1/-1;padding:0"><div class="jt-grid" style="margin:0">'+fakeCards+'</div>'+overlay+'</div>';
+  }
+}
+window._renderJacksTeams=renderJacksTeams;
+var jtTries=0;
+var jtInterval=setInterval(function(){
+  jtTries++;
+  renderJacksTeams();
+  if(jtTries>=20)clearInterval(jtInterval);
+},700);
+renderJacksTeams();
+})();
+</script>
 </body>
 </html>

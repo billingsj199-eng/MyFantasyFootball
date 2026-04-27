@@ -20057,12 +20057,8 @@ window.fmtHeight = fmtHeight;
       setTimeout(poll, 2000); // Initial 2-second delay so the webhook has a chance to write
     } catch(e) { console.warn('[Premium] success handler error:', e); }
   }
-  // Wait for auth to be ready before polling
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    firebase.auth().onAuthStateChanged(u => {
-      if (u) handlePremiumSuccess();
-    });
-  }
+  // Expose so it can be triggered from the main auth listener after Firebase initializes
+  window._handlePremiumSuccess = handlePremiumSuccess;
 
   window._initAdminPanel = initAdminPanel;
 
@@ -21514,6 +21510,7 @@ window.fmtHeight = fmtHeight;
     if (typeof window._checkFounderStatus === 'function') setTimeout(window._checkFounderStatus, 300);
     if (typeof window._loadGiftedPremium === 'function') setTimeout(window._loadGiftedPremium, 250);
     if (typeof window._loadStripePremium === 'function') setTimeout(window._loadStripePremium, 275);
+    if (typeof window._handlePremiumSuccess === 'function') setTimeout(window._handlePremiumSuccess, 300);
     if (typeof window._initAdminPanel === 'function') setTimeout(window._initAdminPanel, 350);
     if (typeof window._loadGameDataFromCloud === 'function') setTimeout(window._loadGameDataFromCloud, 400);
   };

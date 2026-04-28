@@ -3131,12 +3131,22 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent)">UNDERDOG PORTFOLIO</div>
 <span style="font-size:.55rem;padding:2px 6px;border-radius:3px;background:var(--accent);color:#000;font-weight:700;letter-spacing:.5px">NEW</span>
 </div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Upload your Underdog best ball CSV to analyze your full portfolio</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Upload your Underdog best ball CSV to analyze your full portfolio. Upload pre-NFL-draft and NFL season CSVs separately — they'll merge into one portfolio.</div>
 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-<label for="mtUnderdogCSV" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</label>
+<button type="button" onclick="window._udPromptPhaseAndUpload()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</button>
 <input type="file" id="mtUnderdogCSV" accept=".csv" onchange="window._mtParseUnderdogCSV(this)" style="display:none">
 <button onclick="window._udClearPortfolio()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;color:var(--text2);cursor:pointer;white-space:nowrap">CLEAR</button>
 <span id="mtUnderdogStatus" style="font-size:.7rem;color:var(--text2)">Export from Underdog → My Drafts → Download CSV</span>
+</div>
+<!-- Phase picker (shown when UPLOAD CSV is clicked) -->
+<div id="mtUnderdogPhasePicker" style="display:none;margin-top:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;color:var(--text);margin-bottom:8px">WHICH CONTESTS ARE IN THIS CSV?</div>
+<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Underdog separates exports between pre-NFL-draft and NFL season contests. Pick the phase, then choose your file.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button type="button" onclick="window._udPickPhase('pre')" style="flex:1;min-width:140px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">PRE-NFL DRAFT</button>
+<button type="button" onclick="window._udPickPhase('nfl')" style="flex:1;min-width:140px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">NFL SEASON</button>
+<button type="button" onclick="document.getElementById('mtUnderdogPhasePicker').style.display='none'" style="padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;color:var(--text2);cursor:pointer">CANCEL</button>
+</div>
 </div>
 </div>
 
@@ -38406,28 +38416,105 @@ Rules:
   // UNDERDOG PORTFOLIO ANALYZER
   // ═══════════════════════════════════════════════════════════
 
+  // Phase picker: open picker UI, then trigger file input after phase chosen
+  window._udPromptPhaseAndUpload = function() {
+    const picker = document.getElementById('mtUnderdogPhasePicker');
+    if (picker) picker.style.display = '';
+  };
+
+  window._udPickPhase = function(phase) {
+    window._udSelectedPhase = (phase === 'nfl') ? 'nfl' : 'pre';
+    const picker = document.getElementById('mtUnderdogPhasePicker');
+    if (picker) picker.style.display = 'none';
+    const inp = document.getElementById('mtUnderdogCSV');
+    if (inp) {
+      inp.value = ''; // reset so re-uploading the same file still fires onchange
+      inp.click();
+    }
+  };
+
+  // Friendly label for a phase value
+  function _udPhaseLabel(phase) {
+    if (phase === 'nfl') return 'NFL Season';
+    if (phase === 'pre') return 'Pre-NFL Draft';
+    return 'Unknown';
+  }
+
+  // Recompute per-player aggregates from a drafts dict
+  function _udRebuildPlayers(drafts) {
+    const players = {};
+    let totalPicks = 0;
+    Object.values(drafts).forEach(d => {
+      d.picks.forEach(p => {
+        totalPicks++;
+        if (!players[p.name]) {
+          players[p.name] = { pos: p.pos, team: p.team, draftIds: new Set(), picks: [] };
+        }
+        players[p.name].draftIds.add(d.id);
+        players[p.name].picks.push(p.pick);
+        if (p.team && !players[p.name].team) players[p.name].team = p.team;
+      });
+    });
+    const numDrafts = Object.keys(drafts).length;
+    Object.values(players).forEach(p => {
+      p.exposure = numDrafts > 0 ? p.draftIds.size / numDrafts : 0;
+      p.avgPick = p.picks.length ? p.picks.reduce((s, v) => s + v, 0) / p.picks.length : 0;
+      p.minPick = p.picks.length ? Math.min(...p.picks) : 0;
+      p.maxPick = p.picks.length ? Math.max(...p.picks) : 0;
+      p.count = p.draftIds.size;
+    });
+    const totalInvestment = Object.values(drafts).reduce((s, d) => s + (d.fee || 0), 0);
+    return { drafts, players, numDrafts, totalInvestment, totalPicks };
+  }
+
   window._mtParseUnderdogCSV = function(input) {
     const file = input.files[0];
     if (!file) return;
     const status = document.getElementById('mtUnderdogStatus');
-    status.textContent = 'Reading CSV...';
+    const phase = (window._udSelectedPhase === 'nfl') ? 'nfl' : 'pre';
+    status.textContent = 'Reading ' + _udPhaseLabel(phase) + ' CSV...';
     status.style.color = '';
 
     const reader = new FileReader();
     reader.onload = function(e) {
       try {
         const text = e.target.result;
-        const parsed = _udParseCSV(text);
+        const parsed = _udParseCSV(text, phase);
         if (!parsed.drafts || Object.keys(parsed.drafts).length === 0) {
           status.textContent = 'No draft data found in CSV. Make sure this is an Underdog export.';
           status.style.color = '#ef4444';
           return;
         }
-        window._udPortfolio = parsed;
-        status.textContent = `Loaded ${Object.keys(parsed.drafts).length} drafts, ${parsed.totalPicks} picks, ${Object.keys(parsed.players).length} unique players`;
+
+        // MERGE with existing portfolio (dedupe by draft ID — newer upload wins)
+        let merged;
+        const existing = window._udPortfolio;
+        let addedCount = 0;
+        let replacedCount = 0;
+        if (existing && existing.drafts && Object.keys(existing.drafts).length) {
+          const draftsCombined = Object.assign({}, existing.drafts);
+          Object.values(parsed.drafts).forEach(d => {
+            if (draftsCombined[d.id]) replacedCount++; else addedCount++;
+            draftsCombined[d.id] = d; // newer upload overwrites
+          });
+          merged = _udRebuildPlayers(draftsCombined);
+        } else {
+          merged = parsed;
+          addedCount = Object.keys(parsed.drafts).length;
+        }
+
+        window._udPortfolio = merged;
+        const phaseCounts = {};
+        Object.values(merged.drafts).forEach(d => {
+          const ph = d.phase || 'unknown';
+          phaseCounts[ph] = (phaseCounts[ph] || 0) + 1;
+        });
+        const phaseSummary = Object.entries(phaseCounts).map(([p,c]) => c + ' ' + _udPhaseLabel(p)).join(', ');
+        const addedMsg = addedCount + ' new' + (replacedCount ? ', ' + replacedCount + ' updated' : '');
+        status.textContent = `Imported ${Object.keys(parsed.drafts).length} ${_udPhaseLabel(phase)} drafts (${addedMsg}). Portfolio: ${merged.numDrafts} drafts (${phaseSummary}), ${Object.keys(merged.players).length} unique players.`;
         status.style.color = '#22c55e';
-        _udRenderDashboard(parsed);
-        _udSaveToCloud(parsed);
+        _udRenderDashboard(merged);
+        _udSaveToCloud(merged);
       } catch(err) {
         status.textContent = 'Error parsing CSV: ' + err.message;
         status.style.color = '#ef4444';
@@ -38445,6 +38532,7 @@ Rules:
     // Serialize drafts — convert picks arrays, strip Sets from players
     const draftsArr = Object.values(parsed.drafts).map(d => ({
       id: d.id, tournament: d.tournament, fee: d.fee, size: d.size, date: d.date || '',
+      phase: d.phase || 'pre',
       picks: d.picks.map(p => ({ name: p.name, pos: p.pos, team: p.team, pick: p.pick }))
     }));
 
@@ -38478,7 +38566,7 @@ Rules:
       let totalPicks = 0;
 
       cloud.drafts.forEach(d => {
-        drafts[d.id] = { id: d.id, tournament: d.tournament, fee: d.fee || 0, size: d.size || 12, date: d.date || '', picks: d.picks || [] };
+        drafts[d.id] = { id: d.id, tournament: d.tournament, fee: d.fee || 0, size: d.size || 12, date: d.date || '', phase: d.phase || 'pre', picks: d.picks || [] };
         drafts[d.id].picks.sort((a, b) => a.pick - b.pick);
         d.picks.forEach(p => {
           totalPicks++;
@@ -38526,6 +38614,9 @@ Rules:
     db.collection('user_game_data').doc(user.uid).set({ underdogPortfolio: null }, { merge: true })
       .then(() => {
         window._udPortfolio = null;
+        window._udPhaseFilter = null;
+        window._udContestFilter = null;
+        window._udSelectedPhase = null;
         document.getElementById('mtUnderdogDashboard').style.display = 'none';
         document.getElementById('mtUnderdogDashboard').innerHTML = '';
         const status = document.getElementById('mtUnderdogStatus');
@@ -38549,7 +38640,8 @@ Rules:
     } catch(e) {}
   }
 
-  function _udParseCSV(text) {
+  function _udParseCSV(text, phase) {
+    phase = (phase === 'nfl') ? 'nfl' : 'pre';
     const lines = text.split('\n');
     if (lines.length < 2) throw new Error('Empty CSV');
     const headers = _udSplitCSVLine(lines[0]);
@@ -38587,7 +38679,7 @@ Rules:
       const pickedAt = (cols[colIdx['Picked At']] || '').trim();
 
       if (!drafts[draftId]) {
-        drafts[draftId] = { id: draftId, tournament, fee, size: draftSize, picks: [], date: pickedAt };
+        drafts[draftId] = { id: draftId, tournament, fee, size: draftSize, picks: [], date: pickedAt, phase: phase };
       }
       drafts[draftId].picks.push({ name, pos, team, pick: pickNum });
       totalPicks++;
@@ -38695,6 +38787,61 @@ Rules:
     return { total, players, posScores };
   }
 
+  // === Phase filter (single-select: 'pre' | 'nfl' | null=all) ===
+  function _udApplyPhaseFilter(data) {
+    const ph = window._udPhaseFilter;
+    if (!ph) return data;
+    const drafts = {};
+    Object.entries(data.drafts).forEach(([id, d]) => {
+      if ((d.phase || 'pre') === ph) drafts[id] = d;
+    });
+    return _udRebuildPlayers(drafts);
+  }
+
+  window._udSetPhaseFilter = function(phase) {
+    // Toggle off if clicking active chip
+    if (window._udPhaseFilter === phase) phase = null;
+    window._udPhaseFilter = phase;
+    // Reset contest filter when phase changes (different chip set)
+    window._udContestFilter = null;
+    if (window._udPortfolio) _udRenderDashboard(window._udPortfolio);
+  };
+
+  function _udRenderPhaseFilter(originalData) {
+    const phaseCounts = { pre: 0, nfl: 0 };
+    Object.values(originalData.drafts).forEach(d => {
+      const ph = (d.phase === 'nfl') ? 'nfl' : 'pre';
+      phaseCounts[ph]++;
+    });
+    // No point showing the row if everything is one phase and nothing else has been uploaded
+    if (phaseCounts.pre === 0 || phaseCounts.nfl === 0) {
+      // Single-phase portfolios still get a small label so the user knows which phase they're viewing
+      const onlyPhase = phaseCounts.nfl > 0 ? 'nfl' : 'pre';
+      let h = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
+      h += '<span style="font-family:Bebas Neue,sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--accent)">PHASE</span>';
+      h += '<span style="padding:4px 10px;font-family:Bebas Neue,sans-serif;font-size:.7rem;letter-spacing:1px;border:1px solid var(--accent);background:var(--accent);color:#000;border-radius:4px">' + (onlyPhase === 'nfl' ? 'NFL SEASON' : 'PRE-NFL DRAFT') + ' <span style="opacity:.7;font-size:.6rem">' + phaseCounts[onlyPhase] + '</span></span>';
+      h += '<span style="font-size:.6rem;color:var(--text2);font-style:italic">Upload your other phase CSV to compare both.</span>';
+      h += '</div>';
+      return h;
+    }
+    const sel = window._udPhaseFilter; // null = all
+    const chip = (label, val, count) => {
+      const active = (val === null) ? !sel : (sel === val);
+      return '<button onclick="window._udSetPhaseFilter(' + (val === null ? 'null' : "'" + val + "'") + ')" style="padding:5px 12px;font-family:Bebas Neue,sans-serif;font-size:.72rem;letter-spacing:1px;cursor:pointer;border:1px solid ' + (active ? 'var(--accent)' : 'var(--border)') + ';background:' + (active ? 'var(--accent)' : 'var(--surface2)') + ';color:' + (active ? '#000' : 'var(--text2)') + ';border-radius:4px;display:inline-flex;align-items:center;gap:6px">' + (active ? '✓ ' : '') + label + (count !== null ? ' <span style="opacity:.7;font-size:.6rem">' + count + '</span>' : '') + '</button>';
+    };
+    let html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px">';
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">';
+    html += '<span style="font-family:Bebas Neue,sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--accent)">PHASE</span>';
+    html += '<span style="font-size:.65rem;color:var(--text2)">filter drafts by contest phase</span>';
+    html += '</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    html += chip('ALL', null, phaseCounts.pre + phaseCounts.nfl);
+    html += chip('PRE-NFL DRAFT', 'pre', phaseCounts.pre);
+    html += chip('NFL SEASON', 'nfl', phaseCounts.nfl);
+    html += '</div></div>';
+    return html;
+  }
+
   // === Contest filter (multi-select toggle) ===
   // window._udContestFilter is a Set of selected tournament names. null = all selected.
   function _udApplyContestFilter(data) {
@@ -38730,7 +38877,12 @@ Rules:
 
   window._udToggleContest = function(name) {
     if (!window._udPortfolio) return;
-    const allContests = Array.from(new Set(Object.values(window._udPortfolio.drafts).map(d => d.tournament || 'Unknown')));
+    // Restrict chip set to drafts in the active phase (matches what user sees)
+    const ph = window._udPhaseFilter;
+    const visibleDrafts = ph
+      ? Object.values(window._udPortfolio.drafts).filter(d => (d.phase || 'pre') === ph)
+      : Object.values(window._udPortfolio.drafts);
+    const allContests = Array.from(new Set(visibleDrafts.map(d => d.tournament || 'Unknown')));
     if (!window._udContestFilter) window._udContestFilter = new Set(allContests);
     if (window._udContestFilter.has(name)) {
       // Don't allow deselecting the last one
@@ -38789,8 +38941,9 @@ Rules:
     const dash = document.getElementById('mtUnderdogDashboard');
     dash.style.display = '';
 
-    // Apply contest filter (returns subset of data; or original if no filter)
-    const data = _udApplyContestFilter(originalData);
+    // Apply phase filter first, then contest filter (composes nicely)
+    const phaseFiltered = _udApplyPhaseFilter(originalData);
+    const data = _udApplyContestFilter(phaseFiltered);
     const numDrafts = data.numDrafts;
     const playerList = Object.entries(data.players).sort((a, b) => b[1].exposure - a[1].exposure);
 
@@ -38852,8 +39005,12 @@ Rules:
 
     let html = '';
 
+    // ── PHASE FILTER ──
+    html += _udRenderPhaseFilter(originalData);
+
     // ── CONTEST FILTER ──
-    html += _udRenderContestFilter(originalData, data);
+    // Pass phaseFiltered as the "original" so contest chips reflect the active phase
+    html += _udRenderContestFilter(phaseFiltered, data);
 
     // ── SUMMARY CARDS ──
     html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px">`;

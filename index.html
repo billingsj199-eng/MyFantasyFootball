@@ -4012,6 +4012,68 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/mike_clay_projections.js?v=2026-04-25b"></script>
 <script src="data/injury_history.js"></script>
 <script>
+// === Clay projection lookup (suffix-tolerant + nickname-aware) ===
+// d.js names and Clay names sometimes differ on suffix (Jr./III), punctuation,
+// capitalization, or nickname (Kenneth/Ken, Cameron/Cam, Chigoziem/Chig).
+// Use clayLookup(name) instead of MIKE_CLAY_PROJ[name] anywhere we resolve a
+// player to a projection. Falls through these matchers in order:
+//   1. exact key
+//   2. suffix-stripped + common-suffix probe
+//   3. fully-normalized key (lowercase, no punct, no suffix, no middle initial)
+//   4. explicit alias map for nickname pairs
+var _CLAY_NORM_MAP = null;
+function _clayNorm(n) {
+  if (!n) return '';
+  return String(n).toLowerCase()
+    .replace(/\s+(jr\.?|sr\.?|iii|ii|iv|v)$/i, '')
+    .replace(/\s+[a-z]\.\s+/g, ' ')   // strip middle initial (e.g. "Kyle T. Williams")
+    .replace(/[.\-'’`,]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+// Aliases: d.js side ↔ Clay side. Both directions populated below.
+var _CLAY_ALIASES = {
+  'kenneth walker': 'ken walker',
+  'cameron ward': 'cam ward',
+  'chigoziem okonkwo': 'chig okonkwo',
+  'demario douglas': 'demario douglas', // norm equal but listed for clarity
+};
+function _buildClayNormMap() {
+  _CLAY_NORM_MAP = {};
+  if (typeof MIKE_CLAY_PROJ === 'undefined') return;
+  Object.keys(MIKE_CLAY_PROJ).forEach(function(k) {
+    var nk = _clayNorm(k);
+    if (nk && !_CLAY_NORM_MAP[nk]) _CLAY_NORM_MAP[nk] = MIKE_CLAY_PROJ[k];
+  });
+  // Fold aliases both ways
+  Object.keys(_CLAY_ALIASES).forEach(function(a) {
+    var b = _CLAY_ALIASES[a];
+    if (_CLAY_NORM_MAP[b] && !_CLAY_NORM_MAP[a]) _CLAY_NORM_MAP[a] = _CLAY_NORM_MAP[b];
+    if (_CLAY_NORM_MAP[a] && !_CLAY_NORM_MAP[b]) _CLAY_NORM_MAP[b] = _CLAY_NORM_MAP[a];
+  });
+}
+function clayLookup(name) {
+  if (!name || typeof MIKE_CLAY_PROJ === 'undefined') return null;
+  // 1. Exact
+  if (MIKE_CLAY_PROJ[name]) return MIKE_CLAY_PROJ[name];
+  // 2. Suffix-tolerant
+  var SUF_RE = /\s+(Jr\.?|Sr\.?|II|III|IV|V)$/;
+  var stripped = name.replace(SUF_RE, '');
+  if (stripped !== name && MIKE_CLAY_PROJ[stripped]) return MIKE_CLAY_PROJ[stripped];
+  var SUFS = [' Jr.', ' Jr', ' III', ' II', ' Sr.', ' Sr', ' IV', ' V'];
+  for (var i = 0; i < SUFS.length; i++) {
+    if (MIKE_CLAY_PROJ[stripped + SUFS[i]]) return MIKE_CLAY_PROJ[stripped + SUFS[i]];
+  }
+  // 3. Normalized + alias map
+  if (!_CLAY_NORM_MAP) _buildClayNormMap();
+  var nk = _clayNorm(name);
+  if (_CLAY_NORM_MAP[nk]) return _CLAY_NORM_MAP[nk];
+  if (_CLAY_ALIASES[nk] && _CLAY_NORM_MAP[_CLAY_ALIASES[nk]]) return _CLAY_NORM_MAP[_CLAY_ALIASES[nk]];
+  return null;
+}
+window.clayLookup = clayLookup;
+</script>
+<script>
 // Fix combine data errors from external file
 if (typeof COMBINE_DATA !== 'undefined') {
   // Name-audit cleanup: post-rename, the son's record ("Marvin Harrison Jr.") inherited
@@ -7035,14 +7097,23 @@ function adj25ppg(d) {
 
 function adjProjPpg(d) {
   if (d.s === 'K' || d.s === 'DST') return null;
-  if (typeof MIKE_CLAY_PROJ === 'undefined') return null;
-  const cp = MIKE_CLAY_PROJ[d.n];
-  if (!cp) return null;
-  // Clay pts = full PPR. To adjust: half = pts - 0.5*rec, std = pts - 1.0*rec
-  const recs = cp.rec || 0;
-  const adj = rankingScoringFmt === 'ppr' ? 0 : rankingScoringFmt === 'std' ? -1.0 : -0.5;
-  const result = Math.round(((cp.pts + recs * adj) / cp.gm) * 10) / 10;
-  return isFinite(result) ? result : null;
+  if (typeof MIKE_CLAY_PROJ !== 'undefined') {
+    const cp = clayLookup(d.n);
+    if (cp) {
+      // Clay pts = full PPR. To adjust: half = pts - 0.5*rec, std = pts - 1.0*rec
+      const recs = cp.rec || 0;
+      const adj = rankingScoringFmt === 'ppr' ? 0 : rankingScoringFmt === 'std' ? -1.0 : -0.5;
+      const result = Math.round(((cp.pts + recs * adj) / cp.gm) * 10) / 10;
+      if (isFinite(result)) return result;
+    }
+  }
+  // Fallback for veterans (career.length > 0): use the JS Model PPG that's already
+  // computed and attached to D entries. Pure rookies (career: []) intentionally
+  // stay null so the UI shows blank for them.
+  if (d.career && d.career.length > 0 && d._jsModelPpg != null && isFinite(d._jsModelPpg) && d._jsModelPpg > 0) {
+    return d._jsModelPpg;
+  }
+  return null;
 }
 
 function getFiltered() {
@@ -8458,7 +8529,7 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
       // Clay likely knows something the model doesn't (new team, injury return, role change).
       // In those cases, increase Clay's weight proportionally to the gap.
       if (typeof MIKE_CLAY_PROJ !== 'undefined') {
-        var clayProj = MIKE_CLAY_PROJ[d.n];
+        var clayProj = clayLookup(d.n);
         if (clayProj) {
           // Convert Clay PPR pts to current scoring format
           var clayRec = clayProj.rec || 0;
@@ -37861,7 +37932,7 @@ Rules:
       let ppg = 0;
       // Priority 1: Clay projections (always primary)
       if (typeof MIKE_CLAY_PROJ !== 'undefined') {
-        const cp = MIKE_CLAY_PROJ[name];
+        const cp = clayLookup(name);
         if (cp) {
           const recs = cp.rec || 0;
           const clayAdj = pprVal === 1 ? 0 : pprVal === 0 ? -1.0 : -0.5; // Clay pts = full PPR base

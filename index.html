@@ -8987,11 +8987,15 @@ window._toggleRookiePickView = function() {
 })();
 
 // Hide non-applicable ADP tabs based on mode
-// Dynasty: only Consensus + Sleeper (locked) + KTC
-// Superflex/Dynasty SF: hide Underdog (no SF ADP data yet)
 // Dynasty: only Consensus + Sleeper + KTC; Superflex: show all (Underdog locked); Redraft: show all
+// Per-mode default: dynasty/dynastysf default to Sleeper, redraft/superflex default to Consensus.
+// Default is applied when crossing the dynasty ↔ non-dynasty boundary (so picking KTC in
+// dynasty 1QB and switching to dynasty SF preserves KTC, but switching from redraft to
+// dynasty resets to Sleeper).
+let _rnkLastGroup = null;
 function updateRnkAdpForMode() {
   const isDynasty = currentMode === 'dynasty' || currentMode === 'dynastysf';
+  const groupNow = isDynasty ? 'dynasty' : 'redraft';
   document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(tab => {
     const src = tab.dataset.rnkadp;
     if (src === 'consensus') return;
@@ -9002,24 +9006,28 @@ function updateRnkAdpForMode() {
       tab.style.display = src === 'ktc' ? 'none' : '';
     }
   });
-  // Update Underdog lock state for the new mode
   updateRnkAdpLocks();
-  // Reset to consensus if current source is now hidden or locked-unavailable
-  if (isDynasty && rnkAdpSrc !== 'consensus' && rnkAdpSrc !== 'sleeper' && rnkAdpSrc !== 'ktc') {
-    rnkAdpSrc = 'consensus';
+
+  function _setRnkSrc(src) {
+    rnkAdpSrc = src;
     document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(b => b.classList.remove('active'));
-    document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="consensus"]').classList.add('active');
+    const t = document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="' + src + '"]');
+    if (t) t.classList.add('active');
   }
-  // If in non-dynasty mode and KTC is selected, reset
-  if (!isDynasty && rnkAdpSrc === 'ktc') {
-    rnkAdpSrc = 'consensus';
-    document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(b => b.classList.remove('active'));
-    document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="consensus"]').classList.add('active');
-  }
-  if (currentMode === 'superflex' && rnkAdpSrc === 'underdog') {
-    rnkAdpSrc = 'consensus';
-    document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(b => b.classList.remove('active'));
-    document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="consensus"]').classList.add('active');
+
+  if (_rnkLastGroup !== groupNow) {
+    // Crossed the dynasty boundary — apply mode default.
+    _setRnkSrc(isDynasty ? 'sleeper' : 'consensus');
+    _rnkLastGroup = groupNow;
+  } else {
+    // Same group — only repair if current source isn't valid for this mode.
+    if (isDynasty && rnkAdpSrc !== 'consensus' && rnkAdpSrc !== 'sleeper' && rnkAdpSrc !== 'ktc') {
+      _setRnkSrc('sleeper');
+    } else if (!isDynasty && rnkAdpSrc === 'ktc') {
+      _setRnkSrc('consensus');
+    } else if (currentMode === 'superflex' && rnkAdpSrc === 'underdog') {
+      _setRnkSrc('consensus');
+    }
   }
 }
 updateRnkAdpForMode();
@@ -22314,16 +22322,22 @@ window.fmtHeight = fmtHeight;
   // Dynasty: only Consensus + Sleeper (locked) + KTC
   // Superflex: show all, but Underdog is locked (coming soon - no SF data yet)
   // Redraft: show all, Underdog premium-gated
+  // Per-mode default for mock draft ADP (mirrors Rankings):
+  //   dynasty/dynastysf → sleeper
+  //   redraft/superflex → consensus
+  //   rookie            → ktc (forced)
+  // Applied when crossing the dynasty ↔ non-dynasty boundary.
+  let _mdLastGroup = null;
   function updateMdAdpForMode() {
     const isDynasty = mdMode === 'dynasty' || mdMode === 'dynastysf';
     const isRookie = mdMode === 'rookie';
     const tabs = document.querySelectorAll('#mdAdpSrcTabs .md-rank-src-tab');
     if (isRookie) {
-      // Rookie mode: force KTC as ADP source, hide ADP tabs (handled by visibility fn)
       mdAdpSrc = 'ktc';
       tabs.forEach(b => b.classList.remove('active'));
       const ktcTab = document.querySelector('#mdAdpSrcTabs .md-rank-src-tab[data-mdadp="ktc"]');
       if (ktcTab) ktcTab.classList.add('active');
+      _mdLastGroup = 'rookie';
       return;
     }
     tabs.forEach(tab => {
@@ -22332,38 +22346,38 @@ window.fmtHeight = fmtHeight;
       if (isDynasty) {
         tab.style.display = (src === 'sleeper' || src === 'ktc') ? '' : 'none';
       } else {
-        // In non-dynasty modes, hide KTC (it's dynasty-only)
         tab.style.display = src === 'ktc' ? 'none' : '';
       }
     });
-    // Update Underdog lock state based on mode
     const udTab = document.querySelector('#mdAdpSrcTabs .md-rank-src-tab[data-mdadp="underdog"]');
     if (udTab) {
       const icon = udTab.querySelector('.lock-icon');
       if (mdMode === 'superflex') {
-        // Superflex: always locked (coming soon)
         udTab.classList.add('locked');
         if (icon) icon.style.display = '';
       } else if (mdMode === 'redraft') {
-        // Redraft: premium-gated
         if (hasPremium()) { udTab.classList.remove('locked'); if (icon) icon.style.display = 'none'; }
         else { udTab.classList.add('locked'); if (icon) icon.style.display = ''; }
       }
     }
-    // Reset to consensus if current source is now hidden
-    const hiddenSources = [];
-    if (isDynasty) hiddenSources.push('underdog', 'espn', 'yahoo');
-    if (!isDynasty) hiddenSources.push('ktc');
-    if (hiddenSources.includes(mdAdpSrc)) {
-      mdAdpSrc = 'consensus';
+
+    function _setMdSrc(src) {
+      mdAdpSrc = src;
       tabs.forEach(b => b.classList.remove('active'));
-      document.querySelector('#mdAdpSrcTabs .md-rank-src-tab[data-mdadp="consensus"]').classList.add('active');
+      const t = document.querySelector('#mdAdpSrcTabs .md-rank-src-tab[data-mdadp="' + src + '"]');
+      if (t) t.classList.add('active');
     }
-    // If in superflex and underdog was selected, reset to consensus
-    if (mdMode === 'superflex' && mdAdpSrc === 'underdog') {
-      mdAdpSrc = 'consensus';
-      tabs.forEach(b => b.classList.remove('active'));
-      document.querySelector('#mdAdpSrcTabs .md-rank-src-tab[data-mdadp="consensus"]').classList.add('active');
+
+    const groupNow = isDynasty ? 'dynasty' : 'redraft';
+    if (_mdLastGroup !== groupNow) {
+      _setMdSrc(isDynasty ? 'sleeper' : 'consensus');
+      _mdLastGroup = groupNow;
+    } else {
+      const hiddenSources = [];
+      if (isDynasty) hiddenSources.push('underdog', 'espn', 'yahoo');
+      if (!isDynasty) hiddenSources.push('ktc');
+      if (hiddenSources.includes(mdAdpSrc)) _setMdSrc(isDynasty ? 'sleeper' : 'consensus');
+      if (mdMode === 'superflex' && mdAdpSrc === 'underdog') _setMdSrc('consensus');
     }
   }
 

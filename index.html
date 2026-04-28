@@ -6591,11 +6591,13 @@ function _computeConsensusBoard(mode) {
     if (v != null) fRank[i] = v;
   }
 
-  // Underdog ADP rank map (redraft only — we only have Underdog redraft data)
+  // Underdog ADP map (redraft only — we only have Underdog redraft data).
+  // udA is raw ADP (e.g. 1.5, 1.7) which is roughly on the same scale as positional
+  // ranks (lower = better), so it slots into the consensus average directly.
   const uRank = {};
   if (mode === 'redraft') {
     for (let i = 0; i < D.length; i++) {
-      const v = D[i].udR;
+      const v = D[i].udA;
       if (v != null) uRank[i] = v;
     }
   }
@@ -7070,17 +7072,20 @@ function rnkAdp(d) {
   }
   if (rnkAdpSrc === 'sleeper') return _sleeperRank(d);
   if (rnkAdpSrc === 'consensus') {
-    // Average all available ADP sources for the current mode
+    // Average all available ADP sources for the current mode.
+    // Redraft: prefer raw Underdog ADP (d.udA); fall back to d.a for legacy entries.
+    // Dynasty/SF/superflex: use modeAdp (d.da / d.sa / d.sfa).
     const vals = [];
-    const base = modeAdp(d); // underdog (default)
+    const base = currentMode === 'redraft'
+      ? (d.udA != null ? d.udA : modeAdp(d))
+      : modeAdp(d);
     if (base != null && base < 900) vals.push(base);
     const sl = _sleeperRank(d);
     if (sl != null) vals.push(sl);
-    // Future: add espn, yahoo ADP fields here
     if (vals.length === 0) return null;
     return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
   }
-  if (rnkAdpSrc === 'underdog') return modeAdp(d);
+  if (rnkAdpSrc === 'underdog') return d.udA != null ? d.udA : null;  // raw Underdog ADP (e.g. 1.5)
   // Future sources
   // if (rnkAdpSrc === 'espn') return d.espnAdp || null;
   // if (rnkAdpSrc === 'yahoo') return d.yahooAdp || null;

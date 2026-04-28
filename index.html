@@ -38717,11 +38717,14 @@ Rules:
       firebase.auth().onAuthStateChanged(function(user) {
         if (!user) return;
         // Hide upload/clear immediately for non-admins (they can't modify Jack's data)
+        // Show admin sync button for admins
         setTimeout(function() {
           const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
           if (!isAdminNow) {
             window._udReadOnly = true;
             _udApplyReadOnlyUI();
+          } else {
+            _udMaybeShowSyncBtn();
           }
         }, 400);
         if (window._udPortfolio) return;

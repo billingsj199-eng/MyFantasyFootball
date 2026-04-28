@@ -3136,6 +3136,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button type="button" onclick="window._udPromptPhaseAndUpload()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</button>
 <input type="file" id="mtUnderdogCSV" accept=".csv" onchange="window._mtParseUnderdogCSV(this)" style="display:none">
 <button onclick="window._udClearPortfolio()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;color:var(--text2);cursor:pointer;white-space:nowrap">CLEAR</button>
+<button id="mtUnderdogSyncBtn" onclick="window._udSyncToShared()" style="display:none;padding:8px 12px;background:var(--surface2);border:1px solid var(--accent);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;color:var(--accent);cursor:pointer;white-space:nowrap" title="Admin only: push your portfolio to the shared doc so premium members can see it">SYNC TO SHARED</button>
 <span id="mtUnderdogStatus" style="font-size:.7rem;color:var(--text2)">Export from Underdog → My Drafts → Download CSV</span>
 </div>
 <!-- Phase picker (shown when UPLOAD CSV is clicked) -->
@@ -38602,7 +38603,14 @@ Rules:
         if (!doc.exists) return;
         const cloud = doc.data().underdogPortfolio;
         const parsed = _udHydrateCloudPayload(cloud);
-        if (parsed) applyParsed(parsed, 'your account', cloud && cloud.savedAt);
+        if (parsed) {
+          applyParsed(parsed, 'your account', cloud && cloud.savedAt);
+          // Backfill the shared mirror so premium users can read it without
+          // requiring Jack to re-upload. Idempotent — safe to write each load.
+          db.collection('shared').doc('jacks_portfolio').set(cloud, { merge: false })
+            .then(() => { console.log('[Portfolio] Backfilled shared/jacks_portfolio on load'); })
+            .catch(e => { console.warn('[Portfolio] Shared backfill error:', e); });
+        }
       }).catch(e => { console.warn('[Portfolio] Load error:', e); });
     } else if (isPremNow) {
       // Premium non-Jack: read-only view of Jack's mirrored portfolio
@@ -38617,6 +38625,45 @@ Rules:
         }
       }).catch(e => { console.warn('[Portfolio] Shared load error:', e); });
     }
+  }
+
+  // Manual admin sync — push current Jack portfolio to shared/jacks_portfolio.
+  // Visible only when Jack is signed in. Useful for verifying rules/code path.
+  window._udSyncToShared = function() {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
+    const status = document.getElementById('mtUnderdogStatus');
+    if (!db || !user || !isAdminNow) {
+      if (status) { status.textContent = 'Sync only available for admin.'; status.style.color = '#ef4444'; }
+      return;
+    }
+    if (status) { status.textContent = 'Syncing to shared doc...'; status.style.color = ''; }
+    db.collection('user_game_data').doc(user.uid).get().then(doc => {
+      if (!doc.exists) throw new Error('No user_game_data doc found');
+      const cloud = (doc.data() || {}).underdogPortfolio;
+      if (!cloud || !cloud.drafts || !cloud.drafts.length) throw new Error('No portfolio to sync — upload a CSV first');
+      return db.collection('shared').doc('jacks_portfolio').set(cloud, { merge: false }).then(() => cloud);
+    }).then(cloud => {
+      if (status) {
+        status.textContent = `✓ Synced ${cloud.drafts.length} drafts to shared/jacks_portfolio. Premium members can now see your portfolio.`;
+        status.style.color = '#22c55e';
+      }
+      console.log('[Portfolio] Manual sync complete', cloud.drafts.length, 'drafts');
+    }).catch(e => {
+      if (status) {
+        status.textContent = 'Sync failed: ' + (e.message || e) + '. Check console & Firestore rules.';
+        status.style.color = '#ef4444';
+      }
+      console.error('[Portfolio] Manual sync error:', e);
+    });
+  };
+
+  // Show the SYNC button only for admin (called after auth resolves)
+  function _udMaybeShowSyncBtn() {
+    const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
+    const btn = document.getElementById('mtUnderdogSyncBtn');
+    if (btn) btn.style.display = isAdminNow ? '' : 'none';
   }
 
   // Hide Upload/Clear and show a banner when viewing Jack's read-only portfolio
@@ -38661,7 +38708,10 @@ Rules:
       .catch(e => { console.warn('[Portfolio] Clear error:', e); });
   };
 
-  // Auto-load on auth state change
+  // Auto-load on auth state change.
+  // hasPremium() reads from localStorage, which is populated async by
+  // loadStripePremium after a Firestore round-trip. We poll for up to ~10s so
+  // premium users actually get Jack's shared portfolio loaded.
   if (typeof firebase !== 'undefined' && firebase.auth) {
     try {
       firebase.auth().onAuthStateChanged(function(user) {
@@ -38674,13 +38724,53 @@ Rules:
             _udApplyReadOnlyUI();
           }
         }, 400);
-        if (!window._udPortfolio) {
-          // Small delay to let page render first
-          setTimeout(_udLoadFromCloud, 500);
-        }
+        if (window._udPortfolio) return;
+
+        let attempts = 0;
+        const maxAttempts = 20; // ~10s at 500ms each
+        const tryLoad = () => {
+          attempts++;
+          if (window._udPortfolio) return; // already loaded
+          const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
+          const isPremNow = (typeof window.hasPremium === 'function') && window.hasPremium();
+          if (isAdminNow || isPremNow) {
+            _udLoadFromCloud();
+            // One additional retry in case the doc is missing right at the moment
+            // (e.g. Jack just hasn't uploaded since rules were added)
+            return;
+          }
+          if (attempts < maxAttempts) {
+            setTimeout(tryLoad, 500);
+          }
+        };
+        setTimeout(tryLoad, 500);
       });
     } catch(e) {}
   }
+
+  // Also re-trigger when premium status changes (e.g. just activated via Stripe)
+  // We wrap the existing checkPremiumStatus so it also kicks the underdog loader.
+  (function() {
+    const installHook = () => {
+      if (typeof window.checkPremiumStatus !== 'function' || window._udPremiumHookInstalled) return;
+      const _orig = window.checkPremiumStatus;
+      window.checkPremiumStatus = function() {
+        const r = _orig.apply(this, arguments);
+        if (!window._udPortfolio) {
+          // hasPremium() may have just flipped true — try the load
+          setTimeout(_udLoadFromCloud, 100);
+        }
+        return r;
+      };
+      window._udPremiumHookInstalled = true;
+    };
+    // checkPremiumStatus may be defined later in load order — try a few times
+    let tries = 0;
+    const tick = setInterval(() => {
+      installHook();
+      if (window._udPremiumHookInstalled || ++tries > 30) clearInterval(tick);
+    }, 300);
+  })();
 
   function _udParseCSV(text, phase) {
     phase = (phase === 'nfl') ? 'nfl' : 'pre';

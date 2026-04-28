@@ -38547,60 +38547,93 @@ Rules:
     db.collection('user_game_data').doc(user.uid).set({ underdogPortfolio: payload }, { merge: true })
       .then(() => { console.log('[Portfolio] Saved to cloud'); })
       .catch(e => { console.warn('[Portfolio] Save error:', e); });
+
+    // Mirror to shared doc so premium members can view Jack's portfolio.
+    // Only Jack (admin) writes this. NOTE: Firestore rules must allow read on
+    // 'shared/jacks_portfolio' for premium members (or all authed users).
+    const _isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
+    if (_isAdminNow) {
+      db.collection('shared').doc('jacks_portfolio').set(payload, { merge: false })
+        .then(() => { console.log('[Portfolio] Mirrored to shared/jacks_portfolio'); })
+        .catch(e => { console.warn('[Portfolio] Shared mirror error:', e); });
+    }
   }
 
-  // Load portfolio from Firestore on page load
+  // Convert a serialized cloud payload back into the live parsed shape
+  function _udHydrateCloudPayload(cloud) {
+    if (!cloud || !cloud.drafts || !cloud.drafts.length) return null;
+    const drafts = {};
+    cloud.drafts.forEach(d => {
+      drafts[d.id] = { id: d.id, tournament: d.tournament, fee: d.fee || 0, size: d.size || 12, date: d.date || '', phase: d.phase || 'pre', picks: d.picks || [] };
+      drafts[d.id].picks.sort((a, b) => a.pick - b.pick);
+    });
+    const parsed = _udRebuildPlayers(drafts);
+    parsed.totalInvestment = cloud.totalInvestment != null ? cloud.totalInvestment : parsed.totalInvestment;
+    return parsed;
+  }
+
+  // Load portfolio from Firestore on page load.
+  // - Admin (Jack): reads his own from user_game_data/<uid>
+  // - Premium non-admin: reads Jack's mirrored portfolio from shared/jacks_portfolio
+  // - Everyone else: nothing
   function _udLoadFromCloud() {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
 
-    db.collection('user_game_data').doc(user.uid).get().then(doc => {
-      if (!doc.exists) return;
-      const cloud = doc.data().underdogPortfolio;
-      if (!cloud || !cloud.drafts || !cloud.drafts.length) return;
+    const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
+    const isPremNow = (typeof window.hasPremium === 'function') && window.hasPremium();
 
-      // Rebuild parsed format from cloud data
-      const drafts = {};
-      const players = {};
-      let totalPicks = 0;
-
-      cloud.drafts.forEach(d => {
-        drafts[d.id] = { id: d.id, tournament: d.tournament, fee: d.fee || 0, size: d.size || 12, date: d.date || '', phase: d.phase || 'pre', picks: d.picks || [] };
-        drafts[d.id].picks.sort((a, b) => a.pick - b.pick);
-        d.picks.forEach(p => {
-          totalPicks++;
-          if (!players[p.name]) {
-            players[p.name] = { pos: p.pos, team: p.team, draftIds: new Set(), picks: [] };
-          }
-          players[p.name].draftIds.add(d.id);
-          players[p.name].picks.push(p.pick);
-          if (p.team && !players[p.name].team) players[p.name].team = p.team;
-        });
-      });
-
-      const numDrafts = Object.keys(drafts).length;
-      Object.values(players).forEach(p => {
-        p.exposure = p.draftIds.size / numDrafts;
-        p.avgPick = p.picks.reduce((s, v) => s + v, 0) / p.picks.length;
-        p.minPick = Math.min(...p.picks);
-        p.maxPick = Math.max(...p.picks);
-        p.count = p.draftIds.size;
-      });
-
-      const parsed = {
-        drafts, players, totalPicks, numDrafts,
-        totalInvestment: cloud.totalInvestment || Object.values(drafts).reduce((s, d) => s + (d.fee || 0), 0)
-      };
-
+    function applyParsed(parsed, srcLabel, savedAt) {
       window._udPortfolio = parsed;
       const status = document.getElementById('mtUnderdogStatus');
       if (status) {
-        status.textContent = `Loaded ${numDrafts} drafts from your account (saved ${new Date(cloud.savedAt).toLocaleDateString()})`;
+        const when = savedAt ? ` (saved ${new Date(savedAt).toLocaleDateString()})` : '';
+        status.textContent = `Loaded ${parsed.numDrafts} drafts from ${srcLabel}${when}`;
         status.style.color = '#22c55e';
       }
       _udRenderDashboard(parsed);
-    }).catch(e => { console.warn('[Portfolio] Load error:', e); });
+      if (typeof window._renderJacksTeams === 'function') window._renderJacksTeams();
+    }
+
+    if (isAdminNow) {
+      // Jack: his own portfolio
+      db.collection('user_game_data').doc(user.uid).get().then(doc => {
+        if (!doc.exists) return;
+        const cloud = doc.data().underdogPortfolio;
+        const parsed = _udHydrateCloudPayload(cloud);
+        if (parsed) applyParsed(parsed, 'your account', cloud && cloud.savedAt);
+      }).catch(e => { console.warn('[Portfolio] Load error:', e); });
+    } else if (isPremNow) {
+      // Premium non-Jack: read-only view of Jack's mirrored portfolio
+      db.collection('shared').doc('jacks_portfolio').get().then(doc => {
+        if (!doc.exists) return;
+        const cloud = doc.data();
+        const parsed = _udHydrateCloudPayload(cloud);
+        if (parsed) {
+          window._udReadOnly = true;
+          _udApplyReadOnlyUI();
+          applyParsed(parsed, "Jack's portfolio", cloud && cloud.savedAt);
+        }
+      }).catch(e => { console.warn('[Portfolio] Shared load error:', e); });
+    }
+  }
+
+  // Hide Upload/Clear and show a banner when viewing Jack's read-only portfolio
+  function _udApplyReadOnlyUI() {
+    if (!window._udReadOnly) return;
+    // Hide upload button and phase picker
+    const uploadBtn = document.querySelector('#mtSectionUnderdog button[onclick*="_udPromptPhaseAndUpload"]');
+    if (uploadBtn) uploadBtn.style.display = 'none';
+    const clearBtn = document.querySelector('#mtSectionUnderdog button[onclick*="_udClearPortfolio"]');
+    if (clearBtn) clearBtn.style.display = 'none';
+    const picker = document.getElementById('mtUnderdogPhasePicker');
+    if (picker) picker.style.display = 'none';
+    const status = document.getElementById('mtUnderdogStatus');
+    if (status) {
+      status.textContent = "Viewing Jack's portfolio — premium members get a read-only view of Jack's drafts.";
+      status.style.color = 'var(--accent)';
+    }
   }
 
   // Clear saved portfolio
@@ -38632,7 +38665,16 @@ Rules:
   if (typeof firebase !== 'undefined' && firebase.auth) {
     try {
       firebase.auth().onAuthStateChanged(function(user) {
-        if (user && !window._udPortfolio) {
+        if (!user) return;
+        // Hide upload/clear immediately for non-admins (they can't modify Jack's data)
+        setTimeout(function() {
+          const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
+          if (!isAdminNow) {
+            window._udReadOnly = true;
+            _udApplyReadOnlyUI();
+          }
+        }, 400);
+        if (!window._udPortfolio) {
           // Small delay to let page render first
           setTimeout(_udLoadFromCloud, 500);
         }

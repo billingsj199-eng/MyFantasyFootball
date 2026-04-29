@@ -4958,9 +4958,14 @@ if (typeof COMBINE_DATA !== 'undefined') {
 
   // Sync 2025 draft/UDFA teams from COMBINE_DATA.dt back to D[].t
   // d.js may have pre-draft teams (e.g., Gadsden as MIA instead of LAC)
-  // NOTE: cb.dt stores ABBREVIATIONS (e.g., "TEN") but D[].t stores FULL NAMES
-  // (e.g., "Tennessee Titans"). Convert before assigning so the rankings UI
-  // doesn't display abbreviations for 2025 rookies.
+  // NOTE: cb.dt stores ABBREVIATIONS but the codes are not consistent — most
+  // entries use 2-letter codes (TEN, BAL, ATL) while some recent imports use
+  // 3-letter codes (TAM, GNB, KAN, LVR, NWE, NOR, SFO). D[].t stores FULL
+  // NAMES (e.g., "Tennessee Titans"). We first normalize the 3-letter codes
+  // to their 2-letter equivalents, then look up the full team name. Without
+  // the normalization step, a player like Emeka Egbuka (cb.dt="TAM") would
+  // miss the lookup and have d.t corrupted to the bare abbreviation.
+  var _SD25_3TO2 = {GNB:'GB',KAN:'KC',LVR:'LV',NWE:'NE',NOR:'NO',SFO:'SF',TAM:'TB'};
   var _SD25_ABBR_TO_FULL = {
     'ARI':'Arizona Cardinals','ATL':'Atlanta Falcons','BAL':'Baltimore Ravens','BUF':'Buffalo Bills',
     'CAR':'Carolina Panthers','CHI':'Chicago Bears','CIN':'Cincinnati Bengals','CLE':'Cleveland Browns',
@@ -4974,8 +4979,13 @@ if (typeof COMBINE_DATA !== 'undefined') {
   D.forEach(function(d) {
     var cb = COMBINE_DATA[d.n];
     if (cb && cb.yr === 2025 && cb.dt) {
-      var fullTeam = _SD25_ABBR_TO_FULL[cb.dt] || cb.dt;
-      if (fullTeam !== d.t) d.t = fullTeam;
+      // Normalize 3-letter combine-data codes to standard 2-letter codes first
+      var abbr = _SD25_3TO2[cb.dt] || cb.dt;
+      var fullTeam = _SD25_ABBR_TO_FULL[abbr];
+      // Only overwrite d.t if we got a real full name. If lookup misses
+      // (unusual abbreviation), keep d.t as-is rather than corrupting it
+      // with the raw abbreviation.
+      if (fullTeam && fullTeam !== d.t) d.t = fullTeam;
     }
   });
 

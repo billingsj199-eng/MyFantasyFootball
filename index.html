@@ -2174,10 +2174,12 @@ CLEAR
 </div>
 <div class="mode-tabs">
 <button class="mode-tab active" data-mode="redraft">REDRAFT</button>
+<button class="mode-tab" data-mode="bestball">BEST BALL</button>
 <button class="mode-tab" data-mode="superflex">SUPERFLEX</button>
 <button class="mode-tab" data-mode="dynasty">DYNASTY 1QB</button>
 <button class="mode-tab" data-mode="dynastysf">DYNASTY SF</button>
 </div>
+<button id="copyFromRedraftBtn" onclick="window._copyRedraftToBestBall()" style="display:none;margin-left:4px;padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Replace your Best Ball board and tiers with an exact copy of your Redraft rankings.">⇩ COPY FROM REDRAFT</button>
 <div class="sync-toggle-wrap" id="syncToggleWrap" style="display:flex;align-items:center;gap:5px;margin-left:4px;position:relative">
 <div class="pm-toggle" id="syncToggle" onclick="window._togglePosSync()" title="When ON, positional rankings (RB1, RB2, etc.) stay synced between 1QB ↔ SF pairs. Only the overall interleaving changes."></div>
 <span style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.55rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced between paired modes:<br><br>• <b>Redraft ↔ Superflex</b><br>• <b>Dynasty 1QB ↔ Dynasty SF</b><br><br>Only the <em>overall</em> interleaving changes between formats (QBs rank higher in SF). Your within-position order and tiers stay identical across both.<br><br>Move any player or add/remove a tier in one mode and the paired mode updates instantly. Toggle ON to also do an initial sync from your current mode right now.</div></span></span>
@@ -2213,6 +2215,7 @@ CLEAR
 <div class="md-rank-src-tabs" id="rnkAdpSrcTabs" style="border:none;background:rgba(255,255,255,.04);padding:1px">
 <button class="md-rank-src-tab active" data-rnkadp="consensus" style="font-size:.65rem;padding:3px 10px">CONSENSUS</button>
 <button class="md-rank-src-tab locked" data-rnkadp="underdog" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
+<button class="md-rank-src-tab locked" data-rnkadp="dk" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>DK</button>
 <button class="md-rank-src-tab locked" data-rnkadp="espn" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
 <button class="md-rank-src-tab" data-rnkadp="sleeper" style="font-size:.65rem;padding:3px 10px">SLEEPER</button>
 <button class="md-rank-src-tab" data-rnkadp="ktc" style="font-size:.65rem;padding:3px 10px">KTC</button>
@@ -5878,7 +5881,7 @@ function sanitizePlayerName(name) {
 }
 function validateImportData(obj) {
   if (!obj || typeof obj !== 'object') return false;
-  const validModes = ['redraft', 'superflex', 'dynasty', 'dynastysf'];
+  const validModes = ['redraft', 'bestball', 'superflex', 'dynasty', 'dynastysf'];
   const validVersions = ['jacks', 'mine'];
   for (const ver of validVersions) {
     if (obj[ver]) {
@@ -6536,36 +6539,41 @@ dynastyDefaultBoard.splice(0, dynastyDefaultBoard.length, ...sortKickersInBoard(
 sfDefaultBoard.splice(0, sfDefaultBoard.length, ...sortKickersInBoard(sfDefaultBoard));
 superflexDefaultBoard.splice(0, superflexDefaultBoard.length, ...sortKickersInBoard(superflexDefaultBoard));
 
-// Quad mode: redraft + superflex + dynasty + dynastysf, each with independent board & tiers
+// Best Ball default board: same shape as redraft, but K and D/ST stripped out
+// (Underdog Best Ball drafts don't include kickers or defenses).
+const bestBallDefaultBoard = defaultBoard.filter(i => D[i].s !== 'K' && D[i].s !== 'DST');
+
+// Modes: redraft + bestball + superflex + dynasty + dynastysf, each with independent board & tiers
 let currentMode = 'redraft';
 
 // === VERSION SYSTEM: "consensus", "jacks", "jsmodel", "mine", each with independent boards/tiers per mode ===
 let currentVersion = 'consensus';
 const versionBoards = {
-  consensus: { redraft: defaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() },
-  jacks: { redraft: defaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() },
-  jsmodel: { redraft: defaultBoard.slice(), superflex: defaultBoard.slice(), dynasty: defaultBoard.slice(), dynastysf: defaultBoard.slice() },
-  mine: { redraft: defaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() }
+  consensus: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() },
+  jacks: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() },
+  jsmodel: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: defaultBoard.slice(), dynasty: defaultBoard.slice(), dynastysf: defaultBoard.slice() },
+  mine: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() }
 };
 const POS_TIER_KEYS = ['ALL','QB','RB','WR','TE','K','DST','ROOKIE'];
 function _mkPosTiers() { return {ALL:[],QB:[],RB:[],WR:[],TE:[],K:[],DST:[],ROOKIE:[]}; }
 function _mkPosTierCtrs() { return {ALL:0,QB:0,RB:0,WR:0,TE:0,K:0,DST:0,ROOKIE:0}; }
 const versionTiers = {
-  consensus: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
-  jacks: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
-  jsmodel: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
-  mine: { redraft: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() }
+  consensus: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
+  jacks: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
+  jsmodel: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
+  mine: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() }
 };
 const versionTierCounters = {
-  consensus: { redraft: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
-  jacks: { redraft: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
-  jsmodel: { redraft: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
-  mine: { redraft: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() }
+  consensus: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
+  jacks: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
+  jsmodel: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
+  mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() }
 };
 
 // === CONSENSUS RANKING ENGINE ===
 // Averages ranks from: Jack's + market ADP + Sleeper + FantasyPros (all modes) + Underdog (redraft) + KTC (dynasty)
 function _computeConsensusBoard(mode) {
+  // bestball uses the same data sources as redraft (single-season, Underdog-friendly)
   const adpField = mode === 'dynastysf' ? 'sa' : mode === 'dynasty' ? 'da' : mode === 'superflex' ? 'sfa' : 'a';
   const slField = mode === 'dynastysf' ? 'slDsf' : mode === 'dynasty' ? 'slDy' : mode === 'superflex' ? 'slSf' : 'slR';
   const fpField = mode === 'dynastysf' ? 'fpDsf' : mode === 'dynasty' ? 'fpDy' : mode === 'superflex' ? 'fpSf' : 'fpR';
@@ -6602,11 +6610,12 @@ function _computeConsensusBoard(mode) {
     if (v != null) fRank[i] = v;
   }
 
-  // Underdog ADP map (redraft only — we only have Underdog redraft data).
-  // udA is raw ADP (e.g. 1.5, 1.7) which is roughly on the same scale as positional
-  // ranks (lower = better), so it slots into the consensus average directly.
+  // Underdog ADP map. Redraft/Best Ball use udA (Best Ball Mania).
+  // Superflex Underdog ADP lives in d.sfa, which is already this mode's adpField,
+  // so it's already included in the consensus average — no double-count needed here.
+  // udA/sfa are raw ADP scales (lower = better), in line with positional ranks.
   const uRank = {};
-  if (mode === 'redraft') {
+  if (mode === 'redraft' || mode === 'bestball') {
     for (let i = 0; i < D.length; i++) {
       const v = D[i].udA;
       if (v != null) uRank[i] = v;
@@ -6673,6 +6682,8 @@ function _computeConsensusBoard(mode) {
   });
 
   const nonKDST = scored.map(x => x.idx);
+  // Best Ball drafts don't include K or D/ST — return only the skill positions.
+  if (mode === 'bestball') return nonKDST;
   const kickers = [];
   const dsts = [];
   for (let i = 0; i < D.length; i++) {
@@ -6686,7 +6697,7 @@ function _computeConsensusBoard(mode) {
 
 function rebuildConsensusBoards() {
   try {
-    ['redraft','superflex','dynasty','dynastysf'].forEach(m => {
+    ['redraft','bestball','superflex','dynasty','dynastysf'].forEach(m => {
       versionBoards.consensus[m] = _computeConsensusBoard(m);
     });
     // If currently viewing consensus, re-render
@@ -6853,6 +6864,7 @@ function saveLocal() {
   ['jacks','mine'].forEach(function(ver) {
     userData[ver] = {
       redraft: { _order: boardToNames(versionBoards[ver].redraft), _posTiers: _serPT(versionTiers[ver].redraft) },
+      bestball: { _order: boardToNames(versionBoards[ver].bestball), _posTiers: _serPT(versionTiers[ver].bestball) },
       superflex: { _order: boardToNames(versionBoards[ver].superflex), _posTiers: _serPT(versionTiers[ver].superflex) },
       dynasty: { _order: boardToNames(versionBoards[ver].dynasty), _posTiers: _serPT(versionTiers[ver].dynasty) },
       dynastysf: { _order: boardToNames(versionBoards[ver].dynastysf), _posTiers: _serPT(versionTiers[ver].dynastysf) }
@@ -6864,8 +6876,13 @@ function loadModeData(mode, obj, ver) {
   _bypassEditCheck = true;
   ver = ver || currentVersion;
   if (obj._order && Array.isArray(obj._order)) {
-    const fallback = mode === 'dynastysf' ? sfDefaultBoard : mode === 'dynasty' ? dynastyDefaultBoard : mode === 'superflex' ? superflexDefaultBoard : defaultBoard;
-    versionBoards[ver][mode] = namesToBoard(obj._order, fallback);
+    const fallback = mode === 'dynastysf' ? sfDefaultBoard : mode === 'dynasty' ? dynastyDefaultBoard : mode === 'superflex' ? superflexDefaultBoard : mode === 'bestball' ? bestBallDefaultBoard : defaultBoard;
+    let loaded = namesToBoard(obj._order, fallback);
+    // Best Ball: strip any K/D/ST that snuck in from older saves or imports
+    if (mode === 'bestball') {
+      loaded = loaded.filter(idx => D[idx] && D[idx].s !== 'K' && D[idx].s !== 'DST');
+    }
+    versionBoards[ver][mode] = loaded;
   }
   const prevMode = currentMode, prevVer = currentVersion;
   currentMode = mode; currentVersion = ver;
@@ -6896,13 +6913,15 @@ function loadUserData(obj) {
     ['jacks','mine'].forEach(function(ver) {
       if (obj[ver]) {
         if (obj[ver].redraft) loadModeData('redraft', obj[ver].redraft, ver);
+        if (obj[ver].bestball) loadModeData('bestball', obj[ver].bestball, ver);
         if (obj[ver].superflex) loadModeData('superflex', obj[ver].superflex, ver);
         if (obj[ver].dynasty) loadModeData('dynasty', obj[ver].dynasty, ver);
         if (obj[ver].dynastysf) loadModeData('dynastysf', obj[ver].dynastysf, ver);
       }
     });
-  } else if (obj.redraft || obj.superflex || obj.dynasty || obj.dynastysf) {
+  } else if (obj.redraft || obj.bestball || obj.superflex || obj.dynasty || obj.dynastysf) {
     if (obj.redraft) loadModeData('redraft', obj.redraft);
+    if (obj.bestball) loadModeData('bestball', obj.bestball);
     if (obj.superflex) loadModeData('superflex', obj.superflex);
     if (obj.dynasty) loadModeData('dynasty', obj.dynasty);
     if (obj.dynastysf) loadModeData('dynastysf', obj.dynastysf);
@@ -7060,6 +7079,102 @@ function _syncPairedMode() {
   });
 }
 
+// === Copy Redraft → Best Ball ===
+// Best Ball rankings should usually mirror Redraft. This is a one-click full copy
+// of board + ALL tier buckets from the active version's redraft slot into bestball.
+window._copyRedraftToBestBall = function() {
+  if (currentMode !== 'bestball') {
+    toast('Switch to BEST BALL mode to copy from Redraft');
+    return;
+  }
+  if (!canEdit()) {
+    if (!window._authCurrentUser) {
+      toast("Sign in to create your rankings");
+      if (typeof window.openAuthModal === 'function') window.openAuthModal();
+    } else {
+      toast("Only admins can edit Jack's rankings");
+    }
+    return;
+  }
+  const verLabel = currentVersion === 'jacks' ? "Jack's" : 'My';
+  if (!confirm(`Copy ${verLabel} REDRAFT rankings → BEST BALL?\n\nThis will overwrite your current Best Ball board and tiers with an exact copy of Redraft.`)) return;
+
+  const srcBoard = versionBoards[currentVersion].redraft;
+  const srcTiers = versionTiers[currentVersion].redraft;
+  const srcCtrs = versionTierCounters[currentVersion].redraft;
+  if (!srcBoard) { toast('No Redraft board to copy from'); return; }
+
+  // Strip K and D/ST during the copy (Best Ball drafts don't include them).
+  // We rebuild ALL-tier afterRank values to match the new (shorter) board so
+  // tier breaks land on the same skill players, not on the now-removed kickers.
+  const filteredBoard = [];
+  const indexMap = {}; // old index in redraft board → new index in bestball board
+  srcBoard.forEach((idx, oldRank) => {
+    const pos = D[idx] && D[idx].s;
+    if (pos === 'K' || pos === 'DST') return;
+    indexMap[oldRank + 1] = filteredBoard.length + 1;
+    filteredBoard.push(idx);
+  });
+  versionBoards[currentVersion].bestball = filteredBoard;
+
+  // Tier copy. For ALL tiers, re-map afterRank using indexMap so breaks stay
+  // anchored to the same skill-position player. For position-specific tiers
+  // (QB/RB/WR/TE/ROOKIE) afterRank is positional rank, which is unaffected
+  // by stripping K/DST. Skip K and DST tier buckets entirely.
+  const dstTiers = versionTiers[currentVersion].bestball;
+  const dstCtrs = versionTierCounters[currentVersion].bestball;
+  POS_TIER_KEYS.forEach(pk => {
+    if (pk === 'K' || pk === 'DST') {
+      dstTiers[pk] = [];
+      dstCtrs[pk] = 0;
+      return;
+    }
+    const srcArr = srcTiers[pk] || [];
+    if (pk === 'ALL') {
+      const remapped = [];
+      srcArr.forEach(t => {
+        // Find nearest preserved rank ≤ t.afterRank in the new board
+        let newRank = null;
+        for (let r = t.afterRank; r >= 1; r--) {
+          if (indexMap[r] != null) { newRank = indexMap[r]; break; }
+        }
+        if (newRank != null) {
+          remapped.push({id: t.id, label: t.label, name: t.name, afterRank: newRank});
+        }
+      });
+      // Drop duplicates that landed on the same afterRank after remap
+      const seen = new Set();
+      dstTiers[pk] = remapped.filter(t => {
+        if (seen.has(t.afterRank)) return false;
+        seen.add(t.afterRank);
+        return true;
+      });
+    } else {
+      dstTiers[pk] = srcArr.map(t => ({id: t.id, label: t.label, name: t.name, afterRank: t.afterRank}));
+    }
+    dstCtrs[pk] = srcCtrs[pk] || 0;
+  });
+
+  syncMode();
+  renumber();
+  saveLocal();
+  // Persist to cloud if signed in
+  if (typeof window._saveToCloudDebounced === 'function') {
+    window._saveToCloudDebounced();
+  } else if (typeof saveToCloud === 'function') {
+    try { saveToCloud(); } catch(e) { /* best effort */ }
+  }
+  render();
+  toast(`${verLabel} Best Ball synced from Redraft`);
+};
+
+// Show the "Copy from Redraft" button only in Best Ball mode + when the user can edit
+window._updateCopyFromRedraftBtn = function() {
+  const btn = document.getElementById('copyFromRedraftBtn');
+  if (!btn) return;
+  btn.style.display = (currentMode === 'bestball' && canEdit()) ? '' : 'none';
+};
+
 // State
 let filter = 'ALL', sortKey = 'myrank', sortDir = 1, query = '', viewMode = 'all';
 let rankingScoringFmt = 'half';
@@ -7084,10 +7199,10 @@ function rnkAdp(d) {
   if (rnkAdpSrc === 'sleeper') return _sleeperRank(d);
   if (rnkAdpSrc === 'consensus') {
     // Average all available ADP sources for the current mode.
-    // Redraft: prefer raw Underdog ADP (d.udA); fall back to d.a for legacy entries.
+    // Redraft / Best Ball: prefer raw Underdog ADP (d.udA); fall back to d.a for legacy entries.
     // Dynasty/SF/superflex: use modeAdp (d.da / d.sa / d.sfa).
     const vals = [];
-    const base = currentMode === 'redraft'
+    const base = (currentMode === 'redraft' || currentMode === 'bestball')
       ? (d.udA != null ? d.udA : modeAdp(d))
       : modeAdp(d);
     if (base != null && base < 900) vals.push(base);
@@ -7096,7 +7211,15 @@ function rnkAdp(d) {
     if (vals.length === 0) return null;
     return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
   }
-  if (rnkAdpSrc === 'underdog') return d.udA != null ? d.udA : null;  // raw Underdog ADP (e.g. 1.5)
+  if (rnkAdpSrc === 'underdog') {
+    // Underdog ADP: redraft/bestball use d.udA (Best Ball Mania), superflex uses d.sfa (Underdog Superflex)
+    if (currentMode === 'superflex') return d.sfa != null ? d.sfa : null;
+    return d.udA != null ? d.udA : null;
+  }
+  if (rnkAdpSrc === 'dk') {
+    // DraftKings ADP — pulls from d.dk once the field is populated in d.js
+    return d.dk != null ? d.dk : null;
+  }
   // Future sources
   // if (rnkAdpSrc === 'espn') return d.espnAdp || null;
   // if (rnkAdpSrc === 'yahoo') return d.yahooAdp || null;
@@ -7205,6 +7328,8 @@ function getFiltered() {
     return true;
   });
   f = f.filter(d => {
+    // Best Ball: K and D/ST aren't drafted on Underdog — always hide them.
+    if (currentMode === 'bestball' && (d.s === 'K' || d.s === 'DST')) return false;
     if (filter === 'ROOKIE') {
       // 2026 class = no NFL career stats yet, AND either still listed as TBD/FA
       // OR explicitly tagged as yr:2026 in COMBINE_DATA (post-draft, has a real
@@ -7483,7 +7608,7 @@ function updateStats(data) {
     const _cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
     return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
   }).length;
-  const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : '🏈 REDRAFT';
+  const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL' : '🏈 REDRAFT';
   const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'jsmodel' ? '📋 JS MODEL' : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
@@ -7795,13 +7920,21 @@ document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     const src = btn.dataset.rnkadp;
     if (src === 'underdog') {
-      if (currentMode === 'superflex') {
-        rnkAdpHintText.textContent = 'Underdog Superflex ADP coming soon.';
+      if (!hasPremium()) {
+        rnkAdpHintText.innerHTML = 'Underdog ADP requires a <span class="md-premium-link" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">Premium</span> account.';
+        rnkAdpHint.classList.add('show');
+        return;
+      }
+    } else if (src === 'dk') {
+      // DK locked when no data is loaded yet, premium-gated otherwise
+      const hasDkData = Array.isArray(D) && D.some(d => d && d.dk != null);
+      if (!hasDkData) {
+        rnkAdpHintText.textContent = 'DraftKings ADP coming soon.';
         rnkAdpHint.classList.add('show');
         return;
       }
       if (!hasPremium()) {
-        rnkAdpHintText.innerHTML = 'Underdog ADP requires a <span class="md-premium-link" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">Premium</span> account.';
+        rnkAdpHintText.innerHTML = 'DraftKings ADP requires a <span class="md-premium-link" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">Premium</span> account.';
         rnkAdpHint.classList.add('show');
         return;
       }
@@ -7817,20 +7950,30 @@ document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(btn => {
     render();
   });
 });
-// Update Underdog ADP tab lock state based on mode + premium
+// Update Underdog + DK ADP tab lock state based on mode + premium + data availability
 function updateRnkAdpLocks() {
   const udTab = document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="underdog"]');
   if (udTab) {
     const icon = udTab.querySelector('.lock-icon');
-    if (currentMode === 'superflex') {
-      // Superflex: always locked (coming soon)
-      udTab.classList.add('locked');
-      if (icon) icon.style.display = '';
-    } else if (hasPremium()) {
+    if (hasPremium()) {
       udTab.classList.remove('locked');
       if (icon) icon.style.display = 'none';
     } else {
       udTab.classList.add('locked');
+      if (icon) icon.style.display = '';
+    }
+  }
+  // DK: locked until at least one player has a d.dk value. Once data is added
+  // to d.js, this will auto-unlock (still requires premium, like Underdog).
+  const dkTab = document.querySelector('#rnkAdpSrcTabs .md-rank-src-tab[data-rnkadp="dk"]');
+  if (dkTab) {
+    const icon = dkTab.querySelector('.lock-icon');
+    const hasDkData = Array.isArray(D) && D.some(d => d && d.dk != null);
+    if (hasDkData && hasPremium()) {
+      dkTab.classList.remove('locked');
+      if (icon) icon.style.display = 'none';
+    } else {
+      dkTab.classList.add('locked');
       if (icon) icon.style.display = '';
     }
   }
@@ -7859,6 +8002,7 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     updateCompareBtn();
     render();
     if (typeof updateToolbarVisibility === 'function') updateToolbarVisibility();
+    if (typeof window._updateCopyFromRedraftBtn === 'function') window._updateCopyFromRedraftBtn();
     toast(currentVersion === 'consensus' ? 'Consensus Rankings' : currentVersion === 'jacks' ? "Jack's Rankings" : currentVersion === 'jsmodel' ? 'JS Model Rankings' : 'My Rankings');
   });
 });
@@ -8756,12 +8900,13 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
     var jsBoard = _jsComputeBoard();
     // Apply to all modes
     versionBoards.jsmodel.redraft = jsBoard;
+    versionBoards.jsmodel.bestball = jsBoard;
     versionBoards.jsmodel.superflex = jsBoard;
     versionBoards.jsmodel.dynasty = jsBoard;
     versionBoards.jsmodel.dynastysf = jsBoard;
 
     // Auto-generate tiers based on VOR breakpoints
-    var modes = ['redraft','superflex','dynasty','dynastysf'];
+    var modes = ['redraft','bestball','superflex','dynasty','dynastysf'];
     modes.forEach(function(mode) {
       versionTiers.jsmodel[mode].ALL = [];
       versionTierCounters.jsmodel[mode].ALL = 0;
@@ -8957,7 +9102,9 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     updateCompareBtn();
     updateRnkAdpForMode();
     render();
-    toast(currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : 'Redraft');
+    toast(currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'Best Ball' : 'Redraft');
+    // Show/hide "Copy from Redraft" button (Best Ball only)
+    if (typeof window._updateCopyFromRedraftBtn === 'function') window._updateCopyFromRedraftBtn();
     // Show/hide rookie pick toggle
     const rpToggle = document.getElementById('rookiePickToggle');
     if (rpToggle) rpToggle.style.display = (currentMode === 'dynasty' || currentMode === 'dynastysf') ? '' : 'none';
@@ -8979,6 +9126,18 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
         document.querySelector('.pos-btn[data-pos="ALL"]').classList.add('active');
         render();
       }
+    }
+    // Show/hide K and D/ST position filters (Best Ball drafts don't include them)
+    const isBB = currentMode === 'bestball';
+    const kBtn = document.querySelector('.pos-btn[data-pos="K"]');
+    const dstBtn = document.querySelector('.pos-btn[data-pos="DST"]');
+    if (kBtn) kBtn.style.display = isBB ? 'none' : '';
+    if (dstBtn) dstBtn.style.display = isBB ? 'none' : '';
+    if (isBB && (filter === 'K' || filter === 'DST')) {
+      filter = 'ALL';
+      document.querySelectorAll('.pos-btn[data-pos]').forEach(b => b.classList.remove('active'));
+      document.querySelector('.pos-btn[data-pos="ALL"]').classList.add('active');
+      render();
     }
   });
 });
@@ -9003,22 +9162,30 @@ window._toggleRookiePickView = function() {
 })();
 
 // Hide non-applicable ADP tabs based on mode
-// Dynasty: only Consensus + Sleeper + KTC; Superflex: show all (Underdog locked); Redraft: show all
-// Per-mode default: dynasty/dynastysf default to Sleeper, redraft/superflex default to Consensus.
-// Default is applied when crossing the dynasty ↔ non-dynasty boundary (so picking KTC in
-// dynasty 1QB and switching to dynasty SF preserves KTC, but switching from redraft to
-// dynasty resets to Sleeper).
+// Best Ball: only Underdog + DK (the two best ball platforms)
+// Dynasty: only Consensus + Sleeper + KTC
+// Superflex: show all incl. DK (Underdog data-backed via d.sfa, DK Best Ball values shared)
+// Redraft: show all incl. DK
+// Per-mode default: dynasty/dynastysf default to Sleeper, bestball defaults to Underdog,
+// redraft/superflex default to Consensus.
+// Defaults reapplied when crossing group boundaries.
 let _rnkLastGroup = null;
 function updateRnkAdpForMode() {
   const isDynasty = currentMode === 'dynasty' || currentMode === 'dynastysf';
-  const groupNow = isDynasty ? 'dynasty' : 'redraft';
+  const isBestBall = currentMode === 'bestball';
+  const groupNow = isBestBall ? 'bestball' : isDynasty ? 'dynasty' : 'redraft';
   document.querySelectorAll('#rnkAdpSrcTabs .md-rank-src-tab').forEach(tab => {
     const src = tab.dataset.rnkadp;
-    if (src === 'consensus') return;
-    if (isDynasty) {
+    if (isBestBall) {
+      // Only Underdog and DK make sense for Best Ball
+      tab.style.display = (src === 'underdog' || src === 'dk') ? '' : 'none';
+    } else if (isDynasty) {
+      if (src === 'consensus') { tab.style.display = ''; return; }
+      // Dynasty: only Consensus + Sleeper + KTC. DK is best-ball/redraft only.
       tab.style.display = (src === 'sleeper' || src === 'ktc') ? '' : 'none';
     } else {
-      // In non-dynasty modes, hide KTC (it's dynasty-only)
+      if (src === 'consensus') { tab.style.display = ''; return; }
+      // In non-dynasty/non-bestball modes: hide KTC (dynasty-only). DK is allowed.
       tab.style.display = src === 'ktc' ? 'none' : '';
     }
   });
@@ -9032,16 +9199,16 @@ function updateRnkAdpForMode() {
   }
 
   if (_rnkLastGroup !== groupNow) {
-    // Crossed the dynasty boundary — apply mode default.
-    _setRnkSrc(isDynasty ? 'sleeper' : 'consensus');
+    // Crossed a group boundary — apply mode default.
+    _setRnkSrc(isBestBall ? 'underdog' : isDynasty ? 'sleeper' : 'consensus');
     _rnkLastGroup = groupNow;
   } else {
     // Same group — only repair if current source isn't valid for this mode.
-    if (isDynasty && rnkAdpSrc !== 'consensus' && rnkAdpSrc !== 'sleeper' && rnkAdpSrc !== 'ktc') {
+    if (isBestBall && rnkAdpSrc !== 'underdog' && rnkAdpSrc !== 'dk') {
+      _setRnkSrc('underdog');
+    } else if (isDynasty && rnkAdpSrc !== 'consensus' && rnkAdpSrc !== 'sleeper' && rnkAdpSrc !== 'ktc') {
       _setRnkSrc('sleeper');
-    } else if (!isDynasty && rnkAdpSrc === 'ktc') {
-      _setRnkSrc('consensus');
-    } else if (currentMode === 'superflex' && rnkAdpSrc === 'underdog') {
+    } else if (!isDynasty && !isBestBall && rnkAdpSrc === 'ktc') {
       _setRnkSrc('consensus');
     }
   }
@@ -9102,7 +9269,7 @@ document.getElementById('btnExport').addEventListener('click', () => {
     }
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
-  const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : 'Redraft';
+  const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
   const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   
@@ -9174,7 +9341,7 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
     }
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
-  const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : 'Redraft';
+  const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
   const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const esc = v => { const s = String(v ?? ''); return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s; };
@@ -9257,10 +9424,10 @@ document.getElementById('btnClear').addEventListener('click', () => {
     else toast("Only admins can edit Jack's rankings");
     return;
   }
-  const label = currentMode === 'dynastysf' ? 'Dynasty SF' : currentMode === 'dynasty' ? 'Dynasty 1QB' : 'Redraft';
+  const label = currentMode === 'dynastysf' ? 'Dynasty SF' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'Best Ball' : 'Redraft';
   const verLabel = currentVersion === 'jacks' ? "Jack's" : "My";
   if (!confirm(`Reset ${verLabel} ${label} rankings back to ADP order?`)) return;
-  versionBoards[currentVersion][currentMode] = currentMode==='dynastysf' ? sfDefaultBoard.slice() : currentMode==='dynasty' ? dynastyDefaultBoard.slice() : currentMode==='superflex' ? superflexDefaultBoard.slice() : D.map((d,i) => i);
+  versionBoards[currentVersion][currentMode] = currentMode==='dynastysf' ? sfDefaultBoard.slice() : currentMode==='dynasty' ? dynastyDefaultBoard.slice() : currentMode==='superflex' ? superflexDefaultBoard.slice() : currentMode==='bestball' ? bestBallDefaultBoard.slice() : D.map((d,i) => i);
   versionTiers[currentVersion][currentMode] = _mkPosTiers();
   versionTierCounters[currentVersion][currentMode] = _mkPosTierCtrs();
   syncMode();
@@ -21342,6 +21509,7 @@ window.fmtHeight = fmtHeight;
       const data = {
         mine: {
           redraft: { _order: boardToNames(versionBoards.mine.redraft), _posTiers: _serPT(versionTiers.mine.redraft) },
+          bestball: { _order: boardToNames(versionBoards.mine.bestball), _posTiers: _serPT(versionTiers.mine.bestball) },
           superflex: { _order: boardToNames(versionBoards.mine.superflex), _posTiers: _serPT(versionTiers.mine.superflex) },
           dynasty: { _order: boardToNames(versionBoards.mine.dynasty), _posTiers: _serPT(versionTiers.mine.dynasty) },
           dynastysf: { _order: boardToNames(versionBoards.mine.dynastysf), _posTiers: _serPT(versionTiers.mine.dynastysf) }
@@ -21370,6 +21538,7 @@ window.fmtHeight = fmtHeight;
       const data = {
         jacks: {
           redraft: { _order: boardToNames(versionBoards.jacks.redraft), _posTiers: _serPT(versionTiers.jacks.redraft) },
+          bestball: { _order: boardToNames(versionBoards.jacks.bestball), _posTiers: _serPT(versionTiers.jacks.bestball) },
           superflex: { _order: boardToNames(versionBoards.jacks.superflex), _posTiers: _serPT(versionTiers.jacks.superflex) },
           dynasty: { _order: boardToNames(versionBoards.jacks.dynasty), _posTiers: _serPT(versionTiers.jacks.dynasty) },
           dynastysf: { _order: boardToNames(versionBoards.jacks.dynastysf), _posTiers: _serPT(versionTiers.jacks.dynastysf) }
@@ -21411,6 +21580,8 @@ window.fmtHeight = fmtHeight;
         if (obj.jacks) {
           _bypassEditCheck = true;
           if (obj.jacks.redraft) loadModeData('redraft', obj.jacks.redraft, 'jacks');
+          if (obj.jacks.bestball) loadModeData('bestball', obj.jacks.bestball, 'jacks');
+          if (obj.jacks.superflex) loadModeData('superflex', obj.jacks.superflex, 'jacks');
           if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
           if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
           _bypassEditCheck = false;
@@ -21437,6 +21608,7 @@ window.fmtHeight = fmtHeight;
         if (obj.mine) {
           _bypassEditCheck = true;
           if (obj.mine.redraft) loadModeData('redraft', obj.mine.redraft, 'mine');
+          if (obj.mine.bestball) loadModeData('bestball', obj.mine.bestball, 'mine');
           if (obj.mine.superflex) loadModeData('superflex', obj.mine.superflex, 'mine');
           if (obj.mine.dynasty) loadModeData('dynasty', obj.mine.dynasty, 'mine');
           if (obj.mine.dynastysf) loadModeData('dynastysf', obj.mine.dynastysf, 'mine');
@@ -21478,6 +21650,8 @@ window.fmtHeight = fmtHeight;
         if (obj.jacks) {
           _bypassEditCheck = true;
           if (obj.jacks.redraft) loadModeData('redraft', obj.jacks.redraft, 'jacks');
+          if (obj.jacks.bestball) loadModeData('bestball', obj.jacks.bestball, 'jacks');
+          if (obj.jacks.superflex) loadModeData('superflex', obj.jacks.superflex, 'jacks');
           if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
           if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
           _bypassEditCheck = false;
@@ -21573,6 +21747,10 @@ window.fmtHeight = fmtHeight;
     // Re-check admin gating for the JS Model tab now that currentUser is set.
     if (typeof window._jsModelCheckAdmin === 'function') {
       try { window._jsModelCheckAdmin(user); } catch (_e) {}
+    }
+    // Refresh canEdit-dependent UI (Best Ball "Copy from Redraft" button etc.)
+    if (typeof window._updateCopyFromRedraftBtn === 'function') {
+      try { window._updateCopyFromRedraftBtn(); } catch (_e) {}
     }
     if (typeof render === 'function') render();
     if (user) {
@@ -22336,8 +22514,8 @@ window.fmtHeight = fmtHeight;
 
   // Hide non-applicable ADP tabs based on mode
   // Dynasty: only Consensus + Sleeper (locked) + KTC
-  // Superflex: show all, but Underdog is locked (coming soon - no SF data yet)
-  // Redraft: show all, Underdog premium-gated
+  // Superflex: show all, Underdog premium-gated (uses d.sfa)
+  // Redraft: show all, Underdog premium-gated (uses d.udA)
   // Per-mode default for mock draft ADP (mirrors Rankings):
   //   dynasty/dynastysf → sleeper
   //   redraft/superflex → consensus
@@ -22368,10 +22546,7 @@ window.fmtHeight = fmtHeight;
     const udTab = document.querySelector('#mdAdpSrcTabs .md-rank-src-tab[data-mdadp="underdog"]');
     if (udTab) {
       const icon = udTab.querySelector('.lock-icon');
-      if (mdMode === 'superflex') {
-        udTab.classList.add('locked');
-        if (icon) icon.style.display = '';
-      } else if (mdMode === 'redraft') {
+      if (mdMode === 'redraft' || mdMode === 'superflex') {
         if (hasPremium()) { udTab.classList.remove('locked'); if (icon) icon.style.display = 'none'; }
         else { udTab.classList.add('locked'); if (icon) icon.style.display = ''; }
       }
@@ -22393,7 +22568,6 @@ window.fmtHeight = fmtHeight;
       if (isDynasty) hiddenSources.push('underdog', 'espn', 'yahoo');
       if (!isDynasty) hiddenSources.push('ktc');
       if (hiddenSources.includes(mdAdpSrc)) _setMdSrc(isDynasty ? 'sleeper' : 'consensus');
-      if (mdMode === 'superflex' && mdAdpSrc === 'underdog') _setMdSrc('consensus');
     }
   }
 
@@ -22450,11 +22624,6 @@ window.fmtHeight = fmtHeight;
   adpSrcTabs.forEach(t => t.addEventListener('click', () => {
     const src = t.dataset.mdadp;
     if (src === 'underdog') {
-      if (mdMode === 'superflex') {
-        adpPremiumHint.innerHTML = '<svg style="width:16px;height:16px;color:var(--accent);vertical-align:middle;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Underdog Superflex ADP coming soon.';
-        adpPremiumHint.classList.add('show');
-        return;
-      }
       if (!hasPremium()) {
         adpPremiumHint.innerHTML = _adpHintDefault;
         adpPremiumHint.classList.add('show');

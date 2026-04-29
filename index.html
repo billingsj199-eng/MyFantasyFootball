@@ -2181,8 +2181,8 @@ CLEAR
 </div>
 <button id="copyFromRedraftBtn" onclick="window._copyRedraftToBestBall()" style="display:none;margin-left:4px;padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Replace your Best Ball board and tiers with an exact copy of your Redraft rankings.">⇩ COPY FROM REDRAFT</button>
 <div class="sync-toggle-wrap" id="syncToggleWrap" style="display:flex;align-items:center;gap:5px;margin-left:4px;position:relative">
-<div class="pm-toggle" id="syncToggle" onclick="window._togglePosSync()" title="When ON, positional rankings (RB1, RB2, etc.) stay synced between 1QB ↔ SF pairs. Only the overall interleaving changes."></div>
-<span style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.55rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced between paired modes:<br><br>• <b>Redraft ↔ Superflex</b><br>• <b>Dynasty 1QB ↔ Dynasty SF</b><br><br>Only the <em>overall</em> interleaving changes between formats (QBs rank higher in SF). Your within-position order and tiers stay identical across both.<br><br>Move any player or add/remove a tier in one mode and the paired mode updates instantly. Toggle ON to also do an initial sync from your current mode right now.</div></span></span>
+<div class="pm-toggle" id="syncToggle" onclick="window._togglePosSync()" title="When ON, positional rankings (RB1, RB2, etc.) stay synced across Redraft / Best Ball / Superflex and across Dynasty 1QB / Dynasty SF. Only the overall interleaving changes per format."></div>
+<span style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.55rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced across these groups:<br><br>• <b>Redraft ↔ Best Ball ↔ Superflex</b><br>• <b>Dynasty 1QB ↔ Dynasty SF</b><br><br>Only the <em>overall</em> interleaving changes between formats (QBs rank higher in SF, K/DST excluded from Best Ball). Your within-position order and tiers stay identical across all paired modes.<br><br>Move any player or add/remove a tier in one mode and every paired mode updates instantly. Toggle ON to also do an initial sync from your current mode right now.</div></span></span>
 </div>
 </div>
 <div class="pos-filters">
@@ -6958,34 +6958,68 @@ function movePlayer(fromIdx, toPosition) {
   // banner renders just above the player at that rank). So a tier whose start
   // is N covers ranks N..(next-tier-start − 1).
   //
-  // When dragging UP from fromRank to toRank (toRank < fromRank), every player
-  // at ranks [toRank..fromRank-1] shifts DOWN by 1 in rank. To keep those
-  // players in their existing tiers, every tier whose start is in
-  // (toRank, fromRank] must shift +1. We must NOT shift the destination tier
-  // itself when toRank equals its start — otherwise the dropped player ends up
-  // in the tier above instead of joining the destination tier.
+  // The "rank" used here is whatever rank space the active tier bucket lives in:
+  //   - ALL bucket: overall board rank (1..N over the full board)
+  //   - QB/RB/WR/TE buckets: positional rank within that position
+  // So when the user is filtered by a position, we must compute fromRank/toRank
+  // as positional ranks before comparing against the bucket's afterRank values.
   //
-  // Mirror logic for dragging DOWN.
+  // When dragging UP, every tier whose start is in (toRank, fromRank] must shift
+  // +1. We deliberately don't shift the destination tier when toRank equals its
+  // start — otherwise the dropped player ends up in the tier above. Mirror logic
+  // for dragging DOWN.
   const pk = _tierPK();
   const tierArr = versionTiers[currentVersion][currentMode][pk];
   if (tierArr && tierArr.length > 0) {
-    const fromRank = curPos + 1;  // 1-based rank before move
-    const toRank = toPosition + 1;
+    const isPosBucket = (pk === 'QB' || pk === 'RB' || pk === 'WR' || pk === 'TE');
+    const draggedPos = D[fromIdx] && D[fromIdx].s;
+    let fromRank = curPos + 1;
+    let toRank = toPosition + 1;
 
-    if (fromRank > toRank) {
-      // Moving UP: shift tier starts in (toRank, fromRank] DOWN by 1
-      tierArr.forEach(t => {
-        if (t.afterRank > toRank && t.afterRank <= fromRank) {
-          t.afterRank += 1;
+    if (isPosBucket && draggedPos === pk) {
+      // Simulate the move and count: positional rank within `pk` of the
+      // dragged player, before and after the move.
+      const newBoard = board.slice();
+      newBoard.splice(curPos, 1);
+      newBoard.splice(toPosition, 0, fromIdx);
+      let oldR = 0, newR = 0, c = 0;
+      for (let i = 0; i < board.length; i++) {
+        if (D[board[i]] && D[board[i]].s === pk) {
+          c++;
+          if (board[i] === fromIdx) { oldR = c; break; }
         }
-      });
-    } else {
-      // Moving DOWN: shift tier starts in (fromRank, toRank] UP by 1
-      tierArr.forEach(t => {
-        if (t.afterRank > fromRank && t.afterRank <= toRank) {
-          t.afterRank -= 1;
+      }
+      c = 0;
+      for (let i = 0; i < newBoard.length; i++) {
+        if (D[newBoard[i]] && D[newBoard[i]].s === pk) {
+          c++;
+          if (newBoard[i] === fromIdx) { newR = c; break; }
         }
-      });
+      }
+      fromRank = oldR;
+      toRank = newR;
+    } else if (isPosBucket && draggedPos !== pk) {
+      // Dragged player isn't in this position bucket — no tier shift makes
+      // sense here. Leave tiers alone.
+      fromRank = toRank = -1;
+    }
+
+    if (fromRank > 0 && toRank > 0 && fromRank !== toRank) {
+      if (fromRank > toRank) {
+        // Moving UP: shift tier starts in (toRank, fromRank] DOWN by 1
+        tierArr.forEach(t => {
+          if (t.afterRank > toRank && t.afterRank <= fromRank) {
+            t.afterRank += 1;
+          }
+        });
+      } else {
+        // Moving DOWN: shift tier starts in (fromRank, toRank] UP by 1
+        tierArr.forEach(t => {
+          if (t.afterRank > fromRank && t.afterRank <= toRank) {
+            t.afterRank -= 1;
+          }
+        });
+      }
     }
   }
 
@@ -7027,12 +7061,26 @@ window._showSyncHelp = function() {
   // Tooltip shows on hover/tap via CSS; this is a no-op fallback
 };
 
-function _syncPairedMode() {
-  const pairMap = { redraft: 'superflex', superflex: 'redraft', dynasty: 'dynastysf', dynastysf: 'dynasty' };
-  const pairedMode = pairMap[currentMode];
-  if (!pairedMode) return;
-  const srcBoard = versionBoards[currentVersion][currentMode];
-  const dstBoard = versionBoards[currentVersion][pairedMode];
+// Position-sync partner groups. Modes within a group share within-position
+// rankings (RB1, RB2, etc.) and position-specific tiers, while keeping their
+// own overall interleaving. Redraft / Best Ball / Superflex form a 3-way
+// mesh; Dynasty 1QB and Dynasty SF form a 2-way pair.
+function _syncPartners(mode) {
+  if (mode === 'redraft')   return ['superflex', 'bestball'];
+  if (mode === 'superflex') return ['redraft', 'bestball'];
+  if (mode === 'bestball')  return ['redraft', 'superflex'];
+  if (mode === 'dynasty')   return ['dynastysf'];
+  if (mode === 'dynastysf') return ['dynasty'];
+  return [];
+}
+window._syncPartners = _syncPartners;
+
+// Sync the source mode's positional ordering + position tiers into ONE
+// destination mode. Only this single direction; the caller decides which
+// destinations to push to.
+function _syncOneDirection(srcMode, dstMode) {
+  const srcBoard = versionBoards[currentVersion][srcMode];
+  const dstBoard = versionBoards[currentVersion][dstMode];
   if (!srcBoard || !dstBoard) return;
 
   // Build position order from source board
@@ -7072,17 +7120,24 @@ function _syncPairedMode() {
   }
 
   // Sync position-specific tiers (QB, RB, WR, TE, K, DST, ROOKIE) — NOT the ALL tier
-  // since ALL tiers depend on overall rank which differs between 1QB and SF
+  // since ALL tiers depend on overall rank which differs between formats
   const syncTierKeys = ['QB','RB','WR','TE','K','DST','ROOKIE'];
-  const srcTiers = versionTiers[currentVersion][currentMode];
-  const dstTiers = versionTiers[currentVersion][pairedMode];
-  const srcCtrs = versionTierCounters[currentVersion][currentMode];
-  const dstCtrs = versionTierCounters[currentVersion][pairedMode];
+  const srcTiers = versionTiers[currentVersion][srcMode];
+  const dstTiers = versionTiers[currentVersion][dstMode];
+  const srcCtrs = versionTierCounters[currentVersion][srcMode];
+  const dstCtrs = versionTierCounters[currentVersion][dstMode];
   syncTierKeys.forEach(pk => {
-    // Deep copy the tiers from source to destination
+    // Best Ball doesn't have K/DST players, so don't import K/DST tier buckets.
+    if (dstMode === 'bestball' && (pk === 'K' || pk === 'DST')) return;
     dstTiers[pk] = (srcTiers[pk] || []).map(t => ({id: t.id, label: t.label, name: t.name, afterRank: t.afterRank}));
     dstCtrs[pk] = srcCtrs[pk] || 0;
   });
+}
+
+// Push the active mode's positional ordering into every partner mode.
+function _syncPairedMode() {
+  const partners = _syncPartners(currentMode);
+  partners.forEach(p => _syncOneDirection(currentMode, p));
 }
 
 // === Copy Redraft → Best Ball ===
@@ -9089,16 +9144,26 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
-    // If sync is on, sync from the paired 1QB mode into the SF mode (or vice versa)
+    // If sync is on, pull the entering mode's positional order from one of its
+    // partners. With the 3-way redraft/bestball/superflex mesh, we pick a
+    // primary source per mode so the user gets a deterministic result:
+    //   bestball  ← redraft (canonical source for best ball)
+    //   superflex ← redraft (canonical source for superflex)
+    //   redraft   ← superflex (preserves prior behavior)
+    //   dynasty(sf) ← its single pair
     if (window._posSyncEnabled) {
-      const pairMap = { redraft: 'superflex', superflex: 'redraft', dynasty: 'dynastysf', dynastysf: 'dynasty' };
-      const partner = pairMap[currentMode];
-      if (partner) {
-        // Temporarily set to partner, sync from partner → current, then restore
+      const primarySrc = {
+        redraft: 'superflex',
+        superflex: 'redraft',
+        bestball: 'redraft',
+        dynasty: 'dynastysf',
+        dynastysf: 'dynasty'
+      }[currentMode];
+      if (primarySrc) {
         const target = currentMode;
-        currentMode = partner;
+        currentMode = primarySrc;
         syncMode();
-        _syncPairedMode(); // this syncs partner → target
+        _syncOneDirection(currentMode, target);
         currentMode = target;
       }
     }

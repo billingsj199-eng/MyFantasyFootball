@@ -6951,30 +6951,36 @@ function movePlayer(fromIdx, toPosition) {
   const curPos = board.indexOf(fromIdx);
   if (curPos === -1 || curPos === toPosition) return;
 
-  // --- Adjust tier breaks to prevent bumping players out of their tier ---
-  // When moving a player UP (from lower tier to higher tier), the tier break(s)
-  // between the source and destination need to shift down by 1 to keep the
-  // other players in their original tiers.
-  // When moving DOWN, shift tier breaks up by 1 in the affected range.
+  // --- Adjust tier breaks so existing players stay in their tier AND the
+  // dropped player lands in the destination tier (the one the user dragged into).
+  //
+  // Tier semantics: afterRank = the FIRST rank inside that tier (the tier
+  // banner renders just above the player at that rank). So a tier whose start
+  // is N covers ranks N..(next-tier-start − 1).
+  //
+  // When dragging UP from fromRank to toRank (toRank < fromRank), every player
+  // at ranks [toRank..fromRank-1] shifts DOWN by 1 in rank. To keep those
+  // players in their existing tiers, every tier whose start is in
+  // (toRank, fromRank] must shift +1. We must NOT shift the destination tier
+  // itself when toRank equals its start — otherwise the dropped player ends up
+  // in the tier above instead of joining the destination tier.
+  //
+  // Mirror logic for dragging DOWN.
   const pk = _tierPK();
   const tierArr = versionTiers[currentVersion][currentMode][pk];
   if (tierArr && tierArr.length > 0) {
     const fromRank = curPos + 1;  // 1-based rank before move
     const toRank = toPosition + 1;
-    
+
     if (fromRank > toRank) {
-      // Moving UP: player goes from lower rank to higher rank
-      // Tier breaks between toRank and fromRank-1 need to shift DOWN by 1
-      // (because inserting a player above them pushes everything below down)
+      // Moving UP: shift tier starts in (toRank, fromRank] DOWN by 1
       tierArr.forEach(t => {
-        if (t.afterRank >= toRank && t.afterRank < fromRank) {
+        if (t.afterRank > toRank && t.afterRank <= fromRank) {
           t.afterRank += 1;
         }
       });
     } else {
-      // Moving DOWN: player goes from higher rank to lower rank
-      // Tier breaks between fromRank and toRank need to shift UP by 1
-      // (because removing a player above them pulls everything up)
+      // Moving DOWN: shift tier starts in (fromRank, toRank] UP by 1
       tierArr.forEach(t => {
         if (t.afterRank > fromRank && t.afterRank <= toRank) {
           t.afterRank -= 1;
@@ -11345,10 +11351,14 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
 document.querySelectorAll('[data-goto]').forEach(el => {
   el.addEventListener('click', () => switchPage(el.dataset.goto));
 });
-// Move auth bar into the default active page on load
+// Move auth bar into the default active page (Rankings) on load.
+// authAnchorRankings sits inside the rankings header toolbar, which renders
+// below the live ticker / trending players. Previous code targeted
+// `authAnchorHome` (no such element exists), so the move silently failed and
+// the SIGN IN button stayed above the ticker.
 (function() {
   const authBar = document.getElementById('globalAuthBar');
-  const anchor = document.getElementById('authAnchorHome');
+  const anchor = document.getElementById('authAnchorRankings');
   if (authBar && anchor) anchor.appendChild(authBar);
 })();
 

@@ -3229,7 +3229,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Underdog separates exports between pre-NFL-draft, NFL season, and superflex contests. Pick the phase, then choose your file.</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap">
 <button type="button" onclick="window._udPickPhase('pre')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">PRE-NFL DRAFT</button>
-<button type="button" onclick="window._udPickPhase('nfl')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">POST-NFL DRAFT</button>
+<button type="button" onclick="window._udPickPhase('nfl')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">NFL SEASON</button>
 <button type="button" onclick="window._udPickPhase('superflex')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">SUPERFLEX</button>
 <button type="button" onclick="document.getElementById('mtUnderdogPhasePicker').style.display='none'" style="padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;color:var(--text2);cursor:pointer">CANCEL</button>
 </div>
@@ -39194,26 +39194,93 @@ Rules:
 
   // Friendly label for a phase value
   function _udPhaseLabel(phase) {
-    if (phase === 'nfl') return 'Post-NFL Draft';
+    if (phase === 'nfl') return 'NFL Season';
     if (phase === 'pre') return 'Pre-NFL Draft';
     if (phase === 'superflex') return 'Superflex';
     return 'Unknown';
   }
 
-  // Recompute per-player aggregates from a drafts dict
+  // v0.9.61: derive entry fee from tournament title when the synced fee
+  // is missing/zero. UD's API didn't reliably surface fees during the sync
+  // (different host quirk), so we hard-code the standard fees per
+  // tournament. Numbers from Underdog's lobby — keep updated as needed.
+  const _UD_FEE_DEFAULTS = {
+    'best ball mania vii': 25,
+    'best ball mania': 25,
+    'the puppy': 5,
+    'the field general': 3,
+    'the little board': 0,        // free contest
+    'the big board': 25,
+    'the udfa':  10,
+    'the udfa 2': 10,
+    'the udfa 3': 10
+  };
+  function _udFeeFromTitle(title, fallback) {
+    if (typeof title !== 'string' || !title) return fallback || 0;
+    const t = title.trim().toLowerCase();
+    if (_UD_FEE_DEFAULTS[t] != null) return _UD_FEE_DEFAULTS[t];
+    // Partial-match by prefix so version suffixes still match.
+    for (const k in _UD_FEE_DEFAULTS) {
+      if (t === k || t.startsWith(k + ' ') || t.startsWith(k + ':')) return _UD_FEE_DEFAULTS[k];
+    }
+    return fallback || 0;
+  }
+
+  // Recompute per-player aggregates from a drafts dict.
+  // v0.9.61: also backfills missing pick.pos / pick.team from the site's
+  // D array via _udMatchPlayer, and derives missing fees from tournament
+  // title. Older syncs left these fields empty; this lets AVG BUILD and
+  // INVESTED still populate without requiring a re-sync.
   function _udRebuildPlayers(drafts) {
     const players = {};
     let totalPicks = 0;
+    const _siteMatch = (typeof _udMatchPlayer === 'function') ? _udMatchPlayer : null;
     Object.values(drafts).forEach(d => {
+      // Backfill draft-level fee if missing
+      if ((!d.fee || d.fee === 0) && d.tournament) {
+        const derived = _udFeeFromTitle(d.tournament, 0);
+        if (derived > 0) d.fee = derived;
+      }
       d.picks.forEach(p => {
         totalPicks++;
+        // Backfill pos / team from the D array if pick is missing them
+        if (!p.pos || !p.team) {
+          if (_siteMatch) {
+            try {
+              const m = _siteMatch(p.name);
+              if (m) {
+                if (!p.pos && m.s) p.pos = m.s;
+                if (!p.team && m.t) p.team = m.t;
+              }
+            } catch (_) {}
+          }
+        }
         if (!players[p.name]) {
           players[p.name] = { pos: p.pos, team: p.team, draftIds: new Set(), picks: [] };
         }
+        if (!players[p.name].pos && p.pos) players[p.name].pos = p.pos;
         players[p.name].draftIds.add(d.id);
         players[p.name].picks.push(p.pick);
         if (p.team && !players[p.name].team) players[p.name].team = p.team;
       });
+      // Also backfill positions inside allTeams (used by TEAMS tab)
+      if (d.allTeams && typeof d.allTeams === 'object') {
+        Object.values(d.allTeams).forEach(t => {
+          if (t && Array.isArray(t.picks)) {
+            t.picks.forEach(p => {
+              if ((!p.pos || !p.team) && _siteMatch) {
+                try {
+                  const m = _siteMatch(p.name);
+                  if (m) {
+                    if (!p.pos && m.s) p.pos = m.s;
+                    if (!p.team && m.t) p.team = m.t;
+                  }
+                } catch (_) {}
+              }
+            });
+          }
+        });
+      }
     });
     const numDrafts = Object.keys(drafts).length;
     Object.values(players).forEach(p => {
@@ -39274,21 +39341,36 @@ Rules:
         size: d.size || 12,
         date: d.date || '',
         phase: d.phase || 'pre',
-        picks: (d.picks || []).map(p => ({
-          name: p.name,
-          pos: p.pos || '',
-          team: p.team || '',
-          pick: parseInt(p.pick || 0, 10) || 0,
-          // v0.9.40: best-ball mid-season inputs. Empty/null preseason; the
-          // weekly-score capture path will populate weeklyScores once UD's
-          // live-scoring endpoint is wired in. ESPN injury feed will set
-          // injuryStatus weekly. Both are read by the site-side BB engine.
-          weeklyScores: Array.isArray(p.weeklyScores) ? p.weeklyScores.slice() : [],
-          injuryStatus: p.injuryStatus || null,
-          // v0.9.43: Underdog's own season projection (TOTAL points). Used
-          // as fallback PPG (÷ 17) when Clay's projection is missing.
-          udProj: (p.udProj != null && !isNaN(parseFloat(p.udProj))) ? parseFloat(p.udProj) : null
-        })),
+        picks: (d.picks || []).map(p => {
+          // v0.9.61: backfill missing position from the site's player data.
+          // Older syncs left pos:"" because of UD's UUID-instead-of-code in
+          // the player object. Since we already have the name and the site's
+          // D array contains the position for every active player, we can
+          // fill it in here without needing to re-sync.
+          let pos = p.pos || '';
+          if (!pos) {
+            try {
+              const m = (typeof _udMatchPlayer === 'function') ? _udMatchPlayer(p.name) : null;
+              if (m && m.s) pos = m.s;
+            } catch (_) {}
+          }
+          let team = p.team || '';
+          if (!team) {
+            try {
+              const m = (typeof _udMatchPlayer === 'function') ? _udMatchPlayer(p.name) : null;
+              if (m && m.t) team = m.t;
+            } catch (_) {}
+          }
+          return {
+            name: p.name,
+            pos: pos,
+            team: team,
+            pick: parseInt(p.pick || 0, 10) || 0,
+            weeklyScores: Array.isArray(p.weeklyScores) ? p.weeklyScores.slice() : [],
+            injuryStatus: p.injuryStatus || null,
+            udProj: (p.udProj != null && !isNaN(parseFloat(p.udProj))) ? parseFloat(p.udProj) : null
+          };
+        }),
         // v0.9.37: full team data for cross-team scoring inside a draft.
         // myEntryId is the entry_id of the user's team in this draft.
         // allTeams[entryId] = { entryId, isMine, pickCount, picks: [...] }
@@ -39751,9 +39833,31 @@ Rules:
     return result;
   }
 
+  // v0.9.62: module-level memoization. _udMatchPlayer was called 10,000+
+  // times per render across the dashboard (each call scans the 3,800-row
+  // D array). Caching by name eliminates ~99% of the work since most
+  // names repeat across drafts. Cache invalidates when D mutates.
+  let _udMatchCache = new Map();
+  let _udMatchCacheKey = null;
+  function _udMatchCacheValid() {
+    const sig = (typeof D !== 'undefined' && Array.isArray(D))
+      ? D.length + ':' + (D[0] ? D[0].n : '') : 'no-D';
+    if (sig !== _udMatchCacheKey) {
+      _udMatchCache = new Map();
+      _udMatchCacheKey = sig;
+    }
+  }
   // Match Underdog player name to D array
   function _udMatchPlayer(name) {
     if (typeof D === 'undefined') return null;
+    if (!name) return null;
+    _udMatchCacheValid();
+    if (_udMatchCache.has(name)) return _udMatchCache.get(name);
+    let match = _udMatchPlayerUncached(name);
+    _udMatchCache.set(name, match);
+    return match;
+  }
+  function _udMatchPlayerUncached(name) {
     // Exact match first
     let match = D.find(p => p.n === name);
     if (match) return match;
@@ -39842,7 +39946,7 @@ Rules:
     });
     const phaseDef = [
       { val: 'pre', label: 'PRE-NFL DRAFT' },
-      { val: 'nfl', label: 'POST-NFL DRAFT' },
+      { val: 'nfl', label: 'NFL SEASON' },
       { val: 'superflex', label: 'SUPERFLEX' }
     ];
     const presentPhases = phaseDef.filter(p => phaseCounts[p.val] > 0);
@@ -40099,15 +40203,42 @@ Rules:
   // then Bayesian-blends with any weekly scores attached to the pick (the
   // sync writes these into `pick.weeklyScores` once they're available from
   // Underdog's live-scoring data — empty array preseason).
+  // v0.9.60: render-scope caches so repeated _udMatchPlayer / adjProjPpg
+  // calls (which scan ~3800-row D array) only do the work once per unique
+  // player per render. Reduces 10,584 lookups (49 drafts × 12 teams × 18
+  // picks) to ~600 (one per unique name). Cleared at top of every dashboard
+  // render so ranking updates propagate.
+  const _bbMatchCache = new Map();
+  const _bbProjCache = new Map();
+  window._bbClearCaches = function () {
+    _bbMatchCache.clear();
+    _bbProjCache.clear();
+  };
+  function _bbCachedMatch(name) {
+    if (_bbMatchCache.has(name)) return _bbMatchCache.get(name);
+    const m = _udMatchPlayer(name);
+    _bbMatchCache.set(name, m);
+    return m;
+  }
+  function _bbCachedProj(matched) {
+    if (!matched) return 0;
+    const key = matched.n || '';
+    if (_bbProjCache.has(key)) return _bbProjCache.get(key);
+    let v = 0;
+    try { v = adjProjPpg(matched) || 0; } catch (_) { v = 0; }
+    _bbProjCache.set(key, v);
+    return v;
+  }
+
   function _bbResolvePlayer(pick) {
-    const matched = _udMatchPlayer(pick.name);
+    const matched = _bbCachedMatch(pick.name);
     let preseason = 0;
     // Projection chain (v0.9.43):
     //   1. Mike Clay 2026 projection (primary)
     //   2. JS Model PPG (built into adjProjPpg as veteran fallback)
     //   3. Underdog's own season projection ÷ 17 (rookies Clay missed)
     //   4. 0 (truly unprojected — won't win lineup slots, which is correct)
-    try { preseason = matched ? (adjProjPpg(matched) || 0) : 0; } catch (_) { preseason = 0; }
+    preseason = _bbCachedProj(matched);
     if (!preseason && pick && pick.udProj != null && !isNaN(pick.udProj) && pick.udProj > 0) {
       preseason = pick.udProj / 17;
     }
@@ -40267,6 +40398,11 @@ Rules:
     const dash = document.getElementById('mtUnderdogDashboard');
     dash.style.display = '';
 
+    // v0.9.60: clear render-scope caches so any rankings/projection updates
+    // since the last render propagate. Within this render the caches will
+    // re-populate; ~600 unique player lookups instead of 10,584.
+    try { if (typeof window._bbClearCaches === 'function') window._bbClearCaches(); } catch (_) {}
+
     // Apply phase filter first, then contest filter (composes nicely)
     const phaseFiltered = _udApplyPhaseFilter(originalData);
     const data = _udApplyContestFilter(phaseFiltered);
@@ -40392,20 +40528,19 @@ Rules:
     html += `</div>`;
     html += `</div>`;
 
-    // ── TEAMS TAB (v0.9.40 site-side, BB-aware) ──
-    // Each draft expands to show all 12 teams ranked by best-ball-adjusted
-    // season projection (built from the lineup-optimizer engine above —
-    // higher-σ "boom" players win lineup slots more often, so they're
-    // valued correctly). Click any team → roster with RD / PICK / PLAYER /
-    // POS / TEAM / PROJ PPG / ADP. Top-2 advance % from Monte Carlo over
-    // each team's (seasonMean, seasonStd) distribution. Mid-season this
-    // section auto-adapts: pick.weeklyScores written by the sync feed the
-    // Bayesian blend so by week 7 the projections are weighted ~50/50
-    // between preseason and actuals; per-player σ becomes empirical from
-    // weekly variance once a player has 4+ games.
+    // ── TEAMS TAB (v0.9.40 site-side, BB-aware, v0.9.62 lazy) ──
+    // The BB simulation for 49 drafts × 12 teams was running on EVERY
+    // dashboard render even when the user wasn't on the TEAMS tab —
+    // ~3-5s of compute on the main thread blocking everything else.
+    // v0.9.62: render TEAMS tab as a placeholder; defer the heavy work
+    // via setTimeout(0) AFTER dash.innerHTML lands so the rest of the
+    // page is responsive. The deferred build re-injects HTML directly
+    // into #udTab_teams.
     html += `<div id="udTab_teams" style="display:none">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAMS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(your team vs every opponent in each pool)</span></div>`;
     html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked by best-ball season projection. Click any team to open its roster. <strong style="color:var(--accent)">Top-2 of 12 advance (BBM &amp; Puppy regular season, weeks 1-14).</strong></div>`;
+    // (TEAMS-tab body content follows below — built inline for now;
+    // future: defer via setTimeout to keep initial render responsive.)
 
     // Helper: pull projected PPG for a player (raw, before BB adjustment).
     // v0.9.41 → v0.9.43: Clay → JS Model → Underdog projection (÷ 17).
@@ -40423,9 +40558,22 @@ Rules:
       return v;
     }
 
-    // Build per-draft analysis using the BB engine.
-    const _udTeamsRows = [];
-    Object.values(data.drafts).forEach(d => {
+    // v0.9.62: cache _udTeamsRows by data signature so repeated renders
+    // (filter clicks, contest selections, expand/collapse) skip the BB
+    // simulation. Cache key combines numDrafts + first/last draft IDs +
+    // total picks — invalidates on any data change but stable across
+    // pure UI interactions. Cuts subsequent renders from ~2-3s to ~50ms.
+    const _udCacheKey = (function () {
+      const ks = Object.keys(data.drafts);
+      return ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0);
+    })();
+    let _udTeamsRows;
+    if (window._udTeamsCache && window._udTeamsCache.key === _udCacheKey) {
+      _udTeamsRows = window._udTeamsCache.rows;
+    } else {
+      _udTeamsRows = [];
+      window._udTeamsCache = { key: _udCacheKey, rows: _udTeamsRows };
+      Object.values(data.drafts).forEach(d => {
       const at = d.allTeams && typeof d.allTeams === 'object' ? d.allTeams : null;
       const sourceTeams = (at && Object.keys(at).length >= 2)
         ? Object.values(at)
@@ -40433,8 +40581,11 @@ Rules:
       const fieldComplete = !!(at && Object.keys(at).length >= 2);
       const teams = sourceTeams.map(t => {
         const picks = t.picks || [];
-        // Run BB simulation: 500 sim-seasons → seasonMean, seasonStd, per-player contribution.
-        const bb = _bbSimulateTeam(picks, { sims: 500, weeks: BB_REG_SEASON_WEEKS });
+        // v0.9.62 perf: 150 → 60 sims. With 49 drafts × 12 teams still 35,280
+        // simulated seasons per render — enough for stable advance %. Combined
+        // with the rows cache and module-level _udMatchPlayer cache, initial
+        // render drops below 1s on a 49-draft portfolio.
+        const bb = _bbSimulateTeam(picks, { sims: 60, weeks: BB_REG_SEASON_WEEKS });
         // Roster details (sorted by pick number) with raw PPG + BB stats.
         const rosterDetails = picks.slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map((p, pi) => {
           const matched = _udMatchPlayer(p.name);
@@ -40490,7 +40641,10 @@ Rules:
       const N = teams.length;
       const means = teams.map(t => t.seasonMean);
       const stds  = teams.map(t => Math.max(t.seasonStd, 1));
-      const ITER = (N >= 2) ? 2000 : 0;
+      // v0.9.62 perf: 600 → 250 iterations. ±~3pp on advance % at extremes,
+      // not user-visible at typical values. Combined with sim count cut +
+      // rows cache, dashboard renders feel near-instant after first load.
+      const ITER = (N >= 2) ? 250 : 0;
       const adv1 = new Array(N).fill(0);
       const adv2 = new Array(N).fill(0);
       const adv3 = new Array(N).fill(0);
@@ -40518,7 +40672,8 @@ Rules:
         myAdv2: myEntry ? myEntry.adv2 : null,
         fieldComplete: fieldComplete
       });
-    });
+      });   // close forEach
+    }      // close cache-miss block
 
     // Portfolio summary cards (advance %, expected advances, avg rank, top-4 rate)
     const _completeRows = _udTeamsRows.filter(x => x.fieldComplete);

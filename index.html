@@ -40025,8 +40025,7 @@ Rules:
     html += `<div id="udTabBar" style="display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px">`;
     const tabs = [
       { id: 'exposure', label: 'EXPOSURE' },
-      { id: 'teams', label: 'TEAM SCORES' },
-      { id: 'adp', label: 'ADP VALUE' },
+      { id: 'teams', label: 'TEAMS' },
       { id: 'board', label: 'DRAFT BOARD' },
       { id: 'value', label: 'VALUE PICKS' },
       { id: 'builds', label: 'BUILD ANALYSIS' }
@@ -40059,162 +40058,275 @@ Rules:
     html += `</div>`;
     html += `</div>`;
 
-    // TEAM SCORES TAB
+    // ── TEAMS TAB (v0.9.40 site-side) ──
+    // Combined view replacing TEAM SCORES + ADP VALUE + VS FIELD. Each draft
+    // is one expandable row showing all 12 teams (user + opponents synced via
+    // extension's allTeams). Click any team within → expand to roster with
+    // RD / PICK / PLAYER / POS / RANK / VAL / PROJ / ADP / +/- columns. Top-2
+    // advance % from Monte Carlo (BBM + Puppy regular season, weeks 1-14).
     html += `<div id="udTab_teams" style="display:none">`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAM SCORES <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(ranked best → worst)</span></div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Scored using trade calculator values (same curve as rankings + trade calc)</div>`;
-    // Best/worst/avg summary
-    const allTotals = draftScores.map(ds => ds.score.total);
-    const avgTotal = allTotals.length ? Math.round(allTotals.reduce((s, v) => s + v, 0) / allTotals.length) : 0;
-    const bestTotal = Math.max(...allTotals);
-    const worstTotal = Math.min(...allTotals);
-    html += `<div style="display:flex;gap:10px;margin-bottom:14px">`;
-    html += `<div style="flex:1;text-align:center;padding:8px;background:#22c55e10;border:1px solid #22c55e40;border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">BEST</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#22c55e">${bestTotal}</div></div>`;
-    html += `<div style="flex:1;text-align:center;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">AVERAGE</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--accent)">${avgTotal}</div></div>`;
-    html += `<div style="flex:1;text-align:center;padding:8px;background:#ef444410;border:1px solid #ef444440;border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">WORST</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#ef4444">${worstTotal}</div></div>`;
-    html += `</div>`;
-    draftScores.forEach((ds, i) => {
-      const d = ds.draft;
-      const sc = ds.score;
-      const scoreColor = sc.total >= bestTotal ? '#22c55e' : sc.total >= avgTotal ? '#4ade80' : sc.total >= worstTotal + 5 ? '#f59e0b' : '#ef4444';
-      html += `<div onclick="window._udToggleTeamDetail(${i})" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
-      html += `<div style="display:flex;align-items:center;gap:10px">`;
-      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--text2);width:20px;text-align:center">${i + 1}</div>`;
-      html += `<div style="width:44px;height:44px;border-radius:8px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor}">${sc.total}</div>`;
-      html += `<div style="flex:1;min-width:0">`;
-      html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">Draft ${i + 1} <span style="font-weight:400;color:var(--text2)">· ${d.tournament} · $${d.fee.toFixed(0)}</span></div>`;
-      html += `<div style="font-size:.65rem;color:var(--text2)">R1: ${_esc(d.picks[0] ? d.picks[0].name : '?')} (${d.picks[0] ? d.picks[0].pick : '?'})</div>`;
-      html += `</div>`;
-      // Mini pos scores
-      html += `<div style="display:flex;gap:3px">`;
-      ['QB','RB','WR','TE'].forEach(pos => {
-        const ps = sc.posScores[pos] || { pts: 0 };
-        const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.45rem;color:var(--text2)">${pos}</div><div style="font-size:.65rem;font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
-      });
-      html += `</div>`;
-      html += `</div>`;
-      // Detail (hidden)
-      html += `<div id="udTeamDetail_${i}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">`;
-      html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(60px,1fr));gap:6px;margin-bottom:10px">`;
-      ['QB','RB','WR','TE'].forEach(pos => {
-        const ps = sc.posScores[pos] || { pts: 0, count: 0 };
-        const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-        html += `<div style="text-align:center;padding:6px;background:${posColors[pos]}10;border:1px solid ${posColors[pos]}40;border-radius:6px">`;
-        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;color:var(--text2)">${pos}</div>`;
-        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:${posColors[pos]}">${ps.pts} pts</div>`;
-        html += `<div style="font-size:.55rem;color:var(--text2)">${ps.count} player${ps.count !== 1 ? 's' : ''}</div>`;
-        html += `</div>`;
-      });
-      html += `</div>`;
-      html += `<table style="width:100%;border-collapse:collapse;font-size:.7rem"><thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px 6px;color:var(--text2)">RD</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">PICK</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">POS</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">RANK</th><th style="text-align:center;padding:4px 6px;color:var(--text2)">VAL</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">+/-</th></tr></thead><tbody>`;
-      d.picks.forEach((p, pi) => {
-        const matched = _udMatchPlayer(p.name);
-        const rank = matched ? _mtGetPlayerRank(matched.n) : 999;
-        const tradeVal = _udGetValue(p.name);
-        const diff = rank < 500 ? p.pick - rank : 0;
-        const diffColor = diff > 20 ? '#22c55e' : diff > 0 ? '#4ade80' : diff < -20 ? '#ef4444' : diff < 0 ? '#f59e0b' : 'var(--text2)';
-        const diffStr = rank < 500 ? (diff > 0 ? '+' + diff : String(diff)) : '—';
-        const rankColor = rank <= 24 ? '#22c55e' : rank <= 60 ? '#4ade80' : rank <= 120 ? '#facc15' : rank <= 200 ? '#f59e0b' : rank < 500 ? '#ef4444' : 'var(--text2)';
-        const valColor = tradeVal >= 150 ? '#22c55e' : tradeVal >= 75 ? '#4ade80' : tradeVal >= 30 ? '#facc15' : tradeVal >= 10 ? '#f59e0b' : 'var(--text2)';
-        html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:3px 6px;color:var(--text2)">${pi + 1}</td><td style="padding:3px 6px;color:var(--text2)">${p.pick}</td><td style="padding:3px 6px;color:var(--text)">${_esc(p.name)}</td><td style="padding:3px 6px;color:var(--text2)">${p.pos}</td><td style="padding:3px 6px;font-weight:700;color:${rankColor}">${rank < 500 ? rank : '—'}</td><td style="text-align:center;padding:3px 6px;font-weight:700;color:${valColor}">${tradeVal}</td><td style="padding:3px 6px;font-weight:700;color:${diffColor}">${diffStr}</td></tr>`;
-      });
-      html += `</tbody></table>`;
-      html += `</div>`;
-      html += `</div>`;
-    });
-    html += `</div>`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAMS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(your team vs every opponent in each pool)</span></div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked. Click any team to open its roster (score · proj PPG · ADP). <strong style="color:var(--accent)">Top-2 of 12 advance to playoffs (BBM &amp; Puppy, weeks 1-14).</strong></div>`;
 
-    // ADP VALUE TAB
-    html += `<div id="udTab_adp" style="display:none">`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">ADP VALUE</div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Teams ranked by total draft value vs Underdog ADP. Positive value = you got players later than their ADP (steal). Negative = reached.</div>`;
+    // Helper: Box-Muller normal sampler for Monte Carlo.
+    function _udGauss() {
+      const u = 1 - Math.random();
+      const v = Math.random();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+    // Helper: pull projected PPG for a player. adj25ppg() returns the
+    // current-season projection used elsewhere on the site.
+    function _udPlayerProj(name) {
+      const m = _udMatchPlayer(name);
+      if (!m) return null;
+      try { const v = adj25ppg(m); return (v != null) ? v : null; } catch (_) { return null; }
+    }
 
-    // Score each draft by ADP
-    const adpTeams = [];
+    // Build per-draft analysis. Each entry: { d, teams[ranked], myEntry, myRank, myAdv2, fieldComplete }
+    const _udTeamsRows = [];
     Object.values(data.drafts).forEach(d => {
-      let totalAdpVal = 0;
-      let totalAdp = 0;
-      let matchedCount = 0;
-      const playerDetails = d.picks.map((p, pi) => {
-        const matched = _udMatchPlayer(p.name);
-        const adp = matched && matched.a && matched.a < 900 ? matched.a : null;
-        const pickNum = p.pick;
-        const diff = adp != null ? Math.round(pickNum - adp) : null; // positive = picked later than ADP (steal), negative = reached
-        if (adp != null) { totalAdpVal += diff; totalAdp += adp; matchedCount++; }
-        return { name: p.name, pos: p.pos, team: p.team, pick: pickNum, adp, diff, round: pi + 1 };
+      const at = d.allTeams && typeof d.allTeams === 'object' ? d.allTeams : null;
+      const sourceTeams = (at && Object.keys(at).length >= 2)
+        ? Object.values(at)
+        : [{ entryId: 'me', isMine: true, picks: d.picks || [], pickCount: (d.picks || []).length }];
+      const fieldComplete = !!(at && Object.keys(at).length >= 2);
+      const teams = sourceTeams.map(t => {
+        const picks = t.picks || [];
+        const sc = _udScoreTeam(picks.map(p => p.name));
+        // Per-pick details: rank, val, proj, adp, diff vs ADP, diff vs rank
+        const rosterDetails = picks.slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map((p, pi) => {
+          const matched = _udMatchPlayer(p.name);
+          const rank = matched ? _mtGetPlayerRank(matched.n) : 999;
+          const tradeVal = _udGetValue(p.name);
+          const adp = matched && matched.a && matched.a < 900 ? matched.a : null;
+          const proj = _udPlayerProj(p.name);
+          const adpDiff = adp != null ? Math.round(p.pick - adp) : null;
+          const rankDiff = rank < 500 ? p.pick - rank : null;
+          return {
+            round: pi + 1,
+            pick: p.pick,
+            name: p.name,
+            pos: p.pos,
+            team: p.team,
+            rank: rank,
+            val: tradeVal,
+            proj: proj,
+            adp: adp,
+            adpDiff: adpDiff,
+            rankDiff: rankDiff
+          };
+        });
+        // Sum projection for the whole roster (used in the team header line).
+        const projSum = rosterDetails.reduce((s, x) => s + (x.proj || 0), 0);
+        // Aggregate ADP value (positive = stole players late, negative = reached).
+        const adpValue = rosterDetails.reduce((s, x) => s + (x.adpDiff || 0), 0);
+        return {
+          entryId: t.entryId,
+          isMine: !!t.isMine,
+          picks: picks,
+          rosterDetails: rosterDetails,
+          total: sc.total,
+          posScores: sc.posScores,
+          projSum: projSum,
+          adpValue: adpValue,
+          fieldUnknown: !fieldComplete
+        };
       });
-      adpTeams.push({ draft: d, players: playerDetails, totalValue: totalAdpVal, avgAdp: matchedCount > 0 ? Math.round(totalAdp / matchedCount) : 999, matched: matchedCount });
-    });
-    adpTeams.sort((a, b) => b.totalValue - a.totalValue);
 
-    // Summary row
-    const allAdpVals = adpTeams.map(t => t.totalValue);
-    const bestAdpVal = Math.max(...allAdpVals);
-    const worstAdpVal = Math.min(...allAdpVals);
-    const avgAdpVal = allAdpVals.length ? Math.round(allAdpVals.reduce((s, v) => s + v, 0) / allAdpVals.length) : 0;
-    html += `<div style="display:flex;gap:10px;margin-bottom:14px">`;
-    html += `<div style="flex:1;text-align:center;padding:8px;background:#22c55e10;border:1px solid #22c55e40;border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">BEST VALUE</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#22c55e">${bestAdpVal > 0 ? '+' : ''}${bestAdpVal}</div></div>`;
-    html += `<div style="flex:1;text-align:center;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">AVERAGE</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--accent)">${avgAdpVal > 0 ? '+' : ''}${avgAdpVal}</div></div>`;
-    html += `<div style="flex:1;text-align:center;padding:8px;background:#ef444410;border:1px solid #ef444440;border-radius:8px"><div style="font-size:.6rem;color:var(--text2)">WORST VALUE</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#ef4444">${worstAdpVal > 0 ? '+' : ''}${worstAdpVal}</div></div>`;
+      // Monte Carlo advance probabilities for this draft's teams.
+      const N = teams.length;
+      const totals = teams.map(t => t.total);
+      const sigma = totals.map(m => Math.max(m * 0.18, 1));
+      const ITER = (N >= 2) ? 2000 : 0;
+      const adv1 = new Array(N).fill(0);
+      const adv2 = new Array(N).fill(0);
+      const adv3 = new Array(N).fill(0);
+      for (let it = 0; it < ITER; it++) {
+        const sampled = totals.map((m, idx) => m + sigma[idx] * _udGauss());
+        const order = sampled.map((s, idx) => ({ idx, s })).sort((a, b) => b.s - a.s);
+        adv1[order[0].idx]++;
+        if (N >= 2) { adv2[order[0].idx]++; adv2[order[1].idx]++; }
+        if (N >= 3) { adv3[order[0].idx]++; adv3[order[1].idx]++; adv3[order[2].idx]++; }
+      }
+      teams.forEach((t, i) => {
+        t.adv1 = ITER ? adv1[i] / ITER : null;
+        t.adv2 = ITER ? adv2[i] / ITER : null;
+        t.adv3 = ITER ? adv3[i] / ITER : null;
+      });
+      const ranked = teams.slice().sort((a, b) => b.total - a.total);
+      ranked.forEach((t, i) => { t.rank = i + 1; });
+      const myEntry = teams.find(t => t.isMine) || ranked[0];
+      _udTeamsRows.push({
+        d: d,
+        teams: ranked,
+        myEntry: myEntry,
+        myRank: myEntry ? myEntry.rank : null,
+        myAdv2: myEntry ? myEntry.adv2 : null,
+        fieldComplete: fieldComplete
+      });
+    });
+
+    // Portfolio summary cards (advance %, expected advances, avg rank, top-4 rate)
+    const _completeRows = _udTeamsRows.filter(x => x.fieldComplete);
+    const _avgAdv2 = _completeRows.length
+      ? _completeRows.reduce((s, x) => s + (x.myAdv2 || 0), 0) / _completeRows.length : null;
+    const _expAdv = _completeRows.reduce((s, x) => s + (x.myAdv2 || 0), 0);
+    const _avgRank = _completeRows.length
+      ? _completeRows.reduce((s, x) => s + (x.myRank || 0), 0) / _completeRows.length : null;
+    const _top4Count = _completeRows.filter(x => x.myRank && x.myRank <= 4).length;
+
+    function _udSummaryCard(label, val, sub, color) {
+      return `<div style="text-align:center;padding:14px 8px;background:var(--surface);border:1px solid ${color || 'var(--border)'};border-radius:10px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--text2)">${label}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:${color || 'var(--accent)'};margin:2px 0">${val}</div>
+        <div style="font-size:.6rem;color:var(--text2)">${sub}</div>
+      </div>`;
+    }
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px">`;
+    if (_avgAdv2 == null) {
+      html += `<div style="grid-column:1/-1;text-align:center;padding:14px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;color:var(--text2);font-size:.78rem">No full-field drafts yet — re-run <strong style="color:var(--accent)">Sync from Underdog</strong> with the extension to capture every opponent's roster, then advance % and field rankings appear here.</div>`;
+    } else {
+      html += _udSummaryCard('PROJ ADV %', (_avgAdv2 * 100).toFixed(1) + '%', 'avg top-2 chance per draft', '#22c55e');
+      html += _udSummaryCard('EXP. ADVANCES', _expAdv.toFixed(1) + ' / ' + _completeRows.length, 'expected drafts you advance', '#4ade80');
+      html += _udSummaryCard('AVG RANK', (_avgRank || 0).toFixed(1) + ' / 12', 'where you sit in the field', '#fbbf24');
+      html += _udSummaryCard('TOP-4 RATE', Math.round(100 * _top4Count / _completeRows.length) + '%', _top4Count + ' of ' + _completeRows.length + ' drafts', '#3b82f6');
+    }
     html += `</div>`;
 
-    adpTeams.forEach((at, i) => {
-      const d = at.draft;
-      const valColor = at.totalValue > 20 ? '#22c55e' : at.totalValue > 0 ? '#4ade80' : at.totalValue > -20 ? '#f59e0b' : '#ef4444';
-      const valSign = at.totalValue > 0 ? '+' : '';
-      html += `<div onclick="window._udToggleAdpDetail(${i})" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
-      html += `<div style="display:flex;align-items:center;gap:10px">`;
-      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--text2);width:20px;text-align:center">${i + 1}</div>`;
-      html += `<div style="width:48px;height:44px;border-radius:8px;background:${valColor}15;border:2px solid ${valColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${valColor}">${valSign}${at.totalValue}</div>`;
-      html += `<div style="flex:1;min-width:0">`;
-      html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">Draft ${i + 1} <span style="font-weight:400;color:var(--text2)">· ${d.tournament} · $${d.fee.toFixed(0)}</span></div>`;
-      html += `<div style="font-size:.65rem;color:var(--text2)">R1: ${_esc(d.picks[0] ? d.picks[0].name : '?')} (pick ${d.picks[0] ? d.picks[0].pick : '?'})</div>`;
-      html += `</div>`;
-      html += `</div>`;
-      // Expandable detail
-      html += `<div id="udAdpDetail_${i}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">`;
-      html += `<table style="width:100%;border-collapse:collapse;font-size:.7rem"><thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px 6px;color:var(--text2)">RD</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:4px 6px;color:var(--text2)">POS</th><th style="text-align:center;padding:4px 6px;color:var(--text2)">PICK</th><th style="text-align:center;padding:4px 6px;color:var(--text2)">ADP</th><th style="text-align:center;padding:4px 6px;color:var(--text2)">VALUE</th></tr></thead><tbody>`;
-      at.players.forEach(p => {
-        const diffColor = p.diff == null ? 'var(--text2)' : p.diff > 20 ? '#22c55e' : p.diff > 0 ? '#4ade80' : p.diff > -20 ? '#f59e0b' : '#ef4444';
-        const diffStr = p.diff != null ? (p.diff > 0 ? '+' + p.diff : String(p.diff)) : '—';
-        const adpStr = p.adp != null ? Math.round(p.adp) : '—';
-        const adpColor = p.adp != null ? (p.adp <= 24 ? '#22c55e' : p.adp <= 60 ? '#4ade80' : p.adp <= 120 ? '#facc15' : p.adp <= 200 ? '#f59e0b' : 'var(--text2)') : 'var(--text2)';
-        const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-        html += `<tr style="border-bottom:1px solid var(--border)">`;
-        html += `<td style="padding:3px 6px;color:var(--text2)">${p.round}</td>`;
-        html += `<td style="padding:3px 6px;color:var(--text)">${_esc(p.name)}</td>`;
-        html += `<td style="padding:3px 6px;color:${posColors[p.pos] || 'var(--text2)'}">${p.pos}</td>`;
-        html += `<td style="text-align:center;padding:3px 6px;color:var(--text)">${p.pick}</td>`;
-        html += `<td style="text-align:center;padding:3px 6px;font-weight:700;color:${adpColor}">${adpStr}</td>`;
-        html += `<td style="text-align:center;padding:3px 6px;font-weight:700;color:${diffColor}">${diffStr}</td>`;
-        html += `</tr>`;
-      });
-      html += `</tbody></table>`;
-      // Draft summary
-      const steals = at.players.filter(p => p.diff != null && p.diff > 10).sort((a, b) => b.diff - a.diff);
-      const reaches = at.players.filter(p => p.diff != null && p.diff < -10).sort((a, b) => a.diff - b.diff);
-      if (steals.length || reaches.length) {
-        html += `<div style="display:flex;gap:10px;margin-top:8px">`;
-        if (steals.length) {
-          html += `<div style="flex:1"><div style="font-size:.6rem;color:#22c55e;font-weight:700;margin-bottom:3px">STEALS</div>`;
-          steals.slice(0, 3).forEach(s => {
-            html += `<div style="font-size:.65rem;color:var(--text)">${_esc(s.name)} <span style="color:#22c55e;font-weight:700">+${s.diff}</span></div>`;
-          });
-          html += `</div>`;
-        }
-        if (reaches.length) {
-          html += `<div style="flex:1"><div style="font-size:.6rem;color:#ef4444;font-weight:700;margin-bottom:3px">REACHES</div>`;
-          reaches.slice(0, 3).forEach(r => {
-            html += `<div style="font-size:.65rem;color:var(--text)">${_esc(r.name)} <span style="color:#ef4444;font-weight:700">${r.diff}</span></div>`;
-          });
-          html += `</div>`;
+    // Per-draft expandable rows (sorted by user advance % desc, fall back to score)
+    const _sortedRows = _udTeamsRows.slice().sort((a, b) => {
+      const av = a.myAdv2 != null ? a.myAdv2 : -1;
+      const bv = b.myAdv2 != null ? b.myAdv2 : -1;
+      if (bv !== av) return bv - av;
+      return (b.myEntry ? b.myEntry.total : 0) - (a.myEntry ? a.myEntry.total : 0);
+    });
+
+    if (!_sortedRows.length) {
+      html += `<div style="text-align:center;padding:30px;color:var(--text2);font-size:.8rem">No drafts to compare yet.</div>`;
+    } else {
+      _sortedRows.forEach((row, i) => {
+        const d = row.d;
+        const my = row.myEntry;
+        const advPct = (my && my.adv2 != null) ? Math.round(my.adv2 * 100) : null;
+        const advColor = advPct == null ? 'var(--text2)' :
+                          advPct >= 30 ? '#22c55e' :
+                          advPct >= 18 ? '#4ade80' :
+                          advPct >= 10 ? '#facc15' :
+                          advPct >= 5  ? '#f59e0b' : '#ef4444';
+        const rankStr = row.myRank ? `#${row.myRank}/${row.teams.length}` : '—';
+        const fieldNote = row.fieldComplete ? '' : ' <span style="font-size:.55rem;color:var(--text2);font-style:italic">(opponents not synced)</span>';
+        html += `<div onclick="window._udToggleTeamsDraft(${i})" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
+        html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
+        // Advance % badge
+        html += `<div style="width:64px;text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${advColor};line-height:1">${advPct == null ? '—' : advPct + '%'}</div>
+          <div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px">TOP-2 ADV</div>
+        </div>`;
+        // Rank badge
+        html += `<div style="width:48px;text-align:center;padding:6px 4px;background:var(--surface2);border-radius:6px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--text)">${rankStr}</div>
+          <div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px">YOUR RANK</div>
+        </div>`;
+        // Title block
+        html += `<div style="flex:1;min-width:160px">`;
+        html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">${_esc(d.tournament)} <span style="font-weight:400;color:var(--text2)">· $${(d.fee || 0).toFixed(0)} · ${row.teams.length}-team</span>${fieldNote}</div>`;
+        if (my) {
+          html += `<div style="font-size:.65rem;color:var(--text2)">Your score: <span style="color:var(--text);font-weight:600">${my.total}</span> · Proj: <span style="color:var(--text);font-weight:600">${my.projSum.toFixed(1)}</span> · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span></div>`;
         }
         html += `</div>`;
-      }
-      html += `</div>`;
-      html += `</div>`;
-    });
+        html += `<div style="font-size:.65rem;color:var(--text2);text-align:right;line-height:1.4">
+          <div>top-1 <span style="color:var(--text);font-weight:600">${my && my.adv1 != null ? Math.round(my.adv1 * 100) + '%' : '—'}</span></div>
+          <div>top-3 <span style="color:var(--text);font-weight:600">${my && my.adv3 != null ? Math.round(my.adv3 * 100) + '%' : '—'}</span></div>
+        </div>`;
+        html += `</div>`;
+
+        // Draft expand: shows all 12 teams + roster expand-on-click for each.
+        html += `<div id="udTeamsDraft_${i}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">`;
+        if (!row.fieldComplete) {
+          html += `<div style="font-size:.7rem;color:var(--text2);font-style:italic;padding:10px 0">This draft was uploaded via CSV which doesn't capture other entrants. Re-sync from Underdog to see every opponent.</div>`;
+          // Even with no field, still show user's roster on click below
+        }
+        // Team list within draft. Each row clickable.
+        row.teams.forEach((t, ti) => {
+          const isMine = t.isMine;
+          const adv2pct = t.adv2 != null ? Math.round(t.adv2 * 100) : null;
+          const adv1pct = t.adv1 != null ? Math.round(t.adv1 * 100) : null;
+          const adv2col = adv2pct == null ? 'var(--text2)' :
+                          adv2pct >= 30 ? '#22c55e' :
+                          adv2pct >= 18 ? '#4ade80' :
+                          adv2pct >= 10 ? '#facc15' :
+                          adv2pct >= 5  ? '#f59e0b' : '#ef4444';
+          const rowBg = isMine ? 'background:linear-gradient(90deg,rgba(251,191,36,0.18),transparent);' : 'background:var(--surface2);';
+          const teamLabel = isMine ? '<span style="color:var(--accent);font-weight:700">YOU</span>' : 'Opponent ' + ((t.entryId || '').slice(0, 6) || (ti + 1));
+          html += `<div onclick="event.stopPropagation();window._udToggleTeamsRoster(${i}, ${ti})" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;${rowBg}cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">`;
+          html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
+          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--text);width:30px">#${t.rank}</div>`;
+          html += `<div style="flex:1;min-width:90px;font-size:.72rem">${teamLabel}</div>`;
+          html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:70px">
+            <div><span style="color:var(--text);font-weight:700">${t.total}</span> score</div>
+            <div><span style="color:var(--text);font-weight:600">${t.projSum.toFixed(1)}</span> proj</div>
+          </div>`;
+          html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:60px">
+            <div>ADP val <span style="color:${(t.adpValue||0) > 0 ? '#22c55e' : (t.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(t.adpValue||0) > 0 ? '+' : ''}${t.adpValue || 0}</span></div>
+          </div>`;
+          // Position mini-bar
+          html += `<div style="display:flex;gap:3px">`;
+          ['QB','RB','WR','TE'].forEach(pos => {
+            const ps = t.posScores[pos] || { pts: 0 };
+            const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+            html += `<div style="text-align:center;min-width:24px"><div style="font-size:.45rem;color:var(--text2)">${pos}</div><div style="font-size:.6rem;font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
+          });
+          html += `</div>`;
+          // Advance % badges
+          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${adv2col};text-align:right;min-width:54px">${adv2pct == null ? '—' : adv2pct + '%'}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">TOP-2</div></div>`;
+          html += `</div>`;
+
+          // Roster expand within the team row.
+          html += `<div id="udTeamsRoster_${i}_${ti}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">`;
+          html += `<table style="width:100%;border-collapse:collapse;font-size:.68rem">
+            <thead><tr style="border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:3px 6px;color:var(--text2)">RD</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)">PICK</th>
+              <th style="text-align:left;padding:3px 6px;color:var(--text2)">PLAYER</th>
+              <th style="text-align:left;padding:3px 6px;color:var(--text2)">POS</th>
+              <th style="text-align:left;padding:3px 6px;color:var(--text2)">TEAM</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)">RANK</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)">VAL</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)">PROJ</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)">ADP</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)">+/-</th>
+            </tr></thead><tbody>`;
+          t.rosterDetails.forEach(p => {
+            const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+            const rankColor = p.rank <= 24 ? '#22c55e' : p.rank <= 60 ? '#4ade80' : p.rank <= 120 ? '#facc15' : p.rank <= 200 ? '#f59e0b' : p.rank < 500 ? '#ef4444' : 'var(--text2)';
+            const valColor = p.val >= 150 ? '#22c55e' : p.val >= 75 ? '#4ade80' : p.val >= 30 ? '#facc15' : p.val >= 10 ? '#f59e0b' : 'var(--text2)';
+            const adpColor = p.adp == null ? 'var(--text2)' : p.adp <= 24 ? '#22c55e' : p.adp <= 60 ? '#4ade80' : p.adp <= 120 ? '#facc15' : p.adp <= 200 ? '#f59e0b' : 'var(--text2)';
+            const adpDiffColor = p.adpDiff == null ? 'var(--text2)' :
+                                 p.adpDiff > 20 ? '#22c55e' :
+                                 p.adpDiff > 0 ? '#4ade80' :
+                                 p.adpDiff > -20 ? '#f59e0b' : '#ef4444';
+            const adpDiffStr = p.adpDiff != null ? (p.adpDiff > 0 ? '+' + p.adpDiff : String(p.adpDiff)) : '—';
+            html += `<tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:3px 6px;color:var(--text2)">${p.round}</td>
+              <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.pick}</td>
+              <td style="padding:3px 6px;color:var(--text)">${_esc(p.name)}</td>
+              <td style="padding:3px 6px;color:${posColors[p.pos] || 'var(--text2)'};font-weight:600">${p.pos || '—'}</td>
+              <td style="padding:3px 6px;color:var(--text2)">${_esc(p.team || '')}</td>
+              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${rankColor}">${p.rank < 500 ? p.rank : '—'}</td>
+              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${valColor}">${p.val}</td>
+              <td style="padding:3px 6px;text-align:right;color:var(--text)">${p.proj != null ? p.proj.toFixed(1) : '—'}</td>
+              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${adpColor}">${p.adp != null ? Math.round(p.adp) : '—'}</td>
+              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${adpDiffColor}">${adpDiffStr}</td>
+            </tr>`;
+          });
+          html += `</tbody></table>`;
+          html += `</div>`;
+          html += `</div>`;
+        });
+        html += `</div>`;
+        html += `</div>`;
+      });
+    }
     html += `</div>`;
 
     // DRAFT BOARD TAB
@@ -40258,6 +40370,8 @@ Rules:
       html += `</tbody></table>`;
     }
     html += `</div>`;
+
+    // ── (VS FIELD content removed in v0.9.40 — folded into the TEAMS tab) ──
 
     // BUILD ANALYSIS TAB
     html += `<div id="udTab_builds" style="display:none">`;
@@ -40478,7 +40592,7 @@ Rules:
   };
 
   window._udSwitchTab = function(tabId) {
-    const tabs = ['exposure', 'teams', 'adp', 'board', 'value', 'builds'];
+    const tabs = ['exposure', 'teams', 'board', 'value', 'builds'];
     tabs.forEach(t => {
       const el = document.getElementById('udTab_' + t);
       if (el) el.style.display = t === tabId ? '' : 'none';
@@ -40491,13 +40605,14 @@ Rules:
     });
   };
 
-  window._udToggleTeamDetail = function(idx) {
-    const el = document.getElementById('udTeamDetail_' + idx);
+  // v0.9.40: TEAMS tab uses these two toggles. Top-level expands a draft to
+  // show all 12 teams; second-level expands one team to its full roster.
+  window._udToggleTeamsDraft = function(idx) {
+    const el = document.getElementById('udTeamsDraft_' + idx);
     if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
   };
-
-  window._udToggleAdpDetail = function(idx) {
-    const el = document.getElementById('udAdpDetail_' + idx);
+  window._udToggleTeamsRoster = function(draftIdx, teamIdx) {
+    const el = document.getElementById('udTeamsRoster_' + draftIdx + '_' + teamIdx);
     if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
   };
 

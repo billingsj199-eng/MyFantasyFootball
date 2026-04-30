@@ -39226,6 +39226,62 @@ Rules:
     return { drafts, players, numDrafts, totalInvestment, totalPicks };
   }
 
+  // ---------- v0.9.35: MFF Underdog Draft Helper integration ----------
+  // The browser extension pushes synced portfolio data via a CustomEvent
+  // handled by page-bridge.js. That bridge calls window._mffSetPortfolio()
+  // if defined. We define it here so incoming extension data flows through
+  // the SITE's own merge + render pipeline (the same code CSV uploads use).
+  window._mffSetPortfolio = function(extPortfolio) {
+    if (!extPortfolio || !extPortfolio.drafts) {
+      console.warn('[MFF/site] _mffSetPortfolio called with no drafts');
+      return;
+    }
+
+    // Extension shape: drafts is an array of {id, entry_fee, picks: [{name,pos,team,pick}]}.
+    // Site shape: drafts is an object keyed by id with {id, tournament, fee, size, date, phase, picks}.
+    const arr = Array.isArray(extPortfolio.drafts)
+      ? extPortfolio.drafts
+      : Object.values(extPortfolio.drafts);
+
+    // Start with the existing portfolio's drafts (preserve CSV-uploaded data),
+    // then layer the extension drafts on top — extension overwrites by id.
+    const draftsObj = {};
+    if (window._udPortfolio && window._udPortfolio.drafts) {
+      Object.assign(draftsObj, window._udPortfolio.drafts);
+    }
+    for (const d of arr) {
+      if (!d || !d.id) continue;
+      draftsObj[d.id] = {
+        id: d.id,
+        tournament: d.tournament || d.title || 'Underdog',
+        fee: parseFloat(d.entry_fee || d.fee || 0) || 0,
+        size: d.size || 12,
+        date: d.date || '',
+        phase: d.phase || 'pre',
+        picks: (d.picks || []).map(p => ({
+          name: p.name,
+          pos: p.pos || '',
+          team: p.team || '',
+          pick: parseInt(p.pick || 0, 10) || 0
+        }))
+      };
+    }
+
+    // Rebuild aggregates with the site's own logic, then render with the
+    // site's own dashboard. _udRenderDashboard reads the dashboard DOM
+    // (#mtUnderdogDashboard) and rebuilds it from the data.
+    window._udPortfolio = _udRebuildPlayers(draftsObj);
+    try {
+      if (typeof _udRenderDashboard === 'function') _udRenderDashboard(window._udPortfolio);
+    } catch (e) { console.warn('[MFF/site] render error:', e); }
+    try {
+      if (typeof _udSaveToCloud === 'function') _udSaveToCloud(window._udPortfolio);
+    } catch (e) { console.warn('[MFF/site] cloud save error:', e); }
+    console.log('[MFF/site] _mffSetPortfolio applied: now',
+                window._udPortfolio.numDrafts, 'drafts /',
+                Object.keys(window._udPortfolio.players || {}).length, 'unique players');
+  };
+
   window._mtParseUnderdogCSV = function(input) {
     const file = input.files[0];
     if (!file) return;

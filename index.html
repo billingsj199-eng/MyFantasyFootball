@@ -2944,6 +2944,55 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 .bt-method-box{margin-top:1rem;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:.78rem;color:var(--text2);line-height:1.6;display:none}
 .bt-method-box.open{display:block}
 .bt-method-box code{background:rgba(255,255,255,.05);padding:1px 5px;border-radius:3px;color:var(--text)}
+/* Backtest Diagnostics (Apr 2026 v9.2) — correlations, residuals, weight lab */
+.bt-diag-section{margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+.bt-diag-header{margin-bottom:1rem}
+.bt-diag-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--accent);line-height:1}
+.bt-diag-subtitle{color:var(--text2);font-size:.78rem;margin-top:.3rem;line-height:1.5}
+.bt-corr-section-title{font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);margin:1.5rem 0 .75rem;font-weight:600}
+.bt-corr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.bt-corr-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.bt-corr-card-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.bt-corr-card-title{font-size:.65rem;letter-spacing:1px;text-transform:uppercase;color:var(--text2);font-weight:600}
+.bt-corr-card-n{font-size:.6rem;color:var(--text3)}
+.bt-corr-card-rho{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--text);line-height:1}
+.bt-corr-card-rho.good{color:#22c55e}
+.bt-corr-card-rho.ok{color:#60a5fa}
+.bt-corr-card-rho.weak{color:#fbbf24}
+.bt-corr-card-rho.bad{color:#ef4444}
+.bt-corr-card-sub{font-size:.65rem;color:var(--text3);margin-top:2px}
+.bt-corr-card-delta{font-size:.7rem;font-weight:600;margin-top:4px}
+.bt-corr-card-delta.up{color:#22c55e}
+.bt-corr-card-delta.down{color:#ef4444}
+.bt-resid-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.bt-resid-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.bt-resid-card-head{font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--text2);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.bt-resid-card-tag{font-size:.55rem;color:var(--text3);font-weight:400;letter-spacing:.5px}
+.bt-resid-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;font-size:.78rem;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.04);align-items:baseline}
+.bt-resid-row:last-child{border-bottom:none}
+.bt-resid-name{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-resid-pos{font-size:.6rem;color:var(--text2);margin-left:4px}
+.bt-resid-jm{font-size:.7rem;color:var(--text2);font-variant-numeric:tabular-nums;text-align:right}
+.bt-resid-pick{font-size:.7rem;color:var(--text2);font-variant-numeric:tabular-nums;text-align:right;min-width:46px}
+.bt-resid-empty{font-size:.75rem;color:var(--text3);font-style:italic;padding:6px 0}
+.bt-weight-lab{margin-top:2rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0}
+.bt-weight-lab summary{padding:14px 16px;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text);list-style:none;user-select:none}
+.bt-weight-lab summary::-webkit-details-marker{display:none}
+.bt-weight-lab summary::before{content:'▶ ';font-size:.7rem;color:var(--accent);transition:transform .15s;display:inline-block;margin-right:6px}
+.bt-weight-lab[open] summary::before{transform:rotate(90deg)}
+.bt-weight-lab-body{padding:0 16px 16px}
+.bt-weight-lab-help{font-size:.75rem;color:var(--text2);line-height:1.5;margin-bottom:10px}
+.bt-weight-lab-ta{width:100%;min-height:200px;font-family:'Menlo','Monaco',monospace;font-size:.75rem;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px;resize:vertical;line-height:1.5}
+.bt-weight-lab-ta:focus{outline:none;border-color:var(--accent)}
+.bt-weight-lab-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.bt-weight-lab-btn{padding:7px 14px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:.78rem;cursor:pointer;font-family:'DM Sans',sans-serif}
+.bt-weight-lab-btn:hover{background:var(--surface2);border-color:var(--accent)}
+.bt-weight-lab-btn.primary{background:var(--accent);color:#1a1a1a;border-color:var(--accent);font-weight:600}
+.bt-weight-lab-btn.primary:hover{filter:brightness(1.1)}
+.bt-weight-lab-btn:disabled{opacity:.4;cursor:not-allowed}
+.bt-weight-lab-results{margin-top:14px}
+.bt-weight-lab-error{color:#ef4444;font-size:.78rem;padding:10px 12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:6px;margin-top:10px}
+.bt-weight-lab-running{color:var(--text2);font-size:.78rem;padding:10px 0;font-style:italic}
 @media (max-width:640px){
   .bt-wrapper{padding:14px 10px}
   .bt-title{font-size:1.5rem}
@@ -3021,6 +3070,38 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </thead>
 <tbody id="btTierTbody"><tr><td colspan="8" class="bt-empty">Loading prospect model...</td></tr></tbody>
 </table>
+
+<!-- ═══ DIAGNOSTICS (v9.2) ═══ Spearman correlations, residuals, weight lab -->
+<div class="bt-diag-section" id="btDiagSection">
+<div class="bt-diag-header">
+<div class="bt-diag-title">Predictive Power</div>
+<div class="bt-diag-subtitle">Spearman ρ between JM Score and NFL outcome (2017-2024 curveScore) and between JM Rank and actual draft slot (2024-2026). LOYO = leave-one-year-out average.</div>
+</div>
+
+<div class="bt-corr-section-title">JM vs. NFL Outcome (curveScore, 2017-2024)</div>
+<div class="bt-corr-grid" id="btCorrOutcomeGrid"></div>
+
+<div class="bt-corr-section-title">JM Rank vs. Draft Slot (Recent Classes)</div>
+<div class="bt-corr-grid" id="btCorrDraftGrid"></div>
+
+<div class="bt-corr-section-title">Biggest Misses — Recent Draft Classes</div>
+<div class="bt-resid-grid" id="btResidGrid"></div>
+
+<details class="bt-weight-lab" id="btWeightLab">
+<summary>Weight Lab — test alternate JM weights</summary>
+<div class="bt-weight-lab-body">
+<div class="bt-weight-lab-help">Edit the weights JSON below, then click <b>Re-run</b>. Each position has separate <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px">floor</code> (calibrated to starter rate, default 60% of blend) and <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px">ceiling</code> (calibrated to elite rate, default 40%). Each must sum to 1.0 (the lab will warn). Click <b>Reset</b> to restore. Deltas vs. baseline appear in the cards above.</div>
+<textarea id="btWeightLabTextarea" class="bt-weight-lab-ta" spellcheck="false"></textarea>
+<div class="bt-weight-lab-actions">
+<button class="bt-weight-lab-btn primary" id="btWeightLabRun">Re-run with these weights</button>
+<button class="bt-weight-lab-btn" id="btWeightLabReset">Reset to baseline</button>
+<button class="bt-weight-lab-btn" id="btWeightLabDownload">Download full backtest JSON</button>
+</div>
+<div id="btWeightLabResults" class="bt-weight-lab-results"></div>
+</div>
+</details>
+
+</div>
 </div>
 </div>
 
@@ -3134,7 +3215,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent)">UNDERDOG PORTFOLIO</div>
 <span style="font-size:.55rem;padding:2px 6px;border-radius:3px;background:var(--accent);color:#000;font-weight:700;letter-spacing:.5px">NEW</span>
 </div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Upload your Underdog best ball CSV to analyze your full portfolio. Upload pre-NFL-draft and NFL season CSVs separately — they'll merge into one portfolio.</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Upload your Underdog best ball CSV to analyze your full portfolio. Upload pre-NFL-draft, post-NFL-draft, and superflex CSVs separately — they'll merge into one portfolio.</div>
 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
 <button type="button" onclick="window._udPromptPhaseAndUpload()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</button>
 <input type="file" id="mtUnderdogCSV" accept=".csv" onchange="window._mtParseUnderdogCSV(this)" style="display:none">
@@ -3145,10 +3226,11 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- Phase picker (shown when UPLOAD CSV is clicked) -->
 <div id="mtUnderdogPhasePicker" style="display:none;margin-top:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;color:var(--text);margin-bottom:8px">WHICH CONTESTS ARE IN THIS CSV?</div>
-<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Underdog separates exports between pre-NFL-draft and NFL season contests. Pick the phase, then choose your file.</div>
+<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Underdog separates exports between pre-NFL-draft, NFL season, and superflex contests. Pick the phase, then choose your file.</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap">
-<button type="button" onclick="window._udPickPhase('pre')" style="flex:1;min-width:140px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">PRE-NFL DRAFT</button>
-<button type="button" onclick="window._udPickPhase('nfl')" style="flex:1;min-width:140px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">NFL SEASON</button>
+<button type="button" onclick="window._udPickPhase('pre')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">PRE-NFL DRAFT</button>
+<button type="button" onclick="window._udPickPhase('nfl')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">POST-NFL DRAFT</button>
+<button type="button" onclick="window._udPickPhase('superflex')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">SUPERFLEX</button>
 <button type="button" onclick="document.getElementById('mtUnderdogPhasePicker').style.display='none'" style="padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;color:var(--text2);cursor:pointer">CANCEL</button>
 </div>
 </div>
@@ -3858,6 +3940,7 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <div class="md-lineup-slot"><span class="md-ls-pos" style="background:rgba(255,255,255,.06);color:var(--text2)">BENCH</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="BN">−</button><span class="md-step-val md-lu-val" data-lupos="BN">6</span><button class="md-step-btn md-lu-inc" data-lupos="BN">+</button></div></div>
 </div>
 <div class="md-roster-total" id="mdRosterTotal">Roster size: 15 — Rounds will match</div>
+<div id="mdFormatHint" style="font-size:.65rem;color:var(--accent);font-style:italic;margin-top:4px;display:none">Auto-detected: Superflex (using superflex ADP &amp; rankings)</div>
 <!-- Rookie Draft Setup (hidden unless rookie mode) -->
 <div id="mdRookieSetup" style="display:none">
 <div class="md-setup-divider"></div>
@@ -22439,6 +22522,7 @@ window.fmtHeight = fmtHeight;
         mdLineup[pos]--;
         document.querySelector('.md-lu-val[data-lupos="'+pos+'"]').textContent = mdLineup[pos];
         syncLineupTotal();
+        _onLineupChanged(pos);
       }
     });
   });
@@ -22449,12 +22533,34 @@ window.fmtHeight = fmtHeight;
         mdLineup[pos]++;
         document.querySelector('.md-lu-val[data-lupos="'+pos+'"]').textContent = mdLineup[pos];
         syncLineupTotal();
+        _onLineupChanged(pos);
       }
     });
   });
   function syncLineupTotal() {
     const sz = getRosterSize();
     document.getElementById('mdRosterTotal').textContent = 'Roster size: ' + sz + ' \u2014 Rounds will match';
+  }
+
+  // Refresh the auto-detect superflex indicator. Called after any lineup
+  // change and after mode switches. The mock-draft engine reads
+  // isMdEffectivelySuperflex() at draft time, so we don't need to mutate
+  // mdMode here \u2014 just communicate the detected state to the user.
+  function _refreshFormatHint() {
+    const hint = document.getElementById('mdFormatHint');
+    if (!hint) return;
+    // Show only when REDRAFT mode but lineup has SFLEX>0 or QB>1 \u2014 that's the
+    // case where format-tab and effective-mode disagree and the indicator
+    // adds value. In SUPERFLEX mode it's redundant; in 1QB dynasty / rookie
+    // it doesn't apply.
+    const showAuto = (mdMode === 'redraft') && _isMdSfLineup();
+    hint.style.display = showAuto ? '' : 'none';
+  }
+
+  // Triggered after any lineup stepper change \u2014 only steppers for QB or SFLEX
+  // can flip the effective format, so the indicator only repaints for those.
+  function _onLineupChanged(pos) {
+    if (pos === 'QB' || pos === 'SFLEX') _refreshFormatHint();
   }
 
   // Lineup presets per mode+adp combination
@@ -22485,6 +22591,7 @@ window.fmtHeight = fmtHeight;
       if (el) el.textContent = mdLineup[pos];
     });
     syncLineupTotal();
+    _refreshFormatHint();
   }
 
   const modeTabs = document.querySelectorAll('#mdModeTabs .md-mode-tab');
@@ -22561,17 +22668,39 @@ window.fmtHeight = fmtHeight;
     }
   })();
 
+  // === Auto-detect Superflex from the lineup ===
+  // Goal: drafting tool should "just know" if the user is running superflex.
+  // - Format mode SUPERFLEX/DYNASTY SF → always treat as superflex
+  // - Format mode REDRAFT (incl. best-ball variants) → treat as superflex if
+  //   the lineup has SFLEX > 0 OR more than one starting QB
+  // - Format mode DYNASTY 1QB → never superflex (1QB by definition)
+  function _isMdSfLineup() {
+    return ((mdLineup.QB || 0) > 1) || ((mdLineup.SFLEX || 0) > 0);
+  }
+  function isMdEffectivelySuperflex() {
+    if (mdMode === 'superflex' || mdMode === 'dynastysf') return true;
+    if (mdMode === 'dynasty') return false;
+    if (mdMode === 'rookie') return mdRookieScoring === 'sf';
+    return _isMdSfLineup();
+  }
+  // Expose so other modules (mock draft engine helpers) can read it.
+  window._isMdEffectivelySuperflex = isMdEffectivelySuperflex;
+
   // SFLEX slot visibility + Rookie mode slot visibility
-  // Redraft/Dynasty 1QB: SFLEX hidden; Superflex/Dynasty SF: visible and active
-  // Rookie: SFLEX/K/DST hidden, K/DST pos filter buttons hidden
+  // Redraft/Best-Ball/Superflex/Dynasty SF: SFLEX visible (REDRAFT exposes it
+  // so users can opt into superflex without leaving REDRAFT — auto-detect
+  // promotes the draft to superflex ADP/board when SFLEX > 0 or QB > 1).
+  // Dynasty 1QB / Rookie: SFLEX hidden.
   function updateMdSflexVisibility() {
     const sflexSlot = document.getElementById('mdSflexSlot');
     const kSlot = document.getElementById('mdKSlot');
     const dstSlot = document.getElementById('mdDstSlot');
     const isRookie = mdMode === 'rookie';
     const isSF = mdMode === 'superflex' || mdMode === 'dynastysf';
+    const is1QBDynasty = mdMode === 'dynasty';
     if (sflexSlot) {
-      sflexSlot.style.display = isSF ? '' : 'none';
+      // Show SFLEX everywhere except 1QB dynasty + rookie.
+      sflexSlot.style.display = (isRookie || is1QBDynasty) ? 'none' : '';
     }
     // K/DST slots: hide in rookie mode
     if (kSlot) kSlot.style.display = isRookie ? 'none' : '';
@@ -22788,9 +22917,13 @@ window.fmtHeight = fmtHeight;
     }
     // Rookie mode with KTC: use default KTC-sorted board
     if (mdMode === 'rookie') return getADPBoardDefault();
-    // If using a multi-source ranking board (Consensus / Mine / Jack's / JS Model), use that order
+    // If using a multi-source ranking board (Consensus / Mine / Jack's / JS Model), use that order.
+    // Auto-detect Superflex: if REDRAFT mode but lineup is superflex, fall back
+    // to the superflex board for ordering (QBs slot up appropriately).
     if (mdRankSrc === 'consensus' || mdRankSrc === 'mine' || mdRankSrc === 'jacks' || mdRankSrc === 'jsmodel') {
-      const rankBoard = versionBoards[mdRankSrc] ? (versionBoards[mdRankSrc][mdMode] || versionBoards[mdRankSrc].redraft) : null;
+      const rankModeKey = (mdMode === 'redraft' && isMdEffectivelySuperflex())
+        ? 'superflex' : mdMode;
+      const rankBoard = versionBoards[mdRankSrc] ? (versionBoards[mdRankSrc][rankModeKey] || versionBoards[mdRankSrc][mdMode] || versionBoards[mdRankSrc].redraft) : null;
       if (rankBoard && rankBoard.length) {
         const boardEntries = rankBoard.map((dIdx, rank) => {
           const d = D[dIdx];
@@ -22825,11 +22958,16 @@ window.fmtHeight = fmtHeight;
 
   function getADPBoardDefault() {
     const isRookie = mdMode === 'rookie';
+    // When effective-superflex auto-detected (e.g. REDRAFT + SFLEX>0 or QB>1)
+    // use the superflex board for consensus lookup so QBs sort up the way they
+    // would in a real superflex draft.
+    const cBoardKey = (!isRookie && mdMode === 'redraft' && isMdEffectivelySuperflex())
+      ? 'superflex' : mdMode;
     // Precompute consensus rank lookup (multi-source: Jack's + ADP + Sleeper + FP + Underdog + KTC)
     let consensusRankByIdx = null;
-    if (mdAdpSrc === 'consensus' && !isRookie && versionBoards.consensus && versionBoards.consensus[mdMode]) {
+    if (mdAdpSrc === 'consensus' && !isRookie && versionBoards.consensus && versionBoards.consensus[cBoardKey]) {
       consensusRankByIdx = {};
-      versionBoards.consensus[mdMode].forEach((dIdx, r) => { consensusRankByIdx[dIdx] = r + 1; });
+      versionBoards.consensus[cBoardKey].forEach((dIdx, r) => { consensusRankByIdx[dIdx] = r + 1; });
     }
     return D.map((d, i) => {
       // In rookie mode, skip non-rookies
@@ -22847,10 +22985,12 @@ window.fmtHeight = fmtHeight;
         // Players with no KTC value (0) get pushed to the bottom
         if (isRookie) adp = adp > 0 ? (10000 - adp) : 99999;
       } else if (mdAdpSrc === 'sleeper') {
-        // Sleeper ranks — use mode-specific slR/slSf/slDy/slDsf
+        // Sleeper ranks — use mode-specific slR/slSf/slDy/slDsf.
+        // Auto-detect Superflex from lineup so REDRAFT + SFLEX/2QB still uses SF ranks.
+        const sfEffective = isMdEffectivelySuperflex();
         const sv = mdMode === 'dynastysf' ? d.slDsf
                  : mdMode === 'dynasty' ? d.slDy
-                 : mdMode === 'superflex' ? d.slSf
+                 : sfEffective ? d.slSf
                  : d.slR;
         adp = sv != null ? sv : 999;
       } else if (mdAdpSrc === 'consensus' && consensusRankByIdx) {
@@ -22860,9 +23000,12 @@ window.fmtHeight = fmtHeight;
         adp = r != null ? r : 999;
       } else {
         adp = d.a || 999;
-        if (mdMode === 'superflex' && d.sfa) adp = d.sfa;
+        // Underdog / direct-ADP path. Auto-detect Superflex from lineup config:
+        // if user is on REDRAFT but lineup has SFLEX>0 or QB>1, use d.sfa.
+        const sfEffective = isMdEffectivelySuperflex();
+        if (mdMode === 'dynastysf' && d.sa) adp = d.sa;
         else if (mdMode === 'dynasty' && d.da) adp = d.da;
-        else if (mdMode === 'dynastysf' && d.sa) adp = d.sa;
+        else if (sfEffective && d.sfa) adp = d.sfa;
       }
       // Kickers & DST: ignore ADP, sort by pos rank at the bottom
       if (d.s === 'K' || d.s === 'DST') {
@@ -27124,6 +27267,7 @@ window.fmtHeight = fmtHeight;
     //   avoidedTackles, teRec, dominator, pbGrade all trimmed. Sum preserved.
     TE:  { dc: 0.23, breakout: 0.14, yprr: 0.14, prod: 0.09, routeGrade: 0.07, pff: 0.06, contested: 0.06, avoidedTackles: 0.05, ras: 0.05, teRec: 0.04, pbGrade: 0.03, dominator: 0.02, conf: 0.01, qbCtx: 0.01, eff: 0, size: 0 }  // sum=1.00
   };
+  window._JM_CEILING_WEIGHTS = JM_CEILING_WEIGHTS;  // v9.2 — exposed for Weight Lab
 
   // DEVY WEIGHTS — for college players who haven't been drafted yet.
   // No DC, no RAS, no earlyDec — redistributed to production/film metrics.
@@ -30385,8 +30529,364 @@ window.fmtHeight = fmtHeight;
           _btRender();
         });
       });
+      // v9.2: render Spearman correlations + residuals + weight lab
+      if (typeof _btRenderDiag === 'function') _btRenderDiag();
     }
     window._renderBacktest = _btRender;
+
+    // ═══════════════════════════════════════════════════════════════════
+    // DIAGNOSTICS v9.2 (Apr 2026): Spearman correlations, residuals, weight lab
+    // Adds Spearman ρ vs curveScore (2017-2024) and vs draft slot (2024-2026),
+    // plus a weight lab that mutates JM_WEIGHTS in place and re-runs the model.
+    // ═══════════════════════════════════════════════════════════════════
+    const _BT_POS = ['QB','RB','WR','TE'];
+    let _btBaselineCorr = null;       // saved baseline correlations for delta display
+    let _btBaselineWeights = null;    // deep clone of weights at first lab open
+    let _btCurrentWeightsOverride = null;
+
+    function _btRank(values) {
+      const indexed = values.map((v, i) => ({ v, i }));
+      indexed.sort((a, b) => a.v - b.v);
+      const ranks = new Array(values.length);
+      let i = 0;
+      while (i < indexed.length) {
+        let j = i;
+        while (j + 1 < indexed.length && indexed[j + 1].v === indexed[i].v) j++;
+        const avgRank = (i + j) / 2 + 1;
+        for (let k = i; k <= j; k++) ranks[indexed[k].i] = avgRank;
+        i = j + 1;
+      }
+      return ranks;
+    }
+
+    function _btSpearman(xs, ys) {
+      if (!xs || xs.length < 3) return null;
+      const rx = _btRank(xs), ry = _btRank(ys);
+      let sx = 0, sy = 0;
+      for (let i = 0; i < rx.length; i++) { sx += rx[i]; sy += ry[i]; }
+      const mx = sx / rx.length, my = sy / ry.length;
+      let num = 0, dx = 0, dy = 0;
+      for (let i = 0; i < rx.length; i++) {
+        const a = rx[i] - mx, b = ry[i] - my;
+        num += a * b; dx += a * a; dy += b * b;
+      }
+      if (dx === 0 || dy === 0) return null;
+      return num / Math.sqrt(dx * dy);
+    }
+
+    function _btCorrByPos(pairs) {
+      const out = { ALL: { rho: null, n: 0 } };
+      _BT_POS.forEach(p => out[p] = { rho: null, n: 0 });
+      _BT_POS.forEach(p => {
+        const sub = pairs.filter(r => r.pos === p);
+        out[p].n = sub.length;
+        if (sub.length >= 3) out[p].rho = _btSpearman(sub.map(r => r.x), sub.map(r => r.y));
+      });
+      out.ALL.n = pairs.length;
+      if (pairs.length >= 3) out.ALL.rho = _btSpearman(pairs.map(r => r.x), pairs.map(r => r.y));
+      return out;
+    }
+
+    function _btCorrLOYO(pairs) {
+      const years = [...new Set(pairs.map(r => r.year))].filter(y => y != null);
+      if (years.length < 2) return null;
+      const rhos = [];
+      years.forEach(yo => {
+        const sub = pairs.filter(r => r.year !== yo);
+        if (sub.length >= 3) {
+          const rho = _btSpearman(sub.map(r => r.x), sub.map(r => r.y));
+          if (rho != null) rhos.push(rho);
+        }
+      });
+      return rhos.length ? rhos.reduce((a, b) => a + b, 0) / rhos.length : null;
+    }
+
+    function _btCollectOutcomePairs() {
+      const rows = _btCollect();
+      const out = [];
+      rows.forEach(r => {
+        if (r.draftYr < 2017 || r.draftYr > 2024) return;
+        if (r.curveScore == null || r.jm == null) return;
+        out.push({ pos: r.pos, x: r.jm, y: r.curveScore, year: r.draftYr, name: r.n, pick: r.pick, verdict: r.verdict });
+      });
+      return out;
+    }
+
+    function _btCollectDraftSlotPairs() {
+      const out = [];
+      const data = (typeof buildProspectData === 'function') ? buildProspectData() : [];
+      const seen = new Set();
+      data.forEach(p => {
+        if (p.draftYr !== 2024 && p.draftYr !== 2025 && p.draftYr !== 2026) return;
+        if (p.dr == null || p.dr === 'U') return;
+        const pick = (typeof p.dr === 'number') ? p.dr : parseInt(p.dr);
+        if (isNaN(pick) || pick <= 0) return;
+        if (p.jm == null) return;
+        const key = p.draftYr + '::' + p.name;
+        if (seen.has(key)) return;
+        seen.add(key);
+        out.push({ pos: p.pos, x: p.jm, y: -pick, year: p.draftYr, name: p.name, pick });
+      });
+      return out;
+    }
+
+    function _btRhoClass(rho) {
+      if (rho == null) return 'weak';
+      const a = Math.abs(rho);
+      if (a >= 0.55) return 'good';
+      if (a >= 0.40) return 'ok';
+      if (a >= 0.25) return 'weak';
+      return 'bad';
+    }
+
+    function _btCorrCard(label, n, rho, baseRho) {
+      const clz = _btRhoClass(rho);
+      const valStr = rho == null ? '—' : (rho >= 0 ? '+' : '') + rho.toFixed(3);
+      let deltaHtml = '';
+      if (baseRho != null && rho != null && Math.abs(rho - baseRho) > 0.0005) {
+        const d = rho - baseRho;
+        const sign = d >= 0 ? '+' : '';
+        const cls = d >= 0 ? 'up' : 'down';
+        deltaHtml = `<div class="bt-corr-card-delta ${cls}">Δ ${sign}${d.toFixed(3)} vs baseline</div>`;
+      } else if (baseRho != null && rho != null) {
+        deltaHtml = `<div class="bt-corr-card-delta" style="color:var(--text3)">no change</div>`;
+      }
+      return `<div class="bt-corr-card">
+        <div class="bt-corr-card-head"><div class="bt-corr-card-title">${label}</div><div class="bt-corr-card-n">n=${n}</div></div>
+        <div class="bt-corr-card-rho ${clz}">${valStr}</div>
+        ${deltaHtml}
+      </div>`;
+    }
+
+    function _btRenderCorrSet(targetId, pairs, baseline, includeLOYO) {
+      const corr = _btCorrByPos(pairs);
+      const cards = [_btCorrCard('ALL', corr.ALL.n, corr.ALL.rho, baseline ? baseline.ALL.rho : null)];
+      _BT_POS.forEach(p => cards.push(_btCorrCard(p, corr[p].n, corr[p].rho, baseline ? baseline[p].rho : null)));
+      if (includeLOYO) {
+        const loyo = _btCorrLOYO(pairs);
+        cards.push(_btCorrCard('LOYO ALL', pairs.length, loyo, baseline ? baseline._loyo : null));
+        corr._loyo = loyo;
+      }
+      const target = document.getElementById(targetId);
+      if (target) target.innerHTML = cards.join('');
+      return corr;
+    }
+
+    function _btRenderResiduals(pairs) {
+      const grid = document.getElementById('btResidGrid');
+      if (!grid) return;
+      const years = [2024, 2025, 2026];
+      const cards = years.map(yr => {
+        const sub = pairs.filter(r => r.year === yr).slice();
+        if (sub.length < 5) {
+          return `<div class="bt-resid-card">
+            <div class="bt-resid-card-head">${yr}<span class="bt-resid-card-tag">n=${sub.length}</span></div>
+            <div class="bt-resid-empty">Insufficient data for ${yr}.</div>
+          </div>`;
+        }
+        const jmSorted = sub.slice().sort((a, b) => b.x - a.x);
+        const pickSorted = sub.slice().sort((a, b) => a.pick - b.pick);
+        const jmRank = {}; jmSorted.forEach((r, i) => jmRank[r.name] = i + 1);
+        const pickRank = {}; pickSorted.forEach((r, i) => pickRank[r.name] = i + 1);
+        sub.forEach(r => { r._resid = jmRank[r.name] - pickRank[r.name]; r._jmR = jmRank[r.name]; r._pkR = pickRank[r.name]; });
+        const over = sub.slice().sort((a, b) => a._resid - b._resid).slice(0, 5);
+        const under = sub.slice().sort((a, b) => b._resid - a._resid).slice(0, 5);
+        function fmtRow(r) {
+          return `<div class="bt-resid-row">
+            <div class="bt-resid-name">${r.name}<span class="bt-resid-pos">${r.pos}</span></div>
+            <div class="bt-resid-jm">JM ${r.x.toFixed(1)} <span style="color:var(--text3)">#${r._jmR}</span></div>
+            <div class="bt-resid-pick">Pk ${r.pick} <span style="color:var(--text3)">#${r._pkR}</span></div>
+          </div>`;
+        }
+        return `<div class="bt-resid-card">
+          <div class="bt-resid-card-head">${yr}<span class="bt-resid-card-tag">n=${sub.length}</span></div>
+          <div style="font-size:.6rem;letter-spacing:.5px;color:#ef4444cc;text-transform:uppercase;margin-bottom:4px">Over-rated by JM (model high · drafted low)</div>
+          ${over.map(fmtRow).join('')}
+          <div style="font-size:.6rem;letter-spacing:.5px;color:#22c55ecc;text-transform:uppercase;margin:10px 0 4px">Under-rated by JM (model low · drafted high)</div>
+          ${under.map(fmtRow).join('')}
+        </div>`;
+      });
+      grid.innerHTML = cards.join('');
+    }
+
+    function _btRenderDiag() {
+      try {
+        const outcomePairs = _btCollectOutcomePairs();
+        const draftPairs = _btCollectDraftSlotPairs();
+        const oCorr = _btRenderCorrSet('btCorrOutcomeGrid', outcomePairs, _btBaselineCorr ? _btBaselineCorr.outcome : null, true);
+        const dCorr = _btRenderCorrSet('btCorrDraftGrid', draftPairs, _btBaselineCorr ? _btBaselineCorr.draft : null, false);
+        _btRenderResiduals(draftPairs);
+        if (!_btBaselineCorr) _btBaselineCorr = { outcome: oCorr, draft: dCorr };
+      } catch (e) {
+        console.error('[Backtest Diag] render error', e);
+      }
+    }
+    window._renderBacktestDiag = _btRenderDiag;
+
+    // ═══ Weight Lab ═══
+    function _btDeepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+    function _btSortedWeights(pw) {
+      const sorted = Object.entries(pw).sort((a, b) => b[1] - a[1]);
+      const out = {};
+      sorted.forEach(([k, v]) => out[k] = v);
+      return out;
+    }
+    function _btWeightsToJson() {
+      const wf = window._JM_WEIGHTS || {};
+      const wc = window._JM_CEILING_WEIGHTS || {};
+      const out = {};
+      _BT_POS.forEach(p => {
+        out[p] = {
+          floor:   wf[p] ? _btSortedWeights(wf[p]) : {},
+          ceiling: wc[p] ? _btSortedWeights(wc[p]) : {}
+        };
+      });
+      return JSON.stringify(out, null, 2);
+    }
+
+    function _btWeightLabPopulate() {
+      const ta = document.getElementById('btWeightLabTextarea');
+      if (!ta) return;
+      if (!_btBaselineWeights) {
+        _btBaselineWeights = {
+          floor:   _btDeepClone(window._JM_WEIGHTS),
+          ceiling: _btDeepClone(window._JM_CEILING_WEIGHTS || {})
+        };
+      }
+      ta.value = _btWeightsToJson();
+    }
+
+    function _btWeightLabSetResults(html) {
+      const el = document.getElementById('btWeightLabResults');
+      if (el) el.innerHTML = html;
+    }
+
+    function _btApplyWeightOverride(parsed) {
+      // parsed is either the new {pos: {floor, ceiling}} shape OR the legacy
+      // {pos: {weights}} flat shape (treated as floor-only).
+      _BT_POS.forEach(p => {
+        const entry = parsed[p];
+        if (!entry) return;
+        // Detect shape: nested floor/ceiling vs flat
+        const hasFloor = entry.floor && typeof entry.floor === 'object';
+        const hasCeiling = entry.ceiling && typeof entry.ceiling === 'object';
+        const isNested = hasFloor || hasCeiling;
+        const fSrc = isNested ? (entry.floor || {}) : entry;
+        const cSrc = isNested ? (entry.ceiling || null) : null;
+        // Apply floor
+        if (window._JM_WEIGHTS[p] && Object.keys(fSrc).length) {
+          Object.keys(window._JM_WEIGHTS[p]).forEach(k => delete window._JM_WEIGHTS[p][k]);
+          Object.entries(fSrc).forEach(([k, v]) => window._JM_WEIGHTS[p][k] = Number(v) || 0);
+        }
+        // Apply ceiling (only if explicitly provided)
+        if (cSrc && window._JM_CEILING_WEIGHTS && window._JM_CEILING_WEIGHTS[p]) {
+          Object.keys(window._JM_CEILING_WEIGHTS[p]).forEach(k => delete window._JM_CEILING_WEIGHTS[p][k]);
+          Object.entries(cSrc).forEach(([k, v]) => window._JM_CEILING_WEIGHTS[p][k] = Number(v) || 0);
+        }
+      });
+      if (typeof window._jmClearCache === 'function') window._jmClearCache();
+      if (typeof buildProspectData === 'function') buildProspectData();
+    }
+
+    function _btWeightLabRun() {
+      const ta = document.getElementById('btWeightLabTextarea');
+      if (!ta) return;
+      let parsed;
+      try { parsed = JSON.parse(ta.value); }
+      catch (e) {
+        _btWeightLabSetResults(`<div class="bt-weight-lab-error">JSON parse error: ${e.message}</div>`);
+        return;
+      }
+      const warnings = [];
+      _BT_POS.forEach(p => {
+        const e = parsed[p];
+        if (!e) { warnings.push(`Missing position: ${p}`); return; }
+        const isNested = (e.floor && typeof e.floor === 'object') || (e.ceiling && typeof e.ceiling === 'object');
+        if (isNested) {
+          if (e.floor) {
+            const sf = Object.values(e.floor).reduce((a, b) => a + (Number(b) || 0), 0);
+            if (Math.abs(sf - 1.0) > 0.01) warnings.push(`${p}.floor sums to ${sf.toFixed(3)} (expected 1.000)`);
+          }
+          if (e.ceiling) {
+            const sc = Object.values(e.ceiling).reduce((a, b) => a + (Number(b) || 0), 0);
+            if (Math.abs(sc - 1.0) > 0.01) warnings.push(`${p}.ceiling sums to ${sc.toFixed(3)} (expected 1.000)`);
+          }
+        } else {
+          const sum = Object.values(e).reduce((a, b) => a + (Number(b) || 0), 0);
+          if (Math.abs(sum - 1.0) > 0.01) warnings.push(`${p} weights sum to ${sum.toFixed(3)} (expected 1.000)`);
+        }
+      });
+      const warnHtml = warnings.length ? `<div class="bt-weight-lab-error">Warnings:<br>${warnings.join('<br>')}</div>` : '';
+      _btWeightLabSetResults(warnHtml + `<div class="bt-weight-lab-running">Rebuilding model with override weights — recomputing 500+ prospect scores...</div>`);
+      // Defer to next tick so the UI repaints first
+      setTimeout(() => {
+        try {
+          if (!_btBaselineWeights) _btBaselineWeights = _btDeepClone(window._JM_WEIGHTS);
+          _btApplyWeightOverride(parsed);
+          _btCurrentWeightsOverride = parsed;
+          if (typeof window._renderBacktest === 'function') window._renderBacktest();
+          _btWeightLabSetResults(warnHtml + `<div style="color:#22c55e;font-size:.78rem;padding:8px 0">✓ Re-ran with override weights. Compare Δ deltas in the cards above.</div>`);
+        } catch (e) {
+          console.error('[Weight Lab] error', e);
+          _btWeightLabSetResults(`<div class="bt-weight-lab-error">Error during rebuild: ${e.message}<br>See console. Click Reset to recover.</div>`);
+        }
+      }, 30);
+    }
+
+    function _btWeightLabReset() {
+      if (!_btBaselineWeights) {
+        _btWeightLabSetResults(`<div style="color:var(--text2);font-size:.78rem;padding:8px 0">No override applied yet — nothing to reset.</div>`);
+        return;
+      }
+      // Build the nested shape from baseline so _btApplyWeightOverride restores both
+      const restore = {};
+      _BT_POS.forEach(p => {
+        restore[p] = {
+          floor:   _btBaselineWeights.floor && _btBaselineWeights.floor[p] ? _btBaselineWeights.floor[p] : {},
+          ceiling: _btBaselineWeights.ceiling && _btBaselineWeights.ceiling[p] ? _btBaselineWeights.ceiling[p] : {}
+        };
+      });
+      _btApplyWeightOverride(restore);
+      _btCurrentWeightsOverride = null;
+      _btWeightLabPopulate();
+      if (typeof window._renderBacktest === 'function') window._renderBacktest();
+      _btWeightLabSetResults(`<div style="color:var(--text2);font-size:.78rem;padding:8px 0">↺ Restored baseline weights.</div>`);
+    }
+
+    function _btWeightLabDownload() {
+      const outcomePairs = _btCollectOutcomePairs();
+      const draftPairs = _btCollectDraftSlotPairs();
+      const dump = {
+        generated: new Date().toISOString(),
+        weights: window._JM_WEIGHTS,
+        isOverride: !!_btCurrentWeightsOverride,
+        baselineCorr: _btBaselineCorr,
+        outcomeCorr: _btCorrByPos(outcomePairs),
+        outcomeLOYO: _btCorrLOYO(outcomePairs),
+        draftCorr: _btCorrByPos(draftPairs),
+        outcomePairs, draftPairs
+      };
+      const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `jm-backtest-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function _btWireWeightLab() {
+      const run = document.getElementById('btWeightLabRun');
+      const reset = document.getElementById('btWeightLabReset');
+      const dl = document.getElementById('btWeightLabDownload');
+      const lab = document.getElementById('btWeightLab');
+      if (!run || !reset || !dl) return;
+      run.addEventListener('click', _btWeightLabRun);
+      reset.addEventListener('click', _btWeightLabReset);
+      dl.addEventListener('click', _btWeightLabDownload);
+      if (lab) lab.addEventListener('toggle', () => { if (lab.open) _btWeightLabPopulate(); });
+    }
 
     // Wire up controls (once DOM is ready)
     function _wireBacktest() {
@@ -30398,6 +30898,8 @@ window.fmtHeight = fmtHeight;
       const tog = document.getElementById('btMethodToggle');
       const box = document.getElementById('btMethodBox');
       if (tog && box) tog.addEventListener('click', () => box.classList.toggle('open'));
+      // v9.2: wire weight lab buttons
+      if (typeof _btWireWeightLab === 'function') _btWireWeightLab();
 
       // v8.4: reveal admin-only pre-2020 era filter options when user is admin.
       // Non-admins see only 2020-2024 options. Admins get access to full
@@ -38678,7 +39180,8 @@ Rules:
   };
 
   window._udPickPhase = function(phase) {
-    window._udSelectedPhase = (phase === 'nfl') ? 'nfl' : 'pre';
+    const allowed = { pre: 1, nfl: 1, superflex: 1 };
+    window._udSelectedPhase = allowed[phase] ? phase : 'pre';
     const picker = document.getElementById('mtUnderdogPhasePicker');
     if (picker) picker.style.display = 'none';
     const inp = document.getElementById('mtUnderdogCSV');
@@ -38690,8 +39193,9 @@ Rules:
 
   // Friendly label for a phase value
   function _udPhaseLabel(phase) {
-    if (phase === 'nfl') return 'NFL Season';
+    if (phase === 'nfl') return 'Post-NFL Draft';
     if (phase === 'pre') return 'Pre-NFL Draft';
+    if (phase === 'superflex') return 'Superflex';
     return 'Unknown';
   }
 
@@ -38726,7 +39230,8 @@ Rules:
     const file = input.files[0];
     if (!file) return;
     const status = document.getElementById('mtUnderdogStatus');
-    const phase = (window._udSelectedPhase === 'nfl') ? 'nfl' : 'pre';
+    const _allowed = { pre: 1, nfl: 1, superflex: 1 };
+    const phase = _allowed[window._udSelectedPhase] ? window._udSelectedPhase : 'pre';
     status.textContent = 'Reading ' + _udPhaseLabel(phase) + ' CSV...';
     status.style.color = '';
 
@@ -39030,7 +39535,8 @@ Rules:
   })();
 
   function _udParseCSV(text, phase) {
-    phase = (phase === 'nfl') ? 'nfl' : 'pre';
+    const _allowedPh = { pre: 1, nfl: 1, superflex: 1 };
+    phase = _allowedPh[phase] ? phase : 'pre';
     const lines = text.split('\n');
     if (lines.length < 2) throw new Error('Empty CSV');
     const headers = _udSplitCSVLine(lines[0]);
@@ -39176,7 +39682,7 @@ Rules:
     return { total, players, posScores };
   }
 
-  // === Phase filter (single-select: 'pre' | 'nfl' | null=all) ===
+  // === Phase filter (single-select: 'pre' | 'nfl' | 'superflex' | null=all) ===
   function _udApplyPhaseFilter(data) {
     const ph = window._udPhaseFilter;
     if (!ph) return data;
@@ -39197,19 +39703,26 @@ Rules:
   };
 
   function _udRenderPhaseFilter(originalData) {
-    const phaseCounts = { pre: 0, nfl: 0 };
+    const phaseCounts = { pre: 0, nfl: 0, superflex: 0 };
     Object.values(originalData.drafts).forEach(d => {
-      const ph = (d.phase === 'nfl') ? 'nfl' : 'pre';
+      const raw = d.phase;
+      const ph = (raw === 'nfl' || raw === 'superflex') ? raw : 'pre';
       phaseCounts[ph]++;
     });
-    // No point showing the row if everything is one phase and nothing else has been uploaded
-    if (phaseCounts.pre === 0 || phaseCounts.nfl === 0) {
-      // Single-phase portfolios still get a small label so the user knows which phase they're viewing
-      const onlyPhase = phaseCounts.nfl > 0 ? 'nfl' : 'pre';
+    const phaseDef = [
+      { val: 'pre', label: 'PRE-NFL DRAFT' },
+      { val: 'nfl', label: 'POST-NFL DRAFT' },
+      { val: 'superflex', label: 'SUPERFLEX' }
+    ];
+    const presentPhases = phaseDef.filter(p => phaseCounts[p.val] > 0);
+    const totalCount = phaseCounts.pre + phaseCounts.nfl + phaseCounts.superflex;
+    // No point showing chips if everything is one phase
+    if (presentPhases.length <= 1) {
+      const only = presentPhases[0] || phaseDef[0];
       let h = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
       h += '<span style="font-family:Bebas Neue,sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--accent)">PHASE</span>';
-      h += '<span style="padding:4px 10px;font-family:Bebas Neue,sans-serif;font-size:.7rem;letter-spacing:1px;border:1px solid var(--accent);background:var(--accent);color:#000;border-radius:4px">' + (onlyPhase === 'nfl' ? 'NFL SEASON' : 'PRE-NFL DRAFT') + ' <span style="opacity:.7;font-size:.6rem">' + phaseCounts[onlyPhase] + '</span></span>';
-      h += '<span style="font-size:.6rem;color:var(--text2);font-style:italic">Upload your other phase CSV to compare both.</span>';
+      h += '<span style="padding:4px 10px;font-family:Bebas Neue,sans-serif;font-size:.7rem;letter-spacing:1px;border:1px solid var(--accent);background:var(--accent);color:#000;border-radius:4px">' + only.label + ' <span style="opacity:.7;font-size:.6rem">' + phaseCounts[only.val] + '</span></span>';
+      h += '<span style="font-size:.6rem;color:var(--text2);font-style:italic">Upload your other phase CSVs to compare them.</span>';
       h += '</div>';
       return h;
     }
@@ -39224,9 +39737,10 @@ Rules:
     html += '<span style="font-size:.65rem;color:var(--text2)">filter drafts by contest phase</span>';
     html += '</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
-    html += chip('ALL', null, phaseCounts.pre + phaseCounts.nfl);
-    html += chip('PRE-NFL DRAFT', 'pre', phaseCounts.pre);
-    html += chip('NFL SEASON', 'nfl', phaseCounts.nfl);
+    html += chip('ALL', null, totalCount);
+    presentPhases.forEach(p => {
+      html += chip(p.label, p.val, phaseCounts[p.val]);
+    });
     html += '</div></div>';
     return html;
   }

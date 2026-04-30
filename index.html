@@ -39262,7 +39262,13 @@ Rules:
           name: p.name,
           pos: p.pos || '',
           team: p.team || '',
-          pick: parseInt(p.pick || 0, 10) || 0
+          pick: parseInt(p.pick || 0, 10) || 0,
+          // v0.9.40: best-ball mid-season inputs. Empty/null preseason; the
+          // weekly-score capture path will populate weeklyScores once UD's
+          // live-scoring endpoint is wired in. ESPN injury feed will set
+          // injuryStatus weekly. Both are read by the site-side BB engine.
+          weeklyScores: Array.isArray(p.weeklyScores) ? p.weeklyScores.slice() : [],
+          injuryStatus: p.injuryStatus || null
         })),
         // v0.9.37: full team data for cross-team scoring inside a draft.
         // myEntryId is the entry_id of the user's team in this draft.
@@ -39929,6 +39935,213 @@ Rules:
     return html;
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // BEST-BALL SCORING ENGINE (v0.9.40 site-side)
+  // ═══════════════════════════════════════════════════════════
+  // Computes a player's expected weekly contribution to your starting lineup
+  // accounting for best-ball mechanics (auto-start your top scorers each week).
+  // A high-σ "boom/bust" WR with mean 12 PPG can be more valuable than a
+  // metronomic 12 PPG WR — they win lineup competitions on their boom weeks.
+  //
+  // Inputs per player: { name, pos, team, mean, sigma, byeWeek, weeklyScores, injuryStatus }
+  // Output per team:   { weeklyPPG, seasonTotal, seasonStd, perPlayerContribution }
+  //
+  // The same machinery is used both preseason (with position-default σ) and
+  // mid-season (with empirical σ + Bayesian-blended mean from actual scores).
+
+  // Standard BBM lineup: 1 QB / 2 RB / 3 WR / 1 TE / 1 FLEX (RB-WR-TE) = 8 starters
+  const BB_LINEUP = { QB: 1, RB: 2, WR: 3, TE: 1, FLEX: 1 };
+
+  // Position-default σ as a fraction of mean. Calibrated to typical NFL
+  // weekly fantasy variance. Replaced per-player by empirical σ once a
+  // player has 4+ actual games scored.
+  const BB_POS_SIGMA_PCT = { QB: 0.25, RB: 0.35, WR: 0.40, TE: 0.45 };
+
+  // Default best-ball regular season length (BBM/Puppy: weeks 1-14).
+  const BB_REG_SEASON_WEEKS = 14;
+
+  // Prior strength for Bayesian blend. Treats the preseason projection as
+  // worth ~7 implied games of data, so by week 7 actuals are weighted ~50/50.
+  const BB_PRIOR_STRENGTH = 7;
+
+  // 2026 NFL bye-week table. Populate after the schedule drops in May 2026.
+  // Maps NFL team abbreviation → bye week number (1-14).
+  const BB_BYE_WEEKS_2026 = {
+    // 'BAL': 14, 'KC': 6, ...
+  };
+
+  // Box-Muller standard normal sampler. Used to draw weekly player scores.
+  function _bbNormal() {
+    const u = 1 - Math.random();
+    const v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  // Bayesian blend: given a preseason projection and an array of actual
+  // weekly scores, returns the posterior mean. Pre-week-1 returns the raw
+  // projection. Post-week-14 returns ~the actual season average.
+  function _bbBlendMean(preseasonPpg, actualScores, k) {
+    if (preseasonPpg == null || isNaN(preseasonPpg)) preseasonPpg = 0;
+    if (!Array.isArray(actualScores)) return preseasonPpg;
+    const valid = actualScores.filter(s => s != null && !isNaN(s));
+    if (!valid.length) return preseasonPpg;
+    const n = valid.length;
+    const actualAvg = valid.reduce((s, v) => s + v, 0) / n;
+    const prior = (k == null) ? BB_PRIOR_STRENGTH : k;
+    return (prior * preseasonPpg + n * actualAvg) / (prior + n);
+  }
+
+  // Empirical σ once we have ≥ 4 valid weekly scores. Otherwise return the
+  // position default × mean.
+  function _bbBlendSigma(pos, mean, actualScores) {
+    const def = (BB_POS_SIGMA_PCT[pos] || 0.4) * Math.max(mean, 1);
+    if (!Array.isArray(actualScores)) return def;
+    const valid = actualScores.filter(s => s != null && !isNaN(s));
+    if (valid.length < 4) return def;
+    const m = valid.reduce((s, v) => s + v, 0) / valid.length;
+    const variance = valid.reduce((s, v) => s + (v - m) * (v - m), 0) / valid.length;
+    return Math.max(Math.sqrt(variance), 0.5);
+  }
+
+  // Lookup bye week for a given NFL team abbreviation. Returns null if the
+  // schedule hasn't been loaded yet (preseason).
+  function _bbByeWeek(teamAbbr) {
+    if (!teamAbbr) return null;
+    return BB_BYE_WEEKS_2026[String(teamAbbr).toUpperCase()] || null;
+  }
+
+  // Resolve a single pick into the player-stats shape the simulator needs.
+  // Pulls preseason projection from the site's D array via _udMatchPlayer,
+  // then Bayesian-blends with any weekly scores attached to the pick (the
+  // sync writes these into `pick.weeklyScores` once they're available from
+  // Underdog's live-scoring data — empty array preseason).
+  function _bbResolvePlayer(pick) {
+    const matched = _udMatchPlayer(pick.name);
+    let preseason = 0;
+    try { preseason = matched ? (adj25ppg(matched) || 0) : 0; } catch (_) { preseason = 0; }
+    const pos = (pick.pos || (matched && matched.s) || '').toUpperCase();
+    const team = (pick.team || (matched && matched.t) || '').toUpperCase();
+    const weekly = Array.isArray(pick.weeklyScores) ? pick.weeklyScores : null;
+    const mean = _bbBlendMean(preseason, weekly);
+    const sigma = _bbBlendSigma(pos, mean, weekly);
+    const byeWeek = _bbByeWeek(team);
+    // Injury status: 'OUT' / 'IR' / 'Q' / 'D' / null. Set by the future
+    // injury-feed integration; for now always null.
+    const injury = pick.injuryStatus || null;
+    return { name: pick.name, pos: pos, team: team, mean: mean, sigma: sigma,
+             byeWeek: byeWeek, injury: injury, preseason: preseason, weeklyScores: weekly };
+  }
+
+  // Given resolved player stats and a target week, return the score the
+  // player would post that week. Honors bye weeks and injury status.
+  function _bbWeekScore(player, week) {
+    if (!player) return 0;
+    if (player.byeWeek === week) return 0;
+    if (player.injury === 'OUT' || player.injury === 'IR') return 0;
+    let score = (player.mean || 0) + (player.sigma || 0) * _bbNormal();
+    if (player.injury === 'D') score *= 0.5;          // doubtful
+    else if (player.injury === 'Q') score *= 0.85;    // questionable
+    return Math.max(0, score);
+  }
+
+  // Given a single week's player scores, pick the optimal best-ball lineup
+  // and return both the total starting points and the indices of starters.
+  function _bbOptimalLineup(weekScores, players) {
+    // Bucket players by position with their week-score
+    const buckets = { QB: [], RB: [], WR: [], TE: [] };
+    for (let i = 0; i < players.length; i++) {
+      const pos = players[i].pos;
+      if (buckets[pos]) buckets[pos].push({ idx: i, score: weekScores[i] });
+    }
+    Object.keys(buckets).forEach(pos => buckets[pos].sort((a, b) => b.score - a.score));
+
+    const startedIdx = new Set();
+    let total = 0;
+    function takeTop(pos, n) {
+      const arr = buckets[pos];
+      let taken = 0;
+      for (let i = 0; i < arr.length && taken < n; i++) {
+        startedIdx.add(arr[i].idx);
+        total += arr[i].score;
+        taken++;
+        arr[i]._taken = true;
+      }
+    }
+    takeTop('QB', BB_LINEUP.QB);
+    takeTop('RB', BB_LINEUP.RB);
+    takeTop('WR', BB_LINEUP.WR);
+    takeTop('TE', BB_LINEUP.TE);
+    // FLEX = best remaining RB/WR/TE
+    const flexCandidates = []
+      .concat(buckets.RB.filter(x => !x._taken))
+      .concat(buckets.WR.filter(x => !x._taken))
+      .concat(buckets.TE.filter(x => !x._taken));
+    flexCandidates.sort((a, b) => b.score - a.score);
+    for (let i = 0; i < BB_LINEUP.FLEX && i < flexCandidates.length; i++) {
+      startedIdx.add(flexCandidates[i].idx);
+      total += flexCandidates[i].score;
+    }
+    return { total: total, startedIdx: startedIdx };
+  }
+
+  // Run a full best-ball simulation for one team. Returns weekly + season
+  // stats plus per-player average weekly contribution to starts.
+  function _bbSimulateTeam(picks, opts) {
+    opts = opts || {};
+    const weeks = opts.weeks || BB_REG_SEASON_WEEKS;
+    const sims  = opts.sims  || 500;
+    const startWeek = opts.startWeek || 1;   // weeks already in the books are skipped here
+    if (!Array.isArray(picks) || !picks.length) {
+      return { weeklyPPG: 0, seasonMean: 0, seasonStd: 0, perPlayerWeekly: {} };
+    }
+    const players = picks.map(_bbResolvePlayer);
+    const playerContrib = new Array(players.length).fill(0);
+    const playerStarts = new Array(players.length).fill(0);
+    const seasonTotals = new Array(sims).fill(0);
+
+    for (let s = 0; s < sims; s++) {
+      let seasonTotal = 0;
+      for (let w = startWeek; w <= weeks; w++) {
+        // Generate scores for every player this week
+        const weekScores = players.map(p => _bbWeekScore(p, w));
+        const lineup = _bbOptimalLineup(weekScores, players);
+        seasonTotal += lineup.total;
+        lineup.startedIdx.forEach(i => {
+          playerContrib[i] += weekScores[i];
+          playerStarts[i]++;
+        });
+      }
+      seasonTotals[s] = seasonTotal;
+    }
+
+    const totalSimWeeks = sims * (weeks - startWeek + 1);
+    const seasonMean = seasonTotals.reduce((a, b) => a + b, 0) / sims;
+    const variance = seasonTotals.reduce((a, b) => a + (b - seasonMean) * (b - seasonMean), 0) / sims;
+    const seasonStd = Math.sqrt(variance);
+
+    const perPlayerWeekly = {};
+    players.forEach((p, i) => {
+      perPlayerWeekly[p.name] = {
+        avgPpgWhenStart: playerStarts[i] ? playerContrib[i] / playerStarts[i] : 0,
+        startRate: totalSimWeeks ? playerStarts[i] / sims / (weeks - startWeek + 1) : 0,
+        weeklyContrib: totalSimWeeks ? playerContrib[i] / sims / (weeks - startWeek + 1) : 0,
+        preseason: p.preseason,
+        mean: p.mean,
+        sigma: p.sigma,
+        byeWeek: p.byeWeek
+      };
+    });
+
+    return {
+      weeklyPPG: seasonMean / (weeks - startWeek + 1),
+      seasonMean: seasonMean,
+      seasonStd: seasonStd,
+      perPlayerWeekly: perPlayerWeekly
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+
   function _udRenderDashboard(originalData) {
     const dash = document.getElementById('mtUnderdogDashboard');
     dash.style.display = '';
@@ -40058,31 +40271,29 @@ Rules:
     html += `</div>`;
     html += `</div>`;
 
-    // ── TEAMS TAB (v0.9.40 site-side) ──
-    // Combined view replacing TEAM SCORES + ADP VALUE + VS FIELD. Each draft
-    // is one expandable row showing all 12 teams (user + opponents synced via
-    // extension's allTeams). Click any team within → expand to roster with
-    // RD / PICK / PLAYER / POS / RANK / VAL / PROJ / ADP / +/- columns. Top-2
-    // advance % from Monte Carlo (BBM + Puppy regular season, weeks 1-14).
+    // ── TEAMS TAB (v0.9.40 site-side, BB-aware) ──
+    // Each draft expands to show all 12 teams ranked by best-ball-adjusted
+    // season projection (built from the lineup-optimizer engine above —
+    // higher-σ "boom" players win lineup slots more often, so they're
+    // valued correctly). Click any team → roster with RD / PICK / PLAYER /
+    // POS / TEAM / PROJ PPG / ADP. Top-2 advance % from Monte Carlo over
+    // each team's (seasonMean, seasonStd) distribution. Mid-season this
+    // section auto-adapts: pick.weeklyScores written by the sync feed the
+    // Bayesian blend so by week 7 the projections are weighted ~50/50
+    // between preseason and actuals; per-player σ becomes empirical from
+    // weekly variance once a player has 4+ games.
     html += `<div id="udTab_teams" style="display:none">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAMS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(your team vs every opponent in each pool)</span></div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked. Click any team to open its roster (score · proj PPG · ADP). <strong style="color:var(--accent)">Top-2 of 12 advance to playoffs (BBM &amp; Puppy, weeks 1-14).</strong></div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked by best-ball season projection. Click any team to open its roster. <strong style="color:var(--accent)">Top-2 of 12 advance (BBM &amp; Puppy regular season, weeks 1-14).</strong></div>`;
 
-    // Helper: Box-Muller normal sampler for Monte Carlo.
-    function _udGauss() {
-      const u = 1 - Math.random();
-      const v = Math.random();
-      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-    }
-    // Helper: pull projected PPG for a player. adj25ppg() returns the
-    // current-season projection used elsewhere on the site.
+    // Helper: pull projected PPG for a player (raw, before BB adjustment).
     function _udPlayerProj(name) {
       const m = _udMatchPlayer(name);
       if (!m) return null;
       try { const v = adj25ppg(m); return (v != null) ? v : null; } catch (_) { return null; }
     }
 
-    // Build per-draft analysis. Each entry: { d, teams[ranked], myEntry, myRank, myAdv2, fieldComplete }
+    // Build per-draft analysis using the BB engine.
     const _udTeamsRows = [];
     Object.values(data.drafts).forEach(d => {
       const at = d.allTeams && typeof d.allTeams === 'object' ? d.allTeams : null;
@@ -40092,57 +40303,69 @@ Rules:
       const fieldComplete = !!(at && Object.keys(at).length >= 2);
       const teams = sourceTeams.map(t => {
         const picks = t.picks || [];
-        const sc = _udScoreTeam(picks.map(p => p.name));
-        // Per-pick details: rank, val, proj, adp, diff vs ADP, diff vs rank
+        // Run BB simulation: 500 sim-seasons → seasonMean, seasonStd, per-player contribution.
+        const bb = _bbSimulateTeam(picks, { sims: 500, weeks: BB_REG_SEASON_WEEKS });
+        // Roster details (sorted by pick number) with raw PPG + BB stats.
         const rosterDetails = picks.slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map((p, pi) => {
           const matched = _udMatchPlayer(p.name);
-          const rank = matched ? _mtGetPlayerRank(matched.n) : 999;
-          const tradeVal = _udGetValue(p.name);
           const adp = matched && matched.a && matched.a < 900 ? matched.a : null;
           const proj = _udPlayerProj(p.name);
-          const adpDiff = adp != null ? Math.round(p.pick - adp) : null;
-          const rankDiff = rank < 500 ? p.pick - rank : null;
+          const bbStats = bb.perPlayerWeekly[p.name] || null;
           return {
             round: pi + 1,
             pick: p.pick,
             name: p.name,
             pos: p.pos,
             team: p.team,
-            rank: rank,
-            val: tradeVal,
-            proj: proj,
+            proj: proj,                                    // raw preseason/blended PPG
+            bbWeekly: bbStats ? bbStats.weeklyContrib : 0, // per-week contribution to lineup
+            startRate: bbStats ? bbStats.startRate : 0,    // % of weeks they start
             adp: adp,
-            adpDiff: adpDiff,
-            rankDiff: rankDiff
+            adpDiff: adp != null ? Math.round(p.pick - adp) : null,
+            sigma: bbStats ? bbStats.sigma : null,
+            byeWeek: bbStats ? bbStats.byeWeek : null
           };
         });
-        // Sum projection for the whole roster (used in the team header line).
+        // Position-level BB contribution (sum of per-player weekly across each position group)
+        const posScores = { QB: 0, RB: 0, WR: 0, TE: 0 };
+        rosterDetails.forEach(p => { if (posScores[p.pos] != null) posScores[p.pos] += p.bbWeekly; });
+        // Whole-roster projection sum (raw PPG, kept for context line)
         const projSum = rosterDetails.reduce((s, x) => s + (x.proj || 0), 0);
-        // Aggregate ADP value (positive = stole players late, negative = reached).
+        // Aggregate ADP value (positive = stole players late, negative = reached)
         const adpValue = rosterDetails.reduce((s, x) => s + (x.adpDiff || 0), 0);
         return {
           entryId: t.entryId,
           isMine: !!t.isMine,
           picks: picks,
           rosterDetails: rosterDetails,
-          total: sc.total,
-          posScores: sc.posScores,
+          // BB-derived totals — these are the ranking + Monte-Carlo inputs
+          weeklyPPG: bb.weeklyPPG,
+          seasonMean: bb.seasonMean,
+          seasonStd: bb.seasonStd,
+          // Position breakdown for the row mini-chart (BB contribution per position)
+          posScores: { QB: { pts: Math.round(posScores.QB) },
+                       RB: { pts: Math.round(posScores.RB) },
+                       WR: { pts: Math.round(posScores.WR) },
+                       TE: { pts: Math.round(posScores.TE) } },
           projSum: projSum,
           adpValue: adpValue,
           fieldUnknown: !fieldComplete
         };
       });
 
-      // Monte Carlo advance probabilities for this draft's teams.
+      // Monte Carlo advance probabilities for this draft. Each team's season
+      // total is drawn from N(seasonMean, seasonStd²) — the BB engine already
+      // incorporates lineup mechanics + per-player σ, so this captures the
+      // ceiling premium correctly.
       const N = teams.length;
-      const totals = teams.map(t => t.total);
-      const sigma = totals.map(m => Math.max(m * 0.18, 1));
+      const means = teams.map(t => t.seasonMean);
+      const stds  = teams.map(t => Math.max(t.seasonStd, 1));
       const ITER = (N >= 2) ? 2000 : 0;
       const adv1 = new Array(N).fill(0);
       const adv2 = new Array(N).fill(0);
       const adv3 = new Array(N).fill(0);
       for (let it = 0; it < ITER; it++) {
-        const sampled = totals.map((m, idx) => m + sigma[idx] * _udGauss());
+        const sampled = means.map((m, idx) => m + stds[idx] * _bbNormal());
         const order = sampled.map((s, idx) => ({ idx, s })).sort((a, b) => b.s - a.s);
         adv1[order[0].idx]++;
         if (N >= 2) { adv2[order[0].idx]++; adv2[order[1].idx]++; }
@@ -40153,7 +40376,8 @@ Rules:
         t.adv2 = ITER ? adv2[i] / ITER : null;
         t.adv3 = ITER ? adv3[i] / ITER : null;
       });
-      const ranked = teams.slice().sort((a, b) => b.total - a.total);
+      // Rank teams by BB season mean (high → low). This is the ordering shown.
+      const ranked = teams.slice().sort((a, b) => b.seasonMean - a.seasonMean);
       ranked.forEach((t, i) => { t.rank = i + 1; });
       const myEntry = teams.find(t => t.isMine) || ranked[0];
       _udTeamsRows.push({
@@ -40231,7 +40455,7 @@ Rules:
         html += `<div style="flex:1;min-width:160px">`;
         html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">${_esc(d.tournament)} <span style="font-weight:400;color:var(--text2)">· $${(d.fee || 0).toFixed(0)} · ${row.teams.length}-team</span>${fieldNote}</div>`;
         if (my) {
-          html += `<div style="font-size:.65rem;color:var(--text2)">Your score: <span style="color:var(--text);font-weight:600">${my.total}</span> · Proj: <span style="color:var(--text);font-weight:600">${my.projSum.toFixed(1)}</span> · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span></div>`;
+          html += `<div style="font-size:.65rem;color:var(--text2)">BB Proj: <span style="color:var(--text);font-weight:600">${my.weeklyPPG.toFixed(1)}</span> PPG · <span style="color:var(--text);font-weight:600">${my.seasonMean.toFixed(0)}</span> season · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span></div>`;
         }
         html += `</div>`;
         html += `<div style="font-size:.65rem;color:var(--text2);text-align:right;line-height:1.4">
@@ -40262,9 +40486,9 @@ Rules:
           html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
           html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--text);width:30px">#${t.rank}</div>`;
           html += `<div style="flex:1;min-width:90px;font-size:.72rem">${teamLabel}</div>`;
-          html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:70px">
-            <div><span style="color:var(--text);font-weight:700">${t.total}</span> score</div>
-            <div><span style="color:var(--text);font-weight:600">${t.projSum.toFixed(1)}</span> proj</div>
+          html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:84px">
+            <div><span style="color:var(--text);font-weight:700">${t.weeklyPPG.toFixed(1)}</span> BB PPG</div>
+            <div><span style="color:var(--text);font-weight:600">${t.seasonMean.toFixed(0)}</span> season</div>
           </div>`;
           html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:60px">
             <div>ADP val <span style="color:${(t.adpValue||0) > 0 ? '#22c55e' : (t.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(t.adpValue||0) > 0 ? '+' : ''}${t.adpValue || 0}</span></div>

@@ -40290,33 +40290,30 @@ Rules:
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">PLAYER</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">POS</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">TEAM</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)">RANK</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)">VAL</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)">PROJ</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)">PROJ PPG</th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)">ADP</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)">+/-</th>
             </tr></thead><tbody>`;
           t.rosterDetails.forEach(p => {
             const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-            const rankColor = p.rank <= 24 ? '#22c55e' : p.rank <= 60 ? '#4ade80' : p.rank <= 120 ? '#facc15' : p.rank <= 200 ? '#f59e0b' : p.rank < 500 ? '#ef4444' : 'var(--text2)';
-            const valColor = p.val >= 150 ? '#22c55e' : p.val >= 75 ? '#4ade80' : p.val >= 30 ? '#facc15' : p.val >= 10 ? '#f59e0b' : 'var(--text2)';
             const adpColor = p.adp == null ? 'var(--text2)' : p.adp <= 24 ? '#22c55e' : p.adp <= 60 ? '#4ade80' : p.adp <= 120 ? '#facc15' : p.adp <= 200 ? '#f59e0b' : 'var(--text2)';
-            const adpDiffColor = p.adpDiff == null ? 'var(--text2)' :
-                                 p.adpDiff > 20 ? '#22c55e' :
-                                 p.adpDiff > 0 ? '#4ade80' :
-                                 p.adpDiff > -20 ? '#f59e0b' : '#ef4444';
-            const adpDiffStr = p.adpDiff != null ? (p.adpDiff > 0 ? '+' + p.adpDiff : String(p.adpDiff)) : '—';
+            // Color projection by simple position-aware tier so it pops similarly to ADP.
+            const projColor = (() => {
+              if (p.proj == null) return 'var(--text2)';
+              const v = p.proj;
+              if (p.pos === 'QB') return v >= 22 ? '#22c55e' : v >= 19 ? '#4ade80' : v >= 16 ? '#facc15' : v >= 13 ? '#f59e0b' : 'var(--text2)';
+              if (p.pos === 'RB') return v >= 18 ? '#22c55e' : v >= 14 ? '#4ade80' : v >= 11 ? '#facc15' : v >= 8 ? '#f59e0b' : 'var(--text2)';
+              if (p.pos === 'WR') return v >= 17 ? '#22c55e' : v >= 13 ? '#4ade80' : v >= 10 ? '#facc15' : v >= 7 ? '#f59e0b' : 'var(--text2)';
+              if (p.pos === 'TE') return v >= 14 ? '#22c55e' : v >= 11 ? '#4ade80' : v >= 8 ? '#facc15' : v >= 6 ? '#f59e0b' : 'var(--text2)';
+              return 'var(--text2)';
+            })();
             html += `<tr style="border-bottom:1px solid var(--border)">
               <td style="padding:3px 6px;color:var(--text2)">${p.round}</td>
               <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.pick}</td>
               <td style="padding:3px 6px;color:var(--text)">${_esc(p.name)}</td>
               <td style="padding:3px 6px;color:${posColors[p.pos] || 'var(--text2)'};font-weight:600">${p.pos || '—'}</td>
               <td style="padding:3px 6px;color:var(--text2)">${_esc(p.team || '')}</td>
-              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${rankColor}">${p.rank < 500 ? p.rank : '—'}</td>
-              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${valColor}">${p.val}</td>
-              <td style="padding:3px 6px;text-align:right;color:var(--text)">${p.proj != null ? p.proj.toFixed(1) : '—'}</td>
+              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${projColor}">${p.proj != null ? p.proj.toFixed(1) : '—'}</td>
               <td style="padding:3px 6px;text-align:right;font-weight:700;color:${adpColor}">${p.adp != null ? Math.round(p.adp) : '—'}</td>
-              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${adpDiffColor}">${adpDiffStr}</td>
             </tr>`;
           });
           html += `</tbody></table>`;

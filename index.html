@@ -39268,7 +39268,10 @@ Rules:
           // live-scoring endpoint is wired in. ESPN injury feed will set
           // injuryStatus weekly. Both are read by the site-side BB engine.
           weeklyScores: Array.isArray(p.weeklyScores) ? p.weeklyScores.slice() : [],
-          injuryStatus: p.injuryStatus || null
+          injuryStatus: p.injuryStatus || null,
+          // v0.9.43: Underdog's own season projection (TOTAL points). Used
+          // as fallback PPG (÷ 17) when Clay's projection is missing.
+          udProj: (p.udProj != null && !isNaN(parseFloat(p.udProj))) ? parseFloat(p.udProj) : null
         })),
         // v0.9.37: full team data for cross-team scoring inside a draft.
         // myEntryId is the entry_id of the user's team in this draft.
@@ -39953,9 +39956,18 @@ Rules:
   const BB_LINEUP = { QB: 1, RB: 2, WR: 3, TE: 1, FLEX: 1 };
 
   // Position-default σ as a fraction of mean. Calibrated to typical NFL
-  // weekly fantasy variance. Replaced per-player by empirical σ once a
-  // player has 4+ actual games scored.
-  const BB_POS_SIGMA_PCT = { QB: 0.25, RB: 0.35, WR: 0.40, TE: 0.45 };
+  // weekly fantasy variance: real fantasy weeks of a 14-PPG RB swing 0-30+,
+  // so σ is roughly half the mean. Replaced per-player by empirical σ once
+  // a player has 4+ actual games scored.
+  const BB_POS_SIGMA_PCT = { QB: 0.30, RB: 0.50, WR: 0.55, TE: 0.60 };
+
+  // Season-level projection uncertainty. Independent of weekly variance —
+  // captures "Clay might be wrong about this player's true ability." A
+  // player's actual season mean is drawn ONCE per simulated season from
+  // N(projected, (PROJ_UNCERT × projected)²). This single change is what
+  // makes opponents have realistic advance % instead of 0% — without it,
+  // 14 weeks of variance averages out the field too much.
+  const BB_PROJ_UNCERTAINTY_PCT = 0.25;
 
   // Default best-ball regular season length (BBM/Puppy: weeks 1-14).
   const BB_REG_SEASON_WEEKS = 14;
@@ -40018,7 +40030,15 @@ Rules:
   function _bbResolvePlayer(pick) {
     const matched = _udMatchPlayer(pick.name);
     let preseason = 0;
-    try { preseason = matched ? (adj25ppg(matched) || 0) : 0; } catch (_) { preseason = 0; }
+    // Projection chain (v0.9.43):
+    //   1. Mike Clay 2026 projection (primary)
+    //   2. JS Model PPG (built into adjProjPpg as veteran fallback)
+    //   3. Underdog's own season projection ÷ 17 (rookies Clay missed)
+    //   4. 0 (truly unprojected — won't win lineup slots, which is correct)
+    try { preseason = matched ? (adjProjPpg(matched) || 0) : 0; } catch (_) { preseason = 0; }
+    if (!preseason && pick && pick.udProj != null && !isNaN(pick.udProj) && pick.udProj > 0) {
+      preseason = pick.udProj / 17;
+    }
     const pos = (pick.pos || (matched && matched.s) || '').toUpperCase();
     const team = (pick.team || (matched && matched.t) || '').toUpperCase();
     const weekly = Array.isArray(pick.weeklyScores) ? pick.weeklyScores : null;
@@ -40100,10 +40120,37 @@ Rules:
     const seasonTotals = new Array(sims).fill(0);
 
     for (let s = 0; s < sims; s++) {
+      // v0.9.42: per-simulated-season projection uncertainty. Once per
+      // sim-season we draw each player's "true" mean for THIS hypothetical
+      // season from N(projected, (PROJ_UNCERT × projected)²). Weekly variance
+      // then operates around that drawn mean. Without this step, 14 weeks of
+      // averaging shrinks team-level variance to ~3% CV and opponents end
+      // up at 0% advance %; with it, CV is realistic ~10-15%.
+      // Once weekly_scores arrive mid-season, the Bayesian-blended mean is
+      // increasingly anchored to actuals so the projection-uncertainty
+      // factor matters less and less (which is correct — by week 10 we
+      // know each player's pace pretty well).
+      const seasonPlayerMeans = players.map(p => {
+        const blendWeight = Array.isArray(p.weeklyScores) ? p.weeklyScores.filter(s => s != null).length : 0;
+        // After many real games we've already collapsed projection uncertainty;
+        // shrink it linearly from full at week 0 to ~0 by week 14.
+        const shrink = Math.max(0, 1 - blendWeight / BB_REG_SEASON_WEEKS);
+        const projSigma = Math.max(p.mean * BB_PROJ_UNCERTAINTY_PCT * shrink, 0);
+        if (projSigma <= 0) return p.mean;
+        return Math.max(0, p.mean + projSigma * _bbNormal());
+      });
       let seasonTotal = 0;
       for (let w = startWeek; w <= weeks; w++) {
-        // Generate scores for every player this week
-        const weekScores = players.map(p => _bbWeekScore(p, w));
+        // Generate scores for every player this week (operating around the
+        // simulated season-mean rather than the static projection).
+        const weekScores = players.map((p, idx) => {
+          if (p.byeWeek === w) return 0;
+          if (p.injury === 'OUT' || p.injury === 'IR') return 0;
+          let score = seasonPlayerMeans[idx] + (p.sigma || 0) * _bbNormal();
+          if (p.injury === 'D') score *= 0.5;
+          else if (p.injury === 'Q') score *= 0.85;
+          return Math.max(0, score);
+        });
         const lineup = _bbOptimalLineup(weekScores, players);
         seasonTotal += lineup.total;
         lineup.startedIdx.forEach(i => {
@@ -40287,10 +40334,19 @@ Rules:
     html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked by best-ball season projection. Click any team to open its roster. <strong style="color:var(--accent)">Top-2 of 12 advance (BBM &amp; Puppy regular season, weeks 1-14).</strong></div>`;
 
     // Helper: pull projected PPG for a player (raw, before BB adjustment).
-    function _udPlayerProj(name) {
+    // v0.9.41 → v0.9.43: Clay → JS Model → Underdog projection (÷ 17).
+    // adj25ppg returns last year's actual PPG and is wrong for forward-
+    // looking projection.
+    function _udPlayerProj(name, pickObj) {
       const m = _udMatchPlayer(name);
-      if (!m) return null;
-      try { const v = adj25ppg(m); return (v != null) ? v : null; } catch (_) { return null; }
+      let v = null;
+      if (m) {
+        try { v = adjProjPpg(m); } catch (_) { v = null; }
+      }
+      if (v == null && pickObj && pickObj.udProj != null && !isNaN(pickObj.udProj) && pickObj.udProj > 0) {
+        v = pickObj.udProj / 17;
+      }
+      return v;
     }
 
     // Build per-draft analysis using the BB engine.
@@ -40309,7 +40365,7 @@ Rules:
         const rosterDetails = picks.slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map((p, pi) => {
           const matched = _udMatchPlayer(p.name);
           const adp = matched && matched.a && matched.a < 900 ? matched.a : null;
-          const proj = _udPlayerProj(p.name);
+          const proj = _udPlayerProj(p.name, p);
           const bbStats = bb.perPlayerWeekly[p.name] || null;
           return {
             round: pi + 1,

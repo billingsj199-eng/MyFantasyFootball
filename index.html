@@ -4107,6 +4107,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/combine_data.js?v=2026-04-25b"></script>
 <script src="data/historical_draft_picks.js"></script>
 <script src="data/mike_clay_projections.js?v=2026-04-25b"></script>
+<script src="data/player_weekly_sigma.js"></script>
 <script src="data/injury_history.js"></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
@@ -40003,16 +40004,55 @@ Rules:
     return (prior * preseasonPpg + n * actualAvg) / (prior + n);
   }
 
-  // Empirical σ once we have ≥ 4 valid weekly scores. Otherwise return the
-  // position default × mean.
-  function _bbBlendSigma(pos, mean, actualScores) {
-    const def = (BB_POS_SIGMA_PCT[pos] || 0.4) * Math.max(mean, 1);
-    if (!Array.isArray(actualScores)) return def;
-    const valid = actualScores.filter(s => s != null && !isNaN(s));
-    if (valid.length < 4) return def;
-    const m = valid.reduce((s, v) => s + v, 0) / valid.length;
-    const variance = valid.reduce((s, v) => s + (v - m) * (v - m), 0) / valid.length;
-    return Math.max(Math.sqrt(variance), 0.5);
+  // σ resolution chain (v0.9.44):
+  //   1. Empirical σ from THIS season's weekly scores (≥ 4 games this year)
+  //   2. Historical σ_pct × current projection (data/player_weekly_sigma.js,
+  //      built from last 3 NFL seasons weighted 0.5/0.3/0.2 with trend
+  //      correction — captures players whose volatility is shifting)
+  //   3. Position default × mean (rookies and players we have no history for)
+  function _bbBlendSigma(pos, mean, actualScores, playerName) {
+    // 1. Empirical σ if this-season's weekly data is rich enough
+    if (Array.isArray(actualScores)) {
+      const valid = actualScores.filter(s => s != null && !isNaN(s));
+      if (valid.length >= 4) {
+        const m = valid.reduce((s, v) => s + v, 0) / valid.length;
+        const variance = valid.reduce((s, v) => s + (v - m) * (v - m), 0) / valid.length;
+        return Math.max(Math.sqrt(variance), 0.5);
+      }
+    }
+    // 2. Historical σ from build_player_sigma.py output.
+    // We trust the historical record for ANY player with ≥10 games of data
+    // — including declining veterans. The trend correction baked into
+    // sigma_pct already captures players who've gotten more or less
+    // consistent over the 3-year window.
+    //
+    // The one thing we don't extrapolate naively is σ_pct across a big
+    // mean change. If a backup with μ=3, σ_abs=3 (so σ_pct=1.0) gets a
+    // new WR1 projection of μ=12, applying σ_pct=1.0 gives σ=12, which
+    // is unrealistic — real σ for a 12-PPG WR is ~5-6. σ_abs scales
+    // sub-linearly with role; σ_pct doesn't. So we use the historical
+    // ABSOLUTE σ as a cap, scaled by the square root of the mean ratio
+    // (sub-linear growth as role expands). The floor is the position
+    // default at 70% of mean so we never end up with absurdly low σ.
+    if (playerName && typeof PLAYER_WEEKLY_SIGMA !== 'undefined') {
+      const hist = PLAYER_WEEKLY_SIGMA[playerName];
+      if (hist && hist.sigma_pct != null && (hist.games || 0) >= 10) {
+        const histMean = hist.mean_ppg || 0;
+        const histSigmaAbs = hist.sigma_abs || 0;
+        const sigmaFromPct = hist.sigma_pct * Math.max(mean, 1);
+        // σ scales sub-linearly with mean. sqrt(meanRatio) is a defensible
+        // heuristic — a player going from μ=6 to μ=12 (2× growth) sees σ
+        // grow by about √2 ≈ 1.41×, not 2×.
+        const meanRatio = (histMean > 0) ? Math.max(mean, 1) / histMean : 1;
+        const sigmaCap = histSigmaAbs * Math.sqrt(Math.max(meanRatio, 0.5));
+        const sigmaFloor = (BB_POS_SIGMA_PCT[pos] || 0.4) * Math.max(mean, 1) * 0.7;
+        // Take σ_pct projection, cap it by σ_abs scaling, floor by position default
+        const projected = Math.min(sigmaFromPct, sigmaCap > 0 ? sigmaCap : sigmaFromPct);
+        return Math.max(sigmaFloor, projected, 0.5);
+      }
+    }
+    // 3. Position default × mean
+    return (BB_POS_SIGMA_PCT[pos] || 0.4) * Math.max(mean, 1);
   }
 
   // Lookup bye week for a given NFL team abbreviation. Returns null if the
@@ -40043,7 +40083,9 @@ Rules:
     const team = (pick.team || (matched && matched.t) || '').toUpperCase();
     const weekly = Array.isArray(pick.weeklyScores) ? pick.weeklyScores : null;
     const mean = _bbBlendMean(preseason, weekly);
-    const sigma = _bbBlendSigma(pos, mean, weekly);
+    // v0.9.44: pass player name so _bbBlendSigma can hit the historical
+    // σ table (last 3 seasons of weekly data with trend correction).
+    const sigma = _bbBlendSigma(pos, mean, weekly, pick.name);
     const byeWeek = _bbByeWeek(team);
     // Injury status: 'OUT' / 'IR' / 'Q' / 'D' / null. Set by the future
     // injury-feed integration; for now always null.

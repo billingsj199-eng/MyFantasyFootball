@@ -39263,7 +39263,13 @@ Rules:
           pos: p.pos || '',
           team: p.team || '',
           pick: parseInt(p.pick || 0, 10) || 0
-        }))
+        })),
+        // v0.9.37: full team data for cross-team scoring inside a draft.
+        // myEntryId is the entry_id of the user's team in this draft.
+        // allTeams[entryId] = { entryId, isMine, pickCount, picks: [...] }
+        myEntryId: d.myEntryId || null,
+        allTeams: d.allTeams || null,
+        teamCount: d.teamCount || 0
       };
     }
 
@@ -39271,6 +39277,9 @@ Rules:
     // site's own dashboard. _udRenderDashboard reads the dashboard DOM
     // (#mtUnderdogDashboard) and rebuilds it from the data.
     window._udPortfolio = _udRebuildPlayers(draftsObj);
+    // v0.9.38: stamp this so a concurrent _udLoadFromCloud can detect the
+    // race and merge instead of overwriting our just-synced data.
+    window._udExtensionAppliedAt = Date.now();
     try {
       if (typeof _udRenderDashboard === 'function') _udRenderDashboard(window._udPortfolio);
     } catch (e) { console.warn('[MFF/site] render error:', e); }
@@ -39401,6 +39410,30 @@ Rules:
     const isPremNow = (typeof window.hasPremium === 'function') && window.hasPremium();
 
     function applyParsed(parsed, srcLabel, savedAt) {
+      // v0.9.38: race-condition guard. The Underdog extension may have
+      // already pushed a fresher portfolio via _mffSetPortfolio while this
+      // Firestore .get() was in flight. If so, MERGE Firestore's stale
+      // drafts into the in-memory copy instead of overwriting them. Without
+      // this guard, the extension's just-synced 49 drafts get clobbered by
+      // the cloud's older 4-draft snapshot the moment the .get() resolves.
+      const recentExt = window._udExtensionAppliedAt &&
+                        (Date.now() - window._udExtensionAppliedAt) < 60000;
+      if (recentExt && window._udPortfolio && window._udPortfolio.drafts) {
+        const merged = Object.assign({}, parsed.drafts || {}, window._udPortfolio.drafts);
+        const rebuilt = _udRebuildPlayers(merged);
+        window._udPortfolio = rebuilt;
+        const status = document.getElementById('mtUnderdogStatus');
+        if (status) {
+          status.textContent = `Loaded ${rebuilt.numDrafts} drafts (merged extension sync + ${srcLabel})`;
+          status.style.color = '#22c55e';
+        }
+        _udRenderDashboard(rebuilt);
+        // Persist the merged result back to cloud so future loads see it.
+        try { _udSaveToCloud(rebuilt); } catch (_) {}
+        if (typeof window._renderJacksTeams === 'function') window._renderJacksTeams();
+        console.log('[MFF/site] _udLoadFromCloud merged with extension data:', rebuilt.numDrafts, 'drafts');
+        return;
+      }
       window._udPortfolio = parsed;
       const status = document.getElementById('mtUnderdogStatus');
       if (status) {

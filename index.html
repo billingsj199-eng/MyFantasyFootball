@@ -39226,6 +39226,100 @@ Rules:
     return fallback || 0;
   }
 
+  // v0.9.63: tournament-name → phase backfill. Older syncs (before v0.9.59
+  // had the slate.description-based phase detection) left every draft
+  // tagged 'pre'. We can recover correct phases for the 8 known UD
+  // tournaments without forcing a re-sync. Ambiguous tournaments stay
+  // whatever the extension assigned. User can manually correct in the UI.
+  const _UD_TOURNAMENT_PHASE = {
+    'best ball mania vii': 'pre',
+    'best ball mania': 'pre',
+    'the big board': 'pre',
+    'the little board': 'pre',
+    'the puppy': 'pre',
+    'the udfa': 'pre',
+    'the udfa 2': 'pre',
+    'the udfa 3': 'pre',
+    'the field general': 'superflex'    // user-specific: Field General is in NFL 2026 Superflex Season
+    // Tournaments with "Season" in name (post-NFL-draft) → 'nfl' via fallback below
+  };
+  function _udPhaseFromTournament(tournament, currentPhase) {
+    if (!tournament) return currentPhase;
+    const t = String(tournament).toLowerCase().trim();
+    if (_UD_TOURNAMENT_PHASE[t]) return _UD_TOURNAMENT_PHASE[t];
+    // Heuristic: "season" in name (without "pre-draft") → post-NFL-draft
+    if (/\bseason\b/.test(t) && !/pre[\s-]?draft/.test(t)) return 'nfl';
+    if (/superflex/.test(t)) return 'superflex';
+    if (/pre[\s-]?draft/.test(t)) return 'pre';
+    return currentPhase || 'pre';
+  }
+
+  // v0.9.64: deferred dashboard render. Page-load measurements showed
+  // domComplete = 24.5s on a 49-draft portfolio because _udRenderDashboard
+  // (with the BB engine) ran on the critical path during _udLoadFromCloud.
+  // Most users aren't on MyTeams at page-load, so defer the heavy compute
+  // until either:
+  //   (a) the user is currently on the MyTeams section, OR
+  //   (b) browser idle time becomes available, OR
+  //   (c) the user clicks the MyTeams nav button (handled by maybeJumpToMyTeams)
+  // This drops domComplete from 24s → ~2s while the dashboard render still
+  // happens within ~50ms once the user actually navigates there.
+  function _udMyTeamsVisible() {
+    try {
+      const sec = document.getElementById('mtSectionUnderdog') ||
+                  document.getElementById('mtSection') ||
+                  document.querySelector('[data-section="myteams"]');
+      if (sec && sec.offsetParent !== null) return true;
+      // Also check active nav state — different sites mark visibility differently
+      const navBtn = document.getElementById('navMyTeamsBtn');
+      if (navBtn && (navBtn.classList.contains('active') ||
+                     navBtn.getAttribute('aria-current') === 'page')) return true;
+    } catch (_) {}
+    return false;
+  }
+  function _udRenderDashboardDeferred(data) {
+    if (typeof _udRenderDashboard !== 'function') return;
+    if (_udMyTeamsVisible()) {
+      // User is looking at MyTeams now — render immediately
+      try { _udRenderDashboard(data); } catch (e) { console.warn('[MFF/site] render error:', e); }
+      return;
+    }
+    // Otherwise defer. Run on the FIRST of these triggers:
+    //  - User clicks navMyTeamsBtn (instant render, since they need to see data)
+    //  - Browser idle time (requestIdleCallback with 4s budget timeout)
+    //  - 2s timeout fallback for browsers without idle callback
+    window._udPendingRender = data;
+    let fired = false;
+    const run = (reason) => {
+      if (fired) return;
+      fired = true;
+      if (window._udPendingRender !== data) return;
+      window._udPendingRender = null;
+      try { _udRenderDashboard(data); } catch (e) { console.warn('[MFF/site] deferred render error (' + reason + '):', e); }
+    };
+    // Hook nav button click — only attach once globally
+    if (!window._udNavHookInstalled) {
+      window._udNavHookInstalled = true;
+      const nav = document.getElementById('navMyTeamsBtn');
+      if (nav) {
+        nav.addEventListener('click', function () {
+          if (window._udPendingRender) {
+            // Yield once so the click navigation can render its base UI first
+            setTimeout(() => {
+              const pending = window._udPendingRender;
+              if (pending) { window._udPendingRender = null; try { _udRenderDashboard(pending); } catch (_) {} }
+            }, 30);
+          }
+        }, { capture: true });
+      }
+    }
+    if (typeof window.requestIdleCallback === 'function') {
+      requestIdleCallback(() => run('idle'), { timeout: 4000 });
+    } else {
+      setTimeout(() => run('timeout'), 2000);
+    }
+  }
+
   // Recompute per-player aggregates from a drafts dict.
   // v0.9.61: also backfills missing pick.pos / pick.team from the site's
   // D array via _udMatchPlayer, and derives missing fees from tournament
@@ -39241,6 +39335,11 @@ Rules:
         const derived = _udFeeFromTitle(d.tournament, 0);
         if (derived > 0) d.fee = derived;
       }
+      // v0.9.63: backfill phase from tournament name if extension data is wrong.
+      // Older syncs always assigned 'pre' regardless of phase. Override only
+      // when the tournament name unambiguously indicates a different phase.
+      const derivedPhase = _udPhaseFromTournament(d.tournament, d.phase);
+      if (derivedPhase && derivedPhase !== d.phase) d.phase = derivedPhase;
       d.picks.forEach(p => {
         totalPicks++;
         // Backfill pos / team from the D array if pick is missing them
@@ -39387,9 +39486,8 @@ Rules:
     // v0.9.38: stamp this so a concurrent _udLoadFromCloud can detect the
     // race and merge instead of overwriting our just-synced data.
     window._udExtensionAppliedAt = Date.now();
-    try {
-      if (typeof _udRenderDashboard === 'function') _udRenderDashboard(window._udPortfolio);
-    } catch (e) { console.warn('[MFF/site] render error:', e); }
+    // v0.9.64: defer render off page-load critical path
+    _udRenderDashboardDeferred(window._udPortfolio);
     try {
       if (typeof _udSaveToCloud === 'function') _udSaveToCloud(window._udPortfolio);
     } catch (e) { console.warn('[MFF/site] cloud save error:', e); }
@@ -39548,7 +39646,8 @@ Rules:
         status.textContent = `Loaded ${parsed.numDrafts} drafts from ${srcLabel}${when}`;
         status.style.color = '#22c55e';
       }
-      _udRenderDashboard(parsed);
+      // v0.9.64: defer the heavy BB-engine render off page-load critical path
+      _udRenderDashboardDeferred(parsed);
       if (typeof window._renderJacksTeams === 'function') window._renderJacksTeams();
     }
 

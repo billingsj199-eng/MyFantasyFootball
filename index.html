@@ -39237,6 +39237,21 @@ Rules:
       console.warn('[MFF/site] _mffSetPortfolio called with no drafts');
       return;
     }
+    // v0.9.55: if the user JUST clicked CLEAR (within 5 seconds), ignore
+    // any extension-side cached portfolio that mff-bridge dispatches on
+    // page load. Without this guard, CLEAR is undone the moment mff-bridge
+    // reads its still-stale chrome.storage.local entry. The extension's
+    // own clear handler will purge that entry shortly; we just have to
+    // not act on its stale-cached dispatch in the meantime.
+    if (window._udClearedAt && (Date.now() - window._udClearedAt) < 5000) {
+      // BUT: if the dispatch is a fresh post-clear sync (timestamp > clear),
+      // it's a real new sync — let it through.
+      const dispatchAt = extPortfolio.syncedAt || 0;
+      if (dispatchAt < window._udClearedAt) {
+        console.log('[MFF/site] _mffSetPortfolio ignored — stale cached dispatch within 5s of clear');
+        return;
+      }
+    }
 
     // Extension shape: drafts is an array of {id, entry_fee, picks: [{name,pos,team,pick}]}.
     // Site shape: drafts is an object keyed by id with {id, tournament, fee, size, date, phase, picks}.
@@ -39549,17 +39564,34 @@ Rules:
 
     if (!confirm('Clear your saved portfolio? You can re-upload anytime.')) return;
 
+    // v0.9.55: also wipe the extension's cached copies. Without this, the
+    // extension's mff_portfolio_sync entry in chrome.storage.local persists
+    // and gets re-applied to _udPortfolio on every page load, undoing the
+    // clear. Same for mff_existing_draft_ids (incremental-sync skip list)
+    // and mff_portfolio (legacy key). The extension's mff-bridge.js listens
+    // for this event and wipes those storage entries.
+    try {
+      document.dispatchEvent(new CustomEvent('mff-clear-extension-cache'));
+      console.log('[MFF/site] dispatched mff-clear-extension-cache');
+    } catch (_) {}
+    // Stamp this so any race with mff-bridge dispatching its old cached
+    // data doesn't immediately re-apply the stale portfolio.
+    window._udClearedAt = Date.now();
+
     db.collection('user_game_data').doc(user.uid).set({ underdogPortfolio: null }, { merge: true })
       .then(() => {
         window._udPortfolio = null;
         window._udPhaseFilter = null;
         window._udContestFilter = null;
         window._udSelectedPhase = null;
+        // Also reset the extension-applied stamp so a future cloud load
+        // isn't tricked into "merge" mode against nothing.
+        window._udExtensionAppliedAt = 0;
         document.getElementById('mtUnderdogDashboard').style.display = 'none';
         document.getElementById('mtUnderdogDashboard').innerHTML = '';
         const status = document.getElementById('mtUnderdogStatus');
         if (status) {
-          status.textContent = 'Portfolio cleared. Upload a new CSV to start fresh.';
+          status.textContent = 'Portfolio cleared. Sync from Underdog or upload a CSV to start fresh.';
           status.style.color = '';
         }
       })

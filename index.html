@@ -39456,9 +39456,21 @@ Rules:
 
     // Start with the existing portfolio's drafts (preserve CSV-uploaded data),
     // then layer the extension drafts on top — extension overwrites by id.
+    // v0.9.76: track whether _udPortfolio had real drafts BEFORE this merge.
+    // The extension only sends NEW drafts (incremental sync skips existing).
+    // If cloud hasn't loaded yet, _udPortfolio is null and we'd "merge" only
+    // the 1-2 incoming drafts — clobbering the user's full 50-draft history
+    // when _udSaveToCloud writes it back. Defer the cloud save in that case
+    // and let _udLoadFromCloud's race-aware applyParsed merge persist.
     const draftsObj = {};
+    let _hadCloudDrafts = false;
     if (window._udPortfolio && window._udPortfolio.drafts) {
-      Object.assign(draftsObj, window._udPortfolio.drafts);
+      const _exDrafts = window._udPortfolio.drafts;
+      const _exCount = Array.isArray(_exDrafts)
+        ? _exDrafts.length
+        : Object.keys(_exDrafts).length;
+      if (_exCount > 0) _hadCloudDrafts = true;
+      Object.assign(draftsObj, _exDrafts);
     }
     for (const d of arr) {
       if (!d || !d.id) continue;
@@ -39517,9 +39529,24 @@ Rules:
     window._udExtensionAppliedAt = Date.now();
     // v0.9.64: defer render off page-load critical path
     _udRenderDashboardDeferred(window._udPortfolio);
-    try {
-      if (typeof _udSaveToCloud === 'function') _udSaveToCloud(window._udPortfolio);
-    } catch (e) { console.warn('[MFF/site] cloud save error:', e); }
+    // v0.9.76: only save to cloud if we had real existing drafts to merge with
+    // AND we're not already in the deferred state from a prior dispatch.
+    // If _udPortfolio was empty here, that means cloud hasn't loaded yet —
+    // saving the partial extension snapshot would overwrite the user's full
+    // 50+ draft history in Firestore. Defer; _udLoadFromCloud's applyParsed
+    // already merges + saves when it sees a recent _udExtensionAppliedAt.
+    // The awaiting flag ALSO blocks the save on a second extension dispatch
+    // that arrives before cloud finishes loading (prior dispatch left drafts
+    // in _udPortfolio that look real but represent only the partial sync).
+    const _safeToSave = _hadCloudDrafts && !window._udExtensionAwaitingCloudSave;
+    if (_safeToSave) {
+      try {
+        if (typeof _udSaveToCloud === 'function') _udSaveToCloud(window._udPortfolio);
+      } catch (e) { console.warn('[MFF/site] cloud save error:', e); }
+    } else {
+      window._udExtensionAwaitingCloudSave = true;
+      console.log('[MFF/site] _mffSetPortfolio: deferring cloud save — cloud not loaded yet, applyParsed will merge');
+    }
     console.log('[MFF/site] _mffSetPortfolio applied: now',
                 window._udPortfolio.numDrafts, 'drafts /',
                 Object.keys(window._udPortfolio.players || {}).length, 'unique players');
@@ -39787,6 +39814,9 @@ Rules:
         _udRenderDashboard(rebuilt);
         // Persist the merged result back to cloud so future loads see it.
         try { _udSaveToCloud(rebuilt); } catch (_) {}
+        // v0.9.76: extension save was deferred earlier (cloud-not-loaded
+        // path); we just persisted the merged result, so clear the flag.
+        window._udExtensionAwaitingCloudSave = false;
         if (typeof window._renderJacksTeams === 'function') window._renderJacksTeams();
         console.log('[MFF/site] _udLoadFromCloud merged with extension data:', rebuilt.numDrafts, 'drafts');
         return;
@@ -39806,7 +39836,20 @@ Rules:
     if (isAdminNow) {
       // Jack: his own portfolio
       db.collection('user_game_data').doc(user.uid).get().then(doc => {
-        if (!doc.exists) return;
+        if (!doc.exists) {
+          // v0.9.76: brand-new account or wiped doc. If the extension already
+          // populated _udPortfolio while we were waiting on this .get(), the
+          // _mffSetPortfolio path deferred its cloud save. Persist that data
+          // now so we don't strand the freshly-synced drafts in memory only.
+          if (window._udExtensionAwaitingCloudSave && window._udPortfolio &&
+              window._udPortfolio.drafts) {
+            try { _udSaveToCloud(window._udPortfolio); } catch (_) {}
+            window._udExtensionAwaitingCloudSave = false;
+            console.log('[MFF/site] no cloud doc — saved deferred extension portfolio (' +
+                        (window._udPortfolio.numDrafts || 0) + ' drafts)');
+          }
+          return;
+        }
         const cloud = doc.data().underdogPortfolio;
         const parsed = _udHydrateCloudPayload(cloud);
         if (parsed) {
@@ -39816,6 +39859,12 @@ Rules:
           db.collection('shared').doc('jacks_portfolio').set(cloud, { merge: false })
             .then(() => { console.log('[Portfolio] Backfilled shared/jacks_portfolio on load'); })
             .catch(e => { console.warn('[Portfolio] Shared backfill error:', e); });
+        } else if (window._udExtensionAwaitingCloudSave && window._udPortfolio) {
+          // doc.exists but cloud was malformed/empty AND we have pending
+          // extension data — persist it so the user doesn't lose the sync.
+          try { _udSaveToCloud(window._udPortfolio); } catch (_) {}
+          window._udExtensionAwaitingCloudSave = false;
+          console.log('[MFF/site] cloud doc empty — saved deferred extension portfolio');
         }
       }).catch(e => { console.warn('[Portfolio] Load error:', e); });
     } else if (isPremNow) {
@@ -40338,6 +40387,63 @@ Rules:
   // ═══════════════════════════════════════════════════════════
   // BEST-BALL SCORING ENGINE (v0.9.40 site-side)
   // ═══════════════════════════════════════════════════════════
+  // Value Over Replacement (v0.9.65). For each player, compute projected
+  // total season points (Clay's `pts` directly, falling back to adjProjPpg
+  // × 17), then subtract the replacement-level player's season points at
+  // the same position. BBM 12-team starter cutoffs:
+  //   QB12: 12 teams × 1 starter
+  //   RB30: 24 starters + ~6 RB-FLEX (~4 of 12 FLEX slots go to RB)
+  //   WR42: 36 starters + ~6 WR-FLEX (~7 of 12 FLEX slots go to WR)
+  //   TE13: 12 starters + ~1 TE-FLEX
+  //
+  // VOR is a marginal-value measure — the points a player contributes
+  // ABOVE what's freely available at the position. Limited-GP players
+  // (Clay gm < 17 like Charbonnet) get their actual projected total,
+  // which correctly discounts them vs full-season replacement-level RBs.
+  //
+  // Sets `_vor`, `_seasonPts`, `_posRank` on every entry of the global D
+  // array. Re-run when projections or rankings change (called at every
+  // dashboard render).
+  function _computeVOR() {
+    if (typeof D === 'undefined' || !Array.isArray(D)) return;
+    const REPL_LEVEL = { QB: 12, RB: 30, WR: 42, TE: 13 };
+
+    D.forEach(d => {
+      if (!d || !d.s || !['QB','RB','WR','TE'].includes(d.s)) {
+        if (d) { d._seasonPts = null; d._vor = null; d._posRank = null; }
+        return;
+      }
+      let pts = null;
+      const cp = (typeof clayLookup === 'function') ? clayLookup(d.n) : null;
+      if (cp && cp.pts != null && !isNaN(cp.pts)) {
+        // Clay's pts is already a season total — accounts for projected
+        // GP. Charbonnet's 136 is for 11 games; that IS what he scores.
+        pts = cp.pts;
+      } else {
+        let ppg = null;
+        try { ppg = adjProjPpg(d); } catch (_) {}
+        if (ppg != null && !isNaN(ppg)) pts = ppg * 17;
+      }
+      d._seasonPts = pts;
+    });
+
+    // Rank within position, find replacement level, set _vor.
+    const byPos = { QB: [], RB: [], WR: [], TE: [] };
+    D.forEach(d => { if (d._seasonPts != null && byPos[d.s]) byPos[d.s].push(d); });
+    Object.keys(byPos).forEach(pos => {
+      byPos[pos].sort((a, b) => (b._seasonPts || 0) - (a._seasonPts || 0));
+      const replIdx = REPL_LEVEL[pos] - 1;
+      const replPts = byPos[pos][replIdx] ? byPos[pos][replIdx]._seasonPts : 0;
+      byPos[pos].forEach((d, i) => {
+        d._vor = (d._seasonPts || 0) - replPts;
+        d._posRank = i + 1;
+        d._replLevel = replPts;
+      });
+    });
+  }
+  window._computeVOR = _computeVOR;
+
+  // ═══════════════════════════════════════════════════════════
   // Computes a player's expected weekly contribution to your starting lineup
   // accounting for best-ball mechanics (auto-start your top scorers each week).
   // A high-σ "boom/bust" WR with mean 12 PPG can be more valuable than a
@@ -40835,6 +40941,8 @@ Rules:
     // since the last render propagate. Within this render the caches will
     // re-populate; ~600 unique player lookups instead of 10,584.
     try { if (typeof window._bbClearCaches === 'function') window._bbClearCaches(); } catch (_) {}
+    // v0.9.65: refresh VOR (lazy — only D-traversal + per-pos sort, ~5ms).
+    try { _computeVOR(); } catch (_) {}
 
     // Apply phase filter first, then contest filter (composes nicely)
     const phaseFiltered = _udApplyPhaseFilter(originalData);
@@ -40998,7 +41106,8 @@ Rules:
     // pure UI interactions. Cuts subsequent renders from ~2-3s to ~50ms.
     const _udCacheKey = (function () {
       const ks = Object.keys(data.drafts);
-      return ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0);
+      // v0.9.65: bumped suffix so stale caches (no VOR/window fields) bust on first load.
+      return 'v65:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0);
     })();
     let _udTeamsRows;
     if (window._udTeamsCache && window._udTeamsCache.key === _udCacheKey) {
@@ -41039,7 +41148,9 @@ Rules:
             sigma: bbStats ? bbStats.sigma : null,
             byeWeek: bbStats ? bbStats.byeWeek : null,
             startWeek: bbStats && bbStats.startWeek != null ? bbStats.startWeek : 1,
-            endWeek: bbStats && bbStats.endWeek != null ? bbStats.endWeek : BB_REG_SEASON_WEEKS
+            endWeek: bbStats && bbStats.endWeek != null ? bbStats.endWeek : BB_REG_SEASON_WEEKS,
+            vor: matched && matched._vor != null ? matched._vor : null,
+            seasonPts: matched && matched._seasonPts != null ? matched._seasonPts : null
           };
         });
         // Position-level BB contribution (sum of per-player weekly across each position group)
@@ -41049,6 +41160,9 @@ Rules:
         const projSum = rosterDetails.reduce((s, x) => s + (x.proj || 0), 0);
         // Aggregate ADP value (positive = stole players late, negative = reached)
         const adpValue = rosterDetails.reduce((s, x) => s + (x.adpDiff || 0), 0);
+        // Team total VOR (v0.9.65) — sum of marginal value above replacement
+        // across all 18 picks. Higher = more aggregate edge over the field.
+        const vorTotal = rosterDetails.reduce((s, x) => s + (x.vor || 0), 0);
         return {
           entryId: t.entryId,
           isMine: !!t.isMine,
@@ -41065,6 +41179,7 @@ Rules:
                        TE: { pts: Math.round(posScores.TE) } },
           projSum: projSum,
           adpValue: adpValue,
+          vorTotal: vorTotal,
           fieldUnknown: !fieldComplete
         };
       });
@@ -41175,7 +41290,7 @@ Rules:
         html += `<div style="flex:1;min-width:160px">`;
         html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">${_esc(d.tournament)} <span style="font-weight:400;color:var(--text2)">· $${(d.fee || 0).toFixed(0)} · ${row.teams.length}-team</span>${fieldNote}</div>`;
         if (my) {
-          html += `<div style="font-size:.65rem;color:var(--text2)">BB Proj: <span style="color:var(--text);font-weight:600">${my.weeklyPPG.toFixed(1)}</span> PPG · <span style="color:var(--text);font-weight:600">${my.seasonMean.toFixed(0)}</span> season · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span></div>`;
+          html += `<div style="font-size:.65rem;color:var(--text2)">BB Proj: <span style="color:var(--text);font-weight:600">${my.weeklyPPG.toFixed(1)}</span> PPG · <span style="color:var(--text);font-weight:600">${my.seasonMean.toFixed(0)}</span> season · VOR <span style="color:${(my.vorTotal||0) > 200 ? '#22c55e' : (my.vorTotal||0) > 0 ? '#4ade80' : (my.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(my.vorTotal||0) > 0 ? '+' : ''}${Math.round(my.vorTotal||0)}</span> · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span></div>`;
         }
         html += `</div>`;
         html += `<div style="font-size:.65rem;color:var(--text2);text-align:right;line-height:1.4">
@@ -41210,8 +41325,9 @@ Rules:
             <div><span style="color:var(--text);font-weight:700">${t.weeklyPPG.toFixed(1)}</span> BB PPG</div>
             <div><span style="color:var(--text);font-weight:600">${t.seasonMean.toFixed(0)}</span> season</div>
           </div>`;
-          html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:60px">
+          html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:80px">
             <div>ADP val <span style="color:${(t.adpValue||0) > 0 ? '#22c55e' : (t.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(t.adpValue||0) > 0 ? '+' : ''}${t.adpValue || 0}</span></div>
+            <div title="Total Value Over Replacement: sum of season-pts above QB12/RB30/WR42/TE13 for every pick">VOR <span style="color:${(t.vorTotal||0) > 200 ? '#22c55e' : (t.vorTotal||0) > 0 ? '#4ade80' : (t.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(t.vorTotal||0) > 0 ? '+' : ''}${Math.round(t.vorTotal||0)}</span></div>
           </div>`;
           // Position mini-bar
           html += `<div style="display:flex;gap:3px">`;
@@ -41234,7 +41350,9 @@ Rules:
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">PLAYER</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">POS</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">TEAM</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)">PROJ PPG</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Projected fantasy points per game">PROJ PPG</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Projected total season points">SZN PTS</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Value Over Replacement: season pts above the BBM 12-team starter cutoff (QB12/RB30/WR42/TE13)">VOR</th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)">ADP</th>
             </tr></thead><tbody>`;
           t.rosterDetails.forEach(p => {
@@ -41261,6 +41379,17 @@ Rules:
             const wkBadge = isLimited
               ? `<span style="display:inline-block;margin-left:6px;padding:1px 5px;font-size:.55rem;font-weight:600;color:#000;background:#facc15;border-radius:3px;letter-spacing:.3px">WKS ${p.startWeek}-${p.endWeek}</span>`
               : '';
+            // VOR coloring: green for above-replacement, red for below.
+            // Magnitude tiers tuned roughly: starters score +0 to +120,
+            // bench/depth dips into negatives.
+            const vorColor = p.vor == null ? 'var(--text2)' :
+                              p.vor >= 80 ? '#22c55e' :
+                              p.vor >= 40 ? '#4ade80' :
+                              p.vor >= 10 ? '#facc15' :
+                              p.vor >= -10 ? 'var(--text2)' :
+                              '#ef4444';
+            const vorStr = p.vor == null ? '—' :
+                            (p.vor > 0 ? '+' : '') + Math.round(p.vor);
             html += `<tr style="border-bottom:1px solid var(--border)">
               <td style="padding:3px 6px;color:var(--text2)">${p.round}</td>
               <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.pick}</td>
@@ -41268,6 +41397,8 @@ Rules:
               <td style="padding:3px 6px;color:${posColors[p.pos] || 'var(--text2)'};font-weight:600">${p.pos || '—'}</td>
               <td style="padding:3px 6px;color:var(--text2)">${_esc(p.team || '')}</td>
               <td style="padding:3px 6px;text-align:right;font-weight:700;color:${projColor}">${p.proj != null ? p.proj.toFixed(1) : '—'}</td>
+              <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.seasonPts != null ? Math.round(p.seasonPts) : '—'}</td>
+              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${vorColor}">${vorStr}</td>
               <td style="padding:3px 6px;text-align:right;font-weight:700;color:${adpColor}">${p.adp != null ? Math.round(p.adp) : '—'}</td>
             </tr>`;
           });

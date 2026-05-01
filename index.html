@@ -39204,16 +39204,20 @@ Rules:
   // is missing/zero. UD's API didn't reliably surface fees during the sync
   // (different host quirk), so we hard-code the standard fees per
   // tournament. Numbers from Underdog's lobby — keep updated as needed.
+  // v0.9.67: corrected per Jack — UDFA tier is $2 (was $10), Little Board
+  // is $3 (was $0). UD's /v2/entry_styles cache only includes currently-
+  // active tournaments so closed entries fall through to this static map;
+  // wrong values here propagated to every closed-tournament draft.
   const _UD_FEE_DEFAULTS = {
     'best ball mania vii': 25,
     'best ball mania': 25,
     'the puppy': 5,
     'the field general': 3,
-    'the little board': 0,        // free contest
+    'the little board': 3,
     'the big board': 25,
-    'the udfa':  10,
-    'the udfa 2': 10,
-    'the udfa 3': 10
+    'the udfa':  2,
+    'the udfa 2': 2,
+    'the udfa 3': 2
   };
   function _udFeeFromTitle(title, fallback) {
     if (typeof title !== 'string' || !title) return fallback || 0;
@@ -39330,16 +39334,41 @@ Rules:
     let totalPicks = 0;
     const _siteMatch = (typeof _udMatchPlayer === 'function') ? _udMatchPlayer : null;
     Object.values(drafts).forEach(d => {
-      // Backfill draft-level fee if missing
-      if ((!d.fee || d.fee === 0) && d.tournament) {
-        const derived = _udFeeFromTitle(d.tournament, 0);
-        if (derived > 0) d.fee = derived;
+      // v0.9.67: static map is AUTHORITATIVE for known tournaments — UD's
+      // /v2/entry_styles only returns currently-active tournaments, so
+      // closed entries can come back with a wrong synced fee (or get hit
+      // by an older site backfill). For tournaments in _UD_FEE_DEFAULTS
+      // we always trust the static map value over whatever's stored.
+      if (d.tournament) {
+        const t = String(d.tournament).toLowerCase().trim();
+        let mapped = null;
+        if (_UD_FEE_DEFAULTS[t] != null) mapped = _UD_FEE_DEFAULTS[t];
+        else {
+          for (const k in _UD_FEE_DEFAULTS) {
+            if (t === k || t.startsWith(k + ' ') || t.startsWith(k + ':')) {
+              mapped = _UD_FEE_DEFAULTS[k];
+              break;
+            }
+          }
+        }
+        if (mapped != null) d.fee = mapped;
+        else if (!d.fee || d.fee === 0) {
+          // Unknown tournament — keep the synced fee, or 0.
+          const derived = _udFeeFromTitle(d.tournament, 0);
+          if (derived > 0) d.fee = derived;
+        }
       }
-      // v0.9.63: backfill phase from tournament name if extension data is wrong.
-      // Older syncs always assigned 'pre' regardless of phase. Override only
-      // when the tournament name unambiguously indicates a different phase.
-      const derivedPhase = _udPhaseFromTournament(d.tournament, d.phase);
-      if (derivedPhase && derivedPhase !== d.phase) d.phase = derivedPhase;
+      // v0.9.66: backfill phase ONLY when missing/empty. Earlier the
+      // backfill was overriding correctly-classified phases — e.g. extension
+      // would correctly tag a "The Little Board" draft as 'nfl' (post-NFL-Draft
+      // Season slate), then this site code would see "Little Board" in the
+      // static map and force it back to 'pre'. Tournament name alone can't
+      // distinguish identical names that exist in multiple slates, so trust
+      // the extension's slate-description-derived phase if it's set.
+      if (!d.phase) {
+        const derivedPhase = _udPhaseFromTournament(d.tournament, d.phase);
+        if (derivedPhase) d.phase = derivedPhase;
+      }
       d.picks.forEach(p => {
         totalPicks++;
         // Backfill pos / team from the D array if pick is missing them

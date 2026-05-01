@@ -39525,6 +39525,129 @@ Rules:
                 Object.keys(window._udPortfolio.players || {}).length, 'unique players');
   };
 
+  // v0.9.68: ADP daily-refresh receiver. Called by page-bridge.js when the
+  // extension publishes `mff-set-player-adps`. Snapshot shape:
+  //   { date: 'YYYY-MM-DD', capturedAt: <ms>, adps: { [name]: { bbm, sf } } }
+  // We append to a 30-day rolling history in Firestore, then override
+  // D[i].udA / D[i].sfa with the latest values so rankings and portfolio
+  // reflect live ADP without reloading the static d.js.
+  window._mffSetAdpSnapshot = function(snapshot) {
+    if (!snapshot || !snapshot.adps || !snapshot.date) return;
+    const adpMap = snapshot.adps;
+    const today = snapshot.date;
+
+    // 1. Apply latest ADPs to the in-memory D array. This drives the
+    //    rankings table and portfolio adpDiff calculations immediately.
+    // v0.9.74: also try udN as a fallback so Jr/Sr/III variants match
+    //          (the snapshot is keyed by UD's name, d.js by canonical).
+    let appliedBbm = 0, appliedSf = 0;
+    if (Array.isArray(window.D)) {
+      for (let i = 0; i < window.D.length; i++) {
+        const row = window.D[i];
+        if (!row || !row.n) continue;
+        const ent = adpMap[row.n] || (row.udN ? adpMap[row.udN] : null);
+        if (!ent) continue;
+        if (ent.bbm != null && !isNaN(ent.bbm)) { row.udA = ent.bbm; appliedBbm++; }
+        if (ent.sf != null && !isNaN(ent.sf)) { row.sfa = ent.sf; appliedSf++; }
+      }
+    }
+    // Stamp on window so other code (re-renders) can detect a recent apply.
+    window._udLiveAdpAppliedAt = Date.now();
+    console.log('[MFF/site] live ADP applied to D — bbm:', appliedBbm, 'sf:', appliedSf);
+    // v0.9.74: trigger a rankings re-render so the ADP column updates.
+    try { if (typeof renderTable === 'function') renderTable(); } catch (_) {}
+
+    // 2. Save snapshot to Firestore with a 30-day rolling window.
+    try {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+      if (!db || !user) {
+        console.log('[MFF/site] no auth — ADP snapshot kept in memory only');
+        return;
+      }
+      const docRef = db.collection('user_game_data').doc(user.uid);
+      docRef.get().then(doc => {
+        const existing = doc.exists ? (doc.data().adpHistory || []) : [];
+        // Replace today's entry if already present (idempotent if user
+        // visits UD multiple times in one day after a reload).
+        const filtered = existing.filter(s => s && s.date !== today);
+        filtered.push({
+          date: today,
+          capturedAt: snapshot.capturedAt || Date.now(),
+          adps: adpMap
+        });
+        // Sort ascending by date and keep last 30.
+        filtered.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+        const trimmed = filtered.slice(-30);
+        docRef.set({ adpHistory: trimmed }, { merge: true })
+          .then(() => console.log('[MFF/site] ADP snapshot saved to Firestore — history depth', trimmed.length))
+          .catch(e => console.warn('[MFF/site] ADP save error:', e));
+      }).catch(e => console.warn('[MFF/site] ADP load-existing error:', e));
+    } catch (e) {
+      console.warn('[MFF/site] ADP snapshot save threw:', e);
+    }
+
+    // 3. Trigger a re-render of My Teams if currently visible, so
+    //    adpDiff updates without a full page reload. Other views (rankings)
+    //    will pick up changes on next render naturally since D is mutated.
+    try {
+      if (typeof _udRenderDashboard === 'function' && window._udPortfolio) {
+        _udRenderDashboard(window._udPortfolio);
+      }
+    } catch (e) { console.warn('[MFF/site] re-render after ADP apply failed:', e); }
+  };
+  // Replay any snapshot the bridge held while index.html was still loading.
+  if (window.__mffPendingAdpSnapshot) {
+    try { window._mffSetAdpSnapshot(window.__mffPendingAdpSnapshot); } catch (_) {}
+    window.__mffPendingAdpSnapshot = null;
+  }
+
+  // v0.9.68: load the most recent ADP snapshot from Firestore on page
+  // boot. This way the live ADP override applies immediately even before
+  // the user opens an Underdog tab (which is what triggers the refresh
+  // cycle). Only the latest day's snapshot is needed for the override —
+  // history is preserved for future risers/fallers UI.
+  function _udLoadAdpSnapshot() {
+    try {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+      if (!db || !user) return;
+      db.collection('user_game_data').doc(user.uid).get().then(doc => {
+        if (!doc.exists) return;
+        const hist = doc.data().adpHistory;
+        if (!Array.isArray(hist) || !hist.length) return;
+        const latest = hist[hist.length - 1];
+        if (!latest || !latest.adps) return;
+        // Reuse the same in-memory apply logic from _mffSetAdpSnapshot
+        // but skip the Firestore re-save (we just read it).
+        // v0.9.74: also try udN as a fallback for players whose canonical
+        // d.js name has a Jr/Sr/III suffix while the snapshot is keyed by
+        // UD's name (e.g. "Brian Robinson Jr." vs "Brian Robinson").
+        let appliedBbm = 0, appliedSf = 0;
+        if (Array.isArray(window.D)) {
+          for (let i = 0; i < window.D.length; i++) {
+            const row = window.D[i];
+            if (!row || !row.n) continue;
+            const ent = latest.adps[row.n] || (row.udN ? latest.adps[row.udN] : null);
+            if (!ent) continue;
+            if (ent.bbm != null && !isNaN(ent.bbm)) { row.udA = ent.bbm; appliedBbm++; }
+            if (ent.sf != null && !isNaN(ent.sf)) { row.sfa = ent.sf; appliedSf++; }
+          }
+        }
+        window._udLiveAdpAppliedAt = Date.now();
+        console.log('[MFF/site] loaded ADP from Firestore (date',
+                    latest.date + ') — bbm:', appliedBbm, 'sf:', appliedSf);
+        // v0.9.74: trigger a rankings re-render so the visible ADP column
+        // picks up the fresh values immediately. Without this the table
+        // keeps showing whatever values it rendered with on page load.
+        try { if (typeof renderTable === 'function') renderTable(); } catch (_) {}
+      }).catch(e => console.warn('[MFF/site] _udLoadAdpSnapshot error:', e));
+    } catch (e) {
+      console.warn('[MFF/site] _udLoadAdpSnapshot threw:', e);
+    }
+  }
+  window._udLoadAdpSnapshot = _udLoadAdpSnapshot;
+
   window._mtParseUnderdogCSV = function(input) {
     const file = input.files[0];
     if (!file) return;
@@ -39827,6 +39950,15 @@ Rules:
             _udMaybeShowSyncBtn();
           }
         }, 400);
+
+        // v0.9.74: ADP snapshot load runs UNCONDITIONALLY on every auth state
+        // change — independent of the portfolio gate below. Without this, a
+        // returning user with portfolio already in memory (the early-return
+        // case) would skip the ADP overlay and the rankings page would keep
+        // showing whatever values were baked into d.js at last export. Now
+        // the rankings page sees today's live ADPs every reload.
+        try { if (typeof _udLoadAdpSnapshot === 'function') _udLoadAdpSnapshot(); } catch (_) {}
+
         if (window._udPortfolio) return;
 
         let attempts = 0;

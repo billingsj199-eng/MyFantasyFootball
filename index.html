@@ -39456,7 +39456,7 @@ Rules:
 
     // Start with the existing portfolio's drafts (preserve CSV-uploaded data),
     // then layer the extension drafts on top — extension overwrites by id.
-    // v0.9.76: track whether _udPortfolio had real drafts BEFORE this merge.
+    // v0.9.91: track whether _udPortfolio had real drafts BEFORE this merge.
     // The extension only sends NEW drafts (incremental sync skips existing).
     // If cloud hasn't loaded yet, _udPortfolio is null and we'd "merge" only
     // the 1-2 incoming drafts — clobbering the user's full 50-draft history
@@ -39529,7 +39529,7 @@ Rules:
     window._udExtensionAppliedAt = Date.now();
     // v0.9.64: defer render off page-load critical path
     _udRenderDashboardDeferred(window._udPortfolio);
-    // v0.9.76: only save to cloud if we had real existing drafts to merge with
+    // v0.9.91: only save to cloud if we had real existing drafts to merge with
     // AND we're not already in the deferred state from a prior dispatch.
     // If _udPortfolio was empty here, that means cloud hasn't loaded yet —
     // saving the partial extension snapshot would overwrite the user's full
@@ -39814,7 +39814,7 @@ Rules:
         _udRenderDashboard(rebuilt);
         // Persist the merged result back to cloud so future loads see it.
         try { _udSaveToCloud(rebuilt); } catch (_) {}
-        // v0.9.76: extension save was deferred earlier (cloud-not-loaded
+        // v0.9.91: extension save was deferred earlier (cloud-not-loaded
         // path); we just persisted the merged result, so clear the flag.
         window._udExtensionAwaitingCloudSave = false;
         if (typeof window._renderJacksTeams === 'function') window._renderJacksTeams();
@@ -39837,7 +39837,7 @@ Rules:
       // Jack: his own portfolio
       db.collection('user_game_data').doc(user.uid).get().then(doc => {
         if (!doc.exists) {
-          // v0.9.76: brand-new account or wiped doc. If the extension already
+          // v0.9.91: brand-new account or wiped doc. If the extension already
           // populated _udPortfolio while we were waiting on this .get(), the
           // _mffSetPortfolio path deferred its cloud save. Persist that data
           // now so we don't strand the freshly-synced drafts in memory only.
@@ -40933,6 +40933,132 @@ Rules:
 
   // ═══════════════════════════════════════════════════════════
 
+  // v0.9.91: Roster Construction score (0-100). Composite of three
+  // equally-weighted components, derived from 2.5M Underdog BBM
+  // historical rosters (BBM II–VI, 2021–2025):
+  //
+  //   1) BUILD SHAPE — q_rate of the team's QB/RB/WR/TE count tuple
+  //      from the recency-weighted by_build table (top 32 builds cover
+  //      97.3% of teams). Unknown shapes shrink toward the 16.67%
+  //      baseline. Mapped linearly: 0.10 q_rate = 0, 0.22 = 100.
+  //
+  //   2) POSITION COUNTS — distance of each pos count from the ideal
+  //      band (QB 2-3, RB 4-7, WR 6-9, TE 2-3). Each position scores
+  //      max(0, 100 - 35*deviation); average across positions.
+  //
+  //   3) ROUND PATTERN — q_rate of the round at which the team first
+  //      drafted each position, looked up in by_first_<pos>_round.
+  //      Average the 4 rates, normalize with the same 0.10–0.22 map.
+  //
+  // The three normalized 0-100 values are then weighted 33/33/34 and
+  // summed for the final score.
+  // Compact build-rate table (q_rate_w; rounded to 4 dp). Top 32 by
+  // sample size — covers 97.3% of historical teams. Format: 'Q/R/W/T': rate
+  const BBM_BUILD_RATES = {
+    '2/6/8/2':0.1497,'3/5/7/3':0.1915,'2/5/8/3':0.1829,'3/5/8/2':0.1750,
+    '2/6/7/3':0.1626,'3/6/7/2':0.1577,'2/5/9/2':0.1624,'2/7/7/2':0.1327,
+    '3/6/6/3':0.1642,'3/4/8/3':0.2042,'2/4/9/3':0.1912,'3/4/9/2':0.1762,
+    '2/4/10/2':0.1659,'3/7/6/2':0.1440,'2/7/6/3':0.1429,'4/5/7/2':0.1729,
+    '2/5/7/4':0.1750,'4/5/6/3':0.1685,'3/5/6/4':0.1715,'2/8/6/2':0.1129,
+    '4/6/6/2':0.1506,'4/4/7/3':0.1799,'3/4/7/4':0.1916,'4/4/8/2':0.1655,
+    '2/6/6/4':0.1426,'2/4/8/4':0.1803,'3/7/5/3':0.1388,'3/6/8/1':0.1338,
+    '2/6/9/1':0.1144,'4/6/5/3':0.1508,'2/7/8/1':0.1202,'3/5/9/1':0.1363
+  };
+  // Round of first pick at each position → historical q_rate. Round 0
+  // (position never drafted) maps to a hard low value so missing-pos
+  // teams take the deserved hit.
+  const BBM_FIRST_POS_BY_ROUND = {
+    QB: { 1:0.0610, 2:0.1560, 3:0.1865, 4:0.1548, 5:0.1574, 6:0.1456,
+          7:0.1519, 8:0.1740, 9:0.1841,10:0.1773,11:0.1709,12:0.1659,
+         13:0.1657,14:0.1606,15:0.1540,16:0.1348,17:0.1144,18:0.0600 },
+    RB: { 1:0.1685, 2:0.1910, 3:0.1733, 4:0.1536, 5:0.1341, 6:0.1440,
+          7:0.1383, 8:0.1032, 9:0.1086,10:0.1048,11:0.0810,12:0.0669,
+         13:0.0442,14:0.0308,15:0.0286,16:0.0200,17:0.0200,18:0.0200 },
+    WR: { 1:0.1676, 2:0.1416, 3:0.1868, 4:0.2076, 5:0.1811, 6:0.1521,
+          7:0.1421, 8:0.1021, 9:0.1125,10:0.1254,11:0.0625,12:0.0541,
+         13:0.0200,14:0.0200,15:0.0200,16:0.0200,17:0.0200,18:0.0200 },
+    TE: { 1:0.1395, 2:0.1564, 3:0.1393, 4:0.1444, 5:0.1747, 6:0.1786,
+          7:0.1425, 8:0.1809, 9:0.1776,10:0.1729,11:0.1854,12:0.1924,
+         13:0.1743,14:0.1666,15:0.1635,16:0.1589,17:0.1280,18:0.1093 }
+  };
+  const BBM_BASELINE_QRATE = 0.1667;
+  const BBM_RATE_LO = 0.10, BBM_RATE_HI = 0.22; // 0-100 normalization band
+  // Ideal position counts (data-driven; matches engine.js BBM_MAX_POS hard caps)
+  const BBM_IDEAL_COUNTS = { QB:[2,3], RB:[4,7], WR:[6,9], TE:[2,3] };
+
+  function _udRateToScore(rate) {
+    if (rate == null || isNaN(rate)) return 50; // baseline ~50
+    const v = (rate - BBM_RATE_LO) / (BBM_RATE_HI - BBM_RATE_LO);
+    return Math.max(0, Math.min(100, Math.round(v * 100)));
+  }
+  function _udBuildShapeScore(counts) {
+    const key = (counts.QB||0) + '/' + (counts.RB||0) + '/' + (counts.WR||0) + '/' + (counts.TE||0);
+    let rate = BBM_BUILD_RATES[key];
+    if (rate == null) {
+      // Unknown shape: shrink hard toward baseline (this is the long tail).
+      rate = BBM_BASELINE_QRATE * 0.92; // small implicit penalty for off-pattern
+    }
+    return _udRateToScore(rate);
+  }
+  function _udPositionCountScore(counts) {
+    let sum = 0, n = 0;
+    for (const pos of ['QB','RB','WR','TE']) {
+      const c = counts[pos] || 0;
+      const [lo, hi] = BBM_IDEAL_COUNTS[pos];
+      const dev = c < lo ? (lo - c) : c > hi ? (c - hi) : 0;
+      sum += Math.max(0, 100 - 35 * dev);
+      n++;
+    }
+    return Math.round(sum / n);
+  }
+  function _udRoundPatternScore(rosterDetails) {
+    // First-pick round per position. 0 if missing.
+    const firstRound = { QB: 0, RB: 0, WR: 0, TE: 0 };
+    for (const p of rosterDetails) {
+      if (firstRound[p.pos] === 0 && p.round) firstRound[p.pos] = p.round;
+    }
+    let sum = 0, n = 0;
+    for (const pos of ['QB','RB','WR','TE']) {
+      const rd = firstRound[pos];
+      if (!rd) {
+        // Missing position — hard penalty (worse than worst observed round).
+        sum += BBM_RATE_LO;
+      } else {
+        const r = Math.max(1, Math.min(18, rd));
+        sum += BBM_FIRST_POS_BY_ROUND[pos][r] || BBM_BASELINE_QRATE;
+      }
+      n++;
+    }
+    return _udRateToScore(sum / n);
+  }
+  function _udComputeRosterConstruction(rosterDetails) {
+    const counts = { QB:0, RB:0, WR:0, TE:0 };
+    for (const p of rosterDetails) {
+      if (counts[p.pos] != null) counts[p.pos]++;
+    }
+    const buildShape = _udBuildShapeScore(counts);
+    const posCount = _udPositionCountScore(counts);
+    const roundPattern = _udRoundPatternScore(rosterDetails);
+    // 33/33/34 weighting
+    const score = Math.round(buildShape * 0.33 + posCount * 0.33 + roundPattern * 0.34);
+    return {
+      score: Math.max(0, Math.min(100, score)),
+      buildShape: buildShape,
+      posCount: posCount,
+      roundPattern: roundPattern,
+      counts: counts
+    };
+  }
+  // Color band for the badge (mirrors TOP-2 ADV thresholds for visual consistency)
+  function _udConstructionColor(s) {
+    if (s == null) return 'var(--text2)';
+    if (s >= 75) return '#22c55e';
+    if (s >= 60) return '#4ade80';
+    if (s >= 45) return '#facc15';
+    if (s >= 30) return '#f59e0b';
+    return '#ef4444';
+  }
+
   function _udRenderDashboard(originalData) {
     const dash = document.getElementById('mtUnderdogDashboard');
     dash.style.display = '';
@@ -41107,7 +41233,8 @@ Rules:
     const _udCacheKey = (function () {
       const ks = Object.keys(data.drafts);
       // v0.9.65: bumped suffix so stale caches (no VOR/window fields) bust on first load.
-      return 'v65:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0);
+      // v0.9.91: bumped to v91 to invalidate caches missing the new construction field.
+      return 'v91:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0);
     })();
     let _udTeamsRows;
     if (window._udTeamsCache && window._udTeamsCache.key === _udCacheKey) {
@@ -41163,11 +41290,15 @@ Rules:
         // Team total VOR (v0.9.65) — sum of marginal value above replacement
         // across all 18 picks. Higher = more aggregate edge over the field.
         const vorTotal = rosterDetails.reduce((s, x) => s + (x.vor || 0), 0);
+        // v0.9.91: Roster Construction score — BBM-driven 0-100 composite
+        // (build shape + position counts + round-pattern fit).
+        const construction = _udComputeRosterConstruction(rosterDetails);
         return {
           entryId: t.entryId,
           isMine: !!t.isMine,
           picks: picks,
           rosterDetails: rosterDetails,
+          construction: construction,
           // BB-derived totals — these are the ranking + Monte-Carlo inputs
           weeklyPPG: bb.weeklyPPG,
           seasonMean: bb.seasonMean,
@@ -41290,7 +41421,13 @@ Rules:
         html += `<div style="flex:1;min-width:160px">`;
         html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">${_esc(d.tournament)} <span style="font-weight:400;color:var(--text2)">· $${(d.fee || 0).toFixed(0)} · ${row.teams.length}-team</span>${fieldNote}</div>`;
         if (my) {
-          html += `<div style="font-size:.65rem;color:var(--text2)">BB Proj: <span style="color:var(--text);font-weight:600">${my.weeklyPPG.toFixed(1)}</span> PPG · <span style="color:var(--text);font-weight:600">${my.seasonMean.toFixed(0)}</span> season · VOR <span style="color:${(my.vorTotal||0) > 200 ? '#22c55e' : (my.vorTotal||0) > 0 ? '#4ade80' : (my.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(my.vorTotal||0) > 0 ? '+' : ''}${Math.round(my.vorTotal||0)}</span> · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span></div>`;
+          // v0.9.91: include Roster Construction Score in header context line.
+          const myCs = my.construction;
+          const myCsCol = _udConstructionColor(myCs ? myCs.score : null);
+          const buildStr = myCs
+            ? ` · Build <span style="color:${myCsCol};font-weight:700" title="Roster Construction Score (0-100): build shape ${myCs.buildShape}, pos counts ${myCs.posCount}, round pattern ${myCs.roundPattern}">${myCs.score}</span>`
+            : '';
+          html += `<div style="font-size:.65rem;color:var(--text2)">BB Proj: <span style="color:var(--text);font-weight:600">${my.weeklyPPG.toFixed(1)}</span> PPG · <span style="color:var(--text);font-weight:600">${my.seasonMean.toFixed(0)}</span> season · VOR <span style="color:${(my.vorTotal||0) > 200 ? '#22c55e' : (my.vorTotal||0) > 0 ? '#4ade80' : (my.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(my.vorTotal||0) > 0 ? '+' : ''}${Math.round(my.vorTotal||0)}</span> · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span>${buildStr}</div>`;
         }
         html += `</div>`;
         html += `<div style="font-size:.65rem;color:var(--text2);text-align:right;line-height:1.4">
@@ -41337,6 +41474,19 @@ Rules:
             html += `<div style="text-align:center;min-width:24px"><div style="font-size:.45rem;color:var(--text2)">${pos}</div><div style="font-size:.6rem;font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
           });
           html += `</div>`;
+          // v0.9.91: Roster Construction % — composite score (build shape +
+          // position counts + round-pattern fit) graded on 2.5M historical
+          // BBM rosters. Hover for component breakdown.
+          const cs = t.construction;
+          const csCol = _udConstructionColor(cs ? cs.score : null);
+          const csTip = cs
+            ? `Roster Construction Score (BBM-derived):&#10;` +
+              `Build Shape ${cs.counts.QB}Q/${cs.counts.RB}R/${cs.counts.WR}W/${cs.counts.TE}T → ${cs.buildShape}&#10;` +
+              `Position Counts → ${cs.posCount}&#10;` +
+              `Round Pattern (when each pos was first taken) → ${cs.roundPattern}&#10;` +
+              `Composite (33/33/34) → ${cs.score}/100`
+            : 'Roster Construction Score';
+          html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${cs ? cs.score : '—'}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div></div>`;
           // Advance % badges
           html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${adv2col};text-align:right;min-width:54px">${adv2pct == null ? '—' : adv2pct + '%'}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">TOP-2</div></div>`;
           html += `</div>`;

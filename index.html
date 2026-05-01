@@ -41085,22 +41085,71 @@ Rules:
     });
     draftScores.sort((a, b) => b.score.total - a.score.total);
 
-    // Compute value picks (Jack's rank vs pick position)
-    const valuePicks = [];
-    const bustPicks = [];
-    playerList.forEach(([name, info]) => {
-      const d = _udMatchPlayer(name);
-      if (!d) return;
-      const rank = _mtGetPlayerRank(d.n);
-      if (rank >= 500) return;
-      // In a 12-team, 20-round draft, pick 1 = rank ~1, pick 240 = rank ~240
-      const avgPick = info.avgPick;
-      const value = avgPick - rank; // positive = got them later than rank = steal
-      if (value > 15) valuePicks.push({ name: d.n, pos: d.s, team: d.t, rank, avgPick: Math.round(avgPick), value: Math.round(value), count: info.count });
-      if (value < -15) bustPicks.push({ name: d.n, pos: d.s, team: d.t, rank, avgPick: Math.round(avgPick), value: Math.round(value), count: info.count });
+    // v0.9.92: Compute value picks vs CURRENT ADP (not Jack's rank), split
+    // by format so best-ball ADP (d.udA, fallback d.a) and superflex ADP
+    // (d.sfa) are graded against their own draft pools — mixing them would
+    // make e.g. Joe Burrow look like a superflex steal in BBM drafts.
+    //
+    // Format derivation: phase 'superflex' → 'sf'; otherwise 'bbm' (covers
+    // 'pre', 'nfl', and any unknown/missing phase). Each format aggregates
+    // its own per-player avgPick and draft count.
+    const _vpFmtAgg = { bbm: {}, sf: {} };
+    const _vpFmtDraftCount = { bbm: 0, sf: 0 };
+    Object.values(data.drafts).forEach(d => {
+      const fmt = d.phase === 'superflex' ? 'sf' : 'bbm';
+      _vpFmtDraftCount[fmt]++;
+      const picks = d.picks || [];
+      picks.forEach(p => {
+        if (!p || !p.name || !p.pick) return;
+        const bucket = _vpFmtAgg[fmt];
+        if (!bucket[p.name]) bucket[p.name] = { picks: [], pos: p.pos, team: p.team };
+        bucket[p.name].picks.push(p.pick);
+        if (!bucket[p.name].pos && p.pos) bucket[p.name].pos = p.pos;
+        if (!bucket[p.name].team && p.team) bucket[p.name].team = p.team;
+      });
     });
-    valuePicks.sort((a, b) => b.value - a.value);
-    bustPicks.sort((a, b) => a.value - b.value);
+    function _vpFormatAdp(matched, fmt) {
+      if (!matched) return null;
+      if (fmt === 'sf') {
+        const v = matched.sfa;
+        return (v != null && v < 900) ? v : null;
+      }
+      // bbm: prefer raw Underdog BB ADP (udA); fall back to consensus a.
+      const u = matched.udA;
+      if (u != null && u < 900) return u;
+      const a = matched.a;
+      return (a != null && a < 900) ? a : null;
+    }
+    function _vpBuildLists(fmt) {
+      const steals = [], reaches = [];
+      const bucket = _vpFmtAgg[fmt];
+      const drafts = _vpFmtDraftCount[fmt];
+      if (!drafts) return { steals, reaches, drafts };
+      Object.entries(bucket).forEach(([name, info]) => {
+        const matched = _udMatchPlayer(name);
+        if (!matched) return;
+        const adp = _vpFormatAdp(matched, fmt);
+        if (adp == null) return;
+        const avgPick = info.picks.reduce((s, v) => s + v, 0) / info.picks.length;
+        const value = avgPick - adp; // positive = drafted LATER than ADP = steal
+        const row = {
+          name: matched.n,
+          pos: matched.s,
+          team: matched.t,
+          adp: Math.round(adp * 10) / 10,
+          avgPick: Math.round(avgPick),
+          value: Math.round(value),
+          count: info.picks.length
+        };
+        if (value > 15) steals.push(row);
+        if (value < -15) reaches.push(row);
+      });
+      steals.sort((a, b) => b.value - a.value);
+      reaches.sort((a, b) => a.value - b.value);
+      return { steals, reaches, drafts };
+    }
+    const _vpBbm = _vpBuildLists('bbm');
+    const _vpSf  = _vpBuildLists('sf');
 
     // Position build analysis
     const buildPatterns = { 'RB-heavy': 0, 'WR-heavy': 0, 'Balanced': 0, 'Zero RB': 0 };
@@ -41563,9 +41612,16 @@ Rules:
     html += `</div>`;
 
     // DRAFT BOARD TAB
+    // v0.9.92: detect format from filtered drafts (majority wins) so the
+    // board uses the right Underdog ADP scale and shows it in the header.
+    let _udBoardSf = 0, _udBoardBbm = 0;
+    Object.values(data.drafts).forEach(dr => {
+      if (dr && dr.phase === 'superflex') _udBoardSf++; else _udBoardBbm++;
+    });
+    const _udBoardLabel = _udBoardSf > _udBoardBbm ? 'Superflex' : 'Best Ball';
     html += `<div id="udTab_board" style="display:none">`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">DRAFT BOARD</div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by Underdog ADP in a 12-team grid. Color = your ownership%.</div>`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">DRAFT BOARD <span style="font-size:.65rem;color:var(--text2);letter-spacing:1px">· ${_udBoardLabel} ADP</span></div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by raw Underdog ${_udBoardLabel} ADP in a 12-team grid. Color = your ownership%.</div>`;
     // Legend
     html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center">`;
     html += `<span style="color:var(--text2)">OWNERSHIP:</span>`;
@@ -41578,29 +41634,44 @@ Rules:
 
     // VALUE PICKS TAB
     html += `<div id="udTab_value" style="display:none">`;
-    // Steals
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#22c55e;margin-bottom:8px">🔥 BIGGEST STEALS</div>`;
-    html += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted well below Jack's ranking (great value)</div>`;
-    if (valuePicks.length === 0) {
-      html += `<div style="padding:12px;color:var(--text2);font-size:.78rem">No major value picks found</div>`;
-    } else {
-      html += `<table style="width:100%;border-collapse:collapse;font-size:.75rem;margin-bottom:20px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">RANK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
-      valuePicks.slice(0, 20).forEach(vp => {
-        html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(vp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.rank}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e">+${vp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${numDrafts}</td></tr>`;
-      });
-      html += `</tbody></table>`;
+    // v0.9.92: split Best Ball vs Superflex so each format is graded against
+    // its own ADP scale. Helper renders one format's STEALS + REACHES tables.
+    function _vpRenderTables(label, lists) {
+      let out = '';
+      if (!lists.drafts) return ''; // user has no drafts in this format
+      const headerColor = '#fbbf24';
+      out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${headerColor};margin:6px 0 10px;padding:6px 10px;background:rgba(251,191,36,.06);border-left:3px solid ${headerColor};border-radius:4px">${label} <span style="color:var(--text2);font-size:.7rem;letter-spacing:.5px;font-weight:400">· ${lists.drafts} draft${lists.drafts === 1 ? '' : 's'}</span></div>`;
+      // STEALS
+      out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#22c55e;margin-bottom:8px">🔥 BIGGEST STEALS</div>`;
+      out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted well after their current ADP (great value)</div>`;
+      if (lists.steals.length === 0) {
+        out += `<div style="padding:12px;color:var(--text2);font-size:.78rem;margin-bottom:20px">No major value picks found</div>`;
+      } else {
+        out += `<table style="width:100%;border-collapse:collapse;font-size:.75rem;margin-bottom:20px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
+        lists.steals.slice(0, 20).forEach(vp => {
+          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(vp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.adp}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e">+${vp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${lists.drafts}</td></tr>`;
+        });
+        out += `</tbody></table>`;
+      }
+      // REACHES
+      out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#ef4444;margin-bottom:8px">📉 BIGGEST REACHES</div>`;
+      out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted well before their current ADP (overpay)</div>`;
+      if (lists.reaches.length === 0) {
+        out += `<div style="padding:12px;color:var(--text2);font-size:.78rem;margin-bottom:24px">No major reaches found</div>`;
+      } else {
+        out += `<table style="width:100%;border-collapse:collapse;font-size:.75rem;margin-bottom:24px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
+        lists.reaches.slice(0, 20).forEach(bp => {
+          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(bp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.adp}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444">${bp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${lists.drafts}</td></tr>`;
+        });
+        out += `</tbody></table>`;
+      }
+      return out;
     }
-    // Reaches
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#ef4444;margin-bottom:8px">📉 BIGGEST REACHES</div>`;
-    html += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted well above Jack's ranking (overpay)</div>`;
-    if (bustPicks.length === 0) {
-      html += `<div style="padding:12px;color:var(--text2);font-size:.78rem">No major reaches found</div>`;
+    if (!_vpBbm.drafts && !_vpSf.drafts) {
+      html += `<div style="padding:12px;color:var(--text2);font-size:.78rem">No drafts to analyze yet.</div>`;
     } else {
-      html += `<table style="width:100%;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">RANK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
-      bustPicks.slice(0, 20).forEach(bp => {
-        html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(bp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.rank}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444">${bp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${numDrafts}</td></tr>`;
-      });
-      html += `</tbody></table>`;
+      html += _vpRenderTables('BEST BALL', _vpBbm);
+      html += _vpRenderTables('SUPERFLEX', _vpSf);
     }
     html += `</div>`;
 
@@ -41698,9 +41769,23 @@ Rules:
     const roundCount = firstDraft ? firstDraft.picks.length : 20;
     const totalSlots = teamCount * roundCount;
 
-    // Build ADP-sorted player list from D array
-    const adpPlayers = D.filter(d => d.a && d.a < 900 && d.s && !d.s.includes('D/ST') && d.s !== 'K')
-      .map(d => ({ name: d.n, pos: d.s, team: d.t || '', adp: d.a }))
+    // v0.9.92: sort by raw Underdog ADP, NOT the consensus blend (d.a). The
+    // consensus mixes in CBS/ESPN/devy/dynasty rankings which can pull
+    // college players (CJ Daniels, etc.) into early rounds and produce a
+    // grid that doesn't reflect the actual UD draft pool. Use d.udA for
+    // best ball drafts, d.sfa for superflex. Format is auto-detected from
+    // the currently-visible drafts (majority wins).
+    let _sfCount = 0, _bbmCount = 0;
+    Object.values(data.drafts).forEach(dr => {
+      if (dr && dr.phase === 'superflex') _sfCount++; else _bbmCount++;
+    });
+    const _udBoardFmt = _sfCount > _bbmCount ? 'sf' : 'bbm';
+    const _udBoardField = _udBoardFmt === 'sf' ? 'sfa' : 'udA';
+    const adpPlayers = D.filter(d => {
+        const v = d[_udBoardField];
+        return v != null && v < 900 && d.s && !d.s.includes('D/ST') && d.s !== 'K';
+      })
+      .map(d => ({ name: d.n, pos: d.s, team: d.t || '', adp: d[_udBoardField] }))
       .sort((a, b) => a.adp - b.adp)
       .slice(0, totalSlots);
 

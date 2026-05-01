@@ -40366,17 +40366,46 @@ Rules:
   // 14 weeks of variance averages out the field too much.
   const BB_PROJ_UNCERTAINTY_PCT = 0.25;
 
-  // Default best-ball regular season length (BBM/Puppy: weeks 1-14).
-  const BB_REG_SEASON_WEEKS = 14;
+  // Best-ball season length used for the simulator. v0.9.63 bumped 14→17
+  // to count BB playoff weeks (15-17) toward team scoring AND to better
+  // approximate effective games-played until 2026 bye weeks are loaded.
+  // Once BB_BYE_WEEKS_2026 is populated, revisit: pure regular-season
+  // advance % is a 14-week ranking, but with byes ~6 of those 14 weeks
+  // each player sits one — so 17 weeks (no byes) ≈ 14 weeks (with byes)
+  // in expected total volume. Total points is what the advance %
+  // Monte Carlo ranks teams on, so this stays apples-to-apples.
+  const BB_REG_SEASON_WEEKS = 17;
 
   // Prior strength for Bayesian blend. Treats the preseason projection as
   // worth ~7 implied games of data, so by week 7 actuals are weighted ~50/50.
   const BB_PRIOR_STRENGTH = 7;
 
+  // Stack correlation (v0.9.64). σ of the multiplicative team-week factor,
+  // expressed as fraction of mean. Same-team players share this factor each
+  // simulated week, so a Bills stack booms or busts together rather than
+  // diversifying away. Calibrated to produce ~0.10-0.15 weekly correlation
+  // between same-team skill players (NFL historical: ~0.20-0.30 for QB-WR1,
+  // ~0.15-0.20 for WR-WR, lower for QB-RB). Multi-factor (per-position)
+  // correlation would be more accurate but adds complexity; this single-
+  // factor approximation captures most of the stacking edge.
+  const BB_TEAM_CORR_PCT = 0.15;
+
   // 2026 NFL bye-week table. Populate after the schedule drops in May 2026.
   // Maps NFL team abbreviation → bye week number (1-14).
   const BB_BYE_WEEKS_2026 = {
     // 'BAL': 14, 'KC': 6, ...
+  };
+
+  // QB timeshare config (v0.9.63). Use for known split-season situations
+  // where one QB starts and another takes over (or vice versa). Each entry
+  // is a regular-season window — weeks outside [startWeek, endWeek] zero
+  // out for that player. Overrides the GP-derived startWeek below.
+  // Example (uncomment + edit when situations crystalize):
+  //   "Tua Tagovailoa":     { startWeek: 1,  endWeek: 9  },
+  //   "Michael Penix Jr.":  { startWeek: 10, endWeek: 14 },
+  const BB_QB_TIMESHARE = {
+    // 'Tua Tagovailoa':    { startWeek: 1,  endWeek: 9  },
+    // 'Michael Penix Jr.': { startWeek: 10, endWeek: 17 },
   };
 
   // Box-Muller standard normal sampler. Used to draw weekly player scores.
@@ -40400,12 +40429,15 @@ Rules:
     return (prior * preseasonPpg + n * actualAvg) / (prior + n);
   }
 
-  // σ resolution chain (v0.9.44):
+  // σ resolution chain (v0.9.63):
   //   1. Empirical σ from THIS season's weekly scores (≥ 4 games this year)
   //   2. Historical σ_pct × current projection (data/player_weekly_sigma.js,
   //      built from last 3 NFL seasons weighted 0.5/0.3/0.2 with trend
   //      correction — captures players whose volatility is shifting)
-  //   3. Position default × mean (rookies and players we have no history for)
+  //   3. Rookie / no-history fallback: position default × mean, scaled by
+  //      Clay PPG role tier (workhorses tighter, depth wider) and by NFL
+  //      draft capital (R1 picks tighten, late picks widen). Heuristic until
+  //      we can backtest historical rookie σ vs. proj/draft capital.
   function _bbBlendSigma(pos, mean, actualScores, playerName) {
     // 1. Empirical σ if this-season's weekly data is rich enough
     if (Array.isArray(actualScores)) {
@@ -40444,11 +40476,73 @@ Rules:
         const sigmaFloor = (BB_POS_SIGMA_PCT[pos] || 0.4) * Math.max(mean, 1) * 0.7;
         // Take σ_pct projection, cap it by σ_abs scaling, floor by position default
         const projected = Math.min(sigmaFromPct, sigmaCap > 0 ? sigmaCap : sigmaFromPct);
-        return Math.max(sigmaFloor, projected, 0.5);
+        let result = Math.max(sigmaFloor, projected, 0.5);
+        // v0.9.64 sophomore bump: players with only 1 NFL season of data
+        // (< 17 games) have noisy σ% estimates AND empirically post σ%
+        // 3-5pp wider than 4+ year vets at the same role. Bump 5%.
+        if ((hist.games || 0) < 17) result *= 1.05;
+        return result;
       }
     }
-    // 3. Position default × mean
-    return (BB_POS_SIGMA_PCT[pos] || 0.4) * Math.max(mean, 1);
+    // 3. No-history fallback (v0.9.64) — empirical σ% lookup by role tier.
+    //    Calibrated from 5,873 NFL player-seasons (2000-2024) via the
+    //    sigma_by_experience.js script. Two findings drove the rewrite:
+    //
+    //    (a) Role tier dominates. Within rookies alone, σ% ranges from
+    //        50% (workhorse RBs, alpha WRs) to 99% (depth WRs) — almost
+    //        2×. The prior heuristic of basePct × small-scalar (0.85-1.20)
+    //        compressed that to ~1.4× and dramatically underestimated σ%
+    //        for committee and depth players (off by 20-33 percentage
+    //        points), which falsely tightened opponent variance and
+    //        inflated user advance %.
+    //    (b) Rookies are 3-10pp wider than 4+ year vets at the same role
+    //        — a real but secondary effect. We bake the rookie level in
+    //        directly here since step 3 is already the no-history path
+    //        (anyone with ≥10 games of NFL data hits step 2).
+    //
+    //    Numbers below are mean σ% in each (position × actual-rookie-PPG)
+    //    bucket from the dataset. Apply Clay's projected PPG against this
+    //    table to get a forward-looking σ%.
+    const _BB_ROOKIE_SIGMA_PCT_BY_TIER = {
+      RB: [[14, 0.50], [10, 0.62], [6, 0.80], [0, 0.91]],
+      WR: [[13, 0.56], [9,  0.66], [5, 0.80], [0, 0.99]],
+      TE: [[10, 0.53], [6,  0.70],            [0, 0.91]],
+      QB: [[17, 0.41], [13, 0.47],            [0, 0.65]],
+    };
+    let sigmaPct = BB_POS_SIGMA_PCT[pos] || 0.5;  // fallback for unknown pos
+    const tiers = _BB_ROOKIE_SIGMA_PCT_BY_TIER[pos];
+    if (tiers) {
+      for (let ti = 0; ti < tiers.length; ti++) {
+        if (mean >= tiers[ti][0]) { sigmaPct = tiers[ti][1]; break; }
+      }
+    }
+    // Draft-capital adjustment — calibrated from same dataset (n=589 with
+    // a join on COMBINE_DATA.draft). R1 picks see protected snaps in
+    // year 1 vs late-round/UDFA bodies who must earn time. Effect is
+    // strongest at RB and WR; smaller at QB/TE due to smaller samples.
+    if (playerName && typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[playerName]) {
+      const dpick = COMBINE_DATA[playerName].draft;
+      if (dpick != null && !isNaN(dpick)) {
+        let dcap = 1.0;
+        if (pos === 'RB') {
+          if (dpick <= 32)       dcap = 0.92;   // R1: empirical 65% σ% vs 80% in R3
+          else if (dpick <= 64)  dcap = 0.95;
+          else if (dpick >= 100) dcap = 1.05;
+        } else if (pos === 'WR') {
+          if (dpick <= 32)       dcap = 0.93;   // R1: empirical 74% σ% vs 89% in R3
+          else if (dpick <= 64)  dcap = 0.99;
+          else if (dpick >= 100) dcap = 1.05;
+        } else if (pos === 'TE') {
+          if (dpick <= 32)       dcap = 0.92;
+          else if (dpick >= 100) dcap = 1.05;
+        } else if (pos === 'QB') {
+          if (dpick <= 32)       dcap = 0.90;   // R1 QBs land in QB1 roles
+          else if (dpick >= 50)  dcap = 1.10;
+        }
+        sigmaPct *= dcap;
+      }
+    }
+    return sigmaPct * Math.max(mean, 1);
   }
 
   // Lookup bye week for a given NFL team abbreviation. Returns null if the
@@ -40470,9 +40564,11 @@ Rules:
   // render so ranking updates propagate.
   const _bbMatchCache = new Map();
   const _bbProjCache = new Map();
+  const _bbClayCache = new Map();
   window._bbClearCaches = function () {
     _bbMatchCache.clear();
     _bbProjCache.clear();
+    _bbClayCache.clear();
   };
   function _bbCachedMatch(name) {
     if (_bbMatchCache.has(name)) return _bbMatchCache.get(name);
@@ -40489,19 +40585,61 @@ Rules:
     _bbProjCache.set(key, v);
     return v;
   }
+  function _bbCachedClay(name) {
+    if (_bbClayCache.has(name)) return _bbClayCache.get(name);
+    let cp = null;
+    try { cp = (typeof clayLookup === 'function') ? clayLookup(name) : null; } catch (_) {}
+    _bbClayCache.set(name, cp);
+    return cp;
+  }
 
   function _bbResolvePlayer(pick) {
     const matched = _bbCachedMatch(pick.name);
     let preseason = 0;
-    // Projection chain (v0.9.43):
-    //   1. Mike Clay 2026 projection (primary)
+    // Active window in the simulated BB season (weeks 1-17 currently —
+    // see BB_REG_SEASON_WEEKS). Default = full season. Narrowed below by
+    // Clay's projected GP and/or the QB timeshare override. Weeks outside
+    // this window zero out in the sim, same as byes.
+    let startWeek = 1;
+    let endWeek = BB_REG_SEASON_WEEKS;
+
+    // v0.9.63: Clay GP-based missed weeks. If Mike Clay projects a player
+    // for fewer than 17 games, treat them as missing the FIRST (17 - gm)
+    // weeks of the season (the simplest assumption for currently-injured
+    // players returning later). For these players we use Clay's
+    // ACTIVE-week PPG (pts / gm) directly rather than adjProjPpg's
+    // injury-discounted PPG — the missed time is now captured by zero
+    // weeks instead of a flat multiplier, so we'd otherwise double-count.
+    // Full-PPR (BBM) only — rec adjustment is 0 in BBM scoring.
+    const cp = _bbCachedClay(pick.name);
+    let usedClayActive = false;
+    if (cp && cp.gm && cp.gm > 0 && cp.gm < 17 && cp.pts != null) {
+      preseason = cp.pts / cp.gm;
+      const miss = 17 - cp.gm;
+      startWeek = Math.min(miss + 1, BB_REG_SEASON_WEEKS);
+      usedClayActive = true;
+    }
+
+    // Projection chain when Clay didn't override (v0.9.43):
+    //   1. Mike Clay 2026 projection at full health (built into adjProjPpg)
     //   2. JS Model PPG (built into adjProjPpg as veteran fallback)
     //   3. Underdog's own season projection ÷ 17 (rookies Clay missed)
     //   4. 0 (truly unprojected — won't win lineup slots, which is correct)
-    preseason = _bbCachedProj(matched);
-    if (!preseason && pick && pick.udProj != null && !isNaN(pick.udProj) && pick.udProj > 0) {
-      preseason = pick.udProj / 17;
+    if (!usedClayActive) {
+      preseason = _bbCachedProj(matched);
+      if (!preseason && pick && pick.udProj != null && !isNaN(pick.udProj) && pick.udProj > 0) {
+        preseason = pick.udProj / 17;
+      }
     }
+
+    // QB timeshare override: explicit start/end weeks for known split-
+    // season situations. Takes precedence over GP-derived startWeek.
+    const ts = BB_QB_TIMESHARE[pick.name];
+    if (ts) {
+      if (ts.startWeek != null) startWeek = ts.startWeek;
+      if (ts.endWeek   != null) endWeek   = ts.endWeek;
+    }
+
     const pos = (pick.pos || (matched && matched.s) || '').toUpperCase();
     const team = (pick.team || (matched && matched.t) || '').toUpperCase();
     const weekly = Array.isArray(pick.weeklyScores) ? pick.weeklyScores : null;
@@ -40514,15 +40652,19 @@ Rules:
     // injury-feed integration; for now always null.
     const injury = pick.injuryStatus || null;
     return { name: pick.name, pos: pos, team: team, mean: mean, sigma: sigma,
-             byeWeek: byeWeek, injury: injury, preseason: preseason, weeklyScores: weekly };
+             byeWeek: byeWeek, injury: injury, preseason: preseason, weeklyScores: weekly,
+             startWeek: startWeek, endWeek: endWeek };
   }
 
   // Given resolved player stats and a target week, return the score the
-  // player would post that week. Honors bye weeks and injury status.
+  // player would post that week. Honors bye weeks, injury status, and
+  // active window (startWeek/endWeek) — weeks outside the window zero out.
   function _bbWeekScore(player, week) {
     if (!player) return 0;
     if (player.byeWeek === week) return 0;
     if (player.injury === 'OUT' || player.injury === 'IR') return 0;
+    if (player.startWeek != null && week < player.startWeek) return 0;
+    if (player.endWeek   != null && week > player.endWeek)   return 0;
     let score = (player.mean || 0) + (player.sigma || 0) * _bbNormal();
     if (player.injury === 'D') score *= 0.5;          // doubtful
     else if (player.injury === 'Q') score *= 0.85;    // questionable
@@ -40584,6 +40726,19 @@ Rules:
     const playerStarts = new Array(players.length).fill(0);
     const seasonTotals = new Array(sims).fill(0);
 
+    // v0.9.64 stack correlation. Decompose each player's σ² into a team-
+    // shared component (team factor σ = BB_TEAM_CORR_PCT × mean) and an
+    // idiosyncratic component (the rest). When we then add the team
+    // factor multiplicatively each week, total marginal variance is
+    // preserved but same-team players move together. Floor idio σ at
+    // 50% of total to avoid pathological cases where teamVar > totalVar
+    // (can happen for low-mean players).
+    const idioSigmas = players.map(p => {
+      const teamVar = Math.pow(BB_TEAM_CORR_PCT * (p.mean || 0), 2);
+      const totalVar = Math.pow(p.sigma || 0, 2);
+      return Math.sqrt(Math.max(totalVar - teamVar, totalVar * 0.25));
+    });
+
     for (let s = 0; s < sims; s++) {
       // v0.9.42: per-simulated-season projection uncertainty. Once per
       // sim-season we draw each player's "true" mean for THIS hypothetical
@@ -40606,12 +40761,28 @@ Rules:
       });
       let seasonTotal = 0;
       for (let w = startWeek; w <= weeks; w++) {
+        // v0.9.64: draw one team factor per NFL team this week. Same-team
+        // players multiply by the same factor → correlated booms/busts.
+        const teamFactors = {};
+        for (let i = 0; i < players.length; i++) {
+          const t = players[i].team;
+          if (t && !(t in teamFactors)) {
+            teamFactors[t] = 1 + BB_TEAM_CORR_PCT * _bbNormal();
+          }
+        }
         // Generate scores for every player this week (operating around the
         // simulated season-mean rather than the static projection).
         const weekScores = players.map((p, idx) => {
           if (p.byeWeek === w) return 0;
           if (p.injury === 'OUT' || p.injury === 'IR') return 0;
-          let score = seasonPlayerMeans[idx] + (p.sigma || 0) * _bbNormal();
+          if (p.startWeek != null && w < p.startWeek) return 0;  // not yet active (e.g., Clay GP < 17)
+          if (p.endWeek   != null && w > p.endWeek)   return 0;  // benched/done (QB timeshare)
+          let score = seasonPlayerMeans[idx] + idioSigmas[idx] * _bbNormal();
+          // Team factor applies multiplicatively to the post-idio score so
+          // boom/bust weeks scale the player's whole output, not just a
+          // fixed-magnitude shift.
+          const tf = (p.team && teamFactors[p.team] != null) ? teamFactors[p.team] : 1;
+          score *= tf;
           if (p.injury === 'D') score *= 0.5;
           else if (p.injury === 'Q') score *= 0.85;
           return Math.max(0, score);
@@ -40640,7 +40811,9 @@ Rules:
         preseason: p.preseason,
         mean: p.mean,
         sigma: p.sigma,
-        byeWeek: p.byeWeek
+        byeWeek: p.byeWeek,
+        startWeek: p.startWeek,
+        endWeek: p.endWeek
       };
     });
 
@@ -40798,7 +40971,7 @@ Rules:
     // into #udTab_teams.
     html += `<div id="udTab_teams" style="display:none">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAMS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(your team vs every opponent in each pool)</span></div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked by best-ball season projection. Click any team to open its roster. <strong style="color:var(--accent)">Top-2 of 12 advance (BBM &amp; Puppy regular season, weeks 1-14).</strong></div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked by best-ball total points. Click any team to open its roster. <strong style="color:var(--accent)">Top-2 of 12 advance (BBM &amp; Puppy). Simulating weeks 1-17 (incl. playoff weeks) until 2026 byes are loaded.</strong></div>`;
     // (TEAMS-tab body content follows below — built inline for now;
     // future: defer via setTimeout to keep initial render responsive.)
 
@@ -40864,7 +41037,9 @@ Rules:
             adp: adp,
             adpDiff: adp != null ? Math.round(p.pick - adp) : null,
             sigma: bbStats ? bbStats.sigma : null,
-            byeWeek: bbStats ? bbStats.byeWeek : null
+            byeWeek: bbStats ? bbStats.byeWeek : null,
+            startWeek: bbStats && bbStats.startWeek != null ? bbStats.startWeek : 1,
+            endWeek: bbStats && bbStats.endWeek != null ? bbStats.endWeek : BB_REG_SEASON_WEEKS
           };
         });
         // Position-level BB contribution (sum of per-player weekly across each position group)
@@ -41075,10 +41250,21 @@ Rules:
               if (p.pos === 'TE') return v >= 14 ? '#22c55e' : v >= 11 ? '#4ade80' : v >= 8 ? '#facc15' : v >= 6 ? '#f59e0b' : 'var(--text2)';
               return 'var(--text2)';
             })();
+            // v0.9.64 active-window badge. Show "Wks X-Y" tag for any
+            // player whose simulated active window is narrower than the
+            // full season — Clay-projected limited GP (e.g., Charbonnet
+            // returning week 7) or QB timeshare bench/takeover.
+            const fullSeasonStart = 1;
+            const fullSeasonEnd = BB_REG_SEASON_WEEKS;
+            const isLimited = (p.startWeek != null && p.startWeek > fullSeasonStart) ||
+                              (p.endWeek != null && p.endWeek < fullSeasonEnd);
+            const wkBadge = isLimited
+              ? `<span style="display:inline-block;margin-left:6px;padding:1px 5px;font-size:.55rem;font-weight:600;color:#000;background:#facc15;border-radius:3px;letter-spacing:.3px">WKS ${p.startWeek}-${p.endWeek}</span>`
+              : '';
             html += `<tr style="border-bottom:1px solid var(--border)">
               <td style="padding:3px 6px;color:var(--text2)">${p.round}</td>
               <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.pick}</td>
-              <td style="padding:3px 6px;color:var(--text)">${_esc(p.name)}</td>
+              <td style="padding:3px 6px;color:var(--text)">${_esc(p.name)}${wkBadge}</td>
               <td style="padding:3px 6px;color:${posColors[p.pos] || 'var(--text2)'};font-weight:600">${p.pos || '—'}</td>
               <td style="padding:3px 6px;color:var(--text2)">${_esc(p.team || '')}</td>
               <td style="padding:3px 6px;text-align:right;font-weight:700;color:${projColor}">${p.proj != null ? p.proj.toFixed(1) : '—'}</td>

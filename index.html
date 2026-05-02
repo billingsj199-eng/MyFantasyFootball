@@ -1692,7 +1692,10 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 <svg id="pwEyeHide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
 </button>
 </div>
-<div style="height:.65rem"></div>
+<div id="authForgotWrap" style="text-align:right;margin-top:.4rem;margin-bottom:.25rem">
+<a id="authForgotLink" style="font-size:.72rem;color:var(--text2);cursor:pointer;text-decoration:underline;font-weight:500">Forgot password?</a>
+</div>
+<div style="height:.4rem"></div>
 
 <!-- Creator attribution (signup only) -->
 <div id="authCreatorWrap" style="display:none;margin-bottom:.65rem">
@@ -1822,6 +1825,30 @@ SIGN IN
 
 <div class="acct-section">
 <div class="acct-section-title">Account Info</div>
+
+<!-- Email verification banner (shown only for unverified email/password users) -->
+<div id="acctVerifyBanner" style="display:none;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:.7rem .85rem;margin-bottom:.85rem">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:.55rem;min-width:0">
+<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" width="18" height="18" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+<div style="font-size:.78rem;color:var(--text);line-height:1.4">
+<strong style="color:#f59e0b">Verify your email.</strong>
+<span style="color:var(--text2)">We sent a verification link to your inbox. Confirm it to fully unlock your account.</span>
+</div>
+</div>
+<button class="acct-btn acct-btn-outline" id="acctResendVerify" style="font-size:.72rem;padding:.4rem .75rem">RESEND</button>
+</div>
+<div class="acct-msg" id="acctVerifyMsg" style="margin-top:.45rem"></div>
+</div>
+
+<!-- Email verified confirmation (shown for verified email/password users) -->
+<div id="acctVerifiedBadge" style="display:none;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:6px;padding:.55rem .8rem;margin-bottom:.85rem;font-size:.76rem;color:var(--text2)">
+<span style="display:inline-flex;align-items:center;gap:.5rem">
+<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+<span>Email verified</span>
+</span>
+</div>
+
 <div class="acct-field">
 <label class="acct-label">Email Address</label>
 <input type="email" class="acct-input" id="acctPageEmailInput" readonly>
@@ -1853,6 +1880,51 @@ SIGN IN
 <button class="acct-btn acct-btn-primary" id="acctChangePw">UPDATE</button>
 </div>
 <div class="acct-msg" id="acctPwMsg"></div>
+</div>
+</div>
+
+<!-- Change Email section -->
+<div class="acct-section" id="acctChangeEmailSection">
+<div class="acct-section-title">Change Email</div>
+<div class="acct-field">
+<label class="acct-label">New Email Address</label>
+<input type="email" class="acct-input" id="acctNewEmail" placeholder="Enter new email address">
+</div>
+<div class="acct-field">
+<label class="acct-label">Current Password</label>
+<div class="acct-input-row">
+<input type="password" class="acct-input" id="acctEmailPw" placeholder="Enter current password to confirm">
+<button class="acct-btn acct-btn-primary" id="acctChangeEmail">UPDATE</button>
+</div>
+<div class="acct-msg" id="acctEmailMsg"></div>
+</div>
+<div style="font-size:.7rem;color:var(--text2);line-height:1.45;margin-top:.4rem">A verification link will be sent to your new address. Your email won't change until you click that link.</div>
+</div>
+
+<!-- Danger Zone: Delete Account -->
+<div class="acct-section" id="acctDangerSection" style="border-color:rgba(239,68,68,.3)">
+<div class="acct-section-title" style="color:#ef4444;border-bottom-color:rgba(239,68,68,.2)">Danger Zone</div>
+<div style="font-size:.78rem;color:var(--text2);line-height:1.5;margin-bottom:.85rem">Permanently delete your account and all your data — rankings, mock drafts, badges, premium status. This cannot be undone.</div>
+<div id="acctDeleteStep1">
+<button class="acct-btn acct-btn-danger" id="acctDeleteOpenBtn" style="padding:.55rem 1.4rem">DELETE MY ACCOUNT</button>
+</div>
+<div id="acctDeleteStep2" style="display:none">
+<div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);border-radius:6px;padding:.85rem;margin-bottom:.65rem">
+<div style="font-size:.78rem;color:var(--text);margin-bottom:.6rem;line-height:1.5">To confirm, type <strong style="color:#ef4444">DELETE</strong> below and enter your current password.</div>
+<div class="acct-field" style="margin-bottom:.55rem">
+<label class="acct-label">Type DELETE to confirm</label>
+<input type="text" class="acct-input" id="acctDeleteConfirmText" placeholder="DELETE" autocomplete="off">
+</div>
+<div class="acct-field" id="acctDeletePwField" style="margin-bottom:0">
+<label class="acct-label">Current Password</label>
+<input type="password" class="acct-input" id="acctDeletePw" placeholder="Enter current password">
+</div>
+</div>
+<div style="display:flex;gap:8px">
+<button class="acct-btn acct-btn-outline" id="acctDeleteCancelBtn" style="flex:1">CANCEL</button>
+<button class="acct-btn acct-btn-danger" id="acctDeleteConfirmBtn" style="flex:1">PERMANENTLY DELETE</button>
+</div>
+<div class="acct-msg" id="acctDeleteMsg" style="margin-top:.5rem"></div>
 </div>
 </div>
 
@@ -21504,12 +21576,27 @@ window.fmtHeight = fmtHeight;
   let isSignUp = false;
 
   function showError(msg) {
+    // reset to default error styling (red)
+    authError.style.background = '';
+    authError.style.borderColor = '';
+    authError.style.color = '';
+    authError.textContent = msg;
+    authError.classList.add('show');
+  }
+  function showSuccess(msg) {
+    // green success styling (reuses the .auth-error slot)
+    authError.style.background = 'rgba(34,197,94,.1)';
+    authError.style.borderColor = 'rgba(34,197,94,.3)';
+    authError.style.color = '#22c55e';
     authError.textContent = msg;
     authError.classList.add('show');
   }
   function clearError() {
     authError.textContent = '';
     authError.classList.remove('show');
+    authError.style.background = '';
+    authError.style.borderColor = '';
+    authError.style.color = '';
   }
 
   function openAuth() {
@@ -21534,11 +21621,73 @@ window.fmtHeight = fmtHeight;
     authSubmit.textContent = signUp ? 'CREATE ACCOUNT' : 'SIGN IN';
     const creatorWrap = document.getElementById('authCreatorWrap');
     if (creatorWrap) creatorWrap.style.display = signUp ? 'block' : 'none';
+    const forgotWrap = document.getElementById('authForgotWrap');
+    if (forgotWrap) forgotWrap.style.display = signUp ? 'none' : 'block';
     authToggle.innerHTML = signUp
       ? 'Already have an account? <a id="authSwitchMode">Sign in</a>'
       : 'Don\'t have an account? <a id="authSwitchMode">Create one</a>';
     document.getElementById('authSwitchMode').addEventListener('click', () => setAuthMode(!signUp));
     clearError();
+  }
+
+  // === Forgot password ===
+  const authForgotLink = document.getElementById('authForgotLink');
+  if (authForgotLink) {
+    authForgotLink.addEventListener('click', async () => {
+      clearError();
+      if (!isConfigured || !auth) {
+        showError('Authentication is not configured.');
+        return;
+      }
+      const email = (authEmail.value || '').trim();
+      if (!email) {
+        showError('Enter your email above, then click "Forgot password?" to receive a reset link.');
+        authEmail.focus();
+        return;
+      }
+      // Basic email format check
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError('Please enter a valid email address.');
+        authEmail.focus();
+        return;
+      }
+      authForgotLink.style.pointerEvents = 'none';
+      authForgotLink.style.opacity = '.5';
+      const originalText = authForgotLink.textContent;
+      authForgotLink.textContent = 'Sending...';
+      try {
+        // Try to detect Google-only accounts so we can give a helpful hint instead
+        // of an unhelpful "no account found" error. Note: with email-enumeration
+        // protection enabled in Firebase, this returns [] regardless — in that
+        // case we just fall through and send the reset email.
+        let signInMethods = [];
+        try {
+          if (typeof auth.fetchSignInMethodsForEmail === 'function') {
+            signInMethods = await auth.fetchSignInMethodsForEmail(email);
+          }
+        } catch(_) { /* ignore — fall through to normal reset */ }
+
+        const hasPassword = signInMethods.includes('password');
+        const hasGoogle = signInMethods.includes('google.com');
+        if (hasGoogle && !hasPassword) {
+          // Google-only account — no password to reset
+          showError('This email is registered with Google. Click "Continue with Google" below to sign in.');
+        } else {
+          await auth.sendPasswordResetEmail(email);
+          showSuccess('Password reset email sent to ' + email + '. Check your inbox (and spam folder).');
+        }
+      } catch(e) {
+        let msg = e.message || 'Failed to send reset email.';
+        if (e.code === 'auth/user-not-found') msg = 'No account found with that email. If you signed up with Google, click "Continue with Google" instead.';
+        if (e.code === 'auth/invalid-email') msg = 'Please enter a valid email address.';
+        if (e.code === 'auth/too-many-requests') msg = 'Too many attempts. Please wait a few minutes and try again.';
+        if (e.code === 'auth/missing-email') msg = 'Please enter your email address.';
+        showError(msg);
+      }
+      authForgotLink.style.pointerEvents = '';
+      authForgotLink.style.opacity = '';
+      authForgotLink.textContent = originalText;
+    });
   }
 
   // Open modal
@@ -21620,7 +21769,12 @@ window.fmtHeight = fmtHeight;
     try {
       if (isSignUp) {
         const cred = await auth.createUserWithEmailAndPassword(email, pass);
-        if (cred && cred.user) await _writeCreatorAttribution(cred.user.uid);
+        if (cred && cred.user) {
+          await _writeCreatorAttribution(cred.user.uid);
+          // Send email verification right after signup (best-effort)
+          try { await cred.user.sendEmailVerification(); }
+          catch(verifyErr) { console.warn('[Auth] sendEmailVerification failed:', verifyErr); }
+        }
       } else {
         await auth.signInWithEmailAndPassword(email, pass);
       }
@@ -22075,6 +22229,7 @@ window.fmtHeight = fmtHeight;
     acctPageUsername.value = displayName;
     // Check if user signed in with Google (no password change)
     const isGoogleUser = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
+    const isPasswordUser = user.providerData && user.providerData.some(p => p.providerId === 'password');
     const pwSection = acctChangePwBtn.closest('.acct-section');
     if (isGoogleUser && pwSection) {
       pwSection.style.opacity = '.4';
@@ -22084,6 +22239,46 @@ window.fmtHeight = fmtHeight;
       pwSection.style.opacity = '';
       pwSection.style.pointerEvents = '';
       pwSection.querySelector('.acct-section-title').textContent = 'Change Password';
+    }
+
+    // === Email verification banner ===
+    const verifyBanner = document.getElementById('acctVerifyBanner');
+    const verifiedBadge = document.getElementById('acctVerifiedBadge');
+    if (verifyBanner && verifiedBadge) {
+      // Only relevant for password-based accounts. Google emails are pre-verified by Google.
+      if (isPasswordUser && !user.emailVerified) {
+        verifyBanner.style.display = '';
+        verifiedBadge.style.display = 'none';
+      } else if (isPasswordUser && user.emailVerified) {
+        verifyBanner.style.display = 'none';
+        verifiedBadge.style.display = '';
+      } else {
+        // Google users — hide both (Google handles verification on its side)
+        verifyBanner.style.display = 'none';
+        verifiedBadge.style.display = 'none';
+      }
+    }
+
+    // === Change Email — Google users can't change email here ===
+    const changeEmailSection = document.getElementById('acctChangeEmailSection');
+    if (changeEmailSection) {
+      if (isGoogleUser) {
+        changeEmailSection.style.opacity = '.4';
+        changeEmailSection.style.pointerEvents = 'none';
+        const t = changeEmailSection.querySelector('.acct-section-title');
+        if (t) t.textContent = 'Change Email (Google sign-in — managed by Google)';
+      } else {
+        changeEmailSection.style.opacity = '';
+        changeEmailSection.style.pointerEvents = '';
+        const t = changeEmailSection.querySelector('.acct-section-title');
+        if (t) t.textContent = 'Change Email';
+      }
+    }
+
+    // === Delete Account — Google users skip the password field ===
+    const deletePwField = document.getElementById('acctDeletePwField');
+    if (deletePwField) {
+      deletePwField.style.display = isGoogleUser ? 'none' : '';
     }
   }
 
@@ -22296,6 +22491,201 @@ window.fmtHeight = fmtHeight;
       showMsg(acctPwMsg, msg, 'error');
     }
   });
+
+  // When the user navigates to the Account page, refresh their auth state
+  // so the verification banner clears immediately if they just clicked the
+  // email verification link in another tab.
+  if (navAccountBtn) {
+    navAccountBtn.addEventListener('click', async () => {
+      const user = auth ? auth.currentUser : null;
+      if (!user) return;
+      try {
+        await user.reload();
+        populateAccountPage(auth.currentUser);
+      } catch(_) { /* non-fatal */ }
+    });
+  }
+
+  // === Resend verification email ===
+  const acctResendVerifyBtn = document.getElementById('acctResendVerify');
+  const acctVerifyMsg = document.getElementById('acctVerifyMsg');
+  if (acctResendVerifyBtn) {
+    acctResendVerifyBtn.addEventListener('click', async () => {
+      const user = auth ? auth.currentUser : null;
+      if (!user) { showMsg(acctVerifyMsg, 'Not signed in.', 'error'); return; }
+      acctResendVerifyBtn.disabled = true;
+      const orig = acctResendVerifyBtn.textContent;
+      acctResendVerifyBtn.textContent = 'SENDING...';
+      try {
+        await user.sendEmailVerification();
+        showMsg(acctVerifyMsg, 'Verification email sent to ' + user.email + '. Check your inbox.', 'success');
+      } catch(e) {
+        const msg = e.code === 'auth/too-many-requests'
+          ? 'Too many attempts. Please wait a few minutes and try again.'
+          : (e.message || 'Failed to send verification email.');
+        showMsg(acctVerifyMsg, msg, 'error');
+      }
+      acctResendVerifyBtn.disabled = false;
+      acctResendVerifyBtn.textContent = orig;
+    });
+  }
+
+  // === Change Email ===
+  const acctNewEmailInput = document.getElementById('acctNewEmail');
+  const acctEmailPwInput = document.getElementById('acctEmailPw');
+  const acctChangeEmailBtn = document.getElementById('acctChangeEmail');
+  const acctEmailMsg = document.getElementById('acctEmailMsg');
+  if (acctChangeEmailBtn) {
+    acctChangeEmailBtn.addEventListener('click', async () => {
+      const user = auth ? auth.currentUser : null;
+      if (!user) { showMsg(acctEmailMsg, 'Not signed in.', 'error'); return; }
+      const newEmail = (acctNewEmailInput.value || '').trim();
+      const currentPw = acctEmailPwInput.value;
+      if (!newEmail) { showMsg(acctEmailMsg, 'Enter a new email address.', 'error'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) { showMsg(acctEmailMsg, 'Please enter a valid email address.', 'error'); return; }
+      if (newEmail.toLowerCase() === (user.email || '').toLowerCase()) { showMsg(acctEmailMsg, 'That is already your current email.', 'error'); return; }
+      if (!currentPw) { showMsg(acctEmailMsg, 'Enter your current password to confirm.', 'error'); return; }
+      acctChangeEmailBtn.disabled = true;
+      const orig = acctChangeEmailBtn.textContent;
+      acctChangeEmailBtn.textContent = 'UPDATING...';
+      try {
+        // Re-authenticate first
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPw);
+        await user.reauthenticateWithCredential(credential);
+        // Prefer verifyBeforeUpdateEmail (sends verification to new address; doesn't change until clicked)
+        if (typeof user.verifyBeforeUpdateEmail === 'function') {
+          await user.verifyBeforeUpdateEmail(newEmail);
+          showMsg(acctEmailMsg, 'Verification link sent to ' + newEmail + '. Click it to finish updating your email.', 'success');
+        } else {
+          // Fallback for older SDKs
+          await user.updateEmail(newEmail);
+          try { await user.sendEmailVerification(); } catch(_) {}
+          showMsg(acctEmailMsg, 'Email updated to ' + newEmail + '. Verification email sent.', 'success');
+        }
+        acctNewEmailInput.value = '';
+        acctEmailPwInput.value = '';
+      } catch(e) {
+        let msg = e.message || 'Failed to update email.';
+        if (e.code === 'auth/wrong-password') msg = 'Current password is incorrect.';
+        else if (e.code === 'auth/invalid-credential') msg = 'Current password is incorrect.';
+        else if (e.code === 'auth/email-already-in-use') msg = 'That email is already in use by another account.';
+        else if (e.code === 'auth/invalid-email') msg = 'Please enter a valid email address.';
+        else if (e.code === 'auth/requires-recent-login') msg = 'Please sign out and sign back in, then try again.';
+        else if (e.code === 'auth/operation-not-allowed') msg = 'Email change is not enabled. Please contact support.';
+        showMsg(acctEmailMsg, msg, 'error');
+      }
+      acctChangeEmailBtn.disabled = false;
+      acctChangeEmailBtn.textContent = orig;
+    });
+  }
+
+  // === Delete Account ===
+  const acctDeleteOpenBtn = document.getElementById('acctDeleteOpenBtn');
+  const acctDeleteCancelBtn = document.getElementById('acctDeleteCancelBtn');
+  const acctDeleteConfirmBtn = document.getElementById('acctDeleteConfirmBtn');
+  const acctDeleteStep1 = document.getElementById('acctDeleteStep1');
+  const acctDeleteStep2 = document.getElementById('acctDeleteStep2');
+  const acctDeleteConfirmText = document.getElementById('acctDeleteConfirmText');
+  const acctDeletePwInput = document.getElementById('acctDeletePw');
+  const acctDeleteMsg = document.getElementById('acctDeleteMsg');
+
+  function _resetDeleteUI() {
+    if (acctDeleteStep1) acctDeleteStep1.style.display = '';
+    if (acctDeleteStep2) acctDeleteStep2.style.display = 'none';
+    if (acctDeleteConfirmText) acctDeleteConfirmText.value = '';
+    if (acctDeletePwInput) acctDeletePwInput.value = '';
+    if (acctDeleteMsg) { acctDeleteMsg.className = 'acct-msg'; acctDeleteMsg.textContent = ''; }
+  }
+  if (acctDeleteOpenBtn) {
+    acctDeleteOpenBtn.addEventListener('click', () => {
+      if (acctDeleteStep1) acctDeleteStep1.style.display = 'none';
+      if (acctDeleteStep2) acctDeleteStep2.style.display = '';
+    });
+  }
+  if (acctDeleteCancelBtn) {
+    acctDeleteCancelBtn.addEventListener('click', _resetDeleteUI);
+  }
+  if (acctDeleteConfirmBtn) {
+    acctDeleteConfirmBtn.addEventListener('click', async () => {
+      const user = auth ? auth.currentUser : null;
+      if (!user) { showMsg(acctDeleteMsg, 'Not signed in.', 'error'); return; }
+      const typed = (acctDeleteConfirmText.value || '').trim();
+      if (typed !== 'DELETE') { showMsg(acctDeleteMsg, 'Type DELETE exactly (all caps) to confirm.', 'error'); return; }
+      const isGoogleUser = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
+      const isPasswordUser = user.providerData && user.providerData.some(p => p.providerId === 'password');
+      const currentPw = (acctDeletePwInput.value || '');
+      if (isPasswordUser && !currentPw) { showMsg(acctDeleteMsg, 'Enter your current password to confirm.', 'error'); return; }
+
+      acctDeleteConfirmBtn.disabled = true;
+      const orig = acctDeleteConfirmBtn.textContent;
+      acctDeleteConfirmBtn.textContent = 'DELETING...';
+
+      try {
+        // === Re-authenticate ===
+        if (isPasswordUser) {
+          const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPw);
+          await user.reauthenticateWithCredential(credential);
+        } else if (isGoogleUser) {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await user.reauthenticateWithPopup(provider);
+        }
+
+        // === Best-effort cleanup of Firestore data ===
+        const uid = user.uid;
+        const userEmail = (user.email || '').toLowerCase();
+        try {
+          const fdb = firebase.firestore();
+          // Delete user-scoped docs we know about. Failures are non-fatal — Firebase
+          // auth deletion still succeeds even if some Firestore writes are blocked
+          // by rules, and account auth records are what really matters for privacy.
+          const uidKeyedRefs = [
+            fdb.collection('users').doc(uid),
+            fdb.collection('rankings').doc(uid),
+            fdb.collection('creator_attributions').doc(uid),
+            fdb.collection('leaderboard').doc(uid),
+            fdb.collection('user_game_data').doc(uid),
+            fdb.collection('gifted_badges').doc(uid),
+          ];
+          // gifted_premium is keyed by sanitized email (see admin gift premium flow)
+          if (userEmail) {
+            const emailDocId = userEmail.replace(/[^a-z0-9]/g, '_');
+            uidKeyedRefs.push(fdb.collection('gifted_premium').doc(emailDocId));
+          }
+          await Promise.all(uidKeyedRefs.map(ref =>
+            ref.delete().catch(err => console.warn('[Delete] Could not delete', ref.path, err.code || err.message))
+          ));
+        } catch(cleanupErr) {
+          console.warn('[Delete] Firestore cleanup error (non-fatal):', cleanupErr);
+        }
+
+        // Clear local cached data so a future signup on this device starts clean
+        try {
+          localStorage.removeItem('jb_premium');
+          localStorage.removeItem('jb_rankings');
+          localStorage.removeItem('jb_mock_state');
+        } catch(_) {}
+
+        // === Delete the auth user ===
+        await user.delete();
+
+        showMsg(acctDeleteMsg, 'Account deleted. Goodbye.', 'success');
+        // Brief pause so the success message is visible, then redirect
+        setTimeout(() => {
+          if (typeof switchPage === 'function') switchPage('rankings');
+          _resetDeleteUI();
+        }, 1500);
+      } catch(e) {
+        let msg = e.message || 'Failed to delete account.';
+        if (e.code === 'auth/wrong-password') msg = 'Current password is incorrect.';
+        else if (e.code === 'auth/invalid-credential') msg = 'Current password is incorrect.';
+        else if (e.code === 'auth/requires-recent-login') msg = 'Please sign out and sign back in, then try again.';
+        else if (e.code === 'auth/popup-closed-by-user') msg = 'Re-authentication cancelled.';
+        showMsg(acctDeleteMsg, msg, 'error');
+        acctDeleteConfirmBtn.disabled = false;
+        acctDeleteConfirmBtn.textContent = orig;
+      }
+    });
+  }
 
   // Sign out from account page
   acctPageSignoutBtn.addEventListener('click', () => {

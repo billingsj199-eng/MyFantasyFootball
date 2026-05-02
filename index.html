@@ -552,8 +552,8 @@ Paste birthdays for 2026 prospects to fill missing age data. Age drives JM heavi
 <!-- === HOME REDESIGN: ticker + teams hero + action row === -->
 <div class="live-ticker" id="liveTicker">
 <div class="live-ticker-inner">
-<span class="lt-label">LIVE BOARD</span>
-<span id="liveTickerItems"><span class="lt-name" style="opacity:.55">Loading rank movers…</span></span>
+<span class="lt-label">WEEKLY MOVERS</span>
+<span id="liveTickerItems"><span class="lt-name" style="opacity:.55">Loading weekly rank movers…</span></span>
 </div>
 </div>
 <header>
@@ -4495,14 +4495,17 @@ D.forEach((d, i) => {
 });
 
 // Convert an index-based board to a name-based array for storage
+// Defensively filters out retired players (legend pool entries pushed into D for
+// the Guess Who autocomplete) so they never end up in Firestore-saved orders.
 function boardToNames(board) {
-  return board.map(idx => D[idx] ? D[idx].n : null).filter(n => n !== null);
+  return board.map(idx => (D[idx] && !D[idx]._retired) ? D[idx].n : null).filter(n => n !== null);
 }
 
-// === LIVE BOARD ticker: top rank movers in Jack's redraft since last save ===
-// Compares the current redraft order against window._jacksPrevOrder (populated
-// when Jack's rankings doc loads from Firestore). Renders top movers into
-// #liveTickerItems. If no previous snapshot exists yet, shows a friendly fallback.
+// === WEEKLY MOVERS ticker: top rank movers in Jack's redraft over the past ~week ===
+// Compares the current redraft order against window._jacksPrevOrder, which is
+// a WEEKLY anchor (refreshed at most once every 7 days inside saveJacksRankings).
+// Renders top movers into #liveTickerItems. Filters out retired/legend-pool
+// players and ignores movers outside the fantasy-relevant rank range.
 window._renderLiveTicker = function() {
   const ticker = document.getElementById('liveTickerItems');
   if (!ticker) return;
@@ -4518,27 +4521,52 @@ window._renderLiveTicker = function() {
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  // Helper: is this name a retired/legend-pool entry? They get pushed into D
+  // after the boards are built (for Guess Who autocomplete) and must never show
+  // up in the ticker even if a stale Firestore doc still has them.
+  // Primary check uses window._RETIRED_NAMES (populated when EP_RETIRED is
+  // appended to D); falls back to nameToIdx for safety.
+  function _isRetired(name) {
+    if (window._RETIRED_NAMES && window._RETIRED_NAMES.has(name)) return true;
+    const idx = (typeof nameToIdx !== 'undefined') ? nameToIdx[name] : undefined;
+    if (idx === undefined) return false;
+    return !!(D[idx] && D[idx]._retired);
+  }
+
   if (!hasPrev) {
-    ticker.innerHTML = '<span class="lt-name" style="opacity:.55">First save — rank-change tracking starts on the next save</span>';
+    ticker.innerHTML = '<span class="lt-name" style="opacity:.55">Weekly mover tracking starts on the next save</span>';
     return;
   }
 
-  // Build prev rank map (1-indexed)
+  // Build prev rank map (1-indexed), skipping retired names
   const prevRanks = {};
-  prevOrder.forEach((name, i) => { prevRanks[name] = i + 1; });
+  let prevRankCounter = 0;
+  prevOrder.forEach(name => {
+    if (_isRetired(name)) return;
+    prevRankCounter += 1;
+    prevRanks[name] = prevRankCounter;
+  });
+
+  // Only compare movers within the fantasy-relevant rank range. Anything past
+  // 300 is deep enough that ticker noise (legend pool, FA churn, etc.) drowns
+  // out the signal Jack actually cares about.
+  const RELEVANCE_THRESHOLD = 300;
 
   // Compute deltas (positive = moved UP toward rank 1, negative = moved DOWN)
   const movers = [];
   currentOrder.forEach((name, i) => {
     const newRank = i + 1;
+    if (_isRetired(name)) return;                 // never show retired players
+    if (newRank > RELEVANCE_THRESHOLD) return;     // out of range now
     const oldRank = prevRanks[name];
-    if (!oldRank) return; // brand-new entry — skip
+    if (!oldRank) return;                          // brand-new entry — skip
+    if (oldRank > RELEVANCE_THRESHOLD) return;     // also was out of range before
     const delta = oldRank - newRank;
     if (delta !== 0) movers.push({ name, delta, newRank });
   });
 
   if (movers.length === 0) {
-    ticker.innerHTML = '<span class="lt-name" style="opacity:.55">No rank changes since last save</span>';
+    ticker.innerHTML = '<span class="lt-name" style="opacity:.55">No rank changes this week</span>';
     return;
   }
 
@@ -4586,7 +4614,11 @@ function namesToBoard(arr, fallbackBoard) {
     }
   });
   // Append any players not in the saved list (new players added since last save)
+  // SKIP retired-pool entries (Tom Brady, Brett Favre, etc.) — those get pushed
+  // into D after defaultBoard is built (for Guess Who autocomplete) and must NOT
+  // pollute the active rankings boards.
   D.forEach((d, i) => {
+    if (d._retired) return;
     if (!usedIndices.has(i)) resolved.push(i);
   });
   return resolved;
@@ -9556,10 +9588,14 @@ document.addEventListener('click', function(e) {
 
   // Retired players pool for daily Guess Who (from NFL database)
     // Add retired players to D array for autocomplete
+  // Also track retired names in a global Set so the rankings/ticker code can
+  // identify legend-pool entries even though `nameToIdx` was built earlier.
+  window._RETIRED_NAMES = window._RETIRED_NAMES || new Set();
   EP_RETIRED.forEach(p => {
     if (!D.find(d => d.n === p.name)) {
       const seasons = p.last - p.debut + 1;
       D.push({n:p.name,a:999,p:0,s:p.pos,r:p.pos+"\u2014",t:"Retired",p25:null,p24:null,p23:null,age:null,cyr:null,out:null,sal:null,dr:null,exp:seasons,role:null,inj:null,s25:null,career:p.career||[],da:999,sa:999,idx:D.length,myRank:D.length+1,round:99,notes:"",_retired:true,_debut:p.debut,_last:p.last});
+      window._RETIRED_NAMES.add(p.name);
     }
   });
 
@@ -18474,19 +18510,36 @@ window.fmtHeight = fmtHeight;
     if (!currentUser || !db || !isAdmin()) return;
     showSaving();
     try {
-      // === Capture previous snapshot (for the LIVE BOARD ticker) ===
-      // Read the current doc BEFORE overwriting so we can compute rank deltas
-      // for the next render. We only need the redraft _order — that's what the
-      // ticker compares against.
+      // === Capture previous snapshot (for the WEEKLY MOVERS ticker) ===
+      // The ticker shows rank movement vs a WEEKLY anchor — not vs the most
+      // recent save. So we only refresh `_prev` if the existing anchor is more
+      // than 7 days old. Otherwise we keep it, so deltas accumulate over the
+      // whole week regardless of how many times Jack saves in between.
       let prevSnapshot = null;
       try {
         const existingDoc = await db.collection('rankings').doc('jacks-official').get();
         if (existingDoc.exists && existingDoc.data().data) {
           const existingObj = JSON.parse(existingDoc.data().data);
-          if (existingObj.jacks && existingObj.jacks.redraft && Array.isArray(existingObj.jacks.redraft._order)) {
+          const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+          const existingPrev = existingObj._prev;
+          // Helper: drop retired/legend-pool names so they never re-pollute the snapshot
+          const _scrub = arr => arr.filter(n => !(window._RETIRED_NAMES && window._RETIRED_NAMES.has(n))
+            && !(nameToIdx[n] !== undefined && D[nameToIdx[n]] && D[nameToIdx[n]]._retired));
+          // Reuse the existing weekly anchor if it's still fresh (<7 days old)
+          if (existingPrev && Array.isArray(existingPrev.redraft) && existingPrev.savedAt) {
+            const anchorAgeMs = Date.now() - new Date(existingPrev.savedAt).getTime();
+            if (Number.isFinite(anchorAgeMs) && anchorAgeMs < SEVEN_DAYS_MS) {
+              prevSnapshot = {
+                redraft: _scrub(existingPrev.redraft),
+                savedAt: existingPrev.savedAt
+              };
+            }
+          }
+          // Anchor missing or stale → snapshot the soon-to-be-overwritten order as the new weekly baseline
+          if (!prevSnapshot && existingObj.jacks && existingObj.jacks.redraft && Array.isArray(existingObj.jacks.redraft._order)) {
             prevSnapshot = {
-              redraft: existingObj.jacks.redraft._order,
-              savedAt: existingDoc.data().updatedAt || null
+              redraft: _scrub(existingObj.jacks.redraft._order),
+              savedAt: existingDoc.data().updatedAt || new Date().toISOString()
             };
           }
         }

@@ -2357,7 +2357,6 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/underdog_ids.js?v=2026-05-02"></script>
 <script src="data/legend_birth_years.js?v=2026-05-02"></script>
 <script src="data/pff_qb_risk.js?v=2026-05-02"></script>
-<script src="data/cb_school_norm.js?v=2026-05-02"></script>
 <script src="data/college_logo_ids.js?v=2026-05-02"></script>
 <script src="data/fallback_espn_ids.js?v=2026-05-02"></script>
 <script src="data/legend_bio.js?v=2026-05-02"></script>
@@ -7568,8 +7567,8 @@ function draftRdLabel(rd) {
 
 // Collision-safe COMBINE_DATA lookup: returns cb entry only if it belongs to this player
 // Prevents wrong data when multiple players share the same name (e.g. Chris Johnson)
-// _CB_SCHOOL_NORM moved to data/cb_school_norm.js
-function _cbNormSchool(s) { if (!s) return ''; const a = _CB_SCHOOL_NORM[s] || s; return a.toLowerCase().replace(/[.\s]/g,''); }
+// _CB_SCHOOL_NORM merged into _SCHOOL_NORM (data/school_norm.js) — superset map
+function _cbNormSchool(s) { if (!s) return ''; const a = (typeof _SCHOOL_NORM !== 'undefined' ? _SCHOOL_NORM[s] : null) || s; return a.toLowerCase().replace(/[.\s]/g,''); }
 
 function _getValidCB(d) {
   if (typeof COMBINE_DATA === 'undefined' || !d || !d.n) return null;

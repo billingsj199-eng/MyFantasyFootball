@@ -1,0 +1,16 @@
+/* FALLBACK_IDS — extracted from index.html for performance */
+  var FALLBACK_IDS = {
+    "Austin Ekeler":"3068267","Cam Skattebo":"4696981","Dalvin Cook":"3116593","D.J. Moore":"3915416","DJ Moore":"3915416","Darren Waller":"2576925","Harold Fannin":"5083076","Harold Fannin Jr.":"5083076","James Cook":"4379399","James Cook III":"4379399","James Conner":"3045147","Marvin Harrison Jr.":"4432708","Nick Chubb":"3128720","Odell Beckham Jr.":"16733","Russell Wilson":"14881","Todd Gurley":"2977644","Tyreek Hill":"3116406",
+    "Arian Foster":"12497","DeAndre Hopkins":"15795","Steve Smith Sr.":"2622","Steve Smith":"2622","Jamaal Charles":"11307","Devonta Freeman":"16944","Brandon Marshall":"9705","Allen Robinson":"16799","Matt Forte":"11278","Julio Jones":"13982","Antonio Brown":"13934","Le'Veon Bell":"15825","Keenan Allen":"15818","Julian Edelman":"12649","Sammy Watkins":"16725","Adrian Peterson":"10452","Mark Ingram":"13981","Mark Ingram II":"13981","Tyrell Williams":"2587819","Todd Gurley II":"2977644",
+    // === Corrected active-player IDs (d.js contained scrambled IDs; fixed via ESPN API audit) ===
+    "A.J. Brown":"4047646","Alvin Kamara":"3054850","Bijan Robinson":"4430807","Bo Nix":"4426338","Brandon Aiyuk":"4360438","Breece Hall":"4427366","Brian Robinson":"4241474","Brock Bowers":"4432665","Bryce Young":"4685720","Caleb Williams":"4431611",
+    "Calvin Ridley":"3925357","Carson Wentz":"2573079","Chris Olave":"4361370","Christian Watson":"4248528","Chuba Hubbard":"4241416","Colby Parkinson":"4242557","Cole Kmet":"4258595","Cooper Kupp":"2977187","Courtland Sutton":"3128429","D'Andre Swift":"4259545",
+    "Dallas Goedert":"3121023","Dalton Schultz":"3117256","David Montgomery":"4035538","David Njoku":"3123076","De'Von Achane":"4429160","DeVonta Smith":"4241478","Devin Singletary":"4040761","Drake London":"4426502","Evan Engram":"3051876","Garrett Wilson":"4569618",
+    "Geno Smith":"15864","George Pickens":"4426354","Hunter Henry":"3046439","Isaiah Likely":"4361050","Jacoby Brissett":"2578570","Jahmyr Gibbs":"4429795","Jakobi Meyers":"3916433","Jared Goff":"3046779","Jauan Jennings":"3886598","Jaxon Smith-Njigba":"4430878",
+    "Jayden Daniels":"4426348","Jaylen Waddle":"4372016","Jerry Jeudy":"4241463","Jonathan Taylor":"4242335","Jordan Addison":"4429205","Jordan Love":"4036378","JuJu Smith-Schuster":"3120348","Justin Fields":"4362887","Kareem Hunt":"3059915","Kenneth Gainwell":"4371733",
+    "Kirk Cousins":"14880","Kyle Pitts":"4360248","Kyren Williams":"4430737","Mac Jones":"4241464","Malik Willis":"4242512","Mark Andrews":"3116365","Michael Pittman Jr.":"4035687","Michael Wilson":"4360761","Mike Gesicki":"3116164","Najee Harris":"4241457",
+    "Nico Collins":"4258173","Pat Freiermuth":"4361411","Rashee Rice":"4428331","Rashod Bateman":"4360939","Rhamondre Stevenson":"4569173","Rico Dowdle":"4038815","T.J. Hockenson":"4036133","Terry McLaurin":"3121422","Tony Pollard":"3916148","Trey McBride":"4361307",
+    "Tyler Allgeier":"4373626","Tyler Higbee":"2573401","Tyler Shough":"4360689","Wan'Dale Robinson":"4569587","Zay Flowers":"4429615",
+    // Name-collision fixes (d.js id was a different player with the same name)
+    "Kenneth Walker III":"4567048"
+  };

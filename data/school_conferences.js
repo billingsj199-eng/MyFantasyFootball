@@ -1,0 +1,93 @@
+/* _SCHOOL_CONF — extracted from index.html for performance */
+  var _SCHOOL_CONF = {
+    // SEC (16)
+    "Alabama":"SEC","Arkansas":"SEC","Auburn":"SEC","Florida":"SEC","Georgia":"SEC",
+    "Kentucky":"SEC","LSU":"SEC","Mississippi State":"SEC","Miss State":"SEC",
+    "Missouri":"SEC","Mizzou":"SEC","Oklahoma":"SEC","Ole Miss":"SEC","Mississippi":"SEC",
+    "South Carolina":"SEC","Tennessee":"SEC","Texas":"SEC","Texas A&M":"SEC",
+    "Vanderbilt":"SEC","Vandy":"SEC",
+    // Big Ten (18)
+    "Illinois":"Big Ten","Indiana":"Big Ten","Iowa":"Big Ten","Maryland":"Big Ten",
+    "Michigan":"Big Ten","Michigan State":"Big Ten","Minnesota":"Big Ten","Nebraska":"Big Ten",
+    "Northwestern":"Big Ten","Ohio State":"Big Ten","Oregon":"Big Ten","Penn State":"Big Ten",
+    "Purdue":"Big Ten","Rutgers":"Big Ten","UCLA":"Big Ten","USC":"Big Ten",
+    "Washington":"Big Ten","Wisconsin":"Big Ten",
+    // Big 12 (16)
+    "Arizona":"Big 12","Arizona State":"Big 12","ASU":"Big 12","Baylor":"Big 12",
+    "BYU":"Big 12","Brigham Young":"Big 12","Cincinnati":"Big 12","Colorado":"Big 12",
+    "Houston":"Big 12","Iowa State":"Big 12","Kansas":"Big 12","Kansas State":"Big 12",
+    "Oklahoma State":"Big 12","TCU":"Big 12","Texas Tech":"Big 12","UCF":"Big 12",
+    "Central Florida":"Big 12","Utah":"Big 12","West Virginia":"Big 12",
+    // ACC (17)
+    "Boston College":"ACC","California":"ACC","Cal":"ACC","Clemson":"ACC","Duke":"ACC",
+    "Florida State":"ACC","FSU":"ACC","Georgia Tech":"ACC","Louisville":"ACC",
+    "Miami":"ACC","Miami (FL)":"ACC","NC State":"ACC","North Carolina":"ACC","UNC":"ACC",
+    "Pittsburgh":"ACC","Pitt":"ACC","SMU":"ACC","Stanford":"ACC","Syracuse":"ACC",
+    "Virginia":"ACC","Virginia Tech":"ACC","Wake Forest":"ACC",
+    // AAC (14)
+    "Army":"AAC","Charlotte":"AAC","East Carolina":"AAC","ECU":"AAC","FAU":"AAC",
+    "Florida Atlantic":"AAC","Memphis":"AAC","Navy":"AAC","North Texas":"AAC","Rice":"AAC",
+    "South Florida":"AAC","USF":"AAC","Temple":"AAC","Tulane":"AAC","Tulsa":"AAC",
+    "UAB":"AAC","UTSA":"AAC",
+    // Mountain West (12)
+    "Air Force":"Mountain West","Boise State":"Mountain West","Colorado State":"Mountain West",
+    "Fresno State":"Mountain West","Hawaii":"Mountain West","Hawai'i":"Mountain West",
+    "Nevada":"Mountain West","New Mexico":"Mountain West","San Diego State":"Mountain West",
+    "SDSU":"Mountain West","San Jose State":"Mountain West","SJSU":"Mountain West",
+    "UNLV":"Mountain West","Utah State":"Mountain West","Wyoming":"Mountain West",
+    // MAC (13)
+    "Akron":"MAC","Ball State":"MAC","Bowling Green":"MAC","Buffalo":"MAC",
+    "Central Michigan":"MAC","Eastern Michigan":"MAC","Kent State":"MAC",
+    "Miami (OH)":"MAC","Miami (Ohio)":"MAC","Northern Illinois":"MAC","NIU":"MAC",
+    "Ohio":"MAC","Toledo":"MAC","UMass":"MAC","Massachusetts":"MAC","Western Michigan":"MAC",
+    // Sun Belt (14)
+    "Appalachian State":"Sun Belt","App State":"Sun Belt","Arkansas State":"Sun Belt",
+    "Coastal Carolina":"Sun Belt","Georgia Southern":"Sun Belt","Georgia State":"Sun Belt",
+    "James Madison":"Sun Belt","JMU":"Sun Belt","Louisiana":"Sun Belt",
+    "UL Lafayette":"Sun Belt","Louisiana-Lafayette":"Sun Belt","Marshall":"Sun Belt",
+    "Old Dominion":"Sun Belt","ODU":"Sun Belt","South Alabama":"Sun Belt",
+    "Southern Miss":"Sun Belt","Southern Mississippi":"Sun Belt","Texas State":"Sun Belt",
+    "Troy":"Sun Belt","ULM":"Sun Belt","Louisiana-Monroe":"Sun Belt",
+    // C-USA (10)
+    "FIU":"C-USA","Florida International":"C-USA","Jacksonville State":"C-USA",
+    "Kennesaw State":"C-USA","Liberty":"C-USA","Louisiana Tech":"C-USA",
+    "Middle Tennessee":"C-USA","MTSU":"C-USA","New Mexico State":"C-USA",
+    "Sam Houston":"C-USA","Sam Houston State":"C-USA","UTEP":"C-USA",
+    "Western Kentucky":"C-USA","WKU":"C-USA",
+    // Pac-12 (2 remaining)
+    "Oregon State":"Pac-12","Washington State":"Pac-12",
+    // Independents
+    "Notre Dame":"Ind","UConn":"Ind","Connecticut":"Ind",
+    // Abbreviated forms used in COMBINE_DATA / COLLEGE_STATS
+    "Arizona St.":"Big 12","Ohio St.":"Big Ten","Michigan St.":"Big Ten",
+    "Kansas St.":"Big 12","Iowa St.":"Big 12","Oklahoma St.":"Big 12",
+    "Miss. State":"SEC","Miss St.":"SEC","Penn St.":"Big Ten",
+    "Georgia St.":"Sun Belt","Florida St.":"ACC","Boise St.":"Mountain West",
+    "Oregon St.":"Pac-12","Washington St.":"Pac-12","Fresno St.":"Mountain West",
+    "Colorado St.":"Mountain West","Utah St.":"Mountain West","San Jose St.":"Mountain West",
+    "San Diego St.":"Mountain West","Ball St.":"MAC","Kent St.":"MAC",
+    "App. State":"Sun Belt","Appalachian St.":"Sun Belt",
+    "Arkansas St.":"Sun Belt","Texas St.":"Sun Belt",
+    "North Carolina St.":"ACC","Mississippi St.":"SEC","Texas-San Antonio":"AAC",
+    "North Dakota St.":"FCS",
+    // FCS conferences (grouped as "FCS")
+    "North Dakota State":"FCS","NDSU":"FCS","South Dakota State":"FCS","SDSU":"FCS",
+    "Montana":"FCS","Montana State":"FCS","Sacramento State":"FCS","Sac State":"FCS",
+    "Illinois State":"FCS","Missouri State":"FCS","Indiana State":"FCS",
+    "Villanova":"FCS","Delaware":"FCS","Richmond":"FCS","William & Mary":"FCS",
+    "Duquesne":"FCS","Lehigh":"FCS","Lafayette":"FCS","Bryant":"FCS",
+    "Eastern Kentucky":"FCS","Chattanooga":"FCS","Mercer":"FCS","Samford":"FCS",
+    "Jacksonville State":"C-USA","Austin Peay":"FCS","Central Connecticut":"FCS",
+    "Gardner-Webb":"FCS","Idaho State":"FCS","Cal Poly":"FCS","Weber State":"FCS",
+    "Youngstown State":"FCS","Towson":"FCS","Stony Brook":"FCS",
+    "Southeast Missouri":"FCS","SE Missouri":"FCS","McNeese":"FCS",
+    "Incarnate Word":"FCS","Lamar":"FCS","Mercyhurst":"FCS",
+    "Alabama A&M":"FCS","Alabama State":"FCS","Alcorn State":"FCS",
+    "Arkansas-Pine Bluff":"FCS","Bethune-Cookman":"FCS","Florida A&M":"FCS",
+    "Jackson State":"FCS","Mississippi Valley State":"FCS","Prairie View A&M":"FCS",
+    "Southern":"FCS","Texas Southern":"FCS","Grambling":"FCS",
+    "Eastern Illinois":"FCS","South Dakota":"FCS","North Dakota":"FCS",
+    "Northern Iowa":"FCS","Western Illinois":"FCS",
+    "Houston Christian":"FCS","East Texas A&M":"FCS",
+    "South Carolina State":"FCS","Norfolk State":"FCS","North Carolina A&T":"FCS"
+  };

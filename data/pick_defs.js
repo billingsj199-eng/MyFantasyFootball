@@ -1,0 +1,48 @@
+/* pickDefs — extracted from index.html for performance */
+  var pickDefs = [
+    // 2026
+    { n: "2026 Early 1st",  s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '1st', _pickSlot: 'early',  da: 15, sa: 12 },
+    { n: "2026 Mid 1st",    s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '1st', _pickSlot: 'mid',    da: 30, sa: 25 },
+    { n: "2026 Late 1st",   s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '1st', _pickSlot: 'late',   da: 45, sa: 40 },
+    { n: "2026 Early 2nd",  s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '2nd', _pickSlot: 'early',  da: 65, sa: 60 },
+    { n: "2026 Mid 2nd",    s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '2nd', _pickSlot: 'mid',    da: 85, sa: 80 },
+    { n: "2026 Late 2nd",   s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '2nd', _pickSlot: 'late',   da: 105, sa: 100 },
+    { n: "2026 3rd",        s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '3rd', _pickSlot: 'mid',    da: 140, sa: 135 },
+    { n: "2026 4th",        s: 'PICK', t: '2026', _isFuturePick: true, _pickYr: 2026, _pickRd: '4th', _pickSlot: 'mid',    da: 200, sa: 195 },
+    // 2027
+    { n: "2027 Early 1st",  s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '1st', _pickSlot: 'early',  da: 25, sa: 22 },
+    { n: "2027 Mid 1st",    s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '1st', _pickSlot: 'mid',    da: 40, sa: 35 },
+    { n: "2027 Late 1st",   s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '1st', _pickSlot: 'late',   da: 55, sa: 50 },
+    { n: "2027 Early 2nd",  s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '2nd', _pickSlot: 'early',  da: 80, sa: 75 },
+    { n: "2027 Mid 2nd",    s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '2nd', _pickSlot: 'mid',    da: 100, sa: 95 },
+    { n: "2027 Late 2nd",   s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '2nd', _pickSlot: 'late',   da: 120, sa: 115 },
+    { n: "2027 3rd",        s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '3rd', _pickSlot: 'mid',    da: 160, sa: 155 },
+    { n: "2027 4th",        s: 'PICK', t: '2027', _isFuturePick: true, _pickYr: 2027, _pickRd: '4th', _pickSlot: 'mid',    da: 220, sa: 215 },
+    // 2028
+    { n: "2028 Early 1st",  s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '1st', _pickSlot: 'early',  da: 45, sa: 40 },
+    { n: "2028 Mid 1st",    s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '1st', _pickSlot: 'mid',    da: 65, sa: 60 },
+    { n: "2028 Late 1st",   s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '1st', _pickSlot: 'late',   da: 85, sa: 80 },
+    { n: "2028 Early 2nd",  s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '2nd', _pickSlot: 'early',  da: 115, sa: 110 },
+    { n: "2028 Mid 2nd",    s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '2nd', _pickSlot: 'mid',    da: 140, sa: 135 },
+    { n: "2028 Late 2nd",   s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '2nd', _pickSlot: 'late',   da: 165, sa: 160 },
+    { n: "2028 3rd",        s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '3rd', _pickSlot: 'mid',    da: 210, sa: 205 },
+    { n: "2028 4th",        s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '4th', _pickSlot: 'mid',    da: 270, sa: 265 },
+    // 2029 (not ranked, high ADP = off board by default)
+    { n: "2029 Early 1st",  s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
+    { n: "2029 Mid 1st",    s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2029 Late 1st",   s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'late',   da: 900, sa: 900, _unranked: true },
+    { n: "2029 Early 2nd",  s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
+    { n: "2029 Mid 2nd",    s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2029 Late 2nd",   s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'late',   da: 900, sa: 900, _unranked: true },
+    { n: "2029 3rd",        s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '3rd', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2029 4th",        s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '4th', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    // 2030
+    { n: "2030 Early 1st",  s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '1st', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
+    { n: "2030 Mid 1st",    s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '1st', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2030 Late 1st",   s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '1st', _pickSlot: 'late',   da: 900, sa: 900, _unranked: true },
+    { n: "2030 Early 2nd",  s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '2nd', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
+    { n: "2030 Mid 2nd",    s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '2nd', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2030 Late 2nd",   s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '2nd', _pickSlot: 'late',   da: 900, sa: 900, _unranked: true },
+    { n: "2030 3rd",        s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '3rd', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    { n: "2030 4th",        s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '4th', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+  ];

@@ -1,0 +1,25 @@
+/* _CS_ALIASES — extracted from index.html for performance */
+        var _CS_ALIASES = {
+          'Mitchell Trubisky': 'Mitch Trubisky',
+          'Mitch Trubisky': 'Mitchell Trubisky',
+          'A.J. Green': 'AJ Green',
+          'AJ Green': 'A.J. Green',
+          'Marvin Harrison Jr.': 'Marvin Harrison Jr',
+          'Marvin Harrison Jr': 'Marvin Harrison Jr.',
+          'Marvin Harrison': 'Marvin Harrison Jr.',
+          'D.K. Metcalf': 'DK Metcalf',
+          'DK Metcalf': 'D.K. Metcalf',
+          'D.J. Moore': 'DJ Moore',
+          'DJ Moore': 'D.J. Moore',
+          'A.J. Brown': 'AJ Brown',
+          'AJ Brown': 'A.J. Brown',
+          'C.J. Stroud': 'CJ Stroud',
+          'CJ Stroud': 'C.J. Stroud',
+          'D.J. Uiagalelei': 'DJ Uiagalelei',
+          'DJ Uiagalelei': 'D.J. Uiagalelei',
+          'J.J. McCarthy': 'JJ McCarthy',
+          'JJ McCarthy': 'J.J. McCarthy',
+          'Michael Penix': 'Michael Penix Jr.',
+          'Michael Penix Jr.': 'Michael Penix',
+          'Fernando Mendoza V': 'Fernando Mendoza'
+        };

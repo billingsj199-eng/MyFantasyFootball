@@ -2378,6 +2378,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/all_nfl_teams.js?v=2026-05-02"></script>
 <script src="data/badges.js?v=2026-05-02"></script>
 <script src="data/bbm_first_pos_by_round.js?v=2026-05-02"></script>
+<script src="data/bbm_pick_by_rank_round.js?v=2026-05-03"></script>
 <script src="data/college_pos_override.js?v=2026-05-02"></script>
 <script src="data/colorways.js?v=2026-05-02"></script>
 <script src="data/conf_keywords.js?v=2026-05-02"></script>
@@ -37789,6 +37790,12 @@ Rules:
   const BBM_RATE_LO = 0.10, BBM_RATE_HI = 0.22; // 0-100 normalization band
   // Ideal position counts (data-driven; matches engine.js BBM_MAX_POS hard caps)
   const BBM_IDEAL_COUNTS = { QB:[2,3], RB:[4,7], WR:[6,9], TE:[2,3] };
+  // Slot-aware build rates intentionally NOT used. We aggregated 2.0M teams
+  // across BBM IV/V/VI and tested year-over-year stability of the slot×build
+  // lift; correlations were essentially zero (IV vs V = -0.30, V vs VI =
+  // +0.36, IV vs VI = -0.15). The slot effect is dominated by which players
+  // happened to be near each slot's first pick that year, not by stable
+  // strategic structure. Build Shape stays slot-agnostic.
   // Historical advance rate by max stack size (largest QB↔same-team-pass-catcher
   // group on the roster). Sourced from bbm_data.js by_max_stack across 2.5M
   // BBM teams. 5+ stacks have negligible sample, so we cap at 3.
@@ -37800,6 +37807,39 @@ Rules:
     4: 0.2082,   // tiny sample; collapses to ~3-stack territory
     5: 0.2186,   // collapse to 3
     6: 0.2186
+  };
+  // Stack-composition q_rates from BBM IV/V/VI compositional analysis (2.0M
+  // teams). Year-stable signals derived in scripts/aggregate_bbm_stack_composition.py.
+  // Keys describe the same-team-as-QB1 pattern on the roster:
+  //   wr1_only      = team's WR1 stacked, NOT WR2     (clean primary stack)
+  //   wr1_and_wr2   = both WR1 AND WR2 same-team     (over-concentrated, BAD)
+  //   wr1_and_rb1   = WR1 + RB1 same-team             (diversified 3-stack)
+  //   wr1_and_te1   = WR1 + TE1 same-team             (slight positive)
+  //   wr2_no_wr1    = WR2 stacked but WR1 isn't       (skipped your primary)
+  //   te1_only      = only TE1 stacked, no WR mate    (~baseline)
+  //   rb1_only      = only RB1 stacked, no WR mate    (~baseline)
+  //   no_stack      = QB1 has no same-team mate
+  // Values are observed advance rates (~16.67% baseline). Used by
+  // _udStackingScore as a richer signal than max_stack count alone.
+  const BBM_STACK_COMP_RATES = {
+    wr1_only:    0.2030,  // has_wr1 cohort minus wr1_and_wr2 carve-out
+    wr1_and_wr2: 0.1182,  // double-WR same team — over-concentration penalty
+    wr1_and_rb1: 0.1902,  // diversified, RB component
+    wr1_and_te1: 0.1699,  // diversified, TE component
+    wr2_no_wr1:  0.1461,  // has_wr2 cohort (mostly the no-WR1 subset)
+    te1_only:    0.1643,  // has_te1 cohort
+    rb1_only:    0.1641,  // has_rb1 cohort
+    no_stack:    0.1664   // empirical naked-QB rate
+  };
+  // Multi-QB diversification q_rates: number of distinct QBs on the roster
+  // who have at least one same-NFL-team pass-catcher. Modest secondary
+  // signal; only the n=3 cohort lifts meaningfully above baseline.
+  const BBM_N_QB_STACKS_RATES = {
+    0: 0.1561,
+    1: 0.1616,
+    2: 0.1649,
+    3: 0.1792,
+    4: 0.1705
   };
 
   function _udRateToScore(rate) {
@@ -37827,53 +37867,243 @@ Rules:
     }
     return Math.round(sum / n);
   }
+  // Pick slots scored with skip penalties when missing. Skip penalty values
+  // come from BBM_PICK_SKIP_RATES (data/bbm_pick_by_rank_round.js). The
+  // `enforce` flag means: if missing, use BBM_PICK_SKIP_RATES[pos_rank] as
+  // the rate (penalizes skipping). Always-taken slots (e.g. RB1, WR1) have
+  // enforce=false because no historical "skip" cohort exists.
+  const BBM_PICK_SLOTS_REQUIRED = [
+    ['QB',1,false],['QB',2,true],
+    ['RB',1,false],['RB',2,false],['RB',3,false],['RB',4,true],
+    ['WR',1,false],['WR',2,false],['WR',3,false],['WR',4,false],
+    ['WR',5,true],['WR',6,true],['WR',7,true],
+    ['TE',1,false],['TE',2,true],
+  ];
+  // Optional slots: scored only if present (no skip penalty). Skip rate at
+  // these ranks is at-or-above baseline (taking is neutral or worse).
+  const BBM_PICK_SLOTS_OPTIONAL = [
+    ['QB',3],['QB',4],
+    ['RB',5],['RB',6],['RB',7],
+    ['WR',8],
+    ['TE',3],['TE',4],
+  ];
+  function _udLookupPickRate(pos, rank, round) {
+    const tbl = (typeof BBM_PICK_BY_RANK_ROUND !== 'undefined')
+      ? BBM_PICK_BY_RANK_ROUND[pos.toLowerCase()]
+      : null;
+    if (!tbl || !tbl[rank]) return BBM_BASELINE_QRATE;
+    const r = Math.max(1, Math.min(18, round || 0));
+    return tbl[rank][r] != null ? tbl[rank][r] : BBM_BASELINE_QRATE;
+  }
   function _udRoundPatternScore(rosterDetails) {
-    // First-pick round per position. 0 if missing.
-    const firstRound = { QB: 0, RB: 0, WR: 0, TE: 0 };
-    for (const p of rosterDetails) {
-      if (firstRound[p.pos] === 0 && p.round) firstRound[p.pos] = p.round;
+    // Sort picks by overall pick number to compute positional rank in draft order.
+    const sorted = rosterDetails.slice().sort(
+      (a, b) => (a.pick || 9999) - (b.pick || 9999)
+    );
+    const posRanks = { QB:0, RB:0, WR:0, TE:0 };
+    const picks = []; // {pos, rank, round}
+    for (const p of sorted) {
+      if (posRanks[p.pos] == null) continue;
+      posRanks[p.pos]++;
+      picks.push({ pos: p.pos, rank: posRanks[p.pos], round: p.round || 0 });
     }
+    const find = (pos, rank) => picks.find(x => x.pos === pos && x.rank === rank);
+
     let sum = 0, n = 0;
-    for (const pos of ['QB','RB','WR','TE']) {
-      const rd = firstRound[pos];
-      if (!rd) {
-        // Missing position — hard penalty (worse than worst observed round).
-        sum += BBM_RATE_LO;
+    for (const [pos, rank, enforce] of BBM_PICK_SLOTS_REQUIRED) {
+      const got = find(pos, rank);
+      let rate;
+      if (got && got.round) {
+        rate = _udLookupPickRate(pos, rank, got.round);
+      } else if (enforce) {
+        const skipKey = pos.toLowerCase() + '_' + rank;
+        const skip = (typeof BBM_PICK_SKIP_RATES !== 'undefined')
+          ? BBM_PICK_SKIP_RATES[skipKey] : null;
+        rate = (skip != null) ? skip : BBM_RATE_LO;
       } else {
-        const r = Math.max(1, Math.min(18, rd));
-        sum += BBM_FIRST_POS_BY_ROUND[pos][r] || BBM_BASELINE_QRATE;
+        // Always-taken slot missing (e.g. someone drafted 0 RBs). Hard penalty.
+        rate = BBM_RATE_LO;
       }
+      sum += rate; n++;
+    }
+    for (const [pos, rank] of BBM_PICK_SLOTS_OPTIONAL) {
+      const got = find(pos, rank);
+      if (!got || !got.round) continue;
+      sum += _udLookupPickRate(pos, rank, got.round);
       n++;
     }
-    return _udRateToScore(sum / n);
+    return _udRateToScore(sum / Math.max(n, 1));
   }
-  // Compute the team's max stack size — the largest count of same-team
-  // WR+TE pass-catchers tied to any single QB on the roster. Returns
-  // { maxStack, byQb } where byQb is the per-QB stack size for tooltips.
+  // Compute stack metadata from a draft order. Returns:
+  //   maxStack    — largest count of same-team mates tied to any QB
+  //                 (kept for backward-compatible tooltip display)
+  //   byQb        — { qbTeam: stack size }
+  //   compKey     — composition bucket key into BBM_STACK_COMP_RATES,
+  //                 derived from QB1's same-team WR1/WR2/RB1/TE1 pattern
+  //   nQbStacks   — number of distinct QBs that have ≥1 same-team mate
   function _udComputeStacks(rosterDetails) {
+    // Sort once by pick number so positional ranks reflect draft order.
+    const sorted = rosterDetails.slice().sort(
+      (a, b) => (a.pick || 9999) - (b.pick || 9999)
+    );
+
+    // Enumerate QBs in draft order. QB1 = first QB drafted.
+    const qbs = sorted.filter(p => p.pos === 'QB' && p.team);
+    const qb1 = qbs[0];
+    const qb1Team = qb1 ? qb1.team : null;
+    const qbTeams = new Set(qbs.map(q => q.team).filter(Boolean));
+
+    // Per-QB-team stack count for legacy maxStack and the n_qb_stacks signal.
     const qbsByTeam = {};
-    rosterDetails.forEach(p => {
-      if (p.pos === 'QB' && p.team) {
-        qbsByTeam[p.team] = qbsByTeam[p.team] || 0;
-      }
-    });
-    rosterDetails.forEach(p => {
-      if ((p.pos === 'WR' || p.pos === 'TE') && p.team && qbsByTeam[p.team] != null) {
+    qbs.forEach(q => { qbsByTeam[q.team] = 0; });
+    sorted.forEach(p => {
+      if ((p.pos === 'WR' || p.pos === 'TE' || p.pos === 'RB') && p.team
+          && qbsByTeam[p.team] != null) {
         qbsByTeam[p.team]++;
       }
     });
     const sizes = Object.values(qbsByTeam);
     const maxStack = sizes.length ? Math.max(...sizes) : 0;
-    return { maxStack, byQb: qbsByTeam };
+    const nQbStacks = sizes.filter(n => n >= 1).length;
+
+    // Build the composition bucket. Walk picks in draft order tracking each
+    // pass-catcher position's rank within the team. Mark which ranks are
+    // same-team-as-QB1 (the primary stack). Then translate the pattern into
+    // one of the BBM_STACK_COMP_RATES keys.
+    let wrSeen = 0, teSeen = 0, rbSeen = 0;
+    let hasWr1 = false, hasWr2 = false;
+    let hasTe1 = false, hasRb1 = false;
+    if (qb1Team) {
+      for (const p of sorted) {
+        if (p.pos === 'WR') {
+          wrSeen++;
+          if (p.team === qb1Team) {
+            if (wrSeen === 1) hasWr1 = true;
+            else if (wrSeen === 2) hasWr2 = true;
+          }
+        } else if (p.pos === 'TE') {
+          teSeen++;
+          if (p.team === qb1Team && teSeen === 1) hasTe1 = true;
+        } else if (p.pos === 'RB') {
+          rbSeen++;
+          if (p.team === qb1Team && rbSeen === 1) hasRb1 = true;
+        }
+      }
+    }
+    let compKey = null;
+    if (qb1Team) {
+      if (hasWr1 && hasWr2)        compKey = 'wr1_and_wr2';   // worst
+      else if (hasWr1 && hasRb1)   compKey = 'wr1_and_rb1';   // diversified
+      else if (hasWr1 && hasTe1)   compKey = 'wr1_and_te1';
+      else if (hasWr1)             compKey = 'wr1_only';      // best clean
+      else if (hasWr2)             compKey = 'wr2_no_wr1';    // skipped primary
+      else if (hasTe1)             compKey = 'te1_only';
+      else if (hasRb1)             compKey = 'rb1_only';
+      else                         compKey = 'no_stack';
+    }
+    return { maxStack, byQb: qbsByTeam, compKey, nQbStacks };
   }
   function _udStackingScore(rosterDetails) {
-    const { maxStack } = _udComputeStacks(rosterDetails);
-    const capped = Math.min(maxStack, 6);
-    const rate = BBM_MAX_STACK_RATES[capped] != null
-      ? BBM_MAX_STACK_RATES[capped]
-      : BBM_BASELINE_QRATE;
-    return _udRateToScore(rate);
+    const info = _udComputeStacks(rosterDetails);
+    // Composition rate is the primary signal — picks the right bucket from
+    // BBM_STACK_COMP_RATES. Fall back to the slot-agnostic max_stack lookup
+    // if compKey is somehow null (e.g. team has no QB drafted yet).
+    let compRate = info.compKey != null
+      ? BBM_STACK_COMP_RATES[info.compKey]
+      : BBM_MAX_STACK_RATES[Math.min(info.maxStack, 6)];
+    if (compRate == null) compRate = BBM_BASELINE_QRATE;
+
+    // Multi-QB diversification — small additive modifier. Anchored at
+    // n=2 (the median pattern, ~baseline). 3-distinct-QB-stacks lifts
+    // by ~+0.013 absolute over n=2.
+    const nQb = info.nQbStacks;
+    const modRate = BBM_N_QB_STACKS_RATES[nQb] != null
+      ? BBM_N_QB_STACKS_RATES[nQb]
+      : BBM_N_QB_STACKS_RATES[2];
+    const modDelta = modRate - BBM_N_QB_STACKS_RATES[2];
+
+    const finalRate = compRate + modDelta;
+    return _udRateToScore(finalRate);
   }
+  // Structural-mechanic q_rates derived from BBM IV/V/VI compositional analysis.
+  // These are roster-shape penalties that don't depend on player identity:
+  // - bye-week concentration above 7
+  // - drafting 2+ RBs from the same NFL team (backfield cannibalization)
+  // - drafting 2+ WRs from one team without that team's QB (un-anchored corr)
+  // All measured year-stable across 2.0M historical teams.
+  const BBM_BYE_RATES = {
+    0: 0.1667, 1: 0.1667, 2: 0.1667, 3: 0.1660, 4: 0.1681,
+    5: 0.1683, 6: 0.1672, 7: 0.1627, 8: 0.1564, 9: 0.1448,
+    10: 0.1276, 11: 0.1208, 12: 0.1111
+  };
+  const BBM_RB_CANNIB_RATES = {
+    1: 0.1696,   // no cannibalization
+    2: 0.1557,   // -1.4 pp
+    3: 0.1291    // -3.8 pp
+  };
+  const BBM_WR_NOQB_CANNIB_RATES = {
+    0: 0.1305,   // tiny cohort
+    1: 0.1710,   // baseline-ish
+    2: 0.1567,   // -1.0 pp
+    3: 0.1365,   // -3.0 pp
+    4: 0.1061    // -6.1 pp
+  };
+
+  // Compute the structural-mechanic features per roster.
+  // Returns booleans + integers; does NOT score them. Callers use the rates
+  // tables above to translate into score deltas.
+  function _udComputeStructural(rosterDetails) {
+    // Bye concentration: max # of picks sharing a bye week.
+    const byeCount = {};
+    rosterDetails.forEach(p => {
+      const w = p.byeWeek;
+      if (w != null && w > 0) byeCount[w] = (byeCount[w] || 0) + 1;
+    });
+    const maxBye = Object.values(byeCount).reduce((m, c) => Math.max(m, c), 0);
+
+    // RB cannibalization: max # of RBs from one NFL team.
+    const rbCount = {};
+    rosterDetails.forEach(p => {
+      if (p.pos === 'RB' && p.team) rbCount[p.team] = (rbCount[p.team] || 0) + 1;
+    });
+    const maxRbSameTeam = Object.values(rbCount).reduce((m, c) => Math.max(m, c), 1);
+
+    // WR cannibalization without QB: max # of WRs from one team where no QB
+    // on the roster is on that team. This isolates the "un-anchored" pattern
+    // — pairs of WRs that don't have their QB to capture the correlation.
+    const qbTeams = new Set(
+      rosterDetails.filter(p => p.pos === 'QB' && p.team).map(p => p.team)
+    );
+    const wrNoQbCount = {};
+    rosterDetails.forEach(p => {
+      if (p.pos === 'WR' && p.team && !qbTeams.has(p.team)) {
+        wrNoQbCount[p.team] = (wrNoQbCount[p.team] || 0) + 1;
+      }
+    });
+    const maxWrNoQb = Object.values(wrNoQbCount).reduce((m, c) => Math.max(m, c), 0);
+
+    return { maxBye, maxRbSameTeam, maxWrNoQb };
+  }
+
+  // Translate the structural features into a 0-100 score. We treat the
+  // weighted average of three component-rates (bye / rb / wr-no-qb) through
+  // the same _udRateToScore band the other components use, so this slot
+  // composes cleanly into the final composite.
+  function _udStructuralScore(struct) {
+    const byeRate = BBM_BYE_RATES[Math.min(struct.maxBye, 12)] != null
+      ? BBM_BYE_RATES[Math.min(struct.maxBye, 12)]
+      : BBM_BASELINE_QRATE;
+    const rbRate = BBM_RB_CANNIB_RATES[Math.min(struct.maxRbSameTeam, 3)] != null
+      ? BBM_RB_CANNIB_RATES[Math.min(struct.maxRbSameTeam, 3)]
+      : BBM_BASELINE_QRATE;
+    const wrRate = BBM_WR_NOQB_CANNIB_RATES[Math.min(struct.maxWrNoQb, 4)] != null
+      ? BBM_WR_NOQB_CANNIB_RATES[Math.min(struct.maxWrNoQb, 4)]
+      : BBM_BASELINE_QRATE;
+    // Equal-weighted average of the three independent penalty signals.
+    const avg = (byeRate + rbRate + wrRate) / 3;
+    return _udRateToScore(avg);
+  }
+
   function _udComputeRosterConstruction(rosterDetails) {
     const counts = { QB:0, RB:0, WR:0, TE:0 };
     for (const p of rosterDetails) {
@@ -37884,14 +38114,21 @@ Rules:
     const roundPattern = _udRoundPatternScore(rosterDetails);
     const stacking = _udStackingScore(rosterDetails);
     const stackInfo = _udComputeStacks(rosterDetails);
-    // 25/15/25/35 weighting — Stacking gets the largest share because it's
-    // the strongest single predictor of advance. Position Counts is down-
-    // weighted because its signal heavily overlaps with Build Shape.
+    const struct = _udComputeStructural(rosterDetails);
+    const structural = _udStructuralScore(struct);
+    // 15/10/30/25/20 weighting. RoundPattern bumped from 20% -> 30% after
+    // upgrading from first-pick-per-position (4 features) to full per-pick
+    // lift across all 17 slots with skip penalties (sources: 2.6M historical
+    // teams across BBM II-VI, scripts/aggregate_bbm_pos_rank_round.py). The
+    // new signal absorbs much of the build-shape information (so BuildShape
+    // drops from 20% -> 15%) and now rivals Stacking as the strongest single
+    // construction signal, hence Stacking trims 30% -> 25%.
     const score = Math.round(
-      buildShape * 0.25 +
-      posCount * 0.15 +
-      roundPattern * 0.25 +
-      stacking * 0.35
+      buildShape * 0.15 +
+      posCount * 0.10 +
+      roundPattern * 0.30 +
+      stacking * 0.25 +
+      structural * 0.20
     );
     return {
       score: Math.max(0, Math.min(100, score)),
@@ -37899,9 +38136,28 @@ Rules:
       posCount: posCount,
       roundPattern: roundPattern,
       stacking: stacking,
+      structural: structural,
       maxStack: stackInfo.maxStack,
+      compKey: stackInfo.compKey,
+      nQbStacks: stackInfo.nQbStacks,
+      maxBye: struct.maxBye,
+      maxRbSameTeam: struct.maxRbSameTeam,
+      maxWrNoQb: struct.maxWrNoQb,
       counts: counts
     };
+  }
+  // Human-readable label for a stack composition bucket — used in tooltips.
+  function _udCompKeyLabel(k) {
+    return ({
+      wr1_only:    'QB+WR1 (clean primary)',
+      wr1_and_wr2: 'QB+WR1+WR2 (DOUBLE WR — concentration risk)',
+      wr1_and_rb1: 'QB+WR1+RB1 (diversified 3-stack)',
+      wr1_and_te1: 'QB+WR1+TE1',
+      wr2_no_wr1:  'QB+WR2 only (skipped your WR1)',
+      te1_only:    'QB+TE1 only',
+      rb1_only:    'QB+RB1 only',
+      no_stack:    'naked QB (no same-team mate)'
+    })[k] || (k || 'unknown');
   }
   // Color band for the badge (mirrors TOP-2 ADV thresholds for visual consistency)
   function _udConstructionColor(s) {
@@ -38328,7 +38584,7 @@ Rules:
           const myCs = my.construction;
           const myCsCol = _udConstructionColor(myCs ? myCs.score : null);
           const buildStr = myCs
-            ? ` · Build <span style="color:${myCsCol};font-weight:700" title="Roster Construction Score (0-100):&#10;Build Shape ${myCs.buildShape} · Pos Counts ${myCs.posCount} · Round Pattern ${myCs.roundPattern} · Stacking ${myCs.stacking} (max stack: ${myCs.maxStack})&#10;Weighted 25/15/25/35">${myCs.score}</span>`
+            ? ` · Build <span style="color:${myCsCol};font-weight:700" title="Roster Construction Score (0-100):&#10;Build Shape ${myCs.buildShape} · Pos Counts ${myCs.posCount} · Round Pattern ${myCs.roundPattern} · Stacking ${myCs.stacking} · Structural ${myCs.structural}&#10;Stack: ${_udCompKeyLabel(myCs.compKey)} · max ${myCs.maxStack} · ${myCs.nQbStacks} QB-stacks&#10;Structural: max ${myCs.maxBye} on bye · ${myCs.maxRbSameTeam} RB same-team · ${myCs.maxWrNoQb} WR same-team-no-QB&#10;Weighted 20/10/20/30/20">${myCs.score}</span>`
             : '';
           html += `<div style="font-size:.65rem;color:var(--text2)">BB Proj: <span style="color:var(--text);font-weight:600">${my.weeklyPPG.toFixed(1)}</span> PPG · <span style="color:var(--text);font-weight:600">${my.seasonMean.toFixed(0)}</span> season · VOR <span style="color:${(my.vorTotal||0) > 200 ? '#22c55e' : (my.vorTotal||0) > 0 ? '#4ade80' : (my.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(my.vorTotal||0) > 0 ? '+' : ''}${Math.round(my.vorTotal||0)}</span> · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span>${buildStr}</div>`;
         }
@@ -38376,8 +38632,9 @@ Rules:
               `Build Shape ${cs.counts.QB}Q/${cs.counts.RB}R/${cs.counts.WR}W/${cs.counts.TE}T → ${cs.buildShape}&#10;` +
               `Position Counts → ${cs.posCount}&#10;` +
               `Round Pattern (first round each pos) → ${cs.roundPattern}&#10;` +
-              `Stacking (max stack ${cs.maxStack}) → ${cs.stacking}&#10;` +
-              `Composite (25/15/25/35) → ${cs.score}/100`
+              `Stacking → ${cs.stacking} (${_udCompKeyLabel(cs.compKey)}, max ${cs.maxStack}, ${cs.nQbStacks} QB-stacks)&#10;` +
+              `Structural → ${cs.structural} (max ${cs.maxBye} on bye, ${cs.maxRbSameTeam} RB same-team, ${cs.maxWrNoQb} WR same-team-no-QB)&#10;` +
+              `Composite (20/10/20/30/20) → ${cs.score}/100`
             : 'Roster Construction Score';
           html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${cs ? cs.score : '—'}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div></div>`;
           html += `</div>`;

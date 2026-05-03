@@ -36655,6 +36655,10 @@ Rules:
 
   // Manual admin sync — push current Jack portfolio to shared/jacks_portfolio.
   // Visible only when Jack is signed in. Useful for verifying rules/code path.
+  // Uses the IN-MEMORY portfolio (window._udPortfolio) as the source of truth
+  // since that's what's currently displayed and includes any extension syncs
+  // that may not yet be persisted to user_game_data. Also writes back to
+  // user_game_data in the same call so the cloud copy stays in sync.
   window._udSyncToShared = function() {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
@@ -36665,17 +36669,54 @@ Rules:
       return;
     }
     if (status) { status.textContent = 'Syncing to shared doc...'; status.style.color = ''; }
-    db.collection('user_game_data').doc(user.uid).get().then(doc => {
-      if (!doc.exists) throw new Error('No user_game_data doc found');
-      const cloud = (doc.data() || {}).underdogPortfolio;
-      if (!cloud || !cloud.drafts || !cloud.drafts.length) throw new Error('No portfolio to sync — upload a CSV first');
-      return db.collection('shared').doc('jacks_portfolio').set(cloud, { merge: false }).then(() => cloud);
-    }).then(cloud => {
+
+    // Build the payload from in-memory state when possible; fall back to
+    // user_game_data if memory is empty (e.g. fresh page load before render).
+    function buildPayloadFromMemory() {
+      const p = window._udPortfolio;
+      if (!p || !p.drafts) return null;
+      const draftsArr = Object.values(p.drafts).map(d => ({
+        id: d.id, tournament: d.tournament, fee: d.fee, size: d.size,
+        date: d.date || '', phase: d.phase || 'pre',
+        picks: (d.picks || []).map(pk => ({ name: pk.name, pos: pk.pos, team: pk.team, pick: pk.pick }))
+      })).filter(d => d.id);
+      if (!draftsArr.length) return null;
+      return {
+        drafts: draftsArr,
+        totalPicks: p.totalPicks || draftsArr.reduce((s, d) => s + (d.picks ? d.picks.length : 0), 0),
+        numDrafts: draftsArr.length,
+        totalInvestment: p.totalInvestment || draftsArr.reduce((s, d) => s + (parseFloat(d.fee) || 0), 0),
+        savedAt: new Date().toISOString()
+      };
+    }
+
+    const memoryPayload = buildPayloadFromMemory();
+    const sourcePromise = memoryPayload
+      ? Promise.resolve(memoryPayload)
+      : db.collection('user_game_data').doc(user.uid).get().then(doc => {
+          if (!doc.exists) throw new Error('No portfolio in memory or cloud — upload a CSV first');
+          const cloud = (doc.data() || {}).underdogPortfolio;
+          if (!cloud || !cloud.drafts || !cloud.drafts.length) {
+            throw new Error('No portfolio to sync — upload a CSV first');
+          }
+          return cloud;
+        });
+
+    sourcePromise.then(payload => {
+      // Push to the shared doc so premium members can read it. Also persist
+      // back to user_game_data when we built from memory, so SYNC TO SHARED
+      // doubles as a "save" if an extension push hadn't reached cloud yet.
+      const sharedWrite = db.collection('shared').doc('jacks_portfolio').set(payload, { merge: false });
+      const ownWrite = memoryPayload
+        ? db.collection('user_game_data').doc(user.uid).set({ underdogPortfolio: payload }, { merge: true })
+        : Promise.resolve();
+      return Promise.all([sharedWrite, ownWrite]).then(() => payload);
+    }).then(payload => {
       if (status) {
-        status.textContent = `✓ Synced ${cloud.drafts.length} drafts to shared/jacks_portfolio. Premium members can now see your portfolio.`;
+        status.textContent = `✓ Synced ${payload.drafts.length} drafts to shared/jacks_portfolio. Premium members can now see your portfolio.`;
         status.style.color = '#22c55e';
       }
-      console.log('[Portfolio] Manual sync complete', cloud.drafts.length, 'drafts');
+      console.log('[Portfolio] Manual sync complete', payload.drafts.length, 'drafts');
     }).catch(e => {
       if (status) {
         status.textContent = 'Sync failed: ' + (e.message || e) + '. Check console & Firestore rules.';

@@ -1537,6 +1537,12 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent)">UNDERDOG PORTFOLIO</div>
 <span style="font-size:.55rem;padding:2px 6px;border-radius:3px;background:var(--accent);color:#000;font-weight:700;letter-spacing:.5px">NEW</span>
 </div>
+<!-- Portfolio source toggle — only shown to non-admin premium members so they
+     can choose between managing their own portfolio and viewing Jack's. -->
+<div id="mtUnderdogSourceToggle" style="display:none;gap:6px;margin-bottom:10px;padding:4px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:fit-content">
+<button type="button" id="mtUdSourceMine" onclick="window._udSwitchSource('mine')" style="padding:6px 14px;background:var(--accent);color:#000;border:none;border-radius:5px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer">MY PORTFOLIO</button>
+<button type="button" id="mtUdSourceJacks" onclick="window._udSwitchSource('jacks')" style="padding:6px 14px;background:transparent;color:var(--text2);border:none;border-radius:5px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer">JACK'S PORTFOLIO</button>
+</div>
 <div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Upload your Underdog best ball CSV to analyze your full portfolio. Upload pre-NFL-draft, post-NFL-draft, and superflex CSVs separately — they'll merge into one portfolio.</div>
 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
 <button type="button" onclick="window._udPromptPhaseAndUpload()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</button>
@@ -36048,6 +36054,15 @@ Rules:
       console.warn('[MFF/site] _mffSetPortfolio called with no drafts');
       return;
     }
+    // Don't merge extension data into the on-screen portfolio while a premium
+    // user is viewing Jack's read-only mirror — the user's own drafts would
+    // otherwise contaminate Jack's view. The dispatch will be re-played from
+    // chrome.storage when the user switches back to MY PORTFOLIO (mff-bridge
+    // re-reads mff_portfolio_sync on page load) or on the next sync.
+    if (window._udReadOnly) {
+      console.log('[MFF/site] _mffSetPortfolio skipped — viewing Jack\'s read-only portfolio. Switch to MY PORTFOLIO to apply extension sync.');
+      return;
+    }
     // v0.9.55: if the user JUST clicked CLEAR (within 5 seconds), ignore
     // any extension-side cached portfolio that mff-bridge dispatches on
     // page load. Without this guard, CLEAR is undone the moment mff-bridge
@@ -36080,13 +36095,20 @@ Rules:
     // and let _udLoadFromCloud's race-aware applyParsed merge persist.
     const draftsObj = {};
     let _hadCloudDrafts = false;
+    let _existingCount = 0;
     if (window._udPortfolio && window._udPortfolio.drafts) {
       const _exDrafts = window._udPortfolio.drafts;
-      const _exCount = Array.isArray(_exDrafts)
-        ? _exDrafts.length
-        : Object.keys(_exDrafts).length;
-      if (_exCount > 0) _hadCloudDrafts = true;
-      Object.assign(draftsObj, _exDrafts);
+      // Normalize to id-keyed object — _exDrafts can be an array (e.g. when
+      // cloud round-trips the portfolio as JSON) and Object.assign on an
+      // array would copy numeric indices (0, 1, 2 …) instead of draft ids,
+      // which then bypass the dedup-by-id loop below and bloat the merged
+      // result with phantom numeric keys.
+      const exEntries = Array.isArray(_exDrafts)
+        ? _exDrafts.filter(d => d && d.id).map(d => [d.id, d])
+        : Object.entries(_exDrafts).filter(([, d]) => d && d.id);
+      _existingCount = exEntries.length;
+      if (_existingCount > 0) _hadCloudDrafts = true;
+      for (const [id, d] of exEntries) draftsObj[id] = d;
     }
     for (const d of arr) {
       if (!d || !d.id) continue;
@@ -36140,11 +36162,30 @@ Rules:
     // site's own dashboard. _udRenderDashboard reads the dashboard DOM
     // (#mtUnderdogDashboard) and rebuilds it from the data.
     window._udPortfolio = _udRebuildPlayers(draftsObj);
+    const _mergedCount = window._udPortfolio.numDrafts || 0;
     // v0.9.38: stamp this so a concurrent _udLoadFromCloud can detect the
     // race and merge instead of overwriting our just-synced data.
     window._udExtensionAppliedAt = Date.now();
     // v0.9.64: defer render off page-load critical path
     _udRenderDashboardDeferred(window._udPortfolio);
+    console.log('[MFF/site] _mffSetPortfolio merge:',
+                _existingCount, 'existing +', arr.length, 'incoming →',
+                _mergedCount, 'total drafts');
+    // Data-loss safeguard. The merge above can NEVER produce a result with
+    // fewer drafts than were already in memory — Object.assign of existing
+    // followed by id-keyed inserts is monotonic. If we see shrinkage, the
+    // existing structure must have been malformed (e.g. id-less duplicates
+    // collapsing to a single key). Refuse to clobber cloud in that case.
+    if (_hadCloudDrafts && _mergedCount < _existingCount) {
+      console.warn('[MFF/site] _mffSetPortfolio: merged result (' + _mergedCount +
+                   ') is smaller than existing (' + _existingCount +
+                   ') — refusing cloud save to prevent data loss. ' +
+                   'In-memory portfolio rolled back to existing.');
+      // Don't save the suspicious result; don't even keep it in memory.
+      // Restoring the prior portfolio is simpler than reverse-engineering
+      // which drafts got dropped.
+      return;
+    }
     // v0.9.91: only save to cloud if we had real existing drafts to merge with
     // AND we're not already in the deferred state from a prior dispatch.
     // If _udPortfolio was empty here, that means cloud hasn't loaded yet —
@@ -36399,7 +36440,8 @@ Rules:
 
   // Load portfolio from Firestore on page load.
   // - Admin (Jack): reads his own from user_game_data/<uid>
-  // - Premium non-admin: reads Jack's mirrored portfolio from shared/jacks_portfolio
+  // - Premium non-admin: defaults to their OWN portfolio (user_game_data/<uid>);
+  //     can toggle to Jack's via the source picker (shared/jacks_portfolio).
   // - Everyone else: nothing
   function _udLoadFromCloud() {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
@@ -36416,9 +36458,11 @@ Rules:
       // drafts into the in-memory copy instead of overwriting them. Without
       // this guard, the extension's just-synced 49 drafts get clobbered by
       // the cloud's older 4-draft snapshot the moment the .get() resolves.
+      // Skip the merge when viewing Jack's read-only portfolio — the extension
+      // sync belongs to the viewer's own account, not Jack's.
       const recentExt = window._udExtensionAppliedAt &&
                         (Date.now() - window._udExtensionAppliedAt) < 60000;
-      if (recentExt && window._udPortfolio && window._udPortfolio.drafts) {
+      if (!window._udReadOnly && recentExt && window._udPortfolio && window._udPortfolio.drafts) {
         const merged = Object.assign({}, parsed.drafts || {}, window._udPortfolio.drafts);
         const rebuilt = _udRebuildPlayers(merged);
         window._udPortfolio = rebuilt;
@@ -36448,13 +36492,17 @@ Rules:
       _udRenderDashboardDeferred(parsed);
       if (typeof window._renderJacksTeams === 'function') window._renderJacksTeams();
     }
+    // Expose the per-source loaders so _udSwitchSource can call them without
+    // re-entering all the auth/role checks above.
+    window._udApplyParsed = applyParsed;
 
-    if (isAdminNow) {
-      // Jack: his own portfolio
+    function loadOwn() {
+      window._udReadOnly = false;
+      _udClearReadOnlyUI();
       db.collection('user_game_data').doc(user.uid).get().then(doc => {
         if (!doc.exists) {
-          // v0.9.91: brand-new account or wiped doc. If the extension already
-          // populated _udPortfolio while we were waiting on this .get(), the
+          // Brand-new account or wiped doc. If the extension already populated
+          // _udPortfolio while we were waiting on this .get(), the
           // _mffSetPortfolio path deferred its cloud save. Persist that data
           // now so we don't strand the freshly-synced drafts in memory only.
           if (window._udExtensionAwaitingCloudSave && window._udPortfolio &&
@@ -36463,6 +36511,15 @@ Rules:
             window._udExtensionAwaitingCloudSave = false;
             console.log('[MFF/site] no cloud doc — saved deferred extension portfolio (' +
                         (window._udPortfolio.numDrafts || 0) + ' drafts)');
+          } else {
+            const status = document.getElementById('mtUnderdogStatus');
+            if (status) {
+              status.textContent = 'No portfolio yet — upload a CSV or sync from Underdog to start.';
+              status.style.color = '';
+            }
+            const dash = document.getElementById('mtUnderdogDashboard');
+            if (dash) { dash.style.display = 'none'; dash.innerHTML = ''; }
+            window._udPortfolio = null;
           }
           return;
         }
@@ -36470,23 +36527,45 @@ Rules:
         const parsed = _udHydrateCloudPayload(cloud);
         if (parsed) {
           applyParsed(parsed, 'your account', cloud && cloud.savedAt);
-          // Backfill the shared mirror so premium users can read it without
-          // requiring Jack to re-upload. Idempotent — safe to write each load.
-          db.collection('shared').doc('jacks_portfolio').set(cloud, { merge: false })
-            .then(() => { console.log('[Portfolio] Backfilled shared/jacks_portfolio on load'); })
-            .catch(e => { console.warn('[Portfolio] Shared backfill error:', e); });
+          // Admin-only: backfill the shared mirror so premium users can read
+          // it without requiring Jack to re-upload. Idempotent — safe to
+          // write each load.
+          if (isAdminNow) {
+            db.collection('shared').doc('jacks_portfolio').set(cloud, { merge: false })
+              .then(() => { console.log('[Portfolio] Backfilled shared/jacks_portfolio on load'); })
+              .catch(e => { console.warn('[Portfolio] Shared backfill error:', e); });
+          }
         } else if (window._udExtensionAwaitingCloudSave && window._udPortfolio) {
           // doc.exists but cloud was malformed/empty AND we have pending
           // extension data — persist it so the user doesn't lose the sync.
           try { _udSaveToCloud(window._udPortfolio); } catch (_) {}
           window._udExtensionAwaitingCloudSave = false;
           console.log('[MFF/site] cloud doc empty — saved deferred extension portfolio');
+        } else {
+          // doc exists but no portfolio field — empty state
+          const status = document.getElementById('mtUnderdogStatus');
+          if (status) {
+            status.textContent = 'No portfolio yet — upload a CSV or sync from Underdog to start.';
+            status.style.color = '';
+          }
+          const dash = document.getElementById('mtUnderdogDashboard');
+          if (dash) { dash.style.display = 'none'; dash.innerHTML = ''; }
+          window._udPortfolio = null;
         }
       }).catch(e => { console.warn('[Portfolio] Load error:', e); });
-    } else if (isPremNow) {
-      // Premium non-Jack: read-only view of Jack's mirrored portfolio
+    }
+    window._udLoadOwn = loadOwn;
+
+    function loadJacks() {
       db.collection('shared').doc('jacks_portfolio').get().then(doc => {
-        if (!doc.exists) return;
+        if (!doc.exists) {
+          const status = document.getElementById('mtUnderdogStatus');
+          if (status) {
+            status.textContent = "Jack hasn't published a portfolio yet.";
+            status.style.color = 'var(--text2)';
+          }
+          return;
+        }
         const cloud = doc.data();
         const parsed = _udHydrateCloudPayload(cloud);
         if (parsed) {
@@ -36495,6 +36574,82 @@ Rules:
           applyParsed(parsed, "Jack's portfolio", cloud && cloud.savedAt);
         }
       }).catch(e => { console.warn('[Portfolio] Shared load error:', e); });
+    }
+    window._udLoadJacks = loadJacks;
+
+    if (isAdminNow) {
+      // Jack: always his own portfolio. Source toggle isn't shown for admin.
+      window._udPortfolioSource = 'mine';
+      loadOwn();
+    } else if (isPremNow) {
+      // Premium non-Jack: default to THEIR own portfolio. Toggle UI lets them
+      // switch to Jack's read-only view.
+      window._udPortfolioSource = window._udPortfolioSource || 'mine';
+      _udShowSourceToggle();
+      _udUpdateSourceToggleUI();
+      if (window._udPortfolioSource === 'jacks') loadJacks();
+      else loadOwn();
+    }
+  }
+
+  // Show the source toggle (premium non-admin only). Admin always sees their
+  // own data and doesn't need this control.
+  function _udShowSourceToggle() {
+    const toggle = document.getElementById('mtUnderdogSourceToggle');
+    if (!toggle) return;
+    const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
+    const isPremNow = (typeof window.hasPremium === 'function') && window.hasPremium();
+    toggle.style.display = (!isAdminNow && isPremNow) ? 'flex' : 'none';
+  }
+
+  // Reflect the current source on the toggle pills.
+  function _udUpdateSourceToggleUI() {
+    const mine = document.getElementById('mtUdSourceMine');
+    const jacks = document.getElementById('mtUdSourceJacks');
+    if (!mine || !jacks) return;
+    const active = window._udPortfolioSource === 'jacks' ? jacks : mine;
+    const inactive = active === mine ? jacks : mine;
+    active.style.background = 'var(--accent)';
+    active.style.color = '#000';
+    inactive.style.background = 'transparent';
+    inactive.style.color = 'var(--text2)';
+  }
+
+  // User-facing source switch. Reloads the corresponding portfolio and updates
+  // the UI affordances (read-only banner, hidden upload buttons, etc.).
+  window._udSwitchSource = function(source) {
+    if (source !== 'mine' && source !== 'jacks') return;
+    if (window._udPortfolioSource === source) return;
+    window._udPortfolioSource = source;
+    _udUpdateSourceToggleUI();
+    // Reset in-memory state so the new source loads cleanly.
+    window._udPortfolio = null;
+    window._udExtensionAwaitingCloudSave = false;
+    const dash = document.getElementById('mtUnderdogDashboard');
+    if (dash) { dash.style.display = 'none'; dash.innerHTML = ''; }
+    // Defer to the per-source loaders captured during _udLoadFromCloud. If
+    // they aren't installed yet (auth still resolving), fall back to a
+    // fresh _udLoadFromCloud call.
+    if (source === 'jacks' && typeof window._udLoadJacks === 'function') {
+      window._udLoadJacks();
+    } else if (source === 'mine' && typeof window._udLoadOwn === 'function') {
+      window._udLoadOwn();
+    } else {
+      _udLoadFromCloud();
+    }
+  };
+
+  // Inverse of _udApplyReadOnlyUI — restores upload/clear controls when the
+  // user switches back to their own portfolio.
+  function _udClearReadOnlyUI() {
+    const uploadBtn = document.querySelector('#mtSectionUnderdog button[onclick*="_udPromptPhaseAndUpload"]');
+    if (uploadBtn) uploadBtn.style.display = '';
+    const clearBtn = document.querySelector('#mtSectionUnderdog button[onclick*="_udClearPortfolio"]');
+    if (clearBtn) clearBtn.style.display = '';
+    const status = document.getElementById('mtUnderdogStatus');
+    if (status) {
+      status.textContent = 'Export from Underdog → My Drafts → Download CSV';
+      status.style.color = 'var(--text2)';
     }
   }
 
@@ -36604,15 +36759,16 @@ Rules:
     try {
       firebase.auth().onAuthStateChanged(function(user) {
         if (!user) return;
-        // Hide upload/clear immediately for non-admins (they can't modify Jack's data)
-        // Show admin sync button for admins
+        // Premium non-admins now manage their OWN portfolio by default and
+        // can opt into Jack's read-only mirror via the source toggle. Don't
+        // pre-flag read-only here — _udLoadFromCloud will set it correctly
+        // based on the active source. Just show the right admin/source UI.
         setTimeout(function() {
           const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
-          if (!isAdminNow) {
-            window._udReadOnly = true;
-            _udApplyReadOnlyUI();
-          } else {
+          if (isAdminNow) {
             _udMaybeShowSyncBtn();
+          } else {
+            try { _udShowSourceToggle(); } catch (_) {}
           }
         }, 400);
 

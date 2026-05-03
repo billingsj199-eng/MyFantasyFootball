@@ -37746,25 +37746,29 @@ Rules:
 
   // ═══════════════════════════════════════════════════════════
 
-  // v0.9.91: Roster Construction score (0-100). Composite of three
-  // equally-weighted components, derived from 2.5M Underdog BBM
-  // historical rosters (BBM II–VI, 2021–2025):
+  // Roster Construction score (0-100). Composite of four BBM-historical
+  // components, weighted by their independent predictive value:
   //
-  //   1) BUILD SHAPE — q_rate of the team's QB/RB/WR/TE count tuple
+  //   1) BUILD SHAPE (25%) — q_rate of the team's QB/RB/WR/TE count tuple
   //      from the recency-weighted by_build table (top 32 builds cover
   //      97.3% of teams). Unknown shapes shrink toward the 16.67%
   //      baseline. Mapped linearly: 0.10 q_rate = 0, 0.22 = 100.
   //
-  //   2) POSITION COUNTS — distance of each pos count from the ideal
-  //      band (QB 2-3, RB 4-7, WR 6-9, TE 2-3). Each position scores
-  //      max(0, 100 - 35*deviation); average across positions.
+  //   2) POSITION COUNTS (15%) — distance of each pos count from the
+  //      ideal band (QB 2-3, RB 4-7, WR 6-9, TE 2-3). Each position scores
+  //      max(0, 100 - 35*deviation); average across positions. Down-
+  //      weighted from 33% because it heavily overlaps with Build Shape.
   //
-  //   3) ROUND PATTERN — q_rate of the round at which the team first
-  //      drafted each position, looked up in by_first_<pos>_round.
+  //   3) ROUND PATTERN (25%) — q_rate of the round at which the team
+  //      first drafted each position, looked up in by_first_<pos>_round.
   //      Average the 4 rates, normalize with the same 0.10–0.22 map.
   //
-  // The three normalized 0-100 values are then weighted 33/33/34 and
-  // summed for the final score.
+  //   4) STACKING (35%) — single biggest predictive signal in BBM. Looks
+  //      up the team's max stack size (largest count of same-team WR/TE
+  //      tied to a rostered QB) in the by_max_stack q_rate table. 0 stacks
+  //      = 13.05% advance, 2 = 20.12%, 3+ = 21.86%. Mapped through the
+  //      same 0.10–0.22 normalization. Heaviest weight because the
+  //      historical lift from 0 → 2+ stacks is ~54% relative.
   // Compact build-rate table (q_rate_w; rounded to 4 dp). Top 32 by
   // sample size — covers 97.3% of historical teams. Format: 'Q/R/W/T': rate
   const BBM_BUILD_RATES = {
@@ -37785,6 +37789,18 @@ Rules:
   const BBM_RATE_LO = 0.10, BBM_RATE_HI = 0.22; // 0-100 normalization band
   // Ideal position counts (data-driven; matches engine.js BBM_MAX_POS hard caps)
   const BBM_IDEAL_COUNTS = { QB:[2,3], RB:[4,7], WR:[6,9], TE:[2,3] };
+  // Historical advance rate by max stack size (largest QB↔same-team-pass-catcher
+  // group on the roster). Sourced from bbm_data.js by_max_stack across 2.5M
+  // BBM teams. 5+ stacks have negligible sample, so we cap at 3.
+  const BBM_MAX_STACK_RATES = {
+    0: 0.1305,
+    1: 0.1699,
+    2: 0.2012,
+    3: 0.2186,
+    4: 0.2082,   // tiny sample; collapses to ~3-stack territory
+    5: 0.2186,   // collapse to 3
+    6: 0.2186
+  };
 
   function _udRateToScore(rate) {
     if (rate == null || isNaN(rate)) return 50; // baseline ~50
@@ -37831,6 +37847,33 @@ Rules:
     }
     return _udRateToScore(sum / n);
   }
+  // Compute the team's max stack size — the largest count of same-team
+  // WR+TE pass-catchers tied to any single QB on the roster. Returns
+  // { maxStack, byQb } where byQb is the per-QB stack size for tooltips.
+  function _udComputeStacks(rosterDetails) {
+    const qbsByTeam = {};
+    rosterDetails.forEach(p => {
+      if (p.pos === 'QB' && p.team) {
+        qbsByTeam[p.team] = qbsByTeam[p.team] || 0;
+      }
+    });
+    rosterDetails.forEach(p => {
+      if ((p.pos === 'WR' || p.pos === 'TE') && p.team && qbsByTeam[p.team] != null) {
+        qbsByTeam[p.team]++;
+      }
+    });
+    const sizes = Object.values(qbsByTeam);
+    const maxStack = sizes.length ? Math.max(...sizes) : 0;
+    return { maxStack, byQb: qbsByTeam };
+  }
+  function _udStackingScore(rosterDetails) {
+    const { maxStack } = _udComputeStacks(rosterDetails);
+    const capped = Math.min(maxStack, 6);
+    const rate = BBM_MAX_STACK_RATES[capped] != null
+      ? BBM_MAX_STACK_RATES[capped]
+      : BBM_BASELINE_QRATE;
+    return _udRateToScore(rate);
+  }
   function _udComputeRosterConstruction(rosterDetails) {
     const counts = { QB:0, RB:0, WR:0, TE:0 };
     for (const p of rosterDetails) {
@@ -37839,13 +37882,24 @@ Rules:
     const buildShape = _udBuildShapeScore(counts);
     const posCount = _udPositionCountScore(counts);
     const roundPattern = _udRoundPatternScore(rosterDetails);
-    // 33/33/34 weighting
-    const score = Math.round(buildShape * 0.33 + posCount * 0.33 + roundPattern * 0.34);
+    const stacking = _udStackingScore(rosterDetails);
+    const stackInfo = _udComputeStacks(rosterDetails);
+    // 25/15/25/35 weighting — Stacking gets the largest share because it's
+    // the strongest single predictor of advance. Position Counts is down-
+    // weighted because its signal heavily overlaps with Build Shape.
+    const score = Math.round(
+      buildShape * 0.25 +
+      posCount * 0.15 +
+      roundPattern * 0.25 +
+      stacking * 0.35
+    );
     return {
       score: Math.max(0, Math.min(100, score)),
       buildShape: buildShape,
       posCount: posCount,
       roundPattern: roundPattern,
+      stacking: stacking,
+      maxStack: stackInfo.maxStack,
       counts: counts
     };
   }
@@ -38054,7 +38108,7 @@ Rules:
     // into #udTab_teams.
     html += `<div id="udTab_teams" style="display:none">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAMS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(your team vs every opponent in each pool)</span></div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked by best-ball total points. Click any team to open its roster. <strong style="color:var(--accent)">Top-2 of 12 advance (BBM &amp; Puppy). Simulating weeks 1-17 (incl. playoff weeks) until 2026 byes are loaded.</strong></div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked by projected best-ball total points. Click any team to open its roster. <strong style="color:var(--accent)">Rank reflects projected season points only — anything can happen in a real season.</strong></div>`;
     // (TEAMS-tab body content follows below — built inline for now;
     // future: defer via setTimeout to keep initial render responsive.)
 
@@ -38164,32 +38218,14 @@ Rules:
         };
       });
 
-      // Monte Carlo advance probabilities for this draft. Each team's season
-      // total is drawn from N(seasonMean, seasonStd²) — the BB engine already
-      // incorporates lineup mechanics + per-player σ, so this captures the
-      // ceiling premium correctly.
-      const N = teams.length;
-      const means = teams.map(t => t.seasonMean);
-      const stds  = teams.map(t => Math.max(t.seasonStd, 1));
-      // v0.9.62 perf: 600 → 250 iterations. ±~3pp on advance % at extremes,
-      // not user-visible at typical values. Combined with sim count cut +
-      // rows cache, dashboard renders feel near-instant after first load.
-      const ITER = (N >= 2) ? 250 : 0;
-      const adv1 = new Array(N).fill(0);
-      const adv2 = new Array(N).fill(0);
-      const adv3 = new Array(N).fill(0);
-      for (let it = 0; it < ITER; it++) {
-        const sampled = means.map((m, idx) => m + stds[idx] * _bbNormal());
-        const order = sampled.map((s, idx) => ({ idx, s })).sort((a, b) => b.s - a.s);
-        adv1[order[0].idx]++;
-        if (N >= 2) { adv2[order[0].idx]++; adv2[order[1].idx]++; }
-        if (N >= 3) { adv3[order[0].idx]++; adv3[order[1].idx]++; adv3[order[2].idx]++; }
-      }
-      teams.forEach((t, i) => {
-        t.adv1 = ITER ? adv1[i] / ITER : null;
-        t.adv2 = ITER ? adv2[i] / ITER : null;
-        t.adv3 = ITER ? adv3[i] / ITER : null;
-      });
+      // Advance-rate Monte Carlo removed. The independently-sampled
+      // N(seasonMean, seasonStd²) draws produced visually-too-confident gaps
+      // between teams (60% top vs 36% mid vs 5% bottom) because the model
+      // captured weekly sampling noise but not projection uncertainty. Until
+      // we add an epistemic-variance term and/or shared-environment correlation,
+      // we just rank by deterministic seasonMean and report rank-based stats
+      // instead of probabilistic ones.
+      teams.forEach(t => { t.adv1 = null; t.adv2 = null; t.adv3 = null; });
       // Rank teams by BB season mean (high → low). This is the ordering shown.
       const ranked = teams.slice().sort((a, b) => b.seasonMean - a.seasonMean);
       ranked.forEach((t, i) => { t.rank = i + 1; });
@@ -38205,14 +38241,13 @@ Rules:
       });   // close forEach
     }      // close cache-miss block
 
-    // Portfolio summary cards (advance %, expected advances, avg rank, top-4 rate)
+    // Portfolio summary cards. Advance-rate cards removed; rank-based stats
+    // only since the Monte Carlo overstated team-vs-team confidence.
     const _completeRows = _udTeamsRows.filter(x => x.fieldComplete);
-    const _avgAdv2 = _completeRows.length
-      ? _completeRows.reduce((s, x) => s + (x.myAdv2 || 0), 0) / _completeRows.length : null;
-    const _expAdv = _completeRows.reduce((s, x) => s + (x.myAdv2 || 0), 0);
     const _avgRank = _completeRows.length
       ? _completeRows.reduce((s, x) => s + (x.myRank || 0), 0) / _completeRows.length : null;
     const _top4Count = _completeRows.filter(x => x.myRank && x.myRank <= 4).length;
+    const _top1Count = _completeRows.filter(x => x.myRank === 1).length;
 
     function _udSummaryCard(label, val, sub, color) {
       return `<div style="text-align:center;padding:14px 8px;background:var(--surface);border:1px solid ${color || 'var(--border)'};border-radius:10px">
@@ -38222,22 +38257,45 @@ Rules:
       </div>`;
     }
     html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px">`;
-    if (_avgAdv2 == null) {
-      html += `<div style="grid-column:1/-1;text-align:center;padding:14px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;color:var(--text2);font-size:.78rem">No full-field drafts yet — re-run <strong style="color:var(--accent)">Sync from Underdog</strong> with the extension to capture every opponent's roster, then advance % and field rankings appear here.</div>`;
+    if (!_completeRows.length) {
+      html += `<div style="grid-column:1/-1;text-align:center;padding:14px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;color:var(--text2);font-size:.78rem">No full-field drafts yet — re-run <strong style="color:var(--accent)">Sync from Underdog</strong> with the extension to capture every opponent's roster, then field rankings appear here.</div>`;
     } else {
-      html += _udSummaryCard('PROJ ADV %', (_avgAdv2 * 100).toFixed(1) + '%', 'avg top-2 chance per draft', '#22c55e');
-      html += _udSummaryCard('EXP. ADVANCES', _expAdv.toFixed(1) + ' / ' + _completeRows.length, 'expected drafts you advance', '#4ade80');
       html += _udSummaryCard('AVG RANK', (_avgRank || 0).toFixed(1) + ' / 12', 'where you sit in the field', '#fbbf24');
       html += _udSummaryCard('TOP-4 RATE', Math.round(100 * _top4Count / _completeRows.length) + '%', _top4Count + ' of ' + _completeRows.length + ' drafts', '#3b82f6');
+      html += _udSummaryCard('#1 PROJ', _top1Count + ' / ' + _completeRows.length, 'drafts where you project highest', '#22c55e');
     }
     html += `</div>`;
 
-    // Per-draft expandable rows (sorted by user advance % desc, fall back to score)
+    // Sort selector for the per-draft list. User picks the metric they care
+    // about most; default is rank within the field. State persists on window
+    // across re-renders so changing tabs doesn't reset it.
+    if (!window._udTeamsSortBy) window._udTeamsSortBy = 'rank';
+    const _sortKey = window._udTeamsSortBy;
+    const _sortOptions = [
+      { key: 'rank',    label: 'Rank in field',    metric: r => (r.myRank != null ? r.myRank : 999), dir: 'asc' },
+      { key: 'ppg',     label: 'BB Proj PPG',      metric: r => (r.myEntry && r.myEntry.weeklyPPG)  || 0, dir: 'desc' },
+      { key: 'season',  label: 'Season total',     metric: r => (r.myEntry && r.myEntry.seasonMean) || 0, dir: 'desc' },
+      { key: 'build',   label: 'Build score',      metric: r => (r.myEntry && r.myEntry.construction && r.myEntry.construction.score) || 0, dir: 'desc' },
+      { key: 'adpval',  label: 'ADP value',        metric: r => (r.myEntry && r.myEntry.adpValue)  || 0, dir: 'desc' },
+      { key: 'vor',     label: 'Total VOR',        metric: r => (r.myEntry && r.myEntry.vorTotal)  || 0, dir: 'desc' },
+      { key: 'fee',     label: 'Entry fee',        metric: r => (r.d && parseFloat(r.d.fee))       || 0, dir: 'desc' }
+    ];
+    const _activeSort = _sortOptions.find(o => o.key === _sortKey) || _sortOptions[0];
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2)">SORT BY</span>
+      <select onchange="window._udSetTeamsSort(this.value)" style="padding:5px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.72rem;font-family:inherit;cursor:pointer">
+        ${_sortOptions.map(o =>
+          `<option value="${o.key}"${o.key === _sortKey ? ' selected' : ''}>${o.label}</option>`
+        ).join('')}
+      </select>
+    </div>`;
     const _sortedRows = _udTeamsRows.slice().sort((a, b) => {
-      const av = a.myAdv2 != null ? a.myAdv2 : -1;
-      const bv = b.myAdv2 != null ? b.myAdv2 : -1;
-      if (bv !== av) return bv - av;
-      return (b.myEntry ? b.myEntry.total : 0) - (a.myEntry ? a.myEntry.total : 0);
+      const av = _activeSort.metric(a);
+      const bv = _activeSort.metric(b);
+      const cmp = _activeSort.dir === 'asc' ? (av - bv) : (bv - av);
+      if (cmp !== 0) return cmp;
+      // Tie-break on rank so the secondary order is always sensible.
+      return ((a.myRank != null ? a.myRank : 999) - (b.myRank != null ? b.myRank : 999));
     });
 
     if (!_sortedRows.length) {
@@ -38246,24 +38304,20 @@ Rules:
       _sortedRows.forEach((row, i) => {
         const d = row.d;
         const my = row.myEntry;
-        const advPct = (my && my.adv2 != null) ? Math.round(my.adv2 * 100) : null;
-        const advColor = advPct == null ? 'var(--text2)' :
-                          advPct >= 30 ? '#22c55e' :
-                          advPct >= 18 ? '#4ade80' :
-                          advPct >= 10 ? '#facc15' :
-                          advPct >= 5  ? '#f59e0b' : '#ef4444';
         const rankStr = row.myRank ? `#${row.myRank}/${row.teams.length}` : '—';
+        // Color the rank cell — top-tier ranks get the same green/yellow/red
+        // signal the advance % badge used to provide.
+        const rankColor = !row.myRank ? 'var(--text2)' :
+                          row.myRank === 1 ? '#22c55e' :
+                          row.myRank <= 3 ? '#4ade80' :
+                          row.myRank <= 6 ? '#facc15' :
+                          row.myRank <= 9 ? '#f59e0b' : '#ef4444';
         const fieldNote = row.fieldComplete ? '' : ' <span style="font-size:.55rem;color:var(--text2);font-style:italic">(opponents not synced)</span>';
         html += `<div onclick="window._udToggleTeamsDraft(${i})" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
         html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
-        // Advance % badge
-        html += `<div style="width:64px;text-align:center">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${advColor};line-height:1">${advPct == null ? '—' : advPct + '%'}</div>
-          <div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px">TOP-2 ADV</div>
-        </div>`;
-        // Rank badge
-        html += `<div style="width:48px;text-align:center;padding:6px 4px;background:var(--surface2);border-radius:6px">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--text)">${rankStr}</div>
+        // Rank badge — promoted to primary metric now that advance % is gone.
+        html += `<div style="width:84px;text-align:center;padding:6px 4px;background:var(--surface2);border-radius:6px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${rankColor};line-height:1">${rankStr}</div>
           <div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px">YOUR RANK</div>
         </div>`;
         // Title block
@@ -38274,15 +38328,11 @@ Rules:
           const myCs = my.construction;
           const myCsCol = _udConstructionColor(myCs ? myCs.score : null);
           const buildStr = myCs
-            ? ` · Build <span style="color:${myCsCol};font-weight:700" title="Roster Construction Score (0-100): build shape ${myCs.buildShape}, pos counts ${myCs.posCount}, round pattern ${myCs.roundPattern}">${myCs.score}</span>`
+            ? ` · Build <span style="color:${myCsCol};font-weight:700" title="Roster Construction Score (0-100):&#10;Build Shape ${myCs.buildShape} · Pos Counts ${myCs.posCount} · Round Pattern ${myCs.roundPattern} · Stacking ${myCs.stacking} (max stack: ${myCs.maxStack})&#10;Weighted 25/15/25/35">${myCs.score}</span>`
             : '';
           html += `<div style="font-size:.65rem;color:var(--text2)">BB Proj: <span style="color:var(--text);font-weight:600">${my.weeklyPPG.toFixed(1)}</span> PPG · <span style="color:var(--text);font-weight:600">${my.seasonMean.toFixed(0)}</span> season · VOR <span style="color:${(my.vorTotal||0) > 200 ? '#22c55e' : (my.vorTotal||0) > 0 ? '#4ade80' : (my.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(my.vorTotal||0) > 0 ? '+' : ''}${Math.round(my.vorTotal||0)}</span> · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span>${buildStr}</div>`;
         }
         html += `</div>`;
-        html += `<div style="font-size:.65rem;color:var(--text2);text-align:right;line-height:1.4">
-          <div>top-1 <span style="color:var(--text);font-weight:600">${my && my.adv1 != null ? Math.round(my.adv1 * 100) + '%' : '—'}</span></div>
-          <div>top-3 <span style="color:var(--text);font-weight:600">${my && my.adv3 != null ? Math.round(my.adv3 * 100) + '%' : '—'}</span></div>
-        </div>`;
         html += `</div>`;
 
         // Draft expand: shows all 12 teams + roster expand-on-click for each.
@@ -38294,13 +38344,6 @@ Rules:
         // Team list within draft. Each row clickable.
         row.teams.forEach((t, ti) => {
           const isMine = t.isMine;
-          const adv2pct = t.adv2 != null ? Math.round(t.adv2 * 100) : null;
-          const adv1pct = t.adv1 != null ? Math.round(t.adv1 * 100) : null;
-          const adv2col = adv2pct == null ? 'var(--text2)' :
-                          adv2pct >= 30 ? '#22c55e' :
-                          adv2pct >= 18 ? '#4ade80' :
-                          adv2pct >= 10 ? '#facc15' :
-                          adv2pct >= 5  ? '#f59e0b' : '#ef4444';
           const rowBg = isMine ? 'background:linear-gradient(90deg,rgba(251,191,36,0.18),transparent);' : 'background:var(--surface2);';
           const teamLabel = isMine ? '<span style="color:var(--accent);font-weight:700">YOU</span>' : 'Opponent ' + ((t.entryId || '').slice(0, 6) || (ti + 1));
           html += `<div onclick="event.stopPropagation();window._udToggleTeamsRoster(${i}, ${ti})" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;${rowBg}cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">`;
@@ -38332,12 +38375,11 @@ Rules:
             ? `Roster Construction Score (BBM-derived):&#10;` +
               `Build Shape ${cs.counts.QB}Q/${cs.counts.RB}R/${cs.counts.WR}W/${cs.counts.TE}T → ${cs.buildShape}&#10;` +
               `Position Counts → ${cs.posCount}&#10;` +
-              `Round Pattern (when each pos was first taken) → ${cs.roundPattern}&#10;` +
-              `Composite (33/33/34) → ${cs.score}/100`
+              `Round Pattern (first round each pos) → ${cs.roundPattern}&#10;` +
+              `Stacking (max stack ${cs.maxStack}) → ${cs.stacking}&#10;` +
+              `Composite (25/15/25/35) → ${cs.score}/100`
             : 'Roster Construction Score';
           html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${cs ? cs.score : '—'}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div></div>`;
-          // Advance % badges
-          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${adv2col};text-align:right;min-width:54px">${adv2pct == null ? '—' : adv2pct + '%'}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">TOP-2</div></div>`;
           html += `</div>`;
 
           // Roster expand within the team row.
@@ -38732,6 +38774,18 @@ Rules:
   window._udToggleTeamsRoster = function(draftIdx, teamIdx) {
     const el = document.getElementById('udTeamsRoster_' + draftIdx + '_' + teamIdx);
     if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+  };
+
+  // Sort selector handler for the TEAMS tab. Stashes the chosen key on
+  // window so it persists across re-renders, then triggers a dashboard
+  // re-render so the per-draft list reflects the new ordering.
+  window._udSetTeamsSort = function(key) {
+    window._udTeamsSortBy = key;
+    if (window._udPortfolio && typeof _udRenderDashboard === 'function') {
+      try { _udRenderDashboard(window._udPortfolio); } catch (e) {
+        console.warn('[Portfolio] Sort re-render error:', e);
+      }
+    }
   };
 
   // ═══════════════════════════════════════════════════════════

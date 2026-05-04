@@ -602,8 +602,8 @@ CLEAR
 <button class="version-tab" data-version="mine">MY RANKINGS</button>
 </div>
 <div class="mode-tabs">
-<button class="mode-tab active" data-mode="redraft">REDRAFT</button>
-<button class="mode-tab" data-mode="bestball">BEST BALL</button>
+<button class="mode-tab" data-mode="redraft">REDRAFT</button>
+<button class="mode-tab active" data-mode="bestball">BEST BALL</button>
 <button class="mode-tab" data-mode="superflex">SUPERFLEX</button>
 <button class="mode-tab" data-mode="dynasty">DYNASTY 1QB</button>
 <button class="mode-tab" data-mode="dynastysf">DYNASTY SF</button>
@@ -2378,7 +2378,11 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/all_nfl_teams.js?v=2026-05-02"></script>
 <script src="data/badges.js?v=2026-05-02"></script>
 <script src="data/bbm_first_pos_by_round.js?v=2026-05-02"></script>
-<script src="data/bbm_pick_by_rank_round.js?v=2026-05-03"></script>
+<script src="data/bbm_pick_by_rank_round.js?v=2026-05-04"></script>
+<script src="data/bbm_path_optimal.js?v=2026-05-04"></script>
+<script src="data/bbm_optimizer_data.js?v=2026-05-04"></script>
+<script src="data/bbm_stack_comp_multistage.js?v=2026-05-04"></script>
+<script src="data/bbm_structural_multistage.js?v=2026-05-04"></script>
 <script src="data/college_pos_override.js?v=2026-05-02"></script>
 <script src="data/colorways.js?v=2026-05-02"></script>
 <script src="data/conf_keywords.js?v=2026-05-02"></script>
@@ -4652,7 +4656,8 @@ superflexDefaultBoard.splice(0, superflexDefaultBoard.length, ...sortKickersInBo
 const bestBallDefaultBoard = defaultBoard.filter(i => D[i].s !== 'K' && D[i].s !== 'DST');
 
 // Modes: redraft + bestball + superflex + dynasty + dynastysf, each with independent board & tiers
-let currentMode = 'redraft';
+// v0.10.0: default to bestball — primary use case is Underdog BBM drafts.
+let currentMode = 'bestball';
 
 // === VERSION SYSTEM: "consensus", "jacks", "jsmodel", "mine", each with independent boards/tiers per mode ===
 let currentVersion = 'consensus';
@@ -37849,10 +37854,19 @@ Rules:
   }
   function _udBuildShapeScore(counts) {
     const key = (counts.QB||0) + '/' + (counts.RB||0) + '/' + (counts.WR||0) + '/' + (counts.TE||0);
-    let rate = BBM_BUILD_RATES[key];
+    // v0.10.0: prefer multi-stage by_build from BBM_DATA (q_rate/s_rate/f_rate)
+    // and blend across QF/SF/Finals; fall back to QF-only BBM_BUILD_RATES const.
+    let rate = null;
+    if (typeof window !== 'undefined' && window.BBM_DATA && window.BBM_DATA.by_build) {
+      const cell = window.BBM_DATA.by_build[key];
+      if (cell && cell.q_rate != null) {
+        rate = _udBlendedRate(cell.q_rate, cell.s_rate, cell.f_rate);
+      }
+    }
+    if (rate == null) rate = BBM_BUILD_RATES[key];
     if (rate == null) {
       // Unknown shape: shrink hard toward baseline (this is the long tail).
-      rate = BBM_BASELINE_QRATE * 0.92; // small implicit penalty for off-pattern
+      rate = BBM_BASELINE_QRATE * 0.92;
     }
     return _udRateToScore(rate);
   }
@@ -37887,13 +37901,42 @@ Rules:
     ['WR',8],
     ['TE',3],['TE',4],
   ];
-  function _udLookupPickRate(pos, rank, round) {
+  // Tournament-equity stage weights. Reflects that a roster optimized for
+  // QF survival isn't necessarily optimized for tournament wins — Finals
+  // value comes from later-round upside (late-QB stack, deep WR stash, etc.).
+  // 0.50 / 0.30 / 0.20 places primary weight on QF (regular season survival)
+  // but gives meaningful credit to tournament-round equity.
+  const BBM_STAGE_WEIGHTS = { qf: 0.50, sf: 0.30, fin: 0.20 };
+  // Blend three-stage rates into a single QF-equivalent rate by computing
+  // each stage's lift, weighting, then re-applying QF baseline so the
+  // result sits in the same 0-100 score band.
+  function _udBlendedRate(qfRate, sfRate, finRate) {
+    if (qfRate == null) return BBM_BASELINE_QRATE;
+    const baseQf = (typeof BBM_BASELINE_QF_RATE !== 'undefined') ? BBM_BASELINE_QF_RATE : BBM_BASELINE_QRATE;
+    const baseSf = (typeof BBM_BASELINE_SF_RATE !== 'undefined') ? BBM_BASELINE_SF_RATE : 0.01320;
+    const baseFin = (typeof BBM_BASELINE_FIN_RATE !== 'undefined') ? BBM_BASELINE_FIN_RATE : 0.00082;
+    const qLift = qfRate / baseQf;
+    const sLift = (sfRate != null && baseSf) ? sfRate / baseSf : qLift;
+    const fLift = (finRate != null && baseFin) ? finRate / baseFin : qLift;
+    const blended = BBM_STAGE_WEIGHTS.qf * qLift +
+                    BBM_STAGE_WEIGHTS.sf * sLift +
+                    BBM_STAGE_WEIGHTS.fin * fLift;
+    return blended * baseQf;
+  }
+  function _udLookupPickRate(pos, rank, round, stage) {
+    // stage = 'qf' | 'sf' | 'fin' | 'blend' (default 'blend' = tournament equity).
+    const key = stage || 'blend';
     const tbl = (typeof BBM_PICK_BY_RANK_ROUND !== 'undefined')
       ? BBM_PICK_BY_RANK_ROUND[pos.toLowerCase()]
       : null;
     if (!tbl || !tbl[rank]) return BBM_BASELINE_QRATE;
     const r = Math.max(1, Math.min(18, round || 0));
-    return tbl[rank][r] != null ? tbl[rank][r] : BBM_BASELINE_QRATE;
+    const cell = tbl[rank][r];
+    if (cell == null) return BBM_BASELINE_QRATE;
+    // Back-compat: cells used to be plain numbers; now they're {qf, sf, fin, n}.
+    if (typeof cell === 'number') return cell;
+    if (key === 'blend') return _udBlendedRate(cell.qf, cell.sf, cell.fin);
+    return cell[key] != null ? cell[key] : BBM_BASELINE_QRATE;
   }
   function _udRoundPatternScore(rosterDetails) {
     // Sort picks by overall pick number to compute positional rank in draft order.
@@ -37919,7 +37962,21 @@ Rules:
         const skipKey = pos.toLowerCase() + '_' + rank;
         const skip = (typeof BBM_PICK_SKIP_RATES !== 'undefined')
           ? BBM_PICK_SKIP_RATES[skipKey] : null;
-        rate = (skip != null) ? skip : BBM_RATE_LO;
+        // Back-compat: was a plain number, now an object {qf, sf_lift, fin_lift}.
+        // v0.10.0: blend across stages — skipping required picks (e.g. WR5)
+        // hurts even more at SF/Finals than at QF for some slots.
+        if (skip == null) rate = BBM_RATE_LO;
+        else if (typeof skip === 'number') rate = skip;
+        else if (skip.qf != null) {
+          const baseQf = BBM_BASELINE_QRATE;
+          const qLift = skip.qf / baseQf;
+          const sLift = (skip.sf_lift != null) ? skip.sf_lift : qLift;
+          const fLift = (skip.fin_lift != null) ? skip.fin_lift : qLift;
+          const blended = BBM_STAGE_WEIGHTS.qf * qLift +
+                          BBM_STAGE_WEIGHTS.sf * sLift +
+                          BBM_STAGE_WEIGHTS.fin * fLift;
+          rate = blended * baseQf;
+        } else rate = BBM_RATE_LO;
       } else {
         // Always-taken slot missing (e.g. someone drafted 0 RBs). Hard penalty.
         rate = BBM_RATE_LO;
@@ -37933,6 +37990,93 @@ Rules:
       n++;
     }
     return _udRateToScore(sum / Math.max(n, 1));
+  }
+  // Path-aware construction score. Detects the user's build path
+  // (RB pacing by r4, QB-timing, TE-timing, WR pacing by r6) and looks
+  // up the QF advance rate for the user's CURRENT final counts within
+  // that path, using the conditional analysis from
+  // scripts/aggregate_bbm_conditional_construction.py (2.6M teams).
+  // This complements _udRoundPatternScore (which looks at picks
+  // independently) by capturing path interactions like "Robust RB +
+  // 5 RBs total = -25% lift" that no per-pick lookup catches.
+  function _udPathFitInfo(rosterDetails) {
+    const sorted = rosterDetails.slice().sort(
+      (a, b) => (a.pick || 9999) - (b.pick || 9999)
+    );
+    const counts = { QB:0, RB:0, WR:0, TE:0 };
+    let qb1Round = null, te1Round = null;
+    let rbByR4 = 0, wrByR6 = 0;
+    for (const p of sorted) {
+      if (counts[p.pos] == null) continue;
+      counts[p.pos]++;
+      const r = p.round || 0;
+      if (p.pos === 'QB' && qb1Round === null && r) qb1Round = r;
+      if (p.pos === 'TE' && te1Round === null && r) te1Round = r;
+      if (p.pos === 'RB' && r && r <= 4) rbByR4++;
+      if (p.pos === 'WR' && r && r <= 6) wrByR6++;
+    }
+    const rbBucket = Math.min(4, rbByR4); // 0/1/2/3/4
+    const qbBucket = qb1Round == null ? null
+      : qb1Round <= 3 ? 'early'
+      : qb1Round <= 6 ? 'mid'
+      : qb1Round <= 9 ? 'late'
+      : qb1Round <= 12 ? 'late2'
+      : 'verylate';
+    const teBucket = te1Round == null ? null
+      : te1Round <= 4 ? 'early'
+      : te1Round <= 8 ? 'mid'
+      : te1Round <= 12 ? 'late'
+      : 'verylate';
+    const wrBucket = wrByR6 <= 2 ? 'slow'
+      : wrByR6 <= 4 ? 'med'
+      : 'heavy';
+    return { counts, rbBucket, qbBucket, teBucket, wrBucket,
+             rbByR4, wrByR6, qb1Round, te1Round };
+  }
+  // Path-bucket label -> human-readable name for tooltips.
+  const BBM_PATH_LABELS = {
+    rb: { 0:'Zero RB', 1:'Hero RB', 2:'Balanced', 3:'Heavy RB', 4:'Robust RB' },
+    qb: { early:'Early QB (r1-3)', mid:'Mid QB (r4-6)', late:'Late QB (r7-9)',
+          late2:'Late QB (r10-12)', verylate:'Very late QB (r13+)' },
+    te: { early:'Early TE (r1-4)', mid:'Mid TE (r5-8)', late:'Late TE (r9-12)',
+          verylate:'Very late TE (r13+)' },
+    wr: { slow:'Slow WR pace (≤2 by r6)', med:'Med WR pace (3-4 by r6)',
+          heavy:'Heavy WR pace (5+ by r6)' },
+  };
+  // v0.10.0: extract a blended rate from a path-conditional cell.
+  // Cell shape (post-regen): {qf, sf, fin, n}. Back-compat: plain number = QF.
+  function _udPathCellRate(cell) {
+    if (cell == null) return null;
+    if (typeof cell === 'number') return cell;
+    if (cell.qf == null) return null;
+    return _udBlendedRate(cell.qf, cell.sf, cell.fin);
+  }
+  function _udPathFitScore(rosterDetails) {
+    const info = _udPathFitInfo(rosterDetails);
+    const lookups = [];
+    // RB component
+    if (typeof BBM_RB_PATH_LIFT !== 'undefined' && BBM_RB_PATH_LIFT[info.rbBucket]) {
+      const rate = _udPathCellRate(BBM_RB_PATH_LIFT[info.rbBucket][info.counts.RB]);
+      if (rate != null) lookups.push(rate);
+    }
+    // QB component
+    if (info.qbBucket && typeof BBM_QB_TIMING_LIFT !== 'undefined' && BBM_QB_TIMING_LIFT[info.qbBucket]) {
+      const rate = _udPathCellRate(BBM_QB_TIMING_LIFT[info.qbBucket][info.counts.QB]);
+      if (rate != null) lookups.push(rate);
+    }
+    // TE component
+    if (info.teBucket && typeof BBM_TE_TIMING_LIFT !== 'undefined' && BBM_TE_TIMING_LIFT[info.teBucket]) {
+      const rate = _udPathCellRate(BBM_TE_TIMING_LIFT[info.teBucket][info.counts.TE]);
+      if (rate != null) lookups.push(rate);
+    }
+    // WR component
+    if (typeof BBM_WR_PACING_LIFT !== 'undefined' && BBM_WR_PACING_LIFT[info.wrBucket]) {
+      const rate = _udPathCellRate(BBM_WR_PACING_LIFT[info.wrBucket][info.counts.WR]);
+      if (rate != null) lookups.push(rate);
+    }
+    if (!lookups.length) return 50;
+    const avg = lookups.reduce((s,v) => s+v, 0) / lookups.length;
+    return _udRateToScore(avg);
   }
   // Compute stack metadata from a draft order. Returns:
   //   maxStack    — largest count of same-team mates tied to any QB
@@ -38005,12 +38149,25 @@ Rules:
   }
   function _udStackingScore(rosterDetails) {
     const info = _udComputeStacks(rosterDetails);
-    // Composition rate is the primary signal — picks the right bucket from
-    // BBM_STACK_COMP_RATES. Fall back to the slot-agnostic max_stack lookup
-    // if compKey is somehow null (e.g. team has no QB drafted yet).
-    let compRate = info.compKey != null
-      ? BBM_STACK_COMP_RATES[info.compKey]
-      : BBM_MAX_STACK_RATES[Math.min(info.maxStack, 6)];
+    // v0.10.0: prefer multi-stage stack composition (QF/SF/Finals blend) from
+    // BBM_STACK_COMP_MULTI; fall back to QF-only BBM_STACK_COMP_RATES.
+    // Catches patterns like QB+TE1 that flip across rounds (good at SF, bad at Finals).
+    let compRate = null;
+    if (info.compKey != null && typeof BBM_STACK_COMP_MULTI !== 'undefined' && BBM_STACK_COMP_MULTI[info.compKey]) {
+      const cell = BBM_STACK_COMP_MULTI[info.compKey];
+      compRate = _udBlendedRate(cell.qf, cell.sf, cell.fin);
+    }
+    if (compRate == null && info.compKey != null) compRate = BBM_STACK_COMP_RATES[info.compKey];
+    if (compRate == null) {
+      // No compKey (no QB drafted) — fall back to size-based lookup
+      const sz = Math.min(info.maxStack, 4);
+      if (typeof BBM_MAX_STACK_MULTI !== 'undefined' && BBM_MAX_STACK_MULTI[sz]) {
+        const c = BBM_MAX_STACK_MULTI[sz];
+        compRate = _udBlendedRate(c.qf, c.sf, c.fin);
+      } else {
+        compRate = BBM_MAX_STACK_RATES[Math.min(info.maxStack, 6)];
+      }
+    }
     if (compRate == null) compRate = BBM_BASELINE_QRATE;
 
     // Multi-QB diversification — small additive modifier. Anchored at
@@ -38089,16 +38246,20 @@ Rules:
   // weighted average of three component-rates (bye / rb / wr-no-qb) through
   // the same _udRateToScore band the other components use, so this slot
   // composes cleanly into the final composite.
+  // v0.10.0: prefer multi-stage structural rates (BBM_STRUCT_MULTI) when
+  // available; fall back to the QF-only consts. Multi-stage data is loaded
+  // from data/bbm_structural_multistage.js if present.
+  function _udStructLookup(multiKey, qfConst, idx) {
+    const multi = (typeof BBM_STRUCT_MULTI !== 'undefined') ? BBM_STRUCT_MULTI[multiKey] : null;
+    if (multi && multi[idx]) {
+      return _udBlendedRate(multi[idx].qf, multi[idx].sf, multi[idx].fin);
+    }
+    return qfConst[idx] != null ? qfConst[idx] : BBM_BASELINE_QRATE;
+  }
   function _udStructuralScore(struct) {
-    const byeRate = BBM_BYE_RATES[Math.min(struct.maxBye, 12)] != null
-      ? BBM_BYE_RATES[Math.min(struct.maxBye, 12)]
-      : BBM_BASELINE_QRATE;
-    const rbRate = BBM_RB_CANNIB_RATES[Math.min(struct.maxRbSameTeam, 3)] != null
-      ? BBM_RB_CANNIB_RATES[Math.min(struct.maxRbSameTeam, 3)]
-      : BBM_BASELINE_QRATE;
-    const wrRate = BBM_WR_NOQB_CANNIB_RATES[Math.min(struct.maxWrNoQb, 4)] != null
-      ? BBM_WR_NOQB_CANNIB_RATES[Math.min(struct.maxWrNoQb, 4)]
-      : BBM_BASELINE_QRATE;
+    const byeRate = _udStructLookup('bye', BBM_BYE_RATES, Math.min(struct.maxBye, 12));
+    const rbRate  = _udStructLookup('rb',  BBM_RB_CANNIB_RATES, Math.min(struct.maxRbSameTeam, 3));
+    const wrRate  = _udStructLookup('wr',  BBM_WR_NOQB_CANNIB_RATES, Math.min(struct.maxWrNoQb, 4));
     // Equal-weighted average of the three independent penalty signals.
     const avg = (byeRate + rbRate + wrRate) / 3;
     return _udRateToScore(avg);
@@ -38112,22 +38273,25 @@ Rules:
     const buildShape = _udBuildShapeScore(counts);
     const posCount = _udPositionCountScore(counts);
     const roundPattern = _udRoundPatternScore(rosterDetails);
+    const pathFit = _udPathFitScore(rosterDetails);
+    const pathInfo = _udPathFitInfo(rosterDetails);
     const stacking = _udStackingScore(rosterDetails);
     const stackInfo = _udComputeStacks(rosterDetails);
     const struct = _udComputeStructural(rosterDetails);
     const structural = _udStructuralScore(struct);
-    // 15/10/30/25/20 weighting. RoundPattern bumped from 20% -> 30% after
-    // upgrading from first-pick-per-position (4 features) to full per-pick
-    // lift across all 17 slots with skip penalties (sources: 2.6M historical
-    // teams across BBM II-VI, scripts/aggregate_bbm_pos_rank_round.py). The
-    // new signal absorbs much of the build-shape information (so BuildShape
-    // drops from 20% -> 15%) and now rivals Stacking as the strongest single
-    // construction signal, hence Stacking trims 30% -> 25%.
+    // 10/10/25/15/20/20 weighting (BuildShape/PosCount/RoundPattern/PathFit
+    // /Stacking/Structural). v0.10.0: RoundPattern + PathFit + skip penalties
+    // now use TOURNAMENT-EQUITY blended rates (50% QF + 30% SF + 20% Finals)
+    // via _udBlendedRate, instead of QF-only. This captures the deep-round
+    // upside that QF-only scoring missed (e.g. late QB + 3 QB total = +69%
+    // Finals lift but only +10% QF lift, so QF-only undervalued the build).
+    // Sources: aggregate_bbm_pos_rank_round.py + aggregate_bbm_conditional_construction.py.
     const score = Math.round(
-      buildShape * 0.15 +
+      buildShape * 0.10 +
       posCount * 0.10 +
-      roundPattern * 0.30 +
-      stacking * 0.25 +
+      roundPattern * 0.25 +
+      pathFit * 0.15 +
+      stacking * 0.20 +
       structural * 0.20
     );
     return {
@@ -38135,6 +38299,7 @@ Rules:
       buildShape: buildShape,
       posCount: posCount,
       roundPattern: roundPattern,
+      pathFit: pathFit,
       stacking: stacking,
       structural: structural,
       maxStack: stackInfo.maxStack,
@@ -38143,7 +38308,8 @@ Rules:
       maxBye: struct.maxBye,
       maxRbSameTeam: struct.maxRbSameTeam,
       maxWrNoQb: struct.maxWrNoQb,
-      counts: counts
+      counts: counts,
+      pathInfo: pathInfo
     };
   }
   // Human-readable label for a stack composition bucket — used in tooltips.
@@ -38393,7 +38559,9 @@ Rules:
       const ks = Object.keys(data.drafts);
       // v0.9.65: bumped suffix so stale caches (no VOR/window fields) bust on first load.
       // v0.9.91: bumped to v91 to invalidate caches missing the new construction field.
-      return 'v91:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0);
+      // v0.10.0: bumped to v100 — construction score now uses tournament-equity
+      // weighted lifts (was QF-only), and PathFit + skip-rate access changed.
+      return 'v100:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0);
     })();
     let _udTeamsRows;
     if (window._udTeamsCache && window._udTeamsCache.key === _udCacheKey) {
@@ -38451,7 +38619,11 @@ Rules:
         const vorTotal = rosterDetails.reduce((s, x) => s + (x.vor || 0), 0);
         // v0.9.91: Roster Construction score — BBM-driven 0-100 composite
         // (build shape + position counts + round-pattern fit).
-        const construction = _udComputeRosterConstruction(rosterDetails);
+        // v0.10.0: skip for Superflex contests — BBM dataset is STD-only,
+        // so the construction signals (per-pick lifts, path-aware rules,
+        // skip penalties) don't apply to SF roster patterns.
+        const _isSf = !!(d.tournament && /super\s*flex/i.test(d.tournament));
+        const construction = _isSf ? null : _udComputeRosterConstruction(rosterDetails);
         return {
           entryId: t.entryId,
           isMine: !!t.isMine,
@@ -38627,15 +38799,22 @@ Rules:
           // BBM rosters. Hover for component breakdown.
           const cs = t.construction;
           const csCol = _udConstructionColor(cs ? cs.score : null);
+          const pathBits = cs && cs.pathInfo ? [
+            BBM_PATH_LABELS.rb[cs.pathInfo.rbBucket] || `${cs.pathInfo.rbBucket} RB`,
+            cs.pathInfo.qbBucket ? BBM_PATH_LABELS.qb[cs.pathInfo.qbBucket] : 'no QB',
+            cs.pathInfo.teBucket ? BBM_PATH_LABELS.te[cs.pathInfo.teBucket] : 'no TE',
+            BBM_PATH_LABELS.wr[cs.pathInfo.wrBucket] || cs.pathInfo.wrBucket,
+          ].join(' / ') : '';
           const csTip = cs
-            ? `Roster Construction Score (BBM-derived):&#10;` +
+            ? `Roster Construction Score (BBM-derived, tournament-equity weighted 50/30/20 QF/SF/Finals):&#10;` +
               `Build Shape ${cs.counts.QB}Q/${cs.counts.RB}R/${cs.counts.WR}W/${cs.counts.TE}T → ${cs.buildShape}&#10;` +
               `Position Counts → ${cs.posCount}&#10;` +
-              `Round Pattern (first round each pos) → ${cs.roundPattern}&#10;` +
+              `Round Pattern (per-pick lift, blended) → ${cs.roundPattern}&#10;` +
+              `Path Fit → ${cs.pathFit} (${pathBits})&#10;` +
               `Stacking → ${cs.stacking} (${_udCompKeyLabel(cs.compKey)}, max ${cs.maxStack}, ${cs.nQbStacks} QB-stacks)&#10;` +
               `Structural → ${cs.structural} (max ${cs.maxBye} on bye, ${cs.maxRbSameTeam} RB same-team, ${cs.maxWrNoQb} WR same-team-no-QB)&#10;` +
-              `Composite (20/10/20/30/20) → ${cs.score}/100`
-            : 'Roster Construction Score';
+              `Composite (10/10/25/15/20/20) → ${cs.score}/100`
+            : `Construction score N/A — BBM dataset is Standard-format only,&#10;Superflex roster patterns differ structurally.`;
           html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${cs ? cs.score : '—'}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div></div>`;
           html += `</div>`;
 

@@ -37952,12 +37952,21 @@ Rules:
     }
     const find = (pos, rank) => picks.find(x => x.pos === pos && x.rank === rank);
 
+    // Round weighting: early-round picks discriminate teams more than late
+    // ones (a great R1 vs a bad R1 swings advance % much more than a great
+    // WR7 vs a bad WR7). Without this, the simple-average across 15 required
+    // slots collapses every team toward the same mid-band score because the
+    // late-round cells have low rate ceilings AND low rate floors. Linear
+    // ramp from 2.0 (R1) down to 0.5 (R16+).
+    const _roundWeight = (r) => Math.max(0.5, 2.0 - ((r || 12) - 1) * 0.1);
+
     let sum = 0, n = 0;
     for (const [pos, rank, enforce] of BBM_PICK_SLOTS_REQUIRED) {
       const got = find(pos, rank);
-      let rate;
+      let rate, w;
       if (got && got.round) {
         rate = _udLookupPickRate(pos, rank, got.round);
+        w = _roundWeight(got.round);
       } else if (enforce) {
         const skipKey = pos.toLowerCase() + '_' + rank;
         const skip = (typeof BBM_PICK_SKIP_RATES !== 'undefined')
@@ -37977,17 +37986,22 @@ Rules:
                           BBM_STAGE_WEIGHTS.fin * fLift;
           rate = blended * baseQf;
         } else rate = BBM_RATE_LO;
+        // Skipped slot — use the median weight so penalties don't get
+        // disproportionately silenced or amplified vs taken picks.
+        w = 1.0;
       } else {
         // Always-taken slot missing (e.g. someone drafted 0 RBs). Hard penalty.
         rate = BBM_RATE_LO;
+        w = 1.0;
       }
-      sum += rate; n++;
+      sum += rate * w; n += w;
     }
     for (const [pos, rank] of BBM_PICK_SLOTS_OPTIONAL) {
       const got = find(pos, rank);
       if (!got || !got.round) continue;
-      sum += _udLookupPickRate(pos, rank, got.round);
-      n++;
+      const w = _roundWeight(got.round);
+      sum += _udLookupPickRate(pos, rank, got.round) * w;
+      n += w;
     }
     return _udRateToScore(sum / Math.max(n, 1));
   }

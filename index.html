@@ -36986,23 +36986,32 @@ Rules:
     return match;
   }
   function _udMatchPlayerUncached(name) {
+    // Helper: prefer active players over retired ones at every match tier.
+    // Without this, NFL juniors who share a name with their retired dad
+    // (e.g. UD's "Oronde Gadsden" matching Gadsden Sr. instead of II)
+    // hit the retired stub first and lose ADP/projection data.
+    const findActive = (pred) => D.find(p => pred(p) && !p._retired)
+                              || D.find(p => pred(p));
     // Exact match first
-    let match = D.find(p => p.n === name);
+    let match = findActive(p => p.n === name);
     if (match) return match;
     // Try without Jr./Sr./III etc
     const stripped = name.replace(/\s+(Jr\.?|Sr\.?|III|II|IV|V)$/i, '').trim();
-    match = D.find(p => p.n === stripped || p.n.replace(/\s+(Jr\.?|Sr\.?|III|II|IV|V)$/i, '').trim() === stripped);
+    match = findActive(p =>
+      p.n === stripped ||
+      p.n.replace(/\s+(Jr\.?|Sr\.?|III|II|IV|V)$/i, '').trim() === stripped
+    );
     if (match) return match;
     // Case-insensitive
     const lower = name.toLowerCase();
-    match = D.find(p => p.n && p.n.toLowerCase() === lower);
+    match = findActive(p => p.n && p.n.toLowerCase() === lower);
     if (match) return match;
     // Last name + first initial
     const parts = name.split(' ');
     if (parts.length >= 2) {
       const firstInitial = parts[0][0].toLowerCase();
       const lastName = parts[parts.length - 1].toLowerCase().replace(/[.]/g, '');
-      match = D.find(p => {
+      match = findActive(p => {
         if (!p.n) return false;
         const pp = p.n.split(' ');
         return pp.length >= 2 && pp[0][0].toLowerCase() === firstInitial &&

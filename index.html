@@ -38492,8 +38492,10 @@ Rules:
       { id: 'value', label: 'VALUE PICKS' },
       { id: 'builds', label: 'BUILD ANALYSIS' }
     ];
-    tabs.forEach((t, i) => {
-      const active = i === 0;
+    const _activeTabId = window._udActiveTab && tabs.some(t => t.id === window._udActiveTab)
+      ? window._udActiveTab : 'exposure';
+    tabs.forEach((t) => {
+      const active = t.id === _activeTabId;
       html += `<button onclick="window._udSwitchTab('${t.id}')" data-udtab="${t.id}" style="padding:6px 14px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;border-radius:6px;cursor:pointer;white-space:nowrap;border:1px solid ${active ? 'var(--accent)' : 'var(--border)'};background:${active ? 'var(--accent)' : 'var(--surface)'};color:${active ? '#000' : 'var(--text2)'}">${t.label}</button>`;
     });
     html += `</div>`;
@@ -38502,7 +38504,7 @@ Rules:
     html += `<div id="udTabContent">`;
 
     // EXPOSURE TAB
-    html += `<div id="udTab_exposure">`;
+    html += `<div id="udTab_exposure" style="display:${_activeTabId === 'exposure' ? '' : 'none'}">`;
     html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">`;
     html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">PLAYER EXPOSURE</span>`;
     // Position filter buttons
@@ -38528,7 +38530,7 @@ Rules:
     // via setTimeout(0) AFTER dash.innerHTML lands so the rest of the
     // page is responsive. The deferred build re-injects HTML directly
     // into #udTab_teams.
-    html += `<div id="udTab_teams" style="display:none">`;
+    html += `<div id="udTab_teams" style="display:${_activeTabId === 'teams' ? '' : 'none'}">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAMS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(your team vs every opponent in each pool)</span></div>`;
     html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked by projected best-ball total points. Click any team to open its roster. <strong style="color:var(--accent)">Rank reflects projected season points only — anything can happen in a real season.</strong></div>`;
     // (TEAMS-tab body content follows below — built inline for now;
@@ -38911,7 +38913,7 @@ Rules:
       if (dr && dr.phase === 'superflex') _udBoardSf++; else _udBoardBbm++;
     });
     const _udBoardLabel = _udBoardSf > _udBoardBbm ? 'Superflex' : 'Best Ball';
-    html += `<div id="udTab_board" style="display:none">`;
+    html += `<div id="udTab_board" style="display:${_activeTabId === 'board' ? '' : 'none'}">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">DRAFT BOARD <span style="font-size:.65rem;color:var(--text2);letter-spacing:1px">· ${_udBoardLabel} ADP</span></div>`;
     html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by raw Underdog ${_udBoardLabel} ADP in a 12-team grid. Color = your ownership%.</div>`;
     // Legend
@@ -38925,7 +38927,7 @@ Rules:
     html += `</div>`;
 
     // VALUE PICKS TAB
-    html += `<div id="udTab_value" style="display:none">`;
+    html += `<div id="udTab_value" style="display:${_activeTabId === 'value' ? '' : 'none'}">`;
     // v0.9.92: split Best Ball vs Superflex so each format is graded against
     // its own ADP scale. Helper renders one format's STEALS + REACHES tables.
     function _vpRenderTables(label, lists) {
@@ -38970,7 +38972,7 @@ Rules:
     // ── (VS FIELD content removed in v0.9.40 — folded into the TEAMS tab) ──
 
     // BUILD ANALYSIS TAB
-    html += `<div id="udTab_builds" style="display:none">`;
+    html += `<div id="udTab_builds" style="display:${_activeTabId === 'builds' ? '' : 'none'}">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:12px">DRAFT BUILD ANALYSIS</div>`;
 
     // Build pattern breakdown
@@ -39202,6 +39204,7 @@ Rules:
   };
 
   window._udSwitchTab = function(tabId) {
+    window._udActiveTab = tabId;
     const tabs = ['exposure', 'teams', 'board', 'value', 'builds'];
     tabs.forEach(t => {
       const el = document.getElementById('udTab_' + t);

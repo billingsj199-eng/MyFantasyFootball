@@ -1037,6 +1037,13 @@ CLEAR
 <div class="games-subpage active" id="gamesDaily">
 <div style="max-width:520px;margin:0 auto">
 <div class="home-section-label" style="margin-bottom:8px">Daily Challenge</div>
+<style>
+.dc-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.dc-tab{padding:6px 14px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:background .15s,color .15s,border-color .15s}
+.dc-tab.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.dc-pane{display:none}
+.dc-pane.active{display:block}
+</style>
 <div class="dc-tabs">
 <button class="dc-tab active" data-dc="current">CURRENT</button>
 <button class="dc-tab" data-dc="2000s">2000s</button>
@@ -22263,6 +22270,19 @@ window.fmtHeight = fmtHeight;
       tab.classList.add('active');
       const target = document.getElementById('games' + tab.dataset.gamesTab.charAt(0).toUpperCase() + tab.dataset.gamesTab.slice(1));
       if (target) target.classList.add('active');
+    });
+  });
+  // Daily Challenge sub-tab switching (CURRENT / 2000s / 2010s / PHOTO).
+  // The .dc-tab buttons and .dc-pane containers were moved from the home page
+  // into #gamesDaily without their click wiring, leaving every tab inert.
+  document.querySelectorAll('.dc-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const key = tab.dataset.dc;
+      document.querySelectorAll('.dc-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.dc-pane').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const pane = document.querySelector('.dc-pane[data-dc="' + key + '"]');
+      if (pane) pane.classList.add('active');
     });
   });
   // Initial load after a delay for Firebase to init

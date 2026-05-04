@@ -35842,7 +35842,7 @@ Rules:
     'the puppy': 5,
     'the field general': 3,
     'the little board': 3,
-    'the big board': 25,
+    'the big board': 10,
     'the udfa':  2,
     'the udfa 2': 2,
     'the udfa 3': 2
@@ -38815,7 +38815,21 @@ Rules:
               `Structural → ${cs.structural} (max ${cs.maxBye} on bye, ${cs.maxRbSameTeam} RB same-team, ${cs.maxWrNoQb} WR same-team-no-QB)&#10;` +
               `Composite (10/10/25/15/20/20) → ${cs.score}/100`
             : `Construction score N/A — BBM dataset is Standard-format only,&#10;Superflex roster patterns differ structurally.`;
-          html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${cs ? cs.score : '—'}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div></div>`;
+          // v0.10.0: compact path badge under the BUILD score so users see
+          // "Balanced + Late QB" (or whichever path was detected) at a glance
+          // without hovering the tooltip. Two-letter shorthand keeps the
+          // column narrow while exposing the most-actionable path components.
+          const pathBadge = cs && cs.pathInfo ? (() => {
+            const rbMap = {0:'ZRO', 1:'HER', 2:'BAL', 3:'HVY', 4:'ROB'};
+            const qbMap = {early:'EQB', mid:'MQB', late:'LQB', late2:'LQB', verylate:'VLQB'};
+            const rbShort = rbMap[cs.pathInfo.rbBucket] || '';
+            const qbShort = cs.pathInfo.qbBucket ? qbMap[cs.pathInfo.qbBucket] || '' : '';
+            return [rbShort, qbShort].filter(Boolean).join(' · ');
+          })() : '';
+          const pathBadgeHtml = pathBadge
+            ? `<div style="font-size:.42rem;color:var(--text2);letter-spacing:.3px;font-family:'DM Sans',sans-serif;font-weight:500;margin-top:1px">${pathBadge}</div>`
+            : '';
+          html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${cs ? cs.score : '—'}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div>${pathBadgeHtml}</div>`;
           html += `</div>`;
 
           // Roster expand within the team row.

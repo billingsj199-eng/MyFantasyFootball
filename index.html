@@ -38846,11 +38846,20 @@ Rules:
               <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Projected fantasy points per game">PROJ PPG</th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Projected total season points">SZN PTS</th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Value Over Replacement: season pts above the BBM 12-team starter cutoff (QB12/RB30/WR42/TE13)">VOR</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)">ADP</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Pick number minus ADP. Positive = took player later than ADP (got value). Negative = reached.">vs ADP</th>
             </tr></thead><tbody>`;
           t.rosterDetails.forEach(p => {
             const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-            const adpColor = p.adp == null ? 'var(--text2)' : p.adp <= 24 ? '#22c55e' : p.adp <= 60 ? '#4ade80' : p.adp <= 120 ? '#facc15' : p.adp <= 200 ? '#f59e0b' : 'var(--text2)';
+            // ADP delta = pick - adp. Positive = took after ADP (got value),
+            // negative = reach. Color follows the same convention used on the
+            // header row's aggregate ADP val number.
+            const adpDiff = (p.adp != null && p.pick != null) ? Math.round(p.pick - p.adp) : null;
+            const adpColor = adpDiff == null ? 'var(--text2)' :
+                              adpDiff > 0 ? '#22c55e' :
+                              adpDiff < 0 ? '#ef4444' :
+                              'var(--text2)';
+            const adpStr = adpDiff == null ? '—' : (adpDiff > 0 ? '+' : '') + adpDiff;
+            const adpTitle = p.adp != null ? `Player ADP: ${Math.round(p.adp)} · Picked at ${p.pick}` : 'No ADP available';
             // Color projection by simple position-aware tier so it pops similarly to ADP.
             const projColor = (() => {
               if (p.proj == null) return 'var(--text2)';
@@ -38892,7 +38901,7 @@ Rules:
               <td style="padding:3px 6px;text-align:right;font-weight:700;color:${projColor}">${p.proj != null ? p.proj.toFixed(1) : '—'}</td>
               <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.seasonPts != null ? Math.round(p.seasonPts) : '—'}</td>
               <td style="padding:3px 6px;text-align:right;font-weight:700;color:${vorColor}">${vorStr}</td>
-              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${adpColor}">${p.adp != null ? Math.round(p.adp) : '—'}</td>
+              <td title="${adpTitle}" style="padding:3px 6px;text-align:right;font-weight:700;color:${adpColor}">${adpStr}</td>
             </tr>`;
           });
           html += `</tbody></table>`;

@@ -38225,10 +38225,18 @@ Rules:
   // tables above to translate into score deltas.
   function _udComputeStructural(rosterDetails) {
     // Bye concentration: max # of picks sharing a bye week.
+    // byeKnown tracks whether ANY pick had bye-week data — pre-schedule-release
+    // (early offseason) every byeWeek is null and we should not average a
+    // baseline rate into the structural score, since that artificially
+    // compresses the spread for everyone.
     const byeCount = {};
+    let byeKnown = false;
     rosterDetails.forEach(p => {
       const w = p.byeWeek;
-      if (w != null && w > 0) byeCount[w] = (byeCount[w] || 0) + 1;
+      if (w != null && w > 0) {
+        byeCount[w] = (byeCount[w] || 0) + 1;
+        byeKnown = true;
+      }
     });
     const maxBye = Object.values(byeCount).reduce((m, c) => Math.max(m, c), 0);
 
@@ -38253,7 +38261,7 @@ Rules:
     });
     const maxWrNoQb = Object.values(wrNoQbCount).reduce((m, c) => Math.max(m, c), 0);
 
-    return { maxBye, maxRbSameTeam, maxWrNoQb };
+    return { maxBye, maxRbSameTeam, maxWrNoQb, byeKnown };
   }
 
   // Translate the structural features into a 0-100 score. We treat the
@@ -38271,10 +38279,17 @@ Rules:
     return qfConst[idx] != null ? qfConst[idx] : BBM_BASELINE_QRATE;
   }
   function _udStructuralScore(struct) {
-    const byeRate = _udStructLookup('bye', BBM_BYE_RATES, Math.min(struct.maxBye, 12));
     const rbRate  = _udStructLookup('rb',  BBM_RB_CANNIB_RATES, Math.min(struct.maxRbSameTeam, 3));
     const wrRate  = _udStructLookup('wr',  BBM_WR_NOQB_CANNIB_RATES, Math.min(struct.maxWrNoQb, 4));
-    // Equal-weighted average of the three independent penalty signals.
+    // Skip the bye component pre-schedule-release. With every byeWeek=null
+    // the bye lookup falls to BBM_BYE_RATES[0] = 0.1667 (baseline), which
+    // diluted the two real signals (RB / WR-no-QB) toward the median for
+    // every team. Average just the two known signals when bye data is missing.
+    if (!struct.byeKnown) {
+      const avg = (rbRate + wrRate) / 2;
+      return _udRateToScore(avg);
+    }
+    const byeRate = _udStructLookup('bye', BBM_BYE_RATES, Math.min(struct.maxBye, 12));
     const avg = (byeRate + rbRate + wrRate) / 3;
     return _udRateToScore(avg);
   }
@@ -38308,8 +38323,15 @@ Rules:
       stacking * 0.20 +
       structural * 0.20
     );
+    const clampedScore = Math.max(0, Math.min(100, score));
+    // Implied BBM advance rate: invert _udRateToScore. Score 0 = rate LO,
+    // score 100 = rate HI, so the implied advance rate is a clean linear
+    // interpolation. Display as percentage so users can compare directly
+    // to the BBM baseline (1/6 = 16.67%).
+    const advRate = BBM_RATE_LO + (clampedScore / 100) * (BBM_RATE_HI - BBM_RATE_LO);
     return {
-      score: Math.max(0, Math.min(100, score)),
+      score: clampedScore,
+      advRate: advRate,
       buildShape: buildShape,
       posCount: posCount,
       roundPattern: roundPattern,
@@ -38322,6 +38344,7 @@ Rules:
       maxBye: struct.maxBye,
       maxRbSameTeam: struct.maxRbSameTeam,
       maxWrNoQb: struct.maxWrNoQb,
+      byeKnown: struct.byeKnown,
       counts: counts,
       pathInfo: pathInfo
     };
@@ -38771,8 +38794,10 @@ Rules:
           // v0.9.91: include Roster Construction Score in header context line.
           const myCs = my.construction;
           const myCsCol = _udConstructionColor(myCs ? myCs.score : null);
+          const _byeStr = myCs && myCs.byeKnown ? `max ${myCs.maxBye} on bye` : 'bye N/A (schedule not released)';
+          const _myAdvPct = myCs ? (myCs.advRate * 100).toFixed(1) + '%' : '';
           const buildStr = myCs
-            ? ` · Build <span style="color:${myCsCol};font-weight:700" title="Roster Construction Score (0-100):&#10;Build Shape ${myCs.buildShape} · Pos Counts ${myCs.posCount} · Round Pattern ${myCs.roundPattern} · Stacking ${myCs.stacking} · Structural ${myCs.structural}&#10;Stack: ${_udCompKeyLabel(myCs.compKey)} · max ${myCs.maxStack} · ${myCs.nQbStacks} QB-stacks&#10;Structural: max ${myCs.maxBye} on bye · ${myCs.maxRbSameTeam} RB same-team · ${myCs.maxWrNoQb} WR same-team-no-QB&#10;Weighted 20/10/20/30/20">${myCs.score}</span>`
+            ? ` · Build <span style="color:${myCsCol};font-weight:700" title="Implied BBM advance rate (baseline 16.67%):&#10;Build Shape ${myCs.buildShape} · Pos Counts ${myCs.posCount} · Round Pattern ${myCs.roundPattern} · Stacking ${myCs.stacking} · Structural ${myCs.structural}&#10;Stack: ${_udCompKeyLabel(myCs.compKey)} · max ${myCs.maxStack} · ${myCs.nQbStacks} QB-stacks&#10;Structural: ${_byeStr} · ${myCs.maxRbSameTeam} RB same-team · ${myCs.maxWrNoQb} WR same-team-no-QB&#10;Weighted 20/10/20/30/20 (component scores 0-100)">${_myAdvPct}</span>`
             : '';
           html += `<div style="font-size:.65rem;color:var(--text2)">BB Proj: <span style="color:var(--text);font-weight:600">${my.weeklyPPG.toFixed(1)}</span> PPG · <span style="color:var(--text);font-weight:600">${my.seasonMean.toFixed(0)}</span> season · VOR <span style="color:${(my.vorTotal||0) > 200 ? '#22c55e' : (my.vorTotal||0) > 0 ? '#4ade80' : (my.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(my.vorTotal||0) > 0 ? '+' : ''}${Math.round(my.vorTotal||0)}</span> · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span>${buildStr}</div>`;
         }
@@ -38828,8 +38853,8 @@ Rules:
               `Round Pattern (per-pick lift, blended) → ${cs.roundPattern}&#10;` +
               `Path Fit → ${cs.pathFit} (${pathBits})&#10;` +
               `Stacking → ${cs.stacking} (${_udCompKeyLabel(cs.compKey)}, max ${cs.maxStack}, ${cs.nQbStacks} QB-stacks)&#10;` +
-              `Structural → ${cs.structural} (max ${cs.maxBye} on bye, ${cs.maxRbSameTeam} RB same-team, ${cs.maxWrNoQb} WR same-team-no-QB)&#10;` +
-              `Composite (10/10/25/15/20/20) → ${cs.score}/100`
+              `Structural → ${cs.structural} (${cs.byeKnown ? 'max ' + cs.maxBye + ' on bye' : 'bye N/A — schedule not released'}, ${cs.maxRbSameTeam} RB same-team, ${cs.maxWrNoQb} WR same-team-no-QB)&#10;` +
+              `Composite (10/10/25/15/20/20) → ${cs.score}/100 · implied advance rate ${(cs.advRate * 100).toFixed(1)}% (baseline 16.7%)`
             : `Construction score N/A — BBM dataset is Standard-format only,&#10;Superflex roster patterns differ structurally.`;
           // v0.10.0: compact path badge under the BUILD score so users see
           // "Balanced + Late QB" (or whichever path was detected) at a glance
@@ -38845,7 +38870,8 @@ Rules:
           const pathBadgeHtml = pathBadge
             ? `<div style="font-size:.42rem;color:var(--text2);letter-spacing:.3px;font-family:'DM Sans',sans-serif;font-weight:500;margin-top:1px">${pathBadge}</div>`
             : '';
-          html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${cs ? cs.score : '—'}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div>${pathBadgeHtml}</div>`;
+          const _csAdvPct = cs ? (cs.advRate * 100).toFixed(1) + '%' : '—';
+          html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${_csAdvPct}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div>${pathBadgeHtml}</div>`;
           html += `</div>`;
 
           // Roster expand within the team row.

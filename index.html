@@ -644,6 +644,82 @@ Build a stylized PNG of one of your drafted teams — pick from saved Sleeper le
 <div id="adminTgfxPreviewWrap" style="margin-top:1rem;display:none;text-align:center;background:#000;padding:1rem;border-radius:6px;overflow:auto;max-height:700px"></div>
 </div>
 
+<div class="acct-section">
+<div class="acct-section-title">📊 Exposure Graphic Generator (Underdog)</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
+Build a stylized PNG of your most- or least-drafted Underdog players (% exposure across your portfolio). Filter by position.
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+<div class="acct-field">
+<label class="acct-label">Mode</label>
+<select id="adminExpgfxMode" class="acct-input" style="padding:.55rem .75rem">
+<option value="most" selected>Most Drafted (highest exposure)</option>
+<option value="least">Least Drafted (lowest exposure)</option>
+</select>
+</div>
+<div class="acct-field">
+<label class="acct-label">Position</label>
+<select id="adminExpgfxPos" class="acct-input" style="padding:.55rem .75rem">
+<option value="ALL" selected>All Positions</option>
+<option value="QB">QB</option>
+<option value="RB">RB</option>
+<option value="WR">WR</option>
+<option value="TE">TE</option>
+</select>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+<div class="acct-field">
+<label class="acct-label">Player count</label>
+<select id="adminExpgfxCount" class="acct-input" style="padding:.55rem .75rem">
+<option value="12" selected>Top 12</option>
+<option value="24">Top 24</option>
+<option value="36">Top 36</option>
+</select>
+</div>
+<div class="acct-field">
+<label class="acct-label">Min drafts (filter out tiny samples)</label>
+<select id="adminExpgfxMinDrafts" class="acct-input" style="padding:.55rem .75rem">
+<option value="1" selected>1+ draft</option>
+<option value="3">3+ drafts</option>
+<option value="5">5+ drafts</option>
+<option value="10">10+ drafts</option>
+</select>
+</div>
+</div>
+<div class="acct-field">
+<label class="acct-label">Title (use | for line breaks; [POS] is the position label)</label>
+<input type="text" class="acct-input" id="adminExpgfxTitle" value="MOST|DRAFTED|[POS]">
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+<div class="acct-field">
+<label class="acct-label">Header theme</label>
+<select id="adminExpgfxTheme" class="acct-input" style="padding:.55rem .75rem">
+<option value="purple" selected>Purple</option>
+<option value="blue">Blue</option>
+<option value="red">Red</option>
+<option value="green">Green</option>
+<option value="orange">Orange</option>
+<option value="dark">Dark</option>
+</select>
+</div>
+<div class="acct-field">
+<label class="acct-label">Accent color (corner triangle)</label>
+<input type="color" class="acct-input" id="adminExpgfxAccent" value="#facc15" style="height:38px;padding:.2rem .35rem">
+</div>
+</div>
+<div class="acct-field">
+<label class="acct-label">Highlight color ([POS] / % text)</label>
+<input type="color" class="acct-input" id="adminExpgfxHighlight" value="#FFD700" style="height:38px;padding:.2rem .35rem">
+</div>
+<div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
+<button class="acct-btn acct-btn-outline" id="adminExpgfxPreviewBtn">PREVIEW</button>
+<button class="acct-btn acct-btn-primary" id="adminExpgfxDownloadBtn">DOWNLOAD PNG</button>
+</div>
+<div class="acct-msg" id="adminExpgfxMsg"></div>
+<div id="adminExpgfxPreviewWrap" style="margin-top:1rem;display:none;text-align:center;background:#000;padding:1rem;border-radius:6px;overflow:auto;max-height:700px"></div>
+</div>
+
 </div>
 
 </div>
@@ -18218,6 +18294,267 @@ window.fmtHeight = fmtHeight;
           }, 'image/png');
         } catch (e) {
           showAdminMsg(tgfxMsg, 'Error: ' + (e && e.message || e), 'error');
+        }
+      });
+    }
+
+    // ===== Exposure Graphic Generator (Underdog) =====
+    const expModeSel       = document.getElementById('adminExpgfxMode');
+    const expPosSel        = document.getElementById('adminExpgfxPos');
+    const expCountSel      = document.getElementById('adminExpgfxCount');
+    const expMinDraftsSel  = document.getElementById('adminExpgfxMinDrafts');
+    const expTitleInput    = document.getElementById('adminExpgfxTitle');
+    const expThemeSel      = document.getElementById('adminExpgfxTheme');
+    const expAccentInp     = document.getElementById('adminExpgfxAccent');
+    const expHighlightInp  = document.getElementById('adminExpgfxHighlight');
+    const expPreviewBtn    = document.getElementById('adminExpgfxPreviewBtn');
+    const expDownloadBtn   = document.getElementById('adminExpgfxDownloadBtn');
+    const expMsg           = document.getElementById('adminExpgfxMsg');
+    const expPreviewWrap   = document.getElementById('adminExpgfxPreviewWrap');
+
+    // Auto-update default title when mode/pos changes (only if user hasn't customized)
+    function _expDefaultTitle() {
+      const mode = expModeSel.value;
+      return (mode === 'least' ? 'LEAST' : 'MOST') + '|DRAFTED|[POS]';
+    }
+    let _expTitleCustomized = false;
+    if (expTitleInput) {
+      expTitleInput.addEventListener('input', () => { _expTitleCustomized = true; });
+    }
+    function _expSyncTitle() {
+      if (!_expTitleCustomized && expTitleInput) {
+        expTitleInput.value = _expDefaultTitle();
+      }
+    }
+    if (expModeSel) expModeSel.addEventListener('change', _expSyncTitle);
+
+    function _expBuildList() {
+      const portfolio = window._udPortfolio || {};
+      const playersMap = portfolio.players || {};
+      const numDrafts = portfolio.numDrafts || Object.keys(portfolio.drafts || {}).length || 0;
+      if (!Object.keys(playersMap).length || !numDrafts) return { items: [], numDrafts: 0 };
+
+      const mode    = expModeSel.value;          // 'most' | 'least'
+      const pos     = expPosSel.value;           // 'ALL' | 'QB' | ...
+      const count   = parseInt(expCountSel.value, 10) || 12;
+      const minDr   = parseInt(expMinDraftsSel.value, 10) || 1;
+
+      // Normalize entries; recompute exposure defensively in case it's stale
+      const items = Object.entries(playersMap).map(([name, p]) => {
+        const draftCount = (p.draftIds && (p.draftIds.size != null ? p.draftIds.size : (Array.isArray(p.draftIds) ? p.draftIds.length : 0))) || p.count || 0;
+        const exposure = (p.exposure != null) ? p.exposure : (numDrafts > 0 ? draftCount / numDrafts : 0);
+        // Lookup full NFL team name + position from D[] (more reliable than UD's short codes)
+        const dPlayer = _tgfxLookupPlayer(name);
+        return {
+          name: name,
+          pos: (dPlayer && dPlayer.s) || p.pos || '',
+          team: (dPlayer && dPlayer.t) || p.team || '',
+          exposure: exposure,
+          draftCount: draftCount
+        };
+      }).filter(item => {
+        if (item.draftCount < minDr) return false;
+        if (pos !== 'ALL' && item.pos !== pos) return false;
+        return true;
+      });
+
+      items.sort((a, b) => mode === 'least'
+        ? (a.exposure - b.exposure) || (a.draftCount - b.draftCount)
+        : (b.exposure - a.exposure) || (b.draftCount - a.draftCount));
+
+      return { items: items.slice(0, count), numDrafts: numDrafts, totalAvailable: items.length };
+    }
+
+    function _expBuildNode(opts) {
+      const { items, numDrafts, totalAvailable, title, accent, highlight, theme, mode, pos } = opts;
+      if (!items || !items.length) return null;
+
+      const themes = {
+        purple: 'linear-gradient(135deg,#4c1d95 0%,#7c3aed 55%,#a78bfa 100%)',
+        blue:   'linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#60a5fa 100%)',
+        red:    'linear-gradient(135deg,#7f1d1d 0%,#dc2626 55%,#fb7185 100%)',
+        green:  'linear-gradient(135deg,#14532d 0%,#16a34a 55%,#4ade80 100%)',
+        orange: 'linear-gradient(135deg,#7c2d12 0%,#ea580c 55%,#fb923c 100%)',
+        dark:   'linear-gradient(135deg,#0f172a 0%,#1e293b 55%,#475569 100%)'
+      };
+      const headerBg = themes[theme] || themes.purple;
+      const _highlight = highlight || '#FFD700';
+      const posLabel = (pos === 'ALL') ? 'OVERALL' : pos;
+
+      const rawTitle = title || _expDefaultTitle();
+      const titleLines = rawTitle.split('|').map(line =>
+        line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/\[POS\]/g, '<span style="color:' + _highlight + '">' + posLabel + '</span>')
+      );
+      const titleHtml = titleLines.map(line => '<div>' + line + '</div>').join('');
+
+      // Layout: same column rules as rankings graphic
+      const cols = items.length <= 12 ? 1
+                 : items.length <= 24 ? 2
+                 : items.length <= 36 ? 3
+                 : 4;
+      const rowsPerCol = Math.ceil(items.length / cols);
+      const colArrays = [];
+      for (let c = 0; c < cols; c++) {
+        colArrays.push(items.slice(c * rowsPerCol, (c + 1) * rowsPerCol));
+      }
+
+      const _scale = items.length <= 12 ? 1.0 : items.length <= 24 ? 0.78 : 0.62;
+      const RZ = (n) => Math.round(n * _scale);
+
+      function rowHtml(item, rank) {
+        const tc = item.team ? _gfxTeamColor(item.team) : { bg: '#1f2937', fg: '#FFFFFF' };
+        const logoId = (typeof TEAM_LOGO_IDS !== 'undefined' && item.team) ? TEAM_LOGO_IDS[item.team] : null;
+        const logoUrl = logoId ? ('https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png') : '';
+        const logoSize = RZ(72);
+        const logoHtml = logoUrl
+          ? '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;display:flex;align-items:center;justify-content:center;flex:0 0 ' + logoSize + 'px;background:rgba(255,255,255,.95);border-radius:50%;padding:' + RZ(6) + 'px"><img src="' + logoUrl + '" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
+          : '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;background:rgba(255,255,255,.15);border-radius:50%;flex:0 0 ' + logoSize + 'px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:' + RZ(20) + 'px">?</div>';
+        const safeName = (item.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const pct = Math.round(item.exposure * 1000) / 10; // one decimal
+        const pctText = (pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1)) + '%';
+        return '<div style="display:flex;align-items:center;gap:' + RZ(18) + 'px;padding:' + RZ(14) + 'px ' + RZ(20) + 'px;background:' + tc.bg + ';border-radius:' + RZ(10) + 'px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.07)">' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(46) + 'px;color:' + tc.fg + ';min-width:' + RZ(60) + 'px;text-align:right;font-weight:700;line-height:1">' + rank + '.</div>' +
+          logoHtml +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(42) + 'px;color:' + tc.fg + ';letter-spacing:.6px;line-height:1;flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + safeName.toUpperCase() + '</div>' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(40) + 'px;color:' + _highlight + ';letter-spacing:.5px;line-height:1;padding-left:' + RZ(14) + 'px;flex:0 0 auto;text-shadow:0 1px 2px rgba(0,0,0,.5)">' + pctText + '</div>' +
+          '</div>';
+      }
+
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'width:1080px;background:#000;font-family:"Bebas Neue",Impact,Arial,sans-serif;color:#fff;position:relative;overflow:hidden;box-sizing:border-box';
+
+      const subText = numDrafts + ' drafts · ' + items.length + ' shown' + (totalAvailable && totalAvailable > items.length ? ' / ' + totalAvailable + ' eligible' : '');
+      const subHtml = '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:30px;color:rgba(255,255,255,.85);letter-spacing:3px;margin-top:14px">' + subText + '</div>';
+
+      const mffLogo =
+        '<svg viewBox="-2 -8 46 44" width="56" height="54" style="display:block">' +
+          '<rect x="0" y="20" width="8" height="12" rx="1.5" fill="#000" opacity=".35"/>' +
+          '<rect x="11" y="14" width="8" height="18" rx="1.5" fill="#000" opacity=".55"/>' +
+          '<rect x="22" y="7" width="8" height="25" rx="1.5" fill="#000" opacity=".75"/>' +
+          '<rect x="33" y="0" width="8" height="32" rx="1.5" fill="#000" opacity=".95"/>' +
+          '<polyline points="4,17 15,11 26,4 37,-3" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>' +
+          '<circle cx="37" cy="-3" r="3.5" fill="#000"/>' +
+        '</svg>';
+
+      wrap.innerHTML =
+        '<div style="background:' + headerBg + ';padding:50px 56px 42px;position:relative;overflow:hidden;box-sizing:border-box">' +
+          '<div style="position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 150px 150px 0;border-color:transparent ' + accent + ' transparent transparent"></div>' +
+          '<div style="position:absolute;top:14px;right:14px;display:flex;align-items:center;justify-content:center">' + mffLogo + '</div>' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:130px;line-height:.92;color:#fff;letter-spacing:3px;font-weight:900;text-transform:uppercase;padding-right:160px">' + titleHtml + '</div>' +
+          subHtml +
+        '</div>' +
+        '<div style="background:#000;padding:28px 36px;display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:18px;box-sizing:border-box">' +
+          colArrays.map((colItems, ci) => {
+            const startIdx = ci * rowsPerCol;
+            return '<div style="display:flex;flex-direction:column;gap:10px">' +
+              colItems.map((it, ri) => rowHtml(it, startIdx + ri + 1)).join('') +
+            '</div>';
+          }).join('') +
+        '</div>' +
+        '<div style="background:#000;padding:16px 40px 22px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:24px;color:rgba(255,255,255,.45);letter-spacing:6px;box-sizing:border-box">MYFANTASYFOOTBALL.ORG</div>';
+
+      return wrap;
+    }
+
+    async function _expRender() {
+      await _gfxLoadHtml2Canvas();
+      const data = _expBuildList();
+      if (!data.items.length) return null;
+      const node = _expBuildNode({
+        items: data.items,
+        numDrafts: data.numDrafts,
+        totalAvailable: data.totalAvailable,
+        title: expTitleInput.value,
+        accent: expAccentInp.value || '#facc15',
+        highlight: expHighlightInp.value || '#FFD700',
+        theme: expThemeSel.value || 'purple',
+        mode: expModeSel.value,
+        pos: expPosSel.value
+      });
+      if (!node) return null;
+      const holder = document.createElement('div');
+      holder.style.cssText = 'position:fixed;left:-10000px;top:0;z-index:-1;pointer-events:none';
+      holder.appendChild(node);
+      document.body.appendChild(holder);
+      try {
+        const imgs = node.querySelectorAll('img');
+        await Promise.all(Array.from(imgs).map(img => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise(res => {
+            const t = setTimeout(res, 4000);
+            img.onload = () => { clearTimeout(t); res(); };
+            img.onerror = () => { clearTimeout(t); res(); };
+          });
+        }));
+        const canvas = await window.html2canvas(node, {
+          backgroundColor: '#000',
+          scale: 1,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          width: 1080,
+          height: node.offsetHeight,
+          windowWidth: 1080,
+          windowHeight: node.offsetHeight
+        });
+        return canvas;
+      } finally {
+        holder.remove();
+      }
+    }
+
+    if (expPreviewBtn && !expPreviewBtn._bound) {
+      expPreviewBtn._bound = true;
+      expPreviewBtn.addEventListener('click', async () => {
+        const portfolio = window._udPortfolio || {};
+        if (!portfolio.numDrafts && !Object.keys(portfolio.drafts || {}).length) {
+          showAdminMsg(expMsg, 'No Underdog portfolio loaded — sync via the extension first', 'error');
+          return;
+        }
+        showAdminMsg(expMsg, 'Generating preview…', 'success');
+        try {
+          const canvas = await _expRender();
+          if (!canvas) { showAdminMsg(expMsg, 'No players match those filters', 'error'); return; }
+          expPreviewWrap.innerHTML = '';
+          const img = new Image();
+          img.src = canvas.toDataURL('image/png');
+          img.style.cssText = 'max-width:100%;height:auto;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.5)';
+          expPreviewWrap.appendChild(img);
+          expPreviewWrap.style.display = 'block';
+          showAdminMsg(expMsg, '✅ Preview ready', 'success');
+        } catch (e) {
+          showAdminMsg(expMsg, 'Error: ' + (e && e.message || e), 'error');
+        }
+      });
+    }
+
+    if (expDownloadBtn && !expDownloadBtn._bound) {
+      expDownloadBtn._bound = true;
+      expDownloadBtn.addEventListener('click', async () => {
+        const portfolio = window._udPortfolio || {};
+        if (!portfolio.numDrafts && !Object.keys(portfolio.drafts || {}).length) {
+          showAdminMsg(expMsg, 'No Underdog portfolio loaded — sync via the extension first', 'error');
+          return;
+        }
+        showAdminMsg(expMsg, 'Generating PNG…', 'success');
+        try {
+          const canvas = await _expRender();
+          if (!canvas) { showAdminMsg(expMsg, 'No players match those filters', 'error'); return; }
+          const slug = expModeSel.value + '-drafted-' + expPosSel.value.toLowerCase() + '-top' + expCountSel.value;
+          canvas.toBlob(blob => {
+            if (!blob) { showAdminMsg(expMsg, 'PNG encode failed', 'error'); return; }
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'mff-exposure-' + slug + '.png';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+            showAdminMsg(expMsg, '✅ Downloaded ' + a.download, 'success');
+          }, 'image/png');
+        } catch (e) {
+          showAdminMsg(expMsg, 'Error: ' + (e && e.message || e), 'error');
         }
       });
     }

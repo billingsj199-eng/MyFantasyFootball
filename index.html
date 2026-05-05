@@ -575,9 +575,13 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 </select>
 </div>
 <div class="acct-field">
-<label class="acct-label">Accent color</label>
+<label class="acct-label">Accent color (corner triangle)</label>
 <input type="color" class="acct-input" id="adminGfxAccent" value="#facc15" style="height:38px;padding:.2rem .35rem">
 </div>
+</div>
+<div class="acct-field">
+<label class="acct-label">Position color (the [POS] text in the title)</label>
+<input type="color" class="acct-input" id="adminGfxPosColor" value="#FFD700" style="height:38px;padding:.2rem .35rem">
 </div>
 <div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
 <button class="acct-btn acct-btn-outline" id="adminGfxPreviewBtn">PREVIEW</button>
@@ -17564,7 +17568,8 @@ window.fmtHeight = fmtHeight;
     }
 
     function _gfxBuildNode(opts) {
-      const { pos, count, title, accent, theme, pageSlice, totalCount, source, format } = opts;
+      const { pos, count, title, accent, posColor, theme, pageSlice, totalCount, source, format } = opts;
+      const _posColor = posColor || '#FFD700';
       let list = _gfxBuildList(pos, count, source, format);
       if (pageSlice) list = list.slice(pageSlice[0], pageSlice[1]);
       if (!list.length) return { node: null, count: 0 };
@@ -17586,7 +17591,7 @@ window.fmtHeight = fmtHeight;
       // Split on | for explicit line breaks; each line renders as its own block
       const titleLines = rawTitle.split('|').map(line =>
         line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-            .replace(/\[POS\]/g, '<span style="color:' + accent + '">' + posLabel + '</span>')
+            .replace(/\[POS\]/g, '<span style="color:' + _posColor + '">' + posLabel + '</span>')
       );
       const titleHtml = titleLines.map(line => '<div>' + line + '</div>').join('');
       const useTwoCols = list.length > 10;
@@ -17704,12 +17709,14 @@ window.fmtHeight = fmtHeight;
       if (perPage > count) perPage = count;
       const srcEl = document.getElementById('adminGfxSource');
       const fmtEl = document.getElementById('adminGfxFormat');
+      const posColorEl = document.getElementById('adminGfxPosColor');
       return {
         pos: document.getElementById('adminGfxPos').value,
         count: count,
         perPage: perPage,
         title: document.getElementById('adminGfxTitle').value,
         accent: document.getElementById('adminGfxAccent').value || '#facc15',
+        posColor: (posColorEl && posColorEl.value) || '#FFD700',
         theme: document.getElementById('adminGfxTheme').value || 'purple',
         source: srcEl ? srcEl.value : null,
         format: fmtEl ? fmtEl.value : null

@@ -752,11 +752,19 @@ CLEAR
 .tcv-cards{flex:1;display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:rgba(0,0,0,.45)}
 .tcv-card{width:118px;background:linear-gradient(160deg,#1f2937 0%,#0f172a 100%);border-radius:6px;padding:6px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s;border:1px solid rgba(255,255,255,.06);user-select:none}
 .tcv-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.6);border-color:rgba(245,158,11,.4)}
-.tcv-card-rank{position:absolute;top:4px;left:6px;font-family:'Bebas Neue',Impact,sans-serif;font-size:15px;color:#fff;font-weight:700;line-height:1;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.7)}
-.tcv-card-stats{position:absolute;top:4px;right:6px;font-size:10px;color:#e2e8f0;text-align:right;line-height:1.35;font-weight:600;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.85)}
+.tcv-card-rank{position:absolute;top:3px;left:5px;font-family:'Bebas Neue',Impact,sans-serif;font-size:20px;font-weight:900;line-height:1;z-index:3;letter-spacing:.5px;-webkit-text-stroke:1.5px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7)}
+.tcv-card-rank.tier-s{color:#f87171}
+.tcv-card-rank.tier-a{color:#fb923c}
+.tcv-card-rank.tier-b{color:#fde047}
+.tcv-card-rank.tier-c{color:#4ade80}
+.tcv-card-rank.tier-d{color:#38bdf8}
+.tcv-card-rank.tier-e{color:#a78bfa}
+.tcv-card-rank.tier-f{color:#cbd5e1}
+.tcv-card-rank.tier-default{color:#e5e7eb}
+.tcv-card-stats{position:absolute;top:4px;right:6px;font-size:10px;color:#e2e8f0;text-align:right;line-height:1.35;font-weight:700;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.8)}
 .tcv-card-stats .tcv-stat-blank{opacity:.25}
-.tcv-card-img{width:100%;height:78px;object-fit:cover;object-position:center top;border-radius:3px;margin-top:22px;background:#111;display:block}
-.tcv-card-img-fallback{width:100%;height:78px;border-radius:3px;margin-top:22px;background:linear-gradient(135deg,#1e293b,#0f172a);display:flex;align-items:center;justify-content:center;color:#475569;font-size:24px;font-family:'Bebas Neue',Impact,sans-serif}
+.tcv-card-img{width:100%;height:78px;object-fit:contain;object-position:center top;margin-top:22px;background:transparent;display:block}
+.tcv-card-img-fallback{width:100%;height:78px;margin-top:22px;background:transparent;display:flex;align-items:center;justify-content:center;color:#334155;font-size:32px;font-family:'Bebas Neue',Impact,sans-serif;font-weight:900}
 .tcv-card-team{position:absolute;bottom:30px;left:5px;width:24px;height:24px;background:rgba(0,0,0,.55);border-radius:3px;padding:2px;backdrop-filter:blur(2px)}
 .tcv-card-team img{width:100%;height:100%;object-fit:contain}
 .tcv-card-name{font-family:'Bebas Neue',Impact,sans-serif;font-size:14px;color:#fff;text-align:center;margin-top:5px;letter-spacing:.6px;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
@@ -5658,7 +5666,7 @@ function getTierForRank(rank) {
 }
 
 // === Admin Tier-Card View ===
-function _tcvBuildCard(d, displayRank) {
+function _tcvBuildCard(d, displayRank, tierLabel) {
   const card = document.createElement('div');
   card.className = 'tcv-card';
   card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
@@ -5666,6 +5674,20 @@ function _tcvBuildCard(d, displayRank) {
   const ageVal = (d.age != null) ? d.age : '';
   const projVal = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
   const ppg25Val = (typeof adj25ppg === 'function') ? adj25ppg(d) : null;
+
+  // Age color coding (matches main rankings table logic)
+  function _tcvAgeColor(age, pos) {
+    if (age == null) return null;
+    const COLORS = { green: '#22c55e', yellow: '#eab308', orange: '#f97316', red: '#ef4444' };
+    if (pos === 'RB') return age >= 30 ? COLORS.red : age >= 28 ? COLORS.yellow : COLORS.green;
+    if (pos === 'QB') return age >= 35 ? COLORS.red : age >= 32 ? COLORS.orange : age >= 24 ? COLORS.green : COLORS.yellow;
+    if (pos === 'WR') return age >= 32 ? COLORS.red : age >= 29 ? COLORS.orange : age >= 24 ? COLORS.green : COLORS.yellow;
+    if (pos === 'TE') return age >= 33 ? COLORS.red : age >= 31 ? COLORS.orange : age >= 25 ? COLORS.green : COLORS.yellow;
+    return null;
+  }
+  const ageColor = _tcvAgeColor(d.age, d.s);
+  const projColor = (projVal != null && typeof posFptsColor === 'function') ? posFptsColor(projVal, d.s) : null;
+  const ppg25Color = (ppg25Val != null && typeof posFptsColor === 'function') ? posFptsColor(ppg25Val, d.s) : null;
 
   const headshotHtml = d._slImg
     ? '<img class="tcv-card-img" src="' + d._slImg + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'tcv-card-img-fallback\',textContent:\'?\'}))"/>'
@@ -5683,14 +5705,20 @@ function _tcvBuildCard(d, displayRank) {
   lastName = lastName.toUpperCase();
 
   const safeName = (s) => (s || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const fmtStat = (v) => (v == null || v === '' || (typeof v === 'number' && !isFinite(v))) ? '<span class="tcv-stat-blank">—</span>' : v;
+  const fmtStat = (v, color) => {
+    if (v == null || v === '' || (typeof v === 'number' && !isFinite(v))) return '<span class="tcv-stat-blank">—</span>';
+    return color ? '<span style="color:' + color + '">' + v + '</span>' : String(v);
+  };
+
+  const tierKey = (tierLabel || '').toLowerCase().replace(/[^a-z]/g, '');
+  const rankTierCls = tierKey ? 'tier-' + tierKey : 'tier-default';
 
   card.innerHTML =
-    '<div class="tcv-card-rank">' + displayRank + '.</div>' +
+    '<div class="tcv-card-rank ' + rankTierCls + '">' + displayRank + '.</div>' +
     '<div class="tcv-card-stats" title="Age / Proj PPG / 2025 PPG">' +
-      fmtStat(ageVal) + '<br>' +
-      fmtStat(projVal) + '<br>' +
-      fmtStat(ppg25Val) +
+      fmtStat(ageVal, ageColor) + '<br>' +
+      fmtStat(projVal, projColor) + '<br>' +
+      fmtStat(ppg25Val, ppg25Color) +
     '</div>' +
     headshotHtml +
     logoHtml +
@@ -5754,7 +5782,7 @@ function _renderTierCardView(data, container) {
     row.appendChild(letter);
     const cards = document.createElement('div');
     cards.className = 'tcv-cards';
-    g.players.forEach(p => cards.appendChild(_tcvBuildCard(p.d, p.displayRank)));
+    g.players.forEach(p => cards.appendChild(_tcvBuildCard(p.d, p.displayRank, g.label)));
     row.appendChild(cards);
     root.appendChild(row);
   });

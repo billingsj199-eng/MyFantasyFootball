@@ -498,50 +498,6 @@ PREMIUM ACTIVE
 </div>
 
 <div class="acct-section">
-<div class="acct-section-title">🔄 Roster Overrides (post-draft moves)</div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
-Log trades, cuts, and retirements that happen AFTER the draft so landing-spot signals (BLOCKED / VACATE) recompute for 2026 rookies.<br>
-<span style="color:var(--text1);font-weight:600">Formats:</span> <code style="background:var(--surface2);padding:1px 4px;border-radius:3px">Player Name out</code>, <code style="background:var(--surface2);padding:1px 4px;border-radius:3px">Player Name → TEAM</code>, <code style="background:var(--surface2);padding:1px 4px;border-radius:3px">Player Name retired</code>. One per line.<br>
-<span style="font-style:italic;color:var(--text2)">Examples: "A.J. Brown → SF", "Tony Pollard out", "Aaron Rodgers retired"</span>
-</div>
-<div class="acct-field">
-<label class="acct-label">Bulk paste</label>
-<textarea id="adminRosterOverrideInput" class="acct-input" rows="5" style="font-family:monospace;font-size:.8rem;padding:.6rem" placeholder="A.J. Brown → SF&#10;Tony Pollard out&#10;Aaron Rodgers retired"></textarea>
-</div>
-<div style="display:flex;gap:8px;margin-top:.5rem;flex-wrap:wrap">
-<button class="acct-btn acct-btn-outline" id="adminRosterOverridePreviewBtn">PREVIEW</button>
-<button class="acct-btn acct-btn-primary" id="adminRosterOverrideApplyBtn" disabled>APPLY</button>
-</div>
-<div class="acct-msg" id="adminRosterOverrideMsg"></div>
-<div id="adminRosterOverridePreview" style="margin-top:.75rem;font-size:.75rem;display:none"></div>
-<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
-<div style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem;font-weight:600">Active overrides:</div>
-<div id="adminRosterOverrideList" style="font-size:.8rem;line-height:1.8">loading...</div>
-</div>
-</div>
-
-<div class="acct-section">
-<div class="acct-section-title">🎂 Bulk Birthday Entry (2026 prospects)</div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
-Paste birthdays for 2026 prospects to fill missing age data. Age drives JM heavily for RB/WR/TE.<br>
-<span style="color:var(--text1);font-weight:600">Format:</span> <code style="background:var(--surface2);padding:1px 4px;border-radius:3px">Player Name: YYYY-MM-DD</code> (one per line).<br>
-<span style="font-style:italic;color:var(--text2)">Examples: "Carson Beck: 2002-12-12", "Cade Klubnik: 2004-03-31"</span>
-</div>
-<div class="acct-field">
-<label class="acct-label">Bulk paste</label>
-<textarea id="adminBirthdayInput" class="acct-input" rows="8" style="font-family:monospace;font-size:.8rem;padding:.6rem" placeholder="Carson Beck: 2002-12-12&#10;Cade Klubnik: 2004-03-31&#10;Barion Brown: 2004-04-20"></textarea>
-</div>
-<div style="display:flex;gap:8px;margin-top:.5rem;flex-wrap:wrap">
-<button class="acct-btn acct-btn-outline" id="adminBirthdayPreviewBtn">PREVIEW</button>
-<button class="acct-btn acct-btn-primary" id="adminBirthdayApplyBtn" disabled>APPLY</button>
-<button class="acct-btn acct-btn-outline" id="adminBirthdayMissingBtn" title="Show all 2026 prospects currently missing birthdays">SHOW MISSING</button>
-</div>
-<div class="acct-msg" id="adminBirthdayMsg"></div>
-<div id="adminBirthdayPreview" style="margin-top:.75rem;font-size:.75rem;display:none"></div>
-<div id="adminBirthdayMissing" style="margin-top:.75rem;font-size:.75rem;display:none"></div>
-</div>
-
-<div class="acct-section">
 <div class="acct-section-title">🎨 Rankings Graphic Generator</div>
 <div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
 Build a stylized PNG of your top players (uses your personal board order). Pick a position and theme, preview, then download.
@@ -566,12 +522,20 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 <div class="acct-field">
 <label class="acct-label">Player count</label>
 <select id="adminGfxCount" class="acct-input" style="padding:.55rem .75rem">
-<option value="10">Top 10</option>
-<option value="20" selected>Top 20</option>
-<option value="25">Top 25</option>
-<option value="30">Top 30</option>
+<option value="12" selected>Top 12</option>
+<option value="24">Top 24</option>
+<option value="36">Top 36</option>
+<option value="48">Top 48</option>
 </select>
 </div>
+</div>
+<div class="acct-field">
+<label class="acct-label">Players per graphic (paginates if &lt; total count)</label>
+<select id="adminGfxPerPage" class="acct-input" style="padding:.55rem .75rem">
+<option value="12" selected>12 per page</option>
+<option value="24">24 per page</option>
+<option value="36">36 per page (single image)</option>
+</select>
 </div>
 <div class="acct-field">
 <label class="acct-label">Title (use [POS] as placeholder, gets replaced + accent-colored)</label>
@@ -697,6 +661,12 @@ CLEAR
 <button class="pos-btn rookie-sub-btn" data-rookiepos="WR" style="padding:.25rem .65rem;font-size:.65rem">WR</button>
 <button class="pos-btn rookie-sub-btn" data-rookiepos="TE" style="padding:.25rem .65rem;font-size:.65rem">TE</button>
 </div>
+<!-- Admin-only view-mode toggle -->
+<div id="adminViewToggle" style="display:none;margin-top:6px;padding:5px 8px;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-right:4px">ADMIN VIEW:</span>
+<button class="pos-btn view-mode-btn active" data-viewmode="all" style="padding:.25rem .8rem;font-size:.65rem">TABLE</button>
+<button class="pos-btn view-mode-btn" data-viewmode="tierCard" style="padding:.25rem .8rem;font-size:.65rem;background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(236,72,153,.25));border-color:rgba(167,139,250,.4)">🎴 TIER CARDS</button>
+</div>
 </div>
 
 </div>
@@ -766,7 +736,44 @@ CLEAR
 
 <div class="stats-bar" id="statsBar"></div>
 
+<style>
+/* Tier Card View (admin) */
+.tier-card-view{padding:1rem;background:#0a0a0a;min-height:300px}
+.tcv-tier-row{display:flex;align-items:stretch;margin-bottom:8px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.02);min-height:160px}
+.tcv-letter{flex:0 0 56px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:38px;color:#fff;font-weight:900;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.4)}
+.tcv-letter.s,.tcv-letter.tier-s{background:linear-gradient(135deg,#dc2626,#f87171)}
+.tcv-letter.a,.tcv-letter.tier-a{background:linear-gradient(135deg,#ea580c,#fb923c)}
+.tcv-letter.b,.tcv-letter.tier-b{background:linear-gradient(135deg,#ca8a04,#facc15);color:#1a1a1a}
+.tcv-letter.c,.tcv-letter.tier-c{background:linear-gradient(135deg,#16a34a,#4ade80)}
+.tcv-letter.d,.tcv-letter.tier-d{background:linear-gradient(135deg,#0284c7,#38bdf8)}
+.tcv-letter.e,.tcv-letter.tier-e{background:linear-gradient(135deg,#7c3aed,#a78bfa)}
+.tcv-letter.f,.tcv-letter.tier-f{background:linear-gradient(135deg,#475569,#94a3b8)}
+.tcv-letter.tier-default,.tcv-letter.none{background:#1f2937;color:#6b7280}
+.tcv-cards{flex:1;display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:rgba(0,0,0,.45)}
+.tcv-card{width:118px;background:linear-gradient(160deg,#1f2937 0%,#0f172a 100%);border-radius:6px;padding:6px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s;border:1px solid rgba(255,255,255,.06);user-select:none}
+.tcv-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.6);border-color:rgba(245,158,11,.4)}
+.tcv-card-rank{position:absolute;top:4px;left:6px;font-family:'Bebas Neue',Impact,sans-serif;font-size:15px;color:#fff;font-weight:700;line-height:1;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.tcv-card-stats{position:absolute;top:4px;right:6px;font-size:10px;color:#e2e8f0;text-align:right;line-height:1.35;font-weight:600;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.85)}
+.tcv-card-stats .tcv-stat-blank{opacity:.25}
+.tcv-card-img{width:100%;height:78px;object-fit:cover;object-position:center top;border-radius:3px;margin-top:22px;background:#111;display:block}
+.tcv-card-img-fallback{width:100%;height:78px;border-radius:3px;margin-top:22px;background:linear-gradient(135deg,#1e293b,#0f172a);display:flex;align-items:center;justify-content:center;color:#475569;font-size:24px;font-family:'Bebas Neue',Impact,sans-serif}
+.tcv-card-team{position:absolute;bottom:30px;left:5px;width:24px;height:24px;background:rgba(0,0,0,.55);border-radius:3px;padding:2px;backdrop-filter:blur(2px)}
+.tcv-card-team img{width:100%;height:100%;object-fit:contain}
+.tcv-card-name{font-family:'Bebas Neue',Impact,sans-serif;font-size:14px;color:#fff;text-align:center;margin-top:5px;letter-spacing:.6px;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+.tcv-pos-pill{position:absolute;bottom:6px;right:5px;font-size:8.5px;padding:1px 4px;border-radius:2px;font-weight:700;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.5px;color:#fff;line-height:1.3}
+.tcv-pos-pill.QB{background:#ec4899}
+.tcv-pos-pill.RB{background:#10b981}
+.tcv-pos-pill.WR{background:#3b82f6}
+.tcv-pos-pill.TE{background:#f59e0b}
+.tcv-pos-pill.K,.tcv-pos-pill.DST{background:#64748b}
+.tcv-stats-legend{display:flex;justify-content:flex-end;gap:14px;padding:6px 14px 10px;font-size:10px;color:var(--text2);font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.8px;background:#0a0a0a}
+.tcv-stats-legend span{display:flex;align-items:center;gap:4px}
+.tcv-stats-legend .tcv-key{display:inline-block;width:8px;height:8px;border-radius:50%;background:#94a3b8}
+</style>
+
 <div class="table-wrap">
+<!-- Admin tier-card view (hidden unless admin toggles to tierCard mode) -->
+<div id="tierCardWrap" style="display:none"></div>
 <table>
 <thead>
 <tr>
@@ -5650,6 +5657,112 @@ function getTierForRank(rank) {
   return currentTier ? currentTier.label : '';
 }
 
+// === Admin Tier-Card View ===
+function _tcvBuildCard(d, displayRank) {
+  const card = document.createElement('div');
+  card.className = 'tcv-card';
+  card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
+
+  const ageVal = (d.age != null) ? d.age : '';
+  const projVal = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+  const ppg25Val = (typeof adj25ppg === 'function') ? adj25ppg(d) : null;
+
+  const headshotHtml = d._slImg
+    ? '<img class="tcv-card-img" src="' + d._slImg + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'tcv-card-img-fallback\',textContent:\'?\'}))"/>'
+    : '<div class="tcv-card-img-fallback">?</div>';
+
+  const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
+  const logoHtml = logoId
+    ? '<div class="tcv-card-team"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt=""/></div>'
+    : '';
+
+  // Last name only (e.g., "Ja'Marr Chase" -> "CHASE", "Smith-Njigba" stays "SMITH-NJIGBA")
+  const parts = (d.n || '').trim().split(/\s+/);
+  let lastName = parts[parts.length - 1] || (d.n || '');
+  // Truncate to fit (~10 chars before ellipsis is added by CSS)
+  lastName = lastName.toUpperCase();
+
+  const safeName = (s) => (s || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const fmtStat = (v) => (v == null || v === '' || (typeof v === 'number' && !isFinite(v))) ? '<span class="tcv-stat-blank">—</span>' : v;
+
+  card.innerHTML =
+    '<div class="tcv-card-rank">' + displayRank + '.</div>' +
+    '<div class="tcv-card-stats" title="Age / Proj PPG / 2025 PPG">' +
+      fmtStat(ageVal) + '<br>' +
+      fmtStat(projVal) + '<br>' +
+      fmtStat(ppg25Val) +
+    '</div>' +
+    headshotHtml +
+    logoHtml +
+    '<div class="tcv-pos-pill ' + (d.s || '') + '">' + (d.s || '') + '</div>' +
+    '<div class="tcv-card-name" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>';
+
+  card.addEventListener('click', () => {
+    if (typeof openPlayerCard === 'function') openPlayerCard(d);
+  });
+  return card;
+}
+
+function _renderTierCardView(data, container) {
+  // Decide whether to use position-rank (for QB/RB/WR/TE filters) or overall myRank for tier lookup
+  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+
+  // Group consecutive players sharing the same tier label
+  const groups = [];
+  let currentLabel = null;
+  let currentGroup = null;
+
+  data.forEach((d, i) => {
+    const rankForTier = useFilteredRank ? (i + 1) : (d.myRank || (i + 1));
+    const tierLabel = (typeof getTierForRank === 'function') ? getTierForRank(rankForTier) : '';
+    const groupKey = tierLabel || '__none__';
+    if (groupKey !== currentLabel) {
+      currentLabel = groupKey;
+      currentGroup = { label: tierLabel, players: [] };
+      groups.push(currentGroup);
+    }
+    currentGroup.players.push({ d: d, displayRank: i + 1 });
+  });
+
+  // Build DOM
+  const root = document.createElement('div');
+  root.className = 'tier-card-view';
+
+  // Header: filter context + stats legend
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:0 4px 10px;flex-wrap:wrap;gap:8px';
+  const ctx = document.createElement('div');
+  ctx.style.cssText = 'font-family:\'Bebas Neue\',Impact,sans-serif;font-size:14px;color:var(--text1);letter-spacing:1.5px';
+  const filterLabel = filter === 'ROOKIE' && rookiePosFilter && rookiePosFilter !== 'ALL'
+    ? 'ROOKIE ' + rookiePosFilter
+    : filter;
+  ctx.textContent = 'TIER CARDS — ' + filterLabel + ' · ' + data.length + ' PLAYERS';
+  header.appendChild(ctx);
+  const legend = document.createElement('div');
+  legend.className = 'tcv-stats-legend';
+  legend.innerHTML = '<span>STATS:</span><span>AGE</span><span style="color:#475569">/</span><span>PROJ PPG</span><span style="color:#475569">/</span><span>\'25 PPG</span>';
+  header.appendChild(legend);
+  root.appendChild(header);
+
+  groups.forEach(g => {
+    const row = document.createElement('div');
+    row.className = 'tcv-tier-row';
+    const letter = document.createElement('div');
+    const labelKey = (g.label || '').toLowerCase().replace(/[^a-z]/g, '');
+    letter.className = 'tcv-letter ' + (labelKey ? 'tier-' + labelKey : 'tier-default');
+    letter.textContent = g.label || '—';
+    row.appendChild(letter);
+    const cards = document.createElement('div');
+    cards.className = 'tcv-cards';
+    g.players.forEach(p => cards.appendChild(_tcvBuildCard(p.d, p.displayRank)));
+    row.appendChild(cards);
+    root.appendChild(row);
+  });
+
+  container.innerHTML = '';
+  container.appendChild(root);
+}
+
 // Check if user has active premium
 function hasPremium() {
   if (typeof window.isAdmin === 'function' && window.isAdmin()) return true;
@@ -5670,6 +5783,30 @@ function render() {
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
   const editable = canEdit();
+
+  // Admin tier-card view: render to a separate container and skip the table render
+  const _tierCardWrap = document.getElementById('tierCardWrap');
+  const _isAdminViewer = (typeof window.isAdmin === 'function' && window.isAdmin());
+  const _useTierCardView = (viewMode === 'tierCard' && _isAdminViewer);
+  const _rankingsTable = _tierCardWrap ? _tierCardWrap.parentElement.querySelector('table') : null;
+  if (_useTierCardView) {
+    if (_rankingsTable) _rankingsTable.style.display = 'none';
+    if (_tierCardWrap) _tierCardWrap.style.display = '';
+    if (!data.length) {
+      if (_tierCardWrap) _tierCardWrap.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text2)">No players match your filters.</div>';
+      empty.style.display = 'none';
+      updateStats(data);
+      return;
+    }
+    if (_tierCardWrap) _renderTierCardView(data, _tierCardWrap);
+    empty.style.display = 'none';
+    updateStats(data);
+    return;
+  } else {
+    if (_rankingsTable) _rankingsTable.style.display = '';
+    if (_tierCardWrap) { _tierCardWrap.style.display = 'none'; _tierCardWrap.innerHTML = ''; }
+  }
+
   if (!data.length) { tbody.innerHTML = ''; empty.style.display = 'block'; updateStats(data); return; }
   empty.style.display = 'none';
 
@@ -6164,6 +6301,35 @@ document.querySelectorAll('.rookie-sub-btn[data-rookiepos]').forEach(btn => {
     render();
   });
 });
+
+// Admin-only view-mode toggle (TABLE / TIER CARDS)
+document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    viewMode = btn.dataset.viewmode;
+    render();
+  });
+});
+
+// Show admin view-mode toggle on auth/admin status change
+function _refreshAdminViewToggle() {
+  const wrap = document.getElementById('adminViewToggle');
+  if (!wrap) return;
+  const isAdm = (typeof window.isAdmin === 'function' && window.isAdmin());
+  wrap.style.display = isAdm ? 'flex' : 'none';
+  if (!isAdm && viewMode === 'tierCard') {
+    viewMode = 'all';
+    document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(b => b.classList.toggle('active', b.dataset.viewmode === 'all'));
+    if (typeof render === 'function') render();
+  }
+}
+_refreshAdminViewToggle();
+// Re-check on auth state changes (admin status may flip after login)
+if (typeof firebase !== 'undefined' && firebase.auth) {
+  try { firebase.auth().onAuthStateChanged(() => setTimeout(_refreshAdminViewToggle, 250)); } catch(e) {}
+}
+window._refreshAdminViewToggle = _refreshAdminViewToggle;
 
 // Scoring format toggle (PPR / Half / STD)
 const _scoringLabelsRnk = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
@@ -16908,6 +17074,8 @@ window.fmtHeight = fmtHeight;
     if (typeof window.isAdmin === 'function' && window.isAdmin()) {
       adminTab.style.display = '';
       if (adminPanel) adminPanel.style.display = '';
+      // Reveal the admin-only Tier Cards view toggle on the rankings page
+      if (typeof window._refreshAdminViewToggle === 'function') window._refreshAdminViewToggle();
     } else {
       adminTab.style.display = 'none';
       if (adminPanel) { adminPanel.classList.remove('active'); adminPanel.style.display = 'none'; }
@@ -17016,278 +17184,6 @@ window.fmtHeight = fmtHeight;
       });
     }
 
-    // ───────── Roster Override UI ─────────
-    const roInput   = document.getElementById('adminRosterOverrideInput');
-    const roPrevBtn = document.getElementById('adminRosterOverridePreviewBtn');
-    const roApplyBtn= document.getElementById('adminRosterOverrideApplyBtn');
-    const roMsg     = document.getElementById('adminRosterOverrideMsg');
-    const roPreview = document.getElementById('adminRosterOverridePreview');
-    const roList    = document.getElementById('adminRosterOverrideList');
-
-    function _roRenderList() {
-      if (!roList) return;
-      const keys = Object.keys(_rosterOverrides || {});
-      if (!keys.length) { roList.innerHTML = '<div style="color:#888;font-style:italic">No roster overrides yet. Use the textarea above to add post-draft FA/trade moves.</div>'; return; }
-      const rows = keys.sort((a,b) => (_rosterOverrides[a].player||'').localeCompare(_rosterOverrides[b].player||''))
-        .map(function(k) {
-          const ov = _rosterOverrides[k];
-          const desc = ov.action === 'traded'
-            ? (ov.originalTeam || '?') + ' → ' + (ov.newTeam || '?')
-            : (ov.action.toUpperCase() + ' from ' + (ov.originalTeam || '?'));
-          return '<div data-rokey="'+k+'" style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.25rem 0;border-bottom:1px solid rgba(255,255,255,0.06)">'
-            + '<span><strong>' + ov.player + '</strong> &middot; <span style="color:#9ca3af">' + desc + '</span> &middot; <span style="color:#6b7280;font-size:.7rem">'+ov.year+'</span></span>'
-            + '<button class="acct-btn acct-btn-outline" data-rodel="'+k+'" style="padding:.2rem .5rem;font-size:.7rem">×</button>'
-            + '</div>';
-        }).join('');
-      roList.innerHTML = rows;
-      // Wire delete buttons
-      roList.querySelectorAll('[data-rodel]').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          const k = btn.getAttribute('data-rodel');
-          const ov = _rosterOverrides[k];
-          if (!ov) return;
-          if (!confirm('Delete override for ' + ov.player + '?')) return;
-          btn.disabled = true;
-          _roDelete(k).then(function() {
-            showAdminMsg(roMsg, 'Deleted override for ' + ov.player, 'success');
-            if (typeof _pmBuildCache !== 'undefined') { _pmBuildCache = null; _pmBuildCacheKey = null; }
-            _roRenderList();
-          }).catch(function(e) {
-            btn.disabled = false;
-            showAdminMsg(roMsg, 'Delete failed: ' + e.message, 'error');
-          });
-        });
-      });
-    }
-
-    // Ensure overrides are loaded before rendering the list
-    if (roList && !roList._roBound) {
-      roList._roBound = true;
-      if (_roLoaded) {
-        _roRenderList();
-      } else {
-        roList.innerHTML = '<div style="color:#888">Loading overrides…</div>';
-        _roLoad().then(_roRenderList);
-      }
-    }
-
-    // PREVIEW button — parse lines, resolve originalTeam, show validation
-    let _roPending = []; // parsed+resolved entries, ready for APPLY
-    if (roPrevBtn && !roPrevBtn._bound) {
-      roPrevBtn._bound = true;
-      roPrevBtn.addEventListener('click', function() {
-        const lines = String(roInput.value || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-        if (!lines.length) { showAdminMsg(roMsg, 'Enter at least one line', 'error'); return; }
-        _roPending = [];
-        const rows = [];
-        const yr = (new Date()).getFullYear();
-        lines.forEach(function(line) {
-          const parsed = _roParseLine(line);
-          if (!parsed.ok) {
-            rows.push('<div style="color:#ef4444">✗ ' + line + ' <span style="color:#9ca3af">— unrecognized (try "Name out" or "Name → SF")</span></div>');
-            return;
-          }
-          const origTeam = _roResolveOriginalTeam(parsed.player);
-          if (!origTeam) {
-            rows.push('<div style="color:#f59e0b">⚠ ' + parsed.player + ' — no current team found in PLAYER_TEAM_HISTORY. Will save anyway.</div>');
-          }
-          const entry = {
-            player: parsed.player,
-            originalTeam: origTeam || null,
-            newTeam: parsed.newTeam,
-            action: parsed.action,
-            year: yr
-          };
-          _roPending.push(entry);
-          const desc = parsed.action === 'traded'
-            ? (origTeam || '?') + ' → ' + parsed.newTeam
-            : (parsed.action.toUpperCase() + ' from ' + (origTeam || '?'));
-          rows.push('<div style="color:#10b981">✓ <strong>' + parsed.player + '</strong> <span style="color:#9ca3af">— ' + desc + '</span></div>');
-        });
-        roPreview.innerHTML = rows.join('');
-        roPreview.style.display = '';
-        roApplyBtn.disabled = _roPending.length === 0;
-        showAdminMsg(roMsg, 'Previewed ' + _roPending.length + ' of ' + lines.length + ' lines. Review above and click APPLY.', _roPending.length ? 'success' : 'error');
-      });
-
-      roApplyBtn.addEventListener('click', function() {
-        if (!_roPending.length) { showAdminMsg(roMsg, 'Nothing to apply — click PREVIEW first', 'error'); return; }
-        roApplyBtn.disabled = true;
-        roApplyBtn.textContent = 'SAVING…';
-        const tasks = _roPending.map(function(e) { return _roSave(e); });
-        Promise.all(tasks).then(function() {
-          roApplyBtn.textContent = 'APPLY';
-          roApplyBtn.disabled = true;
-          const n = _roPending.length;
-          _roPending = [];
-          roInput.value = '';
-          roPreview.innerHTML = '';
-          roPreview.style.display = 'none';
-          if (typeof _pmBuildCache !== 'undefined') { _pmBuildCache = null; _pmBuildCacheKey = null; }
-          _roRenderList();
-          showAdminMsg(roMsg, '✅ Saved ' + n + ' roster override' + (n===1?'':'s') + '. Prospect chips will refresh on next build.', 'success');
-        }).catch(function(e) {
-          roApplyBtn.textContent = 'APPLY';
-          roApplyBtn.disabled = false;
-          showAdminMsg(roMsg, 'Save failed: ' + e.message, 'error');
-        });
-      });
-    }
-
-    // ───────── Bulk Birthday Entry UI ─────────
-    const bdInput   = document.getElementById('adminBirthdayInput');
-    const bdPrevBtn = document.getElementById('adminBirthdayPreviewBtn');
-    const bdApplyBtn= document.getElementById('adminBirthdayApplyBtn');
-    const bdMissBtn = document.getElementById('adminBirthdayMissingBtn');
-    const bdMsg     = document.getElementById('adminBirthdayMsg');
-    const bdPreview = document.getElementById('adminBirthdayPreview');
-    const bdMissing = document.getElementById('adminBirthdayMissing');
-    let _bdPending = []; // {name, date, raw} entries ready for APPLY
-
-    // Resolve a raw name against COMBINE_DATA. Returns canonical name or null.
-    function _bdResolveName(raw) {
-      if (typeof COMBINE_DATA === 'undefined') return null;
-      if (COMBINE_DATA[raw]) return raw; // exact match
-      const normRaw = (typeof _pmNormName === 'function') ? _pmNormName(raw) : String(raw).toLowerCase().replace(/[^a-z0-9]/g,'');
-      // Search COMBINE_DATA for a normalized match (prefer 2026 non-devy)
-      const candidates = [];
-      for (const n in COMBINE_DATA) {
-        const nn = (typeof _pmNormName === 'function') ? _pmNormName(n) : String(n).toLowerCase().replace(/[^a-z0-9]/g,'');
-        if (nn === normRaw) candidates.push(n);
-      }
-      if (candidates.length === 1) return candidates[0];
-      if (candidates.length > 1) {
-        // Prefer 2026 non-devy
-        const yr2026 = candidates.filter(n => {
-          const cb = COMBINE_DATA[n];
-          return cb && cb.yr === 2026 && !cb.devy;
-        });
-        if (yr2026.length === 1) return yr2026[0];
-        return candidates[0]; // first wins
-      }
-      return null;
-    }
-
-    function _bdParseLine(line) {
-      // Accept: "Name: YYYY-MM-DD", "Name - YYYY-MM-DD", "Name YYYY-MM-DD", "Name, YYYY-MM-DD"
-      const m = line.match(/^(.+?)[\s,:\-–—]+(\d{4}-\d{1,2}-\d{1,2})\s*$/);
-      if (!m) return { ok:false, err:'format: "Name: YYYY-MM-DD"' };
-      const name = m[1].trim();
-      let date = m[2];
-      // Normalize to YYYY-MM-DD
-      const parts = date.split('-');
-      if (parts.length !== 3) return { ok:false, err:'bad date' };
-      const y = parseInt(parts[0], 10);
-      const mo = parseInt(parts[1], 10);
-      const d = parseInt(parts[2], 10);
-      if (!y || !mo || !d) return { ok:false, err:'bad date numbers' };
-      if (y < 1990 || y > 2010) return { ok:false, err:'year out of range (1990-2010)' };
-      if (mo < 1 || mo > 12) return { ok:false, err:'month out of range' };
-      if (d < 1 || d > 31) return { ok:false, err:'day out of range' };
-      // Sanity: not in the future
-      const dt = new Date(y, mo-1, d);
-      if (isNaN(dt.getTime())) return { ok:false, err:'invalid date' };
-      if (dt > new Date()) return { ok:false, err:'future date' };
-      date = y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-      return { ok:true, name, date };
-    }
-
-    // SHOW MISSING — list all 2026 non-devy prospects without birthdays
-    if (bdMissBtn && !bdMissBtn._bound) {
-      bdMissBtn._bound = true;
-      bdMissBtn.addEventListener('click', function() {
-        if (typeof COMBINE_DATA === 'undefined') { showAdminMsg(bdMsg, 'COMBINE_DATA not loaded yet', 'error'); return; }
-        const lby = (typeof LEGEND_BIRTH_YEARS !== 'undefined') ? LEGEND_BIRTH_YEARS : {};
-        const missing = [];
-        for (const n in COMBINE_DATA) {
-          const cb = COMBINE_DATA[n];
-          if (!cb || cb.yr !== 2026 || cb.devy) continue;
-          if (!lby[n]) missing.push({ name:n, pos:cb.pos||'?' });
-        }
-        missing.sort((a,b)=>a.name.localeCompare(b.name));
-        if (!missing.length) { bdMissing.innerHTML = '<div style="color:#10b981">🎉 Every 2026 prospect has a birthday on file.</div>'; bdMissing.style.display=''; return; }
-        const byPos = {};
-        missing.forEach(m => { byPos[m.pos] = byPos[m.pos] || []; byPos[m.pos].push(m.name); });
-        const rows = Object.keys(byPos).sort().map(pos => {
-          const list = byPos[pos].map(n => '<span style="display:inline-block;background:var(--surface2);padding:2px 6px;margin:2px;border-radius:3px;font-size:.72rem;cursor:pointer" data-bdadd="'+n.replace(/"/g,'&quot;')+'">'+n+'</span>').join('');
-          return '<div style="margin-top:.5rem"><span style="color:#9ca3af;font-weight:600">'+pos+' ('+byPos[pos].length+'):</span><br>'+list+'</div>';
-        }).join('');
-        bdMissing.innerHTML = '<div style="color:var(--text2);margin-bottom:.25rem">Missing birthdays: <strong>'+missing.length+'</strong> (click a name to add it to the textarea)</div>' + rows;
-        bdMissing.style.display = '';
-        // Click a chip to append "Name: " to the textarea
-        bdMissing.querySelectorAll('[data-bdadd]').forEach(function(chip) {
-          chip.addEventListener('click', function() {
-            const n = chip.getAttribute('data-bdadd');
-            const cur = bdInput.value.replace(/\s+$/,'');
-            bdInput.value = (cur ? cur + '\n' : '') + n + ': ';
-            bdInput.focus();
-            // Move caret to end
-            bdInput.setSelectionRange(bdInput.value.length, bdInput.value.length);
-          });
-        });
-      });
-    }
-
-    // PREVIEW — parse lines, resolve names, validate
-    if (bdPrevBtn && !bdPrevBtn._bound) {
-      bdPrevBtn._bound = true;
-      bdPrevBtn.addEventListener('click', function() {
-        const lines = String(bdInput.value || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-        if (!lines.length) { showAdminMsg(bdMsg, 'Enter at least one line', 'error'); return; }
-        _bdPending = [];
-        const rows = [];
-        const lby = (typeof LEGEND_BIRTH_YEARS !== 'undefined') ? LEGEND_BIRTH_YEARS : {};
-        lines.forEach(function(line) {
-          const parsed = _bdParseLine(line);
-          if (!parsed.ok) {
-            rows.push('<div style="color:#ef4444">✗ ' + line + ' <span style="color:#9ca3af">— ' + parsed.err + '</span></div>');
-            return;
-          }
-          const canonical = _bdResolveName(parsed.name);
-          if (!canonical) {
-            rows.push('<div style="color:#f59e0b">⚠ <strong>' + parsed.name + '</strong> — not found in COMBINE_DATA. Will save anyway under the name as typed.</div>');
-            _bdPending.push({ name: parsed.name, date: parsed.date, matched: false });
-            return;
-          }
-          const existing = lby[canonical];
-          const note = existing ? ' <span style="color:#f59e0b">(overwriting existing: '+existing+')</span>' : '';
-          const renamed = (canonical !== parsed.name) ? ' <span style="color:#9ca3af">→ matched "'+canonical+'"</span>' : '';
-          rows.push('<div style="color:#10b981">✓ <strong>' + parsed.name + '</strong>' + renamed + ' &middot; ' + parsed.date + note + '</div>');
-          _bdPending.push({ name: canonical, date: parsed.date, matched: true });
-        });
-        bdPreview.innerHTML = rows.join('');
-        bdPreview.style.display = '';
-        bdApplyBtn.disabled = _bdPending.length === 0;
-        const valid = _bdPending.length;
-        showAdminMsg(bdMsg, 'Previewed ' + valid + ' of ' + lines.length + ' lines. Review above and click APPLY.', valid ? 'success' : 'error');
-      });
-
-      bdApplyBtn.addEventListener('click', function() {
-        if (!_bdPending.length) { showAdminMsg(bdMsg, 'Nothing to apply — click PREVIEW first', 'error'); return; }
-        if (typeof _bioSave !== 'function') { showAdminMsg(bdMsg, '_bioSave not available', 'error'); return; }
-        bdApplyBtn.disabled = true;
-        bdApplyBtn.textContent = 'SAVING…';
-        try {
-          _bdPending.forEach(function(e) {
-            _bioSave(e.name, 'birth', e.date);
-          });
-          const n = _bdPending.length;
-          _bdPending = [];
-          bdInput.value = '';
-          bdPreview.innerHTML = '';
-          bdPreview.style.display = 'none';
-          bdApplyBtn.textContent = 'APPLY';
-          bdApplyBtn.disabled = true;
-          if (typeof _pmBuildCache !== 'undefined') { _pmBuildCache = null; _pmBuildCacheKey = null; }
-          showAdminMsg(bdMsg, '✅ Saved ' + n + ' birthday' + (n===1?'':'s') + '. Prospect scores will refresh on next build.', 'success');
-        } catch (err) {
-          bdApplyBtn.textContent = 'APPLY';
-          bdApplyBtn.disabled = false;
-          showAdminMsg(bdMsg, 'Save failed: ' + (err && err.message || err), 'error');
-        }
-      });
-    }
-
     // ===== Rankings Graphic Generator =====
     const gfxPreviewBtn = document.getElementById('adminGfxPreviewBtn');
     const gfxDownloadBtn = document.getElementById('adminGfxDownloadBtn');
@@ -17296,13 +17192,33 @@ window.fmtHeight = fmtHeight;
     function _gfxLoadHtml2Canvas() {
       if (typeof window.html2canvas === 'function') return Promise.resolve();
       if (window._gfxH2cLoading) return window._gfxH2cLoading;
-      window._gfxH2cLoading = new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error('Failed to load html2canvas'));
-        document.head.appendChild(s);
-      });
+      const cdns = [
+        'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+        'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+        'https://cdn.skypack.dev/html2canvas@1.4.1'
+      ];
+      window._gfxH2cLoading = (async () => {
+        let lastErr = null;
+        for (const url of cdns) {
+          try {
+            await new Promise((resolve, reject) => {
+              const s = document.createElement('script');
+              s.src = url;
+              s.crossOrigin = 'anonymous';
+              s.onload = () => resolve();
+              s.onerror = () => reject(new Error('script error: ' + url));
+              document.head.appendChild(s);
+              setTimeout(() => reject(new Error('timeout: ' + url)), 8000);
+            });
+            if (typeof window.html2canvas === 'function') return;
+          } catch (e) {
+            lastErr = e;
+            console.warn('[Gfx] CDN failed:', url, e && e.message);
+          }
+        }
+        throw new Error('All CDNs failed (privacy extension or firewall blocking?). Last: ' + (lastErr && lastErr.message));
+      })();
       return window._gfxH2cLoading;
     }
 
@@ -17367,9 +17283,13 @@ window.fmtHeight = fmtHeight;
     }
 
     function _gfxBuildNode(opts) {
-      const { pos, count, title, accent, theme } = opts;
-      const list = _gfxBuildList(pos, count);
+      const { pos, count, title, accent, theme, pageSlice, totalCount } = opts;
+      let list = _gfxBuildList(pos, count);
+      if (pageSlice) list = list.slice(pageSlice[0], pageSlice[1]);
       if (!list.length) return { node: null, count: 0 };
+      const startRank = pageSlice ? (pageSlice[0] + 1) : 1;
+      const endRank = pageSlice ? Math.min(pageSlice[1], (totalCount || count)) : list.length;
+      const showPageBadge = !!pageSlice;
       const themes = {
         purple: 'linear-gradient(135deg,#4c1d95 0%,#7c3aed 55%,#a78bfa 100%)',
         blue:   'linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#60a5fa 100%)',
@@ -17405,15 +17325,19 @@ window.fmtHeight = fmtHeight;
 
       const wrap = document.createElement('div');
       wrap.style.cssText = 'width:600px;background:#000;font-family:"Bebas Neue",Impact,Arial,sans-serif;color:#fff;position:relative;overflow:hidden;box-sizing:border-box';
+      const pageBadgeHtml = showPageBadge
+        ? '<div style="position:absolute;bottom:8px;left:24px;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:18px;color:rgba(255,255,255,.85);letter-spacing:2px;background:rgba(0,0,0,.35);padding:3px 10px;border-radius:3px">' + startRank + '–' + endRank + '</div>'
+        : '';
       wrap.innerHTML =
-        '<div style="background:' + headerBg + ';padding:36px 26px 32px;position:relative;overflow:hidden">' +
+        '<div style="background:' + headerBg + ';padding:36px 26px 38px;position:relative;overflow:hidden">' +
           '<div style="position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 64px 64px 0;border-color:transparent ' + accent + ' transparent transparent"></div>' +
           '<div style="position:absolute;top:4px;right:14px;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:34px;color:#000;font-weight:900;line-height:1">!</div>' +
           '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:56px;line-height:.92;color:#fff;letter-spacing:1.5px;font-weight:900;text-transform:uppercase">' + titleHtml + '</div>' +
+          pageBadgeHtml +
         '</div>' +
         '<div style="background:#000;padding:18px 22px;display:grid;grid-template-columns:' + (useTwoCols ? '1fr 1fr' : '1fr') + ';gap:18px">' +
-          '<div>' + col1.map((p, i) => rowHtml(p, i + 1)).join('') + '</div>' +
-          (useTwoCols ? '<div>' + col2.map((p, i) => rowHtml(p, half + i + 1)).join('') + '</div>' : '') +
+          '<div>' + col1.map((p, i) => rowHtml(p, startRank + i)).join('') + '</div>' +
+          (useTwoCols ? '<div>' + col2.map((p, i) => rowHtml(p, startRank + half + i)).join('') + '</div>' : '') +
         '</div>' +
         '<div style="background:#000;padding:6px 20px 18px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:13px;color:rgba(255,255,255,.42);letter-spacing:2.5px">MYFANTASYFOOTBALL.ORG</div>';
       return { node: wrap, count: list.length };
@@ -17453,13 +17377,38 @@ window.fmtHeight = fmtHeight;
     }
 
     function _gfxReadOpts() {
+      const count = parseInt(document.getElementById('adminGfxCount').value, 10) || 12;
+      let perPage = parseInt(document.getElementById('adminGfxPerPage').value, 10) || count;
+      if (perPage > count) perPage = count;
       return {
         pos: document.getElementById('adminGfxPos').value,
-        count: parseInt(document.getElementById('adminGfxCount').value, 10) || 20,
+        count: count,
+        perPage: perPage,
         title: document.getElementById('adminGfxTitle').value,
         accent: document.getElementById('adminGfxAccent').value || '#facc15',
         theme: document.getElementById('adminGfxTheme').value || 'purple'
       };
+    }
+
+    function _gfxPageRanges(count, perPage) {
+      // Returns array of [start, end) slices. Single page if perPage >= count.
+      if (!perPage || perPage >= count) return [null]; // null = no slicing, single image
+      const out = [];
+      for (let s = 0; s < count; s += perPage) {
+        out.push([s, Math.min(s + perPage, count)]);
+      }
+      return out;
+    }
+
+    async function _gfxRenderAllPages(opts) {
+      const ranges = _gfxPageRanges(opts.count, opts.perPage);
+      const canvases = [];
+      for (const r of ranges) {
+        const pageOpts = Object.assign({}, opts, { pageSlice: r, totalCount: opts.count });
+        const c = await _gfxRender(pageOpts);
+        if (c) canvases.push({ canvas: c, range: r });
+      }
+      return canvases;
     }
 
     if (gfxPreviewBtn && !gfxPreviewBtn._bound) {
@@ -17468,16 +17417,22 @@ window.fmtHeight = fmtHeight;
         const opts = _gfxReadOpts();
         showAdminMsg(gfxMsg, 'Generating preview…', 'success');
         try {
-          const canvas = await _gfxRender(opts);
-          if (!canvas) { showAdminMsg(gfxMsg, 'No players for that filter — check your board', 'error'); return; }
+          const pages = await _gfxRenderAllPages(opts);
+          if (!pages.length) { showAdminMsg(gfxMsg, 'No players for that filter — check your board', 'error'); return; }
           const wrap = document.getElementById('adminGfxPreviewWrap');
           wrap.innerHTML = '';
-          const img = new Image();
-          img.src = canvas.toDataURL('image/png');
-          img.style.cssText = 'max-width:100%;height:auto;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.5)';
-          wrap.appendChild(img);
+          pages.forEach((p, i) => {
+            const label = document.createElement('div');
+            label.style.cssText = 'font-family:\'Bebas Neue\',sans-serif;font-size:.7rem;color:var(--text2);letter-spacing:1.5px;margin:8px 0 4px;text-align:left';
+            label.textContent = pages.length > 1 ? ('PAGE ' + (i + 1) + ' OF ' + pages.length + (p.range ? ' · #' + (p.range[0] + 1) + '–' + p.range[1] : '')) : '';
+            if (label.textContent) wrap.appendChild(label);
+            const img = new Image();
+            img.src = p.canvas.toDataURL('image/png');
+            img.style.cssText = 'max-width:100%;height:auto;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.5);display:block;margin-bottom:8px';
+            wrap.appendChild(img);
+          });
           wrap.style.display = 'block';
-          showAdminMsg(gfxMsg, '✅ Preview ready', 'success');
+          showAdminMsg(gfxMsg, '✅ Preview ready · ' + pages.length + ' page' + (pages.length === 1 ? '' : 's'), 'success');
         } catch (e) {
           showAdminMsg(gfxMsg, 'Error: ' + (e && e.message || e), 'error');
         }
@@ -17490,19 +17445,29 @@ window.fmtHeight = fmtHeight;
         const opts = _gfxReadOpts();
         showAdminMsg(gfxMsg, 'Generating PNG…', 'success');
         try {
-          const canvas = await _gfxRender(opts);
-          if (!canvas) { showAdminMsg(gfxMsg, 'No players for that filter — check your board', 'error'); return; }
-          canvas.toBlob(blob => {
-            if (!blob) { showAdminMsg(gfxMsg, 'PNG encode failed', 'error'); return; }
+          const pages = await _gfxRenderAllPages(opts);
+          if (!pages.length) { showAdminMsg(gfxMsg, 'No players for that filter — check your board', 'error'); return; }
+          const slug = opts.pos.toLowerCase().replace(/_/g, '-');
+          let downloaded = 0;
+          for (let i = 0; i < pages.length; i++) {
+            const p = pages[i];
+            const blob = await new Promise(res => p.canvas.toBlob(res, 'image/png'));
+            if (!blob) continue;
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'mff-rankings-' + opts.pos.toLowerCase().replace(/_/g, '-') + '-top' + opts.count + '.png';
+            const suffix = pages.length > 1
+              ? '-pg' + (i + 1) + '-of-' + pages.length + '-rk' + (p.range[0] + 1) + '-' + p.range[1]
+              : '-top' + opts.count;
+            a.download = 'mff-rankings-' + slug + suffix + '.png';
             document.body.appendChild(a);
             a.click();
             a.remove();
-            setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-            showAdminMsg(gfxMsg, '✅ Downloaded ' + a.download, 'success');
-          }, 'image/png');
+            setTimeout(((href) => () => URL.revokeObjectURL(href))(a.href), 4000);
+            downloaded++;
+            // Brief pause between downloads so browsers don't block them
+            if (i < pages.length - 1) await new Promise(r => setTimeout(r, 350));
+          }
+          showAdminMsg(gfxMsg, '✅ Downloaded ' + downloaded + ' image' + (downloaded === 1 ? '' : 's'), 'success');
         } catch (e) {
           showAdminMsg(gfxMsg, 'Error: ' + (e && e.message || e), 'error');
         }

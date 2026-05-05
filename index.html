@@ -5085,10 +5085,23 @@ function rebuildConsensusBoards() {
 }
 // Expose for snapshot listener
 window._rebuildConsensusBoards = rebuildConsensusBoards;
-// Initial build
-rebuildConsensusBoards();
 
-// (board/tiers aliases are managed via syncMode below)
+// board/tiers aliases (used everywhere - we update these on mode/version switch)
+// Must be declared BEFORE rebuildConsensusBoards() runs because that triggers
+// syncMode() which writes to `board`/`tiers`/`tierCounter`. Hitting the TDZ
+// here would cause the consensus boards to silently fail to initialize.
+let board = versionBoards[currentVersion].redraft;
+let tiers = versionTiers[currentVersion].redraft.ALL;
+let tierCounter = 0;
+
+function syncMode() {
+  board = versionBoards[currentVersion][currentMode];
+  tiers = versionTiers[currentVersion][currentMode][_tierPK()];
+  tierCounter = versionTierCounters[currentVersion][currentMode][_tierPK()];
+}
+
+// Initial consensus build (now safe — board/tiers/tierCounter are initialized above)
+rebuildConsensusBoards();
 
 // Convenience accessors - always point to the active version + mode
 function getBoard() { return versionBoards[currentVersion][currentMode]; }
@@ -5100,17 +5113,6 @@ function setTiers(t) { versionTiers[currentVersion][currentMode][_tierPK()] = t;
 function _tierPK() {
   if (typeof filter !== 'undefined' && (filter==='QB'||filter==='RB'||filter==='WR'||filter==='TE'||filter==='K'||filter==='DST'||filter==='ROOKIE')) return filter;
   return 'ALL';
-}
-
-// board/tiers aliases (used everywhere - we update these on mode/version switch)
-let board = versionBoards[currentVersion].redraft;
-let tiers = versionTiers[currentVersion].redraft.ALL;
-let tierCounter = 0;
-
-function syncMode() {
-  board = versionBoards[currentVersion][currentMode];
-  tiers = versionTiers[currentVersion][currentMode][_tierPK()];
-  tierCounter = versionTierCounters[currentVersion][currentMode][_tierPK()];
 }
 
 // Check if current user can edit the active version

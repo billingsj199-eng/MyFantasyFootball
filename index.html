@@ -18028,7 +18028,10 @@ window.fmtHeight = fmtHeight;
           const opt = document.createElement('option');
           opt.value = d.id;
           const date = d.date ? (' · ' + d.date) : '';
-          opt.textContent = (d.tournament || 'Draft') + date;
+          // Show custom team name if user renamed on Underdog, else just contest name
+          const baseName = d.tournament || 'Draft';
+          const label = d.teamName ? (baseName + ' — ' + d.teamName) : baseName;
+          opt.textContent = label + date;
           tgfxTeamSel.appendChild(opt);
         });
       }
@@ -37500,6 +37503,7 @@ Rules:
       draftsObj[d.id] = {
         id: d.id,
         tournament: d.tournament || d.title || 'Underdog',
+        teamName: d.teamName || null, // v0.9.62: user's custom team name on UD (separate from contest)
         fee: parseFloat(d.entry_fee || d.fee || 0) || 0,
         size: d.size || 12,
         date: d.date || '',

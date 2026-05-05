@@ -504,6 +504,27 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
 <div class="acct-field">
+<label class="acct-label">Rankings source</label>
+<select id="adminGfxSource" class="acct-input" style="padding:.55rem .75rem">
+<option value="jacks" selected>Jack's</option>
+<option value="mine">My Rankings</option>
+<option value="jsmodel">JS Model</option>
+<option value="consensus">Consensus</option>
+</select>
+</div>
+<div class="acct-field">
+<label class="acct-label">Format</label>
+<select id="adminGfxFormat" class="acct-input" style="padding:.55rem .75rem">
+<option value="redraft">Redraft</option>
+<option value="bestball" selected>Best Ball</option>
+<option value="superflex">Superflex</option>
+<option value="dynasty">Dynasty 1QB</option>
+<option value="dynastysf">Dynasty SF</option>
+</select>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+<div class="acct-field">
 <label class="acct-label">Position</label>
 <select id="adminGfxPos" class="acct-input" style="padding:.55rem .75rem">
 <option value="QB" selected>QB</option>
@@ -17431,10 +17452,61 @@ window.fmtHeight = fmtHeight;
       return window._gfxH2cLoading;
     }
 
-    function _gfxBuildList(pos, count) {
+    // NFL team primary colors (background + readable foreground for the row)
+    const _GFX_TEAM_COLORS = {
+      'Arizona Cardinals':     { bg: '#97233F', fg: '#FFFFFF' },
+      'Atlanta Falcons':       { bg: '#A71930', fg: '#FFFFFF' },
+      'Baltimore Ravens':      { bg: '#241773', fg: '#FFFFFF' },
+      'Buffalo Bills':         { bg: '#00338D', fg: '#FFFFFF' },
+      'Carolina Panthers':     { bg: '#0085CA', fg: '#FFFFFF' },
+      'Chicago Bears':         { bg: '#0B162A', fg: '#C83803' },
+      'Cincinnati Bengals':    { bg: '#FB4F14', fg: '#000000' },
+      'Cleveland Browns':      { bg: '#311D00', fg: '#FF3C00' },
+      'Dallas Cowboys':        { bg: '#003594', fg: '#FFFFFF' },
+      'Denver Broncos':        { bg: '#FB4F14', fg: '#002244' },
+      'Detroit Lions':         { bg: '#0076B6', fg: '#FFFFFF' },
+      'Green Bay Packers':     { bg: '#203731', fg: '#FFB612' },
+      'Houston Texans':        { bg: '#03202F', fg: '#FFFFFF' },
+      'Indianapolis Colts':    { bg: '#002C5F', fg: '#FFFFFF' },
+      'Jacksonville Jaguars':  { bg: '#101820', fg: '#D7A22A' },
+      'Kansas City Chiefs':    { bg: '#E31837', fg: '#FFFFFF' },
+      'Las Vegas Raiders':     { bg: '#000000', fg: '#A5ACAF' },
+      'Los Angeles Chargers':  { bg: '#0080C6', fg: '#FFC20E' },
+      'Los Angeles Rams':      { bg: '#003594', fg: '#FFA300' },
+      'Miami Dolphins':        { bg: '#008E97', fg: '#FFFFFF' },
+      'Minnesota Vikings':     { bg: '#4F2683', fg: '#FFC62F' },
+      'New England Patriots':  { bg: '#002244', fg: '#FFFFFF' },
+      'New Orleans Saints':    { bg: '#D3BC8D', fg: '#000000' },
+      'New York Giants':       { bg: '#0B2265', fg: '#FFFFFF' },
+      'New York Jets':         { bg: '#125740', fg: '#FFFFFF' },
+      'Philadelphia Eagles':   { bg: '#004C54', fg: '#FFFFFF' },
+      'Pittsburgh Steelers':   { bg: '#FFB612', fg: '#000000' },
+      'San Francisco 49ers':   { bg: '#AA0000', fg: '#FFFFFF' },
+      'Seattle Seahawks':      { bg: '#002244', fg: '#69BE28' },
+      'Tampa Bay Buccaneers':  { bg: '#D50A0A', fg: '#FFFFFF' },
+      'Tennessee Titans':      { bg: '#0C2340', fg: '#4B92DB' },
+      'Washington Commanders': { bg: '#5A1414', fg: '#FFB612' }
+    };
+    function _gfxTeamColor(teamName) {
+      return _GFX_TEAM_COLORS[teamName] || { bg: '#1f2937', fg: '#FFFFFF' };
+    }
+
+    function _gfxBuildList(pos, count, source, format) {
+      // Pick the right board based on the source/format selectors. Falls back to live `board`.
+      function _pickBoard() {
+        if (typeof versionBoards === 'undefined') return null;
+        const src = source && versionBoards[source] ? source : (typeof currentVersion !== 'undefined' ? currentVersion : null);
+        if (!src || !versionBoards[src]) return null;
+        const fmt = format && versionBoards[src][format] ? format : (typeof currentMode !== 'undefined' ? currentMode : null);
+        if (!fmt) return null;
+        return versionBoards[src][fmt];
+      }
+      const _activeBoard = _pickBoard() || (typeof board !== 'undefined' ? board : []);
       if (pos === 'DEVY') {
         if (typeof COMBINE_DATA === 'undefined') return [];
-        const ktcMap = (typeof currentMode !== 'undefined' && currentMode === 'dynastysf')
+        const useFmt = format || (typeof currentMode !== 'undefined' ? currentMode : 'dynasty');
+        const useSrc = source || (typeof currentVersion !== 'undefined' ? currentVersion : 'mine');
+        const ktcMap = (useFmt === 'dynastysf')
           ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {})
           : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
         const map = {};
@@ -17443,7 +17515,7 @@ window.fmtHeight = fmtHeight;
           if (!cb.devy) return;
           map[name] = { n: name, s: cb.pos || '??', t: cb.school || '—', _ktc: ktcMap[name] || 0, _isDevy: true };
         });
-        const devyKey = 'devy_board_' + (typeof currentVersion !== 'undefined' ? currentVersion : 'mine') + '_' + (typeof currentMode !== 'undefined' ? currentMode : 'dynasty');
+        const devyKey = 'devy_board_' + useSrc + '_' + useFmt;
         let saved = null;
         try { saved = JSON.parse(localStorage.getItem(devyKey)); } catch(e) {}
         let list;
@@ -17457,8 +17529,8 @@ window.fmtHeight = fmtHeight;
         }
         return list.slice(0, count);
       }
-      if (typeof board === 'undefined' || typeof D === 'undefined') return [];
-      let list = board.map(i => D[i]).filter(d => d && !d._retired && !d._isFuturePick);
+      if (typeof D === 'undefined' || !_activeBoard || !_activeBoard.length) return [];
+      let list = _activeBoard.map(i => D[i]).filter(d => d && !d._retired && !d._isFuturePick);
       const seen = new Set();
       list = list.filter(d => { if (seen.has(d.n)) return false; seen.add(d.n); return true; });
       if (pos === 'ROOKIE' || pos === 'ROOKIE_QB' || pos === 'ROOKIE_RB' || pos === 'ROOKIE_WR' || pos === 'ROOKIE_TE') {
@@ -17492,8 +17564,8 @@ window.fmtHeight = fmtHeight;
     }
 
     function _gfxBuildNode(opts) {
-      const { pos, count, title, accent, theme, pageSlice, totalCount } = opts;
-      let list = _gfxBuildList(pos, count);
+      const { pos, count, title, accent, theme, pageSlice, totalCount, source, format } = opts;
+      let list = _gfxBuildList(pos, count, source, format);
       if (pageSlice) list = list.slice(pageSlice[0], pageSlice[1]);
       if (!list.length) return { node: null, count: 0 };
       const startRank = pageSlice ? (pageSlice[0] + 1) : 1;
@@ -17519,36 +17591,61 @@ window.fmtHeight = fmtHeight;
       const col1 = list.slice(0, half);
       const col2 = list.slice(half);
 
+      // Row sizing scales down as the per-page count grows (more rows = tighter)
+      const _rowScale = list.length <= 12 ? 1.0 : list.length <= 24 ? 0.78 : 0.62;
+      const RZ = (n) => Math.round(n * _rowScale);
       function rowHtml(player, rank) {
         const url = _gfxLogoUrl(player);
+        const logoSize = RZ(72);
         const logo = url
-          ? '<div style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex:0 0 38px"><img src="' + url + '" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
-          : '<div style="width:38px;height:38px;background:#1f2937;border-radius:4px;flex:0 0 38px;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:11px">?</div>';
+          ? '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;display:flex;align-items:center;justify-content:center;flex:0 0 ' + logoSize + 'px;background:rgba(255,255,255,.95);border-radius:50%;padding:' + RZ(6) + 'px"><img src="' + url + '" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
+          : '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;background:rgba(255,255,255,.15);border-radius:50%;flex:0 0 ' + logoSize + 'px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:' + RZ(20) + 'px">?</div>';
         const safeName = (player.n || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        return '<div style="display:flex;align-items:center;gap:11px;padding:9px 4px;border-bottom:1px solid rgba(255,255,255,.06)">' +
-          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:24px;color:#fff;min-width:34px;text-align:right;font-weight:700">' + rank + '.</div>' +
+        const tc = player._isDevy ? { bg: '#1f2937', fg: '#FFFFFF' } : _gfxTeamColor(player.t);
+        const projPpg = (typeof adjProjPpg === 'function' && !player._isDevy) ? adjProjPpg(player) : null;
+        const ppgHtml = (projPpg != null && isFinite(projPpg))
+          ? '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(40) + 'px;color:' + tc.fg + ';opacity:.92;letter-spacing:.5px;line-height:1;padding-left:' + RZ(14) + 'px;flex:0 0 auto">' + projPpg + '</div>'
+          : '';
+        return '<div style="display:flex;align-items:center;gap:' + RZ(18) + 'px;padding:' + RZ(14) + 'px ' + RZ(20) + 'px;background:' + tc.bg + ';border-radius:' + RZ(10) + 'px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.07)">' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(46) + 'px;color:' + tc.fg + ';min-width:' + RZ(60) + 'px;text-align:right;font-weight:700;line-height:1">' + rank + '.</div>' +
           logo +
-          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:23px;color:#fff;letter-spacing:.6px;line-height:1;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + safeName.toUpperCase() + '</div>' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(42) + 'px;color:' + tc.fg + ';letter-spacing:.6px;line-height:1;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + safeName.toUpperCase() + '</div>' +
+          ppgHtml +
           '</div>';
       }
 
       const wrap = document.createElement('div');
-      wrap.style.cssText = 'width:600px;background:#000;font-family:"Bebas Neue",Impact,Arial,sans-serif;color:#fff;position:relative;overflow:hidden;box-sizing:border-box';
+      wrap.style.cssText = 'width:1080px;height:1920px;background:#000;font-family:"Bebas Neue",Impact,Arial,sans-serif;color:#fff;position:relative;overflow:hidden;box-sizing:border-box';
+      // Column layout for 1080×1920 portrait: 2 cols default, 3 cols when >24
+      const cols = list.length <= 6 ? 1
+                 : list.length <= 24 ? 2
+                 : list.length <= 48 ? 3
+                 : 4;
+      const rowsPerCol = Math.ceil(list.length / cols);
+      const columnArrays = [];
+      for (let c = 0; c < cols; c++) {
+        columnArrays.push(list.slice(c * rowsPerCol, (c + 1) * rowsPerCol));
+      }
+
       const pageBadgeHtml = showPageBadge
-        ? '<div style="position:absolute;bottom:8px;left:24px;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:18px;color:rgba(255,255,255,.85);letter-spacing:2px;background:rgba(0,0,0,.35);padding:3px 10px;border-radius:3px">' + startRank + '–' + endRank + '</div>'
+        ? '<div style="position:absolute;bottom:18px;left:50px;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:38px;color:rgba(255,255,255,.92);letter-spacing:3px;background:rgba(0,0,0,.45);padding:8px 20px;border-radius:5px">' + startRank + '–' + endRank + '</div>'
         : '';
       wrap.innerHTML =
-        '<div style="background:' + headerBg + ';padding:36px 26px 38px;position:relative;overflow:hidden">' +
-          '<div style="position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 64px 64px 0;border-color:transparent ' + accent + ' transparent transparent"></div>' +
-          '<div style="position:absolute;top:4px;right:14px;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:34px;color:#000;font-weight:900;line-height:1">!</div>' +
-          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:56px;line-height:.92;color:#fff;letter-spacing:1.5px;font-weight:900;text-transform:uppercase">' + titleHtml + '</div>' +
+        '<div style="background:' + headerBg + ';padding:60px 56px 70px;position:relative;overflow:hidden;height:280px;box-sizing:border-box">' +
+          '<div style="position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 130px 130px 0;border-color:transparent ' + accent + ' transparent transparent"></div>' +
+          '<div style="position:absolute;top:10px;right:34px;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:70px;color:#000;font-weight:900;line-height:1">!</div>' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:108px;line-height:.92;color:#fff;letter-spacing:3px;font-weight:900;text-transform:uppercase">' + titleHtml + '</div>' +
           pageBadgeHtml +
         '</div>' +
-        '<div style="background:#000;padding:18px 22px;display:grid;grid-template-columns:' + (useTwoCols ? '1fr 1fr' : '1fr') + ';gap:18px">' +
-          '<div>' + col1.map((p, i) => rowHtml(p, startRank + i)).join('') + '</div>' +
-          (useTwoCols ? '<div>' + col2.map((p, i) => rowHtml(p, startRank + half + i)).join('') + '</div>' : '') +
+        '<div style="background:#000;padding:30px 40px;display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:20px;height:1570px;box-sizing:border-box">' +
+          columnArrays.map((colPlayers, ci) => {
+            const startIndexInPage = ci * rowsPerCol;
+            return '<div style="display:flex;flex-direction:column;gap:10px">' +
+              colPlayers.map((p, ri) => rowHtml(p, startRank + startIndexInPage + ri)).join('') +
+            '</div>';
+          }).join('') +
         '</div>' +
-        '<div style="background:#000;padding:6px 20px 18px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:13px;color:rgba(255,255,255,.42);letter-spacing:2.5px">MYFANTASYFOOTBALL.ORG</div>';
+        '<div style="background:#000;padding:18px 40px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:26px;color:rgba(255,255,255,.45);letter-spacing:6px;height:70px;box-sizing:border-box">MYFANTASYFOOTBALL.ORG</div>';
       return { node: wrap, count: list.length };
     }
 
@@ -17572,12 +17669,14 @@ window.fmtHeight = fmtHeight;
         }));
         const canvas = await window.html2canvas(built.node, {
           backgroundColor: '#000',
-          scale: 2,
+          scale: 1,
           useCORS: true,
           allowTaint: false,
           logging: false,
-          width: 600,
-          height: built.node.offsetHeight
+          width: 1080,
+          height: 1920,
+          windowWidth: 1080,
+          windowHeight: 1920
         });
         return canvas;
       } finally {
@@ -17589,13 +17688,17 @@ window.fmtHeight = fmtHeight;
       const count = parseInt(document.getElementById('adminGfxCount').value, 10) || 12;
       let perPage = parseInt(document.getElementById('adminGfxPerPage').value, 10) || count;
       if (perPage > count) perPage = count;
+      const srcEl = document.getElementById('adminGfxSource');
+      const fmtEl = document.getElementById('adminGfxFormat');
       return {
         pos: document.getElementById('adminGfxPos').value,
         count: count,
         perPage: perPage,
         title: document.getElementById('adminGfxTitle').value,
         accent: document.getElementById('adminGfxAccent').value || '#facc15',
-        theme: document.getElementById('adminGfxTheme').value || 'purple'
+        theme: document.getElementById('adminGfxTheme').value || 'purple',
+        source: srcEl ? srcEl.value : null,
+        format: fmtEl ? fmtEl.value : null
       };
     }
 

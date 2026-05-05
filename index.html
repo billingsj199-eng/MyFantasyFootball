@@ -30,6 +30,7 @@
 <!-- Firebase SDK (optional — page works without it if blocked by privacy settings) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true;console.warn('[Firebase] SDK blocked — running in offline mode')"></script>
 <script>if(!window._fbBlocked){document.write('<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script>');}</script>
+<!-- html2canvas: lazy-loaded by admin Rankings Graphic Generator (only fetched when admin uses the tool) -->
 </head>
 <body>
 <div class="noise"></div>
@@ -540,6 +541,67 @@ Paste birthdays for 2026 prospects to fill missing age data. Age drives JM heavi
 <div id="adminBirthdayMissing" style="margin-top:.75rem;font-size:.75rem;display:none"></div>
 </div>
 
+<div class="acct-section">
+<div class="acct-section-title">🎨 Rankings Graphic Generator</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
+Build a stylized PNG of your top players (uses your personal board order). Pick a position and theme, preview, then download.
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+<div class="acct-field">
+<label class="acct-label">Position</label>
+<select id="adminGfxPos" class="acct-input" style="padding:.55rem .75rem">
+<option value="QB" selected>QB</option>
+<option value="RB">RB</option>
+<option value="WR">WR</option>
+<option value="TE">TE</option>
+<option value="ROOKIE">Rookies — All</option>
+<option value="ROOKIE_QB">Rookies — QB</option>
+<option value="ROOKIE_RB">Rookies — RB</option>
+<option value="ROOKIE_WR">Rookies — WR</option>
+<option value="ROOKIE_TE">Rookies — TE</option>
+<option value="ALL">Overall</option>
+<option value="DEVY">Devy (College)</option>
+</select>
+</div>
+<div class="acct-field">
+<label class="acct-label">Player count</label>
+<select id="adminGfxCount" class="acct-input" style="padding:.55rem .75rem">
+<option value="10">Top 10</option>
+<option value="20" selected>Top 20</option>
+<option value="25">Top 25</option>
+<option value="30">Top 30</option>
+</select>
+</div>
+</div>
+<div class="acct-field">
+<label class="acct-label">Title (use [POS] as placeholder, gets replaced + accent-colored)</label>
+<input type="text" class="acct-input" id="adminGfxTitle" value="2026 FANTASY [POS] RANKINGS">
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+<div class="acct-field">
+<label class="acct-label">Header theme</label>
+<select id="adminGfxTheme" class="acct-input" style="padding:.55rem .75rem">
+<option value="purple" selected>Purple</option>
+<option value="blue">Blue</option>
+<option value="red">Red</option>
+<option value="green">Green</option>
+<option value="orange">Orange</option>
+<option value="dark">Dark</option>
+</select>
+</div>
+<div class="acct-field">
+<label class="acct-label">Accent color</label>
+<input type="color" class="acct-input" id="adminGfxAccent" value="#facc15" style="height:38px;padding:.2rem .35rem">
+</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
+<button class="acct-btn acct-btn-outline" id="adminGfxPreviewBtn">PREVIEW</button>
+<button class="acct-btn acct-btn-primary" id="adminGfxDownloadBtn">DOWNLOAD PNG</button>
+</div>
+<div class="acct-msg" id="adminGfxMsg"></div>
+<div id="adminGfxPreviewWrap" style="margin-top:1rem;display:none;text-align:center;background:#000;padding:1rem;border-radius:6px;overflow:auto;max-height:600px"></div>
+</div>
+
 </div>
 
 </div>
@@ -625,6 +687,15 @@ CLEAR
 <button class="pos-btn" data-pos="K">K</button>
 <button class="pos-btn" data-pos="DST">D/ST</button>
 <button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
+</div>
+<!-- Rookie sub-position filter (shown only when ROOKIE filter is active) -->
+<div class="pos-filters" id="rookieSubPosFilter" style="display:none;margin-top:6px;padding:5px 8px;background:rgba(255,255,255,.025);border:1px dashed var(--border);border-radius:4px;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-right:4px">ROOKIE POS:</span>
+<button class="pos-btn rookie-sub-btn active" data-rookiepos="ALL" style="padding:.25rem .65rem;font-size:.65rem">ALL</button>
+<button class="pos-btn rookie-sub-btn" data-rookiepos="QB" style="padding:.25rem .65rem;font-size:.65rem">QB</button>
+<button class="pos-btn rookie-sub-btn" data-rookiepos="RB" style="padding:.25rem .65rem;font-size:.65rem">RB</button>
+<button class="pos-btn rookie-sub-btn" data-rookiepos="WR" style="padding:.25rem .65rem;font-size:.65rem">WR</button>
+<button class="pos-btn rookie-sub-btn" data-rookiepos="TE" style="padding:.25rem .65rem;font-size:.65rem">TE</button>
 </div>
 </div>
 
@@ -5358,6 +5429,7 @@ window._updateCopyFromRedraftBtn = function() {
 
 // State
 let filter = 'ALL', sortKey = 'myrank', sortDir = 1, query = '', viewMode = 'all';
+let rookiePosFilter = 'ALL'; // sub-filter applied only when filter === 'ROOKIE'
 let rankingScoringFmt = 'half';
 let rnkAdpSrc = 'consensus';
 
@@ -5519,6 +5591,7 @@ function getFiltered() {
       const _cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
       const is2026 = (_cb && _cb.yr === 2026);
       if (!is2026 && d.t && d.t !== 'TBD' && d.t !== 'FA') return false;
+      if (rookiePosFilter && rookiePosFilter !== 'ALL' && d.s !== rookiePosFilter) return false;
     } else if (filter === 'ALL' && (d.s === 'K' || d.s === 'DST')) return false;
     else if (filter !== 'ALL' && filter !== 'ROOKIE' && d.s !== filter) return false;
     if (query) {
@@ -6073,8 +6146,21 @@ document.querySelectorAll('.pos-btn[data-pos]').forEach(btn => {
     document.querySelectorAll('.pos-btn[data-pos]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     filter = btn.dataset.pos;
+    // Show/hide the rookie sub-position row
+    const _rookieSub = document.getElementById('rookieSubPosFilter');
+    if (_rookieSub) _rookieSub.style.display = (filter === 'ROOKIE') ? 'flex' : 'none';
     syncMode();
     document.getElementById('ageHeader').firstChild.textContent = filter === 'DST' ? 'Opp PPG ' : 'Age ';
+    render();
+  });
+});
+
+// Rookie sub-position filter (only relevant when filter === 'ROOKIE')
+document.querySelectorAll('.rookie-sub-btn[data-rookiepos]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.rookie-sub-btn[data-rookiepos]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    rookiePosFilter = btn.dataset.rookiepos;
     render();
   });
 });
@@ -17198,6 +17284,227 @@ window.fmtHeight = fmtHeight;
           bdApplyBtn.textContent = 'APPLY';
           bdApplyBtn.disabled = false;
           showAdminMsg(bdMsg, 'Save failed: ' + (err && err.message || err), 'error');
+        }
+      });
+    }
+
+    // ===== Rankings Graphic Generator =====
+    const gfxPreviewBtn = document.getElementById('adminGfxPreviewBtn');
+    const gfxDownloadBtn = document.getElementById('adminGfxDownloadBtn');
+    const gfxMsg = document.getElementById('adminGfxMsg');
+
+    function _gfxLoadHtml2Canvas() {
+      if (typeof window.html2canvas === 'function') return Promise.resolve();
+      if (window._gfxH2cLoading) return window._gfxH2cLoading;
+      window._gfxH2cLoading = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('Failed to load html2canvas'));
+        document.head.appendChild(s);
+      });
+      return window._gfxH2cLoading;
+    }
+
+    function _gfxBuildList(pos, count) {
+      if (pos === 'DEVY') {
+        if (typeof COMBINE_DATA === 'undefined') return [];
+        const ktcMap = (typeof currentMode !== 'undefined' && currentMode === 'dynastysf')
+          ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {})
+          : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
+        const map = {};
+        Object.keys(COMBINE_DATA).forEach(name => {
+          const cb = COMBINE_DATA[name];
+          if (!cb.devy) return;
+          map[name] = { n: name, s: cb.pos || '??', t: cb.school || '—', _ktc: ktcMap[name] || 0, _isDevy: true };
+        });
+        const devyKey = 'devy_board_' + (typeof currentVersion !== 'undefined' ? currentVersion : 'mine') + '_' + (typeof currentMode !== 'undefined' ? currentMode : 'dynasty');
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem(devyKey)); } catch(e) {}
+        let list;
+        if (saved && Array.isArray(saved) && saved.length) {
+          list = [];
+          saved.forEach(name => { if (map[name]) { list.push(map[name]); delete map[name]; } });
+          const rest = Object.values(map).sort((a, b) => b._ktc - a._ktc);
+          list = list.concat(rest);
+        } else {
+          list = Object.values(map).sort((a, b) => b._ktc - a._ktc);
+        }
+        return list.slice(0, count);
+      }
+      if (typeof board === 'undefined' || typeof D === 'undefined') return [];
+      let list = board.map(i => D[i]).filter(d => d && !d._retired && !d._isFuturePick);
+      const seen = new Set();
+      list = list.filter(d => { if (seen.has(d.n)) return false; seen.add(d.n); return true; });
+      if (pos === 'ROOKIE' || pos === 'ROOKIE_QB' || pos === 'ROOKIE_RB' || pos === 'ROOKIE_WR' || pos === 'ROOKIE_TE') {
+        const subPos = pos === 'ROOKIE' ? null : pos.split('_')[1];
+        list = list.filter(d => {
+          if (d.career && d.career.length > 0) return false;
+          const cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
+          const is2026 = (cb && cb.yr === 2026);
+          if (!is2026 && d.t && d.t !== 'TBD' && d.t !== 'FA') return false;
+          if (subPos && d.s !== subPos) return false;
+          return true;
+        });
+      } else if (pos === 'ALL') {
+        list = list.filter(d => d.s !== 'K' && d.s !== 'DST');
+      } else {
+        list = list.filter(d => d.s === pos);
+      }
+      return list.slice(0, count);
+    }
+
+    function _gfxLogoUrl(player) {
+      if (player._isDevy) {
+        if (typeof _COLLEGE_LOGO_IDS === 'undefined') return '';
+        const t = player.t || '';
+        const id = _COLLEGE_LOGO_IDS[t] || _COLLEGE_LOGO_IDS[t.toUpperCase()];
+        return id ? ('https://a.espncdn.com/i/teamlogos/ncaa/500/' + id + '.png') : '';
+      }
+      if (typeof TEAM_LOGO_IDS === 'undefined') return '';
+      const id = TEAM_LOGO_IDS[player.t];
+      return id ? ('https://a.espncdn.com/i/teamlogos/nfl/500/' + id + '.png') : '';
+    }
+
+    function _gfxBuildNode(opts) {
+      const { pos, count, title, accent, theme } = opts;
+      const list = _gfxBuildList(pos, count);
+      if (!list.length) return { node: null, count: 0 };
+      const themes = {
+        purple: 'linear-gradient(135deg,#4c1d95 0%,#7c3aed 55%,#a78bfa 100%)',
+        blue:   'linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#60a5fa 100%)',
+        red:    'linear-gradient(135deg,#7f1d1d 0%,#dc2626 55%,#fb7185 100%)',
+        green:  'linear-gradient(135deg,#14532d 0%,#16a34a 55%,#4ade80 100%)',
+        orange: 'linear-gradient(135deg,#7c2d12 0%,#ea580c 55%,#fb923c 100%)',
+        dark:   'linear-gradient(135deg,#0f172a 0%,#1e293b 55%,#475569 100%)'
+      };
+      const headerBg = themes[theme] || themes.purple;
+      const posLabels = { QB:'QB', RB:'RB', WR:'WR', TE:'TE', ROOKIE:'ROOKIE', ROOKIE_QB:'ROOKIE QB', ROOKIE_RB:'ROOKIE RB', ROOKIE_WR:'ROOKIE WR', ROOKIE_TE:'ROOKIE TE', ALL:'OVERALL', DEVY:'DEVY' };
+      const posLabel = posLabels[pos] || pos;
+      const rawTitle = title || '2026 FANTASY [POS] RANKINGS';
+      const titleHtml = rawTitle
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\[POS\]/g, '<span style="color:' + accent + '">' + posLabel + '</span>');
+      const useTwoCols = list.length > 10;
+      const half = useTwoCols ? Math.ceil(list.length / 2) : list.length;
+      const col1 = list.slice(0, half);
+      const col2 = list.slice(half);
+
+      function rowHtml(player, rank) {
+        const url = _gfxLogoUrl(player);
+        const logo = url
+          ? '<div style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex:0 0 38px"><img src="' + url + '" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
+          : '<div style="width:38px;height:38px;background:#1f2937;border-radius:4px;flex:0 0 38px;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:11px">?</div>';
+        const safeName = (player.n || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return '<div style="display:flex;align-items:center;gap:11px;padding:9px 4px;border-bottom:1px solid rgba(255,255,255,.06)">' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:24px;color:#fff;min-width:34px;text-align:right;font-weight:700">' + rank + '.</div>' +
+          logo +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:23px;color:#fff;letter-spacing:.6px;line-height:1;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + safeName.toUpperCase() + '</div>' +
+          '</div>';
+      }
+
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'width:600px;background:#000;font-family:"Bebas Neue",Impact,Arial,sans-serif;color:#fff;position:relative;overflow:hidden;box-sizing:border-box';
+      wrap.innerHTML =
+        '<div style="background:' + headerBg + ';padding:36px 26px 32px;position:relative;overflow:hidden">' +
+          '<div style="position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 64px 64px 0;border-color:transparent ' + accent + ' transparent transparent"></div>' +
+          '<div style="position:absolute;top:4px;right:14px;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:34px;color:#000;font-weight:900;line-height:1">!</div>' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:56px;line-height:.92;color:#fff;letter-spacing:1.5px;font-weight:900;text-transform:uppercase">' + titleHtml + '</div>' +
+        '</div>' +
+        '<div style="background:#000;padding:18px 22px;display:grid;grid-template-columns:' + (useTwoCols ? '1fr 1fr' : '1fr') + ';gap:18px">' +
+          '<div>' + col1.map((p, i) => rowHtml(p, i + 1)).join('') + '</div>' +
+          (useTwoCols ? '<div>' + col2.map((p, i) => rowHtml(p, half + i + 1)).join('') + '</div>' : '') +
+        '</div>' +
+        '<div style="background:#000;padding:6px 20px 18px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:13px;color:rgba(255,255,255,.42);letter-spacing:2.5px">MYFANTASYFOOTBALL.ORG</div>';
+      return { node: wrap, count: list.length };
+    }
+
+    async function _gfxRender(opts) {
+      await _gfxLoadHtml2Canvas();
+      const built = _gfxBuildNode(opts);
+      if (!built.node) return null;
+      const holder = document.createElement('div');
+      holder.style.cssText = 'position:fixed;left:-10000px;top:0;z-index:-1;pointer-events:none';
+      holder.appendChild(built.node);
+      document.body.appendChild(holder);
+      try {
+        const imgs = built.node.querySelectorAll('img');
+        await Promise.all(Array.from(imgs).map(img => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise(res => {
+            const t = setTimeout(res, 4000);
+            img.onload = () => { clearTimeout(t); res(); };
+            img.onerror = () => { clearTimeout(t); res(); };
+          });
+        }));
+        const canvas = await window.html2canvas(built.node, {
+          backgroundColor: '#000',
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          width: 600,
+          height: built.node.offsetHeight
+        });
+        return canvas;
+      } finally {
+        holder.remove();
+      }
+    }
+
+    function _gfxReadOpts() {
+      return {
+        pos: document.getElementById('adminGfxPos').value,
+        count: parseInt(document.getElementById('adminGfxCount').value, 10) || 20,
+        title: document.getElementById('adminGfxTitle').value,
+        accent: document.getElementById('adminGfxAccent').value || '#facc15',
+        theme: document.getElementById('adminGfxTheme').value || 'purple'
+      };
+    }
+
+    if (gfxPreviewBtn && !gfxPreviewBtn._bound) {
+      gfxPreviewBtn._bound = true;
+      gfxPreviewBtn.addEventListener('click', async () => {
+        const opts = _gfxReadOpts();
+        showAdminMsg(gfxMsg, 'Generating preview…', 'success');
+        try {
+          const canvas = await _gfxRender(opts);
+          if (!canvas) { showAdminMsg(gfxMsg, 'No players for that filter — check your board', 'error'); return; }
+          const wrap = document.getElementById('adminGfxPreviewWrap');
+          wrap.innerHTML = '';
+          const img = new Image();
+          img.src = canvas.toDataURL('image/png');
+          img.style.cssText = 'max-width:100%;height:auto;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.5)';
+          wrap.appendChild(img);
+          wrap.style.display = 'block';
+          showAdminMsg(gfxMsg, '✅ Preview ready', 'success');
+        } catch (e) {
+          showAdminMsg(gfxMsg, 'Error: ' + (e && e.message || e), 'error');
+        }
+      });
+    }
+
+    if (gfxDownloadBtn && !gfxDownloadBtn._bound) {
+      gfxDownloadBtn._bound = true;
+      gfxDownloadBtn.addEventListener('click', async () => {
+        const opts = _gfxReadOpts();
+        showAdminMsg(gfxMsg, 'Generating PNG…', 'success');
+        try {
+          const canvas = await _gfxRender(opts);
+          if (!canvas) { showAdminMsg(gfxMsg, 'No players for that filter — check your board', 'error'); return; }
+          canvas.toBlob(blob => {
+            if (!blob) { showAdminMsg(gfxMsg, 'PNG encode failed', 'error'); return; }
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'mff-rankings-' + opts.pos.toLowerCase().replace(/_/g, '-') + '-top' + opts.count + '.png';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+            showAdminMsg(gfxMsg, '✅ Downloaded ' + a.download, 'success');
+          }, 'image/png');
+        } catch (e) {
+          showAdminMsg(gfxMsg, 'Error: ' + (e && e.message || e), 'error');
         }
       });
     }

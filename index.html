@@ -666,6 +666,7 @@ CLEAR
 <span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-right:4px">ADMIN VIEW:</span>
 <button class="pos-btn view-mode-btn active" data-viewmode="all" style="padding:.25rem .8rem;font-size:.65rem">TABLE</button>
 <button class="pos-btn view-mode-btn" data-viewmode="tierCard" style="padding:.25rem .8rem;font-size:.65rem;background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(236,72,153,.25));border-color:rgba(167,139,250,.4)">🎴 TIER CARDS</button>
+<button class="pos-btn" id="tcvFullscreenBtn" style="display:none;padding:.25rem .8rem;font-size:.65rem;background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4);color:var(--accent)" title="Expand tier view to fullscreen (Esc to exit)">⛶ FULLSCREEN</button>
 </div>
 </div>
 
@@ -739,6 +740,12 @@ CLEAR
 <style>
 /* Tier Card View (admin) */
 .tier-card-view{padding:.6rem;background:#0a0a0a;min-height:300px}
+/* Fullscreen mode — overlays the entire viewport */
+#tierCardWrap.tcv-fullscreen{position:fixed;inset:0;z-index:9999;background:#0a0a0a;overflow:auto;padding:14px 16px}
+#tierCardWrap.tcv-fullscreen .tier-card-view{padding:0;min-height:0}
+#tierCardWrap.tcv-fullscreen::before{content:'';display:block;height:0}
+.tcv-fs-close{position:fixed;top:14px;right:18px;z-index:10001;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.7);color:#fff;font-size:18px;font-family:Arial,sans-serif;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .15s,border-color .15s}
+.tcv-fs-close:hover{background:rgba(245,158,11,.4);border-color:rgba(245,158,11,.7)}
 .tcv-tier-row{display:flex;align-items:stretch;margin-bottom:3px;border-radius:4px;overflow:hidden;background:transparent;min-height:0}
 .tcv-letter{flex:0 0 38px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;color:#fff;font-weight:900;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.45)}
 .tcv-letter.tcv-letter-light{color:#1a1a1a;text-shadow:0 1px 2px rgba(255,255,255,.3)}
@@ -6367,9 +6374,65 @@ document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(btn => {
     document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     viewMode = btn.dataset.viewmode;
+    // Show/hide fullscreen button based on whether we're in tier card view
+    const fsBtn = document.getElementById('tcvFullscreenBtn');
+    if (fsBtn) fsBtn.style.display = (viewMode === 'tierCard') ? '' : 'none';
     render();
   });
 });
+
+// Fullscreen toggle for the tier card view
+(function _wireTcvFullscreen() {
+  const fsBtn = document.getElementById('tcvFullscreenBtn');
+  const wrap = document.getElementById('tierCardWrap');
+  if (!fsBtn || !wrap) return;
+
+  function _exitTcvFullscreen() {
+    wrap.classList.remove('tcv-fullscreen');
+    const closeBtn = wrap.querySelector('.tcv-fs-close');
+    if (closeBtn) closeBtn.remove();
+    if (document.fullscreenElement) {
+      try { document.exitFullscreen(); } catch(e) {}
+    }
+    fsBtn.textContent = '⛶ FULLSCREEN';
+  }
+
+  function _enterTcvFullscreen() {
+    wrap.classList.add('tcv-fullscreen');
+    // Inject a close (X) button inside the overlay
+    if (!wrap.querySelector('.tcv-fs-close')) {
+      const x = document.createElement('button');
+      x.className = 'tcv-fs-close';
+      x.textContent = '×';
+      x.title = 'Exit fullscreen (Esc)';
+      x.addEventListener('click', _exitTcvFullscreen);
+      wrap.appendChild(x);
+    }
+    // Try the browser Fullscreen API too — gives true distraction-free mode
+    if (wrap.requestFullscreen) {
+      wrap.requestFullscreen().catch(() => { /* CSS overlay still works even if browser FS denied */ });
+    }
+    fsBtn.textContent = '⛶ EXIT FULLSCREEN';
+  }
+
+  fsBtn.addEventListener('click', () => {
+    if (wrap.classList.contains('tcv-fullscreen')) _exitTcvFullscreen();
+    else _enterTcvFullscreen();
+  });
+
+  // Sync state if the user exits via Esc / browser UI
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && wrap.classList.contains('tcv-fullscreen')) {
+      _exitTcvFullscreen();
+    }
+  });
+  // Also handle Esc when the CSS overlay is on but no browser FS (some browsers / fallback)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && wrap.classList.contains('tcv-fullscreen') && !document.fullscreenElement) {
+      _exitTcvFullscreen();
+    }
+  });
+})();
 
 // Show admin view-mode toggle on auth/admin status change
 function _refreshAdminViewToggle() {

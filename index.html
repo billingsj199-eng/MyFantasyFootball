@@ -37503,7 +37503,8 @@ Rules:
       draftsObj[d.id] = {
         id: d.id,
         tournament: d.tournament || d.title || 'Underdog',
-        teamName: d.teamName || null, // v0.9.62: user's custom team name on UD (separate from contest)
+        teamName: d.teamName || null,         // v0.9.62: user's custom team name on UD (separate from contest)
+        slateTitle: d.slateTitle || null,     // v0.9.68: e.g. "2026 Superflex Season"
         fee: parseFloat(d.entry_fee || d.fee || 0) || 0,
         size: d.size || 12,
         date: d.date || '',

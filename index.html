@@ -752,15 +752,7 @@ CLEAR
 .tcv-cards{flex:1;display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:rgba(0,0,0,.45)}
 .tcv-card{width:118px;background:linear-gradient(160deg,#1f2937 0%,#0f172a 100%);border-radius:6px;padding:6px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s;border:1px solid rgba(255,255,255,.06);user-select:none}
 .tcv-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.6);border-color:rgba(245,158,11,.4)}
-.tcv-card-rank{position:absolute;top:3px;left:5px;font-family:'Bebas Neue',Impact,sans-serif;font-size:20px;font-weight:900;line-height:1;z-index:3;letter-spacing:.5px;-webkit-text-stroke:1.5px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7)}
-.tcv-card-rank.tier-s{color:#f87171}
-.tcv-card-rank.tier-a{color:#fb923c}
-.tcv-card-rank.tier-b{color:#fde047}
-.tcv-card-rank.tier-c{color:#4ade80}
-.tcv-card-rank.tier-d{color:#38bdf8}
-.tcv-card-rank.tier-e{color:#a78bfa}
-.tcv-card-rank.tier-f{color:#cbd5e1}
-.tcv-card-rank.tier-default{color:#e5e7eb}
+.tcv-card-rank{position:absolute;top:3px;left:5px;font-family:'Bebas Neue',Impact,sans-serif;font-size:20px;font-weight:900;line-height:1;z-index:3;letter-spacing:.5px;color:#fff;-webkit-text-stroke:1.5px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7)}
 .tcv-card-stats{position:absolute;top:4px;right:6px;font-size:10px;color:#e2e8f0;text-align:right;line-height:1.35;font-weight:700;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.8)}
 .tcv-card-stats .tcv-stat-blank{opacity:.25}
 .tcv-card-img{width:100%;height:78px;object-fit:contain;object-position:center top;margin-top:22px;background:transparent;display:block}
@@ -774,9 +766,16 @@ CLEAR
 .tcv-pos-pill.WR{background:#3b82f6}
 .tcv-pos-pill.TE{background:#f59e0b}
 .tcv-pos-pill.K,.tcv-pos-pill.DST{background:#64748b}
-.tcv-stats-legend{display:flex;justify-content:flex-end;gap:14px;padding:6px 14px 10px;font-size:10px;color:var(--text2);font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.8px;background:#0a0a0a}
-.tcv-stats-legend span{display:flex;align-items:center;gap:4px}
-.tcv-stats-legend .tcv-key{display:inline-block;width:8px;height:8px;border-radius:50%;background:#94a3b8}
+.tcv-key-card{display:flex;align-items:center;gap:14px;padding:10px 14px;font-family:'Bebas Neue',Impact,sans-serif;background:linear-gradient(135deg,rgba(124,58,237,.10),rgba(236,72,153,.06));border:1px solid rgba(167,139,250,.22);border-radius:6px;margin-bottom:10px;flex-wrap:wrap}
+.tcv-key-title{font-size:13px;letter-spacing:1.5px;color:#a78bfa;font-weight:700;padding-right:10px;border-right:1px solid rgba(255,255,255,.12);margin-right:4px}
+.tcv-key-stack{display:flex;flex-direction:column;align-items:flex-end;line-height:1.3;padding:4px 8px;background:rgba(0,0,0,.45);border-radius:4px}
+.tcv-key-stack-num{font-size:13px;font-weight:700;letter-spacing:.5px}
+.tcv-key-labels{display:flex;flex-direction:column;gap:2px;font-size:11px;letter-spacing:1px}
+.tcv-key-label-row{display:flex;align-items:center;gap:6px;color:var(--text1)}
+.tcv-key-arrow{color:var(--text2);font-size:10px}
+.tcv-key-color-note{margin-left:auto;font-size:10.5px;color:var(--text2);letter-spacing:.5px;font-family:system-ui,sans-serif;font-weight:500}
+.tcv-key-color-note b{color:#22c55e;font-weight:600}
+.tcv-key-color-note i{color:#ef4444;font-style:normal;font-weight:600}
 </style>
 
 <div class="table-wrap">
@@ -5710,11 +5709,8 @@ function _tcvBuildCard(d, displayRank, tierLabel) {
     return color ? '<span style="color:' + color + '">' + v + '</span>' : String(v);
   };
 
-  const tierKey = (tierLabel || '').toLowerCase().replace(/[^a-z]/g, '');
-  const rankTierCls = tierKey ? 'tier-' + tierKey : 'tier-default';
-
   card.innerHTML =
-    '<div class="tcv-card-rank ' + rankTierCls + '">' + displayRank + '.</div>' +
+    '<div class="tcv-card-rank">' + displayRank + '.</div>' +
     '<div class="tcv-card-stats" title="Age / Proj PPG / 2025 PPG">' +
       fmtStat(ageVal, ageColor) + '<br>' +
       fmtStat(projVal, projColor) + '<br>' +
@@ -5756,7 +5752,7 @@ function _renderTierCardView(data, container) {
   const root = document.createElement('div');
   root.className = 'tier-card-view';
 
-  // Header: filter context + stats legend
+  // Header: filter context
   const header = document.createElement('div');
   header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:0 4px 10px;flex-wrap:wrap;gap:8px';
   const ctx = document.createElement('div');
@@ -5766,11 +5762,25 @@ function _renderTierCardView(data, container) {
     : filter;
   ctx.textContent = 'TIER CARDS — ' + filterLabel + ' · ' + data.length + ' PLAYERS';
   header.appendChild(ctx);
-  const legend = document.createElement('div');
-  legend.className = 'tcv-stats-legend';
-  legend.innerHTML = '<span>STATS:</span><span>AGE</span><span style="color:#475569">/</span><span>PROJ PPG</span><span style="color:#475569">/</span><span>\'25 PPG</span>';
-  header.appendChild(legend);
   root.appendChild(header);
+
+  // Visible key explaining what each card shows
+  const keyCard = document.createElement('div');
+  keyCard.className = 'tcv-key-card';
+  keyCard.innerHTML =
+    '<div class="tcv-key-title">KEY</div>' +
+    '<div class="tcv-key-stack" title="Sample stat stack — top to bottom">' +
+      '<div class="tcv-key-stack-num" style="color:#22c55e">26</div>' +
+      '<div class="tcv-key-stack-num" style="color:#facc15">18.5</div>' +
+      '<div class="tcv-key-stack-num" style="color:#4ade80">19.4</div>' +
+    '</div>' +
+    '<div class="tcv-key-labels">' +
+      '<div class="tcv-key-label-row"><span class="tcv-key-arrow">▲</span> AGE</div>' +
+      '<div class="tcv-key-label-row"><span class="tcv-key-arrow">·</span> PROJ PPG (' + (typeof rankingScoringFmt !== 'undefined' ? (rankingScoringFmt === 'ppr' ? 'PPR' : rankingScoringFmt === 'std' ? 'STD' : 'HALF') : 'HALF') + ')</div>' +
+      '<div class="tcv-key-label-row"><span class="tcv-key-arrow">▼</span> \'25 PPG</div>' +
+    '</div>' +
+    '<div class="tcv-key-color-note">Stats are color-coded by position thresholds: <b>green</b> = elite · yellow/orange = average · <i>red</i> = low. Same scale as the table view.</div>';
+  root.appendChild(keyCard);
 
   groups.forEach(g => {
     const row = document.createElement('div');

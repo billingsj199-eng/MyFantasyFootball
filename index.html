@@ -591,6 +591,61 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 <div id="adminGfxPreviewWrap" style="margin-top:1rem;display:none;text-align:center;background:#000;padding:1rem;border-radius:6px;overflow:auto;max-height:600px"></div>
 </div>
 
+<div class="acct-section">
+<div class="acct-section-title">🏆 Drafted Team Graphic Generator</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
+Build a stylized PNG of one of your drafted teams — pick from saved Sleeper leagues or your Underdog portfolio.
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+<div class="acct-field">
+<label class="acct-label">Source</label>
+<select id="adminTgfxSource" class="acct-input" style="padding:.55rem .75rem">
+<option value="myteams" selected>My Teams (Sleeper)</option>
+<option value="underdog">Underdog Portfolio</option>
+</select>
+</div>
+<div class="acct-field">
+<label class="acct-label">Team / Draft</label>
+<select id="adminTgfxTeam" class="acct-input" style="padding:.55rem .75rem">
+<option value="">— select source first —</option>
+</select>
+</div>
+</div>
+<div class="acct-field">
+<label class="acct-label">Title (use | for line breaks; [TEAM] is replaced with team/league name)</label>
+<input type="text" class="acct-input" id="adminTgfxTitle" value="MY|[TEAM]|DRAFT">
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+<div class="acct-field">
+<label class="acct-label">Header theme</label>
+<select id="adminTgfxTheme" class="acct-input" style="padding:.55rem .75rem">
+<option value="purple" selected>Purple</option>
+<option value="blue">Blue</option>
+<option value="red">Red</option>
+<option value="green">Green</option>
+<option value="orange">Orange</option>
+<option value="dark">Dark</option>
+</select>
+</div>
+<div class="acct-field">
+<label class="acct-label">Accent color (corner triangle)</label>
+<input type="color" class="acct-input" id="adminTgfxAccent" value="#facc15" style="height:38px;padding:.2rem .35rem">
+</div>
+</div>
+<div class="acct-field">
+<label class="acct-label">Highlight color (round numbers / brand text)</label>
+<input type="color" class="acct-input" id="adminTgfxHighlight" value="#FFD700" style="height:38px;padding:.2rem .35rem">
+</div>
+<div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
+<button class="acct-btn acct-btn-outline" id="adminTgfxPreviewBtn">PREVIEW</button>
+<button class="acct-btn acct-btn-primary" id="adminTgfxDownloadBtn">DOWNLOAD PNG</button>
+</div>
+<div class="acct-msg" id="adminTgfxMsg"></div>
+<div id="adminTgfxPreviewWrap" style="margin-top:1rem;display:none;text-align:center;background:#000;padding:1rem;border-radius:6px;overflow:auto;max-height:700px"></div>
+</div>
+
+</div>
+
 </div>
 
 </div>
@@ -17803,6 +17858,366 @@ window.fmtHeight = fmtHeight;
           showAdminMsg(gfxMsg, '✅ Downloaded ' + downloaded + ' image' + (downloaded === 1 ? '' : 's'), 'success');
         } catch (e) {
           showAdminMsg(gfxMsg, 'Error: ' + (e && e.message || e), 'error');
+        }
+      });
+    }
+
+    // ===== Drafted Team Graphic Generator =====
+    const tgfxSrcSel      = document.getElementById('adminTgfxSource');
+    const tgfxTeamSel     = document.getElementById('adminTgfxTeam');
+    const tgfxTitleInput  = document.getElementById('adminTgfxTitle');
+    const tgfxThemeSel    = document.getElementById('adminTgfxTheme');
+    const tgfxAccentInp   = document.getElementById('adminTgfxAccent');
+    const tgfxHighlightInp= document.getElementById('adminTgfxHighlight');
+    const tgfxPreviewBtn  = document.getElementById('adminTgfxPreviewBtn');
+    const tgfxDownloadBtn = document.getElementById('adminTgfxDownloadBtn');
+    const tgfxMsg         = document.getElementById('adminTgfxMsg');
+    const tgfxPreviewWrap = document.getElementById('adminTgfxPreviewWrap');
+
+    function _tgfxFormatPick(overall, leagueSize) {
+      // Format like "1.05" given an overall pick number and league size (default 12)
+      const n = parseInt(overall, 10);
+      if (!isFinite(n) || n < 1) return String(overall || '');
+      const sz = leagueSize || 12;
+      const round = Math.ceil(n / sz);
+      const slot = ((n - 1) % sz) + 1;
+      return round + '.' + String(slot).padStart(2, '0');
+    }
+
+    function _tgfxLookupPlayer(name) {
+      if (!name || typeof D === 'undefined') return null;
+      // Direct match first
+      let p = D.find(d => d && d.n === name);
+      if (p) return p;
+      // Loose match (lowercase, strip punctuation)
+      const norm = String(name).toLowerCase().replace(/[^a-z0-9]/g, '');
+      p = D.find(d => d && d.n && String(d.n).toLowerCase().replace(/[^a-z0-9]/g, '') === norm);
+      return p || null;
+    }
+
+    function _tgfxPopulateTeams() {
+      const src = tgfxSrcSel.value;
+      tgfxTeamSel.innerHTML = '';
+
+      if (src === 'myteams') {
+        const sources = [];
+        // Saved leagues (cloud)
+        if (window._mtSavedLeagues && Object.keys(window._mtSavedLeagues).length) {
+          Object.entries(window._mtSavedLeagues).forEach(([leagueId, league]) => {
+            if (!league || !Array.isArray(league.teams)) return;
+            league.teams.forEach((team, idx) => {
+              const isMine = team.isMyTeam || (league.myTeamIdx === idx);
+              if (!isMine && !team.players) return; // skip empty entries
+              sources.push({
+                id: 'saved|' + leagueId + '|' + (team.id || idx),
+                label: (league.name || 'League') + ' — ' + (team.owner || ('Team ' + (idx + 1))) + (isMine ? ' ⭐' : ''),
+                _isMine: isMine
+              });
+            });
+          });
+        }
+        // Currently-loaded league (might not be saved yet)
+        if (window._mtTeams && window._mtTeams.length) {
+          const lname = (window._mtLeague && window._mtLeague.name) || 'Current League';
+          window._mtTeams.forEach((team, idx) => {
+            sources.push({
+              id: 'live|' + idx,
+              label: '[LIVE] ' + lname + ' — ' + (team.owner || ('Team ' + (idx + 1))) + (team.isMyTeam ? ' ⭐' : '')
+            });
+          });
+        }
+        if (!sources.length) {
+          tgfxTeamSel.innerHTML = '<option value="">No teams found — import a Sleeper league on the My Teams page first</option>';
+          return;
+        }
+        // Sort: starred first, then by label
+        sources.sort((a, b) => (b._isMine ? 1 : 0) - (a._isMine ? 1 : 0) || a.label.localeCompare(b.label));
+        sources.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = t.label;
+          tgfxTeamSel.appendChild(opt);
+        });
+      } else if (src === 'underdog') {
+        const drafts = (window._udPortfolio && window._udPortfolio.drafts) || {};
+        const list = Object.values(drafts);
+        if (!list.length) {
+          tgfxTeamSel.innerHTML = '<option value="">No Underdog drafts found — sync via the Underdog extension first</option>';
+          return;
+        }
+        list.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+        list.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          const date = d.date ? (' · ' + d.date) : '';
+          opt.textContent = (d.tournament || 'Draft') + date;
+          tgfxTeamSel.appendChild(opt);
+        });
+      }
+    }
+
+    function _tgfxGetTeamData() {
+      const src = tgfxSrcSel.value;
+      const teamId = tgfxTeamSel.value;
+      if (!teamId) return null;
+
+      if (src === 'myteams') {
+        let team = null, league = null, leagueSize = 12;
+        if (teamId.startsWith('saved|')) {
+          const [_, leagueId, sleeperTeamId] = teamId.split('|');
+          league = (window._mtSavedLeagues || {})[leagueId];
+          if (!league) return null;
+          team = (league.teams || []).find((t, i) => String(t.id) === sleeperTeamId || String(i) === sleeperTeamId);
+          leagueSize = (league.teams || []).length || 12;
+        } else if (teamId.startsWith('live|')) {
+          const idx = parseInt(teamId.split('|')[1], 10);
+          team = (window._mtTeams || [])[idx];
+          league = window._mtLeague || {};
+          leagueSize = (window._mtTeams || []).length || 12;
+        }
+        if (!team) return null;
+
+        const playerNames = team.players || [];
+        // Order roster by current ADP (best-on-team first)
+        const enriched = playerNames.map((name, i) => {
+          const player = _tgfxLookupPlayer(name);
+          return {
+            origIdx: i,
+            name: name,
+            pos: player ? player.s : '',
+            team: player ? player.t : '',
+            adp: (player && (player.a != null ? player.a : player.udA)) || 9999
+          };
+        }).sort((a, b) => a.adp - b.adp);
+
+        return {
+          title: league.name || 'My Team',
+          subtitle: team.owner || '',
+          leagueSize: leagueSize,
+          source: 'sleeper',
+          picks: enriched.map((p, i) => ({
+            pick: i + 1,
+            label: String(i + 1) + '.',
+            name: p.name,
+            pos: p.pos,
+            team: p.team
+          }))
+        };
+      } else if (src === 'underdog') {
+        const draft = ((window._udPortfolio || {}).drafts || {})[teamId];
+        if (!draft || !Array.isArray(draft.picks) || !draft.picks.length) return null;
+        const sz = draft.size || 12;
+        const picks = draft.picks.slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map(p => {
+          const player = _tgfxLookupPlayer(p.name);
+          return {
+            pick: p.pick,
+            label: _tgfxFormatPick(p.pick, sz),
+            name: p.name,
+            pos: p.pos || (player ? player.s : ''),
+            team: player ? player.t : (p.team || '')   // prefer full team name from D[]
+          };
+        });
+        return {
+          title: draft.tournament || 'Underdog Draft',
+          subtitle: draft.date || '',
+          leagueSize: sz,
+          source: 'underdog',
+          picks: picks
+        };
+      }
+      return null;
+    }
+
+    function _tgfxBuildNode(opts) {
+      const { teamData, title, accent, highlight, theme } = opts;
+      if (!teamData || !teamData.picks.length) return null;
+
+      const themes = {
+        purple: 'linear-gradient(135deg,#4c1d95 0%,#7c3aed 55%,#a78bfa 100%)',
+        blue:   'linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#60a5fa 100%)',
+        red:    'linear-gradient(135deg,#7f1d1d 0%,#dc2626 55%,#fb7185 100%)',
+        green:  'linear-gradient(135deg,#14532d 0%,#16a34a 55%,#4ade80 100%)',
+        orange: 'linear-gradient(135deg,#7c2d12 0%,#ea580c 55%,#fb923c 100%)',
+        dark:   'linear-gradient(135deg,#0f172a 0%,#1e293b 55%,#475569 100%)'
+      };
+      const headerBg = themes[theme] || themes.purple;
+      const _highlight = highlight || '#FFD700';
+      const teamLabel = (teamData.title || 'TEAM').toUpperCase();
+
+      const rawTitle = title || 'MY|[TEAM]|DRAFT';
+      const titleLines = rawTitle.split('|').map(line =>
+        line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/\[TEAM\]/g, '<span style="color:' + _highlight + '">' + teamLabel + '</span>')
+      );
+      const titleHtml = titleLines.map(line => '<div>' + line + '</div>').join('');
+
+      // Layout: 1 col for ≤14 picks, 2 cols above
+      const picks = teamData.picks;
+      const cols = picks.length <= 14 ? 1 : 2;
+      const rowsPerCol = Math.ceil(picks.length / cols);
+      const colArrays = [];
+      for (let c = 0; c < cols; c++) {
+        colArrays.push(picks.slice(c * rowsPerCol, (c + 1) * rowsPerCol));
+      }
+
+      // Row sizing scales with pick count
+      const _scale = picks.length <= 14 ? 1.0 : picks.length <= 20 ? 0.85 : 0.7;
+      const RZ = (n) => Math.round(n * _scale);
+
+      function rowHtml(p) {
+        const player = _tgfxLookupPlayer(p.name);
+        const teamName = p.team || (player && player.t);
+        const tc = teamName ? _gfxTeamColor(teamName) : { bg: '#1f2937', fg: '#FFFFFF' };
+        const logoId = (typeof TEAM_LOGO_IDS !== 'undefined' && teamName) ? TEAM_LOGO_IDS[teamName] : null;
+        const logoUrl = logoId ? ('https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png') : '';
+        const logoSize = RZ(70);
+        const logoHtml = logoUrl
+          ? '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;display:flex;align-items:center;justify-content:center;flex:0 0 ' + logoSize + 'px;background:rgba(255,255,255,.95);border-radius:50%;padding:' + RZ(6) + 'px"><img src="' + logoUrl + '" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
+          : '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;background:rgba(255,255,255,.15);border-radius:50%;flex:0 0 ' + logoSize + 'px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:' + RZ(20) + 'px">?</div>';
+
+        const safeName = (p.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const posPill = p.pos
+          ? '<div style="background:rgba(0,0,0,.35);color:' + tc.fg + ';font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(28) + 'px;padding:' + RZ(3) + 'px ' + RZ(10) + 'px;border-radius:' + RZ(5) + 'px;letter-spacing:1px;flex:0 0 auto">' + p.pos + '</div>'
+          : '';
+
+        return '<div style="display:flex;align-items:center;gap:' + RZ(16) + 'px;padding:' + RZ(14) + 'px ' + RZ(20) + 'px;background:' + tc.bg + ';border-radius:' + RZ(10) + 'px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.07)">' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(38) + 'px;color:' + _highlight + ';min-width:' + RZ(80) + 'px;text-align:right;font-weight:700;line-height:1;letter-spacing:.5px;text-shadow:0 1px 2px rgba(0,0,0,.5)">' + p.label + '</div>' +
+          logoHtml +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(38) + 'px;color:' + tc.fg + ';letter-spacing:.6px;line-height:1;flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + safeName.toUpperCase() + '</div>' +
+          posPill +
+          '</div>';
+      }
+
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'width:1080px;background:#000;font-family:"Bebas Neue",Impact,Arial,sans-serif;color:#fff;position:relative;overflow:hidden;box-sizing:border-box';
+
+      const subHtml = teamData.subtitle
+        ? '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:32px;color:rgba(255,255,255,.85);letter-spacing:3px;margin-top:12px">' + teamData.subtitle.replace(/</g,'&lt;') + '</div>'
+        : '';
+
+      // MFF logo in corner (same as rankings)
+      const mffLogo =
+        '<svg viewBox="-2 -8 46 44" width="56" height="54" style="display:block">' +
+          '<rect x="0" y="20" width="8" height="12" rx="1.5" fill="#000" opacity=".35"/>' +
+          '<rect x="11" y="14" width="8" height="18" rx="1.5" fill="#000" opacity=".55"/>' +
+          '<rect x="22" y="7" width="8" height="25" rx="1.5" fill="#000" opacity=".75"/>' +
+          '<rect x="33" y="0" width="8" height="32" rx="1.5" fill="#000" opacity=".95"/>' +
+          '<polyline points="4,17 15,11 26,4 37,-3" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>' +
+          '<circle cx="37" cy="-3" r="3.5" fill="#000"/>' +
+        '</svg>';
+
+      wrap.innerHTML =
+        '<div style="background:' + headerBg + ';padding:50px 56px 42px;position:relative;overflow:hidden;box-sizing:border-box">' +
+          '<div style="position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 150px 150px 0;border-color:transparent ' + accent + ' transparent transparent"></div>' +
+          '<div style="position:absolute;top:14px;right:14px;display:flex;align-items:center;justify-content:center">' + mffLogo + '</div>' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:120px;line-height:.92;color:#fff;letter-spacing:3px;font-weight:900;text-transform:uppercase;padding-right:160px">' + titleHtml + '</div>' +
+          subHtml +
+        '</div>' +
+        '<div style="background:#000;padding:28px 36px;display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:18px;box-sizing:border-box">' +
+          colArrays.map(colPicks =>
+            '<div style="display:flex;flex-direction:column;gap:10px">' +
+              colPicks.map(p => rowHtml(p)).join('') +
+            '</div>'
+          ).join('') +
+        '</div>' +
+        '<div style="background:#000;padding:16px 40px 22px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:24px;color:rgba(255,255,255,.45);letter-spacing:6px;box-sizing:border-box">MYFANTASYFOOTBALL.ORG</div>';
+
+      return wrap;
+    }
+
+    async function _tgfxRender() {
+      await _gfxLoadHtml2Canvas();
+      const teamData = _tgfxGetTeamData();
+      if (!teamData) return null;
+      const node = _tgfxBuildNode({
+        teamData: teamData,
+        title: tgfxTitleInput.value,
+        accent: tgfxAccentInp.value || '#facc15',
+        highlight: tgfxHighlightInp.value || '#FFD700',
+        theme: tgfxThemeSel.value || 'purple'
+      });
+      if (!node) return null;
+      const holder = document.createElement('div');
+      holder.style.cssText = 'position:fixed;left:-10000px;top:0;z-index:-1;pointer-events:none';
+      holder.appendChild(node);
+      document.body.appendChild(holder);
+      try {
+        const imgs = node.querySelectorAll('img');
+        await Promise.all(Array.from(imgs).map(img => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise(res => {
+            const t = setTimeout(res, 4000);
+            img.onload = () => { clearTimeout(t); res(); };
+            img.onerror = () => { clearTimeout(t); res(); };
+          });
+        }));
+        const canvas = await window.html2canvas(node, {
+          backgroundColor: '#000',
+          scale: 1,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          width: 1080,
+          height: node.offsetHeight,
+          windowWidth: 1080,
+          windowHeight: node.offsetHeight
+        });
+        return canvas;
+      } finally {
+        holder.remove();
+      }
+    }
+
+    if (tgfxSrcSel && !tgfxSrcSel._bound) {
+      tgfxSrcSel._bound = true;
+      tgfxSrcSel.addEventListener('change', _tgfxPopulateTeams);
+      _tgfxPopulateTeams();
+    }
+
+    if (tgfxPreviewBtn && !tgfxPreviewBtn._bound) {
+      tgfxPreviewBtn._bound = true;
+      tgfxPreviewBtn.addEventListener('click', async () => {
+        if (!tgfxTeamSel.value) { showAdminMsg(tgfxMsg, 'Pick a team first', 'error'); return; }
+        showAdminMsg(tgfxMsg, 'Generating preview…', 'success');
+        try {
+          const canvas = await _tgfxRender();
+          if (!canvas) { showAdminMsg(tgfxMsg, 'Could not build team graphic — no picks found', 'error'); return; }
+          tgfxPreviewWrap.innerHTML = '';
+          const img = new Image();
+          img.src = canvas.toDataURL('image/png');
+          img.style.cssText = 'max-width:100%;height:auto;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.5)';
+          tgfxPreviewWrap.appendChild(img);
+          tgfxPreviewWrap.style.display = 'block';
+          showAdminMsg(tgfxMsg, '✅ Preview ready', 'success');
+        } catch (e) {
+          showAdminMsg(tgfxMsg, 'Error: ' + (e && e.message || e), 'error');
+        }
+      });
+    }
+
+    if (tgfxDownloadBtn && !tgfxDownloadBtn._bound) {
+      tgfxDownloadBtn._bound = true;
+      tgfxDownloadBtn.addEventListener('click', async () => {
+        if (!tgfxTeamSel.value) { showAdminMsg(tgfxMsg, 'Pick a team first', 'error'); return; }
+        showAdminMsg(tgfxMsg, 'Generating PNG…', 'success');
+        try {
+          const canvas = await _tgfxRender();
+          if (!canvas) { showAdminMsg(tgfxMsg, 'Could not build team graphic — no picks found', 'error'); return; }
+          const td = _tgfxGetTeamData();
+          const slug = (td && td.title ? td.title : 'team').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          canvas.toBlob(blob => {
+            if (!blob) { showAdminMsg(tgfxMsg, 'PNG encode failed', 'error'); return; }
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'mff-team-' + slug + '.png';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+            showAdminMsg(tgfxMsg, '✅ Downloaded ' + a.download, 'success');
+          }, 'image/png');
+        } catch (e) {
+          showAdminMsg(tgfxMsg, 'Error: ' + (e && e.message || e), 'error');
         }
       });
     }

@@ -17399,32 +17399,34 @@ window.fmtHeight = fmtHeight;
     function _gfxLoadHtml2Canvas() {
       if (typeof window.html2canvas === 'function') return Promise.resolve();
       if (window._gfxH2cLoading) return window._gfxH2cLoading;
-      const cdns = [
-        'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
-        'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-        'https://cdn.skypack.dev/html2canvas@1.4.1'
+      // Try local copy first (bypasses CDN-blocking privacy extensions); fall back to CDNs
+      const sources = [
+        { url: 'vendor_html2canvas.min.js', cors: false },               // local (same-origin)
+        { url: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js', cors: true },
+        { url: 'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js', cors: true },
+        { url: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', cors: true },
+        { url: 'https://cdn.skypack.dev/html2canvas@1.4.1', cors: true }
       ];
       window._gfxH2cLoading = (async () => {
         let lastErr = null;
-        for (const url of cdns) {
+        for (const src of sources) {
           try {
             await new Promise((resolve, reject) => {
               const s = document.createElement('script');
-              s.src = url;
-              s.crossOrigin = 'anonymous';
+              s.src = src.url;
+              if (src.cors) s.crossOrigin = 'anonymous';
               s.onload = () => resolve();
-              s.onerror = () => reject(new Error('script error: ' + url));
+              s.onerror = () => reject(new Error('script error: ' + src.url));
               document.head.appendChild(s);
-              setTimeout(() => reject(new Error('timeout: ' + url)), 8000);
+              setTimeout(() => reject(new Error('timeout: ' + src.url)), 8000);
             });
             if (typeof window.html2canvas === 'function') return;
           } catch (e) {
             lastErr = e;
-            console.warn('[Gfx] CDN failed:', url, e && e.message);
+            console.warn('[Gfx] source failed:', src.url, e && e.message);
           }
         }
-        throw new Error('All CDNs failed (privacy extension or firewall blocking?). Last: ' + (lastErr && lastErr.message));
+        throw new Error('html2canvas could not be loaded. Last attempt: ' + (lastErr && lastErr.message));
       })();
       return window._gfxH2cLoading;
     }

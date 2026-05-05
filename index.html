@@ -746,8 +746,25 @@ CLEAR
 #tierCardWrap.tcv-fullscreen::before{content:'';display:block;height:0}
 .tcv-fs-close{position:fixed;top:14px;right:18px;z-index:10001;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.7);color:#fff;font-size:18px;font-family:Arial,sans-serif;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .15s,border-color .15s}
 .tcv-fs-close:hover{background:rgba(245,158,11,.4);border-color:rgba(245,158,11,.7)}
+/* Player-card modal must sit above the fullscreen overlay + close button */
+#tierCardWrap.tcv-fullscreen #modal{z-index:10010}
 .tcv-tier-row{display:flex;align-items:stretch;margin-bottom:3px;border-radius:4px;overflow:hidden;background:transparent;min-height:0}
-.tcv-letter{flex:0 0 38px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;color:#fff;font-weight:900;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.45)}
+.tcv-letter{flex:0 0 38px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;color:#fff;font-weight:900;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.45);cursor:pointer;user-select:none;transition:filter .15s,opacity .15s;position:relative}
+.tcv-letter:hover{filter:brightness(1.15)}
+.tcv-letter::after{content:'';position:absolute;bottom:3px;right:3px;width:0;height:0;border-style:solid;border-width:0 0 6px 6px;border-color:transparent transparent rgba(255,255,255,.5) transparent;opacity:0;transition:opacity .15s}
+.tcv-letter:hover::after{opacity:1}
+.tcv-tier-row.tcv-hidden .tcv-cards{padding:0}
+.tcv-tier-row.tcv-hidden .tcv-card{display:none}
+.tcv-tier-row.tcv-hidden .tcv-letter{opacity:.55;filter:saturate(.6)}
+.tcv-hidden-placeholder{display:none;flex:1;align-items:center;gap:10px;padding:8px 14px;font-family:'Bebas Neue',Impact,sans-serif;font-size:13px;color:var(--text2);letter-spacing:1.5px;background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.08);border-radius:4px;cursor:pointer;transition:background .15s,border-color .15s}
+.tcv-hidden-placeholder:hover{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.3);color:var(--accent)}
+.tcv-tier-row.tcv-hidden .tcv-hidden-placeholder{display:flex}
+.tcv-reveal-controls{display:flex;align-items:center;gap:6px;padding:8px 4px;flex-wrap:wrap}
+.tcv-reveal-btn{padding:.3rem .75rem;font-family:'Bebas Neue',Impact,sans-serif;font-size:.7rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text1);transition:background .15s,border-color .15s,color .15s}
+.tcv-reveal-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tcv-reveal-btn.tcv-primary{background:linear-gradient(135deg,rgba(124,58,237,.3),rgba(236,72,153,.25));border-color:rgba(167,139,250,.5);color:#fff}
+.tcv-reveal-btn.tcv-primary:hover{background:linear-gradient(135deg,rgba(124,58,237,.5),rgba(236,72,153,.4));border-color:#a78bfa}
+.tcv-reveal-status{margin-left:8px;font-family:system-ui,sans-serif;font-size:.7rem;color:var(--text2);letter-spacing:.5px}
 .tcv-letter.tcv-letter-light{color:#1a1a1a;text-shadow:0 1px 2px rgba(255,255,255,.3)}
 .tcv-letter.tier-default{background:#1f2937;color:#6b7280}
 .tcv-cards{flex:1;display:flex;flex-wrap:wrap;gap:7px;padding:6px 8px;background:transparent}
@@ -767,14 +784,10 @@ CLEAR
 .tcv-pos-pill.WR{background:#3b82f6}
 .tcv-pos-pill.TE{background:#f59e0b}
 .tcv-pos-pill.K,.tcv-pos-pill.DST{background:#64748b}
-.tcv-key-card{display:flex;align-items:center;gap:14px;padding:10px 14px;font-family:'Bebas Neue',Impact,sans-serif;background:linear-gradient(135deg,rgba(124,58,237,.10),rgba(236,72,153,.06));border:1px solid rgba(167,139,250,.22);border-radius:6px;margin-bottom:10px;flex-wrap:wrap}
-.tcv-key-title{font-size:13px;letter-spacing:1.5px;color:#a78bfa;font-weight:700;padding-right:10px;border-right:1px solid rgba(255,255,255,.12);margin-right:4px}
-.tcv-key-stack{display:flex;flex-direction:column;align-items:flex-end;line-height:1.3;padding:4px 8px;background:rgba(0,0,0,.45);border-radius:4px}
-.tcv-key-stack-num{font-size:13px;font-weight:700;letter-spacing:.5px}
-.tcv-key-labels{display:flex;flex-direction:column;gap:2px;font-size:11px;letter-spacing:1px}
-.tcv-key-label-row{display:flex;align-items:center;gap:6px;color:var(--text1)}
-.tcv-key-arrow{color:var(--text2);font-size:10px}
-.tcv-key-color-note{margin-left:auto;font-size:10.5px;color:var(--text2);letter-spacing:.5px;font-family:system-ui,sans-serif;font-weight:500}
+.tcv-key-card{display:flex;align-items:center;gap:8px;padding:4px 8px;font-family:system-ui,sans-serif;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(236,72,153,.04));border:1px solid rgba(167,139,250,.18);border-radius:4px;margin-bottom:5px;flex-wrap:wrap;font-size:10px;color:var(--text2);letter-spacing:.3px}
+.tcv-key-title{font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1.2px;color:#a78bfa;font-weight:700}
+.tcv-key-sample{display:inline-flex;gap:5px;align-items:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;font-weight:700;letter-spacing:.4px;padding:1px 5px;background:rgba(0,0,0,.4);border-radius:3px}
+.tcv-key-sample span{line-height:1}
 .tcv-key-color-note b{color:#22c55e;font-weight:600}
 .tcv-key-color-note i{color:#ef4444;font-style:normal;font-weight:600}
 </style>
@@ -5772,22 +5785,25 @@ function _renderTierCardView(data, container) {
   header.appendChild(ctx);
   root.appendChild(header);
 
-  // Visible key explaining what each card shows
+  // Reveal/hide controls (streaming-style tier reveal)
+  const controls = document.createElement('div');
+  controls.className = 'tcv-reveal-controls';
+  controls.innerHTML =
+    '<button class="tcv-reveal-btn" data-tcvaction="hideAll" title="Hide every tier — start the reveal flow">⊘ HIDE ALL</button>' +
+    '<button class="tcv-reveal-btn tcv-primary" data-tcvaction="revealNext" title="Reveal the next hidden tier from the top">▶ REVEAL NEXT</button>' +
+    '<button class="tcv-reveal-btn" data-tcvaction="revealAll" title="Show every tier">◉ REVEAL ALL</button>' +
+    '<span class="tcv-reveal-status" id="tcvRevealStatus"></span>';
+  root.appendChild(controls);
+
+  // Compact one-line key explaining what each card shows
+  const scoreFmtLabel = (typeof rankingScoringFmt !== 'undefined') ? (rankingScoringFmt === 'ppr' ? 'PPR' : rankingScoringFmt === 'std' ? 'STD' : 'HALF') : 'HALF';
   const keyCard = document.createElement('div');
   keyCard.className = 'tcv-key-card';
   keyCard.innerHTML =
-    '<div class="tcv-key-title">KEY</div>' +
-    '<div class="tcv-key-stack" title="Sample stat stack — top to bottom">' +
-      '<div class="tcv-key-stack-num" style="color:#22c55e">26</div>' +
-      '<div class="tcv-key-stack-num" style="color:#facc15">18.5</div>' +
-      '<div class="tcv-key-stack-num" style="color:#4ade80">19.4</div>' +
-    '</div>' +
-    '<div class="tcv-key-labels">' +
-      '<div class="tcv-key-label-row"><span class="tcv-key-arrow">▲</span> AGE</div>' +
-      '<div class="tcv-key-label-row"><span class="tcv-key-arrow">·</span> PROJ PPG (' + (typeof rankingScoringFmt !== 'undefined' ? (rankingScoringFmt === 'ppr' ? 'PPR' : rankingScoringFmt === 'std' ? 'STD' : 'HALF') : 'HALF') + ')</div>' +
-      '<div class="tcv-key-label-row"><span class="tcv-key-arrow">▼</span> \'25 PPG</div>' +
-    '</div>' +
-    '<div class="tcv-key-color-note">Stats are color-coded by position thresholds: <b>green</b> = elite · yellow/orange = average · <i>red</i> = low. Same scale as the table view.</div>';
+    '<span class="tcv-key-title">KEY</span>' +
+    '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">26</span>/<span style="color:#facc15">18.5</span>/<span style="color:#4ade80">19.4</span></span>' +
+    '<span>= AGE / PROJ PPG (' + scoreFmtLabel + ') / \'25 PPG</span>' +
+    '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 
   // Color cycle for tier letters — repeats after 7 tiers (matches tcv-key gradient palette)
@@ -5801,9 +5817,10 @@ function _renderTierCardView(data, container) {
     { bg: 'linear-gradient(135deg,#475569,#94a3b8)', glow: '148,163,184', light: false }   // gray
   ];
   let _coloredTierIdx = 0;
-  groups.forEach(g => {
+  groups.forEach((g, gIdx) => {
     const row = document.createElement('div');
     row.className = 'tcv-tier-row';
+    row.setAttribute('data-tcv-group', String(gIdx));
     const letter = document.createElement('div');
     let glowRgb = null;
     if (!g.label) {
@@ -5817,13 +5834,52 @@ function _renderTierCardView(data, container) {
       _coloredTierIdx++;
     }
     letter.textContent = g.label || '—';
+    letter.title = 'Click to hide / reveal this tier (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
+    letter.addEventListener('click', () => row.classList.toggle('tcv-hidden'));
     row.appendChild(letter);
     const cards = document.createElement('div');
     cards.className = 'tcv-cards';
     g.players.forEach(p => cards.appendChild(_tcvBuildCard(p.d, p.displayRank, g.label, glowRgb)));
     row.appendChild(cards);
+    // Hidden-state placeholder (only visible when row.tcv-hidden is set)
+    const placeholder = document.createElement('div');
+    placeholder.className = 'tcv-hidden-placeholder';
+    placeholder.innerHTML = '<span style="font-size:14px">▶</span><span>HIDDEN · ' + g.players.length + ' PLAYER' + (g.players.length === 1 ? '' : 'S') + ' · CLICK TO REVEAL</span>';
+    placeholder.addEventListener('click', () => row.classList.remove('tcv-hidden'));
+    row.appendChild(placeholder);
     root.appendChild(row);
   });
+
+  // Wire master reveal controls
+  function _tcvUpdateStatus() {
+    const statusEl = root.querySelector('#tcvRevealStatus');
+    if (!statusEl) return;
+    const total = root.querySelectorAll('.tcv-tier-row').length;
+    const hidden = root.querySelectorAll('.tcv-tier-row.tcv-hidden').length;
+    statusEl.textContent = hidden === 0 ? '' : (hidden + ' of ' + total + ' tiers hidden');
+  }
+  root.querySelectorAll('[data-tcvaction]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.getAttribute('data-tcvaction');
+      const rows = root.querySelectorAll('.tcv-tier-row');
+      if (action === 'hideAll') {
+        rows.forEach(r => r.classList.add('tcv-hidden'));
+      } else if (action === 'revealAll') {
+        rows.forEach(r => r.classList.remove('tcv-hidden'));
+      } else if (action === 'revealNext') {
+        for (const r of rows) {
+          if (r.classList.contains('tcv-hidden')) {
+            r.classList.remove('tcv-hidden');
+            r.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            break;
+          }
+        }
+      }
+      _tcvUpdateStatus();
+    });
+  });
+  // Update status whenever a row toggles via direct click
+  root.addEventListener('click', _tcvUpdateStatus, true);
 
   container.innerHTML = '';
   container.appendChild(root);
@@ -6387,10 +6443,37 @@ document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(btn => {
   const wrap = document.getElementById('tierCardWrap');
   if (!fsBtn || !wrap) return;
 
+  // Track where the player-card modal lives in the normal DOM so we can
+  // move it into the fullscreen container (browser Fullscreen API only
+  // renders descendants of the fullscreen element) and restore on exit.
+  let _modalOriginalParent = null;
+  let _modalOriginalNext = null;
+
+  function _moveModalIntoFullscreen() {
+    const modal = document.getElementById('modal');
+    if (!modal) return;
+    if (modal.parentNode === wrap) return; // already moved
+    _modalOriginalParent = modal.parentNode;
+    _modalOriginalNext = modal.nextSibling;
+    wrap.appendChild(modal);
+  }
+  function _restoreModalToOriginalParent() {
+    const modal = document.getElementById('modal');
+    if (!modal || !_modalOriginalParent) return;
+    if (_modalOriginalNext && _modalOriginalNext.parentNode === _modalOriginalParent) {
+      _modalOriginalParent.insertBefore(modal, _modalOriginalNext);
+    } else {
+      _modalOriginalParent.appendChild(modal);
+    }
+    _modalOriginalParent = null;
+    _modalOriginalNext = null;
+  }
+
   function _exitTcvFullscreen() {
     wrap.classList.remove('tcv-fullscreen');
     const closeBtn = wrap.querySelector('.tcv-fs-close');
     if (closeBtn) closeBtn.remove();
+    _restoreModalToOriginalParent();
     if (document.fullscreenElement) {
       try { document.exitFullscreen(); } catch(e) {}
     }
@@ -6408,6 +6491,8 @@ document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(btn => {
       x.addEventListener('click', _exitTcvFullscreen);
       wrap.appendChild(x);
     }
+    // Move the player-card modal in so it remains usable while fullscreen
+    _moveModalIntoFullscreen();
     // Try the browser Fullscreen API too — gives true distraction-free mode
     if (wrap.requestFullscreen) {
       wrap.requestFullscreen().catch(() => { /* CSS overlay still works even if browser FS denied */ });

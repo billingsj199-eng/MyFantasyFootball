@@ -726,8 +726,6 @@ Build a stylized PNG of your most- or least-drafted Underdog players (% exposure
 
 </div>
 
-</div>
-
 <!-- HOME PAGE -->
 <!-- RANKINGS PAGE (existing content) -->
 <div class="page active" id="pageRankings">
@@ -5100,8 +5098,10 @@ function syncMode() {
   tierCounter = versionTierCounters[currentVersion][currentMode][_tierPK()];
 }
 
-// Initial consensus build (now safe — board/tiers/tierCounter are initialized above)
-rebuildConsensusBoards();
+// Initial consensus build — deferred to a microtask so that downstream `let`
+// declarations (filter, sortKey, viewMode, rookiePosFilter, ...) are out of
+// the temporal dead zone before _tierPK / syncMode reference them.
+Promise.resolve().then(() => { try { rebuildConsensusBoards(); } catch(e) { console.warn('[Consensus] deferred rebuild failed:', e); } });
 
 // Convenience accessors - always point to the active version + mode
 function getBoard() { return versionBoards[currentVersion][currentMode]; }

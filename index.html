@@ -559,8 +559,8 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 </select>
 </div>
 <div class="acct-field">
-<label class="acct-label">Title (use [POS] as placeholder, gets replaced + accent-colored)</label>
-<input type="text" class="acct-input" id="adminGfxTitle" value="2026 FANTASY [POS] RANKINGS">
+<label class="acct-label">Title (use [POS] as placeholder; use | for line breaks)</label>
+<input type="text" class="acct-input" id="adminGfxTitle" value="2026|FANTASY [POS]|RANKINGS">
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
 <div class="acct-field">
@@ -17582,10 +17582,13 @@ window.fmtHeight = fmtHeight;
       const headerBg = themes[theme] || themes.purple;
       const posLabels = { QB:'QB', RB:'RB', WR:'WR', TE:'TE', ROOKIE:'ROOKIE', ROOKIE_QB:'ROOKIE QB', ROOKIE_RB:'ROOKIE RB', ROOKIE_WR:'ROOKIE WR', ROOKIE_TE:'ROOKIE TE', ALL:'OVERALL', DEVY:'DEVY' };
       const posLabel = posLabels[pos] || pos;
-      const rawTitle = title || '2026 FANTASY [POS] RANKINGS';
-      const titleHtml = rawTitle
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/\[POS\]/g, '<span style="color:' + accent + '">' + posLabel + '</span>');
+      const rawTitle = title || '2026|FANTASY [POS]|RANKINGS';
+      // Split on | for explicit line breaks; each line renders as its own block
+      const titleLines = rawTitle.split('|').map(line =>
+        line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/\[POS\]/g, '<span style="color:' + accent + '">' + posLabel + '</span>')
+      );
+      const titleHtml = titleLines.map(line => '<div>' + line + '</div>').join('');
       const useTwoCols = list.length > 10;
       const half = useTwoCols ? Math.ceil(list.length / 2) : list.length;
       const col1 = list.slice(0, half);
@@ -17609,13 +17612,13 @@ window.fmtHeight = fmtHeight;
         return '<div style="display:flex;align-items:center;gap:' + RZ(18) + 'px;padding:' + RZ(14) + 'px ' + RZ(20) + 'px;background:' + tc.bg + ';border-radius:' + RZ(10) + 'px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.07)">' +
           '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(46) + 'px;color:' + tc.fg + ';min-width:' + RZ(60) + 'px;text-align:right;font-weight:700;line-height:1">' + rank + '.</div>' +
           logo +
-          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(42) + 'px;color:' + tc.fg + ';letter-spacing:.6px;line-height:1;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + safeName.toUpperCase() + '</div>' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:' + RZ(42) + 'px;color:' + tc.fg + ';letter-spacing:.6px;line-height:1;flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + safeName.toUpperCase() + '</div>' +
           ppgHtml +
           '</div>';
       }
 
       const wrap = document.createElement('div');
-      wrap.style.cssText = 'width:1080px;background:#000;font-family:"Bebas Neue",Impact,Arial,sans-serif;color:#fff;position:relative;overflow:hidden;box-sizing:border-box';
+      wrap.style.cssText = 'width:1200px;background:#000;font-family:"Bebas Neue",Impact,Arial,sans-serif;color:#fff;position:relative;overflow:hidden;box-sizing:border-box';
       // Column layout for 1080×1920 portrait: 2 cols default, 3 cols when >24
       const cols = list.length <= 6 ? 1
                  : list.length <= 24 ? 2
@@ -17644,7 +17647,7 @@ window.fmtHeight = fmtHeight;
         '<div style="background:' + headerBg + ';padding:50px 56px 40px;position:relative;overflow:hidden;box-sizing:border-box">' +
           '<div style="position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 150px 150px 0;border-color:transparent ' + accent + ' transparent transparent"></div>' +
           '<div style="position:absolute;top:18px;right:18px;width:90px;height:90px;display:flex;align-items:center;justify-content:center">' + mffLogo + '</div>' +
-          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:84px;line-height:.95;color:#fff;letter-spacing:2.5px;font-weight:900;text-transform:uppercase;padding-right:140px">' + titleHtml + '</div>' +
+          '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:130px;line-height:.92;color:#fff;letter-spacing:3px;font-weight:900;text-transform:uppercase;padding-right:160px">' + titleHtml + '</div>' +
           pageBadgeHtml +
         '</div>' +
         '<div style="background:#000;padding:28px 36px;display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:18px;box-sizing:border-box">' +
@@ -17684,9 +17687,9 @@ window.fmtHeight = fmtHeight;
           useCORS: true,
           allowTaint: false,
           logging: false,
-          width: 1080,
+          width: 1200,
           height: measuredHeight,
-          windowWidth: 1080,
+          windowWidth: 1200,
           windowHeight: measuredHeight
         });
         return canvas;

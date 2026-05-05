@@ -738,23 +738,23 @@ CLEAR
 
 <style>
 /* Tier Card View (admin) */
-.tier-card-view{padding:.75rem;background:#0a0a0a;min-height:300px}
-.tcv-tier-row{display:flex;align-items:stretch;margin-bottom:5px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.02);min-height:0}
-.tcv-letter{flex:0 0 44px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:30px;color:#fff;font-weight:900;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.45)}
+.tier-card-view{padding:.6rem;background:#0a0a0a;min-height:300px}
+.tcv-tier-row{display:flex;align-items:stretch;margin-bottom:3px;border-radius:4px;overflow:hidden;background:transparent;min-height:0}
+.tcv-letter{flex:0 0 38px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;color:#fff;font-weight:900;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.45)}
 .tcv-letter.tcv-letter-light{color:#1a1a1a;text-shadow:0 1px 2px rgba(255,255,255,.3)}
 .tcv-letter.tier-default{background:#1f2937;color:#6b7280}
-.tcv-cards{flex:1;display:flex;flex-wrap:wrap;gap:6px;padding:6px;background:rgba(0,0,0,.45)}
-.tcv-card{width:98px;background:linear-gradient(160deg,#1f2937 0%,#0f172a 100%);border-radius:5px;padding:4px 4px 5px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s;border:1px solid rgba(255,255,255,.06);user-select:none}
-.tcv-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.6);border-color:rgba(245,158,11,.4)}
-.tcv-card-rank{position:absolute;top:2px;left:4px;font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;font-weight:900;line-height:1;z-index:3;letter-spacing:.4px;color:#fff;-webkit-text-stroke:1.4px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7)}
-.tcv-card-stats{position:absolute;top:3px;right:5px;font-size:9.5px;color:#e2e8f0;text-align:right;line-height:1.3;font-weight:700;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.8)}
+.tcv-cards{flex:1;display:flex;flex-wrap:wrap;gap:7px;padding:6px 8px;background:transparent}
+.tcv-card{width:92px;background:linear-gradient(160deg,#1f2937 0%,#0f172a 100%);border-radius:5px;padding:4px 4px 5px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s;border:none;user-select:none;box-shadow:0 0 0 1px rgba(255,255,255,.04)}
+.tcv-card:hover{transform:translateY(-2px)}
+.tcv-card-rank{position:absolute;top:2px;left:4px;font-family:'Bebas Neue',Impact,sans-serif;font-size:16px;font-weight:900;line-height:1;z-index:3;letter-spacing:.4px;color:#fff;-webkit-text-stroke:1.3px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7)}
+.tcv-card-stats{position:absolute;top:3px;right:5px;font-size:9px;color:#e2e8f0;text-align:right;line-height:1.3;font-weight:700;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.8)}
 .tcv-card-stats .tcv-stat-blank{opacity:.25}
-.tcv-card-img{width:100%;height:60px;object-fit:contain;object-position:center top;margin-top:18px;background:transparent;display:block}
-.tcv-card-img-fallback{width:100%;height:60px;margin-top:18px;background:transparent;display:flex;align-items:center;justify-content:center;color:#334155;font-size:26px;font-family:'Bebas Neue',Impact,sans-serif;font-weight:900}
-.tcv-card-team{position:absolute;bottom:24px;left:4px;width:20px;height:20px;background:rgba(0,0,0,.55);border-radius:3px;padding:1px;backdrop-filter:blur(2px)}
+.tcv-card-img{width:100%;height:54px;object-fit:contain;object-position:center top;margin-top:16px;background:transparent;display:block}
+.tcv-card-img-fallback{width:100%;height:54px;margin-top:16px;background:transparent;display:flex;align-items:center;justify-content:center;color:#334155;font-size:24px;font-family:'Bebas Neue',Impact,sans-serif;font-weight:900}
+.tcv-card-team{position:absolute;bottom:22px;left:3px;width:18px;height:18px;background:rgba(0,0,0,.55);border-radius:3px;padding:1px;backdrop-filter:blur(2px)}
 .tcv-card-team img{width:100%;height:100%;object-fit:contain}
-.tcv-card-name{font-family:'Bebas Neue',Impact,sans-serif;font-size:12px;color:#fff;text-align:center;margin-top:3px;letter-spacing:.5px;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px}
-.tcv-pos-pill{position:absolute;bottom:4px;right:4px;font-size:8px;padding:1px 3px;border-radius:2px;font-weight:700;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.4px;color:#fff;line-height:1.3}
+.tcv-card-name{font-family:'Bebas Neue',Impact,sans-serif;font-size:11.5px;color:#fff;text-align:center;margin-top:2px;letter-spacing:.5px;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px}
+.tcv-pos-pill{position:absolute;bottom:4px;right:3px;font-size:7.5px;padding:1px 3px;border-radius:2px;font-weight:700;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.4px;color:#fff;line-height:1.3}
 .tcv-pos-pill.QB{background:#ec4899}
 .tcv-pos-pill.RB{background:#10b981}
 .tcv-pos-pill.WR{background:#3b82f6}
@@ -5659,10 +5659,17 @@ function getTierForRank(rank) {
 }
 
 // === Admin Tier-Card View ===
-function _tcvBuildCard(d, displayRank, tierLabel) {
+function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   const card = document.createElement('div');
   card.className = 'tcv-card';
   card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
+  if (glowRgb) {
+    const baseShadow = '0 0 0 1px rgba(' + glowRgb + ',.55), 0 2px 6px rgba(' + glowRgb + ',.3), 0 4px 14px rgba(' + glowRgb + ',.18)';
+    const hoverShadow = '0 0 0 1.5px rgba(' + glowRgb + ',.85), 0 4px 10px rgba(' + glowRgb + ',.45), 0 8px 22px rgba(' + glowRgb + ',.28)';
+    card.style.boxShadow = baseShadow;
+    card.addEventListener('mouseenter', () => { card.style.boxShadow = hoverShadow; });
+    card.addEventListener('mouseleave', () => { card.style.boxShadow = baseShadow; });
+  }
 
   const ageVal = (d.age != null) ? d.age : '';
   const projVal = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
@@ -5778,19 +5785,20 @@ function _renderTierCardView(data, container) {
 
   // Color cycle for tier letters — repeats after 7 tiers (matches tcv-key gradient palette)
   const TIER_COLORS = [
-    { bg: 'linear-gradient(135deg,#dc2626,#f87171)', light: false },  // red
-    { bg: 'linear-gradient(135deg,#ea580c,#fb923c)', light: false },  // orange
-    { bg: 'linear-gradient(135deg,#ca8a04,#facc15)', light: true  },  // yellow (dark text)
-    { bg: 'linear-gradient(135deg,#16a34a,#4ade80)', light: false },  // green
-    { bg: 'linear-gradient(135deg,#0284c7,#38bdf8)', light: false },  // blue
-    { bg: 'linear-gradient(135deg,#7c3aed,#a78bfa)', light: false },  // purple
-    { bg: 'linear-gradient(135deg,#475569,#94a3b8)', light: false }   // gray
+    { bg: 'linear-gradient(135deg,#dc2626,#f87171)', glow: '248,113,113', light: false },  // red
+    { bg: 'linear-gradient(135deg,#ea580c,#fb923c)', glow: '251,146,60',  light: false },  // orange
+    { bg: 'linear-gradient(135deg,#ca8a04,#facc15)', glow: '250,204,21',  light: true  },  // yellow (dark text)
+    { bg: 'linear-gradient(135deg,#16a34a,#4ade80)', glow: '74,222,128',  light: false },  // green
+    { bg: 'linear-gradient(135deg,#0284c7,#38bdf8)', glow: '56,189,248',  light: false },  // blue
+    { bg: 'linear-gradient(135deg,#7c3aed,#a78bfa)', glow: '167,139,250', light: false },  // purple
+    { bg: 'linear-gradient(135deg,#475569,#94a3b8)', glow: '148,163,184', light: false }   // gray
   ];
   let _coloredTierIdx = 0;
   groups.forEach(g => {
     const row = document.createElement('div');
     row.className = 'tcv-tier-row';
     const letter = document.createElement('div');
+    let glowRgb = null;
     if (!g.label) {
       // No tier set — neutral placeholder
       letter.className = 'tcv-letter tier-default';
@@ -5798,13 +5806,14 @@ function _renderTierCardView(data, container) {
       const c = TIER_COLORS[_coloredTierIdx % TIER_COLORS.length];
       letter.className = 'tcv-letter' + (c.light ? ' tcv-letter-light' : '');
       letter.style.background = c.bg;
+      glowRgb = c.glow;
       _coloredTierIdx++;
     }
     letter.textContent = g.label || '—';
     row.appendChild(letter);
     const cards = document.createElement('div');
     cards.className = 'tcv-cards';
-    g.players.forEach(p => cards.appendChild(_tcvBuildCard(p.d, p.displayRank, g.label)));
+    g.players.forEach(p => cards.appendChild(_tcvBuildCard(p.d, p.displayRank, g.label, glowRgb)));
     row.appendChild(cards);
     root.appendChild(row);
   });

@@ -17,7 +17,9 @@
 .trivia-grid{display:grid;gap:3px;padding:3px;background:#1a1a2e}
 .trivia-cell{position:relative;background:rgba(255,255,255,.95);border-radius:4px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:transform .1s}
 .trivia-cell:hover{transform:scale(1.02)}
-.trivia-cell.revealed{border:3px solid #22c55e}
+/* Revealed cells: no box border — the team-color outline lives on the player
+   silhouette via drop-shadow. Wrong cells keep the red box for clarity. */
+.trivia-cell.revealed{border:none}
 .trivia-cell.wrong{border:3px solid #ef4444}
 .trivia-cell.wrong .trivia-cell-cat{opacity:.15}
 /* Reveal overlay sits BELOW the category/stat strip so the stat (e.g. "219 WINS")
@@ -26,12 +28,15 @@
 /* Reveal flows as a normal flex child below the cat strip — no fixed top offset
    so the stats line stays naturally visible above with no gap. Inner items are
    flex-stacked so the image + name share the available space without overflow. */
-.trivia-cell-reveal{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:3px;z-index:2;border-radius:0 0 3px 3px;background:rgba(255,255,255,.95);min-height:0;overflow:hidden}
-/* Player image: bounded on BOTH axes so it fits the reveal at any cell size,
-   from tiny mobile cells (~60px) up to desktop. Thin team-color outline. */
-.trivia-cell-reveal img{max-width:80%;max-height:62%;aspect-ratio:1;object-fit:cover;border-radius:4px;border:2px solid #22c55e;flex:0 1 auto;min-height:0}
-/* Name as a flex child below the image — bold + readable, never overlaps. */
-.trivia-cell-reveal .reveal-name{font-family:'DM Sans',sans-serif;font-weight:800;font-size:.65rem;color:#0f172a;text-align:center;line-height:1.05;letter-spacing:.2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 0 auto}
+.trivia-cell-reveal{position:relative;flex:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:2px;padding:2px;z-index:2;border-radius:0 0 3px 3px;background:rgba(255,255,255,.95);min-height:0;overflow:hidden}
+/* Player image FILLS the box between the stat strip and the name — full width,
+   grows to take all remaining vertical space (flex:1). object-fit:contain so
+   the player isn't cropped. Outline traces the player silhouette via stacked
+   drop-shadow filters (works because ESPN headshots have transparent BGs).
+   The actual outline color is set inline per cell via the `--team-outline` var. */
+.trivia-cell-reveal img{width:100%;flex:1 1 0;min-height:0;object-fit:contain;object-position:center;display:block;filter:var(--team-outline-filter,drop-shadow(1.5px 0 0 #22c55e) drop-shadow(-1.5px 0 0 #22c55e) drop-shadow(0 1.5px 0 #22c55e) drop-shadow(0 -1.5px 0 #22c55e))}
+/* Name wraps to 2 lines if needed so the full name is visible. */
+.trivia-cell-reveal .reveal-name{font-family:'DM Sans',sans-serif;font-weight:800;font-size:.6rem;color:#0f172a;text-align:center;line-height:1.05;letter-spacing:0;width:100%;word-break:break-word;white-space:normal;flex:0 0 auto;padding:1px 2px}
 .trivia-cell.revealed .trivia-cell-body,.trivia-cell.revealed .trivia-cell-hint{display:none}
 .trivia-cell.wrong .trivia-cell-body,.trivia-cell.wrong .trivia-cell-hint{display:none}
 .trivia-cell-answer{display:none}

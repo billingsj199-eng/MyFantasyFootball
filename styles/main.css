@@ -1,6 +1,19 @@
 /* extracted from index.html for performance */
 
 *{margin:0;padding:0;box-sizing:border-box}
+/* Keyboard-only focus ring (won't show for mouse clicks) */
+:focus-visible{outline:2px solid var(--accent,#f59e0b);outline-offset:2px;border-radius:4px}
+/* Don't double-up the focus ring on the sidebar nav buttons (they have their own active style) */
+.nav-btn:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--accent,#f59e0b)}
+/* Embed mode — hide chrome so a single feature can be iframed (e.g. ?embed=trivia&id=...) */
+body.mff-embed .sidebar,
+body.mff-embed .global-auth-bar,
+body.mff-embed .auth-anchor,
+body.mff-embed header,
+body.mff-embed .live-ticker,
+body.mff-embed #mffTourOverlay{display:none!important}
+body.mff-embed .page:not(.active){display:none!important}
+body.mff-embed .main-content{padding-bottom:0!important}
 :root{
 --bg:#0a0e17;--surface:#111827;--surface2:#1a2236;--border:#1e2a42;
 --text:#e2e8f0;--text2:#8899b4;--accent:#f59e0b;--accent2:#fbbf24;
@@ -9,6 +22,18 @@
 --green:#22c55e;--red:#ef4444;
 /* === HOME REDESIGN ADDITIONS === */
 --accent-blue:#38bdf8;--accent-purple:#c084fc;--accent-pink:#f472b6;--accent-emerald:#10b981;--ticker-bg:#06060c;
+/* Elevation overlays (subtle backgrounds on top of surfaces). Auto-invert in light theme. */
+--elev-1:rgba(255,255,255,.03);--elev-2:rgba(255,255,255,.06);--elev-3:rgba(255,255,255,.1);
+}
+/* Light theme. Inline-style hardcoded colors aren't covered yet; if you spot a
+   broken element in light mode, find the inline `color:#...` or `background:#...`
+   in index.html and replace with the matching CSS variable. */
+:root[data-theme="light"]{
+--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;
+--text:#0f172a;--text2:#64748b;--accent:#d97706;--accent2:#f59e0b;
+--qb-bg:rgba(231,76,60,.1);--rb-bg:rgba(34,197,94,.1);--wr-bg:rgba(59,130,246,.1);--te-bg:rgba(168,85,247,.1);
+--ticker-bg:#0f172a;
+--elev-1:rgba(0,0,0,.04);--elev-2:rgba(0,0,0,.06);--elev-3:rgba(0,0,0,.1);
 }
 /* === HOME REDESIGN STYLES === */
 .live-ticker{width:100%;align-self:stretch;background:var(--ticker-bg);border-bottom:1px solid var(--border);overflow:hidden;white-space:nowrap;padding:7px 0;font-size:.7rem;letter-spacing:.5px;flex-shrink:0}
@@ -361,7 +386,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .acct-msg.error{display:block;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
 .acct-signout-row{text-align:center;margin-top:1.5rem}
 /* Badge System */
-.games-tabs{display:flex;gap:2px;justify-content:center;margin-bottom:1.25rem;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.15);width:fit-content;margin-left:auto;margin-right:auto}
+.games-tabs{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-bottom:1.25rem;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.15);width:fit-content;max-width:100%;margin-left:auto;margin-right:auto}
 .games-tab{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;padding:7px 20px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;white-space:nowrap}
 .games-tab:hover{color:var(--text)}
 .games-tab.active{background:var(--accent);color:var(--bg)}
@@ -567,7 +592,7 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 .js-model-btn{font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;padding:3px 8px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:3px;transition:all .15s;white-space:nowrap}
 .js-model-btn:hover{color:var(--text)}
 .js-model-btn.active{background:rgba(59,130,246,.25);color:#60a5fa}
-.mode-tabs{display:flex;gap:2px;margin-right:12px;background:rgba(255,255,255,.04);border-radius:6px;padding:2px}
+.mode-tabs{display:flex;gap:2px;margin-right:12px;background:var(--elev-1);border-radius:6px;padding:2px}
 .mode-tab{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;padding:5px 14px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;white-space:nowrap}
 .mode-tab:hover{color:var(--text)}
 .mode-tab.active{background:var(--accent);color:var(--bg);font-weight:700;box-shadow:inset 0 -3px 0 rgba(0,0,0,.28),0 2px 6px -2px rgba(0,0,0,.4)}
@@ -596,7 +621,7 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 .tier-name-static{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)}
 .tier-controls{margin-left:auto;display:flex;gap:3px;opacity:.4;transition:opacity .15s}
 .tier-row:hover .tier-controls{opacity:1}
-.tier-btn{background:none;border:1px solid rgba(255,255,255,.1);color:var(--text2);cursor:pointer;padding:1px 6px;border-radius:3px;font-size:.65rem;font-family:'DM Sans',sans-serif;line-height:1.4}
+.tier-btn{background:none;border:1px solid var(--elev-3);color:var(--text2);cursor:pointer;padding:1px 6px;border-radius:3px;font-size:.65rem;font-family:'DM Sans',sans-serif;line-height:1.4}
 .tier-btn:hover{border-color:var(--accent);color:var(--accent)}
 .tier-btn.del:hover{border-color:#ef4444;color:#ef4444}
 .add-tier-row td{padding:0 .6rem;border-bottom:none;height:0;overflow:hidden;transition:height .15s,padding .15s}
@@ -674,7 +699,7 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 
 /* Career Log Table */
 .career-log-controls{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-.career-log-toggle{display:flex;gap:1px;background:rgba(255,255,255,.04);border-radius:4px;padding:1px}
+.career-log-toggle{display:flex;gap:1px;background:var(--elev-1);border-radius:4px;padding:1px}
 .career-log-toggle button{font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1px;padding:3px 10px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:3px;transition:all .15s}
 .career-log-toggle button.active{background:var(--accent);color:var(--bg);font-weight:700}
 .career-log-year-select{font-family:'DM Sans',sans-serif;font-size:.65rem;padding:2px 6px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:3px;cursor:pointer;outline:none}
@@ -693,7 +718,7 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 .career-table .career-bar{display:none}
 /* Combine/Athletic Profile */
 .combine-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-.combine-stat{text-align:center;padding:6px 4px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--border)}
+.combine-stat{text-align:center;padding:6px 4px;background:var(--elev-1);border-radius:6px;border:1px solid var(--border)}
 .combine-stat .cb-val{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--accent);line-height:1.1}
 .combine-stat .cb-lbl{font-size:.5rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 .cb-elite{color:var(--green) !important}
@@ -702,10 +727,10 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 .cb-below{color:var(--red) !important}
 .college-conf-badge{font-size:.4rem;padding:1px 4px;border-radius:3px;background:rgba(245,158,11,.12);color:var(--accent);font-weight:600;white-space:nowrap}
 /* Card View Toggle */
-.card-view-toggle{display:flex;gap:1px;background:rgba(255,255,255,.04);border-radius:6px;padding:2px;margin-bottom:10px}
+.card-view-toggle{display:flex;gap:1px;background:var(--elev-1);border-radius:6px;padding:2px;margin-bottom:10px}
 .card-view-btn{flex:1;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;padding:5px 0;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;text-align:center}
 .card-view-btn.active{background:var(--accent);color:var(--bg);font-weight:700}
-.card-view-btn:hover:not(.active){background:rgba(255,255,255,.06)}
+.card-view-btn:hover:not(.active){background:var(--elev-2)}
 .card-prospect-view{display:none}
 .card-prospect-view.active{display:block}
 .card-fantasy-view{display:block}
@@ -813,13 +838,16 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .search-box{max-width:none;min-width:unset}
   .search-box input{padding:.5rem .75rem .5rem 2rem;font-size:.8rem}
   .filter-rows{gap:4px}
-  .filter-row-top{gap:2px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:2px}
-  .filter-row-top::-webkit-scrollbar{display:none}
-  .pos-filters{gap:2px}
+  /* Wrap filter chunks instead of horizontal-scrolling. Phones are too narrow to
+     fit version + mode + sync on one row, and a hidden scrollbar leaves users
+     unaware they can swipe. */
+  .filter-row-top{gap:4px;flex-wrap:wrap;padding-bottom:2px}
+  .pos-filters{gap:2px;flex-wrap:wrap}
   .pos-btn{padding:.35rem .6rem;font-size:.65rem;min-height:34px}
-  .version-tabs{margin-right:4px;flex-shrink:0}
+  /* Allow shrinking so inner flex-wrap can trigger when content > parent width. */
+  .version-tabs{margin-right:4px;flex-wrap:wrap}
   .version-tab{font-size:.68rem;padding:4px 8px}
-  .mode-tabs{margin-right:4px;flex-shrink:0}
+  .mode-tabs{margin-right:4px;flex-wrap:wrap}
   .mode-tab{font-size:.72rem;padding:4px 10px}
   .sync-toggle-wrap{margin-left:2px!important;gap:3px!important;flex-shrink:0}
   .sync-toggle-wrap .pm-toggle{width:32px;height:18px}
@@ -831,8 +859,8 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .stats-bar{padding:.25rem .75rem;gap:.75rem}
   .stat-chip{font-size:.62rem}
 
-  .toolbar{display:flex;gap:.35rem;margin-left:auto;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
-  .toolbar::-webkit-scrollbar{display:none}
+  /* Wrap toolbar buttons rather than horizontal-scrolling with hidden scrollbar. */
+  .toolbar{display:flex;gap:.35rem;margin-left:auto;flex-wrap:wrap}
   .tb-btn{font-size:.58rem;padding:.3rem .5rem;gap:3px}
   .tb-btn svg{width:11px;height:11px}
   .tb-btn#btnExport,.tb-btn#btnImport,.tb-btn#btnClear{display:none}
@@ -945,7 +973,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .lg-badge{font-size:.6rem;font-weight:700;padding:2px 5px;border-radius:3px;letter-spacing:.5px}
 .lg-hof{font-size:.55rem;background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#0a0e17;padding:1px 5px;border-radius:8px;font-weight:700;display:inline-block;margin-top:2px;font-family:'DM Sans',sans-serif}
 .lg-grid-row{display:grid;border-bottom:1px solid #1a2236}
-.lg-grid-row:nth-child(even){background:rgba(255,255,255,.01)}
+.lg-grid-row:nth-child(even){background:var(--elev-1)}
 .lg-grid-label{padding:8px 6px;font-size:.7rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .lg-grid-cell{padding:8px 6px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px}
 .lg-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;max-width:420px;margin:0 auto}
@@ -970,7 +998,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .trade-header{text-align:center;margin-bottom:1.5rem}
 .trade-title{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
 .trade-subtitle{color:var(--text2);font-size:.82rem;margin-top:4px}
-.trade-mode-tabs{display:flex;gap:2px;justify-content:center;margin-bottom:1.25rem;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.15);width:fit-content;margin-left:auto;margin-right:auto}
+.trade-mode-tabs{display:flex;gap:2px;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.15);width:fit-content;max-width:100%;margin-left:auto;margin-right:auto}
 .trade-mode-tab,.trade-src-tab{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;padding:5px 14px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
 .trade-mode-tab:hover,.trade-src-tab:hover{color:var(--text)}
 .trade-mode-tab.active,.trade-src-tab.active{background:var(--accent);color:var(--bg);font-weight:700}
@@ -1032,13 +1060,13 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .trade-verdict-sub{font-size:.78rem;color:var(--text2)}
 .trade-insights{margin-top:.75rem;padding:.7rem .9rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;text-align:left}
 .trade-insight-row{font-size:.72rem;color:var(--text);line-height:1.4;padding:1px 0}
-.trade-insight-row:not(:last-child){border-bottom:1px dashed rgba(255,255,255,.06);padding-bottom:4px;margin-bottom:4px}
+.trade-insight-row:not(:last-child){border-bottom:1px dashed var(--elev-2);padding-bottom:4px;margin-bottom:4px}
 .trade-empty{text-align:center;color:var(--text2);font-size:.78rem;padding:1.5rem 0;font-style:italic}
 .trade-reset-btn{margin-top:1rem;padding:8px 24px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;cursor:pointer;transition:all .15s}
 .trade-reset-btn:hover{border-color:var(--accent);color:var(--accent)}
 .trade-pick-section{margin-top:.75rem}
 .trade-pick-label{font-size:.7rem;color:var(--text2);letter-spacing:.5px;margin-bottom:.4rem;text-transform:uppercase;font-weight:600}
-.trade-pick-year-tabs{display:flex;gap:2px;margin-bottom:.4rem;background:rgba(255,255,255,.04);border-radius:4px;padding:2px;width:fit-content}
+.trade-pick-year-tabs{display:flex;gap:2px;margin-bottom:.4rem;background:var(--elev-1);border-radius:4px;padding:2px;width:fit-content}
 .trade-yr-tab{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1px;padding:3px 10px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:3px;transition:all .12s}
 .trade-yr-tab:hover{color:var(--text)}
 .trade-yr-tab.active{background:var(--accent);color:var(--bg);font-weight:700}
@@ -1052,11 +1080,13 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .trade-slot-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(245,158,11,.06)}
 
 @media(max-width:600px){
-  .page-trade{padding:.75rem}
   .trade-title{font-size:2rem;letter-spacing:2px}
   .trade-layout{gap:.75rem}
   .trade-side{padding:1rem}
   .trade-vs-icon{width:36px;height:36px;font-size:.9rem}
+  /* Smaller SIGN IN button on mobile leaves more room for centered page titles. */
+  .global-signin-btn{padding:5px 11px;font-size:.75rem}
+  .global-signin-btn svg{width:13px;height:13px}
 }
 
 /* Global Top-Right Auth Bar — flows inside each page header */
@@ -1067,11 +1097,11 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 /* Home / Trivia / Fantasy: top-right bar */
 .home-hero > .auth-anchor,
 .page-games > .auth-anchor,
-.page-games > .auth-anchor,
 .page-trade > .auth-anchor,
 .page-mockdraft > .auth-anchor,
 .page-account > .auth-anchor,
-.page-prospect > .auth-anchor{position:absolute;top:12px;right:16px;z-index:50}
+.page-prospect > .auth-anchor,
+.page-compare > .auth-anchor{position:absolute;top:12px;right:16px;z-index:50}
 .global-signin-btn{display:flex;align-items:center;gap:6px;padding:7px 16px;background:var(--accent);border:none;border-radius:6px;color:var(--bg);font-family:'Bebas Neue',sans-serif;font-size:.88rem;letter-spacing:1.5px;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(245,158,11,.25);white-space:nowrap}
 .global-signin-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
 .global-signin-btn svg{width:16px;height:16px}
@@ -1129,7 +1159,8 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .page-trade > .auth-anchor,
   .page-mockdraft > .auth-anchor,
   .page-account > .auth-anchor,
-  .page-prospect > .auth-anchor{top:8px;right:8px}
+  .page-prospect > .auth-anchor,
+  .page-compare > .auth-anchor{top:8px;right:8px}
   .page-games > .auth-anchor{position:relative;top:auto;right:auto;display:flex;justify-content:center;margin-bottom:8px;z-index:50}
   .games-tabs{width:auto;max-width:100%;flex-wrap:wrap}
   .games-tab{font-size:.78rem;padding:6px 14px;letter-spacing:1px}
@@ -1185,7 +1216,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .md-setup-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--border)}
 .md-setup-row:last-of-type{border-bottom:none}
 .md-label{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)}
-.md-mode-tabs{display:flex;gap:2px;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.15)}
+.md-mode-tabs{display:flex;gap:2px;flex-wrap:wrap;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.15)}
 .md-mode-tab{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;padding:4px 10px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;white-space:nowrap}
 .md-mode-tab:hover{color:var(--text)}
 .md-mode-tab.active{background:var(--accent);color:var(--bg);font-weight:700}
@@ -1196,7 +1227,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .md-start-btn{width:100%;margin-top:1.5rem;padding:12px;background:var(--accent);border:none;border-radius:8px;color:var(--bg);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;cursor:pointer;transition:all .15s;font-weight:700}
 .md-start-btn:hover{filter:brightness(1.15)}
 .md-setup-divider{height:1px;background:var(--border);margin:.5rem 0}
-.md-rank-src-tabs{display:flex;gap:2px;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.15)}
+.md-rank-src-tabs{display:flex;gap:2px;flex-wrap:wrap;background:rgba(245,158,11,.06);border-radius:6px;padding:2px;border:1px solid rgba(245,158,11,.15)}
 .md-rank-src-tab{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;padding:4px 10px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
 .md-rank-src-tab:hover{color:var(--text)}
 .md-rank-src-tab.active{background:var(--accent);color:var(--bg);font-weight:700}
@@ -1571,8 +1602,10 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   .lb-section-title{font-size:.8rem!important}
   
   /* General page padding */
-  .page-rankings,.page-games,.page-mock,.page-trade{padding:.75rem .5rem!important}
-  .page-prospect{padding:0!important}
+  .page-rankings,.page-games,.page-mock{padding:.75rem .5rem!important}
+  /* Pages with absolute-positioned auth bar in top-right need top padding so
+     centered headers don't run underneath the SIGN IN button. */
+  .page-trade,.page-mockdraft,.page-account,.page-prospect,.page-compare{padding:56px .5rem .75rem!important}
 }
 
 @media(max-width:400px){
@@ -1590,7 +1623,7 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 /* My Teams mobile responsiveness */
 @media(max-width:768px){
   #pageMyTeams{
-    overflow:auto!important;
+    overflow-x:hidden!important;overflow-y:auto!important;
   }
   #pageMyTeams > div:nth-child(2){
     padding:12px 10px!important;
@@ -1601,7 +1634,7 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
     grid-template-columns:1fr!important;
   }
   #pageMyTeams{
-    overflow:auto!important;
+    overflow-x:hidden!important;overflow-y:auto!important;
   }
   #pageMyTeams > div:nth-child(2){
     padding:10px 8px!important;

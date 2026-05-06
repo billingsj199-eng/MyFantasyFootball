@@ -19,11 +19,14 @@
 .trivia-cell:hover{transform:scale(1.02)}
 .trivia-cell.revealed{border:3px solid #22c55e}
 .trivia-cell.wrong{border:3px solid #ef4444}
-.trivia-cell.revealed .trivia-cell-cat{opacity:.15}
 .trivia-cell.wrong .trivia-cell-cat{opacity:.15}
-.trivia-cell-reveal{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px;z-index:2;border-radius:3px}
-.trivia-cell-reveal img{width:55%;max-width:64px;aspect-ratio:1;object-fit:cover;border-radius:50%;border:3px solid #22c55e}
-.trivia-cell-reveal .reveal-name{font-family:'Bebas Neue',sans-serif;font-size:.68rem;color:#fff;text-align:center;line-height:1.15;letter-spacing:.5px;text-shadow:1px 1px 2px rgba(0,0,0,.6);max-width:100%;overflow:hidden;word-break:break-word}
+/* Reveal overlay sits BELOW the category/stat strip so the stat (e.g. "219 WINS")
+   stays visible. No tinted background on the cell itself — team color is shown
+   only as a glow around the headshot, baseball-card style. */
+.trivia-cell-reveal{position:absolute;left:0;right:0;bottom:0;top:26px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;padding:5px 4px 0;z-index:2;border-radius:0 0 3px 3px;background:rgba(255,255,255,.95)}
+.trivia-cell-reveal img{width:55%;max-width:60px;aspect-ratio:1;object-fit:cover;border-radius:50%;border:3px solid #22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18),0 4px 14px rgba(34,197,94,.35)}
+/* Name sits in the bottom strip where the guess input was — bold + readable. */
+.trivia-cell-reveal .reveal-name{position:absolute;left:0;right:0;bottom:0;padding:5px 4px;background:rgba(255,255,255,.97);font-family:'DM Sans',sans-serif;font-weight:800;font-size:.7rem;color:#0f172a;text-align:center;line-height:1.1;letter-spacing:.2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .trivia-cell.revealed .trivia-cell-body,.trivia-cell.revealed .trivia-cell-hint{display:none}
 .trivia-cell.wrong .trivia-cell-body,.trivia-cell.wrong .trivia-cell-hint{display:none}
 .trivia-cell-answer{display:none}
@@ -34,7 +37,7 @@
 .trivia-cell-logo{width:52%;max-width:60px;aspect-ratio:1;object-fit:contain;opacity:.85}
 .trivia-cell-hint{font-size:.6rem;color:var(--text2);text-align:center;padding:0 2px 3px;line-height:1.2}
 .trivia-cell.guessing{cursor:default}
-.trivia-guess-input{position:absolute;bottom:0;left:0;right:0;padding:5px 4px;border:none;border-top:2px solid var(--accent);background:rgba(255,255,255,.97);font-family:'DM Sans',sans-serif;font-size:.65rem;text-align:center;outline:none;color:#111;z-index:2}
+.trivia-guess-input{position:absolute;bottom:0;left:0;right:0;padding:5px 4px;border:none;background:rgba(255,255,255,.97);font-family:'DM Sans',sans-serif;font-size:.65rem;text-align:center;outline:none;color:#111;z-index:2}
 .trivia-guess-input::placeholder{color:#999;font-size:.6rem}
 .trivia-guess-input.shake{animation:triviaShake .4s ease}
 @keyframes triviaShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}

@@ -35729,7 +35729,7 @@ window.fmtHeight = fmtHeight;
       revealHtml += `<img src="${headshot}" style="border-color:${borderColor}" onerror="this.style.display='none'" alt="">`;
     } else {
       const initials = answerName.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
-      revealHtml += `<div style="width:52%;max-width:60px;aspect-ratio:1;border-radius:4px;border:3px solid ${borderColor};background:${_withAlpha(borderColor, 0.12)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:${borderColor};letter-spacing:1px">${initials}</div>`;
+      revealHtml += `<div style="max-width:80%;max-height:62%;aspect-ratio:1;border-radius:4px;border:2px solid ${borderColor};background:${_withAlpha(borderColor, 0.12)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:${borderColor};letter-spacing:1px;flex:0 1 auto;min-height:0">${initials}</div>`;
     }
     revealHtml += `<div class="reveal-name">${_esc(answerName)}</div>`;
     if (answerDetail) revealHtml += `<div style="font-size:.5rem;color:var(--text2);text-align:center">${_esc(answerDetail)}</div>`;

@@ -35613,15 +35613,24 @@ window.fmtHeight = fmtHeight;
 
     if (!matches.length) return;
 
+    // Append dropdown to document.body with position:fixed so it escapes the
+    // cell's `overflow:hidden`. Position is computed from the cell's bounding
+    // rect so it floats just above the input.
+    const cell = inputEl.closest('.trivia-cell');
+    if (!cell) return;
+    const r = cell.getBoundingClientRect();
+    const inputR = inputEl.getBoundingClientRect();
     const dropdown = document.createElement('div');
     dropdown.className = 'trivia-ac-dropdown';
-    dropdown.style.cssText = 'position:absolute;bottom:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px 6px 0 0;max-height:160px;overflow-y:auto;z-index:50;box-shadow:0 -4px 12px rgba(0,0,0,.3)';
+    const dropdownWidth = Math.max(180, r.width);
+    const left = Math.max(4, Math.min(window.innerWidth - dropdownWidth - 4, r.left + (r.width - dropdownWidth) / 2));
+    dropdown.style.cssText = `position:fixed;left:${left}px;top:auto;bottom:${window.innerHeight - inputR.top}px;width:${dropdownWidth}px;background:var(--surface);border:1px solid var(--border);border-radius:6px 6px 0 0;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 -4px 12px rgba(0,0,0,.4)`;
 
     matches.slice(0, 8).forEach(p => {
       const opt = document.createElement('div');
-      opt.style.cssText = 'padding:5px 8px;font-size:.72rem;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px';
+      opt.style.cssText = 'padding:6px 10px;font-size:.78rem;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px';
       const posBadge = p.pos ? `<span style="font-size:.55rem;font-weight:700;padding:1px 4px;border-radius:3px;background:rgba(168,85,247,.15);color:#a855f7">${p.pos}</span>` : '';
-      const teamLbl = p.team ? `<span style="color:var(--text2);font-size:.6rem;margin-left:auto">${p.team}</span>` : '';
+      const teamLbl = p.team ? `<span style="color:var(--text2);font-size:.65rem;margin-left:auto">${p.team}</span>` : '';
       opt.innerHTML = `${posBadge}<span>${p.name}</span>${teamLbl}`;
       opt.addEventListener('mousedown', (e) => {
         e.preventDefault(); // don't blur the input
@@ -35634,13 +35643,8 @@ window.fmtHeight = fmtHeight;
       dropdown.appendChild(opt);
     });
 
-    // Position relative to the cell
-    const cell = inputEl.closest('.trivia-cell');
-    if (cell) {
-      cell.style.position = 'relative';
-      cell.appendChild(dropdown);
-      _triviaACActive = { idx, el: dropdown };
-    }
+    document.body.appendChild(dropdown);
+    _triviaACActive = { idx, el: dropdown };
   }
 
   function _triviaHideAutocomplete() {
@@ -35720,16 +35724,12 @@ window.fmtHeight = fmtHeight;
     const answerName = (item.answer || '').split(/[\(\,]/)[0].trim();
     const answerDetail = (item.answer || '').replace(answerName, '').trim().replace(/^[\(\,\-–—\s]+|[\)\s]+$/g, '');
 
-    const _glowOuter = _withAlpha(borderColor, 0.18);
-    const _glowDrop  = _withAlpha(borderColor, 0.35);
-    const _imgShadow = `0 0 0 4px ${_glowOuter},0 4px 14px ${_glowDrop}`;
-
     let revealHtml = `<div class="trivia-cell-reveal">`;
     if (headshot) {
-      revealHtml += `<img src="${headshot}" style="border-color:${borderColor};box-shadow:${_imgShadow}" onerror="this.style.display='none'" alt="">`;
+      revealHtml += `<img src="${headshot}" style="border-color:${borderColor}" onerror="this.style.display='none'" alt="">`;
     } else {
       const initials = answerName.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
-      revealHtml += `<div style="width:50%;max-width:58px;aspect-ratio:1;border-radius:50%;border:3px solid ${borderColor};background:${_withAlpha(borderColor, 0.12)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${borderColor};letter-spacing:1px;box-shadow:${_imgShadow}">${initials}</div>`;
+      revealHtml += `<div style="width:52%;max-width:60px;aspect-ratio:1;border-radius:4px;border:3px solid ${borderColor};background:${_withAlpha(borderColor, 0.12)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:${borderColor};letter-spacing:1px">${initials}</div>`;
     }
     revealHtml += `<div class="reveal-name">${_esc(answerName)}</div>`;
     if (answerDetail) revealHtml += `<div style="font-size:.5rem;color:var(--text2);text-align:center">${_esc(answerDetail)}</div>`;

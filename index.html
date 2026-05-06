@@ -24,11 +24,18 @@
 <link rel="canonical" href="https://myfantasyfootball.org/">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%230f0f1a'/%3E%3Crect x='8' y='32' width='7' height='9' rx='1.5' fill='%23f59e0b' opacity='.3'/%3E%3Crect x='17' y='25' width='7' height='16' rx='1.5' fill='%23f59e0b' opacity='.5'/%3E%3Crect x='26' y='17' width='7' height='24' rx='1.5' fill='%23f59e0b' opacity='.7'/%3E%3Crect x='35' y='9' width='7' height='32' rx='1.5' fill='%23f59e0b'/%3E%3Cpolyline points='11.5,29 20.5,22 29.5,14 38.5,6' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='38.5' cy='6' r='3' fill='%23f59e0b'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%230f0f1a'/%3E%3Crect x='8' y='32' width='7' height='9' rx='1.5' fill='%23f59e0b' opacity='.3'/%3E%3Crect x='17' y='25' width='7' height='16' rx='1.5' fill='%23f59e0b' opacity='.5'/%3E%3Crect x='26' y='17' width='7' height='24' rx='1.5' fill='%23f59e0b' opacity='.7'/%3E%3Crect x='35' y='9' width='7' height='32' rx='1.5' fill='%23f59e0b'/%3E%3Cpolyline points='11.5,29 20.5,22 29.5,14 38.5,6' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='38.5' cy='6' r='3' fill='%23f59e0b'/%3E%3C/svg%3E">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MFF">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-05-02">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
+
+<!-- Service worker registration — enables PWA install prompt + offline shell -->
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(e){console.warn('[SW] register failed',e);});});}</script>
 
 <!-- Firebase SDK (optional — page works without it if blocked by privacy settings) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true;console.warn('[Firebase] SDK blocked — running in offline mode')"></script>
@@ -9182,7 +9189,39 @@ function _buildInjuryBadge(d) {
   return html;
 }
 
-function openPlayerCard(d) {
+function openPlayerCard(d, ctxMode) {
+  // ctxMode lets callers (Trade Calc, My Teams, etc.) display the player in the
+  // context of a different mode than the rankings page's currentMode. Falls back
+  // to currentMode when not provided so the rankings-page click path is unchanged.
+  const _ctxMode = ctxMode || currentMode;
+  const _isDynastyCtx = _ctxMode === 'dynasty' || _ctxMode === 'dynastysf';
+  const _ctxModeLabel = { redraft: 'Redraft', bestball: 'Best Ball', superflex: 'Superflex', dynasty: 'Dynasty 1QB', dynastysf: 'Dynasty SF' }[_ctxMode] || _ctxMode;
+
+  // Compute rank within the requested mode by looking the player up in that
+  // mode's board. Falls back to d.myRank (current rankings-page mode) if no
+  // board exists for the context mode.
+  function _rankInCtx() {
+    if (_ctxMode === currentMode) return d.myRank;
+    const board = (typeof versionBoards !== 'undefined' && versionBoards[currentVersion] && versionBoards[currentVersion][_ctxMode]) || null;
+    if (!board || d.idx == null) return d.myRank;
+    const i = board.indexOf(d.idx);
+    return i >= 0 ? (i + 1) : null;
+  }
+  const _ctxRank = _rankInCtx();
+
+  // Mode-aware ADP for the context. Mirrors the logic in rnkAdp() / _sleeperRank()
+  // but takes the mode as a parameter rather than reading currentMode.
+  function _udAdpInCtx() {
+    if (_ctxMode === 'superflex') return d.sfa != null ? d.sfa : null;
+    return d.udA != null ? d.udA : (d.a != null ? d.a : null);
+  }
+  function _slpAdpInCtx() {
+    if (_ctxMode === 'dynastysf') return d.slDsf != null ? d.slDsf : null;
+    if (_ctxMode === 'dynasty') return d.slDy != null ? d.slDy : null;
+    if (_ctxMode === 'superflex') return d.slSf != null ? d.slSf : null;
+    return d.slR != null ? d.slR : null;
+  }
+
   const best = bestPpg(d);
   const _cardAdp = rnkAdp(d);
   const diffVal = _cardAdp != null ? _cardAdp - d.myRank : 0;
@@ -9237,14 +9276,15 @@ function openPlayerCard(d) {
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
         <button class="card-view-btn" data-cardview="comps">COMPS</button>
+        <button class="card-view-btn" data-cardview="info">INFO</button>
       </div>` : ''}
       <div class="card-fantasy-view${(d._isDevy || _is2026) ? ' hidden' : ''}" id="cardFantasyView">
       ${!d._retired ? `<div class="card-section">
-        <div class="card-section-title">Rankings</div>
+        <div class="card-section-title">Rankings <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
         <div class="card-rank-row" style="grid-template-columns:1fr 1fr">
           <div class="card-rank-box">
             <div class="lbl">Your Rank</div>
-            <div class="num green">${d.myRank}</div>
+            <div class="num green">${_ctxRank != null ? _ctxRank : (d.myRank ?? '—')}</div>
           </div>
           <div class="card-rank-box">
             <div class="lbl">Pos Rank</div>
@@ -9267,166 +9307,65 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
 
-      ${!_is2026 && d.career && d.career.length > 0 ? (() => {
-        const _cr = d.career;
-        const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
-        const _totalGp = _cr.reduce((sum, s) => sum + (s.gp || 0), 0);
-        const _totalFpts = _cr.reduce((sum, s) => sum + (s.fpts || 0), 0);
+      ${!d._retired && d.s !== 'K' && d.s !== 'DST' ? (() => {
+        // Mode-aware ADPs scoped to the calling context (Trade Calc dynasty,
+        // My Teams dynasty league, etc.) — uses the helpers defined above.
+        const _udAdp = _udAdpInCtx();
+        const _slpAdp = _slpAdpInCtx();
+        const _fmt = v => v != null ? v : '—';
+        // Dynasty contexts swap ESPN/Yahoo (which don't publish dynasty ADPs)
+        // for KTC (the dynasty value standard). Uses KTC_SF map for Superflex.
+        if (_isDynastyCtx) {
+          const _ktcMap = (_ctxMode === 'dynastysf' && typeof KTC_SF !== 'undefined') ? KTC_SF
+                       : (typeof KTC_1QB !== 'undefined') ? KTC_1QB : {};
+          const _ktcVal = _ktcMap[d.n] != null ? _ktcMap[d.n] : null;
+          return `<div class="card-section">
+          <div class="card-section-title">ADP Comparison <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
+          <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="card-rank-box">
+              <div class="lbl">Underdog</div>
+              <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_udAdp)}</div>
+            </div>
+            <div class="card-rank-box">
+              <div class="lbl">Sleeper</div>
+              <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_slpAdp)}</div>
+            </div>
+            <div class="card-rank-box">
+              <div class="lbl">KTC</div>
+              <div class="num${_ktcVal != null ? ' accent' : ''}"${_ktcVal == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_ktcVal)}</div>
+            </div>
+          </div>
+        </div>`;
+        }
+        // Redraft / Best Ball / Superflex — show ESPN / Yahoo placeholders for
+        // when those data sources ship. To wire them up: populate d.espnAdp /
+        // d.yahooAdp in d.js and uncomment the lines below.
+        //   const _espnAdp = d.espnAdp != null ? d.espnAdp : null;
+        //   const _yahAdp  = d.yahooAdp != null ? d.yahooAdp : null;
+        const _espnAdp = null;
+        const _yahAdp = null;
         return `<div class="card-section">
-        <div class="card-section-title">Career Highlights</div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
-          <div class="card-rank-box"><div class="lbl">Best PPG</div><div class="num green">${_bestSzn ? _bestSzn.ppg : '—'}</div></div>
-          <div class="card-rank-box"><div class="lbl">Best Pts</div><div class="num green">${_bestSzn ? _bestSzn.fpts : '—'}</div></div>
-          <div class="card-rank-box"><div class="lbl">Best Yr</div><div class="num accent">${_bestSzn ? _bestSzn.yr : '—'}</div></div>
-          <div class="card-rank-box"><div class="lbl">Seasons</div><div class="num accent">${_cr.length}</div></div>
-        </div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">
-          <div class="card-rank-box"><div class="lbl">Career GP</div><div class="num accent">${_totalGp}</div></div>
-          <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(_totalFpts)}</div></div>
-        </div>
-      </div>`;
-      })() : ''}
-
-      ${!d._retired && d.s !== 'K' && d.s !== 'DST' ? `<div class="card-section">
-        <div class="card-section-title">ADP Comparison</div>
+        <div class="card-section-title">ADP Comparison <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
         <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
           <div class="card-rank-box">
             <div class="lbl">Underdog</div>
-            <div class="num accent">${d.a != null ? d.a : '—'}</div>
+            <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_udAdp)}</div>
           </div>
           <div class="card-rank-box">
             <div class="lbl">Sleeper</div>
-            <div class="num accent">${d.slp != null ? d.slp : '—'}</div>
+            <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_slpAdp)}</div>
           </div>
           <div class="card-rank-box">
             <div class="lbl">ESPN</div>
-            <div class="num" style="color:var(--text2)">—</div>
+            <div class="num${_espnAdp != null ? ' accent' : ''}"${_espnAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_espnAdp)}</div>
           </div>
           <div class="card-rank-box">
             <div class="lbl">Yahoo</div>
-            <div class="num" style="color:var(--text2)">—</div>
+            <div class="num${_yahAdp != null ? ' accent' : ''}"${_yahAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_yahAdp)}</div>
           </div>
         </div>
-      </div>` : ''}
-
-      ${(() => {
-        // --- INJURY IMPACT SECTION ---
-        // Show recovery projection for any player with injury data
-        var _ii = d._injDiscount;
-        var _iiHist = (typeof INJURY_HISTORY !== 'undefined') ? INJURY_HISTORY[d.n] : null;
-        var _iiTag = d.inj;
-        if (!_iiTag && !_ii && !_iiHist) return '';
-        if (d.s === 'K' || d.s === 'DST' || d._retired) return '';
-
-        // Determine injury type
-        var _iiType = '';
-        var _iiSrc = '';
-        if (_iiTag) {
-          _iiType = _iiTag;
-          _iiSrc = 'manual';
-        } else if (_ii && _ii.injType) {
-          _iiType = _ii.injType;
-          _iiSrc = 'auto (nflverse)';
-        } else if (_ii) {
-          _iiType = _ii.tag;
-          _iiSrc = 'auto (GP drop)';
-        }
-
-        // Get baseline PPG (pre-injury production)
-        var _iiBaseline = null;
-        if (d.career && d.career.length >= 2) {
-          var _iiCareer = d.career.slice().sort(function(a,b){return (a.yr||0)-(b.yr||0);});
-          var _iiHealthy = _iiCareer.filter(function(s){return s.gp >= 10 && s.fpts;});
-          if (_iiHealthy.length > 0) {
-            _iiBaseline = Math.round(_iiHealthy.reduce(function(sum,s){return sum + s.fpts/s.gp;},0) / _iiHealthy.length * 10) / 10;
-          }
-        }
-        if (!_iiBaseline && d._jsModelPpg) _iiBaseline = d._jsModelPpg;
-        if (!_iiBaseline) return '';
-
-        // Recovery curve data from nflverse analysis
-        // Weeks-back multipliers (how a player performs each week after returning)
-        // Week 1 back = still rusty, Week 4+ = approaching new baseline
-        var _iiWeekCurves = {
-          QB:  [0.82, 0.88, 0.93, 0.95, 0.97, 1.00],
-          RB:  [0.72, 0.80, 0.85, 0.90, 0.93, 0.95],
-          WR:  [0.75, 0.82, 0.88, 0.92, 0.95, 0.97],
-          TE:  [0.70, 0.78, 0.84, 0.88, 0.92, 0.95]
-        };
-
-        // Injury-type modifiers (some injuries have longer rust periods)
-        var _iiTypeAdj = 1.0;
-        var _iiTypeLower = (_iiType || '').toLowerCase();
-        if (/acl/.test(_iiTypeLower)) _iiTypeAdj = 0.90;
-        else if (/achilles/.test(_iiTypeLower)) _iiTypeAdj = 0.85;
-        else if (/concussion/.test(_iiTypeLower)) _iiTypeAdj = 0.92;
-        else if (/hamstring/.test(_iiTypeLower)) _iiTypeAdj = 0.95;
-        else if (/ankle|foot/.test(_iiTypeLower)) _iiTypeAdj = 0.97;
-        else if (/shoulder/.test(_iiTypeLower)) _iiTypeAdj = 1.00;
-        else if (/knee|mcl|lcl/.test(_iiTypeLower)) _iiTypeAdj = 0.93;
-
-        var _iiCurve = _iiWeekCurves[d.s] || _iiWeekCurves['WR'];
-        var _iiDisc = _ii ? _ii.mult : 1.0;
-
-        // New baseline = healthy baseline × injury discount
-        var _iiNewBase = Math.round(_iiBaseline * _iiDisc * 10) / 10;
-
-        // Build weekly projections
-        var _iiWeeks = _iiCurve.map(function(wkMult, i) {
-          var adjMult = Math.min(1.0, wkMult * _iiTypeAdj);
-          var ppg = Math.round(_iiNewBase * adjMult * 10) / 10;
-          return { week: i + 1, mult: Math.round(adjMult * 100), ppg: ppg };
-        });
-
-        // Full recovery PPG
-        var _iiFullPpg = _iiNewBase;
-
-        // History section: past injuries from INJURY_HISTORY
-        var _iiHistHtml = '';
-        if (_iiHist && _iiHist.length > 0) {
-          var _iiHistRows = _iiHist.slice(0, 5).map(function(r) {
-            return '<tr><td style="color:var(--text2)">' + r.season + '</td><td>' + (r.injury || '—') +
-              '</td><td style="text-align:center">' + r.weeksMissed + '</td><td style="text-align:center">' +
-              (r.seasonEnder ? '<span style="color:var(--red)">Yes</span>' : 'No') + '</td></tr>';
-          }).join('');
-          _iiHistHtml = '<div style="margin-top:8px"><div style="font-size:.6rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Injury History</div>' +
-            '<table style="width:100%;font-size:.72rem;border-collapse:collapse">' +
-            '<tr style="color:var(--text2);font-size:.6rem;text-transform:uppercase;letter-spacing:.5px">' +
-            '<th style="text-align:left;padding:2px 4px">Year</th><th style="text-align:left;padding:2px 4px">Injury</th>' +
-            '<th style="text-align:center;padding:2px 4px">Wks Out</th><th style="text-align:center;padding:2px 4px">Season End</th></tr>' +
-            _iiHistRows + '</table></div>';
-        }
-
-        return '<div class="card-section">' +
-          '<div class="card-section-title" style="display:flex;align-items:center;gap:6px">' +
-          '<span style="color:var(--red)">&#9829;</span> Injury Impact' +
-          '</div>' +
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">' +
-            '<div class="card-rank-box"><div class="lbl">Healthy Baseline</div><div class="num accent">' + _iiBaseline + ' ppg</div></div>' +
-            '<div class="card-rank-box"><div class="lbl">Post-Injury Proj</div><div class="num" style="color:' + (_iiDisc >= 0.95 ? 'var(--green)' : _iiDisc >= 0.80 ? 'var(--accent)' : 'var(--red)') + '">' + _iiFullPpg + ' ppg</div></div>' +
-          '</div>' +
-          '<div style="font-size:.6rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Return-to-Play Projection</div>' +
-          '<div style="display:flex;gap:3px;margin-bottom:4px">' +
-          _iiWeeks.map(function(w) {
-            var barH = Math.max(8, Math.round(w.mult * 0.4));
-            var barColor = w.mult >= 95 ? 'var(--green)' : w.mult >= 85 ? 'var(--accent)' : 'var(--red)';
-            return '<div style="flex:1;text-align:center">' +
-              '<div style="font-size:.55rem;color:var(--text2);margin-bottom:2px">Wk ' + w.week + '</div>' +
-              '<div style="height:40px;display:flex;align-items:flex-end;justify-content:center">' +
-                '<div style="width:100%;height:' + barH + 'px;background:' + barColor + ';border-radius:2px;opacity:.7"></div>' +
-              '</div>' +
-              '<div style="font-size:.65rem;font-weight:700;color:var(--text);margin-top:2px">' + w.ppg + '</div>' +
-              '<div style="font-size:.5rem;color:var(--text2)">' + w.mult + '%</div>' +
-            '</div>';
-          }).join('') +
-          '</div>' +
-          '<div style="font-size:.6rem;color:var(--text2);margin-top:2px">' +
-            'Based on ' + d.s + ' recovery data from nflverse (2009-2025). ' +
-            'Bars show projected PPG for each week after return.' +
-          '</div>' +
-          _iiHistHtml +
-        '</div>';
-      })()}
+      </div>`;
+      })() : ''}
 
       ${!_is2026 && d.career && d.career.length > 0 ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
@@ -9469,71 +9408,6 @@ function openPlayerCard(d) {
         </div>
       </div>` : ''}
 
-      ${!d._retired && !_is2026 ? `<div class="card-section">
-        <div class="card-section-title">Player Info</div>
-        <div class="card-grid">
-          <div class="card-stat">
-            <span class="card-stat-label">Draft Capital</span>
-            <span class="card-stat-value">${draftRdLabel(d.dr)}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Contract (AAV)</span>
-            <span class="card-stat-value">${d.sal != null ? '$' + fmt(d.sal, 2) + 'M' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Contract Year</span>
-            <span class="card-stat-value">${d.cyr != null ? fmtInt(d.cyr) : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Potential Out</span>
-            <span class="card-stat-value">${d.out != null ? fmtInt(d.out) : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Height</span>
-            <span class="card-stat-value">${fmtHeight(d._height)}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Weight</span>
-            <span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Jersey</span>
-            <span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">College</span>
-            <span class="card-stat-value">${d._college || '—'}</span>
-          </div>
-        </div>
-      </div>` : (d._height || d._weight || d.dr || d._college) ? `<div class="card-section">
-        <div class="card-section-title">Player Info</div>
-        <div class="card-grid">
-          <div class="card-stat">
-            <span class="card-stat-label">Height</span>
-            <span class="card-stat-value">${fmtHeight(d._height)}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Weight</span>
-            <span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Draft Pick</span>
-            <span class="card-stat-value">${d.dr != null ? '#' + d.dr + ' Overall' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">College</span>
-            <span class="card-stat-value">${d._college || '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Jersey</span>
-            <span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Years Active</span>
-            <span class="card-stat-value">${d._debut && d._last ? d._debut + '–' + d._last : '—'}</span>
-          </div>
-        </div>
-      </div>` : ''}
       </div>
       <div class="card-prospect-view${(d._isDevy || _is2026) ? ' active' : ''}" id="cardProspectView">
       ${(() => {
@@ -9832,6 +9706,98 @@ function openPlayerCard(d) {
         return html2;
       })()}
       </div>
+      <div class="card-prospect-view" id="cardInfoView" style="display:none">
+      ${!_is2026 && d.career && d.career.length > 0 ? (() => {
+        const _cr = d.career;
+        const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
+        const _totalGp = _cr.reduce((sum, s) => sum + (s.gp || 0), 0);
+        const _totalFpts = _cr.reduce((sum, s) => sum + (s.fpts || 0), 0);
+        return `<div class="card-section">
+        <div class="card-section-title">Career Highlights</div>
+        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
+          <div class="card-rank-box"><div class="lbl">Best PPG</div><div class="num green">${_bestSzn ? _bestSzn.ppg : '—'}</div></div>
+          <div class="card-rank-box"><div class="lbl">Best Pts</div><div class="num green">${_bestSzn ? _bestSzn.fpts : '—'}</div></div>
+          <div class="card-rank-box"><div class="lbl">Best Yr</div><div class="num accent">${_bestSzn ? _bestSzn.yr : '—'}</div></div>
+          <div class="card-rank-box"><div class="lbl">Seasons</div><div class="num accent">${_cr.length}</div></div>
+        </div>
+        <div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">
+          <div class="card-rank-box"><div class="lbl">Career GP</div><div class="num accent">${_totalGp}</div></div>
+          <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(_totalFpts)}</div></div>
+        </div>
+      </div>`;
+      })() : ''}
+
+      ${d.inj ? `<div class="card-section">
+        <div class="card-section-title">Injury Status</div>
+        <div style="padding:8px 4px">${_buildInjuryBadge(d)}</div>
+      </div>` : ''}
+
+      ${!d._retired && !_is2026 ? `<div class="card-section">
+        <div class="card-section-title">Bio</div>
+        <div class="card-grid">
+          <div class="card-stat">
+            <span class="card-stat-label">Draft Capital</span>
+            <span class="card-stat-value">${draftRdLabel(d.dr)}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Contract (AAV)</span>
+            <span class="card-stat-value">${d.sal != null ? '$' + fmt(d.sal, 2) + 'M' : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Contract Year</span>
+            <span class="card-stat-value">${d.cyr != null ? fmtInt(d.cyr) : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Potential Out</span>
+            <span class="card-stat-value">${d.out != null ? fmtInt(d.out) : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Height</span>
+            <span class="card-stat-value">${fmtHeight(d._height)}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Weight</span>
+            <span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Jersey</span>
+            <span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">College</span>
+            <span class="card-stat-value">${d._college || '—'}</span>
+          </div>
+        </div>
+      </div>` : (d._height || d._weight || d.dr || d._college) ? `<div class="card-section">
+        <div class="card-section-title">Bio</div>
+        <div class="card-grid">
+          <div class="card-stat">
+            <span class="card-stat-label">Height</span>
+            <span class="card-stat-value">${fmtHeight(d._height)}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Weight</span>
+            <span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Draft Pick</span>
+            <span class="card-stat-value">${d.dr != null ? '#' + d.dr + ' Overall' : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">College</span>
+            <span class="card-stat-value">${d._college || '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Jersey</span>
+            <span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span>
+          </div>
+          <div class="card-stat">
+            <span class="card-stat-label">Years Active</span>
+            <span class="card-stat-value">${d._debut && d._last ? d._debut + '–' + d._last : '—'}</span>
+          </div>
+        </div>
+      </div>` : ''}
+      </div>
     </div>
   `;
 
@@ -9841,7 +9807,12 @@ function openPlayerCard(d) {
   if (_cardShareBtn) {
     _cardShareBtn.addEventListener('click', () => {
       const slug = (typeof window._playerSlug === 'function' && d && d.n) ? window._playerSlug(d.n) : '';
-      const url = window.location.origin + window.location.pathname + (slug ? '?player=' + slug : '');
+      // Prefer the static /p/<slug>.html page so social-media crawlers see the
+      // OG meta tags. Real users click through and land on the redirect to
+      // /?player=<slug> (handled by the existing URL detector).
+      const url = slug
+        ? window.location.origin + '/p/' + slug + '.html'
+        : window.location.origin + window.location.pathname;
       const ok = (msg) => { if (typeof toast === 'function') toast(msg); };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url)
@@ -9865,7 +9836,7 @@ function openPlayerCard(d) {
     }
   } catch (_e) {}
 
-  // Fantasy/Prospect view toggle
+  // Fantasy/Prospect/Comps/Info view toggle
   const _cvToggle = document.getElementById('cardViewToggle');
   if (_cvToggle) {
     _cvToggle.querySelectorAll('.card-view-btn').forEach(btn => {
@@ -9876,13 +9847,17 @@ function openPlayerCard(d) {
         const fv = document.getElementById('cardFantasyView');
         const pv = document.getElementById('cardProspectView');
         const cv = document.getElementById('cardCompsView');
+        const iv = document.getElementById('cardInfoView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
         if (cv) cv.style.display = 'none';
+        if (iv) iv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
         } else if (view === 'comps') {
           if (cv) cv.style.display = 'block';
+        } else if (view === 'info') {
+          if (iv) iv.style.display = 'block';
         } else {
           fv.classList.remove('hidden');
         }
@@ -19826,13 +19801,14 @@ window.fmtHeight = fmtHeight;
         renderAll();
       });
     });
-    // Player name clicks open player card
+    // Player name clicks open player card — pass tradeMode so the card shows
+    // dynasty rank/ADP when the trade is in dynasty mode, etc.
     document.querySelectorAll('.tp-card-link').forEach(link => {
       link.addEventListener('click', e => {
         e.stopPropagation();
         const dIdx = parseInt(link.dataset.didx);
         const d = D[dIdx];
-        if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
+        if (d && typeof openPlayerCard === 'function') openPlayerCard(d, tradeMode);
       });
     });
   }
@@ -22890,7 +22866,7 @@ window.fmtHeight = fmtHeight;
         e.stopPropagation();
         const dIdx = parseInt(link.dataset.didx);
         const d = D[dIdx];
-        if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
+        if (d && typeof openPlayerCard === 'function') openPlayerCard(d, mdMode);
       });
     });
   }
@@ -23120,7 +23096,7 @@ window.fmtHeight = fmtHeight;
         e.stopPropagation();
         const dIdx = parseInt(link.dataset.didx);
         const d = D[dIdx];
-        if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
+        if (d && typeof openPlayerCard === 'function') openPlayerCard(d, mdMode);
       });
     });
     container.querySelectorAll('.md-ar-btn').forEach(btn => {
@@ -34987,13 +34963,37 @@ window.fmtHeight = fmtHeight;
 
   // _NFL_LOGO_MAP moved to data/nfl_logo_map.js
 
+  // Common alt abbreviations seen across data sources (PFR / ESPN / Sleeper /
+  // historical exports use slightly different keys for the same team).
+  const _TEAM_ABBR_ALIASES = {
+    ARZ: 'ARI', CRD: 'ARI',                    // Arizona
+    BLT: 'BAL', RAV: 'BAL',                    // Baltimore
+    CLV: 'CLE',                                // Cleveland
+    HST: 'HOU', HOI: 'HOU',                    // Houston
+    JAC: 'JAX',                                // Jacksonville
+    KAN: 'KC', KCC: 'KC',                      // Kansas City
+    LA: 'LAR', RAM: 'LAR', STL: 'LAR',         // Rams (legacy STL → LA → LAR)
+    SDG: 'LAC', SD: 'LAC', SAN: 'LAC',         // Chargers (legacy SD → LAC)
+    OAK: 'LV', OAR: 'LV', RAI: 'LV',           // Raiders (OAK → LV)
+    NEP: 'NE', NWE: 'NE',                      // New England
+    NOS: 'NO', NOR: 'NO',                      // New Orleans
+    NYJ: 'NYJ', NYG: 'NYG',                    // (no-ops, listed for clarity)
+    SFO: 'SF',                                 // San Francisco
+    TAM: 'TB', TBB: 'TB',                      // Tampa Bay
+    OTI: 'TEN', TENN: 'TEN',                   // Tennessee (Houston Oilers legacy)
+    WSH: 'WAS', RED: 'WAS',                    // Washington
+    GNB: 'GB',                                 // Green Bay
+  };
+
   function _triviaLogoUrl(team) {
     if (!team) return '';
-    // Try NFL (abbreviation or full name)
-    const nflId = _NFL_LOGO_MAP[team] || _NFL_LOGO_MAP[team.toUpperCase()];
+    const upper = team.toUpperCase();
+    const canon = _TEAM_ABBR_ALIASES[upper] || upper;
+    // Try NFL (canonical abbreviation, raw input, or full name)
+    const nflId = _NFL_LOGO_MAP[canon] || _NFL_LOGO_MAP[upper] || _NFL_LOGO_MAP[team];
     if (nflId) return `https://a.espncdn.com/i/teamlogos/nfl/500/${nflId}.png`;
     // Try college
-    const colId = _COLLEGE_LOGO_IDS[team] || _COLLEGE_LOGO_IDS[team.toUpperCase()] || null;
+    const colId = _COLLEGE_LOGO_IDS[team] || _COLLEGE_LOGO_IDS[upper] || null;
     if (colId) return `https://a.espncdn.com/i/teamlogos/ncaa/500/${colId}.png`;
     return '';
   }
@@ -35554,12 +35554,32 @@ window.fmtHeight = fmtHeight;
   let _triviaACActive = null; // currently active autocomplete {idx, el}
 
   function _triviaBuildPlayerList() {
-    if (!_triviaData || !_triviaData.items) return [];
-    return _triviaData.items.map(it => {
-      // Extract just the player name (strip year/parenthetical)
-      const name = (it.answer || '').split(/[\(\,]/)[0].trim();
-      return name;
-    }).filter(Boolean);
+    // Build a broad pool so typing partial names surfaces suggestions, like the
+    // daily challenge. Combines: active players (D), historical players
+    // (ALL_PLAYERS_DB), and the current trivia board's answers (in case any
+    // are missing from the other two sources).
+    const out = [];
+    const seen = new Set();
+    const _push = (name, pos, team) => {
+      if (!name) return;
+      const k = name.toLowerCase();
+      if (seen.has(k)) return;
+      seen.add(k);
+      out.push({ name, pos: pos || '', team: team || '' });
+    };
+    if (typeof D !== 'undefined' && Array.isArray(D)) {
+      D.forEach(d => _push(d.n, d.s, d.t));
+    }
+    if (typeof ALL_PLAYERS_DB !== 'undefined' && Array.isArray(ALL_PLAYERS_DB)) {
+      ALL_PLAYERS_DB.forEach(p => _push(p.name, p.pos, ''));
+    }
+    if (_triviaData && _triviaData.items) {
+      _triviaData.items.forEach(it => {
+        const n = (it.answer || '').split(/[\(\,]/)[0].trim();
+        _push(n, '', it.team || '');
+      });
+    }
+    return out;
   }
 
   function _triviaShowAutocomplete(inputEl, idx) {
@@ -35579,13 +35599,15 @@ window.fmtHeight = fmtHeight;
 
     const matches = [];
     const seen = new Set();
-    allNames.forEach(name => {
-      if (seen.has(name.toLowerCase())) return;
+    allNames.forEach(p => {
+      const name = p && p.name ? p.name : '';
+      if (!name) return;
       const nameLow = name.toLowerCase();
-      // Match start of first or last name, or anywhere in name
-      if (nameLow.includes(query)) {
+      if (seen.has(nameLow)) return;
+      // Match anywhere in name
+      if (nameLow.includes(query) && !answeredNames.has(name)) {
         seen.add(nameLow);
-        matches.push(name);
+        matches.push(p);
       }
     });
 
@@ -35593,15 +35615,17 @@ window.fmtHeight = fmtHeight;
 
     const dropdown = document.createElement('div');
     dropdown.className = 'trivia-ac-dropdown';
-    dropdown.style.cssText = 'position:absolute;bottom:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px 6px 0 0;max-height:120px;overflow-y:auto;z-index:50;box-shadow:0 -4px 12px rgba(0,0,0,.3)';
+    dropdown.style.cssText = 'position:absolute;bottom:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px 6px 0 0;max-height:160px;overflow-y:auto;z-index:50;box-shadow:0 -4px 12px rgba(0,0,0,.3)';
 
-    matches.slice(0, 8).forEach(name => {
+    matches.slice(0, 8).forEach(p => {
       const opt = document.createElement('div');
-      opt.style.cssText = 'padding:5px 8px;font-size:.72rem;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)';
-      opt.textContent = name;
+      opt.style.cssText = 'padding:5px 8px;font-size:.72rem;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px';
+      const posBadge = p.pos ? `<span style="font-size:.55rem;font-weight:700;padding:1px 4px;border-radius:3px;background:rgba(168,85,247,.15);color:#a855f7">${p.pos}</span>` : '';
+      const teamLbl = p.team ? `<span style="color:var(--text2);font-size:.6rem;margin-left:auto">${p.team}</span>` : '';
+      opt.innerHTML = `${posBadge}<span>${p.name}</span>${teamLbl}`;
       opt.addEventListener('mousedown', (e) => {
         e.preventDefault(); // don't blur the input
-        inputEl.value = name;
+        inputEl.value = p.name;
         _triviaHideAutocomplete();
         window._triviaGuess(idx);
       });
@@ -35674,28 +35698,41 @@ window.fmtHeight = fmtHeight;
     const borderColor = (_triviaGame.active && _triviaGame.teams > 1 && teamIdx != null)
       ? _triviaTeamConfig[teamIdx].color
       : '#22c55e';
-    const bgColor = (_triviaGame.active && _triviaGame.teams > 1 && teamIdx != null)
-      ? _triviaTeamConfig[teamIdx].color + '20'
-      : 'rgba(34,197,94,.12)';
+    // Helper: hex (#RRGGBB) or color name → rgba string with alpha. Falls back
+    // to the input untouched (browsers will accept named/var colors directly).
+    const _withAlpha = (c, a) => {
+      if (typeof c === 'string' && c.charAt(0) === '#' && c.length === 7) {
+        const r = parseInt(c.substr(1, 2), 16);
+        const g = parseInt(c.substr(3, 2), 16);
+        const b = parseInt(c.substr(5, 2), 16);
+        return `rgba(${r},${g},${b},${a})`;
+      }
+      return c;
+    };
 
     cell.classList.add('revealed');
     cell.style.borderColor = borderColor;
-    cell.style.background = bgColor;
+    // No full-cell background — keep the cat strip + body neutral so the stat
+    // value stays prominent; the team color shows only around the headshot.
 
     // Build reveal content with headshot
     const headshot = _triviaGetHeadshot(item.answer);
     const answerName = (item.answer || '').split(/[\(\,]/)[0].trim();
     const answerDetail = (item.answer || '').replace(answerName, '').trim().replace(/^[\(\,\-–—\s]+|[\)\s]+$/g, '');
 
-    let revealHtml = `<div class="trivia-cell-reveal" style="background:${bgColor}">`;
+    const _glowOuter = _withAlpha(borderColor, 0.18);
+    const _glowDrop  = _withAlpha(borderColor, 0.35);
+    const _imgShadow = `0 0 0 4px ${_glowOuter},0 4px 14px ${_glowDrop}`;
+
+    let revealHtml = `<div class="trivia-cell-reveal">`;
     if (headshot) {
-      revealHtml += `<img src="${headshot}" style="border-color:${borderColor}" onerror="this.style.display='none'" alt="">`;
+      revealHtml += `<img src="${headshot}" style="border-color:${borderColor};box-shadow:${_imgShadow}" onerror="this.style.display='none'" alt="">`;
     } else {
       const initials = answerName.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
-      revealHtml += `<div style="width:50%;max-width:58px;aspect-ratio:1;border-radius:50%;border:3px solid ${borderColor};background:${borderColor}30;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${borderColor};letter-spacing:1px">${initials}</div>`;
+      revealHtml += `<div style="width:50%;max-width:58px;aspect-ratio:1;border-radius:50%;border:3px solid ${borderColor};background:${_withAlpha(borderColor, 0.12)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${borderColor};letter-spacing:1px;box-shadow:${_imgShadow}">${initials}</div>`;
     }
     revealHtml += `<div class="reveal-name">${_esc(answerName)}</div>`;
-    if (answerDetail) revealHtml += `<div style="font-size:.5rem;color:rgba(255,255,255,.6);text-align:center">${_esc(answerDetail)}</div>`;
+    if (answerDetail) revealHtml += `<div style="font-size:.5rem;color:var(--text2);text-align:center">${_esc(answerDetail)}</div>`;
     revealHtml += '</div>';
     cell.insertAdjacentHTML('beforeend', revealHtml);
 
@@ -38364,7 +38401,7 @@ Rules:
       const rankColor = p.rank <= 24 ? '#22c55e' : p.rank <= 60 ? '#4ade80' : p.rank <= 120 ? '#facc15' : p.rank <= 200 ? '#f59e0b' : '#ef4444';
       const valColor = p.val >= 150 ? '#22c55e' : p.val >= 75 ? '#4ade80' : p.val >= 30 ? '#facc15' : p.val >= 10 ? '#f59e0b' : 'var(--text2)';
       html += `<tr style="border-bottom:1px solid var(--border)">`;
-      html += `<td style="padding:5px 8px;color:var(--text)">${_esc(p.name)}</td>`;
+      html += `<td style="padding:5px 8px;color:var(--text)"><span class="mt-roster-name" data-mtname="${_esc(p.name)}" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;text-decoration-color:rgba(245,158,11,.4)">${_esc(p.name)}</span></td>`;
       html += `<td style="padding:5px 8px;color:var(--text2)">${p.pos}</td>`;
       html += `<td style="padding:5px 8px;color:var(--text2)">${p.team}</td>`;
       html += `<td style="text-align:center;padding:5px 8px;font-weight:700;color:${rankColor}">${p.rank <= 500 ? p.rank : '—'}</td>`;
@@ -38397,6 +38434,17 @@ Rules:
 
     detail.innerHTML = html;
     detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Wire roster name clicks → open player card with the league's mode (dynasty / superflex / etc.)
+    detail.querySelectorAll('.mt-roster-name').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const name = el.dataset.mtname;
+        const dEntry = (typeof D !== 'undefined') ? D.find(x => x.n === name) : null;
+        if (dEntry && typeof openPlayerCard === 'function') {
+          openPlayerCard(dEntry, _mtGetRankingMode());
+        }
+      });
+    });
   };
 
   // Manual search

@@ -129,7 +129,7 @@ Continue with Google
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
 <span class="nav-label">Games</span>
 </button>
-<button class="nav-btn" data-page="trivia" id="navTriviaBtn" title="Trivia Builder" aria-label="Trivia Builder" style="display:none">
+<button class="nav-btn" data-page="trivia" id="navTriviaBtn" title="Trivia" aria-label="Trivia">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
 <span class="nav-label">Trivia</span>
 </button>
@@ -1915,20 +1915,86 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="trivia-wrap">
 <!-- Tabs -->
 <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
-<button class="trivia-tab active" data-tab="builder" onclick="window._triviaTabSwitch('builder')" style="padding:8px 18px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);background:none;border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;cursor:pointer">Board Builder</button>
+<button class="trivia-tab active" data-tab="builder" onclick="window._triviaTabSwitch('builder')" style="padding:8px 18px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);background:none;border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;cursor:pointer">Trivia</button>
 </div>
 
 <!-- Board Builder Tab -->
 <div id="triviaTabBuilder">
 
+<!-- DAILY BOARD — deterministic-by-date challenge, same for everyone.
+     Pool of templates is hashed by today's date (or ?daily=YYYY-MM-DD).
+     Streak + per-day completion tracked in localStorage. Post-game modal
+     in #triviaDailyModal (below) emits a Wordle-style emoji share. -->
+<div id="triviaDailyPanel" style="margin-bottom:12px;padding:14px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(255,209,102,.10),rgba(168,85,247,.08));border:1px solid rgba(255,209,102,.35);position:relative;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+<div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:2px;color:#ffd166;line-height:1">DAILY BOARD <span id="triviaDailyDateLabel" style="font-size:.7rem;color:var(--text2);letter-spacing:1px;margin-left:6px"></span> <span id="triviaDailyPreviewBadge" style="display:none;font-size:.6rem;background:#a855f7;color:#fff;padding:2px 7px;border-radius:4px;letter-spacing:1.5px;margin-left:6px;vertical-align:2px">PREVIEW</span></div>
+<div id="triviaDailyTitle" style="margin-top:4px;font-size:.85rem;color:var(--text)">—</div>
+<div id="triviaDailyMeta" style="margin-top:2px;font-size:.7rem;color:var(--text2)">Same board for everyone, every day.</div>
+</div>
+<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;align-items:center;min-width:54px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#ffd166;line-height:1" id="triviaDailyStreak">0</div>
+<div style="font-size:.6rem;color:var(--text2);letter-spacing:1px">STREAK 🔥</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;min-width:60px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--text);line-height:1" id="triviaDailyBest">—</div>
+<div style="font-size:.6rem;color:var(--text2);letter-spacing:1px">TODAY</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<button id="triviaDailyPlayBtn" onclick="window._triviaPlayDaily()" style="padding:10px 22px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;cursor:pointer;font-weight:700">PLAY TODAY</button>
+<button id="triviaSurpriseBtn" onclick="window._triviaSurpriseMe()" title="Random AI-generated trivia · not the daily, no streak" style="padding:7px 18px;background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.45);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;cursor:pointer">🎲 SURPRISE ME</button>
+</div>
+</div>
+<!-- Admin preview row — lets admins QA tomorrow's (or any future) daily
+     before it goes live. Hidden by default; shown when window.isAdmin()
+     returns true. Preview runs DON'T write to localStorage so streaks +
+     completion history stay clean. -->
+<div id="triviaDailyAdminRow" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(168,85,247,.3);align-items:center;gap:10px;flex-wrap:wrap;font-size:.7rem;color:var(--text2)">
+<span style="letter-spacing:1px">🔒 ADMIN PREVIEW:</span>
+<input type="date" id="triviaDailyPreviewDate" style="padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem;font-family:'DM Sans',sans-serif">
+<button onclick="window._triviaApplyPreview()" style="padding:5px 12px;background:rgba(168,85,247,.2);color:#c084fc;border:1px solid rgba(168,85,247,.5);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:600">PREVIEW DATE</button>
+<button id="triviaDailyResetPreviewBtn" onclick="window._triviaResetPreview()" style="display:none;padding:5px 10px;background:none;color:var(--text2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer">RESET TO TODAY</button>
+<span style="opacity:.7;font-size:.65rem;flex-basis:100%">Preview runs don't bump streak or write history.</span>
+<button id="triviaDailyLockBtn" onclick="window._triviaLockAsDaily()" title="Snapshot the current board as the locked daily for the chosen date. Players on that date will see exactly these items, immune to data drift." style="padding:5px 12px;background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.5);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:600">💾 LOCK AS DAILY</button>
+<button onclick="window._triviaToggleArchive()" style="padding:5px 12px;background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid rgba(56,189,248,.5);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:600">📚 ARCHIVE</button>
+<button onclick="window._triviaOpenReportsPanel()" title="Triage user-submitted cell reports" style="padding:5px 12px;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.5);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:600">🚩 REPORTS</button>
+<span id="triviaDailyLockStatus" style="font-size:.65rem;color:var(--text2)"></span>
+</div>
+</div>
+
+<!-- Archive list — shows all saved dailies, click to replay. Hidden by
+     default; toggled via the ARCHIVE button in the admin row. -->
+<div id="triviaDailyArchive" style="display:none;margin-top:10px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">DAILY ARCHIVE</div>
+<button onclick="window._triviaToggleArchive()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:.85rem">✕</button>
+</div>
+<div id="triviaDailyArchiveList" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"><div style="color:var(--text2);font-size:.78rem;padding:6px">Loading…</div></div>
+</div>
+
 <!-- Quick-start Templates -->
 <div id="triviaTemplates" style="margin-bottom:12px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)">
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">QUICK-START TEMPLATES</div>
-<div style="font-size:.6rem;color:var(--text2)">Click to fill filters &amp; generate</div>
+<div style="font-size:.6rem;color:var(--text2)">Click any card to play instantly</div>
 </div>
 <div id="triviaTemplateGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px"></div>
 </div>
+
+<!-- Customize disclosure: tucks Board Filters + Layout opts + Game Settings
+     behind a single toggle so first-time visitors aren't hit with 15+
+     controls before they can play. Power users get everything by clicking
+     CUSTOMIZE; open/closed state persists via localStorage (key:
+     mff_triviaCustomizeOpen). Templates above remain the primary 1-click
+     on-ramp and call _triviaGenerate() directly, so collapsing this
+     section doesn't block them. -->
+<details id="triviaCustomizeWrap" style="margin-bottom:12px">
+<summary id="triviaCustomizeSummary" style="cursor:pointer;list-style:none;padding:10px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);display:flex;align-items:center;justify-content:space-between;user-select:none">
+<span>CUSTOMIZE BOARD &amp; GAME SETTINGS</span>
+<span id="triviaCustomizeChevron" style="font-size:.85rem;color:var(--text2);transition:transform .15s">▾</span>
+</summary>
+<div style="margin-top:10px">
 
 <!-- Board Filter Panel -->
 <div id="triviaBoardFilters" style="margin-bottom:12px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)">
@@ -2235,6 +2301,27 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 
 </div>
 </div>
+</div>
+</details>
+<script>
+(function(){
+  // Persist Customize disclosure open/closed state. Default closed so
+  // first-time visitors see Templates as the one-click on-ramp without
+  // a wall of dropdowns; reopen sticks for power users.
+  var det = document.getElementById('triviaCustomizeWrap');
+  var chev = document.getElementById('triviaCustomizeChevron');
+  if (!det) return;
+  try {
+    var saved = localStorage.getItem('mff_triviaCustomizeOpen');
+    det.open = saved === '1';
+  } catch(_){ det.open = false; }
+  if (chev) chev.style.transform = det.open ? 'rotate(180deg)' : 'rotate(0deg)';
+  det.addEventListener('toggle', function(){
+    try { localStorage.setItem('mff_triviaCustomizeOpen', det.open ? '1' : '0'); } catch(_){}
+    if (chev) chev.style.transform = det.open ? 'rotate(180deg)' : 'rotate(0deg)';
+  });
+})();
+</script>
 
 <!-- Team Setup (shown when 2+ teams) -->
 <div id="triviaTeamSetup" style="display:none;margin-bottom:16px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)">
@@ -2352,6 +2439,60 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div><!-- end triviaTabCustomfg -->
 
 </div><!-- end trivia-wrap -->
+
+<!-- Daily Board result modal — shown after completing today's daily.
+     Built dynamically by _triviaShowDailyResult(); the wrapper here is the
+     fixed overlay + visibility gate. Hidden by default. -->
+<div id="triviaDailyModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)">
+<div style="background:var(--surface2);border:1px solid rgba(255,209,102,.4);border-radius:14px;padding:22px 24px;max-width:380px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:'DM Sans',sans-serif">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#ffd166">DAILY COMPLETE</div>
+<button onclick="document.getElementById('triviaDailyModal').style.display='none'" style="background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+</div>
+<div id="triviaDailyModalDate" style="font-size:.72rem;color:var(--text2);letter-spacing:1px;margin-bottom:14px">—</div>
+<div id="triviaDailyModalStats" style="display:flex;justify-content:space-around;margin-bottom:14px"></div>
+<pre id="triviaDailyModalGrid" style="font-family:'DM Mono','Courier New',monospace;font-size:1.05rem;line-height:1.25;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin:0 0 14px;white-space:pre;overflow:auto"></pre>
+<div style="display:flex;gap:8px">
+<button id="triviaDailyShareBtn" onclick="window._triviaShareDaily()" style="flex:1;padding:10px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer;font-weight:700">SHARE RESULT</button>
+<button onclick="document.getElementById('triviaDailyModal').style.display='none'" style="padding:10px 16px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer">CLOSE</button>
+</div>
+<div id="triviaDailyShareConfirm" style="font-size:.7rem;color:#22c55e;text-align:center;margin-top:8px;min-height:14px"></div>
+</div>
+</div>
+
+<!-- Report this cell modal — opened from the 🚩 flag on revealed cells.
+     Body is rebuilt by _triviaOpenReport(idx); the wrapper here is the
+     fixed overlay + visibility gate. -->
+<div id="triviaReportModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)">
+<div style="background:var(--surface2);border:1px solid rgba(239,68,68,.45);border-radius:14px;padding:22px 24px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:'DM Sans',sans-serif">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:#ef4444">🚩 REPORT CELL</div>
+<button onclick="document.getElementById('triviaReportModal').style.display='none'" style="background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+</div>
+<div id="triviaReportContext" style="font-size:.75rem;color:var(--text2);margin-bottom:12px;line-height:1.5"></div>
+<label style="display:block;font-size:.72rem;color:var(--text2);margin-bottom:4px">What's wrong? (optional)</label>
+<textarea id="triviaReportReason" placeholder="e.g. Should also accept &quot;J. Jefferson&quot; / Stat looks wrong / Wrong team logo" maxlength="500" style="width:100%;min-height:70px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.78rem;resize:vertical;box-sizing:border-box"></textarea>
+<div style="display:flex;gap:8px;margin-top:14px">
+<button id="triviaReportSubmitBtn" onclick="window._triviaSubmitReport()" style="flex:1;padding:9px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer;font-weight:700">SUBMIT REPORT</button>
+<button onclick="document.getElementById('triviaReportModal').style.display='none'" style="padding:9px 16px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer">CANCEL</button>
+</div>
+<div id="triviaReportConfirm" style="font-size:.7rem;color:#22c55e;text-align:center;margin-top:8px;min-height:14px"></div>
+</div>
+</div>
+
+<!-- Admin Reports panel — toggleable list of pending reports for triage. -->
+<div id="triviaReportsPanel" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)">
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px 22px;max-width:680px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:'DM Sans',sans-serif">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:#ffd166">CELL REPORTS</div>
+<button onclick="document.getElementById('triviaReportsPanel').style.display='none'" style="background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+</div>
+<div id="triviaReportsList" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;font-size:.78rem">
+<div style="color:var(--text2);padding:8px">Loading…</div>
+</div>
+</div>
+</div>
+
 </div><!-- close pageTrivia -->
 
 <div class="page page-trade" id="pageTrade">
@@ -34784,15 +34925,12 @@ window.fmtHeight = fmtHeight;
 // TRIVIA BOARD BUILDER (Admin Only)
 // =============================================
 (function() {
-  // Show trivia nav button only for admin
-  function _triviaCheckAdmin() {
-    const btn = document.getElementById('navTriviaBtn');
-    if (!btn) return;
-    btn.style.display = (typeof window.isAdmin === 'function' && window.isAdmin()) ? '' : 'none';
-  }
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    try { firebase.auth().onAuthStateChanged(_triviaCheckAdmin); } catch(e) {}
-  }
+  // v0.10.4: trivia nav is public. The page itself shows admin-only
+  // affordances (Lock as Daily, archive delete, Save to Catalog) gated
+  // separately via _triviaUpdateAdminUI / dataset checks. The legacy
+  // _triviaCheckAdmin function was the page-level gate; left as a no-op
+  // so any external onAuthStateChanged binding stays harmless.
+  function _triviaCheckAdmin() { /* no-op since v0.10.4 */ }
 
   // === CONFIG: Set this to your Cloudflare Worker URL after deploying ===
   const TRIVIA_API_URL = 'https://late-wind-6322.billingsj199.workers.dev';
@@ -34948,14 +35086,24 @@ window.fmtHeight = fmtHeight;
       boardEl.style.margin = '0 auto';
     }
     document.getElementById('triviaExportBar').style.display = 'flex';
-    // Show and reset save button
+    // Show and reset save button — admin-only since v0.10.4 (Save to
+    // Catalog is curation, not a player action). _triviaUpdateAdminUI
+    // toggles it elsewhere too in case auth state flips after render.
     const saveBtn = document.getElementById('triviaSaveCatalogBtn');
-    saveBtn.style.display = '';
+    const _isAdmCatalog = (typeof window.isAdmin === 'function' && window.isAdmin());
+    saveBtn.style.display = _isAdmCatalog ? '' : 'none';
     saveBtn.textContent = '💾 Save to Catalog';
     saveBtn.style.opacity = '1';
     saveBtn.style.color = '#22c55e';
     saveBtn.style.borderColor = '#22c55e';
     delete saveBtn.dataset.saved;
+    // Auto-scroll the board into view. Templates already do this via
+    // _triviaApplyTemplate, but the bare GENERATE button + custom-prompt
+    // path leaves the board below the fold; scrolling here covers all
+    // entry points uniformly.
+    setTimeout(() => {
+      try { area.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(_) {}
+    }, 100);
   }
 
   // College team ESPN IDs for logos
@@ -35739,6 +35887,11 @@ window.fmtHeight = fmtHeight;
     }
     revealHtml += `<div class="reveal-name">${_esc(answerName)}</div>`;
     if (answerDetail) revealHtml += `<div style="font-size:.5rem;color:var(--text2);text-align:center">${_esc(answerDetail)}</div>`;
+    // Report flag — small button at top-right so users can flag a
+    // suspicious answer/stat. Only shown on revealed cells (player has
+    // seen the answer, can judge it). _triviaOpenReport reads the cell's
+    // idx and last-guess from dataset.
+    revealHtml += `<button class="trivia-report-flag" onclick="event.stopPropagation();window._triviaOpenReport(${idx})" title="Report this cell" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.35);border:none;color:rgba(255,255,255,.7);font-size:.75rem;width:18px;height:18px;border-radius:4px;cursor:pointer;line-height:1;padding:0;z-index:5">🚩</button>`;
     revealHtml += '</div>';
     cell.insertAdjacentHTML('beforeend', revealHtml);
 
@@ -35760,6 +35913,7 @@ window.fmtHeight = fmtHeight;
     let html = '<div class="trivia-cell-reveal" style="background:rgba(239,68,68,.88)">';
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;color:rgba(255,200,200,.7);letter-spacing:1px;margin-bottom:2px">ANSWER</div>`;
     html += `<div class="reveal-name" style="color:#fff;font-size:.78rem">${_esc(item.answer || '')}</div>`;
+    html += `<button class="trivia-report-flag" onclick="event.stopPropagation();window._triviaOpenReport(${idx})" title="Report this cell" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.45);border:none;color:rgba(255,255,255,.85);font-size:.75rem;width:18px;height:18px;border-radius:4px;cursor:pointer;line-height:1;padding:0;z-index:5">🚩</button>`;
     html += '</div>';
     cell.insertAdjacentHTML('beforeend', html);
 
@@ -35798,6 +35952,10 @@ window.fmtHeight = fmtHeight;
     const guess = input.value.trim();
     if (!guess) return;
 
+    // Stash for the report-this-cell feature so a flagged cell carries
+    // the player's most recent attempt (helps admin spot alias misses).
+    cell.dataset.lastGuess = guess;
+
     const item = _triviaData.items[idx];
     if (!item) return;
 
@@ -35811,6 +35969,7 @@ window.fmtHeight = fmtHeight;
       _triviaPlayCorrect();
       delete cell.dataset.stealAttempt;
       _triviaScore.correct++;
+      if (typeof window._triviaRecordDailyResult === 'function') window._triviaRecordDailyResult(idx, 'correct');
 
       if (_triviaGame.active) {
         const pts = _triviaGetPointValue(idx);
@@ -35851,6 +36010,7 @@ window.fmtHeight = fmtHeight;
         _triviaMarkWrong(cell, idx);
         delete cell.dataset.stealAttempt;
         _triviaScore.wrong++;
+        if (typeof window._triviaRecordDailyResult === 'function') window._triviaRecordDailyResult(idx, 'wrong');
 
         if (_triviaGame.active) {
           _triviaHandleWrongTurn(idx);
@@ -35928,6 +36088,11 @@ window.fmtHeight = fmtHeight;
       _triviaGame.active = false;
       _triviaGame.gameOver = true;
       document.getElementById('triviaGiveUpBtn').style.display = 'none';
+      // Daily-mode finalize: solo runs only (multi-team daily would need
+      // its own scoring contract). The function no-ops when not a daily.
+      if (typeof window._triviaFinalizeDaily === 'function' && _triviaGame.teams <= 1) {
+        try { window._triviaFinalizeDaily(); } catch(_){}
+      }
       // Show game over in score bar
       const bar = document.getElementById('triviaScoreBar');
       if (bar && _triviaGame.teams > 1) {
@@ -36127,8 +36292,17 @@ window.fmtHeight = fmtHeight;
         const idx = parseInt(c.dataset.idx);
         _triviaMarkWrong(c, idx);
         _triviaScore.wrong++;
+        // Daily share-grid: leftover cells from a give-up render as
+        // "didn't reach" (⬜) rather than wrong, since the player chose
+        // to bail rather than miss them. Leave the result null.
       }
     });
+
+    // Daily-mode finalize on give-up. Solo only — multi-team daily would
+    // need its own scoring contract; defer.
+    if (typeof window._triviaFinalizeDaily === 'function' && _triviaGame.teams <= 1) {
+      try { window._triviaFinalizeDaily(); } catch(_){}
+    }
 
     // Show game over in score bar
     const bar = document.getElementById('triviaScoreBar');
@@ -36244,6 +36418,11 @@ window.fmtHeight = fmtHeight;
 
   function _triviaApplyTemplate(t) {
     if (!t || !t.filters) return;
+    // Clear any in-flight daily run when a regular template is applied
+    // directly (not via _triviaPlayDaily, which sets _triviaDailyRun AFTER
+    // calling this function). Prevents a stale daily flag from finalizing
+    // a different board's score against today's date.
+    if (!t._isDailyApply) { _triviaDailyRun = null; }
     const f = t.filters;
     const setVal = (id, v) => { const el = document.getElementById(id); if (el && v != null) { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); } };
     setVal('triviaFilterType', f.type);
@@ -36300,6 +36479,1001 @@ window.fmtHeight = fmtHeight;
     });
   }
   _triviaRenderTemplates();
+
+  // ===== DAILY BOARD =====
+  // Deterministic-by-date challenge: same board for everyone on a given
+  // day. Date determines the template via a stable hash; localStorage
+  // tracks streak + per-date completion so the panel can show "you've
+  // played today" vs "play today". Permalink: ?daily=YYYY-MM-DD locks
+  // the seed so a shared link plays the same board even if the date has
+  // rolled over for the visitor.
+  //
+  // No backend yet — virality is driven by the share grid, not a global
+  // leaderboard. A Firestore-backed leaderboard can layer on later
+  // without changing the seed/state contract.
+  const _TRIVIA_DAILY_POOL = [
+    { title: 'All-Time Receiving Yds', desc: 'Top 20 careers · WR/TE',
+      filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'] } },
+    { title: '2024 Rushing TDs', desc: 'Top 20 last season · RB',
+      filters: { type: 'season', stat: 'rtd', year: '2024', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
+    { title: 'All-Time Passing TDs', desc: 'QB career leaders',
+      filters: { type: 'career', stat: 'ptd', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB'] } },
+    { title: 'Best Single-Game Fpts', desc: 'Highest one-game scores',
+      filters: { type: 'game', stat: 'fpts', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
+    { title: '2025 Fantasy PPG Leaders', desc: 'Top 20 by PPG last year',
+      filters: { type: 'season', stat: 'ppg', year: '2025', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
+    { title: '2024 First-Round Picks', desc: 'Round 1 · skill positions',
+      filters: { type: 'draft', stat: 'fpts', year: '2024', count: 20, conf: 'all', team: 'all', draftRound: '1', positions: ['QB','RB','WR','TE'] } },
+    { title: 'All-Time Rushing Yds', desc: 'RB career leaders',
+      filters: { type: 'career', stat: 'ry', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
+    { title: '2025 Receiving TDs', desc: 'Top 20 last season · WR/TE',
+      filters: { type: 'season', stat: 'rctd', year: '2025', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'] } },
+    { title: 'All-Time Receptions', desc: 'Career receptions · WR/TE/RB',
+      filters: { type: 'career', stat: 'rec', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE','RB'] } },
+    { title: '2024 Passing Yards', desc: 'QB volume leaders',
+      filters: { type: 'season', stat: 'py', year: '2024', count: 20, conf: 'all', team: 'all', positions: ['QB'] } },
+    { title: 'All-Time Total TDs', desc: 'Career — all positions',
+      filters: { type: 'career', stat: 'totalTd', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
+    { title: '2023 Fantasy PPG', desc: 'Top 20 by PPG · two seasons back',
+      filters: { type: 'season', stat: 'ppg', year: '2023', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } }
+  ];
+
+  const _TRIVIA_DAILY_KEY = 'mff_triviaDaily';
+
+  // Returns YYYY-MM-DD in local time. We use local time so "today" matches
+  // the user's clock, not UTC — this is fine because the seed is derived
+  // from the date string itself, not a UTC timestamp.
+  function _triviaTodayStr() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  // Stable string hash → unsigned int. Same dateStr always produces same
+  // pool index, so all visitors see the same daily board on a given date.
+  function _triviaDateHash(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = (h * 16777619) >>> 0;
+    }
+    return h;
+  }
+
+  // Admin preview override (in-memory only). When set, _triviaResolveDailyDate
+  // returns this date and _triviaFinalizeDaily skips localStorage writes so
+  // QAing tomorrow's board doesn't bump the admin's real streak.
+  let _triviaPreviewDate = null;
+
+  // Permalink override: ?daily=YYYY-MM-DD lets shared links lock the same
+  // board regardless of when the visitor opens it. Falls back to today.
+  // Resolution order: admin preview > URL permalink > today.
+  function _triviaResolveDailyDate() {
+    if (_triviaPreviewDate) return _triviaPreviewDate;
+    try {
+      const m = (location.search || '').match(/[?&]daily=(\d{4}-\d{2}-\d{2})/);
+      if (m) return m[1];
+    } catch(_){}
+    return _triviaTodayStr();
+  }
+
+  // Pull the content-hash version off the permalink, if present. Used by
+  // the drift detector after a daily run renders.
+  function _triviaResolveDailyVersion() {
+    try {
+      const m = (location.search || '').match(/[?&]v=([a-z0-9]{1,8})/i);
+      if (m) return m[1];
+    } catch(_){}
+    return null;
+  }
+
+  function _triviaLoadDailyState() {
+    try {
+      const raw = localStorage.getItem(_TRIVIA_DAILY_KEY);
+      if (!raw) return { streak: 0, lastPlayedDate: null, completed: {} };
+      const obj = JSON.parse(raw);
+      return {
+        streak: obj.streak || 0,
+        lastPlayedDate: obj.lastPlayedDate || null,
+        completed: obj.completed || {}
+      };
+    } catch(_){ return { streak: 0, lastPlayedDate: null, completed: {} }; }
+  }
+
+  function _triviaSaveDailyState(state) {
+    try { localStorage.setItem(_TRIVIA_DAILY_KEY, JSON.stringify(state)); } catch(_){}
+  }
+
+  // YYYY-MM-DD math: subtract one day (string-in / string-out). Used to
+  // detect consecutive-day streaks — Date arithmetic handles month/year
+  // boundaries for us.
+  function _triviaPrevDay(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  // Days since the Unix epoch in local time. Used as the cycle counter so
+  // a "12-day cycle" advances by exactly 1 each day regardless of year
+  // boundaries. dayOfYear had a wrap-around bug at year-end (Dec 31 →
+  // Jan 1 reset the cycle index) which this avoids.
+  function _triviaDayNumber(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return Math.floor(d.getTime() / 86400000);
+  }
+
+  // Mulberry32 PRNG — small, fast, decent distribution. Seeded by the
+  // cycle number so all visitors compute the SAME permutation per cycle.
+  function _triviaRng(seed) {
+    let t = seed >>> 0;
+    return function() {
+      t = (t + 0x6D2B79F5) >>> 0;
+      let r = t;
+      r = Math.imul(r ^ (r >>> 15), r | 1);
+      r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Fisher-Yates shuffle of [0..n-1] driven by the seeded RNG. Returns
+  // a permutation array; same seed → same permutation.
+  function _triviaShufflePerm(n, seed) {
+    const arr = Array.from({ length: n }, (_, i) => i);
+    const rng = _triviaRng(seed);
+    for (let i = n - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // v0.10.3 (daily fix #1): cycle-based picker so every N-day window
+  // covers all N templates exactly once. Previously `hash(date) % N`
+  // could collide on consecutive days. Same-cycle visitors all see the
+  // same shuffled order and the same board.
+  function _triviaPickDailyTemplate(dateStr) {
+    const N = _TRIVIA_DAILY_POOL.length;
+    if (N === 0) return null;
+    const dayNum = _triviaDayNumber(dateStr);
+    const cycleNum = Math.floor(dayNum / N);
+    const cycleIdx = dayNum % N;
+    const perm = _triviaShufflePerm(N, cycleNum);
+    return _TRIVIA_DAILY_POOL[perm[cycleIdx]];
+  }
+
+  // Returns the chain of template indices to try in order, starting from
+  // today's pick. Used by _triviaPlayDaily to fall back to the next entry
+  // when a template yields too few items (validation fix #2). Same date
+  // always returns the same chain so fallback is reproducible.
+  function _triviaPickDailyChain(dateStr) {
+    const N = _TRIVIA_DAILY_POOL.length;
+    const dayNum = _triviaDayNumber(dateStr);
+    const cycleNum = Math.floor(dayNum / N);
+    const cycleIdx = dayNum % N;
+    const perm = _triviaShufflePerm(N, cycleNum);
+    const ordered = [];
+    for (let i = 0; i < N; i++) ordered.push(_TRIVIA_DAILY_POOL[perm[(cycleIdx + i) % N]]);
+    return ordered;
+  }
+
+  // Track the live daily run so the game-over hook can detect it. Set on
+  // _triviaPlayDaily(), cleared on non-daily generates / template clicks.
+  let _triviaDailyRun = null; // { date, startTime, results: ['correct'|'wrong'|null, ...] }
+
+  // Refresh the panel UI from current localStorage + today's pool entry.
+  // Called on init and after every completion / streak update.
+  function _triviaUpdateDailyPanel() {
+    const dateStr = _triviaResolveDailyDate();
+    const tpl = _triviaPickDailyTemplate(dateStr);
+    const state = _triviaLoadDailyState();
+    const dateLabelEl = document.getElementById('triviaDailyDateLabel');
+    const titleEl = document.getElementById('triviaDailyTitle');
+    const metaEl = document.getElementById('triviaDailyMeta');
+    const streakEl = document.getElementById('triviaDailyStreak');
+    const bestEl = document.getElementById('triviaDailyBest');
+    const playBtn = document.getElementById('triviaDailyPlayBtn');
+    if (!titleEl) return;
+    if (dateLabelEl) dateLabelEl.textContent = '· ' + dateStr;
+    titleEl.textContent = tpl.title;
+    metaEl.textContent = tpl.desc;
+    streakEl.textContent = String(state.streak || 0);
+
+    const todayResult = state.completed[dateStr];
+    if (todayResult) {
+      bestEl.textContent = todayResult.score + '/' + todayResult.total;
+      if (playBtn) {
+        playBtn.textContent = 'PLAY AGAIN';
+        playBtn.style.opacity = '0.85';
+      }
+    } else {
+      bestEl.textContent = '—';
+      if (playBtn) {
+        playBtn.textContent = 'PLAY TODAY';
+        playBtn.style.opacity = '1';
+      }
+    }
+  }
+
+  // Minimum item count for a daily board to be considered "playable". A
+  // 4×4 grid is the smallest layout we render, so 16 items is the floor.
+  // Templates yielding fewer items get bypassed via the chain.
+  const _TRIVIA_DAILY_MIN_ITEMS = 16;
+
+  window._triviaPlayDaily = function() {
+    const dateStr = _triviaResolveDailyDate();
+    const chain = _triviaPickDailyChain(dateStr);
+    if (!chain.length) return;
+    // Capture start time + initialize per-cell results array so the share
+    // grid can reflect actual cell-by-cell outcomes. The preview flag
+    // travels with the run so finalize knows to skip localStorage.
+    _triviaDailyRun = {
+      date: dateStr,
+      startTime: Date.now(),
+      results: [],
+      preview: !!_triviaPreviewDate
+    };
+
+    // Fast path: if a locked snapshot exists for this date, render it
+    // verbatim and skip the cycle-shuffle + filter pipeline. Players see
+    // the curated board (data-drift-immune); admins QA'ing a future date
+    // see the snapshot they locked.
+    _triviaFetchLockedDaily(dateStr).then(snap => {
+      if (snap && snap.items && snap.items.length) {
+        _triviaDailyRun.results = new Array(snap.items.length).fill(null);
+        _triviaRenderLockedDaily(snap);
+        if (typeof window._triviaStartGame === 'function') window._triviaStartGame();
+        return;
+      }
+      _triviaPlayDailyFromTemplate(chain);
+    });
+  };
+
+  function _triviaPlayDailyFromTemplate(chain) {
+
+    // v0.10.3 (daily fix #2): chain-based fallback. Try the day's primary
+    // template first; if its render yields <_TRIVIA_DAILY_MIN_ITEMS, walk
+    // the chain. The chain order is itself deterministic per-date, so all
+    // visitors that hit the same fallback land on the same board.
+    let chainIdx = 0;
+    let lastDataRef = null; // detect when a fresh _triviaData has loaded
+
+    const _tryNext = () => {
+      if (chainIdx >= chain.length) {
+        // Pool exhausted — surface a clear error rather than silently leaving
+        // the user staring at a half-built board.
+        const area = document.getElementById('triviaBoardArea');
+        if (area) area.innerHTML = '<div class="trivia-loading">Today\'s daily board could not be built (no template yielded enough items). Try again later.</div>';
+        _triviaDailyRun = null;
+        return;
+      }
+      const tpl = chain[chainIdx];
+      lastDataRef = _triviaData;
+      _triviaApplyTemplate(Object.assign({ _isDailyApply: true }, tpl));
+    };
+
+    const _checkAndStart = () => {
+      // Wait for _triviaData to refresh to a NEW object (different ref
+      // than what we saw before kicking off the apply). Avoids an instant
+      // success on a stale prior-render's data.
+      if (_triviaData === lastDataRef) return false;
+      if (!_triviaData || !_triviaData.items) return false;
+      if (_triviaData.items.length < _TRIVIA_DAILY_MIN_ITEMS) {
+        chainIdx++;
+        _tryNext();
+        return false;
+      }
+      _triviaDailyRun.results = new Array(_triviaData.items.length).fill(null);
+      // v0.10.3 (daily fix #3): permalink drift check. If the URL carries
+      // a content-hash and it doesn't match the current board's items,
+      // the underlying data has changed since the link was generated.
+      // Show a non-blocking banner so result-grid comparisons stay honest
+      // (we still let the player run the board — they can still play it).
+      const expectedV = _triviaResolveDailyVersion();
+      if (expectedV) {
+        const actualV = _triviaContentHash(_triviaData.items);
+        if (actualV !== expectedV) _triviaShowDriftNotice(expectedV, actualV);
+      }
+      if (typeof window._triviaStartGame === 'function') window._triviaStartGame();
+      return true;
+    };
+
+    _tryNext();
+    let tries = 0;
+    const iv = setInterval(() => {
+      tries++;
+      // Cap at ~12s total: 40 polls × 100ms × up to pool-length retries.
+      // _checkAndStart kicks the next chain entry on short-yield, which
+      // resets the await; bump tries less aggressively in that case.
+      if (_checkAndStart() || tries > 120 || !_triviaDailyRun) clearInterval(iv);
+    }, 100);
+  }
+
+  // Called from inside the guess-resolution path (correct / wrong / give-up)
+  // so the daily-grid share image reflects per-cell outcomes. Idempotent —
+  // safe to call multiple times for the same idx (last write wins).
+  window._triviaRecordDailyResult = function(idx, status) {
+    if (!_triviaDailyRun || !_triviaDailyRun.results) return;
+    if (idx < 0 || idx >= _triviaDailyRun.results.length) return;
+    _triviaDailyRun.results[idx] = status; // 'correct' | 'wrong' | null
+  };
+
+  // Called from _triviaCheckGameOver when a daily run finishes. Updates
+  // streak (consecutive-day rule) and renders the result modal with the
+  // share grid + permalink. In admin-preview mode, skips localStorage
+  // writes entirely so QA runs don't pollute streaks/history.
+  window._triviaFinalizeDaily = function() {
+    if (!_triviaDailyRun) return;
+    const run = _triviaDailyRun;
+    const elapsedMs = Date.now() - run.startTime;
+    const score = (_triviaScore && _triviaScore.correct) || 0;
+    const total = (_triviaScore && _triviaScore.total) || (run.results ? run.results.length : 0);
+
+    const isPreview = !!run.preview;
+    const state = _triviaLoadDailyState();
+
+    if (!isPreview) {
+      const alreadyDone = !!state.completed[run.date];
+      // Streak rule: only update if this is the user's first completion for
+      // this date. Replays don't bump streak (and don't reset it either).
+      if (!alreadyDone) {
+        if (state.lastPlayedDate === _triviaPrevDay(run.date)) state.streak = (state.streak || 0) + 1;
+        else if (state.lastPlayedDate === run.date) { /* same day re-entry, no-op */ }
+        else state.streak = 1;
+        state.lastPlayedDate = run.date;
+      }
+      // Always store the LATEST completion (replay overwrites prior). Best-
+      // score logic can layer on later if we want "personal best" semantics.
+      state.completed[run.date] = {
+        score: score,
+        total: total,
+        timeMs: elapsedMs,
+        results: run.results.slice()
+      };
+      _triviaSaveDailyState(state);
+    }
+    _triviaUpdateDailyPanel();
+    _triviaShowDailyResult(run.date, score, total, elapsedMs, run.results, state.streak, isPreview);
+    _triviaDailyRun = null;
+  };
+
+  // v0.10.3 (daily fix #3): content hash for permalink stability. Hashes
+  // the rendered items so a friend opening ?daily=DATE&v=HASH can detect
+  // when the underlying data has changed (e.g., season ingest updated
+  // 2025 PPG leaders) and surface a "data has changed since the original
+  // run" notice rather than silently showing a different board.
+  function _triviaContentHash(items) {
+    if (!items || !items.length) return '0000';
+    let h = 2166136261;
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      const key = (it.answer || '') + '|' + (it.value != null ? it.value : '');
+      for (let j = 0; j < key.length; j++) {
+        h ^= key.charCodeAt(j);
+        h = (h * 16777619) >>> 0;
+      }
+    }
+    // 4-char base36 — 1.7M-entry namespace, enough to detect drift without
+    // making the share URL ugly.
+    return ('0000' + h.toString(36)).slice(-4);
+  }
+
+  // Build emoji grid + meta and show the modal. Layout uses the current
+  // board columns so the grid visually mirrors what the player saw. The
+  // isPreview flag tags admin QA runs visually + omits the share text so
+  // a preview result can't be accidentally shared as an "official" run.
+  function _triviaShowDailyResult(date, score, total, ms, results, streak, isPreview) {
+    const modal = document.getElementById('triviaDailyModal');
+    const gridEl = document.getElementById('triviaDailyModalGrid');
+    const dateEl = document.getElementById('triviaDailyModalDate');
+    const statsEl = document.getElementById('triviaDailyModalStats');
+    if (!modal || !gridEl) return;
+
+    let cols = 5;
+    try {
+      const layout = _getLayout(total);
+      if (layout && layout[0]) cols = layout[0];
+    } catch(_){}
+
+    // Wordle-style: ✅ correct, ❌ wrong, ⬜ unanswered (gave up / didn't reach).
+    const cells = (results || []).map(r =>
+      r === 'correct' ? '🟩' : r === 'wrong' ? '🟥' : '⬜'
+    );
+    const lines = [];
+    for (let i = 0; i < cells.length; i += cols) {
+      lines.push(cells.slice(i, i + cols).join(''));
+    }
+    const timeStr = _triviaFormatMs(ms);
+    const accuracy = total ? Math.round((score / total) * 100) : 0;
+    const tpl = _triviaPickDailyTemplate(date);
+    const contentHash = _triviaContentHash(_triviaData && _triviaData.items);
+
+    const shareText =
+      'MFF Daily · ' + date + '\n' +
+      tpl.title + '\n' +
+      lines.join('\n') + '\n' +
+      score + '/' + total + ' · ' + timeStr + '\n' +
+      location.origin + location.pathname + '?daily=' + date + '&v=' + contentHash;
+
+    // Stash on the modal so the share button can grab it without rebuild.
+    // Preview runs get a marked share text so an accidental share is
+    // obvious; the share button itself is also disabled visually below.
+    modal.dataset.shareText = isPreview
+      ? '(admin preview · not for sharing)\n' + shareText
+      : shareText;
+    modal.dataset.isPreview = isPreview ? '1' : '';
+    dateEl.textContent = (isPreview ? '🔒 PREVIEW · ' : '') + date + ' · ' + tpl.title;
+    gridEl.textContent = lines.join('\n');
+    statsEl.innerHTML =
+      '<div style="text-align:center"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1">' + score + '/' + total + '</div><div style="font-size:.65rem;color:var(--text2);letter-spacing:1px">SCORE · ' + accuracy + '%</div></div>' +
+      '<div style="text-align:center"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1">' + timeStr + '</div><div style="font-size:.65rem;color:var(--text2);letter-spacing:1px">TIME</div></div>' +
+      '<div style="text-align:center"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1">' + (streak || 0) + '🔥</div><div style="font-size:.65rem;color:var(--text2);letter-spacing:1px">STREAK</div></div>';
+
+    const confirmEl = document.getElementById('triviaDailyShareConfirm');
+    if (confirmEl) confirmEl.textContent = '';
+    modal.style.display = 'flex';
+  }
+
+  function _triviaFormatMs(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  // Surfaced when a permalink's content hash doesn't match the current
+  // board (data changed since the original run). Banner is dismissable
+  // and inserted just above the board so it's hard to miss but not modal.
+  function _triviaShowDriftNotice(expected, actual) {
+    const area = document.getElementById('triviaBoardArea');
+    if (!area) return;
+    if (document.getElementById('triviaDriftNotice')) return; // already shown
+    const div = document.createElement('div');
+    div.id = 'triviaDriftNotice';
+    div.style.cssText = 'margin:0 0 10px;padding:10px 14px;border-radius:8px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.45);color:var(--text);font-size:.78rem;line-height:1.4;display:flex;align-items:center;gap:10px';
+    div.innerHTML =
+      '<span style="font-size:1.1rem">⚠️</span>' +
+      '<span style="flex:1">This shared board\'s underlying stats have updated since the original run. Results may differ from the friend who shared it. <span style="color:var(--text2);font-size:.7rem">(' + expected + ' → ' + actual + ')</span></span>' +
+      '<button onclick="this.closest(\'#triviaDriftNotice\').remove()" style="background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;line-height:1">✕</button>';
+    area.parentNode.insertBefore(div, area);
+  }
+
+  // ===== SURPRISE ME: random custom-prompt trivia =====
+  // Picks one of a curated list of AI prompts and runs the existing
+  // custom-prompt path. Intentionally NOT part of the daily rotation —
+  // AI output is non-deterministic across visitors, so it can't satisfy
+  // the "same board for everyone" contract. Doesn't touch streak state.
+  // Power users can still write their own prompt via the Customize
+  // disclosure below; this is just a one-click entry point for variety.
+  const _TRIVIA_SURPRISE_PROMPTS = [
+    'Top 20 fantasy WR seasons of all time by total fantasy points',
+    'Top 20 single-game rushing yards by an RB since 2000',
+    'Top 20 NFL careers in passing TDs from the 2000s and 2010s',
+    'Top 20 rookies who hit 1000+ rushing yards in their first NFL season',
+    'Top 20 best fantasy seasons by tight ends, all-time',
+    'Top 20 first-round NFL draft busts at WR by career fantasy points',
+    'Top 20 fantasy QB seasons of the 1990s by total fantasy points',
+    'Top 20 RB seasons with 1500+ rushing yards since 2010',
+    'Top 20 single-season receiving TD leaders since 2000',
+    'Top 20 highest-scoring fantasy weeks ever by a single player',
+    'Top 20 RBs by combined rushing + receiving yards in a season since 2010',
+    'Top 20 WRs by single-season targets since 2010'
+  ];
+
+  window._triviaSurpriseMe = function() {
+    // Clear any in-flight daily run so a SURPRISE finish doesn't trigger
+    // _triviaFinalizeDaily against today's date.
+    _triviaDailyRun = null;
+    const prompt = _TRIVIA_SURPRISE_PROMPTS[Math.floor(Math.random() * _TRIVIA_SURPRISE_PROMPTS.length)];
+    const promptInput = document.getElementById('triviaPrompt');
+    const toggle = document.getElementById('triviaCustomPromptToggle');
+    const wrap = document.getElementById('triviaCustomPromptWrap');
+    if (!promptInput || !toggle) {
+      alert('Custom prompt UI not found.');
+      return;
+    }
+    // Open the Customize disclosure so the user can see what's running
+    // and tweak/regenerate if the AI returns something off.
+    const det = document.getElementById('triviaCustomizeWrap');
+    if (det && !det.open) det.open = true;
+    promptInput.value = prompt;
+    if (!toggle.checked) {
+      toggle.checked = true;
+      toggle.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (wrap) wrap.style.display = '';
+    if (typeof window._triviaGenerate === 'function') {
+      const result = window._triviaGenerate();
+      const _kickStart = () => {
+        if (_triviaData && _triviaData.items && _triviaData.items.length) {
+          if (typeof window._triviaStartGame === 'function') window._triviaStartGame();
+          return true;
+        }
+        return false;
+      };
+      // AI calls take longer than structured filters; wait up to ~30s.
+      let tries = 0;
+      const iv = setInterval(() => {
+        tries++;
+        if (_kickStart() || tries > 300) clearInterval(iv);
+      }, 100);
+    }
+  };
+
+  window._triviaShareDaily = function() {
+    const modal = document.getElementById('triviaDailyModal');
+    const text = modal && modal.dataset.shareText;
+    if (!text) return;
+    const confirmEl = document.getElementById('triviaDailyShareConfirm');
+    const setOk = (msg) => { if (confirmEl) { confirmEl.textContent = msg; setTimeout(() => { if (confirmEl.textContent === msg) confirmEl.textContent = ''; }, 2500); } };
+    // Try the Web Share API first on mobile; fall back to clipboard.
+    if (navigator.share) {
+      navigator.share({ text: text }).then(() => setOk('Shared!')).catch(() => {
+        if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => setOk('Copied to clipboard'));
+      });
+      return;
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => setOk('Copied to clipboard')).catch(() => setOk('Copy failed — long-press to copy'));
+    } else {
+      setOk('Clipboard not available');
+    }
+  };
+
+  _triviaUpdateDailyPanel();
+
+  // ===== FIRST-VISIT ONBOARDING =====
+  // One-time popover anchored above the daily panel. Explains the
+  // metaphor ("one trivia per day, same for everyone, type your guess")
+  // so cold visitors don't bounce. Dismissed forever via localStorage;
+  // skipped on permalink visits since those visitors already know why
+  // they're here.
+  function _triviaShowFirstVisitTooltip() {
+    try {
+      if (localStorage.getItem('mff_triviaSeenIntro') === '1') return;
+      if (/[?&]daily=\d{4}-\d{2}-\d{2}/.test(location.search || '')) return;
+    } catch(_){}
+    const panel = document.getElementById('triviaDailyPanel');
+    if (!panel || !panel.parentNode) return;
+    if (document.getElementById('triviaIntroTip')) return;
+    const tip = document.createElement('div');
+    tip.id = 'triviaIntroTip';
+    tip.style.cssText = 'position:relative;margin-bottom:12px;padding:14px 18px;border-radius:10px;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.45);color:var(--text);font-size:.8rem;line-height:1.5;display:flex;align-items:flex-start;gap:12px';
+    tip.innerHTML =
+      '<div style="font-size:1.4rem;line-height:1;flex-shrink:0;margin-top:1px">👋</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:#38bdf8;margin-bottom:4px">HOW IT WORKS</div>' +
+        '<div style="margin-bottom:6px">A new fantasy-football trivia board drops every day — same one for everyone. Hit <strong style="color:#ffd166">PLAY TODAY</strong>, type guesses for each cell, and share your result grid when you finish.</div>' +
+        '<div style="font-size:.72rem;color:var(--text2)">Want variety? Try <strong style="color:#c084fc">🎲 Surprise Me</strong> for an AI-generated random board, or pick a quick-start template below.</div>' +
+      '</div>' +
+      '<button onclick="window._triviaDismissIntro()" title="Dismiss" style="background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;line-height:1;padding:0;flex-shrink:0">✕</button>';
+    panel.parentNode.insertBefore(tip, panel);
+  }
+  window._triviaDismissIntro = function() {
+    try { localStorage.setItem('mff_triviaSeenIntro', '1'); } catch(_){}
+    const tip = document.getElementById('triviaIntroTip');
+    if (tip && tip.remove) tip.remove();
+  };
+  _triviaShowFirstVisitTooltip();
+
+  // ===== ADMIN PREVIEW =====
+  // Lets admins QA tomorrow's (or any future) daily before it goes live.
+  // Activated via a date input on the daily panel; visibility tied to
+  // window.isAdmin(). Preview state is in-memory only — no localStorage,
+  // no URL rewrite — so it can't leak into a real player's session.
+  window._triviaApplyPreview = function() {
+    const inp = document.getElementById('triviaDailyPreviewDate');
+    if (!inp) return;
+    const v = (inp.value || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      alert('Pick a valid date (YYYY-MM-DD).');
+      return;
+    }
+    _triviaPreviewDate = v;
+    _triviaUpdateDailyPanel();
+    _triviaUpdateAdminUI();
+  };
+
+  window._triviaResetPreview = function() {
+    _triviaPreviewDate = null;
+    _triviaUpdateDailyPanel();
+    _triviaUpdateAdminUI();
+  };
+
+  function _triviaUpdateAdminUI() {
+    const isAdm = (typeof window.isAdmin === 'function' && window.isAdmin());
+    const row = document.getElementById('triviaDailyAdminRow');
+    const badge = document.getElementById('triviaDailyPreviewBadge');
+    const resetBtn = document.getElementById('triviaDailyResetPreviewBtn');
+    const dateInput = document.getElementById('triviaDailyPreviewDate');
+    if (row) row.style.display = isAdm ? 'flex' : 'none';
+    if (badge) badge.style.display = _triviaPreviewDate ? '' : 'none';
+    if (resetBtn) resetBtn.style.display = _triviaPreviewDate ? '' : 'none';
+    // Default the date input to tomorrow when first showing for admins,
+    // so the most common QA flow (preview tomorrow) is one click away.
+    if (isAdm && dateInput && !dateInput.value) {
+      const t = new Date();
+      t.setDate(t.getDate() + 1);
+      const y = t.getFullYear(), m = String(t.getMonth()+1).padStart(2,'0'), d = String(t.getDate()).padStart(2,'0');
+      dateInput.value = y + '-' + m + '-' + d;
+    }
+  }
+
+  // Wire admin UI to auth state. Initial pass + Firebase listener so the
+  // row appears as soon as the auth check resolves on page load.
+  _triviaUpdateAdminUI();
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try { firebase.auth().onAuthStateChanged(_triviaUpdateAdminUI); } catch(e) {}
+  }
+
+  // ===== DAILY ARCHIVE (Firestore-backed) =====
+  // Saves the currently-rendered board as the locked daily for a chosen
+  // date. On play, _triviaPlayDaily checks Firestore first and replays
+  // the snapshot verbatim — items + answers + hints frozen. This solves
+  // two problems at once: (1) data drift (a permalink keeps working even
+  // if the underlying stats refresh), (2) curation (Jack can craft a
+  // board with custom filters or AI prompt and lock it for a future
+  // date instead of being stuck with the cycle-shuffle pick).
+  //
+  // Schema: trivia_daily/{YYYY-MM-DD} = {
+  //   date, title, items: [...], colorway, layout, lockedBy, lockedAt
+  // }
+  // Cache: _triviaDailyArchiveCache[date] = snapshot | null (not found)
+  const _triviaDailyArchiveCache = {};
+
+  window._triviaLockAsDaily = function() {
+    const status = document.getElementById('triviaDailyLockStatus');
+    const btn = document.getElementById('triviaDailyLockBtn');
+    if (!_triviaData || !_triviaData.items || !_triviaData.items.length) {
+      if (status) status.textContent = 'No board rendered yet.';
+      return;
+    }
+    const user = firebase && firebase.auth && firebase.auth().currentUser;
+    if (!user) { if (status) status.textContent = 'Sign in required.'; return; }
+    if (typeof window.isAdmin !== 'function' || !window.isAdmin()) {
+      if (status) status.textContent = 'Admin only.';
+      return;
+    }
+    // Lock for the preview date if one is set (so admins can pre-lock
+    // tomorrow's daily) — otherwise lock for today.
+    const date = _triviaPreviewDate || _triviaTodayStr();
+    const cwSel = document.getElementById('triviaColorway').value;
+    const customColor = cwSel === 'custom' ? document.getElementById('triviaColor').value : null;
+    const layoutSel = document.getElementById('triviaLayout').value;
+    const titleEl = document.getElementById('triviaGameName');
+    const title = (titleEl && titleEl.value && titleEl.value.trim())
+      || _triviaData.title
+      || 'Daily Board';
+
+    // Strip the items down to fields we'll need for replay. _renderBoard
+    // accepts answer/value/hint/team/category/rank/headshot — keep all
+    // of them so the locked board renders identically.
+    const items = _triviaData.items.map(it => ({
+      rank: it.rank != null ? it.rank : '',
+      answer: it.answer || '',
+      value: it.value != null ? it.value : '',
+      hint: it.hint || '',
+      team: it.team || '',
+      category: it.category || '',
+      headshot: it.headshot || ''
+    }));
+
+    const doc = {
+      date: date,
+      title: title,
+      items: items,
+      itemCount: items.length,
+      colorway: cwSel,
+      customColor: customColor,
+      layout: layoutSel,
+      lockedBy: user.uid,
+      lockedByEmail: user.email || '',
+      lockedAt: new Date().toISOString()
+    };
+
+    if (btn) { btn.textContent = '💾 SAVING…'; btn.style.opacity = '.6'; }
+    if (status) status.textContent = '';
+    firebase.firestore().collection('trivia_daily').doc(date).set(doc).then(() => {
+      _triviaDailyArchiveCache[date] = doc;
+      if (btn) { btn.textContent = '✓ LOCKED'; btn.style.opacity = '1'; }
+      if (status) status.textContent = 'Locked for ' + date + ' · ' + items.length + ' items';
+      // Refresh archive list if open.
+      const archive = document.getElementById('triviaDailyArchive');
+      if (archive && archive.style.display !== 'none') _triviaLoadArchive();
+      setTimeout(() => { if (btn) btn.textContent = '💾 LOCK AS DAILY'; }, 2500);
+    }).catch(err => {
+      console.error('[TriviaDaily] Save error:', err);
+      if (btn) { btn.textContent = '💾 SAVE FAILED'; btn.style.opacity = '1'; }
+      if (status) status.textContent = (err && err.message) || 'Save failed.';
+      setTimeout(() => { if (btn) btn.textContent = '💾 LOCK AS DAILY'; }, 3000);
+    });
+  };
+
+  // Returns a Promise that resolves to the locked snapshot for date, or
+  // null if there isn't one. Caches per-date so repeat lookups don't hit
+  // Firestore. Resolves to null (not throws) on permission/network error
+  // so the caller can fall back to the template-based daily.
+  function _triviaFetchLockedDaily(date) {
+    if (Object.prototype.hasOwnProperty.call(_triviaDailyArchiveCache, date)) {
+      return Promise.resolve(_triviaDailyArchiveCache[date]);
+    }
+    if (typeof firebase === 'undefined' || !firebase.firestore) return Promise.resolve(null);
+    return firebase.firestore().collection('trivia_daily').doc(date).get().then(snap => {
+      const data = snap && snap.exists ? snap.data() : null;
+      _triviaDailyArchiveCache[date] = data;
+      return data;
+    }).catch(err => {
+      console.warn('[TriviaDaily] fetch failed for ' + date + ':', err && err.message);
+      return null;
+    });
+  }
+
+  // Renders a locked snapshot directly via _renderBoard, bypassing the
+  // template/filter pipeline. The data shape mirrors what _triviaGenerate
+  // builds, so _renderBoard works unchanged.
+  function _triviaRenderLockedDaily(snap) {
+    // Restore colorway/layout from the snapshot so the board looks how
+    // it was locked. Falls back to current settings if the snapshot is
+    // missing those fields (older docs).
+    if (snap.colorway) {
+      const cw = document.getElementById('triviaColorway');
+      if (cw) cw.value = snap.colorway;
+      if (snap.colorway === 'custom' && snap.customColor) {
+        const cc = document.getElementById('triviaColor');
+        if (cc) cc.value = snap.customColor;
+      }
+    }
+    if (snap.layout) {
+      const lo = document.getElementById('triviaLayout');
+      if (lo) lo.value = snap.layout;
+    }
+    const data = {
+      title: snap.title || 'Daily Board',
+      items: snap.items || [],
+      _locked: true,
+      _lockedDate: snap.date
+    };
+    if (typeof _renderBoard === 'function') _renderBoard(data);
+  }
+
+  window._triviaToggleArchive = function() {
+    const panel = document.getElementById('triviaDailyArchive');
+    if (!panel) return;
+    if (panel.style.display === 'none') {
+      panel.style.display = '';
+      _triviaLoadArchive();
+    } else {
+      panel.style.display = 'none';
+    }
+  };
+
+  function _triviaLoadArchive() {
+    const list = document.getElementById('triviaDailyArchiveList');
+    if (!list) return;
+    if (typeof firebase === 'undefined' || !firebase.firestore) {
+      list.innerHTML = '<div style="color:var(--text2);font-size:.78rem;padding:6px">Firestore unavailable.</div>';
+      return;
+    }
+    list.innerHTML = '<div style="color:var(--text2);font-size:.78rem;padding:6px">Loading…</div>';
+    // orderBy date descending so newest dailies sit on top. Limit 100 —
+    // can paginate later if the archive grows past that.
+    firebase.firestore().collection('trivia_daily').orderBy('date', 'desc').limit(100).get().then(snap => {
+      if (snap.empty) {
+        list.innerHTML = '<div style="color:var(--text2);font-size:.78rem;padding:6px">No locked dailies yet. Build a board, click LOCK AS DAILY to archive it.</div>';
+        return;
+      }
+      let html = '';
+      snap.forEach(doc => {
+        const d = doc.data();
+        const isAdm = (typeof window.isAdmin === 'function' && window.isAdmin());
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);transition:border-color .2s" onmouseenter="this.style.borderColor=\'var(--accent)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">';
+        html += '<div style="flex:1;min-width:0;cursor:pointer" onclick="window._triviaPlayArchived(\'' + d.date + '\')">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#ffd166">' + _esc(d.date) + '</div>';
+        html += '<div style="font-size:.78rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _esc(d.title || 'Daily Board') + '</div>';
+        html += '<div style="font-size:.65rem;color:var(--text2)">' + (d.itemCount || (d.items && d.items.length) || '?') + ' cells</div>';
+        html += '</div>';
+        if (isAdm) {
+          html += '<button onclick="window._triviaDeleteArchived(\'' + d.date + '\',this)" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:.7rem;padding:2px 6px;opacity:.5" title="Delete locked daily">✕</button>';
+        }
+        html += '</div>';
+      });
+      list.innerHTML = html;
+    }).catch(err => {
+      console.error('[TriviaDaily] archive load error:', err);
+      list.innerHTML = '<div style="color:#ef4444;font-size:.78rem;padding:6px">Failed to load archive.</div>';
+    });
+  }
+
+  // Replays an archived daily exactly as it was locked. Marks the run as
+  // a non-streak replay so completing an old archived board doesn't
+  // bump streak (those are "today" rewards only).
+  window._triviaPlayArchived = function(date) {
+    _triviaFetchLockedDaily(date).then(snap => {
+      if (!snap) {
+        alert('That archived daily could not be loaded.');
+        return;
+      }
+      _triviaDailyRun = {
+        date: date,
+        startTime: Date.now(),
+        results: new Array(snap.items.length).fill(null),
+        // Archived plays are not "today" — treat like preview for state
+        // purposes (no streak bump, no completion overwrite of a real
+        // run on that date). Result modal still renders normally.
+        preview: true,
+        archived: true
+      };
+      _triviaRenderLockedDaily(snap);
+      // _renderBoard is sync; start the game immediately.
+      if (typeof window._triviaStartGame === 'function') window._triviaStartGame();
+      // Scroll the board into view (the archive panel is up top; users
+      // need to see the board they're about to play).
+      setTimeout(() => {
+        const a = document.getElementById('triviaBoardArea');
+        if (a) a.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    });
+  };
+
+  window._triviaDeleteArchived = function(date, btnEl) {
+    if (!confirm('Delete the locked daily for ' + date + '? This will free that date back to the auto-shuffle.')) return;
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    firebase.firestore().collection('trivia_daily').doc(date).delete().then(() => {
+      delete _triviaDailyArchiveCache[date];
+      if (btnEl && btnEl.closest) {
+        const row = btnEl.closest('div[onmouseenter]');
+        if (row && row.remove) row.remove();
+      }
+    }).catch(err => {
+      console.error('[TriviaDaily] delete failed:', err);
+      alert('Delete failed: ' + (err && err.message));
+    });
+  };
+
+  // ===== REPORT THIS CELL =====
+  // Lets any player flag a cell whose answer/stat looks wrong. Writes to
+  // trivia_reports with strict shape (rules enforce field caps + types).
+  // Anyone can create — no auth — so anonymous players can still report.
+  // Admin reads + deletes via the REPORTS button in the admin row.
+  let _triviaReportPendingIdx = -1;
+
+  window._triviaOpenReport = function(idx) {
+    if (!_triviaData || !_triviaData.items || !_triviaData.items[idx]) return;
+    const item = _triviaData.items[idx];
+    _triviaReportPendingIdx = idx;
+    const cell = document.querySelector('.trivia-cell[data-idx="' + idx + '"]');
+    const lastGuess = (cell && cell.dataset && cell.dataset.lastGuess) || '';
+    const ctx = document.getElementById('triviaReportContext');
+    if (ctx) {
+      let html = '<div><strong style="color:var(--text)">Cell ' + (idx + 1) + ':</strong> ' + _esc(item.answer || '') + '</div>';
+      if (item.value != null && item.value !== '') html += '<div><strong style="color:var(--text)">Stat:</strong> ' + _esc(String(item.value)) + (item.category ? ' ' + _esc(item.category) : '') + '</div>';
+      if (lastGuess) html += '<div><strong style="color:var(--text)">Your last guess:</strong> ' + _esc(lastGuess) + '</div>';
+      ctx.innerHTML = html;
+    }
+    const reasonEl = document.getElementById('triviaReportReason');
+    if (reasonEl) reasonEl.value = '';
+    const confirmEl = document.getElementById('triviaReportConfirm');
+    if (confirmEl) confirmEl.textContent = '';
+    const submitBtn = document.getElementById('triviaReportSubmitBtn');
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.textContent = 'SUBMIT REPORT'; }
+    document.getElementById('triviaReportModal').style.display = 'flex';
+  };
+
+  window._triviaSubmitReport = function() {
+    if (_triviaReportPendingIdx < 0) return;
+    if (!_triviaData || !_triviaData.items || !_triviaData.items[_triviaReportPendingIdx]) return;
+    if (typeof firebase === 'undefined' || !firebase.firestore) {
+      alert('Firestore unavailable.');
+      return;
+    }
+    const idx = _triviaReportPendingIdx;
+    const item = _triviaData.items[idx];
+    const cell = document.querySelector('.trivia-cell[data-idx="' + idx + '"]');
+    const lastGuess = (cell && cell.dataset && cell.dataset.lastGuess) || '';
+    const reasonRaw = (document.getElementById('triviaReportReason').value || '').slice(0, 500).trim();
+    // Date: prefer the active daily run's date; otherwise tag the report
+    // with today's date so admin can still group by day even for non-daily
+    // boards (templates, surprise me, archived replays).
+    const date = (_triviaDailyRun && _triviaDailyRun.date) || _triviaTodayStr();
+    const title = (_triviaData && _triviaData.title) ? String(_triviaData.title).slice(0, 200) : '';
+    const expected = String(item.answer || '').slice(0, 200);
+    const guessTrim = String(lastGuess).slice(0, 200);
+
+    // Shape MUST match the rules' allowlist exactly — Firestore rules
+    // reject the write otherwise (and we want loud failure if a field is
+    // accidentally renamed).
+    const doc = {
+      date: date,
+      itemIdx: idx,
+      expected: expected,
+      guess: guessTrim,
+      reason: reasonRaw,
+      title: title,
+      createdAt: new Date().toISOString()
+    };
+
+    const submitBtn = document.getElementById('triviaReportSubmitBtn');
+    const confirmEl = document.getElementById('triviaReportConfirm');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '.6'; submitBtn.textContent = 'SUBMITTING…'; }
+    firebase.firestore().collection('trivia_reports').add(doc).then(() => {
+      if (submitBtn) { submitBtn.textContent = '✓ SUBMITTED'; }
+      if (confirmEl) confirmEl.textContent = 'Thanks — admin will review.';
+      setTimeout(() => {
+        const m = document.getElementById('triviaReportModal');
+        if (m) m.style.display = 'none';
+      }, 1200);
+    }).catch(err => {
+      console.error('[TriviaReport] submit error:', err);
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.textContent = 'SUBMIT REPORT'; }
+      if (confirmEl) { confirmEl.style.color = '#ef4444'; confirmEl.textContent = 'Submit failed: ' + (err && err.message); }
+    });
+  };
+
+  window._triviaOpenReportsPanel = function() {
+    if (typeof window.isAdmin !== 'function' || !window.isAdmin()) {
+      alert('Admin only.');
+      return;
+    }
+    const panel = document.getElementById('triviaReportsPanel');
+    if (!panel) return;
+    panel.style.display = 'flex';
+    _triviaLoadReports();
+  };
+
+  function _triviaLoadReports() {
+    const list = document.getElementById('triviaReportsList');
+    if (!list) return;
+    if (typeof firebase === 'undefined' || !firebase.firestore) {
+      list.innerHTML = '<div style="color:var(--text2);padding:8px">Firestore unavailable.</div>';
+      return;
+    }
+    list.innerHTML = '<div style="color:var(--text2);padding:8px">Loading…</div>';
+    firebase.firestore().collection('trivia_reports').orderBy('createdAt', 'desc').limit(100).get().then(snap => {
+      if (snap.empty) {
+        list.innerHTML = '<div style="color:var(--text2);padding:8px">No reports yet.</div>';
+        return;
+      }
+      let html = '';
+      snap.forEach(doc => {
+        const d = doc.data();
+        const dateStr = d.createdAt ? new Date(d.createdAt).toLocaleString() : '';
+        html += '<div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);display:flex;flex-direction:column;gap:4px">';
+        html += '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">';
+        html += '<div style="flex:1;min-width:0">';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;letter-spacing:1px;color:#ffd166">' + _esc(d.date || '') + ' · cell ' + ((d.itemIdx != null ? d.itemIdx + 1 : '?')) + '</div>';
+        if (d.title) html += '<div style="font-size:.7rem;color:var(--text2);margin-bottom:3px">' + _esc(d.title) + '</div>';
+        html += '<div><strong>Expected:</strong> ' + _esc(d.expected || '') + '</div>';
+        if (d.guess) html += '<div><strong>Guess:</strong> ' + _esc(d.guess) + '</div>';
+        if (d.reason) html += '<div style="margin-top:3px;color:var(--text2);white-space:pre-wrap">' + _esc(d.reason) + '</div>';
+        html += '<div style="font-size:.65rem;color:var(--text2);margin-top:3px">' + _esc(dateStr) + '</div>';
+        html += '</div>';
+        html += '<button onclick="window._triviaDeleteReport(\'' + doc.id + '\',this)" style="background:none;border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:.7rem;padding:4px 8px;border-radius:6px;flex-shrink:0" title="Resolve / delete">✓</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+      list.innerHTML = html;
+    }).catch(err => {
+      console.error('[TriviaReports] load error:', err);
+      list.innerHTML = '<div style="color:#ef4444;padding:8px">Failed to load reports.</div>';
+    });
+  }
+
+  window._triviaDeleteReport = function(id, btnEl) {
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    firebase.firestore().collection('trivia_reports').doc(id).delete().then(() => {
+      if (btnEl && btnEl.closest) {
+        const row = btnEl.closest('div[style*="border:1px solid"]');
+        if (row && row.remove) row.remove();
+      }
+    }).catch(err => {
+      console.error('[TriviaReports] delete failed:', err);
+      alert('Delete failed: ' + (err && err.message));
+    });
+  };
 
   window._triviaGenerate = async function() {
     const useCustom = document.getElementById('triviaCustomPromptToggle').checked;

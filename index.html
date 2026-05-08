@@ -2010,6 +2010,17 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </select>
 </label>
 
+<!-- Season-type filter: regular season (default) vs postseason. Postseason
+     stats are stored as a nested 'post' field per season in legend_careers,
+     populated from nflverse for 1999+ seasons. Hidden when type='draft'
+     since draft mode doesn't have a regular/post split. -->
+<label id="triviaFilterSeasonTypeLabel" style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Season Type
+<select id="triviaFilterSeasonType" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="reg" selected>Regular Season</option>
+<option value="post">Postseason</option>
+</select>
+</label>
+
 <label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Stat Category
 <select id="triviaFilterStat" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
 <option value="fpts">Fantasy Pts</option>
@@ -2147,6 +2158,16 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
     // Hide stat category for draft mode (not needed)
     var statEl = document.getElementById('triviaFilterStat').closest('label');
     if (statEl) statEl.style.display = t === 'draft' ? 'none' : '';
+    // Postseason filter doesn't apply to draft mode (no playoffs in
+    // draft selection) and we don't currently support postseason for
+    // single-game mode (WEEKLY_STATS doesn't separate playoff games).
+    var stEl = document.getElementById('triviaFilterSeasonTypeLabel');
+    if (stEl) stEl.style.display = (t === 'draft' || t === 'game') ? 'none' : 'flex';
+    // If we're switching to a mode that doesn't support postseason,
+    // force the value back to 'reg' so subsequent generations use the
+    // right path.
+    var stSel = document.getElementById('triviaFilterSeasonType');
+    if (stSel && (t === 'draft' || t === 'game')) stSel.value = 'reg';
   });
 })();
 </script>
@@ -36413,7 +36434,14 @@ window.fmtHeight = fmtHeight;
     { title: '2025 Fantasy PPG Leaders', desc: 'Top 20 by PPG last year',
       filters: { type: 'season', stat: 'ppg', year: '2025', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
     { title: '2024 First-Round Picks', desc: 'Round 1 · skill positions',
-      filters: { type: 'draft', stat: 'fpts', year: '2024', count: 20, conf: 'all', team: 'all', draftRound: '1', positions: ['QB','RB','WR','TE'] } }
+      filters: { type: 'draft', stat: 'fpts', year: '2024', count: 20, conf: 'all', team: 'all', draftRound: '1', positions: ['QB','RB','WR','TE'] } },
+    // Postseason templates — read each season's nested 'post' field.
+    { title: 'Career Playoff Pass Yds', desc: 'Top 20 all-time postseason · QB',
+      filters: { type: 'career', stat: 'py', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB'], seasonType: 'post' } },
+    { title: 'Career Playoff Rush Yds', desc: 'Top 20 all-time postseason · RB',
+      filters: { type: 'career', stat: 'ry', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['RB'], seasonType: 'post' } },
+    { title: 'Career Playoff Rec Yds', desc: 'Top 20 all-time postseason · WR/TE',
+      filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'], seasonType: 'post' } }
   ];
 
   function _triviaApplyTemplate(t) {
@@ -36432,6 +36460,8 @@ window.fmtHeight = fmtHeight;
     setVal('triviaFilterConf', f.conf || 'all');
     setVal('triviaFilterTeam', f.team || 'all');
     if (f.draftRound != null) setVal('triviaFilterDraftRound', f.draftRound);
+    // Default to regular season unless the template explicitly says postseason.
+    setVal('triviaFilterSeasonType', f.seasonType || 'reg');
 
     // Position checkboxes — sync each one's checked state and fire change so the
     // existing label-styling handler updates ✓/✗ visuals.
@@ -36515,7 +36545,15 @@ window.fmtHeight = fmtHeight;
     { title: 'All-Time Total TDs', desc: 'Career — all positions',
       filters: { type: 'career', stat: 'totalTd', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
     { title: '2023 Fantasy PPG', desc: 'Top 20 by PPG · two seasons back',
-      filters: { type: 'season', stat: 'ppg', year: '2023', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } }
+      filters: { type: 'season', stat: 'ppg', year: '2023', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
+    // Postseason entries widen the daily rotation so playoff boards
+    // surface naturally. Same deterministic shuffle picks them.
+    { title: 'Career Playoff Pass Yds', desc: 'Top 20 all-time postseason · QB',
+      filters: { type: 'career', stat: 'py', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB'], seasonType: 'post' } },
+    { title: 'Career Playoff Rush Yds', desc: 'Top 20 all-time postseason · RB',
+      filters: { type: 'career', stat: 'ry', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['RB'], seasonType: 'post' } },
+    { title: 'Career Playoff Rec Yds', desc: 'Top 20 all-time postseason · WR/TE',
+      filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'], seasonType: 'post' } }
   ];
 
   const _TRIVIA_DAILY_KEY = 'mff_triviaDaily';
@@ -37491,6 +37529,13 @@ window.fmtHeight = fmtHeight;
       const team = document.getElementById('triviaFilterTeam').value;
       const posSelect = document.getElementById('triviaFilterPos');
       const positions = Array.from(posSelect.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+      // v0.10.6: 'reg' (default) | 'post'. Postseason mode reads from
+      // each season's nested s.post field (populated from nflverse for
+      // 1999+) instead of the top-level season fields. Game mode and
+      // draft mode ignore this — neither has a regular/post split that
+      // makes sense in the current data.
+      const seasonType = (document.getElementById('triviaFilterSeasonType') || {}).value || 'reg';
+      const isPost = seasonType === 'post';
 
       if (!positions.length) { alert('Select at least one position'); return; }
 
@@ -37515,7 +37560,102 @@ window.fmtHeight = fmtHeight;
       const allEntries = [];
       const _seenKey = new Set();
 
-      if (filterType === 'draft') {
+      // v0.10.6: postseason short-circuit. Reads exclusively from
+      // LEGEND_CAREERS (and falls through to D[].career.post if present)
+      // since WEEKLY_STATS doesn't store playoff data. Skips the rest of
+      // the structured-filter pipeline and pushes synthesized entries
+      // directly into allEntries.
+      if (isPost) {
+        const _postPosMap = _dPosMap;
+        // Pull D[]-attached careers in addition to standalone LEGEND_CAREERS
+        // so active players whose D[].career was populated outside the
+        // legend_careers merge still surface playoff data.
+        const _postSources = {};
+        if (typeof LEGEND_CAREERS !== 'undefined') {
+          for (const n in LEGEND_CAREERS) _postSources[n] = LEGEND_CAREERS[n];
+        }
+        if (typeof D !== 'undefined') {
+          D.forEach(d => {
+            if (!d.career || !d.career.length) return;
+            // Only override if D's career has at least one post-bearing
+            // season; otherwise legend_careers wins (fuller coverage).
+            if (d.career.some(s => s && s.post)) _postSources[d.n] = d.career;
+          });
+        }
+
+        const isCareerMode = (filterType === 'career');
+        for (const name in _postSources) {
+          const career = _postSources[name];
+          if (!career || !career.length) continue;
+          const pos = _postPosMap[name] || (typeof D !== 'undefined' ? (D.find(p => p.n === name) || {}).s : '') || '';
+          if (!positions.includes(pos)) continue;
+
+          if (isCareerMode) {
+            // Aggregate post fields across all seasons for this player.
+            let py=0, ptd=0, pint=0, ry=0, rtd=0, ra=0, rec=0, rcy=0, rctd=0, fl=0, fpts=0, gp=0;
+            const teamStat = {}; // team -> sum of active stat (for primary-team logo)
+            for (const s of career) {
+              const p = s && s.post;
+              if (!p) continue;
+              gp += p.gp||0;
+              py += p.py||0; ptd += p.ptd||0; pint += p.int||0;
+              ry += p.ry||0; rtd += p.rtd||0; ra += p.ra||0;
+              rec += p.rc||0; rcy += p.rcy||0; rctd += p.rctd||0;
+              fl += p.fl||0; fpts += p.fpts||0;
+              const tm = s.tm || '';
+              if (tm) {
+                const v = stat === 'totalTd' ? ((p.ptd||0) + (p.rtd||0) + (p.rctd||0))
+                          : stat === 'fpts' || stat === 'ppg' ? (p.fpts||0)
+                          : stat === 'rec' ? (p.rc||0)
+                          : (p[stat] || 0);
+                teamStat[tm] = (teamStat[tm] || 0) + v;
+              }
+            }
+            if (gp === 0) continue;
+            // Pick the team where most of the stat was accumulated; falls
+            // back to the player's most recent post-bearing team's tm.
+            let bestTeam = '';
+            let bestVal = -1;
+            for (const tm in teamStat) {
+              if (teamStat[tm] > bestVal) { bestVal = teamStat[tm]; bestTeam = tm; }
+            }
+            if (!bestTeam) {
+              const lastWith = [...career].reverse().find(s => s && s.post && s.tm);
+              if (lastWith) bestTeam = lastWith.tm;
+            }
+            if (conf !== 'all' && _teamConf[bestTeam] !== conf) continue;
+            if (team !== 'all' && bestTeam !== team) continue;
+            const ppg = gp > 0 ? Math.round((fpts/gp)*10)/10 : 0;
+            allEntries.push({
+              name, pos, team: bestTeam, gp,
+              fpts: Math.round(fpts*10)/10, ppg,
+              py, ptd, 'int': pint, ry, rtd, rec, rcy, rctd, ra, fl,
+              tgt: 0, totalTd: ptd + rtd + rctd, _isCareer: true
+            });
+          } else {
+            // SEASON mode (postseason): emit one entry per season that
+            // has a post payload. Year filter applies to the season's yr.
+            for (const s of career) {
+              const p = s && s.post;
+              if (!p) continue;
+              if (!s.yr) continue;
+              if (year !== 'all' && s.yr !== parseInt(year)) continue;
+              const tm = s.tm || '';
+              if (conf !== 'all' && _teamConf[tm] !== conf) continue;
+              if (team !== 'all' && tm !== team) continue;
+              const ppg = (p.gp||0) > 0 ? Math.round(((p.fpts||0)/p.gp)*10)/10 : 0;
+              allEntries.push({
+                name, pos, team: tm, yr: s.yr, gp: p.gp||0,
+                fpts: Math.round((p.fpts||0)*10)/10, ppg,
+                py: p.py||0, ptd: p.ptd||0, 'int': p.int||0,
+                ry: p.ry||0, rtd: p.rtd||0, rec: p.rc||0,
+                rcy: p.rcy||0, rctd: p.rctd||0, ra: p.ra||0, fl: p.fl||0,
+                tgt: 0, totalTd: (p.ptd||0)+(p.rtd||0)+(p.rctd||0)
+              });
+            }
+          }
+        }
+      } else if (filterType === 'draft') {
         // === NFL DRAFT MODE — uses COMBINE_DATA ===
         const draftRound = document.getElementById('triviaFilterDraftRound').value;
         const draftEntries = [];
@@ -37596,6 +37736,24 @@ window.fmtHeight = fmtHeight;
         // === CAREER TOTALS MODE — aggregate all seasons per player ===
         const _careerMap = {}; // name -> aggregated stats
 
+        // Map the user's selected stat to the per-week / per-season field
+        // we should accumulate when scoring the "primary team" for the
+        // career-team logo. For ppg we use fpts (team where they scored
+        // most fantasy points); totalTd sums ptd+rtd+rctd.
+        function _statValueWeek(w) {
+          if (stat === 'totalTd') return (w.ptd||0) + (w.rtd||0) + (w.rctd||0);
+          if (stat === 'ppg' || stat === 'fpts') return (w.fpts||0);
+          return (w[stat] || 0);
+        }
+        function _statValueSeason(s) {
+          if (stat === 'totalTd') return (s.ptd||0) + (s.rtd||0) + (s.rctd||0);
+          if (stat === 'ppg' || stat === 'fpts') return (s.fpts||0);
+          // D[].career uses 'rc' for receptions where weekly uses 'rec';
+          // remap so the team-attribution lookup doesn't undercount.
+          if (stat === 'rec') return (s.rc||0);
+          return (s[stat] || 0);
+        }
+
         // From WEEKLY_STATS
         if (typeof WEEKLY_STATS !== 'undefined') {
           Object.keys(WEEKLY_STATS).forEach(name => {
@@ -37607,17 +37765,28 @@ window.fmtHeight = fmtHeight;
             Object.keys(ws.seasons).forEach(szn => {
               const weeks = ws.seasons[szn];
               if (!weeks || !weeks.length) return;
-              if (!_careerMap[name]) _careerMap[name] = { name, pos, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0, gp:0, seasons:0, totalTd:0, _yrs:[] };
+              if (!_careerMap[name]) _careerMap[name] = { name, pos, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0, gp:0, seasons:0, totalTd:0, _yrs:[], _teamStat:{} };
               const c = _careerMap[name];
               let sznGp = 0;
+              const _sznYr = parseInt(szn);
+              // Resolve the season's primary team once (used as fallback
+              // when w.tm is missing — happens on some older seasons).
+              const _sznTeam = (typeof getCareerTeamAbbr === 'function')
+                ? getCareerTeamAbbr(name, _sznYr, '')
+                : '';
               weeks.forEach(w => {
                 if (w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0) { c.gp++; sznGp++; }
                 c.py += w.py||0; c.ptd += w.ptd||0; c['int'] += w.int||0;
                 c.ry += w.ry||0; c.rtd += w.rtd||0; c.ra += w.ra||0;
                 c.rec += w.rec||0; c.rcy += w.rcy||0; c.rctd += w.rctd||0;
                 c.tgt += w.tgt||0; c.fl += w.fl||0; c.fpts += w.fpts||0;
+                // Per-team accumulation for primary-team logo selection.
+                const _wkTeam = w.tm || _sznTeam;
+                if (_wkTeam) {
+                  c._teamStat[_wkTeam] = (c._teamStat[_wkTeam] || 0) + _statValueWeek(w);
+                }
               });
-              if (sznGp > 0) { c.seasons++; c._yrs.push(parseInt(szn)); }
+              if (sznGp > 0) { c.seasons++; c._yrs.push(_sznYr); }
               _seenKey.add(name + '|' + szn);
             });
           });
@@ -37633,7 +37802,7 @@ window.fmtHeight = fmtHeight;
               if (!s.yr) return;
               const key = d.n + '|' + s.yr;
               if (_seenKey.has(key)) return;
-              if (!_careerMap[d.n]) _careerMap[d.n] = { name: d.n, pos, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0, gp:0, seasons:0, totalTd:0, _yrs:[] };
+              if (!_careerMap[d.n]) _careerMap[d.n] = { name: d.n, pos, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0, gp:0, seasons:0, totalTd:0, _yrs:[], _teamStat:{} };
               const c = _careerMap[d.n];
               c.py += s.py||0; c.ptd += s.ptd||0; c['int'] += s.int||0;
               c.ry += s.ry||0; c.rtd += s.rtd||0; c.ra += s.ra||0;
@@ -37642,6 +37811,13 @@ window.fmtHeight = fmtHeight;
               c.gp += s.gp||0;
               c.seasons++;
               c._yrs.push(s.yr);
+              // Per-team accumulation for primary-team logo selection.
+              // D[].career may carry s.tm; if not, look up via team history.
+              const _seasonTeam = s.tm || (typeof getCareerTeamAbbr === 'function'
+                ? getCareerTeamAbbr(d.n, s.yr, '') : '');
+              if (_seasonTeam) {
+                c._teamStat[_seasonTeam] = (c._teamStat[_seasonTeam] || 0) + _statValueSeason(s);
+              }
             });
           });
         }
@@ -37651,12 +37827,25 @@ window.fmtHeight = fmtHeight;
           c.fpts = Math.round(c.fpts * 10) / 10;
           c.ppg = c.gp > 0 ? Math.round((c.fpts / c.gp) * 10) / 10 : 0;
           c.totalTd = c.ptd + c.rtd + c.rctd;
-          // Get current team for logo
-          const latestYr = c._yrs.length ? Math.max(...c._yrs) : null;
-          c.team = latestYr ? (_getTeamForPlayerYear(c.name, latestYr) || '') : '';
-          if (!c.team && typeof D !== 'undefined') {
-            const dEntry = D.find(p => p.n === c.name);
-            if (dEntry) c.team = dEntry.t || '';
+          // v0.10.5: pick the team where the player accumulated the MOST of
+          // the active stat (Vikings for Peterson rushing, Cowboys for
+          // Smith, etc.). Falls back to latest-season team only if the
+          // per-team table is empty (older players, dataset gaps).
+          let bestTeam = '', bestVal = -1;
+          if (c._teamStat) {
+            for (const tm in c._teamStat) {
+              if (c._teamStat[tm] > bestVal) { bestVal = c._teamStat[tm]; bestTeam = tm; }
+            }
+          }
+          if (bestTeam) {
+            c.team = bestTeam;
+          } else {
+            const latestYr = c._yrs.length ? Math.max(...c._yrs) : null;
+            c.team = latestYr ? (_getTeamForPlayerYear(c.name, latestYr) || '') : '';
+            if (!c.team && typeof D !== 'undefined') {
+              const dEntry = D.find(p => p.n === c.name);
+              if (dEntry) c.team = dEntry.t || '';
+            }
           }
           // Conference filter
           if (conf !== 'all') {
@@ -37833,8 +38022,11 @@ window.fmtHeight = fmtHeight;
       const teamLabel = team === 'all' ? '' : ' ' + team;
       const posLabel = positions.length === 4 ? '' : ' ' + positions.join('/');
       const typeLabel = filterType === 'game' ? 'Single Game' : (filterType === 'career' ? '' : '');
+      // Postseason mode prepends a "Postseason" qualifier to the title so
+      // players immediately see this is a playoff board, not regular season.
+      const postLabel = isPost ? 'Postseason ' : '';
       const gameName = document.getElementById('triviaGameName').value.trim();
-      const title = gameName || `${yearLabel}${weekLabel} Top ${topN.length}${posLabel} ${typeLabel} ${statLabel.toUpperCase()} in ${confLabel}${teamLabel}`.replace(/\s+/g,' ').trim();
+      const title = gameName || `${yearLabel}${weekLabel} Top ${topN.length}${posLabel} ${typeLabel} ${postLabel}${statLabel.toUpperCase()} in ${confLabel}${teamLabel}`.replace(/\s+/g,' ').trim();
 
       // Build items
       const items = topN.map((s, i) => {

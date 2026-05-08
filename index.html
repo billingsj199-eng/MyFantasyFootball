@@ -14465,6 +14465,21 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
     var hasOldNFL = kw.career.some(function(s) { return s.yr < 2025; });
     if (hasOldNFL) { kw.career = []; kw._retired = false; }
   }
+  // Marvin Harrison (HOF WR, Colts 1996-2008) vs Marvin Harrison Jr. (Cardinals
+  // 2024+). Some data sources (weekly_stats.js, ALL_PLAYERS_DB) merged the
+  // rookie's stats under the bare "Marvin Harrison" key, inflating the dad's
+  // career totals by ~100 rec in trivia. Split: any season >= 2024 belongs
+  // to Jr.; any season < 2024 is the HOF dad. The dad is _retired (career
+  // ended 2008) so D entry should keep only pre-2024 seasons. The Jr. entry
+  // (separate D row at offset ~1.67M in all_players.js) keeps its own data.
+  var mh = D.find(function(d) { return d.n === 'Marvin Harrison' && d.s === 'WR'; });
+  if (mh && mh.career && mh.career.length > 0) {
+    var modernSeasons = mh.career.filter(function(s) { return s.yr >= 2024; });
+    if (modernSeasons.length > 0) {
+      // Drop the rookie's seasons from the dad's career array.
+      mh.career = mh.career.filter(function(s) { return s.yr < 2024; });
+    }
+  }
 })();
 
 

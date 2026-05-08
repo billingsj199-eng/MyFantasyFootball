@@ -2037,7 +2037,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </select>
 </label>
 
-<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Year
+<label id="triviaFilterYearLabel" style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Year
 <select id="triviaFilterYear" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
 <option value="all">All-Time</option>
 <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
@@ -2047,6 +2047,22 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option>
 <option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option>
 <option value="2007">2007</option><option value="2006">2006</option>
+</select>
+</label>
+
+<label id="triviaFilterEraLabel" style="font-size:.78rem;color:var(--text2);display:none;flex-direction:column;gap:3px">Era
+<select id="triviaFilterEra" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="all">All-Time</option>
+<option value="since-2020">Since 2020</option>
+<option value="since-2010">Since 2010</option>
+<option value="since-2000">Since 2000</option>
+<option value="since-1999">Modern Era (Since 1999)</option>
+<option value="2020-2029">2020s</option>
+<option value="2010-2019">2010s</option>
+<option value="2000-2009">2000s</option>
+<option value="1990-1999">1990s</option>
+<option value="1980-1989">1980s</option>
+<option value="1970-1979">1970s</option>
 </select>
 </label>
 
@@ -2152,9 +2168,11 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
     var t = this.value;
     document.getElementById('triviaFilterWeekLabel').style.display = t === 'game' ? 'flex' : 'none';
     document.getElementById('triviaFilterDraftRoundLabel').style.display = t === 'draft' ? 'flex' : 'none';
-    // Hide year for career mode
+    // Hide year for career mode (era selector takes its slot instead)
     var yearEl = document.getElementById('triviaFilterYear').closest('label');
     if (yearEl) yearEl.style.display = t === 'career' ? 'none' : '';
+    var eraEl = document.getElementById('triviaFilterEraLabel');
+    if (eraEl) eraEl.style.display = t === 'career' ? 'flex' : 'none';
     // Hide stat category for draft mode (not needed)
     var statEl = document.getElementById('triviaFilterStat').closest('label');
     if (statEl) statEl.style.display = t === 'draft' ? 'none' : '';
@@ -36513,6 +36531,7 @@ window.fmtHeight = fmtHeight;
     setVal('triviaFilterType', f.type);
     setVal('triviaFilterStat', f.stat);
     setVal('triviaFilterYear', f.year);
+    setVal('triviaFilterEra', f.era || 'all');
     setVal('triviaFilterCount', String(f.count));
     setVal('triviaFilterConf', f.conf || 'all');
     setVal('triviaFilterTeam', f.team || 'all');
@@ -37098,6 +37117,10 @@ window.fmtHeight = fmtHeight;
     if (!f) return null;
     if (f.type !== 'career') return null;
     if (f.year !== 'all') return null;
+    // Reference table is all-time only — skip ref check when an era filter
+    // is active so we don't compare an era-scoped board against the
+    // all-time leaderboard. Cross-check against LEGEND_CAREERS still runs.
+    if ((f.era || 'all') !== 'all') return null;
     if (f.conf !== 'all' || f.team !== 'all') return null;
     const posKey = (f.positions || []).slice().sort().join(',');
     const era = f.isPost ? 'post' : 'reg';
@@ -37120,6 +37143,20 @@ window.fmtHeight = fmtHeight;
     const dPos = {};
     if (typeof D !== 'undefined') D.forEach(d => { if (d.n && d.s) dPos[d.n] = d.s; });
 
+    // Era bounds — apply per-season filtering during aggregation so the
+    // cross-check matches an era-scoped board.
+    const era = f.era || 'all';
+    let eraMin = null, eraMax = null;
+    if (era !== 'all') {
+      if (era.indexOf('since-') === 0) eraMin = parseInt(era.slice(6), 10);
+      else {
+        const m = /^(\d{4})-(\d{4})$/.exec(era);
+        if (m) { eraMin = parseInt(m[1], 10); eraMax = parseInt(m[2], 10); }
+      }
+    }
+    const eraOk = (yr) => (eraMin == null || yr >= eraMin) && (eraMax == null || yr <= eraMax);
+    const eraActive = (eraMin != null) || (eraMax != null);
+
     function statOf(s) {
       if (isPost) {
         const p = s.post;
@@ -37141,7 +37178,10 @@ window.fmtHeight = fmtHeight;
       const pos = dPos[name] || '';
       if (positions.size && !positions.has(pos)) continue;
       let v = 0;
-      for (const s of career) v += statOf(s);
+      for (const s of career) {
+        if (eraActive && s && s.yr && !eraOk(s.yr)) continue;
+        v += statOf(s);
+      }
       if (v > 0) out.push({ name, val: v });
       seenNames.add(name);
     }
@@ -37155,7 +37195,10 @@ window.fmtHeight = fmtHeight;
         const pos = d.s || '';
         if (positions.size && !positions.has(pos)) continue;
         let v = 0;
-        for (const s of d.career) v += statOf(s);
+        for (const s of d.career) {
+          if (eraActive && s && s.yr && !eraOk(s.yr)) continue;
+          v += statOf(s);
+        }
         if (v > 0) out.push({ name: d.n, val: v });
       }
     }
@@ -37880,6 +37923,20 @@ window.fmtHeight = fmtHeight;
       // makes sense in the current data.
       const seasonType = (document.getElementById('triviaFilterSeasonType') || {}).value || 'reg';
       const isPost = seasonType === 'post';
+      // Era is a career-mode-only year-range filter ("since-2010", "2010-2019", etc.).
+      // For non-career modes the era selector is hidden and treated as 'all'.
+      const era = (document.getElementById('triviaFilterEra') || {}).value || 'all';
+      function _parseEra(e) {
+        if (!e || e === 'all') return [null, null];
+        if (e.indexOf('since-') === 0) return [parseInt(e.slice(6), 10), null];
+        const m = /^(\d{4})-(\d{4})$/.exec(e);
+        if (m) return [parseInt(m[1], 10), parseInt(m[2], 10)];
+        return [null, null];
+      }
+      const _eraBounds = _parseEra(era);
+      const _eraMin = _eraBounds[0], _eraMax = _eraBounds[1];
+      const _eraOk = (yr) => (_eraMin == null || yr >= _eraMin) && (_eraMax == null || yr <= _eraMax);
+      const _eraActive = (filterType === 'career') && (era !== 'all');
 
       if (!positions.length) { alert('Select at least one position'); return; }
 
@@ -37938,9 +37995,12 @@ window.fmtHeight = fmtHeight;
             // Aggregate post fields across all seasons for this player.
             let py=0, ptd=0, pint=0, ry=0, rtd=0, ra=0, rec=0, rcy=0, rctd=0, fl=0, fpts=0, gp=0;
             const teamStat = {}; // team -> sum of active stat (for primary-team logo)
+            const _careerYrs = [];
             for (const s of career) {
               const p = s && s.post;
               if (!p) continue;
+              if (_eraActive && s.yr && !_eraOk(s.yr)) continue;
+              if (s.yr) _careerYrs.push(s.yr);
               gp += p.gp||0;
               py += p.py||0; ptd += p.ptd||0; pint += p.int||0;
               ry += p.ry||0; rtd += p.rtd||0; ra += p.ra||0;
@@ -37974,7 +38034,8 @@ window.fmtHeight = fmtHeight;
               name, pos, team: bestTeam, gp,
               fpts: Math.round(fpts*10)/10, ppg,
               py, ptd, 'int': pint, ry, rtd, rec, rcy, rctd, ra, fl,
-              tgt: 0, totalTd: ptd + rtd + rctd, _isCareer: true
+              tgt: 0, totalTd: ptd + rtd + rctd, _isCareer: true,
+              _yrs: _careerYrs
             });
           } else {
             // SEASON mode (postseason): emit one entry per season that
@@ -38109,10 +38170,11 @@ window.fmtHeight = fmtHeight;
             Object.keys(ws.seasons).forEach(szn => {
               const weeks = ws.seasons[szn];
               if (!weeks || !weeks.length) return;
+              const _sznYr = parseInt(szn);
+              if (_eraActive && !_eraOk(_sznYr)) return;
               if (!_careerMap[name]) _careerMap[name] = { name, pos, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0, gp:0, seasons:0, totalTd:0, _yrs:[], _teamStat:{} };
               const c = _careerMap[name];
               let sznGp = 0;
-              const _sznYr = parseInt(szn);
               // Resolve the season's primary team once (used as fallback
               // when w.tm is missing — happens on some older seasons).
               const _sznTeam = (typeof getCareerTeamAbbr === 'function')
@@ -38144,6 +38206,7 @@ window.fmtHeight = fmtHeight;
             if (!positions.includes(pos)) return;
             d.career.forEach(s => {
               if (!s.yr) return;
+              if (_eraActive && !_eraOk(s.yr)) return;
               const key = d.n + '|' + s.yr;
               if (_seenKey.has(key)) return;
               if (!_careerMap[d.n]) _careerMap[d.n] = { name: d.n, pos, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0, gp:0, seasons:0, totalTd:0, _yrs:[], _teamStat:{} };
@@ -38359,8 +38422,24 @@ window.fmtHeight = fmtHeight;
       };
       const statLabel = _statLabels[stat] || stat;
 
-      // Build title
-      const yearLabel = filterType === 'career' ? 'Career' : (year === 'all' ? 'All-Time' : year);
+      // Build title. Career mode uses the era selector instead of a single year;
+      // "since-2010" → "Career Since 2010", "2010-2019" → "Career 2010-2019".
+      function _eraTitleSuffix(e) {
+        if (!e || e === 'all') return '';
+        if (e.indexOf('since-') === 0) return ' Since ' + e.slice(6);
+        const m = /^(\d{4})-(\d{4})$/.exec(e);
+        if (m) {
+          if (m[1] === '2020' && m[2] === '2029') return ' 2020s';
+          if (m[1] === '2010' && m[2] === '2019') return ' 2010s';
+          if (m[1] === '2000' && m[2] === '2009') return ' 2000s';
+          if (m[1] === '1990' && m[2] === '1999') return ' 1990s';
+          if (m[1] === '1980' && m[2] === '1989') return ' 1980s';
+          if (m[1] === '1970' && m[2] === '1979') return ' 1970s';
+          return ' ' + m[1] + '-' + m[2];
+        }
+        return '';
+      }
+      const yearLabel = filterType === 'career' ? ('Career' + _eraTitleSuffix(era)) : (year === 'all' ? 'All-Time' : year);
       const weekLabel = week !== 'all' && filterType === 'game' ? ' Wk ' + week : '';
       const confLabel = conf === 'all' ? 'NFL' : conf;
       const teamLabel = team === 'all' ? '' : ' ' + team;
@@ -38399,7 +38478,7 @@ window.fmtHeight = fmtHeight;
         // v0.10.7: capture filter params + raw top-N entries so the
         // verifier (called from _renderBoard) can cross-check against
         // a direct LEGEND_CAREERS aggregation and the reference table.
-        _filter: { type: filterType, stat, year, positions, isPost, count, conf, team },
+        _filter: { type: filterType, stat, year, era, positions, isPost, count, conf, team },
         _topN: topN.map(s => ({ name: s.name, val: s[stat] || 0, pos: s.pos, team: s.team }))
       };
       _triviaFixItemTeams(parsed.items);

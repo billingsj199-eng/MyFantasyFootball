@@ -14259,7 +14259,19 @@ document.addEventListener('click', function(e) {
 // === UNIFIED COMPARE SEARCH (adds players to the compare grid) ===
 (function() {
 LDB.forEach(p => { if (LEGEND_CAREERS[p.n]) p.seasons = LEGEND_CAREERS[p.n]; });
-D.forEach(d => { if (d._retired && (!d.career || !d.career.length) && LEGEND_CAREERS[d.n]) d.career = LEGEND_CAREERS[d.n]; });
+// Bind LEGEND_CAREERS into D[].career for retired players. Old logic
+// only filled D when it was EMPTY, but the 2026-05-07 backfill expanded
+// many partial entries (Curtis Martin had 7 seasons, now 11; Thurman
+// Thomas had 2, now 13; Jerome Bettis 7→13; Marcus Allen 2→16; etc.).
+// Prefer LEGEND_CAREERS whenever it has MORE seasons so the trivia
+// aggregation sees the complete year-by-year careers.
+D.forEach(d => {
+  if (!d._retired) return;
+  const lc = LEGEND_CAREERS[d.n];
+  if (!lc || !lc.length) return;
+  const cur = (d.career && d.career.length) || 0;
+  if (lc.length > cur) d.career = lc;
+});
 
 // === ALL_PLAYERS_DB integration: enrich D array with career stats ===
 if (typeof ALL_PLAYERS_DB !== 'undefined') {
@@ -35118,6 +35130,15 @@ window.fmtHeight = fmtHeight;
     saveBtn.style.color = '#22c55e';
     saveBtn.style.borderColor = '#22c55e';
     delete saveBtn.dataset.saved;
+    // v0.10.7: run the verifier. Reference table + cross-check happen
+    // here so every entry point (template click, GENERATE, AI prompt,
+    // daily play) gets the same quality gate. _triviaShowVerifyBanner
+    // tears down any prior banner so re-renders don't stack.
+    try {
+      const verify = _triviaVerifyBoard(data);
+      _triviaShowVerifyBanner(verify);
+    } catch (_e) { console.warn('[Trivia] verify failed:', _e); }
+
     // Auto-scroll the board into view. Templates already do this via
     // _triviaApplyTemplate, but the bare GENERATE button + custom-prompt
     // path leaves the board below the fold; scrolling here covers all
@@ -36963,6 +36984,259 @@ window.fmtHeight = fmtHeight;
     return m + ':' + String(s).padStart(2, '0');
   }
 
+  // ===== BOARD VERIFIER (v0.10.7) =====
+  // Runs two checks on every generated board:
+  //   1. Reference-table match — for tracked career queries we know the
+  //      actual top-25 from the NFL record book. If the board's filter
+  //      matches a tracked key, compare names and surface diffs.
+  //   2. Internal cross-check — aggregate the same query from
+  //      LEGEND_CAREERS directly (skipping D[].career) and compare.
+  //      Catches drift between data sources, like the 2026-05-07 bug
+  //      where partial D[].career data was overriding the LEGEND_CAREERS
+  //      backfill.
+  // Both checks are non-blocking: results render as a banner above the
+  // board, so the user/admin sees the verdict but the board still plays.
+
+  // Curated reference: for each tracked filter, the actual top-25 player
+  // names in record-book order. Names should match how the trivia
+  // displays them (no Sr./Jr. suffix unless authoritative). Updated as
+  // of 2025-26 NFL season.
+  const _TRIVIA_KNOWN_LEADERS = {
+    // Key format: type|stat|year|posSorted|isPost
+    'career|ry|all|RB|reg': [
+      'Emmitt Smith','Walter Payton','Frank Gore','Barry Sanders','Adrian Peterson',
+      'Curtis Martin','LaDainian Tomlinson','Jerome Bettis','Eric Dickerson','Derrick Henry',
+      'Tony Dorsett','Jim Brown','Marshall Faulk','Edgerrin James','Marcus Allen',
+      'Franco Harris','Thurman Thomas','Fred Taylor','Steven Jackson','John Riggins',
+      'Corey Dillon','O.J. Simpson','LeSean McCoy','Warrick Dunn','Ricky Watters'
+    ],
+    'career|py|all|QB|reg': [
+      'Tom Brady','Drew Brees','Peyton Manning','Brett Favre','Aaron Rodgers',
+      'Matthew Stafford','Ben Roethlisberger','Philip Rivers','Matt Ryan','Dan Marino',
+      'Eli Manning','John Elway','Russell Wilson','Kirk Cousins','Drew Bledsoe',
+      'Vinny Testaverde','Warren Moon','Fran Tarkenton','Carson Palmer','Joe Flacco'
+    ],
+    'career|ptd|all|QB|reg': [
+      'Tom Brady','Drew Brees','Peyton Manning','Aaron Rodgers','Brett Favre',
+      'Philip Rivers','Matthew Stafford','Ben Roethlisberger','Dan Marino','Russell Wilson',
+      'Eli Manning','Matt Ryan','Patrick Mahomes','Fran Tarkenton','John Elway',
+      'Warren Moon','Johnny Unitas','Joe Montana','Kurt Warner','Vinny Testaverde'
+    ],
+    'career|rcy|all|TE,WR|reg': [
+      'Jerry Rice','Larry Fitzgerald','Terrell Owens','Randy Moss','Isaac Bruce',
+      'Tony Gonzalez','Tim Brown','Steve Smith Sr.','Marvin Harrison','Reggie Wayne',
+      'Andre Johnson','Anquan Boldin','Jason Witten','Julio Jones','Torry Holt',
+      'James Lofton','Henry Ellard','DeAndre Hopkins','Andre Reed','Steve Largent'
+    ],
+    'career|rec|all|RB,TE,WR|reg': [
+      'Jerry Rice','Larry Fitzgerald','Tony Gonzalez','Jason Witten','Marvin Harrison',
+      'Tim Brown','Travis Kelce','Anquan Boldin','Reggie Wayne','Andre Johnson',
+      'Julio Jones','Antonio Gates','Steve Smith Sr.','Davante Adams','Hines Ward',
+      'Andre Reed','DeAndre Hopkins','Cris Carter','Mike Evans','Keenan Allen'
+    ],
+    'career|ry|all|RB|post': [
+      'Emmitt Smith','Franco Harris','Thurman Thomas','Tony Dorsett','Marcus Allen',
+      'Terrell Davis','John Riggins','Marshawn Lynch','Larry Csonka','Edgerrin James',
+      'Roger Craig','Curtis Martin','Eddie George','Ray Rice','Jerome Bettis'
+    ],
+    'career|py|all|QB|post': [
+      'Tom Brady','Peyton Manning','Ben Roethlisberger','Brett Favre','Joe Montana',
+      'Drew Brees','John Elway','Dan Marino','Russell Wilson','Kurt Warner',
+      'Troy Aikman','Terry Bradshaw','Donovan McNabb','Joe Flacco','Steve Young'
+    ],
+    'career|rcy|all|TE,WR|post': [
+      'Jerry Rice','Travis Kelce','Julian Edelman','Rob Gronkowski','Cliff Branch',
+      'Reggie Wayne','Andre Reed','Tyreek Hill','Hines Ward','Drew Pearson',
+      'Art Monk','Anquan Boldin','John Stallworth','Steve Smith Sr.','Julio Jones'
+    ],
+  };
+
+  // Build the lookup key for a filter object. Returns null when the
+  // filter doesn't match any tracked query.
+  function _triviaRefKey(f) {
+    if (!f) return null;
+    if (f.type !== 'career') return null;
+    if (f.year !== 'all') return null;
+    if (f.conf !== 'all' || f.team !== 'all') return null;
+    const posKey = (f.positions || []).slice().sort().join(',');
+    const era = f.isPost ? 'post' : 'reg';
+    return f.type + '|' + f.stat + '|' + f.year + '|' + posKey + '|' + era;
+  }
+
+  // Aggregate the same career query from LEGEND_CAREERS directly, with
+  // active players from D[].career to cover modern names like Derrick
+  // Henry who aren't in LEGEND_CAREERS. After the 2026-05-07 fix, retired
+  // players in D[].career hold the same array as LEGEND_CAREERS — so we
+  // skip D entries whose name already came from LEGEND_CAREERS to avoid
+  // double counting. Returns top-N names + values, matching the order
+  // the structured-filter aggregation would produce.
+  function _triviaAltAggregateCareer(f) {
+    if (typeof LEGEND_CAREERS === 'undefined') return null;
+    if (f.type !== 'career') return null;
+    const stat = f.stat;
+    const isPost = !!f.isPost;
+    const positions = new Set(f.positions || []);
+    const dPos = {};
+    if (typeof D !== 'undefined') D.forEach(d => { if (d.n && d.s) dPos[d.n] = d.s; });
+
+    function statOf(s) {
+      if (isPost) {
+        const p = s.post;
+        if (!p) return 0;
+        if (stat === 'totalTd') return (p.ptd||0) + (p.rtd||0) + (p.rctd||0);
+        if (stat === 'rec') return (p.rc||0);
+        return (p[stat]||0);
+      }
+      if (stat === 'totalTd') return (s.ptd||0) + (s.rtd||0) + (s.rctd||0);
+      if (stat === 'rec') return (s.rc||0);
+      return (s[stat]||0);
+    }
+
+    const out = [];
+    const seenNames = new Set();
+    for (const name in LEGEND_CAREERS) {
+      const career = LEGEND_CAREERS[name];
+      if (!career || !career.length) continue;
+      const pos = dPos[name] || '';
+      if (positions.size && !positions.has(pos)) continue;
+      let v = 0;
+      for (const s of career) v += statOf(s);
+      if (v > 0) out.push({ name, val: v });
+      seenNames.add(name);
+    }
+    // Pull in active players from D[].career — those NOT in
+    // LEGEND_CAREERS contribute fresh totals; retired players are
+    // already counted via LEGEND_CAREERS so we skip duplicates.
+    if (typeof D !== 'undefined') {
+      for (const d of D) {
+        if (!d.career || !d.career.length) continue;
+        if (seenNames.has(d.n)) continue;
+        const pos = d.s || '';
+        if (positions.size && !positions.has(pos)) continue;
+        let v = 0;
+        for (const s of d.career) v += statOf(s);
+        if (v > 0) out.push({ name: d.n, val: v });
+      }
+    }
+    out.sort((a, b) => b.val - a.val);
+    return out;
+  }
+
+  // Compare the rendered top-N to a reference list of names. Returns
+  // diff details (mismatched ranks) and a verdict.
+  function _triviaCompareNames(rendered, expected, depth) {
+    depth = depth || Math.min(rendered.length, expected.length, 10);
+    const mismatches = [];
+    let exact = 0;
+    for (let i = 0; i < depth; i++) {
+      const r = (rendered[i] && rendered[i].name) || '';
+      const e = expected[i] || '';
+      // Allow Sr./Jr. fuzz so reference doesn't have to match suffixes.
+      const norm = (n) => n.replace(/\s+(Sr\.?|Jr\.?|II|III|IV)$/i, '').trim().toLowerCase();
+      if (norm(r) === norm(e)) exact++;
+      else mismatches.push({ rank: i + 1, expected: e, got: r });
+    }
+    return { depth, exact, mismatches };
+  }
+
+  // Master verifier — runs reference + cross-check, returns combined result.
+  function _triviaVerifyBoard(data) {
+    if (!data || !data._filter || !data._topN) return null;
+    const result = { ref: null, cross: null };
+    const f = data._filter;
+
+    // Reference check.
+    const refKey = _triviaRefKey(f);
+    if (refKey && _TRIVIA_KNOWN_LEADERS[refKey]) {
+      const expected = _TRIVIA_KNOWN_LEADERS[refKey];
+      const cmp = _triviaCompareNames(data._topN, expected, Math.min(10, expected.length));
+      result.ref = {
+        key: refKey,
+        ok: cmp.exact === cmp.depth,
+        depth: cmp.depth,
+        exact: cmp.exact,
+        mismatches: cmp.mismatches
+      };
+    }
+
+    // Cross-check (career mode only — season/game modes are nflverse-
+    // driven and the alternate path doesn't help).
+    if (f.type === 'career') {
+      const alt = _triviaAltAggregateCareer(f);
+      if (alt && alt.length) {
+        const altTop = alt.slice(0, data._topN.length);
+        const cmp = _triviaCompareNames(data._topN, altTop.map(a => a.name), Math.min(10, altTop.length));
+        result.cross = {
+          ok: cmp.exact === cmp.depth,
+          depth: cmp.depth,
+          exact: cmp.exact,
+          mismatches: cmp.mismatches
+        };
+      }
+    }
+
+    return result;
+  }
+
+  // Render the verification banner above the board area. Three states:
+  //   - All checks pass: green ✓ "Verified against NFL record book"
+  //   - Only cross-check has data and it passes: green ✓ "Cross-checked"
+  //   - Any mismatch: amber ⚠️ with expandable details
+  // Returns silently when no checks ran (filter not tracked + non-career).
+  function _triviaShowVerifyBanner(result) {
+    const area = document.getElementById('triviaBoardArea');
+    if (!area || !area.parentNode) return;
+    // Tear down any prior banner.
+    const stale = document.getElementById('triviaVerifyBanner');
+    if (stale) stale.remove();
+    if (!result || (!result.ref && !result.cross)) return;
+
+    const refOk = result.ref ? result.ref.ok : true;
+    const crossOk = result.cross ? result.cross.ok : true;
+    const allOk = refOk && crossOk && (result.ref || result.cross);
+
+    const div = document.createElement('div');
+    div.id = 'triviaVerifyBanner';
+    if (allOk) {
+      const sources = [];
+      if (result.ref) sources.push('NFL record book (top ' + result.ref.depth + ')');
+      if (result.cross) sources.push('LEGEND_CAREERS direct (top ' + result.cross.depth + ')');
+      div.style.cssText = 'margin:0 0 10px;padding:8px 14px;border-radius:8px;background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.45);color:var(--text);font-size:.74rem;line-height:1.4;display:flex;align-items:center;gap:10px';
+      div.innerHTML =
+        '<span style="font-size:1rem">✓</span>' +
+        '<span style="flex:1">Verified against ' + sources.join(' + ') + '</span>' +
+        '<button onclick="this.closest(\'#triviaVerifyBanner\').remove()" style="background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer;line-height:1">✕</button>';
+    } else {
+      // Build diff list.
+      const diffs = [];
+      if (result.ref && !result.ref.ok) {
+        diffs.push('<div style="font-weight:600;color:#f59e0b;margin-top:4px">Differs from NFL record book ('
+          + result.ref.exact + '/' + result.ref.depth + ' match):</div>');
+        for (const m of result.ref.mismatches.slice(0, 5)) {
+          diffs.push('<div style="font-size:.7rem;margin-left:10px">#' + m.rank + ': expected <strong>' + _esc(m.expected) + '</strong>, got <strong>' + _esc(m.got || '(missing)') + '</strong></div>');
+        }
+      }
+      if (result.cross && !result.cross.ok) {
+        diffs.push('<div style="font-weight:600;color:#f59e0b;margin-top:4px">Differs from LEGEND_CAREERS direct ('
+          + result.cross.exact + '/' + result.cross.depth + ' match):</div>');
+        for (const m of result.cross.mismatches.slice(0, 5)) {
+          diffs.push('<div style="font-size:.7rem;margin-left:10px">#' + m.rank + ': alt-path has <strong>' + _esc(m.expected) + '</strong>, board shows <strong>' + _esc(m.got || '(missing)') + '</strong></div>');
+        }
+      }
+      div.style.cssText = 'margin:0 0 10px;padding:10px 14px;border-radius:8px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.45);color:var(--text);font-size:.78rem;line-height:1.4';
+      div.innerHTML =
+        '<div style="display:flex;align-items:flex-start;gap:10px">' +
+          '<span style="font-size:1.1rem;flex-shrink:0">⚠️</span>' +
+          '<div style="flex:1">' +
+            '<strong>Verification flagged differences.</strong> The board still plays — but a curated reference disagrees with what got generated.' +
+            diffs.join('') +
+          '</div>' +
+          '<button onclick="this.closest(\'#triviaVerifyBanner\').remove()" style="background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;line-height:1">✕</button>' +
+        '</div>';
+    }
+    area.parentNode.insertBefore(div, area);
+  }
+
   // Surfaced when a permalink's content hash doesn't match the current
   // board (data changed since the original run). Banner is dismissable
   // and inserted just above the board so it's hard to miss but not modal.
@@ -38050,7 +38324,14 @@ window.fmtHeight = fmtHeight;
         };
       });
 
-      const parsed = { title, items, _prompt: 'structured-filter' };
+      const parsed = {
+        title, items, _prompt: 'structured-filter',
+        // v0.10.7: capture filter params + raw top-N entries so the
+        // verifier (called from _renderBoard) can cross-check against
+        // a direct LEGEND_CAREERS aggregation and the reference table.
+        _filter: { type: filterType, stat, year, positions, isPost, count, conf, team },
+        _topN: topN.map(s => ({ name: s.name, val: s[stat] || 0, pos: s.pos, team: s.team }))
+      };
       _triviaFixItemTeams(parsed.items);
       _renderBoard(parsed);
       btn.disabled = false; btn.textContent = 'GENERATE';

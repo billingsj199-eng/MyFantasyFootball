@@ -14279,11 +14279,27 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   const _apdb = {};
   ALL_PLAYERS_DB.forEach(p => { _apdb[p.name] = p; });
 
+  // Pick the longest available career across candidate sources. Preference
+  // order: existing d.career (if longer) → LEGEND_CAREERS (Wikipedia/PFR
+  // backfill) → ALL_PLAYERS_DB (older curated data, often partial pre-1999).
+  // This is the same reasoning as the line-14268 LEGEND_CAREERS bind, but
+  // applied to the ALL_PLAYERS_DB merge path which runs AFTER and used to
+  // overwrite the LEGEND_CAREERS bind with shorter data.
+  function _bestCareer(name, ...candidates) {
+    let best = null;
+    for (const c of candidates) {
+      if (c && c.length && (!best || c.length > best.length)) best = c;
+    }
+    return best || [];
+  }
+
   // 1) Fill in career stats + birth year for existing D entries
   D.forEach(d => {
     const ap = _apdb[d.n];
     if (!ap) return;
-    if (!d.career || !d.career.length) d.career = ap.career;
+    const lc = (typeof LEGEND_CAREERS !== 'undefined') ? LEGEND_CAREERS[d.n] : null;
+    const best = _bestCareer(d.n, d.career, lc, ap.career);
+    if (best.length > ((d.career && d.career.length) || 0)) d.career = best;
     if (d.birthYear == null && ap.birthYear != null) {
       d.birthYear = typeof ap.birthYear === 'string' ? parseInt(ap.birthYear) : ap.birthYear;
       if (d.age == null && d.birthYear) d.age = 2026 - d.birthYear;
@@ -14327,11 +14343,16 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
     // Get birth year and calculate age
     const by = p.birthYear ? (typeof p.birthYear === 'string' ? parseInt(p.birthYear) : p.birthYear) : null;
     const age = by ? 2026 - by : null;
+    // Prefer LEGEND_CAREERS data if it has more seasons than the
+    // ALL_PLAYERS_DB candidate (the 2026-05-07 Wikipedia/PFR backfill
+    // expanded many partial entries from 1999+ to full careers).
+    const _lcCareer = (typeof LEGEND_CAREERS !== 'undefined') ? LEGEND_CAREERS[p.name] : null;
+    const _bestCar = _bestCareer(p.name, _lcCareer, p.career);
     D.push({
       n: p.name, a: 999, p: 0, s: p.pos, r: p.pos + '\u2014', t: lastTeam,
       p25: null, p24: null, p23: null, age: age, cyr: null, out: null,
       sal: null, dr: null, exp: seasons, role: null, inj: null, s25: null,
-      career: p.career || [], da: 999, sa: 999, idx: D.length,
+      career: _bestCar, da: 999, sa: 999, idx: D.length,
       myRank: D.length + 1, round: 99, notes: '',
       _retired: true, _debut: p.debut, _last: p.last, _slImg: imgUrl,
       birthYear: by

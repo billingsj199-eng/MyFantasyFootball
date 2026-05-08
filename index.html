@@ -2046,7 +2046,20 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option>
 <option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option>
 <option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option>
-<option value="2007">2007</option><option value="2006">2006</option>
+<option value="2007">2007</option><option value="2006">2006</option><option value="2005">2005</option>
+<option value="2004">2004</option><option value="2003">2003</option><option value="2002">2002</option>
+<option value="2001">2001</option><option value="2000">2000</option><option value="1999">1999</option>
+<option value="1998">1998</option><option value="1997">1997</option><option value="1996">1996</option>
+<option value="1995">1995</option><option value="1994">1994</option><option value="1993">1993</option>
+<option value="1992">1992</option><option value="1991">1991</option><option value="1990">1990</option>
+<option value="1989">1989</option><option value="1988">1988</option><option value="1987">1987</option>
+<option value="1986">1986</option><option value="1985">1985</option><option value="1984">1984</option>
+<option value="1983">1983</option><option value="1982">1982</option><option value="1981">1981</option>
+<option value="1980">1980</option><option value="1979">1979</option><option value="1978">1978</option>
+<option value="1977">1977</option><option value="1976">1976</option><option value="1975">1975</option>
+<option value="1974">1974</option><option value="1973">1973</option><option value="1972">1972</option>
+<option value="1971">1971</option><option value="1970">1970</option><option value="1969">1969</option>
+<option value="1968">1968</option><option value="1967">1967</option><option value="1966">1966</option>
 </select>
 </label>
 
@@ -2944,6 +2957,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/hp.js"></script>
 <script src="data/ep_retired.js"></script>
 <script src="data/legend_careers.js"></script>
+<script src="data/season_leaders.js"></script>
 <script src="data/ldb.js"></script>
 <script src="data/player_team_history.js"></script>
 <script src="data/ep_players_u.js"></script>
@@ -38398,6 +38412,68 @@ window.fmtHeight = fmtHeight;
                 totalTd: (s.ptd||0) + (s.rtd||0) + (s.rctd||0)
               });
             });
+          });
+        }
+      }
+
+      // SEASON_LEADERS fallback — covers 1966-2025 top-25 per category
+      // (passing/rushing/receiving) scraped from PFR. Used when a year
+      // is selected but WEEKLY_STATS doesn't reach back that far
+      // (pre-1999) AND, for 1999+ years, as a supplementary source for
+      // players whose season-line PFR captured but who slipped through
+      // the existing pipeline. _seenKey dedup keeps WEEKLY_STATS as
+      // authoritative when both sources have the same name+year.
+      if (filterType === 'season' && year !== 'all' && typeof SEASON_LEADERS !== 'undefined') {
+        const _slYr = SEASON_LEADERS[String(year)];
+        if (_slYr) {
+          // PFR uses some non-standard 3-letter abbreviations; map to
+          // the user's canonical set so conf/team filters work.
+          const _PFR_TM = {
+            'SDG':'SD','SFO':'SF','GNB':'GB','KAN':'KC','NWE':'NE',
+            'TAM':'TB','NOR':'NO','LVR':'LV','RAM':'LAR'
+          };
+          const _normTm = (t) => _PFR_TM[t] || t || '';
+          const _slYrInt = parseInt(year);
+          const _slMerged = {};
+          ['passing','rushing','receiving'].forEach(cat => {
+            (_slYr[cat] || []).forEach(r => {
+              if (!r || !r.name) return;
+              if (_seenKey.has(r.name + '|' + _slYrInt)) return;
+              const m = _slMerged[r.name] || (_slMerged[r.name] = {
+                name: r.name,
+                pos: (r.pos || '').toUpperCase() ||
+                     (cat === 'passing' ? 'QB' : cat === 'rushing' ? 'RB' : 'WR'),
+                team: _normTm(r.team), yr: _slYrInt, gp: r.g || 0,
+                py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0,
+                rec:0, rcy:0, rctd:0, tgt:0, fl:0,
+                fpts:0, ppg:0, totalTd:0
+              });
+              if (r.pass_yds) m.py = r.pass_yds;
+              if (r.pass_td) m.ptd = r.pass_td;
+              if (r.pass_int) m['int'] = r.pass_int;
+              if (r.rush_yds) m.ry = r.rush_yds;
+              if (r.rush_td) m.rtd = r.rush_td;
+              if (r.rush_att) m.ra = r.rush_att;
+              if (r.rec) m.rec = r.rec;
+              if (r.rec_yds) m.rcy = r.rec_yds;
+              if (r.rec_td) m.rctd = r.rec_td;
+              if (r.targets) m.tgt = r.targets;
+              if (r.g && r.g > m.gp) m.gp = r.g;
+              if (!m.team) m.team = _normTm(r.team);
+            });
+          });
+          Object.values(_slMerged).forEach(m => {
+            if (!positions.includes(m.pos)) return;
+            if (conf !== 'all' && _teamConf[m.team] !== conf) return;
+            if (team !== 'all' && m.team !== team) return;
+            m.totalTd = (m.ptd||0) + (m.rtd||0) + (m.rctd||0);
+            m.fpts = Math.round((
+              m.py * 0.04 + m.ptd * 4 - m['int'] * 1 +
+              m.ry * 0.1 + m.rtd * 6 +
+              m.rec * 0.5 + m.rcy * 0.1 + m.rctd * 6
+            ) * 10) / 10;
+            m.ppg = m.gp > 0 ? Math.round(m.fpts / m.gp * 10) / 10 : 0;
+            allEntries.push(m);
           });
         }
       }

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyFantasyFootball — redirecting…</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<style>body{background:#0a0a0a;color:#94a3b8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:1rem;text-align:center}a{color:#f59e0b}</style>
+</head>
+<body>
+<script>
+// GitHub Pages serves this file for any path that doesn't match a real file.
+// Translate path-style URLs like /mock-draft, /trade-calc, /prospect into a
+// hash redirect so SPA tab routing keeps working for shared links.
+(function() {
+  var KNOWN = ['rankings','compare','games','trade','mockdraft','prospect','myteams','account','trivia','backtest'];
+  var ALIASES = { 'mock-draft':'mockdraft', 'trade-calc':'tradecalc', 'tradecalc':'trade', 'my-teams':'myteams' };
+  var path = (location.pathname || '/').toLowerCase().replace(/^\/+|\/+$/g, '').split('/').pop() || '';
+  var slug = ALIASES[path] || path;
+  var target = location.origin + '/';
+  if (slug && KNOWN.indexOf(slug) >= 0) target += '#' + slug;
+  // Preserve any query string (e.g. ?player=…) so existing deep-links keep working.
+  if (location.search) target += location.search;
+  location.replace(target);
+})();
+</script>
+<noscript>
+<p>Page not found. <a href="/">Return to MyFantasyFootball home</a>.</p>
+</noscript>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Privacy Policy — MyFantasyFootball</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Privacy policy for MyFantasyFootball.org and the MFF Underdog Draft Helper Chrome extension.">
+<style>
+  :root { --bg:#0a0a0a; --surface:#141414; --border:#262626; --text:#e5e5e5; --text2:#94a3b8; --accent:#f59e0b; }
+  body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; line-height:1.6; margin:0; padding:2rem 1rem; }
+  .wrap { max-width:760px; margin:0 auto; }
+  h1 { color:var(--accent); font-size:1.8rem; letter-spacing:1px; margin-top:0; }
+  h2 { color:var(--accent); font-size:1.1rem; letter-spacing:.5px; margin-top:2rem; margin-bottom:.5rem; }
+  p, li { color:var(--text); font-size:.95rem; }
+  a { color:var(--accent); }
+  ul { padding-left:1.2rem; }
+  .meta { color:var(--text2); font-size:.85rem; margin-bottom:2rem; }
+  code { background:var(--surface); border:1px solid var(--border); padding:1px 6px; border-radius:3px; font-family:'DM Mono',ui-monospace,monospace; font-size:.85rem; }
+  hr { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+  .footer { margin-top:3rem; color:var(--text2); font-size:.85rem; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Privacy Policy</h1>
+<p class="meta">Last updated: 2026-05-10 &middot; Covers <a href="/">myfantasyfootball.org</a> and the <b>MFF Underdog Draft Helper</b> Chrome extension.</p>
+
+<p>MyFantasyFootball.org and the MFF Underdog Draft Helper extension are personal projects built for fantasy football fans. We try to collect as little data as possible. This policy explains what we do collect, why, and how it's stored.</p>
+
+<h2>Summary (the short version)</h2>
+<ul>
+<li>The extension does not transmit your data to any third-party server.</li>
+<li>All extension data — draft picks you log, sidebar position, sync state — is stored locally on your computer in Chrome's extension storage.</li>
+<li>The site uses Firebase Authentication and Firestore to save your account and rankings, only when you choose to sign in.</li>
+<li>We don't sell, rent, or share your data with anyone.</li>
+<li>No analytics, no tracking pixels, no advertising.</li>
+</ul>
+
+<hr>
+
+<h2>The MFF Underdog Draft Helper extension</h2>
+
+<h3>What it does</h3>
+<p>The extension adds a sidebar to Underdog Fantasy draft pages that suggests picks based on your rankings, ADP value, and BBM advance-rate analysis.</p>
+
+<h3>Data the extension reads</h3>
+<ul>
+<li><b>On underdogfantasy.com / underdogsports.com:</b> The extension reads the draft state visible on the page (your draft slot, picks made, players still available) so it can recommend picks. It does not read or transmit your personal account information beyond what's needed for authenticated API calls back to Underdog itself.</li>
+<li><b>On myfantasyfootball.org / billingsj199-eng.github.io:</b> The extension reads your saved rankings and portfolio so the Underdog sidebar can use them. This is read-only and stays in your browser.</li>
+</ul>
+
+<h3>Data the extension stores</h3>
+<p>All data is stored in <code>chrome.storage.local</code> on your computer. It is never transmitted to a server we control. Stored data includes:</p>
+<ul>
+<li>Draft state per draft ID (pick history, your slot)</li>
+<li>Sidebar size and position</li>
+<li>A copy of your MFF rankings synced from the site, so the sidebar works without re-fetching</li>
+<li>Cached ADP snapshots for value calculations</li>
+</ul>
+<p>Uninstalling the extension or running <code>chrome.storage.local.clear()</code> deletes everything.</p>
+
+<h3>Permissions and why we need them</h3>
+<ul>
+<li><b><code>storage</code></b> — to save the draft state, sidebar settings, and synced rankings on your computer.</li>
+<li><b><code>cookies</code></b> — to read Underdog session cookies so authenticated API requests work reliably (some endpoints reject cookie-less calls). Cookies are only read for the Underdog domains and are only sent to Underdog's own servers.</li>
+<li><b><code>host_permissions</code> (Underdog domains)</b> — to inject the draft sidebar and listen for picks.</li>
+<li><b><code>host_permissions</code> (myfantasyfootball.org, billingsj199-eng.github.io)</b> — to read your rankings from the MFF site so the sidebar uses them as the recommendation source.</li>
+</ul>
+
+<h3>What the extension does NOT do</h3>
+<ul>
+<li>It does not transmit your data to any server we operate.</li>
+<li>It does not collect analytics, telemetry, or usage statistics.</li>
+<li>It does not auto-pick or auto-bid on your behalf.</li>
+<li>It does not modify Underdog's UI beyond adding the sidebar overlay.</li>
+</ul>
+
+<hr>
+
+<h2>The myfantasyfootball.org website</h2>
+
+<h3>Data we collect when you sign in</h3>
+<ul>
+<li><b>Email and display name</b> — stored in Firebase Authentication for account access.</li>
+<li><b>Your custom rankings, tiers, and trade-calculator state</b> — stored in Firestore so they sync across devices.</li>
+<li><b>Trivia / game scores</b> — if you opt into leaderboards.</li>
+</ul>
+<p>Firebase is a Google service; their privacy policy applies to the underlying storage: <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a>.</p>
+
+<h3>Data we don't collect</h3>
+<ul>
+<li>No advertising data, no third-party trackers, no analytics scripts.</li>
+<li>No sale of any user data — ever.</li>
+</ul>
+
+<h3>External data sources</h3>
+<p>The site loads public data from third parties to render rankings, headshots, and stats:</p>
+<ul>
+<li>ESPN CDN — player headshots and team logos</li>
+<li>Sleeper / Underdog / KTC — public ADP and rankings APIs</li>
+<li>College Football Data API — historical college stats</li>
+</ul>
+<p>These third parties may log your IP address as part of normal web traffic; we do not pass them any account information.</p>
+
+<hr>
+
+<h2>Your rights</h2>
+<ul>
+<li>You can sign out at any time from the Account tab.</li>
+<li>You can delete your account by emailing the address below — we'll remove your Firebase doc within 7 days.</li>
+<li>You can uninstall the extension to wipe all locally-stored extension data.</li>
+</ul>
+
+<h2>Contact</h2>
+<p>Questions or data deletion requests: <a href="mailto:billingsj199@gmail.com">billingsj199@gmail.com</a></p>
+
+<h2>Changes to this policy</h2>
+<p>If we change this policy in a way that affects how data is handled, we'll update the "Last updated" date at the top. The current version is always available at <a href="https://myfantasyfootball.org/privacy.html">myfantasyfootball.org/privacy.html</a>.</p>
+
+<div class="footer">
+<p><a href="/">← Back to MyFantasyFootball</a></p>
+</div>
+</div>
+</body>
+</html>

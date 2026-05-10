@@ -1849,12 +1849,21 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   background:linear-gradient(180deg,rgba(245,158,11,.04),rgba(10,10,15,.98))
 }
 /* When docked is active, give the prospect content room on the right so the
-   table isn't hidden under the dock. Class is toggled by JS on body. */
+   table isn't hidden under the dock. Use margin-right (not max-width) so the
+   wrapper naturally sizes to (parent_width - dock_space) regardless of the
+   left sidebar's width — avoids hardcoding viewport math. */
 body.pm-wl-docked #pageProspect .pm-wrapper{
-  max-width:calc(100vw - 488px);
-  margin-left:auto;
-  margin-right:0;
+  width:auto;
+  max-width:none;
+  margin-left:0;
+  margin-right:488px;
   padding-right:1.5rem
+}
+/* Table can overflow the shrunk wrapper on narrow viewports — let it scroll
+   horizontally inside its container instead of bleeding under the dock. */
+body.pm-wl-docked #pageProspect .pm-table-wrap{
+  overflow-x:auto;
+  max-width:100%
 }
 /* In docked mode the right column is narrow — collapse the internal 2-col grid
    so sliders sit on top, backtest summary below. Both single column. */
@@ -1879,10 +1888,10 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
 /* Narrow screens: make the dock smaller so the table still fits */
 @media(max-width:1280px){
   .pm-weight-lab[open]{width:380px}
-  body.pm-wl-docked #pageProspect .pm-wrapper{max-width:calc(100vw - 408px)}
+  body.pm-wl-docked #pageProspect .pm-wrapper{margin-right:408px}
 }
 @media(max-width:980px){
   /* On phones/tablets, fall back to inline (full width) — dock would crowd out the table */
   .pm-weight-lab[open]{position:static;width:auto;max-height:none;box-shadow:none;border-radius:10px;border:1px solid rgba(245,158,11,.4)}
-  body.pm-wl-docked #pageProspect .pm-wrapper{max-width:1400px;margin:0 auto;padding-right:1.5rem}
+  body.pm-wl-docked #pageProspect .pm-wrapper{width:100%;max-width:1400px;margin:0 auto;padding-right:1.5rem}
 }

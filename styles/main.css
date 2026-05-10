@@ -570,6 +570,8 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 .diff-up{color:var(--green)}
 .diff-down{color:var(--red)}
 .diff-even{color:var(--text2)}
+.adp-cell.adp-value{background:rgba(34,197,94,.10);color:var(--green);font-weight:600}
+.adp-cell.adp-reach{background:rgba(239,68,68,.10);color:var(--red);font-weight:600}
 
 
 
@@ -667,6 +669,8 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 .card-header{padding:.9rem 1.1rem .75rem;position:relative;border-bottom:1px solid var(--border)}
 .card-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem;padding:4px 8px;border-radius:4px;transition:all .15s}
 .card-close:hover{color:var(--accent);background:rgba(245,158,11,.1)}
+.card-share{position:absolute;top:1rem;right:3rem;background:none;border:none;color:var(--text2);cursor:pointer;padding:6px 8px;border-radius:4px;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.card-share:hover{color:var(--accent);background:rgba(245,158,11,.1)}
 .card-name{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:2px;color:var(--text);line-height:1}
 .card-meta{display:flex;gap:.5rem;align-items:center;margin-top:.35rem;flex-wrap:wrap}
 .card-meta .pos-badge{font-size:.75rem;padding:3px 10px}
@@ -869,11 +873,49 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .global-signin-btn svg{width:13px;height:13px}
 
   .table-wrap{padding:0 0 1rem;-webkit-overflow-scrolling:touch}
-  table{min-width:520px}
-  thead th{padding:.5rem .4rem;font-size:.56rem;position:sticky;top:0}
-  tbody td{padding:.45rem .4rem;font-size:.72rem}
+  /* Trim min-width so the table fits common phone widths (~360-414px) without
+     horizontal scrolling. Achievable because we hide several columns below. */
+  table{min-width:360px;table-layout:fixed}
+  thead th{padding:.5rem .15rem;font-size:.55rem;position:sticky;top:0;text-align:center}
+  thead th:nth-child(3){text-align:left}
+  tbody td{padding:.45rem .15rem;font-size:.72rem;text-align:center}
+  tbody td:nth-child(3){text-align:left}
   .rank-cell{font-size:.9rem}
-  .myrank-num{width:36px;font-size:.9rem}
+  .myrank-num{width:32px;font-size:.85rem}
+  /* Mobile column hides — declutter the rankings table on phones. Users who
+     want these can re-enable via the COLS popup (which writes to localStorage,
+     overriding these hides for that column only). */
+  /* Drag handle (col 1) — only useful for admins reordering boards. */
+  #pageRankings table thead th:first-child,
+  #pageRankings table tbody td:first-child{display:none}
+  /* '25 PPG and +/- columns — historical / derivable info, surfaced in tooltips. */
+  #pageRankings table .ppg25-cell,
+  #pageRankings table #ppg25HeaderTh,
+  #pageRankings table .diff-cell,
+  #pageRankings table thead th[data-sort="diff"]{display:none}
+  /* Verbose label suffixes — hidden on mobile to keep column widths compact. */
+  .hide-on-mobile{display:none}
+  /* Constrain the Player column so long names truncate instead of stretching
+     the whole table off-screen. The full name is still in the player card. */
+  #pageRankings table tbody td:nth-child(3),
+  #pageRankings table thead th:nth-child(3){max-width:115px;width:115px}
+  /* Tighter rank/pos/age columns so total fits a 375px viewport. */
+  #pageRankings table tbody td:nth-child(2),
+  #pageRankings table thead th:nth-child(2){min-width:32px;width:32px}
+  #pageRankings table tbody td:nth-child(4),
+  #pageRankings table thead th:nth-child(4){min-width:30px;width:30px}
+  #pageRankings table tbody td:nth-child(5),
+  #pageRankings table thead th:nth-child(5){min-width:36px;width:36px}
+  #pageRankings table tbody td.adp-cell,
+  #pageRankings table thead #adpHeader{min-width:36px;width:36px}
+  #pageRankings table tbody .age-cell,
+  #pageRankings table thead #ageHeader{min-width:32px;width:32px}
+  #pageRankings table tbody td.ppg-proj-cell,
+  #pageRankings table thead #ppgProjHeader{min-width:46px;width:46px}
+  #pageRankings .player-cell{min-width:0;overflow:hidden}
+  #pageRankings .player-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  /* Smaller headshot on mobile to recover horizontal space. */
+  #pageRankings .player-headshot-sm{width:24px;height:24px;flex-shrink:0}
 
   /* Player card modal - full screen on mobile */
   .modal-overlay{align-items:flex-end;padding:0;overflow-y:auto}
@@ -1587,6 +1629,21 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   
   /* Rankings table */
   .rankings-table th,.rankings-table td{padding:4px 3px!important;font-size:.65rem!important}
+  /* Sticky rank + player columns when the table is horizontally scrolled. The
+     drag handle col is hidden on mobile (no useful touch interaction). thead
+     sticks via top:0; the rank/player cells stick via left:0 / left:auto so the
+     player stays visible when scrolling right to see PPG / age / etc. */
+  .table-wrap table thead th:first-child,
+  .table-wrap table tbody td:first-child{display:none}
+  .table-wrap table thead th:nth-child(2),
+  .table-wrap table tbody td:nth-child(2){position:sticky;left:0;z-index:5;background:var(--bg)}
+  .table-wrap table thead th:nth-child(3),
+  .table-wrap table tbody td:nth-child(3){position:sticky;left:48px;z-index:5;background:var(--bg)}
+  .table-wrap table thead th:nth-child(2),
+  .table-wrap table thead th:nth-child(3){z-index:11;background:var(--surface)}
+  /* Soft right-edge shadow on the sticky player col so users notice they can scroll. */
+  .table-wrap table tbody td:nth-child(3){box-shadow:6px 0 8px -6px rgba(0,0,0,.5)}
+  .table-wrap table thead th:nth-child(3){box-shadow:6px 0 8px -6px rgba(0,0,0,.5)}
   
   /* Player cards */
   .player-card-inner{padding:.75rem!important}

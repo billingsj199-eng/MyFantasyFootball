@@ -1831,3 +1831,58 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .pm-wl-bt-foot{margin-top:10px;font-size:.7rem;color:var(--text3);font-family:'DM Sans',sans-serif;line-height:1.4}
 .pm-wl-bt-foot .pm-wl-bt-foot-strong{color:var(--text2)}
 .pm-wl-bt-empty{padding:18px;text-align:center;color:var(--text3);font-size:.78rem}
+
+/* ─── Docked-right mode: when Lab is open, float it as a sticky right column
+       so the prospect table stays visible and updates live as sliders drag. ── */
+.pm-weight-lab[open]{
+  position:fixed;
+  top:70px;
+  right:0;
+  width:460px;
+  max-height:calc(100vh - 90px);
+  overflow-y:auto;
+  z-index:50;
+  margin:0;
+  border-radius:10px 0 0 10px;
+  border-right:none;
+  box-shadow:-8px 0 32px rgba(0,0,0,.5);
+  background:linear-gradient(180deg,rgba(245,158,11,.04),rgba(10,10,15,.98))
+}
+/* When docked is active, give the prospect content room on the right so the
+   table isn't hidden under the dock. Class is toggled by JS on body. */
+body.pm-wl-docked #pageProspect .pm-wrapper{
+  max-width:calc(100vw - 488px);
+  margin-left:auto;
+  margin-right:0;
+  padding-right:1.5rem
+}
+/* In docked mode the right column is narrow — collapse the internal 2-col grid
+   so sliders sit on top, backtest summary below. Both single column. */
+body.pm-wl-docked .pm-weight-lab .pm-wl-grid{grid-template-columns:1fr;gap:14px}
+body.pm-wl-docked .pm-weight-lab .pm-wl-sliders{max-height:340px}
+body.pm-wl-docked .pm-weight-lab .pm-wl-sliders-head,
+body.pm-wl-docked .pm-weight-lab .pm-wl-row{grid-template-columns:108px 1fr 36px 54px 62px;gap:6px}
+body.pm-wl-docked .pm-weight-lab .pm-wl-row-label{font-size:.74rem}
+body.pm-wl-docked .pm-weight-lab .pm-wl-row-label .pm-wl-row-key{font-size:.6rem}
+body.pm-wl-docked .pm-weight-lab .pm-wl-kpis{grid-template-columns:repeat(5,1fr);gap:3px}
+body.pm-wl-docked .pm-weight-lab .pm-wl-kpi{padding:6px 3px}
+body.pm-wl-docked .pm-weight-lab .pm-wl-kpi-val{font-size:.92rem}
+body.pm-wl-docked .pm-weight-lab .pm-wl-kpi-label{font-size:.55rem}
+body.pm-wl-docked .pm-weight-lab .pm-wl-kpi-delta{font-size:.6rem}
+body.pm-wl-docked .pm-weight-lab .pm-wl-tierchart{height:75px}
+body.pm-wl-docked .pm-weight-lab .pm-wl-tier-label{font-size:.5rem}
+body.pm-wl-docked .pm-weight-lab .pm-wl-tier-pct{font-size:.58rem}
+body.pm-wl-docked .pm-weight-lab .pm-wl-tier-bar-wrap{height:48px}
+body.pm-wl-docked .pm-weight-lab .pm-wl-thresholds{gap:3px}
+body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-cell{min-width:42px}
+body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
+/* Narrow screens: make the dock smaller so the table still fits */
+@media(max-width:1280px){
+  .pm-weight-lab[open]{width:380px}
+  body.pm-wl-docked #pageProspect .pm-wrapper{max-width:calc(100vw - 408px)}
+}
+@media(max-width:980px){
+  /* On phones/tablets, fall back to inline (full width) — dock would crowd out the table */
+  .pm-weight-lab[open]{position:static;width:auto;max-height:none;box-shadow:none;border-radius:10px;border:1px solid rgba(245,158,11,.4)}
+  body.pm-wl-docked #pageProspect .pm-wrapper{max-width:1400px;margin:0 auto;padding-right:1.5rem}
+}

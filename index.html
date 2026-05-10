@@ -34575,14 +34575,19 @@ window.fmtHeight = fmtHeight;
       if (presetSel) presetSel.addEventListener('change', e => _pmWlLoadPreset(e.target.value));
       if (presetSave) presetSave.addEventListener('click', _pmWlSaveAsPreset);
       if (presetDel)  presetDel.addEventListener('click', _pmWlDeletePreset);
-      // Render summary the first time the panel is opened (cheap deferred work)
+      // Render summary the first time the panel is opened (cheap deferred work),
+      // and toggle the body.pm-wl-docked class so the prospect wrapper makes
+      // room on the right side for the docked panel.
       lab.addEventListener('toggle', () => {
+        document.body.classList.toggle('pm-wl-docked', lab.open);
         if (lab.open) {
           _pmWlBuildSliders();
           _pmWlRenderSummary();
         }
       });
     }
+    // Sync body class on init in case lab is already open
+    document.body.classList.toggle('pm-wl-docked', !!lab.open);
     _pmWlRenderPresetDropdown();
     if (lab.open) _pmWlRenderSummary();
   }

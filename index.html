@@ -129,7 +129,7 @@ Continue with Google
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
 <span class="nav-label">Games</span>
 </button>
-<button class="nav-btn" data-page="trivia" id="navTriviaBtn" title="Trivia" aria-label="Trivia">
+<button class="nav-btn" data-page="trivia" id="navTriviaBtn" title="Trivia" aria-label="Trivia" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
 <span class="nav-label">Trivia</span>
 </button>
@@ -306,6 +306,9 @@ SIGN IN
 <button class="acct-btn acct-btn-danger" id="acctPageSignout" style="padding:.65rem 2.5rem">
 <span style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> SIGN OUT</span>
 </button>
+</div>
+<div style="text-align:center;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border);font-size:.7rem;color:var(--text2)">
+<a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:none;border-bottom:1px dotted var(--text2)">Privacy Policy</a>
 </div>
 </div>
 
@@ -776,10 +779,29 @@ JSON
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 UNDERDOG
 </button>
+<button class="tb-btn" id="btnExportTiers" title="Export tier groupings (JSON)" style="font-size:.55rem">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+TIERS
+</button>
 <button class="tb-btn" id="btnImport" title="Import rankings from JSON">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
 IMPORT
 </button>
+<button class="tb-btn" id="btnColumnToggle" title="Show/hide columns" style="position:relative">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="3" y2="21"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="21" y1="3" x2="21" y2="21"/></svg>
+COLS
+</button>
+<button class="tb-btn" id="btnDraftHelper" title="Get the MFF Draft Helper Chrome extension for live Underdog draft recommendations" style="font-size:.55rem">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+HELPER
+</button>
+<div id="colTogglePopup" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;z-index:100;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.4);font-family:'DM Sans',sans-serif;font-size:.78rem">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px">SHOW COLUMNS</div>
+<label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="adp" checked> ADP</label>
+<label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppgProj" checked> Proj PPG</label>
+<label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppg25" checked> '25 PPG</label>
+<label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="age" checked> Age</label>
+</div>
 <button class="tb-btn" id="btnClear" title="Clear all your rankings & notes">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
 CLEAR
@@ -787,7 +809,7 @@ CLEAR
 <div class="auth-anchor" id="authAnchorRankings"></div>
 </div>
 </div>
-<p class="subtitle"><span id="rankingsCountText">413 players ranked 1–413</span> &middot; Click a name for full player card &middot; Drag to reorder &middot; Hover between rows to add tiers &middot; Hit Save to sync</p>
+<p class="subtitle"><span id="rankingsCountText">413 players ranked 1–413</span><span id="rankingsUpdatedText" style="display:none;color:var(--accent);margin-left:6px" title=""></span> &middot; Click a name for full player card &middot; Drag to reorder &middot; Hover between rows to add tiers &middot; Hit Save to sync</p>
 </header>
 
 <div class="controls">
@@ -979,10 +1001,10 @@ CLEAR
 <th data-sort="myrank" class="sorted"># <span class="arrow">▲</span></th>
 <th data-sort="name">Player <span class="arrow"></span></th>
 <th data-sort="pos">Pos <span class="arrow"></span></th>
-<th data-sort="posRank">Pos Rank <span class="arrow"></span></th>
-<th data-sort="adp">ADP <span class="arrow"></span></th>
-<th data-sort="pts">Proj PPG (Half PPR) <span class="arrow"></span></th>
-<th data-sort="fpts25"><span id="ppg25Header">'25 PPG (Half PPR)</span> <span class="arrow"></span></th>
+<th data-sort="posRank">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
+<th data-sort="adp" id="adpHeader">ADP <span class="arrow"></span></th>
+<th data-sort="pts" id="ppgProjHeader">Proj PPG<span class="hide-on-mobile"> (Half PPR)</span> <span class="arrow"></span></th>
+<th data-sort="fpts25" id="ppg25HeaderTh"><span id="ppg25Header">'25 PPG<span class="hide-on-mobile"> (Half PPR)</span></span> <span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" style="display:none">Y/RR <span class="arrow"></span></th>
 <th data-sort="jm" id="jmHeader" style="display:none">JM <span class="arrow"></span></th>
 <th data-sort="landing" id="landingHeader" style="display:none" title="Landing Spot — 0-100, higher = better fantasy opportunity. Separate from JM (prospect quality).">Land <span class="arrow"></span></th>
@@ -2076,7 +2098,13 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <option value="1990-1999">1990s</option>
 <option value="1980-1989">1980s</option>
 <option value="1970-1979">1970s</option>
+<option value="custom">Custom Range…</option>
 </select>
+<span id="triviaFilterEraCustom" style="display:none;gap:6px;align-items:center;margin-top:4px">
+<input type="number" id="triviaFilterEraFrom" min="1920" max="2030" placeholder="From" style="width:70px;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<span style="color:var(--text2);font-size:.78rem">to</span>
+<input type="number" id="triviaFilterEraTo" min="1920" max="2030" placeholder="To" style="width:70px;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+</span>
 </label>
 
 <label id="triviaFilterWeekLabel" style="font-size:.78rem;color:var(--text2);display:none;flex-direction:column;gap:3px">Week
@@ -2199,6 +2227,11 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
     // right path.
     var stSel = document.getElementById('triviaFilterSeasonType');
     if (stSel && (t === 'draft' || t === 'game')) stSel.value = 'reg';
+  });
+  var eraSel = document.getElementById('triviaFilterEra');
+  if (eraSel) eraSel.addEventListener('change', function() {
+    var box = document.getElementById('triviaFilterEraCustom');
+    if (box) box.style.display = this.value === 'custom' ? 'inline-flex' : 'none';
   });
 })();
 </script>
@@ -2390,6 +2423,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trivia-export-btn" id="triviaSaveCatalogBtn" onclick="window._triviaSaveToCatalog()" style="display:none;background:rgba(34,197,94,.15);border-color:#22c55e;color:#22c55e">💾 Save to Catalog</button>
 <button class="trivia-export-btn" id="triviaStartGameBtn" onclick="window._triviaStartGame()" style="background:var(--accent);color:#000;font-weight:700">START GAME</button>
 </div>
+</div><!-- end triviaDailyPanel -->
 
 <!-- Catalog Panel -->
 <div style="margin-top:16px;text-align:center">
@@ -2681,6 +2715,15 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="md-title">MOCK DRAFT</div>
 <div class="md-subtitle" id="mdSubtitle">Configure your draft settings and simulate against CPU teams</div>
 </div>
+<!-- Live Draft Helper promo — visible to all visitors. Opens the install modal. -->
+<button id="mdDraftHelperBtn" style="margin:0 auto 1rem;display:flex;align-items:center;gap:12px;padding:12px 18px;background:linear-gradient(135deg,rgba(245,158,11,.10),rgba(245,158,11,.04));border:1px solid rgba(245,158,11,.35);border-radius:10px;color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;width:100%;max-width:520px;transition:border-color .15s,background .15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(245,158,11,.35)'">
+<div style="font-size:1.6rem;line-height:1">🔧</div>
+<div style="flex:1;min-width:0">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)">DRAFTING ON UNDERDOG?</div>
+<div style="font-size:.74rem;color:var(--text2);margin-top:1px;line-height:1.4">Get the MFF Draft Helper Chrome extension — live BPA recommendations powered by Jack's rankings, on every Underdog draft.</div>
+</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--accent);padding:6px 12px;border:1px solid var(--accent);border-radius:6px;flex-shrink:0">INSTALL</div>
+</button>
 <div id="mdResumeBanner" style="display:none"></div>
 <div id="mdPastDrafts" style="display:none"></div>
 <div class="md-setup-card">
@@ -2857,6 +2900,43 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 
 <div class="toast" id="toast"></div>
 
+<!-- Underdog Draft Helper install modal — opens from the toolbar 🔧 button
+     and from the Mock Draft tab promo card. Update DOWNLOAD_URL when the
+     extension lands on the Chrome Web Store. -->
+<div id="draftHelperOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)">
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:22px 24px 18px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:'DM Sans',sans-serif">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--accent)">🔧 MFF DRAFT HELPER</div>
+<button id="draftHelperClose" style="background:none;border:none;color:var(--text2);font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
+</div>
+<div style="font-size:.78rem;color:var(--text2);margin-bottom:14px;line-height:1.5">A Chrome extension that runs on Underdog drafts and recommends picks live, powered by Jack's rankings + a BBM advance-rate optimizer. Stacking analysis, true-cliff milestones, recency-weighted historical data.</div>
+
+<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--text);margin-bottom:8px">HOW TO INSTALL (3 STEPS)</div>
+<ol style="margin:0;padding-left:20px;font-size:.78rem;line-height:1.7;color:var(--text)">
+<li><a id="draftHelperDownload" href="/mff-draft-helper.zip" download style="color:var(--accent);font-weight:600">Download the extension</a> and unzip it anywhere on your computer</li>
+<li>Open <code style="background:var(--surface);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:.74rem">chrome://extensions</code> and toggle <b>Developer mode</b> (top-right)</li>
+<li>Click <b>Load unpacked</b> and select the unzipped folder</li>
+</ol>
+<div style="font-size:.7rem;color:var(--text2);margin-top:8px;line-height:1.5">The sidebar will appear automatically when you open any Underdog draft. Pin the extension for one-click access.</div>
+</div>
+
+<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--text);margin-bottom:8px">WHAT IT DOES</div>
+<ul style="margin:0;padding-left:20px;font-size:.78rem;line-height:1.7;color:var(--text)">
+<li>Live BPA recommendations using Jack's rankings + ADP value</li>
+<li>BBM advance-rate optimizer with statistical shrinkage</li>
+<li>Stacking detection (QB+WR/TE) and round priors</li>
+<li>True-cliff milestones — know when the position falls off</li>
+</ul>
+</div>
+
+<div style="display:flex;gap:8px;justify-content:flex-end">
+<button id="draftHelperOk" style="padding:9px 18px;background:var(--accent);color:#000;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;cursor:pointer;font-weight:700">GOT IT</button>
+</div>
+</div>
+</div>
+
 <!-- Help Modal -->
 <div class="help-overlay" id="helpOverlay">
 <div class="help-card">
@@ -2906,6 +2986,29 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <div class="help-section-desc">Sign in to save your rankings to the cloud. After making changes, hit the Save button in the toolbar. Your rankings sync across devices and persist between sessions.</div>
 </div>
 
+<div class="help-section">
+<div class="help-section-icon">⌨️</div>
+<div class="help-section-title">KEYBOARD SHORTCUTS</div>
+<div class="help-section-desc">
+<div style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:.8rem;line-height:1.5">
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">/</kbd><span>Focus the rankings search</span>
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">?</kbd><span>Open this help overlay</span>
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">Esc</kbd><span>Close this overlay</span>
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">g r</kbd><span>Go to Rankings</span>
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">g c</kbd><span>Go to Compare</span>
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">g g</kbd><span>Go to Games</span>
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">g t</kbd><span>Go to Trade Calc</span>
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">g m</kbd><span>Go to Mock Draft</span>
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">g p</kbd><span>Go to Prospect</span>
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">g y</kbd><span>Go to My Teams</span>
+<kbd style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-family:'DM Mono',monospace;font-size:.78rem">g a</kbd><span>Go to Account</span>
+</div>
+</div>
+</div>
+
+</div>
+<div style="text-align:center;margin-top:1rem;padding-top:.85rem;border-top:1px solid var(--border);font-size:.7rem;color:var(--text2)">
+<a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:none;border-bottom:1px dotted var(--text2)">Privacy Policy</a>
 </div>
 </div>
 </div>
@@ -5073,10 +5176,12 @@ function boardToNames(board) {
 window._renderLiveTicker = function() {
   const ticker = document.getElementById('liveTickerItems');
   if (!ticker) return;
-  // Need versionBoards.jacks.redraft to compute current ranks
-  if (typeof versionBoards === 'undefined' || !versionBoards.jacks || !versionBoards.jacks.redraft) return;
+  // Replace the initial "Loading…" placeholder if data isn't ready yet, so anon
+  // users (who never trigger a fresh snapshot) don't see a permanent spinner.
+  const _setIdle = (msg) => { ticker.innerHTML = '<span class="lt-name" style="opacity:.55">' + msg + '</span>'; };
+  if (typeof versionBoards === 'undefined' || !versionBoards.jacks || !versionBoards.jacks.redraft) { _setIdle('Live rankings not loaded yet'); return; }
   const currentOrder = boardToNames(versionBoards.jacks.redraft);
-  if (!currentOrder.length) return;
+  if (!currentOrder.length) { _setIdle('Live rankings not loaded yet'); return; }
 
   const prevOrder = window._jacksPrevOrder;
   const hasPrev = Array.isArray(prevOrder) && prevOrder.length > 0;
@@ -5152,6 +5257,13 @@ window._renderLiveTicker = function() {
       + '<span class="' + cls + '" title="' + tt + '">' + arrow + ' ' + sign + Math.abs(m.delta) + '</span>';
   }).join('');
 };
+
+// Fallback: anon users may never trigger the Firestore snapshot path that calls
+// _renderLiveTicker, leaving the ticker stuck on its initial "Loading…" string.
+// Call once after data is reasonably loaded so the placeholder gets replaced.
+window.addEventListener('load', () => {
+  setTimeout(() => { try { window._renderLiveTicker(); } catch(_) {} }, 2500);
+});
 
 // Convert a name-based array back to an index-based board
 // Handles: name arrays, legacy index arrays, and missing players gracefully
@@ -5516,18 +5628,45 @@ function addTier(afterRank, label, name, _pk) {
 }
 
 function removeTier(id) {
-  if (!canEdit()) { 
+  if (!canEdit()) {
     if (!window._authCurrentUser) {
       toast("Sign in to create your rankings");
       if (typeof window.openAuthModal === 'function') window.openAuthModal();
     } else {
       toast("Only admins can edit Jack's rankings");
     }
-    return; 
+    return;
   }
   const pk = _tierPK();
   versionTiers[currentVersion][currentMode][pk] = versionTiers[currentVersion][currentMode][pk].filter(t => t.id !== id);
   tiers = versionTiers[currentVersion][currentMode][pk];
+}
+
+// Rename tier (preserve label/color, only update display name)
+function renameTier(id, newName) {
+  if (!canEdit()) return false;
+  const t = tiers.find(x => x.id === id);
+  if (!t) return false;
+  const trimmed = (newName || '').trim();
+  if (!trimmed) return false;
+  t.name = trimmed.slice(0, 40); // cap length
+  return true;
+}
+
+// Move a tier divider up (toward rank 1) or down by `delta` ranks. Bound by
+// neighboring tiers so the order stays consistent.
+function moveTier(id, delta) {
+  if (!canEdit()) return false;
+  const sorted = tiers.slice().sort((a, b) => a.afterRank - b.afterRank);
+  const idx = sorted.findIndex(x => x.id === id);
+  if (idx < 0) return false;
+  const t = sorted[idx];
+  const minRank = idx > 0 ? sorted[idx - 1].afterRank + 1 : 1;
+  const maxRank = idx < sorted.length - 1 ? sorted[idx + 1].afterRank - 1 : 9999;
+  const next = Math.max(minRank, Math.min(maxRank, t.afterRank + delta));
+  if (next === t.afterRank) return false;
+  t.afterRank = next;
+  return true;
 }
 
 function saveLocal() {
@@ -6122,9 +6261,28 @@ function getFiltered() {
 function diffHtml(d) {
   const adp = rnkAdp(d);
   const _srcLabel = ({consensus:'Consensus',underdog:'Underdog',dk:'DK',espn:'ESPN',sleeper:'Sleeper',ktc:'KTC',yahoo:'Yahoo'})[rnkAdpSrc] || rnkAdpSrc;
-  if (adp == null) return `<span class="diff-even" title="No ${_srcLabel} ADP available for this player">—</span>`;
+  // Build a per-source rank breakdown so users can see at a glance how
+  // each ranking source values this player. Skip the version they're
+  // currently viewing (it'd just be the row's own rank).
+  function _rankInVer(ver) {
+    try {
+      const b = versionBoards[ver] && versionBoards[ver][currentMode];
+      if (!Array.isArray(b)) return null;
+      const i = b.indexOf(d.idx);
+      return i >= 0 ? i + 1 : null;
+    } catch(_) { return null; }
+  }
+  const _verLabels = { jacks: "Jack's", consensus: 'Consensus', mine: 'My Ranks', jsmodel: 'JS Model' };
+  const _otherVers = Object.keys(_verLabels).filter(v => v !== currentVersion);
+  const _verRanks = _otherVers
+    .map(v => ({ v, r: _rankInVer(v) }))
+    .filter(x => x.r != null)
+    .map(x => `${_verLabels[x.v]} #${x.r}`)
+    .join(' · ');
+  const _verSuffix = _verRanks ? ' || ' + _verRanks : '';
+  if (adp == null) return `<span class="diff-even" title="No ${_srcLabel} ADP available for this player${_verSuffix}">—</span>`;
   const diff = adp - d.myRank;
-  const _tt = `Rank ${d.myRank} vs ${_srcLabel} ADP ${adp}`;
+  const _tt = `Rank ${d.myRank} vs ${_srcLabel} ADP ${adp}${_verSuffix}`;
   if (Math.abs(diff) < 0.5) return `<span class="diff-even" title="${_tt} — even with the market">—</span>`;
   if (diff > 0) return `<span class="diff-up" title="${_tt} — ranked ${Math.abs(diff).toFixed(0)} spots higher than ADP">▲ ${Math.abs(diff).toFixed(0)}</span>`;
   return `<span class="diff-down" title="${_tt} — ranked ${Math.abs(diff).toFixed(0)} spots lower than ADP">▼ ${Math.abs(diff).toFixed(0)}</span>`;
@@ -6485,8 +6643,10 @@ function render() {
           html += `<tr class="tier-row" data-tier-id="${t.id}">
             <td colspan="13"><div class="tier-inner">
               <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
-              ${editable ? `<span class="tier-name-static">${t.name}</span>
+              ${editable ? `<span class="tier-name-static" data-tier-rename="${t.id}" title="Click to rename">${t.name}</span>
               <div class="tier-controls">
+                <button class="tier-btn" data-tier-move="${t.id}" data-delta="-1" title="Move tier up (boundary earlier)">▲</button>
+                <button class="tier-btn" data-tier-move="${t.id}" data-delta="1" title="Move tier down (boundary later)">▼</button>
                 <button class="tier-btn del" data-tier-del="${t.id}" title="Remove tier">✕</button>
               </div>` : `<span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">${t.name}</span>`}
             </div></td>
@@ -6520,9 +6680,9 @@ function render() {
       <td><div class="player-cell" style="flex-direction:row;align-items:center;gap:6px">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${d._slImg}" alt="" onerror="this.style.display='none'">` : ''}<div style="display:flex;flex-direction:column;gap:1px">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span>`}</div></div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
-      <td class="adp-cell">${rnkAdp(d) != null ? rnkAdp(d) : '—'}</td>
-      <td class="pts-cell"${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);if(v==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return v+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return v;})()}</td>
-      <td class="pts-cell"${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null){return jv>0?' style="color:#22c55e;font-weight:700"':jv<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"';}const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null)return jv>0?'+'+jv:jv;const v=adj25ppg(d);return v!=null?v:'—';})()}</td>
+      <td class="adp-cell${(()=>{const a=rnkAdp(d);if(a==null)return '';const df=a-d.myRank;if(df>=3)return ' adp-value';if(df<=-3)return ' adp-reach';return '';})()}" title="${(()=>{const a=rnkAdp(d);if(a==null)return '';const df=Math.round(a-d.myRank);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${rnkAdp(d) != null ? rnkAdp(d) : '—'}</td>
+      <td class="pts-cell ppg-proj-cell"${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);if(v==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return v+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return v;})()}</td>
+      <td class="pts-cell ppg25-cell"${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null){return jv>0?' style="color:#22c55e;font-weight:700"':jv<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"';}const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null)return jv>0?'+'+jv:jv;const v=adj25ppg(d);return v!=null?v:'—';})()}</td>
       <td class="pts-cell yrr-cell" style="display:none">${d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')}</td>
       <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})()}</td>
       <td class="pts-cell landing-cell" style="display:none">${(()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})()}</td>
@@ -6573,6 +6733,8 @@ function render() {
   const _landH = document.getElementById('landingHeader');
   if (_landH) _landH.style.display = showLanding ? '' : 'none';
   document.querySelectorAll('.landing-cell').forEach(c => c.style.display = showLanding ? '' : 'none');
+  // Re-apply user-saved column toggles after tbody rebuild
+  if (typeof window._applyColumnToggles === 'function') window._applyColumnToggles();
 }
 
 function updateStats(data) {
@@ -6651,6 +6813,53 @@ function attachTierListeners() {
     // Delete tier
     const delBtn = e.target.closest('[data-tier-del]');
     if (delBtn) { removeTier(+delBtn.dataset.tierDel); if (window._posSyncEnabled) _syncPairedMode(); saveLocal(); render(); toast('Tier removed'); return; }
+    // Move tier divider up/down by 1 rank
+    const mvBtn = e.target.closest('[data-tier-move]');
+    if (mvBtn) {
+      const id = +mvBtn.dataset.tierMove;
+      const delta = parseInt(mvBtn.dataset.delta, 10) || 0;
+      if (moveTier(id, delta)) {
+        if (window._posSyncEnabled) _syncPairedMode();
+        saveLocal();
+        render();
+      }
+      e.stopPropagation();
+      return;
+    }
+    // Click tier name → inline rename
+    const nameSpan = e.target.closest('[data-tier-rename]');
+    if (nameSpan && !nameSpan.querySelector('input')) {
+      const id = +nameSpan.dataset.tierRename;
+      const t = tiers.find(x => x.id === id);
+      if (!t) return;
+      const original = t.name;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = original;
+      input.maxLength = 40;
+      input.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;background:var(--bg);color:var(--text);border:1px solid var(--accent);border-radius:4px;padding:2px 6px;width:140px";
+      nameSpan.textContent = '';
+      nameSpan.appendChild(input);
+      input.focus();
+      input.select();
+      const commit = (save) => {
+        if (save && renameTier(id, input.value)) {
+          saveLocal();
+          render();
+          toast('Tier renamed');
+        } else {
+          nameSpan.removeChild(input);
+          nameSpan.textContent = original;
+        }
+      };
+      input.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') { ev.preventDefault(); commit(true); }
+        else if (ev.key === 'Escape') { ev.preventDefault(); commit(false); }
+      });
+      input.addEventListener('blur', () => commit(true));
+      e.stopPropagation();
+      return;
+    }
   });
 
   // Compare checkboxes + tier name editing
@@ -6862,6 +7071,90 @@ document.getElementById('helpClose').addEventListener('click', () => {
 document.getElementById('helpOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('helpOverlay')) document.getElementById('helpOverlay').classList.remove('open');
 });
+
+// === Draft Helper install modal ===
+// Opened from the rankings toolbar 🔧 button and the Mock Draft tab promo card.
+(function _initDraftHelperModal() {
+  const overlay = document.getElementById('draftHelperOverlay');
+  if (!overlay) return;
+  const open = () => { overlay.style.display = 'flex'; };
+  const close = () => { overlay.style.display = 'none'; };
+  const btnTb = document.getElementById('btnDraftHelper');
+  const btnMd = document.getElementById('mdDraftHelperBtn');
+  const btnClose = document.getElementById('draftHelperClose');
+  const btnOk = document.getElementById('draftHelperOk');
+  if (btnTb) btnTb.addEventListener('click', open);
+  if (btnMd) btnMd.addEventListener('click', open);
+  if (btnClose) btnClose.addEventListener('click', close);
+  if (btnOk) btnOk.addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.style.display === 'flex') close(); });
+})();
+
+// === Global keyboard shortcuts ===
+// "/" focuses the rankings search; "?" opens help; "g <letter>" jumps to a tab.
+// Only fires when no editable element is focused, so users can still type
+// freely in inputs / textareas / contenteditable.
+(function _initKeyboardShortcuts() {
+  const NAV_KEYS = {
+    r: 'rankings', c: 'compare', g: 'games', t: 'trade', m: 'mockdraft',
+    p: 'prospect', y: 'myteams', a: 'account', v: 'trivia', b: 'backtest'
+  };
+  let pendingG = false;
+  let gTimer = null;
+  function _isEditableTarget(el) {
+    if (!el) return false;
+    const tag = el.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    if (el.isContentEditable) return true;
+    return false;
+  }
+  document.addEventListener('keydown', e => {
+    if (_isEditableTarget(e.target)) return;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    // "/" → focus rankings search
+    if (e.key === '/' && !e.shiftKey) {
+      const search = document.getElementById('search');
+      if (search) {
+        e.preventDefault();
+        // Switch to Rankings if needed, then focus the search
+        if (typeof window.switchPage === 'function' && !document.getElementById('pageRankings').classList.contains('active')) {
+          window.switchPage('rankings');
+        }
+        setTimeout(() => search.focus(), 0);
+      }
+      return;
+    }
+    // "?" → open help
+    if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+      e.preventDefault();
+      const ov = document.getElementById('helpOverlay');
+      if (ov) ov.classList.add('open');
+      return;
+    }
+    // "Escape" → close help
+    if (e.key === 'Escape') {
+      const ov = document.getElementById('helpOverlay');
+      if (ov && ov.classList.contains('open')) { ov.classList.remove('open'); return; }
+    }
+    // "g <letter>" → navigate
+    if (pendingG) {
+      pendingG = false;
+      if (gTimer) { clearTimeout(gTimer); gTimer = null; }
+      const target = NAV_KEYS[e.key.toLowerCase()];
+      if (target && typeof window.switchPage === 'function') {
+        e.preventDefault();
+        window.switchPage(target);
+      }
+      return;
+    }
+    if (e.key === 'g') {
+      pendingG = true;
+      gTimer = setTimeout(() => { pendingG = false; gTimer = null; }, 1500);
+      return;
+    }
+  });
+})();
 
 // Controls
 let _searchTimer = null;
@@ -8486,6 +8779,53 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
   a.download = `${verLabel}-${modeLabel}-${posLabel}-Rankings.json`;
   a.click();
   toast(`Exported ${players.length} players to JSON`);
+});
+
+// Export tier groupings (JSON) — players grouped under each tier label, no
+// per-row stat noise, useful for quick sharing of tier philosophy.
+document.getElementById('btnExportTiers').addEventListener('click', () => {
+  const data = getFiltered();
+  if (!data.length) { toast('Nothing to export'); return; }
+  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+  // Sort tier boundaries ascending for grouping
+  const sortedTiers = tiers.slice().sort((a, b) => a.afterRank - b.afterRank);
+  const groups = [];
+  let current = { tier: 'Untiered', label: '', afterRank: 0, players: [] };
+  data.forEach((d, i) => {
+    const displayRank = useFilteredRank ? (i + 1) : d.myRank;
+    // Find the latest tier whose afterRank <= displayRank
+    let owner = null;
+    for (const t of sortedTiers) { if (t.afterRank <= displayRank) owner = t; else break; }
+    const key = owner ? owner.label + '|' + owner.afterRank : '';
+    if ((owner && current.label !== owner.label) || (!owner && current.tier !== 'Untiered')) {
+      if (current.players.length) groups.push(current);
+      current = owner
+        ? { tier: 'Tier ' + owner.label, label: owner.label, name: owner.name, startRank: displayRank, players: [] }
+        : { tier: 'Untiered', label: '', startRank: displayRank, players: [] };
+    }
+    current.players.push({ rank: displayRank, name: d.n, team: d.t, pos: d.s, posRank: d.myPosRank || d.r });
+  });
+  if (current.players.length) groups.push(current);
+
+  const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
+  const posLabel = filter === 'ALL' ? 'All' : filter;
+  const payload = {
+    source: 'myfantasyfootball.org',
+    version: currentVersion,
+    mode: currentMode,
+    position: filter,
+    exportedAt: new Date().toISOString(),
+    tierCount: groups.filter(g => g.tier !== 'Untiered').length,
+    playerCount: data.length,
+    tiers: groups
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${verLabel}-${modeLabel}-${posLabel}-Tiers.json`;
+  a.click();
+  toast(`Exported ${payload.tierCount} tier${payload.tierCount === 1 ? '' : 's'} to JSON`);
 });
 
 // Export to Underdog format CSV (id, firstName, lastName, rank)
@@ -10661,17 +11001,101 @@ function switchPage(page) {
   const authBar = document.getElementById('globalAuthBar');
   const anchor = document.getElementById(anchorMap[page]);
   if (authBar && anchor) anchor.appendChild(authBar);
+  // Update URL hash so the tab is shareable / bookmarkable. Skip the rankings
+  // landing page (default — keeps URLs clean for new visitors).
+  try {
+    const targetHash = page && page !== 'rankings' ? '#' + page : '';
+    if (location.hash !== targetHash) {
+      history.replaceState({}, '', location.pathname + location.search + targetHash);
+    }
+  } catch(_) {}
   // Render compare grid when navigating to compare page
   if (page === 'compare') renderCompareGrid();
   // Render backtest when navigating to backtest page
   if (page === 'backtest' && typeof window._renderBacktest === 'function') window._renderBacktest();
 }
+window.switchPage = switchPage;
+// Read #<page> from URL on initial load and on hashchange (back/forward).
+(function _initHashRouter() {
+  function _applyHash() {
+    const h = (location.hash || '').replace(/^#\/?/, '').toLowerCase();
+    if (h && pageMap[h]) switchPage(h);
+  }
+  window.addEventListener('hashchange', _applyHash);
+  // Defer to after DOMContentLoaded so the nav handlers exist.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _applyHash);
+  } else {
+    setTimeout(_applyHash, 0);
+  }
+})();
+
+// === Column Visibility Toggle ===
+// Lets users hide ADP / Proj PPG / '25 PPG / Age columns to declutter wide
+// rankings. Persisted in localStorage. Other columns (Y/RR, JM, Land) are
+// auto-toggled by view context and intentionally not user-controllable.
+(function _initColumnToggle() {
+  const STORAGE_KEY = 'mff_col_toggles';
+  const COLS = {
+    adp: { th: 'adpHeader', cell: '.adp-cell' },
+    ppgProj: { th: 'ppgProjHeader', cell: '.ppg-proj-cell' },
+    ppg25: { th: 'ppg25HeaderTh', cell: '.ppg25-cell' },
+    age: { th: 'ageHeader', cell: '.age-cell' }
+  };
+  function _load() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; } catch(_) { return {}; }
+  }
+  function _save(state) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(_) {}
+  }
+  function _apply(state) {
+    Object.keys(COLS).forEach(k => {
+      const visible = state[k] !== false; // default visible
+      const th = document.getElementById(COLS[k].th);
+      // Don't override view-context hides (e.g. yrr/jm/landing handled elsewhere).
+      // For our four columns the th element is always present and always visible by
+      // default, so this is safe.
+      if (th) th.style.display = visible ? '' : 'none';
+      document.querySelectorAll(COLS[k].cell).forEach(c => { c.style.display = visible ? '' : 'none'; });
+    });
+  }
+  function _syncCheckboxes(state) {
+    document.querySelectorAll('[data-coltoggle]').forEach(cb => {
+      cb.checked = state[cb.dataset.coltoggle] !== false;
+    });
+  }
+  const state = _load();
+  // Apply on initial render and after every render() call (since render rebuilds tbody).
+  window._applyColumnToggles = () => _apply(_load());
+  window.addEventListener('DOMContentLoaded', () => { _syncCheckboxes(state); _apply(state); });
+
+  document.addEventListener('click', e => {
+    const btn = document.getElementById('btnColumnToggle');
+    const pop = document.getElementById('colTogglePopup');
+    if (!pop) return;
+    if (btn && btn.contains(e.target)) {
+      pop.style.display = pop.style.display === 'none' ? 'block' : 'none';
+      e.stopPropagation();
+      return;
+    }
+    if (!pop.contains(e.target)) pop.style.display = 'none';
+  });
+  document.addEventListener('change', e => {
+    if (!e.target.matches('[data-coltoggle]')) return;
+    const cur = _load();
+    cur[e.target.dataset.coltoggle] = e.target.checked;
+    _save(cur);
+    _apply(cur);
+  });
+})();
 // Show/hide admin-only nav buttons when auth state changes
 (function() {
   function _navAdminCheck() {
     const admin = typeof window.isAdmin === 'function' && window.isAdmin();
     const btBtn = document.getElementById('navBacktestBtn');
     if (btBtn) btBtn.style.display = admin ? '' : 'none';
+    const tvBtn = document.getElementById('navTriviaBtn');
+    if (tvBtn) tvBtn.style.display = admin ? '' : 'none';
   }
   if (typeof firebase !== 'undefined' && firebase.auth) {
     try { firebase.auth().onAuthStateChanged(_navAdminCheck); } catch(e) {}
@@ -14330,13 +14754,41 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
     const ap = _apdb[d.n];
     if (!ap) return;
     const lc = (typeof LEGEND_CAREERS !== 'undefined') ? LEGEND_CAREERS[d.n] : null;
-    const best = _bestCareer(d.n, d.career, lc, ap.career);
-    if (best.length > ((d.career && d.career.length) || 0)) d.career = best;
+    // LEGEND_CAREERS first on ties: it's the canonical source updated
+    // by the PFR backfill pipeline. The 2026-05-08 merge brought fresh
+    // pre-1999 season totals (Freeman McNeil's 80s rush yds went from
+    // 6293 → 7146) for ~67 players whose D[].career was already at the
+    // same season count but with the older lower numbers; ordering D
+    // first kept the stale version because length tied and the strict
+    // > below couldn't break the tie.
+    const best = _bestCareer(d.n, lc, d.career, ap.career);
+    // Use >= so a tied-length LEGEND_CAREERS entry replaces a stale
+    // D[].career on ties (same season count, fresher numbers from the
+    // PFR backfill). When LEGEND has fewer seasons, d.career is what
+    // _bestCareer returned anyway, so this no-ops correctly.
+    if (best.length >= ((d.career && d.career.length) || 0)) d.career = best;
     if (d.birthYear == null && ap.birthYear != null) {
       d.birthYear = typeof ap.birthYear === 'string' ? parseInt(ap.birthYear) : ap.birthYear;
       if (d.age == null && d.birthYear) d.age = 2026 - d.birthYear;
     }
   });
+
+  // 1b) Second pass for retired players NOT in ALL_PLAYERS_DB. The
+  // 2026-05-08 PFR backfill expanded LEGEND_CAREERS to 2,438 players
+  // including pre-WEEKLY_STATS-era legends (Freeman McNeil, Larry
+  // Brown, Curt Warner) whose D[].career still has the older shorter
+  // pre-merge totals. The loop above skips them via `if (!ap) return`,
+  // so they keep stale data. This pass aligns D[].career to LEGEND for
+  // any case where LEGEND has at least as many seasons.
+  if (typeof LEGEND_CAREERS !== 'undefined') {
+    D.forEach(d => {
+      const lc = LEGEND_CAREERS[d.n];
+      if (!lc || !lc.length) return;
+      if (lc.length >= ((d.career && d.career.length) || 0)) {
+        d.career = lc;
+      }
+    });
+  }
 
   // 2) Merge ALL_PLAYERS_TEAMS into PLAYER_TEAM_HISTORY
   if (typeof ALL_PLAYERS_TEAMS !== 'undefined' && typeof PLAYER_TEAM_HISTORY !== 'undefined') {
@@ -20834,6 +21286,8 @@ window.fmtHeight = fmtHeight;
     try {
       const doc = await db.collection('rankings').doc('jacks-official').get();
       if (doc.exists && doc.data().data) {
+        window._jacksUpdatedAt = doc.data().updatedAt || null;
+        if (typeof window._renderRankingsUpdated === 'function') window._renderRankingsUpdated();
         const obj = JSON.parse(doc.data().data);
         // Stash the prev snapshot for the live ticker
         if (obj._prev && Array.isArray(obj._prev.redraft)) {
@@ -20916,6 +21370,8 @@ window.fmtHeight = fmtHeight;
     if (!db || jacksUnsubscribe) return;
     jacksUnsubscribe = db.collection('rankings').doc('jacks-official').onSnapshot(doc => {
       if (doc.exists && doc.data().data) {
+        window._jacksUpdatedAt = doc.data().updatedAt || null;
+        if (typeof window._renderRankingsUpdated === 'function') window._renderRankingsUpdated();
         const obj = JSON.parse(doc.data().data);
         // Stash prev snapshot for live ticker
         if (obj._prev && Array.isArray(obj._prev.redraft)) {
@@ -20999,6 +21455,21 @@ window.fmtHeight = fmtHeight;
   // Render on init (auth listener will re-render once currentUser is set).
   setTimeout(_renderLastSaved, 0);
   window._renderLastSaved = _renderLastSaved;
+
+  // Show when Jack's shared rankings were last updated. Visible to ALL users
+  // (signed in or not) — populated by the snapshot/load handlers above.
+  function _renderRankingsUpdated() {
+    const el = document.getElementById('rankingsUpdatedText');
+    if (!el) return;
+    const ts = window._jacksUpdatedAt ? new Date(window._jacksUpdatedAt).getTime() : null;
+    if (!ts) { el.style.display = 'none'; return; }
+    el.style.display = '';
+    el.textContent = '· Rankings updated ' + _formatRelative(ts);
+    el.title = 'Last updated by Jack ' + new Date(ts).toLocaleString();
+  }
+  setInterval(_renderRankingsUpdated, 60000);
+  setTimeout(_renderRankingsUpdated, 0);
+  window._renderRankingsUpdated = _renderRankingsUpdated;
 
   // Manual save button handler
   const _saveIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
@@ -21374,6 +21845,10 @@ window.fmtHeight = fmtHeight;
     });
     // Also start listening for Jack's updates even before sign-in (public data)
     listenForJacksUpdates();
+    // Snapshot listeners can be slow/unreliable for anon users in some
+    // environments, so do a one-shot read to populate the "Rankings updated"
+    // chip immediately. The snapshot will refresh it later if Jack saves.
+    loadJacksFromCloud();
   }
 
   // === ACCOUNT PAGE LOGIC ===
@@ -36530,7 +37005,25 @@ window.fmtHeight = fmtHeight;
     { title: 'Career Playoff Rush Yds', desc: 'Top 20 all-time postseason · RB',
       filters: { type: 'career', stat: 'ry', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['RB'], seasonType: 'post' } },
     { title: 'Career Playoff Rec Yds', desc: 'Top 20 all-time postseason · WR/TE',
-      filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'], seasonType: 'post' } }
+      filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'], seasonType: 'post' } },
+
+    // Era / historical templates — added 2026-05-08 after the PFR
+    // backfill brought 1966-1998 season + career data into the
+    // trivia generator. The single-year boards read from
+    // SEASON_LEADERS; the era-scoped career boards read from the
+    // expanded LEGEND_CAREERS via the existing era filter.
+    { title: 'Career 1980s Rush Yds', desc: 'Dickerson/Payton/Dorsett era · RB',
+      filters: { type: 'career', stat: 'ry', year: 'all', era: '1980-1989', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
+    { title: 'Career 1990s Rec Yds', desc: 'Rice/Irvin/Carter era · WR/TE',
+      filters: { type: 'career', stat: 'rcy', year: 'all', era: '1990-1999', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'] } },
+    { title: 'Career Modern Era Pass TDs', desc: 'Since 1999 · QB',
+      filters: { type: 'career', stat: 'ptd', year: 'all', era: 'since-1999', count: 20, conf: 'all', team: 'all', positions: ['QB'] } },
+    { title: '1985 Rushing Yards', desc: 'Marcus Allen MVP year · RB',
+      filters: { type: 'season', stat: 'ry', year: '1985', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
+    { title: '1972 Rushing Yards', desc: 'OJ era · RB',
+      filters: { type: 'season', stat: 'ry', year: '1972', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
+    { title: '1995 Receiving Yards', desc: 'Rice/Bruce/Moore record year · WR/TE',
+      filters: { type: 'season', stat: 'rcy', year: '1995', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'] } }
   ];
 
   function _triviaApplyTemplate(t) {
@@ -36643,7 +37136,25 @@ window.fmtHeight = fmtHeight;
     { title: 'Career Playoff Rush Yds', desc: 'Top 20 all-time postseason · RB',
       filters: { type: 'career', stat: 'ry', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['RB'], seasonType: 'post' } },
     { title: 'Career Playoff Rec Yds', desc: 'Top 20 all-time postseason · WR/TE',
-      filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'], seasonType: 'post' } }
+      filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'], seasonType: 'post' } },
+
+    // Era / historical templates — added 2026-05-08 after the PFR
+    // backfill brought 1966-1998 season + career data into the
+    // trivia generator. The single-year boards read from
+    // SEASON_LEADERS; the era-scoped career boards read from the
+    // expanded LEGEND_CAREERS via the existing era filter.
+    { title: 'Career 1980s Rush Yds', desc: 'Dickerson/Payton/Dorsett era · RB',
+      filters: { type: 'career', stat: 'ry', year: 'all', era: '1980-1989', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
+    { title: 'Career 1990s Rec Yds', desc: 'Rice/Irvin/Carter era · WR/TE',
+      filters: { type: 'career', stat: 'rcy', year: 'all', era: '1990-1999', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'] } },
+    { title: 'Career Modern Era Pass TDs', desc: 'Since 1999 · QB',
+      filters: { type: 'career', stat: 'ptd', year: 'all', era: 'since-1999', count: 20, conf: 'all', team: 'all', positions: ['QB'] } },
+    { title: '1985 Rushing Yards', desc: 'Marcus Allen MVP year · RB',
+      filters: { type: 'season', stat: 'ry', year: '1985', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
+    { title: '1972 Rushing Yards', desc: 'OJ era · RB',
+      filters: { type: 'season', stat: 'ry', year: '1972', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
+    { title: '1995 Receiving Yards', desc: 'Rice/Bruce/Moore record year · WR/TE',
+      filters: { type: 'season', stat: 'rcy', year: '1995', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'] } }
   ];
 
   const _TRIVIA_DAILY_KEY = 'mff_triviaDaily';
@@ -37220,6 +37731,60 @@ window.fmtHeight = fmtHeight;
     return out;
   }
 
+  // Season-mode cross-check source: SEASON_LEADERS data is from PFR,
+  // independent of WEEKLY_STATS / nflverse, so for 1999+ years it
+  // catches data drift between the two pipelines. For pre-1999 years
+  // both rendered and expected come from SEASON_LEADERS so the check
+  // is essentially confirming the trivia generator didn't drop or
+  // mis-sort entries during rendering.
+  //
+  // Stat → (PFR table id, PFR field name). fpts/ppg/totalTd cross
+  // categories so they're skipped here — the all-time reference table
+  // covers those for career mode.
+  const _SL_STAT_MAP = {
+    py:   ['passing',   'pass_yds'],
+    ptd:  ['passing',   'pass_td'],
+    ry:   ['rushing',   'rush_yds'],
+    rtd:  ['rushing',   'rush_td'],
+    rcy:  ['receiving', 'rec_yds'],
+    rec:  ['receiving', 'rec'],
+    rctd: ['receiving', 'rec_td'],
+    tgt:  ['receiving', 'targets']
+  };
+
+  function _triviaAltAggregateSeason(f) {
+    if (typeof SEASON_LEADERS === 'undefined') return null;
+    if (f.type !== 'season') return null;
+    if (!f.year || f.year === 'all') return null;
+    const yrData = SEASON_LEADERS[String(f.year)];
+    if (!yrData) return null;
+    const m = _SL_STAT_MAP[f.stat];
+    if (!m) return null;
+    const cat = m[0], slField = m[1];
+    const list = (yrData[cat] || []).slice();
+    if (!list.length) return null;
+    // Position resolution: prefer D[]'s classification (modern unified
+    // RB/WR/TE/QB labels) over PFR's (which retained FB/HB through the
+    // 70s and 80s — Csonka, Riggins, Kevin Mack are all FB in PFR but
+    // RB in D[], so a strict PFR filter would drop them). The rendered
+    // board uses D[]'s pos; the cross-check has to match.
+    const dPos = {};
+    if (typeof D !== 'undefined') D.forEach(d => { if (d.n && d.s) dPos[d.n] = d.s; });
+    const positions = new Set(f.positions || []);
+    const out = [];
+    list.forEach(r => {
+      if (!r || !r.name) return;
+      const pfrPos = (r.pos || '').toUpperCase();
+      const pos = dPos[r.name] ||
+                  (pfrPos && ['QB','RB','WR','TE'].includes(pfrPos) ? pfrPos : '') ||
+                  (cat === 'passing' ? 'QB' : cat === 'rushing' ? 'RB' : 'WR');
+      if (positions.size && !positions.has(pos)) return;
+      out.push({ name: r.name, val: r[slField] || 0 });
+    });
+    out.sort((a, b) => b.val - a.val);
+    return out;
+  }
+
   // Compare the rendered top-N to a reference list of names. Returns
   // diff details (mismatched ranks) and a verdict. Two-tier check: a
   // position-exact pass (strict order), and a set-equal pass that treats
@@ -37276,22 +37841,27 @@ window.fmtHeight = fmtHeight;
       };
     }
 
-    // Cross-check (career mode only — season/game modes are nflverse-
-    // driven and the alternate path doesn't help).
+    // Cross-check. Career mode aggregates from LEGEND_CAREERS; season
+    // mode (when a specific year is selected and the stat maps to a
+    // single PFR category) aggregates from SEASON_LEADERS as an
+    // independent pipeline.
+    let alt = null;
     if (f.type === 'career') {
-      const alt = _triviaAltAggregateCareer(f);
-      if (alt && alt.length) {
-        const altTop = alt.slice(0, data._topN.length);
-        const cmp = _triviaCompareNames(data._topN, altTop.map(a => a.name), Math.min(10, altTop.length));
-        result.cross = {
-          ok: cmp.namesMatch,
-          depth: cmp.depth,
-          exact: cmp.exact,
-          mismatches: cmp.mismatches,
-          missing: cmp.missing,
-          extra: cmp.extra
-        };
-      }
+      alt = _triviaAltAggregateCareer(f);
+    } else if (f.type === 'season') {
+      alt = _triviaAltAggregateSeason(f);
+    }
+    if (alt && alt.length) {
+      const altTop = alt.slice(0, data._topN.length);
+      const cmp = _triviaCompareNames(data._topN, altTop.map(a => a.name), Math.min(10, altTop.length));
+      result.cross = {
+        ok: cmp.namesMatch,
+        depth: cmp.depth,
+        exact: cmp.exact,
+        mismatches: cmp.mismatches,
+        missing: cmp.missing,
+        extra: cmp.extra
+      };
     }
 
     return result;
@@ -37939,7 +38509,15 @@ window.fmtHeight = fmtHeight;
       const isPost = seasonType === 'post';
       // Era is a career-mode-only year-range filter ("since-2010", "2010-2019", etc.).
       // For non-career modes the era selector is hidden and treated as 'all'.
-      const era = (document.getElementById('triviaFilterEra') || {}).value || 'all';
+      let era = (document.getElementById('triviaFilterEra') || {}).value || 'all';
+      if (era === 'custom') {
+        const _ef = parseInt((document.getElementById('triviaFilterEraFrom') || {}).value, 10);
+        const _et = parseInt((document.getElementById('triviaFilterEraTo') || {}).value, 10);
+        if (_ef && _et && _ef <= _et) era = _ef + '-' + _et;
+        else if (_ef && !_et) era = 'since-' + _ef;
+        else if (!_ef && _et) era = '1920-' + _et;
+        else era = 'all';
+      }
       function _parseEra(e) {
         if (!e || e === 'all') return [null, null];
         if (e.indexOf('since-') === 0) return [parseInt(e.slice(6), 10), null];
@@ -38421,8 +38999,10 @@ window.fmtHeight = fmtHeight;
       // is selected but WEEKLY_STATS doesn't reach back that far
       // (pre-1999) AND, for 1999+ years, as a supplementary source for
       // players whose season-line PFR captured but who slipped through
-      // the existing pipeline. _seenKey dedup keeps WEEKLY_STATS as
-      // authoritative when both sources have the same name+year.
+      // the existing pipeline. We dedup against the actual emitted
+      // entries (not just _seenKey) because the D[].career fill block
+      // doesn't update _seenKey, and merged retired players from the
+      // legend backfill can now appear in D[] with old-year careers.
       if (filterType === 'season' && year !== 'all' && typeof SEASON_LEADERS !== 'undefined') {
         const _slYr = SEASON_LEADERS[String(year)];
         if (_slYr) {
@@ -38434,15 +39014,27 @@ window.fmtHeight = fmtHeight;
           };
           const _normTm = (t) => _PFR_TM[t] || t || '';
           const _slYrInt = parseInt(year);
+          const _slEmitted = new Set(allEntries.map(e => e.name + '|' + e.yr));
+          // Position resolution: prefer D[]'s modern unified label
+          // (RB/WR/TE/QB) over PFR's (which kept FB/HB through the 80s).
+          // Csonka, Kevin Mack, Craig James, Earnest Byner all sit in PFR
+          // as "FB" but are RB to the trivia user — defaulting unknown
+          // PFR positions to the category default keeps them in.
+          const _slPos = (r, cat) => {
+            const dp = (typeof _dPosMap !== 'undefined' ? _dPosMap[r.name] : null);
+            if (dp) return dp;
+            const pfr = (r.pos || '').toUpperCase();
+            if (['QB','RB','WR','TE'].includes(pfr)) return pfr;
+            return cat === 'passing' ? 'QB' : cat === 'rushing' ? 'RB' : 'WR';
+          };
           const _slMerged = {};
           ['passing','rushing','receiving'].forEach(cat => {
             (_slYr[cat] || []).forEach(r => {
               if (!r || !r.name) return;
-              if (_seenKey.has(r.name + '|' + _slYrInt)) return;
+              if (_slEmitted.has(r.name + '|' + _slYrInt)) return;
               const m = _slMerged[r.name] || (_slMerged[r.name] = {
                 name: r.name,
-                pos: (r.pos || '').toUpperCase() ||
-                     (cat === 'passing' ? 'QB' : cat === 'rushing' ? 'RB' : 'WR'),
+                pos: _slPos(r, cat),
                 team: _normTm(r.team), yr: _slYrInt, gp: r.g || 0,
                 py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0,
                 rec:0, rcy:0, rctd:0, tgt:0, fl:0,

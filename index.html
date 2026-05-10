@@ -1636,6 +1636,63 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="pm-bulk-preview" id="pmBulkRasPreview" style="display:none"></div>
 </div>
 </div>
+<!-- Weight Lab — admin-only panel for live weight tuning + backtest preview -->
+<details class="pm-weight-lab" id="pmWeightLab" style="display:none">
+<summary class="pm-wl-summary-bar">
+<span class="pm-wl-summary-title">⚙️ Weight Lab <span class="pm-wl-summary-sub">— drag sliders to tune JM weights, see backtest impact live</span></span>
+<span class="pm-wl-summary-meta" id="pmWlHeaderMeta"></span>
+</summary>
+<div class="pm-wl-body">
+<div class="pm-wl-toolbar">
+<div class="pm-wl-pos-tabs" id="pmWlPosTabs">
+<button class="pm-wl-tab active" data-pmwlpos="QB">QB</button>
+<button class="pm-wl-tab" data-pmwlpos="RB">RB</button>
+<button class="pm-wl-tab" data-pmwlpos="WR">WR</button>
+<button class="pm-wl-tab" data-pmwlpos="TE">TE</button>
+</div>
+<div class="pm-wl-mode-tabs" id="pmWlModeTabs">
+<button class="pm-wl-tab active" data-pmwlmode="floor">Floor</button>
+<button class="pm-wl-tab" data-pmwlmode="ceiling">Ceiling</button>
+</div>
+<div class="pm-wl-presets">
+<span class="pm-wl-preset-label">Preset:</span>
+<select class="pm-wl-preset-sel" id="pmWlPresetSel" title="Switch between saved weight configurations"></select>
+<button class="pm-wl-btn pm-wl-preset-save" id="pmWlPresetSave" title="Save current weights + tiers as a named preset (stored locally)">Save As…</button>
+<button class="pm-wl-btn pm-wl-preset-delete" id="pmWlPresetDelete" title="Delete the selected preset" style="display:none">🗑</button>
+</div>
+<div class="pm-wl-actions">
+<button class="pm-wl-btn" id="pmWlReset" title="Restore deployed v4 weights">↺ Reset</button>
+<button class="pm-wl-btn" id="pmWlExport" title="Download current weights as JSON">⤓ Export</button>
+</div>
+</div>
+<div class="pm-wl-grid">
+<div class="pm-wl-sliders-col">
+<div class="pm-wl-sliders-head">
+<span>Component</span>
+<span class="pm-wl-col-raw">Raw</span>
+<span class="pm-wl-col-pct">Weight</span>
+<span class="pm-wl-col-delta">Δ vs base</span>
+</div>
+<div class="pm-wl-sliders" id="pmWlSliders"></div>
+<div class="pm-wl-sum-line" id="pmWlSumLine"></div>
+</div>
+<div class="pm-wl-backtest-col">
+<div class="pm-wl-bt-head">
+<span class="pm-wl-bt-title">Backtest impact <span id="pmWlBtPosLabel"></span></span>
+<select class="pm-wl-bt-class" id="pmWlBtClass">
+<option value="all" selected>2020-2023</option>
+<option value="allyears">2020-2024</option>
+<option value="fullhistory">2017-2024</option>
+</select>
+</div>
+<div class="pm-wl-kpis" id="pmWlKpis"></div>
+<div class="pm-wl-thresholds" id="pmWlThresholds"></div>
+<div class="pm-wl-tierchart" id="pmWlTierChart"></div>
+<div class="pm-wl-bt-foot" id="pmWlBtFoot"></div>
+</div>
+</div>
+</div>
+</details>
 <div id="pmClassGrade" class="pm-class-grade" style="display:none"></div>
 <div class="pm-table-wrap">
 <table class="pm-table" id="pmTable">
@@ -33653,6 +33710,22 @@ window.fmtHeight = fmtHeight;
     }
   }
 
+  // Synchronous rebuild for callers that already know data is loaded (e.g. the
+  // Weight Lab after a slider drag). Unlike rebuildAndRender(), this skips the
+  // _dcLoad/_bioLoad/_roLoad gate and runs immediately so the cross-page
+  // _pmJm stamp + pmBuiltData closure var both stay fresh after weight changes.
+  function _pmRebuildSync() {
+    pmBuiltData = buildProspectData();
+    window._jmScoresAttached = false; // Rankings page re-attaches on next render
+    pmBuiltData.forEach(function(p) {
+      if (p.jm == null) return;
+      var match = D.find(function(d) { return d.n === p.name; });
+      if (match) match._pmJm = p.jm;
+    });
+    renderTable();
+  }
+  window._pmRebuildSync = _pmRebuildSync;
+
   // Position tabs
   document.getElementById('pmPosTabs').addEventListener('click', function(e) {
     const btn = e.target.closest('.pm-pos-tab');
@@ -33751,6 +33824,781 @@ window.fmtHeight = fmtHeight;
   if (typeof firebase !== 'undefined' && firebase.auth) {
     try { firebase.auth().onAuthStateChanged(_pmSyncAdminTools); } catch(e) {}
   }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  WEIGHT LAB — admin-only live JM weight tuner with backtest preview
+  //  Phase 1: sliders for floor + ceiling weights per position, normalize at
+  //  apply time, mutate window._JM_WEIGHTS / _JM_CEILING_WEIGHTS, debounced
+  //  rebuild + re-render. Backtest summary shows Stud/Hit+/Bust/Elite rates
+  //  with Δ vs deployed baseline + per-tier mini calibration chart.
+  //  Phase 2 forward-compat: sliders are data-driven from the weight objects
+  //  so adding a new component key (e.g. user-defined "my film grade") will
+  //  auto-render a new slider with no code changes.
+  // ═══════════════════════════════════════════════════════════════════════
+
+  const _PM_WL_LABELS = {
+    dc: 'Draft Capital', prod: 'Production', age: 'Draft Age', breakout: 'Breakout Age',
+    ras: 'RAS (Athleticism)', pff: 'Film Grade (PFF)', qbRush: 'QB Rushing',
+    qbAccuracy: 'QB Accuracy', qbInt: 'QB INT Rate', qbCtx: 'QB Context',
+    conf: 'Conference / School', size: 'Size', tm: 'Teammate Quality',
+    improvement: 'Y-over-Y Improvement', earlyDeclare: 'Early Declare',
+    dominator: 'Dominator', marketShare: 'Market Share', rbRec: 'RB Receiving',
+    yaco: 'Yards After Contact', yprr: 'Yards Per Route Run', routeGrade: 'Route Grade',
+    contested: 'Contested Catch', efficiency: 'Efficiency', colTrajectory: 'College Trajectory'
+  };
+  const _PM_WL_TIERS = ['Generational','Top Prospect','Starter','Contributor','Depth','Lottery Ticket','Long Shot'];
+  const _PM_WL_TIER_COLORS = {
+    'Generational':'#fbbf24','Top Prospect':'#34d399','Starter':'#60a5fa',
+    'Contributor':'#a78bfa','Depth':'#94a3b8','Lottery Ticket':'#f87171','Long Shot':'#475569'
+  };
+  const _PM_WL_ELITE_PPG = { QB: 20.0, RB: 15.0, WR: 15.0, TE: 11.0 };
+
+  // State: pos = QB/RB/WR/TE; mode = floor/ceiling; baseline captured on first build
+  // activePreset = name of the currently loaded preset, or '__deployed__' for the deployed baseline
+  const _pmWl = { pos: 'QB', mode: 'floor', baseline: null, baselineRates: null, applyTimer: null, dirty: false, activePreset: '__deployed__' };
+  const _PM_WL_PRESET_KEY = 'pmWlPresets';
+  const _PM_WL_DEPLOYED = '__deployed__';
+
+  function _pmWlIsAdmin() { return _dcIsAdmin(); }
+
+  function _pmWlDeepClone(o) { return JSON.parse(JSON.stringify(o || {})); }
+
+  function _pmWlGetWeights(pos, mode) {
+    const root = (mode === 'ceiling' ? window._JM_CEILING_WEIGHTS : window._JM_WEIGHTS) || {};
+    return root[pos] || {};
+  }
+
+  function _pmWlCaptureBaseline() {
+    if (_pmWl.baseline) return;
+    _pmWl.baseline = {
+      floor:   _pmWlDeepClone(window._JM_WEIGHTS || {}),
+      ceiling: _pmWlDeepClone(window._JM_CEILING_WEIGHTS || {}),
+      tiers:   _pmWlDeepClone(window._POS_TIERS || {})
+    };
+  }
+
+  // Pretty label for a weight key (falls back to the key itself)
+  function _pmWlLabel(key) {
+    return _PM_WL_LABELS[key] || key.charAt(0).toUpperCase() + key.slice(1);
+  }
+
+  // Build the slider rows for the active pos+mode from current live weights
+  function _pmWlBuildSliders() {
+    const container = document.getElementById('pmWlSliders');
+    if (!container) return;
+    const pos = _pmWl.pos, mode = _pmWl.mode;
+    const live = _pmWlGetWeights(pos, mode);
+    const baseline = (_pmWl.baseline && _pmWl.baseline[mode] && _pmWl.baseline[mode][pos]) || live;
+    const keys = Object.keys(live).sort((a,b) => (live[b]||0) - (live[a]||0));
+    if (keys.length === 0) {
+      container.innerHTML = '<div class="pm-wl-bt-empty">No '+mode+' weights defined for '+pos+'.</div>';
+      return;
+    }
+    // For initial slider value: scale current weight (0..1) to a 0..100 raw value
+    // such that normalizing across all sliders reproduces the current weights.
+    // Use raw = round(weight * 100) so DC=0.27 → slider at 27. Sum of raws will be ~100.
+    let html = '';
+    keys.forEach(k => {
+      const w = live[k] || 0;
+      const wb = baseline[k] || 0;
+      const raw = Math.round(w * 100);
+      const baselinePct = Math.round(wb * 100);
+      // Baseline tick uses raw position 0..100 → left % of the slider width
+      const tickLeftPct = Math.max(0, Math.min(100, baselinePct));
+      html += '<div class="pm-wl-row" data-pmwlkey="'+k+'">';
+      html +=   '<div class="pm-wl-row-label">'+_pmWlLabel(k)+'<span class="pm-wl-row-key">'+k+'</span></div>';
+      html +=   '<div class="pm-wl-slider-wrap">';
+      html +=     '<input type="range" class="pm-wl-slider" min="0" max="100" step="1" value="'+raw+'" data-pmwlkey="'+k+'">';
+      html +=     '<div class="pm-wl-baseline-tick" style="left:'+tickLeftPct+'%" title="Deployed baseline: '+baselinePct+'"></div>';
+      html +=   '</div>';
+      html +=   '<span class="pm-wl-row-raw" data-pmwlraw>'+raw+'</span>';
+      html +=   '<span class="pm-wl-row-pct" data-pmwlpct>'+(w*100).toFixed(1)+'%</span>';
+      html +=   '<span class="pm-wl-row-delta zero" data-pmwldelta>—</span>';
+      html += '</div>';
+    });
+    container.innerHTML = html;
+    // Wire slider input events (debounced apply)
+    container.querySelectorAll('.pm-wl-slider').forEach(slider => {
+      slider.addEventListener('input', _pmWlOnInput);
+    });
+    _pmWlUpdateRowReadouts();
+  }
+
+  // Read all sliders for current pos+mode, recompute raws → normalized weights, update readouts
+  function _pmWlReadSliders() {
+    const container = document.getElementById('pmWlSliders');
+    if (!container) return { raws: {}, norm: {}, sumRaw: 0 };
+    const raws = {};
+    let sumRaw = 0;
+    container.querySelectorAll('.pm-wl-slider').forEach(s => {
+      const k = s.getAttribute('data-pmwlkey');
+      const v = Number(s.value) || 0;
+      raws[k] = v;
+      sumRaw += v;
+    });
+    const norm = {};
+    if (sumRaw > 0) {
+      Object.keys(raws).forEach(k => norm[k] = raws[k] / sumRaw);
+    } else {
+      // Edge case: all zero — keep all zero (apply will skip)
+      Object.keys(raws).forEach(k => norm[k] = 0);
+    }
+    return { raws, norm, sumRaw };
+  }
+
+  // Update the per-row readouts (raw, pct, delta) after slider drag, before debounced apply
+  function _pmWlUpdateRowReadouts() {
+    const { raws, norm, sumRaw } = _pmWlReadSliders();
+    const baseline = (_pmWl.baseline && _pmWl.baseline[_pmWl.mode] && _pmWl.baseline[_pmWl.mode][_pmWl.pos]) || {};
+    const container = document.getElementById('pmWlSliders');
+    if (!container) return;
+    container.querySelectorAll('.pm-wl-row').forEach(row => {
+      const k = row.getAttribute('data-pmwlkey');
+      const raw = raws[k] || 0;
+      const pct = (norm[k] || 0) * 100;
+      const basePct = (baseline[k] || 0) * 100;
+      const delta = pct - basePct;
+      const rawEl = row.querySelector('[data-pmwlraw]');
+      const pctEl = row.querySelector('[data-pmwlpct]');
+      const dEl   = row.querySelector('[data-pmwldelta]');
+      if (rawEl) rawEl.textContent = raw;
+      if (pctEl) pctEl.textContent = pct.toFixed(1) + '%';
+      if (dEl) {
+        if (Math.abs(delta) < 0.05) {
+          dEl.className = 'pm-wl-row-delta zero';
+          dEl.textContent = '—';
+        } else {
+          dEl.className = 'pm-wl-row-delta ' + (delta > 0 ? 'up' : 'down');
+          dEl.textContent = (delta > 0 ? '+' : '') + delta.toFixed(1);
+        }
+      }
+    });
+    const sumLine = document.getElementById('pmWlSumLine');
+    if (sumLine) {
+      const cleanlyNormalized = sumRaw === 0 ? false : true;
+      sumLine.innerHTML = 'Sliders sum (raw): <span class="pm-wl-sum-val">'+sumRaw+'</span>'
+        + ' &middot; weights normalized to sum 1.000 on apply'
+        + (cleanlyNormalized ? '' : ' &middot; <span style="color:#f87171">all-zero — change ignored</span>');
+    }
+  }
+
+  // Debounced apply: mutate window weights, clear caches, re-render prospect table + backtest summary
+  function _pmWlOnInput() {
+    _pmWlUpdateRowReadouts();
+    if (_pmWl.applyTimer) clearTimeout(_pmWl.applyTimer);
+    _pmWl.applyTimer = setTimeout(_pmWlApply, 220);
+  }
+
+  function _pmWlApply() {
+    const { norm, sumRaw } = _pmWlReadSliders();
+    if (sumRaw <= 0) return; // can't normalize all-zero
+    _pmWlCaptureBaseline();
+    const root = (_pmWl.mode === 'ceiling' ? window._JM_CEILING_WEIGHTS : window._JM_WEIGHTS);
+    if (!root || !root[_pmWl.pos]) return;
+    const target = root[_pmWl.pos];
+    // Clear existing keys then reassign normalized values (preserves any keys
+    // not represented in the slider set — though for now slider set === all keys)
+    Object.keys(target).forEach(k => delete target[k]);
+    Object.keys(norm).forEach(k => target[k] = norm[k]);
+    // Invalidate caches and rebuild. Use _pmRebuildSync so pmBuiltData closure
+    // var + D[]._pmJm cross-page stamps are also refreshed — otherwise renderTable
+    // shows stale data and Rankings/Trade Calc/Mock Draft show stale JM values.
+    if (typeof window._jmClearCache === 'function') window._jmClearCache();
+    if (typeof window._pmRebuildSync === 'function') {
+      try { window._pmRebuildSync(); } catch(e) { console.error('[Weight Lab] _pmRebuildSync failed', e); }
+    }
+    // Also keep the admin backtest page in sync if it's been initialized
+    if (typeof window._renderBacktest === 'function') {
+      try { window._renderBacktest(); } catch(e) {}
+    }
+    _pmWl.dirty = true;
+    _pmWlRenderSummary();
+    _pmWlSyncHeaderMeta();
+  }
+
+  // Backtest collection: walks BACKTEST_OUTCOMES, joins with current JM scores,
+  // assigns tier, marks elite. Returns rows for the current pos filter.
+  function _pmWlCollect(classFilter) {
+    if (typeof BACKTEST_OUTCOMES === 'undefined') return [];
+    const data = (typeof buildProspectData === 'function') ? buildProspectData() : [];
+    const jmByName = {};
+    data.forEach(p => { if (p.jm != null && !p.lowConfidence) jmByName[p.name] = p.jm; });
+    if (typeof D !== 'undefined') {
+      D.forEach(d => { if (d._pmJm != null && jmByName[d.n] == null) jmByName[d.n] = d._pmJm; });
+    }
+    const nrm = s => s.toLowerCase().replace(/\b(jr\.?|sr\.?|ii|iii|iv|v)\b/g,'').replace(/[^a-z0-9]/g,'');
+    const jmByNrm = {};
+    Object.keys(jmByName).forEach(n => { jmByNrm[nrm(n)] = jmByName[n]; });
+    const inRange = yr => {
+      yr = parseInt(yr);
+      if (classFilter === 'all') return yr >= 2020 && yr <= 2023;
+      if (classFilter === 'allyears') return yr >= 2020 && yr <= 2024;
+      if (classFilter === 'fullhistory') return yr >= 2017 && yr <= 2024;
+      return yr >= 2020 && yr <= 2023;
+    };
+    const out = [];
+    Object.keys(BACKTEST_OUTCOMES).forEach(yr => {
+      if (!inRange(yr)) return;
+      BACKTEST_OUTCOMES[yr].forEach(r => {
+        if (r.pos !== _pmWl.pos) return;
+        let jm = jmByName[r.n];
+        if (jm == null) jm = jmByNrm[nrm(r.n)];
+        if (jm == null) return;
+        const tier = (typeof window._tierForJm === 'function') ? window._tierForJm(jm, r.pos) : null;
+        let elite = false;
+        const elitePpg = _PM_WL_ELITE_PPG[r.pos];
+        if (elitePpg != null && Array.isArray(r.seasons)) {
+          for (const s of r.seasons) {
+            if ((s.gp||0) >= 8 && s.ppg != null && s.ppg >= elitePpg) { elite = true; break; }
+          }
+        }
+        out.push({ name: r.n, pos: r.pos, draftYr: parseInt(yr), verdict: r.verdict, jm,
+                   tierLabel: (tier ? tier.label : 'Long Shot'), elite });
+      });
+    });
+    return out;
+  }
+
+  // Calibration: fraction of evaluable adjacent tier pairs that are ordered
+  // correctly (higher tier has Hit+ rate ≥ lower tier). Returns score in [0,1],
+  // along with the count of ordered pairs and any inversion descriptions.
+  // This is the "is the model actually predictive?" sanity check.
+  function _pmWlCalibrationScore(tiers) {
+    const seq = ['Generational','Top Prospect','Starter','Contributor','Depth','Lottery Ticket','Long Shot'];
+    const rates = seq.map(t => {
+      const s = tiers && tiers[t];
+      if (!s || !s.evald) return null;
+      return (s.stud + s.hit) / s.evald;
+    });
+    let ordered = 0, total = 0;
+    const inversions = [];
+    for (let i = 0; i < rates.length - 1; i++) {
+      let j = i + 1;
+      while (j < rates.length && rates[j] == null) j++;
+      if (rates[i] == null || j >= rates.length) continue;
+      total++;
+      if (rates[i] >= rates[j]) ordered++;
+      else inversions.push(seq[i] + ' (' + Math.round(rates[i]*100) + '%) < ' + seq[j] + ' (' + Math.round(rates[j]*100) + '%)');
+    }
+    return { score: total > 0 ? ordered / total : null, ordered, total, inversions };
+  }
+
+  // Aggregate verdict counts per tier and overall rates
+  function _pmWlAggregate(rows) {
+    const tiers = {};
+    _PM_WL_TIERS.forEach(t => tiers[t] = { total:0, evald:0, stud:0, hit:0, contributor:0, bust:0, pending:0, elite:0 });
+    let total = 0, evald = 0, stud = 0, hit = 0, bust = 0, elite = 0;
+    rows.forEach(r => {
+      const t = tiers[r.tierLabel] || tiers['Long Shot'];
+      t.total++;
+      t[r.verdict] = (t[r.verdict] || 0) + 1;
+      if (r.elite) t.elite++;
+      total++;
+      if (r.verdict === 'pending') t.pending++;
+      else {
+        t.evald++;
+        evald++;
+        if (r.verdict === 'stud') stud++;
+        else if (r.verdict === 'hit') hit++;
+        else if (r.verdict === 'bust') bust++;
+        if (r.elite) elite++;
+      }
+    });
+    const studHit = stud + hit;
+    return {
+      tiers, total, evald,
+      studRate: evald ? stud / evald : null,
+      hitRate:  evald ? studHit / evald : null,
+      bustRate: evald ? bust / evald : null,
+      eliteRate: evald ? elite / evald : null
+    };
+  }
+
+  // Eagerly compute baseline rates for every (pos × classFilter) combo while
+  // weights are still at the deployed baseline. Called once on first init
+  // before the user edits anything, so subsequent renders can show deltas
+  // against the deployed model regardless of which pos/class is being viewed.
+  function _pmWlComputeAllBaselineRates() {
+    const result = {};
+    const savedPos = _pmWl.pos;
+    ['QB','RB','WR','TE'].forEach(pos => {
+      result[pos] = {};
+      ['all','allyears','fullhistory'].forEach(cf => {
+        _pmWl.pos = pos;
+        const rows = _pmWlCollect(cf);
+        const agg  = _pmWlAggregate(rows);
+        result[pos][cf] = {
+          studRate: agg.studRate, hitRate: agg.hitRate,
+          bustRate: agg.bustRate, eliteRate: agg.eliteRate,
+          tiers: JSON.parse(JSON.stringify(agg.tiers))
+        };
+      });
+    });
+    _pmWl.pos = savedPos;
+    return result;
+  }
+
+  // Render the backtest summary card: KPIs + tier mini chart
+  function _pmWlRenderSummary() {
+    const labelEl = document.getElementById('pmWlBtPosLabel');
+    if (labelEl) labelEl.textContent = '— ' + _pmWl.pos;
+    const classFilter = (document.getElementById('pmWlBtClass') || {}).value || 'all';
+    // First call before any edit: capture baseline rates for every (pos × class)
+    if (!_pmWl.baselineRates && !_pmWl.dirty) {
+      _pmWl.baselineRates = _pmWlComputeAllBaselineRates();
+    }
+    const rows = _pmWlCollect(classFilter);
+    const agg  = _pmWlAggregate(rows);
+    const base = (_pmWl.baselineRates && _pmWl.baselineRates[_pmWl.pos] && _pmWl.baselineRates[_pmWl.pos][classFilter]) || null;
+    // KPI cards
+    const kpis = document.getElementById('pmWlKpis');
+    if (kpis) {
+      const fmt = r => r == null ? '—' : Math.round(r*100) + '%';
+      const dpp = (cur, b) => {
+        if (cur == null || b == null) return { cls: 'zero', str: '—' };
+        const d = (cur - b) * 100;
+        if (Math.abs(d) < 0.5) return { cls: 'zero', str: '±0pp' };
+        return { cls: d > 0 ? 'up' : 'down', str: (d > 0 ? '+' : '') + d.toFixed(1) + 'pp' };
+      };
+      // For bust rate, "up" is BAD — flip color
+      const bustColor = (cur, b) => {
+        if (cur == null || b == null) return { cls: 'zero', str: '—' };
+        const d = (cur - b) * 100;
+        if (Math.abs(d) < 0.5) return { cls: 'zero', str: '±0pp' };
+        return { cls: d > 0 ? 'down' : 'up', str: (d > 0 ? '+' : '') + d.toFixed(1) + 'pp' };
+      };
+      const dStud  = dpp(agg.studRate, base ? base.studRate : null);
+      const dHit   = dpp(agg.hitRate,  base ? base.hitRate  : null);
+      const dBust  = bustColor(agg.bustRate, base ? base.bustRate : null);
+      const dElite = dpp(agg.eliteRate, base ? base.eliteRate : null);
+      // Calibration: only metric that's actually weight-sensitive on a fixed cohort.
+      // The four rate KPIs above are determined by which players are evaluated, not
+      // by JM weights — they only redistribute players across tiers. Calibration
+      // score captures whether higher tiers actually contain more hits.
+      const calCur  = _pmWlCalibrationScore(agg.tiers);
+      const calBase = base ? _pmWlCalibrationScore(base.tiers) : null;
+      const calCurStr = calCur.score == null ? '—' : Math.round(calCur.score * 100) + '%';
+      const calCurSub = calCur.score == null ? 'no data' : calCur.ordered + '/' + calCur.total + ' pairs';
+      const dCal = (calCur.score != null && calBase && calBase.score != null) ? dpp(calCur.score, calBase.score) : { cls: 'zero', str: '—' };
+      const calTitle = calCur.inversions && calCur.inversions.length
+        ? 'Calibration ' + calCurStr + ' — inversions: ' + calCur.inversions.join('; ')
+        : 'Calibration ' + calCurStr + ' — fraction of adjacent tier pairs where higher tier has Hit+ rate ≥ lower tier. 100% = strictly monotonic. This is the only KPI that responds to weight changes on a fixed cohort.';
+      // Cohort-invariance tooltip for the four rate KPIs
+      const invariantTip = 'Overall ' + _pmWl.pos + ' rate across the cohort. This number is determined by which players are in the cohort, NOT by your JM weights — weight changes redistribute players across tiers but don\'t change the verdict mix. See the per-tier chart and Calibration KPI for weight-sensitive signal.';
+      kpis.innerHTML =
+        '<div class="pm-wl-kpi" title="Stud rate: '+invariantTip+'"><div class="pm-wl-kpi-label">Stud</div><div class="pm-wl-kpi-val" style="color:#22c55e">'+fmt(agg.studRate)+'</div><div class="pm-wl-kpi-delta '+dStud.cls+'">'+dStud.str+'</div></div>'
+       +'<div class="pm-wl-kpi" title="Hit+ rate: '+invariantTip+'"><div class="pm-wl-kpi-label">Hit+</div><div class="pm-wl-kpi-val" style="color:#60a5fa">'+fmt(agg.hitRate)+'</div><div class="pm-wl-kpi-delta '+dHit.cls+'">'+dHit.str+'</div></div>'
+       +'<div class="pm-wl-kpi" title="Bust rate: '+invariantTip+'"><div class="pm-wl-kpi-label">Bust</div><div class="pm-wl-kpi-val" style="color:#ef4444">'+fmt(agg.bustRate)+'</div><div class="pm-wl-kpi-delta '+dBust.cls+'">'+dBust.str+'</div></div>'
+       +'<div class="pm-wl-kpi" title="Elite rate: '+invariantTip+'"><div class="pm-wl-kpi-label">Elite</div><div class="pm-wl-kpi-val" style="color:#fbbf24">'+fmt(agg.eliteRate)+'</div><div class="pm-wl-kpi-delta '+dElite.cls+'">'+dElite.str+'</div></div>'
+       +'<div class="pm-wl-kpi" title="'+calTitle.replace(/"/g,'&quot;')+'"><div class="pm-wl-kpi-label">Calibration</div><div class="pm-wl-kpi-val" style="color:'+(calCur.score == null ? '#94a3b8' : calCur.score >= 0.99 ? '#22c55e' : calCur.score >= 0.6 ? '#fbbf24' : '#ef4444')+'">'+calCurStr+'</div><div class="pm-wl-kpi-delta '+dCal.cls+'" title="'+calCurSub+'">'+dCal.str+'</div></div>';
+    }
+    // Tier mini chart: per-tier hit+ rate bar with baseline overlay
+    const chart = document.getElementById('pmWlTierChart');
+    if (chart) {
+      let html = '';
+      _PM_WL_TIERS.forEach(label => {
+        const t = agg.tiers[label];
+        if (!t || t.total === 0) {
+          // Empty tier — render thin placeholder
+          html += '<div class="pm-wl-tier-col" title="'+label+': no data">'
+                + '<div class="pm-wl-tier-pct">—</div>'
+                + '<div class="pm-wl-tier-bar-wrap"></div>'
+                + '<div class="pm-wl-tier-label">'+label+'</div>'
+                + '<div class="pm-wl-tier-n">n=0</div></div>';
+          return;
+        }
+        const evald = t.evald;
+        const rate = evald > 0 ? (t.stud + t.hit) / evald : 0;
+        const baseTier = (base && base.tiers && base.tiers[label]) || null;
+        const baseEvald = baseTier ? baseTier.evald : 0;
+        const baseRate = baseEvald > 0 ? (baseTier.stud + baseTier.hit) / baseEvald : null;
+        const barH = Math.max(2, Math.round(rate * 100 * 0.6)); // 60px max
+        const baseY = baseRate != null ? Math.round(baseRate * 100 * 0.6) : null;
+        const color = _PM_WL_TIER_COLORS[label] || '#60a5fa';
+        html += '<div class="pm-wl-tier-col" title="'+label+': '+Math.round(rate*100)+'% Hit+ ('+t.stud+' stud + '+t.hit+' hit / '+evald+')'+(baseRate!=null?' · base '+Math.round(baseRate*100)+'%':'')+'">'
+              + '<div class="pm-wl-tier-pct">'+Math.round(rate*100)+'%</div>'
+              + '<div class="pm-wl-tier-bar-wrap">'
+              +   '<div class="pm-wl-tier-bar" style="height:'+barH+'px;background:'+color+'cc"></div>'
+              +   (baseY != null ? '<div class="pm-wl-tier-baseline" style="bottom:'+baseY+'px"></div>' : '')
+              + '</div>'
+              + '<div class="pm-wl-tier-label">'+label.replace('Lottery Ticket','Lottery')+'</div>'
+              + '<div class="pm-wl-tier-n">n='+evald+'</div></div>';
+      });
+      chart.innerHTML = html;
+    }
+    // Threshold inputs (re-build on each render so they reflect current pos)
+    _pmWlBuildThresholds();
+    // Footer text
+    const foot = document.getElementById('pmWlBtFoot');
+    if (foot) {
+      foot.innerHTML = '<span class="pm-wl-bt-foot-strong">'+agg.evald+' evaluated</span>'
+        + ' / '+agg.total+' total ('+_pmWl.pos+', '+classFilter+'). '
+        + 'Blue tick = deployed baseline. Hit+ = stud + hit.';
+    }
+  }
+
+  // Render threshold number inputs for the current position. Excludes "Long Shot"
+  // which is always the floor (min=0). Inputs validate monotonic-decreasing order
+  // (Generational > Top Prospect > ... > Lottery > 0) on commit.
+  function _pmWlBuildThresholds() {
+    const container = document.getElementById('pmWlThresholds');
+    if (!container) return;
+    const tiers = (window._POS_TIERS && window._POS_TIERS[_pmWl.pos]) || [];
+    if (tiers.length === 0) { container.innerHTML = ''; return; }
+    let html = '<span class="pm-wl-thresholds-label">Tier ≥</span>';
+    tiers.forEach((t, idx) => {
+      if (t.label === 'Long Shot') return; // floor at 0, no input
+      const shortLabel = t.label === 'Lottery Ticket' ? 'Lottery' : t.label;
+      html += '<div class="pm-wl-thresh-cell">'
+            + '<div class="pm-wl-thresh-tier" style="color:'+t.color+'">'+shortLabel+'</div>'
+            + '<input type="number" class="pm-wl-thresh-input" min="1" max="99" step="1" '
+            +   'value="'+t.min+'" data-pmwlthresh="'+idx+'" title="'+t.label+' minimum JM score">'
+            + '</div>';
+    });
+    container.innerHTML = html;
+    container.querySelectorAll('.pm-wl-thresh-input').forEach(inp => {
+      inp.addEventListener('input', _pmWlOnThreshInput);
+      inp.addEventListener('change', _pmWlOnThreshChange);
+    });
+  }
+
+  // Live preview while typing — apply only if monotonic, otherwise mark invalid
+  function _pmWlOnThreshInput(e) {
+    if (_pmWl.threshTimer) clearTimeout(_pmWl.threshTimer);
+    _pmWl.threshTimer = setTimeout(() => _pmWlApplyThresholds(false), 250);
+  }
+
+  // Commit on blur/Enter — also clamps invalid inputs back to monotonic order
+  function _pmWlOnThreshChange(e) {
+    if (_pmWl.threshTimer) clearTimeout(_pmWl.threshTimer);
+    _pmWlApplyThresholds(true);
+  }
+
+  function _pmWlApplyThresholds(clampInvalid) {
+    const tiers = window._POS_TIERS && window._POS_TIERS[_pmWl.pos];
+    if (!tiers) return;
+    const inputs = document.querySelectorAll('#pmWlThresholds .pm-wl-thresh-input');
+    // Read raw values
+    const raws = {};
+    inputs.forEach(inp => {
+      const idx = parseInt(inp.getAttribute('data-pmwlthresh'));
+      const v = parseInt(inp.value);
+      raws[idx] = isFinite(v) ? Math.max(1, Math.min(99, v)) : tiers[idx].min;
+    });
+    // Validate monotonic-decreasing: tiers[i].min > tiers[i+1].min
+    let valid = true;
+    const indices = Object.keys(raws).map(Number).sort((a,b) => a-b);
+    for (let i = 0; i < indices.length - 1; i++) {
+      if (raws[indices[i]] <= raws[indices[i+1]]) { valid = false; break; }
+    }
+    inputs.forEach(inp => {
+      const idx = parseInt(inp.getAttribute('data-pmwlthresh'));
+      // Mark invalid if this input is out of order vs its neighbours
+      const myVal = raws[idx];
+      const prevIdx = idx > 0 ? idx - 1 : null;
+      const nextIdx = (raws[idx + 1] != null) ? idx + 1 : null;
+      let bad = false;
+      if (prevIdx != null && raws[prevIdx] != null && myVal >= raws[prevIdx]) bad = true;
+      if (nextIdx != null && raws[nextIdx] != null && myVal <= raws[nextIdx]) bad = true;
+      inp.classList.toggle('invalid', bad);
+    });
+    if (!valid) {
+      if (!clampInvalid) return;
+      // On commit with invalid order: clamp each input to maintain strict monotonic decrease
+      // Walk top-down: each tier must be ≥ prior tier - 1
+      for (let i = 1; i < indices.length; i++) {
+        const prior = raws[indices[i-1]];
+        if (raws[indices[i]] >= prior) raws[indices[i]] = prior - 1;
+      }
+      // Also clamp last to ≥1 (Long Shot is always 0)
+      const last = indices[indices.length - 1];
+      if (raws[last] < 1) raws[last] = 1;
+      // Reflect clamped values back to inputs and clear invalid flag
+      inputs.forEach(inp => {
+        const idx = parseInt(inp.getAttribute('data-pmwlthresh'));
+        inp.value = raws[idx];
+        inp.classList.remove('invalid');
+      });
+    }
+    // Apply to POS_TIERS in place
+    let changed = false;
+    indices.forEach(idx => {
+      if (tiers[idx] && tiers[idx].min !== raws[idx]) {
+        tiers[idx].min = raws[idx];
+        changed = true;
+      }
+    });
+    if (!changed) return;
+    _pmWl.dirty = true;
+    // Tier changes don't affect JM scores (only bucket assignments), so we
+    // don't need to rebuild prospect data — just re-render the table from
+    // existing pmBuiltData with the new tier thresholds.
+    if (typeof window._jmClearCache === 'function') window._jmClearCache();
+    if (typeof renderTable === 'function') {
+      try { renderTable(); } catch(e) { console.error('[Weight Lab] threshold renderTable failed', e); }
+    }
+    if (typeof window._renderBacktest === 'function') { try { window._renderBacktest(); } catch(e) {} }
+    // Re-render summary (which rebuilds thresholds + chart with new tier assignments)
+    _pmWlRenderSummary();
+    _pmWlSyncHeaderMeta();
+  }
+
+  function _pmWlSyncHeaderMeta() {
+    const meta = document.getElementById('pmWlHeaderMeta');
+    if (!meta) return;
+    const active = _pmWl.activePreset || _PM_WL_DEPLOYED;
+    const activeName = (active === _PM_WL_DEPLOYED) ? 'Deployed v4' : active;
+    meta.innerHTML = _pmWl.dirty
+      ? '<span class="pm-wl-meta-pill">' + activeName + ' (modified)</span>'
+      : '<span style="opacity:.6">' + activeName + '</span>';
+  }
+
+  function _pmWlReset() {
+    if (!_pmWl.baseline) return;
+    // Restore floor, ceiling, AND tier thresholds for ALL positions from baseline
+    ['QB','RB','WR','TE'].forEach(p => {
+      if (window._JM_WEIGHTS && window._JM_WEIGHTS[p] && _pmWl.baseline.floor[p]) {
+        Object.keys(window._JM_WEIGHTS[p]).forEach(k => delete window._JM_WEIGHTS[p][k]);
+        Object.entries(_pmWl.baseline.floor[p]).forEach(([k,v]) => window._JM_WEIGHTS[p][k] = v);
+      }
+      if (window._JM_CEILING_WEIGHTS && window._JM_CEILING_WEIGHTS[p] && _pmWl.baseline.ceiling[p]) {
+        Object.keys(window._JM_CEILING_WEIGHTS[p]).forEach(k => delete window._JM_CEILING_WEIGHTS[p][k]);
+        Object.entries(_pmWl.baseline.ceiling[p]).forEach(([k,v]) => window._JM_CEILING_WEIGHTS[p][k] = v);
+      }
+      // Restore tier thresholds in place (mutate min on each entry — preserves the
+      // tier objects which are referenced by other code that reads label/color)
+      if (window._POS_TIERS && window._POS_TIERS[p] && _pmWl.baseline.tiers[p]) {
+        const live = window._POS_TIERS[p];
+        const base = _pmWl.baseline.tiers[p];
+        for (let i = 0; i < live.length && i < base.length; i++) {
+          live[i].min = base[i].min;
+        }
+      }
+    });
+    if (typeof window._jmClearCache === 'function') window._jmClearCache();
+    if (typeof window._pmRebuildSync === 'function') window._pmRebuildSync();
+    if (typeof window._renderBacktest === 'function') { try { window._renderBacktest(); } catch(e) {} }
+    _pmWl.dirty = false;
+    _pmWl.activePreset = _PM_WL_DEPLOYED;
+    _pmWlBuildSliders();
+    _pmWlRenderSummary();
+    _pmWlSyncHeaderMeta();
+    _pmWlRenderPresetDropdown();
+  }
+
+  function _pmWlExport() {
+    const dump = {
+      generated: new Date().toISOString(),
+      isOverride: !!_pmWl.dirty,
+      floor:   _pmWlDeepClone(window._JM_WEIGHTS || {}),
+      ceiling: _pmWlDeepClone(window._JM_CEILING_WEIGHTS || {}),
+      tiers:   _pmWlDeepClone(window._POS_TIERS || {})
+    };
+    const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'jm-weights-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  PRESETS — localStorage-backed save/load. Each preset is a snapshot of
+  //  {floor, ceiling, tiers} for all 4 positions. Built-in '__deployed__'
+  //  references _pmWl.baseline (captured on first init). User presets stored
+  //  under one JSON object keyed by name. Phase 2: swap this for Firestore.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  function _pmWlPresetsLoad() {
+    try { return JSON.parse(localStorage.getItem(_PM_WL_PRESET_KEY) || '{}') || {}; }
+    catch(e) { return {}; }
+  }
+  function _pmWlPresetsSave(presets) {
+    try { localStorage.setItem(_PM_WL_PRESET_KEY, JSON.stringify(presets)); return true; }
+    catch(e) { return false; }
+  }
+
+  function _pmWlRenderPresetDropdown() {
+    const sel = document.getElementById('pmWlPresetSel');
+    if (!sel) return;
+    const presets = _pmWlPresetsLoad();
+    const names = Object.keys(presets).sort();
+    let html = '<option value="' + _PM_WL_DEPLOYED + '">Deployed v4</option>';
+    if (names.length) {
+      html += '<optgroup label="Saved">';
+      names.forEach(n => {
+        const esc = n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+        html += '<option value="' + esc + '">' + esc + '</option>';
+      });
+      html += '</optgroup>';
+    }
+    sel.innerHTML = html;
+    // Sync selection to active preset (fallback to deployed if a preset was deleted)
+    const active = _pmWl.activePreset || _PM_WL_DEPLOYED;
+    sel.value = (active === _PM_WL_DEPLOYED || presets[active]) ? active : _PM_WL_DEPLOYED;
+    if (sel.value !== active) _pmWl.activePreset = sel.value;
+    _pmWlSyncPresetDelete();
+  }
+
+  function _pmWlSyncPresetDelete() {
+    const sel = document.getElementById('pmWlPresetSel');
+    const del = document.getElementById('pmWlPresetDelete');
+    if (!sel || !del) return;
+    del.style.display = (sel.value && sel.value !== _PM_WL_DEPLOYED) ? '' : 'none';
+  }
+
+  // Apply a preset snapshot (or the deployed baseline) to live weights/tiers
+  function _pmWlApplyPresetSnapshot(snapshot) {
+    ['QB','RB','WR','TE'].forEach(pos => {
+      if (window._JM_WEIGHTS && window._JM_WEIGHTS[pos] && snapshot.floor && snapshot.floor[pos]) {
+        Object.keys(window._JM_WEIGHTS[pos]).forEach(k => delete window._JM_WEIGHTS[pos][k]);
+        Object.entries(snapshot.floor[pos]).forEach(([k,v]) => window._JM_WEIGHTS[pos][k] = v);
+      }
+      if (window._JM_CEILING_WEIGHTS && window._JM_CEILING_WEIGHTS[pos] && snapshot.ceiling && snapshot.ceiling[pos]) {
+        Object.keys(window._JM_CEILING_WEIGHTS[pos]).forEach(k => delete window._JM_CEILING_WEIGHTS[pos][k]);
+        Object.entries(snapshot.ceiling[pos]).forEach(([k,v]) => window._JM_CEILING_WEIGHTS[pos][k] = v);
+      }
+      if (window._POS_TIERS && window._POS_TIERS[pos] && snapshot.tiers && snapshot.tiers[pos]) {
+        const live = window._POS_TIERS[pos], base = snapshot.tiers[pos];
+        for (let i = 0; i < live.length && i < base.length; i++) live[i].min = base[i].min;
+      }
+    });
+    if (typeof window._jmClearCache === 'function') window._jmClearCache();
+    if (typeof window._pmRebuildSync === 'function') {
+      try { window._pmRebuildSync(); } catch(e) { console.error('[Weight Lab] _pmRebuildSync failed', e); }
+    }
+    if (typeof window._renderBacktest === 'function') { try { window._renderBacktest(); } catch(e) {} }
+  }
+
+  function _pmWlLoadPreset(name) {
+    if (name === _PM_WL_DEPLOYED) {
+      if (_pmWl.baseline) _pmWlApplyPresetSnapshot(_pmWl.baseline);
+    } else {
+      const presets = _pmWlPresetsLoad();
+      if (!presets[name]) return;
+      _pmWlApplyPresetSnapshot(presets[name]);
+    }
+    _pmWl.activePreset = name;
+    _pmWl.dirty = false;
+    _pmWlBuildSliders();
+    _pmWlRenderSummary();
+    _pmWlSyncHeaderMeta();
+    _pmWlRenderPresetDropdown();
+  }
+
+  function _pmWlSaveAsPreset() {
+    const suggested = (_pmWl.activePreset && _pmWl.activePreset !== _PM_WL_DEPLOYED) ? _pmWl.activePreset : '';
+    const name = prompt('Save current weights + tiers as a preset.\n(Stored locally in this browser.)\n\nPreset name:', suggested);
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed || trimmed === _PM_WL_DEPLOYED || trimmed.length > 60) {
+      alert('Invalid preset name (max 60 chars, can\'t be empty or reserved).');
+      return;
+    }
+    const presets = _pmWlPresetsLoad();
+    if (presets[trimmed] && !confirm('Preset "' + trimmed + '" already exists. Overwrite?')) return;
+    presets[trimmed] = {
+      savedAt: new Date().toISOString(),
+      floor:   _pmWlDeepClone(window._JM_WEIGHTS || {}),
+      ceiling: _pmWlDeepClone(window._JM_CEILING_WEIGHTS || {}),
+      tiers:   _pmWlDeepClone(window._POS_TIERS || {})
+    };
+    if (!_pmWlPresetsSave(presets)) {
+      alert('Failed to save (localStorage may be full or disabled).');
+      return;
+    }
+    _pmWl.activePreset = trimmed;
+    _pmWl.dirty = false;
+    _pmWlRenderPresetDropdown();
+    _pmWlSyncHeaderMeta();
+  }
+
+  function _pmWlDeletePreset() {
+    const sel = document.getElementById('pmWlPresetSel');
+    if (!sel) return;
+    const name = sel.value;
+    if (!name || name === _PM_WL_DEPLOYED) return;
+    if (!confirm('Delete preset "' + name + '"? This can\'t be undone.')) return;
+    const presets = _pmWlPresetsLoad();
+    delete presets[name];
+    _pmWlPresetsSave(presets);
+    // After delete, fall back to deployed baseline
+    _pmWlLoadPreset(_PM_WL_DEPLOYED);
+  }
+
+  function _pmWlSyncAdmin() {
+    const lab = document.getElementById('pmWeightLab');
+    if (!lab) return;
+    lab.style.display = _pmWlIsAdmin() ? 'block' : 'none';
+  }
+
+  function _pmWlOnPosTabClick(e) {
+    const btn = e.target.closest('[data-pmwlpos]');
+    if (!btn) return;
+    document.querySelectorAll('#pmWlPosTabs .pm-wl-tab').forEach(b => b.classList.toggle('active', b === btn));
+    _pmWl.pos = btn.getAttribute('data-pmwlpos');
+    _pmWlBuildSliders();
+    _pmWlRenderSummary();
+  }
+
+  function _pmWlOnModeTabClick(e) {
+    const btn = e.target.closest('[data-pmwlmode]');
+    if (!btn) return;
+    document.querySelectorAll('#pmWlModeTabs .pm-wl-tab').forEach(b => b.classList.toggle('active', b === btn));
+    _pmWl.mode = btn.getAttribute('data-pmwlmode');
+    _pmWlBuildSliders();
+  }
+
+  function _pmWlInit() {
+    const lab = document.getElementById('pmWeightLab');
+    if (!lab) return;
+    _pmWlSyncAdmin();
+    _pmWlCaptureBaseline();
+    _pmWlBuildSliders();
+    _pmWlSyncHeaderMeta();
+    // Wire interactions (idempotent — safe to call multiple times)
+    if (!lab._pmWlWired) {
+      lab._pmWlWired = true;
+      const posTabs  = document.getElementById('pmWlPosTabs');
+      const modeTabs = document.getElementById('pmWlModeTabs');
+      const resetBtn = document.getElementById('pmWlReset');
+      const exportBtn = document.getElementById('pmWlExport');
+      const classSel = document.getElementById('pmWlBtClass');
+      const presetSel = document.getElementById('pmWlPresetSel');
+      const presetSave = document.getElementById('pmWlPresetSave');
+      const presetDel  = document.getElementById('pmWlPresetDelete');
+      if (posTabs)  posTabs.addEventListener('click', _pmWlOnPosTabClick);
+      if (modeTabs) modeTabs.addEventListener('click', _pmWlOnModeTabClick);
+      if (resetBtn) resetBtn.addEventListener('click', _pmWlReset);
+      if (exportBtn) exportBtn.addEventListener('click', _pmWlExport);
+      if (classSel) classSel.addEventListener('change', _pmWlRenderSummary);
+      if (presetSel) presetSel.addEventListener('change', e => _pmWlLoadPreset(e.target.value));
+      if (presetSave) presetSave.addEventListener('click', _pmWlSaveAsPreset);
+      if (presetDel)  presetDel.addEventListener('click', _pmWlDeletePreset);
+      // Render summary the first time the panel is opened (cheap deferred work)
+      lab.addEventListener('toggle', () => {
+        if (lab.open) {
+          _pmWlBuildSliders();
+          _pmWlRenderSummary();
+        }
+      });
+    }
+    _pmWlRenderPresetDropdown();
+    if (lab.open) _pmWlRenderSummary();
+  }
+
+  // Expose admin sync so the auth-state hook below can re-run it
+  function _pmWlSyncFromAuth() {
+    _pmWlSyncAdmin();
+    if (_pmWlIsAdmin()) _pmWlInit();
+  }
+  _pmWlSyncFromAuth();
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try { firebase.auth().onAuthStateChanged(_pmWlSyncFromAuth); } catch(e) {}
+  }
+  window._pmWlInit = _pmWlInit;
+  window._pmWlSyncAdmin = _pmWlSyncAdmin;
+  window._pmWl = _pmWl; // exposed for debugging
 
   // Normalize a name for fuzzy matching: strip suffix, lowercase, remove non-alphanum
   function _pmNormName(name) {

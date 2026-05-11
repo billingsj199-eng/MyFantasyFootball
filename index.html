@@ -26275,60 +26275,59 @@ window.fmtHeight = fmtHeight;
   const POS_TIERS = {
     QB: [
       // v8.3 (Apr 23 2026): Generational UNIVERSAL at ≥90 across all positions.
-      // User intent: "Generational" should mean once-in-a-draft across the board,
-      // not position-scaled. Empty-tier years are acceptable. Historical QB tier
-      // is empty with this threshold (Caleb 89.8 just misses — he stays "Top
-      // Prospect" which more accurately reflects his pre-draft profile).
-      // Mahomes/Manning/Elway-caliber QBs would cross 90; no one in 2017-2027 has.
-      { min: 90, label: 'Generational',  color: '#fbbf24' },  // universal threshold
-      { min: 75, label: 'Top Prospect',  color: '#34d399' },  //  75% hit
-      { min: 60, label: 'Starter',       color: '#60a5fa' },  //  83% hit (small-n inversion, noise)
+      // v9 (May 10 2026): Top Prospect raised 75→79 from in-page tier-threshold
+      //   optimizer (n=73 QB). Pulled 5 noisy ~75-78 JM scores out of Top Prospect
+      //   into Starter, sharpening the Top Prospect tier to 100% hit (n=6).
+      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=2)
+      { min: 79, label: 'Top Prospect',  color: '#34d399' },  // 100% hit (n=6)
+      { min: 60, label: 'Starter',       color: '#60a5fa' },  //  75% hit (n=16)
       { min: 48, label: 'Contributor',   color: '#a78bfa' },  //  11% hit
-      { min: 36, label: 'Depth',         color: '#94a3b8' },  //  13% hit
+      { min: 36, label: 'Depth',         color: '#94a3b8' },  //   8% hit
       { min: 24, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit
       { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit
     ],
     RB: [
       // v8.3 (Apr 23 2026): Generational raised 88→90 for universal alignment.
-      //   Saquon (93), Bijan (92.1), Jeanty (91), Gibbs (90.2) remain. CMC
-      //   (88.4) and Jeremiyah Love (89.2) drop to Top Prospect — both are
-      //   still elite but the Generational label is now reserved for ≥90.
-      // v8.1: Top Prospect 74→70. Catches Najee (82.1), Breece Hall, Etienne
-      //   (76.5), Walker III (70.5), etc.
-      { min: 90, label: 'Generational',  color: '#fbbf24' },  // universal threshold
-      { min: 70, label: 'Top Prospect',  color: '#34d399' },  // 100% hit (expanded from 74)
-      { min: 60, label: 'Starter',       color: '#60a5fa' },  //  47% hit
-      { min: 48, label: 'Contributor',   color: '#a78bfa' },  //  14% hit
-      { min: 36, label: 'Depth',         color: '#94a3b8' },  //   6% hit
-      { min: 24, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit
+      //   Saquon (93), Bijan (92.1), Jeanty (91), Gibbs (90.2) remain.
+      // v9 (May 10 2026): in-page tier-threshold optimizer — Top Prospect raised
+      //   70→74 (sharpened to 100% hit), Depth 36→34, Lottery 24→26.
+      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=2)
+      { min: 74, label: 'Top Prospect',  color: '#34d399' },  // 100% hit (n=10)
+      { min: 60, label: 'Starter',       color: '#60a5fa' },  //  41% hit (n=22)
+      { min: 48, label: 'Contributor',   color: '#a78bfa' },  //  18% hit
+      { min: 34, label: 'Depth',         color: '#94a3b8' },  //   8% hit
+      { min: 26, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit
       { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit
     ],
     WR: [
-      // v8.3: Generational ≥90. Post-v8 (Apr 23 2026) hit-rate measurements
-      // below use verdict-based stud+hit (n=196 WR backtest 2017-2024).
-      // Strictly monotonic gradient confirmed.
-      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=1: Drake London)
-      { min: 76, label: 'Top Prospect',  color: '#34d399' },  //  67% hit (n=12)
-      { min: 62, label: 'Starter',       color: '#60a5fa' },  //  41% hit (n=22)
-      { min: 50, label: 'Contributor',   color: '#a78bfa' },  //  16% hit (n=57)
-      { min: 38, label: 'Depth',         color: '#94a3b8' },  //   5% hit (n=39)
-      { min: 26, label: 'Lottery Ticket',color: '#f87171' },  //   3% hit (n=39)
-      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit (n=26)
+      // v8.3: Generational ≥90.
+      // v9 (May 10 2026): in-page tier-threshold optimizer — Top Prospect raised
+      //   76→80 (sharpened: hr 54%→70% with no busts), Starter lowered 62→60.
+      //   Strict monotonic hit-rate AND PPG gradient achieved (n=219).
+      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=3)
+      { min: 80, label: 'Top Prospect',  color: '#34d399' },  //  70% hit (n=10) — 0% bust
+      { min: 60, label: 'Starter',       color: '#60a5fa' },  //  38% hit (n=34)
+      { min: 50, label: 'Contributor',   color: '#a78bfa' },  //  12% hit (n=42)
+      { min: 38, label: 'Depth',         color: '#94a3b8' },  //   6% hit (n=50)
+      { min: 26, label: 'Lottery Ticket',color: '#f87171' },  //   3% hit (n=36)
+      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit (n=28)
     ],
     TE: [
       // v8.3 (Apr 23 2026): Generational raised 84→90 for universal alignment.
-      //   Only Bowers (92.4) and Pitts (90.6) remain Generational. Engram (83.7),
-      //   Hockenson (79.9), Colston Loveland (83.3), Tyler Warren (76.4) all
-      //   stay Top Prospect — which reflects the actual talent gap vs. Bowers.
-      //   User intent: Generational label should mean Bowers/Pitts-tier only.
-      // v8.1: Top Prospect 70→66. Catches McBride/Warren/Loveland/Hasz tier.
-      { min: 90, label: 'Generational',  color: '#fbbf24' },  // universal threshold
-      { min: 66, label: 'Top Prospect',  color: '#34d399' },  //  67% hit (expanded from 70)
-      { min: 56, label: 'Starter',       color: '#60a5fa' },  //  30% hit
-      { min: 44, label: 'Contributor',   color: '#a78bfa' },  //  14% hit
-      { min: 32, label: 'Depth',         color: '#94a3b8' },  //   7% hit
-      { min: 22, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit
-      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit
+      //   Only Bowers (92.4) and Pitts (90.6) remain Generational.
+      // v9 (May 10 2026): in-page tier-threshold optimizer (n=101 TE) drove the
+      //   biggest gain for any single TE tweak — score 0.954 → 0.787 (-18%).
+      //   Top Prospect 66→70, Starter 56→58, Contributor 44→42, Lottery 22→25.
+      //   Sharpened Top Prospect to 82% hit (was 73%). TE remains the hardest
+      //   position to discriminate at the bottom (Depth/Lottery hit rates near
+      //   noise floor at 5-9%) but tier ordering is now consistent.
+      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=2)
+      { min: 70, label: 'Top Prospect',  color: '#34d399' },  //  82% hit (n=11)
+      { min: 58, label: 'Starter',       color: '#60a5fa' },  //  40% hit (n=10)
+      { min: 42, label: 'Contributor',   color: '#a78bfa' },  //  13% hit (n=30)
+      { min: 32, label: 'Depth',         color: '#94a3b8' },  //   8% hit (n=12)
+      { min: 25, label: 'Lottery Ticket',color: '#f87171' },  //   9% hit (n=11)
+      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   5% hit (n=19)
     ]
   };
   window._POS_TIERS = POS_TIERS;
@@ -28886,6 +28885,9 @@ window.fmtHeight = fmtHeight;
 
   let _pmBuildCache = null;
   let _pmBuildCacheKey = null;
+  // Expose for offline optimization tooling (Weight optimizer in /preview_eval).
+  // No-op in production; just a window reference.
+  setTimeout(() => { try { window.buildProspectData = buildProspectData; } catch(e) {} }, 0);
   function buildProspectData() {
     // Cache: skip rebuild if inputs haven't changed
     const cacheKey = pmScoring + '::' + JSON.stringify(_dcCache);
@@ -30605,6 +30607,15 @@ window.fmtHeight = fmtHeight;
       return best >= thresh;
     }
 
+    // Expose helpers for offline weight-optimizer driven via /preview_eval.
+    setTimeout(() => {
+      try {
+        window._btCollect = _btCollect;
+        window._btTierStats = _btTierStats;
+        window._btFilter = _btFilter;
+        window.BT_TIERS = BT_TIERS;
+      } catch (e) {}
+    }, 0);
     function _btCollect() {
       // Returns array of {name, pos, jm, draftYr, pick, verdict, avgPpg, partial, seasons, tier, elite}
       if (typeof BACKTEST_OUTCOMES === 'undefined') return [];

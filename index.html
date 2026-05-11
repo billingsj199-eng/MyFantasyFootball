@@ -21906,6 +21906,14 @@ window.fmtHeight = fmtHeight;
         } catch (e) {}
         loadFromCloud();
         listenForJacksUpdates();
+        // Retry gifted/stripe premium loaders a few times — the existing
+        // updateAccountUI hook can fire before Firestore is fully ready
+        // on a first-time sign-in in a fresh browser context, which
+        // leaves the user on FREE PLAN even when a valid gift exists.
+        [600, 1800, 3500].forEach(ms => setTimeout(() => {
+          try { if (typeof window._loadGiftedPremium === 'function') window._loadGiftedPremium(); } catch (_) {}
+          try { if (typeof window._loadStripePremium === 'function') window._loadStripePremium(); } catch (_) {}
+        }, ms));
       } else {
         console.log('[Auth] Signed out');
         // Wipe any cached premium so the next account starts clean
@@ -22135,7 +22143,8 @@ window.fmtHeight = fmtHeight;
   // Each entry: { days, expires } — "expires" is the last day the code can be redeemed (inclusive, end-of-day Eastern).
   // The granted premium runs for `days` days OR until the hard expiration (whichever comes first).
   const REDEEM_CODES = {
-    'DRAFT': { days: 7, expires: '2026-04-28' }
+    'DRAFT': { days: 7, expires: '2026-04-28' },
+    'CHROMEREVIEW': { days: 365, expires: '2027-06-01' }
   };
 
   function _showRedeemMsg(msg, ok) {

@@ -3116,7 +3116,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/d.js?v=2026-04-27e"></script>
 <script src="data/hp.js"></script>
 <script src="data/ep_retired.js"></script>
-<script src="data/legend_careers.js"></script>
+<script src="data/legend_careers.js" defer></script>
 <script src="data/season_leaders.js"></script>
 <script src="data/ldb.js"></script>
 <script src="data/player_team_history.js"></script>
@@ -3124,9 +3124,13 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/active_team_history.js"></script>
 <script src="data/daily_retired_pool.js"></script>
 <script src="data/weekly_stats_active.js"></script>
-<script src="data/weekly_stats_retired_1.js"></script>
-<script src="data/weekly_stats_retired_2.js"></script>
-<script src="data/weekly_stats_retired_3.js"></script>
+<!-- WEEKLY_STATS_RETIRED: ~10 MB total, deferred. Initialized as window.WEEKLY_STATS_RETIRED
+     by file _1 and extended by _2 and _3 via Object.assign — defer preserves
+     document order so the chain remains correct. Merged into WEEKLY_STATS via
+     _mergeWeeklyStatsRetired() on DOMContentLoaded (defined ~line 4986). -->
+<script src="data/weekly_stats_retired_1.js" defer></script>
+<script src="data/weekly_stats_retired_2.js" defer></script>
+<script src="data/weekly_stats_retired_3.js" defer></script>
 <script src="data/all_players.js"></script>
 <script src="data/combine_data.js?v=2026-04-25b"></script>
 <script src="data/historical_draft_picks.js"></script>
@@ -4913,9 +4917,13 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
   // === END MISSING SEASON BACKFILL ===
 }
 </script>
-<script src="data/college_weekly_1.js"></script>
-<script src="data/college_weekly_2.js"></script>
-<script src="data/college_weekly_3.js"></script>
+<!-- COLLEGE_WEEKLY: ~9 MB total, deferred. All consumers in index.html access
+     COLLEGE_WEEKLY inside function bodies with `typeof COLLEGE_WEEKLY !== 'undefined'`
+     guards, so no top-level wrap needed. devy file kept synchronous because it
+     does top-level COMBINE_DATA patching. -->
+<script src="data/college_weekly_1.js" defer></script>
+<script src="data/college_weekly_2.js" defer></script>
+<script src="data/college_weekly_3.js" defer></script>
 <script src="data/college_weekly_devy.js"></script>
 <script src="data/wr_yprr.js"></script>
 <script src="data/js_model_data.js"></script>
@@ -4973,12 +4981,29 @@ if (typeof _PFF_TE_GRADES !== 'undefined') {
   _PFF_TE_GRADES['Tanner Koziol'] = 73.0;
 }
 </script>
-<script src="data/all_players_weekly_1.js"></script>
-<script src="data/all_players_weekly_2.js"></script>
-<script src="data/all_players_weekly_3.js"></script>
-<script src="data/all_players_weekly_4.js"></script>
-<script src="data/all_players_weekly_5.js"></script>
-<script>const WEEKLY_STATS = Object.assign({}, WEEKLY_STATS_RETIRED, WEEKLY_STATS_ACTIVE);</script>
+<!-- ALL_PLAYERS_WEEKLY: ~13 MB total, deferred. Single top-level consumer
+     (the merge at ~line 14879) was refactored to be idempotent and re-call
+     itself on DOMContentLoaded so the data lands after deferred scripts. -->
+<script src="data/all_players_weekly_1.js" defer></script>
+<script src="data/all_players_weekly_2.js" defer></script>
+<script src="data/all_players_weekly_3.js" defer></script>
+<script src="data/all_players_weekly_4.js" defer></script>
+<script src="data/all_players_weekly_5.js" defer></script>
+<script>
+// WEEKLY_STATS_RETIRED is deferred (~10 MB across 3 files). Initialize WEEKLY_STATS
+// from ACTIVE only at parse time; merge RETIRED on DOMContentLoaded once deferred
+// scripts have parsed. Preserves the original "ACTIVE wins on key collision"
+// semantics (Object.assign({}, RETIRED, ACTIVE)) by only filling absent keys.
+const WEEKLY_STATS = Object.assign({}, WEEKLY_STATS_ACTIVE);
+function _mergeWeeklyStatsRetired() {
+  if (typeof WEEKLY_STATS_RETIRED === 'undefined') return;
+  for (const name in WEEKLY_STATS_RETIRED) {
+    if (!WEEKLY_STATS[name]) WEEKLY_STATS[name] = WEEKLY_STATS_RETIRED[name];
+  }
+}
+_mergeWeeklyStatsRetired();
+document.addEventListener('DOMContentLoaded', _mergeWeeklyStatsRetired);
+</script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
 <script>
 // Global auth state flag — used by canEdit() before Firebase auth module loads
@@ -14791,20 +14816,27 @@ document.addEventListener('click', function(e) {
 
 // === UNIFIED COMPARE SEARCH (adds players to the compare grid) ===
 (function() {
-LDB.forEach(p => { if (LEGEND_CAREERS[p.n]) p.seasons = LEGEND_CAREERS[p.n]; });
+// LEGEND_CAREERS is deferred (~2.85 MB). When this runs at parse time, the
+// global may not exist yet — the typeof guards below let the bindings no-op
+// here and re-run via DOMContentLoaded (see _applyLegendCareerBindings).
+if (typeof LEGEND_CAREERS !== 'undefined') {
+  LDB.forEach(p => { if (LEGEND_CAREERS[p.n]) p.seasons = LEGEND_CAREERS[p.n]; });
+}
 // Bind LEGEND_CAREERS into D[].career for retired players. Old logic
 // only filled D when it was EMPTY, but the 2026-05-07 backfill expanded
 // many partial entries (Curtis Martin had 7 seasons, now 11; Thurman
 // Thomas had 2, now 13; Jerome Bettis 7→13; Marcus Allen 2→16; etc.).
 // Prefer LEGEND_CAREERS whenever it has MORE seasons so the trivia
 // aggregation sees the complete year-by-year careers.
-D.forEach(d => {
-  if (!d._retired) return;
-  const lc = LEGEND_CAREERS[d.n];
-  if (!lc || !lc.length) return;
-  const cur = (d.career && d.career.length) || 0;
-  if (lc.length > cur) d.career = lc;
-});
+if (typeof LEGEND_CAREERS !== 'undefined') {
+  D.forEach(d => {
+    if (!d._retired) return;
+    const lc = LEGEND_CAREERS[d.n];
+    if (!lc || !lc.length) return;
+    const cur = (d.career && d.career.length) || 0;
+    if (lc.length > cur) d.career = lc;
+  });
+}
 
 // === ALL_PLAYERS_DB integration: enrich D array with career stats ===
 if (typeof ALL_PLAYERS_DB !== 'undefined') {
@@ -14875,16 +14907,21 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   }
 
   // 3) Merge ALL_PLAYERS_WEEKLY into WEEKLY_STATS
-  // Prefer ALL_PLAYERS_WEEKLY data since it's consistent with ALL_PLAYERS_DB season totals
-  if (typeof ALL_PLAYERS_WEEKLY !== 'undefined' && typeof WEEKLY_STATS !== 'undefined') {
+  // Idempotent: skip when data isn't loaded yet; safe to re-run.
+  // all_players_weekly_*.js are deferred (~13 MB), so the first eager call
+  // here no-ops; the DOMContentLoaded listener re-runs the merge once the
+  // deferred scripts have parsed.
+  function _mergeAllPlayersWeekly() {
+    if (typeof ALL_PLAYERS_WEEKLY === 'undefined' || typeof WEEKLY_STATS === 'undefined') return;
     for (const [name, data] of Object.entries(ALL_PLAYERS_WEEKLY)) {
       if (!WEEKLY_STATS[name]) { WEEKLY_STATS[name] = data; continue; }
-      // Overwrite all seasons from ALL_PLAYERS_WEEKLY for scoring consistency
       for (const [yr, weeks] of Object.entries(data.seasons)) {
         WEEKLY_STATS[name].seasons[yr] = weeks;
       }
     }
   }
+  _mergeAllPlayersWeekly();
+  document.addEventListener('DOMContentLoaded', _mergeAllPlayersWeekly);
 
   // 4) Add players from ALL_PLAYERS_DB that aren't in D yet
   const _dNames = new Set(D.map(d => d.n));
@@ -15045,7 +15082,8 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
 
 
 // Add HP players with LEGEND_CAREERS data to D so they get full career log cards
-HP.forEach(p => {
+// Guarded for deferred LEGEND_CAREERS load — re-runs via _applyLegendCareerBindings on DOMContentLoaded.
+if (typeof LEGEND_CAREERS !== 'undefined') HP.forEach(p => {
   if (!p.n || !p.s || p.s === 'K' || p.s === 'DST') return;
   if (!LEGEND_CAREERS[p.n]) return; // No career data available
   if (D.find(d => d.n === p.n)) return; // Already in D
@@ -15063,6 +15101,57 @@ HP.forEach(p => {
     round: 99, notes: '', _retired: true, _debut: debut, _last: last, _slImg: null
   });
 });
+
+// === DEFERRED LEGEND_CAREERS BINDING ===
+// legend_careers.js is deferred (~2.85 MB). Re-run all 4 binding patterns
+// on DOMContentLoaded so D[].career, LDB[].seasons, and HP-added retired
+// players pick up the deferred data once it's parsed. Idempotent — safe
+// to run again even if the data was already loaded synchronously.
+function _applyLegendCareerBindings() {
+  if (typeof LEGEND_CAREERS === 'undefined') return;
+  // Pattern 1: bind into LDB seasons (trivia legends DB)
+  if (typeof LDB !== 'undefined') {
+    LDB.forEach(p => { if (LEGEND_CAREERS[p.n]) p.seasons = LEGEND_CAREERS[p.n]; });
+  }
+  // Pattern 2: prefer LEGEND when it has MORE seasons than current d.career
+  D.forEach(d => {
+    if (!d._retired) return;
+    const lc = LEGEND_CAREERS[d.n];
+    if (!lc || !lc.length) return;
+    const cur = (d.career && d.career.length) || 0;
+    if (lc.length > cur) d.career = lc;
+  });
+  // Pattern 3: tie-breaker pass — replace d.career when LEGEND has >= seasons
+  // (matches the post-ALL_PLAYERS_DB-merge cleanup pass)
+  D.forEach(d => {
+    const lc = LEGEND_CAREERS[d.n];
+    if (!lc || !lc.length) return;
+    if (lc.length >= ((d.career && d.career.length) || 0)) d.career = lc;
+  });
+  // Pattern 4: add HP players that have LEGEND_CAREERS data but aren't in D
+  if (typeof HP !== 'undefined') {
+    HP.forEach(p => {
+      if (!p.n || !p.s || p.s === 'K' || p.s === 'DST') return;
+      if (!LEGEND_CAREERS[p.n]) return;
+      if (D.find(d => d.n === p.n)) return;
+      const career = LEGEND_CAREERS[p.n];
+      const teams = (p._teams || []);
+      const primaryTeam = teams.length ? teams[0] : 'Retired';
+      const yrsMatch = (p._yrs || '').match(/(\d{4})-(\d{4})/);
+      const debut = yrsMatch ? parseInt(yrsMatch[1]) : (career.length ? career[0].yr : null);
+      const last = yrsMatch ? parseInt(yrsMatch[2]) : (career.length ? career[career.length - 1].yr : null);
+      D.push({
+        n: p.n, a: 999, p: 0, s: p.s, r: p.s + '—', t: primaryTeam,
+        p25: null, p24: null, p23: null, age: null,
+        cyr: null, out: null, sal: null, dr: null, exp: career.length || null, role: null, inj: null,
+        s25: null, career: career, da: 999, sa: 999, idx: D.length, myRank: D.length + 1,
+        round: 99, notes: '', _retired: true, _debut: debut, _last: last, _slImg: null
+      });
+    });
+  }
+}
+document.addEventListener('DOMContentLoaded', _applyLegendCareerBindings);
+
 // LEGEND_BIRTH_YEARS moved to data/legend_birth_years.js
 LDB.forEach(p => { if (LEGEND_BIRTH_YEARS[p.n]) p.birthYear = typeof LEGEND_BIRTH_YEARS[p.n] === 'string' ? parseInt(LEGEND_BIRTH_YEARS[p.n]) : LEGEND_BIRTH_YEARS[p.n]; });
 

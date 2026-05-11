@@ -19800,7 +19800,10 @@ window.fmtHeight = fmtHeight;
   // to the currently signed-in user, so account switches don't carry premium.
   function _clearStaleStripePremium(reason) {
     const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
-    if (existing && (existing.source === 'stripe' || existing.gifted)) {
+    // Only clear stripe-sourced entries here. Gifted premium has its own
+    // Firestore source (`gifted_premium`) and must NOT be wiped just
+    // because the user has no active Stripe sub.
+    if (existing && existing.source === 'stripe') {
       localStorage.removeItem('jb_premium');
       console.log('[Premium] Cleared stale localStorage premium (' + reason + ')');
       if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();

@@ -4152,6 +4152,9 @@ if (typeof COMBINE_DATA !== 'undefined') {
 <script src="data/college_stats.js"></script>
 <!-- Backtest outcomes: rookie verdicts (Stud/Hit/Contributor/Bust/Pending) for 2020-2024 classes -->
 <script src="data/backtest_outcomes.js"></script>
+<!-- NFL.com prospect grades (5.4-7.45 scale + tier label) — 2014-2026, 1,672 prospects -->
+<!-- Used as DISPLAY ONLY on prospect cards; not in JM model (residual signal +0.074 over DC). -->
+<script src="data/nfl_prospect_grades.js?v=2026-05-11"></script>
 <!-- Phase 1: nickname/alias recovery patches (CFBD stats that didn't match due to name variants) -->
 <script src="data/college_stats_patch.js"></script>
 <!-- Phase 2: hand-curated FCS/D2 stats (Wikipedia-sourced — replaces CFBD crossover junk) -->
@@ -10087,6 +10090,23 @@ function openPlayerCard(d, ctxMode) {
           <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:1" class="${_pffColor(_pmD.pffGrade)}">${_pmD.pffGrade.toFixed(1)}</div>
           <div style="font-size:.5rem;font-weight:700;margin-top:2px" class="${_pffColor(_pmD.pffGrade)}">${_pffLabel(_pmD.pffGrade)}</div>
           ${_pmD.pffRisk >= 2 ? '<div style="margin-top:6px;font-size:.55rem;font-weight:700;color:#f87171;background:#f8717115;padding:3px 10px;border-radius:6px;display:inline-block">⚠ Film Risk: regression, low final grade, or one-year wonder</div>' : _pmD.pffRisk === 1 ? '<div style="margin-top:6px;font-size:.55rem;font-weight:600;color:#fb923c;background:#fb923c15;padding:3px 10px;border-radius:6px;display:inline-block">Mild concern: film trajectory or limited sample</div>' : ''}
+        </div>`;
+      })()}
+      ${(() => {
+        // NFL.com Prospect Grade — display-only signal, scraped from nfl.com/prospects/<slug>/<uuid>
+        // Scale: 8.0=perfect, 7.0=Pro Bowl, 6.5=Boom-or-bust, 6.0=Backup, <6=UDFA.
+        // Pre-2014 grades used a different scale — those are still shown but compare carefully.
+        const _nflG = (window._NFL_PROSPECT_GRADES || {})[d.n];
+        if (!_nflG || _nflG.g == null) return '';
+        const g = _nflG.g;
+        const _nflColor = g >= 7.0 ? 'cb-elite' : g >= 6.5 ? 'cb-good' : g >= 6.2 ? 'cb-avg' : g >= 6.0 ? 'cb-avg' : 'cb-below';
+        const tier = _nflG.tier || (g >= 7.3 ? 'Perennial All-Pro' : g >= 7.0 ? 'Pro Bowl talent' : g >= 6.7 ? 'Year 1 starter' : g >= 6.5 ? 'Boom-or-bust' : g >= 6.2 ? 'Eventual starter' : g >= 6.0 ? 'Backup w/ starter upside' : g >= 5.8 ? 'Average backup' : g >= 5.6 ? 'Practice squad' : 'Priority UDFA');
+        const isPre2014 = _nflG.yr && parseInt(_nflG.yr) < 2014;
+        return `<div class="card-section" style="text-align:center;padding-bottom:4px">
+          <div class="card-section-title">NFL.com Prospect Grade <span style="font-size:.55rem;color:var(--text2);font-weight:400">· Scout consensus · ${_nflG.yr || '?'} class</span></div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:1" class="${_nflColor}">${g.toFixed(2)}</div>
+          <div style="font-size:.55rem;font-weight:700;margin-top:2px" class="${_nflColor}">${tier}</div>
+          <div style="font-size:.42rem;color:var(--text2);margin-top:3px">Scale: 5.5 (UDFA) → 8.0 (perfect prospect)${isPre2014 ? ' · pre-2014 scale differs' : ''}</div>
         </div>`;
       })()}
       ${hasDrills ? `<div class="card-section">

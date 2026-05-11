@@ -17,7 +17,10 @@
     //   from ceiling entirely despite r=0.21/0.27 signal. pffRecv doubled 0.02→0.04.
     //   yaco, breakaway, elusive, conf, mktShare trimmed (correlations weaker than
     //   prior ceiling weights suggested). Sum preserved.
-    RB:  { dc: 0.30, rbRec: 0.15, ras: 0.10, prod: 0.08, breakout: 0.08, yaco: 0.06, pff: 0.05, breakaway: 0.05, elusive: 0.04, pffRecv: 0.04, mktShare: 0.03, conf: 0.02, dominator: 0, tm: 0 },  // sum=1.00
+    // RB v8 ceiling (May 10 2026): in-page coord-descent. pff (rush grade) raised
+    //   0.05 → 0.08 — was the single biggest accepted ceiling move. dc trimmed
+    //   slightly (0.30 → 0.29), everything else absorbed small proportional cuts.
+    RB:  { dc: 0.291, rbRec: 0.145, ras: 0.097, pff: 0.080, prod: 0.077, breakout: 0.077, yaco: 0.058, breakaway: 0.048, elusive: 0.039, pffRecv: 0.039, mktShare: 0.029, conf: 0.019, dominator: 0, tm: 0 },  // sum=1.00
     // WR v7 (Apr 2026): added adot (5%) + slotFit (3%). Other ceiling weights rescaled by 0.92.
     // v6: dropped dominator (dead in both eras), redistributed to breakout (+2), yprr (+1), pff (+1).
     // WR v8 ceiling: added avoidedTackles (3%). Trimmed yac (0.04→0.02 — avoidedTackles

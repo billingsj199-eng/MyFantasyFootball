@@ -26,7 +26,12 @@
     // Predictive correlation improvement: 0.6297 → 0.6442 (+0.0145 Pearson on backtest).
     // QB v8 (Apr 24 2026): conf trimmed 0.02 → 0 (corr 0.03, dead). Redistributed
     //   to pff (0.07 → 0.08, corr 0.24) and breakout (0.13 → 0.14).
-    QB:  { dc: 0.27, breakout: 0.14, prod: 0.13, pff: 0.08, ras: 0.08, qbRush: 0.07, age: 0.07, bigTime: 0.06, qbAccuracy: 0.04, turnoverRate: 0.03, totalColFpts: 0.03, conf: 0, colTrajectory: 0, size: 0 },  // sum=1.00
+    // QB v9 (May 10 2026): in-page coordinate-descent over Floor weights vs combined
+    //   monotonicity-of-(hr,ppg,bust)+top-tier-bust-suppression+late-pick-catch
+    //   objective on 2017-2024 backtest (n=73 QB). Score 0.5213 → 0.4730 (-9.3%).
+    //   Single accepted move: dc 0.27 → 0.30, others rescaled proportionally.
+    //   Starter tier: hr 73%→82%, bust 9%→0%, PPG 15.7→16.7.
+    QB:  { dc: 0.300, breakout: 0.134, prod: 0.125, pff: 0.077, ras: 0.077, qbRush: 0.067, age: 0.067, bigTime: 0.058, qbAccuracy: 0.038, turnoverRate: 0.029, totalColFpts: 0.029, conf: 0, colTrajectory: 0, size: 0 },  // sum=1.00
     // RB v6 (Apr 2026): regression-driven cleanup — dominator dead (raw 0.09, ridge -2.0), totalColFpts redundant, colTrajectory zero
     // Redistributed to rbRec (raw 0.29, ridge +6.8), breakout (raw 0.39, ridge +6.9), pffRecv (raw 0.26, ridge +5.3)
     // RB v8 (Apr 24 2026): further data-driven tuning from PFF metric correlations.
@@ -37,7 +42,14 @@
     //   yaco 0.04 → 0.03 (corr 0.06/0.13 — weaker than expected)
     //   improve, mktShare, totalColFpts, age trimmed to balance.
     //   v7 preserved: pff (rush) 0.05, conf 0, size 0.
-    RB:  { dc: 0.26, prod: 0.13, breakout: 0.12, rbRec: 0.11, ras: 0.08, age: 0.055, dcAgeComposite: 0.05, pff: 0.05, yaco: 0.03, pffRecv: 0.03, improve: 0.025, elusive: 0.02, forcedMissed: 0.015, breakaway: 0.015, totalColFpts: 0.005, mktShare: 0.005, dominator: 0, conf: 0, size: 0, colTrajectory: 0, tm: 0 },  // sum=1.00
+    // RB v9 (May 10 2026): in-page coord-descent on the same objective as QB v9
+    //   (n=143 RB backtest). Score 0.4505 → 0.3371 (-25.2%, biggest gain of any pos).
+    //   Major rebalance: dc +0.03, ras +0.03, improve +0.03 (YoY PPG slope was
+    //   under-weighted), prod -0.04. Killed elusive (0.02→0) and forcedMissed
+    //   (0.015→0) — v8 had added small weight on PFF rush metrics but the
+    //   optimizer says they're already captured by yaco + pff rush grade.
+    //   Starter tier: hr 33%→40%, bust 48%→40%, PPG 9.0→9.8. Depth: hr 6%→9%.
+    RB:  { dc: 0.291, breakout: 0.115, rbRec: 0.106, ras: 0.110, prod: 0.092, improve: 0.056, age: 0.053, dcAgeComposite: 0.048, pff: 0.048, yaco: 0.029, pffRecv: 0.029, breakaway: 0.014, totalColFpts: 0.005, mktShare: 0.005, elusive: 0, forcedMissed: 0, dominator: 0, conf: 0, size: 0, colTrajectory: 0, tm: 0 },  // sum=1.00
     // WR v7 (Apr 2026): added adot (6%) + slotFit (3%) weighted components from PFF career data.
     //   aDOT: sweet-spot curve — dead zone ≤8.5 (0-for-15 hits), peak 8.5-13.
     //   slotFit: U-curve — peak 60-80% slot (Waddle/Jeff/ARSB/Egbuka), bust zone ≥80%.
@@ -53,7 +65,11 @@
     //   routeGrade raised 0.045 → 0.08 (corr 0.18/0.32).
     //   breakout +0.01 (corr 0.26/0.26), pff +0.005 (corr 0.30/0.36).
     //   contested trimmed (weaker than expected), conf zeroed (dead).
-    WR:  { dc: 0.22, breakout: 0.15, prod: 0.14, yprr: 0.11, routeGrade: 0.08, pff: 0.075, ras: 0.06, age: 0.045, dcAgeComposite: 0.03, contested: 0.03, slotFit: 0.03, avoidedTackles: 0.03, dominator: 0, conf: 0, adot: 0, totalColFpts: 0, colTrajectory: 0, tm: 0 },  // sum=1.00
+    // WR v10 (May 10 2026): in-page coord-descent (n=219 WR). Score 0.6769 → 0.5926
+    //   (-12.5%). Single accepted move: yprr 0.11 → 0.14 (already the 2nd-strongest
+    //   non-DC signal per v9; optimizer says push it further). Top Prospect tier:
+    //   hr 54%→58%, bust 23%→17%, PPG 10.9→11.1.
+    WR:  { dc: 0.213, breakout: 0.145, yprr: 0.140, prod: 0.135, routeGrade: 0.077, pff: 0.072, ras: 0.058, age: 0.043, dcAgeComposite: 0.029, contested: 0.029, slotFit: 0.029, avoidedTackles: 0.029, dominator: 0, conf: 0, adot: 0, totalColFpts: 0, colTrajectory: 0, tm: 0 },  // sum=1.00
     // TE v8 (Apr 23 2026): added avoidedTackles (5%) + pbGrade (3%) — both new weighted
     // components from PFF career data. Backtest n=83 (avoid) / n=70 (pbGrade):
     //   avoidedPerRec  r = +0.26  (3rd-strongest TE signal)
@@ -72,5 +88,10 @@
     //   non-DC TE signal). routeGrade ADDED at 0.06 (corr 0.27/0.37, previously
     //   unweighted despite being computed). Contested, avoidedTackles, teRec,
     //   pbGrade trimmed to fund. Conf zeroed (corr -0.05 dead). Sum preserved.
-    TE:  { dc: 0.20, breakout: 0.14, prod: 0.12, yprr: 0.12, pff: 0.07, ras: 0.07, routeGrade: 0.06, teRec: 0.05, contested: 0.04, age: 0.04, avoidedTackles: 0.04, pbGrade: 0.03, dominator: 0.01, eff: 0.01, conf: 0, totalColFpts: 0, size: 0, qbCtx: 0, colTrajectory: 0 }  // sum=1.00
+    // TE v11 (May 10 2026): in-page coord-descent (n=101 TE). Score 0.9576 → 0.9543
+    //   (only -0.3% — TE weight tuning is information-limited; the bottom 4 tiers
+    //   all have ~5-7% hit rates which is statistical noise on small n's). Single
+    //   accepted move: dc 0.20 → 0.22. Real TE improvement came from tier-threshold
+    //   tuning (see POS_TIERS in index.html), which dropped score to 0.7871 (-18%).
+    TE:  { dc: 0.220, breakout: 0.137, prod: 0.117, yprr: 0.117, pff: 0.068, ras: 0.068, routeGrade: 0.059, teRec: 0.049, contested: 0.039, age: 0.039, avoidedTackles: 0.039, pbGrade: 0.029, dominator: 0.010, eff: 0.010, conf: 0, totalColFpts: 0, size: 0, qbCtx: 0, colTrajectory: 0 }  // sum=1.00
   };

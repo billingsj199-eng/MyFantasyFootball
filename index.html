@@ -29,7 +29,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MFF">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-05-10b">
+<link rel="stylesheet" href="styles/main.css?v=2026-05-12m">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -103,15 +103,15 @@ Continue with Google
 </button>
 <button class="nav-btn" data-page="myteams" id="navMyTeamsBtn" title="My Teams" aria-label="My Teams">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-<span class="nav-label">My<br>Teams</span>
+<span class="nav-label">My Teams</span>
 </button>
 <button class="nav-btn" data-page="trade" title="Trade Calculator" aria-label="Trade Calculator">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-<span class="nav-label">Trade<br>Calc</span>
+<span class="nav-label">Trade Calc</span>
 </button>
 <button class="nav-btn" data-page="mockdraft" title="Mock Draft" aria-label="Mock Draft">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
-<span class="nav-label">Mock<br>Draft</span>
+<span class="nav-label">Mock Draft</span>
 </button>
 <button class="nav-btn" data-page="prospect" title="Prospect Model" aria-label="Prospect Model">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/><circle cx="12" cy="7" r="2"/><circle cx="18" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="6" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
@@ -119,7 +119,7 @@ Continue with Google
 </button>
 <button class="nav-btn" data-page="backtest" id="navBacktestBtn" title="Model Backtest" aria-label="Model Backtest" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
-<span class="nav-label">Back<br>test</span>
+<span class="nav-label">Backtest</span>
 </button>
 <button class="nav-btn" data-page="compare" title="Compare" aria-label="Compare Players">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
@@ -767,22 +767,31 @@ SHARE
 <svg id="btnThemeIconDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
 <svg id="btnThemeIconLight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
 </button>
-<button class="tb-btn" id="btnExport" title="Export rankings to Excel/CSV">
+<div style="position:relative;display:inline-flex">
+<button class="tb-btn" id="btnExportMenu" title="Download your rankings in various formats" onclick="event.stopPropagation();var m=document.getElementById('exportMenu');var open=m.style.display!=='none';m.style.display=open?'none':'block';this.setAttribute('aria-expanded',!open)">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-CSV
+EXPORT <span style="font-size:.5rem;margin-left:1px;opacity:.7">▾</span>
 </button>
-<button class="tb-btn" id="btnExportJson" title="Export rankings to JSON (for scripts and tooling)" style="font-size:.55rem">
+<div id="exportMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px;z-index:120;min-width:180px;box-shadow:0 12px 32px rgba(0,0,0,.5);font-family:'DM Sans',sans-serif">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:1.5px;color:var(--text2);padding:4px 8px 6px">DOWNLOAD AS</div>
+<button class="tb-btn export-menu-item" id="btnExport" title="Export rankings to Excel/CSV" style="width:100%;justify-content:flex-start;padding:6px 8px;font-size:.7rem">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-JSON
+EXCEL (.CSV)
 </button>
-<button class="tb-btn" id="btnExportUnderdog" title="Export rankings as Underdog-compatible CSV" style="font-size:.55rem">
+<button class="tb-btn export-menu-item" id="btnExportJson" title="Export rankings to JSON (for scripts and tooling)" style="width:100%;justify-content:flex-start;padding:6px 8px;font-size:.7rem">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-UNDERDOG
+DATA (.JSON)
 </button>
-<button class="tb-btn" id="btnExportTiers" title="Export tier groupings (JSON)" style="font-size:.55rem">
+<button class="tb-btn export-menu-item" id="btnExportUnderdog" title="Export rankings as Underdog-compatible CSV" style="width:100%;justify-content:flex-start;padding:6px 8px;font-size:.7rem">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+UNDERDOG CSV
+</button>
+<button class="tb-btn export-menu-item" id="btnExportTiers" title="Export tier groupings (JSON)" style="width:100%;justify-content:flex-start;padding:6px 8px;font-size:.7rem">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-TIERS
+TIERS (.JSON)
 </button>
+</div>
+</div>
 <button class="tb-btn" id="btnImport" title="Import rankings from JSON">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
 IMPORT
@@ -809,7 +818,7 @@ CLEAR
 <div class="auth-anchor" id="authAnchorRankings"></div>
 </div>
 </div>
-<p class="subtitle"><span id="rankingsCountText">413 players ranked 1–413</span><span id="rankingsUpdatedText" style="display:none;color:var(--accent);margin-left:6px" title=""></span> &middot; Click a name for full player card &middot; Drag to reorder &middot; Hover between rows to add tiers &middot; Hit Save to sync</p>
+<p class="subtitle"><span id="rankingsCountText">413 players ranked 1–413</span><span id="rankingsUpdatedText" style="display:none;color:var(--accent);margin-left:6px" title=""></span><span id="rankingsUnsavedText" style="display:none;color:var(--accent);margin-left:8px;font-weight:600"></span></p>
 </header>
 
 <div class="controls">
@@ -1002,14 +1011,14 @@ CLEAR
 <th data-sort="name">Player <span class="arrow"></span></th>
 <th data-sort="pos">Pos <span class="arrow"></span></th>
 <th data-sort="posRank">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
-<th data-sort="adp" id="adpHeader">ADP <span class="arrow"></span></th>
-<th data-sort="pts" id="ppgProjHeader">Proj PPG<span class="hide-on-mobile"> (Half PPR)</span> <span class="arrow"></span></th>
-<th data-sort="fpts25" id="ppg25HeaderTh"><span id="ppg25Header">'25 PPG<span class="hide-on-mobile"> (Half PPR)</span></span> <span class="arrow"></span></th>
-<th data-sort="yrr" id="yrrHeader" style="display:none">Y/RR <span class="arrow"></span></th>
-<th data-sort="jm" id="jmHeader" style="display:none">JM <span class="arrow"></span></th>
-<th data-sort="landing" id="landingHeader" style="display:none" title="Landing Spot — 0-100, higher = better fantasy opportunity. Separate from JM (prospect quality).">Land <span class="arrow"></span></th>
+<th data-sort="adp" id="adpHeader"><span data-gloss="Average Draft Position — where this player goes on average in the selected ADP source.">ADP</span> <span class="arrow"></span></th>
+<th data-sort="pts" id="ppgProjHeader"><span data-gloss="Projected fantasy points per game for the upcoming season (Half PPR scoring).">Proj PPG</span><span class="hide-on-mobile"> (Half PPR)</span> <span class="arrow"></span></th>
+<th data-sort="fpts25" id="ppg25HeaderTh"><span id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (Half PPR scoring).">'25 PPG</span><span class="hide-on-mobile"> (Half PPR)</span></span> <span class="arrow"></span></th>
+<th data-sort="yrr" id="yrrHeader" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
+<th data-sort="jm" id="jmHeader" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
+<th data-sort="landing" id="landingHeader" style="display:none"><span data-gloss="Landing Spot (0-100) — quality of the NFL fantasy opportunity (depth chart, scheme, target share). Separate from JM (prospect quality).">Land</span> <span class="arrow"></span></th>
 <th data-sort="age" id="ageHeader">Age <span class="arrow"></span></th>
-<th data-sort="diff" title="Difference between this rank and the selected ADP source. ▲ means this player is ranked higher than the market (value pick); ▼ means ranked lower (fade).">+/- <span class="arrow"></span></th>
+<th data-sort="diff"><span data-gloss="Rank vs. selected ADP source. ▲ = ranked higher than market (value pick). ▼ = ranked lower (fade).">+/-</span> <span class="arrow"></span></th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -1339,7 +1348,7 @@ CLEAR
 <style>
 .dc-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .dc-tab{padding:6px 14px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:background .15s,color .15s,border-color .15s}
-.dc-tab.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.dc-tab.active{background:var(--chip-active-bg);color:var(--chip-active-fg);border-color:var(--chip-active-border)}
 .dc-pane{display:none}
 .dc-pane.active{display:block}
 </style>
@@ -1533,7 +1542,8 @@ CLEAR
 </div>
 </div>
 <div class="pm-wrapper" id="pmWrapperContent">
-<div class="pm-header">
+<div class="pm-header" style="position:relative">
+<button class="help-btn" id="pmHelpBtn" title="How to read the Prospect Model" style="position:absolute;right:0;top:6px">?</button>
 <div class="pm-title">Prospect Model</div>
 <div class="pm-subtitle">JM Score (<b>Jack's Model</b>, 0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS, draft capital, size &amp; teammate quality <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text2);font-size:.65rem;text-align:center;line-height:16px;cursor:help;vertical-align:middle;margin-left:4px" title="HIT RATE METHODOLOGY&#10;&#10;Hit = top fantasy season within first 3 NFL years&#10;&#10;Thresholds (half-PPR):&#10;• QB: 200+ fpts (≈ top-12 finish)&#10;• RB: 170+ fpts (≈ top-24 finish)&#10;• WR: 170+ fpts (≈ top-24 finish)&#10;• TE: 120+ fpts (≈ top-12 finish)&#10;&#10;Tiers (position-specific, monotonic hit-rate gradient):&#10;• QB: 84+ Gen / 66+ Top Prospect / 56+ Starter / 46+ Contributor / 36+ Depth / 28+ Lottery&#10;• RB: 84+ Gen / 74+ Top Prospect / 50+ Starter / 43+ Contributor / 36+ Depth / 30+ Lottery&#10;• WR: 86+ Gen / 80+ Top Prospect / 68+ Starter / 55+ Contributor / 46+ Depth / 38+ Lottery&#10;• TE: 74+ Gen / 56+ Top Prospect / 52+ Starter / 44+ Contributor / 32+ Depth / 28+ Lottery&#10;&#10;Sample: 2017-2024 draft classes&#10;&#10;Tier hit rates are shown as percentages next to each tier badge. Hover a badge for exact counts.">?</span></div>
 </div>
@@ -1816,7 +1826,8 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="auth-anchor" id="authAnchorMyTeams"></div>
 <div style="max-width:800px;margin:0 auto;padding:20px 16px;min-width:0">
 
-<div style="text-align:center;margin-bottom:1.5rem">
+<div style="text-align:center;margin-bottom:1.5rem;position:relative">
+<button class="help-btn" id="mtHelpBtn" title="How to read the My Teams dashboard" style="position:absolute;right:0;top:14px">?</button>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1">MY TEAMS</div>
 <div style="color:var(--text2);font-size:.82rem;margin-top:4px">Import your fantasy teams, analyze rosters, and track your portfolio</div>
 </div>
@@ -1841,6 +1852,38 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 
 <!-- SLEEPER SECTION -->
 <div id="mtSectionSleeper">
+
+<!-- Empty-state preview — what you unlock after importing a league. Auto-hides via JS once
+     teams are loaded (the import grid stays at top until then for completion-rate reasons). -->
+<div id="mtImportPreview" style="margin-bottom:16px;padding:16px;background:linear-gradient(135deg,rgba(245,158,11,.04),rgba(245,158,11,.01));border:1px solid rgba(245,158,11,.18);border-radius:12px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)">WHAT YOU'LL SEE AFTER IMPORTING</span>
+<span style="font-size:.65rem;color:var(--text2);font-style:italic">Free · paste a league ID below to unlock</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<div style="display:flex;gap:10px;align-items:flex-start">
+<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;flex-shrink:0;margin-top:1px"><path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 5-9"/></svg>
+<div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);margin-bottom:2px">PORTFOLIO OVERVIEW</div>
+<div style="font-size:.7rem;color:var(--text2);line-height:1.4">Total drafts, dollars invested, average team build, and your most-rostered players across every league.</div>
+</div>
+</div>
+<div style="display:flex;gap:10px;align-items:flex-start">
+<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;flex-shrink:0;margin-top:1px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+<div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);margin-bottom:2px">TEAM RANKINGS</div>
+<div style="font-size:.7rem;color:var(--text2);line-height:1.4">Every team in every league ranked by projected best-ball total. Click any roster for picks, VOR, and projection breakdown.</div>
+</div>
+</div>
+<div style="display:flex;gap:10px;align-items:flex-start">
+<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+<div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);margin-bottom:2px">VALUE &amp; REACH ANALYSIS</div>
+<div style="font-size:.7rem;color:var(--text2);line-height:1.4">Find your steals (picked late vs. ADP) and reaches across every draft. Build-shape scoring (ZRO/HER/BAL) and stacking analysis included.</div>
+</div>
+</div>
+</div>
+</div>
 
 <!-- Import Section -->
 <div id="mtImportGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:20px">
@@ -2737,12 +2780,12 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- Result -->
-<div class="trade-result" id="tradeResult">
+<div class="trade-result is-empty" id="tradeResult">
 <div class="trade-result-bar-wrap">
 <div class="trade-result-bar-a" id="tradeBarA" style="width:50%"><span class="trade-result-bar-label">TEAM A</span></div>
 <div class="trade-result-bar-b" id="tradeBarB" style="width:50%"><span class="trade-result-bar-label">TEAM B</span></div>
 </div>
-<div class="trade-verdict even" id="tradeVerdict">ADD PLAYERS TO EVALUATE</div>
+<div class="trade-verdict even" id="tradeVerdict"></div>
 <div class="trade-verdict-sub" id="tradeVerdictSub"></div>
 <div class="trade-insights" id="tradeInsights" style="display:none"></div>
 <div style="display:flex;gap:8px;justify-content:center;margin-top:1rem;flex-wrap:wrap">
@@ -2768,7 +2811,8 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 <!-- Setup Screen -->
 <div id="mdSetup">
-<div class="md-header">
+<div class="md-header" style="position:relative">
+<button class="help-btn" id="mdHelpBtn" title="How Mock Draft works" style="position:absolute;right:0;top:6px">?</button>
 <div class="md-title">MOCK DRAFT</div>
 <div class="md-subtitle" id="mdSubtitle">Configure your draft settings and simulate against CPU teams</div>
 </div>
@@ -3004,7 +3048,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <div class="help-section">
 <div class="help-section-icon">📋</div>
 <div class="help-section-title">MY RANKINGS</div>
-<div class="help-section-desc">Your personal custom rankings. Drag and drop players to reorder them, add and remove tiers to organize by position group, export your rankings to a spreadsheet, use the trade calculator powered by your custom values, and mock draft using your personal board.<br><br><b style="color:var(--accent)">Position Sync:</b> Toggle the SYNC switch next to the mode tabs to keep your positional rankings (RB1, RB2, WR1, etc.) and position-specific tiers identical between paired formats — Redraft ↔ Superflex and Dynasty 1QB ↔ Dynasty SF. Only the overall interleaving changes (QBs rank higher in SF). Move a player or add a tier in either mode and the other updates automatically.</div>
+<div class="help-section-desc">Your personal custom rankings. <b style="color:var(--accent)">Click a name</b> for the full player card. <b style="color:var(--accent)">Drag rows</b> to reorder. <b style="color:var(--accent)">Hover between rows</b> to add a tier break. <b style="color:var(--accent)">Hit Save</b> to sync to the cloud. Drag and drop players to reorder them, add and remove tiers to organize by position group, export your rankings to a spreadsheet, use the trade calculator powered by your custom values, and mock draft using your personal board.<br><br><b style="color:var(--accent)">Position Sync:</b> Toggle the SYNC switch next to the mode tabs to keep your positional rankings (RB1, RB2, WR1, etc.) and position-specific tiers identical between paired formats — Redraft ↔ Superflex and Dynasty 1QB ↔ Dynasty SF. Only the overall interleaving changes (QBs rank higher in SF). Move a player or add a tier in either mode and the other updates automatically.</div>
 </div>
 
 <div class="help-section">
@@ -3069,6 +3113,167 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 </div>
 </div>
 </div>
+
+<!-- Mock Draft Help Modal — explains format/ranks/ADP source/CPU style choices. -->
+<div class="help-overlay" id="mdHelpOverlay">
+<div class="help-card">
+<button class="help-close" id="mdHelpClose">✕</button>
+<div class="help-title">MOCK DRAFT</div>
+<div class="help-sections">
+<div class="help-section">
+<div class="help-section-icon">⚙️</div>
+<div class="help-section-title">FORMAT</div>
+<div class="help-section-desc"><b>Redraft</b> — standard 1-year leagues. <b>Superflex</b> — second QB slot, QBs spike up the board. <b>Dynasty 1QB / SF</b> — long-term values (rookies + youth weighted). <b>Rookie</b> — rookie-only mocks against the 2026 class.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">📋</div>
+<div class="help-section-title">RANKINGS SOURCE</div>
+<div class="help-section-desc">Which board the <em>CPUs</em> use when picking. <b>Consensus</b> — community aggregate. <b>Jack's</b> — Jack's official board (premium). <b>JS Model</b> — algorithmic projections (premium). <b>My Ranks</b> — your custom rankings from the Rankings page.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🎯</div>
+<div class="help-section-title">ADP SOURCE</div>
+<div class="help-section-desc">Market ADP the CPUs reference for reach/value decisions. <b>Underdog</b> and <b>Sleeper</b> are most accurate for best-ball and dynasty respectively. <b>KTC</b> = KeepTradeCut dynasty values.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🤖</div>
+<div class="help-section-title">CPU STYLE</div>
+<div class="help-section-desc"><b>Mixed</b> — weighted blend of all archetypes (default, most realistic). <b>BPA</b> — every CPU drafts Best Player Available; predictable, less variance. <b>Aggressive</b> — CPUs run hard archetypes; more reaches + position runs. <b>Zero-RB</b> — CPUs lean Zero/Hero-RB or WR-heavy, so RB value falls to you.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🪑</div>
+<div class="help-section-title">DRAFT SLOT &amp; LINEUP</div>
+<div class="help-section-desc"><b>Number of Teams</b> sets the field size. <b>Your Pick</b> chooses your draft slot (1 = first overall). <b>Starting Lineup</b> spinners define how many QB/RB/WR/TE/FLEX/SFLEX/K/D-ST slots and how many bench spots — affects roster size and total rounds.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">⏱️</div>
+<div class="help-section-title">ON THE CLOCK</div>
+<div class="help-section-desc">When it's your turn, search/filter available players or sort by RANK vs ADP. The board log on the right shows every pick. After the draft completes, you get a Grade Card + analytics (positional spend, build shape, value vs ADP).</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🔧</div>
+<div class="help-section-title">LIVE DRAFT HELPER</div>
+<div class="help-section-desc">For real Underdog drafts: install the Chrome extension (from the orange banner above) to get live BPA recommendations powered by Jack's rankings during your actual drafts. Free.</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- My Teams Help Modal — same .help-overlay pattern, tailored to portfolio jargon. -->
+<div class="help-overlay" id="mtHelpOverlay">
+<div class="help-card">
+<button class="help-close" id="mtHelpClose">✕</button>
+<div class="help-title">MY TEAMS</div>
+<div class="help-sections">
+<div class="help-section">
+<div class="help-section-icon">📥</div>
+<div class="help-section-title">IMPORTING YOUR PORTFOLIO</div>
+<div class="help-section-desc"><b style="color:var(--accent)">Sleeper:</b> paste a league ID to pull every team in that league. <b style="color:var(--accent)">Underdog:</b> upload your Underdog CSV export (Account → Best Ball → Export). Every draft, every pick, every entry fee — synced in one click.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">📊</div>
+<div class="help-section-title">KPI STRIP</div>
+<div class="help-section-desc"><b>DRAFTS</b> — count across the selected phase + contest filter. <b>INVESTED</b> — total $ across drafts, with avg entry fee below. <b>PLAYERS</b> — unique players you own, with total picks below. <b>AVG BUILD</b> — mean QB/RB/WR/TE count per roster across your portfolio.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🎯</div>
+<div class="help-section-title">EXPOSURE TAB</div>
+<div class="help-section-desc">Every player you own, ranked by ownership %. Click any row to expand and see <b>every draft you got them</b>, the pick number, your slot, plus your <b>top 5 most-common co-drafts</b>. Click a tournament link to jump to that exact team on the Teams tab.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🏆</div>
+<div class="help-section-title">TEAMS TAB</div>
+<div class="help-section-desc">Every draft with all 12 teams ranked by projected best-ball total. Click any team for the full roster (picks, projections, VOR, vs-ADP). Sort the list by rank, BB Proj, season total, build score, ADP value, or entry fee.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">💎</div>
+<div class="help-section-title">VOR &amp; ADP VAL</div>
+<div class="help-section-desc"><b>VOR</b> (Value Over Replacement) — season pts above the BBM starter cutoff (QB12/RB30/WR42/TE13). Positive = above replacement. <b>ADP val</b> — sum of (ADP − pick number) across the roster. Positive = stole players late vs. market. Negative = reached.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🧱</div>
+<div class="help-section-title">BUILD SCORE &amp; PATH CODES</div>
+<div class="help-section-desc">BUILD % = implied BBM advance rate (baseline 16.7%) based on roster shape, position counts, round pattern, stacking, and structural fit. Hover the score for the breakdown. Path codes: <b>RB</b> — ZRO=Zero, HER=Hero, BAL=Balanced, HVY=Heavy, ROB=Robust. <b>QB</b> — EQB=Early, MQB=Mid, LQB=Late, VLQB=Very Late.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🔍</div>
+<div class="help-section-title">FILTERS</div>
+<div class="help-section-desc"><b>Phase</b> — limit to a particular best-ball phase (regular, quarterfinal, etc.). <b>Contest</b> — check chips to keep specific tournaments (right-click a chip to view that contest only). All KPIs and tabs update live.</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Prospect Model Help Modal — reuses .help-overlay styles, lives outside any page
+     container so the position:fixed overlay works regardless of which page is active. -->
+<div class="help-overlay" id="pmHelpOverlay">
+<div class="help-card">
+<button class="help-close" id="pmHelpClose">✕</button>
+<div class="help-title">PROSPECT MODEL</div>
+<div class="help-sections">
+<div class="help-section">
+<div class="help-section-icon">🎯</div>
+<div class="help-section-title">JM SCORE (0-100)</div>
+<div class="help-section-desc">Jack's Model — a single number predicting a prospect's chance of becoming a fantasy contributor in their first 3 NFL years. Blends draft age, breakout age, college production, conference quality, RAS, draft capital, size, and teammate strength. Position-specific weights — what drives a QB hit is different from what drives a WR hit.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🏷️</div>
+<div class="help-section-title">TIERS &amp; HIT RATES</div>
+<div class="help-section-desc">Each JM range maps to a position-specific tier (Generational → Top Prospect → Starter → Contributor → Depth → Lottery Ticket → Long Shot). The % next to each tier is the historical 3-year hit rate based on 2017-2024 draft classes. "Hit" means clearing a position-specific fantasy threshold (QB 200+ fpts, RB/WR 170+, TE 120+, half-PPR).</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">📋</div>
+<div class="help-section-title">DC (DRAFT CAPITAL)</div>
+<div class="help-section-desc">NFL overall pick number. Lower = earlier = more team investment. UDFA = undrafted free agent. DC heavily shifts JM upward for 2026 prospects once drafts happen — a Day 1 pick gets a meaningful boost, a UDFA gets a meaningful penalty.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🏃</div>
+<div class="help-section-title">RAS, FILM, TEAMMATE</div>
+<div class="help-section-desc"><b>RAS</b> (Relative Athletic Score, 0-10) — composite combine/pro-day athleticism vs. position peers. <b>FILM</b> — PFF tape grade for the player's final college season. <b>TM</b> (Teammate score) — quality of the college supporting cast (line, QB play, surrounding skill players) which adjusts production credit.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🎂</div>
+<div class="help-section-title">DRAFT AGE &amp; BREAKOUT</div>
+<div class="help-section-desc"><b>Draft Age</b> — age on draft day. Younger declarations historically hit at higher rates. <b>Breakout Age</b> — youngest college season where the player crossed the position's dominator threshold (early breakouts predict NFL success better than late ones).</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">📊</div>
+<div class="help-section-title">RISK INDICATOR</div>
+<div class="help-section-desc">Adjustments to raw JM based on bust/sleeper signals (extreme age, low breakout, athletic outliers). Red ▼ means the model is fading the player versus their components alone; green ▲ means it's boosting. Hover the cell for the specific drivers.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">🧪</div>
+<div class="help-section-title">BACKTEST</div>
+<div class="help-section-desc">Every component weight was tuned on 2017-2024 actual NFL outcomes — see the Backtest page for tier-by-tier hit rates, calibration, and how the current weights compare to alternatives. Free to access.</div>
+</div>
+
+<div class="help-section">
+<div class="help-section-icon">💡</div>
+<div class="help-section-title">HOVER ANY COLUMN HEADER</div>
+<div class="help-section-desc">JM, TIER, RISK, DC, DRAFT AGE, BREAKOUT, RAS, TM, FILM all show a tooltip on hover with a one-line definition. Look for the dotted-orange underline.</div>
+</div>
+</div>
+</div>
+</div>
+
 <input type="file" id="fileImport" accept=".json" style="display:none">
 
 <script src="data/ktc_rankings.js?v=2026-05-02"></script>
@@ -7214,6 +7419,25 @@ document.getElementById('helpOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('helpOverlay')) document.getElementById('helpOverlay').classList.remove('open');
 });
 
+// Page-scoped help modals (Prospect, My Teams, Mock Draft) — same open/close pattern
+// as the Rankings help. Parameterised by element ids.
+[
+  { btnId: 'pmHelpBtn', overlayId: 'pmHelpOverlay', closeId: 'pmHelpClose' },
+  { btnId: 'mtHelpBtn', overlayId: 'mtHelpOverlay', closeId: 'mtHelpClose' },
+  { btnId: 'mdHelpBtn', overlayId: 'mdHelpOverlay', closeId: 'mdHelpClose' }
+].forEach(({ btnId, overlayId, closeId }) => {
+  const btn = document.getElementById(btnId);
+  const overlay = document.getElementById(overlayId);
+  const close = document.getElementById(closeId);
+  if (!btn || !overlay) return;
+  btn.addEventListener('click', () => overlay.classList.add('open'));
+  if (close) close.addEventListener('click', () => overlay.classList.remove('open'));
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) overlay.classList.remove('open');
+  });
+});
+
 // === Draft Helper install modal ===
 // Opened from the rankings toolbar 🔧 button and the Mock Draft tab promo card.
 (function _initDraftHelperModal() {
@@ -9773,12 +9997,42 @@ function _filterCollegeWeeks(weeks) {
   return weeks.filter(_isValidCollegeWeek);
 }
 
+// --- Offseason injury filter ---
+// In February through August, the active-season injury feed (NFLVERSE_INJURY_TAGS,
+// Firestore injury_updates) goes stale — "3 weeks out" tags from Week 17 don't
+// mean anything in May. During offseason we only surface injuries that are
+// known to carry across multiple months: ACL/Achilles/Lisfranc tears, season-
+// ending surgeries, and anything explicitly noting a return year >= current.
+function _isOffseasonNow() {
+  var m = new Date().getMonth(); // 0=Jan, 8=Sep
+  return m >= 1 && m <= 7; // Feb (1) → Aug (7)
+}
+function _isLongTermInjuryTag(tag) {
+  if (!tag) return false;
+  var t = String(tag).toLowerCase();
+  // Major ligament / foot reconstructions — 9-12+ month recoveries.
+  if (/\bacl\b|\bachilles\b|\blisfranc\b|\bpcl\b|\bmcl\b|\blcl\b/.test(t)) return true;
+  // Explicit surgery / reconstruction / torn / season-ending language.
+  if (/surgery|repair|reconstruction|\btorn\b|tear\b|season.?ending|out for (season|year)/.test(t)) return true;
+  // Explicit future-year return tag (e.g. "out until 2026", "return early 2027").
+  var ym = t.match(/(20\d{2})/);
+  if (ym) {
+    var yr = parseInt(ym[1], 10);
+    if (yr >= new Date().getFullYear()) return true;
+  }
+  // Multi-month recovery windows ("6 months", "8 months", etc.).
+  if (/\b([6-9]|1[0-9])\s*months?\b/.test(t)) return true;
+  return false;
+}
+
 // --- Injury Pill Helper: short Q/D/O/IR/PUP/SUS badge for the rankings table row ---
 // Maps d.inj tag (e.g. "knee, Out", "ankle, Questionable", "IR", "Suspended")
 // to a 1-3 letter code with color + full tag in tooltip. Returns '' if no usable status.
 function _injPill(d) {
   if (!d || !d.inj) return '';
   var tag = String(d.inj);
+  // During offseason, hide short-term tags; only show true long-term injuries.
+  if (_isOffseasonNow() && !_isLongTermInjuryTag(tag)) return '';
   var t = tag.toLowerCase();
   var code, color;
   // Order matters: most severe / most specific first
@@ -9797,6 +10051,10 @@ function _injPill(d) {
 function _buildInjuryBadge(d) {
   if (!d.inj) return '';
   var tag = d.inj;
+  // Offseason: suppress short-term tags so stale Week 17 "3 weeks out" entries
+  // don't litter cards in May. Long-term injuries (ACL, surgery, future return
+  // year, etc.) still surface — see _isLongTermInjuryTag.
+  if (_isOffseasonNow() && !_isLongTermInjuryTag(tag)) return '';
   var disc = d._injDiscount;
   
   // Build tooltip with details
@@ -11238,6 +11496,21 @@ window.switchPage = switchPage;
       return;
     }
     if (!pop.contains(e.target)) pop.style.display = 'none';
+  });
+  // Export ▾ dropdown — close on outside click. The toggle button has an inline
+  // onclick that opens/closes; this just handles "click anywhere else to close".
+  // Also auto-close after picking an export option so the menu doesn't linger.
+  document.addEventListener('click', e => {
+    const expMenu = document.getElementById('exportMenu');
+    const expBtn = document.getElementById('btnExportMenu');
+    if (!expMenu || expMenu.style.display === 'none') return;
+    if (expBtn && expBtn.contains(e.target)) return; // toggle handles itself
+    if (expMenu.contains(e.target)) {
+      // clicked an export option — close the menu after the export runs
+      setTimeout(() => { expMenu.style.display = 'none'; }, 0);
+      return;
+    }
+    expMenu.style.display = 'none';
   });
   document.addEventListener('change', e => {
     if (!e.target.matches('[data-coltoggle]')) return;
@@ -20590,13 +20863,16 @@ window.fmtHeight = fmtHeight;
     const barB = document.getElementById('tradeBarB');
     const insightsEl = document.getElementById('tradeInsights');
 
+    const resultEl = document.getElementById('tradeResult');
     if (sum === 0) {
       barA.style.width = '50%'; barB.style.width = '50%';
-      verdict.textContent = 'ADD PLAYERS TO EVALUATE';
+      verdict.textContent = '';
       verdict.className = 'trade-verdict even'; sub.textContent = '';
+      if (resultEl) resultEl.classList.add('is-empty');
       if (insightsEl) { insightsEl.style.display = 'none'; insightsEl.innerHTML = ''; }
       return;
     }
+    if (resultEl) resultEl.classList.remove('is-empty');
     // Symmetric bar widths: clamp to [8, 92] so the losing side always shows a sliver,
     // and swapping A↔B produces a mirror image rather than a vanishing bar.
     const pctA = Math.max(8, Math.min(92, Math.round((totalA / sum) * 100)));
@@ -32729,18 +33005,18 @@ window.fmtHeight = fmtHeight;
   function getColumns(pos, isTotals) {
     const cols = [
       { key: 'name', label: 'PLAYER', sortable: true },
-      { key: 'jm', label: 'JM', sortable: true },
-      { key: 'tier', label: 'TIER', sortable: true },
-      { key: 'risk', label: 'RISK', sortable: true },
-      { key: 'dc', label: 'DC', sortable: true },
-      { key: 'age', label: 'DRAFT AGE', sortable: true },
-      { key: 'breakoutAge', label: 'BREAKOUT', sortable: true },
+      { key: 'jm', label: '<span data-gloss="JM Score (0-100) — Jack\'s prospect grade combining draft age, breakout age, production, conference, RAS, draft capital, size &amp; teammate quality. Higher = better.">JM</span>', sortable: true },
+      { key: 'tier', label: '<span data-gloss="Position-specific tier (Generational → Lottery) derived from JM. Percent shown is the historical 3-year hit rate for that tier.">TIER</span>', sortable: true },
+      { key: 'risk', label: '<span data-gloss="Risk indicator — adjustment applied to JM based on bust/sleeper signals (age extremes, low breakout, athletic outliers).">RISK</span>', sortable: true },
+      { key: 'dc', label: '<span data-gloss="Draft Capital — NFL overall pick number. Lower = earlier pick = more team investment. UDFA = undrafted.">DC</span>', sortable: true },
+      { key: 'age', label: '<span data-gloss="Age on draft day. Younger declarations historically hit at higher rates.">DRAFT AGE</span>', sortable: true },
+      { key: 'breakoutAge', label: '<span data-gloss="Breakout age — youngest college season where the player crossed the position\'s dominator threshold.">BREAKOUT</span>', sortable: true },
       { key: 'draftYr', label: 'YEAR', sortable: true },
       { key: 'ht', label: 'HT', sortable: true },
       { key: 'wt', label: 'WT', sortable: true },
       { key: 'lastCollege', label: 'COLLEGE', sortable: true },
       { key: 'lastConf', label: 'CONF', sortable: true },
-      { key: 'ras', label: 'RAS', sortable: true },
+      { key: 'ras', label: '<span data-gloss="Relative Athletic Score (0-10) — composite combine/pro-day athleticism vs. position peers.">RAS</span>', sortable: true },
       { key: 'gp', label: 'GP', sortable: true }
     ];
 
@@ -32755,11 +33031,11 @@ window.fmtHeight = fmtHeight;
       cols.push({ key: 'ypc', label: 'YPC', sortable: true });
     }
     if (pos === 'WR' || pos === 'TE') {
-      cols.push({ key: 'ypr', label: 'YPR', sortable: true });
+      cols.push({ key: 'ypr', label: '<span data-gloss="Yards per Reception — average yards gained per catch.">YPR</span>', sortable: true });
     }
 
-    cols.push({ key: 'tm', label: 'TM', sortable: true });
-    cols.push({ key: 'pff', label: 'FILM', sortable: true });
+    cols.push({ key: 'tm', label: '<span data-gloss="Teammate score — quality of the college supporting cast (offensive line, surrounding skill players, QB play).">TM</span>', sortable: true });
+    cols.push({ key: 'pff', label: '<span data-gloss="PFF Film grade — Pro Football Focus tape grade for the player\'s final college season.">FILM</span>', sortable: true });
     return cols;
   }
 
@@ -33428,6 +33704,10 @@ window.fmtHeight = fmtHeight;
             } else if (p.jm != null) {
               tierLabel = 'Incomplete'; tierColor = '#64748b';
             }
+            // Pair color with a symbol so the tier signal works without color (a11y).
+            // ★ = top, ▲ = high, ◆ = solid, ● = average, ○ = light, ◇ = lottery, · = long-shot
+            const _tierIcons = { 'Generational': '★', 'Top Prospect': '▲', 'Starter': '◆', 'Contributor': '●', 'Depth': '○', 'Lottery Ticket': '◇', 'Long Shot': '·' };
+            const tierIcon = _tierIcons[tierLabel] || '';
             // Hit rate — use position-specific rate when available, fall back to overall
             let hitRateText = '';
             let hitRateDisplay = '';
@@ -33439,7 +33719,8 @@ window.fmtHeight = fmtHeight;
               hitRateText = ` title="${_posLabel}${_hr.rate}% hit rate (${_hr.hits}/${_hr.total} from 2017-2024 classes)"`;
               hitRateDisplay = ' <span style=\"opacity:.6;font-size:.6rem\">(' + _hr.rate + '%)</span>';
             }
-            rows += `<td style="text-align:center"><span${hitRateText} style="font-size:.65rem;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:10px;background:${tierColor}22;color:${tierColor};white-space:nowrap;cursor:${hitRateText ? 'help' : 'default'}">${tierLabel}${hitRateDisplay}</span></td>`;
+            const _iconHtml = tierIcon ? `<span aria-hidden="true" style="margin-right:4px">${tierIcon}</span>` : '';
+            rows += `<td style="text-align:center"><span${hitRateText} style="font-size:.65rem;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:10px;background:${tierColor}22;color:${tierColor};white-space:nowrap;cursor:${hitRateText ? 'help' : 'default'}">${_iconHtml}${tierLabel}${hitRateDisplay}</span></td>`;
             break;
           }
           case 'risk': {
@@ -43603,9 +43884,9 @@ Rules:
     // No point showing chips if everything is one phase
     if (presentPhases.length <= 1) {
       const only = presentPhases[0] || phaseDef[0];
-      let h = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
-      h += '<span style="font-family:Bebas Neue,sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--accent)">PHASE</span>';
-      h += '<span style="padding:4px 10px;font-family:Bebas Neue,sans-serif;font-size:.7rem;letter-spacing:1px;border:1px solid var(--accent);background:var(--accent);color:#000;border-radius:4px">' + only.label + ' <span style="opacity:.7;font-size:.6rem">' + phaseCounts[only.val] + '</span></span>';
+      let h = '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 2px;margin-bottom:10px">';
+      h += '<span style="font-family:Bebas Neue,sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2)">PHASE:</span>';
+      h += '<span style="padding:4px 10px;font-family:Bebas Neue,sans-serif;font-size:.7rem;letter-spacing:1px;border:1px solid var(--chip-active-border);background:var(--chip-active-bg);color:var(--chip-active-fg);border-radius:4px">' + only.label + ' <span style="opacity:.7;font-size:.6rem">' + phaseCounts[only.val] + '</span></span>';
       h += '<span style="font-size:.6rem;color:var(--text2);font-style:italic">Upload your other phase CSVs to compare them.</span>';
       h += '</div>';
       return h;
@@ -43615,17 +43896,17 @@ Rules:
       const active = (val === null) ? !sel : (sel === val);
       return '<button onclick="window._udSetPhaseFilter(' + (val === null ? 'null' : "'" + val + "'") + ')" style="padding:5px 12px;font-family:Bebas Neue,sans-serif;font-size:.72rem;letter-spacing:1px;cursor:pointer;border:1px solid ' + (active ? 'var(--accent)' : 'var(--border)') + ';background:' + (active ? 'var(--accent)' : 'var(--surface2)') + ';color:' + (active ? '#000' : 'var(--text2)') + ';border-radius:4px;display:inline-flex;align-items:center;gap:6px">' + (active ? '✓ ' : '') + label + (count !== null ? ' <span style="opacity:.7;font-size:.6rem">' + count + '</span>' : '') + '</button>';
     };
-    let html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px">';
-    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">';
-    html += '<span style="font-family:Bebas Neue,sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--accent)">PHASE</span>';
-    html += '<span style="font-size:.65rem;color:var(--text2)">filter drafts by contest phase</span>';
-    html += '</div>';
-    html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    // Inline (no card) — PHASE has at most 4 chips and the same card treatment as
+    // the CONTEST FILTER below made the two visually indistinguishable. Inline + label
+    // before the chips gives a clear hierarchy: PHASE is a pre-filter, CONTEST is the
+    // main multi-select panel.
+    let html = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;padding:0 2px">';
+    html += '<span style="font-family:Bebas Neue,sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2)">PHASE:</span>';
     html += chip('ALL', null, totalCount);
     presentPhases.forEach(p => {
       html += chip(p.label, p.val, phaseCounts[p.val]);
     });
-    html += '</div></div>';
+    html += '</div>';
     return html;
   }
 
@@ -45026,17 +45307,25 @@ Rules:
 
     // ── SUMMARY CARDS ──
     html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px">`;
+    const _tourneyEntries = Object.entries(tourneyGroups);
+    const _tourneyFull = _tourneyEntries.map(([k,v]) => `${v.count} ${k}`).join(', ');
+    // Always one-line subtext on the DRAFTS KPI card so all four cards have the same
+    // vertical rhythm. Full breakdown is available via the hover title attribute.
+    const _draftsSub = _tourneyEntries.length === 1
+      ? _tourneyEntries[0][0]
+      : `${_tourneyEntries.length} contests`;
     const cards = [
-      { label: 'DRAFTS', val: numDrafts, sub: Object.entries(tourneyGroups).map(([k,v]) => `${v.count} ${k}`).join(', ') },
-      { label: 'INVESTED', val: '$' + data.totalInvestment.toFixed(0), sub: '$' + (data.totalInvestment / numDrafts).toFixed(2) + ' avg entry' },
-      { label: 'PLAYERS', val: Object.keys(data.players).length, sub: data.totalPicks + ' total picks' },
-      { label: 'AVG BUILD', val: `${avgPos.QB}/${avgPos.RB}/${avgPos.WR}/${avgPos.TE}`, sub: 'QB/RB/WR/TE per team' }
+      { label: 'DRAFTS', val: numDrafts, sub: _draftsSub, subTitle: _tourneyFull, gloss: 'Total number of drafts in your imported portfolio across the selected phase + contest filters.' },
+      { label: 'INVESTED', val: '$' + data.totalInvestment.toFixed(0), sub: '$' + (data.totalInvestment / numDrafts).toFixed(2) + ' avg entry', gloss: 'Total dollars invested across all drafts in the current filter. Subtext shows your average entry fee.' },
+      { label: 'PLAYERS', val: Object.keys(data.players).length, sub: data.totalPicks + ' total picks', gloss: 'Number of unique players you own at least one share of, plus your total pick count.' },
+      { label: 'AVG BUILD', val: `${avgPos.QB}/${avgPos.RB}/${avgPos.WR}/${avgPos.TE}`, sub: 'QB/RB/WR/TE per team', gloss: 'Average positional shape of your teams — mean QB/RB/WR/TE count per roster.' }
     ];
     cards.forEach(c => {
       html += `<div style="text-align:center;padding:14px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px">`;
-      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">${c.label}</div>`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)"><span data-gloss="${_esc(c.gloss)}">${c.label}</span></div>`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:var(--accent);margin:2px 0">${c.val}</div>`;
-      html += `<div style="font-size:.6rem;color:var(--text2)">${c.sub}</div>`;
+      const _subTitleAttr = c.subTitle ? ` title="${_esc(c.subTitle)}"` : '';
+      html += `<div${_subTitleAttr} style="font-size:.6rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.sub}</div>`;
       html += `</div>`;
     });
     html += `</div>`;
@@ -45090,7 +45379,7 @@ Rules:
     // into #udTab_teams.
     html += `<div id="udTab_teams" style="display:${_activeTabId === 'teams' ? '' : 'none'}">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAMS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(your team vs every opponent in each pool)</span></div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px">Click a draft to see all 12 teams ranked by projected best-ball total points. Click any team to open its roster. <strong style="color:var(--accent)">Rank reflects projected season points only — anything can happen in a real season.</strong></div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px;max-width:760px;word-wrap:break-word">Click a draft to see all 12 teams ranked by projected best-ball total points. Click any team to open its roster. <strong style="color:var(--accent)">Rank reflects projected season points only — anything can happen in a real season.</strong></div>`;
     // (TEAMS-tab body content follows below — built inline for now;
     // future: defer via setTimeout to keep initial render responsive.)
 
@@ -45301,7 +45590,8 @@ Rules:
                           row.myRank <= 6 ? '#facc15' :
                           row.myRank <= 9 ? '#f59e0b' : '#ef4444';
         const fieldNote = row.fieldComplete ? '' : ' <span style="font-size:.55rem;color:var(--text2);font-style:italic">(opponents not synced)</span>';
-        html += `<div onclick="window._udToggleTeamsDraft(${i})" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
+        const _safeDid = String(d.id || '').replace(/"/g, '&quot;');
+        html += `<div onclick="window._udToggleTeamsDraft(${i})" data-udteamsdraft="${_safeDid}" data-udteamsdraftidx="${i}" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
         html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
         // Rank badge — promoted to primary metric now that advance % is gone.
         html += `<div style="width:84px;text-align:center;padding:6px 4px;background:var(--surface2);border-radius:6px">
@@ -45356,8 +45646,8 @@ Rules:
             <div><span style="color:var(--text);font-weight:600">${t.seasonMean.toFixed(0)}</span> season</div>
           </div>`;
           html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:80px">
-            <div>ADP val <span style="color:${(t.adpValue||0) > 0 ? '#22c55e' : (t.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(t.adpValue||0) > 0 ? '+' : ''}${t.adpValue || 0}</span></div>
-            <div title="Total Value Over Replacement: sum of season-pts above QB12/RB30/WR42/TE13 for every pick">VOR <span style="color:${(t.vorTotal||0) > 200 ? '#22c55e' : (t.vorTotal||0) > 0 ? '#4ade80' : (t.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(t.vorTotal||0) > 0 ? '+' : ''}${Math.round(t.vorTotal||0)}</span></div>
+            <div><span data-gloss="ADP value — sum of (ADP − pick number) across the roster. Positive = stole players late vs. market. Negative = reached.">ADP val</span> <span style="color:${(t.adpValue||0) > 0 ? '#22c55e' : (t.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(t.adpValue||0) > 0 ? '+' : ''}${t.adpValue || 0}</span></div>
+            <div><span data-gloss="Total Value Over Replacement — sum of season-pts above the BBM starter cutoff (QB12/RB30/WR42/TE13) for every pick on this roster.">VOR</span> <span style="color:${(t.vorTotal||0) > 200 ? '#22c55e' : (t.vorTotal||0) > 0 ? '#4ade80' : (t.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(t.vorTotal||0) > 0 ? '+' : ''}${Math.round(t.vorTotal||0)}</span></div>
           </div>`;
           // Position mini-bar
           html += `<div style="display:flex;gap:3px">`;
@@ -45400,25 +45690,25 @@ Rules:
             return [rbShort, qbShort].filter(Boolean).join(' · ');
           })() : '';
           const pathBadgeHtml = pathBadge
-            ? `<div style="font-size:.42rem;color:var(--text2);letter-spacing:.3px;font-family:'DM Sans',sans-serif;font-weight:500;margin-top:1px">${pathBadge}</div>`
+            ? `<div style="font-size:.42rem;color:var(--text2);letter-spacing:.3px;font-family:'DM Sans',sans-serif;font-weight:500;margin-top:1px"><span data-gloss="Build path shorthand. RB: ZRO=Zero RB, HER=Hero RB, BAL=Balanced, HVY=RB Heavy, ROB=Robust RB. QB: EQB=Early QB, MQB=Mid QB, LQB=Late QB, VLQB=Very Late QB.">${pathBadge}</span></div>`
             : '';
           const _csAdvPct = cs ? (cs.advRate * 100).toFixed(1) + '%' : '—';
           html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${_csAdvPct}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div>${pathBadgeHtml}</div>`;
           html += `</div>`;
 
           // Roster expand within the team row.
-          html += `<div id="udTeamsRoster_${i}_${ti}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">`;
-          html += `<table style="width:100%;border-collapse:collapse;font-size:.68rem">
+          html += `<div id="udTeamsRoster_${i}_${ti}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0">`;
+          html += `<table style="width:100%;min-width:680px;border-collapse:collapse;font-size:.68rem">
             <thead><tr style="border-bottom:1px solid var(--border)">
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">RD</th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)">PICK</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">PLAYER</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">POS</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">TEAM</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Projected fantasy points per game">PROJ PPG</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Projected total season points">SZN PTS</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Value Over Replacement: season pts above the BBM 12-team starter cutoff (QB12/RB30/WR42/TE13)">VOR</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)" title="Pick number minus ADP. Positive = took player later than ADP (got value). Negative = reached.">vs ADP</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected fantasy points per game.">PROJ PPG</span></th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected total season points.">SZN PTS</span></th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Value Over Replacement — season pts above the BBM 12-team starter cutoff (QB12/RB30/WR42/TE13).">VOR</span></th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Pick number minus ADP. Positive = took player later than ADP (got value). Negative = reached.">vs ADP</span></th>
             </tr></thead><tbody>`;
           t.rosterDetails.forEach(p => {
             const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
@@ -45522,11 +45812,11 @@ Rules:
       if (lists.steals.length === 0) {
         out += `<div style="padding:12px;color:var(--text2);font-size:.78rem;margin-bottom:20px">No major value picks found</div>`;
       } else {
-        out += `<table style="width:100%;border-collapse:collapse;font-size:.75rem;margin-bottom:20px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
+        out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:20px"><table style="width:100%;min-width:540px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
         lists.steals.slice(0, 20).forEach(vp => {
           out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(vp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.adp}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e">+${vp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${lists.drafts}</td></tr>`;
         });
-        out += `</tbody></table>`;
+        out += `</tbody></table></div>`;
       }
       // REACHES
       out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#ef4444;margin-bottom:8px">📉 BIGGEST REACHES</div>`;
@@ -45534,11 +45824,11 @@ Rules:
       if (lists.reaches.length === 0) {
         out += `<div style="padding:12px;color:var(--text2);font-size:.78rem;margin-bottom:24px">No major reaches found</div>`;
       } else {
-        out += `<table style="width:100%;border-collapse:collapse;font-size:.75rem;margin-bottom:24px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
+        out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:24px"><table style="width:100%;min-width:540px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
         lists.reaches.slice(0, 20).forEach(bp => {
           out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(bp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.adp}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444">${bp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${lists.drafts}</td></tr>`;
         });
-        out += `</tbody></table>`;
+        out += `</tbody></table></div>`;
       }
       return out;
     }
@@ -45633,6 +45923,7 @@ Rules:
     // Store data for filtering
     window._udPlayerList = playerList;
     window._udNumDrafts = numDrafts;
+    window._udData = data;
   }
 
   function _udRenderDraftBoard(data) {
@@ -45675,8 +45966,8 @@ Rules:
     });
 
     let html = '';
-    html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">`;
-    html += `<table style="border-collapse:collapse;font-size:.6rem;min-width:${teamCount * 75}px;width:100%">`;
+    html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%">`;
+    html += `<table style="border-collapse:collapse;font-size:.6rem;min-width:${teamCount * 95}px;width:100%">`;
 
     // Header row
     html += `<thead><tr>`;
@@ -45736,9 +46027,19 @@ Rules:
       const rank = matched ? _mtGetPlayerRank(matched.n) : null;
       const barColor = pct >= 30 ? 'var(--accent)' : pct >= 15 ? '#3b82f6' : 'var(--text2)';
       const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+      const safeName = name.replace(/"/g, '&quot;');
+      // Small headshot lifts scannability on a long ownership list. Lazy-loaded;
+      // hidden cleanly via onerror if the URL is missing or 404s.
+      const headshotUrl = matched && matched._slImg ? matched._slImg : '';
+      const headshotHtml = headshotUrl
+        ? `<img src="${headshotUrl}" alt="" loading="lazy" onerror="this.style.display='none'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:center top;background:var(--surface2);flex-shrink:0">`
+        : `<div style="width:28px;height:28px;border-radius:50%;background:var(--surface2);flex-shrink:0"></div>`;
 
-      html += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;${idx > 0 ? 'border-top:1px solid var(--border)' : ''}">`;
-      html += `<div style="width:24px;text-align:center;font-size:.65rem;color:var(--text2)">${idx + 1}</div>`;
+      // Outer wrapper holds both the clickable row + the (initially hidden) expand panel.
+      html += `<div data-udexp-row="${safeName}"${idx > 0 ? ' style="border-top:1px solid var(--border)"' : ''}>`;
+      html += `<div onclick="window._udToggleExpRow('${safeName.replace(/'/g, '&#39;')}')" style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;transition:background .12s" onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background='transparent'">`;
+      html += `<div style="width:24px;text-align:center;font-size:.65rem;color:var(--text2)"><span class="udexp-caret" style="display:inline-block;transition:transform .12s">▸</span> ${idx + 1}</div>`;
+      html += headshotHtml;
       html += `<span style="font-size:.55rem;padding:1px 4px;border-radius:3px;background:${posColors[info.pos] || 'var(--text2)'}20;color:${posColors[info.pos] || 'var(--text2)'};font-weight:600">${info.pos}</span>`;
       html += `<div style="flex:1;min-width:0">`;
       html += `<div style="font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(name)} <span style="font-weight:400;color:var(--text2);font-size:.65rem">${info.team || ''}</span></div>`;
@@ -45755,9 +46056,195 @@ Rules:
         html += `<div style="text-align:right;min-width:36px"><div style="font-size:.55rem;color:var(--text2)">RANK</div><div style="font-size:.75rem;font-weight:700;color:${rank <= 24 ? '#22c55e' : rank <= 60 ? '#4ade80' : rank <= 120 ? '#facc15' : '#f59e0b'}">${rank}</div></div>`;
       }
       html += `</div>`;
+      // Expand panel — populated lazily on first open by _udToggleExpRow
+      html += `<div class="udexp-panel" data-udexp-panel="${safeName}" style="display:none;padding:8px 6px 12px 32px;background:rgba(255,255,255,.015);border-top:1px dashed var(--border)"></div>`;
+      html += `</div>`;
     });
     return html;
   }
+
+  // Build & toggle the per-player expand panel on the Exposures list. Lazy-renders
+  // the detail (drafts you have them in + most-common co-drafted players) on the
+  // first open so we don't pay for 200+ panels up-front. Click again to collapse.
+  window._udToggleExpRow = function(name) {
+    const wrap = document.querySelector(`[data-udexp-row="${name}"]`);
+    if (!wrap) return;
+    const panel = wrap.querySelector(`[data-udexp-panel="${name}"]`);
+    const caret = wrap.querySelector('.udexp-caret');
+    if (!panel) return;
+    const open = panel.style.display !== 'none';
+    if (open) {
+      panel.style.display = 'none';
+      if (caret) caret.style.transform = 'rotate(0deg)';
+      return;
+    }
+    if (!panel.dataset.rendered) {
+      panel.innerHTML = _udBuildExpRowPanel(name);
+      panel.dataset.rendered = '1';
+    }
+    panel.style.display = 'block';
+    if (caret) caret.style.transform = 'rotate(90deg)';
+  };
+
+  // Build the inner HTML for an exposure row's expand panel. Computes (1) every draft
+  // this player is in with the user's slot + the pick where they got him, and (2) the
+  // top 5 most-common players you draft alongside him (aggregated across all those
+  // drafts). The CSV import is the user's portfolio export, so every pick in a draft
+  // belongs to the user — co-drafts are simply the other 17 picks per draft.
+  function _udBuildExpRowPanel(name) {
+    const data = window._udData;
+    if (!data) return `<div style="color:var(--text2);font-size:.7rem">Portfolio data not loaded.</div>`;
+    // Resolve market ADP for this player once (Underdog BB preferred, consensus fallback).
+    let marketAdp = null;
+    try {
+      const matched = (typeof _udMatchPlayer === 'function') ? _udMatchPlayer(name) : null;
+      if (matched) {
+        if (matched.udA != null && matched.udA < 900) marketAdp = matched.udA;
+        else if (matched.a != null && matched.a < 900) marketAdp = matched.a;
+      }
+    } catch (_) {}
+    const drafts = data.drafts;
+    const rows = [];
+    const coDraftCount = {};
+    Object.values(drafts).forEach(d => {
+      const myPick = d.picks.find(p => p.name === name);
+      if (!myPick) return;
+      // User's draft slot = first pick number (round 1 == picks 1..size)
+      const firstPick = d.picks[0] ? d.picks[0].pick : null;
+      const slot = firstPick != null ? firstPick : null;
+      const round = d.size ? Math.ceil(myPick.pick / d.size) : null;
+      rows.push({ draftId: d.id, tournament: d.tournament || 'Underdog', date: d.date, pickNum: myPick.pick, round, slot, size: d.size });
+      // Aggregate co-drafts
+      d.picks.forEach(p => {
+        if (p.name === name) return;
+        coDraftCount[p.name] = (coDraftCount[p.name] || 0) + 1;
+      });
+    });
+    if (!rows.length) return `<div style="color:var(--text2);font-size:.7rem">No drafts found for this player.</div>`;
+    // Sort drafts by earliest pick first (you got them earliest in these drafts)
+    rows.sort((a, b) => a.pickNum - b.pickNum);
+    const topCo = Object.entries(coDraftCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const totalDraftsWithPlayer = rows.length;
+
+    // Summary stats across this player's drafts
+    const allPicks = rows.map(r => r.pickNum);
+    const avgPick = allPicks.reduce((s, v) => s + v, 0) / allPicks.length;
+    const avgDelta = marketAdp != null ? (avgPick - marketAdp) : null;
+
+    let h = '';
+    // === Summary line ===
+    h += `<div style="display:flex;flex-wrap:wrap;gap:14px;font-size:.66rem;color:var(--text2);margin-bottom:10px">`;
+    h += `<span>Avg pick <span style="color:var(--text);font-weight:600">${avgPick.toFixed(1)}</span></span>`;
+    if (marketAdp != null) {
+      h += `<span>Market ADP <span style="color:var(--text);font-weight:600">${marketAdp.toFixed(1)}</span></span>`;
+      const _dColor = avgDelta > 2 ? '#22c55e' : avgDelta < -2 ? '#ef4444' : 'var(--text2)';
+      const _dSign = avgDelta > 0 ? '+' : '';
+      const _dArrow = avgDelta > 2 ? '▲ ' : avgDelta < -2 ? '▼ ' : '';
+      h += `<span>vs ADP <span style="color:${_dColor};font-weight:700">${_dArrow}${_dSign}${avgDelta.toFixed(1)}</span></span>`;
+    }
+    h += `</div>`;
+
+    // === DRAFTS list ===
+    h += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px">DRAFTS WITH THIS PLAYER (${totalDraftsWithPlayer})</div>`;
+    // Column layout: tournament | slot | pick | (adp+delta if available) | round
+    const _withAdp = marketAdp != null;
+    const _cols = _withAdp ? '1fr auto auto auto auto auto' : '1fr auto auto auto';
+    h += `<div style="display:grid;grid-template-columns:${_cols};gap:4px 12px;font-size:.7rem;align-items:center;margin-bottom:14px;max-width:680px">`;
+    h += `<div style="font-size:.55rem;color:var(--text2);letter-spacing:1px">TOURNAMENT</div>`;
+    h += `<div style="font-size:.55rem;color:var(--text2);letter-spacing:1px;text-align:right">SLOT</div>`;
+    h += `<div style="font-size:.55rem;color:var(--text2);letter-spacing:1px;text-align:right">PICK</div>`;
+    if (_withAdp) {
+      h += `<div style="font-size:.55rem;color:var(--text2);letter-spacing:1px;text-align:right" title="Market ADP (Underdog Best Ball preferred, consensus fallback)">ADP</div>`;
+      h += `<div style="font-size:.55rem;color:var(--text2);letter-spacing:1px;text-align:right" title="Pick − ADP. Positive = you got them later than market (value). Negative = reached.">Δ</div>`;
+    }
+    h += `<div style="font-size:.55rem;color:var(--text2);letter-spacing:1px;text-align:right">RD</div>`;
+    rows.forEach(r => {
+      const safeDraftId = String(r.draftId).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+      h += `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="#" onclick="event.preventDefault();event.stopPropagation();window._udJumpToDraft('${safeDraftId}')" style="color:var(--accent);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:pointer">${_esc(r.tournament)}</a></div>`;
+      h += `<div style="text-align:right;color:var(--text)">${r.slot != null ? r.slot : '—'}${r.size ? '/' + r.size : ''}</div>`;
+      h += `<div style="text-align:right;color:var(--text);font-weight:600">${r.pickNum}</div>`;
+      if (_withAdp) {
+        const delta = r.pickNum - marketAdp;
+        const dColor = delta > 6 ? '#22c55e' : delta > 2 ? '#4ade80' : delta < -6 ? '#ef4444' : delta < -2 ? '#f59e0b' : 'var(--text2)';
+        const dArrow = delta > 2 ? '▲' : delta < -2 ? '▼' : '–';
+        const dSign = delta > 0 ? '+' : '';
+        h += `<div style="text-align:right;color:var(--text2)">${marketAdp.toFixed(0)}</div>`;
+        h += `<div style="text-align:right;color:${dColor};font-weight:700" title="Pick ${r.pickNum} − ADP ${marketAdp.toFixed(1)} = ${dSign}${delta.toFixed(1)}">${dArrow} ${dSign}${Math.round(delta)}</div>`;
+      }
+      h += `<div style="text-align:right;color:var(--text2)">${r.round || '—'}</div>`;
+    });
+    h += `</div>`;
+
+    // === Top co-drafts ===
+    if (topCo.length) {
+      h += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px">MOST COMMON CO-DRAFTS <span style="font-family:'DM Sans',sans-serif;letter-spacing:0;text-transform:none;font-style:italic;color:var(--text2);opacity:.8">— click to drill in</span></div>`;
+      h += `<div style="display:flex;flex-wrap:wrap;gap:6px;max-width:640px">`;
+      topCo.forEach(([coName, count]) => {
+        const coInfo = data.players[coName];
+        const pos = coInfo ? coInfo.pos : '';
+        const posColor = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' }[pos] || 'var(--text2)';
+        const pctWithThis = Math.round((count / totalDraftsWithPlayer) * 100);
+        const safeCoName = String(coName).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        h += `<button onclick="event.preventDefault();event.stopPropagation();window._udDrillToPlayer('${safeCoName}')" style="padding:5px 9px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.7rem;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:border-color .12s,background .12s" onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(245,158,11,.06)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">`;
+        h += `<span style="font-size:.5rem;padding:1px 4px;border-radius:3px;background:${posColor}25;color:${posColor};font-weight:700">${pos}</span>`;
+        h += `<span style="color:var(--text);font-weight:600">${_esc(coName)}</span>`;
+        h += `<span style="color:var(--text2);font-size:.62rem">${count}× &middot; ${pctWithThis}%</span>`;
+        h += `</button>`;
+      });
+      h += `</div>`;
+    }
+    return h;
+  }
+
+  // Co-draft chip → exposure-row drill-down. Resets text + position filters so the
+  // target row is guaranteed visible, re-renders the list, finds the row, and
+  // auto-expands + scrolls to it. Robust even when the user has filters active.
+  window._udDrillToPlayer = function(playerName) {
+    if (!window._udPlayerList) return;
+    // Clear the text filter (if present) and position filter so we're sure the
+    // target row is rendered.
+    const filterInput = document.getElementById('udExpFilter');
+    if (filterInput && filterInput.value) filterInput.value = '';
+    if (window._udExpPosFilter !== 'ALL' && typeof window._udFilterExposurePos === 'function') {
+      window._udFilterExposurePos('ALL');
+    } else if (typeof window._udFilterExposure === 'function') {
+      window._udFilterExposure('');
+    }
+    // Wait one tick for the re-render, then find the row + scroll + expand.
+    setTimeout(() => {
+      const safe = String(playerName).replace(/"/g, '\\"');
+      const target = document.querySelector(`[data-udexp-row="${CSS.escape(playerName)}"]`)
+        || document.querySelector(`[data-udexp-row="${safe}"]`);
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const panel = target.querySelector(`[data-udexp-panel]`);
+      if (panel && panel.style.display === 'none') {
+        // Re-use the existing toggle so caret rotates correctly.
+        window._udToggleExpRow(playerName);
+      }
+      // Brief visual highlight so the user's eye lands in the right place.
+      target.style.transition = 'background .25s';
+      target.style.background = 'rgba(245,158,11,.10)';
+      setTimeout(() => { target.style.background = ''; }, 900);
+    }, 40);
+  };
+
+  // Deep-link from an exposure-row tournament link → the Teams tab, scrolled and
+  // expanded on the corresponding draft. Teams tab is rendered eagerly during
+  // dashboard build so we just need to find the matching draft row by data attr.
+  window._udJumpToDraft = function(draftId) {
+    if (typeof window._udSwitchTab === 'function') window._udSwitchTab('teams');
+    setTimeout(() => {
+      const row = document.querySelector(`[data-udteamsdraft="${CSS.escape(String(draftId))}"]`);
+      if (!row) return;
+      const idx = row.getAttribute('data-udteamsdraftidx');
+      if (idx != null && typeof window._udToggleTeamsDraft === 'function') {
+        const expand = document.getElementById('udTeamsDraft_' + idx);
+        if (expand && expand.style.display === 'none') window._udToggleTeamsDraft(parseInt(idx));
+      }
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
+  };
 
   window._udExpPosFilter = 'ALL';
 

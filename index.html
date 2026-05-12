@@ -5681,6 +5681,8 @@ const versionBoards = {
   jsmodel: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: defaultBoard.slice(), dynasty: defaultBoard.slice(), dynastysf: defaultBoard.slice() },
   mine: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() }
 };
+// MAIN-world content scripts (page-bridge.js) can't reach top-level const via window.X — attach explicitly.
+window.versionBoards = versionBoards;
 const POS_TIER_KEYS = ['ALL','QB','RB','WR','TE','K','DST','ROOKIE'];
 function _mkPosTiers() { return {ALL:[],QB:[],RB:[],WR:[],TE:[],K:[],DST:[],ROOKIE:[]}; }
 function _mkPosTierCtrs() { return {ALL:0,QB:0,RB:0,WR:0,TE:0,K:0,DST:0,ROOKIE:0}; }

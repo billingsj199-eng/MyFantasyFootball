@@ -61,7 +61,7 @@
 <!-- Auth Modal -->
 <div class="auth-overlay" id="authOverlay">
 <div class="auth-card">
-<button class="auth-close" id="authClose">&times;</button>
+<button class="auth-close" id="authClose" aria-label="Close sign-in dialog">&times;</button>
 <div class="auth-card-title" id="authTitle">SIGN IN</div>
 <div class="auth-card-sub" id="authSub">Save your rankings to the cloud</div>
 <div class="auth-error" id="authError"></div>
@@ -164,7 +164,7 @@ SIGN IN
 <!-- Account Modal -->
 <div class="auth-overlay" id="acctOverlay" style="display:none">
 <div class="auth-card" style="max-width:420px">
-<button class="auth-close" id="acctClose">&times;</button>
+<button class="auth-close" id="acctClose" aria-label="Close account dialog">&times;</button>
 <div class="auth-card-title">MY ACCOUNT</div>
 <div class="auth-card-sub">Manage your account settings</div>
 <div style="display:flex;flex-direction:column;gap:.65rem">
@@ -3049,7 +3049,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- Help Modal -->
 <div class="help-overlay" id="helpOverlay">
 <div class="help-card">
-<button class="help-close" id="helpClose">✕</button>
+<button class="help-close" id="helpClose" aria-label="Close help">✕</button>
 <div class="help-title">HOW TO USE</div>
 <div class="help-sections">
 
@@ -3125,7 +3125,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- Mock Draft Help Modal — explains format/ranks/ADP source/CPU style choices. -->
 <div class="help-overlay" id="mdHelpOverlay">
 <div class="help-card">
-<button class="help-close" id="mdHelpClose">✕</button>
+<button class="help-close" id="mdHelpClose" aria-label="Close help">✕</button>
 <div class="help-title">MOCK DRAFT</div>
 <div class="help-sections">
 <div class="help-section">
@@ -3176,7 +3176,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- My Teams Help Modal — same .help-overlay pattern, tailored to portfolio jargon. -->
 <div class="help-overlay" id="mtHelpOverlay">
 <div class="help-card">
-<button class="help-close" id="mtHelpClose">✕</button>
+<button class="help-close" id="mtHelpClose" aria-label="Close help">✕</button>
 <div class="help-title">MY TEAMS</div>
 <div class="help-sections">
 <div class="help-section">
@@ -3228,7 +3228,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      container so the position:fixed overlay works regardless of which page is active. -->
 <div class="help-overlay" id="pmHelpOverlay">
 <div class="help-card">
-<button class="help-close" id="pmHelpClose">✕</button>
+<button class="help-close" id="pmHelpClose" aria-label="Close help">✕</button>
 <div class="help-title">PROSPECT MODEL</div>
 <div class="help-sections">
 <div class="help-section">
@@ -10222,7 +10222,7 @@ function openPlayerCard(d, ctxMode) {
       <button class="card-share" id="cardShare" title="Copy a shareable link to this player" aria-label="Copy share link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </button>
-      <button class="card-close" id="cardClose">&times;</button>
+      <button class="card-close" id="cardClose" aria-label="Close player card">&times;</button>
       <div class="card-hero">
         ${d._slImg ? `<img src="${d._slImg}" alt="${d.n}" loading="lazy" onerror="this.style.display='none'">` : ''}
         <div>

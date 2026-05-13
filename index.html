@@ -800,17 +800,9 @@ TIERS (.JSON)
 </button>
 </div>
 </div>
-<button class="tb-btn" id="btnImport" title="Import rankings from JSON">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-IMPORT
-</button>
 <button class="tb-btn" id="btnColumnToggle" title="Show/hide columns" style="position:relative">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="3" y2="21"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="21" y1="3" x2="21" y2="21"/></svg>
 COLS
-</button>
-<button class="tb-btn" id="btnDraftHelper" title="Get the MFF Draft Helper Chrome extension for live Underdog draft recommendations" style="font-size:.55rem">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-HELPER
 </button>
 <div id="colTogglePopup" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;z-index:100;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.4);font-family:'DM Sans',sans-serif;font-size:.78rem">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px">SHOW COLUMNS</div>
@@ -819,10 +811,26 @@ HELPER
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppg25" checked> '25 PPG</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="age" checked> Age</label>
 </div>
-<button class="tb-btn" id="btnClear" title="Clear all your rankings & notes">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-CLEAR
+<button class="tb-btn" id="btnDraftHelper" title="Get the MFF Draft Helper Chrome extension for live Underdog draft recommendations" style="font-size:.55rem">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+HELPER
 </button>
+<div style="position:relative;display:inline-flex">
+<button class="tb-btn" id="btnMoreMenu" title="More actions" aria-label="More actions" aria-haspopup="menu" aria-expanded="false" onclick="event.stopPropagation();var m=document.getElementById('moreMenu');var open=m.style.display!=='none';m.style.display=open?'none':'block';this.setAttribute('aria-expanded',!open)">
+<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+MORE
+</button>
+<div id="moreMenu" role="menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px;z-index:120;min-width:170px;box-shadow:0 12px 32px rgba(0,0,0,.5);font-family:'DM Sans',sans-serif">
+<button class="tb-btn export-menu-item" id="btnImport" title="Import rankings from JSON" style="width:100%;justify-content:flex-start;padding:6px 8px;font-size:.7rem">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+IMPORT
+</button>
+<button class="tb-btn export-menu-item" id="btnClear" title="Clear all your rankings & notes" style="width:100%;justify-content:flex-start;padding:6px 8px;font-size:.7rem">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+CLEAR ALL
+</button>
+</div>
+</div>
 <div class="auth-anchor" id="authAnchorRankings"></div>
 </div>
 </div>
@@ -830,19 +838,73 @@ CLEAR
 </header>
 
 <div class="controls">
-<div class="search-box">
+<div class="search-box" style="position:relative">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-<input type="text" id="search" placeholder="Search player or team...">
+<input type="text" id="search" placeholder="Search player or team…  ( / to focus )" autocomplete="off" aria-haspopup="listbox" aria-controls="searchSuggest" aria-autocomplete="list">
+<div id="searchSuggest" class="search-suggest" role="listbox" hidden></div>
 </div>
 <button class="help-btn" id="helpBtn" title="How to use">?</button>
+<style>
+  .search-suggest{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.5);z-index:90;max-height:320px;overflow-y:auto;font-family:'DM Sans',sans-serif;padding:4px}
+  .search-suggest[hidden]{display:none}
+  .search-suggest-item{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;cursor:pointer;color:var(--text);font-size:.8rem;line-height:1.2}
+  .search-suggest-item:hover,.search-suggest-item.active{background:rgba(245,158,11,.12)}
+  .search-suggest-item img{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);background:var(--surface);flex-shrink:0}
+  .ss-text{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+  .ss-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ss-meta{font-size:.62rem;color:var(--text2);letter-spacing:.3px}
+  .ss-pos{display:inline-block;padding:0 5px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.5px;margin-right:5px}
+  .filter-row-label{font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;color:var(--text2);margin-right:6px;text-transform:uppercase;flex-shrink:0;align-self:center}
+  .filter-row-top > .filter-row-label:not(:first-child){margin-left:10px}
+  tr.kb-grabbed{outline:2px dashed var(--accent);outline-offset:-2px;background:rgba(245,158,11,.06)}
+  tr.kb-grabbed .drag-handle{opacity:1;color:var(--accent)}
+  /* U3: stacked column header — main label + smaller muted scoring-format on a second line */
+  .th-stack{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:middle;line-height:1.05;text-align:left;margin-right:4px}
+  .th-fmt{font-size:.55rem;opacity:.6;font-weight:400;letter-spacing:.5px;text-transform:none;margin-top:1px}
+  /* P6 Phase 1: virtualization via content-visibility. Browser skips paint/layout
+     for off-screen rows. Falls back to no-op on Safari <18 (no harm). */
+  #pageRankings tbody tr{content-visibility:auto;contain-intrinsic-size:auto 52px}
+  #pageRankings tbody tr.tier-row{contain-intrinsic-size:auto 40px}
+  @media (max-width:600px){
+    #pageRankings tbody tr{contain-intrinsic-size:auto 88px}
+    #pageRankings tbody tr.tier-row{contain-intrinsic-size:auto 36px}
+  }
+  /* M1: card-style rankings rows on phones (≤600px). Falls back to the existing
+     compact-table CSS at 600-768px (tablets / large phones in landscape). */
+  @media (max-width:600px){
+    #pageRankings table{display:block;min-width:0;table-layout:auto}
+    #pageRankings thead{display:none}
+    #pageRankings tbody{display:block;padding:0 .5rem}
+    #pageRankings tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:9px 10px;margin:0 0 5px;background:var(--surface);border:1px solid var(--border)!important;border-radius:10px}
+    #pageRankings tbody tr td{border:none!important;padding:2px 4px!important;background:transparent!important;width:auto!important;max-width:none!important;min-width:0!important;text-align:left!important;display:block}
+    #pageRankings tbody .myrank-cell{flex:0 0 30px;text-align:center!important}
+    #pageRankings tbody .myrank-num{width:auto;font-size:1.05rem;background:none;padding:0}
+    #pageRankings tbody tr td:nth-child(3){flex:1 1 auto;min-width:0!important}
+    #pageRankings tbody tr td:nth-child(4){flex:0 0 auto}
+    #pageRankings tbody .pos-rank-cell{flex:0 0 auto;color:var(--text2);font-size:.72rem;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
+    #pageRankings tbody .adp-cell,
+    #pageRankings tbody .ppg-proj-cell{flex:0 0 auto;font-size:.72rem;color:var(--text2);width:auto!important;min-width:0!important}
+    #pageRankings tbody .adp-cell{flex-basis:100%!important;padding-top:6px!important;border-top:1px dashed rgba(255,255,255,.05)!important;margin-top:4px!important}
+    #pageRankings tbody .adp-cell::before{content:"ADP ";opacity:.55;margin-right:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
+    #pageRankings tbody .ppg-proj-cell::before{content:"· PROJ ";opacity:.55;margin:0 3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
+    #pageRankings tbody .age-cell{display:none}
+    /* Tier banner rows still need to span full card width */
+    #pageRankings tbody tr.tier-row{display:block;padding:8px 12px;background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.25)!important}
+    #pageRankings tbody tr.tier-row td{display:block;text-align:center!important}
+    /* Premium-blur cards: keep the blur but fit the card shape */
+    #pageRankings tbody tr.premium-blur td{filter:blur(4px)}
+  }
+</style>
 <div class="filter-rows">
 <div class="filter-row-top">
+<span class="filter-row-label">Model</span>
 <div class="version-tabs">
 <button class="version-tab active" data-version="consensus">CONSENSUS</button>
 <button class="version-tab" data-version="jacks">JACK'S</button>
 <button class="version-tab" data-version="jsmodel" id="jsModelVersionTab" style="display:none">JS MODEL</button>
 <button class="version-tab" data-version="mine">MY RANKINGS</button>
 </div>
+<span class="filter-row-label">Format</span>
 <div class="mode-tabs">
 <button class="mode-tab" data-mode="redraft">REDRAFT</button>
 <button class="mode-tab active" data-mode="bestball">BEST BALL</button>
@@ -857,6 +919,7 @@ CLEAR
 </div>
 </div>
 <div class="pos-filters">
+<span class="filter-row-label">Position</span>
 <button class="pos-btn active" data-pos="ALL">ALL</button>
 <button class="pos-btn" data-pos="QB">QB</button>
 <button class="pos-btn" data-pos="RB">RB</button>
@@ -1020,8 +1083,8 @@ CLEAR
 <th data-sort="pos">Pos <span class="arrow"></span></th>
 <th data-sort="posRank">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
 <th data-sort="adp" id="adpHeader"><span data-gloss="Average Draft Position — where this player goes on average in the selected ADP source.">ADP</span> <span class="arrow"></span></th>
-<th data-sort="pts" id="ppgProjHeader"><span data-gloss="Projected fantasy points per game for the upcoming season (Half PPR scoring).">Proj PPG</span><span class="hide-on-mobile"> (Half PPR)</span> <span class="arrow"></span></th>
-<th data-sort="fpts25" id="ppg25HeaderTh"><span id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (Half PPR scoring).">'25 PPG</span><span class="hide-on-mobile"> (Half PPR)</span></span> <span class="arrow"></span></th>
+<th data-sort="pts" id="ppgProjHeader"><span class="th-stack"><span data-gloss="Projected fantasy points per game for the upcoming season (Half PPR scoring).">Proj PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
+<th data-sort="fpts25" id="ppg25HeaderTh"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (Half PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
 <th data-sort="jm" id="jmHeader" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
 <th data-sort="landing" id="landingHeader" style="display:none"><span data-gloss="Landing Spot (0-100) — quality of the NFL fantasy opportunity (depth chart, scheme, target share). Separate from JM (prospect quality).">Land</span> <span class="arrow"></span></th>
@@ -1030,6 +1093,7 @@ CLEAR
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
+<tfoot><tr><td colspan="99"><div id="kbReorderLive" role="status" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0"></div></td></tr></tfoot>
 </table>
 <div class="empty-state" id="empty" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -6995,7 +7059,7 @@ function render() {
       const pc = posColors[d.s] || 'var(--text2)';
       const editable = canEdit();
       html += `<tr style="border-bottom:1px solid rgba(30,42,66,.4)" data-devy-idx="${d._devyIdx}" data-devy-name="${d.n.replace(/"/g,'&quot;')}">
-        <td>${editable ? '<div class="drag-handle devy-drag"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div>' : ''}</td>
+        <td>${editable ? '<div class="drag-handle devy-drag" tabindex="0" role="button" aria-label="Reorder ' + d.n.replace(/"/g,'&quot;') + '. Press Space to grab, then arrow keys to move, Space to drop."><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div>' : ''}</td>
         <td class="myrank-cell"><span class="myrank-num">${d.myRank}</span></td>
         <td><div class="player-cell"><span class="player-name">${d.n}</span><span class="player-team">${d.t}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
@@ -7052,7 +7116,7 @@ function render() {
     }
 
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}">
-      <td><div class="drag-handle"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div></td>
+      <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(getTierForRank(displayRank))}" title="Overall rank: ${d.myRank}">${(filter === 'ALL' || filter === 'ROOKIE') ? (i + 1) : d.myRank}</span></td>
       <td><div class="player-cell" style="flex-direction:row;align-items:center;gap:6px">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${d._slImg}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}<div style="display:flex;flex-direction:column;gap:1px">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span>`}</div></div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
@@ -7428,6 +7492,81 @@ function attachTierListeners() {
   }
 
   tbody.addEventListener('pointerdown', onPointerDown);
+
+  // === Keyboard reorder (a11y) ===
+  // Tab onto a drag handle, Space to grab, ↑/↓ to move, Space to drop, Esc to cancel.
+  // Movement uses the same movePlayer() the pointer drop uses, so tier semantics + the
+  // dynasty/SF synced boards + save logic all stay consistent.
+  let _kbGrabbedIdx = null;
+  const _kbLive = document.getElementById('kbReorderLive');
+  function _kbSay(msg) { if (_kbLive) _kbLive.textContent = msg; }
+  function _kbFocusHandle(idx) {
+    const row = tbody.querySelector('tr[data-idx="' + idx + '"]');
+    const handle = row && row.querySelector('.drag-handle');
+    if (handle) handle.focus();
+    if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  function _kbReleaseGrab() {
+    if (_kbGrabbedIdx == null) return;
+    const row = tbody.querySelector('tr[data-idx="' + _kbGrabbedIdx + '"]');
+    if (row) row.classList.remove('kb-grabbed');
+    _kbGrabbedIdx = null;
+  }
+  tbody.addEventListener('keydown', e => {
+    const handle = e.target.closest && e.target.closest('.drag-handle');
+    if (!handle) return;
+    const row = handle.closest('tr[data-idx]');
+    if (!row) return; // devy uses data-devy-idx, skip for now
+    const idx = +row.dataset.idx;
+    // Block if not editable / blurred (mirrors pointerdown logic)
+    if (currentVersion === 'jsmodel') return;
+    if (row.classList.contains('premium-blur')) return;
+
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (_kbGrabbedIdx === idx) {
+        _kbReleaseGrab();
+        _kbSay('Dropped ' + (row.querySelector('.player-name')?.textContent || 'player') + ' at rank ' + (board.indexOf(idx) + 1) + '.');
+      } else {
+        _kbReleaseGrab(); // release any prior grab on another row
+        _kbGrabbedIdx = idx;
+        row.classList.add('kb-grabbed');
+        _kbSay('Grabbed ' + (row.querySelector('.player-name')?.textContent || 'player') + ' at rank ' + (board.indexOf(idx) + 1) + '. Use arrow keys to move, Space to drop.');
+      }
+      return;
+    }
+    if (e.key === 'Escape') {
+      if (_kbGrabbedIdx === idx) {
+        e.preventDefault();
+        _kbReleaseGrab();
+        _kbSay('Cancelled.');
+      }
+      return;
+    }
+    if (_kbGrabbedIdx !== idx) return; // arrows only act when grabbed
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const curPos = board.indexOf(idx);
+      const delta = e.key === 'ArrowUp' ? -1 : 1;
+      const newPos = curPos + delta;
+      if (newPos < 0 || newPos >= board.length) return;
+      movePlayer(idx, newPos);
+      render();
+      // Re-grab after re-render (focus is lost when the row is re-created)
+      _kbGrabbedIdx = idx;
+      setTimeout(() => {
+        const r = tbody.querySelector('tr[data-idx="' + idx + '"]');
+        if (r) r.classList.add('kb-grabbed');
+        _kbFocusHandle(idx);
+        _kbSay('Moved to rank ' + (board.indexOf(idx) + 1) + '.');
+      }, 0);
+    }
+  });
+  // Release grab if the user clicks anywhere else
+  document.addEventListener('pointerdown', e => {
+    if (_kbGrabbedIdx == null) return;
+    if (!e.target.closest('.drag-handle')) _kbReleaseGrab();
+  });
 })();
 
 // Toast
@@ -7554,11 +7693,93 @@ document.getElementById('helpOverlay').addEventListener('click', e => {
 
 // Controls
 let _searchTimer = null;
-document.getElementById('search').addEventListener('input', e => { 
-  query = e.target.value; 
+document.getElementById('search').addEventListener('input', e => {
+  query = e.target.value;
   if (_searchTimer) clearTimeout(_searchTimer);
   _searchTimer = setTimeout(render, 120);
 });
+
+// Search autocomplete — top-5 matches in a dropdown below the input.
+// Click or Enter opens the player card; Arrow/Esc navigate/close.
+(function _initSearchAutocomplete() {
+  const input = document.getElementById('search');
+  const suggest = document.getElementById('searchSuggest');
+  if (!input || !suggest) return;
+  let items = [];
+  let activeIdx = -1;
+  function buildItems(q) {
+    if (!q || q.length < 2) return [];
+    const lc = q.toLowerCase();
+    const matches = [];
+    for (const d of D) {
+      if (!d || !d.n || d._isFuturePick) continue;
+      const name = d.n.toLowerCase();
+      const team = (d.t || '').toLowerCase();
+      let score = 0;
+      if (name.startsWith(lc)) score = 100;
+      else if (name.includes(lc)) score = 60;
+      else if (team === lc) score = 50;
+      else if (team.startsWith(lc)) score = 30;
+      if (score > 0) matches.push({ d, score });
+    }
+    matches.sort((a, b) => b.score - a.score || (a.d.myRank || 999) - (b.d.myRank || 999));
+    return matches.slice(0, 5).map(m => m.d);
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+  function drawSuggest() {
+    if (!items.length) { suggest.hidden = true; suggest.innerHTML = ''; input.setAttribute('aria-expanded', 'false'); return; }
+    suggest.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    suggest.innerHTML = items.map((d, i) => {
+      const img = d._slImg ? '<img src="' + esc(d._slImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<div style="width:28px;height:28px;border-radius:50%;background:var(--surface);flex-shrink:0"></div>';
+      const posRank = d.myPosRank ? ' · ' + esc(String(d.myPosRank)) : (d.r ? ' · ' + esc(d.r) : '');
+      return '<div class="search-suggest-item' + (i === activeIdx ? ' active' : '') + '" role="option" data-idx="' + i + '" tabindex="-1">' + img +
+        '<div class="ss-text"><div class="ss-name">' + esc(d.n) + '</div>' +
+        '<div class="ss-meta">' + esc(d.s || '') + ' · ' + esc(d.t || 'FA') + posRank + '</div></div></div>';
+    }).join('');
+  }
+  function pick(i) {
+    const d = items[i];
+    if (!d) return;
+    suggest.hidden = true;
+    items = []; activeIdx = -1;
+    input.value = '';
+    query = '';
+    input.setAttribute('aria-expanded', 'false');
+    if (_searchTimer) clearTimeout(_searchTimer);
+    if (typeof render === 'function') render();
+    if (typeof openPlayerCard === 'function') openPlayerCard(d);
+  }
+  input.addEventListener('input', () => {
+    items = buildItems(input.value);
+    activeIdx = items.length ? 0 : -1;
+    drawSuggest();
+  });
+  input.addEventListener('keydown', e => {
+    if (suggest.hidden || !items.length) {
+      if (e.key === 'Escape') input.blur();
+      return;
+    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); drawSuggest(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); drawSuggest(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (activeIdx >= 0) pick(activeIdx); }
+    else if (e.key === 'Escape') { suggest.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+  });
+  suggest.addEventListener('mousedown', e => {
+    // mousedown (not click) so we beat the input's blur from closing the dropdown
+    const item = e.target.closest('.search-suggest-item');
+    if (!item) return;
+    e.preventDefault();
+    pick(parseInt(item.dataset.idx, 10));
+  });
+  input.addEventListener('blur', () => {
+    // Delay hide so click-on-item still registers
+    setTimeout(() => { suggest.hidden = true; input.setAttribute('aria-expanded', 'false'); }, 150);
+  });
+  input.addEventListener('focus', () => {
+    if (items.length) { suggest.hidden = false; input.setAttribute('aria-expanded', 'true'); }
+  });
+})();
 
 document.querySelectorAll('.pos-btn[data-pos]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -7706,9 +7927,10 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
     btn.classList.add('active');
     rankingScoringFmt = btn.dataset.rnkscoring;
     const projTh = document.querySelector('th[data-sort="pts"]');
-    if (projTh) projTh.firstChild.textContent = 'Proj PPG (' + _scoringLabelsRnk[rankingScoringFmt] + ') ';
-    const ppg25Hdr = document.getElementById('ppg25Header');
-    if (ppg25Hdr) ppg25Hdr.textContent = "'25 PPG (" + _scoringLabelsRnk[rankingScoringFmt] + ")";
+    const projFmt = projTh && projTh.querySelector('.th-fmt');
+    if (projFmt) projFmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
+    const ppg25Fmt = document.querySelector('#ppg25Header .th-fmt');
+    if (ppg25Fmt) ppg25Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
     render();
   });
 });
@@ -8773,13 +8995,14 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
     var projTh = document.querySelector('th[data-sort="pts"]');
     var vorTh = document.querySelector('th[data-sort="fpts25"]');
     if (isJS) {
-      if (projTh) projTh.innerHTML = 'JS Proj PPG <span class="arrow"></span>';
-      if (vorTh) vorTh.innerHTML = 'VOR <span class="arrow"></span>';
+      if (projTh) projTh.innerHTML = '<span class="th-stack"><span>JS Proj PPG</span></span><span class="arrow"></span>';
+      if (vorTh) vorTh.innerHTML = '<span class="th-stack" id="ppg25Header"><span>VOR</span></span><span class="arrow"></span>';
     } else {
       var _scoringLabelsRnk2 = {ppr:'PPR',half:'Half PPR',std:'Standard'};
       var fmt = typeof rankingScoringFmt !== 'undefined' ? rankingScoringFmt : 'half';
-      if (projTh) projTh.innerHTML = 'Proj PPG (' + (_scoringLabelsRnk2[fmt]||'Half PPR') + ') <span class="arrow"></span>';
-      if (vorTh) vorTh.innerHTML = '<span id="ppg25Header">\'25 PPG (' + (_scoringLabelsRnk2[fmt]||'Half PPR') + ')</span> <span class="arrow"></span>';
+      var fmtLabel = _scoringLabelsRnk2[fmt] || 'Half PPR';
+      if (projTh) projTh.innerHTML = '<span class="th-stack"><span>Proj PPG</span><span class="hide-on-mobile th-fmt">' + fmtLabel + '</span></span><span class="arrow"></span>';
+      if (vorTh) vorTh.innerHTML = '<span class="th-stack" id="ppg25Header"><span>\'25 PPG</span><span class="hide-on-mobile th-fmt">' + fmtLabel + '</span></span><span class="arrow"></span>';
     }
     // Rebuild board when switching to JS Model
     if (isJS) _jsRebuild();
@@ -11556,6 +11779,20 @@ window.switchPage = switchPage;
       return;
     }
     expMenu.style.display = 'none';
+  });
+  // More ⋯ dropdown — same close-on-outside-click pattern. Auto-close after
+  // picking Import/Helper/Clear so the menu doesn't linger over the resulting modal.
+  document.addEventListener('click', e => {
+    const moreMenu = document.getElementById('moreMenu');
+    const moreBtn = document.getElementById('btnMoreMenu');
+    if (!moreMenu || moreMenu.style.display === 'none') return;
+    if (moreBtn && moreBtn.contains(e.target)) return; // toggle handles itself
+    if (moreMenu.contains(e.target)) {
+      setTimeout(() => { moreMenu.style.display = 'none'; moreBtn?.setAttribute('aria-expanded', 'false'); }, 0);
+      return;
+    }
+    moreMenu.style.display = 'none';
+    moreBtn?.setAttribute('aria-expanded', 'false');
   });
   document.addEventListener('change', e => {
     if (!e.target.matches('[data-coltoggle]')) return;
@@ -22356,6 +22593,10 @@ window.fmtHeight = fmtHeight;
     if (saveBtn) saveBtn.style.display = (currentUser && allowed) ? '' : 'none';
     const shareBtn = document.getElementById('btnShareRanks');
     if (shareBtn) shareBtn.style.display = (currentUser && allowed) ? '' : 'none';
+    // MORE dropdown only holds edit-mode actions (Import, Clear) — hide the
+    // button when neither is visible so guests don't see an empty dropdown.
+    const moreBtn = document.getElementById('btnMoreMenu');
+    if (moreBtn) moreBtn.style.display = allowed ? '' : 'none';
   }
   window.updateToolbarVisibility = updateToolbarVisibility;
 

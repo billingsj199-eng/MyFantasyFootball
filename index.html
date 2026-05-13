@@ -69,7 +69,7 @@
 <input type="email" class="auth-input" id="authEmail" placeholder="Email address" autocomplete="email">
 <div style="position:relative">
 <input type="password" class="auth-input" id="authPassword" placeholder="Password" autocomplete="current-password" style="padding-right:3rem;margin-bottom:0">
-<button type="button" id="authPwToggle" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text2);padding:4px;display:flex;align-items:center;transition:color .15s" title="Show password">
+<button type="button" id="authPwToggle" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text2);padding:4px;display:flex;align-items:center;transition:color .15s" title="Show password" aria-label="Show password">
 <svg id="pwEyeShow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
 <svg id="pwEyeHide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
 </button>
@@ -158,7 +158,7 @@ Continue with Google
 SIGN IN
 </button>
 <div class="global-acct-pill" id="globalAcctPill">
-<div class="global-acct-avatar" id="globalAcctAvatar" style="cursor:pointer" title="Account settings">?</div>
+<div class="global-acct-avatar" id="globalAcctAvatar" role="button" tabindex="0" aria-label="Account settings" style="cursor:pointer" title="Account settings">?</div>
 </div>
 
 <!-- Account Modal -->
@@ -377,12 +377,12 @@ Ad-free experience
 </div>
 </div>
 <div style="display:flex;gap:10px;margin-top:.5rem;justify-content:center;flex-wrap:wrap">
-<div id="planMonthly" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);cursor:pointer;text-align:center;transition:all .15s">
+<div id="planMonthly" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid var(--border);background:var(--elev-1);cursor:pointer;text-align:center;transition:all .15s">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">MONTHLY</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$9.99</div>
 <div style="font-size:.65rem;color:var(--text2)">Billed monthly</div>
 </div>
-<div id="planSeason" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="display:none;flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);cursor:pointer;text-align:center;transition:all .15s">
+<div id="planSeason" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="display:none;flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid var(--border);background:var(--elev-1);cursor:pointer;text-align:center;transition:all .15s">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">SEASON PASS</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$29.99</div>
 <div style="font-size:.65rem;color:var(--text2)">One fantasy season</div>
@@ -394,7 +394,7 @@ Ad-free experience
 <div style="font-size:.65rem;color:var(--text2)">$5.83/mo — Save 42%</div>
 </div>
 </div>
-<style>.plan-option.selected{border-color:var(--accent)!important;background:rgba(245,158,11,.08)!important}.plan-option:not(.selected){border-color:rgba(255,255,255,.1)!important;background:rgba(255,255,255,.02)!important}.plan-option:not(.selected):hover{border-color:rgba(245,158,11,.3)!important}</style>
+<style>.plan-option.selected{border-color:var(--accent)!important;background:rgba(245,158,11,.08)!important}.plan-option:not(.selected){border-color:var(--border)!important;background:var(--elev-1)!important}.plan-option:not(.selected):hover{border-color:rgba(245,158,11,.3)!important}</style>
 
 <!-- Legacy promo input — hidden. Promo codes are now applied via Stripe Checkout's built-in field. -->
 <div style="display:none">
@@ -411,10 +411,10 @@ Ad-free experience
 <div style="font-size:.68rem;color:var(--text2);margin-top:.5rem">Cancel anytime. Have a promo code? Enter it on the next step.</div>
 
 <!-- Redeem free-premium code -->
-<div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.08)">
+<div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2);text-align:center;margin-bottom:.5rem">HAVE A REDEEM CODE?</div>
 <div style="display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap">
-<input type="text" id="premiumRedeemInput" placeholder="Enter code" autocomplete="off" style="flex:1;max-width:180px;padding:.5rem .65rem;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">
+<input type="text" id="premiumRedeemInput" placeholder="Enter code" autocomplete="off" style="flex:1;max-width:180px;padding:.5rem .65rem;border-radius:6px;border:1px solid var(--border);background:var(--elev-1);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;letter-spacing:1px;text-transform:uppercase">
 <button type="button" id="premiumRedeemApply" style="padding:.5rem .9rem;border-radius:6px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.12);color:#22c55e;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;cursor:pointer">REDEEM</button>
 </div>
 <div id="premiumRedeemMsg" style="font-size:.7rem;margin-top:.4rem;min-height:1em;text-align:center"></div>
@@ -466,7 +466,7 @@ PREMIUM ACTIVE
 </div>
 <div style="font-size:.72rem;color:var(--text2)" id="premiumBillingDetails"></div>
 <div id="premiumManageWrap" style="margin-top:.75rem;display:none">
-<button type="button" id="premiumManageBtn" style="padding:.5rem .9rem;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;cursor:pointer">MANAGE SUBSCRIPTION</button>
+<button type="button" id="premiumManageBtn" style="padding:.5rem .9rem;border-radius:6px;border:1px solid var(--border);background:var(--elev-1);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;cursor:pointer">MANAGE SUBSCRIPTION</button>
 </div>
 </div>
 </div>
@@ -884,7 +884,7 @@ CLEAR ALL
     #pageRankings tbody .pos-rank-cell{flex:0 0 auto;color:var(--text2);font-size:.72rem;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
     #pageRankings tbody .adp-cell,
     #pageRankings tbody .ppg-proj-cell{flex:0 0 auto;font-size:.72rem;color:var(--text2);width:auto!important;min-width:0!important}
-    #pageRankings tbody .adp-cell{flex-basis:100%!important;padding-top:6px!important;border-top:1px dashed rgba(255,255,255,.05)!important;margin-top:4px!important}
+    #pageRankings tbody .adp-cell{flex-basis:100%!important;padding-top:6px!important;border-top:1px dashed var(--border)!important;margin-top:4px!important}
     #pageRankings tbody .adp-cell::before{content:"ADP ";opacity:.55;margin-right:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
     #pageRankings tbody .ppg-proj-cell::before{content:"· PROJ ";opacity:.55;margin:0 3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
     #pageRankings tbody .age-cell{display:none}
@@ -932,7 +932,7 @@ CLEAR ALL
 <button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
 </div>
 <!-- Rookie sub-position filter (shown only when ROOKIE filter is active) -->
-<div class="pos-filters" id="rookieSubPosFilter" style="display:none;margin-top:6px;padding:5px 8px;background:rgba(255,255,255,.025);border:1px dashed var(--border);border-radius:4px;align-items:center;gap:8px;flex-wrap:wrap">
+<div class="pos-filters" id="rookieSubPosFilter" style="display:none;margin-top:6px;padding:5px 8px;background:var(--elev-1);border:1px dashed var(--border);border-radius:4px;align-items:center;gap:8px;flex-wrap:wrap">
 <span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-right:4px">ROOKIE POS:</span>
 <button class="pos-btn rookie-sub-btn active" data-rookiepos="ALL" style="padding:.25rem .65rem;font-size:.65rem">ALL</button>
 <button class="pos-btn rookie-sub-btn" data-rookiepos="QB" style="padding:.25rem .65rem;font-size:.65rem">QB</button>
@@ -962,7 +962,7 @@ CLEAR ALL
 </div>
 <div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">ADP:</span>
-<div class="md-rank-src-tabs" id="rnkAdpSrcTabs" style="border:none;background:rgba(255,255,255,.04);padding:1px">
+<div class="md-rank-src-tabs" id="rnkAdpSrcTabs" style="border:none;background:var(--elev-1);padding:1px">
 <button class="md-rank-src-tab active" data-rnkadp="consensus" style="font-size:.65rem;padding:3px 10px">CONSENSUS</button>
 <button class="md-rank-src-tab locked" data-rnkadp="underdog" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
 <button class="md-rank-src-tab locked" data-rnkadp="dk" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>DK</button>
@@ -1078,18 +1078,18 @@ CLEAR ALL
 <thead>
 <tr>
 <th style="width:28px"></th>
-<th data-sort="myrank" class="sorted"># <span class="arrow">▲</span></th>
-<th data-sort="name">Player <span class="arrow"></span></th>
-<th data-sort="pos">Pos <span class="arrow"></span></th>
-<th data-sort="posRank">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
-<th data-sort="adp" id="adpHeader"><span data-gloss="Average Draft Position — where this player goes on average in the selected ADP source.">ADP</span> <span class="arrow"></span></th>
-<th data-sort="pts" id="ppgProjHeader"><span class="th-stack"><span data-gloss="Projected fantasy points per game for the upcoming season (Half PPR scoring).">Proj PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
-<th data-sort="fpts25" id="ppg25HeaderTh"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (Half PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
-<th data-sort="yrr" id="yrrHeader" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
-<th data-sort="jm" id="jmHeader" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
-<th data-sort="landing" id="landingHeader" style="display:none"><span data-gloss="Landing Spot (0-100) — quality of the NFL fantasy opportunity (depth chart, scheme, target share). Separate from JM (prospect quality).">Land</span> <span class="arrow"></span></th>
-<th data-sort="age" id="ageHeader">Age <span class="arrow"></span></th>
-<th data-sort="diff"><span data-gloss="Rank vs. selected ADP source. ▲ = ranked higher than market (value pick). ▼ = ranked lower (fade).">+/-</span> <span class="arrow"></span></th>
+<th data-sort="myrank" class="sorted" tabindex="0" aria-sort="ascending"># <span class="arrow">▲</span></th>
+<th data-sort="name" tabindex="0" aria-sort="none">Player <span class="arrow"></span></th>
+<th data-sort="pos" tabindex="0" aria-sort="none">Pos <span class="arrow"></span></th>
+<th data-sort="posRank" tabindex="0" aria-sort="none">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
+<th data-sort="adp" id="adpHeader" tabindex="0" aria-sort="none"><span data-gloss="Average Draft Position — where this player goes on average in the selected ADP source.">ADP</span> <span class="arrow"></span></th>
+<th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Projected fantasy points per game for the upcoming season (Half PPR scoring).">Proj PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
+<th data-sort="fpts25" id="ppg25HeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (Half PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
+<th data-sort="yrr" id="yrrHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
+<th data-sort="jm" id="jmHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
+<th data-sort="landing" id="landingHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Landing Spot (0-100) — quality of the NFL fantasy opportunity (depth chart, scheme, target share). Separate from JM (prospect quality).">Land</span> <span class="arrow"></span></th>
+<th data-sort="age" id="ageHeader" tabindex="0" aria-sort="none">Age <span class="arrow"></span></th>
+<th data-sort="diff" tabindex="0" aria-sort="none"><span data-gloss="Rank vs. selected ADP source. ▲ = ranked higher than market (value pick). ▼ = ranked lower (fade).">+/-</span> <span class="arrow"></span></th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -2974,7 +2974,7 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <div class="md-lineup-slot" id="mdSflexSlot"><span class="md-ls-pos" style="background:rgba(168,85,247,.1);color:#a855f7">SFLEX</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="SFLEX">−</button><span class="md-step-val md-lu-val" data-lupos="SFLEX">0</span><button class="md-step-btn md-lu-inc" data-lupos="SFLEX">+</button></div></div>
 <div class="md-lineup-slot" id="mdKSlot"><span class="md-ls-pos" style="background:rgba(245,158,11,.12);color:var(--accent)">K</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="K">−</button><span class="md-step-val md-lu-val" data-lupos="K">1</span><button class="md-step-btn md-lu-inc" data-lupos="K">+</button></div></div>
 <div class="md-lineup-slot" id="mdDstSlot"><span class="md-ls-pos" style="background:rgba(107,114,128,.12);color:#6b7280">D/ST</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="DST">−</button><span class="md-step-val md-lu-val" data-lupos="DST">1</span><button class="md-step-btn md-lu-inc" data-lupos="DST">+</button></div></div>
-<div class="md-lineup-slot"><span class="md-ls-pos" style="background:rgba(255,255,255,.06);color:var(--text2)">BENCH</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="BN">−</button><span class="md-step-val md-lu-val" data-lupos="BN">6</span><button class="md-step-btn md-lu-inc" data-lupos="BN">+</button></div></div>
+<div class="md-lineup-slot"><span class="md-ls-pos" style="background:var(--elev-2);color:var(--text2)">BENCH</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="BN">−</button><span class="md-step-val md-lu-val" data-lupos="BN">6</span><button class="md-step-btn md-lu-inc" data-lupos="BN">+</button></div></div>
 </div>
 <div class="md-roster-total" id="mdRosterTotal">Roster size: 15 — Rounds will match</div>
 <div id="mdFormatHint" style="font-size:.65rem;color:var(--accent);font-style:italic;margin-top:4px;display:none">Auto-detected: Superflex (using superflex ADP &amp; rankings)</div>
@@ -3348,48 +3348,12 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 
 <input type="file" id="fileImport" accept=".json" style="display:none">
 
-<script src="data/ktc_rankings.js?v=2026-05-02"></script>
-<script src="data/underdog_ids.js?v=2026-05-02"></script>
-<script src="data/legend_birth_years.js?v=2026-05-02"></script>
-<script src="data/pff_qb_risk.js?v=2026-05-02"></script>
-<script src="data/college_logo_ids.js?v=2026-05-02"></script>
-<script src="data/fallback_espn_ids.js?v=2026-05-02"></script>
-<script src="data/legend_bio.js?v=2026-05-02"></script>
-<script src="data/qb_big_time.js?v=2026-05-02"></script>
-<script src="data/qb_turnover_rate.js?v=2026-05-02"></script>
-<script src="data/retired_espn_ids.js?v=2026-05-02"></script>
-<script src="data/school_conferences.js?v=2026-05-02"></script>
-<script src="data/school_keywords.js?v=2026-05-02"></script>
-<script src="data/school_norm.js?v=2026-05-02"></script>
-<script src="data/team_divisions.js?v=2026-05-02"></script>
-<script src="data/team_keywords.js?v=2026-05-02"></script>
-<script src="data/nfl_logo_map.js?v=2026-05-02"></script>
-<script src="data/all_nfl_teams.js?v=2026-05-02"></script>
-<script src="data/badges.js?v=2026-05-02"></script>
-<script src="data/bbm_first_pos_by_round.js?v=2026-05-02"></script>
-<script src="data/bbm_pick_by_rank_round.js?v=2026-05-04"></script>
-<script src="data/bbm_path_optimal.js?v=2026-05-04"></script>
-<script src="data/bbm_optimizer_data.js?v=2026-05-04"></script>
-<script src="data/bbm_stack_comp_multistage.js?v=2026-05-04"></script>
-<script src="data/bbm_structural_multistage.js?v=2026-05-04"></script>
-<script src="data/college_pos_override.js?v=2026-05-02"></script>
-<script src="data/colorways.js?v=2026-05-02"></script>
-<script src="data/conf_keywords.js?v=2026-05-02"></script>
-<script src="data/cs_aliases.js?v=2026-05-02"></script>
-<script src="data/full_to_code.js?v=2026-05-02"></script>
-<script src="data/ht_ranges.js?v=2026-05-02"></script>
-<script src="data/ih_type_mults.js?v=2026-05-02"></script>
-<script src="data/inj_type_multipliers.js?v=2026-05-02"></script>
-<script src="data/jm_ceiling_weights.js?v=2026-05-02"></script>
-<script src="data/jm_devy_ceiling.js?v=2026-05-02"></script>
-<script src="data/jm_devy_floor.js?v=2026-05-02"></script>
-<script src="data/jm_weights.js?v=2026-05-02"></script>
-<script src="data/pick_defs.js?v=2026-05-02"></script>
-<script src="data/prod_ranges.js?v=2026-05-02"></script>
-<script src="data/prospect_aliases.js?v=2026-05-02"></script>
-<script src="data/team_2025_fix.js?v=2026-05-02"></script>
-<script src="data/team_abbr_map.js?v=2026-05-02"></script>
-<script src="data/team_logo_ids.js?v=2026-05-02"></script>
+<!-- P2 bundle: 42 small stable lookup tables concatenated by scripts/bundle_lookups.py.
+     Re-run that script after editing any source file. Pipeline-regenerated files
+     (d.js, all_players.js, weekly_stats_active.js, etc.) are intentionally NOT
+     bundled — they keep loading as separate script tags so the pipeline doesn't
+     need to know about bundling. -->
+<script src="data/_bundle_lookups.js?v=2026-05-13"></script>
 <script src="data/d.js?v=2026-05-13a"></script>
 <script src="data/hp.js"></script>
 <script src="data/ep_retired.js"></script>
@@ -4430,21 +4394,18 @@ if (typeof COMBINE_DATA !== 'undefined') {
   }
 }
 </script>
-<script src="data/college_stats.js"></script>
+<!-- college_stats.js (1.88 MB) + 3 patch files lazy-loaded via window._ensureCollegeStatsData()
+     on prospect / compare / backtest / mockdraft / dynasty / openPlayerCard activation.
+     All COLLEGE_STATS consumers use typeof guards, so the page renders fine pre-load. -->
 <!-- Backtest outcomes: rookie verdicts (Stud/Hit/Contributor/Bust/Pending) for 2020-2024 classes -->
 <script src="data/backtest_outcomes.js"></script>
 <!-- NFL.com prospect grades (5.4-7.45 scale + tier label) — 2014-2026, 1,672 prospects -->
 <!-- Used as DISPLAY ONLY on prospect cards; not in JM model (residual signal +0.074 over DC). -->
 <script src="data/nfl_prospect_grades.js?v=2026-05-11"></script>
-<!-- Phase 1: nickname/alias recovery patches (CFBD stats that didn't match due to name variants) -->
-<script src="data/college_stats_patch.js"></script>
-<!-- Phase 2: hand-curated FCS/D2 stats (Wikipedia-sourced — replaces CFBD crossover junk) -->
-<script src="data/college_stats_manual_patch.js"></script>
-<!-- Phase 3: alias + CSV-pull fill for COMBINE_DATA-keyed prospects (DK Metcalf → D.K. Metcalf, Deebo Samuel → Deebo Samuel Sr., Antonio Gibson, Zach Wilson, etc.) -->
-<script src="data/college_stats_patch_phase3.js"></script>
 <script>
 // === Travis Hunter — complete college stats (Jackson State + Colorado) ===
-// Must be after college_stats.js to override any partial data from CFBD pulls
+// Lazy-applied by _ensureCollegeStatsData() after college_stats.js loads.
+window._csPatch1 = function() {
 if (typeof COLLEGE_STATS !== 'undefined') {
   // Bucky Irving, Christian Watson, Trey Lance patches (moved from earlier in file)
   if (!COLLEGE_STATS['Bucky Irving']) COLLEGE_STATS['Bucky Irving'] = [];
@@ -4567,10 +4528,12 @@ if (typeof COLLEGE_STATS !== 'undefined') {
     {yr:2024,tm:"Florida",conf:"SEC",gp:13,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:42,rcy:783,rctd:2,fl:0,fpts:111.3,pff:72.9}
   ];
 }
+};
 </script>
 <script>
 // === Chris Bell — Louisville WR, 2026 class ===
-// Missing from CFBD data pull entirely. Manual entry from ESPN/sports-reference.
+// Lazy-applied by _ensureCollegeStatsData(). Missing from CFBD; manual entry.
+window._csPatch2 = function() {
 if (typeof COLLEGE_STATS !== 'undefined') {
   COLLEGE_STATS['Chris Bell'] = [
     {yr:2022,tm:"Louisville",conf:"ACC",gp:7,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:7,rcy:105,rctd:0,fl:0,fpts:10.5},
@@ -4579,9 +4542,12 @@ if (typeof COLLEGE_STATS !== 'undefined') {
     {yr:2025,tm:"Louisville",conf:"ACC",gp:11,py:0,ptd:0,int:0,pc:0,pa:0,ry:0,rtd:0,ra:0,rec:72,rcy:917,rctd:6,fl:0,fpts:163.2}
   ];
 }
+};
 </script>
 <script>
 // === 2025 COLLEGE QB STATS (from PFF passing_summary) ===
+// Lazy-applied by _ensureCollegeStatsData().
+window._csPatch3 = function() {
 if (typeof COLLEGE_STATS !== 'undefined') {
     if (!COLLEGE_STATS['D.J. Moore']) COLLEGE_STATS['D.J. Moore'] = [];
   COLLEGE_STATS['D.J. Moore'].push({yr:2015,tm:"Maryland",conf:"Big Ten",gp:11,py:0,ptd:0,int:0,pc:0,pa:1,ry:9,rtd:0,ra:1,rec:29,rcy:357,rctd:3,fl:0,fpts:52.6});
@@ -5193,15 +5159,18 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
   // === END COLLEGE STATS BACKFILL ===
   // === END MISSING SEASON BACKFILL ===
 }
+};
 </script>
 <!-- COLLEGE_WEEKLY: ~9 MB total, deferred. All consumers in index.html access
      COLLEGE_WEEKLY inside function bodies with `typeof COLLEGE_WEEKLY !== 'undefined'`
-     guards, so no top-level wrap needed. devy file kept synchronous because it
-     does top-level COMBINE_DATA patching. -->
+     guards, so no top-level wrap needed. devy file (435 KB) is now lazy-loaded
+     via _ensureCollegeStatsData() — its top-level COMBINE_DATA height/weight
+     patches use `if (COMBINE_DATA[name])` guards and the file self-inits
+     COLLEGE_WEEKLY, so deferring is safe (only side effect: bulk-patched devy
+     bios show "—" briefly until the lazy load completes). -->
 <script src="data/college_weekly_1.js" defer></script>
 <script src="data/college_weekly_2.js" defer></script>
 <script src="data/college_weekly_3.js" defer></script>
-<script src="data/college_weekly_devy.js"></script>
 <script src="data/wr_yprr.js"></script>
 <script src="data/js_model_data.js"></script>
 <script src="data/player_comps.js"></script>
@@ -5255,6 +5224,39 @@ window._ensurePffData = (function() {
       s.onload  = function() { try { _applyPffPatches(); } catch (e) { console.warn('[PFF patches]', e); } resolve(); };
       s.onerror = function() { console.warn('[PFF] load failed'); resolve(); };
       document.head.appendChild(s);
+    });
+    return promise;
+  };
+})();
+
+// college_stats.js (~1.88 MB) + 3 patch files lazy-loaded on prospect/compare/backtest/
+// mockdraft/dynasty/openPlayerCard activation. Patches are scheduled in document order
+// (window._csPatch1/2/3 defined inline above) and applied once all files resolve.
+window._ensureCollegeStatsData = (function() {
+  let promise = null;
+  function _loadScript(src) {
+    return new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      s.onload  = function() { resolve(); };
+      s.onerror = function() { console.warn('[CollegeStats] load failed', src); resolve(); };
+      document.head.appendChild(s);
+    });
+  }
+  return function _ensureCollegeStatsData() {
+    if (promise) return promise;
+    // college_stats chain (4 sequential files) runs in parallel with devy
+    // (independent — devy patches COMBINE_DATA and self-inits COLLEGE_WEEKLY).
+    const csChain = _loadScript('data/college_stats.js?v=2026-05-13')
+      .then(function() { return _loadScript('data/college_stats_patch.js?v=2026-05-13'); })
+      .then(function() { return _loadScript('data/college_stats_manual_patch.js?v=2026-05-13'); })
+      .then(function() { return _loadScript('data/college_stats_patch_phase3.js?v=2026-05-13'); });
+    const devy = _loadScript('data/college_weekly_devy.js?v=2026-05-13');
+    promise = Promise.all([csChain, devy]).then(function() {
+      try { if (window._csPatch1) window._csPatch1(); } catch (e) { console.warn('[CS patch 1]', e); }
+      try { if (window._csPatch2) window._csPatch2(); } catch (e) { console.warn('[CS patch 2]', e); }
+      try { if (window._csPatch3) window._csPatch3(); } catch (e) { console.warn('[CS patch 3]', e); }
     });
     return promise;
   };
@@ -6957,9 +6959,10 @@ function render() {
   // Attach JM scores to D entries on demand for dynasty rankings
   const _isDynRender = currentMode === 'dynasty' || currentMode === 'dynastysf';
   if (_isDynRender) {
-    // PFF grades are lazy-loaded (~121 KB) — fire on first dynasty render too,
+    // PFF grades + college stats are lazy-loaded — fire on first dynasty render,
     // in case the user landed directly in dynasty mode from saved state.
     if (typeof window._ensurePffData === 'function') window._ensurePffData();
+    if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
     if (typeof window._attachJmScores === 'function' && !window._jmScoresAttached) {
       window._attachJmScores();
       window._jmScoresAttached = true;
@@ -7051,6 +7054,14 @@ function render() {
     });
   }
 
+  // Pre-sort tiers once for the whole render; getTierForRank() would re-sort
+  // per row otherwise (506 redundant slices + sorts).
+  const _sortedTiers = tiers.slice().sort((a, b) => a.afterRank - b.afterRank);
+  const _tierLabelForRank = (rank) => {
+    let cur = null;
+    for (const t of _sortedTiers) { if (t.afterRank <= rank) cur = t; else break; }
+    return cur ? cur.label : '';
+  };
   let html = '';
   data.forEach((d, i) => {
     // DEVY filter: custom row rendering
@@ -7100,6 +7111,19 @@ function render() {
     const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (_adp != null && Math.abs(_adp - d.myRank) >= 1);
     const checked = compareSet.has(d.idx) ? 'checked' : '';
     const blurred = shouldBlur && (i + 1) > blurCutoff ? 'premium-blur' : '';
+    // Hoist per-row computations called 2-4× inside the row template. Saves
+    // ~20% of JS time in render() (measured 113ms → 90ms for the pure JS pass).
+    // Total sort-click time is still ~300ms because browser layout/paint of
+    // 506 rows dominates — that ceiling needs DOM diffing or virtualization
+    // to push lower.
+    const _projPpgJS = isJSModel ? d._jsModelPpg : null;
+    const _projPpg = _projPpgJS != null ? _projPpgJS : adjProjPpg(d);
+    const _25ppgJS = isJSModel ? d._jsModelVor : null;
+    const _25ppg = _25ppgJS != null ? _25ppgJS : adj25ppg(d);
+    const _projColor = (_projPpg != null) ? posFptsColor(_projPpg, d.s) : null;
+    const _25Color = (_25ppg != null && _25ppgJS == null) ? posFptsColor(_25ppg, d.s) : null;
+    const _adpDelta = _adp != null ? (_adp - d.myRank) : null;
+    const _displayTierLabel = _tierLabelForRank(displayRank);
 
     // Insert premium wall row right at the cutoff, above blurred rows
     if (shouldBlur && i === blurCutoff && data.length > blurCutoff) {
@@ -7117,13 +7141,13 @@ function render() {
 
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div></td>
-      <td class="myrank-cell"><span class="myrank-num tier-${tierColor(getTierForRank(displayRank))}" title="Overall rank: ${d.myRank}">${(filter === 'ALL' || filter === 'ROOKIE') ? (i + 1) : d.myRank}</span></td>
+      <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="Overall rank: ${d.myRank}">${(filter === 'ALL' || filter === 'ROOKIE') ? (i + 1) : d.myRank}</span></td>
       <td><div class="player-cell" style="flex-direction:row;align-items:center;gap:6px">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${d._slImg}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}<div style="display:flex;flex-direction:column;gap:1px">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span>`}</div></div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
-      <td class="adp-cell${(()=>{const a=rnkAdp(d);if(a==null)return '';const df=a-d.myRank;if(df>=3)return ' adp-value';if(df<=-3)return ' adp-reach';return '';})()}" title="${(()=>{const a=rnkAdp(d);if(a==null)return '';const df=Math.round(a-d.myRank);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${rnkAdp(d) != null ? rnkAdp(d) : '—'}</td>
-      <td class="pts-cell ppg-proj-cell"${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelPpg:null;const v=jv!=null?jv:adjProjPpg(d);if(v==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return v+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return v;})()}</td>
-      <td class="pts-cell ppg25-cell"${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null){return jv>0?' style="color:#22c55e;font-weight:700"':jv<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"';}const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+';font-weight:700"':'';})()}>${(()=>{const jv=isJSModel?d._jsModelVor:null;if(jv!=null)return jv>0?'+'+jv:jv;const v=adj25ppg(d);return v!=null?v:'—';})()}</td>
+      <td class="adp-cell${_adpDelta==null?'':(_adpDelta>=3?' adp-value':(_adpDelta<=-3?' adp-reach':''))}" title="${_adpDelta==null?'':(()=>{const df=Math.round(_adpDelta);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${_adp != null ? _adp : '—'}</td>
+      <td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>
+      <td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
       <td class="pts-cell yrr-cell" style="display:none">${d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')}</td>
       <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})()}</td>
       <td class="pts-cell landing-cell" style="display:none">${(()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})()}</td>
@@ -9107,9 +9131,10 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     updateCompareBtn();
     updateRnkAdpForMode();
     // Dynasty modes trigger _attachJmScores → buildProspectData, which reads PFF grades.
-    // Fire the lazy load so PFF is ready for the JM column on first dynasty render.
-    if ((currentMode === 'dynasty' || currentMode === 'dynastysf') && typeof window._ensurePffData === 'function') {
-      window._ensurePffData();
+    // Fire the lazy loads so PFF + college stats are ready on first dynasty render.
+    if ((currentMode === 'dynasty' || currentMode === 'dynastysf')) {
+      if (typeof window._ensurePffData === 'function') window._ensurePffData();
+      if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
     }
     render();
     toast(currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'Best Ball' : 'Redraft');
@@ -9235,14 +9260,19 @@ document.querySelectorAll('.pos-btn[data-view]').forEach(btn => {
 });
 
 document.querySelectorAll('thead th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
+  const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
     else { sortKey = key; sortDir = (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm') ? -1 : 1; }
-    document.querySelectorAll('thead th').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; });
+    document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
+    th.setAttribute('aria-sort', sortDir === 1 ? 'ascending' : 'descending');
     render();
+  };
+  th.addEventListener('click', _doSort);
+  th.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _doSort(); }
   });
 });
 
@@ -10382,9 +10412,10 @@ function _buildInjuryBadge(d) {
 }
 
 function openPlayerCard(d, ctxMode) {
-  // PFF grades are lazy-loaded; opening any player card may render prospect/JM
-  // info that consumes them, so fire the load on click.
+  // PFF grades + college stats are lazy-loaded; opening any player card may render
+  // prospect/JM/career info that consumes them, so fire the loads on click.
   if (typeof window._ensurePffData === 'function') window._ensurePffData();
+  if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
   // ctxMode lets callers (Trade Calc, My Teams, etc.) display the player in the
   // context of a different mode than the rankings page's currentMode. Falls back
   // to currentMode when not provided so the rankings-page click path is unchanged.
@@ -10844,7 +10875,7 @@ function openPlayerCard(d, ctxMode) {
         var declinedCount = comps.length - improvedCount;
         var trend = improvedCount > declinedCount ? 'improved' : improvedCount === declinedCount ? 'split' : 'declined';
         var trendColor = trend === 'improved' ? 'var(--green)' : trend === 'declined' ? 'var(--red)' : 'var(--accent)';
-        html += '<div style="text-align:center;padding:8px;margin-top:4px;border-radius:6px;background:rgba(255,255,255,.03);font-size:.7rem;color:var(--text2)">';
+        html += '<div style="text-align:center;padding:8px;margin-top:4px;border-radius:6px;background:var(--elev-1);font-size:.7rem;color:var(--text2)">';
         html += '<span style="font-weight:700;color:'+trendColor+'">'+improvedCount+'/'+comps.length+'</span> similar seasons '+trend+' the following year';
         html += '</div>';
 
@@ -10911,7 +10942,7 @@ function openPlayerCard(d, ctxMode) {
         });
         
         html2 += '</tbody></table>';
-        html2 += '<div style="text-align:center;padding:6px;margin-top:4px;border-radius:6px;background:rgba(255,255,255,.03);font-size:.7rem;color:var(--text2)">';
+        html2 += '<div style="text-align:center;padding:6px;margin-top:4px;border-radius:6px;background:var(--elev-1);font-size:.7rem;color:var(--text2)">';
         html2 += '<span style="font-weight:700;color:'+(hitCount2>=3?'var(--green)':hitCount2>=2?'var(--accent)':'var(--red)')+'">'+hitCount2+'/'+scored2.length+'</span> similar prospects became fantasy-relevant';
         html2 += '</div></div></div>';
         
@@ -11344,7 +11375,7 @@ function renderCompareGrid() {
         const _isMed = _cmpComparePlayers[i] && _cmpComparePlayers[i]._isMedian;
         const _barOpacity = _isMed ? '.6' : '1';
         cells += '<div style="display:flex;align-items:center;gap:8px;min-width:0;opacity:' + _barOpacity + '">'
-          + '<div style="flex:1;height:14px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;min-width:60px">'
+          + '<div style="flex:1;height:14px;background:var(--elev-1);border-radius:3px;overflow:hidden;min-width:60px">'
             + (v == null ? '' : '<div style="height:100%;width:' + w + '%;background:' + bg + '"></div>')
           + '</div>'
           + '<div style="font-size:.72rem;font-weight:' + (isBest ? '700' : '500') + ';color:' + (isBest ? '#22c55e' : 'var(--text)') + ';width:42px;text-align:right">' + stat.fmt(v) + '</div>'
@@ -11692,7 +11723,10 @@ function switchPage(page) {
   // page never pays for it.
   if (typeof window._ensurePffData === 'function') {
     const _pffPages = ['prospect', 'compare', 'backtest', 'mockdraft'];
-    if (_pffPages.includes(page)) window._ensurePffData();
+    if (_pffPages.includes(page)) {
+      window._ensurePffData();
+      if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
+    }
   }
   // Render compare grid when navigating to compare page
   if (page === 'compare') renderCompareGrid();
@@ -21678,6 +21712,7 @@ window.fmtHeight = fmtHeight;
     pwEyeShow.style.display = isHidden ? 'none' : '';
     pwEyeHide.style.display = isHidden ? '' : 'none';
     pwToggle.title = isHidden ? 'Hide password' : 'Show password';
+    pwToggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
     pwToggle.style.color = isHidden ? 'var(--accent)' : 'var(--text2)';
   });
   const acctBar = { style: {} };       // removed from sidebar
@@ -21844,6 +21879,9 @@ window.fmtHeight = fmtHeight;
   // Account page — navigate on avatar click
   globalAcctAvatar.addEventListener('click', () => {
     switchPage('account');
+  });
+  globalAcctAvatar.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchPage('account'); }
   });
   acctClose.addEventListener('click', () => { acctOverlay.style.display = 'none'; });
   acctOverlay.addEventListener('click', (e) => { if (e.target === acctOverlay) acctOverlay.style.display = 'none'; });
@@ -25099,7 +25137,7 @@ window.fmtHeight = fmtHeight;
           if (_rpm && _rpm.jm != null) {
             const _rjc = (window._jmTierStyle ? window._jmTierStyle(_rpm.jm, slot.filled.player.pos).color
                           : (_rpm.jm >= 82 ? '#34d399' : _rpm.jm >= 66 ? '#60a5fa' : _rpm.jm >= 50 ? '#fbbf24' : '#f87171'));
-            _rJmBadge = '<span style="font-size:.58rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:5px;background:rgba(255,255,255,.06);color:'+_rjc+'">JM '+Math.round(_rpm.jm)+'</span>';
+            _rJmBadge = '<span style="font-size:.58rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:5px;background:var(--elev-2);color:'+_rjc+'">JM '+Math.round(_rpm.jm)+'</span>';
           }
           // Enrich meta with school
           const _rcb = typeof COMBINE_DATA !== 'undefined' ? COMBINE_DATA[slot.filled.player.name] : null;
@@ -46346,7 +46384,7 @@ Rules:
       }
       html += `</div>`;
       // Expand panel — populated lazily on first open by _udToggleExpRow
-      html += `<div class="udexp-panel" data-udexp-panel="${safeName}" style="display:none;padding:8px 6px 12px 32px;background:rgba(255,255,255,.015);border-top:1px dashed var(--border)"></div>`;
+      html += `<div class="udexp-panel" data-udexp-panel="${safeName}" style="display:none;padding:8px 6px 12px 32px;background:var(--elev-1);border-top:1px dashed var(--border)"></div>`;
       html += `</div>`;
     });
     return html;
@@ -46767,7 +46805,7 @@ Rules:
       + '<div style="font-size:.85rem;color:var(--text);line-height:1.5">' + _esc(s.body) + '</div>'
       + (s.hint ? '<div style="margin-top:.8rem;padding:.55rem .7rem;background:var(--surface2);border-left:3px solid var(--accent);border-radius:4px;font-size:.7rem;color:var(--text2);line-height:1.4">' + _esc(s.hint) + '</div>' : '');
     dots.innerHTML = STEPS.map((_, i) =>
-      '<div style="width:7px;height:7px;border-radius:50%;background:' + (i === idx ? 'var(--accent)' : 'rgba(255,255,255,.18)') + ';transition:background .2s"></div>'
+      '<div style="width:7px;height:7px;border-radius:50%;background:' + (i === idx ? 'var(--accent)' : 'var(--elev-3)') + ';transition:background .2s"></div>'
     ).join('');
     backBtn.style.display = idx > 0 ? '' : 'none';
     nextBtn.textContent = idx === STEPS.length - 1 ? 'GOT IT ✓' : 'NEXT →';

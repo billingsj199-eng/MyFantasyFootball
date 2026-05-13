@@ -13,7 +13,7 @@ const ACTIVE_TEAM_HISTORY = {
     'Andrei Iosivas': [{t:'Cincinnati Bengals',y1:2023,y2:2099}],
     'Anthony Richardson': [{t:'Indianapolis Colts',y1:2023,y2:2099}],
     'Anthony Smith': [{t:'Dallas Cowboys',y1:2026,y2:2099}],
-    'Antonio Williams': [{t:'Buffalo Bills',y1:2020,y2:2021},{t:'New York Giants',y1:2022,y2:2022},{t:'Washington Commanders',y1:2026,y2:2099}],
+    'Antonio Williams': [{t:'Washington Commanders',y1:2026,y2:2099}],
     'Ashton Dulin': [{t:'Indianapolis Colts',y1:2019,y2:2099}],
     'Ashton Jeanty': [{t:'Las Vegas Raiders',y1:2025,y2:2099}],
     'Athan Kaliakmanis': [{t:'Washington Commanders',y1:2026,y2:2099}],

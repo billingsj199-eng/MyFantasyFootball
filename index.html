@@ -3354,15 +3354,15 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      bundled — they keep loading as separate script tags so the pipeline doesn't
      need to know about bundling. -->
 <script src="data/_bundle_lookups.js?v=2026-05-13"></script>
-<script src="data/d.js?v=2026-05-13a"></script>
+<script src="data/d.js?v=2026-05-13b"></script>
 <script src="data/hp.js"></script>
 <script src="data/ep_retired.js"></script>
-<script src="data/legend_careers.js" defer></script>
+<script src="data/legend_careers.js?v=2026-05-13b" defer></script>
 <script src="data/season_leaders.js"></script>
 <script src="data/ldb.js"></script>
 <script src="data/player_team_history.js"></script>
 <script src="data/ep_players_u.js"></script>
-<script src="data/active_team_history.js"></script>
+<script src="data/active_team_history.js?v=2026-05-13b"></script>
 <script src="data/daily_retired_pool.js"></script>
 <script src="data/weekly_stats_active.js"></script>
 <!-- WEEKLY_STATS_RETIRED: ~10 MB total, deferred. Initialized as window.WEEKLY_STATS_RETIRED
@@ -15537,6 +15537,7 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   // any case where LEGEND has at least as many seasons.
   if (typeof LEGEND_CAREERS !== 'undefined') {
     D.forEach(d => {
+      if (!d._retired) return;
       const lc = LEGEND_CAREERS[d.n];
       if (!lc || !lc.length) return;
       if (lc.length >= ((d.career && d.career.length) || 0)) {

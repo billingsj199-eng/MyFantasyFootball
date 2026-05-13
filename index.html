@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
@@ -28,6 +28,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MFF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://a.espncdn.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://site.api.espn.com">
+<link rel="dns-prefetch" href="https://sports.core.api.espn.com">
+<link rel="preload" href="styles/main.css?v=2026-05-12m" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-05-12m">
 
@@ -84,7 +92,7 @@
 <button class="auth-btn auth-btn-primary" id="authSubmit">SIGN IN</button>
 <div class="auth-divider">OR</div>
 <button class="auth-btn auth-btn-google" id="authGoogle">
-<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" loading="lazy" width="18" height="18">
 Continue with Google
 </button>
 <div class="auth-toggle" id="authToggle">Don't have an account? <a id="authSwitchMode">Sign up</a></div>
@@ -871,7 +879,7 @@ CLEAR
 </div>
 <!-- Admin-only view-mode toggle -->
 <div id="adminViewToggle" style="display:none;margin-top:6px;padding:5px 8px;align-items:center;gap:8px;flex-wrap:wrap">
-<span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-right:4px">ADMIN VIEW:</span>
+<span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-right:4px">VIEW:</span>
 <button class="pos-btn view-mode-btn active" data-viewmode="all" style="padding:.25rem .8rem;font-size:.65rem">TABLE</button>
 <button class="pos-btn view-mode-btn" data-viewmode="tierCard" style="padding:.25rem .8rem;font-size:.65rem;background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(236,72,153,.25));border-color:rgba(167,139,250,.4)">🎴 TIER CARDS</button>
 <button class="pos-btn" id="tcvFullscreenBtn" style="display:none;padding:.25rem .8rem;font-size:.65rem;background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4);color:var(--accent)" title="Expand tier view to fullscreen (Esc to exit)">⛶ FULLSCREEN</button>
@@ -1138,7 +1146,7 @@ CLEAR
 </div>
 <div class="fg-team-reveal" id="fgTeamReveal" style="display:none">
 <div class="fg-spinner-result" id="fgSpinnerResult" style="display:none">
-<img id="fgResultLogo" src="" alt="">
+<img id="fgResultLogo" src="" alt="" loading="lazy">
 </div>
 <div class="fg-team-name" id="fgTeamName"></div>
 <div class="fg-team-sub" id="fgTeamSub">Pick any player from this team — choose a roster slot to place them</div>
@@ -1168,7 +1176,7 @@ CLEAR
 <div id="epuStats" class="ep-streak-display" style="margin-top:6px"></div>
 </div>
 <div class="elite-pull-img-wrap">
-<img id="epuImage" class="ep-blur" src="" alt="Mystery player" style="display:none">
+<img id="epuImage" class="ep-blur" src="" alt="Mystery player" loading="lazy" style="display:none">
 <div id="epuPlaceholder" class="ep-placeholder">Loading player...</div>
 </div>
 <div class="elite-pull-body">
@@ -1507,7 +1515,7 @@ CLEAR
 <div class="elite-pull-subtitle">Guess today's player from their picture &middot; 1 attempt</div>
 </div>
 <div class="elite-pull-img-wrap">
-<img id="epImage" class="ep-blur" src="" alt="Mystery player" style="display:none">
+<img id="epImage" class="ep-blur" src="" alt="Mystery player" loading="lazy" style="display:none">
 <div id="epPlaceholder" class="ep-placeholder">Loading today's player...</div>
 </div>
 <div class="elite-pull-body">
@@ -3276,58 +3284,58 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 
 <input type="file" id="fileImport" accept=".json" style="display:none">
 
-<script src="data/ktc_rankings.js?v=2026-05-02"></script>
-<script src="data/underdog_ids.js?v=2026-05-02"></script>
-<script src="data/legend_birth_years.js?v=2026-05-02"></script>
-<script src="data/pff_qb_risk.js?v=2026-05-02"></script>
-<script src="data/college_logo_ids.js?v=2026-05-02"></script>
-<script src="data/fallback_espn_ids.js?v=2026-05-02"></script>
-<script src="data/legend_bio.js?v=2026-05-02"></script>
-<script src="data/qb_big_time.js?v=2026-05-02"></script>
-<script src="data/qb_turnover_rate.js?v=2026-05-02"></script>
-<script src="data/retired_espn_ids.js?v=2026-05-02"></script>
-<script src="data/school_conferences.js?v=2026-05-02"></script>
-<script src="data/school_keywords.js?v=2026-05-02"></script>
-<script src="data/school_norm.js?v=2026-05-02"></script>
-<script src="data/team_divisions.js?v=2026-05-02"></script>
-<script src="data/team_keywords.js?v=2026-05-02"></script>
-<script src="data/nfl_logo_map.js?v=2026-05-02"></script>
-<script src="data/all_nfl_teams.js?v=2026-05-02"></script>
-<script src="data/badges.js?v=2026-05-02"></script>
-<script src="data/bbm_first_pos_by_round.js?v=2026-05-02"></script>
-<script src="data/bbm_pick_by_rank_round.js?v=2026-05-04"></script>
-<script src="data/bbm_path_optimal.js?v=2026-05-04"></script>
-<script src="data/bbm_optimizer_data.js?v=2026-05-04"></script>
-<script src="data/bbm_stack_comp_multistage.js?v=2026-05-04"></script>
-<script src="data/bbm_structural_multistage.js?v=2026-05-04"></script>
-<script src="data/college_pos_override.js?v=2026-05-02"></script>
-<script src="data/colorways.js?v=2026-05-02"></script>
-<script src="data/conf_keywords.js?v=2026-05-02"></script>
-<script src="data/cs_aliases.js?v=2026-05-02"></script>
-<script src="data/full_to_code.js?v=2026-05-02"></script>
-<script src="data/ht_ranges.js?v=2026-05-02"></script>
-<script src="data/ih_type_mults.js?v=2026-05-02"></script>
-<script src="data/inj_type_multipliers.js?v=2026-05-02"></script>
-<script src="data/jm_ceiling_weights.js?v=2026-05-02"></script>
-<script src="data/jm_devy_ceiling.js?v=2026-05-02"></script>
-<script src="data/jm_devy_floor.js?v=2026-05-02"></script>
-<script src="data/jm_weights.js?v=2026-05-02"></script>
+<script src="data/ktc_rankings.js?v=2026-05-02" defer></script>
+<script src="data/underdog_ids.js?v=2026-05-02" defer></script>
+<script src="data/legend_birth_years.js?v=2026-05-02" defer></script>
+<script src="data/pff_qb_risk.js?v=2026-05-02" defer></script>
+<script src="data/college_logo_ids.js?v=2026-05-02" defer></script>
+<script src="data/fallback_espn_ids.js?v=2026-05-02" defer></script>
+<script src="data/legend_bio.js?v=2026-05-02" defer></script>
+<script src="data/qb_big_time.js?v=2026-05-02" defer></script>
+<script src="data/qb_turnover_rate.js?v=2026-05-02" defer></script>
+<script src="data/retired_espn_ids.js?v=2026-05-02" defer></script>
+<script src="data/school_conferences.js?v=2026-05-02" defer></script>
+<script src="data/school_keywords.js?v=2026-05-02" defer></script>
+<script src="data/school_norm.js?v=2026-05-02" defer></script>
+<script src="data/team_divisions.js?v=2026-05-02" defer></script>
+<script src="data/team_keywords.js?v=2026-05-02" defer></script>
+<script src="data/nfl_logo_map.js?v=2026-05-02" defer></script>
+<script src="data/all_nfl_teams.js?v=2026-05-02" defer></script>
+<script src="data/badges.js?v=2026-05-02" defer></script>
+<script src="data/bbm_first_pos_by_round.js?v=2026-05-02" defer></script>
+<script src="data/bbm_pick_by_rank_round.js?v=2026-05-04" defer></script>
+<script src="data/bbm_path_optimal.js?v=2026-05-04" defer></script>
+<script src="data/bbm_optimizer_data.js?v=2026-05-04" defer></script>
+<script src="data/bbm_stack_comp_multistage.js?v=2026-05-04" defer></script>
+<script src="data/bbm_structural_multistage.js?v=2026-05-04" defer></script>
+<script src="data/college_pos_override.js?v=2026-05-02" defer></script>
+<script src="data/colorways.js?v=2026-05-02" defer></script>
+<script src="data/conf_keywords.js?v=2026-05-02" defer></script>
+<script src="data/cs_aliases.js?v=2026-05-02" defer></script>
+<script src="data/full_to_code.js?v=2026-05-02" defer></script>
+<script src="data/ht_ranges.js?v=2026-05-02" defer></script>
+<script src="data/ih_type_mults.js?v=2026-05-02" defer></script>
+<script src="data/inj_type_multipliers.js?v=2026-05-02" defer></script>
+<script src="data/jm_ceiling_weights.js?v=2026-05-02" defer></script>
+<script src="data/jm_devy_ceiling.js?v=2026-05-02" defer></script>
+<script src="data/jm_devy_floor.js?v=2026-05-02" defer></script>
+<script src="data/jm_weights.js?v=2026-05-02" defer></script>
 <script src="data/pick_defs.js?v=2026-05-02"></script>
-<script src="data/prod_ranges.js?v=2026-05-02"></script>
-<script src="data/prospect_aliases.js?v=2026-05-02"></script>
-<script src="data/team_2025_fix.js?v=2026-05-02"></script>
-<script src="data/team_abbr_map.js?v=2026-05-02"></script>
-<script src="data/team_logo_ids.js?v=2026-05-02"></script>
-<script src="data/d.js?v=2026-04-27e"></script>
-<script src="data/hp.js"></script>
-<script src="data/ep_retired.js"></script>
+<script src="data/prod_ranges.js?v=2026-05-02" defer></script>
+<script src="data/prospect_aliases.js?v=2026-05-02" defer></script>
+<script src="data/team_2025_fix.js?v=2026-05-02" defer></script>
+<script src="data/team_abbr_map.js?v=2026-05-02" defer></script>
+<script src="data/team_logo_ids.js?v=2026-05-02" defer></script>
+<script src="data/d.js?v=2026-05-13a"></script>
+<script src="data/hp.js" defer></script>
+<script src="data/ep_retired.js" defer></script>
 <script src="data/legend_careers.js" defer></script>
-<script src="data/season_leaders.js"></script>
-<script src="data/ldb.js"></script>
-<script src="data/player_team_history.js"></script>
-<script src="data/ep_players_u.js"></script>
-<script src="data/active_team_history.js"></script>
-<script src="data/daily_retired_pool.js"></script>
+<script src="data/season_leaders.js" defer></script>
+<script src="data/ldb.js" defer></script>
+<script src="data/player_team_history.js" defer></script>
+<script src="data/ep_players_u.js" defer></script>
+<script src="data/active_team_history.js" defer></script>
+<script src="data/daily_retired_pool.js" defer></script>
 <script src="data/weekly_stats_active.js"></script>
 <!-- WEEKLY_STATS_RETIRED: ~10 MB total, deferred. Initialized as window.WEEKLY_STATS_RETIRED
      by file _1 and extended by _2 and _3 via Object.assign — defer preserves
@@ -3336,12 +3344,12 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/weekly_stats_retired_1.js" defer></script>
 <script src="data/weekly_stats_retired_2.js" defer></script>
 <script src="data/weekly_stats_retired_3.js" defer></script>
-<script src="data/all_players.js"></script>
+<script src="data/all_players.js" defer></script>
 <script src="data/combine_data.js?v=2026-04-25b"></script>
-<script src="data/historical_draft_picks.js"></script>
-<script src="data/mike_clay_projections.js?v=2026-04-25b"></script>
-<script src="data/player_weekly_sigma.js"></script>
-<script src="data/injury_history.js"></script>
+<script src="data/historical_draft_picks.js" defer></script>
+<script src="data/mike_clay_projections.js?v=2026-04-25b" defer></script>
+<script src="data/player_weekly_sigma.js" defer></script>
+<script src="data/injury_history.js" defer></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
 // d.js names and Clay names sometimes differ on suffix (Jr./III), punctuation,
@@ -4360,10 +4368,10 @@ if (typeof COMBINE_DATA !== 'undefined') {
 </script>
 <script src="data/college_stats.js"></script>
 <!-- Backtest outcomes: rookie verdicts (Stud/Hit/Contributor/Bust/Pending) for 2020-2024 classes -->
-<script src="data/backtest_outcomes.js"></script>
+<script src="data/backtest_outcomes.js" defer></script>
 <!-- NFL.com prospect grades (5.4-7.45 scale + tier label) — 2014-2026, 1,672 prospects -->
 <!-- Used as DISPLAY ONLY on prospect cards; not in JM model (residual signal +0.074 over DC). -->
-<script src="data/nfl_prospect_grades.js?v=2026-05-11"></script>
+<script src="data/nfl_prospect_grades.js?v=2026-05-11" defer></script>
 <!-- Phase 1: nickname/alias recovery patches (CFBD stats that didn't match due to name variants) -->
 <script src="data/college_stats_patch.js"></script>
 <!-- Phase 2: hand-curated FCS/D2 stats (Wikipedia-sourced — replaces CFBD crossover junk) -->
@@ -5130,61 +5138,63 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
 <script src="data/college_weekly_2.js" defer></script>
 <script src="data/college_weekly_3.js" defer></script>
 <script src="data/college_weekly_devy.js"></script>
-<script src="data/wr_yprr.js"></script>
+<script src="data/wr_yprr.js" defer></script>
 <script src="data/js_model_data.js"></script>
-<script src="data/player_comps.js"></script>
-<script src="data/wr_drop_rate.js"></script>
-<script src="data/wr_contested.js"></script>
-<script src="data/wr_yac.js"></script>
-<script src="data/wr_route_grade.js"></script>
-<script src="data/wr_adot.js"></script>
-<script src="data/wr_adv_career.js"></script>
-<script src="data/rb_yaco.js"></script>
-<script src="data/rb_missed_tackles.js"></script>
-<script src="data/rb_elusive.js"></script>
-<script src="data/rb_breakaway.js"></script>
-<script src="data/qb_adot.js"></script>
-<script src="data/pff_grades.js"></script>
+<script src="data/player_comps.js" defer></script>
+<script src="data/wr_drop_rate.js" defer></script>
+<script src="data/wr_contested.js" defer></script>
+<script src="data/wr_yac.js" defer></script>
+<script src="data/wr_route_grade.js" defer></script>
+<script src="data/wr_adot.js" defer></script>
+<script src="data/wr_adv_career.js" defer></script>
+<script src="data/rb_yaco.js" defer></script>
+<script src="data/rb_missed_tackles.js" defer></script>
+<script src="data/rb_elusive.js" defer></script>
+<script src="data/rb_breakaway.js" defer></script>
+<script src="data/qb_adot.js" defer></script>
 <script>
-// PFF grade patches for players missing from generated file
-// Apostrophe-name alias fixes: pff_grades.js truncated names with leading apostrophes
-// (e.g. "Le'Veon Moss" -> "Veon Moss", "Ja'Kobi Lane" -> "Kobi Lane"). Copy broken
-// keys over to the correct canonical names so JM lookups find them.
-if (typeof _PFF_RB_GRADES !== 'undefined') {
-  if (!_PFF_RB_GRADES["J'Mari Taylor"] && _PFF_RB_GRADES['Mari Taylor']) _PFF_RB_GRADES["J'Mari Taylor"] = _PFF_RB_GRADES['Mari Taylor'];
-  if (!_PFF_RB_GRADES["Le'Veon Moss"]  && _PFF_RB_GRADES['Veon Moss'])  _PFF_RB_GRADES["Le'Veon Moss"]  = _PFF_RB_GRADES['Veon Moss'];
+// pff_grades.js is lazy-loaded on first prospect-tab activation (~121 KB).
+// All consumers are inside buildProspectData (prospect-page IIFE) and reference
+// window._PFF_*_GRADES with `&&` guards, so the page renders fine without them.
+function _applyPffPatches() {
+  // Apostrophe-name alias fixes: pff_grades.js truncated names with leading apostrophes
+  // (e.g. "Le'Veon Moss" -> "Veon Moss"). Copy broken keys over to canonical names.
+  if (typeof _PFF_RB_GRADES !== 'undefined') {
+    if (!_PFF_RB_GRADES["J'Mari Taylor"] && _PFF_RB_GRADES['Mari Taylor']) _PFF_RB_GRADES["J'Mari Taylor"] = _PFF_RB_GRADES['Mari Taylor'];
+    if (!_PFF_RB_GRADES["Le'Veon Moss"]  && _PFF_RB_GRADES['Veon Moss'])  _PFF_RB_GRADES["Le'Veon Moss"]  = _PFF_RB_GRADES['Veon Moss'];
+  }
+  if (typeof _PFF_WR_GRADES !== 'undefined') {
+    if (!_PFF_WR_GRADES["Ja'Kobi Lane"]       && _PFF_WR_GRADES['Kobi Lane'])       _PFF_WR_GRADES["Ja'Kobi Lane"]       = _PFF_WR_GRADES['Kobi Lane'];
+    if (!_PFF_WR_GRADES["De'Zhaun Stribling"] && _PFF_WR_GRADES['Zhaun Stribling']) _PFF_WR_GRADES["De'Zhaun Stribling"] = _PFF_WR_GRADES['Zhaun Stribling'];
+    if (!_PFF_WR_GRADES['DJ Moore']) _PFF_WR_GRADES['DJ Moore'] = 83.2;
+    if (!_PFF_WR_GRADES['D.J. Moore']) _PFF_WR_GRADES['D.J. Moore'] = 83.2;
+    // Hand-curated PFF grades_offense averages from receiving_summary CSVs / season pages
+    _PFF_WR_GRADES['Travis Hunter']      = 83.2; // 2024:86.3, 2023:77.6, 2022 JSU:85.8
+    _PFF_WR_GRADES['Tetairoa McMillan']  = 79.6; // 2024:84.8, 2023:87.4, 2022:66.5
+    _PFF_WR_GRADES['Matthew Golden']     = 69.2; // 2024 Tex:74.0, 2023 Hou:68.4, 2022 Hou:65.3
+    _PFF_WR_GRADES['Kyle Williams']      = 72.7; // 2024 WSU:79.8, 2023 WSU:67.3, 2022 UNLV:71.4, 2021 UNLV:71.7, 2020 UNLV:73.3
+    _PFF_WR_GRADES['Elijah Sarratt']     = 85.3; // 2025 Ind:86.1, 2024 Ind:80.0, 2023 JMU:89.9
+    _PFF_WR_GRADES['Chimere Dike']       = 66.8; // 2024 Fla:72.9, 2023 Wisc:58.0, 2022 Wisc:74.4, 2021 Wisc:65.5, 2020 Wisc:63.3
+  }
+  if (typeof _PFF_TE_GRADES !== 'undefined') {
+    _PFF_TE_GRADES['Tanner Koziol']      = 73.0; // 2025 Hou:78.9, 2024 BSt:87.9, 2023 BSt:59.9, 2022 BSt:65.3
+  }
 }
-if (typeof _PFF_WR_GRADES !== 'undefined') {
-  if (!_PFF_WR_GRADES["Ja'Kobi Lane"]       && _PFF_WR_GRADES['Kobi Lane'])       _PFF_WR_GRADES["Ja'Kobi Lane"]       = _PFF_WR_GRADES['Kobi Lane'];
-  if (!_PFF_WR_GRADES["De'Zhaun Stribling"] && _PFF_WR_GRADES['Zhaun Stribling']) _PFF_WR_GRADES["De'Zhaun Stribling"] = _PFF_WR_GRADES['Zhaun Stribling'];
-}
-if (typeof _PFF_WR_GRADES !== 'undefined') {
-  if (!_PFF_WR_GRADES['DJ Moore']) _PFF_WR_GRADES['DJ Moore'] = 83.2;
-  if (!_PFF_WR_GRADES['D.J. Moore']) _PFF_WR_GRADES['D.J. Moore'] = 83.2;
-  // Travis Hunter: PFF OFF grade avg from PFF season grades page
-  // 2024: 86.3, 2023: 77.6, 2022 Jackson St: 85.8 → avg 83.2
-  _PFF_WR_GRADES['Travis Hunter'] = 83.2;
-  // Tetairoa McMillan: PFF grades_offense avg from receiving_summary CSVs
-  // 2024: 84.8, 2023: 87.4, 2022: 66.5 → avg 79.6
-  _PFF_WR_GRADES['Tetairoa McMillan'] = 79.6;
-  // Matthew Golden: PFF grades_offense avg from receiving_summary CSVs
-  // 2024 Texas: 74.0, 2023 Houston: 68.4, 2022 Houston: 65.3 → avg 69.2
-  _PFF_WR_GRADES['Matthew Golden'] = 69.2;
-  // Kyle Williams: PFF grades_offense avg from receiving_summary CSVs
-  // 2024 WSU: 79.8, 2023 WSU: 67.3, 2022 UNLV: 71.4, 2021 UNLV: 71.7, 2020 UNLV: 73.3 → avg 72.7
-  _PFF_WR_GRADES['Kyle Williams'] = 72.7;
-  // Elijah Sarratt: PFF grades_offense avg from receiving_summary CSVs
-  // 2025 Indiana: 86.1, 2024 Indiana: 80.0, 2023 JMU: 89.9 → avg 85.3
-  _PFF_WR_GRADES['Elijah Sarratt'] = 85.3;
-  // Chimere Dike: PFF grades_offense avg from receiving_summary CSVs
-  // 2024 Fla: 72.9, 2023 Wisc: 58.0, 2022 Wisc: 74.4, 2021 Wisc: 65.5, 2020 Wisc: 63.3 → avg 66.8
-  _PFF_WR_GRADES['Chimere Dike'] = 66.8;
-}
-if (typeof _PFF_TE_GRADES !== 'undefined') {
-  // Tanner Koziol: PFF grades_offense avg from receiving_summary CSVs
-  // 2025 Houston: 78.9, 2024 Ball St: 87.9, 2023 Ball St: 59.9, 2022 Ball St: 65.3 → avg 73.0
-  _PFF_TE_GRADES['Tanner Koziol'] = 73.0;
-}
+window._ensurePffData = (function() {
+  let promise = null;
+  return function _ensurePffData() {
+    if (promise) return promise;
+    promise = new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = 'data/pff_grades.js?v=2026-05-13';
+      s.async = false;
+      s.onload  = function() { try { _applyPffPatches(); } catch (e) { console.warn('[PFF patches]', e); } resolve(); };
+      s.onerror = function() { console.warn('[PFF] load failed'); resolve(); };
+      document.head.appendChild(s);
+    });
+    return promise;
+  };
+})();
 </script>
 <!-- ALL_PLAYERS_WEEKLY: ~13 MB total, deferred. Single top-level consumer
      (the merge at ~line 14879) was refactored to be idempotent and re-call
@@ -5222,11 +5232,19 @@ window._authCurrentUser = null;
 // we mirror them in Firestore at users/{uid}/data/adp_history. On wipe, the
 // extension boots empty, MFF site pulls history from Firestore and pushes it
 // back into chrome.storage.local via the same bridge.
+// Per-uid denial cache — once Firestore rejects a read/write with permission-denied
+// for a given user, short-circuit future calls so the extension's 10s recovery
+// poller (mff-bridge.js) doesn't spam the console for ~2 minutes per page load.
+function _mffAdpHistoryDenialKey(e, uid) {
+  if (!e || !uid) return false;
+  return e.code === 'permission-denied' || /insufficient permissions/i.test(e.message || '');
+}
 window._mffSaveAdpHistory = async function(history) {
   try {
     if (!Array.isArray(history) || !history.length) return false;
     const u = window._authCurrentUser;
     if (!u || !u.uid) return false;
+    if (window._mffAdpHistoryDenied === u.uid) return false;
     if (typeof firebase === 'undefined' || !firebase.firestore) return false;
     const db = firebase.firestore();
     // Single doc rather than subcollection — at ~10 KB/snapshot × 30 days max,
@@ -5239,6 +5257,8 @@ window._mffSaveAdpHistory = async function(history) {
     console.log('[MFF/adp-backup] saved', history.length, 'snapshot(s) to Firestore');
     return true;
   } catch (e) {
+    const u = window._authCurrentUser;
+    if (_mffAdpHistoryDenialKey(e, u && u.uid)) window._mffAdpHistoryDenied = u.uid;
     console.warn('[MFF/adp-backup] save failed:', e);
     return false;
   }
@@ -5247,6 +5267,7 @@ window._mffLoadAdpHistory = async function() {
   try {
     const u = window._authCurrentUser;
     if (!u || !u.uid) return null;
+    if (window._mffAdpHistoryDenied === u.uid) return null;
     if (typeof firebase === 'undefined' || !firebase.firestore) return null;
     const db = firebase.firestore();
     const doc = await db.collection('users').doc(u.uid).collection('data').doc('adp_history').get();
@@ -5256,6 +5277,8 @@ window._mffLoadAdpHistory = async function() {
     console.log('[MFF/adp-backup] loaded', data.history.length, 'snapshot(s) from Firestore');
     return data.history;
   } catch (e) {
+    const u = window._authCurrentUser;
+    if (_mffAdpHistoryDenialKey(e, u && u.uid)) window._mffAdpHistoryDenied = u.uid;
     console.warn('[MFF/adp-backup] load failed:', e);
     return null;
   }
@@ -5299,7 +5322,7 @@ function validateImportData(obj) {
 // Cached in sessionStorage for instant loads after first run.
 (function() {
   const IMG_BASE = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/';
-  const IMG_SUFFIX = '.png&w=350&h=254';
+  const IMG_SUFFIX = '.png&w=64&h=64';
   const CACHE_KEY = 'espnIdCache12';
   const NOT_FOUND_KEY = 'espnIdNotFound1';
   let cache = {};
@@ -6687,7 +6710,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
 
   const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
   const logoHtml = logoId
-    ? '<div class="tcv-card-team"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt=""/></div>'
+    ? '<div class="tcv-card-team"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy"/></div>'
     : '';
 
   // Last name only (e.g., "Ja'Marr Chase" -> "CHASE", "Smith-Njigba" stays "SMITH-NJIGBA")
@@ -6869,9 +6892,14 @@ window.hasPremium = hasPremium;
 function render() {
   // Attach JM scores to D entries on demand for dynasty rankings
   const _isDynRender = currentMode === 'dynasty' || currentMode === 'dynastysf';
-  if (_isDynRender && typeof window._attachJmScores === 'function' && !window._jmScoresAttached) {
-    window._attachJmScores();
-    window._jmScoresAttached = true;
+  if (_isDynRender) {
+    // PFF grades are lazy-loaded (~121 KB) — fire on first dynasty render too,
+    // in case the user landed directly in dynasty mode from saved state.
+    if (typeof window._ensurePffData === 'function') window._ensurePffData();
+    if (typeof window._attachJmScores === 'function' && !window._jmScoresAttached) {
+      window._attachJmScores();
+      window._jmScoresAttached = true;
+    }
   }
   const data = getFiltered();
   const tbody = document.getElementById('tbody');
@@ -8855,6 +8883,11 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     compareSet.clear();
     updateCompareBtn();
     updateRnkAdpForMode();
+    // Dynasty modes trigger _attachJmScores → buildProspectData, which reads PFF grades.
+    // Fire the lazy load so PFF is ready for the JM column on first dynasty render.
+    if ((currentMode === 'dynasty' || currentMode === 'dynastysf') && typeof window._ensurePffData === 'function') {
+      window._ensurePffData();
+    }
     render();
     toast(currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'Best Ball' : 'Redraft');
     // Show/hide "Copy from Redraft" button (Best Ball only)
@@ -10126,6 +10159,9 @@ function _buildInjuryBadge(d) {
 }
 
 function openPlayerCard(d, ctxMode) {
+  // PFF grades are lazy-loaded; opening any player card may render prospect/JM
+  // info that consumes them, so fire the load on click.
+  if (typeof window._ensurePffData === 'function') window._ensurePffData();
   // ctxMode lets callers (Trade Calc, My Teams, etc.) display the player in the
   // context of a different mode than the rankings page's currentMode. Falls back
   // to currentMode when not provided so the rankings-page click path is unchanged.
@@ -10188,7 +10224,7 @@ function openPlayerCard(d, ctxMode) {
       </button>
       <button class="card-close" id="cardClose">&times;</button>
       <div class="card-hero">
-        ${d._slImg ? `<img src="${d._slImg}" alt="${d.n}" onerror="this.style.display='none'">` : ''}
+        ${d._slImg ? `<img src="${d._slImg}" alt="${d.n}" loading="lazy" onerror="this.style.display='none'">` : ''}
         <div>
           <div class="card-name">${d.n}${_cardJm != null ? (() => {
             const _jmTt = window._jmTierTooltip ? window._jmTierTooltip(_cardJm, d.s).replace(/"/g, '&quot;') : 'JM Score';
@@ -11136,7 +11172,7 @@ function renderCompareGrid() {
         || window.RETIRED_ESPN_IDS[d.n + ' Jr.']
         || window.RETIRED_ESPN_IDS[d.n + ' III']
         || window.RETIRED_ESPN_IDS[(d.n || '').replace(/ Jr\.?$/i, '').replace(/ III$/i, '').trim()];
-      if (rid) d._slImg = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + rid + '.png&w=350&h=254';
+      if (rid) d._slImg = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + rid + '.png&w=64&h=64';
     }
     
     // All retired players (from any source) use the same card
@@ -11428,6 +11464,13 @@ function switchPage(page) {
       history.replaceState({}, '', location.pathname + location.search + targetHash);
     }
   } catch(_) {}
+  // Lazy-load PFF grades on first access of any page that consumes them.
+  // pff_grades.js is ~121 KB; only buildProspectData reads it, so the rankings
+  // page never pays for it.
+  if (typeof window._ensurePffData === 'function') {
+    const _pffPages = ['prospect', 'compare', 'backtest', 'mockdraft'];
+    if (_pffPages.includes(page)) window._ensurePffData();
+  }
   // Render compare grid when navigating to compare page
   if (page === 'compare') renderCompareGrid();
   // Render backtest when navigating to backtest page
@@ -11656,7 +11699,7 @@ document.addEventListener('click', function(e) {
         id = cache[poolPlayer.name];
       }
     }
-    return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350&h=254`;
+    return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=64&h=64`;
   }
 
   // Retired players pool for daily Guess Who (from NFL database)
@@ -12156,7 +12199,7 @@ document.addEventListener('click', function(e) {
         }
       }
     }
-    return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350&h=254`;
+    return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=64&h=64`;
   }
 
   // allNamesU is declared and populated above in _rebuildAllNamesU (kept in sync with EP_PLAYERS_U)
@@ -14227,7 +14270,7 @@ document.addEventListener('click', function(e) {
   function confLogoSvg(conf, size) {
     const s = size || 80;
     const url = confLogoUrl(conf);
-    if (url) return '<img src="' + url + '" alt="' + (CONF_DISPLAY[conf]||conf) + '" style="width:' + s + 'px;height:' + s + 'px;object-fit:contain" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'"><div style="display:none;width:' + s + 'px;height:' + s + 'px;border-radius:50%;background:' + (CONF_COLORS[conf]||'#f59e0b') + ';align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:' + Math.max(s/5,12) + 'px;color:#fff;letter-spacing:1px;font-weight:700;text-align:center;line-height:1.1;padding:4px">' + (CONF_DISPLAY[conf]||conf) + '</div>';
+    if (url) return '<img src="' + url + '" alt="' + (CONF_DISPLAY[conf]||conf) + '" loading="lazy" style="width:' + s + 'px;height:' + s + 'px;object-fit:contain" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'"><div style="display:none;width:' + s + 'px;height:' + s + 'px;border-radius:50%;background:' + (CONF_COLORS[conf]||'#f59e0b') + ';align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:' + Math.max(s/5,12) + 'px;color:#fff;letter-spacing:1px;font-weight:700;text-align:center;line-height:1.1;padding:4px">' + (CONF_DISPLAY[conf]||conf) + '</div>';
     const color = CONF_COLORS[conf] || '#f59e0b';
     const label = CONF_DISPLAY[conf] || conf;
     return '<div style="width:'+s+'px;height:'+s+'px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:'+Math.max(s/5,12)+'px;color:#fff;letter-spacing:1px;font-weight:700;text-align:center;line-height:1.1;padding:4px">'+label+'</div>';
@@ -15265,7 +15308,7 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
     if (p.last >= 2024) return;
     const seasons = p.last - p.debut + 1;
     const imgUrl = (window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.name])
-      ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + window.RETIRED_ESPN_IDS[p.name] + '.png&w=350&h=254'
+      ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + window.RETIRED_ESPN_IDS[p.name] + '.png&w=64&h=64'
       : null;
     // Get last team from career data or team history
     const lastTeam = (p.career && p.career.length && p.career[p.career.length-1].tm)
@@ -21970,6 +22013,9 @@ window.fmtHeight = fmtHeight;
     el.style.display = '';
     el.textContent = '· Rankings updated ' + _formatRelative(ts);
     el.title = 'Last updated by Jack ' + new Date(ts).toLocaleString();
+    // Freshness cue: green ≤3d, accent 4–7d, red 8d+
+    const ageDays = (Date.now() - ts) / 86400000;
+    el.style.color = ageDays <= 3 ? '#22c55e' : (ageDays <= 7 ? 'var(--accent)' : '#ef4444');
   }
   setInterval(_renderRankingsUpdated, 60000);
   setTimeout(_renderRankingsUpdated, 0);
@@ -37101,7 +37147,7 @@ window.fmtHeight = fmtHeight;
       html += `<input type="color" value="${tc.color}" data-team="${i}" onchange="window._triviaTeamColorChange(${i}, this.value)" title="Team color">`;
       html += `<div class="trivia-team-logo-btn" data-team="${i}" onclick="window._triviaOpenLogoPicker(${i}, this)" title="Pick team logo">`;
       if (logoUrl) {
-        html += `<img src="${logoUrl}" alt="${_esc(tc.logo)}">`;
+        html += `<img src="${logoUrl}" alt="${_esc(tc.logo)}" loading="lazy">`;
       } else {
         html += `<span style="font-size:.65rem;color:var(--text2)">Logo</span>`;
       }
@@ -37250,7 +37296,7 @@ window.fmtHeight = fmtHeight;
       const bgStyle = isCur ? `${clr}15` : isElim ? 'transparent' : 'transparent';
       html += `<div style="flex:1;min-width:100px;padding:8px 10px;border-radius:8px;border:${borderStyle};background:${bgStyle};${isElim ? 'opacity:.35;' : ''}text-align:center;position:relative">`;
       if (isCur) html += '<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface2);padding:0 6px;font-size:.55rem;color:' + clr + ';letter-spacing:1px;font-family:\'Bebas Neue\',sans-serif">YOUR TURN</div>';
-      if (logoUrl) html += `<img src="${logoUrl}" style="width:28px;height:28px;object-fit:contain;margin-bottom:4px;${isElim ? 'filter:grayscale(1);' : ''}">`;
+      if (logoUrl) html += `<img src="${logoUrl}" loading="lazy" style="width:28px;height:28px;object-fit:contain;margin-bottom:4px;${isElim ? 'filter:grayscale(1);' : ''}">`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;color:${isElim ? 'var(--text2)' : clr};${isElim ? 'text-decoration:line-through;' : ''}">${_esc(tc.name)}</div>`;
       html += `<div style="font-size:1.4rem;font-weight:700;color:${isElim ? 'var(--text2)' : clr};font-family:'Bebas Neue',sans-serif">${_triviaGame.scores[i]} pts</div>`;
       if (isElim) {
@@ -37728,7 +37774,7 @@ window.fmtHeight = fmtHeight;
     if (window.FALLBACK_IDS) {
       for (const v of nameVariants) {
         if (window.FALLBACK_IDS[v]) {
-          return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.FALLBACK_IDS[v]}.png&w=350&h=254`;
+          return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.FALLBACK_IDS[v]}.png&w=64&h=64`;
         }
       }
     }
@@ -37737,7 +37783,7 @@ window.fmtHeight = fmtHeight;
     if (window.RETIRED_ESPN_IDS) {
       for (const v of nameVariants) {
         if (window.RETIRED_ESPN_IDS[v]) {
-          return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.RETIRED_ESPN_IDS[v]}.png&w=350&h=254`;
+          return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.RETIRED_ESPN_IDS[v]}.png&w=64&h=64`;
         }
       }
     }
@@ -37788,7 +37834,7 @@ window.fmtHeight = fmtHeight;
 
     let revealHtml = `<div class="trivia-cell-reveal" style="--team-outline-filter:${_outlineFilter}">`;
     if (headshot) {
-      revealHtml += `<img src="${headshot}" onerror="this.style.display='none'" alt="">`;
+      revealHtml += `<img src="${headshot}" alt="" loading="lazy" onerror="this.style.display='none'">`;
     } else {
       // No transparent silhouette to outline for the placeholder — fall back to
       // a simple border around the initials box.
@@ -37978,7 +38024,7 @@ window.fmtHeight = fmtHeight;
           const logoUrl = tc.logo ? _triviaLogoUrl(tc.logo) : '';
           html += `<span style="color:${tc.color};display:inline-flex;align-items:center;gap:4px;${isElim ? 'opacity:.4;text-decoration:line-through' : ''}${isWinner ? ';font-size:1.3rem' : ''}">`;
           if (isWinner) html += '👑 ';
-          if (logoUrl) html += `<img src="${logoUrl}" style="width:22px;height:22px;object-fit:contain">`;
+          if (logoUrl) html += `<img src="${logoUrl}" loading="lazy" style="width:22px;height:22px;object-fit:contain">`;
           html += `${_esc(tc.name)}: ${_triviaGame.scores[i]}`;
           if (isElim) html += ' (eliminated)';
           html += '</span>';
@@ -38016,7 +38062,7 @@ window.fmtHeight = fmtHeight;
           const tc = _triviaTeamConfig[i];
           const logoUrl = tc.logo ? _triviaLogoUrl(tc.logo) : '';
           html += `<span style="color:${tc.color};display:inline-flex;align-items:center;gap:4px;${isWin ? 'font-size:1.3rem' : 'opacity:.6'}">`;
-          if (logoUrl) html += `<img src="${logoUrl}" style="width:${isWin?'28':'20'}px;height:${isWin?'28':'20'}px;object-fit:contain">`;
+          if (logoUrl) html += `<img src="${logoUrl}" loading="lazy" style="width:${isWin?'28':'20'}px;height:${isWin?'28':'20'}px;object-fit:contain">`;
           html += `${_esc(tc.name)}: ${_triviaGame.scores[i]}${isWin ? ' 👑' : ''}</span>`;
         }
         html += '<span style="font-size:.75rem;color:var(--text2);width:100%;text-align:center;margin-top:4px">Click any unanswered cell to reveal</span>';
@@ -38227,7 +38273,7 @@ window.fmtHeight = fmtHeight;
         const tc = _triviaTeamConfig[i];
         const logoUrl = tc.logo ? _triviaLogoUrl(tc.logo) : '';
         html += `<span style="color:${tc.color};display:inline-flex;align-items:center;gap:4px;${isWin ? 'font-size:1.3rem' : 'opacity:.6'}">`;
-        if (logoUrl) html += `<img src="${logoUrl}" style="width:${isWin?'28':'20'}px;height:${isWin?'28':'20'}px;object-fit:contain">`;
+        if (logoUrl) html += `<img src="${logoUrl}" loading="lazy" style="width:${isWin?'28':'20'}px;height:${isWin?'28':'20'}px;object-fit:contain">`;
         html += `${_esc(tc.name)}: ${_triviaGame.scores[i]}${isWin ? ' 👑' : ''}</span>`;
       }
       html += '<span style="font-size:.75rem;color:var(--text2);width:100%;text-align:center;margin-top:4px">Click any cell to reveal the answer</span>';
@@ -41185,7 +41231,7 @@ Rules:
           const yearLabel = p.week ? `Wk ${p.week}, ${p.year}` : `${p.year}`;
           const headshot = _triviaGetHeadshot(p.name);
           html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)">`;
-          if (headshot) html += `<img src="${headshot}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)" onerror="this.style.display='none'">`;
+          if (headshot) html += `<img src="${headshot}" loading="lazy" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)" onerror="this.style.display='none'">`;
           html += `<div style="flex:1;min-width:0"><div style="font-size:.82rem;color:var(--text)">${_esc(p.name)}</div><div style="font-size:.65rem;color:var(--text2)">${slotLabel} · ${p.team} · ${yearLabel}</div></div>`;
           html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--accent)">${p.fpts}</div>`;
           html += '</div>';
@@ -41225,7 +41271,7 @@ Rules:
         const yearLabel = opt.week ? `Wk ${opt.week}, ${opt.year}` : `${opt.year}`;
         const headshot = _triviaGetHeadshot(opt.name);
         html += `<div onclick="window._cfgPick(${i})" style="padding:12px;border-radius:10px;background:var(--surface2);border:2px solid var(--border);cursor:pointer;transition:all .15s;text-align:center" onmouseenter="this.style.borderColor='var(--accent)';this.style.transform='scale(1.02)'" onmouseleave="this.style.borderColor='var(--border)';this.style.transform='scale(1)'">`;
-        if (headshot) html += `<img src="${headshot}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);margin-bottom:6px" onerror="this.style.display='none'">`;
+        if (headshot) html += `<img src="${headshot}" loading="lazy" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);margin-bottom:6px" onerror="this.style.display='none'">`;
         html += `<div style="font-size:.85rem;color:var(--text);font-weight:600">${_esc(opt.name)}</div>`;
         html += `<div style="font-size:.7rem;color:var(--text2)">${opt.pos} · ${opt.team} · ${yearLabel}</div>`;
         html += `<div style="font-size:.65rem;color:var(--text2);margin-top:2px">? pts</div>`;

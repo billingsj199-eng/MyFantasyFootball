@@ -35,9 +35,9 @@
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-05-12m" as="style">
+<link rel="preload" href="styles/main.css?v=2026-05-14a" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-05-12m">
+<link rel="stylesheet" href="styles/main.css?v=2026-05-14a">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -870,23 +870,49 @@ CLEAR ALL
     #pageRankings tbody tr.tier-row{contain-intrinsic-size:auto 36px}
   }
   /* M1: card-style rankings rows on phones (≤600px). Falls back to the existing
-     compact-table CSS at 600-768px (tablets / large phones in landscape). */
+     compact-table CSS at 600-768px (tablets / large phones in landscape).
+     Single-line Underdog-style layout: rank · headshot+name/team · posRank · ADP · PROJ. */
   @media (max-width:600px){
     #pageRankings table{display:block;min-width:0;table-layout:auto}
     #pageRankings thead{display:none}
     #pageRankings tbody{display:block;padding:0 .5rem}
-    #pageRankings tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:9px 10px;margin:0 0 5px;background:var(--surface);border:1px solid var(--border)!important;border-radius:10px}
-    #pageRankings tbody tr td{border:none!important;padding:2px 4px!important;background:transparent!important;width:auto!important;max-width:none!important;min-width:0!important;text-align:left!important;display:block}
-    #pageRankings tbody .myrank-cell{flex:0 0 30px;text-align:center!important}
-    #pageRankings tbody .myrank-num{width:auto;font-size:1.05rem;background:none;padding:0}
-    #pageRankings tbody tr td:nth-child(3){flex:1 1 auto;min-width:0!important}
-    #pageRankings tbody tr td:nth-child(4){flex:0 0 auto}
-    #pageRankings tbody .pos-rank-cell{flex:0 0 auto;color:var(--text2);font-size:.72rem;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
+    #pageRankings tbody tr{display:flex;flex-wrap:nowrap;align-items:center;gap:0 6px;padding:8px 10px;margin:0 0 5px;background:var(--surface);border:1px solid var(--border)!important;border-radius:10px}
+    #pageRankings tbody tr td{border:none!important;padding:0!important;background:transparent!important;width:auto!important;max-width:none!important;min-width:0!important;text-align:left!important;display:block}
+    /* Drag handle hidden (no reorder on mobile) */
+    #pageRankings tbody tr td:first-child{display:none}
+    /* Rank num */
+    #pageRankings tbody .myrank-cell{flex:0 0 26px;text-align:center!important}
+    #pageRankings tbody .myrank-num{width:auto;font-size:1rem;background:none;padding:0}
+    /* Player cell — headshot + name/team — flex-grow to take remaining space */
+    #pageRankings tbody tr td:nth-child(3){flex:1 1 auto;min-width:0!important;padding:0 2px!important;overflow:hidden}
+    #pageRankings tbody tr td:nth-child(3) .player-cell{gap:7px!important}
+    /* Hide the standalone position badge — the pos-rank chip (e.g. "WR6") below
+       already conveys the position via colour, so showing both is redundant. */
+    #pageRankings tbody tr td:nth-child(4){display:none!important}
+    /* Position rank ("WR6") — colour-coded chip, position-tinted background */
+    #pageRankings tbody .pos-rank-cell{flex:0 0 auto;font-size:.62rem;font-weight:700;font-family:'Bebas Neue',sans-serif;letter-spacing:.6px;padding:2px 6px!important;min-width:30px;text-align:center!important;border-radius:4px;line-height:1.1}
+    #pageRankings tbody tr:has(.pos-badge.QB) .pos-rank-cell{background:rgba(239,68,68,.18);color:#fca5a5}
+    #pageRankings tbody tr:has(.pos-badge.RB) .pos-rank-cell{background:rgba(34,197,94,.18);color:#86efac}
+    #pageRankings tbody tr:has(.pos-badge.WR) .pos-rank-cell{background:rgba(59,130,246,.18);color:#93c5fd}
+    #pageRankings tbody tr:has(.pos-badge.TE) .pos-rank-cell{background:rgba(245,158,11,.18);color:#fcd34d}
+    #pageRankings tbody tr:has(.pos-badge.K) .pos-rank-cell{background:rgba(148,163,184,.18);color:#cbd5e1}
+    #pageRankings tbody tr:has(.pos-badge.DST) .pos-rank-cell{background:rgba(148,163,184,.18);color:#cbd5e1}
+    /* ADP and PROJ — value on top, tiny label below, Underdog-style */
     #pageRankings tbody .adp-cell,
-    #pageRankings tbody .ppg-proj-cell{flex:0 0 auto;font-size:.72rem;color:var(--text2);width:auto!important;min-width:0!important}
-    #pageRankings tbody .adp-cell{flex-basis:100%!important;padding-top:6px!important;border-top:1px dashed var(--border)!important;margin-top:4px!important}
-    #pageRankings tbody .adp-cell::before{content:"ADP ";opacity:.55;margin-right:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
-    #pageRankings tbody .ppg-proj-cell::before{content:"· PROJ ";opacity:.55;margin:0 3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
+    #pageRankings tbody .ppg-proj-cell{
+      flex:0 0 auto;
+      text-align:center!important;
+      font-size:.82rem;
+      font-weight:600;
+      color:var(--text);
+      padding:0 3px!important;
+      min-width:36px!important;
+      line-height:1.05
+    }
+    #pageRankings tbody .adp-cell{margin-left:4px}
+    #pageRankings tbody .ppg-proj-cell{min-width:42px!important}
+    #pageRankings tbody .adp-cell::after{content:"ADP";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
+    #pageRankings tbody .ppg-proj-cell::after{content:"PROJ";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
     #pageRankings tbody .age-cell{display:none}
     /* Tier banner rows still need to span full card width */
     #pageRankings tbody tr.tier-row{display:block;padding:8px 12px;background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.25)!important}
@@ -41854,19 +41880,55 @@ Rules:
     const type = league.settings && league.settings.type === 2 ? 'dynasty' : (league.settings && league.settings.type === 1 ? 'keeper' : 'redraft');
     const ppr = league.scoring_settings ? (league.scoring_settings.rec || 0) : 1;
     const starters = rp.filter(p => p !== 'BN').length;
+    const bestBall = !!(league.settings && league.settings.best_ball);
 
-    _mtFormat = { type, sf, ppr, starters, rosterPositions: rp };
+    _mtFormat = { type, sf, ppr, starters, rosterPositions: rp, bestBall };
 
     // Update format display
     const fmtEl = document.getElementById('mtFormatDisplay');
     if (fmtEl) {
       const labels = [];
+      if (bestBall) labels.push('Best Ball');
       labels.push(type.charAt(0).toUpperCase() + type.slice(1));
       if (sf) labels.push('Superflex');
       labels.push(ppr === 1 ? 'PPR' : ppr === 0.5 ? 'Half PPR' : ppr === 0 ? 'Standard' : ppr + ' PPR');
       labels.push(starters + ' starters');
       fmtEl.textContent = labels.join(' · ');
     }
+  }
+
+  // Project PPG for a single player, matching the priority hierarchy used by
+  // _mtBestLineup. Best-ball leagues pin PPR=1 (BBM/UD scoring is full PPR)
+  // so the Clay-projection path returns the same number the BB sim would use.
+  function _mtGetPlayerPpg(name) {
+    const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
+    if (!d || d.s === 'K' || d.s === 'DST') return 0;
+    const pprVal = _mtFormat.bestBall ? 1 : (_mtFormat.ppr != null ? _mtFormat.ppr : 0.5);
+    // 1) Clay projections (Clay pts are full-PPR; adjust down for half/STD)
+    if (typeof MIKE_CLAY_PROJ !== 'undefined' && typeof clayLookup === 'function') {
+      const cp = clayLookup(name);
+      if (cp && cp.gm > 0) {
+        const recs = cp.rec || 0;
+        const clayAdj = pprVal === 1 ? 0 : pprVal === 0 ? -1.0 : -0.5;
+        return Math.round(((cp.pts + recs * clayAdj) / cp.gm) * 10) / 10;
+      }
+    }
+    // 2) 2025 actual PPG
+    const adj = pprVal === 1 ? 0.5 : pprVal === 0 ? -0.5 : 0;
+    if (d.s25 && d.s25.gp > 0 && d.s25.fpts > 0) {
+      const recs = d.s25.rc || 0;
+      return Math.round(((d.s25.fpts + recs * adj) / d.s25.gp) * 10) / 10;
+    }
+    // 3) Last career season PPG
+    if (d.career && d.career.length) {
+      const last = d.career[d.career.length - 1];
+      if (last.gp > 0 && last.fpts > 0) {
+        return Math.round((last.fpts / last.gp) * 10) / 10;
+      }
+    }
+    // 4) JS model projection
+    if (d._jsModelPpg) return d._jsModelPpg;
+    return 0;
   }
 
   // Sleeper League Import
@@ -42513,24 +42575,80 @@ Rules:
     const lineup = _mtBestLineup(t.players);
     html += _mtRenderBestLineup(lineup);
 
-    // Full roster table
-    html += `<table style="width:100%;border-collapse:collapse;font-size:.75rem">`;
-    html += `<thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:6px 8px;color:var(--text2)">POS</th><th style="text-align:left;padding:6px 8px;color:var(--text2)">TEAM</th><th style="text-align:center;padding:6px 8px;color:var(--text2)">RANK</th><th style="text-align:center;padding:6px 8px;color:var(--text2)">VAL</th>`;
-    if (_mtFormat.type === 'dynasty') html += `<th style="text-align:center;padding:6px 8px;color:var(--text2)">AGE</th>`;
-    html += `</tr></thead><tbody>`;
-    sc.players.forEach(p => {
-      const rankColor = p.rank <= 24 ? '#22c55e' : p.rank <= 60 ? '#4ade80' : p.rank <= 120 ? '#facc15' : p.rank <= 200 ? '#f59e0b' : '#ef4444';
-      const valColor = p.val >= 150 ? '#22c55e' : p.val >= 75 ? '#4ade80' : p.val >= 30 ? '#facc15' : p.val >= 10 ? '#f59e0b' : 'var(--text2)';
-      html += `<tr style="border-bottom:1px solid var(--border)">`;
-      html += `<td style="padding:5px 8px;color:var(--text)"><span class="mt-roster-name" data-mtname="${_esc(p.name)}" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;text-decoration-color:rgba(245,158,11,.4)">${_esc(p.name)}</span></td>`;
-      html += `<td style="padding:5px 8px;color:var(--text2)">${p.pos}</td>`;
-      html += `<td style="padding:5px 8px;color:var(--text2)">${p.team}</td>`;
-      html += `<td style="text-align:center;padding:5px 8px;font-weight:700;color:${rankColor}">${p.rank <= 500 ? p.rank : '—'}</td>`;
-      html += `<td style="text-align:center;padding:5px 8px;font-weight:700;color:${valColor}">${p.val}</td>`;
-      if (_mtFormat.type === 'dynasty') html += `<td style="text-align:center;padding:5px 8px;color:var(--text2)">${p.age || '—'}</td>`;
-      html += `</tr>`;
+    // Full roster — grouped by position (Underdog-style)
+    const isDynastyView = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
+    // Precompute projected PPG per player using the same logic as the best
+    // lineup. Best-ball leagues use full-PPR Clay (via _mtGetPlayerPpg).
+    const ppgByName = {};
+    sc.players.forEach(p => { ppgByName[p.name] = _mtGetPlayerPpg(p.name); });
+    html += `<div class="mt-roster-grouped" style="margin-top:6px">`;
+    ['QB','RB','WR','TE'].forEach(pos => {
+      const posPlayers = sc.players.filter(p => p.pos === pos).sort((a,b) => (a.rank||999) - (b.rank||999));
+      if (!posPlayers.length) return;
+      const ps = sc.posScores[pos] || { pts: 0, count: 0 };
+      // Section total PPG: sum of every player's projected PPG at this position.
+      const posPpgTotal = Math.round(posPlayers.reduce((s, p) => s + (ppgByName[p.name] || 0), 0) * 10) / 10;
+      html += `<div class="mt-pos-section" style="margin-bottom:14px">`;
+      // Section header
+      html += `<div class="mt-pos-header" style="display:flex;align-items:baseline;gap:10px;padding:0 4px 4px;margin-bottom:6px;border-bottom:2px solid ${posColors[pos]}40">`;
+      html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:2px;color:${posColors[pos]}">${pos}</span>`;
+      html += `<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">${ps.count} player${ps.count!==1?'s':''} · ${ps.pts} val${posPpgTotal > 0 ? ' · ' + posPpgTotal + ' PPG' : ''}</span>`;
+      html += `</div>`;
+      // Player rows
+      posPlayers.forEach(p => {
+        const rankColor = p.rank <= 24 ? '#22c55e' : p.rank <= 60 ? '#4ade80' : p.rank <= 120 ? '#facc15' : p.rank <= 200 ? '#f59e0b' : '#ef4444';
+        const valColor = p.val >= 150 ? '#22c55e' : p.val >= 75 ? '#4ade80' : p.val >= 30 ? '#facc15' : p.val >= 10 ? '#f59e0b' : 'var(--text2)';
+        const dEntry = (typeof D !== 'undefined') ? D.find(x => x.n === p.name) : null;
+        const projPpg = ppgByName[p.name] || 0;
+        const ppgColor = projPpg >= 15 ? '#22c55e' : projPpg >= 10 ? '#4ade80' : projPpg >= 6 ? '#facc15' : projPpg > 0 ? '#f59e0b' : 'var(--text2)';
+        const adp = dEntry && dEntry.adp != null ? dEntry.adp : null;
+        const bye = dEntry && dEntry.bye ? dEntry.bye : null;
+        html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4)">`;
+        // Position chip
+        html += `<span class="pos-badge ${p.pos}" style="flex:0 0 auto;font-size:.55rem;padding:2px 5px;font-weight:700">${p.pos}</span>`;
+        // Name + team (+ age on dynasty)
+        html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0;cursor:pointer" data-mtname="${_esc(p.name)}">`;
+        html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(p.name)}</div>`;
+        const metaParts = [p.team || '—'];
+        if (bye) metaParts.push('Bye ' + bye);
+        if (isDynastyView && p.age) metaParts.push(p.age + 'y');
+        html += `<div style="font-size:.62rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${metaParts.join(' · ')}</div>`;
+        html += `</div>`;
+        // Stat blocks (right-aligned, label below value)
+        html += `<div class="mt-roster-stats" style="flex:0 0 auto;display:flex;gap:8px;align-items:center">`;
+        // RANK
+        html += `<div style="text-align:center;min-width:32px"><div style="font-size:.82rem;font-weight:700;color:${rankColor};line-height:1.05">${p.rank <= 500 ? p.rank : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">RANK</div></div>`;
+        // VAL
+        html += `<div style="text-align:center;min-width:32px"><div style="font-size:.82rem;font-weight:700;color:${valColor};line-height:1.05">${p.val}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">VAL</div></div>`;
+        // PROJ PPG — always visible (mobile + web)
+        html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${ppgColor};line-height:1.05">${projPpg > 0 ? projPpg : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">PPG</div></div>`;
+        // ADP (web-only)
+        html += `<div class="mt-roster-stat-extra" style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:var(--text);line-height:1.05">${adp != null ? adp : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">ADP</div></div>`;
+        html += `</div>`;
+        html += `</div>`;
+      });
+      html += `</div>`;
     });
-    html += `</tbody></table>`;
+    // Kickers/D-ST appear under "OTHER" if present
+    const otherPlayers = sc.players.filter(p => !['QB','RB','WR','TE'].includes(p.pos));
+    if (otherPlayers.length) {
+      html += `<div class="mt-pos-section" style="margin-bottom:14px">`;
+      html += `<div class="mt-pos-header" style="display:flex;align-items:baseline;gap:10px;padding:0 4px 4px;margin-bottom:6px;border-bottom:2px solid var(--border)">`;
+      html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:2px;color:var(--text2)">OTHER</span>`;
+      html += `<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">${otherPlayers.length} player${otherPlayers.length!==1?'s':''}</span>`;
+      html += `</div>`;
+      otherPlayers.forEach(p => {
+        html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4)">`;
+        html += `<span style="flex:0 0 auto;font-size:.55rem;padding:2px 5px;font-weight:700;background:var(--surface2);color:var(--text2);border-radius:3px">${p.pos}</span>`;
+        html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0;cursor:pointer" data-mtname="${_esc(p.name)}">`;
+        html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text)">${_esc(p.name)}</div>`;
+        html += `<div style="font-size:.62rem;color:var(--text2)">${p.team || '—'}</div>`;
+        html += `</div>`;
+        html += `</div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
 
     // Draft picks section (dynasty only)
     if (sc.picks && sc.picks.length > 0) {
@@ -42556,10 +42674,11 @@ Rules:
     detail.innerHTML = html;
     detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
     // Wire roster name clicks → open player card with the league's mode (dynasty / superflex / etc.)
-    detail.querySelectorAll('.mt-roster-name').forEach(el => {
+    detail.querySelectorAll('.mt-roster-name-wrap, .mt-roster-name').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         const name = el.dataset.mtname;
+        if (!name) return;
         const dEntry = (typeof D !== 'undefined') ? D.find(x => x.n === name) : null;
         if (dEntry && typeof openPlayerCard === 'function') {
           openPlayerCard(dEntry, _mtGetRankingMode());

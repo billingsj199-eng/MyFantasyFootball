@@ -5439,6 +5439,26 @@ function validateImportData(obj) {
     if (!window.RETIRED_ESPN_IDS[k]) window.RETIRED_ESPN_IDS[k] = _BASE_RETIRED_IDS[k];
   });
 
+  // Rebuild DAILY_RETIRED_POOL with the now-merged ID set. The pool was
+  // assembled at file-load time inside daily_retired_pool.js using only the
+  // 311 inline IDs; the _BASE_RETIRED_IDS merge above adds ~1500 more IDs that
+  // belong in the Guess Who picture pool but were getting stranded.
+  if (typeof EP_RETIRED !== 'undefined' && typeof DAILY_RETIRED_POOL !== 'undefined') {
+    const _expanded = EP_RETIRED
+      .filter(p => p.last >= 2004 && window.RETIRED_ESPN_IDS[p.name])
+      .map(p => ({
+        name: p.name,
+        pos: p.pos,
+        team: (window._RETIRED_TEAM_MAP && window._RETIRED_TEAM_MAP[p.name]) || 'NFL',
+        id: window.RETIRED_ESPN_IDS[p.name]
+      }));
+    if (_expanded.length > DAILY_RETIRED_POOL.length) {
+      DAILY_RETIRED_POOL.length = 0;
+      _expanded.forEach(p => DAILY_RETIRED_POOL.push(p));
+      console.log('[GuessWho] Expanded retired pool: ' + DAILY_RETIRED_POOL.length + ' players (was 311 at file-load)');
+    }
+  }
+
   const playersToFix = D.filter(p => p._slImg && p._slImg.includes('espncdn.com') && p.n && !p.n.includes('D/ST') && !(p._retired && window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.n]));
 
   // Apply cached fixes immediately

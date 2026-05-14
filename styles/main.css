@@ -138,44 +138,48 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 .jt-locked-btn:hover{filter:brightness(1.1)}
 @media (max-width:560px){.jt-grid{grid-template-columns:1fr}}
 
-/* My Teams — position-grouped roster (Underdog-style). Each pos section has a coloured header and one-line player rows. */
+/* My Teams — position-grouped roster (Underdog-style). Compact rows so more
+   players fit on screen without losing scannability. */
 .mt-roster-grouped .mt-roster-row:hover{background:rgba(245,158,11,.04)}
 .mt-roster-grouped .mt-roster-name-wrap:hover .mt-roster-name{color:var(--accent)}
-/* Hide extra stat columns (PPG, ADP) on phones — keep rank + val for one-line layout */
-@media (max-width:600px){
-  .mt-roster-grouped .mt-roster-stat-extra{display:none}
-  .mt-roster-grouped .mt-roster-row{gap:6px!important;padding:6px 4px!important}
-  .mt-roster-grouped .mt-roster-stats{gap:6px!important}
-  .mt-roster-grouped .mt-pos-header{padding-bottom:3px!important}
-}
-/* Underdog exposure list + My Teams roster headshots.
-   Force aspect ratio + min sizes so nothing can squish them. On desktop sized
-   close to the native ESPN headshot resolution (64px) so the photos don't
-   look mushy at smaller sizes. */
+/* Headshots: locked aspect ratio + min sizes so nothing can squish them. */
 .udexp-headshot,
 .mt-roster-grouped .mt-roster-headshot{aspect-ratio:1/1!important;flex-shrink:0!important;object-fit:cover!important;object-position:center 18%!important;border:2px solid var(--border)!important;background:var(--surface)!important}
-.mt-roster-grouped .mt-roster-headshot{min-width:36px!important;min-height:36px!important;width:36px;height:36px}
-@media (min-width:760px){
-  .udexp-headshot{width:48px!important;height:48px!important}
-  .mt-roster-grouped .mt-roster-headshot{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important}
+.mt-roster-grouped .mt-roster-headshot{width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important}
+/* Mobile — tightest layout, drop PPG/ADP extras */
+@media (max-width:600px){
+  .mt-roster-grouped .mt-roster-stat-extra{display:none}
+  .mt-roster-grouped .mt-pos-section{margin-bottom:10px!important}
+  .mt-roster-grouped .mt-pos-header{padding:0 2px 2px!important;margin-bottom:3px!important;gap:8px!important}
+  .mt-roster-grouped .mt-pos-header > span:first-child{font-size:1.05rem!important;letter-spacing:1.5px!important}
+  .mt-roster-grouped .mt-pos-header > span:nth-child(2){font-size:.58rem!important}
+  .mt-roster-grouped .mt-roster-row{gap:6px!important;padding:4px 4px!important}
+  .mt-roster-grouped .mt-roster-headshot{width:26px!important;height:26px!important;min-width:26px!important;min-height:26px!important}
+  .mt-roster-grouped .mt-roster-name{font-size:.78rem!important}
+  .mt-roster-grouped .mt-roster-name-wrap > div:nth-child(2){font-size:.58rem!important}
+  .mt-roster-grouped .mt-roster-stats{gap:6px!important}
+  .mt-roster-grouped .mt-roster-stats > div > div:first-child{font-size:.78rem!important}
+  .mt-roster-grouped .mt-roster-stats > div > div:last-child{font-size:.48rem!important}
 }
-
-/* Desktop (>=760px): a modest size bump for the team-detail roster — enough
-   for the extra room without dominating the row. */
+/* Underdog exposure (separate component) */
 @media (min-width:760px){
-  .mt-roster-grouped .mt-pos-section{margin-bottom:16px!important}
-  .mt-roster-grouped .mt-pos-header{padding:0 4px 4px!important;margin-bottom:6px!important;gap:12px!important}
-  .mt-roster-grouped .mt-pos-header > span:first-child{font-size:1.35rem!important;letter-spacing:2px!important}
-  .mt-roster-grouped .mt-pos-header > span:nth-child(2){font-size:.7rem!important}
-  .mt-roster-grouped .mt-roster-row{gap:10px!important;padding:7px 8px!important}
-  .mt-roster-grouped .mt-roster-headshot{width:44px!important;height:44px!important}
-  .mt-roster-grouped .mt-roster-row > .pos-badge{font-size:.62rem!important;padding:3px 7px!important;min-width:30px;text-align:center}
-  .mt-roster-grouped .mt-roster-name{font-size:.9rem!important}
-  .mt-roster-grouped .mt-roster-name-wrap > div:nth-child(2){font-size:.66rem!important;margin-top:1px}
-  .mt-roster-grouped .mt-roster-stats{gap:14px!important}
-  .mt-roster-grouped .mt-roster-stats > div{min-width:42px!important}
-  .mt-roster-grouped .mt-roster-stats > div > div:first-child{font-size:.9rem!important}
-  .mt-roster-grouped .mt-roster-stats > div > div:last-child{font-size:.55rem!important;margin-top:1px}
+  .udexp-headshot{width:44px!important;height:44px!important}
+}
+/* Desktop — compact but readable; aim for ~36px row height so a full roster fits */
+@media (min-width:760px){
+  .mt-roster-grouped .mt-pos-section{margin-bottom:10px!important}
+  .mt-roster-grouped .mt-pos-header{padding:0 4px 2px!important;margin-bottom:3px!important;gap:10px!important}
+  .mt-roster-grouped .mt-pos-header > span:first-child{font-size:1.1rem!important;letter-spacing:1.5px!important}
+  .mt-roster-grouped .mt-pos-header > span:nth-child(2){font-size:.62rem!important}
+  .mt-roster-grouped .mt-roster-row{gap:10px!important;padding:4px 8px!important}
+  .mt-roster-grouped .mt-roster-headshot{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important}
+  .mt-roster-grouped .mt-roster-row > .pos-badge{font-size:.58rem!important;padding:2px 6px!important;min-width:26px;text-align:center}
+  .mt-roster-grouped .mt-roster-name{font-size:.82rem!important;line-height:1.15}
+  .mt-roster-grouped .mt-roster-name-wrap > div:nth-child(2){font-size:.62rem!important;margin-top:0;line-height:1.1}
+  .mt-roster-grouped .mt-roster-stats{gap:12px!important}
+  .mt-roster-grouped .mt-roster-stats > div{min-width:38px!important}
+  .mt-roster-grouped .mt-roster-stats > div > div:first-child{font-size:.82rem!important;line-height:1.1}
+  .mt-roster-grouped .mt-roster-stats > div > div:last-child{font-size:.5rem!important;margin-top:0}
 }
 
 @media (max-width:760px){.home-action-row{grid-template-columns:repeat(2,1fr)}.live-ticker{font-size:.62rem;padding:5px 0}}

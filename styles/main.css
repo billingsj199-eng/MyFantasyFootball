@@ -148,21 +148,30 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
   .mt-roster-grouped .mt-roster-stats{gap:6px!important}
   .mt-roster-grouped .mt-pos-header{padding-bottom:3px!important}
 }
-/* Desktop (>=760px): bump up sizes to use the extra horizontal room. */
+/* Underdog exposure list + My Teams roster: lock aspect ratio so a global
+   img{max-width:100%} rule can't squish the circles into vertical ovals. */
+.udexp-headshot,
+.mt-roster-grouped .mt-roster-headshot{aspect-ratio:1/1;flex-shrink:0!important}
 @media (min-width:760px){
-  .mt-roster-grouped .mt-pos-section{margin-bottom:18px!important}
-  .mt-roster-grouped .mt-pos-header{padding:0 6px 6px!important;margin-bottom:8px!important;gap:14px!important}
-  .mt-roster-grouped .mt-pos-header > span:first-child{font-size:1.6rem!important;letter-spacing:2.5px!important}
-  .mt-roster-grouped .mt-pos-header > span:nth-child(2){font-size:.78rem!important}
-  .mt-roster-grouped .mt-roster-row{gap:14px!important;padding:10px 10px!important}
-  .mt-roster-grouped .mt-roster-headshot{width:40px!important;height:40px!important}
-  .mt-roster-grouped .mt-roster-row > .pos-badge{font-size:.72rem!important;padding:4px 9px!important;min-width:34px;text-align:center}
-  .mt-roster-grouped .mt-roster-name{font-size:1rem!important}
-  .mt-roster-grouped .mt-roster-name-wrap > div:nth-child(2){font-size:.74rem!important;margin-top:2px}
-  .mt-roster-grouped .mt-roster-stats{gap:18px!important}
-  .mt-roster-grouped .mt-roster-stats > div{min-width:48px!important}
-  .mt-roster-grouped .mt-roster-stats > div > div:first-child{font-size:1rem!important}
-  .mt-roster-grouped .mt-roster-stats > div > div:last-child{font-size:.58rem!important;margin-top:2px}
+  .udexp-headshot{width:44px!important;height:44px!important}
+}
+
+/* Desktop (>=760px): a modest size bump for the team-detail roster — enough
+   for the extra room without dominating the row. */
+@media (min-width:760px){
+  .mt-roster-grouped .mt-pos-section{margin-bottom:16px!important}
+  .mt-roster-grouped .mt-pos-header{padding:0 4px 4px!important;margin-bottom:6px!important;gap:12px!important}
+  .mt-roster-grouped .mt-pos-header > span:first-child{font-size:1.35rem!important;letter-spacing:2px!important}
+  .mt-roster-grouped .mt-pos-header > span:nth-child(2){font-size:.7rem!important}
+  .mt-roster-grouped .mt-roster-row{gap:10px!important;padding:7px 8px!important}
+  .mt-roster-grouped .mt-roster-headshot{width:32px!important;height:32px!important}
+  .mt-roster-grouped .mt-roster-row > .pos-badge{font-size:.62rem!important;padding:3px 7px!important;min-width:30px;text-align:center}
+  .mt-roster-grouped .mt-roster-name{font-size:.9rem!important}
+  .mt-roster-grouped .mt-roster-name-wrap > div:nth-child(2){font-size:.66rem!important;margin-top:1px}
+  .mt-roster-grouped .mt-roster-stats{gap:14px!important}
+  .mt-roster-grouped .mt-roster-stats > div{min-width:42px!important}
+  .mt-roster-grouped .mt-roster-stats > div > div:first-child{font-size:.9rem!important}
+  .mt-roster-grouped .mt-roster-stats > div > div:last-child{font-size:.55rem!important;margin-top:1px}
 }
 
 @media (max-width:760px){.home-action-row{grid-template-columns:repeat(2,1fr)}.live-ticker{font-size:.62rem;padding:5px 0}}

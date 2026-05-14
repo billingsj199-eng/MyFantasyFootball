@@ -41684,7 +41684,7 @@ Rules:
 
   function _mtGetPlayerRank(name) {
     if (typeof D === 'undefined') return 999;
-    const d = D.find(p => p.n === name);
+    const d = _mtLookupD(name);
     if (!d) return 999;
 
     // Get the correct board for this league's format
@@ -42663,18 +42663,18 @@ Rules:
         const ppgColor = projPpg >= 15 ? '#22c55e' : projPpg >= 10 ? '#4ade80' : projPpg >= 6 ? '#facc15' : projPpg > 0 ? '#f59e0b' : 'var(--text2)';
         const adp = dEntry && dEntry.adp != null ? dEntry.adp : null;
         const bye = dEntry && dEntry.bye ? dEntry.bye : null;
-        html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4)">`;
+        html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4);cursor:pointer" data-mtname="${_esc(p.name)}">`;
         // Player headshot (falls back to colour-block if no image)
         const _hsUrl = dEntry && dEntry._slImg ? dEntry._slImg : '';
         if (_hsUrl) {
-          html += `<img class="mt-roster-headshot" src="${_hsUrl}" alt="" loading="lazy" onerror="this.style.display='none'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:center top;background:var(--surface2);flex-shrink:0">`;
+          html += `<img class="mt-roster-headshot" src="${_hsUrl}" alt="" loading="lazy" onerror="this.style.display='none'" style="width:28px;height:28px;min-width:28px;min-height:28px;border-radius:50%;object-fit:cover;object-position:center top;background:var(--surface2);flex-shrink:0;aspect-ratio:1/1">`;
         } else {
-          html += `<div class="mt-roster-headshot" style="width:28px;height:28px;border-radius:50%;background:var(--surface2);flex-shrink:0"></div>`;
+          html += `<div class="mt-roster-headshot" style="width:28px;height:28px;min-width:28px;min-height:28px;border-radius:50%;background:var(--surface2);flex-shrink:0;aspect-ratio:1/1"></div>`;
         }
         // Position chip
         html += `<span class="pos-badge ${p.pos}" style="flex:0 0 auto;font-size:.55rem;padding:2px 5px;font-weight:700">${p.pos}</span>`;
         // Name + team (+ age on dynasty)
-        html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0;cursor:pointer" data-mtname="${_esc(p.name)}">`;
+        html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0" data-mtname="${_esc(p.name)}">`;
         html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(p.name)}</div>`;
         const metaParts = [p.team || '—'];
         if (bye) metaParts.push('Bye ' + bye);
@@ -42707,14 +42707,14 @@ Rules:
       otherPlayers.forEach(p => {
         const _dE = _mtLookupD(p.name);
         const _hs = _dE && _dE._slImg ? _dE._slImg : '';
-        html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4)">`;
+        html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4);cursor:pointer" data-mtname="${_esc(p.name)}">`;
         if (_hs) {
-          html += `<img class="mt-roster-headshot" src="${_hs}" alt="" loading="lazy" onerror="this.style.display='none'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:center top;background:var(--surface2);flex-shrink:0">`;
+          html += `<img class="mt-roster-headshot" src="${_hs}" alt="" loading="lazy" onerror="this.style.display='none'" style="width:28px;height:28px;min-width:28px;min-height:28px;border-radius:50%;object-fit:cover;object-position:center top;background:var(--surface2);flex-shrink:0;aspect-ratio:1/1">`;
         } else {
-          html += `<div class="mt-roster-headshot" style="width:28px;height:28px;border-radius:50%;background:var(--surface2);flex-shrink:0"></div>`;
+          html += `<div class="mt-roster-headshot" style="width:28px;height:28px;min-width:28px;min-height:28px;border-radius:50%;background:var(--surface2);flex-shrink:0;aspect-ratio:1/1"></div>`;
         }
         html += `<span style="flex:0 0 auto;font-size:.55rem;padding:2px 5px;font-weight:700;background:var(--surface2);color:var(--text2);border-radius:3px">${p.pos}</span>`;
-        html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0;cursor:pointer" data-mtname="${_esc(p.name)}">`;
+        html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0" data-mtname="${_esc(p.name)}">`;
         html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text)">${_esc(p.name)}</div>`;
         html += `<div style="font-size:.62rem;color:var(--text2)">${p.team || '—'}</div>`;
         html += `</div>`;
@@ -42750,7 +42750,11 @@ Rules:
     detail.innerHTML = html;
     detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
     // Wire roster name clicks → open player card with the league's mode (dynasty / superflex / etc.)
-    detail.querySelectorAll('.mt-roster-name-wrap, .mt-roster-name').forEach(el => {
+    // Whole row is clickable — opens the player card in the league's ranking
+    // mode (redraft/superflex/dynasty/dynastysf) so the ADP source it surfaces
+    // matches the league context. Keep the old name-wrap selector too so any
+    // legacy markup still works.
+    detail.querySelectorAll('.mt-roster-row[data-mtname], .mt-roster-name-wrap[data-mtname]').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         const name = el.dataset.mtname;

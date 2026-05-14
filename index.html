@@ -12541,14 +12541,17 @@ document.addEventListener('click', function(e) {
 
   function pickRandomPlayer() {
     if (EP_PLAYERS_U.length < 100) _buildUnlimitedPool();
+    if (!EP_PLAYERS_U.length) return null;
     const bad = getBadImages();
     const validPool = EP_PLAYERS_U.filter(p => !bad.includes(p.id));
     const pool = validPool.length > 0 ? validPool : EP_PLAYERS_U;
+    if (!pool.length) return null;
     if (usedIndices.length >= pool.length) usedIndices = [];
     let idx;
     do { idx = Math.floor(Math.random() * pool.length); } while (usedIndices.includes(idx));
     usedIndices.push(idx);
     const picked = pool[idx];
+    if (!picked) return null;
     // Ensure team reflects current active team, not old team from data
     const correctedTeam = getCurrentTeamAbbr(picked.name, picked.team);
     return Object.assign({}, picked, { team: correctedTeam });
@@ -12683,6 +12686,7 @@ document.addEventListener('click', function(e) {
     if (!e.target.closest('#pageGames .ep-guess-wrap')) epuSuggestions.classList.remove('show');
   });
 
+  let _epuLoadToken = 0;
   function startRoundU() {
     currentPlayerU = pickRandomPlayer();
     guessesU = [];
@@ -12696,22 +12700,43 @@ document.addEventListener('click', function(e) {
     epuImage.classList.remove('ep-reveal');
     epuImage.style.display = 'none';
     epuPlaceholder.style.display = 'block';
+    epuPlaceholder.style.cursor = 'pointer';
+    epuPlaceholder.title = 'Click to retry';
+    epuPlaceholder.onclick = () => startRoundU();
     epuPlaceholder.textContent = 'Loading player...';
+
+    // Pool not built yet — wait for _buildUnlimitedPool retries (8s/15s) and try again.
+    if (!currentPlayerU) {
+      epuPlaceholder.textContent = 'Loading pool — retrying…';
+      const myToken = ++_epuLoadToken;
+      setTimeout(() => { if (myToken === _epuLoadToken) startRoundU(); }, 1500);
+      return;
+    }
 
     const imgUrl = getHeadshotUrlU(currentPlayerU.id, currentPlayerU.name);
     let _epuRetries = 0;
+    const myToken = ++_epuLoadToken;
+    let watchdog = null;
+    function _epuRetryWithNew() {
+      _epuRetries++;
+      if (_epuRetries < 10) {
+        const next = pickRandomPlayer();
+        if (!next) { epuPlaceholder.textContent = 'No image available — click to retry'; return; }
+        currentPlayerU = next;
+        _epuTryLoad(getHeadshotUrlU(currentPlayerU.id, currentPlayerU.name));
+      } else {
+        epuPlaceholder.textContent = 'No image available — click to retry';
+      }
+    }
     function _epuTryLoad(url) {
+      if (watchdog) { clearTimeout(watchdog); watchdog = null; }
       epuImage.src = url;
       epuImage.onload = () => {
+        if (myToken !== _epuLoadToken) return;
+        if (watchdog) { clearTimeout(watchdog); watchdog = null; }
         if (epuImage.naturalWidth < 50 || epuImage.naturalHeight < 50) {
-          addBadImage(currentPlayerU.id);
-          _epuRetries++;
-          if (_epuRetries < 10) {
-            currentPlayerU = pickRandomPlayer();
-            _epuTryLoad(getHeadshotUrlU(currentPlayerU.id, currentPlayerU.name));
-          } else {
-            epuPlaceholder.textContent = 'No image available';
-          }
+          if (currentPlayerU && currentPlayerU.id) addBadImage(currentPlayerU.id);
+          _epuRetryWithNew();
           return;
         }
         epuPlaceholder.style.display = 'none';
@@ -12719,15 +12744,18 @@ document.addEventListener('click', function(e) {
         epuImage.style.filter = 'blur(0) brightness(1.05)';
       };
       epuImage.onerror = () => {
-        addBadImage(currentPlayerU.id);
-        _epuRetries++;
-        if (_epuRetries < 10) {
-          currentPlayerU = pickRandomPlayer();
-          _epuTryLoad(getHeadshotUrlU(currentPlayerU.id, currentPlayerU.name));
-        } else {
-          epuPlaceholder.textContent = 'No image available';
-        }
+        if (myToken !== _epuLoadToken) return;
+        if (watchdog) { clearTimeout(watchdog); watchdog = null; }
+        if (currentPlayerU && currentPlayerU.id) addBadImage(currentPlayerU.id);
+        _epuRetryWithNew();
       };
+      // Safety net: if neither onload nor onerror fires within 8s, force a retry
+      // so the placeholder can never get stuck on "Loading player..." indefinitely.
+      watchdog = setTimeout(() => {
+        if (myToken !== _epuLoadToken) return;
+        if (epuImage.complete && epuImage.naturalWidth >= 50) return;
+        _epuRetryWithNew();
+      }, 8000);
     }
     _epuTryLoad(imgUrl);
     renderStatsU();
@@ -46480,6 +46508,38 @@ Rules:
       html += `</div>`;
     });
     html += `</div>`;
+
+    // Draft slot distribution (how often you drafted from each pick slot)
+    const slotCounts = {};
+    let slotMaxTc = 12;
+    Object.values(data.drafts).forEach(d => {
+      if (!d.picks || !d.picks.length) return;
+      const slot = d.picks[0].pick;
+      if (!slot || slot < 1 || slot > 32) return;
+      slotCounts[slot] = (slotCounts[slot] || 0) + 1;
+      const tc = d.teamCount || 12;
+      if (tc > slotMaxTc) slotMaxTc = tc;
+    });
+    const slotTotal = Object.values(slotCounts).reduce((s, n) => s + n, 0);
+    if (slotTotal > 0) {
+      const slotMax = Math.max(1, ...Object.values(slotCounts));
+      const expectedPct = 100 / slotMaxTc;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text);margin-bottom:8px">DRAFT SLOT DISTRIBUTION</div>`;
+      html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:6px">Random distribution would be ~${expectedPct.toFixed(1)}% per slot.</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(${slotMaxTc},1fr);gap:4px;margin-bottom:20px">`;
+      for (let s = 1; s <= slotMaxTc; s++) {
+        const cnt = slotCounts[s] || 0;
+        const pct = (100 * cnt / slotTotal);
+        const opacity = (cnt / slotMax * 0.55).toFixed(2);
+        const ord = (s === 1) ? '1st' : (s === 2) ? '2nd' : (s === 3) ? '3rd' : s + 'th';
+        html += `<div style="text-align:center;padding:8px 2px;background:rgba(251,191,36,${opacity});border:1px solid var(--border);border-radius:6px" title="Slot ${s}: ${cnt} drafts (${pct.toFixed(1)}%) · expected ${expectedPct.toFixed(1)}%">`;
+        html += `<div style="font-size:.58rem;color:var(--text2);letter-spacing:.5px">${ord}</div>`;
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:var(--text);line-height:1.1">${cnt}</div>`;
+        html += `<div style="font-size:.55rem;color:var(--text2)">${pct.toFixed(0)}%</div>`;
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
 
     // Round 1 position breakdown
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text);margin-bottom:8px">ROUND 1 POSITION PICKS</div>`;

@@ -41856,7 +41856,7 @@ Rules:
 
     // Position scores
     const posScores = {};
-    ['QB','RB','WR','TE'].forEach(pos => {
+    ['QB','RB','WR','TE','K','DST'].forEach(pos => {
       const group = ranked.filter(p => p.pos === pos);
       const pts = group.reduce((s, p) => s + p.val, 0);
       posScores[pos] = { pts, count: group.length };
@@ -42535,6 +42535,23 @@ Rules:
     return html;
   }
 
+  // Toggle between BY POSITION (grouped roster) and OPTIMAL LINEUP (best lineup).
+  // Defaults to position view; lineup view shows the same data sorted into starter slots.
+  window._mtSwitchTeamView = function(view) {
+    const lineupEl = document.getElementById('mtTeamViewLineup');
+    const posEl = document.getElementById('mtTeamViewPosition');
+    if (!lineupEl || !posEl) return;
+    const wantLineup = view === 'lineup';
+    lineupEl.style.display = wantLineup ? '' : 'none';
+    posEl.style.display = wantLineup ? 'none' : '';
+    document.querySelectorAll('.mt-view-tab').forEach(btn => {
+      const active = btn.dataset.mtview === view;
+      btn.style.background = active ? 'var(--accent)' : 'transparent';
+      btn.style.color = active ? '#000' : 'var(--text2)';
+      btn.classList.toggle('active', active);
+    });
+  };
+
   window._mtShowTeam = function(idx) {
     const teams = window._mtTeams;
     if (!teams || !teams[idx]) return;
@@ -42560,8 +42577,12 @@ Rules:
 
     // Position breakdown
     html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(65px,1fr));gap:8px;margin-bottom:16px">`;
-    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-    ['QB','RB','WR','TE'].forEach(pos => {
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a855f7', DST: '#94a3b8' };
+    // Always show QB/RB/WR/TE; show K/DST only if the roster has them
+    const _gridPositions = ['QB','RB','WR','TE'];
+    if ((sc.posScores.K || {}).count) _gridPositions.push('K');
+    if ((sc.posScores.DST || {}).count) _gridPositions.push('DST');
+    _gridPositions.forEach(pos => {
       const ps = sc.posScores[pos] || { pts: 0, count: 0 };
       html += `<div style="text-align:center;padding:8px;background:${posColors[pos]}10;border:1px solid ${posColors[pos]}40;border-radius:8px">`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;color:var(--text2)">${pos}</div>`;
@@ -42571,9 +42592,20 @@ Rules:
     });
     html += `</div>`;
 
-    // Best Lineup
+    // View toggle — BY POSITION vs OPTIMAL LINEUP
+    html += `<div class="mt-view-tabs" style="display:flex;gap:2px;margin-bottom:12px;background:var(--surface2);padding:3px;border-radius:8px;width:fit-content">`;
+    html += `<button class="mt-view-tab" data-mtview="position" onclick="window._mtSwitchTeamView('position')" style="padding:6px 16px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;border:none;border-radius:5px;cursor:pointer;background:var(--accent);color:#000;transition:all .15s">BY POSITION</button>`;
+    html += `<button class="mt-view-tab" data-mtview="lineup" onclick="window._mtSwitchTeamView('lineup')" style="padding:6px 16px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">OPTIMAL LINEUP</button>`;
+    html += `</div>`;
+
+    // Best Lineup (hidden by default — shown when user toggles to OPTIMAL LINEUP)
     const lineup = _mtBestLineup(t.players);
+    html += `<div id="mtTeamViewLineup" style="display:none">`;
     html += _mtRenderBestLineup(lineup);
+    html += `</div>`;
+
+    // BY POSITION wrapper opens here; closes after the .mt-roster-grouped block below.
+    html += `<div id="mtTeamViewPosition">`;
 
     // Full roster — grouped by position (Underdog-style)
     const isDynastyView = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
@@ -42582,7 +42614,7 @@ Rules:
     const ppgByName = {};
     sc.players.forEach(p => { ppgByName[p.name] = _mtGetPlayerPpg(p.name); });
     html += `<div class="mt-roster-grouped" style="margin-top:6px">`;
-    ['QB','RB','WR','TE'].forEach(pos => {
+    ['QB','RB','WR','TE','K','DST'].forEach(pos => {
       const posPlayers = sc.players.filter(p => p.pos === pos).sort((a,b) => (a.rank||999) - (b.rank||999));
       if (!posPlayers.length) return;
       const ps = sc.posScores[pos] || { pts: 0, count: 0 };
@@ -42636,8 +42668,8 @@ Rules:
       });
       html += `</div>`;
     });
-    // Kickers/D-ST appear under "OTHER" if present
-    const otherPlayers = sc.players.filter(p => !['QB','RB','WR','TE'].includes(p.pos));
+    // Anything else (IDP, unrecognized positions) → OTHER fallback
+    const otherPlayers = sc.players.filter(p => !['QB','RB','WR','TE','K','DST'].includes(p.pos));
     if (otherPlayers.length) {
       html += `<div class="mt-pos-section" style="margin-bottom:14px">`;
       html += `<div class="mt-pos-header" style="display:flex;align-items:baseline;gap:10px;padding:0 4px 4px;margin-bottom:6px;border-bottom:2px solid var(--border)">`;
@@ -42662,6 +42694,8 @@ Rules:
       });
       html += `</div>`;
     }
+    html += `</div>`;
+    // Close the #mtTeamViewPosition wrapper opened above the grouped roster.
     html += `</div>`;
 
     // Draft picks section (dynasty only)

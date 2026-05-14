@@ -148,12 +148,14 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
   .mt-roster-grouped .mt-roster-stats{gap:6px!important}
   .mt-roster-grouped .mt-pos-header{padding-bottom:3px!important}
 }
-/* Underdog exposure list + My Teams roster: lock aspect ratio so a global
-   img{max-width:100%} rule can't squish the circles into vertical ovals. */
+/* Underdog exposure list + My Teams roster: lock aspect ratio + min-width so
+   nothing can squish the circles. Larger sizes on desktop. */
 .udexp-headshot,
-.mt-roster-grouped .mt-roster-headshot{aspect-ratio:1/1;flex-shrink:0!important}
+.mt-roster-grouped .mt-roster-headshot{aspect-ratio:1/1!important;flex-shrink:0!important;object-fit:cover!important}
+.mt-roster-grouped .mt-roster-headshot{min-width:32px!important;min-height:32px!important}
 @media (min-width:760px){
   .udexp-headshot{width:44px!important;height:44px!important}
+  .mt-roster-grouped .mt-roster-headshot{min-width:44px!important;min-height:44px!important}
 }
 
 /* Desktop (>=760px): a modest size bump for the team-detail roster — enough
@@ -164,7 +166,7 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
   .mt-roster-grouped .mt-pos-header > span:first-child{font-size:1.35rem!important;letter-spacing:2px!important}
   .mt-roster-grouped .mt-pos-header > span:nth-child(2){font-size:.7rem!important}
   .mt-roster-grouped .mt-roster-row{gap:10px!important;padding:7px 8px!important}
-  .mt-roster-grouped .mt-roster-headshot{width:32px!important;height:32px!important}
+  .mt-roster-grouped .mt-roster-headshot{width:44px!important;height:44px!important}
   .mt-roster-grouped .mt-roster-row > .pos-badge{font-size:.62rem!important;padding:3px 7px!important;min-width:30px;text-align:center}
   .mt-roster-grouped .mt-roster-name{font-size:.9rem!important}
   .mt-roster-grouped .mt-roster-name-wrap > div:nth-child(2){font-size:.66rem!important;margin-top:1px}

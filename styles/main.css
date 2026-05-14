@@ -148,14 +148,16 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
   .mt-roster-grouped .mt-roster-stats{gap:6px!important}
   .mt-roster-grouped .mt-pos-header{padding-bottom:3px!important}
 }
-/* Underdog exposure list + My Teams roster: lock aspect ratio + min-width so
-   nothing can squish the circles. Larger sizes on desktop. */
+/* Underdog exposure list + My Teams roster headshots.
+   Force aspect ratio + min sizes so nothing can squish them. On desktop sized
+   close to the native ESPN headshot resolution (64px) so the photos don't
+   look mushy at smaller sizes. */
 .udexp-headshot,
-.mt-roster-grouped .mt-roster-headshot{aspect-ratio:1/1!important;flex-shrink:0!important;object-fit:cover!important}
-.mt-roster-grouped .mt-roster-headshot{min-width:32px!important;min-height:32px!important}
+.mt-roster-grouped .mt-roster-headshot{aspect-ratio:1/1!important;flex-shrink:0!important;object-fit:cover!important;object-position:center 18%!important;border:2px solid var(--border)!important;background:var(--surface)!important}
+.mt-roster-grouped .mt-roster-headshot{min-width:36px!important;min-height:36px!important;width:36px;height:36px}
 @media (min-width:760px){
-  .udexp-headshot{width:44px!important;height:44px!important}
-  .mt-roster-grouped .mt-roster-headshot{min-width:44px!important;min-height:44px!important}
+  .udexp-headshot{width:48px!important;height:48px!important}
+  .mt-roster-grouped .mt-roster-headshot{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important}
 }
 
 /* Desktop (>=760px): a modest size bump for the team-detail roster — enough

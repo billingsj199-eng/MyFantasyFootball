@@ -148,6 +148,22 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
   .mt-roster-grouped .mt-roster-stats{gap:6px!important}
   .mt-roster-grouped .mt-pos-header{padding-bottom:3px!important}
 }
+/* Desktop (>=760px): bump up sizes to use the extra horizontal room. */
+@media (min-width:760px){
+  .mt-roster-grouped .mt-pos-section{margin-bottom:18px!important}
+  .mt-roster-grouped .mt-pos-header{padding:0 6px 6px!important;margin-bottom:8px!important;gap:14px!important}
+  .mt-roster-grouped .mt-pos-header > span:first-child{font-size:1.6rem!important;letter-spacing:2.5px!important}
+  .mt-roster-grouped .mt-pos-header > span:nth-child(2){font-size:.78rem!important}
+  .mt-roster-grouped .mt-roster-row{gap:14px!important;padding:10px 10px!important}
+  .mt-roster-grouped .mt-roster-headshot{width:40px!important;height:40px!important}
+  .mt-roster-grouped .mt-roster-row > .pos-badge{font-size:.72rem!important;padding:4px 9px!important;min-width:34px;text-align:center}
+  .mt-roster-grouped .mt-roster-name{font-size:1rem!important}
+  .mt-roster-grouped .mt-roster-name-wrap > div:nth-child(2){font-size:.74rem!important;margin-top:2px}
+  .mt-roster-grouped .mt-roster-stats{gap:18px!important}
+  .mt-roster-grouped .mt-roster-stats > div{min-width:48px!important}
+  .mt-roster-grouped .mt-roster-stats > div > div:first-child{font-size:1rem!important}
+  .mt-roster-grouped .mt-roster-stats > div > div:last-child{font-size:.58rem!important;margin-top:2px}
+}
 
 @media (max-width:760px){.home-action-row{grid-template-columns:repeat(2,1fr)}.live-ticker{font-size:.62rem;padding:5px 0}}
 

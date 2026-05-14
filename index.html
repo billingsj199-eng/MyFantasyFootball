@@ -12870,12 +12870,22 @@ document.addEventListener('click', function(e) {
   }
 
   let _gwPoolBuiltWithWeekly = false;
+  let _gwPoolBuildSig = '';
   function initGwPool() {
-    // Rebuild if we built without weekly stats but they're now available
-    if (gwPoolCurrent && gwPoolCurrent.length > 0) {
-      if (_gwPoolBuiltWithWeekly || typeof WEEKLY_STATS === 'undefined') return;
-      // Weekly stats now available but pool was built without them — rebuild
-    }
+    // Build a signature of every input data source. The old guard only checked
+    // WEEKLY_STATS, so if HP / LDB / LEGEND_CAREERS finished loading AFTER the
+    // first build, the pool stayed frozen at the partial state — leaving the
+    // 2000s era pool with only 3 players. Rebuilding when any source grows
+    // fixes this without thrashing once everything is loaded.
+    const sig = [
+      typeof D !== 'undefined' ? D.length : 0,
+      typeof HP !== 'undefined' ? HP.length : 0,
+      typeof LDB !== 'undefined' ? LDB.length : 0,
+      typeof LEGEND_CAREERS !== 'undefined' ? Object.keys(LEGEND_CAREERS).length : 0,
+      typeof WEEKLY_STATS !== 'undefined' ? Object.keys(WEEKLY_STATS).length : 0
+    ].join('|');
+    if (gwPoolCurrent && gwPoolCurrent.length > 0 && _gwPoolBuildSig === sig) return;
+    _gwPoolBuildSig = sig;
     _gwPoolBuiltWithWeekly = (typeof WEEKLY_STATS !== 'undefined');
     gwPoolCurrent = null;
     gwPoolAlltime = null;
@@ -13142,6 +13152,42 @@ document.addEventListener('click', function(e) {
           _hasWeekly: bestWkFpts != null
         });
       });
+    }
+
+    // Dedupe duplicates from mixed name conventions across data files. Three patterns:
+    //  (1) "X Sr." vs "X" — Sr. always means the dad, so when both exist in the
+    //      pool they're the same player; drop Sr.
+    //  (2) "X Jr."/"X II"/"X III"/"X IV"/"X V" vs "X" — could be father/son
+    //      (different people) OR same player rendered both ways; only dedupe if
+    //      stats match (year + team + bestSzn).
+    //  (3) "DJ X" vs "D.J. X" (dotted-initial variants) — same player, two
+    //      spellings; keep the dotted version (canonical Underdog/ESPN style).
+    const _byName = {};
+    allPool.forEach(p => _byName[p.name] = p);
+    const _toDelete = new Set();
+    for (const p of allPool) {
+      const mSr = p.name.match(/^(.+?)\s+Sr\.?$/i);
+      if (mSr && _byName[mSr[1]]) { _toDelete.add(p.name); continue; }
+      const mJr = p.name.match(/^(.+?)\s+(Jr\.?|II|III|IV|V)$/i);
+      if (mJr) {
+        const c = _byName[mJr[1]];
+        if (c && c.bestSzn === p.bestSzn && c.bestSznYear === p.bestSznYear && c.team === p.team) {
+          _toDelete.add(p.name);
+        }
+      }
+    }
+    const _byNoDots = {};
+    allPool.forEach(p => {
+      const k = p.name.replace(/\./g, '').toLowerCase();
+      (_byNoDots[k] = _byNoDots[k] || []).push(p.name);
+    });
+    for (const variants of Object.values(_byNoDots)) {
+      if (variants.length < 2) continue;
+      const dotted = variants.find(n => n.includes('.'));
+      if (dotted) variants.filter(n => !n.includes('.')).forEach(n => _toDelete.add(n));
+    }
+    for (let i = allPool.length - 1; i >= 0; i--) {
+      if (_toDelete.has(allPool[i].name)) allPool.splice(i, 1);
     }
 
     // Filter to only players with season stats for better gameplay

@@ -1111,8 +1111,11 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .player-headshot{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:var(--surface)}
 .player-headshot-sm{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);vertical-align:middle;margin-right:5px;background:var(--surface)}
 .card-hero{display:flex;align-items:center;gap:14px;margin-bottom:4px}
-.card-hero img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:var(--surface);flex-shrink:0}
-.compare-col .card-hero img{width:52px;height:52px}
+.card-hero img{width:96px!important;height:96px!important;border-radius:50%!important;object-fit:cover!important;object-position:center top!important;aspect-ratio:1/1!important;border:2px solid var(--border);background:var(--surface);flex-shrink:0!important}
+.compare-col .card-hero img{width:64px!important;height:64px!important}
+@media (max-width:600px){
+  .card-hero img{width:72px!important;height:72px!important}
+}
 
 
 /* Trade Calculator */

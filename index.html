@@ -35,9 +35,9 @@
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-05-14k" as="style">
+<link rel="preload" href="styles/main.css?v=2026-05-14l" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-05-14k">
+<link rel="stylesheet" href="styles/main.css?v=2026-05-14l">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -3390,7 +3390,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/ep_players_u.js"></script>
 <script src="data/active_team_history.js?v=2026-05-13c"></script>
 <script src="data/daily_retired_pool.js"></script>
-<script src="data/weekly_stats_active.js?v=2026-05-13b"></script>
+<script src="data/weekly_stats_active.js?v=2026-05-14a"></script>
 <!-- WEEKLY_STATS_RETIRED: ~10 MB total, deferred. Initialized as window.WEEKLY_STATS_RETIRED
      by file _1 and extended by _2 and _3 via Object.assign — defer preserves
      document order so the chain remains correct. Merged into WEEKLY_STATS via
@@ -9889,21 +9889,21 @@ function buildWeeklyTable(d, season, scoringFormat) {
   // Find best week fpts for highlighting
   const bestFpts = Math.max(...adjusted.map(w => w.fpts));
 
-  let hdr = '<tr><th>WK</th><th>TM</th><th>FPTS</th>';
+  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th><th>FPTS</th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
   else if (isRB) hdr += '<th>ATT</th><th>RyD</th><th>RTD</th><th>TGT</th><th>REC</th><th>RcY</th><th>RcTD</th><th>FL</th>';
   else hdr += '<th>TGT</th><th>REC</th><th>RcY</th><th>RcTD</th><th>RyD</th><th>RTD</th><th>FL</th>';
   hdr += '</tr>';
 
-  // Get team for this season from career data or team history
-  const curAbbr = teamAbbr(d.t);
-
   let rows = adjusted.map(w => {
     const isBest = w.fpts === bestFpts && bestFpts > 0 ? ' class="best-yr"' : '';
-    const tm = w.tm || getCareerTeamAbbr(d.n, +season, curAbbr);
+    // Show opponent (`opp`) when populated. Pre-2025 weekly rows often have
+    // empty `opp` strings (older data wasn't captured with opponent info) —
+    // dash those out rather than falling back to the player's own team.
+    const oppCell = w.opp && w.opp.trim() ? w.opp.trim() : '—';
     let row = '<tr>';
     row += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
-    row += '<td style="color:var(--text2)">' + tm + '</td>';
+    row += '<td style="color:var(--text2)">' + oppCell + '</td>';
     const _wkColor = posFptsColor(w.fpts, pos);
     if (_wkColor) {
       row += '<td class="fpts-cell" style="color:' + _wkColor + ';font-weight:700">' + w.fpts + '</td>';
@@ -41949,10 +41949,47 @@ Rules:
   // Project PPG for a single player, matching the priority hierarchy used by
   // _mtBestLineup. Best-ball leagues pin PPR=1 (BBM/UD scoring is full PPR)
   // so the Clay-projection path returns the same number the BB sim would use.
+  // Format-aware consensus ADP: mirrors the rankings-page `consensus` source
+  // (average of Underdog/main + Sleeper for the league's mode). Returns null
+  // for K/DST since neither source projects them.
+  function _mtGetConsensusAdp(d) {
+    if (!d || d.s === 'K' || d.s === 'DST') return null;
+    const mode = _mtGetRankingMode();
+    const vals = [];
+    let base = null;
+    if (mode === 'dynastysf') base = d.sa;
+    else if (mode === 'dynasty') base = d.da;
+    else if (mode === 'superflex') base = d.sfa;
+    else base = (d.udA != null ? d.udA : d.a);
+    if (base != null && base < 900) vals.push(base);
+    let sl = null;
+    if (mode === 'dynastysf') sl = d.slDsf;
+    else if (mode === 'dynasty') sl = d.slDy;
+    else if (mode === 'superflex') sl = d.slSf;
+    else sl = d.slR;
+    if (sl != null) vals.push(sl);
+    if (!vals.length) return null;
+    return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+  }
+
   function _mtGetPlayerPpg(name) {
     const d = _mtLookupD(name);
-    if (!d || d.s === 'K' || d.s === 'DST') return 0;
+    if (!d) return 0;
+    const isKDst = d.s === 'K' || d.s === 'DST';
     const pprVal = _mtFormat.bestBall ? 1 : (_mtFormat.ppr != null ? _mtFormat.ppr : 0.5);
+    // K/DST: skip Clay (no kicker/defense projections) and use the precomputed
+    // s25.ppg / career.ppg fields. The s25.fpts field on DSTs is a different
+    // stat (≈ point differential), not fantasy points — DON'T divide fpts/gp.
+    if (isKDst) {
+      if (d.s25 && d.s25.ppg > 0) return Math.round(d.s25.ppg * 10) / 10;
+      if (d.career && d.career.length) {
+        for (let i = d.career.length - 1; i >= 0; i--) {
+          const c = d.career[i];
+          if (c && c.ppg > 0) return Math.round(c.ppg * 10) / 10;
+        }
+      }
+      return 0;
+    }
     // 1) Clay projections (Clay pts are full-PPR; adjust down for half/STD)
     if (typeof MIKE_CLAY_PROJ !== 'undefined' && typeof clayLookup === 'function') {
       const cp = clayLookup(name);
@@ -42682,7 +42719,9 @@ Rules:
         const dEntry = _mtLookupD(p.name);
         const projPpg = ppgByName[p.name] || 0;
         const ppgColor = projPpg >= 15 ? '#22c55e' : projPpg >= 10 ? '#4ade80' : projPpg >= 6 ? '#facc15' : projPpg > 0 ? '#f59e0b' : 'var(--text2)';
-        const adp = dEntry && dEntry.adp != null ? dEntry.adp : null;
+        // Format-aware consensus ADP (averages Underdog/main + Sleeper for the
+        // league's mode — dynasty 1QB, dynasty SF, superflex, or redraft).
+        const adp = _mtGetConsensusAdp(dEntry);
         const bye = dEntry && dEntry.bye ? dEntry.bye : null;
         html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4);cursor:pointer" data-mtname="${_esc(p.name)}">`;
         // Player headshot. ESPN URLs ship with &w=64&h=64 which renders blurry

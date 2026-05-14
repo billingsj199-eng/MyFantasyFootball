@@ -11919,7 +11919,25 @@ document.querySelectorAll('[data-goto]').forEach(el => {
 // === Shared bad image tracking for Guess Who games (picture + type name) ===
 const BAD_IMG_KEY = 'ep_bad_images';
 function getBadImages() { try { return JSON.parse(sessionStorage.getItem(BAD_IMG_KEY) || '[]'); } catch(e) { return []; } }
-function addBadImage(id) { const bad = getBadImages(); if (!bad.includes(id)) { bad.push(id); sessionStorage.setItem(BAD_IMG_KEY, JSON.stringify(bad)); } }
+function addBadImage(id) {
+  const bad = getBadImages();
+  if (!bad.includes(id)) { bad.push(id); sessionStorage.setItem(BAD_IMG_KEY, JSON.stringify(bad)); }
+  // Self-heal: if the bad list is growing fast (>50 entries) it's almost
+  // certainly a CDN / network / ad-blocker issue rather than 50 individually
+  // broken IDs. Wipe it so the next round can try fresh.
+  if (bad.length > 50) sessionStorage.removeItem(BAD_IMG_KEY);
+}
+// Diagnostic: lets the user (or me) inspect the picture-game pool from devtools.
+window._gwDiag = function() {
+  const bad = getBadImages();
+  return {
+    badImageCount: bad.length,
+    badImageSample: bad.slice(0, 5),
+    espnCacheSize: Object.keys(JSON.parse(sessionStorage.getItem('espnIdCache12') || '{}')).length,
+    DAILY_RETIRED_POOL: typeof DAILY_RETIRED_POOL !== 'undefined' ? DAILY_RETIRED_POOL.length : 'undef',
+    D_active_with_img: typeof D !== 'undefined' ? D.filter(d => !d._retired && d._slImg).length : 'undef'
+  };
+};
 
 // === Clickable player name links in game results ===
 // Returns an HTML string for a clickable player name that opens their card

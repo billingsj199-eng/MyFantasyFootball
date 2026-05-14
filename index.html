@@ -46157,7 +46157,32 @@ Rules:
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Value Over Replacement — season pts above the BBM 12-team starter cutoff (QB12/RB30/WR42/TE13).">VOR</span></th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Pick number minus ADP. Positive = took player later than ADP (got value). Negative = reached.">vs ADP</span></th>
             </tr></thead><tbody>`;
+          // Group roster by position (Underdog-style). Within each position
+          // keep draft order so the pick column still tells a coherent story.
+          const _posOrder = ['QB','RB','WR','TE'];
+          const _posColorsHdr = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+          const _grouped = {};
           t.rosterDetails.forEach(p => {
+            const key = _posOrder.includes(p.pos) ? p.pos : 'OTHER';
+            (_grouped[key] = _grouped[key] || []).push(p);
+          });
+          const _renderOrder = _posOrder.filter(pos => _grouped[pos] && _grouped[pos].length);
+          if (_grouped.OTHER && _grouped.OTHER.length) _renderOrder.push('OTHER');
+          _renderOrder.forEach(pos => {
+            const group = _grouped[pos];
+            const _hdrColor = _posColorsHdr[pos] || '#94a3b8';
+            const _totalProj = Math.round(group.reduce((s, p) => s + (p.proj != null ? p.proj : 0), 0) * 10) / 10;
+            const _totalSzn = Math.round(group.reduce((s, p) => s + (p.seasonPts != null ? p.seasonPts : 0), 0));
+            const _totalVor = Math.round(group.reduce((s, p) => s + (p.vor != null ? p.vor : 0), 0));
+            const _vorClr = _totalVor > 100 ? '#22c55e' : _totalVor > 0 ? '#4ade80' : _totalVor > -100 ? '#facc15' : '#ef4444';
+            html += `<tr class="bb-pos-section-row" style="background:${_hdrColor}10;border-top:2px solid ${_hdrColor}50;border-bottom:1px solid ${_hdrColor}30">
+              <td colspan="5" style="padding:5px 6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${_hdrColor}">${pos} <span style="font-size:.55rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif;margin-left:6px">${group.length} player${group.length===1?'':'s'}</span></td>
+              <td style="padding:5px 6px;text-align:right;font-weight:700;color:${_hdrColor}">${_totalProj > 0 ? _totalProj : '—'}</td>
+              <td style="padding:5px 6px;text-align:right;color:var(--text2)">${_totalSzn > 0 ? _totalSzn : '—'}</td>
+              <td style="padding:5px 6px;text-align:right;font-weight:700;color:${_vorClr}">${_totalVor > 0 ? '+' : ''}${_totalVor}</td>
+              <td></td>
+            </tr>`;
+            group.forEach(p => {
             const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
             // ADP delta = pick - adp. Positive = took after ADP (got value),
             // negative = reach. Color follows the same convention used on the
@@ -46212,6 +46237,7 @@ Rules:
               <td style="padding:3px 6px;text-align:right;font-weight:700;color:${vorColor}">${vorStr}</td>
               <td title="${adpTitle}" style="padding:3px 6px;text-align:right;font-weight:700;color:${adpColor}">${adpStr}</td>
             </tr>`;
+            });
           });
           html += `</tbody></table>`;
           html += `</div>`;

@@ -1180,8 +1180,8 @@ CLEAR ALL
 <button class="fg-mode-btn" id="fgModeWeek" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">BEST WEEK</button>
 </div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" id="fgScoringHalf" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">HALF PPR</button>
-<button class="fg-mode-btn" id="fgScoringPpr" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">PPR</button>
+<button class="fg-mode-btn" id="fgScoringHalf" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">HALF PPR</button>
+<button class="fg-mode-btn active" id="fgScoringPpr" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">PPR</button>
 </div>
 <div id="fgCustomSettings" style="display:none;margin:2px 0 4px">
 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -14833,11 +14833,11 @@ document.addEventListener('click', function(e) {
     return getBestSeason(player, forTeam);
   }
 
-  // Half PPR vs PPR scoring — toggles how a season/week's points are
-  // displayed and totaled. Underlying data stays Half PPR (matches site
-  // convention); PPR mode adds another 0.5 per reception on the fly so
-  // toggling mid-game rescales everything immediately.
-  let fgScoring = localStorage.getItem('fg_scoring') || 'half';
+  // PPR (default) vs Half PPR scoring — toggles how a season/week's points
+  // are displayed and totaled. Underlying data is stored Half PPR, so PPR
+  // mode adds another 0.5 per reception on the fly. The leaderboard tracks
+  // PPR; Half PPR is the alternate "fun" view and doesn't save.
+  let fgScoring = localStorage.getItem('fg_scoring') || 'ppr';
   function _fgScore(season) {
     if (!season) return 0;
     const base = season.fpts || 0;
@@ -15518,9 +15518,9 @@ document.addEventListener('click', function(e) {
       // Custom games: show score but no high score tracking or leaderboard save
       goSubEl.textContent = 'Custom Game (not saved to leaderboard)';
       goSubEl.style.color = 'var(--text2)';
-    } else if (fgScoring === 'ppr') {
-      // PPR mode: leaderboard tracks Half PPR only, so don't write
-      goSubEl.textContent = 'PPR mode (leaderboard tracks Half PPR only)';
+    } else if (fgScoring === 'half') {
+      // Half PPR is the alternate view; leaderboard tracks PPR
+      goSubEl.textContent = 'Half PPR mode (leaderboard tracks PPR only)';
       goSubEl.style.color = 'var(--text2)';
     } else {
     const isWeek = fgMode === 'week';

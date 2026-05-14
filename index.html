@@ -1179,6 +1179,10 @@ CLEAR ALL
 <button class="fg-mode-btn active" id="fgModeSeason" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">BEST SEASON</button>
 <button class="fg-mode-btn" id="fgModeWeek" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">BEST WEEK</button>
 </div>
+<div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<button class="fg-mode-btn active" id="fgScoringHalf" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">HALF PPR</button>
+<button class="fg-mode-btn" id="fgScoringPpr" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">PPR</button>
+</div>
 <div id="fgCustomSettings" style="display:none;margin:2px 0 4px">
 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
 <select id="fgYearSelect" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1px;cursor:pointer">
@@ -12701,9 +12705,9 @@ document.addEventListener('click', function(e) {
     epuImage.style.display = 'none';
     epuPlaceholder.style.display = 'block';
     epuPlaceholder.style.cursor = 'pointer';
-    epuPlaceholder.title = 'Click to retry';
+    epuPlaceholder.title = 'Click to skip to a different player';
     epuPlaceholder.onclick = () => startRoundU();
-    epuPlaceholder.textContent = 'Loading player...';
+    epuPlaceholder.textContent = 'Loading player… (click to skip)';
 
     // Pool not built yet — wait for _buildUnlimitedPool retries (8s/15s) and try again.
     if (!currentPlayerU) {
@@ -12749,13 +12753,15 @@ document.addEventListener('click', function(e) {
         if (currentPlayerU && currentPlayerU.id) addBadImage(currentPlayerU.id);
         _epuRetryWithNew();
       };
-      // Safety net: if neither onload nor onerror fires within 8s, force a retry
+      // Safety net: if neither onload nor onerror fires within 4s, force a retry
       // so the placeholder can never get stuck on "Loading player..." indefinitely.
+      // Also surface progress in the placeholder so the user knows it's retrying.
       watchdog = setTimeout(() => {
         if (myToken !== _epuLoadToken) return;
         if (epuImage.complete && epuImage.naturalWidth >= 50) return;
+        epuPlaceholder.textContent = `Loading player… (retry ${_epuRetries + 1}/10, click to skip)`;
         _epuRetryWithNew();
-      }, 8000);
+      }, 4000);
     }
     _epuTryLoad(imgUrl);
     renderStatsU();
@@ -14704,7 +14710,7 @@ document.addEventListener('click', function(e) {
     let best=null;
     for(const[szn,weeks]of Object.entries(weekly)){
       if(forConf&&validSeasons.size&&!validSeasons.has(szn))continue;
-      for(const w of weeks){const fp=_cfpW(w);if(!best||fp>best.fpts)best={fpts:fp,yr:+szn,wk:w.wk,tm:w.tm,opp:w.opp||''};}
+      for(const w of weeks){const fp=_cfpW(w);if(!best||fp>best.fpts)best={fpts:fp,yr:+szn,wk:w.wk,tm:w.tm,opp:w.opp||'',rec:w.rec||0,rc:w.rc||0};}
     }
     return best;
   }
@@ -14810,7 +14816,7 @@ document.addEventListener('click', function(e) {
           if (weekTeam !== modernTeam) continue;
         }
         if (!best || w.fpts > best.fpts) {
-          best = { fpts: w.fpts, yr: +szn, wk: w.wk, tm: w.tm, opp: w.opp || '' };
+          best = { fpts: w.fpts, yr: +szn, wk: w.wk, tm: w.tm, opp: w.opp || '', rc: w.rc || 0, rec: w.rec || 0 };
         }
       }
     }
@@ -14825,6 +14831,19 @@ document.addEventListener('click', function(e) {
     }
     if (fgMode === 'week') return getBestWeek(player, forTeam);
     return getBestSeason(player, forTeam);
+  }
+
+  // Half PPR vs PPR scoring — toggles how a season/week's points are
+  // displayed and totaled. Underlying data stays Half PPR (matches site
+  // convention); PPR mode adds another 0.5 per reception on the fly so
+  // toggling mid-game rescales everything immediately.
+  let fgScoring = localStorage.getItem('fg_scoring') || 'half';
+  function _fgScore(season) {
+    if (!season) return 0;
+    const base = season.fpts || 0;
+    if (fgScoring !== 'ppr') return base;
+    const rec = season.rc != null ? season.rc : (season.rec || 0);
+    return Math.round((base + 0.5 * rec) * 10) / 10;
   }
 
   // Mode toggle
@@ -15176,7 +15195,7 @@ document.addEventListener('click', function(e) {
             <div class="fg-slot-name">${filled.player.n}</div>
             <div class="fg-slot-detail">${slotDetail}</div>
           </div>
-          <span class="fg-slot-pts">${filled.pts.toFixed(1)}</span>
+          <span class="fg-slot-pts">${_fgScore(filled.bestSeason).toFixed(1)}</span>
         `;
         div.style.cursor = 'pointer';
         div.addEventListener('click', () => {
@@ -15195,7 +15214,7 @@ document.addEventListener('click', function(e) {
       }
       slotsContainer.appendChild(div);
     });
-    const total = Object.values(roster).reduce((s,r) => s + r.pts, 0);
+    const total = Object.values(roster).reduce((s,r) => s + _fgScore(r.bestSeason), 0);
     totalPtsEl.textContent = total.toFixed(1);
     renderHighScore();
   }
@@ -15492,12 +15511,16 @@ document.addEventListener('click', function(e) {
     teamReveal.style.display = 'none';
     draftEmpty.style.display = 'none';
     gameOverEl.style.display = 'block';
-    const total = Object.values(roster).reduce((s,r) => s + r.pts, 0);
+    const total = Object.values(roster).reduce((s,r) => s + _fgScore(r.bestSeason), 0);
     finalScoreEl.textContent = total.toFixed(1) + ' PTS';
 
     if (fgType === 'custom') {
       // Custom games: show score but no high score tracking or leaderboard save
       goSubEl.textContent = 'Custom Game (not saved to leaderboard)';
+      goSubEl.style.color = 'var(--text2)';
+    } else if (fgScoring === 'ppr') {
+      // PPR mode: leaderboard tracks Half PPR only, so don't write
+      goSubEl.textContent = 'PPR mode (leaderboard tracks Half PPR only)';
       goSubEl.style.color = 'var(--text2)';
     } else {
     const isWeek = fgMode === 'week';
@@ -15571,6 +15594,32 @@ document.addEventListener('click', function(e) {
   }
 
   resetBtn.addEventListener('click', resetGame);
+
+  // Half PPR / PPR scoring toggle
+  const fgScoringHalfBtn = document.getElementById('fgScoringHalf');
+  const fgScoringPprBtn = document.getElementById('fgScoringPpr');
+  if (fgScoringHalfBtn && fgScoringPprBtn) {
+    if (fgScoring === 'ppr') {
+      fgScoringHalfBtn.classList.remove('active');
+      fgScoringPprBtn.classList.add('active');
+    }
+    fgScoringHalfBtn.addEventListener('click', () => {
+      if (fgScoring === 'half') return;
+      fgScoring = 'half';
+      localStorage.setItem('fg_scoring', 'half');
+      fgScoringHalfBtn.classList.add('active');
+      fgScoringPprBtn.classList.remove('active');
+      renderRoster();
+    });
+    fgScoringPprBtn.addEventListener('click', () => {
+      if (fgScoring === 'ppr') return;
+      fgScoring = 'ppr';
+      localStorage.setItem('fg_scoring', 'ppr');
+      fgScoringPprBtn.classList.add('active');
+      fgScoringHalfBtn.classList.remove('active');
+      renderRoster();
+    });
+  }
   playAgainBtn.addEventListener('click', resetGame);
 
   // Init

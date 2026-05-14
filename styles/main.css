@@ -1107,9 +1107,11 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .lg-card-stat-val{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px}
 .lg-footer{margin-top:1rem;display:flex;gap:12px;flex-wrap:wrap;font-size:.65rem;color:var(--text2)}
 
-/* Sleeper Headshots & Player Info */
-.player-headshot{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:var(--surface)}
-.player-headshot-sm{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);vertical-align:middle;margin-right:5px;background:var(--surface)}
+/* Sleeper Headshots & Player Info. The aspect-ratio + object-fit !important
+   defends against a generic img rule (or table-cell sizing) flattening these
+   circles into ovals when displayed at small sizes. */
+.player-headshot{width:56px;height:56px;border-radius:50%;object-fit:cover!important;object-position:center top!important;aspect-ratio:1/1!important;border:2px solid var(--border);background:var(--surface);flex-shrink:0}
+.player-headshot-sm{width:28px!important;height:28px!important;border-radius:50%;object-fit:cover!important;object-position:center top!important;aspect-ratio:1/1!important;border:1px solid var(--border);vertical-align:middle;margin-right:5px;background:var(--surface);flex-shrink:0}
 .card-hero{display:flex;align-items:center;gap:14px;margin-bottom:4px}
 .card-hero img{width:96px!important;height:96px!important;border-radius:50%!important;object-fit:cover!important;object-position:center top!important;aspect-ratio:1/1!important;border:2px solid var(--border);background:var(--surface);flex-shrink:0!important}
 .compare-col .card-hero img{width:64px!important;height:64px!important}

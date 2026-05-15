@@ -3411,7 +3411,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/injury_history.js"></script>
 <script src="data/clay_team_grades_2026.js?v=2026-05-15"></script>
 <script src="data/nfl_schedule_2026.js?v=2026-05-15c"></script>
-<script src="data/nfl_game_totals_2026.js?v=2026-05-15c"></script>
+<script src="data/nfl_game_totals_2026.js?v=2026-05-15e"></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
 // d.js names and Clay names sometimes differ on suffix (Jr./III), punctuation,
@@ -42084,6 +42084,22 @@ Rules:
     TE: { lb: 0.40, s: 0.35, cb: 0.20, di: 0.05 },
   };
 
+  // Position-aware spread weighting for SOS. Game script affects positions
+  // differently: favored RBs see clock-killer carries (big positive signal);
+  // underdog WR/TE get garbage-time bumps (small positive); QBs of heavy
+  // favorites can suppress (efficient game, fewer attempts). The weight
+  // determines how much the team-relative spread folds into the SOS blend.
+  // 0 = ignore spread; positive = favorite = easier; negative = inverse.
+  //
+  // Magnitudes calibrated to empirical fantasy data: RB sees ~10-15% lift
+  // when favored ≥7; WR/TE bump is ~3-5%; QB effect is small + opposite.
+  const POSITION_SPREAD_WEIGHT = {
+    QB: -0.10,  // slight underdog bias (more attempts to catch up)
+    RB:  0.25,  // favorites get clock-killer carries (strongest signal)
+    WR:  0.08,  // mild favorite bias; underdogs get garbage-time targets
+    TE:  0.08,  // similar to WR
+  };
+
   function _mtClayUnitGrade(clayG, pos) {
     if (!clayG) return null;
     const w = POSITION_DEF_WEIGHTS[pos];
@@ -42176,10 +42192,11 @@ Rules:
     const dstByAbbr = _mtBuildDstByAbbr();
     const teamDef = {};
     const teamTot = {};
+    const teamSpr = {};  // team -> { avg: avg team-relative spread, n }
     Object.keys(dstByAbbr).forEach(team => {
       const opps = window.getPlayoffOpponents(team, [15, 16, 17]);
       if (!opps.length) return;
-      let defSum = 0, defN = 0, totSum = 0, totN = 0;
+      let defSum = 0, defN = 0, totSum = 0, totN = 0, sprSum = 0, sprN = 0;
       const detail = [];
       opps.forEach(g => {
         const oppRec = dstByAbbr[String(g.opp).toUpperCase()];
@@ -42188,7 +42205,20 @@ Rules:
         const gt = (typeof window.getNflGameTotal === 'function')
                    ? window.getNflGameTotal(g.wk, away, home)
                    : null;
-        if (typeof gt === 'number') { totSum += gt; totN++; }
+        const teamSpread = (typeof window.getNflTeamSpread === 'function')
+                           ? window.getNflTeamSpread(g.wk, team, g.opp, g.home)
+                           : null;
+        // v0.10.31: implied team total replaces raw O/U in the SOS blend.
+        // implied = (total - team_spread) / 2 — captures THIS team's expected
+        // scoring, not just the combined game total. A 47-total game with a
+        // -7 favorite gives 27 implied (good) vs a -1 favorite gives 24
+        // implied (less good). Strictly better signal than O/U for skill
+        // players where what matters is YOUR team's scoring environment.
+        const impliedTot = (typeof window.getNflTeamImpliedTotal === 'function')
+                           ? window.getNflTeamImpliedTotal(g.wk, team, g.opp, g.home)
+                           : null;
+        if (typeof impliedTot === 'number') { totSum += impliedTot; totN++; }
+        if (typeof teamSpread === 'number') { sprSum += teamSpread; sprN++; }
         if (oppRec) {
           const defZ = (key === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[key];
           defSum += defZ; defN++;
@@ -42202,12 +42232,13 @@ Rules:
             dstRank: oppRec.dst.r, oppg: oppRec.dst.oppg,
             clayDefRk: oppRec.clay ? oppRec.clay.defRk : null,
             clayDefGr: oppRec.clay ? oppRec.clay.defGr : null,
-            posUnits, gameTotal: gt,
+            posUnits, gameTotal: gt, teamSpread, impliedTotal: impliedTot,
           });
         }
       });
       if (defN > 0) teamDef[team] = { avg: defSum / defN, n: defN, opps: detail };
       if (totN > 0) teamTot[team] = { avg: totSum / totN, n: totN };
+      if (sprN > 0) teamSpr[team] = { avg: sprSum / sprN, n: sprN };
     });
     const totalsPopulated = (typeof window.getNflTotalsCount === 'function')
                              ? window.getNflTotalsCount() : 0;
@@ -42222,6 +42253,17 @@ Rules:
         totalsReady = true;
       }
     }
+    // Spread z-score across teams (centered ~0 by construction — favored offset
+    // underdog, sums to 0 league-wide). Sd ~3-4 over 3-game playoff window.
+    let sMu = 0, sSd = 1, spreadsReady = false;
+    const sprAvgs = Object.values(teamSpr).filter(t => t.n >= 2).map(t => t.avg);
+    if (sprAvgs.length >= 4) {
+      const m = sprAvgs.reduce((s, v) => s + v, 0) / sprAvgs.length;
+      const variance = sprAvgs.reduce((s, v) => s + (v - m) * (v - m), 0) / sprAvgs.length;
+      sMu = m; sSd = Math.sqrt(variance) || 1;
+      spreadsReady = true;
+    }
+    const sprWeight = (POSITION_SPREAD_WEIGHT[key] != null) ? POSITION_SPREAD_WEIGHT[key] : 0;
     const finalScores = Object.entries(teamDef).map(([team, d]) => {
       let blendAvg = d.avg;
       let totalAdjusted = false;
@@ -42230,7 +42272,21 @@ Rules:
         blendAvg = (d.avg * 3 + zT) / 4;
         totalAdjusted = true;
       }
-      return { team, blendAvg, opps: d.opps, teamTot: teamTot[team] || null, totalAdjusted };
+      // Add spread contribution. Favored teams have NEGATIVE spreads, so zS
+      // is negative when team is favored. For positions where favorites are
+      // easier (RB, WR, TE: positive weight), zS * weight is negative when
+      // favored → blendAvg decreases → EASIER rating. For QB (negative weight),
+      // favored team gets a small SOS bump (efficient game caps QB volume).
+      let spreadAdjusted = false;
+      let zS = null;
+      if (spreadsReady && sprWeight !== 0 && teamSpr[team] && teamSpr[team].n >= 2) {
+        zS = (teamSpr[team].avg - sMu) / sSd;
+        blendAvg += sprWeight * zS;
+        spreadAdjusted = true;
+      }
+      return { team, blendAvg, opps: d.opps, teamTot: teamTot[team] || null,
+               teamSpr: teamSpr[team] || null, zS, sprWeight,
+               totalAdjusted, spreadAdjusted };
     });
     finalScores.sort((a, b) => a.blendAvg - b.blendAvg);
     finalScores.forEach((data, i) => {
@@ -42247,9 +42303,11 @@ Rules:
         else if (o.clayDefRk) sub.push('Clay D#' + o.clayDefRk);
         if (typeof o.oppg === 'number') sub.push(o.oppg.toFixed(1) + ' PA');
         if (typeof o.gameTotal === 'number') sub.push('O/U ' + o.gameTotal.toFixed(1));
+        if (typeof o.impliedTotal === 'number') sub.push('impl ' + o.impliedTotal.toFixed(1));
+        if (typeof o.teamSpread === 'number') sub.push((o.teamSpread > 0 ? '+' : '') + o.teamSpread + ' sprd');
         if (sub.length) parts.push('(' + sub.join(', ') + ')');
         return parts.join(' ');
-      }).join(', ') + (data.totalAdjusted ? ' · totals-blended' : '');
+      }).join(', ') + (data.spreadAdjusted ? ' · spread-blended' : (data.totalAdjusted ? ' · implied-blended' : ''));
       _mtPlayoffSosCache[key][data.team] = { label, color, title: tip, rank, avg: data.blendAvg };
     });
     return _mtPlayoffSosCache[key];
@@ -42287,20 +42345,35 @@ Rules:
       const home = g.home ? team : g.opp;
       const gt = (typeof window.getNflGameTotal === 'function')
                  ? window.getNflGameTotal(week, away, home) : null;
-      teamRows[team] = { defZ, gt, g, oppRec };
+      const sp = (typeof window.getNflTeamSpread === 'function')
+                 ? window.getNflTeamSpread(week, team, g.opp, g.home) : null;
+      // v0.10.31: implied team total replaces raw O/U as the SOS signal.
+      const it = (typeof window.getNflTeamImpliedTotal === 'function')
+                 ? window.getNflTeamImpliedTotal(week, team, g.opp, g.home) : null;
+      teamRows[team] = { defZ, gt, sp, it, g, oppRec };
     });
-    // z-score game totals across this week's matchups.
+    // z-score implied team totals AND spreads across this week's matchups.
     const mean = a => a.reduce((s,v)=>s+v,0)/a.length;
     const std  = a => { const m=mean(a); return Math.sqrt(mean(a.map(v=>(v-m)*(v-m))))||1; };
-    const totals = Object.values(teamRows).map(x => x.gt).filter(v => typeof v === 'number');
-    const useTotals = totals.length >= 4;
-    const tMu = useTotals ? mean(totals) : 0;
-    const tSd = useTotals ? std(totals)  : 1;
+    const implieds = Object.values(teamRows).map(x => x.it).filter(v => typeof v === 'number');
+    const spreads = Object.values(teamRows).map(x => x.sp).filter(v => typeof v === 'number');
+    const useTotals = implieds.length >= 4;
+    const useSpreads = spreads.length >= 4;
+    const tMu = useTotals ? mean(implieds) : 0;
+    const tSd = useTotals ? std(implieds)  : 1;
+    const sMu = useSpreads ? mean(spreads) : 0;
+    const sSd = useSpreads ? std(spreads)  : 1;
+    const sprWeight = (POSITION_SPREAD_WEIGHT[posKey] != null) ? POSITION_SPREAD_WEIGHT[posKey] : 0;
     const scored = Object.entries(teamRows).map(([t, x]) => {
       let blend = x.defZ;
-      if (useTotals && typeof x.gt === 'number') {
-        const zT = -(x.gt - tMu) / tSd;
+      if (useTotals && typeof x.it === 'number') {
+        // Invert: higher implied total = MORE expected scoring = EASIER for player.
+        const zT = -(x.it - tMu) / tSd;
         blend = (x.defZ * 3 + zT) / 4;
+      }
+      if (useSpreads && sprWeight !== 0 && typeof x.sp === 'number') {
+        const zS = (x.sp - sMu) / sSd;
+        blend += sprWeight * zS;
       }
       return { t, blend, ...x };
     });
@@ -42325,7 +42398,7 @@ Rules:
       _mtPlayoffSosWeeklyCache[cacheKey][d.t] = {
         label, color, rank, n,
         opp: d.g.opp, home: d.g.home,
-        gameTotal: d.gt,
+        gameTotal: d.gt, teamSpread: d.sp, impliedTotal: d.it,
         clayDefRk: c.defRk || null,
         posUnits, oppg: d.oppRec.dst.oppg,
       };
@@ -45258,7 +45331,7 @@ Rules:
       const active = isAll || (sel && sel.has(c));
       const safeC = String(c).replace(/'/g,"\\'");
       const draftCount = Object.values(originalData.drafts).filter(d => (d.tournament || 'Unknown') === c).length;
-      html += '<button onclick="window._udToggleContest(\'' + safeC + '\')" oncontextmenu="event.preventDefault();window._udSelectOnlyContest(\'' + safeC + '\')" title="Click to toggle. Right-click to select only this contest." style="padding:5px 11px;font-family:Bebas Neue,sans-serif;font-size:.7rem;letter-spacing:1px;cursor:pointer;border:1px solid ' + (active ? 'var(--accent)' : 'var(--border)') + ';background:' + (active ? 'var(--accent)' : 'var(--surface2)') + ';color:' + (active ? '#000' : 'var(--text2)') + ';border-radius:4px;display:inline-flex;align-items:center;gap:6px">';
+      html += '<button onclick="window._udSelectOnlyContest(\'' + safeC + '\')" oncontextmenu="event.preventDefault();window._udToggleContest(\'' + safeC + '\')" title="Click to view only this contest. Right-click to add/remove from a multi-contest filter." style="padding:5px 11px;font-family:Bebas Neue,sans-serif;font-size:.7rem;letter-spacing:1px;cursor:pointer;border:1px solid ' + (active ? 'var(--accent)' : 'var(--border)') + ';background:' + (active ? 'var(--accent)' : 'var(--surface2)') + ';color:' + (active ? '#000' : 'var(--text2)') + ';border-radius:4px;display:inline-flex;align-items:center;gap:6px">';
       html += (active ? '\u2713 ' : '') + c + ' <span style="opacity:.7;font-size:.6rem">' + draftCount + '</span>';
       html += '</button>';
     });

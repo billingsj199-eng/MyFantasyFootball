@@ -3408,6 +3408,9 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/mike_clay_projections.js?v=2026-04-25b"></script>
 <script src="data/player_weekly_sigma.js"></script>
 <script src="data/injury_history.js"></script>
+<script src="data/clay_team_grades_2026.js?v=2026-05-15"></script>
+<script src="data/nfl_schedule_2026.js?v=2026-05-15c"></script>
+<script src="data/nfl_game_totals_2026.js?v=2026-05-15c"></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
 // d.js names and Clay names sometimes differ on suffix (Jr./III), punctuation,
@@ -22283,6 +22286,50 @@ window.fmtHeight = fmtHeight;
         },
         _prev: prevSnapshot
       };
+
+      // ── PRE-SAVE SAFETY CHECK ───────────────────────────────────────────
+      // Compare what we're about to write against what's already in
+      // Firestore. Refuse the write (and warn) if any mode shrinks by >50%
+      // or drops to zero — that's the "boards-not-loaded" trap that wiped
+      // dynasty/bestball tiers on 2026-05-14. User can override via prompt.
+      try {
+        const existing = await db.collection('rankings').doc('jacks-official').get();
+        if (existing.exists && existing.data().data) {
+          const prev = JSON.parse(existing.data().data);
+          const SHRINK_THRESHOLD = 0.5;
+          const shrunk = [];
+          ['redraft','bestball','superflex','dynasty','dynastysf'].forEach(m => {
+            const newLen = (data.jacks[m] && data.jacks[m]._order || []).length;
+            const oldLen = (prev.jacks && prev.jacks[m] && prev.jacks[m]._order || []).length;
+            const newTiers = data.jacks[m] && data.jacks[m]._posTiers ? Object.values(data.jacks[m]._posTiers).reduce((s,a) => s + (a?a.length:0), 0) : 0;
+            const oldTiers = prev.jacks && prev.jacks[m] && prev.jacks[m]._posTiers ? Object.values(prev.jacks[m]._posTiers).reduce((s,a) => s + (a?a.length:0), 0) : 0;
+            if (oldLen > 0 && (newLen === 0 || newLen / oldLen < SHRINK_THRESHOLD)) shrunk.push(m + ' players: ' + oldLen + '→' + newLen);
+            if (oldTiers > 0 && newTiers === 0) shrunk.push(m + ' tiers: ' + oldTiers + '→0');
+          });
+          if (shrunk.length) {
+            const msg = 'SAFETY CHECK: this save would shrink your rankings:\n\n' + shrunk.join('\n') + '\n\nThis usually means the page didn\'t fully load. Save anyway?';
+            if (!confirm(msg)) {
+              console.warn('[Save] Aborted by safety check:', shrunk);
+              hideSaving();
+              toast('Save cancelled — boards looked degraded');
+              return;
+            }
+            console.warn('[Save] Safety check warned, user overrode:', shrunk);
+          }
+        }
+      } catch(scErr) { console.warn('[Save] Safety check skipped:', scErr); }
+
+      // ── LOCAL ROLLING BACKUP (PRE-WRITE) ────────────────────────────────
+      // Snapshot to localStorage BEFORE writing — if the write goes wrong,
+      // last 10 saves are still recoverable from this browser. Survives
+      // anything except a full localStorage clear.
+      try {
+        const backups = JSON.parse(localStorage.getItem('mff_jacks_backups') || '[]');
+        backups.unshift({ ts: new Date().toISOString(), updatedBy: currentUser.email || '', data: data });
+        if (backups.length > 10) backups.length = 10;
+        localStorage.setItem('mff_jacks_backups', JSON.stringify(backups));
+      } catch(bkErr) { console.warn('[Save] Local backup failed (likely quota):', bkErr); }
+
       console.log('[Save] Writing jacks doc (' + JSON.stringify(data).length + ' bytes)...');
       await db.collection('rankings').doc('jacks-official').set({
         data: JSON.stringify(data),
@@ -22290,6 +22337,22 @@ window.fmtHeight = fmtHeight;
         updatedAt: new Date().toISOString()
       }, {merge: true});
       console.log('[Save] Jacks rankings saved OK');
+
+      // ── CLOUD ROLLING BACKUP (POST-WRITE) ───────────────────────────────
+      // Mirror to a timestamped doc in rankings_history. Survives if the
+      // main doc is deleted from Firebase Console. Best-effort — don't
+      // block the save flow if it fails.
+      try {
+        const historyId = new Date().toISOString().replace(/[:.]/g, '-');
+        await db.collection('rankings_history').doc(historyId).set({
+          data: JSON.stringify(data),
+          updatedBy: currentUser.email || '',
+          updatedAt: new Date().toISOString(),
+          source: 'jacks-official'
+        });
+        console.log('[Save] Cloud backup written: rankings_history/' + historyId);
+      } catch(hbErr) { console.warn('[Save] Cloud backup failed:', hbErr); }
+
       toast("Jack's rankings saved & shared with all users");
     } catch(e) {
       console.error('[Save] Jacks save error:', e.code, e.message, e);
@@ -41946,6 +42009,303 @@ Rules:
     return d && d.age ? d.age : null;
   }
 
+  // ==== Playoff SOS (2026 weeks 15-17) ====
+  // Per-position defensive signal blend. Four metrics z-scored across 32 teams:
+  //   1. Clay weighted-unit grade — position-specific weighting of Mike Clay's
+  //      DI/ED/LB/CB/S unit grades (PDF p.63). E.g. WR weights CB+S heavily;
+  //      RB weights DI+LB.
+  //   2. DST proj (p)  — projected DST fantasy points (team-wide signal).
+  //   3. oppg (inv)    — points allowed per game (team-wide).
+  //   4. Game O/U      — DK game total (team-wide; folded in if data exists).
+  // Higher zBlend = stronger D = harder matchup for facing players at this pos.
+  //
+  // Position weights for Clay units (sum to ~1.0 per position):
+  //   QB → ED 35% + CB 30% + S 20% + LB 10% + DI 5%  (pass rush + secondary)
+  //   RB → DI 35% + LB 35% + ED 25% + S 5%           (run defense)
+  //   WR → CB 50% + S 35% + LB 15%                   (secondary coverage)
+  //   TE → LB 40% + S 35% + CB 20% + DI 5%           (middle of field)
+  //   *  → defGr fallback (overall) for K, DST, OTHER
+  const POSITION_DEF_WEIGHTS = {
+    QB: { ed: 0.35, cb: 0.30, s: 0.20, lb: 0.10, di: 0.05 },
+    RB: { di: 0.35, lb: 0.35, ed: 0.25, s: 0.05 },
+    WR: { cb: 0.50, s: 0.35, lb: 0.15 },
+    TE: { lb: 0.40, s: 0.35, cb: 0.20, di: 0.05 },
+  };
+
+  function _mtClayUnitGrade(clayG, pos) {
+    if (!clayG) return null;
+    const w = POSITION_DEF_WEIGHTS[pos];
+    if (!w) return typeof clayG.defGr === 'number' ? clayG.defGr : null;
+    let sum = 0, totalW = 0;
+    for (const unit in w) {
+      if (typeof clayG[unit] === 'number') {
+        sum += clayG[unit] * w[unit];
+        totalW += w[unit];
+      }
+    }
+    return totalW > 0 ? sum / totalW : null;
+  }
+
+  let _mtDstByAbbrCache = null;
+  function _mtBuildDstByAbbr() {
+    if (_mtDstByAbbrCache) return _mtDstByAbbrCache;
+    _mtDstByAbbrCache = {};
+    if (!Array.isArray(window.D) || typeof TEAM_ABBR_MAP === 'undefined') return _mtDstByAbbrCache;
+    const dsts = window.D.filter(p => p && p.s === 'DST' && typeof p.p === 'number');
+    if (!dsts.length) return _mtDstByAbbrCache;
+    const clay = window.CLAY_TEAM_GRADES_2026 || {};
+    const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+    const std  = a => { const m = mean(a); return Math.sqrt(mean(a.map(v => (v-m)*(v-m)))) || 1; };
+    // Team-wide signals: DST proj + opp PA + Clay overall.
+    const ps    = dsts.map(d => d.p);
+    const oppgs = dsts.map(d => d.oppg).filter(v => typeof v === 'number');
+    const pMu = mean(ps), pSd = std(ps);
+    const oMu = oppgs.length ? mean(oppgs) : 0;
+    const oSd = oppgs.length ? std(oppgs) : 1;
+    // Position-specific Clay distributions (so each position z-scores against
+    // the right league mean for that unit weighting).
+    const POSITIONS = ['QB','RB','WR','TE'];
+    const posGradesArr = {};
+    POSITIONS.forEach(pos => { posGradesArr[pos] = []; });
+    const overallClayDefs = [];
+    Object.values(clay).forEach(g => {
+      if (typeof g.defGr === 'number') overallClayDefs.push(g.defGr);
+      POSITIONS.forEach(pos => {
+        const v = _mtClayUnitGrade(g, pos);
+        if (typeof v === 'number') posGradesArr[pos].push(v);
+      });
+    });
+    const cMuOverall = overallClayDefs.length ? mean(overallClayDefs) : 0;
+    const cSdOverall = overallClayDefs.length ? std(overallClayDefs)  : 1;
+    const cMuByPos = {}, cSdByPos = {};
+    POSITIONS.forEach(pos => {
+      cMuByPos[pos] = posGradesArr[pos].length ? mean(posGradesArr[pos]) : 0;
+      cSdByPos[pos] = posGradesArr[pos].length ? std(posGradesArr[pos])  : 1;
+    });
+    dsts.forEach(d => {
+      const abbr = TEAM_ABBR_MAP[d.t] || d.t;
+      if (!abbr) return;
+      const upper = String(abbr).toUpperCase();
+      const zP = (d.p - pMu) / pSd;
+      const zO = (typeof d.oppg === 'number') ? -(d.oppg - oMu) / oSd : 0;
+      const clayG = clay[upper] || null;
+      const zCByPos = {};
+      POSITIONS.forEach(pos => {
+        const g = _mtClayUnitGrade(clayG, pos);
+        zCByPos[pos] = (g != null) ? (g - cMuByPos[pos]) / cSdByPos[pos] : 0;
+      });
+      const zCOverall = clayG && typeof clayG.defGr === 'number'
+                        ? (clayG.defGr - cMuOverall) / cSdOverall
+                        : 0;
+      // Per-position defensive 3-signal blend (Clay-by-pos + DST proj + opp PA).
+      // Total signal (game O/U) gets folded in later in _mtBuildPlayoffSos.
+      const defZByPos = {};
+      POSITIONS.forEach(pos => {
+        defZByPos[pos] = (zP + zO + zCByPos[pos]) / 3;
+      });
+      const defZOverall = (zP + zO + zCOverall) / 3;
+      _mtDstByAbbrCache[upper] = {
+        dst: d, clay: clayG, zP, zO,
+        zCByPos, zCOverall,
+        defZByPos, defZOverall,
+      };
+    });
+    return _mtDstByAbbrCache;
+  }
+
+  // Cache keyed by position. _mtPlayoffSosCache[pos][team] -> { label, color, ... }
+  // pos in {'QB','RB','WR','TE','OVERALL'}. OVERALL is the fallback for K/DST/other.
+  const _mtPlayoffSosCache = {};
+  function _mtBuildPlayoffSos(pos) {
+    const key = (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE') ? pos : 'OVERALL';
+    if (_mtPlayoffSosCache[key]) return _mtPlayoffSosCache[key];
+    _mtPlayoffSosCache[key] = {};
+    if (typeof window.getPlayoffOpponents !== 'function') return _mtPlayoffSosCache[key];
+    const dstByAbbr = _mtBuildDstByAbbr();
+    const teamDef = {};
+    const teamTot = {};
+    Object.keys(dstByAbbr).forEach(team => {
+      const opps = window.getPlayoffOpponents(team, [15, 16, 17]);
+      if (!opps.length) return;
+      let defSum = 0, defN = 0, totSum = 0, totN = 0;
+      const detail = [];
+      opps.forEach(g => {
+        const oppRec = dstByAbbr[String(g.opp).toUpperCase()];
+        const away = g.home ? g.opp : team;
+        const home = g.home ? team : g.opp;
+        const gt = (typeof window.getNflGameTotal === 'function')
+                   ? window.getNflGameTotal(g.wk, away, home)
+                   : null;
+        if (typeof gt === 'number') { totSum += gt; totN++; }
+        if (oppRec) {
+          const defZ = (key === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[key];
+          defSum += defZ; defN++;
+          const posUnits = (key !== 'OVERALL' && POSITION_DEF_WEIGHTS[key] && oppRec.clay)
+                           ? Object.keys(POSITION_DEF_WEIGHTS[key])
+                                 .map(u => u.toUpperCase() + (oppRec.clay[u] != null ? oppRec.clay[u] : '?'))
+                                 .join('/')
+                           : null;
+          detail.push({
+            wk: g.wk, opp: g.opp, home: g.home,
+            dstRank: oppRec.dst.r, oppg: oppRec.dst.oppg,
+            clayDefRk: oppRec.clay ? oppRec.clay.defRk : null,
+            clayDefGr: oppRec.clay ? oppRec.clay.defGr : null,
+            posUnits, gameTotal: gt,
+          });
+        }
+      });
+      if (defN > 0) teamDef[team] = { avg: defSum / defN, n: defN, opps: detail };
+      if (totN > 0) teamTot[team] = { avg: totSum / totN, n: totN };
+    });
+    const totalsPopulated = (typeof window.getNflTotalsCount === 'function')
+                             ? window.getNflTotalsCount() : 0;
+    const useTotals = totalsPopulated >= 8;
+    let tMu = 0, tSd = 1, totalsReady = false;
+    if (useTotals) {
+      const teamAvgs = Object.values(teamTot).filter(t => t.n >= 2).map(t => t.avg);
+      if (teamAvgs.length >= 4) {
+        const m = teamAvgs.reduce((s, v) => s + v, 0) / teamAvgs.length;
+        const variance = teamAvgs.reduce((s, v) => s + (v - m) * (v - m), 0) / teamAvgs.length;
+        tMu = m; tSd = Math.sqrt(variance) || 1;
+        totalsReady = true;
+      }
+    }
+    const finalScores = Object.entries(teamDef).map(([team, d]) => {
+      let blendAvg = d.avg;
+      let totalAdjusted = false;
+      if (totalsReady && teamTot[team] && teamTot[team].n >= 2) {
+        const zT = -(teamTot[team].avg - tMu) / tSd;
+        blendAvg = (d.avg * 3 + zT) / 4;
+        totalAdjusted = true;
+      }
+      return { team, blendAvg, opps: d.opps, teamTot: teamTot[team] || null, totalAdjusted };
+    });
+    finalScores.sort((a, b) => a.blendAvg - b.blendAvg);
+    finalScores.forEach((data, i) => {
+      const rank = i + 1;
+      let label, color;
+      if (rank <= 11)      { label = 'E'; color = '#22c55e'; }
+      else if (rank <= 21) { label = 'M'; color = '#facc15'; }
+      else                 { label = 'H'; color = '#ef4444'; }
+      const posTag = (key === 'OVERALL') ? '' : (' (' + key + ')');
+      const tip = 'Playoff SOS' + posTag + ' · ' + data.opps.map(o => {
+        const parts = ['W' + o.wk + ' ' + (o.home ? 'vs ' : '@ ') + o.opp];
+        const sub = [];
+        if (o.posUnits) sub.push(o.posUnits);
+        else if (o.clayDefRk) sub.push('Clay D#' + o.clayDefRk);
+        if (typeof o.oppg === 'number') sub.push(o.oppg.toFixed(1) + ' PA');
+        if (typeof o.gameTotal === 'number') sub.push('O/U ' + o.gameTotal.toFixed(1));
+        if (sub.length) parts.push('(' + sub.join(', ') + ')');
+        return parts.join(' ');
+      }).join(', ') + (data.totalAdjusted ? ' · totals-blended' : '');
+      _mtPlayoffSosCache[key][data.team] = { label, color, title: tip, rank, avg: data.blendAvg };
+    });
+    return _mtPlayoffSosCache[key];
+  }
+
+  function _mtGetPlayoffSos(teamRaw, pos) {
+    if (!teamRaw) return null;
+    let abbr = teamRaw;
+    if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamRaw]) abbr = TEAM_ABBR_MAP[teamRaw];
+    return _mtBuildPlayoffSos(pos)[String(abbr).toUpperCase()] || null;
+  }
+
+  // Convert any team representation (full name or abbr) to a 3-letter abbr.
+  function _mtTeamToAbbr(t) {
+    if (!t) return null;
+    if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) return TEAM_ABBR_MAP[t];
+    return String(t).toUpperCase();
+  }
+
+  // Bringback Wave 1: render a "Playoff Matchups" panel listing each NFL game
+  // in weeks 15-17 that involves the user's skill players. Highlight games
+  // where the user owns players on BOTH sides (bringback exposure).
+  function _mtRenderPlayoffMatchups(players) {
+    if (typeof window.NFL_SCHEDULE_2026 !== 'object' || !players || !players.length) return '';
+    // Index user's skill players by NFL team abbr.
+    const byTeam = {};
+    players.forEach(p => {
+      if (!p || !p.team) return;
+      if (!['QB','RB','WR','TE'].includes(p.pos)) return;
+      const abbr = _mtTeamToAbbr(p.team);
+      if (!abbr) return;
+      if (!byTeam[abbr]) byTeam[abbr] = [];
+      byTeam[abbr].push(p);
+    });
+    if (!Object.keys(byTeam).length) return '';
+
+    // Collect games (W15-17) where at least one of the user's teams plays.
+    const exposures = [];  // { wk, away, home, awayPlayers, homePlayers, isBringback, total, totalTier }
+    [15, 16, 17].forEach(wk => {
+      (window.NFL_SCHEDULE_2026[wk] || []).forEach(g => {
+        const away = String(g[0]).toUpperCase();
+        const home = String(g[1]).toUpperCase();
+        const awayPlayers = byTeam[away] || [];
+        const homePlayers = byTeam[home] || [];
+        if (!awayPlayers.length && !homePlayers.length) return;
+        const total = (typeof window.getNflGameTotal === 'function')
+                       ? window.getNflGameTotal(wk, away, home) : null;
+        const cls = (typeof window.classifyGameTotal === 'function')
+                       ? window.classifyGameTotal(total) : { tier: null, color: null, label: '—' };
+        exposures.push({
+          wk, away, home, awayPlayers, homePlayers,
+          isBringback: awayPlayers.length > 0 && homePlayers.length > 0,
+          total, totalTier: cls.tier, totalColor: cls.color, totalLabel: cls.label,
+        });
+      });
+    });
+    if (!exposures.length) return '';
+
+    const bringbackCount = exposures.filter(e => e.isBringback).length;
+    const highTotalBringbacks = exposures.filter(e => e.isBringback && e.totalTier === 'high').length;
+    const lowTotalBringbacks  = exposures.filter(e => e.isBringback && e.totalTier === 'low').length;
+
+    let html = '<div style="margin-top:16px">';
+    html += '<div style="display:flex;align-items:baseline;gap:10px;padding:0 4px 4px;margin-bottom:8px;border-bottom:2px solid var(--accent)40">';
+    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.05rem;letter-spacing:1.8px;color:var(--accent)">PLAYOFF MATCHUPS</span>';
+    html += '<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">' +
+            exposures.length + ' game' + (exposures.length!==1?'s':'') +
+            ' · ' + bringbackCount + ' bringback' + (bringbackCount!==1?'s':'');
+    if (highTotalBringbacks > 0) html += ' · <span style="color:#22c55e">' + highTotalBringbacks + ' high-total</span>';
+    if (lowTotalBringbacks  > 0) html += ' · <span style="color:#ef4444">' + lowTotalBringbacks + ' low-total</span>';
+    html += ' · W15-17</span>';
+    html += '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:6px">';
+    exposures.forEach(e => {
+      // Border priority: total tier (when available) > bringback purple > default.
+      // Background mirrors the border at low opacity.
+      let borderColor, bg;
+      if (e.totalTier === 'high')      { borderColor = '#22c55e'; bg = 'rgba(34,197,94,.10)'; }
+      else if (e.totalTier === 'low')  { borderColor = '#ef4444'; bg = 'rgba(239,68,68,.10)'; }
+      else if (e.totalTier === 'mid')  { borderColor = '#facc15'; bg = 'rgba(250,204,21,.08)'; }
+      else if (e.isBringback)          { borderColor = '#a855f7'; bg = 'rgba(168,85,247,.08)'; }
+      else                             { borderColor = 'rgba(30,42,66,.4)'; bg = 'var(--surface2)'; }
+      html += '<div style="padding:7px 9px;background:' + bg + ';border:1px solid ' + borderColor + ';border-radius:6px;font-size:.72rem">';
+      html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
+      html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.68rem;letter-spacing:1.2px;color:var(--text2);min-width:28px">W' + e.wk + '</span>';
+      html += '<span style="font-weight:700;color:var(--text)">' + e.away + ' @ ' + e.home + '</span>';
+      if (e.isBringback) {
+        html += '<span style="font-size:.55rem;font-weight:700;color:#a855f7;letter-spacing:.5px;padding:1px 5px;border:1px solid #a855f7;border-radius:3px">BRINGBACK</span>';
+      }
+      if (typeof e.total === 'number') {
+        html += '<span style="margin-left:auto;font-size:.62rem;font-weight:700;color:' + (e.totalColor || 'var(--text2)') + '" title="Game total (over/under)">O/U ' + e.totalLabel + '</span>';
+      }
+      html += '</div>';
+      // Side-by-side player lists
+      html += '<div style="display:flex;gap:10px;font-size:.66rem;color:var(--text2)">';
+      const fmtSide = (list, label) => {
+        if (!list.length) return '<div style="flex:1;color:var(--text3)">' + label + ': —</div>';
+        const names = list.map(p => '<span style="color:var(--text)">' + _esc(p.name) + '</span> <span style="opacity:.6">(' + p.pos + ')</span>').join(', ');
+        return '<div style="flex:1"><span style="opacity:.7">' + label + ':</span> ' + names + '</div>';
+      };
+      html += fmtSide(e.awayPlayers, e.away);
+      html += fmtSide(e.homePlayers, e.home);
+      html += '</div></div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
   // Assign exact pick numbers (2026 1.01, 1.02...) for current draft year,
   // and Early/Mid/Late tiers for future years.
   // Called after lineupPpg is computed on each team.
@@ -42916,6 +43276,17 @@ Rules:
         html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${ppgColor};line-height:1.05">${projPpg > 0 ? projPpg : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">PPG</div></div>`;
         // ADP (web-only)
         html += `<div class="mt-roster-stat-extra" style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:var(--text);line-height:1.05">${adp != null ? adp : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">ADP</div></div>`;
+        // PLAYOFF SOS — facing tough defenses in W15-17? (web-only)
+        // Per-position rating: QB/RB/WR/TE use position-weighted Clay grades
+        // (e.g. WR reads CB+S, RB reads DI+LB). Tooltip lists the 3 opponents
+        // with the specific unit grades that drove the rating.
+        if (p.pos !== 'DST' && p.pos !== 'K') {
+          const psos = _mtGetPlayoffSos(dEntry ? dEntry.t : (p.team || ''), p.pos);
+          const psosLabel = psos ? psos.label : '—';
+          const psosColor = psos ? psos.color : 'var(--text2)';
+          const psosTitle = psos ? psos.title : 'Playoff SOS unavailable';
+          html += `<div class="mt-roster-stat-extra" title="${_esc(psosTitle)}" style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${psosColor};line-height:1.05">${psosLabel}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">P-SOS</div></div>`;
+        }
         html += `</div>`;
         html += `</div>`;
       });
@@ -42950,6 +43321,13 @@ Rules:
     html += `</div>`;
     // Close the #mtTeamViewPosition wrapper opened above the grouped roster.
     html += `</div>`;
+
+    // ==== Playoff Matchups panel (BBM W15-17) ====
+    // Group user's skill players (QB/RB/WR/TE) by NFL game across playoff weeks.
+    // Flag bringbacks (player on each side of the same NFL game) — per
+    // memory project_bringback_playoffs, bringback edge depends on game total
+    // (Wave 2 will color by Vegas total). For now, list exposures only.
+    html += _mtRenderPlayoffMatchups(sc.players);
 
     // Draft picks section (dynasty only)
     if (sc.picks && sc.picks.length > 0) {
@@ -44869,10 +45247,19 @@ Rules:
   // factor approximation captures most of the stacking edge.
   const BB_TEAM_CORR_PCT = 0.15;
 
-  // 2026 NFL bye-week table. Populate after the schedule drops in May 2026.
-  // Maps NFL team abbreviation → bye week number (1-14).
+  // 2026 NFL bye-week table. Schedule released 2026-05-14.
+  // Maps NFL team abbreviation → bye week number (5-14).
+  // Distribution: W5×2, W6×4, W7×4, W8×4, W9×2, W10×4, W11×6, W13×4, W14×2.
+  // (No byes in Week 12 — Thanksgiving week.)
   const BB_BYE_WEEKS_2026 = {
-    // 'BAL': 14, 'KC': 6, ...
+    'ARI': 14, 'ATL': 11, 'BAL': 13, 'BUF': 7,
+    'CAR': 5,  'CHI': 10, 'CIN': 6,  'CLE': 11,
+    'DAL': 14, 'DEN': 10, 'DET': 6,  'GB':  11,
+    'HOU': 8,  'IND': 13, 'JAX': 7,  'KC':  5,
+    'LAC': 7,  'LAR': 11, 'LV':  13, 'MIA': 6,
+    'MIN': 6,  'NE':  11, 'NO':  8,  'NYG': 8,
+    'NYJ': 13, 'PHI': 10, 'PIT': 9,  'SEA': 11,
+    'SF':  8,  'TB':  10, 'TEN': 9,  'WAS': 7,
   };
 
   // QB timeshare config (v0.9.63). Use for known split-season situations

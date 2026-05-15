@@ -1115,6 +1115,7 @@ CLEAR ALL
 <th data-sort="jm" id="jmHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
 <th data-sort="landing" id="landingHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Landing Spot (0-100) — quality of the NFL fantasy opportunity (depth chart, scheme, target share). Separate from JM (prospect quality).">Land</span> <span class="arrow"></span></th>
 <th data-sort="age" id="ageHeader" tabindex="0" aria-sort="none">Age <span class="arrow"></span></th>
+<th data-sort="psos" id="psosHeader" tabindex="0" aria-sort="none"><span data-gloss="Playoff SOS (BBM weeks 15-17) — facing opponents weighted by your position. E=easy (rank 1-11), M=mid (12-21), H=hard (22-32). Blends Mike Clay defensive unit grades, DST proj, opp PA, and DK game totals.">P-SOS</span> <span class="arrow"></span></th>
 <th data-sort="diff" tabindex="0" aria-sort="none"><span data-gloss="Rank vs. selected ADP source. ▲ = ranked higher than market (value pick). ▼ = ranked lower (fade).">+/-</span> <span class="arrow"></span></th>
 </tr>
 </thead>
@@ -7152,6 +7153,7 @@ function render() {
         <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');const _tt=window._jmTierTooltip?window._jmTierTooltip(d._pmJm,d.s).replace(/"/g,'&quot;'):'';return '<span style="color:'+jc+';font-weight:700;cursor:help" title="'+_tt+'">'+jm+'</span>';})()}</td>
         <td class="pts-cell landing-cell" style="display:none">—</td>
         <td>—</td>
+        <td class="psos-cell">—</td>
         <td>—</td>
       </tr>`;
       return;
@@ -7163,7 +7165,7 @@ function render() {
       tiers.forEach(t => {
         if (t.afterRank > prevDisplayRank && t.afterRank <= displayRank) {
           html += `<tr class="tier-row" data-tier-id="${t.id}">
-            <td colspan="13"><div class="tier-inner">
+            <td colspan="14"><div class="tier-inner">
               <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
               ${editable ? `<span class="tier-name-static" data-tier-rename="${t.id}" title="Click to rename">${t.name}</span>
               <div class="tier-controls">
@@ -7199,13 +7201,13 @@ function render() {
     if (shouldBlur && i === blurCutoff && data.length > blurCutoff) {
       const _isSignedIn = !!window._authCurrentUser;
       if (isMine && !_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="13" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="14" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else if (isMine && !isPremium) {
-        html += '<tr id="premiumWallRow"><td colspan="13" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in each filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="14" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in each filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       } else if (!_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="13" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="14" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else {
-        html += '<tr id="premiumWallRow"><td colspan="13" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="14" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       }
     }
 
@@ -7222,12 +7224,13 @@ function render() {
       <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})()}</td>
       <td class="pts-cell landing-cell" style="display:none">${(()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})()}</td>
       <td class="age-cell ${d.s==='DST' ? (d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '') : d.age!=null ? (d.s==='RB' ? (d.age>=30?'age-red':d.age>=28?'age-yellow':'age-green') : d.s==='QB' ? (d.age>=35?'age-red':d.age>=32?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='WR' ? (d.age>=32?'age-red':d.age>=29?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='TE' ? (d.age>=33?'age-red':d.age>=31?'age-orange':d.age>=25?'age-green':'age-yellow') : '') : ''}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (d.age != null ? d.age : '—')}</td>
+      <td class="psos-cell">${(()=>{if(d.s==='K'||d.s==='DST')return '—';if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.label+'</span>';})()}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
     </tr>`;
 
     // "Add tier" mini-button between rows (only show on hover via CSS)
     if (editable && showTiers && !tierMap[displayRank]) {
-      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="13"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
+      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="14"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
     }
   });
 
@@ -7237,7 +7240,7 @@ function render() {
     tiers.forEach(t => {
       if (t.afterRank > lastDisplayRank) {
         html += `<tr class="tier-row" data-tier-id="${t.id}">
-          <td colspan="13"><div class="tier-inner">
+          <td colspan="14"><div class="tier-inner">
             <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
             ${editable ? `<span class="tier-name-static">${t.name}</span>
             <div class="tier-controls">
@@ -10575,6 +10578,55 @@ function openPlayerCard(d, ctxMode) {
         <button class="card-view-btn" data-cardview="info">INFO</button>
       </div>` : ''}
       <div class="card-fantasy-view${(d._isDevy || _is2026) ? ' hidden' : ''}" id="cardFantasyView">
+      ${(!d._retired && (d.bye || (d.s === 'QB' || d.s === 'RB' || d.s === 'WR' || d.s === 'TE'))) ? (() => {
+        // Playoff Schedule row: Bye + W15 + W16 + W17 + Total P-SOS
+        // Per-week ratings use _mtGetPlayoffSosWeekly; total uses _mtGetPlayoffSos.
+        const _isSkill = d.s === 'QB' || d.s === 'RB' || d.s === 'WR' || d.s === 'TE';
+        const _wkRatings = {};
+        if (_isSkill && typeof window._mtGetPlayoffSosWeekly === 'function') {
+          [15, 16, 17].forEach(w => { _wkRatings[w] = window._mtGetPlayoffSosWeekly(d.t, d.s, w); });
+        }
+        const _totRating = (_isSkill && typeof window._mtGetPlayoffSos === 'function')
+                           ? window._mtGetPlayoffSos(d.t, d.s) : null;
+        const _byeBox = `
+          <div class="card-rank-box">
+            <div class="lbl">Bye</div>
+            <div class="num accent">${d.bye || '—'}</div>
+          </div>`;
+        const _wkBox = (w) => {
+          const r = _wkRatings[w];
+          if (!r) return `<div class="card-rank-box"><div class="lbl">Week ${w}</div><div class="num" style="color:var(--text2)">—</div></div>`;
+          const _arrow = r.home ? 'vs' : '@';
+          const _sub = [];
+          if (r.posUnits) _sub.push(r.posUnits);
+          if (typeof r.oppg === 'number') _sub.push(r.oppg.toFixed(1) + ' PA');
+          if (typeof r.gameTotal === 'number') _sub.push('O/U ' + r.gameTotal.toFixed(1));
+          const _title = `W${w} ${_arrow} ${r.opp} · rank ${r.rank}/${r.n}` + (_sub.length ? ' · ' + _sub.join(', ') : '');
+          return `
+            <div class="card-rank-box" title="${_title.replace(/"/g, '&quot;')}" style="cursor:help">
+              <div class="lbl">Week ${w}</div>
+              <div class="num" style="color:${r.color};font-size:1rem;line-height:1.05">${r.label}</div>
+              <div style="font-size:.55rem;color:var(--text2);margin-top:2px;font-weight:400">${_arrow} ${r.opp}${typeof r.gameTotal === 'number' ? ' · ' + r.gameTotal : ''}</div>
+            </div>`;
+        };
+        const _totBox = _totRating ? `
+          <div class="card-rank-box" title="${(_totRating.title || '').replace(/"/g, '&quot;')}" style="cursor:help">
+            <div class="lbl">Total P-SOS</div>
+            <div class="num" style="color:${_totRating.color}">${_totRating.label}</div>
+            <div style="font-size:.55rem;color:var(--text2);margin-top:2px;font-weight:400">rank ${_totRating.rank}/32</div>
+          </div>` : `
+          <div class="card-rank-box">
+            <div class="lbl">Total P-SOS</div>
+            <div class="num" style="color:var(--text2)">—</div>
+          </div>`;
+        return `<div class="card-section">
+          <div class="card-section-title">Playoff Schedule <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· W15-17 SOS, position-weighted</span></div>
+          <div class="card-rank-row" style="grid-template-columns:${_isSkill ? '0.7fr 1fr 1fr 1fr 1fr' : '1fr'}">
+            ${_byeBox}
+            ${_isSkill ? _wkBox(15) + _wkBox(16) + _wkBox(17) + _totBox : ''}
+          </div>
+        </div>`;
+      })() : ''}
       ${!d._retired ? `<div class="card-section">
         <div class="card-section-title">Rankings <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
         <div class="card-rank-row" style="grid-template-columns:1fr 1fr">
@@ -42209,6 +42261,87 @@ Rules:
     if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamRaw]) abbr = TEAM_ABBR_MAP[teamRaw];
     return _mtBuildPlayoffSos(pos)[String(abbr).toUpperCase()] || null;
   }
+
+  // Per-week per-position SOS rating. Cache key is `${pos}_${week}`.
+  // Same 4-signal blend as overall, but for a single week instead of averaging.
+  // Returns null if the team has no opp this week (shouldn't happen in W15-17
+  // for 2026 — no byes — but the fallback is here just in case).
+  const _mtPlayoffSosWeeklyCache = {};
+  function _mtBuildPlayoffSosWeekly(pos, week) {
+    const posKey = (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE') ? pos : 'OVERALL';
+    const cacheKey = posKey + '_' + week;
+    if (_mtPlayoffSosWeeklyCache[cacheKey]) return _mtPlayoffSosWeeklyCache[cacheKey];
+    _mtPlayoffSosWeeklyCache[cacheKey] = {};
+    if (typeof window.getPlayoffOpponents !== 'function') return _mtPlayoffSosWeeklyCache[cacheKey];
+    const dstByAbbr = _mtBuildDstByAbbr();
+    const teamRows = {};
+    Object.keys(dstByAbbr).forEach(team => {
+      const opps = window.getPlayoffOpponents(team, [week]);
+      if (!opps.length) return;
+      const g = opps[0];
+      if (g.bye) return;
+      const oppRec = dstByAbbr[String(g.opp).toUpperCase()];
+      if (!oppRec) return;
+      const defZ = (posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
+      const away = g.home ? g.opp : team;
+      const home = g.home ? team : g.opp;
+      const gt = (typeof window.getNflGameTotal === 'function')
+                 ? window.getNflGameTotal(week, away, home) : null;
+      teamRows[team] = { defZ, gt, g, oppRec };
+    });
+    // z-score game totals across this week's matchups.
+    const mean = a => a.reduce((s,v)=>s+v,0)/a.length;
+    const std  = a => { const m=mean(a); return Math.sqrt(mean(a.map(v=>(v-m)*(v-m))))||1; };
+    const totals = Object.values(teamRows).map(x => x.gt).filter(v => typeof v === 'number');
+    const useTotals = totals.length >= 4;
+    const tMu = useTotals ? mean(totals) : 0;
+    const tSd = useTotals ? std(totals)  : 1;
+    const scored = Object.entries(teamRows).map(([t, x]) => {
+      let blend = x.defZ;
+      if (useTotals && typeof x.gt === 'number') {
+        const zT = -(x.gt - tMu) / tSd;
+        blend = (x.defZ * 3 + zT) / 4;
+      }
+      return { t, blend, ...x };
+    });
+    scored.sort((a, b) => a.blend - b.blend);
+    const n = scored.length;
+    // 1-11 E (~easiest third), 12-21 M, 22-32 H — same buckets as overall.
+    // For non-32-team weeks (e.g. if used outside playoffs), scale by thirds.
+    const easyCut = Math.round(n / 3);
+    const hardCut = n - Math.round(n / 3);
+    scored.forEach((d, i) => {
+      const rank = i + 1;
+      let label, color;
+      if (rank <= easyCut)        { label = 'E'; color = '#22c55e'; }
+      else if (rank > hardCut)    { label = 'H'; color = '#ef4444'; }
+      else                        { label = 'M'; color = '#facc15'; }
+      const c = d.oppRec.clay || {};
+      const posUnits = (posKey !== 'OVERALL' && POSITION_DEF_WEIGHTS[posKey])
+                       ? Object.keys(POSITION_DEF_WEIGHTS[posKey])
+                             .map(u => u.toUpperCase() + (c[u] != null ? c[u] : '?'))
+                             .join('/')
+                       : null;
+      _mtPlayoffSosWeeklyCache[cacheKey][d.t] = {
+        label, color, rank, n,
+        opp: d.g.opp, home: d.g.home,
+        gameTotal: d.gt,
+        clayDefRk: c.defRk || null,
+        posUnits, oppg: d.oppRec.dst.oppg,
+      };
+    });
+    return _mtPlayoffSosWeeklyCache[cacheKey];
+  }
+  function _mtGetPlayoffSosWeekly(teamRaw, pos, week) {
+    if (!teamRaw) return null;
+    let abbr = teamRaw;
+    if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamRaw]) abbr = TEAM_ABBR_MAP[teamRaw];
+    return _mtBuildPlayoffSosWeekly(pos, week)[String(abbr).toUpperCase()] || null;
+  }
+
+  // Expose for code paths outside this IIFE — rankings table, player card.
+  window._mtGetPlayoffSos = _mtGetPlayoffSos;
+  window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
 
   // Convert any team representation (full name or abbr) to a 3-letter abbr.
   function _mtTeamToAbbr(t) {

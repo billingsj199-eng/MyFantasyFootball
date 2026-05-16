@@ -7058,8 +7058,13 @@ function render() {
     if (typeof window._ensurePffData === 'function') window._ensurePffData();
     if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
     if (typeof window._attachJmScores === 'function' && !window._jmScoresAttached) {
-      window._attachJmScores();
-      window._jmScoresAttached = true;
+      // _attachJmScores returns true if it attached synchronously (data already
+      // loaded), false if it deferred behind the async loaders. In the deferred
+      // case the function self-triggers a re-render once the data resolves, so
+      // we leave _jmScoresAttached false until the actual attach completes.
+      if (window._attachJmScores() === true) {
+        window._jmScoresAttached = true;
+      }
     }
   }
   const data = getFiltered();
@@ -26919,17 +26924,24 @@ window.fmtHeight = fmtHeight;
   window._jmClass = null; // set after jmClass is defined
 
   // Attach JM scores from prospect model to D entries for dynasty rankings column
-  // Called lazily from render() when dynasty mode is active
-  window._attachJmScores = function() {
+  // Called lazily from render() when dynasty mode is active.
+  //
+  // RACE FIX: buildProspectData depends on COLLEGE_STATS + PFF data, which are
+  // lazy-loaded via _ensureCollegeStatsData / _ensurePffData. If we built before
+  // those resolved, the prospect model returned a partial result (mostly devy
+  // players from COMBINE_DATA), which got cached. Actually-drafted rookies like
+  // Jeremiyah Love would never get JM scores. Now we wait for both async loaders
+  // before the first build, then re-render so the rankings table picks up the
+  // freshly stamped _pmJm / _pmLandingSpot values.
+  function _attachJmScoresSync() {
     let data = pmBuiltData;
     if (!data || !data.length) {
-      // Prospect page not yet visited — build on demand
       if (typeof buildProspectData === 'function') {
         data = buildProspectData();
         pmBuiltData = data;
       }
     }
-    if (!data || !data.length) return;
+    if (!data || !data.length) return false;
     data.forEach(function(p) {
       if (p.jm == null && p.landingSpot == null) return;
       var match = D.find(function(d) { return d.n === p.name; });
@@ -26941,6 +26953,25 @@ window.fmtHeight = fmtHeight;
         }
       }
     });
+    return true;
+  }
+  window._attachJmScores = function() {
+    // If pmBuiltData was already built (prospect page visited, or async chain
+    // already resolved), attach synchronously — no async detour needed.
+    if (pmBuiltData && pmBuiltData.length) return _attachJmScoresSync();
+    // Otherwise gate the build behind the async data loaders so the cache
+    // doesn't get poisoned with a partial result.
+    const pffP = (typeof window._ensurePffData === 'function') ? window._ensurePffData() : Promise.resolve();
+    const csP = (typeof window._ensureCollegeStatsData === 'function') ? window._ensureCollegeStatsData() : Promise.resolve();
+    Promise.all([pffP, csP]).then(function() {
+      _attachJmScoresSync();
+      // Trigger a re-render so the now-populated _pmJm/_pmLandingSpot values
+      // surface in the rankings table.
+      if (typeof window.render === 'function') {
+        try { window.render(); } catch (_) {}
+      }
+    });
+    return false;
   };
 
   // Draft Capital: stored in Firestore, only editable for 2026 class by admin
@@ -34872,7 +34903,14 @@ window.fmtHeight = fmtHeight;
     }
     
     try {
-      Promise.all([_dcLoad(), _bioLoad(), _roLoad()]).then(function() {
+      // Gate the build on the async data loaders too — COLLEGE_STATS + PFF
+      // ship as lazy-loaded scripts, and if we build before they resolve the
+      // result silently drops drafted rookies (only devy COMBINE_DATA entries
+      // survive). The 1QB/SF rankings rookies filter showed `—` for JM/LAND
+      // until this gate landed.
+      const _pffP = (typeof window._ensurePffData === 'function') ? window._ensurePffData() : Promise.resolve();
+      const _csP = (typeof window._ensureCollegeStatsData === 'function') ? window._ensureCollegeStatsData() : Promise.resolve();
+      Promise.all([_dcLoad(), _bioLoad(), _roLoad(), _pffP, _csP]).then(function() {
         _pmDiagnostic(pmBuiltData);
         // Defer heavy computation so browser can paint and handle events
         setTimeout(_doBuild, 50);

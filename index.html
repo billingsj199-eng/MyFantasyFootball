@@ -6570,13 +6570,36 @@ function _sleeperRank(d) {
   return d.slR != null ? d.slR : null;
 }
 
+// Strip suffixes (Jr., Sr., II, III, IV, V) for fuzzy name matching across data sources
+// where one side has the suffix and the other doesn't (e.g., d.n="Michael Pittman Jr."
+// but KTC stores "Michael Pittman").
+function _normalizeNameForLookup(name) {
+  if (!name) return '';
+  return String(name).replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim().toLowerCase();
+}
+// Lookup value in a name-keyed map, falling back to suffix-stripped match.
+// Builds and caches a normalized-key index per map on first miss.
+const _ktcNormCache = new WeakMap();
+function _ktcGet(map, name) {
+  if (!map || !name) return null;
+  if (map[name] != null) return map[name];
+  let idx = _ktcNormCache.get(map);
+  if (!idx) {
+    idx = {};
+    for (const k in map) idx[_normalizeNameForLookup(k)] = map[k];
+    _ktcNormCache.set(map, idx);
+  }
+  const v = idx[_normalizeNameForLookup(name)];
+  return v != null ? v : null;
+}
+
 // Get ADP for a player based on the selected ranking ADP source
 function rnkAdp(d) {
   if (d.s === 'K' || d.s === 'DST') return null;
   if (rnkAdpSrc === 'ktc') {
     // KTC dynasty values — 1QB map for dynasty mode, SF map for dynastysf mode
     const map = currentMode === 'dynastysf' ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {}) : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
-    return map[d.n] != null ? map[d.n] : null;
+    return _ktcGet(map, d.n);
   }
   if (rnkAdpSrc === 'sleeper') return _sleeperRank(d);
   if (rnkAdpSrc === 'consensus') {
@@ -7223,7 +7246,7 @@ function render() {
       <td class="pts-cell yrr-cell" style="display:none">${d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')}</td>
       <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})()}</td>
       <td class="pts-cell landing-cell" style="display:none">${(()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})()}</td>
-      <td class="age-cell ${d.s==='DST' ? (d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '') : d.age!=null ? (d.s==='RB' ? (d.age>=30?'age-red':d.age>=28?'age-yellow':'age-green') : d.s==='QB' ? (d.age>=35?'age-red':d.age>=32?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='WR' ? (d.age>=32?'age-red':d.age>=29?'age-orange':d.age>=24?'age-green':'age-yellow') : d.s==='TE' ? (d.age>=33?'age-red':d.age>=31?'age-orange':d.age>=25?'age-green':'age-yellow') : '') : ''}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (d.age != null ? d.age : '—')}</td>
+      <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
       <td class="psos-cell">${(()=>{if(d.s==='K'||d.s==='DST')return '—';if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.label+'</span>';})()}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
     </tr>`;
@@ -10563,7 +10586,7 @@ function openPlayerCard(d, ctxMode) {
           <div class="card-meta">
             <span class="pos-badge ${d.s}">${d.s}</span>
             <span class="card-team">${d.t}</span>
-            ${d.s==='DST' ? (d.oppg!=null ? `<span class="card-team">Opp PPG ${d.oppg}</span>` : '') : (d.age != null ? `<span class="card-team">Age ${d.age}</span>` : '')}
+            ${d.s==='DST' ? (d.oppg!=null ? `<span class="card-team">Opp PPG ${d.oppg}</span>` : '') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? `<span class="card-team">Age ${_ad.str}</span>` : '';})()}
             ${d._number != null ? `<span class="card-team">#${d._number}</span>` : ''}
             ${_buildInjuryBadge(d)}
           </div>
@@ -11572,7 +11595,7 @@ function renderCompareGrid() {
               <div class="card-meta">
                 <span class="pos-badge ${d.s}">${d.s}</span>
                 <span class="card-team">${d.t}</span>
-                ${d.age != null ? `<span class="card-team">Age ${d.age}</span>` : ''}
+                ${(()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? `<span class="card-team">Age ${_ad.str}</span>` : '';})()}
                 <span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:#f59e0b;font-weight:600">${yrsActive || 'RETIRED'}</span>
               </div>
             </div>
@@ -11663,7 +11686,7 @@ function renderCompareGrid() {
             <div class="card-meta">
               <span class="pos-badge ${d.s}">${d.s}</span>
               <span class="card-team">${d.t}</span>
-              ${d.s==='DST' ? (d.oppg!=null ? `<span class="card-team">Opp PPG ${d.oppg}</span>` : '') : (d.age != null ? `<span class="card-team">Age ${d.age}</span>` : '')}
+              ${d.s==='DST' ? (d.oppg!=null ? `<span class="card-team">Opp PPG ${d.oppg}</span>` : '') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? `<span class="card-team">Age ${_ad.str}</span>` : '';})()}
               ${d._number != null ? `<span class="card-team">#${d._number}</span>` : ''}
               ${activeTag}
               ${_buildInjuryBadge(d)}
@@ -19285,14 +19308,46 @@ if (typeof ALL_PLAYERS_BIO !== 'undefined') {
     }
   }
   D.forEach(d => {
-    if (d.age == null && LEGEND_BIRTH_YEARS[d.n]) {
-      const by = LEGEND_BIRTH_YEARS[d.n];
+    const by = LEGEND_BIRTH_YEARS[d.n];
+    if (by && typeof by === 'string' && by.length >= 10 && by.includes('-')) {
+      d.birthDate = by;
+    }
+    if (d.age == null && by) {
       const yr = typeof by === 'string' ? parseInt(by) : by;
       if (yr > 1900) { d.birthYear = yr; d.age = 2026 - yr; }
     }
   });
   console.log('[ALL_PLAYERS_BIO] Added ' + _bioAdded + ' bio entries');
 }
+// Capture full birth date string on every D entry for decimal age display.
+// Runs unconditionally — LEGEND_BIRTH_YEARS is loaded eagerly from data/legend_birth_years.js.
+if (typeof LEGEND_BIRTH_YEARS !== 'undefined') {
+  D.forEach(d => {
+    if (d.birthDate) return;
+    const by = LEGEND_BIRTH_YEARS[d.n];
+    if (by && typeof by === 'string' && by.length >= 10 && by.includes('-')) {
+      d.birthDate = by;
+    }
+  });
+}
+// Compute decimal age (e.g., 27.3) from full birth date when available.
+// Returns { num, str } — num is the numeric age for thresholds, str is formatted display.
+// Falls back to integer d.age when no full birth date is on file.
+function _ageDisplay(d) {
+  if (!d || d.age == null) return null;
+  if (d.birthDate) {
+    const bd = new Date(d.birthDate + 'T00:00:00');
+    if (!isNaN(bd)) {
+      const yrs = (Date.now() - bd.getTime()) / (365.25 * 24 * 3600 * 1000);
+      if (yrs > 0 && yrs < 120) {
+        const rounded = Math.round(yrs * 10) / 10;
+        return { num: rounded, str: rounded.toFixed(1) };
+      }
+    }
+  }
+  return { num: d.age, str: String(d.age) };
+}
+window._ageDisplay = _ageDisplay;
 function _calcAge(entry) {
   if (!entry) return null;
   if (typeof entry === 'string' && entry.includes('-')) {

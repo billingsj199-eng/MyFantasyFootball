@@ -5701,13 +5701,19 @@ window._fixHeadshotUrl = function(url) {
 };
 
 // === FUTURE DRAFT PICKS (dynasty/SF rankings) ===
-// 2026 picks: current year — still tradeable in dynasty leagues
 // 2027 picks: Early/Mid 1st, Mid/Late 1st, Early/Mid 2nd, Mid/Late 2nd, 3rd, 4th
 // 2028 picks: same structure
 // 2029, 2030: available for trade calc but not ranked by default
+//
+// 2026 picks intentionally skipped: by the time these would render, the actual
+// 2026 prospects are already in the rankings (COMBINE_DATA 2026 class), so the
+// generic "2026 Early 1st" / "2026 Mid 1st" / etc. labels just create duplicate
+// rows that get sorted next to the real prospects they represent. Remove them
+// after the 2026 NFL draft (April 2026) and revert next year for the 2027 class.
 (function() {
   // pickDefs moved to data/pick_defs.js
   pickDefs.forEach(pk => {
+    if (pk._pickYr === 2026) return; // skip current-year picks (see note above)
     if (!D.find(d => d.n === pk.n)) {
       D.push({
         n: pk.n, a: 999, p: 0, s: pk.s, r: 'PICK', t: pk.t,

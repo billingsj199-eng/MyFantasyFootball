@@ -519,6 +519,34 @@ PREMIUM ACTIVE
 </div>
 
 <div class="acct-section">
+<div class="acct-section-title">🎟️ Premium Redeem Codes</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">Create a code users can redeem for free premium. Each code grants the same number of days no matter when redeemed, and stops working after the code's expiration date. Each user (email) can only redeem a given code once.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+<div class="acct-field">
+<label class="acct-label">Code</label>
+<input type="text" class="acct-input" id="adminPremCodeName" placeholder="e.g. SUMMER26" autocomplete="off" style="text-transform:uppercase;letter-spacing:1px">
+</div>
+<div class="acct-field">
+<label class="acct-label">Days of premium granted</label>
+<input type="number" class="acct-input" id="adminPremCodeDays" min="1" max="3650" value="7">
+</div>
+</div>
+<div class="acct-field">
+<label class="acct-label">Code expires on (last day to redeem)</label>
+<input type="date" class="acct-input" id="adminPremCodeExpires">
+</div>
+<div style="display:flex;gap:8px;margin-top:.5rem">
+<button class="acct-btn acct-btn-primary" id="adminPremCodeCreateBtn">CREATE CODE</button>
+<button class="acct-btn acct-btn-outline" id="adminPremCodeRefreshBtn">REFRESH LIST</button>
+</div>
+<div class="acct-msg" id="adminPremCodeMsg"></div>
+<div style="margin-top:1rem">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:.5rem">RECENT CODES</div>
+<div id="adminPremCodeList" style="display:flex;flex-direction:column;gap:.4rem;font-size:.78rem"></div>
+</div>
+</div>
+
+<div class="acct-section">
 <div class="acct-section-title">🎨 Rankings Graphic Generator</div>
 <div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
 Build a stylized PNG of your top players (uses your personal board order). Pick a position and theme, preview, then download.
@@ -920,6 +948,24 @@ CLEAR ALL
     /* Premium-blur cards: keep the blur but fit the card shape */
     #pageRankings tbody tr.premium-blur td{filter:blur(4px)}
   }
+  /* === WEEKLY FORMAT (admin-only) column swap ===
+     Default state: OPP + TEAM TOTAL columns hidden, ADP/AGE/P-SOS visible.
+     When body has .format-weekly class, swap them. */
+  body.format-weekly #pageRankings #adpHeader,
+  body.format-weekly #pageRankings .adp-cell,
+  body.format-weekly #pageRankings #ageHeader,
+  body.format-weekly #pageRankings .age-cell,
+  body.format-weekly #pageRankings #psosHeader,
+  body.format-weekly #pageRankings .psos-cell { display: none !important; }
+  body.format-weekly #pageRankings #oppHeader,
+  body.format-weekly #pageRankings #teamTotalHeader,
+  body.format-weekly #pageRankings .opp-cell,
+  body.format-weekly #pageRankings .teamtotal-cell { display: table-cell !important; }
+  /* Opp cell styling — match ADP cell visual rhythm */
+  #pageRankings tbody .opp-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:54px}
+  #pageRankings tbody .teamtotal-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:56px}
+  #pageRankings tbody .opp-cell.opp-home{color:#a7f3d0}
+  #pageRankings tbody .opp-cell.opp-bye{color:var(--text2);font-style:italic}
 </style>
 <div class="filter-rows">
 <div class="filter-row-top">
@@ -937,6 +983,16 @@ CLEAR ALL
 <button class="mode-tab" data-mode="superflex">SUPERFLEX</button>
 <button class="mode-tab" data-mode="dynasty">DYNASTY 1QB</button>
 <button class="mode-tab" data-mode="dynastysf">DYNASTY SF</button>
+<button class="mode-tab" data-mode="weekly" id="weeklyModeTab" style="display:none" title="Weekly rankings — admin only">WEEKLY</button>
+</div>
+<!-- Admin-only week selector for WEEKLY format. The chosen week is saved to
+     Firestore at settings/active_week so it's site-wide; users see whichever
+     week is published. -->
+<div id="weeklyWeekSelectorWrap" style="display:none;align-items:center;gap:6px;margin-left:6px;padding:2px 8px;border:1px solid rgba(245,158,11,.35);border-radius:6px;background:rgba(245,158,11,.06)">
+<span style="font-size:.58rem;color:var(--accent);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;white-space:nowrap">ACTIVE WEEK:</span>
+<select id="activeWeekSelect" style="padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer" title="Sets the published week shown in WEEKLY format. Stored site-wide.">
+<option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4</option><option value="5">Week 5</option><option value="6">Week 6</option><option value="7">Week 7</option><option value="8">Week 8</option><option value="9">Week 9</option><option value="10">Week 10</option><option value="11">Week 11</option><option value="12">Week 12</option><option value="13">Week 13</option><option value="14">Week 14</option><option value="15">Week 15</option><option value="16">Week 16</option><option value="17">Week 17</option><option value="18">Week 18</option>
+</select>
 </div>
 <button id="copyFromRedraftBtn" onclick="window._copyRedraftToBestBall()" style="display:none;margin-left:4px;padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Replace your Best Ball board and tiers with an exact copy of your Redraft rankings.">⇩ COPY FROM REDRAFT</button>
 <div class="sync-toggle-wrap" id="syncToggleWrap" style="display:flex;align-items:center;gap:5px;margin-left:4px;position:relative">
@@ -1109,6 +1165,8 @@ CLEAR ALL
 <th data-sort="pos" tabindex="0" aria-sort="none">Pos <span class="arrow"></span></th>
 <th data-sort="posRank" tabindex="0" aria-sort="none">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
 <th data-sort="adp" id="adpHeader" tabindex="0" aria-sort="none"><span data-gloss="Average Draft Position — where this player goes on average in the selected ADP source.">ADP</span> <span class="arrow"></span></th>
+<th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week.">Opp</span> <span class="arrow"></span></th>
+<th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
 <th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Projected fantasy points per game for the upcoming season (Half PPR scoring).">Proj PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
 <th data-sort="fpts25" id="ppg25HeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (Half PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
@@ -5315,6 +5373,16 @@ function _mergeWeeklyStatsRetired() {
   for (const name in WEEKLY_STATS_RETIRED) {
     if (!WEEKLY_STATS[name]) WEEKLY_STATS[name] = WEEKLY_STATS_RETIRED[name];
   }
+  // Retired weekly stats just merged — rebuild Elite Pull pools so the 2000s/
+  // 2010s era pools pick up the legends. Without this, initGwPool's first
+  // 3s-timer run can fire before retired weekly has parsed, leaving era pools
+  // nearly empty (only active players whose best season was 2000-2009).
+  if (typeof window._gwInitPool === 'function') {
+    try { window._gwInitPool(); } catch(e) { console.warn('[GW] post-merge pool rebuild failed:', e); }
+  }
+  if (typeof window._gwDailyReinit === 'function') {
+    try { window._gwDailyReinit(); } catch(e) { console.warn('[GW] daily re-init failed:', e); }
+  }
 }
 _mergeWeeklyStatsRetired();
 document.addEventListener('DOMContentLoaded', _mergeWeeklyStatsRetired);
@@ -7175,6 +7243,8 @@ function render() {
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td>${d._devyEligYr}</td>
         <td>${d._devyKtc > 0 ? d._devyKtc.toLocaleString() : '—'}</td>
+        <td class="opp-cell weekly-only-cell" style="display:none">—</td>
+        <td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>
         <td>—</td>
         <td>—</td>
         <td class="pts-cell yrr-cell" style="display:none">—</td>
@@ -7193,7 +7263,7 @@ function render() {
       tiers.forEach(t => {
         if (t.afterRank > prevDisplayRank && t.afterRank <= displayRank) {
           html += `<tr class="tier-row" data-tier-id="${t.id}">
-            <td colspan="14"><div class="tier-inner">
+            <td colspan="16"><div class="tier-inner">
               <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
               ${editable ? `<span class="tier-name-static" data-tier-rename="${t.id}" title="Click to rename">${t.name}</span>
               <div class="tier-controls">
@@ -7229,13 +7299,13 @@ function render() {
     if (shouldBlur && i === blurCutoff && data.length > blurCutoff) {
       const _isSignedIn = !!window._authCurrentUser;
       if (isMine && !_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="14" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="16" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else if (isMine && !isPremium) {
-        html += '<tr id="premiumWallRow"><td colspan="14" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in each filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="16" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in each filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       } else if (!_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="14" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="16" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else {
-        html += '<tr id="premiumWallRow"><td colspan="14" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="16" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       }
     }
 
@@ -7246,6 +7316,8 @@ function render() {
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       <td class="adp-cell${_adpDelta==null?'':(_adpDelta>=3?' adp-value':(_adpDelta<=-3?' adp-reach':''))}" title="${_adpDelta==null?'':(()=>{const df=Math.round(_adpDelta);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${_adp != null ? _adp : '—'}</td>
+      <td class="opp-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return o || '—'; })()}</td>
+      <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); return (t != null ? t : '—'); })()}</td>
       <td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>
       <td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
       <td class="pts-cell yrr-cell" style="display:none">${d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')}</td>
@@ -7258,7 +7330,7 @@ function render() {
 
     // "Add tier" mini-button between rows (only show on hover via CSS)
     if (editable && showTiers && !tierMap[displayRank]) {
-      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="14"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
+      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="16"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
     }
   });
 
@@ -7268,7 +7340,7 @@ function render() {
     tiers.forEach(t => {
       if (t.afterRank > lastDisplayRank) {
         html += `<tr class="tier-row" data-tier-id="${t.id}">
-          <td colspan="14"><div class="tier-inner">
+          <td colspan="16"><div class="tier-inner">
             <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
             ${editable ? `<span class="tier-name-static">${t.name}</span>
             <div class="tier-controls">
@@ -8159,6 +8231,7 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
 // initializing window.isAdmin/currentUser. We accept the user object directly
 // from onAuthStateChanged and check the email against the admin list.
 const _JSMODEL_ADMIN_EMAILS = ['billingsj199@gmail.com'];
+window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
 function _jsModelCheckAdmin(userArg) {
   const tab = document.getElementById('jsModelVersionTab');
   // Resolve user from any source — listener arg, firebase singleton, or window stash
@@ -8189,6 +8262,120 @@ function _jsModelCheckAdmin(userArg) {
 }
 window._jsModelCheckAdmin = _jsModelCheckAdmin;
 _jsModelCheckAdmin();
+
+// === WEEKLY FORMAT (admin-only at launch) ===
+// Adds a WEEKLY format tab + admin week selector. When Weekly is active:
+//   - Hide ADP / AGE / P-SOS columns (via body.format-weekly CSS)
+//   - Show OPP + TEAM TOTAL columns
+//   - OPP populated from NFL_SCHEDULE_2026 + the active week (settings/active_week in Firestore)
+//   - TEAM TOTAL is stubbed (—) until DK weekly totals are wired site-wide
+(function(){
+  // Active week defaults to 1 until Firestore says otherwise.
+  window._weeklyActiveWeek = window._weeklyActiveWeek || 1;
+
+  // Helper: opponent label for a team's matchup in the active week.
+  // Returns "@OPP" for away, "OPP" for home (with class hooks), "BYE" if bye.
+  window._weeklyOppFor = function(teamAbbr) {
+    if (!teamAbbr || typeof window.getNflScheduleForTeam !== 'function') return null;
+    const sched = window.getNflScheduleForTeam(teamAbbr);
+    if (!Array.isArray(sched)) return null;
+    const wk = window._weeklyActiveWeek || 1;
+    const entry = sched[wk - 1];
+    if (!entry) return null;
+    if (entry.bye) return 'BYE';
+    if (!entry.opp) return null;
+    return entry.home ? entry.opp : ('@' + entry.opp);
+  };
+
+  // Stub: TEAM TOTAL data isn't loaded site-wide yet. Returns null so the
+  // cell renders as "—". Wire this to real DK weekly totals in a follow-up.
+  window._weeklyTeamTotalFor = function(/* teamAbbr */) { return null; };
+
+  function _weeklyAdminCheck(userArg) {
+    const tab = document.getElementById('weeklyModeTab');
+    const selWrap = document.getElementById('weeklyWeekSelectorWrap');
+    let u = userArg || null;
+    if (!u && typeof firebase !== 'undefined' && firebase.auth) {
+      try { u = firebase.auth().currentUser; } catch(_e) {}
+    }
+    if (!u && typeof window._authCurrentUser !== 'undefined') u = window._authCurrentUser;
+    const adminByEmail = !!(u && u.email && _JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
+    const adminByFn = typeof window.isAdmin === 'function' && window.isAdmin();
+    const admin = adminByEmail || adminByFn;
+    if (tab) tab.style.display = admin ? '' : 'none';
+    if (selWrap) selWrap.style.display = (admin && currentMode === 'weekly') ? 'inline-flex' : 'none';
+    // If a non-admin somehow landed in WEEKLY, bounce them back to bestball.
+    if (!admin && currentMode === 'weekly') {
+      currentMode = 'bestball';
+      document.body.classList.remove('format-weekly');
+      document.querySelectorAll('.mode-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === 'bestball');
+      });
+      try { syncMode(); renumber(); render(); } catch(_e) {}
+    }
+  }
+  window._weeklyAdminCheck = _weeklyAdminCheck;
+  _weeklyAdminCheck();
+
+  // Load active week from Firestore (settings/active_week.week). Falls back to
+  // localStorage for offline / pre-auth so the chosen week persists between
+  // reloads even if Firestore is unavailable.
+  function _weeklyLoadActiveWeek() {
+    const stored = parseInt(localStorage.getItem('mff_active_week') || '1', 10);
+    if (stored >= 1 && stored <= 18) window._weeklyActiveWeek = stored;
+    const sel = document.getElementById('activeWeekSelect');
+    if (sel) sel.value = String(window._weeklyActiveWeek);
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    if (!db) return;
+    db.collection('settings').doc('active_week').get().then(doc => {
+      if (!doc.exists) return;
+      const d = doc.data() || {};
+      const wk = parseInt(d.week, 10);
+      if (wk >= 1 && wk <= 18) {
+        window._weeklyActiveWeek = wk;
+        localStorage.setItem('mff_active_week', String(wk));
+        if (sel) sel.value = String(wk);
+        // Re-render so OPP cells refresh if Weekly is active
+        if (currentMode === 'weekly' && typeof render === 'function') render();
+      }
+    }).catch(() => {});
+  }
+  _weeklyLoadActiveWeek();
+
+  // Wire the admin week selector — writes to Firestore + localStorage.
+  const _wkSel = document.getElementById('activeWeekSelect');
+  if (_wkSel && !_wkSel._bound) {
+    _wkSel._bound = true;
+    _wkSel.addEventListener('change', () => {
+      const wk = parseInt(_wkSel.value, 10);
+      if (!(wk >= 1 && wk <= 18)) return;
+      window._weeklyActiveWeek = wk;
+      localStorage.setItem('mff_active_week', String(wk));
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+      if (db) {
+        db.collection('settings').doc('active_week').set({
+          week: wk,
+          updatedAt: new Date().toISOString(),
+          updatedBy: (u && u.email) || 'admin'
+        }, { merge: true }).catch(e => console.warn('[Weekly] save failed:', e));
+      }
+      if (currentMode === 'weekly' && typeof render === 'function') render();
+      if (typeof toast === 'function') toast('Active week → ' + wk);
+    });
+  }
+
+  // Re-check admin visibility on auth state changes so the WEEKLY tab appears
+  // immediately after sign-in (matches the JS Model tab behavior).
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try {
+      firebase.auth().onAuthStateChanged(u => {
+        _weeklyAdminCheck(u);
+        if (u) _weeklyLoadActiveWeek();
+      });
+    } catch(_e) {}
+  }
+})();
 if (typeof firebase !== 'undefined' && firebase.auth) {
   try { firebase.auth().onAuthStateChanged(_jsModelCheckAdmin); } catch (_e) {}
 }
@@ -9200,9 +9387,21 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
 document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.dataset.mode === currentMode) return;
+    // WEEKLY format is admin-only. Guard at click time so a user who somehow
+    // sees a leftover tab can't enter the mode.
+    if (btn.dataset.mode === 'weekly') {
+      const isAdm = (typeof window.isAdmin === 'function' && window.isAdmin())
+        || (window._JSMODEL_ADMIN_EMAILS && window._authCurrentUser && window._authCurrentUser.email
+            && window._JSMODEL_ADMIN_EMAILS.includes(window._authCurrentUser.email.toLowerCase()));
+      if (!isAdm) { if (typeof toast === 'function') toast('Weekly format is admin-only for now'); return; }
+    }
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
+    // Toggle the body class + admin week selector visibility for WEEKLY format
+    document.body.classList.toggle('format-weekly', currentMode === 'weekly');
+    const wkSelWrap = document.getElementById('weeklyWeekSelectorWrap');
+    if (wkSelWrap) wkSelWrap.style.display = (currentMode === 'weekly') ? 'inline-flex' : 'none';
     // If sync is on, pull the entering mode's positional order from one of its
     // partners. With the 3-way redraft/bestball/superflex mesh, we pick a
     // primary source per mode so the user gets a deterministic result:
@@ -12488,10 +12687,18 @@ document.addEventListener('click', function(e) {
     // Load image — use customImg if available, otherwise ESPN headshot
     // If headshot fails or returns a placeholder, remove from pool and try next
     let _epSkipAttempts = 0;
+    let _epLoadTimer = null;
     function _epTryLoadImage() {
       const imgUrl = todayPlayer.customImg || getHeadshotUrl(todayPlayer.id);
-      epImage.src = imgUrl;
-      epImage.onload = () => {
+
+      // Each attempt is guarded so a handler that fires after a later skip
+      // can't apply stale state from a prior attempt.
+      const attemptId = ++_epTryLoadImage._attemptSeq;
+      const isCurrent = () => attemptId === _epTryLoadImage._attemptSeq;
+
+      const handleLoad = () => {
+        if (!isCurrent()) return;
+        if (_epLoadTimer) { clearTimeout(_epLoadTimer); _epLoadTimer = null; }
         if (epImage.naturalWidth < 50 || epImage.naturalHeight < 50) {
           addBadImage(todayPlayer.id);
           _epSkipToNext();
@@ -12506,11 +12713,49 @@ document.addEventListener('click', function(e) {
           epImage.classList.remove('ep-reveal');
         }
       };
-      epImage.onerror = () => {
+      const handleError = () => {
+        if (!isCurrent()) return;
+        if (_epLoadTimer) { clearTimeout(_epLoadTimer); _epLoadTimer = null; }
         addBadImage(todayPlayer.id);
         _epSkipToNext();
       };
+
+      // Attach handlers BEFORE assigning src. Setting src first can drop the
+      // load event for browser-cached images (the load fires synchronously
+      // during the assignment, before the handler is in place) — that left
+      // the placeholder stuck on "Loading today's player..." forever.
+      epImage.onload = handleLoad;
+      epImage.onerror = handleError;
+
+      // Force a reload even if the URL is unchanged from a prior attempt
+      // (otherwise no event fires when reassigning the same src).
+      if (epImage.src === imgUrl) epImage.removeAttribute('src');
+      epImage.src = imgUrl;
+
+      // Safety net 1: image already complete (synchronous cache hit before
+      // handlers were attached, even with the above ordering on some browsers).
+      if (epImage.complete) {
+        if (epImage.naturalWidth > 0) {
+          // Defer to next tick so the rest of init() (state save, etc.) runs first
+          setTimeout(handleLoad, 0);
+        } else {
+          setTimeout(handleError, 0);
+        }
+        return;
+      }
+
+      // Safety net 2: if neither load nor error fires within 6 seconds, treat
+      // as a failed load and skip to the next player. Without this, a single
+      // hung request could pin the daily on "Loading…" indefinitely.
+      if (_epLoadTimer) clearTimeout(_epLoadTimer);
+      _epLoadTimer = setTimeout(() => {
+        if (!isCurrent()) return;
+        console.warn('[Guess Who] image load timeout, skipping', todayPlayer && todayPlayer.name, todayPlayer && todayPlayer.id);
+        handleError();
+      }, 6000);
     }
+    _epTryLoadImage._attemptSeq = 0;
+
     function _epSkipToNext() {
       _epSkipAttempts++;
       if (_epSkipAttempts < DAILY_COMBINED_POOL.length) {
@@ -13387,6 +13632,10 @@ document.addEventListener('click', function(e) {
     window._gwGetPool2000s = function() { return gwPool2000s; };
     window._gwGetPool2010s = function() { return gwPool2010s; };
     window._gwGetPoolCollege = function() { return gwPoolCollege; };
+    // Expose pool builder so callers (WEEKLY_STATS_RETIRED post-merge,
+    // daily Elite Pull init) can trigger a rebuild after upstream data grows.
+    // The signature check inside initGwPool() makes repeated calls cheap.
+    window._gwInitPool = initGwPool;
 
     // Ensure all-time pool players (legends) exist in D so player cards can open for them
     if (gwPoolAlltime && gwPoolAlltime.length) {
@@ -14099,7 +14348,16 @@ document.addEventListener('click', function(e) {
   function waitForPools(cb) {
     const check = () => {
       // The unlimited Elite Pull initializes pools on a 3s timeout; we wait for them
-      if (typeof window._gwGetPoolCurrent === 'function') { cb(); return; }
+      if (typeof window._gwGetPoolCurrent === 'function') {
+        // Force a build now (the signature check inside makes this cheap if
+        // already built). Without this, the daily races the 3s timer and may
+        // see empty pools, then never re-checks.
+        if (typeof window._gwInitPool === 'function') {
+          try { window._gwInitPool(); } catch(e) { console.warn('[GW Daily] pool init failed:', e); }
+        }
+        cb();
+        return;
+      }
       setTimeout(check, 500);
     };
     check();
@@ -14416,16 +14674,24 @@ document.addEventListener('click', function(e) {
     return { init, renderStreak, statePrefix: config.statePrefix };
   }
 
-  // Expose pool getters from the unlimited GW
-  // These will be set after the unlimited GW initializes its pools
-  let _poolCurrent = null;
-  let _poolAlltime = null;
+  // Track every created daily game so _gwDailyReinit() can re-init them all
+  // when the upstream pool grows (e.g. WEEKLY_STATS_RETIRED merges in post 3s-timer).
+  const _createdGames = [];
 
-  // Wait for pools, then create both daily games
+  // 150+ helper: filter to players who scored >= 150 fpts in their best season
+  const _pool150 = (base) => base ? base.filter(p => p.bestSzn != null && p.bestSzn >= 150) : [];
+
+  // Track ALL vs 150+ variants by group so toggle can re-render the correct streak
+  const _dailyVariants = {};
+
+  // Wait for pools (and force a build), then create every daily game. We always
+  // create each game even if its pool is empty right now — init() bails on
+  // empty pools, and _gwDailyReinit() re-runs init() once the retired weekly
+  // stats merge in and the era pools fill out.
   waitForPools(function() {
-    _poolCurrent = window._gwGetPoolCurrent();
-    _poolAlltime = window._gwGetPoolAlltime();
-    const _poolCollege = typeof window._gwGetPoolCollege === 'function' ? window._gwGetPoolCollege() : null;
+    const _gpCurrent = () => (typeof window._gwGetPoolCurrent === 'function' ? (window._gwGetPoolCurrent() || []) : []);
+    const _gp2000s   = () => (typeof window._gwGetPool2000s === 'function' ? (window._gwGetPool2000s() || []) : []);
+    const _gp2010s   = () => (typeof window._gwGetPool2010s === 'function' ? (window._gwGetPool2010s() || []) : []);
 
     const dailyCurrent = createDailyGW({
       statePrefix: 'gwd_c',
@@ -14440,109 +14706,87 @@ document.addEventListener('click', function(e) {
       suggestionsId: 'gwDailySuggestions',
       guessRowsId: 'gwDailyGuessRows',
       streakElId: 'gwDailyStreak',
-      getPool: () => _poolCurrent,
+      getPool: _gpCurrent,
       lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily === 'function') window._lbUpdateGwDaily(won, streak); }
     });
-    if (dailyCurrent) dailyCurrent.init();
+    if (dailyCurrent) { dailyCurrent.init(); _createdGames.push(dailyCurrent); }
 
+    const daily00s = createDailyGW({
+      statePrefix: 'gwd_00s',
+      streakKey: 'gw_daily_00s_streak',
+      lastWinKey: 'gw_daily_00s_last_win',
+      seedOffset: 20003,
+      modeLabel: '2000s',
+      maxGuesses: 8,
+      inputId: 'gwDaily00sInput',
+      guessBtnId: 'gwDaily00sGuessBtn',
+      resultId: 'gwDaily00sResult',
+      giveUpBtnId: 'gwDaily00sGiveUpBtn',
+      suggestionsId: 'gwDaily00sSuggestions',
+      guessRowsId: 'gwDaily00sGuessRows',
+      streakElId: 'gwDaily00sStreak',
+      getPool: _gp2000s,
+      lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily00s === 'function') window._lbUpdateGwDaily00s(won, streak); }
+    });
+    if (daily00s) { daily00s.init(); _dailyVariants['gwDaily00s_all'] = daily00s; _createdGames.push(daily00s); }
 
+    const daily10s = createDailyGW({
+      statePrefix: 'gwd_10s',
+      streakKey: 'gw_daily_10s_streak',
+      lastWinKey: 'gw_daily_10s_last_win',
+      seedOffset: 20107,
+      modeLabel: '2010s',
+      maxGuesses: 8,
+      inputId: 'gwDaily10sInput',
+      guessBtnId: 'gwDaily10sGuessBtn',
+      resultId: 'gwDaily10sResult',
+      giveUpBtnId: 'gwDaily10sGiveUpBtn',
+      suggestionsId: 'gwDaily10sSuggestions',
+      guessRowsId: 'gwDaily10sGuessRows',
+      streakElId: 'gwDaily10sStreak',
+      getPool: _gp2010s,
+      lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily10s === 'function') window._lbUpdateGwDaily10s(won, streak); }
+    });
+    if (daily10s) { daily10s.init(); _dailyVariants['gwDaily10s_all'] = daily10s; _createdGames.push(daily10s); }
 
-    const _pool2000s = typeof window._gwGetPool2000s === 'function' ? window._gwGetPool2000s() : null;
-    const _pool2010s = typeof window._gwGetPool2010s === 'function' ? window._gwGetPool2010s() : null;
+    // === 150+ variants for 2000s, 2010s ===
+    const daily00s150 = createDailyGW({
+      statePrefix: 'gwd_00s150',
+      streakKey: 'gw_daily_00s150_streak',
+      lastWinKey: 'gw_daily_00s150_last_win',
+      seedOffset: 31502,
+      modeLabel: '2000s',
+      maxGuesses: 8,
+      inputId: 'gwDaily00s150Input',
+      guessBtnId: 'gwDaily00s150GuessBtn',
+      resultId: 'gwDaily00s150Result',
+      giveUpBtnId: 'gwDaily00s150GiveUpBtn',
+      suggestionsId: 'gwDaily00s150Suggestions',
+      guessRowsId: 'gwDaily00s150GuessRows',
+      streakElId: 'gwDaily00sStreak',
+      getPool: () => _pool150(_gp2000s()),
+      lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily00s150 === 'function') window._lbUpdateGwDaily00s150(won, streak); }
+    });
+    if (daily00s150) { daily00s150.init(); _dailyVariants['gwDaily00s_150'] = daily00s150; _createdGames.push(daily00s150); }
 
-    // Track ALL vs 150+ variants by group so toggle can re-render the correct streak
-    const _dailyVariants = {};
-
-    if (_pool2000s && _pool2000s.length) {
-      const daily00s = createDailyGW({
-        statePrefix: 'gwd_00s',
-        streakKey: 'gw_daily_00s_streak',
-        lastWinKey: 'gw_daily_00s_last_win',
-        seedOffset: 20003,
-        modeLabel: '2000s',
-        maxGuesses: 8,
-        inputId: 'gwDaily00sInput',
-        guessBtnId: 'gwDaily00sGuessBtn',
-        resultId: 'gwDaily00sResult',
-        giveUpBtnId: 'gwDaily00sGiveUpBtn',
-        suggestionsId: 'gwDaily00sSuggestions',
-        guessRowsId: 'gwDaily00sGuessRows',
-        streakElId: 'gwDaily00sStreak',
-        getPool: () => _pool2000s,
-        lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily00s === 'function') window._lbUpdateGwDaily00s(won, streak); }
-      });
-      if (daily00s) { daily00s.init(); _dailyVariants['gwDaily00s_all'] = daily00s; }
-    }
-
-    if (_pool2010s && _pool2010s.length) {
-      const daily10s = createDailyGW({
-        statePrefix: 'gwd_10s',
-        streakKey: 'gw_daily_10s_streak',
-        lastWinKey: 'gw_daily_10s_last_win',
-        seedOffset: 20107,
-        modeLabel: '2010s',
-        maxGuesses: 8,
-        inputId: 'gwDaily10sInput',
-        guessBtnId: 'gwDaily10sGuessBtn',
-        resultId: 'gwDaily10sResult',
-        giveUpBtnId: 'gwDaily10sGiveUpBtn',
-        suggestionsId: 'gwDaily10sSuggestions',
-        guessRowsId: 'gwDaily10sGuessRows',
-        streakElId: 'gwDaily10sStreak',
-        getPool: () => _pool2010s,
-        lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily10s === 'function') window._lbUpdateGwDaily10s(won, streak); }
-      });
-      if (daily10s) { daily10s.init(); _dailyVariants['gwDaily10s_all'] = daily10s; }
-    }
-
-    // === 150+ variants for All-Time, 2000s, 2010s ===
-    const _pool150 = (base) => base ? base.filter(p => p.bestSzn != null && p.bestSzn >= 150) : null;
-
-
-
-    const _pool00s150 = _pool150(_pool2000s);
-    if (_pool00s150 && _pool00s150.length) {
-      const daily00s150 = createDailyGW({
-        statePrefix: 'gwd_00s150',
-        streakKey: 'gw_daily_00s150_streak',
-        lastWinKey: 'gw_daily_00s150_last_win',
-        seedOffset: 31502,
-        modeLabel: '2000s',
-        maxGuesses: 8,
-        inputId: 'gwDaily00s150Input',
-        guessBtnId: 'gwDaily00s150GuessBtn',
-        resultId: 'gwDaily00s150Result',
-        giveUpBtnId: 'gwDaily00s150GiveUpBtn',
-        suggestionsId: 'gwDaily00s150Suggestions',
-        guessRowsId: 'gwDaily00s150GuessRows',
-        streakElId: 'gwDaily00sStreak',
-        getPool: () => _pool00s150,
-        lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily00s150 === 'function') window._lbUpdateGwDaily00s150(won, streak); }
-      });
-      if (daily00s150) { daily00s150.init(); _dailyVariants['gwDaily00s_150'] = daily00s150; }
-    }
-
-    const _pool10s150 = _pool150(_pool2010s);
-    if (_pool10s150 && _pool10s150.length) {
-      const daily10s150 = createDailyGW({
-        statePrefix: 'gwd_10s150',
-        streakKey: 'gw_daily_10s150_streak',
-        lastWinKey: 'gw_daily_10s150_last_win',
-        seedOffset: 31503,
-        modeLabel: '2010s',
-        maxGuesses: 8,
-        inputId: 'gwDaily10s150Input',
-        guessBtnId: 'gwDaily10s150GuessBtn',
-        resultId: 'gwDaily10s150Result',
-        giveUpBtnId: 'gwDaily10s150GiveUpBtn',
-        suggestionsId: 'gwDaily10s150Suggestions',
-        guessRowsId: 'gwDaily10s150GuessRows',
-        streakElId: 'gwDaily10sStreak',
-        getPool: () => _pool10s150,
-        lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily10s150 === 'function') window._lbUpdateGwDaily10s150(won, streak); }
-      });
-      if (daily10s150) { daily10s150.init(); _dailyVariants['gwDaily10s_150'] = daily10s150; }
-    }
+    const daily10s150 = createDailyGW({
+      statePrefix: 'gwd_10s150',
+      streakKey: 'gw_daily_10s150_streak',
+      lastWinKey: 'gw_daily_10s150_last_win',
+      seedOffset: 31503,
+      modeLabel: '2010s',
+      maxGuesses: 8,
+      inputId: 'gwDaily10s150Input',
+      guessBtnId: 'gwDaily10s150GuessBtn',
+      resultId: 'gwDaily10s150Result',
+      giveUpBtnId: 'gwDaily10s150GiveUpBtn',
+      suggestionsId: 'gwDaily10s150Suggestions',
+      guessRowsId: 'gwDaily10s150GuessRows',
+      streakElId: 'gwDaily10sStreak',
+      getPool: () => _pool150(_gp2010s()),
+      lbUpdate: (won, streak) => { if (typeof window._lbUpdateGwDaily10s150 === 'function') window._lbUpdateGwDaily10s150(won, streak); }
+    });
+    if (daily10s150) { daily10s150.init(); _dailyVariants['gwDaily10s_150'] = daily10s150; _createdGames.push(daily10s150); }
 
     // === Wire up ALL/150+ toggle buttons ===
     document.querySelectorAll('[data-dtoggle]').forEach(btn => {
@@ -14563,9 +14807,20 @@ document.addEventListener('click', function(e) {
         if (variant && typeof variant.renderStreak === 'function') variant.renderStreak();
       });
     });
-
-
   });
+
+  // Called after WEEKLY_STATS_RETIRED merges + _gwInitPool() rebuilds pools.
+  // Re-runs each daily game's init() so it re-picks a target from the now-full
+  // pool. createDailyGW's init() preserves saved-state guesses if the saved
+  // target name still exists in the new pool (so users mid-game keep their
+  // streak); otherwise a fresh target is picked from the corrected pool.
+  window._gwDailyReinit = function() {
+    _createdGames.forEach(g => {
+      if (g && typeof g.init === 'function') {
+        try { g.init(); } catch(e) { console.warn('[GW Daily] reinit failed:', e); }
+      }
+    });
+  };
 })();
 
 // Dynamic sticky offsets no longer needed - flex layout handles it
@@ -19797,6 +20052,157 @@ window.fmtHeight = fmtHeight;
       });
     }
 
+    // ===== Premium Redeem Codes =====
+    const premCodeCreateBtn = document.getElementById('adminPremCodeCreateBtn');
+    const premCodeRefreshBtn = document.getElementById('adminPremCodeRefreshBtn');
+    const premCodeListEl = document.getElementById('adminPremCodeList');
+    const premCodeMsg = document.getElementById('adminPremCodeMsg');
+
+    function _renderPremCodeRow(code, data) {
+      const expiresStr = data.expires || '';
+      let expDate = null;
+      if (expiresStr) {
+        const [ey, em, ed] = expiresStr.split('-').map(Number);
+        expDate = new Date(ey, em - 1, ed, 23, 59, 59, 999);
+      }
+      const expired = expDate ? (Date.now() > expDate.getTime()) : false;
+      const disabled = !!data.disabled;
+      const uses = (typeof data.uses === 'number') ? data.uses : 0;
+      const status = disabled ? 'DISABLED' : (expired ? 'EXPIRED' : 'ACTIVE');
+      const statusColor = disabled ? '#ef4444' : (expired ? '#9ca3af' : '#22c55e');
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.5rem .65rem;border:1px solid var(--border);border-radius:6px;background:var(--elev-1)">' +
+        '<div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1">' +
+          '<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap"><span style="font-family:\'JetBrains Mono\',\'DM Sans\',monospace;font-weight:700;letter-spacing:1px">' + code + '</span>' +
+          '<span style="font-size:.62rem;color:' + statusColor + ';letter-spacing:1px;font-weight:600">' + status + '</span></div>' +
+          '<div style="font-size:.68rem;color:var(--text2)">' + (data.days || 0) + 'd premium · expires ' + (expiresStr || '?') + ' · used ' + uses + 'x</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:4px;flex-shrink:0">' +
+          '<button class="acct-btn acct-btn-outline" data-pc-copy="' + code + '" style="padding:.3rem .55rem;font-size:.65rem">COPY</button>' +
+          '<button class="acct-btn acct-btn-outline" data-pc-toggle="' + code + '" data-pc-disabled="' + (disabled ? '1' : '0') + '" style="padding:.3rem .55rem;font-size:.65rem">' + (disabled ? 'ENABLE' : 'DISABLE') + '</button>' +
+          '<button class="acct-btn acct-btn-outline" data-pc-delete="' + code + '" style="padding:.3rem .55rem;font-size:.65rem;color:#ef4444">DELETE</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function loadPremiumCodes() {
+      if (!premCodeListEl) return;
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      if (!db) { premCodeListEl.innerHTML = '<div style="color:var(--text2);font-size:.7rem">Database unavailable.</div>'; return; }
+      premCodeListEl.innerHTML = '<div style="color:var(--text2);font-size:.7rem">Loading…</div>';
+      db.collection('premium_codes').orderBy('createdAt', 'desc').limit(50).get().then(snap => {
+        if (snap.empty) {
+          premCodeListEl.innerHTML = '<div style="color:var(--text2);font-size:.7rem">No codes yet.</div>';
+          return;
+        }
+        const rows = [];
+        snap.forEach(doc => { rows.push(_renderPremCodeRow(doc.id, doc.data() || {})); });
+        premCodeListEl.innerHTML = rows.join('');
+      }).catch(e => {
+        premCodeListEl.innerHTML = '<div style="color:#ef4444;font-size:.7rem">Load error: ' + (e.message || e) + '</div>';
+      });
+    }
+
+    if (premCodeCreateBtn && !premCodeCreateBtn._bound) {
+      premCodeCreateBtn._bound = true;
+      premCodeCreateBtn.addEventListener('click', () => {
+        try {
+          const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+          if (!db) { showAdminMsg(premCodeMsg, 'Database not available', 'error'); return; }
+          const codeRaw = (document.getElementById('adminPremCodeName').value || '').trim().toUpperCase();
+          const days = parseInt(document.getElementById('adminPremCodeDays').value, 10);
+          const expires = (document.getElementById('adminPremCodeExpires').value || '').trim();
+          if (!codeRaw || !/^[A-Z0-9_-]{3,40}$/.test(codeRaw)) {
+            showAdminMsg(premCodeMsg, 'Code must be 3–40 chars, letters/numbers/-/_ only.', 'error'); return;
+          }
+          if (!days || days < 1 || days > 3650) {
+            showAdminMsg(premCodeMsg, 'Days must be between 1 and 3650.', 'error'); return;
+          }
+          if (!expires || !/^\d{4}-\d{2}-\d{2}$/.test(expires)) {
+            showAdminMsg(premCodeMsg, 'Pick a valid expiration date.', 'error'); return;
+          }
+          const [ey, em, ed] = expires.split('-').map(Number);
+          const expEnd = new Date(ey, em - 1, ed, 23, 59, 59, 999).getTime();
+          if (expEnd < Date.now()) {
+            showAdminMsg(premCodeMsg, 'Expiration date is in the past.', 'error'); return;
+          }
+          premCodeCreateBtn.disabled = true;
+          premCodeCreateBtn.textContent = 'CREATING…';
+          const adminEmail = (firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : 'admin';
+          const docRef = db.collection('premium_codes').doc(codeRaw);
+          docRef.get().then(snap => {
+            if (snap.exists) {
+              throw new Error('Code ' + codeRaw + ' already exists.');
+            }
+            return docRef.set({
+              code: codeRaw,
+              days: days,
+              expires: expires,
+              disabled: false,
+              uses: 0,
+              createdBy: adminEmail,
+              createdAt: new Date().toISOString()
+            });
+          }).then(() => {
+            premCodeCreateBtn.disabled = false;
+            premCodeCreateBtn.textContent = 'CREATE CODE';
+            showAdminMsg(premCodeMsg, '✅ Created code ' + codeRaw + ' — ' + days + ' days premium, redeemable until ' + expires, 'success');
+            document.getElementById('adminPremCodeName').value = '';
+            loadPremiumCodes();
+          }).catch(e => {
+            premCodeCreateBtn.disabled = false;
+            premCodeCreateBtn.textContent = 'CREATE CODE';
+            showAdminMsg(premCodeMsg, 'Error: ' + (e.message || e), 'error');
+          });
+        } catch (err) {
+          premCodeCreateBtn.disabled = false;
+          premCodeCreateBtn.textContent = 'CREATE CODE';
+          showAdminMsg(premCodeMsg, 'Error: ' + err.message, 'error');
+        }
+      });
+    }
+
+    if (premCodeRefreshBtn && !premCodeRefreshBtn._bound) {
+      premCodeRefreshBtn._bound = true;
+      premCodeRefreshBtn.addEventListener('click', loadPremiumCodes);
+    }
+
+    if (premCodeListEl && !premCodeListEl._bound) {
+      premCodeListEl._bound = true;
+      premCodeListEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+        if (!db) return;
+        const copyCode = btn.getAttribute('data-pc-copy');
+        const toggleCode = btn.getAttribute('data-pc-toggle');
+        const deleteCode = btn.getAttribute('data-pc-delete');
+        if (copyCode) {
+          if (navigator.clipboard) navigator.clipboard.writeText(copyCode).catch(()=>{});
+          showAdminMsg(premCodeMsg, 'Copied ' + copyCode + ' to clipboard.', 'success');
+          return;
+        }
+        if (toggleCode) {
+          const willDisable = btn.getAttribute('data-pc-disabled') !== '1';
+          db.collection('premium_codes').doc(toggleCode).update({ disabled: willDisable }).then(() => {
+            showAdminMsg(premCodeMsg, (willDisable ? 'Disabled ' : 'Enabled ') + toggleCode, 'success');
+            loadPremiumCodes();
+          }).catch(err => showAdminMsg(premCodeMsg, 'Error: ' + err.message, 'error'));
+          return;
+        }
+        if (deleteCode) {
+          if (!confirm('Delete code ' + deleteCode + '? This cannot be undone.')) return;
+          db.collection('premium_codes').doc(deleteCode).delete().then(() => {
+            showAdminMsg(premCodeMsg, 'Deleted ' + deleteCode, 'success');
+            loadPremiumCodes();
+          }).catch(err => showAdminMsg(premCodeMsg, 'Error: ' + err.message, 'error'));
+          return;
+        }
+      });
+    }
+
+    // Load the list on admin panel init
+    loadPremiumCodes();
+
     // ===== Rankings Graphic Generator =====
     const gfxPreviewBtn = document.getElementById('adminGfxPreviewBtn');
     const gfxDownloadBtn = document.getElementById('adminGfxDownloadBtn');
@@ -23288,65 +23694,113 @@ window.fmtHeight = fmtHeight;
     el.style.color = ok ? '#22c55e' : '#ef4444';
   }
 
+  // Resolve a code definition — checks hardcoded REDEEM_CODES first, then
+  // falls back to admin-created codes in Firestore (premium_codes/{CODE}).
+  // Returns a Promise<{days, expires, source} | null>.
+  function _resolveRedeemCode(raw) {
+    const local = REDEEM_CODES[raw];
+    if (local) return Promise.resolve({ days: local.days, expires: local.expires, source: 'builtin' });
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    if (!db) return Promise.resolve(null);
+    return db.collection('premium_codes').doc(raw).get().then(doc => {
+      if (!doc.exists) return null;
+      const d = doc.data() || {};
+      if (d.disabled) return { disabled: true };
+      return { days: d.days, expires: d.expires, source: 'firestore' };
+    }).catch(() => null);
+  }
+
   function applyRedeemCode() {
     const input = document.getElementById('premiumRedeemInput');
     if (!input) return;
     const raw = (input.value || '').trim().toUpperCase();
     if (!raw) { _showRedeemMsg('Enter a code.', false); return; }
-    const def = REDEEM_CODES[raw];
-    if (!def) { _showRedeemMsg('Invalid code.', false); return; }
 
-    // Use Eastern date for consistency with the rest of the app's daily logic
-    const nowEastern = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
-    const todayMidnight = new Date(nowEastern.getFullYear(), nowEastern.getMonth(), nowEastern.getDate()).getTime();
+    _resolveRedeemCode(raw).then(def => {
+      if (!def) { _showRedeemMsg('Invalid code.', false); return; }
+      if (def.disabled) { _showRedeemMsg('This code has been disabled.', false); return; }
+      if (!def.days || !def.expires) { _showRedeemMsg('Invalid code.', false); return; }
 
-    // Code expiration: end of `expires` day (23:59:59.999)
-    const [ey, em, ed] = def.expires.split('-').map(Number);
-    const codeExpiresAt = new Date(ey, em - 1, ed, 23, 59, 59, 999).getTime();
+      // Code expiration: end of `expires` day (23:59:59.999)
+      const [ey, em, ed] = def.expires.split('-').map(Number);
+      const codeExpiresAt = new Date(ey, em - 1, ed, 23, 59, 59, 999).getTime();
+      if (Date.now() > codeExpiresAt) {
+        _showRedeemMsg('This code has expired.', false);
+        return;
+      }
 
-    if (Date.now() > codeExpiresAt) {
-      _showRedeemMsg('This code has expired.', false);
-      return;
-    }
-
-    // Check for existing premium — don't let a redeem code shorten a longer existing subscription
-    const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
-    const existingExpires = (existing && existing.expires) ? existing.expires : 0;
-
-    // Grant the full `days` duration regardless of when applied (as long as the code itself hasn't expired)
-    const grantEnd = Date.now() + def.days * 24 * 60 * 60 * 1000;
-    const finalExpires = Math.max(existingExpires, grantEnd);
-
-    const record = {
-      plan: 'Free Trial (' + raw + ')',
-      price: '$0.00 (code)',
-      activated: Date.now(),
-      expires: finalExpires,
-      redeemCode: raw
-    };
-    localStorage.setItem('jb_premium', JSON.stringify(record));
-
-    // Log redeem usage to Firestore
-    try {
       const u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-      if (u && db) {
-        db.collection('redeem_uses').add({
+      if (!u || !u.email) {
+        _showRedeemMsg('Please sign in to redeem a code.', false);
+        return;
+      }
+
+      // Once-per-user check: query redeem_uses for this uid+code
+      const checkUsed = db
+        ? db.collection('redeem_uses').where('uid', '==', u.uid).where('code', '==', raw).limit(1).get()
+            .then(snap => !snap.empty).catch(() => false)
+        : Promise.resolve(false);
+
+      checkUsed.then(alreadyUsed => {
+        if (alreadyUsed) { _showRedeemMsg('You have already redeemed this code.', false); return; }
+
+        // Grant the full `days` duration (capped at the code's own expiration date)
+        const grantEnd = Math.min(Date.now() + def.days * 24 * 60 * 60 * 1000, codeExpiresAt);
+
+        // Don't shorten a longer existing subscription
+        const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+        const existingExpires = (existing && existing.expires) ? existing.expires : 0;
+        const finalExpires = Math.max(existingExpires, grantEnd);
+
+        const record = {
+          plan: 'Free Trial (' + raw + ')',
+          price: '$0.00 (code)',
+          activated: Date.now(),
+          expires: finalExpires,
+          redeemCode: raw,
+          uid: u.uid
+        };
+        localStorage.setItem('jb_premium', JSON.stringify(record));
+
+        // Persist to Firestore so premium follows the user across devices
+        const docId = u.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const giftedWrite = db ? db.collection('gifted_premium').doc(docId).set({
+          email: u.email.toLowerCase(),
+          expires: finalExpires,
+          days: def.days,
+          label: 'Code: ' + raw,
+          grantedBy: 'redeem:' + raw,
+          grantedAt: new Date().toISOString()
+        }, { merge: true }).catch(e => console.warn('[Redeem] gifted_premium write failed:', e))
+          : Promise.resolve();
+
+        // Log redeem usage (also used for once-per-user enforcement)
+        const usesLog = db ? db.collection('redeem_uses').add({
           uid: u.uid,
           email: (u.email || ''),
           code: raw,
           days: def.days,
+          source: def.source || 'builtin',
           grantedUntil: new Date(finalExpires).toISOString(),
           at: new Date().toISOString()
-        }).catch(e => console.warn('[Redeem] log error:', e));
-      }
-    } catch(e) { console.warn('[Redeem] log failed:', e); }
+        }).catch(e => console.warn('[Redeem] log error:', e))
+          : Promise.resolve();
 
-    const daysLeft = Math.ceil((finalExpires - Date.now()) / (24 * 60 * 60 * 1000));
-    _showRedeemMsg('Premium activated! ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' of free access.', true);
-    checkPremiumStatus();
-    if (typeof toast === 'function') toast('Premium activated via code ' + raw + '!');
-    if (typeof render === 'function') render();
+        // Increment uses counter on the Firestore code (best-effort)
+        const incUses = (db && def.source === 'firestore') ? db.collection('premium_codes').doc(raw).update({
+          uses: firebase.firestore.FieldValue.increment(1)
+        }).catch(() => {}) : Promise.resolve();
+
+        Promise.all([giftedWrite, usesLog, incUses]).then(() => {
+          const daysLeft = Math.ceil((finalExpires - Date.now()) / (24 * 60 * 60 * 1000));
+          _showRedeemMsg('Premium activated! ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' of free access.', true);
+          checkPremiumStatus();
+          if (typeof toast === 'function') toast('Premium activated via code ' + raw + '!');
+          if (typeof render === 'function') render();
+        });
+      });
+    });
   }
 
   const _redeemBtn = document.getElementById('premiumRedeemApply');

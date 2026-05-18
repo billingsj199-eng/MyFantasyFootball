@@ -1,6 +1,6 @@
 # MyFantasyFootball — Backlog
 
-_Last updated: 2026-05-13_
+_Last updated: 2026-05-18_
 
 Running backlog for myfantasyfootball.org. Items are grouped by what's blocking them, then by effort. **Read DEPLOY_NOTES.md first** if any "Shipped" item below mentions Firestore rules — those features won't work in prod until rules are pushed.
 
@@ -23,6 +23,20 @@ If picking the next thing to do, in order:
 3. **Phone-test mobile responsiveness on real devices** — full mobile pass + emulator scan done 2026-05-06 but a real phone may still surface issues (touch targets, iOS Safari quirks, real-world rotation behavior).
 4. **ESPN league import** (multi-week) — biggest TAM unlock. Single largest gap in user acquisition.
 5. **Inline-style hex/rgba color audit for light mode** — 15 fixes shipped 2026-05-13 (plan-option cards, premium-redeem input/button/divider, rookie sub-pos filter, ADP source tabs, bench chip, JM badge, UD expand panel, pagination dots, etc.). The remaining inline `color:#000`/`#fff` patterns are mostly intentional (orange-accent buttons, white-on-solid-brand badges). Continue the audit only when you spot a *new* broken element.
+
+---
+
+## Weekly format expansion (scoped 2026-05-18, foundation shipped)
+
+The WEEKLY format tab + admin week selector + OPP column landed 2026-05-18 (admin-only at launch — see [index.html](index.html) `_weeklyAdminCheck`, `_weeklyOppFor`, `body.format-weekly` CSS). Roadmap before going live to all users:
+
+1. **TEAM TOTAL data wiring** — `window._weeklyTeamTotalFor(teamAbbr)` currently returns `null` so the cell shows `—`. Source it from DK weekly totals. DK lines are pulled for the Playoff SOS feature (weeks 15-17 only); need a site-wide weekly pull. Suggested path: scrape DK to `data/dk_weekly_totals_2026.js` shaped as `{wk1:{NE:24.5,KC:27.0,...}, wk2:{...}}`. The OPP column already reads `window._weeklyActiveWeek` so the total helper should too.
+2. **Weekly yards + TD odds columns** — DK player props (Anytime TD, O/U receiving/rushing/passing yards) per player per week. Add as 2-3 additional columns visible only in WEEKLY format. Same `weekly-only-col` / `.weekly-only-cell` CSS hooks already in place — just add `<th>` + cells and a helper like `window._weeklyPropFor(playerName, propKind)`. Decide: one combined "Odds" column with hover-popover, or separate Yds + TD columns. Data source TBD — DK API or scrape.
+3. **Weekly tab on player cards** — new tab inside the player-card modal that shows everything weekly: opponent, team total, spread, individual props (yards/TD odds), Mike Clay PPG, opponent's defense vs position rank, last 5 weeks of actual fantasy points if season is in progress. Should be the default tab when WEEKLY format is active. Player-card code lives around `openPlayerCard()` in [index.html](index.html).
+4. **K and D/ST weekly support** — currently OPP/TEAM TOTAL cells show `—` for K and DST (defensive check in the cell template). For K: weekly should show opponent, team total, FG odds, XP odds (or just an O/U on points scored). For D/ST: opponent, team total (theirs ↓ = good), expected sacks/INTs/yards-allowed odds, defensive props. Once data sources are picked, drop the K/DST guard in `.opp-cell` and `.teamtotal-cell` template at [index.html:7287](index.html:7287).
+5. **Weekly PROJ value** — PROJ column currently shows season PPG even in WEEKLY format. Wire to a true weekly projection (Mike Clay PPG × opponent defense-vs-position factor, OR a dedicated weekly source if one exists). Helper would be `window._weeklyProjFor(playerName)` returning a fpts number; intercept the existing PROJ cell renderer when `currentMode === 'weekly'`.
+6. **Hand-authored "Jack's Week N" rankings** — if you want the WEEKLY row order to differ from season rankings, need a separate storage path. Suggested: `rankings/jacks-weekly-{N}` in Firestore. Currently WEEKLY falls through to redraft-mode ranks (because `currentMode === 'weekly'` doesn't match any of the `dynasty*/superflex` checks in `[adp|sl]For()` helpers around index.html:6084).
+7. **Public launch** — flip `_weeklyAdminCheck` to always show the tab once items 1-5 are wired enough that non-admins get value. Until then, the tab is hidden and the click handler bounces non-admin clicks with a toast.
 
 ---
 

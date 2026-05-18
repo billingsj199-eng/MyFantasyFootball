@@ -5253,16 +5253,16 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
 }
 };
 </script>
-<!-- COLLEGE_WEEKLY: ~9 MB total, deferred. All consumers in index.html access
-     COLLEGE_WEEKLY inside function bodies with `typeof COLLEGE_WEEKLY !== 'undefined'`
-     guards, so no top-level wrap needed. devy file (435 KB) is now lazy-loaded
-     via _ensureCollegeStatsData() — its top-level COMBINE_DATA height/weight
-     patches use `if (COMBINE_DATA[name])` guards and the file self-inits
-     COLLEGE_WEEKLY, so deferring is safe (only side effect: bulk-patched devy
-     bios show "—" briefly until the lazy load completes). -->
-<script src="data/college_weekly_1.js" defer></script>
-<script src="data/college_weekly_2.js" defer></script>
-<script src="data/college_weekly_3.js" defer></script>
+<!-- COLLEGE_WEEKLY: ~9 MB total. Now FULLY lazy-loaded via _ensureCollegeStatsData()
+     instead of `defer` — saves the full 8.86 MB transfer on every cold load for
+     pages that don't open college data (Rankings, Mock Draft, Account, Daily
+     games, Trade Calc, etc.). All consumers in index.html access COLLEGE_WEEKLY
+     inside function bodies with `typeof COLLEGE_WEEKLY !== 'undefined'` guards,
+     so they gracefully no-op until the lazy load completes. Triggers covered:
+     openPlayerCard, switchPage(prospect|compare|backtest|mockdraft), dynasty
+     mode-switch / first dynasty render. Elite Pull college pool (Games page)
+     falls back to a non-weekly pool until first openPlayerCard load. -->
+<!-- (Scripts moved into the _ensureCollegeStatsData chain — see line ~5347.) -->
 <script src="data/wr_yprr.js"></script>
 <script src="data/js_model_data.js"></script>
 <script src="data/player_comps.js"></script>
@@ -5345,7 +5345,14 @@ window._ensureCollegeStatsData = (function() {
       .then(function() { return _loadScript('data/college_stats_manual_patch.js?v=2026-05-13'); })
       .then(function() { return _loadScript('data/college_stats_patch_phase3.js?v=2026-05-13'); });
     const devy = _loadScript('data/college_weekly_devy.js?v=2026-05-13');
-    promise = Promise.all([csChain, devy]).then(function() {
+    // college_weekly_1/2/3 (~8.86 MB total) — moved here from eager `defer` script
+    // tags 2026-05-18 so they no longer hit on every cold load. Files all
+    // populate the same COLLEGE_WEEKLY object and have no order dependency;
+    // loaded in parallel to minimize wall time once a college-using page is hit.
+    const cwk1 = _loadScript('data/college_weekly_1.js');
+    const cwk2 = _loadScript('data/college_weekly_2.js');
+    const cwk3 = _loadScript('data/college_weekly_3.js');
+    promise = Promise.all([csChain, devy, cwk1, cwk2, cwk3]).then(function() {
       try { if (window._csPatch1) window._csPatch1(); } catch (e) { console.warn('[CS patch 1]', e); }
       try { if (window._csPatch2) window._csPatch2(); } catch (e) { console.warn('[CS patch 2]', e); }
       try { if (window._csPatch3) window._csPatch3(); } catch (e) { console.warn('[CS patch 3]', e); }
@@ -8320,25 +8327,41 @@ _jsModelCheckAdmin();
   // Load active week from Firestore (settings/active_week.week). Falls back to
   // localStorage for offline / pre-auth so the chosen week persists between
   // reloads even if Firestore is unavailable.
+  //
+  // CRITICAL: This IIFE runs at line ~8300 of the inline script, but Firebase
+  // initializeApp() is at line ~22400. Calling firebase.firestore() before
+  // initializeApp throws "No Firebase App '[DEFAULT]' has been created" — a
+  // SYNCHRONOUS throw that halts the rest of the inline script (which is one
+  // ~43,000-line block). That breaks page nav, sign-in, openAuthModal, and
+  // basically every interactive feature. The fix: try/catch the firestore()
+  // call and treat any access failure as "no Firestore available right now".
+  // The auth-state listener at the bottom of the IIFE re-fires this loader
+  // once Firebase auth IS ready, so the Firestore read still happens.
   function _weeklyLoadActiveWeek() {
     const stored = parseInt(localStorage.getItem('mff_active_week') || '1', 10);
     if (stored >= 1 && stored <= 18) window._weeklyActiveWeek = stored;
     const sel = document.getElementById('activeWeekSelect');
     if (sel) sel.value = String(window._weeklyActiveWeek);
-    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    let db = null;
+    try {
+      db = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length)
+        ? firebase.firestore() : null;
+    } catch(_e) { db = null; }
     if (!db) return;
-    db.collection('settings').doc('active_week').get().then(doc => {
-      if (!doc.exists) return;
-      const d = doc.data() || {};
-      const wk = parseInt(d.week, 10);
-      if (wk >= 1 && wk <= 18) {
-        window._weeklyActiveWeek = wk;
-        localStorage.setItem('mff_active_week', String(wk));
-        if (sel) sel.value = String(wk);
-        // Re-render so OPP cells refresh if Weekly is active
-        if (currentMode === 'weekly' && typeof render === 'function') render();
-      }
-    }).catch(() => {});
+    try {
+      db.collection('settings').doc('active_week').get().then(doc => {
+        if (!doc.exists) return;
+        const d = doc.data() || {};
+        const wk = parseInt(d.week, 10);
+        if (wk >= 1 && wk <= 18) {
+          window._weeklyActiveWeek = wk;
+          localStorage.setItem('mff_active_week', String(wk));
+          if (sel) sel.value = String(wk);
+          // Re-render so OPP cells refresh if Weekly is active
+          if (currentMode === 'weekly' && typeof render === 'function') render();
+        }
+      }).catch(() => {});
+    } catch(_e) {}
   }
   _weeklyLoadActiveWeek();
 

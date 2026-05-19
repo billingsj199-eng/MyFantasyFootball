@@ -26,6 +26,7 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%230f0f1a'/%3E%3Crect x='8' y='32' width='7' height='9' rx='1.5' fill='%23f59e0b' opacity='.3'/%3E%3Crect x='17' y='25' width='7' height='16' rx='1.5' fill='%23f59e0b' opacity='.5'/%3E%3Crect x='26' y='17' width='7' height='24' rx='1.5' fill='%23f59e0b' opacity='.7'/%3E%3Crect x='35' y='9' width='7' height='32' rx='1.5' fill='%23f59e0b'/%3E%3Cpolyline points='11.5,29 20.5,22 29.5,14 38.5,6' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='38.5' cy='6' r='3' fill='%23f59e0b'/%3E%3C/svg%3E">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MFF">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -967,6 +968,11 @@ CLEAR ALL
   body.format-weekly #pageRankings #teamTotalHeader,
   body.format-weekly #pageRankings .opp-cell,
   body.format-weekly #pageRankings .teamtotal-cell { display: table-cell !important; }
+  /* Hide ALL + ROOKIES position pills in weekly (irrelevant to weekly scoring) */
+  body.format-weekly .pos-btn[data-pos="ALL"],
+  body.format-weekly .pos-btn[data-pos="ROOKIE"] { display: none !important; }
+  /* Show the FLEX pill only in weekly */
+  body.format-weekly #flexPosBtn { display: inline-flex !important; }
   /* Opp cell styling — match ADP cell visual rhythm */
   #pageRankings tbody .opp-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:54px}
   #pageRankings tbody .teamtotal-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:56px}
@@ -1013,6 +1019,7 @@ CLEAR ALL
 <button class="pos-btn" data-pos="RB">RB</button>
 <button class="pos-btn" data-pos="WR">WR</button>
 <button class="pos-btn" data-pos="TE">TE</button>
+<button class="pos-btn" data-pos="FLEX" id="flexPosBtn" style="display:none" title="RB + WR + TE combined">FLEX</button>
 <button class="pos-btn" data-pos="ROOKIE">ROOKIES</button>
 <button class="pos-btn" data-pos="DEVY" id="devyPosBtn" style="display:none">DEVY</button>
 <button class="pos-btn" data-pos="K">K</button>
@@ -5931,10 +5938,10 @@ let currentMode = 'bestball';
 // === VERSION SYSTEM: "consensus", "jacks", "jsmodel", "mine", each with independent boards/tiers per mode ===
 let currentVersion = 'consensus';
 const versionBoards = {
-  consensus: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() },
-  jacks: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() },
-  jsmodel: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: defaultBoard.slice(), dynasty: defaultBoard.slice(), dynastysf: defaultBoard.slice() },
-  mine: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice() }
+  consensus: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: bestBallDefaultBoard.slice() },
+  jacks: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: bestBallDefaultBoard.slice() },
+  jsmodel: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: defaultBoard.slice(), dynasty: defaultBoard.slice(), dynastysf: defaultBoard.slice(), weekly: bestBallDefaultBoard.slice() },
+  mine: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: bestBallDefaultBoard.slice() }
 };
 // MAIN-world content scripts (page-bridge.js) can't reach top-level const via window.X — attach explicitly.
 window.versionBoards = versionBoards;
@@ -5942,16 +5949,16 @@ const POS_TIER_KEYS = ['ALL','QB','RB','WR','TE','K','DST','ROOKIE'];
 function _mkPosTiers() { return {ALL:[],QB:[],RB:[],WR:[],TE:[],K:[],DST:[],ROOKIE:[]}; }
 function _mkPosTierCtrs() { return {ALL:0,QB:0,RB:0,WR:0,TE:0,K:0,DST:0,ROOKIE:0}; }
 const versionTiers = {
-  consensus: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
-  jacks: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
-  jsmodel: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() },
-  mine: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers() }
+  consensus: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
+  jacks: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
+  jsmodel: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
+  mine: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() }
 };
 const versionTierCounters = {
-  consensus: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
-  jacks: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
-  jsmodel: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() },
-  mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs() }
+  consensus: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
+  jacks: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
+  jsmodel: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
+  mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
 };
 
 // === CONSENSUS RANKING ENGINE ===
@@ -6123,6 +6130,7 @@ function setTiers(t) { versionTiers[currentVersion][currentMode][_tierPK()] = t;
 // Map current position filter to tier bucket key
 function _tierPK() {
   if (typeof filter !== 'undefined' && (filter==='QB'||filter==='RB'||filter==='WR'||filter==='TE'||filter==='K'||filter==='DST'||filter==='ROOKIE')) return filter;
+  // FLEX (RB/WR/TE) shares the ALL tier bucket — tiers are global to the visible list.
   return 'ALL';
 }
 
@@ -6850,6 +6858,7 @@ function getFiltered() {
       if (!is2026 && d.t && d.t !== 'TBD' && d.t !== 'FA') return false;
       if (rookiePosFilter && rookiePosFilter !== 'ALL' && d.s !== rookiePosFilter) return false;
     } else if (filter === 'ALL' && (d.s === 'K' || d.s === 'DST')) return false;
+    else if (filter === 'FLEX') { if (d.s !== 'RB' && d.s !== 'WR' && d.s !== 'TE') return false; }
     else if (filter !== 'ALL' && filter !== 'ROOKIE' && d.s !== filter) return false;
     if (query) {
       const q = query.toLowerCase();
@@ -9441,6 +9450,17 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
+    // WEEKLY hides ALL + ROOKIES pills — if those were active, bounce to FLEX
+    // so the table doesn't render an empty / wrong filter state.
+    if (currentMode === 'weekly' && (filter === 'ALL' || filter === 'ROOKIE')) {
+      filter = 'FLEX';
+      document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === 'FLEX'));
+    }
+    // Leaving WEEKLY while FLEX is active — restore ALL since FLEX hides outside weekly.
+    if (currentMode !== 'weekly' && filter === 'FLEX') {
+      filter = 'ALL';
+      document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === 'ALL'));
+    }
     // Toggle the body class + admin week selector visibility for WEEKLY format
     document.body.classList.toggle('format-weekly', currentMode === 'weekly');
     const wkSelWrap = document.getElementById('weeklyWeekSelectorWrap');
@@ -22436,12 +22456,27 @@ window.fmtHeight = fmtHeight;
       app = firebase.initializeApp(firebaseConfig);
       auth = firebase.auth();
       db = firebase.firestore();
-      // Enable offline persistence so writes resolve from cache immediately
-      db.enablePersistence({ synchronizeTabs: false }).then(() => {
-        console.log('[Auth] Firestore persistence enabled');
-      }).catch(err => {
-        console.warn('[Auth] Persistence failed:', err.code);
-      });
+      // Enable offline persistence so writes resolve from cache immediately.
+      // Prefer the new settings({ localCache: persistentLocalCache() }) API
+      // (Firebase >=10.5) — enableIndexedDbPersistence is deprecated. Falls
+      // back to the legacy API if the SDK on the page is older.
+      try {
+        if (firebase.firestore.persistentLocalCache && firebase.firestore.persistentSingleTabManager) {
+          db.settings({
+            localCache: firebase.firestore.persistentLocalCache({
+              tabManager: firebase.firestore.persistentSingleTabManager()
+            })
+          });
+          console.log('[Auth] Firestore persistence enabled (cache API)');
+        } else {
+          db.enablePersistence({ synchronizeTabs: false }).catch(err => {
+            console.warn('[Auth] Persistence failed:', err.code);
+          });
+        }
+      } catch(e) {
+        console.warn('[Auth] Persistence setup failed, falling back:', e && e.message);
+        try { db.enablePersistence({ synchronizeTabs: false }).catch(()=>{}); } catch(_e) {}
+      }
       console.log('[Auth] Firebase initialized (long-polling mode)');
     } catch(e) {
       console.error('[Auth] Firebase init error:', e);

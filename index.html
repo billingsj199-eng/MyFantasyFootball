@@ -7323,7 +7323,11 @@ function render() {
     // 506 rows dominates — that ceiling needs DOM diffing or virtualization
     // to push lower.
     const _projPpgJS = isJSModel ? d._jsModelPpg : null;
-    const _projPpg = _projPpgJS != null ? _projPpgJS : adjProjPpg(d);
+    let _projPpg = _projPpgJS != null ? _projPpgJS : adjProjPpg(d);
+    // WEEKLY mode: adjust season PPG by team total + opponent defense.
+    if (currentMode === 'weekly' && typeof window._weeklyAdjustPpg === 'function') {
+      _projPpg = window._weeklyAdjustPpg(d, _projPpg);
+    }
     const _25ppgJS = isJSModel ? d._jsModelVor : null;
     const _25ppg = _25ppgJS != null ? _25ppgJS : adj25ppg(d);
     const _projColor = (_projPpg != null) ? posFptsColor(_projPpg, d.s) : null;
@@ -8311,21 +8315,73 @@ _jsModelCheckAdmin();
 
   // Helper: opponent label for a team's matchup in the active week.
   // Returns "@OPP" for away, "OPP" for home (with class hooks), "BYE" if bye.
-  window._weeklyOppFor = function(teamAbbr) {
-    if (!teamAbbr || typeof window.getNflScheduleForTeam !== 'function') return null;
-    const sched = window.getNflScheduleForTeam(teamAbbr);
-    if (!Array.isArray(sched)) return null;
+  // Input `team` is the player's d.t — usually the full team name ("Atlanta
+  // Falcons"). Convert to abbreviation via TEAM_ABBR_MAP before lookup.
+  window._weeklyOppFor = function(team) {
+    if (!team || typeof window.getNflScheduleForTeam !== 'function') return null;
+    const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[team]) ? TEAM_ABBR_MAP[team] : team;
+    const sched = window.getNflScheduleForTeam(abbr);
+    if (!sched) return null;
     const wk = window._weeklyActiveWeek || 1;
-    const entry = sched[wk - 1];
+    // Schedule is 1-indexed (positions 1-18). Don't subtract.
+    const entry = sched[wk];
     if (!entry) return null;
     if (entry.bye) return 'BYE';
     if (!entry.opp) return null;
     return entry.home ? entry.opp : ('@' + entry.opp);
   };
 
-  // Stub: TEAM TOTAL data isn't loaded site-wide yet. Returns null so the
-  // cell renders as "—". Wire this to real DK weekly totals in a follow-up.
-  window._weeklyTeamTotalFor = function(/* teamAbbr */) { return null; };
+  // TEAM TOTAL — derive from DK game total + spread (NFL_GAME_TOTALS_2026).
+  // team_total = (total - spread) / 2 if home, (total + spread) / 2 if away.
+  // spread is the HOME team's spread (negative = home favored).
+  window._weeklyTeamTotalFor = function(team) {
+    if (!team || typeof window.getNflScheduleForTeam !== 'function') return null;
+    if (!window.NFL_GAME_TOTALS_2026) return null;
+    const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[team]) ? TEAM_ABBR_MAP[team] : team;
+    const sched = window.getNflScheduleForTeam(abbr);
+    if (!sched) return null;
+    const wk = window._weeklyActiveWeek || 1;
+    const entry = sched[wk];
+    if (!entry || entry.bye || !entry.opp) return null;
+    const away = entry.home ? entry.opp : abbr;
+    const home = entry.home ? abbr : entry.opp;
+    const game = window.NFL_GAME_TOTALS_2026['W' + wk + '_' + away + '_' + home];
+    if (!game || typeof game.total !== 'number' || typeof game.spread !== 'number') return null;
+    const t = entry.home
+      ? (game.total - game.spread) / 2
+      : (game.total + game.spread) / 2;
+    return Math.round(t * 10) / 10;
+  };
+
+  // Weekly PROJ PPG adjustment: scales the player's season-long PPG by
+  //   (team_total / league_avg)  ×  (opp_def_factor)
+  // where opp_def_factor pulls from Clay's defensive rank (rank 1 = toughest).
+  // Clamps prevent extreme outliers from cratering or inflating projections.
+  window._weeklyAdjustPpg = function(d, basePpg) {
+    if (basePpg == null || !isFinite(basePpg)) return basePpg;
+    if (!d || !d.t) return basePpg;
+    const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
+    const sched = window.getNflScheduleForTeam && window.getNflScheduleForTeam(abbr);
+    if (!sched) return basePpg;
+    const wk = window._weeklyActiveWeek || 1;
+    const entry = sched[wk];
+    if (!entry) return basePpg;
+    if (entry.bye) return 0;
+    // Team-total factor (league avg ~22.5)
+    const tt = window._weeklyTeamTotalFor(d.t);
+    let ttFactor = 1;
+    if (tt != null) ttFactor = Math.max(0.7, Math.min(1.3, tt / 22.5));
+    // Opp-defense factor from Clay rank (1 = toughest, 32 = softest)
+    let oppFactor = 1;
+    const oppAbbr = entry.opp;
+    const cg = window.CLAY_TEAM_GRADES_2026 && window.CLAY_TEAM_GRADES_2026[oppAbbr];
+    if (cg && typeof cg.defRk === 'number') {
+      // rank 1 → 0.88, rank 16.5 → 1.00, rank 32 → 1.12
+      oppFactor = 1 + (16.5 - cg.defRk) * 0.0075;
+      oppFactor = Math.max(0.85, Math.min(1.15, oppFactor));
+    }
+    return Math.round(basePpg * ttFactor * oppFactor * 10) / 10;
+  };
 
   function _weeklyAdminCheck(userArg) {
     const tab = document.getElementById('weeklyModeTab');

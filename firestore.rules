@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /leaderboard/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /rankings/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+    // users/{uid}/data/{docId}: per-user app data (e.g. adp_history from the
+    // Underdog Draft Helper extension). User owns their own subcollection.
+    match /users/{userId}/data/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /user_game_data/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /gifted_badges/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    match /gifted_premium/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    match /founders/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    match /app_meta/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    match /prospect_draft_capital/{doc} {
+      allow read, write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    match /prospect_bio/{doc} {
+      allow read, write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    match /trivia_catalog/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    // trivia_daily/{YYYY-MM-DD}: locked daily snapshots curated by admin.
+    // Public read so anonymous players see the curated board; admin-only
+    // write since this is the live "daily challenge" surface.
+    match /trivia_daily/{date} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    // trivia_reports/{reportId}: user-submitted "this cell looks wrong"
+    // flags. Anyone can create (no auth required so anonymous players
+    // can report) with strict shape validation; admin reads + deletes
+    // to triage and clear queue. Cap text fields to prevent abuse.
+    match /trivia_reports/{reportId} {
+      allow read: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow delete: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow create: if request.resource.data.keys().hasOnly(['date','itemIdx','expected','guess','reason','createdAt','title'])
+                    && (request.resource.data.date is string && request.resource.data.date.size() <= 16)
+                    && (request.resource.data.expected is string && request.resource.data.expected.size() <= 200)
+                    && (request.resource.data.guess is string && request.resource.data.guess.size() <= 200)
+                    && (!('reason' in request.resource.data) || (request.resource.data.reason is string && request.resource.data.reason.size() <= 500))
+                    && (!('title' in request.resource.data) || (request.resource.data.title is string && request.resource.data.title.size() <= 200))
+                    && (request.resource.data.itemIdx is number && request.resource.data.itemIdx >= 0 && request.resource.data.itemIdx < 100)
+                    && request.resource.data.createdAt is string
+                    && request.resource.data.createdAt.size() <= 32;
+      allow update: if false;
+    }
+    match /promo_uses/{docId} {
+      allow read: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    // creator_attributions/{uid}: tracks which creator referred the signup.
+    // Written once by the user at signup, then locked. Admin can read/edit/delete.
+    match /creator_attributions/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.email == 'billingsj199@gmail.com');
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update, delete: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    // shared/jacks_portfolio: mirror of Jack's Underdog portfolio so premium
+    // members can view it. Read by any authed user (premium gating done
+    // client-side, matching gifted_badges / gifted_premium pattern). Write
+    // only by Jack so other accounts can't overwrite the shared portfolio.
+    match /shared/jacks_portfolio {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    // shared_rankings/{shareId}: snapshots of a user's My Rankings, generated
+    // by the SHARE button in the rankings toolbar. Anyone with the link can
+    // view; only signed-in users can create one (and only owned by themselves);
+    // only the owner can update or delete. Size cap prevents abuse.
+    match /shared_rankings/{shareId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.order.size() > 0
+                    && request.resource.data.order.size() <= 600;
+      allow update, delete: if request.auth != null
+                            && request.auth.uid == resource.data.ownerUid;
+    }
+  }
+}

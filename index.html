@@ -23381,6 +23381,11 @@ window.fmtHeight = fmtHeight;
     if (typeof window._jsModelCheckAdmin === 'function') {
       try { window._jsModelCheckAdmin(user); } catch (_e) {}
     }
+    // Same for the WEEKLY format tab — its IIFE-internal auth listener fails to
+    // register because firebase.auth() throws when called before initializeApp.
+    if (typeof window._weeklyAdminCheck === 'function') {
+      try { window._weeklyAdminCheck(user); } catch (_e) {}
+    }
     // Refresh canEdit-dependent UI (Best Ball "Copy from Redraft" button etc.)
     if (typeof window._updateCopyFromRedraftBtn === 'function') {
       try { window._updateCopyFromRedraftBtn(); } catch (_e) {}

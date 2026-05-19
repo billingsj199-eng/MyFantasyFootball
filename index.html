@@ -45,9 +45,15 @@
 <!-- Service worker registration — enables PWA install prompt + offline shell -->
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(e){console.warn('[SW] register failed',e);});});}</script>
 
-<!-- Firebase SDK (optional — page works without it if blocked by privacy settings) -->
+<!-- Firebase SDK (optional — page works without it if blocked by privacy settings)
+     Plain <script> tags (no document.write) so the browser's preload scanner discovers
+     all four upfront and downloads them in parallel with the HTML, instead of waiting
+     until the inline document.write line executes. Order is preserved because each tag
+     is a synchronous script — they still execute in document order. -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true;console.warn('[Firebase] SDK blocked — running in offline mode')"></script>
-<script>if(!window._fbBlocked){document.write('<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"><\/script>');}</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"></script>
 <!-- html2canvas: lazy-loaded by admin Rankings Graphic Generator (only fetched when admin uses the tool) -->
 </head>
 <body>
@@ -22427,18 +22433,6 @@ window.fmtHeight = fmtHeight;
         console.log('[Auth] Firestore persistence enabled');
       }).catch(err => {
         console.warn('[Auth] Persistence failed:', err.code);
-      });
-      // Connectivity diagnostic — test if we can reach Firestore at all
-      fetch('https://firestore.googleapis.com/v1/projects/' + firebaseConfig.projectId + '/databases/(default)/documents/rankings/jacks-official', {
-        headers: { 'Content-Type': 'application/json' }
-      }).then(r => {
-        console.log('[Auth] Firestore REST test:', r.status, r.statusText);
-        if (r.status === 403 || r.status === 401) console.warn('[Auth] ⚠️ Firestore RULES are blocking reads — check Firebase Console → Firestore → Rules');
-        if (r.status === 404) console.warn('[Auth] ⚠️ Firestore database or collection may not exist yet');
-        if (r.status === 200) console.log('[Auth] ✓ Firestore is reachable and rules allow reads');
-      }).catch(err => {
-        console.error('[Auth] ✗ Cannot reach Firestore server at all:', err.message);
-        console.error('[Auth] ⚠️ This is likely a CSP or network issue. Check if the page is served over HTTPS.');
       });
       console.log('[Auth] Firebase initialized (long-polling mode)');
     } catch(e) {

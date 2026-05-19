@@ -37,6 +37,13 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
     }
+    // settings/{docId}: site-wide config (e.g. active_week with publishedWeek).
+    // Public read so non-admin users can see what week is currently published;
+    // admin-only write since these toggle live UI state.
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
     match /prospect_draft_capital/{doc} {
       allow read, write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
     }

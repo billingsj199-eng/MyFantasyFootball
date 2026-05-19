@@ -965,8 +965,10 @@ CLEAR ALL
   body.format-weekly #pageRankings #psosHeader,
   body.format-weekly #pageRankings .psos-cell { display: none !important; }
   body.format-weekly #pageRankings #oppHeader,
+  body.format-weekly #pageRankings #spreadHeader,
   body.format-weekly #pageRankings #teamTotalHeader,
   body.format-weekly #pageRankings .opp-cell,
+  body.format-weekly #pageRankings .spread-cell,
   body.format-weekly #pageRankings .teamtotal-cell { display: table-cell !important; }
   /* Hide ALL + ROOKIES position pills in weekly (irrelevant to weekly scoring) */
   body.format-weekly .pos-btn[data-pos="ALL"],
@@ -975,9 +977,15 @@ CLEAR ALL
   body.format-weekly #flexPosBtn { display: inline-flex !important; }
   /* Opp cell styling — match ADP cell visual rhythm */
   #pageRankings tbody .opp-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:54px}
+  #pageRankings tbody .spread-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:54px}
   #pageRankings tbody .teamtotal-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:56px}
   #pageRankings tbody .opp-cell.opp-home{color:#a7f3d0}
   #pageRankings tbody .opp-cell.opp-bye{color:var(--text2);font-style:italic}
+  /* Matchup difficulty — opponent's Clay defensive rank.
+     easy = bottom 1/3 defense (rank 23-32), hard = top 1/3 (rank 1-10). */
+  #pageRankings tbody .opp-cell.opp-easy{color:#22c55e}
+  #pageRankings tbody .opp-cell.opp-medium{color:#f59e0b}
+  #pageRankings tbody .opp-cell.opp-hard{color:#ef4444}
 </style>
 <div class="filter-rows">
 <div class="filter-row-top">
@@ -997,14 +1005,22 @@ CLEAR ALL
 <button class="mode-tab" data-mode="dynastysf">DYNASTY SF</button>
 <button class="mode-tab" data-mode="weekly" id="weeklyModeTab" style="display:none" title="Weekly rankings — admin only">WEEKLY</button>
 </div>
-<!-- Admin-only week selector for WEEKLY format. The chosen week is saved to
-     Firestore at settings/active_week so it's site-wide; users see whichever
-     week is published. -->
+<!-- Admin-only week selector for WEEKLY format. Admin selects a week to edit;
+     PUBLISH pushes it live to all users; REMOVE pulls it back to admin-only.
+     Saved in Firestore at settings/active_week. -->
 <div id="weeklyWeekSelectorWrap" style="display:none;align-items:center;gap:6px;margin-left:6px;padding:2px 8px;border:1px solid rgba(245,158,11,.35);border-radius:6px;background:rgba(245,158,11,.06)">
 <span style="font-size:.58rem;color:var(--accent);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;white-space:nowrap">ACTIVE WEEK:</span>
-<select id="activeWeekSelect" style="padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer" title="Sets the published week shown in WEEKLY format. Stored site-wide.">
+<select id="activeWeekSelect" style="padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer" title="The week you're currently editing. Click PUBLISH to push it live to users.">
 <option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4</option><option value="5">Week 5</option><option value="6">Week 6</option><option value="7">Week 7</option><option value="8">Week 8</option><option value="9">Week 9</option><option value="10">Week 10</option><option value="11">Week 11</option><option value="12">Week 12</option><option value="13">Week 13</option><option value="14">Week 14</option><option value="15">Week 15</option><option value="16">Week 16</option><option value="17">Week 17</option><option value="18">Week 18</option>
 </select>
+<button id="weeklyPublishBtn" style="padding:3px 9px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid #22c55e;background:transparent;color:#22c55e;white-space:nowrap" title="Push the currently-selected week live so all users see it in the WEEKLY tab.">PUBLISH</button>
+<button id="weeklyUnpublishBtn" style="padding:3px 9px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid #ef4444;background:transparent;color:#ef4444;white-space:nowrap" title="Hide the WEEKLY tab from all non-admin users.">REMOVE</button>
+<span id="weeklyPublishStatus" style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;margin-left:2px"></span>
+</div>
+<!-- Non-admin "live week" chip — shown to users when a week is currently published. -->
+<div id="weeklyPublishedChip" style="display:none;align-items:center;gap:6px;margin-left:6px;padding:2px 10px;border:1px solid rgba(34,197,94,.45);border-radius:6px;background:rgba(34,197,94,.08)">
+<span style="width:6px;height:6px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e"></span>
+<span id="weeklyPublishedChipLabel" style="font-size:.62rem;color:#22c55e;letter-spacing:1px;font-family:'Bebas Neue',sans-serif;font-weight:700">LIVE — WEEK 1</span>
 </div>
 <button id="copyFromRedraftBtn" onclick="window._copyRedraftToBestBall()" style="display:none;margin-left:4px;padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Replace your Best Ball board and tiers with an exact copy of your Redraft rankings.">⇩ COPY FROM REDRAFT</button>
 <div class="sync-toggle-wrap" id="syncToggleWrap" style="display:flex;align-items:center;gap:5px;margin-left:4px;position:relative">
@@ -1178,7 +1194,8 @@ CLEAR ALL
 <th data-sort="pos" tabindex="0" aria-sort="none">Pos <span class="arrow"></span></th>
 <th data-sort="posRank" tabindex="0" aria-sort="none">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
 <th data-sort="adp" id="adpHeader" tabindex="0" aria-sort="none"><span data-gloss="Average Draft Position — where this player goes on average in the selected ADP source.">ADP</span> <span class="arrow"></span></th>
-<th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week.">Opp</span> <span class="arrow"></span></th>
+<th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week. Color reflects defensive difficulty: green = bottom 1/3, amber = middle, red = top 1/3.">Opp</span> <span class="arrow"></span></th>
+<th data-sort="spread" id="spreadHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="DK point spread for this team. Negative = favored, positive = underdog.">Spread</span> <span class="arrow"></span></th>
 <th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
 <th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Projected fantasy points per game for the upcoming season (Half PPR scoring).">Proj PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
 <th data-sort="fpts25" id="ppg25HeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (Half PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
@@ -7280,6 +7297,7 @@ function render() {
         <td>${d._devyEligYr}</td>
         <td>${d._devyKtc > 0 ? d._devyKtc.toLocaleString() : '—'}</td>
         <td class="opp-cell weekly-only-cell" style="display:none">—</td>
+        <td class="spread-cell weekly-only-cell" style="display:none">—</td>
         <td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>
         <td>—</td>
         <td>—</td>
@@ -7356,7 +7374,8 @@ function render() {
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       <td class="adp-cell${_adpDelta==null?'':(_adpDelta>=3?' adp-value':(_adpDelta<=-3?' adp-reach':''))}" title="${_adpDelta==null?'':(()=>{const df=Math.round(_adpDelta);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${_adp != null ? _adp : '—'}</td>
-      <td class="opp-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return o || '—'; })()}</td>
+      <td class="opp-cell weekly-only-cell${(()=>{ if(d.s==='K'||d.s==='DST'||typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return o || '—'; })()}</td>
+      <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); return (t != null ? t : '—'); })()}</td>
       <td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>
       <td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
@@ -8331,10 +8350,10 @@ _jsModelCheckAdmin();
     return entry.home ? entry.opp : ('@' + entry.opp);
   };
 
-  // TEAM TOTAL — derive from DK game total + spread (NFL_GAME_TOTALS_2026).
-  // team_total = (total - spread) / 2 if home, (total + spread) / 2 if away.
-  // spread is the HOME team's spread (negative = home favored).
-  window._weeklyTeamTotalFor = function(team) {
+  // Internal: returns the {wk, opp, home, abbr, game} bundle for a player's
+  // team this active week, or null if the matchup or game data is missing.
+  // Shared by the team-total / spread / opp-difficulty helpers below.
+  function _weeklyGameContext(team) {
     if (!team || typeof window.getNflScheduleForTeam !== 'function') return null;
     if (!window.NFL_GAME_TOTALS_2026) return null;
     const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[team]) ? TEAM_ABBR_MAP[team] : team;
@@ -8346,8 +8365,42 @@ _jsModelCheckAdmin();
     const away = entry.home ? entry.opp : abbr;
     const home = entry.home ? abbr : entry.opp;
     const game = window.NFL_GAME_TOTALS_2026['W' + wk + '_' + away + '_' + home];
-    if (!game || typeof game.total !== 'number' || typeof game.spread !== 'number') return null;
-    const t = entry.home
+    if (!game) return null;
+    return { wk, abbr, opp: entry.opp, home: entry.home, game };
+  }
+
+  // SPREAD — the team's spread for the active week (negative = favored).
+  // Home team's spread is `game.spread`; away team's is `-game.spread`.
+  window._weeklySpreadFor = function(team) {
+    const ctx = _weeklyGameContext(team);
+    if (!ctx || typeof ctx.game.spread !== 'number') return null;
+    return ctx.home ? ctx.game.spread : -ctx.game.spread;
+  };
+
+  // OPP DIFFICULTY — 'easy' / 'medium' / 'hard' based on opponent's Clay
+  // defensive rank (1 = toughest defense in the league, 32 = softest).
+  //   defRk 1-10  → hard  (red)
+  //   defRk 11-22 → medium (amber)
+  //   defRk 23-32 → easy   (green)
+  window._weeklyOppDifficulty = function(team) {
+    const ctx = _weeklyGameContext(team);
+    if (!ctx) return null;
+    const cg = window.CLAY_TEAM_GRADES_2026 && window.CLAY_TEAM_GRADES_2026[ctx.opp];
+    if (!cg || typeof cg.defRk !== 'number') return null;
+    if (cg.defRk <= 10) return 'hard';
+    if (cg.defRk >= 23) return 'easy';
+    return 'medium';
+  };
+
+  // TEAM TOTAL — derive from DK game total + spread (NFL_GAME_TOTALS_2026).
+  // team_total = (total - spread) / 2 if home, (total + spread) / 2 if away.
+  // spread is the HOME team's spread (negative = home favored).
+  window._weeklyTeamTotalFor = function(team) {
+    const ctx = _weeklyGameContext(team);
+    if (!ctx) return null;
+    const game = ctx.game;
+    if (typeof game.total !== 'number' || typeof game.spread !== 'number') return null;
+    const t = ctx.home
       ? (game.total - game.spread) / 2
       : (game.total + game.spread) / 2;
     return Math.round(t * 10) / 10;
@@ -8383,9 +8436,15 @@ _jsModelCheckAdmin();
     return Math.round(basePpg * ttFactor * oppFactor * 10) / 10;
   };
 
+  // Track the published week separately from admin's editing selection.
+  // null = nothing currently published (non-admins can't enter WEEKLY mode).
+  window._weeklyPublishedWeek = window._weeklyPublishedWeek || null;
+
   function _weeklyAdminCheck(userArg) {
     const tab = document.getElementById('weeklyModeTab');
     const selWrap = document.getElementById('weeklyWeekSelectorWrap');
+    const liveChip = document.getElementById('weeklyPublishedChip');
+    const liveChipLabel = document.getElementById('weeklyPublishedChipLabel');
     let u = userArg || null;
     if (!u && typeof firebase !== 'undefined' && firebase.auth) {
       try { u = firebase.auth().currentUser; } catch(_e) {}
@@ -8394,16 +8453,33 @@ _jsModelCheckAdmin();
     const adminByEmail = !!(u && u.email && _JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
     const adminByFn = typeof window.isAdmin === 'function' && window.isAdmin();
     const admin = adminByEmail || adminByFn;
-    if (tab) tab.style.display = admin ? '' : 'none';
+    const published = window._weeklyPublishedWeek;
+    // Tab is visible to admins always, and to everyone else only when a week
+    // is currently published.
+    const tabVisible = admin || (published != null);
+    if (tab) tab.style.display = tabVisible ? '' : 'none';
     if (selWrap) selWrap.style.display = (admin && currentMode === 'weekly') ? 'inline-flex' : 'none';
-    // If a non-admin somehow landed in WEEKLY, bounce them back to bestball.
-    if (!admin && currentMode === 'weekly') {
+    // Non-admin "LIVE — WEEK N" chip: shown when in weekly mode + a week is live.
+    if (liveChip) {
+      if (!admin && currentMode === 'weekly' && published != null) {
+        liveChip.style.display = 'inline-flex';
+        if (liveChipLabel) liveChipLabel.textContent = 'LIVE — WEEK ' + published;
+      } else {
+        liveChip.style.display = 'none';
+      }
+    }
+    // If a non-admin lands in WEEKLY without a published week, bounce them.
+    if (!admin && currentMode === 'weekly' && published == null) {
       currentMode = 'bestball';
       document.body.classList.remove('format-weekly');
       document.querySelectorAll('.mode-tab').forEach(b => {
         b.classList.toggle('active', b.dataset.mode === 'bestball');
       });
       try { syncMode(); renumber(); render(); } catch(_e) {}
+    }
+    // Non-admin viewing WEEKLY is locked to the published week.
+    if (!admin && published != null) {
+      window._weeklyActiveWeek = published;
     }
   }
   window._weeklyAdminCheck = _weeklyAdminCheck;
@@ -8422,6 +8498,29 @@ _jsModelCheckAdmin();
   // call and treat any access failure as "no Firestore available right now".
   // The auth-state listener at the bottom of the IIFE re-fires this loader
   // once Firebase auth IS ready, so the Firestore read still happens.
+  function _weeklyApplySettings(d) {
+    const sel = document.getElementById('activeWeekSelect');
+    const wk = parseInt(d.week, 10);
+    if (wk >= 1 && wk <= 18) {
+      window._weeklyActiveWeek = wk;
+      localStorage.setItem('mff_active_week', String(wk));
+      if (sel) sel.value = String(wk);
+    }
+    const pw = (d.publishedWeek == null) ? null : parseInt(d.publishedWeek, 10);
+    window._weeklyPublishedWeek = (pw >= 1 && pw <= 18) ? pw : null;
+    // Refresh tab/chip visibility now that published state is known.
+    if (typeof _weeklyAdminCheck === 'function') _weeklyAdminCheck();
+    // Update the admin status label.
+    const statusEl = document.getElementById('weeklyPublishStatus');
+    if (statusEl) {
+      statusEl.textContent = window._weeklyPublishedWeek != null
+        ? ('● LIVE: Week ' + window._weeklyPublishedWeek)
+        : '○ Not published';
+      statusEl.style.color = window._weeklyPublishedWeek != null ? '#22c55e' : 'var(--text2)';
+    }
+    if (currentMode === 'weekly' && typeof render === 'function') render();
+  }
+
   function _weeklyLoadActiveWeek() {
     const stored = parseInt(localStorage.getItem('mff_active_week') || '1', 10);
     if (stored >= 1 && stored <= 18) window._weeklyActiveWeek = stored;
@@ -8434,21 +8533,48 @@ _jsModelCheckAdmin();
     } catch(_e) { db = null; }
     if (!db) return;
     try {
-      db.collection('settings').doc('active_week').get().then(doc => {
-        if (!doc.exists) return;
-        const d = doc.data() || {};
-        const wk = parseInt(d.week, 10);
-        if (wk >= 1 && wk <= 18) {
-          window._weeklyActiveWeek = wk;
-          localStorage.setItem('mff_active_week', String(wk));
-          if (sel) sel.value = String(wk);
-          // Re-render so OPP cells refresh if Weekly is active
-          if (currentMode === 'weekly' && typeof render === 'function') render();
-        }
-      }).catch(() => {});
+      // Attach a snapshot listener so publish/unpublish propagates live to
+      // every open tab without requiring a refresh. Single shared doc — cheap.
+      if (!window._weeklySettingsUnsub) {
+        window._weeklySettingsUnsub = db.collection('settings').doc('active_week')
+          .onSnapshot(doc => {
+            if (!doc.exists) { window._weeklyPublishedWeek = null; if (typeof _weeklyAdminCheck === 'function') _weeklyAdminCheck(); return; }
+            _weeklyApplySettings(doc.data() || {});
+          }, () => {});
+      }
     } catch(_e) {}
   }
   _weeklyLoadActiveWeek();
+
+  // Wire PUBLISH / REMOVE buttons (admin-only via the rule + UI gating).
+  const _pubBtn = document.getElementById('weeklyPublishBtn');
+  if (_pubBtn && !_pubBtn._bound) {
+    _pubBtn._bound = true;
+    _pubBtn.addEventListener('click', () => {
+      const wk = window._weeklyActiveWeek || 1;
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+      if (!db) { if (typeof toast === 'function') toast('Firestore unavailable'); return; }
+      db.collection('settings').doc('active_week').set({
+        publishedWeek: wk,
+        publishedAt: new Date().toISOString(),
+        publishedBy: (u && u.email) || 'admin'
+      }, { merge: true })
+        .then(() => { if (typeof toast === 'function') toast('Week ' + wk + ' published live'); })
+        .catch(e => { console.warn('[Weekly] publish failed:', e); if (typeof toast === 'function') toast('Publish failed: ' + (e.code || e.message)); });
+    });
+  }
+  const _unpubBtn = document.getElementById('weeklyUnpublishBtn');
+  if (_unpubBtn && !_unpubBtn._bound) {
+    _unpubBtn._bound = true;
+    _unpubBtn.addEventListener('click', () => {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      if (!db) { if (typeof toast === 'function') toast('Firestore unavailable'); return; }
+      db.collection('settings').doc('active_week').set({ publishedWeek: null }, { merge: true })
+        .then(() => { if (typeof toast === 'function') toast('Weekly tab hidden from users'); })
+        .catch(e => { console.warn('[Weekly] unpublish failed:', e); if (typeof toast === 'function') toast('Remove failed: ' + (e.code || e.message)); });
+    });
+  }
 
   // Wire the admin week selector — writes to Firestore + localStorage.
   const _wkSel = document.getElementById('activeWeekSelect');

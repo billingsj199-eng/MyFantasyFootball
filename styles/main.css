@@ -1137,6 +1137,62 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .trade-mode-tab.active,.trade-src-tab.active{background:var(--chip-active-bg);color:var(--chip-active-fg);font-weight:700;box-shadow:inset 0 0 0 1px var(--chip-active-border)}
 .trade-src-tab.locked{opacity:.55;cursor:not-allowed}
 .trade-src-tab.locked:hover{color:var(--text2)}
+/* Trade Calc view toggle (CALCULATOR / FIND TRADE) */
+.trade-view-tabs{display:flex;gap:2px;justify-content:center;flex-wrap:wrap;margin:0 auto 1rem;background:rgba(34,197,94,.06);border-radius:6px;padding:3px;border:1px solid rgba(34,197,94,.18);width:fit-content;max-width:100%}
+.trade-view-tab{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;padding:7px 20px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;white-space:nowrap}
+.trade-view-tab:hover{color:var(--text)}
+.trade-view-tab.active{background:var(--green);color:#000;font-weight:700}
+/* Trade Calc — league + team pickers (shows real owners as side labels) */
+.calc-league-picker{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:1rem;display:flex;flex-direction:column;gap:.65rem}
+/* FIND TRADE — controls + result cards */
+.trade-finder-controls{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:1rem;display:flex;flex-direction:column;gap:.85rem}
+.finder-row{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+.finder-label{font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--text2);min-width:140px}
+.finder-select{flex:1;min-width:200px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.85rem}
+.finder-slider{flex:1;min-width:200px;accent-color:var(--accent)}
+.finder-run-btn{padding:10px 22px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;cursor:pointer;font-weight:700;align-self:center;transition:filter .15s}
+.finder-run-btn:hover{filter:brightness(1.1)}
+.finder-run-btn:disabled{opacity:.5;cursor:not-allowed}
+.trade-finder-empty{text-align:center;padding:2.5rem 1rem;color:var(--text2);background:var(--surface);border:1px dashed var(--border);border-radius:10px}
+.trade-finder-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;padding:0 .25rem}
+.finder-result-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.6rem;transition:border-color .15s}
+.finder-result-card:hover{border-color:var(--accent)}
+.finder-result-sides{display:flex;gap:.75rem;align-items:stretch}
+.finder-side{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.6rem .7rem;display:flex;flex-direction:column;gap:.25rem}
+.finder-side-label{font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:.2rem}
+.finder-arrow{align-self:center;font-size:1.2rem;color:var(--text2);padding:0 .25rem}
+.finder-asset{display:flex;align-items:center;gap:.4rem;font-size:.78rem;padding:2px 0}
+.finder-asset .td-pos{font-size:.6rem;padding:1px 5px;border-radius:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
+.finder-asset .td-val{margin-left:auto;font-weight:700;color:var(--accent);font-size:.78rem}
+.finder-side-total{font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:var(--text2);border-top:1px solid var(--border);padding-top:.3rem;margin-top:.25rem;text-align:right}
+.finder-result-meta{display:flex;align-items:center;gap:.5rem;margin-top:.6rem;font-size:.75rem;flex-wrap:wrap}
+.finder-load-btn{margin-left:auto;padding:5px 12px;background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:5px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer;transition:background .15s,color .15s}
+.finder-load-btn:hover{background:var(--accent);color:#000}
+/* Real-picks adder — shown when a team is selected for a side */
+.trade-real-picks{margin-top:.5rem}
+.trade-real-picks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:5px}
+.real-pick-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:6px;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s,transform .1s;font-family:'DM Sans',sans-serif}
+.real-pick-btn:hover{background:rgba(245,158,11,.18);border-color:var(--accent)}
+.real-pick-btn:active{transform:scale(.96)}
+.real-pick-btn .rp-label{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;line-height:1.1}
+.real-pick-btn .rp-val{font-size:.7rem;font-weight:700;color:var(--accent)}
+/* Team archetype badges (Contender / Retool / Rebuilder) — dynasty only */
+.team-arch-badge{display:inline-flex;align-items:center;gap:3px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;padding:2px 7px;border-radius:4px;margin-top:5px;cursor:pointer;user-select:none;transition:filter .15s,transform .1s;line-height:1;vertical-align:middle}
+.team-arch-badge:hover{filter:brightness(1.15)}
+.team-arch-badge:active{transform:scale(.95)}
+.team-arch-contender{background:rgba(245,158,11,.15);color:var(--accent);border:1px solid rgba(245,158,11,.45)}
+.team-arch-rebuilder{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.45)}
+.team-arch-retool{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.45)}
+/* Player-card "Find Trade For Me" button */
+.card-finder-btn{display:inline-flex;align-items:center;gap:.4rem;padding:5px 12px;background:rgba(34,197,94,.1);border:1px solid var(--green);color:var(--green);border-radius:5px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.2px;cursor:pointer;transition:background .15s,color .15s,transform .1s}
+.card-finder-btn:hover{background:var(--green);color:#000}
+.card-finder-btn:active{transform:scale(.97)}
+@media(max-width:768px){
+  .finder-result-sides{flex-direction:column}
+  .finder-arrow{transform:rotate(90deg);padding:.25rem 0}
+  .finder-label{min-width:0;flex-basis:100%}
+  .finder-select,.finder-slider{min-width:0;width:100%}
+}
 .trade-src-tab .lock-icon{width:11px;height:11px;opacity:.7}
 .trade-src-tab.active .lock-icon{opacity:1}
 .trade-layout{display:flex;gap:1.25rem;align-items:flex-start}

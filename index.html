@@ -36,9 +36,9 @@
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-05-14l" as="style">
+<link rel="preload" href="styles/main.css?v=2026-05-20a" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-05-14l">
+<link rel="stylesheet" href="styles/main.css?v=2026-05-20a">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -22736,34 +22736,85 @@ window.fmtHeight = fmtHeight;
       else localStorage.setItem(_archKey(league, team), val);
     } catch (_e) {}
   };
-  function _calcAutoArchetype(team) {
+  // Archetype heuristic — LEAGUE-RELATIVE on projected PPG of the best lineup.
+  // 1. Get each team's projected lineup PPG (already computed by _mtBestLineup
+  //    at Sleeper-import time and stored as t.lineupPpg). Fallback: sum of top 9
+  //    players' PPG if not yet computed (e.g. fresh import or test data).
+  // 2. Rank teams; top third = Contender (highest PPG), bottom third = Rebuilder.
+  // 3. Middle third gets nudged by pick capital — stacked picks → Rebuilder.
+  function _calcPlayerPpg(d) {
+    if (!d || d.s === 'K' || d.s === 'DST') return 0;
+    // Mirrors _mtBestLineup's priority order: Clay → 2025 season → last career → JS model
+    if (typeof MIKE_CLAY_PROJ !== 'undefined' && typeof clayLookup === 'function') {
+      const cp = clayLookup(d.n);
+      if (cp && cp.pts && cp.gm) return cp.pts / cp.gm;
+    }
+    if (d.s25 && d.s25.gp > 0 && d.s25.fpts > 0) return d.s25.fpts / d.s25.gp;
+    if (d.career && d.career.length) {
+      const last = d.career[d.career.length - 1];
+      if (last.gp > 0 && last.fpts > 0) return last.fpts / last.gp;
+    }
+    if (d._jsModelPpg) return d._jsModelPpg;
+    return 0;
+  }
+  function _calcAutoArchetype(team, league) {
     if (!team) return null;
-    const players = (team.players || [])
-      .map(name => _finderLookupD(name))
-      .filter(Boolean)
-      .map(d => ({ d, v: getPlayerValue(d) }))
-      .filter(x => x.v > 1)
-      .sort((a, b) => b.v - a.v)
-      .slice(0, 12);
-    const ages = players.map(x => x.d.age).filter(a => typeof a === 'number' && a > 0);
-    const avgAge = ages.length ? ages.reduce((s, a) => s + a, 0) / ages.length : null;
-    let firstRdPicks = 0;
-    (team.draftPicks || []).forEach(pk => { if (pk.round === '1st') firstRdPicks++; });
-    const games = (team.wins || 0) + (team.losses || 0);
-    const winPct = games > 0 ? (team.wins || 0) / games : 0.5;
-    let score = 0;
-    if (avgAge != null) score += (avgAge - 26.0) * 1.0;
-    score -= firstRdPicks * 0.7;
-    score += (winPct - 0.5) * 2;
-    if (score >= 1) return 'contender';
-    if (score <= -1) return 'rebuilder';
+    function _teamProjPpg(t) {
+      if (!t) return 0;
+      // Prefer the lineup PPG computed by _mtBestLineup at import time —
+      // it respects the league's actual starting positions.
+      if (typeof t.lineupPpg === 'number' && t.lineupPpg > 0) return t.lineupPpg;
+      // Fallback: top 9 PPG sum (no roster-position constraint, rough proxy).
+      const ppgs = [];
+      (t.players || []).forEach(name => {
+        const d = _finderLookupD(name);
+        const p = _calcPlayerPpg(d);
+        if (p > 0) ppgs.push(p);
+      });
+      ppgs.sort((a, b) => b - a);
+      return ppgs.slice(0, 9).reduce((s, v) => s + v, 0);
+    }
+    function _pickCapital(t) {
+      let p = 0;
+      (t.draftPicks || []).forEach(pk => {
+        if (pk.round === '1st') p += 3;
+        else if (pk.round === '2nd') p += 1;
+      });
+      return p;
+    }
+    const myPpg = _teamProjPpg(team);
+    const myPicks = _pickCapital(team);
+    // No league context — coarse absolute fallback.
+    if (!league || !(league.teams || []).length || league.teams.length < 3) {
+      if (myPpg > 130) return 'contender';
+      if (myPpg < 80) return 'rebuilder';
+      return 'retool';
+    }
+    const allPpg = league.teams.map(_teamProjPpg);
+    const topPpg = Math.max.apply(null, allPpg);
+    if (topPpg <= 0) return 'retool';
+    // Relative-to-top thresholds — captures league spread, not just rank.
+    // A stacked league produces multiple Contenders; a one-team-dominates
+    // league produces fewer.
+    //   Contender: within 12% of the top team's PPG (>= 88% of top)
+    //   Rebuilder: more than 30% below the top team's PPG (<= 70% of top)
+    //   Retool: in between
+    const ratio = myPpg / topPpg;
+    if (ratio >= 0.88) return 'contender';
+    if (ratio <= 0.70) return 'rebuilder';
+    // Middle band — only nudge DOWN to Rebuilder when a team is clearly
+    // stacking picks (a transition-to-rebuild signal). Don't nudge UP to
+    // Contender — having few picks isn't strong enough evidence on its own.
+    const n = league.teams.length;
+    const avgPicks = league.teams.reduce((s, t) => s + _pickCapital(t), 0) / n;
+    if (avgPicks > 0 && myPicks > avgPicks * 1.7 && myPicks >= 4) return 'rebuilder';
     return 'retool';
   }
   window._calcGetArchetype = function(team, league) {
     if (!team) return null;
     const override = window._calcGetArchOverride(league, team);
     if (override && override !== 'auto') return override;
-    return _calcAutoArchetype(team);
+    return _calcAutoArchetype(team, league);
   };
   const _ARCH_LABEL = { contender: 'Contender', retool: 'Retool', rebuilder: 'Rebuilder' };
   const _ARCH_ICON = { contender: '🏆', retool: '🔄', rebuilder: '🌱' };

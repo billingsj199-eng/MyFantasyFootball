@@ -2900,6 +2900,28 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trade-src-tab locked" data-tsrc="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
 <button class="trade-src-tab" data-tsrc="ktc">KTC</button>
 </div>
+
+<!-- View toggle: CALCULATOR vs FIND TRADE -->
+<div class="trade-view-tabs">
+<button class="trade-view-tab active" data-tview="calc">CALCULATOR</button>
+<button class="trade-view-tab" data-tview="finder">FIND TRADE</button>
+</div>
+
+<div id="tradeCalcView">
+<!-- League + per-side team pickers — hidden until at least one synced league exists -->
+<div class="calc-league-picker" id="calcLeaguePicker" style="display:none">
+<div class="finder-row">
+<label class="finder-label" for="calcLeague">League</label>
+<select id="calcLeague" class="finder-select"></select>
+<button id="calcSuggestBtn" class="finder-run-btn" style="display:none;padding:7px 14px;font-size:.78rem">SUGGEST FAIR TRADE</button>
+</div>
+<div class="finder-row" id="calcTeamPickerRow" style="display:none">
+<label class="finder-label">Teams</label>
+<select id="calcTeamA" class="finder-select" style="flex:1;min-width:140px"></select>
+<span style="color:var(--text2);font-size:.75rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px">VS</span>
+<select id="calcTeamB" class="finder-select" style="flex:1;min-width:140px"></select>
+</div>
+</div>
 <div class="trade-layout">
 <!-- Side A -->
 <div class="trade-side">
@@ -2983,6 +3005,32 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trade-reset-btn" id="tradeShareBtn" title="Copy a shareable URL of this trade">🔗 SHARE</button>
 <button class="trade-reset-btn" id="tradeResetBtn">RESET TRADE</button>
 </div>
+</div>
+</div>
+<!-- end #tradeCalcView -->
+
+<!-- FIND TRADE view -->
+<div id="tradeFinderView" style="display:none">
+<div class="trade-finder-controls">
+<div class="finder-row">
+<label class="finder-label" for="finderLeague">League</label>
+<select id="finderLeague" class="finder-select"></select>
+</div>
+<div class="finder-row">
+<label class="finder-label" for="finderTargetSearch">Player to acquire</label>
+<div class="trade-search-wrap" style="flex:1;position:relative">
+<svg class="trade-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-width="2" d="m21 21-4.35-4.35"/></svg>
+<input type="text" id="finderTargetSearch" class="trade-search" placeholder="Search rostered players..." autocomplete="off">
+<div class="trade-dropdown" id="finderTargetDrop"></div>
+</div>
+</div>
+<div class="finder-row">
+<label class="finder-label" for="finderTolerance">Tolerance: <span id="finderTolVal">±8%</span></label>
+<input type="range" id="finderTolerance" min="3" max="15" value="8" class="finder-slider">
+</div>
+<button id="finderRunBtn" class="finder-run-btn">FIND TRADES</button>
+</div>
+<div id="finderResults"></div>
 </div>
 </div>
 </div>
@@ -11640,6 +11688,34 @@ function openPlayerCard(d, ctxMode) {
 
   modal.classList.add('open');
   document.getElementById('cardClose').addEventListener('click', closeCard);
+
+  // FIND TRADE FOR ME — appears when the player is rostered in a synced league
+  // (and isn't on your team). One click → Trade Calc → Find Trade with target pre-filled.
+  try {
+    if (typeof window._finderHasOwner === 'function' && d && d.idx != null) {
+      const _finderInfo = window._finderHasOwner(d.idx);
+      if (_finderInfo) {
+        const _btn = document.createElement('button');
+        _btn.className = 'card-finder-btn';
+        _btn.innerHTML = '<span style="font-size:.85rem;line-height:1">🎯</span> FIND TRADE FOR ME';
+        _btn.title = 'Owned by ' + _finderInfo.team.owner + (_finderInfo.league.name ? ' · ' + _finderInfo.league.name : '');
+        _btn.addEventListener('click', () => {
+          if (typeof closeCard === 'function') closeCard();
+          if (typeof window._finderShowAndRun === 'function') {
+            setTimeout(() => window._finderShowAndRun(d.idx), 60);
+          }
+        });
+        const _meta = cardEl.querySelector('.card-meta');
+        if (_meta && _meta.parentElement) {
+          const _row = document.createElement('div');
+          _row.style.cssText = 'margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap';
+          _row.appendChild(_btn);
+          _meta.parentElement.insertBefore(_row, _meta.nextSibling);
+        }
+      }
+    }
+  } catch (_e) {}
+
   const _cardShareBtn = document.getElementById('cardShare');
   if (_cardShareBtn) {
     _cardShareBtn.addEventListener('click', () => {
@@ -21955,10 +22031,12 @@ window.fmtHeight = fmtHeight;
     return 0;
   }
 
-  function getPickValue(round, year, slot) {
-    // Dynasty modes: use board position (wherever Jack ranked the pick)
+  function getPickValue(round, year, slot, pickNum) {
+    // Dynasty modes: use board position (wherever Jack ranked the pick).
+    // pickNum (e.g. "1.04") routes _pickTradeValue to the actual rookie at that
+    // board position rather than the generic Early/Mid/Late slot value.
     if (tradeMode === 'dynasty' || tradeMode === 'dynastysf') {
-      return _pickTradeValue(round, year, slot, tradeSource, tradeMode);
+      return _pickTradeValue(round, year, slot, tradeSource, tradeMode, pickNum);
     }
     // Redraft/superflex: use static base values
     const base = PICK_BASE[round] ? PICK_BASE[round][tradeMode] : 0;
@@ -22098,7 +22176,7 @@ window.fmtHeight = fmtHeight;
   function calcSideTotal(side) {
     let total = 0;
     side.players.forEach(idx => { total += getPlayerValue(D[idx]); });
-    side.picks.forEach(p => { total += getPickValue(p.round, p.year, p.slot); });
+    side.picks.forEach(p => { total += getPickValue(p.round, p.year, p.slot, p._pickNum); });
     return total;
   }
 
@@ -22127,10 +22205,15 @@ window.fmtHeight = fmtHeight;
         </div>`;
       });
       side.picks.forEach((p, i) => {
-        const val = getPickValue(p.round, p.year, p.slot);
+        const val = getPickValue(p.round, p.year, p.slot, p._pickNum);
+        // Real picks (with _pickNum from synced rosters) display as "2027 1.04 · via Sam"
+        // so it's clear which exact pick is in the trade. Falls back to generic slot label.
+        const pickLabel = p._pickNum
+          ? (p.year + ' ' + p._pickNum + (p.original ? ' <span style="color:var(--text2);font-weight:400">· via ' + _esc(p.original) + '</span>' : ''))
+          : (p.year + ' ' + slotLabel(p.slot) + ' ' + p.round);
         html += `<div class="trade-player-chip">
           <span class="tp-pos" style="background:rgba(245,158,11,.12);color:var(--accent);font-size:.55rem">PICK</span>
-          <span class="tp-name">${p.year} ${slotLabel(p.slot)} ${p.round}</span>
+          <span class="tp-name">${pickLabel}</span>
           <span class="tp-val">${val}</span>
           <button class="tp-remove" data-pick-idx="${i}" data-side="${sideClass}">&times;</button>
         </div>`;
@@ -22278,12 +22361,16 @@ window.fmtHeight = fmtHeight;
     document.querySelectorAll('.tp-remove').forEach(btn => {
       btn.addEventListener('click', () => {
         const side = btn.dataset.side === 'a' ? sideA : sideB;
+        const wasPick = btn.dataset.pickIdx !== undefined;
         if (btn.dataset.idx !== undefined) {
           side.players = side.players.filter(i => i !== +btn.dataset.idx);
-        } else if (btn.dataset.pickIdx !== undefined) {
+        } else if (wasPick) {
           side.picks.splice(+btn.dataset.pickIdx, 1);
         }
         renderAll();
+        if (wasPick && typeof _calcRenderRealPicks === 'function') {
+          _calcRenderRealPicks(btn.dataset.side);
+        }
       });
     });
     // Player name clicks open player card — pass tradeMode so the card shows
@@ -22298,10 +22385,16 @@ window.fmtHeight = fmtHeight;
     });
   }
 
+  // Per-side roster filter — set when an owner is picked in the Calc-view team picker.
+  // Each entry: { idxSet: Set<dIdx>, owner: string } or null = no filter (all players).
+  const _calcSideFilters = { a: null, b: null };
+  window._calcSideFilters = _calcSideFilters;
+
   // Search
   function setupSearch(inputId, dropId, side) {
     const input = document.getElementById(inputId);
     const drop = document.getElementById(dropId);
+    const sideKey = side === sideA ? 'a' : 'b';
     let debounce = null;
     input.addEventListener('input', () => {
       clearTimeout(debounce);
@@ -22309,8 +22402,10 @@ window.fmtHeight = fmtHeight;
         const q = input.value.trim().toLowerCase();
         if (q.length < 2) { drop.classList.remove('show'); return; }
         const usedIdxs = new Set([...sideA.players, ...sideB.players]);
+        const rosterFilter = _calcSideFilters[sideKey];
         const matches = D.filter(d =>
           !usedIdxs.has(d.idx) && d.s !== 'K' && !d._retired && d.t !== 'Retired' &&
+          (!rosterFilter || rosterFilter.idxSet.has(d.idx)) &&
           (d.n.toLowerCase().includes(q) || d.t.toLowerCase().includes(q))
         ).slice(0, 8);
         if (!matches.length) { drop.classList.remove('show'); return; }
@@ -22590,6 +22685,931 @@ window.fmtHeight = fmtHeight;
   }
   _tradeUpdateJacksLock();
   window._tradeUpdateJacksLock = _tradeUpdateJacksLock;
+
+  // ═══════════════════════════════════════════════════════════
+  // TRADE FINDER — engine + UI
+  // Recommends trade packages by scanning your synced Sleeper league.
+  // ═══════════════════════════════════════════════════════════
+  function _esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  const _finderState = { targetDIdx: null, leagueIdx: 0 };
+
+  function _finderLookupD(name) {
+    if (typeof D === 'undefined' || !name) return null;
+    if (typeof nameToIdx !== 'undefined' && nameToIdx[name] !== undefined) {
+      return D[nameToIdx[name]];
+    }
+    const found = D.find(p => p.n === name);
+    if (found) return found;
+    const norm = String(name).toLowerCase().replace(/[.\-'\s]/g, '');
+    return D.find(p => p.n && p.n.toLowerCase().replace(/[.\-'\s]/g, '') === norm) || null;
+  }
+
+  function _finderGetActiveLeague() {
+    const leagues = window._mtSavedLeagues || [];
+    if (!leagues.length) return null;
+    const sel = document.getElementById('finderLeague');
+    let idx = _finderState.leagueIdx;
+    if (sel && sel.value !== '') idx = parseInt(sel.value);
+    if (!leagues[idx]) idx = 0;
+    return { league: leagues[idx], idx };
+  }
+
+  // Team archetype — Contender / Retool / Rebuilder. Manual override stored in
+  // localStorage and respected over the heuristic. Dynasty-relevant only.
+  const _ARCH_VALUES = ['auto', 'contender', 'retool', 'rebuilder'];
+  function _archKey(league, team) {
+    const lid = (league && (league.leagueId || league.name)) || '?';
+    const tid = (team && (team.id != null ? team.id : team.owner)) || '?';
+    return '_calcArch:' + lid + ':' + tid;
+  }
+  window._calcGetArchOverride = function(league, team) {
+    try {
+      const v = localStorage.getItem(_archKey(league, team));
+      return _ARCH_VALUES.indexOf(v) >= 0 ? v : 'auto';
+    } catch (_e) { return 'auto'; }
+  };
+  window._calcSetArchOverride = function(league, team, val) {
+    try {
+      if (!val || val === 'auto') localStorage.removeItem(_archKey(league, team));
+      else localStorage.setItem(_archKey(league, team), val);
+    } catch (_e) {}
+  };
+  function _calcAutoArchetype(team) {
+    if (!team) return null;
+    const players = (team.players || [])
+      .map(name => _finderLookupD(name))
+      .filter(Boolean)
+      .map(d => ({ d, v: getPlayerValue(d) }))
+      .filter(x => x.v > 1)
+      .sort((a, b) => b.v - a.v)
+      .slice(0, 12);
+    const ages = players.map(x => x.d.age).filter(a => typeof a === 'number' && a > 0);
+    const avgAge = ages.length ? ages.reduce((s, a) => s + a, 0) / ages.length : null;
+    let firstRdPicks = 0;
+    (team.draftPicks || []).forEach(pk => { if (pk.round === '1st') firstRdPicks++; });
+    const games = (team.wins || 0) + (team.losses || 0);
+    const winPct = games > 0 ? (team.wins || 0) / games : 0.5;
+    let score = 0;
+    if (avgAge != null) score += (avgAge - 26.0) * 1.0;
+    score -= firstRdPicks * 0.7;
+    score += (winPct - 0.5) * 2;
+    if (score >= 1) return 'contender';
+    if (score <= -1) return 'rebuilder';
+    return 'retool';
+  }
+  window._calcGetArchetype = function(team, league) {
+    if (!team) return null;
+    const override = window._calcGetArchOverride(league, team);
+    if (override && override !== 'auto') return override;
+    return _calcAutoArchetype(team);
+  };
+  const _ARCH_LABEL = { contender: 'Contender', retool: 'Retool', rebuilder: 'Rebuilder' };
+  const _ARCH_ICON = { contender: '🏆', retool: '🔄', rebuilder: '🌱' };
+
+  // Engine — returns { results, otherTeam, myTeam, target } or { error }
+  window._findTrade = function(targetDIdx, options) {
+    options = options || {};
+    const tolerance = options.tolerance != null ? options.tolerance : 0.08;
+    const maxPieces = options.maxPieces || 3;
+    const includePicks = options.includePicks !== false;
+
+    // Explicit fromTeam/toTeam override (used by Calc-view team pickers + _suggestTrade).
+    // Falls back to "fromTeam = isMyTeam, toTeam = whoever owns the target".
+    let league, myTeam, otherTeam;
+    if (options.fromTeam && options.toTeam) {
+      myTeam = options.fromTeam;
+      otherTeam = options.toTeam;
+      league = options.league || null;
+    } else {
+      const lgInfo = options.league ? { league: options.league } : _finderGetActiveLeague();
+      if (!lgInfo) return { error: 'no_league', results: [] };
+      league = lgInfo.league;
+      if (!league.teams || !league.teams.length) return { error: 'no_teams', results: [] };
+      myTeam = league.teams.find(t => t.isMyTeam);
+      if (!myTeam) return { error: 'no_my_team', results: [] };
+    }
+
+    const targetD = D[targetDIdx];
+    if (!targetD) return { error: 'no_target', results: [] };
+
+    if (!otherTeam) {
+      for (const t of league.teams) {
+        if (t.isMyTeam) continue;
+        const hit = (t.players || []).some(n => {
+          const d = _finderLookupD(n);
+          return d && d.idx === targetDIdx;
+        });
+        if (hit) { otherTeam = t; break; }
+      }
+      if (!otherTeam) return { error: 'target_not_rostered', results: [] };
+    } else {
+      // Verify target is actually on the explicit toTeam's roster
+      const onTo = (otherTeam.players || []).some(n => {
+        const d = _finderLookupD(n);
+        return d && d.idx === targetDIdx;
+      });
+      if (!onTo) return { error: 'target_not_rostered', results: [] };
+    }
+
+    const isDyn = tradeMode === 'dynasty' || tradeMode === 'dynastysf';
+
+    function buildAssets(team) {
+      const assets = [];
+      (team.players || []).forEach(name => {
+        const d = _finderLookupD(name);
+        if (!d) return;
+        const v = getPlayerValue(d);
+        if (v <= 1) return;
+        assets.push({ type: 'p', d, didx: d.idx, name: d.n, pos: d.s, value: v });
+      });
+      if (isDyn && includePicks) {
+        (team.draftPicks || []).forEach(pk => {
+          const v = window._getPickValue(pk.round, pk.year, pk.slot, tradeMode, pk._pickNum);
+          if (v <= 1) return;
+          const label = pk._pickNum
+            ? (pk.year + ' ' + pk._pickNum)
+            : (pk.year + ' ' + (pk.slot ? pk.slot.charAt(0).toUpperCase() + pk.slot.slice(1) + ' ' : '') + pk.round);
+          assets.push({ type: 'k', pick: pk, value: v, name: label, pos: 'PICK' });
+        });
+      }
+      return assets;
+    }
+
+    const myAssets = buildAssets(myTeam);
+    const theirAssets = buildAssets(otherTeam);
+    const targetAsset = theirAssets.find(a => a.type === 'p' && a.didx === targetDIdx);
+    if (!targetAsset) return { error: 'target_not_found', results: [] };
+
+    const myPosCount = {}, theirPosCount = {};
+    myAssets.filter(a => a.type === 'p').forEach(a => { myPosCount[a.pos] = (myPosCount[a.pos] || 0) + 1; });
+    theirAssets.filter(a => a.type === 'p').forEach(a => { theirPosCount[a.pos] = (theirPosCount[a.pos] || 0) + 1; });
+
+    const mySorted = myAssets.slice().sort((a, b) => b.value - a.value);
+
+    // Their-side extras to potentially throw in alongside target (cap to top 8 by value <= target)
+    const theirExtras = theirAssets
+      .filter(a => a !== targetAsset && a.value <= targetAsset.value)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8);
+
+    const getCombos = [[targetAsset]];
+    for (let i = 0; i < theirExtras.length; i++) {
+      getCombos.push([targetAsset, theirExtras[i]]);
+      if (maxPieces >= 3) {
+        for (let j = i + 1; j < theirExtras.length; j++) {
+          getCombos.push([targetAsset, theirExtras[i], theirExtras[j]]);
+        }
+      }
+    }
+
+    const raw = [];
+
+    // Archetypes (dynasty only) — used to bias scoring toward timeline-aligned trades.
+    const fromArch = isDyn ? window._calcGetArchetype(myTeam, league) : null;
+    const toArch = isDyn ? window._calcGetArchetype(otherTeam, league) : null;
+    function _archAssetFit(asset, archetype) {
+      // Positive = asset matches what this archetype wants to RECEIVE.
+      if (!archetype || archetype === 'retool') return 0;
+      if (asset.type === 'k') {
+        return archetype === 'rebuilder' ? 0.04 : (archetype === 'contender' ? -0.02 : 0);
+      }
+      const age = asset.d && typeof asset.d.age === 'number' ? asset.d.age : null;
+      if (age == null) return 0;
+      if (archetype === 'contender' && age >= 26) return 0.03;
+      if (archetype === 'rebuilder' && age <= 24) return 0.03;
+      if (archetype === 'contender' && age <= 23) return -0.02;
+      if (archetype === 'rebuilder' && age >= 28) return -0.02;
+      return 0;
+    }
+
+    function scoreCombo(giveSide, getSide, getTotal) {
+      const giveTotal = giveSide.reduce((s, a) => s + a.value, 0);
+      const delta = (giveTotal - getTotal) / getTotal;
+      let fit = 0;
+      giveSide.forEach(a => {
+        if (a.type !== 'p') return;
+        if ((myPosCount[a.pos] || 0) >= 4) fit += 0.10;
+        if ((theirPosCount[a.pos] || 0) <= 1) fit += 0.12;
+      });
+      getSide.forEach(a => {
+        if (a.type !== 'p') return;
+        if ((myPosCount[a.pos] || 0) <= 1) fit += 0.15;
+        if ((theirPosCount[a.pos] || 0) >= 4) fit += 0.08;
+      });
+
+      // Timeline bonus — what I receive should match my archetype's wants,
+      // and what I send should match other team's archetype's wants.
+      let timeline = 0;
+      if (fromArch && toArch && fromArch !== toArch) {
+        getSide.forEach(a => { timeline += _archAssetFit(a, fromArch); });
+        giveSide.forEach(a => { timeline += _archAssetFit(a, toArch); });
+        timeline = Math.max(-0.15, Math.min(0.15, timeline));
+      }
+
+      const pieces = giveSide.length + getSide.length;
+      const piecePenalty = Math.max(0.6, 1 - (pieces - 2) * 0.05);
+      const valueMatch = Math.max(0, 1 - Math.abs(delta) / tolerance);
+      return { giveTotal, delta, fit, timeline, score: valueMatch * (1 + fit + timeline) * piecePenalty };
+    }
+
+    for (const getSide of getCombos) {
+      const getTotal = getSide.reduce((s, a) => s + a.value, 0);
+      const minVal = getTotal * (1 - tolerance);
+      const maxVal = getTotal * (1 + tolerance);
+
+      // 1-piece give (mySorted desc)
+      for (let i = 0; i < mySorted.length; i++) {
+        const v = mySorted[i].value;
+        if (v > maxVal) continue;
+        if (v < minVal) break;
+        const s = scoreCombo([mySorted[i]], getSide, getTotal);
+        raw.push({ give: [mySorted[i]], get: getSide, getTotal, ...s });
+      }
+
+      // 2-piece
+      if (maxPieces >= 2) {
+        for (let i = 0; i < mySorted.length; i++) {
+          if (mySorted[i].value >= maxVal) continue;
+          for (let j = i + 1; j < mySorted.length; j++) {
+            const sum = mySorted[i].value + mySorted[j].value;
+            if (sum < minVal) break;
+            if (sum > maxVal) continue;
+            const s = scoreCombo([mySorted[i], mySorted[j]], getSide, getTotal);
+            raw.push({ give: [mySorted[i], mySorted[j]], get: getSide, getTotal, ...s });
+          }
+        }
+      }
+
+      // 3-piece
+      if (maxPieces >= 3) {
+        for (let i = 0; i < mySorted.length; i++) {
+          if (mySorted[i].value >= maxVal) continue;
+          for (let j = i + 1; j < mySorted.length; j++) {
+            const sum2 = mySorted[i].value + mySorted[j].value;
+            if (sum2 >= maxVal) continue;
+            for (let k = j + 1; k < mySorted.length; k++) {
+              const sum3 = sum2 + mySorted[k].value;
+              if (sum3 < minVal) break;
+              if (sum3 > maxVal) continue;
+              const s = scoreCombo([mySorted[i], mySorted[j], mySorted[k]], getSide, getTotal);
+              raw.push({ give: [mySorted[i], mySorted[j], mySorted[k]], get: getSide, getTotal, ...s });
+            }
+          }
+        }
+      }
+    }
+
+    raw.sort((a, b) => b.score - a.score);
+    const seen = new Set();
+    const deduped = [];
+    for (const r of raw) {
+      const key = r.give.map(a => a.type + (a.didx || a.name)).sort().join('|') + '>' +
+                  r.get.map(a => a.type + (a.didx || a.name)).sort().join('|');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(r);
+      if (deduped.length >= 5) break;
+    }
+
+    return {
+      results: deduped, otherTeam, myTeam, target: targetD,
+      fromArch: isDyn ? window._calcGetArchetype(myTeam, league) : null,
+      toArch: isDyn ? window._calcGetArchetype(otherTeam, league) : null
+    };
+  };
+
+  // Suggest fair trades between two specific teams. Enumerates top N players on
+  // toTeam as candidate targets, runs _findTrade for each, then dedupes/ranks.
+  window._suggestTrade = function(fromTeam, toTeam, options) {
+    options = options || {};
+    if (!fromTeam || !toTeam) return { error: 'no_teams', results: [] };
+    const topN = options.topN || 12;
+
+    const candidates = (toTeam.players || [])
+      .map(name => _finderLookupD(name))
+      .filter(Boolean)
+      .map(d => ({ d, v: getPlayerValue(d) }))
+      .filter(x => x.v > 1)
+      .sort((a, b) => b.v - a.v)
+      .slice(0, topN);
+
+    const all = [];
+    for (const { d } of candidates) {
+      const out = window._findTrade(d.idx, {
+        tolerance: options.tolerance,
+        maxPieces: options.maxPieces,
+        includePicks: options.includePicks,
+        league: options.league,
+        fromTeam,
+        toTeam
+      });
+      if (out && out.results) all.push(...out.results);
+    }
+
+    all.sort((a, b) => b.score - a.score);
+    const seen = new Set();
+    const deduped = [];
+    for (const r of all) {
+      const key = r.give.map(a => a.type + (a.didx || a.name)).sort().join('|') + '>' +
+                  r.get.map(a => a.type + (a.didx || a.name)).sort().join('|');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(r);
+      if (deduped.length >= 5) break;
+    }
+    return { results: deduped, myTeam: fromTeam, otherTeam: toTeam };
+  };
+
+  // Check if a player is rostered in any synced league (used by player-card button)
+  window._finderHasOwner = function(dIdx) {
+    const leagues = window._mtSavedLeagues || [];
+    for (let li = 0; li < leagues.length; li++) {
+      const lg = leagues[li];
+      for (const t of (lg.teams || [])) {
+        if (t.isMyTeam) continue;
+        for (const name of (t.players || [])) {
+          const d = _finderLookupD(name);
+          if (d && d.idx === dIdx) return { leagueIdx: li, league: lg, team: t };
+        }
+      }
+    }
+    return null;
+  };
+
+  window._finderPopulateLeagueDropdown = _finderPopulateLeagueDropdown;
+  function _finderPopulateLeagueDropdown() {
+    const sel = document.getElementById('finderLeague');
+    if (!sel) return;
+    const leagues = window._mtSavedLeagues || [];
+    if (!leagues.length) {
+      sel.innerHTML = '<option value="">No synced leagues</option>';
+      sel.disabled = true;
+      return;
+    }
+    sel.disabled = false;
+    sel.innerHTML = leagues.map((lg, i) => {
+      const label = (lg.name || 'League ' + (i + 1)) + (lg.season ? ' · ' + lg.season : '');
+      return '<option value="' + i + '">' + _esc(label) + '</option>';
+    }).join('');
+    if (_finderState.leagueIdx >= leagues.length) _finderState.leagueIdx = 0;
+    sel.value = String(_finderState.leagueIdx);
+  }
+
+  function _finderRenderEmpty(msg) {
+    const c = document.getElementById('finderResults');
+    if (!c) return;
+    const leagues = window._mtSavedLeagues || [];
+    if (!leagues.length) {
+      c.innerHTML = '<div class="trade-finder-empty">' +
+        '<div style="font-size:2rem;margin-bottom:.5rem">📭</div>' +
+        '<div style="font-family:Bebas Neue,sans-serif;font-size:1rem;letter-spacing:1.5px;margin-bottom:.5rem">NO LEAGUES SYNCED</div>' +
+        '<div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem">Import a Sleeper league on the My Teams page to enable the trade finder.</div>' +
+        '<button onclick="document.querySelector(\'[data-page=myteams]\').click()" class="finder-run-btn">GO TO MY TEAMS</button>' +
+        '</div>';
+      return;
+    }
+    c.innerHTML = '<div class="trade-finder-empty"><div style="color:var(--text2);font-size:.85rem">' +
+      _esc(msg || 'Pick a player to acquire, then click FIND TRADES.') + '</div></div>';
+  }
+
+  function _renderAssetChip(a) {
+    if (a.type === 'k') {
+      return '<div class="finder-asset"><span class="td-pos" style="background:#7c3aed;color:#fff">PICK</span><span>' + _esc(a.name) + '</span><span class="td-val">' + a.value + '</span></div>';
+    }
+    return '<div class="finder-asset"><span class="td-pos ' + a.d.s + '">' + a.d.s + '</span><span>' + _esc(a.d.n) + '</span><span class="td-val">' + a.value + '</span></div>';
+  }
+
+  function _finderRenderResults(out) {
+    const c = document.getElementById('finderResults');
+    if (!c) return;
+    if (out.error) {
+      const msgs = {
+        no_league: 'No league synced — import one on the My Teams page first.',
+        no_teams: 'League has no teams.',
+        no_my_team: 'Couldn\'t find your team in this league. Make sure your Sleeper account is detected on the My Teams page.',
+        no_target: 'Player not found.',
+        target_not_rostered: 'That player isn\'t on a roster in this league.',
+        target_not_found: 'Target not found on owner\'s roster.'
+      };
+      c.innerHTML = '<div class="trade-finder-empty"><div style="color:var(--text2)">' + (msgs[out.error] || out.error) + '</div></div>';
+      return;
+    }
+    if (!out.results.length) {
+      c.innerHTML = '<div class="trade-finder-empty">' +
+        '<div style="font-family:Bebas Neue,sans-serif;font-size:1rem;letter-spacing:1.5px;margin-bottom:.5rem">NO MATCHES</div>' +
+        '<div style="font-size:.8rem;color:var(--text2)">Try widening the tolerance slider, or pick a different target.</div></div>';
+      return;
+    }
+    let html = '<div class="trade-finder-header">' +
+      '<span style="font-family:Bebas Neue,sans-serif;letter-spacing:1.5px;font-size:.9rem">' + out.results.length + ' TRADE' + (out.results.length === 1 ? '' : 'S') + ' FOUND</span>' +
+      '<span style="font-size:.72rem;color:var(--text2)">Target owner: <b style="color:var(--text)">' + _esc(out.otherTeam.owner) + '</b>' +
+        (out.toArch ? ' <span class="team-arch-badge team-arch-' + out.toArch + '" style="margin-left:6px">' + (_ARCH_ICON[out.toArch] || '') + ' ' + (_ARCH_LABEL[out.toArch] || out.toArch) + '</span>' : '') +
+        (out.fromArch && out.fromArch !== out.toArch ? ' <span style="color:var(--text2);margin-left:4px">· you: <b style="color:var(--text)">' + (_ARCH_LABEL[out.fromArch] || out.fromArch) + '</b></span>' : '') +
+      '</span>' +
+      '</div>';
+    out.results.forEach((r, i) => {
+      const deltaPct = Math.round(r.delta * 100);
+      const deltaLabel = Math.abs(deltaPct) <= 1
+        ? 'EVEN'
+        : (deltaPct > 0 ? '+' + deltaPct + '% your side overpays' : deltaPct + '% (you come out ahead)');
+      const deltaColor = Math.abs(deltaPct) <= 3 ? 'var(--text2)' : (deltaPct < 0 ? 'var(--green)' : 'var(--accent)');
+      const giveHtml = r.give.map(_renderAssetChip).join('');
+      const getHtml = r.get.map(_renderAssetChip).join('');
+      const getTotal = Math.round(r.getTotal || r.get.reduce((s, a) => s + a.value, 0));
+      html += '<div class="finder-result-card">' +
+        '<div class="finder-result-sides">' +
+          '<div class="finder-side">' +
+            '<div class="finder-side-label">YOU SEND</div>' + giveHtml +
+            '<div class="finder-side-total">TOTAL ' + r.giveTotal + '</div>' +
+          '</div>' +
+          '<div class="finder-arrow">⇄</div>' +
+          '<div class="finder-side">' +
+            '<div class="finder-side-label">YOU GET</div>' + getHtml +
+            '<div class="finder-side-total">TOTAL ' + getTotal + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="finder-result-meta">' +
+          '<span style="color:' + deltaColor + ';font-weight:600">' + deltaLabel + '</span>' +
+          (r.fit > 0.2 ? '<span style="color:var(--green);margin-left:.75rem">✓ mutual fit</span>' : '') +
+          '<button class="finder-load-btn" data-load-idx="' + i + '">LOAD INTO CALCULATOR</button>' +
+        '</div>' +
+      '</div>';
+    });
+    c.innerHTML = html;
+    c.querySelectorAll('.finder-load-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.loadIdx);
+        _finderLoadIntoCalc(out.results[idx]);
+      });
+    });
+  }
+
+  function _finderRun() {
+    if (_finderState.targetDIdx == null) { _finderRenderEmpty(); return; }
+    const tolInput = document.getElementById('finderTolerance');
+    const tolerance = tolInput ? (parseInt(tolInput.value) / 100) : 0.08;
+    const lgInfo = _finderGetActiveLeague();
+    const out = window._findTrade(_finderState.targetDIdx, {
+      tolerance,
+      league: lgInfo ? lgInfo.league : null
+    });
+    _finderRenderResults(out);
+  }
+
+  function _finderLoadIntoCalc(r) {
+    sideA.players = []; sideA.picks = [];
+    sideB.players = []; sideB.picks = [];
+    r.give.forEach(a => {
+      if (a.type === 'p') sideA.players.push(a.didx);
+      else if (a.type === 'k') sideA.picks.push({ round: a.pick.round, year: a.pick.year, slot: a.pick.slot, _pickNum: a.pick._pickNum, original: a.pick.original });
+    });
+    r.get.forEach(a => {
+      if (a.type === 'p') sideB.players.push(a.didx);
+      else if (a.type === 'k') sideB.picks.push({ round: a.pick.round, year: a.pick.year, slot: a.pick.slot, _pickNum: a.pick._pickNum, original: a.pick.original });
+    });
+    const calcTab = document.querySelector('.trade-view-tab[data-tview="calc"]');
+    if (calcTab) calcTab.click();
+    renderAll();
+    if (typeof _calcRenderRealPicks === 'function') { _calcRenderRealPicks('a'); _calcRenderRealPicks('b'); }
+    if (typeof toast === 'function') toast('Loaded — tweak as needed');
+  }
+
+  // Target search autocomplete — scoped to rostered players in selected league (excluding your team)
+  (function _setupFinderTargetSearch() {
+    const input = document.getElementById('finderTargetSearch');
+    const drop = document.getElementById('finderTargetDrop');
+    if (!input || !drop) return;
+    let debounce = null;
+    input.addEventListener('input', () => {
+      _finderState.targetDIdx = null;
+      clearTimeout(debounce);
+      debounce = setTimeout(() => {
+        const q = input.value.trim().toLowerCase();
+        if (q.length < 2) { drop.classList.remove('show'); return; }
+        const lgInfo = _finderGetActiveLeague();
+        if (!lgInfo) { drop.classList.remove('show'); return; }
+        const seenIdx = new Set();
+        const candidates = [];
+        (lgInfo.league.teams || []).forEach(t => {
+          if (t.isMyTeam) return;
+          (t.players || []).forEach(name => {
+            const d = _finderLookupD(name);
+            if (!d || seenIdx.has(d.idx)) return;
+            if (!d.n.toLowerCase().includes(q)) return;
+            seenIdx.add(d.idx);
+            candidates.push({ d, ownerName: t.owner || 'Team' });
+          });
+        });
+        candidates.sort((a, b) => getPlayerValue(b.d) - getPlayerValue(a.d));
+        const matches = candidates.slice(0, 8);
+        if (!matches.length) { drop.classList.remove('show'); return; }
+        drop.innerHTML = matches.map(({ d, ownerName }) => {
+          const val = getPlayerValue(d);
+          return '<div class="trade-drop-item" data-idx="' + d.idx + '">' +
+            '<span class="td-pos ' + d.s + '">' + d.s + '</span><span>' + _esc(d.n) + '</span>' +
+            '<span class="td-team" title="Owned by ' + _esc(ownerName) + '">' + _esc(String(ownerName).slice(0, 14)) + '</span>' +
+            '<span class="td-val">' + val + '</span></div>';
+        }).join('');
+        drop.classList.add('show');
+        drop.querySelectorAll('.trade-drop-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const idx = parseInt(item.dataset.idx);
+            _finderState.targetDIdx = idx;
+            if (D[idx]) input.value = D[idx].n;
+            drop.classList.remove('show');
+            _finderRun();
+          });
+        });
+      }, 150);
+    });
+    input.addEventListener('blur', () => { setTimeout(() => drop.classList.remove('show'), 200); });
+    input.addEventListener('focus', () => { if (input.value.trim().length >= 2) input.dispatchEvent(new Event('input')); });
+  })();
+
+  // View toggle
+  document.querySelectorAll('.trade-view-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.tview;
+      document.querySelectorAll('.trade-view-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const calcEl = document.getElementById('tradeCalcView');
+      const findEl = document.getElementById('tradeFinderView');
+      if (calcEl) calcEl.style.display = view === 'calc' ? '' : 'none';
+      if (findEl) findEl.style.display = view === 'finder' ? '' : 'none';
+      if (view === 'finder') {
+        _finderPopulateLeagueDropdown();
+        if (_finderState.targetDIdx != null) _finderRun();
+        else _finderRenderEmpty();
+      }
+    });
+  });
+
+  // League change → reset target, re-render
+  const _finderLeagueSel = document.getElementById('finderLeague');
+  if (_finderLeagueSel) {
+    _finderLeagueSel.addEventListener('change', () => {
+      _finderState.leagueIdx = parseInt(_finderLeagueSel.value) || 0;
+      _finderState.targetDIdx = null;
+      const ti = document.getElementById('finderTargetSearch');
+      if (ti) ti.value = '';
+      _finderRenderEmpty();
+    });
+  }
+
+  // Tolerance slider
+  const _finderTol = document.getElementById('finderTolerance');
+  const _finderTolLbl = document.getElementById('finderTolVal');
+  if (_finderTol && _finderTolLbl) {
+    _finderTol.addEventListener('input', () => { _finderTolLbl.textContent = '±' + _finderTol.value + '%'; });
+    _finderTol.addEventListener('change', () => { if (_finderState.targetDIdx != null) _finderRun(); });
+  }
+
+  // Run button
+  const _finderRunBtn = document.getElementById('finderRunBtn');
+  if (_finderRunBtn) _finderRunBtn.addEventListener('click', _finderRun);
+
+  // Re-run when mode or source changes (only if finder is visible + target selected)
+  function _finderMaybeReRun() {
+    const findEl = document.getElementById('tradeFinderView');
+    if (findEl && findEl.style.display !== 'none' && _finderState.targetDIdx != null) {
+      setTimeout(_finderRun, 0);
+    }
+  }
+  document.querySelectorAll('.trade-mode-tab').forEach(b => b.addEventListener('click', _finderMaybeReRun));
+  document.querySelectorAll('.trade-src-tab').forEach(b => b.addEventListener('click', _finderMaybeReRun));
+  // Archetype labels + real-pick adder both depend on tradeMode being dynasty —
+  // refresh them when mode changes.
+  document.querySelectorAll('.trade-mode-tab').forEach(b => b.addEventListener('click', () => {
+    setTimeout(() => {
+      _calcRefreshTeamOptionLabels();
+      _calcUpdateSideLabels();
+      _calcRenderRealPicks('a');
+      _calcRenderRealPicks('b');
+    }, 0);
+  }));
+
+  // Public entrypoint for the player-card button
+  window._finderShowAndRun = function(targetDIdx) {
+    const leagues = window._mtSavedLeagues || [];
+    if (!leagues.length) {
+      if (typeof toast === 'function') toast('Import a Sleeper league on My Teams first');
+      return false;
+    }
+    // Switch to trade page first
+    const navBtn = document.querySelector('.nav-btn[data-page="trade"]');
+    if (navBtn) navBtn.click();
+    // Click finder view tab
+    const viewTab = document.querySelector('.trade-view-tab[data-tview="finder"]');
+    if (viewTab) viewTab.click();
+    // Set target + run
+    _finderState.targetDIdx = targetDIdx;
+    const input = document.getElementById('finderTargetSearch');
+    if (input && D[targetDIdx]) input.value = D[targetDIdx].n;
+    _finderRun();
+    return true;
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  // CALC VIEW — league + team pickers (shared state with FIND TRADE)
+  // ═══════════════════════════════════════════════════════════
+  const _calcLeagueSel = document.getElementById('calcLeague');
+  const _calcTeamA = document.getElementById('calcTeamA');
+  const _calcTeamB = document.getElementById('calcTeamB');
+  const _calcSuggestBtn = document.getElementById('calcSuggestBtn');
+  const _calcPicker = document.getElementById('calcLeaguePicker');
+  const _calcTeamRow = document.getElementById('calcTeamPickerRow');
+
+  function _calcBuildRosterFilter(team) {
+    if (!team) return null;
+    const idxSet = new Set();
+    (team.players || []).forEach(name => {
+      const d = _finderLookupD(name);
+      if (d) idxSet.add(d.idx);
+    });
+    return { idxSet, owner: team.owner || 'Team', team, pickCount: (team.draftPicks || []).length };
+  }
+
+  function _calcUpdateSideLabels() {
+    const labelA = document.querySelector('#tradeCalcView .trade-side-label.side-a');
+    const labelB = document.querySelector('#tradeCalcView .trade-side-label.side-b');
+    const isDyn = (tradeMode === 'dynasty' || tradeMode === 'dynastysf');
+    const leagues = window._mtSavedLeagues || [];
+    const lg = leagues[_finderState.leagueIdx];
+    function archBadge(team, sideLetter) {
+      if (!isDyn || !team) return '';
+      const arch = window._calcGetArchetype(team, lg);
+      const override = window._calcGetArchOverride(lg, team);
+      if (!arch) return '';
+      const cls = 'team-arch-' + arch;
+      const icon = _ARCH_ICON[arch] || '';
+      const lbl = _ARCH_LABEL[arch] || arch;
+      const tipPrefix = (override === 'auto' || !override) ? 'Auto-detected · ' : 'Manual · ';
+      return '<span class="team-arch-badge ' + cls + '" data-arch-side="' + sideLetter + '" title="' + tipPrefix + 'Click to cycle">' + icon + ' ' + lbl + '</span>';
+    }
+    function fmt(f, sideLetter) {
+      const sub = f.idxSet.size + ' player' + (f.idxSet.size === 1 ? '' : 's') + (f.pickCount ? ' · ' + f.pickCount + ' pick' + (f.pickCount === 1 ? '' : 's') : '');
+      return _esc(f.owner) + ' <span style="display:block;font-size:.6rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">' + sub + '</span>' + archBadge(f.team, sideLetter);
+    }
+    if (labelA) labelA.innerHTML = _calcSideFilters.a ? fmt(_calcSideFilters.a, 'a') : 'TEAM A';
+    if (labelB) labelB.innerHTML = _calcSideFilters.b ? fmt(_calcSideFilters.b, 'b') : 'TEAM B';
+    // Wire badge click → cycle override (auto → contender → retool → rebuilder → auto)
+    document.querySelectorAll('#tradeCalcView .team-arch-badge[data-arch-side]').forEach(b => {
+      b.addEventListener('click', () => {
+        const side = b.dataset.archSide;
+        const f = _calcSideFilters[side];
+        if (!f) return;
+        const cur = window._calcGetArchOverride(lg, f.team);
+        const next = _ARCH_VALUES[(_ARCH_VALUES.indexOf(cur) + 1) % _ARCH_VALUES.length];
+        window._calcSetArchOverride(lg, f.team, next);
+        _calcUpdateSideLabels();
+        _calcRefreshTeamOptionLabels();
+      });
+    });
+  }
+
+  // Refresh the option text in calcTeamA / calcTeamB without resetting selection,
+  // so archetype overrides applied via badge click show up in the dropdowns too.
+  function _calcRefreshTeamOptionLabels() {
+    const leagues = window._mtSavedLeagues || [];
+    const lg = leagues[_finderState.leagueIdx];
+    if (!lg || !lg.teams) return;
+    const isDyn = (tradeMode === 'dynasty' || tradeMode === 'dynastysf');
+    [_calcTeamA, _calcTeamB].forEach(sel => {
+      if (!sel) return;
+      Array.from(sel.options).forEach(opt => {
+        if (opt.value === '') return;
+        const t = lg.teams[parseInt(opt.value)];
+        if (!t) return;
+        const star = t.isMyTeam ? '⭐ ' : '';
+        const archStr = isDyn ? (() => {
+          const a = window._calcGetArchetype(t, lg);
+          return a ? ' — ' + (_ARCH_LABEL[a] || a) : '';
+        })() : '';
+        opt.text = star + (t.owner || 'Team') + archStr;
+      });
+    });
+  }
+
+  function _calcApplyTeamFilters() {
+    const leagues = window._mtSavedLeagues || [];
+    const lg = leagues[_finderState.leagueIdx];
+    if (!lg) {
+      _calcSideFilters.a = null;
+      _calcSideFilters.b = null;
+    } else {
+      const aIdx = _calcTeamA ? _calcTeamA.value : '';
+      const bIdx = _calcTeamB ? _calcTeamB.value : '';
+      _calcSideFilters.a = (aIdx !== '' && lg.teams[+aIdx]) ? _calcBuildRosterFilter(lg.teams[+aIdx]) : null;
+      _calcSideFilters.b = (bIdx !== '' && lg.teams[+bIdx]) ? _calcBuildRosterFilter(lg.teams[+bIdx]) : null;
+    }
+    _calcUpdateSideLabels();
+    if (_calcSuggestBtn) {
+      _calcSuggestBtn.style.display = (_calcSideFilters.a && _calcSideFilters.b) ? '' : 'none';
+    }
+    _calcRenderRealPicks('a');
+    _calcRenderRealPicks('b');
+  }
+
+  // When a team is selected on a side in dynasty mode, replace the generic
+  // 1st/2nd/3rd/4th + Early/Mid/Late pick adder with the team's actual owned picks
+  // (post-trades). Clicking a real pick adds it with its exact pickNum so the
+  // value reflects WHICH pick it is, not just the round + slot heuristic.
+  function _calcRenderRealPicks(sideLetter) {
+    const section = document.getElementById('tradePickSection' + sideLetter.toUpperCase());
+    if (!section) return;
+    const yearTabs = section.querySelector('.trade-pick-year-tabs');
+    const roundBtns = section.querySelector('.trade-pick-btns');
+    let realEl = section.querySelector('.trade-real-picks');
+    if (!realEl) {
+      realEl = document.createElement('div');
+      realEl.className = 'trade-real-picks';
+      section.appendChild(realEl);
+    }
+    const isDyn = (tradeMode === 'dynasty' || tradeMode === 'dynastysf');
+    const filter = _calcSideFilters[sideLetter];
+    if (!isDyn || !filter || !filter.team || !(filter.team.draftPicks || []).length) {
+      if (yearTabs) yearTabs.style.display = '';
+      if (roundBtns) roundBtns.style.display = '';
+      realEl.style.display = 'none';
+      realEl.innerHTML = '';
+      return;
+    }
+    const team = filter.team;
+    const sideArr = sideLetter === 'a' ? sideA.picks : sideB.picks;
+    const usedKeys = new Set(sideArr.map(p => p.year + ':' + p.round + ':' + (p._pickNum || p.slot)));
+    const available = (team.draftPicks || [])
+      .filter(pk => !usedKeys.has(pk.year + ':' + pk.round + ':' + (pk._pickNum || pk.slot)))
+      .slice()
+      .sort((a, b) => {
+        if (a.year !== b.year) return parseInt(a.year) - parseInt(b.year);
+        const rO = { '1st': 1, '2nd': 2, '3rd': 3, '4th': 4 };
+        return (rO[a.round] || 5) - (rO[b.round] || 5);
+      });
+    if (yearTabs) yearTabs.style.display = 'none';
+    if (roundBtns) roundBtns.style.display = 'none';
+    realEl.style.display = '';
+    if (!available.length) {
+      realEl.innerHTML = '<div style="font-size:.7rem;color:var(--text2);text-align:center;padding:.5rem">All of ' + _esc(team.owner || 'this team') + '’s picks are already in the trade.</div>';
+      return;
+    }
+    let html = '<div style="font-size:.6rem;color:var(--text2);font-family:Bebas Neue,sans-serif;letter-spacing:1.2px;margin-bottom:5px">' + _esc((team.owner || 'TEAM').toUpperCase()) + '’S PICKS</div>';
+    html += '<div class="trade-real-picks-grid">';
+    available.forEach((pk, i) => {
+      const val = getPickValue(pk.round, pk.year, pk.slot, pk._pickNum);
+      const label = pk._pickNum ? (pk.year + ' ' + pk._pickNum) : (pk.year + ' ' + slotLabel(pk.slot) + ' ' + pk.round);
+      const via = pk.original && pk.original !== team.owner ? ' · via ' + pk.original : '';
+      html += '<button type="button" class="real-pick-btn" data-rpidx="' + i + '" data-side="' + sideLetter + '" title="' + _esc(label + via + ' · value ' + val) + '">' +
+        '<span class="rp-label">' + _esc(label) + '</span>' +
+        '<span class="rp-val">' + val + '</span>' +
+        '</button>';
+    });
+    html += '</div>';
+    realEl.innerHTML = html;
+    realEl.querySelectorAll('.real-pick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.rpidx);
+        const pk = available[idx];
+        const side = sideLetter === 'a' ? sideA : sideB;
+        side.picks.push({
+          round: pk.round, year: pk.year, slot: pk.slot,
+          _pickNum: pk._pickNum, original: pk.original
+        });
+        renderAll();
+        _calcRenderRealPicks(sideLetter);
+      });
+    });
+  }
+  window._calcRenderRealPicks = _calcRenderRealPicks;
+
+  function _calcPopulateTeams() {
+    const leagues = window._mtSavedLeagues || [];
+    const lg = leagues[_finderState.leagueIdx];
+    if (!lg || !lg.teams || !lg.teams.length) {
+      if (_calcTeamRow) _calcTeamRow.style.display = 'none';
+      _calcApplyTeamFilters();
+      return;
+    }
+    if (_calcTeamRow) _calcTeamRow.style.display = '';
+    const isDyn = (tradeMode === 'dynasty' || tradeMode === 'dynastysf');
+    const opts = ['<option value="">— Any player —</option>'];
+    lg.teams.forEach((t, i) => {
+      const star = t.isMyTeam ? '⭐ ' : '';
+      let archStr = '';
+      if (isDyn) {
+        const arch = window._calcGetArchetype(t, lg);
+        if (arch) archStr = ' — ' + (_ARCH_LABEL[arch] || arch);
+      }
+      opts.push('<option value="' + i + '">' + star + _esc((t.owner || 'Team ' + (i + 1)) + archStr) + '</option>');
+    });
+    if (_calcTeamA) _calcTeamA.innerHTML = opts.join('');
+    if (_calcTeamB) _calcTeamB.innerHTML = opts.join('');
+    // Default Team A to user's team, Team B blank
+    const myIdx = lg.teams.findIndex(t => t.isMyTeam);
+    if (_calcTeamA) _calcTeamA.value = myIdx >= 0 ? String(myIdx) : '';
+    if (_calcTeamB) _calcTeamB.value = '';
+    _calcApplyTeamFilters();
+  }
+
+  function _calcPopulateLeagues() {
+    const leagues = window._mtSavedLeagues || [];
+    if (!leagues.length) {
+      if (_calcPicker) _calcPicker.style.display = 'none';
+      _calcApplyTeamFilters();
+      return;
+    }
+    if (_calcPicker) _calcPicker.style.display = '';
+    if (_calcLeagueSel) {
+      _calcLeagueSel.innerHTML = leagues.map((lg, i) => {
+        const label = (lg.name || 'League ' + (i + 1)) + (lg.season ? ' · ' + lg.season : '');
+        return '<option value="' + i + '">' + _esc(label) + '</option>';
+      }).join('');
+      if (_finderState.leagueIdx >= leagues.length) _finderState.leagueIdx = 0;
+      _calcLeagueSel.value = String(_finderState.leagueIdx);
+    }
+    _calcPopulateTeams();
+  }
+
+  if (_calcLeagueSel) {
+    _calcLeagueSel.addEventListener('change', () => {
+      _finderState.leagueIdx = parseInt(_calcLeagueSel.value) || 0;
+      // Sync FIND TRADE tab
+      const flSel = document.getElementById('finderLeague');
+      if (flSel && flSel.value !== _calcLeagueSel.value) {
+        flSel.value = _calcLeagueSel.value;
+        // Reset finder target since league changed
+        _finderState.targetDIdx = null;
+        const ti = document.getElementById('finderTargetSearch');
+        if (ti) ti.value = '';
+      }
+      _calcPopulateTeams();
+    });
+  }
+  if (_calcTeamA) _calcTeamA.addEventListener('change', _calcApplyTeamFilters);
+  if (_calcTeamB) _calcTeamB.addEventListener('change', _calcApplyTeamFilters);
+
+  // Sync from FIND TRADE → Calc when finder's league changes
+  const _flSelInit = document.getElementById('finderLeague');
+  if (_flSelInit) {
+    _flSelInit.addEventListener('change', () => {
+      if (_calcLeagueSel && _calcLeagueSel.value !== _flSelInit.value) {
+        _calcLeagueSel.value = _flSelInit.value;
+        _calcPopulateTeams();
+      }
+    });
+  }
+
+  // SUGGEST FAIR TRADE — auto-load top result into the calculator
+  if (_calcSuggestBtn) {
+    _calcSuggestBtn.addEventListener('click', () => {
+      const fA = _calcSideFilters.a;
+      const fB = _calcSideFilters.b;
+      if (!fA || !fB) return;
+      const lg = (window._mtSavedLeagues || [])[_finderState.leagueIdx];
+      _calcSuggestBtn.disabled = true;
+      _calcSuggestBtn.textContent = 'SEARCHING...';
+      setTimeout(() => {
+        try {
+          const out = window._suggestTrade(fA.team, fB.team, { league: lg, tolerance: 0.10 });
+          if (!out || out.error || !out.results || !out.results.length) {
+            if (typeof toast === 'function') toast('No balanced trades found — try widening tolerance');
+            return;
+          }
+          const r = out.results[0];
+          sideA.players = []; sideA.picks = [];
+          sideB.players = []; sideB.picks = [];
+          r.give.forEach(a => {
+            if (a.type === 'p') sideA.players.push(a.didx);
+            else if (a.type === 'k') sideA.picks.push({ round: a.pick.round, year: a.pick.year, slot: a.pick.slot, _pickNum: a.pick._pickNum, original: a.pick.original });
+          });
+          r.get.forEach(a => {
+            if (a.type === 'p') sideB.players.push(a.didx);
+            else if (a.type === 'k') sideB.picks.push({ round: a.pick.round, year: a.pick.year, slot: a.pick.slot, _pickNum: a.pick._pickNum, original: a.pick.original });
+          });
+          renderAll();
+          _calcRenderRealPicks('a'); _calcRenderRealPicks('b');
+          if (typeof toast === 'function') toast('Top suggestion loaded — ' + out.results.length + ' total found');
+        } finally {
+          _calcSuggestBtn.disabled = false;
+          _calcSuggestBtn.textContent = 'SUGGEST FAIR TRADE';
+        }
+      }, 30);
+    });
+  }
+
+  // Expose so My Teams can refresh us after league import/delete
+  window._calcRefreshLeagues = _calcPopulateLeagues;
+
+  // Populate on load + whenever Firebase auth resolves (leagues load async)
+  _calcPopulateLeagues();
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try {
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) setTimeout(() => { _calcPopulateLeagues(); _finderPopulateLeagueDropdown(); }, 800);
+      });
+    } catch (_e) {}
+  }
 
   renderAll();
 })();
@@ -44577,6 +45597,9 @@ Rules:
       leagues.sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
       window._mtSavedLeagues = leagues;
       _mtRenderSavedTeams(leagues);
+      // Notify Trade Calc pickers so they re-populate with the fresh league list
+      if (typeof window._calcRefreshLeagues === 'function') window._calcRefreshLeagues();
+      if (typeof window._finderPopulateLeagueDropdown === 'function') window._finderPopulateLeagueDropdown();
     }).catch(e => { console.warn('[MyTeams] Load error:', e); });
   }
 

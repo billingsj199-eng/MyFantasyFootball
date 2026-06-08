@@ -1078,7 +1078,8 @@ CLEAR ALL
 <button class="md-rank-src-tab active" data-rnkadp="consensus" style="font-size:.65rem;padding:3px 10px">CONSENSUS</button>
 <button class="md-rank-src-tab locked" data-rnkadp="underdog" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
 <button class="md-rank-src-tab locked" data-rnkadp="dk" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>DK</button>
-<button class="md-rank-src-tab locked" data-rnkadp="espn" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
+<button class="md-rank-src-tab" data-rnkadp="espn" style="font-size:.65rem;padding:3px 10px">ESPN</button>
+<button class="md-rank-src-tab" data-rnkadp="cbs" style="font-size:.65rem;padding:3px 10px">CBS</button>
 <button class="md-rank-src-tab" data-rnkadp="sleeper" style="font-size:.65rem;padding:3px 10px">SLEEPER</button>
 <button class="md-rank-src-tab" data-rnkadp="ktc" style="font-size:.65rem;padding:3px 10px">KTC</button>
 <button class="md-rank-src-tab locked" data-rnkadp="yahoo" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
@@ -6080,6 +6081,18 @@ function _computeConsensusBoard(mode) {
     }
   }
 
+  // ESPN + CBS overall ranks (1QB redraft pick numbers, injected via d.js).
+  // Only fold into the consensus for redraft/best ball — they don't publish
+  // superflex/dynasty boards.
+  const eRank = {};
+  const cRank = {};
+  if (mode === 'redraft' || mode === 'bestball') {
+    for (let i = 0; i < D.length; i++) {
+      if (D[i].espnAdp != null) eRank[i] = D[i].espnAdp;
+      if (D[i].cbsAdp != null) cRank[i] = D[i].cbsAdp;
+    }
+  }
+
   // KTC rank map (dynasty modes only — higher KTC = better rank)
   // Name-robust lookup: tries exact name, then suffix-stripped, then common suffixes.
   // This handles the case where KTC map and d.js disagree on Jr./II/III usage.
@@ -6123,6 +6136,8 @@ function _computeConsensusBoard(mode) {
     if (fRank[i]) ranks.push(fRank[i]);
     if (uRank[i]) ranks.push(uRank[i]);
     if (kRank[i]) ranks.push(kRank[i]);
+    if (eRank[i]) ranks.push(eRank[i]);
+    if (cRank[i]) ranks.push(cRank[i]);
     if (ranks.length === 0) {
       // No source data — use defaultBoard fallback position so they still appear
       scored.push({ idx: i, avg: 9999, sources: 0 });
@@ -6783,6 +6798,11 @@ function rnkAdp(d) {
     if (base != null && base < 900) vals.push(base);
     const sl = _sleeperRank(d);
     if (sl != null) vals.push(sl);
+    // ESPN + CBS overall ranks (1QB redraft) — only meaningful in redraft/best ball.
+    if (currentMode === 'redraft' || currentMode === 'bestball') {
+      if (d.espnAdp != null) vals.push(d.espnAdp);
+      if (d.cbsAdp != null) vals.push(d.cbsAdp);
+    }
     if (vals.length === 0) return null;
     return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
   }
@@ -6795,8 +6815,9 @@ function rnkAdp(d) {
     // DraftKings ADP — pulls from d.dk once the field is populated in d.js
     return d.dk != null ? d.dk : null;
   }
+  if (rnkAdpSrc === 'espn') return d.espnAdp != null ? d.espnAdp : null;
+  if (rnkAdpSrc === 'cbs') return d.cbsAdp != null ? d.cbsAdp : null;
   // Future sources
-  // if (rnkAdpSrc === 'espn') return d.espnAdp || null;
   // if (rnkAdpSrc === 'yahoo') return d.yahooAdp || null;
   return modeAdp(d);
 }
@@ -6996,7 +7017,7 @@ function getFiltered() {
 
 function diffHtml(d) {
   const adp = rnkAdp(d);
-  const _srcLabel = ({consensus:'Consensus',underdog:'Underdog',dk:'DK',espn:'ESPN',sleeper:'Sleeper',ktc:'KTC',yahoo:'Yahoo'})[rnkAdpSrc] || rnkAdpSrc;
+  const _srcLabel = ({consensus:'Consensus',underdog:'Underdog',dk:'DK',espn:'ESPN',cbs:'CBS',sleeper:'Sleeper',ktc:'KTC',yahoo:'Yahoo'})[rnkAdpSrc] || rnkAdpSrc;
   // Build a per-source rank breakdown so users can see at a glance how
   // each ranking source values this player. Skip the version they're
   // currently viewing (it'd just be the row's own rank).
@@ -9934,6 +9955,8 @@ function updateRnkAdpForMode() {
       tab.style.display = (src === 'sleeper' || src === 'ktc') ? '' : 'none';
     } else {
       if (src === 'consensus') { tab.style.display = ''; return; }
+      // ESPN & CBS publish 1QB redraft boards only — show in redraft, hide in superflex.
+      if (src === 'espn' || src === 'cbs') { tab.style.display = currentMode === 'redraft' ? '' : 'none'; return; }
       // In non-dynasty/non-bestball modes: hide KTC (dynasty-only). DK is allowed.
       tab.style.display = src === 'ktc' ? 'none' : '';
     }

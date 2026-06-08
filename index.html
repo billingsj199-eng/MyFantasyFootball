@@ -3555,7 +3555,7 @@ ADD TO CHROME
 <script src="data/injury_history.js"></script>
 <script src="data/clay_team_grades_2026.js?v=2026-05-15"></script>
 <script src="data/nfl_schedule_2026.js?v=2026-05-15c"></script>
-<script src="data/nfl_game_totals_2026.js?v=2026-05-15e"></script>
+<script src="data/betting_lines_2026.js?v=2026-06-08h"></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
 // d.js names and Clay names sometimes differ on suffix (Jr./III), punctuation,
@@ -8403,7 +8403,7 @@ _jsModelCheckAdmin();
   // Shared by the team-total / spread / opp-difficulty helpers below.
   function _weeklyGameContext(team) {
     if (!team || typeof window.getNflScheduleForTeam !== 'function') return null;
-    if (!window.NFL_GAME_TOTALS_2026) return null;
+    if (!window.BETTING_2026 || !window.BETTING_2026.gameTotals) return null;
     const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[team]) ? TEAM_ABBR_MAP[team] : team;
     const sched = window.getNflScheduleForTeam(abbr);
     if (!sched) return null;
@@ -8412,7 +8412,7 @@ _jsModelCheckAdmin();
     if (!entry || entry.bye || !entry.opp) return null;
     const away = entry.home ? entry.opp : abbr;
     const home = entry.home ? abbr : entry.opp;
-    const game = window.NFL_GAME_TOTALS_2026['W' + wk + '_' + away + '_' + home];
+    const game = window.BETTING_2026.gameTotals['W' + wk + '_' + away + '_' + home];
     if (!game) return null;
     return { wk, abbr, opp: entry.opp, home: entry.home, game };
   }
@@ -8440,7 +8440,7 @@ _jsModelCheckAdmin();
     return 'medium';
   };
 
-  // TEAM TOTAL — derive from DK game total + spread (NFL_GAME_TOTALS_2026).
+  // TEAM TOTAL — derive from DK game total + spread (BETTING_2026.gameTotals).
   // team_total = (total - spread) / 2 if home, (total + spread) / 2 if away.
   // spread is the HOME team's spread (negative = home favored).
   window._weeklyTeamTotalFor = function(team) {
@@ -8452,6 +8452,85 @@ _jsModelCheckAdmin();
       ? (game.total - game.spread) / 2
       : (game.total + game.spread) / 2;
     return Math.round(t * 10) / 10;
+  };
+
+  // PLAYER PROP PROJECTION — converts a player's SEASON-LONG sportsbook prop
+  // lines (BETTING_2026.seasonProps, manually pasted) into a blended fantasy
+  // projection for PPR / Half / STD: a full-season point total and a PPG
+  // (total / 17 games). Returns null if the player has no posted props or
+  // isn't a skill position. The O/U line is used directly as the expected
+  // value for each stat.
+  window._PROPS_GAMES = 17; // games used to derive PPG from a season total
+  window._propsProjectionFor = function(d) {
+    if (!d || !d.n) return null;
+    if (d.s !== 'QB' && d.s !== 'RB' && d.s !== 'WR' && d.s !== 'TE') return null;
+    if (!window.BETTING_2026 || !window.BETTING_2026.seasonProps) return null;
+    const _props = window.BETTING_2026.seasonProps;
+    let rec = _props[d.n];
+    if (!rec && typeof _PROSPECT_ALIASES !== 'undefined' && _PROSPECT_ALIASES) {
+      const alt = _PROSPECT_ALIASES[d.n];
+      if (alt && _props[alt]) rec = _props[alt];
+    }
+    if (!rec) return null;
+
+    const BOOKS = ['DK', 'FD', 'MGM'];
+    const lines = {};
+    BOOKS.forEach(b => { if (rec[b]) lines[b] = rec[b]; });
+    const bookKeys = Object.keys(lines);
+    if (!bookKeys.length) return null;
+
+    // Consensus per stat = average of the books that posted it.
+    const STAT_KEYS = ['py', 'ptd', 'int', 'ry', 'rtd', 'ra', 'rec', 'rcy', 'rctd'];
+    const consensus = {};
+    STAT_KEYS.forEach(k => {
+      const vals = bookKeys.map(b => lines[b][k]).filter(v => typeof v === 'number');
+      if (vals.length) consensus[k] = vals.reduce((s, v) => s + v, 0) / vals.length;
+    });
+
+    // Season fantasy points from a stat bag (same scoring as the rest of the site).
+    const recMult = { ppr: 1.0, half: 0.5, std: 0.0 };
+    const fpFrom = (s, fmt) => {
+      let fp = 0;
+      if (typeof s.py === 'number') fp += s.py / 25;
+      if (typeof s.ptd === 'number') fp += s.ptd * 4;
+      if (typeof s.int === 'number') fp += s.int * -2;
+      if (typeof s.ry === 'number') fp += s.ry / 10;
+      if (typeof s.rtd === 'number') fp += s.rtd * 6;
+      if (typeof s.rcy === 'number') fp += s.rcy / 10;
+      if (typeof s.rctd === 'number') fp += s.rctd * 6;
+      if (typeof s.rec === 'number') fp += s.rec * recMult[fmt];
+      return Math.round(fp * 10) / 10;
+    };
+    const G = window._PROPS_GAMES || 17;
+    const ppgOf = (total) => Math.round((total / G) * 10) / 10;
+
+    const total = {
+      ppr: fpFrom(consensus, 'ppr'),
+      half: fpFrom(consensus, 'half'),
+      std: fpFrom(consensus, 'std')
+    };
+    const ppg = { ppr: ppgOf(total.ppr), half: ppgOf(total.half), std: ppgOf(total.std) };
+
+    const perBook = {};
+    bookKeys.forEach(b => {
+      // Book's own lines override consensus; consensus fills stats this book
+      // doesn't post (e.g. DK lists passing yds but not TDs), so per-book
+      // projections stay comparable instead of cratering on partial coverage.
+      const merged = Object.assign({}, consensus, lines[b]);
+      const tot = { ppr: fpFrom(merged, 'ppr'), half: fpFrom(merged, 'half'), std: fpFrom(merged, 'std') };
+      perBook[b] = { total: tot, ppg: { ppr: ppgOf(tot.ppr), half: ppgOf(tot.half), std: ppgOf(tot.std) } };
+    });
+
+    return {
+      games: G,
+      asOf: rec.asOf || null,
+      books: bookKeys,
+      lines: lines,
+      consensus: consensus,
+      total: total,
+      ppg: ppg,
+      perBook: perBook
+    };
   };
 
   // Weekly PROJ PPG adjustment: scales the player's season-long PPG by
@@ -10651,6 +10730,108 @@ function _getCollegeStats(name, pos) {
   });
 }
 
+// Renders the LINES tab: SEASON-LONG sportsbook prop lines (DK/FD/MGM) →
+// blended fantasy projection (season total + PPG). Pulls from
+// window._propsProjectionFor.
+function buildLinesView(d) {
+  const P = (typeof window._propsProjectionFor === 'function') ? window._propsProjectionFor(d) : null;
+
+  if (!P) {
+    return '<div class="card-section"><div class="card-section-title">Sportsbook Lines</div>'
+      + '<div style="text-align:center;padding:2rem 1rem;color:var(--text2);font-size:.8rem;line-height:1.5">'
+      + 'No season-long prop lines posted for <b style="color:var(--text)">' + d.n + '</b> yet.<br>'
+      + '<span style="font-size:.7rem">Add them to <code style="color:var(--accent)">data/betting_lines_2026.js</code> (seasonProps) to build a projection.</span>'
+      + '</div></div>';
+  }
+
+  const fmt1 = (v) => (typeof v === 'number') ? (Math.round(v * 10) / 10).toFixed(1) : '—';
+  const fmt0 = (v) => (typeof v === 'number') ? String(Math.round(v)) : '—';
+  const BOOK_LBL = { DK: 'DK', FD: 'FD', MGM: 'MGM' };
+  const isQB = d.s === 'QB';
+
+  // Stat rows shown for this position (only rows with at least one book value).
+  const ROWS = isQB
+    ? [['py', 'Pass Yds', fmt0], ['ptd', 'Pass TD', fmt1], ['int', 'INT', fmt1], ['ry', 'Rush Yds', fmt0], ['rtd', 'Rush TD', fmt1]]
+    : [['ry', 'Rush Yds', fmt0], ['rtd', 'Rush TD', fmt1], ['ra', 'Rush Att', fmt0], ['rec', 'Rec', fmt1], ['rcy', 'Rec Yds', fmt0], ['rctd', 'Rec TD', fmt1]];
+
+  let html = '';
+
+  // --- Projected PPG (headline) + season total ---
+  html += '<div class="card-section">';
+  html += '<div class="card-section-title">Projected PPG '
+    + '<span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· 2026 season props · blended '
+    + P.books.length + ' book' + (P.books.length > 1 ? 's' : '') + '</span></div>';
+  html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">';
+  html += '<div class="card-rank-box"><div class="lbl">PPR</div><div class="num green">' + fmt1(P.ppg.ppr) + '</div></div>';
+  html += '<div class="card-rank-box" style="outline:1px solid var(--accent)"><div class="lbl">Half PPR</div><div class="num accent">' + fmt1(P.ppg.half) + '</div></div>';
+  html += '<div class="card-rank-box"><div class="lbl">STD</div><div class="num">' + fmt1(P.ppg.std) + '</div></div>';
+  html += '</div>';
+  html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:.4rem">';
+  html += '<div class="card-rank-box"><div class="lbl">PPR Total</div><div class="num" style="color:var(--text2)">' + fmt0(P.total.ppr) + '</div></div>';
+  html += '<div class="card-rank-box"><div class="lbl">Half Total</div><div class="num" style="color:var(--text2)">' + fmt0(P.total.half) + '</div></div>';
+  html += '<div class="card-rank-box"><div class="lbl">STD Total</div><div class="num" style="color:var(--text2)">' + fmt0(P.total.std) + '</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">Season total ÷ ' + P.games + ' games.</div>';
+  // Honesty caveat: flag categories with no props so a passing-only QB or a
+  // rush-only RB isn't read as a complete projection.
+  const _has = (k) => typeof P.consensus[k] === 'number';
+  const _missing = [];
+  if (isQB) {
+    if (!_has('py') && !_has('ptd')) _missing.push('passing');
+    if (!_has('ry') && !_has('rtd')) _missing.push('rushing');
+  } else if (d.s === 'RB') {
+    if (!_has('ry')) _missing.push('rushing yards');
+    if (!_has('rcy')) _missing.push('receiving yards');
+  } else {
+    if (!_has('rcy')) _missing.push('receiving yards');
+  }
+  if (_missing.length) {
+    html += '<div style="margin-top:8px;padding:6px 8px;border-radius:6px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);font-size:.6rem;color:var(--text2);line-height:1.45">'
+      + '⚠ No <b style="color:var(--accent)">' + _missing.join(' or ') + '</b> prop'
+      + (_missing.length > 1 ? 's' : '') + ' loaded yet — this projection only counts the lines below, so it\'s a floor.</div>';
+  }
+  // Receptions note: books often don't post a season receptions line, so PPR
+  // can't be separated from STD for pass-catchers. Flag it so equal boxes read
+  // as expected, not a bug.
+  if (!isQB && _has('rcy') && !_has('rec')) {
+    html += '<div style="margin-top:6px;font-size:.55rem;color:var(--text2);line-height:1.45">'
+      + 'No season <b>receptions</b> prop posted — PPR / Half / STD are equal until a receptions line is added.</div>';
+  }
+  html += '</div>';
+
+  // --- Lines table: stat × book + consensus avg ---
+  html += '<div class="card-section"><div class="card-section-title">Season Prop Lines '
+    + '<span style="font-size:.55rem;color:var(--text2);font-weight:400">→ DraftKings · FanDuel · BetMGM</span></div>';
+  html += '<table class="career-table"><thead><tr><th style="text-align:left">Stat</th>';
+  P.books.forEach(b => { html += '<th>' + BOOK_LBL[b] + '</th>'; });
+  html += '<th>Avg</th></tr></thead><tbody>';
+
+  let anyRow = false;
+  ROWS.forEach(([k, label, fmtFn]) => {
+    if (!P.books.some(b => typeof P.lines[b][k] === 'number')) return;
+    anyRow = true;
+    html += '<tr><td style="text-align:left;font-weight:600">' + label + '</td>';
+    P.books.forEach(b => { html += '<td>' + fmtFn(P.lines[b][k]) + '</td>'; });
+    html += '<td style="font-weight:700;color:var(--accent)">' + fmtFn(P.consensus[k]) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  if (P.asOf) html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">Lines as of ' + P.asOf + '.</div>';
+  html += '</div>';
+
+  // --- Per-book projection breakdown (Half PPR PPG) ---
+  if (P.books.length > 1) {
+    html += '<div class="card-section"><div class="card-section-title">By Book '
+      + '<span style="font-size:.55rem;color:var(--text2);font-weight:400">→ Half PPR PPG</span></div>';
+    html += '<div class="card-rank-row" style="grid-template-columns:repeat(' + P.books.length + ',1fr)">';
+    P.books.forEach(b => {
+      html += '<div class="card-rank-box"><div class="lbl">' + BOOK_LBL[b] + '</div><div class="num accent">' + fmt1(P.perBook[b].ppg.half) + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  return html;
+}
+
 function buildCollegeTable(d, scoringFormat) {
   if (typeof COLLEGE_STATS === 'undefined') return '';
   const stats = _getCollegeStats(d.n, d.s);
@@ -11095,6 +11276,7 @@ function openPlayerCard(d, ctxMode) {
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
         <button class="card-view-btn" data-cardview="comps">COMPS</button>
+        ${(!d._isDevy && !_is2026 && !d._retired) ? `<button class="card-view-btn" data-cardview="lines">LINES</button>` : ''}
         <button class="card-view-btn" data-cardview="info">INFO</button>
       </div>` : ''}
       <div class="card-fantasy-view${(d._isDevy || _is2026) ? ' hidden' : ''}" id="cardFantasyView">
@@ -11683,6 +11865,9 @@ function openPlayerCard(d, ctxMode) {
         </div>
       </div>` : ''}
       </div>
+      <div class="card-prospect-view" id="cardLinesView" style="display:none">
+      ${buildLinesView(d)}
+      </div>
     </div>
   `;
 
@@ -11761,16 +11946,20 @@ function openPlayerCard(d, ctxMode) {
         const pv = document.getElementById('cardProspectView');
         const cv = document.getElementById('cardCompsView');
         const iv = document.getElementById('cardInfoView');
+        const lv = document.getElementById('cardLinesView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
         if (cv) cv.style.display = 'none';
         if (iv) iv.style.display = 'none';
+        if (lv) lv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
         } else if (view === 'comps') {
           if (cv) cv.style.display = 'block';
         } else if (view === 'info') {
           if (iv) iv.style.display = 'block';
+        } else if (view === 'lines') {
+          if (lv) lv.style.display = 'block';
         } else {
           fv.classList.remove('hidden');
         }

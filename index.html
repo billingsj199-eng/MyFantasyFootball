@@ -3528,8 +3528,8 @@ ADD TO CHROME
      (d.js, all_players.js, weekly_stats_active.js, etc.) are intentionally NOT
      bundled — they keep loading as separate script tags so the pipeline doesn't
      need to know about bundling. -->
-<script src="data/_bundle_lookups.js?v=2026-05-13"></script>
-<script src="data/d.js?v=2026-05-13b"></script>
+<script src="data/_bundle_lookups.js?v=2026-06-08a"></script>
+<script src="data/d.js?v=2026-06-08b"></script>
 <script src="data/hp.js"></script>
 <script src="data/ep_retired.js"></script>
 <script src="data/legend_careers.js?v=2026-05-13b" defer></script>
@@ -3550,7 +3550,7 @@ ADD TO CHROME
 <script src="data/all_players.js"></script>
 <script src="data/combine_data.js?v=2026-04-25b"></script>
 <script src="data/historical_draft_picks.js"></script>
-<script src="data/mike_clay_projections.js?v=2026-04-25b"></script>
+<script src="data/mike_clay_projections.js?v=2026-06-08a"></script>
 <script src="data/player_weekly_sigma.js"></script>
 <script src="data/injury_history.js"></script>
 <script src="data/clay_team_grades_2026.js?v=2026-05-15"></script>
@@ -11387,16 +11387,16 @@ function openPlayerCard(d, ctxMode) {
           </div>
         </div>`;
         }
-        // Redraft / Best Ball / Superflex — show ESPN / Yahoo placeholders for
-        // when those data sources ship. To wire them up: populate d.espnAdp /
-        // d.yahooAdp in d.js and uncomment the lines below.
-        //   const _espnAdp = d.espnAdp != null ? d.espnAdp : null;
-        //   const _yahAdp  = d.yahooAdp != null ? d.yahooAdp : null;
-        const _espnAdp = null;
+        // Redraft / Best Ball / Superflex — ESPN & CBS are wired from d.js
+        // (espnAdp / cbsAdp = overall pick number, 1QB redraft, injected by
+        // inject_rankings.py). Yahoo stays a placeholder until its data ships:
+        // populate d.yahooAdp and swap the null below.
+        const _espnAdp = d.espnAdp != null ? d.espnAdp : null;
+        const _cbsAdp  = d.cbsAdp  != null ? d.cbsAdp  : null;
         const _yahAdp = null;
         return `<div class="card-section">
         <div class="card-section-title">ADP Comparison <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
+        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">
           <div class="card-rank-box">
             <div class="lbl">Underdog</div>
             <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_udAdp)}</div>
@@ -11408,6 +11408,10 @@ function openPlayerCard(d, ctxMode) {
           <div class="card-rank-box">
             <div class="lbl">ESPN</div>
             <div class="num${_espnAdp != null ? ' accent' : ''}"${_espnAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_espnAdp)}</div>
+          </div>
+          <div class="card-rank-box">
+            <div class="lbl">CBS</div>
+            <div class="num${_cbsAdp != null ? ' accent' : ''}"${_cbsAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_cbsAdp)}</div>
           </div>
           <div class="card-rank-box">
             <div class="lbl">Yahoo</div>

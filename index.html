@@ -844,6 +844,7 @@ COLS
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="adp" checked> ADP</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppgProj" checked> Proj PPG</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppg25" checked> '25 PPG</label>
+<label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="l4ppg" checked> L4 PPG</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="age" checked> Age</label>
 </div>
 <button class="tb-btn" id="btnDraftHelper" title="Get the MFF Draft Helper Chrome extension for live Underdog draft recommendations" style="font-size:.55rem">
@@ -1199,6 +1200,7 @@ CLEAR ALL
 <th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
 <th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Projected fantasy points per game for the upcoming season (Half PPR scoring).">Proj PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
 <th data-sort="fpts25" id="ppg25HeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (Half PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
+<th data-sort="l4ppg" id="l4ppgHeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="l4ppgHeader"><span data-gloss="Average fantasy PPG over the player's last 4 games of 2025. Compared to the full-season '25 PPG it shows which way a player is trending: ▲ = trending up, ▼ = trending down.">L4 PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
 <th data-sort="jm" id="jmHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
 <th data-sort="landing" id="landingHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Landing Spot (0-100) — quality of the NFL fantasy opportunity (depth chart, scheme, target share). Separate from JM (prospect quality).">Land</span> <span class="arrow"></span></th>
@@ -6812,6 +6814,38 @@ function adj25ppg(d) {
   return Math.round(((d.s25.fpts + recs * adj) / gp) * 10) / 10;
 }
 
+// Average fantasy PPG over a player's last 4 games of their most recent season.
+// Used as a "trending" signal alongside full-season '25 PPG. Respects the active
+// ranking scoring format (weekly fpts are stored as Half PPR, like buildWeeklyTable).
+function last4Ppg(d) {
+  if (typeof WEEKLY_STATS === 'undefined' || !WEEKLY_STATS) return null;
+  const wd = WEEKLY_STATS[d.n];
+  if (!wd || !wd.seasons) return null;
+  const years = Object.keys(wd.seasons).map(y => parseInt(y, 10)).filter(y => !isNaN(y));
+  if (!years.length) return null;
+  const latest = Math.max(...years);
+  const weeks = wd.seasons[String(latest)];
+  if (!weeks || !weeks.length) return null;
+  const recAdj = rankingScoringFmt === 'ppr' ? 0.5 : rankingScoringFmt === 'std' ? -0.5 : 0;
+  const last4 = weeks.slice(-4);
+  if (!last4.length) return null;
+  let sum = 0;
+  for (const w of last4) sum += (w.fpts || 0) + (w.rec || 0) * recAdj;
+  return Math.round((sum / last4.length) * 10) / 10;
+}
+
+// Build the "L4 PPG" display: number + a small trend arrow vs full-season '25 PPG.
+// up (green ▲) if L4 ≥ season + 1, down (red ▼) if ≤ season − 1, else flat (·).
+function l4PpgCellHtml(l4, seasonPpg) {
+  if (l4 == null) return { html: '—', color: null };
+  const v = l4.toFixed(1);
+  if (seasonPpg == null) return { html: v, color: null };
+  const diff = l4 - seasonPpg;
+  if (diff >= 1) return { html: v + ' <span style="font-size:.6rem">▲</span>', color: '#22c55e' };
+  if (diff <= -1) return { html: v + ' <span style="font-size:.6rem">▼</span>', color: '#ef4444' };
+  return { html: v + ' <span style="font-size:.6rem;color:var(--text2)">·</span>', color: null };
+}
+
 function adjProjPpg(d) {
   // K and DST: Clay's projections only cover QB/RB/WR/TE, so use d.p (season total
   // already in d.js) divided by 17. Scoring format doesn't shift K/DST values.
@@ -6943,6 +6977,7 @@ function getFiltered() {
         case 'round': av = a.round; bv = b.round; break;
         case 'pts': av = currentVersion==='jsmodel'?(a._jsModelPpg||0):(adjProjPpg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelPpg||0):(adjProjPpg(b)||0); if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
         case 'fpts25': av = currentVersion==='jsmodel'?(a._jsModelVor||0):(adj25ppg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelVor||0):(adj25ppg(b)||0); break;
+        case 'l4ppg': av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
@@ -7366,7 +7401,7 @@ function render() {
       tiers.forEach(t => {
         if (t.afterRank > prevDisplayRank && t.afterRank <= displayRank) {
           html += `<tr class="tier-row" data-tier-id="${t.id}">
-            <td colspan="16"><div class="tier-inner">
+            <td colspan="17"><div class="tier-inner">
               <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
               ${editable ? `<span class="tier-name-static" data-tier-rename="${t.id}" title="Click to rename">${t.name}</span>
               <div class="tier-controls">
@@ -7397,6 +7432,9 @@ function render() {
     }
     const _25ppgJS = isJSModel ? d._jsModelVor : null;
     const _25ppg = _25ppgJS != null ? _25ppgJS : adj25ppg(d);
+    // Last-4-games PPG + trend arrow (compared to actual full-season '25 PPG).
+    const _l4ppg = last4Ppg(d);
+    const _l4Cell = l4PpgCellHtml(_l4ppg, adj25ppg(d));
     const _projColor = (_projPpg != null) ? posFptsColor(_projPpg, d.s) : null;
     const _25Color = (_25ppg != null && _25ppgJS == null) ? posFptsColor(_25ppg, d.s) : null;
     const _adpDelta = _adp != null ? (_adp - d.myRank) : null;
@@ -7406,13 +7444,13 @@ function render() {
     if (shouldBlur && i === blurCutoff && data.length > blurCutoff) {
       const _isSignedIn = !!window._authCurrentUser;
       if (isMine && !_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="16" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else if (isMine && !isPremium) {
-        html += '<tr id="premiumWallRow"><td colspan="16" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in each filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in each filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       } else if (!_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="16" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else {
-        html += '<tr id="premiumWallRow"><td colspan="16" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       }
     }
 
@@ -7428,6 +7466,7 @@ function render() {
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); return (t != null ? t : '—'); })()}</td>
       <td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>
       <td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
+      <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>
       <td class="pts-cell yrr-cell" style="display:none">${d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')}</td>
       <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})()}</td>
       <td class="pts-cell landing-cell" style="display:none">${(()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})()}</td>
@@ -7438,7 +7477,7 @@ function render() {
 
     // "Add tier" mini-button between rows (only show on hover via CSS)
     if (editable && showTiers && !tierMap[displayRank]) {
-      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="16"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
+      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
     }
   });
 
@@ -7448,7 +7487,7 @@ function render() {
     tiers.forEach(t => {
       if (t.afterRank > lastDisplayRank) {
         html += `<tr class="tier-row" data-tier-id="${t.id}">
-          <td colspan="16"><div class="tier-inner">
+          <td colspan="17"><div class="tier-inner">
             <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
             ${editable ? `<span class="tier-name-static">${t.name}</span>
             <div class="tier-controls">
@@ -8236,6 +8275,8 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
     if (projFmt) projFmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
     const ppg25Fmt = document.querySelector('#ppg25Header .th-fmt');
     if (ppg25Fmt) ppg25Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
+    const l4Fmt = document.querySelector('#l4ppgHeader .th-fmt');
+    if (l4Fmt) l4Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
     render();
   });
 });
@@ -11342,7 +11383,7 @@ function openPlayerCard(d, ctxMode) {
             <div class="num accent">${d.myPosRank || d.r}</div>
           </div>
         </div>
-        <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr':'1fr 1fr'};margin-top:.4rem">
+        <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
           <div class="card-rank-box">
             <div class="lbl">Proj PPG</div>
             <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div>
@@ -11351,6 +11392,10 @@ function openPlayerCard(d, ctxMode) {
             <div class="lbl">'25 PPG</div>
             <div class="num${(()=>{const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adj25ppg(d);return v!=null?v.toFixed(1):'—';})()}</div>
           </div>
+          ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d));return `<div class="card-rank-box">
+            <div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div>
+            <div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div>
+          </div>`;})()}
           ${(d.s==='RB'||d.s==='WR'||d.s==='TE') ? `<div class="card-rank-box">
             <div class="lbl">'${d._yrr_yr ? String(d._yrr_yr).slice(-2) : '25'} Y/RR</div>
             <div class="num" style="color:${d._yrr!=null?(d._yrr>=2.0?'var(--green)':d._yrr>=1.5?'var(--accent)':'var(--text2)'):'var(--text2)'}">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</div>
@@ -12422,9 +12467,10 @@ function renderCompareGrid() {
             <div class="card-rank-box"><div class="lbl">Pos Rank</div><div class="num accent">${d.myPosRank || d.r}</div></div>
             <div class="card-rank-box"><div class="lbl">+/- ADP</div><div class="num ${diffClass}">${diffText}</div></div>
           </div>
-          <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr':'1fr 1fr'};margin-top:.4rem">
+          <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
             <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div></div>
             <div class="card-rank-box"><div class="lbl">'25 PPG</div><div class="num green">${(()=>{const v=adj25ppg(d);return v!=null?v.toFixed(1):'—';})()}</div></div>
+            ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d));return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div></div>`;})()}
             ${(d.s==='RB'||d.s==='WR'||d.s==='TE') ? `<div class="card-rank-box"><div class="lbl">'${d._yrr_yr ? String(d._yrr_yr).slice(-2) : '25'} Y/RR</div><div class="num" style="color:${d._yrr!=null?(d._yrr>=2.0?'var(--green)':d._yrr>=1.5?'var(--accent)':'var(--text2)'):'var(--text2)'}">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</div></div>` : ''}
           </div>
         </div>
@@ -12623,6 +12669,7 @@ window.switchPage = switchPage;
     adp: { th: 'adpHeader', cell: '.adp-cell' },
     ppgProj: { th: 'ppgProjHeader', cell: '.ppg-proj-cell' },
     ppg25: { th: 'ppg25HeaderTh', cell: '.ppg25-cell' },
+    l4ppg: { th: 'l4ppgHeaderTh', cell: '.l4ppg-cell' },
     age: { th: 'ageHeader', cell: '.age-cell' }
   };
   function _load() {

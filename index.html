@@ -1176,6 +1176,13 @@ CLEAR ALL
 .tcv-pos-pill.WR{background:#3b82f6}
 .tcv-pos-pill.TE{background:#f59e0b}
 .tcv-pos-pill.K,.tcv-pos-pill.DST{background:#64748b}
+/* Per-player reveal cover — sits over the card while it's "covered" */
+.tcv-card-cover{display:none;position:absolute;inset:0;z-index:6;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:linear-gradient(160deg,#1e293b 0%,#0b1220 100%);cursor:pointer}
+.tcv-card.tcv-covered .tcv-card-cover{display:flex}
+.tcv-card.tcv-covered:hover{transform:none}
+.tcv-card.tcv-covered:hover .tcv-card-cover{background:linear-gradient(160deg,#27364a 0%,#0d1626 100%)}
+.tcv-cover-rank{font-family:'Bebas Neue',Impact,sans-serif;font-size:18px;font-weight:900;color:#fff;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,.7)}
+.tcv-cover-q{font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;font-weight:900;color:rgba(255,255,255,.22);line-height:1}
 .tcv-key-card{display:flex;align-items:center;gap:8px;padding:4px 8px;font-family:system-ui,sans-serif;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(236,72,153,.04));border:1px solid rgba(167,139,250,.18);border-radius:4px;margin-bottom:5px;flex-wrap:wrap;font-size:10px;color:var(--text2);letter-spacing:.3px}
 .tcv-key-title{font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1.2px;color:#a78bfa;font-weight:700}
 .tcv-key-sample{display:inline-flex;gap:5px;align-items:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;font-weight:700;letter-spacing:.4px;padding:1px 5px;background:rgba(0,0,0,.4);border-radius:3px}
@@ -3532,7 +3539,7 @@ ADD TO CHROME
      bundled — they keep loading as separate script tags so the pipeline doesn't
      need to know about bundling. -->
 <script src="data/_bundle_lookups.js?v=2026-06-08a"></script>
-<script src="data/d.js?v=2026-06-08b"></script>
+<script src="data/d.js?v=2026-06-09a"></script>
 <script src="data/hp.js"></script>
 <script src="data/ep_retired.js"></script>
 <script src="data/legend_careers.js?v=2026-05-13b" defer></script>
@@ -7059,15 +7066,53 @@ function getTierForRank(rank) {
 }
 
 // === Admin Tier-Card View ===
+// NFL team colors keyed by full team name (matches D-array `t`). {p:primary, s:secondary}
+const _TCV_TEAM_COLORS = {
+  'Arizona Cardinals':{p:'#97233F',s:'#FFFFFF'}, 'Atlanta Falcons':{p:'#A71930',s:'#A5ACAF'},
+  'Baltimore Ravens':{p:'#241773',s:'#9E7C0C'}, 'Buffalo Bills':{p:'#00338D',s:'#C60C30'},
+  'Carolina Panthers':{p:'#0085CA',s:'#FFFFFF'}, 'Chicago Bears':{p:'#0B162A',s:'#C83803'},
+  'Cincinnati Bengals':{p:'#FB4F14',s:'#000000'}, 'Cleveland Browns':{p:'#311D00',s:'#FF3C00'},
+  'Dallas Cowboys':{p:'#003594',s:'#869397'}, 'Denver Broncos':{p:'#FB4F14',s:'#002244'},
+  'Detroit Lions':{p:'#0076B6',s:'#B0B7BC'}, 'Green Bay Packers':{p:'#203731',s:'#FFB612'},
+  'Houston Texans':{p:'#03202F',s:'#A71930'}, 'Indianapolis Colts':{p:'#002C5F',s:'#FFFFFF'},
+  'Jacksonville Jaguars':{p:'#101820',s:'#D7A22A'}, 'Kansas City Chiefs':{p:'#E31837',s:'#FFB81C'},
+  'Las Vegas Raiders':{p:'#000000',s:'#A5ACAF'}, 'Los Angeles Chargers':{p:'#0080C6',s:'#FFC20E'},
+  'Los Angeles Rams':{p:'#003594',s:'#FFA300'}, 'Miami Dolphins':{p:'#008E97',s:'#FC4C02'},
+  'Minnesota Vikings':{p:'#4F2683',s:'#FFC62F'}, 'New England Patriots':{p:'#002244',s:'#C60C30'},
+  'New Orleans Saints':{p:'#D3BC8D',s:'#101820'}, 'New York Giants':{p:'#0B2265',s:'#A71930'},
+  'New York Jets':{p:'#125740',s:'#FFFFFF'}, 'Philadelphia Eagles':{p:'#004C54',s:'#A5ACAF'},
+  'Pittsburgh Steelers':{p:'#FFB612',s:'#101820'}, 'San Francisco 49ers':{p:'#AA0000',s:'#B3995D'},
+  'Seattle Seahawks':{p:'#002244',s:'#69BE28'}, 'Tampa Bay Buccaneers':{p:'#D50A0A',s:'#FF7900'},
+  'Tennessee Titans':{p:'#0C2340',s:'#4B92DB'}, 'Washington Commanders':{p:'#5A1414',s:'#FFB612'}
+};
+function _tcvLum(hex){
+  const m = hex.replace('#',''); if (m.length < 6) return 1;
+  const r=parseInt(m.slice(0,2),16), g=parseInt(m.slice(2,4),16), b=parseInt(m.slice(4,6),16);
+  return (0.299*r + 0.587*g + 0.114*b) / 255;
+}
+function _tcvHexToRgb(hex){
+  const m = hex.replace('#','');
+  return parseInt(m.slice(0,2),16)+','+parseInt(m.slice(2,4),16)+','+parseInt(m.slice(4,6),16);
+}
+// Pick the most visible team color for an outline on the dark card bg:
+// use primary unless it's too dark to read, then fall back to secondary.
+function _tcvTeamOutline(teamName){
+  const c = _TCV_TEAM_COLORS[teamName];
+  if (!c) return '#64748b';
+  return _tcvLum(c.p) < 0.16 ? c.s : c.p;
+}
+
 function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   const card = document.createElement('div');
   card.className = 'tcv-card';
   card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
-  if (glowRgb) {
-    const baseShadow = '0 0 0 1px rgba(' + glowRgb + ',.55), 0 2px 6px rgba(' + glowRgb + ',.3), 0 4px 14px rgba(' + glowRgb + ',.18)';
-    const hoverShadow = '0 0 0 1.5px rgba(' + glowRgb + ',.85), 0 4px 10px rgba(' + glowRgb + ',.45), 0 8px 22px rgba(' + glowRgb + ',.28)';
+  // Outline the card in its NFL team's colors
+  {
+    const teamRgb = _tcvHexToRgb(_tcvTeamOutline(d.t));
+    const baseShadow = '0 0 0 1.5px rgba(' + teamRgb + ',.9), 0 2px 7px rgba(' + teamRgb + ',.3)';
+    const hoverShadow = '0 0 0 2px rgba(' + teamRgb + ',1), 0 4px 14px rgba(' + teamRgb + ',.55)';
     card.style.boxShadow = baseShadow;
-    card.addEventListener('mouseenter', () => { card.style.boxShadow = hoverShadow; });
+    card.addEventListener('mouseenter', () => { if (!card.classList.contains('tcv-covered')) card.style.boxShadow = hoverShadow; });
     card.addEventListener('mouseleave', () => { card.style.boxShadow = baseShadow; });
   }
 
@@ -7120,9 +7165,15 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     headshotHtml +
     logoHtml +
     '<div class="tcv-pos-pill ' + (d.s || '') + '">' + (d.s || '') + '</div>' +
-    '<div class="tcv-card-name" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>';
+    '<div class="tcv-card-name" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>' +
+    '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div><div class="tcv-cover-q">?</div></div>';
 
   card.addEventListener('click', () => {
+    // While covered, a click reveals just this one player (don't open the card)
+    if (card.classList.contains('tcv-covered')) {
+      card.classList.remove('tcv-covered');
+      return;
+    }
     if (typeof openPlayerCard === 'function') openPlayerCard(d);
   });
   return card;
@@ -7169,9 +7220,9 @@ function _renderTierCardView(data, container) {
   const controls = document.createElement('div');
   controls.className = 'tcv-reveal-controls';
   controls.innerHTML =
-    '<button class="tcv-reveal-btn" data-tcvaction="hideAll" title="Hide every tier — start the reveal flow">⊘ HIDE ALL</button>' +
-    '<button class="tcv-reveal-btn tcv-primary" data-tcvaction="revealNext" title="Reveal the next hidden tier from the top">▶ REVEAL NEXT</button>' +
-    '<button class="tcv-reveal-btn" data-tcvaction="revealAll" title="Show every tier">◉ REVEAL ALL</button>' +
+    '<button class="tcv-reveal-btn" data-tcvaction="hideAll" title="Hide every player — start the reveal flow">⊘ HIDE ALL</button>' +
+    '<button class="tcv-reveal-btn tcv-primary" data-tcvaction="revealNext" title="Reveal the next hidden player from the top">▶ REVEAL NEXT</button>' +
+    '<button class="tcv-reveal-btn" data-tcvaction="revealAll" title="Show every player">◉ REVEAL ALL</button>' +
     '<span class="tcv-reveal-status" id="tcvRevealStatus"></span>';
   root.appendChild(controls);
 
@@ -7214,43 +7265,43 @@ function _renderTierCardView(data, container) {
       _coloredTierIdx++;
     }
     letter.textContent = g.label || '—';
-    letter.title = 'Click to hide / reveal this tier (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
-    letter.addEventListener('click', () => row.classList.toggle('tcv-hidden'));
+    letter.title = 'Click to hide / reveal every player in this tier (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
+    letter.addEventListener('click', () => {
+      const rowCards = row.querySelectorAll('.tcv-card');
+      // If any card in the tier is currently shown, cover the whole tier; otherwise reveal it.
+      const anyShown = Array.prototype.some.call(rowCards, c => !c.classList.contains('tcv-covered'));
+      rowCards.forEach(c => c.classList.toggle('tcv-covered', anyShown));
+    });
     row.appendChild(letter);
     const cards = document.createElement('div');
     cards.className = 'tcv-cards';
     g.players.forEach(p => cards.appendChild(_tcvBuildCard(p.d, p.displayRank, g.label, glowRgb)));
     row.appendChild(cards);
-    // Hidden-state placeholder (only visible when row.tcv-hidden is set)
-    const placeholder = document.createElement('div');
-    placeholder.className = 'tcv-hidden-placeholder';
-    placeholder.innerHTML = '<span style="font-size:14px">▶</span><span>HIDDEN · ' + g.players.length + ' PLAYER' + (g.players.length === 1 ? '' : 'S') + ' · CLICK TO REVEAL</span>';
-    placeholder.addEventListener('click', () => row.classList.remove('tcv-hidden'));
-    row.appendChild(placeholder);
     root.appendChild(row);
   });
 
-  // Wire master reveal controls
+  // Wire master reveal controls (operate one player at a time)
   function _tcvUpdateStatus() {
     const statusEl = root.querySelector('#tcvRevealStatus');
     if (!statusEl) return;
-    const total = root.querySelectorAll('.tcv-tier-row').length;
-    const hidden = root.querySelectorAll('.tcv-tier-row.tcv-hidden').length;
-    statusEl.textContent = hidden === 0 ? '' : (hidden + ' of ' + total + ' tiers hidden');
+    const total = root.querySelectorAll('.tcv-card').length;
+    const hidden = root.querySelectorAll('.tcv-card.tcv-covered').length;
+    statusEl.textContent = hidden === 0 ? '' : (hidden + ' of ' + total + ' players hidden');
   }
   root.querySelectorAll('[data-tcvaction]').forEach(btn => {
     btn.addEventListener('click', () => {
       const action = btn.getAttribute('data-tcvaction');
-      const rows = root.querySelectorAll('.tcv-tier-row');
+      const cards = root.querySelectorAll('.tcv-card');
       if (action === 'hideAll') {
-        rows.forEach(r => r.classList.add('tcv-hidden'));
+        cards.forEach(c => c.classList.add('tcv-covered'));
       } else if (action === 'revealAll') {
-        rows.forEach(r => r.classList.remove('tcv-hidden'));
+        cards.forEach(c => c.classList.remove('tcv-covered'));
       } else if (action === 'revealNext') {
-        for (const r of rows) {
-          if (r.classList.contains('tcv-hidden')) {
-            r.classList.remove('tcv-hidden');
-            r.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Reveal the next single covered player, in rank order (top tier → left to right)
+        for (const c of cards) {
+          if (c.classList.contains('tcv-covered')) {
+            c.classList.remove('tcv-covered');
+            c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             break;
           }
         }
@@ -7258,8 +7309,9 @@ function _renderTierCardView(data, container) {
       _tcvUpdateStatus();
     });
   });
-  // Update status whenever a row toggles via direct click
-  root.addEventListener('click', _tcvUpdateStatus, true);
+  // Update status after any direct card/tier-letter click (bubble phase, so it
+  // runs after the card's own handler has flipped its covered state).
+  root.addEventListener('click', _tcvUpdateStatus, false);
 
   container.innerHTML = '';
   container.appendChild(root);

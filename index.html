@@ -16639,6 +16639,28 @@ document.addEventListener('click', function(e) {
   renderRoster();
 })();
 
+// === CAREER-SOURCE TIE-BREAK HELPERS ===
+// Several passes below choose D[].career from competing sources (d.js,
+// ALL_PLAYERS_DB, LEGEND_CAREERS). They used to prefer LEGEND_CAREERS whenever
+// it had >= the same number of seasons. But the PFR "qualifying careers"
+// backfill that fed LEGEND_CAREERS / pfr_qualifying_careers ZEROED OUT QB
+// rushing — Caleb Williams, Lamar Jackson, Jalen Hurts, Jayden Daniels, etc.
+// all show ra/ry/rtd = 0 with fpts recomputed as passing-only. On a length tie
+// that rushing-stripped career was overwriting the complete d.js/ALL_PLAYERS_DB
+// line, so cards rendered QBs with 0 rushing yards.
+// Tie-break by total production instead: a career missing an entire stat
+// category has strictly LOWER fpts, so it loses — while the documented
+// "fresher PFR totals win" RB cases (Freeman McNeil 6293→7146 rush yds) have
+// HIGHER totals and still win.
+function _careerFptsSum(c){ let s = 0; if (c && c.length) for (let i = 0; i < c.length; i++) s += (c[i].fpts || 0); return s; }
+function _careerReplaces(cand, cur){
+  const cl = (cand && cand.length) || 0, ul = (cur && cur.length) || 0;
+  if (cl === 0) return false;
+  if (cl > ul) return true;
+  if (cl === ul) return _careerFptsSum(cand) > _careerFptsSum(cur);
+  return false;
+}
+
 // === UNIFIED COMPARE SEARCH (adds players to the compare grid) ===
 (function() {
 // LEGEND_CAREERS is deferred (~2.85 MB). When this runs at parse time, the
@@ -16678,7 +16700,8 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   function _bestCareer(name, ...candidates) {
     let best = null;
     for (const c of candidates) {
-      if (c && c.length && (!best || c.length > best.length)) best = c;
+      if (!c || !c.length) continue;
+      if (!best || _careerReplaces(c, best)) best = c;
     }
     return best || [];
   }
@@ -16719,7 +16742,7 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
       if (!d._retired) return;
       const lc = LEGEND_CAREERS[d.n];
       if (!lc || !lc.length) return;
-      if (lc.length >= ((d.career && d.career.length) || 0)) {
+      if (_careerReplaces(lc, d.career)) {
         d.career = lc;
       }
     });
@@ -16949,12 +16972,13 @@ function _applyLegendCareerBindings() {
     const cur = (d.career && d.career.length) || 0;
     if (lc.length > cur) d.career = lc;
   });
-  // Pattern 3: tie-breaker pass — replace d.career when LEGEND has >= seasons
+  // Pattern 3: tie-breaker pass — replace d.career when LEGEND is a better
+  // source (more seasons, or equal seasons with more total production).
   // (matches the post-ALL_PLAYERS_DB-merge cleanup pass)
   D.forEach(d => {
     const lc = LEGEND_CAREERS[d.n];
     if (!lc || !lc.length) return;
-    if (lc.length >= ((d.career && d.career.length) || 0)) d.career = lc;
+    if (_careerReplaces(lc, d.career)) d.career = lc;
   });
   // Pattern 4: add HP players that have LEGEND_CAREERS data but aren't in D
   if (typeof HP !== 'undefined') {

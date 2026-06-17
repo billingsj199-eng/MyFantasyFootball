@@ -48969,7 +48969,9 @@ Rules:
       // v0.9.91: bumped to v91 to invalidate caches missing the new construction field.
       // v0.10.0: bumped to v100 — construction score now uses tournament-equity
       // weighted lifts (was QF-only), and PathFit + skip-rate access changed.
-      return 'v100:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0);
+      // v0.10.1: bumped to v101 — VS ADP / ADP val now grade against raw Underdog
+      // ADP (udA/sfa) instead of consensus d.a, so cached rows must recompute.
+      return 'v101:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0);
     })();
     let _udTeamsRows;
     if (window._udTeamsCache && window._udTeamsCache.key === _udCacheKey) {
@@ -48991,9 +48993,19 @@ Rules:
         // render drops below 1s on a 49-draft portfolio.
         const bb = _bbSimulateTeam(picks, { sims: 60, weeks: BB_REG_SEASON_WEEKS });
         // Roster details (sorted by pick number) with raw PPG + BB stats.
+        // v0.10.1: grade VS ADP / ADP val against the raw Underdog ADP the draft
+        // actually ran on (udA for Best Ball, sfa for Superflex) — NOT the
+        // consensus blend (d.a), which mixes in CBS/ESPN/devy/dynasty rankings
+        // and overstated value (e.g. Charbonnet at pick 175 read +58 against
+        // consensus 117 vs the true +15 against UD ADP 159.9). Matches the
+        // Draft Board (_udRenderDraftBoard) and the Value Picks tab. Fall back
+        // to consensus d.a only when the Underdog field is missing.
+        const _udAdpField = d.phase === 'superflex' ? 'sfa' : 'udA';
         const rosterDetails = picks.slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map((p, pi) => {
           const matched = _udMatchPlayer(p.name);
-          const adp = matched && matched.a && matched.a < 900 ? matched.a : null;
+          const _udAdpRaw = matched && matched[_udAdpField] != null ? matched[_udAdpField] : null;
+          const adp = (_udAdpRaw != null && _udAdpRaw < 900) ? _udAdpRaw
+                    : (matched && matched.a && matched.a < 900 ? matched.a : null);
           const proj = _udPlayerProj(p.name, p);
           const bbStats = bb.perPlayerWeekly[p.name] || null;
           return {

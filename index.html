@@ -48971,7 +48971,12 @@ Rules:
       // weighted lifts (was QF-only), and PathFit + skip-rate access changed.
       // v0.10.1: bumped to v101 — VS ADP / ADP val now grade against raw Underdog
       // ADP (udA/sfa) instead of consensus d.a, so cached rows must recompute.
-      return 'v101:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0);
+      // v0.10.1: include _udLiveAdpAppliedAt so a live ADP snapshot (extension
+      // push or Firestore boot-load that mutates D[i].udA/sfa in place) busts
+      // this cache. Without it the re-render returns rows computed with the
+      // original page-load ADP and the live values never reach the cards.
+      const _liveAdp = window._udLiveAdpAppliedAt || 0;
+      return 'v101:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0) + ':' + _liveAdp;
     })();
     let _udTeamsRows;
     if (window._udTeamsCache && window._udTeamsCache.key === _udCacheKey) {
@@ -48994,18 +48999,29 @@ Rules:
         const bb = _bbSimulateTeam(picks, { sims: 60, weeks: BB_REG_SEASON_WEEKS });
         // Roster details (sorted by pick number) with raw PPG + BB stats.
         // v0.10.1: grade VS ADP / ADP val against the raw Underdog ADP the draft
-        // actually ran on (udA for Best Ball, sfa for Superflex) — NOT the
-        // consensus blend (d.a), which mixes in CBS/ESPN/devy/dynasty rankings
-        // and overstated value (e.g. Charbonnet at pick 175 read +58 against
-        // consensus 117 vs the true +15 against UD ADP 159.9). Matches the
-        // Draft Board (_udRenderDraftBoard) and the Value Picks tab. Fall back
-        // to consensus d.a only when the Underdog field is missing.
-        const _udAdpField = d.phase === 'superflex' ? 'sfa' : 'udA';
+        // actually ran on — Underdog ONLY, never the consensus blend (d.a).
+        // Consensus mixes in CBS/ESPN/devy/dynasty rankings and badly overstates
+        // value (e.g. Charbonnet read +58 vs the true +15; SF rookies Carson Beck
+        // +125, Eli Raridon +201). Both udA (Underdog Best Ball Mania, 1-QB) and
+        // sfa (Underdog Superflex) are real Underdog ADP scales; only `a` is the
+        // consensus blend and it is deliberately excluded.
+        //
+        // Chain: Superflex prefers sfa, then falls back to udA (still Underdog —
+        // the 1-QB scale understates QB value in SF but is the best Underdog
+        // signal for deep stashes with no sfa, e.g. Beck/Raridon → udA≈215).
+        // Best Ball uses udA. If a player has NO Underdog ADP, adp stays null
+        // and the pick shows no VS ADP (and contributes 0 to the aggregate),
+        // rather than borrowing the misleading consensus number.
+        const _udAdpChain = d.phase === 'superflex' ? ['sfa', 'udA'] : ['udA'];
         const rosterDetails = picks.slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map((p, pi) => {
           const matched = _udMatchPlayer(p.name);
-          const _udAdpRaw = matched && matched[_udAdpField] != null ? matched[_udAdpField] : null;
-          const adp = (_udAdpRaw != null && _udAdpRaw < 900) ? _udAdpRaw
-                    : (matched && matched.a && matched.a < 900 ? matched.a : null);
+          let adp = null;
+          if (matched) {
+            for (const f of _udAdpChain) {
+              const v = matched[f];
+              if (v != null && v < 900) { adp = v; break; }
+            }
+          }
           const proj = _udPlayerProj(p.name, p);
           const bbStats = bb.perPlayerWeekly[p.name] || null;
           return {

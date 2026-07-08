@@ -3589,7 +3589,9 @@ ADD TO CHROME
 <script src="data/combine_data.js?v=2026-04-25b"></script>
 <script src="data/historical_draft_picks.js?v=2026-04-20" defer></script>
 <script src="data/mike_clay_projections.js?v=2026-07-08a"></script>
-<script src="data/player_weekly_sigma.js?v=2026-04-30"></script>
+<!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
+     Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
+<script src="data/player_weekly_sigma.js?v=2026-04-30" defer></script>
 <script src="data/injury_history.js?v=2026-04-16"></script>
 <script src="data/clay_team_grades_2026.js?v=2026-05-15"></script>
 <script src="data/nfl_schedule_2026.js?v=2026-05-15c"></script>
@@ -4617,7 +4619,9 @@ if (typeof COMBINE_DATA !== 'undefined') {
 <script src="data/backtest_outcomes.js?v=2026-04-22" defer></script>
 <!-- NFL.com prospect grades (5.4-7.45 scale + tier label) — 2014-2026, 1,672 prospects -->
 <!-- Used as DISPLAY ONLY on prospect cards; not in JM model (residual signal +0.074 over DC). -->
-<script src="data/nfl_prospect_grades.js?v=2026-05-11"></script>
+<!-- defer: window._NFL_PROSPECT_GRADES has a single on-demand consumer (the player
+     card's NFL.com grade section, post-DOMContentLoaded) and no parse-time reader. -->
+<script src="data/nfl_prospect_grades.js?v=2026-05-11" defer></script>
 <script>
 // === Travis Hunter — complete college stats (Jackson State + Colorado) ===
 // Lazy-applied by _ensureCollegeStatsData() after college_stats.js loads.

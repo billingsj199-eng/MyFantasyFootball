@@ -46,15 +46,39 @@
 <!-- Service worker registration — enables PWA install prompt + offline shell -->
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(e){console.warn('[SW] register failed',e);});});}</script>
 
-<!-- Firebase SDK (optional — page works without it if blocked by privacy settings)
-     Plain <script> tags (no document.write) so the browser's preload scanner discovers
-     all four upfront and downloads them in parallel with the HTML, instead of waiting
-     until the inline document.write line executes. Order is preserved because each tag
-     is a synchronous script — they still execute in document order. -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true;console.warn('[Firebase] SDK blocked — running in offline mode')"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js" crossorigin="anonymous" onerror="window._fbBlocked=true"></script>
+<!-- Firebase readiness queue. The SDK below is `defer`ed so it no longer blocks first
+     paint. Any code that needs firebase/auth registers via window._whenFirebaseReady();
+     callbacks flush once window._fbBoot() runs (fired from the last firebase script's
+     onload + a DOMContentLoaded fallback). Defined here — before any inline consumer —
+     so a queued call can never hit an undefined helper. -->
+<script>
+window._fbReady = false;
+window._fbReadyQueue = [];
+window._whenFirebaseReady = function(cb){
+  if (window._fbReady) { try { cb(); } catch(e){ console.warn('[fbReady]', e); } }
+  else window._fbReadyQueue.push(cb);
+};
+window._fbFlushReady = function(){
+  if (window._fbReady) return;
+  window._fbReady = true;
+  var q = window._fbReadyQueue.splice(0);
+  for (var i=0;i<q.length;i++){ try { q[i](); } catch(e){ console.warn('[fbReady]', e); } }
+};
+// Fallback: if the firebase onload never fires (e.g. CDN blocked → onerror instead),
+// still boot on DOMContentLoaded so queued callbacks flush and the app enters offline
+// mode gracefully. _fbBoot is idempotent (early-returns once _fbReady is set).
+document.addEventListener('DOMContentLoaded', function(){ if (window._fbBoot) window._fbBoot(); });
+</script>
+
+<!-- Firebase SDK (optional — page works without it if blocked by privacy settings).
+     DEFERRED so it downloads in parallel with the HTML but no longer blocks first paint.
+     initializeApp + all auth listeners run from window._fbBoot(), fired by the onload on
+     the last script (functions-compat) — which executes after all four have parsed, and
+     before DOMContentLoaded. Order among the four is preserved (defer executes in order). -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" crossorigin="anonymous" defer onerror="window._fbBlocked=true;console.warn('[Firebase] SDK blocked — running in offline mode')"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" defer onerror="window._fbBlocked=true"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" defer onerror="window._fbBlocked=true"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js" crossorigin="anonymous" defer onload="if(window._fbBoot)window._fbBoot()" onerror="window._fbBlocked=true"></script>
 <!-- html2canvas: lazy-loaded by admin Rankings Graphic Generator (only fetched when admin uses the tool) -->
 </head>
 <body>
@@ -3540,13 +3564,17 @@ ADD TO CHROME
      need to know about bundling. -->
 <script src="data/_bundle_lookups.js?v=2026-07-08a"></script>
 <script src="data/d.js?v=2026-07-08a"></script>
-<script src="data/hp.js?v=2026-05-04"></script>
+<script src="data/hp.js?v=2026-05-04" defer></script>
+<!-- NOT deferred: daily_retired_pool.js (sync, below) reads EP_RETIRED at load to build
+     DAILY_RETIRED_POOL, which index.html then consumes at parse (Guess Who daily pool,
+     ~L13135+). Deferring ep_retired.js would leave EP_RETIRED undefined for that build. -->
 <script src="data/ep_retired.js?v=2026-04-23"></script>
 <script src="data/legend_careers.js?v=2026-05-13b" defer></script>
 <!-- season_leaders.js (~744 KB) is lazy-loaded via window._ensureSeasonLeaders() — SEASON_LEADERS is read only by the admin Trivia generator, so regular users never fetch it. -->
 <script src="data/ldb.js?v=2026-04-21"></script>
 <script src="data/player_team_history.js?v=2026-04-02"></script>
-<script src="data/ep_players_u.js?v=2026-04-21"></script>
+<!-- ep_players_u.js removed: its global const EP_PLAYERS_U is shadowed by a local
+     `let EP_PLAYERS_U` in the Unlimited Guess-Who IIFE and never read. Dead payload. -->
 <script src="data/active_team_history.js?v=2026-05-13c"></script>
 <script src="data/daily_retired_pool.js?v=2026-04-21"></script>
 <script src="data/weekly_stats_active.js?v=2026-05-14c-opp"></script>
@@ -5359,20 +5387,14 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
      mode-switch / first dynasty render. Elite Pull college pool (Games page)
      falls back to a non-weekly pool until first openPlayerCard load. -->
 <!-- (Scripts moved into the _ensureCollegeStatsData chain — see line ~5347.) -->
-<script src="data/wr_yprr.js?v=2026-04-05"></script>
 <script src="data/js_model_data.js?v=2026-04-07"></script>
 <script src="data/player_comps.js?v=2026-04-07" defer></script>
-<script src="data/wr_drop_rate.js?v=2026-04-06"></script>
-<script src="data/wr_contested.js?v=2026-04-06"></script>
-<script src="data/wr_yac.js?v=2026-04-06"></script>
-<script src="data/wr_route_grade.js?v=2026-04-06"></script>
-<script src="data/wr_adot.js?v=2026-04-06"></script>
-<script src="data/wr_adv_career.js?v=2026-04-23"></script>
-<script src="data/rb_yaco.js?v=2026-04-06"></script>
-<script src="data/rb_missed_tackles.js?v=2026-04-06"></script>
-<script src="data/rb_elusive.js?v=2026-04-06"></script>
-<script src="data/rb_breakaway.js?v=2026-04-16"></script>
-<script src="data/qb_adot.js?v=2026-04-06"></script>
+<!-- PFF advanced-stat files (~1.24 MB combined) are consumed ONLY by the JM prospect
+     scoring helpers (jmYaco/jmYprr/etc., ~L30330-31130), which run only inside
+     buildProspectData(). buildProspectData already rides an async gate behind
+     _ensurePffData/_ensureCollegeStatsData, so these are lazy-loaded via
+     window._ensureProspectStats() on prospect/compare/backtest/mockdraft access —
+     the rankings landing page never pays for them. (qb_adot.js removed: 0 refs.) -->
 <script>
 // pff_grades.js is lazy-loaded on first prospect-tab activation (~121 KB).
 // All consumers are inside buildProspectData (prospect-page IIFE) and reference
@@ -5473,6 +5495,44 @@ window._ensureCollegeStatsData = (function() {
       try { if (window._csPatch2) window._csPatch2(); } catch (e) { console.warn('[CS patch 2]', e); }
       try { if (window._csPatch3) window._csPatch3(); } catch (e) { console.warn('[CS patch 3]', e); }
     });
+    return promise;
+  };
+})();
+
+// PFF advanced-stat files (~1.24 MB) — consumed ONLY by the JM prospect scoring
+// helpers (jmYaco/jmYprr/jmContested/etc.), which run only inside buildProspectData().
+// That build already rides an async gate behind _ensurePffData/_ensureCollegeStatsData
+// (see _attachJmScores + rebuildAndRender), so these ship lazily too: fired on
+// prospect/compare/backtest/mockdraft access and awaited before the first prospect
+// build so JM scores are never computed with the stat globals missing. The rankings
+// landing page never pays for them. All globals are independent → loaded in parallel.
+window._ensureProspectStats = (function() {
+  let promise = null;
+  function _loadScript(src) {
+    return new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      s.onload  = function() { resolve(); };
+      s.onerror = function() { console.warn('[ProspectStats] load failed', src); resolve(); };
+      document.head.appendChild(s);
+    });
+  }
+  return function _ensureProspectStats() {
+    if (promise) return promise;
+    promise = Promise.all([
+      _loadScript('data/wr_yprr.js?v=2026-04-05'),
+      _loadScript('data/wr_drop_rate.js?v=2026-04-06'),
+      _loadScript('data/wr_contested.js?v=2026-04-06'),
+      _loadScript('data/wr_yac.js?v=2026-04-06'),
+      _loadScript('data/wr_route_grade.js?v=2026-04-06'),
+      _loadScript('data/wr_adot.js?v=2026-04-06'),
+      _loadScript('data/wr_adv_career.js?v=2026-04-23'),
+      _loadScript('data/rb_yaco.js?v=2026-04-06'),
+      _loadScript('data/rb_missed_tackles.js?v=2026-04-06'),
+      _loadScript('data/rb_elusive.js?v=2026-04-06'),
+      _loadScript('data/rb_breakaway.js?v=2026-04-16')
+    ]);
     return promise;
   };
 })();
@@ -5638,7 +5698,11 @@ function validateImportData(obj) {
   // assembled at file-load time inside daily_retired_pool.js using only the
   // 311 inline IDs; the _BASE_RETIRED_IDS merge above adds ~1500 more IDs that
   // belong in the Guess Who picture pool but were getting stranded.
-  if (typeof EP_RETIRED !== 'undefined' && typeof DAILY_RETIRED_POOL !== 'undefined') {
+  // ep_retired.js (~795 KB) is deferred — EP_RETIRED may be undefined at parse.
+  // Expand the Guess Who picture pool eagerly when present, else on DOMContentLoaded.
+  // Idempotent: the length-grew guard no-ops once the pool is already expanded.
+  function _expandDailyRetiredPool() {
+    if (typeof EP_RETIRED === 'undefined' || typeof DAILY_RETIRED_POOL === 'undefined') return;
     const _expanded = EP_RETIRED
       .filter(p => p.last >= 2004 && window.RETIRED_ESPN_IDS[p.name])
       .map(p => ({
@@ -5653,6 +5717,8 @@ function validateImportData(obj) {
       console.log('[GuessWho] Expanded retired pool: ' + DAILY_RETIRED_POOL.length + ' players (was 311 at file-load)');
     }
   }
+  _expandDailyRetiredPool();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _expandDailyRetiredPool);
 
   const playersToFix = D.filter(p => p._slImg && p._slImg.includes('espncdn.com') && p.n && !p.n.includes('D/ST') && !(p._retired && window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.n]));
 
@@ -7354,6 +7420,7 @@ function render() {
     // in case the user landed directly in dynasty mode from saved state.
     if (typeof window._ensurePffData === 'function') window._ensurePffData();
     if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
+    if (typeof window._ensureProspectStats === 'function') window._ensureProspectStats();
     if (typeof window._attachJmScores === 'function' && !window._jmScoresAttached) {
       // _attachJmScores returns true if it attached synchronously (data already
       // loaded), false if it deferred behind the async loaders. In the deferred
@@ -8350,10 +8417,13 @@ function _refreshAdminViewToggle() {
   }
 }
 _refreshAdminViewToggle();
-// Re-check on auth state changes (admin status may flip after login)
-if (typeof firebase !== 'undefined' && firebase.auth) {
-  try { firebase.auth().onAuthStateChanged(() => setTimeout(_refreshAdminViewToggle, 250)); } catch(e) {}
-}
+// Re-check on auth state changes (admin status may flip after login). Firebase is
+// deferred, so register through the ready queue rather than at parse time.
+_whenFirebaseReady(function(){
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try { firebase.auth().onAuthStateChanged(() => setTimeout(_refreshAdminViewToggle, 250)); } catch(e) {}
+  }
+});
 window._refreshAdminViewToggle = _refreshAdminViewToggle;
 
 // Scoring format toggle (PPR / Half / STD)
@@ -8862,19 +8932,24 @@ _jsModelCheckAdmin();
   }
 
   // Re-check admin visibility on auth state changes so the WEEKLY tab appears
-  // immediately after sign-in (matches the JS Model tab behavior).
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    try {
-      firebase.auth().onAuthStateChanged(u => {
-        _weeklyAdminCheck(u);
-        if (u) _weeklyLoadActiveWeek();
-      });
-    } catch(_e) {}
-  }
+  // immediately after sign-in (matches the JS Model tab behavior). Firebase is
+  // deferred → register through the ready queue rather than at parse time.
+  _whenFirebaseReady(function(){
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      try {
+        firebase.auth().onAuthStateChanged(u => {
+          _weeklyAdminCheck(u);
+          if (u) _weeklyLoadActiveWeek();
+        });
+      } catch(_e) {}
+    }
+  });
 })();
-if (typeof firebase !== 'undefined' && firebase.auth) {
-  try { firebase.auth().onAuthStateChanged(_jsModelCheckAdmin); } catch (_e) {}
-}
+_whenFirebaseReady(function(){
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try { firebase.auth().onAuthStateChanged(_jsModelCheckAdmin); } catch (_e) {}
+  }
+});
 
 // ============================================================
 // JS MODEL ENGINE — dynamic scoring, VOR-based rankings
@@ -9942,6 +10017,7 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     if ((currentMode === 'dynasty' || currentMode === 'dynastysf')) {
       if (typeof window._ensurePffData === 'function') window._ensurePffData();
       if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
+      if (typeof window._ensureProspectStats === 'function') window._ensureProspectStats();
     }
     render();
     toast(currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'Best Ball' : 'Redraft');
@@ -11326,6 +11402,7 @@ function openPlayerCard(d, ctxMode) {
   // PFF grades + college stats are lazy-loaded; opening any player card may render
   // prospect/JM/career info that consumes them, so fire the loads on click.
   if (typeof window._ensurePffData === 'function') window._ensurePffData();
+  if (typeof window._ensureProspectStats === 'function') window._ensureProspectStats();
   if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
   // ctxMode lets callers (Trade Calc, My Teams, etc.) display the player in the
   // context of a different mode than the rankings page's currentMode. Falls back
@@ -12735,6 +12812,9 @@ function switchPage(page) {
     if (_pffPages.includes(page)) {
       window._ensurePffData();
       if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
+      // PFF advanced-stat files (~1.24 MB) — same prospect-scoring lifecycle as PFF/
+      // college_stats. Fire the prefetch on page open so they're ready by build time.
+      if (typeof window._ensureProspectStats === 'function') window._ensureProspectStats();
     }
   }
   // season_leaders.js (~744 KB) — only the admin Trivia generator reads SEASON_LEADERS.
@@ -12859,9 +12939,11 @@ window.switchPage = switchPage;
     const tvBtn = document.getElementById('navTriviaBtn');
     if (tvBtn) tvBtn.style.display = admin ? '' : 'none';
   }
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    try { firebase.auth().onAuthStateChanged(_navAdminCheck); } catch(e) {}
-  }
+  _whenFirebaseReady(function(){
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      try { firebase.auth().onAuthStateChanged(_navAdminCheck); } catch(e) {}
+    }
+  });
   // Also check on initial load in case auth already resolved
   window.addEventListener('DOMContentLoaded', _navAdminCheck);
   setTimeout(_navAdminCheck, 1500);
@@ -13010,13 +13092,23 @@ document.addEventListener('click', function(e) {
   // Also track retired names in a global Set so the rankings/ticker code can
   // identify legend-pool entries even though `nameToIdx` was built earlier.
   window._RETIRED_NAMES = window._RETIRED_NAMES || new Set();
-  EP_RETIRED.forEach(p => {
-    if (!D.find(d => d.n === p.name)) {
-      const seasons = p.last - p.debut + 1;
-      D.push({n:p.name,a:999,p:0,s:p.pos,r:p.pos+"\u2014",t:"Retired",p25:null,p24:null,p23:null,age:null,cyr:null,out:null,sal:null,dr:null,exp:seasons,role:null,inj:null,s25:null,career:p.career||[],da:999,sa:999,idx:D.length,myRank:D.length+1,round:99,notes:"",_retired:true,_debut:p.debut,_last:p.last});
-      window._RETIRED_NAMES.add(p.name);
-    }
-  });
+  // ep_retired.js (~795 KB) is deferred \u2014 EP_RETIRED may be undefined at parse.
+  // Push retired players into D (for search/autocomplete + Guess Who) eagerly when
+  // present, else on DOMContentLoaded once the deferred script parses. Idempotent:
+  // the D.find guard + Set prevent duplicate pushes on re-run. Runs AFTER the initial
+  // render(), so the main rankings table never depended on these entries.
+  function _epAppendRetiredToD() {
+    if (typeof EP_RETIRED === 'undefined') return;
+    EP_RETIRED.forEach(p => {
+      if (!D.find(d => d.n === p.name)) {
+        const seasons = p.last - p.debut + 1;
+        D.push({n:p.name,a:999,p:0,s:p.pos,r:p.pos+"\u2014",t:"Retired",p25:null,p24:null,p23:null,age:null,cyr:null,out:null,sal:null,dr:null,exp:seasons,role:null,inj:null,s25:null,career:p.career||[],da:999,sa:999,idx:D.length,myRank:D.length+1,round:99,notes:"",_retired:true,_debut:p.debut,_last:p.last});
+        window._RETIRED_NAMES.add(p.name);
+      }
+    });
+  }
+  _epAppendRetiredToD();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _epAppendRetiredToD);
 
   // Pre-audited set of ESPN IDs that return 404 — devy/college prospects whose NFL headshots
   // don't exist yet. Derived from a full HEAD-check of every image URL in the Guess Who pool.
@@ -15635,30 +15727,39 @@ document.addEventListener('click', function(e) {
     });
   }
 
-  // Add historical players from HP — merge _bestByTeam into existing pool entries
-  HP.forEach(p => {
-    const key = p.n + '|' + p.s;
-    if (poolNameSet.has(key)) {
-      // Player already in pool from D/LDB — merge HP data into them
-      const existing = FG_POOL.find(x => x.n === p.n && x.s === p.s);
-      if (existing) {
-        if (p._bestByTeam) existing._bestByTeam = Object.assign(existing._bestByTeam || {}, p._bestByTeam);
-        if (p._teams) {
-          const tSet = new Set(existing._fgTeams || []);
-          p._teams.forEach(t => tSet.add(t));
-          existing._fgTeams = [...tSet];
+  // Add historical players from HP — merge _bestByTeam into existing pool entries.
+  // hp.js (~838 KB) is deferred, so HP may be undefined at parse. Build eagerly when
+  // present, else on DOMContentLoaded once the deferred script has parsed. Idempotent
+  // via poolNameSet — a re-run merges into existing entries and never duplicates.
+  // (The Fantasy Game only reads FG_POOL on user interaction, which is post-DCL.)
+  function _fgAppendHpPlayers() {
+    if (typeof HP === 'undefined') return;
+    HP.forEach(p => {
+      const key = p.n + '|' + p.s;
+      if (poolNameSet.has(key)) {
+        // Player already in pool from D/LDB — merge HP data into them
+        const existing = FG_POOL.find(x => x.n === p.n && x.s === p.s);
+        if (existing) {
+          if (p._bestByTeam) existing._bestByTeam = Object.assign(existing._bestByTeam || {}, p._bestByTeam);
+          if (p._teams) {
+            const tSet = new Set(existing._fgTeams || []);
+            p._teams.forEach(t => tSet.add(t));
+            existing._fgTeams = [...tSet];
+          }
+          if (p._yrs && !existing._yrs) existing._yrs = p._yrs;
         }
-        if (p._yrs && !existing._yrs) existing._yrs = p._yrs;
+        return;
       }
-      return;
-    }
-    FG_POOL.push({
-      n: p.n, s: p.s, _fgTeams: p._teams || [], _fgIdx: FG_POOL.length,
-      _yrs: p._yrs || '', _retired: true,
-      career: [], _bestByTeam: p._bestByTeam || {}, _srcHP: true
+      FG_POOL.push({
+        n: p.n, s: p.s, _fgTeams: p._teams || [], _fgIdx: FG_POOL.length,
+        _yrs: p._yrs || '', _retired: true,
+        career: [], _bestByTeam: p._bestByTeam || {}, _srcHP: true
+      });
+      poolNameSet.add(key);
     });
-    poolNameSet.add(key);
-  });
+  }
+  _fgAppendHpPlayers();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _fgAppendHpPlayers);
 
   // Build the complete NFL teams list (all 32)
   // ALL_NFL_TEAMS moved to data/all_nfl_teams.js
@@ -24044,13 +24145,15 @@ window.fmtHeight = fmtHeight;
 
   // Populate on load + whenever Firebase auth resolves (leagues load async)
   _calcPopulateLeagues();
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    try {
-      firebase.auth().onAuthStateChanged(function(user) {
-        if (user) setTimeout(() => { _calcPopulateLeagues(); _finderPopulateLeagueDropdown(); }, 800);
-      });
-    } catch (_e) {}
-  }
+  _whenFirebaseReady(function(){
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      try {
+        firebase.auth().onAuthStateChanged(function(user) {
+          if (user) setTimeout(() => { _calcPopulateLeagues(); _finderPopulateLeagueDropdown(); }, 800);
+        });
+      } catch (_e) {}
+    }
+  });
 
   renderAll();
 })();
@@ -24094,37 +24197,47 @@ window.fmtHeight = fmtHeight;
   // Expose globally so rankings code can check
   window.isAdmin = isAdmin;
 
-  if (isConfigured && typeof firebase !== 'undefined' && !window._fbBlocked) {
-    try {
-      app = firebase.initializeApp(firebaseConfig);
-      auth = firebase.auth();
-      db = firebase.firestore();
-      // Enable offline persistence so writes resolve from cache immediately.
-      // Prefer the new settings({ localCache: persistentLocalCache() }) API
-      // (Firebase >=10.5) — enableIndexedDbPersistence is deprecated. Falls
-      // back to the legacy API if the SDK on the page is older.
+  // Firebase SDK is deferred (see the <script> tags in <head>), so it is NOT loaded at
+  // parse time. Initialization runs from window._fbBoot(), fired by the firebase onload
+  // (+ a DOMContentLoaded fallback) once the SDK has parsed. Idempotent + guarded: a
+  // blocked CDN (window._fbBlocked) degrades to offline mode instead of throwing. After
+  // init, _fbFlushReady() runs every queued _whenFirebaseReady callback (the auth
+  // listeners scattered across the app) now that app/auth/db are populated.
+  window._fbBoot = function() {
+    if (window._fbReady) return;
+    if (isConfigured && typeof firebase !== 'undefined' && !window._fbBlocked) {
       try {
-        if (firebase.firestore.persistentLocalCache && firebase.firestore.persistentSingleTabManager) {
-          db.settings({
-            localCache: firebase.firestore.persistentLocalCache({
-              tabManager: firebase.firestore.persistentSingleTabManager()
-            })
-          });
-          console.log('[Auth] Firestore persistence enabled (cache API)');
-        } else {
-          db.enablePersistence({ synchronizeTabs: false }).catch(err => {
-            console.warn('[Auth] Persistence failed:', err.code);
-          });
+        app = firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        // Enable offline persistence so writes resolve from cache immediately.
+        // Prefer the new settings({ localCache: persistentLocalCache() }) API
+        // (Firebase >=10.5) — enableIndexedDbPersistence is deprecated. Falls
+        // back to the legacy API if the SDK on the page is older.
+        try {
+          if (firebase.firestore.persistentLocalCache && firebase.firestore.persistentSingleTabManager) {
+            db.settings({
+              localCache: firebase.firestore.persistentLocalCache({
+                tabManager: firebase.firestore.persistentSingleTabManager()
+              })
+            });
+            console.log('[Auth] Firestore persistence enabled (cache API)');
+          } else {
+            db.enablePersistence({ synchronizeTabs: false }).catch(err => {
+              console.warn('[Auth] Persistence failed:', err.code);
+            });
+          }
+        } catch(e) {
+          console.warn('[Auth] Persistence setup failed, falling back:', e && e.message);
+          try { db.enablePersistence({ synchronizeTabs: false }).catch(()=>{}); } catch(_e) {}
         }
+        console.log('[Auth] Firebase initialized (long-polling mode)');
       } catch(e) {
-        console.warn('[Auth] Persistence setup failed, falling back:', e && e.message);
-        try { db.enablePersistence({ synchronizeTabs: false }).catch(()=>{}); } catch(_e) {}
+        console.error('[Auth] Firebase init error:', e);
       }
-      console.log('[Auth] Firebase initialized (long-polling mode)');
-    } catch(e) {
-      console.error('[Auth] Firebase init error:', e);
     }
-  }
+    if (typeof window._fbFlushReady === 'function') window._fbFlushReady();
+  };
 
   // === UI ELEMENTS ===
   const overlay = document.getElementById('authOverlay');
@@ -25144,7 +25257,10 @@ window.fmtHeight = fmtHeight;
     if (_hasUnsavedChanges && currentUser) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  if (isConfigured && auth) {
+  // Deferred firebase: register the definitive auth listener + public-data load once the
+  // SDK has booted (`auth` is null until _fbBoot runs). Guarded so offline mode no-ops.
+  _whenFirebaseReady(function() {
+   if (isConfigured && auth) {
     auth.onAuthStateChanged(user => {
       updateAccountUI(user);
       if (user) {
@@ -25188,7 +25304,8 @@ window.fmtHeight = fmtHeight;
     // environments, so do a one-shot read to populate the "Rankings updated"
     // chip immediately. The snapshot will refresh it later if Jack saves.
     loadJacksFromCloud();
-  }
+   }
+  });
 
   // === ACCOUNT PAGE LOGIC ===
   const navAccountBtn = document.getElementById('navAccountBtn');
@@ -29131,7 +29248,8 @@ window.fmtHeight = fmtHeight;
     // doesn't get poisoned with a partial result.
     const pffP = (typeof window._ensurePffData === 'function') ? window._ensurePffData() : Promise.resolve();
     const csP = (typeof window._ensureCollegeStatsData === 'function') ? window._ensureCollegeStatsData() : Promise.resolve();
-    Promise.all([pffP, csP]).then(function() {
+    const psP = (typeof window._ensureProspectStats === 'function') ? window._ensureProspectStats() : Promise.resolve();
+    Promise.all([pffP, csP, psP]).then(function() {
       _attachJmScoresSync();
       // Trigger a re-render so the now-populated _pmJm/_pmLandingSpot values
       // surface in the rankings table.
@@ -37078,7 +37196,8 @@ window.fmtHeight = fmtHeight;
       // until this gate landed.
       const _pffP = (typeof window._ensurePffData === 'function') ? window._ensurePffData() : Promise.resolve();
       const _csP = (typeof window._ensureCollegeStatsData === 'function') ? window._ensureCollegeStatsData() : Promise.resolve();
-      Promise.all([_dcLoad(), _bioLoad(), _roLoad(), _pffP, _csP]).then(function() {
+      const _psP = (typeof window._ensureProspectStats === 'function') ? window._ensureProspectStats() : Promise.resolve();
+      Promise.all([_dcLoad(), _bioLoad(), _roLoad(), _pffP, _csP, _psP]).then(function() {
         _pmDiagnostic(pmBuiltData);
         // Defer heavy computation so browser can paint and handle events
         setTimeout(_doBuild, 50);
@@ -37200,10 +37319,12 @@ window.fmtHeight = fmtHeight;
     tools.style.display = _dcIsAdmin() ? 'inline-flex' : 'none';
   }
   _pmSyncAdminTools();
-  // Re-check whenever auth state changes (Firebase will re-run this)
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    try { firebase.auth().onAuthStateChanged(_pmSyncAdminTools); } catch(e) {}
-  }
+  // Re-check whenever auth state changes (firebase is deferred → via the ready queue)
+  _whenFirebaseReady(function(){
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      try { firebase.auth().onAuthStateChanged(_pmSyncAdminTools); } catch(e) {}
+    }
+  });
 
   // ═══════════════════════════════════════════════════════════════════════
   //  WEIGHT LAB — admin-only live JM weight tuner with backtest preview
@@ -37978,9 +38099,11 @@ window.fmtHeight = fmtHeight;
     if (_pmWlIsAdmin()) _pmWlInit();
   }
   _pmWlSyncFromAuth();
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    try { firebase.auth().onAuthStateChanged(_pmWlSyncFromAuth); } catch(e) {}
-  }
+  _whenFirebaseReady(function(){
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      try { firebase.auth().onAuthStateChanged(_pmWlSyncFromAuth); } catch(e) {}
+    }
+  });
   window._pmWlInit = _pmWlInit;
   window._pmWlSyncAdmin = _pmWlSyncAdmin;
   window._pmWl = _pmWl; // exposed for debugging
@@ -38496,20 +38619,23 @@ window.fmtHeight = fmtHeight;
   });
   pmObserver.observe(prospectPage, { attributes: true, attributeFilter: ['class'] });
 
-  // Re-render when auth state changes so admin edit icons appear
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    try {
-      firebase.auth().onAuthStateChanged(function() {
-        // Reset DC + bio caches so admin can load from Firestore after login
-        _dcLoaded = false;
-        _bioLoaded = false;
-        _pmUpdateGate();
-        if (pmInitialized && prospectPage.classList.contains('active')) {
-          rebuildAndRender();
-        }
-      });
-    } catch(e) {}
-  }
+  // Re-render when auth state changes so admin edit icons appear (firebase is
+  // deferred → register through the ready queue rather than at parse time)
+  _whenFirebaseReady(function(){
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      try {
+        firebase.auth().onAuthStateChanged(function() {
+          // Reset DC + bio caches so admin can load from Firestore after login
+          _dcLoaded = false;
+          _bioLoaded = false;
+          _pmUpdateGate();
+          if (pmInitialized && prospectPage.classList.contains('active')) {
+            rebuildAndRender();
+          }
+        });
+      } catch(e) {}
+    }
+  });
 
   // === DRAFT CAPITAL ANALYSIS ===
   // Computes actual success rates from the data at runtime
@@ -42352,9 +42478,11 @@ window.fmtHeight = fmtHeight;
   // Wire admin UI to auth state. Initial pass + Firebase listener so the
   // row appears as soon as the auth check resolves on page load.
   _triviaUpdateAdminUI();
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    try { firebase.auth().onAuthStateChanged(_triviaUpdateAdminUI); } catch(e) {}
-  }
+  _whenFirebaseReady(function(){
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      try { firebase.auth().onAuthStateChanged(_triviaUpdateAdminUI); } catch(e) {}
+    }
+  });
 
   // ===== DAILY ARCHIVE (Firestore-backed) =====
   // Saves the currently-rendered board as the locked daily for a chosen
@@ -46176,14 +46304,16 @@ Rules:
     .catch(e => { console.warn('[MyTeams] Delete error:', e); });
   };
 
-  // Auto-load saved leagues on auth
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    try {
-      firebase.auth().onAuthStateChanged(function(user) {
-        if (user) { setTimeout(_mtLoadSavedLeagues, 300); }
-      });
-    } catch(e) {}
-  }
+  // Auto-load saved leagues on auth (firebase is deferred → via the ready queue)
+  _whenFirebaseReady(function(){
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      try {
+        firebase.auth().onAuthStateChanged(function(user) {
+          if (user) { setTimeout(_mtLoadSavedLeagues, 300); }
+        });
+      } catch(e) {}
+    }
+  });
 
   // ═══════════════════════════════════════════════════════════
   // UNDERDOG PORTFOLIO ANALYZER
@@ -47191,7 +47321,9 @@ Rules:
   // hasPremium() reads from localStorage, which is populated async by
   // loadStripePremium after a Firestore round-trip. We poll for up to ~10s so
   // premium users actually get Jack's shared portfolio loaded.
-  if (typeof firebase !== 'undefined' && firebase.auth) {
+  // (firebase is deferred → register through the ready queue rather than at parse time)
+  _whenFirebaseReady(function(){
+   if (typeof firebase !== 'undefined' && firebase.auth) {
     try {
       firebase.auth().onAuthStateChanged(function(user) {
         if (!user) return;
@@ -47238,7 +47370,8 @@ Rules:
         setTimeout(tryLoad, 500);
       });
     } catch(e) {}
-  }
+   }
+  });
 
   // Also re-trigger when premium status changes (e.g. just activated via Stripe)
   // We wrap the existing checkPremiumStatus so it also kicks the underdog loader.

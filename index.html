@@ -3577,7 +3577,7 @@ ADD TO CHROME
      `let EP_PLAYERS_U` in the Unlimited Guess-Who IIFE and never read. Dead payload. -->
 <script src="data/active_team_history.js?v=2026-05-13c"></script>
 <script src="data/daily_retired_pool.js?v=2026-04-21"></script>
-<script src="data/weekly_stats_active.js?v=2026-05-14c-opp"></script>
+<script src="data/weekly_stats_active.js?v=2026-05-14c-opp" defer></script>
 <!-- WEEKLY_STATS_RETIRED: ~10 MB total, deferred. Initialized as window.WEEKLY_STATS_RETIRED
      by file _1 and extended by _2 and _3 via Object.assign — defer preserves
      document order so the chain remains correct. Merged into WEEKLY_STATS via
@@ -5546,11 +5546,24 @@ window._ensureProspectStats = (function() {
 <script src="data/all_players_weekly_4.js?v=2026-04-16" defer></script>
 <script src="data/all_players_weekly_5.js?v=2026-04-15" defer></script>
 <script>
-// WEEKLY_STATS_RETIRED is deferred (~10 MB across 3 files). Initialize WEEKLY_STATS
-// from ACTIVE only at parse time; merge RETIRED on DOMContentLoaded once deferred
-// scripts have parsed. Preserves the original "ACTIVE wins on key collision"
-// semantics (Object.assign({}, RETIRED, ACTIVE)) by only filling absent keys.
-const WEEKLY_STATS = Object.assign({}, WEEKLY_STATS_ACTIVE);
+// WEEKLY_STATS_ACTIVE (~2.4 MB) and WEEKLY_STATS_RETIRED (~10 MB) are BOTH deferred
+// now, so WEEKLY_STATS starts empty at parse and is populated on DOMContentLoaded once
+// the deferred scripts parse. Collision semantics preserved: ACTIVE overwrites (wins),
+// RETIRED only fills absent keys — order-independent. The only parse-time consumer is
+// the L4 PPG column (last4Ppg → WEEKLY_STATS), which degrades to null and is repainted
+// by the re-render below; every other reader is on-demand (player cards, games, teams).
+const WEEKLY_STATS = (typeof WEEKLY_STATS_ACTIVE !== 'undefined') ? Object.assign({}, WEEKLY_STATS_ACTIVE) : {};
+let _wsActiveMerged = (typeof WEEKLY_STATS_ACTIVE !== 'undefined');
+function _mergeWeeklyStatsActive() {
+  if (_wsActiveMerged || typeof WEEKLY_STATS_ACTIVE === 'undefined') return;
+  _wsActiveMerged = true;
+  for (const name in WEEKLY_STATS_ACTIVE) WEEKLY_STATS[name] = WEEKLY_STATS_ACTIVE[name];
+  // Repaint so the L4 PPG column (blank at first paint while ACTIVE was still loading)
+  // fills in. Default sort is by rank, so this fills cells without reordering.
+  if (typeof window.render === 'function') { try { window.render(); } catch(e) {} }
+}
+_mergeWeeklyStatsActive();
+document.addEventListener('DOMContentLoaded', _mergeWeeklyStatsActive);
 function _mergeWeeklyStatsRetired() {
   if (typeof WEEKLY_STATS_RETIRED === 'undefined') return;
   for (const name in WEEKLY_STATS_RETIRED) {

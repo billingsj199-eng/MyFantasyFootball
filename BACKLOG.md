@@ -2,7 +2,7 @@
 
 _Last updated: 2026-05-18_
 
-Running backlog for myfantasyfootball.org. Items are grouped by what's blocking them, then by effort. **Read DEPLOY_NOTES.md first** if any "Shipped" item below mentions Firestore rules — those features won't work in prod until rules are pushed.
+Running backlog for myfantasyfootball.co. Items are grouped by what's blocking them, then by effort. **Read DEPLOY_NOTES.md first** if any "Shipped" item below mentions Firestore rules — those features won't work in prod until rules are pushed.
 
 ---
 
@@ -157,7 +157,7 @@ When you next deploy:
 - **Rankings table** — horizontal scroll works, thead is sticky. **Sticky first columns added** on mobile: drag handle col hidden (no useful touch interaction), rank + player columns sticky-left so the player name stays visible when scrolling right to see PPG / age / etc. Soft right-edge shadow on the player col hints at scrollability. Desktop unaffected.
 - **Player card share button** — chain icon next to the close button copies a `/p/<slug>.html` URL to clipboard. Toast: "Player URL copied". Falls back to `prompt()` on browsers without clipboard API.
 - **OG / Twitter card meta tags for shared player URLs** — `scripts/build_player_og_pages.py` generates ~580 static HTML files in `p/<slug>.html` with proper `<meta property="og:image">` etc. so social-media crawlers produce rich previews. Real users get a JS redirect + meta refresh to the main app's `?player=<slug>` detector. ~100 active players have ESPN headshots in the OG image; the rest get title+description-only summary cards. Regenerate with `python scripts/build_player_og_pages.py` whenever d.js changes.
-- **sitemap.xml** — same build script writes `sitemap.xml` at the project root listing the homepage + all 580 player pages so Google Search Console picks them up. Submit the URL `https://www.myfantasyfootball.org/sitemap.xml` in GSC once deployed.
+- **sitemap.xml** — same build script writes `sitemap.xml` at the project root listing the homepage + all 580 player pages so Google Search Console picks them up. Submit the URL `https://www.myfantasyfootball.co/sitemap.xml` in GSC once deployed.
 - **PWA / Add to Home Screen** — `manifest.webmanifest` + `sw.js` (network-first service worker for the shell). Apple meta tags (`apple-mobile-web-app-capable` etc.) for iOS standalone mode. Theme color, app shortcuts (Rankings / My Teams / Trade / Mock), `start_url` with `?source=pwa` for analytics. **Caveat**: Chrome's *auto* install prompt requires 192×192 + 512×512 PNG icons; without them users can still install manually via browser menu / iOS Share sheet. Generating PNGs is a follow-up.
 - **Player card 4th tab — INFO** — split out Career Highlights + Bio + Injury Status into a new INFO tab so the FANTASY tab stays focused on rankings/projections/ADP/career log. The "Player Info" section was renamed to "Bio" inside the INFO tab. The header injury pill stays for quick-glance alerts; an expanded Injury Status section in INFO shows full details (severity, projection impact %, return estimate).
 - **Player card ADP Comparison fix** — was showing `—` for Sleeper because the code read `d.slp` (which doesn't exist); the real Sleeper data is in `d.slR` / `slSf` / `slDy` / `slDsf` (mode-specific). Now uses the existing `_sleeperRank(d)` helper. Underdog also fixed to use `d.udA` (Best Ball Mania) / `d.sfa` (Superflex), falling back to legacy `d.a`. ESPN/Yahoo stay as placeholders — wired so populating `d.espnAdp` / `d.yahooAdp` in `d.js` and uncommenting two lines in the card lights them up.

@@ -10,18 +10,18 @@
 <title>MyFantasyFootball — Dynasty Rankings, Prospect Model & Mock Drafts</title>
 <meta name="description" content="Free dynasty and redraft fantasy football rankings, JM prospect model, mock draft simulator, trade calculator, and daily games. Built for serious fantasy managers.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://myfantasyfootball.org/">
+<meta property="og:url" content="https://www.myfantasyfootball.co/">
 <meta property="og:title" content="MyFantasyFootball — Dynasty Rankings, Prospect Model & Mock Drafts">
 <meta property="og:description" content="Free dynasty and redraft fantasy football rankings, JM prospect model, mock draft simulator, trade calculator, and daily games. Built for serious fantasy managers.">
-<meta property="og:image" content="https://myfantasyfootball.org/og-image.png">
+<meta property="og:image" content="https://www.myfantasyfootball.co/og-image.png">
 <meta property="og:site_name" content="MyFantasyFootball">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MyFantasyFootball — Dynasty Rankings & Prospect Model">
 <meta name="twitter:description" content="Free dynasty and redraft fantasy football rankings, JM prospect model, mock draft simulator, trade calculator, and daily games.">
-<meta name="twitter:image" content="https://myfantasyfootball.org/og-image.png">
+<meta name="twitter:image" content="https://www.myfantasyfootball.co/og-image.png">
 <meta name="theme-color" content="#0a0e17">
 <meta name="robots" content="index, follow, max-image-preview:large">
-<link rel="canonical" href="https://myfantasyfootball.org/">
+<link rel="canonical" href="https://www.myfantasyfootball.co/">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%230f0f1a'/%3E%3Crect x='8' y='32' width='7' height='9' rx='1.5' fill='%23f59e0b' opacity='.3'/%3E%3Crect x='17' y='25' width='7' height='16' rx='1.5' fill='%23f59e0b' opacity='.5'/%3E%3Crect x='26' y='17' width='7' height='24' rx='1.5' fill='%23f59e0b' opacity='.7'/%3E%3Crect x='35' y='9' width='7' height='32' rx='1.5' fill='%23f59e0b'/%3E%3Cpolyline points='11.5,29 20.5,22 29.5,14 38.5,6' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='38.5' cy='6' r='3' fill='%23f59e0b'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%230f0f1a'/%3E%3Crect x='8' y='32' width='7' height='9' rx='1.5' fill='%23f59e0b' opacity='.3'/%3E%3Crect x='17' y='25' width='7' height='16' rx='1.5' fill='%23f59e0b' opacity='.5'/%3E%3Crect x='26' y='17' width='7' height='24' rx='1.5' fill='%23f59e0b' opacity='.7'/%3E%3Crect x='35' y='9' width='7' height='32' rx='1.5' fill='%23f59e0b'/%3E%3Cpolyline points='11.5,29 20.5,22 29.5,14 38.5,6' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='38.5' cy='6' r='3' fill='%23f59e0b'/%3E%3C/svg%3E">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -89,7 +89,7 @@
 <!-- Creator attribution (signup only) -->
 <div id="authCreatorWrap" style="display:none;margin-bottom:.65rem">
 <label style="display:block;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:.3rem">HOW DID YOU HEAR ABOUT US?</label>
-<select id="authCreator" class="auth-input" style="padding:.55rem .75rem;cursor:pointer">
+<select id="authCreator" aria-label="How did you hear about us?" class="auth-input" style="padding:.55rem .75rem;cursor:pointer">
 <option value="jackb933">jackb933</option>
 <option value="dyl">dyl</option>
 </select>
@@ -177,11 +177,11 @@ SIGN IN
 <div style="display:flex;flex-direction:column;gap:.65rem">
 <div>
 <label style="font-size:.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px">Email</label>
-<input type="text" class="auth-input" id="acctEmail" readonly style="margin-bottom:0;opacity:.7;cursor:default">
+<input type="text" class="auth-input" id="acctEmail" aria-label="Email address" readonly style="margin-bottom:0;opacity:.7;cursor:default">
 </div>
 <div>
 <label style="font-size:.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px">Password</label>
-<input type="text" class="auth-input" value="••••••••" readonly style="margin-bottom:0;opacity:.5;cursor:default">
+<input aria-label="Password (hidden)" type="text" class="auth-input" value="••••••••" readonly style="margin-bottom:0;opacity:.5;cursor:default">
 </div>
 </div>
 <div style="display:flex;gap:8px;margin-top:1.25rem">
@@ -240,7 +240,7 @@ SIGN IN
 
 <div class="acct-field">
 <label class="acct-label">Email Address</label>
-<input type="email" class="acct-input" id="acctPageEmailInput" readonly>
+<input type="email" class="acct-input" id="acctPageEmailInput" aria-label="Email address" readonly>
 </div>
 <div class="acct-field">
 <label class="acct-label">Username</label>
@@ -405,7 +405,7 @@ Ad-free experience
 
 <!-- Legacy promo input — hidden. Promo codes are now applied via Stripe Checkout's built-in field. -->
 <div style="display:none">
-<input type="text" id="premiumPromoInput" autocomplete="off">
+<input type="text" id="premiumPromoInput" aria-label="Promo code" autocomplete="off">
 <button type="button" id="premiumPromoApply">APPLY</button>
 <div id="premiumPromoMsg"></div>
 </div>
@@ -494,7 +494,7 @@ PREMIUM ACTIVE
 </div>
 <div class="acct-field">
 <label class="acct-label">Badge</label>
-<select id="adminGiftBadgeSelect" class="acct-input" style="padding:.55rem .75rem"></select>
+<select id="adminGiftBadgeSelect" aria-label="Badge to gift" class="acct-input" style="padding:.55rem .75rem"></select>
 </div>
 <div style="display:flex;gap:8px;margin-top:.5rem">
 <button class="acct-btn acct-btn-primary" id="adminGiftBadgeBtn">GIFT BADGE</button>
@@ -512,7 +512,7 @@ PREMIUM ACTIVE
 </div>
 <div class="acct-field">
 <label class="acct-label">Duration</label>
-<select id="adminGiftPremDuration" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminGiftPremDuration" aria-label="Premium gift duration" class="acct-input" style="padding:.55rem .75rem">
 <option value="7">1 Week</option>
 <option value="30">1 Month</option>
 <option value="150">Season Pass (~5 months)</option>
@@ -535,12 +535,12 @@ PREMIUM ACTIVE
 </div>
 <div class="acct-field">
 <label class="acct-label">Days of premium granted</label>
-<input type="number" class="acct-input" id="adminPremCodeDays" min="1" max="3650" value="7">
+<input type="number" class="acct-input" id="adminPremCodeDays" aria-label="Premium code duration in days" min="1" max="3650" value="7">
 </div>
 </div>
 <div class="acct-field">
 <label class="acct-label">Code expires on (last day to redeem)</label>
-<input type="date" class="acct-input" id="adminPremCodeExpires">
+<input type="date" class="acct-input" id="adminPremCodeExpires" aria-label="Premium code expiry date">
 </div>
 <div style="display:flex;gap:8px;margin-top:.5rem">
 <button class="acct-btn acct-btn-primary" id="adminPremCodeCreateBtn">CREATE CODE</button>
@@ -561,7 +561,7 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
 <div class="acct-field">
 <label class="acct-label">Rankings source</label>
-<select id="adminGfxSource" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminGfxSource" aria-label="Rankings graphic source" class="acct-input" style="padding:.55rem .75rem">
 <option value="jacks" selected>Jack's</option>
 <option value="mine">My Rankings</option>
 <option value="jsmodel">JS Model</option>
@@ -570,7 +570,7 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 </div>
 <div class="acct-field">
 <label class="acct-label">Format</label>
-<select id="adminGfxFormat" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminGfxFormat" aria-label="Rankings graphic scoring format" class="acct-input" style="padding:.55rem .75rem">
 <option value="redraft">Redraft</option>
 <option value="bestball" selected>Best Ball</option>
 <option value="superflex">Superflex</option>
@@ -582,7 +582,7 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
 <div class="acct-field">
 <label class="acct-label">Position</label>
-<select id="adminGfxPos" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminGfxPos" aria-label="Rankings graphic position filter" class="acct-input" style="padding:.55rem .75rem">
 <option value="QB" selected>QB</option>
 <option value="RB">RB</option>
 <option value="WR">WR</option>
@@ -598,7 +598,7 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 </div>
 <div class="acct-field">
 <label class="acct-label">Player count</label>
-<select id="adminGfxCount" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminGfxCount" aria-label="Rankings graphic player count" class="acct-input" style="padding:.55rem .75rem">
 <option value="12" selected>Top 12</option>
 <option value="24">Top 24</option>
 <option value="36">Top 36</option>
@@ -608,7 +608,7 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 </div>
 <div class="acct-field">
 <label class="acct-label">Players per graphic (paginates if &lt; total count)</label>
-<select id="adminGfxPerPage" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminGfxPerPage" aria-label="Rankings graphic players per page" class="acct-input" style="padding:.55rem .75rem">
 <option value="12" selected>12 per page</option>
 <option value="24">24 per page</option>
 <option value="36">36 per page (single image)</option>
@@ -616,12 +616,12 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 </div>
 <div class="acct-field">
 <label class="acct-label">Title (use [POS] as placeholder; use | for line breaks)</label>
-<input type="text" class="acct-input" id="adminGfxTitle" value="2026|FANTASY [POS]|RANKINGS">
+<input type="text" class="acct-input" id="adminGfxTitle" aria-label="Rankings graphic title" value="2026|FANTASY [POS]|RANKINGS">
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
 <div class="acct-field">
 <label class="acct-label">Header theme</label>
-<select id="adminGfxTheme" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminGfxTheme" aria-label="Rankings graphic theme" class="acct-input" style="padding:.55rem .75rem">
 <option value="purple" selected>Purple</option>
 <option value="blue">Blue</option>
 <option value="red">Red</option>
@@ -632,12 +632,12 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 </div>
 <div class="acct-field">
 <label class="acct-label">Accent color (corner triangle)</label>
-<input type="color" class="acct-input" id="adminGfxAccent" value="#facc15" style="height:38px;padding:.2rem .35rem">
+<input type="color" class="acct-input" id="adminGfxAccent" aria-label="Rankings graphic accent color" value="#facc15" style="height:38px;padding:.2rem .35rem">
 </div>
 </div>
 <div class="acct-field">
 <label class="acct-label">Position color (the [POS] text in the title)</label>
-<input type="color" class="acct-input" id="adminGfxPosColor" value="#FFD700" style="height:38px;padding:.2rem .35rem">
+<input type="color" class="acct-input" id="adminGfxPosColor" aria-label="Rankings graphic position color" value="#FFD700" style="height:38px;padding:.2rem .35rem">
 </div>
 <div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
 <button class="acct-btn acct-btn-outline" id="adminGfxPreviewBtn">PREVIEW</button>
@@ -655,26 +655,26 @@ Build a stylized PNG of one of your drafted teams — pick from saved Sleeper le
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
 <div class="acct-field">
 <label class="acct-label">Source</label>
-<select id="adminTgfxSource" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminTgfxSource" aria-label="Team graphic source" class="acct-input" style="padding:.55rem .75rem">
 <option value="myteams" selected>My Teams (Sleeper)</option>
 <option value="underdog">Underdog Portfolio</option>
 </select>
 </div>
 <div class="acct-field">
 <label class="acct-label">Team / Draft</label>
-<select id="adminTgfxTeam" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminTgfxTeam" aria-label="Team graphic team" class="acct-input" style="padding:.55rem .75rem">
 <option value="">— select source first —</option>
 </select>
 </div>
 </div>
 <div class="acct-field">
 <label class="acct-label">Title (use | for line breaks; [TEAM] is replaced with team/league name)</label>
-<input type="text" class="acct-input" id="adminTgfxTitle" value="MY|[TEAM]|DRAFT">
+<input type="text" class="acct-input" id="adminTgfxTitle" aria-label="Team graphic title" value="MY|[TEAM]|DRAFT">
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
 <div class="acct-field">
 <label class="acct-label">Header theme</label>
-<select id="adminTgfxTheme" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminTgfxTheme" aria-label="Team graphic theme" class="acct-input" style="padding:.55rem .75rem">
 <option value="purple" selected>Purple</option>
 <option value="blue">Blue</option>
 <option value="red">Red</option>
@@ -685,12 +685,12 @@ Build a stylized PNG of one of your drafted teams — pick from saved Sleeper le
 </div>
 <div class="acct-field">
 <label class="acct-label">Accent color (corner triangle)</label>
-<input type="color" class="acct-input" id="adminTgfxAccent" value="#facc15" style="height:38px;padding:.2rem .35rem">
+<input type="color" class="acct-input" id="adminTgfxAccent" aria-label="Team graphic accent color" value="#facc15" style="height:38px;padding:.2rem .35rem">
 </div>
 </div>
 <div class="acct-field">
 <label class="acct-label">Highlight color (round numbers / brand text)</label>
-<input type="color" class="acct-input" id="adminTgfxHighlight" value="#FFD700" style="height:38px;padding:.2rem .35rem">
+<input type="color" class="acct-input" id="adminTgfxHighlight" aria-label="Team graphic highlight color" value="#FFD700" style="height:38px;padding:.2rem .35rem">
 </div>
 <div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
 <button class="acct-btn acct-btn-outline" id="adminTgfxPreviewBtn">PREVIEW</button>
@@ -708,14 +708,14 @@ Build a stylized PNG of your most- or least-drafted Underdog players (% exposure
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
 <div class="acct-field">
 <label class="acct-label">Mode</label>
-<select id="adminExpgfxMode" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminExpgfxMode" aria-label="Exposure graphic mode" class="acct-input" style="padding:.55rem .75rem">
 <option value="most" selected>Most Drafted (highest exposure)</option>
 <option value="least">Least Drafted (lowest exposure)</option>
 </select>
 </div>
 <div class="acct-field">
 <label class="acct-label">Position</label>
-<select id="adminExpgfxPos" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminExpgfxPos" aria-label="Exposure graphic position filter" class="acct-input" style="padding:.55rem .75rem">
 <option value="ALL" selected>All Positions</option>
 <option value="QB">QB</option>
 <option value="RB">RB</option>
@@ -727,7 +727,7 @@ Build a stylized PNG of your most- or least-drafted Underdog players (% exposure
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
 <div class="acct-field">
 <label class="acct-label">Player count</label>
-<select id="adminExpgfxCount" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminExpgfxCount" aria-label="Exposure graphic count" class="acct-input" style="padding:.55rem .75rem">
 <option value="12" selected>Top 12</option>
 <option value="24">Top 24</option>
 <option value="36">Top 36</option>
@@ -735,7 +735,7 @@ Build a stylized PNG of your most- or least-drafted Underdog players (% exposure
 </div>
 <div class="acct-field">
 <label class="acct-label">Min drafts (filter out tiny samples)</label>
-<select id="adminExpgfxMinDrafts" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminExpgfxMinDrafts" aria-label="Exposure graphic minimum drafts" class="acct-input" style="padding:.55rem .75rem">
 <option value="1" selected>1+ draft</option>
 <option value="3">3+ drafts</option>
 <option value="5">5+ drafts</option>
@@ -745,12 +745,12 @@ Build a stylized PNG of your most- or least-drafted Underdog players (% exposure
 </div>
 <div class="acct-field">
 <label class="acct-label">Title (use | for line breaks; [POS] is the position label)</label>
-<input type="text" class="acct-input" id="adminExpgfxTitle" value="MOST|DRAFTED|[POS]">
+<input type="text" class="acct-input" id="adminExpgfxTitle" aria-label="Exposure graphic title" value="MOST|DRAFTED|[POS]">
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
 <div class="acct-field">
 <label class="acct-label">Header theme</label>
-<select id="adminExpgfxTheme" class="acct-input" style="padding:.55rem .75rem">
+<select id="adminExpgfxTheme" aria-label="Exposure graphic theme" class="acct-input" style="padding:.55rem .75rem">
 <option value="purple" selected>Purple</option>
 <option value="blue">Blue</option>
 <option value="red">Red</option>
@@ -761,12 +761,12 @@ Build a stylized PNG of your most- or least-drafted Underdog players (% exposure
 </div>
 <div class="acct-field">
 <label class="acct-label">Accent color (corner triangle)</label>
-<input type="color" class="acct-input" id="adminExpgfxAccent" value="#facc15" style="height:38px;padding:.2rem .35rem">
+<input type="color" class="acct-input" id="adminExpgfxAccent" aria-label="Exposure graphic accent color" value="#facc15" style="height:38px;padding:.2rem .35rem">
 </div>
 </div>
 <div class="acct-field">
 <label class="acct-label">Highlight color ([POS] / % text)</label>
-<input type="color" class="acct-input" id="adminExpgfxHighlight" value="#FFD700" style="height:38px;padding:.2rem .35rem">
+<input type="color" class="acct-input" id="adminExpgfxHighlight" aria-label="Exposure graphic highlight color" value="#FFD700" style="height:38px;padding:.2rem .35rem">
 </div>
 <div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
 <button class="acct-btn acct-btn-outline" id="adminExpgfxPreviewBtn">PREVIEW</button>
@@ -1111,13 +1111,13 @@ CLEAR ALL
 </div>
 <div style="display:flex;align-items:center;gap:6px">
 <span style="font-size:.6rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">TEAMS:</span>
-<select id="jsModelTeams" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:.7rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">
+<select id="jsModelTeams" aria-label="Number of teams" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:.7rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">
 <option value="8">8</option><option value="10">10</option><option value="12" selected>12</option><option value="14">14</option><option value="16">16</option>
 </select>
 </div>
 <div style="display:flex;align-items:center;gap:6px">
 <span style="font-size:.6rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">ROSTER:</span>
-<select id="jsModelRoster" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:.7rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">
+<select id="jsModelRoster" aria-label="Roster format" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:.7rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">
 <option value="2rb2wr1flx" selected>2RB/2WR/1FLX</option>
 <option value="2rb3wr1flx">2RB/3WR/1FLX</option>
 <option value="2rb2wr2flx">2RB/2WR/2FLX</option>
@@ -1284,7 +1284,7 @@ CLEAR ALL
 </div>
 <div id="fgCustomSettings" style="display:none;margin:2px 0 4px">
 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-<select id="fgYearSelect" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1px;cursor:pointer">
+<select id="fgYearSelect" aria-label="Season year" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1px;cursor:pointer">
 <option value="best">BEST (ALL-TIME)</option>
 <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
 <option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option>
@@ -1294,7 +1294,7 @@ CLEAR ALL
 <option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option>
 <option value="2007">2007</option><option value="2006">2006</option>
 </select>
-<select id="fgWeekSelect" style="display:none;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1px;cursor:pointer">
+<select id="fgWeekSelect" aria-label="Week" style="display:none;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1px;cursor:pointer">
 <option value="best">BEST WEEK</option>
 <option value="1">WK 1</option><option value="2">WK 2</option><option value="3">WK 3</option>
 <option value="4">WK 4</option><option value="5">WK 5</option><option value="6">WK 6</option>
@@ -1778,7 +1778,7 @@ CLEAR ALL
 <optgroup label="NFC South"><option value="ATL">Atlanta Falcons</option><option value="CAR">Carolina Panthers</option><option value="NO">New Orleans Saints</option><option value="TB">Tampa Bay Buccaneers</option></optgroup>
 <optgroup label="NFC West"><option value="ARI">Arizona Cardinals</option><option value="LAR">Los Angeles Rams</option><option value="SF">San Francisco 49ers</option><option value="SEA">Seattle Seahawks</option></optgroup>
 </select>
-<select id="pmDraftClassFilter" style="padding:5px 10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.78rem;cursor:pointer;margin-left:6px">
+<select id="pmDraftClassFilter" aria-label="Draft class filter" style="padding:5px 10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.78rem;cursor:pointer;margin-left:6px">
 <option value="recent" selected>2020+ (Recent)</option>
 <option value="all">All Classes</option>
 <option value="2026">2026</option>
@@ -1890,7 +1890,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="pm-wl-backtest-col">
 <div class="pm-wl-bt-head">
 <span class="pm-wl-bt-title">Backtest impact <span id="pmWlBtPosLabel"></span></span>
-<select class="pm-wl-bt-class" id="pmWlBtClass">
+<select class="pm-wl-bt-class" id="pmWlBtClass" aria-label="Weight lab draft class">
 <option value="all" selected>2020-2023</option>
 <option value="allyears">2020-2024</option>
 <option value="fullhistory">2017-2024</option>
@@ -1926,7 +1926,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 <div class="bt-controls">
 <span class="bt-ctrl-label">Class</span>
-<select class="bt-select" id="btClassFilter">
+<select class="bt-select" id="btClassFilter" aria-label="Draft class filter">
 <option value="all">2020-2023 (Complete)</option>
 <option value="2020">2020 only</option>
 <option value="2021">2021 only</option>
@@ -1941,7 +1941,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <option value="fullhistory" class="bt-admin-only" style="display:none">Full history 2017-2024 (admin)</option>
 </select>
 <span class="bt-ctrl-label" style="margin-left:8px">Position</span>
-<select class="bt-select" id="btPosFilter">
+<select class="bt-select" id="btPosFilter" aria-label="Position filter">
 <option value="all">All Positions</option>
 <option value="QB">QB</option>
 <option value="RB">RB</option>
@@ -1949,7 +1949,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <option value="TE">TE</option>
 </select>
 <span class="bt-ctrl-label" style="margin-left:8px">Metric</span>
-<select class="bt-select" id="btMetricFilter">
+<select class="bt-select" id="btMetricFilter" aria-label="Metric filter">
 <option value="hit">Hit Rate (Hit + Stud)</option>
 <option value="stud">Stud Rate (top tier only)</option>
 <option value="elite">Elite Rate (rookie-window top-6 PPG)</option>
@@ -2008,7 +2008,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <summary>Weight Lab — test alternate JM weights</summary>
 <div class="bt-weight-lab-body">
 <div class="bt-weight-lab-help">Edit the weights JSON below, then click <b>Re-run</b>. Each position has separate <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px">floor</code> (calibrated to starter rate, default 60% of blend) and <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px">ceiling</code> (calibrated to elite rate, default 40%). Each must sum to 1.0 (the lab will warn). Click <b>Reset</b> to restore. Deltas vs. baseline appear in the cards above.</div>
-<textarea id="btWeightLabTextarea" class="bt-weight-lab-ta" spellcheck="false"></textarea>
+<textarea id="btWeightLabTextarea" aria-label="Weight lab configuration" class="bt-weight-lab-ta" spellcheck="false"></textarea>
 <div class="bt-weight-lab-actions">
 <button class="bt-weight-lab-btn primary" id="btWeightLabRun">Re-run with these weights</button>
 <button class="bt-weight-lab-btn" id="btWeightLabReset">Reset to baseline</button>
@@ -2205,7 +2205,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Upload your Underdog best ball CSV to analyze your full portfolio. Upload pre-NFL-draft, post-NFL-draft, and superflex CSVs separately — they'll merge into one portfolio.</div>
 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
 <button type="button" onclick="window._udPromptPhaseAndUpload()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">UPLOAD CSV</button>
-<input type="file" id="mtUnderdogCSV" accept=".csv" onchange="window._mtParseUnderdogCSV(this)" style="display:none">
+<input type="file" id="mtUnderdogCSV" aria-label="Underdog CSV file" accept=".csv" onchange="window._mtParseUnderdogCSV(this)" style="display:none">
 <button onclick="window._udClearPortfolio()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;color:var(--text2);cursor:pointer;white-space:nowrap">CLEAR</button>
 <button id="mtUnderdogSyncBtn" onclick="window._udSyncToShared()" style="display:none;padding:8px 12px;background:var(--surface2);border:1px solid var(--accent);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;color:var(--accent);cursor:pointer;white-space:nowrap" title="Admin only: push your portfolio to the shared doc so premium members can see it">SYNC TO SHARED</button>
 <span id="mtUnderdogStatus" style="font-size:.7rem;color:var(--text2)">Export from Underdog → My Drafts → Download CSV</span>
@@ -2275,7 +2275,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      completion history stay clean. -->
 <div id="triviaDailyAdminRow" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(168,85,247,.3);align-items:center;gap:10px;flex-wrap:wrap;font-size:.7rem;color:var(--text2)">
 <span style="letter-spacing:1px">🔒 ADMIN PREVIEW:</span>
-<input type="date" id="triviaDailyPreviewDate" style="padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem;font-family:'DM Sans',sans-serif">
+<input type="date" id="triviaDailyPreviewDate" aria-label="Preview date" style="padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem;font-family:'DM Sans',sans-serif">
 <button onclick="window._triviaApplyPreview()" style="padding:5px 12px;background:rgba(168,85,247,.2);color:#c084fc;border:1px solid rgba(168,85,247,.5);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:600">PREVIEW DATE</button>
 <button id="triviaDailyResetPreviewBtn" onclick="window._triviaResetPreview()" style="display:none;padding:5px 10px;background:none;color:var(--text2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer">RESET TO TODAY</button>
 <span style="opacity:.7;font-size:.65rem;flex-basis:100%">Preview runs don't bump streak or write history.</span>
@@ -2927,9 +2927,9 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 <div class="finder-row" id="calcTeamPickerRow" style="display:none">
 <label class="finder-label">Teams</label>
-<select id="calcTeamA" class="finder-select" style="flex:1;min-width:140px"></select>
+<select id="calcTeamA" aria-label="Team A player search" class="finder-select" style="flex:1;min-width:140px"></select>
 <span style="color:var(--text2);font-size:.75rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px">VS</span>
-<select id="calcTeamB" class="finder-select" style="flex:1;min-width:140px"></select>
+<select id="calcTeamB" aria-label="Team B player search" class="finder-select" style="flex:1;min-width:140px"></select>
 </div>
 </div>
 <div class="trade-layout">
@@ -3531,7 +3531,7 @@ ADD TO CHROME
 </div>
 </div>
 
-<input type="file" id="fileImport" accept=".json" style="display:none">
+<input type="file" id="fileImport" aria-label="Import rankings file" accept=".json" style="display:none">
 
 <!-- P2 bundle: 42 small stable lookup tables concatenated by scripts/bundle_lookups.py.
      Re-run that script after editing any source file. Pipeline-regenerated files
@@ -3540,32 +3540,32 @@ ADD TO CHROME
      need to know about bundling. -->
 <script src="data/_bundle_lookups.js?v=2026-06-08a"></script>
 <script src="data/d.js?v=2026-06-09a"></script>
-<script src="data/hp.js"></script>
-<script src="data/ep_retired.js"></script>
+<script src="data/hp.js?v=2026-05-04"></script>
+<script src="data/ep_retired.js?v=2026-04-23"></script>
 <script src="data/legend_careers.js?v=2026-05-13b" defer></script>
-<script src="data/season_leaders.js"></script>
-<script src="data/ldb.js"></script>
-<script src="data/player_team_history.js"></script>
-<script src="data/ep_players_u.js"></script>
+<!-- season_leaders.js (~744 KB) is lazy-loaded via window._ensureSeasonLeaders() — SEASON_LEADERS is read only by the admin Trivia generator, so regular users never fetch it. -->
+<script src="data/ldb.js?v=2026-04-21"></script>
+<script src="data/player_team_history.js?v=2026-04-02"></script>
+<script src="data/ep_players_u.js?v=2026-04-21"></script>
 <script src="data/active_team_history.js?v=2026-05-13c"></script>
-<script src="data/daily_retired_pool.js"></script>
+<script src="data/daily_retired_pool.js?v=2026-04-21"></script>
 <script src="data/weekly_stats_active.js?v=2026-05-14c-opp"></script>
 <!-- WEEKLY_STATS_RETIRED: ~10 MB total, deferred. Initialized as window.WEEKLY_STATS_RETIRED
      by file _1 and extended by _2 and _3 via Object.assign — defer preserves
      document order so the chain remains correct. Merged into WEEKLY_STATS via
      _mergeWeeklyStatsRetired() on DOMContentLoaded (defined ~line 4986). -->
-<script src="data/weekly_stats_retired_1.js" defer></script>
-<script src="data/weekly_stats_retired_2.js" defer></script>
-<script src="data/weekly_stats_retired_3.js" defer></script>
-<script src="data/all_players.js"></script>
+<script src="data/weekly_stats_retired_1.js?v=2026-04-20" defer></script>
+<script src="data/weekly_stats_retired_2.js?v=2026-04-20" defer></script>
+<script src="data/weekly_stats_retired_3.js?v=2026-04-20" defer></script>
+<script src="data/all_players.js?v=2026-04-23" defer></script>
 <script src="data/combine_data.js?v=2026-04-25b"></script>
-<script src="data/historical_draft_picks.js"></script>
+<script src="data/historical_draft_picks.js?v=2026-04-20" defer></script>
 <script src="data/mike_clay_projections.js?v=2026-06-08a"></script>
-<script src="data/player_weekly_sigma.js"></script>
-<script src="data/injury_history.js"></script>
+<script src="data/player_weekly_sigma.js?v=2026-04-30"></script>
+<script src="data/injury_history.js?v=2026-04-16"></script>
 <script src="data/clay_team_grades_2026.js?v=2026-05-15"></script>
 <script src="data/nfl_schedule_2026.js?v=2026-05-15c"></script>
-<script src="data/betting_lines_2026.js?v=2026-06-08h"></script>
+<script src="data/betting_lines_2026.js?v=2026-07-07c"></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
 // d.js names and Clay names sometimes differ on suffix (Jr./III), punctuation,
@@ -4586,7 +4586,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
      on prospect / compare / backtest / mockdraft / dynasty / openPlayerCard activation.
      All COLLEGE_STATS consumers use typeof guards, so the page renders fine pre-load. -->
 <!-- Backtest outcomes: rookie verdicts (Stud/Hit/Contributor/Bust/Pending) for 2020-2024 classes -->
-<script src="data/backtest_outcomes.js"></script>
+<script src="data/backtest_outcomes.js?v=2026-04-22" defer></script>
 <!-- NFL.com prospect grades (5.4-7.45 scale + tier label) — 2014-2026, 1,672 prospects -->
 <!-- Used as DISPLAY ONLY on prospect cards; not in JM model (residual signal +0.074 over DC). -->
 <script src="data/nfl_prospect_grades.js?v=2026-05-11"></script>
@@ -5359,20 +5359,20 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
      mode-switch / first dynasty render. Elite Pull college pool (Games page)
      falls back to a non-weekly pool until first openPlayerCard load. -->
 <!-- (Scripts moved into the _ensureCollegeStatsData chain — see line ~5347.) -->
-<script src="data/wr_yprr.js"></script>
-<script src="data/js_model_data.js"></script>
-<script src="data/player_comps.js"></script>
-<script src="data/wr_drop_rate.js"></script>
-<script src="data/wr_contested.js"></script>
-<script src="data/wr_yac.js"></script>
-<script src="data/wr_route_grade.js"></script>
-<script src="data/wr_adot.js"></script>
-<script src="data/wr_adv_career.js"></script>
-<script src="data/rb_yaco.js"></script>
-<script src="data/rb_missed_tackles.js"></script>
-<script src="data/rb_elusive.js"></script>
-<script src="data/rb_breakaway.js"></script>
-<script src="data/qb_adot.js"></script>
+<script src="data/wr_yprr.js?v=2026-04-05"></script>
+<script src="data/js_model_data.js?v=2026-04-07"></script>
+<script src="data/player_comps.js?v=2026-04-07" defer></script>
+<script src="data/wr_drop_rate.js?v=2026-04-06"></script>
+<script src="data/wr_contested.js?v=2026-04-06"></script>
+<script src="data/wr_yac.js?v=2026-04-06"></script>
+<script src="data/wr_route_grade.js?v=2026-04-06"></script>
+<script src="data/wr_adot.js?v=2026-04-06"></script>
+<script src="data/wr_adv_career.js?v=2026-04-23"></script>
+<script src="data/rb_yaco.js?v=2026-04-06"></script>
+<script src="data/rb_missed_tackles.js?v=2026-04-06"></script>
+<script src="data/rb_elusive.js?v=2026-04-06"></script>
+<script src="data/rb_breakaway.js?v=2026-04-16"></script>
+<script src="data/qb_adot.js?v=2026-04-06"></script>
 <script>
 // pff_grades.js is lazy-loaded on first prospect-tab activation (~121 KB).
 // All consumers are inside buildProspectData (prospect-page IIFE) and reference
@@ -5411,6 +5411,26 @@ window._ensurePffData = (function() {
       s.async = false;
       s.onload  = function() { try { _applyPffPatches(); } catch (e) { console.warn('[PFF patches]', e); } resolve(); };
       s.onerror = function() { console.warn('[PFF] load failed'); resolve(); };
+      document.head.appendChild(s);
+    });
+    return promise;
+  };
+})();
+
+// season_leaders.js (~744 KB) — SEASON_LEADERS is consumed ONLY by the admin Trivia
+// generator (window._triviaGenerate season-board path; the daily-play verifier degrades
+// gracefully when it's absent). Lazy-loaded so the ~99% of users who never open Trivia
+// don't pay for it. Fired on trivia-page open (head start) and awaited in _triviaGenerate.
+window._ensureSeasonLeaders = (function() {
+  let promise = null;
+  return function _ensureSeasonLeaders() {
+    if (promise) return promise;
+    promise = new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = 'data/season_leaders.js?v=2026-05-08';
+      s.async = false;
+      s.onload  = function() { resolve(); };
+      s.onerror = function() { console.warn('[SeasonLeaders] load failed'); resolve(); };
       document.head.appendChild(s);
     });
     return promise;
@@ -5460,11 +5480,11 @@ window._ensureCollegeStatsData = (function() {
 <!-- ALL_PLAYERS_WEEKLY: ~13 MB total, deferred. Single top-level consumer
      (the merge at ~line 14879) was refactored to be idempotent and re-call
      itself on DOMContentLoaded so the data lands after deferred scripts. -->
-<script src="data/all_players_weekly_1.js" defer></script>
-<script src="data/all_players_weekly_2.js" defer></script>
-<script src="data/all_players_weekly_3.js" defer></script>
-<script src="data/all_players_weekly_4.js" defer></script>
-<script src="data/all_players_weekly_5.js" defer></script>
+<script src="data/all_players_weekly_1.js?v=2026-04-15" defer></script>
+<script src="data/all_players_weekly_2.js?v=2026-05-08" defer></script>
+<script src="data/all_players_weekly_3.js?v=2026-04-16" defer></script>
+<script src="data/all_players_weekly_4.js?v=2026-04-16" defer></script>
+<script src="data/all_players_weekly_5.js?v=2026-04-15" defer></script>
 <script>
 // WEEKLY_STATS_RETIRED is deferred (~10 MB across 3 files). Initialize WEEKLY_STATS
 // from ACTIVE only at parse time; merge RETIRED on DOMContentLoaded once deferred
@@ -10206,7 +10226,7 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
   });
 
   const payload = {
-    source: 'myfantasyfootball.org',
+    source: 'myfantasyfootball.co',
     version: currentVersion,
     mode: currentMode,
     position: filter,
@@ -10254,7 +10274,7 @@ document.getElementById('btnExportTiers').addEventListener('click', () => {
   const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const payload = {
-    source: 'myfantasyfootball.org',
+    source: 'myfantasyfootball.co',
     version: currentVersion,
     mode: currentMode,
     position: filter,
@@ -12321,6 +12341,10 @@ function renderCompareGrid() {
         p24: median(peers.map(p => p.p24)),
         age: median(peers.map(p => p.age)),
         _pmJm: median(peers.map(p => p._pmJm)),
+        // Precompute the median of the Clay-based adjusted Proj PPG so the summary
+        // bar (which now uses adjProjPpg, matching the cards + rankings table) still
+        // has a value for the synthetic median pseudo-player (it has no Clay entry).
+        _projPpgMedian: median(peers.map(p => adjProjPpg(p))),
         _isMedian: true
       };
       _cmpComparePlayers = [lone, synth];
@@ -12329,7 +12353,7 @@ function renderCompareGrid() {
   }
   if (_cmpComparePlayers.length >= 2) {
     const stats = [
-      { key: 'projPpg', label: 'Proj PPG',   lowerBetter: false, get: d => d && d.p != null && isFinite(d.p) ? Math.round(d.p / 17 * 10) / 10 : null, fmt: v => v == null ? '—' : v.toFixed(1) },
+      { key: 'projPpg', label: 'Proj PPG',   lowerBetter: false, get: d => { if (!d) return null; if (d._isMedian) return (d._projPpgMedian != null && isFinite(d._projPpgMedian)) ? d._projPpgMedian : null; const v = adjProjPpg(d); return (v != null && isFinite(v)) ? v : null; }, fmt: v => v == null ? '—' : v.toFixed(1) },
       { key: 'p25',     label: "'25 PPG",    lowerBetter: false, get: d => d && d.p25 != null ? d.p25 : null,                                          fmt: v => v == null ? '—' : v.toFixed(1) },
       { key: 'p24',     label: "'24 PPG",    lowerBetter: false, get: d => d && d.p24 != null ? d.p24 : null,                                          fmt: v => v == null ? '—' : v.toFixed(1) },
       { key: 'adp',     label: 'ADP',        lowerBetter: true,  get: d => d && d.a != null && d.a > 0 && d.a < 999 ? d.a : null,                       fmt: v => v == null ? '—' : v.toFixed(1) },
@@ -12713,6 +12737,9 @@ function switchPage(page) {
       if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
     }
   }
+  // season_leaders.js (~744 KB) — only the admin Trivia generator reads SEASON_LEADERS.
+  // Fire the load on trivia-page open so it's ready by the time a board is generated.
+  if (page === 'trivia' && typeof window._ensureSeasonLeaders === 'function') window._ensureSeasonLeaders();
   // Render compare grid when navigating to compare page
   if (page === 'compare') renderCompareGrid();
   // Render backtest when navigating to backtest page
@@ -12724,6 +12751,7 @@ window.switchPage = switchPage;
   function _applyHash() {
     const h = (location.hash || '').replace(/^#\/?/, '').toLowerCase();
     if (h && pageMap[h]) switchPage(h);
+    else if (h) switchPage('rankings'); // unknown hash (e.g. #mock) → fall back to rankings landing + clean the URL
   }
   window.addEventListener('hashchange', _applyHash);
   // Defer to after DOMContentLoaded so the nav handlers exist.
@@ -13234,7 +13262,7 @@ document.addEventListener('click', function(e) {
       ? '✅ Got it in ' + guesses.length + '/' + MAX_GUESSES
       : '❌ Missed (' + guesses.length + '/' + MAX_GUESSES + ')';
     const streakLine = streak > 0 ? '\n🔥 ' + streak + '-day streak' + (longestStreak > streak ? ' (best ' + longestStreak + ')' : '') : '';
-    const text = 'Daily Elite Pull · ' + dateStr + '\n' + resultLine + '\n' + squares + blanks + streakLine + '\nhttps://myfantasyfootball.org';
+    const text = 'Daily Elite Pull · ' + dateStr + '\n' + resultLine + '\n' + squares + blanks + streakLine + '\nhttps://myfantasyfootball.co';
     const ok = (m) => { if (typeof toast === 'function') toast(m); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => ok('Result copied — paste it anywhere')).catch(() => { window.prompt('Copy your result:', text); });
@@ -14527,7 +14555,7 @@ document.addEventListener('click', function(e) {
     overlay.classList.add('show');
     // Build text for clipboard
     const textGrid = resultRows.map(cells => cells.map(m => gwMatchToShare(m).emoji).join('')).join('\n');
-    const copyText = title + '\n' + subtitle + '\n\n' + textGrid + '\n\nmyfantasyfootball.org';
+    const copyText = title + '\n' + subtitle + '\n\n' + textGrid + '\n\nmyfantasyfootball.co';
     document.getElementById('gwShareCopyBtn').onclick = () => {
       navigator.clipboard.writeText(copyText).then(() => {
         copiedEl.textContent = 'Copied to clipboard!';
@@ -14561,7 +14589,7 @@ document.addEventListener('click', function(e) {
     if (!target || !target.name) return null;
     const payload = JSON.stringify({ n: target.name, m: mode });
     const encoded = btoa(unescape(encodeURIComponent(payload)));
-    return 'https://myfantasyfootball.org?ep=' + encodeURIComponent(encoded);
+    return 'https://myfantasyfootball.co?ep=' + encodeURIComponent(encoded);
   }
 
   // Track comparison results for unlimited share grid
@@ -16686,7 +16714,13 @@ if (typeof LEGEND_CAREERS !== 'undefined') {
 }
 
 // === ALL_PLAYERS_DB integration: enrich D array with career stats ===
-if (typeof ALL_PLAYERS_DB !== 'undefined') {
+// all_players.js is deferred (2.5 MB) so ALL_PLAYERS_DB is undefined at parse time.
+// Wrapped in an idempotent function: it no-ops eagerly, and is re-run on
+// DOMContentLoaded (below) once the deferred script has parsed. Idempotent because
+// career picks converge, birthYear/age are ==null-guarded, and the retired-player
+// D.push rebuilds its name-set each call so it never double-adds.
+function _enrichFromAllPlayers() {
+  if (typeof ALL_PLAYERS_DB === 'undefined') return;
   // Build lookup by name
   const _apdb = {};
   ALL_PLAYERS_DB.forEach(p => { _apdb[p.name] = p; });
@@ -16810,6 +16844,13 @@ if (typeof ALL_PLAYERS_DB !== 'undefined') {
   });
   console.log('[ALL_PLAYERS_DB] Enriched career stats, added ' + _apAdded + ' new retired players');
 }
+_enrichFromAllPlayers();
+// Re-run once the deferred all_players.js has parsed, then re-apply the retired-player
+// bio/age/team pass to the players this enrichment just injected into D.
+document.addEventListener('DOMContentLoaded', function() {
+  _enrichFromAllPlayers();
+  if (typeof _applyRetiredBioTeam === 'function') _applyRetiredBioTeam();
+});
 
 // === LIVE INJURY UPDATES: Load from Firestore and merge into D array ===
 // The injury_scanner.py script pushes injury data to Firestore doc 'site_data/injury_updates'.
@@ -20281,28 +20322,35 @@ function _calcAge(entry) {
   }
   return new Date().getFullYear() - entry;
 }
-D.forEach(d => { if (d._retired && d.age == null && LEGEND_BIRTH_YEARS[d.n]) d.age = _calcAge(LEGEND_BIRTH_YEARS[d.n]); });
-// Apply bio data (height, weight, draft, college, jersey) to retired D entries
-D.forEach(d => {
-  const bio = LEGEND_BIO[d.n];
-  if (!bio) return;
-  if (bio.h && d._height == null) d._height = bio.h;
-  if (bio.w && d._weight == null) d._weight = bio.w;
-  if (bio.dr && d.dr == null) d.dr = bio.dr;
-  if (bio.c && !d._college) d._college = bio.c;
-  if (bio.j != null && d._number == null) d._number = bio.j;
-});
-// Fix team display for retired D entries: use first team from PLAYER_TEAM_HISTORY instead of "Retired" or joined teams
-D.forEach(d => {
-  if (!d._retired) return;
-  const hist = PLAYER_TEAM_HISTORY[d.n];
-  if (hist && hist.length) {
-    const ABBR_TO_FULL = {};
-    Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => { ABBR_TO_FULL[abbr] = full; });
-    const firstAbbr = hist[0].t;
-    d.t = ABBR_TO_FULL[firstAbbr] || firstAbbr;
-  }
-});
+// Retired-player bio/age/team pass. Idempotent (all writes ==null/!falsy-guarded except
+// the deterministic team reassignment). Runs eagerly here for retired players already in
+// D (d.js/HP/LEGEND sources), and is re-run on DOMContentLoaded by the _enrichFromAllPlayers
+// handler above so the retired players injected from the deferred all_players.js also get it.
+function _applyRetiredBioTeam() {
+  D.forEach(d => { if (d._retired && d.age == null && LEGEND_BIRTH_YEARS[d.n]) d.age = _calcAge(LEGEND_BIRTH_YEARS[d.n]); });
+  // Apply bio data (height, weight, draft, college, jersey) to retired D entries
+  D.forEach(d => {
+    const bio = LEGEND_BIO[d.n];
+    if (!bio) return;
+    if (bio.h && d._height == null) d._height = bio.h;
+    if (bio.w && d._weight == null) d._weight = bio.w;
+    if (bio.dr && d.dr == null) d.dr = bio.dr;
+    if (bio.c && !d._college) d._college = bio.c;
+    if (bio.j != null && d._number == null) d._number = bio.j;
+  });
+  // Fix team display for retired D entries: use first team from PLAYER_TEAM_HISTORY instead of "Retired" or joined teams
+  D.forEach(d => {
+    if (!d._retired) return;
+    const hist = PLAYER_TEAM_HISTORY[d.n];
+    if (hist && hist.length) {
+      const ABBR_TO_FULL = {};
+      Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => { ABBR_TO_FULL[abbr] = full; });
+      const firstAbbr = hist[0].t;
+      d.t = ABBR_TO_FULL[firstAbbr] || firstAbbr;
+    }
+  });
+}
+_applyRetiredBioTeam();
 
 const _PC={QB:"#e74c3c",RB:"#22c55e",WR:"#3b82f6",TE:"#a855f7",K:"#f59e0b",DST:"#6b7280"};
 const _PB={QB:"rgba(231,76,60,.12)",RB:"rgba(34,197,94,.12)",WR:"rgba(59,130,246,.12)",TE:"rgba(168,85,247,.12)",K:"rgba(245,158,11,.12)",DST:"rgba(107,114,128,.12)"};
@@ -21054,7 +21102,7 @@ window.fmtHeight = fmtHeight;
         const url = _gfxLogoUrl(player);
         const logoSize = RZ(72);
         const logo = url
-          ? '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;display:flex;align-items:center;justify-content:center;flex:0 0 ' + logoSize + 'px;background:rgba(255,255,255,.95);border-radius:50%;padding:' + RZ(6) + 'px"><img src="' + url + '" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
+          ? '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;display:flex;align-items:center;justify-content:center;flex:0 0 ' + logoSize + 'px;background:rgba(255,255,255,.95);border-radius:50%;padding:' + RZ(6) + 'px"><img src="' + url + '" alt="" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
           : '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;background:rgba(255,255,255,.15);border-radius:50%;flex:0 0 ' + logoSize + 'px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:' + RZ(20) + 'px">?</div>';
         const safeName = (player.n || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         const tc = player._isDevy ? { bg: '#1f2937', fg: '#FFFFFF' } : _gfxTeamColor(player.t);
@@ -21111,7 +21159,7 @@ window.fmtHeight = fmtHeight;
             '</div>';
           }).join('') +
         '</div>' +
-        '<div style="background:#000;padding:16px 40px 22px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:24px;color:rgba(255,255,255,.45);letter-spacing:6px;box-sizing:border-box">MYFANTASYFOOTBALL.ORG</div>';
+        '<div style="background:#000;padding:16px 40px 22px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:24px;color:rgba(255,255,255,.45);letter-spacing:6px;box-sizing:border-box">MYFANTASYFOOTBALL.CO</div>';
       return { node: wrap, count: list.length };
     }
 
@@ -21468,7 +21516,7 @@ window.fmtHeight = fmtHeight;
         const logoUrl = logoId ? ('https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png') : '';
         const logoSize = RZ(70);
         const logoHtml = logoUrl
-          ? '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;display:flex;align-items:center;justify-content:center;flex:0 0 ' + logoSize + 'px;background:rgba(255,255,255,.95);border-radius:50%;padding:' + RZ(6) + 'px"><img src="' + logoUrl + '" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
+          ? '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;display:flex;align-items:center;justify-content:center;flex:0 0 ' + logoSize + 'px;background:rgba(255,255,255,.95);border-radius:50%;padding:' + RZ(6) + 'px"><img src="' + logoUrl + '" alt="" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
           : '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;background:rgba(255,255,255,.15);border-radius:50%;flex:0 0 ' + logoSize + 'px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:' + RZ(20) + 'px">?</div>';
 
         const safeName = (p.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -21516,7 +21564,7 @@ window.fmtHeight = fmtHeight;
             '</div>'
           ).join('') +
         '</div>' +
-        '<div style="background:#000;padding:16px 40px 22px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:24px;color:rgba(255,255,255,.45);letter-spacing:6px;box-sizing:border-box">MYFANTASYFOOTBALL.ORG</div>';
+        '<div style="background:#000;padding:16px 40px 22px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:24px;color:rgba(255,255,255,.45);letter-spacing:6px;box-sizing:border-box">MYFANTASYFOOTBALL.CO</div>';
 
       return wrap;
     }
@@ -21728,7 +21776,7 @@ window.fmtHeight = fmtHeight;
         const logoUrl = logoId ? ('https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png') : '';
         const logoSize = RZ(72);
         const logoHtml = logoUrl
-          ? '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;display:flex;align-items:center;justify-content:center;flex:0 0 ' + logoSize + 'px;background:rgba(255,255,255,.95);border-radius:50%;padding:' + RZ(6) + 'px"><img src="' + logoUrl + '" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
+          ? '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;display:flex;align-items:center;justify-content:center;flex:0 0 ' + logoSize + 'px;background:rgba(255,255,255,.95);border-radius:50%;padding:' + RZ(6) + 'px"><img src="' + logoUrl + '" alt="" crossorigin="anonymous" style="max-width:100%;max-height:100%;object-fit:contain"/></div>'
           : '<div style="width:' + logoSize + 'px;height:' + logoSize + 'px;background:rgba(255,255,255,.15);border-radius:50%;flex:0 0 ' + logoSize + 'px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:' + RZ(20) + 'px">?</div>';
         const safeName = (item.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const pct = Math.round(item.exposure * 1000) / 10; // one decimal
@@ -21772,7 +21820,7 @@ window.fmtHeight = fmtHeight;
             '</div>';
           }).join('') +
         '</div>' +
-        '<div style="background:#000;padding:16px 40px 22px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:24px;color:rgba(255,255,255,.45);letter-spacing:6px;box-sizing:border-box">MYFANTASYFOOTBALL.ORG</div>';
+        '<div style="background:#000;padding:16px 40px 22px;text-align:center;font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:24px;color:rgba(255,255,255,.45);letter-spacing:6px;box-sizing:border-box">MYFANTASYFOOTBALL.CO</div>';
 
       return wrap;
     }
@@ -26837,7 +26885,7 @@ window.fmtHeight = fmtHeight;
     if (!pick.isUser && mdState.archetypes && mdState.archetypes[pick.teamIdx] && mdState.archetypes[pick.teamIdx] !== 'bpa') {
       _archTag = '<span style="font-size:.5rem;color:var(--text2);margin-left:4px;opacity:.7">['+ARCHETYPE_LABELS[mdState.archetypes[pick.teamIdx]]+']</span>';
     }
-    row.innerHTML = '<span class="md-lr-pick">'+pick.round+'.'+String(pick.pickInRound).padStart(2,'0')+'</span><span class="md-lr-team">'+(pick.isUser?'YOU':'Team '+(pick.teamIdx+1))+_archTag+'</span><span class="md-lr-pos" style="background:'+posBg+';color:'+posCol+'">'+escapeHTML(pc)+'</span><span class="md-lr-name">'+escapeHTML(pick.player.name)+jmBadge+_vBadge+'</span>';
+    row.innerHTML = '<span class="md-lr-pick">'+pick.round+'.'+String(pick.pickInRound).padStart(2,'0')+'</span><span class="md-lr-team">'+(pick.isUser?'YOU':'Team '+(pick.teamIdx+1))+'</span>'+_archTag+'<span class="md-lr-pos" style="background:'+posBg+';color:'+posCol+'">'+escapeHTML(pc)+'</span><span class="md-lr-name">'+escapeHTML(pick.player.name)+jmBadge+_vBadge+'</span>';
     log.prepend(row);
   }
 
@@ -40108,7 +40156,7 @@ window.fmtHeight = fmtHeight;
       const bgStyle = isCur ? `${clr}15` : isElim ? 'transparent' : 'transparent';
       html += `<div style="flex:1;min-width:100px;padding:8px 10px;border-radius:8px;border:${borderStyle};background:${bgStyle};${isElim ? 'opacity:.35;' : ''}text-align:center;position:relative">`;
       if (isCur) html += '<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface2);padding:0 6px;font-size:.55rem;color:' + clr + ';letter-spacing:1px;font-family:\'Bebas Neue\',sans-serif">YOUR TURN</div>';
-      if (logoUrl) html += `<img src="${logoUrl}" loading="lazy" style="width:28px;height:28px;object-fit:contain;margin-bottom:4px;${isElim ? 'filter:grayscale(1);' : ''}">`;
+      if (logoUrl) html += `<img src="${logoUrl}" alt="" loading="lazy" style="width:28px;height:28px;object-fit:contain;margin-bottom:4px;${isElim ? 'filter:grayscale(1);' : ''}">`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;color:${isElim ? 'var(--text2)' : clr};${isElim ? 'text-decoration:line-through;' : ''}">${_esc(tc.name)}</div>`;
       html += `<div style="font-size:1.4rem;font-weight:700;color:${isElim ? 'var(--text2)' : clr};font-family:'Bebas Neue',sans-serif">${_triviaGame.scores[i]} pts</div>`;
       if (isElim) {
@@ -40840,7 +40888,7 @@ window.fmtHeight = fmtHeight;
           const logoUrl = tc.logo ? _triviaLogoUrl(tc.logo) : '';
           html += `<span style="color:${tc.color};display:inline-flex;align-items:center;gap:4px;${isElim ? 'opacity:.4;text-decoration:line-through' : ''}${isWinner ? ';font-size:1.3rem' : ''}">`;
           if (isWinner) html += '👑 ';
-          if (logoUrl) html += `<img src="${logoUrl}" loading="lazy" style="width:22px;height:22px;object-fit:contain">`;
+          if (logoUrl) html += `<img src="${logoUrl}" alt="" loading="lazy" style="width:22px;height:22px;object-fit:contain">`;
           html += `${_esc(tc.name)}: ${_triviaGame.scores[i]}`;
           if (isElim) html += ' (eliminated)';
           html += '</span>';
@@ -40878,7 +40926,7 @@ window.fmtHeight = fmtHeight;
           const tc = _triviaTeamConfig[i];
           const logoUrl = tc.logo ? _triviaLogoUrl(tc.logo) : '';
           html += `<span style="color:${tc.color};display:inline-flex;align-items:center;gap:4px;${isWin ? 'font-size:1.3rem' : 'opacity:.6'}">`;
-          if (logoUrl) html += `<img src="${logoUrl}" loading="lazy" style="width:${isWin?'28':'20'}px;height:${isWin?'28':'20'}px;object-fit:contain">`;
+          if (logoUrl) html += `<img src="${logoUrl}" alt="" loading="lazy" style="width:${isWin?'28':'20'}px;height:${isWin?'28':'20'}px;object-fit:contain">`;
           html += `${_esc(tc.name)}: ${_triviaGame.scores[i]}${isWin ? ' 👑' : ''}</span>`;
         }
         html += '<span style="font-size:.75rem;color:var(--text2);width:100%;text-align:center;margin-top:4px">Click any unanswered cell to reveal</span>';
@@ -41089,7 +41137,7 @@ window.fmtHeight = fmtHeight;
         const tc = _triviaTeamConfig[i];
         const logoUrl = tc.logo ? _triviaLogoUrl(tc.logo) : '';
         html += `<span style="color:${tc.color};display:inline-flex;align-items:center;gap:4px;${isWin ? 'font-size:1.3rem' : 'opacity:.6'}">`;
-        if (logoUrl) html += `<img src="${logoUrl}" loading="lazy" style="width:${isWin?'28':'20'}px;height:${isWin?'28':'20'}px;object-fit:contain">`;
+        if (logoUrl) html += `<img src="${logoUrl}" alt="" loading="lazy" style="width:${isWin?'28':'20'}px;height:${isWin?'28':'20'}px;object-fit:contain">`;
         html += `${_esc(tc.name)}: ${_triviaGame.scores[i]}${isWin ? ' 👑' : ''}</span>`;
       }
       html += '<span style="font-size:.75rem;color:var(--text2);width:100%;text-align:center;margin-top:4px">Click any cell to reveal the answer</span>';
@@ -42672,6 +42720,8 @@ window.fmtHeight = fmtHeight;
   };
 
   window._triviaGenerate = async function() {
+    // season_leaders.js is lazy-loaded; the structured season-filter path reads SEASON_LEADERS.
+    if (typeof window._ensureSeasonLeaders === 'function') await window._ensureSeasonLeaders();
     const useCustom = document.getElementById('triviaCustomPromptToggle').checked;
     const btn = document.getElementById('triviaGenBtn');
     const area = document.getElementById('triviaBoardArea');
@@ -44047,7 +44097,7 @@ Rules:
           const yearLabel = p.week ? `Wk ${p.week}, ${p.year}` : `${p.year}`;
           const headshot = _triviaGetHeadshot(p.name);
           html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)">`;
-          if (headshot) html += `<img src="${headshot}" loading="lazy" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)" onerror="this.style.display='none'">`;
+          if (headshot) html += `<img src="${headshot}" alt="" loading="lazy" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)" onerror="this.style.display='none'">`;
           html += `<div style="flex:1;min-width:0"><div style="font-size:.82rem;color:var(--text)">${_esc(p.name)}</div><div style="font-size:.65rem;color:var(--text2)">${slotLabel} · ${p.team} · ${yearLabel}</div></div>`;
           html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--accent)">${p.fpts}</div>`;
           html += '</div>';
@@ -44087,7 +44137,7 @@ Rules:
         const yearLabel = opt.week ? `Wk ${opt.week}, ${opt.year}` : `${opt.year}`;
         const headshot = _triviaGetHeadshot(opt.name);
         html += `<div onclick="window._cfgPick(${i})" style="padding:12px;border-radius:10px;background:var(--surface2);border:2px solid var(--border);cursor:pointer;transition:all .15s;text-align:center" onmouseenter="this.style.borderColor='var(--accent)';this.style.transform='scale(1.02)'" onmouseleave="this.style.borderColor='var(--border)';this.style.transform='scale(1)'">`;
-        if (headshot) html += `<img src="${headshot}" loading="lazy" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);margin-bottom:6px" onerror="this.style.display='none'">`;
+        if (headshot) html += `<img src="${headshot}" alt="" loading="lazy" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);margin-bottom:6px" onerror="this.style.display='none'">`;
         html += `<div style="font-size:.85rem;color:var(--text);font-weight:600">${_esc(opt.name)}</div>`;
         html += `<div style="font-size:.7rem;color:var(--text2)">${opt.pos} · ${opt.team} · ${yearLabel}</div>`;
         html += `<div style="font-size:.65rem;color:var(--text2);margin-top:2px">? pts</div>`;

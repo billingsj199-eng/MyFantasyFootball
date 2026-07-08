@@ -3592,10 +3592,17 @@ ADD TO CHROME
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
 <script src="data/player_weekly_sigma.js?v=2026-04-30" defer></script>
-<script src="data/injury_history.js?v=2026-04-16"></script>
+<!-- defer: INJURY_HISTORY is read only by _jsComputeBoard (the opt-in JS Model board),
+     not the default rankings injury column (that uses NFLVERSE_INJURY_TAGS). typeof-
+     guarded with a GP-drop fallback; window._jsRebuild is re-run on DCL (see ~L9971)
+     to refine the JS Model injury multipliers once the file has parsed. -->
+<script src="data/injury_history.js?v=2026-04-16" defer></script>
 <script src="data/clay_team_grades_2026.js?v=2026-05-15"></script>
 <script src="data/nfl_schedule_2026.js?v=2026-05-15c"></script>
-<script src="data/betting_lines_2026.js?v=2026-07-07c"></script>
+<!-- defer: window.BETTING_2026 feeds the on-demand player-card LINES tab (post-DCL) and
+     a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
+     reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
+<script src="data/betting_lines_2026.js?v=2026-07-07c" defer></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
 // d.js names and Clay names sometimes differ on suffix (Jr./III), punctuation,
@@ -9969,6 +9976,14 @@ _whenFirebaseReady(function(){
 
   // Expose rebuild for external triggers (e.g. Firestore injury updates arriving async)
   window._jsRebuild = _jsRebuild;
+  // injury_history.js is deferred — the initial _jsComputeBoard() above ran with the
+  // GP-drop fallback. Once INJURY_HISTORY has parsed (by DOMContentLoaded), recompute so
+  // the JS Model board picks up the precise injury-type multipliers.
+  document.addEventListener('DOMContentLoaded', function(){
+    if (typeof INJURY_HISTORY !== 'undefined' && Object.keys(INJURY_HISTORY).length) {
+      try { _jsRebuild(); } catch(e) {}
+    }
+  });
 })();
 
 // Mode tabs: switch between redraft and dynasty

@@ -22884,7 +22884,9 @@ window.fmtHeight = fmtHeight;
 
   // Mode tabs
   function updatePickVisibility() {
-    const show = tradeMode !== 'redraft';
+    // Draft-pick trading is a dynasty-only concept. Redraft AND superflex are
+    // both redraft-style (players only) — only the two dynasty modes trade picks.
+    const show = tradeMode === 'dynasty' || tradeMode === 'dynastysf';
     document.getElementById('tradePickSectionA').style.display = show ? '' : 'none';
     document.getElementById('tradePickSectionB').style.display = show ? '' : 'none';
     if (!show) { sideA.picks = []; sideB.picks = []; }

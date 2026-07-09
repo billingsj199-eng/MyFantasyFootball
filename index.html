@@ -1400,7 +1400,7 @@ CLEAR ALL
 <div id="epuStats" class="ep-streak-display" style="margin-top:6px"></div>
 </div>
 <div class="elite-pull-img-wrap">
-<img id="epuImage" class="ep-blur" src="" alt="Mystery player" loading="lazy" style="display:none">
+<img id="epuImage" class="ep-blur" src="" alt="Mystery player" loading="eager" style="display:none">
 <div id="epuPlaceholder" class="ep-placeholder">Loading player...</div>
 </div>
 <div class="elite-pull-body">
@@ -1739,7 +1739,7 @@ CLEAR ALL
 <div class="elite-pull-subtitle">Guess today's player from their picture &middot; 1 attempt</div>
 </div>
 <div class="elite-pull-img-wrap">
-<img id="epImage" class="ep-blur" src="" alt="Mystery player" loading="lazy" style="display:none">
+<img id="epImage" class="ep-blur" src="" alt="Mystery player" loading="eager" style="display:none">
 <div id="epPlaceholder" class="ep-placeholder">Loading today's player...</div>
 </div>
 <div class="elite-pull-body">
@@ -7233,9 +7233,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     card.addEventListener('mouseleave', () => { card.style.boxShadow = baseShadow; });
   }
 
-  const ageVal = (d.age != null) ? d.age : '';
   const projVal = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
-  const ppg25Val = (typeof adj25ppg === 'function') ? adj25ppg(d) : null;
 
   // Age color coding (matches main rankings table logic)
   function _tcvAgeColor(age, pos) {
@@ -7247,9 +7245,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     if (pos === 'TE') return age >= 33 ? COLORS.red : age >= 31 ? COLORS.orange : age >= 25 ? COLORS.green : COLORS.yellow;
     return null;
   }
-  const ageColor = _tcvAgeColor(d.age, d.s);
   const projColor = (projVal != null && typeof posFptsColor === 'function') ? posFptsColor(projVal, d.s) : null;
-  const ppg25Color = (ppg25Val != null && typeof posFptsColor === 'function') ? posFptsColor(ppg25Val, d.s) : null;
 
   const headshotHtml = d._slImg
     ? '<img class="tcv-card-img" src="' + window._fixHeadshotUrl(d._slImg) + '" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'tcv-card-img-fallback\',textContent:\'?\'}))"/>'
@@ -7272,12 +7268,40 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     return color ? '<span style="color:' + color + '">' + v + '</span>' : String(v);
   };
 
+  // Per-position / per-format stat slots (top→bottom on each card):
+  //   1) ADP   2) Proj PPG   3) dynasty→Age · WR/TE→Y/RR · QB/RB/other→+/- vs ADP
+  // Team Total is intentionally not used for QB: it's a weekly-only Vegas field
+  // (undefined in season views), so the value arrow takes the third slot instead.
+  const _isDyn = (typeof currentMode !== 'undefined') && (currentMode === 'dynasty' || currentMode === 'dynastysf');
+  const _adpVal = (typeof rnkAdp === 'function') ? rnkAdp(d) : null;
+  const _statSlots = [
+    { v: _adpVal, c: null, lbl: 'ADP' },
+    { v: projVal, c: projColor, lbl: 'Proj PPG' }
+  ];
+  if (_isDyn) {
+    _statSlots.push({ v: (d.age != null ? d.age : null), c: _tcvAgeColor(d.age, d.s), lbl: 'Age' });
+  } else if (d.s === 'WR' || d.s === 'TE') {
+    const _y = (d._yrr != null) ? d._yrr : null;
+    const _yc = (_y != null) ? (_y >= 2.0 ? 'var(--green)' : _y >= 1.5 ? 'var(--accent)' : 'var(--text2)') : null;
+    _statSlots.push({ v: (_y != null ? _y.toFixed(2) : null), c: _yc, lbl: 'Y/RR' });
+  } else {
+    // QB / RB / K / DST → +/- ADP value arrow (ranked vs the market)
+    let _arrow = '<span class="tcv-stat-blank">—</span>';
+    if (_adpVal != null && d.myRank != null) {
+      const _df = _adpVal - d.myRank;
+      if (Math.abs(_df) < 0.5) _arrow = '<span style="color:var(--text2)">—</span>';
+      else if (_df > 0) _arrow = '<span style="color:var(--green)">▲' + Math.abs(_df).toFixed(0) + '</span>';
+      else _arrow = '<span style="color:var(--red)">▼' + Math.abs(_df).toFixed(0) + '</span>';
+    }
+    _statSlots.push({ html: _arrow, lbl: '+/- vs ADP' });
+  }
+  const _statsHtml = _statSlots.map(s => s.html != null ? s.html : fmtStat(s.v, s.c)).join('<br>');
+  const _statsTitle = _statSlots.map(s => s.lbl).join(' / ');
+
   card.innerHTML =
     '<div class="tcv-card-rank">' + displayRank + '.</div>' +
-    '<div class="tcv-card-stats" title="Age / Proj PPG / 2025 PPG">' +
-      fmtStat(ageVal, ageColor) + '<br>' +
-      fmtStat(projVal, projColor) + '<br>' +
-      fmtStat(ppg25Val, ppg25Color) +
+    '<div class="tcv-card-stats" title="' + _statsTitle + '">' +
+      _statsHtml +
     '</div>' +
     headshotHtml +
     logoHtml +
@@ -7349,8 +7373,8 @@ function _renderTierCardView(data, container) {
   keyCard.className = 'tcv-key-card';
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
-    '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">26</span>/<span style="color:#facc15">18.5</span>/<span style="color:#4ade80">19.4</span></span>' +
-    '<span>= AGE / PROJ PPG (' + scoreFmtLabel + ') / \'25 PPG</span>' +
+    '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span>4</span>/<span style="color:#facc15">17.3</span>/<span style="color:#22c55e">▲6</span></span>' +
+    '<span>= ADP / PROJ PPG (' + scoreFmtLabel + ') / VALUE — <b>WR/TE</b> show Y/RR, <b>dynasty</b> shows Age</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 
@@ -13896,7 +13920,10 @@ document.addEventListener('click', function(e) {
     }
     function _epuTryLoad(url) {
       if (watchdog) { clearTimeout(watchdog); watchdog = null; }
-      epuImage.src = url;
+      // Attach handlers BEFORE assigning src: a browser-cached image can fire
+      // its load event synchronously during the assignment, and now that these
+      // images actually load (loading="eager"), same-session cache hits on retry
+      // are common — setting src first would drop that load event.
       epuImage.onload = () => {
         if (myToken !== _epuLoadToken) return;
         if (watchdog) { clearTimeout(watchdog); watchdog = null; }
@@ -13915,6 +13942,10 @@ document.addEventListener('click', function(e) {
         if (currentPlayerU && currentPlayerU.id) addBadImage(currentPlayerU.id);
         _epuRetryWithNew();
       };
+      // Force a refetch even if the URL is unchanged from a prior attempt
+      // (reassigning the same src fires no event on its own).
+      if (epuImage.getAttribute('src') === url) epuImage.removeAttribute('src');
+      epuImage.src = url;
       // Safety net: if neither onload nor onerror fires within 4s, force a retry
       // so the placeholder can never get stuck on "Loading player..." indefinitely.
       // Also surface progress in the placeholder so the user knows it's retrying.

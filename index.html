@@ -74,17 +74,66 @@ window._fbFlushReady = function(){
 document.addEventListener('DOMContentLoaded', function(){ if (window._fbBootAuth) window._fbBootAuth(); if (window._fbBoot) window._fbBoot(); });
 </script>
 
-<!-- Firebase SDK (optional — page works without it if blocked by privacy settings).
-     DEFERRED so it downloads in parallel with the HTML but no longer blocks first paint.
-     Two-phase boot so auto sign-in resolves fast: auth-compat's onload fires _fbBootAuth()
-     (initializeApp + the account-pill auth listener) as soon as the small auth SDK is ready,
-     WITHOUT waiting for the heavy firestore/functions bundles. firestore-compat's onload
-     then fires _fbBoot() for firestore init + the db-dependent ready queue. functions-compat
-     is no longer on the critical path (only used for Stripe checkout). Defer preserves order,
-     and both trigger before DOMContentLoaded (which also calls both as a fallback). -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" crossorigin="anonymous" defer onerror="window._fbBlocked=true;console.warn('[Firebase] SDK blocked — running in offline mode')"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" defer onload="if(window._fbBootAuth)window._fbBootAuth()" onerror="window._fbBlocked=true"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" defer onload="if(window._fbBoot)window._fbBoot()" onerror="window._fbBlocked=true"></script>
+<!-- Firebase AUTH loader (optional — page works without it if blocked by privacy settings).
+     app-compat + auth-compat are injected from the <head> (async) so the auth token-refresh
+     round-trip overlaps the large (~2.8MB) document download+parse instead of running AFTER
+     it. The old `defer`ed tags gated auth behind the full parse — deferred scripts don't
+     execute until parsing finishes — which delayed the signed-in pill by the entire parse
+     time. Dynamically-injected async scripts don't block the parser (first paint stays fast)
+     AND execute the moment they download, so initializeApp + onAuthStateChanged fire mid-parse.
+
+     firestore-compat + functions-compat stay on the DEFERRED path below (NOT loaded here) on
+     purpose: they must not be present during parse. Dozens of consumers are guarded on
+     `firebase.firestore ?` and would otherwise start the Firestore instance mid-parse, before
+     _fbBoot can configure offline persistence (which must be the first call on the instance).
+     Deferring them keeps `firebase.firestore` undefined until after parse, exactly like before.
+     The main app reuses this same app/auth instance (_fbBootAuth/_fbBoot guard on
+     firebase.apps.length), so no double-init. A blocked CDN → _fbBlocked → offline mode. -->
+<script>
+(function(){
+  var V = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  var cfg = {
+    apiKey: "AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY",
+    authDomain: "jackb933-website.firebaseapp.com",
+    projectId: "jackb933-website",
+    storageBucket: "jackb933-website.firebasestorage.app",
+    messagingSenderId: "732824763527",
+    appId: "1:732824763527:web:2a4b344d01ee89cf668c22"
+  };
+  // undefined = auth not yet resolved, null = signed out, object = signed-in user.
+  window._earlyAuthUser = undefined;
+  function load(src){
+    return new Promise(function(res, rej){
+      var s = document.createElement('script');
+      s.src = src; s.crossOrigin = 'anonymous'; s.async = true;
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  load(V + 'firebase-app-compat.js')
+    .then(function(){ return load(V + 'firebase-auth-compat.js'); })
+    .then(function(){
+      // Init + earliest possible auth listener: kicks off the token refresh now, in
+      // parallel with the rest of the parse. Stash the user; the main app's auth listeners
+      // (registered on this same firebase.auth() instance once _fbBootAuth runs) fire
+      // immediately with the already-resolved user instead of waiting on the network.
+      try {
+        if (!(firebase.apps && firebase.apps.length)) firebase.initializeApp(cfg);
+        firebase.auth().onAuthStateChanged(function(u){
+          window._earlyAuthUser = u;
+          if (typeof window.updateAccountUI === 'function') { try { window.updateAccountUI(u); } catch(e){} }
+        });
+      } catch(e){ console.warn('[Auth] early boot failed:', e && e.message); }
+    })
+    .catch(function(){ window._fbBlocked = true; console.warn('[Firebase] Auth SDK blocked — running in offline mode'); });
+})();
+</script>
+<!-- Firestore + Functions: DEFERRED (download in parallel, execute only after the full parse
+     so `firebase.firestore` stays undefined during parse — see the auth loader note above).
+     firestore-compat depends on app-compat, which the head loader above loads early, so it is
+     present by the time these deferred scripts run. firestore-compat's onload fires _fbBoot()
+     (db init + persistence + the ready queue). functions-compat is Stripe-only, off the path. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" defer onload="if(window._fbBoot)window._fbBoot()" onerror="window._fbBlocked=true;if(window._fbBoot)window._fbBoot()"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js" crossorigin="anonymous" defer onerror="window._fbBlocked=true"></script>
 <!-- html2canvas: lazy-loaded by admin Rankings Graphic Generator (only fetched when admin uses the tool) -->
 </head>
@@ -17073,7 +17122,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // This loads it on page load so the JS model injury discount system has fresh data.
 // Also loads team/roster updates from 'site_data/roster_updates' for FA signings, trades, etc.
 (function() {
-  if (typeof firebase === 'undefined' || typeof D === 'undefined') return;
+  // firebase (app) now initializes early via the head loader, but firestore-compat stays
+  // deferred, so `firebase.firestore` is still undefined during parse — bail cleanly then,
+  // exactly as before. (NOTE: this loader has effectively no-op'd on load for a while because
+  // the SDK isn't present at parse time; see the separately-flagged fix to run it via
+  // _whenFirebaseReady if the injury/roster feed should actually apply.)
+  if (typeof firebase === 'undefined' || !firebase.firestore || typeof D === 'undefined') return;
   var _pendingUpdates = 0;
   var _completedUpdates = 0;
 
@@ -24342,6 +24396,12 @@ window.fmtHeight = fmtHeight;
 
   window._fbBoot = function() {
     if (window._fbReady) return;
+    // Defensive: bail without flushing the ready queue if firestore-compat isn't loaded yet
+    // (normally impossible — the deferred firestore tag executes before DOMContentLoaded — but
+    // protects the ready queue from being flushed with db=null if the boot order ever shifts;
+    // firestore-compat's onload calls _fbBoot() again once it's present). If the CDN is blocked,
+    // _fbBlocked is set and we fall through to flush the queue for offline mode.
+    if (isConfigured && !window._fbBlocked && (typeof firebase === 'undefined' || !firebase.firestore)) return;
     if (isConfigured && typeof firebase !== 'undefined' && !window._fbBlocked) {
       try {
         // app/auth may already be initialized by _fbBootAuth — reuse rather than

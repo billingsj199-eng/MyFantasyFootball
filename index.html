@@ -25619,34 +25619,16 @@ window.fmtHeight = fmtHeight;
   window._getActivePromo = () => _activePromo;
 
   // === REDEEM CODES — free premium grants ===
-  // Each entry: { days, expires } — "expires" is the last day the code can be redeemed (inclusive, end-of-day Eastern).
-  // The granted premium runs for `days` days OR until the hard expiration (whichever comes first).
-  const REDEEM_CODES = {
-    'DRAFT': { days: 7, expires: '2026-04-28' },
-    'CHROMEREVIEW': { days: 365, expires: '2027-06-01' }
-  };
-
+  // Code validation + the premium grant now happen SERVER-SIDE in the
+  // `redeemCode` Cloud Function (functions/index.js). The function owns the
+  // built-in code map AND premium_codes/{CODE}, enforces once-per-user, and
+  // writes gifted_premium via the admin SDK — so the client never writes those
+  // collections (their rules are admin-only) and premium can't be self-granted.
   function _showRedeemMsg(msg, ok) {
     const el = document.getElementById('premiumRedeemMsg');
     if (!el) return;
     el.textContent = msg || '';
     el.style.color = ok ? '#22c55e' : '#ef4444';
-  }
-
-  // Resolve a code definition — checks hardcoded REDEEM_CODES first, then
-  // falls back to admin-created codes in Firestore (premium_codes/{CODE}).
-  // Returns a Promise<{days, expires, source} | null>.
-  function _resolveRedeemCode(raw) {
-    const local = REDEEM_CODES[raw];
-    if (local) return Promise.resolve({ days: local.days, expires: local.expires, source: 'builtin' });
-    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-    if (!db) return Promise.resolve(null);
-    return db.collection('premium_codes').doc(raw).get().then(doc => {
-      if (!doc.exists) return null;
-      const d = doc.data() || {};
-      if (d.disabled) return { disabled: true };
-      return { days: d.days, expires: d.expires, source: 'firestore' };
-    }).catch(() => null);
   }
 
   function applyRedeemCode() {
@@ -25655,90 +25637,46 @@ window.fmtHeight = fmtHeight;
     const raw = (input.value || '').trim().toUpperCase();
     if (!raw) { _showRedeemMsg('Enter a code.', false); return; }
 
-    _resolveRedeemCode(raw).then(def => {
-      if (!def) { _showRedeemMsg('Invalid code.', false); return; }
-      if (def.disabled) { _showRedeemMsg('This code has been disabled.', false); return; }
-      if (!def.days || !def.expires) { _showRedeemMsg('Invalid code.', false); return; }
+    const u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!u || !u.email) { _showRedeemMsg('Please sign in to redeem a code.', false); return; }
+    if (typeof firebase === 'undefined' || !firebase.functions) {
+      _showRedeemMsg('Service unavailable — please refresh and try again.', false);
+      return;
+    }
 
-      // Code expiration: end of `expires` day (23:59:59.999)
-      const [ey, em, ed] = def.expires.split('-').map(Number);
-      const codeExpiresAt = new Date(ey, em - 1, ed, 23, 59, 59, 999).getTime();
-      if (Date.now() > codeExpiresAt) {
-        _showRedeemMsg('This code has expired.', false);
-        return;
-      }
+    _showRedeemMsg('Redeeming…', true);
 
-      const u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
-      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-      if (!u || !u.email) {
-        _showRedeemMsg('Please sign in to redeem a code.', false);
-        return;
-      }
+    // Validate + grant server-side. The redeemCode function checks the code,
+    // enforces once-per-user, and writes gifted_premium via the admin SDK.
+    const fns = firebase.app().functions('us-central1');
+    const redeem = fns.httpsCallable('redeemCode');
+    redeem({ code: raw }).then(res => {
+      const data = (res && res.data) || {};
+      if (!data.ok || !data.expires) { _showRedeemMsg('Invalid code.', false); return; }
 
-      // Once-per-user check: query redeem_uses for this uid+code
-      const checkUsed = db
-        ? db.collection('redeem_uses').where('uid', '==', u.uid).where('code', '==', raw).limit(1).get()
-            .then(snap => !snap.empty).catch(() => false)
-        : Promise.resolve(false);
+      // Mirror the server grant to localStorage so premium is live immediately
+      // on this device (checkPremiumStatus also re-syncs from gifted_premium).
+      const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+      const existingExpires = (existing && existing.expires) ? existing.expires : 0;
+      const finalExpires = Math.max(existingExpires, data.expires);
+      localStorage.setItem('jb_premium', JSON.stringify({
+        plan: 'Free Trial (' + raw + ')',
+        price: '$0.00 (code)',
+        activated: Date.now(),
+        expires: finalExpires,
+        redeemCode: raw,
+        uid: u.uid
+      }));
 
-      checkUsed.then(alreadyUsed => {
-        if (alreadyUsed) { _showRedeemMsg('You have already redeemed this code.', false); return; }
-
-        // Grant the full `days` duration (capped at the code's own expiration date)
-        const grantEnd = Math.min(Date.now() + def.days * 24 * 60 * 60 * 1000, codeExpiresAt);
-
-        // Don't shorten a longer existing subscription
-        const existing = JSON.parse(localStorage.getItem('jb_premium') || 'null');
-        const existingExpires = (existing && existing.expires) ? existing.expires : 0;
-        const finalExpires = Math.max(existingExpires, grantEnd);
-
-        const record = {
-          plan: 'Free Trial (' + raw + ')',
-          price: '$0.00 (code)',
-          activated: Date.now(),
-          expires: finalExpires,
-          redeemCode: raw,
-          uid: u.uid
-        };
-        localStorage.setItem('jb_premium', JSON.stringify(record));
-
-        // Persist to Firestore so premium follows the user across devices
-        const docId = u.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        const giftedWrite = db ? db.collection('gifted_premium').doc(docId).set({
-          email: u.email.toLowerCase(),
-          expires: finalExpires,
-          days: def.days,
-          label: 'Code: ' + raw,
-          grantedBy: 'redeem:' + raw,
-          grantedAt: new Date().toISOString()
-        }, { merge: true }).catch(e => console.warn('[Redeem] gifted_premium write failed:', e))
-          : Promise.resolve();
-
-        // Log redeem usage (also used for once-per-user enforcement)
-        const usesLog = db ? db.collection('redeem_uses').add({
-          uid: u.uid,
-          email: (u.email || ''),
-          code: raw,
-          days: def.days,
-          source: def.source || 'builtin',
-          grantedUntil: new Date(finalExpires).toISOString(),
-          at: new Date().toISOString()
-        }).catch(e => console.warn('[Redeem] log error:', e))
-          : Promise.resolve();
-
-        // Increment uses counter on the Firestore code (best-effort)
-        const incUses = (db && def.source === 'firestore') ? db.collection('premium_codes').doc(raw).update({
-          uses: firebase.firestore.FieldValue.increment(1)
-        }).catch(() => {}) : Promise.resolve();
-
-        Promise.all([giftedWrite, usesLog, incUses]).then(() => {
-          const daysLeft = Math.ceil((finalExpires - Date.now()) / (24 * 60 * 60 * 1000));
-          _showRedeemMsg('Premium activated! ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' of free access.', true);
-          checkPremiumStatus();
-          if (typeof toast === 'function') toast('Premium activated via code ' + raw + '!');
-          if (typeof render === 'function') render();
-        });
-      });
+      const daysLeft = Math.ceil((finalExpires - Date.now()) / (24 * 60 * 60 * 1000));
+      _showRedeemMsg('Premium activated! ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' of free access.', true);
+      if (typeof checkPremiumStatus === 'function') checkPremiumStatus();
+      if (typeof toast === 'function') toast('Premium activated via code ' + raw + '!');
+      if (typeof render === 'function') render();
+    }).catch(err => {
+      // The function throws HttpsError with a user-facing message
+      // (invalid / disabled / expired / already redeemed).
+      _showRedeemMsg((err && err.message) ? err.message : 'Could not redeem code.', false);
     });
   }
 

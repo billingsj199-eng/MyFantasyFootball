@@ -14050,7 +14050,12 @@ document.addEventListener('click', function(e) {
       typeof HP !== 'undefined' ? HP.length : 0,
       typeof LDB !== 'undefined' ? LDB.length : 0,
       typeof LEGEND_CAREERS !== 'undefined' ? Object.keys(LEGEND_CAREERS).length : 0,
-      typeof WEEKLY_STATS !== 'undefined' ? Object.keys(WEEKLY_STATS).length : 0
+      typeof WEEKLY_STATS !== 'undefined' ? Object.keys(WEEKLY_STATS).length : 0,
+      // COLLEGE_STATS/COLLEGE_WEEKLY are lazy-loaded (see _ensureCollegeStatsData).
+      // Include them in the signature so the college pool rebuilds once that data
+      // arrives — otherwise gwPoolCollege stays null and college mode crashes.
+      typeof COLLEGE_STATS !== 'undefined' ? Object.keys(COLLEGE_STATS).length : 0,
+      typeof COLLEGE_WEEKLY !== 'undefined' ? Object.keys(COLLEGE_WEEKLY).length : 0
     ].join('|');
     if (gwPoolCurrent && gwPoolCurrent.length > 0 && _gwPoolBuildSig === sig) return;
     _gwPoolBuildSig = sig;
@@ -14491,9 +14496,11 @@ document.addEventListener('click', function(e) {
 
   function gwPickTarget() {
     initGwPool();
-    if (!getGwPool().length) return;
-    // Prefer players with weekly data so the WK column is useful
+    // getGwPool() can be null while a lazy-loaded pool (e.g. college) is still
+    // fetching — guard so we don't read .length off null.
     const pool = getGwPool();
+    if (!pool || !pool.length) { gwTarget = null; return; }
+    // Prefer players with weekly data so the WK column is useful
     const withWeekly = pool.filter(p => p._hasWeekly);
     const pickFrom = withWeekly.length > 20 ? withWeekly : pool;
     gwTarget = pickFrom[Math.floor(Math.random() * pickFrom.length)];
@@ -14801,7 +14808,36 @@ document.addEventListener('click', function(e) {
     }
   }
 
+  // College mode reads COLLEGE_STATS / COLLEGE_WEEKLY, which are lazy-loaded
+  // (see window._ensureCollegeStatsData). The Games page never triggers that load
+  // on its own, so without this the college pool is null and the round crashes.
+  function _gwEnsureCollege(cb) {
+    if (typeof COLLEGE_STATS !== 'undefined') { cb(); return; }
+    if (typeof window._ensureCollegeStatsData !== 'function') { cb(); return; }
+    window._ensureCollegeStatsData().then(function() {
+      _gwPoolBuildSig = ''; // force initGwPool to rebuild now that college data exists
+      initGwPool();
+      cb();
+    });
+  }
+  function _gwShowLoadingCollege() {
+    gwInput.disabled = true;
+    gwGuessBtn.disabled = true;
+    gwGuessRows.innerHTML = '<div style="text-align:center;color:var(--text2);padding:1.5rem;font-size:.85rem">Loading college players…</div>';
+    gwResult.style.display = 'none';
+    gwNextBtn.style.display = 'none';
+    gwGiveUpBtn.style.display = 'none';
+  }
+
   function gwStartRound() {
+    // Defer the college round until its lazy-loaded data has arrived. Gate on
+    // COLLEGE_STATS being defined (not on pool size) so a genuinely empty pool
+    // can't spin here forever.
+    if (gwMode === 'college' && typeof COLLEGE_STATS === 'undefined') {
+      _gwShowLoadingCollege();
+      _gwEnsureCollege(function() { if (gwMode === 'college') gwStartRound(); });
+      return;
+    }
     gwGuesses = [];
     gwResultRows = [];
     gwGameOver = false;
@@ -14820,9 +14856,11 @@ document.addEventListener('click', function(e) {
   // Autocomplete suggestions
   gwInput.addEventListener('input', () => {
     initGwPool();
+    const pool = getGwPool();
     const val = gwInput.value.trim().toLowerCase();
-    if (val.length < 2) { gwSuggestions.classList.remove('show'); return; }
-    const matches = getGwPool().filter(p =>
+    // Pool can be null while lazy-loaded data (college) is still fetching.
+    if (!pool || val.length < 2) { gwSuggestions.classList.remove('show'); return; }
+    const matches = pool.filter(p =>
       p.name.toLowerCase().includes(val) && !gwGuesses.some(g => g.toLowerCase() === p.name.toLowerCase())
     ).slice(0, 8);
     if (!matches.length) { gwSuggestions.classList.remove('show'); return; }
@@ -16424,6 +16462,13 @@ document.addEventListener('click', function(e) {
 
   function startDraft() {
     if (gameOver) return;
+    // Cancel any in-flight spinner loop before starting a new one. Without this a
+    // re-entrant call (double-click on Start Draft, or starting a round while a
+    // prior spin is still decelerating) leaves an orphaned requestAnimationFrame
+    // loop running. The STOP button's handler is reassigned to the newest loop, so
+    // the old one never receives the stop signal — it keeps cycling logos forever
+    // and the spinner "never settles".
+    if (spinnerInterval) { cancelAnimationFrame(spinnerInterval); spinnerInterval = null; }
     const openSlots = getOpenSlots();
     if (!openSlots.length) { endGame(); return; }
 
@@ -16478,7 +16523,7 @@ document.addEventListener('click', function(e) {
         const progress = Math.min(slowdownFrames / 40, 1);
         const easedSpeed = speed * (1 - progress * progress);
         if (easedSpeed < 0.3) {
-          clearInterval(spinnerInterval);
+          cancelAnimationFrame(spinnerInterval);
           spinnerInterval = null;
           revealTeam(spinnerTargetTeam);
           return;

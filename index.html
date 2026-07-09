@@ -34,6 +34,10 @@
 <link rel="preconnect" href="https://a.espncdn.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<!-- Firebase Auth endpoints — the returning-session token refresh hits these before
+     onAuthStateChanged resolves. Preconnecting shaves the DNS+TLS handshake off auto sign-in. -->
+<link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
 <link rel="preload" href="styles/main.css?v=2026-05-20a" as="style">
@@ -67,18 +71,21 @@ window._fbFlushReady = function(){
 // Fallback: if the firebase onload never fires (e.g. CDN blocked → onerror instead),
 // still boot on DOMContentLoaded so queued callbacks flush and the app enters offline
 // mode gracefully. _fbBoot is idempotent (early-returns once _fbReady is set).
-document.addEventListener('DOMContentLoaded', function(){ if (window._fbBoot) window._fbBoot(); });
+document.addEventListener('DOMContentLoaded', function(){ if (window._fbBootAuth) window._fbBootAuth(); if (window._fbBoot) window._fbBoot(); });
 </script>
 
 <!-- Firebase SDK (optional — page works without it if blocked by privacy settings).
      DEFERRED so it downloads in parallel with the HTML but no longer blocks first paint.
-     initializeApp + all auth listeners run from window._fbBoot(), fired by the onload on
-     the last script (functions-compat) — which executes after all four have parsed, and
-     before DOMContentLoaded. Order among the four is preserved (defer executes in order). -->
+     Two-phase boot so auto sign-in resolves fast: auth-compat's onload fires _fbBootAuth()
+     (initializeApp + the account-pill auth listener) as soon as the small auth SDK is ready,
+     WITHOUT waiting for the heavy firestore/functions bundles. firestore-compat's onload
+     then fires _fbBoot() for firestore init + the db-dependent ready queue. functions-compat
+     is no longer on the critical path (only used for Stripe checkout). Defer preserves order,
+     and both trigger before DOMContentLoaded (which also calls both as a fallback). -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" crossorigin="anonymous" defer onerror="window._fbBlocked=true;console.warn('[Firebase] SDK blocked — running in offline mode')"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" defer onerror="window._fbBlocked=true"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" defer onerror="window._fbBlocked=true"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js" crossorigin="anonymous" defer onload="if(window._fbBoot)window._fbBoot()" onerror="window._fbBlocked=true"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" crossorigin="anonymous" defer onload="if(window._fbBootAuth)window._fbBootAuth()" onerror="window._fbBlocked=true"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" defer onload="if(window._fbBoot)window._fbBoot()" onerror="window._fbBlocked=true"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js" crossorigin="anonymous" defer onerror="window._fbBlocked=true"></script>
 <!-- html2canvas: lazy-loaded by admin Rankings Graphic Generator (only fetched when admin uses the tool) -->
 </head>
 <body>
@@ -24230,17 +24237,41 @@ window.fmtHeight = fmtHeight;
   window.isAdmin = isAdmin;
 
   // Firebase SDK is deferred (see the <script> tags in <head>), so it is NOT loaded at
-  // parse time. Initialization runs from window._fbBoot(), fired by the firebase onload
-  // (+ a DOMContentLoaded fallback) once the SDK has parsed. Idempotent + guarded: a
-  // blocked CDN (window._fbBlocked) degrades to offline mode instead of throwing. After
-  // init, _fbFlushReady() runs every queued _whenFirebaseReady callback (the auth
-  // listeners scattered across the app) now that app/auth/db are populated.
+  // parse time. Boot is two-phase: _fbBootAuth() (auth-compat onload) then _fbBoot()
+  // (firestore-compat onload), with a DOMContentLoaded fallback for both. Idempotent +
+  // guarded: a blocked CDN (window._fbBlocked) degrades to offline mode instead of
+  // throwing. After firestore init, _fbFlushReady() runs every queued _whenFirebaseReady
+  // callback (the auth listeners scattered across the app) now that app/auth/db are populated.
+  //
+  // Auth-only boot. Fires on the (small) auth-compat onload so the signed-in account
+  // pill resolves WITHOUT waiting for the much larger firestore + functions bundles to
+  // download and parse. Only touches firebase.auth(); firestore init + the db-dependent
+  // ready queue still run from _fbBoot() below (fired on the firestore onload). Idempotent
+  // and guarded — a blocked CDN or missing SDK degrades to a no-op.
+  window._fbBootAuth = function() {
+    if (window._fbAuthBooted || window._fbBlocked) return;
+    if (!(isConfigured && typeof firebase !== 'undefined' && firebase.auth)) return;
+    window._fbAuthBooted = true;
+    try {
+      app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      // Dedicated UI listener — updates the account pill the moment the persisted
+      // session resolves. The definitive listener (loadFromCloud etc.) still runs
+      // from the _whenFirebaseReady queue once firestore is up. updateAccountUI is
+      // idempotent, so running it from both is harmless.
+      auth.onAuthStateChanged(function(user){ try { updateAccountUI(user); } catch(_e){} });
+      console.log('[Auth] Auth booted early (pre-firestore)');
+    } catch(e) { console.warn('[Auth] early auth boot failed:', e && e.message); }
+  };
+
   window._fbBoot = function() {
     if (window._fbReady) return;
     if (isConfigured && typeof firebase !== 'undefined' && !window._fbBlocked) {
       try {
-        app = firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
+        // app/auth may already be initialized by _fbBootAuth — reuse rather than
+        // re-init (firebase.initializeApp throws if the default app already exists).
+        app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(firebaseConfig);
+        auth = auth || firebase.auth();
         db = firebase.firestore();
         // Enable offline persistence so writes resolve from cache immediately.
         // Prefer the new settings({ localCache: persistentLocalCache() }) API

@@ -3634,13 +3634,10 @@ ADD TO CHROME
 <script src="data/active_team_history.js?v=2026-05-13c"></script>
 <script src="data/daily_retired_pool.js?v=2026-04-21"></script>
 <script src="data/weekly_stats_active.js?v=2026-05-14c-opp" defer></script>
-<!-- WEEKLY_STATS_RETIRED: ~10 MB total, deferred. Initialized as window.WEEKLY_STATS_RETIRED
-     by file _1 and extended by _2 and _3 via Object.assign — defer preserves
-     document order so the chain remains correct. Merged into WEEKLY_STATS via
-     _mergeWeeklyStatsRetired() on DOMContentLoaded (defined ~line 4986). -->
-<script src="data/weekly_stats_retired_1.js?v=2026-04-20" defer></script>
-<script src="data/weekly_stats_retired_2.js?v=2026-04-20" defer></script>
-<script src="data/weekly_stats_retired_3.js?v=2026-04-20" defer></script>
+<!-- WEEKLY_STATS_RETIRED (~10 MB): now LAZY-loaded (not deferred) via window._loadWeeklyData()
+     — see the loader block below (~line 5615). It feeds only retired-player weekly game logs
+     + Elite Pull era pools, so it no longer blocks the initial load. Merged into WEEKLY_STATS
+     by _mergeWeeklyStatsRetired() on the 'mff:weeklydata' event the loader dispatches. -->
 <script src="data/all_players.js?v=2026-04-23" defer></script>
 <script src="data/combine_data.js?v=2026-04-25b"></script>
 <script src="data/historical_draft_picks.js?v=2026-04-20" defer></script>
@@ -5604,14 +5601,9 @@ window._ensureProspectStats = (function() {
   };
 })();
 </script>
-<!-- ALL_PLAYERS_WEEKLY: ~13 MB total, deferred. Single top-level consumer
-     (the merge at ~line 14879) was refactored to be idempotent and re-call
-     itself on DOMContentLoaded so the data lands after deferred scripts. -->
-<script src="data/all_players_weekly_1.js?v=2026-04-15" defer></script>
-<script src="data/all_players_weekly_2.js?v=2026-05-08" defer></script>
-<script src="data/all_players_weekly_3.js?v=2026-04-16" defer></script>
-<script src="data/all_players_weekly_4.js?v=2026-04-16" defer></script>
-<script src="data/all_players_weekly_5.js?v=2026-04-15" defer></script>
+<!-- ALL_PLAYERS_WEEKLY (~12.5 MB): now LAZY-loaded (not deferred) via window._loadWeeklyData()
+     — see the loader block below. Its only consumer is _mergeAllPlayersWeekly (idempotent),
+     which now runs on the 'mff:weeklydata' event the loader dispatches instead of on DCL. -->
 <script>
 // WEEKLY_STATS_ACTIVE (~2.4 MB) and WEEKLY_STATS_RETIRED (~10 MB) are BOTH deferred
 // now, so WEEKLY_STATS starts empty at parse and is populated on DOMContentLoaded once
@@ -5649,6 +5641,53 @@ function _mergeWeeklyStatsRetired() {
 }
 _mergeWeeklyStatsRetired();
 document.addEventListener('DOMContentLoaded', _mergeWeeklyStatsRetired);
+// Also merge once the lazy weekly bundles arrive (see _loadWeeklyData below). Idempotent.
+document.addEventListener('mff:weeklydata', _mergeWeeklyStatsRetired);
+
+// === Lazy-load heavy retired weekly-stats bundles (~22.5 MB) ===
+// weekly_stats_retired_1-3 (~10 MB) + all_players_weekly_1-5 (~12.5 MB) used to load via
+// `defer`, which executes them AND the WEEKLY_STATS merges before DOMContentLoaded — ~400-730 ms
+// of main-thread blocking AFTER the page has already painted. They ONLY feed retired-player
+// weekly game logs (deep in a player card) + Elite Pull era pools, so nothing on the initial
+// rankings view needs them. We now lazy-load: kicked off at idle after `load`, and forced
+// on-demand when a surface that reads them opens (Games/Compare — see switchPage). async=false
+// preserves execution order so the _1/_2/_3.. window.*=… + Object.assign chains stay correct.
+// On completion we dispatch 'mff:weeklydata'; _mergeWeeklyStatsRetired + _mergeAllPlayersWeekly
+// listen for it (next to their DCL hooks) → populate WEEKLY_STATS + rebuild the Elite Pull pools.
+window._loadWeeklyData = function() {
+  if (window._weeklyDataPromise) return window._weeklyDataPromise;
+  var files = [
+    'data/weekly_stats_retired_1.js?v=2026-04-20',
+    'data/weekly_stats_retired_2.js?v=2026-04-20',
+    'data/weekly_stats_retired_3.js?v=2026-04-20',
+    'data/all_players_weekly_1.js?v=2026-04-15',
+    'data/all_players_weekly_2.js?v=2026-05-08',
+    'data/all_players_weekly_3.js?v=2026-04-16',
+    'data/all_players_weekly_4.js?v=2026-04-16',
+    'data/all_players_weekly_5.js?v=2026-04-15'
+  ];
+  function inject(src) {
+    return new Promise(function(res) {
+      var s = document.createElement('script');
+      s.src = src; s.async = false; // preserve execution order (the _2/_3.. files extend _1)
+      s.onload = res;
+      s.onerror = function() { console.warn('[WeeklyData] load failed:', src); res(); };
+      document.head.appendChild(s);
+    });
+  }
+  window._weeklyDataPromise = Promise.all(files.map(inject)).then(function() {
+    try { document.dispatchEvent(new Event('mff:weeklydata')); }
+    catch (e) { console.warn('[WeeklyData] merge dispatch failed:', e); }
+  });
+  return window._weeklyDataPromise;
+};
+// Idle preload: start soon after first paint so the common path (browse rankings → open a
+// legend's card) has data ready, without blocking the initial load.
+window.addEventListener('load', function() {
+  var kick = function() { try { window._loadWeeklyData(); } catch (e) {} };
+  if (window.requestIdleCallback) requestIdleCallback(kick, { timeout: 3000 });
+  else setTimeout(kick, 1200);
+});
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
 <script>
@@ -11516,6 +11555,9 @@ function openPlayerCard(d, ctxMode) {
   if (typeof window._ensurePffData === 'function') window._ensurePffData();
   if (typeof window._ensureProspectStats === 'function') window._ensureProspectStats();
   if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
+  // Retired players' weekly game logs come from the lazy weekly bundles (window._loadWeeklyData).
+  // Fire the load when a legend's card opens so it fills in (the idle preload usually beats this).
+  if (d && d._retired && typeof window._loadWeeklyData === 'function') window._loadWeeklyData();
   // ctxMode lets callers (Trade Calc, My Teams, etc.) display the player in the
   // context of a different mode than the rankings page's currentMode. Falls back
   // to currentMode when not provided so the rankings-page click path is unchanged.
@@ -12932,6 +12974,10 @@ function switchPage(page) {
   // season_leaders.js (~744 KB) — only the admin Trivia generator reads SEASON_LEADERS.
   // Fire the load on trivia-page open so it's ready by the time a board is generated.
   if (page === 'trivia' && typeof window._ensureSeasonLeaders === 'function') window._ensureSeasonLeaders();
+  // Retired weekly game-log bundles (~22.5 MB, lazy) — Games (Elite Pull era pools) and
+  // Compare (legend weekly rows) read them. Force the load on open so they're ready; the
+  // idle preload after `load` usually beats this, but this covers a fast navigator.
+  if ((page === 'games' || page === 'compare') && typeof window._loadWeeklyData === 'function') window._loadWeeklyData();
   // Render compare grid when navigating to compare page
   if (page === 'compare') renderCompareGrid();
   // Render backtest when navigating to backtest page
@@ -17072,6 +17118,8 @@ function _enrichFromAllPlayers() {
   }
   _mergeAllPlayersWeekly();
   document.addEventListener('DOMContentLoaded', _mergeAllPlayersWeekly);
+  // ALL_PLAYERS_WEEKLY is now lazy-loaded (window._loadWeeklyData) — re-merge when it arrives.
+  document.addEventListener('mff:weeklydata', _mergeAllPlayersWeekly);
 
   // 4) Add players from ALL_PLAYERS_DB that aren't in D yet
   const _dNames = new Set(D.map(d => d.n));

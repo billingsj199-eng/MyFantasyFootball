@@ -84,6 +84,30 @@ service cloud.firestore {
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
       allow update, delete: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
     }
+    // premium_codes/{CODE}: admin-created redeem codes. Admin has full CRUD
+    // (create / list / toggle disabled / delete). Any signed-in user may read a
+    // SINGLE code doc (to redeem it) and bump its `uses` counter by exactly 1 on
+    // redeem — but only the `uses` field, so codes can't otherwise be tampered
+    // with. `list` is admin-only so users can't enumerate every code.
+    match /premium_codes/{code} {
+      allow get: if request.auth != null;
+      allow list: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow create, delete: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow update: if request.auth != null && (
+        request.auth.token.email == 'billingsj199@gmail.com'
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uses'])
+            && request.resource.data.uses == resource.data.uses + 1)
+      );
+    }
+    // redeem_uses/{id}: per-redeem log, also the once-per-user enforcement source.
+    // A signed-in user creates their own entries (uid must match) and can read
+    // back only their own (the client queries where uid == their uid); admin can
+    // read all and clean up.
+    match /redeem_uses/{id} {
+      allow read: if request.auth != null && (resource.data.uid == request.auth.uid || request.auth.token.email == 'billingsj199@gmail.com');
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
     // creator_attributions/{uid}: tracks which creator referred the signup.
     // Written once by the user at signup, then locked. Admin can read/edit/delete.
     match /creator_attributions/{userId} {

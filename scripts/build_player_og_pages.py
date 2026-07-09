@@ -1,0 +1,240 @@
+"""
+Generate static player profile pages with Open Graph + Twitter Card meta tags.
+
+Each output file at p/<slug>.html contains:
+  - OG/Twitter meta tags (image=ESPN headshot, title=name + position rank, description=projection)
+  - A meta refresh + JS redirect to /?player=<slug>
+
+Crawlers (Twitter, Facebook, Discord, Slack, etc.) don't execute JS, so they read
+the meta tags and produce a rich preview. Real users hit the redirect and end up
+on the main app, which loads the player card via the existing ?player=slug detector.
+
+Run from the project root:
+    python scripts/build_player_og_pages.py
+
+Regenerate whenever d.js or the ESPN ID map updates. Commit the resulting `p/`
+directory to your GitHub Pages repo so the static files are served at
+https://www.myfantasyfootball.co/p/<slug>.html
+"""
+
+import json
+import os
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+D_JS = ROOT / "data" / "d.js"
+ESPN_IDS_JS = ROOT / "data" / "fallback_espn_ids.js"
+RETIRED_IDS_JS = ROOT / "data" / "retired_espn_ids.js"
+OUT_DIR = ROOT / "p"
+
+SITE_URL = "https://www.myfantasyfootball.co"
+
+
+def _strip_js_const(text: str, var_name: str) -> str:
+    """Strip `const VAR = ` / `var VAR = ` prefix to leave a JSON literal at the start."""
+    text = text.strip()
+    for prefix in (f"const {var_name} = ", f"var {var_name} = "):
+        if text.startswith(prefix):
+            text = text[len(prefix):]
+            break
+    return text
+
+
+def _decode_first(text: str):
+    """Decode the first JSON value from text, ignoring whatever comes after."""
+    decoder = json.JSONDecoder()
+    return decoder.raw_decode(text)[0]
+
+
+def load_players():
+    text = D_JS.read_text(encoding="utf-8")
+    return _decode_first(_strip_js_const(text, "D"))
+
+
+_ID_PAIR_RE = re.compile(r"""(['"])([^'"]+)\1\s*:\s*(['"])(\d+)\3""")
+
+
+def load_espn_ids():
+    """Returns dict: name → espnId (from both fallback + retired maps).
+
+    Uses regex extraction instead of JSON parsing so single-quoted JS
+    object literals (like retired_espn_ids.js) work too.
+    """
+    out = {}
+    for path in [ESPN_IDS_JS, RETIRED_IDS_JS]:
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for m in _ID_PAIR_RE.finditer(text):
+            name = m.group(2)
+            espn_id = m.group(4)
+            if name and espn_id:
+                out[name] = espn_id
+    return out
+
+
+def slugify(name: str) -> str:
+    s = name.lower()
+    s = re.sub(r"[^a-z0-9\s-]", "", s)
+    s = re.sub(r"\s+", "-", s.strip())
+    return s
+
+
+def html_escape(s: str) -> str:
+    return (
+        s.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&#39;")
+    )
+
+
+HEAD_TPL = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title}</title>
+<meta name="description" content="{description}">
+<meta property="og:type" content="profile">
+<meta property="og:url" content="{canonical}">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{description}">
+<meta property="og:site_name" content="MyFantasyFootball">
+{og_image}
+<meta name="twitter:card" content="{twitter_card}">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{description}">
+{twitter_image}
+<link rel="canonical" href="{canonical}">
+<meta http-equiv="refresh" content="0; url={redirect}">
+<script>window.location.replace({redirect_js});</script>
+<style>body{{font-family:system-ui,sans-serif;background:#0a0e17;color:#e2e8f0;margin:0;padding:2rem;text-align:center}}a{{color:#f59e0b}}</style>
+</head>
+<body>
+<p>Redirecting to <a href="{redirect}">{name}'s player profile</a>...</p>
+</body>
+</html>
+"""
+
+
+def build_page(player: dict, espn_ids: dict) -> str | None:
+    name = player.get("n")
+    if not name:
+        return None
+    slug = slugify(name)
+    if not slug:
+        return None
+    pos = player.get("s") or ""
+    pos_rank = player.get("r") or ""
+    team = player.get("t") or ""
+    age = player.get("age")
+    proj = player.get("p")
+    s25 = player.get("s25") or {}
+    ppg25 = s25.get("ppg")
+
+    # Title
+    title_parts = [name]
+    if pos_rank:
+        title_parts.append(f"({pos_rank})")
+    title_parts.append("· MyFantasyFootball")
+    title = " ".join(title_parts)
+
+    # Description
+    desc_parts = []
+    if pos and team:
+        desc_parts.append(f"{pos} · {team}")
+    if age:
+        desc_parts.append(f"Age {age}")
+    if proj:
+        desc_parts.append(f"{proj} projected pts")
+    if ppg25:
+        desc_parts.append(f"{ppg25} PPG in 2025")
+    description = " · ".join(desc_parts) or f"{name}'s fantasy football profile."
+
+    # OG image — ESPN headshot
+    espn_id = espn_ids.get(name)
+    if espn_id:
+        img_url = f"https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/{espn_id}.png&w=350&h=254"
+        og_image = f'<meta property="og:image" content="{html_escape(img_url)}">\n<meta property="og:image:width" content="350">\n<meta property="og:image:height" content="254">'
+        twitter_image = f'<meta name="twitter:image" content="{html_escape(img_url)}">'
+        twitter_card = "summary_large_image"
+    else:
+        og_image = ""
+        twitter_image = ""
+        twitter_card = "summary"
+
+    canonical = f"{SITE_URL}/p/{slug}.html"
+    redirect = f"/?player={slug}"
+    return HEAD_TPL.format(
+        title=html_escape(title),
+        description=html_escape(description),
+        canonical=html_escape(canonical),
+        og_image=og_image,
+        twitter_card=twitter_card,
+        twitter_image=twitter_image,
+        redirect=html_escape(redirect),
+        redirect_js=json.dumps(redirect),
+        name=html_escape(name),
+    )
+
+
+SITEMAP_TPL = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>{site}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+{urls}
+</urlset>
+"""
+
+SITEMAP_URL_TPL = '<url><loc>{loc}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>'
+
+
+def write_sitemap(slugs: list[str]):
+    sitemap_path = ROOT / "sitemap.xml"
+    urls = "\n".join(
+        SITEMAP_URL_TPL.format(loc=f"{SITE_URL}/p/{s}.html") for s in sorted(slugs)
+    )
+    sitemap_path.write_text(SITEMAP_TPL.format(site=SITE_URL, urls=urls), encoding="utf-8")
+    print(f"Wrote sitemap.xml with {len(slugs) + 1} URLs")
+
+
+def main():
+    print("Loading data...")
+    players = load_players()
+    espn_ids = load_espn_ids()
+    print(f"  {len(players)} players, {len(espn_ids)} ESPN IDs")
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    written = 0
+    skipped = 0
+    no_image = 0
+    seen_slugs: set[str] = set()
+    for p in players:
+        html = build_page(p, espn_ids)
+        if html is None:
+            skipped += 1
+            continue
+        slug = slugify(p["n"])
+        if slug in seen_slugs:
+            # Name collision — skip duplicates so we don't overwrite (first wins)
+            skipped += 1
+            continue
+        seen_slugs.add(slug)
+        (OUT_DIR / f"{slug}.html").write_text(html, encoding="utf-8")
+        written += 1
+        if not espn_ids.get(p.get("n")):
+            no_image += 1
+
+    print(f"\n{written} pages written to {OUT_DIR}/")
+    print(f"  {no_image} of those have no ESPN headshot (will use site default OG)")
+    print(f"  {skipped} skipped (no name or duplicate slug)")
+
+    write_sitemap(list(seen_slugs))
+
+
+if __name__ == "__main__":
+    main()

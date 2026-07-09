@@ -3625,7 +3625,10 @@ ADD TO CHROME
      DAILY_RETIRED_POOL, which index.html then consumes at parse (Guess Who daily pool,
      ~L13135+). Deferring ep_retired.js would leave EP_RETIRED undefined for that build. -->
 <script src="data/ep_retired.js?v=2026-04-23"></script>
-<script src="data/legend_careers.js?v=2026-05-13b" defer></script>
+<!-- legend_careers.js (~2.8 MB): now LAZY-loaded (not deferred) via window._loadRetiredData()
+     — see the loader block below. Feeds retired-player careers (Compare, Trivia, retired cards,
+     Games) — none of which is the default rankings view. Its binds re-run via
+     _applyLegendCareerBindings on the 'mff:retireddata' event the loader dispatches. -->
 <!-- season_leaders.js (~744 KB) is lazy-loaded via window._ensureSeasonLeaders() — SEASON_LEADERS is read only by the admin Trivia generator, so regular users never fetch it. -->
 <script src="data/ldb.js?v=2026-04-21"></script>
 <script src="data/player_team_history.js?v=2026-04-02"></script>
@@ -3638,7 +3641,12 @@ ADD TO CHROME
      — see the loader block below (~line 5615). It feeds only retired-player weekly game logs
      + Elite Pull era pools, so it no longer blocks the initial load. Merged into WEEKLY_STATS
      by _mergeWeeklyStatsRetired() on the 'mff:weeklydata' event the loader dispatches. -->
-<script src="data/all_players.js?v=2026-04-23" defer></script>
+<!-- all_players.js (~2.5 MB): now LAZY-loaded (not deferred) via window._loadRetiredData()
+     — see the loader block below. ALL_PLAYERS_DB enriches D with retired players + careers
+     (Compare/Trivia/Prospect/Mock/retired cards), never the default rankings view (retired
+     players are filtered out of it). _enrichFromAllPlayers + _applyRetiredBioTeam re-run on
+     the 'mff:retireddata' event the loader dispatches. -->
+
 <script src="data/combine_data.js?v=2026-04-25b"></script>
 <script src="data/historical_draft_picks.js?v=2026-04-20" defer></script>
 <script src="data/mike_clay_projections.js?v=2026-07-08a"></script>
@@ -5681,10 +5689,46 @@ window._loadWeeklyData = function() {
   });
   return window._weeklyDataPromise;
 };
-// Idle preload: start soon after first paint so the common path (browse rankings → open a
-// legend's card) has data ready, without blocking the initial load.
+
+// === Lazy-load retired-player enrichment bundles (~5.3 MB) ===
+// legend_careers.js (~2.8 MB) + all_players.js (~2.5 MB) used to load via `defer`, so their
+// enrichment (adds ~1500 retired players + career binds to D) ran before DOMContentLoaded.
+// Retired players are FILTERED OUT of the default rankings render, so nothing on the landing
+// view needs them — only Compare, Trivia, Prospect, Mock Draft, Games, and retired-player
+// cards do. Lazy-load them the same way as the weekly bundles: legend_careers first (the
+// all_players enrichment reads LEGEND_CAREERS), async=false to keep order, then dispatch
+// 'mff:retireddata' — _enrichFromAllPlayers + _applyRetiredBioTeam + _applyLegendCareerBindings
+// listen for it (next to their DCL hooks) and enrich D idempotently.
+window._loadRetiredData = function() {
+  if (window._retiredDataPromise) return window._retiredDataPromise;
+  var files = [
+    'data/legend_careers.js?v=2026-05-13b',
+    'data/all_players.js?v=2026-04-23'
+  ];
+  function inject(src) {
+    return new Promise(function(res) {
+      var s = document.createElement('script');
+      s.src = src; s.async = false; // legend_careers must execute before all_players
+      s.onload = res;
+      s.onerror = function() { console.warn('[RetiredData] load failed:', src); res(); };
+      document.head.appendChild(s);
+    });
+  }
+  window._retiredDataPromise = Promise.all(files.map(inject)).then(function() {
+    try { document.dispatchEvent(new Event('mff:retireddata')); }
+    catch (e) { console.warn('[RetiredData] enrich dispatch failed:', e); }
+  });
+  return window._retiredDataPromise;
+};
+
+// Idle preload: start both lazy bundle sets soon after first paint so the common paths have
+// data ready without blocking the initial load. Retired enrichment first (smaller + needed by
+// more surfaces), then the larger weekly game-log bundles.
 window.addEventListener('load', function() {
-  var kick = function() { try { window._loadWeeklyData(); } catch (e) {} };
+  var kick = function() {
+    try { window._loadRetiredData(); } catch (e) {}
+    try { window._loadWeeklyData(); } catch (e) {}
+  };
   if (window.requestIdleCallback) requestIdleCallback(kick, { timeout: 3000 });
   else setTimeout(kick, 1200);
 });
@@ -11555,9 +11599,13 @@ function openPlayerCard(d, ctxMode) {
   if (typeof window._ensurePffData === 'function') window._ensurePffData();
   if (typeof window._ensureProspectStats === 'function') window._ensureProspectStats();
   if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
-  // Retired players' weekly game logs come from the lazy weekly bundles (window._loadWeeklyData).
-  // Fire the load when a legend's card opens so it fills in (the idle preload usually beats this).
-  if (d && d._retired && typeof window._loadWeeklyData === 'function') window._loadWeeklyData();
+  // Retired players' careers + weekly game logs come from the lazy bundles
+  // (window._loadRetiredData / _loadWeeklyData). Fire both when a legend's card opens so it
+  // fills in (the idle preload usually beats this).
+  if (d && d._retired) {
+    if (typeof window._loadRetiredData === 'function') window._loadRetiredData();
+    if (typeof window._loadWeeklyData === 'function') window._loadWeeklyData();
+  }
   // ctxMode lets callers (Trade Calc, My Teams, etc.) display the player in the
   // context of a different mode than the rankings page's currentMode. Falls back
   // to currentMode when not provided so the rankings-page click path is unchanged.
@@ -12978,6 +13026,10 @@ function switchPage(page) {
   // Compare (legend weekly rows) read them. Force the load on open so they're ready; the
   // idle preload after `load` usually beats this, but this covers a fast navigator.
   if ((page === 'games' || page === 'compare') && typeof window._loadWeeklyData === 'function') window._loadWeeklyData();
+  // Retired-player enrichment (all_players.js + legend_careers.js, lazy) is read by every
+  // non-rankings surface (Compare, Trivia, Prospect, Mock, Games, retired cards), so fire it
+  // on any non-rankings navigation as a catch-all. Idempotent + idle-preloaded, so it's a net.
+  if (page !== 'rankings' && typeof window._loadRetiredData === 'function') window._loadRetiredData();
   // Render compare grid when navigating to compare page
   if (page === 'compare') renderCompareGrid();
   // Render backtest when navigating to backtest page
@@ -17158,12 +17210,16 @@ function _enrichFromAllPlayers() {
   console.log('[ALL_PLAYERS_DB] Enriched career stats, added ' + _apAdded + ' new retired players');
 }
 _enrichFromAllPlayers();
-// Re-run once the deferred all_players.js has parsed, then re-apply the retired-player
-// bio/age/team pass to the players this enrichment just injected into D.
-document.addEventListener('DOMContentLoaded', function() {
+// Re-run once all_players.js has parsed, then re-apply the retired-player bio/age/team pass
+// to the players this enrichment just injected into D. all_players.js is now lazy-loaded
+// (window._loadRetiredData) rather than deferred, so run on both DCL (harmless no-op when the
+// bundle hasn't loaded) and the 'mff:retireddata' event the loader dispatches once it has.
+function _rerunAllPlayersEnrich() {
   _enrichFromAllPlayers();
   if (typeof _applyRetiredBioTeam === 'function') _applyRetiredBioTeam();
-});
+}
+document.addEventListener('DOMContentLoaded', _rerunAllPlayersEnrich);
+document.addEventListener('mff:retireddata', _rerunAllPlayersEnrich);
 
 // === LIVE INJURY UPDATES: Load from Firestore and merge into D array ===
 // The injury_scanner.py script pushes injury data to Firestore doc 'site_data/injury_updates'.
@@ -17362,6 +17418,12 @@ function _applyLegendCareerBindings() {
   }
 }
 document.addEventListener('DOMContentLoaded', _applyLegendCareerBindings);
+// legend_careers.js is now lazy-loaded (window._loadRetiredData) — re-bind when it arrives.
+document.addEventListener('mff:retireddata', _applyLegendCareerBindings);
+// Rebuild the Elite Pull / Guess Who pools once retired careers are bound — their rebuild
+// signature includes LEGEND_CAREERS.length, so this picks up the newly-loaded legends
+// regardless of whether the weekly-data merge (which also rebuilds them) ran first.
+document.addEventListener('mff:retireddata', function(){ if (typeof window._gwInitPool === 'function') { try { window._gwInitPool(); } catch(e){} } });
 
 // LEGEND_BIRTH_YEARS moved to data/legend_birth_years.js
 LDB.forEach(p => { if (LEGEND_BIRTH_YEARS[p.n]) p.birthYear = typeof LEGEND_BIRTH_YEARS[p.n] === 'string' ? parseInt(LEGEND_BIRTH_YEARS[p.n]) : LEGEND_BIRTH_YEARS[p.n]; });

@@ -3630,10 +3630,13 @@ ADD TO CHROME
 <script src="data/_bundle_lookups.js?v=2026-07-08a"></script>
 <script src="data/d.js?v=2026-07-08a"></script>
 <script src="data/hp.js?v=2026-05-04" defer></script>
-<!-- NOT deferred: daily_retired_pool.js (sync, below) reads EP_RETIRED at load to build
-     DAILY_RETIRED_POOL, which index.html then consumes at parse (Guess Who daily pool,
-     ~L13135+). Deferring ep_retired.js would leave EP_RETIRED undefined for that build. -->
-<script src="data/ep_retired.js?v=2026-04-23"></script>
+<!-- ep_retired.js (~795 KB) + daily_retired_pool.js DEFERRED (2026-07-10). EP_RETIRED is
+     read ONLY by daily_retired_pool.js (→ DAILY_RETIRED_POOL); DAILY_RETIRED_POOL is read
+     ONLY by the Guess Who code, which now lives in the DEFERRED app.js (not inline anymore).
+     Deferred scripts run in document order before DOMContentLoaded, so the chain
+     ep_retired → daily_retired_pool → app.js is preserved, and none of this ~795 KB blocks
+     the parser / first paint. Neither global feeds the default rankings view. -->
+<script src="data/ep_retired.js?v=2026-04-23" defer></script>
 <!-- legend_careers.js (~2.8 MB): now LAZY-loaded (not deferred) via window._loadRetiredData()
      — see the loader block below. Feeds retired-player careers (Compare, Trivia, retired cards,
      Games) — none of which is the default rankings view. Its binds re-run via
@@ -3644,7 +3647,7 @@ ADD TO CHROME
 <!-- ep_players_u.js removed: its global const EP_PLAYERS_U is shadowed by a local
      `let EP_PLAYERS_U` in the Unlimited Guess-Who IIFE and never read. Dead payload. -->
 <script src="data/active_team_history.js?v=2026-05-13c"></script>
-<script src="data/daily_retired_pool.js?v=2026-04-21"></script>
+<script src="data/daily_retired_pool.js?v=2026-04-21" defer></script>
 <script src="data/weekly_stats_active.js?v=2026-05-14c-opp" defer></script>
 <!-- WEEKLY_STATS_RETIRED (~10 MB): now LAZY-loaded (not deferred) via window._loadWeeklyData()
      — see the loader block below (~line 5615). It feeds only retired-player weekly game logs

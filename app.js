@@ -4359,10 +4359,6 @@ _whenFirebaseReady(function(){
     if (isJS) _jsRebuild();
   }
   window._jsModelUpdateUI = _jsModelUpdateUI;
-  // Warm the (now-lazy) projection map after first paint so switching to JS Model is
-  // instant — without paying the ~187ms build on the startup critical path.
-  if (window.requestIdleCallback) requestIdleCallback(function(){ try{ _jsBuildProj(); }catch(e){} }, { timeout: 4000 });
-  else setTimeout(function(){ try{ _jsBuildProj(); }catch(e){} }, 1200);
 
   // Expose for ppg column
   window._jsModelGetPpg = function(d) {
@@ -4419,16 +4415,22 @@ _whenFirebaseReady(function(){
     return results;
   };
 
-  // Initial build
-  _jsComputeBoard();
+  // Initial build — DEFERRED off the startup critical path. This eager compute (which
+  // triggers the ~175ms _jsBuildProj projection build) was for the JS-Model view, which
+  // is NOT the default (CONSENSUS is). Warm it at idle instead; switching to JS Model
+  // (or the DCL injury-history rebuild below) builds it on demand if idle hasn't fired.
+  if (window.requestIdleCallback) requestIdleCallback(function(){ try{ _jsComputeBoard(); }catch(e){} }, { timeout: 4000 });
+  else setTimeout(function(){ try{ _jsComputeBoard(); }catch(e){} }, 1200);
 
   // Expose rebuild for external triggers (e.g. Firestore injury updates arriving async)
   window._jsRebuild = _jsRebuild;
-  // injury_history.js is deferred — the initial _jsComputeBoard() above ran with the
-  // GP-drop fallback. Once INJURY_HISTORY has parsed (by DOMContentLoaded), recompute so
-  // the JS Model board picks up the precise injury-type multipliers.
+  // injury_history.js is deferred — once INJURY_HISTORY has parsed, recompute so the JS
+  // Model board picks up the precise injury-type multipliers. But ONLY if the board was
+  // already built (i.e. JS Model is in use) — otherwise forcing _jsRebuild here would run
+  // the ~175ms build on DCL for everyone. When the board isn't built yet, the idle warm-up
+  // above computes it AFTER INJURY_HISTORY is already loaded, so it's correct without this.
   document.addEventListener('DOMContentLoaded', function(){
-    if (typeof INJURY_HISTORY !== 'undefined' && Object.keys(INJURY_HISTORY).length) {
+    if (_jsPlayerProj && typeof INJURY_HISTORY !== 'undefined' && Object.keys(INJURY_HISTORY).length) {
       try { _jsRebuild(); } catch(e) {}
     }
   });

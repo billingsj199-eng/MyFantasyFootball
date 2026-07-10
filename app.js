@@ -7278,6 +7278,9 @@ function renderSearchChips() {
   }
   render = _coalesced;
   window.render = _coalesced;
+  // Record the auth assumption the initial render below reflects, so the auth-resolve
+  // handler (updateAccountUI) can skip its render when the status didn't actually change.
+  window._lastAuthRenderSignedIn = !!window._authCurrentUser;
   window.addEventListener('load', function(){ setTimeout(function(){ _batching = false; if (_pending || _timer){ if (_timer){ clearTimeout(_timer); _timer = null; } _pending = false; _impl(); } }, 600); });
 })();
 
@@ -19811,7 +19814,15 @@ window.fmtHeight = fmtHeight;
     if (typeof window._updateCopyFromRedraftBtn === 'function') {
       try { window._updateCopyFromRedraftBtn(); } catch (_e) {}
     }
-    if (typeof render === 'function') render();
+    // Only re-render if signed-in status actually CHANGED. The initial render already
+    // assumed the current (usually signed-out) state; when auth resolves to the SAME
+    // status (the common case), this was a redundant full ~500-row repaint on the startup
+    // critical path. Edit-control visibility only flips on a signed-in⇄signed-out change.
+    var _si = !!user;
+    if (typeof render === 'function' && window._lastAuthRenderSignedIn !== _si) {
+      window._lastAuthRenderSignedIn = _si;
+      render();
+    }
     if (user) {
       const initial = (user.email || user.displayName || '?')[0].toUpperCase();
       const displayEmail = user.email || user.displayName || 'Signed in';

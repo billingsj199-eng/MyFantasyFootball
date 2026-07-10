@@ -7260,6 +7260,27 @@ function renderSearchChips() {
   });
 }
 
+// --- Startup render coalescer (perf) ---
+// During initial load ~8 deferred data bundles (weekly stats, retired careers, JM scores,
+// betting, injury, auth-state, cloud rankings) EACH trigger a full render() — 8 repaints of
+// ~500 rows (~60ms each ≈ 480ms wasted), even though most of that data isn't visible in the
+// default view. Coalesce: the FIRST render fires immediately (leading — table shows ASAP),
+// any further render() within 160ms collapses into a single trailing render. Auto-disables
+// ~600ms after `load`, so steady-state user-interaction renders stay fully synchronous.
+(function(){
+  var _impl = render, _batching = true, _timer = null, _last = -1e9, _pending = false;
+  function _flush(){ _timer = null; if (_pending){ _pending = false; _last = performance.now(); _impl(); } }
+  function _coalesced(){
+    if (!_batching) { _impl(); return; }
+    var now = performance.now();
+    if (now - _last > 160) { _last = now; _pending = false; if (_timer){ clearTimeout(_timer); _timer = null; } _impl(); }
+    else { _pending = true; if (!_timer) _timer = setTimeout(_flush, 140); }
+  }
+  render = _coalesced;
+  window.render = _coalesced;
+  window.addEventListener('load', function(){ setTimeout(function(){ _batching = false; if (_pending || _timer){ if (_timer){ clearTimeout(_timer); _timer = null; } _pending = false; _impl(); } }, 600); });
+})();
+
 render();
 
 // === Page Navigation ===

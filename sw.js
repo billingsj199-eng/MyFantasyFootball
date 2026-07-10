@@ -9,7 +9,7 @@
    - Firebase / ESPN / Sleeper / Cloudflare APIs → bypass entirely.
    Bump SW_VERSION when changing SW logic so old caches get wiped on activate. */
 
-const SW_VERSION   = '2026-07-09f';
+const SW_VERSION   = '2026-07-09g';
 const SHELL_CACHE  = 'mff-shell-' + SW_VERSION;
 const STATIC_CACHE = 'mff-static-' + SW_VERSION;
 const RUNTIME_CACHE = 'mff-runtime-' + SW_VERSION;

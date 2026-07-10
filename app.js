@@ -7596,10 +7596,16 @@ document.addEventListener('click', function(e) {
   // render(), so the main rankings table never depended on these entries.
   function _epAppendRetiredToD() {
     if (typeof EP_RETIRED === 'undefined') return;
+    // O(n) dedup: build a name Set once instead of D.find() per retired player (was
+    // O(EP_RETIRED \u00d7 D) \u2248 3M ops / ~185ms at startup). Set is seeded from D so re-runs
+    // (DCL) stay idempotent \u2014 already-pushed retirees are in D \u2192 in the Set \u2192 skipped.
+    var _existingNames = new Set();
+    for (var _i = 0; _i < D.length; _i++) _existingNames.add(D[_i].n);
     EP_RETIRED.forEach(p => {
-      if (!D.find(d => d.n === p.name)) {
+      if (!_existingNames.has(p.name)) {
         const seasons = p.last - p.debut + 1;
         D.push({n:p.name,a:999,p:0,s:p.pos,r:p.pos+"\u2014",t:"Retired",p25:null,p24:null,p23:null,age:null,cyr:null,out:null,sal:null,dr:null,exp:seasons,role:null,inj:null,s25:null,career:p.career||[],da:999,sa:999,idx:D.length,myRank:D.length+1,round:99,notes:"",_retired:true,_debut:p.debut,_last:p.last});
+        _existingNames.add(p.name);
         window._RETIRED_NAMES.add(p.name);
       }
     });
@@ -7705,17 +7711,24 @@ document.addEventListener('click', function(e) {
     team: _dailyPoolTeams[d.n.toLowerCase()] || getCurrentTeamAbbr(d.n, d.t),
     pos: d.s
   }));
+  // O(n) dedup: track lowercased names in a Set instead of allNames.some() per pool
+  // entry (each was O(pool × allNames) — two more startup n² loops).
+  const _allNameSet = new Set(allNames.map(a => a.name.toLowerCase()));
   // Ensure all daily pull players are searchable
   DAILY_RETIRED_POOL.forEach(p => {
-    if (!allNames.some(a => a.name.toLowerCase() === p.name.toLowerCase())) {
+    const _k = p.name.toLowerCase();
+    if (!_allNameSet.has(_k)) {
       allNames.push({name: p.name, team: p.team, pos: p.pos});
+      _allNameSet.add(_k);
     }
   });
   // Defensive catch-up: any name in the daily puzzle pool not yet searchable
   DAILY_COMBINED_POOL.forEach(p => {
     if (!p || !p.name) return;
-    if (!allNames.some(a => a.name.toLowerCase() === p.name.toLowerCase())) {
+    const _k = p.name.toLowerCase();
+    if (!_allNameSet.has(_k)) {
       allNames.push({name: p.name, team: p.team || 'NFL', pos: p.pos});
+      _allNameSet.add(_k);
     }
   });
 

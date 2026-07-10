@@ -3424,8 +3424,14 @@ _whenFirebaseReady(function(){
     return n.toLowerCase().replace(/\s+(jr\.?|sr\.?|iii|ii|iv|v)$/i,'').replace(/[.\-']/g,'').replace(/\s+/g,' ').trim();
   }
 
-  // Build D-index → projection map
-  const _jsPlayerProj = {}; // idx → {name,pos,team,gp, pass_yds,pass_td,ints,rush_yds,rush_td,rec,rec_yds,rec_td,fumbles}
+  // Build D-index → projection map. LAZY (perf): this whole precompute — the O(n²)
+  // name match over D + the rookie-template pass (which also calls _pmBuiltData) — was
+  // ~187ms of synchronous STARTUP execution on the critical path, for the JS-Model view
+  // which is NOT the default. Now built on first JS-Model board compute (or idle warm-up).
+  let _jsPlayerProj = null;
+  function _jsBuildProj() {
+    if (_jsPlayerProj) return _jsPlayerProj;
+    _jsPlayerProj = {};
   D.forEach(function(d, idx) {
     if (d.s === 'K' || d.s === 'DST') return;
     // Try exact name match first
@@ -3535,6 +3541,8 @@ _whenFirebaseReady(function(){
   })();
 
   console.log('[JS Model] Total projections: ' + Object.keys(_jsPlayerProj).length + '/' + D.length + ' players');
+    return _jsPlayerProj;
+  }
 
   // --- Scoring presets ---
   var _jsScoringPresets = {
@@ -3572,6 +3580,7 @@ _whenFirebaseReady(function(){
 
   // --- Compute VOR and generate board ---
   function _jsComputeBoard() {
+    _jsBuildProj(); // lazy: build the projection map on first use (was eager at startup)
     var scoring = _jsScoringPresets[_jsScoring];
     var roster = Object.assign({}, _jsRosterPresets[_jsRoster]);
 
@@ -4232,6 +4241,7 @@ _whenFirebaseReady(function(){
 
   // --- Rebuild and apply board ---
   function _jsRebuild() {
+    _jsBuildProj(); // lazy: ensure projection map exists before reading it below
     var jsBoard = _jsComputeBoard();
     // Apply to all modes
     versionBoards.jsmodel.redraft = jsBoard;
@@ -4349,6 +4359,10 @@ _whenFirebaseReady(function(){
     if (isJS) _jsRebuild();
   }
   window._jsModelUpdateUI = _jsModelUpdateUI;
+  // Warm the (now-lazy) projection map after first paint so switching to JS Model is
+  // instant — without paying the ~187ms build on the startup critical path.
+  if (window.requestIdleCallback) requestIdleCallback(function(){ try{ _jsBuildProj(); }catch(e){} }, { timeout: 4000 });
+  else setTimeout(function(){ try{ _jsBuildProj(); }catch(e){} }, 1200);
 
   // Expose for ppg column
   window._jsModelGetPpg = function(d) {

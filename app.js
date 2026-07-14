@@ -5029,34 +5029,38 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
   const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
-  const esc = v => { const s = String(v ?? ''); return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  // Underdog's current export quotes every populated field; mirror that exactly.
+  const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
   const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
-  
-  const headers = ['id','firstName','lastName','adp','projectedPoints','positionRank','slotName','teamName','lineupStatus','byeWeek'];
-  const rows = [headers.join(',')];
+
+  const headers = ['id','firstName','lastName','adp','projectedPoints','salary','positionRank','slotName','teamName','lineupStatus','byeWeek'];
+  const rows = [headers.map(esc).join(',')];
   let matched = 0, skipped = 0;
-  
+
   data.forEach((d, i) => {
     const udId = window.UNDERDOG_IDS && window.UNDERDOG_IDS[d.n];
     if (!udId) { skipped++; return; }
     matched++;
+    const meta = (window.UNDERDOG_META && window.UNDERDOG_META[d.n]) || null;
     const displayRank = useFilteredRank ? (i + 1) : d.myRank;
     const parts = d.n.split(' ');
-    const firstName = parts[0] || '';
-    const lastName = parts.slice(1).join(' ') || '';
+    // Prefer Underdog's own name spelling (e.g. Kenny Gainwell, Hollywood Brown)
+    // so uploads match their player records.
+    const firstName = meta ? meta.f : (parts[0] || '');
+    const lastName = meta ? meta.l : (parts.slice(1).join(' ') || '');
     const posRank = d.myPosRank || d.r || '';
-    const adpVal = rnkAdp(d) != null ? rnkAdp(d) : '';
     const ppgProj = adjProjPpg(d) != null ? (adjProjPpg(d) * 17).toFixed(1) : '0.0';
-    
+
     rows.push([
       esc(udId),
       esc(firstName),
       esc(lastName),
       esc(displayRank),
       esc(ppgProj),
+      esc(meta ? meta.sal : ''),
       esc(posRank),
       esc(d.s),
-      esc(d.t),
+      esc(meta ? meta.tm : d.t),
       '',
       ''
     ].join(','));

@@ -1162,6 +1162,14 @@ CLEAR ALL
 </div>
 </div>
 <div style="display:flex;align-items:center;gap:8px">
+<span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">STATS:</span>
+<div class="career-log-toggle" id="rankingStatModeToggle">
+<button class="rnk-statmode-btn active" data-rnkstatmode="fantasy" title="Fantasy points per game columns (Proj PPG / '25 PPG / L4 PPG)">FANTASY</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs and team PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM, plus Vegas implied team PPG">BETTING LINES</button>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">ADP:</span>
 <div class="md-rank-src-tabs" id="rnkAdpSrcTabs" style="border:none;background:var(--elev-1);padding:1px">
 <button class="md-rank-src-tab active" data-rnkadp="consensus" style="font-size:.65rem;padding:3px 10px">CONSENSUS</button>
@@ -3661,7 +3669,7 @@ ADD TO CHROME
 
 <script src="data/combine_data.js?v=2026-04-25b"></script>
 <script src="data/historical_draft_picks.js?v=2026-04-20" defer></script>
-<script src="data/mike_clay_projections.js?v=2026-07-08a"></script>
+<script src="data/mike_clay_projections.js?v=2026-07-14a"></script>
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
 <script src="data/player_weekly_sigma.js?v=2026-04-30" defer></script>
@@ -5764,7 +5772,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-09f"></script>
+<script defer src="app.js?v=2026-07-14a"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

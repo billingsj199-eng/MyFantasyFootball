@@ -1265,6 +1265,10 @@ let filter = 'ALL', sortKey = 'myrank', sortDir = 1, query = '', viewMode = 'all
 let rookiePosFilter = 'ALL'; // sub-filter applied only when filter === 'ROOKIE'
 let rankingScoringFmt = 'half';
 let rnkAdpSrc = 'consensus';
+// Rankings STATS view: 'fantasy' = PPG columns, 'proj' = Clay projected yds/TD,
+// 'lines' = sportsbook season-prop yds/TD (DK/FD/MGM average). Both non-fantasy
+// modes swap the third column to Vegas implied TEAM PPG. Session-only, like scoring.
+let rnkStatMode = 'fantasy';
 
 // Get Sleeper rank for a player in the current mode
 function _sleeperRank(d) {
@@ -1412,6 +1416,88 @@ function adjProjPpg(d) {
   return null;
 }
 
+// === STATS view helpers (rankings FANTASY / PROJECTIONS / BETTING LINES toggle) ===
+// JS Model owns its own columns (JS Proj PPG / VOR), so the stat mode only
+// applies outside it.
+function _effStatMode() {
+  return currentVersion === 'jsmodel' ? 'fantasy' : rnkStatMode;
+}
+
+// PROJECTIONS: combined yards + TDs from Mike Clay's 2026 stat lines.
+// Returns { yds, tds, tip } or null when Clay doesn't project the player.
+function _projStatLine(d) {
+  if (d.s !== 'QB' && d.s !== 'RB' && d.s !== 'WR' && d.s !== 'TE') return null;
+  if (typeof clayLookup !== 'function') return null;
+  const cp = clayLookup(d.n);
+  if (!cp) return null;
+  const py = cp.py || 0, ry = cp.ry || 0, rcy = cp.rcy || 0;
+  const ptd = cp.ptd || 0, rtd = cp.rtd || 0, rctd = cp.rctd || 0;
+  if (!py && !ry && !rcy && !ptd && !rtd && !rctd) return null;
+  const parts = [];
+  if (py) parts.push('Pass ' + py.toLocaleString() + ' yds / ' + ptd + ' TD');
+  if (ry) parts.push('Rush ' + ry.toLocaleString() + ' yds / ' + rtd + ' TD');
+  if (rcy) parts.push('Rec ' + rcy.toLocaleString() + ' yds / ' + rctd + ' TD');
+  return {
+    yds: py + ry + rcy,
+    tds: ptd + rtd + rctd,
+    tip: 'Mike Clay 2026 (' + (cp.gm || 17) + ' gm): ' + parts.join(' · ')
+  };
+}
+
+// BETTING LINES: combined yards + TDs from season-long sportsbook props,
+// each stat averaged across the books that posted it (DK / FD / MGM).
+// Returns { yds, tds, tip } or null when no props are posted.
+function _linesStatLine(d) {
+  if (typeof window._propsProjectionFor !== 'function') return null;
+  const P = window._propsProjectionFor(d);
+  if (!P || !P.consensus) return null;
+  const c = P.consensus;
+  const py = c.py || 0, ry = c.ry || 0, rcy = c.rcy || 0;
+  const ptd = c.ptd || 0, rtd = c.rtd || 0, rctd = c.rctd || 0;
+  const hasYds = !!(py || ry || rcy);
+  const hasTds = !!(ptd || rtd || rctd);
+  if (!hasYds && !hasTds) return null;
+  const fmt1 = v => (Math.round(v * 10) / 10).toLocaleString();
+  const parts = [];
+  if (py || ptd) parts.push('Pass ' + (py ? fmt1(py) + ' yds' : '') + (py && ptd ? ' / ' : '') + (ptd ? fmt1(ptd) + ' TD' : ''));
+  if (ry || rtd) parts.push('Rush ' + (ry ? fmt1(ry) + ' yds' : '') + (ry && rtd ? ' / ' : '') + (rtd ? fmt1(rtd) + ' TD' : ''));
+  if (rcy || rctd) parts.push('Rec ' + (rcy ? fmt1(rcy) + ' yds' : '') + (rcy && rctd ? ' / ' : '') + (rctd ? fmt1(rctd) + ' TD' : ''));
+  return {
+    yds: hasYds ? py + ry + rcy : null,
+    tds: hasTds ? ptd + rtd + rctd : null,
+    tip: 'O/U avg of ' + P.books.join('/') + (P.asOf ? ' (as of ' + P.asOf + ')' : '') + ': ' + parts.join(' · ')
+  };
+}
+
+// TEAM PPG: season average of Vegas implied team totals across every game in
+// BETTING_2026.gameTotals ('W{wk}_{AWAY}_{HOME}', spread = home spread).
+// Cached on first use; keyed by team abbreviation.
+let _impliedPpgCache = null;
+function _impliedTeamPpg(teamFullName) {
+  if (!teamFullName) return null;
+  if (!window.BETTING_2026 || !window.BETTING_2026.gameTotals) return null;
+  if (!_impliedPpgCache) {
+    const agg = {};
+    const KEY_RE = /^W\d+_([A-Z]+)_([A-Z]+)$/;
+    Object.keys(window.BETTING_2026.gameTotals).forEach(k => {
+      const m = KEY_RE.exec(k);
+      const g = window.BETTING_2026.gameTotals[k];
+      if (!m || !g || typeof g.total !== 'number' || typeof g.spread !== 'number') return;
+      const away = m[1], home = m[2];
+      const homePts = (g.total - g.spread) / 2;
+      const awayPts = (g.total + g.spread) / 2;
+      (agg[home] = agg[home] || { sum: 0, n: 0 });
+      (agg[away] = agg[away] || { sum: 0, n: 0 });
+      agg[home].sum += homePts; agg[home].n++;
+      agg[away].sum += awayPts; agg[away].n++;
+    });
+    _impliedPpgCache = {};
+    Object.keys(agg).forEach(t => { _impliedPpgCache[t] = { ppg: Math.round((agg[t].sum / agg[t].n) * 10) / 10, n: agg[t].n }; });
+  }
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamFullName]) ? TEAM_ABBR_MAP[teamFullName] : teamFullName;
+  return _impliedPpgCache[abbr] || null;
+}
+
 function getFiltered() {
   // DEVY filter: build list from COMBINE_DATA devy players, with custom ordering
   if (filter === 'DEVY') {
@@ -1507,6 +1593,12 @@ function getFiltered() {
   });
   // Secondary sorts (non-myrank)
   if (sortKey !== 'myrank') {
+    // STATS view repurposes the three PPG sort keys: pts → yards, fpts25 → TDs,
+    // l4ppg → implied team PPG (proj = Clay stat lines, lines = book averages).
+    const _sm = _effStatMode();
+    const _smYds = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); return (s && s.yds != null) ? s.yds : -Infinity; };
+    const _smTds = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); return (s && s.tds != null) ? s.tds : -Infinity; };
+    const _smTeamPpg = d => { const t = _impliedTeamPpg(d.t); return t ? t.ppg : -Infinity; };
     f.sort((a, b) => {
       let av, bv;
       switch(sortKey) {
@@ -1515,9 +1607,9 @@ function getFiltered() {
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
         case 'adp': av = rnkAdp(a) ?? 999; bv = rnkAdp(b) ?? 999; break;
         case 'round': av = a.round; bv = b.round; break;
-        case 'pts': av = currentVersion==='jsmodel'?(a._jsModelPpg||0):(adjProjPpg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelPpg||0):(adjProjPpg(b)||0); if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
-        case 'fpts25': av = currentVersion==='jsmodel'?(a._jsModelVor||0):(adj25ppg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelVor||0):(adj25ppg(b)||0); break;
-        case 'l4ppg': av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
+        case 'pts': if (_sm !== 'fantasy') { av = _smYds(a); bv = _smYds(b); break; } av = currentVersion==='jsmodel'?(a._jsModelPpg||0):(adjProjPpg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelPpg||0):(adjProjPpg(b)||0); if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
+        case 'fpts25': if (_sm !== 'fantasy') { av = _smTds(a); bv = _smTds(b); break; } av = currentVersion==='jsmodel'?(a._jsModelVor||0):(adj25ppg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelVor||0):(adj25ppg(b)||0); break;
+        case 'l4ppg': if (_sm !== 'fantasy') { av = _smTeamPpg(a); bv = _smTeamPpg(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
@@ -1983,6 +2075,7 @@ function render() {
   // and stringifying content. Cuts both compute and tbody HTML weight in the common
   // (non-weekly, non-dynasty) view. Reused by the header/cell toggles after the loop.
   const _isWeekly = currentMode === 'weekly';
+  const _statMode = _effStatMode();
   const showYrr = filter === 'WR' || filter === 'TE' || filter === 'RB';
   const showJm = currentMode === 'dynasty' || currentMode === 'dynastysf';
   const showLanding = showJm && filter === 'ROOKIE';
@@ -2044,19 +2137,38 @@ function render() {
     // Total sort-click time is still ~300ms because browser layout/paint of
     // 506 rows dominates — that ceiling needs DOM diffing or virtualization
     // to push lower.
-    const _projPpgJS = isJSModel ? d._jsModelPpg : null;
-    let _projPpg = _projPpgJS != null ? _projPpgJS : adjProjPpg(d);
-    // WEEKLY mode: adjust season PPG by team total + opponent defense.
-    if (currentMode === 'weekly' && typeof window._weeklyAdjustPpg === 'function') {
-      _projPpg = window._weeklyAdjustPpg(d, _projPpg);
+    // The three stat cells swap with the STATS toggle: fantasy PPG columns
+    // (default) vs Clay projected yds/TD vs betting-line yds/TD, third column
+    // becoming Vegas implied TEAM PPG in the non-fantasy modes.
+    let _statTds;
+    if (_statMode === 'fantasy') {
+      const _projPpgJS = isJSModel ? d._jsModelPpg : null;
+      let _projPpg = _projPpgJS != null ? _projPpgJS : adjProjPpg(d);
+      // WEEKLY mode: adjust season PPG by team total + opponent defense.
+      if (currentMode === 'weekly' && typeof window._weeklyAdjustPpg === 'function') {
+        _projPpg = window._weeklyAdjustPpg(d, _projPpg);
+      }
+      const _25ppgJS = isJSModel ? d._jsModelVor : null;
+      const _25ppg = _25ppgJS != null ? _25ppgJS : adj25ppg(d);
+      // Last-4-games PPG + trend arrow (compared to actual full-season '25 PPG).
+      const _l4ppg = last4Ppg(d);
+      const _l4Cell = l4PpgCellHtml(_l4ppg, adj25ppg(d));
+      const _projColor = (_projPpg != null) ? posFptsColor(_projPpg, d.s) : null;
+      const _25Color = (_25ppg != null && _25ppgJS == null) ? posFptsColor(_25ppg, d.s) : null;
+      _statTds = `<td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>
+      <td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
+      <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
+    } else {
+      const _line = _statMode === 'proj' ? _projStatLine(d) : _linesStatLine(d);
+      const _tp = _impliedTeamPpg(d.t);
+      const _tipAttr = (_line && _line.tip) ? ' title="' + _line.tip.replace(/"/g, '&quot;') + '" style="cursor:help;font-weight:700"' : '';
+      const _ydsHtml = (_line && _line.yds != null) ? Math.round(_line.yds).toLocaleString() : '—';
+      const _tdsHtml = (_line && _line.tds != null) ? String(Math.round(_line.tds * 10) / 10) : '—';
+      const _tpColor = _tp ? (_tp.ppg >= 24.5 ? '#22c55e' : _tp.ppg <= 20.5 ? '#ef4444' : '#facc15') : null;
+      _statTds = `<td class="pts-cell ppg-proj-cell"${_tipAttr}>${_ydsHtml}</td>
+      <td class="pts-cell ppg25-cell"${_tipAttr}>${_tdsHtml}</td>
+      <td class="pts-cell l4ppg-cell"${_tp ? ' style="color:'+_tpColor+';font-weight:700;cursor:help" title="Season average of Vegas implied team totals (DK) across '+_tp.n+' games"' : ''}>${_tp ? _tp.ppg.toFixed(1) : '—'}</td>`;
     }
-    const _25ppgJS = isJSModel ? d._jsModelVor : null;
-    const _25ppg = _25ppgJS != null ? _25ppgJS : adj25ppg(d);
-    // Last-4-games PPG + trend arrow (compared to actual full-season '25 PPG).
-    const _l4ppg = last4Ppg(d);
-    const _l4Cell = l4PpgCellHtml(_l4ppg, adj25ppg(d));
-    const _projColor = (_projPpg != null) ? posFptsColor(_projPpg, d.s) : null;
-    const _25Color = (_25ppg != null && _25ppgJS == null) ? posFptsColor(_25ppg, d.s) : null;
     const _adpDelta = _adp != null ? (_adp - d.myRank) : null;
     const _displayTierLabel = _tierLabelForRank(displayRank);
 
@@ -2084,9 +2196,7 @@ function render() {
       ${_isWeekly ? `<td class="opp-cell weekly-only-cell${(()=>{ if(d.s==='K'||d.s==='DST'||typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return o || '—'; })()}</td>
       <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); return (t != null ? t : '—'); })()}</td>` : '<td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
-      <td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>
-      <td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
-      <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>
+      ${_statTds}
       <td class="pts-cell yrr-cell" style="display:none">${showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—'}</td>
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell" style="display:none">${showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
@@ -2891,13 +3001,58 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
     document.querySelectorAll('.rnk-scoring-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     rankingScoringFmt = btn.dataset.rnkscoring;
-    const projTh = document.querySelector('th[data-sort="pts"]');
-    const projFmt = projTh && projTh.querySelector('.th-fmt');
-    if (projFmt) projFmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
-    const ppg25Fmt = document.querySelector('#ppg25Header .th-fmt');
-    if (ppg25Fmt) ppg25Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
-    const l4Fmt = document.querySelector('#l4ppgHeader .th-fmt');
-    if (l4Fmt) l4Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
+    // In proj/lines STATS view the three columns aren't scoring-dependent —
+    // leave their headers alone (the updater owns them).
+    if (rnkStatMode === 'fantasy') {
+      const projTh = document.querySelector('th[data-sort="pts"]');
+      const projFmt = projTh && projTh.querySelector('.th-fmt');
+      if (projFmt) projFmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
+      const ppg25Fmt = document.querySelector('#ppg25Header .th-fmt');
+      if (ppg25Fmt) ppg25Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
+      const l4Fmt = document.querySelector('#l4ppgHeader .th-fmt');
+      if (l4Fmt) l4Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
+    }
+    render();
+  });
+});
+
+// STATS view headers — rewrites the three swap-able column headers to match
+// rnkStatMode (fantasy PPG / Clay projections / betting lines). Preserves the
+// current sort arrow since it rebuilds the th contents.
+window._updateRnkStatHeaders = function() {
+  if (currentVersion === 'jsmodel') return; // JS Model owns these headers (JS Proj PPG / VOR)
+  const c1 = document.getElementById('ppgProjHeader');
+  const c2 = document.getElementById('ppg25HeaderTh');
+  const c3 = document.getElementById('l4ppgHeaderTh');
+  if (!c1 || !c2 || !c3) return;
+  const _set = (th, stackId, gloss, label, sub) => {
+    const arrow = th.querySelector('.arrow');
+    const arrowTxt = arrow ? arrow.textContent : '';
+    th.innerHTML = '<span class="th-stack"' + (stackId ? ' id="' + stackId + '"' : '') + '><span data-gloss="' + gloss.replace(/"/g, '&quot;') + '">' + label + '</span>' + (sub ? '<span class="hide-on-mobile th-fmt">' + sub + '</span>' : '') + '</span><span class="arrow">' + arrowTxt + '</span>';
+  };
+  const fmtLabel = _scoringLabelsRnk[rankingScoringFmt] || 'Half PPR';
+  if (rnkStatMode === 'fantasy') {
+    _set(c1, null, 'Projected fantasy points per game for the upcoming season (' + fmtLabel + ' scoring).', 'Proj PPG', fmtLabel);
+    _set(c2, 'ppg25Header', 'Actual fantasy points per game from the 2025 season (' + fmtLabel + ' scoring).', '\'25 PPG', fmtLabel);
+    _set(c3, 'l4ppgHeader', 'Average fantasy PPG over the player\'s last 4 games of 2025. Compared to the full-season \'25 PPG it shows which way a player is trending: ▲ = trending up, ▼ = trending down.', 'L4 PPG', fmtLabel);
+  } else if (rnkStatMode === 'proj') {
+    _set(c1, null, 'Projected total yards for 2026 (passing + rushing + receiving) — Mike Clay projections. Hover a value for the breakdown.', 'Yds', 'Clay Proj');
+    _set(c2, 'ppg25Header', 'Projected total touchdowns for 2026 (passing + rushing + receiving) — Mike Clay projections.', 'TD', 'Clay Proj');
+    _set(c3, 'l4ppgHeader', 'Team PPG — season average of Vegas implied team totals across the full schedule (DK game totals + spreads). Higher = better scoring environment.', 'Team PPG', 'Vegas');
+  } else {
+    _set(c1, null, 'Season-long sportsbook yardage lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving. Hover a value for the breakdown.', 'Yds', 'Book Avg');
+    _set(c2, 'ppg25Header', 'Season-long sportsbook touchdown lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving.', 'TD', 'Book Avg');
+    _set(c3, 'l4ppgHeader', 'Team PPG — season average of Vegas implied team totals across the full schedule (DK game totals + spreads). Higher = better scoring environment.', 'Team PPG', 'Vegas');
+  }
+};
+
+// STATS view toggle (Fantasy / Projections / Betting Lines)
+document.querySelectorAll('.rnk-statmode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    rnkStatMode = btn.dataset.rnkstatmode;
+    window._updateRnkStatHeaders();
     render();
   });
 });
@@ -4348,6 +4503,14 @@ _whenFirebaseReady(function(){
     if (isJS) {
       if (projTh) projTh.innerHTML = '<span class="th-stack"><span>JS Proj PPG</span></span><span class="arrow"></span>';
       if (vorTh) vorTh.innerHTML = '<span class="th-stack" id="ppg25Header"><span>VOR</span></span><span class="arrow"></span>';
+      // JS Model forces the fantasy stat view — restore the L4 header too in
+      // case the STATS toggle had swapped it to TEAM PPG.
+      var l4Th = document.getElementById('l4ppgHeaderTh');
+      if (l4Th) l4Th.innerHTML = '<span class="th-stack" id="l4ppgHeader"><span>L4 PPG</span></span><span class="arrow"></span>';
+    } else if (typeof window._updateRnkStatHeaders === 'function') {
+      // Restores fantasy PPG headers — or the proj/lines STATS headers if that
+      // toggle is active — including glosses and the current scoring label.
+      window._updateRnkStatHeaders();
     } else {
       var _scoringLabelsRnk2 = {ppr:'PPR',half:'Half PPR',std:'Standard'};
       var fmt = typeof rankingScoringFmt !== 'undefined' ? rankingScoringFmt : 'half';
@@ -4630,7 +4793,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; sortDir = (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm') ? -1 : 1; }
+    else { sortKey = key; sortDir = (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';

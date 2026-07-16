@@ -5047,7 +5047,12 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
     // Prefer Underdog's own name spelling (e.g. Kenny Gainwell, Hollywood Brown)
     // so uploads match their player records.
     const firstName = meta ? meta.f : (parts[0] || '');
-    const lastName = meta ? meta.l : (parts.slice(1).join(' ') || '');
+    let lastName = meta ? meta.l : (parts.slice(1).join(' ') || '');
+    // Underdog's own export drops the suffix from some lastNames ("Harrison"
+    // for Marvin Harrison Jr.) but their upload matcher wants the suffixed
+    // name — re-append the site name's suffix when it's missing.
+    const suf = (d.n.match(/ (Jr\.?|Sr\.?|II|III|IV|V)$/) || [])[1];
+    if (suf && !lastName.endsWith(suf)) lastName += ' ' + suf;
     const posRank = d.myPosRank || d.r || '';
     const ppgProj = adjProjPpg(d) != null ? (adjProjPpg(d) * 17).toFixed(1) : '0.0';
 

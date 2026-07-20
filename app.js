@@ -10030,6 +10030,15 @@ document.addEventListener('click', function(e) {
     function loadState() {
       const key = getDailyKey(config.statePrefix);
       _initDateKey = key; // lock to the date at init time
+      // ALWAYS reset in-memory state first. These are closure variables that
+      // survive re-init — without this, a day rollover with no save under the
+      // new key kept yesterday's guesses/gameOver and the game re-rendered as
+      // completed forever ("the 2000s/2010s dailies never reset"). Any re-init
+      // path without a full page reload hit it: _gwDailyReinit on data arrival,
+      // the ALL/150+ toggle, or a missed/throttled midnight reload.
+      guesses = [];
+      gameOver = false;
+      resultRows = [];
       const saved = localStorage.getItem(key);
       if (saved) {
         const state = JSON.parse(saved);
@@ -10051,8 +10060,20 @@ document.addEventListener('click', function(e) {
     }
 
     function renderStreak() {
-      if (streak > 0) {
-        streakEl.textContent = '🔥 ' + streak + ' DAY STREAK';
+      // A streak is only alive if the last win was today or yesterday. The
+      // stored counter goes stale after a missed day (updateStreak only runs
+      // on the next play), so compute liveness at render time — otherwise a
+      // days-old "6 DAY STREAK" shows next to a fresh (or even lost) game.
+      let live = streak;
+      if (live > 0) {
+        const todayStr = getDailyDateStr();
+        const y = getEasternDate();
+        y.setDate(y.getDate() - 1);
+        const yesterdayStr = `${y.getFullYear()}-${y.getMonth()+1}-${y.getDate()}`;
+        if (lastWinDate !== todayStr && lastWinDate !== yesterdayStr) live = 0;
+      }
+      if (live > 0) {
+        streakEl.textContent = '🔥 ' + live + ' DAY STREAK';
       } else {
         streakEl.textContent = '';
       }

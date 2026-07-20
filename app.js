@@ -1402,6 +1402,40 @@ function rnkAdp(d) {
   return modeAdp(d);
 }
 
+// Per-source ADP lookup for the ADP comparison STATS view. Ignores rnkAdpSrc —
+// each column is pinned to one platform. Underdog respects the mode split
+// (sfa for superflex, udA otherwise), matching rnkAdp's own handling.
+function _adpBySource(d, src) {
+  if (d.s === 'K' || d.s === 'DST') return null;
+  if (src === 'underdog') return currentMode === 'superflex' ? (d.sfa != null ? d.sfa : null) : (d.udA != null ? d.udA : null);
+  if (src === 'sleeper') return _sleeperRank(d);
+  if (src === 'espn') return d.espnAdp != null ? d.espnAdp : null;
+  if (src === 'cbs') return d.cbsAdp != null ? d.cbsAdp : null;
+  return null;
+}
+
+// One cell of the ADP comparison view: the platform's ADP colored by its gap to
+// the current board's rank. Green = market drafts the player LATER than this rank
+// (value), red = EARLIER (reach) — same ±3 thresholds and semantics as the main
+// ADP column's adp-value/adp-reach classes. Underdog is premium-gated here just
+// like it is in the ADP source selector.
+function _adpCmpCellHtml(d, src, label) {
+  if (src === 'underdog' && typeof hasPremium === 'function' && !hasPremium()) {
+    return '<span style="color:var(--text2);cursor:help;font-size:.7rem" title="Underdog ADP requires a Premium account">&#128274;</span>';
+  }
+  const v = _adpBySource(d, src);
+  if (v == null) return '—';
+  const diff = Math.round(v - d.myRank);
+  const clr = diff >= 3 ? '#22c55e' : diff <= -3 ? '#ef4444' : null;
+  const tt = label + ' ADP ' + v + ' vs rank ' + d.myRank + (diff >= 3
+    ? ' — value: the market drafts them ' + diff + ' spots later than this rank'
+    : diff <= -3
+      ? ' — reach: the market drafts them ' + Math.abs(diff) + ' spots earlier than this rank'
+      : ' — even with this rank');
+  const badge = clr ? '<span style="font-size:.55rem"> ' + (diff > 0 ? '▲' : '▼') + Math.abs(diff) + '</span>' : '';
+  return '<span style="' + (clr ? 'color:' + clr + ';font-weight:700;' : '') + 'cursor:help" title="' + tt.replace(/"/g, '&quot;') + '">' + v + badge + '</span>';
+}
+
 function adj25ppg(d) {
   if (!d.s25) return null;
   // K/DST: s25.fpts is sometimes 0 even when ppg is populated. The rec
@@ -1656,6 +1690,8 @@ function getFiltered() {
     const _smYds = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); return (s && s.yds != null) ? s.yds : -Infinity; };
     const _smTds = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); return (s && s.tds != null) ? s.tds : -Infinity; };
     const _smTeamPpg = d => { const t = _impliedTeamPpg(d.t); return t ? t.ppg : -Infinity; };
+    // ADP comparison view: missing ADPs sort to the bottom in the (default) ascending order.
+    const _smAdp = (d, src) => { const v = _adpBySource(d, src); return v == null ? 9999 : v; };
     f.sort((a, b) => {
       let av, bv;
       switch(sortKey) {
@@ -1664,14 +1700,14 @@ function getFiltered() {
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
         case 'adp': av = rnkAdp(a) ?? 999; bv = rnkAdp(b) ?? 999; break;
         case 'round': av = a.round; bv = b.round; break;
-        case 'pts': if (_sm !== 'fantasy') { av = _smYds(a); bv = _smYds(b); break; } av = currentVersion==='jsmodel'?(a._jsModelPpg||0):(adjProjPpg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelPpg||0):(adjProjPpg(b)||0); if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
-        case 'fpts25': if (_sm !== 'fantasy') { av = _smTds(a); bv = _smTds(b); break; } av = currentVersion==='jsmodel'?(a._jsModelVor||0):(adj25ppg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelVor||0):(adj25ppg(b)||0); break;
-        case 'l4ppg': if (_sm !== 'fantasy') { av = _smTeamPpg(a); bv = _smTeamPpg(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
+        case 'pts': if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy') { av = _smYds(a); bv = _smYds(b); break; } av = currentVersion==='jsmodel'?(a._jsModelPpg||0):(adjProjPpg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelPpg||0):(adjProjPpg(b)||0); if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
+        case 'fpts25': if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm !== 'fantasy') { av = _smTds(a); bv = _smTds(b); break; } av = currentVersion==='jsmodel'?(a._jsModelVor||0):(adj25ppg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelVor||0):(adj25ppg(b)||0); break;
+        case 'l4ppg': if (_sm === 'adp') { av = _smAdp(a,'espn'); bv = _smAdp(b,'espn'); break; } if (_sm !== 'fantasy') { av = _smTeamPpg(a); bv = _smTeamPpg(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if(filter==='RB'){const _ac=a.career&&a.career.length?a.career[a.career.length-1]:null;const _bc=b.career&&b.career.length?b.career[b.career.length-1]:null;av=_ac&&_ac.gp?(_ac.ry||0)/_ac.gp:0;bv=_bc&&_bc.gp?(_bc.ry||0)/_bc.gp:0;}else{av=a._yrr||0;bv=b._yrr||0;} break;
+        case 'yrr': if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if(filter==='RB'){const _ac=a.career&&a.career.length?a.career[a.career.length-1]:null;const _bc=b.career&&b.career.length?b.career[b.career.length-1]:null;av=_ac&&_ac.gp?(_ac.ry||0)/_ac.gp:0;bv=_bc&&_bc.gp?(_bc.ry||0)/_bc.gp:0;}else{av=a._yrr||0;bv=b._yrr||0;} break;
         case 'jm': av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'diff': av = (rnkAdp(a)??a.myRank) - a.myRank; bv = (rnkAdp(b)??b.myRank) - b.myRank; break;
@@ -2215,6 +2251,12 @@ function render() {
       _statTds = `<td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>
       <td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
       <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
+    } else if (_statMode === 'adp') {
+      // ADP comparison view: platform ADPs side by side vs the current board's rank
+      // (4th column — CBS — rides the repurposed Y/RR cell below).
+      _statTds = `<td class="pts-cell ppg-proj-cell">${_adpCmpCellHtml(d, 'underdog', 'Underdog')}</td>
+      <td class="pts-cell ppg25-cell">${_adpCmpCellHtml(d, 'sleeper', 'Sleeper')}</td>
+      <td class="pts-cell l4ppg-cell">${_adpCmpCellHtml(d, 'espn', 'ESPN')}</td>`;
     } else {
       const _line = _statMode === 'proj' ? _projStatLine(d) : _linesStatLine(d);
       const _tp = _impliedTeamPpg(d.t);
@@ -2254,7 +2296,7 @@ function render() {
       <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); return (t != null ? t : '—'); })()}</td>` : '<td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
       ${_statTds}
-      <td class="pts-cell yrr-cell" style="display:none">${showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—'}</td>
+      <td class="pts-cell yrr-cell" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—')}</td>
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell" style="display:none">${showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
@@ -2293,10 +2335,18 @@ function render() {
   attachRowListeners();
   attachTierListeners();
   // showYrr / showJm / showLanding hoisted above the row loop (reused here).
+  // In the ADP comparison STATS view the Y/RR column is repurposed as the CBS
+  // ADP column and shown for every position filter.
+  const _adpCmpMode = _statMode === 'adp';
   const yrrH = document.getElementById('yrrHeader');
-  yrrH.style.display = showYrr ? '' : 'none';
-  yrrH.childNodes[0].textContent = filter === 'RB' ? 'Rush YPG ' : 'Y/RR ';
-  document.querySelectorAll('.yrr-cell').forEach(c => c.style.display = showYrr ? '' : 'none');
+  yrrH.style.display = (showYrr || _adpCmpMode) ? '' : 'none';
+  yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : (filter === 'RB' ? 'Rush YPG ' : 'Y/RR ');
+  if (yrrH.childNodes[0].setAttribute) {
+    yrrH.childNodes[0].setAttribute('data-gloss', _adpCmpMode
+      ? 'CBS overall rank compared to the current ranks. Green = the market drafts the player later than this rank (value), red = earlier (reach).'
+      : 'Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.');
+  }
+  document.querySelectorAll('.yrr-cell').forEach(c => c.style.display = (showYrr || _adpCmpMode) ? '' : 'none');
   document.getElementById('jmHeader').style.display = showJm ? '' : 'none';
   document.querySelectorAll('.jm-cell').forEach(c => c.style.display = showJm ? '' : 'none');
   // Landing Spot only meaningful for rookies — show only in dynasty modes when ROOKIE filter is active.
@@ -3096,6 +3146,11 @@ window._updateRnkStatHeaders = function() {
     _set(c1, null, 'Projected total yards for 2026 (passing + rushing + receiving) — Mike Clay projections. Hover a value for the breakdown.', 'Yds', 'Clay Proj');
     _set(c2, 'ppg25Header', 'Projected total touchdowns for 2026 (passing + rushing + receiving) — Mike Clay projections.', 'TD', 'Clay Proj');
     _set(c3, 'l4ppgHeader', 'Team PPG — season average of Vegas implied team totals across the full schedule (DK game totals + spreads). Higher = better scoring environment.', 'Team PPG', 'Vegas');
+  } else if (rnkStatMode === 'adp') {
+    const _cmpGloss = ' compared to the current ranks. Green = the market drafts the player later than this rank (value), red = earlier (reach). CBS is in the 4th column.';
+    _set(c1, null, 'Underdog ADP (Best Ball Mania; Superflex mode uses Underdog SF)' + _cmpGloss, 'UD', 'ADP');
+    _set(c2, 'ppg25Header', 'Sleeper ADP' + _cmpGloss, 'SLPR', 'ADP');
+    _set(c3, 'l4ppgHeader', 'ESPN overall rank' + _cmpGloss, 'ESPN', 'ADP');
   } else {
     _set(c1, null, 'Season-long sportsbook yardage lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving. Hover a value for the breakdown.', 'Yds', 'Book Avg');
     _set(c2, 'ppg25Header', 'Season-long sportsbook touchdown lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving.', 'TD', 'Book Avg');
@@ -4850,7 +4905,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; sortDir = (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';

@@ -45,7 +45,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-20e" as="script">
+<link rel="preload" href="app.js?v=2026-07-20f" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1206,6 +1206,7 @@ CLEAR ALL
 <button class="rnk-statmode-btn active" data-rnkstatmode="fantasy" title="Fantasy points per game columns (Proj PPG / '25 PPG / L4 PPG)">FANTASY</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs and team PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM, plus Vegas implied team PPG">BETTING LINES</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="adp" title="Every platform's ADP side by side (Underdog / Sleeper / ESPN / CBS) compared to the current ranks — green = the market drafts them later than this rank (value), red = earlier (reach)">ADP</button>
 </div>
 </div>
 <div style="display:flex;align-items:center;gap:8px">
@@ -1388,6 +1389,8 @@ CLEAR ALL
 <!-- GAMES PAGE (Fantasy Game + Elite Pull + Guess Who) -->
 <div class="page page-games" id="pageGames">
 <div class="auth-anchor" id="authAnchorGames"></div>
+<!-- Low-opacity site watermark so screen recordings of the games show the URL -->
+<div style="text-align:center;font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:4px;color:var(--accent);opacity:.28;user-select:none;pointer-events:none;margin:0 0 6px">myfantasyfootball.co</div>
 <div class="games-tabs">
 <!-- Tab data-attribute "guesswho" targets #gamesGuesswho (Elite Pull clue game); "elitepull" targets #gamesElitepull (Guess Who picture game). Names are swapped from the data attributes because of a pre-swap legacy in the IDs. -->
 <button class="games-tab active" data-games-tab="daily">DAILY</button>
@@ -4873,7 +4876,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-20e"></script>
+<script defer src="app.js?v=2026-07-20f"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

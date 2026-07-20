@@ -45,7 +45,11 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-20d" as="script">
+<link rel="preload" href="app.js?v=2026-07-20e" as="script">
+<!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
+     loader chain below, but the bytes can arrive during parse. crossorigin matches the
+     dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
+<link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous">
 <link rel="preload" href="data/combine_data.js?v=2026-04-25b" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-04-23" as="script">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-07-14a" as="script">
@@ -91,12 +95,11 @@ document.addEventListener('DOMContentLoaded', function(){ if (window._fbBootAuth
      time. Dynamically-injected async scripts don't block the parser (first paint stays fast)
      AND execute the moment they download, so initializeApp + onAuthStateChanged fire mid-parse.
 
-     firestore-compat + functions-compat stay on the DEFERRED path below (NOT loaded here) on
-     purpose: they must not be present during parse. Dozens of consumers are guarded on
-     `firebase.firestore ?` and would otherwise start the Firestore instance mid-parse, before
-     _fbBoot can configure offline persistence (which must be the first call on the instance).
-     Deferring them keeps `firebase.firestore` undefined until after parse, exactly like before.
-     The main app reuses this same app/auth instance (_fbBootAuth/_fbBoot guard on
+     firestore-compat + functions-compat load LATER IN THIS SAME CHAIN (see below), gated on
+     DOMContentLoaded: they must not be present during parse. Dozens of consumers are guarded
+     on `firebase.firestore ?` and would otherwise start the Firestore instance mid-parse,
+     before _fbBoot can configure offline persistence (which must be the first call on the
+     instance). The main app reuses this same app/auth instance (_fbBootAuth/_fbBoot guard on
      firebase.apps.length), so no double-init. A blocked CDN → _fbBlocked → offline mode. -->
 <script>
 (function(){
@@ -134,16 +137,42 @@ document.addEventListener('DOMContentLoaded', function(){ if (window._fbBootAuth
         });
       } catch(e){ console.warn('[Auth] early boot failed:', e && e.message); }
     })
-    .catch(function(){ window._fbBlocked = true; console.warn('[Firebase] Auth SDK blocked — running in offline mode'); });
+    // Firestore + Functions: loaded from THIS chain, not static defer tags. The old
+    // deferred tags raced the async app/auth injection above — once the page parse got
+    // fast (2026-07-20 perf work: DCL ~350 ms), the deferred tags often executed BEFORE
+    // app-compat/auth-compat had downloaded, leaving firebase.firestore permanently
+    // undefined (firestore-compat threw with no firebase global) or _fbBoot throwing at
+    // firebase.auth() and flushing the ready queue with db=null. Chaining guarantees
+    // dependency order. The DOMContentLoaded gate preserves the old invariant that
+    // `firebase.firestore` is undefined during parse (consumers guarded on
+    // `firebase.firestore ?` must not start the instance before _fbBoot configures
+    // persistence — persistence must be the first call on the instance). A preload link
+    // in the head warms the firestore-compat download so the gate costs no network time.
+    .then(function(){
+      return new Promise(function(res){
+        if (document.readyState !== 'loading') res();
+        else document.addEventListener('DOMContentLoaded', function(){ res(); });
+      });
+    })
+    .then(function(){ return load(V + 'firebase-firestore-compat.js'); })
+    .then(function(){
+      if (window._fbBoot) window._fbBoot();
+      // functions-compat is Stripe-only and off the boot path. Its failure must NOT set
+      // _fbBlocked — that would flag a healthy Firestore session as offline.
+      load(V + 'firebase-functions-compat.js').catch(function(){
+        console.warn('[Firebase] functions-compat failed to load (Stripe features unavailable)');
+      });
+    })
+    .catch(function(){
+      window._fbBlocked = true;
+      console.warn('[Firebase] SDK blocked — running in offline mode');
+      // Flush the ready queue into offline mode. The DOMContentLoaded fallback may have
+      // already fired (and bailed on the missing-firestore guard), so this call is the
+      // one that actually flushes when an SDK fails to load after DCL.
+      if (window._fbBoot) window._fbBoot();
+    });
 })();
 </script>
-<!-- Firestore + Functions: DEFERRED (download in parallel, execute only after the full parse
-     so `firebase.firestore` stays undefined during parse — see the auth loader note above).
-     firestore-compat depends on app-compat, which the head loader above loads early, so it is
-     present by the time these deferred scripts run. firestore-compat's onload fires _fbBoot()
-     (db init + persistence + the ready queue). functions-compat is Stripe-only, off the path. -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" crossorigin="anonymous" defer onload="if(window._fbBoot)window._fbBoot()" onerror="window._fbBlocked=true;if(window._fbBoot)window._fbBoot()"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js" crossorigin="anonymous" defer onerror="window._fbBlocked=true"></script>
 <!-- html2canvas: lazy-loaded by admin Rankings Graphic Generator (only fetched when admin uses the tool) -->
 </head>
 <body>
@@ -4844,7 +4873,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-20d"></script>
+<script defer src="app.js?v=2026-07-20e"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

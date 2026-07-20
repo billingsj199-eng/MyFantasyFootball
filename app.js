@@ -19068,12 +19068,13 @@ window.fmtHeight = fmtHeight;
 
   window._fbBoot = function() {
     if (window._fbReady) return;
-    // Defensive: bail without flushing the ready queue if firestore-compat isn't loaded yet
-    // (normally impossible — the deferred firestore tag executes before DOMContentLoaded — but
-    // protects the ready queue from being flushed with db=null if the boot order ever shifts;
-    // firestore-compat's onload calls _fbBoot() again once it's present). If the CDN is blocked,
-    // _fbBlocked is set and we fall through to flush the queue for offline mode.
-    if (isConfigured && !window._fbBlocked && (typeof firebase === 'undefined' || !firebase.firestore)) return;
+    // Defensive: bail without flushing the ready queue until BOTH auth-compat and
+    // firestore-compat are registered (the head loader chain calls _fbBoot again once
+    // firestore loads). The !firebase.auth check matters: the DCL fallback used to reach
+    // the init below before auth-compat arrived, throw at firebase.auth(), and flush the
+    // queue with db=null — permanently killing Firestore for the session. If the CDN is
+    // blocked, _fbBlocked is set and we fall through to flush the queue for offline mode.
+    if (isConfigured && !window._fbBlocked && (typeof firebase === 'undefined' || !firebase.firestore || !firebase.auth)) return;
     if (isConfigured && typeof firebase !== 'undefined' && !window._fbBlocked) {
       try {
         // app/auth may already be initialized by _fbBootAuth — reuse rather than

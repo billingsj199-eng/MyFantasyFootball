@@ -1253,11 +1253,68 @@ window._copyRedraftToBestBall = function() {
   toast(`${verLabel} Best Ball synced from Redraft`);
 };
 
-// Show the "Copy from Redraft" button only in Best Ball mode + when the user can edit
+// === Copy Best Ball → Redraft ===
+// Mirror of the copy above for when Best Ball is the maintained board. Overwrites
+// the Redraft board with the Best Ball order verbatim; K/D/ST (and any player
+// missing from the Best Ball board) keep their current Redraft order at the end.
+window._copyBestBallToRedraft = function() {
+  if (currentMode !== 'redraft') {
+    toast('Switch to REDRAFT mode to copy from Best Ball');
+    return;
+  }
+  if (!canEdit()) {
+    if (!window._authCurrentUser) {
+      toast("Sign in to create your rankings");
+      if (typeof window.openAuthModal === 'function') window.openAuthModal();
+    } else {
+      toast("Only admins can edit Jack's rankings");
+    }
+    return;
+  }
+  const verLabel = currentVersion === 'jacks' ? "Jack's" : 'My';
+  if (!confirm(`Copy ${verLabel} BEST BALL rankings → REDRAFT?\n\nThis will overwrite your current Redraft board and tiers with an exact copy of Best Ball. Kickers and D/ST keep their current Redraft order at the end.`)) return;
+
+  const srcBoard = versionBoards[currentVersion].bestball;
+  if (!srcBoard || !srcBoard.length) { toast('No Best Ball board to copy from'); return; }
+  const curBoard = versionBoards[currentVersion].redraft || [];
+
+  const inSrc = new Set(srcBoard);
+  const newBoard = srcBoard.slice();
+  curBoard.forEach(idx => { if (!inSrc.has(idx)) newBoard.push(idx); });
+  versionBoards[currentVersion].redraft = newBoard;
+
+  // ALL-tier afterRank values stay valid as-is: the new Redraft board begins
+  // with the Best Ball board verbatim, so every break lands on the same player.
+  // K/DST tier buckets keep the existing Redraft ones (Best Ball has none).
+  const srcTiers = versionTiers[currentVersion].bestball;
+  const srcCtrs = versionTierCounters[currentVersion].bestball;
+  const dstTiers = versionTiers[currentVersion].redraft;
+  const dstCtrs = versionTierCounters[currentVersion].redraft;
+  POS_TIER_KEYS.forEach(pk => {
+    if (pk === 'K' || pk === 'DST') return;
+    dstTiers[pk] = (srcTiers[pk] || []).map(t => ({id: t.id, label: t.label, name: t.name, afterRank: t.afterRank}));
+    dstCtrs[pk] = srcCtrs[pk] || 0;
+  });
+
+  syncMode();
+  renumber();
+  saveLocal();
+  if (typeof window._saveToCloudDebounced === 'function') {
+    window._saveToCloudDebounced();
+  } else if (typeof saveToCloud === 'function') {
+    try { saveToCloud(); } catch(e) { /* best effort */ }
+  }
+  render();
+  toast(`${verLabel} Redraft synced from Best Ball`);
+};
+
+// Show the copy buttons only in their target mode + when the user can edit:
+// "Copy from Redraft" in Best Ball, "Copy from Best Ball" in Redraft.
 window._updateCopyFromRedraftBtn = function() {
   const btn = document.getElementById('copyFromRedraftBtn');
-  if (!btn) return;
-  btn.style.display = (currentMode === 'bestball' && canEdit()) ? '' : 'none';
+  if (btn) btn.style.display = (currentMode === 'bestball' && canEdit()) ? '' : 'none';
+  const bbBtn = document.getElementById('copyFromBestBallBtn');
+  if (bbBtn) bbBtn.style.display = (currentMode === 'redraft' && canEdit()) ? '' : 'none';
 };
 
 // State

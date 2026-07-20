@@ -31,6 +31,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # Minify app.js IN THE DEPLOY ARTIFACT ONLY — the repo keeps unminified source,
+      # so the edit-and-push workflow is unchanged. Same filename + ?v= URL, so
+      # index.html and the service worker need no awareness of this step.
+      # --keep-fnames: inline HTML handlers + cross-file globals rely on top-level
+      # names (never mangled) and some code paths read fn.name — keep both safe.
+      # If terser or the syntax check fails, the whole deploy fails and the site
+      # keeps serving the previous build (never a broken artifact).
+      - name: Minify app.js
+        run: |
+          npx -y terser@5 app.js --compress --mangle --keep-fnames --comments false -o app.min.tmp.js
+          node --check app.min.tmp.js
+          echo "app.js: $(wc -c < app.js) -> $(wc -c < app.min.tmp.js) bytes"
+          mv app.min.tmp.js app.js
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

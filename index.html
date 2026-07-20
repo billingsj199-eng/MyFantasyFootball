@@ -41,6 +41,15 @@
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
 <link rel="preload" href="styles/main.css?v=2026-05-20a" as="style">
+<!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
+     slow connections the preload scanner doesn't discover them until most of the HTML has
+     downloaded. Preloading from the head starts these downloads in parallel with the body.
+     Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
+<link rel="preload" href="app.js?v=2026-07-20c" as="script">
+<link rel="preload" href="data/combine_data.js?v=2026-04-25b" as="script">
+<link rel="preload" href="data/ep_retired.js?v=2026-04-23" as="script">
+<link rel="preload" href="data/_bundle_lookups.js?v=2026-07-14a" as="script">
+<link rel="preload" href="data/d.js?v=2026-07-14a" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-05-20a">
 
@@ -3657,7 +3666,8 @@ ADD TO CHROME
      `let EP_PLAYERS_U` in the Unlimited Guess-Who IIFE and never read. Dead payload. -->
 <script src="data/active_team_history.js?v=2026-05-13c" defer></script>
 <script src="data/daily_retired_pool.js?v=2026-04-21" defer></script>
-<script src="data/weekly_stats_active.js?v=2026-05-14c-opp" defer></script>
+<!-- weekly_stats_active.js (~2.4 MB) moved into the _loadWeeklyData lazy bundle (2026-07-20)
+     — it only feeds the L4 PPG column (repaints on merge) + on-demand game logs. -->
 <!-- WEEKLY_STATS_RETIRED (~10 MB): now LAZY-loaded (not deferred) via window._loadWeeklyData()
      — see the loader block below (~line 5615). It feeds only retired-player weekly game logs
      + Elite Pull era pools, so it no longer blocks the initial load. Merged into WEEKLY_STATS
@@ -4684,12 +4694,14 @@ window._ensureProspectStats = (function() {
      — see the loader block below. Its only consumer is _mergeAllPlayersWeekly (idempotent),
      which now runs on the 'mff:weeklydata' event the loader dispatches instead of on DCL. -->
 <script>
-// WEEKLY_STATS_ACTIVE (~2.4 MB) and WEEKLY_STATS_RETIRED (~10 MB) are BOTH deferred
-// now, so WEEKLY_STATS starts empty at parse and is populated on DOMContentLoaded once
-// the deferred scripts parse. Collision semantics preserved: ACTIVE overwrites (wins),
-// RETIRED only fills absent keys — order-independent. The only parse-time consumer is
-// the L4 PPG column (last4Ppg → WEEKLY_STATS), which degrades to null and is repainted
-// by the re-render below; every other reader is on-demand (player cards, games, teams).
+// WEEKLY_STATS_ACTIVE (~2.4 MB) rides the _loadWeeklyData lazy bundle since 2026-07-20
+// (was eager defer — 2.4 MB of parse before DOMContentLoaded for one rankings column);
+// WEEKLY_STATS_RETIRED (~10 MB) has been lazy all along. WEEKLY_STATS starts empty at
+// parse and populates when the bundles land (mff:weeklydata). Collision semantics
+// preserved: ACTIVE overwrites (wins), RETIRED only fills absent keys — order-independent.
+// The only render-path consumer is the L4 PPG column (last4Ppg → WEEKLY_STATS), which
+// degrades to null and is repainted by the re-render below; every other reader is
+// on-demand (player cards force _loadWeeklyData on open; games/compare force it on nav).
 const WEEKLY_STATS = (typeof WEEKLY_STATS_ACTIVE !== 'undefined') ? Object.assign({}, WEEKLY_STATS_ACTIVE) : {};
 let _wsActiveMerged = (typeof WEEKLY_STATS_ACTIVE !== 'undefined');
 function _mergeWeeklyStatsActive() {
@@ -4702,6 +4714,7 @@ function _mergeWeeklyStatsActive() {
 }
 _mergeWeeklyStatsActive();
 document.addEventListener('DOMContentLoaded', _mergeWeeklyStatsActive);
+document.addEventListener('mff:weeklydata', _mergeWeeklyStatsActive);
 function _mergeWeeklyStatsRetired() {
   if (typeof WEEKLY_STATS_RETIRED === 'undefined') return;
   for (const name in WEEKLY_STATS_RETIRED) {
@@ -4768,6 +4781,10 @@ function _injectScripts(files, tag, opts) {
 window._loadWeeklyData = function(opts) {
   if (window._weeklyDataPromise) return window._weeklyDataPromise;
   var files = [
+    // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer). First in
+    // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
+    // merge listens on the same mff:weeklydata event as the retired merges.
+    'data/weekly_stats_active.js?v=2026-05-14c-opp',
     'data/weekly_stats_retired_1.js?v=2026-04-20',
     'data/weekly_stats_retired_2.js?v=2026-04-20',
     'data/weekly_stats_retired_3.js?v=2026-04-20',
@@ -4827,7 +4844,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-20b"></script>
+<script defer src="app.js?v=2026-07-20c"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

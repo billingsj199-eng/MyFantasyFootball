@@ -6115,12 +6115,13 @@ function openPlayerCard(d, ctxMode) {
   if (typeof window._ensurePffData === 'function') window._ensurePffData();
   if (typeof window._ensureProspectStats === 'function') window._ensureProspectStats();
   if (typeof window._ensureCollegeStatsData === 'function') window._ensureCollegeStatsData();
-  // Retired players' careers + weekly game logs come from the lazy bundles
-  // (window._loadRetiredData / _loadWeeklyData). Fire both when a legend's card opens so it
-  // fills in (the idle preload usually beats this).
+  // Retired players' careers come from the lazy retired bundle; weekly game logs for
+  // ALL players come from the lazy weekly bundles (weekly_stats_active.js joined them
+  // 2026-07-20 — it's no longer eager). Fire the loads on click so the card fills in
+  // (the idle preload usually beats this).
+  if (typeof window._loadWeeklyData === 'function') window._loadWeeklyData();
   if (d && d._retired) {
     if (typeof window._loadRetiredData === 'function') window._loadRetiredData();
-    if (typeof window._loadWeeklyData === 'function') window._loadWeeklyData();
   }
   // ctxMode lets callers (Trade Calc, My Teams, etc.) display the player in the
   // context of a different mode than the rankings page's currentMode. Falls back

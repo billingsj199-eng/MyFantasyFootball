@@ -10536,10 +10536,11 @@ document.addEventListener('click', function(e) {
   }
 
   // Add historical players from HP — merge _bestByTeam into existing pool entries.
-  // hp.js (~838 KB) is deferred, so HP may be undefined at parse. Build eagerly when
-  // present, else on DOMContentLoaded once the deferred script has parsed. Idempotent
-  // via poolNameSet — a re-run merges into existing entries and never duplicates.
-  // (The Fantasy Game only reads FG_POOL on user interaction, which is post-DCL.)
+  // hp.js (~838 KB) is lazy-loaded via _loadRetiredData (since 2026-07-20), so HP is
+  // undefined at parse AND at DCL. Re-run on the mff:retireddata event the lazy loader
+  // dispatches (DCL kept as a harmless fallback). Idempotent via poolNameSet — a re-run
+  // merges into existing entries and never duplicates.
+  // (The Fantasy Game only reads FG_POOL on user interaction, well after the idle warm-up.)
   function _fgAppendHpPlayers() {
     if (typeof HP === 'undefined') return;
     HP.forEach(p => {
@@ -10568,6 +10569,7 @@ document.addEventListener('click', function(e) {
   }
   _fgAppendHpPlayers();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _fgAppendHpPlayers);
+  document.addEventListener('mff:retireddata', _fgAppendHpPlayers);
 
   // Build the complete NFL teams list (all 32)
   // ALL_NFL_TEAMS moved to data/all_nfl_teams.js
@@ -11976,7 +11978,13 @@ document.addEventListener('mff:retireddata', _applyLegendCareerBindings);
 // Rebuild the Elite Pull / Guess Who pools once retired careers are bound — their rebuild
 // signature includes LEGEND_CAREERS.length, so this picks up the newly-loaded legends
 // regardless of whether the weekly-data merge (which also rebuilds them) ran first.
-document.addEventListener('mff:retireddata', function(){ if (typeof window._gwInitPool === 'function') { try { window._gwInitPool(); } catch(e){} } });
+document.addEventListener('mff:retireddata', function(){
+  if (typeof window._gwInitPool === 'function') { try { window._gwInitPool(); } catch(e){} }
+  // hp.js rides the retired bundle now — era pools grow when it lands, so re-init any
+  // daily games that were created from the pre-HP pools (same pattern as the
+  // mff:weeklydata → _gwDailyReinit hook in index.html).
+  if (typeof window._gwDailyReinit === 'function') { try { window._gwDailyReinit(); } catch(e){} }
+});
 
 // LEGEND_BIRTH_YEARS moved to data/legend_birth_years.js
 LDB.forEach(p => { if (LEGEND_BIRTH_YEARS[p.n]) p.birthYear = typeof LEGEND_BIRTH_YEARS[p.n] === 'string' ? parseInt(LEGEND_BIRTH_YEARS[p.n]) : LEGEND_BIRTH_YEARS[p.n]; });

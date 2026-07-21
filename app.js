@@ -4346,19 +4346,50 @@ _whenFirebaseReady(function(){
       // --- Experience curve: "young jump" / veteran fade ---
       // Calibrated from scripts/backtest_js_model.py residuals (2018-2025):
       // how much players beat/missed the recency-weighted core by years of
-      // experience. Measured: QB exp1/2 +20%/+26%; RB exp1 +18%, exp6+ -10%;
-      // WR exp1/2 +8%/+9%, exp5 -14%, exp6+ -17%; TE exp2/3 +13%/+9%, exp6+ -17%.
+      // experience. Measured: QB exp1/2 +20%/+26%; RB exp1 +18%;
+      // WR exp1/2 +8%/+9%, exp5 -14%; TE exp2/3 +13%/+9%.
       // Applied at ~60% of measured (noise shrinkage), BEFORE the JM and Clay
       // blends, which price young upside their own way — full residual on top
       // of those would double-count.
       var _expJumpTbl = {
         QB: { 1: 1.12, 2: 1.15, 3: 1.02 },
-        RB: { 1: 1.11, 6: 0.94 },
-        WR: { 1: 1.05, 2: 1.05, 4: 0.96, 5: 0.92, 6: 0.90 },
-        TE: { 2: 1.07, 3: 1.05, 4: 0.96, 5: 0.96, 6: 0.90 }
+        RB: { 1: 1.11 },
+        WR: { 1: 1.05, 2: 1.05, 4: 0.96, 5: 0.92 },
+        TE: { 2: 1.07, 3: 1.05, 4: 0.96, 5: 0.96 }
       };
+      // Veteran (exp 6+) fade is PRODUCTION-TIERED — the backtest tier split
+      // showed elite producers age very differently from the mid-tier vets
+      // driving the average fade:
+      //   WR elite -3.9% vs rest -19.8% (Evans-types basically hold)
+      //   RB elite -15.6% vs rest -8.5% (elite vet RBs fall HARDER)
+      //   TE elite -15.6% vs rest -17.5% (no real difference)
+      //   QB skipped (residuals were measured against the QB age curve this
+      //   engine no longer applies, so they don't transfer)
+      // Tier by the player's RAW base-rate PPG (pre-discount) so an injury
+      // discount can't demote an elite vet into the harsher tier.
+      var _vetFadeTbl = {
+        RB: { elite: 0.91, rest: 0.95 },
+        WR: { elite: 0.98, rest: 0.89 },
+        TE: { elite: 0.91, rest: 0.90 }
+      };
+      var _vetEliteThr = { RB: 12, WR: 12, TE: 9 }; // half-PPR-ish raw PPG
       if (d.exp != null && d.exp >= 1) {
-        var _ejMult = (_expJumpTbl[pos] || {})[Math.min(d.exp, 6)];
+        var _ejMult = null;
+        if (d.exp >= 6) {
+          var _vf = _vetFadeTbl[pos];
+          if (_vf) {
+            var _rawPpg = _jsScore(proj, scoring);
+            _ejMult = _vf[_rawPpg >= _vetEliteThr[pos] ? 'elite' : 'rest'];
+            // Injury double-count guard: the measured vet fade already
+            // includes injury-wrecked seasons, so when an injury discount was
+            // applied to this player this season, halve the fade.
+            if (d._injDiscount && d._injDiscount.mult < 0.97) {
+              _ejMult = 1 - (1 - _ejMult) * 0.5;
+            }
+          }
+        } else {
+          _ejMult = (_expJumpTbl[pos] || {})[d.exp];
+        }
         if (_ejMult) fpts_pg *= _ejMult;
       }
 
@@ -4637,8 +4668,58 @@ _whenFirebaseReady(function(){
       }
     });
 
-    // Sort by VOR descending
-    scored.sort(function(a,b) { return b.vor - a.vor; });
+    // --- Final ordering: model within position, market across positions ---
+    // Raw half-PPR VOR is structurally RB/TE-heavy vs how drafts actually go
+    // (model top-60 was 32 RB / 10 TE / 13 WR vs Underdog's 25 / 3 / 30, and
+    // no linear per-position VOR scaling can fix allocation — the RB VOR
+    // distribution dwarfs WR's in the starter zone). So: the model keeps full
+    // control of ORDER WITHIN each position (its backtested strength), while
+    // the CROSS-POSITION mix follows a market slot curve — "the Nth RB
+    // typically goes at overall pick X" — built live from Underdog ADP
+    // (consensus rank fallback), so it tracks live ADP updates. Positional
+    // outliers vs market stay fully visible (a player the model calls WR8 vs
+    // market WR20 still leaps off the board). 1QB only: superflex/2QB keep
+    // pure VOR ordering — their QB premium is the whole point and UD's 1QB
+    // curve would erase it.
+    var _slotCurve = null;
+    if (_jsFormat === '1qb') {
+      var _mktRanked = [];
+      var _udCount = 0;
+      D.forEach(function(dd) {
+        if (dd.s !== 'QB' && dd.s !== 'RB' && dd.s !== 'WR' && dd.s !== 'TE') return;
+        if (dd.udA != null) _udCount++;
+      });
+      D.forEach(function(dd) {
+        if (dd.s !== 'QB' && dd.s !== 'RB' && dd.s !== 'WR' && dd.s !== 'TE') return;
+        var mv = _udCount >= 100 ? dd.udA : dd.a;
+        if (mv != null) _mktRanked.push({ pos: dd.s, v: mv });
+      });
+      if (_mktRanked.length >= 100) {
+        _mktRanked.sort(function(a, b) { return a.v - b.v; });
+        _slotCurve = { QB: [], RB: [], WR: [], TE: [] };
+        _mktRanked.forEach(function(m, i) { _slotCurve[m.pos].push(i + 1); });
+      }
+    }
+    if (_slotCurve) {
+      var _slotFor = function(pos, posRank) {
+        var arr = _slotCurve[pos];
+        if (posRank <= arr.length) return arr[posRank - 1];
+        // extrapolate past the market's data with the observed tail spacing
+        var last = arr[arr.length - 1] || 300;
+        var span = arr.length >= 6 ? (last - arr[arr.length - 6]) / 5 : 8;
+        return last + (posRank - arr.length) * Math.max(span, 2);
+      };
+      var _byPos = { QB: [], RB: [], WR: [], TE: [] };
+      scored.forEach(function(p) { _byPos[p.pos].push(p); });
+      for (var _sp in _byPos) {
+        _byPos[_sp].sort(function(a, b) { return b.vor - a.vor; });
+        _byPos[_sp].forEach(function(p, i) { p.slot = _slotFor(_sp, i + 1); });
+      }
+      scored.sort(function(a, b) { return (a.slot - b.slot) || (b.vor - a.vor); });
+    } else {
+      // No market data (or superflex/2QB): pure VOR descending
+      scored.sort(function(a, b) { return b.vor - a.vor; });
+    }
 
     // Build board (array of D indices)
     var jsBoard = scored.map(function(p) { return p.idx; });

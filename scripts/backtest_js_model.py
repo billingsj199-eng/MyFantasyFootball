@@ -303,6 +303,31 @@ def residuals_by_experience(db, rows, model='w3_age'):
             parts.append(f'exp{label}: {mean:+.1%} (n={len(v)})')
         print(f'  {pos:<3} ' + '  '.join(parts))
 
+    # Veteran fade by production tier: does the exp-6+ fade apply to ELITE
+    # producers too, or only to the mid-tier vets falling off cliffs?
+    # Tier = projected PPG (the core's own estimate, so it's known pre-season).
+    elite_thr = {'QB': 17, 'RB': 12, 'WR': 12, 'TE': 9}
+    tier_buckets = defaultdict(list)
+    for r in rows:
+        deb = debut.get(r['name'])
+        if not deb or r['year'] - deb < 6:
+            continue
+        pred = r['preds'][model]
+        if pred < 3:
+            continue
+        tier = 'elite' if pred >= elite_thr[r['pos']] else 'rest'
+        tier_buckets[(r['pos'], tier)].append((r['actual'] - pred) / pred)
+    print(f'\n=== exp6+ veteran residual split by projected-PPG tier '
+          f'(elite thr: {elite_thr}) ===')
+    for pos in POSITIONS:
+        parts = []
+        for tier in ('elite', 'rest'):
+            v = tier_buckets.get((pos, tier))
+            if v:
+                parts.append(f'{tier}: {sum(v)/len(v):+.1%} (n={len(v)})')
+        if parts:
+            print(f'  {pos:<3} ' + '  '.join(parts))
+
 
 def diagnose_file_weighting(db, js_model_data, scoring):
     """Which weighting does js_model_data.js match: career-avg or recency (w3)?"""

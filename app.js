@@ -3754,14 +3754,19 @@ _whenFirebaseReady(function(){
       if (!dr && draftPick) dr = Math.ceil(draftPick / 32); // pick → round
       if (!dr && draftPick) dr = draftPick <= 32 ? 1 : draftPick <= 64 ? 2 : draftPick <= 100 ? 3 : 4;
       
-      // Estimate draft round from ADP if no draft data (pre-draft prospects)
-      if (!dr && d.a) {
-        if (d.a < 40) dr = 1;
-        else if (d.a < 80) dr = 2;
-        else if (d.a < 150) dr = 3;
+      // Estimate draft round from ADP if no draft data — but ONLY from real
+      // market ADP (udA = actual Underdog picks). d.a is the consensus board
+      // rank, and for devy imports it's a DEVY-board rank: Dean Connors
+      // (undrafted devy RB) had a=31, which this path used to read as top-40
+      // redraft ADP → round-1 capital → elite RB boost → RB24 overall.
+      var mktAdp = d.udA != null ? d.udA : null;
+      if (!dr && mktAdp) {
+        if (mktAdp < 40) dr = 1;
+        else if (mktAdp < 80) dr = 2;
+        else if (mktAdp < 150) dr = 3;
         else dr = 4;
       }
-      if (!dr) dr = 4; // default to late round
+      if (!dr) dr = 4; // default to late round (incl. undrafted/devy)
 
       var rdKey = String(Math.min(dr, 4));
       var tmpl = (_JS_ROOKIE_TEMPLATES[pos] || {})[rdKey];
@@ -3784,18 +3789,19 @@ _whenFirebaseReady(function(){
       // Historical data shows Rd 1 RBs average ~13-15 PPG in year 1, but the
       // base template × JM scale often only produces ~10 PPG. Bridge the gap
       // for top-pick RBs who will get immediate workhorse usage.
+      // (gated on real market ADP for the same reason as the dr estimate)
       if (pos === 'RB' && dr === 1) {
         // Top-12 ADP RBs are projected as immediate starters
-        if (d.a && d.a <= 20) scale *= 1.35; // top pick RB → ~1.35x total
-        else if (d.a && d.a <= 40) scale *= 1.25;
+        if (mktAdp && mktAdp <= 20) scale *= 1.35; // top pick RB → ~1.35x total
+        else if (mktAdp && mktAdp <= 40) scale *= 1.25;
         else scale *= 1.15;
       } else if (pos === 'WR' && dr === 1) {
         // Rd 1 WRs also get a small boost (year-1 WRs have a wider range)
-        if (d.a && d.a <= 30) scale *= 1.15;
-        else if (d.a && d.a <= 60) scale *= 1.10;
+        if (mktAdp && mktAdp <= 30) scale *= 1.15;
+        else if (mktAdp && mktAdp <= 60) scale *= 1.10;
       } else if (pos === 'TE' && dr <= 2) {
         // Top TEs (Bowers-type) get modest boost
-        if (d.a && d.a <= 50) scale *= 1.15;
+        if (mktAdp && mktAdp <= 50) scale *= 1.15;
       }
 
       _jsPlayerProj[idx] = {

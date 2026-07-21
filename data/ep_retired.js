@@ -6747,18 +6747,7 @@ const EP_RETIRED = [
 {yr:2008,gp:2,py:151,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:6.0,ppg:3.0},
 {yr:2009,gp:3,py:230,ptd:2,int:0,ra:0,ry:0,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:17.2,ppg:5.7},
 {yr:2010,gp:2,py:38,ptd:0,int:1,ra:0,ry:0,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:-0.5,ppg:-0.2}]},
-    {name:"Zach Miller",pos:"TE",debut:2007,last:2017,career:[
-{yr:2007,gp:15,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:44,rcy:444,rctd:3,fl:1,fpts:60.4,ppg:4.0},
-{yr:2008,gp:15,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:56,rcy:778,rctd:1,fl:0,fpts:83.8,ppg:5.6},
-{yr:2009,gp:25,py:0,ptd:0,int:0,ra:1,ry:3,rtd:0,rc:87,rcy:1017,rctd:5,fl:0,fpts:132.0,ppg:5.3},
-{yr:2010,gp:25,py:0,ptd:0,int:0,ra:2,ry:9,rtd:0,rc:80,rcy:901,rctd:6,fl:0,fpts:127.0,ppg:5.1},
-{yr:2011,gp:15,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:29,rcy:275,rctd:1,fl:0,fpts:33.5,ppg:2.2},
-{yr:2012,gp:16,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:38,rcy:396,rctd:3,fl:1,fpts:55.6,ppg:3.5},
-{yr:2013,gp:13,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:33,rcy:387,rctd:5,fl:0,fpts:68.7,ppg:5.3},
-{yr:2014,gp:3,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:6,rcy:76,rctd:0,fl:0,fpts:7.6,ppg:2.5},
-{yr:2015,gp:12,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:34,rcy:439,rctd:5,fl:0,fpts:73.9,ppg:6.2},
-{yr:2016,gp:10,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:47,rcy:486,rctd:4,fl:0,fpts:72.6,ppg:7.3},
-{yr:2017,gp:8,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:20,rcy:236,rctd:2,fl:0,fpts:35.6,ppg:4.5}]},
+    {"name":"Zach Miller","pos":"TE","debut":2007,"last":2014,"career":[{"yr":2007,"gp":15,"tm":"LV","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":44,"rcy":444,"rctd":3,"fl":1,"fpts":104.4,"ppg":7,"pc":0,"pa":0,"tgt":44},{"yr":2008,"gp":15,"tm":"LV","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":56,"rcy":778,"rctd":1,"fl":0,"fpts":139.8,"ppg":9.3,"pc":0,"pa":0,"tgt":56},{"yr":2009,"gp":15,"tm":"LV","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":66,"rcy":805,"rctd":3,"fl":0,"fpts":164.5,"ppg":11,"pc":0,"pa":0,"tgt":100},{"yr":2010,"gp":15,"tm":"LV","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":60,"rcy":685,"rctd":5,"fl":0,"fpts":158.5,"ppg":10.6,"pc":0,"pa":0,"tgt":92},{"yr":2011,"gp":13,"tm":"SEA","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":25,"rcy":233,"rctd":0,"fl":0,"fpts":48.3,"ppg":3.7,"pc":0,"pa":0,"tgt":44},{"yr":2012,"gp":16,"tm":"SEA","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":38,"rcy":396,"rctd":3,"fl":1,"fpts":93.6,"ppg":5.8,"pc":0,"pa":0,"tgt":53},{"yr":2013,"gp":13,"tm":"SEA","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":33,"rcy":387,"rctd":5,"fl":0,"fpts":101.7,"ppg":7.8,"pc":0,"pa":0,"tgt":56},{"yr":2014,"gp":3,"tm":"SEA","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":6,"rcy":76,"rctd":0,"fl":0,"fpts":13.6,"ppg":4.5,"pc":0,"pa":0,"tgt":7}]},
     {name:"Jeff Graham",pos:"WR",debut:1999,last:2001,career:[
 {yr:1999,gp:16,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:54,rcy:882,rctd:2,fl:0,fpts:100.2,ppg:6.3},
 {yr:2000,gp:13,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:55,rcy:907,rctd:4,fl:0,fpts:114.7,ppg:8.8},
@@ -8966,12 +8955,7 @@ const EP_RETIRED = [
 {yr:2013,gp:2,py:0,ptd:0,int:0,ra:10,ry:12,rtd:0,rc:4,rcy:14,rctd:0,fl:0,fpts:2.6,ppg:1.3}]},
     {name:"Cecil Collins",pos:"RB",debut:1999,last:1999,career:[
 {yr:1999,gp:8,py:0,ptd:0,int:0,ra:131,ry:414,rtd:2,rc:6,rcy:32,rctd:0,fl:1,fpts:54.6,ppg:6.8}]},
-    {name:"Chris Henry",pos:"WR",debut:2005,last:2009,career:[
-{yr:2005,gp:11,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:31,rcy:422,rctd:6,fl:1,fpts:76.2,ppg:6.9},
-{yr:2006,gp:11,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:36,rcy:605,rctd:9,fl:0,fpts:114.5,ppg:10.4},
-{yr:2007,gp:13,py:0,ptd:0,int:0,ra:31,ry:119,rtd:2,rc:27,rcy:396,rctd:2,fl:0,fpts:75.5,ppg:5.8},
-{yr:2008,gp:11,py:0,ptd:0,int:0,ra:1,ry:3,rtd:0,rc:19,rcy:220,rctd:2,fl:0,fpts:34.3,ppg:3.1},
-{yr:2009,gp:8,py:0,ptd:0,int:0,ra:0,ry:0,rtd:0,rc:12,rcy:236,rctd:2,fl:0,fpts:35.6,ppg:4.5}]},
+    {"name":"Chris Henry","pos":"WR","debut":2005,"last":2009,"career":[{"yr":2005,"gp":11,"tm":"CIN","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":31,"rcy":422,"rctd":6,"fl":1,"fpts":107.2,"ppg":9.7,"pc":0,"pa":0,"tgt":31},{"yr":2006,"gp":11,"tm":"CIN","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":36,"rcy":605,"rctd":9,"fl":0,"fpts":150.5,"ppg":13.7,"pc":0,"pa":0,"tgt":36},{"yr":2007,"gp":7,"tm":"CIN","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":21,"rcy":343,"rctd":2,"fl":0,"fpts":67.3,"ppg":9.6,"pc":0,"pa":0,"tgt":21},{"yr":2008,"gp":10,"tm":"CIN","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":19,"rcy":220,"rctd":2,"fl":0,"fpts":53,"ppg":5.3,"pc":0,"pa":0,"tgt":19},{"yr":2009,"gp":8,"tm":"CIN","py":0,"ptd":0,"int":0,"ra":0,"ry":0,"rtd":0,"rc":12,"rcy":236,"rctd":2,"fl":0,"fpts":47.6,"ppg":6,"pc":0,"pa":0,"tgt":23}]},
     {name:"Shaun Draughn",pos:"RB",debut:2012,last:2016,career:[
 {yr:2012,gp:14,py:0,ptd:0,int:0,ra:59,ry:233,rtd:2,rc:24,rcy:158,rctd:0,fl:1,fpts:49.1,ppg:3.5},
 {yr:2013,gp:1,py:0,ptd:0,int:0,ra:4,ry:2,rtd:0,rc:0,rcy:0,rctd:0,fl:0,fpts:0.2,ppg:0.2},

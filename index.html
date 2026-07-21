@@ -51,7 +51,7 @@
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous">
 <link rel="preload" href="data/combine_data.js?v=2026-04-25b" as="script">
-<link rel="preload" href="data/ep_retired.js?v=2026-04-23" as="script">
+<link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-07-14a" as="script">
 <link rel="preload" href="data/d.js?v=2026-07-21l" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -3687,7 +3687,7 @@ ADD TO CHROME
      Deferred scripts run in document order before DOMContentLoaded, so the chain
      ep_retired → daily_retired_pool → app.js is preserved, and none of this ~795 KB blocks
      the parser / first paint. Neither global feeds the default rankings view. -->
-<script src="data/ep_retired.js?v=2026-04-23" defer></script>
+<script src="data/ep_retired.js?v=2026-07-21" defer></script>
 <!-- legend_careers.js (~2.8 MB): now LAZY-loaded (not deferred) via window._loadRetiredData()
      — see the loader block below. Feeds retired-player careers (Compare, Trivia, retired cards,
      Games) — none of which is the default rankings view. Its binds re-run via
@@ -4818,14 +4818,14 @@ window._loadWeeklyData = function(opts) {
     // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
     // merge listens on the same mff:weeklydata event as the retired merges.
     'data/weekly_stats_active.js?v=2026-05-14c-opp',
-    'data/weekly_stats_retired_1.js?v=2026-04-20',
-    'data/weekly_stats_retired_2.js?v=2026-04-20',
-    'data/weekly_stats_retired_3.js?v=2026-04-20',
+    'data/weekly_stats_retired_1.js?v=2026-07-21',
+    'data/weekly_stats_retired_2.js?v=2026-07-21',
+    'data/weekly_stats_retired_3.js?v=2026-07-21',
     'data/all_players_weekly_1.js?v=2026-04-15',
     'data/all_players_weekly_2.js?v=2026-05-08',
     'data/all_players_weekly_3.js?v=2026-04-16',
-    'data/all_players_weekly_4.js?v=2026-04-16',
-    'data/all_players_weekly_5.js?v=2026-04-15',
+    'data/all_players_weekly_4.js?v=2026-07-21b',
+    'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
     'data/snap_counts.js?v=2026-07-21b'
   ];
@@ -4848,8 +4848,8 @@ window._loadWeeklyData = function(opts) {
 window._loadRetiredData = function(opts) {
   if (window._retiredDataPromise) return window._retiredDataPromise;
   var files = [
-    'data/legend_careers.js?v=2026-05-13b',
-    'data/all_players.js?v=2026-07-21b',
+    'data/legend_careers.js?v=2026-07-21',
+    'data/all_players.js?v=2026-07-21c',
     // hp.js joined the lazy bundle 2026-07-20 (was eager defer): per-team best seasons for
     // retired players. Independent of the two above; consumers (_fgAppendHpPlayers, initGwPool
     // signature rebuild) re-run on the mff:retireddata event this loader dispatches.

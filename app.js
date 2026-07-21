@@ -41579,8 +41579,9 @@ Rules:
         html += `<div class="mt-roster-stats" style="flex:0 0 auto;display:flex;gap:8px;align-items:center">`;
         // RANK (overall)
         html += `<div style="text-align:center;min-width:32px"><div style="font-size:.82rem;font-weight:700;color:${rankColor};line-height:1.05">${p.rank <= 500 ? p.rank : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">RANK</div></div>`;
-        // POS RANK (e.g. RB7)
-        html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${posColors[pos]};line-height:1.05">${posRank ? _esc(String(posRank)) : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">POS RANK</div></div>`;
+        // POS RANK — number only ("RB7" → "7"); the column header names the position.
+        const posRankNum = posRank ? String(posRank).replace(/\D/g, '') : '';
+        html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${posColors[pos]};line-height:1.05">${posRankNum || '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">POS RANK</div></div>`;
         // PROJ PPG
         html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${ppgColor};line-height:1.05">${projPpg > 0 ? projPpg : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">PPG</div></div>`;
         html += `</div>`;

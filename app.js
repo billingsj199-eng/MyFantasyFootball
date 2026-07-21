@@ -41663,15 +41663,22 @@ Rules:
         html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0" data-mtname="${_esc(p.name)}">`;
         html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(p.name)}</div>`;
         html += `</div>`;
-        // Stat blocks (label below value): overall RANK, positional rank, PPG.
+        // Stat blocks — bare numbers, labels dropped 2026-07-21 per Jack
+        // (hover titles disambiguate): overall rank · pos rank · PPG.
+        // Pos rank color is quality-tiered like overall rank; QB/TE tiers are
+        // tighter than RB/WR since fewer start per team.
+        const posRankNum = posRank ? parseInt(String(posRank).replace(/\D/g, ''), 10) : null;
+        const _prDeep = pos === 'RB' || pos === 'WR';
+        const posRankColor = posRankNum == null ? 'var(--text2)'
+          : posRankNum <= (_prDeep ? 12 : 6) ? '#22c55e'
+          : posRankNum <= (_prDeep ? 24 : 12) ? '#4ade80'
+          : posRankNum <= (_prDeep ? 36 : 18) ? '#facc15'
+          : posRankNum <= (_prDeep ? 48 : 24) ? '#f59e0b'
+          : '#ef4444';
         html += `<div class="mt-roster-stats" style="flex:0 0 auto;display:flex;gap:8px;align-items:center">`;
-        // RANK (overall)
-        html += `<div style="text-align:center;min-width:32px"><div style="font-size:.82rem;font-weight:700;color:${rankColor};line-height:1.05">${p.rank <= 500 ? p.rank : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">RANK</div></div>`;
-        // POS RANK — number only ("RB7" → "7"); the column header names the position.
-        const posRankNum = posRank ? String(posRank).replace(/\D/g, '') : '';
-        html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${posColors[pos]};line-height:1.05">${posRankNum || '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">POS RANK</div></div>`;
-        // PROJ PPG
-        html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${ppgColor};line-height:1.05">${projPpg > 0 ? projPpg : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">PPG</div></div>`;
+        html += `<div title="Overall rank" style="text-align:center;min-width:26px;font-size:.8rem;font-weight:700;color:${rankColor};line-height:1.05">${p.rank <= 500 ? p.rank : '—'}</div>`;
+        html += `<div title="Position rank" style="text-align:center;min-width:26px;font-size:.8rem;font-weight:700;color:${posRankColor};line-height:1.05">${posRankNum || '—'}</div>`;
+        html += `<div title="Projected PPG" style="text-align:center;min-width:30px;font-size:.8rem;font-weight:700;color:${ppgColor};line-height:1.05">${projPpg > 0 ? projPpg : '—'}</div>`;
         html += `</div>`;
         html += `</div>`;
       });

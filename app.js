@@ -12683,6 +12683,9 @@ function _enrichFromAllPlayers() {
         if (!WEEKLY_STATS[name].seasons[yr]) WEEKLY_STATS[name].seasons[yr] = weeks;
       }
     }
+    // The by-name season fill above can graft a same-named retired player's game
+    // logs onto a current player — re-run the collision cleanup after each merge.
+    if (typeof window._fixNameCollisions === 'function') window._fixNameCollisions();
   }
   _mergeAllPlayersWeekly();
   document.addEventListener('DOMContentLoaded', _mergeAllPlayersWeekly);
@@ -12723,6 +12726,10 @@ function _enrichFromAllPlayers() {
     });
     _apAdded++;
   });
+  // Re-apply the name-collision cleanup: the career merge above can re-graft a
+  // same-named retired player's career onto a current player (window fn — defined
+  // later in this file, so guard the eager parse-time call).
+  if (typeof window._fixNameCollisions === 'function') window._fixNameCollisions();
   console.log('[ALL_PLAYERS_DB] Enriched career stats, added ' + _apAdded + ' new retired players');
 }
 _enrichFromAllPlayers();
@@ -12836,15 +12843,45 @@ document.addEventListener('mff:retireddata', _rerunAllPlayersEnrich);
   } catch(e) { _rebuildIfDone(); }
 })();
 
-// === NAME COLLISION FIX: Clear old career data for 2025 rookies with same name as retired NFL players ===
-(function() {
-  // Kyle Williams (2025 WR, Washington State) — collides with old Kyle Williams (49ers WR 2010-2015)
-  var kw = D.find(function(d) { return d.n === 'Kyle Williams' && d.s === 'WR'; });
-  if (kw && kw.career && kw.career.length > 0) {
-    // Check if career has old seasons (pre-2025 NFL). If so, clear it — he's a rookie.
-    var hasOldNFL = kw.career.some(function(s) { return s.yr < 2025; });
-    if (hasOldNFL) { kw.career = []; kw._retired = false; }
+// === NAME COLLISION FIX: Clear old career data for current players with same name as retired NFL players ===
+// Must be RE-RUNNABLE, not a one-shot IIFE: all_players.js / legend_careers.js / the weekly
+// bundles are lazy-loaded, and each enrichment pass (_enrichFromAllPlayers,
+// _applyLegendCareerBindings, _mergeAllPlayersWeekly) can re-graft the retired player's
+// career or game logs by bare name AFTER a one-shot fix already ran. Each of those passes
+// calls window._fixNameCollisions() again after merging.
+window._fixNameCollisions = function() {
+  // Drop pre-debut seasons from a current player's career (a same-named retired
+  // player's rows merged in by name). Keeps the current player's real seasons.
+  function _dropPreDebut(name, pos, debutYr) {
+    var d = D.find(function(x) { return x.n === name && (!pos || x.s === pos) && !x._retired; });
+    if (d) {
+      // Snapshot the pristine d.js career on first run (parse time, before any lazy
+      // merge) — a wholesale career replacement by _bestCareer drops the current
+      // player's real rows along with the bogus ones, so we restore them below.
+      if (!d._preMergeCareer) d._preMergeCareer = (d.career || []).slice();
+      if (d.career && d.career.some(function(s) { return s.yr < debutYr; })) {
+        d.career = d.career.filter(function(s) { return s.yr >= debutYr; });
+      }
+      d._preMergeCareer.forEach(function(row) {
+        if (row.yr >= debutYr && !(d.career || []).some(function(s) { return s.yr === row.yr; })) {
+          d.career = (d.career || []).concat([row]);
+        }
+      });
+      if (d.career) d.career.sort(function(a, b) { return a.yr - b.yr; });
+    }
+    // Same-named retired player's game logs merged into WEEKLY_STATS by bare name.
+    if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[name] && WEEKLY_STATS[name].seasons) {
+      var seasons = WEEKLY_STATS[name].seasons;
+      Object.keys(seasons).forEach(function(y) { if (+y < debutYr) delete seasons[y]; });
+    }
   }
+  // Kyle Williams (2025 WR, Washington State, NE) — collides with old Kyle Williams (49ers WR 2010-2013)
+  _dropPreDebut('Kyle Williams', 'WR', 2025);
+  // Antonio Williams (2026 WR, Washington Commanders) — collides with Antonio Williams (RB, BUF 2020)
+  _dropPreDebut('Antonio Williams', 'WR', 2026);
+  // Chris Brazzell II (2026 WR, Tennessee) — ALL_PLAYERS_DB once held the 1999-2000 Cowboys WR
+  // (Chris Brazzell, no suffix) under the suffixed key; renamed in data 2026-07-21, guarded here too.
+  _dropPreDebut('Chris Brazzell II', 'WR', 2026);
   // Marvin Harrison (HOF WR, Colts 1996-2008) vs Marvin Harrison Jr. (Cardinals
   // 2024+). Some data sources (weekly_stats.js, ALL_PLAYERS_DB) merged the
   // rookie's stats under the bare "Marvin Harrison" key, inflating the dad's
@@ -12860,7 +12897,8 @@ document.addEventListener('mff:retireddata', _rerunAllPlayersEnrich);
       mh.career = mh.career.filter(function(s) { return s.yr < 2024; });
     }
   }
-})();
+};
+window._fixNameCollisions();
 
 
 // Add HP players with LEGEND_CAREERS data to D so they get full career log cards
@@ -12932,6 +12970,8 @@ function _applyLegendCareerBindings() {
       });
     });
   }
+  // Patterns 2/3 can re-graft a same-named legend career onto a current player.
+  if (typeof window._fixNameCollisions === 'function') window._fixNameCollisions();
 }
 document.addEventListener('DOMContentLoaded', _applyLegendCareerBindings);
 // legend_careers.js is now lazy-loaded (window._loadRetiredData) — re-bind when it arrives.

@@ -1,12 +1,14 @@
 # MyFantasyFootball — Backlog
 
-_Last updated: 2026-05-18_
+_Last updated: 2026-07-21_
 
 Running backlog for myfantasyfootball.co. Items are grouped by what's blocking them, then by effort. **Read DEPLOY_NOTES.md first** if any "Shipped" item below mentions Firestore rules — those features won't work in prod until rules are pushed.
 
 ---
 
 ## Suggested next-session priorities
+
+**New (2026-07-21):** Dynasty JS Model — see "JS Model roadmap" section below. The redraft JS Model was overhauled + backtested this session; dynasty/dynastySF still show the identical redraft board.
 
 If picking the next thing to do, in order:
 
@@ -23,6 +25,20 @@ If picking the next thing to do, in order:
 3. **Phone-test mobile responsiveness on real devices** — full mobile pass + emulator scan done 2026-05-06 but a real phone may still surface issues (touch targets, iOS Safari quirks, real-world rotation behavior).
 4. **ESPN league import** (multi-week) — biggest TAM unlock. Single largest gap in user acquisition.
 5. **Inline-style hex/rgba color audit for light mode** — 15 fixes shipped 2026-05-13 (plan-option cards, premium-redeem input/button/divider, rookie sub-pos filter, ADP source tabs, bench chip, JM badge, UD expand panel, pagination dots, etc.). The remaining inline `color:#000`/`#fff` patterns are mostly intentional (orange-accent buttons, white-on-solid-brand badges). Continue the audit only when you spot a *new* broken element.
+
+---
+
+## JS Model roadmap (overhaul shipped 2026-07-21)
+
+Shipped this session (commits `becd845`..`c705e52`): backtest harness (`scripts/backtest_js_model.py`, 2018-2025), 50/30/20 × games-played recency-weighted base rates via committed generator (`scripts/generate_js_model_data.py`), QB age-curve removed, experience curves (young jump / production-tiered vet fade), Vegas team context from `BETTING_2026.gameTotals`, vacated targets/carries from roster diffs, market slot-curve allocation (within-position order = model, cross-position mix = Underdog ADP), Clay games-played blend + 85% Clay cap for low-info cores, betting-props third ensemble leg (20% wt), devy draft-capital fix, positional tiers. Historical Clay projections (2019-2025) parsed from ESPN draft-kit CDN PDFs (`scripts/parse_clay_history.py` → `data/clay_history.json`, gitignored — regenerate locally): **full model beats Clay alone at every position** (MAE QB 3.07 vs 3.36, RB 2.25/2.26, WR 2.03/2.14, TE 1.42/1.44).
+
+Remaining, in rough priority order:
+
+1. **Dynasty JS Model** _(biggest gap — dynasty/dynastySF currently get the identical redraft board; age-29 CMC ranks top-6 "dynasty")_. Design agreed 2026-07-21: multi-year discounted value `V = Σ PPG(year+k) × 0.85^k` over ~4 years, chaining the (already validated) age curves + experience-jump curves forward; KTC_1QB / KTC_SF as the cross-position slot anchors (same trick as UD ADP for redraft); separate board compute per mode so the existing dynasty injury multipliers (Y2 recovery) finally apply. Backtest the chained-curve valuation against realized 3-year PPG from ALL_PLAYERS_DB before shipping; fit the discount rate + horizon on data.
+2. **Rookie template calibration** — templates + boosts are the only major hand-made component. Fit year-1 PPG by draft round × position × JM score from BACKTEST_OUTCOMES + weekly stats.
+3. **Context-normalized historical rates** — project target/carry *share* × new-team volume instead of raw per-game production (the Mike Evans "solid despite bad offense/target competition" class of cases). Core redesign; backtest first.
+4. **Games-played / availability model** — projected GP is still weighted historical GP (+ Clay blend). INJURY_HISTORY could support a real availability projection (age × position × injury count).
+5. **January 2027: score the 2026 board vs actuals** — harness is ready (includes `clay`/`full` models). Also tag the repo at season start so the exact deployed model is easy to retrieve. Props weight (20%) is the one unvalidated number — an archived props season or two makes it backtestable (git history of `betting_lines_2026.js` already preserves the data).
 
 ---
 

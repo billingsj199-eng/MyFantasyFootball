@@ -151,8 +151,18 @@ def spearman(a, b):
     return cov / (va * vb)
 
 
-def build_predictions(db, years, scoring, age_curves):
-    """Returns rows: {name,pos,year,actual,preds:{model:ppg}}"""
+def _norm_name(n):
+    n = re.sub(r'\s+(jr\.?|sr\.?|iii|ii|iv|v)$', '', n.lower())
+    return re.sub(r"[.\-']", '', n).strip()
+
+
+def build_predictions(db, years, scoring, age_curves, clay_hist=None):
+    """Returns rows: {name,pos,year,actual,preds:{model:ppg}}
+
+    clay_hist: {year: {normalized_name: {pos, gm, pts(PPR), rec}}} — when a
+    player-year has a Clay projection, adds 'clay' (Clay alone) and 'full'
+    (shipped core + the app's divergence-weighted Clay blend) predictions.
+    """
     rows = []
     for p in db:
         pos = p.get('pos')
@@ -234,6 +244,24 @@ def build_predictions(db, years, scoring, age_curves):
             elif 1 <= exp <= 5:
                 shipped *= exp_jump.get(pos, {}).get(exp, 1.0)
             preds['shipped'] = shipped
+
+            # 'clay' / 'full': historical Mike Clay projections (parsed from
+            # ESPN draft-kit PDFs by parse_clay_history.py). 'full' emulates
+            # the app's Clay blend: base weight by experience, boosted toward
+            # a cap when Clay and the core diverge.
+            c = (clay_hist or {}).get(y, {}).get(_norm_name(p['name']))
+            if c and c['gm'] >= 1:
+                rec_adj = scoring['rc'] - 1.0  # Clay pts are full-PPR
+                clay_ppg = (c['pts'] + c['rec'] * rec_adj) / c['gm']
+                preds['clay'] = clay_ppg
+                base_wt = 0.40 if exp <= 1 else (0.33 if exp == 2 else 0.25)
+                if shipped > 1:
+                    div = abs(clay_ppg - shipped) / shipped
+                    max_wt = 0.65 if exp <= 2 else 0.55
+                    wt = min(base_wt + min(div / 0.30, 1.0) * base_wt, max_wt)
+                    preds['full'] = shipped * (1 - wt) + clay_ppg * wt
+                else:
+                    preds['full'] = clay_ppg * 0.85
 
             rows.append({'name': p['name'], 'pos': pos, 'year': y,
                          'actual': actual, 'preds': preds})
@@ -447,11 +475,31 @@ def main():
     print(f'ALL_PLAYERS_DB: {len(db)} players, latest season {max_yr}')
     years = [y for y in years if y <= max_yr]
 
-    rows = build_predictions(db, years, scoring, age_curves)
+    clay_hist = None
+    clay_path = os.path.join(DATA_DIR, 'clay_history.json')
+    if os.path.exists(clay_path):
+        with open(clay_path, encoding='utf-8') as f:
+            clay_hist = {int(y): {_norm_name(n): v for n, v in ps.items()}
+                         for y, ps in json.load(f).items()}
+        print(f'Clay history loaded: seasons {sorted(clay_hist)}')
+
+    rows = build_predictions(db, years, scoring, age_curves, clay_hist)
     models = ['prior', 'w3', 'w3g', 'career', 'career_age', 'w3_age', 'w3g_age', 'shipped']
     results = evaluate(rows, models)
     print_results(results, models, years, args.scoring)
     per_season_summary(rows)
+
+    # Clay-intersection pool: player-seasons where a historical Clay
+    # projection exists — lets us score the FULL deployed model (core + Clay
+    # blend) and Clay alone on identical footing.
+    crows = [r for r in rows if 'clay' in r['preds']]
+    if crows:
+        cyears = sorted({r['year'] for r in crows})
+        cmodels = ['prior', 'shipped', 'clay', 'full']
+        print(f'\n=== CLAY-INTERSECTION POOL ({len(crows)} player-seasons, '
+              f'{cyears[0]}-{cyears[-1]}) ===')
+        print_results(evaluate(crows, cmodels), cmodels, cyears, args.scoring)
+        per_season_summary(crows, model='full')
     residuals_by_experience(db, rows)
     diagnose_file_weighting(db, js_model_data, scoring)
 

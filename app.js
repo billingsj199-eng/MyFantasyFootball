@@ -6115,8 +6115,8 @@ function buildWeeklyTable(d, season, scoringFormat) {
 
   let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th><th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
-  else if (isRB) hdr += '<th>ATT</th><th><span data-gloss="Share of team carries that week">CAR%</span></th><th>RyD</th><th>RTD</th><th>TGT</th><th>REC</th><th>RcY</th><th>RcTD</th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>FL</th>';
-  else hdr += '<th>TGT</th><th>REC</th><th>RcY</th><th>RcTD</th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>RyD</th><th>RTD</th><th>FL</th>';
+  else if (isRB) hdr += '<th>ATT</th><th><span data-gloss="Share of team carries that week">CAR%</span></th><th>RyD</th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>FL</th>';
+  else hdr += '<th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>RyD</th><th>FL</th>';
   hdr += '</tr>';
 
   let rows = adjusted.map(w => {
@@ -6148,16 +6148,18 @@ function buildWeeklyTable(d, season, scoringFormat) {
         + _statCell(w.rtd||0, w.rtd||0, 0, 1.2) + '<td>' + (w.fl||0) + '</td>';
     } else if (isRB) {
       const _wkCar = _carPctWeek(d.n, season, w);
+      const _wkTd = (w.rtd||0) + (w.rctd||0);
       row += _statCell(w.ra||0, w.ra||0, 6, 19)
         + _statCell(_wkCar != null ? _wkCar.toFixed(1) + '%' : '—', _wkCar, 15, 65)
-        + _statCell(w.ry||0, w.ry||0, 25, 95) + _statCell(w.rtd||0, w.rtd||0, 0, 1.2)
+        + _statCell(w.ry||0, w.ry||0, 25, 95)
         + _statCell(w.tgt||0, w.tgt||0, 1, 5.5) + _statCell(w.rec||0, w.rec||0, 0.8, 4.5)
-        + _statCell(w.rcy||0, w.rcy||0, 5, 40) + _statCell(w.rctd||0, w.rctd||0, 0, 1.2)
+        + _statCell(w.rcy||0, w.rcy||0, 5, 40) + _statCell(_wkTd, _wkTd, 0, 1.2)
         + _wkTsCell + '<td>' + (w.fl||0) + '</td>';
     } else {
+      const _wkTd = (w.rtd||0) + (w.rctd||0);
       row += _statCell(w.tgt||0, w.tgt||0, 3, 10) + _statCell(w.rec||0, w.rec||0, 2, 7)
-        + _statCell(w.rcy||0, w.rcy||0, 20, 90) + _statCell(w.rctd||0, w.rctd||0, 0, 1.2)
-        + _wkTsCell + '<td>' + (w.ry||0) + '</td><td>' + (w.rtd||0) + '</td><td>' + (w.fl||0) + '</td>';
+        + _statCell(w.rcy||0, w.rcy||0, 20, 90) + _statCell(_wkTd, _wkTd, 0, 1.2)
+        + _wkTsCell + '<td>' + (w.ry||0) + '</td><td>' + (w.fl||0) + '</td>';
     }
     row += '</tr>';
     return row;
@@ -6183,9 +6185,10 @@ function buildWeeklyTable(d, season, scoringFormat) {
       if (_totCar != null) _totCarCell = '<td>' + _totCar.toFixed(1) + '%</td>';
     }
   }
+  const _totTd = (totals.rtd||0) + (totals.rctd||0);
   if (isQB) totalRow += '<td>'+totals.pc+'</td><td>'+totals.pa+'</td><td>'+totals.py+'</td><td>'+totals.ptd+'</td><td>'+totals.int+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
-  else if (isRB) totalRow += '<td>'+totals.ra+'</td>'+_totCarCell+'<td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+totals.rctd+'</td>'+_totTsCell+'<td>'+totals.fl+'</td>';
-  else totalRow += '<td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+totals.rctd+'</td>'+_totTsCell+'<td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
+  else if (isRB) totalRow += '<td>'+totals.ra+'</td>'+_totCarCell+'<td>'+totals.ry+'</td><td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td>'+_totTsCell+'<td>'+totals.fl+'</td>';
+  else totalRow += '<td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td>'+_totTsCell+'<td>'+totals.ry+'</td><td>'+totals.fl+'</td>';
   totalRow += '</tr>';
   rows += totalRow;
 
@@ -6278,34 +6281,38 @@ function buildCareerTable(d, scoringFormat, statMode) {
   } else if (!isK) {
     // Color scales differ by position: RB receiving volume ≠ WR volume
     const S = isRB
-      ? { tgt: [1, 5.5], rec: [0.8, 4.5], rcy: [5, 40], ypr: [5, 9.5], rctd: [0.02, 0.25], ts: [3, 14], yrr: [0.6, 1.7] }
-      : { tgt: [3, 10], rec: [2, 7], rcy: [20, 90], ypr: [7, 15.5], rctd: [0.1, 0.65], ts: [10, 28], yrr: [0.9, 2.5] };
+      ? { tgt: [1, 5.5], rec: [0.8, 4.5], rcy: [5, 40], ypr: [5, 9.5], td: [0.15, 0.85], ts: [3, 14], yrr: [0.6, 1.7] }
+      : { tgt: [3, 10], rec: [2, 7], rcy: [20, 90], ypr: [7, 15.5], td: [0.1, 0.7], ts: [10, 28], yrr: [0.9, 2.5] };
     const cs = (f, r, inv) => ({ f, lo: r[0], hi: r[1], inv });
     const _tsVal = (y, tm) => _tsPctSeason(tm, y.yr, y._ex.tgt, d.n);
     const _tsCol = ['TS%', 'Share of team targets that season (weeks played)', (y, tm) => {
       const v = _tsVal(y, tm);
       return v != null ? v.toFixed(1) + '%' : '—';
     }, cs(_tsVal, S.ts)];
+    // Rushing + receiving TDs combined (QBs keep PTD/RTD separate — passing
+    // TDs score differently in many leagues, rush/rec TDs don't)
+    const _tdSum = y => (y.rtd || 0) + (y.rctd || 0);
+    const _tdCol = mode === 'tot'
+      ? ['TD', 'Rushing + receiving TDs', y => _tdSum(y), cs(y => pgN(_tdSum(y), y), S.td)]
+      : ['TD', 'Rushing + receiving TDs per game', y => _avg(_tdSum(y), y.gp), cs(y => pgN(_tdSum(y), y), S.td)];
     const rc = {
       tgt: cs(y => y._ex.tgt != null ? pgN(y._ex.tgt, y) : null, S.tgt),
       rec: cs(y => pgN(y.rc, y), S.rec),
       rcy: cs(y => pgN(y.rcy, y), S.rcy),
       ypr: cs(y => y.rc > 0 ? (y.rcy || 0) / y.rc : null, S.ypr),
-      rctd: cs(y => pgN(y.rctd, y), S.rctd),
       yrr: cs(y => y.yrr != null ? y.yrr : null, S.yrr)
     };
     const recCols = mode === 'tot' ? [
       ['TGT', null, y => N(y._ex.tgt), rc.tgt], ['REC', null, y => y.rc || 0, rc.rec], ['RcY', null, y => y.rcy || 0, rc.rcy],
-      ['Y/R', 'Yards per reception', _ypr, rc.ypr], ['RcTD', null, y => y.rctd || 0, rc.rctd],
-      _tsCol,
+      ['Y/R', 'Yards per reception', _ypr, rc.ypr],
+      _tdCol, _tsCol,
       ['Y/RR', 'Yards per route run', _yrrF, rc.yrr]
     ] : [
       ['TGT', 'Targets per game', y => y._ex.tgt != null ? _avg(y._ex.tgt, y.gp) : '—', rc.tgt],
       ['REC', 'Receptions per game', y => _avg(y.rc, y.gp), rc.rec],
       ['RcY', 'Receiving yards per game', y => _avg(y.rcy, y.gp), rc.rcy],
       ['Y/R', 'Yards per reception', _ypr, rc.ypr],
-      ['RcTD', 'Receiving TDs per game', y => _avg(y.rctd, y.gp), rc.rctd],
-      _tsCol,
+      _tdCol, _tsCol,
       ['Y/RR', 'Yards per route run', _yrrF, rc.yrr]
     ];
     // Rushing block: colored + CAR% for RBs; neutral context stats for WR/TE
@@ -6317,20 +6324,18 @@ function buildCareerTable(d, scoringFormat, statMode) {
     const ru = isRB ? {
       ra: cs(y => pgN(y.ra, y), [6, 19]),
       ry: cs(y => pgN(y.ry, y), [25, 95]),
-      ypc: cs(y => y.ra > 0 ? (y.ry || 0) / y.ra : null, [3.5, 5.3]),
-      rtd: cs(y => pgN(y.rtd, y), [0.1, 0.75])
-    } : { ra: null, ry: null, ypc: null, rtd: null };
+      ypc: cs(y => y.ra > 0 ? (y.ry || 0) / y.ra : null, [3.5, 5.3])
+    } : { ra: null, ry: null, ypc: null };
     const rushCols = (mode === 'tot' ? [
       ['CAR', null, y => y.ra || 0, ru.ra]
     ] : [
       ['CAR', 'Carries per game', y => _avg(y.ra, y.gp), ru.ra]
     ]).concat(isRB ? [_carCol] : []).concat(mode === 'tot' ? [
       ['RyD', null, y => y.ry || 0, ru.ry],
-      ['YPC', 'Yards per carry', _ypc, ru.ypc], ['RTD', null, y => y.rtd || 0, ru.rtd]
+      ['YPC', 'Yards per carry', _ypc, ru.ypc]
     ] : [
       ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp), ru.ry],
-      ['YPC', 'Yards per carry', _ypc, ru.ypc],
-      ['RTD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp), ru.rtd]
+      ['YPC', 'Yards per carry', _ypc, ru.ypc]
     ]);
     cols = isRB ? rushCols.concat(recCols) : recCols.concat(rushCols);
     if (mode === 'tot') cols.push(['FL', null, y => y.fl || 0, null]);

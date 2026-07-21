@@ -793,6 +793,18 @@ td.adp-reach{background:rgba(239,68,68,.10);color:var(--red);font-weight:600}
 .career-table .best-yr{color:var(--green);font-weight:700}
 .career-table .fpts-cell{font-weight:700}
 .career-table .career-bar{display:none}
+/* Flock-style stat tiers (red→orange→yellow→lime→green) — emitted by
+   _statCell in app.js. Light theme swaps in darker, readable variants. */
+.career-table td.st-r{color:#f87171;background:rgba(248,113,113,.09)}
+.career-table td.st-o{color:#fb923c;background:rgba(251,146,60,.09)}
+.career-table td.st-y{color:#facc15;background:rgba(250,204,21,.09)}
+.career-table td.st-l{color:#a3e635;background:rgba(163,230,53,.09)}
+.career-table td.st-g{color:#4ade80;background:rgba(74,222,128,.09)}
+:root[data-theme="light"] .career-table td.st-r{color:#dc2626;background:rgba(220,38,38,.07)}
+:root[data-theme="light"] .career-table td.st-o{color:#ea580c;background:rgba(234,88,12,.07)}
+:root[data-theme="light"] .career-table td.st-y{color:#b45309;background:rgba(202,138,4,.09)}
+:root[data-theme="light"] .career-table td.st-l{color:#65a30d;background:rgba(101,163,13,.09)}
+:root[data-theme="light"] .career-table td.st-g{color:#16a34a;background:rgba(22,163,74,.07)}
 /* Combine/Athletic Profile */
 .combine-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 .combine-stat{text-align:center;padding:6px 4px;background:var(--elev-1);border-radius:6px;border:1px solid var(--border)}
@@ -1015,9 +1027,14 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .card-close{top:.75rem;right:.75rem;font-size:1.4rem;padding:6px 10px;min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center}
   .card-name{font-size:1.5rem}
   .card-body{padding:.75rem 1rem;padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0))}
-  .career-table{font-size:.44rem}
-  .career-table th{font-size:.34rem;padding:1px 2px}
-  .career-table td{padding:1px 2px}
+  /* Wider stat tables (SNP%/TS%/CAR% era) scroll horizontally on mobile —
+     keep the font readable and size columns to content instead of squeezing
+     every column onto the screen. table-layout:auto overrides the global
+     mobile `table{table-layout:fixed}` above (which is for the rankings
+     table) — fixed layout crushes these to ~24px/col and text overlaps. */
+  .career-table{font-size:.52rem;table-layout:auto !important;min-width:0}
+  .career-table th{font-size:.38rem;padding:2px 4px}
+  .career-table td{padding:2px 4px}
 
   /* Compare page */
   .compare-grid{gap:.5rem}

@@ -40,12 +40,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-07-21a" as="style">
+<link rel="preload" href="styles/main.css?v=2026-07-21b" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-21p" as="script">
+<link rel="preload" href="app.js?v=2026-07-21q" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -55,7 +55,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-07-14a" as="script">
 <link rel="preload" href="data/d.js?v=2026-07-14a" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-07-21a">
+<link rel="stylesheet" href="styles/main.css?v=2026-07-21b">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -4878,7 +4878,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-21p"></script>
+<script defer src="app.js?v=2026-07-21q"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

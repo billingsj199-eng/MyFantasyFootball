@@ -6016,25 +6016,19 @@ function _carPctWeek(playerName, season, w) {
 }
 
 // Flock-style stat-cell coloring: normalize v into [lo,hi] → 5-step ramp
-// (red → orange → yellow → lime → green), colored text + faint tint.
-const _statTints = {
-  '#f87171': 'rgba(248,113,113,.09)',
-  '#fb923c': 'rgba(251,146,60,.09)',
-  '#facc15': 'rgba(250,204,21,.09)',
-  '#a3e635': 'rgba(163,230,53,.09)',
-  '#4ade80': 'rgba(74,222,128,.09)'
-};
-function _scaleColor(v, lo, hi, invert) {
+// (red → orange → yellow → lime → green). Emits st-* classes so the light
+// theme can swap in darker, readable variants (see styles/main.css).
+function _scaleClass(v, lo, hi, invert) {
   if (v == null || isNaN(v)) return null;
   let t = (v - lo) / (hi - lo);
   if (invert) t = 1 - t;
   t = Math.max(0, Math.min(1, t));
-  return t < 0.2 ? '#f87171' : t < 0.4 ? '#fb923c' : t < 0.6 ? '#facc15' : t < 0.8 ? '#a3e635' : '#4ade80';
+  return t < 0.2 ? 'st-r' : t < 0.4 ? 'st-o' : t < 0.6 ? 'st-y' : t < 0.8 ? 'st-l' : 'st-g';
 }
 function _statCell(display, v, lo, hi, invert) {
-  const c = _scaleColor(v, lo, hi, invert);
+  const c = _scaleClass(v, lo, hi, invert);
   if (!c || display === '—') return '<td>' + display + '</td>';
-  return '<td style="color:' + c + ';background:' + _statTints[c] + '">' + display + '</td>';
+  return '<td class="' + c + '">' + display + '</td>';
 }
 
 // QB fantasy point color tiers

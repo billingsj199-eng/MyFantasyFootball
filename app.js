@@ -1436,6 +1436,16 @@ function _adpCmpCellHtml(d, src, label) {
   return '<span style="' + (clr ? 'color:' + clr + ';font-weight:700;' : '') + 'cursor:help" title="' + tt.replace(/"/g, '&quot;') + '">' + v + badge + '</span>';
 }
 
+// Matching td-level class so the whole cell block gets the value/reach tint,
+// same ±3 thresholds as _adpCmpCellHtml. Empty when locked or no data.
+function _adpCmpCellCls(d, src) {
+  if (src === 'underdog' && typeof hasPremium === 'function' && !hasPremium()) return '';
+  const v = _adpBySource(d, src);
+  if (v == null) return '';
+  const diff = Math.round(v - d.myRank);
+  return diff >= 3 ? ' adp-value' : diff <= -3 ? ' adp-reach' : '';
+}
+
 function adj25ppg(d) {
   if (!d.s25) return null;
   // K/DST: s25.fpts is sometimes 0 even when ppg is populated. The rec
@@ -2254,9 +2264,9 @@ function render() {
     } else if (_statMode === 'adp') {
       // ADP comparison view: platform ADPs side by side vs the current board's rank
       // (4th column — CBS — rides the repurposed Y/RR cell below).
-      _statTds = `<td class="pts-cell ppg-proj-cell">${_adpCmpCellHtml(d, 'underdog', 'Underdog')}</td>
-      <td class="pts-cell ppg25-cell">${_adpCmpCellHtml(d, 'sleeper', 'Sleeper')}</td>
-      <td class="pts-cell l4ppg-cell">${_adpCmpCellHtml(d, 'espn', 'ESPN')}</td>`;
+      _statTds = `<td class="pts-cell ppg-proj-cell${_adpCmpCellCls(d, 'underdog')}">${_adpCmpCellHtml(d, 'underdog', 'Underdog')}</td>
+      <td class="pts-cell ppg25-cell${_adpCmpCellCls(d, 'sleeper')}">${_adpCmpCellHtml(d, 'sleeper', 'Sleeper')}</td>
+      <td class="pts-cell l4ppg-cell${_adpCmpCellCls(d, 'espn')}">${_adpCmpCellHtml(d, 'espn', 'ESPN')}</td>`;
     } else {
       const _line = _statMode === 'proj' ? _projStatLine(d) : _linesStatLine(d);
       const _tp = _impliedTeamPpg(d.t);
@@ -2296,7 +2306,7 @@ function render() {
       <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); return (t != null ? t : '—'); })()}</td>` : '<td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
       ${_statTds}
-      <td class="pts-cell yrr-cell" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—')}</td>
+      <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—')}</td>
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell" style="display:none">${showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
@@ -10042,13 +10052,18 @@ document.addEventListener('click', function(e) {
       const saved = localStorage.getItem(key);
       if (saved) {
         const state = JSON.parse(saved);
+        // Trust the save only if its target matches today's seed-computed
+        // target (init() sets `target` before calling us). A mismatch means
+        // the save is stale — e.g. yesterday's finished game restored into
+        // today's key by the cloud sync — so discard it instead of replaying
+        // a game the player never played today. Same seed-match rule the
+        // cloud sync itself uses to decide what counts as "today's state".
+        if (state.targetName && target && state.targetName !== target.name) {
+          localStorage.removeItem(key);
+          return;
+        }
         guesses = state.guesses || [];
         gameOver = state.gameOver || false;
-        if (state.targetName) {
-          const pool = getPool();
-          const found = pool.find(p => p.name === state.targetName);
-          if (found) target = found;
-        }
       }
     }
 
@@ -17217,13 +17232,17 @@ window.fmtHeight = fmtHeight;
       } catch(e) { return false; }
     }
     const _pool150Sync = (getter) => { const p = (typeof getter === 'function') ? getter() : null; return p ? p.filter(x => x.bestSzn != null && x.bestSzn >= 150) : null; };
-    // Only sync daily states that actually exist AND match today's target
-    if (epState) dailyStates.ep = epState;
-    if (gwCState && _saveVerifyTarget(gwCState, window._gwGetPoolCurrent, 0)) dailyStates.gwC = gwCState;
-    if (gw00sState && _saveVerifyTarget(gw00sState, window._gwGetPool2000s, 20003)) dailyStates.gw00s = gw00sState;
-    if (gw10sState && _saveVerifyTarget(gw10sState, window._gwGetPool2010s, 20107)) dailyStates.gw10s = gw10sState;
-    if (gw00s150State && _saveVerifyTarget(gw00s150State, () => _pool150Sync(window._gwGetPool2000s), 31502)) dailyStates.gw00s150 = gw00s150State;
-    if (gw10s150State && _saveVerifyTarget(gw10s150State, () => _pool150Sync(window._gwGetPool2010s), 31503)) dailyStates.gw10s150 = gw10s150State;
+    // Only sync daily states that actually exist AND match today's target.
+    // Each entry gets its own <key>Date stamp: the doc is written with
+    // {merge:true}, so Firestore keeps yesterday's entries in the dailyStates
+    // map while the shared `date` field gets bumped to today — the per-key
+    // date is what lets the restore side tell fresh entries from leftovers.
+    if (epState) { dailyStates.ep = epState; dailyStates.epDate = keys.dateStr; }
+    if (gwCState && _saveVerifyTarget(gwCState, window._gwGetPoolCurrent, 0)) { dailyStates.gwC = gwCState; dailyStates.gwCDate = keys.dateStr; }
+    if (gw00sState && _saveVerifyTarget(gw00sState, window._gwGetPool2000s, 20003)) { dailyStates.gw00s = gw00sState; dailyStates.gw00sDate = keys.dateStr; }
+    if (gw10sState && _saveVerifyTarget(gw10sState, window._gwGetPool2010s, 20107)) { dailyStates.gw10s = gw10sState; dailyStates.gw10sDate = keys.dateStr; }
+    if (gw00s150State && _saveVerifyTarget(gw00s150State, () => _pool150Sync(window._gwGetPool2000s), 31502)) { dailyStates.gw00s150 = gw00s150State; dailyStates.gw00s150Date = keys.dateStr; }
+    if (gw10s150State && _saveVerifyTarget(gw10s150State, () => _pool150Sync(window._gwGetPool2010s), 31503)) { dailyStates.gw10s150 = gw10s150State; dailyStates.gw10s150Date = keys.dateStr; }
     if (dailyStates.ep || dailyStates.gwC || dailyStates.gw00s || dailyStates.gw10s || dailyStates.gw00s150 || dailyStates.gw10s150) data.dailyStates = dailyStates;
     data.syncedAt = new Date().toISOString();
     db.collection('user_game_data').doc(user.uid).set(data, { merge: true }).catch(e => console.warn('[Sync] save error:', e));
@@ -17290,66 +17309,54 @@ window.fmtHeight = fmtHeight;
       if (cloud.dailyStates) {
         const keys = _syncDailyKeys();
         if (cloud.dailyStates.date === keys.dateStr) {
-          // Additional verification: check that the cloud state's target matches today's seed
-          // This prevents stale game data that got stamped with today's date from being restored
+          // Fallback verification for legacy docs without per-key dates: check
+          // that the cloud state's target matches today's seed. NOTE: an
+          // unloaded pool means "can't verify" → SKIP. The old "allow it"
+          // behavior was the bug that kept resurrecting yesterday's finished
+          // era games: this load runs ~400ms after auth, the 2000s/2010s pools
+          // arrive seconds later with the lazy retired data, so a stale entry
+          // (kept alive in the merged dailyStates map) sailed through
+          // unverified and landed under TODAY's localStorage key.
           function _verifyDailyTarget(stateJson, poolGetter, seedOffset) {
             try {
               const state = JSON.parse(stateJson);
               if (!state.targetName) return true; // no target to verify
               const pool = (typeof poolGetter === 'function') ? poolGetter() : null;
-              if (!pool || !pool.length) return true; // can't verify without pool, allow it
+              if (!pool || !pool.length) return false; // can't verify without pool — skip
               const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
               const seed = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate() + (seedOffset || 0);
               const todayTarget = pool[Math.abs(seed * 2654435761 >>> 0) % pool.length];
               return todayTarget && state.targetName === todayTarget.name;
             } catch(e) { return false; }
           }
-          // Guess Who daily (picture game) — only restore if no local state exists. Key "ep" is legacy from pre-swap naming.
-          if (cloud.dailyStates.ep && !localStorage.getItem(keys.ep)) {
-            localStorage.setItem(keys.ep, cloud.dailyStates.ep);
-            _dailyRestored = true;
+          // Per-key freshness: true/false when the save stamped a <key>Date,
+          // null for legacy docs (fall back to target verification).
+          function _cloudFresh(k) {
+            const dt = cloud.dailyStates[k + 'Date'];
+            if (dt === undefined) return null;
+            return dt === keys.dateStr;
           }
-          // Elite Pull daily current (clue-grid) — verify target matches today's seed. Key "gwC" is legacy from pre-swap naming.
-          if (cloud.dailyStates.gwC && !localStorage.getItem(keys.gwC)) {
-            if (_verifyDailyTarget(cloud.dailyStates.gwC, window._gwGetPoolCurrent, 0)) {
-              localStorage.setItem(keys.gwC, cloud.dailyStates.gwC);
+          function _restoreDaily(k, localKey, poolGetter, seedOffset) {
+            if (!cloud.dailyStates[k] || localStorage.getItem(localKey)) return;
+            const fresh = _cloudFresh(k);
+            const ok = fresh === true || (fresh === null && poolGetter !== null && _verifyDailyTarget(cloud.dailyStates[k], poolGetter, seedOffset));
+            if (ok) {
+              localStorage.setItem(localKey, cloud.dailyStates[k]);
               _dailyRestored = true;
             } else {
-              console.log('[Sync] Skipped stale gwC state — target does not match today');
+              console.log('[Sync] Skipped stale ' + k + ' daily state');
             }
           }
-          // Elite Pull daily 2000s — verify target matches today's seed
-          if (cloud.dailyStates.gw00s && !localStorage.getItem(keys.gw00s)) {
-            if (_verifyDailyTarget(cloud.dailyStates.gw00s, window._gwGetPool2000s, 20003)) {
-              localStorage.setItem(keys.gw00s, cloud.dailyStates.gw00s);
-              _dailyRestored = true;
-            } else {
-              console.log('[Sync] Skipped stale gw00s state — target does not match today');
-            }
-          }
-          // Elite Pull daily 2010s — verify target matches today's seed
-          if (cloud.dailyStates.gw10s && !localStorage.getItem(keys.gw10s)) {
-            if (_verifyDailyTarget(cloud.dailyStates.gw10s, window._gwGetPool2010s, 20107)) {
-              localStorage.setItem(keys.gw10s, cloud.dailyStates.gw10s);
-              _dailyRestored = true;
-            } else {
-              console.log('[Sync] Skipped stale gw10s state — target does not match today');
-            }
-          }
-          // 150+ variants
           const _pool150R = (getter) => { const p = (typeof getter === 'function') ? getter() : null; return p ? p.filter(x => x.bestSzn != null && x.bestSzn >= 150) : null; };
-          if (cloud.dailyStates.gw00s150 && !localStorage.getItem(keys.gw00s150)) {
-            if (_verifyDailyTarget(cloud.dailyStates.gw00s150, () => _pool150R(window._gwGetPool2000s), 31502)) {
-              localStorage.setItem(keys.gw00s150, cloud.dailyStates.gw00s150);
-              _dailyRestored = true;
-            }
-          }
-          if (cloud.dailyStates.gw10s150 && !localStorage.getItem(keys.gw10s150)) {
-            if (_verifyDailyTarget(cloud.dailyStates.gw10s150, () => _pool150R(window._gwGetPool2010s), 31503)) {
-              localStorage.setItem(keys.gw10s150, cloud.dailyStates.gw10s150);
-              _dailyRestored = true;
-            }
-          }
+          // Guess Who daily (picture game) has no target to verify, so legacy
+          // docs (no epDate) are skipped outright. Key "ep" is legacy naming.
+          _restoreDaily('ep', keys.ep, null, 0);
+          // Elite Pull dailies (clue-grid). Key "gwC" is legacy naming.
+          _restoreDaily('gwC', keys.gwC, window._gwGetPoolCurrent, 0);
+          _restoreDaily('gw00s', keys.gw00s, window._gwGetPool2000s, 20003);
+          _restoreDaily('gw10s', keys.gw10s, window._gwGetPool2010s, 20107);
+          _restoreDaily('gw00s150', keys.gw00s150, () => _pool150R(window._gwGetPool2000s), 31502);
+          _restoreDaily('gw10s150', keys.gw10s150, () => _pool150R(window._gwGetPool2010s), 31503);
         }
       }
       // If we restored daily state that the games already initialized without, reload once

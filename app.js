@@ -4518,6 +4518,7 @@ _whenFirebaseReady(function(){
       // Divergence bonus: when Clay and the JS Model disagree by a large margin,
       // Clay likely knows something the model doesn't (new team, injury return, role change).
       // In those cases, increase Clay's weight proportionally to the gap.
+      var _clayGmWt = null; // Clay's projected games + the weight he earned
       if (typeof MIKE_CLAY_PROJ !== 'undefined') {
         var clayProj = clayLookup(d.n);
         if (clayProj) {
@@ -4548,11 +4549,17 @@ _whenFirebaseReady(function(){
             var divDirection = clayPpg > jsPpg ? 1 : -1; // +1 = Clay higher, -1 = Clay lower
             // divergence 0% → base weight, 30%+ → up to double the base weight
             var divBonus = Math.min(divergence / 0.30, 1.0) * baseClayWt;
-            // Higher cap for year-1/2 players: Clay knows more about their role than historical stats
-            var maxClayWt = _expVal <= 2 ? 0.65 : 0.55;
+            // Higher cap for year-1/2 players: Clay knows more about their role than historical stats.
+            // Low-information core (rookie, or missed essentially all of last
+            // season): the historical rates carry almost no signal — e.g.
+            // Jonathon Brooks post-ACL had a near-zero core dragging Clay's
+            // healthy-season projection down — so let Clay take up to 85%.
+            var _coreLowInfo = !d.s25 || d.s25.gp == null || d.s25.gp <= 4;
+            var maxClayWt = _coreLowInfo ? 0.85 : (_expVal <= 2 ? 0.65 : 0.55);
             var clayWt = Math.min(baseClayWt + divBonus, maxClayWt);
 
             fpts_pg = fpts_pg * (1 - clayWt) + clayPpg * clayWt;
+            _clayGmWt = { gm: clayProj.gm, wt: clayWt };
 
             // Store divergence info for UI (only if significant: >15% gap)
             if (divergence >= 0.15) {
@@ -4569,6 +4576,7 @@ _whenFirebaseReady(function(){
           } else {
             // JS Model has no real projection — lean heavily on Clay
             fpts_pg = clayPpg * 0.85;
+            _clayGmWt = { gm: clayProj.gm, wt: 0.85 };
           }
         }
       }
@@ -4608,7 +4616,16 @@ _whenFirebaseReady(function(){
         }
       }
 
-      var _injGpAdj = proj.gp; // adjusted games played for injury
+      // --- Games played: blend Clay's projected games at the weight he earned ---
+      // The Clay blend fixes PPG but the SEASON total also needs his games.
+      // Without this, a backup who won a starting job (Malik Willis: Clay 17
+      // gm) or a returner (Brooks) got starter PPG x stale backup/template
+      // games and cratered in VOR.
+      var _gpBase = proj.gp;
+      if (_clayGmWt && isFinite(_clayGmWt.gm) && _clayGmWt.gm >= 1) {
+        _gpBase = proj.gp * (1 - _clayGmWt.wt) + Math.min(_clayGmWt.gm, 17) * _clayGmWt.wt;
+      }
+      var _injGpAdj = _gpBase; // adjusted games played for injury
       if (d._injDiscount && d._injDiscount.mult < 0.90 && !isDynasty) {
         // For significant injuries in redraft: cap GP to reflect actual expected games
         // The fpts_pg discount already handles per-game reduction (rust etc),
@@ -4617,13 +4634,13 @@ _whenFirebaseReady(function(){
         var _injWeekMatch = _injTagLc.match(/week\s*(\d+)/i);
         if (_injWeekMatch) {
           var _retWk = parseInt(_injWeekMatch[1]);
-          _injGpAdj = Math.min(proj.gp, Math.max(1, 17 - (_retWk - 1)));
+          _injGpAdj = Math.min(_gpBase, Math.max(1, 17 - (_retWk - 1)));
         } else if (/2026/.test(_injTagLc)) {
           // Year-based tag with 2026 — estimate GP from timing hint
-          if (/late/.test(_injTagLc)) _injGpAdj = Math.min(proj.gp, 6);
-          else if (/mid/.test(_injTagLc)) _injGpAdj = Math.min(proj.gp, 10);
-          else if (/early/.test(_injTagLc)) _injGpAdj = Math.min(proj.gp, 15);
-          else _injGpAdj = Math.min(proj.gp, 10); // generic "2026" → mid-season
+          if (/late/.test(_injTagLc)) _injGpAdj = Math.min(_gpBase, 6);
+          else if (/mid/.test(_injTagLc)) _injGpAdj = Math.min(_gpBase, 10);
+          else if (/early/.test(_injTagLc)) _injGpAdj = Math.min(_gpBase, 15);
+          else _injGpAdj = Math.min(_gpBase, 10); // generic "2026" → mid-season
         } else if (d._injDiscount.mult <= 0.10) {
           // Season-ending or out until 2027+: essentially 0 games
           _injGpAdj = 1;

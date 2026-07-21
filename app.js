@@ -4567,6 +4567,41 @@ _whenFirebaseReady(function(){
         }
       }
 
+      // --- Betting-market props blend (third ensemble leg) ---
+      // BETTING_2026.seasonProps: DK/FD/MGM season lines, consensus-averaged
+      // by _propsProjectionFor. The market is the second independent
+      // forward-looking source next to Clay, so no single input dominates —
+      // and books post lines for rookies, patching the model's weakest path.
+      // Books rarely post every stat (season receptions especially), so the
+      // engine's own per-game rates fill anything un-posted; book lines
+      // override what they do post. Gated on the player's PRIMARY yardage
+      // stat being posted so partial junk coverage can't crater anyone.
+      // Weight 20% — no historical props archive exists to backtest, so it's
+      // deliberately below the (validated) Clay weight.
+      d._propsBlend = null;
+      if (fpts_pg > 1 && typeof window._propsProjectionFor === 'function') {
+        var _pp = window._propsProjectionFor(d);
+        var _ppC = _pp && _pp.consensus;
+        var _primaryKey = pos === 'QB' ? 'py' : pos === 'RB' ? 'ry' : 'rcy';
+        if (_ppC && typeof _ppC[_primaryKey] === 'number') {
+          var _ppG = _pp.games || 17;
+          // props key -> engine proj key (both feed the same scoring object)
+          var _ppMap = { py:'pass_yds', ptd:'pass_td', int:'ints', ry:'rush_yds',
+                        rtd:'rush_td', rec:'rec', rcy:'rec_yds', rctd:'rec_td' };
+          var _ppPpg = (proj.fumbles || 0) * scoring.fumbles;
+          for (var _ppK in _ppMap) {
+            var _engK = _ppMap[_ppK];
+            var _perGame = (typeof _ppC[_ppK] === 'number') ? _ppC[_ppK] / _ppG : (proj[_engK] || 0);
+            _ppPpg += _perGame * scoring[_engK];
+          }
+          if (_ppPpg > 0) {
+            var _ppWt = 0.20;
+            fpts_pg = fpts_pg * (1 - _ppWt) + _ppPpg * _ppWt;
+            d._propsBlend = { ppg: Math.round(_ppPpg * 10) / 10, wt: _ppWt, books: _pp.books };
+          }
+        }
+      }
+
       var _injGpAdj = proj.gp; // adjusted games played for injury
       if (d._injDiscount && d._injDiscount.mult < 0.90 && !isDynasty) {
         // For significant injuries in redraft: cap GP to reflect actual expected games

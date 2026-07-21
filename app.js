@@ -40617,102 +40617,9 @@ Rules:
   window._mtGetPlayoffSos = _mtGetPlayoffSos;
   window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
 
-  // Convert any team representation (full name or abbr) to a 3-letter abbr.
-  function _mtTeamToAbbr(t) {
-    if (!t) return null;
-    if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) return TEAM_ABBR_MAP[t];
-    return String(t).toUpperCase();
-  }
-
-  // Bringback Wave 1: render a "Playoff Matchups" panel listing each NFL game
-  // in weeks 15-17 that involves the user's skill players. Highlight games
-  // where the user owns players on BOTH sides (bringback exposure).
-  function _mtRenderPlayoffMatchups(players) {
-    if (typeof window.NFL_SCHEDULE_2026 !== 'object' || !players || !players.length) return '';
-    // Index user's skill players by NFL team abbr.
-    const byTeam = {};
-    players.forEach(p => {
-      if (!p || !p.team) return;
-      if (!['QB','RB','WR','TE'].includes(p.pos)) return;
-      const abbr = _mtTeamToAbbr(p.team);
-      if (!abbr) return;
-      if (!byTeam[abbr]) byTeam[abbr] = [];
-      byTeam[abbr].push(p);
-    });
-    if (!Object.keys(byTeam).length) return '';
-
-    // Collect games (W15-17) where at least one of the user's teams plays.
-    const exposures = [];  // { wk, away, home, awayPlayers, homePlayers, isBringback, total, totalTier }
-    [15, 16, 17].forEach(wk => {
-      (window.NFL_SCHEDULE_2026[wk] || []).forEach(g => {
-        const away = String(g[0]).toUpperCase();
-        const home = String(g[1]).toUpperCase();
-        const awayPlayers = byTeam[away] || [];
-        const homePlayers = byTeam[home] || [];
-        if (!awayPlayers.length && !homePlayers.length) return;
-        const total = (typeof window.getNflGameTotal === 'function')
-                       ? window.getNflGameTotal(wk, away, home) : null;
-        const cls = (typeof window.classifyGameTotal === 'function')
-                       ? window.classifyGameTotal(total) : { tier: null, color: null, label: '—' };
-        exposures.push({
-          wk, away, home, awayPlayers, homePlayers,
-          isBringback: awayPlayers.length > 0 && homePlayers.length > 0,
-          total, totalTier: cls.tier, totalColor: cls.color, totalLabel: cls.label,
-        });
-      });
-    });
-    if (!exposures.length) return '';
-
-    const bringbackCount = exposures.filter(e => e.isBringback).length;
-    const highTotalBringbacks = exposures.filter(e => e.isBringback && e.totalTier === 'high').length;
-    const lowTotalBringbacks  = exposures.filter(e => e.isBringback && e.totalTier === 'low').length;
-
-    let html = '<div style="margin-top:16px">';
-    html += '<div style="display:flex;align-items:baseline;gap:10px;padding:0 4px 4px;margin-bottom:8px;border-bottom:2px solid var(--accent)40">';
-    html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.05rem;letter-spacing:1.8px;color:var(--accent)">PLAYOFF MATCHUPS</span>';
-    html += '<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">' +
-            exposures.length + ' game' + (exposures.length!==1?'s':'') +
-            ' · ' + bringbackCount + ' bringback' + (bringbackCount!==1?'s':'');
-    if (highTotalBringbacks > 0) html += ' · <span style="color:#22c55e">' + highTotalBringbacks + ' high-total</span>';
-    if (lowTotalBringbacks  > 0) html += ' · <span style="color:#ef4444">' + lowTotalBringbacks + ' low-total</span>';
-    html += ' · W15-17</span>';
-    html += '</div>';
-    html += '<div style="display:flex;flex-direction:column;gap:6px">';
-    exposures.forEach(e => {
-      // Border priority: total tier (when available) > bringback purple > default.
-      // Background mirrors the border at low opacity.
-      let borderColor, bg;
-      if (e.totalTier === 'high')      { borderColor = '#22c55e'; bg = 'rgba(34,197,94,.10)'; }
-      else if (e.totalTier === 'low')  { borderColor = '#ef4444'; bg = 'rgba(239,68,68,.10)'; }
-      else if (e.totalTier === 'mid')  { borderColor = '#facc15'; bg = 'rgba(250,204,21,.08)'; }
-      else if (e.isBringback)          { borderColor = '#a855f7'; bg = 'rgba(168,85,247,.08)'; }
-      else                             { borderColor = 'rgba(30,42,66,.4)'; bg = 'var(--surface2)'; }
-      html += '<div style="padding:7px 9px;background:' + bg + ';border:1px solid ' + borderColor + ';border-radius:6px;font-size:.72rem">';
-      html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
-      html += '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.68rem;letter-spacing:1.2px;color:var(--text2);min-width:28px">W' + e.wk + '</span>';
-      html += '<span style="font-weight:700;color:var(--text)">' + e.away + ' @ ' + e.home + '</span>';
-      if (e.isBringback) {
-        html += '<span style="font-size:.55rem;font-weight:700;color:#a855f7;letter-spacing:.5px;padding:1px 5px;border:1px solid #a855f7;border-radius:3px">BRINGBACK</span>';
-      }
-      if (typeof e.total === 'number') {
-        html += '<span style="margin-left:auto;font-size:.62rem;font-weight:700;color:' + (e.totalColor || 'var(--text2)') + '" title="Game total (over/under)">O/U ' + e.totalLabel + '</span>';
-      }
-      html += '</div>';
-      // Side-by-side player lists
-      html += '<div style="display:flex;gap:10px;font-size:.66rem;color:var(--text2)">';
-      const fmtSide = (list, label) => {
-        if (!list.length) return '<div style="flex:1;color:var(--text3)">' + label + ': —</div>';
-        const names = list.map(p => '<span style="color:var(--text)">' + _esc(p.name) + '</span> <span style="opacity:.6">(' + p.pos + ')</span>').join(', ');
-        return '<div style="flex:1"><span style="opacity:.7">' + label + ':</span> ' + names + '</div>';
-      };
-      html += fmtSide(e.awayPlayers, e.away);
-      html += fmtSide(e.homePlayers, e.home);
-      html += '</div></div>';
-    });
-    html += '</div></div>';
-    return html;
-  }
-
+  // Bringback Wave 1 "Playoff Matchups" panel removed 2026-07-21 at Jack's
+  // request (was rendered under the team detail roster). Recover from git
+  // history if Wave 2 (bringback coloring by Vegas total) revives it.
   // Assign exact pick numbers (2026 1.01, 1.02...) for current draft year,
   // and Early/Mid/Late tiers for future years.
   // Called after lineupPpg is computed on each team.
@@ -40920,7 +40827,10 @@ Rules:
       }
       return 0;
     }
-    // 1) Clay projections (Clay pts are full-PPR; adjust down for half/STD)
+    // Clay projections ONLY (Clay pts are full-PPR; adjust down for half/STD).
+    // No Clay projection → no PPG. The old fallbacks (2025 actual → last career
+    // season → JS model) surfaced stale numbers — e.g. unsigned FA Joe Mixon
+    // showed his 2024 Houston PPG as if it were a 2026 projection.
     if (typeof MIKE_CLAY_PROJ !== 'undefined' && typeof clayLookup === 'function') {
       const cp = clayLookup(name);
       if (cp && cp.gm > 0) {
@@ -40929,21 +40839,6 @@ Rules:
         return Math.round(((cp.pts + recs * clayAdj) / cp.gm) * 10) / 10;
       }
     }
-    // 2) 2025 actual PPG
-    const adj = pprVal === 1 ? 0.5 : pprVal === 0 ? -0.5 : 0;
-    if (d.s25 && d.s25.gp > 0 && d.s25.fpts > 0) {
-      const recs = d.s25.rc || 0;
-      return Math.round(((d.s25.fpts + recs * adj) / d.s25.gp) * 10) / 10;
-    }
-    // 3) Last career season PPG
-    if (d.career && d.career.length) {
-      const last = d.career[d.career.length - 1];
-      if (last.gp > 0 && last.fpts > 0) {
-        return Math.round((last.fpts / last.gp) * 10) / 10;
-      }
-    }
-    // 4) JS model projection
-    if (d._jsModelPpg) return d._jsModelPpg;
     return 0;
   }
 
@@ -41378,7 +41273,6 @@ Rules:
 
     // Get projected PPG for each player, adjusted for league scoring
     const pprVal = _mtFormat.ppr != null ? _mtFormat.ppr : 0.5;
-    const adj = pprVal === 1 ? 0.5 : pprVal === 0 ? -0.5 : 0; // adjustment from half-PPR base
 
     let _dbgFound = 0, _dbgNoD = 0, _dbgNoPpg = 0;
     const pool = playerNames.map(name => {
@@ -41387,7 +41281,9 @@ Rules:
       if (d.s === 'K' || d.s === 'DST') return { name, pos: d.s, ppg: 0, d };
       _dbgFound++;
       let ppg = 0;
-      // Priority 1: Clay projections (always primary)
+      // Clay projections ONLY — matches _mtGetPlayerPpg. Players Clay doesn't
+      // project (unsigned FAs, deep rookies) get no PPG and drop from the pool
+      // rather than ranking on a stale last-played-season number.
       if (typeof MIKE_CLAY_PROJ !== 'undefined') {
         const cp = clayLookup(name);
         if (cp) {
@@ -41396,20 +41292,6 @@ Rules:
           ppg = Math.round(((cp.pts + recs * clayAdj) / cp.gm) * 10) / 10;
         }
       }
-      // Priority 2: 2025 actual season PPG
-      if (!ppg && d.s25 && d.s25.gp > 0 && d.s25.fpts > 0) {
-        const recs = d.s25.rc || 0;
-        ppg = Math.round(((d.s25.fpts + recs * adj) / d.s25.gp) * 10) / 10;
-      }
-      // Priority 3: last career season PPG
-      if (!ppg && d.career && d.career.length) {
-        const last = d.career[d.career.length - 1];
-        if (last.gp > 0 && last.fpts > 0) {
-          ppg = Math.round((last.fpts / last.gp) * 10) / 10;
-        }
-      }
-      // Priority 4: JS model projection
-      if (!ppg && d._jsModelPpg) ppg = d._jsModelPpg;
       if (!ppg) _dbgNoPpg++;
       return { name, pos: d.s, ppg, d };
     }).filter(p => p.ppg > 0);
@@ -41640,18 +41522,14 @@ Rules:
       // Section header
       html += `<div class="mt-pos-header" style="display:flex;align-items:baseline;gap:10px;padding:0 4px 4px;margin-bottom:6px;border-bottom:2px solid ${posColors[pos]}40">`;
       html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:2px;color:${posColors[pos]}">${pos}</span>`;
-      html += `<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">${ps.count} player${ps.count!==1?'s':''} · ${ps.pts} val${posPpgTotal > 0 ? ' · ' + posPpgTotal + ' PPG' : ''}</span>`;
+      html += `<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">${ps.count} player${ps.count!==1?'s':''}${posPpgTotal > 0 ? ' · ' + posPpgTotal + ' PPG' : ''}</span>`;
       html += `</div>`;
       // Player rows
       posPlayers.forEach(p => {
         const rankColor = p.rank <= 24 ? '#22c55e' : p.rank <= 60 ? '#4ade80' : p.rank <= 120 ? '#facc15' : p.rank <= 200 ? '#f59e0b' : '#ef4444';
-        const valColor = p.val >= 150 ? '#22c55e' : p.val >= 75 ? '#4ade80' : p.val >= 30 ? '#facc15' : p.val >= 10 ? '#f59e0b' : 'var(--text2)';
         const dEntry = _mtLookupD(p.name);
         const projPpg = ppgByName[p.name] || 0;
         const ppgColor = projPpg >= 15 ? '#22c55e' : projPpg >= 10 ? '#4ade80' : projPpg >= 6 ? '#facc15' : projPpg > 0 ? '#f59e0b' : 'var(--text2)';
-        // Format-aware consensus ADP (averages Underdog/main + Sleeper for the
-        // league's mode — dynasty 1QB, dynasty SF, superflex, or redraft).
-        const adp = _mtGetConsensusAdp(dEntry);
         const bye = dEntry && dEntry.bye ? dEntry.bye : null;
         html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4);cursor:pointer" data-mtname="${_esc(p.name)}">`;
         // Player headshot. ESPN URLs ship with &w=64&h=64 which renders blurry
@@ -41663,8 +41541,6 @@ Rules:
         } else {
           html += `<div class="mt-roster-headshot" style="border-radius:50%"></div>`;
         }
-        // Position chip
-        html += `<span class="pos-badge ${p.pos}" style="flex:0 0 auto;font-size:.55rem;padding:2px 5px;font-weight:700">${p.pos}</span>`;
         // Name + team (+ age on dynasty)
         html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0" data-mtname="${_esc(p.name)}">`;
         html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(p.name)}</div>`;
@@ -41673,16 +41549,15 @@ Rules:
         if (isDynastyView && p.age) metaParts.push(p.age + 'y');
         html += `<div style="font-size:.62rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${metaParts.join(' · ')}</div>`;
         html += `</div>`;
-        // Stat blocks (right-aligned, label below value)
+        // Stat blocks (label below value). RANK + PPG + P-SOS only — VAL and
+        // ADP dropped 2026-07-21 (val already lives on the position summary
+        // cards above; rows stay narrow enough for the column-per-position
+        // desktop layout).
         html += `<div class="mt-roster-stats" style="flex:0 0 auto;display:flex;gap:8px;align-items:center">`;
         // RANK
         html += `<div style="text-align:center;min-width:32px"><div style="font-size:.82rem;font-weight:700;color:${rankColor};line-height:1.05">${p.rank <= 500 ? p.rank : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">RANK</div></div>`;
-        // VAL
-        html += `<div style="text-align:center;min-width:32px"><div style="font-size:.82rem;font-weight:700;color:${valColor};line-height:1.05">${p.val}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">VAL</div></div>`;
         // PROJ PPG — always visible (mobile + web)
         html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${ppgColor};line-height:1.05">${projPpg > 0 ? projPpg : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">PPG</div></div>`;
-        // ADP (web-only)
-        html += `<div class="mt-roster-stat-extra" style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:var(--text);line-height:1.05">${adp != null ? adp : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">ADP</div></div>`;
         // PLAYOFF SOS — facing tough defenses in W15-17? (web-only)
         // Per-position rating: QB/RB/WR/TE use position-weighted Clay grades
         // (e.g. WR reads CB+S, RB reads DI+LB). Tooltip lists the 3 opponents
@@ -41728,13 +41603,6 @@ Rules:
     html += `</div>`;
     // Close the #mtTeamViewPosition wrapper opened above the grouped roster.
     html += `</div>`;
-
-    // ==== Playoff Matchups panel (BBM W15-17) ====
-    // Group user's skill players (QB/RB/WR/TE) by NFL game across playoff weeks.
-    // Flag bringbacks (player on each side of the same NFL game) — per
-    // memory project_bringback_playoffs, bringback edge depends on game total
-    // (Wave 2 will color by Vegas total). For now, list exposures only.
-    html += _mtRenderPlayoffMatchups(sc.players);
 
     // Draft picks section (dynasty only)
     if (sc.picks && sc.picks.length > 0) {

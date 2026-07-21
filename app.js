@@ -5800,11 +5800,14 @@ let _weeklyRankCache = {};
 document.addEventListener('mff:retireddata', () => { _seasonRankCache = {}; _apdbIdx = null; });
 document.addEventListener('mff:weeklydata', () => { _weeklyRankCache = {}; });
 
-// Positional finish for a season, by total fantasy points in the chosen
-// scoring, across ALL players in ALL_PLAYERS_DB (full-league coverage).
-function _seasonPosRank(pos, yr, name, adjFpts, fmt) {
-  if (typeof ALL_PLAYERS_DB === 'undefined' || !pos || !yr || adjFpts == null) return null;
-  const key = pos + '|' + fmt;
+// Positional finish for a season across ALL players in ALL_PLAYERS_DB
+// (full-league coverage), in the chosen scoring. rankBy 'tot' ranks by total
+// fantasy points; 'ppg' ranks by points per game (min 8 games to qualify, so
+// a 2-game cameo can't top the board). `value` must match rankBy.
+function _seasonPosRank(pos, yr, name, value, fmt, rankBy) {
+  if (typeof ALL_PLAYERS_DB === 'undefined' || !pos || !yr || value == null) return null;
+  const by = rankBy === 'ppg' ? 'ppg' : 'tot';
+  const key = pos + '|' + fmt + '|' + by;
   let byYear = _seasonRankCache[key];
   if (!byYear) {
     const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;
@@ -5813,7 +5816,9 @@ function _seasonPosRank(pos, yr, name, adjFpts, fmt) {
       if (p.pos !== pos || !p.career) continue;
       for (const s of p.career) {
         if (s.fpts == null || !s.yr) continue;
-        const f = s.fpts + (s.rc || 0) * recAdj;
+        if (by === 'ppg' && (!s.gp || s.gp < 8)) continue;
+        const adj = s.fpts + (s.rc || 0) * recAdj;
+        const f = by === 'ppg' ? adj / s.gp : adj;
         (byYear[s.yr] = byYear[s.yr] || []).push({ n: p.name, f });
       }
     }
@@ -5826,7 +5831,7 @@ function _seasonPosRank(pos, yr, name, adjFpts, fmt) {
   // rounding differences between d.career and ALL_PLAYERS_DB don't double-count)
   let ahead = 0;
   for (const e of list) {
-    if (e.f <= adjFpts + 0.05) break;
+    if (e.f <= value + 0.05) break;
     if (e.n !== name) ahead++;
   }
   return ahead + 1;
@@ -6337,7 +6342,9 @@ function buildCareerTable(d, scoringFormat, statMode) {
 
   let hdr = '<tr><th>YR</th><th>TM</th><th>AGE</th><th>GP</th><th>PPG</th>'
     + (mode === 'tot' ? '<th>Pts</th>' : '')
-    + '<th><span data-gloss="Positional finish that season by total fantasy points, across all NFL players">RNK</span></th>'
+    + '<th><span data-gloss="' + (mode === 'tot'
+        ? 'Positional finish that season by total fantasy points, across all NFL players'
+        : 'Positional finish that season by fantasy PPG (min 8 games played), across all NFL players') + '">RNK</span></th>'
     + '<th><span data-gloss="Offensive snap share that season (nflverse, 2012+)">SNP%</span></th>';
   cols.forEach(col => {
     hdr += col[1] ? '<th><span data-gloss="' + col[1] + '">' + col[0] + '</span></th>' : '<th>' + col[0] + '</th>';
@@ -6367,7 +6374,9 @@ function buildCareerTable(d, scoringFormat, statMode) {
         row += '<td' + ppgClass + '>' + y.ppg + '</td>';
       }
       if (mode === 'tot') row += '<td class="fpts-cell">' + y.fpts + '</td>';
-      const _seasonRk = _seasonPosRank(d.s, y.yr, d.n, y.fpts, fmt);
+      // TOT mode ranks the season by total points; AVG mode by PPG (8+ games)
+      const _rkVal = mode === 'tot' ? y.fpts : (y.gp >= 8 ? y.ppg : null);
+      const _seasonRk = _seasonPosRank(d.s, y.yr, d.n, _rkVal, fmt, mode === 'tot' ? 'tot' : 'ppg');
       row += '<td' + _posRankStyle(_seasonRk, d.s) + '>' + (_seasonRk != null ? _seasonRk : '—') + '</td>';
       const _snp = _snapSeason(d.n, y.yr);
       row += _statCell(_snp != null ? Math.round(_snp) + '%' : '—', _snp, 40, 90);

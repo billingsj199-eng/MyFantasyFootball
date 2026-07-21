@@ -806,7 +806,6 @@ if (typeof COMBINE_DATA !== 'undefined') {
   _sd25('Mitchell Evans', 163, 'CAR', 'TE', 'Notre Dame');
   _sd25('Oronde Gadsden II', 165, 'LAC', 'TE', 'Syracuse');
   _sd25('Tory Horton', 166, 'SEA', 'WR', 'Colorado State');
-  _sd25('Jackson Harris', 173, 'BUF', 'TE', 'Georgia Tech');
   // Round 6
   _sd25('Ollie Gordon II', 179, 'MIA', 'RB', 'Oklahoma State');
   _sd25('Kyle McCord', 181, 'PHI', 'QB', 'Syracuse');

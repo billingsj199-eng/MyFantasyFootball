@@ -12673,6 +12673,47 @@ function _enrichFromAllPlayers() {
   // all_players_weekly_*.js are deferred (~13 MB), so the first eager call
   // here no-ops; the DOMContentLoaded listener re-runs the merge once the
   // deferred scripts have parsed.
+  //
+  // Suffix-aware weekly key aliasing (2026-07-21 name audit): ~40 players' game
+  // logs sit under a suffix/punctuation variant of their canonical D name
+  // ("Ronald Jones" vs "Ronald Jones II", "Michael Penix" vs "Michael Penix Jr."),
+  // so every direct WEEKLY_STATS[name] read missed them. After each merge, point
+  // the canonical name at the variant entry (same object reference, no copy).
+  // Guards — alias only when: the canonical name has no entry yet, the normalized
+  // match is UNIQUE across WEEKLY_STATS keys (skips Steve Smith/Sr.-style pairs),
+  // positions agree when both sides carry one, and the variant's seasons overlap
+  // the player's own career era (blocks cross-era same-name grafts like
+  // Frank Gore Jr. ← Frank Gore).
+  function _aliasWeeklyKeys() {
+    if (typeof WEEKLY_STATS === 'undefined' || typeof D === 'undefined') return;
+    const norm = n => String(n).toLowerCase()
+      .replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v)$/i, '')
+      .replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
+    const idx = Object.create(null);
+    for (const k in WEEKLY_STATS) {
+      const nk = norm(k);
+      idx[nk] = (nk in idx) ? '__AMBIG__' : k;
+    }
+    let aliased = 0;
+    D.forEach(d => {
+      if (!d || !d.n || WEEKLY_STATS[d.n]) return;
+      const key = idx[norm(d.n)];
+      if (!key || key === '__AMBIG__' || key === d.n) return;
+      const entry = WEEKLY_STATS[key];
+      if (entry.pos && d.s && entry.pos !== d.s) return;
+      // era overlap: known years from career rows + s25
+      const known = (d.career || []).map(r => r.yr);
+      if (d.s25 && d.s25.yr) known.push(d.s25.yr);
+      if (!known.length) return; // no era evidence (e.g. incoming rookie) — don't guess
+      const lo = Math.min.apply(null, known) - 1, hi = Math.max.apply(null, known) + 1;
+      const overlaps = Object.keys(entry.seasons || {}).some(y => +y >= lo && +y <= hi);
+      if (!overlaps) return;
+      WEEKLY_STATS[d.n] = entry;
+      aliased++;
+    });
+    if (aliased) console.log('[WeeklyAlias] linked ' + aliased + ' suffix-variant weekly keys');
+  }
+  window._aliasWeeklyKeys = _aliasWeeklyKeys;
   function _mergeAllPlayersWeekly() {
     if (typeof ALL_PLAYERS_WEEKLY === 'undefined' || typeof WEEKLY_STATS === 'undefined') return;
     for (const [name, data] of Object.entries(ALL_PLAYERS_WEEKLY)) {
@@ -12683,6 +12724,7 @@ function _enrichFromAllPlayers() {
         if (!WEEKLY_STATS[name].seasons[yr]) WEEKLY_STATS[name].seasons[yr] = weeks;
       }
     }
+    _aliasWeeklyKeys();
     // The by-name season fill above can graft a same-named retired player's game
     // logs onto a current player — re-run the collision cleanup after each merge.
     if (typeof window._fixNameCollisions === 'function') window._fixNameCollisions();
@@ -40215,6 +40257,40 @@ Rules:
     return rank;
   }
 
+  // Positional rank on the SAME board _mtGetPlayerRank uses (value source +
+  // league mode) — e.g. the 5th RB on the dynasty board. d.myPosRank/d.r track
+  // whatever board the RANKINGS page is currently showing, which made dynasty
+  // leagues display redraft pos ranks. Cache is per source|mode and cleared on
+  // every team-list render so rankings edits and source switches pick up.
+  let _mtPosRankCache = {};
+  function _mtGetPlayerPosRank(name) {
+    const d = _mtLookupD(name);
+    if (!d || !d.s) return null;
+    const mode = _mtGetRankingMode();
+    const key = _mtValueSrc + '|' + mode;
+    if (!_mtPosRankCache[key]) {
+      const map = {};
+      const counts = {};
+      const ADP_SRCS = ['underdog', 'ktc', 'espn', 'sleeper', 'yahoo'];
+      let board = null;
+      if (ADP_SRCS.indexOf(_mtValueSrc) >= 0) {
+        if (typeof window._getAdpBoard === 'function') board = window._getAdpBoard(_mtValueSrc, mode);
+      } else if (typeof versionBoards !== 'undefined') {
+        board = versionBoards[_mtValueSrc] && versionBoards[_mtValueSrc][mode];
+      }
+      if (board && board.length && typeof D !== 'undefined') {
+        board.forEach(idx => {
+          const p = D[idx];
+          if (!p || !p.s) return;
+          counts[p.s] = (counts[p.s] || 0) + 1;
+          map[p.n] = counts[p.s];
+        });
+      }
+      _mtPosRankCache[key] = map;
+    }
+    return _mtPosRankCache[key][d.n] || null;
+  }
+
   // Sleeper sends bare names ("Brian Thomas", "Kenneth Walker", "AJ Barner")
   // but D often stores them differently ("Brian Thomas Jr.", "Kenneth Walker III",
   // "A.J. Barner"). nameToIdx already registers suffix-stripped aliases for Jr./III;
@@ -41117,6 +41193,9 @@ Rules:
   const _mtOpenTeams = new Set();
 
   function _mtRenderTeamList(teams) {
+    // Rebuild positional-rank maps on every list render — cheap, and keeps
+    // them in sync with value-source switches and live rankings edits.
+    _mtPosRankCache = {};
     const pr = document.getElementById('mtPowerRankings');
     let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">POWER RANKINGS</div>';
 
@@ -41560,7 +41639,10 @@ Rules:
         const dEntry = _mtLookupD(p.name);
         const projPpg = ppgByName[p.name] || 0;
         const ppgColor = projPpg >= 15 ? '#22c55e' : projPpg >= 10 ? '#4ade80' : projPpg >= 6 ? '#facc15' : projPpg > 0 ? '#f59e0b' : 'var(--text2)';
-        const posRank = dEntry ? (dEntry.myPosRank || dEntry.r || null) : null;
+        // League-format positional rank (dynasty board in dynasty leagues, etc.).
+        // Fallback: digits of the rankings-page pos rank if the board lookup fails.
+        const posRank = _mtGetPlayerPosRank(p.name) ||
+          (dEntry && (dEntry.myPosRank || dEntry.r) ? String(dEntry.myPosRank || dEntry.r).replace(/\D/g, '') : null);
         html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4);cursor:pointer" data-mtname="${_esc(p.name)}">`;
         // Player headshot. ESPN URLs ship with &w=64&h=64 which renders blurry
         // at 56px on desktop — swap for a 200-wide variant so the circle stays

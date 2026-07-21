@@ -45,7 +45,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-21y" as="script">
+<link rel="preload" href="app.js?v=2026-07-21za" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -3697,7 +3697,7 @@ ADD TO CHROME
 <script src="data/player_team_history.js?v=2026-04-02" defer></script>
 <!-- ep_players_u.js removed: its global const EP_PLAYERS_U is shadowed by a local
      `let EP_PLAYERS_U` in the Unlimited Guess-Who IIFE and never read. Dead payload. -->
-<script src="data/active_team_history.js?v=2026-05-13c" defer></script>
+<script src="data/active_team_history.js?v=2026-07-21" defer></script>
 <script src="data/daily_retired_pool.js?v=2026-04-21" defer></script>
 <!-- weekly_stats_active.js (~2.4 MB) moved into the _loadWeeklyData lazy bundle (2026-07-20)
      — it only feeds the L4 PPG column (repaints on merge) + on-demand game logs. -->
@@ -4879,7 +4879,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-21y"></script>
+<script defer src="app.js?v=2026-07-21za"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

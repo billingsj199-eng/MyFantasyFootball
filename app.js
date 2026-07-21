@@ -4820,11 +4820,14 @@ _whenFirebaseReady(function(){
       versionTierCounters.jsmodel[mode].ALL = 0;
     });
 
-    // Get VOR values in board order
+    // Get VOR values in board order. Skip retired players — the rankings
+    // render filters them out (app.js ~1651), so tier afterRanks must be
+    // ranks within the VISIBLE list or every break lands on the wrong row.
     var vorValues = [];
-    jsBoard.forEach(function(idx, rank) {
-      var vor = D[idx]._jsModelVor;
-      if (vor != null) vorValues.push({rank: rank+1, vor: vor});
+    jsBoard.forEach(function(idx) {
+      var bd = D[idx];
+      if (bd._retired) return;
+      if (bd._jsModelVor != null) vorValues.push({rank: vorValues.length + 1, vor: bd._jsModelVor});
     });
 
     // Dynamic tier generation based on natural VOR gaps
@@ -4882,6 +4885,59 @@ _whenFirebaseReady(function(){
         versionTiers.jsmodel[mode].ALL.push({id: _tc, label: t.label, name: t.name, afterRank: t.afterRank});
       });
       versionTierCounters.jsmodel[mode].ALL = _tc;
+    });
+
+    // --- Per-position tiers (QB/RB/WR/TE filter tabs) ---
+    // Same natural-VOR-gap approach as the ALL view, but computed within each
+    // position's own list. afterRank is the POSITIONAL rank — that's what the
+    // renderer's _tierPK() bucket expects when a position filter is active.
+    // Within a position the board order IS VOR-descending (the market slot
+    // curve only re-interleaves across positions), so board order is safe to
+    // scan directly.
+    var _posVor = { QB: [], RB: [], WR: [], TE: [] };
+    jsBoard.forEach(function(bIdx) {
+      var bd = D[bIdx];
+      if (bd._retired) return; // hidden by the render — see vorValues note
+      if (_posVor[bd.s] && bd._jsModelVor != null) _posVor[bd.s].push(bd._jsModelVor);
+    });
+    var _posScanDepth = { QB: 32, RB: 60, WR: 72, TE: 32 };
+    Object.keys(_posVor).forEach(function(ppos) {
+      modes.forEach(function(mode) {
+        versionTiers.jsmodel[mode][ppos] = [];
+        versionTierCounters.jsmodel[mode][ppos] = 0;
+      });
+      var vals = _posVor[ppos];
+      if (vals.length < 8) return;
+      var pgaps = [];
+      for (var pgi = 0; pgi < Math.min(vals.length - 1, _posScanDepth[ppos]); pgi++) {
+        pgaps.push({ rank: pgi + 1, gap: vals[pgi] - vals[pgi + 1] });
+      }
+      var psorted = pgaps.slice().sort(function(a, b) { return b.gap - a.gap; });
+      // Positional tiers can legitimately be small at the top ("Tier 1:
+      // Gibbs, Bijan"), so min size 2 (vs 3 on the ALL board) and a lower
+      // gap floor since positional VOR is flatter deep in the list.
+      var pbreaks = [];
+      for (var pg = 0; pg < psorted.length && pbreaks.length < 8; pg++) {
+        var prk = psorted[pg].rank;
+        var pclose = false;
+        for (var pb = 0; pb < pbreaks.length; pb++) {
+          if (Math.abs(pbreaks[pb] - prk) < 2) { pclose = true; break; }
+        }
+        if (!pclose && psorted[pg].gap > 1.5) pbreaks.push(prk);
+      }
+      pbreaks.sort(function(a, b) { return a - b; });
+      var ptiers = [{ afterRank: 1, label: tierLabels[0], name: tierNames[0] }];
+      for (var pt = 0; pt < pbreaks.length && pt < tierLabels.length - 1; pt++) {
+        ptiers.push({ afterRank: pbreaks[pt] + 1, label: tierLabels[pt + 1], name: tierNames[pt + 1] });
+      }
+      modes.forEach(function(mode) {
+        var pctr = 0;
+        ptiers.forEach(function(t) {
+          pctr++;
+          versionTiers.jsmodel[mode][ppos].push({ id: pctr, label: t.label, name: t.name, afterRank: t.afterRank });
+        });
+        versionTierCounters.jsmodel[mode][ppos] = pctr;
+      });
     });
 
     if (currentVersion === 'jsmodel') {

@@ -768,6 +768,11 @@ if (typeof COMBINE_DATA !== 'undefined') {
   _sd25('RJ Harvey', 60, 'DEN', 'RB', 'UCF');
   // Round 3
   _sd25('Harold Fannin Jr.', 67, 'CLE', 'TE', 'Bowling Green');
+  // Kyle Williams — combine_data.js's entry is the OLD 49ers WR (ASU 2010, pick 206, SFO),
+  // so _sd25's soft merge left a corrupt hybrid (rookie draft slot + old player's school/
+  // measurables/dt). Force-overwrite with the 2025 Patriots rookie (same idiom as Ryan
+  // Williams above). His college stats are patched separately in index.html _csPatch1.
+  COMBINE_DATA['Kyle Williams'] = { yr: 2025, school: 'Washington State', pos: 'WR', ht: '5-11', wt: 190, forty: 4.40, draft: 69, ras: 8.24, dt: 'NWE' };
   _sd25('Kyle Williams', 69, 'NE', 'WR', 'Washington State');
   _sd25('Andrew Armstrong', 70, 'DET', 'WR', 'Arkansas');
   _sd25('Zakhari Franklin', 74, 'DEN', 'WR', 'Illinois');

@@ -41512,7 +41512,9 @@ Rules:
     const ppgByName = {};
     sc.players.forEach(p => { ppgByName[p.name] = _mtGetPlayerPpg(p.name); });
     html += `<div class="mt-roster-grouped" style="margin-top:6px">`;
-    ['QB','RB','WR','TE','K','DST'].forEach(pos => {
+    // Skill positions only — K/DST/OTHER columns removed 2026-07-21 at Jack's
+    // request (K/DST totals still show on the position summary cards above).
+    ['QB','RB','WR','TE'].forEach(pos => {
       const posPlayers = sc.players.filter(p => p.pos === pos).sort((a,b) => (a.rank||999) - (b.rank||999));
       if (!posPlayers.length) return;
       const ps = sc.posScores[pos] || { pts: 0, count: 0 };
@@ -41530,7 +41532,7 @@ Rules:
         const dEntry = _mtLookupD(p.name);
         const projPpg = ppgByName[p.name] || 0;
         const ppgColor = projPpg >= 15 ? '#22c55e' : projPpg >= 10 ? '#4ade80' : projPpg >= 6 ? '#facc15' : projPpg > 0 ? '#f59e0b' : 'var(--text2)';
-        const bye = dEntry && dEntry.bye ? dEntry.bye : null;
+        const posRank = dEntry ? (dEntry.myPosRank || dEntry.r || null) : null;
         html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4);cursor:pointer" data-mtname="${_esc(p.name)}">`;
         // Player headshot. ESPN URLs ship with &w=64&h=64 which renders blurry
         // at 56px on desktop — swap for a 200-wide variant so the circle stays
@@ -41541,65 +41543,26 @@ Rules:
         } else {
           html += `<div class="mt-roster-headshot" style="border-radius:50%"></div>`;
         }
-        // Name + team (+ age on dynasty)
+        // Name (+ age on dynasty). Team/bye dropped 2026-07-21 at Jack's request.
         html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0" data-mtname="${_esc(p.name)}">`;
         html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(p.name)}</div>`;
-        const metaParts = [p.team || '—'];
-        if (bye) metaParts.push('Bye ' + bye);
-        if (isDynastyView && p.age) metaParts.push(p.age + 'y');
-        html += `<div style="font-size:.62rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${metaParts.join(' · ')}</div>`;
-        html += `</div>`;
-        // Stat blocks (label below value). RANK + PPG + P-SOS only — VAL and
-        // ADP dropped 2026-07-21 (val already lives on the position summary
-        // cards above; rows stay narrow enough for the column-per-position
-        // desktop layout).
-        html += `<div class="mt-roster-stats" style="flex:0 0 auto;display:flex;gap:8px;align-items:center">`;
-        // RANK
-        html += `<div style="text-align:center;min-width:32px"><div style="font-size:.82rem;font-weight:700;color:${rankColor};line-height:1.05">${p.rank <= 500 ? p.rank : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">RANK</div></div>`;
-        // PROJ PPG — always visible (mobile + web)
-        html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${ppgColor};line-height:1.05">${projPpg > 0 ? projPpg : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">PPG</div></div>`;
-        // PLAYOFF SOS — facing tough defenses in W15-17? (web-only)
-        // Per-position rating: QB/RB/WR/TE use position-weighted Clay grades
-        // (e.g. WR reads CB+S, RB reads DI+LB). Tooltip lists the 3 opponents
-        // with the specific unit grades that drove the rating.
-        if (p.pos !== 'DST' && p.pos !== 'K') {
-          const psos = _mtGetPlayoffSos(dEntry ? dEntry.t : (p.team || ''), p.pos);
-          const psosLabel = psos ? psos.label : '—';
-          const psosColor = psos ? psos.color : 'var(--text2)';
-          const psosTitle = psos ? psos.title : 'Playoff SOS unavailable';
-          html += `<div class="mt-roster-stat-extra" title="${_esc(psosTitle)}" style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${psosColor};line-height:1.05">${psosLabel}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">P-SOS</div></div>`;
+        if (isDynastyView && p.age) {
+          html += `<div style="font-size:.62rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.age}y</div>`;
         }
+        html += `</div>`;
+        // Stat blocks (label below value): overall RANK, positional rank, PPG.
+        html += `<div class="mt-roster-stats" style="flex:0 0 auto;display:flex;gap:8px;align-items:center">`;
+        // RANK (overall)
+        html += `<div style="text-align:center;min-width:32px"><div style="font-size:.82rem;font-weight:700;color:${rankColor};line-height:1.05">${p.rank <= 500 ? p.rank : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">RANK</div></div>`;
+        // POS RANK (e.g. RB7)
+        html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${posColors[pos]};line-height:1.05">${posRank ? _esc(String(posRank)) : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">POS RANK</div></div>`;
+        // PROJ PPG
+        html += `<div style="text-align:center;min-width:34px"><div style="font-size:.82rem;font-weight:700;color:${ppgColor};line-height:1.05">${projPpg > 0 ? projPpg : '—'}</div><div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">PPG</div></div>`;
         html += `</div>`;
         html += `</div>`;
       });
       html += `</div>`;
     });
-    // Anything else (IDP, unrecognized positions) → OTHER fallback
-    const otherPlayers = sc.players.filter(p => !['QB','RB','WR','TE','K','DST'].includes(p.pos));
-    if (otherPlayers.length) {
-      html += `<div class="mt-pos-section" style="margin-bottom:14px">`;
-      html += `<div class="mt-pos-header" style="display:flex;align-items:baseline;gap:10px;padding:0 4px 4px;margin-bottom:6px;border-bottom:2px solid var(--border)">`;
-      html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:2px;color:var(--text2)">OTHER</span>`;
-      html += `<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">${otherPlayers.length} player${otherPlayers.length!==1?'s':''}</span>`;
-      html += `</div>`;
-      otherPlayers.forEach(p => {
-        const _dE = _mtLookupD(p.name);
-        const _hs = _dE && _dE._slImg ? window._fixHeadshotUrl(_dE._slImg) : '';
-        html += `<div class="mt-roster-row" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(30,42,66,.4);cursor:pointer" data-mtname="${_esc(p.name)}">`;
-        if (_hs) {
-          html += `<img class="mt-roster-headshot" src="${_hs}" alt="" loading="lazy" onerror="this.style.display='none'" style="border-radius:50%">`;
-        } else {
-          html += `<div class="mt-roster-headshot" style="border-radius:50%"></div>`;
-        }
-        html += `<span style="flex:0 0 auto;font-size:.55rem;padding:2px 5px;font-weight:700;background:var(--surface2);color:var(--text2);border-radius:3px">${p.pos}</span>`;
-        html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0" data-mtname="${_esc(p.name)}">`;
-        html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text)">${_esc(p.name)}</div>`;
-        html += `<div style="font-size:.62rem;color:var(--text2)">${p.team || '—'}</div>`;
-        html += `</div>`;
-        html += `</div>`;
-      });
-      html += `</div>`;
-    }
     html += `</div>`;
     // Close the #mtTeamViewPosition wrapper opened above the grouped roster.
     html += `</div>`;

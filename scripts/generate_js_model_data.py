@@ -5,10 +5,13 @@ generate_js_model_data.py — Regenerate data/js_model_data.js from ALL_PLAYERS_
 Builds the _JS_MODEL_DATA per-game rate table the JS Model engine (app.js)
 projects from. Rates are 50/30/20 recency-weighted over the last three league
 seasons (anchor = latest season in ALL_PLAYERS_DB, weights renormalized over
-the seasons the player actually appeared in) — NOT career averages. The
-scripts/backtest_js_model.py harness showed career-average rates lose to even
-a naive prior-year baseline at WR, while 50/30/20 weighting is the best core
-at every position (2018-2025 backtest, 2026-07-21).
+the seasons the player actually appeared in), with each season's weight ALSO
+scaled by games played (min(gp,17)) — an 8-game injury season shouldn't
+dominate two healthy 17-game ones just because it's most recent. NOT career
+averages. The scripts/backtest_js_model.py harness showed career-average
+rates lose to even a naive prior-year baseline at WR; 50/30/20 is the best
+core at every position, and the games-played scaling ("w3g") matches or
+beats it everywhere (2018-2025 backtest, 2026-07-21).
 
 Players included: pos QB/RB/WR/TE who played in the anchor season or the one
 before it (missing one full season to injury is draftable; anyone out longer
@@ -84,7 +87,7 @@ def raw_js_line(path, const_name):
 
 
 def weighted_rates(seasons, years):
-    """50/30/20 per-game rates over `years` (renormalized on appearances)."""
+    """50/30/20 x games-played per-game rates over `years` (renormalized)."""
     by_year = {s['yr']: s for s in seasons}
     rates, weights, gps = [], [], []
     for yr, w in zip(years, WEIGHTS):
@@ -93,7 +96,7 @@ def weighted_rates(seasons, years):
         if not s or gp < 1:
             continue
         rates.append({k: (s.get(k) or 0) / gp for k in STAT_KEYS})
-        weights.append(w)
+        weights.append(w * min(gp, 17))
         gps.append(gp)
     if not rates:
         return None

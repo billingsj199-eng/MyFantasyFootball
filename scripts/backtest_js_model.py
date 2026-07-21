@@ -176,15 +176,21 @@ def build_predictions(db, years, scoring, age_curves):
             preds['prior'] = score_rates(season_rates(prev), scoring)
 
             # w3: 50/30/20 over available of Y-1..Y-3
-            rl, wl = [], []
+            # w3g: same, but each season's weight also scaled by games played
+            # (an 8-game injury season shouldn't dominate two healthy 17-game
+            # seasons just because it's the most recent)
+            rl, wl, wgl = [], [], []
             for back, w in zip(range(1, 4), W3_WEIGHTS):
                 s = by_year.get(y - back)
                 r = season_rates(s) if s else None
                 if r:
                     rl.append(r)
                     wl.append(w)
+                    wgl.append(w * min(s.get('gp') or 0, 17))
             w3 = blend_rates(rl, wl)
             preds['w3'] = score_rates(w3, scoring)
+            w3g = blend_rates(rl, wgl)
+            preds['w3g'] = score_rates(w3g, scoring)
 
             # career: totals across all seasons < Y over total gp
             tot = {k: 0.0 for k in STAT_KEYS}
@@ -208,6 +214,7 @@ def build_predictions(db, years, scoring, age_curves):
                 mult = (age_curves.get(pos) or {}).get(str(age), 1.0)
             preds['career_age'] = preds['career'] * mult
             preds['w3_age'] = preds['w3'] * mult
+            preds['w3g_age'] = preds['w3g'] * mult
 
             rows.append({'name': p['name'], 'pos': pos, 'year': y,
                          'actual': actual, 'preds': preds})
@@ -336,7 +343,7 @@ def diagnose_file_weighting(db, js_model_data, scoring):
     by_name = {}
     for p in db:
         by_name.setdefault(p['name'], p)
-    diffs = {'career': [], 'w3': []}
+    diffs = {'career': [], 'w3': [], 'w3g': []}
     matched = 0
     for row in js_model_data:
         name, pos = row[0], row[1]
@@ -358,21 +365,24 @@ def diagnose_file_weighting(db, js_model_data, scoring):
             for k in STAT_KEYS:
                 tot[k] += s.get(k) or 0
         car = {k: tot[k] / tot_gp for k in STAT_KEYS}
-        # w3 hypothesis anchored on last played season
-        rl, wl = [], []
+        # w3 / w3g hypotheses anchored on last played season
+        rl, wl, wgl = [], [], []
         for back, w in zip(range(0, 3), W3_WEIGHTS):
             s = next((x for x in career if x['yr'] == last_yr - back), None)
             r = season_rates(s) if s else None
             if r:
                 rl.append(r)
                 wl.append(w)
+                wgl.append(w * min(s.get('gp') or 0, 17))
         w3 = blend_rates(rl, wl)
+        w3g = blend_rates(rl, wgl)
         diffs['career'].append(abs(score_rates(car, scoring) - score_rates(file_rates, scoring)))
         diffs['w3'].append(abs(score_rates(w3, scoring) - score_rates(file_rates, scoring)))
+        diffs['w3g'].append(abs(score_rates(w3g, scoring) - score_rates(file_rates, scoring)))
         matched += 1
     print(f'\n=== js_model_data.js weighting diagnostic ({matched} matched players, '
           f'PPG-space MAE vs each hypothesis) ===')
-    for h in ('career', 'w3'):
+    for h in ('career', 'w3', 'w3g'):
         d = diffs[h]
         if d:
             print(f'  {h:<8} MAE {sum(d)/len(d):.2f} ppg   '
@@ -400,7 +410,7 @@ def main():
     years = [y for y in years if y <= max_yr]
 
     rows = build_predictions(db, years, scoring, age_curves)
-    models = ['prior', 'w3', 'career', 'career_age', 'w3_age']
+    models = ['prior', 'w3', 'w3g', 'career', 'career_age', 'w3_age', 'w3g_age']
     results = evaluate(rows, models)
     print_results(results, models, years, args.scoring)
     residuals_by_experience(db, rows)

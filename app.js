@@ -3413,7 +3413,7 @@ _jsModelCheckAdmin();
     }
     if (!rec) return null;
 
-    const BOOKS = ['DK', 'FD', 'MGM'];
+    const BOOKS = ['DK', 'FD', 'MGM', 'UD'];
     const lines = {};
     BOOKS.forEach(b => { if (rec[b]) lines[b] = rec[b]; });
     const bookKeys = Object.keys(lines);
@@ -6529,9 +6529,85 @@ function _getCollegeStats(name, pos) {
   });
 }
 
-// Renders the LINES tab: SEASON-LONG sportsbook prop lines (DK/FD/MGM) →
-// blended fantasy projection (season total + PPG). Pulls from
-// window._propsProjectionFor.
+// Weekly prop lines section for the LINES tab: latest week in
+// BETTING_2026.weeklyProps that has this player. Books: UD/PP (DK reserved).
+// Returns '' when no weekly lines exist so callers can append unconditionally.
+function _buildWeeklyLinesSection(d) {
+  const wp = (window.BETTING_2026 && window.BETTING_2026.weeklyProps) || {};
+  const wks = Object.keys(wp).filter(w => wp[w] && wp[w][d.n]).map(Number).sort((a, b) => b - a);
+  if (!wks.length) return '';
+  const wk = wks[0];
+  const rec = wp[String(wk)][d.n];
+  const LBL = { DK: 'DraftKings', UD: 'Underdog', PP: 'PrizePicks' };
+  const books = ['DK', 'UD', 'PP'].filter(b => rec[b]);
+  if (!books.length) return '';
+  const fmt1 = (v) => (typeof v === 'number') ? (Math.round(v * 10) / 10).toFixed(1) : '—';
+  const fmt0 = (v) => (typeof v === 'number') ? String(Math.round(v)) : '—';
+  const ROWS = [['py', 'Pass Yds', fmt0], ['ptd', 'Pass TD', fmt1], ['int', 'INT', fmt1],
+                ['ry', 'Rush Yds', fmt0], ['rec', 'Rec', fmt1], ['rcy', 'Rec Yds', fmt0],
+                ['rrtd', 'Rush+Rec TD', fmt1]];
+  // Game context (matchup + Vegas numbers) from the same file's gameTotals.
+  // d.t is the full team name ("Philadelphia Eagles") — map to abbr first.
+  let ctx = '', game = null, isHome = false;
+  const gt = window.BETTING_2026.gameTotals || {};
+  const team = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t])
+    ? TEAM_ABBR_MAP[d.t] : String(d.t || '').toUpperCase();
+  for (const key in gt) {
+    const m = key.match(/^W(\d+)_([A-Z]+)_([A-Z]+)$/);
+    if (m && Number(m[1]) === wk && (m[2] === team || m[3] === team)) {
+      game = gt[key] || {};
+      isHome = (m[3] === team);
+      ctx = ' · ' + m[2] + ' @ ' + m[3];
+      break;
+    }
+  }
+  let html = '<div class="card-section"><div class="card-section-title">Week ' + wk + ' Prop Lines '
+    + '<span style="font-size:.55rem;color:var(--text2);font-weight:400">→ '
+    + books.map(b => LBL[b]).join(' · ') + ctx + '</span></div>';
+  // Vegas game environment: game O/U (bringback-tier colored), team implied
+  // total, and the spread from this player's team's perspective (neg = favored).
+  if (game && (typeof game.total === 'number' || typeof game.spread === 'number')) {
+    const total = (typeof game.total === 'number') ? game.total : null;
+    const teamSpread = (typeof game.spread === 'number') ? (isHome ? game.spread : -game.spread) : null;
+    const implied = (total !== null && teamSpread !== null) ? (total - teamSpread) / 2 : null;
+    const cls = (total !== null && typeof window.classifyGameTotal === 'function')
+      ? window.classifyGameTotal(total) : { color: null };
+    html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:.5rem">';
+    html += '<div class="card-rank-box"><div class="lbl">Game Total</div><div class="num"'
+      + (cls.color ? ' style="color:' + cls.color + '"' : '') + '>'
+      + (total !== null ? total.toFixed(1) : '—') + '</div></div>';
+    html += '<div class="card-rank-box"><div class="lbl">Team Total</div><div class="num accent">'
+      + (implied !== null ? implied.toFixed(1) : '—') + '</div></div>';
+    html += '<div class="card-rank-box"><div class="lbl">Spread</div><div class="num">'
+      + (teamSpread !== null ? (teamSpread > 0 ? '+' : '') + teamSpread : '—') + '</div></div>';
+    html += '</div>';
+  }
+  html += '<table class="career-table"><thead><tr><th style="text-align:left">Stat</th>';
+  books.forEach(b => { html += '<th>' + b + '</th>'; });
+  if (books.length > 1) html += '<th>Avg</th>';
+  html += '</tr></thead><tbody>';
+  ROWS.forEach(([k, label, fmtFn]) => {
+    const vals = books.map(b => rec[b][k]).filter(v => typeof v === 'number');
+    if (!vals.length) return;
+    html += '<tr><td style="text-align:left;font-weight:600">' + label + '</td>';
+    books.forEach(b => { html += '<td>' + fmtFn(rec[b][k]) + '</td>'; });
+    if (books.length > 1) {
+      html += '<td style="font-weight:700;color:var(--accent)">'
+        + fmtFn(vals.reduce((a, v) => a + v, 0) / vals.length) + '</td>';
+    }
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">'
+    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line.'
+    + (rec.asOf ? ' As of ' + rec.asOf + '.' : '') + '</div>';
+  html += '</div>';
+  return html;
+}
+
+// Renders the LINES tab: SEASON-LONG sportsbook prop lines (DK/FD/MGM/UD) →
+// blended fantasy projection (season total + PPG) + the weekly section.
+// Pulls from window._propsProjectionFor.
 function buildLinesView(d) {
   const P = (typeof window._propsProjectionFor === 'function') ? window._propsProjectionFor(d) : null;
 
@@ -6540,12 +6616,13 @@ function buildLinesView(d) {
       + '<div style="text-align:center;padding:2rem 1rem;color:var(--text2);font-size:.8rem;line-height:1.5">'
       + 'No season-long prop lines posted for <b style="color:var(--text)">' + d.n + '</b> yet.<br>'
       + '<span style="font-size:.7rem">Add them to <code style="color:var(--accent)">data/betting_lines_2026.js</code> (seasonProps) to build a projection.</span>'
-      + '</div></div>';
+      + '</div></div>'
+      + _buildWeeklyLinesSection(d);
   }
 
   const fmt1 = (v) => (typeof v === 'number') ? (Math.round(v * 10) / 10).toFixed(1) : '—';
   const fmt0 = (v) => (typeof v === 'number') ? String(Math.round(v)) : '—';
-  const BOOK_LBL = { DK: 'DK', FD: 'FD', MGM: 'MGM' };
+  const BOOK_LBL = { DK: 'DK', FD: 'FD', MGM: 'MGM', UD: 'UD' };
   const isQB = d.s === 'QB';
 
   // Stat rows shown for this position (only rows with at least one book value).
@@ -6600,7 +6677,7 @@ function buildLinesView(d) {
 
   // --- Lines table: stat × book + consensus avg ---
   html += '<div class="card-section"><div class="card-section-title">Season Prop Lines '
-    + '<span style="font-size:.55rem;color:var(--text2);font-weight:400">→ DraftKings · FanDuel · BetMGM</span></div>';
+    + '<span style="font-size:.55rem;color:var(--text2);font-weight:400">→ DraftKings · FanDuel · BetMGM · Underdog</span></div>';
   html += '<table class="career-table"><thead><tr><th style="text-align:left">Stat</th>';
   P.books.forEach(b => { html += '<th>' + BOOK_LBL[b] + '</th>'; });
   html += '<th>Avg</th></tr></thead><tbody>';
@@ -6627,6 +6704,9 @@ function buildLinesView(d) {
     });
     html += '</div></div>';
   }
+
+  // --- This week's prop lines (auto-pulled UD/PP) ---
+  html += _buildWeeklyLinesSection(d);
 
   return html;
 }

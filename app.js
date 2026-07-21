@@ -12692,13 +12692,19 @@ function _enrichFromAllPlayers() {
     const idx = Object.create(null);
     for (const k in WEEKLY_STATS) {
       const nk = norm(k);
-      idx[nk] = (nk in idx) ? '__AMBIG__' : k;
+      (idx[nk] = idx[nk] || []).push(k);
     }
     let aliased = 0;
     D.forEach(d => {
+      // Only when the canonical name has NO entry at all. Filling missing seasons
+      // across variant keys when BOTH entries exist was considered and rejected:
+      // that shape is usually two real players (Steve Smith / Steve Smith Sr.
+      // overlap 2007-2013) and cross-filling would re-create the graft bug.
       if (!d || !d.n || WEEKLY_STATS[d.n]) return;
-      const key = idx[norm(d.n)];
-      if (!key || key === '__AMBIG__' || key === d.n) return;
+      const cands = idx[norm(d.n)] || [];
+      if (cands.length !== 1) return; // ambiguous normalized name — leave alone
+      const key = cands[0];
+      if (key === d.n) return;
       const entry = WEEKLY_STATS[key];
       if (entry.pos && d.s && entry.pos !== d.s) return;
       // era overlap: known years from career rows + s25

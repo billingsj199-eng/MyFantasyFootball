@@ -41535,7 +41535,6 @@ Rules:
     html += `<div class="mt-team-view-position">`;
 
     // Full roster — grouped by position (Underdog-style)
-    const isDynastyView = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
     // Precompute projected PPG per player using the same logic as the best
     // lineup. Best-ball leagues use full-PPR Clay (via _mtGetPlayerPpg).
     const ppgByName = {};
@@ -41572,12 +41571,9 @@ Rules:
         } else {
           html += `<div class="mt-roster-headshot" style="border-radius:50%"></div>`;
         }
-        // Name (+ age on dynasty). Team/bye dropped 2026-07-21 at Jack's request.
+        // Name only — team/bye/age all dropped per Jack (Flock-style one-liner).
         html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0" data-mtname="${_esc(p.name)}">`;
         html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(p.name)}</div>`;
-        if (isDynastyView && p.age) {
-          html += `<div style="font-size:.62rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.age}y</div>`;
-        }
         html += `</div>`;
         // Stat blocks (label below value): overall RANK, positional rank, PPG.
         html += `<div class="mt-roster-stats" style="flex:0 0 auto;display:flex;gap:8px;align-items:center">`;
@@ -41592,30 +41588,34 @@ Rules:
       });
       html += `</div>`;
     });
+    // PICKS column (dynasty/keeper) — rides the same column grid as the
+    // positions, Flock-style. Replaces the old DRAFT PICKS chip section that
+    // sat below the roster.
+    if (sc.picks && sc.picks.length > 0) {
+      html += `<div class="mt-pos-section" style="margin-bottom:14px">`;
+      html += `<div class="mt-pos-header" style="display:flex;align-items:baseline;gap:10px;padding:0 4px 4px;margin-bottom:6px;border-bottom:2px solid var(--accent)40">`;
+      html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:2px;color:var(--accent)">PICKS</span>`;
+      html += `<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">${sc.picks.length} · +${sc.pickTotal} val</span>`;
+      html += `</div>`;
+      sc.picks.forEach(pk => {
+        const valColor = pk.val >= 150 ? '#22c55e' : pk.val >= 75 ? '#4ade80' : pk.val >= 30 ? '#facc15' : '#f59e0b';
+        const label = pk._pickNum ? pk.year + ' ' + pk._pickNum : pk.year + ' ' + pk.round;
+        // Secondary text: rookie name for exact picks, otherwise slot tier + origin.
+        const metaParts = [];
+        if (pk._pickNum && pk._rookieName) metaParts.push(_esc(pk._rookieName));
+        else if (pk.slot) metaParts.push(_esc(String(pk.slot)));
+        if (pk.original && pk.original !== t.owner) metaParts.push('via ' + _esc(pk.original));
+        html += `<div class="mt-pick-row" style="display:flex;align-items:center;gap:6px;padding:8px 4px;border-bottom:1px solid rgba(30,42,66,.4);font-size:.72rem">`;
+        html += `<span style="font-weight:700;color:var(--accent);white-space:nowrap">${label}</span>`;
+        if (metaParts.length) html += `<span style="flex:1 1 auto;min-width:0;color:var(--text2);font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${metaParts.join(' · ')}</span>`;
+        html += `<span style="margin-left:auto;font-weight:700;color:${valColor}">${pk.val}</span>`;
+        html += `</div>`;
+      });
+      html += `</div>`;
+    }
     html += `</div>`;
     // Close the .mt-team-view-position wrapper opened above the grouped roster.
     html += `</div>`;
-
-    // Draft picks section (dynasty only)
-    if (sc.picks && sc.picks.length > 0) {
-      html += `<div style="margin-top:16px">`;
-      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">DRAFT PICKS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(+${sc.pickTotal} total value)</span></div>`;
-      html += `<div style="display:flex;flex-wrap:wrap;gap:6px">`;
-      sc.picks.forEach(pk => {
-        const valColor = pk.val >= 150 ? '#22c55e' : pk.val >= 75 ? '#4ade80' : pk.val >= 30 ? '#facc15' : '#f59e0b';
-        html += `<div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.72rem">`;
-        html += `<span style="font-weight:700;color:var(--accent)">${pk._pickNum ? pk.year + ' ' + pk._pickNum : pk.year + ' ' + pk.round}</span>`;
-        html += `${pk._pickNum ? '' : '<span style=\"color:var(--text2)\"> ' + pk.slot + '</span>'}`;
-        // Show rookie player name for exact picks
-        if (pk._pickNum && pk._rookieName) {
-          html += `<span style="color:var(--text2);font-size:.6rem;margin-left:4px">(${_esc(pk._rookieName)})</span>`;
-        }
-        if (pk.original && pk.original !== t.owner) html += `<span style="color:var(--text2)"> (via ${_esc(pk.original)})</span>`;
-        html += `<span style="font-weight:700;color:${valColor};margin-left:6px">${pk.val}</span>`;
-        html += `</div>`;
-      });
-      html += `</div></div>`;
-    }
 
     detail.innerHTML = html;
     // 'nearest' keeps the standings list in place — the detail just unfolds

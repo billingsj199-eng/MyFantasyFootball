@@ -3821,6 +3821,112 @@ _whenFirebaseReady(function(){
     return _jsPlayerProj;
   }
 
+  // --- Vegas team context: season-avg implied points per team ---
+  // Derived from BETTING_2026.gameTotals (O/U + spread → implied points for
+  // both teams, averaged over every posted game). The betting market prices
+  // coaching changes, play-calling, pace and personnel — team-level signals
+  // historical player rates can't see — and Jack's line updates refresh it.
+  // (Supersedes the MIKE_CLAY_TEAMS offRk idea, which was never populated.)
+  var _jsVegasCtx = null;
+  function _jsVegasTeamCtx() {
+    if (_jsVegasCtx) return _jsVegasCtx;
+    var out = {};
+    var bt = (typeof BETTING_2026 !== 'undefined') ? BETTING_2026.gameTotals : null;
+    if (!bt) { _jsVegasCtx = out; return out; }
+    var acc = {}; // abbr -> {pts, n}
+    Object.keys(bt).forEach(function(k) {
+      var m = k.match(/^W\d+_([A-Z]+)_([A-Z]+)$/);
+      var rec = bt[k];
+      if (!m || !rec || typeof rec.total !== 'number' || typeof rec.spread !== 'number') return;
+      var homePts = (rec.total - rec.spread) / 2; // spread = home's, negative if favored
+      var awayPts = rec.total - homePts;
+      [[m[2], homePts], [m[1], awayPts]].forEach(function(t) {
+        if (!acc[t[0]]) acc[t[0]] = { pts: 0, n: 0 };
+        acc[t[0]].pts += t[1]; acc[t[0]].n++;
+      });
+    });
+    var abbrs = Object.keys(acc);
+    if (!abbrs.length) { _jsVegasCtx = out; return out; }
+    var league = abbrs.reduce(function(s, a) { return s + acc[a].pts / acc[a].n; }, 0) / abbrs.length;
+    abbrs.forEach(function(a) {
+      var team = acc[a].pts / acc[a].n;
+      // half the relative gap, capped ±6% (top offense ≈ +6%, bottom ≈ -6%)
+      var mult = 1 + Math.max(-0.06, Math.min(0.06, (team - league) / league * 0.5));
+      out[a] = { implied: Math.round(team * 10) / 10, mult: Math.round(mult * 1000) / 1000 };
+    });
+    _jsVegasCtx = out;
+    return out;
+  }
+
+  // --- Vacated opportunity: net 2025 targets/carries freed up per team ---
+  // For each team: opportunity that LEFT (last season's targets/carries of
+  // players no longer on the roster) minus opportunity that ARRIVED (what the
+  // new joiners used elsewhere), as a share of the team's totals. Incumbents
+  // on high-net-vacated teams get a boost — their historical rates were
+  // earned in a more crowded target environment. Computed live from
+  // ALL_PLAYERS_DB (last season, per-player team) x current D rosters, so
+  // trades/signings reflected in d.js flow through automatically.
+  var _jsVacCtx = null;
+  function _jsVacatedCtx() {
+    if (_jsVacCtx) return _jsVacCtx;
+    var out = { teams: {}, prevTeam: {} };
+    if (typeof ALL_PLAYERS_DB === 'undefined' || typeof TEAM_ABBR_MAP === 'undefined') {
+      // all_players.js is LAZY-loaded (2.5 MB) — usually not present on the
+      // first board compute. Kick the loader (dedup'd) and return empty
+      // WITHOUT caching; the mff:retireddata listener below recomputes the
+      // board once the data lands.
+      try { if (typeof window._loadRetiredData === 'function') window._loadRetiredData(); } catch (_e) {}
+      return out;
+    }
+    var alias = { ARZ:'ARI', BLT:'BAL', CLV:'CLE', HST:'HOU', LA:'LAR', JAC:'JAX', WSH:'WAS', OAK:'LV', SD:'LAC', STL:'LAR' };
+    var lastYr = 0;
+    ALL_PLAYERS_DB.forEach(function(p) {
+      (p.career || []).forEach(function(s) { if (s.yr > lastYr) lastYr = s.yr; });
+    });
+    var curTeam = {};
+    D.forEach(function(d) {
+      if (d.n && d.t && d.t !== 'TBD' && d.t !== 'FA') curTeam[d.n] = TEAM_ABBR_MAP[d.t] || d.t;
+    });
+    var team = {}; // abbr -> totals
+    function T(a) {
+      if (!team[a]) team[a] = { tgt: 0, car: 0, vacTgt: 0, vacCar: 0, inTgt: 0, inCar: 0 };
+      return team[a];
+    }
+    ALL_PLAYERS_DB.forEach(function(p) {
+      var s = null;
+      (p.career || []).forEach(function(row) { if (row.yr === lastYr) s = row; });
+      if (!s || !s.tm) return;
+      var tm = alias[s.tm] || s.tm;
+      var tgt = s.tgt || 0, car = s.ra || 0;
+      if (!tgt && !car) return;
+      var cur = curTeam[p.name] || null;
+      out.prevTeam[p.name] = tm;
+      T(tm).tgt += tgt; T(tm).car += car;
+      if (cur !== tm) {
+        T(tm).vacTgt += tgt; T(tm).vacCar += car;       // left this team (or the league)
+        if (cur) { T(cur).inTgt += tgt; T(cur).inCar += car; } // brought volume to a new team
+      }
+    });
+    Object.keys(team).forEach(function(a) {
+      var t = team[a];
+      if (t.tgt < 100) return; // not a real team sample
+      out.teams[a] = {
+        netTgt: (t.vacTgt - t.inTgt) / t.tgt,
+        netCar: t.car >= 100 ? (t.vacCar - t.inCar) / t.car : 0
+      };
+    });
+    _jsVacCtx = out;
+    return out;
+  }
+
+  // The vacated-opportunity ctx reads lazily-loaded ALL_PLAYERS_DB: when the
+  // retired-data bundle lands, drop the cache and recompute an already-built
+  // board so incumbents pick up their vacated-volume multipliers.
+  document.addEventListener('mff:retireddata', function() {
+    _jsVacCtx = null;
+    if (_jsPlayerProj) { try { _jsRebuild(); } catch (_e) {} }
+  });
+
   // --- Scoring presets ---
   var _jsScoringPresets = {
     half_ppr: { pass_yds:0.04, pass_td:4, ints:-1, rush_yds:0.1, rush_td:6, rec:0.5, rec_yds:0.1, rec_td:6, fumbles:-2 },
@@ -4237,6 +4343,25 @@ _whenFirebaseReady(function(){
         }
       }
 
+      // --- Experience curve: "young jump" / veteran fade ---
+      // Calibrated from scripts/backtest_js_model.py residuals (2018-2025):
+      // how much players beat/missed the recency-weighted core by years of
+      // experience. Measured: QB exp1/2 +20%/+26%; RB exp1 +18%, exp6+ -10%;
+      // WR exp1/2 +8%/+9%, exp5 -14%, exp6+ -17%; TE exp2/3 +13%/+9%, exp6+ -17%.
+      // Applied at ~60% of measured (noise shrinkage), BEFORE the JM and Clay
+      // blends, which price young upside their own way — full residual on top
+      // of those would double-count.
+      var _expJumpTbl = {
+        QB: { 1: 1.12, 2: 1.15, 3: 1.02 },
+        RB: { 1: 1.11, 6: 0.94 },
+        WR: { 1: 1.05, 2: 1.05, 4: 0.96, 5: 0.92, 6: 0.90 },
+        TE: { 2: 1.07, 3: 1.05, 4: 0.96, 5: 0.96, 6: 0.90 }
+      };
+      if (d.exp != null && d.exp >= 1) {
+        var _ejMult = (_expJumpTbl[pos] || {})[Math.min(d.exp, 6)];
+        if (_ejMult) fpts_pg *= _ejMult;
+      }
+
       // JM talent blending for young players
       var exp = d.exp != null ? d.exp : 99;
       var blendWeights = _jmBlendWeights[pos];
@@ -4295,11 +4420,58 @@ _whenFirebaseReady(function(){
         }
       }
 
-      // Age curve adjustment: multiply by retention factor for player's age next season
-      if (_ageCurves && _ageCurves[pos] && d.age != null) {
+      // Age curve adjustment: multiply by retention factor for player's age next season.
+      // QBs excluded: the 2018-2025 backtest (scripts/backtest_js_model.py) showed the
+      // age multiplier makes QB projections WORSE (MAE 3.33 -> 3.44) — QBs age too
+      // idiosyncratically for a smooth curve.
+      if (pos !== 'QB' && _ageCurves && _ageCurves[pos] && d.age != null) {
         var nextAge = d.age + 1;
         var ageMult = _ageCurves[pos][String(nextAge)];
         if (ageMult != null) fpts_pg *= ageMult;
+      }
+
+      // --- Team Environment (Vegas) + Vacated Opportunity ---
+      // Both applied BEFORE the Clay blend: Clay's projections already bake in
+      // team quality and roles, so scaling after the blend would double-count
+      // them on the Clay portion.
+      d._vacCtx = null;
+      var _teamAbbr = (d.t && typeof TEAM_ABBR_MAP !== 'undefined') ? (TEAM_ABBR_MAP[d.t] || null) : null;
+      if (_teamAbbr) {
+        // Vegas implied team scoring: market's read on coaching/pace/personnel
+        var _vCtx = _jsVegasTeamCtx()[_teamAbbr];
+        if (_vCtx) fpts_pg *= _vCtx.mult;
+
+        // Vacated targets/carries: boost incumbents whose team shed volume,
+        // squeeze incumbents whose team imported it. Incumbents only — a
+        // player who changed teams has his role priced by Clay, not by his
+        // old team's target tree.
+        var _vac = _jsVacatedCtx();
+        var _vacT = _vac.teams[_teamAbbr];
+        if (_vacT && _vac.prevTeam[d.n] === _teamAbbr) {
+          var _vacNet = 0;
+          if (pos === 'WR' || pos === 'TE') {
+            _vacNet = _vacT.netTgt * 0.25;                       // WR/TE: targets only
+          } else if (pos === 'RB') {
+            _vacNet = _vacT.netCar * 0.20 + _vacT.netTgt * 0.10; // RB: mostly carries
+          }
+          // QBs skipped: team pass volume is already priced by Vegas/Clay
+          if (_vacNet) {
+            var _vacMult = 1 + Math.max(-0.06, Math.min(0.06, _vacNet));
+            fpts_pg *= _vacMult;
+            d._vacCtx = { mult: Math.round(_vacMult * 1000) / 1000, netTgt: Math.round(_vacT.netTgt * 100), netCar: Math.round(_vacT.netCar * 100) };
+          }
+        }
+      }
+
+      // --- Defensive Strength of Schedule ---
+      // Adjust based on how tough the defenses this player will face are.
+      // Clay's defensive SOS multiplier: >1.0 means softer schedule (opponent defenses allow more),
+      // <1.0 means harder schedule. Also pre-blend for the same double-count reason.
+      if (typeof MIKE_CLAY_DEF_SOS !== 'undefined' && d.t) {
+        var sosMult = MIKE_CLAY_DEF_SOS[d.t];
+        if (sosMult != null) {
+          fpts_pg *= sosMult;
+        }
       }
 
       // --- Clay Expert Blend + Divergence Adjustment ---
@@ -4361,31 +4533,6 @@ _whenFirebaseReady(function(){
             // JS Model has no real projection — lean heavily on Clay
             fpts_pg = clayPpg * 0.85;
           }
-        }
-      }
-
-      // --- Team Efficiency Context ---
-      // Players on better offenses produce more fantasy points. Clay's offensive rankings
-      // capture projected team strength. Slight multiplier: top offenses get a boost,
-      // bottom offenses get a penalty. Capped at ±5% to avoid overweighting.
-      if (typeof MIKE_CLAY_TEAMS !== 'undefined' && d.t) {
-        var tmData = MIKE_CLAY_TEAMS[d.t];
-        if (tmData) {
-          // offRk 1 = best, 32 = worst. Center at 16.5, scale to multiplier.
-          // Rk 1 → +5%, Rk 16 → ~0%, Rk 32 → -5%
-          var offEff = 1.0 + (16.5 - tmData.offRk) / 16.5 * 0.05;
-          fpts_pg *= offEff;
-        }
-      }
-
-      // --- Defensive Strength of Schedule ---
-      // Adjust based on how tough the defenses this player will face are.
-      // Clay's defensive SOS multiplier: >1.0 means softer schedule (opponent defenses allow more),
-      // <1.0 means harder schedule. Applied as a direct multiplier on PPG.
-      if (typeof MIKE_CLAY_DEF_SOS !== 'undefined' && d.t) {
-        var sosMult = MIKE_CLAY_DEF_SOS[d.t];
-        if (sosMult != null) {
-          fpts_pg *= sosMult;
         }
       }
 

@@ -216,6 +216,25 @@ def build_predictions(db, years, scoring, age_curves):
             preds['w3_age'] = preds['w3'] * mult
             preds['w3g_age'] = preds['w3g'] * mult
 
+            # 'shipped': emulates the engine's own layers as deployed
+            # 2026-07-21 — w3g rates, age curve for non-QB only, experience
+            # jump (exp 1-5), production-tiered vet fade (exp 6+). The live
+            # Clay/Vegas/vacated/JM/injury layers can't be reconstructed
+            # historically, so this is the model's own-data floor.
+            shipped = preds['w3g'] * (1.0 if pos == 'QB' else mult)
+            exp_jump = {'QB': {1: 1.12, 2: 1.15, 3: 1.02},
+                        'RB': {1: 1.11},
+                        'WR': {1: 1.05, 2: 1.05, 4: 0.96, 5: 0.92},
+                        'TE': {2: 1.07, 3: 1.05, 4: 0.96, 5: 0.96}}
+            vet_fade = {'RB': (0.91, 0.95), 'WR': (0.98, 0.89), 'TE': (0.91, 0.90)}
+            elite_thr = {'RB': 12, 'WR': 12, 'TE': 9}
+            exp = y - (p.get('debut') or y)
+            if exp >= 6 and pos in vet_fade:
+                shipped *= vet_fade[pos][0 if preds['w3g'] >= elite_thr[pos] else 1]
+            elif 1 <= exp <= 5:
+                shipped *= exp_jump.get(pos, {}).get(exp, 1.0)
+            preds['shipped'] = shipped
+
             rows.append({'name': p['name'], 'pos': pos, 'year': y,
                          'actual': actual, 'preds': preds})
     return rows
@@ -275,6 +294,25 @@ def print_results(results, models, years, scoring_name):
             sp = f"{r['spearman']:.3f}" if r['spearman'] is not None else '—'
             th = f"{r['topn_hit']*100:.0f}%" if r['topn_hit'] is not None else '—'
             print(f'  {m:<12}{r["mae"]:>7.2f}{r["rmse"]:>8.2f}{sp:>10}{th:>10}{star}')
+
+
+def per_season_summary(rows, model='shipped'):
+    """Season-by-season rank quality — how stable is the model year to year?"""
+    print(f"\n=== '{model}': per-season Spearman / top-N hits ===")
+    for y in sorted({r['year'] for r in rows}):
+        parts = []
+        for pos in POSITIONS:
+            yr = [r for r in rows if r['year'] == y and r['pos'] == pos]
+            if len(yr) < 10:
+                continue
+            pred = [r['preds'][model] for r in yr]
+            act = [r['actual'] for r in yr]
+            sp = spearman(pred, act)
+            n = min(TOP_N[pos], len(yr))
+            tp = set(sorted(range(len(yr)), key=lambda i: -pred[i])[:n])
+            ta = set(sorted(range(len(yr)), key=lambda i: -act[i])[:n])
+            parts.append(f'{pos} {sp:.2f} {len(tp & ta)}/{n}')
+        print(f'  {y}:  ' + '   '.join(parts))
 
 
 def residuals_by_experience(db, rows, model='w3_age'):
@@ -410,9 +448,10 @@ def main():
     years = [y for y in years if y <= max_yr]
 
     rows = build_predictions(db, years, scoring, age_curves)
-    models = ['prior', 'w3', 'w3g', 'career', 'career_age', 'w3_age', 'w3g_age']
+    models = ['prior', 'w3', 'w3g', 'career', 'career_age', 'w3_age', 'w3g_age', 'shipped']
     results = evaluate(rows, models)
     print_results(results, models, years, args.scoring)
+    per_season_summary(rows)
     residuals_by_experience(db, rows)
     diagnose_file_weighting(db, js_model_data, scoring)
 

@@ -5773,6 +5773,129 @@ function getWeeklySeasons(d) {
   return Object.keys(WEEKLY_STATS[d.n].seasons).sort((a,b) => +b - +a);
 }
 
+// === Enriched career-log helpers ===
+// Positional season-finish ranks (from ALL_PLAYERS_DB) + weekly ranks (from
+// WEEKLY_STATS) + per-season CMP/ATT/TGT extras. Both source bundles are
+// lazy-loaded, so every helper degrades to null until the data lands; the
+// caches are flushed when the merge events fire so ranks fill in after.
+let _apdbIdx = null;
+function _apdbGet(name) {
+  if (typeof ALL_PLAYERS_DB === 'undefined' || !name) return null;
+  if (!_apdbIdx || _apdbIdx._n !== ALL_PLAYERS_DB.length) {
+    _apdbIdx = { _n: ALL_PLAYERS_DB.length, m: {} };
+    for (const p of ALL_PLAYERS_DB) if (!_apdbIdx.m[p.name]) _apdbIdx.m[p.name] = p;
+  }
+  const m = _apdbIdx.m;
+  if (m[name]) return m[name];
+  const noDots = name.replace(/\./g, '');
+  if (noDots !== name && m[noDots]) return m[noDots];
+  const noSuffix = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '').trim();
+  if (noSuffix !== name && m[noSuffix]) return m[noSuffix];
+  if (m[name + ' Jr.']) return m[name + ' Jr.'];
+  return null;
+}
+
+let _seasonRankCache = {};
+let _weeklyRankCache = {};
+document.addEventListener('mff:retireddata', () => { _seasonRankCache = {}; _apdbIdx = null; });
+document.addEventListener('mff:weeklydata', () => { _weeklyRankCache = {}; });
+
+// Positional finish for a season, by total fantasy points in the chosen
+// scoring, across ALL players in ALL_PLAYERS_DB (full-league coverage).
+function _seasonPosRank(pos, yr, name, adjFpts, fmt) {
+  if (typeof ALL_PLAYERS_DB === 'undefined' || !pos || !yr || adjFpts == null) return null;
+  const key = pos + '|' + fmt;
+  let byYear = _seasonRankCache[key];
+  if (!byYear) {
+    const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;
+    byYear = {};
+    for (const p of ALL_PLAYERS_DB) {
+      if (p.pos !== pos || !p.career) continue;
+      for (const s of p.career) {
+        if (s.fpts == null || !s.yr) continue;
+        const f = s.fpts + (s.rc || 0) * recAdj;
+        (byYear[s.yr] = byYear[s.yr] || []).push({ n: p.name, f });
+      }
+    }
+    for (const y in byYear) byYear[y].sort((a, b) => b.f - a.f);
+    _seasonRankCache[key] = byYear;
+  }
+  const list = byYear[yr];
+  if (!list || !list.length) return null;
+  // Count players strictly ahead (skip the player's own DB row so slight
+  // rounding differences between d.career and ALL_PLAYERS_DB don't double-count)
+  let ahead = 0;
+  for (const e of list) {
+    if (e.f <= adjFpts + 0.05) break;
+    if (e.n !== name) ahead++;
+  }
+  return ahead + 1;
+}
+
+// Positional rank for a single week, across all players in WEEKLY_STATS.
+// Returns null when the pool is too thin to rank meaningfully (old seasons
+// where retired weekly coverage is partial).
+function _weeklyPosRank(pos, season, wk, adjFpts, fmt) {
+  if (typeof WEEKLY_STATS === 'undefined' || !pos || adjFpts == null) return null;
+  const key = pos + '|' + season + '|' + fmt;
+  let byWk = _weeklyRankCache[key];
+  if (!byWk) {
+    const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;
+    byWk = {};
+    for (const pn in WEEKLY_STATS) {
+      const pd = WEEKLY_STATS[pn];
+      if (!pd || pd.pos !== pos || !pd.seasons || !pd.seasons[season]) continue;
+      for (const w of pd.seasons[season]) {
+        if (w.fpts == null) continue;
+        const f = w.fpts + (w.rec || 0) * recAdj;
+        (byWk[w.wk] = byWk[w.wk] || []).push(f);
+      }
+    }
+    for (const k in byWk) byWk[k].sort((a, b) => b - a);
+    _weeklyRankCache[key] = byWk;
+  }
+  const list = byWk[wk];
+  const minPool = (pos === 'RB' || pos === 'WR') ? 20 : 12;
+  if (!list || list.length < minPool) return null;
+  // The player's own score is in the list — equal values don't count as "ahead"
+  let ahead = 0;
+  for (const f of list) {
+    if (f <= adjFpts + 0.05) break;
+    ahead++;
+  }
+  return ahead + 1;
+}
+
+// Color a positional rank cell: elite / starter / flex / off the map
+function _posRankStyle(rk, pos) {
+  if (rk == null) return ' style="color:var(--text2)"';
+  const deep = pos === 'RB' || pos === 'WR';
+  const t1 = deep ? 12 : 6, t2 = deep ? 24 : 12, t3 = deep ? 36 : 18;
+  const c = rk <= t1 ? '#4ade80' : rk <= t2 ? '#60a5fa' : rk <= t3 ? '#facc15' : '#f87171';
+  return ' style="color:' + c + ';font-weight:700"';
+}
+
+// Per-season CMP/ATT/TGT (not stored in d.career) — from ALL_PLAYERS_DB,
+// falling back to summing the player's weekly rows for that season.
+function _careerExtras(name, yr) {
+  const ap = _apdbGet(name);
+  if (ap && ap.career) {
+    const s = ap.career.find(x => x.yr === yr);
+    if (s && (s.tgt != null || s.pc != null || s.pa != null)) {
+      return { tgt: s.tgt != null ? s.tgt : null, pc: s.pc != null ? s.pc : null, pa: s.pa != null ? s.pa : null };
+    }
+  }
+  if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[name] && WEEKLY_STATS[name].seasons) {
+    const weeks = WEEKLY_STATS[name].seasons[String(yr)];
+    if (weeks && weeks.length) {
+      let tgt = 0, pc = 0, pa = 0;
+      for (const w of weeks) { tgt += w.tgt || 0; pc += w.pc || 0; pa += w.pa || 0; }
+      return { tgt, pc, pa };
+    }
+  }
+  return { tgt: null, pc: null, pa: null };
+}
+
 // QB fantasy point color tiers
 function qbFptsColor(pts) {
   if (pts >= 22) return '#4ade80'; // light green
@@ -5849,7 +5972,7 @@ function buildWeeklyTable(d, season, scoringFormat) {
   // Find best week fpts for highlighting
   const bestFpts = Math.max(...adjusted.map(w => w.fpts));
 
-  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th><th>FPTS</th>';
+  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th><th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
   else if (isRB) hdr += '<th>ATT</th><th>RyD</th><th>RTD</th><th>TGT</th><th>REC</th><th>RcY</th><th>RcTD</th><th>FL</th>';
   else hdr += '<th>TGT</th><th>REC</th><th>RcY</th><th>RcTD</th><th>RyD</th><th>RTD</th><th>FL</th>';
@@ -5871,6 +5994,8 @@ function buildWeeklyTable(d, season, scoringFormat) {
       const fptsClass = w.fpts === bestFpts && bestFpts > 0 ? ' class="fpts-cell best-yr"' : ' class="fpts-cell"';
       row += '<td' + fptsClass + '>' + w.fpts + '</td>';
     }
+    const _wkRank = _weeklyPosRank(pos, season, w.wk, w.fpts, fmt);
+    row += '<td' + _posRankStyle(_wkRank, pos) + '>' + (_wkRank != null ? _wkRank : '—') + '</td>';
     if (isQB) {
       row += '<td>' + (w.pc||0) + '</td><td>' + (w.pa||0) + '</td><td>' + (w.py||0) + '</td><td>' + (w.ptd||0) + '</td><td>' + (w.int||0) + '</td><td>' + (w.ry||0) + '</td><td>' + (w.rtd||0) + '</td><td>' + (w.fl||0) + '</td>';
     } else if (isRB) {
@@ -5887,7 +6012,7 @@ function buildWeeklyTable(d, season, scoringFormat) {
   adjusted.forEach(w => { for (const k in totals) totals[k] += (w[k]||0); });
   totals.fpts = Math.round(totals.fpts * 10) / 10;
   let totalRow = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
-  totalRow += '<td style="color:var(--accent)">TOT</td><td></td><td style="font-weight:700">' + totals.fpts + '</td>';
+  totalRow += '<td style="color:var(--accent)">TOT</td><td></td><td style="font-weight:700">' + totals.fpts + '</td><td style="color:var(--text2)">—</td>';
   if (isQB) totalRow += '<td>'+totals.pc+'</td><td>'+totals.pa+'</td><td>'+totals.py+'</td><td>'+totals.ptd+'</td><td>'+totals.int+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
   else if (isRB) totalRow += '<td>'+totals.ra+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+totals.rctd+'</td><td>'+totals.fl+'</td>';
   else totalRow += '<td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+totals.rctd+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
@@ -5897,7 +6022,7 @@ function buildWeeklyTable(d, season, scoringFormat) {
   return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-function buildCareerTable(d, scoringFormat) {
+function buildCareerTable(d, scoringFormat, statMode) {
   const c = d.career;
   if (!c || !c.length) return '';
 
@@ -5909,18 +6034,19 @@ function buildCareerTable(d, scoringFormat) {
   const isRB = d.s === 'RB';
   const isK  = d.s === 'K' || d.s === 'DST';
   const curAbbr = teamAbbr(d.t);
-  const hasTeamHistory = !!PLAYER_TEAM_HISTORY[d.n];
 
   // Scoring adjustment: stored data is half PPR
   // PPR = +0.5 per reception, STD = -0.5 per reception
   const fmt = scoringFormat || 'half';
+  // 'tot' = season totals (legacy view), 'avg' = per-game averages
+  const mode = statMode || 'tot';
   const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;
 
   const adjusted = c.map(y => {
     const recs = y.rc || 0;
     const adjFpts = Math.round((y.fpts + recs * recAdj) * 10) / 10;
     const adjPpg = y.gp > 0 ? Math.round((adjFpts / y.gp) * 10) / 10 : 0;
-    return { ...y, fpts: adjFpts, ppg: adjPpg };
+    return { ...y, fpts: adjFpts, ppg: adjPpg, _ex: _careerExtras(d.n, y.yr) };
   });
 
   // Fill in missing years with zero rows
@@ -5930,7 +6056,7 @@ function buildCareerTable(d, scoringFormat) {
       const prev = adjusted[i - 1].yr;
       const cur = adjusted[i].yr;
       for (let yr = prev + 1; yr < cur; yr++) {
-        filled.push({ yr, gp: 0, fpts: 0, ppg: 0, py: 0, ptd: 0, int: 0, ry: 0, rtd: 0, ra: 0, rc: 0, rcy: 0, rctd: 0, fl: 0, yrr: null, _gap: true });
+        filled.push({ yr, gp: 0, fpts: 0, ppg: 0, py: 0, ptd: 0, int: 0, ry: 0, rtd: 0, ra: 0, rc: 0, rcy: 0, rctd: 0, fl: 0, yrr: null, _gap: true, _ex: { tgt: null, pc: null, pa: null } });
       }
     }
     filled.push(adjusted[i]);
@@ -5938,10 +6064,65 @@ function buildCareerTable(d, scoringFormat) {
 
   const bestPPG = Math.max(...filled.filter(y => !y._gap).map(y => y.ppg));
 
-  let hdr = '<tr><th>YR</th><th>TM</th><th>AGE</th><th>GP</th><th>PPG</th><th>Pts</th>';
-  if (isQB)       hdr += '<th>PyD</th><th>TD</th><th>IN</th><th>RyD</th><th>TD</th>';
-  else if (isRB)  hdr += '<th>Yds</th><th>Rec</th><th>TD</th><th>Y/RR</th>';
-  else if (!isK)  hdr += '<th>Yds</th><th>Rec</th><th>TD</th><th>Y/RR</th>';
+  const _avg = (v, gp) => gp > 0 ? ((v || 0) / gp).toFixed(1) : '—';
+  const _cmpPct = y => (y._ex.pc != null && y._ex.pa > 0) ? (y._ex.pc / y._ex.pa * 100).toFixed(1) : '—';
+  const _ypc = y => (y.ra > 0) ? ((y.ry || 0) / y.ra).toFixed(1) : '—';
+  const _ypr = y => (y.rc > 0) ? ((y.rcy || 0) / y.rc).toFixed(1) : '—';
+  const _yrrF = y => y.yrr != null ? y.yrr.toFixed(2) : '—';
+  const N = v => v == null ? '—' : v;
+
+  // Position-specific stat columns: [header, gloss (null = none), valueFn]
+  let cols = [];
+  if (isQB) {
+    cols = mode === 'tot' ? [
+      ['CMP', null, y => N(y._ex.pc)], ['ATT', null, y => N(y._ex.pa)],
+      ['CMP%', 'Completion percentage', _cmpPct],
+      ['PyD', null, y => y.py || 0], ['PTD', null, y => y.ptd || 0], ['INT', null, y => y.int || 0],
+      ['CAR', null, y => y.ra || 0], ['RyD', null, y => y.ry || 0], ['RTD', null, y => y.rtd || 0],
+      ['FL', null, y => y.fl || 0]
+    ] : [
+      ['CMP', 'Completions per game', y => y._ex.pc != null ? _avg(y._ex.pc, y.gp) : '—'],
+      ['ATT', 'Pass attempts per game', y => y._ex.pa != null ? _avg(y._ex.pa, y.gp) : '—'],
+      ['CMP%', 'Completion percentage', _cmpPct],
+      ['PyD', 'Passing yards per game', y => _avg(y.py, y.gp)],
+      ['PTD', 'Passing TDs per game', y => _avg(y.ptd, y.gp)],
+      ['INT', 'Interceptions per game', y => _avg(y.int, y.gp)],
+      ['CAR', 'Carries per game', y => _avg(y.ra, y.gp)],
+      ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp)],
+      ['RTD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp)]
+    ];
+  } else if (!isK) {
+    const recCols = mode === 'tot' ? [
+      ['TGT', null, y => N(y._ex.tgt)], ['REC', null, y => y.rc || 0], ['RcY', null, y => y.rcy || 0],
+      ['Y/R', 'Yards per reception', _ypr], ['RcTD', null, y => y.rctd || 0],
+      ['Y/RR', 'Yards per route run', _yrrF]
+    ] : [
+      ['TGT', 'Targets per game', y => y._ex.tgt != null ? _avg(y._ex.tgt, y.gp) : '—'],
+      ['REC', 'Receptions per game', y => _avg(y.rc, y.gp)],
+      ['RcY', 'Receiving yards per game', y => _avg(y.rcy, y.gp)],
+      ['Y/R', 'Yards per reception', _ypr],
+      ['RcTD', 'Receiving TDs per game', y => _avg(y.rctd, y.gp)],
+      ['Y/RR', 'Yards per route run', _yrrF]
+    ];
+    const rushCols = mode === 'tot' ? [
+      ['CAR', null, y => y.ra || 0], ['RyD', null, y => y.ry || 0],
+      ['YPC', 'Yards per carry', _ypc], ['RTD', null, y => y.rtd || 0]
+    ] : [
+      ['CAR', 'Carries per game', y => _avg(y.ra, y.gp)],
+      ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp)],
+      ['YPC', 'Yards per carry', _ypc],
+      ['RTD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp)]
+    ];
+    cols = isRB ? rushCols.concat(recCols) : recCols.concat(rushCols);
+    if (mode === 'tot') cols.push(['FL', null, y => y.fl || 0]);
+  }
+
+  let hdr = '<tr><th>YR</th><th>TM</th><th>AGE</th><th>GP</th><th>PPG</th>'
+    + (mode === 'tot' ? '<th>Pts</th>' : '')
+    + '<th><span data-gloss="Positional finish that season by total fantasy points, across all NFL players">RNK</span></th>';
+  cols.forEach(col => {
+    hdr += col[1] ? '<th><span data-gloss="' + col[1] + '">' + col[0] + '</span></th>' : '<th>' + col[0] + '</th>';
+  });
   hdr += '</tr>';
 
   let rows = filled.map(y => {
@@ -5956,10 +6137,8 @@ function buildCareerTable(d, scoringFormat) {
     row += '<td style="color:var(--text2)">' + ageInSeason + '</td>';
     row += '<td>' + (isGap ? '—' : y.gp) + '</td>';
     if (isGap) {
-      row += '<td class="fpts-cell">—</td><td class="fpts-cell">—</td>';
-      if (isQB)      row += '<td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>';
-      else if (isRB) row += '<td>—</td><td>—</td><td>—</td><td>—</td>';
-      else if (!isK) row += '<td>—</td><td>—</td><td>—</td><td>—</td>';
+      row += '<td class="fpts-cell">—</td>' + (mode === 'tot' ? '<td class="fpts-cell">—</td>' : '') + '<td style="color:var(--text2)">—</td>';
+      row += cols.map(() => '<td>—</td>').join('');
     } else {
       const _fptsColor = posFptsColor(y.ppg, d.s);
       if (_fptsColor) {
@@ -5968,16 +6147,70 @@ function buildCareerTable(d, scoringFormat) {
         const ppgClass = y.ppg === bestPPG ? ' class="fpts-cell best-yr"' : ' class="fpts-cell"';
         row += '<td' + ppgClass + '>' + y.ppg + '</td>';
       }
-      row += '<td class="fpts-cell">' + y.fpts + '</td>';
-      if (isQB)      row += '<td>' + (y.py||0) + '</td><td>' + (y.ptd||0) + '</td><td>' + (y.int||0) + '</td><td>' + (y.ry||0) + '</td><td>' + (y.rtd||0) + '</td>';
-      else if (isRB) row += '<td>' + ((y.ry||0)+(y.rcy||0)) + '</td><td>' + (y.rc||0) + '</td><td>' + ((y.rtd||0)+(y.rctd||0)) + '</td><td>' + (y.yrr != null ? y.yrr.toFixed(2) : '—') + '</td>';
-      else if (!isK) row += '<td>' + ((y.rcy||0)+(y.ry||0)) + '</td><td>' + (y.rc||0) + '</td><td>' + ((y.rctd||0)+(y.rtd||0)) + '</td><td>' + (y.yrr != null ? y.yrr.toFixed(2) : '—') + '</td>';
+      if (mode === 'tot') row += '<td class="fpts-cell">' + y.fpts + '</td>';
+      const _seasonRk = _seasonPosRank(d.s, y.yr, d.n, y.fpts, fmt);
+      row += '<td' + _posRankStyle(_seasonRk, d.s) + '>' + (_seasonRk != null ? _seasonRk : '—') + '</td>';
+      row += cols.map(col => '<td>' + col[2](y) + '</td>').join('');
     }
     row += '</tr>';
     return row;
   }).join('');
 
   return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+// Career Stats section — lives in the CAREER card tab (inline on K/DST cards,
+// which have no tab bar). Scoring toggle + AVG/TOT stat-mode toggle.
+function _careerSectionHtml(d) {
+  if (!d.career || !d.career.length) return '';
+  const bestSeasonsNote = d._retired && d._debut && d._last && d.career.length < (d._last - d._debut + 1) * 0.5
+    ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : '';
+  return `<div class="card-section">
+    <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+      <span id="clScoringLabel">Career Stats (Half PPR)${bestSeasonsNote}</span>
+      <div class="career-log-controls" style="flex-wrap:wrap">
+        <div class="career-log-toggle">
+          <button class="cl-scoring-btn" data-clscoring="ppr">PPR</button>
+          <button class="cl-scoring-btn active" data-clscoring="half">HALF</button>
+          <button class="cl-scoring-btn" data-clscoring="std">STD</button>
+        </div>
+        <div class="career-log-toggle">
+          <button class="cl-stat-btn active" data-clstat="avg">AVG</button>
+          <button class="cl-stat-btn" data-clstat="tot">TOT</button>
+        </div>
+      </div>
+    </div>
+    <div id="careerLogContent">${buildCareerTable(d, 'half', 'avg')}</div>
+  </div>`;
+}
+
+// Game Logs section — lives in the LOGS card tab (inline on K/DST cards).
+// Scoring toggle + season selector. Weekly data is lazy-loaded, so the section
+// renders a loading note until the bundle lands (see the mff:weeklydata hook
+// in the card wiring, which also reveals the LOGS tab button).
+function _logsSectionHtml(d) {
+  if (!d.career || !d.career.length) return '';
+  const seasons = getWeeklySeasons(d);
+  return `<div class="card-section">
+    <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+      <span id="glScoringLabel">Game Logs (Half PPR)</span>
+      <div class="career-log-controls" style="flex-wrap:wrap">
+        <div class="career-log-toggle">
+          <button class="gl-scoring-btn" data-glscoring="ppr">PPR</button>
+          <button class="gl-scoring-btn active" data-glscoring="half">HALF</button>
+          <button class="gl-scoring-btn" data-glscoring="std">STD</button>
+        </div>
+        <select class="career-log-year-select" id="glYearSelect">
+          ${seasons.map(s => '<option value="'+s+'">'+s+'</option>').join('')}
+        </select>
+      </div>
+    </div>
+    <div id="gameLogContent">${seasons.length
+      ? buildWeeklyTable(d, seasons[0], 'half')
+      : (typeof WEEKLY_STATS !== 'undefined' && Object.keys(WEEKLY_STATS).length > 0)
+        ? '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No game-by-game data available for this player.</div>'
+        : '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">Game-by-game data is loading…</div>'}</div>
+  </div>`;
 }
 
 function _getCollegeStats(name, pos) {
@@ -6614,6 +6847,8 @@ function openPlayerCard(d, ctxMode) {
     <div class="card-body">
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
+        ${!d._isDevy && !_is2026 && d.career && d.career.length > 0 ? `<button class="card-view-btn" data-cardview="logs" id="cardLogsTabBtn"${hasWeeklyData(d) ? '' : ' style="display:none"'}>LOGS</button>
+        <button class="card-view-btn" data-cardview="career">CAREER</button>` : ''}
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
         <button class="card-view-btn" data-cardview="comps">COMPS</button>
         ${(!d._isDevy && !_is2026 && !d._retired) ? `<button class="card-view-btn" data-cardview="lines">LINES</button>` : ''}
@@ -6765,26 +7000,9 @@ function openPlayerCard(d, ctxMode) {
       </div>`;
       })() : ''}
 
-      ${!_is2026 && d.career && d.career.length > 0 ? `<div class="card-section">
-        <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-          <span id="clScoringLabel">Career Log (Half PPR)${d._retired && d.career && d._debut && d._last && d.career.length < (d._last - d._debut + 1) * 0.5 ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : ''}</span>
-          <div class="career-log-controls">
-            <div class="career-log-toggle">
-              <button class="cl-scoring-btn" data-clscoring="ppr">PPR</button>
-              <button class="cl-scoring-btn active" data-clscoring="half">HALF</button>
-              <button class="cl-scoring-btn" data-clscoring="std">STD</button>
-            </div>
-            ${hasWeeklyData(d) ? `<div class="career-log-toggle">
-              <button class="cl-mode-btn active" data-clmode="season">SEASON</button>
-              <button class="cl-mode-btn" data-clmode="weekly">WEEKLY</button>
-            </div>
-            <select class="career-log-year-select" id="clYearSelect" style="display:none">
-              ${getWeeklySeasons(d).map(s => '<option value="'+s+'">'+s+'</option>').join('')}
-            </select>` : ''}
-          </div>
-        </div>
-        <div id="careerLogContent">${buildCareerTable(d, 'half')}</div>
-      </div>` : d._retired ? `<div class="card-section">
+      ${(d.s === 'K' || d.s === 'DST') && !_is2026 && d.career && d.career.length > 0
+        ? _careerSectionHtml(d) + _logsSectionHtml(d)
+        : (!_is2026 && d.career && d.career.length > 0) ? '' : d._retired ? `<div class="card-section">
         <div class="card-section-title">Career Summary</div>
         <div class="card-grid">
           <div class="card-stat">
@@ -7216,6 +7434,13 @@ function openPlayerCard(d, ctxMode) {
       <div class="card-prospect-view" id="cardLinesView" style="display:none">
       ${buildLinesView(d)}
       </div>
+      ${d.s !== 'K' && d.s !== 'DST' && !d._isDevy && !_is2026 && d.career && d.career.length > 0 ? `
+      <div class="card-prospect-view" id="cardCareerView" style="display:none">
+      ${_careerSectionHtml(d)}
+      </div>
+      <div class="card-prospect-view" id="cardLogsView" style="display:none">
+      ${_logsSectionHtml(d)}
+      </div>` : ''}
     </div>
   `;
 
@@ -7295,11 +7520,15 @@ function openPlayerCard(d, ctxMode) {
         const cv = document.getElementById('cardCompsView');
         const iv = document.getElementById('cardInfoView');
         const lv = document.getElementById('cardLinesView');
+        const crv = document.getElementById('cardCareerView');
+        const lgv = document.getElementById('cardLogsView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
         if (cv) cv.style.display = 'none';
         if (iv) iv.style.display = 'none';
         if (lv) lv.style.display = 'none';
+        if (crv) crv.style.display = 'none';
+        if (lgv) lgv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
         } else if (view === 'comps') {
@@ -7308,6 +7537,10 @@ function openPlayerCard(d, ctxMode) {
           if (iv) iv.style.display = 'block';
         } else if (view === 'lines') {
           if (lv) lv.style.display = 'block';
+        } else if (view === 'career') {
+          if (crv) crv.style.display = 'block';
+        } else if (view === 'logs') {
+          if (lgv) lgv.style.display = 'block';
         } else {
           fv.classList.remove('hidden');
         }
@@ -7359,53 +7592,91 @@ function openPlayerCard(d, ctxMode) {
     }
   }
 
-  // Career log Season/Weekly toggle + Scoring toggle
-  const clModeBtns = cardEl.querySelectorAll('.cl-mode-btn');
+  // CAREER tab: scoring toggle + AVG/TOT stat-mode toggle
   const clScoringBtns = cardEl.querySelectorAll('.cl-scoring-btn');
-  const clYearSelect = document.getElementById('clYearSelect');
+  const clStatBtns = cardEl.querySelectorAll('.cl-stat-btn');
   const clContent = document.getElementById('careerLogContent');
   const clLabel = document.getElementById('clScoringLabel');
   let _clScoring = 'half';
+  let _clStat = 'avg';
   const scoringLabels = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
 
   function _clRefresh() {
-    const activeMode = cardEl.querySelector('.cl-mode-btn.active');
-    const mode = activeMode ? activeMode.dataset.clmode : 'season';
-    if (mode === 'weekly' && clYearSelect) {
-      clContent.innerHTML = buildWeeklyTable(d, clYearSelect.value, _clScoring);
-    } else {
-      clContent.innerHTML = buildCareerTable(d, _clScoring);
-    }
-    if (clLabel) clLabel.textContent = 'Career Log (' + scoringLabels[_clScoring] + ')';
+    if (!clContent) return;
+    clContent.innerHTML = buildCareerTable(d, _clScoring, _clStat);
+    if (clLabel) clLabel.textContent = 'Career Stats (' + scoringLabels[_clScoring] + ')';
   }
 
-  if (clScoringBtns.length) {
-    clScoringBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        clScoringBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        _clScoring = btn.dataset.clscoring;
-        _clRefresh();
-      });
+  clScoringBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      clScoringBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _clScoring = btn.dataset.clscoring;
+      _clRefresh();
+    });
+  });
+  clStatBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      clStatBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _clStat = btn.dataset.clstat;
+      _clRefresh();
+    });
+  });
+  // RNK + CMP/ATT/TGT come from the lazy ALL_PLAYERS_DB bundle — repaint once
+  // it lands if this card's career table is still the one in the DOM.
+  if (clContent) {
+    document.addEventListener('mff:retireddata', function _clRetiredRepaint() {
+      document.removeEventListener('mff:retireddata', _clRetiredRepaint);
+      if (document.getElementById('careerLogContent') === clContent) _clRefresh();
     });
   }
-  if (clModeBtns.length) {
-    clModeBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        clModeBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const mode = btn.dataset.clmode;
-        if (mode === 'weekly') {
-          clYearSelect.style.display = '';
-        } else {
-          clYearSelect.style.display = 'none';
-        }
-        _clRefresh();
-      });
+
+  // LOGS tab: scoring toggle + season selector
+  const glScoringBtns = cardEl.querySelectorAll('.gl-scoring-btn');
+  const glYearSelect = document.getElementById('glYearSelect');
+  const glContent = document.getElementById('gameLogContent');
+  const glLabel = document.getElementById('glScoringLabel');
+  let _glScoring = 'half';
+
+  function _glRefresh() {
+    if (!glContent || !glYearSelect || !glYearSelect.value) return;
+    glContent.innerHTML = buildWeeklyTable(d, glYearSelect.value, _glScoring);
+    if (glLabel) glLabel.textContent = 'Game Logs (' + scoringLabels[_glScoring] + ')';
+  }
+
+  glScoringBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      glScoringBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _glScoring = btn.dataset.glscoring;
+      _glRefresh();
     });
-    if (clYearSelect) {
-      clYearSelect.addEventListener('change', () => { _clRefresh(); });
-    }
+  });
+  if (glYearSelect) {
+    glYearSelect.addEventListener('change', () => { _glRefresh(); });
+  }
+  // The LOGS tab button is hidden (and the season selector empty) when the card
+  // opens before the lazy weekly bundle has merged (e.g. ?player= deep links) —
+  // reveal + populate once data lands.
+  if (glContent) {
+    document.addEventListener('mff:weeklydata', function _glWeeklyReveal() {
+      document.removeEventListener('mff:weeklydata', _glWeeklyReveal);
+      if (document.getElementById('gameLogContent') !== glContent) return;
+      if (!hasWeeklyData(d)) {
+        // Bundle landed but this player has no weekly rows — swap the loading
+        // note for a definitive message (only K/DST inline sections hit this;
+        // the LOGS tab button stays hidden on tabbed cards).
+        glContent.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No game-by-game data available for this player.</div>';
+        return;
+      }
+      const glTabBtn = document.getElementById('cardLogsTabBtn');
+      if (glTabBtn) glTabBtn.style.display = '';
+      if (glYearSelect && !glYearSelect.options.length) {
+        glYearSelect.innerHTML = getWeeklySeasons(d).map(s => '<option value="'+s+'">'+s+'</option>').join('');
+      }
+      _glRefresh();
+    });
   }
 }
 

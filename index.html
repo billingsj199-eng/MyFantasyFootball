@@ -45,7 +45,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-21v" as="script">
+<link rel="preload" href="app.js?v=2026-07-21w" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2318,7 +2318,8 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="mtPowerRankings" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
 
 <!-- Expanded Team View -->
-<div id="mtTeamDetail" style="display:none;margin-top:12px"></div>
+<!-- Team details now render inline below each standings row (#mtTeamDetailInline-N inside #mtPowerRankings) -->
+
 </div>
 
 <!-- Saved Teams -->
@@ -4878,7 +4879,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-21v"></script>
+<script defer src="app.js?v=2026-07-21w"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

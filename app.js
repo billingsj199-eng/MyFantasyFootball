@@ -41112,6 +41112,10 @@ Rules:
     }
   }
 
+  // Which teams' inline details are expanded, keyed by String(team index).
+  // Multiple teams can be open at once; the set survives list re-renders.
+  const _mtOpenTeams = new Set();
+
   function _mtRenderTeamList(teams) {
     const pr = document.getElementById('mtPowerRankings');
     let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">POWER RANKINGS</div>';
@@ -41214,8 +41218,14 @@ Rules:
       }
       html += `</div>`;
       html += `</div>`;
+      // Inline detail container — the team expands here, directly below its
+      // row, when clicked. Sibling of the row so row clicks can't bubble in.
+      html += `<div class="mt-team-detail-inline" id="mtTeamDetailInline-${origIdx}" style="display:none;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px"></div>`;
     });
     pr.innerHTML = html;
+    // Restore any expanded team details (multiple can be open; survives the
+    // full re-render that sorting / view-mode switches trigger).
+    _mtOpenTeams.forEach(k => _mtRenderTeamDetail(parseInt(k, 10)));
   }
 
   window._mtSortTeams = function(key) {
@@ -41434,15 +41444,19 @@ Rules:
   }
 
   // Toggle between BY POSITION (grouped roster) and OPTIMAL LINEUP (best lineup).
-  // Defaults to position view; lineup view shows the same data sorted into starter slots.
-  window._mtSwitchTeamView = function(view) {
-    const lineupEl = document.getElementById('mtTeamViewLineup');
-    const posEl = document.getElementById('mtTeamViewPosition');
+  // Defaults to position view; lineup view shows the same data sorted into
+  // starter slots. Scoped to one team's inline detail (idx) since several
+  // teams can be expanded at once.
+  window._mtSwitchTeamView = function(view, idx) {
+    const root = document.getElementById('mtTeamDetailInline-' + idx);
+    if (!root) return;
+    const lineupEl = root.querySelector('.mt-team-view-lineup');
+    const posEl = root.querySelector('.mt-team-view-position');
     if (!lineupEl || !posEl) return;
     const wantLineup = view === 'lineup';
     lineupEl.style.display = wantLineup ? '' : 'none';
     posEl.style.display = wantLineup ? 'none' : '';
-    document.querySelectorAll('.mt-view-tab').forEach(btn => {
+    root.querySelectorAll('.mt-view-tab').forEach(btn => {
       const active = btn.dataset.mtview === view;
       btn.style.background = active ? 'var(--accent)' : 'transparent';
       btn.style.color = active ? '#000' : 'var(--text2)';
@@ -41450,12 +41464,27 @@ Rules:
     });
   };
 
+  window._mtCloseTeam = function(idx) {
+    _mtOpenTeams.delete(String(idx));
+    const box = document.getElementById('mtTeamDetailInline-' + idx);
+    if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+  };
+
+  // Row click: toggle the team's inline detail (open below the row / close on
+  // second click). Multiple teams can be open at the same time.
   window._mtShowTeam = function(idx) {
+    if (_mtOpenTeams.has(String(idx))) { window._mtCloseTeam(idx); return; }
+    _mtOpenTeams.add(String(idx));
+    _mtRenderTeamDetail(idx);
+  };
+
+  function _mtRenderTeamDetail(idx) {
     const teams = window._mtTeams;
     if (!teams || !teams[idx]) return;
     const t = teams[idx];
     const sc = t.score;
-    const detail = document.getElementById('mtTeamDetail');
+    const detail = document.getElementById('mtTeamDetailInline-' + idx);
+    if (!detail) return;
     detail.style.display = '';
 
     const allScores = teams.map(x => x.score.total);
@@ -41470,7 +41499,7 @@ Rules:
     html += `</div>`;
     html += `<div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text)">${_esc(t.owner)}${t.isMyTeam ? ' <span style="font-size:.7rem;color:var(--accent)">⭐ MY TEAM</span>' : ''}</div>`;
     html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Players: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div></div>`;
-    html += `<button onclick="document.getElementById('mtTeamDetail').style.display='none'" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕ Close</button>`;
+    html += `<button onclick="window._mtCloseTeam(${idx})" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕ Close</button>`;
     html += `</div>`;
 
     // Position breakdown
@@ -41492,18 +41521,18 @@ Rules:
 
     // View toggle — BY POSITION vs OPTIMAL LINEUP
     html += `<div class="mt-view-tabs" style="display:flex;gap:2px;margin-bottom:12px;background:var(--surface2);padding:3px;border-radius:8px;width:fit-content">`;
-    html += `<button class="mt-view-tab" data-mtview="position" onclick="window._mtSwitchTeamView('position')" style="padding:6px 16px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;border:none;border-radius:5px;cursor:pointer;background:var(--accent);color:#000;transition:all .15s">BY POSITION</button>`;
-    html += `<button class="mt-view-tab" data-mtview="lineup" onclick="window._mtSwitchTeamView('lineup')" style="padding:6px 16px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">OPTIMAL LINEUP</button>`;
+    html += `<button class="mt-view-tab" data-mtview="position" onclick="window._mtSwitchTeamView('position', ${idx})" style="padding:6px 16px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;border:none;border-radius:5px;cursor:pointer;background:var(--accent);color:#000;transition:all .15s">BY POSITION</button>`;
+    html += `<button class="mt-view-tab" data-mtview="lineup" onclick="window._mtSwitchTeamView('lineup', ${idx})" style="padding:6px 16px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">OPTIMAL LINEUP</button>`;
     html += `</div>`;
 
     // Best Lineup (hidden by default — shown when user toggles to OPTIMAL LINEUP)
     const lineup = _mtBestLineup(t.players);
-    html += `<div id="mtTeamViewLineup" style="display:none">`;
+    html += `<div class="mt-team-view-lineup" style="display:none">`;
     html += _mtRenderBestLineup(lineup);
     html += `</div>`;
 
     // BY POSITION wrapper opens here; closes after the .mt-roster-grouped block below.
-    html += `<div id="mtTeamViewPosition">`;
+    html += `<div class="mt-team-view-position">`;
 
     // Full roster — grouped by position (Underdog-style)
     const isDynastyView = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
@@ -41564,7 +41593,7 @@ Rules:
       html += `</div>`;
     });
     html += `</div>`;
-    // Close the #mtTeamViewPosition wrapper opened above the grouped roster.
+    // Close the .mt-team-view-position wrapper opened above the grouped roster.
     html += `</div>`;
 
     // Draft picks section (dynasty only)
@@ -41589,7 +41618,9 @@ Rules:
     }
 
     detail.innerHTML = html;
-    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // 'nearest' keeps the standings list in place — the detail just unfolds
+    // below its row instead of yanking the page to the top of the panel.
+    detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     // Wire roster name clicks → open player card with the league's mode (dynasty / superflex / etc.)
     // Whole row is clickable — opens the player card in the league's ranking
     // mode (redraft/superflex/dynasty/dynastysf) so the ADP source it surfaces
@@ -41606,7 +41637,7 @@ Rules:
         }
       });
     });
-  };
+  }
 
   // Manual search
   window._mtSearchPlayer = function(query) {

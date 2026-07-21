@@ -6,9 +6,11 @@
 #     "Josh Allen": { "2025": { "s": 98.5, "w": {"1": 100, "2": 87, ...} }, ... }
 #   }
 #   window.TEAM_TGT = { "2025": { "CIN": { "2": 43, ... }, ... }, ... }
+#   window.TEAM_CAR = { "2025": { "CIN": { "2": 17, ... }, ... }, ... }
 # s = season offensive snap % (snap-weighted: sum(snaps)/sum(team snaps))
 # w = per-week offensive snap % (whole numbers, REG season only)
 # TEAM_TGT = exact team pass targets per week (REG), the TS% denominator.
+# TEAM_CAR = exact team rush attempts per week (REG), the CAR% denominator.
 #
 # Only players present in data/d.js are kept (the player card only opens for
 # D-array players). nflverse names are normalized to d.js names (dots/suffixes).
@@ -99,8 +101,9 @@ def main():
                 'w': agg['w'],
             }
 
-    # Team weekly target totals (exact TS% denominator)
+    # Team weekly target + carry totals (exact TS% / CAR% denominators)
     team_tgt = {}
+    team_car = {}
     for yr in TEAM_YEARS:
         r = requests.get(TEAM_URL.format(yr=yr), timeout=60)
         if r.status_code != 200:
@@ -109,16 +112,20 @@ def main():
         df = pd.read_csv(io.BytesIO(r.content))
         df = df[df.season_type == 'REG']
         y = team_tgt.setdefault(str(yr), {})
+        yc = team_car.setdefault(str(yr), {})
         for row in df.itertuples(index=False):
-            if pd.isna(row.targets):
-                continue
             tm = TEAM_FIX.get(str(row.team), str(row.team))
-            y.setdefault(tm, {})[str(int(row.week))] = int(row.targets)
+            wk = str(int(row.week))
+            if not pd.isna(row.targets):
+                y.setdefault(tm, {})[wk] = int(row.targets)
+            if not pd.isna(row.carries):
+                yc.setdefault(tm, {})[wk] = int(row.carries)
         print(f'team {yr}: {len(y)} teams')
         time.sleep(0.3)
 
     js = ('window.SNAP_COUNTS=' + json.dumps(out, separators=(',', ':')) + ';\n'
-          + 'window.TEAM_TGT=' + json.dumps(team_tgt, separators=(',', ':')) + ';\n')
+          + 'window.TEAM_TGT=' + json.dumps(team_tgt, separators=(',', ':')) + ';\n'
+          + 'window.TEAM_CAR=' + json.dumps(team_car, separators=(',', ':')) + ';\n')
     with open(OUT, 'w', encoding='utf-8') as f:
         f.write(js)
     print(f'wrote {OUT}: {len(out)} players, {len(team_tgt)} team seasons, {os.path.getsize(OUT)/1024:.0f} KB')

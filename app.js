@@ -5993,6 +5993,50 @@ function _tsPctWeek(playerName, season, w) {
   return (w.tgt || 0) / tot * 100;
 }
 
+// Carry share % — share of the team's rush attempts (TEAM_CAR in snap_counts.js)
+function _carPctSeason(tm, yr, ra, playerName) {
+  if (ra == null || !tm || typeof TEAM_CAR === 'undefined' || !TEAM_CAR[yr] || !TEAM_CAR[yr][tm]) return null;
+  const wks = TEAM_CAR[yr][tm];
+  let played = null;
+  if (playerName && typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[playerName]
+      && WEEKLY_STATS[playerName].seasons && WEEKLY_STATS[playerName].seasons[yr]) {
+    played = new Set(WEEKLY_STATS[playerName].seasons[yr].map(w => String(w.wk)));
+  }
+  let tot = 0;
+  for (const k in wks) { if (!played || played.has(k)) tot += wks[k]; }
+  if (tot < (played ? 10 : 50)) return null;
+  return ra / tot * 100;
+}
+function _carPctWeek(playerName, season, w) {
+  if (!w || w.ra == null) return null;
+  const tm = (w.tm && w.tm.trim()) || _getTeamForPlayerYear(playerName, +season);
+  if (!tm || typeof TEAM_CAR === 'undefined' || !TEAM_CAR[season] || !TEAM_CAR[season][tm]) return null;
+  const tot = TEAM_CAR[season][tm][w.wk];
+  return tot > 0 ? (w.ra || 0) / tot * 100 : null;
+}
+
+// Flock-style stat-cell coloring: normalize v into [lo,hi] → 5-step ramp
+// (red → orange → yellow → lime → green), colored text + faint tint.
+const _statTints = {
+  '#f87171': 'rgba(248,113,113,.09)',
+  '#fb923c': 'rgba(251,146,60,.09)',
+  '#facc15': 'rgba(250,204,21,.09)',
+  '#a3e635': 'rgba(163,230,53,.09)',
+  '#4ade80': 'rgba(74,222,128,.09)'
+};
+function _scaleColor(v, lo, hi, invert) {
+  if (v == null || isNaN(v)) return null;
+  let t = (v - lo) / (hi - lo);
+  if (invert) t = 1 - t;
+  t = Math.max(0, Math.min(1, t));
+  return t < 0.2 ? '#f87171' : t < 0.4 ? '#fb923c' : t < 0.6 ? '#facc15' : t < 0.8 ? '#a3e635' : '#4ade80';
+}
+function _statCell(display, v, lo, hi, invert) {
+  const c = _scaleColor(v, lo, hi, invert);
+  if (!c || display === '—') return '<td>' + display + '</td>';
+  return '<td style="color:' + c + ';background:' + _statTints[c] + '">' + display + '</td>';
+}
+
 // QB fantasy point color tiers
 function qbFptsColor(pts) {
   if (pts >= 22) return '#4ade80'; // light green
@@ -6071,8 +6115,8 @@ function buildWeeklyTable(d, season, scoringFormat) {
 
   let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th><th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
-  else if (isRB) hdr += '<th>ATT</th><th>RyD</th><th>RTD</th><th>TGT</th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>REC</th><th>RcY</th><th>RcTD</th><th>FL</th>';
-  else hdr += '<th>TGT</th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>REC</th><th>RcY</th><th>RcTD</th><th>RyD</th><th>RTD</th><th>FL</th>';
+  else if (isRB) hdr += '<th>ATT</th><th><span data-gloss="Share of team carries that week">CAR%</span></th><th>RyD</th><th>RTD</th><th>TGT</th><th>REC</th><th>RcY</th><th>RcTD</th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>FL</th>';
+  else hdr += '<th>TGT</th><th>REC</th><th>RcY</th><th>RcTD</th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>RyD</th><th>RTD</th><th>FL</th>';
   hdr += '</tr>';
 
   let rows = adjusted.map(w => {
@@ -6094,15 +6138,26 @@ function buildWeeklyTable(d, season, scoringFormat) {
     const _wkRank = _weeklyPosRank(pos, season, w.wk, w.fpts, fmt);
     row += '<td' + _posRankStyle(_wkRank, pos) + '>' + (_wkRank != null ? _wkRank : '—') + '</td>';
     const _wkSnp = _snapWeek(d.n, season, w.wk);
-    row += '<td>' + (_wkSnp != null ? _wkSnp + '%' : '—') + '</td>';
+    row += _statCell(_wkSnp != null ? _wkSnp + '%' : '—', _wkSnp, 40, 90);
     const _wkTs = isQB ? null : _tsPctWeek(d.n, season, w);
-    const _wkTsCell = '<td>' + (_wkTs != null ? _wkTs.toFixed(1) + '%' : '—') + '</td>';
+    const _wkTsCell = _statCell(_wkTs != null ? _wkTs.toFixed(1) + '%' : '—', _wkTs, isRB ? 3 : 10, isRB ? 14 : 28);
     if (isQB) {
-      row += '<td>' + (w.pc||0) + '</td><td>' + (w.pa||0) + '</td><td>' + (w.py||0) + '</td><td>' + (w.ptd||0) + '</td><td>' + (w.int||0) + '</td><td>' + (w.ry||0) + '</td><td>' + (w.rtd||0) + '</td><td>' + (w.fl||0) + '</td>';
+      row += _statCell(w.pc||0, w.pc||0, 12, 24) + _statCell(w.pa||0, w.pa||0, 20, 38)
+        + _statCell(w.py||0, w.py||0, 150, 290) + _statCell(w.ptd||0, w.ptd||0, 0, 2.5)
+        + _statCell(w.int||0, w.int||0, 0, 2, true) + _statCell(w.ry||0, w.ry||0, 8, 45)
+        + _statCell(w.rtd||0, w.rtd||0, 0, 1.2) + '<td>' + (w.fl||0) + '</td>';
     } else if (isRB) {
-      row += '<td>' + (w.ra||0) + '</td><td>' + (w.ry||0) + '</td><td>' + (w.rtd||0) + '</td><td>' + (w.tgt||0) + '</td>' + _wkTsCell + '<td>' + (w.rec||0) + '</td><td>' + (w.rcy||0) + '</td><td>' + (w.rctd||0) + '</td><td>' + (w.fl||0) + '</td>';
+      const _wkCar = _carPctWeek(d.n, season, w);
+      row += _statCell(w.ra||0, w.ra||0, 6, 19)
+        + _statCell(_wkCar != null ? _wkCar.toFixed(1) + '%' : '—', _wkCar, 15, 65)
+        + _statCell(w.ry||0, w.ry||0, 25, 95) + _statCell(w.rtd||0, w.rtd||0, 0, 1.2)
+        + _statCell(w.tgt||0, w.tgt||0, 1, 5.5) + _statCell(w.rec||0, w.rec||0, 0.8, 4.5)
+        + _statCell(w.rcy||0, w.rcy||0, 5, 40) + _statCell(w.rctd||0, w.rctd||0, 0, 1.2)
+        + _wkTsCell + '<td>' + (w.fl||0) + '</td>';
     } else {
-      row += '<td>' + (w.tgt||0) + '</td>' + _wkTsCell + '<td>' + (w.rec||0) + '</td><td>' + (w.rcy||0) + '</td><td>' + (w.rctd||0) + '</td><td>' + (w.ry||0) + '</td><td>' + (w.rtd||0) + '</td><td>' + (w.fl||0) + '</td>';
+      row += _statCell(w.tgt||0, w.tgt||0, 3, 10) + _statCell(w.rec||0, w.rec||0, 2, 7)
+        + _statCell(w.rcy||0, w.rcy||0, 20, 90) + _statCell(w.rctd||0, w.rctd||0, 0, 1.2)
+        + _wkTsCell + '<td>' + (w.ry||0) + '</td><td>' + (w.rtd||0) + '</td><td>' + (w.fl||0) + '</td>';
     }
     row += '</tr>';
     return row;
@@ -6118,14 +6173,19 @@ function buildWeeklyTable(d, season, scoringFormat) {
   totalRow += '<td style="color:var(--accent)">TOT</td><td></td><td style="font-weight:700">' + totals.fpts + '</td><td style="color:var(--text2)">—</td>';
   totalRow += '<td>' + (_totSnp != null ? Math.round(_totSnp) + '%' : '—') + '</td>';
   let _totTsCell = '<td style="color:var(--text2)">—</td>';
+  let _totCarCell = '<td style="color:var(--text2)">—</td>';
   if (!isQB) {
     const _tmSeason = _getTeamForPlayerYear(d.n, +season);
     const _totTs = _tmSeason ? _tsPctSeason(_tmSeason, season, totals.tgt, d.n) : null;
     if (_totTs != null) _totTsCell = '<td>' + _totTs.toFixed(1) + '%</td>';
+    if (isRB) {
+      const _totCar = _tmSeason ? _carPctSeason(_tmSeason, season, totals.ra, d.n) : null;
+      if (_totCar != null) _totCarCell = '<td>' + _totCar.toFixed(1) + '%</td>';
+    }
   }
   if (isQB) totalRow += '<td>'+totals.pc+'</td><td>'+totals.pa+'</td><td>'+totals.py+'</td><td>'+totals.ptd+'</td><td>'+totals.int+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
-  else if (isRB) totalRow += '<td>'+totals.ra+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.tgt+'</td>'+_totTsCell+'<td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+totals.rctd+'</td><td>'+totals.fl+'</td>';
-  else totalRow += '<td>'+totals.tgt+'</td>'+_totTsCell+'<td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+totals.rctd+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
+  else if (isRB) totalRow += '<td>'+totals.ra+'</td>'+_totCarCell+'<td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+totals.rctd+'</td>'+_totTsCell+'<td>'+totals.fl+'</td>';
+  else totalRow += '<td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+totals.rctd+'</td>'+_totTsCell+'<td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
   totalRow += '</tr>';
   rows += totalRow;
 
@@ -6181,55 +6241,99 @@ function buildCareerTable(d, scoringFormat, statMode) {
   const _yrrF = y => y.yrr != null ? y.yrr.toFixed(2) : '—';
   const N = v => v == null ? '—' : v;
 
-  // Position-specific stat columns: [header, gloss (null = none), valueFn]
+  // Position-specific stat columns: [header, gloss (null = none), valueFn, colorSpec]
+  // colorSpec {f, lo, hi, inv} colors the cell by per-game value (Flock-style);
+  // null = neutral. Rate stats (CMP%, YPC, TS%, ...) color by the rate itself.
+  const pgN = (v, y) => y.gp > 0 ? (v || 0) / y.gp : null;
   let cols = [];
   if (isQB) {
+    const qc = {
+      cmp:  { f: y => y._ex.pc != null ? pgN(y._ex.pc, y) : null, lo: 12, hi: 24 },
+      att:  { f: y => y._ex.pa != null ? pgN(y._ex.pa, y) : null, lo: 20, hi: 38 },
+      cmpP: { f: y => (y._ex.pc != null && y._ex.pa > 0) ? y._ex.pc / y._ex.pa * 100 : null, lo: 55, hi: 70 },
+      py:   { f: y => pgN(y.py, y), lo: 150, hi: 290 },
+      ptd:  { f: y => pgN(y.ptd, y), lo: 0.7, hi: 2.3 },
+      int:  { f: y => pgN(y.int, y), lo: 0.3, hi: 1.1, inv: true },
+      ra:   { f: y => pgN(y.ra, y), lo: 1.5, hi: 8 },
+      ry:   { f: y => pgN(y.ry, y), lo: 8, hi: 45 },
+      rtd:  { f: y => pgN(y.rtd, y), lo: 0.05, hi: 0.45 }
+    };
     cols = mode === 'tot' ? [
-      ['CMP', null, y => N(y._ex.pc)], ['ATT', null, y => N(y._ex.pa)],
-      ['CMP%', 'Completion percentage', _cmpPct],
-      ['PyD', null, y => y.py || 0], ['PTD', null, y => y.ptd || 0], ['INT', null, y => y.int || 0],
-      ['CAR', null, y => y.ra || 0], ['RyD', null, y => y.ry || 0], ['RTD', null, y => y.rtd || 0],
-      ['FL', null, y => y.fl || 0]
+      ['CMP', null, y => N(y._ex.pc), qc.cmp], ['ATT', null, y => N(y._ex.pa), qc.att],
+      ['CMP%', 'Completion percentage', _cmpPct, qc.cmpP],
+      ['PyD', null, y => y.py || 0, qc.py], ['PTD', null, y => y.ptd || 0, qc.ptd], ['INT', null, y => y.int || 0, qc.int],
+      ['CAR', null, y => y.ra || 0, qc.ra], ['RyD', null, y => y.ry || 0, qc.ry], ['RTD', null, y => y.rtd || 0, qc.rtd],
+      ['FL', null, y => y.fl || 0, null]
     ] : [
-      ['CMP', 'Completions per game', y => y._ex.pc != null ? _avg(y._ex.pc, y.gp) : '—'],
-      ['ATT', 'Pass attempts per game', y => y._ex.pa != null ? _avg(y._ex.pa, y.gp) : '—'],
-      ['CMP%', 'Completion percentage', _cmpPct],
-      ['PyD', 'Passing yards per game', y => _avg(y.py, y.gp)],
-      ['PTD', 'Passing TDs per game', y => _avg(y.ptd, y.gp)],
-      ['INT', 'Interceptions per game', y => _avg(y.int, y.gp)],
-      ['CAR', 'Carries per game', y => _avg(y.ra, y.gp)],
-      ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp)],
-      ['RTD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp)]
+      ['CMP', 'Completions per game', y => y._ex.pc != null ? _avg(y._ex.pc, y.gp) : '—', qc.cmp],
+      ['ATT', 'Pass attempts per game', y => y._ex.pa != null ? _avg(y._ex.pa, y.gp) : '—', qc.att],
+      ['CMP%', 'Completion percentage', _cmpPct, qc.cmpP],
+      ['PyD', 'Passing yards per game', y => _avg(y.py, y.gp), qc.py],
+      ['PTD', 'Passing TDs per game', y => _avg(y.ptd, y.gp), qc.ptd],
+      ['INT', 'Interceptions per game', y => _avg(y.int, y.gp), qc.int],
+      ['CAR', 'Carries per game', y => _avg(y.ra, y.gp), qc.ra],
+      ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp), qc.ry],
+      ['RTD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp), qc.rtd]
     ];
   } else if (!isK) {
+    // Color scales differ by position: RB receiving volume ≠ WR volume
+    const S = isRB
+      ? { tgt: [1, 5.5], rec: [0.8, 4.5], rcy: [5, 40], ypr: [5, 9.5], rctd: [0.02, 0.25], ts: [3, 14], yrr: [0.6, 1.7] }
+      : { tgt: [3, 10], rec: [2, 7], rcy: [20, 90], ypr: [7, 15.5], rctd: [0.1, 0.65], ts: [10, 28], yrr: [0.9, 2.5] };
+    const cs = (f, r, inv) => ({ f, lo: r[0], hi: r[1], inv });
+    const _tsVal = (y, tm) => _tsPctSeason(tm, y.yr, y._ex.tgt, d.n);
     const _tsCol = ['TS%', 'Share of team targets that season (weeks played)', (y, tm) => {
-      const v = _tsPctSeason(tm, y.yr, y._ex.tgt, d.n);
+      const v = _tsVal(y, tm);
       return v != null ? v.toFixed(1) + '%' : '—';
-    }];
+    }, cs(_tsVal, S.ts)];
+    const rc = {
+      tgt: cs(y => y._ex.tgt != null ? pgN(y._ex.tgt, y) : null, S.tgt),
+      rec: cs(y => pgN(y.rc, y), S.rec),
+      rcy: cs(y => pgN(y.rcy, y), S.rcy),
+      ypr: cs(y => y.rc > 0 ? (y.rcy || 0) / y.rc : null, S.ypr),
+      rctd: cs(y => pgN(y.rctd, y), S.rctd),
+      yrr: cs(y => y.yrr != null ? y.yrr : null, S.yrr)
+    };
     const recCols = mode === 'tot' ? [
-      ['TGT', null, y => N(y._ex.tgt)], _tsCol, ['REC', null, y => y.rc || 0], ['RcY', null, y => y.rcy || 0],
-      ['Y/R', 'Yards per reception', _ypr], ['RcTD', null, y => y.rctd || 0],
-      ['Y/RR', 'Yards per route run', _yrrF]
-    ] : [
-      ['TGT', 'Targets per game', y => y._ex.tgt != null ? _avg(y._ex.tgt, y.gp) : '—'],
+      ['TGT', null, y => N(y._ex.tgt), rc.tgt], ['REC', null, y => y.rc || 0, rc.rec], ['RcY', null, y => y.rcy || 0, rc.rcy],
+      ['Y/R', 'Yards per reception', _ypr, rc.ypr], ['RcTD', null, y => y.rctd || 0, rc.rctd],
       _tsCol,
-      ['REC', 'Receptions per game', y => _avg(y.rc, y.gp)],
-      ['RcY', 'Receiving yards per game', y => _avg(y.rcy, y.gp)],
-      ['Y/R', 'Yards per reception', _ypr],
-      ['RcTD', 'Receiving TDs per game', y => _avg(y.rctd, y.gp)],
-      ['Y/RR', 'Yards per route run', _yrrF]
-    ];
-    const rushCols = mode === 'tot' ? [
-      ['CAR', null, y => y.ra || 0], ['RyD', null, y => y.ry || 0],
-      ['YPC', 'Yards per carry', _ypc], ['RTD', null, y => y.rtd || 0]
+      ['Y/RR', 'Yards per route run', _yrrF, rc.yrr]
     ] : [
-      ['CAR', 'Carries per game', y => _avg(y.ra, y.gp)],
-      ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp)],
-      ['YPC', 'Yards per carry', _ypc],
-      ['RTD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp)]
+      ['TGT', 'Targets per game', y => y._ex.tgt != null ? _avg(y._ex.tgt, y.gp) : '—', rc.tgt],
+      ['REC', 'Receptions per game', y => _avg(y.rc, y.gp), rc.rec],
+      ['RcY', 'Receiving yards per game', y => _avg(y.rcy, y.gp), rc.rcy],
+      ['Y/R', 'Yards per reception', _ypr, rc.ypr],
+      ['RcTD', 'Receiving TDs per game', y => _avg(y.rctd, y.gp), rc.rctd],
+      _tsCol,
+      ['Y/RR', 'Yards per route run', _yrrF, rc.yrr]
     ];
+    // Rushing block: colored + CAR% for RBs; neutral context stats for WR/TE
+    const _carVal = (y, tm) => _carPctSeason(tm, y.yr, y.ra, d.n);
+    const _carCol = ['CAR%', 'Share of team carries that season (weeks played)', (y, tm) => {
+      const v = _carVal(y, tm);
+      return v != null ? v.toFixed(1) + '%' : '—';
+    }, cs(_carVal, [15, 65])];
+    const ru = isRB ? {
+      ra: cs(y => pgN(y.ra, y), [6, 19]),
+      ry: cs(y => pgN(y.ry, y), [25, 95]),
+      ypc: cs(y => y.ra > 0 ? (y.ry || 0) / y.ra : null, [3.5, 5.3]),
+      rtd: cs(y => pgN(y.rtd, y), [0.1, 0.75])
+    } : { ra: null, ry: null, ypc: null, rtd: null };
+    const rushCols = (mode === 'tot' ? [
+      ['CAR', null, y => y.ra || 0, ru.ra]
+    ] : [
+      ['CAR', 'Carries per game', y => _avg(y.ra, y.gp), ru.ra]
+    ]).concat(isRB ? [_carCol] : []).concat(mode === 'tot' ? [
+      ['RyD', null, y => y.ry || 0, ru.ry],
+      ['YPC', 'Yards per carry', _ypc, ru.ypc], ['RTD', null, y => y.rtd || 0, ru.rtd]
+    ] : [
+      ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp), ru.ry],
+      ['YPC', 'Yards per carry', _ypc, ru.ypc],
+      ['RTD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp), ru.rtd]
+    ]);
     cols = isRB ? rushCols.concat(recCols) : recCols.concat(rushCols);
-    if (mode === 'tot') cols.push(['FL', null, y => y.fl || 0]);
+    if (mode === 'tot') cols.push(['FL', null, y => y.fl || 0, null]);
   }
 
   let hdr = '<tr><th>YR</th><th>TM</th><th>AGE</th><th>GP</th><th>PPG</th>'
@@ -6251,7 +6355,7 @@ function buildCareerTable(d, scoringFormat, statMode) {
     row += '<td style="color:var(--text2)">' + tm + '</td>';
     const ageInSeason = d.age != null ? d.age - (2026 - y.yr) : (d.birthYear != null ? y.yr - d.birthYear : '—');
     row += '<td style="color:var(--text2)">' + ageInSeason + '</td>';
-    row += '<td>' + (isGap ? '—' : y.gp) + '</td>';
+    row += isGap ? '<td>—</td>' : _statCell(y.gp, y.gp, 6, 16);
     if (isGap) {
       row += '<td class="fpts-cell">—</td>' + (mode === 'tot' ? '<td class="fpts-cell">—</td>' : '') + '<td style="color:var(--text2)">—</td><td>—</td>';
       row += cols.map(() => '<td>—</td>').join('');
@@ -6267,8 +6371,13 @@ function buildCareerTable(d, scoringFormat, statMode) {
       const _seasonRk = _seasonPosRank(d.s, y.yr, d.n, y.fpts, fmt);
       row += '<td' + _posRankStyle(_seasonRk, d.s) + '>' + (_seasonRk != null ? _seasonRk : '—') + '</td>';
       const _snp = _snapSeason(d.n, y.yr);
-      row += '<td>' + (_snp != null ? Math.round(_snp) + '%' : '—') + '</td>';
-      row += cols.map(col => '<td>' + col[2](y, tm) + '</td>').join('');
+      row += _statCell(_snp != null ? Math.round(_snp) + '%' : '—', _snp, 40, 90);
+      row += cols.map(col => {
+        const disp = col[2](y, tm);
+        const spec = col[3];
+        if (!spec || disp === '—') return '<td>' + disp + '</td>';
+        return _statCell(disp, spec.f(y, tm), spec.lo, spec.hi, spec.inv);
+      }).join('');
     }
     row += '</tr>';
     return row;

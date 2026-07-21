@@ -12551,6 +12551,22 @@ function _careerReplaces(cand, cur){
   if (cl === ul) return _careerFptsSum(cand) > _careerFptsSum(cur);
   return false;
 }
+// Per-season Y/RR only exists in the d.js careers (PFF exports + the
+// scripts/build_nfl_yprr.py backfill) — LEGEND_CAREERS / ALL_PLAYERS_DB
+// careers don't carry it. When a replacement career wins, copy yrr across
+// by year so the card's Career Stats column survives the swap. Years the
+// replacement splits into multiple stint rows (mid-season trades) are left
+// blank: the d.js value is full-season and would mislabel a partial stint.
+function _carryYrr(from, to){
+  if (!from || !to || from === to || !from.length || !to.length) return to;
+  const byYr = {}, stints = {};
+  from.forEach(s => { if (s && s.yr != null && s.yrr != null) byYr[s.yr] = s.yrr; });
+  to.forEach(s => { if (s && s.yr != null) stints[s.yr] = (stints[s.yr] || 0) + 1; });
+  to.forEach(s => {
+    if (s && s.yr != null && s.yrr == null && stints[s.yr] === 1 && byYr[s.yr] != null) s.yrr = byYr[s.yr];
+  });
+  return to;
+}
 
 // === UNIFIED COMPARE SEARCH (adds players to the compare grid) ===
 (function() {
@@ -12572,7 +12588,7 @@ if (typeof LEGEND_CAREERS !== 'undefined') {
     const lc = LEGEND_CAREERS[d.n];
     if (!lc || !lc.length) return;
     const cur = (d.career && d.career.length) || 0;
-    if (lc.length > cur) d.career = lc;
+    if (lc.length > cur) d.career = _carryYrr(d.career, lc);
   });
 }
 
@@ -12620,7 +12636,7 @@ function _enrichFromAllPlayers() {
     // D[].career on ties (same season count, fresher numbers from the
     // PFR backfill). When LEGEND has fewer seasons, d.career is what
     // _bestCareer returned anyway, so this no-ops correctly.
-    if (best.length >= ((d.career && d.career.length) || 0)) d.career = best;
+    if (best.length >= ((d.career && d.career.length) || 0)) d.career = _carryYrr(d.career, best);
     if (d.birthYear == null && ap.birthYear != null) {
       d.birthYear = typeof ap.birthYear === 'string' ? parseInt(ap.birthYear) : ap.birthYear;
       if (d.age == null && d.birthYear) d.age = 2026 - d.birthYear;
@@ -12640,7 +12656,7 @@ function _enrichFromAllPlayers() {
       const lc = LEGEND_CAREERS[d.n];
       if (!lc || !lc.length) return;
       if (_careerReplaces(lc, d.career)) {
-        d.career = lc;
+        d.career = _carryYrr(d.career, lc);
       }
     });
   }
@@ -12885,7 +12901,7 @@ function _applyLegendCareerBindings() {
     const lc = LEGEND_CAREERS[d.n];
     if (!lc || !lc.length) return;
     const cur = (d.career && d.career.length) || 0;
-    if (lc.length > cur) d.career = lc;
+    if (lc.length > cur) d.career = _carryYrr(d.career, lc);
   });
   // Pattern 3: tie-breaker pass — replace d.career when LEGEND is a better
   // source (more seasons, or equal seasons with more total production).
@@ -12893,7 +12909,7 @@ function _applyLegendCareerBindings() {
   D.forEach(d => {
     const lc = LEGEND_CAREERS[d.n];
     if (!lc || !lc.length) return;
-    if (_careerReplaces(lc, d.career)) d.career = lc;
+    if (_careerReplaces(lc, d.career)) d.career = _carryYrr(d.career, lc);
   });
   // Pattern 4: add HP players that have LEGEND_CAREERS data but aren't in D
   if (typeof HP !== 'undefined') {

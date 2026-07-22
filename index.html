@@ -3718,7 +3718,7 @@ ADD TO CHROME
      _applyLegendCareerBindings on the 'mff:retireddata' event the loader dispatches. -->
 <!-- season_leaders.js (~744 KB) is lazy-loaded via window._ensureSeasonLeaders() — SEASON_LEADERS is read only by the admin Trivia generator, so regular users never fetch it. -->
 <script src="data/ldb.js?v=2026-04-21" defer></script>
-<script src="data/player_team_history.js?v=2026-04-02" defer></script>
+<script src="data/player_team_history.js?v=2026-07-22" defer></script>
 <!-- ep_players_u.js removed: its global const EP_PLAYERS_U is shadowed by a local
      `let EP_PLAYERS_U` in the Unlimited Guess-Who IIFE and never read. Dead payload. -->
 <script src="data/active_team_history.js?v=2026-07-21" defer></script>
@@ -4877,7 +4877,7 @@ window._loadRetiredData = function(opts) {
     // hp.js joined the lazy bundle 2026-07-20 (was eager defer): per-team best seasons for
     // retired players. Independent of the two above; consumers (_fgAppendHpPlayers, initGwPool
     // signature rebuild) re-run on the mff:retireddata event this loader dispatches.
-    'data/hp.js?v=2026-05-04'
+    'data/hp.js?v=2026-07-22'
   ];
   window._retiredDataPromise = _injectScripts(files, 'RetiredData', opts).then(function() {
     try { document.dispatchEvent(new Event('mff:retireddata')); }

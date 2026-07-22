@@ -4012,6 +4012,12 @@ _jsModelCheckAdmin();
   // RB/WR/TE slot, take whichever position's next-up player projects highest.
   // Byes / OUT players project 0 and sink. QB/K/DST slots are untouched.
   window._weeklyAutoFlex = function(ver) {
+    // Once Jack hand-arranges the FLEX interleave (cross-position drag), the
+    // 'FLEX' owned flag turns auto-interleave OFF for that week — his
+    // arrangement is authoritative; positional edits still flow within slots.
+    const _wkAF = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    const _ownedAF = window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][_wkAF];
+    if (_ownedAF && _ownedAF.FLEX) return;
     const b = versionBoards[ver].weekly;
     const flexSlots = [];
     const queues = { RB: [], WR: [], TE: [] };
@@ -4117,12 +4123,25 @@ _jsModelCheckAdmin();
   const _origSaveLocalWeekly = saveLocal;
   saveLocal = function() {
     if (currentMode === 'weekly' && (currentVersion === 'jacks' || currentVersion === 'mine')) {
-      const changed = _weeklyDiffPositions(currentVersion);
-      // Positional edit changed the pecking order — re-derive the FLEX
-      // interleave before stashing/serializing so all views agree.
-      window._weeklyAutoFlex(currentVersion);
-      window._weeklyMarkOwned(currentVersion, window._weeklyActiveWeek || 1, changed);
-      window._weeklyBaseline[currentVersion] = versionBoards[currentVersion].weekly.slice();
+      const ver = currentVersion;
+      const wk = window._weeklyActiveWeek || 1;
+      const changed = _weeklyDiffPositions(ver);
+      // Cross-position interleave change (an RB dragged over a WR in FLEX):
+      // the position SEQUENCE of the board differs even if every position's
+      // internal order is unchanged. That hands interleave ownership to Jack
+      // and turns auto-flex off for this week.
+      const base = window._weeklyBaseline[ver];
+      const cur = versionBoards[ver].weekly;
+      if (base && base.length === cur.length) {
+        const posSeq = arr => arr.map(idx => (D[idx] && D[idx].s) || '?').join(',');
+        if (base.join(',') !== cur.join(',') && posSeq(base) !== posSeq(cur)) changed.FLEX = true;
+      }
+      window._weeklyMarkOwned(ver, wk, changed);
+      // Re-derive the FLEX interleave (no-op once FLEX is owned), then make
+      // sure the session stash holds the post-autoflex board.
+      window._weeklyAutoFlex(ver);
+      window._weeklySessionBoards[ver][wk] = versionBoards[ver].weekly.slice();
+      window._weeklyBaseline[ver] = versionBoards[ver].weekly.slice();
       syncMode(); renumber();
     }
     _origSaveLocalWeekly.apply(this, arguments);

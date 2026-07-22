@@ -602,8 +602,11 @@ def pull_dk_weekly_atd(week_by_matchup):
         driver.get(DK_LEAGUE_PAGE)
         time.sleep(8)
         league = _page_fetch(driver, f'{DK_API}/leagues/88808')
+        # DK names the league-level subcategory "TD Scorer" (category "TD
+        # Scorers"); the per-event markets inside are "Anytime TD Scorer".
         subs = [s for s in league.get('subcategories', [])
-                if 'anytime td' in (s.get('name') or '').lower()]
+                if (s.get('name') or '').lower() in ('td scorer', 'anytime td scorer')
+                or 'anytime td' in (s.get('name') or '').lower()]
         if not subs:
             print('  DK Anytime TD: no subcategory posted (normal in offseason)')
             return {}
@@ -619,15 +622,23 @@ def pull_dk_weekly_atd(week_by_matchup):
             events = {}
             for ev in body.get('events', []):
                 wk = None
-                m = re.match(r'([A-Z]{2,4})\s*@\s*([A-Z]{2,4})', ev.get('name') or '')
-                if m:
-                    wk = week_by_matchup.get((m.group(1), m.group(2)))
+                # Event names look like "NE Patriots @ SEA Seahawks" — the
+                # abbreviation is the first token on each side of the '@'.
+                nm = ev.get('name') or ''
+                if '@' in nm:
+                    away, _, home = nm.partition('@')
+                    a = (away.strip().split() or [''])[0]
+                    h = (home.strip().split() or [''])[0]
+                    wk = week_by_matchup.get((a, h))
                 if wk is None:
                     start = ev.get('startEventDate') or ev.get('startDate')
                     if start:
                         try:
-                            wk = _week_of(datetime.datetime.fromisoformat(
-                                str(start).replace('Z', '+00:00')).replace(tzinfo=None))
+                            # UTC → ET-ish before taking the date, else Monday
+                            # night games (00:15 UTC Tue) land in the next week.
+                            dt = datetime.datetime.fromisoformat(
+                                str(start).replace('Z', '+00:00')).replace(tzinfo=None)
+                            wk = _week_of(dt - datetime.timedelta(hours=5))
                         except ValueError:
                             pass
                 if wk is not None:
@@ -637,6 +648,8 @@ def pull_dk_weekly_atd(week_by_matchup):
                 mkt = markets.get(sel.get('marketId'))
                 if not mkt:
                     continue
+                if 'anytime' not in (mkt.get('name') or '').lower():
+                    continue  # subcategory may later carry First TD etc.
                 wk = events.get(mkt.get('eventId'))
                 if wk is None:
                     continue

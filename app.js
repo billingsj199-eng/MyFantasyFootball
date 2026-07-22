@@ -892,10 +892,12 @@ function saveLocal() {
       superflex: { _order: boardToNames(versionBoards[ver].superflex), _posTiers: _serPT(versionTiers[ver].superflex) },
       dynasty: { _order: boardToNames(versionBoards[ver].dynasty), _posTiers: _serPT(versionTiers[ver].dynasty) },
       dynastysf: { _order: boardToNames(versionBoards[ver].dynastysf), _posTiers: _serPT(versionTiers[ver].dynastysf) },
-      // Weekly carries the week it was edited for. An untouched week's board
-      // is derived from redraft at load (see _weeklyReconcileBoard), so only
-      // the actively-edited week's order is worth persisting.
-      weekly: { _order: boardToNames(versionBoards[ver].weekly), _posTiers: _serPT(versionTiers[ver].weekly), _week: (window._weeklyActiveWeek || 1) }
+      // Weekly carries the week it was edited for + which POSITIONS were
+      // hand-ranked (_ownedPos). Unowned positions re-derive from redraft at
+      // load (see _weeklyReconcileBoard), so only the actively-edited week's
+      // order is worth persisting.
+      weekly: { _order: boardToNames(versionBoards[ver].weekly), _posTiers: _serPT(versionTiers[ver].weekly), _week: (window._weeklyActiveWeek || 1),
+        _ownedPos: Object.keys((window._weeklyOwnedPos && window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][window._weeklyActiveWeek || 1]) || {}) }
     };
   });
 }
@@ -3812,8 +3814,10 @@ _jsModelCheckAdmin();
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
       const u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
       if (!db) { if (typeof toast === 'function') toast('Firestore unavailable'); return; }
-      // Publishing freezes the week — it stops tracking redraft.
-      if (typeof window._weeklyMarkOwned === 'function') window._weeklyMarkOwned('jacks', wk);
+      // Publishing freezes the whole week — every position stops tracking redraft.
+      if (typeof window._weeklyMarkOwned === 'function') {
+        window._weeklyMarkOwned('jacks', wk, { QB: true, RB: true, WR: true, TE: true, K: true, DST: true });
+      }
       db.collection('settings').doc('active_week').set({
         publishedWeek: wk,
         publishedAt: new Date().toISOString(),
@@ -3878,16 +3882,56 @@ _jsModelCheckAdmin();
   // Weekly also persists now (saveLocal serializes {_order,_posTiers,_week});
   // only the actively-edited week's order is stored — earlier weeks are gone
   // by design, they're history once played.
-  window._weeklySaved = window._weeklySaved || {};           // ver -> {_order,_posTiers,_week} (persisted snapshot)
+  window._weeklySaved = window._weeklySaved || {};           // ver -> {_order,_posTiers,_week,_ownedPos} (persisted snapshot)
   window._weeklySessionBoards = window._weeklySessionBoards || {}; // ver -> { wk: [board indices] } (this session's edits)
-  window._weeklySessionOwned = window._weeklySessionOwned || {};   // kept for publish freeze checks
+  window._weeklyOwnedPos = window._weeklyOwnedPos || {};     // ver -> { wk: {POS:true} } — positions Jack actually re-ranked
+  window._weeklyBaseline = window._weeklyBaseline || {};     // ver -> board snapshot at last reconcile (edit detection)
+  window._weeklySessionOwned = window._weeklySessionOwned || {};
+
+  // Slot-stable merge: keep `base`'s order for OWNED positions, but re-fill
+  // the slots occupied by unowned positions with the redraft-relative order
+  // of those positions — so the QB list keeps following redraft even after
+  // the RB list was hand-ranked and saved.
+  window._weeklyMergeUnowned = function(base, redraft, ownedPos) {
+    const unownedSlots = [];
+    base.forEach((idx, slot) => { const p = D[idx] && D[idx].s; if (p && !ownedPos[p]) unownedSlots.push(slot); });
+    if (!unownedSlots.length) return base.slice();
+    const slotPos = unownedSlots.map(sl => D[base[sl]].s);
+    const need = {};
+    slotPos.forEach(p => { need[p] = (need[p] || 0) + 1; });
+    const fresh = {};
+    redraft.forEach(idx => {
+      const p = D[idx] && D[idx].s;
+      if (p && need[p] && (fresh[p] = fresh[p] || []).length < need[p] + 50) fresh[p].push(idx);
+    });
+    const out = base.slice();
+    const cursor = {};
+    unownedSlots.forEach((sl, i) => {
+      const p = slotPos[i];
+      const c = cursor[p] || 0;
+      if (fresh[p] && fresh[p][c] != null) { out[sl] = fresh[p][c]; cursor[p] = c + 1; }
+    });
+    // Guard against dupes if redraft/base membership diverged: keep first occurrence.
+    const seen = new Set(); const dedup = [];
+    out.forEach(idx => { if (!seen.has(idx)) { seen.add(idx); dedup.push(idx); } });
+    return dedup;
+  };
+
   window._weeklyStashSaved = function(obj, ver) {
     if (!obj || !obj._order) return;
     window._weeklySaved[ver] = obj;
+    if (obj._week != null && Array.isArray(obj._ownedPos)) {
+      const set = {};
+      obj._ownedPos.forEach(p => set[p] = true);
+      (window._weeklyOwnedPos[ver] = window._weeklyOwnedPos[ver] || {})[obj._week] = set;
+    }
     window._weeklyReconcileBoard(ver);
   };
-  window._weeklyMarkOwned = function(ver, wk) {
+  window._weeklyMarkOwned = function(ver, wk, posSet) {
     window._weeklySessionOwned[ver] = wk;
+    const owned = (window._weeklyOwnedPos[ver] = window._weeklyOwnedPos[ver] || {});
+    owned[wk] = owned[wk] || {};
+    Object.keys(posSet || {}).forEach(p => owned[wk][p] = true);
     (window._weeklySessionBoards[ver] = window._weeklySessionBoards[ver] || {})[wk] =
       versionBoards[ver].weekly.slice();
   };
@@ -3895,29 +3939,54 @@ _jsModelCheckAdmin();
     ver = ver || 'jacks';
     if (!versionBoards[ver]) return;
     const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    const ownedPos = (window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][wk]) || null;
     const sessionBoard = window._weeklySessionBoards[ver] && window._weeklySessionBoards[ver][wk];
+    const saved = window._weeklySaved[ver];
+    let base = null;
     if (sessionBoard) {
-      versionBoards[ver].weekly = sessionBoard.slice(); // this week was edited this session
-    } else {
-      const saved = window._weeklySaved[ver];
-      if (saved && saved._week === wk) {
-        loadModeData('weekly', saved, ver);
-      } else {
-        versionBoards[ver].weekly = versionBoards[ver].redraft.slice();
+      base = sessionBoard;
+    } else if (saved && saved._week === wk) {
+      loadModeData('weekly', saved, ver);       // board from names + tiers
+      base = versionBoards[ver].weekly;
+      // Legacy saves without _ownedPos freeze everything (conservative).
+      if (!ownedPos && !Array.isArray(saved._ownedPos)) {
+        versionBoards[ver].weekly = base.slice();
+        base = null;
       }
     }
+    if (base) {
+      // Owned positions keep the edited order; everything else re-follows redraft.
+      versionBoards[ver].weekly = window._weeklyMergeUnowned(base, versionBoards[ver].redraft, ownedPos || {});
+    } else if (!(saved && saved._week === wk)) {
+      versionBoards[ver].weekly = versionBoards[ver].redraft.slice();
+    }
+    window._weeklyBaseline[ver] = versionBoards[ver].weekly.slice();
     if (currentMode === 'weekly' && currentVersion === ver) {
       syncMode(); renumber();
       if (typeof render === 'function') render();
     }
   };
-  // Any weekly edit takes ownership of the active week for this session.
+  // Any weekly edit takes ownership of the active week — but only for the
+  // POSITIONS whose relative order actually changed vs the last reconcile,
+  // so unedited positions keep following redraft.
+  function _weeklyDiffPositions(ver) {
+    const base = window._weeklyBaseline[ver];
+    const cur = versionBoards[ver].weekly;
+    const changed = {};
+    if (!base) { ['QB','RB','WR','TE','K','DST'].forEach(p => changed[p] = true); return changed; }
+    const seq = (arr) => { const by = {}; arr.forEach(idx => { const p = D[idx] && D[idx].s; if (p) (by[p] = by[p] || []).push(idx); }); return by; };
+    const a = seq(base), b = seq(cur);
+    new Set([...Object.keys(a), ...Object.keys(b)]).forEach(p => {
+      if ((a[p] || []).join(',') !== (b[p] || []).join(',')) changed[p] = true;
+    });
+    return changed;
+  }
   const _origSaveLocalWeekly = saveLocal;
   saveLocal = function() {
-    _origSaveLocalWeekly.apply(this, arguments);
     if (currentMode === 'weekly' && (currentVersion === 'jacks' || currentVersion === 'mine')) {
-      window._weeklyMarkOwned(currentVersion, window._weeklyActiveWeek || 1);
+      window._weeklyMarkOwned(currentVersion, window._weeklyActiveWeek || 1, _weeklyDiffPositions(currentVersion));
     }
+    _origSaveLocalWeekly.apply(this, arguments);
   };
 
   // Wire the admin week selector — writes to Firestore + localStorage.

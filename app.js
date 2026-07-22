@@ -1525,6 +1525,8 @@ function _effStatMode() {
 }
 
 // PROJECTIONS: combined yards + TDs from Mike Clay's 2026 stat lines.
+// In WEEKLY mode the same numbers are shown per game (season / projected gm)
+// so the column reads on the same scale as the weekly prop lines.
 // Returns { yds, tds, tip } or null when Clay doesn't project the player.
 function _projStatLine(d) {
   if (d.s !== 'QB' && d.s !== 'RB' && d.s !== 'WR' && d.s !== 'TE') return null;
@@ -1534,6 +1536,19 @@ function _projStatLine(d) {
   const py = cp.py || 0, ry = cp.ry || 0, rcy = cp.rcy || 0;
   const ptd = cp.ptd || 0, rtd = cp.rtd || 0, rctd = cp.rctd || 0;
   if (!py && !ry && !rcy && !ptd && !rtd && !rctd) return null;
+  if (currentMode === 'weekly') {
+    const gm = cp.gm || 17;
+    const r1 = v => Math.round((v / gm) * 10) / 10;
+    const parts = [];
+    if (py) parts.push('Pass ' + r1(py) + ' yds/gm');
+    if (ry) parts.push('Rush ' + r1(ry) + ' yds/gm');
+    if (rcy) parts.push('Rec ' + r1(rcy) + ' yds/gm');
+    return {
+      yds: r1(py + ry + rcy),
+      tds: Math.round(((ptd + rtd + rctd) / gm) * 100) / 100,
+      tip: 'Mike Clay 2026 per game (' + gm + ' gm pace): ' + parts.join(' · ')
+    };
+  }
   const parts = [];
   if (py) parts.push('Pass ' + py.toLocaleString() + ' yds / ' + ptd + ' TD');
   if (ry) parts.push('Rush ' + ry.toLocaleString() + ' yds / ' + rtd + ' TD');
@@ -1545,10 +1560,67 @@ function _projStatLine(d) {
   };
 }
 
+// WEEKLY prop lines for the active week (BETTING_2026.weeklyProps, pulled by
+// scripts/pull_betting_lines.py --weekly-props). Averages each posted stat
+// across books (UD / PrizePicks). Returns { stats, books, asOf } or null.
+function _weeklyPropLinesFor(name) {
+  if (!window.BETTING_2026 || !window.BETTING_2026.weeklyProps) return null;
+  const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+  const board = window.BETTING_2026.weeklyProps[wk] || window.BETTING_2026.weeklyProps[String(wk)];
+  if (!board) return null;
+  let rec = board[name];
+  if (!rec && typeof _PROSPECT_ALIASES !== 'undefined' && _PROSPECT_ALIASES) {
+    const alt = _PROSPECT_ALIASES[name];
+    if (alt && board[alt]) rec = board[alt];
+  }
+  if (!rec) return null;
+  const stats = {}, books = [];
+  Object.keys(rec).forEach(book => {
+    if (book === 'asOf') return;
+    const lines = rec[book];
+    if (!lines || typeof lines !== 'object') return;
+    books.push(book);
+    Object.keys(lines).forEach(st => {
+      if (typeof lines[st] !== 'number') return;
+      (stats[st] = stats[st] || []).push(lines[st]);
+    });
+  });
+  if (!books.length) return null;
+  const avg = {};
+  Object.keys(stats).forEach(st => { avg[st] = Math.round((stats[st].reduce((a, b) => a + b, 0) / stats[st].length) * 100) / 100; });
+  return { stats: avg, books, asOf: rec.asOf || null };
+}
+
 // BETTING LINES: combined yards + TDs from season-long sportsbook props,
 // each stat averaged across the books that posted it (DK / FD / MGM).
+// In WEEKLY mode this switches to the active week's prop board (UD / PP):
+// yds = sum of posted yardage O/Us, TD col = the rush+rec TD (rrtd) line.
+// Coverage grows as weekly boards get posted — missing players show blank.
 // Returns { yds, tds, tip } or null when no props are posted.
 function _linesStatLine(d) {
+  if (d.s !== 'QB' && d.s !== 'RB' && d.s !== 'WR' && d.s !== 'TE') return null;
+  if (currentMode === 'weekly') {
+    const W = _weeklyPropLinesFor(d.n);
+    if (!W) return null;
+    const s = W.stats;
+    const py = s.py || 0, ry = s.ry || 0, rcy = s.rcy || 0;
+    const hasYds = !!(py || ry || rcy);
+    const hasTd = s.rrtd != null;
+    if (!hasYds && !hasTd) return null;
+    const parts = [];
+    if (py) parts.push('Pass ' + py + ' yds');
+    if (ry) parts.push('Rush ' + ry + ' yds');
+    if (rcy) parts.push('Rec ' + rcy + ' yds');
+    if (s.rec != null) parts.push(s.rec + ' rec');
+    if (hasTd) parts.push('Rush+Rec TD ' + s.rrtd);
+    if (s.int != null) parts.push('INT ' + s.int);
+    const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    return {
+      yds: hasYds ? Math.round((py + ry + rcy) * 10) / 10 : null,
+      tds: hasTd ? s.rrtd : null,
+      tip: 'Week ' + wk + ' O/U avg of ' + W.books.join('/') + (W.asOf ? ' (as of ' + W.asOf + ')' : '') + ': ' + parts.join(' · ')
+    };
+  }
   if (typeof window._propsProjectionFor !== 'function') return null;
   const P = window._propsProjectionFor(d);
   if (!P || !P.consensus) return null;
@@ -3153,8 +3225,13 @@ window._updateRnkStatHeaders = function() {
     _set(c2, 'ppg25Header', 'Actual fantasy points per game from the 2025 season (' + fmtLabel + ' scoring).', '\'25 PPG', fmtLabel);
     _set(c3, 'l4ppgHeader', 'Average fantasy PPG over the player\'s last 4 games of 2025. Compared to the full-season \'25 PPG it shows which way a player is trending: ▲ = trending up, ▼ = trending down.', 'L4 PPG', fmtLabel);
   } else if (rnkStatMode === 'proj') {
-    _set(c1, null, 'Projected total yards for 2026 (passing + rushing + receiving) — Mike Clay projections. Hover a value for the breakdown.', 'Yds', 'Clay Proj');
-    _set(c2, 'ppg25Header', 'Projected total touchdowns for 2026 (passing + rushing + receiving) — Mike Clay projections.', 'TD', 'Clay Proj');
+    if (currentMode === 'weekly') {
+      _set(c1, null, 'Projected yards PER GAME (passing + rushing + receiving) — Mike Clay season projection divided by projected games. Hover a value for the breakdown.', 'Yds', 'Clay /Gm');
+      _set(c2, 'ppg25Header', 'Projected touchdowns PER GAME (passing + rushing + receiving) — Mike Clay season projection divided by projected games.', 'TD', 'Clay /Gm');
+    } else {
+      _set(c1, null, 'Projected total yards for 2026 (passing + rushing + receiving) — Mike Clay projections. Hover a value for the breakdown.', 'Yds', 'Clay Proj');
+      _set(c2, 'ppg25Header', 'Projected total touchdowns for 2026 (passing + rushing + receiving) — Mike Clay projections.', 'TD', 'Clay Proj');
+    }
     _set(c3, 'l4ppgHeader', 'Team PPG — season average of Vegas implied team totals across the full schedule (DK game totals + spreads). Higher = better scoring environment.', 'Team PPG', 'Vegas');
   } else if (rnkStatMode === 'adp') {
     const _cmpGloss = ' compared to the current ranks. Green = the market drafts the player later than this rank (value), red = earlier (reach). CBS is in the 4th column.';
@@ -3162,8 +3239,14 @@ window._updateRnkStatHeaders = function() {
     _set(c2, 'ppg25Header', 'Sleeper ADP' + _cmpGloss, 'SLPR', 'ADP');
     _set(c3, 'l4ppgHeader', 'ESPN overall rank' + _cmpGloss, 'ESPN', 'ADP');
   } else {
-    _set(c1, null, 'Season-long sportsbook yardage lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving. Hover a value for the breakdown.', 'Yds', 'Book Avg');
-    _set(c2, 'ppg25Header', 'Season-long sportsbook touchdown lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving.', 'TD', 'Book Avg');
+    if (currentMode === 'weekly') {
+      const _wkNum = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+      _set(c1, null, 'This week\'s sportsbook yardage prop lines (O/U), averaged across the books that posted one (Underdog / PrizePicks). Combined passing + rushing + receiving. Blank = no board posted yet for this player. Hover a value for the breakdown.', 'Yds', 'Wk' + _wkNum + ' Lines');
+      _set(c2, 'ppg25Header', 'This week\'s rush+rec touchdown prop line (O/U, ≈ anytime TD), averaged across the books that posted one (Underdog / PrizePicks).', 'TD', 'Wk' + _wkNum + ' O/U');
+    } else {
+      _set(c1, null, 'Season-long sportsbook yardage lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving. Hover a value for the breakdown.', 'Yds', 'Book Avg');
+      _set(c2, 'ppg25Header', 'Season-long sportsbook touchdown lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving.', 'TD', 'Book Avg');
+    }
     _set(c3, 'l4ppgHeader', 'Team PPG — season average of Vegas implied team totals across the full schedule (DK game totals + spreads). Higher = better scoring environment.', 'Team PPG', 'Vegas');
   }
 };
@@ -3678,6 +3761,10 @@ _jsModelCheckAdmin();
           updatedBy: (u && u.email) || 'admin'
         }, { merge: true }).catch(e => console.warn('[Weekly] save failed:', e));
       }
+      // Week number appears in the BETTING LINES headers ("Wk2 Lines") and the
+      // weekly slate-average cache keys off the week — refresh both.
+      window._weeklySlateAvgCache = null;
+      if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
       if (currentMode === 'weekly' && typeof render === 'function') render();
       if (typeof toast === 'function') toast('Active week → ' + wk);
     });
@@ -5138,6 +5225,9 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     compareSet.clear();
     updateCompareBtn();
     updateRnkAdpForMode();
+    // PROJECTIONS / BETTING LINES headers change meaning in WEEKLY (per-game
+    // Clay / weekly prop board) — rebuild them on every format switch.
+    if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
     // Dynasty modes trigger _attachJmScores → buildProspectData, which reads PFF grades.
     // Fire the lazy loads so PFF + college stats are ready on first dynasty render.
     if ((currentMode === 'dynasty' || currentMode === 'dynastysf')) {

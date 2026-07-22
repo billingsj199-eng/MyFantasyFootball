@@ -891,7 +891,11 @@ function saveLocal() {
       bestball: { _order: boardToNames(versionBoards[ver].bestball), _posTiers: _serPT(versionTiers[ver].bestball) },
       superflex: { _order: boardToNames(versionBoards[ver].superflex), _posTiers: _serPT(versionTiers[ver].superflex) },
       dynasty: { _order: boardToNames(versionBoards[ver].dynasty), _posTiers: _serPT(versionTiers[ver].dynasty) },
-      dynastysf: { _order: boardToNames(versionBoards[ver].dynastysf), _posTiers: _serPT(versionTiers[ver].dynastysf) }
+      dynastysf: { _order: boardToNames(versionBoards[ver].dynastysf), _posTiers: _serPT(versionTiers[ver].dynastysf) },
+      // Weekly carries the week it was edited for. An untouched week's board
+      // is derived from redraft at load (see _weeklyReconcileBoard), so only
+      // the actively-edited week's order is worth persisting.
+      weekly: { _order: boardToNames(versionBoards[ver].weekly), _posTiers: _serPT(versionTiers[ver].weekly), _week: (window._weeklyActiveWeek || 1) }
     };
   });
 }
@@ -941,6 +945,12 @@ function loadUserData(obj) {
         if (obj[ver].superflex) loadModeData('superflex', obj[ver].superflex, ver);
         if (obj[ver].dynasty) loadModeData('dynasty', obj[ver].dynasty, ver);
         if (obj[ver].dynastysf) loadModeData('dynastysf', obj[ver].dynastysf, ver);
+        // Weekly: stash the saved snapshot; reconcile derives the board from
+        // redraft when the active week wasn't the one saved.
+        if (typeof window._weeklyStashSaved === 'function') {
+          if (obj[ver].weekly) window._weeklyStashSaved(obj[ver].weekly, ver);
+          else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard(ver);
+        }
       }
     });
   } else if (obj.redraft || obj.bestball || obj.superflex || obj.dynasty || obj.dynastysf) {
@@ -3750,6 +3760,11 @@ _jsModelCheckAdmin();
     }
     const pw = (d.publishedWeek == null) ? null : parseInt(d.publishedWeek, 10);
     window._weeklyPublishedWeek = (pw >= 1 && pw <= 18) ? pw : null;
+    // Active week is now known — re-derive untouched weekly boards from redraft.
+    if (typeof window._weeklyReconcileBoard === 'function') {
+      window._weeklyReconcileBoard('jacks');
+      window._weeklyReconcileBoard('mine');
+    }
     // Refresh tab/chip visibility now that published state is known.
     if (typeof _weeklyAdminCheck === 'function') _weeklyAdminCheck();
     // Update the admin status label.
@@ -3797,6 +3812,8 @@ _jsModelCheckAdmin();
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
       const u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
       if (!db) { if (typeof toast === 'function') toast('Firestore unavailable'); return; }
+      // Publishing freezes the week — it stops tracking redraft.
+      if (typeof window._weeklyMarkOwned === 'function') window._weeklyMarkOwned('jacks', wk);
       db.collection('settings').doc('active_week').set({
         publishedWeek: wk,
         publishedAt: new Date().toISOString(),
@@ -3852,6 +3869,57 @@ _jsModelCheckAdmin();
     });
   }
 
+  // === Weekly board follows Redraft until touched ===
+  // Jack's rule: a week he hasn't edited/saved/published tracks his current
+  // Redraft (rest-of-season) order automatically, so he only hand-moves
+  // matchup-specific players. Ownership of a week is taken by (a) any weekly
+  // edit this session (drag / TRIM — they all funnel through saveLocal), or
+  // (b) a persisted weekly save whose _week matches the active week.
+  // Weekly also persists now (saveLocal serializes {_order,_posTiers,_week});
+  // only the actively-edited week's order is stored — earlier weeks are gone
+  // by design, they're history once played.
+  window._weeklySaved = window._weeklySaved || {};           // ver -> {_order,_posTiers,_week} (persisted snapshot)
+  window._weeklySessionBoards = window._weeklySessionBoards || {}; // ver -> { wk: [board indices] } (this session's edits)
+  window._weeklySessionOwned = window._weeklySessionOwned || {};   // kept for publish freeze checks
+  window._weeklyStashSaved = function(obj, ver) {
+    if (!obj || !obj._order) return;
+    window._weeklySaved[ver] = obj;
+    window._weeklyReconcileBoard(ver);
+  };
+  window._weeklyMarkOwned = function(ver, wk) {
+    window._weeklySessionOwned[ver] = wk;
+    (window._weeklySessionBoards[ver] = window._weeklySessionBoards[ver] || {})[wk] =
+      versionBoards[ver].weekly.slice();
+  };
+  window._weeklyReconcileBoard = function(ver) {
+    ver = ver || 'jacks';
+    if (!versionBoards[ver]) return;
+    const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    const sessionBoard = window._weeklySessionBoards[ver] && window._weeklySessionBoards[ver][wk];
+    if (sessionBoard) {
+      versionBoards[ver].weekly = sessionBoard.slice(); // this week was edited this session
+    } else {
+      const saved = window._weeklySaved[ver];
+      if (saved && saved._week === wk) {
+        loadModeData('weekly', saved, ver);
+      } else {
+        versionBoards[ver].weekly = versionBoards[ver].redraft.slice();
+      }
+    }
+    if (currentMode === 'weekly' && currentVersion === ver) {
+      syncMode(); renumber();
+      if (typeof render === 'function') render();
+    }
+  };
+  // Any weekly edit takes ownership of the active week for this session.
+  const _origSaveLocalWeekly = saveLocal;
+  saveLocal = function() {
+    _origSaveLocalWeekly.apply(this, arguments);
+    if (currentMode === 'weekly' && (currentVersion === 'jacks' || currentVersion === 'mine')) {
+      window._weeklyMarkOwned(currentVersion, window._weeklyActiveWeek || 1);
+    }
+  };
+
   // Wire the admin week selector — writes to Firestore + localStorage.
   const _wkSel = document.getElementById('activeWeekSelect');
   if (_wkSel && !_wkSel._bound) {
@@ -3874,6 +3942,11 @@ _jsModelCheckAdmin();
       // weekly slate-average cache keys off the week — refresh both.
       window._weeklySlateAvgCache = null;
       if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+      // New week: an untouched board re-derives from the current Redraft order.
+      if (typeof window._weeklyReconcileBoard === 'function') {
+        window._weeklyReconcileBoard('jacks');
+        window._weeklyReconcileBoard('mine');
+      }
       if (currentMode === 'weekly' && typeof render === 'function') render();
       if (typeof toast === 'function') toast('Active week → ' + wk);
     });
@@ -5306,6 +5379,12 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     document.body.classList.toggle('format-weekly', currentMode === 'weekly');
     const wkSelWrap = document.getElementById('weeklyWeekSelectorWrap');
     if (wkSelWrap) wkSelWrap.style.display = (currentMode === 'weekly') ? 'inline-flex' : 'none';
+    // Entering WEEKLY: an untouched week's board re-derives from the current
+    // Redraft order (picks up any redraft moves made since last visit).
+    if (currentMode === 'weekly' && typeof window._weeklyReconcileBoard === 'function') {
+      window._weeklyReconcileBoard('jacks');
+      window._weeklyReconcileBoard('mine');
+    }
     // If sync is on, pull the entering mode's positional order from one of its
     // partners. With the 3-way redraft/bestball/superflex mesh, we pick a
     // primary source per mode so the user gets a deterministic result:
@@ -20946,6 +21025,11 @@ window.fmtHeight = fmtHeight;
           if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
           if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
           _bypassEditCheck = false;
+          // Weekly follows redraft unless this week was saved (see _weeklyReconcileBoard)
+          if (typeof window._weeklyStashSaved === 'function') {
+            if (obj.jacks.weekly) window._weeklyStashSaved(obj.jacks.weekly, 'jacks');
+            else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('jacks');
+          }
           // Rebuild consensus now that Jack's ranks are available
           if (typeof window._rebuildConsensusBoards === 'function') {
             try { window._rebuildConsensusBoards(); } catch(e) { console.warn('[Consensus] rebuild after Jack load failed:', e); }
@@ -20978,6 +21062,10 @@ window.fmtHeight = fmtHeight;
           if (obj.mine.dynasty) loadModeData('dynasty', obj.mine.dynasty, 'mine');
           if (obj.mine.dynastysf) loadModeData('dynastysf', obj.mine.dynastysf, 'mine');
           _bypassEditCheck = false;
+          if (typeof window._weeklyStashSaved === 'function') {
+            if (obj.mine.weekly) window._weeklyStashSaved(obj.mine.weekly, 'mine');
+            else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('mine');
+          }
           console.log('[Auth] Loaded user rankings from cloud');
         }
         // Legacy support: if old format had both jacks+mine in user doc, migrate mine data
@@ -21030,6 +21118,11 @@ window.fmtHeight = fmtHeight;
           if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
           if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
           _bypassEditCheck = false;
+          // Weekly tracks the fresh redraft order unless this week was saved
+          if (typeof window._weeklyStashSaved === 'function') {
+            if (obj.jacks.weekly) window._weeklyStashSaved(obj.jacks.weekly, 'jacks');
+            else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('jacks');
+          }
           // Rebuild consensus using Jack's latest ranks (will re-render if currently viewing consensus)
           if (typeof window._rebuildConsensusBoards === 'function') {
             try { window._rebuildConsensusBoards(); } catch(e) { console.warn('[Consensus] rebuild on snapshot failed:', e); }

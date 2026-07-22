@@ -1605,23 +1605,28 @@ function _linesStatLine(d) {
     const s = W.stats;
     const py = s.py || 0, ry = s.ry || 0, rcy = s.rcy || 0;
     const hasYds = !!(py || ry || rcy);
-    const hasTd = s.rrtd != null;
-    // Anytime-TD odds (DK, american) — every book's TD line is 0.5, so the
-    // juice is the real signal of TD likelihood.
+    // Combined TD line = pass TD O/U + rush+rec TD O/U, whichever are posted
+    // (mirrors the season view's ptd+rtd+rctd combination — QBs show their
+    // 1.5 pass-TD line, skill players their 0.5 rrtd line).
+    const hasTd = (s.rrtd != null || s.ptd != null);
+    const tdLine = (s.ptd || 0) + (s.rrtd || 0);
+    // Anytime-TD odds (DK, american) — every book's rush+rec TD line is 0.5,
+    // so the juice is the real signal of TD likelihood.
     const atd = (s.atd != null) ? Math.round(s.atd) : null;
     if (!hasYds && !hasTd && atd == null) return null;
     const parts = [];
     if (py) parts.push('Pass ' + py + ' yds');
+    if (s.ptd != null) parts.push('Pass TD ' + s.ptd);
     if (ry) parts.push('Rush ' + ry + ' yds');
     if (rcy) parts.push('Rec ' + rcy + ' yds');
     if (s.rec != null) parts.push(s.rec + ' rec');
-    if (hasTd) parts.push('Rush+Rec TD ' + s.rrtd);
+    if (s.rrtd != null) parts.push('Rush+Rec TD ' + s.rrtd);
     if (atd != null) parts.push('Anytime TD ' + (atd > 0 ? '+' : '') + atd);
     if (s.int != null) parts.push('INT ' + s.int);
     const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     return {
       yds: hasYds ? Math.round((py + ry + rcy) * 10) / 10 : null,
-      tds: (hasTd || atd != null) ? (hasTd ? s.rrtd : null) : null,
+      tds: hasTd ? Math.round(tdLine * 10) / 10 : null,
       tdsOdds: atd,
       tip: 'Week ' + wk + ' O/U avg of ' + W.books.join('/') + (W.asOf ? ' (as of ' + W.asOf + ')' : '') + ': ' + parts.join(' · ')
     };
@@ -3619,7 +3624,7 @@ _jsModelCheckAdmin();
         const p = o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100);
         rrtd = -Math.log(1 - Math.min(0.95, p * 0.9));
       }
-      const pts = pick('py') / 25 - pick('int') * 2 + clayPg('ptd') * 4
+      const pts = pick('py') / 25 - pick('int') * 2 + pick('ptd') * 4
         + pick('ry') / 10 + pick('rcy') / 10 + pick('rec') * recMult + rrtd * 6;
       if (isFinite(pts)) return Math.round(pts * injMult * 10) / 10;
     }

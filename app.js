@@ -3556,12 +3556,16 @@ _jsModelCheckAdmin();
     };
   };
 
-  // Weekly PROJ PPG adjustment: scales the player's season-long PPG by
-  //   (team_total / league_avg)  ×  (opp_def_factor)
-  // where opp_def_factor pulls from Clay's defensive rank (rank 1 = toughest).
-  // Clamps prevent extreme outliers from cratering or inflating projections.
+  // Weekly PROJ PPG. Priority order:
+  //   1. Ruled-out players (IR/PUP/SUS/Out) -> 0; Doubtful -> half. Skipped in
+  //      the offseason where lingering 2025 tags would wrongly zero players.
+  //   2. Posted weekly prop board (UD/PP via _weeklyPropLinesFor): score the
+  //      posted lines with site scoring, filling unposted stats from Clay
+  //      per-game. NO team-total / defense factors on this path — the books
+  //      already price matchup, environment, and injuries into the lines.
+  //   3. Fallback heuristic: season-long PPG × (team_total / slate_avg) ×
+  //      (opp_def_factor from Clay's defensive rank, 1 = toughest), clamped.
   window._weeklyAdjustPpg = function(d, basePpg) {
-    if (basePpg == null || !isFinite(basePpg)) return basePpg;
     if (!d || !d.t) return basePpg;
     const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
     const sched = window.getNflScheduleForTeam && window.getNflScheduleForTeam(abbr);
@@ -3570,6 +3574,29 @@ _jsModelCheckAdmin();
     const entry = sched[wk];
     if (!entry) return basePpg;
     if (entry.bye) return 0;
+    // Injury gate (in-season only — offseason tags are stale)
+    let injMult = 1;
+    const _offseason = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
+    if (!_offseason && d.inj) {
+      const t = String(d.inj).toLowerCase();
+      if (/\bir\b|\bpup\b|suspend|\bout\b|out for season|season.?ending/.test(t)) return 0;
+      if (/doubtful/.test(t)) injMult = 0.5;
+    }
+    // Props-first: score the posted weekly lines directly
+    const W = (typeof _weeklyPropLinesFor === 'function') ? _weeklyPropLinesFor(d.n) : null;
+    if (W && W.stats) {
+      const s = W.stats;
+      const cp = (typeof clayLookup === 'function') ? clayLookup(d.n) : null;
+      const gm = (cp && cp.gm) ? cp.gm : 17;
+      const clayPg = f => cp ? ((cp[f] || 0) / gm) : 0;
+      const pick = k => (s[k] != null) ? s[k] : clayPg(k);
+      const recMult = rankingScoringFmt === 'ppr' ? 1.0 : rankingScoringFmt === 'std' ? 0 : 0.5;
+      const rrtd = (s.rrtd != null) ? s.rrtd : (clayPg('rtd') + clayPg('rctd'));
+      const pts = pick('py') / 25 - pick('int') * 2 + clayPg('ptd') * 4
+        + pick('ry') / 10 + pick('rcy') / 10 + pick('rec') * recMult + rrtd * 6;
+      if (isFinite(pts)) return Math.round(pts * injMult * 10) / 10;
+    }
+    if (basePpg == null || !isFinite(basePpg)) return basePpg;
     // Team-total factor, normalized to THIS week's slate average so the
     // factor redistributes around 1.0 instead of inflating every player in
     // a high-scoring week (hardcoded 22.5 ran ~6% hot on a ~24-avg slate).
@@ -3600,7 +3627,7 @@ _jsModelCheckAdmin();
       oppFactor = 1 + (cg.defRk - 16.5) * 0.0075;
       oppFactor = Math.max(0.85, Math.min(1.15, oppFactor));
     }
-    return Math.round(basePpg * ttFactor * oppFactor * 10) / 10;
+    return Math.round(basePpg * ttFactor * oppFactor * injMult * 10) / 10;
   };
 
   // Track the published week separately from admin's editing selection.

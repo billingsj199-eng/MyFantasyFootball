@@ -1635,13 +1635,16 @@ function _linesStatLine(d) {
     const s = W.stats;
     const py = s.py || 0, ry = s.ry || 0, rcy = s.rcy || 0;
     const hasYds = !!(py || ry || rcy);
-    // Combined TD line = pass TD O/U + rush+rec TD O/U, whichever are posted
-    // (mirrors the season view's ptd+rtd+rctd combination — QBs show their
-    // 1.5 pass-TD line, skill players their 0.5 rrtd line).
-    const hasTd = (s.rrtd != null || s.ptd != null);
-    const tdLine = (s.ptd || 0) + (s.rrtd || 0);
-    // Anytime-TD odds (DK, american) — every book's rush+rec TD line is 0.5,
-    // so the juice is the real signal of TD likelihood.
+    // TD column is position-aware: QBs show their PASSING TD line (their
+    // rushing anytime-TD odds would be misleading under it — tooltip only);
+    // skill players show the rush+rec 0.5 line with anytime-TD odds beneath.
+    const _isQB = d.s === 'QB';
+    let tdLine = null;
+    if (_isQB) { if (s.ptd != null) tdLine = s.ptd; }
+    else if (s.rrtd != null || s.ptd != null) tdLine = (s.ptd || 0) + (s.rrtd || 0);
+    const hasTd = tdLine != null;
+    // Anytime-TD odds (DK + UD hidden prices, american) — the rush+rec line
+    // is 0.5 for everyone, the juice is the real signal of TD likelihood.
     const atd = (s.atd != null) ? Math.round(s.atd) : null;
     if (!hasYds && !hasTd && atd == null) return null;
     const parts = [];
@@ -1657,7 +1660,7 @@ function _linesStatLine(d) {
     return {
       yds: hasYds ? Math.round((py + ry + rcy) * 10) / 10 : null,
       tds: hasTd ? Math.round(tdLine * 10) / 10 : null,
-      tdsOdds: atd,
+      tdsOdds: _isQB ? null : atd,
       tip: 'Week ' + wk + ' O/U avg of ' + W.books.join('/') + (W.asOf ? ' (as of ' + W.asOf + ')' : '') + ': ' + parts.join(' · ')
     };
   }
@@ -3351,7 +3354,7 @@ window._updateRnkStatHeaders = function() {
     if (currentMode === 'weekly') {
       const _wkNum = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
       _set(c1, null, 'This week\'s sportsbook yardage prop lines (O/U), averaged across the books that posted one (Underdog / PrizePicks). Combined passing + rushing + receiving. Blank = no board posted yet for this player. Hover a value for the breakdown.', 'Yds', 'Wk' + _wkNum + ' Lines');
-      _set(c2, 'ppg25Header', 'This week\'s rush+rec touchdown prop line (O/U, ≈ anytime TD), averaged across the books that posted one (Underdog / PrizePicks).', 'TD', 'Wk' + _wkNum + ' O/U');
+      _set(c2, 'ppg25Header', 'This week\'s touchdown prop line (O/U), averaged across the books that posted one. QBs show their PASSING TD line; RB/WR/TE show the rush+rec TD line (≈ anytime TD) with the anytime-TD odds beneath — the real signal of TD likelihood.', 'TD', 'Wk' + _wkNum + ' O/U');
     } else {
       _set(c1, null, 'Season-long sportsbook yardage lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving. Hover a value for the breakdown.', 'Yds', 'Book Avg');
       _set(c2, 'ppg25Header', 'Season-long sportsbook touchdown lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving.', 'TD', 'Book Avg');

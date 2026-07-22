@@ -2392,6 +2392,7 @@ function render() {
     // (default) vs Clay projected yds/TD vs betting-line yds/TD, third column
     // becoming Vegas implied TEAM PPG in the non-fantasy modes.
     let _statTds;
+    let _statTd1 = ''; // first stat cell (Proj PPG / YDS / UD-ADP) — rendered BEFORE the weekly OPP/SPREAD/TOTAL block
     if (_statMode === 'fantasy') {
       const _projPpgJS = isJSModel ? d._jsModelPpg : null;
       let _projPpg = _projPpgJS != null ? _projPpgJS : adjProjPpg(d);
@@ -2406,14 +2407,14 @@ function render() {
       const _l4Cell = l4PpgCellHtml(_l4ppg, adj25ppg(d));
       const _projColor = (_projPpg != null) ? posFptsColor(_projPpg, d.s) : null;
       const _25Color = (_25ppg != null && _25ppgJS == null) ? posFptsColor(_25ppg, d.s) : null;
-      _statTds = `<td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>
-      <td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
+      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>`;
+      _statTds = `<td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
       <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
     } else if (_statMode === 'adp') {
       // ADP comparison view: platform ADPs side by side vs the current board's rank
       // (4th column — CBS — rides the repurposed Y/RR cell below).
-      _statTds = `<td class="pts-cell ppg-proj-cell${_adpCmpCellCls(d, 'underdog')}">${_adpCmpCellHtml(d, 'underdog', 'Underdog')}</td>
-      <td class="pts-cell ppg25-cell${_adpCmpCellCls(d, 'sleeper')}">${_adpCmpCellHtml(d, 'sleeper', 'Sleeper')}</td>
+      _statTd1 = `<td class="pts-cell ppg-proj-cell${_adpCmpCellCls(d, 'underdog')}">${_adpCmpCellHtml(d, 'underdog', 'Underdog')}</td>`;
+      _statTds = `<td class="pts-cell ppg25-cell${_adpCmpCellCls(d, 'sleeper')}">${_adpCmpCellHtml(d, 'sleeper', 'Sleeper')}</td>
       <td class="pts-cell l4ppg-cell${_adpCmpCellCls(d, 'espn')}">${_adpCmpCellHtml(d, 'espn', 'ESPN')}</td>`;
     } else {
       const _line = _statMode === 'proj' ? _projStatLine(d) : _linesStatLine(d);
@@ -2430,8 +2431,8 @@ function render() {
         _tdsHtml += '<div style="font-size:.55rem;line-height:1.15;font-weight:700;color:' + _oc + '">' + (_o > 0 ? '+' : '') + _o + '</div>';
       }
       const _tpColor = _tp ? (_tp.ppg >= 24.5 ? '#22c55e' : _tp.ppg <= 20.5 ? '#ef4444' : '#facc15') : null;
-      _statTds = `<td class="pts-cell ppg-proj-cell"${_tipAttr}>${_ydsHtml}</td>
-      <td class="pts-cell ppg25-cell"${_tipAttr}>${_tdsHtml}</td>
+      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_tipAttr}>${_ydsHtml}</td>`;
+      _statTds = `<td class="pts-cell ppg25-cell"${_tipAttr}>${_tdsHtml}</td>
       <td class="pts-cell l4ppg-cell"${_tp ? ' style="color:'+_tpColor+';font-weight:700;cursor:help" title="Season average of Vegas implied team totals (DK) across '+_tp.n+' games"' : ''}>${_tp ? _tp.ppg.toFixed(1) : '—'}</td>`;
     }
     const _adpDelta = _adp != null ? (_adp - d.myRank) : null;
@@ -2458,6 +2459,7 @@ function render() {
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       <td class="adp-cell${_adpDelta==null?'':(_adpDelta>=3?' adp-value':(_adpDelta<=-3?' adp-reach':''))}" title="${_adpDelta==null?'':(()=>{const df=Math.round(_adpDelta);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${_adp != null ? _adp : '—'}</td>
+      ${_statTd1}
       ${_isWeekly ? `<td class="opp-cell weekly-only-cell${(()=>{ if(d.s==='K'||d.s==='DST'||typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return o || '—'; })()}</td>
       <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>` : '<td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}

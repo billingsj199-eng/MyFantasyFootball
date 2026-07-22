@@ -3917,6 +3917,44 @@ _jsModelCheckAdmin();
     return dedup;
   };
 
+  // AUTO-FLEX: re-interleave the RB/WR/TE slots of the weekly board by each
+  // player's weekly PROJ PPG (props/odds-driven), WITHOUT ever changing the
+  // relative order within a position — Jack's positional rankings stay
+  // authoritative, the FLEX view derives from them. Greedy merge: at each
+  // RB/WR/TE slot, take whichever position's next-up player projects highest.
+  // Byes / OUT players project 0 and sink. QB/K/DST slots are untouched.
+  window._weeklyAutoFlex = function(ver) {
+    const b = versionBoards[ver].weekly;
+    const flexSlots = [];
+    const queues = { RB: [], WR: [], TE: [] };
+    b.forEach((idx, sl) => {
+      const p = D[idx] && D[idx].s;
+      if (p === 'RB' || p === 'WR' || p === 'TE') { flexSlots.push(sl); queues[p].push(idx); }
+    });
+    if (flexSlots.length < 2) return;
+    const score = {};
+    const scoreOf = (idx) => {
+      if (score[idx] == null) {
+        let v = null;
+        try {
+          const base = (typeof adjProjPpg === 'function') ? adjProjPpg(D[idx]) : null;
+          v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(D[idx], base) : base;
+        } catch (e) { v = null; }
+        score[idx] = (v != null && isFinite(v)) ? v : -1;
+      }
+      return score[idx];
+    };
+    const heads = { RB: 0, WR: 0, TE: 0 };
+    flexSlots.forEach(sl => {
+      let best = null, bestScore = -Infinity;
+      ['RB', 'WR', 'TE'].forEach(p => {
+        const idx = queues[p][heads[p]];
+        if (idx != null && scoreOf(idx) > bestScore) { best = p; bestScore = scoreOf(idx); }
+      });
+      if (best != null) { b[sl] = queues[best][heads[best]]; heads[best]++; }
+    });
+  };
+
   window._weeklyStashSaved = function(obj, ver) {
     if (!obj || !obj._order) return;
     window._weeklySaved[ver] = obj;
@@ -3960,6 +3998,8 @@ _jsModelCheckAdmin();
     } else if (!(saved && saved._week === wk)) {
       versionBoards[ver].weekly = versionBoards[ver].redraft.slice();
     }
+    // FLEX interleave derives from positional order + weekly PROJ PPG.
+    window._weeklyAutoFlex(ver);
     window._weeklyBaseline[ver] = versionBoards[ver].weekly.slice();
     if (currentMode === 'weekly' && currentVersion === ver) {
       syncMode(); renumber();
@@ -3984,7 +4024,13 @@ _jsModelCheckAdmin();
   const _origSaveLocalWeekly = saveLocal;
   saveLocal = function() {
     if (currentMode === 'weekly' && (currentVersion === 'jacks' || currentVersion === 'mine')) {
-      window._weeklyMarkOwned(currentVersion, window._weeklyActiveWeek || 1, _weeklyDiffPositions(currentVersion));
+      const changed = _weeklyDiffPositions(currentVersion);
+      // Positional edit changed the pecking order — re-derive the FLEX
+      // interleave before stashing/serializing so all views agree.
+      window._weeklyAutoFlex(currentVersion);
+      window._weeklyMarkOwned(currentVersion, window._weeklyActiveWeek || 1, changed);
+      window._weeklyBaseline[currentVersion] = versionBoards[currentVersion].weekly.slice();
+      syncMode(); renumber();
     }
     _origSaveLocalWeekly.apply(this, arguments);
   };

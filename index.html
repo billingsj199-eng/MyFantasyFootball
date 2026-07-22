@@ -45,7 +45,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-22j" as="script">
+<link rel="preload" href="app.js?v=2026-07-22k" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1143,6 +1143,7 @@ CLEAR ALL
 </select>
 <button id="weeklyPublishBtn" style="padding:3px 9px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid #22c55e;background:transparent;color:#22c55e;white-space:nowrap" title="Push the currently-selected week live so all users see it in the WEEKLY tab.">PUBLISH</button>
 <button id="weeklyUnpublishBtn" style="padding:3px 9px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid #ef4444;background:transparent;color:#ef4444;white-space:nowrap" title="Hide the WEEKLY tab from all non-admin users.">REMOVE</button>
+<button id="weeklyTrimBtn" style="padding:3px 9px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Cut the weekly board at an overall rank — removes every player ranked below it (injured / irrelevant tail). Enter 'undo' to restore this session's trim. Hit SAVE after.">TRIM</button>
 <span id="weeklyPublishStatus" style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;margin-left:2px"></span>
 </div>
 <!-- Non-admin "live week" chip — shown to users when a week is currently published. -->
@@ -4879,7 +4880,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-22j"></script>
+<script defer src="app.js?v=2026-07-22k"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

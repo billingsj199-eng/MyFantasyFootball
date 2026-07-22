@@ -3818,6 +3818,40 @@ _jsModelCheckAdmin();
     });
   }
 
+  // TRIM — cut the weekly board at an overall rank: everyone ranked below is
+  // removed from the WEEKLY board only (other formats keep their full lists),
+  // so the injured / irrelevant tail is one action to clear. Session-undoable
+  // via entering "undo"; SAVE persists like any other reorder.
+  const _trimBtn = document.getElementById('weeklyTrimBtn');
+  if (_trimBtn && !_trimBtn._bound) {
+    _trimBtn._bound = true;
+    _trimBtn.addEventListener('click', () => {
+      if (currentMode !== 'weekly') { if (typeof toast === 'function') toast('Switch to WEEKLY first'); return; }
+      if (typeof canEdit === 'function' && !canEdit()) { if (typeof toast === 'function') toast('This board isn\'t editable'); return; }
+      const b = getBoard();
+      const ans = prompt('Cut the WEEKLY board at overall rank — everyone ranked below is removed.\n'
+        + 'Currently ' + b.length + ' players ranked. Enter a rank, or "undo" to restore the last trim:', '200');
+      if (ans == null) return;
+      if (String(ans).trim().toLowerCase() === 'undo') {
+        const st = window._weeklyTrimUndo;
+        if (!st || st.version !== currentVersion) { toast('Nothing to undo this session'); return; }
+        setBoard(st.board.slice());
+        window._weeklyTrimUndo = null;
+        syncMode(); renumber(); saveLocal(); render();
+        toast('Weekly board restored (' + getBoard().length + ' players) — hit SAVE');
+        return;
+      }
+      const n = parseInt(ans, 10);
+      if (!(n >= 1)) { toast('Enter a rank number or "undo"'); return; }
+      if (n >= b.length) { toast('Nothing ranked below #' + n); return; }
+      window._weeklyTrimUndo = { version: currentVersion, board: b.slice() };
+      const removed = b.length - n;
+      setBoard(b.slice(0, n));
+      syncMode(); renumber(); saveLocal(); render();
+      toast('Removed ' + removed + ' players below #' + n + ' — hit SAVE to keep');
+    });
+  }
+
   // Wire the admin week selector — writes to Firestore + localStorage.
   const _wkSel = document.getElementById('activeWeekSelect');
   if (_wkSel && !_wkSel._bound) {

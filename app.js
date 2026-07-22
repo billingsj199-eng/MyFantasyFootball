@@ -3582,13 +3582,17 @@ _jsModelCheckAdmin();
       if (/\bir\b|\bpup\b|suspend|\bout\b|out for season|season.?ending/.test(t)) return 0;
       if (/doubtful/.test(t)) injMult = 0.5;
     }
-    // Props-first: score the posted weekly lines directly
+    // Props-first: score the posted weekly lines directly. Requires a Clay
+    // projection as the fill source for stats the books don't post (weekly
+    // receptions lines barely exist, pass-TD lines don't) — without Clay
+    // those would fill as 0 and silently undercount, so a board player with
+    // no Clay row falls through to the heuristic instead.
     const W = (typeof _weeklyPropLinesFor === 'function') ? _weeklyPropLinesFor(d.n) : null;
-    if (W && W.stats) {
+    const cp = (W && typeof clayLookup === 'function') ? clayLookup(d.n) : null;
+    if (W && W.stats && cp) {
       const s = W.stats;
-      const cp = (typeof clayLookup === 'function') ? clayLookup(d.n) : null;
-      const gm = (cp && cp.gm) ? cp.gm : 17;
-      const clayPg = f => cp ? ((cp[f] || 0) / gm) : 0;
+      const gm = cp.gm || 17;
+      const clayPg = f => (cp[f] || 0) / gm;
       const pick = k => (s[k] != null) ? s[k] : clayPg(k);
       const recMult = rankingScoringFmt === 'ppr' ? 1.0 : rankingScoringFmt === 'std' ? 0 : 0.5;
       const rrtd = (s.rrtd != null) ? s.rrtd : (clayPg('rtd') + clayPg('rctd'));

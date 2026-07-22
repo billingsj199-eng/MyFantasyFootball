@@ -3608,7 +3608,17 @@ _jsModelCheckAdmin();
       const clayPg = f => (cp[f] || 0) / gm;
       const pick = k => (s[k] != null) ? s[k] : clayPg(k);
       const recMult = rankingScoringFmt === 'ppr' ? 1.0 : rankingScoringFmt === 'std' ? 0 : 0.5;
-      const rrtd = (s.rrtd != null) ? s.rrtd : (clayPg('rtd') + clayPg('rctd'));
+      // Expected rush+rec TDs. The 0.5 O/U line is flat for everyone; when DK
+      // anytime-TD odds are posted they carry the real signal, so convert
+      // implied probability -> expected TDs: strip ~10% vig, then Poisson
+      // lambda = -ln(1-p) to account for multi-TD games (-165 => ~0.82 xTD,
+      // +250 => ~0.30 xTD, vs the flat line's 0.5 for both).
+      let rrtd = (s.rrtd != null) ? s.rrtd : (clayPg('rtd') + clayPg('rctd'));
+      if (s.atd != null) {
+        const o = s.atd;
+        const p = o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100);
+        rrtd = -Math.log(1 - Math.min(0.95, p * 0.9));
+      }
       const pts = pick('py') / 25 - pick('int') * 2 + clayPg('ptd') * 4
         + pick('ry') / 10 + pick('rcy') / 10 + pick('rec') * recMult + rrtd * 6;
       if (isFinite(pts)) return Math.round(pts * injMult * 10) / 10;

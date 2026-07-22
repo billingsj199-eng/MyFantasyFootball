@@ -5092,16 +5092,30 @@ _whenFirebaseReady(function(){
           // Year-1/2 players with high draft capital should lean more on Clay:
           // Clay captures opportunity/role changes that the model's limited sample misses.
           // exp 0-1: 0.40, exp 2 w/ high DC: 0.35, exp 2: 0.30, exp 3+: 0.25
+          // QB/RB exp<=2 get MORE Clay (0.50 / 0.42, cap 0.75): the 2026-07-22
+          // player-level autopsy (scripts/analyze_model_vs_clay.py) showed the
+          // model's win rate vs Clay is worst on young players, and the blend
+          // backtest confirmed raising young QB/RB weights is a strict Pareto
+          // win (QB MAE 3.084->3.075, RB 2.251->2.242, WR/TE unchanged) while
+          // the same bump at WR hurt — so WR/TE keep the original schedule.
+          // (A career-games low-info guard was also tested and REJECTED: it
+          // hands Clay the journeyman-backup cases that are the model's
+          // biggest edge.)
           var baseClayWt = 0.25;
           var _expVal = d.exp != null ? d.exp : 99;
+          var _youngQbRb = (pos === 'QB' || pos === 'RB') && _expVal <= 2;
           if (_expVal <= 1) {
-            baseClayWt = 0.40;
+            baseClayWt = _youngQbRb ? 0.50 : 0.40;
           } else if (_expVal === 2) {
-            // Year-2: higher weight if they were a premium pick (Rd 1-2)
-            var _drVal = d.dr;
-            if (typeof _drVal === 'number' && _drVal <= 64) baseClayWt = 0.38;
-            else if (typeof _drVal === 'number' && _drVal <= 100) baseClayWt = 0.33;
-            else baseClayWt = 0.30;
+            if (_youngQbRb) {
+              baseClayWt = 0.42; // supersedes DC tiering (all tiers are lower)
+            } else {
+              // Year-2: higher weight if they were a premium pick (Rd 1-2)
+              var _drVal = d.dr;
+              if (typeof _drVal === 'number' && _drVal <= 64) baseClayWt = 0.38;
+              else if (typeof _drVal === 'number' && _drVal <= 100) baseClayWt = 0.33;
+              else baseClayWt = 0.30;
+            }
           }
 
           if (jsPpg > 1) {
@@ -5115,7 +5129,7 @@ _whenFirebaseReady(function(){
             // Jonathon Brooks post-ACL had a near-zero core dragging Clay's
             // healthy-season projection down — so let Clay take up to 85%.
             var _coreLowInfo = !d.s25 || d.s25.gp == null || d.s25.gp <= 4;
-            var maxClayWt = _coreLowInfo ? 0.85 : (_expVal <= 2 ? 0.65 : 0.55);
+            var maxClayWt = _coreLowInfo ? 0.85 : (_expVal <= 2 ? (_youngQbRb ? 0.75 : 0.65) : 0.55);
             var clayWt = Math.min(baseClayWt + divBonus, maxClayWt);
 
             fpts_pg = fpts_pg * (1 - clayWt) + clayPpg * clayWt;

@@ -4504,7 +4504,7 @@ _whenFirebaseReady(function(){
 
   // --- Current settings ---
   var _jsScoring = 'half_ppr';
-  var _jsFormat = '1qb'; // 1qb, sflex, 2qb
+  var _jsFormat = '1qb'; // 1qb, sflex, 2qb, dyn1qb, dynsf
   var _jsTeams = 12;
   var _jsRoster = '2rb2wr1flx';
 
@@ -4522,14 +4522,19 @@ _whenFirebaseReady(function(){
   }
 
   // --- Compute VOR and generate board ---
-  function _jsComputeBoard() {
+  function _jsComputeBoard(boardMode) {
     _jsBuildProj(); // lazy: build the projection map on first use (was eager at startup)
+    // boardMode defaults to the format selector. 'dyn1qb'/'dynsf' switch the
+    // valuation to the multi-year discounted dynasty value (chaining block
+    // below) and anchor cross-position mix to KTC instead of Underdog ADP.
+    if (!boardMode) boardMode = _jsFormat;
+    var isDynasty = boardMode === 'dyn1qb' || boardMode === 'dynsf';
     var scoring = _jsScoringPresets[_jsScoring];
     var roster = Object.assign({}, _jsRosterPresets[_jsRoster]);
 
     // Adjust QB slots for format
-    if (_jsFormat === '2qb') roster.QB = 2;
-    else if (_jsFormat === 'sflex') roster.SFLEX = 1;
+    if (boardMode === '2qb') roster.QB = 2;
+    else if (boardMode === 'sflex' || boardMode === 'dynsf') roster.SFLEX = 1;
 
     var teams = _jsTeams;
 
@@ -4668,7 +4673,8 @@ _whenFirebaseReady(function(){
       //   Weeks 4-6:  QB .92, RB .87, WR .82, TE .75
       //   Weeks 7-10: QB .81, RB .70, WR .83, TE .73
       var _injMult = 1.0;
-      var isDynasty = currentMode === 'dynasty' || currentMode === 'dynastysf';
+      // isDynasty comes from boardMode at the top of _jsComputeBoard — dynasty
+      // boards are computed explicitly now instead of following the mode tab.
       if (d.inj) {
         var injTag = d.inj.toLowerCase().trim();
         var _injAge = d.age || 27;
@@ -5200,6 +5206,57 @@ _whenFirebaseReady(function(){
           _injGpAdj = 1;
         }
       }
+      // --- DYNASTY: multi-year discounted value ---
+      // V = sum_{k=0..H-1} PPG_hat(Y+k) * gamma^k, gamma=0.85 H=4, fit + validated
+      // by scripts/backtest_dynasty_model.py (2018-2023, truth = realized 3yr
+      // fpts/17): chained curves beat the one-year board at every position,
+      // and the no-experience-chain variant LOSES to it — the compounded
+      // jump/fade factors carry the signal. Year 0 is exactly the one-year
+      // projection (all layers incl. Clay/props/injury); future years chain
+      // RELATIVE factors: age-curve ratio curve(age+1+k)/curve(age+1) for
+      // non-QB (clamped to the curve's 23-41 range), and per-year experience
+      // factors compounding (a jump/fade is a persisting level shift).
+      // Normalized by sum(gamma^k) so the result stays on a PPG scale and the
+      // VOR machinery below works unchanged.
+      if (isDynasty && fpts_pg > 0) {
+        var _dynG = 0.85, _dynH = 4;
+        var _acPos = (pos !== 'QB' && _ageCurves && _ageCurves[pos]) ? _ageCurves[pos] : null;
+        var _acVal = function(a) {
+          if (!_acPos) return null;
+          var v = _acPos[String(a)];
+          if (v != null) return v;
+          var keys = Object.keys(_acPos).map(Number);
+          var mn = Math.min.apply(null, keys), mx = Math.max.apply(null, keys);
+          return _acPos[String(a < mn ? mn : mx)];
+        };
+        var _c1 = (d.age != null) ? _acVal(d.age + 1) : null;
+        var _dynRawBase = _jsScore(proj, scoring); // vet-fade tier on raw base (matches year-0 logic)
+        var _dynSum = 0, _dynNorm = 0, _expCum = 1;
+        for (var _dk = 0; _dk < _dynH; _dk++) {
+          var _fk = fpts_pg;
+          if (_dk > 0) {
+            if (_c1) {
+              var _ck = _acVal(d.age + 1 + _dk);
+              if (_ck != null) _fk *= _ck / _c1;
+            }
+            var _de = (d.exp != null ? d.exp : 3) + _dk;
+            var _def = 1;
+            if (_de >= 6) {
+              var _dvf = _vetFadeTbl[pos];
+              if (_dvf) _def = _dvf[_dynRawBase >= _vetEliteThr[pos] ? 'elite' : 'rest'];
+            } else if (_de >= 1) {
+              _def = (_expJumpTbl[pos] || {})[_de] || 1;
+            }
+            _expCum *= _def;
+            _fk *= _expCum;
+          }
+          var _dw = Math.pow(_dynG, _dk);
+          _dynSum += _fk * _dw;
+          _dynNorm += _dw;
+        }
+        fpts_pg = _dynSum / _dynNorm;
+      }
+
       var fpts_season = fpts_pg * _injGpAdj;
       scored.push({ idx: idx, pos: pos, fpts_pg: fpts_pg, fpts_season: fpts_season, gp: _injGpAdj, _clayDiv: d._clayDiv || null });
     });
@@ -5294,7 +5351,28 @@ _whenFirebaseReady(function(){
     // pure VOR ordering — their QB premium is the whole point and UD's 1QB
     // curve would erase it.
     var _slotCurve = null;
-    if (_jsFormat === '1qb') {
+    if (isDynasty) {
+      // Dynasty market anchor: KTC values (KTC_SF for dynastysf, KTC_1QB
+      // otherwise) play the role Underdog ADP plays for redraft — the model
+      // keeps within-position order, KTC sets the cross-position mix. KTC is
+      // higher-better, so negate to reuse the ascending-rank machinery.
+      var _ktcMap = (boardMode === 'dynsf')
+        ? (typeof KTC_SF !== 'undefined' ? KTC_SF : null)
+        : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : null);
+      if (_ktcMap) {
+        var _ktcRanked = [];
+        D.forEach(function(dd) {
+          if (dd.s !== 'QB' && dd.s !== 'RB' && dd.s !== 'WR' && dd.s !== 'TE') return;
+          var kv = _ktcMap[dd.n];
+          if (kv != null) _ktcRanked.push({ pos: dd.s, v: -kv });
+        });
+        if (_ktcRanked.length >= 100) {
+          _ktcRanked.sort(function(a, b) { return a.v - b.v; });
+          _slotCurve = { QB: [], RB: [], WR: [], TE: [] };
+          _ktcRanked.forEach(function(m, i) { _slotCurve[m.pos].push(i + 1); });
+        }
+      }
+    } else if (boardMode === '1qb') {
       var _mktRanked = [];
       var _udCount = 0;
       D.forEach(function(dd) {
@@ -5342,30 +5420,59 @@ _whenFirebaseReady(function(){
       if (!inBoard.has(idx)) jsBoard.push(idx);
     });
 
-    // Store fpts_pg and VOR on D entries for display
+    // Per-board display stats. _jsRebuild computes up to three boards per
+    // rebuild now (base + dynasty + dynastysf) and stamps D with whichever
+    // board is actually being rendered, so stats can't come from a board the
+    // user isn't looking at.
+    var stats = {};
     scored.forEach(function(p) {
-      D[p.idx]._jsModelPpg = Math.round(p.fpts_pg * 10) / 10;
-      D[p.idx]._jsModelVor = Math.round(p.vor * 10) / 10;
-      D[p.idx]._jsModelSeason = Math.round(p.fpts_season);
-    });
-    // Clear for unmatched
-    D.forEach(function(d, idx) {
-      if (!_jsPlayerProj[idx]) { d._jsModelPpg = null; d._jsModelVor = null; d._jsModelSeason = null; d._clayDiv = null; }
+      stats[p.idx] = {
+        ppg: Math.round(p.fpts_pg * 10) / 10,
+        vor: Math.round(p.vor * 10) / 10,
+        season: Math.round(p.fpts_season)
+      };
     });
 
-    return jsBoard;
+    return { board: jsBoard, stats: stats };
   }
 
-  // --- Rebuild and apply board ---
+  // Stamp one board's display stats onto D (nulls for unmatched/K/DST).
+  function _jsApplyStats(res) {
+    D.forEach(function(d, idx) {
+      var s = res.stats[idx];
+      if (s) {
+        d._jsModelPpg = s.ppg; d._jsModelVor = s.vor; d._jsModelSeason = s.season;
+      } else {
+        d._jsModelPpg = null; d._jsModelVor = null; d._jsModelSeason = null; d._clayDiv = null;
+      }
+    });
+  }
+
+  // --- Rebuild and apply boards ---
+  // Three boards per rebuild since 2026-07-22: the format-selected board for
+  // redraft-ish modes, plus dedicated dynasty / dynastysf boards (multi-year
+  // discounted valuation + KTC anchor) so trade calc / player cards / any
+  // dynasty-context consumer of versionBoards.jsmodel finally sees a real
+  // dynasty order instead of the redraft board.
   function _jsRebuild() {
     _jsBuildProj(); // lazy: ensure projection map exists before reading it below
-    var jsBoard = _jsComputeBoard();
-    // Apply to all modes
-    versionBoards.jsmodel.redraft = jsBoard;
-    versionBoards.jsmodel.bestball = jsBoard;
-    versionBoards.jsmodel.superflex = jsBoard;
-    versionBoards.jsmodel.dynasty = jsBoard;
-    versionBoards.jsmodel.dynastysf = jsBoard;
+    var visible = _jsComputeBoard(); // per the format selector (_jsFormat)
+    var dynRes = _jsFormat === 'dyn1qb' ? visible : _jsComputeBoard('dyn1qb');
+    var dynSfRes = _jsFormat === 'dynsf' ? visible : _jsComputeBoard('dynsf');
+    versionBoards.jsmodel.redraft = visible.board;
+    versionBoards.jsmodel.bestball = visible.board;
+    versionBoards.jsmodel.superflex = visible.board;
+    versionBoards.jsmodel.dynasty = dynRes.board;
+    versionBoards.jsmodel.dynastysf = dynSfRes.board;
+
+    // Stamp stats + generate tiers from the board the renderer will show
+    // (versionBoards.jsmodel[currentMode]). Tiers for the other modes reuse
+    // these breaks — only the rendered mode's tiers are ever visible in the
+    // JS Model view (its mode tabs are hidden).
+    var stamp = currentMode === 'dynasty' ? dynRes
+              : currentMode === 'dynastysf' ? dynSfRes : visible;
+    _jsApplyStats(stamp);
+    var jsBoard = stamp.board;
 
     // Auto-generate tiers based on VOR breakpoints
     var modes = ['redraft','bestball','superflex','dynasty','dynastysf'];
@@ -5600,8 +5707,12 @@ _whenFirebaseReady(function(){
   // triggers the ~175ms _jsBuildProj projection build) was for the JS-Model view, which
   // is NOT the default (CONSENSUS is). Warm it at idle instead; switching to JS Model
   // (or the DCL injury-history rebuild below) builds it on demand if idle hasn't fired.
-  if (window.requestIdleCallback) requestIdleCallback(function(){ try{ _jsComputeBoard(); }catch(e){} }, { timeout: 4000 });
-  else setTimeout(function(){ try{ _jsComputeBoard(); }catch(e){} }, 1200);
+  // NOTE: _jsComputeBoard is PURE now (returns {board, stats}) — the warm-up
+  // must stamp stats explicitly, because adjProjPpg's veteran fallback and the
+  // My Teams PPG helpers read d._jsModelPpg outside the JS Model view.
+  var _jsWarmUp = function(){ try{ _jsApplyStats(_jsComputeBoard()); }catch(e){} };
+  if (window.requestIdleCallback) requestIdleCallback(_jsWarmUp, { timeout: 4000 });
+  else setTimeout(_jsWarmUp, 1200);
 
   // Expose rebuild for external triggers (e.g. Firestore injury updates arriving async)
   window._jsRebuild = _jsRebuild;

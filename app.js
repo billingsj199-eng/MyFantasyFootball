@@ -1587,7 +1587,18 @@ function _weeklyPropLinesFor(name) {
   });
   if (!books.length) return null;
   const avg = {};
-  Object.keys(stats).forEach(st => { avg[st] = Math.round((stats[st].reduce((a, b) => a + b, 0) / stats[st].length) * 100) / 100; });
+  Object.keys(stats).forEach(st => {
+    const vals = stats[st];
+    if (st === 'atd') {
+      // American odds can't be averaged directly (undefined between ±100):
+      // average implied probabilities across books, convert back.
+      const ps = vals.map(o => o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100));
+      const p = ps.reduce((a, b) => a + b, 0) / ps.length;
+      avg.atd = Math.round(p >= 0.5 ? -(p * 100) / (1 - p) : ((1 - p) * 100) / p);
+      return;
+    }
+    avg[st] = Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100;
+  });
   return { stats: avg, books, asOf: rec.asOf || null };
 }
 

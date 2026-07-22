@@ -585,6 +585,23 @@ def pull_ud_weekly(week_by_matchup):
             continue
         wkd.setdefault(name, {})[stat] = val
         n += 1
+        # UD hides per-side prices behind selection — the API exposes them on
+        # every line. For the rush+rec TD 0.5, the HIGHER side's american
+        # price ≈ anytime-TD odds (Jack: "they have different odds for the TD
+        # scorers even if it doesn't show until you select it").
+        if stat == 'rrtd':
+            for opt in line.get('options') or []:
+                if opt.get('choice') != 'higher':
+                    continue
+                price = opt.get('american_price')
+                if price is None:
+                    break
+                try:
+                    wkd[name]['atd'] = int(str(price).replace('+', ''))
+                    n += 1
+                except ValueError:
+                    pass
+                break
     print(f'  Underdog weekly: {n} lines, weeks {sorted(out)}, '
           f'{sum(len(v) for v in out.values())} player-weeks')
     return out

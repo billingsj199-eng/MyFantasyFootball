@@ -897,7 +897,8 @@ function saveLocal() {
       // load (see _weeklyReconcileBoard), so only the actively-edited week's
       // order is worth persisting.
       weekly: { _order: boardToNames(versionBoards[ver].weekly), _posTiers: _serPT(versionTiers[ver].weekly), _week: (window._weeklyActiveWeek || 1),
-        _ownedPos: Object.keys((window._weeklyOwnedPos && window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][window._weeklyActiveWeek || 1]) || {}) }
+        _ownedPos: Object.keys((window._weeklyOwnedPos && window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][window._weeklyActiveWeek || 1]) || {}),
+        _cut: (typeof window._weeklyCutoffFor === 'function' ? window._weeklyCutoffFor(ver) : null) }
     };
   });
 }
@@ -1751,7 +1752,16 @@ function getFiltered() {
     return devyPlayers;
   }
   // Always get board-ordered list first
-  let f = board.map(idx => D[idx]);
+  // WEEKLY cut line: non-editors (published view) only see players above it;
+  // the editing admin sees the full list with the draggable-across divider.
+  let _boardSrc = board;
+  if (currentMode === 'weekly' && typeof window._weeklyCutoffFor === 'function') {
+    const _cutN = window._weeklyCutoffFor(currentVersion);
+    if (_cutN != null && !(typeof canEdit === 'function' && canEdit())) {
+      _boardSrc = board.slice(0, _cutN);
+    }
+  }
+  let f = _boardSrc.map(idx => D[idx]);
   // Hide retired players from rankings
   f = f.filter(d => !d._retired);
   // Defensive dedupe: a player should never appear twice in the rankings.
@@ -2316,6 +2326,29 @@ function render() {
       return;
     }
     const displayRank = useFilteredRank ? (i + 1) : d.myRank;
+    // WEEKLY cut line: tier-style divider at the overall cutoff rank. Players
+    // below it are hidden from non-editors; the admin drags players across it
+    // to add/remove them from the published week.
+    if (currentMode === 'weekly' && typeof window._weeklyCutoffFor === 'function') {
+      const _cutN = window._weeklyCutoffFor(currentVersion);
+      if (_cutN != null) {
+        const _prevOverall = i > 0 ? data[i - 1].myRank : 0;
+        if (d.myRank > _cutN && _prevOverall <= _cutN) {
+          const _cutUp = Math.max(1, _prevOverall > 0 ? _prevOverall - 1 : 0);
+          html += `<tr class="tier-row cut-line-row">
+            <td colspan="17"><div class="tier-inner" style="border-color:#ef4444">
+              <span class="tier-badge" style="background:#ef4444;color:#fff">✂</span>
+              <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#ef4444">CUT LINE — #${_cutN} · below hidden from published week</span>
+              ${editable ? `<div class="tier-controls">
+                ${_prevOverall > 0 ? `<button class="tier-btn" data-cut-set="${_cutUp}" title="Move line up (cut one more player)">▲</button>` : ''}
+                <button class="tier-btn" data-cut-set="${d.myRank}" title="Move line down (keep ${d.n})">▼</button>
+                <button class="tier-btn del" data-cut-clear="1" title="Remove the cut line (everyone visible)">✕</button>
+              </div>` : ''}
+            </div></td>
+          </tr>`;
+        }
+      }
+    }
     // Insert tier row before this player if a tier sits between previous rank and this rank
     if (showTiers) {
       const prevDisplayRank = i > 0 ? (useFilteredRank ? i : data[i-1].myRank) : 0;
@@ -2550,6 +2583,25 @@ function attachTierListeners() {
   tbody.addEventListener('click', e => {
     const nameLink = e.target.closest('.player-name-link');
     if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
+    // Weekly cut line controls
+    const cutSet = e.target.closest('[data-cut-set]');
+    if (cutSet) {
+      if (typeof window._weeklySetCutoff === 'function') {
+        window._weeklySetCutoff(currentVersion, parseInt(cutSet.dataset.cutSet, 10));
+        saveLocal(); render();
+      }
+      e.stopPropagation();
+      return;
+    }
+    const cutClear = e.target.closest('[data-cut-clear]');
+    if (cutClear) {
+      if (typeof window._weeklySetCutoff === 'function') {
+        window._weeklySetCutoff(currentVersion, null);
+        saveLocal(); render(); toast('Cut line removed');
+      }
+      e.stopPropagation();
+      return;
+    }
     // Add tier
     const addBtn = e.target.closest('[data-add-tier]');
     if (addBtn) { addTier(+addBtn.dataset.addTier); if (window._posSyncEnabled) _syncPairedMode(); saveLocal(); render(); toast('Tier added'); return; }
@@ -3850,26 +3902,17 @@ _jsModelCheckAdmin();
       if (currentMode !== 'weekly') { if (typeof toast === 'function') toast('Switch to WEEKLY first'); return; }
       if (typeof canEdit === 'function' && !canEdit()) { if (typeof toast === 'function') toast('This board isn\'t editable'); return; }
       const b = getBoard();
-      const ans = prompt('Cut the WEEKLY board at overall rank — everyone ranked below is removed.\n'
-        + 'Currently ' + b.length + ' players ranked. Enter a rank, or "undo" to restore the last trim:', '200');
+      const cur = window._weeklyCutoffFor(currentVersion);
+      const ans = prompt('Place the CUT LINE at an overall rank — players below it stay on your\n'
+        + 'board (drag them across the line to add/remove) but are hidden from the\n'
+        + 'published week. ' + b.length + ' players ranked'
+        + (cur ? ', line currently at #' + cur : '') + '. Enter a rank, or 0 to remove the line:', String(cur || 200));
       if (ans == null) return;
-      if (String(ans).trim().toLowerCase() === 'undo') {
-        const st = window._weeklyTrimUndo;
-        if (!st || st.version !== currentVersion) { toast('Nothing to undo this session'); return; }
-        setBoard(st.board.slice());
-        window._weeklyTrimUndo = null;
-        syncMode(); renumber(); saveLocal(); render();
-        toast('Weekly board restored (' + getBoard().length + ' players) — hit SAVE');
-        return;
-      }
       const n = parseInt(ans, 10);
-      if (!(n >= 1)) { toast('Enter a rank number or "undo"'); return; }
-      if (n >= b.length) { toast('Nothing ranked below #' + n); return; }
-      window._weeklyTrimUndo = { version: currentVersion, board: b.slice() };
-      const removed = b.length - n;
-      setBoard(b.slice(0, n));
-      syncMode(); renumber(); saveLocal(); render();
-      toast('Removed ' + removed + ' players below #' + n + ' — hit SAVE to keep');
+      if (isNaN(n) || n < 0) { toast('Enter a rank number (0 removes the line)'); return; }
+      window._weeklySetCutoff(currentVersion, n >= 1 ? Math.min(n, b.length) : null);
+      saveLocal(); render();
+      toast(n >= 1 ? ('Cut line at #' + Math.min(n, b.length) + ' — below is hidden when published. Hit SAVE.') : 'Cut line removed');
     });
   }
 
@@ -3882,7 +3925,24 @@ _jsModelCheckAdmin();
   // Weekly also persists now (saveLocal serializes {_order,_posTiers,_week});
   // only the actively-edited week's order is stored — earlier weeks are gone
   // by design, they're history once played.
-  window._weeklySaved = window._weeklySaved || {};           // ver -> {_order,_posTiers,_week,_ownedPos} (persisted snapshot)
+  // CUT LINE: non-destructive weekly cutoff at an overall rank. Renders as a
+  // draggable-across tier-style divider for the admin; published/non-editor
+  // views only see players above it. Stored per version+week, persisted in
+  // the weekly save as _cut.
+  window._weeklyCutoff = window._weeklyCutoff || {};         // ver -> { wk: N }
+  window._weeklyCutoffFor = function(ver) {
+    const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    const m = window._weeklyCutoff[ver];
+    const n = m && m[wk];
+    return (n >= 1) ? n : null;
+  };
+  window._weeklySetCutoff = function(ver, n) {
+    const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    const m = (window._weeklyCutoff[ver] = window._weeklyCutoff[ver] || {});
+    if (n >= 1) m[wk] = n; else delete m[wk];
+  };
+
+  window._weeklySaved = window._weeklySaved || {};           // ver -> {_order,_posTiers,_week,_ownedPos,_cut} (persisted snapshot)
   window._weeklySessionBoards = window._weeklySessionBoards || {}; // ver -> { wk: [board indices] } (this session's edits)
   window._weeklyOwnedPos = window._weeklyOwnedPos || {};     // ver -> { wk: {POS:true} } — positions Jack actually re-ranked
   window._weeklyBaseline = window._weeklyBaseline || {};     // ver -> board snapshot at last reconcile (edit detection)
@@ -3962,6 +4022,9 @@ _jsModelCheckAdmin();
       const set = {};
       obj._ownedPos.forEach(p => set[p] = true);
       (window._weeklyOwnedPos[ver] = window._weeklyOwnedPos[ver] || {})[obj._week] = set;
+    }
+    if (obj._week != null && obj._cut >= 1) {
+      (window._weeklyCutoff[ver] = window._weeklyCutoff[ver] || {})[obj._week] = obj._cut;
     }
     window._weeklyReconcileBoard(ver);
   };

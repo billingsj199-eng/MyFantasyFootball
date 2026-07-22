@@ -23,12 +23,32 @@
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://www.myfantasyfootball.co/">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%230f0f1a'/%3E%3Crect x='8' y='32' width='7' height='9' rx='1.5' fill='%23f59e0b' opacity='.3'/%3E%3Crect x='17' y='25' width='7' height='16' rx='1.5' fill='%23f59e0b' opacity='.5'/%3E%3Crect x='26' y='17' width='7' height='24' rx='1.5' fill='%23f59e0b' opacity='.7'/%3E%3Crect x='35' y='9' width='7' height='32' rx='1.5' fill='%23f59e0b'/%3E%3Cpolyline points='11.5,29 20.5,22 29.5,14 38.5,6' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='38.5' cy='6' r='3' fill='%23f59e0b'/%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%230f0f1a'/%3E%3Crect x='8' y='32' width='7' height='9' rx='1.5' fill='%23f59e0b' opacity='.3'/%3E%3Crect x='17' y='25' width='7' height='16' rx='1.5' fill='%23f59e0b' opacity='.5'/%3E%3Crect x='26' y='17' width='7' height='24' rx='1.5' fill='%23f59e0b' opacity='.7'/%3E%3Crect x='35' y='9' width='7' height='32' rx='1.5' fill='%23f59e0b'/%3E%3Cpolyline points='11.5,29 20.5,22 29.5,14 38.5,6' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='38.5' cy='6' r='3' fill='%23f59e0b'/%3E%3C/svg%3E">
+<!-- iOS ignores SVG/data-URI touch icons — must be a real PNG file (regenerate via scripts/make_icons.py if the logo changes) -->
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MFF">
+<!-- Analytics (GA4). To activate: create a GA4 property at analytics.google.com
+     (Admin → Create Property → Web data stream for www.myfantasyfootball.co),
+     paste the "G-XXXXXXXXXX" measurement ID into MFF_GA_ID below. Empty = fully
+     inert (no script fetched, nothing tracked). switchPage() in app.js sends
+     SPA page_view events once this is live. -->
+<script>
+(function(){
+  var MFF_GA_ID = '';
+  if (!MFF_GA_ID) return;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function(){ dataLayer.push(arguments); };
+  gtag('js', new Date());
+  gtag('config', MFF_GA_ID);
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=' + MFF_GA_ID;
+  document.head.appendChild(s);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://a.espncdn.com" crossorigin>
@@ -3680,7 +3700,8 @@ ADD TO CHROME
      bundled — they keep loading as separate script tags so the pipeline doesn't
      need to know about bundling. -->
 <script src="data/_bundle_lookups.js?v=2026-07-14a" defer></script>
-<script src="data/d.js?v=2026-07-22" defer></script>
+<script src="data/d.js?v=2026-07-22b" defer></script>
+<script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
 <!-- ep_retired.js (~795 KB) + daily_retired_pool.js DEFERRED (2026-07-10). EP_RETIRED is
      read ONLY by daily_retired_pool.js (→ DAILY_RETIRED_POOL); DAILY_RETIRED_POOL is read
@@ -3714,7 +3735,7 @@ ADD TO CHROME
 
 <script src="data/combine_data.js?v=2026-04-25b" defer></script>
 <script src="data/historical_draft_picks.js?v=2026-04-20" defer></script>
-<script src="data/mike_clay_projections.js?v=2026-07-14a" defer></script>
+<script src="data/mike_clay_projections.js?v=2026-07-22" defer></script>
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
 <script src="data/player_weekly_sigma.js?v=2026-04-30" defer></script>
@@ -4880,7 +4901,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-22u"></script>
+<script defer src="app.js?v=2026-07-22w"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

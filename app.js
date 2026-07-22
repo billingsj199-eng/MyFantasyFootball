@@ -357,6 +357,16 @@ D.forEach((d, i) => {
   }
 });
 
+// Stamp d.bye from data/bye_weeks.js (regenerate via scripts/pull_bye_weeks.py).
+// Fills the Bye box in the player card's Playoff Schedule row. FA/TBD have no
+// TEAM_ABBR_MAP entry so d.bye stays undefined and the card renders '—'.
+if (window.BYE_WEEKS && typeof TEAM_ABBR_MAP !== 'undefined') {
+  D.forEach(d => {
+    const ab = TEAM_ABBR_MAP[d.t];
+    if (ab && window.BYE_WEEKS[ab] != null) d.bye = window.BYE_WEEKS[ab];
+  });
+}
+
 // Convert an index-based board to a name-based array for storage
 // Defensively filters out retired players (legend pool entries pushed into D for
 // the Guess Who autocomplete) so they never end up in Firestore-saved orders.
@@ -1511,9 +1521,15 @@ function l4PpgCellHtml(l4, seasonPpg) {
 }
 
 function adjProjPpg(d) {
-  // K and DST: Clay's projections only cover QB/RB/WR/TE, so use d.p (season total
-  // already in d.js) divided by 17. Scoring format doesn't shift K/DST values.
+  // K: Clay projects FG/XP per team (extract_clay_projections.py parses the
+  // kicker row since 2026-07-22; pts = 3*FGM+XPM, no distance bonuses — flat
+  // across all kickers so K-vs-K order is right). Fall back to d.p/17.
+  // DST: the PDF only has a unit RANK, no points — d.p/17 stays the source.
   if (d.s === 'K' || d.s === 'DST') {
+    if (d.s === 'K' && typeof MIKE_CLAY_PROJ !== 'undefined' && typeof clayLookup === 'function') {
+      const cp = clayLookup(d.n);
+      if (cp && cp.pos === 'K' && cp.pts > 0 && cp.gm > 0) return Math.round((cp.pts / cp.gm) * 10) / 10;
+    }
     if (d.p != null && isFinite(d.p) && d.p > 0) return Math.round((d.p / 17) * 10) / 10;
     return null;
   }
@@ -2460,9 +2476,14 @@ function render() {
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       <td class="adp-cell${_adpDelta==null?'':(_adpDelta>=3?' adp-value':(_adpDelta<=-3?' adp-reach':''))}" title="${_adpDelta==null?'':(()=>{const df=Math.round(_adpDelta);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${_adp != null ? _adp : '—'}</td>
       ${_statTd1}
-      ${_isWeekly ? `<td class="opp-cell weekly-only-cell${(()=>{ if(d.s==='K'||d.s==='DST'||typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return o || '—'; })()}</td>
-      <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
-      <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{ if(d.s==='K'||d.s==='DST') return '—'; if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>` : '<td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
+      ${_isWeekly ? `<td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return o || '—'; })()}</td>
+      <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
+      <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{
+        // D/ST rows show the OPPONENT's implied total (lower = better matchup),
+        // with the color scale inverted accordingly. Everyone else shows their
+        // own team's implied total (higher = better environment).
+        if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
+        if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>` : '<td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
       ${_statTds}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—')}</td>
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
@@ -3567,13 +3588,19 @@ _jsModelCheckAdmin();
   //   defRk 1-10  → hard  (red)
   //   defRk 11-22 → medium (amber)
   //   defRk 23-32 → easy   (green)
-  window._weeklyOppDifficulty = function(team) {
+  // For D/ST rows (pos='DST') the matchup flips: what matters is the opponent
+  // OFFENSE, so we grade on offRk instead (offRk 1-10 = elite offense = hard).
+  // Kickers get no color — opposing defense quality cuts both ways for FG
+  // volume, so we don't imply a signal we haven't validated.
+  window._weeklyOppDifficulty = function(team, pos) {
+    if (pos === 'K') return null;
     const ctx = _weeklyGameContext(team);
     if (!ctx) return null;
     const cg = window.CLAY_TEAM_GRADES_2026 && window.CLAY_TEAM_GRADES_2026[ctx.opp];
-    if (!cg || typeof cg.defRk !== 'number') return null;
-    if (cg.defRk <= 10) return 'hard';
-    if (cg.defRk >= 23) return 'easy';
+    const rk = cg ? (pos === 'DST' ? cg.offRk : cg.defRk) : null;
+    if (typeof rk !== 'number') return null;
+    if (rk <= 10) return 'hard';
+    if (rk >= 23) return 'easy';
     return 'medium';
   };
 
@@ -3588,6 +3615,20 @@ _jsModelCheckAdmin();
     const t = ctx.home
       ? (game.total - game.spread) / 2
       : (game.total + game.spread) / 2;
+    return Math.round(t * 10) / 10;
+  };
+
+  // OPPONENT TEAM TOTAL — the other side's implied total. This is the number
+  // a D/ST row cares about (lower = better matchup). Same derivation as
+  // _weeklyTeamTotalFor with home/away mirrored.
+  window._weeklyOppTeamTotalFor = function(team) {
+    const ctx = _weeklyGameContext(team);
+    if (!ctx) return null;
+    const game = ctx.game;
+    if (typeof game.total !== 'number' || typeof game.spread !== 'number') return null;
+    const t = ctx.home
+      ? (game.total + game.spread) / 2
+      : (game.total - game.spread) / 2;
     return Math.round(t * 10) / 10;
   };
 
@@ -9066,6 +9107,14 @@ function switchPage(page) {
     const targetHash = page && page !== 'rankings' ? '#' + page : '';
     if (location.hash !== targetHash) {
       history.replaceState({}, '', location.pathname + location.search + targetHash);
+    }
+  } catch(_) {}
+  // SPA page-view for GA4 (no-op until MFF_GA_ID is set in index.html) — hash
+  // navigation doesn't fire real page loads, so feature usage is invisible
+  // without this.
+  try {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'page_view', { page_path: '/' + (page || 'rankings'), page_title: page || 'rankings' });
     }
   } catch(_) {}
   // Lazy-load PFF grades on first access of any page that consumes them.

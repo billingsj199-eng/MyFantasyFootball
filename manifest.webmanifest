@@ -10,6 +10,18 @@
   "categories": ["sports", "utilities"],
   "icons": [
     {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%230f0f1a'/%3E%3Crect x='8' y='32' width='7' height='9' rx='1.5' fill='%23f59e0b' opacity='.3'/%3E%3Crect x='17' y='25' width='7' height='16' rx='1.5' fill='%23f59e0b' opacity='.5'/%3E%3Crect x='26' y='17' width='7' height='24' rx='1.5' fill='%23f59e0b' opacity='.7'/%3E%3Crect x='35' y='9' width='7' height='32' rx='1.5' fill='%23f59e0b'/%3E%3Cpolyline points='11.5,29 20.5,22 29.5,14 38.5,6' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='38.5' cy='6' r='3' fill='%23f59e0b'/%3E%3C/svg%3E",
       "sizes": "any",
       "type": "image/svg+xml",

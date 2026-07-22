@@ -1,6 +1,6 @@
 # MyFantasyFootball — Backlog
 
-_Last updated: 2026-07-21_
+_Last updated: 2026-07-22_
 
 Running backlog for myfantasyfootball.co. Items are grouped by what's blocking them, then by effort. **Read DEPLOY_NOTES.md first** if any "Shipped" item below mentions Firestore rules — those features won't work in prod until rules are pushed.
 
@@ -8,23 +8,28 @@ Running backlog for myfantasyfootball.co. Items are grouped by what's blocking t
 
 ## Suggested next-session priorities
 
-**New (2026-07-21):** Dynasty JS Model — see "JS Model roadmap" section below. The redraft JS Model was overhauled + backtested this session; dynasty/dynastySF still show the identical redraft board.
+**Shipped 2026-07-20/22 (was #1 here):** the ~26 MB deferred-data lazy-load is DONE. `legend_careers.js` + `all_players.js` + `hp.js` load via `window._loadRetiredData()`, `weekly_stats_active/retired_1-3` + `all_players_weekly_1-5` + `snap_counts.js` via `window._loadWeeklyData()` — both kicked off at idle after `load` (staggered one file per idle window) and forced on-demand by the surfaces that read them (openPlayerCard, Games/Compare navigation). Merges re-run on `mff:retireddata` / `mff:weeklydata` events. See index.html ~line 4774.
+
+**Shipped 2026-07-22 (draft-season quick wins):**
+- **Bye weeks** — `scripts/pull_bye_weeks.py` (ESPN scoreboard API) → `data/bye_weeks.js` → `d.bye` stamped at boot → fills the Bye box in the player card's Playoff Schedule row (that box existed but always showed `—`). Per Jack: player card only, NO rankings column. Cross-checked against the hand-typed `BB_BYE_WEEKS_2026` table in app.js (~line 44264) — identical; that table is still its own copy inside the BBM sim closure.
+- **PWA PNG icons** — `scripts/make_icons.py` (Pillow, redraws the manifest SVG logo) → `icons/icon-180/192/512.png`, registered in manifest.webmanifest. Chrome auto-install prompt criteria now met. The old `apple-touch-icon` was a data-URI SVG which iOS *ignores* — now a real 180px PNG.
+- **GA4 analytics stub** — inert loader in index.html head (`MFF_GA_ID = ''`); `switchPage()` in app.js sends SPA `page_view` events once live. **Jack action required**: create the GA4 property at analytics.google.com (web data stream for www.myfantasyfootball.co) and paste the `G-…` measurement ID into `MFF_GA_ID`. Do this BEFORE August draft-season traffic or the season's usage data is lost.
 
 If picking the next thing to do, in order:
 
-1. **Move 3 deferred data groups to fully lazy** _(highest perf-per-effort lift available — ~26 MB off every cold load)_. Currently `legend_careers.js` (2.85 MB), `weekly_stats_retired_1/2/3.js` (10.15 MB total), and `all_players_weekly_1-5.js` (12.86 MB total) load on every visit via `defer`. They merge into `WEEKLY_STATS` / `D[].career` / `LDB.seasons` via re-run handlers at `_mergeWeeklyStatsRetired` (~line 5279), `_mergeAllPlayersWeekly` (~line 15560), `_applyLegendCareerBindings` (LDB at ~15468, D.career at ~15477). Convert each to the lazy-load pattern shipped 2026-05-13 for `college_stats.js` — see `_ensureCollegeStatsData` in index.html as the template.
-   - **The careful path** (1-2 hour scoped session):
-     1. Audit every `WEEKLY_STATS[name]` read (26 sites, 14 already use `typeof` guards) — confirm each is inside a function called only after page navigation, not at parse time.
-     2. Same audit for `LEGEND_CAREERS[name]` and `ALL_PLAYERS_WEEKLY[name]` reads.
-     3. Map each consumer to the page/feature that triggers it (openPlayerCard, switchPage('trivia'), legend leaderboard page, player history page).
-     4. Add a `_ensureLegendsData()` lazy loader that pulls all 3 groups in parallel via `Promise.all`. Triggers: openPlayerCard (retired-player branch), switchPage('trivia'), switchPage('legendBoard'?).
-     5. Refactor one file group at a time. After each, smoke-test trivia + a retired player card + the legends leaderboard.
-   - **Why it wasn't done 2026-05-13**: previous-session P1 regression was caused exactly by deferring data scripts without auditing parse-time consumers (handoff: "the agent missed at least 4 cases"). The 26 MB win is worth a dedicated session, not a bolt-on at the end of an already-long one.
-   - **Verification**: cold-load Network panel should show zero requests for `legend_careers.js`, `weekly_stats_retired_*`, `all_players_weekly_*` on the rankings page. Opening any retired player card should fetch them.
-2. **Per-year top-25 sweep for trivia** _(scoped 2026-05-07, not finished — see "Trivia data — known remaining gap" below)_. Fresh session can pick up the localStorage seed list of 452 unique slugs.
-3. **Phone-test mobile responsiveness on real devices** — full mobile pass + emulator scan done 2026-05-06 but a real phone may still surface issues (touch targets, iOS Safari quirks, real-world rotation behavior).
-4. **ESPN league import** (multi-week) — biggest TAM unlock. Single largest gap in user acquisition.
-5. **Inline-style hex/rgba color audit for light mode** — 15 fixes shipped 2026-05-13 (plan-option cards, premium-redeem input/button/divider, rookie sub-pos filter, ADP source tabs, bench chip, JM badge, UD expand panel, pagination dots, etc.). The remaining inline `color:#000`/`#fff` patterns are mostly intentional (orange-accent buttons, white-on-solid-brand badges). Continue the audit only when you spot a *new* broken element.
+1. **Activate analytics** — the 2-minute Jack-only step above. Everything else on this list gets prioritized better once real usage data exists.
+2. **Dynasty JS Model** — see "JS Model roadmap" below. Biggest model credibility gap (dynasty/dynastySF show the identical redraft board; age-29 CMC ranks top-6 "dynasty"). Design already agreed 2026-07-21. Dynasty startup season is NOW.
+3. **Draft-season data hygiene sweep** — kickers + K projections DONE 2026-07-22:
+   - ~~Stale kickers~~ — Sleeper depth-chart audit (`scripts/fix_kickers_20260722.py`): added missing starters Tyler Bass (BUF, K13), Trey Smack (GB rookie, K18), Jason Sanders (NYJ, K21); existing editorial K order preserved (splice + renumber, NOT a p-sort — first attempt p-sorted and clobbered the board, reverted from `d.js.bak_pre_kickers_20260722`). Bass/Sanders have no 2025 stats (ESPN-confirmed didn't play) so their `p` values are hand-estimates; Clay's PDF independently confirms Bass as BUF K1.
+   - ~~K Clay projections~~ — `extract_clay_projections.py` now parses the per-team kicker row (FGM/FGA/XPM/XPA; pts = 3×FGM+XPM, no distance-bonus data) → 32 K entries in `mike_clay_projections.js`; `adjProjPpg()` prefers Clay for K with `d.p/17` fallback. DST stays on `d.p/17` — the PDF has only a unit rank, no DST points.
+   - Still open: 151 COMBINE↔ALL name collisions (2026-07-21 stats audit); MIA rank order (Patterson K17 above Gonzalez K31) contradicts Sleeper's current depth chart (Gonzalez is the listed starter) — Jack call, since it's an editorial board.
+4. **Fix the injury/roster Firestore feed** — it silently never runs (known bug). Tolerable in July, trust-killing in-season. Diagnose before NFL Week 1.
+5. **Weekly format completion → public launch by Week 1** — see "Weekly format expansion" below. Weekly props + board sync landed 2026-07-21/22; remaining: true weekly projections (consensus blend), weekly player-card tab, K/DST support, un-gate `_weeklyAdminCheck`.
+6. **Phone-test mobile responsiveness on real devices** — August drafts happen on phones at draft parties.
+7. **ADP movement tracking** _(new idea 2026-07-22)_ — the betting-lines pull already fetches live UD ADP daily; snapshot it to a dated file each run and ship a "risers/fallers this week" view. Most shareable content type of draft season; pairs with the "smart alerts" future idea.
+8. **ESPN league import** — biggest TAM unlock, but multi-week; start AFTER kickoff (league import is more valuable in-season for waivers/trades than at draft time, and starting now lands it half-tested mid-August).
+
+Still open, lower urgency: per-year top-25 trivia sweep (452-slug seed list); light-mode inline-color audit (only when a new broken element is spotted).
 
 ---
 
@@ -49,7 +54,7 @@ The WEEKLY format tab + admin week selector + OPP column landed 2026-05-18 (admi
 1. **TEAM TOTAL data wiring** — `window._weeklyTeamTotalFor(teamAbbr)` currently returns `null` so the cell shows `—`. Source it from DK weekly totals. DK lines are pulled for the Playoff SOS feature (weeks 15-17 only); need a site-wide weekly pull. Suggested path: scrape DK to `data/dk_weekly_totals_2026.js` shaped as `{wk1:{NE:24.5,KC:27.0,...}, wk2:{...}}`. The OPP column already reads `window._weeklyActiveWeek` so the total helper should too.
 2. **Weekly yards + TD odds columns** — DK player props (Anytime TD, O/U receiving/rushing/passing yards) per player per week. Add as 2-3 additional columns visible only in WEEKLY format. Same `weekly-only-col` / `.weekly-only-cell` CSS hooks already in place — just add `<th>` + cells and a helper like `window._weeklyPropFor(playerName, propKind)`. Decide: one combined "Odds" column with hover-popover, or separate Yds + TD columns. Data source TBD — DK API or scrape.
 3. **Weekly tab on player cards** — new tab inside the player-card modal that shows everything weekly: opponent, team total, spread, individual props (yards/TD odds), Mike Clay PPG, opponent's defense vs position rank, last 5 weeks of actual fantasy points if season is in progress. Should be the default tab when WEEKLY format is active. Player-card code lives around `openPlayerCard()` in [index.html](index.html).
-4. **K and D/ST weekly support** — currently OPP/TEAM TOTAL cells show `—` for K and DST (defensive check in the cell template). For K: weekly should show opponent, team total, FG odds, XP odds (or just an O/U on points scored). For D/ST: opponent, team total (theirs ↓ = good), expected sacks/INTs/yards-allowed odds, defensive props. Once data sources are picked, drop the K/DST guard in `.opp-cell` and `.teamtotal-cell` template at [index.html:7287](index.html:7287).
+4. **K and D/ST weekly support** — OPP/SPREAD/TEAM TOTAL columns SHIPPED for K + DST 2026-07-22 (guards dropped in the row template). K rows show their own implied total (high = green, no opp-difficulty color — FG volume vs. opposing D quality cuts both ways). DST rows show the OPPONENT's implied total with the color scale inverted (low = green, tooltip explains) via new `_weeklyOppTeamTotalFor`, and opp-difficulty graded on the opponent's Clay OFFENSE rank (`_weeklyOppDifficulty(team, pos)`). Still open: K FG/XP odds or points O/U props; DST sacks/INTs/defensive props.
 5. **Weekly PROJ value** — PROJ column currently shows season PPG even in WEEKLY format. Wire to a true weekly projection (Mike Clay PPG × opponent defense-vs-position factor, OR a dedicated weekly source if one exists). Helper would be `window._weeklyProjFor(playerName)` returning a fpts number; intercept the existing PROJ cell renderer when `currentMode === 'weekly'`.
 6. **Hand-authored "Jack's Week N" rankings** — if you want the WEEKLY row order to differ from season rankings, need a separate storage path. Suggested: `rankings/jacks-weekly-{N}` in Firestore. Currently WEEKLY falls through to redraft-mode ranks (because `currentMode === 'weekly'` doesn't match any of the `dynasty*/superflex` checks in `[adp|sl]For()` helpers around index.html:6084).
 7. **Public launch** — flip `_weeklyAdminCheck` to always show the tab once items 1-5 are wired enough that non-admins get value. Until then, the tab is hidden and the click handler bounces non-admin clicks with a toast.
@@ -205,9 +210,9 @@ When you next deploy:
 
 ### Quick wins (<1 day each, doable now)
 
-- **Bye week column** — blocked on 2026 NFL schedule release (typically mid-May). When data drops, decide source: Sleeper API at load (live) vs. static `data/bye_weeks.js` regenerated weekly. Insert between Pos Rank and ADP.
+- ~~**Bye week column**~~ — _Shipped 2026-07-22 as a player-card field instead (Jack: no rankings column). `scripts/pull_bye_weeks.py` → `data/bye_weeks.js`._
 - **Performance: virtualize the rankings table** — ~500 rows render at once. Risky without test coverage; do this on a quiet branch.
-- **Analytics on tool usage** — wire Plausible / Umami / GA4 to track which pages/features get used. Drives future roadmap. Needs service decision first.
+- ~~**Analytics on tool usage**~~ — _GA4 stub shipped 2026-07-22; needs Jack to create the property + paste the measurement ID (see priorities above)._
 - **Inline-style color audit for light mode** — ~30 places in `index.html` use hardcoded hex/rgba colors that don't follow the dark→light flip. Each is small; do them as you spot broken elements in light mode.
 - ~~**Sticky first column on the rankings table**~~ — _Shipped 2026-05-06._
 
@@ -260,7 +265,7 @@ Ideas that aren't on the active backlog but are worth considering for future roa
 - **sitemap.xml** for the player-profile URLs — Google Search Console picks these up, helps with indexing player names as keywords.
 
 ### PWA / install
-- ~~**Add to Home Screen / PWA**~~ — _Shipped 2026-05-06._ Manifest + SW + Apple meta tags + app shortcuts. **Still TODO**: generate 192×192 and 512×512 PNG icons so Chrome auto-fires the install prompt (currently users have to install via browser menu).
+- ~~**Add to Home Screen / PWA**~~ — _Shipped 2026-05-06; PNG icons (192/512 + 180 apple-touch) shipped 2026-07-22 via `scripts/make_icons.py`, so Chrome's auto install prompt criteria are met._
 - **iOS pull-to-refresh** + native-feeling viewport behavior on mobile.
 
 ### Power user / admin tools

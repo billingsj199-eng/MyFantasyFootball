@@ -3487,17 +3487,34 @@ _jsModelCheckAdmin();
     const entry = sched[wk];
     if (!entry) return basePpg;
     if (entry.bye) return 0;
-    // Team-total factor (league avg ~22.5)
+    // Team-total factor, normalized to THIS week's slate average so the
+    // factor redistributes around 1.0 instead of inflating every player in
+    // a high-scoring week (hardcoded 22.5 ran ~6% hot on a ~24-avg slate).
     const tt = window._weeklyTeamTotalFor(d.t);
     let ttFactor = 1;
-    if (tt != null) ttFactor = Math.max(0.7, Math.min(1.3, tt / 22.5));
-    // Opp-defense factor from Clay rank (1 = toughest, 32 = softest)
+    if (tt != null) {
+      const cache = window._weeklySlateAvgCache;
+      let slateAvg = (cache && cache.wk === wk) ? cache.avg : null;
+      if (slateAvg == null) {
+        let sum = 0, n = 0;
+        if (typeof TEAM_ABBR_MAP !== 'undefined') {
+          Object.keys(TEAM_ABBR_MAP).forEach(team => {
+            const v = window._weeklyTeamTotalFor(team);
+            if (v != null) { sum += v; n++; }
+          });
+        }
+        slateAvg = n >= 8 ? sum / n : 22.5;
+        window._weeklySlateAvgCache = { wk, avg: slateAvg };
+      }
+      ttFactor = Math.max(0.7, Math.min(1.3, tt / slateAvg));
+    }
+    // Opp-defense factor from Clay rank (1 = toughest, 32 = softest):
+    // rank 1 → 0.88, rank 16.5 → 1.00, rank 32 → 1.12
     let oppFactor = 1;
     const oppAbbr = entry.opp;
     const cg = window.CLAY_TEAM_GRADES_2026 && window.CLAY_TEAM_GRADES_2026[oppAbbr];
     if (cg && typeof cg.defRk === 'number') {
-      // rank 1 → 0.88, rank 16.5 → 1.00, rank 32 → 1.12
-      oppFactor = 1 + (16.5 - cg.defRk) * 0.0075;
+      oppFactor = 1 + (cg.defRk - 16.5) * 0.0075;
       oppFactor = Math.max(0.85, Math.min(1.15, oppFactor));
     }
     return Math.round(basePpg * ttFactor * oppFactor * 10) / 10;

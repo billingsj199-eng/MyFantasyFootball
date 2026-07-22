@@ -29,10 +29,39 @@ from backtest_js_model import (  # noqa: E402
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
 
 
+def load_weeks_played():
+    """(name, year) -> sorted weeks played, from data/all_players_weekly_1-5.js."""
+    import re
+    out = {}
+    key_fix = re.compile(r'([{,])(\w+):')
+    for i in range(1, 6):
+        path = os.path.join(DATA_DIR, f'all_players_weekly_{i}.js')
+        if not os.path.exists(path):
+            continue
+        txt = open(path, encoding='utf-8').read()
+        for m in re.finditer(r'ALL_PLAYERS_WEEKLY\["((?:[^"\\]|\\.)*)"\]=(\{.*?\});\n',
+                             txt, re.S):
+            try:
+                obj = json.loads(key_fix.sub(r'\1"\2":', m.group(2)))
+            except Exception:
+                continue
+            for yr, games in (obj.get('seasons') or {}).items():
+                out[(m.group(1).replace('\\"', '"'), int(yr))] = \
+                    sorted(g.get('wk', 0) for g in games)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--min-n', type=int, default=3)
     ap.add_argument('--scoring', default='half_ppr', choices=sorted(SCORING))
+    ap.add_argument('--keep-inseason-injuries', action='store_true',
+                    help='Score injury-shortened seasons too (default: a season '
+                         'where the player appeared by week 3 but finished <12 '
+                         'games is dropped — got hurt/benched after the season '
+                         'began, which no projection can be expected to call. '
+                         'Seasons short because the player STARTED out (PUP, '
+                         'suspension, known injury) stay in — that was knowable.)')
     args = ap.parse_args()
     scoring = SCORING[args.scoring]
 
@@ -47,6 +76,15 @@ def main():
             if 'clay' in r['preds'] and 'full' in r['preds']]
     print(f'{len(rows)} player-seasons with both model + Clay predictions '
           f'({years[0]}-{years[-1]}, {args.scoring})')
+
+    if not args.keep_inseason_injuries:
+        wp = load_weeks_played()
+        before = len(rows)
+        rows = [r for r in rows
+                if not (lambda w: w and w[0] <= 3 and len(w) < 12)
+                       (wp.get((r['name'], r['year'])))]
+        print(f'in-season-injury filter: dropped {before - len(rows)} rows '
+              f'(appeared by wk3, finished <12 games) — kept {len(rows)}')
 
     meta = {p['name']: p for p in db}
 

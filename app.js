@@ -1606,18 +1606,23 @@ function _linesStatLine(d) {
     const py = s.py || 0, ry = s.ry || 0, rcy = s.rcy || 0;
     const hasYds = !!(py || ry || rcy);
     const hasTd = s.rrtd != null;
-    if (!hasYds && !hasTd) return null;
+    // Anytime-TD odds (DK, american) — every book's TD line is 0.5, so the
+    // juice is the real signal of TD likelihood.
+    const atd = (s.atd != null) ? Math.round(s.atd) : null;
+    if (!hasYds && !hasTd && atd == null) return null;
     const parts = [];
     if (py) parts.push('Pass ' + py + ' yds');
     if (ry) parts.push('Rush ' + ry + ' yds');
     if (rcy) parts.push('Rec ' + rcy + ' yds');
     if (s.rec != null) parts.push(s.rec + ' rec');
     if (hasTd) parts.push('Rush+Rec TD ' + s.rrtd);
+    if (atd != null) parts.push('Anytime TD ' + (atd > 0 ? '+' : '') + atd);
     if (s.int != null) parts.push('INT ' + s.int);
     const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     return {
       yds: hasYds ? Math.round((py + ry + rcy) * 10) / 10 : null,
-      tds: hasTd ? s.rrtd : null,
+      tds: (hasTd || atd != null) ? (hasTd ? s.rrtd : null) : null,
+      tdsOdds: atd,
       tip: 'Week ' + wk + ' O/U avg of ' + W.books.join('/') + (W.asOf ? ' (as of ' + W.asOf + ')' : '') + ': ' + parts.join(' · ')
     };
   }
@@ -2344,7 +2349,15 @@ function render() {
       const _tp = _impliedTeamPpg(d.t);
       const _tipAttr = (_line && _line.tip) ? ' title="' + _line.tip.replace(/"/g, '&quot;') + '" style="cursor:help;font-weight:700"' : '';
       const _ydsHtml = (_line && _line.yds != null) ? Math.round(_line.yds).toLocaleString() : '—';
-      const _tdsHtml = (_line && _line.tds != null) ? String(Math.round(_line.tds * 10) / 10) : '—';
+      let _tdsHtml = (_line && _line.tds != null) ? String(Math.round(_line.tds * 10) / 10) : '—';
+      // Weekly betting-lines view: anytime-TD odds under the O/U line — the
+      // line is 0.5 for everyone, the juice is the real TD probability.
+      if (_line && _line.tdsOdds != null) {
+        const _o = _line.tdsOdds;
+        const _p = _o < 0 ? (-_o) / ((-_o) + 100) : 100 / (_o + 100); // implied prob
+        const _oc = _p >= 0.55 ? '#22c55e' : _p >= 0.4 ? '#4ade80' : _p >= 0.25 ? '#facc15' : 'var(--text2)';
+        _tdsHtml += '<div style="font-size:.55rem;line-height:1.15;font-weight:700;color:' + _oc + '">' + (_o > 0 ? '+' : '') + _o + '</div>';
+      }
       const _tpColor = _tp ? (_tp.ppg >= 24.5 ? '#22c55e' : _tp.ppg <= 20.5 ? '#ef4444' : '#facc15') : null;
       _statTds = `<td class="pts-cell ppg-proj-cell"${_tipAttr}>${_ydsHtml}</td>
       <td class="pts-cell ppg25-cell"${_tipAttr}>${_tdsHtml}</td>
@@ -6681,9 +6694,10 @@ function _buildWeeklyLinesSection(d) {
   if (!books.length) return '';
   const fmt1 = (v) => (typeof v === 'number') ? (Math.round(v * 10) / 10).toFixed(1) : '—';
   const fmt0 = (v) => (typeof v === 'number') ? String(Math.round(v)) : '—';
+  const fmtOdds = (v) => (typeof v === 'number') ? ((v > 0 ? '+' : '') + Math.round(v)) : '—';
   const ROWS = [['py', 'Pass Yds', fmt0], ['ptd', 'Pass TD', fmt1], ['int', 'INT', fmt1],
                 ['ry', 'Rush Yds', fmt0], ['rec', 'Rec', fmt1], ['rcy', 'Rec Yds', fmt0],
-                ['rrtd', 'Rush+Rec TD', fmt1]];
+                ['rrtd', 'Rush+Rec TD', fmt1], ['atd', 'Anytime TD odds', fmtOdds]];
   // Game context (matchup + Vegas numbers) from the same file's gameTotals.
   // d.t is the full team name ("Philadelphia Eagles") — map to abbr first.
   let ctx = '', game = null, isHome = false;

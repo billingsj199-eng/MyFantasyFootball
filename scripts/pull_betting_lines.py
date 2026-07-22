@@ -335,7 +335,7 @@ def pull_season_props():
 
 
 BOOK_ORDER = ('DK', 'FD', 'MGM', 'UD', 'PP')
-STAT_ORDER = ['py', 'ptd', 'int', 'ry', 'rtd', 'ra', 'rec', 'rcy', 'rctd', 'rrtd']
+STAT_ORDER = ['py', 'ptd', 'int', 'ry', 'rtd', 'ra', 'rec', 'rcy', 'rctd', 'rrtd', 'atd']
 
 
 def parse_props_entry(raw):
@@ -590,6 +590,79 @@ def pull_ud_weekly(week_by_matchup):
     return out
 
 
+def pull_dk_weekly_atd(week_by_matchup):
+    """Return {wk: {player: {'atd': american_odds}}} from DK's Anytime TD
+    Scorer market (per-event, posted a few days before games in season —
+    empty in the offseason, which is fine). Odds are the value: every book's
+    TD line is 0.5, the juice IS the signal. Same Selenium in-page fetch
+    pattern as pull_season_props; subcategory resolved BY NAME."""
+    driver = _make_driver()
+    try:
+        print(f'  loading {DK_LEAGUE_PAGE} for Anytime TD odds (Chrome window — ignore it)')
+        driver.get(DK_LEAGUE_PAGE)
+        time.sleep(8)
+        league = _page_fetch(driver, f'{DK_API}/leagues/88808')
+        subs = [s for s in league.get('subcategories', [])
+                if 'anytime td' in (s.get('name') or '').lower()]
+        if not subs:
+            print('  DK Anytime TD: no subcategory posted (normal in offseason)')
+            return {}
+        out = {}
+        n = 0
+        for s in subs:
+            try:
+                body = _page_fetch(driver,
+                                   f"{DK_API}/leagues/88808/categories/{s.get('categoryId')}/subcategories/{s['id']}")
+            except Exception as e:
+                print(f"  DK Anytime TD subcategory {s.get('name')}: FAILED ({e})")
+                continue
+            events = {}
+            for ev in body.get('events', []):
+                wk = None
+                m = re.match(r'([A-Z]{2,4})\s*@\s*([A-Z]{2,4})', ev.get('name') or '')
+                if m:
+                    wk = week_by_matchup.get((m.group(1), m.group(2)))
+                if wk is None:
+                    start = ev.get('startEventDate') or ev.get('startDate')
+                    if start:
+                        try:
+                            wk = _week_of(datetime.datetime.fromisoformat(
+                                str(start).replace('Z', '+00:00')).replace(tzinfo=None))
+                        except ValueError:
+                            pass
+                if wk is not None:
+                    events[ev.get('id')] = wk
+            markets = {m['id']: m for m in body.get('markets', [])}
+            for sel in body.get('selections', []):
+                mkt = markets.get(sel.get('marketId'))
+                if not mkt:
+                    continue
+                wk = events.get(mkt.get('eventId'))
+                if wk is None:
+                    continue
+                player = (sel.get('label') or '').strip()
+                if not player and sel.get('participants'):
+                    player = (sel['participants'][0].get('name') or '').strip()
+                odds = sel.get('oddsAmerican') or (sel.get('displayOdds') or {}).get('american')
+                if not player or odds is None:
+                    continue
+                try:
+                    odds = int(str(odds).replace('+', '').replace('−', '-'))
+                except ValueError:
+                    continue
+                wkd = out.setdefault(wk, {})
+                if 'atd' in wkd.get(player, {}):
+                    continue
+                wkd.setdefault(player, {})['atd'] = odds
+                n += 1
+            time.sleep(1.0)
+        print(f'  DK Anytime TD: {n} odds, weeks {sorted(out)}, '
+              f'{sum(len(v) for v in out.values())} player-weeks')
+        return out
+    finally:
+        driver.quit()
+
+
 def pull_pp_weekly():
     """Return {wk: {player: {stat: line}}} from PrizePicks (Selenium in-page
     fetch — DataDome blocks plain requests). Standard squares only."""
@@ -701,6 +774,10 @@ def update_weekly_props(src):
         pulls.append(('PP', pull_pp_weekly()))
     except Exception as e:
         print(f'  !! PrizePicks weekly failed ({e}) — PP untouched')
+    try:
+        pulls.append(('DK', pull_dk_weekly_atd(week_by_matchup)))
+    except Exception as e:
+        print(f'  !! DK Anytime TD failed ({e}) — DK untouched')
 
     weeks = parse_weekly_block(src)
     changed = 0
@@ -750,7 +827,8 @@ JSON_FILE = os.path.join(ROOT, 'data', 'betting_lines_2026.json')
 
 
 def _raw_stats_to_dict(raw):
-    return {k: float(v) for k, v in re.findall(r'(\w+):\s*([\d.]+)', raw or '')}
+    # -? for american odds values (atd: -150)
+    return {k: float(v) for k, v in re.findall(r'(\w+):\s*(-?[\d.]+)', raw or '')}
 
 
 def emit_json_export(src):

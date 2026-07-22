@@ -21041,13 +21041,17 @@ window.fmtHeight = fmtHeight;
     showSaving();
     try {
       function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
+      const _cutOf = (m) => (typeof window._boardCutoffFor === 'function') ? window._boardCutoffFor('mine', m) : null;
       const data = {
         mine: {
-          redraft: { _order: boardToNames(versionBoards.mine.redraft), _posTiers: _serPT(versionTiers.mine.redraft) },
-          bestball: { _order: boardToNames(versionBoards.mine.bestball), _posTiers: _serPT(versionTiers.mine.bestball) },
-          superflex: { _order: boardToNames(versionBoards.mine.superflex), _posTiers: _serPT(versionTiers.mine.superflex) },
-          dynasty: { _order: boardToNames(versionBoards.mine.dynasty), _posTiers: _serPT(versionTiers.mine.dynasty) },
-          dynastysf: { _order: boardToNames(versionBoards.mine.dynastysf), _posTiers: _serPT(versionTiers.mine.dynastysf) }
+          redraft: { _order: boardToNames(versionBoards.mine.redraft), _posTiers: _serPT(versionTiers.mine.redraft), _cut: _cutOf('redraft') },
+          bestball: { _order: boardToNames(versionBoards.mine.bestball), _posTiers: _serPT(versionTiers.mine.bestball), _cut: _cutOf('bestball') },
+          superflex: { _order: boardToNames(versionBoards.mine.superflex), _posTiers: _serPT(versionTiers.mine.superflex), _cut: _cutOf('superflex') },
+          dynasty: { _order: boardToNames(versionBoards.mine.dynasty), _posTiers: _serPT(versionTiers.mine.dynasty), _cut: _cutOf('dynasty') },
+          dynastysf: { _order: boardToNames(versionBoards.mine.dynastysf), _posTiers: _serPT(versionTiers.mine.dynastysf), _cut: _cutOf('dynastysf') },
+          weekly: { _order: boardToNames(versionBoards.mine.weekly), _posTiers: _serPT(versionTiers.mine.weekly), _week: (window._weeklyActiveWeek || 1),
+            _ownedPos: Object.keys((window._weeklyOwnedPos && window._weeklyOwnedPos.mine && window._weeklyOwnedPos.mine[window._weeklyActiveWeek || 1]) || {}),
+            _cut: _cutOf('weekly') }
         }
       };
       console.log('[Save] Writing user doc (' + JSON.stringify(data).length + ' bytes)...');
@@ -21105,13 +21109,17 @@ window.fmtHeight = fmtHeight;
       } catch(snapErr) { console.warn('[Save] Could not capture previous snapshot:', snapErr); }
 
       function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
+      const _cutOf = (m) => (typeof window._boardCutoffFor === 'function') ? window._boardCutoffFor('jacks', m) : null;
       const data = {
         jacks: {
-          redraft: { _order: boardToNames(versionBoards.jacks.redraft), _posTiers: _serPT(versionTiers.jacks.redraft) },
-          bestball: { _order: boardToNames(versionBoards.jacks.bestball), _posTiers: _serPT(versionTiers.jacks.bestball) },
-          superflex: { _order: boardToNames(versionBoards.jacks.superflex), _posTiers: _serPT(versionTiers.jacks.superflex) },
-          dynasty: { _order: boardToNames(versionBoards.jacks.dynasty), _posTiers: _serPT(versionTiers.jacks.dynasty) },
-          dynastysf: { _order: boardToNames(versionBoards.jacks.dynastysf), _posTiers: _serPT(versionTiers.jacks.dynastysf) }
+          redraft: { _order: boardToNames(versionBoards.jacks.redraft), _posTiers: _serPT(versionTiers.jacks.redraft), _cut: _cutOf('redraft') },
+          bestball: { _order: boardToNames(versionBoards.jacks.bestball), _posTiers: _serPT(versionTiers.jacks.bestball), _cut: _cutOf('bestball') },
+          superflex: { _order: boardToNames(versionBoards.jacks.superflex), _posTiers: _serPT(versionTiers.jacks.superflex), _cut: _cutOf('superflex') },
+          dynasty: { _order: boardToNames(versionBoards.jacks.dynasty), _posTiers: _serPT(versionTiers.jacks.dynasty), _cut: _cutOf('dynasty') },
+          dynastysf: { _order: boardToNames(versionBoards.jacks.dynastysf), _posTiers: _serPT(versionTiers.jacks.dynastysf), _cut: _cutOf('dynastysf') },
+          weekly: { _order: boardToNames(versionBoards.jacks.weekly), _posTiers: _serPT(versionTiers.jacks.weekly), _week: (window._weeklyActiveWeek || 1),
+            _ownedPos: Object.keys((window._weeklyOwnedPos && window._weeklyOwnedPos.jacks && window._weeklyOwnedPos.jacks[window._weeklyActiveWeek || 1]) || {}),
+            _cut: _cutOf('weekly') }
         },
         _prev: prevSnapshot
       };
@@ -21127,7 +21135,7 @@ window.fmtHeight = fmtHeight;
           const prev = JSON.parse(existing.data().data);
           const SHRINK_THRESHOLD = 0.5;
           const shrunk = [];
-          ['redraft','bestball','superflex','dynasty','dynastysf'].forEach(m => {
+          ['redraft','bestball','superflex','dynasty','dynastysf','weekly'].forEach(m => {
             const newLen = (data.jacks[m] && data.jacks[m]._order || []).length;
             const oldLen = (prev.jacks && prev.jacks[m] && prev.jacks[m]._order || []).length;
             const newTiers = data.jacks[m] && data.jacks[m]._posTiers ? Object.values(data.jacks[m]._posTiers).reduce((s,a) => s + (a?a.length:0), 0) : 0;

@@ -885,13 +885,14 @@ function moveTier(id, delta) {
 function saveLocal() {
   userData = {};
   function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
+  const _cutOf = (ver, mode) => (typeof window._boardCutoffFor === 'function') ? window._boardCutoffFor(ver, mode) : null;
   ['jacks','mine'].forEach(function(ver) {
     userData[ver] = {
-      redraft: { _order: boardToNames(versionBoards[ver].redraft), _posTiers: _serPT(versionTiers[ver].redraft) },
-      bestball: { _order: boardToNames(versionBoards[ver].bestball), _posTiers: _serPT(versionTiers[ver].bestball) },
-      superflex: { _order: boardToNames(versionBoards[ver].superflex), _posTiers: _serPT(versionTiers[ver].superflex) },
-      dynasty: { _order: boardToNames(versionBoards[ver].dynasty), _posTiers: _serPT(versionTiers[ver].dynasty) },
-      dynastysf: { _order: boardToNames(versionBoards[ver].dynastysf), _posTiers: _serPT(versionTiers[ver].dynastysf) },
+      redraft: { _order: boardToNames(versionBoards[ver].redraft), _posTiers: _serPT(versionTiers[ver].redraft), _cut: _cutOf(ver, 'redraft') },
+      bestball: { _order: boardToNames(versionBoards[ver].bestball), _posTiers: _serPT(versionTiers[ver].bestball), _cut: _cutOf(ver, 'bestball') },
+      superflex: { _order: boardToNames(versionBoards[ver].superflex), _posTiers: _serPT(versionTiers[ver].superflex), _cut: _cutOf(ver, 'superflex') },
+      dynasty: { _order: boardToNames(versionBoards[ver].dynasty), _posTiers: _serPT(versionTiers[ver].dynasty), _cut: _cutOf(ver, 'dynasty') },
+      dynastysf: { _order: boardToNames(versionBoards[ver].dynastysf), _posTiers: _serPT(versionTiers[ver].dynastysf), _cut: _cutOf(ver, 'dynastysf') },
       // Weekly carries the week it was edited for + which POSITIONS were
       // hand-ranked (_ownedPos). Unowned positions re-derive from redraft at
       // load (see _weeklyReconcileBoard), so only the actively-edited week's
@@ -906,6 +907,11 @@ function saveLocal() {
 function loadModeData(mode, obj, ver) {
   _bypassEditCheck = true;
   ver = ver || currentVersion;
+  // Restore the mode's cut line (weekly's is week-keyed and handled by
+  // _weeklyStashSaved instead).
+  if (mode !== 'weekly' && typeof window._setBoardCutoff === 'function') {
+    window._setBoardCutoff(ver, mode, (obj._cut >= 1) ? obj._cut : null);
+  }
   if (obj._order && Array.isArray(obj._order)) {
     const fallback = mode === 'dynastysf' ? sfDefaultBoard : mode === 'dynasty' ? dynastyDefaultBoard : mode === 'superflex' ? superflexDefaultBoard : mode === 'bestball' ? bestBallDefaultBoard : defaultBoard;
     let loaded = namesToBoard(obj._order, fallback);
@@ -1752,11 +1758,11 @@ function getFiltered() {
     return devyPlayers;
   }
   // Always get board-ordered list first
-  // WEEKLY cut line: non-editors (published view) only see players above it;
-  // the editing admin sees the full list with the draggable-across divider.
+  // Cut line (all formats): non-editors only see players above it; the
+  // editing owner sees the full list with the draggable-across divider.
   let _boardSrc = board;
-  if (currentMode === 'weekly' && typeof window._weeklyCutoffFor === 'function') {
-    const _cutN = window._weeklyCutoffFor(currentVersion);
+  if (typeof window._boardCutoffFor === 'function') {
+    const _cutN = window._boardCutoffFor(currentVersion, currentMode);
     if (_cutN != null && !(typeof canEdit === 'function' && canEdit())) {
       _boardSrc = board.slice(0, _cutN);
     }
@@ -2326,19 +2332,20 @@ function render() {
       return;
     }
     const displayRank = useFilteredRank ? (i + 1) : d.myRank;
-    // WEEKLY cut line: tier-style divider at the overall cutoff rank. Players
-    // below it are hidden from non-editors; the admin drags players across it
-    // to add/remove them from the published week.
-    if (currentMode === 'weekly' && typeof window._weeklyCutoffFor === 'function') {
-      const _cutN = window._weeklyCutoffFor(currentVersion);
+    // Cut line (all formats): tier-style divider at the overall cutoff rank.
+    // Players below it are hidden from non-editors; the editor drags players
+    // across it to add/remove them from the visible list.
+    if (typeof window._boardCutoffFor === 'function') {
+      const _cutN = window._boardCutoffFor(currentVersion, currentMode);
       if (_cutN != null) {
         const _prevOverall = i > 0 ? data[i - 1].myRank : 0;
         if (d.myRank > _cutN && _prevOverall <= _cutN) {
           const _cutUp = Math.max(1, _prevOverall > 0 ? _prevOverall - 1 : 0);
+          const _cutLbl = currentMode === 'weekly' ? 'below hidden from published week' : 'below hidden from viewers';
           html += `<tr class="tier-row cut-line-row">
             <td colspan="17"><div class="tier-inner" style="border-color:#ef4444">
               <span class="tier-badge" style="background:#ef4444;color:#fff">✂</span>
-              <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#ef4444">CUT LINE — #${_cutN} · below hidden from published week</span>
+              <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#ef4444">CUT LINE — #${_cutN} · ${_cutLbl}</span>
               ${editable ? `<div class="tier-controls">
                 ${_prevOverall > 0 ? `<button class="tier-btn" data-cut-set="${_cutUp}" title="Move line up (cut one more player)">▲</button>` : ''}
                 <button class="tier-btn" data-cut-set="${d.myRank}" title="Move line down (keep ${d.n})">▼</button>
@@ -2460,9 +2467,9 @@ function render() {
       <td class="diff-cell">${diffHtml(d)}</td>
     </tr>`;
 
-    // "Add tier" mini-button between rows (only show on hover via CSS)
+    // "Add tier" + "cut line" mini-buttons between rows (show on hover via CSS)
     if (editable && showTiers && !tierMap[displayRank]) {
-      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button></td></tr>`;
+      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button><button class="add-tier-btn" data-add-cut="${d.myRank}" style="color:#ef4444;border-color:#ef4444" title="Place the cut line here — players below are hidden from viewers">✂ CUT</button></td></tr>`;
     }
   });
 
@@ -2583,20 +2590,29 @@ function attachTierListeners() {
   tbody.addEventListener('click', e => {
     const nameLink = e.target.closest('.player-name-link');
     if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
-    // Weekly cut line controls
+    // Cut line controls (all formats)
     const cutSet = e.target.closest('[data-cut-set]');
     if (cutSet) {
-      if (typeof window._weeklySetCutoff === 'function') {
-        window._weeklySetCutoff(currentVersion, parseInt(cutSet.dataset.cutSet, 10));
+      if (typeof window._setBoardCutoff === 'function') {
+        window._setBoardCutoff(currentVersion, currentMode, parseInt(cutSet.dataset.cutSet, 10));
         saveLocal(); render();
+      }
+      e.stopPropagation();
+      return;
+    }
+    const cutAdd = e.target.closest('[data-add-cut]');
+    if (cutAdd) {
+      if (typeof window._setBoardCutoff === 'function') {
+        window._setBoardCutoff(currentVersion, currentMode, parseInt(cutAdd.dataset.addCut, 10));
+        saveLocal(); render(); toast('Cut line placed — players below are hidden from viewers. Hit SAVE.');
       }
       e.stopPropagation();
       return;
     }
     const cutClear = e.target.closest('[data-cut-clear]');
     if (cutClear) {
-      if (typeof window._weeklySetCutoff === 'function') {
-        window._weeklySetCutoff(currentVersion, null);
+      if (typeof window._setBoardCutoff === 'function') {
+        window._setBoardCutoff(currentVersion, currentMode, null);
         saveLocal(); render(); toast('Cut line removed');
       }
       e.stopPropagation();
@@ -3925,22 +3941,29 @@ _jsModelCheckAdmin();
   // Weekly also persists now (saveLocal serializes {_order,_posTiers,_week});
   // only the actively-edited week's order is stored — earlier weeks are gone
   // by design, they're history once played.
-  // CUT LINE: non-destructive weekly cutoff at an overall rank. Renders as a
-  // draggable-across tier-style divider for the admin; published/non-editor
-  // views only see players above it. Stored per version+week, persisted in
-  // the weekly save as _cut.
-  window._weeklyCutoff = window._weeklyCutoff || {};         // ver -> { wk: N }
-  window._weeklyCutoffFor = function(ver) {
-    const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
-    const m = window._weeklyCutoff[ver];
-    const n = m && m[wk];
+  // CUT LINE: non-destructive cutoff at an overall rank, available in EVERY
+  // format. Renders as a draggable-across tier-style divider for the editor;
+  // non-editor views only see players above it. Keyed per version+mode
+  // (weekly additionally per week); persisted as _cut in each mode's save.
+  window._boardCutoff = window._boardCutoff || {};           // ver -> { modeKey: N }
+  window._cutKeyFor = function(mode) {
+    return mode === 'weekly'
+      ? ('weekly:' + (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1))
+      : mode;
+  };
+  window._boardCutoffFor = function(ver, mode) {
+    const m = window._boardCutoff[ver];
+    const n = m && m[window._cutKeyFor(mode)];
     return (n >= 1) ? n : null;
   };
-  window._weeklySetCutoff = function(ver, n) {
-    const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
-    const m = (window._weeklyCutoff[ver] = window._weeklyCutoff[ver] || {});
-    if (n >= 1) m[wk] = n; else delete m[wk];
+  window._setBoardCutoff = function(ver, mode, n) {
+    const m = (window._boardCutoff[ver] = window._boardCutoff[ver] || {});
+    const k = window._cutKeyFor(mode);
+    if (n >= 1) m[k] = n; else delete m[k];
   };
+  // Weekly-specific wrappers (used by the TRIM button + weekly serializer)
+  window._weeklyCutoffFor = function(ver) { return window._boardCutoffFor(ver, 'weekly'); };
+  window._weeklySetCutoff = function(ver, n) { window._setBoardCutoff(ver, 'weekly', n); };
 
   window._weeklySaved = window._weeklySaved || {};           // ver -> {_order,_posTiers,_week,_ownedPos,_cut} (persisted snapshot)
   window._weeklySessionBoards = window._weeklySessionBoards || {}; // ver -> { wk: [board indices] } (this session's edits)
@@ -4024,7 +4047,7 @@ _jsModelCheckAdmin();
       (window._weeklyOwnedPos[ver] = window._weeklyOwnedPos[ver] || {})[obj._week] = set;
     }
     if (obj._week != null && obj._cut >= 1) {
-      (window._weeklyCutoff[ver] = window._weeklyCutoff[ver] || {})[obj._week] = obj._cut;
+      (window._boardCutoff[ver] = window._boardCutoff[ver] || {})['weekly:' + obj._week] = obj._cut;
     }
     window._weeklyReconcileBoard(ver);
   };

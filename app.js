@@ -4039,7 +4039,9 @@ _jsModelCheckAdmin();
   };
 
   window._weeklyStashSaved = function(obj, ver) {
-    if (!obj || !obj._order) return;
+    // Empty _order = a degraded save (or an old-build overwrite) — never let
+    // it clobber a live board; reconcile will derive from redraft instead.
+    if (!obj || !obj._order || !obj._order.length) { window._weeklyReconcileBoard(ver); return; }
     window._weeklySaved[ver] = obj;
     if (obj._week != null && Array.isArray(obj._ownedPos)) {
       const set = {};
@@ -21042,6 +21044,11 @@ window.fmtHeight = fmtHeight;
     try {
       function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
       const _cutOf = (m) => (typeof window._boardCutoffFor === 'function') ? window._boardCutoffFor('mine', m) : null;
+      if ((!versionBoards.mine.weekly || !versionBoards.mine.weekly.length) && versionBoards.mine.redraft.length
+          && typeof window._weeklyReconcileBoard === 'function') {
+        console.warn('[Save] mine weekly board was empty — rebuilding from redraft before save');
+        window._weeklyReconcileBoard('mine');
+      }
       const data = {
         mine: {
           redraft: { _order: boardToNames(versionBoards.mine.redraft), _posTiers: _serPT(versionTiers.mine.redraft), _cut: _cutOf('redraft') },
@@ -21110,6 +21117,13 @@ window.fmtHeight = fmtHeight;
 
       function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
       const _cutOf = (m) => (typeof window._boardCutoffFor === 'function') ? window._boardCutoffFor('jacks', m) : null;
+      // Never serialize an empty weekly board while redraft is populated —
+      // rebuild it from redraft first (guards the empty-weekly save Jack hit).
+      if ((!versionBoards.jacks.weekly || !versionBoards.jacks.weekly.length) && versionBoards.jacks.redraft.length
+          && typeof window._weeklyReconcileBoard === 'function') {
+        console.warn('[Save] jacks weekly board was empty — rebuilding from redraft before save');
+        window._weeklyReconcileBoard('jacks');
+      }
       const data = {
         jacks: {
           redraft: { _order: boardToNames(versionBoards.jacks.redraft), _posTiers: _serPT(versionTiers.jacks.redraft), _cut: _cutOf('redraft') },

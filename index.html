@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-23e" as="script">
+<link rel="preload" href="app.js?v=2026-07-23f" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2222,15 +2222,13 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="mtSleeperStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
 </div>
 
-<!-- ESPN League Import (Coming Soon) -->
-<div class="mt-import-soon" title="ESPN league import is in development. Sleeper and Underdog work today." style="background:var(--surface);border:1px dashed var(--border);border-radius:12px;padding:16px;opacity:.55;position:relative">
-<div style="position:absolute;top:10px;right:10px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:2px 7px;border-radius:3px">COMING SOON</div>
+<!-- ESPN League Import (via the MFF ESPN Chrome extension) -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative">
+<div style="position:absolute;top:10px;right:10px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">ESPN LEAGUE</div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Connect your ESPN league to import rosters and run analysis</div>
-<div style="display:flex;gap:6px">
-<input type="text" placeholder="Coming soon..." disabled style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:.8rem;cursor:not-allowed">
-<button disabled style="padding:8px 14px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:not-allowed;white-space:nowrap">IMPORT</button>
-</div>
+<div id="mtEspnHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Install the MFF ESPN extension, open your league on fantasy.espn.com, and click "Export league to MFF" — synced leagues appear here.</div>
+<div id="mtEspnLeagueList"></div>
+<div id="mtEspnStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
 </div>
 
 <!-- Yahoo League Import (Coming Soon) -->
@@ -4857,7 +4855,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-23e"></script>
+<script defer src="app.js?v=2026-07-23f"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

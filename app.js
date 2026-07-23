@@ -40461,6 +40461,8 @@ Rules:
       teams.sort((a, b) => b.score.total - a.score.total);
 
       // Render
+      _mtActiveSource = 'sleeper';
+      _mtActiveEspnId = null;
       _mtRenderLeague(league, teams);
       status.textContent = `Imported ${teams.length} teams from "${league.name}"`;
 
@@ -40476,6 +40478,126 @@ Rules:
     }
     btn.disabled = false;
     btn.textContent = 'IMPORT';
+  };
+
+  // ─── ESPN League Import (via the MFF ESPN extension) ────────────────────
+  // The espn-extension content script on fantasy.espn.com normalizes leagues
+  // into chrome.storage; its mff-bridge.js content script on THIS site
+  // re-dispatches them as a document CustomEvent (on load + on every change).
+  // Payload contract lives in espn-extension/normalize.js.
+  let _mtEspnLeagues = null;        // { leagueId: normalizedLeague }
+  let _mtActiveSource = 'sleeper';  // which importer produced window._mtTeams
+  let _mtActiveEspnId = null;
+
+  document.addEventListener('mff-espn-league-from-extension', function (e) {
+    try {
+      const leagues = e.detail && e.detail.leagues;
+      if (!leagues || typeof leagues !== 'object') return;
+      _mtEspnLeagues = leagues;
+      _mtRenderEspnCard();
+    } catch (err) { console.warn('[MyTeams] ESPN bridge event error:', err); }
+  });
+
+  function _mtRenderEspnCard() {
+    const list = document.getElementById('mtEspnLeagueList');
+    const hint = document.getElementById('mtEspnHint');
+    if (!list) return;
+    const leagues = _mtEspnLeagues ? Object.values(_mtEspnLeagues) : [];
+    if (!leagues.length) { list.innerHTML = ''; return; }
+    leagues.sort((a, b) => (b.syncedAt || 0) - (a.syncedAt || 0));
+    if (hint) hint.textContent = 'Leagues synced from the MFF ESPN extension — click IMPORT to load one.';
+    let html = '';
+    leagues.forEach(lg => {
+      const fmt = [lg.teamCount + ' teams'];
+      if (lg.sf) fmt.push('SF');
+      fmt.push(lg.scoring === 'ppr' ? 'PPR' : lg.scoring === 'half' ? '.5 PPR' : 'STD');
+      if (lg.season) fmt.push(lg.season);
+      const synced = lg.syncedAt ? _mtRelTime(new Date(lg.syncedAt).toISOString()) : '';
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:5px">`;
+      html += `<div style="flex:1;min-width:0"><div style="font-size:.75rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(lg.name || 'ESPN League')}</div>`;
+      html += `<div style="font-size:.62rem;color:var(--text2)">${fmt.join(' · ')}${synced ? ' · synced ' + synced : ''}${lg.drafted ? '' : ' · <span style="color:#f59e0b">pre-draft</span>'}</div></div>`;
+      html += `<button onclick="window._mtImportEspn('${_esc(lg.leagueId)}')" style="padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer">IMPORT</button>`;
+      html += `</div>`;
+    });
+    list.innerHTML = html;
+  }
+
+  // ESPN name → D[] canonical name. ESPN carries suffixes ("Marvin Harrison
+  // Jr.") and punctuated initials ("D.J. Moore"); _mtLookupD already handles
+  // punctuation, this adds suffix strip/add fallbacks. Unmatched players keep
+  // their raw ESPN name so the roster still lists them (they score 0).
+  function _mtResolveEspnName(name) {
+    if (!name) return null;
+    let d = _mtLookupD(name);
+    if (!d) {
+      const stripped = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '');
+      if (stripped !== name) d = _mtLookupD(stripped);
+      else d = _mtLookupD(name + ' Jr.');
+    }
+    return d ? { name: d.n, matched: true } : { name: name, matched: false };
+  }
+
+  window._mtImportEspn = function (leagueId) {
+    const lg = _mtEspnLeagues && _mtEspnLeagues[String(leagueId)];
+    const status = document.getElementById('mtEspnStatus');
+    if (!lg) {
+      if (status) { status.textContent = 'League not found — re-sync from the extension.'; status.style.color = '#ef4444'; }
+      return;
+    }
+    try {
+      // Shape a Sleeper-style league object so _mtDetectFormat (and therefore
+      // the whole Sleeper scoring/lineup/render pipeline) can be reused as-is.
+      _mtDetectFormat({
+        roster_positions: lg.rosterPositions || [],
+        settings: { type: lg.keeper ? 1 : 0 },
+        scoring_settings: { rec: lg.pprValue != null ? lg.pprValue : 0 }
+      });
+
+      let matchedCount = 0, totalCount = 0;
+      const teams = (lg.teams || []).map(t => {
+        const players = (t.roster || []).map(r => {
+          const res = _mtResolveEspnName(r && r.name);
+          if (!res) return null;
+          totalCount++;
+          if (res.matched) matchedCount++;
+          return res.name;
+        }).filter(Boolean);
+        return {
+          id: t.teamId,
+          owner: t.name || t.owner || ('Team ' + t.teamId),
+          ownerId: t.owner || '',
+          isMyTeam: !!t.isMine,
+          players: players,
+          draftPicks: [],
+          wins: t.wins || 0,
+          losses: t.losses || 0,
+          fpts: t.fpts || 0
+        };
+      });
+
+      teams.forEach(t => {
+        t.score = _mtScoreRoster(t.players, []);
+        const lineup = _mtBestLineup(t.players);
+        t.lineupPpg = lineup ? lineup.totalPpg : 0;
+      });
+      teams.sort((a, b) => b.score.total - a.score.total);
+
+      _mtActiveSource = 'espn';
+      _mtActiveEspnId = String(lg.leagueId);
+      _mtRenderLeague({ name: lg.name, season: String(lg.season || '') }, teams);
+
+      const unmatched = totalCount - matchedCount;
+      if (status) {
+        status.textContent = `Imported ${teams.length} teams from "${lg.name}"` +
+          (unmatched > 0 ? ` — ${unmatched} of ${totalCount} players unmatched` : '');
+        status.style.color = unmatched > 0 ? '#f59e0b' : '#22c55e';
+      }
+
+      _mtSaveLeagueToCloud('espn_' + lg.leagueId, { name: lg.name, season: String(lg.season || '') }, teams);
+    } catch (err) {
+      console.warn('[MyTeams] ESPN import error:', err);
+      if (status) { status.textContent = 'Error: ' + err.message; status.style.color = '#ef4444'; }
+    }
   };
 
   let _mtSortBy = 'total'; // current sort key
@@ -40656,6 +40778,16 @@ Rules:
   window._mtSelectMyTeam = function(idx) {
     if (!window._mtTeams) return;
     window._mtTeams.forEach((t, i) => { t.isMyTeam = (String(i) === String(idx)); });
+    // ESPN leagues don't live in the Sleeper input — re-render the badges and
+    // persist the new selection directly instead of re-importing.
+    if (_mtActiveSource === 'espn') {
+      _mtRenderTeamList(window._mtTeams);
+      if (_mtActiveEspnId) {
+        const l = window._mtLeague || {};
+        _mtSaveLeagueToCloud('espn_' + _mtActiveEspnId, { name: l.name || 'ESPN League', season: l.season || '' }, window._mtTeams);
+      }
+      return;
+    }
     // Re-render just updates the badges
     document.querySelectorAll('#mtPowerRankings [style*="MY TEAM"]').forEach(el => el.remove());
     // Simple: just re-import from stored data
@@ -41431,8 +41563,13 @@ Rules:
     const fakeLg = { name: lg.name || 'League', season: lg.season || '' };
     _mtRenderLeague(fakeLg, teams);
 
-    // Update league ID field
-    if (lg.leagueId) document.getElementById('mtSleeperLeagueId').value = lg.leagueId;
+    // Track the source so _mtSelectMyTeam re-saves instead of re-importing a
+    // non-Sleeper id against the Sleeper API. ESPN leagues save as 'espn_<id>'.
+    const isEspn = String(lg.leagueId || '').indexOf('espn_') === 0;
+    _mtActiveSource = isEspn ? 'espn' : 'sleeper';
+    _mtActiveEspnId = isEspn ? String(lg.leagueId).slice(5) : null;
+    // Update league ID field (Sleeper leagues only)
+    if (lg.leagueId && !isEspn) document.getElementById('mtSleeperLeagueId').value = lg.leagueId;
     const status = document.getElementById('mtSleeperStatus');
     if (status) {
       status.textContent = `Loaded "${lg.name}" from saved data (${lg.savedAt ? new Date(lg.savedAt).toLocaleDateString() : ''})`;

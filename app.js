@@ -2421,7 +2421,9 @@ function render() {
       // Last-4-games PPG + trend arrow (compared to actual full-season '25 PPG).
       const _l4ppg = last4Ppg(d);
       const _l4Cell = l4PpgCellHtml(_l4ppg, adj25ppg(d));
-      const _projColor = (_projPpg != null) ? posFptsColor(_projPpg, d.s) : null;
+      // WEEKLY FLEX view compares RB/WR/TE head-to-head — color PROJ PPG on
+      // one shared scale there; positional pills keep the per-position scale.
+      const _projColor = (_projPpg != null) ? ((currentMode === 'weekly' && filter === 'FLEX') ? flexFptsColor(_projPpg) : posFptsColor(_projPpg, d.s)) : null;
       const _25Color = (_25ppg != null && _25ppgJS == null) ? posFptsColor(_25ppg, d.s) : null;
       _statTd1 = `<td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>`;
       _statTds = `<td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
@@ -6770,6 +6772,20 @@ function teFptsColor(pts) {
   if (pts >= 10) return '#facc15'; // yellow
   if (pts >= 8) return '#f97316'; // orange
   if (pts >= 5) return '#b91c1c'; // dark red
+  return '#ef4444'; // bright red
+}
+
+// Cross-positional scale for the WEEKLY FLEX view: flex decisions compare
+// RB/WR/TE points head-to-head, so one shared scale — a 13-PPG RB and a
+// 13-PPG TE color the same. Thresholds bracket the RB (20/16/12/10/8/5) and
+// WR (20/16/14/12/10/7) positional scales. Positional pills keep posFptsColor.
+function flexFptsColor(pts) {
+  if (pts >= 20) return '#4ade80'; // light green
+  if (pts >= 16) return '#22c55e'; // green
+  if (pts >= 13) return '#60a5fa'; // light blue
+  if (pts >= 11) return '#facc15'; // yellow
+  if (pts >= 9) return '#f97316'; // orange
+  if (pts >= 6) return '#b91c1c'; // dark red
   return '#ef4444'; // bright red
 }
 

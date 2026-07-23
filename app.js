@@ -909,7 +909,10 @@ function saveLocal() {
       // order is worth persisting.
       weekly: { _order: boardToNames(versionBoards[ver].weekly), _posTiers: _serPT(versionTiers[ver].weekly), _week: (window._weeklyActiveWeek || 1),
         _ownedPos: Object.keys((window._weeklyOwnedPos && window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][window._weeklyActiveWeek || 1]) || {}),
-        _cut: (typeof window._weeklyCutoffFor === 'function' ? window._weeklyCutoffFor(ver) : null) }
+        _cut: (typeof window._weeklyCutoffFor === 'function' ? window._weeklyCutoffFor(ver) : null),
+        // Per-group QB/K/DST position-rank cut lines (only set groups saved)
+        _cutPos: (function() { const o = {}; if (typeof window._weeklyPosCutoffFor === 'function') {
+          window._weeklyPosCutGroups.forEach(p => { const n = window._weeklyPosCutoffFor(ver, p); if (n != null) o[p] = n; }); } return o; })() }
     };
   });
 }
@@ -1780,9 +1783,23 @@ function getFiltered() {
   // Cut line (all formats): non-editors only see players above it; the
   // editing owner sees the full list with the draggable-across divider.
   let _boardSrc = board;
-  if (typeof window._boardCutoffFor === 'function') {
+  if (typeof window._boardCutoffFor === 'function' && !(typeof canEdit === 'function' && canEdit())) {
     const _cutN = window._boardCutoffFor(currentVersion, currentMode);
-    if (_cutN != null && !(typeof canEdit === 'function' && canEdit())) {
+    if (currentMode === 'weekly' && typeof window._weeklyPosCutoffFor === 'function') {
+      // WEEKLY: the overall cut governs only RB/WR/TE; QB/K/DST each enforce
+      // their own position-rank cut line (unset = whole group visible).
+      const _pc = {};
+      window._weeklyPosCutGroups.forEach(p => { _pc[p] = window._weeklyPosCutoffFor(currentVersion, p); });
+      const _posSeen = {};
+      _boardSrc = board.filter((idx, bi) => {
+        const p = D[idx];
+        if (!p) return false;
+        if (_pc[p.s] === undefined) return _cutN == null || bi < _cutN; // flex group
+        if (p._retired) return false; // dropped downstream — keep pos-rank count aligned with display
+        _posSeen[p.s] = (_posSeen[p.s] || 0) + 1;
+        return _pc[p.s] == null || _posSeen[p.s] <= _pc[p.s];
+      });
+    } else if (_cutN != null) {
       _boardSrc = board.slice(0, _cutN);
     }
   }
@@ -2355,20 +2372,32 @@ function render() {
     // Players below it are hidden from non-editors; the editor drags players
     // across it to add/remove them from the visible list.
     if (typeof window._boardCutoffFor === 'function') {
-      const _cutN = window._boardCutoffFor(currentVersion, currentMode);
-      if (_cutN != null) {
-        const _prevOverall = i > 0 ? data[i - 1].myRank : 0;
-        if (d.myRank > _cutN && _prevOverall <= _cutN) {
-          const _cutUp = Math.max(1, _prevOverall > 0 ? _prevOverall - 1 : 0);
+      // WEEKLY QB/K/DST views run their own position-rank cut line; the
+      // overall (flex) line is suppressed there so it can't blanket-hide a
+      // whole group that ranks below the flex tail.
+      const _isPosCutView = currentMode === 'weekly' && typeof window._weeklyPosCutoffFor === 'function'
+        && window._weeklyPosCutGroups.includes(filter);
+      const _cutN = _isPosCutView
+        ? window._weeklyPosCutoffFor(currentVersion, filter)
+        : window._boardCutoffFor(currentVersion, currentMode);
+      if (_cutN != null && !(currentMode === 'weekly' && !_isPosCutView && window._weeklyPosCutGroups && window._weeklyPosCutGroups.includes(d.s))) {
+        // Positional views are filtered to one position, so i+1 IS the
+        // position rank; overall views cross on d.myRank.
+        const _rowRank = _isPosCutView ? (i + 1) : d.myRank;
+        const _prevRank = i > 0 ? (_isPosCutView ? i : data[i - 1].myRank) : 0;
+        if (_rowRank > _cutN && _prevRank <= _cutN) {
+          const _cutUp = Math.max(1, _prevRank > 0 ? _prevRank - 1 : 0);
+          const _cutPosAttr = _isPosCutView ? ` data-cut-pos="${filter}"` : '';
+          const _cutName = _isPosCutView ? ((filter === 'DST' ? 'D/ST' : filter) + ' CUT LINE — ' + filter + _cutN) : ('CUT LINE — #' + _cutN);
           const _cutLbl = currentMode === 'weekly' ? 'below hidden from published week' : 'below hidden from viewers';
           html += `<tr class="tier-row cut-line-row">
             <td colspan="17"><div class="tier-inner" style="border-color:#ef4444">
               <span class="tier-badge" style="background:#ef4444;color:#fff">✂</span>
-              <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#ef4444">CUT LINE — #${_cutN} · ${_cutLbl}</span>
+              <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#ef4444">${_cutName} · ${_cutLbl}</span>
               ${editable ? `<div class="tier-controls">
-                ${_prevOverall > 0 ? `<button class="tier-btn" data-cut-set="${_cutUp}" title="Move line up (cut one more player)">▲</button>` : ''}
-                <button class="tier-btn" data-cut-set="${d.myRank}" title="Move line down (keep ${d.n})">▼</button>
-                <button class="tier-btn del" data-cut-clear="1" title="Remove the cut line (everyone visible)">✕</button>
+                ${_prevRank > 0 ? `<button class="tier-btn" data-cut-set="${_cutUp}"${_cutPosAttr} title="Move line up (cut one more player)">▲</button>` : ''}
+                <button class="tier-btn" data-cut-set="${_rowRank}"${_cutPosAttr} title="Move line down (keep ${d.n})">▼</button>
+                <button class="tier-btn del" data-cut-clear="1"${_cutPosAttr} title="Remove the cut line (everyone visible)">✕</button>
               </div>` : ''}
             </div></td>
           </tr>`;
@@ -2497,7 +2526,10 @@ function render() {
 
     // "Add tier" + "cut line" mini-buttons between rows (show on hover via CSS)
     if (editable && showTiers && !tierMap[displayRank]) {
-      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button><button class="add-tier-btn" data-add-cut="${d.myRank}" style="color:#ef4444;border-color:#ef4444" title="Place the cut line here — players below are hidden from viewers">✂ CUT</button></td></tr>`;
+      // WEEKLY QB/K/DST views place that group's own position-rank cut line
+      // (i+1 = position rank there); everywhere else it's the overall cut.
+      const _addCutPos = (currentMode === 'weekly' && window._weeklyPosCutGroups && window._weeklyPosCutGroups.includes(filter)) ? filter : null;
+      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button><button class="add-tier-btn" data-add-cut="${_addCutPos ? (i + 1) : d.myRank}"${_addCutPos ? ` data-cut-pos="${_addCutPos}"` : ''} style="color:#ef4444;border-color:#ef4444" title="Place the cut line here — players below are hidden from viewers">✂ CUT</button></td></tr>`;
     }
   });
 
@@ -2618,31 +2650,31 @@ function attachTierListeners() {
   tbody.addEventListener('click', e => {
     const nameLink = e.target.closest('.player-name-link');
     if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
-    // Cut line controls (all formats)
+    // Cut line controls (all formats). data-cut-pos marks a WEEKLY QB/K/DST
+    // group line (position-rank based); without it, the overall cut.
+    const _applyCut = (el, n) => {
+      const cp = el.dataset.cutPos;
+      if (cp && typeof window._weeklySetPosCutoff === 'function') window._weeklySetPosCutoff(currentVersion, cp, n);
+      else if (typeof window._setBoardCutoff === 'function') window._setBoardCutoff(currentVersion, currentMode, n);
+      saveLocal(); render();
+    };
     const cutSet = e.target.closest('[data-cut-set]');
     if (cutSet) {
-      if (typeof window._setBoardCutoff === 'function') {
-        window._setBoardCutoff(currentVersion, currentMode, parseInt(cutSet.dataset.cutSet, 10));
-        saveLocal(); render();
-      }
+      _applyCut(cutSet, parseInt(cutSet.dataset.cutSet, 10));
       e.stopPropagation();
       return;
     }
     const cutAdd = e.target.closest('[data-add-cut]');
     if (cutAdd) {
-      if (typeof window._setBoardCutoff === 'function') {
-        window._setBoardCutoff(currentVersion, currentMode, parseInt(cutAdd.dataset.addCut, 10));
-        saveLocal(); render(); toast('Cut line placed — players below are hidden from viewers. Hit SAVE.');
-      }
+      _applyCut(cutAdd, parseInt(cutAdd.dataset.addCut, 10));
+      toast('Cut line placed — players below are hidden from viewers. Hit SAVE.');
       e.stopPropagation();
       return;
     }
     const cutClear = e.target.closest('[data-cut-clear]');
     if (cutClear) {
-      if (typeof window._setBoardCutoff === 'function') {
-        window._setBoardCutoff(currentVersion, currentMode, null);
-        saveLocal(); render(); toast('Cut line removed');
-      }
+      _applyCut(cutClear, null);
+      toast('Cut line removed');
       e.stopPropagation();
       return;
     }
@@ -3966,10 +3998,30 @@ _jsModelCheckAdmin();
       if (currentMode !== 'weekly') { if (typeof toast === 'function') toast('Switch to WEEKLY first'); return; }
       if (typeof canEdit === 'function' && !canEdit()) { if (typeof toast === 'function') toast('This board isn\'t editable'); return; }
       const b = getBoard();
+      // QB/K/DST views trim their own group at a POSITION rank; flex views
+      // trim the overall (RB/WR/TE) line at an overall rank.
+      const grp = (window._weeklyPosCutGroups && window._weeklyPosCutGroups.includes(filter)) ? filter : null;
+      if (grp) {
+        const glbl = grp === 'DST' ? 'D/ST' : grp;
+        const gTotal = b.reduce((s, idx) => s + (D[idx] && D[idx].s === grp ? 1 : 0), 0);
+        const gCur = window._weeklyPosCutoffFor(currentVersion, grp);
+        const gAns = prompt('Place the ' + glbl + ' CUT LINE at a ' + glbl + ' position rank — ' + glbl + 's below\n'
+          + 'it are hidden from the published week (flex/QB/other lines unaffected).\n'
+          + gTotal + ' ' + glbl + 's ranked' + (gCur ? ', line currently at ' + grp + gCur : '')
+          + '. Enter a rank, or 0 to remove the line:', String(gCur || (grp === 'QB' ? 32 : 15)));
+        if (gAns == null) return;
+        const gn = parseInt(gAns, 10);
+        if (isNaN(gn) || gn < 0) { toast('Enter a rank number (0 removes the line)'); return; }
+        window._weeklySetPosCutoff(currentVersion, grp, gn >= 1 ? Math.min(gn, gTotal) : null);
+        saveLocal(); render();
+        toast(gn >= 1 ? (glbl + ' cut line at ' + grp + Math.min(gn, gTotal) + ' — below is hidden when published. Hit SAVE.') : (glbl + ' cut line removed'));
+        return;
+      }
       const cur = window._weeklyCutoffFor(currentVersion);
-      const ans = prompt('Place the CUT LINE at an overall rank — players below it stay on your\n'
-        + 'board (drag them across the line to add/remove) but are hidden from the\n'
-        + 'published week. ' + b.length + ' players ranked'
+      const ans = prompt('Place the CUT LINE at an overall rank — flex (RB/WR/TE) players below it\n'
+        + 'stay on your board (drag them across the line to add/remove) but are\n'
+        + 'hidden from the published week. QB/K/D/ST have their own lines (set from\n'
+        + 'their position tabs). ' + b.length + ' players ranked'
         + (cur ? ', line currently at #' + cur : '') + '. Enter a rank, or 0 to remove the line:', String(cur || 200));
       if (ans == null) return;
       const n = parseInt(ans, 10);
@@ -4012,6 +4064,21 @@ _jsModelCheckAdmin();
   // Weekly-specific wrappers (used by the TRIM button + weekly serializer)
   window._weeklyCutoffFor = function(ver) { return window._boardCutoffFor(ver, 'weekly'); };
   window._weeklySetCutoff = function(ver, n) { window._setBoardCutoff(ver, 'weekly', n); };
+  // WEEKLY per-group cut lines: QB / K / DST live at the bottom of the overall
+  // board, so the overall (flex) cut line can't serve them — one line at #167
+  // hides every kicker. Each group gets its own POSITION-RANK cut, keyed per
+  // week; the overall weekly _cut now governs only RB/WR/TE (the flex group).
+  window._weeklyPosCutGroups = ['QB', 'K', 'DST'];
+  window._weeklyPosCutoffFor = function(ver, pos) {
+    const m = window._boardCutoff[ver];
+    const n = m && m[window._cutKeyFor('weekly') + ':' + pos];
+    return (n >= 1) ? n : null;
+  };
+  window._weeklySetPosCutoff = function(ver, pos, n) {
+    const m = (window._boardCutoff[ver] = window._boardCutoff[ver] || {});
+    const k = window._cutKeyFor('weekly') + ':' + pos;
+    if (n >= 1) m[k] = n; else delete m[k];
+  };
 
   window._weeklySaved = window._weeklySaved || {};           // ver -> {_order,_posTiers,_week,_ownedPos,_cut} (persisted snapshot)
   window._weeklySessionBoards = window._weeklySessionBoards || {}; // ver -> { wk: [board indices] } (this session's edits)
@@ -4104,6 +4171,13 @@ _jsModelCheckAdmin();
     }
     if (obj._week != null && obj._cut >= 1) {
       (window._boardCutoff[ver] = window._boardCutoff[ver] || {})['weekly:' + obj._week] = obj._cut;
+    }
+    // Per-group QB/K/DST cut lines ride the same weekly save
+    if (obj._week != null && obj._cutPos) {
+      const _m = (window._boardCutoff[ver] = window._boardCutoff[ver] || {});
+      (window._weeklyPosCutGroups || ['QB','K','DST']).forEach(p => {
+        if (obj._cutPos[p] >= 1) _m['weekly:' + obj._week + ':' + p] = obj._cutPos[p];
+      });
     }
     window._weeklyReconcileBoard(ver);
   };
@@ -6762,7 +6836,30 @@ function posFptsColor(pts, pos) {
   if (pos === 'RB') return rbFptsColor(pts);
   if (pos === 'WR') return wrFptsColor(pts);
   if (pos === 'TE') return teFptsColor(pts);
+  if (pos === 'K') return kFptsColor(pts);
+  if (pos === 'DST') return dstFptsColor(pts);
   return null;
+}
+
+// K scoring is tightly banded (~6-12 PPG), so the tiers sit close together.
+function kFptsColor(pts) {
+  if (pts >= 10.5) return '#4ade80'; // light green
+  if (pts >= 9.5) return '#22c55e'; // green
+  if (pts >= 8.5) return '#60a5fa'; // light blue
+  if (pts >= 7.5) return '#facc15'; // yellow
+  if (pts >= 6.5) return '#f97316'; // orange
+  if (pts >= 5) return '#b91c1c'; // dark red
+  return '#ef4444'; // bright red
+}
+
+function dstFptsColor(pts) {
+  if (pts >= 9) return '#4ade80'; // light green
+  if (pts >= 8) return '#22c55e'; // green
+  if (pts >= 7) return '#60a5fa'; // light blue
+  if (pts >= 6) return '#facc15'; // yellow
+  if (pts >= 5) return '#f97316'; // orange
+  if (pts >= 3.5) return '#b91c1c'; // dark red
+  return '#ef4444'; // bright red
 }
 
 function teFptsColor(pts) {

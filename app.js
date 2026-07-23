@@ -532,12 +532,11 @@ const bestBallDefaultBoard = defaultBoard.filter(i => D[i].s !== 'K' && D[i].s !
 // v0.10.0: default to bestball — primary use case is Underdog BBM drafts.
 let currentMode = 'bestball';
 
-// === VERSION SYSTEM: "consensus", "jacks", "jsmodel", "mine", each with independent boards/tiers per mode ===
+// === VERSION SYSTEM: "consensus", "jacks", "mine", each with independent boards/tiers per mode ===
 let currentVersion = 'consensus';
 const versionBoards = {
   consensus: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
   jacks: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
-  jsmodel: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: defaultBoard.slice(), dynasty: defaultBoard.slice(), dynastysf: defaultBoard.slice(), weekly: defaultBoard.slice() },
   mine: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() }
 };
 // MAIN-world content scripts (page-bridge.js) can't reach top-level const via window.X — attach explicitly.
@@ -548,13 +547,11 @@ function _mkPosTierCtrs() { return {ALL:0,QB:0,RB:0,WR:0,TE:0,K:0,DST:0,ROOKIE:0
 const versionTiers = {
   consensus: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
   jacks: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
-  jsmodel: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
   mine: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() }
 };
 const versionTierCounters = {
   consensus: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   jacks: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
-  jsmodel: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
 };
 
@@ -749,7 +746,6 @@ function _tierPK() {
 function canEdit() {
   if (typeof window._authCurrentUser !== 'undefined' && !window._authCurrentUser) return false;
   if (currentVersion === 'consensus') return false;
-  if (currentVersion === 'jsmodel') return false;
   if (currentVersion === 'mine') return true;
   return typeof window.isAdmin === 'function' && window.isAdmin();
 }
@@ -1546,20 +1542,12 @@ function adjProjPpg(d) {
       if (isFinite(result)) return result;
     }
   }
-  // Fallback for veterans (career.length > 0): use the JS Model PPG that's already
-  // computed and attached to D entries. Pure rookies (career: []) intentionally
-  // stay null so the UI shows blank for them.
-  if (d.career && d.career.length > 0 && d._jsModelPpg != null && isFinite(d._jsModelPpg) && d._jsModelPpg > 0) {
-    return d._jsModelPpg;
-  }
   return null;
 }
 
 // === STATS view helpers (rankings FANTASY / PROJECTIONS / BETTING LINES toggle) ===
-// JS Model owns its own columns (JS Proj PPG / VOR), so the stat mode only
-// applies outside it.
 function _effStatMode() {
-  return currentVersion === 'jsmodel' ? 'fantasy' : rnkStatMode;
+  return rnkStatMode;
 }
 
 // PROJECTIONS: combined yards + TDs from Mike Clay's 2026 stat lines.
@@ -1867,8 +1855,8 @@ function getFiltered() {
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
         case 'adp': av = rnkAdp(a) ?? 999; bv = rnkAdp(b) ?? 999; break;
         case 'round': av = a.round; bv = b.round; break;
-        case 'pts': if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy') { av = _smYds(a); bv = _smYds(b); break; } av = currentVersion==='jsmodel'?(a._jsModelPpg||0):(adjProjPpg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelPpg||0):(adjProjPpg(b)||0); if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
-        case 'fpts25': if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm !== 'fantasy') { av = _smTds(a); bv = _smTds(b); break; } av = currentVersion==='jsmodel'?(a._jsModelVor||0):(adj25ppg(a)||0); bv = currentVersion==='jsmodel'?(b._jsModelVor||0):(adj25ppg(b)||0); break;
+        case 'pts': if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy') { av = _smYds(a); bv = _smYds(b); break; } av = adjProjPpg(a)||0; bv = adjProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
+        case 'fpts25': if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm !== 'fantasy') { av = _smTds(a); bv = _smTds(b); break; } av = adj25ppg(a)||0; bv = adj25ppg(b)||0; break;
         case 'l4ppg': if (_sm === 'adp') { av = _smAdp(a,'espn'); bv = _smAdp(b,'espn'); break; } if (_sm !== 'fantasy') { av = _smTeamPpg(a); bv = _smTeamPpg(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
@@ -1900,7 +1888,7 @@ function diffHtml(d) {
       return i >= 0 ? i + 1 : null;
     } catch(_) { return null; }
   }
-  const _verLabels = { jacks: "Jack's", consensus: 'Consensus', mine: 'My Ranks', jsmodel: 'JS Model' };
+  const _verLabels = { jacks: "Jack's", consensus: 'Consensus', mine: 'My Ranks' };
   const _otherVers = Object.keys(_verLabels).filter(v => v !== currentVersion);
   const _verRanks = _otherVers
     .map(v => ({ v, r: _rankInVer(v) }))
@@ -2267,18 +2255,16 @@ function render() {
   // Premium blur:
   //   Jack's: non-premium blur after top 24 (ALL/ROOKIE) or top 12 (position)
   //   My Rankings: not signed in = blur everything (can't edit at all); signed in non-premium = top 12 editable, rest blurred
-  //   JS Model: never blur (free for all)
   const isPremium = hasPremium();
   const isJacks = currentVersion === 'jacks';
   const isMine = currentVersion === 'mine';
-  const isJSModel = currentVersion === 'jsmodel';
   const isConsensus = currentVersion === 'consensus';
   const isSignedOut = !window._authCurrentUser;
   const blurCutoff = (isMine && isSignedOut) ? 0
                    : (isMine && !isPremium) ? 12
                    : (filter === 'ALL' || filter === 'ROOKIE') ? 24
                    : 12;
-  const shouldBlur = !isJSModel && !isConsensus && (
+  const shouldBlur = !isConsensus && (
     (isJacks && !isPremium) ||
     (isMine && isSignedOut) ||
     (isMine && !isPremium)
@@ -2439,23 +2425,21 @@ function render() {
     let _statTds;
     let _statTd1 = ''; // first stat cell (Proj PPG / YDS / UD-ADP) — rendered BEFORE the weekly OPP/SPREAD/TOTAL block
     if (_statMode === 'fantasy') {
-      const _projPpgJS = isJSModel ? d._jsModelPpg : null;
-      let _projPpg = _projPpgJS != null ? _projPpgJS : adjProjPpg(d);
+      let _projPpg = adjProjPpg(d);
       // WEEKLY mode: adjust season PPG by team total + opponent defense.
       if (currentMode === 'weekly' && typeof window._weeklyAdjustPpg === 'function') {
         _projPpg = window._weeklyAdjustPpg(d, _projPpg);
       }
-      const _25ppgJS = isJSModel ? d._jsModelVor : null;
-      const _25ppg = _25ppgJS != null ? _25ppgJS : adj25ppg(d);
+      const _25ppg = adj25ppg(d);
       // Last-4-games PPG + trend arrow (compared to actual full-season '25 PPG).
       const _l4ppg = last4Ppg(d);
       const _l4Cell = l4PpgCellHtml(_l4ppg, adj25ppg(d));
       // WEEKLY FLEX view compares RB/WR/TE head-to-head — color PROJ PPG on
       // one shared scale there; positional pills keep the per-position scale.
       const _projColor = (_projPpg != null) ? ((currentMode === 'weekly' && filter === 'FLEX') ? flexFptsColor(_projPpg) : posFptsColor(_projPpg, d.s)) : null;
-      const _25Color = (_25ppg != null && _25ppgJS == null) ? posFptsColor(_25ppg, d.s) : null;
-      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${(()=>{if(_projPpg==null)return '—';const cd=isJSModel&&d._clayDiv;if(cd){const arrow=cd.dir>0?'▲':'▼';const clr=cd.dir>0?'#22c55e':'#ef4444';return _projPpg+' <span title="Clay: '+cd.clayPpg+' vs JS: '+cd.jsPpg+' ('+cd.pct+'% gap, '+cd.wt+'% Clay wt)" style="font-size:.55rem;color:'+clr+';cursor:help">'+arrow+'</span>';}return _projPpg;})()}</td>`;
-      _statTds = `<td class="pts-cell ppg25-cell"${_25ppgJS!=null?(_25ppgJS>0?' style="color:#22c55e;font-weight:700"':(_25ppgJS<-10?' style="color:#ef4444;font-weight:700"':' style="font-weight:700"')):(_25Color?' style="color:'+_25Color+';font-weight:700"':'')}>${_25ppgJS!=null?(_25ppgJS>0?'+'+_25ppgJS:_25ppgJS):(_25ppg!=null?_25ppg:'—')}</td>
+      const _25Color = (_25ppg != null) ? posFptsColor(_25ppg, d.s) : null;
+      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${_projPpg==null?'—':_projPpg}</td>`;
+      _statTds = `<td class="pts-cell ppg25-cell"${_25Color?' style="color:'+_25Color+';font-weight:700"':''}>${_25ppg!=null?_25ppg:'—'}</td>
       <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
     } else if (_statMode === 'adp') {
       // ADP comparison view: platform ADPs side by side vs the current board's rank
@@ -2592,7 +2576,7 @@ function updateStats(data) {
     return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
   }).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL' : '🏈 REDRAFT';
-  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'jsmodel' ? '📋 JS MODEL' : '📋 MY RANKINGS';
+  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
@@ -2812,7 +2796,6 @@ function attachTierListeners() {
   }
 
   function onPointerDown(e) {
-    if (currentVersion === 'jsmodel') return;
     const handle = e.target.closest('.drag-handle');
     if (!handle) return;
     const row = handle.closest('tr[data-idx]') || handle.closest('tr[data-devy-idx]');
@@ -2949,7 +2932,6 @@ function attachTierListeners() {
     if (!row) return; // devy uses data-devy-idx, skip for now
     const idx = +row.dataset.idx;
     // Block if not editable / blurred (mirrors pointerdown logic)
-    if (currentVersion === 'jsmodel') return;
     if (row.classList.contains('premium-blur')) return;
 
     if (e.key === ' ' || e.key === 'Enter') {
@@ -3378,7 +3360,6 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
 // rnkStatMode (fantasy PPG / Clay projections / betting lines). Preserves the
 // current sort arrow since it rebuilds the th contents.
 window._updateRnkStatHeaders = function() {
-  if (currentVersion === 'jsmodel') return; // JS Model owns these headers (JS Proj PPG / VOR)
   const c1 = document.getElementById('ppgProjHeader');
   const c2 = document.getElementById('ppg25HeaderTh');
   const c3 = document.getElementById('l4ppgHeaderTh');
@@ -3498,22 +3479,13 @@ function updateRnkAdpLocks() {
 }
 updateRnkAdpLocks();
 
-// Version tabs: switch between Jack's, JS Model, and My Rankings
+// Version tabs: switch between Consensus, Jack's, and My Rankings
 document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
   btn.addEventListener('click', () => {
-    // JS Model is admin-only for now (coming soon to everyone else)
-    if (btn.dataset.version === 'jsmodel') {
-      const _isAdminNow = typeof window.isAdmin === 'function' && window.isAdmin();
-      if (!_isAdminNow) {
-        toast('JS Model — Coming Soon');
-        return;
-      }
-    }
     if (btn.dataset.version === currentVersion) return;
     document.querySelectorAll('.version-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentVersion = btn.dataset.version;
-    _jsModelUpdateUI();
     syncMode();
     renumber();
     compareSet.clear();
@@ -3521,46 +3493,15 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     render();
     if (typeof updateToolbarVisibility === 'function') updateToolbarVisibility();
     if (typeof window._updateCopyFromRedraftBtn === 'function') window._updateCopyFromRedraftBtn();
-    toast(currentVersion === 'consensus' ? 'Consensus Rankings' : currentVersion === 'jacks' ? "Jack's Rankings" : currentVersion === 'jsmodel' ? 'JS Model Rankings' : 'My Rankings');
+    toast(currentVersion === 'consensus' ? 'Consensus Rankings' : currentVersion === 'jacks' ? "Jack's Rankings" : 'My Rankings');
   });
 });
 
-// Show/hide the JS Model version tab based on admin state (it's hidden by default)
-// IMPORTANT: this must work even when called BEFORE the auth IIFE finishes
-// initializing window.isAdmin/currentUser. We accept the user object directly
-// from onAuthStateChanged and check the email against the admin list.
+// Admin allowlist — gates admin-only features (e.g. the WEEKLY format tab).
+// (Named for the old JS Model tab it originally gated; the model moved to the
+// standalone js_model_site project 2026-07-23, but the list stays.)
 const _JSMODEL_ADMIN_EMAILS = ['billingsj199@gmail.com'];
 window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
-function _jsModelCheckAdmin(userArg) {
-  const tab = document.getElementById('jsModelVersionTab');
-  // Resolve user from any source — listener arg, firebase singleton, or window stash
-  let u = userArg || null;
-  if (!u && typeof firebase !== 'undefined' && firebase.auth) {
-    try { u = firebase.auth().currentUser; } catch (_e) {}
-  }
-  if (!u && typeof window._authCurrentUser !== 'undefined') u = window._authCurrentUser;
-  const adminByEmail = !!(u && u.email && _JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
-  const adminByFn = typeof window.isAdmin === 'function' && window.isAdmin();
-  const admin = adminByEmail || adminByFn;
-  if (tab) {
-    tab.style.display = admin ? '' : 'none';
-    // If a non-admin somehow got switched to JS Model, reset them to Jack's
-    if (!admin && currentVersion === 'jsmodel') {
-      currentVersion = 'jacks';
-      document.querySelectorAll('.version-tab').forEach(b => {
-        b.classList.toggle('active', b.dataset.version === 'jacks');
-      });
-      try { if (typeof _jsModelUpdateUI === 'function') _jsModelUpdateUI(); } catch (_e) {}
-      try { syncMode(); renumber(); render(); } catch (_e) {}
-    }
-  }
-  // Also reveal/hide JS Model source tabs in Trade Calc, My Teams, and Mock Draft
-  document.querySelectorAll('.jsmodel-src-tab').forEach(t => {
-    t.style.display = admin ? '' : 'none';
-  });
-}
-window._jsModelCheckAdmin = _jsModelCheckAdmin;
-_jsModelCheckAdmin();
 
 // === WEEKLY FORMAT (admin-only at launch) ===
 // Adds a WEEKLY format tab + admin week selector. When Weekly is active:
@@ -4310,1513 +4251,6 @@ _jsModelCheckAdmin();
     }
   });
 })();
-_whenFirebaseReady(function(){
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    try { firebase.auth().onAuthStateChanged(_jsModelCheckAdmin); } catch (_e) {}
-  }
-});
-
-// ============================================================
-// JS MODEL ENGINE — dynamic scoring, VOR-based rankings
-// ============================================================
-(function() {
-  if (typeof _JS_MODEL_DATA === 'undefined') { window._jsModelUpdateUI = function(){}; return; }
-
-  // --- Match PFF names to D array indices ---
-  const _jsNameMap = {};
-  _JS_MODEL_DATA.forEach(function(row) { _jsNameMap[row[0]] = row; });
-
-  // Normalize for matching: lowercase, strip Jr./Sr./III/II/IV, periods, spaces
-  function _jsNorm(n) {
-    return n.toLowerCase().replace(/\s+(jr\.?|sr\.?|iii|ii|iv|v)$/i,'').replace(/[.\-']/g,'').replace(/\s+/g,' ').trim();
-  }
-
-  // Build D-index → projection map. LAZY (perf): this whole precompute — the O(n²)
-  // name match over D + the rookie-template pass (which also calls _pmBuiltData) — was
-  // ~187ms of synchronous STARTUP execution on the critical path, for the JS-Model view
-  // which is NOT the default. Now built on first JS-Model board compute (or idle warm-up).
-  let _jsPlayerProj = null;
-  function _jsBuildProj() {
-    if (_jsPlayerProj) return _jsPlayerProj;
-    _jsPlayerProj = {};
-  D.forEach(function(d, idx) {
-    if (d.s === 'K' || d.s === 'DST') return;
-    // Try exact name match first
-    var row = _jsNameMap[d.n];
-    // Try normalized match
-    if (!row) {
-      var norm = _jsNorm(d.n);
-      for (var i = 0; i < _JS_MODEL_DATA.length; i++) {
-        if (_jsNorm(_JS_MODEL_DATA[i][0]) === norm) { row = _JS_MODEL_DATA[i]; break; }
-      }
-    }
-    if (!row) return;
-    // row: [name, pos, team, gp, pass_yds, pass_td, ints, rush_yds, rush_td, rec, rec_yds, rec_td, fumbles]
-    _jsPlayerProj[idx] = {
-      gp: row[3],
-      pass_yds: row[4], pass_td: row[5], ints: row[6],
-      rush_yds: row[7], rush_td: row[8],
-      rec: row[9], rec_yds: row[10], rec_td: row[11],
-      fumbles: row[12]
-    };
-  });
-
-  var _jsMatched = Object.keys(_jsPlayerProj).length;
-
-  // --- Generate rookie projections for unmatched players using JM + draft capital ---
-  (function() {
-    if (typeof _JS_ROOKIE_TEMPLATES === 'undefined') return;
-    var _pmData = (typeof window._pmBuiltData === 'function') ? window._pmBuiltData() : [];
-    var _pmMap = {};
-    _pmData.forEach(function(p) { _pmMap[p.name] = p; });
-
-    var rookieCount = 0;
-    D.forEach(function(d, idx) {
-      if (_jsPlayerProj[idx]) return; // already has PFF projection
-      if (d.s === 'K' || d.s === 'DST') return;
-      var pos = d.s;
-      if (pos !== 'QB' && pos !== 'RB' && pos !== 'WR' && pos !== 'TE') return;
-      
-      // Get draft capital from COMBINE_DATA or D array
-      var dr = d.dr; // draft round from D array
-      var cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
-      var draftPick = (cb && cb.draft) ? cb.draft : (cb && cb.draftProj) ? cb.draftProj : null;
-      if (!dr && draftPick) dr = Math.ceil(draftPick / 32); // pick → round
-      if (!dr && draftPick) dr = draftPick <= 32 ? 1 : draftPick <= 64 ? 2 : draftPick <= 100 ? 3 : 4;
-      
-      // Estimate draft round from ADP if no draft data — but ONLY from real
-      // market ADP (udA = actual Underdog picks). d.a is the consensus board
-      // rank, and for devy imports it's a DEVY-board rank: Dean Connors
-      // (undrafted devy RB) had a=31, which this path used to read as top-40
-      // redraft ADP → round-1 capital → elite RB boost → RB24 overall.
-      var mktAdp = d.udA != null ? d.udA : null;
-      if (!dr && mktAdp) {
-        if (mktAdp < 40) dr = 1;
-        else if (mktAdp < 80) dr = 2;
-        else if (mktAdp < 150) dr = 3;
-        else dr = 4;
-      }
-      if (!dr) dr = 4; // default to late round (incl. undrafted/devy)
-
-      var rdKey = String(Math.min(dr, 4));
-      var tmpl = (_JS_ROOKIE_TEMPLATES[pos] || {})[rdKey];
-      if (!tmpl) return;
-
-      // Get JM score for quality scaling
-      var jmScore = null;
-      var pm = _pmMap[d.n];
-      if (pm && pm.jm != null) jmScore = pm.jm;
-
-      // Scale template by JM score: calibrated to actual historical rookie production
-      // JM 90 → 1.24x, JM 75 → 1.15x, JM 65 → 1.09x (baseline), JM 50 → 1.0x, JM 35 → 0.91x
-      var scale = 1.0;
-      if (jmScore != null) {
-        scale = 0.7 + (jmScore / 100) * 0.6; // maps 50→1.0, 65→1.09, 80→1.18, 90→1.24
-        scale = Math.max(0.6, Math.min(1.35, scale));
-      }
-
-      // Additional boost for elite incoming rookies (top ADP + Round 1 RBs):
-      // Historical data shows Rd 1 RBs average ~13-15 PPG in year 1, but the
-      // base template × JM scale often only produces ~10 PPG. Bridge the gap
-      // for top-pick RBs who will get immediate workhorse usage.
-      // (gated on real market ADP for the same reason as the dr estimate)
-      if (pos === 'RB' && dr === 1) {
-        // Top-12 ADP RBs are projected as immediate starters
-        if (mktAdp && mktAdp <= 20) scale *= 1.35; // top pick RB → ~1.35x total
-        else if (mktAdp && mktAdp <= 40) scale *= 1.25;
-        else scale *= 1.15;
-      } else if (pos === 'WR' && dr === 1) {
-        // Rd 1 WRs also get a small boost (year-1 WRs have a wider range)
-        if (mktAdp && mktAdp <= 30) scale *= 1.15;
-        else if (mktAdp && mktAdp <= 60) scale *= 1.10;
-      } else if (pos === 'TE' && dr <= 2) {
-        // Top TEs (Bowers-type) get modest boost
-        if (mktAdp && mktAdp <= 50) scale *= 1.15;
-      }
-
-      _jsPlayerProj[idx] = {
-        gp: tmpl[9],
-        pass_yds: Math.round(tmpl[0] * scale * 10) / 10,
-        pass_td: Math.round(tmpl[1] * scale * 100) / 100,
-        ints: Math.round(tmpl[2] * 100) / 100, // don't scale INTs up for good prospects
-        rush_yds: Math.round(tmpl[3] * scale * 10) / 10,
-        rush_td: Math.round(tmpl[4] * scale * 100) / 100,
-        rec: Math.round(tmpl[5] * scale * 10) / 10,
-        rec_yds: Math.round(tmpl[6] * scale * 10) / 10,
-        rec_td: Math.round(tmpl[7] * scale * 100) / 100,
-        fumbles: Math.round(tmpl[8] * 100) / 100,
-        _isRookie: true,
-        _jmScore: jmScore
-      };
-      rookieCount++;
-    });
-    console.log('[JS Model] Generated ' + rookieCount + ' rookie projections from JM + draft capital');
-  })();
-
-  console.log('[JS Model] Total projections: ' + Object.keys(_jsPlayerProj).length + '/' + D.length + ' players');
-    return _jsPlayerProj;
-  }
-
-  // --- Vegas team context: season-avg implied points per team ---
-  // Derived from BETTING_2026.gameTotals (O/U + spread → implied points for
-  // both teams, averaged over every posted game). The betting market prices
-  // coaching changes, play-calling, pace and personnel — team-level signals
-  // historical player rates can't see — and Jack's line updates refresh it.
-  // (Supersedes the MIKE_CLAY_TEAMS offRk idea, which was never populated.)
-  var _jsVegasCtx = null;
-  function _jsVegasTeamCtx() {
-    if (_jsVegasCtx) return _jsVegasCtx;
-    var out = {};
-    var bt = (typeof BETTING_2026 !== 'undefined') ? BETTING_2026.gameTotals : null;
-    if (!bt) { _jsVegasCtx = out; return out; }
-    var acc = {}; // abbr -> {pts, n}
-    Object.keys(bt).forEach(function(k) {
-      var m = k.match(/^W\d+_([A-Z]+)_([A-Z]+)$/);
-      var rec = bt[k];
-      if (!m || !rec || typeof rec.total !== 'number' || typeof rec.spread !== 'number') return;
-      var homePts = (rec.total - rec.spread) / 2; // spread = home's, negative if favored
-      var awayPts = rec.total - homePts;
-      [[m[2], homePts], [m[1], awayPts]].forEach(function(t) {
-        if (!acc[t[0]]) acc[t[0]] = { pts: 0, n: 0 };
-        acc[t[0]].pts += t[1]; acc[t[0]].n++;
-      });
-    });
-    var abbrs = Object.keys(acc);
-    if (!abbrs.length) { _jsVegasCtx = out; return out; }
-    var league = abbrs.reduce(function(s, a) { return s + acc[a].pts / acc[a].n; }, 0) / abbrs.length;
-    abbrs.forEach(function(a) {
-      var team = acc[a].pts / acc[a].n;
-      // half the relative gap, capped ±6% (top offense ≈ +6%, bottom ≈ -6%)
-      var mult = 1 + Math.max(-0.06, Math.min(0.06, (team - league) / league * 0.5));
-      out[a] = { implied: Math.round(team * 10) / 10, mult: Math.round(mult * 1000) / 1000 };
-    });
-    _jsVegasCtx = out;
-    return out;
-  }
-
-  // --- Vacated opportunity: net 2025 targets/carries freed up per team ---
-  // For each team: opportunity that LEFT (last season's targets/carries of
-  // players no longer on the roster) minus opportunity that ARRIVED (what the
-  // new joiners used elsewhere), as a share of the team's totals. Incumbents
-  // on high-net-vacated teams get a boost — their historical rates were
-  // earned in a more crowded target environment. Computed live from
-  // ALL_PLAYERS_DB (last season, per-player team) x current D rosters, so
-  // trades/signings reflected in d.js flow through automatically.
-  var _jsVacCtx = null;
-  function _jsVacatedCtx() {
-    if (_jsVacCtx) return _jsVacCtx;
-    var out = { teams: {}, prevTeam: {} };
-    if (typeof ALL_PLAYERS_DB === 'undefined' || typeof TEAM_ABBR_MAP === 'undefined') {
-      // all_players.js is LAZY-loaded (2.5 MB) — usually not present on the
-      // first board compute. Kick the loader (dedup'd) and return empty
-      // WITHOUT caching; the mff:retireddata listener below recomputes the
-      // board once the data lands.
-      try { if (typeof window._loadRetiredData === 'function') window._loadRetiredData(); } catch (_e) {}
-      return out;
-    }
-    var alias = { ARZ:'ARI', BLT:'BAL', CLV:'CLE', HST:'HOU', LA:'LAR', JAC:'JAX', WSH:'WAS', OAK:'LV', SD:'LAC', STL:'LAR' };
-    var lastYr = 0;
-    ALL_PLAYERS_DB.forEach(function(p) {
-      (p.career || []).forEach(function(s) { if (s.yr > lastYr) lastYr = s.yr; });
-    });
-    var curTeam = {};
-    D.forEach(function(d) {
-      if (d.n && d.t && d.t !== 'TBD' && d.t !== 'FA') curTeam[d.n] = TEAM_ABBR_MAP[d.t] || d.t;
-    });
-    var team = {}; // abbr -> totals
-    function T(a) {
-      if (!team[a]) team[a] = { tgt: 0, car: 0, vacTgt: 0, vacCar: 0, inTgt: 0, inCar: 0 };
-      return team[a];
-    }
-    ALL_PLAYERS_DB.forEach(function(p) {
-      var s = null;
-      (p.career || []).forEach(function(row) { if (row.yr === lastYr) s = row; });
-      if (!s || !s.tm) return;
-      var tm = alias[s.tm] || s.tm;
-      var tgt = s.tgt || 0, car = s.ra || 0;
-      if (!tgt && !car) return;
-      var cur = curTeam[p.name] || null;
-      out.prevTeam[p.name] = tm;
-      T(tm).tgt += tgt; T(tm).car += car;
-      if (cur !== tm) {
-        T(tm).vacTgt += tgt; T(tm).vacCar += car;       // left this team (or the league)
-        if (cur) { T(cur).inTgt += tgt; T(cur).inCar += car; } // brought volume to a new team
-      }
-    });
-    Object.keys(team).forEach(function(a) {
-      var t = team[a];
-      if (t.tgt < 100) return; // not a real team sample
-      out.teams[a] = {
-        netTgt: (t.vacTgt - t.inTgt) / t.tgt,
-        netCar: t.car >= 100 ? (t.vacCar - t.inCar) / t.car : 0
-      };
-    });
-    _jsVacCtx = out;
-    return out;
-  }
-
-  // The vacated-opportunity ctx reads lazily-loaded ALL_PLAYERS_DB: when the
-  // retired-data bundle lands, drop the cache and recompute an already-built
-  // board so incumbents pick up their vacated-volume multipliers.
-  document.addEventListener('mff:retireddata', function() {
-    _jsVacCtx = null;
-    if (_jsPlayerProj) { try { _jsRebuild(); } catch (_e) {} }
-  });
-
-  // --- Scoring presets ---
-  var _jsScoringPresets = {
-    half_ppr: { pass_yds:0.04, pass_td:4, ints:-1, rush_yds:0.1, rush_td:6, rec:0.5, rec_yds:0.1, rec_td:6, fumbles:-2 },
-    full_ppr: { pass_yds:0.04, pass_td:4, ints:-1, rush_yds:0.1, rush_td:6, rec:1.0, rec_yds:0.1, rec_td:6, fumbles:-2 },
-    non_ppr:  { pass_yds:0.04, pass_td:4, ints:-1, rush_yds:0.1, rush_td:6, rec:0.0, rec_yds:0.1, rec_td:6, fumbles:-2 }
-  };
-
-  // --- Roster presets: { QB, RB, WR, TE, FLEX, SFLEX } ---
-  var _jsRosterPresets = {
-    '2rb2wr1flx': { QB:1, RB:2, WR:2, TE:1, FLEX:1, SFLEX:0 },
-    '2rb3wr1flx': { QB:1, RB:2, WR:3, TE:1, FLEX:1, SFLEX:0 },
-    '2rb2wr2flx': { QB:1, RB:2, WR:2, TE:1, FLEX:2, SFLEX:0 },
-    '1rb3wr2flx': { QB:1, RB:1, WR:3, TE:1, FLEX:2, SFLEX:0 }
-  };
-
-  // --- Current settings ---
-  var _jsScoring = 'half_ppr';
-  var _jsFormat = '1qb'; // 1qb, sflex, 2qb, dyn1qb, dynsf
-  var _jsTeams = 12;
-  var _jsRoster = '2rb2wr1flx';
-
-  // --- Score a player's projection ---
-  function _jsScore(proj, scoring) {
-    return (proj.pass_yds * scoring.pass_yds) +
-           (proj.pass_td * scoring.pass_td) +
-           (proj.ints * scoring.ints) +
-           (proj.rush_yds * scoring.rush_yds) +
-           (proj.rush_td * scoring.rush_td) +
-           (proj.rec * scoring.rec) +
-           (proj.rec_yds * scoring.rec_yds) +
-           (proj.rec_td * scoring.rec_td) +
-           (proj.fumbles * scoring.fumbles);
-  }
-
-  // --- Compute VOR and generate board ---
-  function _jsComputeBoard(boardMode) {
-    _jsBuildProj(); // lazy: build the projection map on first use (was eager at startup)
-    // boardMode defaults to the format selector. 'dyn1qb'/'dynsf' switch the
-    // valuation to the multi-year discounted dynasty value (chaining block
-    // below) and anchor cross-position mix to KTC instead of Underdog ADP.
-    if (!boardMode) boardMode = _jsFormat;
-    var isDynasty = boardMode === 'dyn1qb' || boardMode === 'dynsf';
-    var scoring = _jsScoringPresets[_jsScoring];
-    var roster = Object.assign({}, _jsRosterPresets[_jsRoster]);
-
-    // Adjust QB slots for format
-    if (boardMode === '2qb') roster.QB = 2;
-    else if (boardMode === 'sflex' || boardMode === 'dynsf') roster.SFLEX = 1;
-
-    var teams = _jsTeams;
-
-    // Score all players
-    var scored = []; // [{idx, pos, fpts_pg, fpts_season}]
-    var _ageCurves = typeof _JS_AGE_CURVES !== 'undefined' ? _JS_AGE_CURVES : null;
-
-    // Empirical JM/talent blend weights by position and experience
-    // talent_wt = how much JM score influences the projection (remainder = NFL production)
-    // From backtest: early-career PFF grade (proxy for JM) vs prior year production
-    var _jmBlendWeights = {
-      QB:  {0:0.90, 1:0.65, 2:0.30, 3:0.30, 4:0.15, 5:0.15, 6:0.10},
-      WR:  {0:0.90, 1:0.75, 2:0.45, 3:0.25, 4:0.20, 5:0.15, 6:0.00},
-      TE:  {0:0.90, 1:0.70, 2:0.30, 3:0.15, 4:0.30, 5:0.20, 6:0.15},
-      RB:  {0:0.90, 1:0.30, 2:0.00, 3:0.10, 4:0.10, 5:0.05, 6:0.00}
-    };
-
-    // Get JM scores from prospect model (if available)
-    var _pmData = (typeof window._pmBuiltData === 'function') ? window._pmBuiltData() : [];
-    var _pmMap = {};
-    _pmData.forEach(function(p) { _pmMap[p.name] = p; });
-
-    // Compute positional average fpts for JM scaling baseline
-    var _posAvgFpts = {QB:0, WR:0, TE:0, RB:0};
-    var _posAvgN = {QB:0, WR:0, TE:0, RB:0};
-
-    D.forEach(function(d, idx) {
-      var proj = _jsPlayerProj[idx];
-      if (!proj) return;
-      var pos = d.s;
-      if (!_posAvgFpts[pos] && _posAvgFpts[pos] !== 0) return;
-      var f = _jsScore(proj, scoring);
-      if (f > 2) { _posAvgFpts[pos] += f; _posAvgN[pos]++; }
-    });
-    for (var p in _posAvgFpts) {
-      _posAvgFpts[p] = _posAvgN[p] > 0 ? _posAvgFpts[p] / _posAvgN[p] : 8;
-    }
-
-    // --- Fix exp=null for veterans: compute from career data or draft pick ---
-    D.forEach(function(d) {
-      if (d.exp != null) return;
-      if (d.s === 'K' || d.s === 'DST') return;
-      // Method 1: career array length
-      if (d.career && d.career.length > 0) {
-        d.exp = d.career.length;
-        return;
-      }
-      // Method 2: draft pick implies at least 1 year of experience
-      // (players in the D array with a real NFL draft pick but no career data
-      //  are typically injured rookies or year-1 players with minimal stats)
-      if (d.dr && typeof d.dr === 'number' && d.dr <= 262) {
-        // Estimate from draft year via COMBINE_DATA
-        var cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
-        if (cb && cb.yr) {
-          d.exp = Math.max(0, 2026 - cb.yr);
-        } else {
-          d.exp = 1; // has a draft pick but no year info → assume at least 1 year
-        }
-      }
-    });
-
-    // --- Build backup QB map from Clay projections ---
-    // If Clay projects a QB for < 30 total points (< 2 ppg), they're a clear backup
-    var _clayBackupQBs = {};
-    var _clayQB1perTeam = {};
-    if (typeof MIKE_CLAY_PROJ !== 'undefined') {
-      // First pass: find QB1 per team (highest Clay pts)
-      Object.keys(MIKE_CLAY_PROJ).forEach(function(name) {
-        var cp = MIKE_CLAY_PROJ[name];
-        if (cp.pos !== 'QB') return;
-        if (!_clayQB1perTeam[cp.tm] || cp.pts > _clayQB1perTeam[cp.tm].pts) {
-          _clayQB1perTeam[cp.tm] = { name: name, pts: cp.pts };
-        }
-      });
-      // Second pass: anyone with < 30 pts or significantly below their team's QB1 is a backup
-      Object.keys(MIKE_CLAY_PROJ).forEach(function(name) {
-        var cp = MIKE_CLAY_PROJ[name];
-        if (cp.pos !== 'QB') return;
-        var teamQB1 = _clayQB1perTeam[cp.tm];
-        if (cp.pts < 30 || (teamQB1 && cp.pts < teamQB1.pts * 0.55)) {
-          _clayBackupQBs[name] = true;
-        }
-      });
-    }
-
-    D.forEach(function(d, idx) {
-      var proj = _jsPlayerProj[idx];
-      if (!proj) return;
-      var pos = d.s;
-      if (pos !== 'QB' && pos !== 'RB' && pos !== 'WR' && pos !== 'TE') return;
-      var fpts_pg = _jsScore(proj, scoring);
-
-      // --- FIX: Free agent penalty ---
-      // Players without an NFL team get a massive discount. In redraft,
-      // an unsigned player has enormous uncertainty about if/when/where they play.
-      var isFreeAgent = !d.t || d.t === 'TBD' || d.t === 'FA';
-      if (isFreeAgent) {
-        // Check if they have career data (veteran FA vs unknown)
-        var hasCareer = d.career && d.career.length > 0;
-        if (hasCareer) {
-          // Veteran free agent: could sign anywhere, but huge risk of not playing
-          // Discount 75% — they drop to the back but aren't completely zeroed out
-          fpts_pg *= 0.25;
-        } else {
-          // Pre-draft prospect or completely unknown: use 40% of projection
-          // (2026 draft class will get real teams/projections once drafted)
-          fpts_pg *= 0.40;
-        }
-      }
-
-      // --- FIX: Backup QB penalty ---
-      // If Clay identifies this as a backup QB (< 30 season pts), crush the projection
-      if (pos === 'QB' && _clayBackupQBs[d.n]) {
-        // Backup QBs are essentially unrosterable in redraft
-        fpts_pg *= 0.15;
-      }
-
-      // --- Injury Discount System (v4: injury-type-specific, nflverse-calibrated) ---
-      // Calibrated from nflverse injury reports (2009-2025): 1468 players, 2881 injury-seasons.
-      // Uses exact recovery rates by injury type + position + age from backtest.
-      //
-      // Key data points (median Y1 recovery % of baseline):
-      //   Major (4+ weeks missed): QB 95%, RB 79%, WR 75%, TE 73%
-      //   Young (<27) vs Old (27+): RB 90/73, WR 105/73, TE 95/71, QB 108/92
-      //   Recovery curve: QB Y1=95 Y2=97 Y3=87 | RB 79/83/111 | WR 75/67/67 | TE 73/72/62
-      //   Repeat same-body-part injury: 83% vs first-time 86% (small difference)
-      //
-      // Per-injury-type multipliers (median Y1 from nflverse):
-      //   Ankle:      QB .78, RB .79, WR .99, TE .85
-      //   Hamstring:  QB  — , RB .72, WR .81, TE .79
-      //   Shoulder:   QB 1.2, RB .77, WR .92, TE .63
-      //   Knee(other):QB .92, RB .73, WR .86, TE 1.0
-      //   Foot:       QB .67, RB 1.0, WR .66, TE .64
-      //   Concussion: QB .94, RB .72, WR .76, TE .66
-      //   Weeks 1-3:  QB .88, RB .82, WR .90, TE .86
-      //   Weeks 4-6:  QB .92, RB .87, WR .82, TE .75
-      //   Weeks 7-10: QB .81, RB .70, WR .83, TE .73
-      var _injMult = 1.0;
-      // isDynasty comes from boardMode at the top of _jsComputeBoard — dynasty
-      // boards are computed explicitly now instead of following the mode tab.
-      if (d.inj) {
-        var injTag = d.inj.toLowerCase().trim();
-        var _injAge = d.age || 27;
-        var _injYoung = _injAge < 27;
-
-        // --- Injury-type-specific multipliers from nflverse backtest ---
-        // Each: { QB, RB, WR, TE } = median Y1 recovery rate
-        // _injTypeMultipliers moved to data/inj_type_multipliers.js
-
-        // Dynasty multipliers (Y2 recovery from Part 6 curve data)
-        var _dynastyMult = { QB: 0.97, RB: 0.83, WR: 0.67, TE: 0.72 };
-
-        // Young player boost: data shows <27 recover much better
-        // QB 108/92=1.17x, RB 90/73=1.23x, WR 105/73=1.44x, TE 95/71=1.34x
-        var _youngBoost = { QB: 1.15, RB: 1.20, WR: 1.35, TE: 1.30 };
-
-        // Detect injury type from tag
-        function _getInjuryMult(tag, position) {
-          // Try to match specific injury type
-          if (/\bacl\b/.test(tag)) return _injTypeMultipliers.acl[position];
-          if (/\bachilles\b/.test(tag)) return _injTypeMultipliers.achilles[position];
-          if (/\bconcussion\b/.test(tag)) return _injTypeMultipliers.concussion[position];
-          if (/\bhamstring\b/.test(tag)) return _injTypeMultipliers.hamstring[position];
-          if (/\bshoulder\b|\blabrum\b|\bpec\b/.test(tag)) return _injTypeMultipliers.shoulder[position];
-          if (/\bfoot\b|\btoe\b|\blisfranc\b/.test(tag)) return _injTypeMultipliers.foot[position];
-          if (/\bankle\b/.test(tag)) return _injTypeMultipliers.ankle[position];
-          if (/\bback\b|\bspine\b/.test(tag)) return _injTypeMultipliers.back[position];
-          if (/\bhip\b/.test(tag)) return _injTypeMultipliers.hip[position];
-          if (/\bcalf\b/.test(tag)) return _injTypeMultipliers.calf[position];
-          if (/\bgroin\b/.test(tag)) return _injTypeMultipliers.groin[position];
-          if (/\bquad\b/.test(tag)) return _injTypeMultipliers.quad[position];
-          if (/\bfibula?\b|\btibia\b/.test(tag)) return _injTypeMultipliers.fibula[position];
-          if (/\brib\b|\bchest\b/.test(tag)) return _injTypeMultipliers.ribs[position];
-          if (/\bwrist\b|\bhand\b|\bthumb\b|\bfinger\b/.test(tag)) return _injTypeMultipliers.wrist[position];
-          if (/\bknee\b|\bmcl\b|\blcl\b|\bpcl\b|\bmeniscus\b/.test(tag)) return _injTypeMultipliers.knee[position];
-          return null; // no match
-        }
-
-        // --- Pre-check: "healthy" / "full go" / "cleared" override ---
-        var isCleared = /\bhealthy\b|\bfull go\b|\bcleared\b|\b100%\b|\bno concern/.test(injTag);
-
-        if (isCleared) {
-          _injMult = 1.0;
-        }
-        // Pattern 1: Year-based timeline — "2027", "Mid-Late 2026"
-        else if (/(20\d{2})/.test(injTag)) {
-          var yearMatch = injTag.match(/(20\d{2})/);
-          var injYear = parseInt(yearMatch[1]);
-          var _typeMult = _getInjuryMult(injTag, pos) || 0.75; // fallback
-
-          if (injYear >= 2027) {
-            _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : 0.03;
-          } else if (injYear === 2026) {
-            var weekInTag = injTag.match(/week\s*(\d+)/i);
-            if (weekInTag) {
-              var retWk = parseInt(weekInTag[1]);
-              var gpLeft = Math.max(1, 17 - (retWk - 1));
-              _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : (gpLeft / 17) * _typeMult;
-            } else if (/late/.test(injTag)) {
-              _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : (6 / 17) * _typeMult;
-            } else if (/mid/.test(injTag)) {
-              _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : (10 / 17) * _typeMult;
-            } else if (/early/.test(injTag)) {
-              _injMult = isDynasty ? (_dynastyMult[pos] || 0.85) : (15 / 17) * _typeMult;
-            } else {
-              _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : (10 / 17) * _typeMult;
-            }
-          }
-        }
-        // Pattern 2: ACL/Achilles with return week — "ACL, LCL, Week 1"
-        else if (/acl|achilles/.test(injTag) && /week\s*\d/i.test(injTag)) {
-          var weekMatch = injTag.match(/week\s*(\d+)/i);
-          var returnWeek = weekMatch ? parseInt(weekMatch[1]) : 8;
-          var gamesPlayed = Math.max(1, 17 - (returnWeek - 1));
-          var _typeMult = _getInjuryMult(injTag, pos) || 0.75;
-          _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : (gamesPlayed / 17) * _typeMult;
-        }
-        // Pattern 3: ACL/Achilles, no timeline
-        else if (/acl|achilles/.test(injTag)) {
-          var _typeMult = _getInjuryMult(injTag, pos) || 0.75;
-          var isMulti = /and|plus|\+|meniscus|mcl|lcl|pcl/.test(injTag);
-          if (isMulti) {
-            _injMult = isDynasty ? (_dynastyMult[pos] || 0.65) * 0.80 : _typeMult * 0.45;
-          } else {
-            _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) * 0.90 : _typeMult * 0.60;
-          }
-        }
-        // Pattern 4: Season-ending
-        else if (/season.?ending|out for season|out for year|done for year/.test(injTag)) {
-          var _typeMult = _getInjuryMult(injTag, pos) || 0.75;
-          _injMult = isDynasty ? (_dynastyMult[pos] || 0.70) : 0.05;
-        }
-        // Pattern 5: Specific injury type detected — use exact multiplier
-        else if (_getInjuryMult(injTag, pos) != null) {
-          var _typeMult = _getInjuryMult(injTag, pos);
-          var hasSurgery = /surgery|procedure|repair|reconstruction|scope/.test(injTag);
-          var sigWeek = injTag.match(/week\s*(\d+)/i);
-          var weeksMissedMatch = injTag.match(/(\d+)\s*weeks?\s*(out|missed)/i);
-
-          if (sigWeek) {
-            var sigReturn = parseInt(sigWeek[1]);
-            var sigGames = Math.max(1, 17 - (sigReturn - 1));
-            _injMult = isDynasty ? (_dynastyMult[pos] || 0.80) : (sigGames / 17) * _typeMult;
-          } else if (weeksMissedMatch) {
-            var wksMissed = parseInt(weeksMissedMatch[1]);
-            if (wksMissed >= 8) {
-              _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : _typeMult * 0.85;
-            } else {
-              _injMult = isDynasty ? (_dynastyMult[pos] || 0.85) : _typeMult;
-            }
-          } else if (hasSurgery) {
-            _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : _typeMult * 0.85;
-          } else if (/\bminor\b/.test(injTag)) {
-            // "Ankle, Minor" — light discount, player mostly healthy
-            _injMult = isDynasty ? 0.98 : Math.min(1.0, _typeMult * 1.10);
-          } else {
-            _injMult = isDynasty ? (_dynastyMult[pos] || 0.85) : _typeMult;
-          }
-        }
-        // Pattern 6: Suspension
-        else if (/suspen/.test(injTag)) {
-          var suspGames = injTag.match(/(\d+)\s*game/i);
-          var missedGames = suspGames ? parseInt(suspGames[1]) : 4;
-          _injMult = isDynasty ? 1.0 : Math.max(0.20, (17 - missedGames) / 17);
-        }
-        // Pattern 7: Minor / game-time
-        else if (/questionable|doubtful|day.?to.?day|gtd|probable/.test(injTag)) {
-          _injMult = isDynasty ? 1.0 : 0.97;
-        }
-        // Pattern 8: IR / PUP
-        else if (/\bIR\b|\bPUP\b/i.test(injTag)) {
-          var _typeMult = _getInjuryMult(injTag, pos) || 0.75;
-          _injMult = isDynasty ? (_dynastyMult[pos] || 0.75) : _typeMult * 0.50;
-        }
-        // Fallback: unrecognized
-        else {
-          // Use weeks-missed data: 1-3 weeks fallback
-          var _wkFallback = { QB: 0.88, RB: 0.82, WR: 0.90, TE: 0.86 };
-          _injMult = isDynasty ? 0.90 : (_wkFallback[pos] || 0.85);
-        }
-
-        // Apply young player boost (data shows <27 recover significantly better)
-        if (_injYoung && _injMult < 1.0 && _injMult > 0.10) {
-          var boost = _youngBoost[pos] || 1.15;
-          _injMult = Math.min(1.0, _injMult * boost);
-        }
-
-        fpts_pg *= _injMult;
-      }
-      // Store injury discount info on player for UI/diagnostic access
-      d._injDiscount = d.inj ? { tag: d.inj, mult: Math.round(_injMult * 100) / 100, mode: currentMode } : null;
-
-      // --- Auto Injury Detection (GP Drop + INJURY_HISTORY) ---
-      // If no manual inj tag, detect likely injuries from career GP drops.
-      // When INJURY_HISTORY is available, use actual injury type for precise multiplier.
-      // SKIP if player is a free agent — FA penalty already handles them.
-      if (!d.inj && !isFreeAgent && d.career && d.career.length >= 2) {
-        var _careerSorted = d.career.slice().sort(function(a,b) { return (a.yr||0) - (b.yr||0); });
-        var _lastSzn = _careerSorted[_careerSorted.length - 1];
-        var _prevSzn = _careerSorted[_careerSorted.length - 2];
-
-        if (_lastSzn && _prevSzn && _lastSzn.gp != null && _prevSzn.gp != null) {
-          var _lastGp = _lastSzn.gp;
-          var _prevGp = _prevSzn.gp;
-          var _lastYr = _lastSzn.yr || 0;
-
-          if (_lastYr >= 2024 && _prevGp >= 13 && _lastGp <= 10) {
-            var _autoAge = d.age || 27;
-            var _autoYoung = _autoAge < 27;
-            var _autoMult = null;
-            var _autoInjType = null;
-
-            // Try INJURY_HISTORY for exact injury type
-            if (typeof INJURY_HISTORY !== 'undefined' && INJURY_HISTORY[d.n]) {
-              var _ihRecords = INJURY_HISTORY[d.n];
-              var _ihMatch = _ihRecords.find(function(r) { return r.season === _lastYr; });
-              if (_ihMatch && _ihMatch.injury) {
-                _autoInjType = _ihMatch.injury;
-                // Use injury-type-specific multiplier
-                var _ihTag = _ihMatch.injury.toLowerCase();
-                // Reuse the same lookup table from the manual system
-                // _ihTypeMults moved to data/ih_type_mults.js
-                // Match injury type
-                var _ihMult = null;
-                for (var _ihKey in _ihTypeMults) {
-                  if (new RegExp('\\b' + _ihKey + '\\b', 'i').test(_ihTag)) {
-                    _ihMult = _ihTypeMults[_ihKey][pos];
-                    break;
-                  }
-                }
-                if (_ihMult != null) {
-                  _autoMult = isDynasty ? ({ QB: 0.97, RB: 0.83, WR: 0.67, TE: 0.72 }[pos] || 0.80) : _ihMult;
-                }
-              }
-            }
-
-            // Fallback: GP-drop severity if no INJURY_HISTORY match
-            if (_autoMult == null) {
-              var _autoSevere = _lastGp <= 5;
-              var _wksMult;
-              if (_autoSevere) {
-                _wksMult = { QB: 0.81, RB: 0.70, WR: 0.75, TE: 0.73 }; // 7-10+ weeks data
-              } else {
-                _wksMult = { QB: 0.92, RB: 0.87, WR: 0.82, TE: 0.75 }; // 4-6 weeks data
-              }
-              _autoMult = isDynasty ? ({ QB: 0.97, RB: 0.83, WR: 0.67, TE: 0.72 }[pos] || 0.80) : (_wksMult[pos] || 0.80);
-            }
-
-            // Young player boost
-            if (_autoYoung && _autoMult < 1.0 && _autoMult > 0.10) {
-              var _autoBoost = { QB: 1.15, RB: 1.20, WR: 1.35, TE: 1.30 };
-              _autoMult = Math.min(1.0, _autoMult * (_autoBoost[pos] || 1.15));
-            }
-
-            // Y2 recovery boost for 2024 injuries (2026 is their Y2)
-            if (_lastYr === 2024) {
-              _autoMult = 1.0 - (1.0 - _autoMult) * 0.50;
-            }
-
-            fpts_pg *= _autoMult;
-
-            d._injDiscount = {
-              tag: 'AUTO: ' + _lastGp + ' GP in ' + _lastYr + ' (was ' + _prevGp + ' GP)' + (_autoInjType ? ' [' + _autoInjType + ']' : ''),
-              mult: Math.round(_autoMult * 100) / 100,
-              mode: currentMode,
-              auto: true,
-              severity: _lastGp <= 5 ? 'severe' : 'moderate',
-              injYear: _lastYr,
-              injType: _autoInjType
-            };
-          }
-        }
-      }
-
-      // --- Experience curve: "young jump" / veteran fade ---
-      // Calibrated from scripts/backtest_js_model.py residuals (2018-2025):
-      // how much players beat/missed the recency-weighted core by years of
-      // experience. Measured: QB exp1/2 +20%/+26%; RB exp1 +18%;
-      // WR exp1/2 +8%/+9%, exp5 -14%; TE exp2/3 +13%/+9%.
-      // Applied at ~60% of measured (noise shrinkage), BEFORE the JM and Clay
-      // blends, which price young upside their own way — full residual on top
-      // of those would double-count.
-      var _expJumpTbl = {
-        QB: { 1: 1.12, 2: 1.15, 3: 1.02 },
-        RB: { 1: 1.11 },
-        WR: { 1: 1.05, 2: 1.05, 4: 0.96, 5: 0.92 },
-        TE: { 2: 1.07, 3: 1.05, 4: 0.96, 5: 0.96 }
-      };
-      // Veteran (exp 6+) fade is PRODUCTION-TIERED — the backtest tier split
-      // showed elite producers age very differently from the mid-tier vets
-      // driving the average fade:
-      //   WR elite -3.9% vs rest -19.8% (Evans-types basically hold)
-      //   RB elite -15.6% vs rest -8.5% (elite vet RBs fall HARDER)
-      //   TE elite -15.6% vs rest -17.5% (no real difference)
-      //   QB skipped (residuals were measured against the QB age curve this
-      //   engine no longer applies, so they don't transfer)
-      // Tier by the player's RAW base-rate PPG (pre-discount) so an injury
-      // discount can't demote an elite vet into the harsher tier.
-      var _vetFadeTbl = {
-        RB: { elite: 0.91, rest: 0.95 },
-        WR: { elite: 0.98, rest: 0.89 },
-        TE: { elite: 0.91, rest: 0.90 }
-      };
-      var _vetEliteThr = { RB: 12, WR: 12, TE: 9 }; // half-PPR-ish raw PPG
-      if (d.exp != null && d.exp >= 1) {
-        var _ejMult = null;
-        if (d.exp >= 6) {
-          var _vf = _vetFadeTbl[pos];
-          if (_vf) {
-            var _rawPpg = _jsScore(proj, scoring);
-            _ejMult = _vf[_rawPpg >= _vetEliteThr[pos] ? 'elite' : 'rest'];
-            // Injury double-count guard: the measured vet fade already
-            // includes injury-wrecked seasons, so when an injury discount was
-            // applied to this player this season, halve the fade.
-            if (d._injDiscount && d._injDiscount.mult < 0.97) {
-              _ejMult = 1 - (1 - _ejMult) * 0.5;
-            }
-          }
-        } else {
-          _ejMult = (_expJumpTbl[pos] || {})[d.exp];
-        }
-        if (_ejMult) fpts_pg *= _ejMult;
-      }
-
-      // JM talent blending for young players
-      var exp = d.exp != null ? d.exp : 99;
-      var blendWeights = _jmBlendWeights[pos];
-      var talentWt = blendWeights ? (blendWeights[Math.min(exp, 6)] || 0) : 0;
-
-      if (talentWt > 0) {
-        var pm = _pmMap[d.n];
-        var jmScore = pm ? pm.jm : null;
-        if (jmScore != null) {
-          // Convert JM score to expected fpts/gm for this season
-          // Calibrated: JM 90 → ~1.24x positional average, JM 50 → ~1.0x, JM 30 → ~0.88x
-          var jmMult = 0.7 + (jmScore / 100) * 0.6;
-          var jmExpected = _posAvgFpts[pos] * jmMult;
-
-          // Blend: talentWt * jmExpected + (1-talentWt) * nflProjection
-          fpts_pg = talentWt * jmExpected + (1 - talentWt) * fpts_pg;
-        }
-      }
-
-      // Late-season trajectory: use weekly game logs to detect players
-      // trending up or down at the end of the season
-      if (typeof WEEKLY_STATS !== 'undefined') {
-        var ws = WEEKLY_STATS[d.n];
-        if (ws && ws.seasons) {
-          // Get most recent season
-          var recentSeason = Object.keys(ws.seasons).sort(function(a,b){return +b - +a;})[0];
-          var weeks = ws.seasons[recentSeason];
-          if (weeks && weeks.length >= 8) {
-            // Get last 6 games played (skip bye/injury weeks with 0 fpts)
-            var played = weeks.filter(function(w) { return w.fpts > 0; });
-            if (played.length >= 8) {
-              var fullAvg = played.reduce(function(s,w){return s+w.fpts;},0) / played.length;
-              var last6 = played.slice(-6);
-              var last6Avg = last6.reduce(function(s,w){return s+w.fpts;},0) / last6.length;
-              
-              if (fullAvg > 2) {
-                var momentum = last6Avg / fullAvg;
-                var trajectoryMult = 1.0;
-                
-                if (momentum > 1.30) trajectoryMult = 1.05;
-                else if (momentum > 1.15) trajectoryMult = 1.03;
-                else if (momentum < 0.70) trajectoryMult = 0.95;
-                else if (momentum < 0.85) trajectoryMult = 0.97;
-                
-                // Young players: late-season improvement is more meaningful
-                // (represents development, not just random variance)
-                var exp = d.exp != null ? d.exp : 99;
-                if (exp <= 2 && trajectoryMult > 1.0) {
-                  trajectoryMult = 1.0 + (trajectoryMult - 1.0) * 1.5; // 50% extra boost
-                }
-                
-                fpts_pg *= trajectoryMult;
-              }
-            }
-          }
-        }
-      }
-
-      // Age curve adjustment: multiply by retention factor for player's age next season.
-      // QBs excluded: the 2018-2025 backtest (scripts/backtest_js_model.py) showed the
-      // age multiplier makes QB projections WORSE (MAE 3.33 -> 3.44) — QBs age too
-      // idiosyncratically for a smooth curve.
-      if (pos !== 'QB' && _ageCurves && _ageCurves[pos] && d.age != null) {
-        var nextAge = d.age + 1;
-        var ageMult = _ageCurves[pos][String(nextAge)];
-        if (ageMult != null) fpts_pg *= ageMult;
-      }
-
-      // --- Team Environment (Vegas) + Vacated Opportunity ---
-      // Both applied BEFORE the Clay blend: Clay's projections already bake in
-      // team quality and roles, so scaling after the blend would double-count
-      // them on the Clay portion.
-      d._vacCtx = null;
-      var _teamAbbr = (d.t && typeof TEAM_ABBR_MAP !== 'undefined') ? (TEAM_ABBR_MAP[d.t] || null) : null;
-      if (_teamAbbr) {
-        // Vegas implied team scoring: market's read on coaching/pace/personnel
-        var _vCtx = _jsVegasTeamCtx()[_teamAbbr];
-        if (_vCtx) fpts_pg *= _vCtx.mult;
-
-        // Vacated targets/carries: boost incumbents whose team shed volume,
-        // squeeze incumbents whose team imported it. Incumbents only — a
-        // player who changed teams has his role priced by Clay, not by his
-        // old team's target tree.
-        var _vac = _jsVacatedCtx();
-        var _vacT = _vac.teams[_teamAbbr];
-        if (_vacT && _vac.prevTeam[d.n] === _teamAbbr) {
-          var _vacNet = 0;
-          if (pos === 'WR' || pos === 'TE') {
-            _vacNet = _vacT.netTgt * 0.25;                       // WR/TE: targets only
-          } else if (pos === 'RB') {
-            _vacNet = _vacT.netCar * 0.20 + _vacT.netTgt * 0.10; // RB: mostly carries
-          }
-          // QBs skipped: team pass volume is already priced by Vegas/Clay
-          if (_vacNet) {
-            var _vacMult = 1 + Math.max(-0.06, Math.min(0.06, _vacNet));
-            fpts_pg *= _vacMult;
-            d._vacCtx = { mult: Math.round(_vacMult * 1000) / 1000, netTgt: Math.round(_vacT.netTgt * 100), netCar: Math.round(_vacT.netCar * 100) };
-          }
-        }
-      }
-
-      // --- Defensive Strength of Schedule ---
-      // Adjust based on how tough the defenses this player will face are.
-      // Clay's defensive SOS multiplier: >1.0 means softer schedule (opponent defenses allow more),
-      // <1.0 means harder schedule. Also pre-blend for the same double-count reason.
-      if (typeof MIKE_CLAY_DEF_SOS !== 'undefined' && d.t) {
-        var sosMult = MIKE_CLAY_DEF_SOS[d.t];
-        if (sosMult != null) {
-          fpts_pg *= sosMult;
-        }
-      }
-
-      // --- Clay Expert Blend + Divergence Adjustment ---
-      // Clay's projections capture coaching changes, offseason moves, and opportunity shifts
-      // that historical stats alone can't predict.
-      // Base blend: 25% Clay / 75% JS Model (35% Clay for rookies/2nd-year).
-      // Divergence bonus: when Clay and the JS Model disagree by a large margin,
-      // Clay likely knows something the model doesn't (new team, injury return, role change).
-      // In those cases, increase Clay's weight proportionally to the gap.
-      var _clayGmWt = null; // Clay's projected games + the weight he earned
-      if (typeof MIKE_CLAY_PROJ !== 'undefined') {
-        var clayProj = clayLookup(d.n);
-        if (clayProj) {
-          // Convert Clay PPR pts to current scoring format
-          var clayRec = clayProj.rec || 0;
-          var clayAdj = scoring.rec === 1 ? 0 : scoring.rec === 0 ? -1.0 : -0.5;
-          var clayPpg = (clayProj.pts + clayRec * clayAdj) / clayProj.gm;
-
-          // Measure divergence: how far apart are the two projections?
-          var jsPpg = fpts_pg; // current JS Model PPG (before Clay blend)
-          // Year-1/2 players with high draft capital should lean more on Clay:
-          // Clay captures opportunity/role changes that the model's limited sample misses.
-          // exp 0-1: 0.40, exp 2 w/ high DC: 0.35, exp 2: 0.30, exp 3+: 0.25
-          // QB/RB exp<=2 get MORE Clay (0.50 / 0.42, cap 0.75): the 2026-07-22
-          // player-level autopsy (scripts/analyze_model_vs_clay.py) showed the
-          // model's win rate vs Clay is worst on young players, and the blend
-          // backtest confirmed raising young QB/RB weights is a strict Pareto
-          // win (QB MAE 3.084->3.075, RB 2.251->2.242, WR/TE unchanged) while
-          // the same bump at WR hurt — so WR/TE keep the original schedule.
-          // (A career-games low-info guard was also tested and REJECTED: it
-          // hands Clay the journeyman-backup cases that are the model's
-          // biggest edge.)
-          var baseClayWt = 0.25;
-          var _expVal = d.exp != null ? d.exp : 99;
-          var _youngQbRb = (pos === 'QB' || pos === 'RB') && _expVal <= 2;
-          if (_expVal <= 1) {
-            baseClayWt = _youngQbRb ? 0.50 : 0.40;
-          } else if (_expVal === 2) {
-            if (_youngQbRb) {
-              baseClayWt = 0.42; // supersedes DC tiering (all tiers are lower)
-            } else {
-              // Year-2: higher weight if they were a premium pick (Rd 1-2)
-              var _drVal = d.dr;
-              if (typeof _drVal === 'number' && _drVal <= 64) baseClayWt = 0.38;
-              else if (typeof _drVal === 'number' && _drVal <= 100) baseClayWt = 0.33;
-              else baseClayWt = 0.30;
-            }
-          }
-
-          if (jsPpg > 1) {
-            var divergence = Math.abs(clayPpg - jsPpg) / jsPpg; // as % of JS PPG
-            var divDirection = clayPpg > jsPpg ? 1 : -1; // +1 = Clay higher, -1 = Clay lower
-            // divergence 0% → base weight, 30%+ → up to double the base weight
-            var divBonus = Math.min(divergence / 0.30, 1.0) * baseClayWt;
-            // Higher cap for year-1/2 players: Clay knows more about their role than historical stats.
-            // Low-information core (rookie, or missed essentially all of last
-            // season): the historical rates carry almost no signal — e.g.
-            // Jonathon Brooks post-ACL had a near-zero core dragging Clay's
-            // healthy-season projection down — so let Clay take up to 85%.
-            var _coreLowInfo = !d.s25 || d.s25.gp == null || d.s25.gp <= 4;
-            var maxClayWt = _coreLowInfo ? 0.85 : (_expVal <= 2 ? (_youngQbRb ? 0.75 : 0.65) : 0.55);
-            var clayWt = Math.min(baseClayWt + divBonus, maxClayWt);
-
-            fpts_pg = fpts_pg * (1 - clayWt) + clayPpg * clayWt;
-            _clayGmWt = { gm: clayProj.gm, wt: clayWt };
-
-            // Store divergence info for UI (only if significant: >15% gap)
-            if (divergence >= 0.15) {
-              d._clayDiv = {
-                jsPpg: Math.round(jsPpg * 10) / 10,
-                clayPpg: Math.round(clayPpg * 10) / 10,
-                pct: Math.round(divergence * 100),
-                dir: divDirection, // +1 Clay bullish, -1 Clay bearish
-                wt: Math.round(clayWt * 100) // actual Clay weight used
-              };
-            } else {
-              d._clayDiv = null;
-            }
-          } else {
-            // JS Model has no real projection — lean heavily on Clay
-            fpts_pg = clayPpg * 0.85;
-            _clayGmWt = { gm: clayProj.gm, wt: 0.85 };
-          }
-        }
-      }
-
-      // --- Betting-market props blend (third ensemble leg) ---
-      // BETTING_2026.seasonProps: DK/FD/MGM season lines, consensus-averaged
-      // by _propsProjectionFor. The market is the second independent
-      // forward-looking source next to Clay, so no single input dominates —
-      // and books post lines for rookies, patching the model's weakest path.
-      // Books rarely post every stat (season receptions especially), so the
-      // engine's own per-game rates fill anything un-posted; book lines
-      // override what they do post. Gated on the player's PRIMARY yardage
-      // stat being posted so partial junk coverage can't crater anyone.
-      // Weight 20% — no historical props archive exists to backtest, so it's
-      // deliberately below the (validated) Clay weight.
-      d._propsBlend = null;
-      if (fpts_pg > 1 && typeof window._propsProjectionFor === 'function') {
-        var _pp = window._propsProjectionFor(d);
-        var _ppC = _pp && _pp.consensus;
-        var _primaryKey = pos === 'QB' ? 'py' : pos === 'RB' ? 'ry' : 'rcy';
-        if (_ppC && typeof _ppC[_primaryKey] === 'number') {
-          var _ppG = _pp.games || 17;
-          // props key -> engine proj key (both feed the same scoring object)
-          var _ppMap = { py:'pass_yds', ptd:'pass_td', int:'ints', ry:'rush_yds',
-                        rtd:'rush_td', rec:'rec', rcy:'rec_yds', rctd:'rec_td' };
-          var _ppPpg = (proj.fumbles || 0) * scoring.fumbles;
-          for (var _ppK in _ppMap) {
-            var _engK = _ppMap[_ppK];
-            var _perGame = (typeof _ppC[_ppK] === 'number') ? _ppC[_ppK] / _ppG : (proj[_engK] || 0);
-            _ppPpg += _perGame * scoring[_engK];
-          }
-          if (_ppPpg > 0) {
-            var _ppWt = 0.20;
-            fpts_pg = fpts_pg * (1 - _ppWt) + _ppPpg * _ppWt;
-            d._propsBlend = { ppg: Math.round(_ppPpg * 10) / 10, wt: _ppWt, books: _pp.books };
-          }
-        }
-      }
-
-      // --- Games played: blend Clay's projected games at the weight he earned ---
-      // The Clay blend fixes PPG but the SEASON total also needs his games.
-      // Without this, a backup who won a starting job (Malik Willis: Clay 17
-      // gm) or a returner (Brooks) got starter PPG x stale backup/template
-      // games and cratered in VOR.
-      var _gpBase = proj.gp;
-      if (_clayGmWt && isFinite(_clayGmWt.gm) && _clayGmWt.gm >= 1) {
-        _gpBase = proj.gp * (1 - _clayGmWt.wt) + Math.min(_clayGmWt.gm, 17) * _clayGmWt.wt;
-      }
-      var _injGpAdj = _gpBase; // adjusted games played for injury
-      if (d._injDiscount && d._injDiscount.mult < 0.90 && !isDynasty) {
-        // For significant injuries in redraft: cap GP to reflect actual expected games
-        // The fpts_pg discount already handles per-game reduction (rust etc),
-        // but we also need to reduce total games for season value
-        var _injTagLc = d.inj ? d.inj.toLowerCase() : '';
-        var _injWeekMatch = _injTagLc.match(/week\s*(\d+)/i);
-        if (_injWeekMatch) {
-          var _retWk = parseInt(_injWeekMatch[1]);
-          _injGpAdj = Math.min(_gpBase, Math.max(1, 17 - (_retWk - 1)));
-        } else if (/2026/.test(_injTagLc)) {
-          // Year-based tag with 2026 — estimate GP from timing hint
-          if (/late/.test(_injTagLc)) _injGpAdj = Math.min(_gpBase, 6);
-          else if (/mid/.test(_injTagLc)) _injGpAdj = Math.min(_gpBase, 10);
-          else if (/early/.test(_injTagLc)) _injGpAdj = Math.min(_gpBase, 15);
-          else _injGpAdj = Math.min(_gpBase, 10); // generic "2026" → mid-season
-        } else if (d._injDiscount.mult <= 0.10) {
-          // Season-ending or out until 2027+: essentially 0 games
-          _injGpAdj = 1;
-        }
-      }
-      // --- DYNASTY: multi-year discounted value ---
-      // V = sum_{k=0..H-1} PPG_hat(Y+k) * gamma^k, gamma=0.85 H=4, fit + validated
-      // by scripts/backtest_dynasty_model.py (2018-2023, truth = realized 3yr
-      // fpts/17): chained curves beat the one-year board at every position,
-      // and the no-experience-chain variant LOSES to it — the compounded
-      // jump/fade factors carry the signal. Year 0 is exactly the one-year
-      // projection (all layers incl. Clay/props/injury); future years chain
-      // RELATIVE factors: age-curve ratio curve(age+1+k)/curve(age+1) for
-      // non-QB (clamped to the curve's 23-41 range), and per-year experience
-      // factors compounding (a jump/fade is a persisting level shift).
-      // Normalized by sum(gamma^k) so the result stays on a PPG scale and the
-      // VOR machinery below works unchanged.
-      if (isDynasty && fpts_pg > 0) {
-        var _dynG = 0.85, _dynH = 4;
-        var _acPos = (pos !== 'QB' && _ageCurves && _ageCurves[pos]) ? _ageCurves[pos] : null;
-        var _acVal = function(a) {
-          if (!_acPos) return null;
-          var v = _acPos[String(a)];
-          if (v != null) return v;
-          var keys = Object.keys(_acPos).map(Number);
-          var mn = Math.min.apply(null, keys), mx = Math.max.apply(null, keys);
-          return _acPos[String(a < mn ? mn : mx)];
-        };
-        var _c1 = (d.age != null) ? _acVal(d.age + 1) : null;
-        var _dynRawBase = _jsScore(proj, scoring); // vet-fade tier on raw base (matches year-0 logic)
-        var _dynSum = 0, _dynNorm = 0, _expCum = 1;
-        for (var _dk = 0; _dk < _dynH; _dk++) {
-          var _fk = fpts_pg;
-          if (_dk > 0) {
-            if (_c1) {
-              var _ck = _acVal(d.age + 1 + _dk);
-              if (_ck != null) _fk *= _ck / _c1;
-            }
-            var _de = (d.exp != null ? d.exp : 3) + _dk;
-            var _def = 1;
-            if (_de >= 6) {
-              var _dvf = _vetFadeTbl[pos];
-              if (_dvf) _def = _dvf[_dynRawBase >= _vetEliteThr[pos] ? 'elite' : 'rest'];
-            } else if (_de >= 1) {
-              _def = (_expJumpTbl[pos] || {})[_de] || 1;
-            }
-            _expCum *= _def;
-            _fk *= _expCum;
-          }
-          var _dw = Math.pow(_dynG, _dk);
-          _dynSum += _fk * _dw;
-          _dynNorm += _dw;
-        }
-        fpts_pg = _dynSum / _dynNorm;
-      }
-
-      var fpts_season = fpts_pg * _injGpAdj;
-      scored.push({ idx: idx, pos: pos, fpts_pg: fpts_pg, fpts_season: fpts_season, gp: _injGpAdj, _clayDiv: d._clayDiv || null });
-    });
-
-    // Sort each position by fpts_season
-    var byPos = { QB:[], RB:[], WR:[], TE:[] };
-    scored.forEach(function(p) { if (byPos[p.pos]) byPos[p.pos].push(p); });
-    for (var pos in byPos) byPos[pos].sort(function(a,b) { return b.fpts_season - a.fpts_season; });
-
-    // Replacement level — position-accurate approach
-    // QBs: only compete for QB slot, not flex. Use pure QB starters × teams.
-    // RBs/WRs: compete for position slots AND flex. Flex is RB/WR only.
-    // TEs: only compete for TE slot. TEs never realistically go in flex
-    //       over a WR30/RB30, so no flex inflation.
-    var flex = roster.FLEX || 0;
-    var sflex = roster.SFLEX || 0;
-    var replacement = {};
-    
-    // QB: pure starter count (1QB or 2QB), no flex
-    var qbRepl = Math.min(Math.ceil(roster.QB * teams), byPos.QB.length - 1);
-    if (qbRepl < 0) qbRepl = 0;
-    replacement['QB'] = byPos.QB.length > 0 ? byPos.QB[qbRepl].fpts_season : 0;
-    
-    // RB/WR: share the flex pool between them
-    var rbStarters = Math.min(Math.ceil((roster.RB + flex * 0.55) * teams), byPos.RB.length - 1);
-    var wrStarters = Math.min(Math.ceil((roster.WR + flex * 0.45) * teams), byPos.WR.length - 1);
-    if (rbStarters < 0) rbStarters = 0;
-    if (wrStarters < 0) wrStarters = 0;
-    replacement['RB'] = byPos.RB.length > 0 ? byPos.RB[rbStarters].fpts_season : 0;
-    replacement['WR'] = byPos.WR.length > 0 ? byPos.WR[wrStarters].fpts_season : 0;
-    
-    // TE: pure starter count, no flex inflation
-    var teRepl = Math.min(Math.ceil(roster.TE * teams), byPos.TE.length - 1);
-    if (teRepl < 0) teRepl = 0;
-    replacement['TE'] = byPos.TE.length > 0 ? byPos.TE[teRepl].fpts_season : 0;
-    
-    // Superflex: if sflex > 0, QBs get additional demand
-    if (sflex > 0) {
-      qbRepl = Math.min(Math.ceil((roster.QB + sflex) * teams), byPos.QB.length - 1);
-      if (qbRepl < 0) qbRepl = 0;
-      replacement['QB'] = byPos.QB.length > 0 ? byPos.QB[qbRepl].fpts_season : 0;
-    }
-
-    // Compute VOR with PPG weighting
-    // Raw VOR = season_total - replacement_level
-    // But we want to value PPG more than total points because:
-    // 1. High PPG + moderate GP is better in best-ball/playoffs than moderate PPG + high GP
-    // 2. Availability matters but a guy playing 16 games of 8 PPG shouldn't rank above
-    //    a guy playing 14 games of 12 PPG
-    // Approach: VOR = (ppg_component × 0.6) + (season_total_component × 0.4)
-    
-    // First compute replacement PPG for each position
-    var replacementPPG = {};
-    var replIdxMap = {QB: qbRepl, RB: rbStarters, WR: wrStarters, TE: teRepl};
-    for (var pos in replIdxMap) {
-      var list = byPos[pos] || [];
-      var ri = Math.min(replIdxMap[pos], list.length - 1);
-      if (ri < 0) ri = 0;
-      replacementPPG[pos] = list.length > 0 ? list[ri].fpts_pg : 0;
-    }
-    
-    scored.forEach(function(p) {
-      var sznVor = p.fpts_season - (replacement[p.pos] || 0);
-      var ppgVor = (p.fpts_pg - (replacementPPG[p.pos] || 0)) * 16; // normalize to 16-game scale
-      
-      // Blend: 55% PPG-based, 45% season-total-based
-      p.vor = sznVor * 0.45 + ppgVor * 0.55;
-      
-      // QB discount in 1QB: QBs are highly replaceable via streaming
-      // In 1QB, the difference between QB1 and QB12 matters less than RB1 vs RB30
-      if (p.pos === 'QB' && roster.QB === 1 && sflex === 0) {
-        p.vor *= 0.55; // 45% discount for 1QB replaceability
-      }
-      
-      // TE compression: still needed because TE1-2 produce outsized PPG VOR
-      if (p.pos === 'TE') {
-        p.vor *= 0.80;
-      }
-    });
-
-    // --- Final ordering: model within position, market across positions ---
-    // Raw half-PPR VOR is structurally RB/TE-heavy vs how drafts actually go
-    // (model top-60 was 32 RB / 10 TE / 13 WR vs Underdog's 25 / 3 / 30, and
-    // no linear per-position VOR scaling can fix allocation — the RB VOR
-    // distribution dwarfs WR's in the starter zone). So: the model keeps full
-    // control of ORDER WITHIN each position (its backtested strength), while
-    // the CROSS-POSITION mix follows a market slot curve — "the Nth RB
-    // typically goes at overall pick X" — built live from Underdog ADP
-    // (consensus rank fallback), so it tracks live ADP updates. Positional
-    // outliers vs market stay fully visible (a player the model calls WR8 vs
-    // market WR20 still leaps off the board). 1QB only: superflex/2QB keep
-    // pure VOR ordering — their QB premium is the whole point and UD's 1QB
-    // curve would erase it.
-    var _slotCurve = null;
-    if (isDynasty) {
-      // Dynasty market anchor: KTC values (KTC_SF for dynastysf, KTC_1QB
-      // otherwise) play the role Underdog ADP plays for redraft — the model
-      // keeps within-position order, KTC sets the cross-position mix. KTC is
-      // higher-better, so negate to reuse the ascending-rank machinery.
-      var _ktcMap = (boardMode === 'dynsf')
-        ? (typeof KTC_SF !== 'undefined' ? KTC_SF : null)
-        : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : null);
-      if (_ktcMap) {
-        var _ktcRanked = [];
-        D.forEach(function(dd) {
-          if (dd.s !== 'QB' && dd.s !== 'RB' && dd.s !== 'WR' && dd.s !== 'TE') return;
-          var kv = _ktcMap[dd.n];
-          if (kv != null) _ktcRanked.push({ pos: dd.s, v: -kv });
-        });
-        if (_ktcRanked.length >= 100) {
-          _ktcRanked.sort(function(a, b) { return a.v - b.v; });
-          _slotCurve = { QB: [], RB: [], WR: [], TE: [] };
-          _ktcRanked.forEach(function(m, i) { _slotCurve[m.pos].push(i + 1); });
-        }
-      }
-    } else if (boardMode === '1qb') {
-      var _mktRanked = [];
-      var _udCount = 0;
-      D.forEach(function(dd) {
-        if (dd.s !== 'QB' && dd.s !== 'RB' && dd.s !== 'WR' && dd.s !== 'TE') return;
-        if (dd.udA != null) _udCount++;
-      });
-      D.forEach(function(dd) {
-        if (dd.s !== 'QB' && dd.s !== 'RB' && dd.s !== 'WR' && dd.s !== 'TE') return;
-        var mv = _udCount >= 100 ? dd.udA : dd.a;
-        if (mv != null) _mktRanked.push({ pos: dd.s, v: mv });
-      });
-      if (_mktRanked.length >= 100) {
-        _mktRanked.sort(function(a, b) { return a.v - b.v; });
-        _slotCurve = { QB: [], RB: [], WR: [], TE: [] };
-        _mktRanked.forEach(function(m, i) { _slotCurve[m.pos].push(i + 1); });
-      }
-    }
-    if (_slotCurve) {
-      var _slotFor = function(pos, posRank) {
-        var arr = _slotCurve[pos];
-        if (posRank <= arr.length) return arr[posRank - 1];
-        // extrapolate past the market's data with the observed tail spacing
-        var last = arr[arr.length - 1] || 300;
-        var span = arr.length >= 6 ? (last - arr[arr.length - 6]) / 5 : 8;
-        return last + (posRank - arr.length) * Math.max(span, 2);
-      };
-      var _byPos = { QB: [], RB: [], WR: [], TE: [] };
-      scored.forEach(function(p) { _byPos[p.pos].push(p); });
-      for (var _sp in _byPos) {
-        _byPos[_sp].sort(function(a, b) { return b.vor - a.vor; });
-        _byPos[_sp].forEach(function(p, i) { p.slot = _slotFor(_sp, i + 1); });
-      }
-      scored.sort(function(a, b) { return (a.slot - b.slot) || (b.vor - a.vor); });
-    } else {
-      // No market data (or superflex/2QB): pure VOR descending
-      scored.sort(function(a, b) { return b.vor - a.vor; });
-    }
-
-    // Build board (array of D indices)
-    var jsBoard = scored.map(function(p) { return p.idx; });
-
-    // Append any D indices not in scored (K, DST, unmatched)
-    var inBoard = new Set(jsBoard);
-    D.forEach(function(d, idx) {
-      if (!inBoard.has(idx)) jsBoard.push(idx);
-    });
-
-    // Per-board display stats. _jsRebuild computes up to three boards per
-    // rebuild now (base + dynasty + dynastysf) and stamps D with whichever
-    // board is actually being rendered, so stats can't come from a board the
-    // user isn't looking at.
-    var stats = {};
-    scored.forEach(function(p) {
-      stats[p.idx] = {
-        ppg: Math.round(p.fpts_pg * 10) / 10,
-        vor: Math.round(p.vor * 10) / 10,
-        season: Math.round(p.fpts_season)
-      };
-    });
-
-    return { board: jsBoard, stats: stats };
-  }
-
-  // Stamp one board's display stats onto D (nulls for unmatched/K/DST).
-  function _jsApplyStats(res) {
-    D.forEach(function(d, idx) {
-      var s = res.stats[idx];
-      if (s) {
-        d._jsModelPpg = s.ppg; d._jsModelVor = s.vor; d._jsModelSeason = s.season;
-      } else {
-        d._jsModelPpg = null; d._jsModelVor = null; d._jsModelSeason = null; d._clayDiv = null;
-      }
-    });
-  }
-
-  // --- Rebuild and apply boards ---
-  // Three boards per rebuild since 2026-07-22: the format-selected board for
-  // redraft-ish modes, plus dedicated dynasty / dynastysf boards (multi-year
-  // discounted valuation + KTC anchor) so trade calc / player cards / any
-  // dynasty-context consumer of versionBoards.jsmodel finally sees a real
-  // dynasty order instead of the redraft board.
-  function _jsRebuild() {
-    _jsBuildProj(); // lazy: ensure projection map exists before reading it below
-    var visible = _jsComputeBoard(); // per the format selector (_jsFormat)
-    var dynRes = _jsFormat === 'dyn1qb' ? visible : _jsComputeBoard('dyn1qb');
-    var dynSfRes = _jsFormat === 'dynsf' ? visible : _jsComputeBoard('dynsf');
-    versionBoards.jsmodel.redraft = visible.board;
-    versionBoards.jsmodel.bestball = visible.board;
-    versionBoards.jsmodel.superflex = visible.board;
-    versionBoards.jsmodel.dynasty = dynRes.board;
-    versionBoards.jsmodel.dynastysf = dynSfRes.board;
-
-    // Stamp stats + generate tiers from the board the renderer will show
-    // (versionBoards.jsmodel[currentMode]). Tiers for the other modes reuse
-    // these breaks — only the rendered mode's tiers are ever visible in the
-    // JS Model view (its mode tabs are hidden).
-    var stamp = currentMode === 'dynasty' ? dynRes
-              : currentMode === 'dynastysf' ? dynSfRes : visible;
-    _jsApplyStats(stamp);
-    var jsBoard = stamp.board;
-
-    // Auto-generate tiers based on VOR breakpoints
-    var modes = ['redraft','bestball','superflex','dynasty','dynastysf'];
-    modes.forEach(function(mode) {
-      versionTiers.jsmodel[mode].ALL = [];
-      versionTierCounters.jsmodel[mode].ALL = 0;
-    });
-
-    // Get VOR values in board order. Skip retired players — the rankings
-    // render filters them out (app.js ~1651), so tier afterRanks must be
-    // ranks within the VISIBLE list or every break lands on the wrong row.
-    var vorValues = [];
-    jsBoard.forEach(function(idx) {
-      var bd = D[idx];
-      if (bd._retired) return;
-      if (bd._jsModelVor != null) vorValues.push({rank: vorValues.length + 1, vor: bd._jsModelVor});
-    });
-
-    // Dynamic tier generation based on natural VOR gaps
-    // Instead of fixed thresholds, find clusters of similar VOR values
-    // and put tier breaks where the biggest gaps are.
-    // This creates tiers where players within a tier are truly comparable.
-    
-    if (vorValues.length < 10) return jsBoard;
-    
-    // Compute VOR gaps between consecutive players
-    var gaps = [];
-    for (var gi = 0; gi < Math.min(vorValues.length - 1, 120); gi++) {
-      gaps.push({
-        rank: vorValues[gi].rank,
-        gap: vorValues[gi].vor - vorValues[gi+1].vor,
-        vor: vorValues[gi].vor
-      });
-    }
-    
-    // Find the largest gaps — these are natural tier breaks
-    // We want 8-12 tiers in the top 100 players
-    var sortedGaps = gaps.slice().sort(function(a,b) { return b.gap - a.gap; });
-    
-    // Take top 10 gaps as tier breaks, but enforce minimum tier size of 3 players
-    var tierBreaks = [];
-    var usedRanks = {};
-    for (var tgi = 0; tgi < sortedGaps.length && tierBreaks.length < 10; tgi++) {
-      var gapRank = sortedGaps[tgi].rank;
-      // Don't put breaks too close together (min 3 players per tier)
-      var tooClose = false;
-      for (var tb = 0; tb < tierBreaks.length; tb++) {
-        if (Math.abs(tierBreaks[tb] - gapRank) < 3) { tooClose = true; break; }
-      }
-      if (!tooClose && sortedGaps[tgi].gap > 2) {
-        tierBreaks.push(gapRank);
-      }
-    }
-    tierBreaks.sort(function(a,b) { return a - b; });
-    
-    // Build tier labels
-    var tierLabels = ['S','A','B','C','D','E','F','G','H','I','J'];
-    var tierNames = ['ELITE','TIER 1','TIER 2','TIER 3','TIER 4','TIER 5','TIER 6','TIER 7','TIER 8','TIER 9','TIER 10'];
-    var finalTiers = [];
-    finalTiers.push({afterRank: 1, label: tierLabels[0], name: tierNames[0]});
-    for (var ti = 0; ti < tierBreaks.length && ti < tierLabels.length - 1; ti++) {
-      finalTiers.push({afterRank: tierBreaks[ti] + 1, label: tierLabels[ti+1], name: tierNames[ti+1]});
-    }
-
-    // Apply tiers to all modes
-    var _tc = 0;
-    modes.forEach(function(mode) {
-      _tc = 0;
-      finalTiers.forEach(function(t) {
-        _tc++;
-        versionTiers.jsmodel[mode].ALL.push({id: _tc, label: t.label, name: t.name, afterRank: t.afterRank});
-      });
-      versionTierCounters.jsmodel[mode].ALL = _tc;
-    });
-
-    // --- Per-position tiers (QB/RB/WR/TE filter tabs) ---
-    // Same natural-VOR-gap approach as the ALL view, but computed within each
-    // position's own list. afterRank is the POSITIONAL rank — that's what the
-    // renderer's _tierPK() bucket expects when a position filter is active.
-    // Within a position the board order IS VOR-descending (the market slot
-    // curve only re-interleaves across positions), so board order is safe to
-    // scan directly.
-    var _posVor = { QB: [], RB: [], WR: [], TE: [] };
-    jsBoard.forEach(function(bIdx) {
-      var bd = D[bIdx];
-      if (bd._retired) return; // hidden by the render — see vorValues note
-      if (_posVor[bd.s] && bd._jsModelVor != null) _posVor[bd.s].push(bd._jsModelVor);
-    });
-    var _posScanDepth = { QB: 32, RB: 60, WR: 72, TE: 32 };
-    Object.keys(_posVor).forEach(function(ppos) {
-      modes.forEach(function(mode) {
-        versionTiers.jsmodel[mode][ppos] = [];
-        versionTierCounters.jsmodel[mode][ppos] = 0;
-      });
-      var vals = _posVor[ppos];
-      if (vals.length < 8) return;
-      var pgaps = [];
-      for (var pgi = 0; pgi < Math.min(vals.length - 1, _posScanDepth[ppos]); pgi++) {
-        pgaps.push({ rank: pgi + 1, gap: vals[pgi] - vals[pgi + 1] });
-      }
-      var psorted = pgaps.slice().sort(function(a, b) { return b.gap - a.gap; });
-      // Positional tiers can legitimately be small at the top ("Tier 1:
-      // Gibbs, Bijan"), so min size 2 (vs 3 on the ALL board) and a lower
-      // gap floor since positional VOR is flatter deep in the list.
-      var pbreaks = [];
-      for (var pg = 0; pg < psorted.length && pbreaks.length < 8; pg++) {
-        var prk = psorted[pg].rank;
-        var pclose = false;
-        for (var pb = 0; pb < pbreaks.length; pb++) {
-          if (Math.abs(pbreaks[pb] - prk) < 2) { pclose = true; break; }
-        }
-        if (!pclose && psorted[pg].gap > 1.5) pbreaks.push(prk);
-      }
-      pbreaks.sort(function(a, b) { return a - b; });
-      var ptiers = [{ afterRank: 1, label: tierLabels[0], name: tierNames[0] }];
-      for (var pt = 0; pt < pbreaks.length && pt < tierLabels.length - 1; pt++) {
-        ptiers.push({ afterRank: pbreaks[pt] + 1, label: tierLabels[pt + 1], name: tierNames[pt + 1] });
-      }
-      modes.forEach(function(mode) {
-        var pctr = 0;
-        ptiers.forEach(function(t) {
-          pctr++;
-          versionTiers.jsmodel[mode][ppos].push({ id: pctr, label: t.label, name: t.name, afterRank: t.afterRank });
-        });
-        versionTierCounters.jsmodel[mode][ppos] = pctr;
-      });
-    });
-
-    if (currentVersion === 'jsmodel') {
-      syncMode();
-      renumber();
-      render();
-    }
-  }
-
-  // --- UI toggle ---
-  function _jsModelUpdateUI() {
-    var isJS = currentVersion === 'jsmodel';
-    document.body.classList.toggle('jsmodel-active', isJS);
-    var bar = document.getElementById('jsModelBar');
-    var scoringRow = document.getElementById('rankingScoringToggle');
-    var adpHint = document.getElementById('rnkAdpHint');
-    var modeTabs = document.querySelector('.mode-tabs');
-    if (bar) bar.style.display = isJS ? '' : 'none';
-    // Hide standard scoring/ADP row when in JS Model mode
-    if (scoringRow) scoringRow.closest('div[style*="padding"]').style.display = isJS ? 'none' : '';
-    if (adpHint) adpHint.style.display = isJS ? 'none' : '';
-    // Hide mode tabs (redraft/dynasty/etc) for JS Model — it has its own format selector
-    if (modeTabs) modeTabs.style.display = isJS ? 'none' : '';
-    // Update column headers
-    var projTh = document.querySelector('th[data-sort="pts"]');
-    var vorTh = document.querySelector('th[data-sort="fpts25"]');
-    if (isJS) {
-      if (projTh) projTh.innerHTML = '<span class="th-stack"><span>JS Proj PPG</span></span><span class="arrow"></span>';
-      if (vorTh) vorTh.innerHTML = '<span class="th-stack" id="ppg25Header"><span>VOR</span></span><span class="arrow"></span>';
-      // JS Model forces the fantasy stat view — restore the L4 header too in
-      // case the STATS toggle had swapped it to TEAM PPG.
-      var l4Th = document.getElementById('l4ppgHeaderTh');
-      if (l4Th) l4Th.innerHTML = '<span class="th-stack" id="l4ppgHeader"><span>L4 PPG</span></span><span class="arrow"></span>';
-    } else if (typeof window._updateRnkStatHeaders === 'function') {
-      // Restores fantasy PPG headers — or the proj/lines STATS headers if that
-      // toggle is active — including glosses and the current scoring label.
-      window._updateRnkStatHeaders();
-    } else {
-      var _scoringLabelsRnk2 = {ppr:'PPR',half:'Half PPR',std:'Standard'};
-      var fmt = typeof rankingScoringFmt !== 'undefined' ? rankingScoringFmt : 'half';
-      var fmtLabel = _scoringLabelsRnk2[fmt] || 'Half PPR';
-      if (projTh) projTh.innerHTML = '<span class="th-stack"><span>Proj PPG</span><span class="hide-on-mobile th-fmt">' + fmtLabel + '</span></span><span class="arrow"></span>';
-      if (vorTh) vorTh.innerHTML = '<span class="th-stack" id="ppg25Header"><span>\'25 PPG</span><span class="hide-on-mobile th-fmt">' + fmtLabel + '</span></span><span class="arrow"></span>';
-    }
-    // Rebuild board when switching to JS Model
-    if (isJS) _jsRebuild();
-  }
-  window._jsModelUpdateUI = _jsModelUpdateUI;
-
-  // Expose for ppg column
-  window._jsModelGetPpg = function(d) {
-    return currentVersion === 'jsmodel' ? d._jsModelPpg : null;
-  };
-
-  // --- Wire up settings controls ---
-  document.querySelectorAll('#jsModelScoringToggle .js-model-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('#jsModelScoringToggle .js-model-btn').forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      _jsScoring = btn.dataset.jmscoring;
-      _jsRebuild();
-    });
-  });
-  document.querySelectorAll('#jsModelFormatToggle .js-model-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('#jsModelFormatToggle .js-model-btn').forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      _jsFormat = btn.dataset.jmformat;
-      _jsRebuild();
-    });
-  });
-  var teamsSelect = document.getElementById('jsModelTeams');
-  if (teamsSelect) teamsSelect.addEventListener('change', function() {
-    _jsTeams = parseInt(this.value) || 12;
-    _jsRebuild();
-  });
-  var rosterSelect = document.getElementById('jsModelRoster');
-  if (rosterSelect) rosterSelect.addEventListener('change', function() {
-    _jsRoster = this.value;
-    _jsRebuild();
-  });
-
-  // Expose injury discount diagnostic on window for console inspection
-  window._injDiagnostic = function(autoOnly) {
-    var results = [];
-    D.forEach(function(d) {
-      if (d._injDiscount) {
-        if (autoOnly && !d._injDiscount.auto) return;
-        results.push({
-          name: d.n, pos: d.s, team: d.t, injury: d._injDiscount.tag,
-          mult: d._injDiscount.mult, mode: d._injDiscount.mode,
-          auto: d._injDiscount.auto ? 'YES' : '',
-          severity: d._injDiscount.severity || '',
-          ppg: d._jsModelPpg, vor: d._jsModelVor
-        });
-      }
-    });
-    results.sort(function(a,b) { return a.mult - b.mult; });
-    console.table(results);
-    console.log('Total: ' + results.length + ' (' + results.filter(function(r){return r.auto==='YES';}).length + ' auto-detected, ' + results.filter(function(r){return r.auto==='';}).length + ' manual tags)');
-    console.log('Tip: _injDiagnostic(true) to show only auto-detected');
-    return results;
-  };
-
-  // Initial build — DEFERRED off the startup critical path. This eager compute (which
-  // triggers the ~175ms _jsBuildProj projection build) was for the JS-Model view, which
-  // is NOT the default (CONSENSUS is). Warm it at idle instead; switching to JS Model
-  // (or the DCL injury-history rebuild below) builds it on demand if idle hasn't fired.
-  // NOTE: _jsComputeBoard is PURE now (returns {board, stats}) — the warm-up
-  // must stamp stats explicitly, because adjProjPpg's veteran fallback and the
-  // My Teams PPG helpers read d._jsModelPpg outside the JS Model view.
-  var _jsWarmUp = function(){ try{ _jsApplyStats(_jsComputeBoard()); }catch(e){} };
-  if (window.requestIdleCallback) requestIdleCallback(_jsWarmUp, { timeout: 4000 });
-  else setTimeout(_jsWarmUp, 1200);
-
-  // Expose rebuild for external triggers (e.g. Firestore injury updates arriving async)
-  window._jsRebuild = _jsRebuild;
-  // injury_history.js is deferred — once INJURY_HISTORY has parsed, recompute so the JS
-  // Model board picks up the precise injury-type multipliers. But ONLY if the board was
-  // already built (i.e. JS Model is in use) — otherwise forcing _jsRebuild here would run
-  // the ~175ms build on DCL for everyone. When the board isn't built yet, the idle warm-up
-  // above computes it AFTER INJURY_HISTORY is already loaded, so it's correct without this.
-  document.addEventListener('DOMContentLoaded', function(){
-    if (_jsPlayerProj && typeof INJURY_HISTORY !== 'undefined' && Object.keys(INJURY_HISTORY).length) {
-      try { _jsRebuild(); } catch(e) {}
-    }
-  });
-})();
 
 // Mode tabs: switch between redraft and dynasty
 document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
@@ -6040,12 +4474,11 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
 // Compute how many rows the current user is allowed to export based on premium gate.
 // Non-premium Jack's: 24 for ALL/ROOKIE, 12 for positions.
 // Non-premium My Rankings: 12 across all filters.
-// JS Model: unlimited (free for everyone). Premium: unlimited.
+// Premium: unlimited.
 function _exportCutoff() {
   const _isPrem = typeof hasPremium === 'function' && hasPremium();
   if (_isPrem) return Infinity;
   if (currentVersion === 'consensus') return Infinity;
-  if (currentVersion === 'jsmodel') return Infinity;
   // Not signed in on My Rankings should get 0, but canEdit gate already prevents that flow; still safe to return 0.
   if (currentVersion === 'mine' && !window._authCurrentUser) return 0;
   if (currentVersion === 'mine') return 12;
@@ -6068,26 +4501,19 @@ document.getElementById('btnExport').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   
   // Build CSV
   const esc = v => { const s = String(v ?? ''); return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
   
-  const _isJSM = currentVersion === 'jsmodel';
   const _sl = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
-  const headers = _isJSM
-    ? ['Rank', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', 'JS Proj PPG', 'VOR', 'Proj Season', 'Age']
-    : ['Rank', 'Tier', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', 'PPG Proj (' + _sl[rankingScoringFmt] + ')', 'PPG 2025 (' + _sl[rankingScoringFmt] + ')', 'Age', 'ADP Diff'];
+  const headers = ['Rank', 'Tier', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', 'PPG Proj (' + _sl[rankingScoringFmt] + ')', 'PPG 2025 (' + _sl[rankingScoringFmt] + ')', 'Age', 'ADP Diff'];
   const rows = [headers.join(',')];
-  
+
   data.forEach((d, i) => {
     const displayRank = useFilteredRank ? (i + 1) : d.myRank;
-    if (_isJSM) {
-      rows.push([d.myRank,esc(d.n),esc(d.t),d.s,esc(d.myPosRank||d.r),rnkAdp(d)!=null?rnkAdp(d):'',d._jsModelPpg!=null?d._jsModelPpg:'',d._jsModelVor!=null?d._jsModelVor:'',d._jsModelSeason!=null?d._jsModelSeason:'',d.age!=null?d.age:''].join(','));
-      return;
-    }
     const tierLabel = getTierForRank(displayRank);
     const tierName = tiers.find(t => {
       const sorted = tiers.slice().sort((a,b) => a.afterRank - b.afterRank);
@@ -6140,14 +4566,13 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' \u2014 upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
-  const _isJSM = currentVersion === 'jsmodel';
 
   const players = data.map((d, i) => {
     const displayRank = useFilteredRank ? (i + 1) : d.myRank;
-    const tierLabel = !_isJSM ? getTierForRank(displayRank) : null;
+    const tierLabel = getTierForRank(displayRank);
     const adp = rnkAdp(d);
     const ppgProj = adjProjPpg(d);
     const ppg25 = adj25ppg(d);
@@ -6161,16 +4586,10 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
       adp: adp != null ? adp : null,
       age: d.age != null ? d.age : null
     };
-    if (_isJSM) {
-      base.jsModelPpg = d._jsModelPpg != null ? d._jsModelPpg : null;
-      base.jsModelVor = d._jsModelVor != null ? d._jsModelVor : null;
-      base.jsModelSeason = d._jsModelSeason != null ? d._jsModelSeason : null;
-    } else {
-      base.tier = tierLabel || null;
-      base.ppgProj = ppgProj != null ? ppgProj : null;
-      base.ppg2025 = ppg25 != null ? ppg25 : null;
-      base.adpDiff = adp != null ? Math.round(adp - d.myRank) : null;
-    }
+    base.tier = tierLabel || null;
+    base.ppgProj = ppgProj != null ? ppgProj : null;
+    base.ppg2025 = ppg25 != null ? ppg25 : null;
+    base.adpDiff = adp != null ? Math.round(adp - d.myRank) : null;
     return base;
   });
 
@@ -6179,7 +4598,7 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
     version: currentVersion,
     mode: currentMode,
     position: filter,
-    scoring: _isJSM ? null : rankingScoringFmt,
+    scoring: rankingScoringFmt,
     exportedAt: new Date().toISOString(),
     count: players.length,
     players
@@ -6220,7 +4639,7 @@ document.getElementById('btnExportTiers').addEventListener('click', () => {
   if (current.players.length) groups.push(current);
 
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const payload = {
     source: 'myfantasyfootball.co',
@@ -6255,7 +4674,7 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'jsmodel' ? 'JSModel' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   // Underdog's current export quotes every populated field; mirror that exactly.
   const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
@@ -6342,7 +4761,6 @@ document.getElementById('btnClear').addEventListener('click', () => {
   if (!canEdit()) {
     if (!window._authCurrentUser) { toast("Sign in to create your rankings"); if (typeof window.openAuthModal === 'function') window.openAuthModal(); }
     else if (currentVersion === 'consensus') toast("Consensus rankings are auto-generated and can't be edited");
-    else if (currentVersion === 'jsmodel') toast("JS Model rankings are auto-generated");
     else toast("Only admins can edit Jack's rankings");
     return;
   }
@@ -13698,10 +12116,6 @@ document.addEventListener('mff:retireddata', _rerunAllPlayersEnrich);
 
   function _rebuildIfDone() {
     _completedUpdates++;
-    if (_completedUpdates >= _pendingUpdates && typeof window._jsRebuild === 'function') {
-      window._jsRebuild();
-      console.log('[LiveUpdates] JS model rebuilt with latest data');
-    }
   }
 
   // --- Injury Updates ---
@@ -19327,7 +17741,7 @@ window.fmtHeight = fmtHeight;
   };
 
   // Note: no age multiplier — age is already baked into every ranking source
-  // (Jack's, Consensus, JS Model, KTC, Sleeper dynasty ADP), so applying one
+  // (Jack's, Consensus, KTC, Sleeper dynasty ADP), so applying one
   // on top of the rank would double-count age decay.
 
   function _getTierForPlayerFull(d, src, mode) {
@@ -19416,7 +17830,7 @@ window.fmtHeight = fmtHeight;
     } else {
       val = Math.max(Math.round(1000 / (Math.pow(rank, 0.8) + 3)), 1);
     }
-    // Tier multiplier only applies to version-based sources (consensus/jacks/jsmodel/mine)
+    // Tier multiplier only applies to version-based sources (consensus/jacks/mine)
     if (!isAdpSrc) {
       const tierLabel = _getTierForPlayerFull(d, s, m);
       if (tierLabel && TIER_MULT[tierLabel] !== undefined) {
@@ -19785,14 +18199,6 @@ window.fmtHeight = fmtHeight;
   document.querySelectorAll('.trade-src-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       const src = btn.dataset.tsrc;
-      // JS Model is admin-only for now (coming soon to everyone else)
-      if (src === 'jsmodel') {
-        const _isAdminNow = typeof window.isAdmin === 'function' && window.isAdmin();
-        if (!_isAdminNow) {
-          if (typeof toast === 'function') toast('JS Model — Coming Soon');
-          return;
-        }
-      }
       // Lock Jack's Ranks behind premium
       if (src === 'jacks' && !hasPremium()) {
         const existing = document.getElementById('tradePremiumLock');
@@ -20016,7 +18422,6 @@ window.fmtHeight = fmtHeight;
       const last = d.career[d.career.length - 1];
       if (last.gp > 0 && last.fpts > 0) return last.fpts / last.gp;
     }
-    if (d._jsModelPpg) return d._jsModelPpg;
     return 0;
   }
   function _calcAutoArchetype(team, league) {
@@ -22004,11 +20409,7 @@ window.fmtHeight = fmtHeight;
   function updateAccountUI(user) {
     currentUser = user;
     window._authCurrentUser = user;
-    // Re-check admin gating for the JS Model tab now that currentUser is set.
-    if (typeof window._jsModelCheckAdmin === 'function') {
-      try { window._jsModelCheckAdmin(user); } catch (_e) {}
-    }
-    // Same for the WEEKLY format tab — its IIFE-internal auth listener fails to
+    // Re-check admin gating for the WEEKLY format tab — its IIFE-internal auth listener fails to
     // register because firebase.auth() throws when called before initializeApp.
     if (typeof window._weeklyAdminCheck === 'function') {
       try { window._weeklyAdminCheck(user); } catch (_e) {}
@@ -23143,14 +21544,6 @@ window.fmtHeight = fmtHeight;
   const rankPremiumHint = document.getElementById('mdRankPremiumHint');
   rankSrcTabs.forEach(t => t.addEventListener('click', () => {
     const src = t.dataset.mdsrc;
-    // JS Model is admin-only for now (coming soon to everyone else)
-    if (src === 'jsmodel') {
-      const _isAdminNow = typeof window.isAdmin === 'function' && window.isAdmin();
-      if (!_isAdminNow) {
-        if (typeof toast === 'function') toast('JS Model — Coming Soon');
-        return;
-      }
-    }
     if (src === 'jacks' && !hasPremium()) {
       // Show premium hint, don't switch
       rankPremiumHint.classList.add('show');
@@ -23270,10 +21663,10 @@ window.fmtHeight = fmtHeight;
     }
     // Rookie mode with KTC: use default KTC-sorted board
     if (mdMode === 'rookie') return getADPBoardDefault();
-    // If using a multi-source ranking board (Consensus / Mine / Jack's / JS Model), use that order.
+    // If using a multi-source ranking board (Consensus / Mine / Jack's), use that order.
     // Auto-detect Superflex: if REDRAFT mode but lineup is superflex, fall back
     // to the superflex board for ordering (QBs slot up appropriately).
-    if (mdRankSrc === 'consensus' || mdRankSrc === 'mine' || mdRankSrc === 'jacks' || mdRankSrc === 'jsmodel') {
+    if (mdRankSrc === 'consensus' || mdRankSrc === 'mine' || mdRankSrc === 'jacks') {
       const rankModeKey = (mdMode === 'redraft' && isMdEffectivelySuperflex())
         ? 'superflex' : mdMode;
       const rankBoard = versionBoards[mdRankSrc] ? (versionBoards[mdRankSrc][rankModeKey] || versionBoards[mdRankSrc][mdMode] || versionBoards[mdRankSrc].redraft) : null;
@@ -41124,7 +39517,7 @@ Rules:
   let _mtMyUserId = null; // auto-detected Sleeper user ID
   let _mtViewMode = 'value'; // 'value' = dynasty rankings, 'contender' = redraft rankings (win-now)
   // Value source — which ranking/ADP source to use for team grades and player values.
-  // Supports: consensus, jacks, jsmodel, mine (version-based) + underdog, ktc, espn, sleeper, yahoo (ADP-based)
+  // Supports: consensus, jacks, mine (version-based) + underdog, ktc, espn, sleeper, yahoo (ADP-based)
   let _mtValueSrc = 'consensus';
   window._mtGetValueSrc = function() { return _mtValueSrc; };
 
@@ -42356,7 +40749,7 @@ Rules:
       const sampleName = playerNames.find(n => { const d = D.find(p => p.n === n); return d && d.s !== 'K' && d.s !== 'DST'; });
       if (sampleName) {
         const sd = D.find(p => p.n === sampleName);
-        console.log('[BestLineup] Sample player:', sampleName, 'p:', sd.p, 's25:', !!sd.s25, 'career:', sd.career ? sd.career.length : 0, '_jsModelPpg:', sd._jsModelPpg);
+        console.log('[BestLineup] Sample player:', sampleName, 'p:', sd.p, 's25:', !!sd.s25, 'career:', sd.career ? sd.career.length : 0);
         if (sd.career && sd.career.length) {
           const last = sd.career[sd.career.length - 1];
           console.log('[BestLineup] Last career season:', JSON.stringify(last));
@@ -44857,9 +43250,8 @@ Rules:
 
     // Projection chain when Clay didn't override (v0.9.43):
     //   1. Mike Clay 2026 projection at full health (built into adjProjPpg)
-    //   2. JS Model PPG (built into adjProjPpg as veteran fallback)
-    //   3. Underdog's own season projection ÷ 17 (rookies Clay missed)
-    //   4. 0 (truly unprojected — won't win lineup slots, which is correct)
+    //   2. Underdog's own season projection ÷ 17 (rookies Clay missed)
+    //   3. 0 (truly unprojected — won't win lineup slots, which is correct)
     if (!usedClayActive) {
       preseason = _bbCachedProj(matched);
       if (!preseason && pick && pick.udProj != null && !isNaN(pick.udProj) && pick.udProj > 0) {
@@ -46117,7 +44509,7 @@ Rules:
     let html = '';
 
     // Helper: pull projected PPG for a player (raw, before BB adjustment).
-    // v0.9.41 → v0.9.43: Clay → JS Model → Underdog projection (÷ 17).
+    // v0.9.41 → v0.9.43: Clay → Underdog projection (÷ 17).
     // adj25ppg returns last year's actual PPG and is wrong for forward-
     // looking projection.
     function _udPlayerProj(name, pickObj) {
@@ -46994,10 +45386,12 @@ Rules:
     }
   } catch(e) {}
 
-  // Value-source tabs (consensus / jacks / jsmodel / mine + underdog / espn / sleeper / yahoo / ktc)
+  // Value-source tabs (consensus / jacks / mine + underdog / espn / sleeper / yahoo / ktc)
   try {
     const savedSrc = localStorage.getItem('mt_value_src');
-    if (savedSrc) _mtValueSrc = savedSrc;
+    // 'jsmodel' removed 2026-07-23 (model moved to the standalone js_model_site
+    // project) — fall back to consensus for anyone who had it saved.
+    if (savedSrc && savedSrc !== 'jsmodel') _mtValueSrc = savedSrc;
   } catch(e) {}
   const MT_LOCKED_ADP = ['espn', 'yahoo'];
   function _mtRefreshAfterSrcChange() {
@@ -47019,14 +45413,6 @@ Rules:
     btn.classList.toggle('active', btn.dataset.mtsrc === _mtValueSrc);
     btn.addEventListener('click', () => {
       const src = btn.dataset.mtsrc;
-      // JS Model is admin-only for now (coming soon to everyone else)
-      if (src === 'jsmodel') {
-        const _isAdminNow = typeof window.isAdmin === 'function' && window.isAdmin();
-        if (!_isAdminNow) {
-          if (typeof toast === 'function') toast('JS Model — Coming Soon');
-          return;
-        }
-      }
       // Locked ADP sources
       if (MT_LOCKED_ADP.indexOf(src) >= 0) {
         if (typeof toast === 'function') toast(src.toUpperCase() + ' ADP coming soon — Premium only');

@@ -35,6 +35,12 @@ Still open, lower urgency: per-year top-25 trivia sweep (452-slug seed list); li
 
 ## JS Model roadmap (overhaul shipped 2026-07-21)
 
+> **MOVED OFF-SITE 2026-07-23**: the JS Model was removed from the deployed app
+> and now lives as its own local-only site at `E:\MyFantasyFootball\js_model_site\`
+> (engine.js + shims + minimal UI; generator/backtest scripts moved there too,
+> reading shared data from this repo's `data/`). Everything below is history of
+> the on-site era.
+
 Shipped this session (commits `becd845`..`c705e52`): backtest harness (`scripts/backtest_js_model.py`, 2018-2025), 50/30/20 × games-played recency-weighted base rates via committed generator (`scripts/generate_js_model_data.py`), QB age-curve removed, experience curves (young jump / production-tiered vet fade), Vegas team context from `BETTING_2026.gameTotals`, vacated targets/carries from roster diffs, market slot-curve allocation (within-position order = model, cross-position mix = Underdog ADP), Clay games-played blend + 85% Clay cap for low-info cores, betting-props third ensemble leg (20% wt), devy draft-capital fix, positional tiers. Historical Clay projections (2019-2025) parsed from ESPN draft-kit CDN PDFs (`scripts/parse_clay_history.py` → `data/clay_history.json`, gitignored — regenerate locally): **full model beats Clay alone at every position** (MAE QB 3.07 vs 3.36, RB 2.25/2.26, WR 2.03/2.14, TE 1.42/1.44).
 
 Remaining, in rough priority order:

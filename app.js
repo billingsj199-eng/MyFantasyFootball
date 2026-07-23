@@ -42158,8 +42158,12 @@ Rules:
   };
 
   // === BEST LINEUP OPTIMIZER ===
-  // Slots players into the actual league roster positions to maximize projected PPG
-  function _mtBestLineup(playerNames) {
+  // Slots players into the actual league roster positions to maximize projected PPG.
+  // basis: 'ppg' (default) ranks the pool by Clay season PPG; 'weekly' ranks it by
+  // Jack's WEEKLY board order for the active/published week, shows week-adjusted
+  // PPG (_weeklyAdjustPpg: props/team-total/opp-defense), and benches bye/out players.
+  function _mtBestLineup(playerNames, basis) {
+    basis = basis || 'ppg';
     let rp = _mtFormat.rosterPositions || [];
     // Fallback: if rosterPositions wasn't stored, build a default from format info
     if (!rp.length && _mtFormat.starters) {
@@ -42180,11 +42184,34 @@ Rules:
     // Get projected PPG for each player, adjusted for league scoring
     const pprVal = _mtFormat.ppr != null ? _mtFormat.ppr : 0.5;
 
+    // Jack's weekly board rank lookup (name → 1-based rank), weekly basis only.
+    // versionBoards.jacks.weekly is D indices in board order; follows Redraft
+    // until Jack touches the week, so there's always an order to rank against.
+    let wkRankByName = null, wkNum = null;
+    if (basis === 'weekly' && window.versionBoards && window.versionBoards.jacks && window.versionBoards.jacks.weekly) {
+      wkRankByName = {};
+      window.versionBoards.jacks.weekly.forEach((di, i) => {
+        const dp = (typeof D !== 'undefined') ? D[di] : null;
+        if (dp && wkRankByName[dp.n] == null) wkRankByName[dp.n] = i + 1;
+      });
+      wkNum = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    }
+
     let _dbgFound = 0, _dbgNoD = 0, _dbgNoPpg = 0;
     const pool = playerNames.map(name => {
       const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
-      if (!d) { _dbgNoD++; return { name, pos: '?', ppg: 0, d: null }; }
-      if (d.s === 'K' || d.s === 'DST') return { name, pos: d.s, ppg: 0, d };
+      if (!d) { _dbgNoD++; return { name, pos: '?', ppg: 0, wkRank: null, d: null }; }
+      const wkRank = wkRankByName ? (wkRankByName[name] != null ? wkRankByName[name] : null) : null;
+      // Bye/ruled-out gate (weekly basis only): keep them in the pool so they
+      // show on the bench, but never start them regardless of Jack's rank.
+      let out = null;
+      if (basis === 'weekly' && d.t && typeof window.getNflScheduleForTeam === 'function') {
+        const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
+        const sched = window.getNflScheduleForTeam(abbr);
+        const entry = sched && sched[wkNum || 1];
+        if (entry && entry.bye) out = 'BYE';
+      }
+      if (d.s === 'K' || d.s === 'DST') return { name, pos: d.s, ppg: 0, wkRank, out, d };
       _dbgFound++;
       let ppg = 0;
       // Clay projections ONLY — matches _mtGetPlayerPpg. Players Clay doesn't
@@ -42198,9 +42225,16 @@ Rules:
           ppg = Math.round(((cp.pts + recs * clayAdj) / cp.gm) * 10) / 10;
         }
       }
+      if (basis === 'weekly' && ppg > 0 && typeof window._weeklyAdjustPpg === 'function') {
+        const adj = window._weeklyAdjustPpg(d, ppg);
+        // Adjusted 0 with a real season projection = the injury gate fired
+        // (IR/PUP/Out in-season) — bench them like a bye.
+        if (!adj && !out) out = 'OUT';
+        ppg = adj || 0;
+      }
       if (!ppg) _dbgNoPpg++;
-      return { name, pos: d.s, ppg, d };
-    }).filter(p => p.ppg > 0);
+      return { name, pos: d.s, ppg, wkRank, out, d };
+    }).filter(p => basis === 'weekly' ? (p.wkRank != null || p.ppg > 0) : p.ppg > 0);
     console.log('[BestLineup] Found in D:', _dbgFound, 'Not in D:', _dbgNoD, 'No PPG:', _dbgNoPpg, 'Pool after filter:', pool.length);
     if (pool.length > 0) {
       console.log('[BestLineup] Top 3:', pool.slice(0,3).map(p => p.name + '=' + p.ppg).join(', '));
@@ -42217,8 +42251,15 @@ Rules:
       }
     }
 
-    // Sort by PPG descending for greedy assignment
-    pool.sort((a, b) => b.ppg - a.ppg);
+    // Sort for greedy assignment. Weekly basis: Jack's weekly rank ascending
+    // (unranked sink to the bottom, PPG tiebreak), bye/out players dead last.
+    // PPG basis: projected PPG descending.
+    if (basis === 'weekly') {
+      const rk = p => p.out ? 2e9 : (p.wkRank != null ? p.wkRank : 1e9);
+      pool.sort((a, b) => rk(a) - rk(b) || b.ppg - a.ppg);
+    } else {
+      pool.sort((a, b) => b.ppg - a.ppg);
+    }
 
     // Map Sleeper slot names to which positions can fill them
     function canFill(slot, pos) {
@@ -42227,6 +42268,7 @@ Rules:
       if (slot === 'SUPER_FLEX' && (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE')) return true;
       if (slot === 'REC_FLEX' && (pos === 'WR' || pos === 'TE')) return true;
       if (slot === 'WRRB_FLEX' && (pos === 'WR' || pos === 'RB')) return true;
+      if (slot === 'DEF' && pos === 'DST') return true; // Sleeper calls the slot DEF
       if (slot === 'IDP_FLEX') return false; // skip IDP
       return false;
     }
@@ -42276,20 +42318,23 @@ Rules:
       bench,
       totalPpg: avgPpg,
       starterCount: starters.length,
-      slotCount: slots.length
+      slotCount: slots.length,
+      basis,
+      week: wkNum
     };
   }
 
   // Render best lineup HTML
   function _mtRenderBestLineup(lineup) {
     if (!lineup) return '';
-    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-    const slotLabels = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLX', SUPER_FLEX: 'SF', REC_FLEX: 'RF', WRRB_FLEX: 'WF', BN: 'BN' };
+    const isWeekly = lineup.basis === 'weekly';
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a855f7', DST: '#94a3b8' };
+    const slotLabels = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLX', SUPER_FLEX: 'SF', REC_FLEX: 'RF', WRRB_FLEX: 'WF', DEF: 'DST', BN: 'BN' };
 
     let html = `<div style="margin-top:18px;margin-bottom:8px">`;
     html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)">BEST LINEUP</div>`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#22c55e">${lineup.totalPpg} <span style="font-size:.65rem;color:var(--text2);font-weight:400">PROJ PPG</span></div>`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)">${isWeekly ? `BEST LINEUP · JACK'S WK ${lineup.week || 1}` : 'BEST LINEUP'}</div>`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#22c55e">${lineup.totalPpg} <span style="font-size:.65rem;color:var(--text2);font-weight:400">${isWeekly ? 'WK PROJ PPG' : 'PROJ PPG'}</span></div>`;
     html += `</div>`;
 
     // Starter slots
@@ -42307,8 +42352,16 @@ Rules:
         html += `<div style="flex:1;display:flex;align-items:center;gap:6px">`;
         html += `<span style="font-size:.55rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'};padding:1px 4px;border-radius:3px;background:${(posColors[p.pos] || '#666')}20">${p.pos}</span>`;
         html += `<span style="font-size:.78rem;font-weight:600;color:var(--text)">${_esc(p.name)}</span>`;
+        if (isWeekly && p.out) html += `<span style="font-size:.55rem;font-weight:700;color:#ef4444">${p.out}</span>`;
         html += `</div>`;
-        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${ppgColor}">${p.ppg}</div>`;
+        if (isWeekly) {
+          html += `<div style="display:flex;align-items:baseline;gap:8px">`;
+          if (p.ppg > 0) html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;color:${ppgColor}">${p.ppg}</span>`;
+          html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:var(--accent);min-width:34px;text-align:right" title="Jack's weekly rank">${p.wkRank != null ? '#' + p.wkRank : '—'}</span>`;
+          html += `</div>`;
+        } else {
+          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${ppgColor}">${p.ppg}</div>`;
+        }
       } else {
         html += `<div style="flex:1;font-size:.72rem;color:var(--text2);opacity:.5">EMPTY</div>`;
         html += `<div style="font-size:.72rem;color:var(--text2);opacity:.4">—</div>`;
@@ -42328,8 +42381,9 @@ Rules:
         html += `<div style="display:flex;align-items:center;gap:8px;padding:3px 8px;opacity:.65">`;
         html += `<div style="min-width:28px;text-align:center;font-size:.55rem;color:var(--text2)">BN</div>`;
         html += `<span style="font-size:.5rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'}">${p.pos}</span>`;
-        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)">${_esc(p.name)}</span>`;
-        html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg}</span>`;
+        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)">${_esc(p.name)}${isWeekly && p.out ? ' <span style="color:#ef4444;font-size:.55rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
+        if (isWeekly) html += `<span style="font-size:.72rem;color:var(--accent);min-width:30px;text-align:right" title="Jack's weekly rank">${p.wkRank != null ? '#' + p.wkRank : '—'}</span>`;
+        html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg > 0 ? p.ppg : '—'}</span>`;
         html += `</div>`;
       });
       html += `</div></div>`;
@@ -42358,6 +42412,15 @@ Rules:
       btn.style.color = active ? '#000' : 'var(--text2)';
       btn.classList.toggle('active', active);
     });
+  };
+
+  // Switch the OPTIMAL LINEUP ranking basis (Clay PPG vs Jack's weekly board),
+  // re-render that team's detail, and stay on the lineup view. Basis is a
+  // session-global preference so newly opened teams match the last choice.
+  window._mtSetLineupBasis = function(basis, idx) {
+    window._mtLineupBasis = basis === 'weekly' ? 'weekly' : 'ppg';
+    _mtRenderTeamDetail(idx);
+    window._mtSwitchTeamView('lineup', idx);
   };
 
   window._mtCloseTeam = function(idx) {
@@ -42421,9 +42484,18 @@ Rules:
     html += `<button class="mt-view-tab" data-mtview="lineup" onclick="window._mtSwitchTeamView('lineup', ${idx})" style="padding:6px 16px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">OPTIMAL LINEUP</button>`;
     html += `</div>`;
 
-    // Best Lineup (hidden by default — shown when user toggles to OPTIMAL LINEUP)
-    const lineup = _mtBestLineup(t.players);
+    // Best Lineup (hidden by default — shown when user toggles to OPTIMAL LINEUP).
+    // Basis sub-toggle: rank the pool by Clay projected PPG or by Jack's WEEKLY board.
+    const lineupBasis = window._mtLineupBasis === 'weekly' ? 'weekly' : 'ppg';
+    const lineup = _mtBestLineup(t.players, lineupBasis);
     html += `<div class="mt-team-view-lineup" style="display:none">`;
+    html += `<div style="display:flex;align-items:center;gap:2px;margin-top:14px;background:var(--surface2);padding:2px;border-radius:6px;width:fit-content">`;
+    html += `<span style="font-size:.55rem;color:var(--text2);letter-spacing:.5px;padding:0 6px">RANK BY</span>`;
+    [['ppg', 'PROJ PPG'], ['weekly', `JACK'S WEEKLY`]].forEach(pair => {
+      const on = lineupBasis === pair[0];
+      html += `<button onclick="window._mtSetLineupBasis('${pair[0]}', ${idx})" style="padding:4px 12px;font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1px;border:none;border-radius:4px;cursor:pointer;background:${on ? 'var(--surface)' : 'transparent'};color:${on ? 'var(--accent)' : 'var(--text2)'};${on ? 'box-shadow:0 0 0 1px var(--border);' : ''}transition:all .15s">${pair[1]}</button>`;
+    });
+    html += `</div>`;
     html += _mtRenderBestLineup(lineup);
     html += `</div>`;
 

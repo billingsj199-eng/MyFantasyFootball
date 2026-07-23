@@ -48,6 +48,23 @@ jobs:
           node --check app.min.tmp.js
           echo "app.js: $(wc -c < app.js) -> $(wc -c < app.min.tmp.js) bytes"
           mv app.min.tmp.js app.js
+      # Minify data/*.js IN THE DEPLOY ARTIFACT ONLY (same pattern as app.js).
+      # esbuild in non-bundle script mode strips whitespace/comments but never
+      # renames top-level identifiers (verified locally: `const D=` /
+      # `var KTC_1QB=` survive), so cross-file globals and inline readers are
+      # safe. ~7 MB less raw JS for the browser to parse (59 -> 52 MB); the
+      # over-the-wire win is small since Pages gzips anyway. Runs in ~3 s.
+      # The grep guard fails the deploy if a future esbuild version ever
+      # starts renaming top-level names (node --check alone wouldn't catch it).
+      # data/*.json (extension live-fetch) is untouched.
+      - name: Minify data files
+        run: |
+          npx -y esbuild@0.21.5 data/*.js --minify --charset=utf8 --outdir=data.min --log-level=error
+          for f in data.min/*.js; do node --check "$f"; done
+          grep -q 'const D=' data.min/d.js
+          echo "data/*.js: $(du -sk data | cut -f1) KB -> $(du -sk data.min | cut -f1) KB"
+          cp data.min/*.js data/
+          rm -rf data.min
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

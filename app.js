@@ -45877,471 +45877,18 @@ Rules:
     html += `</div>`;
     html += `</div>`;
 
-    // ── TEAMS TAB (v0.9.40 site-side, BB-aware, v0.9.62 lazy) ──
-    // The BB simulation for 49 drafts × 12 teams was running on EVERY
-    // dashboard render even when the user wasn't on the TEAMS tab —
-    // ~3-5s of compute on the main thread blocking everything else.
-    // v0.9.62: render TEAMS tab as a placeholder; defer the heavy work
-    // via setTimeout(0) AFTER dash.innerHTML lands so the rest of the
-    // page is responsive. The deferred build re-injects HTML directly
-    // into #udTab_teams.
+    // ── TEAMS TAB (v0.9.40 site-side, BB-aware, v0.10.2 fully lazy) ──
     html += `<div id="udTab_teams" style="display:${_activeTabId === 'teams' ? '' : 'none'}">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAMS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(your team vs every opponent in each pool)</span></div>`;
     html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px;max-width:760px;word-wrap:break-word">Click a draft to see all 12 teams ranked by projected best-ball total points. Click any team to open its roster. <strong style="color:var(--accent)">Rank reflects projected season points only — anything can happen in a real season.</strong></div>`;
-    // (TEAMS-tab body content follows below — built inline for now;
-    // future: defer via setTimeout to keep initial render responsive.)
-
-    // Helper: pull projected PPG for a player (raw, before BB adjustment).
-    // v0.9.41 → v0.9.43: Clay → JS Model → Underdog projection (÷ 17).
-    // adj25ppg returns last year's actual PPG and is wrong for forward-
-    // looking projection.
-    function _udPlayerProj(name, pickObj) {
-      const m = _udMatchPlayer(name);
-      let v = null;
-      if (m) {
-        try { v = adjProjPpg(m); } catch (_) { v = null; }
-      }
-      if (v == null && pickObj && pickObj.udProj != null && !isNaN(pickObj.udProj) && pickObj.udProj > 0) {
-        v = pickObj.udProj / 17;
-      }
-      return v;
-    }
-
-    // v0.9.62: cache _udTeamsRows by data signature so repeated renders
-    // (filter clicks, contest selections, expand/collapse) skip the BB
-    // simulation. Cache key combines numDrafts + first/last draft IDs +
-    // total picks — invalidates on any data change but stable across
-    // pure UI interactions. Cuts subsequent renders from ~2-3s to ~50ms.
-    const _udCacheKey = (function () {
-      const ks = Object.keys(data.drafts);
-      // v0.9.65: bumped suffix so stale caches (no VOR/window fields) bust on first load.
-      // v0.9.91: bumped to v91 to invalidate caches missing the new construction field.
-      // v0.10.0: bumped to v100 — construction score now uses tournament-equity
-      // weighted lifts (was QF-only), and PathFit + skip-rate access changed.
-      // v0.10.1: bumped to v101 — VS ADP / ADP val now grade against raw Underdog
-      // ADP (udA/sfa) instead of consensus d.a, so cached rows must recompute.
-      // v0.10.1: include _udLiveAdpAppliedAt so a live ADP snapshot (extension
-      // push or Firestore boot-load that mutates D[i].udA/sfa in place) busts
-      // this cache. Without it the re-render returns rows computed with the
-      // original page-load ADP and the live values never reach the cards.
-      const _liveAdp = window._udLiveAdpAppliedAt || 0;
-      return 'v101:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0) + ':' + _liveAdp;
-    })();
-    let _udTeamsRows;
-    if (window._udTeamsCache && window._udTeamsCache.key === _udCacheKey) {
-      _udTeamsRows = window._udTeamsCache.rows;
-    } else {
-      _udTeamsRows = [];
-      window._udTeamsCache = { key: _udCacheKey, rows: _udTeamsRows };
-      Object.values(data.drafts).forEach(d => {
-      const at = d.allTeams && typeof d.allTeams === 'object' ? d.allTeams : null;
-      const sourceTeams = (at && Object.keys(at).length >= 2)
-        ? Object.values(at)
-        : [{ entryId: 'me', isMine: true, picks: d.picks || [], pickCount: (d.picks || []).length }];
-      const fieldComplete = !!(at && Object.keys(at).length >= 2);
-      const teams = sourceTeams.map(t => {
-        const picks = t.picks || [];
-        // v0.9.62 perf: 150 → 60 sims. With 49 drafts × 12 teams still 35,280
-        // simulated seasons per render — enough for stable advance %. Combined
-        // with the rows cache and module-level _udMatchPlayer cache, initial
-        // render drops below 1s on a 49-draft portfolio.
-        const bb = _bbSimulateTeam(picks, { sims: 60, weeks: BB_REG_SEASON_WEEKS });
-        // Roster details (sorted by pick number) with raw PPG + BB stats.
-        // v0.10.1: grade VS ADP / ADP val against the raw Underdog ADP the draft
-        // actually ran on — Underdog ONLY, never the consensus blend (d.a).
-        // Consensus mixes in CBS/ESPN/devy/dynasty rankings and badly overstates
-        // value (e.g. Charbonnet read +58 vs the true +15; SF rookies Carson Beck
-        // +125, Eli Raridon +201). Both udA (Underdog Best Ball Mania, 1-QB) and
-        // sfa (Underdog Superflex) are real Underdog ADP scales; only `a` is the
-        // consensus blend and it is deliberately excluded.
-        //
-        // Chain: Superflex prefers sfa, then falls back to udA (still Underdog —
-        // the 1-QB scale understates QB value in SF but is the best Underdog
-        // signal for deep stashes with no sfa, e.g. Beck/Raridon → udA≈215).
-        // Best Ball uses udA. If a player has NO Underdog ADP, adp stays null
-        // and the pick shows no VS ADP (and contributes 0 to the aggregate),
-        // rather than borrowing the misleading consensus number.
-        const _udAdpChain = d.phase === 'superflex' ? ['sfa', 'udA'] : ['udA'];
-        const rosterDetails = picks.slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map((p, pi) => {
-          const matched = _udMatchPlayer(p.name);
-          let adp = null;
-          if (matched) {
-            for (const f of _udAdpChain) {
-              const v = matched[f];
-              if (v != null && v < 900) { adp = v; break; }
-            }
-          }
-          const proj = _udPlayerProj(p.name, p);
-          const bbStats = bb.perPlayerWeekly[p.name] || null;
-          return {
-            round: pi + 1,
-            pick: p.pick,
-            name: p.name,
-            pos: p.pos,
-            team: p.team,
-            proj: proj,                                    // raw preseason/blended PPG
-            bbWeekly: bbStats ? bbStats.weeklyContrib : 0, // per-week contribution to lineup
-            startRate: bbStats ? bbStats.startRate : 0,    // % of weeks they start
-            adp: adp,
-            adpDiff: adp != null ? Math.round(p.pick - adp) : null,
-            sigma: bbStats ? bbStats.sigma : null,
-            byeWeek: bbStats ? bbStats.byeWeek : null,
-            startWeek: bbStats && bbStats.startWeek != null ? bbStats.startWeek : 1,
-            endWeek: bbStats && bbStats.endWeek != null ? bbStats.endWeek : BB_REG_SEASON_WEEKS,
-            vor: matched && matched._vor != null ? matched._vor : null,
-            seasonPts: matched && matched._seasonPts != null ? matched._seasonPts : null
-          };
-        });
-        // Position-level BB contribution (sum of per-player weekly across each position group)
-        const posScores = { QB: 0, RB: 0, WR: 0, TE: 0 };
-        rosterDetails.forEach(p => { if (posScores[p.pos] != null) posScores[p.pos] += p.bbWeekly; });
-        // Whole-roster projection sum (raw PPG, kept for context line)
-        const projSum = rosterDetails.reduce((s, x) => s + (x.proj || 0), 0);
-        // Aggregate ADP value (positive = stole players late, negative = reached)
-        const adpValue = rosterDetails.reduce((s, x) => s + (x.adpDiff || 0), 0);
-        // Team total VOR (v0.9.65) — sum of marginal value above replacement
-        // across all 18 picks. Higher = more aggregate edge over the field.
-        const vorTotal = rosterDetails.reduce((s, x) => s + (x.vor || 0), 0);
-        // v0.9.91: Roster Construction score — BBM-driven 0-100 composite
-        // (build shape + position counts + round-pattern fit).
-        // v0.10.0: skip for Superflex contests — BBM dataset is STD-only,
-        // so the construction signals (per-pick lifts, path-aware rules,
-        // skip penalties) don't apply to SF roster patterns.
-        const _isSf = !!(d.tournament && /super\s*flex/i.test(d.tournament));
-        const construction = _isSf ? null : _udComputeRosterConstruction(rosterDetails);
-        return {
-          entryId: t.entryId,
-          isMine: !!t.isMine,
-          picks: picks,
-          rosterDetails: rosterDetails,
-          construction: construction,
-          // BB-derived totals — these are the ranking + Monte-Carlo inputs
-          weeklyPPG: bb.weeklyPPG,
-          seasonMean: bb.seasonMean,
-          seasonStd: bb.seasonStd,
-          // Position breakdown for the row mini-chart (BB contribution per position)
-          posScores: { QB: { pts: Math.round(posScores.QB) },
-                       RB: { pts: Math.round(posScores.RB) },
-                       WR: { pts: Math.round(posScores.WR) },
-                       TE: { pts: Math.round(posScores.TE) } },
-          projSum: projSum,
-          adpValue: adpValue,
-          vorTotal: vorTotal,
-          fieldUnknown: !fieldComplete
-        };
-      });
-
-      // Advance-rate Monte Carlo removed. The independently-sampled
-      // N(seasonMean, seasonStd²) draws produced visually-too-confident gaps
-      // between teams (60% top vs 36% mid vs 5% bottom) because the model
-      // captured weekly sampling noise but not projection uncertainty. Until
-      // we add an epistemic-variance term and/or shared-environment correlation,
-      // we just rank by deterministic seasonMean and report rank-based stats
-      // instead of probabilistic ones.
-      teams.forEach(t => { t.adv1 = null; t.adv2 = null; t.adv3 = null; });
-      // Rank teams by BB season mean (high → low). This is the ordering shown.
-      const ranked = teams.slice().sort((a, b) => b.seasonMean - a.seasonMean);
-      ranked.forEach((t, i) => { t.rank = i + 1; });
-      const myEntry = teams.find(t => t.isMine) || ranked[0];
-      _udTeamsRows.push({
-        d: d,
-        teams: ranked,
-        myEntry: myEntry,
-        myRank: myEntry ? myEntry.rank : null,
-        myAdv2: myEntry ? myEntry.adv2 : null,
-        fieldComplete: fieldComplete
-      });
-      });   // close forEach
-    }      // close cache-miss block
-
-    // Portfolio summary cards. Advance-rate cards removed; rank-based stats
-    // only since the Monte Carlo overstated team-vs-team confidence.
-    const _completeRows = _udTeamsRows.filter(x => x.fieldComplete);
-    const _avgRank = _completeRows.length
-      ? _completeRows.reduce((s, x) => s + (x.myRank || 0), 0) / _completeRows.length : null;
-    const _top4Count = _completeRows.filter(x => x.myRank && x.myRank <= 4).length;
-    const _top1Count = _completeRows.filter(x => x.myRank === 1).length;
-
-    function _udSummaryCard(label, val, sub, color) {
-      return `<div style="text-align:center;padding:14px 8px;background:var(--surface);border:1px solid ${color || 'var(--border)'};border-radius:10px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--text2)">${label}</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:${color || 'var(--accent)'};margin:2px 0">${val}</div>
-        <div style="font-size:.6rem;color:var(--text2)">${sub}</div>
-      </div>`;
-    }
-    html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px">`;
-    if (!_completeRows.length) {
-      html += `<div style="grid-column:1/-1;text-align:center;padding:14px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;color:var(--text2);font-size:.78rem">No full-field drafts yet — re-run <strong style="color:var(--accent)">Sync from Underdog</strong> with the extension to capture every opponent's roster, then field rankings appear here.</div>`;
-    } else {
-      html += _udSummaryCard('AVG RANK', (_avgRank || 0).toFixed(1) + ' / 12', 'where you sit in the field', '#fbbf24');
-      html += _udSummaryCard('TOP-4 RATE', Math.round(100 * _top4Count / _completeRows.length) + '%', _top4Count + ' of ' + _completeRows.length + ' drafts', '#3b82f6');
-      html += _udSummaryCard('#1 PROJ', _top1Count + ' / ' + _completeRows.length, 'drafts where you project highest', '#22c55e');
-    }
-    html += `</div>`;
-
-    // Sort selector for the per-draft list. User picks the metric they care
-    // about most; default is rank within the field. State persists on window
-    // across re-renders so changing tabs doesn't reset it.
-    if (!window._udTeamsSortBy) window._udTeamsSortBy = 'rank';
-    const _sortKey = window._udTeamsSortBy;
-    const _sortOptions = [
-      { key: 'rank',    label: 'Rank in field',    metric: r => (r.myRank != null ? r.myRank : 999), dir: 'asc' },
-      { key: 'ppg',     label: 'BB Proj PPG',      metric: r => (r.myEntry && r.myEntry.weeklyPPG)  || 0, dir: 'desc' },
-      { key: 'season',  label: 'Season total',     metric: r => (r.myEntry && r.myEntry.seasonMean) || 0, dir: 'desc' },
-      { key: 'build',   label: 'Build score',      metric: r => (r.myEntry && r.myEntry.construction && r.myEntry.construction.score) || 0, dir: 'desc' },
-      { key: 'adpval',  label: 'ADP value',        metric: r => (r.myEntry && r.myEntry.adpValue)  || 0, dir: 'desc' },
-      { key: 'vor',     label: 'Total VOR',        metric: r => (r.myEntry && r.myEntry.vorTotal)  || 0, dir: 'desc' },
-      { key: 'fee',     label: 'Entry fee',        metric: r => (r.d && parseFloat(r.d.fee))       || 0, dir: 'desc' }
-    ];
-    const _activeSort = _sortOptions.find(o => o.key === _sortKey) || _sortOptions[0];
-    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2)">SORT BY</span>
-      <select onchange="window._udSetTeamsSort(this.value)" style="padding:5px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.72rem;font-family:inherit;cursor:pointer">
-        ${_sortOptions.map(o =>
-          `<option value="${o.key}"${o.key === _sortKey ? ' selected' : ''}>${o.label}</option>`
-        ).join('')}
-      </select>
-    </div>`;
-    const _sortedRows = _udTeamsRows.slice().sort((a, b) => {
-      const av = _activeSort.metric(a);
-      const bv = _activeSort.metric(b);
-      const cmp = _activeSort.dir === 'asc' ? (av - bv) : (bv - av);
-      if (cmp !== 0) return cmp;
-      // Tie-break on rank so the secondary order is always sensible.
-      return ((a.myRank != null ? a.myRank : 999) - (b.myRank != null ? b.myRank : 999));
-    });
-
-    if (!_sortedRows.length) {
-      html += `<div style="text-align:center;padding:30px;color:var(--text2);font-size:.8rem">No drafts to compare yet.</div>`;
-    } else {
-      _sortedRows.forEach((row, i) => {
-        const d = row.d;
-        const my = row.myEntry;
-        const rankStr = row.myRank ? `#${row.myRank}/${row.teams.length}` : '—';
-        // Color the rank cell — top-tier ranks get the same green/yellow/red
-        // signal the advance % badge used to provide.
-        const rankColor = !row.myRank ? 'var(--text2)' :
-                          row.myRank === 1 ? '#22c55e' :
-                          row.myRank <= 3 ? '#4ade80' :
-                          row.myRank <= 6 ? '#facc15' :
-                          row.myRank <= 9 ? '#f59e0b' : '#ef4444';
-        const fieldNote = row.fieldComplete ? '' : ' <span style="font-size:.55rem;color:var(--text2);font-style:italic">(opponents not synced)</span>';
-        const _safeDid = String(d.id || '').replace(/"/g, '&quot;');
-        html += `<div onclick="window._udToggleTeamsDraft(${i})" data-udteamsdraft="${_safeDid}" data-udteamsdraftidx="${i}" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
-        html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
-        // Rank badge — promoted to primary metric now that advance % is gone.
-        html += `<div style="width:84px;text-align:center;padding:6px 4px;background:var(--surface2);border-radius:6px">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${rankColor};line-height:1">${rankStr}</div>
-          <div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px">YOUR RANK</div>
-        </div>`;
-        // Title block. Show user's custom team name (e.g. "BBM BAL/SEA/AMONRA")
-        // as primary identifier when available; fall back to the tournament name
-        // alone. Tournament + fee + size live on the secondary line either way
-        // so users can still tell which contest each team is in.
-        html += `<div style="flex:1;min-width:160px">`;
-        const _tName = d.teamName && d.teamName.trim() ? _esc(d.teamName.trim()) : '';
-        const _tournLabel = _esc(d.tournament || 'Underdog');
-        const _meta = `$${(d.fee || 0).toFixed(0)} · ${row.teams.length}-team`;
-        if (_tName && _tName !== _tournLabel) {
-          html += `<div style="font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_tName}</div>`;
-          html += `<div style="font-size:.65rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_tournLabel} · ${_meta}${fieldNote}</div>`;
-        } else {
-          html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">${_tournLabel} <span style="font-weight:400;color:var(--text2)">· ${_meta}</span>${fieldNote}</div>`;
-        }
-        if (my) {
-          // v0.9.91: include Roster Construction Score in header context line.
-          const myCs = my.construction;
-          const myCsCol = _udConstructionColor(myCs ? myCs.score : null);
-          const _byeStr = myCs && myCs.byeKnown ? `max ${myCs.maxBye} on bye` : 'bye N/A (schedule not released)';
-          const _myAdvPct = myCs ? (myCs.advRate * 100).toFixed(1) + '%' : '';
-          const buildStr = myCs
-            ? ` · Build <span style="color:${myCsCol};font-weight:700" title="Implied BBM advance rate (baseline 16.67%):&#10;Build Shape ${myCs.buildShape} · Pos Counts ${myCs.posCount} · Round Pattern ${myCs.roundPattern} · Stacking ${myCs.stacking} · Structural ${myCs.structural}&#10;Stack: ${_udCompKeyLabel(myCs.compKey)} · max ${myCs.maxStack} · ${myCs.nQbStacks} QB-stacks&#10;Structural: ${_byeStr} · ${myCs.maxRbSameTeam} RB same-team · ${myCs.maxWrNoQb} WR same-team-no-QB&#10;Weighted 20/10/20/30/20 (component scores 0-100)">${_myAdvPct}</span>`
-            : '';
-          html += `<div style="font-size:.65rem;color:var(--text2)">BB Proj: <span style="color:var(--text);font-weight:600">${my.weeklyPPG.toFixed(1)}</span> PPG · <span style="color:var(--text);font-weight:600">${my.seasonMean.toFixed(0)}</span> season · VOR <span style="color:${(my.vorTotal||0) > 200 ? '#22c55e' : (my.vorTotal||0) > 0 ? '#4ade80' : (my.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(my.vorTotal||0) > 0 ? '+' : ''}${Math.round(my.vorTotal||0)}</span> · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span>${buildStr}</div>`;
-        }
-        html += `</div>`;
-        html += `</div>`;
-
-        // Draft expand: shows all 12 teams + roster expand-on-click for each.
-        html += `<div id="udTeamsDraft_${i}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">`;
-        if (!row.fieldComplete) {
-          html += `<div style="font-size:.7rem;color:var(--text2);font-style:italic;padding:10px 0">This draft was uploaded via CSV which doesn't capture other entrants. Re-sync from Underdog to see every opponent.</div>`;
-          // Even with no field, still show user's roster on click below
-        }
-        // Team list within draft. Each row clickable.
-        row.teams.forEach((t, ti) => {
-          const isMine = t.isMine;
-          const rowBg = isMine ? 'background:linear-gradient(90deg,rgba(251,191,36,0.18),transparent);' : 'background:var(--surface2);';
-          const teamLabel = isMine ? '<span style="color:var(--accent);font-weight:700">YOU</span>' : 'Opponent ' + ((t.entryId || '').slice(0, 6) || (ti + 1));
-          html += `<div onclick="event.stopPropagation();window._udToggleTeamsRoster(${i}, ${ti})" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;${rowBg}cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">`;
-          html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
-          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--text);width:30px">#${t.rank}</div>`;
-          html += `<div style="flex:1;min-width:90px;font-size:.72rem">${teamLabel}</div>`;
-          html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:84px">
-            <div><span style="color:var(--text);font-weight:700">${t.weeklyPPG.toFixed(1)}</span> BB PPG</div>
-            <div><span style="color:var(--text);font-weight:600">${t.seasonMean.toFixed(0)}</span> season</div>
-          </div>`;
-          html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:80px">
-            <div><span data-gloss="ADP value — sum of (ADP − pick number) across the roster. Positive = stole players late vs. market. Negative = reached.">ADP val</span> <span style="color:${(t.adpValue||0) > 0 ? '#22c55e' : (t.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(t.adpValue||0) > 0 ? '+' : ''}${t.adpValue || 0}</span></div>
-            <div><span data-gloss="Total Value Over Replacement — sum of season-pts above the BBM starter cutoff (QB12/RB30/WR42/TE13) for every pick on this roster.">VOR</span> <span style="color:${(t.vorTotal||0) > 200 ? '#22c55e' : (t.vorTotal||0) > 0 ? '#4ade80' : (t.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(t.vorTotal||0) > 0 ? '+' : ''}${Math.round(t.vorTotal||0)}</span></div>
-          </div>`;
-          // Position mini-bar
-          html += `<div style="display:flex;gap:3px">`;
-          ['QB','RB','WR','TE'].forEach(pos => {
-            const ps = t.posScores[pos] || { pts: 0 };
-            const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-            html += `<div style="text-align:center;min-width:24px"><div style="font-size:.45rem;color:var(--text2)">${pos}</div><div style="font-size:.6rem;font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
-          });
-          html += `</div>`;
-          // v0.9.91: Roster Construction % — composite score (build shape +
-          // position counts + round-pattern fit) graded on 2.5M historical
-          // BBM rosters. Hover for component breakdown.
-          const cs = t.construction;
-          const csCol = _udConstructionColor(cs ? cs.score : null);
-          const pathBits = cs && cs.pathInfo ? [
-            BBM_PATH_LABELS.rb[cs.pathInfo.rbBucket] || `${cs.pathInfo.rbBucket} RB`,
-            cs.pathInfo.qbBucket ? BBM_PATH_LABELS.qb[cs.pathInfo.qbBucket] : 'no QB',
-            cs.pathInfo.teBucket ? BBM_PATH_LABELS.te[cs.pathInfo.teBucket] : 'no TE',
-            BBM_PATH_LABELS.wr[cs.pathInfo.wrBucket] || cs.pathInfo.wrBucket,
-          ].join(' / ') : '';
-          const csTip = cs
-            ? `Roster Construction Score (BBM-derived, tournament-equity weighted 50/30/20 QF/SF/Finals):&#10;` +
-              `Build Shape ${cs.counts.QB}Q/${cs.counts.RB}R/${cs.counts.WR}W/${cs.counts.TE}T → ${cs.buildShape}&#10;` +
-              `Position Counts → ${cs.posCount}&#10;` +
-              `Round Pattern (per-pick lift, blended) → ${cs.roundPattern}&#10;` +
-              `Path Fit → ${cs.pathFit} (${pathBits})&#10;` +
-              `Stacking → ${cs.stacking} (${_udCompKeyLabel(cs.compKey)}, max ${cs.maxStack}, ${cs.nQbStacks} QB-stacks)&#10;` +
-              `Structural → ${cs.structural} (${cs.byeKnown ? 'max ' + cs.maxBye + ' on bye' : 'bye N/A — schedule not released'}, ${cs.maxRbSameTeam} RB same-team, ${cs.maxWrNoQb} WR same-team-no-QB)&#10;` +
-              `Composite (10/10/25/15/20/20) → ${cs.score}/100 · implied advance rate ${(cs.advRate * 100).toFixed(1)}% (baseline 16.7%)`
-            : `Construction score N/A — BBM dataset is Standard-format only,&#10;Superflex roster patterns differ structurally.`;
-          // v0.10.0: compact path badge under the BUILD score so users see
-          // "Balanced + Late QB" (or whichever path was detected) at a glance
-          // without hovering the tooltip. Two-letter shorthand keeps the
-          // column narrow while exposing the most-actionable path components.
-          const pathBadge = cs && cs.pathInfo ? (() => {
-            const rbMap = {0:'ZRO', 1:'HER', 2:'BAL', 3:'HVY', 4:'ROB'};
-            const qbMap = {early:'EQB', mid:'MQB', late:'LQB', late2:'LQB', verylate:'VLQB'};
-            const rbShort = rbMap[cs.pathInfo.rbBucket] || '';
-            const qbShort = cs.pathInfo.qbBucket ? qbMap[cs.pathInfo.qbBucket] || '' : '';
-            return [rbShort, qbShort].filter(Boolean).join(' · ');
-          })() : '';
-          const pathBadgeHtml = pathBadge
-            ? `<div style="font-size:.42rem;color:var(--text2);letter-spacing:.3px;font-family:'DM Sans',sans-serif;font-weight:500;margin-top:1px"><span data-gloss="Build path shorthand. RB: ZRO=Zero RB, HER=Hero RB, BAL=Balanced, HVY=RB Heavy, ROB=Robust RB. QB: EQB=Early QB, MQB=Mid QB, LQB=Late QB, VLQB=Very Late QB.">${pathBadge}</span></div>`
-            : '';
-          const _csAdvPct = cs ? (cs.advRate * 100).toFixed(1) + '%' : '—';
-          html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${_csAdvPct}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div>${pathBadgeHtml}</div>`;
-          html += `</div>`;
-
-          // Roster expand within the team row.
-          html += `<div id="udTeamsRoster_${i}_${ti}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0">`;
-          html += `<table style="width:100%;min-width:680px;border-collapse:collapse;font-size:.68rem">
-            <thead><tr style="border-bottom:1px solid var(--border)">
-              <th style="text-align:left;padding:3px 6px;color:var(--text2)">RD</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)">PICK</th>
-              <th style="text-align:left;padding:3px 6px;color:var(--text2)">PLAYER</th>
-              <th style="text-align:left;padding:3px 6px;color:var(--text2)">POS</th>
-              <th style="text-align:left;padding:3px 6px;color:var(--text2)">TEAM</th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected fantasy points per game.">PROJ PPG</span></th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected total season points.">SZN PTS</span></th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Value Over Replacement — season pts above the BBM 12-team starter cutoff (QB12/RB30/WR42/TE13).">VOR</span></th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Pick number minus ADP. Positive = took player later than ADP (got value). Negative = reached.">vs ADP</span></th>
-            </tr></thead><tbody>`;
-          // Group roster by position (Underdog-style). Within each position
-          // keep draft order so the pick column still tells a coherent story.
-          const _posOrder = ['QB','RB','WR','TE'];
-          const _posColorsHdr = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-          const _grouped = {};
-          t.rosterDetails.forEach(p => {
-            const key = _posOrder.includes(p.pos) ? p.pos : 'OTHER';
-            (_grouped[key] = _grouped[key] || []).push(p);
-          });
-          const _renderOrder = _posOrder.filter(pos => _grouped[pos] && _grouped[pos].length);
-          if (_grouped.OTHER && _grouped.OTHER.length) _renderOrder.push('OTHER');
-          _renderOrder.forEach(pos => {
-            const group = _grouped[pos];
-            const _hdrColor = _posColorsHdr[pos] || '#94a3b8';
-            const _totalProj = Math.round(group.reduce((s, p) => s + (p.proj != null ? p.proj : 0), 0) * 10) / 10;
-            const _totalSzn = Math.round(group.reduce((s, p) => s + (p.seasonPts != null ? p.seasonPts : 0), 0));
-            const _totalVor = Math.round(group.reduce((s, p) => s + (p.vor != null ? p.vor : 0), 0));
-            const _vorClr = _totalVor > 100 ? '#22c55e' : _totalVor > 0 ? '#4ade80' : _totalVor > -100 ? '#facc15' : '#ef4444';
-            html += `<tr class="bb-pos-section-row" style="background:${_hdrColor}10;border-top:2px solid ${_hdrColor}50;border-bottom:1px solid ${_hdrColor}30">
-              <td colspan="5" style="padding:5px 6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${_hdrColor}">${pos} <span style="font-size:.55rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif;margin-left:6px">${group.length} player${group.length===1?'':'s'}</span></td>
-              <td style="padding:5px 6px;text-align:right;font-weight:700;color:${_hdrColor}">${_totalProj > 0 ? _totalProj : '—'}</td>
-              <td style="padding:5px 6px;text-align:right;color:var(--text2)">${_totalSzn > 0 ? _totalSzn : '—'}</td>
-              <td style="padding:5px 6px;text-align:right;font-weight:700;color:${_vorClr}">${_totalVor > 0 ? '+' : ''}${_totalVor}</td>
-              <td></td>
-            </tr>`;
-            group.forEach(p => {
-            const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-            // ADP delta = pick - adp. Positive = took after ADP (got value),
-            // negative = reach. Color follows the same convention used on the
-            // header row's aggregate ADP val number.
-            const adpDiff = (p.adp != null && p.pick != null) ? Math.round(p.pick - p.adp) : null;
-            const adpColor = adpDiff == null ? 'var(--text2)' :
-                              adpDiff > 0 ? '#22c55e' :
-                              adpDiff < 0 ? '#ef4444' :
-                              'var(--text2)';
-            const adpStr = adpDiff == null ? '—' : (adpDiff > 0 ? '+' : '') + adpDiff;
-            const adpTitle = p.adp != null ? `Player ADP: ${Math.round(p.adp)} · Picked at ${p.pick}` : 'No ADP available';
-            // Color projection by simple position-aware tier so it pops similarly to ADP.
-            const projColor = (() => {
-              if (p.proj == null) return 'var(--text2)';
-              const v = p.proj;
-              if (p.pos === 'QB') return v >= 22 ? '#22c55e' : v >= 19 ? '#4ade80' : v >= 16 ? '#facc15' : v >= 13 ? '#f59e0b' : 'var(--text2)';
-              if (p.pos === 'RB') return v >= 18 ? '#22c55e' : v >= 14 ? '#4ade80' : v >= 11 ? '#facc15' : v >= 8 ? '#f59e0b' : 'var(--text2)';
-              if (p.pos === 'WR') return v >= 17 ? '#22c55e' : v >= 13 ? '#4ade80' : v >= 10 ? '#facc15' : v >= 7 ? '#f59e0b' : 'var(--text2)';
-              if (p.pos === 'TE') return v >= 14 ? '#22c55e' : v >= 11 ? '#4ade80' : v >= 8 ? '#facc15' : v >= 6 ? '#f59e0b' : 'var(--text2)';
-              return 'var(--text2)';
-            })();
-            // v0.9.64 active-window badge. Show "Wks X-Y" tag for any
-            // player whose simulated active window is narrower than the
-            // full season — Clay-projected limited GP (e.g., Charbonnet
-            // returning week 7) or QB timeshare bench/takeover.
-            const fullSeasonStart = 1;
-            const fullSeasonEnd = BB_REG_SEASON_WEEKS;
-            const isLimited = (p.startWeek != null && p.startWeek > fullSeasonStart) ||
-                              (p.endWeek != null && p.endWeek < fullSeasonEnd);
-            const wkBadge = isLimited
-              ? `<span style="display:inline-block;margin-left:6px;padding:1px 5px;font-size:.55rem;font-weight:600;color:#000;background:#facc15;border-radius:3px;letter-spacing:.3px">WKS ${p.startWeek}-${p.endWeek}</span>`
-              : '';
-            // VOR coloring: green for above-replacement, red for below.
-            // Magnitude tiers tuned roughly: starters score +0 to +120,
-            // bench/depth dips into negatives.
-            const vorColor = p.vor == null ? 'var(--text2)' :
-                              p.vor >= 80 ? '#22c55e' :
-                              p.vor >= 40 ? '#4ade80' :
-                              p.vor >= 10 ? '#facc15' :
-                              p.vor >= -10 ? 'var(--text2)' :
-                              '#ef4444';
-            const vorStr = p.vor == null ? '—' :
-                            (p.vor > 0 ? '+' : '') + Math.round(p.vor);
-            // Player headshot via D match (falls back to a colour-block circle if no image)
-            const _bbMatch = (typeof _udMatchPlayer === 'function') ? _udMatchPlayer(p.name) : null;
-            const _bbHs = _bbMatch && _bbMatch._slImg ? window._fixHeadshotUrl(_bbMatch._slImg) : '';
-            const _bbHsHtml = _bbHs
-              ? `<img class="bb-roster-headshot" src="${_bbHs}" alt="" loading="lazy" onerror="this.style.display='none'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;object-position:center top;background:var(--surface2);flex-shrink:0;vertical-align:middle;margin-right:6px">`
-              : `<span class="bb-roster-headshot" style="display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--surface2);flex-shrink:0;vertical-align:middle;margin-right:6px"></span>`;
-            html += `<tr style="border-bottom:1px solid var(--border)">
-              <td style="padding:3px 6px;color:var(--text2)">${p.round}</td>
-              <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.pick}</td>
-              <td style="padding:3px 6px;color:var(--text);white-space:nowrap">${_bbHsHtml}${_esc(p.name)}${wkBadge}</td>
-              <td style="padding:3px 6px;color:${posColors[p.pos] || 'var(--text2)'};font-weight:600">${p.pos || '—'}</td>
-              <td style="padding:3px 6px;color:var(--text2)">${_esc(p.team || '')}</td>
-              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${projColor}">${p.proj != null ? p.proj.toFixed(1) : '—'}</td>
-              <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.seasonPts != null ? Math.round(p.seasonPts) : '—'}</td>
-              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${vorColor}">${vorStr}</td>
-              <td title="${adpTitle}" style="padding:3px 6px;text-align:right;font-weight:700;color:${adpColor}">${adpStr}</td>
-            </tr>`;
-            });
-          });
-          html += `</tbody></table>`;
-          html += `</div>`;
-          html += `</div>`;
-        });
-        html += `</div>`;
-        html += `</div>`;
-      });
-    }
+    // v0.10.2: TEAMS tab body is fully LAZY. The field simulation + all
+    // draft/team/roster markup used to be built right here on EVERY dashboard
+    // render, parking ~600k hidden DOM nodes (95% of the whole page) inside
+    // this tab even when the user never opened it. The body is now built into
+    // #udTeamsBody on first tab activation (_udEnsureTeamsTab); each draft's
+    // 12 team rows on first draft expand (_udBuildTeamsDraftHtml); and each
+    // roster table on its own first click (_udBuildTeamsRosterHtml).
+    html += `<div id="udTeamsBody"></div>`;
     html += `</div>`;
 
     // DRAFT BOARD TAB
@@ -46524,6 +46071,517 @@ Rules:
     window._udPlayerList = playerList;
     window._udNumDrafts = numDrafts;
     window._udData = data;
+
+    // v0.10.2: dashboard just re-rendered (data/filter change) — any TEAMS
+    // body markup is gone with the innerHTML swap above, so mark it unbuilt.
+    // If the user is currently ON the TEAMS tab, rebuild it now (the BB-sim
+    // rows cache makes this cheap when only filters/sort changed).
+    window._udTeamsBuilt = false;
+    if (_activeTabId === 'teams') _udEnsureTeamsTab();
+  }
+
+  // ═══ TEAMS tab lazy build (v0.10.2) ═══════════════════════════════
+  // Three levels, each built on first demand:
+  //   1. _udBuildTeamsTab       — summary cards + sort bar + collapsed draft
+  //                               header cards (runs the cached BB field sim)
+  //   2. _udBuildTeamsDraftHtml — one draft's 12 ranked team rows
+  //   3. _udBuildTeamsRosterHtml — one team's grouped roster table
+  // Previously all three levels rendered for every draft during
+  // _udRenderDashboard — ~3.3k hidden nodes x 12 teams x N drafts.
+
+  // Ensure the TEAMS tab body exists; safe to call repeatedly. Optional cb
+  // fires once the body is in the DOM (used by the exposure-row deep link).
+  function _udEnsureTeamsTab(cb) {
+    if (window._udTeamsBuilt) { if (cb) { try { cb(); } catch (_) {} } return; }
+    if (cb) (window._udTeamsBuildCbs = window._udTeamsBuildCbs || []).push(cb);
+    if (window._udTeamsBuilding) return;
+    const body = document.getElementById('udTeamsBody');
+    if (!body) return;
+    window._udTeamsBuilding = true;
+    body.innerHTML = `<div style="text-align:center;padding:26px;color:var(--text2);font-size:.75rem">Crunching team projections…</div>`;
+    // Yield a frame so the tab switch (and the message above) paints before
+    // the BB simulation runs on a cold cache.
+    setTimeout(function() {
+      try { _udBuildTeamsTab(); }
+      catch (e) { console.warn('[Portfolio] TEAMS tab build failed:', e); }
+      window._udTeamsBuilding = false;
+      const cbs = (window._udTeamsBuildCbs || []).splice(0);
+      cbs.forEach(function(f) { try { f(); } catch (_) {} });
+    }, 30);
+  }
+
+  function _udBuildTeamsTab() {
+    const body = document.getElementById('udTeamsBody');
+    const data = window._udData;
+    if (!body || !data) return;
+    let html = '';
+
+    // Helper: pull projected PPG for a player (raw, before BB adjustment).
+    // v0.9.41 → v0.9.43: Clay → JS Model → Underdog projection (÷ 17).
+    // adj25ppg returns last year's actual PPG and is wrong for forward-
+    // looking projection.
+    function _udPlayerProj(name, pickObj) {
+      const m = _udMatchPlayer(name);
+      let v = null;
+      if (m) {
+        try { v = adjProjPpg(m); } catch (_) { v = null; }
+      }
+      if (v == null && pickObj && pickObj.udProj != null && !isNaN(pickObj.udProj) && pickObj.udProj > 0) {
+        v = pickObj.udProj / 17;
+      }
+      return v;
+    }
+
+    // v0.9.62: cache _udTeamsRows by data signature so repeated renders
+    // (filter clicks, contest selections, expand/collapse) skip the BB
+    // simulation. Cache key combines numDrafts + first/last draft IDs +
+    // total picks — invalidates on any data change but stable across
+    // pure UI interactions. Cuts subsequent renders from ~2-3s to ~50ms.
+    const _udCacheKey = (function () {
+      const ks = Object.keys(data.drafts);
+      // v0.9.65: bumped suffix so stale caches (no VOR/window fields) bust on first load.
+      // v0.9.91: bumped to v91 to invalidate caches missing the new construction field.
+      // v0.10.0: bumped to v100 — construction score now uses tournament-equity
+      // weighted lifts (was QF-only), and PathFit + skip-rate access changed.
+      // v0.10.1: bumped to v101 — VS ADP / ADP val now grade against raw Underdog
+      // ADP (udA/sfa) instead of consensus d.a, so cached rows must recompute.
+      // v0.10.1: include _udLiveAdpAppliedAt so a live ADP snapshot (extension
+      // push or Firestore boot-load that mutates D[i].udA/sfa in place) busts
+      // this cache. Without it the re-render returns rows computed with the
+      // original page-load ADP and the live values never reach the cards.
+      const _liveAdp = window._udLiveAdpAppliedAt || 0;
+      return 'v101:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0) + ':' + _liveAdp;
+    })();
+    let _udTeamsRows;
+    if (window._udTeamsCache && window._udTeamsCache.key === _udCacheKey) {
+      _udTeamsRows = window._udTeamsCache.rows;
+    } else {
+      _udTeamsRows = [];
+      window._udTeamsCache = { key: _udCacheKey, rows: _udTeamsRows };
+      Object.values(data.drafts).forEach(d => {
+      const at = d.allTeams && typeof d.allTeams === 'object' ? d.allTeams : null;
+      const sourceTeams = (at && Object.keys(at).length >= 2)
+        ? Object.values(at)
+        : [{ entryId: 'me', isMine: true, picks: d.picks || [], pickCount: (d.picks || []).length }];
+      const fieldComplete = !!(at && Object.keys(at).length >= 2);
+      const teams = sourceTeams.map(t => {
+        const picks = t.picks || [];
+        // v0.9.62 perf: 150 → 60 sims. With 49 drafts × 12 teams still 35,280
+        // simulated seasons per render — enough for stable advance %. Combined
+        // with the rows cache and module-level _udMatchPlayer cache, initial
+        // render drops below 1s on a 49-draft portfolio.
+        const bb = _bbSimulateTeam(picks, { sims: 60, weeks: BB_REG_SEASON_WEEKS });
+        // Roster details (sorted by pick number) with raw PPG + BB stats.
+        // v0.10.1: grade VS ADP / ADP val against the raw Underdog ADP the draft
+        // actually ran on — Underdog ONLY, never the consensus blend (d.a).
+        // Consensus mixes in CBS/ESPN/devy/dynasty rankings and badly overstates
+        // value (e.g. Charbonnet read +58 vs the true +15; SF rookies Carson Beck
+        // +125, Eli Raridon +201). Both udA (Underdog Best Ball Mania, 1-QB) and
+        // sfa (Underdog Superflex) are real Underdog ADP scales; only `a` is the
+        // consensus blend and it is deliberately excluded.
+        //
+        // Chain: Superflex prefers sfa, then falls back to udA (still Underdog —
+        // the 1-QB scale understates QB value in SF but is the best Underdog
+        // signal for deep stashes with no sfa, e.g. Beck/Raridon → udA≈215).
+        // Best Ball uses udA. If a player has NO Underdog ADP, adp stays null
+        // and the pick shows no VS ADP (and contributes 0 to the aggregate),
+        // rather than borrowing the misleading consensus number.
+        const _udAdpChain = d.phase === 'superflex' ? ['sfa', 'udA'] : ['udA'];
+        const rosterDetails = picks.slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map((p, pi) => {
+          const matched = _udMatchPlayer(p.name);
+          let adp = null;
+          if (matched) {
+            for (const f of _udAdpChain) {
+              const v = matched[f];
+              if (v != null && v < 900) { adp = v; break; }
+            }
+          }
+          const proj = _udPlayerProj(p.name, p);
+          const bbStats = bb.perPlayerWeekly[p.name] || null;
+          return {
+            round: pi + 1,
+            pick: p.pick,
+            name: p.name,
+            pos: p.pos,
+            team: p.team,
+            proj: proj,                                    // raw preseason/blended PPG
+            bbWeekly: bbStats ? bbStats.weeklyContrib : 0, // per-week contribution to lineup
+            startRate: bbStats ? bbStats.startRate : 0,    // % of weeks they start
+            adp: adp,
+            adpDiff: adp != null ? Math.round(p.pick - adp) : null,
+            sigma: bbStats ? bbStats.sigma : null,
+            byeWeek: bbStats ? bbStats.byeWeek : null,
+            startWeek: bbStats && bbStats.startWeek != null ? bbStats.startWeek : 1,
+            endWeek: bbStats && bbStats.endWeek != null ? bbStats.endWeek : BB_REG_SEASON_WEEKS,
+            vor: matched && matched._vor != null ? matched._vor : null,
+            seasonPts: matched && matched._seasonPts != null ? matched._seasonPts : null
+          };
+        });
+        // Position-level BB contribution (sum of per-player weekly across each position group)
+        const posScores = { QB: 0, RB: 0, WR: 0, TE: 0 };
+        rosterDetails.forEach(p => { if (posScores[p.pos] != null) posScores[p.pos] += p.bbWeekly; });
+        // Whole-roster projection sum (raw PPG, kept for context line)
+        const projSum = rosterDetails.reduce((s, x) => s + (x.proj || 0), 0);
+        // Aggregate ADP value (positive = stole players late, negative = reached)
+        const adpValue = rosterDetails.reduce((s, x) => s + (x.adpDiff || 0), 0);
+        // Team total VOR (v0.9.65) — sum of marginal value above replacement
+        // across all 18 picks. Higher = more aggregate edge over the field.
+        const vorTotal = rosterDetails.reduce((s, x) => s + (x.vor || 0), 0);
+        // v0.9.91: Roster Construction score — BBM-driven 0-100 composite
+        // (build shape + position counts + round-pattern fit).
+        // v0.10.0: skip for Superflex contests — BBM dataset is STD-only,
+        // so the construction signals (per-pick lifts, path-aware rules,
+        // skip penalties) don't apply to SF roster patterns.
+        const _isSf = !!(d.tournament && /super\s*flex/i.test(d.tournament));
+        const construction = _isSf ? null : _udComputeRosterConstruction(rosterDetails);
+        return {
+          entryId: t.entryId,
+          isMine: !!t.isMine,
+          picks: picks,
+          rosterDetails: rosterDetails,
+          construction: construction,
+          // BB-derived totals — these are the ranking + Monte-Carlo inputs
+          weeklyPPG: bb.weeklyPPG,
+          seasonMean: bb.seasonMean,
+          seasonStd: bb.seasonStd,
+          // Position breakdown for the row mini-chart (BB contribution per position)
+          posScores: { QB: { pts: Math.round(posScores.QB) },
+                       RB: { pts: Math.round(posScores.RB) },
+                       WR: { pts: Math.round(posScores.WR) },
+                       TE: { pts: Math.round(posScores.TE) } },
+          projSum: projSum,
+          adpValue: adpValue,
+          vorTotal: vorTotal,
+          fieldUnknown: !fieldComplete
+        };
+      });
+
+      // Advance-rate Monte Carlo removed. The independently-sampled
+      // N(seasonMean, seasonStd²) draws produced visually-too-confident gaps
+      // between teams (60% top vs 36% mid vs 5% bottom) because the model
+      // captured weekly sampling noise but not projection uncertainty. Until
+      // we add an epistemic-variance term and/or shared-environment correlation,
+      // we just rank by deterministic seasonMean and report rank-based stats
+      // instead of probabilistic ones.
+      teams.forEach(t => { t.adv1 = null; t.adv2 = null; t.adv3 = null; });
+      // Rank teams by BB season mean (high → low). This is the ordering shown.
+      const ranked = teams.slice().sort((a, b) => b.seasonMean - a.seasonMean);
+      ranked.forEach((t, i) => { t.rank = i + 1; });
+      const myEntry = teams.find(t => t.isMine) || ranked[0];
+      _udTeamsRows.push({
+        d: d,
+        teams: ranked,
+        myEntry: myEntry,
+        myRank: myEntry ? myEntry.rank : null,
+        myAdv2: myEntry ? myEntry.adv2 : null,
+        fieldComplete: fieldComplete
+      });
+      });   // close forEach
+    }      // close cache-miss block
+    // Portfolio summary cards. Advance-rate cards removed; rank-based stats
+    // only since the Monte Carlo overstated team-vs-team confidence.
+    const _completeRows = _udTeamsRows.filter(x => x.fieldComplete);
+    const _avgRank = _completeRows.length
+      ? _completeRows.reduce((s, x) => s + (x.myRank || 0), 0) / _completeRows.length : null;
+    const _top4Count = _completeRows.filter(x => x.myRank && x.myRank <= 4).length;
+    const _top1Count = _completeRows.filter(x => x.myRank === 1).length;
+
+    function _udSummaryCard(label, val, sub, color) {
+      return `<div style="text-align:center;padding:14px 8px;background:var(--surface);border:1px solid ${color || 'var(--border)'};border-radius:10px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--text2)">${label}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:${color || 'var(--accent)'};margin:2px 0">${val}</div>
+        <div style="font-size:.6rem;color:var(--text2)">${sub}</div>
+      </div>`;
+    }
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px">`;
+    if (!_completeRows.length) {
+      html += `<div style="grid-column:1/-1;text-align:center;padding:14px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;color:var(--text2);font-size:.78rem">No full-field drafts yet — re-run <strong style="color:var(--accent)">Sync from Underdog</strong> with the extension to capture every opponent's roster, then field rankings appear here.</div>`;
+    } else {
+      html += _udSummaryCard('AVG RANK', (_avgRank || 0).toFixed(1) + ' / 12', 'where you sit in the field', '#fbbf24');
+      html += _udSummaryCard('TOP-4 RATE', Math.round(100 * _top4Count / _completeRows.length) + '%', _top4Count + ' of ' + _completeRows.length + ' drafts', '#3b82f6');
+      html += _udSummaryCard('#1 PROJ', _top1Count + ' / ' + _completeRows.length, 'drafts where you project highest', '#22c55e');
+    }
+    html += `</div>`;
+
+    // Sort selector for the per-draft list. User picks the metric they care
+    // about most; default is rank within the field. State persists on window
+    // across re-renders so changing tabs doesn't reset it.
+    if (!window._udTeamsSortBy) window._udTeamsSortBy = 'rank';
+    const _sortKey = window._udTeamsSortBy;
+    const _sortOptions = [
+      { key: 'rank',    label: 'Rank in field',    metric: r => (r.myRank != null ? r.myRank : 999), dir: 'asc' },
+      { key: 'ppg',     label: 'BB Proj PPG',      metric: r => (r.myEntry && r.myEntry.weeklyPPG)  || 0, dir: 'desc' },
+      { key: 'season',  label: 'Season total',     metric: r => (r.myEntry && r.myEntry.seasonMean) || 0, dir: 'desc' },
+      { key: 'build',   label: 'Build score',      metric: r => (r.myEntry && r.myEntry.construction && r.myEntry.construction.score) || 0, dir: 'desc' },
+      { key: 'adpval',  label: 'ADP value',        metric: r => (r.myEntry && r.myEntry.adpValue)  || 0, dir: 'desc' },
+      { key: 'vor',     label: 'Total VOR',        metric: r => (r.myEntry && r.myEntry.vorTotal)  || 0, dir: 'desc' },
+      { key: 'fee',     label: 'Entry fee',        metric: r => (r.d && parseFloat(r.d.fee))       || 0, dir: 'desc' }
+    ];
+    const _activeSort = _sortOptions.find(o => o.key === _sortKey) || _sortOptions[0];
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2)">SORT BY</span>
+      <select onchange="window._udSetTeamsSort(this.value)" style="padding:5px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.72rem;font-family:inherit;cursor:pointer">
+        ${_sortOptions.map(o =>
+          `<option value="${o.key}"${o.key === _sortKey ? ' selected' : ''}>${o.label}</option>`
+        ).join('')}
+      </select>
+    </div>`;
+    const _sortedRows = _udTeamsRows.slice().sort((a, b) => {
+      const av = _activeSort.metric(a);
+      const bv = _activeSort.metric(b);
+      const cmp = _activeSort.dir === 'asc' ? (av - bv) : (bv - av);
+      if (cmp !== 0) return cmp;
+      // Tie-break on rank so the secondary order is always sensible.
+      return ((a.myRank != null ? a.myRank : 999) - (b.myRank != null ? b.myRank : 999));
+    });
+    if (!_sortedRows.length) {
+      html += `<div style="text-align:center;padding:30px;color:var(--text2);font-size:.8rem">No drafts to compare yet.</div>`;
+    } else {
+      _sortedRows.forEach((row, i) => {
+        const d = row.d;
+        const my = row.myEntry;
+        const rankStr = row.myRank ? `#${row.myRank}/${row.teams.length}` : '—';
+        // Color the rank cell — top-tier ranks get the same green/yellow/red
+        // signal the advance % badge used to provide.
+        const rankColor = !row.myRank ? 'var(--text2)' :
+                          row.myRank === 1 ? '#22c55e' :
+                          row.myRank <= 3 ? '#4ade80' :
+                          row.myRank <= 6 ? '#facc15' :
+                          row.myRank <= 9 ? '#f59e0b' : '#ef4444';
+        const fieldNote = row.fieldComplete ? '' : ' <span style="font-size:.55rem;color:var(--text2);font-style:italic">(opponents not synced)</span>';
+        const _safeDid = String(d.id || '').replace(/"/g, '&quot;');
+        html += `<div onclick="window._udToggleTeamsDraft(${i})" data-udteamsdraft="${_safeDid}" data-udteamsdraftidx="${i}" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
+        html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
+        // Rank badge — promoted to primary metric now that advance % is gone.
+        html += `<div style="width:84px;text-align:center;padding:6px 4px;background:var(--surface2);border-radius:6px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${rankColor};line-height:1">${rankStr}</div>
+          <div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px">YOUR RANK</div>
+        </div>`;
+        // Title block. Show user's custom team name (e.g. "BBM BAL/SEA/AMONRA")
+        // as primary identifier when available; fall back to the tournament name
+        // alone. Tournament + fee + size live on the secondary line either way
+        // so users can still tell which contest each team is in.
+        html += `<div style="flex:1;min-width:160px">`;
+        const _tName = d.teamName && d.teamName.trim() ? _esc(d.teamName.trim()) : '';
+        const _tournLabel = _esc(d.tournament || 'Underdog');
+        const _meta = `$${(d.fee || 0).toFixed(0)} · ${row.teams.length}-team`;
+        if (_tName && _tName !== _tournLabel) {
+          html += `<div style="font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_tName}</div>`;
+          html += `<div style="font-size:.65rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_tournLabel} · ${_meta}${fieldNote}</div>`;
+        } else {
+          html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">${_tournLabel} <span style="font-weight:400;color:var(--text2)">· ${_meta}</span>${fieldNote}</div>`;
+        }
+        if (my) {
+          // v0.9.91: include Roster Construction Score in header context line.
+          const myCs = my.construction;
+          const myCsCol = _udConstructionColor(myCs ? myCs.score : null);
+          const _byeStr = myCs && myCs.byeKnown ? `max ${myCs.maxBye} on bye` : 'bye N/A (schedule not released)';
+          const _myAdvPct = myCs ? (myCs.advRate * 100).toFixed(1) + '%' : '';
+          const buildStr = myCs
+            ? ` · Build <span style="color:${myCsCol};font-weight:700" title="Implied BBM advance rate (baseline 16.67%):&#10;Build Shape ${myCs.buildShape} · Pos Counts ${myCs.posCount} · Round Pattern ${myCs.roundPattern} · Stacking ${myCs.stacking} · Structural ${myCs.structural}&#10;Stack: ${_udCompKeyLabel(myCs.compKey)} · max ${myCs.maxStack} · ${myCs.nQbStacks} QB-stacks&#10;Structural: ${_byeStr} · ${myCs.maxRbSameTeam} RB same-team · ${myCs.maxWrNoQb} WR same-team-no-QB&#10;Weighted 20/10/20/30/20 (component scores 0-100)">${_myAdvPct}</span>`
+            : '';
+          html += `<div style="font-size:.65rem;color:var(--text2)">BB Proj: <span style="color:var(--text);font-weight:600">${my.weeklyPPG.toFixed(1)}</span> PPG · <span style="color:var(--text);font-weight:600">${my.seasonMean.toFixed(0)}</span> season · VOR <span style="color:${(my.vorTotal||0) > 200 ? '#22c55e' : (my.vorTotal||0) > 0 ? '#4ade80' : (my.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(my.vorTotal||0) > 0 ? '+' : ''}${Math.round(my.vorTotal||0)}</span> · ADP val: <span style="color:${(my.adpValue||0) > 0 ? '#22c55e' : (my.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(my.adpValue||0) > 0 ? '+' : ''}${my.adpValue || 0}</span>${buildStr}</div>`;
+        }
+        html += `</div>`;
+        html += `</div>`;
+        // Draft expand (the 12 ranked teams) — built on first click
+        // (v0.10.2: _udToggleTeamsDraft -> _udBuildTeamsDraftHtml).
+        html += `<div id="udTeamsDraft_${i}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"></div>`;
+        html += `</div>`;
+      });
+    }
+
+    body.innerHTML = html;
+    // Sorted row objects backing the lazy expand builders — indexes match the
+    // data-udteamsdraftidx attrs / onclick args baked into the cards above.
+    window._udTeamsSorted = _sortedRows;
+    window._udTeamsBuilt = true;
+  }
+
+  // One draft's expand: the ranked 12-team field. Roster containers start
+  // empty; _udToggleTeamsRoster fills each on its first click.
+  function _udBuildTeamsDraftHtml(row, i) {
+    let html = '';
+        if (!row.fieldComplete) {
+          html += `<div style="font-size:.7rem;color:var(--text2);font-style:italic;padding:10px 0">This draft was uploaded via CSV which doesn't capture other entrants. Re-sync from Underdog to see every opponent.</div>`;
+          // Even with no field, still show user's roster on click below
+        }
+        // Team list within draft. Each row clickable.
+        row.teams.forEach((t, ti) => {
+          const isMine = t.isMine;
+          const rowBg = isMine ? 'background:linear-gradient(90deg,rgba(251,191,36,0.18),transparent);' : 'background:var(--surface2);';
+          const teamLabel = isMine ? '<span style="color:var(--accent);font-weight:700">YOU</span>' : 'Opponent ' + ((t.entryId || '').slice(0, 6) || (ti + 1));
+          html += `<div onclick="event.stopPropagation();window._udToggleTeamsRoster(${i}, ${ti})" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;${rowBg}cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">`;
+          html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
+          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--text);width:30px">#${t.rank}</div>`;
+          html += `<div style="flex:1;min-width:90px;font-size:.72rem">${teamLabel}</div>`;
+          html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:84px">
+            <div><span style="color:var(--text);font-weight:700">${t.weeklyPPG.toFixed(1)}</span> BB PPG</div>
+            <div><span style="color:var(--text);font-weight:600">${t.seasonMean.toFixed(0)}</span> season</div>
+          </div>`;
+          html += `<div style="font-size:.62rem;color:var(--text2);text-align:right;line-height:1.2;min-width:80px">
+            <div><span data-gloss="ADP value — sum of (ADP − pick number) across the roster. Positive = stole players late vs. market. Negative = reached.">ADP val</span> <span style="color:${(t.adpValue||0) > 0 ? '#22c55e' : (t.adpValue||0) < 0 ? '#ef4444' : 'var(--text2)'};font-weight:600">${(t.adpValue||0) > 0 ? '+' : ''}${t.adpValue || 0}</span></div>
+            <div><span data-gloss="Total Value Over Replacement — sum of season-pts above the BBM starter cutoff (QB12/RB30/WR42/TE13) for every pick on this roster.">VOR</span> <span style="color:${(t.vorTotal||0) > 200 ? '#22c55e' : (t.vorTotal||0) > 0 ? '#4ade80' : (t.vorTotal||0) > -100 ? '#facc15' : '#ef4444'};font-weight:700">${(t.vorTotal||0) > 0 ? '+' : ''}${Math.round(t.vorTotal||0)}</span></div>
+          </div>`;
+          // Position mini-bar
+          html += `<div style="display:flex;gap:3px">`;
+          ['QB','RB','WR','TE'].forEach(pos => {
+            const ps = t.posScores[pos] || { pts: 0 };
+            const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+            html += `<div style="text-align:center;min-width:24px"><div style="font-size:.45rem;color:var(--text2)">${pos}</div><div style="font-size:.6rem;font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
+          });
+          html += `</div>`;
+          // v0.9.91: Roster Construction % — composite score (build shape +
+          // position counts + round-pattern fit) graded on 2.5M historical
+          // BBM rosters. Hover for component breakdown.
+          const cs = t.construction;
+          const csCol = _udConstructionColor(cs ? cs.score : null);
+          const pathBits = cs && cs.pathInfo ? [
+            BBM_PATH_LABELS.rb[cs.pathInfo.rbBucket] || `${cs.pathInfo.rbBucket} RB`,
+            cs.pathInfo.qbBucket ? BBM_PATH_LABELS.qb[cs.pathInfo.qbBucket] : 'no QB',
+            cs.pathInfo.teBucket ? BBM_PATH_LABELS.te[cs.pathInfo.teBucket] : 'no TE',
+            BBM_PATH_LABELS.wr[cs.pathInfo.wrBucket] || cs.pathInfo.wrBucket,
+          ].join(' / ') : '';
+          const csTip = cs
+            ? `Roster Construction Score (BBM-derived, tournament-equity weighted 50/30/20 QF/SF/Finals):&#10;` +
+              `Build Shape ${cs.counts.QB}Q/${cs.counts.RB}R/${cs.counts.WR}W/${cs.counts.TE}T → ${cs.buildShape}&#10;` +
+              `Position Counts → ${cs.posCount}&#10;` +
+              `Round Pattern (per-pick lift, blended) → ${cs.roundPattern}&#10;` +
+              `Path Fit → ${cs.pathFit} (${pathBits})&#10;` +
+              `Stacking → ${cs.stacking} (${_udCompKeyLabel(cs.compKey)}, max ${cs.maxStack}, ${cs.nQbStacks} QB-stacks)&#10;` +
+              `Structural → ${cs.structural} (${cs.byeKnown ? 'max ' + cs.maxBye + ' on bye' : 'bye N/A — schedule not released'}, ${cs.maxRbSameTeam} RB same-team, ${cs.maxWrNoQb} WR same-team-no-QB)&#10;` +
+              `Composite (10/10/25/15/20/20) → ${cs.score}/100 · implied advance rate ${(cs.advRate * 100).toFixed(1)}% (baseline 16.7%)`
+            : `Construction score N/A — BBM dataset is Standard-format only,&#10;Superflex roster patterns differ structurally.`;
+          // v0.10.0: compact path badge under the BUILD score so users see
+          // "Balanced + Late QB" (or whichever path was detected) at a glance
+          // without hovering the tooltip. Two-letter shorthand keeps the
+          // column narrow while exposing the most-actionable path components.
+          const pathBadge = cs && cs.pathInfo ? (() => {
+            const rbMap = {0:'ZRO', 1:'HER', 2:'BAL', 3:'HVY', 4:'ROB'};
+            const qbMap = {early:'EQB', mid:'MQB', late:'LQB', late2:'LQB', verylate:'VLQB'};
+            const rbShort = rbMap[cs.pathInfo.rbBucket] || '';
+            const qbShort = cs.pathInfo.qbBucket ? qbMap[cs.pathInfo.qbBucket] || '' : '';
+            return [rbShort, qbShort].filter(Boolean).join(' · ');
+          })() : '';
+          const pathBadgeHtml = pathBadge
+            ? `<div style="font-size:.42rem;color:var(--text2);letter-spacing:.3px;font-family:'DM Sans',sans-serif;font-weight:500;margin-top:1px"><span data-gloss="Build path shorthand. RB: ZRO=Zero RB, HER=Hero RB, BAL=Balanced, HVY=RB Heavy, ROB=Robust RB. QB: EQB=Early QB, MQB=Mid QB, LQB=Late QB, VLQB=Very Late QB.">${pathBadge}</span></div>`
+            : '';
+          const _csAdvPct = cs ? (cs.advRate * 100).toFixed(1) + '%' : '—';
+          html += `<div title="${csTip}" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${csCol};text-align:right;min-width:54px">${_csAdvPct}<div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif">BUILD</div>${pathBadgeHtml}</div>`;
+          html += `</div>`;
+          // Roster expand within the team row — table built on first click
+          // (v0.10.2: _udToggleTeamsRoster -> _udBuildTeamsRosterHtml).
+          html += `<div id="udTeamsRoster_${i}_${ti}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0"></div>`;
+          html += `</div>`;
+        });
+    return html;
+  }
+
+  // One team's grouped roster table (QB/RB/WR/TE sections + totals).
+  function _udBuildTeamsRosterHtml(t) {
+    let html = '';
+          html += `<table style="width:100%;min-width:680px;border-collapse:collapse;font-size:.68rem">
+            <thead><tr style="border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:3px 6px;color:var(--text2)">RD</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)">PICK</th>
+              <th style="text-align:left;padding:3px 6px;color:var(--text2)">PLAYER</th>
+              <th style="text-align:left;padding:3px 6px;color:var(--text2)">POS</th>
+              <th style="text-align:left;padding:3px 6px;color:var(--text2)">TEAM</th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected fantasy points per game.">PROJ PPG</span></th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected total season points.">SZN PTS</span></th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Value Over Replacement — season pts above the BBM 12-team starter cutoff (QB12/RB30/WR42/TE13).">VOR</span></th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Pick number minus ADP. Positive = took player later than ADP (got value). Negative = reached.">vs ADP</span></th>
+            </tr></thead><tbody>`;
+          // Group roster by position (Underdog-style). Within each position
+          // keep draft order so the pick column still tells a coherent story.
+          const _posOrder = ['QB','RB','WR','TE'];
+          const _posColorsHdr = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+          const _grouped = {};
+          t.rosterDetails.forEach(p => {
+            const key = _posOrder.includes(p.pos) ? p.pos : 'OTHER';
+            (_grouped[key] = _grouped[key] || []).push(p);
+          });
+          const _renderOrder = _posOrder.filter(pos => _grouped[pos] && _grouped[pos].length);
+          if (_grouped.OTHER && _grouped.OTHER.length) _renderOrder.push('OTHER');
+          _renderOrder.forEach(pos => {
+            const group = _grouped[pos];
+            const _hdrColor = _posColorsHdr[pos] || '#94a3b8';
+            const _totalProj = Math.round(group.reduce((s, p) => s + (p.proj != null ? p.proj : 0), 0) * 10) / 10;
+            const _totalSzn = Math.round(group.reduce((s, p) => s + (p.seasonPts != null ? p.seasonPts : 0), 0));
+            const _totalVor = Math.round(group.reduce((s, p) => s + (p.vor != null ? p.vor : 0), 0));
+            const _vorClr = _totalVor > 100 ? '#22c55e' : _totalVor > 0 ? '#4ade80' : _totalVor > -100 ? '#facc15' : '#ef4444';
+            html += `<tr class="bb-pos-section-row" style="background:${_hdrColor}10;border-top:2px solid ${_hdrColor}50;border-bottom:1px solid ${_hdrColor}30">
+              <td colspan="5" style="padding:5px 6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${_hdrColor}">${pos} <span style="font-size:.55rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif;margin-left:6px">${group.length} player${group.length===1?'':'s'}</span></td>
+              <td style="padding:5px 6px;text-align:right;font-weight:700;color:${_hdrColor}">${_totalProj > 0 ? _totalProj : '—'}</td>
+              <td style="padding:5px 6px;text-align:right;color:var(--text2)">${_totalSzn > 0 ? _totalSzn : '—'}</td>
+              <td style="padding:5px 6px;text-align:right;font-weight:700;color:${_vorClr}">${_totalVor > 0 ? '+' : ''}${_totalVor}</td>
+              <td></td>
+            </tr>`;
+            group.forEach(p => {
+            const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+            // ADP delta = pick - adp. Positive = took after ADP (got value),
+            // negative = reach. Color follows the same convention used on the
+            // header row's aggregate ADP val number.
+            const adpDiff = (p.adp != null && p.pick != null) ? Math.round(p.pick - p.adp) : null;
+            const adpColor = adpDiff == null ? 'var(--text2)' :
+                              adpDiff > 0 ? '#22c55e' :
+                              adpDiff < 0 ? '#ef4444' :
+                              'var(--text2)';
+            const adpStr = adpDiff == null ? '—' : (adpDiff > 0 ? '+' : '') + adpDiff;
+            const adpTitle = p.adp != null ? `Player ADP: ${Math.round(p.adp)} · Picked at ${p.pick}` : 'No ADP available';
+            // Color projection by simple position-aware tier so it pops similarly to ADP.
+            const projColor = (() => {
+              if (p.proj == null) return 'var(--text2)';
+              const v = p.proj;
+              if (p.pos === 'QB') return v >= 22 ? '#22c55e' : v >= 19 ? '#4ade80' : v >= 16 ? '#facc15' : v >= 13 ? '#f59e0b' : 'var(--text2)';
+              if (p.pos === 'RB') return v >= 18 ? '#22c55e' : v >= 14 ? '#4ade80' : v >= 11 ? '#facc15' : v >= 8 ? '#f59e0b' : 'var(--text2)';
+              if (p.pos === 'WR') return v >= 17 ? '#22c55e' : v >= 13 ? '#4ade80' : v >= 10 ? '#facc15' : v >= 7 ? '#f59e0b' : 'var(--text2)';
+              if (p.pos === 'TE') return v >= 14 ? '#22c55e' : v >= 11 ? '#4ade80' : v >= 8 ? '#facc15' : v >= 6 ? '#f59e0b' : 'var(--text2)';
+              return 'var(--text2)';
+            })();
+            // v0.9.64 active-window badge. Show "Wks X-Y" tag for any
+            // player whose simulated active window is narrower than the
+            // full season — Clay-projected limited GP (e.g., Charbonnet
+            // returning week 7) or QB timeshare bench/takeover.
+            const fullSeasonStart = 1;
+            const fullSeasonEnd = BB_REG_SEASON_WEEKS;
+            const isLimited = (p.startWeek != null && p.startWeek > fullSeasonStart) ||
+                              (p.endWeek != null && p.endWeek < fullSeasonEnd);
+            const wkBadge = isLimited
+              ? `<span style="display:inline-block;margin-left:6px;padding:1px 5px;font-size:.55rem;font-weight:600;color:#000;background:#facc15;border-radius:3px;letter-spacing:.3px">WKS ${p.startWeek}-${p.endWeek}</span>`
+              : '';
+            // VOR coloring: green for above-replacement, red for below.
+            // Magnitude tiers tuned roughly: starters score +0 to +120,
+            // bench/depth dips into negatives.
+            const vorColor = p.vor == null ? 'var(--text2)' :
+                              p.vor >= 80 ? '#22c55e' :
+                              p.vor >= 40 ? '#4ade80' :
+                              p.vor >= 10 ? '#facc15' :
+                              p.vor >= -10 ? 'var(--text2)' :
+                              '#ef4444';
+            const vorStr = p.vor == null ? '—' :
+                            (p.vor > 0 ? '+' : '') + Math.round(p.vor);
+            // Player headshot via D match (falls back to a colour-block circle if no image)
+            const _bbMatch = (typeof _udMatchPlayer === 'function') ? _udMatchPlayer(p.name) : null;
+            const _bbHs = _bbMatch && _bbMatch._slImg ? window._fixHeadshotUrl(_bbMatch._slImg) : '';
+            const _bbHsHtml = _bbHs
+              ? `<img class="bb-roster-headshot" src="${_bbHs}" alt="" loading="lazy" onerror="this.style.display='none'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;object-position:center top;background:var(--surface2);flex-shrink:0;vertical-align:middle;margin-right:6px">`
+              : `<span class="bb-roster-headshot" style="display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--surface2);flex-shrink:0;vertical-align:middle;margin-right:6px"></span>`;
+            html += `<tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:3px 6px;color:var(--text2)">${p.round}</td>
+              <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.pick}</td>
+              <td style="padding:3px 6px;color:var(--text);white-space:nowrap">${_bbHsHtml}${_esc(p.name)}${wkBadge}</td>
+              <td style="padding:3px 6px;color:${posColors[p.pos] || 'var(--text2)'};font-weight:600">${p.pos || '—'}</td>
+              <td style="padding:3px 6px;color:var(--text2)">${_esc(p.team || '')}</td>
+              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${projColor}">${p.proj != null ? p.proj.toFixed(1) : '—'}</td>
+              <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.seasonPts != null ? Math.round(p.seasonPts) : '—'}</td>
+              <td style="padding:3px 6px;text-align:right;font-weight:700;color:${vorColor}">${vorStr}</td>
+              <td title="${adpTitle}" style="padding:3px 6px;text-align:right;font-weight:700;color:${adpColor}">${adpStr}</td>
+            </tr>`;
+            });
+          });
+          html += `</tbody></table>`;
+    return html;
   }
 
   function _udRenderDraftBoard(data) {
@@ -46830,11 +46888,11 @@ Rules:
   };
 
   // Deep-link from an exposure-row tournament link → the Teams tab, scrolled and
-  // expanded on the corresponding draft. Teams tab is rendered eagerly during
-  // dashboard build so we just need to find the matching draft row by data attr.
+  // expanded on the corresponding draft. v0.10.2: the tab body is lazy now, so
+  // wait for _udEnsureTeamsTab's callback before looking for the draft card.
   window._udJumpToDraft = function(draftId) {
     if (typeof window._udSwitchTab === 'function') window._udSwitchTab('teams');
-    setTimeout(() => {
+    _udEnsureTeamsTab(() => setTimeout(() => {
       const row = document.querySelector(`[data-udteamsdraft="${CSS.escape(String(draftId))}"]`);
       if (!row) return;
       const idx = row.getAttribute('data-udteamsdraftidx');
@@ -46843,7 +46901,7 @@ Rules:
         if (expand && expand.style.display === 'none') window._udToggleTeamsDraft(parseInt(idx));
       }
       row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 60);
+    }, 40));
   };
 
   window._udExpPosFilter = 'ALL';
@@ -46884,29 +46942,44 @@ Rules:
         btn.style.borderColor = t === tabId ? 'var(--accent)' : 'var(--border)';
       }
     });
+    // v0.10.2: TEAMS tab body is lazy — build it on first activation.
+    if (tabId === 'teams') _udEnsureTeamsTab();
   };
 
   // v0.9.40: TEAMS tab uses these two toggles. Top-level expands a draft to
   // show all 12 teams; second-level expands one team to its full roster.
+  // v0.10.2: both build their content on first expand (empty shells until
+  // then) — the field markup no longer exists pre-rendered in hidden divs.
   window._udToggleTeamsDraft = function(idx) {
     const el = document.getElementById('udTeamsDraft_' + idx);
-    if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+    if (!el) return;
+    const opening = el.style.display === 'none';
+    if (opening && !el.dataset.built) {
+      const row = (window._udTeamsSorted || [])[idx];
+      if (row) { el.innerHTML = _udBuildTeamsDraftHtml(row, idx); el.dataset.built = '1'; }
+    }
+    el.style.display = opening ? '' : 'none';
   };
   window._udToggleTeamsRoster = function(draftIdx, teamIdx) {
     const el = document.getElementById('udTeamsRoster_' + draftIdx + '_' + teamIdx);
-    if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+    if (!el) return;
+    const opening = el.style.display === 'none';
+    if (opening && !el.dataset.built) {
+      const row = (window._udTeamsSorted || [])[draftIdx];
+      const t = row && row.teams && row.teams[teamIdx];
+      if (t) { el.innerHTML = _udBuildTeamsRosterHtml(t); el.dataset.built = '1'; }
+    }
+    el.style.display = opening ? '' : 'none';
   };
 
   // Sort selector handler for the TEAMS tab. Stashes the chosen key on
-  // window so it persists across re-renders, then triggers a dashboard
-  // re-render so the per-draft list reflects the new ordering.
+  // window so it persists across re-renders. v0.10.2: rebuilds only the
+  // TEAMS body (BB-sim rows cache makes this ~50ms) instead of re-rendering
+  // the entire dashboard.
   window._udSetTeamsSort = function(key) {
     window._udTeamsSortBy = key;
-    if (window._udPortfolio && typeof _udRenderDashboard === 'function') {
-      try { _udRenderDashboard(window._udPortfolio); } catch (e) {
-        console.warn('[Portfolio] Sort re-render error:', e);
-      }
-    }
+    window._udTeamsBuilt = false;
+    _udEnsureTeamsTab();
   };
 
   // ═══════════════════════════════════════════════════════════

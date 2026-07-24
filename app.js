@@ -40226,6 +40226,38 @@ Rules:
     return _mtDstByAbbrCache;
   }
 
+  // Season baseline of implied team totals: median implied total per team
+  // across all 18 weeks (byes skipped). Used so the SOS blend measures each
+  // window's implied totals RELATIVE to the team's own norm — a raw implied
+  // total mostly encodes "is this offense good" (roster quality, not
+  // schedule). Median over mean: 17 games is a small sample and a couple of
+  // outlier lines (Week 18 rest games) drag a mean around.
+  let _mtImplBaseCache = null;
+  function _mtImpliedBaselines() {
+    if (_mtImplBaseCache) return _mtImplBaseCache;
+    _mtImplBaseCache = {};
+    if (typeof window.getNflScheduleForTeam !== 'function'
+        || typeof window.getNflTeamImpliedTotal !== 'function') return _mtImplBaseCache;
+    Object.keys(_mtBuildDstByAbbr()).forEach(team => {
+      const sched = window.getNflScheduleForTeam(team);
+      if (!sched) return;
+      const vals = [];
+      for (let w = 1; w <= 18; w++) {
+        const g = sched[w];
+        if (!g || g.bye || !g.opp) continue;
+        const it = window.getNflTeamImpliedTotal(w, team, g.opp, g.home);
+        if (typeof it === 'number') vals.push(it);
+      }
+      // Need a meaningful season sample before we trust a baseline.
+      if (vals.length >= 6) {
+        vals.sort((a, b) => a - b);
+        const m = Math.floor(vals.length / 2);
+        _mtImplBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
+      }
+    });
+    return _mtImplBaseCache;
+  }
+
   // === Adjustable SOS week window (rankings table) ===
   // null = the playoff default (W15-17); {from,to} = a custom range (e.g. 1-5).
   // Persisted to localStorage so the rankings view keeps your window.
@@ -40320,14 +40352,26 @@ Rules:
     const totalsPopulated = (typeof window.getNflTotalsCount === 'function')
                              ? window.getNflTotalsCount() : 0;
     const useTotals = totalsPopulated >= 8;
+    // 2026-07-24: the implied-total signal is now the DIFF between the
+    // window's avg implied total and the team's own season median
+    // (_mtImpliedBaselines) — isolates the schedule's effect on scoring
+    // environment instead of rewarding good offenses in every window.
+    const _implBase = _mtImpliedBaselines();
+    const teamRel = {};
+    Object.keys(teamTot).forEach(t => {
+      if (teamTot[t].n >= minN && typeof _implBase[t] === 'number') teamRel[t] = teamTot[t].avg - _implBase[t];
+    });
     let tMu = 0, tSd = 1, totalsReady = false;
     if (useTotals) {
-      const teamAvgs = Object.values(teamTot).filter(t => t.n >= minN).map(t => t.avg);
-      if (teamAvgs.length >= 4) {
-        const m = teamAvgs.reduce((s, v) => s + v, 0) / teamAvgs.length;
-        const variance = teamAvgs.reduce((s, v) => s + (v - m) * (v - m), 0) / teamAvgs.length;
-        tMu = m; tSd = Math.sqrt(variance) || 1;
-        totalsReady = true;
+      const relVals = Object.values(teamRel);
+      if (relVals.length >= 4) {
+        const m = relVals.reduce((s, v) => s + v, 0) / relVals.length;
+        const variance = relVals.reduce((s, v) => s + (v - m) * (v - m), 0) / relVals.length;
+        const sd = Math.sqrt(variance);
+        // Near-season-length windows: every team's window avg ≈ its own
+        // baseline, so the diffs collapse toward 0 — skip the adjustment
+        // rather than z-amplifying noise.
+        if (sd >= 0.5) { tMu = m; tSd = sd; totalsReady = true; }
       }
     }
     // Spread z-score across teams (centered ~0 by construction — favored offset
@@ -40344,8 +40388,8 @@ Rules:
     const finalScores = Object.entries(teamDef).map(([team, d]) => {
       let blendAvg = d.avg;
       let totalAdjusted = false;
-      if (totalsReady && teamTot[team] && teamTot[team].n >= minN) {
-        const zT = -(teamTot[team].avg - tMu) / tSd;
+      if (totalsReady && teamRel[team] != null) {
+        const zT = -(teamRel[team] - tMu) / tSd;
         blendAvg = (d.avg * 3 + zT) / 4;
         totalAdjusted = true;
       }
@@ -40390,7 +40434,12 @@ Rules:
         if (typeof o.teamSpread === 'number') sub.push((o.teamSpread > 0 ? '+' : '') + o.teamSpread + ' sprd');
         if (sub.length) parts.push('(' + sub.join(', ') + ')');
         return parts.join(' ');
-      }).join(', ') + (data.spreadAdjusted ? ' · spread-blended' : (data.totalAdjusted ? ' · implied-blended' : ''));
+      }).join(', ')
+        + (data.totalAdjusted && data.teamTot && typeof _implBase[data.team] === 'number'
+            ? ' · impl ' + data.teamTot.avg.toFixed(1) + ' vs szn ' + _implBase[data.team].toFixed(1)
+              + ' (' + (teamRel[data.team] >= 0 ? '+' : '') + teamRel[data.team].toFixed(1) + ')'
+            : '')
+        + (data.spreadAdjusted ? ' · spread-blended' : (data.totalAdjusted ? ' · implied-blended' : ''));
       _mtPlayoffSosCache[key][data.team] = { label, color, title: tip, rank, avg: data.blendAvg };
     });
     return _mtPlayoffSosCache[key];
@@ -40435,23 +40484,29 @@ Rules:
                  ? window.getNflTeamImpliedTotal(week, team, g.opp, g.home) : null;
       teamRows[team] = { defZ, gt, sp, it, g, oppRec };
     });
-    // z-score implied team totals AND spreads across this week's matchups.
+    // z-score implied-total DIFFS (vs each team's season median baseline —
+    // see _mtImpliedBaselines) AND spreads across this week's matchups.
     const mean = a => a.reduce((s,v)=>s+v,0)/a.length;
     const std  = a => { const m=mean(a); return Math.sqrt(mean(a.map(v=>(v-m)*(v-m))))||1; };
-    const implieds = Object.values(teamRows).map(x => x.it).filter(v => typeof v === 'number');
+    const _implBase = _mtImpliedBaselines();
+    Object.entries(teamRows).forEach(([t, x]) => {
+      x.rel = (typeof x.it === 'number' && typeof _implBase[t] === 'number') ? x.it - _implBase[t] : null;
+    });
+    const rels = Object.values(teamRows).map(x => x.rel).filter(v => typeof v === 'number');
     const spreads = Object.values(teamRows).map(x => x.sp).filter(v => typeof v === 'number');
-    const useTotals = implieds.length >= 4;
+    const useTotals = rels.length >= 4 && std(rels) >= 0.5;
     const useSpreads = spreads.length >= 4;
-    const tMu = useTotals ? mean(implieds) : 0;
-    const tSd = useTotals ? std(implieds)  : 1;
+    const tMu = useTotals ? mean(rels) : 0;
+    const tSd = useTotals ? std(rels)  : 1;
     const sMu = useSpreads ? mean(spreads) : 0;
     const sSd = useSpreads ? std(spreads)  : 1;
     const sprWeight = (POSITION_SPREAD_WEIGHT[posKey] != null) ? POSITION_SPREAD_WEIGHT[posKey] : 0;
     const scored = Object.entries(teamRows).map(([t, x]) => {
       let blend = x.defZ;
-      if (useTotals && typeof x.it === 'number') {
-        // Invert: higher implied total = MORE expected scoring = EASIER for player.
-        const zT = -(x.it - tMu) / tSd;
+      if (useTotals && typeof x.rel === 'number') {
+        // Invert: implied total ABOVE the team's own season norm = more
+        // expected scoring than usual = EASIER for the player.
+        const zT = -(x.rel - tMu) / tSd;
         blend = (x.defZ * 3 + zT) / 4;
       }
       if (useSpreads && sprWeight !== 0 && typeof x.sp === 'number') {

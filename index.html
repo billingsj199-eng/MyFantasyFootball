@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-23f" as="script">
+<link rel="preload" href="app.js?v=2026-07-24a" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2195,7 +2195,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;flex-shrink:0;margin-top:1px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
 <div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);margin-bottom:2px">TEAM RANKINGS</div>
-<div style="font-size:.7rem;color:var(--text2);line-height:1.4">Every team in every league ranked by projected best-ball total. Click any roster for picks, VOR, and projection breakdown.</div>
+<div style="font-size:.7rem;color:var(--text2);line-height:1.4">Every team in every pool ranked and graded. Click any roster for picks, VOR, and projection breakdown.</div>
 </div>
 </div>
 <div style="display:flex;gap:10px;align-items:flex-start">
@@ -3567,7 +3567,7 @@ ADD TO CHROME
 <div class="help-section">
 <div class="help-section-icon">🏆</div>
 <div class="help-section-title">TEAMS TAB</div>
-<div class="help-section-desc">Every draft with all 12 teams ranked by projected best-ball total. Click any team for the full roster (picks, projections, VOR, vs-ADP). Sort the list by rank, BB Proj, season total, build score, ADP value, or entry fee.</div>
+<div class="help-section-desc">Every draft with all 12 teams ranked by build grade — the Roster Construction score from historical BBM data (Superflex pools rank by projected season points instead). Click any team for the full roster (picks, projections, VOR, vs-ADP). Sort the list by rank, BB Proj, season total, build score, ADP value, or entry fee.</div>
 </div>
 
 <div class="help-section">
@@ -4855,7 +4855,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-23f"></script>
+<script defer src="app.js?v=2026-07-24a"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

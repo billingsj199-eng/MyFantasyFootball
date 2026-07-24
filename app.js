@@ -43096,14 +43096,22 @@ Rules:
   // ═══════════════════════════════════════════════════════════
   // Computes a player's expected weekly contribution to your starting lineup
   // accounting for best-ball mechanics (auto-start your top scorers each week).
-  // A high-σ "boom/bust" WR with mean 12 PPG can be more valuable than a
-  // metronomic 12 PPG WR — they win lineup competitions on their boom weeks.
+  //
+  // v0.10.3: the 60-sim Monte Carlo is gone — replaced by a single
+  // deterministic pass over the 17 weeks using each player's blended mean
+  // PPG (byes / Clay-GP active windows / injury tags still zero weeks out,
+  // then the optimal lineup is picked from the means). Field ORDERING now
+  // comes from the historical-BBM Construction score, so these numbers are
+  // display context, not the ranking input — and being deterministic they
+  // never wiggle between renders. Trade-off vs the sim: means-based
+  // lineups don't credit bench volatility (a boom/bust WR8 shows ~0
+  // contribution), so season totals run a bit conservative.
   //
   // Inputs per player: { name, pos, team, mean, sigma, byeWeek, weeklyScores, injuryStatus }
-  // Output per team:   { weeklyPPG, seasonTotal, seasonStd, perPlayerContribution }
+  // Output per team:   { weeklyPPG, seasonMean, seasonStd, perPlayerWeekly }
   //
-  // The same machinery is used both preseason (with position-default σ) and
-  // mid-season (with empirical σ + Bayesian-blended mean from actual scores).
+  // The same machinery is used both preseason (raw projection) and
+  // mid-season (Bayesian-blended mean from actual scores).
 
   // Standard BBM lineup: 1 QB / 2 RB / 3 WR / 1 TE / 1 FLEX (RB-WR-TE) = 8 starters
   const BB_LINEUP = { QB: 1, RB: 2, WR: 3, TE: 1, FLEX: 1 };
@@ -43114,15 +43122,7 @@ Rules:
   // a player has 4+ actual games scored.
   const BB_POS_SIGMA_PCT = { QB: 0.30, RB: 0.50, WR: 0.55, TE: 0.60 };
 
-  // Season-level projection uncertainty. Independent of weekly variance —
-  // captures "Clay might be wrong about this player's true ability." A
-  // player's actual season mean is drawn ONCE per simulated season from
-  // N(projected, (PROJ_UNCERT × projected)²). This single change is what
-  // makes opponents have realistic advance % instead of 0% — without it,
-  // 14 weeks of variance averages out the field too much.
-  const BB_PROJ_UNCERTAINTY_PCT = 0.25;
-
-  // Best-ball season length used for the simulator. v0.9.63 bumped 14→17
+  // Best-ball season length used for the expected-lineup pass. v0.9.63 bumped 14→17
   // to count BB playoff weeks (15-17) toward team scoring AND to better
   // approximate effective games-played until 2026 bye weeks are loaded.
   // Once BB_BYE_WEEKS_2026 is populated, revisit: pure regular-season
@@ -43135,16 +43135,6 @@ Rules:
   // Prior strength for Bayesian blend. Treats the preseason projection as
   // worth ~7 implied games of data, so by week 7 actuals are weighted ~50/50.
   const BB_PRIOR_STRENGTH = 7;
-
-  // Stack correlation (v0.9.64). σ of the multiplicative team-week factor,
-  // expressed as fraction of mean. Same-team players share this factor each
-  // simulated week, so a Bills stack booms or busts together rather than
-  // diversifying away. Calibrated to produce ~0.10-0.15 weekly correlation
-  // between same-team skill players (NFL historical: ~0.20-0.30 for QB-WR1,
-  // ~0.15-0.20 for WR-WR, lower for QB-RB). Multi-factor (per-position)
-  // correlation would be more accurate but adds complexity; this single-
-  // factor approximation captures most of the stacking edge.
-  const BB_TEAM_CORR_PCT = 0.15;
 
   // 2026 NFL bye-week table. Schedule released 2026-05-14.
   // Maps NFL team abbreviation → bye week number (5-14).
@@ -43172,13 +43162,6 @@ Rules:
     // 'Tua Tagovailoa':    { startWeek: 1,  endWeek: 9  },
     // 'Michael Penix Jr.': { startWeek: 10, endWeek: 17 },
   };
-
-  // Box-Muller standard normal sampler. Used to draw weekly player scores.
-  function _bbNormal() {
-    const u = 1 - Math.random();
-    const v = Math.random();
-    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-  }
 
   // Bayesian blend: given a preseason projection and an array of actual
   // weekly scores, returns the posterior mean. Pre-week-1 returns the raw
@@ -43420,16 +43403,16 @@ Rules:
              startWeek: startWeek, endWeek: endWeek };
   }
 
-  // Given resolved player stats and a target week, return the score the
-  // player would post that week. Honors bye weeks, injury status, and
-  // active window (startWeek/endWeek) — weeks outside the window zero out.
+  // Given resolved player stats and a target week, return the player's
+  // expected score that week. Honors bye weeks, injury status, and active
+  // window (startWeek/endWeek) — weeks outside the window zero out.
   function _bbWeekScore(player, week) {
     if (!player) return 0;
     if (player.byeWeek === week) return 0;
     if (player.injury === 'OUT' || player.injury === 'IR') return 0;
     if (player.startWeek != null && week < player.startWeek) return 0;
     if (player.endWeek   != null && week > player.endWeek)   return 0;
-    let score = (player.mean || 0) + (player.sigma || 0) * _bbNormal();
+    let score = player.mean || 0;
     if (player.injury === 'D') score *= 0.5;          // doubtful
     else if (player.injury === 'Q') score *= 0.85;    // questionable
     return Math.max(0, score);
@@ -43475,12 +43458,17 @@ Rules:
     return { total: total, startedIdx: startedIdx };
   }
 
-  // Run a full best-ball simulation for one team. Returns weekly + season
-  // stats plus per-player average weekly contribution to starts.
-  function _bbSimulateTeam(picks, opts) {
+  // Deterministic expected best-ball season for one team (v0.10.3 —
+  // replaces _bbSimulateTeam's 60-sim Monte Carlo). One pass over the 17
+  // weeks: each player's week score is their blended mean (zeroed on bye /
+  // outside the active window / injured out), and the optimal lineup is
+  // picked from those means. No randomness → identical output every
+  // render, and ~60× cheaper per team. seasonStd is 0 by construction;
+  // nothing downstream consumes it since the advance-% Monte Carlo was
+  // removed.
+  function _bbExpectedTeam(picks, opts) {
     opts = opts || {};
     const weeks = opts.weeks || BB_REG_SEASON_WEEKS;
-    const sims  = opts.sims  || 500;
     const startWeek = opts.startWeek || 1;   // weeks already in the books are skipped here
     if (!Array.isArray(picks) || !picks.length) {
       return { weeklyPPG: 0, seasonMean: 0, seasonStd: 0, perPlayerWeekly: {} };
@@ -43488,90 +43476,24 @@ Rules:
     const players = picks.map(_bbResolvePlayer);
     const playerContrib = new Array(players.length).fill(0);
     const playerStarts = new Array(players.length).fill(0);
-    const seasonTotals = new Array(sims).fill(0);
-
-    // v0.9.64 stack correlation. Decompose each player's σ² into a team-
-    // shared component (team factor σ = BB_TEAM_CORR_PCT × mean) and an
-    // idiosyncratic component (the rest). When we then add the team
-    // factor multiplicatively each week, total marginal variance is
-    // preserved but same-team players move together. Floor idio σ at
-    // 50% of total to avoid pathological cases where teamVar > totalVar
-    // (can happen for low-mean players).
-    const idioSigmas = players.map(p => {
-      const teamVar = Math.pow(BB_TEAM_CORR_PCT * (p.mean || 0), 2);
-      const totalVar = Math.pow(p.sigma || 0, 2);
-      return Math.sqrt(Math.max(totalVar - teamVar, totalVar * 0.25));
-    });
-
-    for (let s = 0; s < sims; s++) {
-      // v0.9.42: per-simulated-season projection uncertainty. Once per
-      // sim-season we draw each player's "true" mean for THIS hypothetical
-      // season from N(projected, (PROJ_UNCERT × projected)²). Weekly variance
-      // then operates around that drawn mean. Without this step, 14 weeks of
-      // averaging shrinks team-level variance to ~3% CV and opponents end
-      // up at 0% advance %; with it, CV is realistic ~10-15%.
-      // Once weekly_scores arrive mid-season, the Bayesian-blended mean is
-      // increasingly anchored to actuals so the projection-uncertainty
-      // factor matters less and less (which is correct — by week 10 we
-      // know each player's pace pretty well).
-      const seasonPlayerMeans = players.map(p => {
-        const blendWeight = Array.isArray(p.weeklyScores) ? p.weeklyScores.filter(s => s != null).length : 0;
-        // After many real games we've already collapsed projection uncertainty;
-        // shrink it linearly from full at week 0 to ~0 by week 14.
-        const shrink = Math.max(0, 1 - blendWeight / BB_REG_SEASON_WEEKS);
-        const projSigma = Math.max(p.mean * BB_PROJ_UNCERTAINTY_PCT * shrink, 0);
-        if (projSigma <= 0) return p.mean;
-        return Math.max(0, p.mean + projSigma * _bbNormal());
+    let seasonTotal = 0;
+    for (let w = startWeek; w <= weeks; w++) {
+      const weekScores = players.map(p => _bbWeekScore(p, w));
+      const lineup = _bbOptimalLineup(weekScores, players);
+      seasonTotal += lineup.total;
+      lineup.startedIdx.forEach(i => {
+        playerContrib[i] += weekScores[i];
+        playerStarts[i]++;
       });
-      let seasonTotal = 0;
-      for (let w = startWeek; w <= weeks; w++) {
-        // v0.9.64: draw one team factor per NFL team this week. Same-team
-        // players multiply by the same factor → correlated booms/busts.
-        const teamFactors = {};
-        for (let i = 0; i < players.length; i++) {
-          const t = players[i].team;
-          if (t && !(t in teamFactors)) {
-            teamFactors[t] = 1 + BB_TEAM_CORR_PCT * _bbNormal();
-          }
-        }
-        // Generate scores for every player this week (operating around the
-        // simulated season-mean rather than the static projection).
-        const weekScores = players.map((p, idx) => {
-          if (p.byeWeek === w) return 0;
-          if (p.injury === 'OUT' || p.injury === 'IR') return 0;
-          if (p.startWeek != null && w < p.startWeek) return 0;  // not yet active (e.g., Clay GP < 17)
-          if (p.endWeek   != null && w > p.endWeek)   return 0;  // benched/done (QB timeshare)
-          let score = seasonPlayerMeans[idx] + idioSigmas[idx] * _bbNormal();
-          // Team factor applies multiplicatively to the post-idio score so
-          // boom/bust weeks scale the player's whole output, not just a
-          // fixed-magnitude shift.
-          const tf = (p.team && teamFactors[p.team] != null) ? teamFactors[p.team] : 1;
-          score *= tf;
-          if (p.injury === 'D') score *= 0.5;
-          else if (p.injury === 'Q') score *= 0.85;
-          return Math.max(0, score);
-        });
-        const lineup = _bbOptimalLineup(weekScores, players);
-        seasonTotal += lineup.total;
-        lineup.startedIdx.forEach(i => {
-          playerContrib[i] += weekScores[i];
-          playerStarts[i]++;
-        });
-      }
-      seasonTotals[s] = seasonTotal;
     }
 
-    const totalSimWeeks = sims * (weeks - startWeek + 1);
-    const seasonMean = seasonTotals.reduce((a, b) => a + b, 0) / sims;
-    const variance = seasonTotals.reduce((a, b) => a + (b - seasonMean) * (b - seasonMean), 0) / sims;
-    const seasonStd = Math.sqrt(variance);
-
+    const nWeeks = weeks - startWeek + 1;
     const perPlayerWeekly = {};
     players.forEach((p, i) => {
       perPlayerWeekly[p.name] = {
         avgPpgWhenStart: playerStarts[i] ? playerContrib[i] / playerStarts[i] : 0,
-        startRate: totalSimWeeks ? playerStarts[i] / sims / (weeks - startWeek + 1) : 0,
-        weeklyContrib: totalSimWeeks ? playerContrib[i] / sims / (weeks - startWeek + 1) : 0,
+        startRate: nWeeks ? playerStarts[i] / nWeeks : 0,
+        weeklyContrib: nWeeks ? playerContrib[i] / nWeeks : 0,
         preseason: p.preseason,
         mean: p.mean,
         sigma: p.sigma,
@@ -43582,9 +43504,9 @@ Rules:
     });
 
     return {
-      weeklyPPG: seasonMean / (weeks - startWeek + 1),
-      seasonMean: seasonMean,
-      seasonStd: seasonStd,
+      weeklyPPG: nWeeks ? seasonTotal / nWeeks : 0,
+      seasonMean: seasonTotal,
+      seasonStd: 0,
       perPlayerWeekly: perPlayerWeekly
     };
   }
@@ -44409,7 +44331,7 @@ Rules:
     // ── TEAMS TAB (v0.9.40 site-side, BB-aware, v0.10.2 fully lazy) ──
     html += `<div id="udTab_teams" style="display:${_activeTabId === 'teams' ? '' : 'none'}">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAMS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(your team vs every opponent in each pool)</span></div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px;max-width:760px;word-wrap:break-word">Click a draft to see all 12 teams ranked by projected best-ball total points. Click any team to open its roster. <strong style="color:var(--accent)">Rank reflects projected season points only — anything can happen in a real season.</strong></div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px;max-width:760px;word-wrap:break-word">Click a draft to see every team in the pool ranked by <span data-gloss="Roster Construction score — how the build grades against 2.5M historical BBM rosters (build shape, round patterns, stacking, structural risk). Superflex pools rank by projected season points instead — the BBM history is standard-lineup only.">build grade</span> (historical BBM data, not a season simulation). Click any team to open its roster. <strong style="color:var(--accent)">Rank grades the build only — anything can happen in a real season.</strong></div>`;
     // v0.10.2: TEAMS tab body is fully LAZY. The field simulation + all
     // draft/team/roster markup used to be built right here on EVERY dashboard
     // render, parking ~600k hidden DOM nodes (95% of the whole page) inside
@@ -44661,45 +44583,50 @@ Rules:
       return v;
     }
 
-    // v0.9.62: cache _udTeamsRows by data signature so repeated renders
-    // (filter clicks, contest selections, expand/collapse) skip the BB
-    // simulation. Cache key combines numDrafts + first/last draft IDs +
-    // total picks — invalidates on any data change but stable across
-    // pure UI interactions. Cuts subsequent renders from ~2-3s to ~50ms.
-    const _udCacheKey = (function () {
-      const ks = Object.keys(data.drafts);
-      // v0.9.65: bumped suffix so stale caches (no VOR/window fields) bust on first load.
-      // v0.9.91: bumped to v91 to invalidate caches missing the new construction field.
-      // v0.10.0: bumped to v100 — construction score now uses tournament-equity
-      // weighted lifts (was QF-only), and PathFit + skip-rate access changed.
-      // v0.10.1: bumped to v101 — VS ADP / ADP val now grade against raw Underdog
-      // ADP (udA/sfa) instead of consensus d.a, so cached rows must recompute.
-      // v0.10.1: include _udLiveAdpAppliedAt so a live ADP snapshot (extension
-      // push or Firestore boot-load that mutates D[i].udA/sfa in place) busts
-      // this cache. Without it the re-render returns rows computed with the
-      // original page-load ADP and the live values never reach the cards.
-      const _liveAdp = window._udLiveAdpAppliedAt || 0;
-      return 'v101:' + ks.length + ':' + (ks[0] || '') + ':' + (ks[ks.length - 1] || '') + ':' + (data.totalPicks || 0) + ':' + _liveAdp;
-    })();
-    let _udTeamsRows;
-    if (window._udTeamsCache && window._udTeamsCache.key === _udCacheKey) {
-      _udTeamsRows = window._udTeamsCache.rows;
-    } else {
-      _udTeamsRows = [];
-      window._udTeamsCache = { key: _udCacheKey, rows: _udTeamsRows };
-      Object.values(data.drafts).forEach(d => {
+    // v0.10.3: cache _udTeamsRows PER DRAFT (was one portfolio-wide key).
+    // The old key folded numDrafts + totalPicks into a single signature, so
+    // joining one new draft (or any pick sync) recomputed every draft in the
+    // portfolio. Now each draft caches its own row on a per-draft signature
+    // (team count + synced pick counts); a new draft computes only itself
+    // and pure UI re-renders (filters, expand/collapse, sorts) hit cache on
+    // everything. The global part still busts the whole cache when it must:
+    // the version tag (bump on any change to the row shape or grading —
+    // history: v65 VOR fields, v91 construction, v100 tournament-equity
+    // lifts, v101 raw-UD ADP grading, v102 construction-ranked field +
+    // deterministic expected lineup) and _udLiveAdpAppliedAt, because a live
+    // ADP snapshot mutates D[i].udA/sfa in place and changes every draft's
+    // adpDiff.
+    const _udGlobalSig = 'v102:' + (window._udLiveAdpAppliedAt || 0);
+    if (!window._udTeamsCache || window._udTeamsCache.globalSig !== _udGlobalSig) {
+      window._udTeamsCache = { globalSig: _udGlobalSig, byDraft: {} };
+    }
+    const _udByDraft = window._udTeamsCache.byDraft;
+    // Drop cache entries for drafts that no longer exist (deleted/re-import).
+    Object.keys(_udByDraft).forEach(k => { if (!data.drafts[k]) delete _udByDraft[k]; });
+    const _udTeamsRows = [];
+    Object.keys(data.drafts).forEach(dk => {
+      const d = data.drafts[dk];
       const at = d.allTeams && typeof d.allTeams === 'object' ? d.allTeams : null;
-      const sourceTeams = (at && Object.keys(at).length >= 2)
-        ? Object.values(at)
+      const _atVals = at ? Object.values(at) : [];
+      // Per-draft signature: opponent-team count + total picks across the
+      // field + own pick count (covers CSV drafts with no allTeams). Any
+      // mid-draft sync grows a pick count and recomputes just this draft.
+      const _dSig = _atVals.length + ':' +
+        _atVals.reduce((s, t) => s + ((t.picks || []).length), 0) + ':' +
+        (d.picks || []).length;
+      const _cached = _udByDraft[dk];
+      if (_cached && _cached.sig === _dSig) { _udTeamsRows.push(_cached.row); return; }
+      const sourceTeams = (_atVals.length >= 2)
+        ? _atVals
         : [{ entryId: 'me', isMine: true, picks: d.picks || [], pickCount: (d.picks || []).length }];
-      const fieldComplete = !!(at && Object.keys(at).length >= 2);
+      const fieldComplete = _atVals.length >= 2;
       const teams = sourceTeams.map(t => {
         const picks = t.picks || [];
-        // v0.9.62 perf: 150 → 60 sims. With 49 drafts × 12 teams still 35,280
-        // simulated seasons per render — enough for stable advance %. Combined
-        // with the rows cache and module-level _udMatchPlayer cache, initial
-        // render drops below 1s on a 49-draft portfolio.
-        const bb = _bbSimulateTeam(picks, { sims: 60, weeks: BB_REG_SEASON_WEEKS });
+        // v0.10.3: deterministic expected lineup (one pass over 17 weeks)
+        // instead of the 60-sim Monte Carlo — ~60× cheaper per team, and
+        // with the per-draft cache a newly joined draft computes only its
+        // own 12 teams instead of the whole portfolio.
+        const bb = _bbExpectedTeam(picks, { weeks: BB_REG_SEASON_WEEKS });
         // Roster details (sorted by pick number) with raw PPG + BB stats.
         // v0.10.1: grade VS ADP / ADP val against the raw Underdog ADP the draft
         // actually ran on — Underdog ONLY, never the consensus blend (d.a).
@@ -44785,28 +44712,32 @@ Rules:
         };
       });
 
-      // Advance-rate Monte Carlo removed. The independently-sampled
-      // N(seasonMean, seasonStd²) draws produced visually-too-confident gaps
-      // between teams (60% top vs 36% mid vs 5% bottom) because the model
-      // captured weekly sampling noise but not projection uncertainty. Until
-      // we add an epistemic-variance term and/or shared-environment correlation,
-      // we just rank by deterministic seasonMean and report rank-based stats
-      // instead of probabilistic ones.
+      // Advance-rate Monte Carlo removed (overconfident), and v0.10.3 the
+      // seasonMean ordering went with it: we don't need to predict each
+      // field's placements, just grade the builds. Rank by the historical-
+      // BBM Construction score (2.5M-roster build grade), tie-broken by
+      // deterministic expected season points. Superflex fields fall back
+      // to expected season points entirely — construction is null there
+      // (BBM dataset is STD-only), for every team in the draft alike.
       teams.forEach(t => { t.adv1 = null; t.adv2 = null; t.adv3 = null; });
-      // Rank teams by BB season mean (high → low). This is the ordering shown.
-      const ranked = teams.slice().sort((a, b) => b.seasonMean - a.seasonMean);
+      const ranked = teams.slice().sort((a, b) => {
+        const ac = a.construction ? a.construction.score : -1;
+        const bc = b.construction ? b.construction.score : -1;
+        return (bc - ac) || (b.seasonMean - a.seasonMean);
+      });
       ranked.forEach((t, i) => { t.rank = i + 1; });
       const myEntry = teams.find(t => t.isMine) || ranked[0];
-      _udTeamsRows.push({
+      const _row = {
         d: d,
         teams: ranked,
         myEntry: myEntry,
         myRank: myEntry ? myEntry.rank : null,
         myAdv2: myEntry ? myEntry.adv2 : null,
         fieldComplete: fieldComplete
-      });
-      });   // close forEach
-    }      // close cache-miss block
+      };
+      _udByDraft[dk] = { sig: _dSig, row: _row };
+      _udTeamsRows.push(_row);
+    });   // close per-draft forEach
     // Portfolio summary cards. Advance-rate cards removed; rank-based stats
     // only since the Monte Carlo overstated team-vs-team confidence.
     const _completeRows = _udTeamsRows.filter(x => x.fieldComplete);
@@ -44828,7 +44759,7 @@ Rules:
     } else {
       html += _udSummaryCard('AVG RANK', (_avgRank || 0).toFixed(1) + ' / 12', 'where you sit in the field', '#fbbf24');
       html += _udSummaryCard('TOP-4 RATE', Math.round(100 * _top4Count / _completeRows.length) + '%', _top4Count + ' of ' + _completeRows.length + ' drafts', '#3b82f6');
-      html += _udSummaryCard('#1 PROJ', _top1Count + ' / ' + _completeRows.length, 'drafts where you project highest', '#22c55e');
+      html += _udSummaryCard('#1 BUILD', _top1Count + ' / ' + _completeRows.length, 'drafts where your build grades best', '#22c55e');
     }
     html += `</div>`;
 
@@ -44882,7 +44813,9 @@ Rules:
         html += `<div onclick="window._udToggleTeamsDraft(${i})" data-udteamsdraft="${_safeDid}" data-udteamsdraftidx="${i}" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
         html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
         // Rank badge — promoted to primary metric now that advance % is gone.
-        html += `<div style="width:84px;text-align:center;padding:6px 4px;background:var(--surface2);border-radius:6px">
+        // v0.10.3: rank = Construction-score order within the field (build
+        // grade vs historical BBM), not projected points.
+        html += `<div title="Rank in this field by Roster Construction score — the historical-BBM build grade. Ties (and Superflex fields, where the STD-only BBM data doesn't apply) order by expected season points." style="width:84px;text-align:center;padding:6px 4px;background:var(--surface2);border-radius:6px">
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${rankColor};line-height:1">${rankStr}</div>
           <div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px">YOUR RANK</div>
         </div>`;

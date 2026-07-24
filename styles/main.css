@@ -2065,3 +2065,24 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
   .pm-weight-lab[open]{position:static;width:auto;max-height:none;box-shadow:none;border-radius:10px;border:1px solid rgba(245,158,11,.4)}
   body.pm-wl-docked #pageProspect .pm-wrapper{width:100%;max-width:1400px;margin:0 auto;padding-right:1.5rem}
 }
+
+/* ─── Compare card SPLITS & FILTERS (season/week filters + teammate split) ── */
+.cmp-split summary{cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--accent);list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+.cmp-split summary::-webkit-details-marker{display:none}
+.cmp-split summary::before{content:'\25B8';font-size:.6rem;transition:transform .15s}
+.cmp-split[open] summary::before{transform:rotate(90deg)}
+.cmp-split-body{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.cmp-split-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cmp-split-lbl{font-size:.58rem;color:var(--text2);font-family:'Bebas Neue',sans-serif;letter-spacing:1px;min-width:56px}
+.cmp-split-chip{padding:2px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.62rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.cmp-split-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(245,158,11,.08)}
+.cmp-split-wk{width:48px;padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:.68rem;font-family:'DM Sans',sans-serif}
+.cmp-split-wk:focus,.cmp-split-mate:focus{outline:none;border-color:var(--accent)}
+.cmp-split-mate-wrap{position:relative;flex:1;min-width:150px;display:flex;gap:4px}
+.cmp-split-mate{flex:1;min-width:0;padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:.7rem;font-family:'DM Sans',sans-serif}
+.cmp-split-mate-clear{padding:2px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);cursor:pointer;font-size:.72rem;line-height:1}
+.cmp-split-mate-clear:hover{color:var(--text);border-color:var(--accent)}
+.cmp-split-drop{position:absolute;top:100%;left:0;right:0;z-index:30;background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-top:2px;max-height:190px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.cmp-split-drop-item{padding:5px 8px;font-size:.7rem;cursor:pointer;display:flex;gap:6px;align-items:center}
+.cmp-split-drop-item:hover{background:var(--elev-1)}
+.cmp-split-note{font-size:.6rem;color:var(--text2);line-height:1.4}

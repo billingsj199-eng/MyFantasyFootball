@@ -5819,7 +5819,7 @@ function _logsSectionHtml(d) {
       : (typeof WEEKLY_STATS !== 'undefined' && Object.keys(WEEKLY_STATS).length > 0)
         ? '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No game-by-game data available for this player.</div>'
         : '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">Game-by-game data is loading…</div>'}</div>
-  </div>`;
+  </div>${!d._retired ? '<div id="cardSplitsWrap">' + _cmpSplitSectionHtml(d, 'gl') + '</div>' : ''}`;
 }
 
 function _getCollegeStats(name, pos) {
@@ -7346,11 +7346,16 @@ function openPlayerCard(d, ctxMode) {
       btn.classList.add('active');
       _glScoring = btn.dataset.glscoring;
       _glRefresh();
+      _cmpSplitRefresh(d.n);
     });
   });
   if (glYearSelect) {
     glYearSelect.addEventListener('change', () => { _glRefresh(); });
   }
+  // SPLITS & FILTERS below the game log (shared engine with the Compare page,
+  // current players only — see _logsSectionHtml).
+  const _spWrap = document.getElementById('cardSplitsWrap');
+  if (_spWrap && _spWrap.innerHTML.trim()) _cmpWireSplits(_spWrap);
   // The LOGS tab button is hidden (and the season selector empty) when the card
   // opens before the lazy weekly bundle has merged (e.g. ?player= deep links) —
   // reveal + populate once data lands.
@@ -7371,6 +7376,12 @@ function openPlayerCard(d, ctxMode) {
         glYearSelect.innerHTML = getWeeklySeasons(d).map(s => '<option value="'+s+'">'+s+'</option>').join('');
       }
       _glRefresh();
+      // Splits section renders empty when the card opens pre-bundle — fill + wire now.
+      const spWrap = document.getElementById('cardSplitsWrap');
+      if (spWrap && !spWrap.innerHTML.trim() && !d._retired) {
+        spWrap.innerHTML = _cmpSplitSectionHtml(d, 'gl');
+        _cmpWireSplits(spWrap);
+      }
     });
   }
 }
@@ -7414,6 +7425,247 @@ function openCompare() {
 
 // Shared array of search-added players (from the search bar)
 var searchAdded = [];
+
+// === Compare card SPLITS & FILTERS ===
+// Per-card game-log filtering on the Compare page: limit the sample to specific
+// seasons and/or a week range, or split production by whether a chosen teammate
+// also played that week (e.g. Tee Higgins with vs. without Joe Burrow). Reads
+// the same WEEKLY_STATS rows as the weekly game log. Teammate splits only count
+// seasons where both players were on the same team (_getTeamForPlayerYear), so
+// picking a never-teammate yields an explicit "never teammates" message rather
+// than a meaningless split. State survives grid re-renders (keyed by name).
+var _cmpSplitState = {};
+
+function _cmpSplitSt(name) {
+  return _cmpSplitState[name] || (_cmpSplitState[name] = { open: false, seasons: null, wkFrom: 1, wkTo: 18, mate: null });
+}
+
+function _cmpFindPlayer(name) {
+  let d = (typeof D !== 'undefined' && Array.isArray(D)) ? D.find(p => p && p.n === name) : null;
+  if (!d) { const sr = searchAdded.find(p => p._src && p._src.n === name); d = sr ? sr._src : null; }
+  return d || null;
+}
+
+// Alt team abbreviations (LA/JAC/relocations) — both sides normalize the same
+// way, so same-year equality checks stay correct across data sources.
+var _CMP_ABBR_NORM = { LA:'LAR', STL:'LAR', SL:'LAR', SD:'LAC', OAK:'LV', JAC:'JAX', WSH:'WAS', ARZ:'ARI', BLT:'BAL', CLV:'CLE', HST:'HOU', KAN:'KC' };
+function _cmpNormTeam(t) { return t ? (_CMP_ABBR_NORM[t] || t) : t; }
+
+// Scoring follows the card's PPR/HALF/STD toggle when present (retired cards);
+// current-player cards have no toggle, so they stay on the half-PPR default.
+function _cmpSplitScoring(name) {
+  const esc = name.replace(/"/g, '\\"');
+  const b = document.querySelector('.cmp-cl-scoring.active[data-cmpplayer="' + esc + '"]');
+  return b ? b.dataset.cmpscoring : 'half';
+}
+
+function _cmpSplitAgg(games, recAdj) {
+  if (!games.length) return null;
+  const t = { py:0, ptd:0, int:0, pa:0, pc:0, ry:0, rtd:0, ra:0, fl:0, rec:0, rcy:0, rctd:0, tgt:0 };
+  let fpts = 0, high = -Infinity;
+  games.forEach(w => {
+    const f = (w.fpts || 0) + (w.rec || 0) * recAdj;
+    if (f > high) high = f;
+    fpts += f;
+    for (const k in t) t[k] += (w[k] || 0);
+  });
+  return { gp: games.length, ppg: fpts / games.length, high, t };
+}
+
+function _cmpMateWeekSet(mate, yr) {
+  if (typeof WEEKLY_STATS === 'undefined') return null;
+  const wd = WEEKLY_STATS[mate];
+  const rows = wd && wd.seasons && wd.seasons[String(yr)];
+  return rows ? new Set(rows.map(r => r.wk)) : null;
+}
+
+function _cmpSplitResultsHtml(name, fmtOverride) {
+  const d = _cmpFindPlayer(name);
+  if (!d || typeof WEEKLY_STATS === 'undefined' || !WEEKLY_STATS[d.n]) return '';
+  const st = _cmpSplitSt(name);
+  const fmtKey = fmtOverride || _cmpSplitScoring(name);
+  const recAdj = fmtKey === 'ppr' ? 0.5 : fmtKey === 'std' ? -0.5 : 0;
+  const wd = WEEKLY_STATS[d.n];
+  const seasons = Object.keys(wd.seasons).filter(yr => !st.seasons || st.seasons.has(yr)).sort();
+  const inRange = w => w.wk >= st.wkFrom && w.wk <= st.wkTo;
+  const statDefs = d.s === 'QB' ? [['PY/G', a => (a.t.py / a.gp).toFixed(1)], ['PTD/G', a => (a.t.ptd / a.gp).toFixed(2)], ['INT/G', a => (a.t.int / a.gp).toFixed(2)], ['RY/G', a => (a.t.ry / a.gp).toFixed(1)]]
+    : d.s === 'RB' ? [['ATT/G', a => (a.t.ra / a.gp).toFixed(1)], ['RY/G', a => (a.t.ry / a.gp).toFixed(1)], ['TGT/G', a => (a.t.tgt / a.gp).toFixed(1)], ['TD/G', a => ((a.t.rtd + a.t.rctd) / a.gp).toFixed(2)]]
+    : (d.s === 'WR' || d.s === 'TE') ? [['TGT/G', a => (a.t.tgt / a.gp).toFixed(1)], ['REC/G', a => (a.t.rec / a.gp).toFixed(1)], ['RcY/G', a => (a.t.rcy / a.gp).toFixed(1)], ['TD/G', a => ((a.t.rtd + a.t.rctd) / a.gp).toFixed(2)]]
+    : [];
+  const emptyMsg = m => '<div style="text-align:center;padding:10px;color:var(--text2);font-size:.7rem">' + m + '</div>';
+
+  // Teammate split: two aggregate rows over the shared-team seasons only.
+  if (st.mate) {
+    const shared = seasons.filter(yr => {
+      const ta = _cmpNormTeam(_getTeamForPlayerYear(d.n, +yr));
+      const tb = _cmpNormTeam(_getTeamForPlayerYear(st.mate, +yr));
+      return ta && tb && ta === tb;
+    });
+    if (!shared.length) return emptyMsg('No seasons in the sample where ' + d.n + ' and ' + st.mate + ' were teammates');
+    const withG = [], withoutG = [];
+    shared.forEach(yr => {
+      const mw = _cmpMateWeekSet(st.mate, yr) || new Set();
+      wd.seasons[yr].forEach(w => { if (inRange(w)) (mw.has(w.wk) ? withG : withoutG).push(w); });
+    });
+    const aw = _cmpSplitAgg(withG, recAdj), ao = _cmpSplitAgg(withoutG, recAdj);
+    if (!aw && !ao) return emptyMsg('No games match these filters');
+    const last = st.mate.split(' ').slice(-1)[0].toUpperCase();
+    const betterWith = aw && ao ? aw.ppg >= ao.ppg : !!aw;
+    const hdr = '<tr><th></th><th>GP</th><th>PPG</th><th>HIGH</th>' + statDefs.map(s => '<th>' + s[0] + '</th>').join('') + '</tr>';
+    const row = (lbl, a, isBetter) => {
+      if (!a) return '<tr><td style="font-weight:700;color:var(--accent);white-space:nowrap">' + lbl + '</td><td colspan="' + (3 + statDefs.length) + '" style="color:var(--text2)">no games in sample</td></tr>';
+      return '<tr><td style="font-weight:700;color:var(--accent);white-space:nowrap">' + lbl + '</td><td>' + a.gp + '</td>'
+        + '<td style="font-weight:700;color:' + (isBetter ? 'var(--green)' : 'var(--text)') + '">' + a.ppg.toFixed(1) + '</td>'
+        + '<td>' + a.high.toFixed(1) + '</td>' + statDefs.map(s => '<td>' + s[1](a) + '</td>').join('') + '</tr>';
+    };
+    return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>'
+      + row('WITH ' + last, aw, betterWith) + row('W/O ' + last, ao, !betterWith && !!ao)
+      + '</tbody></table></div>'
+      + '<div class="cmp-split-note" style="margin-top:6px">Teammate seasons: ' + shared.join(', ') + ' · "With" = weeks both players logged a game</div>';
+  }
+
+  // No teammate: one aggregate over the filtered sample.
+  const games = [];
+  seasons.forEach(yr => wd.seasons[yr].forEach(w => { if (inRange(w)) games.push(w); }));
+  const agg = _cmpSplitAgg(games, recAdj);
+  if (!agg) return emptyMsg('No games match these filters');
+  const box = (lbl, val, cls) => '<div class="card-rank-box"><div class="lbl">' + lbl + '</div><div class="num ' + (cls || 'accent') + '">' + val + '</div></div>';
+  let html = '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr)">'
+    + box('GP', agg.gp) + box('PPG', agg.ppg.toFixed(1), 'green') + box('High', agg.high.toFixed(1)) + '</div>';
+  if (statDefs.length) html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr);margin-top:.4rem">' + statDefs.map(s => box(s[0], s[1](agg))).join('') + '</div>';
+  return html;
+}
+
+// scoresrc: undefined for Compare cards (scoring follows the compare card's
+// cmp-cl toggle), 'gl' for the player-card LOGS tab (follows the gl toggle).
+function _cmpSplitSectionHtml(d, scoresrc) {
+  if (!d || !d.n || !d.s) return '';
+  try { if (typeof WEEKLY_STATS === 'undefined' || !hasWeeklyData(d)) return ''; } catch (_) { return ''; }
+  const name = d.n;
+  const esc = name.replace(/"/g, '&quot;');
+  const st = _cmpSplitSt(name);
+  const allSeasons = getWeeklySeasons(d);
+  if (!allSeasons.length) return '';
+  const chips = ['<button class="cmp-split-chip' + (!st.seasons ? ' active' : '') + '" data-cmpplayer="' + esc + '" data-season="ALL">ALL</button>']
+    .concat(allSeasons.map(yr => '<button class="cmp-split-chip' + (st.seasons && st.seasons.has(yr) ? ' active' : '') + '" data-cmpplayer="' + esc + '" data-season="' + yr + '">&rsquo;' + String(yr).slice(-2) + '</button>'))
+    .join('');
+  const mateVal = st.mate ? st.mate.replace(/"/g, '&quot;') : '';
+  return '<div class="card-section"><details class="cmp-split"' + (st.open ? ' open' : '') + ' data-cmpplayer="' + esc + '">'
+    + '<summary><span data-gloss="Filter the game log to specific seasons or weeks, or split production by whether a teammate played that week (e.g. with vs. without their QB).">SPLITS &amp; FILTERS</span></summary>'
+    + '<div class="cmp-split-body">'
+      + '<div class="cmp-split-row"><span class="cmp-split-lbl">SEASONS</span>' + chips + '</div>'
+      + '<div class="cmp-split-row"><span class="cmp-split-lbl">WEEKS</span>'
+        + '<input type="number" class="cmp-split-wk" data-bound="from" data-cmpplayer="' + esc + '" min="1" max="22" value="' + st.wkFrom + '">'
+        + '<span style="color:var(--text2);font-size:.65rem">to</span>'
+        + '<input type="number" class="cmp-split-wk" data-bound="to" data-cmpplayer="' + esc + '" min="1" max="22" value="' + st.wkTo + '"></div>'
+      + '<div class="cmp-split-row"><span class="cmp-split-lbl">TEAMMATE</span>'
+        + '<div class="cmp-split-mate-wrap">'
+          + '<input type="text" class="cmp-split-mate" data-cmpplayer="' + esc + '" placeholder="e.g. Joe Burrow &mdash; with/without split" value="' + mateVal + '" autocomplete="off">'
+          + '<button class="cmp-split-mate-clear" data-cmpplayer="' + esc + '" title="Clear teammate split">&times;</button>'
+          + '<div class="cmp-split-drop" style="display:none"></div>'
+        + '</div></div>'
+      + '<div class="cmp-split-results" data-cmpplayer="' + esc + '"' + (scoresrc ? ' data-scoresrc="' + scoresrc + '"' : '') + '>' + _cmpSplitResultsHtml(name) + '</div>'
+    + '</div></details></div>';
+}
+
+// Repaints every rendered splits panel for this player (the same player can be
+// open on Compare and in the player-card modal at once), each in its own
+// context's scoring.
+function _cmpSplitRefresh(name) {
+  const esc = name.replace(/"/g, '\\"');
+  document.querySelectorAll('.cmp-split-results[data-cmpplayer="' + esc + '"]').forEach(el => {
+    let fmtKey = null;
+    if (el.dataset.scoresrc === 'gl') {
+      const b = document.querySelector('#playerCard .gl-scoring-btn.active');
+      fmtKey = b ? b.dataset.glscoring : 'half';
+    }
+    el.innerHTML = _cmpSplitResultsHtml(name, fmtKey);
+  });
+}
+
+function _cmpWireSplits(root) {
+  root.querySelectorAll('details.cmp-split').forEach(det => {
+    // Retired compare cards are click-to-open (data-epcard) — keep every splits
+    // interaction from bubbling into that handler.
+    det.addEventListener('click', e => e.stopPropagation());
+    det.addEventListener('toggle', () => { _cmpSplitSt(det.dataset.cmpplayer).open = det.open; });
+  });
+  root.querySelectorAll('.cmp-split-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.cmpplayer;
+      const st = _cmpSplitSt(name);
+      const yr = btn.dataset.season;
+      if (yr === 'ALL') st.seasons = null;
+      else if (!st.seasons) st.seasons = new Set([yr]); // was ALL → narrow to just this season
+      else if (st.seasons.has(yr)) { st.seasons.delete(yr); if (!st.seasons.size) st.seasons = null; }
+      else st.seasons.add(yr);
+      btn.parentElement.querySelectorAll('.cmp-split-chip').forEach(b => {
+        const v = b.dataset.season;
+        b.classList.toggle('active', v === 'ALL' ? !st.seasons : !!(st.seasons && st.seasons.has(v)));
+      });
+      _cmpSplitRefresh(name);
+    });
+  });
+  root.querySelectorAll('.cmp-split-wk').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const name = inp.dataset.cmpplayer;
+      const st = _cmpSplitSt(name);
+      let v = parseInt(inp.value, 10);
+      if (isNaN(v)) v = inp.dataset.bound === 'from' ? 1 : 18;
+      v = Math.max(1, Math.min(22, v));
+      if (inp.dataset.bound === 'from') st.wkFrom = Math.min(v, st.wkTo);
+      else st.wkTo = Math.max(v, st.wkFrom);
+      inp.value = inp.dataset.bound === 'from' ? st.wkFrom : st.wkTo;
+      _cmpSplitRefresh(name);
+    });
+  });
+  root.querySelectorAll('.cmp-split-mate').forEach(inp => {
+    const name = inp.dataset.cmpplayer;
+    const drop = inp.parentElement.querySelector('.cmp-split-drop');
+    inp.addEventListener('input', () => {
+      const st = _cmpSplitSt(name);
+      if (st.mate && inp.value !== st.mate) { st.mate = null; _cmpSplitRefresh(name); }
+      const q = inp.value.trim().toLowerCase();
+      if (q.length < 2 || typeof WEEKLY_STATS === 'undefined') { drop.style.display = 'none'; return; }
+      const starts = [], incl = [];
+      for (const pn in WEEKLY_STATS) {
+        if (pn === name) continue;
+        const l = pn.toLowerCase();
+        if (l.startsWith(q)) { starts.push(pn); if (starts.length >= 8) break; }
+        else if (incl.length < 8 && l.includes(q)) incl.push(pn);
+      }
+      const list = starts.concat(incl).slice(0, 8);
+      if (!list.length) { drop.style.display = 'none'; return; }
+      drop.innerHTML = list.map(pn => {
+        const pos = (WEEKLY_STATS[pn] && WEEKLY_STATS[pn].pos) || '';
+        return '<div class="cmp-split-drop-item" data-name="' + pn.replace(/"/g, '&quot;') + '">'
+          + (pos ? '<span class="pos-badge ' + pos + '" style="font-size:.5rem;padding:1px 4px">' + pos + '</span>' : '')
+          + '<span>' + pn + '</span></div>';
+      }).join('');
+      drop.style.display = '';
+      drop.querySelectorAll('.cmp-split-drop-item').forEach(it => {
+        it.addEventListener('mousedown', ev => {
+          ev.preventDefault();
+          const st2 = _cmpSplitSt(name);
+          st2.mate = it.dataset.name;
+          inp.value = it.dataset.name;
+          drop.style.display = 'none';
+          _cmpSplitRefresh(name);
+        });
+      });
+    });
+    inp.addEventListener('blur', () => { setTimeout(() => { drop.style.display = 'none'; }, 150); });
+  });
+  root.querySelectorAll('.cmp-split-mate-clear').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.cmpplayer;
+      _cmpSplitSt(name).mate = null;
+      const inp = btn.parentElement.querySelector('.cmp-split-mate');
+      if (inp) inp.value = '';
+      _cmpSplitRefresh(name);
+    });
+  });
+}
 
 function renderCompareGrid() {
   const checkPlayers = [...compareSet].map(idx => D[idx]);
@@ -7683,6 +7935,7 @@ function renderCompareGrid() {
             </div>
             <div class="cmp-cl-content" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">${buildCareerTable(d, 'half')}</div>
           </div>` : ''}
+          ${_cmpSplitSectionHtml(d)}
           ${d._height || d._weight || d.dr || d._college ? `<div class="card-section">
             <div class="card-section-title">Player Info</div>
             <div class="card-grid">
@@ -7761,6 +8014,7 @@ function renderCompareGrid() {
         </div>` : d._retired ? `<div class="card-section">
           <div class="card-section-title">Career: ${d._debut}–${d._last} (${d._last - d._debut + 1} seasons)</div>
         </div>` : ''}
+        ${_cmpSplitSectionHtml(d)}
       </div>
     </div>`;
   }).join('');
@@ -7825,6 +8079,7 @@ function renderCompareGrid() {
         }
       }
       _cmpRefresh(playerName);
+      _cmpSplitRefresh(playerName);
     });
   });
   
@@ -7847,7 +8102,21 @@ function renderCompareGrid() {
       _cmpRefresh(sel.dataset.cmpplayer);
     });
   });
+
+  _cmpWireSplits(compareGrid);
 }
+
+// The splits section only renders once the lazy weekly bundle has merged — if
+// the user is already on Compare when it lands, re-render so the section (and
+// the retired cards' SEASON/WEEKLY toggles) appear. Skip while the user is
+// typing in a teammate box so the re-render doesn't eat their input.
+document.addEventListener('mff:weeklydata', () => {
+  const pg = document.getElementById('pageCompare');
+  if (!pg || !pg.classList.contains('active')) return;
+  const ae = document.activeElement;
+  if (ae && ae.classList && ae.classList.contains('cmp-split-mate')) return;
+  renderCompareGrid();
+});
 
 function renderSearchChips() {
   const el = document.getElementById('lgChips');

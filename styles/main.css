@@ -2086,3 +2086,10 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
 .cmp-split-drop-item{padding:5px 8px;font-size:.7rem;cursor:pointer;display:flex;gap:6px;align-items:center}
 .cmp-split-drop-item:hover{background:var(--elev-1)}
 .cmp-split-note{font-size:.6rem;color:var(--text2);line-height:1.4}
+
+/* ─── P-SOS week-range control (rankings header) ── */
+#psosRangeBtn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:.62rem;padding:0 2px;vertical-align:middle;line-height:1}
+#psosRangeBtn:hover,#psosRangeBtn:focus-visible{color:var(--accent)}
+.sos-range-pop{position:fixed;z-index:900;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px;min-width:200px}
+.sos-pop-title{font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1.2px;color:var(--accent)}
+.sos-range-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}

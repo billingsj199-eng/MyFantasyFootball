@@ -1979,6 +1979,14 @@ function getFiltered() {
         case 'yrr': if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if(filter==='RB'){const _ac=a.career&&a.career.length?a.career[a.career.length-1]:null;const _bc=b.career&&b.career.length?b.career[b.career.length-1]:null;av=_ac&&_ac.gp?(_ac.ry||0)/_ac.gp:0;bv=_bc&&_bc.gp?(_bc.ry||0)/_bc.gp:0;}else{av=a._yrr||0;bv=b._yrr||0;} break;
         case 'jm': av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
+        case 'psos': {
+          // Sort by SOS rank in the active week window (1 = easiest schedule).
+          // K/DST and unknown teams sink to the bottom.
+          const _wk = typeof window._sosActiveWeeks === 'function' ? window._sosActiveWeeks() : null;
+          const _sosRk = d => (d.s === 'K' || d.s === 'DST' || typeof window._mtGetPlayoffSos !== 'function') ? 999
+            : (window._mtGetPlayoffSos(d.t, d.s, _wk) || { rank: 999 }).rank;
+          av = _sosRk(a); bv = _sosRk(b); break;
+        }
         case 'diff': av = (rnkAdp(a)??a.myRank) - a.myRank; bv = (rnkAdp(b)??b.myRank) - b.myRank; break;
         default: av = a.myRank; bv = b.myRank;
       }
@@ -2621,7 +2629,7 @@ function render() {
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell" style="display:none">${showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
-      <td class="psos-cell">${(()=>{if(d.s==='K'||d.s==='DST')return '—';if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.label+'</span>';})()}</td>
+      <td class="psos-cell">${(()=>{if(d.s==='K'||d.s==='DST')return '—';if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.label+'</span>';})()}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
     </tr>`;
 
@@ -40217,20 +40225,52 @@ Rules:
     return _mtDstByAbbrCache;
   }
 
-  // Cache keyed by position. _mtPlayoffSosCache[pos][team] -> { label, color, ... }
-  // pos in {'QB','RB','WR','TE','OVERALL'}. OVERALL is the fallback for K/DST/other.
+  // === Adjustable SOS week window (rankings table) ===
+  // null = the playoff default (W15-17); {from,to} = a custom range (e.g. 1-5).
+  // Persisted to localStorage so the rankings view keeps your window.
+  let _sosRange = null;
+  try {
+    const _sr = localStorage.getItem('mff_sosRange');
+    if (_sr) { const p = JSON.parse(_sr); if (p && p.from >= 1 && p.to <= 18 && p.from <= p.to) _sosRange = { from: +p.from, to: +p.to }; }
+  } catch (_) {}
+  function _sosActiveWeeks() {
+    if (!_sosRange) return [15, 16, 17];
+    const out = [];
+    for (let w = _sosRange.from; w <= _sosRange.to; w++) out.push(w);
+    return out;
+  }
+  window._sosActiveWeeks = _sosActiveWeeks;
+  window._sosGetRange = function() { return _sosRange; };
+  window._sosSetRange = function(range) {
+    _sosRange = range || null;
+    try {
+      if (_sosRange) localStorage.setItem('mff_sosRange', JSON.stringify(_sosRange));
+      else localStorage.removeItem('mff_sosRange');
+    } catch (_) {}
+  };
+
+  // Cache keyed by position + week window. _mtPlayoffSosCache[posKey_wks][team]
+  // -> { label, color, ... }. posKey in {'QB','RB','WR','TE','OVERALL'};
+  // OVERALL is the fallback for K/DST/other. Default window is W15-17.
   const _mtPlayoffSosCache = {};
-  function _mtBuildPlayoffSos(pos) {
-    const key = (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE') ? pos : 'OVERALL';
+  function _mtBuildPlayoffSos(pos, weeks) {
+    const wks = (Array.isArray(weeks) && weeks.length) ? weeks : [15, 16, 17];
+    const posKey = (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE') ? pos : 'OVERALL';
+    const key = posKey + '_' + wks.join('_');
     if (_mtPlayoffSosCache[key]) return _mtPlayoffSosCache[key];
     _mtPlayoffSosCache[key] = {};
     if (typeof window.getPlayoffOpponents !== 'function') return _mtPlayoffSosCache[key];
+    // Signal-blend guards were written for the 3-game playoff window (n >= 2);
+    // for shorter custom windows require at least min(2, window size) games so
+    // a 1-week window still blends totals/spreads.
+    const minN = Math.min(2, wks.length);
+    const isDefaultWindow = wks.length === 3 && wks[0] === 15 && wks[1] === 16 && wks[2] === 17;
     const dstByAbbr = _mtBuildDstByAbbr();
     const teamDef = {};
     const teamTot = {};
     const teamSpr = {};  // team -> { avg: avg team-relative spread, n }
     Object.keys(dstByAbbr).forEach(team => {
-      const opps = window.getPlayoffOpponents(team, [15, 16, 17]);
+      const opps = window.getPlayoffOpponents(team, wks);
       if (!opps.length) return;
       let defSum = 0, defN = 0, totSum = 0, totN = 0, sprSum = 0, sprN = 0;
       const detail = [];
@@ -40256,10 +40296,10 @@ Rules:
         if (typeof impliedTot === 'number') { totSum += impliedTot; totN++; }
         if (typeof teamSpread === 'number') { sprSum += teamSpread; sprN++; }
         if (oppRec) {
-          const defZ = (key === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[key];
+          const defZ = (posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
           defSum += defZ; defN++;
-          const posUnits = (key !== 'OVERALL' && POSITION_DEF_WEIGHTS[key] && oppRec.clay)
-                           ? Object.keys(POSITION_DEF_WEIGHTS[key])
+          const posUnits = (posKey !== 'OVERALL' && POSITION_DEF_WEIGHTS[posKey] && oppRec.clay)
+                           ? Object.keys(POSITION_DEF_WEIGHTS[posKey])
                                  .map(u => u.toUpperCase() + (oppRec.clay[u] != null ? oppRec.clay[u] : '?'))
                                  .join('/')
                            : null;
@@ -40281,7 +40321,7 @@ Rules:
     const useTotals = totalsPopulated >= 8;
     let tMu = 0, tSd = 1, totalsReady = false;
     if (useTotals) {
-      const teamAvgs = Object.values(teamTot).filter(t => t.n >= 2).map(t => t.avg);
+      const teamAvgs = Object.values(teamTot).filter(t => t.n >= minN).map(t => t.avg);
       if (teamAvgs.length >= 4) {
         const m = teamAvgs.reduce((s, v) => s + v, 0) / teamAvgs.length;
         const variance = teamAvgs.reduce((s, v) => s + (v - m) * (v - m), 0) / teamAvgs.length;
@@ -40292,18 +40332,18 @@ Rules:
     // Spread z-score across teams (centered ~0 by construction — favored offset
     // underdog, sums to 0 league-wide). Sd ~3-4 over 3-game playoff window.
     let sMu = 0, sSd = 1, spreadsReady = false;
-    const sprAvgs = Object.values(teamSpr).filter(t => t.n >= 2).map(t => t.avg);
+    const sprAvgs = Object.values(teamSpr).filter(t => t.n >= minN).map(t => t.avg);
     if (sprAvgs.length >= 4) {
       const m = sprAvgs.reduce((s, v) => s + v, 0) / sprAvgs.length;
       const variance = sprAvgs.reduce((s, v) => s + (v - m) * (v - m), 0) / sprAvgs.length;
       sMu = m; sSd = Math.sqrt(variance) || 1;
       spreadsReady = true;
     }
-    const sprWeight = (POSITION_SPREAD_WEIGHT[key] != null) ? POSITION_SPREAD_WEIGHT[key] : 0;
+    const sprWeight = (POSITION_SPREAD_WEIGHT[posKey] != null) ? POSITION_SPREAD_WEIGHT[posKey] : 0;
     const finalScores = Object.entries(teamDef).map(([team, d]) => {
       let blendAvg = d.avg;
       let totalAdjusted = false;
-      if (totalsReady && teamTot[team] && teamTot[team].n >= 2) {
+      if (totalsReady && teamTot[team] && teamTot[team].n >= minN) {
         const zT = -(teamTot[team].avg - tMu) / tSd;
         blendAvg = (d.avg * 3 + zT) / 4;
         totalAdjusted = true;
@@ -40315,7 +40355,7 @@ Rules:
       // favored team gets a small SOS bump (efficient game caps QB volume).
       let spreadAdjusted = false;
       let zS = null;
-      if (spreadsReady && sprWeight !== 0 && teamSpr[team] && teamSpr[team].n >= 2) {
+      if (spreadsReady && sprWeight !== 0 && teamSpr[team] && teamSpr[team].n >= minN) {
         zS = (teamSpr[team].avg - sMu) / sSd;
         blendAvg += sprWeight * zS;
         spreadAdjusted = true;
@@ -40325,14 +40365,20 @@ Rules:
                totalAdjusted, spreadAdjusted };
     });
     finalScores.sort((a, b) => a.blendAvg - b.blendAvg);
+    // League thirds (32 teams → 11/21 cuts, matching the original buckets).
+    // Custom windows can drop bye-week teams below 32, so scale by count.
+    const _fsN = finalScores.length;
+    const _easyCut = Math.round(_fsN / 3);
+    const _hardCut = _fsN - Math.round(_fsN / 3);
     finalScores.forEach((data, i) => {
       const rank = i + 1;
       let label, color;
-      if (rank <= 11)      { label = 'E'; color = '#22c55e'; }
-      else if (rank <= 21) { label = 'M'; color = '#facc15'; }
-      else                 { label = 'H'; color = '#ef4444'; }
-      const posTag = (key === 'OVERALL') ? '' : (' (' + key + ')');
-      const tip = 'Playoff SOS' + posTag + ' · ' + data.opps.map(o => {
+      if (rank <= _easyCut)      { label = 'E'; color = '#22c55e'; }
+      else if (rank <= _hardCut) { label = 'M'; color = '#facc15'; }
+      else                       { label = 'H'; color = '#ef4444'; }
+      const posTag = (posKey === 'OVERALL') ? '' : (' (' + posKey + ')');
+      const tipPrefix = isDefaultWindow ? 'Playoff SOS' : 'SOS W' + wks[0] + (wks.length > 1 ? '-' + wks[wks.length - 1] : '');
+      const tip = tipPrefix + posTag + ' · ' + data.opps.map(o => {
         const parts = ['W' + o.wk + ' ' + (o.home ? 'vs ' : '@ ') + o.opp];
         const sub = [];
         if (o.posUnits) sub.push(o.posUnits);
@@ -40349,11 +40395,11 @@ Rules:
     return _mtPlayoffSosCache[key];
   }
 
-  function _mtGetPlayoffSos(teamRaw, pos) {
+  function _mtGetPlayoffSos(teamRaw, pos, weeks) {
     if (!teamRaw) return null;
     let abbr = teamRaw;
     if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamRaw]) abbr = TEAM_ABBR_MAP[teamRaw];
-    return _mtBuildPlayoffSos(pos)[String(abbr).toUpperCase()] || null;
+    return _mtBuildPlayoffSos(pos, weeks)[String(abbr).toUpperCase()] || null;
   }
 
   // Per-week per-position SOS rating. Cache key is `${pos}_${week}`.
@@ -40451,6 +40497,67 @@ Rules:
   // Expose for code paths outside this IIFE — rankings table, player card.
   window._mtGetPlayoffSos = _mtGetPlayoffSos;
   window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
+
+  // === P-SOS week-range control (rankings header ▾) ===
+  // Popover with presets (Playoff 15-17 default, Full 1-18) + custom from/to.
+  // Applying re-renders the table; the header label reflects a custom window.
+  (function _sosRangeControl() {
+    const btn = document.getElementById('psosRangeBtn');
+    const lbl = document.getElementById('psosHeaderLabel');
+    if (!btn) return;
+    let pop = null;
+    function _updateLabel() {
+      const r = _sosRange;
+      if (lbl) lbl.textContent = r ? ('SOS ' + r.from + '-' + r.to) : 'P-SOS';
+    }
+    function _close() {
+      if (pop) { pop.remove(); pop = null; document.removeEventListener('mousedown', _outside); }
+    }
+    function _outside(e) { if (pop && !pop.contains(e.target) && e.target !== btn) _close(); }
+    function _apply(range) {
+      window._sosSetRange(range);
+      _updateLabel();
+      _close();
+      if (typeof render === 'function') render();
+    }
+    btn.addEventListener('keydown', e => e.stopPropagation()); // th Enter/Space sorts
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // th click sorts
+      if (pop) { _close(); return; }
+      const r = _sosRange;
+      pop = document.createElement('div');
+      pop.className = 'sos-range-pop';
+      pop.innerHTML = '<div class="sos-pop-title">SOS WEEK RANGE</div>'
+        + '<div class="sos-range-row">'
+          + '<button class="cmp-split-chip' + (!r ? ' active' : '') + '" data-sospreset="playoff">PLAYOFF 15-17</button>'
+          + '<button class="cmp-split-chip' + (r && r.from === 1 && r.to === 18 ? ' active' : '') + '" data-sospreset="season">FULL 1-18</button>'
+        + '</div>'
+        + '<div class="sos-range-row"><span style="font-size:.6rem;color:var(--text2)">WKS</span>'
+          + '<input type="number" class="cmp-split-wk" id="sosWkFrom" min="1" max="18" value="' + (r ? r.from : 15) + '">'
+          + '<span style="font-size:.6rem;color:var(--text2)">to</span>'
+          + '<input type="number" class="cmp-split-wk" id="sosWkTo" min="1" max="18" value="' + (r ? r.to : 17) + '">'
+          + '<button class="cmp-split-chip" id="sosWkApply">APPLY</button>'
+        + '</div>';
+      document.body.appendChild(pop);
+      const rect = btn.getBoundingClientRect();
+      pop.style.top = (rect.bottom + 4) + 'px';
+      pop.style.left = Math.max(8, Math.min(rect.left - 70, window.innerWidth - pop.offsetWidth - 8)) + 'px';
+      pop.addEventListener('click', ev => ev.stopPropagation());
+      pop.querySelector('[data-sospreset="playoff"]').addEventListener('click', () => _apply(null));
+      pop.querySelector('[data-sospreset="season"]').addEventListener('click', () => _apply({ from: 1, to: 18 }));
+      pop.querySelector('#sosWkApply').addEventListener('click', () => {
+        let f = parseInt(pop.querySelector('#sosWkFrom').value, 10);
+        let t = parseInt(pop.querySelector('#sosWkTo').value, 10);
+        if (isNaN(f)) f = 15;
+        if (isNaN(t)) t = 17;
+        f = Math.max(1, Math.min(18, f));
+        t = Math.max(f, Math.min(18, t));
+        _apply(f === 15 && t === 17 ? null : { from: f, to: t });
+      });
+      document.addEventListener('mousedown', _outside);
+    });
+    _updateLabel(); // restore a persisted custom window's label on boot
+  })();
 
   // Bringback Wave 1 "Playoff Matchups" panel removed 2026-07-21 at Jack's
   // request (was rendered under the team detail roster). Recover from git

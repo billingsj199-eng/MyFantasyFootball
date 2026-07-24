@@ -1083,12 +1083,20 @@ function movePlayer(fromIdx, toPosition) {
   saveLocal();
 }
 
-// === Position Lock: move an entire position group in one drag ===
-// When the POS LOCK toggle is on (ALL / FLEX views only), dragging any
-// player shifts EVERY player of that position by the same number of
-// overall slots — the group's internal order and the relative order of
-// everyone else both stay intact. One drag pushes "the QBs" down past a
-// WR run instead of 10+ individual drags.
+// === Position Lock: minimal-repair group drag ===
+// When the POS LOCK toggle is on (ALL / FLEX views only), a drag pushes
+// along ONLY the position-mates the dragged player leapfrogs, keeping
+// positional order locked with the smallest possible disturbance:
+//   drag DOWN 14→20 → the mates that sat between 14 and 20 land as a
+//     block RIGHT BELOW him at the drop point; mates already past 20
+//     don't move at all
+//   drag UP → mirror image: the passed mates land right ABOVE him;
+//     mates higher than the drop point stay put
+// (2026-07-24, Jack, third iteration: v1 shifted the whole group both
+// ways; v2 carried the whole far side; v3 = only the crossed mates.)
+// So one drag still demotes a QB run below a WR run — grab the top QB
+// of the run, drop it below the WRs, the run lands with it — but a QB
+// parked at rank 300 never budges.
 //
 // Tier notes: within-position order never changes, so the QB/RB/WR/TE
 // tier buckets are untouched (and paired-mode position sync has nothing
@@ -1100,34 +1108,69 @@ function movePositionGroup(fromIdx, toPosition) {
   const pos = D[fromIdx] && D[fromIdx].s;
   const curPos = board.indexOf(fromIdx);
   if (!pos || curPos === -1 || curPos === toPosition) return;
-  const delta = toPosition - curPos;
-  const memberIdxs = [], targets = [], others = [];
-  for (let i = 0; i < board.length; i++) {
-    if (D[board[i]] && D[board[i]].s === pos) {
-      memberIdxs.push(board[i]);
-      targets.push(Math.max(0, Math.min(board.length - 1, i + delta)));
-    } else {
-      others.push(board[i]);
-    }
+  const down = toPosition > curPos;
+  // Crossed mates = same-position players the drag leapfrogs. toPosition
+  // uses movePlayer's post-removal coordinates, which for a down-drag
+  // means the dragged player lands just after ORIGINAL index toPosition —
+  // so the crossed span is (curPos, toPosition] going down and
+  // [toPosition, curPos) going up.
+  const crossed = [];
+  const lo = down ? curPos + 1 : Math.max(0, toPosition);
+  const hi = down ? Math.min(toPosition, board.length - 1) : curPos - 1;
+  for (let i = lo; i <= hi; i++) {
+    if (D[board[i]] && D[board[i]].s === pos) crossed.push(board[i]);
   }
-  if (memberIdxs.length <= 1) { movePlayer(fromIdx, toPosition); return; }
-  // Merge back into the board: walk the final slots, placing each group
-  // member once its target slot arrives (or once the non-group players run
-  // out). Both sequences stay internally ordered; clamping compresses the
-  // group against the top/bottom edge instead of spilling.
-  let oi = 0, mi = 0;
-  for (let slot = 0; slot < board.length; slot++) {
-    if (mi < memberIdxs.length && (targets[mi] <= slot || oi >= others.length)) {
-      board[slot] = memberIdxs[mi++];
-    } else {
-      board[slot] = others[oi++];
+  // No mates crossed → positional order isn't threatened; plain single
+  // move (keeps movePlayer's tier-break adjustments, which the group
+  // path intentionally skips).
+  if (!crossed.length) { movePlayer(fromIdx, toPosition); return; }
+  // The dragged player plus the crossed mates travel as one block, mates
+  // hugging his far side so order holds: below him going down, above him
+  // going up.
+  const block = down ? [fromIdx].concat(crossed) : crossed.concat([fromIdx]);
+  const blockSet = new Set(block);
+  const others = board.filter(i => !blockSet.has(i));
+  // Tier preservation (Jack 2026-07-24): moving players into a tier should
+  // EXPAND that tier, never re-deal the tiers of players who didn't move.
+  // ALL-bucket breaks are rank-anchored, so before rearranging, re-anchor
+  // each break to the first NON-block player at/after its start; after the
+  // move, point the break back at that player's new rank. Non-block
+  // relative order is preserved, so every non-moving player keeps exactly
+  // the tier they were in, and the block simply joins whichever tier its
+  // landing spot falls inside (the destination tier — same rule as a
+  // single-player move). Positional tier buckets need nothing: positional
+  // order never changes here. FLEX view shares the ALL bucket (_tierPK).
+  const _tiersAll = versionTiers[currentVersion] && versionTiers[currentVersion][currentMode]
+    ? versionTiers[currentVersion][currentMode].ALL : null;
+  const _tierAnchors = (_tiersAll && _tiersAll.length) ? _tiersAll.map(t => {
+    let anchor = null;
+    for (let i = t.afterRank - 1; i >= 0 && i < board.length; i++) {
+      if (!blockSet.has(board[i])) { anchor = board[i]; break; }
     }
+    return { t: t, anchor: anchor };
+  }) : null;
+  // Down: every removed block member sat at an original index ≤ toPosition,
+  // so the insertion slot shifts left by the crossed count (the dragged
+  // player's own removal is already baked into toPosition). Up: the whole
+  // block sat at indices ≥ toPosition, so the slot is unchanged.
+  const insertAt = Math.max(0, Math.min(others.length, down ? toPosition - crossed.length : toPosition));
+  const merged = others.slice(0, insertAt).concat(block, others.slice(insertAt));
+  for (let i = 0; i < board.length; i++) board[i] = merged[i];
+  // Point each break back at its anchor player's new rank. Anchor-less
+  // breaks (a tail tier made up entirely of block members) keep their old
+  // rank rather than chasing the block.
+  if (_tierAnchors) {
+    _tierAnchors.forEach(a => {
+      if (a.anchor == null) return;
+      const nr = board.indexOf(a.anchor);
+      if (nr >= 0) a.t.afterRank = nr + 1;
+    });
   }
   renumber();
   saveLocal();
   if (typeof toast === 'function') {
-    toast('Moved all ' + memberIdxs.length + ' ' + pos + 's ' + (delta > 0 ? 'down' : 'up') + ' ' +
-          Math.abs(delta) + ' overall spot' + (Math.abs(delta) === 1 ? '' : 's'));
+    toast('POS LOCK: ' + crossed.length + ' ' + pos + (crossed.length === 1 ? '' : 's') +
+          ' pushed ' + (down ? 'down below ' : 'up above ') + (D[fromIdx].n || 'the dragged player'));
   }
 }
 
@@ -1141,7 +1184,7 @@ window._togglePosLock = function () {
   if (btn) btn.classList.toggle('pos-lock-on', window._posLockEnabled);
   if (typeof toast === 'function') {
     toast(window._posLockEnabled
-      ? 'Position Lock ON — dragging any player now moves their entire position group'
+      ? 'Position Lock ON — dragging a player pushes the position-mates you drag past along with them'
       : 'Position Lock off — drags move single players again');
   }
 };
@@ -2802,6 +2845,10 @@ function attachTierListeners() {
   let pointerY = 0, cloneX = 0, cloneOffsetY = 0;
   let rafId = null, isDragging = false;
   let _rowRects = [];
+  // POS LOCK group-mate rows, split by side of the dragged row. tick()
+  // tints exactly the mates the pointer has crossed — the ones the drop
+  // would push along.
+  let _grpAbove = new Set(), _grpBelow = new Set();
 
   function clearIndicators() {
     if (lastIndicatorRow) { lastIndicatorRow.classList.remove('drag-indicator'); lastIndicatorRow = null; }
@@ -2866,6 +2913,19 @@ function attachTierListeners() {
     const target = getRowAtY(pointerY);
     if (target) { target.classList.add('drag-indicator'); lastIndicatorRow = target; }
 
+    // POS LOCK: tint exactly the mates the pointer has crossed — those are
+    // the ones the drop will push along. A below-mate lights up once the
+    // pointer is beneath its row (you've dragged past it going down); an
+    // above-mate once the pointer is over it going up. _rowRects refreshes
+    // on auto-scroll, so the boundary stays honest mid-scroll.
+    if (_grpAbove.size || _grpBelow.size) {
+      for (const rr of _rowRects) {
+        const mid = (rr.top + rr.bottom) / 2;
+        if (_grpBelow.has(rr.row)) rr.row.classList.toggle('group-drag-mate', mid < pointerY);
+        else if (_grpAbove.has(rr.row)) rr.row.classList.toggle('group-drag-mate', mid > pointerY);
+      }
+    }
+
     rafId = requestAnimationFrame(tick);
   }
 
@@ -2900,12 +2960,16 @@ function attachTierListeners() {
     tbody.classList.add('is-dragging');
     row.setPointerCapture(e.pointerId);
 
-    // POS LOCK: tint every row that will move together with the dragged one
+    // POS LOCK: collect the position-mates on each side of the dragged row.
+    // tick() tints only the ones the pointer has crossed.
+    _grpAbove = new Set(); _grpBelow = new Set();
     if (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') && dragIdx != null && D[dragIdx]) {
       const gp = D[dragIdx].s;
+      let seenSelf = false;
       tbody.querySelectorAll('tr[data-idx]').forEach(r => {
+        if (r === row) { seenSelf = true; return; }
         const d2 = D[+r.dataset.idx];
-        if (d2 && d2.s === gp && r !== row) r.classList.add('group-drag-mate');
+        if (d2 && d2.s === gp) (seenSelf ? _grpBelow : _grpAbove).add(r);
       });
     }
 
@@ -2992,7 +3056,7 @@ function attachTierListeners() {
       }
     }
     dragRow = null; dragIdx = null; _devyDragName = null;
-    _rowRects = [];
+    _rowRects = []; _grpAbove = new Set(); _grpBelow = new Set();
   }
 
   tbody.addEventListener('pointerdown', onPointerDown);

@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-24c" as="script">
+<link rel="preload" href="app.js?v=2026-07-24e" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1189,7 +1189,7 @@ CLEAR ALL
 <button class="pos-btn" data-pos="K">K</button>
 <button class="pos-btn" data-pos="DST">D/ST</button>
 <button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
-<button id="posLockToggle" onclick="window._togglePosLock()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Position Lock: while ON, dragging any player moves their ENTIRE position group by the same amount — internal order preserved. Push all QBs down past a WR run in one drag instead of ten. Resets on page reload.">🔒 POS LOCK</button>
+<button id="posLockToggle" onclick="window._togglePosLock()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Position Lock: while ON, a drag pushes along only the position-mates you drag PAST — drag a QB from 14 to 20 and the QBs that sat between land right below him, while a QB at 21+ just slots in under them and a QB at 60 doesn't move at all. Works both directions. Positional order always preserved. Resets on page reload.">🔒 POS LOCK</button>
 </div>
 <!-- Rookie sub-position filter (shown only when ROOKIE filter is active) -->
 <div class="pos-filters" id="rookieSubPosFilter" style="display:none;margin-top:6px;padding:5px 8px;background:var(--elev-1);border:1px dashed var(--border);border-radius:4px;align-items:center;gap:8px;flex-wrap:wrap">
@@ -4857,7 +4857,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-24c"></script>
+<script defer src="app.js?v=2026-07-24e"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

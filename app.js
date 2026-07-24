@@ -21533,7 +21533,7 @@ window.fmtHeight = fmtHeight;
       _mdLastGroup = groupNow;
     } else {
       const hiddenSources = [];
-      if (isDynasty) hiddenSources.push('underdog', 'espn', 'yahoo');
+      if (isDynasty) hiddenSources.push('underdog', 'espn', 'cbs', 'yahoo');
       if (!isDynasty) hiddenSources.push('ktc');
       if (hiddenSources.includes(mdAdpSrc)) _setMdSrc(isDynasty ? 'sleeper' : 'consensus');
     }
@@ -21575,9 +21575,12 @@ window.fmtHeight = fmtHeight;
     document.getElementById('pageAccount').classList.add('active');
   });
 
-  // ADP source tabs (Consensus / Underdog / ESPN / Sleeper / Yahoo)
-  // Underdog requires premium; ESPN and Yahoo are locked until data is added
-  const _ADP_ENABLED = { consensus: true, underdog: true, espn: false, sleeper: true, yahoo: false, ktc: true };
+  // ADP source tabs (Consensus / Underdog / ESPN / CBS / Sleeper / Yahoo / KTC)
+  // Underdog requires premium; Yahoo is locked until data is added.
+  // ESPN + CBS unlocked v0.10.4 — espnAdp/cbsAdp (overall pick number, 1QB
+  // redraft, injected by inject_rankings.py) already back the rankings ADP
+  // compare view, so the mock board reads the same fields.
+  const _ADP_ENABLED = { consensus: true, underdog: true, espn: true, cbs: true, sleeper: true, yahoo: false, ktc: true };
   const adpSrcTabs = document.querySelectorAll('#mdAdpSrcTabs .md-rank-src-tab');
   const adpPremiumHint = document.getElementById('mdAdpPremiumHint');
   const _adpHintDefault = adpPremiumHint.innerHTML;
@@ -21744,6 +21747,15 @@ window.fmtHeight = fmtHeight;
         // Use the consensus board rank directly as the pick order.
         const r = consensusRankByIdx[i];
         adp = r != null ? r : 999;
+      } else if (mdAdpSrc === 'espn' || mdAdpSrc === 'cbs') {
+        // ESPN / CBS overall-pick ADP (1QB redraft — neither publishes a
+        // superflex variant, so the same board serves SF lineups, which is
+        // what a real ESPN/CBS room drafts off anyway). Players outside the
+        // source's ranked pool (~230 ESPN / ~190 CBS) sort after every
+        // ranked player, ordered among themselves by consensus market ADP —
+        // NOT interleaved by d.a, which is a different scale.
+        const v = mdAdpSrc === 'espn' ? d.espnAdp : d.cbsAdp;
+        adp = v != null ? v : 500 + Math.min(d.a || 400, 399);
       } else {
         adp = d.a || 999;
         // Underdog / direct-ADP path. Auto-detect Superflex from lineup config:

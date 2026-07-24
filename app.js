@@ -40508,8 +40508,9 @@ Rules:
     if (!btn) return;
     let pop = null;
     function _updateLabel() {
-      const r = _sosRange;
-      if (lbl) lbl.textContent = r ? ('SOS ' + r.from + '-' + r.to) : 'P-SOS';
+      // Custom window → plain "SOS" (the popover + cell tooltips carry the
+      // exact week range); default playoff window → "P-SOS".
+      if (lbl) lbl.textContent = _sosRange ? 'SOS' : 'P-SOS';
     }
     function _close() {
       if (pop) { pop.remove(); pop = null; document.removeEventListener('mousedown', _outside); }

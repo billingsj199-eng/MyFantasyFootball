@@ -577,6 +577,9 @@ tbody tr.drag-indicator::before{content:'';position:absolute;left:0;right:0;top:
 .drag-clone td{padding:.55rem .6rem;font-size:.8rem;white-space:nowrap}
 tbody tr.ranked-row{background:rgba(34,197,94,.03)}
 tbody tr.just-dropped{background:rgba(245,158,11,.12);box-shadow:inset 0 0 0 1px rgba(245,158,11,.3);animation:dropFade 2s ease-out forwards}
+/* POS LOCK (group drag): toggle-on state + tint on rows that move with the dragged player */
+#posLockToggle.pos-lock-on{border-color:var(--accent);color:var(--accent);background:rgba(245,158,11,.12);box-shadow:0 0 6px rgba(245,158,11,.35)}
+tbody tr.group-drag-mate td{background:rgba(245,158,11,.07)}
 @keyframes dropFade{0%{background:rgba(245,158,11,.15);box-shadow:inset 0 0 0 1px rgba(245,158,11,.4)}100%{background:transparent;box-shadow:none}}
 tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 

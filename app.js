@@ -1083,6 +1083,77 @@ function movePlayer(fromIdx, toPosition) {
   saveLocal();
 }
 
+// === Position Lock: move an entire position group in one drag ===
+// When the POS LOCK toggle is on (ALL / FLEX views only), dragging any
+// player shifts EVERY player of that position by the same number of
+// overall slots — the group's internal order and the relative order of
+// everyone else both stay intact. One drag pushes "the QBs" down past a
+// WR run instead of 10+ individual drags.
+//
+// Tier notes: within-position order never changes, so the QB/RB/WR/TE
+// tier buckets are untouched (and paired-mode position sync has nothing
+// to re-mirror). ALL-view tier breaks are rank-anchored and deliberately
+// stay put — players shift across the banners, which is the point.
+window._posLockEnabled = false;
+function movePositionGroup(fromIdx, toPosition) {
+  if (!canEdit()) { movePlayer(fromIdx, toPosition); return; } // movePlayer shows the sign-in / admin toasts
+  const pos = D[fromIdx] && D[fromIdx].s;
+  const curPos = board.indexOf(fromIdx);
+  if (!pos || curPos === -1 || curPos === toPosition) return;
+  const delta = toPosition - curPos;
+  const memberIdxs = [], targets = [], others = [];
+  for (let i = 0; i < board.length; i++) {
+    if (D[board[i]] && D[board[i]].s === pos) {
+      memberIdxs.push(board[i]);
+      targets.push(Math.max(0, Math.min(board.length - 1, i + delta)));
+    } else {
+      others.push(board[i]);
+    }
+  }
+  if (memberIdxs.length <= 1) { movePlayer(fromIdx, toPosition); return; }
+  // Merge back into the board: walk the final slots, placing each group
+  // member once its target slot arrives (or once the non-group players run
+  // out). Both sequences stay internally ordered; clamping compresses the
+  // group against the top/bottom edge instead of spilling.
+  let oi = 0, mi = 0;
+  for (let slot = 0; slot < board.length; slot++) {
+    if (mi < memberIdxs.length && (targets[mi] <= slot || oi >= others.length)) {
+      board[slot] = memberIdxs[mi++];
+    } else {
+      board[slot] = others[oi++];
+    }
+  }
+  renumber();
+  saveLocal();
+  if (typeof toast === 'function') {
+    toast('Moved all ' + memberIdxs.length + ' ' + pos + 's ' + (delta > 0 ? 'down' : 'up') + ' ' +
+          Math.abs(delta) + ' overall spot' + (Math.abs(delta) === 1 ? '' : 's'));
+  }
+}
+
+// POS LOCK toggle + visibility. Session-only by design (never persisted):
+// it's a "temporarily lock the positional order while I restructure the
+// overall board" mode, and silently waking up in a later session with
+// group-drags enabled would be a nasty surprise.
+window._togglePosLock = function () {
+  window._posLockEnabled = !window._posLockEnabled;
+  const btn = document.getElementById('posLockToggle');
+  if (btn) btn.classList.toggle('pos-lock-on', window._posLockEnabled);
+  if (typeof toast === 'function') {
+    toast(window._posLockEnabled
+      ? 'Position Lock ON — dragging any player now moves their entire position group'
+      : 'Position Lock off — drags move single players again');
+  }
+};
+function updatePosLockVis() {
+  const btn = document.getElementById('posLockToggle');
+  if (!btn) return;
+  const premiumOk = (typeof window.isAdmin === 'function' && window.isAdmin()) ||
+                    (typeof hasPremium === 'function' && hasPremium());
+  const show = canEdit() && premiumOk && (filter === 'ALL' || filter === 'FLEX');
+  btn.style.display = show ? '' : 'none';
+}
+
 // === Position Sync: keep within-position order identical across 1QB ↔ SF pairs ===
 // Pairs: redraft ↔ superflex, dynasty ↔ dynastysf
 window._posSyncEnabled = false;
@@ -2203,6 +2274,9 @@ function hasPremium() {
 window.hasPremium = hasPremium;
 
 function render() {
+  // POS LOCK toggle visibility tracks whatever render tracks (version /
+  // mode / filter / auth changes all funnel through here).
+  updatePosLockVis();
   // Attach JM scores to D entries on demand for dynasty rankings
   const _isDynRender = currentMode === 'dynasty' || currentMode === 'dynastysf';
   if (_isDynRender) {
@@ -2826,6 +2900,15 @@ function attachTierListeners() {
     tbody.classList.add('is-dragging');
     row.setPointerCapture(e.pointerId);
 
+    // POS LOCK: tint every row that will move together with the dragged one
+    if (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') && dragIdx != null && D[dragIdx]) {
+      const gp = D[dragIdx].s;
+      tbody.querySelectorAll('tr[data-idx]').forEach(r => {
+        const d2 = D[+r.dataset.idx];
+        if (d2 && d2.s === gp && r !== row) r.classList.add('group-drag-mate');
+      });
+    }
+
     clone = createClone(row);
     clone.style.left = '0px';
     clone.style.top = '0px';
@@ -2849,6 +2932,7 @@ function attachTierListeners() {
     dragRow.classList.remove('dragging');
     tbody.classList.remove('is-dragging');
     clearIndicators();
+    tbody.querySelectorAll('tr.group-drag-mate').forEach(r => r.classList.remove('group-drag-mate'));
     if (clone) { clone.remove(); clone = null; }
     document.removeEventListener('pointermove', onPointerMove);
     document.removeEventListener('pointerup', onPointerUp);
@@ -2891,7 +2975,14 @@ function attachTierListeners() {
       if (!dropAbove && dragPos < targetPos) { /* stays */ }
       else if (!dropAbove) targetPos = targetPos + 1;
       else if (dropAbove && dragPos < targetPos) targetPos = targetPos - 1;
-      movePlayer(dragIdx, targetPos);
+      // POS LOCK: shift the whole position group by this drag's delta.
+      // (Keyboard reorder stays single-player — arrow-key group nudges
+      // would fire a full group merge per keypress.)
+      if (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX')) {
+        movePositionGroup(dragIdx, targetPos);
+      } else {
+        movePlayer(dragIdx, targetPos);
+      }
       const movedIdx = dragIdx;
       render();
       const droppedRow = tbody.querySelector(`tr[data-idx="${movedIdx}"]`);

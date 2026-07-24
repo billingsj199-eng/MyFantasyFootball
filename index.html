@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-24g" as="script">
+<link rel="preload" href="app.js?v=2026-07-24h" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1144,8 +1144,8 @@ CLEAR ALL
 </div>
 <span class="filter-row-label">Format</span>
 <div class="mode-tabs">
-<button class="mode-tab" data-mode="redraft">REDRAFT</button>
-<button class="mode-tab active" data-mode="bestball">BEST BALL</button>
+<button class="mode-tab active" data-mode="redraft">REDRAFT</button>
+<button class="mode-tab" data-mode="bestball">BEST BALL</button>
 <button class="mode-tab" data-mode="superflex">SUPERFLEX</button>
 <button class="mode-tab" data-mode="dynasty">DYNASTY 1QB</button>
 <button class="mode-tab" data-mode="dynastysf">DYNASTY SF</button>
@@ -1334,7 +1334,7 @@ CLEAR ALL
 <th data-sort="jm" id="jmHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
 <th data-sort="landing" id="landingHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Landing Spot (0-100) — quality of the NFL fantasy opportunity (depth chart, scheme, target share). Separate from JM (prospect quality).">Land</span> <span class="arrow"></span></th>
 <th data-sort="age" id="ageHeader" tabindex="0" aria-sort="none">Age <span class="arrow"></span></th>
-<th data-sort="psos" id="psosHeader" tabindex="0" aria-sort="none"><span data-gloss="Strength of schedule over the selected week window (default: BBM playoff weeks 15-17) — facing opponents weighted by your position. E=easy, M=mid, H=hard (league thirds). Blends Mike Clay defensive unit grades, DST proj, opp PA, and DK spreads/totals. Click the header to sort; click ▾ to change the week window (e.g. weeks 1-5)." id="psosHeaderLabel">P-SOS</span><button id="psosRangeBtn" type="button" title="Adjust SOS week range" aria-label="Adjust SOS week range">▾</button> <span class="arrow"></span></th>
+<th data-sort="psos" id="psosHeader" tabindex="0" aria-sort="none"><span data-gloss="Strength of schedule over the selected week window (default: BBM playoff weeks 15-17) — facing opponents weighted by your position. 1 = easiest schedule, 32 = hardest; green/yellow/red by league thirds. Blends Mike Clay defensive unit grades, DST proj, opp PA, and DK spreads/totals. Click the header to sort; click ▾ to change the week window (e.g. weeks 1-5)." id="psosHeaderLabel">P-SOS</span><button id="psosRangeBtn" type="button" title="Adjust SOS week range" aria-label="Adjust SOS week range">▾</button> <span class="arrow"></span></th>
 <th data-sort="diff" tabindex="0" aria-sort="none"><span data-gloss="Rank vs. selected ADP source. ▲ = ranked higher than market (value pick). ▼ = ranked lower (fade).">+/-</span> <span class="arrow"></span></th>
 </tr>
 </thead>
@@ -4857,7 +4857,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-24g"></script>
+<script defer src="app.js?v=2026-07-24h"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -529,8 +529,9 @@ superflexDefaultBoard.splice(0, superflexDefaultBoard.length, ...sortKickersInBo
 const bestBallDefaultBoard = defaultBoard.filter(i => D[i].s !== 'K' && D[i].s !== 'DST');
 
 // Modes: redraft + bestball + superflex + dynasty + dynastysf, each with independent board & tiers
-// v0.10.0: default to bestball — primary use case is Underdog BBM drafts.
-let currentMode = 'bestball';
+// 2026-07-24: default back to redraft (was bestball since v0.10.0) — keep the
+// active class on the REDRAFT tab in index.html in sync with this.
+let currentMode = 'redraft';
 
 // === VERSION SYSTEM: "consensus", "jacks", "mine", each with independent boards/tiers per mode ===
 let currentVersion = 'consensus';
@@ -2629,7 +2630,7 @@ function render() {
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell" style="display:none">${showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
-      <td class="psos-cell">${(()=>{if(d.s==='K'||d.s==='DST')return '—';if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.label+'</span>';})()}</td>
+      <td class="psos-cell">${(()=>{if(d.s==='K'||d.s==='DST')return '—';if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
     </tr>`;
 
@@ -40378,7 +40379,7 @@ Rules:
       else                       { label = 'H'; color = '#ef4444'; }
       const posTag = (posKey === 'OVERALL') ? '' : (' (' + posKey + ')');
       const tipPrefix = isDefaultWindow ? 'Playoff SOS' : 'SOS W' + wks[0] + (wks.length > 1 ? '-' + wks[wks.length - 1] : '');
-      const tip = tipPrefix + posTag + ' · ' + data.opps.map(o => {
+      const tip = tipPrefix + posTag + ' #' + rank + '/' + _fsN + ' (1 = easiest) · ' + data.opps.map(o => {
         const parts = ['W' + o.wk + ' ' + (o.home ? 'vs ' : '@ ') + o.opp];
         const sub = [];
         if (o.posUnits) sub.push(o.posUnits);

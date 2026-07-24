@@ -224,6 +224,8 @@ When you next deploy:
 
 ### Day-scale items
 
+- **In-season SOS: swap defensive priors for observed FPA-by-position** _(Jack, 2026-07-24)_ — once 2026 games are in the weekly stats pipeline, compute fantasy points allowed per position group (QB/RB/WR/TE) from our own `WEEKLY_STATS` (each game row has `opp` + `fpts` — no new data source) and phase it into the SOS blend in place of the preseason priors (Clay unit grades / DST proj / opp PA). **Jack's weighting schedule:** ramp observed FPA's share up each week — first couple weeks are too small a sample to stand alone — and **after Week 4 drop the preseason priors entirely** (100% actual results). Default ramp to implement: observed share = (weeksPlayed − 1) / 4 → W1 0%, W2 25%, W3 50%, W4 75%, W5+ 100% (tunable). Consider light schedule-adjustment on early FPA (points allowed to WRs partly reflects which WRs were faced). Vegas layer (baseline-relative implied totals + spreads) stays throughout. Context: 2026-07-24 session made the SOS window adjustable (`_mtBuildPlayoffSos(pos, weeks)`), cell shows 1-32 rank, implied totals now relative to each team's season median (`_mtImpliedBaselines`).
+
 - **Trade Calc 3-way trades** — design call first (3-column layout vs. rotating A→B→C, fairness scoring across pairs vs. net flow per team). Current scoring is `A.total vs B.total`; multi-team needs new model.
 - **Onboarding tour copy/quality v2** — current spotlight works; tour copy could be tightened or include short demo clips per step.
 - **Prospect Model per-tier hit-rate panel** — already shown in TIER column + tooltips. v2 could surface a top-of-page panel making the data more discoverable. Design call: does the tooltip suffice?

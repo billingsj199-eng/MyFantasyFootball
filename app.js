@@ -5958,6 +5958,80 @@ function _getCollegeStats(name, pos) {
   });
 }
 
+// === CAMP NEWS (player-card headline strip) =================================
+// data/camp_news_2026.json is maintained twice daily by the cloud camp-news
+// routine (same runs that commit camp_reports/*.md). Fetched with an
+// hour-stamped param — must NOT contain "v=" or the SW pins it cache-first
+// forever; a changing param makes each hour a fresh cache entry instead.
+// 404 (file not yet created) is silently tolerated: the strip just won't show.
+window.CAMP_NEWS = null;
+window._campNewsIdx = null;
+function _campNewsNorm(n) {
+  return String(n).toLowerCase().replace(/[.'’-]/g, '')
+    .replace(/\s+(jr|sr|ii|iii|iv|v)$/, '').replace(/\s+/g, ' ').trim();
+}
+(function _loadCampNews() {
+  const now = new Date();
+  const stamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0') + String(now.getHours()).padStart(2, '0');
+  fetch('data/camp_news_2026.json?d=' + stamp)
+    .then(r => (r && r.ok) ? r.json() : null)
+    .then(j => {
+      if (!j || !Array.isArray(j.items)) return;
+      window.CAMP_NEWS = j;
+      const idx = {};
+      j.items.forEach(it => {
+        if (!it || !it.player || !it.headline) return;
+        const k = _campNewsNorm(it.player);
+        (idx[k] = idx[k] || []).push(it);
+      });
+      window._campNewsIdx = idx;
+    })
+    .catch(() => {});
+})();
+
+// Camp News section — sits directly under ADP Comparison on the FANTASY tab.
+// Newest ≤3 items from the last 14 days for this player; each headline links
+// out to the source article / X post. Returns '' when there's nothing to show.
+function _campNewsSectionHtml(d) {
+  const idx = window._campNewsIdx;
+  if (!idx) return '';
+  let items = idx[_campNewsNorm(d.n)] || [];
+  if (!items.length) return '';
+  // Name collisions (two players sharing a normalized name): trust the item's
+  // team when it has one — drop wrong-team items, keep team-less ones.
+  if (items.some(it => it.team)) {
+    const tm = items.filter(it => !it.team || it.team === d.t);
+    if (tm.length !== items.length && tm.length) items = tm;
+  }
+  const cutoff = Date.now() - 14 * 24 * 3600 * 1000;
+  items = items.filter(it => !it.date || (Date.parse(it.date + 'T12:00:00') || 0) >= cutoff);
+  if (!items.length) return '';
+  items = items.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const tagColor = { injury: 'var(--red)', faller: 'var(--red)', riser: 'var(--green)',
+                     role: 'var(--accent)', transaction: 'var(--accent)' };
+  const rows = items.map(it => {
+    const dt = it.date ? new Date(it.date + 'T12:00:00') : null;
+    const dateStr = (dt && !isNaN(dt)) ? (dt.getMonth() + 1) + '/' + dt.getDate() : '';
+    const safeUrl = /^https?:\/\//i.test(it.url || '') ? it.url : null;
+    const tag = (it.tag && tagColor[it.tag])
+      ? `<span style="color:${tagColor[it.tag]};font-weight:700;text-transform:uppercase;font-size:.5rem;letter-spacing:.5px">${esc(it.tag)}</span> `
+      : '';
+    const head = safeUrl
+      ? `<a href="${esc(safeUrl)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;border-bottom:1px dotted var(--text2)">${esc(it.headline)}</a>`
+      : esc(it.headline);
+    return `<div style="padding:.35rem 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:.72rem;line-height:1.35">${tag}${head}<span style="color:var(--text2);font-size:.55rem">${dateStr ? ' · ' + dateStr : ''}${safeUrl ? ' ↗' : ''}</span></div>
+      ${it.take ? `<div style="font-size:.62rem;color:var(--text2);margin-top:2px">${esc(it.take)}</div>` : ''}
+    </div>`;
+  }).join('');
+  return `<div class="card-section">
+    <div class="card-section-title">Camp News <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· auto-scanned 2x daily</span></div>
+    <div style="margin-top:-.15rem">${rows}</div>
+  </div>`;
+}
+
 // Weekly prop lines section for the LINES tab: latest week in
 // BETTING_2026.weeklyProps that has this player. Books: UD/PP (DK reserved).
 // Returns '' when no weekly lines exist so callers can append unconditionally.
@@ -6744,6 +6818,8 @@ function openPlayerCard(d, ctxMode) {
         </div>
       </div>`;
       })() : ''}
+
+      ${(!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d) : ''}
 
       ${(d.s === 'K' || d.s === 'DST') && !_is2026 && d.career && d.career.length > 0
         ? _careerSectionHtml(d) + _logsSectionHtml(d)

@@ -2463,19 +2463,20 @@ function render() {
         <td class="myrank-cell"><span class="myrank-num">${d.myRank}</span></td>
         <td><div class="player-cell"><span class="player-name">${d.n}</span><span class="player-team">${d.t}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
-        <td>${d._devyEligYr}</td>
-        <td>${d._devyKtc > 0 ? d._devyKtc.toLocaleString() : '—'}</td>
+        <td class="pos-rank-cell">${d._devyEligYr}</td>
+        <td class="adp-cell">${d._devyKtc > 0 ? d._devyKtc.toLocaleString() : '—'}</td>
+        <td class="pts-cell ppg-proj-cell">—</td>
         <td class="opp-cell weekly-only-cell" style="display:none">—</td>
         <td class="spread-cell weekly-only-cell" style="display:none">—</td>
         <td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>
-        <td>—</td>
-        <td>—</td>
+        <td class="pts-cell ppg25-cell">—</td>
+        <td class="pts-cell l4ppg-cell">—</td>
         <td class="pts-cell yrr-cell" style="display:none">—</td>
         <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');const _tt=window._jmTierTooltip?window._jmTierTooltip(d._pmJm,d.s).replace(/"/g,'&quot;'):'';return '<span style="color:'+jc+';font-weight:700;cursor:help" title="'+_tt+'">'+jm+'</span>';})()}</td>
         <td class="pts-cell landing-cell" style="display:none">—</td>
-        <td>—</td>
+        <td class="age-cell">—</td>
         <td class="psos-cell">—</td>
-        <td>—</td>
+        <td class="diff-cell">—</td>
       </tr>`;
       return;
     }
@@ -5474,7 +5475,31 @@ function fptsStyle(pts, pos) {
   return ' style="color:' + color + ';font-weight:700"';
 }
 
-function buildWeeklyTable(d, season, scoringFormat) {
+// Color-coded points bar chart shown above the LOGS / CAREER tables on the
+// player card. items: [{label, value, color, dim, title}] — bar height scales
+// to the max value in the set; colors come from the posFptsColor tiers so the
+// chart reads the same as the FPTS/PPG table columns.
+function _fptsBarChartHtml(items, caption) {
+  if (!items || items.length < 2) return '';
+  const vals = items.filter(it => !it.dim).map(it => it.value);
+  if (!vals.length || Math.max(...vals) <= 0) return '';
+  const max = Math.max(...vals);
+  const H = 72; // tallest bar, px
+  const bars = items.map(it => {
+    const h = it.dim ? 2 : Math.max(2, Math.round(Math.max(0, it.value) / max * H));
+    const c = it.dim ? 'rgba(148,163,184,.25)' : (it.color || 'var(--text2)');
+    return '<div class="fbc-col"' + (it.title ? ' title="' + String(it.title).replace(/"/g, '&quot;') + '"' : '') + '>'
+      + '<span class="fbc-val"' + (it.dim ? '' : ' style="color:' + c + '"') + '>' + (it.dim ? '' : it.value) + '</span>'
+      + '<div class="fbc-bar" style="height:' + h + 'px;background:' + c + '"></div>'
+      + '<span class="fbc-lbl">' + it.label + '</span>'
+      + '</div>';
+  }).join('');
+  return '<div class="fbc-wrap">'
+    + (caption ? '<div class="fbc-caption">' + caption + '</div>' : '')
+    + '<div class="fbc-row">' + bars + '</div></div>';
+}
+
+function buildWeeklyTable(d, season, scoringFormat, withChart) {
   const wd = WEEKLY_STATS[d.n];
   if (!wd || !wd.seasons[season]) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
   const weeks = wd.seasons[season];
@@ -5574,10 +5599,20 @@ function buildWeeklyTable(d, season, scoringFormat) {
   totalRow += '</tr>';
   rows += totalRow;
 
-  return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
+  let chart = '';
+  if (withChart) {
+    chart = _fptsBarChartHtml(adjusted.map(w => ({
+      label: w.wk,
+      value: w.fpts,
+      color: posFptsColor(w.fpts, pos),
+      title: 'Wk ' + w.wk + (w.opp && w.opp.trim() ? ' ' + w.opp.trim() : '') + ': ' + w.fpts + ' pts'
+    })), 'Points by week');
+  }
+
+  return chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-function buildCareerTable(d, scoringFormat, statMode) {
+function buildCareerTable(d, scoringFormat, statMode, withChart) {
   const c = d.career;
   if (!c || !c.length) return '';
 
@@ -5774,7 +5809,18 @@ function buildCareerTable(d, scoringFormat, statMode) {
     return row;
   }).join('');
 
-  return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
+  let chart = '';
+  if (withChart) {
+    chart = _fptsBarChartHtml(filled.map(y => ({
+      label: "'" + String(y.yr).slice(2),
+      value: y._gap ? 0 : (mode === 'tot' ? y.fpts : y.ppg),
+      color: y._gap ? null : posFptsColor(y.ppg, d.s),
+      dim: !!y._gap,
+      title: y._gap ? (y.yr + ': did not play') : (y.yr + ': ' + y.ppg + ' PPG · ' + y.fpts + ' pts (' + y.gp + ' gp)')
+    })), mode === 'tot' ? 'Points by season' : 'PPG by season');
+  }
+
+  return chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 // Career Stats section — lives in the CAREER card tab (inline on K/DST cards,
@@ -5798,7 +5844,7 @@ function _careerSectionHtml(d) {
         </div>
       </div>
     </div>
-    <div id="careerLogContent">${buildCareerTable(d, 'half', 'avg')}</div>
+    <div id="careerLogContent">${buildCareerTable(d, 'half', 'avg', true)}</div>
   </div>`;
 }
 
@@ -5824,7 +5870,7 @@ function _logsSectionHtml(d) {
       </div>
     </div>
     <div id="gameLogContent">${seasons.length
-      ? buildWeeklyTable(d, seasons[0], 'half')
+      ? buildWeeklyTable(d, seasons[0], 'half', true)
       : (typeof WEEKLY_STATS !== 'undefined' && Object.keys(WEEKLY_STATS).length > 0)
         ? '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No game-by-game data available for this player.</div>'
         : '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">Game-by-game data is loading…</div>'}</div>
@@ -7302,7 +7348,7 @@ function openPlayerCard(d, ctxMode) {
 
   function _clRefresh() {
     if (!clContent) return;
-    clContent.innerHTML = buildCareerTable(d, _clScoring, _clStat);
+    clContent.innerHTML = buildCareerTable(d, _clScoring, _clStat, true);
     if (clLabel) clLabel.textContent = 'Career Stats (' + scoringLabels[_clScoring] + ')';
   }
 
@@ -7345,7 +7391,7 @@ function openPlayerCard(d, ctxMode) {
 
   function _glRefresh() {
     if (!glContent || !glYearSelect || !glYearSelect.value) return;
-    glContent.innerHTML = buildWeeklyTable(d, glYearSelect.value, _glScoring);
+    glContent.innerHTML = buildWeeklyTable(d, glYearSelect.value, _glScoring, true);
     if (glLabel) glLabel.textContent = 'Game Logs (' + scoringLabels[_glScoring] + ')';
   }
 
@@ -8274,12 +8320,22 @@ window.switchPage = switchPage;
   function _apply(state) {
     Object.keys(COLS).forEach(k => {
       const visible = state[k] !== false; // default visible
+      // An EXPLICIT check (state true, i.e. the user ticked the box at some
+      // point) is applied as inline !important so it beats the mobile
+      // declutter hides in main.css. Unset stays '' so those CSS hides apply.
+      // Never force in WEEKLY format — its column swap owns ADP/Age there.
+      const forced = state[k] === true && !document.body.classList.contains('format-weekly');
+      const _setDisp = el => {
+        if (!visible) { el.style.display = 'none'; return; }
+        if (forced) el.style.setProperty('display', 'table-cell', 'important');
+        else el.style.display = '';
+      };
       const th = document.getElementById(COLS[k].th);
       // Don't override view-context hides (e.g. yrr/jm/landing handled elsewhere).
       // For our four columns the th element is always present and always visible by
       // default, so this is safe.
-      if (th) th.style.display = visible ? '' : 'none';
-      document.querySelectorAll(COLS[k].cell).forEach(c => { c.style.display = visible ? '' : 'none'; });
+      if (th) _setDisp(th);
+      document.querySelectorAll(COLS[k].cell).forEach(_setDisp);
     });
   }
   function _syncCheckboxes(state) {

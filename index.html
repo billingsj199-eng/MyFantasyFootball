@@ -60,12 +60,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-07-24c" as="style">
+<link rel="preload" href="styles/main.css?v=2026-07-27c" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-24j" as="script">
+<link rel="preload" href="app.js?v=2026-07-27b" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -75,7 +75,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-07-14a" as="script">
 <link rel="preload" href="data/d.js?v=2026-07-23" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-07-24c">
+<link rel="stylesheet" href="styles/main.css?v=2026-07-27c">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1086,6 +1086,13 @@ CLEAR ALL
     #pageRankings tbody .ppg-proj-cell{min-width:42px!important}
     #pageRankings tbody .adp-cell::after{content:"ADP";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
     #pageRankings tbody .ppg-proj-cell::after{content:"PROJ";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
+    /* P-SOS — same value-on-top/label-below treatment as ADP/PROJ (previously
+       rendered as a bare unlabeled number cramming the end of the card). */
+    #pageRankings tbody .psos-cell{flex:0 0 auto;text-align:center!important;font-size:.82rem;font-weight:600;padding:0 3px!important;min-width:30px!important;line-height:1.05}
+    #pageRankings tbody .psos-cell::after{content:"SOS";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
+    /* WEEKLY cards keep Opp (Spread/Team Total are hidden on phones in main.css) */
+    body.format-weekly #pageRankings tbody td.opp-cell{flex:0 0 auto;text-align:center!important;font-size:.78rem;font-weight:600;padding:0 3px!important;min-width:40px!important;line-height:1.05}
+    body.format-weekly #pageRankings tbody td.opp-cell::after{content:"OPP";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
     #pageRankings tbody .age-cell{display:none}
     /* Tier banner rows still need to span full card width */
     #pageRankings tbody tr.tier-row{display:block;padding:8px 12px;background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.25)!important}
@@ -4857,7 +4864,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-24j"></script>
+<script defer src="app.js?v=2026-07-27b"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

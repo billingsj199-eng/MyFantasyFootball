@@ -775,17 +775,33 @@ td.adp-reach{background:rgba(239,68,68,.10);color:var(--red);font-weight:600}
 .career-log-toggle button.active{background:var(--chip-active-bg);color:var(--chip-active-fg);font-weight:700;box-shadow:inset 0 0 0 1px var(--chip-active-border)}
 .career-log-year-select{font-family:'DM Sans',sans-serif;font-size:.65rem;padding:2px 6px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:3px;cursor:pointer;outline:none}
 .career-log-year-select:focus{border-color:var(--accent)}
-.career-table-wrap{max-height:220px;overflow-y:auto;overflow-x:auto;border-radius:4px;border:1px solid var(--border)}
-.career-table{border-collapse:collapse;border-spacing:0;margin:0;font-size:.48rem;width:100% !important;min-width:0 !important}
+.career-table-wrap{max-height:260px;overflow-y:auto;overflow-x:auto;border-radius:4px;border:1px solid var(--border)}
+/* Stat size scales with the viewport (clamp): ~8.8px on phones up to ~14.4px
+   on desktop — the wraps scroll horizontally, so bigger type just means scroll. */
+.career-table{border-collapse:collapse;border-spacing:0;margin:0;font-size:clamp(.55rem,.38rem + .6vw,.9rem);width:100% !important;min-width:0 !important}
 .career-table thead{position:sticky;top:0;z-index:1;background:var(--surface)}
-.career-table th,.career-table td{padding:2px 5px;text-align:center;white-space:nowrap;border-bottom:1px solid rgba(30,42,66,.2);line-height:1}
-.career-table th{font-size:.38rem;text-transform:uppercase;letter-spacing:0;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border)}
+.career-table th,.career-table td{padding:3px 6px;text-align:center;white-space:nowrap;border-bottom:1px solid rgba(30,42,66,.2);line-height:1.1}
+.career-table th{font-size:clamp(.42rem,.32rem + .35vw,.66rem);text-transform:uppercase;letter-spacing:0;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border)}
 .career-table th:first-child,.career-table td:first-child{text-align:left;padding-left:3px}
 .career-table td{color:var(--text)}
 .career-table td:first-child{font-weight:700;color:var(--accent)}
 .career-table tr:last-child td{border-bottom:none}
 .career-table .best-yr{color:var(--green);font-weight:700}
-.career-table .fpts-cell{font-weight:700}
+/* FPTS / PPG — the headline stat, a notch larger than the rest of the row */
+.career-table .fpts-cell{font-weight:700;font-size:1.08em}
+/* Color-coded points bar chart above the LOGS / CAREER tables (player card) */
+.fbc-wrap{overflow-x:auto;padding:8px 6px 6px;margin-bottom:8px;border:1px solid var(--border);border-radius:6px;background:rgba(148,163,184,.04)}
+.fbc-caption{font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:1.2px;color:var(--text2);text-transform:uppercase;margin:0 0 6px 2px}
+.fbc-row{display:flex;align-items:flex-end;gap:5px;min-width:max-content;padding:0 2px}
+.fbc-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;flex:1 0 auto;min-width:26px}
+.fbc-bar{width:clamp(12px,1.5vw,22px);border-radius:3px 3px 0 0;min-height:2px}
+.fbc-val{font-size:clamp(.52rem,.4rem + .35vw,.78rem);font-weight:700;line-height:1}
+.fbc-lbl{font-size:clamp(.48rem,.4rem + .25vw,.66rem);color:var(--text2);line-height:1}
+/* Desktop: taller stat viewport so the larger rows still show plenty of seasons */
+@media(min-width:900px){
+  .career-table-wrap{max-height:320px}
+  .fbc-caption{font-size:.72rem}
+}
 .career-table .career-bar{display:none}
 /* Flock-style stat tiers (red→orange→yellow→lime→green) — emitted by
    _statCell in app.js. Light theme swaps in darker, readable variants. */
@@ -985,6 +1001,18 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   #pageRankings table #ppg25HeaderTh,
   #pageRankings table .diff-cell,
   #pageRankings table thead th[data-sort="diff"]{display:none}
+  /* L4 PPG + Age — trend/roster detail that lives on the player card. */
+  #pageRankings table .l4ppg-cell,
+  #pageRankings table #l4ppgHeaderTh,
+  #pageRankings table .age-cell,
+  #pageRankings table #ageHeader{display:none}
+  /* WEEKLY view: keep Opp, drop Spread + Team Total on phones. Needs !important
+     plus the extra element selectors to out-specific the body.format-weekly
+     show rules (display:table-cell !important) in index.html. */
+  body.format-weekly #pageRankings th#spreadHeader,
+  body.format-weekly #pageRankings th#teamTotalHeader,
+  body.format-weekly #pageRankings td.spread-cell,
+  body.format-weekly #pageRankings td.teamtotal-cell{display:none !important}
   /* Verbose label suffixes — hidden on mobile to keep column widths compact. */
   .hide-on-mobile{display:none}
   /* Constrain the Player column so long names truncate instead of stretching
@@ -1028,8 +1056,11 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
      every column onto the screen. table-layout:auto overrides the global
      mobile `table{table-layout:fixed}` above (which is for the rankings
      table) — fixed layout crushes these to ~24px/col and text overlaps. */
-  .career-table{font-size:.52rem;table-layout:auto !important;min-width:0}
-  .career-table th{font-size:.38rem;padding:2px 4px}
+  /* Font sizes come from the responsive clamp() on the base rules — only the
+     layout override (vs the global mobile table{table-layout:fixed}) and
+     tighter padding live here. */
+  .career-table{table-layout:auto !important;min-width:0}
+  .career-table th{padding:2px 4px}
   .career-table td{padding:2px 4px}
 
   /* Compare page */

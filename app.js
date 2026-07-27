@@ -1463,7 +1463,7 @@ window._updateCopyFromRedraftBtn = function() {
 // State
 let filter = 'ALL', sortKey = 'myrank', sortDir = 1, query = '', viewMode = 'all';
 let rookiePosFilter = 'ALL'; // sub-filter applied only when filter === 'ROOKIE'
-let rankingScoringFmt = 'half';
+let rankingScoringFmt = 'ppr';
 let rnkAdpSrc = 'consensus';
 // Rankings STATS view: 'fantasy' = PPG columns, 'proj' = Clay projected yds/TD,
 // 'lines' = sportsbook season-prop yds/TD (DK/FD/MGM average). Both non-fantasy
@@ -5831,11 +5831,11 @@ function _careerSectionHtml(d) {
     ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : '';
   return `<div class="card-section">
     <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-      <span id="clScoringLabel">Career Stats (Half PPR)${bestSeasonsNote}</span>
+      <span id="clScoringLabel">Career Stats (PPR)${bestSeasonsNote}</span>
       <div class="career-log-controls" style="flex-wrap:wrap">
         <div class="career-log-toggle">
-          <button class="cl-scoring-btn" data-clscoring="ppr">PPR</button>
-          <button class="cl-scoring-btn active" data-clscoring="half">HALF</button>
+          <button class="cl-scoring-btn active" data-clscoring="ppr">PPR</button>
+          <button class="cl-scoring-btn" data-clscoring="half">HALF</button>
           <button class="cl-scoring-btn" data-clscoring="std">STD</button>
         </div>
         <div class="career-log-toggle">
@@ -5844,7 +5844,7 @@ function _careerSectionHtml(d) {
         </div>
       </div>
     </div>
-    <div id="careerLogContent">${buildCareerTable(d, 'half', 'avg', true)}</div>
+    <div id="careerLogContent">${buildCareerTable(d, 'ppr', 'avg', true)}</div>
   </div>`;
 }
 
@@ -5857,11 +5857,11 @@ function _logsSectionHtml(d) {
   const seasons = getWeeklySeasons(d);
   return `<div class="card-section">
     <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-      <span id="glScoringLabel">Game Logs (Half PPR)</span>
+      <span id="glScoringLabel">Game Logs (PPR)</span>
       <div class="career-log-controls" style="flex-wrap:wrap">
         <div class="career-log-toggle">
-          <button class="gl-scoring-btn" data-glscoring="ppr">PPR</button>
-          <button class="gl-scoring-btn active" data-glscoring="half">HALF</button>
+          <button class="gl-scoring-btn active" data-glscoring="ppr">PPR</button>
+          <button class="gl-scoring-btn" data-glscoring="half">HALF</button>
           <button class="gl-scoring-btn" data-glscoring="std">STD</button>
         </div>
         <select class="career-log-year-select" id="glYearSelect">
@@ -5870,7 +5870,7 @@ function _logsSectionHtml(d) {
       </div>
     </div>
     <div id="gameLogContent">${seasons.length
-      ? buildWeeklyTable(d, seasons[0], 'half', true)
+      ? buildWeeklyTable(d, seasons[0], 'ppr', true)
       : (typeof WEEKLY_STATS !== 'undefined' && Object.keys(WEEKLY_STATS).length > 0)
         ? '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No game-by-game data available for this player.</div>'
         : '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">Game-by-game data is loading…</div>'}</div>
@@ -6068,8 +6068,8 @@ function buildLinesView(d) {
     + '<span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· 2026 season props · blended '
     + P.books.length + ' book' + (P.books.length > 1 ? 's' : '') + '</span></div>';
   html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">';
-  html += '<div class="card-rank-box"><div class="lbl">PPR</div><div class="num green">' + fmt1(P.ppg.ppr) + '</div></div>';
-  html += '<div class="card-rank-box" style="outline:1px solid var(--accent)"><div class="lbl">Half PPR</div><div class="num accent">' + fmt1(P.ppg.half) + '</div></div>';
+  html += '<div class="card-rank-box" style="outline:1px solid var(--accent)"><div class="lbl">PPR</div><div class="num accent">' + fmt1(P.ppg.ppr) + '</div></div>';
+  html += '<div class="card-rank-box"><div class="lbl">Half PPR</div><div class="num green">' + fmt1(P.ppg.half) + '</div></div>';
   html += '<div class="card-rank-box"><div class="lbl">STD</div><div class="num">' + fmt1(P.ppg.std) + '</div></div>';
   html += '</div>';
   html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:.4rem">';
@@ -6124,13 +6124,13 @@ function buildLinesView(d) {
   if (P.asOf) html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">Lines as of ' + P.asOf + '.</div>';
   html += '</div>';
 
-  // --- Per-book projection breakdown (Half PPR PPG) ---
+  // --- Per-book projection breakdown (PPR PPG) ---
   if (P.books.length > 1) {
     html += '<div class="card-section"><div class="card-section-title">By Book '
-      + '<span style="font-size:.55rem;color:var(--text2);font-weight:400">→ Half PPR PPG</span></div>';
+      + '<span style="font-size:.55rem;color:var(--text2);font-weight:400">→ PPR PPG</span></div>';
     html += '<div class="card-rank-row" style="grid-template-columns:repeat(' + P.books.length + ',1fr)">';
     P.books.forEach(b => {
-      html += '<div class="card-rank-box"><div class="lbl">' + BOOK_LBL[b] + '</div><div class="num accent">' + fmt1(P.perBook[b].ppg.half) + '</div></div>';
+      html += '<div class="card-rank-box"><div class="lbl">' + BOOK_LBL[b] + '</div><div class="num accent">' + fmt1(P.perBook[b].ppg.ppr) + '</div></div>';
     });
     html += '</div></div>';
   }
@@ -6907,11 +6907,11 @@ function openPlayerCard(d, ctxMode) {
       </div>
       ${_getCollegeStats(d.n, d.s) ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-          <span id="collegeLogLabel">College Career Log (Half PPR)</span>
+          <span id="collegeLogLabel">College Career Log (PPR)</span>
           <div class="career-log-controls">
             <div class="career-log-toggle">
-              <button class="college-scoring-btn" data-collegescoring="ppr">PPR</button>
-              <button class="college-scoring-btn active" data-collegescoring="half">HALF</button>
+              <button class="college-scoring-btn active" data-collegescoring="ppr">PPR</button>
+              <button class="college-scoring-btn" data-collegescoring="half">HALF</button>
               <button class="college-scoring-btn" data-collegescoring="std">STD</button>
             </div>
             ${hasCollegeWeekly(d) ? `<div class="career-log-toggle">
@@ -6923,7 +6923,7 @@ function openPlayerCard(d, ctxMode) {
             </select>` : ''}
           </div>
         </div>
-        <div id="collegeLogContent">${buildCollegeTable(d, 'half')}</div>
+        <div id="collegeLogContent">${buildCollegeTable(d, 'ppr')}</div>
       </div>` : ''}`;
       })() : `<div class="card-section" style="text-align:center;padding:12px">
         <div class="card-section-title">RAS</div>
@@ -6945,11 +6945,11 @@ function openPlayerCard(d, ctxMode) {
       </div>
       ${_getCollegeStats(d.n, d.s) ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-          <span id="collegeLogLabel">College Career Log (Half PPR)</span>
+          <span id="collegeLogLabel">College Career Log (PPR)</span>
           <div class="career-log-controls">
             <div class="career-log-toggle">
-              <button class="college-scoring-btn" data-collegescoring="ppr">PPR</button>
-              <button class="college-scoring-btn active" data-collegescoring="half">HALF</button>
+              <button class="college-scoring-btn active" data-collegescoring="ppr">PPR</button>
+              <button class="college-scoring-btn" data-collegescoring="half">HALF</button>
               <button class="college-scoring-btn" data-collegescoring="std">STD</button>
             </div>
             ${hasCollegeWeekly(d) ? `<div class="career-log-toggle">
@@ -6961,7 +6961,7 @@ function openPlayerCard(d, ctxMode) {
             </select>` : ''}
           </div>
         </div>
-        <div id="collegeLogContent">${buildCollegeTable(d, 'half')}</div>
+        <div id="collegeLogContent">${buildCollegeTable(d, 'ppr')}</div>
       </div>` : ''}`; })()}
       </div>
       <div class="card-prospect-view" id="cardCompsView" style="display:none">
@@ -7299,7 +7299,7 @@ function openPlayerCard(d, ctxMode) {
   const _cclYearSelect = document.getElementById('cclYearSelect');
   const _cclContent = document.getElementById('collegeLogContent');
   const _cclLabel = document.getElementById('collegeLogLabel');
-  let _collegeScoring = 'half';
+  let _collegeScoring = 'ppr';
   const _cclScoringLabels = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
 
   function _cclRefresh() {
@@ -7342,7 +7342,7 @@ function openPlayerCard(d, ctxMode) {
   const clStatBtns = cardEl.querySelectorAll('.cl-stat-btn');
   const clContent = document.getElementById('careerLogContent');
   const clLabel = document.getElementById('clScoringLabel');
-  let _clScoring = 'half';
+  let _clScoring = 'ppr';
   let _clStat = 'avg';
   const scoringLabels = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
 
@@ -7387,7 +7387,7 @@ function openPlayerCard(d, ctxMode) {
   const glYearSelect = document.getElementById('glYearSelect');
   const glContent = document.getElementById('gameLogContent');
   const glLabel = document.getElementById('glScoringLabel');
-  let _glScoring = 'half';
+  let _glScoring = 'ppr';
 
   function _glRefresh() {
     if (!glContent || !glYearSelect || !glYearSelect.value) return;
@@ -7511,7 +7511,7 @@ function _cmpNormTeam(t) { return t ? (_CMP_ABBR_NORM[t] || t) : t; }
 function _cmpSplitScoring(name) {
   const esc = name.replace(/"/g, '\\"');
   const b = document.querySelector('.cmp-cl-scoring.active[data-cmpplayer="' + esc + '"]');
-  return b ? b.dataset.cmpscoring : 'half';
+  return b ? b.dataset.cmpscoring : 'ppr';
 }
 
 function _cmpSplitAgg(games, recAdj) {
@@ -7632,7 +7632,7 @@ function _cmpSplitRefresh(name) {
     let fmtKey = null;
     if (el.dataset.scoresrc === 'gl') {
       const b = document.querySelector('#playerCard .gl-scoring-btn.active');
-      fmtKey = b ? b.dataset.glscoring : 'half';
+      fmtKey = b ? b.dataset.glscoring : 'ppr';
     }
     el.innerHTML = _cmpSplitResultsHtml(name, fmtKey);
   });
@@ -7972,11 +7972,11 @@ function renderCompareGrid() {
           })() : ''; })()}
           ${career.length > 0 ? `<div class="card-section">
             <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-              <span class="cmp-cl-label">Career Log (Half PPR)${career.length < ((d._last||0) - (d._debut||0) + 1) * 0.5 ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : ''}</span>
+              <span class="cmp-cl-label">Career Log (PPR)${career.length < ((d._last||0) - (d._debut||0) + 1) * 0.5 ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : ''}</span>
               <div class="career-log-controls">
                 <div class="career-log-toggle">
-                  <button class="cmp-cl-scoring" data-cmpscoring="ppr" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">PPR</button>
-                  <button class="cmp-cl-scoring active" data-cmpscoring="half" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">HALF</button>
+                  <button class="cmp-cl-scoring active" data-cmpscoring="ppr" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">PPR</button>
+                  <button class="cmp-cl-scoring" data-cmpscoring="half" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">HALF</button>
                   <button class="cmp-cl-scoring" data-cmpscoring="std" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">STD</button>
                 </div>
                 ${hasWeeklyData(d) ? `<div class="career-log-toggle">
@@ -7988,7 +7988,7 @@ function renderCompareGrid() {
                 </select>` : ''}
               </div>
             </div>
-            <div class="cmp-cl-content" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">${buildCareerTable(d, 'half')}</div>
+            <div class="cmp-cl-content" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">${buildCareerTable(d, 'ppr')}</div>
           </div>` : ''}
           ${_cmpSplitSectionHtml(d)}
           ${d._height || d._weight || d.dr || d._college ? `<div class="card-section">
@@ -8064,8 +8064,8 @@ function renderCompareGrid() {
           </div>
         </div>
         ${d.career && d.career.length > 0 ? `<div class="card-section">
-          <div class="card-section-title">Career Log (Half PPR)</div>
-          ${buildCareerTable(d)}
+          <div class="card-section-title">Career Log (PPR)</div>
+          ${buildCareerTable(d, 'ppr')}
         </div>` : d._retired ? `<div class="card-section">
           <div class="card-section-title">Career: ${d._debut}–${d._last} (${d._last - d._debut + 1} seasons)</div>
         </div>` : ''}
@@ -8106,7 +8106,7 @@ function renderCompareGrid() {
     const modeBtn = compareGrid.querySelector('.cmp-cl-mode.active[data-cmpplayer="' + esc + '"]');
     const yearSel = compareGrid.querySelector('.cmp-cl-year[data-cmpplayer="' + esc + '"]');
     if (!contentEl) return;
-    const scoring = _cmpScoring[playerName] || 'half';
+    const scoring = _cmpScoring[playerName] || 'ppr';
     const mode = modeBtn ? modeBtn.dataset.cmpmode : 'season';
     if (mode === 'weekly' && yearSel) {
       contentEl.innerHTML = buildWeeklyTable(d, yearSel.value, scoring);

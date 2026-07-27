@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-27b" as="script">
+<link rel="preload" href="app.js?v=2026-07-27d" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1222,8 +1222,8 @@ CLEAR ALL
 <div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">SCORING:</span>
 <div class="career-log-toggle" id="rankingScoringToggle">
-<button class="rnk-scoring-btn" data-rnkscoring="ppr">PPR</button>
-<button class="rnk-scoring-btn active" data-rnkscoring="half">HALF</button>
+<button class="rnk-scoring-btn active" data-rnkscoring="ppr">PPR</button>
+<button class="rnk-scoring-btn" data-rnkscoring="half">HALF</button>
 <button class="rnk-scoring-btn" data-rnkscoring="std">STD</button>
 </div>
 </div>
@@ -1331,12 +1331,12 @@ CLEAR ALL
 <th data-sort="pos" tabindex="0" aria-sort="none">Pos <span class="arrow"></span></th>
 <th data-sort="posRank" tabindex="0" aria-sort="none">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
 <th data-sort="adp" id="adpHeader" tabindex="0" aria-sort="none"><span data-gloss="Average Draft Position — where this player goes on average in the selected ADP source.">ADP</span> <span class="arrow"></span></th>
-<th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Projected fantasy points per game for the upcoming season (Half PPR scoring).">Proj PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
+<th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Projected fantasy points per game for the upcoming season (PPR scoring).">Proj PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week. Color reflects defensive difficulty: green = bottom 1/3, amber = middle, red = top 1/3.">Opp</span> <span class="arrow"></span></th>
 <th data-sort="spread" id="spreadHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="DK point spread for this team. Negative = favored, positive = underdog.">Spread</span> <span class="arrow"></span></th>
 <th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
-<th data-sort="fpts25" id="ppg25HeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (Half PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
-<th data-sort="l4ppg" id="l4ppgHeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="l4ppgHeader"><span data-gloss="Average fantasy PPG over the player's last 4 games of 2025. Compared to the full-season '25 PPG it shows which way a player is trending: ▲ = trending up, ▼ = trending down.">L4 PPG</span><span class="hide-on-mobile th-fmt">Half PPR</span></span><span class="arrow"></span></th>
+<th data-sort="fpts25" id="ppg25HeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
+<th data-sort="l4ppg" id="l4ppgHeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="l4ppgHeader"><span data-gloss="Average fantasy PPG over the player's last 4 games of 2025. Compared to the full-season '25 PPG it shows which way a player is trending: ▲ = trending up, ▼ = trending down.">L4 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
 <th data-sort="jm" id="jmHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
 <th data-sort="landing" id="landingHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Landing Spot (0-100) — quality of the NFL fantasy opportunity (depth chart, scheme, target share). Separate from JM (prospect quality).">Land</span> <span class="arrow"></span></th>
@@ -4864,7 +4864,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-27b"></script>
+<script defer src="app.js?v=2026-07-27d"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

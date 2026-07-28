@@ -26,6 +26,9 @@
 #             ADP refresh) -> UnderdogADP.csv (udA) + UnderdogSFADP.csv (sfa)
 #             + rolls data/ud_adp_history.json (30-day feed the extension
 #             fetches to show ADP risers/fallers).
+#   Phase G — Mike Clay projections: re-downloads ESPN's draft-kit PDF from
+#             its stable CDN URL; when the bytes change, re-runs
+#             extract_clay_projections.py -> data/mike_clay_projections.js.
 #
 # ESPN/CBS/Yahoo values are stored as SEQUENTIAL RANK ORDER (1..N by that
 # site's ADP), not raw draft-position decimals — emitted as round.pick so
@@ -113,6 +116,14 @@ UD_MIRROR_MAX_AGE_DAYS = 14   # older snapshot = extension hasn't run; keep old 
 UD_MIN_ROWS = 100
 UD_HISTORY_FILE = os.path.join(ROOT, 'data', 'ud_adp_history.json')
 UD_HISTORY_DAYS = 30
+
+# Mike Clay projections: ESPN republishes the draft-kit PDF at a stable URL
+# as Clay updates it through the summer. We re-download daily, and only when
+# the bytes change re-run extract_clay_projections.py -> mike_clay_projections.js.
+CLAY_PDF_URL = 'https://g.espncdn.com/s/ffldraftkit/26/NFLDK2026_CS_ClayProjections2026.pdf'
+CLAY_PDF = os.path.join(SR_DIR, 'NFLDK2026_CS_ClayProjections2026.pdf')
+CLAY_OUT = os.path.join(ROOT, 'data', 'mike_clay_projections.js')
+CLAY_MIN_ENTRIES = 400
 
 KTC_URL = 'https://keeptradecut.com/dynasty-rankings'
 KTC_MIN_ROWS = 400
@@ -483,6 +494,50 @@ def pull_ktc():
 
 
 # ---------------------------------------------------------------------------
+# Phase G — Mike Clay projections (ESPN draft-kit PDF)
+# ---------------------------------------------------------------------------
+
+def pull_clay():
+    """Returns True if data/mike_clay_projections.js changed (caller bumps ?v=)."""
+    try:
+        r = requests.get(CLAY_PDF_URL, headers=HEADERS, timeout=120)
+        r.raise_for_status()
+        pdf = r.content
+        if pdf[:5] != b'%PDF-' or len(pdf) < 1_000_000:
+            print(f'  !! Clay PDF: response not a plausible PDF ({len(pdf):,} bytes) — skipped')
+            return False
+        old_pdf = open(CLAY_PDF, 'rb').read() if os.path.exists(CLAY_PDF) else b''
+        if pdf == old_pdf:
+            print('  Clay PDF unchanged — extraction skipped')
+            return False
+        open(CLAY_PDF, 'wb').write(pdf)
+        print(f'  downloaded Clay PDF: {len(pdf):,} bytes (was {len(old_pdf):,})')
+
+        before = open(CLAY_OUT, 'rb').read() if os.path.exists(CLAY_OUT) else b''
+        res = subprocess.run([sys.executable, 'extract_clay_projections.py'],
+                             cwd=ROOT, capture_output=True, text=True)
+        for ln in (res.stdout or '').strip().splitlines()[-3:]:
+            print('  ' + ln)
+        if res.returncode != 0:
+            print((res.stderr or '').strip()[-500:])
+            raise RuntimeError(f'extract_clay_projections.py failed (exit {res.returncode})')
+        after = open(CLAY_OUT, 'rb').read()
+        n_entries = after.count(b'pos:"')
+        if n_entries < CLAY_MIN_ENTRIES:
+            print(f'  !! Clay extract: only {n_entries} entries (<{CLAY_MIN_ENTRIES}) — restoring previous file')
+            if before:
+                open(CLAY_OUT, 'wb').write(before)
+            return False
+        changed = after != before
+        print(f'  mike_clay_projections.js: {n_entries} entries '
+              f'({"changed" if changed else "no change"})')
+        return changed
+    except Exception as e:
+        print(f'  !! Clay: {e} — kept old projections')
+        return False
+
+
+# ---------------------------------------------------------------------------
 # Inject + version bump
 # ---------------------------------------------------------------------------
 
@@ -540,11 +595,16 @@ def main():
         bump_version(r'data/_bundle_lookups\.js')
     print('\nPhase F — Underdog ADP (extension mirror):')
     n_ud = pull_underdog_mirror()
+    print('\nPhase G — Mike Clay projections:')
+    clay_changed = pull_clay()
+    if clay_changed:
+        bump_version(r'data/mike_clay_projections\.js')
 
     total = n_fp + n_espn + n_cbs + n_yah + n_ud
     print(f'\nCSV sources refreshed: {total}/9 (FP {n_fp}/4, ESPN {n_espn}/1, '
           f'CBS {n_cbs}/1, Yahoo {n_yah}/1, UD {n_ud}/2) '
-          f'+ KTC {"updated" if ktc_changed else "unchanged/skipped"}')
+          f'+ KTC {"updated" if ktc_changed else "unchanged/skipped"}'
+          f' + Clay {"updated" if clay_changed else "unchanged/skipped"}')
     if total == 0 and not ktc_changed:
         print('Nothing refreshed — aborting before inject.')
         sys.exit(1)

@@ -25,7 +25,7 @@ Write-Log '=== daily consensus ADP pull start ==='
 
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
 # (Site Rankings CSVs are git-excluded local files — these are the tracked targets.)
-$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json')
+$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/mike_clay_projections.js')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -44,7 +44,7 @@ if (-not $changed) {
     Write-Log 'no ADP movement - nothing to commit'
 } else {
     git add @Files
-    git commit -m ('Auto consensus-ADP refresh {0} (FP ECR x4 + ESPN + CBS + Yahoo + KTC)' -f (Get-Date -Format 'yyyy-MM-dd'))
+    git commit -m ('Auto data refresh {0} (consensus ADPs + KTC + UD mirror + Clay)' -f (Get-Date -Format 'yyyy-MM-dd'))
     # Cloud routines (camp news) can land commits mid-morning; rebase so the push fast-forwards.
     git pull --rebase --autostash origin main
     git push origin main

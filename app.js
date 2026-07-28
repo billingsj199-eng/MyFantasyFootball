@@ -6847,6 +6847,7 @@ function openPlayerCard(d, ctxMode) {
 
       </div>
       <div class="card-prospect-view${(d._isDevy || _is2026) ? ' active' : ''}" id="cardProspectView">
+      ${_is2026 ? _campNewsSectionHtml(d) : ''}
       ${(() => {
         const _pmD2 = window._pmBuiltData ? window._pmBuiltData().find(p => p.name === d.n) : null;
         if (!_pmD2 || _pmD2.jm == null) return '';

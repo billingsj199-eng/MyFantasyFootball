@@ -113,6 +113,16 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
     }
+    // shared/ud_adp_latest: latest Underdog ADP snapshot (per-player BBM +
+    // Superflex ADP), mirrored from Jack's session whenever the Draft Helper
+    // extension applies its daily ADP refresh. PUBLIC read (unauthenticated)
+    // so the daily consensus-ADP puller on Jack's PC can fetch it via the
+    // Firestore REST API without credentials — the data is just public
+    // Underdog ADP numbers, nothing sensitive. Write only by Jack.
+    match /shared/ud_adp_latest {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
     // shared_rankings/{shareId}: snapshots of a user's My Rankings, generated
     // by the SHARE button in the rankings toolbar. Anyone with the link can
     // view; only signed-in users can create one (and only owned by themselves);

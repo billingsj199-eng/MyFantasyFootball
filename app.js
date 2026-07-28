@@ -42808,6 +42808,20 @@ Rules:
         console.log('[MFF/site] no auth — ADP snapshot kept in memory only');
         return;
       }
+      // Admin session: also mirror the snapshot to the public shared doc so
+      // the daily consensus-ADP puller (scripts/pull_consensus_adp.py) can
+      // read it keylessly and refresh d.js udA/sfa + the site-hosted ADP
+      // trend feed. Rules restrict writes to Jack's account.
+      try {
+        if ((user.email || '').toLowerCase() === 'billingsj199@gmail.com') {
+          db.collection('shared').doc('ud_adp_latest').set({
+            date: today,
+            capturedAt: snapshot.capturedAt || Date.now(),
+            adps: adpMap
+          }).then(() => console.log('[MFF/site] ADP snapshot mirrored to shared/ud_adp_latest'))
+            .catch(e => console.warn('[MFF/site] shared ADP mirror error:', e));
+        }
+      } catch (e) { console.warn('[MFF/site] shared ADP mirror threw:', e); }
       const docRef = db.collection('user_game_data').doc(user.uid);
       docRef.get().then(doc => {
         const existing = doc.exists ? (doc.data().adpHistory || []) : [];

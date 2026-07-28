@@ -25,7 +25,7 @@ Write-Log '=== daily consensus ADP pull start ==='
 
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
 # (Site Rankings CSVs are git-excluded local files — these are the tracked targets.)
-$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js')
+$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"

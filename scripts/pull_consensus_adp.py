@@ -20,15 +20,22 @@
 #             in keeptradecut.com/dynasty-rankings -> spliced straight into
 #             data/_bundle_lookups.js + data/ktc_rankings.js (KTC_1QB/KTC_SF),
 #             replacing the manual League-Analyzer-XLSX + build_ktc.py flow.
+#   Phase F — Underdog ADP (BBM + Superflex) from the shared/ud_adp_latest
+#             Firestore mirror doc (public read; written by Jack's site
+#             session whenever the Draft Helper extension applies its daily
+#             ADP refresh) -> UnderdogADP.csv (udA) + UnderdogSFADP.csv (sfa)
+#             + rolls data/ud_adp_history.json (30-day feed the extension
+#             fetches to show ADP risers/fallers).
 #
 # ESPN/CBS/Yahoo values are stored as SEQUENTIAL RANK ORDER (1..N by that
 # site's ADP), not raw draft-position decimals — emitted as round.pick so
 # inject_rankings.py's parse_pickadp reproduces the rank as an int.
 #
-# Sleeper (Sleeper*.csv) and Underdog (UnderdogADP.csv) have NO public
-# endpoint — those files are left untouched and re-injected as-is, so the
-# manual refresh cadence for them still works (live Underdog ADP already
-# reaches the site via the extension's daily Firestore snapshots anyway).
+# Sleeper (Sleeper*.csv) has NO public endpoint — those files are left
+# untouched and re-injected as-is, so the manual refresh cadence still works.
+# Underdog needs a logged-in session, but Phase F closes that loop via the
+# extension: Jack's browser captures live UD ADP, the site mirrors it to a
+# public Firestore doc, and this script folds it back into d.js.
 #
 # CSVs are written in the exact formats inject_rankings.py already parses,
 # then inject_rankings.py is run to rewrite data/d.js, and the d.js ?v= tag
@@ -94,6 +101,18 @@ YAHOO_URL = ('https://pub-api-ro.fantasysports.yahoo.com/fantasy/v2/league/'
              '470.l.public/players;position=ALL;start=0;count=400;'
              'sort=average_pick/draft_analysis?format=json_f')
 YAHOO_MIN_ROWS = 150
+
+# Underdog ADP mirror: shared/ud_adp_latest is written by Jack's site session
+# whenever the Draft Helper extension applies its daily ADP refresh (see
+# _mffSetAdpSnapshot in app.js). Public-read per firestore.rules, so this
+# fetch needs no credentials — the ?key= is the public web API key.
+UD_MIRROR_URL = ('https://firestore.googleapis.com/v1/projects/jackb933-website/'
+                 'databases/(default)/documents/shared/ud_adp_latest'
+                 '?key=AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY')
+UD_MIRROR_MAX_AGE_DAYS = 14   # older snapshot = extension hasn't run; keep old CSVs
+UD_MIN_ROWS = 100
+UD_HISTORY_FILE = os.path.join(ROOT, 'data', 'ud_adp_history.json')
+UD_HISTORY_DAYS = 30
 
 KTC_URL = 'https://keeptradecut.com/dynasty-rankings'
 KTC_MIN_ROWS = 400
@@ -287,6 +306,96 @@ def pull_yahoo():
 
 
 # ---------------------------------------------------------------------------
+# Phase F — Underdog ADP from the extension's Firestore mirror
+# ---------------------------------------------------------------------------
+
+def _fs_val(f):
+    """Unwrap a Firestore REST field value."""
+    if 'doubleValue' in f:
+        return float(f['doubleValue'])
+    if 'integerValue' in f:
+        return int(f['integerValue'])
+    if 'stringValue' in f:
+        return f['stringValue']
+    if 'mapValue' in f:
+        return {k: _fs_val(v) for k, v in (f['mapValue'].get('fields') or {}).items()}
+    return None
+
+
+def pull_underdog_mirror():
+    """Read shared/ud_adp_latest, regenerate UnderdogADP.csv (udA/BBM) +
+    UnderdogSFADP.csv (sfa/Superflex) and roll data/ud_adp_history.json
+    (the site-hosted feed the Draft Helper extension reads for ADP-movement
+    arrows). Returns number of CSVs refreshed (0-2)."""
+    try:
+        r = requests.get(UD_MIRROR_URL, headers=HEADERS, timeout=30)
+        if r.status_code == 404:
+            print('  !! UD mirror doc not found yet — open an Underdog tab with the '
+                  'extension (as Jack) once so the site can mirror a snapshot. Kept old CSVs.')
+            return 0
+        r.raise_for_status()
+        fields = r.json().get('fields') or {}
+        snap_date = _fs_val(fields.get('date', {})) or ''
+        adps = _fs_val(fields.get('adps', {})) or {}
+        if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', snap_date) or not adps:
+            print(f'  !! UD mirror: malformed doc (date={snap_date!r}, {len(adps)} players) — kept old CSVs')
+            return 0
+        age = (datetime.date.today() - datetime.date.fromisoformat(snap_date)).days
+        if age > UD_MIRROR_MAX_AGE_DAYS:
+            print(f'  !! UD mirror: snapshot is {age} days old ({snap_date}) — kept old CSVs')
+            return 0
+
+        bbm, sf = [], []
+        for name, ent in adps.items():
+            if not isinstance(ent, dict) or not name.strip():
+                continue
+            b, s = ent.get('bbm'), ent.get('sf')
+            if isinstance(b, (int, float)) and 0 < b < 300:
+                bbm.append((float(b), name))
+            if isinstance(s, (int, float)) and 0 < s < 300:
+                sf.append((float(s), name))
+        print(f'  UD mirror {snap_date} (age {age}d): {len(bbm)} BBM / {len(sf)} SF ADPs')
+
+        def emit(fname, entries):
+            if len(entries) < UD_MIN_ROWS:
+                print(f'  !! {fname}: only {len(entries)} rows (<{UD_MIN_ROWS}) — kept old file')
+                return 0
+            entries.sort(key=lambda x: x[0])
+            rows = []
+            for adp, name in entries:
+                parts = name.split(' ', 1)
+                first, last = parts[0], (parts[1] if len(parts) > 1 else '')
+                rows.append(['', first, last, adp, '', '', '', '', '', ''])
+            write_csv(fname,
+                      '"id","firstName","lastName","adp","projectedPoints","positionRank",'
+                      '"slotName","teamName","lineupStatus","byeWeek"', rows)
+            return 1
+
+        n = emit('UnderdogADP.csv', bbm) + emit('UnderdogSFADP.csv', sf)
+
+        # Roll the site-hosted history feed (extension reads this for ▲▼).
+        hist = {'updated': '', 'days': []}
+        if os.path.exists(UD_HISTORY_FILE):
+            try:
+                hist = json.load(open(UD_HISTORY_FILE, encoding='utf-8'))
+            except Exception:
+                pass
+        days = [d for d in hist.get('days', []) if d.get('date') != snap_date]
+        days.append({'date': snap_date, 'adps': adps})
+        days.sort(key=lambda d: d.get('date', ''))
+        hist = {'updated': datetime.datetime.now(datetime.timezone.utc)
+                           .strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'days': days[-UD_HISTORY_DAYS:]}
+        with open(UD_HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(hist, f, separators=(',', ':'))
+        print(f'  ud_adp_history.json: {len(hist["days"])} day(s) through {snap_date}')
+        return n
+    except Exception as e:
+        print(f'  !! UD mirror: {e} — kept old CSVs')
+        return 0
+
+
+# ---------------------------------------------------------------------------
 # Phase E — KeepTradeCut dynasty values -> _bundle_lookups.js + ktc_rankings.js
 # ---------------------------------------------------------------------------
 
@@ -429,10 +538,13 @@ def main():
     ktc_changed = pull_ktc()
     if ktc_changed:
         bump_version(r'data/_bundle_lookups\.js')
+    print('\nPhase F — Underdog ADP (extension mirror):')
+    n_ud = pull_underdog_mirror()
 
-    total = n_fp + n_espn + n_cbs + n_yah
-    print(f'\nCSV sources refreshed: {total}/7 (FP {n_fp}/4, ESPN {n_espn}/1, '
-          f'CBS {n_cbs}/1, Yahoo {n_yah}/1) + KTC {"updated" if ktc_changed else "unchanged/skipped"}')
+    total = n_fp + n_espn + n_cbs + n_yah + n_ud
+    print(f'\nCSV sources refreshed: {total}/9 (FP {n_fp}/4, ESPN {n_espn}/1, '
+          f'CBS {n_cbs}/1, Yahoo {n_yah}/1, UD {n_ud}/2) '
+          f'+ KTC {"updated" if ktc_changed else "unchanged/skipped"}')
     if total == 0 and not ktc_changed:
         print('Nothing refreshed — aborting before inject.')
         sys.exit(1)

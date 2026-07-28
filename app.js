@@ -6000,8 +6000,11 @@ function _campNewsSectionHtml(d) {
   if (!items.length) return '';
   // Name collisions (two players sharing a normalized name): trust the item's
   // team when it has one — drop wrong-team items, keep team-less ones.
+  // d.t is the FULL team name ("Kansas City Chiefs") while feed items carry
+  // standard abbreviations ("KC"), so convert before comparing.
   if (items.some(it => it.team)) {
-    const tm = items.filter(it => !it.team || it.team === d.t);
+    const dAbbr = (typeof teamAbbr === 'function') ? teamAbbr(d.t) : d.t;
+    const tm = items.filter(it => !it.team || it.team === dAbbr);
     if (tm.length !== items.length && tm.length) items = tm;
   }
   const cutoff = Date.now() - 14 * 24 * 3600 * 1000;

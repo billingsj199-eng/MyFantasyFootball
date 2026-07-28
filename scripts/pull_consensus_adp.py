@@ -13,6 +13,17 @@
 #             -> ESPN1QB.csv
 #   Phase C — CBS redraft ADP from the public draft-averages page
 #             -> CBS1QB.csv
+#   Phase D — Yahoo redraft ADP from the public pub-api-ro fantasy API
+#             (the endpoint behind football.fantasysports.yahoo.com/f1/
+#             draftanalysis; works keyless) -> Yahoo1QB.csv
+#   Phase E — KeepTradeCut dynasty values from the playersArray JSON embedded
+#             in keeptradecut.com/dynasty-rankings -> spliced straight into
+#             data/_bundle_lookups.js + data/ktc_rankings.js (KTC_1QB/KTC_SF),
+#             replacing the manual League-Analyzer-XLSX + build_ktc.py flow.
+#
+# ESPN/CBS/Yahoo values are stored as SEQUENTIAL RANK ORDER (1..N by that
+# site's ADP), not raw draft-position decimals — emitted as round.pick so
+# inject_rankings.py's parse_pickadp reproduces the rank as an int.
 #
 # Sleeper (Sleeper*.csv) and Underdog (UnderdogADP.csv) have NO public
 # endpoint — those files are left untouched and re-injected as-is, so the
@@ -75,6 +86,24 @@ CBS_URLS = [
     'https://www.cbssports.com/fantasy/football/draft/averages/both/h2h/all/',
 ]
 CBS_MIN_ROWS = 100
+
+# Yahoo public fantasy API (no auth/cookies/crumb needed) — same data as the
+# f1/draftanalysis page. 470 = 2026 NFL game key; bump yearly. average_pick is
+# "-" for undrafted players, which caps the ranked pool around ~300.
+YAHOO_URL = ('https://pub-api-ro.fantasysports.yahoo.com/fantasy/v2/league/'
+             '470.l.public/players;position=ALL;start=0;count=400;'
+             'sort=average_pick/draft_analysis?format=json_f')
+YAHOO_MIN_ROWS = 150
+
+KTC_URL = 'https://keeptradecut.com/dynasty-rankings'
+KTC_MIN_ROWS = 400
+KTC_BUNDLE = os.path.join(ROOT, 'data', '_bundle_lookups.js')
+KTC_ORPHAN = os.path.join(ROOT, 'data', 'ktc_rankings.js')
+# KTC display name -> d.js canonical name, for cases inject_rankings.py's
+# norm_name/OVERRIDES can't bridge (kept from scripts/refresh_ktc.py).
+KTC_ALIASES = {
+    'Jamarion Miller': 'Jam Miller',
+}
 
 VALID_POS = {'QB', 'RB', 'WR', 'TE'}
 
@@ -220,6 +249,131 @@ def pull_cbs():
 
 
 # ---------------------------------------------------------------------------
+# Phase D — Yahoo ADP (public pub-api-ro fantasy API)
+# ---------------------------------------------------------------------------
+
+def pull_yahoo():
+    try:
+        r = requests.get(YAHOO_URL, headers=HEADERS, timeout=30)
+        r.raise_for_status()
+        players = r.json()['fantasy_content']['league'].get('players', [])
+        entries = []
+        for item in players:
+            pl = item.get('player') or {}
+            name = ((pl.get('name') or {}).get('full') or '').strip()
+            pos = pl.get('primary_position') or pl.get('display_position') or ''
+            da = (pl.get('draft_analysis') or {}).get('average_pick')
+            if pos not in VALID_POS or not name:
+                continue
+            try:
+                adp = float(da)
+            except (TypeError, ValueError):
+                continue  # "-" = undrafted
+            team = (pl.get('editorial_team_abbr') or '').upper()
+            entries.append((adp, name, team, pos))
+        entries.sort(key=lambda x: x[0])
+        if len(entries) < YAHOO_MIN_ROWS:
+            print(f'  !! Yahoo1QB.csv: only {len(entries)} rows (<{YAHOO_MIN_ROWS}) — kept old file')
+            return 0
+        rows = [[name, team, pos, overall_to_round_pick(i + 1), '0']
+                for i, (_, name, team, pos) in enumerate(entries)]
+        write_csv('Yahoo1QB.csv',
+                  '"Player Name", "Player Team", "Player Position", Yahoo: Redraft 1 STD ADP, "Market Index 1",',
+                  rows)
+        return 1
+    except Exception as e:
+        print(f'  !! Yahoo1QB.csv: {e} — kept old file')
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# Phase E — KeepTradeCut dynasty values -> _bundle_lookups.js + ktc_rankings.js
+# ---------------------------------------------------------------------------
+
+def _ktc_js_literal(varname, m):
+    body = ','.join(f'{json.dumps(k, ensure_ascii=False)}:{int(v)}' for k, v in m.items())
+    return f'var {varname}={{{body}}};'
+
+
+def _ktc_splice(path, varname, literal):
+    src = open(path, encoding='utf-8').read()
+    pat = re.compile(r'var ' + varname + r'=\{.*?\};', re.S)
+    if not pat.search(src):
+        raise RuntimeError(f'{varname} definition not found in {path}')
+    open(path, 'w', encoding='utf-8').write(pat.sub(lambda _: literal, src, count=1))
+
+
+def pull_ktc():
+    """Returns True if the bundle changed (caller bumps its ?v=)."""
+    try:
+        # inject_rankings' name normalization lives at repo root.
+        sys.path.insert(0, ROOT)
+        from inject_rankings import norm_name, final_key
+
+        r = requests.get(KTC_URL, headers={**HEADERS, 'Accept': 'text/html,application/xhtml+xml'},
+                         timeout=30)
+        r.raise_for_status()
+        m = re.search(r'var\s+playersArray\s*=\s*(\[.*?\])\s*;', r.text, re.DOTALL)
+        if not m:
+            print('  !! KTC: playersArray not found — template changed? Kept old maps.')
+            return False
+        arr = json.loads(m.group(1))
+        if len(arr) < KTC_MIN_ROWS:
+            print(f'  !! KTC: only {len(arr)} players (<{KTC_MIN_ROWS}) — kept old maps')
+            return False
+
+        # d.js name index so KTC keys land under d.js-canonical names.
+        dsrc = open(os.path.join(ROOT, 'data', 'd.js'), encoding='utf-8').read()
+        dnames = re.findall(r'"n":"([^"]+)"', dsrc)
+        exact = set(dnames)
+        norm_idx = {}
+        for n in dnames:
+            norm_idx.setdefault(norm_name(n), n)
+
+        def resolve(raw):
+            raw = KTC_ALIASES.get(raw, raw)
+            if raw in exact:
+                return raw
+            k = final_key(raw)
+            return norm_idx.get(k, raw)  # picks / deep dynasty keep KTC name
+
+        one_qb, sf = {}, {}
+        for p in arr:
+            name = p.get('playerName') or ''
+            if not name:
+                continue
+            key = resolve(name)
+            oqb = (p.get('oneQBValues') or {}).get('value')
+            sfv = (p.get('superflexValues') or {}).get('value')
+            if oqb is not None and key not in one_qb:
+                one_qb[key] = oqb
+            if sfv is not None and key not in sf:
+                sf[key] = sfv
+        one_qb = dict(sorted(one_qb.items(), key=lambda kv: -kv[1]))
+        sf = dict(sorted(sf.items(), key=lambda kv: -kv[1]))
+        covered = len([n for n in one_qb if n in exact])
+        print(f'  KTC_1QB: {len(one_qb)} entries, KTC_SF: {len(sf)} '
+              f'(d.js players covered: {covered})')
+        if covered < 200:
+            print('  !! KTC: d.js coverage suspiciously low — kept old maps')
+            return False
+
+        before = open(KTC_BUNDLE, 'rb').read()
+        lit1 = _ktc_js_literal('KTC_1QB', one_qb)
+        litsf = _ktc_js_literal('KTC_SF', sf)
+        for path in (KTC_BUNDLE, KTC_ORPHAN):
+            _ktc_splice(path, 'KTC_1QB', lit1)
+            _ktc_splice(path, 'KTC_SF', litsf)
+        changed = open(KTC_BUNDLE, 'rb').read() != before
+        print(f'  spliced KTC maps into _bundle_lookups.js + ktc_rankings.js'
+              f' ({"changed" if changed else "no change"})')
+        return changed
+    except Exception as e:
+        print(f'  !! KTC: {e} — kept old maps')
+        return False
+
+
+# ---------------------------------------------------------------------------
 # Inject + version bump
 # ---------------------------------------------------------------------------
 
@@ -238,12 +392,12 @@ def run_inject():
     return open(d_path, 'rb').read() != before
 
 
-def bump_version():
+def bump_version(fname=r'data/d\.js'):
     html = open(INDEX_FILE, encoding='utf-8').read()
-    pat = r'(data/d\.js\?v=)([\w.-]+)'
+    pat = r'(' + fname + r'\?v=)([\w.-]+)'
     m = re.search(pat, html)
     if not m:
-        print('  !! d.js script tag not found in index.html — bump ?v= manually')
+        print(f'  !! {fname} script tag not found in index.html — bump ?v= manually')
         return
     old = m.group(2)
     if old.startswith(TODAY):
@@ -253,7 +407,7 @@ def bump_version():
         new = TODAY
     html = re.sub(pat, r'\g<1>' + new, html)
     open(INDEX_FILE, 'w', encoding='utf-8').write(html)
-    print(f'  index.html: d.js ?v={old} -> ?v={new}')
+    print(f'  index.html: {fname} ?v={old} -> ?v={new}')
 
 
 def main():
@@ -269,14 +423,21 @@ def main():
     n_espn = pull_espn()
     print('\nPhase C — CBS ADP:')
     n_cbs = pull_cbs()
+    print('\nPhase D — Yahoo ADP:')
+    n_yah = pull_yahoo()
+    print('\nPhase E — KeepTradeCut dynasty values:')
+    ktc_changed = pull_ktc()
+    if ktc_changed:
+        bump_version(r'data/_bundle_lookups\.js')
 
-    total = n_fp + n_espn + n_cbs
-    print(f'\nSources refreshed: {total}/6 (FP {n_fp}/4, ESPN {n_espn}/1, CBS {n_cbs}/1)')
-    if total == 0:
+    total = n_fp + n_espn + n_cbs + n_yah
+    print(f'\nCSV sources refreshed: {total}/7 (FP {n_fp}/4, ESPN {n_espn}/1, '
+          f'CBS {n_cbs}/1, Yahoo {n_yah}/1) + KTC {"updated" if ktc_changed else "unchanged/skipped"}')
+    if total == 0 and not ktc_changed:
         print('Nothing refreshed — aborting before inject.')
         sys.exit(1)
 
-    if not args.no_inject:
+    if not args.no_inject and total > 0:
         if run_inject():
             bump_version()
         else:

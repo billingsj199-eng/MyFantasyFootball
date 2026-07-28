@@ -608,15 +608,17 @@ function _computeConsensusBoard(mode) {
     }
   }
 
-  // ESPN + CBS overall ranks (1QB redraft pick numbers, injected via d.js).
-  // Only fold into the consensus for redraft/best ball — they don't publish
-  // superflex/dynasty boards.
+  // ESPN + CBS + Yahoo overall ranks (1QB redraft pick numbers, injected via
+  // d.js). Only fold into the consensus for redraft/best ball — they don't
+  // publish superflex/dynasty boards.
   const eRank = {};
   const cRank = {};
+  const yRank = {};
   if (mode === 'redraft' || mode === 'bestball') {
     for (let i = 0; i < D.length; i++) {
       if (D[i].espnAdp != null) eRank[i] = D[i].espnAdp;
       if (D[i].cbsAdp != null) cRank[i] = D[i].cbsAdp;
+      if (D[i].yahooAdp != null) yRank[i] = D[i].yahooAdp;
     }
   }
 
@@ -665,6 +667,7 @@ function _computeConsensusBoard(mode) {
     if (kRank[i]) ranks.push(kRank[i]);
     if (eRank[i]) ranks.push(eRank[i]);
     if (cRank[i]) ranks.push(cRank[i]);
+    if (yRank[i]) ranks.push(yRank[i]);
     if (ranks.length === 0) {
       // No source data — use defaultBoard fallback position so they still appear
       scored.push({ idx: i, avg: 9999, sources: 0 });
@@ -1521,10 +1524,11 @@ function rnkAdp(d) {
     if (base != null && base < 900) vals.push(base);
     const sl = _sleeperRank(d);
     if (sl != null) vals.push(sl);
-    // ESPN + CBS overall ranks (1QB redraft) — only meaningful in redraft/best ball.
+    // ESPN + CBS + Yahoo overall ranks (1QB redraft) — only meaningful in redraft/best ball.
     if (currentMode === 'redraft' || currentMode === 'bestball') {
       if (d.espnAdp != null) vals.push(d.espnAdp);
       if (d.cbsAdp != null) vals.push(d.cbsAdp);
+      if (d.yahooAdp != null) vals.push(d.yahooAdp);
     }
     if (vals.length === 0) return null;
     return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
@@ -1540,8 +1544,7 @@ function rnkAdp(d) {
   }
   if (rnkAdpSrc === 'espn') return d.espnAdp != null ? d.espnAdp : null;
   if (rnkAdpSrc === 'cbs') return d.cbsAdp != null ? d.cbsAdp : null;
-  // Future sources
-  // if (rnkAdpSrc === 'yahoo') return d.yahooAdp || null;
+  if (rnkAdpSrc === 'yahoo') return d.yahooAdp != null ? d.yahooAdp : null;
   return modeAdp(d);
 }
 
@@ -1554,6 +1557,7 @@ function _adpBySource(d, src) {
   if (src === 'sleeper') return _sleeperRank(d);
   if (src === 'espn') return d.espnAdp != null ? d.espnAdp : null;
   if (src === 'cbs') return d.cbsAdp != null ? d.cbsAdp : null;
+  if (src === 'yahoo') return d.yahooAdp != null ? d.yahooAdp : null;
   return null;
 }
 
@@ -4575,8 +4579,8 @@ function updateRnkAdpForMode() {
       tab.style.display = (src === 'sleeper' || src === 'ktc') ? '' : 'none';
     } else {
       if (src === 'consensus') { tab.style.display = ''; return; }
-      // ESPN & CBS publish 1QB redraft boards only — show in redraft, hide in superflex.
-      if (src === 'espn' || src === 'cbs') { tab.style.display = currentMode === 'redraft' ? '' : 'none'; return; }
+      // ESPN, CBS & Yahoo publish 1QB redraft boards only — show in redraft, hide in superflex.
+      if (src === 'espn' || src === 'cbs' || src === 'yahoo') { tab.style.display = currentMode === 'redraft' ? '' : 'none'; return; }
       // In non-dynasty/non-bestball modes: hide KTC (dynasty-only). DK is allowed.
       tab.style.display = src === 'ktc' ? 'none' : '';
     }
@@ -6788,13 +6792,12 @@ function openPlayerCard(d, ctxMode) {
           </div>
         </div>`;
         }
-        // Redraft / Best Ball / Superflex — ESPN & CBS are wired from d.js
-        // (espnAdp / cbsAdp = overall pick number, 1QB redraft, injected by
-        // inject_rankings.py). Yahoo stays a placeholder until its data ships:
-        // populate d.yahooAdp and swap the null below.
+        // Redraft / Best Ball / Superflex — ESPN, CBS & Yahoo are wired from
+        // d.js (espnAdp / cbsAdp / yahooAdp = that site's rank order, 1QB
+        // redraft, injected by inject_rankings.py).
         const _espnAdp = d.espnAdp != null ? d.espnAdp : null;
         const _cbsAdp  = d.cbsAdp  != null ? d.cbsAdp  : null;
-        const _yahAdp = null;
+        const _yahAdp = d.yahooAdp != null ? d.yahooAdp : null;
         return `<div class="card-section">
         <div class="card-section-title">ADP Comparison <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
         <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">
@@ -22145,11 +22148,12 @@ window.fmtHeight = fmtHeight;
   });
 
   // ADP source tabs (Consensus / Underdog / ESPN / CBS / Sleeper / Yahoo / KTC)
-  // Underdog requires premium; Yahoo is locked until data is added.
-  // ESPN + CBS unlocked v0.10.4 — espnAdp/cbsAdp (overall pick number, 1QB
-  // redraft, injected by inject_rankings.py) already back the rankings ADP
-  // compare view, so the mock board reads the same fields.
-  const _ADP_ENABLED = { consensus: true, underdog: true, espn: true, cbs: true, sleeper: true, yahoo: false, ktc: true };
+  // Underdog requires premium.
+  // ESPN + CBS unlocked v0.10.4, Yahoo unlocked 2026-07-28 — espnAdp/cbsAdp/
+  // yahooAdp (rank order, 1QB redraft, injected by inject_rankings.py)
+  // already back the rankings ADP compare view, so the mock board reads the
+  // same fields.
+  const _ADP_ENABLED = { consensus: true, underdog: true, espn: true, cbs: true, sleeper: true, yahoo: true, ktc: true };
   const adpSrcTabs = document.querySelectorAll('#mdAdpSrcTabs .md-rank-src-tab');
   const adpPremiumHint = document.getElementById('mdAdpPremiumHint');
   const _adpHintDefault = adpPremiumHint.innerHTML;
@@ -22316,14 +22320,14 @@ window.fmtHeight = fmtHeight;
         // Use the consensus board rank directly as the pick order.
         const r = consensusRankByIdx[i];
         adp = r != null ? r : 999;
-      } else if (mdAdpSrc === 'espn' || mdAdpSrc === 'cbs') {
-        // ESPN / CBS overall-pick ADP (1QB redraft — neither publishes a
+      } else if (mdAdpSrc === 'espn' || mdAdpSrc === 'cbs' || mdAdpSrc === 'yahoo') {
+        // ESPN / CBS / Yahoo rank-order ADP (1QB redraft — none publishes a
         // superflex variant, so the same board serves SF lineups, which is
-        // what a real ESPN/CBS room drafts off anyway). Players outside the
-        // source's ranked pool (~230 ESPN / ~190 CBS) sort after every
-        // ranked player, ordered among themselves by consensus market ADP —
-        // NOT interleaved by d.a, which is a different scale.
-        const v = mdAdpSrc === 'espn' ? d.espnAdp : d.cbsAdp;
+        // what a real ESPN/CBS/Yahoo room drafts off anyway). Players outside
+        // the source's ranked pool sort after every ranked player, ordered
+        // among themselves by consensus market ADP — NOT interleaved by d.a,
+        // which is a different scale.
+        const v = mdAdpSrc === 'espn' ? d.espnAdp : mdAdpSrc === 'cbs' ? d.cbsAdp : d.yahooAdp;
         adp = v != null ? v : 500 + Math.min(d.a || 400, 399);
       } else {
         adp = d.a || 999;

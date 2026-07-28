@@ -224,6 +224,10 @@ def pull_cbs():
 # ---------------------------------------------------------------------------
 
 def run_inject():
+    """Run inject_rankings.py; return True if data/d.js actually changed
+    (a quiet morning re-injects identical values -> no bump, no commit)."""
+    d_path = os.path.join(ROOT, 'data', 'd.js')
+    before = open(d_path, 'rb').read()
     print('\nRunning inject_rankings.py ...')
     res = subprocess.run([sys.executable, 'inject_rankings.py'],
                          cwd=ROOT, capture_output=True, text=True)
@@ -231,6 +235,7 @@ def run_inject():
     if res.returncode != 0:
         print(res.stderr)
         raise RuntimeError(f'inject_rankings.py failed (exit {res.returncode})')
+    return open(d_path, 'rb').read() != before
 
 
 def bump_version():
@@ -272,8 +277,10 @@ def main():
         sys.exit(1)
 
     if not args.no_inject:
-        run_inject()
-        bump_version()
+        if run_inject():
+            bump_version()
+        else:
+            print('d.js unchanged — skipping ?v= bump.')
     print('\nDone.')
 
 

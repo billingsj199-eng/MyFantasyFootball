@@ -23,7 +23,8 @@ Set-Location $Repo
 Write-Log '=== daily consensus ADP pull start ==='
 
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
-$Files = @('data/d.js', 'index.html', 'Site Rankings')
+# (Site Rankings CSVs are git-excluded local files — only d.js/index.html are tracked.)
+$Files = @('data/d.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -43,6 +44,8 @@ if (-not $changed) {
 } else {
     git add @Files
     git commit -m ('Auto consensus-ADP refresh {0} (FP ECR x4 + ESPN + CBS)' -f (Get-Date -Format 'yyyy-MM-dd'))
+    # Cloud routines (camp news) can land commits mid-morning; rebase so the push fast-forwards.
+    git pull --rebase --autostash origin main
     git push origin main
     if ($LASTEXITCODE -eq 0) { Write-Log 'pushed updated ADPs' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }

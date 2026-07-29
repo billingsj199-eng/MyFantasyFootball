@@ -2402,14 +2402,13 @@ function render() {
 
   // Premium blur:
   //   Jack's: non-premium blur after top 36 (ALL) or top 12 (position/rookie)
-  //   My Rankings: not signed in = blur everything (can't edit at all); signed in non-premium = top 12 editable, rest blurred
+  //   My Rankings: not signed in = blur everything (can't edit at all); signed in non-premium = top 36 (ALL) / top 12 (position/rookie) editable, rest blurred
   const isPremium = hasPremium();
   const isJacks = currentVersion === 'jacks';
   const isMine = currentVersion === 'mine';
   const isConsensus = currentVersion === 'consensus';
   const isSignedOut = !window._authCurrentUser;
   const blurCutoff = (isMine && isSignedOut) ? 0
-                   : (isMine && !isPremium) ? 12
                    : (filter === 'ALL') ? 36
                    : 12;
   const shouldBlur = !isConsensus && (
@@ -2624,7 +2623,7 @@ function render() {
       if (isMine && !_isSignedIn) {
         html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else if (isMine && !isPremium) {
-        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in each filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in this filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       } else if (!_isSignedIn) {
         html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Create a free account, then upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else {
@@ -2969,7 +2968,7 @@ function attachTierListeners() {
     // Block drag on blurred rows (non-premium users past the top cutoff)
     if (row.classList.contains('premium-blur')) {
       if (currentVersion === 'mine' && window._authCurrentUser) {
-        toast('Upgrade to PRO to rank beyond the top 12');
+        toast('Upgrade to PRO to rank beyond the top ' + (filter === 'ALL' ? 36 : 12));
       } else if (currentVersion === 'mine') {
         toast('Sign in to create your rankings');
         if (typeof window.openAuthModal === 'function') window.openAuthModal();
@@ -3037,7 +3036,7 @@ function attachTierListeners() {
     // Block drops onto blurred rows — prevents non-premium users from swapping a top-12 player past the cutoff
     if (target && target.classList && target.classList.contains('premium-blur')) {
       if (currentVersion === 'mine' && window._authCurrentUser) {
-        toast('Upgrade to PRO to rank beyond the top 12');
+        toast('Upgrade to PRO to rank beyond the top ' + (filter === 'ALL' ? 36 : 12));
       }
       target = null;
     }
@@ -4700,8 +4699,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
 // UNDERDOG_IDS moved to data/underdog_ids.js
 
 // Compute how many rows the current user is allowed to export based on premium gate.
-// Non-premium Jack's: 36 for ALL, 12 for positions/rookie.
-// Non-premium My Rankings: 12 across all filters.
+// Non-premium Jack's AND My Rankings: 36 for ALL, 12 for positions/rookie.
 // Premium: unlimited.
 function _exportCutoff() {
   const _isPrem = typeof hasPremium === 'function' && hasPremium();
@@ -4709,8 +4707,6 @@ function _exportCutoff() {
   if (currentVersion === 'consensus') return Infinity;
   // Not signed in on My Rankings should get 0, but canEdit gate already prevents that flow; still safe to return 0.
   if (currentVersion === 'mine' && !window._authCurrentUser) return 0;
-  if (currentVersion === 'mine') return 12;
-  // Jack's rankings non-premium
   return (filter === 'ALL') ? 36 : 12;
 }
 

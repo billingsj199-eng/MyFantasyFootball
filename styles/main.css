@@ -853,9 +853,11 @@ tbody tr.cmp-selected{background:rgba(245,158,11,.06)}
 .compare-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
 .compare-title{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;color:var(--accent)}
 .compare-grid{display:flex;gap:1rem;overflow-x:auto;padding-bottom:1rem}
-.compare-col{background:var(--surface);border:1px solid var(--border);border-radius:8px;min-width:320px;max-width:380px;flex-shrink:0;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.compare-col{background:var(--surface);border:1px solid var(--border);border-radius:8px;min-width:380px;max-width:460px;flex-shrink:0;box-shadow:0 12px 40px rgba(0,0,0,.4)}
 .compare-col .card-header{padding:1rem 1.25rem .75rem}
-.compare-col .card-name{font-size:1.65rem}
+.compare-col .card-name{font-size:1.8rem}
+.compare-col .card-snap-btn{position:absolute;top:.75rem;right:3.4rem;float:none}
+.compare-col:hover .card-snap-btn{opacity:1}
 .cmp-stats-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:6px}
 .cmp-stats-desc{font-size:.66rem;color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1.2px}
 .cmp-fullstats .career-table{font-size:clamp(.72rem,.55rem + .45vw,.95rem)}

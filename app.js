@@ -8355,116 +8355,11 @@ function renderCompareGrid() {
     return;
   }
 
-  // Visual stat-bar summary above the cards. With 2+ players, shows side-by-side.
-  // With exactly 1 player, synthesizes a "position median" benchmark row so the
-  // single-player case still produces a useful view. Pulls from D-entry fields:
-  // a (ADP), p (season proj total), p25 (last yr PPG), age, _pmJm (JM Score).
-  // Lower-is-better for ADP and Age.
-  let _cmpSummaryHtml = '';
-  // If exactly one player and they're a current (non-retired) skill-position player,
-  // build a synthetic "Position Median" pseudo-player from the top 36 at that position.
-  let _cmpComparePlayers = allPlayers.slice();
-  let _cmpHeaderNames = allPlayers.map(d => (d && d.n) ? d.n : '—');
-  if (allPlayers.length === 1) {
-    const lone = allPlayers[0];
-    if (lone && lone.s && ['QB','RB','WR','TE'].indexOf(lone.s) >= 0 && !lone._retired) {
-      const peers = (Array.isArray(D) ? D : [])
-        .filter(p => p && p.s === lone.s && !p._retired && p.myRank && p.idx !== lone.idx)
-        .sort((a, b) => a.myRank - b.myRank)
-        .slice(0, 36);
-      const median = arr => {
-        const sorted = arr.filter(v => typeof v === 'number' && isFinite(v)).sort((a, b) => a - b);
-        if (!sorted.length) return null;
-        const m = Math.floor(sorted.length / 2);
-        return sorted.length % 2 ? sorted[m] : (sorted[m - 1] + sorted[m]) / 2;
-      };
-      const synth = {
-        n: lone.s + ' Median',
-        s: lone.s,
-        a: median(peers.map(p => p.a)),
-        p: median(peers.map(p => p.p)),
-        p25: median(peers.map(p => p.p25)),
-        p24: median(peers.map(p => p.p24)),
-        age: median(peers.map(p => p.age)),
-        _pmJm: median(peers.map(p => p._pmJm)),
-        // Precompute the median of the Clay-based adjusted Proj PPG so the summary
-        // bar (which now uses adjProjPpg, matching the cards + rankings table) still
-        // has a value for the synthetic median pseudo-player (it has no Clay entry).
-        _projPpgMedian: median(peers.map(p => adjProjPpg(p))),
-        _isMedian: true
-      };
-      _cmpComparePlayers = [lone, synth];
-      _cmpHeaderNames = [lone.n, 'Top-36 ' + lone.s + ' Median'];
-    }
-  }
-  if (_cmpComparePlayers.length >= 2) {
-    const stats = [
-      { key: 'projPpg', label: 'Proj PPG',   lowerBetter: false, get: d => { if (!d) return null; if (d._isMedian) return (d._projPpgMedian != null && isFinite(d._projPpgMedian)) ? d._projPpgMedian : null; const v = adjProjPpg(d); return (v != null && isFinite(v)) ? v : null; }, fmt: v => v == null ? '—' : v.toFixed(1) },
-      { key: 'p25',     label: "'25 PPG",    lowerBetter: false, get: d => d && d.p25 != null ? d.p25 : null,                                          fmt: v => v == null ? '—' : v.toFixed(1) },
-      { key: 'p24',     label: "'24 PPG",    lowerBetter: false, get: d => d && d.p24 != null ? d.p24 : null,                                          fmt: v => v == null ? '—' : v.toFixed(1) },
-      { key: 'adp',     label: 'ADP',        lowerBetter: true,  get: d => d && d.a != null && d.a > 0 && d.a < 999 ? d.a : null,                       fmt: v => v == null ? '—' : v.toFixed(1) },
-      { key: 'age',     label: 'Age',        lowerBetter: true,  get: d => d && d.age != null ? d.age : null,                                          fmt: v => v == null ? '—' : v },
-      { key: 'jm',      label: 'JM Score',   lowerBetter: false, get: d => d && d._pmJm != null ? d._pmJm : null,                                      fmt: v => v == null ? '—' : v.toFixed(1) }
-    ];
-    let rows = '';
-    stats.forEach(stat => {
-      const vals = _cmpComparePlayers.map(d => stat.get(d));
-      const numericVals = vals.filter(v => typeof v === 'number' && isFinite(v));
-      if (numericVals.length < 2) return; // skip if fewer than 2 players have this stat
-      const max = Math.max(...numericVals);
-      const min = Math.min(...numericVals);
-      const best = stat.lowerBetter ? min : max;
-      // Bar width: for lower-better stats, invert so smaller = wider bar.
-      const widthFor = v => {
-        if (v == null) return 0;
-        if (max === min) return 100;
-        if (stat.lowerBetter) return 30 + ((max - v) / (max - min)) * 70;
-        return 30 + ((v - min) / (max - min)) * 70;
-      };
-      let cells = '';
-      vals.forEach((v, i) => {
-        const isBest = v != null && v === best && numericVals.length > 1;
-        const bg = isBest ? 'linear-gradient(90deg,#22c55e,rgba(34,197,94,.5))' : 'linear-gradient(90deg,rgba(245,158,11,.55),rgba(245,158,11,.2))';
-        const w = widthFor(v);
-        const _isMed = _cmpComparePlayers[i] && _cmpComparePlayers[i]._isMedian;
-        const _barOpacity = _isMed ? '.6' : '1';
-        cells += '<div style="display:flex;align-items:center;gap:8px;min-width:0;opacity:' + _barOpacity + '">'
-          + '<div style="flex:1;height:14px;background:var(--elev-1);border-radius:3px;overflow:hidden;min-width:60px">'
-            + (v == null ? '' : '<div style="height:100%;width:' + w + '%;background:' + bg + '"></div>')
-          + '</div>'
-          + '<div style="font-size:.72rem;font-weight:' + (isBest ? '700' : '500') + ';color:' + (isBest ? '#22c55e' : 'var(--text)') + ';width:42px;text-align:right">' + stat.fmt(v) + '</div>'
-          + '</div>';
-      });
-      rows += '<div style="display:grid;grid-template-columns:90px repeat(' + _cmpComparePlayers.length + ',1fr);gap:10px;align-items:center;padding:6px 0">'
-        + '<div style="font-size:.65rem;color:var(--text2);font-family:\'Bebas Neue\',sans-serif;letter-spacing:1px">' + stat.label + (stat.lowerBetter ? ' <span style="opacity:.5;font-size:.55rem">(lower)</span>' : '') + '</div>'
-        + cells
-        + '</div>';
-    });
-    if (rows) {
-      const isMedianMode = allPlayers.length === 1 && _cmpComparePlayers.length === 2 && _cmpComparePlayers[1]._isMedian;
-      const headerCells = _cmpHeaderNames.map((n, i) => {
-        const isMed = _cmpComparePlayers[i] && _cmpComparePlayers[i]._isMedian;
-        return '<div style="font-size:.7rem;font-weight:600;color:' + (isMed ? 'var(--text2)' : 'var(--text)') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (n || '—') + '</div>';
-      }).join('');
-      const titleText = isMedianMode ? 'VS POSITION MEDIAN' : 'QUICK COMPARE';
-      const subText = isMedianMode
-        ? 'Benchmarked against the top-36 ' + _cmpComparePlayers[0].s + ' median · add a 2nd player to compare directly'
-        : 'Best value highlighted green · lower-better stats inverted';
-      _cmpSummaryHtml = '<div style="margin-bottom:18px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap">'
-          + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--accent)">' + titleText + '</div>'
-          + '<div style="font-size:.55rem;color:var(--text2)">' + subText + '</div>'
-        + '</div>'
-        + '<div style="display:grid;grid-template-columns:90px repeat(' + _cmpComparePlayers.length + ',1fr);gap:10px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)">'
-          + '<div></div>' + headerCells
-        + '</div>'
-        + rows
-        + '</div>';
-    }
-  }
-
+  // QUICK COMPARE bar summary removed 2026-07-29 — the split-aware STATS
+  // sections on the cards carry the comparison now. The #compareSummary
+  // container hosts the admin snapshot bar instead (see below).
   const _cmpSummaryEl = document.getElementById('compareSummary');
-  if (_cmpSummaryEl) _cmpSummaryEl.innerHTML = _cmpSummaryHtml || '';
+  if (_cmpSummaryEl) _cmpSummaryEl.innerHTML = '';
   compareGrid.innerHTML = allPlayers.map((d, i) => {
     const isSearch = i >= checkPlayers.length;
     const sr = isSearch ? searchAdded[i - checkPlayers.length] : null;
@@ -8722,6 +8617,54 @@ function renderCompareGrid() {
   });
 
   _cmpWireSplits(compareGrid);
+  _adminInjectCompareSnapBtns();
+}
+
+// Admin-only: camera buttons on the Compare page — one per card (header, next
+// to the duplicate button) + a SNAPSHOT COMPARISON bar (hosted in the retired
+// #compareSummary container) that captures the whole grid side by side.
+function _adminInjectCompareSnapBtns() {
+  if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return;
+  const grid = document.getElementById('compareGrid');
+  if (!grid || !grid.querySelector('.compare-col')) return;
+  const CAM_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+  const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'player';
+  const snap = async (btn, target, label) => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    try {
+      await _snapElement(target, label);
+      if (typeof toast === 'function') toast('Image downloaded');
+    } catch (err) {
+      console.warn('compare snapshot failed', err);
+      if (typeof toast === 'function') toast('Snapshot failed');
+    }
+    btn.disabled = false;
+  };
+  grid.querySelectorAll('.compare-col').forEach(col => {
+    if (col.querySelector('.card-snap-btn')) return;
+    const b = document.createElement('button');
+    b.className = 'card-snap-btn';
+    b.title = 'Download this card as an image (admin)';
+    b.innerHTML = CAM_SVG;
+    b.addEventListener('click', e => {
+      e.stopPropagation(); // retired cards are click-to-open
+      const nm = col.querySelector('.card-name');
+      snap(b, col, slug(nm ? nm.textContent : 'player') + '_compare');
+    });
+    const hdr = col.querySelector('.card-header');
+    (hdr || col).appendChild(b);
+  });
+  const bar = document.getElementById('compareSummary');
+  if (bar && !bar.querySelector('.cmp-snap-all')) {
+    bar.innerHTML = '<div style="display:flex;justify-content:flex-end;margin-bottom:10px">'
+      + '<button class="cmp-snap-all card-snap-btn" style="opacity:1;float:none;display:flex;align-items:center;gap:6px;font-family:\'Bebas Neue\',sans-serif;font-size:.7rem;letter-spacing:1.5px;padding:5px 12px;line-height:1">' + CAM_SVG + ' SNAPSHOT COMPARISON</button></div>';
+    const all = bar.querySelector('.cmp-snap-all');
+    all.addEventListener('click', () => {
+      const names = [...grid.querySelectorAll('.compare-col .card-name')].map(n => slug(n.textContent)).slice(0, 3).join('_vs_');
+      snap(all, grid, names || 'player_comparison');
+    });
+  }
 }
 
 // The splits section only renders once the lazy weekly bundle has merged — if

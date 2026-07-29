@@ -6676,7 +6676,7 @@ async function _snapElement(el, fileLabel) {
   });
   // Compose: padding around the content + a bottom strip that holds the
   // watermark so it stays visible without overlapping any information.
-  const PAD = 14 * SCALE, STRIP = 32 * SCALE;
+  const PAD = 14 * SCALE, STRIP = 44 * SCALE;
   const out = document.createElement('canvas');
   out.width = src.width + PAD * 2;
   out.height = src.height + PAD * 2 + STRIP;
@@ -6684,7 +6684,7 @@ async function _snapElement(el, fileLabel) {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, out.width, out.height);
   ctx.drawImage(src, PAD, PAD);
-  ctx.font = '700 ' + (18 * SCALE) + 'px "Bebas Neue", Arial, sans-serif';
+  ctx.font = '700 ' + (26 * SCALE) + 'px "Bebas Neue", Arial, sans-serif';
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'right';
   ctx.fillStyle = 'rgba(245,158,11,0.92)';

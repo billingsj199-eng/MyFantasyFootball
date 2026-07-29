@@ -7616,7 +7616,7 @@ var searchAdded = [];
 var _cmpSplitState = {};
 
 function _cmpSplitSt(name) {
-  return _cmpSplitState[name] || (_cmpSplitState[name] = { open: false, seasons: null, wkFrom: 1, wkTo: 18, mate: null });
+  return _cmpSplitState[name] || (_cmpSplitState[name] = { open: false, seasons: null, wkFrom: 1, wkTo: 18, mate: null, minSnap: 0 });
 }
 
 function _cmpFindPlayer(name) {
@@ -7667,6 +7667,20 @@ function _cmpSplitResultsHtml(name, fmtOverride) {
   const wd = WEEKLY_STATS[d.n];
   const seasons = Object.keys(wd.seasons).filter(yr => !st.seasons || st.seasons.has(yr)).sort();
   const inRange = w => w.wk >= st.wkFrom && w.wk <= st.wkTo;
+  // Min snap % filter: drops games below the threshold to strip partial-game
+  // outliers (injury exits, blowout rest). Games with no snap data (pre-2012,
+  // playoffs, bundle not loaded) are kept rather than punished for a data gap.
+  let _snapDropped = 0;
+  const snapOk = (yr, w) => {
+    if (!st.minSnap) return true;
+    const sp = _snapWeek(d.n, +yr, w.wk);
+    if (sp == null || sp >= st.minSnap) return true;
+    _snapDropped++;
+    return false;
+  };
+  const snapNote = () => _snapDropped
+    ? '<div class="cmp-split-note" style="margin-top:6px">' + _snapDropped + ' game' + (_snapDropped === 1 ? '' : 's') + ' under ' + st.minSnap + '% snaps excluded</div>'
+    : '';
   const statDefs = d.s === 'QB' ? [['PY/G', a => (a.t.py / a.gp).toFixed(1)], ['PTD/G', a => (a.t.ptd / a.gp).toFixed(2)], ['INT/G', a => (a.t.int / a.gp).toFixed(2)], ['RY/G', a => (a.t.ry / a.gp).toFixed(1)]]
     : d.s === 'RB' ? [['ATT/G', a => (a.t.ra / a.gp).toFixed(1)], ['RY/G', a => (a.t.ry / a.gp).toFixed(1)], ['TGT/G', a => (a.t.tgt / a.gp).toFixed(1)], ['TD/G', a => ((a.t.rtd + a.t.rctd) / a.gp).toFixed(2)]]
     : (d.s === 'WR' || d.s === 'TE') ? [['TGT/G', a => (a.t.tgt / a.gp).toFixed(1)], ['REC/G', a => (a.t.rec / a.gp).toFixed(1)], ['RcY/G', a => (a.t.rcy / a.gp).toFixed(1)], ['TD/G', a => ((a.t.rtd + a.t.rctd) / a.gp).toFixed(2)]]
@@ -7684,7 +7698,7 @@ function _cmpSplitResultsHtml(name, fmtOverride) {
     const withG = [], withoutG = [];
     shared.forEach(yr => {
       const mw = _cmpMateWeekSet(st.mate, yr) || new Set();
-      wd.seasons[yr].forEach(w => { if (inRange(w)) (mw.has(w.wk) ? withG : withoutG).push(w); });
+      wd.seasons[yr].forEach(w => { if (inRange(w) && snapOk(yr, w)) (mw.has(w.wk) ? withG : withoutG).push(w); });
     });
     const aw = _cmpSplitAgg(withG, recAdj), ao = _cmpSplitAgg(withoutG, recAdj);
     if (!aw && !ao) return emptyMsg('No games match these filters');
@@ -7700,19 +7714,20 @@ function _cmpSplitResultsHtml(name, fmtOverride) {
     return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>'
       + row('WITH ' + last, aw, betterWith) + row('W/O ' + last, ao, !betterWith && !!ao)
       + '</tbody></table></div>'
-      + '<div class="cmp-split-note" style="margin-top:6px">Teammate seasons: ' + shared.join(', ') + ' · "With" = weeks both players logged a game</div>';
+      + '<div class="cmp-split-note" style="margin-top:6px">Teammate seasons: ' + shared.join(', ') + ' · "With" = weeks both players logged a game</div>'
+      + snapNote();
   }
 
   // No teammate: one aggregate over the filtered sample.
   const games = [];
-  seasons.forEach(yr => wd.seasons[yr].forEach(w => { if (inRange(w)) games.push(w); }));
+  seasons.forEach(yr => wd.seasons[yr].forEach(w => { if (inRange(w) && snapOk(yr, w)) games.push(w); }));
   const agg = _cmpSplitAgg(games, recAdj);
   if (!agg) return emptyMsg('No games match these filters');
   const box = (lbl, val, cls) => '<div class="card-rank-box"><div class="lbl">' + lbl + '</div><div class="num ' + (cls || 'accent') + '">' + val + '</div></div>';
   let html = '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr)">'
     + box('GP', agg.gp) + box('PPG', agg.ppg.toFixed(1), 'green') + box('High', agg.high.toFixed(1)) + '</div>';
   if (statDefs.length) html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr);margin-top:.4rem">' + statDefs.map(s => box(s[0], s[1](agg))).join('') + '</div>';
-  return html;
+  return html + snapNote();
 }
 
 // scoresrc: undefined for Compare cards (scoring follows the compare card's
@@ -7737,6 +7752,9 @@ function _cmpSplitSectionHtml(d, scoresrc) {
         + '<input type="number" class="cmp-split-wk" data-bound="from" data-cmpplayer="' + esc + '" min="1" max="22" value="' + st.wkFrom + '">'
         + '<span style="color:var(--text2);font-size:.65rem">to</span>'
         + '<input type="number" class="cmp-split-wk" data-bound="to" data-cmpplayer="' + esc + '" min="1" max="22" value="' + st.wkTo + '"></div>'
+      + '<div class="cmp-split-row"><span class="cmp-split-lbl"><span data-gloss="Exclude games where the player was on the field for less than this share of the team\'s offensive snaps — strips injury exits and partial games from the sample. Games without snap data (pre-2012 or playoffs) are always kept. 0 = off.">MIN SNAP %</span></span>'
+        + '<input type="number" class="cmp-split-wk" data-bound="snap" data-cmpplayer="' + esc + '" min="0" max="100" step="5" value="' + st.minSnap + '" placeholder="0">'
+        + '<span style="color:var(--text2);font-size:.65rem">0 = off</span></div>'
       + '<div class="cmp-split-row"><span class="cmp-split-lbl">TEAMMATE</span>'
         + '<div class="cmp-split-mate-wrap">'
           + '<input type="text" class="cmp-split-mate" data-cmpplayer="' + esc + '" placeholder="e.g. Joe Burrow &mdash; with/without split" value="' + mateVal + '" autocomplete="off">'
@@ -7790,6 +7808,12 @@ function _cmpWireSplits(root) {
       const name = inp.dataset.cmpplayer;
       const st = _cmpSplitSt(name);
       let v = parseInt(inp.value, 10);
+      if (inp.dataset.bound === 'snap') {
+        st.minSnap = isNaN(v) ? 0 : Math.max(0, Math.min(100, v));
+        inp.value = st.minSnap;
+        _cmpSplitRefresh(name);
+        return;
+      }
       if (isNaN(v)) v = inp.dataset.bound === 'from' ? 1 : 18;
       v = Math.max(1, Math.min(22, v));
       if (inp.dataset.bound === 'from') st.wkFrom = Math.min(v, st.wkTo);

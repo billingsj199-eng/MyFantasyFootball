@@ -861,6 +861,8 @@ tbody tr.cmp-selected{background:rgba(245,158,11,.06)}
 .compare-col .card-stat-value{font-size:.82rem}
 .compare-col .remove-from-compare,.compare-col .remove-from-search{background:none;border:none;color:var(--text2);cursor:pointer;font-size:.7rem;padding:2px 6px;border-radius:3px;transition:all .15s;position:absolute;top:.75rem;right:.75rem}
 .compare-col .remove-from-compare:hover,.compare-col .remove-from-search:hover{color:var(--red);background:rgba(239,68,68,.1)}
+.compare-col .cmp-dup-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:.7rem;padding:2px 6px;border-radius:3px;transition:all .15s;position:absolute;top:.75rem;right:2.1rem}
+.compare-col .cmp-dup-btn:hover{color:var(--accent);background:rgba(245,158,11,.1)}
 .compare-best{color:var(--green) !important;font-weight:700 !important}
 .compare-worst{color:var(--red) !important;opacity:.6}
 

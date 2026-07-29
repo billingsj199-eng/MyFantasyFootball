@@ -7619,7 +7619,16 @@ function _cmpSplitSt(name) {
   return _cmpSplitState[name] || (_cmpSplitState[name] = { open: false, seasons: null, wkFrom: 1, wkTo: 18, mate: null, minSnap: 0 });
 }
 
+// The same player can appear on the Compare grid more than once (duplicate
+// cards, each with independent splits). Instance keys are "Name##<seq>": the
+// base name drives all data lookups; the full key is what split state and the
+// panel's data-cmpplayer attribute carry. Plain names (first card, player-card
+// modal) pass through unchanged.
+var _cmpDupSeq = 0;
+function _cmpKeyName(key) { const i = key.indexOf('##'); return i < 0 ? key : key.slice(0, i); }
+
 function _cmpFindPlayer(name) {
+  name = _cmpKeyName(name);
   let d = (typeof D !== 'undefined' && Array.isArray(D)) ? D.find(p => p && p.n === name) : null;
   if (!d) { const sr = searchAdded.find(p => p._src && p._src.n === name); d = sr ? sr._src : null; }
   return d || null;
@@ -7633,7 +7642,9 @@ function _cmpNormTeam(t) { return t ? (_CMP_ABBR_NORM[t] || t) : t; }
 // Scoring follows the card's PPR/HALF/STD toggle when present (retired cards);
 // current-player cards have no toggle, so they stay on the half-PPR default.
 function _cmpSplitScoring(name) {
-  const esc = name.replace(/"/g, '\\"');
+  // Scoring toggles are keyed by plain player name (shared across duplicate
+  // cards of the same player), so strip any instance suffix before matching.
+  const esc = _cmpKeyName(name).replace(/"/g, '\\"');
   const b = document.querySelector('.cmp-cl-scoring.active[data-cmpplayer="' + esc + '"]');
   return b ? b.dataset.cmpscoring : 'ppr';
 }
@@ -7732,10 +7743,12 @@ function _cmpSplitResultsHtml(name, fmtOverride) {
 
 // scoresrc: undefined for Compare cards (scoring follows the compare card's
 // cmp-cl toggle), 'gl' for the player-card LOGS tab (follows the gl toggle).
-function _cmpSplitSectionHtml(d, scoresrc) {
+// instKey: "Name##<seq>" for duplicate Compare cards so each keeps its own
+// split state; omitted everywhere else (plain name).
+function _cmpSplitSectionHtml(d, scoresrc, instKey) {
   if (!d || !d.n || !d.s) return '';
   try { if (typeof WEEKLY_STATS === 'undefined' || !hasWeeklyData(d)) return ''; } catch (_) { return ''; }
-  const name = d.n;
+  const name = instKey || d.n;
   const esc = name.replace(/"/g, '&quot;');
   const st = _cmpSplitSt(name);
   const allSeasons = getWeeklySeasons(d);
@@ -7769,14 +7782,18 @@ function _cmpSplitSectionHtml(d, scoresrc) {
 // open on Compare and in the player-card modal at once), each in its own
 // context's scoring.
 function _cmpSplitRefresh(name) {
-  const esc = name.replace(/"/g, '\\"');
-  document.querySelectorAll('.cmp-split-results[data-cmpplayer="' + esc + '"]').forEach(el => {
+  // Match by base player name so a scoring-toggle repaint reaches duplicate
+  // cards too; each panel repaints with its OWN key (independent split state).
+  const base = _cmpKeyName(name);
+  document.querySelectorAll('.cmp-split-results[data-cmpplayer]').forEach(el => {
+    const key = el.dataset.cmpplayer;
+    if (_cmpKeyName(key) !== base) return;
     let fmtKey = null;
     if (el.dataset.scoresrc === 'gl') {
       const b = document.querySelector('#playerCard .gl-scoring-btn.active');
       fmtKey = b ? b.dataset.glscoring : 'ppr';
     }
-    el.innerHTML = _cmpSplitResultsHtml(name, fmtKey);
+    el.innerHTML = _cmpSplitResultsHtml(key, fmtKey);
   });
 }
 
@@ -7831,8 +7848,9 @@ function _cmpWireSplits(root) {
       const q = inp.value.trim().toLowerCase();
       if (q.length < 2 || typeof WEEKLY_STATS === 'undefined') { drop.style.display = 'none'; return; }
       const starts = [], incl = [];
+      const baseName = _cmpKeyName(name);
       for (const pn in WEEKLY_STATS) {
-        if (pn === name) continue;
+        if (pn === baseName) continue;
         const l = pn.toLowerCase();
         if (l.startsWith(q)) { starts.push(pn); if (starts.length >= 8) break; }
         else if (incl.length < 8 && l.includes(q)) incl.push(pn);
@@ -8060,7 +8078,12 @@ function renderCompareGrid() {
         || window.RETIRED_ESPN_IDS[(d.n || '').replace(/ Jr\.?$/i, '').replace(/ III$/i, '').trim()];
       if (rid) d._slImg = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + rid + '.png&w=350&h=254';
     }
-    
+
+    // Duplicate cards get a stable instance key from their DUP seq so each
+    // keeps independent split state; originals keep the plain name.
+    const instKey = (d && sr && sr._key && sr._key.indexOf('DUP:') === 0) ? d.n + '##' + sr._key.split(':')[1] : (d ? d.n : null);
+    const dupBtn = d ? `<button class="cmp-dup-btn" data-i="${i}" title="Duplicate this card — compare the same player under different splits">&#10697;</button>` : '';
+
     // All retired players (from any source) use the same card
     if (d && (d._retired || (sr && sr._retired) || (sr && sr._key && sr._key.startsWith('L:')))) {
       const removeBtn = isSearch 
@@ -8074,7 +8097,7 @@ function renderCompareGrid() {
       
       return `<div class="compare-col" data-epcard="${d.n}" style="cursor:pointer">
         <div class="card-header" style="position:relative">
-          ${removeBtn}
+          ${removeBtn}${dupBtn}
           <div class="card-hero">
             ${d._slImg ? `<img src="${window._fixHeadshotUrl(d._slImg)}" alt="${d.n}" loading="lazy" onerror="this.style.display='none'">` : ''}
             <div>
@@ -8138,7 +8161,7 @@ function renderCompareGrid() {
             </div>
             <div class="cmp-cl-content" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">${buildCareerTable(d, 'ppr')}</div>
           </div>` : ''}
-          ${_cmpSplitSectionHtml(d)}
+          ${_cmpSplitSectionHtml(d, undefined, instKey)}
           ${d._height || d._weight || d.dr || d._college ? `<div class="card-section">
             <div class="card-section-title">Player Info</div>
             <div class="card-grid">
@@ -8166,7 +8189,7 @@ function renderCompareGrid() {
 
     return `<div class="compare-col">
       <div class="card-header" style="position:relative">
-        ${removeBtn}
+        ${removeBtn}${dupBtn}
         <div class="card-hero">
           ${d._slImg ? `<img src="${window._fixHeadshotUrl(d._slImg)}" alt="${d.n}" loading="lazy" onerror="this.style.display='none'">` : ''}
           <div>
@@ -8217,7 +8240,7 @@ function renderCompareGrid() {
         </div>` : d._retired ? `<div class="card-section">
           <div class="card-section-title">Career: ${d._debut}–${d._last} (${d._last - d._debut + 1} seasons)</div>
         </div>` : ''}
-        ${_cmpSplitSectionHtml(d)}
+        ${_cmpSplitSectionHtml(d, undefined, instKey)}
       </div>
     </div>`;
   }).join('');
@@ -8240,6 +8263,19 @@ function renderCompareGrid() {
       renderSearchChips();
     });
   });
+  // Duplicate-card buttons: push a search-added clone under a unique DUP key so
+  // the same player renders twice side by side, each with its own split state.
+  compareGrid.querySelectorAll('.cmp-dup-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const src = allPlayers[+btn.dataset.i];
+      if (!src || !src.n) return;
+      _cmpDupSeq++;
+      searchAdded.push({ n: src.n, s: src.s, t: src.t, _retired: !!src._retired, _key: 'DUP:' + _cmpDupSeq + ':' + src.n, _src: src });
+      renderSearchChips();
+      renderCompareGrid();
+    });
+  });
   // Compare career log scoring toggles (PPR/HALF/STD) and mode toggles (SEASON/WEEKLY)
   const scoringLabels = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
   // Track scoring per player
@@ -8249,18 +8285,16 @@ function renderCompareGrid() {
     const d = D.find(dd => dd.n === playerName);
     if (!d) return;
     const esc = playerName.replace(/"/g, '\\"');
-    const contentEl = compareGrid.querySelector('.cmp-cl-content[data-cmpplayer="' + esc + '"]');
-    const labelEl = compareGrid.querySelector('.cmp-cl-label');
+    // querySelectorAll: duplicate cards of the same player share one career-log
+    // state (scoring/mode/year are name-keyed), so repaint every instance.
+    const contentEls = compareGrid.querySelectorAll('.cmp-cl-content[data-cmpplayer="' + esc + '"]');
     const modeBtn = compareGrid.querySelector('.cmp-cl-mode.active[data-cmpplayer="' + esc + '"]');
     const yearSel = compareGrid.querySelector('.cmp-cl-year[data-cmpplayer="' + esc + '"]');
-    if (!contentEl) return;
+    if (!contentEls.length) return;
     const scoring = _cmpScoring[playerName] || 'ppr';
     const mode = modeBtn ? modeBtn.dataset.cmpmode : 'season';
-    if (mode === 'weekly' && yearSel) {
-      contentEl.innerHTML = buildWeeklyTable(d, yearSel.value, scoring);
-    } else {
-      contentEl.innerHTML = buildCareerTable(d, scoring);
-    }
+    const html = (mode === 'weekly' && yearSel) ? buildWeeklyTable(d, yearSel.value, scoring) : buildCareerTable(d, scoring);
+    contentEls.forEach(el => { el.innerHTML = html; });
   }
   
   compareGrid.querySelectorAll('.cmp-cl-scoring').forEach(btn => {
@@ -8269,8 +8303,8 @@ function renderCompareGrid() {
       const playerName = btn.dataset.cmpplayer;
       const scoring = btn.dataset.cmpscoring;
       const esc = playerName.replace(/"/g, '\\"');
-      compareGrid.querySelectorAll('.cmp-cl-scoring[data-cmpplayer="' + esc + '"]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      // Mirror the active state across duplicate cards' toggles too.
+      compareGrid.querySelectorAll('.cmp-cl-scoring[data-cmpplayer="' + esc + '"]').forEach(b => b.classList.toggle('active', b.dataset.cmpscoring === scoring));
       _cmpScoring[playerName] = scoring;
       const section = btn.closest('.card-section');
       if (section) {
@@ -8291,10 +8325,9 @@ function renderCompareGrid() {
       e.stopPropagation();
       const playerName = btn.dataset.cmpplayer;
       const esc = playerName.replace(/"/g, '\\"');
-      compareGrid.querySelectorAll('.cmp-cl-mode[data-cmpplayer="' + esc + '"]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const yearSel = compareGrid.querySelector('.cmp-cl-year[data-cmpplayer="' + esc + '"]');
-      if (yearSel) yearSel.style.display = btn.dataset.cmpmode === 'weekly' ? '' : 'none';
+      // Mirror mode + year-select visibility across duplicate cards' toggles.
+      compareGrid.querySelectorAll('.cmp-cl-mode[data-cmpplayer="' + esc + '"]').forEach(b => b.classList.toggle('active', b.dataset.cmpmode === btn.dataset.cmpmode));
+      compareGrid.querySelectorAll('.cmp-cl-year[data-cmpplayer="' + esc + '"]').forEach(s => { s.style.display = btn.dataset.cmpmode === 'weekly' ? '' : 'none'; });
       _cmpRefresh(playerName);
     });
   });
@@ -8302,6 +8335,10 @@ function renderCompareGrid() {
   compareGrid.querySelectorAll('.cmp-cl-year').forEach(sel => {
     sel.addEventListener('change', (e) => {
       e.stopPropagation();
+      // Keep duplicate cards' year selects in lockstep — _cmpRefresh reads the
+      // first matching select, so an unsynced sibling would win over this one.
+      const esc = sel.dataset.cmpplayer.replace(/"/g, '\\"');
+      compareGrid.querySelectorAll('.cmp-cl-year[data-cmpplayer="' + esc + '"]').forEach(s => { s.value = sel.value; });
       _cmpRefresh(sel.dataset.cmpplayer);
     });
   });

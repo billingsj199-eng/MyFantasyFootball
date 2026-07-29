@@ -2401,7 +2401,7 @@ function render() {
   empty.style.display = 'none';
 
   // Premium blur:
-  //   Jack's: non-premium blur after top 24 (ALL/ROOKIE) or top 12 (position)
+  //   Jack's: non-premium blur after top 36 (ALL) or top 12 (position/rookie)
   //   My Rankings: not signed in = blur everything (can't edit at all); signed in non-premium = top 12 editable, rest blurred
   const isPremium = hasPremium();
   const isJacks = currentVersion === 'jacks';
@@ -2410,7 +2410,7 @@ function render() {
   const isSignedOut = !window._authCurrentUser;
   const blurCutoff = (isMine && isSignedOut) ? 0
                    : (isMine && !isPremium) ? 12
-                   : (filter === 'ALL' || filter === 'ROOKIE') ? 24
+                   : (filter === 'ALL') ? 36
                    : 12;
   const shouldBlur = !isConsensus && (
     (isJacks && !isPremium) ||
@@ -2626,7 +2626,7 @@ function render() {
       } else if (isMine && !isPremium) {
         html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in each filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       } else if (!_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO VIEW FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Create a free account or sign in to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Create a free account, then upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
       } else {
         html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
       }
@@ -4700,7 +4700,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
 // UNDERDOG_IDS moved to data/underdog_ids.js
 
 // Compute how many rows the current user is allowed to export based on premium gate.
-// Non-premium Jack's: 24 for ALL/ROOKIE, 12 for positions.
+// Non-premium Jack's: 36 for ALL, 12 for positions/rookie.
 // Non-premium My Rankings: 12 across all filters.
 // Premium: unlimited.
 function _exportCutoff() {
@@ -4711,7 +4711,7 @@ function _exportCutoff() {
   if (currentVersion === 'mine' && !window._authCurrentUser) return 0;
   if (currentVersion === 'mine') return 12;
   // Jack's rankings non-premium
-  return (filter === 'ALL' || filter === 'ROOKIE') ? 24 : 12;
+  return (filter === 'ALL') ? 36 : 12;
 }
 
 // Export as CSV (opens in Excel)
@@ -43729,6 +43729,102 @@ Rules:
     if (btn) btn.style.display = isAdminNow ? '' : 'none';
   }
 
+  // === JACK'S TEAMS panel (#mtJacksTeams, top of My Teams) ===
+  // Premium (incl. admin): compact card grid of Jack's most recent Underdog
+  // drafts read from shared/jacks_portfolio (rules allow any authed read;
+  // premium gating is client-side, matching the gifted_premium pattern).
+  // Signed-in free: blurred teaser + upgrade CTA (.jt-locked-* styles).
+  // Anonymous: section stays hidden (.jt-section ships display:none).
+  window._jtOpenJacksPortfolio = function() {
+    if (typeof window._mtSwitchSource === 'function') window._mtSwitchSource('underdog');
+    const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
+    // Admin's own portfolio IS Jack's — only non-admins need the source flip.
+    if (!isAdminNow && window._udPortfolioSource !== 'jacks' &&
+        typeof window._udSwitchSource === 'function') {
+      window._udSwitchSource('jacks');
+    }
+    const sect = document.getElementById('mtSectionUnderdog');
+    if (sect) { try { sect.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) {} }
+  };
+
+  function _jtEsc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  window._renderJacksTeams = function() {
+    const sect = document.getElementById('mtJacksTeams');
+    if (!sect) return;
+    const grid = sect.querySelector('.jt-grid');
+    if (!grid) return;
+    const user = (typeof firebase !== 'undefined' && firebase.auth && firebase.apps && firebase.apps.length)
+      ? firebase.auth().currentUser : null;
+    if (!user) { sect.style.display = 'none'; return; }
+    const isPremNow = (typeof window.hasPremium === 'function') && window.hasPremium();
+
+    if (!isPremNow) {
+      // Signed-in free: blurred placeholder cards under an upgrade overlay.
+      const fake = ['BBM VI', 'The Big Board', 'Superflex Special', 'The Puppy'].map(t =>
+        '<div class="jt-card"><div class="jt-card-label">BEST BALL</div>' +
+        '<div class="jt-card-name">' + t + '</div>' +
+        '<div class="jt-card-meta">12-team &middot; 18 rounds</div></div>').join('');
+      grid.innerHTML =
+        '<div class="jt-locked-wrap" style="grid-column:1/-1">' +
+          '<div class="jt-locked-content"><div class="jt-grid">' + fake + '</div></div>' +
+          '<div class="jt-locked-overlay">' +
+            '<div class="jt-locked-icon">&#128274;</div>' +
+            '<div class="jt-locked-label">PREMIUM FEATURE</div>' +
+            '<div class="jt-locked-desc">See which tournaments Jack is drafting and browse his full Underdog portfolio, updated as he drafts.</div>' +
+            '<button class="jt-locked-btn" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{const t=document.querySelector(\'[data-acct-tab=premium]\');if(t)t.click();},150)">UPGRADE TO PRO</button>' +
+          '</div>' +
+        '</div>';
+      sect.style.display = 'block';
+      return;
+    }
+
+    const render = (payload) => {
+      const drafts = (payload && payload.drafts) ? payload.drafts.slice() : [];
+      if (!drafts.length) { sect.style.display = 'none'; return; }
+      // Most recent first — dates are ISO-ish strings, string compare is fine.
+      drafts.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+      const cards = drafts.slice(0, 5).map(d => {
+        const picks = d.picks || [];
+        const first3 = picks.slice(0, 3).map(p => p.name).filter(Boolean).join(', ');
+        const fee = (parseFloat(d.fee) > 0) ? ('$' + parseFloat(d.fee)) : '';
+        // Bare YYYY-MM-DD parses as UTC midnight and shifts a day back in
+        // US timezones — pin it to local midnight instead.
+        const when = d.date ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(d.date) ? d.date + 'T00:00:00' : d.date) : null;
+        const dateStr = (when && !isNaN(when)) ? when.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+        const pickLabel = picks.length + (picks.length === 1 ? ' pick' : ' picks');
+        return '<div class="jt-card" onclick="window._jtOpenJacksPortfolio()">' +
+          '<div class="jt-card-label">' + _jtEsc([dateStr, fee].filter(Boolean).join(' · ') || 'DRAFT') + '</div>' +
+          '<div class="jt-card-name">' + _jtEsc(d.tournament || 'Underdog Draft') + '</div>' +
+          '<div class="jt-card-meta">' + _jtEsc(pickLabel + (first3 ? ' · ' + first3 : '')) + '</div>' +
+        '</div>';
+      }).join('');
+      const total = payload.numDrafts || drafts.length;
+      const viewAll = '<div class="jt-card jt-card-empty" onclick="window._jtOpenJacksPortfolio()" style="display:flex;flex-direction:column;justify-content:center;text-align:center">' +
+        '<div class="jt-card-label" style="margin-bottom:2px">VIEW FULL PORTFOLIO</div>' +
+        '<div class="jt-card-meta">' + total + ' drafts &rarr;</div></div>';
+      grid.innerHTML = cards + viewAll;
+      sect.style.display = 'block';
+    };
+
+    // ~5 min cache so re-renders (auth churn, premium re-checks) don't
+    // re-hit Firestore every time.
+    const cached = window._jtSharedCache;
+    if (cached && (Date.now() - cached.at) < 300000) { render(cached.payload); return; }
+    const db = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length)
+      ? firebase.firestore() : null;
+    if (!db) return;
+    db.collection('shared').doc('jacks_portfolio').get().then(doc => {
+      if (!doc.exists) { sect.style.display = 'none'; return; }
+      const payload = doc.data();
+      window._jtSharedCache = { at: Date.now(), payload: payload };
+      render(payload);
+    }).catch(e => { console.warn('[JacksTeams] load error:', e); sect.style.display = 'none'; });
+  };
+
   // Hide Upload/Clear and show a banner when viewing Jack's read-only portfolio
   function _udApplyReadOnlyUI() {
     if (!window._udReadOnly) return;
@@ -43809,6 +43905,11 @@ Rules:
           } else {
             try { _udShowSourceToggle(); } catch (_) {}
           }
+          // Jack's Teams panel renders for every signed-in user (locked
+          // teaser for free, real cards for premium). Premium may still be
+          // hydrating at this point — the checkPremiumStatus hook below
+          // re-renders once it flips.
+          try { window._renderJacksTeams(); } catch (_) {}
         }, 400);
 
         // v0.9.74: ADP snapshot load runs UNCONDITIONALLY on every auth state
@@ -43856,6 +43957,9 @@ Rules:
           // hasPremium() may have just flipped true — try the load
           setTimeout(_udLoadFromCloud, 100);
         }
+        // Re-render Jack's Teams so the locked teaser upgrades to real cards
+        // (or hides on sign-out) whenever premium state settles.
+        try { if (typeof window._renderJacksTeams === 'function') setTimeout(window._renderJacksTeams, 150); } catch (_) {}
         return r;
       };
       window._udPremiumHookInstalled = true;

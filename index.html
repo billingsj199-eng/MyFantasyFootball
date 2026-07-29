@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-07-29n" as="script">
+<link rel="preload" href="app.js?v=2026-07-29o" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2163,7 +2163,9 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="color:var(--text2);font-size:.82rem;margin-top:4px">Import your fantasy teams, analyze rosters, and track your portfolio</div>
 </div>
 
-<!-- JACKS TEAMS — admin only, populated by JS at runtime -->
+<!-- JACKS TEAMS — premium panel, populated by _renderJacksTeams at runtime.
+     Premium: card grid of Jack's recent Underdog drafts (shared/jacks_portfolio).
+     Signed-in free: blurred teaser + upgrade CTA. Anonymous: stays hidden. -->
 <div class="jt-section" id="mtJacksTeams">
 <div class="jt-head">
 <div class="jt-title">
@@ -3438,7 +3440,7 @@ ADD TO CHROME
 <div class="help-section">
 <div class="help-section-icon">⭐</div>
 <div class="help-section-title">JACK'S RANKINGS</div>
-<div class="help-section-desc">Jack's official rankings for the 2026 fantasy football season. View his player valuations, tier breakdowns, and use them as a reference when building your own board. Free users can see the top 24 overall (or top 12 per position).</div>
+<div class="help-section-desc">Jack's official rankings for the 2026 fantasy football season. View his player valuations, tier breakdowns, and use them as a reference when building your own board. Free users can see the top 36 overall (or top 12 per position).</div>
 </div>
 
 <div class="help-section">
@@ -4864,7 +4866,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-07-29n"></script>
+<script defer src="app.js?v=2026-07-29o"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

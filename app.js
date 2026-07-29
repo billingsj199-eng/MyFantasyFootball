@@ -1835,6 +1835,12 @@ function _impliedTeamPpg(teamFullName) {
     });
     _impliedPpgCache = {};
     Object.keys(agg).forEach(t => { _impliedPpgCache[t] = { ppg: Math.round((agg[t].sum / agg[t].n) * 10) / 10, n: agg[t].n }; });
+    // League rank, highest implied PPG first; ties share a rank (competition style).
+    const _ranked = Object.keys(_impliedPpgCache).sort((a, b) => _impliedPpgCache[b].ppg - _impliedPpgCache[a].ppg);
+    _ranked.forEach((t, i) => {
+      const prev = i > 0 ? _impliedPpgCache[_ranked[i - 1]] : null;
+      _impliedPpgCache[t].rank = (prev && prev.ppg === _impliedPpgCache[t].ppg) ? prev.rank : i + 1;
+    });
   }
   const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamFullName]) ? TEAM_ABBR_MAP[teamFullName] : teamFullName;
   return _impliedPpgCache[abbr] || null;
@@ -2595,7 +2601,7 @@ function render() {
       const _tpColor = _tp ? (_tp.ppg >= 24.5 ? '#22c55e' : _tp.ppg <= 20.5 ? '#ef4444' : '#facc15') : null;
       _statTd1 = `<td class="pts-cell ppg-proj-cell"${_tipAttr}>${_ydsHtml}</td>`;
       _statTds = `<td class="pts-cell ppg25-cell"${_tipAttr}>${_tdsHtml}</td>
-      <td class="pts-cell l4ppg-cell"${_tp ? ' style="color:'+_tpColor+';font-weight:700;cursor:help" title="Season average of Vegas implied team totals (DK) across '+_tp.n+' games"' : ''}>${_tp ? _tp.ppg.toFixed(1) : '—'}</td>`;
+      <td class="pts-cell l4ppg-cell"${_tp ? ' style="color:'+_tpColor+';font-weight:700;cursor:help" title="Season average of Vegas implied team totals (DK) across '+_tp.n+' games — ranked #'+_tp.rank+' of 32 teams"' : ''}>${_tp ? _tp.ppg.toFixed(1) + ' <span style="font-size:.65rem;font-weight:600;color:var(--text2)">(' + _tp.rank + ')</span>' : '—'}</td>`;
     }
     const _adpDelta = _adp != null ? (_adp - d.myRank) : null;
     const _displayTierLabel = _tierLabelForRank(displayRank);
@@ -6616,6 +6622,118 @@ function _buildInjuryBadge(d) {
   return html;
 }
 
+// ── Admin card snapshots ────────────────────────────────────────────────────
+// Admin-only: camera buttons on every card section (and the whole card) that
+// download a high-res PNG (3× scale) with a MYFANTASYFOOTBALL.CO watermark in
+// a dedicated strip along the bottom, so the brand never covers data.
+// html2canvas is vendored at the repo root (CSP script-src 'self') and
+// lazy-loaded on first click.
+function _snapLoadLib() {
+  if (window.html2canvas) return Promise.resolve();
+  if (window._snapLibPromise) return window._snapLibPromise;
+  window._snapLibPromise = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'vendor_html2canvas.min.js?v=1.4.1';
+    s.onload = res;
+    s.onerror = () => { window._snapLibPromise = null; rej(new Error('html2canvas failed to load')); };
+    document.head.appendChild(s);
+  });
+  return window._snapLibPromise;
+}
+
+async function _snapElement(el, fileLabel) {
+  await _snapLoadLib();
+  const SCALE = 3;
+  // Walk up for the first solid background so sections snapped alone keep the
+  // card's dark backdrop.
+  let bg = '#141a26', n = el;
+  while (n && n !== document.documentElement) {
+    const c = getComputedStyle(n).backgroundColor;
+    if (c && c !== 'transparent' && c !== 'rgba(0, 0, 0, 0)') { bg = c; break; }
+    n = n.parentElement;
+  }
+  const src = await window.html2canvas(el, {
+    backgroundColor: bg, scale: SCALE, useCORS: true, logging: false,
+    ignoreElements: node => !!(node.classList && (node.classList.contains('card-snap-btn') || node.classList.contains('card-share') || node.classList.contains('card-close')))
+  });
+  // Compose: padding around the content + a bottom strip that holds the
+  // watermark so it stays visible without overlapping any information.
+  const PAD = 14 * SCALE, STRIP = 24 * SCALE;
+  const out = document.createElement('canvas');
+  out.width = src.width + PAD * 2;
+  out.height = src.height + PAD * 2 + STRIP;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.drawImage(src, PAD, PAD);
+  ctx.font = '700 ' + (12 * SCALE) + 'px "Bebas Neue", Arial, sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(245,158,11,0.92)';
+  ctx.fillText('MYFANTASYFOOTBALL.CO', out.width - PAD, src.height + PAD * 2 + STRIP / 2 - SCALE);
+  return new Promise((res, rej) => out.toBlob(b => {
+    if (!b) return rej(new Error('canvas export failed'));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = fileLabel + '.png';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    res();
+  }, 'image/png'));
+}
+
+function _adminInjectSnapButtons(playerName) {
+  if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return;
+  const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'section';
+  const CAM_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+  const mkBtn = (target, label) => {
+    const b = document.createElement('button');
+    b.className = 'card-snap-btn';
+    b.title = 'Download as image (admin)';
+    b.setAttribute('aria-label', 'Download ' + label + ' as image');
+    b.innerHTML = CAM_SVG;
+    b.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (b.disabled) return;
+      b.disabled = true;
+      try {
+        await _snapElement(target, slug(playerName) + '_' + slug(label));
+        if (typeof toast === 'function') toast('Image downloaded');
+      } catch (err) {
+        console.warn('card snapshot failed', err);
+        if (typeof toast === 'function') toast('Snapshot failed');
+      }
+      b.disabled = false;
+    });
+    return b;
+  };
+  const inject = () => {
+    cardEl.querySelectorAll('.card-section').forEach(sec => {
+      const t = sec.querySelector(':scope > .card-section-title');
+      if (!t || t.querySelector('.card-snap-btn')) return;
+      const label = (t.childNodes[0] && t.childNodes[0].textContent || '').trim() || 'section';
+      t.appendChild(mkBtn(sec, label));
+    });
+    const hdr = cardEl.querySelector('.card-header');
+    if (hdr && !hdr.querySelector('.card-snap-btn')) {
+      const b = mkBtn(cardEl, 'card');
+      b.classList.add('card-snap-btn-hdr');
+      b.title = 'Download full card as image (admin)';
+      hdr.appendChild(b);
+    }
+  };
+  inject();
+  // Career / logs / comps sections lazy-render after data bundles arrive —
+  // re-inject when new nodes land. Debounced; idempotent so the observer
+  // firing on its own button inserts settles immediately.
+  if (window._snapObserver) window._snapObserver.disconnect();
+  window._snapObserver = new MutationObserver(() => {
+    clearTimeout(window._snapObserverT);
+    window._snapObserverT = setTimeout(inject, 150);
+  });
+  window._snapObserver.observe(cardEl, { childList: true, subtree: true });
+}
+
 function openPlayerCard(d, ctxMode) {
   // PFF grades + college stats are lazy-loaded; opening any player card may render
   // prospect/JM/career info that consumes them, so fire the loads on click.
@@ -6809,6 +6927,8 @@ function openPlayerCard(d, ctxMode) {
         const _udAdp = _udAdpInCtx();
         const _slpAdp = _slpAdpInCtx();
         const _fmt = v => v != null ? v : '—';
+        // Platform favicon (icons/adp_*.png) inline before the ADP number.
+        const _adpLogo = k => `<img src="icons/adp_${k}.png" alt="" style="width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px">`;
         // Dynasty contexts swap ESPN/Yahoo (which don't publish dynasty ADPs)
         // for KTC (the dynasty value standard). Uses KTC_SF map for Superflex.
         if (_isDynastyCtx) {
@@ -6820,15 +6940,15 @@ function openPlayerCard(d, ctxMode) {
           <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">
             <div class="card-rank-box">
               <div class="lbl">Underdog</div>
-              <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_udAdp)}</div>
+              <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('underdog')}${_fmt(_udAdp)}</div>
             </div>
             <div class="card-rank-box">
               <div class="lbl">Sleeper</div>
-              <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_slpAdp)}</div>
+              <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('sleeper')}${_fmt(_slpAdp)}</div>
             </div>
             <div class="card-rank-box">
               <div class="lbl">KTC</div>
-              <div class="num${_ktcVal != null ? ' accent' : ''}"${_ktcVal == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_ktcVal)}</div>
+              <div class="num${_ktcVal != null ? ' accent' : ''}"${_ktcVal == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('ktc')}${_fmt(_ktcVal)}</div>
             </div>
           </div>
         </div>`;
@@ -6844,23 +6964,23 @@ function openPlayerCard(d, ctxMode) {
         <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">
           <div class="card-rank-box">
             <div class="lbl">Underdog</div>
-            <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_udAdp)}</div>
+            <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('underdog')}${_fmt(_udAdp)}</div>
           </div>
           <div class="card-rank-box">
             <div class="lbl">Sleeper</div>
-            <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_slpAdp)}</div>
+            <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('sleeper')}${_fmt(_slpAdp)}</div>
           </div>
           <div class="card-rank-box">
             <div class="lbl">ESPN</div>
-            <div class="num${_espnAdp != null ? ' accent' : ''}"${_espnAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_espnAdp)}</div>
+            <div class="num${_espnAdp != null ? ' accent' : ''}"${_espnAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('espn')}${_fmt(_espnAdp)}</div>
           </div>
           <div class="card-rank-box">
             <div class="lbl">CBS</div>
-            <div class="num${_cbsAdp != null ? ' accent' : ''}"${_cbsAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_cbsAdp)}</div>
+            <div class="num${_cbsAdp != null ? ' accent' : ''}"${_cbsAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('cbs')}${_fmt(_cbsAdp)}</div>
           </div>
           <div class="card-rank-box">
             <div class="lbl">Yahoo</div>
-            <div class="num${_yahAdp != null ? ' accent' : ''}"${_yahAdp == null ? ' style="color:var(--text2)"' : ''}>${_fmt(_yahAdp)}</div>
+            <div class="num${_yahAdp != null ? ' accent' : ''}"${_yahAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('yahoo')}${_fmt(_yahAdp)}</div>
           </div>
         </div>
       </div>`;
@@ -7363,6 +7483,9 @@ function openPlayerCard(d, ctxMode) {
       }
     });
   }
+
+  // Admin-only: camera buttons for downloading card sections as watermarked PNGs.
+  try { _adminInjectSnapButtons(d && d.n ? d.n : 'player'); } catch (_e) {}
 
   // Update URL with player slug so the open card is linkable. Uses pushState so
   // the browser back button closes the modal naturally.

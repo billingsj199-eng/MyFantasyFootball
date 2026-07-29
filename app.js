@@ -8609,12 +8609,6 @@ function renderCompareGrid() {
         </div>
         ${_cmpFullStatsSectionHtml(d, instKey)}
         ${_cmpSplitSectionHtml(d, undefined, instKey)}
-        ${d.career && d.career.length > 0 ? `<div class="card-section">
-          <div class="card-section-title">Career Log (PPR)</div>
-          ${buildCareerTable(d, 'ppr')}
-        </div>` : d._retired ? `<div class="card-section">
-          <div class="card-section-title">Career: ${d._debut}–${d._last} (${d._last - d._debut + 1} seasons)</div>
-        </div>` : ''}
       </div>
     </div>`;
   }).join('');

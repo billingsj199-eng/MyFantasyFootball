@@ -1846,6 +1846,18 @@ function _impliedTeamPpg(teamFullName) {
   return _impliedPpgCache[abbr] || null;
 }
 
+// Team PPG rank box for card Rankings rows (player card + Compare columns).
+// Same color thresholds and (rank) treatment as the rankings-table cell.
+function _teamPpgBoxHtml(team) {
+  const tp = _impliedTeamPpg(team);
+  if (!tp) return '';
+  const c = tp.ppg >= 24.5 ? '#22c55e' : tp.ppg <= 20.5 ? '#ef4444' : '#facc15';
+  return `<div class="card-rank-box">
+    <div class="lbl" title="Season average of Vegas implied team totals (DK) across ${tp.n} games — ranked #${tp.rank} of 32 teams" style="cursor:help">Team PPG</div>
+    <div class="num" style="color:${c}">${tp.ppg.toFixed(1)} <span style="font-size:.6em;font-weight:600;color:var(--text2)">(${tp.rank})</span></div>
+  </div>`;
+}
+
 function getFiltered() {
   // DEVY filter: build list from COMBINE_DATA devy players, with custom ordering
   if (filter === 'DEVY') {
@@ -6919,7 +6931,7 @@ function openPlayerCard(d, ctxMode) {
             <div class="num accent">${d.myPosRank || d.r}</div>
           </div>
         </div>
-        <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
+        <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
           <div class="card-rank-box">
             <div class="lbl">Proj PPG</div>
             <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div>
@@ -6932,10 +6944,7 @@ function openPlayerCard(d, ctxMode) {
             <div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div>
             <div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div>
           </div>`;})()}
-          ${(d.s==='RB'||d.s==='WR'||d.s==='TE') ? `<div class="card-rank-box">
-            <div class="lbl">'${d._yrr_yr ? String(d._yrr_yr).slice(-2) : '25'} Y/RR</div>
-            <div class="num" style="color:${d._yrr!=null?(d._yrr>=2.0?'var(--green)':d._yrr>=1.5?'var(--accent)':'var(--text2)'):'var(--text2)'}">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</div>
-          </div>` : ''}
+          ${_teamPpgBoxHtml(d.t)}
         </div>
       </div>` : ''}
 
@@ -8355,11 +8364,11 @@ function renderCompareGrid() {
             <div class="card-rank-box"><div class="lbl">Pos Rank</div><div class="num accent">${d.myPosRank || d.r}</div></div>
             <div class="card-rank-box"><div class="lbl">+/- ADP</div><div class="num ${diffClass}">${diffText}</div></div>
           </div>
-          <div class="card-rank-row" style="grid-template-columns:${(d.s==='RB'||d.s==='WR'||d.s==='TE')?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
+          <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
             <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div></div>
             <div class="card-rank-box"><div class="lbl">'25 PPG</div><div class="num green">${(()=>{const v=adj25ppg(d);return v!=null?v.toFixed(1):'—';})()}</div></div>
             ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d));return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div></div>`;})()}
-            ${(d.s==='RB'||d.s==='WR'||d.s==='TE') ? `<div class="card-rank-box"><div class="lbl">'${d._yrr_yr ? String(d._yrr_yr).slice(-2) : '25'} Y/RR</div><div class="num" style="color:${d._yrr!=null?(d._yrr>=2.0?'var(--green)':d._yrr>=1.5?'var(--accent)':'var(--text2)'):'var(--text2)'}">${d._yrr != null ? d._yrr.toFixed(2) : '—'}</div></div>` : ''}
+            ${_teamPpgBoxHtml(d.t)}
           </div>
         </div>
         <div class="card-section">

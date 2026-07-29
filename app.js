@@ -3855,15 +3855,31 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     };
   };
 
+  // Actual 2026 season-to-date PPG from WEEKLY_STATS (site scoring format).
+  // Null until the in-season weekly-stats pull writes 2026 rows.
+  function _seasonActualPpg2026(d) {
+    if (typeof WEEKLY_STATS === 'undefined' || !WEEKLY_STATS) return null;
+    const wd = WEEKLY_STATS[d.n];
+    const wks = wd && wd.seasons && wd.seasons['2026'];
+    if (!wks || !wks.length) return null;
+    const recAdj = rankingScoringFmt === 'ppr' ? 0.5 : rankingScoringFmt === 'std' ? -0.5 : 0;
+    let sum = 0;
+    for (const w of wks) sum += (w.fpts || 0) + (w.rec || 0) * recAdj;
+    return { ppg: sum / wks.length, gp: wks.length };
+  }
+
   // Weekly PROJ PPG. Priority order:
   //   1. Ruled-out players (IR/PUP/SUS/Out) -> 0; Doubtful -> half. Skipped in
   //      the offseason where lingering 2025 tags would wrongly zero players.
-  //   2. Posted weekly prop board (UD/PP via _weeklyPropLinesFor): score the
+  //   2. DST: season proj (or Clay own-defense-rank baseline) ± the
+  //      OPPONENT's implied total — the generic factors don't apply.
+  //   3. Posted weekly prop board (UD/PP via _weeklyPropLinesFor): score the
   //      posted lines with site scoring, filling unposted stats from Clay
   //      per-game. NO team-total / defense factors on this path — the books
   //      already price matchup, environment, and injuries into the lines.
-  //   3. Fallback heuristic: season-long PPG × (team_total / slate_avg) ×
+  //   4. Fallback heuristic: season-long PPG × (team_total / slate_avg) ×
   //      (opp_def_factor from Clay's defensive rank, 1 = toughest), clamped.
+  //      Kickers ride this path: ttFactor IS the right Vegas signal for a K.
   window._weeklyAdjustPpg = function(d, basePpg) {
     if (!d || !d.t) return basePpg;
     const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
@@ -3880,6 +3896,31 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const t = String(d.inj).toLowerCase();
       if (/\bir\b|\bpup\b|suspend|\bout\b|out for season|season.?ending/.test(t)) return 0;
       if (/doubtful/.test(t)) injMult = 0.5;
+    }
+    // In-season decay of preseason projections: shrink the base toward the
+    // player's ACTUAL 2026 per-game scoring as games accumulate — the prior
+    // is worth ~6 games (3 gm → 33% actuals, 10 gm → 63%). Preseason there
+    // are no 2026 rows in WEEKLY_STATS, so projections stand unchanged.
+    const act = _seasonActualPpg2026(d);
+    if (act && basePpg != null && isFinite(basePpg)) {
+      basePpg = basePpg + (act.ppg - basePpg) * (act.gp / (act.gp + 6));
+    }
+    // DST: the generic factors below are the WRONG signals for a defense
+    // (own team total and the opponent's DEFENSE rank are both irrelevant).
+    // Baseline = season proj (d.p/17), falling back to Clay's own composite
+    // defense rank (1=best → 8.5 ppg, 32nd → 4.0), adjusted by the
+    // OPPONENT's implied total (lower = better matchup) — the same formula
+    // the Sleeper extension's season mode uses.
+    if (d.s === 'DST') {
+      let dv = (basePpg != null && isFinite(basePpg) && basePpg > 0) ? basePpg : null;
+      if (dv == null) {
+        const own = window.CLAY_TEAM_GRADES_2026 && window.CLAY_TEAM_GRADES_2026[abbr];
+        if (own && typeof own.defRk === 'number') dv = 8.5 - 4.5 * (own.defRk - 1) / 31;
+      }
+      if (dv == null) return basePpg;
+      const oppTT = window._weeklyOppTeamTotalFor(d.t);
+      if (oppTT != null) dv += (21.5 - oppTT) * 0.35;
+      return Math.round(Math.max(1, dv * injMult) * 10) / 10;
     }
     // Props-first: score the posted weekly lines directly. Requires a Clay
     // projection as the fill source for stats the books don't post (weekly

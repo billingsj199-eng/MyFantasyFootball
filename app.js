@@ -7918,7 +7918,6 @@ function _cmpFullStatDefs(pos, fmtKey) {
     r('Yards/Carry', a => a.t.ra ? a.t.ry / a.t.ra : null, 2),
     v('Rush TD', a => a.t.rtd, 2),
     v('Targets', a => a.t.tgt, 1), v('Receptions', a => a.t.rec, 1), v('Rec Yds', a => a.t.rcy, 1), v('Rec TD', a => a.t.rctd, 2),
-    v('Total Yds', a => a.t.ry + a.t.rcy, 1), v('Total TD', a => a.t.rtd + a.t.rctd, 2),
     v('Fumbles', a => a.t.fl, 2, true)];
   if (pos === 'WR' || pos === 'TE') return [ppg,
     v('Targets', a => a.t.tgt, 1), v('Receptions', a => a.t.rec, 1),
@@ -7927,7 +7926,6 @@ function _cmpFullStatDefs(pos, fmtKey) {
     r('Yds/Rec', a => a.t.rec ? a.t.rcy / a.t.rec : null, 1),
     v('Rec TD', a => a.t.rctd, 2),
     v('Rush Att', a => a.t.ra, 1), v('Rush Yds', a => a.t.ry, 1),
-    v('Total Yds', a => a.t.ry + a.t.rcy, 1), v('Total TD', a => a.t.rtd + a.t.rctd, 2),
     v('Fumbles', a => a.t.fl, 2, true)];
   return [ppg];
 }

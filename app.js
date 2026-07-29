@@ -7766,7 +7766,9 @@ var searchAdded = [];
 var _cmpSplitState = {};
 
 function _cmpSplitSt(name) {
-  return _cmpSplitState[name] || (_cmpSplitState[name] = { open: false, seasons: null, wkFrom: 1, wkTo: 18, mate: null, minSnap: 0 });
+  // side: which half of a teammate split this card shows ('both'|'with'|'wo');
+  // agg: STATS section display mode ('avg' per-game | 'tot' totals).
+  return _cmpSplitState[name] || (_cmpSplitState[name] = { open: false, seasons: null, wkFrom: 1, wkTo: 18, mate: null, minSnap: 0, side: 'both', agg: 'avg' });
 }
 
 // The same player can appear on the Compare grid more than once (duplicate
@@ -7872,8 +7874,9 @@ function _cmpSplitResultsHtml(name, fmtOverride) {
         + '<td style="font-weight:700;color:' + (isBetter ? 'var(--green)' : 'var(--text)') + '">' + a.ppg.toFixed(1) + '</td>'
         + '<td>' + a.high.toFixed(1) + '</td>' + statDefs.map(s => '<td>' + s[1](a) + '</td>').join('') + '</tr>';
     };
+    const _side = st.side || 'both';
     return '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>'
-      + row('WITH ' + last, aw, betterWith) + row('W/O ' + last, ao, !betterWith && !!ao)
+      + (_side !== 'wo' ? row('WITH ' + last, aw, betterWith) : '') + (_side !== 'with' ? row('W/O ' + last, ao, !betterWith && !!ao) : '')
       + '</tbody></table></div>'
       + '<div class="cmp-split-note" style="margin-top:6px">Teammate seasons: ' + shared.join(', ') + ' · "With" = weeks both players logged a game</div>'
       + snapNote();
@@ -7889,6 +7892,205 @@ function _cmpSplitResultsHtml(name, fmtOverride) {
     + box('GP', agg.gp) + box('PPG', agg.ppg.toFixed(1), 'green') + box('High', agg.high.toFixed(1)) + '</div>';
   if (statDefs.length) html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr);margin-top:.4rem">' + statDefs.map(s => box(s[0], s[1](agg))).join('') + '</div>';
   return html + snapNote();
+}
+
+// === Compare card STATS section (full stat lines, split-aware) ===
+// Flock-style Metric / Value / (pos rank) table under the Rankings section.
+// Values follow the card's split filters (seasons, weeks, min snap %, teammate
+// side) and the AVG/TOTAL toggle; ranks compare the value against every same-
+// position player over the SAME seasons + week window (min 4 games in sample).
+
+// Stat rows per position. f() returns the TOTAL over the sample; vol(ume) stats
+// divide by GP in AVG mode, ratio stats (Y/C, Catch %…) are mode-independent.
+// asc = lower is better (INT, fumbles) for rank direction.
+function _cmpFullStatDefs(pos, fmtKey) {
+  const v = (lbl, f, dec, asc) => ({ lbl, f, dec: dec == null ? 1 : dec, vol: true, asc: !!asc });
+  const r = (lbl, f, dec) => ({ lbl, f, dec: dec == null ? 1 : dec, vol: false });
+  const ppg = { lbl: (fmtKey || 'half').toUpperCase() + ' Pts', f: a => a.ppg * a.gp, dec: 1, vol: true };
+  if (pos === 'QB') return [ppg,
+    v('Pass Yds', a => a.t.py, 1), v('Pass TD', a => a.t.ptd, 2), v('INT', a => a.t.int, 2, true),
+    v('Comp', a => a.t.pc, 1), v('Pass Att', a => a.t.pa, 1),
+    r('Comp %', a => a.t.pa ? a.t.pc / a.t.pa * 100 : null, 1),
+    v('Rush Att', a => a.t.ra, 1), v('Rush Yds', a => a.t.ry, 1), v('Rush TD', a => a.t.rtd, 2),
+    v('Fumbles', a => a.t.fl, 2, true)];
+  if (pos === 'RB') return [ppg,
+    v('Rush Att', a => a.t.ra, 1), v('Rush Yds', a => a.t.ry, 1),
+    r('Yards/Carry', a => a.t.ra ? a.t.ry / a.t.ra : null, 2),
+    v('Rush TD', a => a.t.rtd, 2),
+    v('Targets', a => a.t.tgt, 1), v('Receptions', a => a.t.rec, 1), v('Rec Yds', a => a.t.rcy, 1), v('Rec TD', a => a.t.rctd, 2),
+    v('Total Yds', a => a.t.ry + a.t.rcy, 1), v('Total TD', a => a.t.rtd + a.t.rctd, 2),
+    v('Fumbles', a => a.t.fl, 2, true)];
+  if (pos === 'WR' || pos === 'TE') return [ppg,
+    v('Targets', a => a.t.tgt, 1), v('Receptions', a => a.t.rec, 1),
+    r('Catch %', a => a.t.tgt ? a.t.rec / a.t.tgt * 100 : null, 1),
+    v('Rec Yds', a => a.t.rcy, 1),
+    r('Yds/Rec', a => a.t.rec ? a.t.rcy / a.t.rec : null, 1),
+    v('Rec TD', a => a.t.rctd, 2),
+    v('Rush Att', a => a.t.ra, 1), v('Rush Yds', a => a.t.ry, 1),
+    v('Total Yds', a => a.t.ry + a.t.rcy, 1), v('Total TD', a => a.t.rtd + a.t.rctd, 2),
+    v('Fumbles', a => a.t.fl, 2, true)];
+  return [ppg];
+}
+
+// Position-wide value pools for ranks, cached per (pos, seasons, weeks, fmt,
+// mode) signature. Rebuilt lazily; cleared when more weekly data merges in.
+var _cmpRankPoolCache = {};
+document.addEventListener('mff:weeklydata', () => { _cmpRankPoolCache = {}; });
+
+function _cmpRankPools(pos, st, fmtKey, mode) {
+  const sig = pos + '|' + (st.seasons ? Array.from(st.seasons).sort().join(',') : 'ALL') + '|' + st.wkFrom + '-' + st.wkTo + '|' + fmtKey + '|' + mode;
+  let pools = _cmpRankPoolCache[sig];
+  if (pools) return pools;
+  const recAdj = fmtKey === 'ppr' ? 0.5 : fmtKey === 'std' ? -0.5 : 0;
+  const defs = _cmpFullStatDefs(pos, fmtKey);
+  pools = defs.map(() => []);
+  for (const pn in WEEKLY_STATS) {
+    const wd = WEEKLY_STATS[pn];
+    if (!wd || wd.pos !== pos || !wd.seasons) continue;
+    const games = [];
+    for (const yr in wd.seasons) {
+      if (st.seasons && !st.seasons.has(yr)) continue;
+      const rows = wd.seasons[yr];
+      for (let i = 0; i < rows.length; i++) { if (rows[i].wk >= st.wkFrom && rows[i].wk <= st.wkTo) games.push(rows[i]); }
+    }
+    if (games.length < 4) continue; // tiny samples would flood the rank pool with noise
+    const a = _cmpSplitAgg(games, recAdj);
+    for (let i = 0; i < defs.length; i++) {
+      let t = defs[i].f(a);
+      if (t == null || !isFinite(t)) continue;
+      pools[i].push(defs[i].vol && mode === 'avg' ? t / a.gp : t);
+    }
+  }
+  pools.forEach(p => p.sort((x, y) => x - y));
+  return _cmpRankPoolCache[sig] = pools;
+}
+
+function _cmpPoolRank(sorted, v, asc) {
+  if (!sorted || !sorted.length || v == null || !isFinite(v)) return null;
+  let lo = 0, hi = sorted.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (sorted[m] < v) lo = m + 1; else hi = m; }
+  let lo2 = lo, hi2 = sorted.length;
+  while (lo2 < hi2) { const m = (lo2 + hi2) >> 1; if (sorted[m] <= v) lo2 = m + 1; else hi2 = m; }
+  const better = asc ? lo : sorted.length - lo2; // strictly-better count in rank direction
+  return better + 1;
+}
+
+function _cmpRankColor(r) {
+  return r == null ? 'var(--text2)' : r <= 6 ? '#22c55e' : r <= 18 ? '#facc15' : r <= 32 ? 'var(--text2)' : '#ef4444';
+}
+
+function _cmpFullStatsHtml(name, fmtOverride) {
+  const d = _cmpFindPlayer(name);
+  if (!d || typeof WEEKLY_STATS === 'undefined' || !WEEKLY_STATS[d.n]) return '<div class="cmp-split-note">Weekly data loading&hellip;</div>';
+  const st = _cmpSplitSt(name);
+  const fmtKey = fmtOverride || _cmpSplitScoring(name);
+  const recAdj = fmtKey === 'ppr' ? 0.5 : fmtKey === 'std' ? -0.5 : 0;
+  const mode = st.agg || 'avg';
+  const wd = WEEKLY_STATS[d.n];
+  const seasons = Object.keys(wd.seasons).filter(yr => !st.seasons || st.seasons.has(yr)).sort();
+  const inRange = w => w.wk >= st.wkFrom && w.wk <= st.wkTo;
+  const snapOk = (yr, w) => {
+    if (!st.minSnap) return true;
+    const sp = _snapWeek(d.n, +yr, w.wk);
+    return sp == null || sp >= st.minSnap;
+  };
+  const esc = name.replace(/"/g, '&quot;');
+  const defs = _cmpFullStatDefs(d.s, fmtKey);
+  const mval = (df, a) => { const t = df.f(a); return t == null || !isFinite(t) ? null : (df.vol && mode === 'avg' ? t / a.gp : t); };
+  const fmtV = (df, v) => v == null ? '—' : (df.vol && mode === 'tot' ? Math.round(v).toLocaleString() : v.toFixed(df.dec));
+
+  // Sample description parts shared by all layouts
+  const yrLbl = st.seasons ? Array.from(st.seasons).sort().map(y => '’' + String(y).slice(-2)).join('+') : 'CAREER';
+  const wkLbl = (st.wkFrom !== 1 || st.wkTo !== 18) ? ' · W' + st.wkFrom + '–' + st.wkTo : '';
+  const snapLbl = st.minSnap ? ' · ≥' + st.minSnap + '% SNAP' : '';
+  const toggle = '<div class="career-log-toggle"><button class="cmp-stats-agg' + (mode === 'avg' ? ' active' : '') + '" data-cmpplayer="' + esc + '" data-agg="avg">AVG</button>'
+    + '<button class="cmp-stats-agg' + (mode === 'tot' ? ' active' : '') + '" data-cmpplayer="' + esc + '" data-agg="tot">TOTAL</button></div>';
+  const bar = deskLbl => '<div class="cmp-stats-bar"><span class="cmp-stats-desc">' + deskLbl + '</span>' + toggle + '</div>';
+  const emptyMsg = m => '<div style="text-align:center;padding:10px;color:var(--text2);font-size:.7rem">' + m + '</div>';
+
+  // Teammate split: collect with/without game sets over shared-team seasons.
+  if (st.mate) {
+    const shared = seasons.filter(yr => {
+      const ta = _cmpNormTeam(_getTeamForPlayerYear(d.n, +yr));
+      const tb = _cmpNormTeam(_getTeamForPlayerYear(st.mate, +yr));
+      return ta && tb && ta === tb;
+    });
+    const last = st.mate.split(' ').slice(-1)[0].toUpperCase();
+    if (!shared.length) return bar(yrLbl + wkLbl + ' · ' + fmtKey.toUpperCase()) + emptyMsg('No seasons in the sample where ' + d.n + ' and ' + st.mate + ' were teammates');
+    const withG = [], withoutG = [];
+    shared.forEach(yr => {
+      const mw = _cmpMateWeekSet(st.mate, yr) || new Set();
+      wd.seasons[yr].forEach(w => { if (inRange(w) && snapOk(yr, w)) (mw.has(w.wk) ? withG : withoutG).push(w); });
+    });
+    const aw = _cmpSplitAgg(withG, recAdj), ao = _cmpSplitAgg(withoutG, recAdj);
+    const side = st.side || 'both';
+    if (side === 'both') {
+      if (!aw && !ao) return bar(yrLbl + wkLbl) + emptyMsg('No games match these filters');
+      const desc = yrLbl + wkLbl + ' · SPLIT: ' + last + ' · ' + (aw ? aw.gp : 0) + 'G / ' + (ao ? ao.gp : 0) + 'G' + snapLbl + ' · ' + fmtKey.toUpperCase();
+      const rows = defs.map(df => {
+        const vw = aw ? mval(df, aw) : null, vo = ao ? mval(df, ao) : null;
+        let wBetter = false, oBetter = false;
+        if (vw != null && vo != null && vw !== vo) { const wWins = df.asc ? vw < vo : vw > vo; wBetter = wWins; oBetter = !wWins; }
+        return '<tr><td>' + df.lbl + '</td>'
+          + '<td style="font-weight:700;color:' + (wBetter ? 'var(--green)' : 'var(--text)') + '">' + fmtV(df, vw) + '</td>'
+          + '<td style="font-weight:700;color:' + (oBetter ? 'var(--green)' : 'var(--text)') + '">' + fmtV(df, vo) + '</td></tr>';
+      }).join('');
+      return bar(desc) + '<div class="career-table-wrap cmp-stats-wrap"><table class="career-table"><thead>'
+        + '<tr><th>' + (mode === 'avg' ? 'Per Game' : 'Totals') + '</th><th>W/ ' + last + '</th><th>W/O ' + last + '</th></tr></thead><tbody>'
+        + '<tr><td>GP</td><td>' + (aw ? aw.gp : 0) + '</td><td>' + (ao ? ao.gp : 0) + '</td></tr>' + rows
+        + '</tbody></table></div>';
+    }
+    // Single side (WITH or W/O) — falls through to the ranked single-sample table.
+    const agg = side === 'with' ? aw : ao;
+    const desc = yrLbl + wkLbl + ' · ' + (side === 'with' ? 'W/ ' : 'W/O ') + last + ' · ' + (agg ? agg.gp : 0) + 'G' + snapLbl + ' · ' + fmtKey.toUpperCase();
+    if (!agg) return bar(desc) + emptyMsg('No games match these filters');
+    return bar(desc) + _cmpRankedStatTable(d, st, fmtKey, mode, defs, agg, mval, fmtV);
+  }
+
+  // No teammate: one sample over the filters.
+  const games = [];
+  seasons.forEach(yr => wd.seasons[yr].forEach(w => { if (inRange(w) && snapOk(yr, w)) games.push(w); }));
+  const agg = _cmpSplitAgg(games, recAdj);
+  const desc = yrLbl + wkLbl + ' · ' + (agg ? agg.gp : 0) + 'G' + snapLbl + ' · ' + fmtKey.toUpperCase();
+  if (!agg) return bar(desc) + emptyMsg('No games match these filters');
+  return bar(desc) + _cmpRankedStatTable(d, st, fmtKey, mode, defs, agg, mval, fmtV);
+}
+
+function _cmpRankedStatTable(d, st, fmtKey, mode, defs, agg, mval, fmtV) {
+  const pools = _cmpRankPools(d.s, st, fmtKey, mode);
+  const rows = defs.map((df, i) => {
+    const v = mval(df, agg);
+    const r = _cmpPoolRank(pools[i], v, df.asc);
+    return '<tr><td>' + df.lbl + '</td><td style="font-weight:700">' + fmtV(df, v) + '</td>'
+      + '<td style="font-weight:700;color:' + _cmpRankColor(r) + '">' + (r != null ? '(' + r + ')' : '—') + '</td></tr>';
+  }).join('');
+  return '<div class="career-table-wrap cmp-stats-wrap"><table class="career-table"><thead>'
+    + '<tr><th>' + (mode === 'avg' ? 'Per Game' : 'Totals') + '</th><th>Value</th>'
+    + '<th title="Rank among all ' + d.s + 's over the same seasons and week window (min 4 games)" style="cursor:help">Rank</th></tr></thead><tbody>'
+    + '<tr><td>GP</td><td style="font-weight:700">' + agg.gp + '</td><td></td></tr>' + rows
+    + '</tbody></table></div>';
+}
+
+// Section wrapper on the Compare cards; inner div repaints on every filter change.
+function _cmpFullStatsSectionHtml(d, instKey) {
+  if (!d || !d.n || !d.s) return '';
+  try { if (typeof WEEKLY_STATS === 'undefined' || !hasWeeklyData(d)) return ''; } catch (_) { return ''; }
+  const key = instKey || d.n;
+  const esc = key.replace(/"/g, '&quot;');
+  return '<div class="card-section"><div class="card-section-title">Stats <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· follows Splits &amp; Filters</span></div>'
+    + '<div class="cmp-fullstats" data-cmpplayer="' + esc + '">' + _cmpFullStatsHtml(key) + '</div></div>';
+}
+
+// AVG/TOTAL buttons live inside the repainted div — rewire after every paint.
+function _cmpWireStatsToggles(scope) {
+  scope.querySelectorAll('.cmp-stats-agg').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // retired compare cards are click-to-open
+      const name = btn.dataset.cmpplayer;
+      _cmpSplitSt(name).agg = btn.dataset.agg;
+      _cmpSplitRefresh(name);
+    });
+  });
 }
 
 // scoresrc: undefined for Compare cards (scoring follows the compare card's
@@ -7924,6 +8126,10 @@ function _cmpSplitSectionHtml(d, scoresrc, instKey) {
           + '<button class="cmp-split-mate-clear" data-cmpplayer="' + esc + '" title="Clear teammate split">&times;</button>'
           + '<div class="cmp-split-drop" style="display:none"></div>'
         + '</div></div>'
+      + '<div class="cmp-split-row cmp-split-siderow" data-cmpplayer="' + esc + '"' + (st.mate ? '' : ' style="display:none"') + '><span class="cmp-split-lbl">SHOW</span>'
+        + ['both', 'with', 'wo'].map(s => '<button class="cmp-split-chip cmp-split-side' + ((st.side || 'both') === s ? ' active' : '') + '" data-cmpplayer="' + esc + '" data-side="' + s + '">' + (s === 'both' ? 'BOTH' : s === 'with' ? 'WITH' : 'W/O') + '</button>').join('')
+        + (scoresrc ? '' : '<button class="cmp-split-chip cmp-split-vsbtn" data-cmpplayer="' + esc + '" title="Duplicate this card and show WITH on one card, WITHOUT on the other">&#10697; W/ vs W/O</button>')
+        + '</div>'
       + '<div class="cmp-split-results" data-cmpplayer="' + esc + '"' + (scoresrc ? ' data-scoresrc="' + scoresrc + '"' : '') + '>' + _cmpSplitResultsHtml(name) + '</div>'
     + '</div></details></div>';
 }
@@ -7945,6 +8151,17 @@ function _cmpSplitRefresh(name) {
     }
     el.innerHTML = _cmpSplitResultsHtml(key, fmtKey);
   });
+  // STATS section + teammate SHOW row track the same state.
+  document.querySelectorAll('.cmp-fullstats[data-cmpplayer]').forEach(el => {
+    const key = el.dataset.cmpplayer;
+    if (_cmpKeyName(key) !== base) return;
+    el.innerHTML = _cmpFullStatsHtml(key);
+    _cmpWireStatsToggles(el);
+  });
+  document.querySelectorAll('.cmp-split-siderow[data-cmpplayer]').forEach(el => {
+    if (_cmpKeyName(el.dataset.cmpplayer) !== base) return;
+    el.style.display = _cmpSplitSt(el.dataset.cmpplayer).mate ? '' : 'none';
+  });
 }
 
 function _cmpWireSplits(root) {
@@ -7954,7 +8171,7 @@ function _cmpWireSplits(root) {
     det.addEventListener('click', e => e.stopPropagation());
     det.addEventListener('toggle', () => { _cmpSplitSt(det.dataset.cmpplayer).open = det.open; });
   });
-  root.querySelectorAll('.cmp-split-chip').forEach(btn => {
+  root.querySelectorAll('.cmp-split-chip[data-season]').forEach(btn => {
     btn.addEventListener('click', () => {
       const name = btn.dataset.cmpplayer;
       const st = _cmpSplitSt(name);
@@ -8036,6 +8253,33 @@ function _cmpWireSplits(root) {
       _cmpSplitRefresh(name);
     });
   });
+  root.querySelectorAll('.cmp-split-side').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.cmpplayer;
+      _cmpSplitSt(name).side = btn.dataset.side;
+      btn.parentElement.querySelectorAll('.cmp-split-side').forEach(b => b.classList.toggle('active', b === btn));
+      _cmpSplitRefresh(name);
+    });
+  });
+  // W/ vs W/O: set this card to WITH and spawn a duplicate locked to W/O, so the
+  // two halves of the split sit side by side (Flock-style two-card compare).
+  root.querySelectorAll('.cmp-split-vsbtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.cmpplayer;
+      const st = _cmpSplitSt(key);
+      if (!st.mate) return;
+      const src = _cmpFindPlayer(key);
+      if (!src) return;
+      st.side = 'with';
+      _cmpDupSeq++;
+      const dupKey = src.n + '##' + _cmpDupSeq;
+      _cmpSplitState[dupKey] = { open: st.open, seasons: st.seasons ? new Set(st.seasons) : null, wkFrom: st.wkFrom, wkTo: st.wkTo, mate: st.mate, minSnap: st.minSnap, side: 'wo', agg: st.agg };
+      searchAdded.push({ n: src.n, s: src.s, t: src.t, _retired: !!src._retired, _key: 'DUP:' + _cmpDupSeq + ':' + src.n, _src: src });
+      renderCompareGrid();
+      if (typeof renderSearchChips === 'function') renderSearchChips();
+    });
+  });
+  _cmpWireStatsToggles(root);
 }
 
 function renderCompareGrid() {
@@ -8311,16 +8555,8 @@ function renderCompareGrid() {
             </div>
             <div class="cmp-cl-content" data-cmpplayer="${d.n.replace(/"/g, '&quot;')}">${buildCareerTable(d, 'ppr')}</div>
           </div>` : ''}
+          ${_cmpFullStatsSectionHtml(d, instKey)}
           ${_cmpSplitSectionHtml(d, undefined, instKey)}
-          ${d._height || d._weight || d.dr || d._college ? `<div class="card-section">
-            <div class="card-section-title">Player Info</div>
-            <div class="card-grid">
-              <div class="card-stat"><span class="card-stat-label">Height</span><span class="card-stat-value">${fmtHeight(d._height)}</span></div>
-              <div class="card-stat"><span class="card-stat-label">Weight</span><span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span></div>
-              <div class="card-stat"><span class="card-stat-label">Draft Pick</span><span class="card-stat-value">${d.dr != null ? '#' + d.dr + ' Overall' : '—'}</span></div>
-              <div class="card-stat"><span class="card-stat-label">College</span><span class="card-stat-value">${d._college || '—'}</span></div>
-            </div>
-          </div>` : ''}
         </div>
       </div>`;
     }
@@ -8371,26 +8607,14 @@ function renderCompareGrid() {
             ${_teamPpgBoxHtml(d.t)}
           </div>
         </div>
-        <div class="card-section">
-          <div class="card-section-title">Player Info</div>
-          <div class="card-grid">
-            <div class="card-stat"><span class="card-stat-label">Draft Capital</span><span class="card-stat-value">${draftRdLabel(d.dr)}</span></div>
-            <div class="card-stat"><span class="card-stat-label">Contract (AAV)</span><span class="card-stat-value">${d.sal != null ? '$'+fmt(d.sal,2)+'M' : '—'}</span></div>
-            <div class="card-stat"><span class="card-stat-label">Contract Year</span><span class="card-stat-value">${d.cyr != null ? fmtInt(d.cyr) : '—'}</span></div>
-            <div class="card-stat"><span class="card-stat-label">Potential Out</span><span class="card-stat-value">${d.out != null ? fmtInt(d.out) : '—'}</span></div>
-            <div class="card-stat"><span class="card-stat-label">Height</span><span class="card-stat-value">${fmtHeight(d._height)}</span></div>
-            <div class="card-stat"><span class="card-stat-label">Weight</span><span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span></div>
-            <div class="card-stat"><span class="card-stat-label">Jersey</span><span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span></div>
-            <div class="card-stat"><span class="card-stat-label">College</span><span class="card-stat-value">${d._college || '—'}</span></div>
-          </div>
-        </div>
+        ${_cmpFullStatsSectionHtml(d, instKey)}
+        ${_cmpSplitSectionHtml(d, undefined, instKey)}
         ${d.career && d.career.length > 0 ? `<div class="card-section">
           <div class="card-section-title">Career Log (PPR)</div>
           ${buildCareerTable(d, 'ppr')}
         </div>` : d._retired ? `<div class="card-section">
           <div class="card-section-title">Career: ${d._debut}–${d._last} (${d._last - d._debut + 1} seasons)</div>
         </div>` : ''}
-        ${_cmpSplitSectionHtml(d, undefined, instKey)}
       </div>
     </div>`;
   }).join('');

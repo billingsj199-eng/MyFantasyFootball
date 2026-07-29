@@ -5016,7 +5016,7 @@ var _2025_TEAM_FIX = {
   'Isiah Pacheco':'KC','Romeo Doubs':'GB','Tua Tagovailoa':'MIA','Geno Smith':'SEA',
   'Kyler Murray':'ARI','Michael Pittman Jr.':'IND','DJ Moore':'CHI','Jaylen Waddle':'MIA',
   'Kenneth Gainwell':'PHI','Rashid Shaheed':'NO','Rico Dowdle':'DAL','Trey Hendrickson':'CIN',
-  'Tyler Linderbaum':'BAL','Malik Willis':'GB','Baker Mayfield':'TB','Daniel Jones':'NYG',
+  'Tyler Linderbaum':'BAL','Malik Willis':'GB','Baker Mayfield':'TB','Daniel Jones':'IND',
   'Rachaad White':'TB','Chig Okonkwo':'TEN','Jamel Dean':'TB','Reed Blankenship':'PHI',
   'Zion Johnson':'LAC','Demario Davis':'NO','Minkah Fitzpatrick':'PIT','Tariq Woolen':'SEA',
   'Devin Bush':'CLE','Brandon Aiyuk':'SF','Ricky Pearsall':'SF',

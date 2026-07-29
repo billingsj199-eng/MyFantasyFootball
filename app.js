@@ -5937,7 +5937,7 @@ function _logsSectionHtml(d) {
       : (typeof WEEKLY_STATS !== 'undefined' && Object.keys(WEEKLY_STATS).length > 0)
         ? '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No game-by-game data available for this player.</div>'
         : '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">Game-by-game data is loading…</div>'}</div>
-  </div>${!d._retired ? '<div id="cardSplitsWrap">' + _cmpSplitSectionHtml(d, 'gl') + '</div>' : ''}`;
+  </div>${!d._retired ? '<div id="cardSplitsWrap">' + _cmpFullStatsSectionHtml(d, null, 'gl') + _cmpSplitSectionHtml(d, 'gl') + '</div>' : ''}`;
 }
 
 function _getCollegeStats(name, pos) {
@@ -7705,10 +7705,10 @@ function openPlayerCard(d, ctxMode) {
         glYearSelect.innerHTML = getWeeklySeasons(d).map(s => '<option value="'+s+'">'+s+'</option>').join('');
       }
       _glRefresh();
-      // Splits section renders empty when the card opens pre-bundle — fill + wire now.
+      // Splits + Stats sections render empty when the card opens pre-bundle — fill + wire now.
       const spWrap = document.getElementById('cardSplitsWrap');
       if (spWrap && !spWrap.innerHTML.trim() && !d._retired) {
-        spWrap.innerHTML = _cmpSplitSectionHtml(d, 'gl');
+        spWrap.innerHTML = _cmpFullStatsSectionHtml(d, null, 'gl') + _cmpSplitSectionHtml(d, 'gl');
         _cmpWireSplits(spWrap);
       }
     });
@@ -8069,14 +8069,21 @@ function _cmpRankedStatTable(d, st, fmtKey, mode, defs, agg, mval, fmtV) {
     + '</tbody></table></div>';
 }
 
-// Section wrapper on the Compare cards; inner div repaints on every filter change.
-function _cmpFullStatsSectionHtml(d, instKey) {
+// Section wrapper on the Compare cards + player-card LOGS tab; inner div
+// repaints on every filter change. scoresrc 'gl' = follow the game-log
+// scoring toggle (player-card modal) instead of the compare-card toggle.
+function _cmpFullStatsSectionHtml(d, instKey, scoresrc) {
   if (!d || !d.n || !d.s) return '';
   try { if (typeof WEEKLY_STATS === 'undefined' || !hasWeeklyData(d)) return ''; } catch (_) { return ''; }
   const key = instKey || d.n;
   const esc = key.replace(/"/g, '&quot;');
+  let fmtOverride = null;
+  if (scoresrc === 'gl') {
+    const b = document.querySelector('#playerCard .gl-scoring-btn.active');
+    fmtOverride = b ? b.dataset.glscoring : 'ppr';
+  }
   return '<div class="card-section"><div class="card-section-title">Stats <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· follows Splits &amp; Filters</span></div>'
-    + '<div class="cmp-fullstats" data-cmpplayer="' + esc + '">' + _cmpFullStatsHtml(key) + '</div></div>';
+    + '<div class="cmp-fullstats" data-cmpplayer="' + esc + '"' + (scoresrc ? ' data-scoresrc="' + scoresrc + '"' : '') + '>' + _cmpFullStatsHtml(key, fmtOverride) + '</div></div>';
 }
 
 // AVG/TOTAL buttons live inside the repainted div — rewire after every paint.
@@ -8153,7 +8160,12 @@ function _cmpSplitRefresh(name) {
   document.querySelectorAll('.cmp-fullstats[data-cmpplayer]').forEach(el => {
     const key = el.dataset.cmpplayer;
     if (_cmpKeyName(key) !== base) return;
-    el.innerHTML = _cmpFullStatsHtml(key);
+    let fmtKey = null;
+    if (el.dataset.scoresrc === 'gl') {
+      const b = document.querySelector('#playerCard .gl-scoring-btn.active');
+      fmtKey = b ? b.dataset.glscoring : 'ppr';
+    }
+    el.innerHTML = _cmpFullStatsHtml(key, fmtKey);
     _cmpWireStatsToggles(el);
   });
   document.querySelectorAll('.cmp-split-siderow[data-cmpplayer]').forEach(el => {

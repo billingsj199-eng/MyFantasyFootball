@@ -35,7 +35,7 @@ const PRICE_IDS = {
 };
 
 // === URLs ===
-const SITE_URL = "https://myfantasyfootball.org";
+const SITE_URL = "https://myfantasyfootball.co";
 const SUCCESS_URL = SITE_URL + "/?premium_success=1&session_id={CHECKOUT_SESSION_ID}";
 const CANCEL_URL  = SITE_URL + "/?premium_cancel=1";
 
@@ -78,6 +78,7 @@ function isCanceling(subscription) {
 // Allowed origins for callable functions.
 // Using a regex that matches both root and www, plus localhost for dev.
 const ALLOWED_ORIGINS = [
+  /^https:\/\/(www\.)?myfantasyfootball\.co$/,
   /^https:\/\/(www\.)?myfantasyfootball\.org$/,
   /^https:\/\/billingsj199-eng\.github\.io$/,
   /^http:\/\/localhost(:\d+)?$/,

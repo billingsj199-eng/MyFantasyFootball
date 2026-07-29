@@ -2149,9 +2149,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   };
 
   // Per-position / per-format stat slots (top→bottom on each card):
-  //   1) ADP   2) Proj PPG   3) dynasty→Age · WR/TE→Y/RR · QB/RB/other→+/- vs ADP
-  // Team Total is intentionally not used for QB: it's a weekly-only Vegas field
-  // (undefined in season views), so the value arrow takes the third slot instead.
+  //   1) ADP   2) Proj PPG   3) dynasty→Age · WR/TE→Team PPG · QB/RB/other→+/- vs ADP
   const _isDyn = (typeof currentMode !== 'undefined') && (currentMode === 'dynasty' || currentMode === 'dynastysf');
   const _adpVal = (typeof rnkAdp === 'function') ? rnkAdp(d) : null;
   const _statSlots = [
@@ -2161,9 +2159,11 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   if (_isDyn) {
     _statSlots.push({ v: (d.age != null ? d.age : null), c: _tcvAgeColor(d.age, d.s), lbl: 'Age' });
   } else if (d.s === 'WR' || d.s === 'TE') {
-    const _y = (d._yrr != null) ? d._yrr : null;
-    const _yc = (_y != null) ? (_y >= 2.0 ? 'var(--green)' : _y >= 1.5 ? 'var(--accent)' : 'var(--text2)') : null;
-    _statSlots.push({ v: (_y != null ? _y.toFixed(2) : null), c: _yc, lbl: 'Y/RR' });
+    // Vegas implied Team PPG + league rank (season avg — same source as the
+    // table column and player-card box).
+    const _tp = (typeof _impliedTeamPpg === 'function') ? _impliedTeamPpg(d.t) : null;
+    const _tc = _tp ? (_tp.ppg >= 24.5 ? '#22c55e' : _tp.ppg <= 20.5 ? '#ef4444' : '#facc15') : null;
+    _statSlots.push({ v: _tp ? _tp.ppg.toFixed(1) + '<span style="font-size:.75em;color:var(--text2)">(' + _tp.rank + ')</span>' : null, c: _tc, lbl: 'Team PPG' });
   } else {
     // QB / RB / K / DST → +/- ADP value arrow (ranked vs the market)
     let _arrow = '<span class="tcv-stat-blank">—</span>';
@@ -2254,7 +2254,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span>4</span>/<span style="color:#facc15">17.3</span>/<span style="color:#22c55e">▲6</span></span>' +
-    '<span>= ADP / PROJ PPG (' + scoreFmtLabel + ') / VALUE — <b>WR/TE</b> show Y/RR, <b>dynasty</b> shows Age</span>' +
+    '<span>= ADP / PROJ PPG (' + scoreFmtLabel + ') / VALUE — <b>WR/TE</b> show Team PPG (rank), <b>dynasty</b> shows Age</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 

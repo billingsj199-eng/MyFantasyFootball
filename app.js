@@ -6654,11 +6654,29 @@ async function _snapElement(el, fileLabel) {
   }
   const src = await window.html2canvas(el, {
     backgroundColor: bg, scale: SCALE, useCORS: true, logging: false,
-    ignoreElements: node => !!(node.classList && (node.classList.contains('card-snap-btn') || node.classList.contains('card-share') || node.classList.contains('card-close')))
+    ignoreElements: node => !!(node.classList && (node.classList.contains('card-snap-btn') || node.classList.contains('card-share') || node.classList.contains('card-close'))),
+    // html2canvas ignores object-fit and stretches covered imgs (player
+    // headshots). Swap them for background-image divs — background-size:
+    // cover renders correctly — keeping size, radius, border and position.
+    onclone: (doc, cloneEl) => {
+      const win = doc.defaultView;
+      (cloneEl || doc).querySelectorAll('img').forEach(img => {
+        if (!img.src) return;
+        const cs = win.getComputedStyle(img);
+        if (cs.objectFit !== 'cover') return;
+        const div = doc.createElement('div');
+        div.style.cssText = 'display:inline-block;width:' + cs.width + ';height:' + cs.height
+          + ';border-radius:' + cs.borderRadius + ';border:' + cs.border
+          + ';margin:' + cs.margin + ';flex-shrink:0;background-color:' + cs.backgroundColor
+          + ';background-image:url("' + img.src + '");background-size:cover;background-repeat:no-repeat'
+          + ';background-position:' + (cs.objectPosition || 'center');
+        img.parentNode.replaceChild(div, img);
+      });
+    }
   });
   // Compose: padding around the content + a bottom strip that holds the
   // watermark so it stays visible without overlapping any information.
-  const PAD = 14 * SCALE, STRIP = 24 * SCALE;
+  const PAD = 14 * SCALE, STRIP = 32 * SCALE;
   const out = document.createElement('canvas');
   out.width = src.width + PAD * 2;
   out.height = src.height + PAD * 2 + STRIP;
@@ -6666,7 +6684,7 @@ async function _snapElement(el, fileLabel) {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, out.width, out.height);
   ctx.drawImage(src, PAD, PAD);
-  ctx.font = '700 ' + (12 * SCALE) + 'px "Bebas Neue", Arial, sans-serif';
+  ctx.font = '700 ' + (18 * SCALE) + 'px "Bebas Neue", Arial, sans-serif';
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'right';
   ctx.fillStyle = 'rgba(245,158,11,0.92)';

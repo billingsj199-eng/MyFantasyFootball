@@ -34,6 +34,15 @@ const PRICE_IDS = {
   yearly:  "price_1TQrIeHIcvDuU89CSm5NehUd",
 };
 
+// === Season Pass (one-time payment, fixed end date) ===
+// The Season Pass costs $24.99 once and ALWAYS ends Jan 15 2027 at 11:59pm ET,
+// no matter when it's purchased. It is NOT a subscription — nothing renews.
+// UPDATE BOTH constants each season: create a fresh one-time Price in the
+// Stripe dashboard (Products → Season Pass → Add price → One-off) and move
+// the end date forward a year.
+const SEASON_PASS_PRICE_ID = "PASTE_SEASON_PASS_PRICE_ID"; // $24.99 one-time price
+const SEASON_PASS_END_MS = Date.UTC(2027, 0, 16, 4, 59, 59, 999); // Jan 15 2027 23:59:59 ET (UTC-5)
+
 // === URLs ===
 const SITE_URL = "https://myfantasyfootball.co";
 const SUCCESS_URL = SITE_URL + "/?premium_success=1&session_id={CHECKOUT_SESSION_ID}";
@@ -92,8 +101,16 @@ exports.createCheckoutSession = onCall(
     }
 
     const plan = (request.data && request.data.plan) || "yearly";
-    if (!PRICE_IDS[plan]) {
+    if (plan !== "season" && !PRICE_IDS[plan]) {
       throw new HttpsError("invalid-argument", "Invalid plan: " + plan);
+    }
+    if (plan === "season") {
+      if (SEASON_PASS_PRICE_ID.indexOf("PASTE") === 0) {
+        throw new HttpsError("failed-precondition", "Season Pass isn't available yet — check back soon.");
+      }
+      if (Date.now() >= SEASON_PASS_END_MS) {
+        throw new HttpsError("failed-precondition", "Season Pass sales have ended for this season.");
+      }
     }
 
     const stripe = new Stripe(STRIPE_SECRET_KEY.value());
@@ -115,11 +132,16 @@ exports.createCheckoutSession = onCall(
       await userRef.set({ stripeCustomerId: customerId }, { merge: true });
     }
 
+    // Season Pass = one-time payment; Monthly/Yearly = recurring subscription.
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
+      mode: plan === "season" ? "payment" : "subscription",
       customer: customerId,
-      line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],
+      line_items: [{
+        price: plan === "season" ? SEASON_PASS_PRICE_ID : PRICE_IDS[plan],
+        quantity: 1,
+      }],
       client_reference_id: uid,
+      metadata: { plan: plan, firebaseUid: uid },
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
       allow_promotion_codes: true,
@@ -325,6 +347,39 @@ exports.stripeWebhook = onRequest(
           const customerId = session.customer;
           const subscriptionId = session.subscription;
 
+          // Season Pass — one-time payment, no subscription object. Grant
+          // premium with the fixed season end date regardless of purchase date.
+          const isSeasonPass = session.mode === "payment" &&
+            session.metadata && session.metadata.plan === "season";
+          if (isSeasonPass && uid) {
+            const userRef = db.collection("users").doc(uid);
+            const snap = await userRef.get();
+            const existing = snap.exists ? (snap.data().premium || null) : null;
+            const existingActive = existing &&
+              (existing.status === "active" || existing.status === "trialing") &&
+              existing.currentPeriodEnd > Date.now();
+            if (existingActive && existing.currentPeriodEnd >= SEASON_PASS_END_MS) {
+              // They already have premium running past the season end — don't downgrade it.
+              console.log("Season Pass bought by", uid, "— kept existing longer premium");
+              break;
+            }
+            await userRef.set({
+              stripeCustomerId: customerId,
+              premium: {
+                plan: "season",
+                status: "active",
+                stripeSubscriptionId: null, // one-time payment — nothing to renew or cancel
+                stripePriceId: SEASON_PASS_PRICE_ID,
+                currentPeriodEnd: SEASON_PASS_END_MS,
+                cancelAtPeriodEnd: true,
+                activatedAt: FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
+              },
+            }, { merge: true });
+            console.log("Season Pass activated for", uid, "— ends", new Date(SEASON_PASS_END_MS).toISOString());
+            break;
+          }
+
           if (!uid || !subscriptionId) {
             console.warn("Skipping incomplete session:", session.id);
             break;
@@ -370,6 +425,18 @@ exports.stripeWebhook = onRequest(
           }
 
           const userDoc = userQuery.docs[0];
+
+          // Don't let a lingering old subscription event (e.g. a canceled
+          // monthly's deletion) clobber an active fixed-date Season Pass.
+          const existingPrem = (userDoc.data() || {}).premium || null;
+          if (existingPrem && existingPrem.plan === "season" &&
+              existingPrem.status === "active" &&
+              existingPrem.currentPeriodEnd > Date.now() &&
+              existingPrem.currentPeriodEnd >= getPeriodEnd(subscription) * 1000) {
+            console.log("Ignoring", event.type, "for", userDoc.id, "— active Season Pass takes precedence");
+            break;
+          }
+
           const priceId = subscription.items.data[0].price.id;
           const plan = planFromPriceId(priceId);
 

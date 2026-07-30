@@ -25957,14 +25957,21 @@ window.fmtHeight = fmtHeight;
       // v8.3: Generational ≥90.
       // v9 (May 10 2026): in-page tier-threshold optimizer — Top Prospect raised
       //   76→80 (sharpened: hr 54%→70% with no busts), Starter lowered 62→60.
-      //   Strict monotonic hit-rate AND PPG gradient achieved (n=219).
-      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=3)
-      { min: 80, label: 'Top Prospect',  color: '#34d399' },  //  70% hit (n=10) — 0% bust
-      { min: 60, label: 'Starter',       color: '#60a5fa' },  //  38% hit (n=34)
-      { min: 50, label: 'Contributor',   color: '#a78bfa' },  //  12% hit (n=42)
-      { min: 38, label: 'Depth',         color: '#94a3b8' },  //   6% hit (n=50)
-      { min: 26, label: 'Lottery Ticket',color: '#f87171' },  //   3% hit (n=36)
-      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit (n=28)
+      // v10 (Jul 2026): grid-search re-cut (n=203, 17.7K configs) for the v9 DC
+      //   curve + day-3 shrink distribution, which had diluted TP to 58%.
+      //   Objective: strict monotone hr/PPG/bust gradients + top-tier bust
+      //   suppression + top-3 hit capture. TP 80→87 (87-90 = Jefferson/DeVonta/
+      //   Olave/JSN/Harry, 80% hit, 12.8 PPG); demoted 80-87 band (Higgins/
+      //   Waddle/G.Wilson/Davis/Bateman/Jamo/Moore) hits 43% — Starter-grade.
+      //   Starter 60→54, Contributor 50→44, Depth 38→32. All gradients strictly
+      //   monotone: hr 100/80/33/12/4/0/0, bust 0/20/44/68/91/93/100.
+      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=4)
+      { min: 87, label: 'Top Prospect',  color: '#34d399' },  //  80% hit (n=5)
+      { min: 54, label: 'Starter',       color: '#60a5fa' },  //  33% hit (n=57)
+      { min: 44, label: 'Contributor',   color: '#a78bfa' },  //  12% hit (n=25)
+      { min: 32, label: 'Depth',         color: '#94a3b8' },  //   4% hit (n=56)
+      { min: 26, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit (n=29)
+      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit (n=27)
     ],
     TE: [
       // v8.3 (Apr 23 2026): Generational raised 84→90 for universal alignment.

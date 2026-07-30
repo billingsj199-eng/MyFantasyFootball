@@ -18831,6 +18831,30 @@ window.fmtHeight = fmtHeight;
     return Math.max(val, 1);
   };
 
+  // Package (consolidation) adjustment — shared by trade calc, trade finder, suggest.
+  // Raw sums let 2-for-1 / 3-for-1 packages win on quantity: three mid assets out-sum
+  // one elite player even though the elite side wins the trade in practice (roster
+  // spots are scarce, only the best pieces start). Fix: the best asset on a side
+  // counts in full, every additional asset pays a roster-spot cost equal to HALF a
+  // replacement-level player (the value curve at rank 140). Assets below the cost
+  // contribute nothing — junk throw-ins can't tilt a trade. Half (not full)
+  // replacement keeps 2-for-1s of two genuine starters competitive, matching how
+  // KTC's own multi-piece adjustment behaves on its flat dynasty curve.
+  window._packageRosterCost = function(mode) {
+    const m = mode || tradeMode;
+    const isDyn = (m === 'dynasty' || m === 'dynastysf');
+    const repl = isDyn ? 7750 / (Math.pow(140, 0.8) + 30) : 1000 / (Math.pow(140, 0.8) + 3);
+    return Math.round(repl / 2); // dynasty ≈ 47, redraft ≈ 9
+  };
+  window._packageAdjustedTotal = function(values, mode) {
+    if (!values || !values.length) return 0;
+    const cost = window._packageRosterCost(mode);
+    const sorted = values.slice().sort((a, b) => b - a);
+    let total = sorted[0];
+    for (let i = 1; i < sorted.length; i++) total += Math.max(sorted[i] - cost, 0);
+    return Math.round(total);
+  };
+
   // Expose TIER_MULT globally so other IIFEs can read it
   window._TIER_MULT = TIER_MULT;
 
@@ -18838,11 +18862,18 @@ window.fmtHeight = fmtHeight;
     return window._getTradeValue(d, tradeSource, tradeMode);
   }
 
+  // raw = straight sum; total = package-adjusted (extra pieces pay a roster-spot cost)
+  function calcSideDetail(side) {
+    const vals = [];
+    side.players.forEach(idx => { vals.push(getPlayerValue(D[idx])); });
+    side.picks.forEach(p => { vals.push(getPickValue(p.round, p.year, p.slot, p._pickNum)); });
+    const raw = vals.reduce((s, v) => s + v, 0);
+    const total = window._packageAdjustedTotal(vals, tradeMode);
+    return { raw, total, adj: total - raw, count: vals.length };
+  }
+
   function calcSideTotal(side) {
-    let total = 0;
-    side.players.forEach(idx => { total += getPlayerValue(D[idx]); });
-    side.picks.forEach(p => { total += getPickValue(p.round, p.year, p.slot, p._pickNum); });
-    return total;
+    return calcSideDetail(side).total;
   }
 
   function slotLabel(slot) {
@@ -18885,7 +18916,21 @@ window.fmtHeight = fmtHeight;
       });
       container.innerHTML = html;
     }
-    totalEl.textContent = calcSideTotal(side);
+    const det = calcSideDetail(side);
+    totalEl.textContent = det.total;
+    // Multi-piece note: show raw sum + discount so the math stays transparent
+    let adjEl = totalEl.parentElement.querySelector('.trade-total-adjnote');
+    if (det.adj < 0) {
+      if (!adjEl) {
+        adjEl = document.createElement('div');
+        adjEl.className = 'trade-total-adjnote';
+        totalEl.parentElement.appendChild(adjEl);
+      }
+      adjEl.textContent = 'multi-piece adj ' + det.adj + ' (raw ' + det.raw + ')';
+      adjEl.title = 'Each asset after this side\'s best pays a roster-spot cost of ' + window._packageRosterCost(tradeMode) + ' — packages can\'t win on quantity alone';
+    } else if (adjEl) {
+      adjEl.remove();
+    }
     attachRemoveListeners();
     updateResult();
   }
@@ -18956,6 +19001,16 @@ window.fmtHeight = fmtHeight;
     if (!aTotal || !bTotal) return out;
 
     const isDyn = tradeMode === 'dynasty' || tradeMode === 'dynastysf';
+
+    // 0. Consolidation — flag when a multi-piece side is paying the roster-spot discount
+    const aDet = calcSideDetail(a);
+    const bDet = calcSideDetail(b);
+    if (aDet.adj < 0 || bDet.adj < 0) {
+      const parts = [];
+      if (aDet.adj < 0) parts.push('Team A ' + aDet.adj);
+      if (bDet.adj < 0) parts.push('Team B ' + bDet.adj);
+      out.push('Multi-piece discount applied: ' + parts.join(', ') + ' — extra pieces cost roster spots');
+    }
 
     // 1. Peak — highest single-asset value
     const aPeak = aValues.length ? Math.max(...aValues) : 0;
@@ -19593,8 +19648,12 @@ window.fmtHeight = fmtHeight;
       return 0;
     }
 
+    // Same package adjustment as the calculator, so loaded suggestions match its verdict
+    const _pkgCost = window._packageRosterCost(tradeMode);
+    const _pkgSideTotal = side => window._packageAdjustedTotal(side.map(a => a.value), tradeMode);
+
     function scoreCombo(giveSide, getSide, getTotal) {
-      const giveTotal = giveSide.reduce((s, a) => s + a.value, 0);
+      const giveTotal = _pkgSideTotal(giveSide);
       const delta = (giveTotal - getTotal) / getTotal;
       let fit = 0;
       giveSide.forEach(a => {
@@ -19624,9 +19683,13 @@ window.fmtHeight = fmtHeight;
     }
 
     for (const getSide of getCombos) {
-      const getTotal = getSide.reduce((s, a) => s + a.value, 0);
+      const getTotal = _pkgSideTotal(getSide);
       const minVal = getTotal * (1 - tolerance);
       const maxVal = getTotal * (1 + tolerance);
+      // Raw-sum loop windows widen by the per-piece cost on the high side: the
+      // adjusted total can sit up to cost×(pieces−1) below the raw sum, so a raw
+      // sum slightly over maxVal can still land in-window after adjustment.
+      // scoreCombo re-checks the true adjusted delta; score 0 combos are dropped.
 
       // 1-piece give (mySorted desc)
       for (let i = 0; i < mySorted.length; i++) {
@@ -19634,7 +19697,7 @@ window.fmtHeight = fmtHeight;
         if (v > maxVal) continue;
         if (v < minVal) break;
         const s = scoreCombo([mySorted[i]], getSide, getTotal);
-        raw.push({ give: [mySorted[i]], get: getSide, getTotal, ...s });
+        if (s.score > 0) raw.push({ give: [mySorted[i]], get: getSide, getTotal, ...s });
       }
 
       // 2-piece
@@ -19644,9 +19707,9 @@ window.fmtHeight = fmtHeight;
           for (let j = i + 1; j < mySorted.length; j++) {
             const sum = mySorted[i].value + mySorted[j].value;
             if (sum < minVal) break;
-            if (sum > maxVal) continue;
+            if (sum > maxVal + _pkgCost) continue;
             const s = scoreCombo([mySorted[i], mySorted[j]], getSide, getTotal);
-            raw.push({ give: [mySorted[i], mySorted[j]], get: getSide, getTotal, ...s });
+            if (s.score > 0) raw.push({ give: [mySorted[i], mySorted[j]], get: getSide, getTotal, ...s });
           }
         }
       }
@@ -19657,13 +19720,13 @@ window.fmtHeight = fmtHeight;
           if (mySorted[i].value >= maxVal) continue;
           for (let j = i + 1; j < mySorted.length; j++) {
             const sum2 = mySorted[i].value + mySorted[j].value;
-            if (sum2 >= maxVal) continue;
+            if (sum2 >= maxVal + 2 * _pkgCost) continue;
             for (let k = j + 1; k < mySorted.length; k++) {
               const sum3 = sum2 + mySorted[k].value;
               if (sum3 < minVal) break;
-              if (sum3 > maxVal) continue;
+              if (sum3 > maxVal + 2 * _pkgCost) continue;
               const s = scoreCombo([mySorted[i], mySorted[j], mySorted[k]], getSide, getTotal);
-              raw.push({ give: [mySorted[i], mySorted[j], mySorted[k]], get: getSide, getTotal, ...s });
+              if (s.score > 0) raw.push({ give: [mySorted[i], mySorted[j], mySorted[k]], get: getSide, getTotal, ...s });
             }
           }
         }

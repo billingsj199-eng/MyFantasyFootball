@@ -17011,13 +17011,21 @@ window.fmtHeight = fmtHeight;
         try {
           const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
           const email = document.getElementById('adminGiftPremEmail').value.trim().toLowerCase();
-          const days = parseInt(document.getElementById('adminGiftPremDuration').value);
+          const durationRaw = document.getElementById('adminGiftPremDuration').value;
           if (!db) { showAdminMsg(premMsg, 'Database not available', 'error'); return; }
           if (!email) { showAdminMsg(premMsg, 'Enter an email', 'error'); return; }
+          // Season Pass gifts end on the SAME fixed date as the paid $24.99 pass
+          // (Jan 15 2027 11:59pm ET — keep in sync with SEASON_PASS_END_MS in
+          // functions/index.js); other durations stay rolling days-from-now.
+          const SEASON_GIFT_END = Date.UTC(2027, 0, 16, 4, 59, 59, 999);
+          const isSeason = durationRaw === 'season';
+          if (isSeason && Date.now() >= SEASON_GIFT_END) { showAdminMsg(premMsg, 'Season has ended — update the Season Pass end date first.', 'error'); return; }
+          const days = isSeason ? Math.max(1, Math.ceil((SEASON_GIFT_END - Date.now()) / 86400000)) : parseInt(durationRaw);
           giftPremBtn.disabled = true;
           giftPremBtn.textContent = 'GRANTING...';
-          const expires = Date.now() + (days * 24 * 60 * 60 * 1000);
-          const labels = { 7: '1 Week', 30: '1 Month', 150: 'Season Pass', 365: 'Yearly Pass' };
+          const expires = isSeason ? SEASON_GIFT_END : Date.now() + (days * 24 * 60 * 60 * 1000);
+          const labels = { 7: '1 Week', 30: '1 Month', 365: 'Yearly Pass' };
+          const label = isSeason ? 'Season Pass' : (labels[days] || days + ' days');
           const expDate = new Date(expires).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
           const docId = email.replace(/[^a-z0-9]/g, '_');
           const adminEmail = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : 'admin';
@@ -17025,13 +17033,13 @@ window.fmtHeight = fmtHeight;
             email: email,
             expires: expires,
             days: days,
-            label: labels[days] || days + ' days',
+            label: label,
             grantedBy: adminEmail,
             grantedAt: new Date().toISOString()
           }).then(function() {
             giftPremBtn.disabled = false;
             giftPremBtn.textContent = 'GRANT PREMIUM';
-            showAdminMsg(premMsg, '✅ Granted ' + (labels[days] || days + ' days') + ' premium to ' + email + ' — expires ' + expDate, 'success');
+            showAdminMsg(premMsg, '✅ Granted ' + label + ' premium to ' + email + ' — expires ' + expDate, 'success');
           }).catch(function(e) {
             giftPremBtn.disabled = false;
             giftPremBtn.textContent = 'GRANT PREMIUM';
@@ -18778,11 +18786,12 @@ window.fmtHeight = fmtHeight;
         const map = mode === 'dynastysf' ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {}) : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
         return map[d.n] != null ? map[d.n] : null;
       }
-      if (src === 'espn' || src === 'yahoo') {
-        // ESPN/Yahoo publish a single 1QB redraft rank order (d.espnAdp /
-        // d.yahooAdp from inject_rankings.py) — no SF/dynasty variants, so
-        // the tabs are gated to redraft mode on every surface offering them.
-        const v = src === 'espn' ? d.espnAdp : d.yahooAdp;
+      if (src === 'espn' || src === 'cbs' || src === 'yahoo') {
+        // ESPN/CBS/Yahoo publish a single 1QB redraft rank order (d.espnAdp /
+        // d.cbsAdp / d.yahooAdp from inject_rankings.py) — no SF/dynasty
+        // variants, so the tabs are gated to redraft mode on every surface
+        // offering them.
+        const v = src === 'espn' ? d.espnAdp : src === 'cbs' ? d.cbsAdp : d.yahooAdp;
         return v != null ? v : null;
       }
       return null;
@@ -18807,7 +18816,7 @@ window.fmtHeight = fmtHeight;
   //   redraft/superflex:  1000 / (rank^0.8 + 3)   — steep top, rewards elite picks
   //   dynasty/dynastysf:  7750 / (rank^0.8 + 30)  — KTC-shaped: flat top, long depth tail
   // The dynasty offset of 30 flattens rank #1 vs #50 ratio to ~1.7x (matches KTC) instead of ~5x.
-  const _ADP_SRCS = ['underdog', 'ktc', 'espn', 'sleeper', 'yahoo'];
+  const _ADP_SRCS = ['underdog', 'ktc', 'espn', 'cbs', 'sleeper', 'yahoo'];
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
     const m = mode || tradeMode;
@@ -19236,11 +19245,11 @@ window.fmtHeight = fmtHeight;
   // back to consensus if one of them was the active source.
   function updateAdpSrcVisibility() {
     const show = tradeMode === 'redraft';
-    ['espn', 'yahoo'].forEach(srcKey => {
+    ['espn', 'cbs', 'yahoo'].forEach(srcKey => {
       const tab = document.querySelector('.trade-src-tab[data-tsrc="' + srcKey + '"]');
       if (tab) tab.style.display = show ? '' : 'none';
     });
-    if (!show && (tradeSource === 'espn' || tradeSource === 'yahoo')) {
+    if (!show && (tradeSource === 'espn' || tradeSource === 'cbs' || tradeSource === 'yahoo')) {
       tradeSource = 'consensus';
       // [data-tsrc] keeps this off the My Teams tabs, which share the class
       document.querySelectorAll('.trade-src-tab[data-tsrc]').forEach(b => b.classList.toggle('active', b.dataset.tsrc === 'consensus'));
@@ -19286,13 +19295,13 @@ window.fmtHeight = fmtHeight;
       // ESPN/Yahoo publish 1QB redraft rank order only — redraft mode alone.
       // Their tabs are hidden outside redraft; this guard covers programmatic
       // clicks (?trade= share URLs restored via sTab.click()).
-      if ((src === 'espn' || src === 'yahoo') && tradeMode !== 'redraft') {
+      if ((src === 'espn' || src === 'cbs' || src === 'yahoo') && tradeMode !== 'redraft') {
         if (typeof toast === 'function') toast(src.toUpperCase() + ' ADP is redraft only');
         return;
       }
       // Underdog ADP is premium (matches Rankings + Mock Draft); ESPN/Yahoo
       // get the same gate on this surface.
-      if ((src === 'underdog' || src === 'espn' || src === 'yahoo') && !hasPremium()) {
+      if ((src === 'underdog' || src === 'espn' || src === 'cbs' || src === 'yahoo') && !hasPremium()) {
         if (typeof toast === 'function') toast((src === 'underdog' ? 'Underdog' : src.toUpperCase()) + ' ADP requires Premium');
         return;
       }
@@ -19413,7 +19422,7 @@ window.fmtHeight = fmtHeight;
   // Hide lock icon on premium-gated tabs for premium users (icons are hardcoded in HTML)
   function _tradeUpdateJacksLock() {
     const prem = typeof hasPremium === 'function' && hasPremium();
-    ['jacks', 'underdog', 'espn', 'yahoo'].forEach(function(srcKey) {
+    ['jacks', 'underdog', 'espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
       const tab = document.querySelector('.trade-src-tab[data-tsrc="' + srcKey + '"]');
       if (!tab) return;
       const icon = tab.querySelector('.lock-icon');
@@ -40678,7 +40687,7 @@ Rules:
     const mode = _mtGetRankingMode();
     let rank = 999;
 
-    const ADP_SRCS = ['underdog', 'ktc', 'espn', 'sleeper', 'yahoo'];
+    const ADP_SRCS = ['underdog', 'ktc', 'espn', 'cbs', 'sleeper', 'yahoo'];
     const src = _mtValueSrc;
     let board = null;
     if (ADP_SRCS.indexOf(src) >= 0) {
@@ -40716,7 +40725,7 @@ Rules:
     if (!_mtPosRankCache[key]) {
       const map = {};
       const counts = {};
-      const ADP_SRCS = ['underdog', 'ktc', 'espn', 'sleeper', 'yahoo'];
+      const ADP_SRCS = ['underdog', 'ktc', 'espn', 'cbs', 'sleeper', 'yahoo'];
       let board = null;
       if (ADP_SRCS.indexOf(_mtValueSrc) >= 0) {
         if (typeof window._getAdpBoard === 'function') board = window._getAdpBoard(_mtValueSrc, mode);
@@ -46871,11 +46880,11 @@ Rules:
   // sync, saved-league restore).
   function _mtUpdateAdpSrcVisibility() {
     const show = _mtGetRankingMode() === 'redraft';
-    ['espn', 'yahoo'].forEach(function(srcKey) {
+    ['espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
       const tab = document.querySelector('.mt-src-tab[data-mtsrc="' + srcKey + '"]');
       if (tab) tab.style.display = show ? '' : 'none';
     });
-    if (!show && (_mtValueSrc === 'espn' || _mtValueSrc === 'yahoo')) {
+    if (!show && (_mtValueSrc === 'espn' || _mtValueSrc === 'cbs' || _mtValueSrc === 'yahoo')) {
       _mtValueSrc = 'consensus';
       try { localStorage.setItem('mt_value_src', 'consensus'); } catch(e) {}
       document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.toggle('active', b.dataset.mtsrc === 'consensus'));
@@ -46903,13 +46912,13 @@ Rules:
       const src = btn.dataset.mtsrc;
       // ESPN/Yahoo publish 1QB redraft rank order only — redraft leagues
       // alone. Tabs are hidden for other formats; guard covers stale clicks.
-      if ((src === 'espn' || src === 'yahoo') && _mtGetRankingMode() !== 'redraft') {
+      if ((src === 'espn' || src === 'cbs' || src === 'yahoo') && _mtGetRankingMode() !== 'redraft') {
         if (typeof toast === 'function') toast(src.toUpperCase() + ' ADP is redraft only');
         return;
       }
       // Underdog ADP is premium (matches Rankings + Mock Draft); ESPN/Yahoo
       // get the same gate on this surface.
-      if ((src === 'underdog' || src === 'espn' || src === 'yahoo') && typeof hasPremium === 'function' && !hasPremium()) {
+      if ((src === 'underdog' || src === 'espn' || src === 'cbs' || src === 'yahoo') && typeof hasPremium === 'function' && !hasPremium()) {
         if (typeof toast === 'function') toast((src === 'underdog' ? 'Underdog' : src.toUpperCase()) + ' ADP requires Premium');
         return;
       }
@@ -46929,7 +46938,7 @@ Rules:
   // Hide lock icon on premium-gated tabs for premium users (icons are hardcoded in HTML)
   function _mtUpdateJacksLock() {
     const prem = typeof hasPremium === 'function' && hasPremium();
-    ['jacks', 'underdog', 'espn', 'yahoo'].forEach(function(srcKey) {
+    ['jacks', 'underdog', 'espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
       const tab = document.querySelector('.mt-src-tab[data-mtsrc="' + srcKey + '"]');
       if (!tab) return;
       const icon = tab.querySelector('.lock-icon');

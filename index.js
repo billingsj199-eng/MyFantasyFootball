@@ -40,7 +40,7 @@ const PRICE_IDS = {
 // UPDATE BOTH constants each season: create a fresh one-time Price in the
 // Stripe dashboard (Products → Season Pass → Add price → One-off) and move
 // the end date forward a year.
-const SEASON_PASS_PRICE_ID = "PASTE_SEASON_PASS_PRICE_ID"; // $24.99 one-time price
+const SEASON_PASS_PRICE_ID = "price_1TytTLHIcvDuU89CrkaUR8mO"; // $24.99 one-time price (live)
 const SEASON_PASS_END_MS = Date.UTC(2027, 0, 16, 4, 59, 59, 999); // Jan 15 2027 23:59:59 ET (UTC-5)
 
 // === URLs ===

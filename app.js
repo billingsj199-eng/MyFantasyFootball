@@ -25969,19 +25969,23 @@ window.fmtHeight = fmtHeight;
     TE: [
       // v8.3 (Apr 23 2026): Generational raised 84→90 for universal alignment.
       //   Only Bowers (92.4) and Pitts (90.6) remain Generational.
-      // v9 (May 10 2026): in-page tier-threshold optimizer (n=101 TE) drove the
-      //   biggest gain for any single TE tweak — score 0.954 → 0.787 (-18%).
-      //   Top Prospect 66→70, Starter 56→58, Contributor 44→42, Lottery 22→25.
-      //   Sharpened Top Prospect to 82% hit (was 73%). TE remains the hardest
-      //   position to discriminate at the bottom (Depth/Lottery hit rates near
-      //   noise floor at 5-9%) but tier ordering is now consistent.
+      // v9 (May 10 2026): in-page tier-threshold optimizer (n=101 TE), score
+      //   0.954 → 0.787 (-18%). Top Prospect 66→70, Starter 56→58.
+      // v10 (Jul 2026): re-cut for the v9 DC curve + day-3 shrink distribution.
+      //   The new TE curve compresses picks 33+ so the 60-70 band (Andrews,
+      //   LaPorta, Goedert, Gesicki, Jonnu — 83% hit) landed BELOW the old TP
+      //   cut while outperforming 70-80 (Howard/Njoku busts). TP 70→60 merges
+      //   them: 80% hit at n=15 (was 82% at n=11 — more hits captured, top-3
+      //   tier capture 68%→77%). Starter 58→48, Depth 32→30, Lottery 25→20.
+      //   Bottom flip (Lottery > Depth) persists — Kittle/Knox/Schultz are
+      //   irreducible noise; the pre-v10 model had the same flip (9% > 8%).
       { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=2)
-      { min: 70, label: 'Top Prospect',  color: '#34d399' },  //  82% hit (n=11)
-      { min: 58, label: 'Starter',       color: '#60a5fa' },  //  40% hit (n=10)
-      { min: 42, label: 'Contributor',   color: '#a78bfa' },  //  13% hit (n=30)
-      { min: 32, label: 'Depth',         color: '#94a3b8' },  //   8% hit (n=12)
-      { min: 25, label: 'Lottery Ticket',color: '#f87171' },  //   9% hit (n=11)
-      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   5% hit (n=19)
+      { min: 60, label: 'Top Prospect',  color: '#34d399' },  //  80% hit (n=15)
+      { min: 48, label: 'Starter',       color: '#60a5fa' },  //  20% hit (n=15)
+      { min: 42, label: 'Contributor',   color: '#a78bfa' },  //  20% hit (n=10)
+      { min: 30, label: 'Depth',         color: '#94a3b8' },  //   0% hit (n=16)
+      { min: 20, label: 'Lottery Ticket',color: '#f87171' },  //  17% hit (n=12) — Kittle noise
+      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   4% hit (n=25)
     ]
   };
   window._POS_TIERS = POS_TIERS;
@@ -26220,6 +26224,51 @@ window.fmtHeight = fmtHeight;
     const pick = typeof dr === 'number' ? dr : parseInt(dr);
     if (isNaN(pick) || pick < 1) return null;
 
+    // Weight Lab / backtest hook: lets the console test alternative DC curves
+    // against the live pipeline without editing the built-ins below.
+    if (typeof window._jmDcOverride === 'function') {
+      const _o = window._jmDcOverride(pick, pos);
+      if (_o != null) return _o;
+    }
+
+    // ═══ RB / WR / TE v9 (Jul 2026) — EMPIRICAL REFIT ═══
+    // Piecewise-linear through nodes derived from isotonic regression (PAVA) of
+    // NFL outcome (stud=3/hit=2/contributor=1/bust=0) by pick on BACKTEST_OUTCOMES
+    // 2017-2024 (n=500), then smoothed. Validated LOYO (curve refit without each
+    // year, that year scored out-of-year, pooled) as part of the curve + day-3
+    // shrink package (see _jmDay3Shrink in calcJM):
+    //   WR r .527→.563, R5+bust-over-R3hit inversions 22.8%→6.0%
+    //   RB r .565→.595, inversions 8.5%→0%
+    //   TE r .524→.560
+    // Key shape changes vs v8:
+    //   WR: near-flat through R1 (pick 12 ≈ pick 30 empirically), HIGHER through
+    //       picks 65-88 (340 vs old 218 — the Kupp/McLaurin/Nico/Dell band),
+    //       hard cliff after pick ~95.
+    //   RB: flat 1000 through pick 20, real drop starts R2, cliff at pick 88.
+    //   TE: cliff right after R1 (pick 45 → 420 vs old 624). Reverses part of the
+    //       v8.1 late flattening — costs Kittle/Schultz a few points but TE
+    //       improved on the 2021-24 holdout (r .612→.625).
+    // QB keeps the hand-built curve below: fitted QB curves LOST on holdout
+    // (r .634→.590) — QB data is too sparse and the curve encodes real priors.
+    const _DC_NODES = {
+      WR: [[1,1000],[5,980],[9,760],[32,740],[48,450],[64,360],[88,340],[100,140],[130,90],[160,60],[200,28],[260,10]],
+      RB: [[1,1000],[20,990],[32,640],[45,560],[64,400],[87,350],[107,180],[130,160],[160,115],[200,60],[260,15]],
+      TE: [[1,1000],[10,1000],[20,900],[32,780],[45,420],[64,335],[100,220],[130,140],[160,15],[260,8]]
+    };
+    const _nodes = _DC_NODES[pos];
+    if (_nodes) {
+      if (pick <= _nodes[0][0]) return _nodes[0][1];
+      const _last = _nodes[_nodes.length - 1];
+      if (pick >= _last[0]) return _last[1];
+      for (let _i = 1; _i < _nodes.length; _i++) {
+        if (pick <= _nodes[_i][0]) {
+          const _x0 = _nodes[_i - 1][0], _y0 = _nodes[_i - 1][1];
+          return _y0 + (_nodes[_i][1] - _y0) * (pick - _x0) / (_nodes[_i][0] - _x0);
+        }
+      }
+      return _last[1];
+    }
+
     // === QB (n=137) — Pick 1 towers, picks 2-3 solid, then sparse/chaotic ===
     // Data: Pick 1: 75% SR / 33% ER (n=24), Pick 2: 70%/0% (n=10), Pick 3: 56%/0% (n=9)
     //   4-5: 40%/0% (n=5), 6-10: 42%/25% (n=12), 11-15: 64%/18% (n=11)
@@ -26239,72 +26288,6 @@ window.fmtHeight = fmtHeight;
       if (pick <= 150) return 43 - (pick - 100) * 0.4;          // 101-150: 43-23
       if (pick <= 220) return 23 - (pick - 150) * 0.15;         // 151-220: 23-12.5
       return Math.max(2, 12 - (pick - 220) * 0.1);              // 221+: 12→7
-    }
-
-    // === RB (n=237) — Picks 2-15 elite, smooth monotonic decrease ===
-    // Modern data (2018-2022): Rd3 RBs avg 484 fpts5 with 45% hit rate — nearly as good as Rd2.
-    // Curve revised: gentler slope through Rd2-3, reflecting that mid-round RBs produce well.
-    if (pos === 'RB') {
-      if (pick === 1) return 1000;
-      if (pick <= 3) return 990 - (pick - 1) * 10;              // 2-3: 980-970
-      if (pick <= 5) return 970 - (pick - 3) * 10;              // 4-5: 960-950
-      if (pick <= 10) return 950 - (pick - 5) * 14;             // 6-10: 936-880
-      if (pick <= 15) return 880 - (pick - 10) * 8;             // 11-15: 872-840
-      if (pick <= 20) return 840 - (pick - 15) * 12;            // 16-20: 828-780
-      if (pick <= 25) return 780 - (pick - 20) * 16;            // 21-25: 764-700
-      if (pick <= 32) return 700 - (pick - 25) * 20;            // 26-32: 680-560
-      if (pick <= 50) return 560 - (pick - 32) * 8;             // 33-50: 552-416
-      if (pick <= 64) return 416 - (pick - 50) * 6;             // 51-64: 410-332
-      if (pick <= 100) return 332 - (pick - 64) * 2.5;          // 65-100: 330-242 (gentler — Rd3 RBs hit)
-      if (pick <= 150) return 242 - (pick - 100) * 2;           // 101-150: 242-142
-      if (pick <= 220) return 142 - (pick - 150) * 0.8;         // 151-220: 142-86
-      return Math.max(5, 86 - (pick - 220) * 0.5);              // 221+: 86→65
-    }
-
-    // === WR (n=325) — Picks 3-10 elite, strong through 25, cliff at 26 ===
-    // Data: Pick 3: 100%/100% (Fitz, Andre Johnson, Braylon), Pick 1: only 50% (Keyshawn)
-    //   4-5: 70%/10%, 6-10: 83%/17% (Julio, Evans, Waddle), 11-15: 73%/7%
-    //   16-20: 68%/32% (JSN, Jefferson, Javon Walker), 21-25: 75%/33% (Aiyuk, Hopkins)
-    //   26-32: 48%/20% ← cliff, 33-40: 52%/24%, 41-50: 43%/7%
-    //   51-64: 51%/12%, 65-100: flat ~42%/12%
-    if (pos === 'WR') {
-      if (pick <= 1) return 1000;
-      if (pick <= 3) return 1000 - (pick - 1) * 15;             // 2-3: 985-970
-      if (pick <= 5) return 970 - (pick - 3) * 35;              // 4-5: 935-900
-      if (pick <= 10) return 900 - (pick - 5) * 20;             // 6-10: 880-800
-      if (pick <= 15) return 800 - (pick - 10) * 16;            // 11-15: 784-720
-      if (pick <= 20) return 720 - (pick - 15) * 14;            // 16-20: 706-650
-      if (pick <= 25) return 650 - (pick - 20) * 12;            // 21-25: 638-590
-      if (pick <= 32) return 590 - (pick - 25) * 20;            // 26-32: 570-450 ← cliff
-      if (pick <= 50) return 450 - (pick - 32) * 8;             // 33-50: 442-306
-      if (pick <= 64) return 306 - (pick - 50) * 5;             // 51-64: 301-236
-      if (pick <= 100) return 236 - (pick - 64) * 3;            // 65-100: 233-128
-      if (pick <= 150) return 128 - (pick - 100) * 1.5;         // 101-150: 128-53
-      if (pick <= 220) return 53 - (pick - 150) * 0.4;          // 151-220: 53-25
-      return Math.max(3, 25 - (pick - 220) * 0.3);              // 221+: 25→12
-    }
-
-    // === TE (n=114) — Top 10 elite, meaningful dropoff 20-40, GENTLER cliff (v8.1) ===
-    // v8.1 (Apr 23 2026): flattened the curve at picks 33+ because late-round TE hit
-    // rate is 10.7% (vs QB 2.8%, WR 5.4%). Previously pick 100 TE → dc=21 (harsher
-    // than the empirical 10-15% hit rate justified). Now pick 100 → dc=28, pick 150
-    // → dc=20. Rewards Kittle (pick 146), Schultz (pick 137), Andrews (pick 86),
-    // McBride (pick 55) types. Top end (pick 1-32) unchanged.
-    if (pos === 'TE') {
-      if (pick <= 5) return 1000;
-      if (pick <= 10) return 1000 - (pick - 5) * 8;             // 6-10: 992-960 (unchanged)
-      if (pick <= 15) return 960 - (pick - 10) * 14;            // 11-15: 946-890 (unchanged)
-      if (pick <= 20) return 890 - (pick - 15) * 10;            // 16-20: 880-840 (unchanged)
-      if (pick <= 25) return 840 - (pick - 20) * 10;            // 21-25: 830-790 (unchanged)
-      if (pick <= 32) return 790 - (pick - 25) * 10;            // 26-32: 780-720 (unchanged)
-      // FLATTER FROM HERE (v8.1):
-      if (pick <= 40) return 720 - (pick - 32) * 12;            // 33-40: 720-624 (was 706-608; +16)
-      if (pick <= 50) return 624 - (pick - 40) * 13;            // 41-50: 624-494 (was 592-448; +46)
-      if (pick <= 64) return 494 - (pick - 50) * 7;             // 51-64: 494-396 (was 440-336; +60)
-      if (pick <= 100) return 396 - (pick - 64) * 3;            // 65-100: 396-288 (was 332-210; +78)
-      if (pick <= 150) return 288 - (pick - 100) * 1.7;         // 101-150: 288-203 (was 210-110; +93)
-      if (pick <= 220) return 203 - (pick - 150) * 0.9;         // 151-220: 203-140 (was 110-54; +86)
-      return Math.max(8, 140 - (pick - 220) * 0.5);             // 221+: 140→90 (was 54→34)
     }
 
     // Fallback
@@ -28310,8 +28293,32 @@ window.fmtHeight = fmtHeight;
       return Math.min(100, 77.5 + bonus);
     }
 
+    // ═══ DAY-3 SHRINK v9 (Jul 2026) ═══
+    // "The NFL watched this player and let him fall" — same philosophy as the
+    // short-WR cap: a shiny college profile on a day-3 pick is information the
+    // weighted blend can't express, because the dc component is nearly flat
+    // across day 3 (~4 JM pts between pick 70 and pick 190 at WR dc weight).
+    // Shrink the final (post-stretch) score toward a pick-based prior, ONLY
+    // when above it — low scores stay put and ordering WITHIN a pick band is
+    // preserved (affine transform), so sleeper-hunting among late picks is
+    // untouched; shiny late fliers just stop outranking R2-3 hits.
+    // LOYO-validated together with the v9 DC curves (see jmDraftCapital):
+    //   WR r .527→.563 + R5+bust-over-R3hit inversions 22.8%→6.0%
+    //   RB r .565→.595 + inversions →0%   TE r .524→.560
+    // QB exempt: QB had ZERO inversions at baseline and shrinking only
+    // demotes Purdy-types for no measured gain.
+    // Devy/undrafted (_dcPick sentinel 999) never shrink — they aren't
+    // day-3 picks, the NFL hasn't passed on them yet.
+    const _day3Shrink = (v) => {
+      if (v == null || p.pos === 'QB') return v;
+      if (isNaN(_dcPick) || _dcPick > 300) return v;
+      if (_dcPick >= 141 && v > 28) return 28 + 0.4 * (v - 28);   // R5+ : prior 28, λ 0.4
+      if (_dcPick >= 106 && v > 36) return 36 + 0.6 * (v - 36);   // R4  : prior 36, λ 0.6
+      return v;
+    };
+
     const _preStretch = blended + gpAdj + htPenalty + tmBonus + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
-    const final = Math.max(0, Math.min(100, Math.round(_jmStretch(_preStretch) * 10) / 10));
+    const final = Math.max(0, Math.min(100, Math.round(_day3Shrink(_jmStretch(_preStretch)) * 10) / 10));
     // Low confidence if less than 50% of weight has data, or fewer than 5 of 22 components
     // For devy players, lower the threshold since DC/RAS/earlyDec are expected to be missing
     const _minDataCount = p.isDevy ? 3 : 5;
@@ -28322,8 +28329,10 @@ window.fmtHeight = fmtHeight;
     // Apply same adjustments + stretch as final so floor/ceiling display stays consistent.
     const _floorPre = floorRaw + gpAdj + htPenalty + tmBonus + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
     const _ceilPre = ceilRaw + gpAdj + htPenalty + tmBonus + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
-    const floorFinal = Math.max(0, Math.min(100, Math.round(_jmStretch(_floorPre) * 10) / 10));
-    const ceilFinal = Math.max(0, Math.min(100, Math.round(_jmStretch(_ceilPre) * 10) / 10));
+    // Day-3 shrink applied here too so floor/ceiling display stays consistent
+    // with the shrunk final (otherwise floor could exceed final for late picks).
+    const floorFinal = Math.max(0, Math.min(100, Math.round(_day3Shrink(_jmStretch(_floorPre)) * 10) / 10));
+    const ceilFinal = Math.max(0, Math.min(100, Math.round(_day3Shrink(_jmStretch(_ceilPre)) * 10) / 10));
     // Expose component scores for correlation analysis
     const _compScores = {};
     scores.forEach(s => { _compScores[s.key] = s.score; });

@@ -25932,13 +25932,18 @@ window.fmtHeight = fmtHeight;
       // v9 (May 10 2026): Top Prospect raised 75→79 from in-page tier-threshold
       //   optimizer (n=73 QB). Pulled 5 noisy ~75-78 JM scores out of Top Prospect
       //   into Starter, sharpening the Top Prospect tier to 100% hit (n=6).
+      // v10 (Jul 2026): grid-search pass (n=66, same objective as WR/RB/TE
+      //   v10). CONFIRMED Gen/TP/Starter cuts (90/79/60) already optimal —
+      //   every top config kept them. Only bottom moved: Contributor 48→46,
+      //   Depth 36→32, fixing a PPG inversion (old Lottery avg 6.0 > Depth
+      //   5.7 PPG) and cleaning bust gradient to 0/0/13/75/92/100/100.
       { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=2)
       { min: 79, label: 'Top Prospect',  color: '#34d399' },  // 100% hit (n=6)
       { min: 60, label: 'Starter',       color: '#60a5fa' },  //  75% hit (n=16)
-      { min: 48, label: 'Contributor',   color: '#a78bfa' },  //  11% hit
-      { min: 36, label: 'Depth',         color: '#94a3b8' },  //   8% hit
-      { min: 24, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit
-      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit
+      { min: 46, label: 'Contributor',   color: '#a78bfa' },  //   8% hit (n=12)
+      { min: 32, label: 'Depth',         color: '#94a3b8' },  //   8% hit (n=12)
+      { min: 24, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit (n=6)
+      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit (n=12)
     ],
     RB: [
       // v8.3 (Apr 23 2026): Generational raised 88→90 for universal alignment.

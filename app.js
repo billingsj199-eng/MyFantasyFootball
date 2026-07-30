@@ -25945,13 +25945,19 @@ window.fmtHeight = fmtHeight;
       //   Saquon (93), Bijan (92.1), Jeanty (91), Gibbs (90.2) remain.
       // v9 (May 10 2026): in-page tier-threshold optimizer — Top Prospect raised
       //   70→74 (sharpened to 100% hit), Depth 36→34, Lottery 24→26.
-      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=2)
-      { min: 74, label: 'Top Prospect',  color: '#34d399' },  // 100% hit (n=10)
-      { min: 60, label: 'Starter',       color: '#60a5fa' },  //  41% hit (n=22)
-      { min: 48, label: 'Contributor',   color: '#a78bfa' },  //  18% hit
-      { min: 34, label: 'Depth',         color: '#94a3b8' },  //   8% hit
-      { min: 26, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit
-      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit
+      // v10 (Jul 2026): grid-search re-cut (n=136, same objective as WR v10)
+      //   for the v9 DC curve + day-3 shrink distribution. TP 74→75 drops
+      //   exactly CEH (74.1, contributor) → TP back to 100% hit. Starter
+      //   60→52 (band 52-75, 29% hit — pulls in Hunt/Montgomery types),
+      //   Contributor 48→42, Depth 34→30. Gradients strictly monotone:
+      //   hit 100/100/29/24/9/0/0, bust 0/0/42/71/81/89/91.
+      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=4)
+      { min: 75, label: 'Top Prospect',  color: '#34d399' },  // 100% hit (n=10)
+      { min: 52, label: 'Starter',       color: '#60a5fa' },  //  29% hit (n=31)
+      { min: 42, label: 'Contributor',   color: '#a78bfa' },  //  24% hit (n=17)
+      { min: 30, label: 'Depth',         color: '#94a3b8' },  //   9% hit (n=54)
+      { min: 26, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit (n=9)
+      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit (n=11)
     ],
     WR: [
       // v8.3: Generational ≥90.
@@ -25978,21 +25984,23 @@ window.fmtHeight = fmtHeight;
       //   Only Bowers (92.4) and Pitts (90.6) remain Generational.
       // v9 (May 10 2026): in-page tier-threshold optimizer (n=101 TE), score
       //   0.954 → 0.787 (-18%). Top Prospect 66→70, Starter 56→58.
-      // v10 (Jul 2026): re-cut for the v9 DC curve + day-3 shrink distribution.
-      //   The new TE curve compresses picks 33+ so the 60-70 band (Andrews,
-      //   LaPorta, Goedert, Gesicki, Jonnu — 83% hit) landed BELOW the old TP
-      //   cut while outperforming 70-80 (Howard/Njoku busts). TP 70→60 merges
-      //   them: 80% hit at n=15 (was 82% at n=11 — more hits captured, top-3
-      //   tier capture 68%→77%). Starter 58→48, Depth 32→30, Lottery 25→20.
-      //   Bottom flip (Lottery > Depth) persists — Kittle/Knox/Schultz are
-      //   irreducible noise; the pre-v10 model had the same flip (9% > 8%).
+      // v10 (Jul 2026): quick hand re-cut for the v9 DC curve + day-3 shrink
+      //   distribution merged the Andrews/LaPorta band into TP at 60.
+      // v10.1 (Jul 2026): full grid-search optimizer pass (n=95, same objective
+      //   as WR/RB v10) found a better structure: small elite TP at 74+
+      //   (Engram/Hock/Fant/Njoku/Howard/McBride + Mayer bust — 86% hit) over
+      //   a strong 54-74 Starter band (Andrews/LaPorta/Kincaid/Goedert/Gesicki/
+      //   Jonnu/Kmet/Freiermuth — 57% hit). Also FIXES the old Lottery>Depth
+      //   flip: bottom is now 9/8/7% — monotone. Kittle (28) sits in Lottery,
+      //   Schultz (14) in Long Shot; still irreducible noise, no longer inverted.
+      //   Gradients: hit 100/86/57/11/9/8/7, bust 0/14/36/44/87/88/87 (≈flat floor).
       { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=2)
-      { min: 60, label: 'Top Prospect',  color: '#34d399' },  //  80% hit (n=15)
-      { min: 48, label: 'Starter',       color: '#60a5fa' },  //  20% hit (n=15)
-      { min: 42, label: 'Contributor',   color: '#a78bfa' },  //  20% hit (n=10)
-      { min: 30, label: 'Depth',         color: '#94a3b8' },  //   0% hit (n=16)
-      { min: 20, label: 'Lottery Ticket',color: '#f87171' },  //  17% hit (n=12) — Kittle noise
-      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   4% hit (n=25)
+      { min: 74, label: 'Top Prospect',  color: '#34d399' },  //  86% hit (n=7)
+      { min: 54, label: 'Starter',       color: '#60a5fa' },  //  57% hit (n=14)
+      { min: 48, label: 'Contributor',   color: '#a78bfa' },  //  11% hit (n=9)
+      { min: 34, label: 'Depth',         color: '#94a3b8' },  //   9% hit (n=23)
+      { min: 18, label: 'Lottery Ticket',color: '#f87171' },  //   8% hit (n=25)
+      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   7% hit (n=15)
     ]
   };
   window._POS_TIERS = POS_TIERS;

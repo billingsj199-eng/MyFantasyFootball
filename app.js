@@ -19299,7 +19299,8 @@ window.fmtHeight = fmtHeight;
       // Remove lock message when switching to unlocked source
       const existing = document.getElementById('tradePremiumLock');
       if (existing) existing.remove();
-      document.querySelectorAll('.trade-src-tab').forEach(b => b.classList.remove('active'));
+      // [data-tsrc] keeps this off the My Teams tabs, which share the class
+      document.querySelectorAll('.trade-src-tab[data-tsrc]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       tradeSource = src;
       renderAll();
@@ -19403,8 +19404,9 @@ window.fmtHeight = fmtHeight;
   // Defer one tick so the surrounding IIFE finishes wiring tab handlers.
   setTimeout(_applyTradeShareUrl, 0);
 
-  // Set initial active tab to consensus (default, works for all users)
-  document.querySelectorAll('.trade-src-tab').forEach(b => {
+  // Set initial active tab to consensus (default, works for all users).
+  // [data-tsrc] keeps this off the My Teams tabs, which share the class.
+  document.querySelectorAll('.trade-src-tab[data-tsrc]').forEach(b => {
     b.classList.toggle('active', b.dataset.tsrc === tradeSource);
   });
 
@@ -41455,6 +41457,10 @@ Rules:
       labels.push(starters + ' starters');
       fmtEl.textContent = labels.join(' · ');
     }
+
+    // Format change can hide ESPN/Yahoo (redraft-only sources) — run before
+    // scoring so a fallback to consensus applies to this league's grades.
+    _mtUpdateAdpSrcVisibility();
   }
 
   // Project PPG for a single player, matching the priority hierarchy used by
@@ -42804,6 +42810,9 @@ Rules:
 
     // Restore format
     if (lg.format) _mtFormat = { ...lg.format };
+    // Format change can hide ESPN/Yahoo (redraft-only sources) — run before
+    // scoring so a fallback to consensus applies to this league's grades.
+    _mtUpdateAdpSrcVisibility();
 
     // Re-score teams with current rankings
     const teams = (lg.teams || []).map(t => ({
@@ -46917,10 +46926,10 @@ Rules:
     });
   });
 
-  // Hide lock icon on Jack's + Underdog tabs for premium users (icons are hardcoded in HTML)
+  // Hide lock icon on premium-gated tabs for premium users (icons are hardcoded in HTML)
   function _mtUpdateJacksLock() {
     const prem = typeof hasPremium === 'function' && hasPremium();
-    ['jacks', 'underdog'].forEach(function(srcKey) {
+    ['jacks', 'underdog', 'espn', 'yahoo'].forEach(function(srcKey) {
       const tab = document.querySelector('.mt-src-tab[data-mtsrc="' + srcKey + '"]');
       if (!tab) return;
       const icon = tab.querySelector('.lock-icon');
@@ -46934,5 +46943,6 @@ Rules:
   }
   _mtUpdateJacksLock();
   window._mtUpdateJacksLock = _mtUpdateJacksLock;
+  _mtUpdateAdpSrcVisibility();
 
 })();

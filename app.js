@@ -18291,7 +18291,7 @@ window.fmtHeight = fmtHeight;
         _clearStaleStripePremium('no active stripe premium for this user');
         return;
       }
-      const planLabel = prem.plan === 'yearly' ? 'Yearly' : prem.plan === 'monthly' ? 'Monthly' : 'Premium';
+      const planLabel = prem.plan === 'yearly' ? 'Yearly' : prem.plan === 'monthly' ? 'Monthly' : prem.plan === 'season' ? 'Season Pass' : 'Premium';
       const refreshed = JSON.parse(localStorage.getItem('jb_premium') || 'null');
       const existingExpires = (refreshed && refreshed.uid === myUid && refreshed.expires) || 0;
       if (expires >= existingExpires) {
@@ -18778,11 +18778,14 @@ window.fmtHeight = fmtHeight;
         const map = mode === 'dynastysf' ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {}) : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
         return map[d.n] != null ? map[d.n] : null;
       }
-      // espn/yahoo not yet implemented — fall back to underdog
-      if (mode === 'dynastysf') return d.sa != null ? d.sa : null;
-      if (mode === 'dynasty') return d.da != null ? d.da : null;
-      if (mode === 'superflex') return d.sfa != null ? d.sfa : null;
-      return d.a != null ? d.a : null;
+      if (src === 'espn' || src === 'yahoo') {
+        // ESPN/Yahoo publish a single 1QB redraft rank order (d.espnAdp /
+        // d.yahooAdp from inject_rankings.py) — no SF/dynasty variants, so
+        // the tabs are gated to redraft mode on every surface offering them.
+        const v = src === 'espn' ? d.espnAdp : d.yahooAdp;
+        return v != null ? v : null;
+      }
+      return null;
     };
     const items = [];
     D.forEach((d, idx) => {
@@ -19228,23 +19231,43 @@ window.fmtHeight = fmtHeight;
       : 'Add players to each side to evaluate trades';
   }
 
+  // ESPN/Yahoo ADP tabs are redraft-only (1QB rank-order boards — same rule
+  // as the rankings ADP source tabs). Hide them in every other mode and fall
+  // back to consensus if one of them was the active source.
+  function updateAdpSrcVisibility() {
+    const show = tradeMode === 'redraft';
+    ['espn', 'yahoo'].forEach(srcKey => {
+      const tab = document.querySelector('.trade-src-tab[data-tsrc="' + srcKey + '"]');
+      if (tab) tab.style.display = show ? '' : 'none';
+    });
+    if (!show && (tradeSource === 'espn' || tradeSource === 'yahoo')) {
+      tradeSource = 'consensus';
+      // [data-tsrc] keeps this off the My Teams tabs, which share the class
+      document.querySelectorAll('.trade-src-tab[data-tsrc]').forEach(b => b.classList.toggle('active', b.dataset.tsrc === 'consensus'));
+    }
+  }
+
   document.querySelectorAll('.trade-mode-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.trade-mode-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       tradeMode = btn.dataset.tmode;
       updatePickVisibility();
+      updateAdpSrcVisibility();
       hideSlotPopover();
       renderAll();
     });
   });
   updatePickVisibility();
+  updateAdpSrcVisibility();
 
   // Ranking source tabs (Consensus / Jack's / JS Model / My Ranks + ADP sources)
-  const LOCKED_ADP_SRCS = ['espn', 'yahoo'];
   document.querySelectorAll('.trade-src-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       const src = btn.dataset.tsrc;
+      // My Teams tabs share the .trade-src-tab class but carry data-mtsrc
+      // only — ignore them here so their clicks can't clobber tradeSource.
+      if (!src) return;
       // Lock Jack's Ranks behind premium
       if (src === 'jacks' && !hasPremium()) {
         const existing = document.getElementById('tradePremiumLock');
@@ -19260,14 +19283,17 @@ window.fmtHeight = fmtHeight;
         if (tradeLayout) tradeLayout.parentElement.insertBefore(lockMsg, tradeLayout);
         return;
       }
-      // Locked ADP sources (ESPN/Sleeper/Yahoo) — not implemented yet
-      if (LOCKED_ADP_SRCS.indexOf(src) >= 0) {
-        if (typeof toast === 'function') toast(src.toUpperCase() + ' ADP coming soon — Premium only');
+      // ESPN/Yahoo publish 1QB redraft rank order only — redraft mode alone.
+      // Their tabs are hidden outside redraft; this guard covers programmatic
+      // clicks (?trade= share URLs restored via sTab.click()).
+      if ((src === 'espn' || src === 'yahoo') && tradeMode !== 'redraft') {
+        if (typeof toast === 'function') toast(src.toUpperCase() + ' ADP is redraft only');
         return;
       }
-      // Underdog ADP is premium (matches Rankings + Mock Draft)
-      if (src === 'underdog' && !hasPremium()) {
-        if (typeof toast === 'function') toast('Underdog ADP requires Premium');
+      // Underdog ADP is premium (matches Rankings + Mock Draft); ESPN/Yahoo
+      // get the same gate on this surface.
+      if ((src === 'underdog' || src === 'espn' || src === 'yahoo') && !hasPremium()) {
+        if (typeof toast === 'function') toast((src === 'underdog' ? 'Underdog' : src.toUpperCase()) + ' ADP requires Premium');
         return;
       }
       // Remove lock message when switching to unlocked source
@@ -19382,10 +19408,10 @@ window.fmtHeight = fmtHeight;
     b.classList.toggle('active', b.dataset.tsrc === tradeSource);
   });
 
-  // Hide lock icon on Jack's + Underdog tabs for premium users (icons are hardcoded in HTML)
+  // Hide lock icon on premium-gated tabs for premium users (icons are hardcoded in HTML)
   function _tradeUpdateJacksLock() {
     const prem = typeof hasPremium === 'function' && hasPremium();
-    ['jacks', 'underdog'].forEach(function(srcKey) {
+    ['jacks', 'underdog', 'espn', 'yahoo'].forEach(function(srcKey) {
       const tab = document.querySelector('.trade-src-tab[data-tsrc="' + srcKey + '"]');
       if (!tab) return;
       const icon = tab.querySelector('.lock-icon');
@@ -21761,7 +21787,7 @@ window.fmtHeight = fmtHeight;
     if (!priceEl) return;
     const yearlySelected = document.querySelector('#planYearly.selected');
     const seasonSelected = document.querySelector('#planSeason.selected');
-    const basePrice = yearlySelected ? 69.99 : seasonSelected ? 29.99 : 9.99;
+    const basePrice = yearlySelected ? 69.99 : seasonSelected ? 24.99 : 9.99;
     const planLabel = yearlySelected ? 'year' : seasonSelected ? 'season' : 'month';
     if (_activePromo) {
       const discounted = basePrice * (1 - _activePromo.pct);
@@ -22248,10 +22274,8 @@ window.fmtHeight = fmtHeight;
     const seasonSelected = document.querySelector('#planSeason.selected');
     let plan;
     if (yearlySelected) plan = 'yearly';
-    else if (seasonSelected) {
-      // Season pass is hidden but defensive — fall back to yearly
-      plan = 'yearly';
-    } else plan = 'monthly';
+    else if (seasonSelected) plan = 'season';
+    else plan = 'monthly';
 
     // Log promo usage if a promo code is active (independent of Stripe — Stripe Checkout
     // handles its own promo codes via allow_promotion_codes in the function).
@@ -46832,7 +46856,23 @@ Rules:
     // project) — fall back to consensus for anyone who had it saved.
     if (savedSrc && savedSrc !== 'jsmodel') _mtValueSrc = savedSrc;
   } catch(e) {}
-  const MT_LOCKED_ADP = ['espn', 'yahoo'];
+  // ESPN/Yahoo value-source tabs are redraft-only (1QB rank-order boards).
+  // Hide them when the loaded league isn't redraft and fall back to consensus
+  // if one of them was active. Re-run wherever _mtFormat changes (league
+  // sync, saved-league restore).
+  function _mtUpdateAdpSrcVisibility() {
+    const show = _mtGetRankingMode() === 'redraft';
+    ['espn', 'yahoo'].forEach(function(srcKey) {
+      const tab = document.querySelector('.mt-src-tab[data-mtsrc="' + srcKey + '"]');
+      if (tab) tab.style.display = show ? '' : 'none';
+    });
+    if (!show && (_mtValueSrc === 'espn' || _mtValueSrc === 'yahoo')) {
+      _mtValueSrc = 'consensus';
+      try { localStorage.setItem('mt_value_src', 'consensus'); } catch(e) {}
+      document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.toggle('active', b.dataset.mtsrc === 'consensus'));
+    }
+  }
+
   function _mtRefreshAfterSrcChange() {
     // Re-render anything that depends on values
     if (window._mtTeams && typeof _mtRenderTeamList === 'function') {
@@ -46852,14 +46892,16 @@ Rules:
     btn.classList.toggle('active', btn.dataset.mtsrc === _mtValueSrc);
     btn.addEventListener('click', () => {
       const src = btn.dataset.mtsrc;
-      // Locked ADP sources
-      if (MT_LOCKED_ADP.indexOf(src) >= 0) {
-        if (typeof toast === 'function') toast(src.toUpperCase() + ' ADP coming soon — Premium only');
+      // ESPN/Yahoo publish 1QB redraft rank order only — redraft leagues
+      // alone. Tabs are hidden for other formats; guard covers stale clicks.
+      if ((src === 'espn' || src === 'yahoo') && _mtGetRankingMode() !== 'redraft') {
+        if (typeof toast === 'function') toast(src.toUpperCase() + ' ADP is redraft only');
         return;
       }
-      // Underdog ADP is premium (matches Rankings + Mock Draft)
-      if (src === 'underdog' && typeof hasPremium === 'function' && !hasPremium()) {
-        if (typeof toast === 'function') toast('Underdog ADP requires Premium');
+      // Underdog ADP is premium (matches Rankings + Mock Draft); ESPN/Yahoo
+      // get the same gate on this surface.
+      if ((src === 'underdog' || src === 'espn' || src === 'yahoo') && typeof hasPremium === 'function' && !hasPremium()) {
+        if (typeof toast === 'function') toast((src === 'underdog' ? 'Underdog' : src.toUpperCase()) + ' ADP requires Premium');
         return;
       }
       // Premium lock on Jack's rankings

@@ -123,6 +123,19 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
     }
+    // rankings_history/{timestamp}: rolling cloud backup of Jack's rankings,
+    // written after every saveJacksRankings. Admin-only both ways — it's a
+    // disaster-recovery mirror, never read by the app at runtime.
+    match /rankings_history/{docId} {
+      allow read, write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    // roster_overrides/{playerKey}: post-draft roster moves (trades/cuts) that
+    // adjust prospect landing-spot signals. Loaded for ALL users (public read,
+    // no auth required) so signals are consistent; admin-only write.
+    match /roster_overrides/{playerKey} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
     // shared_rankings/{shareId}: snapshots of a user's My Rankings, generated
     // by the SHARE button in the rankings toolbar. Anyone with the link can
     // view; only signed-in users can create one (and only owned by themselves);

@@ -1,6 +1,96 @@
 {
-  "updated": "2026-07-31T02:15:00Z",
+  "updated": "2026-07-31T16:10:00Z",
   "items": [
+    {
+      "player": "Chris Brazzell II",
+      "team": "CAR",
+      "pos": "WR",
+      "date": "2026-07-31",
+      "headline": "Will undergo season-ending surgery on torn LCL",
+      "take": "Erases his rookie season entirely and opens real reps at Panthers WR3.",
+      "url": "https://www.espn.com/nfl/story/_/id/49489959/panthers-wr-brazzell-season-ending-surgery-source-says",
+      "tag": "injury"
+    },
+    {
+      "player": "Tua Tagovailoa",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-07-31",
+      "headline": "Back \"flare-up\" recurs; Falcons sign Cooper Rush for QB depth",
+      "take": "Not considered long-term, but Atlanta's healthy QB depth is thinning with Penix Jr. also not full-go.",
+      "url": "https://www.espn.com/nfl/story/_/id/49479437/tua-tagovailoa-flare-falcons-add-cooper-rush",
+      "tag": "injury"
+    },
+    {
+      "player": "Jahmyr Gibbs",
+      "team": "DET",
+      "pos": "RB",
+      "date": "2026-07-31",
+      "headline": "Misses third straight practice in hold-in, plus a minor back note",
+      "take": "Still a business dispute, not a workload risk, but now tangled with a (downplayed) back issue.",
+      "url": "https://www.espn.com/nfl/story/_/id/49490010/2026-training-camp-holdin-tracking-updates-bijan-robinson-jahmyr-gibbs-vita-vea-tuli-tuipulotu",
+      "tag": "role"
+    },
+    {
+      "player": "Bijan Robinson",
+      "team": "ATL",
+      "pos": "RB",
+      "date": "2026-07-31",
+      "headline": "Hold-in continues; Falcons talks reportedly more active than Gibbs'",
+      "take": "No missed-game risk yet - still a dynasty-value watch as extension momentum builds.",
+      "url": "https://www.espn.com/nfl/story/_/id/49490010/2026-training-camp-holdin-tracking-updates-bijan-robinson-jahmyr-gibbs-vita-vea-tuli-tuipulotu",
+      "tag": "role"
+    },
+    {
+      "player": "Terrance Ferguson",
+      "team": "LAR",
+      "pos": "TE",
+      "date": "2026-07-31",
+      "headline": "Drawing \"de facto WR3\" buzz early in Rams camp",
+      "take": "Averaged 21 yds/catch as a rookie; Rams' 13-personnel shift could get him real Year 2 target volume.",
+      "url": "https://ramblinfan.com/rams-intel-hints-terrance-fergusons-year-2-leap-already-in-works",
+      "tag": "riser"
+    },
+    {
+      "player": "Ladd McConkey",
+      "team": "LAC",
+      "pos": "WR",
+      "date": "2026-07-31",
+      "headline": "Full go for camp after fully rehabbing spring hamstring strain",
+      "take": "New OC Mike McDaniel's quick-throw scheme sets up a potential bounce-back season.",
+      "url": "https://www.thefantasyfootballers.com/news/632003/ladd-mcconkey-will-be-full-go-for-camp/",
+      "tag": "injury"
+    },
+    {
+      "player": "Tre Harris",
+      "team": "LAC",
+      "pos": "WR",
+      "date": "2026-07-31",
+      "headline": "Expected to be a \"legitimate part of the passing offense\" in Year 2",
+      "take": "A third real target alongside McConkey and Johnston in a deepening Chargers WR room.",
+      "url": "https://www.profootballnetwork.com/fantasy-football/chargers-wrs-fantasy-outlook-2025/",
+      "tag": "riser"
+    },
+    {
+      "player": "Matthew Golden",
+      "team": "GB",
+      "pos": "WR",
+      "date": "2026-07-31",
+      "headline": "Early camp standout after a quiet rookie year",
+      "take": "Packers cleared out Doubs and Wicks, opening a bigger Year 2 target share for him.",
+      "url": "https://sportsnaut.com/nfl/fantasy-football-news-matthew-golden-packers-training-camp",
+      "tag": "riser"
+    },
+    {
+      "player": "Ja'Kobi Lane",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-07-31",
+      "headline": "Soaring catch highlights Day 2 of Ravens rookie camp report",
+      "take": "Early flash for a rookie pass-catcher group looking to contribute in Year 1.",
+      "url": "https://www.baltimoreravens.com/news/jakobi-lane-soaring-catch-ravens-rookie-wide-receiver-practice-report-2026",
+      "tag": "riser"
+    },
     {
       "player": "Chris Olave",
       "team": "NO",

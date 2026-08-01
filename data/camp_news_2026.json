@@ -1,6 +1,96 @@
 {
-  "updated": "2026-07-31T16:10:00Z",
+  "updated": "2026-08-01T02:08:21Z",
   "items": [
+    {
+      "player": "Colston Loveland",
+      "team": "CHI",
+      "pos": "TE",
+      "date": "2026-07-31",
+      "headline": "Drawing \"best TE in the NFL\" buzz from Caleb Williams and beat reporters",
+      "take": "Dominant camp reps have him in real conversation to challenge for fantasy TE1 as a Year 2 breakout.",
+      "url": "https://www.bleachernation.com/bears/2026/07/31/caleb-on-colston-loveland/",
+      "tag": "riser"
+    },
+    {
+      "player": "Deshaun Watson",
+      "team": "CLE",
+      "pos": "QB",
+      "date": "2026-07-31",
+      "headline": "Throws 3rd interception in 3 straight camp practices",
+      "take": "Keeps Cleveland's QB competition alive and Shedeur Sanders squarely in the mix.",
+      "url": "https://www.espn.com/nfl/story/_/id/49449000/cleveland-browns-training-camp-2026-intel-updates",
+      "tag": "faller"
+    },
+    {
+      "player": "Quinshon Judkins",
+      "team": "CLE",
+      "pos": "RB",
+      "date": "2026-07-31",
+      "headline": "RB coach: \"sky is the limit,\" can play all 3 downs after 2025 ankle/fibula injury",
+      "take": "Recovery looks ahead of schedule - trending toward a full workhorse role for the Browns.",
+      "url": "https://www.cleveland19.com/2026/07/31/duce-staley-quinshon-judkins-recovery-upcoming-season/",
+      "tag": "injury"
+    },
+    {
+      "player": "Tua Tagovailoa",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-07-31",
+      "headline": "Says back \"feels great,\" limited work is purely precautionary",
+      "take": "Reassuring step up from Wednesday's flare-up - QB1 job unaffected, on track for Week 1.",
+      "url": "https://www.espn.com/nfl/story/_/id/49497586/tua-tagovailoa-not-fretting-back-issue-unsure-full-return",
+      "tag": "injury"
+    },
+    {
+      "player": "Brian Thomas Jr.",
+      "team": "JAX",
+      "pos": "WR",
+      "date": "2026-07-31",
+      "headline": "Erupts with three 20+ yard catches off Trevor Lawrence in camp practice",
+      "take": "Reverses an earlier slow-chemistry note - trending back toward his breakout WR1 form.",
+      "url": "https://www.bigcatcountry.com/jacksonville-jaguars-training-camp/86941/10-observations-from-day-2-of-jaguars-training-camp",
+      "tag": "riser"
+    },
+    {
+      "player": "Denzel Boston",
+      "team": "CLE",
+      "pos": "WR",
+      "date": "2026-07-31",
+      "headline": "Makes leaping sideline grab, called the \"catch of camp\"",
+      "take": "Continues building on his early-camp buzz in a crowded but talent-thin Browns WR room.",
+      "url": "https://www.clevelandbrowns.com/video/shedeur-sanders-throws-a-quick-strike-over-the-middle-to-denzel-boston-training-camp-highlights",
+      "tag": "riser"
+    },
+    {
+      "player": "Eli Raridon",
+      "team": "NE",
+      "pos": "TE",
+      "date": "2026-07-31",
+      "headline": "Emerging as clear No. 2 TE behind Hunter Henry, 2 red-zone TDs Thursday",
+      "take": "Julian Hill's season-ending IR opened the door, and the rookie is taking full advantage - deep-league TE stash.",
+      "url": "https://www.si.com/nfl/patriots/onsi/rookie-te-eli-raridon-turning-heads-at-patriots-training-camp",
+      "tag": "riser"
+    },
+    {
+      "player": "Cyrus Allen",
+      "team": "KC",
+      "pos": "WR",
+      "date": "2026-07-31",
+      "headline": "Andy Reid: \"Pat's got some trust there\" as rookie WR keeps stacking good days",
+      "take": "Continues to separate in a crowded Chiefs WR room - late-round dynasty/best-ball flier gaining real momentum.",
+      "url": "https://www.si.com/nfl/chiefs/onsi/cyrus-allen-standing-out-at-chiefs-training-camp-pats-got-some-trust-there",
+      "tag": "riser"
+    },
+    {
+      "player": "J.J. McCarthy",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-07-31",
+      "headline": "Murray trade rumors reportedly go quiet after 2 good weeks from McCarthy",
+      "take": "A real swing back in McCarthy's favor after Murray was said to be closing the gap earlier in the week - battle still expected to run into preseason.",
+      "url": "https://www.si.com/nfl/vikings/onsi/news/kyler-murray-vikings-rumors-go-silent-after-2-good-weeks-from-jj-mccarthy",
+      "tag": "role"
+    },
     {
       "player": "Chris Brazzell II",
       "team": "CAR",

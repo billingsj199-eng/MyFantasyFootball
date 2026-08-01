@@ -1,6 +1,46 @@
 {
-  "updated": "2026-08-01T02:08:21Z",
+  "updated": "2026-08-01T16:10:28Z",
   "items": [
+    {
+      "player": "Ricky Pearsall",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-08-01",
+      "headline": "Report says recurring PCL swelling could require season-ending surgery",
+      "take": "Escalation from Wednesday's 'exploring options' language - fade him until there's clarity, Deebo Samuel/Jauan Jennings gain value.",
+      "url": "https://heavy.com/sports/nfl/san-francisco-49ers/49ers-ricky-pearsall-injury-season-ending/",
+      "tag": "injury"
+    },
+    {
+      "player": "Shedeur Sanders",
+      "team": "CLE",
+      "pos": "QB",
+      "date": "2026-08-01",
+      "headline": "Held out of Saturday practice with arm/shoulder soreness",
+      "take": "Considered minor, but Browns QB room (Gabriel, Pickett) is also banged up right now - Flacco getting extra 1st-team run in the meantime.",
+      "url": "https://www.clevelandbrowns.com/news/dillon-gabriel-limited-shedeur-sanders-set-to-practice-on-day-10-team-coverage",
+      "tag": "injury"
+    },
+    {
+      "player": "Jeremiyah Love",
+      "team": "ARI",
+      "pos": "RB",
+      "date": "2026-07-31",
+      "headline": "Pads-on debut draws raves; Breer calls him headline of Cardinals camp",
+      "take": "Touches still shared early - Allgeier has out-carried him 21-18 through the first week despite the buzz.",
+      "url": "https://www.si.com/nfl/albert-breer-five-biggest-cardinals-training-camp-takeaways-jeremiyah-love",
+      "tag": "role"
+    },
+    {
+      "player": "Kaelon Black",
+      "team": "SF",
+      "pos": "RB",
+      "date": "2026-08-01",
+      "headline": "Getting expanded reps behind McCaffrey with Jordan James out (rib)",
+      "take": "Deep-league/dynasty stash if James' rib recovery drags into the season.",
+      "url": "https://www.cbssports.com/fantasy/football/news/49ers-jordan-james-diagnosed-with-fractured-rib/",
+      "tag": "role"
+    },
     {
       "player": "Colston Loveland",
       "team": "CHI",

@@ -1,4 +1,4 @@
-// Mike Clay 2026 NFL Projection Guide (Updated 7/31/2026)
+// Mike Clay 2026 NFL Projection Guide (Updated 8/2/2026)
 // Source: ESPN — extracted from NFLDK2026_CS_ClayProjections2026.pdf
 // 490 player entries, 32 teams
 
@@ -434,15 +434,15 @@ var MIKE_CLAY_PROJ = {
   "Brock Purdy": {pos:"QB",tm:"SF",gm:17,pts:292,rec:0,py:4181,ptd:27,ry:277,rtd:4},
   "Mac Jones": {pos:"QB",tm:"SF",gm:17,pts:9,rec:0,py:146,ptd:1,ry:2},
   "Christian McCaffrey": {pos:"RB",tm:"SF",gm:17,pts:343,rec:79,ry:1131,rtd:9,rcy:685,rctd:5},
-  "Jordan James": {pos:"RB",tm:"SF",gm:17,pts:58,rec:8,ry:302,rtd:2,rcy:63},
+  "Jordan James": {pos:"RB",tm:"SF",gm:17,pts:61,rec:8,ry:321,rtd:2,rcy:63},
   "Kyle Juszczyk": {pos:"RB",tm:"SF",gm:17,pts:45,rec:20,ry:19,rcy:162,rctd:1},
   "Kaelon Black": {pos:"RB",tm:"SF",gm:17,pts:29,rec:4,ry:147,rtd:1,rcy:31},
   "Isaac Guerendo": {pos:"RB",tm:"SF",gm:17,pts:1,rec:0},
-  "Mike Evans": {pos:"WR",tm:"SF",gm:17,pts:182,rec:57,rcy:899,rctd:6},
+  "Mike Evans": {pos:"WR",tm:"SF",gm:17,pts:183,rec:57,rcy:905,rctd:6},
   "Deebo Samuel": {pos:"WR",tm:"SF",gm:17,pts:172,rec:55,ry:109,rtd:1,rcy:735,rctd:4},
-  "De'Zhaun Stribling": {pos:"WR",tm:"SF",gm:17,pts:101,rec:33,rcy:498,rctd:3},
-  "Ricky Pearsall": {pos:"WR",tm:"SF",gm:17,pts:59,rec:21,ry:24,rcy:272,rctd:1},
-  "Christian Kirk": {pos:"WR",tm:"SF",gm:17,pts:9,rec:3,rcy:42},
+  "De'Zhaun Stribling": {pos:"WR",tm:"SF",gm:17,pts:110,rec:36,rcy:543,rctd:3},
+  "Christian Kirk": {pos:"WR",tm:"SF",gm:17,pts:46,rec:16,rcy:220,rctd:1},
+  "Demarcus Robinson": {pos:"WR",tm:"SF",gm:17,pts:9,rec:3,rcy:44},
   "Jacob Cowing": {pos:"WR",tm:"SF",gm:17,pts:1,rec:0},
   "George Kittle": {pos:"TE",tm:"SF",gm:15,pts:177,rec:70,rcy:762,rctd:5},
   "Jake Tonges": {pos:"TE",tm:"SF",gm:17,pts:33,rec:13,rcy:135,rctd:1},

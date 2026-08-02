@@ -1,6 +1,46 @@
 {
-  "updated": "2026-08-01T16:10:28Z",
+  "updated": "2026-08-02T02:09:11Z",
   "items": [
+    {
+      "player": "Xavier Worthy",
+      "team": "KC",
+      "pos": "WR",
+      "date": "2026-08-01",
+      "headline": "Carted off practice with shoulder injury, same shoulder as surgery",
+      "take": "Same shoulder that needed labrum surgery in January \u2014 real risk until Chiefs confirm it's not structural.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/xavier-worthy-left-chiefs-practice-with-a-shoulder-injury",
+      "tag": "injury"
+    },
+    {
+      "player": "Cyrus Allen",
+      "team": "KC",
+      "pos": "WR",
+      "date": "2026-08-01",
+      "headline": "Carted off same practice as Worthy with shin bruise, nothing torn/broken",
+      "take": "Per Schefter, tests came back clean \u2014 expected to be fine after building real 1st-team trust with Mahomes.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/reports-chiefs-wr-cyrus-allen-day-to-day-with-shin-bruise",
+      "tag": "injury"
+    },
+    {
+      "player": "Baker Mayfield",
+      "team": "TB",
+      "pos": "QB",
+      "date": "2026-08-01",
+      "headline": "Confirmed to play out 2026 on expiring deal, no Bucs extension reached",
+      "take": "Contract drama resolved for the season with no distraction risk, but points to a pending free agent next spring.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/baker-mayfield-to-play-2026-season-without-new-contract-with-bucs",
+      "tag": "transaction"
+    },
+    {
+      "player": "J.J. McCarthy",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-08-01",
+      "headline": "Splits reps with Murray again; O'Connell has QB1 decision date in mind",
+      "take": "Battle still unresolved into camp's 2nd week \u2014 don't lock in either QB's fantasy price until a starter is named.",
+      "url": "https://www.startribune.com/minnesota-vikings-training-camp-practice-live-updates-kyler-murray-jj-mccarthy-eagan/601873236",
+      "tag": "role"
+    },
     {
       "player": "Ricky Pearsall",
       "team": "SF",

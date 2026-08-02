@@ -1,6 +1,56 @@
 {
-  "updated": "2026-08-02T02:09:11Z",
+  "updated": "2026-08-02T16:10:02Z",
   "items": [
+    {
+      "player": "Xavier Worthy",
+      "team": "KC",
+      "pos": "WR",
+      "date": "2026-08-02",
+      "headline": "Rapoport, Schefter: shoulder believed OK, avoided serious injury",
+      "take": "Downgrade the alarm from Saturday's cart-off \u2014 could return before Aug. 15 preseason opener",
+      "url": "https://x.com/RapSheet/status/2083648790322434079",
+      "tag": "injury"
+    },
+    {
+      "player": "Ricky Pearsall",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-08-01",
+      "headline": "Confirmed for season-ending PCL surgery, headed to IR",
+      "take": "Officially done for 2026; opens targets for Deebo Samuel, Kirk (once healthy) and Jennings",
+      "url": "https://www.espn.com/nfl/story/_/id/49505715/49ers-wr-pearsall-season-ending-knee-surgery",
+      "tag": "injury"
+    },
+    {
+      "player": "Deebo Samuel",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-08-01",
+      "headline": "Makes first practice back with 49ers, active on 10-play plan",
+      "take": "Immediate beneficiary of the Pearsall injury, quickly making plays in his return",
+      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/deebo-samuel-practice-return-takeaways-analysis/1953756/",
+      "tag": "riser"
+    },
+    {
+      "player": "Shedeur Sanders",
+      "team": "CLE",
+      "pos": "QB",
+      "date": "2026-08-01",
+      "headline": "Outplays Watson again, 13/22 4 TD 1 INT with 1st-team reps",
+      "take": "Sanders is winning the Browns' QB battle on the field through three straight practices",
+      "url": "https://sports.yahoo.com/articles/shedeur-sanders-continues-strong-browns-001316876.html",
+      "tag": "riser"
+    },
+    {
+      "player": "Kyler Murray",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-08-01",
+      "headline": "Reportedly pulling ahead of McCarthy in Vikings QB battle",
+      "take": "First real separation in a competition that had been a dead heat",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/kyler-murray-seems-to-be-pulling-ahead-in-vikings-qb-competition-as-expected",
+      "tag": "riser"
+    },
     {
       "player": "Xavier Worthy",
       "team": "KC",

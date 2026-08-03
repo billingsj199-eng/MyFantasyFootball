@@ -1,13 +1,53 @@
 {
-  "updated": "2026-08-02T16:10:02Z",
+  "updated": "2026-08-03T02:10:00Z",
   "items": [
+    {
+      "player": "Travis Hunter",
+      "team": "JAX",
+      "pos": "WR",
+      "date": "2026-08-02",
+      "headline": "Best two-way practice of his career: INT off Mullens then 35-yd catch from Lawrence",
+      "take": "Still hinges on offensive snap share, but flashes keep building his ceiling case",
+      "url": "https://www.jaguars.com/news/jaguars-2026-training-camp-snapshot-day-4-standout-day-for-hunter",
+      "tag": "riser"
+    },
+    {
+      "player": "Khalil Herbert",
+      "team": "SF",
+      "pos": "RB",
+      "date": "2026-08-02",
+      "headline": "Signed by 49ers as backup RB with Jordan James (rib) sidelined",
+      "take": "Deep-league McCaffrey handcuff stash until James returns",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/49ers-sign-rb-khalil-herbert-dl-titus-leo",
+      "tag": "transaction"
+    },
+    {
+      "player": "Kevin Coleman Jr.",
+      "team": "MIA",
+      "pos": "WR",
+      "date": "2026-08-02",
+      "headline": "Hauls in 70-yard TD from Quinn Ewers in first fan practice",
+      "take": "Early camp buzz for a rookie slot in a crowded Dolphins WR room",
+      "url": "https://www.si.com/nfl/dolphins/onsi/training-camp-practice-4-observations-offense-goes-deep-01kz184m7krb",
+      "tag": "riser"
+    },
+    {
+      "player": "Fernando Mendoza",
+      "team": "LV",
+      "pos": "QB",
+      "date": "2026-08-02",
+      "headline": "Worst practice of camp, picked off in 7-on-7 Sunday",
+      "take": "Cousins keeps firm grip on Raiders QB1 job for now",
+      "url": "https://sports.yahoo.com/articles/fernando-mendoza-struggles-during-rough-185633674.html",
+      "tag": "faller"
+    },
     {
       "player": "Xavier Worthy",
       "team": "KC",
       "pos": "WR",
       "date": "2026-08-02",
       "headline": "Rapoport, Schefter: shoulder believed OK, avoided serious injury",
-      "take": "Downgrade the alarm from Saturday's cart-off \u2014 could return before Aug. 15 preseason opener",
+      "take": "Downgrade the alarm from Saturday's cart-off — could return before Aug. 15 preseason opener",
       "url": "https://x.com/RapSheet/status/2083648790322434079",
       "tag": "injury"
     },
@@ -57,7 +97,7 @@
       "pos": "WR",
       "date": "2026-08-01",
       "headline": "Carted off practice with shoulder injury, same shoulder as surgery",
-      "take": "Same shoulder that needed labrum surgery in January \u2014 real risk until Chiefs confirm it's not structural.",
+      "take": "Same shoulder that needed labrum surgery in January — real risk until Chiefs confirm it's not structural.",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/xavier-worthy-left-chiefs-practice-with-a-shoulder-injury",
       "tag": "injury"
     },
@@ -67,7 +107,7 @@
       "pos": "WR",
       "date": "2026-08-01",
       "headline": "Carted off same practice as Worthy with shin bruise, nothing torn/broken",
-      "take": "Per Schefter, tests came back clean \u2014 expected to be fine after building real 1st-team trust with Mahomes.",
+      "take": "Per Schefter, tests came back clean — expected to be fine after building real 1st-team trust with Mahomes.",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/reports-chiefs-wr-cyrus-allen-day-to-day-with-shin-bruise",
       "tag": "injury"
     },
@@ -87,7 +127,7 @@
       "pos": "QB",
       "date": "2026-08-01",
       "headline": "Splits reps with Murray again; O'Connell has QB1 decision date in mind",
-      "take": "Battle still unresolved into camp's 2nd week \u2014 don't lock in either QB's fantasy price until a starter is named.",
+      "take": "Battle still unresolved into camp's 2nd week — don't lock in either QB's fantasy price until a starter is named.",
       "url": "https://www.startribune.com/minnesota-vikings-training-camp-practice-live-updates-kyler-murray-jj-mccarthy-eagan/601873236",
       "tag": "role"
     },

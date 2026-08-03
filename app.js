@@ -6744,7 +6744,7 @@ async function _snapElement(el, fileLabel) {
   }
   const src = await window.html2canvas(el, {
     backgroundColor: bg, scale: SCALE, useCORS: true, logging: false,
-    ignoreElements: node => !!(node.classList && (node.classList.contains('card-snap-btn') || node.classList.contains('card-share') || node.classList.contains('card-close'))),
+    ignoreElements: node => !!((node.classList && (node.classList.contains('card-snap-btn') || node.classList.contains('card-share') || node.classList.contains('card-close') || node.classList.contains('card-finder-row'))) || node.id === 'cardIrToggle'),
     // html2canvas ignores object-fit and stretches covered imgs (player
     // headshots). Swap them for background-image divs — background-size:
     // cover renders correctly — keeping size, radius, border and position.
@@ -7562,6 +7562,7 @@ function openPlayerCard(d, ctxMode) {
         const _meta = cardEl.querySelector('.card-meta');
         if (_meta && _meta.parentElement) {
           const _row = document.createElement('div');
+          _row.className = 'card-finder-row';
           _row.style.cssText = 'margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap';
           _row.appendChild(_btn);
           _meta.parentElement.insertBefore(_row, _meta.nextSibling);

@@ -1,6 +1,36 @@
 {
-  "updated": "2026-08-03T02:10:00Z",
+  "updated": "2026-08-03T16:10:00Z",
   "items": [
+    {
+      "player": "Jeremiyah Love",
+      "team": "ARI",
+      "pos": "RB",
+      "date": "2026-08-02",
+      "headline": "Listed RB2 behind Tyler Allgeier on Cardinals' first depth chart of 2026",
+      "take": "Tempers redraft ADP a bit - camp reps and touches (10-4) still favor a competitive 1A/1B, not a clear lead back",
+      "url": "https://arizonasports.com/nfl/arizona-cardinals/jeremiyah-love-listed-as-rb2-on-cardinals-1st-depth-chart-of-preseason",
+      "tag": "faller"
+    },
+    {
+      "player": "Ja'Lynn Polk",
+      "team": "NO",
+      "pos": "WR",
+      "date": "2026-08-02",
+      "headline": "Placed on reserve/retired list, retiring at age 24",
+      "take": "No fantasy value himself, but thins an already-shallow Saints WR room behind Olave/Shaheed",
+      "url": "https://www.espn.com/nfl/story/_/id/49515016/saints-place-wr-jalynn-polk-24-reserve-retired-list",
+      "tag": "transaction"
+    },
+    {
+      "player": "Roman Wilson",
+      "team": "PIT",
+      "pos": "WR",
+      "date": "2026-08-02",
+      "headline": "Continuing to see heavy first-team reps, now also working in at punt returner",
+      "take": "New special-teams wrinkle adds a roster-safety floor on top of his camp receiving buzz",
+      "url": "https://x.com/FarabaughFB/status/2083584550492324205",
+      "tag": "riser"
+    },
     {
       "player": "Travis Hunter",
       "team": "JAX",

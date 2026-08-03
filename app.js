@@ -763,17 +763,88 @@ function modeAdp(d) {
   return d.a;
 }
 
+// === OUT FOR SEASON (IR) ===
+// Admin-flagged players hidden from the season-format rankings (redraft,
+// bestball, superflex, weekly) without touching anything else: they keep
+// their board slot, dynasty ranks, player card, and search entry, so
+// clearing the flag brings them back exactly where they were. Entries are
+// stored as {name: seasonYear} and only hide during that season — IR_SEASON
+// rolls over by itself every March 1 (a January injury still belongs to the
+// prior calendar year's season), so nobody stays hidden into next year and
+// no annual code bump is needed.
+// Synced to everyone via an `ir` field on rankings/jacks-official (written
+// directly with a field merge — no full SAVE needed, snapshot listeners
+// pick it up live). localStorage mirrors it for pre-snapshot boot.
+const IR_SEASON = (() => { const _d = new Date(); return _d.getMonth() >= 2 ? _d.getFullYear() : _d.getFullYear() - 1; })();
+window._irMap = {};
+try { window._irMap = JSON.parse(localStorage.getItem('mff_ir_list') || '{}') || {}; } catch(e) { window._irMap = {}; }
+const _IR_HIDDEN_MODES = { redraft: 1, bestball: 1, superflex: 1, weekly: 1 };
+window._irIsOut = function(name) { return window._irMap[name] === IR_SEASON; };
+window._irHiddenHere = function(mode) { return !!_IR_HIDDEN_MODES[mode || currentMode]; };
+window._irFlagged = function() { return Object.keys(window._irMap).filter(n => window._irMap[n] === IR_SEASON); };
+// Apply a remote (Firestore) copy of the map. Returns true if it changed.
+window._irApplyRemote = function(raw) {
+  if (raw == null) return false;
+  let map;
+  try { map = JSON.parse(raw) || {}; } catch(e) { return false; }
+  if (JSON.stringify(map) === JSON.stringify(window._irMap)) return false;
+  window._irMap = map;
+  try { localStorage.setItem('mff_ir_list', JSON.stringify(map)); } catch(e) {}
+  return true;
+};
+window._irToggle = function(name) {
+  if (typeof window.isAdmin !== 'function' || !window.isAdmin()) { toast('Only admins can flag players out for season'); return false; }
+  if (window._irMap[name] === IR_SEASON) delete window._irMap[name];
+  else window._irMap[name] = IR_SEASON;
+  try { localStorage.setItem('mff_ir_list', JSON.stringify(window._irMap)); } catch(e) {}
+  // Field-level merge write — doesn't touch the rankings data blob, and the
+  // jacks-official snapshot listener pushes it live to every open tab.
+  try {
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
+      firebase.firestore().collection('rankings').doc('jacks-official')
+        .set({ ir: JSON.stringify(window._irMap) }, { merge: true })
+        .catch(e => console.warn('[IR] cloud sync failed:', e));
+    }
+  } catch(e) { console.warn('[IR] cloud sync failed:', e); }
+  renumber();
+  render();
+  return true;
+};
+// Count of IR-hidden players above a board position (visible-rank conversion)
+function _irHiddenAbove(pos) {
+  if (!window._irHiddenHere(currentMode)) return 0;
+  let h = 0;
+  for (let i = 0; i < pos && i < board.length; i++) {
+    const dd = D[board[i]];
+    if (dd && window._irIsOut(dd.n)) h++;
+  }
+  return h;
+}
+
 // Renumber all myRank values from the board order
 function renumber() {
   const posCounts = {QB: 0, RB: 0, WR: 0, TE: 0, K: 0, DST: 0};
-  board.forEach((idx, pos) => {
-    D[idx].myRank = pos + 1;
+  // Out-for-season players keep their board slot but are skipped in the
+  // numbering (season formats only), so the visible table stays contiguous
+  // and tier banners line up. They're parked after the visible board — still
+  // holding a truthy myRank for Trade Calc / cards / search.
+  const _irHide = window._irHiddenHere(currentMode);
+  const _parked = [];
+  let r = 0;
+  const _num = (idx) => {
+    r++;
+    D[idx].myRank = r;
     const p = D[idx].s;
     if (posCounts[p] !== undefined) {
       posCounts[p]++;
       D[idx].myPosRank = p + posCounts[p];
     }
+  };
+  board.forEach(idx => {
+    if (_irHide && D[idx] && window._irIsOut(D[idx].n)) { _parked.push(idx); return; }
+    _num(idx);
   });
+  _parked.forEach(_num);
 }
 renumber();
 
@@ -1029,8 +1100,11 @@ function movePlayer(fromIdx, toPosition) {
   if (tierArr && tierArr.length > 0) {
     const isPosBucket = (pk === 'QB' || pk === 'RB' || pk === 'WR' || pk === 'TE');
     const draggedPos = D[fromIdx] && D[fromIdx].s;
-    let fromRank = curPos + 1;
-    let toRank = toPosition + 1;
+    // Tier afterRank anchors live in VISIBLE rank space; out-for-season
+    // players still occupy board slots while hidden, so convert.
+    const _irHide = window._irHiddenHere(currentMode);
+    let fromRank = curPos + 1 - _irHiddenAbove(curPos);
+    let toRank = toPosition + 1 - _irHiddenAbove(toPosition);
 
     if (isPosBucket && draggedPos === pk) {
       // Simulate the move and count: positional rank within `pk` of the
@@ -1040,14 +1114,14 @@ function movePlayer(fromIdx, toPosition) {
       newBoard.splice(toPosition, 0, fromIdx);
       let oldR = 0, newR = 0, c = 0;
       for (let i = 0; i < board.length; i++) {
-        if (D[board[i]] && D[board[i]].s === pk) {
+        if (D[board[i]] && D[board[i]].s === pk && !(_irHide && window._irIsOut(D[board[i]].n))) {
           c++;
           if (board[i] === fromIdx) { oldR = c; break; }
         }
       }
       c = 0;
       for (let i = 0; i < newBoard.length; i++) {
-        if (D[newBoard[i]] && D[newBoard[i]].s === pk) {
+        if (D[newBoard[i]] && D[newBoard[i]].s === pk && !(_irHide && window._irIsOut(D[newBoard[i]].n))) {
           c++;
           if (newBoard[i] === fromIdx) { newR = c; break; }
         }
@@ -1921,6 +1995,7 @@ function getFiltered() {
         if (!p) return false;
         if (_pc[p.s] === undefined) return _cutN == null || bi < _cutN; // flex group
         if (p._retired) return false; // dropped downstream — keep pos-rank count aligned with display
+        if (window._irIsOut(p.n)) return false; // out-for-season: same alignment reason
         _posSeen[p.s] = (_posSeen[p.s] || 0) + 1;
         return _pc[p.s] == null || _posSeen[p.s] <= _pc[p.s];
       });
@@ -1931,6 +2006,13 @@ function getFiltered() {
   let f = _boardSrc.map(idx => D[idx]);
   // Hide retired players from rankings
   f = f.filter(d => !d._retired);
+  // Out-for-season players: hidden from season formats (redraft / bestball /
+  // superflex / weekly) but untouched in dynasty modes. A typed search still
+  // surfaces them so their card (and the admin unflag toggle on it) stays
+  // reachable from the rankings page.
+  if (window._irHiddenHere(currentMode) && !query) {
+    f = f.filter(d => !window._irIsOut(d.n));
+  }
   // Defensive dedupe: a player should never appear twice in the rankings.
   // Some board sync paths can occasionally produce duplicate indices pointing
   // to the same D[] entry — keep the first occurrence and drop the rest.
@@ -6851,6 +6933,8 @@ function openPlayerCard(d, ctxMode) {
             ${d.s==='DST' ? (d.oppg!=null ? `<span class="card-team">Opp PPG ${d.oppg}</span>` : '') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? `<span class="card-team">Age ${_ad.str}</span>` : '';})()}
             ${d._number != null ? `<span class="card-team">#${d._number}</span>` : ''}
             ${_buildInjuryBadge(d)}
+            ${window._irIsOut(d.n) ? `<span class="inj-pill" data-status="OUT" title="Out for season — hidden from the ${IR_SEASON} Redraft / Best Ball / Superflex / Weekly rankings. Dynasty boards and this card are unaffected; the flag clears automatically next season.">OUT FOR SEASON</span>` : ''}
+            ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026) ? `<button id="cardIrToggle" title="${window._irIsOut(d.n) ? 'Restore this player to the season rankings (their board slot was kept)' : 'Hide this player from the ' + IR_SEASON + ' Redraft / Best Ball / Superflex / Weekly rankings — board slot, dynasty ranks, card and search are kept, and the flag auto-clears next season'}" style="padding:2px 8px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid ${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};background:transparent;color:${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};white-space:nowrap">${window._irIsOut(d.n) ? 'RESTORE TO RANKINGS' : 'MARK OUT FOR SEASON'}</button>` : ''}
           </div>
         </div>
       </div>
@@ -7485,6 +7569,21 @@ function openPlayerCard(d, ctxMode) {
       }
     }
   } catch (_e) {}
+
+  // Admin-only: OUT FOR SEASON toggle — flags the player hidden from the
+  // season-format rankings (see window._irToggle) and refreshes the card so
+  // the badge + button state update in place.
+  const _cardIrBtn = document.getElementById('cardIrToggle');
+  if (_cardIrBtn) {
+    _cardIrBtn.addEventListener('click', () => {
+      const wasOut = window._irIsOut(d.n);
+      const label = wasOut ? null : 'Hide ' + d.n + ' from the ' + IR_SEASON + ' season rankings?\n\nRedraft / Best Ball / Superflex / Weekly hide them; dynasty boards, their board slot, player card and search all stay. Applies for every user immediately.';
+      if (label && !confirm(label)) return;
+      if (!window._irToggle(d.n)) return;
+      toast(wasOut ? d.n + ' restored to the season rankings' : d.n + ' hidden from ' + IR_SEASON + ' season rankings (' + window._irFlagged().length + ' player' + (window._irFlagged().length === 1 ? '' : 's') + ' flagged)');
+      if (typeof openPlayerCard === 'function') openPlayerCard(d, ctxMode);
+    });
+  }
 
   const _cardShareBtn = document.getElementById('cardShare');
   if (_cardShareBtn) {
@@ -21035,6 +21134,10 @@ window.fmtHeight = fmtHeight;
     if (!db) return;
     try {
       const doc = await db.collection('rankings').doc('jacks-official').get();
+      // Out-for-season flags ride the same doc as a separate `ir` field
+      if (doc.exists && typeof window._irApplyRemote === 'function' && window._irApplyRemote(doc.data().ir)) {
+        renumber(); render();
+      }
       if (doc.exists && doc.data().data) {
         window._jacksUpdatedAt = doc.data().updatedAt || null;
         if (typeof window._renderRankingsUpdated === 'function') window._renderRankingsUpdated();
@@ -21128,6 +21231,11 @@ window.fmtHeight = fmtHeight;
   function listenForJacksUpdates() {
     if (!db || jacksUnsubscribe) return;
     jacksUnsubscribe = db.collection('rankings').doc('jacks-official').onSnapshot(doc => {
+      // Out-for-season flags: apply live so a toggle in one tab (or by Jack)
+      // hides/restores the player everywhere without a refresh.
+      if (doc.exists && typeof window._irApplyRemote === 'function' && window._irApplyRemote(doc.data().ir)) {
+        renumber(); render();
+      }
       if (doc.exists && doc.data().data) {
         window._jacksUpdatedAt = doc.data().updatedAt || null;
         if (typeof window._renderRankingsUpdated === 'function') window._renderRankingsUpdated();

@@ -65,14 +65,14 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-03b" as="script">
+<link rel="preload" href="app.js?v=2026-08-04a" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous">
 <link rel="preload" href="data/combine_data.js?v=2026-04-25b" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
-<link rel="preload" href="data/_bundle_lookups.js?v=2026-08-03" as="script">
+<link rel="preload" href="data/_bundle_lookups.js?v=2026-08-04" as="script">
 <link rel="preload" href="data/d.js?v=2026-08-03" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-08-04a">
@@ -3664,12 +3664,13 @@ ADD TO CHROME
 
 <input type="file" id="fileImport" aria-label="Import rankings file" accept=".json" style="display:none">
 
-<!-- P2 bundle: 42 small stable lookup tables concatenated by scripts/bundle_lookups.py.
+<!-- P2 bundle: 36 small stable lookup tables concatenated by scripts/bundle_lookups.py.
      Re-run that script after editing any source file. Pipeline-regenerated files
      (d.js, all_players.js, weekly_stats_active.js, etc.) are intentionally NOT
      bundled — they keep loading as separate script tags so the pipeline doesn't
-     need to know about bundling. -->
-<script src="data/_bundle_lookups.js?v=2026-08-03" defer></script>
+     need to know about bundling. The 6 bbm_* tables were split into the lazy
+     data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
+<script src="data/_bundle_lookups.js?v=2026-08-04" defer></script>
 <script src="data/d.js?v=2026-08-03" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
@@ -3704,7 +3705,11 @@ ADD TO CHROME
      the 'mff:retireddata' event the loader dispatches. -->
 
 <script src="data/combine_data.js?v=2026-04-25b" defer></script>
-<script src="data/historical_draft_picks.js?v=2026-04-20" defer></script>
+<!-- historical_draft_picks.js (~92 KB) LAZY since 2026-08-04 via window._ensureDraftPicksData()
+     — HISTORICAL_DRAFT_PICKS is consumed only inside the prospect-model build
+     (buildProspectData nflTeam fallback + _pmComputeRoomAdj) and admin console studies,
+     all typeof-guarded. Fired alongside _ensureProspectStats and awaited in the same
+     async gates (_attachJmScores / rebuildAndRender). -->
 <script src="data/mike_clay_projections.js?v=2026-08-02" defer></script>
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
@@ -3718,6 +3723,7 @@ ADD TO CHROME
      a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
 <script src="data/betting_lines_2026.js?v=2026-08-03" defer></script>
+<script src="data/headshot_espn_ids.js?v=2026-08-04" defer></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
 // d.js names and Clay names sometimes differ on suffix (Jr./III), punctuation,
@@ -3787,13 +3793,14 @@ window.clayLookup = clayLookup;
 <!-- college_stats.js (1.88 MB) + 3 patch files lazy-loaded via window._ensureCollegeStatsData()
      on prospect / compare / backtest / mockdraft / dynasty / openPlayerCard activation.
      All COLLEGE_STATS consumers use typeof guards, so the page renders fine pre-load. -->
-<!-- Backtest outcomes: rookie verdicts (Stud/Hit/Contributor/Bust/Pending) for 2020-2024 classes -->
-<script src="data/backtest_outcomes.js?v=2026-04-22" defer></script>
-<!-- NFL.com prospect grades (5.4-7.45 scale + tier label) — 2014-2026, 1,672 prospects -->
-<!-- Used as DISPLAY ONLY on prospect cards; not in JM model (residual signal +0.074 over DC). -->
-<!-- defer: window._NFL_PROSPECT_GRADES has a single on-demand consumer (the player
-     card's NFL.com grade section, post-DOMContentLoaded) and no parse-time reader. -->
-<script src="data/nfl_prospect_grades.js?v=2026-05-11" defer></script>
+<!-- Backtest outcomes (rookie Stud/Hit/Contributor/Bust verdicts, 2017-2024 classes, ~356 KB)
+     LAZY since 2026-08-04 via window._ensureBacktestOutcomes() — consumed by the Backtest
+     page, Weight Lab, and two JM sub-signals (_teSchoolHits / _sgBuildIndex) inside
+     buildProspectData. Fired alongside _ensureProspectStats + on backtest-page open. -->
+<!-- NFL.com prospect grades (5.4-7.45 scale + tier label) — 2014-2026, 1,672 prospects.
+     Used as DISPLAY ONLY on prospect cards; not in JM model (residual signal +0.074 over DC).
+     LAZY since 2026-08-04 via window._ensureCardExtras() — single consumer is the player
+     card's NFL.com grade section; openPlayerCard fires the load + re-renders once. -->
 <script>
 // === Travis Hunter — complete college stats (Jackson State + Colorado) ===
 // Lazy-applied by _ensureCollegeStatsData() after college_stats.js loads.
@@ -4563,7 +4570,9 @@ if (!COLLEGE_STATS['Benny Snell']) COLLEGE_STATS['Benny Snell'] = [];
      mode-switch / first dynasty render. Elite Pull college pool (Games page)
      falls back to a non-weekly pool until first openPlayerCard load. -->
 <!-- (Scripts moved into the _ensureCollegeStatsData chain — see line ~5347.) -->
-<script src="data/player_comps.js?v=2026-04-07" defer></script>
+<!-- player_comps.js (~74 KB) LAZY since 2026-08-04 via window._ensureCardExtras() —
+     _PLAYER_COMPS' single consumer is the player card COMPS tab; openPlayerCard fires
+     the load + re-renders once it lands. -->
 <!-- PFF advanced-stat files (~1.24 MB combined) are consumed ONLY by the JM prospect
      scoring helpers (jmYaco/jmYprr/etc., ~L30330-31130), which run only inside
      buildProspectData(). buildProspectData already rides an async gate behind
@@ -4708,6 +4717,103 @@ window._ensureProspectStats = (function() {
       _loadScript('data/rb_elusive.js?v=2026-04-06'),
       _loadScript('data/rb_breakaway.js?v=2026-04-16')
     ]);
+    return promise;
+  };
+})();
+
+// backtest_outcomes.js (~356 KB) — BACKTEST_OUTCOMES feeds the Backtest page, the
+// Weight Lab, and two JM sub-signals inside buildProspectData (_teSchoolHits TE
+// factory bonus + _sgBuildIndex situation grade). Fired wherever _ensureProspectStats
+// fires (prospect/compare/backtest/mockdraft open, dynasty render, openPlayerCard)
+// and awaited in the same prospect-build gates. On load we reset the prospect-model
+// caches in case a build ran before the file landed (direct #backtest deep link).
+window._ensureBacktestOutcomes = (function() {
+  let promise = null;
+  return function _ensureBacktestOutcomes() {
+    if (promise) return promise;
+    promise = new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = 'data/backtest_outcomes.js?v=2026-04-22';
+      s.async = false;
+      s.onload  = function() {
+        try { if (window._pmOutcomeDataReset) window._pmOutcomeDataReset(); } catch (e) {}
+        resolve();
+      };
+      s.onerror = function() { console.warn('[BacktestOutcomes] load failed'); resolve(); };
+      document.head.appendChild(s);
+    });
+    return promise;
+  };
+})();
+
+// historical_draft_picks.js (~92 KB) — HISTORICAL_DRAFT_PICKS is consumed only inside
+// the prospect-model build (nflTeam fallback + _pmComputeRoomAdj room-crowding) and
+// admin console studies that require a completed build. Same lifecycle as
+// backtest_outcomes above: fired with _ensureProspectStats, awaited in the build gates,
+// caches reset on load in case a partial build beat the file.
+window._ensureDraftPicksData = (function() {
+  let promise = null;
+  return function _ensureDraftPicksData() {
+    if (promise) return promise;
+    promise = new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = 'data/historical_draft_picks.js?v=2026-04-20';
+      s.async = false;
+      s.onload  = function() {
+        try { if (window._pmOutcomeDataReset) window._pmOutcomeDataReset(); } catch (e) {}
+        resolve();
+      };
+      s.onerror = function() { console.warn('[DraftPicks] load failed'); resolve(); };
+      document.head.appendChild(s);
+    });
+    return promise;
+  };
+})();
+
+// Player-card extras: nfl_prospect_grades.js (~118 KB, window._NFL_PROSPECT_GRADES →
+// NFL.com grade section) + player_comps.js (~74 KB, _PLAYER_COMPS → COMPS tab).
+// Both have a single consumer inside openPlayerCard's template — the card fires this
+// on open and re-renders itself once when the data lands (see openPlayerCard).
+window._ensureCardExtras = (function() {
+  let promise = null;
+  function _loadScript(src) {
+    return new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      s.onload  = function() { resolve(); };
+      s.onerror = function() { console.warn('[CardExtras] load failed', src); resolve(); };
+      document.head.appendChild(s);
+    });
+  }
+  return function _ensureCardExtras() {
+    if (promise) return promise;
+    promise = Promise.all([
+      _loadScript('data/nfl_prospect_grades.js?v=2026-05-11'),
+      _loadScript('data/player_comps.js?v=2026-04-07')
+    ]);
+    return promise;
+  };
+})();
+
+// _bundle_bbm.js (~280 KB) — BBM tournament tables (BBM_DATA build rates, pick-by-
+// rank-round, path/stack/structural multistage lifts) split out of _bundle_lookups.js
+// 2026-08-04. Consumed ONLY by the My Teams construction-score path
+// (_udComputeRosterConstruction + helpers, all typeof-guarded with QF-only fallback
+// constants). Fired from _udRenderDashboardDeferred (portfolio load) and
+// _udRenderDashboard, which re-renders once when the bundle lands.
+window._ensureBbmData = (function() {
+  let promise = null;
+  return function _ensureBbmData() {
+    if (promise) return promise;
+    promise = new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = 'data/_bundle_bbm.js?v=2026-08-04';
+      s.async = false;
+      s.onload  = function() { resolve(); };
+      s.onerror = function() { console.warn('[BBMData] load failed'); resolve(); };
+      document.head.appendChild(s);
+    });
     return promise;
   };
 })();
@@ -4868,7 +4974,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-03b"></script>
+<script defer src="app.js?v=2026-08-04a"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

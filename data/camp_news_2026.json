@@ -1,6 +1,56 @@
 {
-  "updated": "2026-08-04T02:10:00Z",
+  "updated": "2026-08-04T16:11:40Z",
   "items": [
+    {
+      "player": "Bijan Robinson",
+      "team": "ATL",
+      "pos": "RB",
+      "date": "2026-08-04",
+      "headline": "Signs 3-year, $66.75M extension (up to $75M), highest-paid RB in NFL history by APY",
+      "take": "Ends his hold-in and cements him as Atlanta's long-term workhorse; deal also pressures the Lions and Colts to get Jahmyr Gibbs and Jonathan Taylor extended.",
+      "url": "https://www.nfl.com/news/falcons-bijan-robinson-contract-extension",
+      "tag": "transaction"
+    },
+    {
+      "player": "Jahmyr Gibbs",
+      "team": "DET",
+      "pos": "RB",
+      "date": "2026-08-04",
+      "headline": "Misses 4th straight practice in hold-in; Campbell says Bijan deal won't hurt talks",
+      "take": "Still a business dispute, not a health issue - coach also downplayed an earlier minor back note. Expect resolution before games matter.",
+      "url": "https://www.yardbarker.com/nfl/articles/lions_dan_campbell_drops_new_jahmyr_gibbs_update/s1_17355_44136425",
+      "tag": "role"
+    },
+    {
+      "player": "Kenyon Sadiq",
+      "team": "NYJ",
+      "pos": "TE",
+      "date": "2026-08-04",
+      "headline": "Hits hernia-related setback, Aaron Glenn confirms he'll miss time",
+      "take": "Delays the rookie TE's path to camp reps and early target share; no firm timeline given yet.",
+      "url": "https://heavy.com/sports/nfl/new-york-jets/kenyon-sadiq-injury-setback-training-camp/",
+      "tag": "injury"
+    },
+    {
+      "player": "Jimmy Horn Jr.",
+      "team": "CAR",
+      "pos": "WR",
+      "date": "2026-08-04",
+      "headline": "2025 6th-rounder continues turning heads with speed and route-running in camp",
+      "take": "Deep-league/dynasty buzz stock climbing behind Carolina's top WRs.",
+      "url": "https://sports.yahoo.com/article/jimmy-horn-jr-turning-heads-004203170.html",
+      "tag": "riser"
+    },
+    {
+      "player": "Elic Ayomanor",
+      "team": "TEN",
+      "pos": "WR",
+      "date": "2026-08-04",
+      "headline": "Building real chemistry with Cam Ward, winning 50-50 balls and deep in-breakers",
+      "take": "Still likely opens as Titans' WR4 in a crowded room, but camp helium is real for best-ball/dynasty value.",
+      "url": "https://www.rotoballer.com/player-news/elic-ayomanor-continues-to-impress-in-training-camp/1901120",
+      "tag": "riser"
+    },
     {
       "player": "Michael Penix Jr.",
       "team": "ATL",

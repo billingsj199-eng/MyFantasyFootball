@@ -44,7 +44,7 @@ jobs:
       # keeps serving the previous build (never a broken artifact).
       - name: Minify app.js
         run: |
-          npx -y terser@5 app.js --compress --mangle --keep-fnames --comments false -o app.min.tmp.js
+          npx -y terser@5 app.js --compress "pure_funcs=['console.log','console.info','console.debug']" --mangle --keep-fnames --comments false -o app.min.tmp.js
           node --check app.min.tmp.js
           echo "app.js: $(wc -c < app.js) -> $(wc -c < app.min.tmp.js) bytes"
           mv app.min.tmp.js app.js

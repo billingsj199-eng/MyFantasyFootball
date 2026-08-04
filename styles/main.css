@@ -182,6 +182,7 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 
 html{overflow:hidden;width:100%;height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:row;width:100%;max-width:100vw}
+button,input,select,textarea{font-family:inherit}
 *{scrollbar-width:thin;scrollbar-color:rgba(245,158,11,.3) transparent}
 *::-webkit-scrollbar{width:4px;height:4px}
 *::-webkit-scrollbar-track{background:transparent}
@@ -2141,3 +2142,14 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
 .sos-range-pop{position:fixed;z-index:900;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px;min-width:200px}
 .sos-pop-title{font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1.2px;color:var(--accent)}
 .sos-range-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* Mobile tap targets (2026-08-04 audit): the toolbar pills/tabs are 20-28px
+   tall on phones — below comfortable touch size. Give them ~32px+ hit areas
+   on small screens only; desktop look unchanged. help-btn keeps its circle. */
+@media (max-width:600px){
+  .career-log-toggle button,.mode-tab,.version-tab{padding-top:8px;padding-bottom:8px}
+  /* !important: the rankings ADP-source pills carry inline padding:3px 10px */
+  .md-rank-src-tab{padding-top:8px!important;padding-bottom:8px!important}
+  .tb-btn{padding-top:.55rem;padding-bottom:.55rem}
+  .help-btn{width:32px;height:32px;font-size:.85rem}
+}

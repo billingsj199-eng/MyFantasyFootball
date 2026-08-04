@@ -9,7 +9,7 @@
    - Firebase / ESPN / Sleeper / Cloudflare APIs → bypass entirely.
    Bump SW_VERSION when changing SW logic so old caches get wiped on activate. */
 
-const SW_VERSION   = '2026-07-27a';
+const SW_VERSION   = '2026-08-04a';
 const SHELL_CACHE  = 'mff-shell-' + SW_VERSION;
 const STATIC_CACHE = 'mff-static-' + SW_VERSION;
 const RUNTIME_CACHE = 'mff-runtime-' + SW_VERSION;
@@ -113,12 +113,30 @@ async function cacheFirst(req, cacheName) {
     const res = await fetch(req);
     if (res && res.ok) {
       const copy = res.clone();
-      caches.open(cacheName).then((c) => c.put(req, copy)).catch(() => {});
+      caches.open(cacheName)
+        .then((c) => c.put(req, copy).then(() => pruneSupersededVersions(c, req)))
+        .catch(() => {});
     }
     return res;
   } catch (_) {
     return new Response('', { status: 504, statusText: 'offline' });
   }
+}
+
+// Daily ?v= bumps (ADP, betting lines) would otherwise strand each old entry in
+// STATIC_CACHE forever — unbounded growth until quota eviction drops the whole
+// cache. After caching a versioned asset, evict entries for the same pathname
+// with a different query string.
+async function pruneSupersededVersions(cache, req) {
+  try {
+    const path = new URL(req.url).pathname;
+    const search = new URL(req.url).search;
+    const keys = await cache.keys();
+    await Promise.all(keys.map((k) => {
+      const ku = new URL(k.url);
+      return (ku.pathname === path && ku.search !== search) ? cache.delete(k) : null;
+    }));
+  } catch (_) { /* best-effort */ }
 }
 
 async function staleWhileRevalidate(req, cacheName) {

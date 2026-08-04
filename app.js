@@ -2110,6 +2110,32 @@ function getFiltered() {
           av = _sosRk(a); bv = _sosRk(b); break;
         }
         case 'diff': av = (rnkAdp(a)??a.myRank) - a.myRank; bv = (rnkAdp(b)??b.myRank) - b.myRank; break;
+        // Weekly-only columns (Opp / Spread / Team Total). These read the same
+        // values the cells render — note Team Total shows the OPPONENT's
+        // implied total on D/ST rows, so the sort has to branch the same way
+        // or a D/ST-filtered board sorts by a number it isn't displaying.
+        case 'opp': {
+          const _o = d => {
+            const v = (typeof window._weeklyOppFor === 'function') ? window._weeklyOppFor(d.t) : null;
+            return v ? String(v).replace(/^@/, '') : '~~';  // no game sorts last
+          };
+          return sortDir * _o(a).localeCompare(_o(b));
+        }
+        case 'spread': {
+          const _s = d => {
+            const v = (typeof window._weeklySpreadFor === 'function') ? window._weeklySpreadFor(d.t) : null;
+            return v == null ? Infinity : v;
+          };
+          av = _s(a); bv = _s(b); break;
+        }
+        case 'teamTotal': {
+          const _tt = d => {
+            const fn = (d.s === 'DST') ? window._weeklyOppTeamTotalFor : window._weeklyTeamTotalFor;
+            const v = (typeof fn === 'function') ? fn(d.t) : null;
+            return v == null ? -Infinity : v;
+          };
+          av = _tt(a); bv = _tt(b); break;
+        }
         default: av = a.myRank; bv = b.myRank;
       }
       return sortDir * (av - bv);
@@ -4785,7 +4811,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';

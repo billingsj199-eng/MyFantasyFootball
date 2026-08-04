@@ -60,7 +60,7 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-07-30a" as="style">
+<link rel="preload" href="styles/main.css?v=2026-08-04a" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
@@ -75,7 +75,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-08-03" as="script">
 <link rel="preload" href="data/d.js?v=2026-08-03" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-07-30a">
+<link rel="stylesheet" href="styles/main.css?v=2026-08-04a">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -4662,9 +4662,9 @@ window._ensureCollegeStatsData = (function() {
     // tags 2026-05-18 so they no longer hit on every cold load. Files all
     // populate the same COLLEGE_WEEKLY object and have no order dependency;
     // loaded in parallel to minimize wall time once a college-using page is hit.
-    const cwk1 = _loadScript('data/college_weekly_1.js');
-    const cwk2 = _loadScript('data/college_weekly_2.js');
-    const cwk3 = _loadScript('data/college_weekly_3.js');
+    const cwk1 = _loadScript('data/college_weekly_1.js?v=2026-06-17');
+    const cwk2 = _loadScript('data/college_weekly_2.js?v=2026-06-17');
+    const cwk3 = _loadScript('data/college_weekly_3.js?v=2026-06-17');
     promise = Promise.all([csChain, devy, cwk1, cwk2, cwk3]).then(function() {
       try { if (window._csPatch1) window._csPatch1(); } catch (e) { console.warn('[CS patch 1]', e); }
       try { if (window._csPatch2) window._csPatch2(); } catch (e) { console.warn('[CS patch 2]', e); }

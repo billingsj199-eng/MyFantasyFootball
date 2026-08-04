@@ -1,6 +1,36 @@
 {
-  "updated": "2026-08-03T16:10:00Z",
+  "updated": "2026-08-04T02:10:00Z",
   "items": [
+    {
+      "player": "Michael Penix Jr.",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-08-03",
+      "headline": "Says he's ~4 weeks from full clearance on his third ACL recovery",
+      "take": "All but decides the Falcons' QB1 battle for Tua Tagovailoa; stabilizes outlook for Drake London and Kyle Pitts entering the season.",
+      "url": "https://x.com/JoshTheAthletic/status/2082474300343205982",
+      "tag": "injury"
+    },
+    {
+      "player": "Mike Evans",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-08-03",
+      "headline": "Missed Monday's practice with a quad strain, called minor by Rapoport",
+      "take": "Not believed serious, but adds to a banged-up Niners WR room already missing Ricky Pearsall (out for the year) — worth a short watch before drafting Evans at his current ADP.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-03/mike-evans-quad-not-practicing-on-monday",
+      "tag": "injury"
+    },
+    {
+      "player": "Kaelon Black",
+      "team": "SF",
+      "pos": "RB",
+      "date": "2026-08-03",
+      "headline": "Rookie RB out Monday with an adductor/groin strain",
+      "take": "Timeline could range from a week to a couple months depending on grade; was carving out the RB3 role behind McCaffrey with Jordan James (rib) out, so this muddies an already deep 49ers backfield.",
+      "url": "https://www.ninersnation.com/san-francisco-49ers-preseason/160937/49ers-injuries-continue-to-add-up-as-mike-evans-and-kaelon-black-wont-practice-on-monday",
+      "tag": "injury"
+    },
     {
       "player": "Jeremiyah Love",
       "team": "ARI",

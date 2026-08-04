@@ -2153,3 +2153,97 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
   .tb-btn{padding-top:.55rem;padding-bottom:.55rem}
   .help-btn{width:32px;height:32px;font-size:.85rem}
 }
+
+/* ==========================================================================
+   DRAFT STRATEGY PAGE (ds-)
+   Written guide + the historical ADP tables behind it. Markup shell lives in
+   index.html (#pageDraftStrategy); everything inside #dsBody is built by
+   _renderDraftStrategy() in app.js.
+   ========================================================================== */
+.ds-wrapper{width:100%;max-width:1000px;margin:0 auto;padding:var(--space-5) var(--space-4) var(--space-8);box-sizing:border-box;min-width:0}
+.ds-header{position:relative;margin-bottom:var(--space-6)}
+.ds-title{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
+.ds-subtitle{color:var(--text2);font-size:.82rem;margin-top:var(--space-1)}
+.ds-loading{color:var(--text2);font-size:.85rem;padding:var(--space-6) 0;text-align:center}
+
+.ds-section{margin-bottom:var(--space-8)}
+.ds-h2{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text);margin:0 0 var(--space-2);padding-bottom:var(--space-2);border-bottom:1px solid var(--border)}
+.ds-h3{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:1.5px;color:var(--text);margin:var(--space-6) 0 var(--space-2)}
+.ds-lede{color:var(--text2);font-size:.84rem;line-height:1.65;margin:0 0 var(--space-4);max-width:72ch}
+.ds-lede-sm{font-size:.78rem;margin-bottom:var(--space-3)}
+.ds-caption{color:var(--text2);font-size:.75rem;line-height:1.6;margin:var(--space-3) 0 0;max-width:72ch}
+.ds-caption code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;background:var(--elev-1);padding:1px 5px;border-radius:3px}
+.ds-thin{color:var(--text2);opacity:.75}
+.ds-pos{font-weight:700;font-size:.78rem;letter-spacing:.5px}
+
+/* --- Rules --- */
+.ds-rules{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-3)}
+.ds-rule{display:flex;gap:var(--space-3);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:var(--space-4)}
+.ds-rule-num{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(245,158,11,.14);color:var(--accent);font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+.ds-rule-title{font-size:.92rem;font-weight:600;color:var(--text);line-height:1.45;margin-bottom:var(--space-2)}
+.ds-rule-why{font-size:.82rem;color:var(--text2);line-height:1.65}
+
+/* --- Round-by-round plan --- */
+.ds-plan{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ds-plan-row{display:flex;gap:var(--space-3);background:var(--surface);padding:var(--space-3) var(--space-4)}
+.ds-plan-rnd{flex-shrink:0;width:34px;font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:1px;color:var(--accent);padding-top:2px}
+.ds-plan-body{min-width:0;flex:1}
+.ds-plan-chips{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-2)}
+.ds-plan-chip{display:inline-flex;align-items:center;gap:5px;background:var(--elev-1);border:1px solid var(--border);border-radius:5px;padding:2px 7px}
+.ds-plan-vor{font-size:.72rem;color:var(--text2);font-variant-numeric:tabular-nums}
+.ds-plan-text{font-size:.82rem;color:var(--text2);line-height:1.6}
+
+/* --- Grids --- */
+.ds-tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:10px}
+/* min-width:0 overrides the bare `table{min-width:1100px}` rule above, which
+   exists for the rankings grid and would otherwise force these narrow tables
+   into a horizontal scroll they don't need. */
+.ds-table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:0}
+.ds-table th{background:var(--surface2);color:var(--text2);font-weight:600;font-size:.72rem;letter-spacing:.5px;padding:var(--space-2) var(--space-3);text-align:center;white-space:nowrap;border-bottom:1px solid var(--border)}
+.ds-table td{padding:var(--space-2) var(--space-3);text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+.ds-table tbody tr:last-child td{border-bottom:none}
+.ds-rnd-h,.ds-strm-h{text-align:left!important}
+.ds-rnd{color:var(--text2);font-variant-numeric:tabular-nums;text-align:left!important;width:44px}
+.ds-cell{position:relative;font-variant-numeric:tabular-nums}
+.ds-cell-v{font-weight:600;color:var(--text)}
+.ds-cell-n{display:block;font-size:.62rem;color:var(--text2);opacity:.7;margin-top:1px}
+.ds-cell-thin{opacity:.42}
+.ds-empty{background:transparent}
+.ds-table-plain td{text-align:center}
+.ds-table-plain td:first-child{text-align:left}
+.ds-strm-pos{color:var(--text);font-weight:600}
+
+/* --- Cliffs --- */
+.ds-cliffs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--space-3)}
+.ds-cliff{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:var(--space-4)}
+.ds-cliff-pos{margin-bottom:var(--space-2)}
+.ds-cliff-main{font-size:.86rem;color:var(--text);line-height:1.45}
+.ds-cliff-sub{font-size:.76rem;color:var(--text2);margin-top:var(--space-1);font-variant-numeric:tabular-nums}
+
+/* --- Extremes --- */
+.ds-ext{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-5)}
+.ds-ext-col{min-width:0}
+.ds-ext-col .ds-h3{margin-top:0}
+.ds-ext-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ds-ext-list li{display:flex;align-items:baseline;gap:var(--space-2);background:var(--surface);padding:var(--space-2) var(--space-3)}
+.ds-ext-name{flex:1;min-width:0;font-size:.82rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ds-ext-meta{font-size:.7rem;color:var(--text2);white-space:nowrap}
+.ds-ext-vor{font-size:.8rem;font-weight:600;font-variant-numeric:tabular-nums;min-width:46px;text-align:right}
+.ds-ext-vor.pos{color:var(--rb)}
+.ds-ext-vor.neg{color:var(--qb)}
+
+/* --- Method --- */
+.ds-method{margin:0;padding-left:1.1rem;color:var(--text2);font-size:.8rem;line-height:1.7;max-width:76ch}
+.ds-method li{margin-bottom:var(--space-2)}
+
+@media(max-width:600px){
+  .ds-wrapper{padding:var(--space-4) var(--space-3) calc(var(--space-8) + 56px)}
+  .ds-title{font-size:2.1rem;letter-spacing:3px}
+  .ds-h2{font-size:1.3rem}
+  .ds-rule{padding:var(--space-3);gap:var(--space-2)}
+  .ds-rule-title{font-size:.88rem}
+  .ds-rule-why,.ds-plan-text,.ds-lede{font-size:.8rem}
+  .ds-plan-row{padding:var(--space-3)}
+  .ds-table th,.ds-table td{padding:var(--space-2)}
+}
+

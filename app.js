@@ -41184,6 +41184,44 @@ Rules:
     return _mtImplBaseCache;
   }
 
+  // The DST mirror of _mtImpliedBaselines: for each team, the median implied
+  // total of the OPPONENT across all 18 weeks — i.e. the points this defense
+  // is normally priced to face.
+  //
+  // This baseline is not optional. A raw opponent implied total is heavily
+  // contaminated by the defense's OWN quality, because the market prices
+  // offenses down when they face a good defense. Measured on the 2026 lines,
+  // a team's season-median opponent implied total correlates 0.74 with its
+  // own Clay defensive rank — so ranking on the raw number scores "is this
+  // defense good", not "is this schedule easy", and every elite defense
+  // floats to the top of the easy list in every window. Subtracting each
+  // team's own median cancels that constant and leaves the schedule effect,
+  // exactly as _mtImpliedBaselines does for skill positions.
+  let _mtOppImplBaseCache = null;
+  function _mtOppImpliedBaselines() {
+    if (_mtOppImplBaseCache) return _mtOppImplBaseCache;
+    _mtOppImplBaseCache = {};
+    if (typeof window.getNflScheduleForTeam !== 'function'
+        || typeof window.getNflTeamImpliedTotal !== 'function') return _mtOppImplBaseCache;
+    Object.keys(_mtBuildDstByAbbr()).forEach(team => {
+      const sched = window.getNflScheduleForTeam(team);
+      if (!sched) return;
+      const vals = [];
+      for (let w = 1; w <= 18; w++) {
+        const g = sched[w];
+        if (!g || g.bye || !g.opp) continue;
+        const oi = window.getNflTeamImpliedTotal(w, g.opp, team, !g.home);
+        if (typeof oi === 'number') vals.push(oi);
+      }
+      if (vals.length >= 6) {
+        vals.sort((a, b) => a - b);
+        const m = Math.floor(vals.length / 2);
+        _mtOppImplBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
+      }
+    });
+    return _mtOppImplBaseCache;
+  }
+
   // === Adjustable SOS week window (rankings table) ===
   // null = the playoff default (W15-17); {from,to} = a custom range (e.g. 1-5).
   // Persisted to localStorage so the rankings view keeps your window.
@@ -41292,15 +41330,14 @@ Rules:
     // window's avg implied total and the team's own season median
     // (_mtImpliedBaselines) — isolates the schedule's effect on scoring
     // environment instead of rewarding good offenses in every window.
-    // DST is the exception: its signal is the opponent's RAW implied total.
-    // Baseline-subtraction exists to strip out "this offense is good" from a
-    // player's own total — but for a DST, facing good offenses IS the hard
-    // schedule we're trying to measure, so subtracting it would erase it.
-    const _implBase = _mtImpliedBaselines();
+    // DST measures the same way against its own mirror baseline: the window's
+    // avg OPPONENT implied total minus the opponent implied total this defense
+    // normally faces (_mtOppImpliedBaselines). Same reason as above — the raw
+    // number mostly encodes the defense's own quality, not its schedule.
+    const _implBase = isDstView ? _mtOppImpliedBaselines() : _mtImpliedBaselines();
     const teamRel = {};
     Object.keys(teamTot).forEach(t => {
       if (teamTot[t].n < minN) return;
-      if (isDstView) { teamRel[t] = teamTot[t].avg; return; }
       if (typeof _implBase[t] === 'number') teamRel[t] = teamTot[t].avg - _implBase[t];
     });
     let tMu = 0, tSd = 1, totalsReady = false;
@@ -41388,13 +41425,10 @@ Rules:
         if (sub.length) parts.push('(' + sub.join(', ') + ')');
         return parts.join(' ');
       }).join(', ')
-        + (data.totalAdjusted && data.teamTot
-            ? (isDstView
-                ? ' · opp impl avg ' + data.teamTot.avg.toFixed(1) + ' (lower = easier)'
-                : (typeof _implBase[data.team] === 'number'
-                    ? ' · impl ' + data.teamTot.avg.toFixed(1) + ' vs szn ' + _implBase[data.team].toFixed(1)
-                      + ' (' + (teamRel[data.team] >= 0 ? '+' : '') + teamRel[data.team].toFixed(1) + ')'
-                    : ''))
+        + (data.totalAdjusted && data.teamTot && typeof _implBase[data.team] === 'number'
+            ? ' · ' + (isDstView ? 'opp impl ' : 'impl ') + data.teamTot.avg.toFixed(1)
+              + ' vs szn ' + _implBase[data.team].toFixed(1)
+              + ' (' + (teamRel[data.team] >= 0 ? '+' : '') + teamRel[data.team].toFixed(1) + ')'
             : '')
         + (data.spreadAdjusted ? ' · spread-blended' : (data.totalAdjusted ? ' · implied-blended' : ''));
       _mtPlayoffSosCache[key][data.team] = { label, color, title: tip, rank, avg: data.blendAvg };
@@ -41450,12 +41484,13 @@ Rules:
     // see _mtImpliedBaselines) AND spreads across this week's matchups.
     const mean = a => a.reduce((s,v)=>s+v,0)/a.length;
     const std  = a => { const m=mean(a); return Math.sqrt(mean(a.map(v=>(v-m)*(v-m))))||1; };
-    const _implBase = _mtImpliedBaselines();
+    const _implBase = isDstView ? _mtOppImpliedBaselines() : _mtImpliedBaselines();
     Object.entries(teamRows).forEach(([t, x]) => {
-      // DST uses the opponent's raw implied total (see _mtBuildPlayoffSos for
-      // why baseline-subtraction is wrong for a defense).
-      if (isDstView) { x.rel = (typeof x.oppIt === 'number') ? x.oppIt : null; return; }
-      x.rel = (typeof x.it === 'number' && typeof _implBase[t] === 'number') ? x.it - _implBase[t] : null;
+      // DST reads the OPPONENT's implied total against the opponent-implied
+      // baseline; skill/K read their own against their own. Both are diffs —
+      // the raw number encodes roster quality, not schedule.
+      const v = isDstView ? x.oppIt : x.it;
+      x.rel = (typeof v === 'number' && typeof _implBase[t] === 'number') ? v - _implBase[t] : null;
     });
     const rels = Object.values(teamRows).map(x => x.rel).filter(v => typeof v === 'number');
     const spreads = Object.values(teamRows).map(x => x.sp).filter(v => typeof v === 'number');

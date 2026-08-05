@@ -1,6 +1,46 @@
 {
-  "updated": "2026-08-04T16:11:40Z",
+  "updated": "2026-08-05T02:06:00Z",
   "items": [
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-08-04",
+      "headline": "Agrees to 4-year, $140M extension ($108M gtd), 4th-highest-paid WR by APY",
+      "take": "Locks in as Lamar Jackson's clear top target long-term with zero contract-year distraction.",
+      "url": "https://www.espn.com/nfl/story/_/id/49529316/zay-flowers-ravens-agree-four-year-140m-extension",
+      "tag": "transaction"
+    },
+    {
+      "player": "Deshaun Watson",
+      "team": "CLE",
+      "pos": "QB",
+      "date": "2026-08-04",
+      "headline": "Throws 6th INT in 4 camp practices as Browns QB battle tilts toward Sanders",
+      "take": "Turnover-plagued camp is hurting his hold on the starting job; downgrade his Week 1 QB1 odds.",
+      "url": "https://sports.yahoo.com/articles/deshaun-watson-drops-clear-message-035618262.html",
+      "tag": "faller"
+    },
+    {
+      "player": "KC Concepcion",
+      "team": "CLE",
+      "pos": "WR",
+      "date": "2026-08-04",
+      "headline": "Avoids serious injury after hard fall on right shoulder in 2-minute drill",
+      "take": "Scare resolves without missed time, keeping his path to a big rookie target share intact.",
+      "url": "https://athlonsports.com/nfl/trending/kc-concepcion-encouraging-injury-update-after-training-camp-scare",
+      "tag": "injury"
+    },
+    {
+      "player": "Pat Bryant",
+      "team": "DEN",
+      "pos": "WR",
+      "date": "2026-08-04",
+      "headline": "Building on rookie breakout, draws praise from Sean Payton for confidence and maturity",
+      "take": "Consistently flashing alongside Marvin Mims Jr. \u2014 trending toward a bigger Year 2 role in Denver's passing game.",
+      "url": "https://denversports.com/nfl/denver-broncos/broncos-pat-bryant",
+      "tag": "riser"
+    },
     {
       "player": "Bijan Robinson",
       "team": "ATL",
@@ -67,7 +107,7 @@
       "pos": "WR",
       "date": "2026-08-03",
       "headline": "Missed Monday's practice with a quad strain, called minor by Rapoport",
-      "take": "Not believed serious, but adds to a banged-up Niners WR room already missing Ricky Pearsall (out for the year) — worth a short watch before drafting Evans at his current ADP.",
+      "take": "Not believed serious, but adds to a banged-up Niners WR room already missing Ricky Pearsall (out for the year) \u2014 worth a short watch before drafting Evans at his current ADP.",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-03/mike-evans-quad-not-practicing-on-monday",
       "tag": "injury"
     },
@@ -157,7 +197,7 @@
       "pos": "WR",
       "date": "2026-08-02",
       "headline": "Rapoport, Schefter: shoulder believed OK, avoided serious injury",
-      "take": "Downgrade the alarm from Saturday's cart-off — could return before Aug. 15 preseason opener",
+      "take": "Downgrade the alarm from Saturday's cart-off \u2014 could return before Aug. 15 preseason opener",
       "url": "https://x.com/RapSheet/status/2083648790322434079",
       "tag": "injury"
     },
@@ -207,7 +247,7 @@
       "pos": "WR",
       "date": "2026-08-01",
       "headline": "Carted off practice with shoulder injury, same shoulder as surgery",
-      "take": "Same shoulder that needed labrum surgery in January — real risk until Chiefs confirm it's not structural.",
+      "take": "Same shoulder that needed labrum surgery in January \u2014 real risk until Chiefs confirm it's not structural.",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/xavier-worthy-left-chiefs-practice-with-a-shoulder-injury",
       "tag": "injury"
     },
@@ -217,7 +257,7 @@
       "pos": "WR",
       "date": "2026-08-01",
       "headline": "Carted off same practice as Worthy with shin bruise, nothing torn/broken",
-      "take": "Per Schefter, tests came back clean — expected to be fine after building real 1st-team trust with Mahomes.",
+      "take": "Per Schefter, tests came back clean \u2014 expected to be fine after building real 1st-team trust with Mahomes.",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/reports-chiefs-wr-cyrus-allen-day-to-day-with-shin-bruise",
       "tag": "injury"
     },
@@ -237,7 +277,7 @@
       "pos": "QB",
       "date": "2026-08-01",
       "headline": "Splits reps with Murray again; O'Connell has QB1 decision date in mind",
-      "take": "Battle still unresolved into camp's 2nd week — don't lock in either QB's fantasy price until a starter is named.",
+      "take": "Battle still unresolved into camp's 2nd week \u2014 don't lock in either QB's fantasy price until a starter is named.",
       "url": "https://www.startribune.com/minnesota-vikings-training-camp-practice-live-updates-kyler-murray-jj-mccarthy-eagan/601873236",
       "tag": "role"
     },

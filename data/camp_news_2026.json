@@ -1,6 +1,66 @@
 {
-  "updated": "2026-08-05T02:06:00Z",
+  "updated": "2026-08-05T16:15:00Z",
   "items": [
+    {
+      "player": "Tank Dell",
+      "team": "HOU",
+      "pos": "WR",
+      "date": "2026-08-05",
+      "headline": "Works on the side during Wednesday's practice, ramping up in early camp",
+      "take": "First real practice involvement since his 2025 multi-ligament knee injury — trajectory looks encouraging but no full-team timetable yet.",
+      "url": "https://www.cbssports.com/fantasy/football/news/texans-tank-dell-being-ramped-up/",
+      "tag": "riser"
+    },
+    {
+      "player": "Kenyon Sadiq",
+      "team": "NYJ",
+      "pos": "TE",
+      "date": "2026-08-05",
+      "headline": "Aaron Glenn \"very confident\" rookie TE will be ready for Week 1 vs. Titans despite hernia setback",
+      "take": "Coach's endorsed timeline keeps his rookie outlook intact even as he misses camp reps now.",
+      "url": "https://www.espn.com/nfl/story/_/id/49529675/jets-rookie-te-kenyon-sadiq-miss-hernia-setback",
+      "tag": "injury"
+    },
+    {
+      "player": "Makai Lemon",
+      "team": "PHI",
+      "pos": "WR",
+      "date": "2026-08-05",
+      "headline": "Missed Tuesday's practice with a second hamstring flare-up, called minor",
+      "take": "Mild yellow flag on his push to win the Eagles' WR2 job over Dontayvion Wicks.",
+      "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/devonta-smith-makai-lemon-injury-hamstring-eagles-training-camp/745330/",
+      "tag": "faller"
+    },
+    {
+      "player": "DeVonta Smith",
+      "team": "PHI",
+      "pos": "WR",
+      "date": "2026-08-05",
+      "headline": "Missed Tuesday's practice with a hamstring injury, considered minor",
+      "take": "No real concern for Eagles' established WR1 — day-to-day.",
+      "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/devonta-smith-makai-lemon-injury-hamstring-eagles-training-camp/745330/",
+      "tag": "injury"
+    },
+    {
+      "player": "Princeton Fant",
+      "team": "DAL",
+      "pos": "TE",
+      "date": "2026-08-05",
+      "headline": "Out for the season with torn ACL, partial MCL tear",
+      "take": "Minimal fantasy impact as a backup/special-teams TE, but Dallas's first season-ending camp injury.",
+      "url": "https://www.dallascowboys.com/news/princeton-fant-suffers-acl-partial-mcl-injury-in-practice",
+      "tag": "injury"
+    },
+    {
+      "player": "Kenny Gainwell",
+      "team": "TB",
+      "pos": "RB",
+      "date": "2026-08-05",
+      "headline": "Carving out a real passing-down role alongside Bucky Irving in camp",
+      "take": "Adds legitimate two-back PPR utility to Tampa Bay's backfield even with Irving healthy and full-go.",
+      "url": "https://heavy.com/sports/nfl/tampa-bay-buccaneers/running-back-kenneth-gainwell-major-standout/",
+      "tag": "role"
+    },
     {
       "player": "Zay Flowers",
       "team": "BAL",

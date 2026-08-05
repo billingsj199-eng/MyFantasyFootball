@@ -2,9 +2,10 @@
 #
 # Runs scripts/pull_consensus_adp.py every morning — FantasyPros consensus
 # rankings (4 modes), ESPN ADP, CBS ADP, Yahoo ADP, KeepTradeCut dynasty
-# values — which rewrites the Site Rankings CSVs + KTC maps, re-runs
-# inject_rankings.py into data/d.js, and bumps the touched ?v= tags in
-# index.html. Commits + pushes ONLY when the data actually changed.
+# values, and an NFL roster sync (Sleeper players dump -> d.js team
+# assignments, scripts/update_rosters.py) — which rewrites the Site Rankings
+# CSVs + KTC maps, re-runs inject_rankings.py into data/d.js, and bumps the
+# touched ?v= tags in index.html. Commits + pushes ONLY when data changed.
 # Sleeper/Underdog CSVs have no public endpoint and are left on their
 # manual refresh cadence (they are re-injected as-is each run).
 #
@@ -44,7 +45,7 @@ if (-not $changed) {
     Write-Log 'no ADP movement - nothing to commit'
 } else {
     git add @Files
-    git commit -m ('Auto data refresh {0} (consensus ADPs + KTC + UD mirror + Clay)' -f (Get-Date -Format 'yyyy-MM-dd'))
+    git commit -m ('Auto data refresh {0} (consensus ADPs + KTC + UD mirror + Clay + rosters)' -f (Get-Date -Format 'yyyy-MM-dd'))
     # Cloud routines (camp news) can land commits mid-morning; rebase so the push fast-forwards.
     git pull --rebase --autostash origin main
     git push origin main

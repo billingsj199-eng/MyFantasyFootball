@@ -40,6 +40,10 @@
 # extension: Jack's browser captures live UD ADP, the site mirrors it to a
 # public Firestore doc, and this script folds it back into d.js.
 #
+# Phase H syncs d.js "t" team assignments against Sleeper's public players
+# dump (scripts/update_rosters.py) so FA signings/trades no longer need
+# manual edits; contract fields (sal/cyr/out) stay manual — no free source.
+#
 # CSVs are written in the exact formats inject_rankings.py already parses,
 # then inject_rankings.py is run to rewrite data/d.js, and the d.js ?v= tag
 # in index.html is bumped. A source that returns fewer rows than its sanity
@@ -541,6 +545,24 @@ def pull_clay():
 # Inject + version bump
 # ---------------------------------------------------------------------------
 
+def pull_rosters():
+    """Phase H — run update_rosters.py (Sleeper -> d.js team sync, --no-bump
+    so main() bumps d.js's ?v= once at the end). Returns True if d.js changed.
+    Failures are non-fatal: teams just stay as-is until the next run."""
+    d_path = os.path.join(ROOT, 'data', 'd.js')
+    before = open(d_path, 'rb').read()
+    res = subprocess.run(
+        [sys.executable, os.path.join(ROOT, 'scripts', 'update_rosters.py'),
+         '--no-bump'],
+        cwd=ROOT, capture_output=True, text=True)
+    print(res.stdout)
+    if res.returncode != 0:
+        print(res.stderr)
+        print('  !! roster sync failed — team assignments left as-is')
+        return False
+    return open(d_path, 'rb').read() != before
+
+
 def run_inject():
     """Run inject_rankings.py; return True if data/d.js actually changed
     (a quiet morning re-injects identical values -> no bump, no commit)."""
@@ -600,20 +622,28 @@ def main():
     if clay_changed:
         bump_version(r'data/mike_clay_projections\.js')
 
+    roster_changed = False
+    if not args.no_inject:
+        print('\nPhase H — NFL roster sync (Sleeper -> d.js teams):')
+        roster_changed = pull_rosters()
+
     total = n_fp + n_espn + n_cbs + n_yah + n_ud
     print(f'\nCSV sources refreshed: {total}/9 (FP {n_fp}/4, ESPN {n_espn}/1, '
           f'CBS {n_cbs}/1, Yahoo {n_yah}/1, UD {n_ud}/2) '
           f'+ KTC {"updated" if ktc_changed else "unchanged/skipped"}'
-          f' + Clay {"updated" if clay_changed else "unchanged/skipped"}')
-    if total == 0 and not ktc_changed:
+          f' + Clay {"updated" if clay_changed else "unchanged/skipped"}'
+          f' + rosters {"updated" if roster_changed else "unchanged/skipped"}')
+    if total == 0 and not ktc_changed and not roster_changed:
         print('Nothing refreshed — aborting before inject.')
         sys.exit(1)
 
+    d_changed = roster_changed
     if not args.no_inject and total > 0:
-        if run_inject():
-            bump_version()
-        else:
-            print('d.js unchanged — skipping ?v= bump.')
+        d_changed = run_inject() or d_changed
+    if d_changed:
+        bump_version()
+    else:
+        print('d.js unchanged — skipping ?v= bump.')
     print('\nDone.')
 
 

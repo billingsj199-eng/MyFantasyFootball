@@ -2791,7 +2791,11 @@ function render() {
   const _adpCmpMode = _statMode === 'adp';
   const yrrH = document.getElementById('yrrHeader');
   yrrH.style.display = (showYrr || _adpCmpMode) ? '' : 'none';
-  yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : (filter === 'RB' ? 'Rush YPG ' : 'Y/RR ');
+  if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
+    yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
+  } else {
+    yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : (filter === 'RB' ? 'Rush YPG ' : 'Y/RR ');
+  }
   if (yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].setAttribute('data-gloss', _adpCmpMode
       ? 'CBS expert-consensus rank (their PPR top200 list) compared to the current ranks. Green = CBS has the player later than this rank (value), red = earlier (reach).'
@@ -3667,9 +3671,12 @@ window._updateRnkStatHeaders = function() {
     _set(c3, 'l4ppgHeader', 'Team PPG — season average of Vegas implied team totals across the full schedule (DK game totals + spreads). Higher = better scoring environment.', 'Team PPG', 'Vegas');
   } else if (rnkStatMode === 'adp') {
     const _cmpGloss = ' compared to the current ranks. Green = that site has the player later than this rank (value), red = earlier (reach). CBS is in the 4th column.';
-    _set(c1, null, 'Underdog ADP (Best Ball Mania; Superflex mode uses Underdog SF)' + _cmpGloss, 'UD', 'ADP');
-    _set(c2, 'ppg25Header', 'Sleeper ADP' + _cmpGloss, 'SLPR', 'ADP');
-    _set(c3, 'l4ppgHeader', 'ESPN staff rank — the order ESPN\'s own draft list shows, not ADP —' + _cmpGloss, 'ESPN', 'RANK');
+    // Platform logos instead of text labels (same icons as the player-card
+    // ADP Comparison grid); the tiny ADP/RANK sub keeps the semantics visible.
+    const _thLogo = (k, alt) => '<img src="icons/adp_' + k + '.png" alt="' + alt + '" style="width:16px;height:16px;border-radius:4px;vertical-align:middle">';
+    _set(c1, null, 'Underdog ADP (Best Ball Mania; Superflex mode uses Underdog SF)' + _cmpGloss, _thLogo('underdog', 'Underdog'), 'ADP');
+    _set(c2, 'ppg25Header', 'Sleeper ADP' + _cmpGloss, _thLogo('sleeper', 'Sleeper'), 'ADP');
+    _set(c3, 'l4ppgHeader', 'ESPN staff rank — the order ESPN\'s own draft list shows, not ADP —' + _cmpGloss, _thLogo('espn', 'ESPN'), 'RANK');
   } else {
     if (currentMode === 'weekly') {
       const _wkNum = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;

@@ -689,7 +689,11 @@ td.adp-reach{background:rgba(239,68,68,.10);color:var(--red);font-weight:600}
 .tier-badge.Q{background:rgba(163,230,53,.2);color:#a3e635}
 .tier-badge.R{background:rgba(251,113,133,.2);color:#fb7185}
 .tier-name-static{font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)}
-.tier-controls{margin-left:auto;display:flex;gap:3px;opacity:.4;transition:opacity .15s}
+/* sticky: the tier row spans the full table width, so when the table
+   horizontally overflows (narrow/portrait screens) the right-aligned
+   controls would sit past the scrollport edge — pin them to the visible
+   right edge instead. Inert when the table fits. */
+.tier-controls{margin-left:auto;display:flex;gap:3px;opacity:.4;transition:opacity .15s;position:sticky;right:.6rem}
 .tier-row:hover .tier-controls{opacity:1}
 .tier-btn{background:none;border:1px solid var(--elev-3);color:var(--text2);cursor:pointer;padding:1px 6px;border-radius:3px;font-size:.65rem;font-family:'DM Sans',sans-serif;line-height:1.4}
 .tier-btn:hover{border-color:var(--accent);color:var(--accent)}

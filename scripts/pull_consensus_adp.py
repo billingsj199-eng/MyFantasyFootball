@@ -9,13 +9,12 @@
 #               ppr-superflex-cheatsheets.php  -> FantasyPros_2026_DraftSF.csv
 #               dynasty-overall.php            -> FantasyPros_2026_Dynasty1QB.csv
 #               dynasty-superflex.php          -> FantasyPros_2026_DynastySF.csv
-#   Phase B — ESPN redraft ADP from the public fantasy kona_player_info API
-#             -> ESPN1QB.csv
-#   Phase C — CBS redraft ADP from the public draft-averages page
-#             -> CBS1QB.csv
-#   Phase D — Yahoo redraft ADP from the public pub-api-ro fantasy API
-#             (the endpoint behind football.fantasysports.yahoo.com/f1/
-#             draftanalysis; works keyless) -> Yahoo1QB.csv
+#   Phase B — ESPN staff draft rank (draftRanksByRankType.PPR) from the
+#             public fantasy kona_player_info API -> ESPN1QB.csv
+#   Phase C — CBS expert-consensus rank from the public PPR top200
+#             rankings page -> CBS1QB.csv
+#   Phase D — Yahoo O-Rank (editorial overall rank, sort=OR) from the public
+#             pub-api-ro fantasy API (keyless) -> Yahoo1QB.csv
 #   Phase E — KeepTradeCut dynasty values from the playersArray JSON embedded
 #             in keeptradecut.com/dynasty-rankings -> spliced straight into
 #             data/_bundle_lookups.js + data/ktc_rankings.js (KTC_1QB/KTC_SF),
@@ -31,8 +30,10 @@
 #             extract_clay_projections.py -> data/mike_clay_projections.js.
 #
 # ESPN/CBS/Yahoo values are stored as SEQUENTIAL RANK ORDER (1..N by that
-# site's ADP), not raw draft-position decimals — emitted as round.pick so
-# inject_rankings.py's parse_pickadp reproduces the rank as an int.
+# site's own EDITORIAL rank — the order its player list displays, not crowd
+# ADP; switched 2026-08-06) — emitted as round.pick so inject_rankings.py's
+# parse_pickadp reproduces the rank as an int. Underdog (and Sleeper) have no
+# editorial ranks, so those stay ADP-based.
 #
 # Sleeper (Sleeper*.csv) has NO public endpoint — those files are left
 # untouched and re-injected as-is, so the manual refresh cadence still works.
@@ -94,19 +95,21 @@ ESPN_TEAMS = {
     27: 'TB', 28: 'WAS', 29: 'CAR', 30: 'JAX', 33: 'BAL', 34: 'HOU',
 }
 
-# PPR path first; h2h fallback keeps the pull alive if CBS reshuffles URLs.
-CBS_URLS = [
-    'https://www.cbssports.com/fantasy/football/draft/averages/both/ppr/all/',
-    'https://www.cbssports.com/fantasy/football/draft/averages/both/h2h/all/',
-]
+# 2026-08-06: switched from the draft-averages page (crowd ADP) to the PPR
+# top200 expert-consensus rankings — the "RK" list CBS itself shows. Names on
+# the page are abbreviated ("J. Gibbs"); full names are recovered from the
+# /nfl/players/<id>/<slug>/ URL slug (norm_name in inject_rankings.py treats
+# hyphens as spaces, so slug-derived names still match d.js).
+CBS_URL = 'https://www.cbssports.com/fantasy/football/rankings/ppr/top200/'
 CBS_MIN_ROWS = 100
 
-# Yahoo public fantasy API (no auth/cookies/crumb needed) — same data as the
-# f1/draftanalysis page. 470 = 2026 NFL game key; bump yearly. average_pick is
-# "-" for undrafted players, which caps the ranked pool around ~300.
+# Yahoo public fantasy API (no auth/cookies/crumb needed). 470 = 2026 NFL
+# game key; bump yearly. 2026-08-06: sort switched from average_pick (crowd
+# ADP) to OR — Yahoo's editorial O-Rank, the default order of their player
+# list. The response order IS the rank; no per-player rank field needed.
 YAHOO_URL = ('https://pub-api-ro.fantasysports.yahoo.com/fantasy/v2/league/'
              '470.l.public/players;position=ALL;start=0;count=400;'
-             'sort=average_pick/draft_analysis?format=json_f')
+             'sort=OR/draft_analysis?format=json_f')
 YAHOO_MIN_ROWS = 150
 
 # Underdog ADP mirror: shared/ud_adp_latest is written by Jack's site session
@@ -196,13 +199,19 @@ def pull_fantasypros():
 
 
 # ---------------------------------------------------------------------------
-# Phase B — ESPN ADP (public kona_player_info API)
+# Phase B — ESPN staff draft rank (public kona_player_info API)
 # ---------------------------------------------------------------------------
+# 2026-08-06: switched from ownership.averageDraftPosition (crowd ADP) to
+# draftRanksByRankType.PPR.rank — ESPN's editorial rank, the order their
+# draft-lobby player list actually shows. Jack wants each platform column to
+# mirror what that platform's own list displays; only Underdog (no editorial
+# ranks) stays ADP.
 
 def pull_espn():
     try:
         flt = {'players': {'limit': 400,
-                           'sortAdp': {'sortAsc': True, 'sortPriority': 1}}}
+                           'sortDraftRanks': {'sortPriority': 100,
+                                              'sortAsc': True, 'value': 'PPR'}}}
         r = requests.get(ESPN_URL, params={'view': 'kona_player_info'},
                          headers={**HEADERS, 'x-fantasy-filter': json.dumps(flt)},
                          timeout=30)
@@ -211,11 +220,11 @@ def pull_espn():
         for item in r.json().get('players', []):
             pl = item.get('player') or {}
             pos = ESPN_POS.get(pl.get('defaultPositionId'))
-            adp = (pl.get('ownership') or {}).get('averageDraftPosition')
+            rank = ((pl.get('draftRanksByRankType') or {}).get('PPR') or {}).get('rank')
             name = (pl.get('fullName') or '').strip()
-            if pos not in VALID_POS or not name or not adp or adp <= 0:
+            if pos not in VALID_POS or not name or not rank or rank <= 0:
                 continue
-            entries.append((adp, name, ESPN_TEAMS.get(pl.get('proTeamId'), ''), pos))
+            entries.append((rank, name, ESPN_TEAMS.get(pl.get('proTeamId'), ''), pos))
         entries.sort(key=lambda x: x[0])
         if len(entries) < ESPN_MIN_ROWS:
             print(f'  !! ESPN1QB.csv: only {len(entries)} rows (<{ESPN_MIN_ROWS}) — kept old file')
@@ -232,58 +241,48 @@ def pull_espn():
 
 
 # ---------------------------------------------------------------------------
-# Phase C — CBS ADP (public draft-averages page)
+# Phase C — CBS expert-consensus rank (public PPR top200 rankings page)
 # ---------------------------------------------------------------------------
 
 def pull_cbs():
-    for url in CBS_URLS:
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=30)
-            if r.status_code != 200:
+    try:
+        r = requests.get(CBS_URL, headers=HEADERS, timeout=30)
+        r.raise_for_status()
+        # The page carries several 200-row lists (consensus + one per expert).
+        # The first player-wrapper is the consensus "RK" list — parse only it.
+        wrappers = r.text.split('<div class="player-wrapper">')
+        if len(wrappers) < 2:
+            print('  !! CBS1QB.csv: no player-wrapper found — kept old file')
+            return 0
+        entries = []
+        for chunk in wrappers[1].split('<div class="player-row')[1:]:
+            rk = re.search(r'<div class="rank">(\d+)</div>', chunk)
+            slug = re.search(r'/nfl/players/\d+/([a-z0-9-]+)/', chunk)
+            pm = re.search(r'class="team position">\s*([A-Z]+)', chunk)
+            if not rk or not slug or not pm:
+                continue  # D/ST rows have no player link — dropped here
+            pos = pm.group(1)
+            if pos not in VALID_POS:
                 continue
-            trs = re.findall(r'<tr class="TableBase-bodyTr">(.*?)</tr>', r.text, re.S)
-            entries = []
-            for tr in trs:
-                nm = re.search(
-                    r'CellPlayerName--long.*?<a[^>]*>\s*([^<]+?)\s*</a>(.*?)(?:CellPlayerName--short|$)',
-                    tr, re.S)
-                if not nm:
-                    continue
-                name = nm.group(1).strip()
-                meta = re.sub(r'<[^>]+>', ' ', nm.group(2))
-                pm = re.search(r'\b(QB|RB|WR|TE|K|DST)\b', meta)
-                tm = re.search(r'\b([A-Z]{2,3})\b', meta.replace(pm.group(1), '', 1) if pm else meta)
-                pos = pm.group(1) if pm else ''
-                if pos not in VALID_POS:
-                    continue
-                tds = [re.sub(r'<[^>]+>', '', c).strip()
-                       for c in re.findall(r'<td[^>]*>(.*?)</td>', tr, re.S)]
-                avg = None
-                for c in tds:
-                    if re.fullmatch(r'\d+(\.\d+)?', c) and float(c) >= 1:
-                        avg = float(c)
-                        break
-                if avg is None:
-                    continue
-                entries.append((avg, name, tm.group(1) if tm else '', pos))
-            entries.sort(key=lambda x: x[0])
-            if len(entries) < CBS_MIN_ROWS:
-                print(f'  !! CBS1QB.csv: only {len(entries)} rows from {url}')
-                continue
-            rows = [[name, team, pos, overall_to_round_pick(i + 1), '0']
-                    for i, (_, name, team, pos) in enumerate(entries)]
-            write_csv('CBS1QB.csv',
-                      '"Player Name", "Player Team", "Player Position", CBS: Redraft 1 PPR ADP, "Market Index 1",',
-                      rows)
-            return 1
-        except Exception as e:
-            print(f'  !! CBS1QB.csv: {e} ({url})')
-    print('  !! CBS1QB.csv: all sources failed — kept old file')
-    return 0
+            name = ' '.join(w.capitalize() for w in slug.group(1).split('-'))
+            entries.append((int(rk.group(1)), name, '', pos))
+        entries.sort(key=lambda x: x[0])
+        if len(entries) < CBS_MIN_ROWS:
+            print(f'  !! CBS1QB.csv: only {len(entries)} rows (<{CBS_MIN_ROWS}) — kept old file')
+            return 0
+        rows = [[name, team, pos, overall_to_round_pick(i + 1), '0']
+                for i, (_, name, team, pos) in enumerate(entries)]
+        write_csv('CBS1QB.csv',
+                  '"Player Name", "Player Team", "Player Position", CBS: Redraft 1 PPR ADP, "Market Index 1",',
+                  rows)
+        return 1
+    except Exception as e:
+        print(f'  !! CBS1QB.csv: {e} — kept old file')
+        return 0
 
 
 # ---------------------------------------------------------------------------
-# Phase D — Yahoo ADP (public pub-api-ro fantasy API)
+# Phase D — Yahoo O-Rank (public pub-api-ro fantasy API, sort=OR)
 # ---------------------------------------------------------------------------
 
 def pull_yahoo():
@@ -296,21 +295,15 @@ def pull_yahoo():
             pl = item.get('player') or {}
             name = ((pl.get('name') or {}).get('full') or '').strip()
             pos = pl.get('primary_position') or pl.get('display_position') or ''
-            da = (pl.get('draft_analysis') or {}).get('average_pick')
             if pos not in VALID_POS or not name:
                 continue
-            try:
-                adp = float(da)
-            except (TypeError, ValueError):
-                continue  # "-" = undrafted
             team = (pl.get('editorial_team_abbr') or '').upper()
-            entries.append((adp, name, team, pos))
-        entries.sort(key=lambda x: x[0])
+            entries.append((name, team, pos))  # API order = O-Rank order
         if len(entries) < YAHOO_MIN_ROWS:
             print(f'  !! Yahoo1QB.csv: only {len(entries)} rows (<{YAHOO_MIN_ROWS}) — kept old file')
             return 0
         rows = [[name, team, pos, overall_to_round_pick(i + 1), '0']
-                for i, (_, name, team, pos) in enumerate(entries)]
+                for i, (name, team, pos) in enumerate(entries)]
         write_csv('Yahoo1QB.csv',
                   '"Player Name", "Player Team", "Player Position", Yahoo: Redraft 1 STD ADP, "Market Index 1",',
                   rows)
@@ -605,11 +598,11 @@ def main():
     print(f'Consensus ADP pull {TODAY}')
     print('\nPhase A — FantasyPros consensus rankings:')
     n_fp = pull_fantasypros()
-    print('\nPhase B — ESPN ADP:')
+    print('\nPhase B — ESPN staff rank:')
     n_espn = pull_espn()
-    print('\nPhase C — CBS ADP:')
+    print('\nPhase C — CBS consensus rank:')
     n_cbs = pull_cbs()
-    print('\nPhase D — Yahoo ADP:')
+    print('\nPhase D — Yahoo O-Rank:')
     n_yah = pull_yahoo()
     print('\nPhase E — KeepTradeCut dynasty values:')
     ktc_changed = pull_ktc()

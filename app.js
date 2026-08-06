@@ -2794,7 +2794,7 @@ function render() {
   yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : (filter === 'RB' ? 'Rush YPG ' : 'Y/RR ');
   if (yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].setAttribute('data-gloss', _adpCmpMode
-      ? 'CBS overall rank compared to the current ranks. Green = the market drafts the player later than this rank (value), red = earlier (reach).'
+      ? 'CBS expert-consensus rank (their PPR top200 list) compared to the current ranks. Green = CBS has the player later than this rank (value), red = earlier (reach).'
       : 'Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.');
   }
   document.querySelectorAll('.yrr-cell').forEach(c => c.style.display = (showYrr || _adpCmpMode) ? '' : 'none');
@@ -3666,10 +3666,10 @@ window._updateRnkStatHeaders = function() {
     }
     _set(c3, 'l4ppgHeader', 'Team PPG — season average of Vegas implied team totals across the full schedule (DK game totals + spreads). Higher = better scoring environment.', 'Team PPG', 'Vegas');
   } else if (rnkStatMode === 'adp') {
-    const _cmpGloss = ' compared to the current ranks. Green = the market drafts the player later than this rank (value), red = earlier (reach). CBS is in the 4th column.';
+    const _cmpGloss = ' compared to the current ranks. Green = that site has the player later than this rank (value), red = earlier (reach). CBS is in the 4th column.';
     _set(c1, null, 'Underdog ADP (Best Ball Mania; Superflex mode uses Underdog SF)' + _cmpGloss, 'UD', 'ADP');
     _set(c2, 'ppg25Header', 'Sleeper ADP' + _cmpGloss, 'SLPR', 'ADP');
-    _set(c3, 'l4ppgHeader', 'ESPN overall rank' + _cmpGloss, 'ESPN', 'ADP');
+    _set(c3, 'l4ppgHeader', 'ESPN staff rank — the order ESPN\'s own draft list shows, not ADP —' + _cmpGloss, 'ESPN', 'RANK');
   } else {
     if (currentMode === 'weekly') {
       const _wkNum = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;

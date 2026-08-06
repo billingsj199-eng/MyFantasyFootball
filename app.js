@@ -705,8 +705,27 @@ function _computeConsensusBoard(mode) {
     if (D[i].s === 'K') kickers.push(i);
     else if (D[i].s === 'DST') dsts.push(i);
   }
-  kickers.sort((a, b) => kickerRank(D[a]) - kickerRank(D[b]));
-  dsts.sort((a, b) => dstRank(D[a]) - dstRank(D[b]));
+  // K/DST consensus order: average of the site ranks that cover them
+  // (FP ECR + ESPN staff + Yahoo O-Rank + Sleeper ADP, all verbatim
+  // overall-list slots — injected since 2026-08-06). Jack's positional
+  // rank is the fallback when no site ranks a player.
+  const _kdstSiteAvg = i => {
+    const p = D[i], vals = [];
+    if (p.fpR != null) vals.push(p.fpR);
+    if (p.espnAdp != null) vals.push(p.espnAdp);
+    if (p.yahooAdp != null) vals.push(p.yahooAdp);
+    if (p.slR != null) vals.push(p.slR);
+    return vals.length ? vals.reduce((x, y) => x + y, 0) / vals.length : null;
+  };
+  const _kdstSort = fallback => (a, b) => {
+    const av = _kdstSiteAvg(a), bv = _kdstSiteAvg(b);
+    if (av != null && bv != null && av !== bv) return av - bv;
+    if (av != null && bv == null) return -1;
+    if (av == null && bv != null) return 1;
+    return fallback(D[a]) - fallback(D[b]);
+  };
+  kickers.sort(_kdstSort(kickerRank));
+  dsts.sort(_kdstSort(dstRank));
   return nonKDST.concat(kickers).concat(dsts);
 }
 
@@ -1590,9 +1609,12 @@ function _ktcGet(map, name) {
   return v != null ? v : null;
 }
 
-// Get ADP for a player based on the selected ranking ADP source
+// Get ADP for a player based on the selected ranking ADP source.
+// K/DST are allowed through since 2026-08-06 — FP/ESPN/Yahoo/Sleeper rank
+// them (injected by inject_rankings.py); sources without K/DST data (UD,
+// DK, KTC, CBS) just return null naturally. modeAdp still gates K/DST so
+// the d.a=240 placeholder never leaks into the consensus average.
 function rnkAdp(d) {
-  if (d.s === 'K' || d.s === 'DST') return null;
   if (rnkAdpSrc === 'ktc') {
     // KTC dynasty values — 1QB map for dynasty mode, SF map for dynastysf mode
     const map = currentMode === 'dynastysf' ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {}) : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
@@ -1638,7 +1660,6 @@ function rnkAdp(d) {
 // each column is pinned to one platform. Underdog respects the mode split
 // (sfa for superflex, udA otherwise), matching rnkAdp's own handling.
 function _adpBySource(d, src) {
-  if (d.s === 'K' || d.s === 'DST') return null;
   if (src === 'underdog') return currentMode === 'superflex' ? (d.sfa != null ? d.sfa : null) : (d.udA != null ? d.udA : null);
   if (src === 'sleeper') return _sleeperRank(d);
   if (src === 'espn') return d.espnAdp != null ? d.espnAdp : null;
@@ -1658,6 +1679,12 @@ function _adpCmpCellHtml(d, src, label) {
   }
   const v = _adpBySource(d, src);
   if (v == null) return '—';
+  // K/DST: sites rank them inside their OVERALL lists (~150-280) while this
+  // board pushes them to the bottom by design — the gap is a scale mismatch,
+  // not signal. Show the site's rank, skip the value/reach verdict.
+  if (d.s === 'K' || d.s === 'DST') {
+    return '<span style="cursor:help" title="' + (label + ' overall rank ' + v).replace(/"/g, '&quot;') + '">' + v + '</span>';
+  }
   const diff = Math.round(v - d.myRank);
   const clr = diff >= 3 ? '#22c55e' : diff <= -3 ? '#ef4444' : null;
   const tt = label + ' ADP ' + v + ' vs rank ' + d.myRank + (diff >= 3
@@ -1673,6 +1700,7 @@ function _adpCmpCellHtml(d, src, label) {
 // same ±3 thresholds as _adpCmpCellHtml. Empty when locked or no data.
 function _adpCmpCellCls(d, src) {
   if (src === 'underdog' && typeof hasPremium === 'function' && !hasPremium()) return '';
+  if (d.s === 'K' || d.s === 'DST') return '';  // no value/reach verdict (scale mismatch)
   const v = _adpBySource(d, src);
   if (v == null) return '';
   const diff = Math.round(v - d.myRank);
@@ -1760,6 +1788,20 @@ function _effStatMode() {
 // so the column reads on the same scale as the weekly prop lines.
 // Returns { yds, tds, tip } or null when Clay doesn't project the player.
 function _projStatLine(d) {
+  // Kickers: Clay projects FG/XP volume (fgm/fga/xpm since 2026-07-22) — show
+  // "FGM/FGA" in the yds column and XPM in the TD column, tooltip carries the
+  // full line. DST has no Clay stat line (unit rank only) — stays '—'.
+  if (d.s === 'K') {
+    if (typeof clayLookup !== 'function') return null;
+    const cp = clayLookup(d.n);
+    if (!cp || cp.pos !== 'K' || !cp.fga) return null;
+    return {
+      kFg: (cp.fgm || 0) + '/' + (cp.fga || 0),
+      kXp: cp.xpm != null ? cp.xpm : null,
+      tip: 'Mike Clay 2026: ' + (cp.fgm || 0) + '/' + (cp.fga || 0) + ' FG · '
+           + (cp.xpm || 0) + (cp.xpa ? '/' + cp.xpa : '') + ' XP · ' + (cp.pts || 0) + ' pts'
+    };
+  }
   if (d.s !== 'QB' && d.s !== 'RB' && d.s !== 'WR' && d.s !== 'TE') return null;
   if (typeof clayLookup !== 'function') return null;
   const cp = clayLookup(d.n);
@@ -2104,7 +2146,7 @@ function getFiltered() {
             : (window._mtGetPlayoffSos(d.t, d.s, _wk) || { rank: 999 }).rank;
           av = _sosRk(a); bv = _sosRk(b); break;
         }
-        case 'diff': av = (rnkAdp(a)??a.myRank) - a.myRank; bv = (rnkAdp(b)??b.myRank) - b.myRank; break;
+        case 'diff': av = (a.s==='K'||a.s==='DST') ? 0 : (rnkAdp(a)??a.myRank) - a.myRank; bv = (b.s==='K'||b.s==='DST') ? 0 : (rnkAdp(b)??b.myRank) - b.myRank; break;
         default: av = a.myRank; bv = b.myRank;
       }
       return sortDir * (av - bv);
@@ -2136,6 +2178,11 @@ function diffHtml(d) {
     .join(' · ');
   const _verSuffix = _verRanks ? ' || ' + _verRanks : '';
   if (adp == null) return `<span class="diff-even" title="No ${_srcLabel} ADP available for this player${_verSuffix}">—</span>`;
+  if (d.s === 'K' || d.s === 'DST') {
+    // Sites rank K/DST inside their overall lists; this board seats them at
+    // the bottom by design — suppress the ▲/▼ verdict, keep the rank in the tip.
+    return `<span class="diff-even" title="${_srcLabel} overall rank ${adp}${_verSuffix}">—</span>`;
+  }
   const diff = adp - d.myRank;
   const _tt = `Rank ${d.myRank} vs ${_srcLabel} ADP ${adp}${_verSuffix}`;
   if (Math.abs(diff) < 0.5) return `<span class="diff-even" title="${_tt} — even with the market">—</span>`;
@@ -2695,8 +2742,13 @@ function render() {
       const _line = _statMode === 'proj' ? _projStatLine(d) : _linesStatLine(d);
       const _tp = _impliedTeamPpg(d.t);
       const _tipAttr = (_line && _line.tip) ? ' title="' + _line.tip.replace(/"/g, '&quot;') + '" style="cursor:help;font-weight:700"' : '';
-      const _ydsHtml = (_line && _line.yds != null) ? Math.round(_line.yds).toLocaleString() : '—';
+      let _ydsHtml = (_line && _line.yds != null) ? Math.round(_line.yds).toLocaleString() : '—';
       let _tdsHtml = (_line && _line.tds != null) ? String(Math.round(_line.tds * 10) / 10) : '—';
+      // Kicker Clay line: FGM/FGA rides the yds column, XPM the TD column.
+      if (_line && _line.kFg) {
+        _ydsHtml = _line.kFg;
+        _tdsHtml = _line.kXp != null ? String(_line.kXp) : '—';
+      }
       // Weekly betting-lines view: anytime-TD odds under the O/U line — the
       // line is 0.5 for everyone, the juice is the real TD probability.
       if (_line && _line.tdsOdds != null) {
@@ -2710,7 +2762,9 @@ function render() {
       _statTds = `<td class="pts-cell ppg25-cell"${_tipAttr}>${_tdsHtml}</td>
       <td class="pts-cell l4ppg-cell"${_tp ? ' style="color:'+_tpColor+';font-weight:700;cursor:help" title="Season average of Vegas implied team totals (DK) across '+_tp.n+' games — ranked #'+_tp.rank+' of 32 teams"' : ''}>${_tp ? _tp.ppg.toFixed(1) + ' <span style="font-size:.65rem;font-weight:600;color:var(--text2)">(' + _tp.rank + ')</span>' : '—'}</td>`;
     }
-    const _adpDelta = _adp != null ? (_adp - d.myRank) : null;
+    // K/DST: no value/reach tint — site overall ranks vs this board's
+    // bottom-of-list K/DST slots is a scale mismatch, not draft signal.
+    const _adpDelta = (_adp != null && d.s !== 'K' && d.s !== 'DST') ? (_adp - d.myRank) : null;
     const _displayTierLabel = _tierLabelForRank(displayRank);
 
     // Insert premium wall row right at the cutoff, above blurred rows
@@ -2817,7 +2871,7 @@ function updateStats(data) {
   const rbs = data.filter(d=>d.s==='RB').length;
   const wrs = data.filter(d=>d.s==='WR').length;
   const tes = data.filter(d=>d.s==='TE').length;
-  const moved = D.filter(d => rnkAdp(d) != null && Math.abs(rnkAdp(d) - d.myRank) >= 1).length;
+  const moved = D.filter(d => d.s !== 'K' && d.s !== 'DST' && rnkAdp(d) != null && Math.abs(rnkAdp(d) - d.myRank) >= 1).length;
   const rookies = data.filter(d => {
     if (d.career && d.career.length) return false;
     const _cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
@@ -5777,7 +5831,23 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
 }
 
 function buildCareerTable(d, scoringFormat, statMode, withChart) {
-  const c = d.career;
+  // Kickers: d.career rows are PPG-only placeholders — swap in the full
+  // KICKER_HISTORY seasons (nflverse 1999+) when loaded. Each row carries
+  // the raw kicker season on y._k: fgm/fga per distance bucket
+  // [1-19,20-29,30-39,40-49,50+], xpm/xpa, long, gw, fpts (FG 3/4/5 + XP 1),
+  // ppg and the season-end positional finish (fin).
+  let _khRows = null;
+  if (d.s === 'K' && typeof KICKER_HISTORY !== 'undefined') {
+    _khRows = KICKER_HISTORY[d.n];
+    if (!_khRows) {
+      const _nk = _normalizeNameForLookup(d.n);
+      const _hit = Object.keys(KICKER_HISTORY).find(k => _normalizeNameForLookup(k) === _nk);
+      if (_hit) _khRows = KICKER_HISTORY[_hit];
+    }
+  }
+  const c = (_khRows && _khRows.length)
+    ? _khRows.map(y => ({ yr: y.yr, tm: y.tm, gp: y.gp, fpts: y.fpts, ppg: y.ppg, rc: 0, _k: y }))
+    : d.career;
   if (!c || !c.length) return '';
 
   // Helper: get actual team for a player-year using universal lookup
@@ -5799,7 +5869,10 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
   const adjusted = c.map(y => {
     const recs = y.rc || 0;
     const adjFpts = Math.round((y.fpts + recs * recAdj) * 10) / 10;
-    const adjPpg = y.gp > 0 ? Math.round((adjFpts / y.gp) * 10) / 10 : 0;
+    let adjPpg = y.gp > 0 ? Math.round((adjFpts / y.gp) * 10) / 10 : 0;
+    // K/DST: stored fpts can be 0/garbage while ppg is real (same trust rule
+    // as adj25ppg) — keep the stored ppg instead of the recomputed one.
+    if (isK && y.ppg != null && y.ppg !== 0 && !y._k) adjPpg = y.ppg;
     return { ...y, fpts: adjFpts, ppg: adjPpg, _ex: _careerExtras(d.n, y.yr) };
   });
 
@@ -5858,6 +5931,39 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
       ['CAR', 'Carries per game', y => _avg(y.ra, y.gp), qc.ra],
       ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp), qc.ry],
       ['RTD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp), qc.rtd]
+    ];
+  } else if (_khRows && _khRows.length) {
+    // Kicker columns from KICKER_HISTORY. Color ranges: per-game FG volume,
+    // FG% and long-range work are what separate fantasy kickers.
+    const _sumB = a => (a || []).reduce((x, v) => x + v, 0);
+    const _fgm = k => _sumB(k.fgm), _fga = k => _sumB(k.fga);
+    const _pctV = y => (y._k && _fga(y._k) > 0) ? _fgm(y._k) / _fga(y._k) * 100 : null;
+    const _pctF = y => { const v = _pctV(y); return v != null ? v.toFixed(1) + '%' : '—'; };
+    const kc = {
+      fgm: { f: y => (y._k && y.gp > 0) ? _fgm(y._k) / y.gp : null, lo: 1.0, hi: 2.4 },
+      fga: { f: y => (y._k && y.gp > 0) ? _fga(y._k) / y.gp : null, lo: 1.3, hi: 2.8 },
+      pct: { f: _pctV, lo: 72, hi: 92 },
+      f50: { f: y => (y._k && y.gp > 0) ? (y._k.fgm[4] || 0) / y.gp : null, lo: 0.03, hi: 0.5 },
+      xpm: { f: y => (y._k && y.gp > 0) ? (y._k.xpm || 0) / y.gp : null, lo: 1.2, hi: 3.3 },
+      lng: { f: y => (y._k && y._k.long) ? y._k.long : null, lo: 47, hi: 60 },
+    };
+    cols = mode === 'tot' ? [
+      ['FGM', 'Field goals made', y => y._k ? _fgm(y._k) : '—', kc.fgm],
+      ['FGA', 'Field goal attempts', y => y._k ? _fga(y._k) : '—', kc.fga],
+      ['FG%', 'Field goal percentage', _pctF, kc.pct],
+      ['50+', 'Makes from 50+ yards', y => y._k ? (y._k.fgm[4] || 0) : '—', kc.f50],
+      ['LNG', 'Longest make', y => (y._k && y._k.long) ? y._k.long : '—', kc.lng],
+      ['XPM', 'Extra points made', y => y._k ? (y._k.xpm || 0) : '—', kc.xpm],
+      ['XPA', 'Extra point attempts', y => y._k ? (y._k.xpa || 0) : '—', null],
+      ['GW', 'Game-winning field goals', y => y._k ? (y._k.gw || 0) : '—', null],
+    ] : [
+      ['FGM', 'Field goals made per game', y => y._k ? _avg(_fgm(y._k), y.gp) : '—', kc.fgm],
+      ['FGA', 'Field goal attempts per game', y => y._k ? _avg(_fga(y._k), y.gp) : '—', kc.fga],
+      ['FG%', 'Field goal percentage', _pctF, kc.pct],
+      ['50+', 'Makes from 50+ yards (season total)', y => y._k ? (y._k.fgm[4] || 0) : '—', kc.f50],
+      ['LNG', 'Longest make', y => (y._k && y._k.long) ? y._k.long : '—', kc.lng],
+      ['XPM', 'Extra points made per game', y => y._k ? _avg(y._k.xpm, y.gp) : '—', kc.xpm],
+      ['GW', 'Game-winning field goals', y => y._k ? (y._k.gw || 0) : '—', null],
     ];
   } else if (!isK) {
     // Color scales differ by position: RB receiving volume ≠ WR volume
@@ -5956,9 +6062,11 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
         row += '<td' + ppgClass + '>' + y.ppg + '</td>';
       }
       if (mode === 'tot') row += '<td class="fpts-cell">' + y.fpts + '</td>';
-      // TOT mode ranks the season by total points; AVG mode by PPG (8+ games)
+      // TOT mode ranks the season by total points; AVG mode by PPG (8+ games).
+      // Kicker seasons carry their real season-end finish from KICKER_HISTORY.
       const _rkVal = mode === 'tot' ? y.fpts : (y.gp >= 8 ? y.ppg : null);
-      const _seasonRk = _seasonPosRank(d.s, y.yr, d.n, _rkVal, fmt, mode === 'tot' ? 'tot' : 'ppg');
+      const _seasonRk = (y._k && y._k.fin != null) ? y._k.fin
+        : _seasonPosRank(d.s, y.yr, d.n, _rkVal, fmt, mode === 'tot' ? 'tot' : 'ppg');
       row += '<td' + _posRankStyle(_seasonRk, d.s) + '>' + (_seasonRk != null ? _seasonRk : '—') + '</td>';
       const _snp = _snapSeason(d.n, y.yr);
       row += _statCell(_snp != null ? Math.round(_snp) + '%' : '—', _snp, 40, 90);
@@ -6010,6 +6118,34 @@ function _careerSectionHtml(d) {
     </div>
     <div id="careerLogContent">${buildCareerTable(d, 'ppr', 'avg', true)}</div>
   </div>`;
+}
+
+// FG distance splits section (kicker cards only) — makes/attempts per range
+// bucket from data/kicker_splits.js (ESPN season stats; 2025 with 2024
+// fallback for kickers who missed 2025).
+function _kickerSplitsSectionHtml(d) {
+  if (d.s !== 'K' || typeof KICKER_SPLITS === 'undefined') return '';
+  let sp = KICKER_SPLITS[d.n];
+  if (!sp) {
+    const _nk = _normalizeNameForLookup(d.n);
+    const _hit = Object.keys(KICKER_SPLITS).find(k => _normalizeNameForLookup(k) === _nk);
+    if (_hit) sp = KICKER_SPLITS[_hit];
+  }
+  if (!sp || !sp.fga) return '';
+  const labels = ['1-19', '20-29', '30-39', '40-49', '50+'];
+  const cells = labels.map((lb, i) => {
+    const m = sp.fgm[i] || 0, a = sp.fga[i] || 0;
+    if (!a && i === 0) return '';  // 1-19 bucket is almost always empty
+    const pct = a > 0 ? Math.round(m / a * 100) : null;
+    const clr = pct == null ? 'var(--text2)' : pct >= 85 ? '#22c55e' : pct >= 70 ? '#facc15' : '#ef4444';
+    return '<div class="card-stat"><span class="card-stat-label">' + lb + ' yd</span>' +
+      '<span class="card-stat-value" style="color:' + clr + '">' + m + '/' + a +
+      (pct != null ? ' <span style="font-size:.6rem;color:var(--text2)">(' + pct + '%)</span>' : '') + '</span></div>';
+  }).join('');
+  return '<div class="card-section"><div class="card-section-title">FG Distance Splits <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + sp.yr + ' season</span></div>' +
+    '<div class="card-grid">' + cells +
+    '<div class="card-stat"><span class="card-stat-label">Long</span><span class="card-stat-value">' + (sp.long ? Math.round(sp.long) : '—') + '</span></div>' +
+    '</div></div>';
 }
 
 // Game Logs section — lives in the LOGS card tab (inline on K/DST cards).
@@ -6923,6 +7059,8 @@ function openPlayerCard(d, ctxMode) {
   // but takes the mode as a parameter rather than reading currentMode.
   function _udAdpInCtx() {
     if (_ctxMode === 'superflex') return d.sfa != null ? d.sfa : null;
+    // K/DST: Underdog doesn't draft them and d.a is a 240 placeholder — no fallback.
+    if (d.s === 'K' || d.s === 'DST') return d.udA != null ? d.udA : null;
     return d.udA != null ? d.udA : (d.a != null ? d.a : null);
   }
   function _slpAdpInCtx() {
@@ -7072,9 +7210,12 @@ function openPlayerCard(d, ctxMode) {
         </div>
       </div>` : ''}
 
-      ${!d._retired && d.s !== 'K' && d.s !== 'DST' ? (() => {
+      ${!d._retired ? (() => {
         // Mode-aware ADPs scoped to the calling context (Trade Calc dynasty,
         // My Teams dynasty league, etc.) — uses the helpers defined above.
+        // K/DST included since 2026-08-06: FP/ESPN/Yahoo rank them in their
+        // overall lists, Sleeper ADP covers D/ST; sources without K/DST data
+        // (Underdog, KTC, CBS) just show '—'.
         const _udAdp = _udAdpInCtx();
         const _slpAdp = _slpAdpInCtx();
         const _fmt = v => v != null ? v : '—';
@@ -7140,7 +7281,7 @@ function openPlayerCard(d, ctxMode) {
       ${(!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d) : ''}
 
       ${(d.s === 'K' || d.s === 'DST') && !_is2026 && d.career && d.career.length > 0
-        ? _careerSectionHtml(d) + _logsSectionHtml(d)
+        ? _kickerSplitsSectionHtml(d) + _careerSectionHtml(d) + _logsSectionHtml(d)
         : (!_is2026 && d.career && d.career.length > 0) ? '' : d._retired ? `<div class="card-section">
         <div class="card-section-title">Career Summary</div>
         <div class="card-grid">

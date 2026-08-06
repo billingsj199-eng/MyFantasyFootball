@@ -32,8 +32,10 @@
 # ESPN/CBS/Yahoo values are stored as SEQUENTIAL RANK ORDER (1..N by that
 # site's own EDITORIAL rank — the order its player list displays, not crowd
 # ADP; switched 2026-08-06) — emitted as round.pick so inject_rankings.py's
-# parse_pickadp reproduces the rank as an int. Underdog (and Sleeper) have no
-# editorial ranks, so those stay ADP-based.
+# parse_pickadp reproduces the rank as an int. K/DST are included at their
+# verbatim list slots (2026-08-06 pm) — no position stripping, every rank is
+# the player's true position in that site's full list. Underdog (and Sleeper)
+# have no editorial ranks, so those stay ADP-based.
 #
 # Sleeper (Sleeper*.csv) has NO public endpoint — those files are left
 # untouched and re-injected as-is, so the manual refresh cadence still works.
@@ -254,16 +256,11 @@ def pull_espn():
         if n_skill < ESPN_MIN_ROWS:
             print(f'  !! ESPN1QB.csv: only {n_skill} skill rows (<{ESPN_MIN_ROWS}) — kept old file')
             return 0
-        # Skill players are re-ranked 1..N with K/DST stripped (keeps the scale
-        # K/DST-free, matching FP/Sleeper/Underdog); K/DST keep their verbatim
-        # position in ESPN's full list order — same convention as parse_fp.
-        rows, n = [], 0
-        for i, (_, name, team, pos) in enumerate(entries):
-            if pos in VALID_POS:
-                n += 1
-                rows.append([name, team, pos, overall_to_round_pick(n), '0'])
-            else:
-                rows.append([name, team, pos, overall_to_round_pick(i + 1), '0'])
+        # Verbatim full-list ranks for EVERYONE (K/DST included) since
+        # 2026-08-06 pm — each rank is the player's true slot in ESPN's own
+        # displayed list order, no K/DST stripping.
+        rows = [[name, team, pos, overall_to_round_pick(i + 1), '0']
+                for i, (_, name, team, pos) in enumerate(entries)]
         write_csv('ESPN1QB.csv',
                   '"Player Name", "Player Team", "Player Position", ESPN: Redraft 1 PPR ADP, "Market Index 1",',
                   rows)
@@ -347,15 +344,10 @@ def pull_yahoo():
         if n_skill < YAHOO_MIN_ROWS:
             print(f'  !! Yahoo1QB.csv: only {n_skill} skill rows (<{YAHOO_MIN_ROWS}) — kept old file')
             return 0
-        # Same rank convention as ESPN: skill re-ranked K/DST-free, K/DST keep
-        # their verbatim slot in Yahoo's full O-Rank order.
-        rows, n = [], 0
-        for i, (name, team, pos) in enumerate(entries):
-            if pos in VALID_POS:
-                n += 1
-                rows.append([name, team, pos, overall_to_round_pick(n), '0'])
-            else:
-                rows.append([name, team, pos, overall_to_round_pick(i + 1), '0'])
+        # Same convention as ESPN: verbatim full O-Rank list slots for
+        # everyone, K/DST included — no stripping.
+        rows = [[name, team, pos, overall_to_round_pick(i + 1), '0']
+                for i, (name, team, pos) in enumerate(entries)]
         write_csv('Yahoo1QB.csv',
                   '"Player Name", "Player Team", "Player Position", Yahoo: Redraft 1 STD ADP, "Market Index 1",',
                   rows)

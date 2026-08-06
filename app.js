@@ -47191,7 +47191,7 @@ Rules:
     if (v >= 1e6) { const m = v / 1e6; return '$' + (m >= 100 ? Math.round(m) : m.toFixed(1)) + 'M'; }
     return '$' + Math.round(v / 1e3) + 'K';
   }
-  const _FMT = { h: 'Half', p: 'PPR', s: 'STD' };
+  const _FMT = { h: 'Half', p: 'PPR', s: 'STD', m: 'MFL' };
 
   function _combineFor(name) {
     if (typeof COMBINE_DATA === 'undefined') return null;
@@ -47325,7 +47325,7 @@ Rules:
       (sub.length ? '<span class="rs-player-sub">' + sub.join(' &nbsp;|&nbsp; ') + '</span>' : '') + '</div>';
     html += '<div class="rs-table-wrap"><table class="rs-table"><thead><tr>' +
       '<th>Year</th><th>Age</th><th>Tm</th><th>GP</th><th>FPTS</th><th>PPG</th><th>Finish</th>' +
-      '<th title="Fantasy Football Calculator preseason ADP (12-team)">ADP</th>' +
+      '<th title="Preseason ADP — MFL 1999-2007 (via Wayback, top 32-200), FFC 2008+ (12-team)">ADP</th>' +
       '<th title="Positional ADP rank that preseason">Pos ADP</th>' +
       '<th title="ESPN platform ADP (2018, 2020-2024 only). Caution: ESPN keeps averaging late drafts, so players hurt mid-season can show polluted values">ESPN ADP</th>' +
       '<th title="ESPN preseason expert rank">ESPN Rk</th>' +
@@ -47420,7 +47420,7 @@ Rules:
     { k: 'pos', label: 'Pos', num: false },
     { k: 'yr', label: 'Year', num: true },
     { k: 'tm', label: 'Tm', num: false },
-    { k: 'f', label: 'ADP', num: true, title: 'FFC preseason ADP (12-team)' },
+    { k: 'f', label: 'ADP', num: true, title: 'Preseason ADP — MFL 1999-2007 (via Wayback), FFC 2008+ (12-team)' },
     { k: 'pAdp', label: 'Pos ADP', num: true, title: 'Positional ADP rank' },
     { k: 'e', label: 'ESPN ADP', num: true, title: 'ESPN platform ADP (2018, 2020-2024). Caution: can be polluted for players hurt mid-season' },
     { k: 'gp', label: 'GP', num: true },

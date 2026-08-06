@@ -2163,7 +2163,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="rs-wrapper">
 <div class="rs-header">
 <div class="rs-title">Research</div>
-<div class="rs-subtitle">Historical preseason ADP &amp; expert ranks vs. actual finishes, contract history, and career team data. ADP archive: FFC 2008-2025 (12-team; half-PPR &rsaquo; PPR &rsaquo; standard by year) + ESPN 2018 &amp; 2020-2024. Points are half-PPR from the site database.</div>
+<div class="rs-subtitle">Historical preseason ADP &amp; expert ranks vs. actual finishes, contract history, and career team data. ADP archive: MFL 1999-2007 (via Wayback; top 32 for 1999-2005, top 100 for 2006, top 200 for 2007), FFC 2008-2025 (12-team; half-PPR &rsaquo; PPR &rsaquo; standard by year), ESPN 2018 &amp; 2020-2024. Points are half-PPR from the site database.</div>
 </div>
 
 <!-- Player lookup -->
@@ -4832,7 +4832,7 @@ window._ensureResearchData = (function() {
   return function _ensureResearchData() {
     if (promise) return promise;
     promise = Promise.all([
-      _loadScript('data/research_history.js?v=2026-08-06'),
+      _loadScript('data/research_history.js?v=2026-08-06b'),
       _loadScript('data/contracts_history.js?v=2026-08-06')
     ]);
     return promise;

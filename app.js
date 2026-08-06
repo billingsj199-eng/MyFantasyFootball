@@ -8860,14 +8860,14 @@ function renderSearchChips() {
 render();
 
 // === Page Navigation ===
-const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest' };
-const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest' };
+const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest', research: 'pageResearch' };
+const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest', research: 'authAnchorResearch' };
 function switchPage(page) {
   // Admin-only pages — silently redirect non-admins to home
-  const ADMIN_ONLY_PAGES = ['backtest', 'trivia'];
+  const ADMIN_ONLY_PAGES = ['backtest', 'trivia', 'research'];
   if (ADMIN_ONLY_PAGES.includes(page)) {
     const admin = typeof window.isAdmin === 'function' && window.isAdmin();
-    if (!admin) { page = 'home'; }
+    if (!admin) { page = 'rankings'; } // 'home' isn't in pageMap — it renders a blank page
   }
   Object.values(pageMap).forEach(id => {
     const el = document.getElementById(id);
@@ -8927,6 +8927,8 @@ function switchPage(page) {
   // non-rankings surface (Compare, Trivia, Prospect, Mock, Games, retired cards), so fire it
   // on any non-rankings navigation as a catch-all. Idempotent + idle-preloaded, so it's a net.
   if (page !== 'rankings' && typeof window._loadRetiredData === 'function') window._loadRetiredData();
+  // Research page: kick its two lazy data files + the retired DB, render when ready.
+  if (page === 'research' && typeof window._renderResearch === 'function') window._renderResearch();
   // Render compare grid when navigating to compare page
   if (page === 'compare') renderCompareGrid();
   // Render backtest when navigating to backtest page
@@ -9068,6 +9070,8 @@ window.switchPage = switchPage;
     if (btBtn) btBtn.style.display = admin ? '' : 'none';
     const tvBtn = document.getElementById('navTriviaBtn');
     if (tvBtn) tvBtn.style.display = admin ? '' : 'none';
+    const rsBtn = document.getElementById('navResearchBtn');
+    if (rsBtn) rsBtn.style.display = admin ? '' : 'none';
   }
   _whenFirebaseReady(function(){
     if (typeof firebase !== 'undefined' && firebase.auth) {
@@ -47161,4 +47165,366 @@ Rules:
   window._mtUpdateJacksLock = _mtUpdateJacksLock;
   _mtUpdateAdpSrcVisibility();
 
+})();
+
+// === RESEARCH PAGE (admin-only) ===
+// Historical preseason ADP/expert ranks (window.RESEARCH_HIST, lazy) + contract
+// history (window.CONTRACTS_DB, lazy) joined against ALL_PLAYERS_DB actual
+// seasons. Two surfaces: a player lookup panel and a filterable season explorer.
+(function _researchModule() {
+  let _built = false;
+  let _finIdx = null;      // yr -> pos -> name -> {rank, fpts, ppg, gp, tm}
+  let _byName = null;      // name -> [ALL_PLAYERS_DB entries]
+  let _adpPosIdx = null;   // yr -> name -> pos ADP rank (from FFC adp)
+  let _combineByNorm = null;
+  let _rows = null;        // explorer row objects
+  let _sortKey = 'f', _sortAsc = true;
+  let _yrMin = 2008, _yrMax = 2025;
+
+  function _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function _norm(n) { return String(n || '').toLowerCase().replace(/\b(jr|sr|ii|iii|iv|v)\.?$/,'').replace(/[^a-z]/g,''); }
+  function _hist() { return (typeof window.RESEARCH_HIST === 'object' && window.RESEARCH_HIST) || {}; }
+  function _contracts() { return (typeof window.CONTRACTS_DB === 'object' && window.CONTRACTS_DB) || {}; }
+  function _db() { return (typeof ALL_PLAYERS_DB !== 'undefined' && Array.isArray(ALL_PLAYERS_DB)) ? ALL_PLAYERS_DB : []; }
+  function _money(v) {
+    if (v == null) return '';
+    if (v >= 1e6) { const m = v / 1e6; return '$' + (m >= 100 ? Math.round(m) : m.toFixed(1)) + 'M'; }
+    return '$' + Math.round(v / 1e3) + 'K';
+  }
+  const _FMT = { h: 'Half', p: 'PPR', s: 'STD' };
+
+  function _combineFor(name) {
+    if (typeof COMBINE_DATA === 'undefined') return null;
+    if (COMBINE_DATA[name]) return COMBINE_DATA[name];
+    if (!_combineByNorm) {
+      _combineByNorm = {};
+      Object.keys(COMBINE_DATA).forEach(k => { const nk = _norm(k); if (!(nk in _combineByNorm)) _combineByNorm[nk] = COMBINE_DATA[k]; });
+    }
+    return _combineByNorm[_norm(name)] || null;
+  }
+  function _draftRound(name) {
+    const c = _combineFor(name);
+    const pick = c && +c.draft;
+    if (!pick) return 0; // undrafted / unknown
+    return pick <= 32 ? 1 : pick <= 64 ? 2 : pick <= 106 ? 3 : 4; // 4 = day 3
+  }
+
+  function _build() {
+    if (_built) return;
+    _built = true;
+    _byName = {}; _finIdx = {};
+    _db().forEach(p => {
+      (_byName[p.name] = _byName[p.name] || []).push(p);
+      (p.career || []).forEach(s => {
+        if (!s || s.yr == null) return;
+        const y = _finIdx[s.yr] = _finIdx[s.yr] || {};
+        (y[p.pos] = y[p.pos] || []).push({ name: p.name, fpts: s.fpts || 0, ppg: s.ppg, gp: s.gp, tm: s.tm });
+      });
+    });
+    Object.keys(_finIdx).forEach(yr => Object.keys(_finIdx[yr]).forEach(pos => {
+      const arr = _finIdx[yr][pos];
+      arr.sort((a, b) => b.fpts - a.fpts);
+      const map = {};
+      arr.forEach((r, i) => { if (!(r.name in map)) map[r.name] = { rank: i + 1, fpts: r.fpts, ppg: r.ppg, gp: r.gp, tm: r.tm }; });
+      _finIdx[yr][pos] = map;
+    }));
+    // positional ADP ranks per year from the FFC number
+    _adpPosIdx = {};
+    const hist = _hist();
+    const byYrPos = {};
+    Object.keys(hist).forEach(name => {
+      const pos = hist[name].pos;
+      Object.keys(hist[name].y).forEach(yr => {
+        const f = hist[name].y[yr].f;
+        if (f == null) return;
+        const k = yr + '|' + pos;
+        (byYrPos[k] = byYrPos[k] || []).push({ name, f });
+        _yrMin = Math.min(_yrMin, +yr); _yrMax = Math.max(_yrMax, +yr);
+      });
+    });
+    Object.keys(byYrPos).forEach(k => {
+      const yr = k.split('|')[0];
+      byYrPos[k].sort((a, b) => a.f - b.f);
+      const m = _adpPosIdx[yr] = _adpPosIdx[yr] || {};
+      byYrPos[k].forEach((r, i) => { m[r.name] = i + 1; });
+    });
+    // explorer rows: one per player-season with any recorded ADP
+    _rows = [];
+    Object.keys(hist).forEach(name => {
+      const pos = hist[name].pos;
+      const rookieYr = (_combineFor(name) || {}).yr;
+      Object.keys(hist[name].y).forEach(yr => {
+        const h = hist[name].y[yr];
+        const fin = ((_finIdx[yr] || {})[pos] || {})[name];
+        const row = {
+          name, pos, yr: +yr,
+          f: h.f != null ? h.f : null, fm: h.fm || '', e: h.e != null ? h.e : null, er: h.er || null,
+          pAdp: (_adpPosIdx[yr] || {})[name] || null,
+          tm: fin ? fin.tm : '', gp: fin ? fin.gp : null,
+          fpts: fin ? fin.fpts : null, ppg: fin ? fin.ppg : null,
+          fin: fin ? fin.rank : null,
+          val: null, rookie: rookieYr === +yr, round: _draftRound(name)
+        };
+        if (row.pAdp != null && row.fin != null) row.val = row.pAdp - row.fin;
+        _rows.push(row);
+      });
+    });
+  }
+
+  // ---- Player panel ----
+  function _seasonRowsFor(name) {
+    const hist = (_hist()[name] || {}).y || {};
+    const entries = _byName[name] || [];
+    const careers = entries.length ? entries[0].career || [] : [];
+    const pos = entries.length ? entries[0].pos : (_hist()[name] || {}).pos;
+    const years = new Set(Object.keys(hist).map(Number));
+    careers.forEach(s => years.add(s.yr));
+    const birth = entries.length ? String(entries[0].birthYear || '') : '';
+    const by = birth ? +birth.slice(0, 4) : null;
+    return Array.from(years).sort((a, b) => a - b).map(yr => {
+      const h = hist[yr] || {};
+      const s = careers.find(c => c.yr === yr);
+      const fin = ((_finIdx[yr] || {})[pos] || {})[name];
+      const pAdp = (_adpPosIdx[yr] || {})[name];
+      return {
+        yr, age: by ? yr - by : null, tm: s ? s.tm : '', gp: s ? s.gp : null,
+        fpts: s ? s.fpts : null, ppg: s ? s.ppg : null, pos,
+        fin: fin ? fin.rank : null, f: h.f, fm: h.fm, e: h.e, er: h.er,
+        pAdp: pAdp || null,
+        val: (pAdp != null && fin) ? pAdp - fin.rank : null
+      };
+    });
+  }
+
+  function _valCell(v) {
+    if (v == null) return '<td></td>';
+    const cls = v > 2 ? 'rs-pos-val' : v < -2 ? 'rs-neg-val' : '';
+    return '<td class="' + cls + '">' + (v > 0 ? '+' + v : v) + '</td>';
+  }
+
+  function _renderPlayer(name) {
+    const panel = document.getElementById('rsPlayerPanel');
+    if (!panel) return;
+    const rows = _seasonRowsFor(name);
+    if (!rows.length) { panel.innerHTML = '<div class="rs-empty">No data for ' + _esc(name) + '.</div>'; return; }
+    const pos = rows[0].pos || '?';
+    const c = _combineFor(name);
+    let sub = [];
+    if (c) {
+      let d = [];
+      if (c.yr) d.push(c.yr);
+      if (c.draft) d.push('Pick ' + c.draft + (c.dt ? ' (' + _esc(c.dt) + ')' : ''));
+      else if (c.yr) d.push('Undrafted');
+      if (c.school) d.push(_esc(c.school));
+      if (d.length) sub.push(d.join(' &middot; '));
+    }
+    const teams = Array.from(new Set(rows.map(r => r.tm).filter(Boolean)));
+    if (teams.length) sub.push('Teams: ' + teams.join(', '));
+    let html = '<div class="rs-player-head"><span class="rs-player-name">' + _esc(name) +
+      '</span><span class="rs-pos-pill">' + _esc(pos) + '</span>' +
+      (sub.length ? '<span class="rs-player-sub">' + sub.join(' &nbsp;|&nbsp; ') + '</span>' : '') + '</div>';
+    html += '<div class="rs-table-wrap"><table class="rs-table"><thead><tr>' +
+      '<th>Year</th><th>Age</th><th>Tm</th><th>GP</th><th>FPTS</th><th>PPG</th><th>Finish</th>' +
+      '<th title="Fantasy Football Calculator preseason ADP (12-team)">ADP</th>' +
+      '<th title="Positional ADP rank that preseason">Pos ADP</th>' +
+      '<th title="ESPN platform ADP (2018, 2020-2024 only). Caution: ESPN keeps averaging late drafts, so players hurt mid-season can show polluted values">ESPN ADP</th>' +
+      '<th title="ESPN preseason expert rank">ESPN Rk</th>' +
+      '<th title="Pos ADP minus actual positional finish. Positive = beat their draft slot">+/-</th></tr></thead><tbody>';
+    rows.forEach(r => {
+      html += '<tr><td>' + r.yr + '</td><td>' + (r.age != null ? r.age : '') + '</td><td>' + _esc(r.tm || '') + '</td>' +
+        '<td>' + (r.gp != null ? r.gp : '') + '</td><td>' + (r.fpts != null ? r.fpts : '') + '</td><td>' + (r.ppg != null ? r.ppg : '') + '</td>' +
+        '<td>' + (r.fin ? _esc(pos) + r.fin : '') + '</td>' +
+        '<td>' + (r.f != null ? r.f + ' <span class="rs-fmt">' + (_FMT[r.fm] || '') + '</span>' : '') + '</td>' +
+        '<td>' + (r.pAdp != null ? _esc(pos) + r.pAdp : '') + '</td>' +
+        '<td>' + (r.e != null ? r.e : '') + '</td><td>' + (r.er != null ? r.er : '') + '</td>' + _valCell(r.val) + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    let cons = _contracts()[name];
+    if (!cons) {
+      const key = Object.keys(_contracts()).find(k => _norm(k) === _norm(name));
+      cons = key ? _contracts()[key] : null;
+    }
+    if (cons && cons.length) {
+      html += '<div class="rs-subhead">Contract History <span class="rs-fmt">(OverTheCap)</span></div>' +
+        '<div class="rs-table-wrap"><table class="rs-table"><thead><tr><th>Signed</th><th>Team</th><th>Years</th><th>Total</th><th>APY</th><th>Guaranteed</th><th title="APY as % of the salary cap at signing">% Cap</th></tr></thead><tbody>';
+      cons.forEach(k => {
+        html += '<tr><td>' + k.y + '</td><td>' + _esc(k.t || '') + '</td><td>' + (k.n || '') + '</td><td>' + _money(k.v) + '</td>' +
+          '<td>' + _money(k.a) + '</td><td>' + _money(k.g) + '</td><td>' + (k.p != null ? (k.p * 100).toFixed(1) + '%' : '') + '</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    panel.innerHTML = html;
+  }
+
+  function _selectPlayer(name) {
+    const inp = document.getElementById('rsSearch');
+    if (inp) inp.value = name;
+    const sug = document.getElementById('rsSuggest');
+    if (sug) sug.style.display = 'none';
+    _renderPlayer(name);
+    const panel = document.getElementById('rsPlayerPanel');
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ---- Search ----
+  function _allNames() {
+    const set = new Set();
+    _db().forEach(p => set.add(p.name));
+    Object.keys(_hist()).forEach(n => set.add(n));
+    Object.keys(_contracts()).forEach(n => set.add(n));
+    return Array.from(set);
+  }
+  let _nameCache = null;
+  function _wireSearch() {
+    const inp = document.getElementById('rsSearch');
+    const sug = document.getElementById('rsSuggest');
+    if (!inp || !sug || inp._rsWired) return;
+    inp._rsWired = true;
+    inp.addEventListener('input', () => {
+      const q = _norm(inp.value);
+      if (q.length < 2) { sug.style.display = 'none'; return; }
+      if (!_nameCache) _nameCache = _allNames().map(n => ({ n, k: _norm(n) }));
+      const starts = [], contains = [];
+      for (const c of _nameCache) {
+        if (c.k.startsWith(q)) starts.push(c.n);
+        else if (c.k.includes(q)) contains.push(c.n);
+        if (starts.length >= 12) break;
+      }
+      const hits = starts.concat(contains).slice(0, 12);
+      if (!hits.length) { sug.style.display = 'none'; return; }
+      sug.innerHTML = hits.map(n => {
+        const e = (_byName[n] || [])[0];
+        const meta = e ? (e.pos + ' ' + (e.debut || '') + (e.last && e.last !== e.debut ? '-' + e.last : '')) : ((_hist()[n] || {}).pos || '');
+        return '<div class="rs-sug-item" data-name="' + _esc(n) + '">' + _esc(n) + ' <span class="rs-fmt">' + _esc(meta) + '</span></div>';
+      }).join('');
+      sug.style.display = 'block';
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const first = sug.querySelector('.rs-sug-item');
+        if (first) _selectPlayer(first.dataset.name);
+      } else if (e.key === 'Escape') { sug.style.display = 'none'; }
+    });
+    sug.addEventListener('click', e => {
+      const it = e.target.closest('.rs-sug-item');
+      if (it) _selectPlayer(it.dataset.name);
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.rs-search-row')) sug.style.display = 'none';
+    });
+  }
+
+  // ---- Explorer ----
+  const _COLS = [
+    { k: 'name', label: 'Player', num: false },
+    { k: 'pos', label: 'Pos', num: false },
+    { k: 'yr', label: 'Year', num: true },
+    { k: 'tm', label: 'Tm', num: false },
+    { k: 'f', label: 'ADP', num: true, title: 'FFC preseason ADP (12-team)' },
+    { k: 'pAdp', label: 'Pos ADP', num: true, title: 'Positional ADP rank' },
+    { k: 'e', label: 'ESPN ADP', num: true, title: 'ESPN platform ADP (2018, 2020-2024). Caution: can be polluted for players hurt mid-season' },
+    { k: 'gp', label: 'GP', num: true },
+    { k: 'fpts', label: 'FPTS', num: true, title: 'Half-PPR fantasy points' },
+    { k: 'ppg', label: 'PPG', num: true },
+    { k: 'fin', label: 'Finish', num: true, title: 'Positional finish by total points' },
+    { k: 'val', label: '+/-', num: true, title: 'Pos ADP minus finish. Positive = beat ADP' }
+  ];
+  function _wireControls() {
+    const from = document.getElementById('rsYrFrom'), to = document.getElementById('rsYrTo');
+    if (from && to && !from.options.length) {
+      for (let y = _yrMin; y <= _yrMax; y++) {
+        from.add(new Option(y, y)); to.add(new Option(y, y));
+      }
+      from.value = _yrMin; to.value = _yrMax;
+    }
+    ['rsPos', 'rsYrFrom', 'rsYrTo', 'rsRound', 'rsRookie', 'rsMinGp'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el._rsWired) { el._rsWired = true; el.addEventListener('change', _renderExplorer); }
+    });
+  }
+  function _renderExplorer() {
+    const wrap = document.getElementById('rsExplorerWrap');
+    if (!wrap) return;
+    const pos = (document.getElementById('rsPos') || {}).value || '';
+    const yFrom = +((document.getElementById('rsYrFrom') || {}).value || _yrMin);
+    const yTo = +((document.getElementById('rsYrTo') || {}).value || _yrMax);
+    const round = (document.getElementById('rsRound') || {}).value || '';
+    const rookie = !!(document.getElementById('rsRookie') || {}).checked;
+    const minGp = +((document.getElementById('rsMinGp') || {}).value || 0);
+    let rows = _rows.filter(r =>
+      (!pos || r.pos === pos) && r.yr >= yFrom && r.yr <= yTo &&
+      (!rookie || r.rookie) && (!minGp || (r.gp || 0) >= minGp) &&
+      (!round ||
+        (round === '1' && r.round === 1) || (round === '2' && r.round === 2) ||
+        (round === '3' && r.round === 3) || (round === 'd2' && (r.round === 2 || r.round === 3)) ||
+        (round === 'd3' && r.round === 4) || (round === 'udfa' && r.round === 0)));
+    const col = _COLS.find(c => c.k === _sortKey) || _COLS[4];
+    rows.sort((a, b) => {
+      let av = a[col.k], bv = b[col.k];
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (!col.num) { av = String(av); bv = String(bv); return _sortAsc ? av.localeCompare(bv) : bv.localeCompare(av); }
+      return _sortAsc ? av - bv : bv - av;
+    });
+    const total = rows.length;
+    rows = rows.slice(0, 400);
+    const cnt = document.getElementById('rsCount');
+    if (cnt) cnt.textContent = total + ' seasons' + (total > 400 ? ' (showing 400)' : '');
+    let html = '<table class="rs-table rs-explorer"><thead><tr>' + _COLS.map(c =>
+      '<th data-k="' + c.k + '"' + (c.title ? ' title="' + c.title + '"' : '') +
+      (c.k === _sortKey ? ' class="' + (_sortAsc ? 'sorted-asc' : 'sorted-desc') + '"' : '') + '>' + c.label + '</th>').join('') + '</tr></thead><tbody>';
+    rows.forEach(r => {
+      html += '<tr data-name="' + _esc(r.name) + '"><td class="rs-name">' + _esc(r.name) + '</td><td>' + _esc(r.pos) + '</td><td>' + r.yr + '</td><td>' + _esc(r.tm || '') + '</td>' +
+        '<td>' + (r.f != null ? r.f + ' <span class="rs-fmt">' + (_FMT[r.fm] || '') + '</span>' : '') + '</td>' +
+        '<td>' + (r.pAdp != null ? r.pAdp : '') + '</td><td>' + (r.e != null ? r.e : '') + '</td>' +
+        '<td>' + (r.gp != null ? r.gp : '') + '</td><td>' + (r.fpts != null ? r.fpts : '') + '</td><td>' + (r.ppg != null ? r.ppg : '') + '</td>' +
+        '<td>' + (r.fin != null ? _esc(r.pos) + r.fin : '') + '</td>' + _valCell(r.val) + '</tr>';
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+    if (!wrap._rsWired) {
+      wrap._rsWired = true;
+      wrap.addEventListener('click', e => {
+        const th = e.target.closest('th[data-k]');
+        if (th) {
+          const k = th.dataset.k;
+          if (_sortKey === k) { _sortAsc = !_sortAsc; }
+          else {
+            _sortKey = k;
+            // sensible default direction: production columns start descending
+            _sortAsc = !(k === 'fpts' || k === 'ppg' || k === 'gp' || k === 'val');
+          }
+          _renderExplorer();
+          return;
+        }
+        const tr = e.target.closest('tr[data-name]');
+        if (tr) _selectPlayer(tr.dataset.name);
+      });
+    }
+  }
+
+  function _init() {
+    _build();
+    _wireSearch();
+    _wireControls();
+    _renderExplorer();
+  }
+  window._renderResearch = function _renderResearch() {
+    if (!document.getElementById('pageResearch')) return;
+    const dataP = typeof window._ensureResearchData === 'function' ? window._ensureResearchData() : Promise.resolve();
+    dataP.then(function() {
+      if (typeof ALL_PLAYERS_DB !== 'undefined') { _init(); return; }
+      // Retired DB rides _loadRetiredData (switchPage already fired it for any
+      // non-rankings page) — wait for its completion event, with a poll fallback.
+      let done = false;
+      function _go() { if (done) return; done = true; _init(); }
+      document.addEventListener('mff:retireddata', _go, { once: true });
+      let tries = 0;
+      (function _poll() {
+        if (done) return;
+        if (typeof ALL_PLAYERS_DB !== 'undefined') { _go(); return; }
+        if (++tries < 40) setTimeout(_poll, 500);
+      })();
+    });
+  };
 })();

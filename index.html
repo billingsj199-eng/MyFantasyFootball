@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-06c" as="script">
+<link rel="preload" href="app.js?v=2026-08-06d" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -273,6 +273,10 @@ Continue with Google
 <button class="nav-btn" data-page="backtest" id="navBacktestBtn" title="Model Backtest" aria-label="Model Backtest" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
 <span class="nav-label">Backtest</span>
+</button>
+<button class="nav-btn" data-page="research" id="navResearchBtn" title="Research" aria-label="Research" style="display:none">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6"/><path d="M11 8v6"/></svg>
+<span class="nav-label">Research</span>
 </button>
 <button class="nav-btn" data-page="compare" title="Compare" aria-label="Compare Players">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
@@ -2149,6 +2153,45 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </details>
 
 </div>
+</div>
+</div>
+
+<!-- RESEARCH PAGE (admin-only) -->
+<link rel="stylesheet" href="styles/research.css?v=2026-08-06">
+<div class="page" id="pageResearch" style="padding:0;overflow-y:auto">
+<div class="auth-anchor" id="authAnchorResearch"></div>
+<div class="rs-wrapper">
+<div class="rs-header">
+<div class="rs-title">Research</div>
+<div class="rs-subtitle">Historical preseason ADP &amp; expert ranks vs. actual finishes, contract history, and career team data. ADP archive: FFC 2008-2025 (12-team; half-PPR &rsaquo; PPR &rsaquo; standard by year) + ESPN 2018 &amp; 2020-2024. Points are half-PPR from the site database.</div>
+</div>
+
+<!-- Player lookup -->
+<div class="rs-section">
+<div class="rs-section-title">Player Lookup</div>
+<div class="rs-search-row">
+<input type="text" id="rsSearch" class="rs-search" placeholder="Search any player (active or retired)..." autocomplete="off" spellcheck="false" aria-label="Search players">
+<div class="rs-suggest" id="rsSuggest" style="display:none"></div>
+</div>
+<div id="rsPlayerPanel"></div>
+</div>
+
+<!-- Explorer -->
+<div class="rs-section">
+<div class="rs-section-title">Season Explorer</div>
+<div class="rs-help">Every player-season with a recorded preseason ADP, joined to what they actually did. Filter, then click any column header to sort. Click a row to open that player above.</div>
+<div class="rs-controls">
+<label>Pos <select id="rsPos" class="rs-select"><option value="">All</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option value="DEF">DST</option></select></label>
+<label>From <select id="rsYrFrom" class="rs-select"></select></label>
+<label>To <select id="rsYrTo" class="rs-select"></select></label>
+<label>NFL Draft <select id="rsRound" class="rs-select"><option value="">Any</option><option value="1">Round 1</option><option value="2">Round 2</option><option value="3">Round 3</option><option value="d2">Day 2 (R2-3)</option><option value="d3">Day 3 (R4-7)</option><option value="udfa">Undrafted</option></select></label>
+<label class="rs-check"><input type="checkbox" id="rsRookie"> Rookie season only</label>
+<label>Min GP <input type="number" id="rsMinGp" class="rs-num" value="0" min="0" max="17"></label>
+<span class="rs-count" id="rsCount"></span>
+</div>
+<div class="rs-table-wrap" id="rsExplorerWrap"><div class="rs-empty">Loading research data&hellip;</div></div>
+</div>
+
 </div>
 </div>
 
@@ -4770,6 +4813,32 @@ window._ensureDraftPicksData = (function() {
   };
 })();
 
+// Research page (admin-only): research_history.js (~165 KB, window.RESEARCH_HIST =
+// historical preseason ADP/ranks) + contracts_history.js (~768 KB, window.CONTRACTS_DB =
+// OverTheCap contract history). Only the Research page reads them, so they load on
+// first open of that page and never cost anyone else anything.
+window._ensureResearchData = (function() {
+  let promise = null;
+  function _loadScript(src) {
+    return new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      s.onload  = function() { resolve(); };
+      s.onerror = function() { console.warn('[ResearchData] load failed', src); resolve(); };
+      document.head.appendChild(s);
+    });
+  }
+  return function _ensureResearchData() {
+    if (promise) return promise;
+    promise = Promise.all([
+      _loadScript('data/research_history.js?v=2026-08-06'),
+      _loadScript('data/contracts_history.js?v=2026-08-06')
+    ]);
+    return promise;
+  };
+})();
+
 // Player-card extras: nfl_prospect_grades.js (~118 KB, window._NFL_PROSPECT_GRADES →
 // NFL.com grade section) + player_comps.js (~74 KB, _PLAYER_COMPS → COMPS tab).
 // Both have a single consumer inside openPlayerCard's template — the card fires this
@@ -4974,7 +5043,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-06c"></script>
+<script defer src="app.js?v=2026-08-06d"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

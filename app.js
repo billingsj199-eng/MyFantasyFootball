@@ -3029,6 +3029,9 @@ function attachTierListeners() {
   let dragRow = null, dragIdx = null, clone = null, lastIndicatorRow = null, _devyDragName = null;
   let pointerY = 0, cloneX = 0, cloneOffsetY = 0;
   let rafId = null, isDragging = false;
+  // Scroller to auto-scroll during drag: .table-wrap on desktop, but on phones
+  // (≤600px card layout) #pageRankings is what scrolls (main.css overflow swap).
+  let _dragScroller = scrollContainer;
   let _rowRects = [];
   // POS LOCK group-mate rows, split by side of the dragged row. tick()
   // tints exactly the mates the pointer has crossed — the ones the drop
@@ -3040,9 +3043,10 @@ function attachTierListeners() {
   }
 
   function createClone(row) {
-    const tbl = row.closest('table');
     const table = document.createElement('table');
-    table.style.cssText = `width:${tbl.offsetWidth}px;border-collapse:collapse;table-layout:fixed;`;
+    // row.offsetWidth, not table.offsetWidth: on the ≤600px card layout the row
+    // is an inset card narrower than the table; on desktop they're identical.
+    table.style.cssText = `width:${row.offsetWidth}px;border-collapse:collapse;table-layout:fixed;`;
     const tr = row.cloneNode(true);
     tr.classList.remove('dragging','cmp-selected','ranked-row');
     const origCells = row.children, cloneCells = tr.children;
@@ -3082,14 +3086,14 @@ function attachTierListeners() {
     if (!isDragging) return;
     if (clone) clone.style.transform = `translate3d(${cloneX}px, ${pointerY - cloneOffsetY}px, 0) scale(1.015)`;
 
-    const rect = scrollContainer.getBoundingClientRect();
+    const rect = _dragScroller.getBoundingClientRect();
     const zone = 80;
     let scrolled = false;
     if (pointerY < rect.top + zone) {
-      scrollContainer.scrollTop -= Math.round(2 + Math.pow(1 - (pointerY - rect.top) / zone, 2) * 18);
+      _dragScroller.scrollTop -= Math.round(2 + Math.pow(1 - (pointerY - rect.top) / zone, 2) * 18);
       scrolled = true;
     } else if (pointerY > rect.bottom - zone) {
-      scrollContainer.scrollTop += Math.round(2 + Math.pow(1 - (rect.bottom - pointerY) / zone, 2) * 18);
+      _dragScroller.scrollTop += Math.round(2 + Math.pow(1 - (rect.bottom - pointerY) / zone, 2) * 18);
       scrolled = true;
     }
     if (scrolled) cacheRowRects();
@@ -3137,9 +3141,10 @@ function attachTierListeners() {
     pointerY = e.clientY;
 
     const rowRect = row.getBoundingClientRect();
-    const tblRect = row.closest('table').getBoundingClientRect();
-    cloneX = tblRect.left;
+    cloneX = rowRect.left; // == table left on desktop; card's inset left on phones
     cloneOffsetY = e.clientY - rowRect.top;
+    const _pg = document.getElementById('pageRankings');
+    _dragScroller = (_pg && window.matchMedia('(max-width:600px)').matches) ? _pg : scrollContainer;
 
     row.classList.add('dragging');
     tbody.classList.add('is-dragging');
@@ -3169,6 +3174,9 @@ function attachTierListeners() {
 
     document.addEventListener('pointermove', onPointerMove, {passive: false});
     document.addEventListener('pointerup', onPointerUp);
+    // Touch drags can be cancelled by the browser (system gesture, tab switch):
+    // treat it as an aborted drag so the clone doesn't stick around.
+    document.addEventListener('pointercancel', onPointerUp);
   }
 
   function onPointerMove(e) { e.preventDefault(); pointerY = e.clientY; }
@@ -3185,8 +3193,10 @@ function attachTierListeners() {
     if (clone) { clone.remove(); clone = null; }
     document.removeEventListener('pointermove', onPointerMove);
     document.removeEventListener('pointerup', onPointerUp);
+    document.removeEventListener('pointercancel', onPointerUp);
 
-    let target = getRowAtY(e.clientY);
+    // pointercancel = aborted drag (browser reclaimed the gesture): no drop.
+    let target = e.type === 'pointercancel' ? null : getRowAtY(e.clientY);
     // Block drops onto blurred rows — prevents non-premium users from swapping a top-12 player past the cutoff
     if (target && target.classList && target.classList.contains('premium-blur')) {
       if (currentVersion === 'mine' && window._authCurrentUser) {

@@ -60,12 +60,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-08-06a" as="style">
+<link rel="preload" href="styles/main.css?v=2026-08-07a" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-06d" as="script">
+<link rel="preload" href="app.js?v=2026-08-07a" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -75,7 +75,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-08-07" as="script">
 <link rel="preload" href="data/d.js?v=2026-08-07c" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-08-06a">
+<link rel="stylesheet" href="styles/main.css?v=2026-08-07a">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1051,8 +1051,12 @@ CLEAR ALL
     #pageRankings tbody{display:block;padding:0 .5rem}
     #pageRankings tbody tr{display:flex;flex-wrap:nowrap;align-items:center;gap:0 6px;padding:8px 10px;margin:0 0 5px;background:var(--surface);border:1px solid var(--border)!important;border-radius:10px}
     #pageRankings tbody tr td{border:none!important;padding:0!important;background:transparent!important;width:auto!important;max-width:none!important;min-width:0!important;text-align:left!important;display:block}
-    /* Drag handle hidden (no reorder on mobile) */
-    #pageRankings tbody tr td:first-child{display:none}
+    /* Drag handle: visible grab target so touch reorder works on My/Jack's ranks.
+       The drag engine is pointer-event based with touch-action:none on the handle,
+       so a touch that starts here drags instead of scrolling. Negative margins
+       stretch the tap target to the full card height. */
+    #pageRankings tbody tr td:first-child{display:flex;flex:0 0 24px;align-self:stretch;align-items:center;justify-content:center;margin:-8px 0 -8px -4px!important}
+    #pageRankings tbody tr td:first-child .drag-handle{opacity:.5;padding:0 3px}
     /* Rank num */
     #pageRankings tbody .myrank-cell{flex:0 0 26px;text-align:center!important}
     #pageRankings tbody .myrank-num{width:auto;font-size:1rem;background:none;padding:0}
@@ -1099,6 +1103,25 @@ CLEAR ALL
     #pageRankings tbody tr.tier-row td{display:block;text-align:center!important}
     /* Premium-blur cards: keep the blur but fit the card shape */
     #pageRankings tbody tr.premium-blur td{filter:blur(4px)}
+    /* Floating drag clone — lives on <body>, outside #pageRankings, so the card
+       rules above don't reach it. Mirror the card layout so the row being
+       dragged looks like the card it came from. */
+    .drag-clone table{min-width:0}
+    .drag-clone tr{display:flex;flex-wrap:nowrap;align-items:center;gap:0 6px;padding:8px 10px}
+    .drag-clone tr td{display:block;border:none!important;padding:0!important;background:transparent!important;width:auto!important;max-width:none!important;min-width:0!important;text-align:left!important;white-space:nowrap}
+    .drag-clone tr td:first-child{display:flex;flex:0 0 24px;align-items:center;justify-content:center}
+    .drag-clone .drag-handle{opacity:1;color:var(--accent)}
+    .drag-clone .myrank-cell{flex:0 0 26px;text-align:center!important}
+    .drag-clone .myrank-num{width:auto;font-size:1rem;background:none;padding:0}
+    .drag-clone tr td:nth-child(3){flex:1 1 auto;min-width:0!important;padding:0 2px!important;overflow:hidden}
+    .drag-clone tr td:nth-child(3) .player-cell{gap:7px!important}
+    .drag-clone tr td:nth-child(4){display:none!important}
+    .drag-clone .pos-rank-cell{flex:0 0 auto;font-size:.62rem;font-weight:700;font-family:'Bebas Neue',sans-serif;letter-spacing:.6px;padding:2px 6px!important;min-width:30px;text-align:center!important;border-radius:4px;line-height:1.1}
+    .drag-clone .adp-cell,.drag-clone .ppg-proj-cell,.drag-clone .psos-cell{flex:0 0 auto;text-align:center!important;font-size:.82rem;font-weight:600;color:var(--text);padding:0 3px!important;min-width:36px!important;line-height:1.05}
+    .drag-clone .age-cell{display:none}
+    /* Weekly format: match the card column swap (ADP/SOS out, OPP in) */
+    body.format-weekly .drag-clone .adp-cell,body.format-weekly .drag-clone .psos-cell{display:none!important}
+    body.format-weekly .drag-clone td.opp-cell{display:block!important;flex:0 0 auto;text-align:center!important;font-size:.78rem;font-weight:600;min-width:40px!important}
   }
   /* === WEEKLY FORMAT (admin-only) column swap ===
      Default state: OPP + TEAM TOTAL columns hidden, ADP/AGE/P-SOS visible.
@@ -4979,7 +5002,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-06d"></script>
+<script defer src="app.js?v=2026-08-07a"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

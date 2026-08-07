@@ -1,6 +1,46 @@
 {
-  "updated": "2026-08-06T16:12:59Z",
+  "updated": "2026-08-07T02:15:00Z",
   "items": [
+    {
+      "player": "Carson Beck",
+      "team": "ARI",
+      "pos": "QB",
+      "date": "2026-08-06",
+      "headline": "Throws first pro TD (to Simi Fehoko), goes 11/14 for 148 yds in Hall of Fame Game start",
+      "take": "Efficient, confident preseason debut over Jacoby Brissett; dynasty stash only for 2026.",
+      "url": "https://heavy.com/sports/nfl/arizona-cardinals/rookie-carson-beck-throws-first-touchdown/",
+      "tag": "other"
+    },
+    {
+      "player": "Bam Knight",
+      "team": "ARI",
+      "pos": "RB",
+      "date": "2026-08-06",
+      "headline": "Starts Hall of Fame Game, gets all 15 opening-drive snaps (11 car, 56 yds) with Trey Benson out",
+      "take": "Strengthens his case for the RB3/handcuff job behind Love/Allgeier/Conner in a deep league.",
+      "url": "https://www.cbssports.com/fantasy/football/news/cardinals-bam-knight-in-line-for-bigger-role",
+      "tag": "riser"
+    },
+    {
+      "player": "Trey Benson",
+      "team": "ARI",
+      "pos": "RB",
+      "date": "2026-08-06",
+      "headline": "Held out of Hall of Fame Game with knee discomfort",
+      "take": "Opened the door for Bam Knight's strong debut; status ahead of next practice worth tracking.",
+      "url": "https://www.pff.com/news/fantasy-football-2026-nfl-hall-of-fame-game",
+      "tag": "injury"
+    },
+    {
+      "player": "Colbie Young",
+      "team": "CIN",
+      "pos": "WR",
+      "date": "2026-08-06",
+      "headline": "Rookie WR pushing Andrei Iosivas for Bengals' WR3 job with contested-catch, red-zone flashes",
+      "take": "Emerging name behind Chase/Higgins as Iosivas' drop issues keep the door open.",
+      "url": "https://athlonsports.com/nfl/cincinnati-bengals/andrei-iosivas-charlie-jones-or-colbie-young-who-will-win-the-cincinnati-bengals-wr3-job",
+      "tag": "riser"
+    },
     {
       "player": "Jonathan Taylor",
       "team": "IND",
@@ -137,7 +177,7 @@
       "pos": "WR",
       "date": "2026-08-05",
       "headline": "Works on the side during Wednesday's practice, ramping up in early camp",
-      "take": "First real practice involvement since his 2025 multi-ligament knee injury — trajectory looks encouraging but no full-team timetable yet.",
+      "take": "First real practice involvement since his 2025 multi-ligament knee injury \u2014 trajectory looks encouraging but no full-team timetable yet.",
       "url": "https://www.cbssports.com/fantasy/football/news/texans-tank-dell-being-ramped-up/",
       "tag": "riser"
     },
@@ -167,7 +207,7 @@
       "pos": "WR",
       "date": "2026-08-05",
       "headline": "Missed Tuesday's practice with a hamstring injury, considered minor",
-      "take": "No real concern for Eagles' established WR1 — day-to-day.",
+      "take": "No real concern for Eagles' established WR1 \u2014 day-to-day.",
       "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/devonta-smith-makai-lemon-injury-hamstring-eagles-training-camp/745330/",
       "tag": "injury"
     },
@@ -227,7 +267,7 @@
       "pos": "WR",
       "date": "2026-08-04",
       "headline": "Building on rookie breakout, draws praise from Sean Payton for confidence and maturity",
-      "take": "Consistently flashing alongside Marvin Mims Jr. — trending toward a bigger Year 2 role in Denver's passing game.",
+      "take": "Consistently flashing alongside Marvin Mims Jr. \u2014 trending toward a bigger Year 2 role in Denver's passing game.",
       "url": "https://denversports.com/nfl/denver-broncos/broncos-pat-bryant",
       "tag": "riser"
     },
@@ -297,7 +337,7 @@
       "pos": "WR",
       "date": "2026-08-03",
       "headline": "Missed Monday's practice with a quad strain, called minor by Rapoport",
-      "take": "Not believed serious, but adds to a banged-up Niners WR room already missing Ricky Pearsall (out for the year) — worth a short watch before drafting Evans at his current ADP.",
+      "take": "Not believed serious, but adds to a banged-up Niners WR room already missing Ricky Pearsall (out for the year) \u2014 worth a short watch before drafting Evans at his current ADP.",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-03/mike-evans-quad-not-practicing-on-monday",
       "tag": "injury"
     },
@@ -387,7 +427,7 @@
       "pos": "WR",
       "date": "2026-08-02",
       "headline": "Rapoport, Schefter: shoulder believed OK, avoided serious injury",
-      "take": "Downgrade the alarm from Saturday's cart-off — could return before Aug. 15 preseason opener",
+      "take": "Downgrade the alarm from Saturday's cart-off \u2014 could return before Aug. 15 preseason opener",
       "url": "https://x.com/RapSheet/status/2083648790322434079",
       "tag": "injury"
     },
@@ -437,7 +477,7 @@
       "pos": "WR",
       "date": "2026-08-01",
       "headline": "Carted off practice with shoulder injury, same shoulder as surgery",
-      "take": "Same shoulder that needed labrum surgery in January — real risk until Chiefs confirm it's not structural.",
+      "take": "Same shoulder that needed labrum surgery in January \u2014 real risk until Chiefs confirm it's not structural.",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/xavier-worthy-left-chiefs-practice-with-a-shoulder-injury",
       "tag": "injury"
     },
@@ -447,7 +487,7 @@
       "pos": "WR",
       "date": "2026-08-01",
       "headline": "Carted off same practice as Worthy with shin bruise, nothing torn/broken",
-      "take": "Per Schefter, tests came back clean — expected to be fine after building real 1st-team trust with Mahomes.",
+      "take": "Per Schefter, tests came back clean \u2014 expected to be fine after building real 1st-team trust with Mahomes.",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/reports-chiefs-wr-cyrus-allen-day-to-day-with-shin-bruise",
       "tag": "injury"
     },
@@ -467,7 +507,7 @@
       "pos": "QB",
       "date": "2026-08-01",
       "headline": "Splits reps with Murray again; O'Connell has QB1 decision date in mind",
-      "take": "Battle still unresolved into camp's 2nd week — don't lock in either QB's fantasy price until a starter is named.",
+      "take": "Battle still unresolved into camp's 2nd week \u2014 don't lock in either QB's fantasy price until a starter is named.",
       "url": "https://www.startribune.com/minnesota-vikings-training-camp-practice-live-updates-kyler-murray-jj-mccarthy-eagan/601873236",
       "tag": "role"
     },

@@ -32,8 +32,10 @@
 # ESPN/CBS/Yahoo values are stored as SEQUENTIAL RANK ORDER (1..N by that
 # site's own EDITORIAL rank — the order its player list displays, not crowd
 # ADP; switched 2026-08-06) — emitted as round.pick so inject_rankings.py's
-# parse_pickadp reproduces the rank as an int. Underdog (and Sleeper) have no
-# editorial ranks, so those stay ADP-based.
+# parse_pickadp reproduces the rank as an int. K/DST are included at their
+# verbatim list slots (2026-08-06 pm) — no position stripping, every rank is
+# the player's true position in that site's full list. Underdog (and Sleeper)
+# have no editorial ranks, so those stay ADP-based.
 #
 # Sleeper (Sleeper*.csv) has NO public endpoint — those files are left
 # untouched and re-injected as-is, so the manual refresh cadence still works.
@@ -93,6 +95,21 @@ ESPN_TEAMS = {
     15: 'MIA', 16: 'MIN', 17: 'NE', 18: 'NO', 19: 'NYG', 20: 'NYJ',
     21: 'PHI', 22: 'ARI', 23: 'PIT', 24: 'LAC', 25: 'SF', 26: 'SEA',
     27: 'TB', 28: 'WAS', 29: 'CAR', 30: 'JAX', 33: 'BAL', 34: 'HOU',
+}
+# abbr -> full team name, for building d.js-canonical D/ST names
+# ("Denver Broncos D/ST") from ESPN's "Broncos D/ST" / Yahoo's "Denver".
+TEAM_FULL = {
+    'ARI': 'Arizona Cardinals', 'ATL': 'Atlanta Falcons', 'BAL': 'Baltimore Ravens',
+    'BUF': 'Buffalo Bills', 'CAR': 'Carolina Panthers', 'CHI': 'Chicago Bears',
+    'CIN': 'Cincinnati Bengals', 'CLE': 'Cleveland Browns', 'DAL': 'Dallas Cowboys',
+    'DEN': 'Denver Broncos', 'DET': 'Detroit Lions', 'GB': 'Green Bay Packers',
+    'HOU': 'Houston Texans', 'IND': 'Indianapolis Colts', 'JAX': 'Jacksonville Jaguars',
+    'KC': 'Kansas City Chiefs', 'LAC': 'Los Angeles Chargers', 'LAR': 'Los Angeles Rams',
+    'LV': 'Las Vegas Raiders', 'MIA': 'Miami Dolphins', 'MIN': 'Minnesota Vikings',
+    'NE': 'New England Patriots', 'NO': 'New Orleans Saints', 'NYG': 'New York Giants',
+    'NYJ': 'New York Jets', 'PHI': 'Philadelphia Eagles', 'PIT': 'Pittsburgh Steelers',
+    'SEA': 'Seattle Seahawks', 'SF': 'San Francisco 49ers', 'TB': 'Tampa Bay Buccaneers',
+    'TEN': 'Tennessee Titans', 'WAS': 'Washington Commanders',
 }
 
 # 2026-08-06: switched from the draft-averages page (crowd ADP) to the PPR
@@ -222,13 +239,26 @@ def pull_espn():
             pos = ESPN_POS.get(pl.get('defaultPositionId'))
             rank = ((pl.get('draftRanksByRankType') or {}).get('PPR') or {}).get('rank')
             name = (pl.get('fullName') or '').strip()
-            if pos not in VALID_POS or not name or not rank or rank <= 0:
+            team = ESPN_TEAMS.get(pl.get('proTeamId'), '')
+            if pos not in VALID_POS and pos not in ('K', 'DST'):
                 continue
-            entries.append((rank, name, ESPN_TEAMS.get(pl.get('proTeamId'), ''), pos))
+            if not name or not rank or rank <= 0:
+                continue
+            if pos == 'DST':
+                # ESPN names defenses "Broncos D/ST" — rebuild the d.js-canonical
+                # "Denver Broncos D/ST" from the pro team id.
+                if team not in TEAM_FULL:
+                    continue
+                name = TEAM_FULL[team] + ' D/ST'
+            entries.append((rank, name, team, pos))
         entries.sort(key=lambda x: x[0])
-        if len(entries) < ESPN_MIN_ROWS:
-            print(f'  !! ESPN1QB.csv: only {len(entries)} rows (<{ESPN_MIN_ROWS}) — kept old file')
+        n_skill = sum(1 for e in entries if e[3] in VALID_POS)
+        if n_skill < ESPN_MIN_ROWS:
+            print(f'  !! ESPN1QB.csv: only {n_skill} skill rows (<{ESPN_MIN_ROWS}) — kept old file')
             return 0
+        # Verbatim full-list ranks for EVERYONE (K/DST included) since
+        # 2026-08-06 pm — each rank is the player's true slot in ESPN's own
+        # displayed list order, no K/DST stripping.
         rows = [[name, team, pos, overall_to_round_pick(i + 1), '0']
                 for i, (_, name, team, pos) in enumerate(entries)]
         write_csv('ESPN1QB.csv',
@@ -242,6 +272,9 @@ def pull_espn():
 
 # ---------------------------------------------------------------------------
 # Phase C — CBS expert-consensus rank (public PPR top200 rankings page)
+# NOTE: the top200 list is skill-only (verified 2026-08-06 — zero K/DST rows),
+# so the CBS column stays blank for K/DST. CBS's separate K/DST pages only
+# publish POSITIONAL ranks, which don't fit the overall-rank column scale.
 # ---------------------------------------------------------------------------
 
 def pull_cbs():
@@ -295,13 +328,24 @@ def pull_yahoo():
             pl = item.get('player') or {}
             name = ((pl.get('name') or {}).get('full') or '').strip()
             pos = pl.get('primary_position') or pl.get('display_position') or ''
-            if pos not in VALID_POS or not name:
-                continue
             team = (pl.get('editorial_team_abbr') or '').upper()
+            if pos == 'DEF':
+                # Yahoo names defenses by nickname ("Texans") — rebuild the
+                # d.js-canonical "Houston Texans D/ST" from the team abbr.
+                if team not in TEAM_FULL:
+                    continue
+                name, pos = TEAM_FULL[team] + ' D/ST', 'DST'
+            elif pos not in VALID_POS and pos != 'K':
+                continue
+            if not name:
+                continue
             entries.append((name, team, pos))  # API order = O-Rank order
-        if len(entries) < YAHOO_MIN_ROWS:
-            print(f'  !! Yahoo1QB.csv: only {len(entries)} rows (<{YAHOO_MIN_ROWS}) — kept old file')
+        n_skill = sum(1 for e in entries if e[2] in VALID_POS)
+        if n_skill < YAHOO_MIN_ROWS:
+            print(f'  !! Yahoo1QB.csv: only {n_skill} skill rows (<{YAHOO_MIN_ROWS}) — kept old file')
             return 0
+        # Same convention as ESPN: verbatim full O-Rank list slots for
+        # everyone, K/DST included — no stripping.
         rows = [[name, team, pos, overall_to_round_pick(i + 1), '0']
                 for i, (name, team, pos) in enumerate(entries)]
         write_csv('Yahoo1QB.csv',

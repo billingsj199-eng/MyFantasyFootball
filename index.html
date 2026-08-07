@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-06c" as="script">
+<link rel="preload" href="app.js?v=2026-08-06d" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -73,7 +73,7 @@
 <link rel="preload" href="data/combine_data.js?v=2026-04-25b" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-08-06b" as="script">
-<link rel="preload" href="data/d.js?v=2026-08-06c" as="script">
+<link rel="preload" href="data/d.js?v=2026-08-07" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-08-06a">
 
@@ -3671,7 +3671,7 @@ ADD TO CHROME
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
 <script src="data/_bundle_lookups.js?v=2026-08-06b" defer></script>
-<script src="data/d.js?v=2026-08-06c" defer></script>
+<script src="data/d.js?v=2026-08-07" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
 <!-- ep_retired.js (~795 KB) + daily_retired_pool.js DEFERRED (2026-07-10). EP_RETIRED is
@@ -3711,6 +3711,11 @@ ADD TO CHROME
      all typeof-guarded. Fired alongside _ensureProspectStats and awaited in the same
      async gates (_attachJmScores / rebuildAndRender). -->
 <script src="data/mike_clay_projections.js?v=2026-08-02" defer></script>
+<!-- Kicker stat history (nflverse 1999+, FG buckets/XP/finishes) + current FG
+     distance splits (ESPN). Feed the kicker card career table + FG SPLITS
+     section only — every reader is typeof-guarded. -->
+<script src="data/kicker_history.js?v=2026-08-06" defer></script>
+<script src="data/kicker_splits.js?v=2026-08-06" defer></script>
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
 <script src="data/player_weekly_sigma.js?v=2026-07-30" defer></script>
@@ -4974,7 +4979,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-06c"></script>
+<script defer src="app.js?v=2026-08-06d"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

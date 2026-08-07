@@ -1,6 +1,76 @@
 {
-  "updated": "2026-08-07T02:15:00Z",
+  "updated": "2026-08-07T16:15:00Z",
   "items": [
+    {
+      "player": "Ja'Tavion Sanders",
+      "team": "CAR",
+      "pos": "TE",
+      "date": "2026-08-06",
+      "headline": "Tweaks same ankle surgically repaired last Dec., still plays every snap of HOF Game's opening drive",
+      "take": "Not deemed serious, but a re-aggravation watch on a TE already fighting for reps in a muddled Carolina room.",
+      "url": "https://www.rotowire.com/football/headlines/jatavion-sanders-injury-injures-ankle-tuesday-632564",
+      "tag": "injury"
+    },
+    {
+      "player": "Chris Rodriguez Jr.",
+      "team": "JAX",
+      "pos": "RB",
+      "date": "2026-08-06",
+      "headline": "Busiest practice of camp, every carry positive as he pushes for the short-yardage/goal-line role",
+      "take": "Ramping up off offseason foot surgery but trending toward real complementary touches behind Jacksonville's early-down backs.",
+      "url": "https://www.rotoballer.com/player-news/chris-rodriguez-jr-pushing-for-goal-line-work/1904197",
+      "tag": "role"
+    },
+    {
+      "player": "Malik Benson",
+      "team": "LV",
+      "pos": "WR",
+      "date": "2026-08-06",
+      "headline": "6th-round rookie pulls ahead of Jack Bech and Dont'e Thornton Jr. for Raiders' WR3 job",
+      "take": "Deep-league/dynasty stash behind Tre Tucker and Jalen Nailor with real coach buy-in building.",
+      "url": "https://athlonsports.com/nfl/las-vegas-raiders/raiders-bech-thornton-depth-chart-benson",
+      "tag": "riser"
+    },
+    {
+      "player": "Jalen McMillan",
+      "team": "TB",
+      "pos": "WR",
+      "date": "2026-08-07",
+      "headline": "Sidelined all week with a knee issue, no timetable given by Todd Bowles",
+      "take": "Not believed serious, but an open-ended absence gives Egbuka and Godwin a modest near-term bump if it lingers.",
+      "url": "https://www.cbssports.com/fantasy/football/news/buccaneers-jalen-mcmillan-dealing-with-knee-issue/",
+      "tag": "injury"
+    },
+    {
+      "player": "Josh Jacobs",
+      "team": "GB",
+      "pos": "RB",
+      "date": "2026-08-06",
+      "headline": "Sits out Thursday's practice with a groin injury, not expected to be long-term",
+      "take": "Low concern for now - worth a quick recheck at the next practice report.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/josh-jacobs-out-of-practice-with-groin-injury-not-expected-to-be-long-term",
+      "tag": "injury"
+    },
+    {
+      "player": "Alec Pierce",
+      "team": "IND",
+      "pos": "WR",
+      "date": "2026-08-06",
+      "headline": "Steichen, Ballard still have no clarity on his return timeline from the PUP list",
+      "take": "Week 1 remains the stated goal, but the lack of a firm date is a mild yellow flag for Indy's WR1 entering camp's 2nd/3rd week.",
+      "url": "https://clutchpoints.com/nfl/indianapolis-colts/colts-news-alec-pierce-return-from-injury-mystery-after-gm-update",
+      "tag": "injury"
+    },
+    {
+      "player": "Kyler Murray",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-08-07",
+      "headline": "O'Connell reportedly targeting Aug. 14 to name a QB1 starter over J.J. McCarthy",
+      "take": "Murray remains the presumed favorite despite an even rep split, but don't price in either QB until it's official.",
+      "url": "https://thevikingage.com/minnesota-vikings-proof-needed-name-starting-qb-week-1",
+      "tag": "role"
+    },
     {
       "player": "Carson Beck",
       "team": "ARI",

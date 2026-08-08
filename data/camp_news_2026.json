@@ -1,6 +1,96 @@
 {
-"updated": "2026-08-08T02:10:45Z",
+"updated": "2026-08-08T16:10:18Z",
 "items": [
+{
+"player": "Marvin Mims Jr.",
+"team": "DEN",
+"pos": "WR",
+"date": "2026-08-07",
+"headline": "Leaves Friday's practice with leg/soft-tissue injury, flown back to Denver for evaluation",
+"take": "Severity still unclear -- Broncos called in workout WR depth as a precaution, re-check before locking in his role.",
+"url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-07/marvin-mims-leg-leaves-practice-early-on-friday",
+"tag": "injury"
+},
+{
+"player": "Isaiah Davis",
+"team": "NYJ",
+"pos": "RB",
+"date": "2026-08-07",
+"headline": "Out \"a couple weeks\" with a knee injury, per Aaron Glenn",
+"take": "Expected ready for the regular season -- low-end RB3 stash behind Hall/Allen, not an alarm.",
+"url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/jets-rb-isaiah-davis-will-miss-a-couple-weeks-with-a-knee-injury",
+"tag": "injury"
+},
+{
+"player": "Malik Nabers",
+"team": "NYG",
+"pos": "WR",
+"date": "2026-08-07",
+"headline": "Best-looking rehab practice of the summer, cutting hard off the surgically repaired knee",
+"take": "No firm return date yet, but the ACL/meniscus recovery trajectory keeps trending toward Week 1 availability.",
+"url": "https://www.bigblueview.com/new-york-giants-training-camp/167134/ny-giants-injury-news-malik-nabers-brian-burns-john-michael-schmitz-cam-skattebo",
+"tag": "riser"
+},
+{
+"player": "Caleb Douglas",
+"team": "MIA",
+"pos": "WR",
+"date": "2026-08-07",
+"headline": "Rookie 3rd-rounder drawing \"best receiver on the team\" praise through camp's first padded practices",
+"take": "With Tyreek Hill and Jaylen Waddle both gone, he has a genuinely open runway to real target share.",
+"url": "https://heavy.com/sports/nfl/miami-dolphins/caleb-douglas-training-camp-fantasy-nfl/",
+"tag": "riser"
+},
+{
+"player": "Jadarian Price",
+"team": "SEA",
+"pos": "RB",
+"date": "2026-08-07",
+"headline": "Continues to look like Seattle's clear lead back, getting used as a receiver too",
+"take": "With Kenneth Walker III in KC and Zach Charbonnet's ACL timeline unresolved, his path to a true RB1 role keeps solidifying.",
+"url": "https://www.draftsharks.com/fantasy-football-news/82156/jadarian-price-drawing-early-buzz-as-seahawks-camp-star",
+"tag": "riser"
+},
+{
+"player": "Deshaun Watson",
+"team": "CLE",
+"pos": "QB",
+"date": "2026-08-07",
+"headline": "Monken confirms preseason plan: Watson and Sanders each start one of the first two exhibition games",
+"take": "Decision not expected until after the Aug. 22 game vs. Buffalo -- don't price in his Week 1 outlook yet.",
+"url": "https://www.cbssports.com/nfl/news/browns-qb-battle-todd-monken-reveals-preseason-plan-shedeur-sanders-deshaun-watson/",
+"tag": "role"
+},
+{
+"player": "Shedeur Sanders",
+"team": "CLE",
+"pos": "QB",
+"date": "2026-08-07",
+"headline": "Will get a preseason start under Monken's structured Watson/Sanders evaluation plan",
+"take": "Internal conversation has quietly shifted his way, but nothing official until after the Bills preseason game.",
+"url": "https://www.cbssports.com/nfl/news/browns-qb-battle-todd-monken-reveals-preseason-plan-shedeur-sanders-deshaun-watson/",
+"tag": "role"
+},
+{
+"player": "Tarik Black",
+"team": "DET",
+"pos": "WR",
+"date": "2026-08-05",
+"headline": "Re-signed by Lions two days after being released",
+"take": "Depth-chart shuffle with minimal fantasy value, but fills a WR room now thinner at TE too.",
+"url": "https://www.fantasypros.com/nfl/news/600707/tarik-black-signs-with-lions.php",
+"tag": "transaction"
+},
+{
+"player": "Miles Kitselman",
+"team": "DET",
+"pos": "TE",
+"date": "2026-08-05",
+"headline": "Placed on injured reserve with a significant leg injury, out for the season",
+"take": "Deep TE depth piece behind Sam LaPorta -- negligible fantasy impact.",
+"url": "https://www.cbssports.com/fantasy/football/news/lions-miles-kitselman-placed-on-reserveinjured-list/",
+"tag": "injury"
+},
 {
 "player": "Jahmyr Gibbs",
 "team": "DET",

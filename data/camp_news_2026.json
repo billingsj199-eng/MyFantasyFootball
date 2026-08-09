@@ -1,6 +1,26 @@
 {
-  "updated": "2026-08-09T02:11:56Z",
+  "updated": "2026-08-09T16:14:00Z",
   "items": [
+    {
+      "player": "Carnell Tate",
+      "team": "TEN",
+      "pos": "WR",
+      "date": "2026-08-08",
+      "headline": "Hauls in ~65-yard TD bomb from Cam Ward, drawing early Offensive Rookie of the Year buzz",
+      "take": "4th overall pick's big-play chemistry with Ward is real -- climbing dynasty/rookie boards fast.",
+      "url": "https://atozsports.com/nfl/tennessee-titans-news/titans-camp-cam-ward-carnell-tate-connect-anthony-hill-saleh-simmons/",
+      "tag": "riser"
+    },
+    {
+      "player": "Kyler Murray",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-08-09",
+      "headline": "Now described as 'heavy favorite' for Week 1 job, taking ~2/3 of first-team reps over McCarthy",
+      "take": "Gap over McCarthy is widening beyond a coin-flip battle -- Murray's Week 1 QB1 outlook is firming up.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-07/murray-remains-the-heavy-favorite-to-be-qb1",
+      "tag": "role"
+    },
     {
       "player": "Jaylen Waddle",
       "team": "DEN",
@@ -27,7 +47,7 @@
       "pos": "RB",
       "date": "2026-08-08",
       "headline": "Rookie 4th-rounder earns notable praise from Sean Payton for early-down feel",
-      "take": "Pushing for short-yardage work behind Dobbins/Harvey — deep-league stash watch.",
+      "take": "Pushing for short-yardage work behind Dobbins/Harvey \u2014 deep-league stash watch.",
       "url": "https://predominantlyorange.com/broncos-jonah-coleman-just-earned-major-sean-payton-praise-at-camp-01kz9kzk9hbp",
       "tag": "riser"
     },
@@ -417,7 +437,7 @@
       "pos": "WR",
       "date": "2026-08-05",
       "headline": "Works on the side during Wednesday's practice, ramping up in early camp",
-      "take": "First real practice involvement since his 2025 multi-ligament knee injury — trajectory looks encouraging but no full-team timetable yet.",
+      "take": "First real practice involvement since his 2025 multi-ligament knee injury \u2014 trajectory looks encouraging but no full-team timetable yet.",
       "url": "https://www.cbssports.com/fantasy/football/news/texans-tank-dell-being-ramped-up/",
       "tag": "riser"
     },
@@ -447,7 +467,7 @@
       "pos": "WR",
       "date": "2026-08-05",
       "headline": "Missed Tuesday's practice with a hamstring injury, considered minor",
-      "take": "No real concern for Eagles' established WR1 — day-to-day.",
+      "take": "No real concern for Eagles' established WR1 \u2014 day-to-day.",
       "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/devonta-smith-makai-lemon-injury-hamstring-eagles-training-camp/745330/",
       "tag": "injury"
     },
@@ -507,7 +527,7 @@
       "pos": "WR",
       "date": "2026-08-04",
       "headline": "Building on rookie breakout, draws praise from Sean Payton for confidence and maturity",
-      "take": "Consistently flashing alongside Marvin Mims Jr. — trending toward a bigger Year 2 role in Denver's passing game.",
+      "take": "Consistently flashing alongside Marvin Mims Jr. \u2014 trending toward a bigger Year 2 role in Denver's passing game.",
       "url": "https://denversports.com/nfl/denver-broncos/broncos-pat-bryant",
       "tag": "riser"
     },
@@ -577,7 +597,7 @@
       "pos": "WR",
       "date": "2026-08-03",
       "headline": "Missed Monday's practice with a quad strain, called minor by Rapoport",
-      "take": "Not believed serious, but adds to a banged-up Niners WR room already missing Ricky Pearsall (out for the year) — worth a short watch before drafting Evans at his current ADP.",
+      "take": "Not believed serious, but adds to a banged-up Niners WR room already missing Ricky Pearsall (out for the year) \u2014 worth a short watch before drafting Evans at his current ADP.",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-03/mike-evans-quad-not-practicing-on-monday",
       "tag": "injury"
     },
@@ -667,7 +687,7 @@
       "pos": "WR",
       "date": "2026-08-02",
       "headline": "Rapoport, Schefter: shoulder believed OK, avoided serious injury",
-      "take": "Downgrade the alarm from Saturday's cart-off — could return before Aug. 15 preseason opener",
+      "take": "Downgrade the alarm from Saturday's cart-off \u2014 could return before Aug. 15 preseason opener",
       "url": "https://x.com/RapSheet/status/2083648790322434079",
       "tag": "injury"
     },
@@ -717,7 +737,7 @@
       "pos": "WR",
       "date": "2026-08-01",
       "headline": "Carted off practice with shoulder injury, same shoulder as surgery",
-      "take": "Same shoulder that needed labrum surgery in January — real risk until Chiefs confirm it's not structural.",
+      "take": "Same shoulder that needed labrum surgery in January \u2014 real risk until Chiefs confirm it's not structural.",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/xavier-worthy-left-chiefs-practice-with-a-shoulder-injury",
       "tag": "injury"
     },
@@ -727,7 +747,7 @@
       "pos": "WR",
       "date": "2026-08-01",
       "headline": "Carted off same practice as Worthy with shin bruise, nothing torn/broken",
-      "take": "Per Schefter, tests came back clean — expected to be fine after building real 1st-team trust with Mahomes.",
+      "take": "Per Schefter, tests came back clean \u2014 expected to be fine after building real 1st-team trust with Mahomes.",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/reports-chiefs-wr-cyrus-allen-day-to-day-with-shin-bruise",
       "tag": "injury"
     },
@@ -747,7 +767,7 @@
       "pos": "QB",
       "date": "2026-08-01",
       "headline": "Splits reps with Murray again; O'Connell has QB1 decision date in mind",
-      "take": "Battle still unresolved into camp's 2nd week — don't lock in either QB's fantasy price until a starter is named.",
+      "take": "Battle still unresolved into camp's 2nd week \u2014 don't lock in either QB's fantasy price until a starter is named.",
       "url": "https://www.startribune.com/minnesota-vikings-training-camp-practice-live-updates-kyler-murray-jj-mccarthy-eagan/601873236",
       "tag": "role"
     },

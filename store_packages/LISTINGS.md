@@ -14,13 +14,14 @@ Shared across all four listings:
   myfantasyfootball.co)
 - **Premium gate (v0.27.0/0.18.0/0.7.0/0.16.x):** all four extensions require sign-in + Premium on myfantasyfootball.co (site bridge writes the auth state to extension storage; lock screen otherwise). Disclose in the detailed description (done below); monetization happens entirely on your own site, which Chrome Web Store policy allows.
 - **Certifications:** check all three (no sale/transfer of user data, etc.)
-- **Assets per listing:** 128×128 icon (bundled `icons/icon-128.png`), ≥1
-  screenshot at 1280×800 or 640×400, small promo tile 440×280 (required for
-  some surfaces), optional marquee 1400×560.
-- Screenshot sources: each extension's harness renders the real panel without
-  a live league — `mock.html` (Sleeper/Underdog/ESPN season), `mock_draft.html`
-  / `mock_draftroom.html` (draft modes) served via the repo's launch.json
-  static servers.
+- **Assets: DONE — in `screenshots/`** (captured 2026-08-10 via `shot.html`
+  stage + headless Chrome, exact store sizes):
+  - 1280×800 screenshots: `underdog-draft.png`, `sleeper-season.png` (live
+    draft view), `espn-season.png`, `yahoo-draft.png` + `yahoo-season.png`
+  - 440×280 promo tiles: `tile-underdog/sleeper/espn/yahoo.png`
+  - Regenerate: serve the folder (`static` launch config) and run headless
+    Chrome against `store_packages/shot.html?src=<harness>&panel=<sel>&...`
+    (see the shot.html query params; `click=`/`drive=` advance the harness).
 
 ---
 

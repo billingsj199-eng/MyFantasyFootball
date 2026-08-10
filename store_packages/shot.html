@@ -1,0 +1,110 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>store screenshot stage</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+  #bg { position: fixed; inset: 0; background:
+    radial-gradient(1100px 700px at 85% 20%, var(--glow) 0%, transparent 60%),
+    linear-gradient(135deg, #0b0d12 0%, #12141c 55%, #0b0d12 100%); }
+  #grid { position: fixed; inset: 0; opacity: .35;
+    background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size: 44px 44px; }
+  #copy { position: fixed; left: 64px; top: 50%; transform: translateY(-50%); width: 560px; color: #e8eaf0; z-index: 1; }
+  #mark { font-size: 13px; font-weight: 800; letter-spacing: 3px; color: var(--accent); margin-bottom: 18px; }
+  #title { font-size: 44px; font-weight: 800; line-height: 1.12; margin-bottom: 14px; letter-spacing: -.5px; }
+  #tag { font-size: 17px; color: #aab0bf; line-height: 1.5; margin-bottom: 26px; }
+  .b { display: flex; gap: 10px; align-items: baseline; font-size: 15px; color: #cdd2de; margin-bottom: 12px; }
+  .b::before { content: "●"; color: var(--accent); font-size: 9px; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; z-index: 2; background: transparent; }
+</style>
+<div id="bg"></div><div id="grid"></div>
+<div id="copy">
+  <div id="mark">MYFANTASYFOOTBALL.CO</div>
+  <div id="title"></div>
+  <div id="tag"></div>
+  <div id="bullets"></div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const accent = q.get('accent') || '#7d2eff';
+  document.documentElement.style.setProperty('--accent', accent);
+  document.documentElement.style.setProperty('--glow', accent + '2e');
+  document.getElementById('title').textContent = q.get('title') || '';
+  document.getElementById('tag').textContent = q.get('tag') || '';
+  ['b1', 'b2', 'b3', 'b4'].forEach((k) => {
+    const v = q.get(k);
+    if (!v) return;
+    const d = document.createElement('div');
+    d.className = 'b';
+    const s = document.createElement('span');
+    s.textContent = v;
+    d.appendChild(s);
+    document.getElementById('bullets').appendChild(d);
+  });
+
+  let fr = null;
+  if (q.get('src')) {
+    fr = document.createElement('iframe');
+    fr.src = q.get('src');
+    document.body.appendChild(fr);
+  } else {
+    // tile mode: centered wordmark + title only
+    const c = document.getElementById('copy');
+    c.style.left = '32px'; c.style.width = 'calc(100% - 64px)'; c.style.textAlign = 'center';
+    document.getElementById('mark').style.marginBottom = '10px';
+    document.getElementById('title').style.fontSize = '30px';
+    document.getElementById('tag').style.fontSize = '13px';
+    document.getElementById('tag').style.marginBottom = '0';
+    document.title = 'STAGED';
+  }
+
+  const panelSel = q.get('panel') || '#mff-sidebar';
+  const waitMs = parseInt(q.get('wait') || '6000', 10);
+
+  function drive(doc) {
+    const d = q.get('drive');
+    if (d === 'ud') { // underdog: advance the mock draft to mid-rounds
+      const til = doc.getElementById('auto-til');
+      const a5 = doc.getElementById('auto5');
+      try { if (til) til.click(); } catch (_) {}
+      try { if (a5) { a5.click(); a5.click(); a5.click(); } } catch (_) {}
+      try { if (til) til.click(); } catch (_) {}
+    }
+    // click elements by visible text, in order (comma-separated), 500ms apart
+    const clicks = (q.get('click') || '').split(',').filter(Boolean);
+    clicks.forEach((txt, i) => {
+      setTimeout(() => {
+        const els = doc.querySelectorAll('button, [role="button"], .mff-tab, [data-t], [data-sntab]');
+        for (const el of els) {
+          if (el.textContent.trim().toUpperCase().indexOf(txt.trim().toUpperCase()) === 0) { el.click(); break; }
+        }
+      }, 300 + i * 500);
+    });
+    const tab = q.get('tab'); // click a panel tab by its visible text
+    if (tab) {
+      const els = doc.querySelectorAll(panelSel + ' [data-t], ' + panelSel + ' .mff-tab, ' + panelSel + ' [data-sntab]');
+      for (const el of els) {
+        if (el.textContent.trim().toUpperCase().indexOf(tab.toUpperCase()) === 0) { el.click(); break; }
+      }
+    }
+  }
+
+  function stage() {
+    if (!fr) return;
+    let doc;
+    try { doc = fr.contentDocument; } catch (e) { return; }
+    if (!doc || !doc.body) return;
+    drive(doc);
+    setTimeout(() => {
+      const sty = doc.createElement('style');
+      sty.textContent =
+        'body > *:not(' + panelSel + '){visibility:hidden!important}' +
+        panelSel + '{visibility:visible!important}' +
+        'html,body{background:transparent!important;overflow:hidden!important}';
+      doc.head.appendChild(sty);
+      document.title = 'STAGED';
+    }, parseInt(q.get('post') || '1800', 10));
+  }
+  setTimeout(stage, waitMs);
+</script>

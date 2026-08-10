@@ -42154,8 +42154,18 @@ Rules:
 
   // ESPN name → D[] canonical name. ESPN carries suffixes ("Marvin Harrison
   // Jr.") and punctuated initials ("D.J. Moore"); _mtLookupD already handles
-  // punctuation, this adds suffix strip/add fallbacks. Unmatched players keep
-  // their raw ESPN name so the roster still lists them (they score 0).
+  // punctuation, this adds suffix strip/add + first-name nickname fallbacks.
+  // Unmatched players keep their raw ESPN name so the roster still lists
+  // them (they score 0).
+  const _ESPN_NICK = {
+    Kenny: 'Kenneth', Kenneth: 'Kenny',
+    Mitch: 'Mitchell', Mitchell: 'Mitch',
+    Cam: 'Cameron', Cameron: 'Cam',
+    Gabe: 'Gabriel', Gabriel: 'Gabe',
+    Marquise: 'Hollywood', Hollywood: 'Marquise',
+    Nate: 'Nathaniel', Nathaniel: 'Nate',
+    Josh: 'Joshua', Joshua: 'Josh'
+  };
   function _mtResolveEspnName(name) {
     if (!name) return null;
     let d = _mtLookupD(name);
@@ -42163,6 +42173,16 @@ Rules:
       const stripped = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '');
       if (stripped !== name) d = _mtLookupD(stripped);
       else d = _mtLookupD(name + ' Jr.');
+      if (!d) {
+        // Nickname fallback: swap the first name (Kenny Gainwell ↔ Kenneth
+        // Gainwell) on both the raw and suffix-stripped forms.
+        for (const base of stripped !== name ? [name, stripped] : [name]) {
+          const parts = base.split(' ');
+          const alt = _ESPN_NICK[parts[0]];
+          if (alt) d = _mtLookupD([alt].concat(parts.slice(1)).join(' '));
+          if (d) break;
+        }
+      }
     }
     return d ? { name: d.n, matched: true } : { name: name, matched: false };
   }

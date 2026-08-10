@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MFF Yahoo Helper",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Draft assistant + season helper for Yahoo leagues: live pick recs, optimal lineups, waivers, season sims, and league export.",
   "permissions": [
     "storage"
@@ -56,6 +56,18 @@
       "js": [
         "mff-bridge.js"
       ],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://myfantasyfootball.co/*",
+        "https://www.myfantasyfootball.co/*"
+      ],
+      "js": [
+        "mff-page-user.js"
+      ],
+      "world": "MAIN",
       "run_at": "document_idle",
       "all_frames": false
     }

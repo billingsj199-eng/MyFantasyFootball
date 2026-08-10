@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MFF Sleeper Helper",
-  "version": "0.26.9",
+  "version": "0.27.0",
   "description": "Draft + season helper for Sleeper leagues: live pick recs, optimal lineups, waiver upgrades, and roster values from Jack's boards.",
   "permissions": [
     "storage",
@@ -35,6 +35,29 @@
       "css": [
         "sidebar.css"
       ],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://myfantasyfootball.co/*",
+        "https://www.myfantasyfootball.co/*"
+      ],
+      "js": [
+        "mff-bridge.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://myfantasyfootball.co/*",
+        "https://www.myfantasyfootball.co/*"
+      ],
+      "js": [
+        "mff-page-user.js"
+      ],
+      "world": "MAIN",
       "run_at": "document_idle",
       "all_frames": false
     }

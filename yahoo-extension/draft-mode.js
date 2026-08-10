@@ -36,6 +36,48 @@
 
   const MOCK = window.MFF_DRAFT_MOCK || null;
 
+  // ---------- MFF premium gate (mirrors the Underdog helper's) ----------
+  // mff-page-user.js (MAIN world on the MFF site) + mff-bridge.js write the
+  // signed-in user + premium flag to chrome.storage 'mff_user' whenever an
+  // MFF tab is open. No fresh premium user (24h TTL) = lock screen instead of
+  // the panel and the on-page decorators stay off. Harness MOCK bypasses
+  // unless window.__MFF_GATE_TEST forces the gate on for testing.
+  const GATE_TTL_MS = 24 * 60 * 60 * 1000;
+  let _gateUser = null;
+  function gateAllowed() {
+    if (MOCK && !window.__MFF_GATE_TEST) return true;
+    const u = _gateUser;
+    return !!(u && u.premium && u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS);
+  }
+  function gateLockHTML() {
+    const u = _gateUser;
+    const signed = !!(u && u.email);
+    return '<div style="padding:26px 16px;text-align:center;font-size:12px;line-height:1.5;color:#e5e7eb">' +
+      '<div style="font-size:26px">\ud83d\udd12</div>' +
+      '<div style="font-weight:800;font-size:13px;margin:6px 0">MFF YAHOO HELPER — Premium</div>' +
+      '<div style="color:#9aa0ab;margin-bottom:10px">' + (signed
+        ? 'Signed in as ' + String(u.email).replace(/[&<>"]/g, '') + ' — a Premium account is required.'
+        : 'Sign in at myfantasyfootball.co with a Premium account to unlock.') + '</div>' +
+      '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#7d2eff;color:#fff;border-radius:6px;padding:7px 14px;font-weight:700;text-decoration:none;font-size:12px">' +
+      (signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
+      '<div style="color:#6b7280;font-size:10px;margin-top:10px">Unlocks automatically once Premium is active — just open the site while signed in.</div></div>';
+  }
+  function gateInit(onChange) {
+    try {
+      chrome.storage.local.get(['mff_user'], (res) => {
+        _gateUser = (res && res.mff_user) || null;
+        onChange();
+      });
+      chrome.storage.onChanged.addListener((ch, area) => {
+        if (area !== 'local' || !ch.mff_user) return;
+        _gateUser = ch.mff_user.newValue || null;
+        onChange();
+      });
+      setInterval(onChange, 60 * 1000); // TTL can lapse without a storage event
+    } catch (_) { onChange(); }
+  }
+  window.__mffDraftGate = { allowed: gateAllowed, set: (u) => { _gateUser = u; } };
+
   function urlParts() {
     if (MOCK) return { leagueId: MOCK.leagueId, teamId: MOCK.teamId };
     const m = location.pathname.match(/^\/draftclient\/f1\/(\d+)\/(\d+)/);
@@ -1104,6 +1146,10 @@
 
   function render() {
     if (!root || !st.ready) return;
+    if (!gateAllowed()) {
+      root.innerHTML = '<div style="' + CSS.head + '"><b style="color:#c9a4ff;letter-spacing:.6px">MFF YAHOO HELPER</b></div>' + gateLockHTML();
+      return;
+    }
     const until = picksUntilMine();
     const onClock = teamLabel(st.onClockTeam);
     const nextNo = nextPickNo();
@@ -1222,6 +1268,7 @@
   }
 
   // ---------- boot ----------
+  gateInit(() => { try { render(); } catch (_) {} });
   Promise.all([
     getJson(API + 'settings/nfl/' + st.leagueId + '?format=rawjson').then((j) => applySettings(j.service || j)),
     getJson(API + 'teams/nfl/' + st.leagueId + '?format=rawjson').then((j) => applyTeams(j.service || j)),

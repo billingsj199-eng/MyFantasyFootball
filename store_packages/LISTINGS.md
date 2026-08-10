@@ -12,6 +12,7 @@ Shared across all four listings:
 - **Remote code:** No (all JS is bundled; network calls fetch DATA only — JSON
   from the fantasy platform's own API, Sleeper's public API, and
   myfantasyfootball.co)
+- **Premium gate (v0.27.0/0.18.0/0.7.0/0.16.x):** all four extensions require sign-in + Premium on myfantasyfootball.co (site bridge writes the auth state to extension storage; lock screen otherwise). Disclose in the detailed description (done below); monetization happens entirely on your own site, which Chrome Web Store policy allows.
 - **Certifications:** check all three (no sale/transfer of user data, etc.)
 - **Assets per listing:** 128×128 icon (bundled `icons/icon-128.png`), ≥1
   screenshot at 1280×800 or 640×400, small promo tile 440×280 (required for
@@ -46,9 +47,9 @@ no new permissions, so mention in the "What's new" notes only if asked.
 
 ---
 
-## 2. MFF Sleeper Helper — NEW listing (v0.26.9)
+## 2. MFF Sleeper Helper — NEW listing (v0.27.0)
 
-Upload: `mff-sleeper-helper-0.26.9.zip`
+Upload: `mff-sleeper-helper-0.27.0.zip`
 
 **Short summary (130 chars, matches manifest):**
 ```
@@ -72,6 +73,9 @@ SEASON MODE
 
 HOW IT WORKS
 Draft and league state come from Sleeper's public API — the extension never scrapes your credentials. Rankings come bundled and can sync with your account at myfantasyfootball.co. Everything is processed and stored locally in Chrome storage.
+
+REQUIREMENTS
+A myfantasyfootball.co account with Premium is required — the helper unlocks automatically once you're signed in on the site. Rankings and recommendations are powered by that account.
 
 Not affiliated with Sleeper.
 ```
@@ -99,9 +103,9 @@ Sleeper's API to power recommendations, stored locally only). Everything else No
 
 ---
 
-## 3. MFF ESPN Helper — NEW listing (v0.17.10)
+## 3. MFF ESPN Helper — NEW listing (v0.18.0)
 
-Upload: `mff-espn-helper-0.17.10.zip`
+Upload: `mff-espn-helper-0.18.0.zip`
 
 **Short summary (129 chars, matches manifest):**
 ```
@@ -127,6 +131,9 @@ SEASON MODE
 HOW IT WORKS
 League data comes from ESPN's own fantasy API for your logged-in account; public player data (byes, injuries, actuals) from Sleeper's public API. Rankings are bundled and can sync with myfantasyfootball.co. All processing is local.
 
+REQUIREMENTS
+A myfantasyfootball.co account with Premium is required — the helper unlocks automatically once you're signed in on the site. Rankings and recommendations are powered by that account.
+
 Not affiliated with ESPN.
 ```
 
@@ -151,9 +158,9 @@ Display draft-pick recommendations and lineup/waiver/season-sim advice on ESPN F
 
 ---
 
-## 4. MFF Yahoo Helper — NEW listing (v0.6.1)
+## 4. MFF Yahoo Helper — NEW listing (v0.7.0)
 
-Upload: `mff-yahoo-helper-0.6.1.zip`
+Upload: `mff-yahoo-helper-0.7.0.zip`
 
 **Short summary (124 chars, matches manifest):**
 ```
@@ -177,6 +184,9 @@ SEASON MODE
 
 HOW IT WORKS
 League settings and players come from Yahoo's own fantasy API for your logged-in league; the pick feed passively listens to the draft room's own connection (nothing extra is opened). Public NFL data from Sleeper's public API. Rankings are bundled and sync with myfantasyfootball.co. All processing is local.
+
+REQUIREMENTS
+A myfantasyfootball.co account with Premium is required — the helper unlocks automatically once you're signed in on the site. Rankings and recommendations are powered by that account.
 
 Not affiliated with Yahoo.
 ```

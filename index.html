@@ -2259,7 +2259,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative">
 <div style="position:absolute;top:10px;right:10px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">ESPN LEAGUE</div>
-<div id="mtEspnHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Paste your ESPN league ID or league URL. Private leagues sync via the MFF ESPN extension instead.</div>
+<div id="mtEspnHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Paste your ESPN league ID or league URL. Private leagues sync via the <a data-ext-store="espn" target="_blank" rel="noopener">MFF ESPN extension</a> instead.</div>
 <div style="display:flex;gap:6px">
 <input type="text" id="mtEspnLeagueId" placeholder="League ID or fantasy.espn.com URL" style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem">
 <button id="mtEspnImportBtn" onclick="window._mtImportEspnById()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">IMPORT</button>
@@ -2272,7 +2272,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative">
 <div style="position:absolute;top:10px;right:10px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">YAHOO LEAGUE</div>
-<div id="mtYahooHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Install the MFF Yahoo extension, open your league on football.fantasysports.yahoo.com, and click "Export league to MFF" — synced leagues appear here.</div>
+<div id="mtYahooHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Install the <a data-ext-store="yahoo" target="_blank" rel="noopener">MFF Yahoo extension</a>, open your league on football.fantasysports.yahoo.com, and click "Export league to MFF" — synced leagues appear here.</div>
 <div id="mtYahooLeagueList"></div>
 <div id="mtYahooStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
 </div>
@@ -5285,5 +5285,36 @@ window.addEventListener('load', function() {
 <div class="gw-share-copied" id="gwShareCopied">Copied to clipboard!</div>
 </div>
 </div>
+<script>
+// Chrome Web Store listing URLs for the MFF extensions. Underdog is live;
+// paste each detail URL here after its listing is approved — every
+// <a data-ext-store="..."> on the page turns into a store link automatically
+// (until then those anchors render as plain text).
+window.MFF_EXT_STORE = {
+  underdog: 'https://chromewebstore.google.com/detail/mff-underdog-draft-helper/jflkoplljldeahkdlagncceajpgemngi',
+  espn: '',    // MFF ESPN Helper — pending Web Store approval
+  yahoo: '',   // MFF Yahoo Helper — pending Web Store approval
+  sleeper: ''  // MFF Sleeper Helper — pending Web Store approval
+};
+(function () {
+  function wire() {
+    document.querySelectorAll('a[data-ext-store]').forEach(function (a) {
+      var url = window.MFF_EXT_STORE[a.getAttribute('data-ext-store')] || '';
+      if (url) {
+        a.href = url;
+        a.style.color = 'var(--accent)';
+        a.style.fontWeight = '600';
+      } else {
+        a.removeAttribute('href'); // renders as plain text until the listing exists
+        a.style.color = 'inherit';
+        a.style.textDecoration = 'none';
+        a.style.cursor = 'inherit';
+      }
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+  else wire();
+})();
+</script>
 </body>
 </html>

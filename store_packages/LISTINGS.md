@@ -29,11 +29,38 @@ Shared across all four listings:
 
 Upload: `mff-underdog-draft-helper-0.16.4.zip`
 
-The existing listing copy in `underdog-extension/CHROME_STORE_SUBMISSION.md`
-is still accurate EXCEPT the domain: replace every `myfantasyfootball.org`
-with `www.myfantasyfootball.co` (privacy URL, detailed description, host
-justification — the manifest already carries both hosts plus
-`firestore.googleapis.com`). Add to the host justification:
+Paste-ready replacements for the existing listing (the old copy in
+`underdog-extension/CHROME_STORE_SUBMISSION.md` references the dead `.org`
+domain AND says the helper works "free without sign-in" — no longer true
+since the premium gate).
+
+**Detailed description (replaces the old one):**
+```
+The MFF Underdog Draft Helper is a Chrome extension that adds a live recommendation sidebar to your Underdog Fantasy drafts. Built for Best Ball Mania, it surfaces the best pick on your clock by combining Jack's rankings with a BBM advance-rate optimizer and statistical shrinkage so small-sample builds don't dominate.
+
+WHAT IT SHOWS LIVE
+• Best Player Available — value-weighted using Jack's rankings + Underdog ADP
+• Stacking analysis — flags QB+pass-catcher pairings on your roster
+• True-cliff milestones — get warned when a position is about to fall off
+• Recency-weighted historical data — recent BBM seasons matter more
+• Pick-by-rank-by-round priors so the tool understands draft context, not just BPA
+
+HOW IT WORKS
+The sidebar reads draft state from the Underdog page and matches it against rankings synced from your account at myfantasyfootball.co. All data stays on your computer in Chrome's local storage — nothing is transmitted to a third-party server.
+
+REQUIREMENTS
+A myfantasyfootball.co account with Premium is required — the helper unlocks automatically once you're signed in on the site. An active Underdog Fantasy account (the extension reads draft state from Underdog's own pages).
+
+PRIVACY
+Full privacy policy at https://www.myfantasyfootball.co/privacy.html. We don't collect, transmit, or share user data.
+
+Not affiliated with Underdog Fantasy.
+```
+
+**Privacy policy URL:** `https://www.myfantasyfootball.co/privacy.html`
+
+In the permission justifications, replace `myfantasyfootball.org` with
+`myfantasyfootball.co` wherever it appears, and add to the host justification:
 
 ```
 firestore.googleapis.com: the user's saved rankings on myfantasyfootball.co

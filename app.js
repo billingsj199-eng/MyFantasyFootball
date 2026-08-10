@@ -44376,28 +44376,12 @@ Rules:
     const render = (payload) => {
       const drafts = (payload && payload.drafts) ? payload.drafts.slice() : [];
       if (!drafts.length) { sect.style.display = 'none'; return; }
-      // Most recent first — dates are ISO-ish strings, string compare is fine.
-      drafts.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
-      const cards = drafts.slice(0, 5).map(d => {
-        const picks = d.picks || [];
-        const first3 = picks.slice(0, 3).map(p => p.name).filter(Boolean).join(', ');
-        const fee = (parseFloat(d.fee) > 0) ? ('$' + parseFloat(d.fee)) : '';
-        // Bare YYYY-MM-DD parses as UTC midnight and shifts a day back in
-        // US timezones — pin it to local midnight instead.
-        const when = d.date ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(d.date) ? d.date + 'T00:00:00' : d.date) : null;
-        const dateStr = (when && !isNaN(when)) ? when.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
-        const pickLabel = picks.length + (picks.length === 1 ? ' pick' : ' picks');
-        return '<div class="jt-card" onclick="window._jtOpenJacksPortfolio()">' +
-          '<div class="jt-card-label">' + _jtEsc([dateStr, fee].filter(Boolean).join(' · ') || 'DRAFT') + '</div>' +
-          '<div class="jt-card-name">' + _jtEsc(d.tournament || 'Underdog Draft') + '</div>' +
-          '<div class="jt-card-meta">' + _jtEsc(pickLabel + (first3 ? ' · ' + first3 : '')) + '</div>' +
-        '</div>';
-      }).join('');
+      // Individual draft cards removed 2026-08-10 (Jack's request) — the
+      // panel is just the portfolio link now.
       const total = payload.numDrafts || drafts.length;
-      const viewAll = '<div class="jt-card jt-card-empty" onclick="window._jtOpenJacksPortfolio()" style="display:flex;flex-direction:column;justify-content:center;text-align:center">' +
+      grid.innerHTML = '<div class="jt-card jt-card-empty" onclick="window._jtOpenJacksPortfolio()" style="display:flex;flex-direction:column;justify-content:center;text-align:center;grid-column:1/-1">' +
         '<div class="jt-card-label" style="margin-bottom:2px">VIEW FULL PORTFOLIO</div>' +
         '<div class="jt-card-meta">' + total + ' drafts &rarr;</div></div>';
-      grid.innerHTML = cards + viewAll;
       sect.style.display = 'block';
     };
 

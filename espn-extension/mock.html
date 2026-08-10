@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MFF ESPN Import — mock harness</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 24px; }
+  h1 { font-size: 18px; color: #fbbf24; }
+  pre { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; overflow: auto; font-size: 12px; }
+  .pass { color: #22c55e; } .fail { color: #ef4444; }
+</style>
+</head>
+<body>
+<h1>ESPN normalize.js — mock harness</h1>
+<p>Feeds a canned ESPN v3 league payload (the exact shape of
+<code>?view=mTeam&amp;view=mRoster&amp;view=mSettings</code>) through
+<code>normalizeEspnLeague()</code>. No ESPN session or extension load needed —
+open this file directly, or via the repo dev server.</p>
+<div id="results"></div>
+<h1>Normalized output</h1>
+<pre id="out"></pre>
+
+<script src="normalize.js"></script>
+<script>
+// Canned ESPN league: 2 teams, mixed name formats, half-PPR, superflex (OP
+// slot), records, one empty roster. SWID passed as second arg → team 1 is mine.
+const RAW = {
+  id: 12345678,
+  seasonId: 2026,
+  settings: {
+    name: "Test League of Record",
+    scoringSettings: { scoringItems: [
+      { statId: 42, points: 0.04 },
+      { statId: 53, points: 0.5 }        // receptions → half-PPR
+    ]},
+    rosterSettings: { lineupSlotCounts: {
+      "0": 1, "2": 2, "4": 2, "6": 1, "7": 1, "23": 1, "16": 1, "17": 1,
+      "20": 6, "21": 2   // 21 = IR, must NOT appear in rosterPositions
+    }},
+    draftSettings: { keeperCount: 0 }
+  },
+  members: [
+    { id: "{GUID-1}", displayName: "jack_b", firstName: "Jack", lastName: "B" },
+    { id: "{GUID-2}", firstName: "Other", lastName: "Manager" }
+  ],
+  teams: [
+    {
+      id: 1, name: "Bijan Mustard", owners: ["{GUID-1}"],
+      record: { overall: { wins: 8, losses: 6, pointsFor: 1543.72 } },
+      roster: { entries: [
+        { playerPoolEntry: { player: { id: 4430807, fullName: "Bijan Robinson", defaultPositionId: 2, proTeamId: 1 } } },
+        { playerPoolEntry: { player: { id: 4262921, fullName: "Justin Jefferson", defaultPositionId: 3, proTeamId: 16 } } },
+        { playerPoolEntry: { player: { id: 3918298, fullName: "Josh Allen", defaultPositionId: 1, proTeamId: 2 } } },
+        { playerPoolEntry: { player: { id: -16033, fullName: "Ravens D/ST", defaultPositionId: 16, proTeamId: 33 } } }
+      ]}
+    },
+    {
+      id: 2, location: "Old Format", nickname: "Squad", owners: ["{GUID-2}"],
+      roster: { entries: [] }              // pre-draft / empty team
+    }
+  ]
+};
+
+const norm = window.MFF_ESPN.normalizeEspnLeague(RAW, "{guid-1}"); // case/braces-insensitive SWID
+const rp = norm.rosterPositions;
+const checks = [
+  ["returns an object",            !!norm],
+  ["platform espn",                norm.platform === "espn"],
+  ["leagueId string",              norm.leagueId === "12345678"],
+  ["league name",                  norm.name === "Test League of Record"],
+  ["scoring half-PPR",             norm.scoring === "half" && norm.pprValue === 0.5],
+  ["2 teams",                      norm.teamCount === 2],
+  ["drafted flag (roster exists)", norm.drafted === true],
+  ["modern team name",             norm.teams[0].name === "Bijan Mustard"],
+  ["location+nickname fallback",   norm.teams[1].name === "Old Format Squad"],
+  ["owner displayName",            norm.teams[0].owner === "jack_b"],
+  ["owner first+last fallback",    norm.teams[1].owner === "Other Manager"],
+  ["my team via SWID",             norm.teams[0].isMine === true && norm.teams[1].isMine === false],
+  ["record mapped",                norm.teams[0].wins === 8 && norm.teams[0].losses === 6 && norm.teams[0].fpts === 1543.72],
+  ["missing record → zeros",       norm.teams[1].wins === 0 && norm.teams[1].fpts === 0],
+  ["RB mapped",                    norm.teams[0].roster[0].pos === "RB" && norm.teams[0].roster[0].team === "ATL"],
+  ["WR mapped",                    norm.teams[0].roster[1].pos === "WR" && norm.teams[0].roster[1].team === "MIN"],
+  ["QB mapped",                    norm.teams[0].roster[2].pos === "QB" && norm.teams[0].roster[2].team === "BUF"],
+  ["D/ST full site name",          norm.teams[0].roster[3].pos === "D/ST" && norm.teams[0].roster[3].name === "Baltimore Ravens D/ST" && norm.teams[0].roster[3].team === "BAL"],
+  ["espnId preserved",             norm.teams[0].roster[0].espnId === 4430807],
+  ["empty roster ok",              norm.teams[1].roster.length === 0],
+  ["rosterPositions built",        JSON.stringify(rp) === JSON.stringify(["QB","RB","RB","WR","WR","TE","SUPER_FLEX","FLEX","DEF","K","BN","BN","BN","BN","BN","BN"])],
+  ["IR excluded",                  rp.length === 16],
+  ["superflex detected",           norm.sf === true],
+  ["not keeper",                   norm.keeper === false],
+  ["garbage input → null",         window.MFF_ESPN.normalizeEspnLeague({ nope: 1 }) === null]
+];
+
+const res = document.getElementById("results");
+let passed = 0;
+checks.forEach(([label, ok]) => {
+  if (ok) passed++;
+  const div = document.createElement("div");
+  div.className = ok ? "pass" : "fail";
+  div.textContent = (ok ? "PASS  " : "FAIL  ") + label;
+  res.appendChild(div);
+});
+const hdr = document.createElement("div");
+hdr.style.cssText = "margin-top:8px;font-weight:700";
+hdr.className = passed === checks.length ? "pass" : "fail";
+hdr.textContent = passed + "/" + checks.length + " checks passed";
+res.appendChild(hdr);
+document.title = (passed === checks.length ? "PASS " : "FAIL ") + passed + "/" + checks.length + " — MFF ESPN mock";
+document.getElementById("out").textContent = JSON.stringify(norm, null, 2);
+</script>
+</body>
+</html>

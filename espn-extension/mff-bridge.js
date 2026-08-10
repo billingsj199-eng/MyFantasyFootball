@@ -1,0 +1,40 @@
+/* MFF ESPN League Import — mff-bridge.js (content script on myfantasyfootball.co)
+ *
+ * Courier between chrome.storage.local (written by espn.js on fantasy.espn.com)
+ * and the MFF page. Pushes every stored league to the site via the
+ * "mff-espn-league-from-extension" CustomEvent — once on load and again
+ * whenever the store changes (user exports while an MFF tab is open).
+ *
+ * Site-side contract (to be wired into app.js when the ESPN My Teams UI
+ * lands): listen for the event, read e.detail.leagues — an object keyed by
+ * leagueId, each value the normalized payload from normalize.js:
+ *   { platform:'espn', leagueId, season, name, scoring, teamCount, drafted,
+ *     teams:[{teamId, name, owner, roster:[{espnId, name, pos, team}]}],
+ *     syncedAt }
+ */
+(function () {
+  "use strict";
+  if (window.__mffEspnBridgeLoaded) return;
+  window.__mffEspnBridgeLoaded = true;
+
+  function push(leagues) {
+    if (!leagues || !Object.keys(leagues).length) return;
+    try {
+      document.dispatchEvent(new CustomEvent("mff-espn-league-from-extension", {
+        detail: { leagues: leagues, pushedAt: Date.now() }
+      }));
+    } catch (_) {}
+  }
+
+  try {
+    chrome.storage.local.get(["mff_espn_leagues"], function (res) {
+      if (res && res.mff_espn_leagues) push(res.mff_espn_leagues);
+    });
+    chrome.storage.onChanged.addListener(function (changes, area) {
+      if (area !== "local") return;
+      if (changes.mff_espn_leagues && changes.mff_espn_leagues.newValue) {
+        push(changes.mff_espn_leagues.newValue);
+      }
+    });
+  } catch (_) {}
+})();

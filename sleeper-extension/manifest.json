@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "MFF Sleeper Helper",
+  "version": "0.26.8",
+  "description": "Draft mode: live pick tracking from Jack's rankings + KTC. Season mode: optimal weekly lineup, waiver upgrades, roster values, and Monte Carlo season sims (standings, weekly odds, future-pick values) for your league, scored to its real settings. Public API only â€” no DOM scraping.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "https://api.sleeper.app/*",
+    "https://firestore.googleapis.com/*",
+    "https://sleeper.com/*",
+    "https://*.sleeper.com/*",
+    "https://myfantasyfootball.co/*",
+    "https://www.myfantasyfootball.co/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://sleeper.com/*",
+        "https://*.sleeper.com/*"
+      ],
+      "js": [
+        "data/playoff_sos_2026.js",
+        "data/sim_pack.js",
+        "data/sim_overrides.js",
+        "engine_sim.js",
+        "sidebar.js"
+      ],
+      "css": [
+        "sidebar.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "data/players.json"
+      ],
+      "matches": [
+        "https://sleeper.com/*",
+        "https://*.sleeper.com/*"
+      ]
+    }
+  ],
+  "icons": {
+    "128": "icons/icon-128.png"
+  }
+}

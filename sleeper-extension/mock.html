@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MFF Sleeper Helper — mock harness</title>
+<link rel="stylesheet" href="sidebar.css">
+<script src="data/playoff_sos_2026.js"></script>
+<!-- season-sim engine + data (PICKS tab) — same load order as the manifest -->
+<script src="data/sim_pack.js"></script>
+<script src="data/sim_overrides.js"></script>
+<script src="engine_sim.js"></script>
+<style>body { background: #1b1e24; color: #ccc; font-family: sans-serif; padding: 20px; }</style>
+</head>
+<body>
+<style>
+  /* Draft-board header, sized like the real room's columns (~110px) */
+  #fake-draft-header { display: flex; gap: 2px; background: #10131a; padding: 4px 0; margin-bottom: 8px; overflow: hidden; }
+  #fake-draft-header .hdr-col { width: 110px; flex: 0 0 110px; text-align: center; }
+  #fake-draft-header .av { width: 26px; height: 26px; border-radius: 50%; background: #2b3242; margin: 0 auto 2px; }
+  #fake-draft-header .nm { font-size: 12px; color: #cfd4de; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+<div id="fake-draft-header"></div>
+<!-- Vertical list repeating the same manager names — stands in for Sleeper's
+     traded-picks view / queue / roster panels. The decorator must NOT put
+     position counts here; only the horizontal board header qualifies. -->
+<div id="fake-traded-picks" style="margin:8px 0;font-size:12px;color:#9aa0a6"></div>
+<div id="fake-grid-cells" style="margin:8px 0;font-size:12px;color:#9aa0a6"></div>
+<h2>Mock Sleeper draft room</h2>
+<p>Simulates a 12-team superflex dynasty snake draft (3rd-round reversal).
+One new pick every 4s. Use the sidebar exactly as on sleeper.com.</p>
+<p><b>Season mode:</b> hit the SEASON toggle in the sidebar header — the mock
+serves league L1 (PPR · 5pt paTD · SF dynasty) with deliberately wrong
+starters (Bryce Young in SF over a benched stud) + one Questionable and one
+Out player, so LINEUP should flag moves and WAIVERS should rank vs your team.</p>
+<button id="advance">Force next pick</button>
+<pre id="log"></pre>
+<h3>Fake roster panel (decorator target)</h3>
+<div class="draft-roster2"><div class="draft-roster2-teams" style="max-width:320px">
+  <div class="draft-roster-list-item" style="padding:6px;border-bottom:1px solid #333">
+    <div class="player-data"><div class="meta-container">
+      <div class="name">Lamar Jackson</div><div class="team">QB - BAL (7)</div>
+    </div></div>
+  </div>
+  <div class="draft-roster-list-item" style="padding:6px;border-bottom:1px solid #333">
+    <div class="player-data"><div class="meta-container">
+      <div class="name">Zay Flowers</div><div class="team">WR - BAL (7)</div>
+    </div></div>
+  </div>
+  <div class="draft-roster-list-item" style="padding:6px">
+    <div class="player-data"><div class="meta-container">
+      <div class="name">Jaylen Waddle</div><div class="team">WR - DEN (12)</div>
+    </div></div>
+  </div>
+</div></div>
+<h3>Fake league TEAM page (season decorator target — abbreviated names like the real page)</h3>
+<div id="fake-team-page" style="max-width:460px"></div>
+<h3>Fake Trade Offer modal (trade decorator target — real Sleeper classes)</h3>
+<div class="trade-center-wrapper" style="max-width:460px;background:#182138;padding:10px;border-radius:8px">
+  <div class="trade-header"><div class="title" style="font-weight:700">Trade Offer</div></div>
+  <div class="summary-wrapper"><div class="trade-summary">
+    <div class="roster-trade-container" style="padding:8px;margin:6px 0;background:#131a2e">
+      <div class="row spaced"><div class="row"><div class="username">jack</div></div></div>
+      <div class="roster-trade-summary">
+        <div class="roster-trade-title"><span class="panel-title">RECEIVES</span> / <span class="panel-title">SENDS</span></div>
+        <div class="panel-container" style="display:flex;gap:14px">
+          <div class="panel">
+            <div class="spaced-row"><div class="asset-row"><div class="asset-circle"></div><div class="meta">
+              <div class="meta-text-1">Justin Herbert</div><div class="meta-text-2">QB • LAC</div>
+              <div class="row"><div class="meta-text-2">From rival_2</div></div></div></div></div>
+            <div class="spaced-row"><div class="asset-row"><div class="asset-circle"><span class="asset-text">3rd</span><span class="asset-text">2029</span></div><div class="meta">
+              <div class="meta-text-1">2029 3rd Rd</div><div class="meta-text-2">Draft Pick</div>
+              <div class="row"><div class="meta-text-2">From rival_2</div></div></div></div></div>
+          </div>
+          <div class="panel">
+            <div class="spaced-row"><div class="asset-row"><div class="asset-circle"></div><div class="meta">
+              <div class="meta-text-1">Josh Allen</div><div class="meta-text-2">QB • BUF</div>
+              <div class="row"><div class="meta-text-2">To rival_2</div></div></div></div></div>
+            <div class="spaced-row"><div class="asset-row"><div class="asset-circle"><span class="asset-text">1st</span><span class="asset-text">2027</span></div><div class="meta">
+              <div class="meta-text-1">2027 1st Rd</div><div class="meta-text-2">Draft Pick</div>
+              <div class="row"><div class="meta-text-2">To rival_2</div></div></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="roster-trade-container" style="padding:8px;margin:6px 0;background:#131a2e">
+      <div class="row spaced"><div class="row"><div class="username">rival_2</div></div></div>
+      <div class="roster-trade-summary">
+        <div class="roster-trade-title"><span class="panel-title">RECEIVES</span> / <span class="panel-title">SENDS</span></div>
+        <div class="panel-container" style="display:flex;gap:14px">
+          <div class="panel">
+            <div class="spaced-row"><div class="asset-row"><div class="asset-circle"></div><div class="meta">
+              <div class="meta-text-1">Josh Allen</div><div class="meta-text-2">QB • BUF</div>
+              <div class="row"><div class="meta-text-2">From jack</div></div></div></div></div>
+          </div>
+          <div class="panel">
+            <div class="spaced-row"><div class="asset-row"><div class="asset-circle"></div><div class="meta">
+              <div class="meta-text-1">Justin Herbert</div><div class="meta-text-2">QB • LAC</div>
+              <div class="row"><div class="meta-text-2">To jack</div></div></div></div></div>
+            <div class="spaced-row"><div class="asset-row"><div class="asset-circle"><span class="asset-text">3rd</span><span class="asset-text">2029</span></div><div class="meta">
+              <div class="meta-text-1">2029 3rd Rd</div><div class="meta-text-2">Draft Pick</div>
+              <div class="row"><div class="meta-text-2">To jack</div></div></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+<h3>Fake Sleeper player list (decorator target)</h3>
+<div class="player-rank-list" style="max-width:400px">
+  <div class="player-rank-item2 QB show-watchlist-action" style="padding:4px;border-bottom:1px solid #333;display:flex;gap:8px">
+    <div class="rank" style="width:40px;text-align:center">88</div>
+    <div class="name col-border-right" style="flex:1"><div class="name-wrapper" style="display:flex;flex-direction:column">Bryce Young<div class="position">QB CAR</div></div></div>
+  </div>
+  <div class="player-rank-item2 WR show-watchlist-action odd" style="padding:4px;border-bottom:1px solid #333;display:flex;gap:8px">
+    <div class="rank" style="width:40px;text-align:center">61</div>
+    <div class="name col-border-right" style="flex:1"><div class="name-wrapper" style="display:flex;flex-direction:column">Zay Flowers<div class="position">WR BAL</div></div></div>
+  </div>
+  <div class="player-rank-item2 DEF show-watchlist-action" style="padding:4px;border-bottom:1px solid #333;display:flex;gap:8px">
+    <div class="rank" style="width:40px;text-align:center">201</div>
+    <div class="name col-border-right" style="flex:1"><div class="name-wrapper" style="display:flex;flex-direction:column">Denver Broncos<div class="position">DEF DEN</div></div></div>
+  </div>
+  <div class="player-rank-item2 WR show-watchlist-action" style="padding:4px;display:flex;gap:8px">
+    <div class="rank" style="width:40px;text-align:center">999</div>
+    <div class="name col-border-right" style="flex:1"><div class="name-wrapper" style="display:flex;flex-direction:column">Nonexistent Player<div class="position">WR ???</div></div></div>
+  </div>
+</div>
+<script>
+(function () {
+  // Scripted picks: player names drafted in a plausible SF-startup order.
+  // Resolved to sleeper ids from players.json after it loads.
+  var SCRIPT = [
+    'Josh Allen', 'Ja\'Marr Chase', 'Jayden Daniels', 'Bijan Robinson',
+    'Lamar Jackson', 'Justin Jefferson', 'Jahmyr Gibbs', 'Drake Maye',
+    'Joe Burrow', 'CeeDee Lamb', 'Jaxon Smith-Njigba', 'Puka Nacua',
+    'Caleb Williams', 'Malik Nabers', 'Patrick Mahomes', 'Brock Bowers',
+    'Amon-Ra St. Brown', 'Jalen Hurts', 'Ashton Jeanty', 'Bo Nix',
+    'Harrison Butker', 'Houston Texans D/ST',
+  ];
+  var made = 0;
+  var playersByName = {};
+  var TEAMS = 12, REV = 3;
+
+  function slotFor(pickNo) {
+    var round = Math.ceil(pickNo / TEAMS), idx = (pickNo - 1) % TEAMS;
+    var fwd = round % 2 === 1;
+    if (REV > 0 && round >= REV) fwd = !fwd;
+    return fwd ? idx + 1 : TEAMS - idx;
+  }
+  function buildPicks() {
+    var out = [];
+    for (var i = 0; i < made && i < SCRIPT.length; i++) {
+      var p = playersByName[SCRIPT[i]] || {};
+      var slot = slotFor(i + 1);
+      var isDst = p.s === 'DST';
+      // Sleeper DEF metadata: first_name = city, last_name = nickname, position DEF
+      var nm = isDst ? SCRIPT[i].replace(' D\/ST', '') : SCRIPT[i];
+      var parts = nm.split(' ');
+      out.push({
+        pick_no: i + 1,
+        round: Math.ceil((i + 1) / TEAMS),
+        draft_slot: slot,
+        // TRADED PICKS: rounds 1-2 of slot 3 were acquired by jack (slot 5).
+        // draft_slot stays 3 — only picked_by/roster_id say who really owns
+        // them — so a slot-keyed count would wrongly credit rival_3.
+        picked_by: (slot === 3 && i < 24) ? 'u_jack' : (slot === 5 ? 'u_jack' : 'user_slot_' + slot),
+        roster_id: (slot === 3 && i < 24) ? 5 : slot,
+        player_id: p.sid || null,
+        metadata: {
+          first_name: isDst ? parts.slice(0, -1).join(' ') : parts[0],
+          last_name: isDst ? parts[parts.length - 1] : parts.slice(1).join(' '),
+          position: isDst ? 'DEF' : (p.s || ''),
+          team: p.sTm || '',
+        },
+      });
+    }
+    return out;
+  }
+
+  fetch('data/players.json').then(function (r) { return r.json(); }).then(function (data) {
+    data.players.forEach(function (p) { playersByName[p.n] = p; });
+
+    // ---- season-mode fixtures (league L1) ----
+    function sid(n) { return playersByName[n] ? String(playersByName[n].sid) : null; }
+    var MY_NAMES = ['Josh Allen', 'Bryce Young', 'Bijan Robinson', 'Jahmyr Gibbs',
+      'Chase Brown', "Ja'Marr Chase", 'Zay Flowers', 'Puka Nacua', 'Jaylen Waddle',
+      'Brock Bowers', 'Harrison Butker', 'Houston Texans D/ST'];
+    var myIds = MY_NAMES.map(sid).filter(Boolean);
+    // Wrong on purpose: Gibbs (OUT) still started over Chase Brown, and
+    // Waddle started in FLEX over the better (if Questionable) Puka.
+    var MY_STARTERS = ['Josh Allen', 'Bijan Robinson', 'Jahmyr Gibbs', "Ja'Marr Chase",
+      'Zay Flowers', 'Brock Bowers', 'Jaylen Waddle', 'Bryce Young',
+      'Harrison Butker', 'Houston Texans D/ST'].map(sid);
+    // Rosters 2-12 absorb the next 14 best players each, so waivers are the
+    // realistic mid/low tier.
+    var taken = {};
+    myIds.forEach(function (id) { taken[id] = 1; });
+    var pool = data.players.filter(function (p) { return p.sid && !taken[String(p.sid)]; });
+    var ROSTERS = [{ roster_id: 1, owner_id: 'u_jack', players: myIds.slice(), starters: MY_STARTERS.slice() }];
+    var USERS = [{ user_id: 'u_jack', display_name: 'jack' }];
+    for (var ri = 2; ri <= 12; ri++) {
+      var ps = pool.splice(0, 14).map(function (p) { return String(p.sid); });
+      ROSTERS.push({ roster_id: ri, owner_id: 'user_slot_' + ri, players: ps, starters: ps.slice(0, 10) });
+      USERS.push({ user_id: 'user_slot_' + ri, display_name: 'rival_' + ri });
+    }
+    // user_id -> draft slot (jack drafts from slot 5, rival_N from slot N)
+    var DRAFT_ORDER = { u_jack: 5 };
+    for (var si = 2; si <= 12; si++) if (si !== 5) DRAFT_ORDER['user_slot_' + si] = si;
+    var SLOT_TO_ROSTER = {};
+    for (var sj = 1; sj <= 12; sj++) SLOT_TO_ROSTER[sj] = sj;
+    // Fake draft-board header: Sleeper renders each manager's display name in
+    // a column above the board. Class names here are deliberately NOT
+    // Sleeper's — the decorator joins on the name TEXT, so this also proves
+    // the locator doesn't depend on markup we can't see.
+    (function () {
+      var bar = document.getElementById('fake-draft-header');
+      if (!bar) return;
+      bar.innerHTML = USERS.slice().sort(function (a, b) {
+        return (DRAFT_ORDER[a.user_id] || 99) - (DRAFT_ORDER[b.user_id] || 99);
+      }).map(function (u) {
+        return '<div class="hdr-col"><div class="av"></div><div class="nm">' + u.display_name + '</div></div>';
+      }).join('');
+      var tp = document.getElementById('fake-traded-picks');
+      if (tp) {
+        tp.innerHTML = '<b>Traded picks</b>' + USERS.slice(0, 8).map(function (u, i) {
+          return '<div class="tp-row" style="padding:2px 0">2027 ' + (i + 1) +
+            'st &middot; <span class="username">' + u.display_name + '</span></div>';
+        }).join('');
+      }
+      // Traded-pick OWNER LABELS scattered inside board cells — the real
+      // killer. These repeat manager names at many different heights, so the
+      // header can't be found by shared-ancestor scoring; only by geometry.
+      var gb = document.getElementById('fake-grid-cells');
+      if (gb) {
+        gb.innerHTML = '<b>Board cells (traded-pick labels inside)</b>' +
+          USERS.slice(0, 9).map(function (u, i) {
+            return '<div class="cell" style="height:26px;padding:2px 0">R' + (i + 2) +
+              '.0' + (i + 1) + ' &rarr; <span class="username">' + u.display_name + '</span></div>';
+          }).join('');
+      }
+    })();
+    var MATCHUPS = ROSTERS.map(function (r) {
+      return { roster_id: r.roster_id, matchup_id: Math.ceil(r.roster_id / 2), starters: r.starters, players: r.players, points: 0 };
+    });
+    var LEAGUE = {
+      name: 'Mock Dynasty League', total_rosters: 12,
+      settings: { type: 2 },
+      scoring_settings: {
+        rec: 1, pass_td: 5,
+        // kicker: distance bonuses + miss penalty (exercises the K model)
+        fgm_0_19: 3, fgm_20_29: 3, fgm_30_39: 3, fgm_40_49: 4, fgm_50p: 5,
+        xpm: 1, fgmiss: -1,
+        // DST rules (exercises the DST model)
+        sack: 1, int: 2, fum_rec: 2, def_td: 6, safe: 2, blk_kick: 2,
+        pts_allow_0: 10, pts_allow_1_6: 7, pts_allow_7_13: 4,
+        pts_allow_14_20: 1, pts_allow_21_27: 0, pts_allow_28_34: -1, pts_allow_35p: -4,
+      },
+      roster_positions: ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'SUPER_FLEX', 'K', 'DEF', 'BN', 'BN', 'BN', 'BN', 'BN', 'BN'],
+    };
+    // Injuries: Puka Questionable, Gibbs OUT (his RB2 slot should re-fill).
+    var SL_PLAYERS = {};
+    data.players.forEach(function (p) {
+      if (!p.sid) return;
+      var parts = p.n.replace(' D/ST', '').split(' ');
+      SL_PLAYERS[String(p.sid)] = {
+        position: p.s === 'DST' ? 'DEF' : p.s, team: p.sTm || '',
+        first_name: parts[0], last_name: parts.slice(1).join(' '), status: 'Active',
+      };
+    });
+    if (sid('Puka Nacua')) SL_PLAYERS[sid('Puka Nacua')].injury_status = 'Questionable';
+    if (sid('Jahmyr Gibbs')) SL_PLAYERS[sid('Jahmyr Gibbs')].injury_status = 'Out';
+    var TRENDING = pool.slice(0, 5).map(function (p, i) {
+      return { player_id: String(p.sid), count: 4200 - i * 700 };
+    });
+    // Vegas + weekly-props stand-in for the live betting_lines_2026.json fetch
+    // (week 3 to match /state/nfl). Teams cover my roster; totals/spreads span
+    // the color tiers. Props: Allen board, big Puka board, thin Waddle board.
+    function tm(n) { return playersByName[n] ? playersByName[n].sTm : null; }
+    var VEGAS = { gameTotals: {}, weeklyProps: { '3': {} } };
+    var games = [
+      [tm('Josh Allen'), tm('Jaylen Waddle'), 49.5, -6.5],
+      [tm("Ja'Marr Chase"), tm('Jahmyr Gibbs'), 52.5, 1.5],
+      [tm('Bijan Robinson'), tm('Harrison Butker'), 47.5, 3.0],
+      [tm('Zay Flowers'), tm('Puka Nacua'), 46.5, -1.5],
+      ['HOU', tm('Brock Bowers'), 38.5, 2.5],
+    ];
+    // Every week 1-17 gets the same slate (W3 numbers) so the PICKS-tab
+    // season sim has a full schedule to run over in the harness.
+    for (var vw = 1; vw <= 17; vw++) {
+      games.forEach(function (g) {
+        if (g[0] && g[1] && g[0] !== g[1]) {
+          VEGAS.gameTotals['W' + vw + '_' + g[0] + '_' + g[1]] = { total: g[2], spread: g[3] };
+        }
+      });
+    }
+    VEGAS.weeklyProps['3']['Josh Allen'] = { UD: { py: 249.5, ry: 42.5, atd: 260 }, PP: { py: 245.5, ry: 44.5 } };
+    VEGAS.weeklyProps['3']['Puka Nacua'] = { UD: { rcy: 88.5, atd: -105 }, PP: { rcy: 90.5 } };
+    VEGAS.weeklyProps['3']['Jaylen Waddle'] = { UD: { rcy: 48.5, atd: 210 } };
+    VEGAS.weeklyProps['3']['Bijan Robinson'] = { UD: { ry: 84.5, rcy: 24.5, atd: -170 }, PP: { ry: 86.5, rcy: 25.5 } };
+
+    window.__MFF_MOCK = {
+      draftId: '9990001112223334445',
+      players: data,
+      vegas: VEGAS,
+      api: function (path) {
+        document.getElementById('log').textContent = 'last api: ' + path + ' (picks made: ' + made + ')';
+        if (/\/picks$/.test(path)) return buildPicks();
+        if (/^\/state\/nfl/.test(path)) return { week: 3, season_type: 'regular', season: '2026', league_season: '2026' };
+        if (/^\/league\/L1\/users/.test(path)) return USERS;
+        if (/^\/league\/L1\/rosters/.test(path)) return ROSTERS;
+        if (/^\/league\/L1\/matchups\//.test(path)) return MATCHUPS;
+        if (/^\/league\/L1\/traded_picks/.test(path)) {
+          // jack acquired rival_3's 2027 1st; jack's own 2028 2nd went to rival_2
+          return [
+            { season: '2027', round: 1, roster_id: 3, owner_id: 1, previous_owner_id: 3 },
+            { season: '2028', round: 2, roster_id: 1, owner_id: 2, previous_owner_id: 1 },
+          ];
+        }
+        if (/^\/league\/L1/.test(path)) return LEAGUE;
+        if (/^\/players\/nfl\/trending/.test(path)) return TRENDING;
+        if (/^\/players\/nfl/.test(path)) return SL_PLAYERS;
+        if (/^\/stats\/nfl\/regular\//.test(path)) {
+          // Weeks 1-2 actuals: Waddle hot, Puka cold, Butker hot, HOU DST cold
+          var wkn = path.split('/').pop();
+          var mkS = function (pts) { return { gp: 1, pts_ppr: pts, pts_half_ppr: pts, pts_std: pts }; };
+          var W = {};
+          W[sid('Jaylen Waddle')] = mkS(wkn === '1' ? 21.4 : 19.8);
+          W[sid('Puka Nacua')] = mkS(wkn === '1' ? 8.1 : 9.3);
+          W[sid('Harrison Butker')] = mkS(wkn === '1' ? 13 : 11);
+          W[sid('Houston Texans D/ST')] = mkS(wkn === '1' ? 1 : 2);
+          return W;
+        }
+        if (/^\/draft\//.test(path)) {
+          return {
+            type: 'snake', status: 'drafting', league_id: 'L1',
+            settings: { teams: TEAMS, rounds: 25, reversal_round: REV, slots_qb: 1, slots_super_flex: 1,
+                        slots_rb: 2, slots_wr: 3, slots_te: 1, slots_k: 1, slots_def: 1 },
+            metadata: { scoring_type: 'dynasty_2qb' },
+            // Full order so the board-header decorator can join display name -> slot
+            draft_order: DRAFT_ORDER,
+            slot_to_roster_id: SLOT_TO_ROSTER,
+          };
+        }
+        if (/^\/user\//.test(path)) return { user_id: 'u_jack', username: 'jack' };
+        return null;
+      },
+    };
+    // Fake league TEAM page rows (season decorator): same structure + the
+    // abbreviated first names the real page uses ("L Jackson"), one no-team
+    // free-agent row and one empty slot like the real page's edge cases.
+    var ftp = document.getElementById('fake-team-page');
+    var ftpHtml = '';
+    // Native game line like the real team page renders ("Sun 1:00 PM @ IND") —
+    // the season decorator tints it by matchup instead of adding an opp pill.
+    var MOCK_OPP = {};
+    // gameTotals keys are W<wk>_<AWAY>_<HOME> — g[0] is the road team.
+    games.forEach(function (g) {
+      if (g[0] && g[1]) { MOCK_OPP[g[0]] = '@ ' + g[1]; MOCK_OPP[g[1]] = 'vs ' + g[0]; }
+    });
+    MY_NAMES.forEach(function (n) {
+      var p = playersByName[n];
+      if (!p) return;
+      var isDst = p.s === 'DST';
+      var disp = isDst ? (p.sTm || '') : n.split(' ')[0].charAt(0) + ' ' + n.split(' ').slice(1).join(' ');
+      var gameLine = p.sTm && MOCK_OPP[p.sTm] ? 'Sun 1:00 PM ' + MOCK_OPP[p.sTm] : '';
+      ftpHtml += '<div class="team-roster-item" style="padding:5px;border-bottom:1px solid #333">' +
+        '<div class="cell-player-meta"><div class="player-name-row">' +
+        '<span>' + disp + '</span>' +
+        '<span style="color:#889;margin-left:6px">' + (isDst ? 'DEF' : p.s) + ' - ' + (p.sTm || '') + '</span>' +
+        '<span style="color:#667;margin-left:4px">(9)</span>' +
+        '</div><div class="row" style="color:#889;font-size:11px">' + gameLine + '</div></div></div>';
+    });
+    ftpHtml += '<div class="team-roster-item" style="padding:5px;border-bottom:1px solid #333">' +
+      '<div class="cell-player-meta"><div class="player-name-row"><span>J Mixon</span>' +
+      '<span style="color:#889;margin-left:6px">RB -</span></div><div class="row"></div></div></div>';
+    ftpHtml += '<div class="team-roster-item" style="padding:5px"><div class="cell-empty"></div></div>';
+    ftp.innerHTML = ftpHtml;
+
+    var s = document.createElement('script');
+    s.src = 'sidebar.js?t=' + Date.now(); // bust the browser cache on every harness reload
+    document.body.appendChild(s);
+    setInterval(function () { if (made < SCRIPT.length) made++; }, 4000);
+    document.getElementById('advance').addEventListener('click', function () {
+      if (made < SCRIPT.length) made++;
+    });
+  });
+})();
+</script>
+</body>
+</html>

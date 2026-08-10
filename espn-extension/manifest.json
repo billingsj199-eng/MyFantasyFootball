@@ -1,0 +1,91 @@
+{
+  "manifest_version": 3,
+  "name": "MFF ESPN Helper",
+  "version": "0.17.9",
+  "description": "ESPN league import + draft helper + season mode: optimal weekly lineup, waiver upgrades, and roster values for your ESPN league, scored to its real settings.",
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "https://fantasy.espn.com/*",
+    "https://lm-api-reads.fantasy.espn.com/*",
+    "https://api.sleeper.app/*",
+    "https://myfantasyfootball.co/*",
+    "https://www.myfantasyfootball.co/*",
+    "https://myfantasyfootball.org/*",
+    "https://www.myfantasyfootball.org/*",
+    "https://billingsj199-eng.github.io/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://fantasy.espn.com/football/*"
+      ],
+      "js": [
+        "normalize.js",
+        "espn.js",
+        "data/playoff_sos_2026.js",
+        "data/sim_pack.js",
+        "data/sim_overrides.js",
+        "engine_sim.js",
+        "sidebar.js"
+      ],
+      "css": [
+        "sidebar.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://fantasy.espn.com/*"
+      ],
+      "js": [
+        "ws-sniffer.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_start",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://fantasy.espn.com/*"
+      ],
+      "js": [
+        "draft-probe.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://myfantasyfootball.co/*",
+        "https://www.myfantasyfootball.co/*",
+        "https://myfantasyfootball.org/*",
+        "https://www.myfantasyfootball.org/*",
+        "https://billingsj199-eng.github.io/*"
+      ],
+      "js": [
+        "mff-bridge.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "data/players.json"
+      ],
+      "matches": [
+        "https://fantasy.espn.com/*"
+      ]
+    }
+  ],
+  "icons": {
+    "128": "icons/icon-128.png"
+  }
+}

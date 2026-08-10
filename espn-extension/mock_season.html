@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MFF ESPN Helper — mock SEASON harness</title>
+<link rel="stylesheet" href="sidebar.css">
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 24px; }
+  h1 { font-size: 18px; color: #fbbf24; }
+  #log { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; font-size: 11px; max-height: 300px; overflow: auto; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>ESPN Helper — mock SEASON league</h1>
+<p>Simulates a 10-team PPR league in week 1 of the regular season via
+<code>__MFF_ESPN_MOCK.seasonLeague</code> (mTeam+mRoster+mSettings shape).
+You are <b>team 2</b> with a deliberately WRONG lineup (best players benched),
+one Questionable and one OUT starter — the LINEUP tab should flag start/sit
+moves and WAIVERS should rank free agents by upgrade delta. Serve this folder
+over HTTP (players.json fetch) and open this page.</p>
+<div id="log"></div>
+<h2 style="font-size:15px;color:#fbbf24">Fake ESPN roster table (on-page decoration target)</h2>
+<p style="font-size:12px">Player-name links like ESPN's My Team page renders — the decorator should
+append verdict / matchup / proj pills after each within ~2s.</p>
+<div id="fakeroster" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px;font-size:13px;line-height:2"></div>
+
+<script src="normalize.js"></script>
+<script src="data/playoff_sos_2026.js"></script>
+<script src="data/sim_pack.js"></script>
+<script src="data/sim_overrides.js"></script>
+<script src="engine_sim.js"></script>
+<script>
+(async () => {
+  const logEl = document.getElementById('log');
+  const log = (s) => { logEl.textContent = s + '\n' + logEl.textContent.slice(0, 8000); };
+
+  const data = await (await fetch('data/players.json')).json();
+  const POS_TO_ID = { QB: 1, RB: 2, WR: 3, TE: 4, K: 5, DST: 16 };
+  // ESPN abbrev → proTeamId (reverse of normalize.js PRO_TEAM)
+  const ABBR_TO_ID = {};
+  Object.entries(window.MFF_ESPN.PRO_TEAM).forEach(([id, ab]) => { ABBR_TO_ID[ab] = +id; });
+
+  // ---- snake-draft 10 rosters from the export: 1QB 2RB 2WR 1TE 1FLEX 1K 1DST + 6 BN
+  const TEAMS = 10;
+  const byPos = { QB: [], RB: [], WR: [], TE: [], K: [], DST: [] };
+  (data.players || []).forEach((p, i) => {
+    if (byPos[p.s]) byPos[p.s].push({ p, espnId: 100000 + i });
+  });
+  for (const k in byPos) byPos[k].sort((a, b) => (a.p.rank || 999) - (b.p.rank || 999));
+  const want = { QB: 2, RB: 4, WR: 5, TE: 2, K: 1, DST: 1 }; // 15 per roster
+  const rosters = Array.from({ length: TEAMS }, () => []);
+  for (const pos of ['QB', 'RB', 'WR', 'TE', 'K', 'DST']) {
+    let idx = 0;
+    for (let round = 0; round < want[pos]; round++) {
+      for (let t = 0; t < TEAMS; t++) {
+        const tm = round % 2 === 0 ? t : TEAMS - 1 - t;
+        const e = byPos[pos][idx++];
+        if (e) rosters[tm].push({ pos, ...e });
+      }
+    }
+  }
+  // Starter slots per team: QB(0) RB(2)x2 WR(4)x2 TE(6) FLEX(23) DST(16) K(17), rest BN(20)
+  const SLOT_FOR = { QB: [0], RB: [2, 2], WR: [4, 4], TE: [6], K: [17], DST: [16] };
+  function buildEntries(list, sabotage) {
+    const entries = [];
+    const used = new Set();
+    const pick = (pos, n, slotIds) => {
+      // sabotage = start the WORST eligible instead of the best
+      const cands = list.filter((e) => e.pos === pos && !used.has(e));
+      if (sabotage) cands.reverse();
+      for (let i = 0; i < n && cands[i]; i++) {
+        used.add(cands[i]);
+        entries.push({ e: cands[i], slotId: slotIds[i] || slotIds[0] });
+      }
+    };
+    pick('QB', 1, [0]); pick('RB', 2, [2, 2]); pick('WR', 2, [4, 4]);
+    pick('TE', 1, [6]); pick('K', 1, [17]); pick('DST', 1, [16]);
+    // FLEX: next unused RB/WR/TE (worst-first when sabotaged)
+    const flexCands = list.filter((e) => !used.has(e) && ['RB', 'WR', 'TE'].includes(e.pos));
+    if (sabotage) flexCands.reverse();
+    if (flexCands[0]) { used.add(flexCands[0]); entries.push({ e: flexCands[0], slotId: 23 }); }
+    list.forEach((e) => { if (!used.has(e)) entries.push({ e, slotId: 20 }); });
+    return entries.map(({ e, slotId }, i) => ({
+      lineupSlotId: slotId,
+      playerPoolEntry: { player: {
+        id: e.espnId,
+        fullName: e.p.n.replace(/ D\/ST$/, e.p.s === 'DST' ? ' D/ST' : ''),
+        defaultPositionId: POS_TO_ID[e.p.s],
+        proTeamId: ABBR_TO_ID[e.p.sTm] || 0,
+        // my team: flag two starters to exercise injury handling
+        injuryStatus: (slotId !== 20 && sabotage && i === 1) ? 'OUT'
+          : (slotId !== 20 && sabotage && i === 3) ? 'QUESTIONABLE' : 'ACTIVE',
+      } },
+    }));
+  }
+  const league = {
+    id: 424242, seasonId: 2026, scoringPeriodId: 1,
+    status: { currentMatchupPeriod: 1, latestScoringPeriod: 1 },
+    settings: {
+      name: 'Mock Season League',
+      scheduleSettings: { matchupPeriodCount: 14, playoffTeamCount: 6 },
+      rosterSettings: { lineupSlotCounts: { '0': 1, '2': 2, '4': 2, '6': 1, '23': 1, '16': 1, '17': 1, '20': 6 } },
+      scoringSettings: { scoringItems: [
+        { statId: 53, points: 1 }, { statId: 4, points: 4 },
+        { statId: 74, points: 5 }, { statId: 77, points: 4 }, { statId: 80, points: 3 },
+        { statId: 85, points: -1 }, { statId: 86, points: 1 }, { statId: 88, points: -1 },
+        { statId: 99, points: 1 }, { statId: 95, points: 2 }, { statId: 96, points: 2 },
+        { statId: 97, points: 2 }, { statId: 98, points: 2 }, { statId: 105, points: 6 },
+        { statId: 89, points: 5 }, { statId: 90, points: 4 }, { statId: 91, points: 3 },
+        { statId: 92, points: 1 }, { statId: 121, points: 1 }, { statId: 122, points: 0 },
+        { statId: 123, points: -1 }, { statId: 124, points: -3 }, { statId: 125, points: -5 },
+      ] },
+      draftSettings: {},
+    },
+    teams: Array.from({ length: TEAMS }, (_, i) => ({
+      id: i + 1,
+      name: i === 1 ? 'My Mock Team' : 'Mock Team ' + (i + 1),
+      abbrev: 'T' + (i + 1),
+      owners: [],
+      roster: { entries: buildEntries(rosters[i], i === 1) },
+    })),
+  };
+  // mMatchup-style full-season schedule (round-robin, 14 matchup periods)
+  league.schedule = [];
+  {
+    const ids = Array.from({ length: TEAMS }, (_, i) => i + 1);
+    for (let wk = 1; wk <= 14; wk++) {
+      for (let j = 0; j < TEAMS / 2; j++) {
+        league.schedule.push({
+          matchupPeriodId: wk,
+          home: { teamId: ids[j] },
+          away: { teamId: ids[TEAMS - 1 - j] },
+        });
+      }
+      ids.splice(1, 0, ids.pop()); // rotate all but first
+    }
+  }
+
+  // ---- Vegas fixture: weeks 1-17 pairings over all 32 teams (sim needs a full season)
+  const abbrs = Object.values(window.MFF_ESPN.PRO_TEAM).filter((a) => a !== 'FA');
+  const gameTotals = {};
+  for (let wk = 1; wk <= 17; wk++) {
+    for (let i = 0; i < abbrs.length; i += 2) {
+      gameTotals['W' + wk + '_' + abbrs[i] + '_' + abbrs[i + 1]] =
+        { total: 40 + ((i + wk) % 13), spread: ((i + wk) % 7) - 3 };
+    }
+    abbrs.splice(1, 0, abbrs.pop()); // rotate matchups week to week
+  }
+  // One star gets a W1 prop board to exercise the 80/20 blend
+  const star = (data.players || []).find((p) => p.s === 'RB');
+  const weeklyProps = { '1': {} };
+  if (star) weeklyProps['1'][star.n] = { UD: { ry: 88, rcy: 28, atd: -145 }, PP: { ry: 91.5 } };
+
+  window.__MFF_ESPN_MOCK = {
+    seasonLeagueId: '424242', seasonId: '2026', myTeamId: 2,
+    players: data, seasonLeague: league,
+    nflState: { season_type: 'regular', week: 1, season: '2026' },
+    vegas: { gameTotals, weeklyProps },
+    slMeta: {}, trendAdds: { [star && star.sid]: 4200 },
+  };
+
+  await new Promise((res) => {
+    const s = document.createElement('script');
+    s.src = 'sidebar.js'; s.onload = res;
+    document.head.appendChild(s);
+  });
+  log('harness up — season mode should mount automatically (you are team 2)');
+  // fake ESPN-style player-name anchors for the on-page decorator
+  const fr = document.getElementById('fakeroster');
+  league.teams[1].roster.entries.forEach((e) => {
+    const pl = e.playerPoolEntry.player;
+    const div = document.createElement('div');
+    const a = document.createElement('a');
+    a.href = '#';
+    a.textContent = pl.fullName;
+    a.style.color = '#7dd3fc';
+    div.appendChild(a);
+    fr.appendChild(div);
+  });
+  window.__mffHarness = { league, rosters };
+})();
+</script>
+</body>
+</html>

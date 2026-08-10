@@ -1,0 +1,3839 @@
+// MFF ESPN Draft Helper — sidebar UI + live draft tracking.
+// Ported from sleeper-extension/sidebar.js with an ESPN adapter. The live
+// pick feed comes from ws-sniffer.js (MAIN world) which passively wraps the
+// draft room's own WebSocket — protocol lines:
+//   SELECTING <teamId> <clockMs>                       on the clock
+//   SELECTED  <teamId> <playerId> <n> [<memberSWID>]   pick made
+//   AUTODRAFT <teamId> <true|false>
+// Draft ORDER + teams + scoring come from one authenticated league fetch
+// (?view=mDraftDetail&view=mTeam&view=mSettings) — mDraftDetail's picks
+// carry teamId per overall slot even mid-draft (playerIds stay -1 until the
+// draft ends, which is why the WS feed is the pick source).
+(() => {
+  'use strict';
+  console.log('[MFF/ESPN] sidebar.js evaluating (v0.17.2)');
+  if (window.__mffEspn) return;
+
+  const LM_API = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/';
+  const URL_WATCH_MS = 1500;
+  const MOCK = window.__MFF_ESPN_MOCK || null;
+
+  const state = {
+    players: [],
+    byName: Object.create(null),      // "norm|POS" -> player
+    byNameLoose: Object.create(null), // "norm" -> player (best rank wins)
+    exportedAt: '',
+    // ESPN
+    leagueId: null,
+    seasonId: null,
+    myTeamId: null,        // from URL ?teamId= (overridable in SETTINGS)
+    teams: Object.create(null),      // teamId -> {name, abbrev}
+    espnById: Object.create(null),   // espnPlayerId -> {name, pos, team, p}
+    pickOrder: [],         // 1-based overall -> teamId
+    slots: null,           // {qb,rb,wr,te,flex,sf,k,dst,bn,rounds,teams}
+    scoring: null,         // {rec, passTd}
+    leagueName: '',
+    // live draft state (from WS frames)
+    picks: [],             // [{overall, teamId, playerId, p, name, pos}]
+    seenPlayerIds: new Set(),
+    onClockTeamId: null,
+    clockMs: null,
+    draftedKeys: new Set(),
+    manualDrafted: new Set(),
+    manualMine: new Set(),
+    searchQ: '',
+    myRoster: [],
+    tracking: false,
+    rankSource: 'jack',
+    mode: 're_1qb',
+    modeManual: false,
+    modeDetected: null,
+    posFilter: 'ALL',
+    tab: 'draft',
+    sortVor: false,
+    scoringLabel: 'PPR',
+    expandedKey: null,
+    statusMsg: 'Loading players…',
+    // ---- season (regular) mode ----
+    appMode: 'draft',        // 'draft' | 'season'
+    seasonLeagueId: null,
+    seasonTeams: [],         // [{teamId, name, abbrev, owners, entries:[{espnId,name,pos,team,slotId,p,inj,key}]}]
+    seasonSlots: null,       // starter slot labels from lineupSlotCounts (BN/IR excluded)
+    rosteredKeys: null,      // Set of keys rostered by ANY team (waiver pool filter)
+    espnInj: Object.create(null), // key -> OUT|D|Q from mRoster injuryStatus
+    seasonWeek: 1,
+    byesActive: false,
+    nflState: null,          // Sleeper /state/nfl (week + season_type)
+    slMeta: {},              // sid -> {n,pos,tm,inj} from Sleeper /players/nfl (FA injuries)
+    schedule: {},            // TEAM -> wk -> {opp,home,total,implied} from site Vegas lines
+    wkPropsAll: null,        // site weeklyProps: {"1": {name: {UD:{...}, PP:{...}}}}
+    seasonStats: null,       // {upToWk, byId: {sid: {ppr,half,std,gp}}} — 2026 actuals
+    trendAdds: {},           // sid -> Sleeper 24h add count
+    leagueScoring: null,     // full sleeper-style scoring dict (K buckets + DST values)
+    seasonTab: 'lineup',
+    seasonPosFilter: 'ALL',
+    seasonTeamSrc: 'ktc',
+    seasonPollTimer: null,
+    seasonStatus: 'Loading league…',
+  };
+
+  // ---------- name matching (mirrors export_sleeper_extension_data.py) ----------
+  function norm(n) {
+    let s = (n || '').toLowerCase().trim();
+    for (const suf of [' jr.', ' jr', ' sr.', ' sr', ' iii', ' ii', ' iv', ' v']) {
+      if (s.endsWith(suf)) s = s.slice(0, -suf.length).trim();
+    }
+    s = s.replace(/['’`]/g, '').replace(/[.,]/g, '').replace(/-/g, ' ');
+    return s.replace(/\s+/g, ' ').trim();
+  }
+  function keyOf(p) { return norm(p.n) + '|' + p.s; }
+
+  // ESPN spells some players differently than the site board (ESPN says
+  // "Kenny Gainwell", the board says "Kenneth Gainwell") — with no alias step
+  // the board scrape can't match the pick, so the player never leaves the
+  // available list. Mirrors ALIASES in export_sleeper_extension_data.py, but
+  // applied in BOTH directions so either spelling resolves.
+  const ALIAS_PAIRS = [
+    ['kenneth gainwell', 'kenny gainwell'],
+    ['kenneth walker', 'ken walker'],
+    ['cameron ward', 'cam ward'],
+    ['chigoziem okonkwo', 'chig okonkwo'],
+    ['marquise brown', 'hollywood brown'],
+    ['joshua palmer', 'josh palmer'],
+    ['dj moore', 'd j moore'],
+  ];
+  const ALIASES = Object.create(null);
+  for (const [a, b] of ALIAS_PAIRS) {
+    (ALIASES[a] || (ALIASES[a] = [])).push(b);
+    (ALIASES[b] || (ALIASES[b] = [])).push(a);
+  }
+  // Single lookup path for every ESPN-name → site-player match (board scrape,
+  // restored picks, player map, season rosters).
+  function findPlayer(name, pos) {
+    const pk = pos === 'D/ST' ? 'DST' : (pos || '');
+    const tryName = (nm) =>
+      state.byName[nm + '|' + pk] || state.byNameLoose[nm] || null;
+    const nm = norm(name);
+    let p = tryName(nm);
+    if (p) return p;
+    for (const alt of ALIASES[nm] || []) {
+      p = tryName(alt);
+      if (p) return p;
+    }
+    if (pk === 'DST') return state.byName[norm(name + ' D/ST') + '|DST'] || null;
+    return null;
+  }
+
+  // ---------- storage (falls back to memory in the mock harness) ----------
+  const mem = {};
+  const store = {
+    get(keys) {
+      return new Promise((res) => {
+        try { chrome.storage.local.get(keys, res); } catch (e) { res(mem); }
+      });
+    },
+    set(obj) {
+      Object.assign(mem, obj);
+      try { chrome.storage.local.set(obj); } catch (e) {}
+    },
+  };
+
+  // ---------- live Jack's boards (Firestore REST sends CORS *, direct fetch OK) ----------
+  const FIRESTORE_URL =
+    'https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)' +
+    '/documents/rankings/jacks-official?key=AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY';
+  async function refreshJackBoards() {
+    if (MOCK) return;
+    try {
+      // v0.17.2: fetchJson (direct + background relay fallback) instead of a
+      // bare fetch, so a future ESPN CSP change can't silently kill live boards.
+      const doc = await fetchJson(FIRESTORE_URL);
+      const payload = JSON.parse(doc.fields.data.stringValue);
+      const jacks = payload.jacks || {};
+      const keyByMode = { superflex: 'jSf', dynasty: 'jDy', dynastysf: 'jDsf', redraft: 'rank' };
+      const byNorm = {};
+      for (const p of state.players) (byNorm[norm(p.n)] = byNorm[norm(p.n)] || []).push(p);
+      let applied = 0;
+      for (const [mode, key] of Object.entries(keyByMode)) {
+        const order = (jacks[mode] || {})._order || [];
+        order.forEach((name, i) => {
+          const list = byNorm[norm(name)];
+          if (list) for (const p of list) { p[key] = i + 1; applied++; }
+        });
+      }
+      if (applied) {
+        const upd = doc.fields.updatedAt ? doc.fields.updatedAt.stringValue.slice(0, 10) : '';
+        state.statusMsg = state.players.length + ' players · boards live' + (upd ? ' ' + upd : '');
+        // v0.17.2: season mode must re-render too (same fix Sleeper got in
+        // v0.20.0) — renderStatusOnly() left stale ranks in TEAM/WAIVERS
+        // profiles when the Firestore fetch landed after the initial render.
+        if (state.tracking || state.appMode === 'season') render(); else renderStatusOnly();
+      }
+    } catch (e) { /* baked boards from players.json stay in effect */ }
+  }
+
+  // v0.17.2: long-lived tabs never re-fetched boards — a board saved on the
+  // site only reached ESPN on a full page reload. Re-pull when the tab is
+  // refocused after 5+ minutes hidden (i.e. "I saved on the site, came back").
+  let _boardsFetchedAt = Date.now();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    if (Date.now() - _boardsFetchedAt < 5 * 60 * 1000) return;
+    _boardsFetchedAt = Date.now();
+    refreshJackBoards();
+  });
+
+  // ---------- live Vegas overlay (GitHub Pages serves CORS *, direct fetch OK) ----------
+  function applyLiveVegas(gameTotals) {
+    const SOS = window.MFF_PLAYOFF_SOS;
+    if (!SOS || !gameTotals) return 0;
+    let updated = 0;
+    Object.keys(SOS).forEach((team) => {
+      const posMap = SOS[team] || {};
+      Object.keys(posMap).forEach((pos) => {
+        Object.keys(posMap[pos] || {}).forEach((wk) => {
+          const rec = posMap[pos][wk];
+          if (!rec || !rec.opp) return;
+          const key = rec.home ? ('W' + wk + '_' + rec.opp + '_' + team)
+                               : ('W' + wk + '_' + team + '_' + rec.opp);
+          const g = gameTotals[key];
+          if (!g) return;
+          if (typeof g.total === 'number') rec.gameTotal = g.total;
+          if (typeof g.spread === 'number') {
+            rec.teamSpread = rec.home ? g.spread : -g.spread;
+            if (typeof g.total === 'number') rec.impliedTotal = (g.total - rec.teamSpread) / 2;
+          }
+          updated++;
+        });
+      });
+    });
+    return updated;
+  }
+  if (!MOCK) {
+    fetch('https://www.myfantasyfootball.co/data/betting_lines_2026.json?t=' + Date.now())
+      .then((r) => r.json())
+      .then((d) => {
+        window.BETTING_2026 = d; // season-sim engine (SIMS tab) reads gameTotals here
+        const n = applyLiveVegas(d.gameTotals);
+        buildSchedule(d.gameTotals); // full-season week→opponent map for season mode
+        state.wkPropsAll = d.weeklyProps || null; // site W1+ prop boards → weekly projections
+        if (n) console.log('[MFF/ESPN] live Vegas overlay: ' + n + ' SOS records refreshed');
+        if (state.appMode === 'season') render();
+      }).catch(() => {});
+  }
+
+  // Direct fetch first (ESPN's page CSP allows it today), background-worker
+  // relay as the fallback if a CSP change ever blocks content-script fetches.
+  function fetchJson(url) {
+    return fetch(url).then((r) => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).catch((e) => new Promise((resolve, reject) => {
+      try {
+        chrome.runtime.sendMessage({ type: 'mffFetch', url }, (resp) => {
+          if (chrome.runtime.lastError) return reject(e);
+          if (!resp || !resp.ok) return reject(new Error(resp ? resp.error : String(e)));
+          resolve(resp.data);
+        });
+      } catch (_) { reject(e); }
+    }));
+  }
+
+  // ---------- players.json ----------
+  async function loadPlayers() {
+    let data;
+    if (MOCK && MOCK.players) {
+      data = MOCK.players;
+    } else {
+      const url = chrome.runtime.getURL('data/players.json');
+      data = await (await fetch(url)).json();
+    }
+    state.players = data.players || [];
+    applyLeagueScoring(null);
+    state.exportedAt = data.exported_at || '';
+    for (const p of state.players) {
+      const k = keyOf(p);
+      if (!state.byName[k]) state.byName[k] = p;
+      const loose = norm(p.n);
+      if (!state.byNameLoose[loose]) state.byNameLoose[loose] = p;
+    }
+    state.statusMsg = state.players.length + ' players · data ' + state.exportedAt;
+  }
+
+  // ---------- ESPN adapter ----------
+  function currentSeason() {
+    const now = new Date();
+    return String(now.getMonth() < 2 ? now.getFullYear() - 1 : now.getFullYear());
+  }
+  function urlParams() {
+    try { return new URLSearchParams(location.search); } catch (_) { return new URLSearchParams(''); }
+  }
+  function detectDraftLeagueId() {
+    if (MOCK && MOCK.leagueId) return MOCK.leagueId;
+    if (!/\/football\/draft/i.test(location.pathname)) return null;
+    const id = urlParams().get('leagueId');
+    return id && /^\d+$/.test(id) ? id : null;
+  }
+
+  const POS_BY_ID = { 1: 'QB', 2: 'RB', 3: 'WR', 4: 'TE', 5: 'K', 16: 'DST' };
+  function espnPlayerName(pl) {
+    // DSTs come through as "Ravens D/ST" — rename to the site's convention
+    if (pl.defaultPositionId === 16 && window.MFF_ESPN && window.MFF_ESPN.PRO_TEAM_FULL[pl.proTeamId]) {
+      return window.MFF_ESPN.PRO_TEAM_FULL[pl.proTeamId] + ' D/ST';
+    }
+    return pl.fullName || '';
+  }
+  function abbrevFor(proTeamId) {
+    return (window.MFF_ESPN && window.MFF_ESPN.PRO_TEAM[proTeamId]) || '';
+  }
+
+  async function fetchLeague(leagueId, season) {
+    if (MOCK && MOCK.league) return MOCK.league;
+    const r = await fetch(LM_API + season + '/segments/0/leagues/' + leagueId +
+      '?view=mDraftDetail&view=mTeam&view=mSettings', {
+      credentials: 'include', headers: { Accept: 'application/json' },
+    });
+    if (!r.ok) throw new Error('ESPN league API ' + r.status);
+    return r.json();
+  }
+  async function fetchEspnPlayers(season) {
+    if (MOCK && MOCK.espnPlayers) return MOCK.espnPlayers;
+    const r = await fetch(LM_API + season + '/players?scoringPeriodId=0&view=players_wl', {
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'x-fantasy-filter': JSON.stringify({ filterActive: { value: true } }),
+      },
+    });
+    if (!r.ok) throw new Error('ESPN players API ' + r.status);
+    return r.json();
+  }
+
+  function teamDisplayName(t) {
+    if (t.name && t.name.trim()) return t.name.trim();
+    const parts = [t.location, t.nickname].filter((s) => s && s.trim());
+    return parts.join(' ').trim() || ('Team ' + t.id);
+  }
+
+  // Build pick order: prefer mDraftDetail's explicit per-overall teamIds;
+  // fall back to snake math over draftSettings.pickOrder pre-draft.
+  function buildPickOrder(raw) {
+    const dd = raw.draftDetail || {};
+    const picks = Array.isArray(dd.picks) ? dd.picks : [];
+    const order = [];
+    if (picks.length) {
+      const sorted = picks.slice().sort((a, b) => (a.overallPickNumber || 0) - (b.overallPickNumber || 0));
+      for (const pk of sorted) order[pk.overallPickNumber] = pk.teamId;
+      return order;
+    }
+    const ds = (raw.settings && raw.settings.draftSettings) || {};
+    const round1 = ds.pickOrder || [];
+    const rounds = state.slots ? state.slots.rounds : 16;
+    let overall = 1;
+    for (let rd = 1; rd <= rounds; rd++) {
+      const seq = rd % 2 === 1 ? round1 : round1.slice().reverse();
+      for (const tid of seq) order[overall++] = tid;
+    }
+    return order;
+  }
+
+  function applyLeagueData(raw) {
+    const settings = raw.settings || {};
+    state.leagueName = settings.name || '';
+    state.teams = Object.create(null);
+    (raw.teams || []).forEach((t) => {
+      state.teams[t.id] = { name: teamDisplayName(t), abbrev: t.abbrev || '' };
+    });
+    // lineup slots → simple counts
+    const lc = (settings.rosterSettings && settings.rosterSettings.lineupSlotCounts) || {};
+    const n = (k) => parseInt(lc[k], 10) || 0;
+    const teamCount = (raw.teams || []).length || parseInt((settings.basicSettings || {}).size, 10) || 12;
+    const perTeam = Object.keys(lc).reduce((sum, k) => (k === '21' ? sum : sum + (parseInt(lc[k], 10) || 0)), 0);
+    state.slots = {
+      qb: n('0') + n('1'), rb: n('2'), wr: n('4'), te: n('6'),
+      flex: n('23') + n('3') + n('5'), sf: n('7'), k: n('17'), dst: n('16'),
+      bn: n('20'), teams: teamCount, rounds: perTeam || 16,
+    };
+    // scoring: statId 53 = rec, 4 = passing TD
+    let rec = 0, passTd = 4;
+    try {
+      for (const it of settings.scoringSettings.scoringItems) {
+        const pts = it.pointsOverrides && it.pointsOverrides['16'] != null ? it.pointsOverrides['16'] : it.points;
+        if (it.statId === 53 && typeof pts === 'number') rec = pts;
+        if (it.statId === 4 && typeof pts === 'number') passTd = pts;
+      }
+    } catch (_) {}
+    state.scoring = { rec, passTd };
+    state.pickOrder = buildPickOrder(raw);
+    state.modeDetected = (state.slots.sf > 0 || state.slots.qb >= 2) ? 're_sf' : 're_1qb';
+  }
+
+  function indexEspnPlayers(list) {
+    const arr = Array.isArray(list) ? list : (list && list.players) || [];
+    let matched = 0;
+    for (const pl of arr) {
+      const id = pl.id != null ? pl.id : (pl.player && pl.player.id);
+      const info = pl.fullName ? pl : (pl.player || {});
+      if (id == null || !info.fullName) continue;
+      const name = espnPlayerName(info);
+      const pos = POS_BY_ID[info.defaultPositionId] || '';
+      const p = findPlayer(name, pos);
+      if (p) matched++;
+      state.espnById[id] = { name, pos, team: abbrevFor(info.proTeamId), p };
+    }
+    return { total: arr.length, matched };
+  }
+
+  // ---------- pick math ----------
+  function picksUntilMine() {
+    if (!state.myTeamId || !state.pickOrder.length) return null;
+    const total = state.slots ? state.slots.teams * state.slots.rounds : state.pickOrder.length - 1;
+    const next = state.picks.length + 1;
+    for (let p = next; p <= total; p++) {
+      if (state.pickOrder[p] === state.myTeamId) return p - next;
+    }
+    return null;
+  }
+  function currentRound() {
+    if (!state.slots) return 1;
+    return Math.min(state.slots.rounds, Math.ceil((state.picks.length + 1) / state.slots.teams));
+  }
+  // Overall number of my pick AFTER the one I'm currently making — the
+  // "will he still be there?" horizon for the leapfrog guard.
+  function myNextPickOverall() {
+    if (!state.myTeamId || !state.pickOrder.length) return null;
+    const total = state.slots ? state.slots.teams * state.slots.rounds : state.pickOrder.length - 1;
+    let found = 0;
+    for (let p = state.picks.length + 1; p <= total; p++) {
+      if (state.pickOrder[p] === state.myTeamId) {
+        found++;
+        if (found === 2) return p;
+      }
+    }
+    return null;
+  }
+
+  // ---------- DOM board scrape (PRIMARY pick source in the ESPN room) ----------
+  // ESPN sends NO pick history over HTTP mid-draft (mDraftDetail/mRoster stay
+  // empty) and the WebSocket join snapshot is an opaque base64 `INIT` binary
+  // frame — but the room decodes it into a live `.draftBoardGrid` of
+  // `.completedPick` cells (round.pick + name + pos + slot column). Scraping
+  // that grid is the ONLY reliable full-history source and, unlike WS parsing,
+  // is refresh-proof for free (the room always rebuilds the grid). We poll it;
+  // the WS feed is kept only for instant on-the-clock. Falls back to nothing
+  // in the mock harness (no grid) where the WS path drives picks instead.
+  function scrapeBoardPicks() {
+    const grid = document.querySelector('.draftBoardGrid');
+    if (!grid) return null;
+    const cells = grid.querySelectorAll('.completedPick');
+    if (!cells.length) return [];
+    const teams = (state.slots && state.slots.teams) || 12;
+    const out = [];
+    cells.forEach((c) => {
+      const rp = ((c.querySelector('.roundPick') || {}).textContent || '').trim();
+      const m = rp.match(/^(\d+)\.(\d+)$/);
+      if (!m) return;
+      const round = parseInt(m[1], 10), pickInRd = parseInt(m[2], 10);
+      const overall = (round - 1) * teams + pickInRd;
+      const fn = ((c.querySelector('.playerFirstName') || {}).textContent || '').trim();
+      const ln = ((c.querySelector('.playerLastName') || {}).textContent || '').trim();
+      const proTeam = ((c.querySelector('.playerProTeam') || {}).textContent || '').trim().toUpperCase();
+      const posRaw = ((c.querySelector('.positionPill') || {}).textContent || '').trim().toUpperCase();
+      const isDst = posRaw === 'D/ST' || posRaw === 'DST';
+      const pos = isDst ? 'DST' : posRaw;
+      // DST cells scrape as "Chiefs D/ST"; the site board names them
+      // "Kansas City Chiefs D/ST" — rebuild from the pro-team abbrev.
+      let name;
+      if (isDst) {
+        const full = window.MFF_ESPN && window.MFF_ESPN.PRO_TEAM_FULL[
+          Object.keys(window.MFF_ESPN.PRO_TEAM).find((k) => window.MFF_ESPN.PRO_TEAM[k] === proTeam)];
+        name = (full ? full + ' D/ST' : (fn + ' ' + ln).trim());
+      } else {
+        name = (fn + ' ' + ln).trim();
+      }
+      if (!name) return;
+      out.push({ overall, name, pos });
+    });
+    out.sort((a, b) => a.overall - b.overall);
+    return out;
+  }
+  // Rebuild state.picks from a scraped board. teamId per overall comes from
+  // pickOrder (mDraftDetail structure — populated even when playerIds aren't);
+  // matches names to the site board with the same suffix-tolerant logic used
+  // for the ESPN player map.
+  function applyBoardScrape(scraped) {
+    state.picks = [];
+    state.seenPlayerIds = new Set();
+    for (const s of scraped) {
+      const pos = s.pos === 'D/ST' ? 'DST' : s.pos;
+      const p = findPlayer(s.name, pos);
+      const teamId = state.pickOrder[s.overall] != null ? state.pickOrder[s.overall] : null;
+      state.picks.push({
+        overall: s.overall, teamId,
+        playerId: null,
+        p, name: p ? p.n : s.name, pos: p ? p.s : pos,
+      });
+    }
+  }
+  let boardTimer = null;
+  let lastBoardCount = -1;
+  function pollBoard() {
+    const scraped = scrapeBoardPicks();
+    if (scraped == null) return false;         // no grid (harness) → WS drives
+    if (scraped.length === lastBoardCount) return false;
+    lastBoardCount = scraped.length;
+    applyBoardScrape(scraped);
+    persistPicks();
+    rebuildFromPicks();
+    decorateDraftStrip();  // repaint the strip counts now, don't lag the 2s tick
+    if (state.tracking) render();
+    return true;
+  }
+  function startBoardPolling() {
+    if (boardTimer) return;
+    boardTimer = setInterval(pollBoard, 2500);
+  }
+
+  // ---------- live WS feed ----------
+  // Picks are PERSISTED to chrome.storage as they arrive and restored on
+  // boot, so a page refresh never loses draft progress (the sniffer's replay
+  // buffer only survives within one page load). seenPlayerIds dedupes across
+  // restore + replay + live.
+  function persistPicks() {
+    if (!state.leagueId) return;
+    store.set({
+      ['espnPicks_' + state.leagueId]: {
+        savedAt: Date.now(),
+        // Store name + pos too: board-scraped picks have no ESPN playerId, and
+        // names restore instantly before the grid/player-map is ready on boot.
+        picks: state.picks.map((pk) => ({ t: pk.teamId, p: pk.playerId, n: pk.name, s: pk.pos, o: pk.overall })),
+      },
+    });
+  }
+  function restorePicks(stored) {
+    if (!stored || !Array.isArray(stored.picks)) return;
+    for (const sp of stored.picks) {
+      if (sp.p && sp.p > 0) { addPick(sp.t, sp.p); continue; }
+      if (!sp.n) continue;
+      const pos = sp.s === 'D/ST' ? 'DST' : sp.s;
+      const p = findPlayer(sp.n, pos);
+      state.picks.push({
+        overall: sp.o != null ? sp.o : state.picks.length + 1,
+        teamId: sp.t != null ? sp.t : null,
+        playerId: null, p, name: p ? p.n : sp.n, pos: p ? p.s : (pos || '?'),
+      });
+    }
+  }
+  function addPick(teamId, playerId) {
+    if (!isFinite(teamId) || !isFinite(playerId) || playerId <= 0) return false;
+    if (state.seenPlayerIds.has(playerId)) return false;
+    state.seenPlayerIds.add(playerId);
+    const info = state.espnById[playerId] || null;
+    state.picks.push({
+      overall: state.picks.length + 1,
+      teamId,
+      playerId,
+      p: info ? info.p : null,
+      name: info ? info.name : ('#' + playerId),
+      pos: info ? info.pos : '?',
+    });
+    return true;
+  }
+  // Player-list fetch can land after restored/early picks — backfill names.
+  function reResolvePicks() {
+    for (const pk of state.picks) {
+      if (pk.p) continue;
+      const info = state.espnById[pk.playerId];
+      if (info) { pk.p = info.p; pk.name = info.name; pk.pos = info.pos; }
+    }
+  }
+  // Parse a protocol frame with a GLOBAL regex scan, not line splitting: the
+  // mid-draft join catch-up packs every historical pick into one frame whose
+  // SELECTED entries are not newline-delimited (line splitting parsed only
+  // the first pick — the "refresh loses progress" bug). Verb order within
+  // the frame is preserved, so overall pick numbering stays correct.
+  const SELECTED_RE = /SELECTED\s+(\d+)\s+(\d+)/g;
+  const SELECTING_RE = /SELECTING\s+(\d+)(?:\s+(\d+))?/g;
+  function handleProtoLine(line) { // kept for the console hook / tests
+    return handleProtoData(line);
+  }
+  function handleProtoData(data) {
+    const s = String(data);
+    let changed = false, m;
+    // When the room's draft board exists, it is the authoritative pick source
+    // (pollBoard handles SELECTED); WS is only for the on-the-clock signal.
+    // Without a grid (mock harness), WS drives picks.
+    const hasGrid = !!document.querySelector('.draftBoardGrid');
+    if (!hasGrid) {
+      SELECTED_RE.lastIndex = 0;
+      while ((m = SELECTED_RE.exec(s))) {
+        if (addPick(parseInt(m[1], 10), parseInt(m[2], 10))) changed = true;
+      }
+    } else {
+      // A SELECTED just arrived — re-scrape promptly instead of waiting for the poll.
+      if (/SELECTED\s+\d/.test(s)) setTimeout(pollBoard, 250);
+    }
+    // Last SELECTING in the frame wins (catch-up ends with the current clock)
+    SELECTING_RE.lastIndex = 0;
+    let lastSel = null;
+    while ((m = SELECTING_RE.exec(s))) lastSel = m;
+    if (lastSel) {
+      state.onClockTeamId = parseInt(lastSel[1], 10);
+      state.clockMs = lastSel[2] != null ? parseInt(lastSel[2], 10) : null;
+      changed = true;
+    }
+    return changed;
+  }
+  function handleSniffEvent(detail) {
+    let d;
+    try { d = JSON.parse(detail); } catch (_) { return; }
+    if (d.ev !== 'proto' || !d.data) return;
+    if (handleProtoData(d.data)) {
+      persistPicks();
+      rebuildFromPicks();
+      if (state.tracking) render();
+    }
+  }
+  document.addEventListener('mff-espn-ws-sniff', (e) => handleSniffEvent(e.detail));
+  document.addEventListener('mff-espn-ws-sniff-replay', (e) => handleSniffEvent(e.detail));
+  function requestReplay() {
+    try { document.dispatchEvent(new CustomEvent('mff-espn-sniff-replay-request')); } catch (_) {}
+  }
+
+  function rebuildFromPicks() {
+    state.draftedKeys = new Set();
+    state.myRoster = [];
+    for (const pk of state.picks) {
+      if (pk.p) state.draftedKeys.add(keyOf(pk.p));
+      if (state.myTeamId && pk.teamId === state.myTeamId) {
+        state.myRoster.push({ p: pk.p, name: pk.name, pos: pk.p ? pk.p.s : pk.pos, pickNo: pk.overall });
+      }
+    }
+    for (const k of state.manualMine) {
+      const p = state.byName[k];
+      if (!p || state.myRoster.some((r) => r.p === p)) continue;
+      state.draftedKeys.add(k);
+      state.myRoster.push({ p, name: p.n, pos: p.s, pickNo: null, manual: true });
+    }
+  }
+
+  // ---------- league-scoring adjustment (Clay cPts is full-PPR / 4pt paTD) ----------
+  // Accepts the sleeper-style dict (rec / pass_td, plus K distance buckets +
+  // DST values for the season-mode models) or the draft path's {rec, passTd}.
+  function applyLeagueScoring(scoring) {
+    state.leagueScoring = scoring || null; // full rules for kickerProjFor/dstProjFor
+    const recPts = scoring && scoring.rec != null ? scoring.rec : 1;
+    const passTd = scoring
+      ? (scoring.pass_td != null ? scoring.pass_td : (scoring.passTd != null ? scoring.passTd : 4))
+      : 4;
+    state.scoringLabel =
+      (recPts === 1 ? 'PPR' : recPts === 0.5 ? '½PPR' : recPts === 0 ? 'STD' : recPts + '/rec') +
+      (passTd !== 4 ? ' · ' + passTd + 'pt paTD' : '');
+    state.scoringVals = { recPts, passTd };
+    for (const p of state.players) {
+      if (p.cPts == null || !p.cGm) continue;
+      const adj = p.cPts + (recPts - 1) * (p.cRec || 0) + (passTd - 4) * (p.cPtd || 0);
+      p.szn = Math.round(adj * 10) / 10;
+      p.pPg = Math.round((adj / p.cGm) * 10) / 10;
+      // scDelta = per-game PPG shift this league's scoring gives the player
+      // vs the ½PPR / 4-pt-paTD baseline the rank sources assume. Feeds the
+      // Recommended score so full-PPR bumps reception hogs and STD fades them.
+      p.scDelta = Math.round((((recPts - 0.5) * (p.cRec || 0) +
+        (passTd - 4) * (p.cPtd || 0)) / p.cGm) * 10) / 10;
+    }
+  }
+
+  // ---------- modes ----------
+  const MODES = {
+    re_1qb: { label: 'Redraft 1QB', src: 'jack', qbFloor: 1 },
+    re_sf:  { label: 'Redraft SF',  src: 'jack', qbFloor: 2 },
+    dyn_1qb:{ label: 'Dynasty 1QB', src: 'ktc',  qbFloor: 1 },
+    dyn_sf: { label: 'Dynasty SF',  src: 'ktc',  qbFloor: 2 },
+  };
+  function applyMode(mode, manual) {
+    if (!MODES[mode]) return;
+    state.mode = mode;
+    if (manual) state.modeManual = true;
+    state.rankSource = MODES[mode].src;
+  }
+  const MODE_KEYS = {
+    dyn_sf:  { ktc: 'ktcSf',  jack: 'jDsf', fp: 'fpDsf', sl: 'slDsf', adp: 'sa',  vor: 'vorSf', up: 'upSf' },
+    dyn_1qb: { ktc: 'ktc1qb', jack: 'jDy',  fp: 'fpDy',  sl: 'slDy',  adp: 'da',  vor: 'vor',   up: 'up'   },
+    re_sf:   { ktc: 'ktcSf',  jack: 'jSf',  fp: 'fpSf',  sl: 'slSf',  adp: 'sfa', vor: 'vorSf', up: 'upSf' },
+    re_1qb:  { ktc: 'ktc1qb', jack: 'rank', fp: 'fpR',   sl: 'slR',   adp: 'a',   vor: 'vor',   up: 'up'   },
+  };
+  function modeKeys() { return MODE_KEYS[state.mode] || MODE_KEYS.re_1qb; }
+  // Redraft leagues have no use for dynasty tooling — KTC values (a dynasty
+  // trade market) disappear everywhere unless a dynasty/keeper mode is on.
+  function isDynMode() { return state.mode.indexOf('dyn') === 0; }
+  const SOURCES = {
+    jack: { label: "Jack's Rank",  get: (p) => p[modeKeys().jack], desc: false },
+    ktc:  { label: 'KTC',          get: (p) => p[modeKeys().ktc],  desc: true },
+    fp:   { label: 'FantasyPros',  get: (p) => p[modeKeys().fp],   desc: false },
+    sl:   { label: 'Sleeper Rank', get: (p) => p[modeKeys().sl],   desc: false },
+  };
+  function isDrafted(p) {
+    return state.draftedKeys.has(keyOf(p)) || state.manualDrafted.has(keyOf(p));
+  }
+  // OUT FOR SEASON: the site's IR flag hides a player from the redraft /
+  // best ball / superflex / weekly boards but deliberately KEEPS him in
+  // dynasty (he still has trade value), so mirror that split rather than
+  // dropping him from the data. Search still finds him, same as the site.
+  function isIrHidden(p) { return !!p.ir && !isDynMode(); }
+  function availablePlayers() {
+    return state.players.filter((p) => !isDrafted(p) && !isIrHidden(p));
+  }
+  // Fall-based ADP tags: a player still on the board past his ADP is FALLING
+  // (STEAL/Value); a player whose ADP is well after the current pick would be
+  // a market reach — don't reach 20+ picks, you can very likely get him on a
+  // later turn (Reach/Stretch).
+  function adpTag(p) {
+    const adp = p[modeKeys().adp];
+    if (adp == null || !state.slots) return null;
+    const t = state.slots.teams || 12;
+    const diff = adp - (state.picks.length + 1); // +ve = market drafts him later
+    if (diff <= -2 * t) return 'STEAL';   // fell 2+ rounds past ADP
+    if (diff <= -t) return 'Value';       // fell a full round
+    if (diff >= 20) return 'Reach';       // 20+ picks early vs market
+    if (diff >= 12) return 'Stretch';     // roughly a round early
+    return null;
+  }
+  function stackInfo(p) {
+    if (!p.sTm) return null;
+    const mates = state.myRoster.filter((r) => r.p && r.p.sTm === p.sTm);
+    if (!mates.length) return null;
+    const hasQB = mates.some((r) => r.pos === 'QB');
+    const hasCatcher = mates.some((r) => r.pos === 'WR' || r.pos === 'TE');
+    const names = mates.map((m) => m.name);
+    if (((p.s === 'WR' || p.s === 'TE') && hasQB) || (p.s === 'QB' && hasCatcher)) {
+      return { type: 'stack', names };
+    }
+    return { type: 'team', names };
+  }
+  function starterProjPPG() {
+    const st = state.slots || {};
+    const pool = state.myRoster
+      .filter((r) => r.p && r.p.pPg != null)
+      .map((r) => ({ pos: r.pos, ppg: r.p.pPg }))
+      .sort((a, b) => b.ppg - a.ppg);
+    const used = new Array(pool.length).fill(false);
+    let total = 0;
+    function take(posSet, n) {
+      for (let k = 0; k < (n || 0); k++) {
+        const i = pool.findIndex((x, idx) => !used[idx] && posSet.includes(x.pos));
+        if (i < 0) return;
+        used[i] = true;
+        total += pool[i].ppg;
+      }
+    }
+    take(['QB'], st.qb); take(['RB'], st.rb);
+    take(['WR'], st.wr); take(['TE'], st.te);
+    take(['RB', 'WR', 'TE'], st.flex);
+    take(['QB', 'RB', 'WR', 'TE'], st.sf);
+    take(['K'], st.k);
+    return Math.round(total * 10) / 10;
+  }
+  function sortedAvailable() {
+    const src = SOURCES[state.rankSource];
+    const avail = availablePlayers().filter(
+      (p) => state.posFilter === 'ALL' || p.s === state.posFilter
+    );
+    avail.sort((a, b) => {
+      const va = src.get(a), vb = src.get(b);
+      if (va == null && vb == null) return a.rank - b.rank;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      return src.desc ? vb - va : va - vb;
+    });
+    if (state.sortVor) {
+      const vk = modeKeys().vor;
+      avail.sort((a, b) => {
+        const va = a[vk], vb = b[vk];
+        if (va == null && vb == null) return 0;
+        if (va == null) return 1;
+        if (vb == null) return -1;
+        return vb - va;
+      });
+    }
+    return avail;
+  }
+  function sortListBySource(list) {
+    const src = SOURCES[state.rankSource];
+    return list.slice().sort((a, b) => {
+      const va = src.get(a), vb = src.get(b);
+      if (va == null && vb == null) return a.rank - b.rank;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      return src.desc ? vb - va : va - vb;
+    });
+  }
+  function rosterCounts() {
+    const c = { QB: 0, RB: 0, WR: 0, TE: 0, K: 0, DST: 0 };
+    for (const r of state.myRoster) if (c[r.pos] != null) c[r.pos]++;
+    return c;
+  }
+  // Draft-capital-weighted position counts: a round-1 pick "fills" a position
+  // far more than a round-9 dart. quality = 1.0 through round 2, declining
+  // ~7%/round to a 0.4 floor; manual adds (unknown pick) count 0.7. So three
+  // round-6+ QBs ≈ 1.8 "real" QBs — the position still wants quality even
+  // though the raw count looks full.
+  function effRosterCounts() {
+    const t = (state.slots && state.slots.teams) || 12;
+    const c = { QB: 0, RB: 0, WR: 0, TE: 0, K: 0, DST: 0 };
+    for (const r of state.myRoster) {
+      if (c[r.pos] == null) continue;
+      const rd = r.pickNo ? Math.ceil(r.pickNo / t) : null;
+      c[r.pos] += rd == null ? 0.7 : Math.max(0.4, Math.min(1, 1.14 - 0.07 * rd));
+    }
+    return c;
+  }
+  // Draft-capital VALUE model: every pick carries trade-chart-style value
+  // v(n) (~60 at 1.01 decaying to a ~4-pt floor); each position banks the
+  // value of the picks spent on it. Need is then VALUE invested vs the
+  // format's target share of everything spent so far — not a body count.
+  function pickValue(n) { return 60 * Math.exp(-n / 85) + 4; }
+  const CAPITAL_SHARE = {
+    sf:  { QB: 0.30, RB: 0.21, WR: 0.33, TE: 0.12 },
+    one: { QB: 0.11, RB: 0.28, WR: 0.45, TE: 0.12 },
+  };
+  // League-adjusted capital targets: start from the format base, tilt toward
+  // the positions the lineup actually starts (3WR / multi-flex builds want
+  // more WR capital) and toward the scoring (full PPR favors WRs, STD favors
+  // RBs), then renormalize — so a WR-heavy PPR lineup pulls its extra share
+  // out of QB and TE.
+  function capitalShares() {
+    const s = Object.assign({}, CAPITAL_SHARE[state.mode.endsWith('_sf') ? 'sf' : 'one']);
+    const st = state.slots || {};
+    if (st.rb || st.wr) {
+      const flex = st.flex || 0;
+      s.RB *= ((st.rb || 2) + 0.45 * flex) / 2.45;
+      s.WR *= ((st.wr || 2) + 0.55 * flex) / 2.55;
+      s.TE *= st.te || 1;
+    }
+    const sv = state.scoringVals || {};
+    const rec = sv.recPts != null ? sv.recPts : 1;
+    if (rec >= 0.75) { s.WR *= 1.08; s.RB *= 0.94; }       // full PPR
+    else if (rec <= 0.25) { s.RB *= 1.1; s.WR *= 0.92; }    // STD-ish
+    const tot = s.QB + s.RB + s.WR + s.TE;
+    for (const k in s) s[k] = s[k] * 0.96 / tot;
+    return s;
+  }
+  // Per-position fraction of the target still missing: +1 = nothing banked,
+  // 0 = on target, negative = over-invested.
+  // Positional QUALITY — what number by position you own, NOT what round you
+  // spent (Jack, 2026-08-05): "QB3 even if taken in round 6 should be treated
+  // like a premium, and another QB shouldn't need to be taken. If you take WR2
+  // and WR5, WR won't be as important."
+  //
+  // Each rostered player is weighted by his rank WITHIN his position on the
+  // active board — 1st ≈ 1.00, 3rd ≈ 0.72, 6th ≈ 0.43, 12th ≈ 0.16, 24th ≈
+  // 0.02 — summed per position and expressed as a share of that position's
+  // starters. So QB3 alone fills ~0.72 of a 1-QB requirement, and WR2+WR5
+  // fills (0.85 + 0.51) / 2 ≈ 0.68 of a 2-WR requirement. A pile of late
+  // bodies at the same COUNT barely registers, which is the whole point.
+  const POS_Q_DECAY = 6;
+  function posQualityFill() {
+    const src = SOURCES[state.rankSource] || SOURCES.jack;
+    const byPos = {};
+    for (const p of state.players) {
+      const v = src.get(p);
+      if (v == null) continue;
+      (byPos[p.s] = byPos[p.s] || []).push([p, v]);
+    }
+    const idx = new Map();
+    for (const k in byPos) {
+      byPos[k].sort((a, b) => (src.desc ? b[1] - a[1] : a[1] - b[1]));
+      byPos[k].forEach((e, i) => idx.set(e[0], i + 1));
+    }
+    const st = state.slots || {};
+    const starters = {
+      QB: (st.qb || 0) + (st.sf || 0) || 1,
+      RB: st.rb || 1, WR: st.wr || 1, TE: st.te || 1,
+    };
+    const banked = { QB: 0, RB: 0, WR: 0, TE: 0 };
+    for (const r of state.myRoster) {
+      if (!r.p || banked[r.p.s] == null) continue;
+      const n = idx.get(r.p);
+      if (!n) continue;
+      banked[r.p.s] += Math.exp(-(n - 1) / POS_Q_DECAY);
+    }
+    const out = {};
+    for (const pos in banked) out[pos] = banked[pos] / Math.max(1, starters[pos]);
+    return out;
+  }
+  function capitalDeficits() {
+    const share = capitalShares();
+    const banked = { QB: 0, RB: 0, WR: 0, TE: 0 };
+    let spent = 0;
+    for (const r of state.myRoster) {
+      const v = pickValue(r.pickNo || Math.max(1, state.picks.length / 2));
+      spent += v;
+      if (banked[r.pos] != null) banked[r.pos] += v;
+    }
+    const out = {};
+    for (const pos in banked) {
+      const target = share[pos] * spent;
+      out[pos] = target > 0 ? (target - banked[pos]) / target : 0;
+    }
+    return out;
+  }
+  // Rank WITHIN position for every player, by the active rank source —
+  // shared by the depletion-schedule need check and the need-boost gate.
+  function posRankIndex() {
+    const src = SOURCES[state.rankSource] || SOURCES.jack;
+    const posIdx = new Map();
+    const byP = {};
+    for (const p of state.players) {
+      const v = src.get(p);
+      if (v == null) continue;
+      (byP[p.s] = byP[p.s] || []).push([p, v]);
+    }
+    for (const k in byP) {
+      byP[k].sort((a, b) => (src.desc ? b[1] - a[1] : a[1] - b[1]));
+      byP[k].forEach((e, i) => posIdx.set(e[0], i + 1));
+    }
+    return posIdx;
+  }
+  // Position depletion: how many at each position are off the board, counted
+  // through isDrafted() over the data pool so id-keyed, name-keyed and
+  // manually-marked picks all count the same.
+  function draftedPosCounts() {
+    const g = { QB: 0, RB: 0, WR: 0, TE: 0 };
+    for (const p of state.players) if (g[p.s] != null && isDrafted(p)) g[p.s]++;
+    return g;
+  }
+  // Format-aware need flags. QB/RB/WR/TE use draft-capital-weighted counts
+  // (late-round bodies don't silence a need); K/DST stay raw.
+  function needPositions() {
+    const c = rosterCounts();
+    const ec = effRosterCounts();
+    const rd = currentRound();
+    const m = MODES[state.mode];
+    const st = state.slots || {};
+    const need = new Set();
+    if (m.qbFloor >= 2) {
+      if (ec.QB < 1.9) need.add('QB');
+    } else if (c.QB < 1 && rd >= 6) {
+      need.add('QB');
+    }
+    // EARLY RB2 WINDOW (Jack, 2026-08-06, redraft only): rounds 3-5 with
+    // fewer than 2 RBs rostered is a NEED right now — don't wait for the
+    // round-5 capital-weighted check below. Also lets the leapfrog guard
+    // honor the RB boost cross-position.
+    if (state.mode.indexOf('re_') === 0 && rd >= 3 && rd <= 5 && c.RB < 2) need.add('RB');
+    if (rd >= 5 && ec.RB < 2.6) need.add('RB');
+    if (rd >= 5 && ec.WR < 3.4) need.add('WR');
+    if (rd >= 7 && ec.TE < 0.75) need.add('TE');
+    const lateRd = (st.rounds || 16) - 2;
+    if ((st.k || 0) > 0 && rd >= lateRd && c.K < 1) need.add('K');
+    if ((st.dst || 0) > 0 && rd >= lateRd && c.DST < 1) need.add('DST');
+    // DEPLETION SCHEDULE (Jack, 2026-08-06, redraft only): every league-
+    // size-worth of a position off the board is one "cycle" — after 24 RBs
+    // in a 12-man league every team should own 2; after 12 QBs every team
+    // should own 1. Sitting under floor(taken / teams) at a position =
+    // BEHIND schedule = need, whatever the round; at or above = ahead, and
+    // this rule stays quiet. Capped at what a lineup actually uses
+    // (starters +1 at the flex positions, bare starters at QB/TE) so a
+    // league emptying QBs late can't demand a QB2.
+    if (state.mode.indexOf('re_') === 0) {
+      const gone = draftedPosCounts();
+      const t = st.teams || 12;
+      const cap = {
+        QB: (st.qb || 0) + (st.sf || 0) || 1,
+        RB: (st.rb || 1) + 1,
+        WR: (st.wr || 1) + 1,
+        TE: st.te || 1,
+      };
+      const posIdx = posRankIndex();
+      for (const pos of ['QB', 'RB', 'WR', 'TE']) {
+        const expect = Math.min(cap[pos], Math.floor(gone[pos] / t));
+        if (!expect) continue;
+        if (c[pos] < expect) { need.add(pos); continue; }
+        if (pos !== 'RB' && pos !== 'WR') continue;
+        // QUALITY-AWARE SCHEDULE (Jack, 2026-08-06: "RB20 and RB21 vs RB3
+        // and RB6 — it's not the same"): matching the COUNT isn't enough,
+        // your k-th best player at the position has to belong to cycle k —
+        // best RB inside the top-teams, 2nd inside 2x teams, etc., with a
+        // half-cycle cushion. Two late-cycle bodies leave the need lit until
+        // quality catches up. QB/TE skip this — presence is their bar; a
+        // quality nag there would fight the backup fade head-on.
+        const mine = state.myRoster
+          .filter((r) => r.pos === pos && r.p && posIdx.get(r.p))
+          .map((r) => posIdx.get(r.p)).sort((a, b) => a - b);
+        const behind = mine.length < expect ||
+          mine.slice(0, expect).some((rk, i) => rk > (i + 1) * t + t / 2);
+        if (behind) need.add(pos);
+        // Schedule says AHEAD — every quality slot filled on pace. That
+        // overrides the round-based depth nag above (Jack: "it should know
+        // if you are behind or ahead" — rounds still considered, but the
+        // positional schedule outranks them). Only once the schedule is
+        // meaningful (expect >= 2), so the rounds-3-5 RB2 window keeps
+        // its say early.
+        else if (expect >= 2) need.delete(pos);
+      }
+    }
+    return need;
+  }
+
+  // ---------- pick recommendations ----------
+  // VOR-gap tiers per position among the available board: tier 1 = the top
+  // group; a new tier starts on a 10+ VOR (or 2.5+ ppg) gap between
+  // consecutive players. Higher-tier players get a Recommended boost so the
+  // last tier-1 RB outranks a tier-3 WR sitting slightly higher on the board.
+  function boardTiers(byPos) {
+    const vk = modeKeys().vor;
+    const tiers = new Map();
+    for (const pos in byPos) {
+      const peers = byPos[pos];
+      let tier = 1;
+      for (let i = 0; i < peers.length; i++) {
+        if (i > 0) {
+          const a = peers[i - 1][vk], b = peers[i][vk];
+          if (a != null && b != null) {
+            if (a - b >= 10) tier++;
+          } else if (peers[i - 1].pPg != null && peers[i].pPg != null &&
+                     peers[i - 1].pPg - peers[i].pPg >= 2.5) {
+            tier++;
+          }
+        }
+        tiers.set(peers[i], tier);
+      }
+    }
+    return tiers;
+  }
+
+  // Composite of board position (current rank source), format-aware VOR,
+  // positional tier (higher tier > lower tier), roster need / open starter
+  // slots, league-scoring shift (PPR / pass-TD vs the ½PPR baseline the
+  // ranks assume), ADP (fallers boosted, 20+ pick reaches faded hard),
+  // stacks, and positional cliffs — each contribution doubles as a
+  // human-readable reason chip.
+  function recommendPicks() {
+    const avail = availablePlayers();
+    const sortedAll = sortListBySource(avail);
+    let board = sortedAll.slice(0, 30);
+    if (!board.length) return [];
+    const st = state.slots || {};
+    const c = rosterCounts();
+    const ec = effRosterCounts();
+    const deficits = capitalDeficits();
+    const rd = currentRound();
+    // Rounds 1-4 are best-player-available: four straight RBs is a legit
+    // start and one early RB must NOT fade RB in round 2. The need boost
+    // whispers early and reaches full strength by round 8; the over-invest
+    // fade is OFF entirely through round 4, full by round 8.
+    const dampen = Math.min(1, rd / 8);
+    const fadeRamp = rd <= 4 ? 0 : Math.min(1, (rd - 4) / 4);
+    const lateRd = (st.rounds || 16) - 2;
+    // The ONLY thing that reopens a capital-saturated position: a genuine
+    // faller, late. "Serious" = slid 2+ full rounds past his own ADP (the
+    // STEAL threshold); "late" = last third of the draft, so a round-4 slider
+    // can't talk you into a second early TE.
+    const lateWindow = rd >= Math.ceil((st.rounds || 16) * 0.66);
+    const lateFaller = (q) => lateWindow && adpTag(q) === 'STEAL';
+    const qfill = posQualityFill();
+    // ADP RELIABILITY DECAY (Jack, 2026-08-05): drafters follow ADP less and
+    // less as a draft goes on — late rounds are where people reach for their
+    // guys, chase upside and go fully off-board. So every ADP-derived signal
+    // gets weighted down as the rounds tick by, until it stops voting entirely
+    // and only the board, VOR, tiers, needs and cliffs decide. Full trust
+    // through round 6, linear to zero by round 12.
+    const adpTrust = Math.max(0, Math.min(1, (12 - rd) / 6));
+    // ROSTER LOCK (Jack, 2026-08-05 mock): when the picks you have left only
+    // just cover the mandatory slots still empty, there is no decision to make
+    // — every remaining pick MUST go to one of them. He hit round 15 of 16
+    // with 14/16 rostered, D/ST and K both empty, and the helper was still
+    // leading with a QB. Two picks, two forced slots, zero choice.
+    const spotsLeft = Math.max(0, (st.rounds || 16) - (state.myRoster || []).length);
+    const mustFill = [];
+    if ((st.k || 0) > 0 && (c.K || 0) < (st.k || 0)) mustFill.push('K');
+    if ((st.dst || 0) > 0 && (c.DST || 0) < (st.dst || 0)) mustFill.push('DST');
+    const rosterLocked = mustFill.length > 0 && spotsLeft <= mustFill.length;
+    // Locked = the board IS the forced positions (Jack, 2026-08-06 mock:
+    // 14/16 rostered, K + D/ST empty, and the recs were still QB/RB/WR at
+    // −57 to −73 — the −100 lock penalty worked, but K/DST rank ~178+ on
+    // his board so they never ENTERED the 30-man board window, and the
+    // least-bad skill players topped the list anyway). When every remaining
+    // pick is forced, only the forced positions belong on the board at all.
+    if (rosterLocked) {
+      // Top slice of EACH forced position, not of the merged pool — the
+      // board ranks nearly every K above every D/ST (or vice versa), so a
+      // single merged top-30 can be one position wall-to-wall.
+      let fill = [];
+      for (const pos of mustFill) {
+        fill = fill.concat(sortListBySource(avail.filter((q) => q.s === pos)).slice(0, 15));
+      }
+      if (fill.length) board = sortListBySource(fill).slice(0, 30);
+    }
+    const remStarters = {
+      QB: Math.max(0, (st.qb || 0) + (st.sf || 0) - c.QB),
+      RB: Math.max(0, (st.rb || 0) - c.RB),
+      WR: Math.max(0, (st.wr || 0) - c.WR),
+      TE: Math.max(0, (st.te || 0) - c.TE),
+    };
+    const openSlots = ['QB', 'RB', 'WR', 'TE'].filter((k) => remStarters[k] > 0);
+    const byPos = {};
+    for (const p of board) (byPos[p.s] = byPos[p.s] || []).push(p);
+    // Cliff detection needs the FULL pool. byPos stops at 30 players, so the
+    // last startable player at a thin position has no successor inside the
+    // window and scored no cliff at all — see the cliff block below.
+    const byPosAll = {};
+    for (const p of sortedAll) (byPosAll[p.s] = byPosAll[p.s] || []).push(p);
+    const vk = modeKeys().vor;
+    const tiers = boardTiers(byPos);
+    const sfMode = state.mode.endsWith('_sf');
+    // Board supply per position: how many above-replacement (VOR > 0) players
+    // remain in the WHOLE pool. When a run has emptied a position, the
+    // survivors get scarcer — boost them.
+    const supply = {};
+    for (const q of avail) {
+      if ((q[vk] || 0) > 0) supply[q.s] = (supply[q.s] || 0) + 1;
+    }
+    const need = needPositions();
+    // Board-repair context for the need boost: positional ranks, depletion
+    // counts and league size, so a need only boosts schedule-quality fills.
+    const _needPosIdx = posRankIndex();
+    const _needGone = draftedPosCounts();
+    const _needT = st.teams || 12;
+    const scored = board.map((p, idx) => {
+      let score = Math.max(0, 30 - idx);
+      const reasons = [];
+      // Roster-fit penalties (capital/quality saturation, backup QB/TE,
+      // roster lock, early K/DST) accumulate here so the leapfrog guard can
+      // see them — a player the engine has nerfed as "wrong for THIS roster"
+      // forfeits guard protection (see leapfrogOk).
+      let rosterPen = 0;
+      if (idx === 0) reasons.push('Best on board');
+      if (p[vk] != null) score += p[vk] / 10;
+      // Tier boost: tier 1 +6, tier 2 +3, tier 3+ nothing.
+      const tier = tiers.get(p);
+      if (tier === 1) { score += 6; reasons.push('Tier 1 ' + p.s); }
+      else if (tier === 2) score += 3;
+      // Value-invested need (replaces the old body-count need): boost scales
+      // with how far the position's banked capital sits below its target
+      // share, up to +8; over-invested positions get a small fade.
+      const defc = deficits[p.s] != null ? deficits[p.s] : 0;
+      const qf = qfill[p.s] != null ? qfill[p.s] : 0;
+      // Quality earned at the position throttles the need boost: capital says
+      // "you haven't spent here", quality says "but what you do own is elite".
+      // QB3 in round 6 is cheap AND premium — the old capital-only model saw
+      // only the cheapness and kept shouting QB.
+      if (defc > 0.15 && state.myRoster.length >= 2) {
+        let b = Math.min(8, 10 * defc) * dampen * Math.max(0, 1 - qf);
+        b = Math.round(b * 10) / 10;
+        score += b;
+        if (b >= 3) reasons.push('Needs ' + p.s + ' value');
+      } else if (defc < -0.35 && fadeRamp > 0) {
+        // Positional draft-capital saturation. defc is (target − banked)/target,
+        // so −1 means the position has banked DOUBLE the capital it should
+        // carry. A 2nd-round TE puts TE around −2.8: another TE there is close
+        // to dead capital, yet the old flat −4 cap barely dented a +6 tier
+        // bonus. Scale the fade with the actual overspend instead, so an early
+        // Bowers-style pick shuts the position down while a round-14 body at
+        // the same COUNT barely moves it.
+        let fade = Math.min(20, -7 * defc) * fadeRamp;
+        if (lateFaller(p)) fade *= 0.25;
+        score -= fade;
+        rosterPen += fade;
+        if (fade >= 5) reasons.push(p.s + ' capital full');
+      }
+      // Positional-quality saturation — the QB3 / WR2+WR5 rule. Independent of
+      // the capital fade above (that one is round-spend based and can miss a
+      // cheap elite entirely), and it starts biting at 0.6 fill rather than
+      // waiting for a full starter set. Same late-faller escape.
+      if (qf > 0.5) {
+        let qFade = Math.min(30, 45 * (qf - 0.5)) * dampen;
+        if (lateFaller(p)) qFade *= 0.25;
+        score -= qFade;
+        rosterPen += qFade;
+        if (qFade >= 5) reasons.push(p.s + ' set — ' + Math.round(qf * 100) + '% quality');
+      }
+      // EARLY RB2 PUSH (Jack, 2026-08-06, redraft only): rounds 3-5 with
+      // fewer than 2 RBs rostered — boost every RB until the second one is
+      // in. The value-need boost above ramps to full strength only by round
+      // 8, too slow to force this window; the matching needPositions() entry
+      // lets the leapfrog guard honor the jump cross-position.
+      if (state.mode.indexOf('re_') === 0 && p.s === 'RB' && rd >= 3 && rd <= 5 && c.RB < 2) {
+        score += (2 - c.RB) * 5;
+        reasons.push(c.RB === 0 ? 'No RB yet — rounds 3-5 window' : 'RB2 window (rounds 3-5)');
+      }
+      // NEED BOOST (Jack, 2026-08-06): a flagged need isn't just a badge —
+      // the algo leans toward filling it. This is how the depletion schedule
+      // ("24 RBs gone and you own 1 = behind") reaches the score. Modest, so
+      // tiers and value still rule the pick between needed positions. Gated
+      // on what's STILL ON BOARD (Jack, same session): the boost goes only
+      // to candidates who actually repair the schedule — current-or-next-
+      // cycle quality at the position — never to any body wearing the
+      // right letters.
+      if (need.has(p.s)) {
+        const pr = _needPosIdx.get(p);
+        const bound = (Math.floor((_needGone[p.s] || 0) / _needT) + 1) * _needT + _needT / 2;
+        if (pr == null || pr <= bound) { score += 4; reasons.push('NEED ' + p.s); }
+      }
+      if (remStarters[p.s] > 0) {
+        // The LAST unfilled starter slot is worth more than a generic one:
+        // every other lineup hole is already covered, so this is the only
+        // pick that still changes whether you can field a legal lineup.
+        const lastSlot = openSlots.length === 1;
+        score += lastSlot ? 7 : 4;
+        reasons.push(lastSlot ? 'LAST open slot: ' + p.s : 'Open ' + p.s + ' slot');
+      }
+      // Superflex QB depth: the format favors hoarding QBs — a 3rd/4th QB
+      // still carries starter-insurance + trade value even with the need met.
+      // Uses the capital-weighted count, so a room of late-round QBs keeps
+      // earning this long after the raw count says "full".
+      else if (sfMode && p.s === 'QB' && ec.QB < 3.2 && defc > -0.5) { score += 4; reasons.push('SF QB depth'); }
+      // Supply scarcity: few above-replacement players left at the position.
+      const sup = supply[p.s] || 0;
+      if (sup > 0 && sup <= 3) { score += 5; reasons.push('Only ' + sup + ' startable ' + p.s + (sup === 1 ? '' : 's') + ' left'); }
+      else if (sup > 0 && sup <= 6) score += 2.5;
+      // League scoring: reception hogs rise in full PPR, sink in STD;
+      // big-arm QBs move with 6-pt passing TDs.
+      if (p.scDelta) {
+        score += Math.max(-6, Math.min(6, p.scDelta * 1.5));
+        if (p.scDelta >= 1) reasons.push('Scoring +' + p.scDelta.toFixed(1) + ' ppg');
+        else if (p.scDelta <= -1) reasons.push('Scoring −' + Math.abs(p.scDelta).toFixed(1) + ' ppg');
+      }
+      // ADP earns its place in the score for exactly ONE question: will this
+      // player still be on the board at your NEXT pick? If the market says
+      // yes, don't spend this pick on him — take the scarcer player and come
+      // back for him. The old STEAL/Value boosts and Reach/Stretch fades
+      // scored ADP as a VALUE signal measured against the CURRENT pick, which
+      // is a different question entirely, and they're gone. The tags still
+      // render on the cards as information; they just don't move the score.
+      // QBs in superflex get half the fade: SF QB runs are streaky enough
+      // that "ADP says he lasts" is least reliable exactly at QB.
+      const nextPk = myNextPickOverall();
+      const padp = p[modeKeys().adp];
+      if (nextPk != null && padp != null && padp >= nextPk) {
+        // Scales with HOW FAR past your next pick he goes, and always states
+        // itself. The old version faded a 4-picks-past player by a flat 5 and
+        // pushed no reason at all, so the card gave no hint that the engine
+        // already knew he'd probably still be sitting there next turn.
+        const fadeMult = (sfMode && p.s === 'QB') ? 0.5 : 1;
+        const over = padp - nextPk;
+        const fade = Math.min(16, 6 + over * 0.7) * fadeMult * adpTrust;
+        score -= fade;
+        // Only claim it when it actually cost him something — a decayed-away
+        // fade shouldn't put a confident tag on the card.
+        if (fade >= 3) reasons.push('Likely there at your next pick');
+      }
+      // Stacks matter far less in lineup redraft (they're a best-ball /
+      // tournament lever) — tiny tiebreaker there, real bonus elsewhere.
+      const stk = stackInfo(p);
+      if (stk && stk.type === 'stack') {
+        if (state.mode.indexOf('re_') === 0) score += 1;
+        else { score += 3; reasons.push('Stacks w/ ' + stk.names[0]); }
+      }
+      // Cliff: big dropoff to the next available player at the position
+      // Cliff must look at the WHOLE available pool, not the 30-player board
+      // window (Jack, 2026-08-05 mock): Tucker Kraft was the last startable TE
+      // inside the top 30, so `peers` held one entry, `nxt` came back
+      // undefined, and the single biggest cliff on the board scored ZERO —
+      // exactly when it mattered most. It also scales with the gap now: "next
+      // TE is 30 VOR worse" is a different decision from "12 VOR worse".
+      const peersAll = byPosAll[p.s] || [];
+      const nxt = peersAll[peersAll.indexOf(p) + 1];
+      if (nxt) {
+        const a = p[vk], b = nxt[vk];
+        if (a != null && b != null && a - b >= 12) {
+          const bonus = Math.min(10, 4 + (a - b) * 0.15);
+          score += bonus;
+          reasons.push('Cliff: next ' + p.s + ' −' + Math.round(a - b) + ' VOR');
+        } else if (p.pPg != null && nxt.pPg != null && p.pPg - nxt.pPg >= 2.5) {
+          const bonus = Math.min(10, 4 + (p.pPg - nxt.pPg) * 0.9);
+          score += bonus;
+          reasons.push('Cliff: next ' + p.s + ' −' + (Math.round((p.pPg - nxt.pPg) * 10) / 10) + ' ppg');
+        }
+      } else if (peersAll.length === 1) {
+        score += 10; reasons.push('Last startable ' + p.s);
+      }
+      if (rosterLocked) {
+        // Hard override, not a nudge: nothing else can legally be drafted.
+        if (mustFill.indexOf(p.s) < 0) {
+          score -= 100;
+          rosterPen += 100;
+          reasons.push('No spots left — must draft ' + mustFill.join(' + '));
+        } else {
+          score += 25;
+          reasons.push('Required: ' + spotsLeft + ' pick' + (spotsLeft === 1 ? '' : 's') + ' for ' + mustFill.join(' + '));
+        }
+      } else if ((p.s === 'K' || p.s === 'DST') && rd < lateRd) { score -= 25; rosterPen += 25; }
+      // Lineup redraft: you only START one QB / one TE — a backup there early
+      // is a wasted pick. Huge penalty early, tapering late (a round-13 backup
+      // QB is fine). Superflex raises the QB starter count via st.sf, and
+      // dynasty modes skip this (QB2/TE2 hold real trade value there).
+      if (state.mode.indexOf('re_') === 0) {
+        const qbStarters = (st.qb || 0) + (st.sf || 0) || 1;
+        const teStarters = st.te || 1;
+        // The taper exists for teams that WAITED on the position — a
+        // round-14 handcuff behind a round-11 QB is a normal build.
+        const backupPenalty = rd <= 9 ? 40 : rd < lateRd ? 15 : 5;
+        // ELITE QB/TE = POSITION CLOSED (Jack, 2026-08-06): in a redraft
+        // league with waivers, owning a top guy at a one-starter position
+        // ends it — you are DONE taking them, all draft long, so the taper
+        // never applies. Your backup is the waiver wire. "Top" is measured
+        // by WHERE HE GOES OFF THE BOARD, not the round you got him (Jack:
+        // "2nd QB vs 9th QB") — Bowers falling to round 5 still closes TE,
+        // a QB9 taken in round 6 doesn't close QB. qfill already scores what
+        // you own by rank WITHIN the position (QB2 ≈ 0.85, QB5 ≈ 0.51, QB9 ≈
+        // 0.26), so ≥ 0.5 ≈ top-5 positionally. Sole escape (Jack, same
+        // session): the last couple rounds, and only for STEAL-grade value —
+        // a faller 2+ rounds past his ADP in round 15-16 is the one time the
+        // dead pick isn't dead.
+        const lastTwo = rd >= (st.rounds || 16) - 1;
+        const closed = (pos) => {
+          const q = qfill[pos] != null ? qfill[pos] : 0;
+          return q >= 0.5 && !(lastTwo && adpTag(p) === 'STEAL');
+        };
+        // ABUNDANCE KILL (Jack, 2026-08-06): owning MORE QB/TE bodies than
+        // the lineup starts is abundance whatever their rank — same flat 60
+        // as elite-closed, never the taper (and the surplus multiplier below
+        // stacks it). RB/WR depth stays useful, so only QB/TE run through
+        // this block at all.
+        const penaltyFor = (pos, have, starters) =>
+          (closed(pos) || have > starters ? 60 : backupPenalty);
+        // Scale by HOW MANY surplus bodies you'd own, not a flat hit (Jack,
+        // 2026-08-05 mock: Burrow + Kyler already rostered in a 1QB league and
+        // a third QB still surfaced at #2). Taking your QB2 costs 1x; your QB3
+        // costs 2x, your QB4 3x — a third QB in a one-QB league is a dead
+        // roster spot, not a mild inefficiency.
+        const surplus = (pos, have, starters) =>
+          p.s === pos && have >= starters ? (have - starters + 1) : 0;
+        const qbX = surplus('QB', c.QB, qbStarters);
+        const teX = surplus('TE', c.TE, teStarters);
+        if (qbX) {
+          const pen = penaltyFor('QB', c.QB, qbStarters) * qbX;
+          score -= pen;
+          rosterPen += pen;
+          if (closed('QB')) reasons.push('Elite QB rostered — waivers are the backup');
+          else if (qbX >= 2) reasons.push('Already have ' + c.QB + ' QBs');
+        }
+        if (teX) {
+          const pen = penaltyFor('TE', c.TE, teStarters) * teX;
+          score -= pen;
+          rosterPen += pen;
+          if (closed('TE')) reasons.push('Elite TE rostered — waivers are the backup');
+          else if (teX >= 2) reasons.push('Already have ' + c.TE + ' TEs');
+        }
+      }
+      return { p, score: Math.round(score * 10) / 10, reasons, rosterPen };
+    });
+    // ---- leapfrog guard (Jack, 2026-08-03) ----
+    // A lower-board player may only out-rank a higher-board player when the
+    // timing play is real: the better player's ADP says he'll STILL be there
+    // at your NEXT pick (so you take the one who won't last and bank the
+    // better one) AND the two are ranked very close. Cross-position
+    // leapfrogs take the same test, except a genuine position of NEED may
+    // jump a position with abundant startable supply left. Otherwise the
+    // better board player stays on top no matter what the bonuses say.
+    const nextMine = myNextPickOverall();
+    const idxOf = new Map();
+    board.forEach((p, i) => idxOf.set(p, i));
+    const leapfrogOk = (later, better) => {
+      // A roster-nerfed player forfeits guard protection (Jack, 2026-08-06
+      // mock: Bowers rostered in round 2, Loveland still recommended #1 —
+      // the −40 backup-TE penalty crushed his score, but he sat top of the
+      // board, his ADP was inside Jack's next pick, and pre-round-5 the need
+      // set is empty, so the guard clamped every OTHER player beneath him and
+      // the penalty never mattered). The Underdog engine has carried this
+      // exact exemption since v0.16.3; the port here never got it. The nerf
+      // is the engine saying "not for THIS roster" — protecting him defeats
+      // the nerf. Timing/ADP fades don't count toward rosterPen by design.
+      if ((better.rosterPen || 0) >= 10) return true;
+      const adp = better.p[modeKeys().adp];
+      // Same decay: late on, ADP is no basis for letting a worse board player
+      // jump a better one, so the guard stops accepting that argument.
+      const survives = adpTrust > 0.35 && nextMine != null && adp != null && adp > nextMine + 2;
+      const close = (idxOf.get(later.p) - idxOf.get(better.p)) <= 5;
+      if (survives && close) {
+        if (!later._lfReason && later.p.s === better.p.s) {
+          later.reasons.push(better.p.n.split(' ').pop() + ' should last to your next pick');
+          later._lfReason = true;
+        }
+        return true;
+      }
+      if (later.p.s === better.p.s) return false;
+      return need.has(later.p.s) && (supply[better.p.s] || 0) >= 8;
+    };
+    const boardOrder = scored.slice().sort((a, b) => idxOf.get(a.p) - idxOf.get(b.p));
+    for (let i = 0; i < boardOrder.length; i++) {
+      for (let j = 0; j < i; j++) {
+        const better = boardOrder[j], later = boardOrder[i];
+        if (later.score > better.score && !leapfrogOk(later, better)) {
+          later.score = Math.round((better.score - 0.5) * 10) / 10;
+        }
+      }
+    }
+    scored.sort((a, b) => b.score - a.score);
+    // Locked with BOTH K and D/ST open: he's drafting one of each no matter
+    // what, so the top recs should cover one of each — not three D/STs.
+    if (rosterLocked && mustFill.length > 1) {
+      const first = [];
+      for (const pos of mustFill) {
+        const best = scored.find((s) => s.p.s === pos && first.indexOf(s) < 0);
+        if (best) first.push(best);
+      }
+      const rest = scored.filter((s) => first.indexOf(s) < 0);
+      return first.concat(rest).slice(0, 3);
+    }
+    return scored.slice(0, 3);
+  }
+
+  // ---------- SEASON (regular) MODE ----------
+  // The Sleeper helper's second personality ported onto ESPN's league API:
+  // optimal weekly lineup from the league's REAL lineup slots + REAL scoring,
+  // waiver targets ranked by the ppg they add to YOUR lineup (upgrade delta),
+  // and a TEAM tab of roster values by source. One authenticated fetch
+  // (?view=mTeam&view=mRoster&view=mSettings) polled every 60s carries
+  // everything: rosters, the CURRENT lineup (lineupSlotId; 20=BN 21=IR), and
+  // per-player injuryStatus. Week/byes/actuals/trending ride the open Sleeper
+  // public API — players.json carries Sleeper sids as the id bridge.
+  const SEASON_POLL_MS = 60000;
+  const INJ_TTL_MS = 12 * 3600 * 1000;
+  const PRIOR_GAMES = 6;
+  const CLOSE_PPG = 1.5;
+  const SLOT_ELIG = {
+    QB: ['QB'], RB: ['RB'], WR: ['WR'], TE: ['TE'], K: ['K'], DEF: ['DST'],
+    FLEX: ['RB', 'WR', 'TE'], SUPER_FLEX: ['QB', 'RB', 'WR', 'TE'],
+    WRRB_FLEX: ['WR', 'RB'], REC_FLEX: ['WR', 'TE'],
+  };
+  // ESPN lineupSlotId → optimizer slot label. Narrower than normalize.js's
+  // site mapping on purpose: RB/WR (3) and WR/TE (5) keep their tight
+  // eligibility so the greedy fill order stays correct.
+  const SEASON_SLOT_LABEL = {
+    0: 'QB', 1: 'QB', 2: 'RB', 3: 'WRRB_FLEX', 4: 'WR', 5: 'REC_FLEX',
+    6: 'TE', 7: 'SUPER_FLEX', 16: 'DEF', 17: 'K', 23: 'FLEX',
+  };
+  function detectSeasonLeagueId() {
+    if (MOCK && MOCK.seasonLeagueId) return MOCK.seasonLeagueId;
+    if (/\/football\/draft/i.test(location.pathname)) return null;
+    const id = urlParams().get('leagueId');
+    return id && /^\d+$/.test(id) ? id : null;
+  }
+  // SWID is a plain cookie on .espn.com and equals the member id on
+  // raw.teams[].owners — auto-detects which team is the user's.
+  function readSwid() {
+    try {
+      const m = document.cookie.match(/(?:^|;\s*)SWID=("?)([^;"]+)\1/);
+      return m ? decodeURIComponent(m[2]) : null;
+    } catch (_) { return null; }
+  }
+  function detectMyTeam() {
+    const swid = (readSwid() || '').replace(/[{}]/g, '').toUpperCase();
+    if (!swid) return null;
+    const t = state.seasonTeams.find((x) => (x.owners || []).some(
+      (o) => String(o).replace(/[{}]/g, '').toUpperCase() === swid));
+    return t ? t.teamId : null;
+  }
+
+  // ---- ESPN scoringItems → sleeper-style scoring dict ----
+  // Feeds applyLeagueScoring (rec / pass_td) and the K/DST projection models
+  // (FG distance buckets + DST stat values + points-allowed brackets).
+  // ESPN statIds: 53 rec · 4 passTD · 80/77/74 FG made 0-39/40-49/50+ ·
+  // 85 FG miss · 86/88 XP made/miss · 99 sack · 95 INT · 96 fumRec ·
+  // 97 blkKick · 98 safety · 101-105 return/def TDs · 106 FF ·
+  // 89/90/91/92/121/122/123/124/125 points-allowed brackets.
+  function espnScoringDict(settings) {
+    const out = {};
+    const items = (settings && settings.scoringSettings && settings.scoringSettings.scoringItems) || [];
+    const val = (it) => (it.pointsOverrides && it.pointsOverrides['16'] != null)
+      ? it.pointsOverrides['16'] : it.points;
+    const byStat = {};
+    for (const it of items) {
+      const v = val(it);
+      if (typeof v === 'number') byStat[it.statId] = v;
+    }
+    const put = (k, v) => { if (v != null) out[k] = v; };
+    put('rec', byStat[53]); put('pass_td', byStat[4]);
+    // yardage/TD values for the season-sim engine's scoringFromLeague
+    // (3 passYds · 24 rushYds · 42 recYds · 25 rushTD · 43 recTD — ESPN
+    // stores per-yard points directly, e.g. 0.04)
+    put('pass_yd', byStat[3]); put('rush_yd', byStat[24]); put('rec_yd', byStat[42]);
+    put('rush_td', byStat[25]); put('rec_td', byStat[43]);
+    // K: ESPN's single 0-39 bucket feeds all three sub-40 sleeper buckets
+    put('fgm_0_19', byStat[80]); put('fgm_20_29', byStat[80]); put('fgm_30_39', byStat[80]);
+    put('fgm_40_49', byStat[77]); put('fgm_50p', byStat[74]);
+    if (byStat[85] != null) out.fgmiss = byStat[85];
+    put('xpm', byStat[86]);
+    if (byStat[88] != null) out.xpmiss = byStat[88];
+    // DST
+    put('sack', byStat[99]); put('int', byStat[95]); put('fum_rec', byStat[96]);
+    put('blk_kick', byStat[97]); put('safe', byStat[98]); put('ff', byStat[106]);
+    for (const id of [105, 104, 103, 102, 101]) {
+      if (byStat[id] != null) { out.def_td = byStat[id]; break; }
+    }
+    put('pts_allow_0', byStat[89]); put('pts_allow_1_6', byStat[90]); put('pts_allow_7_13', byStat[91]);
+    if (byStat[92] != null || byStat[121] != null) {
+      const a = byStat[92], b = byStat[121]; // ESPN 14-17 + 18-21 ≈ sleeper 14-20
+      out.pts_allow_14_20 = (a != null && b != null) ? (a + b) / 2 : (a != null ? a : b);
+    }
+    put('pts_allow_21_27', byStat[122]); put('pts_allow_28_34', byStat[123]);
+    if (byStat[124] != null || byStat[125] != null) {
+      const a = byStat[124], b = byStat[125]; // 35-45 + 46+ ≈ sleeper 35+
+      out.pts_allow_35p = (a != null && b != null) ? (a + b) / 2 : (a != null ? a : b);
+    }
+    return out;
+  }
+
+  // ---- league loading ----
+  async function fetchSeasonLeague(leagueId, season) {
+    if (MOCK && MOCK.seasonLeague) return MOCK.seasonLeague;
+    const r = await fetch(LM_API + season + '/segments/0/leagues/' + leagueId +
+      '?view=mTeam&view=mRoster&view=mSettings&view=mMatchup', {
+      credentials: 'include', headers: { Accept: 'application/json' },
+    });
+    if (!r.ok) throw new Error('ESPN league API ' + r.status);
+    return r.json();
+  }
+  function applySeasonLeague(raw) {
+    const settings = raw.settings || {};
+    if (settings.name) state.leagueName = settings.name;
+    const lc = (settings.rosterSettings && settings.rosterSettings.lineupSlotCounts) || {};
+    const slots = [];
+    ['0', '1', '2', '4', '6', '3', '5', '23', '7', '17', '16'].forEach((sid) => {
+      const lbl = SEASON_SLOT_LABEL[sid];
+      const n = parseInt(lc[sid], 10) || 0;
+      for (let i = 0; i < n; i++) slots.push(lbl);
+    });
+    state.seasonSlots = slots;
+    applyLeagueScoring(espnScoringDict(settings));
+    state.seasonTeams = (raw.teams || []).map((t) => {
+      const entries = ((t.roster && t.roster.entries) || []).map((e) => {
+        const pl = e.playerPoolEntry && e.playerPoolEntry.player;
+        if (!pl) return null;
+        const name = espnPlayerName(pl);
+        const pos = POS_BY_ID[pl.defaultPositionId] || '';
+        const p = findPlayer(name, pos);
+        const is = String(pl.injuryStatus || '').toUpperCase();
+        const inj = /^(OUT|INJURY_RESERVE|SUSPEN|RESERVE)/.test(is) ? 'OUT'
+          : is === 'DOUBTFUL' ? 'D' : is === 'QUESTIONABLE' ? 'Q' : null;
+        return {
+          espnId: pl.id, name, raw: pl.fullName || '', pos, team: abbrevFor(pl.proTeamId),
+          slotId: e.lineupSlotId, p, inj,
+          key: p ? keyOf(p) : norm(name) + '|' + pos,
+        };
+      }).filter(Boolean);
+      const rec = (t.record && t.record.overall) || {};
+      return {
+        teamId: t.id, name: teamDisplayName(t), abbrev: t.abbrev || '',
+        owners: t.owners || [], entries,
+        record: { w: rec.wins || 0, l: rec.losses || 0, pf: Math.round((rec.pointsFor || 0) * 10) / 10 },
+      };
+    });
+    // full-season matchup pairs (mMatchup) + playoff shape for the sim
+    const pairs = {};
+    (raw.schedule || []).forEach((m) => {
+      if (!m || m.matchupPeriodId == null || !m.home || !m.away) return;
+      (pairs[m.matchupPeriodId] = pairs[m.matchupPeriodId] || [])
+        .push({ a: m.home.teamId, b: m.away.teamId });
+    });
+    state.seasonPairs = pairs;
+    const ss = settings.scheduleSettings || {};
+    state.playoffStart = (parseInt(ss.matchupPeriodCount, 10) || 14) + 1;
+    state.playoffTeams = parseInt(ss.playoffTeamCount, 10) || 6;
+    state.teams = Object.create(null);
+    state.seasonTeams.forEach((t) => { state.teams[t.teamId] = { name: t.name, abbrev: t.abbrev }; });
+    // roster-wide injury map (mRoster is fresher than the Sleeper dump for
+    // rostered players; FAs fall back to slMeta)
+    state.espnInj = Object.create(null);
+    state.rosteredKeys = new Set();
+    state.seasonTeams.forEach((t) => t.entries.forEach((en) => {
+      if (en.inj) state.espnInj[en.key] = en.inj;
+      state.rosteredKeys.add(en.key);
+    }));
+    const sf = slots.indexOf('SUPER_FLEX') !== -1 || slots.filter((s) => s === 'QB').length >= 2;
+    let keeper = 0;
+    try { keeper = settings.draftSettings.keeperCount || 0; } catch (_) {}
+    state.modeDetected = (keeper > 0 ? 'dyn' : 're') + '_' + (sf ? 'sf' : '1qb');
+    if (!state.modeManual) applyMode(state.modeDetected, false);
+    const sp = raw.scoringPeriodId || (raw.status && raw.status.latestScoringPeriod);
+    if (sp && sp >= 1 && sp <= 18) state.seasonWeek = sp;
+  }
+  async function ensureNflState() {
+    if (state.nflState) return;
+    if (MOCK && MOCK.nflState) {
+      state.nflState = MOCK.nflState;
+    } else {
+      try { state.nflState = (await fetchJson('https://api.sleeper.app/v1/state/nfl')) || {}; }
+      catch (e) { state.nflState = {}; }
+    }
+    const nfl = state.nflState;
+    const wk = nfl && nfl.season_type === 'regular' ? nfl.week : null;
+    state.seasonWeek = wk && wk >= 1 ? wk : state.seasonWeek || 1;
+    state.byesActive = !!(nfl && nfl.season_type === 'regular');
+  }
+
+  // ---- schedule / matchup context (site Vegas lines) ----
+  // Week→opponent map from betting_lines_2026.json gameTotals
+  // (keys W{wk}_{AWAY}_{HOME}) with totals/spreads → implied team totals.
+  function buildSchedule(gameTotals) {
+    if (!gameTotals) return;
+    const sched = {};
+    for (const key of Object.keys(gameTotals)) {
+      const m = key.match(/^W(\d+)_([A-Z]{2,4})_([A-Z]{2,4})$/);
+      if (!m) continue;
+      const wk = parseInt(m[1], 10);
+      const g = gameTotals[key] || {};
+      const total = typeof g.total === 'number' ? g.total : null;
+      const hSpread = typeof g.spread === 'number' ? g.spread : null;
+      const put = (tm, opp, isHome) => {
+        const spread = hSpread == null ? null : (isHome ? hSpread : -hSpread);
+        (sched[tm] = sched[tm] || {})[wk] = {
+          opp, home: isHome, total,
+          implied: (total != null && spread != null)
+            ? Math.round(((total - spread) / 2) * 10) / 10 : null,
+        };
+      };
+      put(m[2], m[3], false);
+      put(m[3], m[2], true);
+    }
+    state.schedule = sched;
+  }
+  // players.json carries no bye field, so byes are derived from the schedule:
+  // a team with 8+ mapped weeks and no game this week is on bye.
+  function onByeThisWeek(p) {
+    if (!state.byesActive) return false;
+    if (p.bye != null) return p.bye === state.seasonWeek;
+    const sch = p.sTm && state.schedule[p.sTm];
+    return !!(sch && Object.keys(sch).length >= 8 && !sch[state.seasonWeek]);
+  }
+  function injOf(p) {
+    const k = keyOf(p);
+    if (state.espnInj && state.espnInj[k]) return state.espnInj[k];
+    const m = p.sid && state.slMeta[p.sid];
+    return (m && m.inj) || null;
+  }
+  // This week's prop-board projection from the site's weeklyProps (UD + PP
+  // blend, league-scored). Only trusted when a yardage line exists — a
+  // TD-odds-only board is far too thin to project from. Receptions have no
+  // book line, so estimate catches from receiving yards (RB ~7.5 ypr,
+  // WR/TE ~11.5). Anytime-TD American odds → expected TDs. Cached per
+  // player per week+scoring.
+  function propsProjFor(p) {
+    const all = state.wkPropsAll;
+    if (!all || p._unmatched) return null;
+    const wk = String(state.seasonWeek);
+    const cacheKey = wk + '|' + state.scoringLabel;
+    if (p._wkpKey === cacheKey) return p._wkpVal;
+    if (!state._wkPropsIdx || state._wkPropsIdx.wk !== wk) {
+      const map = {};
+      const block = all[wk] || {};
+      for (const nm of Object.keys(block)) map[norm(nm)] = block[nm];
+      state._wkPropsIdx = { wk, map };
+    }
+    const rec = state._wkPropsIdx.map[norm(p.n)];
+    let out = null;
+    const books = rec ? [rec.UD, rec.PP].filter(Boolean) : [];
+    if (books.length) {
+      const avg = (k) => {
+        const vs = books.map((b) => b[k]).filter((v) => typeof v === 'number');
+        return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null;
+      };
+      const py = avg('py'), ry = avg('ry'), rcy = avg('rcy');
+      if (py != null || ry != null || rcy != null) {
+        const sv = state.scoringVals || { recPts: 1, passTd: 4 };
+        let pts = 0;
+        if (py != null) {
+          const ptd = avg('ptd');
+          pts += py * 0.04 + (ptd != null ? ptd : py / 125) * (sv.passTd != null ? sv.passTd : 4);
+          const ints = avg('int');
+          if (ints != null) pts -= ints;
+        }
+        if (ry != null) pts += ry * 0.1;
+        if (rcy != null) {
+          pts += rcy * 0.1;
+          const recEst = rcy / (p.s === 'RB' ? 7.5 : 11.5);
+          pts += recEst * (sv.recPts != null ? sv.recPts : 1);
+        }
+        const atd = avg('atd');
+        if (atd != null) {
+          const prob = atd < 0 ? -atd / (-atd + 100) : 100 / (atd + 100);
+          pts += prob * (p.s === 'QB' ? 1 : 1.1) * 6; // QB atd = rush TD only
+        }
+        out = Math.round(pts * 10) / 10;
+      }
+    }
+    p._wkpKey = cacheKey;
+    p._wkpVal = out;
+    return out;
+  }
+  // Matchup info for the current week, colored by Vegas implied total
+  // (for DST: the OPPONENT's implied — lower is better).
+  function wkOppInfo(p) {
+    const g = p.sTm && state.schedule[p.sTm] && state.schedule[p.sTm][state.seasonWeek];
+    if (!g) return null;
+    let val = g.implied, good, bad;
+    if (p.s === 'DST') {
+      val = (g.total != null && g.implied != null) ? Math.round((g.total - g.implied) * 10) / 10 : null;
+      good = val != null && val <= 20.5;
+      bad = val != null && val >= 25.5;
+    } else {
+      good = val != null && val >= 26;
+      bad = val != null && val <= 20.5;
+    }
+    const col = good ? ['#2a4030', '#6dd06d'] : bad ? ['#402a2a', '#d06d6d'] : ['#2a2c33', '#c8ccd4'];
+    const txt = (g.home ? 'vs' : '@') + g.opp;
+    return {
+      txt, bg: col[0], fg: col[1], cls: good ? 'good' : bad ? 'bad' : 'mid',
+      tip: 'Wk ' + state.seasonWeek + ' ' + txt +
+        (g.total != null ? ' · O/U ' + g.total : '') +
+        (g.implied != null ? ' · implied ' + g.implied : '') +
+        (p.s === 'DST' && val != null ? ' · opp implied ' + val : ''),
+    };
+  }
+  function wkOppHTML(p) {
+    const g = wkOppInfo(p);
+    if (!g) return '';
+    return `<span class="tag" style="background:${g.bg};color:${g.fg}" title="${esc(g.tip)}">${esc(g.txt)}</span>`;
+  }
+
+  // ---- modeled K/DST projections (league-scored, Vegas-driven) ----
+  // Kicker: Clay's per-kicker FG/XP season volumes scaled by the week's
+  // implied total, each kicker's own FG distance mix (kD), scored with the
+  // league's REAL kicker rules. DST: expected sacks/INTs/fumbles/TDs vs the
+  // opponent's implied total, quality-scaled by Clay's defense rank (dRk),
+  // plus the points-allowed brackets integrated over a distribution centered
+  // on the opponent implied. Verbatim from the Sleeper helper.
+  const FG_MIX_AVG = [0.02, 0.22, 0.30, 0.30, 0.16];
+  const FG_KEYS = ['fgm_0_19', 'fgm_20_29', 'fgm_30_39', 'fgm_40_49', 'fgm_50p'];
+  const FG_DEF_PTS = [3, 3, 3, 4, 5];
+  function kickerProjFor(p, g) {
+    const T = g && g.implied != null ? g.implied : 22.5;
+    if (p.kFga == null) return 5 + (T - 22.5) * 0.3; // backup K — flat, Vegas-nudged
+    const gm = p.cGm || 17;
+    const fgScale = (0.036 * T + 0.74) / 1.55;            // ≈1.0 at a 22.5 implied
+    const xpScale = Math.max(0.2, (0.115 * T - 0.29) / 2.3);
+    const fgm = (p.kFgm / gm) * fgScale;
+    const fga = (p.kFga / gm) * fgScale;
+    const xpm = ((p.kXpm != null ? p.kXpm : p.kFgm * 1.3) / gm) * xpScale;
+    const xpa = ((p.kXpa != null ? p.kXpa : p.kXpm || 0) / gm) * xpScale;
+    const sc = state.leagueScoring || {};
+    const mix = (p.kD && p.kD.length === 5) ? p.kD : FG_MIX_AVG;
+    let pts = 0;
+    for (let i = 0; i < 5; i++) {
+      pts += fgm * mix[i] * (sc[FG_KEYS[i]] != null ? sc[FG_KEYS[i]] : FG_DEF_PTS[i]);
+    }
+    pts += xpm * (sc.xpm != null ? sc.xpm : 1);
+    if (sc.fgmiss) pts += (fga - fgm) * sc.fgmiss;
+    if (sc.xpmiss) pts += Math.max(0, xpa - xpm) * sc.xpmiss;
+    return pts;
+  }
+  const PA_BUCKETS = [
+    ['pts_allow_0', -0.5, 0.5, 10],
+    ['pts_allow_1_6', 0.5, 6.5, 7],
+    ['pts_allow_7_13', 6.5, 13.5, 4],
+    ['pts_allow_14_20', 13.5, 20.5, 1],
+    ['pts_allow_21_27', 20.5, 27.5, 0],
+    ['pts_allow_28_34', 27.5, 34.5, -1],
+    ['pts_allow_35p', 34.5, 99.5, -4],
+  ];
+  function dstProjFor(p, g) {
+    const O = g && g.total != null && g.implied != null ? g.total - g.implied : 22.5;
+    const sc = state.leagueScoring || {};
+    const val = (k, d) => (sc[k] != null ? sc[k] : d);
+    const q = p.dRk != null ? 1 + (16.5 - p.dRk) * 0.012 : 1; // rank 1 → ×1.19
+    const sacks = Math.max(0.5, 3.6 - 0.055 * O) * q;
+    const ints = Math.max(0.2, 1.5 - 0.025 * O) * q;
+    const dtd = Math.max(0.05, 0.28 - 0.005 * O) * q;
+    let pts = sacks * val('sack', 1) + ints * val('int', 2) + 0.5 * q * val('fum_rec', 2) +
+      dtd * val('def_td', 6) + 0.06 * q * val('safe', 2) + 0.07 * q * val('blk_kick', 2);
+    if (sc.ff) pts += 0.85 * q * sc.ff;
+    const cdf = (x) => 1 / (1 + Math.exp(-(x - O) / 5.6)); // ~normal σ≈9.5
+    for (let i = 0; i < PA_BUCKETS.length; i++) {
+      const b = PA_BUCKETS[i];
+      pts += (cdf(b[2]) - cdf(b[1])) * val(b[0], b[3]);
+    }
+    return pts;
+  }
+
+  // ---- in-season decay of preseason projections ----
+  // After every played week, pull actual fantasy points from Sleeper's public
+  // stats endpoint (players.json sids bridge the ids) and shrink the
+  // preseason base toward season-to-date PPG — prior worth ~6 games.
+  async function fetchSeasonStats() {
+    if (MOCK) return;
+    if (!state.byesActive || state.seasonWeek <= 1) return; // no games played yet
+    const upTo = state.seasonWeek - 1;
+    const season = (state.nflState && state.nflState.season) || '2026';
+    try {
+      const saved = await store.get(['espnHelper.seasonStats']);
+      const c = saved['espnHelper.seasonStats'];
+      if (c && c.season === season && c.upToWk === upTo && Date.now() - c.ts < 6 * 3600 * 1000) {
+        state.seasonStats = c;
+        if (state.appMode === 'season') render();
+        return;
+      }
+    } catch (e) {}
+    try {
+      const byId = {};
+      for (let wk = 1; wk <= upTo; wk++) {
+        const stats = await fetchJson('https://api.sleeper.app/v1/stats/nfl/regular/' + season + '/' + wk);
+        if (!stats) continue;
+        for (const sid of Object.keys(stats)) {
+          const s = stats[sid];
+          if (!s || !s.gp) continue;
+          const rec = byId[sid] || (byId[sid] = { ppr: 0, half: 0, std: 0, gp: 0 });
+          rec.ppr += s.pts_ppr || 0;
+          rec.half += s.pts_half_ppr || 0;
+          rec.std += s.pts_std || 0;
+          rec.gp += 1;
+        }
+      }
+      state.seasonStats = { ts: Date.now(), season, upToWk: upTo, byId };
+      store.set({ 'espnHelper.seasonStats': state.seasonStats });
+      if (state.appMode === 'season') render();
+    } catch (e) { /* preseason projections just stand */ }
+  }
+  function actualPpgFor(p) {
+    const st = state.seasonStats;
+    const rec = st && p.sid && st.byId[p.sid];
+    if (!rec || !rec.gp) return null;
+    const recPts = (state.scoringVals && state.scoringVals.recPts != null) ? state.scoringVals.recPts : 1;
+    const total = recPts >= 0.75 ? rec.ppr : recPts <= 0.25 ? rec.std : rec.half;
+    return { ppg: total / rec.gp, gp: rec.gp };
+  }
+  // Sleeper's full player dump → trimmed {sid: {n,pos,tm,inj}} map. Covers
+  // injury flags for free agents (mRoster only knows rostered players).
+  async function fetchInjuries() {
+    if (MOCK) { state.slMeta = MOCK.slMeta || {}; return; }
+    try {
+      const saved = await store.get(['espnHelper.slMeta2']);
+      const cached = saved['espnHelper.slMeta2'];
+      if (cached && cached.ts && Date.now() - cached.ts < INJ_TTL_MS) {
+        state.slMeta = cached.map || {};
+        if (state.appMode === 'season') render();
+        return;
+      }
+    } catch (e) {}
+    try {
+      const all = await fetchJson('https://api.sleeper.app/v1/players/nfl');
+      const map = {};
+      const OUT_STATUS = /^(Injured Reserve|Physically Unable|Non Football|Suspended|Reserve)/i;
+      const KEEP = { QB: 1, RB: 1, WR: 1, TE: 1, K: 1, DST: 1 };
+      for (const sid of Object.keys(all || {})) {
+        const pl = all[sid];
+        if (!pl) continue;
+        const pos = pl.position === 'DEF' ? 'DST' : pl.position;
+        if (!KEEP[pos]) continue;
+        let inj = null;
+        const is = pl.injury_status || '';
+        if (/^(Out|IR|PUP|COV|Sus|NA|DNR)/i.test(is) || OUT_STATUS.test(pl.status || '')) inj = 'OUT';
+        else if (/^Doubtful/i.test(is)) inj = 'D';
+        else if (/^Questionable/i.test(is)) inj = 'Q';
+        const entry = { n: ((pl.first_name || '') + ' ' + (pl.last_name || '')).trim(), pos, tm: pl.team || '' };
+        if (inj) entry.inj = inj;
+        // Raw designations + experience for the season-sim engine: exp 0 =
+        // TRUE rookie (sigma widening + ramps); is/st feed IR/PUP exclusions.
+        if (typeof pl.years_exp === 'number') entry.exp = pl.years_exp;
+        if (pl.injury_status) entry.is = pl.injury_status;
+        if (pl.status && pl.status !== 'Active') entry.st = pl.status;
+        map[sid] = entry;
+      }
+      state.slMeta = map;
+      store.set({ 'espnHelper.slMeta2': { ts: Date.now(), map } });
+      if (state.appMode === 'season') render();
+    } catch (e) { /* flags just stay off */ }
+  }
+  async function fetchTrending() {
+    if (MOCK) { state.trendAdds = MOCK.trendAdds || {}; return; }
+    try {
+      const t = await fetchJson('https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&limit=50');
+      state.trendAdds = {};
+      if (Array.isArray(t)) for (const x of t) state.trendAdds[String(x.player_id)] = x.count;
+    } catch (e) {}
+  }
+
+  // ---- weekly value + optimal lineup (identity = keyOf, not sleeper sid) ----
+  // This-week value: site prop-board projection blended 80/20 with the
+  // league-scored Clay PPG when a board exists, zeroed on bye (regular season)
+  // and for OUT/IR players, discounted for Doubtful/Questionable, then nudged
+  // by Jack's redraft rank (±1.5 ppg). K/DST fully modeled above.
+  // ---- engine-mean weekly projection (the SIMS number, deterministic) ----
+  // Same mean the SIMS tab draws its distributions around: Clay rescored to
+  // the league's real scoring × Vegas implied-total multiplier (backtested
+  // per-position elasticity) × defense adjustment, with QB/injury windows and
+  // rookie ramps applied. jsMean flavor: once the bundled data pack carries
+  // 2026 actuals it auto-shrinks Clay toward them and swaps preseason unit
+  // grades for realized FPA — preseason it equals the plain mean. Cached per
+  // week+scoring. K/DST excluded: the sidebar's own league-scored Vegas
+  // models below are sharper than the engine's flat DST formula.
+  let _engWk = null;
+  function engineWeekMap() {
+    if (!simAvailable() || !state.leagueScoring) return null;
+    const key = state.seasonWeek + '|' + state.scoringLabel;
+    if (_engWk && _engWk.key === key) return _engWk;
+    const E = window.SimEngine;
+    const bySid = {}, byNorm = {};
+    try {
+      const sched = E.buildSchedule();
+      if (!sched || !Object.keys(sched.byTeam).length) return null;
+      simEnsureGlobals();
+      const players = E.buildPlayers(sched);
+      const sc = E.scoringFromLeague(state.leagueScoring);
+      players.list.forEach((ep) => {
+        if (ep.isDST || ep.pos === 'K') return;
+        const wp = E.weeklyProjection(ep, state.seasonWeek, sc, sched);
+        const m = wp && (wp.jsMean != null ? wp.jsMean : wp.mean);
+        if (!(m > 0)) return;
+        const rec = { m, sig: ep.sigmaPct, pos: ep.pos };
+        if (ep.sid) bySid[ep.sid] = rec;
+        if (byNorm[ep.norm] === undefined) byNorm[ep.norm] = rec;
+      });
+    } catch (e) { console.warn('MFF engineWeekMap failed:', e); return null; }
+    _engWk = { key, bySid, byNorm };
+    return _engWk;
+  }
+  function engineRecFor(p) {
+    const m = engineWeekMap();
+    if (!m) return null;
+    let r = p.sid != null ? m.bySid[String(p.sid)] : undefined;
+    if (r === undefined) r = m.byNorm[window.SimEngine.norm(p.n)];
+    return r || null;
+  }
+  function engineMeanFor(p) {
+    const r = engineRecFor(p);
+    return r ? r.m : null;
+  }
+  // Boom/bust odds, analytic. The engine's marginal weekly distribution is
+  // gamma(mean, sd = mean × sigmaPct) — the correlation structure preserves
+  // marginals exactly — so P(boom)/P(bust) come from the regularized
+  // incomplete gamma (series + continued fraction), no sampling needed.
+  // Evaluated at the DISPLAYED proj (post injury-discount/nudge) so the odds
+  // always describe the number next to them.
+  function lnGamma(z) {
+    const g = [76.18009172947146, -86.50532032941677, 24.01409824083091,
+      -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+    let y = z, tmp = z + 5.5, ser = 1.000000000190015;
+    tmp -= (z + 0.5) * Math.log(tmp);
+    for (let j = 0; j < 6; j++) ser += g[j] / ++y;
+    return -tmp + Math.log(2.5066282746310005 * ser / z);
+  }
+  function gammP(a, x) {
+    if (x <= 0) return 0;
+    if (x < a + 1) {
+      let ap = a, sum = 1 / a, del = sum;
+      for (let i = 0; i < 300; i++) {
+        ap += 1; del *= x / ap; sum += del;
+        if (Math.abs(del) < Math.abs(sum) * 1e-9) break;
+      }
+      return sum * Math.exp(-x + a * Math.log(x) - lnGamma(a));
+    }
+    let b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+    for (let i = 1; i < 300; i++) {
+      const an = -i * (i - a);
+      b += 2; d = an * d + b; if (Math.abs(d) < 1e-300) d = 1e-300;
+      c = b + an / c; if (Math.abs(c) < 1e-300) c = 1e-300;
+      d = 1 / d; const del = d * c; h *= del;
+      if (Math.abs(del - 1) < 1e-9) break;
+    }
+    return 1 - Math.exp(-x + a * Math.log(x) - lnGamma(a)) * h;
+  }
+  function boomBustFor(p, mean) {
+    const r = engineRecFor(p);
+    const E = window.SimEngine;
+    const bb = E && E.BOOM_BUST && E.BOOM_BUST[p.s];
+    if (!r || !bb || !(mean > 0) || !(r.sig > 0)) return null;
+    const k = 1 / (r.sig * r.sig), th = mean * r.sig * r.sig;
+    return { boom: 1 - gammP(k, bb.boom / th), bust: gammP(k, bb.bust / th), boomAt: bb.boom, bustAt: bb.bust };
+  }
+  function bbTip(bb) {
+    return 'From the sim distribution: ' + Math.round(bb.boom * 100) + '% boom (≥' + bb.boomAt +
+      ' pts) · ' + Math.round(bb.bust * 100) + '% bust (<' + bb.bustAt + ' pts)';
+  }
+  function bbTagHTML(p, v) {
+    const bb = boomBustFor(p, v);
+    if (!bb) return '';
+    return `<span class="tag" style="background:#2a2c33" title="${esc(bbTip(bb))}">` +
+      `<span style="color:#6dd06d">▲${Math.round(bb.boom * 100)}</span> ` +
+      `<span style="color:#d06d6d">▼${Math.round(bb.bust * 100)}</span></span>`;
+  }
+  function bbPillHTML(bb) {
+    return `<span title="${esc(bbTip(bb))}" style="background:#2a2c33;font-size:10px;font-weight:700;` +
+      'border-radius:3px;padding:0 4px;line-height:15px;white-space:nowrap;flex:0 0 auto">' +
+      `<span style="color:#6dd06d">▲${Math.round(bb.boom * 100)}</span>&nbsp;` +
+      `<span style="color:#d06d6d">▼${Math.round(bb.bust * 100)}</span></span>`;
+  }
+  function wkVal(p) {
+    if (onByeThisWeek(p)) return 0;
+    const act = actualPpgFor(p);
+    const shrink = act ? act.gp / (act.gp + PRIOR_GAMES) : 0;
+    let v;
+    if (p.s === 'K' || p.s === 'DST') {
+      const g = p.sTm && state.schedule[p.sTm] && state.schedule[p.sTm][state.seasonWeek];
+      v = p.s === 'K' ? kickerProjFor(p, g) : dstProjFor(p, g);
+      if (act) {
+        const prior = p.s === 'K' ? (p.pPg != null ? p.pPg : 7.5) : dstProjFor(p, null);
+        v += (act.ppg - prior) * shrink;
+      }
+      v = Math.max(1, v);
+    } else {
+      // Engine mean is the projection wherever the sim engine covers the
+      // player; the old props/Clay blend survives only as the fallback for
+      // players outside the Clay universe (or when engine data isn't loaded).
+      const em = engineMeanFor(p);
+      if (em != null) {
+        v = em;
+      } else {
+        let base = p.pPg != null ? p.pPg : 0;
+        if (act) base += (act.ppg - base) * shrink; // preseason proj decays per game played
+        v = base;
+        const props = propsProjFor(p);
+        if (props != null) v = (p.pPg != null || act) ? 0.8 * props + 0.2 * base : props;
+      }
+    }
+    const inj = injOf(p);
+    if (inj) {
+      if (inj === 'OUT') return 0;
+      if (inj === 'D') v *= 0.3;
+      else if (inj === 'Q') v *= 0.85;
+    }
+    if (v > 0 && p.rank != null && !p._unmatched && p.s !== 'K' && p.s !== 'DST') {
+      v += Math.max(-0.67, Math.min(1, (100 - p.rank) / 100)) * 1.5;
+      if (v < 0) v = 0;
+    }
+    return Math.round(v * 100) / 100;
+  }
+  function mySeasonTeam() {
+    return state.seasonTeams.find((t) => t.teamId === state.myTeamId) || null;
+  }
+  // Roster entries → player objects. Names outside the 580-player export
+  // become stub entries so the lineup math never loses a body silently.
+  function myPlayerObjs() {
+    const t = mySeasonTeam();
+    if (!t) return [];
+    return t.entries.map((en) => en.p ||
+      { n: en.name, s: en.pos || '?', sTm: en.team, rank: 9999, _unmatched: true });
+  }
+  function currentStarterKeys() {
+    const t = mySeasonTeam();
+    if (!t) return new Set();
+    return new Set(t.entries.filter((en) => en.slotId !== 20 && en.slotId !== 21).map((en) => en.key));
+  }
+  // Greedy optimal lineup over the league's real slots: dedicated positions
+  // fill first, then narrow flexes (WR/RB, WR/TE), then FLEX, then SUPER_FLEX.
+  function optimalLineup(pool) {
+    const slots = state.seasonSlots || [];
+    const order = slots.map((s, i) => ({ s, i, w: SLOT_ELIG[s] ? SLOT_ELIG[s].length : 99 }))
+      .sort((a, b) => a.w - b.w);
+    const entries = pool.map((p) => ({ p, v: wkVal(p) }))
+      .sort((a, b) => b.v - a.v || ((a.p.rank || 9999) - (b.p.rank || 9999)));
+    const used = new Set();
+    const byIdx = {};
+    let total = 0;
+    for (const o of order) {
+      const elig = SLOT_ELIG[o.s];
+      if (!elig) { byIdx[o.i] = null; continue; }
+      const e = entries.find((x) => !used.has(x) && elig.indexOf(x.p.s) !== -1);
+      if (e) { used.add(e); byIdx[o.i] = e; total += e.v; }
+      else byIdx[o.i] = null;
+    }
+    return {
+      assign: slots.map((s, i) => ({ slot: s, e: byIdx[i] || null })),
+      total: Math.round(total * 10) / 10,
+    };
+  }
+  // Start/sit moves: optimal players not currently starting, paired with the
+  // weakest current starters who dropped out of the optimal lineup.
+  function lineupMoves(opt, starterSet, pool) {
+    const adds = opt.assign
+      .filter((a) => a.e && !starterSet.has(keyOf(a.e.p)))
+      .map((a) => a.e)
+      .sort((a, b) => b.v - a.v);
+    const optKeys = new Set(opt.assign.filter((a) => a.e).map((a) => keyOf(a.e.p)));
+    const sits = pool.filter((p) => starterSet.has(keyOf(p)) && !optKeys.has(keyOf(p)))
+      .map((p) => ({ p, v: wkVal(p) }))
+      .sort((a, b) => a.v - b.v);
+    const usedSit = new Set();
+    return adds.map((add) => {
+      const sit = sits.find((s) => !usedSit.has(s) && s.p.s === add.p.s) ||
+                  sits.find((s) => !usedSit.has(s)) || null;
+      if (sit) usedSit.add(sit);
+      return { add, sit, delta: sit ? Math.round((add.v - sit.v) * 10) / 10 : null };
+    });
+  }
+  // Shared lineup verdicts: optimal lineup + start/sit moves + per-player
+  // verdict ('go' start him / 'sit' bench him / 'close' toss-up).
+  function seasonLineupCalc() {
+    if (!mySeasonTeam()) return null;
+    const pool = myPlayerObjs();
+    const opt = optimalLineup(pool);
+    const starterSet = currentStarterKeys();
+    const moves = lineupMoves(opt, starterSet, pool);
+    const cls = {};
+    for (const mv of moves) {
+      if (mv.sit && mv.delta != null && Math.abs(mv.delta) < CLOSE_PPG) {
+        cls[keyOf(mv.add.p)] = 'close';
+        cls[keyOf(mv.sit.p)] = 'close';
+      } else {
+        cls[keyOf(mv.add.p)] = 'go';
+        if (mv.sit) cls[keyOf(mv.sit.p)] = 'sit';
+      }
+    }
+    return { pool, opt, starterSet, moves, cls };
+  }
+  // ---- waivers ----
+  function freeAgents() {
+    const rostered = state.rosteredKeys || new Set();
+    return state.players.filter((p) => !rostered.has(keyOf(p)));
+  }
+  // The "you have Josh Allen" rule: every free agent is scored by the ppg he
+  // adds to YOUR optimal lineup (upgrade delta). ROS quality, Sleeper 24h add
+  // trends, and (keeper leagues) KTC break the ties.
+  function waiverRecs() {
+    const mine = myPlayerObjs();
+    const base = optimalLineup(mine).total;
+    const dyn = state.mode.indexOf('dyn') === 0;
+    const mk = modeKeys();
+    const fas = freeAgents().filter(
+      (p) => state.seasonPosFilter === 'ALL' || p.s === state.seasonPosFilter
+    );
+    const scored = fas.map((p) => {
+      const delta = Math.round((optimalLineup(mine.concat([p])).total - base) * 10) / 10;
+      const trend = (p.sid && state.trendAdds[p.sid]) || 0;
+      let score = delta * 4 + (p.pPg || 0) * 0.6;
+      if (dyn && p[mk.ktc] != null) score += p[mk.ktc] / 400;
+      if (trend) score += Math.min(3, Math.log10(trend + 1) * 1.5);
+      return { p, delta, trend, score: Math.round(score * 10) / 10 };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, 25);
+  }
+  // Keep-score per rostered player: marginal lineup contribution + ROS value
+  // (+ KTC in keeper leagues). Lowest keep = the drop candidate; your only
+  // K/DST/QB at a required slot is protected.
+  function dropCandidates() {
+    const mine = myPlayerObjs();
+    const base = optimalLineup(mine).total;
+    const dyn = state.mode.indexOf('dyn') === 0;
+    const mk = modeKeys();
+    const slots = state.seasonSlots || [];
+    const posCount = {};
+    for (const p of mine) posCount[p.s] = (posCount[p.s] || 0) + 1;
+    const required = new Set(slots.map((s) => (SLOT_ELIG[s] && SLOT_ELIG[s].length === 1) ? SLOT_ELIG[s][0] : null));
+    return mine.map((p) => {
+      const marginal = Math.round((base - optimalLineup(mine.filter((x) => x !== p)).total) * 10) / 10;
+      let keep = marginal * 4 + (p.pPg || 0);
+      if (dyn && !p._unmatched && p[mk.ktc] != null) keep += p[mk.ktc] / 300;
+      if (required.has(p.s) && (posCount[p.s] || 0) <= 1) keep += 100;
+      return { p, marginal, keep };
+    }).sort((a, b) => a.keep - b.keep);
+  }
+  // ---- season boot / polling ----
+  function saveSeasonPrefs() {
+    if (!state.seasonLeagueId) return;
+    store.set({
+      ['espnSeason_' + state.seasonLeagueId]: {
+        teamId: state.myTeamId,
+        tab: state.seasonTab,
+        posFilter: state.seasonPosFilter,
+        teamSrc: state.seasonTeamSrc,
+      },
+    });
+  }
+  async function initSeason(leagueId) {
+    stopSeasonPolling();
+    state.appMode = 'season';
+    state.seasonLeagueId = leagueId;
+    state.seasonId = urlParams().get('seasonId') || (MOCK && MOCK.seasonId) || currentSeason();
+    state.seasonTeams = [];
+    state.seasonStatus = 'Loading league…';
+    buildPanel();
+    render();
+    try {
+      const saved = await store.get(['espnSeason_' + leagueId]);
+      const prefs = saved['espnSeason_' + leagueId] || {};
+      if (prefs.tab) state.seasonTab = prefs.tab;
+      if (prefs.posFilter) state.seasonPosFilter = prefs.posFilter;
+      if (prefs.teamSrc && SOURCES[prefs.teamSrc]) state.seasonTeamSrc = prefs.teamSrc;
+      await ensureNflState();
+      const raw = await fetchSeasonLeague(leagueId, state.seasonId);
+      applySeasonLeague(raw);
+      const urlTeam = parseInt(urlParams().get('teamId'), 10);
+      state.myTeamId = prefs.teamId ||
+        (isFinite(urlTeam) ? urlTeam : null) || detectMyTeam() ||
+        (MOCK && MOCK.myTeamId) || state.myTeamId || null;
+      state.seasonStatus = state.seasonTeams.length + ' teams · week ' + state.seasonWeek +
+        (state.byesActive ? '' : ' (preseason)');
+      startSeasonPolling();
+      startDecorating(); // ESPN's own roster rows get verdict/matchup/proj pills
+      fetchInjuries();
+      fetchTrending();
+      fetchSeasonStats();
+      // fresh league = fresh sim; kick it now if SIMS is the saved tab
+      Object.assign(state.seasonSim, { status: 'idle', placeCounts: null, results: null, recHash: null, selTeam: null });
+      if (state.seasonTab === 'sims' && simAvailable()) setTimeout(ensureSeasonSim, 0);
+    } catch (e) {
+      state.seasonStatus = 'League load failed: ' + e.message;
+    }
+    render();
+  }
+  async function refreshSeasonLeague() {
+    if (!state.seasonLeagueId) return;
+    const raw = await fetchSeasonLeague(state.seasonLeagueId, state.seasonId);
+    applySeasonLeague(raw);
+    state.seasonStatus = state.seasonTeams.length + ' teams · week ' + state.seasonWeek +
+      (state.byesActive ? '' : ' (preseason)');
+  }
+  function startSeasonPolling() {
+    stopSeasonPolling();
+    state.seasonPollTimer = setInterval(async () => {
+      if (state.appMode !== 'season' || !state.seasonLeagueId) return;
+      try { await refreshSeasonLeague(); render(); } catch (e) {}
+    }, SEASON_POLL_MS);
+  }
+  function stopSeasonPolling() {
+    if (state.seasonPollTimer) { clearInterval(state.seasonPollTimer); state.seasonPollTimer = null; }
+  }
+  // ---------- SIMS tab: Monte Carlo season sims ----------
+  // The Sleeper helper's sim core on ESPN data: engine_sim.js (verbatim
+  // sim_lab copy, fed by data/sim_pack.js) runs 1,500 seeded seasons over the
+  // league — real mMatchup pairings (round-robin synth preseason fallback),
+  // mid-season records carried, IR/OUT exclusions, lineups picked from the
+  // league's real slots + scoring — and keeps each team's finish
+  // distribution + per-week results. Standings/odds only: no traded-pick
+  // valuations here (ESPN leagues don't trade future picks).
+  const SIM_RUNS = 1500, SIM_SEED = 99;
+  state.seasonSim = { leagueId: null, status: 'idle', results: null, placeCounts: null,
+    sims: SIM_RUNS, recHash: null, synthPairs: false, note: '', selTeam: null };
+  function simAvailable() {
+    return !!(window.SimEngine && typeof MIKE_CLAY_PROJ !== 'undefined' &&
+      typeof PLAYER_WEEKLY_SIGMA !== 'undefined' && window.BETTING_2026);
+  }
+  function simEnsureGlobals() {
+    // Engine matches Clay names → Sleeper ids through SIM_SLEEPER, and
+    // rookie/injury designations through SIM_SLEEPER_META.
+    if (!window.SIM_SLEEPER) {
+      window.SIM_SLEEPER = { players: state.players.filter((p) => p.sid).map((p) => ({
+        n: p.n, sid: p.sid, a: p.a, age: p.age, ktc1qb: p.ktc1qb, ktcSf: p.ktcSf })) };
+    }
+    const meta = {};
+    for (const sid of Object.keys(state.slMeta)) {
+      const e = state.slMeta[sid];
+      if (e.exp != null || e.is || e.st) meta[sid] = { exp: e.exp, inj: e.is || '', st: e.st || '' };
+    }
+    window.SIM_SLEEPER_META = meta;
+  }
+  const SIM_IR_STATUS = /^(Injured Reserve|Physically Unable|Non Football|Suspended|Reserve)/i;
+  function simUnavailable() {
+    // Mirror sim_lab rules: hard-out roster statuses gone all season; weekly
+    // "Out" benches the current week only (regular season); Q/D untouched —
+    // the sim's variance owns those. ESPN's own roster flags win.
+    const out = {};
+    for (const sid of Object.keys(state.slMeta)) {
+      const e = state.slMeta[sid];
+      const st = e.st || '', is = e.is || '';
+      if (SIM_IR_STATUS.test(st) || /^(IR|NA|COV|DNR)/i.test(is) ||
+          (state.byesActive && /^(PUP|Sus)/i.test(is))) out[sid] = 'ir';
+      else if (state.byesActive && /^Out/i.test(is)) out[sid] = 'out';
+    }
+    state.seasonTeams.forEach((t) => t.entries.forEach((en) => {
+      if (!en.p || !en.p.sid) return;
+      if (en.slotId === 21) out[en.p.sid] = 'ir'; // league-enforced IR slot
+      else if (state.byesActive && en.inj === 'OUT' && !out[en.p.sid]) out[en.p.sid] = 'out';
+    }));
+    return out;
+  }
+  function simTeams() {
+    return state.seasonTeams.map((t) => ({
+      rosterId: t.teamId,
+      name: t.name,
+      playerIds: t.entries.filter((en) => en.p && en.p.sid && en.slotId !== 21)
+        .map((en) => String(en.p.sid)),
+      record: (state.byesActive && t.record && (t.record.w || t.record.l))
+        ? { w: t.record.w, l: t.record.l, pf: t.record.pf } : null,
+    }));
+  }
+  function simRecHash() {
+    return state.seasonTeams.map((t) =>
+      t.teamId + ':' + (t.record ? (t.record.w || 0) + '-' + (t.record.l || 0) : '0-0')).join('|');
+  }
+  function simRoundRobin(ids, weeks) {
+    const arr = ids.slice();
+    if (arr.length % 2) arr.push(null);
+    const n = arr.length, half = n / 2, pairsByWeek = {};
+    weeks.forEach((wk) => {
+      const prs = [];
+      for (let j = 0; j < half; j++) {
+        const a = arr[j], b = arr[n - 1 - j];
+        if (a != null && b != null) prs.push({ a, b });
+      }
+      pairsByWeek[wk] = prs;
+      arr.splice(1, 0, arr.pop()); // rotate all but first
+    });
+    return pairsByWeek;
+  }
+  async function ensureSeasonSim() {
+    const lid = state.seasonLeagueId;
+    const ps = state.seasonSim;
+    if (!lid || !simAvailable() || !state.seasonTeams.length) return;
+    const recHash = simRecHash();
+    if (ps.leagueId === lid &&
+      (ps.status === 'running' || (ps.status === 'done' && ps.recHash === recHash))) return;
+    ps.leagueId = lid; ps.status = 'running'; ps.note = '';
+    render();
+    await new Promise((r) => setTimeout(r, 30)); // let the status paint before the sync sim
+    try {
+      const day = new Date().toDateString();
+      const cacheKey = 'espnSim_' + lid;
+      try { // day+records-keyed cache: finish distributions barely move intraday
+        const saved = await store.get([cacheKey]);
+        const c = saved[cacheKey];
+        if (c && c.v === 1 && c.day === day && c.recHash === recHash && c.results) {
+          Object.assign(ps, { status: 'done', results: c.results, placeCounts: c.placeCounts,
+            sims: c.sims || SIM_RUNS, recHash, synthPairs: !!c.synthPairs });
+          render();
+          return;
+        }
+      } catch (e) {}
+      const E2 = window.SimEngine;
+      const sched = E2.buildSchedule();
+      if (!sched || !Object.keys(sched.byTeam).length) throw new Error('no Vegas lines loaded');
+      const curWeek = state.byesActive ? state.seasonWeek : 1;
+      const playoffStart = state.playoffStart || 15;
+      const regWeeks = [];
+      for (let w = curWeek; w < playoffStart; w++) regWeeks.push(w);
+      const teams = simTeams();
+      let pairsByWeek = state.seasonPairs || {};
+      const anyPairs = regWeeks.some((w) => (pairsByWeek[w] || []).length);
+      ps.synthPairs = !anyPairs;
+      if (!anyPairs) pairsByWeek = simRoundRobin(teams.map((t) => t.rosterId), regWeeks);
+      simEnsureGlobals();
+      const players = E2.buildPlayers(sched);
+      const res = E2.simLeague({
+        teams, sims: SIM_RUNS, seed: SIM_SEED,
+        scoring: E2.scoringFromLeague(state.leagueScoring),
+        schedule: sched, players, pairsByWeek, regWeeks,
+        playoffTeams: state.playoffTeams || 6, playoffStart,
+        lineupSlots: state.seasonSlots || [], unavailable: simUnavailable(), currentWeek: curWeek,
+      });
+      const placeCounts = {}, results = {};
+      res.forEach((r) => {
+        placeCounts[r.team.rosterId] = r.placeCounts;
+        const carried = r.team.record ? (r.team.record.w || 0) + (r.team.record.l || 0) : 0;
+        const games = carried + regWeeks.length;
+        const weekly = {};
+        Object.keys(r.weekly || {}).forEach((wk) => {
+          const w = r.weekly[wk];
+          weekly[wk] = { opp: w.opp, winPct: +w.winPct.toFixed(3), pf: +w.avgPf.toFixed(1), pa: +w.avgPa.toFixed(1) };
+        });
+        results[r.team.rosterId] = {
+          w: +r.avgWins.toFixed(1), l: +(games - r.avgWins).toFixed(1), pf: Math.round(r.avgPF),
+          playoff: +r.playoffOdds.toFixed(3), bye: +r.byeOdds.toFixed(3),
+          finals: +r.finalsOdds.toFixed(3), title: +r.titleOdds.toFixed(3), weekly,
+        };
+      });
+      Object.assign(ps, { status: 'done', placeCounts, results, sims: SIM_RUNS, recHash });
+      store.set({ [cacheKey]: { v: 1, day, recHash, placeCounts, results, sims: SIM_RUNS, synthPairs: ps.synthPairs } });
+    } catch (e) {
+      ps.status = 'error';
+      ps.note = e.message || String(e);
+    }
+    render();
+  }
+  function simExpFinish(rid) {
+    const ps = state.seasonSim;
+    const f = ps.status === 'done' && ps.placeCounts ? ps.placeCounts[rid] : null;
+    if (!f) return null;
+    const n = state.seasonTeams.length || 12;
+    let ev = 0, mode = 1, modeP = 0;
+    for (let pl = 1; pl <= n; pl++) {
+      const p = (f[pl] || 0) / ps.sims;
+      ev += pl * p;
+      if (p > modeP) { modeP = p; mode = pl; }
+    }
+    return { ev, mode, modeP };
+  }
+  function simOrdinal(v) {
+    const s = ['th', 'st', 'nd', 'rd'], t = v % 100;
+    return v + (s[(t - 20) % 10] || s[t] || s[0]);
+  }
+
+  // ---------- on-page decoration (season mode) ----------
+  // Mirrors the Sleeper helper's team-page decorator: every rostered player
+  // name ESPN renders as a link gets inline pills — verdict (▲ START / ▼ SIT
+  // / ≈ TOSS-UP, YOUR roster only), the colored Vegas matchup pill, and this
+  // week's projected ppg. ESPN's fantasy markup churns, so matching keys on
+  // the anchor TEXT (raw ESPN name or our D/ST rename), not on selectors —
+  // robust across My Team / league rosters / player cards. 2s re-scan,
+  // signature-cached so unchanged rows never re-write.
+  let decorateTimer = null;
+  // ESPN is a light theme — the dark pill palette reads as mud there, so the
+  // native OPP cell gets its own light tint pair. 'mid' stays untinted (just
+  // the tooltip): a wall of colored cells would bury the actual signal.
+  const OPP_TINT = { good: ['#e2f3e6', '#1d7a34'], bad: ['#fbe7e7', '#b33636'] };
+  function tintNativeOpp(a, g) {
+    const tr = a.closest('tr');
+    const cell = tr && tr.querySelector('.table--cell.opp');
+    if (!cell) return null;
+    const tgt = cell.querySelector('a') || cell;
+    const sig = g.cls + '|' + g.tip;
+    if (tgt.dataset.mffOppSig !== sig) {
+      tgt.dataset.mffOppSig = sig;
+      tgt.classList.add('mff-opp-hl');
+      tgt.title = g.tip;
+      const c = OPP_TINT[g.cls];
+      tgt.style.background = c ? c[0] : '';
+      tgt.style.color = c ? c[1] : '';
+      tgt.style.borderRadius = c ? '3px' : '';
+      tgt.style.padding = c ? '0 3px' : '';
+      tgt.style.fontWeight = c ? '600' : '';
+    }
+    return tgt;
+  }
+  function untintOpps() {
+    document.querySelectorAll('.mff-opp-hl').forEach((el) => {
+      el.classList.remove('mff-opp-hl');
+      el.removeAttribute('title');
+      el.style.background = el.style.color = el.style.borderRadius = el.style.padding = el.style.fontWeight = '';
+      delete el.dataset.mffOppSig;
+    });
+  }
+  function pillHTML(text, bg, fg, title) {
+    return `<span ${title ? 'title="' + esc(title) + '"' : ''} style="background:${bg};color:${fg};` +
+      'font-size:10px;font-weight:700;border-radius:3px;padding:0 4px;line-height:15px;' +
+      'white-space:nowrap;flex:0 0 auto">' + esc(text) + '</span>';
+  }
+  function decorateSeasonPages() {
+    if (state.appMode !== 'season' || !state.seasonTeams.length) return;
+    const map = Object.create(null);
+    state.seasonTeams.forEach((t) => t.entries.forEach((en) => {
+      if (!en.p) return;
+      const rec = { p: en.p, mine: t.teamId === state.myTeamId };
+      map[norm(en.name)] = rec;
+      if (en.raw) map[norm(en.raw)] = rec;
+    }));
+    const calc = state.myTeamId != null ? seasonLineupCalc() : null;
+    for (const a of document.querySelectorAll('a')) {
+      if (a.closest('#mff-sidebar')) continue;
+      const txt = (a.textContent || '').trim();
+      if (!txt || txt.length > 40) continue;
+      const rec = map[norm(txt)];
+      // ESPN wraps roster-table names in <span class="truncate"> (overflow:hidden +
+      // ellipsis, fixed width) — pills inserted inside it get clipped for any
+      // name long enough to fill the box. Hop out to the truncate wrapper and sit
+      // beside it as a flex sibling, same as ESPN's own injury tag.
+      const host = a.closest('.truncate') || a;
+      const existing = host.nextElementSibling &&
+        host.nextElementSibling.classList && host.nextElementSibling.classList.contains('mff-page-pills')
+        ? host.nextElementSibling : null;
+      if (!rec) { if (existing) existing.remove(); continue; }
+      const p = rec.p;
+      const pills = [];
+      const verdict = rec.mine && calc ? calc.cls[keyOf(p)] : null;
+      if (verdict === 'go') pills.push(pillHTML('▲ START', '#2a4030', '#6dd06d', 'Projects better than a current starter — put him in'));
+      else if (verdict === 'sit') pills.push(pillHTML('▼ SIT', '#402a2a', '#d06d6d', 'A benched player projects better — take him out'));
+      else if (verdict === 'close') pills.push(pillHTML('≈ TOSS-UP', '#4a3f30', '#ffc99b', 'Projections within ' + CLOSE_PPG + ' ppg — either is fine'));
+      // Matchup: ESPN's roster tables already print the opponent in their own
+      // OPP column, so instead of a duplicate pill we tint that cell (green =
+      // plus matchup, red = tough) and hang the Vegas tooltip on it. Rows with
+      // no OPP cell (player cards, news modules) keep the pill.
+      const g = wkOppInfo(p);
+      if (g && !tintNativeOpp(a, g)) pills.push(pillHTML(g.txt, g.bg, g.fg, g.tip));
+      const v = wkVal(p);
+      if (v > 0 || p.pPg != null) {
+        pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#2a2c33', '#b9e28c',
+          'Projected points this week (' + state.scoringLabel + ' · sim-engine mean: Clay × Vegas × matchup, league-scored)'));
+        const bb = boomBustFor(p, v);
+        if (bb) pills.push(bbPillHTML(bb));
+      }
+      const inner = pills.join('');
+      if (existing && existing.dataset.mffSig === inner) continue;
+      if (existing) existing.remove();
+      if (!inner) continue;
+      const span = document.createElement('span');
+      span.className = 'mff-page-pills';
+      span.dataset.mffSig = inner;
+      span.innerHTML = inner;
+      span.style.cssText = 'display:inline-flex;flex-wrap:nowrap;gap:3px;margin-left:6px;' +
+        'vertical-align:middle;overflow:hidden;position:relative;z-index:5;flex:0 0 auto;';
+      host.insertAdjacentElement('afterend', span);
+    }
+  }
+  function startDecorating() {
+    if (decorateTimer) return;
+    decorateTimer = setInterval(decorateSeasonPages, 2000);
+    decorateSeasonPages();
+  }
+  function stopDecorating() {
+    if (decorateTimer) { clearInterval(decorateTimer); decorateTimer = null; }
+    document.querySelectorAll('.mff-page-pills').forEach((el) => el.remove());
+    untintOpps();
+  }
+
+  // ---------- on-page pick-strip needs (DRAFT mode) ----------
+  // ESPN's upcoming-picks strip names every team picking ahead of you but says
+  // nothing about what they've taken, so there's no way to read the room
+  // between your own picks. Hang a QB/RB/WR/TE count under each team name,
+  // brightened where that team still hasn't filled its starting slots — the
+  // bright letters ARE the answer to "what do the people around me need".
+  //
+  // Anchored on the "PICK <n>" label TEXT, not a class: the number maps
+  // straight through pickOrder to a teamId (the visible team names are
+  // ellipsized, so they can't be matched), and ESPN's room markup churns.
+  const STRIP_PICK_RE = /^PICK\s+(\d+)$/i;
+  const STRIP_POS = [['QB', '#c084fc'], ['RB', '#4ade80'], ['WR', '#fb923c'], ['TE', '#60a5fa']];
+  // Matches Underdog's board tiles (Jack's reference): a coloured QB/RB/WR/TE
+  // label row with the counts stacked underneath. Label colour is always on —
+  // that IS the Underdog look. The COUNT carries the "still needs a starter
+  // here" signal: full-strength position colour while short, dim neutral once
+  // filled. (Colouring by need alone made the box look uncoloured by mid-draft
+  // once every team had met its starter counts.)
+  function needsBoxHTML(c, req) {
+    const cell = (s) => '<div style="flex:1;text-align:center">' + s + '</div>';
+    const labels = STRIP_POS.map(([pos, col]) => cell(
+      '<span style="font-size:8px;font-weight:700;letter-spacing:.2px;color:' + col + '">' + pos + '</span>'
+    )).join('');
+    const vals = STRIP_POS.map(([pos, col]) => {
+      const need = c[pos] < (req[pos] || 0);
+      return cell('<span style="font-size:10px;font-weight:800;color:' +
+        (need ? col : '#767c88') + '">' + c[pos] + '</span>');
+    }).join('');
+    return '<div style="display:flex;line-height:9px">' + labels + '</div>' +
+           '<div style="display:flex;line-height:11px">' + vals + '</div>';
+  }
+  // GROW, don't overlay. v0.13.1 pinned the row over the tile bottom to dodge
+  // the fixed-height bar, but that covers the team name — and the point is to
+  // read the name AND the positions together. So open the bar up instead:
+  // relax whatever clips vertically, and swap any fixed height for a
+  // min-height big enough to hold the extra rows. Originals recorded for
+  // teardown so ESPN's own layout goes back exactly as it was.
+  function growStripToFit(row, host) {
+    const rr = row.getBoundingClientRect();
+    if (!rr.height) return;
+    for (let a = host; a && a !== document.body; a = a.parentElement) {
+      const cs = getComputedStyle(a);
+      const ar = a.getBoundingClientRect();
+      const clips = cs.overflowY !== 'visible';
+      const short = rr.bottom > ar.bottom + 0.5;
+      if (!clips && !short) continue;
+      if (!a.dataset.mffStripGrow) {
+        a.dataset.mffStripGrow = JSON.stringify({
+          o: a.style.overflowY || '', h: a.style.height || '', m: a.style.minHeight || '',
+        });
+      }
+      if (clips) a.style.overflowY = 'visible';
+      if (short) {
+        if (a.style.height) a.style.height = '';
+        a.style.minHeight = Math.ceil(ar.height + (rr.bottom - ar.bottom)) + 'px';
+      }
+    }
+  }
+  function teamPosCounts(teamId) {
+    const c = { QB: 0, RB: 0, WR: 0, TE: 0 };
+    for (const pk of state.picks) {
+      if (pk.teamId !== teamId) continue;
+      const s = pk.p ? pk.p.s : pk.pos;
+      if (c[s] != null) c[s]++;
+    }
+    return c;
+  }
+  // Same starter requirement remainingStartersHTML() uses for YOUR roster.
+  function starterReq() {
+    const st = state.slots || {};
+    return { QB: (st.qb || 0) + (st.sf || 0), RB: st.rb || 0, WR: st.wr || 0, TE: st.te || 0 };
+  }
+  // The pick tile is the largest ancestor still small enough to be ONE tile —
+  // climbing stops before the strip container swallows every team's name.
+  function stripCellFor(label) {
+    let el = label, best = null;
+    for (let i = 0; i < 4 && el.parentElement; i++) {
+      el = el.parentElement;
+      if ((el.textContent || '').trim().length > 80) break;
+      best = el;
+    }
+    return best;
+  }
+  function clearStripNeeds() {
+    document.querySelectorAll('.mff-strip-needs').forEach((el) => el.remove());
+    document.querySelectorAll('[data-mff-strip-grow]').forEach((el) => {
+      try {
+        const o = JSON.parse(el.dataset.mffStripGrow);
+        el.style.overflowY = o.o; el.style.height = o.h; el.style.minHeight = o.m;
+      } catch (e) {}
+      delete el.dataset.mffStripGrow;
+    });
+  }
+  function decorateDraftStrip() {
+    if (state.appMode !== 'draft' || !state.pickOrder.length || !state.picks.length) {
+      clearStripNeeds();
+      return;
+    }
+    const req = starterReq();
+    const counts = Object.create(null);
+    // TreeWalker over TEXT nodes, not querySelectorAll + textContent: the
+    // draft room's player table is thousands of elements and textContent on
+    // each is O(subtree). This visits every text node exactly once per pass.
+    const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+      const m = STRIP_PICK_RE.exec((n.nodeValue || '').trim());
+      if (!m) continue;
+      const label = n.parentElement;
+      if (!label || label.closest('#mff-sidebar')) continue;
+      const teamId = state.pickOrder[parseInt(m[1], 10)];
+      if (teamId == null) continue;
+      const cell = stripCellFor(label);
+      if (!cell) continue;
+      const c = counts[teamId] || (counts[teamId] = teamPosCounts(teamId));
+      const sig = STRIP_POS.map(([pos]) => pos + c[pos] + (c[pos] < (req[pos] || 0) ? '!' : '')).join('');
+      let host = cell.querySelector(':scope > .mff-strip-needs');
+      if (host && host.dataset.mffSig === sig) continue;
+      if (host) host.remove();
+      host = document.createElement('div');
+      host.className = 'mff-strip-needs';
+      host.dataset.mffSig = sig;
+      // pointer-events:none so it never swallows a click on ESPN's tile.
+      host.style.cssText = 'width:100%;margin-top:2px;pointer-events:none';
+      host.innerHTML = needsBoxHTML(c, req);
+      cell.appendChild(host);
+      growStripToFit(host, cell);
+      watchStrip(cell.parentElement);
+    }
+  }
+  // ESPN rebuilds the whole strip every time a pick lands (completed tiles
+  // scroll off), which throws away our injected rows — on the interval alone
+  // the counts would blink out for up to a tick after every single pick. So
+  // observe the strip CONTAINER and repaint as soon as it re-renders. Scoped
+  // to that one element, never document.body: the room's player table mutates
+  // constantly and a global observer would fire hundreds of times a second.
+  let stripObserver = null, stripRoot = null, stripDebounce = null;
+  function watchStrip(root) {
+    if (!root || root === stripRoot) return;
+    if (stripObserver) stripObserver.disconnect();
+    stripRoot = root;
+    stripObserver = new MutationObserver(() => {
+      // Our own appendChild re-triggers this; the signature cache makes that
+      // repaint a no-op, which mutates nothing, so it settles after one pass.
+      clearTimeout(stripDebounce);
+      stripDebounce = setTimeout(decorateDraftStrip, 100);
+    });
+    stripObserver.observe(root, { childList: true, subtree: true });
+  }
+  let stripTimer = null;
+  function startStripDecorating() {
+    if (stripTimer) return;
+    stripTimer = setInterval(decorateDraftStrip, 2000);  // safety net / first find
+    decorateDraftStrip();
+  }
+  function stopStripDecorating() {
+    if (stripTimer) { clearInterval(stripTimer); stripTimer = null; }
+    if (stripObserver) { stripObserver.disconnect(); stripObserver = null; }
+    clearTimeout(stripDebounce);
+    stripRoot = null;
+    clearStripNeeds();
+  }
+
+  function setAppMode(mode) {
+    if (mode === state.appMode) { render(); return; }
+    if (mode === 'season') {
+      // From a draft room the room's own leagueId doubles as the season league.
+      const sid = detectSeasonLeagueId() || state.seasonLeagueId || state.leagueId;
+      if (sid && sid !== state.seasonLeagueId) { initSeason(sid); return; }
+      state.appMode = 'season';
+      clearStripNeeds();
+      if (!state.seasonLeagueId) state.seasonStatus = 'Open one of your league pages on fantasy.espn.com';
+    } else {
+      state.appMode = 'draft';
+    }
+    render();
+  }
+
+  // ---------- UI ----------
+  let root = null;
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+  function fmtVal(v) { return v == null ? '—' : String(v); }
+  function teamLabel(teamId) {
+    const t = state.teams[teamId];
+    return t ? t.name : ('Team ' + teamId);
+  }
+
+  function buildPanel() {
+    if (root) return;
+    root = document.createElement('div');
+    root.id = 'mff-sidebar';
+    root.innerHTML = `
+      <div id="mff-header">
+        <span class="title">MFF ESPN HELPER</span>
+        <div id="mff-appmode">
+          <button data-appmode="draft" title="Live draft tracking">DRAFT</button>
+          <button data-appmode="season" title="Weekly lineup + waivers for a league">SEASON</button>
+        </div>
+        <div class="controls">
+          <button id="mff-collapse" title="Collapse">–</button>
+          <button id="mff-close" title="Hide (reopen from the MFF chip)">✕</button>
+        </div>
+      </div>
+      <div id="mff-body"></div>
+      <div id="mff-resize-n" class="mff-resize-edge"></div>
+      <div id="mff-resize-e" class="mff-resize-edge"></div>
+      <div id="mff-resize-s" class="mff-resize-edge"></div>
+      <div id="mff-resize"></div>`;
+    document.body.appendChild(root);
+    root.querySelector('#mff-collapse').addEventListener('click', () => {
+      root.classList.toggle('collapsed');
+    });
+    root.querySelectorAll('#mff-appmode button').forEach((b) => {
+      b.addEventListener('click', () => setAppMode(b.dataset.appmode));
+    });
+    root.querySelector('#mff-close').addEventListener('click', hidePanel);
+    enableDrag();
+    enableResize();
+    root.querySelector('#mff-body').addEventListener('click', onBodyClick);
+    root.querySelector('#mff-body').addEventListener('change', onBodyChange);
+    root.querySelector('#mff-body').addEventListener('input', onBodyInput);
+  }
+  function destroyPanel() {
+    if (root) { root.remove(); root = null; }
+    const chip = document.getElementById('mff-reopen');
+    if (chip) chip.remove();
+    if (boardTimer) { clearInterval(boardTimer); boardTimer = null; }
+    lastBoardCount = -1;
+    stopSeasonPolling();
+    stopDecorating();
+    stopStripDecorating();
+  }
+  function hidePanel() {
+    if (!root) return;
+    root.style.display = 'none';
+    if (document.getElementById('mff-reopen')) return;
+    const chip = document.createElement('div');
+    chip.id = 'mff-reopen';
+    chip.textContent = 'MFF';
+    chip.title = 'Show MFF ESPN Helper';
+    chip.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:2147483647;' +
+      'background:#d50a0a;color:#ffffff;font:700 11px -apple-system,BlinkMacSystemFont,sans-serif;' +
+      'padding:8px 11px;border-radius:20px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.5);user-select:none';
+    chip.addEventListener('click', () => {
+      chip.remove();
+      if (root) root.style.display = 'flex';
+    });
+    document.body.appendChild(chip);
+  }
+
+  function enableDrag() {
+    const header = root.querySelector('#mff-header');
+    let sx, sy, ox, oy, dragging = false;
+    header.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button')) return;
+      dragging = true;
+      sx = e.clientX; sy = e.clientY;
+      const r = root.getBoundingClientRect();
+      ox = r.left; oy = r.top;
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      root.style.left = ox + (e.clientX - sx) + 'px';
+      root.style.top = Math.max(0, oy + (e.clientY - sy)) + 'px';
+      root.style.right = 'auto';
+    });
+    window.addEventListener('mouseup', () => { dragging = false; });
+  }
+  function enableResize() {
+    let sx, sy, sw, sh, st, mode = null;
+    function arm(id, m) {
+      const h = root.querySelector(id);
+      if (!h) return;
+      h.addEventListener('mousedown', (e) => {
+        mode = m;
+        sx = e.clientX; sy = e.clientY;
+        const r = root.getBoundingClientRect();
+        sw = r.width; sh = r.height; st = r.top;
+        e.preventDefault();
+      });
+    }
+    arm('#mff-resize', 'se');
+    arm('#mff-resize-e', 'e');
+    arm('#mff-resize-s', 's');
+    arm('#mff-resize-n', 'n');
+    window.addEventListener('mousemove', (e) => {
+      if (!mode) return;
+      root.style.maxHeight = 'none';
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (mode === 'se' || mode === 'e') root.style.width = Math.max(300, sw + dx) + 'px';
+      if (mode === 'se' || mode === 's') root.style.height = Math.max(200, sh + dy) + 'px';
+      if (mode === 'n') {
+        const newTop = Math.max(0, st + dy);
+        root.style.top = newTop + 'px';
+        root.style.height = Math.max(200, sh + (st - newTop)) + 'px';
+      }
+    });
+    window.addEventListener('mouseup', () => { mode = null; });
+  }
+
+  function render() {
+    if (!root) return;
+    state._rendered = true;
+    if (!isDynMode()) { // dynasty-only sources can't survive a flip to redraft
+      if (state.rankSource === 'ktc') state.rankSource = 'jack';
+      if (state.seasonTeamSrc === 'ktc') state.seasonTeamSrc = 'jack';
+    }
+    const body = root.querySelector('#mff-body');
+    const recsEl = body.querySelector('#mff-recs');
+    const scrollTop = recsEl ? recsEl.scrollTop : 0;
+    const searchFocused = document.activeElement && document.activeElement.id === 'mff-search';
+    root.classList.toggle('on-clock',
+      state.appMode === 'draft' && state.tracking && picksUntilMine() === 0);
+    root.querySelectorAll('#mff-appmode button').forEach((b) => {
+      b.classList.toggle('active', b.dataset.appmode === state.appMode);
+    });
+    body.innerHTML = state.appMode === 'season' ? seasonHTML()
+      : state.tracking ? trackingHTML() : setupHTML();
+    const newRecs = body.querySelector('#mff-recs');
+    if (newRecs) newRecs.scrollTop = scrollTop;
+    if (searchFocused) {
+      const inp = body.querySelector('#mff-search');
+      if (inp) {
+        inp.focus();
+        inp.setSelectionRange(inp.value.length, inp.value.length);
+      }
+    }
+  }
+  function renderStatusOnly() {
+    if (!root) return;
+    const el = root.querySelector('#mff-status-line');
+    if (el) el.textContent = state.appMode === 'season' ? state.seasonStatus : state.statusMsg;
+  }
+
+  function teamOptions() {
+    let out = `<option value="">— pick your team —</option>`;
+    for (const [tid, t] of Object.entries(state.teams)) {
+      out += `<option value="${tid}" ${state.myTeamId === parseInt(tid, 10) ? 'selected' : ''}>${esc(t.name)}</option>`;
+    }
+    return out;
+  }
+  function draftInfoLabel() {
+    if (!state.slots) return state.leagueId ? 'loading league…' : 'open an ESPN draft room';
+    return `${state.slots.teams} teams · ${state.slots.rounds} rds · ${state.scoringLabel}` +
+      (state.slots.sf ? ' · SF' : '');
+  }
+
+  function setupHTML() {
+    return `
+      <div id="mff-setup">
+        <label>League: <b>${esc(state.leagueName || draftInfoLabel())}</b></label>
+        <label>${esc(draftInfoLabel())}</label>
+        <label>Format ${state.modeDetected ? (state.modeDetected === state.mode && !state.modeManual ? '<span style="color:#22c55e">(auto-detected)</span>' : '(detected: ' + esc(MODES[state.modeDetected].label) + ')') : ''}</label>
+        <select class="mff-select" id="mff-mode" style="background:#2a2c33;border:1px solid #3a3d45;color:#e9e9ec;padding:4px 6px;border-radius:3px;font-size:11px;font-weight:600">
+          ${modeOptions()}
+        </select>
+        <label>Your team ${state.myTeamId ? '<span style="color:#22c55e">(auto from URL)</span>' : ''}</label>
+        <select class="mff-select" id="mff-team" style="background:#2a2c33;border:1px solid #3a3d45;color:#e9e9ec;padding:4px 6px;border-radius:3px;font-size:11px;font-weight:600">
+          ${teamOptions()}
+        </select>
+        <button class="start-btn" id="mff-start" ${state.myTeamId && state.leagueId ? '' : 'disabled'}>Start Tracking</button>
+        <div style="font-size:10px;color:#8a8d96">${esc(state.statusMsg)}</div>
+      </div>`;
+  }
+
+  function pickLineHTML() {
+    const teams = state.slots ? state.slots.teams : 12;
+    const nextNo = state.picks.length + 1;
+    const rd = Math.ceil(nextNo / teams);
+    const rdPick = ((nextNo - 1) % teams) + 1;
+    const until = picksUntilMine();
+    const untilTxt = until == null ? '' :
+      until === 0 ? '<span class="pl-until on-clock">ON THE CLOCK</span>' :
+      `<span class="pl-until">${until} until you</span>`;
+    const done = state.slots && nextNo > teams * state.slots.rounds;
+    return `
+      <div id="mff-pick-line">
+        ${done ? '<span class="pl-pick">DRAFT COMPLETE</span>' : `
+        <span class="pl-pick">Pick ${rd}.${String(rdPick).padStart(2, '0')}</span>
+        <span class="pl-sep">·</span><span class="pl-round">#${nextNo}</span>
+        <span class="pl-sep">·</span><span class="pl-mine">You: ${state.myRoster.length}</span>
+        ${untilTxt ? '<span class="pl-sep">·</span>' + untilTxt : ''}`}
+      </div>`;
+  }
+
+  function tickerHTML() {
+    const last = state.picks.slice(-3).reverse();
+    if (!last.length) return '';
+    const t = state.slots ? state.slots.teams : 12;
+    return '<div style="font-size:9px;color:#8a8d96;display:flex;flex-direction:column;gap:1px;padding:0 2px">' +
+      last.map((pk) => {
+        const rd = Math.ceil(pk.overall / t), rp = ((pk.overall - 1) % t) + 1;
+        return `<div>${rd}.${String(rp).padStart(2, '0')} <b style="color:#c8ccd4">${esc(pk.name)}</b> ${esc(pk.pos)} <span style="color:#5a5d66">— ${esc(teamLabel(pk.teamId))}</span></div>`;
+      }).join('') + '</div>';
+  }
+
+  function remainingStartersHTML() {
+    const st = state.slots || {};
+    const c = rosterCounts();
+    const req = {
+      QB: (st.qb || 0) + (st.sf || 0),
+      RB: st.rb || 0,
+      WR: st.wr || 0,
+      TE: st.te || 0,
+    };
+    if (!req.QB && !req.RB && !req.WR && !req.TE) return '';
+    const cells = ['QB', 'RB', 'WR', 'TE'].map((pos) =>
+      `<div class="pos pos-${pos.toLowerCase()}"><span class="v">${Math.max(0, req[pos] - c[pos])}</span><span class="l">${pos}</span></div>`
+    ).join('');
+    return `<div id="mff-target-row">${cells}</div>`;
+  }
+
+  function recommendedHTML() {
+    const recs = recommendPicks();
+    if (!recs.length) return '';
+    const MEDALS = ['#ff4040', '#c0c7d1', '#c9926b'];
+    const cards = recs.map((r, i) => {
+      const p = r.p;
+      const k = keyOf(p);
+      const expanded = state.expandedKey === 'rec|' + k;
+      const team = p.sTm || p.t || '';
+      const reasonTags = r.reasons.map((t) => {
+        const cls = t.indexOf('STEAL') === 0 ? 'STEAL' : t.indexOf('Value') === 0 ? 'Value' : t.indexOf('Reach') === 0 ? 'Reach' : '';
+        return `<span class="tag ${cls}">${esc(t)}</span>`;
+      }).join('');
+      return `
+      <div class="mff-rec ${i === 0 ? 'top' : ''}" data-key="rec|${esc(k)}">
+        <div class="num" style="color:${MEDALS[i]};font-weight:800">${i + 1}</div>
+        <div class="info">
+          <div class="name">${esc(p.n)}</div>
+          <div class="meta">
+            <span class="pos ${p.s}">${p.s}</span>
+            <span>${esc(team)}</span>
+            ${p.pPg != null ? `<span>${p.pPg}ppg</span>` : ''}
+            ${p[modeKeys().adp] != null ? `<span>ADP ${p[modeKeys().adp]}</span>` : ''}
+          </div>
+          ${reasonTags ? `<div class="why">${reasonTags}</div>` : ''}
+        </div>
+        <div class="score" style="color:${MEDALS[i]}">${r.score}</div>
+        ${expanded ? profileHTML(p, k) : ''}
+      </div>`;
+    }).join('');
+    return `<div class="mff-section" id="mff-recommended-wrap"><h3>Recommended</h3>${cards}</div>`;
+  }
+
+  function draftTabHTML() {
+    let srcOpts = '';
+    for (const [k, s] of Object.entries(SOURCES)) {
+      if (k === 'ktc' && !isDynMode()) continue; // dynasty tool — hidden in redraft
+      srcOpts += `<option value="${k}" ${state.rankSource === k ? 'selected' : ''}>${s.label}</option>`;
+    }
+    const posChips = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'].map((p) =>
+      `<button class="pos-filter ${state.posFilter === p ? 'active' : ''}" data-pos="${p}">${p}</button>`
+    ).join('');
+    return `
+      ${pickLineHTML()}
+      ${tickerHTML()}
+      <div class="mff-section" id="mff-roster-wrap">
+        <h3>My Roster</h3>
+        ${countsGridHTML()}
+        ${remainingStartersHTML()}
+      </div>
+      ${recommendedHTML()}
+      <div class="mff-section" id="mff-recs-wrap">
+        <h3>Available</h3>
+        <div id="mff-toggle-row">
+          <select class="mff-select" id="mff-mode">${modeOptions()}</select>
+          <select class="mff-select" id="mff-rank-source">${srcOpts}</select>
+        </div>
+        <div id="mff-pos-toggle" style="display:flex;gap:3px;margin-bottom:4px">${posChips}
+          <button id="mff-sort-vor" class="pos-filter ${state.sortVor ? 'active' : ''}" title="Sort by VOR (format-aware)" style="flex:0 0 auto">VOR</button>
+        </div>
+        <div id="mff-recs">${recsHTML()}</div>
+      </div>
+      <div id="mff-manual">
+        <input type="text" id="mff-search" placeholder="Search player… (✕ drafted / ＋ my pick)" value="${esc(state.searchQ)}" autocomplete="off">
+        <div id="mff-suggestions" style="${state.searchQ.length >= 2 ? '' : 'display:none'}">${searchSuggestionsHTML()}</div>
+      </div>`;
+  }
+
+  function stacksSectionHTML() {
+    const qbs = state.myRoster.filter((r) => r.pos === 'QB' && r.p && r.p.sTm);
+    let inner;
+    if (!qbs.length) {
+      inner = '<div class="mff-proj-empty">Draft a QB to see stack partners</div>';
+    } else {
+      inner = qbs.map((qb) => {
+        const tm = qb.p.sTm;
+        const have = state.myRoster.filter((r) => r !== qb && r.p && r.p.sTm === tm);
+        const targets = sortListBySource(
+          availablePlayers().filter((p) => p.sTm === tm && (p.s === 'WR' || p.s === 'TE'))
+        ).slice(0, 3);
+        const haveRows = have.map((r) =>
+          `<div class="mff-proj-roster-player"><span class="t">${esc(r.pos)}</span>
+            <span class="n" style="color:#6dd0a8">${esc(r.name)} ✓</span>
+            <span class="v">${r.p && r.p.pPg != null ? r.p.pPg + 'ppg' : '—'}</span></div>`).join('');
+        const targetRows = targets.map((t) =>
+          `<div class="mff-proj-roster-player"><span class="t">${esc(t.s)}</span>
+            <span class="n">${esc(t.n)}</span>
+            <span class="v">${t.pPg != null ? t.pPg + 'ppg' : '—'}</span></div>`).join('');
+        return `<div class="mff-proj-roster-group">
+          <div class="mff-proj-roster-grouphead" style="color:#6dd0a8">${esc(qb.name)} <span class="ct">(${esc(tm)})</span></div>
+          ${haveRows}
+          ${targetRows || '<div class="mff-proj-empty" style="padding:4px">No pass-catchers left on ' + esc(tm) + '</div>'}
+        </div>`;
+      }).join('');
+    }
+    return `<div class="mff-section"><h3>Stacks</h3><div class="mff-proj-roster">${inner}</div></div>`;
+  }
+
+  function rosterTabHTML() {
+    const sums = { QB: 0, RB: 0, WR: 0, TE: 0 };
+    const counts = { QB: 0, RB: 0, WR: 0, TE: 0 };
+    for (const r of state.myRoster) {
+      if (sums[r.pos] == null || !r.p || r.p.pPg == null) continue;
+      sums[r.pos] += r.p.pPg;
+      counts[r.pos]++;
+    }
+    const POS_COLORS = { QB: '#c084fc', RB: '#4ade80', WR: '#fb923c', TE: '#60a5fa' };
+    const grid = ['QB', 'RB', 'WR', 'TE'].map((pos) => `
+      <div class="mff-proj-cell" style="border-top-color:${POS_COLORS[pos]}">
+        <div class="mff-proj-pos" style="color:${POS_COLORS[pos]}">${pos}</div>
+        <div class="mff-proj-val">${Math.round(sums[pos] * 10) / 10}</div>
+        <div class="mff-proj-sub">${counts[pos]} proj'd</div>
+      </div>`).join('');
+    return `
+      ${pickLineHTML()}
+      <div class="mff-section">
+        <h3>My Roster</h3>
+        ${countsGridHTML()}
+        ${remainingStartersHTML()}
+      </div>
+      <div class="mff-section">
+        <h3>Proj PPG by position</h3>
+        <div class="mff-proj-grid">${grid}</div>
+      </div>
+      ${stacksSectionHTML()}
+      ${rosterListHTML()}`;
+  }
+
+  function settingsTabHTML() {
+    let ver = '';
+    try { ver = chrome.runtime.getManifest().version; } catch (e) {}
+    return `
+      ${pickLineHTML()}
+      <div class="mff-section"><h3>League</h3>
+        <div style="font-size:11px;color:#c8ccd4">${esc(state.leagueName || '—')} · ${esc(draftInfoLabel())}</div></div>
+      <div class="mff-section"><h3>Your team</h3>
+        <select class="mff-select" id="mff-team" style="width:100%;background:#2a2c33;border:1px solid #3a3d45;color:#e9e9ec;padding:4px 6px;border-radius:3px;font-size:11px;font-weight:600">
+          ${teamOptions()}
+        </select></div>
+      <button id="mff-start" class="start-btn" style="background:#d50a0a;border:none;color:#ffffff;padding:8px;border-radius:4px;cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:0.5px" ${state.myTeamId ? '' : 'disabled'}>Apply + Resync</button>
+      <div style="font-size:10px;color:#8a8d96">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>`;
+  }
+
+  function trackingHTML() {
+    const tabs = [['draft', 'DRAFT'], ['roster', 'ROSTER'], ['settings', 'SETTINGS']].map(([id, lbl]) =>
+      `<button class="mff-tab ${state.tab === id ? 'active' : ''}" data-tab="${id}">${lbl}</button>`).join('');
+    const content = state.tab === 'roster' ? rosterTabHTML()
+      : state.tab === 'settings' ? settingsTabHTML()
+      : draftTabHTML();
+    const onClock = state.onClockTeamId ? teamLabel(state.onClockTeamId) : '';
+    return `
+      <div id="mff-tabs">${tabs}</div>
+      ${content}
+      <div id="mff-mode-line" style="display:flex;gap:6px;font-size:10px;color:#8a8d96;align-items:center">
+        <span class="badge live" style="background:#2a4030;color:#6dd06d;padding:2px 6px;border-radius:3px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600">LIVE WS</span>
+        <span id="mff-status-line" style="flex:1">${esc(onClock ? 'Clock: ' + onClock : state.statusMsg)}</span>
+      </div>`;
+  }
+
+  // ---------- season-mode UI ----------
+  function snBadges(p) {
+    let out = '';
+    if (onByeThisWeek(p)) {
+      out += '<span class="tag" style="background:#3a3040;color:#c0a0d0">BYE</span>';
+    }
+    const inj = injOf(p);
+    if (inj) {
+      const cfg = inj === 'OUT' ? ['#402a2a', '#d06d6d', 'OUT']
+        : inj === 'D' ? ['#453325', '#e0a060', 'DTD']
+        : ['#4a3f30', '#ffc99b', 'Q'];
+      out += `<span class="tag" style="background:${cfg[0]};color:${cfg[1]}">${cfg[2]}</span>`;
+    }
+    return out;
+  }
+  function seasonHeaderHTML() {
+    const modeLbl = MODES[state.mode] ? MODES[state.mode].label : '';
+    const hasProps = !!(state.wkPropsAll && state.wkPropsAll[String(state.seasonWeek)]);
+    return `
+      <div id="mff-pick-line">
+        <span class="pl-pick">${esc(state.leagueName || 'League')}</span>
+        <span class="pl-sep">·</span><span class="pl-round">Wk ${state.seasonWeek}${state.byesActive ? '' : ' (pre)'}</span>
+        <span class="pl-sep">·</span><span class="pl-mine">${esc(state.scoringLabel)}</span>
+        <span class="pl-sep">·</span><span class="pl-mine">${esc(modeLbl)}</span>
+        ${hasProps ? '<span class="pl-sep">·</span><span class="pl-mine" style="color:#6dd06d" title="Wk ' + state.seasonWeek + ' prop boards (UD+PP) loaded — weekly values are the sim-engine mean (Vegas priced in); props cover players outside the engine">W' + state.seasonWeek + ' props</span>' : ''}
+      </div>`;
+  }
+  function seasonLineupHTML() {
+    if (!mySeasonTeam()) {
+      return seasonHeaderHTML() +
+        '<div class="mff-proj-empty">Pick your team in SETTINGS</div>';
+    }
+    const calc = seasonLineupCalc();
+    const pool = calc.pool;
+    const opt = calc.opt;
+    const starterSet = calc.starterSet;
+    const moves = calc.moves;
+    const optKeys = new Set(opt.assign.filter((a) => a.e).map((a) => keyOf(a.e.p)));
+    const rowCls = {};
+    for (const k of Object.keys(calc.cls)) rowCls[k] = 'mff-row-' + calc.cls[k];
+    const POS_COLORS = { QB: '#c084fc', RB: '#4ade80', WR: '#fb923c', TE: '#60a5fa', K: '#bd66ff', DEF: '#7988a1' };
+    const rows = opt.assign.map((a) => {
+      const slotLbl = a.slot === 'SUPER_FLEX' ? 'SFLX' : a.slot === 'WRRB_FLEX' ? 'W/R'
+        : a.slot === 'REC_FLEX' ? 'W/T' : a.slot === 'FLEX' ? 'FLX' : a.slot === 'DEF' ? 'DST' : a.slot;
+      const col = POS_COLORS[a.slot] || '#8a8d96';
+      if (!a.e) {
+        return `<div class="mff-proj-roster-player"><span class="t" style="color:${col}">${esc(slotLbl)}</span>
+          <span class="n" style="color:#d06d6d">— empty${SLOT_ELIG[a.slot] ? '' : ' (unsupported slot)'}</span><span class="v"></span></div>`;
+      }
+      const p = a.e.p;
+      const k = keyOf(p);
+      const cls = rowCls[k] || '';
+      const starting = starterSet.has(k);
+      const mark = starting ? '<span style="color:#5a5d66">✓</span>'
+        : cls === 'mff-row-close'
+          ? '<span style="color:#ffc166;font-weight:800" title="Toss-up — projections are very close">≈</span>'
+          : '<span style="color:#6dd06d;font-weight:800" title="Currently on your bench — start him">▲</span>';
+      return `<div class="mff-proj-roster-player mff-rec ${cls}" data-key="${esc(k)}" style="cursor:pointer">
+        <span class="t" style="color:${col}">${esc(slotLbl)}</span>
+        <span class="n">${mark} ${esc(p.n)} ${wkOppHTML(p)}${bbTagHTML(p, a.e.v)}${snBadges(p)}${p._unmatched ? ' <span style="color:#8a8d96;font-size:9px">(no proj)</span>' : ''}</span>
+        <span class="v" title="Projected ppg this week (${esc(state.scoringLabel)})">${a.e.v ? a.e.v.toFixed(1) : '0'}</span>
+        ${state.expandedKey === k && !p._unmatched ? profileHTML(p, k) : ''}
+      </div>`;
+    }).join('');
+    let movesHtml = '';
+    if (moves.length) {
+      movesHtml = '<div class="mff-section"><h3>Start / Sit moves</h3>' + moves.map((mv) => {
+        const isClose = mv.sit && mv.delta != null && Math.abs(mv.delta) < CLOSE_PPG;
+        if (isClose) {
+          return `<div style="font-size:11px;color:#ffc166;padding:2px 2px">≈ Toss-up: <b>${esc(mv.add.p.n)}</b> / <b>${esc(mv.sit.p.n)}</b> <span style="color:#8a8d96">(${mv.delta >= 0 ? '+' : ''}${mv.delta.toFixed(1)})</span></div>`;
+        }
+        const sitTxt = mv.sit ? ' over <b style="color:#d06d6d">' + esc(mv.sit.p.n) + '</b>' : '';
+        const d = mv.delta != null && mv.delta > 0 ? ` <span class="tag STEAL">+${mv.delta.toFixed(1)}</span>` : '';
+        return `<div style="font-size:11px;color:#c8ccd4;padding:2px 2px">▲ Start <b style="color:#6dd06d">${esc(mv.add.p.n)}</b>${sitTxt}${d}</div>`;
+      }).join('') + '</div>';
+    } else if (starterSet.size) {
+      movesHtml = '<div class="mff-section"><h3>Start / Sit moves</h3>' +
+        '<div style="font-size:11px;color:#6dd06d;padding:2px">✓ Your lineup is already optimal</div></div>';
+    }
+    const bench = pool.filter((p) => !optKeys.has(keyOf(p)))
+      .map((p) => ({ p, v: wkVal(p) })).sort((a, b) => b.v - a.v);
+    const benchRows = bench.map((b) => {
+      const k = keyOf(b.p);
+      const cls = rowCls[k] || '';
+      const mark = cls === 'mff-row-sit'
+        ? '<span style="color:#d06d6d;font-weight:800" title="Currently starting — bench him">▼</span> '
+        : cls === 'mff-row-close'
+          ? '<span style="color:#ffc166;font-weight:800" title="Toss-up — projections are very close">≈</span> '
+          : '';
+      return `
+      <div class="mff-proj-roster-player mff-rec ${cls}" data-key="${esc(k)}" style="cursor:pointer">
+        <span class="t">${esc(b.p.s)}</span>
+        <span class="n">${mark}${esc(b.p.n)} ${wkOppHTML(b.p)}${bbTagHTML(b.p, b.v)}${snBadges(b.p)}</span>
+        <span class="v" title="Projected ppg this week (${esc(state.scoringLabel)})">${b.v ? b.v.toFixed(1) : '0'}</span>
+        ${state.expandedKey === k && !b.p._unmatched ? profileHTML(b.p, k) : ''}
+      </div>`;
+    }).join('');
+    return `
+      ${seasonHeaderHTML()}
+      ${movesHtml}
+      <div class="mff-section"><h3>Optimal lineup <span style="color:#d50a0a">${opt.total} ppg</span></h3>
+        <div class="mff-proj-roster">${rows}</div></div>
+      <div class="mff-section"><h3>Bench</h3>
+        <div class="mff-proj-roster">${benchRows || '<div class="mff-proj-empty">No bench players</div>'}</div></div>`;
+  }
+  function seasonWaiversHTML() {
+    if (!mySeasonTeam()) {
+      return seasonHeaderHTML() +
+        '<div class="mff-proj-empty">Pick your team in SETTINGS to rank waivers vs YOUR lineup</div>';
+    }
+    const posChips = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'].map((p) =>
+      `<button class="pos-filter ${state.seasonPosFilter === p ? 'active' : ''}" data-snpos="${p}">${p}</button>`
+    ).join('');
+    const drops = dropCandidates().slice(0, 3);
+    const recs = waiverRecs();
+    const cards = recs.map((r, i) => {
+      const p = r.p;
+      const k = keyOf(p);
+      const expanded = state.expandedKey === 'wv|' + k;
+      const upgrade = r.delta >= 0.5;
+      const tags = [];
+      if (upgrade) tags.push(`<span class="tag STEAL">LINEUP +${r.delta.toFixed(1)} ppg</span>`);
+      else if (r.delta > 0) tags.push(`<span class="tag Value">+${r.delta.toFixed(1)} ppg</span>`);
+      else tags.push('<span class="tag" style="background:#2a2c33;color:#8a8d96">DEPTH</span>');
+      if (r.trend) tags.push(`<span class="tag" style="background:#453325;color:#e0a060">🔥 ${r.trend} adds</span>`);
+      const dropLine = expanded && drops.length
+        ? `<div class="mff-profile" style="pointer-events:auto;margin-top:2px"><div class="prof-row"><span class="k">SUGGESTED DROP</span><span class="v">${esc(drops[0].p.n)} (${esc(drops[0].p.s)})</span></div></div>`
+        : '';
+      return `
+      <div class="mff-rec ${upgrade ? 'need' : ''}" data-key="wv|${esc(k)}">
+        <div class="num">${i + 1}</div>
+        <div class="info">
+          <div class="name">${esc(p.n)}</div>
+          <div class="meta">
+            <span class="pos ${p.s}">${p.s}</span>
+            <span>${esc(p.sTm || p.t || '')}</span>
+            ${p.pPg != null ? `<span>${p.pPg}ppg</span>` : ''}
+            ${wkOppHTML(p)}
+            ${snBadges(p)}
+          </div>
+          <div class="why">${tags.join('')}</div>
+        </div>
+        <div class="score" style="color:${upgrade ? '#6dd06d' : '#8a8d96'}">${r.delta > 0 ? '+' + r.delta.toFixed(1) : '·'}</div>
+        ${expanded ? profileHTML(p, k) + dropLine : ''}
+      </div>`;
+    }).join('');
+    const dropWatch = drops.length
+      ? `<div class="mff-section"><h3>Drop watch</h3>${drops.map((d) =>
+          `<div style="font-size:11px;color:#c8ccd4;padding:1px 2px">${esc(d.p.n)} <span style="color:#8a8d96">(${esc(d.p.s)} · ${d.marginal > 0 ? 'costs ' + d.marginal.toFixed(1) + ' ppg' : 'not in lineup'})</span></div>`
+        ).join('')}</div>`
+      : '';
+    return `
+      ${seasonHeaderHTML()}
+      <div class="mff-section"><h3>Waiver targets <span style="color:#8a8d96;font-weight:400;font-size:9px">vs your lineup</span></h3>
+        <div id="mff-pos-toggle" style="display:flex;gap:3px;margin-bottom:4px">${posChips}</div>
+        <div id="mff-recs">${cards || '<div class="mff-proj-empty">No free agents matched</div>'}</div>
+      </div>
+      ${dropWatch}`;
+  }
+  // ---- TEAM tab: full-roster values under switchable sources ----
+  const POS_ORDER = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+  function seasonTeamHTML() {
+    if (!mySeasonTeam()) {
+      return seasonHeaderHTML() +
+        '<div style="font-size:11px;color:#8a8d96;padding:8px 2px">Pick your team on the SETTINGS tab first.</div>';
+    }
+    const srcId = (SOURCES[state.seasonTeamSrc] && (state.seasonTeamSrc !== 'ktc' || isDynMode()))
+      ? state.seasonTeamSrc : (isDynMode() ? 'ktc' : 'jack');
+    const src = SOURCES[srcId];
+    const chips = Object.entries(SOURCES)
+      .filter(([id]) => id !== 'ktc' || isDynMode()) // KTC = dynasty-only
+      .map(([id, s]) =>
+      `<button class="pos-filter ${id === srcId ? 'active' : ''}" data-pksrc="${id}" style="flex:0 0 auto">${
+        id === 'ktc' ? 'KTC' : id === 'jack' ? "JACK'S" : id === 'fp' ? 'FP' : 'SLPR'}</button>`).join('');
+    const mine = myPlayerObjs();
+    const val = (p) => p._unmatched ? null : src.get(p);
+    const groups = POS_ORDER.map((pos) => {
+      const list = mine.filter((p) => p.s === pos).sort((a, b) => {
+        const va = val(a), vb = val(b);
+        if (va == null && vb == null) return 0;
+        if (va == null) return 1;
+        if (vb == null) return -1;
+        return src.desc ? vb - va : va - vb;
+      });
+      if (!list.length) return '';
+      const sub = srcId === 'ktc'
+        ? list.reduce((t, p) => t + (val(p) || 0), 0) : null;
+      const rows = list.map((p) => {
+        const v = val(p);
+        const inj = injOf(p);
+        return `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 2px;border-bottom:1px solid #232529;font-size:12px">
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${esc(p.n)}
+              <span style="color:#8a8d96;font-size:10px">${esc(p.sTm || '')}${p.age ? ' · ' + p.age : ''}${inj ? ' · <span style="color:#d06d6d">' + inj + '</span>' : ''}</span></span>
+            <span style="font-weight:600;color:${v == null ? '#8a8d96' : '#e9e9ec'}">${
+              v == null ? '—' : src.desc ? v.toLocaleString() : '#' + v}</span>
+          </div>`;
+      }).join('');
+      return `<div style="display:flex;justify-content:space-between;font-size:10px;color:#8a8d96;text-transform:uppercase;letter-spacing:.5px;margin:8px 0 2px">
+          <span class="pos pos-${pos.toLowerCase()}" style="padding:0 5px;border-radius:3px">${pos}</span>
+          ${sub != null ? '<span>' + sub.toLocaleString() + '</span>' : ''}</div>${rows}`;
+    }).join('');
+    const total = srcId === 'ktc' ? mine.reduce((t, p) => t + (val(p) || 0), 0) : null;
+    return `
+      ${seasonHeaderHTML()}
+      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px">${chips}</div>
+      ${total != null ? `<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px;border-bottom:1px solid #2a2c33"><b>Team total (${esc(src.label)} ${state.mode.endsWith('_sf') ? 'SF' : '1QB'})</b><b style="color:#d50a0a">${total.toLocaleString()}</b></div>` : ''}
+      ${groups}
+      <div style="font-size:9px;color:#8a8d96;margin-top:6px">${esc(src.label)} in the league's detected format (${state.mode.replace('_', ' ').toUpperCase()}). Players outside the export show —.</div>`;
+  }
+  function seasonSettingsHTML() {
+    const teams = state.seasonTeams.map((t) =>
+      `<button data-snroster="${t.teamId}" class="pos-filter ${state.myTeamId === t.teamId ? 'active' : ''}" style="flex:0 0 auto">${esc(t.name)}</button>`
+    ).join('');
+    let ver = '';
+    try { ver = chrome.runtime.getManifest().version; } catch (e) {}
+    return `
+      ${seasonHeaderHTML()}
+      <div class="mff-section"><h3>Your team</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:3px">${teams || '<span style="font-size:10px;color:#8a8d96">League not loaded</span>'}</div>
+        <div style="font-size:9px;color:#8a8d96;margin-top:3px">Auto-detected from your ESPN login (SWID) when possible — tap to override.</div></div>
+      <div class="mff-section"><h3>Format</h3>
+        <select class="mff-select" id="mff-mode">${modeOptions()}</select></div>
+      <button id="mff-sn-refresh" class="start-btn" style="background:#d50a0a;border:none;color:#ffffff;padding:8px;border-radius:4px;cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Refresh league data</button>
+      <div style="font-size:10px;color:#8a8d96">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>`;
+  }
+  function seasonSimsHTML() {
+    const ps = state.seasonSim;
+    if (ps.status === 'running') {
+      return seasonHeaderHTML() +
+        `<div style="padding:16px 6px;color:#8a8d96;font-size:12px">Running ${SIM_RUNS.toLocaleString()} season sims…</div>`;
+    }
+    if (ps.status === 'idle') setTimeout(ensureSeasonSim, 0); // landed here via saved prefs
+    const note = ps.status === 'error'
+      ? `<div style="background:#402a2a;color:#d06d6d;font-size:10px;padding:4px 6px;border-radius:4px;margin-bottom:6px">Sim unavailable: ${esc(ps.note || 'unknown')}</div>` : '';
+    const myRid = state.myTeamId;
+    const nameById = {};
+    state.seasonTeams.forEach((t) => { nameById[t.teamId] = t.name; });
+    const R = ps.results || {};
+    const selRid = ps.selTeam != null ? ps.selTeam : myRid;
+    const standOrder = state.seasonTeams.map((t) => t.teamId)
+      .sort((a, b) => {
+        const ra = R[a], rb = R[b];
+        if (!ra || !rb) return 0;
+        return (rb.w - ra.w) || (rb.pf - ra.pf);
+      });
+    const pct1 = (v) => v == null ? '—' : Math.round(v * 100) + '%';
+    const standRows = Object.keys(R).length ? standOrder.map((rid) => {
+      const r = R[rid];
+      if (!r) return '';
+      const fin = simExpFinish(rid);
+      const sel = rid === selRid;
+      return `<tr data-pkteam="${rid}" style="cursor:pointer;${rid === myRid ? 'color:#b9e28c;' : ''}${sel ? 'background:#1c1e24;' : ''}border-bottom:1px solid #232529">
+          <td style="padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:95px">${sel ? '▸ ' : ''}${esc(nameById[rid] || rid)}</td>
+          <td style="text-align:center;padding:2px 3px;white-space:nowrap">${r.w}-${r.l}</td>
+          <td style="text-align:right;padding:2px 3px">${r.pf.toLocaleString()}</td>
+          <td style="text-align:right;padding:2px 3px">${pct1(r.playoff)}</td>
+          <td style="text-align:right;padding:2px 3px">${pct1(r.title)}</td>
+          <td style="text-align:center;color:#8a8d96;padding:2px 3px;white-space:nowrap">${fin ? simOrdinal(fin.mode) : '—'}</td>
+        </tr>`;
+    }).join('') : '';
+    const sel = R[selRid];
+    let weeklyHtml = '';
+    if (sel) {
+      const wks = Object.keys(sel.weekly || {}).map(Number).sort((a, b) => a - b);
+      const wkRows = wks.map((wk) => {
+        const w = sel.weekly[wk];
+        const wp = Math.round(w.winPct * 100);
+        const col = wp >= 60 ? '#22c55e' : wp <= 40 ? '#d06d6d' : '#ffc166';
+        return `<tr style="border-bottom:1px solid #232529">
+            <td style="padding:2px 4px;color:#8a8d96">W${wk}</td>
+            <td style="padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:105px">${esc(nameById[w.opp] || w.opp)}</td>
+            <td style="text-align:right;padding:2px 4px;color:${col};font-weight:600">${wp}%</td>
+            <td style="text-align:right;padding:2px 4px">${w.pf.toFixed(1)}</td>
+            <td style="text-align:right;padding:2px 4px;color:#8a8d96">${w.pa.toFixed(1)}</td>
+          </tr>`;
+      }).join('');
+      weeklyHtml = `
+        <div style="font-size:10px;color:#8a8d96;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 3px">Week by week · ${esc(nameById[selRid] || selRid)}</div>
+        <div style="font-size:10px;color:#8a8d96;margin-bottom:3px">Playoffs ${pct1(sel.playoff)}${sel.bye ? ' · Bye ' + pct1(sel.bye) : ''} · Finals ${pct1(sel.finals)} · Title ${pct1(sel.title)}</div>
+        ${wkRows ? `<table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr style="color:#8a8d96;font-size:9px;text-transform:uppercase">
+            <th style="text-align:left;padding:2px 4px">Wk</th><th style="text-align:left;padding:2px 4px">Opp</th>
+            <th style="text-align:right;padding:2px 4px">Win</th><th style="text-align:right;padding:2px 4px">Proj</th>
+            <th style="text-align:right;padding:2px 4px">Opp proj</th>
+          </tr></thead><tbody>${wkRows}</tbody></table>` : '<div style="font-size:11px;color:#8a8d96;padding:2px">No remaining regular-season weeks.</div>'}`;
+    }
+    const standingsHtml = standRows ? `
+      <div style="font-size:10px;color:#8a8d96;text-transform:uppercase;letter-spacing:.5px;margin:2px 0 3px">Projected standings <span style="text-transform:none">(tap a team)</span></div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr style="color:#8a8d96;font-size:9px;text-transform:uppercase">
+          <th style="text-align:left;padding:2px 4px">Team</th><th style="padding:2px 3px">Rec</th>
+          <th style="text-align:right;padding:2px 3px">PF</th><th style="text-align:right;padding:2px 3px">PO</th>
+          <th style="text-align:right;padding:2px 3px">Title</th><th style="padding:2px 3px">Fin</th>
+        </tr></thead><tbody>${standRows}</tbody></table>${weeklyHtml}` : '';
+    const statTxt = ps.status === 'done'
+      ? SIM_RUNS.toLocaleString() + ' sims' + (ps.synthPairs ? ' · synth schedule' : ' · real ESPN schedule')
+      : '';
+    return `${seasonHeaderHTML()}${note}${standingsHtml}
+      <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+        <button id="mff-sim-rerun" style="background:#2a2c33;border:none;color:#e9e9ec;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600">RE-RUN SIM</button>
+        <span style="font-size:9px;color:#8a8d96">${statTxt}</span>
+      </div>
+      <div style="font-size:9px;color:#8a8d96;margin-top:6px;line-height:1.35">Standings/odds = ${SIM_RUNS.toLocaleString()} Monte Carlo seasons (Clay projections × Vegas lines, league-scored, real ESPN matchups${ps.synthPairs ? ' — synth round-robin fallback' : ''}), mid-season records carried, IR/OUT excluded. Assumes rest-of-season rosters as-is; players without a Clay projection score 0 in the sim.</div>`;
+  }
+
+  function seasonHTML() {
+    if (!state.seasonLeagueId) {
+      return `<div id="mff-setup">
+        <label>Season mode</label>
+        <div style="font-size:11px;color:#8a8d96">${esc(state.seasonStatus)}</div>
+      </div>`;
+    }
+    const tabs = [['lineup', 'LINEUP'], ['team', 'TEAM'], ['waivers', 'WAIVERS']]
+      .concat(simAvailable() ? [['sims', 'SIMS']] : [])
+      .concat([['snset', 'SETTINGS']])
+      .map(([id, lbl]) =>
+        `<button class="mff-tab ${state.seasonTab === id ? 'active' : ''}" data-sntab="${id}">${lbl}</button>`).join('');
+    const content = state.seasonTab === 'waivers' ? seasonWaiversHTML()
+      : state.seasonTab === 'team' ? seasonTeamHTML()
+      : state.seasonTab === 'sims' && simAvailable() ? seasonSimsHTML()
+      : state.seasonTab === 'snset' ? seasonSettingsHTML()
+      : seasonLineupHTML();
+    return `
+      <div id="mff-tabs">${tabs}</div>
+      ${content}
+      <div id="mff-mode-line" style="display:flex;gap:6px;font-size:10px;color:#8a8d96;align-items:center">
+        <span class="badge live" style="background:#2a4030;color:#6dd06d;padding:2px 6px;border-radius:3px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600">SEASON</span>
+        <span id="mff-status-line" style="flex:1">${esc(state.seasonStatus)}</span>
+      </div>`;
+  }
+
+  function modeOptions() {
+    let out = '';
+    for (const [k, m] of Object.entries(MODES)) {
+      out += `<option value="${k}" ${state.mode === k ? 'selected' : ''}>${m.label}${state.modeDetected === k ? ' ✓' : ''}</option>`;
+    }
+    return out;
+  }
+
+  function countsGridHTML() {
+    const c = rosterCounts();
+    const need = needPositions();
+    const cells = ['QB', 'RB', 'WR', 'TE'].map((pos) =>
+      `<div class="pos pos-${pos.toLowerCase()} ${need.has(pos) ? 'warn' : ''}">
+        <span class="v">${c[pos]}</span><span class="l">${pos}</span>
+      </div>`
+    ).join('');
+    return `<div id="mff-roster">${cells}</div>`;
+  }
+
+  function rosterListHTML() {
+    let list = '';
+    if (state.myRoster.length) {
+      const byPos = {};
+      for (const r of state.myRoster) (byPos[r.pos] = byPos[r.pos] || []).push(r);
+      let totalPpg = 0;
+      list = '<div class="mff-proj-roster" style="margin-top:4px">';
+      for (const pos of ['QB', 'RB', 'WR', 'TE', 'K', 'DST', '?']) {
+        const grp = byPos[pos];
+        if (!grp) continue;
+        list += grp.map((r) => {
+          const ppg = r.p && r.p.pPg != null ? r.p.pPg : null;
+          if (ppg) totalPpg += ppg;
+          const rm = r.manual
+            ? `<button data-unmine="${esc(keyOf(r.p))}" title="Remove manual add" style="background:none;border:none;color:#d06d6d;cursor:pointer;font-size:10px;padding:0 2px">✕</button>`
+            : '';
+          return `<div class="mff-proj-roster-player">
+            <span class="t">${esc(pos)}</span>
+            <span class="n">${esc(r.name)}${r.manual ? ' <span style="color:#8a8d96;font-size:9px">(manual)</span>' : ''}</span>
+            <span class="v">${ppg != null ? ppg : '—'}</span>${rm}
+          </div>`;
+        }).join('');
+      }
+      const proj = starterProjPPG();
+      if (proj > 0) {
+        list += `<div class="mff-proj-roster-player" style="border-top:1px solid #2a2c33">
+          <span class="t"></span><span class="n" style="color:#8a8d96">Proj starters (${esc(state.scoringLabel)})</span>
+          <span class="v">${proj} ppg</span></div>`;
+      }
+      list += '</div>';
+    }
+    if (!list) list = '<div class="mff-proj-empty">No picks yet</div>';
+    return `<div class="mff-section">
+      <h3>Players</h3>${list}
+    </div>`;
+  }
+
+  function recsHTML() {
+    const need = needPositions();
+    const src = SOURCES[state.rankSource];
+    const avail = sortedAvailable().slice(0, 60);
+    if (!avail.length) return '<div class="mff-proj-empty">No players available</div>';
+    return avail.map((p, i) => {
+      const k = keyOf(p);
+      const expanded = state.expandedKey === k;
+      const v = src.get(p);
+      const jm = p[modeKeys().jack] != null ? p[modeKeys().jack] : p.rank;
+      const team = p.sTm || p.t || '';
+      const adp = p[modeKeys().adp];
+      const tag = adpTag(p);
+      const stk = stackInfo(p);
+      const corner = stk
+        ? `<span class="mff-corner-badge"><span class="${stk.type === 'stack' ? 'stack-badge' : 'team-badge'}">${stk.type === 'stack' ? 'STACK' : 'TEAM'}</span></span>`
+        : '';
+      return `
+      <div class="mff-rec ${i === 0 ? 'top' : ''} ${need.has(p.s) ? 'need' : ''} ${stk ? stk.type : ''}" data-key="${esc(k)}">
+        ${corner}
+        <div class="num">${i + 1}</div>
+        <div class="info">
+          <div class="name">${esc(p.n)}</div>
+          <div class="meta">
+            <span class="pos ${p.s}">${p.s}</span>
+            <span>${esc(team)}</span>
+            ${p.age != null ? `<span>${p.age}y</span>` : ''}
+            <span>JM #${jm}</span>
+            ${adp != null ? `<span>ADP ${adp}</span>` : ''}
+            ${p.pPg != null ? `<span>${p.pPg}ppg</span>` : ''}
+          </div>
+          ${tag ? `<div class="why"><span class="tag ${tag}">${tag}</span></div>` : ''}
+        </div>
+        <div class="score">${fmtVal(v)}</div>
+        ${expanded ? profileHTML(p, k) : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function profileHTML(p, k) {
+    const mk = modeKeys();
+    const modeLbl = MODES[state.mode].label;
+    const sfMode = state.mode.endsWith('_sf');
+    const stk = stackInfo(p);
+    const rows = [
+      ["Jack " + modeLbl, p[mk.jack] == null ? null : '#' + p[mk.jack]],
+      ["Jack Redraft", mk.jack !== 'rank' && p.rank != null ? '#' + p.rank : null],
+      ['FP ' + modeLbl, p[mk.fp] == null ? null : '#' + p[mk.fp]],
+      ['Sleeper ' + modeLbl, p[mk.sl] == null ? null : '#' + p[mk.sl]],
+      ['ADP ' + modeLbl, p[mk.adp]],
+      ['KTC Superflex', isDynMode() ? p.ktcSf : null],
+      ['KTC 1QB', isDynMode() ? p.ktc1qb : null],
+      ['Proj PPG (Clay, ' + state.scoringLabel + ')', p.pPg],
+      ['Proj Season', p.szn],
+      ['Ceiling PPG', p.cPpg],
+      ['VOR' + (sfMode ? ' (SF)' : ''), p[mk.vor]],
+      ['Upside' + (sfMode ? ' (SF)' : ''), p[mk.up]],
+      ['Age', p.age], ["'25 PPG", p.p25],
+      ['Bye', p.bye], ['Team', p.sTm || p.t],
+    ].filter((r) => r[1] != null)
+      .map((r) => `<div class="prof-row"><span class="k">${r[0]}</span><span class="v">${esc(r[1])}</span></div>`)
+      .join('');
+    const stackRow = stk
+      ? `<div class="prof-row stack"><span class="k">${stk.type === 'stack' ? 'STACKS WITH' : 'SAME TEAM'}</span><span class="v">${esc(stk.names.join(', '))}</span></div>`
+      : '';
+    let sosRow = '';
+    const sosData = window.MFF_PLAYOFF_SOS;
+    const sos = sosData && p.sTm && sosData[p.sTm] && sosData[p.sTm][p.s];
+    if (sos) {
+      const pills = ['15', '16', '17'].map((w) => {
+        const m = sos[w];
+        if (!m) return '';
+        return `<span style="background:${esc(m.color)};color:#0e0f12;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700" title="SOS rank ${m.rank}/32 · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
+      }).join('');
+      sosRow = `<div class="prof-row"><span class="k">Playoff SOS</span><span class="v" style="display:flex;gap:3px;flex-wrap:wrap">${pills}</span></div>`;
+    }
+    const markBtn = state.appMode === 'draft'
+      ? `<button data-markdrafted="${esc(k)}" style="background:#402a2a;border:none;color:#d06d6d;padding:5px;border-radius:4px;cursor:pointer;font-weight:600;font-size:10px;margin-top:4px">MARK DRAFTED (manual)</button>`
+      : '';
+    return `<div class="mff-profile" style="pointer-events:auto">${rows}${sosRow}${stackRow}${markBtn}</div>`;
+  }
+
+  function searchSuggestionsHTML() {
+    const q = norm(state.searchQ);
+    if (!q || q.length < 2) return '';
+    const hits = state.players.filter((p) => norm(p.n).includes(q)).slice(0, 8);
+    if (!hits.length) return '<div class="s"><span style="color:#8a8d96">No matches</span></div>';
+    return hits.map((p) => {
+      const k = keyOf(p);
+      const gone = isDrafted(p);
+      const btns = gone
+        ? '<span class="pos">drafted</span>'
+        : `<button data-msearch="${esc(k)}" data-act="drafted" title="Mark drafted (someone else)" style="background:#402a2a;border:none;color:#d06d6d;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 6px">✕</button>
+           <button data-msearch="${esc(k)}" data-act="mine" title="Add to MY roster" style="background:#2a4030;border:none;color:#6dd06d;border-radius:3px;cursor:pointer;font-size:10px;padding:1px 6px;margin-left:3px">＋</button>`;
+      return `<div class="s"><span>${esc(p.n)} <span class="pos">${p.s} ${esc(p.sTm || '')}</span></span><span>${btns}</span></div>`;
+    }).join('');
+  }
+
+  // ---------- events ----------
+  function onBodyClick(e) {
+    // ---- season-mode controls ----
+    const snTab = e.target.closest('[data-sntab]');
+    if (snTab) {
+      state.seasonTab = snTab.dataset.sntab;
+      saveSeasonPrefs();
+      if (state.seasonTab === 'sims') setTimeout(ensureSeasonSim, 0);
+      render();
+      return;
+    }
+    const pkTeam = e.target.closest('[data-pkteam]');
+    if (pkTeam) {
+      state.seasonSim.selTeam = +pkTeam.dataset.pkteam;
+      render();
+      return;
+    }
+    if (e.target.id === 'mff-sim-rerun') {
+      const lid = state.seasonLeagueId;
+      if (lid) store.set({ ['espnSim_' + lid]: null });
+      Object.assign(state.seasonSim, { status: 'idle', placeCounts: null, results: null, recHash: null });
+      ensureSeasonSim();
+      return;
+    }
+    const snPos = e.target.closest('[data-snpos]');
+    if (snPos) {
+      state.seasonPosFilter = snPos.dataset.snpos;
+      saveSeasonPrefs();
+      render();
+      return;
+    }
+    const snRoster = e.target.closest('[data-snroster]');
+    if (snRoster) {
+      state.myTeamId = parseInt(snRoster.dataset.snroster, 10);
+      saveSeasonPrefs();
+      render();
+      return;
+    }
+    const pkSrc = e.target.closest('[data-pksrc]');
+    if (pkSrc) {
+      state.seasonTeamSrc = pkSrc.dataset.pksrc;
+      saveSeasonPrefs();
+      render();
+      return;
+    }
+    if (e.target.id === 'mff-sn-refresh') {
+      state.seasonStatus = 'Refreshing…';
+      renderStatusOnly();
+      Promise.all([refreshSeasonLeague(), fetchTrending()])
+        .then(() => render())
+        .catch((err) => { state.seasonStatus = 'Refresh failed: ' + err.message; render(); });
+      return;
+    }
+    // ---- draft-mode controls ----
+    if (e.target.id === 'mff-start') { startTracking(); return; }
+    if (e.target.id === 'mff-sort-vor') {
+      state.sortVor = !state.sortVor;
+      saveDraftPrefs();
+      render();
+      return;
+    }
+    const tab = e.target.closest('[data-tab]');
+    if (tab) {
+      state.tab = tab.dataset.tab;
+      render();
+      return;
+    }
+    const mark = e.target.closest('[data-markdrafted]');
+    if (mark) {
+      state.manualDrafted.add(mark.dataset.markdrafted);
+      state.expandedKey = null;
+      saveDraftPrefs();
+      render();
+      return;
+    }
+    const ms = e.target.closest('[data-msearch]');
+    if (ms) {
+      const key = ms.dataset.msearch;
+      if (ms.dataset.act === 'mine') state.manualMine.add(key);
+      else state.manualDrafted.add(key);
+      state.searchQ = '';
+      rebuildFromPicks();
+      saveDraftPrefs();
+      render();
+      return;
+    }
+    const um = e.target.closest('[data-unmine]');
+    if (um) {
+      state.manualMine.delete(um.dataset.unmine);
+      rebuildFromPicks();
+      saveDraftPrefs();
+      render();
+      return;
+    }
+    const chip = e.target.closest('[data-pos]');
+    if (chip) {
+      state.posFilter = chip.dataset.pos;
+      saveDraftPrefs();
+      render();
+      return;
+    }
+    const rec = e.target.closest('.mff-rec[data-key]');
+    if (rec) {
+      const k = rec.dataset.key;
+      state.expandedKey = state.expandedKey === k ? null : k;
+      render();
+    }
+  }
+  function onBodyChange(e) {
+    if (e.target.id === 'mff-mode') {
+      applyMode(e.target.value, true);
+      saveDraftPrefs();
+      render();
+      return;
+    }
+    if (e.target.id === 'mff-rank-source') {
+      state.rankSource = e.target.value;
+      saveDraftPrefs();
+      render();
+      return;
+    }
+    if (e.target.id === 'mff-team') {
+      state.myTeamId = parseInt(e.target.value, 10) || null;
+      rebuildFromPicks();
+      saveDraftPrefs();
+      render();
+    }
+  }
+  function onBodyInput(e) {
+    if (e.target.id !== 'mff-search') return;
+    state.searchQ = e.target.value;
+    const sug = root.querySelector('#mff-suggestions');
+    if (sug) {
+      sug.style.display = state.searchQ.trim().length >= 2 ? '' : 'none';
+      sug.innerHTML = searchSuggestionsHTML();
+    }
+  }
+
+  function startTracking() {
+    if (!state.myTeamId || !state.leagueId) return;
+    state.tracking = true;
+    state.tab = 'draft';
+    rebuildFromPicks();
+    saveDraftPrefs();
+    render();
+  }
+
+  function saveDraftPrefs() {
+    if (!state.leagueId) return;
+    store.set({
+      ['espnDraft_' + state.leagueId]: {
+        teamId: state.myTeamId,
+        rankSource: state.rankSource,
+        mode: state.mode,
+        modeManual: state.modeManual,
+        posFilter: state.posFilter,
+        sortVor: state.sortVor,
+        manualDrafted: [...state.manualDrafted],
+        manualMine: [...state.manualMine],
+        tracking: state.tracking,
+      },
+    });
+  }
+
+  // ---------- init / URL watching ----------
+  async function initForLeague(leagueId) {
+    if (boardTimer) { clearInterval(boardTimer); boardTimer = null; }
+    lastBoardCount = -1;
+    state.leagueId = leagueId;
+    state.seasonId = (MOCK && MOCK.seasonId) || urlParams().get('seasonId') || currentSeason();
+    state.picks = [];
+    state.seenPlayerIds = new Set();
+    state.myRoster = [];
+    state.draftedKeys = new Set();
+    state.manualDrafted = new Set();
+    state.manualMine = new Set();
+    state.searchQ = '';
+    state.tracking = false;
+    const urlTeam = parseInt(urlParams().get('teamId'), 10);
+    state.myTeamId = isFinite(urlTeam) ? urlTeam : (MOCK && MOCK.myTeamId) || null;
+    buildPanel();
+    render();
+    // Each boot stage is independent: a league-API failure (lobby mocks can
+    // 404 on lm-api-reads) must NOT block player mapping, pick restore, or
+    // the sniffer replay — the WS feed alone still runs a useful helper.
+    const saved = await store.get(['espnDraft_' + leagueId, 'espnPicks_' + leagueId]);
+    const prefs = saved['espnDraft_' + leagueId];
+    let leagueOk = false;
+    try {
+      const raw = await fetchLeague(leagueId, state.seasonId);
+      applyLeagueData(raw);
+      applyLeagueScoring(state.scoring);
+      leagueOk = true;
+    } catch (e) {
+      state.statusMsg = 'League API unavailable (' + e.message + ') — WS-only mode';
+      // Mocks sometimes become API-visible late; retry once in 30s.
+      setTimeout(async () => {
+        if (leagueOk || state.leagueId !== leagueId) return;
+        try {
+          const raw = await fetchLeague(leagueId, state.seasonId);
+          applyLeagueData(raw);
+          applyLeagueScoring(state.scoring);
+          leagueOk = true;
+          if (!state.modeManual && state.modeDetected) applyMode(state.modeDetected, false);
+          render();
+        } catch (_) {}
+      }, 30000);
+    }
+    state.statusMsg = 'Mapping ESPN players…';
+    render();
+    try {
+      const plist = await fetchEspnPlayers(state.seasonId);
+      const m = indexEspnPlayers(plist);
+      state.statusMsg = state.players.length + ' players · ESPN map ' + m.matched + '/' + m.total;
+    } catch (e) {
+      state.statusMsg = 'ESPN player map failed: ' + e.message;
+    }
+    if (prefs) {
+      if (prefs.teamId) state.myTeamId = prefs.teamId;
+      state.mode = prefs.mode || state.mode;
+      state.modeManual = !!prefs.modeManual;
+      state.rankSource = SOURCES[prefs.rankSource] ? prefs.rankSource : MODES[state.mode].src;
+      state.posFilter = prefs.posFilter || 'ALL';
+      state.sortVor = !!prefs.sortVor;
+      state.manualDrafted = new Set(prefs.manualDrafted || []);
+      state.manualMine = new Set(prefs.manualMine || []);
+    }
+    if (!state.modeManual && state.modeDetected) applyMode(state.modeDetected, false);
+    // 1) Restore picks persisted before a refresh, 2) replay whatever the
+    // sniffer buffered this page load (seenPlayerIds dedupes the overlap),
+    // 3) live frames keep flowing. Then auto-start — the URL names our team.
+    const storedPicks = saved['espnPicks_' + leagueId];
+    if (storedPicks && Array.isArray(storedPicks.picks) &&
+        Date.now() - (storedPicks.savedAt || 0) < 7 * 24 * 3600 * 1000) {
+      restorePicks(storedPicks);
+      if (state.picks.length) {
+        console.log('[MFF/ESPN] restored ' + state.picks.length + ' pick(s) from storage');
+      }
+    }
+    reResolvePicks();
+    requestReplay();
+    reResolvePicks();
+    if (state.myTeamId) {
+      state.tracking = true;
+      saveDraftPrefs();
+    }
+    // Scrape the room's draft board immediately, then poll it. This is the
+    // authoritative pick source and overrides restore/replay the moment the
+    // grid is available (the room rebuilds it after every refresh).
+    pollBoard();
+    startBoardPolling();
+    startStripDecorating();
+    rebuildFromPicks();
+    render();
+  }
+
+  // SPA URL watcher: draft rooms flip to DRAFT mode, league pages (any
+  // fantasy.espn.com/football/* URL with a leagueId) flip to SEASON mode; the
+  // header toggle can override until the URL next changes.
+  function onUrlChange() {
+    const did = detectDraftLeagueId();
+    const sid = detectSeasonLeagueId();
+    if (did) {
+      if (did !== state.leagueId) {
+        state.appMode = 'draft';
+        initForLeague(did);
+      } else if (state.appMode !== 'draft') {
+        state.appMode = 'draft';
+        render();
+      }
+    } else if (sid) {
+      if (state.leagueId) { // left the draft room — stop the board scrape
+        state.leagueId = null;
+        if (boardTimer) { clearInterval(boardTimer); boardTimer = null; }
+        lastBoardCount = -1;
+      }
+      if (sid !== state.seasonLeagueId || !root) {
+        initSeason(sid);
+      } else if (state.appMode !== 'season') {
+        state.appMode = 'season';
+        render();
+      }
+    } else if (state.leagueId || state.seasonLeagueId) {
+      state.leagueId = null;
+      state.seasonLeagueId = null;
+      destroyPanel();
+    }
+  }
+  let lastHref = null;
+  function watchUrl() {
+    setInterval(() => {
+      if (location.href === lastHref) return;
+      lastHref = location.href;
+      onUrlChange();
+    }, URL_WATCH_MS);
+  }
+
+  async function main() {
+    await loadPlayers();
+    refreshJackBoards();
+    if (MOCK && MOCK.vegas) { // harness stand-in for the live site-lines fetch
+      window.BETTING_2026 = MOCK.vegas;
+      applyLiveVegas(MOCK.vegas.gameTotals);
+      buildSchedule(MOCK.vegas.gameTotals);
+      state.wkPropsAll = MOCK.vegas.weeklyProps || null;
+    }
+    lastHref = location.href;
+    onUrlChange();
+    watchUrl();
+  }
+
+  window.__mffEspn = { state, render, initForLeague, initSeason, handleProtoLine, rebuildFromPicks,
+    recommendPicks, wkVal, kickerProjFor, dstProjFor, optimalLineup, waiverRecs, seasonLineupCalc,
+    engineMeanFor, engineWeekMap };
+  main();
+})();

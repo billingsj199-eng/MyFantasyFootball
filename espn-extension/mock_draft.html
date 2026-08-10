@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MFF ESPN Draft Helper — mock draft harness</title>
+<link rel="stylesheet" href="sidebar.css">
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 24px; }
+  h1 { font-size: 18px; color: #fbbf24; }
+  #log { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; font-size: 11px; max-height: 300px; overflow: auto; white-space: pre-wrap; }
+  button { background: #fbbf24; color: #0f172a; border: none; border-radius: 6px; padding: 8px 14px; font-weight: 700; cursor: pointer; margin-right: 8px; }
+  /* Upcoming-picks strip, sized like the real room's tiles (~88px) */
+  /* height + overflow:hidden reproduce the real room's FIXED-HEIGHT header bar,
+     which sliced the appended counts row in half (v0.13.0 bug report). */
+  #strip { display: flex; gap: 1px; background: #111; margin: 12px 0; overflow: hidden; height: 44px; }
+  #strip .tile { width: 88px; flex: 0 0 88px; padding: 4px 2px; text-align: center; background: #1b1b1b; height: 44px; box-sizing: border-box; overflow: hidden; }
+  #strip .pk { font-size: 9px; color: #9aa0a6; letter-spacing: .4px; }
+  #strip .tm { font-size: 11px; color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #strip .tile.mine { background: #14532d; }
+</style>
+</head>
+<body>
+<h1>ESPN Draft Helper — mock draft</h1>
+<p>Simulates a 10-team × 16-round snake mock: the harness feeds the sidebar the
+same <code>mff-espn-ws-sniff</code> CustomEvents the MAIN-world sniffer emits in
+a real room (one <code>SELECTING</code>/<code>SELECTED</code> pair every 2s;
+you are <b>team 2</b>). Serve this folder over HTTP (players.json fetch) and
+watch the sidebar track it.</p>
+<button id="force">Force next pick</button>
+<button id="pause">Pause / resume</button>
+<label style="margin-left:12px"><input type="checkbox" id="useGrid"> simulate ESPN draft board (DOM scrape path)</label>
+<!-- Mirrors the room's upcoming-picks strip: each tile is a "PICK <n>" label
+     over a team name. Class names are deliberately NOT ESPN's — the sidebar
+     finds these tiles by the label TEXT, so this also proves the locator does
+     not depend on markup we can't see. -->
+<div id="strip"></div>
+<div id="log"></div>
+<!-- Real ESPN board structure, populated when "simulate board" is on -->
+<div class="draftBoardGrid" style="display:none"></div>
+
+<script src="normalize.js"></script>
+<script src="data/playoff_sos_2026.js"></script>
+<script>
+(async () => {
+  const logEl = document.getElementById('log');
+  const log = (s) => { logEl.textContent = s + '\n' + logEl.textContent.slice(0, 8000); };
+
+  // players.json → both the sidebar's board data AND our fake ESPN id map
+  const data = await (await fetch('data/players.json')).json();
+  const POS_TO_ID = { QB: 1, RB: 2, WR: 3, TE: 4, K: 5, DST: 16 };
+  const espnPlayers = [];
+  const draftable = [];
+  (data.players || []).forEach((p, i) => {
+    if (!POS_TO_ID[p.s]) return;
+    const id = 100000 + i;
+    espnPlayers.push({ id, fullName: p.n, defaultPositionId: POS_TO_ID[p.s], proTeamId: 0 });
+    draftable.push({ id, rank: p.rank || 999 });
+  });
+  draftable.sort((a, b) => a.rank - b.rank);
+
+  // 10-team snake, 16 rounds — mDraftDetail-style pick slots (playerId -1)
+  const TEAMS = 10, ROUNDS = 16;
+  const ddPicks = [];
+  let overall = 1;
+  for (let rd = 1; rd <= ROUNDS; rd++) {
+    for (let i = 0; i < TEAMS; i++) {
+      const teamId = rd % 2 === 1 ? i + 1 : TEAMS - i;
+      ddPicks.push({ overallPickNumber: overall++, roundId: rd, teamId, playerId: -1 });
+    }
+  }
+  const league = {
+    id: 424242, seasonId: 2026,
+    settings: {
+      name: 'Mock Draft Harness League',
+      rosterSettings: { lineupSlotCounts: { '0': 1, '2': 2, '4': 2, '6': 1, '23': 1, '16': 1, '17': 1, '20': 7 } },
+      scoringSettings: { scoringItems: [{ statId: 53, points: 1 }, { statId: 4, points: 4 }] },
+      draftSettings: { pickOrder: [1,2,3,4,5,6,7,8,9,10] },
+    },
+    teams: Array.from({ length: TEAMS }, (_, i) => ({ id: i + 1, name: i === 1 ? 'My Mock Team' : 'Mock Team ' + (i + 1), abbrev: 'T' + (i + 1) })),
+    draftDetail: { drafted: false, inProgress: true, picks: ddPicks },
+  };
+
+  window.__MFF_ESPN_MOCK = {
+    leagueId: '424242', seasonId: '2026', myTeamId: 2,
+    players: data, league, espnPlayers,
+  };
+
+  // Load the sidebar AFTER the mock globals exist
+  await new Promise((res) => {
+    const s = document.createElement('script');
+    s.src = 'sidebar.js'; s.onload = res;
+    document.head.appendChild(s);
+  });
+
+  // ── Drive the draft with synthetic sniffer frames ─────────────────────
+  const emit = (line) => document.dispatchEvent(new CustomEvent('mff-espn-ws-sniff', {
+    detail: JSON.stringify({ ev: 'proto', id: 1, n: 0, data: line + '\n' }),
+  }));
+  const gridEl = document.querySelector('.draftBoardGrid');
+  const idToPlayer = {};
+  (data.players || []).forEach((p, i) => { idToPlayer[100000 + i] = p; });
+  if (/[?&]grid=1/.test(location.search)) document.getElementById('useGrid').checked = true;
+  function useGrid() { return document.getElementById('useGrid').checked; }
+  // Build a cell mirroring ESPN's real .completedPick structure so the
+  // sidebar's DOM scraper (pollBoard) sees exactly what it sees in the room.
+  function addGridCell(slot, player) {
+    const nameParts = player.n.split(' ');
+    const cell = document.createElement('div');
+    cell.className = 'draft-board-grid-pick-cell completedPick';
+    cell.innerHTML =
+      '<span class="roundPick">' + slot.roundId + '.' + ((slot.overallPickNumber - 1) % TEAMS + 1) + '</span>' +
+      '<span class="playerFirstName">' + nameParts[0] + '</span>' +
+      '<span class="playerLastName">' + nameParts.slice(1).join(' ') + '</span>' +
+      '<span class="playerProTeam">' + (player.sTm || player.t || '') + '</span>' +
+      '<span class="positionPill">' + (player.s === 'DST' ? 'D/ST' : player.s) + '</span>';
+    gridEl.appendChild(cell);
+  }
+  // Rebuild the upcoming-picks strip after every pick, exactly like the room
+  // does (completed tiles scroll off the left edge).
+  const stripEl = document.getElementById('strip');
+  function renderStrip() {
+    stripEl.innerHTML = ddPicks.slice(pickIdx, pickIdx + 14).map((s) => {
+      const tm = league.teams.find((t) => t.id === s.teamId);
+      return '<div class="tile' + (s.teamId === 2 ? ' mine' : '') + '">' +
+        '<div class="pk">PICK ' + s.overallPickNumber + '</div>' +
+        '<div class="tm">' + (tm ? tm.name : 'Team ' + s.teamId) + '</div></div>';
+    }).join('');
+  }
+  let pickIdx = 0, avail = draftable.slice(), paused = false;
+  function nextPick() {
+    if (pickIdx >= ddPicks.length || !avail.length) { log('DRAFT COMPLETE'); clearInterval(timer); return; }
+    const slot = ddPicks[pickIdx++];
+    // Mild randomness: teams pick within their top-5 available
+    const j = Math.floor(Math.random() * Math.min(5, avail.length));
+    const chosen = avail.splice(j, 1)[0];
+    if (useGrid()) {
+      addGridCell(slot, idToPlayer[chosen.id]);          // DOM-scrape path
+      emit('SELECTING ' + (ddPicks[pickIdx] ? ddPicks[pickIdx].teamId : slot.teamId) + ' 30000');
+    } else {
+      emit('SELECTED ' + slot.teamId + ' ' + chosen.id + ' 5 {MOCK-SWID}');  // WS path
+      const nxt = ddPicks[pickIdx];
+      if (nxt) emit('SELECTING ' + nxt.teamId + ' 30000');
+    }
+    renderStrip();
+    log('pick #' + slot.overallPickNumber + ' team ' + slot.teamId + ' → playerId ' + chosen.id);
+  }
+  // Simulate ESPN's mid-draft join CATCH-UP: the first 4 picks arrive in ONE
+  // frame with entries glued together / \r-separated (never plain \n) — the
+  // exact shape that broke line-based parsing (v0.5.1 and earlier).
+  const catchupParts = [];
+  for (let i = 0; i < 4 && avail.length; i++) {
+    const slot = ddPicks[pickIdx++];
+    const chosen = avail.splice(Math.floor(Math.random() * 3), 1)[0];
+    if (useGrid()) addGridCell(slot, idToPlayer[chosen.id]);
+    else catchupParts.push('SELECTED ' + slot.teamId + ' ' + chosen.id + ' 5 {MOCK-SWID}');
+    log('catch-up pick #' + slot.overallPickNumber + ' team ' + slot.teamId + ' → ' + chosen.id);
+  }
+  catchupParts.push('SELECTING ' + ddPicks[pickIdx].teamId + ' 30000');
+  emit(catchupParts.join('\r'));
+  renderStrip();
+  const timer = setInterval(() => { if (!paused) nextPick(); }, 2000);
+  document.getElementById('force').addEventListener('click', nextPick);
+  document.getElementById('pause').addEventListener('click', () => { paused = !paused; log(paused ? 'PAUSED' : 'RESUMED'); });
+  log('Harness armed — 10-team snake, you are team 2 (My Mock Team).');
+})();
+</script>
+</body>
+</html>

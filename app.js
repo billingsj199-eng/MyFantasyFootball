@@ -42115,8 +42115,10 @@ Rules:
   // re-dispatches them as a document CustomEvent (on load + on every change).
   // Payload contract lives in espn-extension/normalize.js.
   let _mtEspnLeagues = null;        // { leagueId: normalizedLeague }
+  let _mtYahooLeagues = null;       // { leagueId: normalizedLeague } (Yahoo ext)
   let _mtActiveSource = 'sleeper';  // which importer produced window._mtTeams
   let _mtActiveEspnId = null;
+  let _mtActiveYahooId = null;
 
   document.addEventListener('mff-espn-league-from-extension', function (e) {
     try {
@@ -42194,6 +42196,12 @@ Rules:
       if (status) { status.textContent = 'League not found — re-sync from the extension.'; status.style.color = '#ef4444'; }
       return;
     }
+    _mtImportNormalized(lg, 'espn', status);
+  };
+
+  // Shared importer for extension-normalized league payloads (ESPN direct +
+  // extension, Yahoo extension — one contract, see espn-extension/normalize.js).
+  function _mtImportNormalized(lg, source, status) {
     try {
       // Shape a Sleeper-style league object so _mtDetectFormat (and therefore
       // the whole Sleeper scoring/lineup/render pipeline) can be reused as-is.
@@ -42232,8 +42240,9 @@ Rules:
       });
       teams.sort((a, b) => b.score.total - a.score.total);
 
-      _mtActiveSource = 'espn';
-      _mtActiveEspnId = String(lg.leagueId);
+      _mtActiveSource = source;
+      _mtActiveEspnId = source === 'espn' ? String(lg.leagueId) : null;
+      _mtActiveYahooId = source === 'yahoo' ? String(lg.leagueId) : null;
       _mtRenderLeague({ name: lg.name, season: String(lg.season || '') }, teams);
 
       const unmatched = totalCount - matchedCount;
@@ -42243,12 +42252,12 @@ Rules:
         status.style.color = unmatched > 0 ? '#f59e0b' : '#22c55e';
       }
 
-      _mtSaveLeagueToCloud('espn_' + lg.leagueId, { name: lg.name, season: String(lg.season || '') }, teams);
+      _mtSaveLeagueToCloud(source + '_' + lg.leagueId, { name: lg.name, season: String(lg.season || '') }, teams);
     } catch (err) {
-      console.warn('[MyTeams] ESPN import error:', err);
+      console.warn('[MyTeams] ' + source + ' import error:', err);
       if (status) { status.textContent = 'Error: ' + err.message; status.style.color = '#ef4444'; }
     }
-  };
+  }
 
   // ─── Direct ESPN sync (no extension) ─────────────────────────────────────
   // ESPN's read API reflects our Origin in Access-Control-Allow-Origin, so
@@ -42345,6 +42354,54 @@ Rules:
     const input = document.getElementById('mtEspnLeagueId');
     if (input) input.value = String(leagueId);
     window._mtImportEspnById();
+  };
+
+  // ─── Yahoo League Import (via the MFF Yahoo extension) ───────────────────
+  // Yahoo's API is OAuth-only (no cookie-auth reads, no CORS), so there is
+  // no direct in-site path — the yahoo-extension scrapes the server-rendered
+  // league pages, normalizes to the same payload contract as ESPN, and its
+  // mff-bridge.js re-dispatches stored leagues here.
+  document.addEventListener('mff-yahoo-league-from-extension', function (e) {
+    try {
+      const leagues = e.detail && e.detail.leagues;
+      if (!leagues || typeof leagues !== 'object') return;
+      _mtYahooLeagues = leagues;
+      _mtRenderYahooCard();
+    } catch (err) { console.warn('[MyTeams] Yahoo bridge event error:', err); }
+  });
+
+  function _mtRenderYahooCard() {
+    const list = document.getElementById('mtYahooLeagueList');
+    const hint = document.getElementById('mtYahooHint');
+    if (!list) return;
+    const leagues = _mtYahooLeagues ? Object.values(_mtYahooLeagues) : [];
+    if (!leagues.length) { list.innerHTML = ''; return; }
+    leagues.sort((a, b) => (b.syncedAt || 0) - (a.syncedAt || 0));
+    if (hint) hint.textContent = 'Synced leagues — click IMPORT to load one.';
+    let html = '';
+    leagues.forEach(lg => {
+      const fmt = [lg.teamCount + ' teams'];
+      if (lg.sf) fmt.push('SF');
+      fmt.push(lg.scoring === 'ppr' ? 'PPR' : lg.scoring === 'half' ? '.5 PPR' : 'STD');
+      if (lg.season) fmt.push(lg.season);
+      const synced = lg.syncedAt ? _mtRelTime(new Date(lg.syncedAt).toISOString()) : '';
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:5px">`;
+      html += `<div style="flex:1;min-width:0"><div style="font-size:.75rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(lg.name || 'Yahoo League')}</div>`;
+      html += `<div style="font-size:.62rem;color:var(--text2)">${fmt.join(' · ')}${synced ? ' · synced ' + synced : ''}${lg.drafted ? '' : ' · <span style="color:#f59e0b">pre-draft</span>'}</div></div>`;
+      html += `<button onclick="window._mtImportYahoo('${_esc(lg.leagueId)}')" style="padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer">IMPORT</button>`;
+      html += `</div>`;
+    });
+    list.innerHTML = html;
+  }
+
+  window._mtImportYahoo = function (leagueId) {
+    const lg = _mtYahooLeagues && _mtYahooLeagues[String(leagueId)];
+    const status = document.getElementById('mtYahooStatus');
+    if (!lg) {
+      if (status) { status.textContent = 'League not found — re-export from the extension.'; status.style.color = '#ef4444'; }
+      return;
+    }
+    _mtImportNormalized(lg, 'yahoo', status);
   };
 
   let _mtSortBy = 'total'; // current sort key
@@ -42525,13 +42582,14 @@ Rules:
   window._mtSelectMyTeam = function(idx) {
     if (!window._mtTeams) return;
     window._mtTeams.forEach((t, i) => { t.isMyTeam = (String(i) === String(idx)); });
-    // ESPN leagues don't live in the Sleeper input — re-render the badges and
-    // persist the new selection directly instead of re-importing.
-    if (_mtActiveSource === 'espn') {
+    // ESPN/Yahoo leagues don't live in the Sleeper input — re-render the
+    // badges and persist the new selection directly instead of re-importing.
+    if (_mtActiveSource === 'espn' || _mtActiveSource === 'yahoo') {
       _mtRenderTeamList(window._mtTeams);
-      if (_mtActiveEspnId) {
+      const activeId = _mtActiveSource === 'espn' ? _mtActiveEspnId : _mtActiveYahooId;
+      if (activeId) {
         const l = window._mtLeague || {};
-        _mtSaveLeagueToCloud('espn_' + _mtActiveEspnId, { name: l.name || 'ESPN League', season: l.season || '' }, window._mtTeams);
+        _mtSaveLeagueToCloud(_mtActiveSource + '_' + activeId, { name: l.name || 'League', season: l.season || '' }, window._mtTeams);
       }
       return;
     }
@@ -43314,12 +43372,16 @@ Rules:
     _mtRenderLeague(fakeLg, teams);
 
     // Track the source so _mtSelectMyTeam re-saves instead of re-importing a
-    // non-Sleeper id against the Sleeper API. ESPN leagues save as 'espn_<id>'.
-    const isEspn = String(lg.leagueId || '').indexOf('espn_') === 0;
-    _mtActiveSource = isEspn ? 'espn' : 'sleeper';
-    _mtActiveEspnId = isEspn ? String(lg.leagueId).slice(5) : null;
+    // non-Sleeper id against the Sleeper API. ESPN leagues save as
+    // 'espn_<id>', Yahoo as 'yahoo_<id>'.
+    const savedId = String(lg.leagueId || '');
+    const isEspn = savedId.indexOf('espn_') === 0;
+    const isYahoo = savedId.indexOf('yahoo_') === 0;
+    _mtActiveSource = isEspn ? 'espn' : isYahoo ? 'yahoo' : 'sleeper';
+    _mtActiveEspnId = isEspn ? savedId.slice(5) : null;
+    _mtActiveYahooId = isYahoo ? savedId.slice(6) : null;
     // Update league ID field (Sleeper leagues only)
-    if (lg.leagueId && !isEspn) document.getElementById('mtSleeperLeagueId').value = lg.leagueId;
+    if (lg.leagueId && !isEspn && !isYahoo) document.getElementById('mtSleeperLeagueId').value = lg.leagueId;
     const status = document.getElementById('mtSleeperStatus');
     if (status) {
       status.textContent = `Loaded "${lg.name}" from saved data (${lg.savedAt ? new Date(lg.savedAt).toLocaleDateString() : ''})`;

@@ -42282,8 +42282,10 @@ Rules:
     const status = document.getElementById('mtEspnStatus');
     const btn = document.getElementById('mtEspnImportBtn');
     const raw = (input && input.value || '').trim();
-    // Accept a bare ID or a pasted fantasy.espn.com URL (?leagueId=12345)
+    // Accept a bare ID or a pasted fantasy.espn.com URL (?leagueId=12345).
+    // A team URL also carries teamId= — use it to auto-select "my team".
     const urlMatch = raw.match(/leagueId=(\d+)/i);
+    const teamMatch = raw.match(/teamId=(\d+)/i);
     const id = urlMatch ? urlMatch[1] : (raw.match(/^\d+$/) || [''])[0];
     if (!id) {
       if (status) { status.textContent = 'Paste your ESPN league ID (or the league URL).'; status.style.color = '#f59e0b'; }
@@ -42304,6 +42306,25 @@ Rules:
       if (!norm) throw new Error('That response didn\'t look like a fantasy football league.');
       norm.syncedAt = Date.now();
       norm.direct = true; // in-site fetch, not the extension — enables the ↻ re-sync button
+      // My-team flag: no SWID on the direct path, so take teamId= from a
+      // pasted team URL; a bare-ID re-sync keeps the previous selection
+      // (from the last synced payload, or the dropdown pick if this league
+      // is the one currently loaded).
+      if (teamMatch) {
+        norm.teams.forEach(t => { t.isMine = String(t.teamId) === teamMatch[1]; });
+      } else {
+        let prevMineId = null;
+        const prev = _mtEspnLeagues && _mtEspnLeagues[norm.leagueId];
+        if (prev && prev.teams) {
+          const m = prev.teams.find(t => t.isMine);
+          if (m) prevMineId = m.teamId;
+        }
+        if (prevMineId == null && _mtActiveSource === 'espn' && _mtActiveEspnId === norm.leagueId && window._mtTeams) {
+          const m = window._mtTeams.find(t => t.isMyTeam);
+          if (m) prevMineId = m.id;
+        }
+        if (prevMineId != null) norm.teams.forEach(t => { t.isMine = t.teamId === prevMineId; });
+      }
       if (!_mtEspnLeagues) _mtEspnLeagues = {};
       _mtEspnLeagues[norm.leagueId] = norm;
       _mtRenderEspnCard();

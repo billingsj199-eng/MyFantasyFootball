@@ -398,6 +398,47 @@
     fp:   { label: 'FantasyPros',  get: (p) => p[modeKeys().fp],   desc: false },
     sl:   { label: 'Sleeper Rank', get: (p) => p[modeKeys().sl],   desc: false },
   };
+  // ---------- MY RANKS rank source (user's own site boards) ----------
+  // mff-page-user.js ships versionBoards.mine via the bridge into
+  // chrome.storage 'mff_my_rankings'. Selecting "My Ranks" makes the ENTIRE
+  // rec engine (board order, tiers, quality fill, depletion schedule) run on
+  // the user's custom rankings — same behavior the Underdog helper has.
+  let _myRanks = null;
+  let _myRanksMaps = {};
+  function _myMapFor(modeKey) {
+    if (!_myRanks || !_myRanks[modeKey]) return null;
+    if (!_myRanksMaps[modeKey]) {
+      const m = new Map();
+      _myRanks[modeKey].forEach((r, i) => {
+        const k = norm(r.n) + '|' + r.s;
+        if (!m.has(k)) m.set(k, i + 1);
+      });
+      _myRanksMaps[modeKey] = m;
+    }
+    return _myRanksMaps[modeKey];
+  }
+  function myRanksAvailable() {
+    const mk = (st.mode).indexOf('dyn') === 0
+      ? (st.mode) : (st.mode);
+    return !!(_myRanks && _myRanks[mk] && _myRanks[mk].length);
+  }
+  SOURCES.mine = {
+    label: 'My Ranks',
+    get: (p) => { const m = _myMapFor(st.mode); return m ? (m.get(keyOf(p)) || null) : null; },
+    desc: false,
+  };
+  function _applyMyRanks(v) {
+    _myRanks = (v && v.boards) || null;
+    _myRanksMaps = {};
+    try { render(); } catch (_) {}
+  }
+  try {
+    chrome.storage.local.get(['mff_my_rankings'], (res) => _applyMyRanks(res && res.mff_my_rankings));
+    chrome.storage.onChanged.addListener((ch, area) => {
+      if (area === 'local' && ch.mff_my_rankings) _applyMyRanks(ch.mff_my_rankings.newValue);
+    });
+  } catch (_) {}
+
 
   // ---------- engine substrate (1:1 with espn-extension/sidebar.js) ----------
   function isDrafted(p) {
@@ -1187,7 +1228,11 @@
       let modeOpts = '';
       for (const k in MODES) modeOpts += '<option value="' + k + '"' + (st.mode === k ? ' selected' : '') + '>' + MODES[k].label + '</option>';
       let srcOpts = '';
-      for (const k in SOURCES) srcOpts += '<option value="' + k + '"' + (st.rankSource === k ? ' selected' : '') + '>' + SOURCES[k].label + '</option>';
+      if (st.rankSource === 'mine' && !myRanksAvailable()) st.rankSource = 'jack';
+      for (const k in SOURCES) {
+        if (k === 'mine' && !myRanksAvailable()) continue;
+        srcOpts += '<option value="' + k + '"' + (st.rankSource === k ? ' selected' : '') + '>' + SOURCES[k].label + '</option>';
+      }
       body.innerHTML = tickerHTML() + remainingStartersHTML() +
         '<div style="display:flex;gap:4px;margin-bottom:6px">' +
         '<select id="mffYdMode" style="' + CSS.select + ';flex:1">' + modeOpts + '</select>' +
@@ -1288,5 +1333,5 @@
       st.mode, '·', st.scoringLabel, '·', st.slots.teams + 'tm x', st.slots.rounds, 'rds');
   }).catch((e) => console.warn('[MFF/yahoo-draft] boot failed:', e));
 
-  window.__mffYahooDraft = { state: st, recommend, recommendPicks, handleFrame, render, needPositions, adpTag };
+  window.__mffYahooDraft = { state: st, recommend, recommendPicks, handleFrame, render, needPositions, adpTag, _applyMyRanks };
 })();

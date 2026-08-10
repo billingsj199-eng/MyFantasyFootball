@@ -320,6 +320,47 @@
     fp:   { label: 'FantasyPros',  get: (p) => p[modeKeys().fp],   desc: false },
     sl:   { label: 'Sleeper Rank', get: (p) => p[modeKeys().sl],   desc: false },
   };
+  // ---------- MY RANKS rank source (user's own site boards) ----------
+  // mff-page-user.js ships versionBoards.mine via the bridge into
+  // chrome.storage 'mff_my_rankings'. Selecting "My Ranks" makes the ENTIRE
+  // rec engine (board order, tiers, quality fill, depletion schedule) run on
+  // the user's custom rankings — same behavior the Underdog helper has.
+  let _myRanks = null;
+  let _myRanksMaps = {};
+  function _myMapFor(modeKey) {
+    if (!_myRanks || !_myRanks[modeKey]) return null;
+    if (!_myRanksMaps[modeKey]) {
+      const m = new Map();
+      _myRanks[modeKey].forEach((r, i) => {
+        const k = norm(r.n) + '|' + r.s;
+        if (!m.has(k)) m.set(k, i + 1);
+      });
+      _myRanksMaps[modeKey] = m;
+    }
+    return _myRanksMaps[modeKey];
+  }
+  function myRanksAvailable() {
+    const mk = (state.mode).indexOf('dyn') === 0
+      ? (state.mode) : (state.mode);
+    return !!(_myRanks && _myRanks[mk] && _myRanks[mk].length);
+  }
+  SOURCES.mine = {
+    label: 'My Ranks',
+    get: (p) => { const m = _myMapFor(state.mode); return m ? (m.get(keyOf(p)) || null) : null; },
+    desc: false,
+  };
+  function _applyMyRanks(v) {
+    _myRanks = (v && v.boards) || null;
+    _myRanksMaps = {};
+    try { render(); } catch (_) {}
+  }
+  try {
+    chrome.storage.local.get(['mff_my_rankings'], (res) => _applyMyRanks(res && res.mff_my_rankings));
+    chrome.storage.onChanged.addListener((ch, area) => {
+      if (area === 'local' && ch.mff_my_rankings) _applyMyRanks(ch.mff_my_rankings.newValue);
+    });
+  } catch (_) {}
+
   function applyMode(mode, manual) {
     if (!MODES[mode]) return;
     state.mode = mode;
@@ -1656,9 +1697,10 @@
     const src = SOURCES[srcId];
     const chips = Object.entries(SOURCES)
       .filter(([id]) => id !== 'ktc' || isDynMode()) // KTC = dynasty-only
+      .filter(([id]) => id !== 'mine' || myRanksAvailable())
       .map(([id, s]) =>
       `<button class="pos-filter ${id === srcId ? 'active' : ''}" data-pksrc="${id}" style="flex:0 0 auto">${
-        id === 'ktc' ? 'KTC' : id === 'jack' ? "JACK'S" : id === 'fp' ? 'FP' : 'SLPR'}</button>`).join('');
+        id === 'ktc' ? 'KTC' : id === 'jack' ? "JACK'S" : id === 'fp' ? 'FP' : id === 'mine' ? 'MINE' : 'SLPR'}</button>`).join('');
     const mine = myPlayerObjs();
     const val = (p) => p._unmatched ? null : src.get(p);
     const groups = POS_ORDER.map((pos) => {

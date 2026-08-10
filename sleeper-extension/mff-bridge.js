@@ -21,4 +21,13 @@
       } : null });
     } catch (_) {}
   });
+
+  // MY RANKS: persist the user's own site boards for the rec engine.
+  document.addEventListener("mff-my-rankings-update", function (e) {
+    try {
+      var d = e.detail || {};
+      if (!d.boards) return;
+      chrome.storage.local.set({ mff_my_rankings: { boards: d.boards, syncedAt: d.syncedAt || Date.now() } });
+    } catch (_) {}
+  });
 })();

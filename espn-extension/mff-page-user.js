@@ -45,4 +45,45 @@
   setInterval(tick, 3000);
   setTimeout(tick, 1500);
   setTimeout(tick, 5000);
+
+  // MY RANKS: the user's own boards from the site (versionBoards.mine),
+  // shipped as ordered name+pos rows per helper mode so the extension's rec
+  // engine can run on the user's custom rankings instead of Jack's.
+  var BOARD_TO_MODE = { redraft: "re_1qb", superflex: "re_sf", dynasty: "dyn_1qb", dynastysf: "dyn_sf" };
+  function readMyBoards() {
+    try {
+      var vb = window.versionBoards, D = window.D;
+      if (!vb || !vb.mine || !Array.isArray(D) || !D.length) return null;
+      var out = {}, any = false;
+      for (var k in BOARD_TO_MODE) {
+        var arr = vb.mine[k];
+        if (!Array.isArray(arr) || !arr.length) continue;
+        var rows = [];
+        for (var i = 0; i < arr.length; i++) {
+          var d = D[arr[i]];
+          if (!d || !d.n || !d.s || d._retired) continue;
+          rows.push({ n: d.n, s: d.s });
+        }
+        if (rows.length) { out[BOARD_TO_MODE[k]] = rows; any = true; }
+      }
+      return any ? out : null;
+    } catch (_) { return null; }
+  }
+  var lastBoards = "";
+  function tickBoards() {
+    try {
+      var b = readMyBoards();
+      if (!b) return;
+      var h = Object.keys(b).map(function (k) {
+        return k + ":" + b[k].length + ":" + b[k].slice(0, 12).map(function (r) { return r.n; }).join(",");
+      }).join("|");
+      if (h === lastBoards) return;
+      lastBoards = h;
+      document.dispatchEvent(new CustomEvent("mff-my-rankings-update", {
+        detail: { boards: b, syncedAt: Date.now() }
+      }));
+    } catch (_) {}
+  }
+  setInterval(tickBoards, 4000);
+  setTimeout(tickBoards, 2500);
 })();

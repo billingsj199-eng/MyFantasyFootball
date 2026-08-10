@@ -2530,9 +2530,52 @@
     return `<div class="mff-section" id="mff-recommended-wrap"><h3>Recommended</h3>${cards}</div>`;
   }
 
+
+  // ---------- MY RANKS rank source (user's own site boards) ----------
+  // mff-page-user.js ships versionBoards.mine via the bridge into
+  // chrome.storage 'mff_my_rankings'. Selecting "My Ranks" makes the ENTIRE
+  // rec engine (board order, tiers, quality fill, depletion schedule) run on
+  // the user's custom rankings — same behavior the Underdog helper has.
+  let _myRanks = null;
+  let _myRanksMaps = {};
+  function _myMapFor(modeKey) {
+    if (!_myRanks || !_myRanks[modeKey]) return null;
+    if (!_myRanksMaps[modeKey]) {
+      const m = new Map();
+      _myRanks[modeKey].forEach((r, i) => {
+        const k = norm(r.n) + '|' + r.s;
+        if (!m.has(k)) m.set(k, i + 1);
+      });
+      _myRanksMaps[modeKey] = m;
+    }
+    return _myRanksMaps[modeKey];
+  }
+  function myRanksAvailable() {
+    const mk = (state.mode).indexOf('dyn') === 0
+      ? (state.mode) : (state.mode);
+    return !!(_myRanks && _myRanks[mk] && _myRanks[mk].length);
+  }
+  SOURCES.mine = {
+    label: 'My Ranks',
+    get: (p) => { const m = _myMapFor(state.mode); return m ? (m.get(keyOf(p)) || null) : null; },
+    desc: false,
+  };
+  function _applyMyRanks(v) {
+    _myRanks = (v && v.boards) || null;
+    _myRanksMaps = {};
+    try { if (state._rendered) render(); } catch (_) {}
+  }
+  try {
+    chrome.storage.local.get(['mff_my_rankings'], (res) => _applyMyRanks(res && res.mff_my_rankings));
+    chrome.storage.onChanged.addListener((ch, area) => {
+      if (area === 'local' && ch.mff_my_rankings) _applyMyRanks(ch.mff_my_rankings.newValue);
+    });
+  } catch (_) {}
   function draftTabHTML() {
+    if (state.rankSource === 'mine' && !myRanksAvailable()) state.rankSource = 'jack';
     let srcOpts = '';
     for (const [k, s] of Object.entries(SOURCES)) {
+      if (k === 'mine' && !myRanksAvailable()) continue;
       srcOpts += `<option value="${k}" ${state.rankSource === k ? 'selected' : ''}>${s.label}</option>`;
     }
     const posChips = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST', 'PK'].map((p) =>

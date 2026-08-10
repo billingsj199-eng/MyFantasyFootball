@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "MFF Yahoo Helper",
-  "version": "0.6.0",
-  "description": "Draft assistant + season helper + league export for Yahoo fantasy football: live draft recommendations, optimal weekly lineup, start/sit verdicts, waiver upgrade ranking, roster values from Jack's boards + KTC + Vegas — and one-click league export to myfantasyfootball.co.",
+  "version": "0.6.1",
+  "description": "Draft assistant + season helper for Yahoo leagues: live pick recs, optimal lineups, waivers, season sims, and league export.",
   "permissions": [
     "storage"
   ],

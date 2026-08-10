@@ -1,0 +1,111 @@
+{
+  "manifest_version": 3,
+  "name": "MFF Underdog Draft Helper",
+  "version": "0.16.4",
+  "description": "Live Underdog draft picks from Jack's rankings + BBM advance-rate optimizer. Stacks, cliffs, and live PPG-by-position projections.",
+  "permissions": [
+    "storage",
+    "cookies"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "https://underdogfantasy.com/*",
+    "https://*.underdogfantasy.com/*",
+    "https://underdogsports.com/*",
+    "https://*.underdogsports.com/*",
+    "https://myfantasyfootball.org/*",
+    "https://www.myfantasyfootball.org/*",
+    "https://myfantasyfootball.co/*",
+    "https://www.myfantasyfootball.co/*",
+    "https://billingsj199-eng.github.io/*",
+    "https://firestore.googleapis.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://underdogfantasy.com/*",
+        "https://*.underdogfantasy.com/*",
+        "https://underdogsports.com/*",
+        "https://*.underdogsports.com/*"
+      ],
+      "js": [
+        "data/bbm_data.js",
+        "data/bbm_pick_by_rank_round.js",
+        "data/bbm_path_optimal.js",
+        "data/bbm_stack_comp_multistage.js",
+        "data/bbm_structural_multistage.js",
+        "data/playoff_sos_2026.js",
+        "engine.js",
+        "sidebar.js",
+        "live-watcher.js",
+        "draft-button-pad.js"
+      ],
+      "css": [
+        "sidebar.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://underdogfantasy.com/*",
+        "https://*.underdogfantasy.com/*",
+        "https://underdogsports.com/*",
+        "https://*.underdogsports.com/*"
+      ],
+      "js": [
+        "injected.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://myfantasyfootball.org/*",
+        "https://www.myfantasyfootball.org/*",
+        "https://myfantasyfootball.co/*",
+        "https://www.myfantasyfootball.co/*",
+        "https://billingsj199-eng.github.io/*"
+      ],
+      "js": [
+        "mff-bridge.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://myfantasyfootball.org/*",
+        "https://www.myfantasyfootball.org/*",
+        "https://myfantasyfootball.co/*",
+        "https://www.myfantasyfootball.co/*",
+        "https://billingsj199-eng.github.io/*"
+      ],
+      "js": [
+        "page-bridge.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "data/players.json"
+      ],
+      "matches": [
+        "https://underdogfantasy.com/*",
+        "https://*.underdogfantasy.com/*",
+        "https://underdogsports.com/*",
+        "https://*.underdogsports.com/*"
+      ]
+    }
+  ],
+  "icons": {
+    "128": "icons/icon-128.png"
+  }
+}

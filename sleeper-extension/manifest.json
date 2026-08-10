@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "MFF Sleeper Helper",
-  "version": "0.26.8",
-  "description": "Draft mode: live pick tracking from Jack's rankings + KTC. Season mode: optimal weekly lineup, waiver upgrades, roster values, and Monte Carlo season sims (standings, weekly odds, future-pick values) for your league, scored to its real settings. Public API only â€” no DOM scraping.",
+  "version": "0.26.9",
+  "description": "Draft + season helper for Sleeper leagues: live pick recs, optimal lineups, waiver upgrades, and roster values from Jack's boards.",
   "permissions": [
     "storage",
     "alarms",

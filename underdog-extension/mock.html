@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>MFF Draft Helper — Mock Draft Tester</title>
+  <link rel="stylesheet" href="sidebar.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1a1d22;
+      color: #e9e9ec;
+    }
+    .page { padding: 20px; max-width: 600px; }
+    h1 { font-size: 18px; color: #ffd166; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    .controls button {
+      background: #2a2c33; border: none; color: #e9e9ec;
+      padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: 600;
+    }
+    .controls button.primary { background: #ffd166; color: #0e0f12; }
+    .controls button:hover { filter: brightness(1.1); }
+    pre { background: #14171c; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto; }
+    .pick-log { max-height: 240px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <h1>Mock Draft Tester</h1>
+  <p>Use this page to validate the recommendation engine offline. Click "Auto-pick by ADP" to simulate opponents drafting near Underdog ADP. Click "My pick" while on the recommended player to take them yourself.</p>
+
+  <div class="controls">
+    <button id="auto" class="primary">Auto-pick (best ball ADP)</button>
+    <button id="auto5">Auto-pick × 5</button>
+    <button id="auto-til">Auto-pick til my turn</button>
+    <button id="reset">Reset</button>
+  </div>
+
+  <div class="pick-log">
+    <h3 style="font-size:12px;color:#8a8d96">Pick Log</h3>
+    <pre id="log">(no picks yet)</pre>
+  </div>
+</div>
+
+<script src="engine.js"></script>
+<script>
+// Mock harness — bootstraps the engine + sidebar without needing a real Underdog page
+(async function () {
+  // Load HTML into DOM
+  const html = await (await fetch("sidebar.html")).text();
+  const wrap = document.createElement("div");
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap.firstElementChild);
+
+  // Stub chrome.runtime.getURL so sidebar.js can be reused
+  window.chrome = window.chrome || {};
+  chrome.runtime = chrome.runtime || { getURL: (p) => p };
+
+  // We also need players.json — fetch directly
+  const data = await (await fetch("data/players.json")).json();
+  const players = data.players;
+  const byName = new Map(players.map(p => [p.n, p]));
+
+  // Local state mirroring sidebar.js (we re-import the public render via a hand-rolled minimal copy)
+  const TEAM_SIZE = 12;
+  const state = { drafted: new Set(), myRoster: [], pickNum: 1, slot: 6, history: [] };
+
+  // Helpers — copied (small) from sidebar.js
+  function isMyTurn(p, slot) {
+    const round = Math.ceil(p / TEAM_SIZE);
+    const inR = ((p - 1) % TEAM_SIZE) + 1;
+    return inR === (round % 2 === 1 ? slot : (TEAM_SIZE - slot + 1));
+  }
+
+  function pickByADP() {
+    // Simulate: pick the best available player by Underdog ADP (with mild randomness)
+    const pool = players.filter(p => !state.drafted.has(p.n) && p.udA != null && p.udA < 240)
+                       .sort((a, b) => a.udA - b.udA);
+    if (!pool.length) return null;
+    // small jitter — pick from top 3
+    const idx = Math.floor(Math.random() * Math.min(3, pool.length));
+    return pool[idx];
+  }
+
+  function autoPick() {
+    const p = pickByADP();
+    if (!p) return false;
+    state.drafted.add(p.n);
+    if (isMyTurn(state.pickNum, state.slot)) {
+      // Should not auto-take my pick — but just in case
+      state.myRoster.push(p);
+      state.history.push({ name: p.n, mine: true });
+    } else {
+      state.history.push({ name: p.n, mine: false });
+    }
+    state.pickNum++;
+    return true;
+  }
+
+  function pickForMe(player) {
+    state.drafted.add(player.n);
+    state.myRoster.push(player);
+    state.history.push({ name: player.n, mine: true });
+    state.pickNum++;
+  }
+
+  function render() {
+    const log = state.history.map((h, i) => {
+      const tag = h.mine ? "★ ME" : "  ";
+      return `${(i+1).toString().padStart(3)}  ${tag}  ${h.name}`;
+    }).join("\n");
+    document.getElementById("log").textContent = log || "(no picks yet)";
+
+    // Update sidebar via direct DOM since we don't run sidebar.js init flow here
+    const ENGINE = window.MFFEngine;
+    const round = ENGINE.pickToRound(state.pickNum, TEAM_SIZE);
+    document.getElementById("s-pick").textContent = state.pickNum + "/216";
+    document.getElementById("s-round").textContent = round;
+    document.getElementById("s-mypicks").textContent = state.myRoster.length;
+    document.getElementById("s-until").textContent = isMyTurn(state.pickNum, state.slot) ? "NOW" : nextDistance();
+
+    const counts = ENGINE.rosterCounts(state.myRoster);
+    for (const pos of ["QB","RB","WR","TE"]) {
+      const el = document.getElementById("r-" + pos);
+      if (el) el.textContent = counts[pos] || 0;
+    }
+
+    const recs = ENGINE.recommend({
+      players, draftedSet: state.drafted, myRoster: state.myRoster,
+      pickNum: state.pickNum, slot: state.slot, teamSize: TEAM_SIZE, topN: 6
+    });
+    const recsEl = document.getElementById("mff-recs");
+    recsEl.innerHTML = "";
+    recs.forEach((r, i) => {
+      const p = r.player;
+      const div = document.createElement("div");
+      div.className = "mff-rec" + (i === 0 ? " top" : "");
+      const tags = r.why.map(w => `<span class="tag ${w}">${w}</span>`).join("");
+      div.innerHTML = `
+        <div class="num">${i+1}</div>
+        <div class="info">
+          <div class="name">${p.n}</div>
+          <div class="meta">
+            <span class="pos ${p.s}">${p.s}</span>
+            <span>${p.t || ""}</span>
+            <span>R#${p.rank}</span>
+            ${p.udA != null ? `<span>UD ${p.udA}</span>` : ""}
+          </div>
+          <div class="why">${tags}</div>
+        </div>
+        <div class="score">${r.score}</div>
+      `;
+      div.addEventListener("click", () => {
+        if (isMyTurn(state.pickNum, state.slot)) {
+          pickForMe(p);
+        } else {
+          state.drafted.add(p.n);
+          state.history.push({ name: p.n, mine: false });
+          state.pickNum++;
+        }
+        render();
+      });
+      recsEl.appendChild(div);
+    });
+  }
+
+  function nextDistance() {
+    let p = state.pickNum;
+    while (p <= 216) {
+      if (isMyTurn(p, state.slot)) return p - state.pickNum;
+      p++;
+    }
+    return "—";
+  }
+
+  // Wire mock controls
+  document.getElementById("auto").addEventListener("click", () => { autoPick(); render(); });
+  document.getElementById("auto5").addEventListener("click", () => { for (let i = 0; i < 5; i++) autoPick(); render(); });
+  document.getElementById("auto-til").addEventListener("click", () => {
+    let safety = 30;
+    while (!isMyTurn(state.pickNum, state.slot) && safety-- > 0) autoPick();
+    render();
+  });
+  document.getElementById("reset").addEventListener("click", () => {
+    state.drafted.clear(); state.myRoster.length = 0; state.history.length = 0; state.pickNum = 1;
+    render();
+  });
+
+  // Hide the setup panel + show everything else (mock skips slot picker)
+  document.getElementById("mff-setup").style.display = "none";
+  ["mff-status-wrap","mff-roster-wrap","mff-recs-wrap","mff-manual-wrap"].forEach(id => {
+    document.getElementById(id).style.display = "";
+  });
+  // For mock: pin slot to 6 (mid-round), can be changed by altering state.slot above
+  console.log("Mock harness ready. Slot =", state.slot);
+  render();
+})();
+</script>
+</body>
+</html>

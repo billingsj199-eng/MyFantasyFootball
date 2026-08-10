@@ -1,0 +1,216 @@
+# Chrome Web Store — listing copy for all four MFF extensions
+
+Dashboard: https://chrome.google.com/webstore/devconsole/
+Prepared 2026-08-10. Upload zips are in this folder; rebuild them with the
+session scratchpad `package_store.py` (or re-zip the extension dir minus
+`mock*` / `*.md` / `*.bak*` / `*.tmp`) after any source change — the Store
+requires each upload's `manifest.json` version to be HIGHER than the listed one.
+
+Shared across all four listings:
+- **Category:** Sports · **Language:** English (US)
+- **Privacy policy URL:** `https://www.myfantasyfootball.co/privacy.html`
+- **Remote code:** No (all JS is bundled; network calls fetch DATA only — JSON
+  from the fantasy platform's own API, Sleeper's public API, and
+  myfantasyfootball.co)
+- **Certifications:** check all three (no sale/transfer of user data, etc.)
+- **Assets per listing:** 128×128 icon (bundled `icons/icon-128.png`), ≥1
+  screenshot at 1280×800 or 640×400, small promo tile 440×280 (required for
+  some surfaces), optional marquee 1400×560.
+- Screenshot sources: each extension's harness renders the real panel without
+  a live league — `mock.html` (Sleeper/Underdog/ESPN season), `mock_draft.html`
+  / `mock_draftroom.html` (draft modes) served via the repo's launch.json
+  static servers.
+
+---
+
+## 1. MFF Underdog Draft Helper — UPDATE existing listing (v0.16.3? → 0.16.4)
+
+Upload: `mff-underdog-draft-helper-0.16.4.zip`
+
+The existing listing copy in `underdog-extension/CHROME_STORE_SUBMISSION.md`
+is still accurate EXCEPT the domain: replace every `myfantasyfootball.org`
+with `www.myfantasyfootball.co` (privacy URL, detailed description, host
+justification — the manifest already carries both hosts plus
+`firestore.googleapis.com`). Add to the host justification:
+
+```
+firestore.googleapis.com: the user's saved rankings on myfantasyfootball.co
+are stored in Google Firestore; the extension reads the user's own boards
+from it. betting-line/playoff-SOS data files are refreshed from
+myfantasyfootball.co at startup. Read-only; no user data is written.
+```
+
+Since the last upload the extension gained: live Vegas playoff-SOS refresh,
+JM prospect pills, the rec leapfrog guard and elite-QB/TE positional logic —
+no new permissions, so mention in the "What's new" notes only if asked.
+
+---
+
+## 2. MFF Sleeper Helper — NEW listing (v0.26.9)
+
+Upload: `mff-sleeper-helper-0.26.9.zip`
+
+**Short summary (130 chars, matches manifest):**
+```
+Draft + season helper for Sleeper leagues: live pick recs, optimal lineups, waiver upgrades, and roster values from Jack's boards.
+```
+
+**Detailed description:**
+```
+The MFF Sleeper Helper adds a live sidebar to sleeper.com fantasy football leagues.
+
+DRAFT MODE
+• Live pick recommendations on your clock — best player available blended with format-aware value-over-replacement, positional tiers and cliffs, roster needs, and ADP timing ("will he last to your next pick?")
+• Understands your league's real settings: superflex, PPR scoring, roster slots
+• Dynasty support with KTC market values and rookie-pick awareness
+
+SEASON MODE
+• Optimal weekly lineup from your league's exact lineup slots and scoring
+• Start/sit verdicts with Vegas matchup context on Sleeper's own pages
+• Waiver targets ranked by the points they'd actually add to YOUR lineup
+• Roster values by source (Jack's boards, KTC, FantasyPros, Sleeper ranks)
+
+HOW IT WORKS
+Draft and league state come from Sleeper's public API — the extension never scrapes your credentials. Rankings come bundled and can sync with your account at myfantasyfootball.co. Everything is processed and stored locally in Chrome storage.
+
+Not affiliated with Sleeper.
+```
+
+**Single purpose:**
+```
+Display draft-pick recommendations and lineup/waiver advice on Sleeper fantasy football pages, using rankings from myfantasyfootball.co.
+```
+
+**Permission justifications:**
+- `storage` — persists draft state, panel position, cached rankings and league
+  settings locally in chrome.storage.local; nothing is transmitted.
+- `alarms` — schedules the periodic background refresh of league state during
+  drafts/season polling.
+- `notifications` — optional on-your-clock draft alerts.
+- Host `sleeper.com` / `*.sleeper.com` — the pages the sidebar is injected into.
+- Host `api.sleeper.app` — Sleeper's own public JSON API for league/draft/player
+  state (read-only).
+- Host `myfantasyfootball.co` + `firestore.googleapis.com` — refreshes the
+  bundled rankings/Vegas data files and reads the user's own saved boards
+  (Firestore is the site's database). Read-only.
+
+**Data usage disclosure:** User activity = Yes (draft picks/lineups read from
+Sleeper's API to power recommendations, stored locally only). Everything else No.
+
+---
+
+## 3. MFF ESPN Helper — NEW listing (v0.17.10)
+
+Upload: `mff-espn-helper-0.17.10.zip`
+
+**Short summary (129 chars, matches manifest):**
+```
+Draft helper + season mode for ESPN leagues: live pick recs, optimal lineups, waiver upgrades, sims, and one-click league import.
+```
+
+**Detailed description:**
+```
+The MFF ESPN Helper adds a live sidebar to ESPN Fantasy Football.
+
+DRAFT MODE
+• Live pick recommendations in the ESPN draft room — best available blended with format-aware value-over-replacement, tiers, cliffs, roster needs, and ADP timing
+• Reads your league's real scoring and lineup slots automatically
+• Tracks every pick from the draft board — refresh-proof
+
+SEASON MODE
+• Optimal weekly lineup from your league's exact slots and scoring
+• Start/sit pills and Vegas matchup context on ESPN's own roster pages
+• Waiver targets ranked by the points they'd add to YOUR lineup
+• SIMS tab: 1,500 Monte Carlo season simulations — projected standings, playoff and title odds, week-by-week win probabilities
+• One-click league import to your myfantasyfootball.co account
+
+HOW IT WORKS
+League data comes from ESPN's own fantasy API for your logged-in account; public player data (byes, injuries, actuals) from Sleeper's public API. Rankings are bundled and can sync with myfantasyfootball.co. All processing is local.
+
+Not affiliated with ESPN.
+```
+
+**Single purpose:**
+```
+Display draft-pick recommendations and lineup/waiver/season-sim advice on ESPN Fantasy Football pages, using rankings from myfantasyfootball.co.
+```
+
+**Permission justifications:**
+- `storage` — local persistence of draft state, league cache, panel prefs.
+- Host `fantasy.espn.com` — the pages the sidebar is injected into.
+- Host `lm-api-reads.fantasy.espn.com` — ESPN's own league-read API for the
+  user's logged-in league (rosters, settings, matchups). Read-only.
+- Host `api.sleeper.app` — public NFL state/injury/actuals data.
+- Host `myfantasyfootball.co` / `.org` / `billingsj199-eng.github.io` — data
+  refresh + the league-import bridge to the user's own MFF account (the
+  GitHub host serves the same site).
+- **Data usage disclosure:** Website content = Yes (reads the ESPN draft board
+  DOM to track picks; local only). User activity = Yes (league rosters/picks,
+  local only). Authentication info = No (relies on the browser's own session;
+  never reads or stores credentials).
+
+---
+
+## 4. MFF Yahoo Helper — NEW listing (v0.6.1)
+
+Upload: `mff-yahoo-helper-0.6.1.zip`
+
+**Short summary (124 chars, matches manifest):**
+```
+Draft assistant + season helper for Yahoo leagues: live pick recs, optimal lineups, waivers, season sims, and league export.
+```
+
+**Detailed description:**
+```
+The MFF Yahoo Helper adds a live sidebar to Yahoo Fantasy Football.
+
+DRAFT MODE
+• Live pick recommendations in the Yahoo draft room — best available blended with format-aware value-over-replacement, tiers, cliffs, roster needs, and ADP timing
+• Reads your league's real scoring and roster slots automatically (PPR, superflex, flex types)
+• Tracks every pick live and rebuilds instantly after a refresh
+
+SEASON MODE
+• Optimal weekly lineup from your league's exact slots and scoring
+• Start/sit moves, Vegas matchup context, and waiver targets ranked by the points they'd add to YOUR lineup
+• SIMS tab: 1,500 Monte Carlo season simulations — projected standings, playoff and title odds, week-by-week win probabilities
+• One-click league export to your myfantasyfootball.co account
+
+HOW IT WORKS
+League settings and players come from Yahoo's own fantasy API for your logged-in league; the pick feed passively listens to the draft room's own connection (nothing extra is opened). Public NFL data from Sleeper's public API. Rankings are bundled and sync with myfantasyfootball.co. All processing is local.
+
+Not affiliated with Yahoo.
+```
+
+**Single purpose:**
+```
+Display draft-pick recommendations and lineup/waiver/season-sim advice on Yahoo Fantasy Football pages, using rankings from myfantasyfootball.co.
+```
+
+**Permission justifications:**
+- `storage` — local persistence of draft state, league cache, panel prefs.
+- Host `football.fantasysports.yahoo.com` — the pages the sidebar is injected
+  into; also the origin whose league pages are read for rosters.
+- Host `api.sleeper.app` — public NFL state/injury/actuals data.
+- Host `myfantasyfootball.co` + `firestore.googleapis.com` — data refresh and
+  the user's own saved boards (Firestore is the site's database); league
+  export writes only to the user's own MFF account.
+- **Data usage disclosure:** Website content = Yes (reads the user's Yahoo
+  league pages to build rosters; local only). User activity = Yes (draft
+  picks, local only). Authentication info = No (relies on the browser's own
+  session cookies implicitly; never reads, stores, or transmits them).
+
+---
+
+## Upload order + notes
+
+1. Underdog first (it's an update — fastest approval, no new permissions).
+2. The three new listings can go in the same sitting; each needs its own
+   screenshots + promo tile.
+3. Visibility: pick **Unlisted** if you want install-by-link from the site
+   only; Public if you want store search traffic. Can be changed later.
+4. After approval, swap the site's extension modal links to
+   `https://chromewebstore.google.com/detail/<EXTENSION-ID>` (see the
+   "After publication" section of underdog-extension/CHROME_STORE_SUBMISSION.md).
+5. KNOWN FOLLOW-UP (before going wide publicly): bundled `data/players.json`
+   carries Jack's FULL board while the site gates free users at 36/12 — ship
+   the free slice + premium Firestore fetch if that matters for conversion.

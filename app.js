@@ -557,6 +557,19 @@ window.versionBoards = versionBoards;
 const POS_TIER_KEYS = ['ALL','QB','RB','WR','TE','K','DST','ROOKIE'];
 function _mkPosTiers() { return {ALL:[],QB:[],RB:[],WR:[],TE:[],K:[],DST:[],ROOKIE:[]}; }
 function _mkPosTierCtrs() { return {ALL:0,QB:0,RB:0,WR:0,TE:0,K:0,DST:0,ROOKIE:0}; }
+// Deep-copy a tier bucket map (and its counters) — virgin "mine" boards mirror
+// Jack's tiers, and a shared object would let mine-side tier edits mutate
+// Jack's live tiers in place.
+function _clonePosTiers(src) {
+  const out = _mkPosTiers();
+  if (src) POS_TIER_KEYS.forEach(k => { if (Array.isArray(src[k])) out[k] = src[k].map(t => Object.assign({}, t)); });
+  return out;
+}
+function _clonePosTierCtrs(src) {
+  const out = _mkPosTierCtrs();
+  if (src) POS_TIER_KEYS.forEach(k => { if (typeof src[k] === 'number') out[k] = src[k]; });
+  return out;
+}
 const versionTiers = {
   consensus: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
   jacks: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
@@ -570,7 +583,7 @@ const versionTierCounters = {
 
 // === MINE-FOLLOWS-JACKS SEEDING ===
 // Until a user's first save of a format, their "My Ranks" board mirrors Jack's
-// latest board for that format — order only, no tiers. Weekly mirrors per week:
+// latest board for that format — order AND tiers. Weekly mirrors per week:
 // each new week is virgin until the user saves an edit for that week. A format
 // becomes "custom" (stops mirroring) once it's been edited this session, and
 // permanently once a save persists that edit. Custom flags live in the user doc
@@ -611,8 +624,8 @@ window._mineSeedFromJacks = function() {
     const src = versionBoards.jacks[m];
     if (!src || !src.length) return;
     versionBoards.mine[m] = src.slice();
-    versionTiers.mine[m] = _mkPosTiers();
-    versionTierCounters.mine[m] = _mkPosTierCtrs();
+    versionTiers.mine[m] = _clonePosTiers(versionTiers.jacks[m]);
+    versionTierCounters.mine[m] = _clonePosTierCtrs(versionTierCounters.jacks[m]);
     if (currentVersion === 'mine' && currentMode === m) activeSeeded = true;
   });
   // Weekly virgin-week mirroring lives inside _weeklyReconcileBoard
@@ -4637,15 +4650,17 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     ver = ver || 'jacks';
     if (!versionBoards[ver]) return;
     const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
-    // Virgin "mine" week: mirror Jack's weekly board (order only, no tiers)
+    // Virgin "mine" week: mirror Jack's weekly board (order and tiers)
     // instead of deriving from the user's redraft. Call sites always reconcile
     // 'jacks' before 'mine', so Jack's weekly is already up to date here.
     if (ver === 'mine' && typeof window._mineWeeklyVirgin === 'function' && window._mineWeeklyVirgin(wk)) {
-      const src = (versionBoards.jacks.weekly && versionBoards.jacks.weekly.length)
-        ? versionBoards.jacks.weekly : versionBoards.jacks.redraft;
+      const _useJacksWeekly = !!(versionBoards.jacks.weekly && versionBoards.jacks.weekly.length);
+      const src = _useJacksWeekly ? versionBoards.jacks.weekly : versionBoards.jacks.redraft;
       versionBoards.mine.weekly = src.slice();
-      versionTiers.mine.weekly = _mkPosTiers();
-      versionTierCounters.mine.weekly = _mkPosTierCtrs();
+      // Tiers come from whichever jacks board the order came from, so
+      // afterRank boundaries line up with the mirrored order.
+      versionTiers.mine.weekly = _clonePosTiers(_useJacksWeekly ? versionTiers.jacks.weekly : versionTiers.jacks.redraft);
+      versionTierCounters.mine.weekly = _clonePosTierCtrs(_useJacksWeekly ? versionTierCounters.jacks.weekly : versionTierCounters.jacks.redraft);
       window._weeklyBaseline.mine = versionBoards.mine.weekly.slice();
       if (currentMode === 'weekly' && currentVersion === 'mine') {
         syncMode(); renumber();

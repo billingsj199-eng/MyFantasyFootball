@@ -21914,6 +21914,15 @@ window.fmtHeight = fmtHeight;
 
   document.getElementById('btnShareRanks').addEventListener('click', async () => {
     if (!currentUser || !db) { toast('Sign in to share rankings'); return; }
+    // Virgin-format guard: an unedited "mine" format mirrors Jack's board +
+    // tiers (see _mineSeedFromJacks). shared_rankings docs are world-readable,
+    // so sharing one would republish Jack's premium board to anyone with the
+    // link. Nothing of the user's own exists yet — block instead of leaking.
+    const _virgin = (currentMode === 'weekly')
+      ? (typeof window._mineWeeklyVirgin === 'function' && window._mineWeeklyVirgin(window._weeklyActiveWeek || 1))
+      : (typeof window._mineIsCustom === 'function' && typeof window._mineSeedAllowed === 'function'
+         && window._mineSeedAllowed() && !window._mineIsCustom(currentMode));
+    if (_virgin) { toast("These are still Jack's rankings — make an edit or save to share your own version"); return; }
     const btn = document.getElementById('btnShareRanks');
     const _origText = btn.innerHTML;
     btn.disabled = true;

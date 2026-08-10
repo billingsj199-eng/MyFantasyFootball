@@ -659,6 +659,23 @@ window._mineMetaReset = function() {
   window._mineTouchedWeekly = {};
   window._mineMetaState = 'boot';
 };
+// Board resolver for tools that read "mine" boards outside the rankings table
+// (trade calc, My Teams, portfolio; mock draft carries its own copy of this
+// logic in _mdBoardsFor). For non-premium users a virgin format mirrors Jack's
+// premium board, so those surfaces get the consensus board instead; customized
+// formats and premium users always get the real "mine" board.
+window._mineToolBoard = function(mode) {
+  const prem = (typeof hasPremium === 'function') && hasPremium();
+  if (prem || typeof window._mineIsCustom !== 'function' || window._mineIsCustom(mode)) {
+    return versionBoards.mine[mode];
+  }
+  const cb = versionBoards.consensus && versionBoards.consensus[mode];
+  return (cb && cb.length) ? cb : versionBoards.mine[mode];
+};
+window._verBoardFor = function(src, mode) {
+  if (src === 'mine') return window._mineToolBoard(mode);
+  return versionBoards[src] && versionBoards[src][mode];
+};
 
 // === CONSENSUS RANKING ENGINE ===
 // Averages ranks from: Jack's + market ADP + Sleeper + FantasyPros (all modes) + Underdog (redraft) + KTC (dynasty)
@@ -19102,7 +19119,7 @@ window.fmtHeight = fmtHeight;
         const leagueSize = (typeof window._mtTeams !== 'undefined' && window._mtTeams) ? window._mtTeams.length : 12;
         const overallIdx = (rdNum - 1) * leagueSize + (pickInRound - 1);
         // Find rookies on the board in order (same logic as rookiePickMap)
-        const board = versionBoards[src] ? versionBoards[src][mode] : null;
+        const board = window._verBoardFor(src, mode) || null;
         if (board) {
           const rookies = [];
           board.forEach(function(dIdx) {
@@ -19174,7 +19191,7 @@ window.fmtHeight = fmtHeight;
 
   function _getTierForPlayerFull(d, src, mode) {
     const srcTiers = versionTiers[src][mode].ALL || [];
-    const srcBoard = versionBoards[src][mode];
+    const srcBoard = window._verBoardFor(src, mode) || versionBoards[src][mode];
     const boardPos = srcBoard.indexOf(d.idx);
     const rank = boardPos >= 0 ? boardPos + 1 : 999;
     let currentTier = null;
@@ -19250,7 +19267,7 @@ window.fmtHeight = fmtHeight;
     const s = src || tradeSource;
     const m = mode || tradeMode;
     const isAdpSrc = _ADP_SRCS.indexOf(s) >= 0;
-    const srcBoard = isAdpSrc ? _getAdpBoard(s, m) : (versionBoards[s] && versionBoards[s][m]);
+    const srcBoard = isAdpSrc ? _getAdpBoard(s, m) : window._verBoardFor(s, m);
     if (!srcBoard) return 1;
     const boardPos = srcBoard.indexOf(d.idx);
     const rank = boardPos >= 0 ? boardPos + 1 : 999;
@@ -41213,6 +41230,8 @@ Rules:
       if (typeof window._getAdpBoard === 'function') {
         board = window._getAdpBoard(src, mode);
       }
+    } else if (typeof window._verBoardFor === 'function') {
+      board = window._verBoardFor(src, mode);
     } else if (typeof versionBoards !== 'undefined') {
       board = versionBoards[src] && versionBoards[src][mode];
     }
@@ -41247,6 +41266,8 @@ Rules:
       let board = null;
       if (ADP_SRCS.indexOf(_mtValueSrc) >= 0) {
         if (typeof window._getAdpBoard === 'function') board = window._getAdpBoard(_mtValueSrc, mode);
+      } else if (typeof window._verBoardFor === 'function') {
+        board = window._verBoardFor(_mtValueSrc, mode);
       } else if (typeof versionBoards !== 'undefined') {
         board = versionBoards[_mtValueSrc] && versionBoards[_mtValueSrc][mode];
       }

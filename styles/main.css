@@ -649,7 +649,7 @@ td.adp-reach{background:rgba(239,68,68,.10);color:var(--red);font-weight:600}
 
 
 /* Drag handle */
-.drag-handle{cursor:grab;color:var(--text2);opacity:.3;transition:opacity .15s;display:flex;align-items:center;touch-action:none}
+.drag-handle{cursor:grab;color:var(--text2);opacity:.3;transition:opacity .15s;display:flex;align-items:center;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .drag-handle:hover{opacity:.8;color:var(--accent)}
 .drag-handle:active{cursor:grabbing;opacity:1;color:var(--accent)}
 .drag-handle svg{width:16px;height:16px}
@@ -1853,9 +1853,10 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   /* Rankings table */
   .rankings-table th,.rankings-table td{padding:4px 3px!important;font-size:.65rem!important}
   /* Sticky rank + player columns when the table is horizontally scrolled. The
-     drag handle col is hidden on mobile (no useful touch interaction). thead
-     sticks via top:0; the rank/player cells stick via left:0 / left:auto so the
-     player stays visible when scrolling right to see PPG / age / etc. */
+     drag handle col is hidden here as a default, but the ≤600px card layout in
+     index.html re-shows it for #pageRankings (touch reorder). thead sticks via
+     top:0; the rank/player cells stick via left:0 / left:auto so the player
+     stays visible when scrolling right to see PPG / age / etc. */
   .table-wrap table thead th:first-child,
   .table-wrap table tbody td:first-child{display:none}
   .table-wrap table thead th:nth-child(2),

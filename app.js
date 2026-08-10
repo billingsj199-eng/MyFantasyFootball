@@ -23203,13 +23203,31 @@ window.fmtHeight = fmtHeight;
   setupStepper('mdPickDec','mdPickInc','mdPickVal', () => mdUserPick, v => mdUserPick = v, 1, 16);
   function syncPickMax() { if (mdUserPick > mdTeams) { mdUserPick = mdTeams; document.getElementById('mdPickVal').textContent = mdUserPick; } }
 
+  // Non-premium "My Ranks": a virgin (never-saved) format mirrors Jack's
+  // premium board, so hand back the consensus board for any format the user
+  // hasn't customized — the mirror is a premium view. Custom formats and
+  // premium users always get the real "mine" boards.
+  function _mdMineBoards() {
+    if ((typeof hasPremium === 'function' && hasPremium()) || typeof window._mineIsCustom !== 'function') return versionBoards.mine;
+    const out = {};
+    Object.keys(versionBoards.mine).forEach(m => {
+      out[m] = window._mineIsCustom(m) ? versionBoards.mine[m]
+        : ((versionBoards.consensus[m] && versionBoards.consensus[m].length) ? versionBoards.consensus[m] : versionBoards.mine[m]);
+    });
+    return out;
+  }
+  function _mdBoardsFor(src) {
+    return src === 'mine' ? _mdMineBoards() : versionBoards[src];
+  }
+
   function getADPBoard() {
     // Rookie mode with user rankings: filter the ranking board to only 2026 rookies
     if (mdMode === 'rookie' && mdRookieRankSrc !== 'ktc') {
       const src = mdRookieRankSrc; // 'consensus', 'mine', or 'jacks'
       // Consensus draws from dynasty mode (matches rookie draft context);
       // 'mine' / 'jacks' use their dynasty board (fallback to redraft).
-      const rankBoard = versionBoards[src] ? (versionBoards[src].dynasty || versionBoards[src].redraft) : null;
+      const _vbR = _mdBoardsFor(src);
+      const rankBoard = _vbR ? (_vbR.dynasty || _vbR.redraft) : null;
       if (rankBoard && rankBoard.length) {
         const entries = [];
         let rookieRank = 0;
@@ -23240,7 +23258,8 @@ window.fmtHeight = fmtHeight;
     if (mdRankSrc === 'consensus' || mdRankSrc === 'mine' || mdRankSrc === 'jacks') {
       const rankModeKey = (mdMode === 'redraft' && isMdEffectivelySuperflex())
         ? 'superflex' : mdMode;
-      const rankBoard = versionBoards[mdRankSrc] ? (versionBoards[mdRankSrc][rankModeKey] || versionBoards[mdRankSrc][mdMode] || versionBoards[mdRankSrc].redraft) : null;
+      const _vbM = _mdBoardsFor(mdRankSrc);
+      const rankBoard = _vbM ? (_vbM[rankModeKey] || _vbM[mdMode] || _vbM.redraft) : null;
       if (rankBoard && rankBoard.length) {
         const boardEntries = rankBoard.map((dIdx, rank) => {
           const d = D[dIdx];
@@ -23459,7 +23478,8 @@ window.fmtHeight = fmtHeight;
     if (mdMode === 'rookie') {
       // Use user's rookie ranking source if available, else KTC-sorted board
       if (mdRookieRankSrc !== 'ktc' && versionBoards[mdRookieRankSrc]) {
-        const rb = versionBoards[mdRookieRankSrc].dynasty || versionBoards[mdRookieRankSrc].redraft;
+        const _vbLG = _mdBoardsFor(mdRookieRankSrc);
+        const rb = _vbLG.dynasty || _vbLG.redraft;
         if (rb && rb.length) {
           rankBoard = rb.filter(dIdx => { const d = D[dIdx]; return d && _isRookiePlayer(d); });
         }
@@ -23472,7 +23492,8 @@ window.fmtHeight = fmtHeight;
           .sort((a, b) => b.ktc - a.ktc).map(e => e.idx);
       }
     } else {
-      rankBoard = versionBoards[mdRankSrc] ? (versionBoards[mdRankSrc][mdMode] || versionBoards[mdRankSrc].redraft) : (versionBoards.mine ? versionBoards.mine.redraft : []);
+      const _vbLG2 = _mdBoardsFor(mdRankSrc);
+      rankBoard = _vbLG2 ? (_vbLG2[mdMode] || _vbLG2.redraft) : (versionBoards.mine ? versionBoards.mine.redraft : []);
     }
     const rankByIdx = {};
     rankBoard.forEach((dIdx, i) => { rankByIdx[dIdx] = i + 1; });
@@ -24459,7 +24480,8 @@ window.fmtHeight = fmtHeight;
       // Try user's ranking board first (filtered to rookies)
       if (mdRookieRankSrc !== 'ktc') {
         const _gSrc = mdRookieRankSrc;
-        const _gRankBoard = versionBoards[_gSrc] ? (versionBoards[_gSrc].dynasty || versionBoards[_gSrc].redraft) : null;
+        const _gVb = _mdBoardsFor(_gSrc);
+        const _gRankBoard = _gVb ? (_gVb.dynasty || _gVb.redraft) : null;
         if (_gRankBoard && _gRankBoard.length) {
           _gradeBoard = _gRankBoard.filter(dIdx => { const d = D[dIdx]; return d && _isRookiePlayer(d); });
         }
@@ -24474,7 +24496,8 @@ window.fmtHeight = fmtHeight;
           .map(e => e.idx);
       }
     } else {
-      _gradeBoard = versionBoards[mdRankSrc] ? (versionBoards[mdRankSrc][mdMode] || versionBoards[mdRankSrc].redraft) : versionBoards.mine.redraft;
+      const _gVb2 = _mdBoardsFor(mdRankSrc);
+      _gradeBoard = _gVb2 ? (_gVb2[mdMode] || _gVb2.redraft) : versionBoards.mine.redraft;
     }
     const _gradeTiers = (mdMode === 'rookie') ? {} : (versionTiers[mdRankSrc] ? (versionTiers[mdRankSrc][mdMode] || {}) : {});
     const _gradeTiersAll = (_gradeTiers.ALL || []).slice().sort((a,b) => a.afterRank - b.afterRank);

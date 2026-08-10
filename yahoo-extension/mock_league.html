@@ -1,0 +1,71 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MFF Yahoo league-export harness</title>
+<style>body{font:14px/1.5 system-ui;background:#15171c;color:#ddd;max-width:760px;margin:2rem auto}
+.ok{color:#4ade80}.bad{color:#f87171}h1{font-size:1.2rem}</style>
+<h1>yahoo-normalize.js — league export mapping checks</h1>
+<p>Feeds canned Yahoo league-home + team-page HTML (the server-rendered shape
+the exporter fetches) through parseStandingsDoc / parseTeamDoc /
+buildLeaguePayload and asserts on the payload.</p>
+<div id="out"></div>
+<script src="yahoo-normalize.js"></script>
+<script>
+const LEAGUE_HOME = `
+<html><head><title>Jacks Test League  |  Yahoo Fantasy</title></head><body>
+<nav><a href="/f1/1301476/6">My Team</a><a href="/f1/1301476/players">Players</a></nav>
+<table id="standingstable">
+<tr><td>1</td><td><a href="/f1/1301476/1">Play Action Aaron</a></td><td>10-4-0</td><td>.714</td><td>1,543.22</td></tr>
+<tr><td>2</td><td><a href="/f1/1301476/6">Sunday Funday Theo</a></td><td>9-5</td><td>.643</td><td>1,502.10</td></tr>
+<tr><td>3</td><td><a href="/f1/1301476/3">Touchback Kyle</a></td><td>0-0-0</td><td>.000</td><td>0.00</td></tr>
+</table>
+</body></html>`;
+
+const TEAM_PAGE = `
+<html><body><h1>Sunday Funday Theo</h1>
+<table>
+<tr><td>QB</td><td><div class="ysf-player-name"><a>Josh Allen</a><span>Buf - QB</span></div></td><td>-</td></tr>
+<tr><td>WR</td><td><div class="ysf-player-name"><a>Justin Jefferson</a><span>Min - WR</span></div></td><td>-</td></tr>
+<tr><td>WR</td><td><div class="ysf-player-name"><a>Marvin Harrison Jr.</a><span>Ari - WR</span></div></td><td>-</td></tr>
+<tr><td>RB</td><td><div class="ysf-player-name"><a>Bijan Robinson</a><span>Atl - RB</span></div></td><td>-</td></tr>
+<tr><td>RB</td><td><div class="ysf-player-name"><a>Kenny Gainwell</a><span>TB - RB</span></div></td><td>-</td></tr>
+<tr><td>TE</td><td><div class="ysf-player-name"><a>Sam LaPorta</a><span>Det - TE</span></div></td><td>-</td></tr>
+<tr><td>W/R/T</td><td><div class="ysf-player-name"><a>Nico Collins</a><span>Hou - WR</span></div></td><td>-</td></tr>
+<tr><td>K</td><td><div class="ysf-player-name"><a>Brandon Aubrey</a><span>Dal - K</span></div></td><td>-</td></tr>
+<tr><td>DEF</td><td><div class="ysf-player-name"><a>Washington</a><span>Was - DEF</span></div></td><td>-</td></tr>
+<tr><td>BN</td><td><div class="ysf-player-name"><a>Jaylen Waddle</a><span>Mia - WR</span></div></td><td>-</td></tr>
+<tr><td>BN</td><td></td><td>(Empty)</td></tr>
+<tr><td>IR</td><td><div class="ysf-player-name"><a>Rashee Rice</a><span>KC - WR</span><abbr>IR</abbr></div></td><td>-</td></tr>
+</table></body></html>`;
+
+const P = new DOMParser();
+const N = window.MFF_YAHOO;
+const st = N.parseStandingsDoc(P.parseFromString(LEAGUE_HOME, 'text/html'), '1301476');
+const tm = N.parseTeamDoc(P.parseFromString(TEAM_PAGE, 'text/html'));
+st.teams.forEach(t => { if (t.teamId === 6) { t.roster = tm.roster; t.slots = tm.slots; } else { t.roster = []; t.slots = []; } });
+const pay = N.buildLeaguePayload({ leagueId: '1301476', name: st.name, teams: st.teams, myTeamId: st.myTeamId, scoringPrefs: { rec: 1 } });
+const my = pay.teams.find(t => t.isMine);
+
+const checks = [
+  ['3 teams parsed', st.teams.length === 3],
+  ['league name from title', st.name === 'Jacks Test League'],
+  ['my team from nav link', st.myTeamId === 6],
+  ['records parsed (10-4)', st.teams[0].wins === 10 && st.teams[0].losses === 4],
+  ['2-part record parsed (9-5)', st.teams[1].wins === 9 && st.teams[1].losses === 5],
+  ['pts-for parsed w/ comma', st.teams[0].fpts === 1543.22],
+  ['roster: 11 players incl BN+IR, empty slot skipped', tm.roster.length === 11],
+  ['slots: starters only', JSON.stringify(tm.slots) === JSON.stringify(['QB','WR','WR','RB','RB','TE','FLEX','K','DEF'])],
+  ['DEF renamed to site D/ST form', tm.roster.some(r => r.name === 'Washington Commanders D/ST')],
+  ['WAS→WSH abbr fix', tm.roster.find(r => r.pos === 'D/ST').team === 'WSH'],
+  ['payload platform/id', pay.platform === 'yahoo' && pay.leagueId === '1301476'],
+  ['isMine flag on team 6', !!my && my.teamId === 6],
+  ['scoring from prefs (PPR)', pay.scoring === 'ppr' && pay.pprValue === 1],
+  ['not SF (1 QB, no Q/W/R/T)', pay.sf === false],
+  ['rosterPositions exclude IR', pay.rosterPositions.indexOf('IR') === -1],
+  ['drafted (rosters present)', pay.drafted === true],
+  ['teamCount 3', pay.teamCount === 3],
+];
+document.getElementById('out').innerHTML = checks.map(([label, pass]) =>
+  '<div class="' + (pass ? 'ok' : 'bad') + '">' + (pass ? '✓' : '✗') + ' ' + label + '</div>'
+).join('') + '<h3>' + checks.filter(c => c[1]).length + '/' + checks.length + ' passing</h3>' +
+'<pre style="font-size:11px;color:#9ca3af">' + JSON.stringify(pay, null, 1).slice(0, 2500) + '</pre>';
+</script>

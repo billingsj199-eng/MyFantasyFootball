@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MFF Yahoo Helper — mock harness</title>
+<link rel="stylesheet" href="sidebar.css">
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; background: #fff; color: #222; margin: 0; padding: 24px; }
+  h1 { font-size: 18px; color: #6001d2; }
+  table { border-collapse: collapse; margin: 10px 0; }
+  td { border: 1px solid #ddd; padding: 4px 10px; font-size: 13px; }
+  .ysf-player-name a { color: #0078ff; text-decoration: none; font-weight: 600; }
+  .ysf-player-name span { color: #777; font-size: 11px; margin-left: 6px; }
+  .ysf-player-status { color: #c00; font-size: 10px; font-weight: 700; margin-left: 4px; }
+  button.h { background: #6001d2; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>Yahoo Helper — mock team page</h1>
+<p>Fakes the Yahoo team-page markup (<code>.ysf-player-name</code> rows with
+slot cells) with a deliberately WRONG lineup: studs on the bench, one OUT and
+one Q "starter". The sidebar scrapes this DOM exactly as it would the real
+team page. <button class="h" id="toPlayers">Switch to fake Players page</button></p>
+
+<div id="teampage">
+<table id="statTable0">
+  <tbody>
+    <tr><td>QB</td><td><div class="ysf-player-name"><a>Baker Mayfield</a><span>TB - QB</span></div></td></tr>
+    <tr><td>WR</td><td><div class="ysf-player-name"><a>Jordan Addison</a><span>Min - WR</span></div></td></tr>
+    <tr><td>WR</td><td><div class="ysf-player-name"><a>Michael Wilson</a><span>Ari - WR</span><span class="ysf-player-status">Q</span></div></td></tr>
+    <tr><td>RB</td><td><div class="ysf-player-name"><a>Jonah Coleman</a><span>Den - RB</span><span class="ysf-player-status">O</span></div></td></tr>
+    <tr><td>RB</td><td><div class="ysf-player-name"><a>Javonte Williams</a><span>Dal - RB</span></div></td></tr>
+    <tr><td>TE</td><td><div class="ysf-player-name"><a>Juwan Johnson</a><span>NO - TE</span></div></td></tr>
+    <tr><td>W/R/T</td><td><div class="ysf-player-name"><a>Cam Skattebo</a><span>NYG - RB</span></div></td></tr>
+    <tr><td>K</td><td><div class="ysf-player-name"><a>Tyler Bass</a><span>Buf - K</span></div></td></tr>
+    <tr><td>DEF</td><td><div class="ysf-player-name"><a>Denver</a><span>Den - DEF</span></div></td></tr>
+    <tr><td>BN</td><td><div class="ysf-player-name"><a>Lamar Jackson</a><span>Bal - QB</span></div></td></tr>
+    <tr><td>BN</td><td><div class="ysf-player-name"><a>Jahmyr Gibbs</a><span>Det - RB</span></div></td></tr>
+    <tr><td>BN</td><td><div class="ysf-player-name"><a>Ja'Marr Chase</a><span>Cin - WR</span></div></td></tr>
+    <tr><td>BN</td><td><div class="ysf-player-name"><a>Zay Flowers</a><span>Bal - WR</span></div></td></tr>
+    <tr><td>BN</td><td><div class="ysf-player-name"><a>Brock Bowers</a><span>LV - TE</span></div></td></tr>
+    <tr><td>IR</td><td><div class="ysf-player-name"><a>Jameson Williams</a><span>Det - WR</span></div></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div id="playerspage" style="display:none">
+<h2 style="font-size:15px">Fake league Players page (Available filter)</h2>
+<table>
+  <tbody>
+    <tr><td><div class="ysf-player-name"><a>Daniel Jones</a><span>Ind - QB</span></div></td><td>FA</td></tr>
+    <tr><td><div class="ysf-player-name"><a>Zach Charbonnet</a><span>Sea - RB</span></div></td><td>FA</td></tr>
+    <tr><td><div class="ysf-player-name"><a>Jason Myers</a><span>Sea - K</span></div></td><td>FA</td></tr>
+    <tr><td><div class="ysf-player-name"><a>Aaron Jones</a><span>Min - RB</span></div></td><td>FA</td></tr>
+    <tr><td><div class="ysf-player-name"><a>Rome Odunze</a><span>Chi - WR</span></div></td><td>FA</td></tr>
+    <!-- taken row: has an owner-team link → must be skipped -->
+    <tr><td><div class="ysf-player-name"><a>Bijan Robinson</a><span>Atl - RB</span></div></td><td><a href="/f1/987654/3">Some Rival</a></td></tr>
+  </tbody>
+</table>
+</div>
+
+<script>
+(async () => {
+  const data = await (await fetch('data/players.json')).json();
+  const abbrs = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LAC','LAR','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WSH'];
+  const gameTotals = {};
+  for (let i = 0; i < abbrs.length; i += 2) {
+    gameTotals['W1_' + abbrs[i] + '_' + abbrs[i + 1]] = { total: 40 + (i % 13), spread: (i % 7) - 3 };
+  }
+  const star = (data.players || []).find((p) => p.n === 'Jahmyr Gibbs') || {};
+  window.__MFF_YAHOO_MOCK = {
+    leagueId: '987654',
+    players: data,
+    nflState: { season_type: 'regular', week: 1, season: '2026' },
+    vegas: { gameTotals, weeklyProps: { '1': { 'Jahmyr Gibbs': { UD: { ry: 92, rcy: 34, atd: -160 }, PP: { ry: 95.5 } } } } },
+    slMeta: {}, trendAdds: { [star.sid]: 3100 },
+    playersPage: false,
+  };
+  document.getElementById('toPlayers').addEventListener('click', () => {
+    const tp = document.getElementById('teampage'), pp = document.getElementById('playerspage');
+    const showPlayers = pp.style.display === 'none';
+    pp.style.display = showPlayers ? '' : 'none';
+    tp.style.display = showPlayers ? 'none' : '';
+    window.__MFF_YAHOO_MOCK.playersPage = showPlayers;
+    window.__MFF_YAHOO_MOCK.noScrape = showPlayers; // team rows hidden → don't re-scrape roster
+  });
+  for (const src of ['data/sim_pack.js', 'data/sim_overrides.js', 'engine_sim.js', 'sidebar.js']) {
+    await new Promise((res) => {
+      const s = document.createElement('script');
+      s.src = src; s.onload = res; s.onerror = res;
+      document.head.appendChild(s);
+    });
+  }
+})();
+</script>
+</body>
+</html>

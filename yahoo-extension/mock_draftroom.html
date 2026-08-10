@@ -1,0 +1,71 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MFF Yahoo draft-mode harness (real captured data)</title>
+<style>body{font:14px/1.5 system-ui;background:#0d0e12;color:#ddd;padding:2rem;max-width:700px}
+.ok{color:#4ade80}.bad{color:#f87171}</style>
+<h1 style="font-size:1.1rem">draft-mode.js harness — replays Jack's real 2026-08-10 draft capture</h1>
+<p>Canned settings/teams/players API bodies + the 83 real WS frames, replayed
+through the same 'mff-yahoo-probe' events probe.js dispatches. The panel
+should mount top-right and track picks live.</p>
+<div id="checks"></div>
+<script src="mock_draft_data.js"></script>
+<script>
+const D = window.MFF_DRAFT_MOCK_DATA;
+window.MFF_DRAFT_MOCK = {
+  leagueId: '1301476', teamId: 6,
+  settings: D.settings, teams: D.teams, players: D.players,
+  playersJson: D.playersJson
+};
+</script>
+<script src="draft-mode.js"></script>
+<script>
+// Replay the real frames: replay/setup frames instantly, then live frames spaced.
+setTimeout(() => {
+  const frames = D.frames;
+  let i = 0;
+  const send = (f) => document.dispatchEvent(new CustomEvent('mff-yahoo-probe', {
+    detail: JSON.stringify({ kind: 'ws-msg', url: f })
+  }));
+  // first 12 = connect/replay batch, instantly
+  for (; i < Math.min(12, frames.length); i++) send(frames[i]);
+  const iv = setInterval(() => {
+    if (i >= frames.length) {
+      clearInterval(iv);
+      setTimeout(runChecks, 700);
+      return;
+    }
+    send(frames[i++]);
+  }, 120);
+}, 900);
+
+function runChecks() {
+  const d = window.__mffYahooDraft;
+  const st = d && d.state;
+  const rec = d && d.recommend();
+  const checks = [
+    ['draft-mode booted', !!st && st.ready],
+    ['pool loaded (1000+ players)', st && Object.keys(st.pool).length > 1000],
+    ['board loaded (584)', st && st.board.length === 584],
+    ['snake order parsed', st && st.order.length >= 100],
+    // NOTE: the captured P| replay frame was truncated at 400 chars by the
+    // v0.3.0 probe (fixed in 0.4.0 — full frames dispatch now), so this
+    // canned capture only carries picks 1-31 + the live 106-111 frames.
+    ['replay picks ingested (35+ in truncated capture)', st && Object.keys(st.picks).length >= 35],
+    ['live picks from 0| frames applied', st && !!st.picks[106] && st.picks[106].tid === 9],
+    ['my roster tracked (team 6, 3 in truncated capture)', st && st.myRoster.length >= 3],
+    ['clock ticking', st && st.clock != null],
+    ['recs produced', rec && rec.top.length === 3],
+    ['rec has reason chips', rec && rec.top[0].chips.length >= 0 && typeof rec.top[0].sc === 'number'],
+    ['K/DEF suppressed pre-endgame', rec && rec.top.every(x => ['K','DEF'].indexOf(x.r.pos) === -1 || rec.rnd >= 14)],
+    ['panel mounted', !!document.getElementById('mffYahooDraft')],
+  ];
+  document.getElementById('checks').innerHTML = checks.map(([l, p]) =>
+    '<div class="' + (p ? 'ok' : 'bad') + '">' + (p ? '✓' : '✗') + ' ' + l + '</div>').join('') +
+    '<h3>' + checks.filter(c => c[1]).length + '/' + checks.length + ' passing</h3>' +
+    (st ? '<pre style="font-size:11px;color:#9ca3af">picks=' + Object.keys(st.picks).length +
+      ' currentPick=' + st.currentPick + ' myRoster=[' + st.myRoster.map(r => r.name).join(', ') + ']' +
+      '\nrec1=' + (rec.top[0] ? rec.top[0].r.name + ' (' + rec.top[0].r.pos + ') chips=' + rec.top[0].chips.join('/') : '—') +
+      '\nrec2=' + (rec.top[1] ? rec.top[1].r.name + ' (' + rec.top[1].r.pos + ')' : '—') +
+      '\nrec3=' + (rec.top[2] ? rec.top[2].r.name + ' (' + rec.top[2].r.pos + ')' : '—') + '</pre>' : '');
+}
+</script>

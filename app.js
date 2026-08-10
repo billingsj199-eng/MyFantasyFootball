@@ -568,6 +568,98 @@ const versionTierCounters = {
   mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
 };
 
+// === MINE-FOLLOWS-JACKS SEEDING ===
+// Until a user's first save of a format, their "My Ranks" board mirrors Jack's
+// latest board for that format — order only, no tiers. Weekly mirrors per week:
+// each new week is virgin until the user saves an edit for that week. A format
+// becomes "custom" (stops mirroring) once it's been edited this session, and
+// permanently once a save persists that edit. Custom flags live in the user doc
+// as `mineMeta`; docs without it (pre-seeding saves) are treated as fully
+// custom so existing users' boards are never clobbered.
+const _MINE_MODES = ['redraft','bestball','superflex','dynasty','dynastysf'];
+window._mineCustom = { redraft:false, bestball:false, superflex:false, dynasty:false, dynastysf:false };
+window._mineCustomWeekly = {};   // wk -> true; null = legacy doc, ALL weeks custom
+window._mineTouched = {};        // mode -> true (edited this session, maybe unsaved)
+window._mineTouchedWeekly = {};  // wk -> true
+// 'boot' = signed out / user doc not read yet; 'ready' = doc loaded (or confirmed
+// missing); 'error' = doc read failed. Seeding never runs for a signed-in user
+// unless the doc read finished — a failed load must not let a later save mark
+// their real rankings as virgin.
+window._mineMetaState = 'boot';
+window._mineSeedAllowed = function() {
+  return !window._authCurrentUser || window._mineMetaState === 'ready';
+};
+window._mineIsCustom = function(mode) {
+  return !!(window._mineCustom[mode] || window._mineTouched[mode]);
+};
+window._mineWeeklyVirgin = function(wk) {
+  if (!window._mineSeedAllowed()) return false;
+  if (window._mineCustomWeekly === null) return false;
+  return !(window._mineCustomWeekly[wk] || window._mineTouchedWeekly[wk]);
+};
+window._mineMarkTouched = function(mode) {
+  if (mode === 'weekly') window._mineTouchedWeekly[window._weeklyActiveWeek || 1] = true;
+  else if (window._mineCustom.hasOwnProperty(mode)) window._mineTouched[mode] = true;
+};
+// Copy Jack's boards over every still-virgin "mine" format. Runs after every
+// jacks cloud load/snapshot so virgin boards track his latest saves live.
+window._mineSeedFromJacks = function() {
+  if (!window._mineSeedAllowed()) return;
+  let activeSeeded = false;
+  _MINE_MODES.forEach(m => {
+    if (window._mineIsCustom(m)) return;
+    const src = versionBoards.jacks[m];
+    if (!src || !src.length) return;
+    versionBoards.mine[m] = src.slice();
+    versionTiers.mine[m] = _mkPosTiers();
+    versionTierCounters.mine[m] = _mkPosTierCtrs();
+    if (currentVersion === 'mine' && currentMode === m) activeSeeded = true;
+  });
+  // Weekly virgin-week mirroring lives inside _weeklyReconcileBoard
+  if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('mine');
+  if (activeSeeded) {
+    syncMode(); renumber();
+    if (typeof render === 'function') render();
+  }
+};
+// Serialize custom flags for the user doc, committing touched -> custom in
+// memory (the save that carries these flags is what makes the edits permanent).
+window._mineMetaForSave = function() {
+  const custom = {};
+  _MINE_MODES.forEach(m => { custom[m] = window._mineIsCustom(m); window._mineCustom[m] = custom[m]; });
+  let weeks = null;
+  if (window._mineCustomWeekly !== null) {
+    weeks = {};
+    Object.keys(window._mineCustomWeekly).forEach(w => { if (window._mineCustomWeekly[w]) weeks[w] = true; });
+    Object.keys(window._mineTouchedWeekly).forEach(w => { if (window._mineTouchedWeekly[w]) weeks[w] = true; });
+    window._mineCustomWeekly = weeks;
+  }
+  return { custom: custom, weeklyWeeks: weeks };
+};
+window._mineMetaLoad = function(meta, hasMineData) {
+  window._mineTouched = {};
+  window._mineTouchedWeekly = {};
+  if (meta && meta.custom) {
+    _MINE_MODES.forEach(m => { window._mineCustom[m] = !!meta.custom[m]; });
+    window._mineCustomWeekly = (meta.weeklyWeeks && typeof meta.weeklyWeeks === 'object') ? meta.weeklyWeeks : (meta.weeklyWeeks === null ? null : {});
+  } else if (hasMineData) {
+    // Legacy doc saved before seeding shipped — everything is the user's own.
+    _MINE_MODES.forEach(m => { window._mineCustom[m] = true; });
+    window._mineCustomWeekly = null;
+  } else {
+    _MINE_MODES.forEach(m => { window._mineCustom[m] = false; });
+    window._mineCustomWeekly = {};
+  }
+  window._mineMetaState = 'ready';
+};
+window._mineMetaReset = function() {
+  _MINE_MODES.forEach(m => { window._mineCustom[m] = false; });
+  window._mineCustomWeekly = {};
+  window._mineTouched = {};
+  window._mineTouchedWeekly = {};
+  window._mineMetaState = 'boot';
+};
+
 // === CONSENSUS RANKING ENGINE ===
 // Averages ranks from: Jack's + market ADP + Sleeper + FantasyPros (all modes) + Underdog (redraft) + KTC (dynasty)
 function _computeConsensusBoard(mode) {
@@ -4528,6 +4620,22 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     ver = ver || 'jacks';
     if (!versionBoards[ver]) return;
     const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    // Virgin "mine" week: mirror Jack's weekly board (order only, no tiers)
+    // instead of deriving from the user's redraft. Call sites always reconcile
+    // 'jacks' before 'mine', so Jack's weekly is already up to date here.
+    if (ver === 'mine' && typeof window._mineWeeklyVirgin === 'function' && window._mineWeeklyVirgin(wk)) {
+      const src = (versionBoards.jacks.weekly && versionBoards.jacks.weekly.length)
+        ? versionBoards.jacks.weekly : versionBoards.jacks.redraft;
+      versionBoards.mine.weekly = src.slice();
+      versionTiers.mine.weekly = _mkPosTiers();
+      versionTierCounters.mine.weekly = _mkPosTierCtrs();
+      window._weeklyBaseline.mine = versionBoards.mine.weekly.slice();
+      if (currentMode === 'weekly' && currentVersion === 'mine') {
+        syncMode(); renumber();
+        if (typeof render === 'function') render();
+      }
+      return;
+    }
     const ownedPos = (window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][wk]) || null;
     const sessionBoard = window._weeklySessionBoards[ver] && window._weeklySessionBoards[ver][wk];
     const saved = window._weeklySaved[ver];
@@ -5140,6 +5248,11 @@ document.getElementById('fileImport').addEventListener('change', e => {
       const obj = JSON.parse(ev.target.result);
       if (!validateImportData(obj)) { toast('Invalid data format'); return; }
       loadUserData(obj);
+      // A versioned import can write mine formats beyond the current one —
+      // mark every imported format custom so reseeding won't overwrite them.
+      if (obj.mine && typeof window._mineMarkTouched === 'function') {
+        ['redraft','bestball','superflex','dynasty','dynastysf','weekly'].forEach(m => { if (obj.mine[m]) window._mineMarkTouched(m); });
+      }
       saveLocal();
       render();
       toast('Rankings imported!');
@@ -5163,6 +5276,9 @@ document.getElementById('btnClear').addEventListener('click', () => {
   versionBoards[currentVersion][currentMode] = currentMode==='dynastysf' ? sfDefaultBoard.slice() : currentMode==='dynasty' ? dynastyDefaultBoard.slice() : currentMode==='superflex' ? superflexDefaultBoard.slice() : currentMode==='bestball' ? bestBallDefaultBoard.slice() : D.map((d,i) => i);
   versionTiers[currentVersion][currentMode] = _mkPosTiers();
   versionTierCounters[currentVersion][currentMode] = _mkPosTierCtrs();
+  // Clearing counts as customizing — without this the next jacks snapshot
+  // would silently re-mirror the board the user just reset.
+  if (currentVersion === 'mine' && typeof window._mineMarkTouched === 'function') window._mineMarkTouched(currentMode);
   syncMode();
   renumber();
   userData = {};
@@ -21181,6 +21297,14 @@ window.fmtHeight = fmtHeight;
             _cut: _cutOf('weekly') }
         }
       };
+      // Per-format custom flags: virgin formats keep mirroring Jack's latest on
+      // future loads even though their (mirrored) order is serialized above.
+      // Only written when the doc read succeeded — after a failed load, writing
+      // all-virgin flags would orphan the user's real saved boards. Omitting the
+      // field degrades to the legacy all-custom read path, which is safe.
+      if (window._mineMetaState === 'ready' && typeof window._mineMetaForSave === 'function') {
+        data.mineMeta = window._mineMetaForSave();
+      }
       console.log('[Save] Writing user doc (' + JSON.stringify(data).length + ' bytes)...');
       await db.collection('rankings').doc(currentUser.uid).set({
         data: JSON.stringify(data),
@@ -21377,6 +21501,8 @@ window.fmtHeight = fmtHeight;
             if (obj.jacks.weekly) window._weeklyStashSaved(obj.jacks.weekly, 'jacks');
             else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('jacks');
           }
+          // Virgin "mine" formats mirror the freshly-loaded Jack's boards
+          if (typeof window._mineSeedFromJacks === 'function') window._mineSeedFromJacks();
           // Rebuild consensus now that Jack's ranks are available
           if (typeof window._rebuildConsensusBoards === 'function') {
             try { window._rebuildConsensusBoards(); } catch(e) { console.warn('[Consensus] rebuild after Jack load failed:', e); }
@@ -21400,17 +21526,26 @@ window.fmtHeight = fmtHeight;
       const doc = await db.collection('rankings').doc(currentUser.uid).get();
       if (doc.exists && doc.data().data) {
         const obj = JSON.parse(doc.data().data);
+        // Custom-format flags first — they decide which saved orders below are
+        // the user's own work vs. mirrored Jack's copies to be re-seeded fresh.
+        if (typeof window._mineMetaLoad === 'function') window._mineMetaLoad(obj.mineMeta, !!obj.mine);
         // Only load "mine" data from user doc (Jack's comes from shared doc)
         if (obj.mine) {
+          const _isCust = m => (typeof window._mineIsCustom !== 'function') || window._mineIsCustom(m);
           _bypassEditCheck = true;
-          if (obj.mine.redraft) loadModeData('redraft', obj.mine.redraft, 'mine');
-          if (obj.mine.bestball) loadModeData('bestball', obj.mine.bestball, 'mine');
-          if (obj.mine.superflex) loadModeData('superflex', obj.mine.superflex, 'mine');
-          if (obj.mine.dynasty) loadModeData('dynasty', obj.mine.dynasty, 'mine');
-          if (obj.mine.dynastysf) loadModeData('dynastysf', obj.mine.dynastysf, 'mine');
+          if (obj.mine.redraft && _isCust('redraft')) loadModeData('redraft', obj.mine.redraft, 'mine');
+          if (obj.mine.bestball && _isCust('bestball')) loadModeData('bestball', obj.mine.bestball, 'mine');
+          if (obj.mine.superflex && _isCust('superflex')) loadModeData('superflex', obj.mine.superflex, 'mine');
+          if (obj.mine.dynasty && _isCust('dynasty')) loadModeData('dynasty', obj.mine.dynasty, 'mine');
+          if (obj.mine.dynastysf && _isCust('dynastysf')) loadModeData('dynastysf', obj.mine.dynastysf, 'mine');
           _bypassEditCheck = false;
           if (typeof window._weeklyStashSaved === 'function') {
-            if (obj.mine.weekly) window._weeklyStashSaved(obj.mine.weekly, 'mine');
+            // Only stash the weekly snapshot if the week it belongs to was
+            // actually saved by the user — mirrored copies re-derive instead.
+            const _wkSaved = obj.mine.weekly && obj.mine.weekly._week;
+            const _wkCustom = (typeof window._mineWeeklyVirgin !== 'function')
+              || (_wkSaved != null && !window._mineWeeklyVirgin(_wkSaved));
+            if (obj.mine.weekly && _wkCustom) window._weeklyStashSaved(obj.mine.weekly, 'mine');
             else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('mine');
           }
           console.log('[Auth] Loaded user rankings from cloud');
@@ -21420,11 +21555,18 @@ window.fmtHeight = fmtHeight;
           console.log('[Auth] Legacy data detected — no personal rankings to migrate');
         }
       } else {
-        console.log('[Auth] No personal rankings found — starting fresh');
+        console.log('[Auth] No personal rankings found — starting fresh (seeded from Jack\'s)');
+        if (typeof window._mineMetaLoad === 'function') window._mineMetaLoad(null, false);
         saveUserRankings();
       }
+      // Seed any still-virgin formats from Jack's boards (loadFromCloud loads
+      // Jack's before this runs; the snapshot listener re-seeds on his saves).
+      if (typeof window._mineSeedFromJacks === 'function') window._mineSeedFromJacks();
     } catch(e) {
       console.error('[Auth] User cloud load error:', e);
+      // Doc read failed — freeze seeding + flag writes so a later save can't
+      // mark this user's real rankings as virgin (see _mineSeedAllowed).
+      window._mineMetaState = 'error';
     }
   }
 
@@ -21475,6 +21617,9 @@ window.fmtHeight = fmtHeight;
             if (obj.jacks.weekly) window._weeklyStashSaved(obj.jacks.weekly, 'jacks');
             else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('jacks');
           }
+          // Virgin "mine" formats track Jack's newest saves live (re-renders
+          // itself if the user is currently viewing a reseeded board)
+          if (typeof window._mineSeedFromJacks === 'function') window._mineSeedFromJacks();
           // Rebuild consensus using Jack's latest ranks (will re-render if currently viewing consensus)
           if (typeof window._rebuildConsensusBoards === 'function') {
             try { window._rebuildConsensusBoards(); } catch(e) { console.warn('[Consensus] rebuild on snapshot failed:', e); }
@@ -21607,6 +21752,11 @@ window.fmtHeight = fmtHeight;
   // Monkey-patch saveLocal to track unsaved changes (no auto cloud save)
   const _origSaveLocal = saveLocal;
   saveLocal = function() {
+    // Every edit path funnels through saveLocal — an edit on a "mine" board
+    // makes that format custom, so jacks-snapshot reseeding stops touching it.
+    if (currentVersion === 'mine' && typeof window._mineMarkTouched === 'function') {
+      window._mineMarkTouched(currentMode);
+    }
     _origSaveLocal();
     markUnsaved();
   };
@@ -21952,6 +22102,12 @@ window.fmtHeight = fmtHeight;
             if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();
           }
         } catch (e) {}
+        // Drop the signed-out user's custom flags and re-mirror Jack's boards
+        // so their personal ranks don't linger for the next account/viewer.
+        if (typeof window._mineMetaReset === 'function') {
+          window._mineMetaReset();
+          if (typeof window._mineSeedFromJacks === 'function') window._mineSeedFromJacks();
+        }
         // Stop listening for Jack's updates
         if (jacksUnsubscribe) { jacksUnsubscribe(); jacksUnsubscribe = null; }
       }

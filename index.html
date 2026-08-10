@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-10h" as="script">
+<link rel="preload" href="app.js?v=2026-08-10i" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -689,6 +689,17 @@ PREMIUM ACTIVE
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:.5rem">RECENT CODES</div>
 <div id="adminPremCodeList" style="display:flex;flex-direction:column;gap:.4rem;font-size:.78rem"></div>
 </div>
+</div>
+
+<div class="acct-section">
+<div class="acct-section-title">💬 Ask Jack — Q&amp;A Inbox</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">Premium member questions (1 start/sit + 1 trade per user per week, resets Tuesday). Click the player or trade side you like — your pick appears on the member's My Teams page.</div>
+<div style="display:flex;gap:8px;margin-bottom:.5rem">
+<button class="acct-btn acct-btn-primary" id="adminQaRefreshBtn">LOAD OPEN QUESTIONS</button>
+<button class="acct-btn acct-btn-outline" id="adminQaAnsweredBtn">RECENTLY ANSWERED</button>
+</div>
+<div class="acct-msg" id="adminQaMsg"></div>
+<div id="adminQaList" style="display:flex;flex-direction:column;gap:.6rem"></div>
 </div>
 
 <div class="acct-section">
@@ -2199,6 +2210,11 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 <div class="jt-grid"></div>
 </div>
+
+<!-- ASK JACK — premium weekly Q&A (1 start/sit + 1 trade per week, Tuesday
+     reset). Populated by _qaRenderPanel at runtime: locked teaser for
+     signed-in free users, forms/answers for premium. Hidden for anonymous. -->
+<div id="mtAskJack" style="display:none;margin-bottom:20px"></div>
 
 <!-- Source Toggle -->
 <div style="display:flex;gap:4px;margin-bottom:16px;justify-content:center">
@@ -4987,7 +5003,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-10h"></script>
+<script defer src="app.js?v=2026-08-10i"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

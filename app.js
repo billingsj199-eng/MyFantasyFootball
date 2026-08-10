@@ -42134,7 +42134,7 @@ Rules:
     const leagues = _mtEspnLeagues ? Object.values(_mtEspnLeagues) : [];
     if (!leagues.length) { list.innerHTML = ''; return; }
     leagues.sort((a, b) => (b.syncedAt || 0) - (a.syncedAt || 0));
-    if (hint) hint.textContent = 'Leagues synced from the MFF ESPN extension — click IMPORT to load one.';
+    if (hint) hint.textContent = 'Synced leagues — click IMPORT to load one.';
     let html = '';
     leagues.forEach(lg => {
       const fmt = [lg.teamCount + ' teams'];
@@ -42145,6 +42145,7 @@ Rules:
       html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:5px">`;
       html += `<div style="flex:1;min-width:0"><div style="font-size:.75rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(lg.name || 'ESPN League')}</div>`;
       html += `<div style="font-size:.62rem;color:var(--text2)">${fmt.join(' · ')}${synced ? ' · synced ' + synced : ''}${lg.drafted ? '' : ' · <span style="color:#f59e0b">pre-draft</span>'}</div></div>`;
+      if (lg.direct) html += `<button onclick="window._mtResyncEspn('${_esc(lg.leagueId)}')" title="Re-fetch fresh rosters from ESPN" style="padding:6px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--text2);cursor:pointer">↻</button>`;
       html += `<button onclick="window._mtImportEspn('${_esc(lg.leagueId)}')" style="padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer">IMPORT</button>`;
       html += `</div>`;
     });
@@ -42227,6 +42228,82 @@ Rules:
       console.warn('[MyTeams] ESPN import error:', err);
       if (status) { status.textContent = 'Error: ' + err.message; status.style.color = '#ef4444'; }
     }
+  };
+
+  // ─── Direct ESPN sync (no extension) ─────────────────────────────────────
+  // ESPN's read API reflects our Origin in Access-Control-Allow-Origin, so
+  // public leagues are fetchable straight from the browser. Private leagues
+  // 401 (cookies can't cross origins) — those stay on the extension path.
+  // Reuses espn_normalize.js (a synced copy of the extension's normalize.js —
+  // the extension folder is untracked so it never deploys) so both paths
+  // produce the identical payload _mtImportEspn already consumes.
+  let _mtEspnNormReady = null;
+  function _mtLoadEspnNormalizer() {
+    if (window.MFF_ESPN) return Promise.resolve();
+    if (_mtEspnNormReady) return _mtEspnNormReady;
+    _mtEspnNormReady = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'espn_normalize.js';
+      s.onload = () => window.MFF_ESPN ? resolve() : reject(new Error('normalizer failed to load'));
+      s.onerror = () => { _mtEspnNormReady = null; reject(new Error('normalizer failed to load')); };
+      document.head.appendChild(s);
+    });
+    return _mtEspnNormReady;
+  }
+
+  // NFL fantasy season: the new seasonId takes over in February.
+  function _mtEspnSeason() {
+    const now = new Date();
+    return now.getMonth() >= 1 ? now.getFullYear() : now.getFullYear() - 1;
+  }
+
+  window._mtImportEspnById = async function () {
+    const input = document.getElementById('mtEspnLeagueId');
+    const status = document.getElementById('mtEspnStatus');
+    const btn = document.getElementById('mtEspnImportBtn');
+    const raw = (input && input.value || '').trim();
+    // Accept a bare ID or a pasted fantasy.espn.com URL (?leagueId=12345)
+    const urlMatch = raw.match(/leagueId=(\d+)/i);
+    const id = urlMatch ? urlMatch[1] : (raw.match(/^\d+$/) || [''])[0];
+    if (!id) {
+      if (status) { status.textContent = 'Paste your ESPN league ID (or the league URL).'; status.style.color = '#f59e0b'; }
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
+    if (status) { status.textContent = 'Fetching league from ESPN…'; status.style.color = 'var(--text2)'; }
+    try {
+      await _mtLoadEspnNormalizer();
+      const season = _mtEspnSeason();
+      const resp = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + season +
+        '/segments/0/leagues/' + id + '?view=mTeam&view=mRoster&view=mSettings');
+      if (resp.status === 401) throw new Error('This league is private — use the MFF ESPN extension to sync it (or make the league viewable to public in ESPN league settings).');
+      if (resp.status === 404) throw new Error('League not found for the ' + season + ' season — double-check the ID.');
+      if (!resp.ok) throw new Error('ESPN returned ' + resp.status + ' — try again in a minute.');
+      const rawLg = await resp.json();
+      const norm = window.MFF_ESPN.normalizeEspnLeague(Array.isArray(rawLg) ? rawLg[0] : rawLg, null);
+      if (!norm) throw new Error('That response didn\'t look like a fantasy football league.');
+      norm.syncedAt = Date.now();
+      norm.direct = true; // in-site fetch, not the extension — enables the ↻ re-sync button
+      if (!_mtEspnLeagues) _mtEspnLeagues = {};
+      _mtEspnLeagues[norm.leagueId] = norm;
+      _mtRenderEspnCard();
+      window._mtImportEspn(norm.leagueId);
+    } catch (err) {
+      console.warn('[MyTeams] ESPN direct sync error:', err);
+      if (status) {
+        status.textContent = err instanceof TypeError
+          ? 'Couldn\'t reach ESPN — check your connection and try again.'
+          : 'Error: ' + err.message;
+        status.style.color = '#ef4444';
+      }
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'IMPORT'; }
+  };
+
+  window._mtResyncEspn = function (leagueId) {
+    const input = document.getElementById('mtEspnLeagueId');
+    if (input) input.value = String(leagueId);
+    window._mtImportEspnById();
   };
 
   let _mtSortBy = 'total'; // current sort key

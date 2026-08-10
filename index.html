@@ -6,7 +6,7 @@
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.firebaseio.com https://*.googleapis.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src * data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firestore.googleapis.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com https://lm-api-reads.lazydays.host https://a.espncdn.com https://site.api.espn.com https://sports.core.api.espn.com https://late-wind-6322.billingsj199.workers.dev https://api.sleeper.app https://*.cloudfunctions.net https://*.run.app; frame-src https://*.firebaseapp.com https://*.googleapis.com https://accounts.google.com;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.firebaseio.com https://*.googleapis.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src * data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firestore.googleapis.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com https://lm-api-reads.lazydays.host https://lm-api-reads.fantasy.espn.com https://a.espncdn.com https://site.api.espn.com https://sports.core.api.espn.com https://late-wind-6322.billingsj199.workers.dev https://api.sleeper.app https://*.cloudfunctions.net https://*.run.app; frame-src https://*.firebaseapp.com https://*.googleapis.com https://accounts.google.com;">
 <title>MyFantasyFootball — Dynasty Rankings, Prospect Model & Mock Drafts</title>
 <meta name="description" content="Free dynasty and redraft fantasy football rankings, JM prospect model, mock draft simulator, trade calculator, and daily games. Built for serious fantasy managers.">
 <meta property="og:type" content="website">
@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-07a" as="script">
+<link rel="preload" href="app.js?v=2026-08-10a" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2255,12 +2255,16 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="mtSleeperStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
 </div>
 
-<!-- ESPN League Import (via the MFF ESPN Chrome extension) -->
+<!-- ESPN League Import (direct API sync for public leagues; MFF ESPN extension for private) -->
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative">
 <div style="position:absolute;top:10px;right:10px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">ESPN LEAGUE</div>
-<div id="mtEspnHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Install the MFF ESPN extension, open your league on fantasy.espn.com, and click "Export league to MFF" — synced leagues appear here.</div>
-<div id="mtEspnLeagueList"></div>
+<div id="mtEspnHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Paste your ESPN league ID or league URL. Private leagues sync via the MFF ESPN extension instead.</div>
+<div style="display:flex;gap:6px">
+<input type="text" id="mtEspnLeagueId" placeholder="League ID or fantasy.espn.com URL" style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem">
+<button id="mtEspnImportBtn" onclick="window._mtImportEspnById()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">IMPORT</button>
+</div>
+<div id="mtEspnLeagueList" style="margin-top:8px"></div>
 <div id="mtEspnStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
 </div>
 
@@ -5002,7 +5006,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-07a"></script>
+<script defer src="app.js?v=2026-08-10a"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">
@@ -5048,7 +5052,7 @@ window.addEventListener('load', function() {
     {
       title: '2. Connect your league',
       body: 'My Teams imports your Sleeper league or Underdog portfolio so you can analyze roster strength, run trade scenarios, and build a draft strategy off your real roster.',
-      hint: 'ESPN league import is in beta (via the MFF extension) — Yahoo coming soon.',
+      hint: 'ESPN leagues sync too — paste your league ID (public) or use the MFF extension (private). Yahoo coming soon.',
       targetNav: 'myteams'
     },
     {

@@ -19433,11 +19433,11 @@ window.fmtHeight = fmtHeight;
       val = Math.max(Math.round(1000 / (Math.pow(rank, 0.8) + 3)), 1);
     }
     // Tier multiplier only applies to version-based sources (consensus/jacks/mine).
-    // Pick entries are exempt: the S/A mults are an elite-PLAYER scarcity
-    // premium, and picks sitting inside those tiers were inheriting it —
-    // e.g. 2027 Early 1st at rank 27 priced 176 → 211 (Jack 2026-08-11:
-    // picks too valuable).
-    if (!isAdpSrc && !d._isFuturePick) {
+    // Picks included ON PURPOSE: Jack prices picks by where he ranks them
+    // in the tiers, same as players — a briefly-shipped pick exemption was
+    // reverted at his request (2026-08-11). Move the pick entry on the
+    // board to change its value.
+    if (!isAdpSrc) {
       const tierLabel = _getTierForPlayerFull(d, s, m);
       if (tierLabel && TIER_MULT[tierLabel] !== undefined) {
         val = Math.round(val * TIER_MULT[tierLabel]);

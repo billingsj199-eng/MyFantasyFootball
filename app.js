@@ -42483,6 +42483,23 @@ Rules:
       }
 
       // 5. Build teams
+      // MY TEAM resolution: a manual pick (dropdown) beats name auto-detect —
+      // re-imports (my-team change, background auto-refresh) rebuild teams
+      // from scratch, and auto-detect alone silently dropped the star for
+      // users whose Sleeper name doesn't resemble their account name.
+      // Sleeper owner_ids are GLOBAL user ids, so carrying the user's id
+      // over from the current view or the saved snapshot is safe.
+      let _myUidForLeague = null;
+      if (_mtActiveSource === 'sleeper' && window._mtTeams) {
+        const cur = window._mtTeams.find(t => t && t.isMyTeam);
+        if (cur && cur.ownerId) _myUidForLeague = cur.ownerId;
+      }
+      if (!_myUidForLeague && window._mtSavedLeagues) {
+        const prev = window._mtSavedLeagues.find(l => String(l.leagueId) === String(leagueId));
+        const prevMine = prev && (prev.teams || []).find(t => t && t.isMyTeam);
+        if (prevMine && prevMine.ownerId) _myUidForLeague = prevMine.ownerId;
+      }
+      if (!_myUidForLeague) _myUidForLeague = _mtMyUserId;
       const teams = rosters.map(r => {
         const playerIds = r.players || [];
         const playerNames = playerIds.map(id => {
@@ -42494,8 +42511,12 @@ Rules:
           id: r.roster_id,
           owner: ownerName,
           ownerId: r.owner_id,
-          isMyTeam: r.owner_id === _mtMyUserId,
+          isMyTeam: r.owner_id === _myUidForLeague,
           players: playerNames,
+          // Raw Sleeper player-id set — persisted with the snapshot so the
+          // background auto-refresh can diff live rosters without touching
+          // the name map.
+          slIds: playerIds.map(String).sort(),
           draftPicks: [],
           wins: r.settings ? r.settings.wins : 0,
           losses: r.settings ? r.settings.losses : 0,
@@ -43835,6 +43856,7 @@ Rules:
           ownerId: t.ownerId || '',
           isMyTeam: t.isMyTeam || false,
           players: t.players,
+          slIds: t.slIds || [],   // raw Sleeper ids — auto-refresh diff basis
           draftPicks: t.draftPicks || [],
           wins: t.wins || 0,
           losses: t.losses || 0,
@@ -43987,7 +44009,50 @@ Rules:
       status.textContent = `Loaded "${lg.name}" from saved data (${lg.savedAt ? new Date(lg.savedAt).toLocaleDateString() : ''})`;
       status.style.color = '#22c55e';
     }
+    // Kick off the background roster-freshness check (Sleeper only — the
+    // API is public; ESPN/Yahoo need auth or the extension to re-sync).
+    if (lg.leagueId && !isEspn && !isYahoo) _mtAutoRefreshSleeper(lg);
   };
+
+  // ── Sleeper auto-refresh ─────────────────────────────────────────────
+  // Loading a saved Sleeper league silently checks the live rosters: if any
+  // team's player-id set changed since the snapshot (adds / drops / trades),
+  // the full importer re-runs and re-saves — so transactions show up on the
+  // next page visit without a manual IMPORT click. Snapshots saved before
+  // slIds existed refresh once to acquire them. Any fetch error leaves the
+  // snapshot untouched.
+  async function _mtAutoRefreshSleeper(lg) {
+    const leagueId = String(lg.leagueId || '');
+    if (!leagueId) return;
+    const status = document.getElementById('mtSleeperStatus');
+    try {
+      const resp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/rosters`);
+      if (!resp.ok) return;
+      const rosters = await resp.json();
+      if (!Array.isArray(rosters) || !rosters.length) return;
+      // Bail if the user loaded a different league while we were fetching.
+      const curId = document.getElementById('mtSleeperLeagueId');
+      if (!curId || curId.value.trim() !== leagueId) return;
+      const liveSig = rosters.map(r => (r.players || []).map(String).sort().join(',')).sort().join('|');
+      const teams = lg.teams || [];
+      // Empty slIds arrays are valid (vacant rosters); only a MISSING slIds
+      // property marks a legacy snapshot that needs one refresh to acquire it.
+      const haveIds = teams.length && teams.every(t => Array.isArray(t.slIds));
+      const savedSig = haveIds ? teams.map(t => t.slIds.join(',')).sort().join('|') : null;
+      if (savedSig === liveSig) {
+        if (status) {
+          status.textContent = `Loaded "${lg.name}" — rosters up to date`;
+          status.style.color = '#22c55e';
+        }
+        return;
+      }
+      if (status) {
+        status.textContent = 'League transactions detected — refreshing rosters…';
+        status.style.color = '';
+      }
+      window._mtImportSleeper();
+    } catch (_) { /* offline / API hiccup — the snapshot stays */ }
+  }
 
   window._mtDeleteSavedLeague = function(leagueId) {
     if (!confirm('Remove this saved league?')) return;

@@ -1,6 +1,26 @@
 {
-  "updated": "2026-08-11T02:08:39Z",
+  "updated": "2026-08-11T16:16:50Z",
   "items": [
+    {
+      "player": "Isiah Pacheco",
+      "team": "DET",
+      "pos": "RB",
+      "date": "2026-08-10",
+      "headline": "Diagnosed with MCL sprain, missed 4 straight practices, expected ready for Week 1",
+      "take": "Handcuff-only value behind Jahmyr Gibbs -- no long-term concern per Dan Campbell.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/isiah-pacheco-has-an-mcl-sprain-but-should-be-ready-for-week-1",
+      "tag": "injury"
+    },
+    {
+      "player": "Chase Brown",
+      "team": "CIN",
+      "pos": "RB",
+      "date": "2026-08-05",
+      "headline": "Bengals expanding his role with slot snaps, WR routes and jet sweeps in camp",
+      "take": "Zac Taylor deploying him as a true every-down weapon -- raises his receiving-work ceiling for a 3rd straight 1,000-yard season bid.",
+      "url": "https://sports.yahoo.com/articles/why-zac-taylor-expanding-chase-235702271.html",
+      "tag": "role"
+    },
     {
       "player": "Christian McCaffrey",
       "team": "SF",

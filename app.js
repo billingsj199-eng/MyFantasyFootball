@@ -42269,10 +42269,22 @@ Rules:
     let pickTotal = 0;
     const scoredPicks = includePicks ? (draftPicks || []).map(p => {
       const val = (typeof window._getPickValue === 'function') ? window._getPickValue(p.round, p.year, p.slot, mode, p._pickNum) : 0;
-      pickTotal += val;
       return { ...p, val };
     }) : [];
     if (includePicks) scoredPicks.sort((a, b) => b.val - a.val);
+    // Pick war chests were raw-summed, so a 20-pick hoarder topped the power
+    // rankings on quantity alone (Jack 2026-08-11: "picks feel too valuable").
+    // Same shape as the trade calc's _packageAdjustedTotal, but each extra
+    // pick pays a FULL replacement-level roster cost (trades charge half):
+    // picks are lottery tickets competing for the same few roster spots, so
+    // the 15th pick on a roster is worth close to nothing. Best pick counts
+    // in full; per-pick display vals stay raw (matching trade-calc behavior).
+    if (includePicks && scoredPicks.length) {
+      const pickCost = (typeof window._packageRosterCost === 'function') ? window._packageRosterCost(mode) * 2 : 0;
+      pickTotal = scoredPicks[0].val;
+      for (let i = 1; i < scoredPicks.length; i++) pickTotal += Math.max(scoredPicks[i].val - pickCost, 0);
+      pickTotal = Math.round(pickTotal);
+    }
 
     const total = playerTotal + pickTotal;
 
@@ -42978,9 +42990,9 @@ Rules:
   // The positional boxes show a 1..N rank against the rest of the league
   // instead of the raw summed trade value. Strength is starter-weighted:
   // starting slots count in full, the flex share fractionally, and bench
-  // depth decays hard (0.2 / 0.08 / 0.03) — so one elite starter at a
-  // 1-starter position outranks two mid guys, but a near-elite starter
-  // plus real depth can still edge past a slightly better lone starter.
+  // depth decays hard (0.2 / 0.08 / 0.03). Slot counts come from the
+  // league's actual lineup, so 2-flex and 3-WR formats widen the starter
+  // window and depth automatically counts for more.
   function _mtPosStarterSlots() {
     let rp = (_mtFormat && _mtFormat.rosterPositions) || [];
     if (!rp.length) {
@@ -42995,13 +43007,18 @@ Rules:
       QB: (c('QB') || 1) + sf * 0.8,
       RB: (c('RB') || 2) + flex * 0.45,
       WR: (c('WR') || 2) + flex * 0.45,
-      TE: (c('TE') || 1) + flex * 0.1,
-      K: c('K') || 1,
-      DST: (c('DEF') || c('DST')) || 1
+      TE: (c('TE') || 1) + flex * 0.1
     };
   }
-  // group = one team's players at a position, sorted by val desc
+  // group = one team's players at a position, sorted by val desc.
+  // Trade values curve hard toward the elite, so a raw sum lets one stud
+  // carry a position even where the lineup starts 2-3 bodies every week.
+  // Concave transform (val^alpha) flattens that credit as the starter
+  // window widens: 1-starter QB/TE keep raw top-heavy vals (alpha 1),
+  // 2RB+flex lands ~0.74, 2-flex / 3-WR formats push toward 0.55 — so two
+  // solid starters beat one stud plus a hole where the format demands it.
   function _mtPosStrength(group, starters) {
+    const alpha = starters <= 1.2 ? 1 : Math.max(0.55, 1 - 0.18 * (starters - 1));
     const full = Math.floor(starters);
     const frac = starters - full;
     let bench = 0, total = 0;
@@ -43010,15 +43027,16 @@ Rules:
       if (i < full) w = 1;
       else if (i === full && frac > 0.001) w = 0.2 + 0.7 * frac;
       else { w = bench === 0 ? 0.2 : bench === 1 ? 0.08 : 0.03; bench++; }
-      total += (p.val || 0) * w;
+      total += Math.pow(Math.max(p.val || 0, 0), alpha) * w;
     });
     return total;
   }
   // Stamps t.posRanks = { QB: {rank, strength}, ... } on every team.
+  // K/DST deliberately excluded — ranks there are noise (Jack 2026-08-11).
   function _mtComputePosRanks(teams) {
     if (!teams || !teams.length) return;
     const slots = _mtPosStarterSlots();
-    const POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+    const POS = ['QB', 'RB', 'WR', 'TE'];
     teams.forEach(t => { t.posRanks = {}; });
     POS.forEach(pos => {
       const entries = teams.map((t, i) => {
@@ -43150,7 +43168,7 @@ Rules:
         const pr = (t.posRanks || {})[pos];
         const highlight = _mtSortBy === pos ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
         const lbl = pr ? _mtOrdinal(pr.rank) : ps.pts;
-        const tip = pr ? `title="${pos} rank in league (starter-weighted) · strength ${pr.strength} · raw value ${ps.pts}"` : '';
+        const tip = pr ? `title="${pos} rank in league (weighted to this lineup's starters) · strength ${pr.strength} · raw value ${ps.pts}"` : '';
         html += `<div ${tip} style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">${pos}</div><div style="${highlight};font-weight:700;color:${posColors[pos]}">${lbl}</div></div>`;
       });
       if (isDynasty && _mtViewMode === 'value') {
@@ -43522,16 +43540,15 @@ Rules:
     // treatment in the header box above).
     if (!t.posRanks) _mtComputePosRanks(teams);
     html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(65px,1fr));gap:8px;margin-bottom:16px">`;
-    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a855f7', DST: '#94a3b8' };
-    // Always show QB/RB/WR/TE; show K/DST only if the roster has them
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    // Skill positions only — K/DST rank cards removed 2026-08-11 per Jack
+    // (a 1-slot K/DST "rank" is noise).
     const _gridPositions = ['QB','RB','WR','TE'];
-    if ((sc.posScores.K || {}).count) _gridPositions.push('K');
-    if ((sc.posScores.DST || {}).count) _gridPositions.push('DST');
     _gridPositions.forEach(pos => {
       const ps = sc.posScores[pos] || { pts: 0, count: 0 };
       const pr = (t.posRanks || {})[pos];
       const big = pr ? _mtOrdinal(pr.rank) : ps.pts;
-      const tip = pr ? ` title="${pos} rank of ${teams.length} teams, starter-weighted — elite starters count in full, bench depth barely. Strength ${pr.strength} · raw value ${ps.pts}"` : '';
+      const tip = pr ? ` title="${pos} rank of ${teams.length} teams, weighted to this league's lineup — every required starter (incl. flex share) counts, bench depth barely. Strength ${pr.strength} · raw value ${ps.pts}"` : '';
       html += `<div${tip} style="text-align:center;padding:8px;background:${posColors[pos]}10;border:1px solid ${posColors[pos]}40;border-radius:8px">`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;color:var(--text2)">${pos}</div>`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${posColors[pos]}">${big}</div>`;

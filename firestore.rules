@@ -5,26 +5,28 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
-    // rankings/jacks-official: Jack's shared boards. Public read — the site
-    // loads them before sign-in (rankings page, ticker, IR flags) and the
-    // helper extensions read the same doc over REST. Admin-only write.
-    match /rankings/jacks-official {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
-    }
-    // rankings/{uid}: each user's personal boards + email address.
-    // 2026-08-11 fix, two bugs in one rule:
-    //  - read was `if true`, so an anonymous REST list exposed every user's
-    //    full boards AND email (privacy leak).
-    //  - write was admin-only, so every non-admin saveUserRankings() has been
-    //    silently rejected server-side since ~May (offline persistence made
-    //    the Save button report success while the sync was denied — no
-    //    non-admin doc had an updatedAt newer than 2026-05-05).
-    // Owner + admin, both ways.
+    // rankings/*: single block, no overlapping matches.
+    //  - jacks-official: Jack's full shared boards — public read (the site
+    //    loads them pre-auth; extensions read them over REST), admin write.
+    //    Goes premium-only-read in board-gating Phase C.
+    //  - jacks-public: free-tier slice (top 36, tiers inside the free window,
+    //    IR flags, precomputed ticker movers) — public read, admin write.
+    //  - every other doc id: a user's personal boards + EMAIL. Owner + admin
+    //    only, both ways (2026-08-11 fix: read was public — anonymous REST
+    //    could list every user's boards and email — and write was admin-only,
+    //    which had silently rejected all non-admin saves since ~May; offline
+    //    persistence made the Save button report success anyway).
     match /rankings/{docId} {
-      allow read, write: if request.auth != null
-                         && (request.auth.uid == docId
-                             || request.auth.token.email == 'billingsj199@gmail.com');
+      allow read: if docId == 'jacks-official'
+                  || docId == 'jacks-public'
+                  || (request.auth != null
+                      && (request.auth.uid == docId
+                          || request.auth.token.email == 'billingsj199@gmail.com'));
+      allow write: if request.auth != null
+                   && (request.auth.token.email == 'billingsj199@gmail.com'
+                       || (docId != 'jacks-official'
+                           && docId != 'jacks-public'
+                           && request.auth.uid == docId));
     }
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;

@@ -420,37 +420,44 @@ window._renderLiveTicker = function() {
     return !!(D[idx] && D[idx]._retired);
   }
 
-  if (!hasPrev) {
+  let movers = [];
+  if (hasPrev) {
+    // Build prev rank map (1-indexed), skipping retired names
+    const prevRanks = {};
+    let prevRankCounter = 0;
+    prevOrder.forEach(name => {
+      if (_isRetired(name)) return;
+      prevRankCounter += 1;
+      prevRanks[name] = prevRankCounter;
+    });
+
+    // Only compare movers within the fantasy-relevant rank range. Anything past
+    // 300 is deep enough that ticker noise (legend pool, FA churn, etc.) drowns
+    // out the signal Jack actually cares about.
+    const RELEVANCE_THRESHOLD = 300;
+
+    // Compute deltas (positive = moved UP toward rank 1, negative = moved DOWN)
+    currentOrder.forEach((name, i) => {
+      const newRank = i + 1;
+      if (_isRetired(name)) return;                 // never show retired players
+      if (newRank > RELEVANCE_THRESHOLD) return;     // out of range now
+      const oldRank = prevRanks[name];
+      if (!oldRank) return;                          // brand-new entry — skip
+      if (oldRank > RELEVANCE_THRESHOLD) return;     // also was out of range before
+      const delta = oldRank - newRank;
+      if (delta !== 0) movers.push({ name, delta, newRank });
+    });
+  } else if (Array.isArray(window._jacksMovers) && window._jacksMovers.length) {
+    // Free/anon sessions read the jacks-public slice doc, which ships movers
+    // PRECOMPUTED at save time (same 300-rank window) instead of the full
+    // previous board order — the ticker works without the order ever leaving.
+    movers = window._jacksMovers
+      .filter(m => m && m.n && typeof m.delta === 'number' && !_isRetired(m.n))
+      .map(m => ({ name: m.n, delta: m.delta, newRank: m.newRank }));
+  } else {
     ticker.innerHTML = '<span class="lt-name" style="opacity:.55">Weekly mover tracking starts on the next save</span>';
     return;
   }
-
-  // Build prev rank map (1-indexed), skipping retired names
-  const prevRanks = {};
-  let prevRankCounter = 0;
-  prevOrder.forEach(name => {
-    if (_isRetired(name)) return;
-    prevRankCounter += 1;
-    prevRanks[name] = prevRankCounter;
-  });
-
-  // Only compare movers within the fantasy-relevant rank range. Anything past
-  // 300 is deep enough that ticker noise (legend pool, FA churn, etc.) drowns
-  // out the signal Jack actually cares about.
-  const RELEVANCE_THRESHOLD = 300;
-
-  // Compute deltas (positive = moved UP toward rank 1, negative = moved DOWN)
-  const movers = [];
-  currentOrder.forEach((name, i) => {
-    const newRank = i + 1;
-    if (_isRetired(name)) return;                 // never show retired players
-    if (newRank > RELEVANCE_THRESHOLD) return;     // out of range now
-    const oldRank = prevRanks[name];
-    if (!oldRank) return;                          // brand-new entry — skip
-    if (oldRank > RELEVANCE_THRESHOLD) return;     // also was out of range before
-    const delta = oldRank - newRank;
-    if (delta !== 0) movers.push({ name, delta, newRank });
-  });
 
   if (movers.length === 0) {
     ticker.innerHTML = '<span class="lt-name" style="opacity:.55">No rank changes this week</span>';
@@ -951,12 +958,18 @@ window._irToggle = function(name) {
   else window._irMap[name] = IR_SEASON;
   try { localStorage.setItem('mff_ir_list', JSON.stringify(window._irMap)); } catch(e) {}
   // Field-level merge write — doesn't touch the rankings data blob, and the
-  // jacks-official snapshot listener pushes it live to every open tab.
+  // jacks snapshot listener pushes it live to every open tab. Written to BOTH
+  // docs: free/anon sessions read the jacks-public slice, and IR flags must
+  // reach everyone (they hide players from redraft/bestball/superflex).
   try {
     if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
+      const _irPayload = { ir: JSON.stringify(window._irMap) };
       firebase.firestore().collection('rankings').doc('jacks-official')
-        .set({ ir: JSON.stringify(window._irMap) }, { merge: true })
+        .set(_irPayload, { merge: true })
         .catch(e => console.warn('[IR] cloud sync failed:', e));
+      firebase.firestore().collection('rankings').doc('jacks-public')
+        .set(_irPayload, { merge: true })
+        .catch(e => console.warn('[IR] public-doc sync failed:', e));
     }
   } catch(e) { console.warn('[IR] cloud sync failed:', e); }
   renumber();
@@ -21454,6 +21467,86 @@ window.fmtHeight = fmtHeight;
     hideSaving();
   }
 
+  // ── PUBLIC SLICE (board-gating Phase A, 2026-08-11) ───────────────────
+  // rankings/jacks-public mirrors jacks-official's schema but carries only
+  // the free tier: top-36 per format, tier boundaries inside the free window
+  // (36 overall / 12 positional), IR flags, and PRECOMPUTED ticker movers in
+  // place of the full previous order. Free/anon sessions read this doc;
+  // premium/admin keep reading the full official doc. Once Phase C flips the
+  // rules, jacks-official goes premium-only and this doc is all a free
+  // session ever sees.
+  const _PUB_CUT_ALL = 36, _PUB_CUT_POS = 12;
+  function _buildJacksPublicPayload(fullData) {
+    const out = { jacks: {} };
+    ['redraft','bestball','superflex','dynasty','dynastysf','weekly'].forEach(m => {
+      const src = fullData.jacks && fullData.jacks[m];
+      if (!src) return;
+      const slice = { _order: (src._order || []).slice(0, _PUB_CUT_ALL), _posTiers: {} };
+      const pt = src._posTiers || {};
+      Object.keys(pt).forEach(pk => {
+        const cut = pk === 'ALL' ? _PUB_CUT_ALL : _PUB_CUT_POS;
+        const kept = (pt[pk] || []).filter(t => t && t.afterRank >= 1 && t.afterRank <= cut);
+        if (kept.length) slice._posTiers[pk] = kept;
+      });
+      if (m === 'weekly' && src._week != null) slice._week = src._week;
+      out.jacks[m] = slice;
+    });
+    // Ticker movers off the FULL boards (same 300-rank window + top-8 rule as
+    // _renderLiveTicker) so the free home-page ticker keeps working without
+    // the previous full order ever reaching the public doc.
+    try {
+      const prev = fullData._prev && fullData._prev.redraft;
+      const cur = (fullData.jacks && fullData.jacks.redraft && fullData.jacks.redraft._order) || [];
+      if (Array.isArray(prev) && prev.length && cur.length) {
+        const prevRanks = {};
+        let pc = 0;
+        prev.forEach(n => { prevRanks[n] = ++pc; });
+        const movers = [];
+        cur.forEach((n, i) => {
+          const nr = i + 1;
+          if (nr > 300) return;
+          const or = prevRanks[n];
+          if (!or || or > 300) return;
+          if (or !== nr) movers.push({ n: n, delta: or - nr, newRank: nr });
+        });
+        movers.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+        out._movers = movers.slice(0, 8);
+      }
+    } catch (_) {}
+    return out;
+  }
+  async function _writeJacksPublicSlice(fullData) {
+    if (!db || !isAdmin()) return;
+    const pub = _buildJacksPublicPayload(fullData);
+    await db.collection('rankings').doc('jacks-public').set({
+      data: JSON.stringify(pub),
+      ir: JSON.stringify(window._irMap || {}),
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    console.log('[Save] Public slice written (top ' + _PUB_CUT_ALL + ')');
+  }
+  window._writeJacksPublicSlice = _writeJacksPublicSlice;
+  window._buildJacksPublicPayload = _buildJacksPublicPayload; // debug/console access
+  // Bootstrap + drift repair: whenever an admin session loads and the public
+  // slice is missing or older than the official doc (e.g. a save from an old
+  // cached app build), rebuild it from the official payload.
+  async function _ensureJacksPublicFresh() {
+    if (!db || !isAdmin()) return;
+    try {
+      const [off, pub] = await Promise.all([
+        db.collection('rankings').doc('jacks-official').get(),
+        db.collection('rankings').doc('jacks-public').get()
+      ]);
+      if (!off.exists || !off.data().data) return;
+      const offAt = off.data().updatedAt || '';
+      const pubOk = pub.exists && pub.data().data;
+      const pubAt = (pub.exists && pub.data().updatedAt) || '';
+      if (pubOk && pubAt >= offAt) return;
+      await _writeJacksPublicSlice(JSON.parse(off.data().data));
+      console.log('[Save] Public slice backfilled (was ' + (pubAt || 'missing') + ')');
+    } catch (e) { console.warn('[Save] public slice backfill failed:', e); }
+  }
+
   // Admin only: save Jack's rankings to a shared document everyone reads
   async function saveJacksRankings() {
     if (!currentUser || !db || !isAdmin()) return;
@@ -21583,6 +21676,14 @@ window.fmtHeight = fmtHeight;
         console.log('[Save] Cloud backup written: rankings_history/' + historyId);
       } catch(hbErr) { console.warn('[Save] Cloud backup failed:', hbErr); }
 
+      // ── PUBLIC SLICE (POST-WRITE) ───────────────────────────────────────
+      // Refresh the free-tier jacks-public doc from the payload just saved.
+      // Best-effort: a failure never blocks the official save, and the admin
+      // backfill (_ensureJacksPublicFresh) repairs any drift on next load.
+      try {
+        await _writeJacksPublicSlice(data);
+      } catch(psErr) { console.warn('[Save] public slice write failed:', psErr); }
+
       toast("Jack's rankings saved & shared with all users");
     } catch(e) {
       console.error('[Save] Jacks save error:', e.code, e.message, e);
@@ -21602,11 +21703,38 @@ window.fmtHeight = fmtHeight;
     }
   }
 
-  // Load Jack's official rankings from the shared document
+  // Which jacks doc this session reads (board-gating Phase A): premium and
+  // admin sessions get the full official doc; free/anon get the top-36 public
+  // slice. hasPremium() reads the localStorage cache, so this answers
+  // correctly at boot before any Firestore round-trip.
+  function _jacksDocId() {
+    try {
+      if (typeof isAdmin === 'function' && isAdmin()) return 'jacks-official';
+      if (typeof hasPremium === 'function' && hasPremium()) return 'jacks-official';
+    } catch (_) {}
+    return 'jacks-public';
+  }
+
+  // Load Jack's rankings from the shared document for this session's tier
   async function loadJacksFromCloud() {
     if (!db) return;
     try {
-      const doc = await db.collection('rankings').doc('jacks-official').get();
+      let _docId = _jacksDocId();
+      let doc = null;
+      try {
+        doc = await db.collection('rankings').doc(_docId).get();
+      } catch (readErr) {
+        // Defensive both ways: a free session denied on either doc (rules
+        // propagation gap, stale premium flag post-Phase-C) tries the other.
+        console.warn('[Auth] jacks read failed on ' + _docId + ':', readErr && readErr.code);
+        _docId = _docId === 'jacks-public' ? 'jacks-official' : 'jacks-public';
+        doc = await db.collection('rankings').doc(_docId).get();
+      }
+      // Slice doc not written yet (bootstrap pending Jack's next save/load):
+      // fall back to the official doc, which keeps public read until Phase C.
+      if (_docId === 'jacks-public' && (!doc.exists || !doc.data().data)) {
+        doc = await db.collection('rankings').doc('jacks-official').get();
+      }
       // Out-for-season flags ride the same doc as a separate `ir` field
       if (doc.exists && typeof window._irApplyRemote === 'function' && window._irApplyRemote(doc.data().ir)) {
         renumber(); render();
@@ -21615,7 +21743,8 @@ window.fmtHeight = fmtHeight;
         window._jacksUpdatedAt = doc.data().updatedAt || null;
         if (typeof window._renderRankingsUpdated === 'function') window._renderRankingsUpdated();
         const obj = JSON.parse(doc.data().data);
-        // Stash the prev snapshot for the live ticker
+        // Stash the prev snapshot for the live ticker. The public slice ships
+        // precomputed _movers instead of the full previous order.
         if (obj._prev && Array.isArray(obj._prev.redraft)) {
           window._jacksPrevOrder = obj._prev.redraft;
           window._jacksPrevSavedAt = obj._prev.savedAt || null;
@@ -21623,6 +21752,7 @@ window.fmtHeight = fmtHeight;
           window._jacksPrevOrder = null;
           window._jacksPrevSavedAt = null;
         }
+        window._jacksMovers = Array.isArray(obj._movers) ? obj._movers : null;
         if (obj.jacks) {
           _bypassEditCheck = true;
           if (obj.jacks.redraft) loadModeData('redraft', obj.jacks.redraft, 'jacks');
@@ -21709,6 +21839,8 @@ window.fmtHeight = fmtHeight;
     if (!currentUser || !db) return;
     // Load Jack's shared rankings first (for all users)
     await loadJacksFromCloud();
+    // Admin session: bootstrap/repair the public slice doc (fire-and-forget)
+    if (isAdmin()) { try { _ensureJacksPublicFresh(); } catch (_) {} }
     // Then load user's personal rankings
     await loadUserRankings();
     syncMode();
@@ -21717,11 +21849,24 @@ window.fmtHeight = fmtHeight;
     toast('Rankings loaded from cloud');
   }
 
-  // Listen for real-time updates to Jack's rankings so all users stay in sync
+  // Listen for real-time updates to Jack's rankings so all users stay in sync.
+  // Subscribes to this session's tier doc (_jacksDocId); _jacksResubscribe
+  // switches docs when premium/admin status changes mid-session.
   let jacksUnsubscribe = null;
-  function listenForJacksUpdates() {
-    if (!db || jacksUnsubscribe) return;
-    jacksUnsubscribe = db.collection('rankings').doc('jacks-official').onSnapshot(doc => {
+  let _jacksSubDocId = null;
+  function listenForJacksUpdates(forceDocId) {
+    if (!db) return;
+    const _docId = forceDocId || _jacksDocId();
+    if (jacksUnsubscribe && _jacksSubDocId === _docId) return;
+    if (jacksUnsubscribe) { try { jacksUnsubscribe(); } catch (_) {} jacksUnsubscribe = null; }
+    _jacksSubDocId = _docId;
+    jacksUnsubscribe = db.collection('rankings').doc(_docId).onSnapshot(doc => {
+      // Slice doc not written yet (bootstrap pending): follow the official
+      // doc instead — it keeps public read until Phase C flips the rules.
+      if (_docId === 'jacks-public' && (!doc.exists || !doc.data().data)) {
+        if (_jacksSubDocId === 'jacks-public') listenForJacksUpdates('jacks-official');
+        return;
+      }
       // Out-for-season flags: apply live so a toggle in one tab (or by Jack)
       // hides/restores the player everywhere without a refresh.
       if (doc.exists && typeof window._irApplyRemote === 'function' && window._irApplyRemote(doc.data().ir)) {
@@ -21731,7 +21876,7 @@ window.fmtHeight = fmtHeight;
         window._jacksUpdatedAt = doc.data().updatedAt || null;
         if (typeof window._renderRankingsUpdated === 'function') window._renderRankingsUpdated();
         const obj = JSON.parse(doc.data().data);
-        // Stash prev snapshot for live ticker
+        // Stash prev snapshot for live ticker (public slice ships _movers)
         if (obj._prev && Array.isArray(obj._prev.redraft)) {
           window._jacksPrevOrder = obj._prev.redraft;
           window._jacksPrevSavedAt = obj._prev.savedAt || null;
@@ -21739,6 +21884,7 @@ window.fmtHeight = fmtHeight;
           window._jacksPrevOrder = null;
           window._jacksPrevSavedAt = null;
         }
+        window._jacksMovers = Array.isArray(obj._movers) ? obj._movers : null;
         if (obj.jacks) {
           _bypassEditCheck = true;
           if (obj.jacks.redraft) loadModeData('redraft', obj.jacks.redraft, 'jacks');
@@ -21774,8 +21920,25 @@ window.fmtHeight = fmtHeight;
       }
     }, err => {
       console.error('[Auth] Jacks snapshot listener error:', err);
+      // Defensive both ways on permission-denied: a stale premium flag on the
+      // official doc (post-Phase-C) drops to the public slice; a denied slice
+      // read (rules propagation gap) climbs to the official doc.
+      if (err && err.code === 'permission-denied') {
+        jacksUnsubscribe = null;
+        _jacksSubDocId = null;
+        listenForJacksUpdates(_docId === 'jacks-official' ? 'jacks-public' : 'jacks-official');
+      }
     });
   }
+  // Re-evaluate which doc to follow when premium/admin status changes
+  // mid-session (sign-in, premium loaders, sign-out).
+  window._jacksResubscribe = function() {
+    if (!db) return;
+    const want = _jacksDocId();
+    if (jacksUnsubscribe && want === _jacksSubDocId) return;
+    listenForJacksUpdates(want);
+    loadJacksFromCloud();
+  };
 
   // Track unsaved changes instead of auto-saving
   let _hasUnsavedChanges = false;
@@ -22252,8 +22415,10 @@ window.fmtHeight = fmtHeight;
           window._mineMetaReset();
           if (typeof window._mineSeedFromJacks === 'function') window._mineSeedFromJacks();
         }
-        // Stop listening for Jack's updates
-        if (jacksUnsubscribe) { jacksUnsubscribe(); jacksUnsubscribe = null; }
+        // Re-subscribe as an anonymous session — _jacksDocId() drops back to
+        // the public slice now that premium/admin no longer applies.
+        if (jacksUnsubscribe) { try { jacksUnsubscribe(); } catch (_) {} jacksUnsubscribe = null; _jacksSubDocId = null; }
+        listenForJacksUpdates();
       }
     });
     // Also start listening for Jack's updates even before sign-in (public data)
@@ -22860,7 +23025,14 @@ window.fmtHeight = fmtHeight;
 
   // Check status on load
   checkPremiumStatus();
-  window.checkPremiumStatus = checkPremiumStatus;
+  // Exposed wrapper also re-evaluates which jacks doc the session follows —
+  // premium arriving mid-session (Stripe/gift loaders) upgrades the live
+  // subscription from the public slice to the full official doc.
+  window.checkPremiumStatus = function() {
+    const r = checkPremiumStatus();
+    try { if (typeof window._jacksResubscribe === 'function') window._jacksResubscribe(); } catch (_) {}
+    return r;
+  };
 
   // Manage Subscription button — opens Stripe Customer Portal
   const premiumManageBtn = document.getElementById('premiumManageBtn');

@@ -47241,7 +47241,7 @@ Rules:
       html += `<button onclick="window._udFilterExposurePos('${pos}')" data-udposfilter="${pos}" style="padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? posFilterColors[pos] : 'var(--border)'};background:${active ? posFilterColors[pos] : 'var(--surface)'};color:${active ? (pos === 'ALL' ? '#000' : '#fff') : 'var(--text2)'}">${pos}</button>`;
     });
     html += `</div>`;
-    html += `<input id="udExpFilter" oninput="window._udFilterExposure(this.value)" placeholder="Filter players..." style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem;font-family:'DM Sans',sans-serif;width:150px;flex:1;min-width:100px;max-width:200px">`;
+    html += `<input id="udExpFilter" oninput="window._udFilterExposure(this.value)" placeholder="Filter… or &quot;maye + aj brown&quot; for stacks" title="Type one name to filter the list, or combine names with + (or a comma) to see every draft that rosters ALL of them" style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem;font-family:'DM Sans',sans-serif;width:150px;flex:1;min-width:100px;max-width:260px">`;
     html += `</div>`;
     html += `<div id="udExposureList">`;
     html += _udRenderExposureRows(playerList, numDrafts, '', 'ALL');
@@ -48410,16 +48410,78 @@ Rules:
       btn.style.color = active ? (p === 'ALL' ? '#000' : '#fff') : 'var(--text2)';
       btn.style.borderColor = active ? posFilterColors[p] : 'var(--border)';
     });
-    // Re-render with both text and pos filter
+    // Re-render with both text and pos filter (combo queries ignore the
+    // position chips — they're a draft list, not a player list)
     const textFilter = document.getElementById('udExpFilter') ? document.getElementById('udExpFilter').value : '';
     const el = document.getElementById('udExposureList');
-    if (el && window._udPlayerList) el.innerHTML = _udRenderExposureRows(window._udPlayerList, window._udNumDrafts, textFilter, pos);
+    if (el && window._udPlayerList) {
+      const combo = _udComboSearchHtml(textFilter);
+      el.innerHTML = combo != null ? combo : _udRenderExposureRows(window._udPlayerList, window._udNumDrafts, textFilter, pos);
+    }
   };
+
+  // Combo search: "drake maye + aj brown" (separators: + , &) lists every
+  // draft that rosters ALL of the named players — stack hunting. Each term
+  // resolves to the highest-exposure portfolio player it substring-matches;
+  // rows open the draft-roster popup (_vpOpenDraft). Returns null when the
+  // query isn't a combo so the caller falls back to the normal name filter.
+  function _udComboSearchHtml(val) {
+    const raw = String(val || '');
+    if (!/[+,&]/.test(raw)) return null;
+    const terms = raw.split(/[+,&]/).map(t => t.trim().toLowerCase()).filter(t => t.length >= 2);
+    if (terms.length < 2) return null;
+    const data = window._udData;
+    if (!data || !data.drafts || !data.players) return null;
+    const names = Object.keys(data.players);
+    const matched = [];
+    for (const t of terms) {
+      const hits = names.filter(n => n.toLowerCase().includes(t));
+      if (!hits.length) {
+        return `<div style="padding:12px 4px;color:var(--text2);font-size:.75rem">No player in your portfolio matches &ldquo;${_esc(t)}&rdquo;.</div>`;
+      }
+      hits.sort((a, b) => (data.players[b].exposure || 0) - (data.players[a].exposure || 0));
+      if (!matched.includes(hits[0])) matched.push(hits[0]);
+    }
+    if (matched.length < 2) return null; // terms collapsed to one player
+    const rows = [];
+    Object.entries(data.drafts).forEach(([did, d]) => {
+      const byName = {};
+      (d.picks || []).forEach(p => { if (p && p.name) byName[p.name] = p.pick; });
+      if (matched.every(n => byName[n] != null)) rows.push({ did, d, picks: matched.map(n => byName[n]) });
+    });
+    const numDrafts = window._udNumDrafts || Object.keys(data.drafts).length;
+    const pct = numDrafts ? Math.round(1000 * rows.length / numDrafts) / 10 : 0;
+    let html = `<div style="padding:8px 4px 10px;font-size:.75rem;color:var(--text)">` +
+      `<span style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--accent)">TEAMS WITH</span> ` +
+      matched.map(n => `<span style="font-weight:600">${_esc(n)}</span>`).join('<span style="color:var(--text2)"> + </span>') +
+      ` <span style="color:var(--text2)">— ${rows.length} of ${numDrafts} draft${numDrafts === 1 ? '' : 's'} (${pct}%)</span></div>`;
+    if (!rows.length) {
+      html += `<div style="padding:12px 4px;color:var(--text2);font-size:.75rem">No draft has all of them together.</div>`;
+      return html;
+    }
+    rows.sort((a, b) => (a.d.tournament || '').localeCompare(b.d.tournament || '') || (a.d.date || '').localeCompare(b.d.date || ''));
+    const nmSafe = String(matched[0]).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
+    html += `<div style="display:flex;flex-direction:column;gap:4px">`;
+    rows.forEach(r => {
+      const didSafe = String(r.did).replace(/[^\w-]/g, '');
+      const pickStr = matched.map((n, i) => `@${r.picks[i]}`).join(' <span style="color:var(--text2)">·</span> ');
+      html += `<div onclick="window._vpOpenDraft('${didSafe}','${nmSafe}')" title="Click to view this team" style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:.72rem" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">` +
+        `<span style="color:var(--accent)">${_esc(r.d.tournament || 'Draft')}</span>` +
+        (r.d.date ? `<span style="color:var(--text2);font-size:.62rem">${_esc(String(r.d.date).slice(0, 10))}</span>` : '') +
+        `<span style="margin-left:auto;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;color:var(--text)">${pickStr}</span>` +
+        `</div>`;
+    });
+    html += `</div>`;
+    return html;
+  }
 
   window._udFilterExposure = function(val) {
     if (!window._udPlayerList) return;
     const el = document.getElementById('udExposureList');
-    if (el) el.innerHTML = _udRenderExposureRows(window._udPlayerList, window._udNumDrafts, val, window._udExpPosFilter || 'ALL');
+    if (!el) return;
+    const combo = _udComboSearchHtml(val);
+    el.innerHTML = combo != null ? combo
+      : _udRenderExposureRows(window._udPlayerList, window._udNumDrafts, val, window._udExpPosFilter || 'ALL');
   };
 
   window._udSwitchTab = function(tabId) {

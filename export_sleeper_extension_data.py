@@ -379,6 +379,29 @@ def slice_board_tiers(tiers, cutoff=JACK_FREE_CUTOFF):
             for k, v in (tiers or {}).items()}
 
 
+# ---- FULL-BOARD FETCH (board-gating Phase B, 2026-08-11) ---------------
+# rankings/jacks-official goes premium-only read in Phase C, which kills the
+# tokenless REST fetch. Primary source is now the exportJacksBoards Cloud
+# Function (admin-SDK read, gated by the local secret in
+# E:\MyFantasyFootball\secrets\export_feed_key.txt); the public REST read
+# stays as a fallback until the rules flip.
+EXPORT_FEED_URL = "https://us-central1-jackb933-website.cloudfunctions.net/exportJacksBoards"
+EXPORT_FEED_KEY_PATH = r"E:\MyFantasyFootball\secrets\export_feed_key.txt"
+
+
+def fetch_jacks_doc(timeout=30):
+    """Full jacks-official doc in Firestore-REST shape ({fields:{data:...}})."""
+    try:
+        key = open(EXPORT_FEED_KEY_PATH).read().strip()
+        req = urllib.request.Request(EXPORT_FEED_URL, headers={"x-export-key": key})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.load(r)
+    except Exception as e:
+        print("WARN: export feed unavailable (" + str(e) + ") — falling back to public REST")
+    with urllib.request.urlopen(FIRESTORE_URL, timeout=timeout) as r:
+        return json.load(r)
+
+
 def load_jacks_boards():
     """name-norm -> rank for Jack's live boards, plus his tier boundaries.
 
@@ -396,8 +419,7 @@ def load_jacks_boards():
     out = {"jR": {}, "jSf": {}, "jDy": {}, "jDsf": {}}
     tiers = {}
     try:
-        with urllib.request.urlopen(FIRESTORE_URL, timeout=20) as r:
-            doc = json.load(r)
+        doc = fetch_jacks_doc()
         load_ir_map(doc)
         payload = json.loads(doc["fields"]["data"]["stringValue"])
         jacks = payload.get("jacks", {})

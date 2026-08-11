@@ -392,10 +392,8 @@ def load_jacks_format_boards():
     [{a, l, n}] where a tier applies from rank `a` until the next boundary."""
     try:
         import export_sleeper_extension_data as sx
-        import urllib.request
 
-        with urllib.request.urlopen(sx.FIRESTORE_URL, timeout=20) as r:
-            doc = json.load(r)
+        doc = sx.fetch_jacks_doc()  # export-feed fn w/ public-REST fallback
         sx.load_ir_map(doc)   # top-level `ir` field — see the note in that module
         payload = json.loads(doc["fields"]["data"]["stringValue"])
         jacks = payload.get("jacks", {})

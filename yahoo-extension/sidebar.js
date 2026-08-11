@@ -255,6 +255,44 @@
     });
   } catch (_) {}
 
+  // Bridge-shipped full boards (board-gating Phase B): a premium site session
+  // writes versionBoards.jacks into chrome.storage 'mff_jacks_boards' via
+  // mff-page-user/mff-bridge. Once Phase C rules-gates the official doc, the
+  // direct Firestore read above 403s and THIS is the premium path to the full
+  // board. The live fetch still wins when it works — it runs after this on
+  // boot and re-runs on refocus/premium-unlock.
+  async function applyBridgeJackBoards(v) {
+    try {
+      if (!v || !v.boards) return;
+      if (!(v.syncedAt && (Date.now() - v.syncedAt) < 7 * 24 * 60 * 60 * 1000)) return; // stale ship
+      const gu = await store.get(['mff_user']);
+      const u = (gu && gu.mff_user) || _gateUser;
+      if (!(u && u.premium && u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS)) return;
+      const byNorm = {};
+      for (const p of state.players) (byNorm[norm(p.n)] = byNorm[norm(p.n)] || []).push(p);
+      let applied = 0;
+      for (const key of ['rank', 'jSf', 'jDy', 'jDsf']) {
+        const order = v.boards[key];
+        if (!Array.isArray(order) || !order.length) continue;
+        order.forEach((name, i) => {
+          const list = byNorm[norm(name)];
+          if (list) for (const p of list) { p[key] = i + 1; applied++; }
+        });
+        const tl = v.tiers && v.tiers[key];
+        if (Array.isArray(tl) && tl.length) state.tiers[key] = tl;
+      }
+      if (applied) {
+        state.seasonStatus = state.players.length + ' players · boards synced from site';
+        render();
+      }
+    } catch (_) {}
+  }
+  try {
+    chrome.storage.onChanged.addListener((ch, area) => {
+      if (area === 'local' && ch.mff_jacks_boards) applyBridgeJackBoards(ch.mff_jacks_boards.newValue);
+    });
+  } catch (_) {}
+
   // ---------- live Vegas overlay + schedule (GitHub Pages sends CORS *) ----------
   function applyLiveVegas(gameTotals) {
     const SOS = window.MFF_PLAYOFF_SOS;
@@ -2046,6 +2084,7 @@
   }
   async function main() {
     await loadPlayers();
+    store.get(['mff_jacks_boards']).then((r) => applyBridgeJackBoards(r && r.mff_jacks_boards));
     refreshJackBoards();
     if (MOCK && MOCK.vegas) {
       applyLiveVegas(MOCK.vegas.gameTotals);

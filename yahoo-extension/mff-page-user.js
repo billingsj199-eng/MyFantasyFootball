@@ -97,4 +97,62 @@
   }
   setInterval(tickBoards, 4000);
   setTimeout(tickBoards, 2500);
+
+  // JACKS BOARDS (board-gating Phase B): a PREMIUM session ships Jack's full
+  // boards + tier boundaries into the helper. After Phase C flips the rules,
+  // the extension's direct Firestore read 403s and this bridge payload is the
+  // premium path to the full board — the bundled players.json only carries
+  // the free top-36 slice.
+  var JACKS_KEYS = { redraft: "rank", superflex: "jSf", dynasty: "jDy", dynastysf: "jDsf" };
+  function readJacksBoards() {
+    try {
+      var u = readUser();
+      if (!u || !u.premium) return null;
+      var vb = window.versionBoards, D = window.D;
+      var vt = window.versionTiers || (typeof versionTiers !== "undefined" ? versionTiers : null);
+      if (!vb || !vb.jacks || !Array.isArray(D) || !D.length) return null;
+      var boards = {}, tiers = {}, any = false;
+      for (var mode in JACKS_KEYS) {
+        var key = JACKS_KEYS[mode];
+        var arr = vb.jacks[mode];
+        if (!Array.isArray(arr) || !arr.length) continue;
+        var names = [];
+        for (var i = 0; i < arr.length; i++) {
+          var d = D[arr[i]];
+          if (!d || !d.n || d._retired) continue;
+          names.push(d.n);
+        }
+        if (!names.length) continue;
+        boards[key] = names;
+        any = true;
+        try {
+          var tl = vt && vt.jacks && vt.jacks[mode] && vt.jacks[mode].ALL;
+          if (Array.isArray(tl) && tl.length) {
+            tiers[key] = tl
+              .filter(function (t) { return t && t.afterRank >= 1 && t.label; })
+              .map(function (t) { return { a: t.afterRank, l: String(t.label), n: String(t.name || "") }; })
+              .sort(function (x, y) { return x.a - y.a; });
+          }
+        } catch (_) {}
+      }
+      return any ? { boards: boards, tiers: tiers } : null;
+    } catch (_) { return null; }
+  }
+  var lastJacks = "";
+  function tickJacks() {
+    try {
+      var j = readJacksBoards();
+      if (!j) return;
+      var h = Object.keys(j.boards).map(function (k) {
+        return k + ":" + j.boards[k].length + ":" + j.boards[k].slice(0, 12).join(",");
+      }).join("|");
+      if (h === lastJacks) return;
+      lastJacks = h;
+      document.dispatchEvent(new CustomEvent("mff-jacks-boards-update", {
+        detail: { boards: j.boards, tiers: j.tiers, syncedAt: Date.now() }
+      }));
+    } catch (_) {}
+  }
+  setInterval(tickJacks, 5000);
+  setTimeout(tickJacks, 3000);
 })();

@@ -52,6 +52,20 @@
   });
 
   // MY RANKS: persist the user's own site boards for the rec engine.
+
+  // JACKS BOARDS (board-gating Phase B): persist Jack's full boards + tiers
+  // shipped by a premium session — the sidebar's premium path once the direct
+  // Firestore read is rules-gated (Phase C).
+  document.addEventListener("mff-jacks-boards-update", function (e) {
+    try {
+      var d = e.detail || {};
+      if (!d.boards) return;
+      chrome.storage.local.set({ mff_jacks_boards: {
+        boards: d.boards, tiers: d.tiers || {}, syncedAt: d.syncedAt || Date.now()
+      } });
+    } catch (_) {}
+  });
+
   document.addEventListener("mff-my-rankings-update", function (e) {
     try {
       var d = e.detail || {};

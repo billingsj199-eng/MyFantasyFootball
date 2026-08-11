@@ -238,6 +238,39 @@
       if (nu && nu.premium && !(was && was.premium)) refreshJackBoards();
     });
   } catch (_) {}
+  // Bridge-shipped full boards (board-gating Phase B): premium site sessions
+  // write 'mff_jacks_boards'; once Phase C rules-gates the official doc the
+  // direct fetch above 403s and this payload is the premium path. Draft mode
+  // only uses the redraft (rank) + superflex (jSf) boards.
+  function applyBridgeJackBoards(v) {
+    try {
+      if (!v || !v.boards) return;
+      if (!(v.syncedAt && (Date.now() - v.syncedAt) < 7 * 24 * 60 * 60 * 1000)) return;
+      chrome.storage.local.get(['mff_user'], (gu) => {
+        const u = (gu && gu.mff_user) || _gateUser;
+        if (!(u && u.premium && u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS)) return;
+        const byNorm = {};
+        for (const p of st.board) (byNorm[norm(p.n)] = byNorm[norm(p.n)] || []).push(p);
+        let applied = 0;
+        for (const key of ['rank', 'jSf']) {
+          const order = v.boards[key];
+          if (!Array.isArray(order) || !order.length) continue;
+          order.forEach((name, i) => {
+            const list = byNorm[norm(name)];
+            if (list) for (const p of list) { p[key] = i + 1; applied++; }
+          });
+          const tl = v.tiers && v.tiers[key];
+          if (Array.isArray(tl) && tl.length) st.tiers[key] = tl;
+        }
+        if (applied && st.ready) render();
+      });
+    } catch (_) {}
+  }
+  try {
+    chrome.storage.onChanged.addListener((ch, area) => {
+      if (area === 'local' && ch.mff_jacks_boards) applyBridgeJackBoards(ch.mff_jacks_boards.newValue);
+    });
+  } catch (_) {}
 
   function applySettings(svc) {
     st.leagueName = svc.name || ('League ' + st.leagueId);
@@ -1407,7 +1440,11 @@
     getJson(API + 'teams/nfl/' + st.leagueId + '?format=rawjson').then((j) => applyTeams(j.service || j)),
     getJson(API + 'players/nfl/' + st.leagueId + '?images=1&team_id=' + st.myTeamId + '&projected=1&average=1&format=rawjson')
       .then((j) => applyPlayers(j.service || j)),
-    loadBoard().then((pj) => { st.board = (pj && pj.players) || []; st.tiers = (pj && pj.tiers) || {}; indexBoard(); refreshJackBoards(); }),
+    loadBoard().then((pj) => {
+      st.board = (pj && pj.players) || []; st.tiers = (pj && pj.tiers) || {}; indexBoard();
+      try { chrome.storage.local.get(['mff_jacks_boards'], (r) => applyBridgeJackBoards(r && r.mff_jacks_boards)); } catch (_) {}
+      refreshJackBoards();
+    }),
   ]).then(backfill).then(() => {
     linkBoard();
     applyLeagueScoring();

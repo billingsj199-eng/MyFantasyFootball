@@ -75,9 +75,9 @@ no new permissions, so mention in the "What's new" notes only if asked.
 
 ---
 
-## 2. MFF Sleeper Helper — UPDATE existing listing (published 0.27.1 → 0.28.2)
+## 2. MFF Sleeper Helper — UPDATE existing listing (published 0.27.1 → 0.28.3)
 
-Upload: `mff-sleeper-helper-0.28.2.zip`
+Upload: `mff-sleeper-helper-0.28.3.zip`
 
 **Short summary (130 chars, matches manifest):**
 ```
@@ -131,9 +131,9 @@ Sleeper's API to power recommendations, stored locally only). Everything else No
 
 ---
 
-## 3. MFF ESPN Helper — UPDATE existing listing (published 0.18.1 → 0.19.2)
+## 3. MFF ESPN Helper — UPDATE existing listing (published 0.18.1 → 0.19.3)
 
-Upload: `mff-espn-helper-0.19.2.zip`
+Upload: `mff-espn-helper-0.19.3.zip`
 
 **Short summary (129 chars, matches manifest):**
 ```
@@ -186,9 +186,9 @@ Display draft-pick recommendations and lineup/waiver/season-sim advice on ESPN F
 
 ---
 
-## 4. MFF Yahoo Helper — UPDATE existing listing (published 0.7.1 → 0.8.2)
+## 4. MFF Yahoo Helper — UPDATE existing listing (published 0.7.1 → 0.8.3)
 
-Upload: `mff-yahoo-helper-0.8.2.zip`
+Upload: `mff-yahoo-helper-0.8.3.zip`
 
 **Short summary (124 chars, matches manifest):**
 ```

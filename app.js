@@ -19289,9 +19289,18 @@ window.fmtHeight = fmtHeight;
     const pickName = (round === '3rd' || round === '4th') ? `${year} ${rdLabel}` : `${year} ${slotLabel} ${rdLabel}`;
     const entry = D.find(d => d.n === pickName && d._isFuturePick);
     if (entry && typeof window._getTradeValue === 'function') {
-      return window._getTradeValue(entry, src, mode);
+      const v = window._getTradeValue(entry, src, mode);
+      if (v > 1) return v;
     }
-    return 0;
+    // Pick entry missing from (or unplaced on) this board — the value curve
+    // returns 1 past rank 400, which silently zeroed picks on the baked
+    // boards and ALL picks in dynasty SF. Static dynasty base × year
+    // discount (× slot for 1st/2nd; 3rds/4ths carry no slot) instead —
+    // deliberately a touch under Jack's board placements.
+    const DYN_PICK_BASE = { '1st': 150, '2nd': 65, '3rd': 30, '4th': 15 };
+    const base = (DYN_PICK_BASE[round] || 15) * (mode === 'dynastysf' ? 1.1 : 1);
+    const slotM = (round === '1st' || round === '2nd') ? (SLOT_MULT[slot] || 1.0) : 1.0;
+    return Math.round(base * (YEAR_MULT[year] || 0.7) * slotM);
   }
 
   function getPickValue(round, year, slot, pickNum) {
@@ -19423,8 +19432,12 @@ window.fmtHeight = fmtHeight;
     } else {
       val = Math.max(Math.round(1000 / (Math.pow(rank, 0.8) + 3)), 1);
     }
-    // Tier multiplier only applies to version-based sources (consensus/jacks/mine)
-    if (!isAdpSrc) {
+    // Tier multiplier only applies to version-based sources (consensus/jacks/mine).
+    // Pick entries are exempt: the S/A mults are an elite-PLAYER scarcity
+    // premium, and picks sitting inside those tiers were inheriting it —
+    // e.g. 2027 Early 1st at rank 27 priced 176 → 211 (Jack 2026-08-11:
+    // picks too valuable).
+    if (!isAdpSrc && !d._isFuturePick) {
       const tierLabel = _getTierForPlayerFull(d, s, m);
       if (tierLabel && TIER_MULT[tierLabel] !== undefined) {
         val = Math.round(val * TIER_MULT[tierLabel]);
@@ -42235,7 +42248,12 @@ Rules:
           }
           assigned2026++;
         } else {
-          if (slotMap[origIdx] !== undefined) pk.slot = slotMap[origIdx];
+          // Only NEXT year's draft position is projectable from the current
+          // roster — 2+ years out everything is a mid (Jack 2026-08-11:
+          // "we can't really predict where they will end").
+          const nextYr = parseInt(currentDraftYear, 10) + 1;
+          if (parseInt(pk.year, 10) > nextYr) pk.slot = 'mid';
+          else if (slotMap[origIdx] !== undefined) pk.slot = slotMap[origIdx];
         }
       });
     });

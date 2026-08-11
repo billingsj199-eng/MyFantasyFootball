@@ -1,6 +1,26 @@
 {
-  "updated": "2026-08-10T16:12:25Z",
+  "updated": "2026-08-11T02:08:39Z",
   "items": [
+    {
+      "player": "Christian McCaffrey",
+      "team": "SF",
+      "pos": "RB",
+      "date": "2026-08-10",
+      "headline": "Sat out Monday's practice with tightness/soreness, first missed day of camp",
+      "take": "Team calls it managed rest, not a real concern, but worth a glance given his injury history",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/christian-mccaffrey-sore-but-ok-as-49ers-manage-his-workload",
+      "tag": "injury"
+    },
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-08-08",
+      "headline": "Day-to-day with left quad contusion after practice collision",
+      "take": "Not expected to threaten Week 1 availability, days after signing $140M extension",
+      "url": "https://www.espn.com/nfl/story/_/id/49562105/ravens-wr-zay-flowers-day-day-quad-contusion",
+      "tag": "injury"
+    },
     {
       "player": "Luther Burden III",
       "team": "CHI",

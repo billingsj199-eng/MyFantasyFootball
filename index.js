@@ -512,3 +512,123 @@ exports.exportJacksBoards = onRequest(
     }
   }
 );
+
+// === refreshJacksPublic: server-side rebuild of rankings/jacks-public ===
+// Bootstrap + backstop for the board-gating public slice (the site's admin
+// session also writes it on every save via _writeJacksPublicSlice — that
+// client code is authoritative; keep the two slicers in sync). Gated by the
+// same EXPORT_FEED_KEY secret as exportJacksBoards.
+exports.refreshJacksPublic = onRequest(
+  { secrets: [EXPORT_FEED_KEY] },
+  async (req, res) => {
+    try {
+      const supplied = req.get("x-export-key") || "";
+      if (!supplied || supplied !== EXPORT_FEED_KEY.value()) {
+        res.status(403).json({ error: "forbidden" });
+        return;
+      }
+      const db = getFirestore();
+      const snap = await db.collection("rankings").doc("jacks-official").get();
+      if (!snap.exists || !snap.data().data) {
+        res.status(404).json({ error: "official missing" });
+        return;
+      }
+      const full = JSON.parse(snap.data().data);
+      const CUT_ALL = 36, CUT_POS = 12;
+      const out = { jacks: {} };
+      for (const m of ["redraft", "bestball", "superflex", "dynasty", "dynastysf", "weekly"]) {
+        const src = full.jacks && full.jacks[m];
+        if (!src) continue;
+        const slice = { _order: (src._order || []).slice(0, CUT_ALL), _posTiers: {} };
+        const pt = src._posTiers || {};
+        for (const pk of Object.keys(pt)) {
+          const cut = pk === "ALL" ? CUT_ALL : CUT_POS;
+          const kept = (pt[pk] || []).filter((t) => t && t.afterRank >= 1 && t.afterRank <= cut);
+          if (kept.length) slice._posTiers[pk] = kept;
+        }
+        if (m === "weekly" && src._week != null) slice._week = src._week;
+        out.jacks[m] = slice;
+      }
+      // Precomputed ticker movers (same rules as the site: 300-rank window,
+      // top 8 by |delta|) so free sessions keep the home-page ticker.
+      const prev = full._prev && full._prev.redraft;
+      const cur = (full.jacks && full.jacks.redraft && full.jacks.redraft._order) || [];
+      if (Array.isArray(prev) && prev.length && cur.length) {
+        const prevRanks = {};
+        let pc = 0;
+        for (const n of prev) prevRanks[n] = ++pc;
+        const movers = [];
+        cur.forEach((n, i) => {
+          const nr = i + 1;
+          if (nr > 300) return;
+          const or = prevRanks[n];
+          if (!or || or > 300) return;
+          if (or !== nr) movers.push({ n: n, delta: or - nr, newRank: nr });
+        });
+        movers.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+        out._movers = movers.slice(0, 8);
+      }
+      await db.collection("rankings").doc("jacks-public").set({
+        data: JSON.stringify(out),
+        ir: snap.data().ir || "{}",
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+      res.json({
+        ok: true,
+        modes: Object.keys(out.jacks),
+        redraftLen: (out.jacks.redraft && out.jacks.redraft._order.length) || 0,
+        movers: (out._movers || []).length,
+      });
+    } catch (err) {
+      console.error("refreshJacksPublic error:", err);
+      res.status(500).json({ error: "internal" });
+    }
+  }
+);
+
+// === premiumCheck: diagnostic for the Phase C premium read rules ===
+// Given ?email=, evaluates EXACTLY the conditions the firestore.rules premium
+// helpers apply (gifted_premium/{email-key}.expires, users/{uid}.premium
+// status + currentPeriodEnd) against live data, so a premium account's access
+// to rankings/jacks-official can be verified without an interactive sign-in.
+// Secret-gated like the other ops endpoints; reveals premium metadata only.
+const { getAuth } = require("firebase-admin/auth");
+exports.premiumCheck = onRequest(
+  { secrets: [EXPORT_FEED_KEY] },
+  async (req, res) => {
+    try {
+      const supplied = req.get("x-export-key") || "";
+      if (!supplied || supplied !== EXPORT_FEED_KEY.value()) {
+        res.status(403).json({ error: "forbidden" });
+        return;
+      }
+      const email = String(req.query.email || "").toLowerCase();
+      if (!email) { res.status(400).json({ error: "email required" }); return; }
+      const giftKey = email.replace(/[^a-z0-9]/g, "_");
+      const db = getFirestore();
+      const now = Date.now();
+      const gift = await db.collection("gifted_premium").doc(giftKey).get();
+      const giftExpires = gift.exists ? (gift.data().expires || 0) : null;
+      const giftOk = gift.exists && giftExpires > now;
+      let uid = null, prem = null;
+      try {
+        const u = await getAuth().getUserByEmail(email);
+        uid = u.uid;
+        const ud = await db.collection("users").doc(uid).get();
+        prem = ud.exists ? (ud.data().premium || null) : null;
+      } catch (_) { /* no auth user — stripe check stays false */ }
+      const stripeOk = !!(prem
+        && ["active", "trialing"].includes(prem.status)
+        && (prem.currentPeriodEnd || 0) > now);
+      res.json({
+        email, giftKey,
+        gifted: { exists: gift.exists, expires: giftExpires, ok: giftOk },
+        stripe: { uid, status: prem ? prem.status : null, currentPeriodEnd: prem ? prem.currentPeriodEnd : null, ok: stripeOk },
+        rulesWouldAllowOfficialRead: giftOk || stripeOk,
+      });
+    } catch (err) {
+      console.error("premiumCheck error:", err);
+      res.status(500).json({ error: "internal" });
+    }
+  }
+);

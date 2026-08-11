@@ -65,7 +65,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-11o" as="script">
+<link rel="preload" href="app.js?v=2026-08-11p" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2279,12 +2279,16 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="mtEspnStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
 </div>
 
-<!-- Yahoo League Import (via the MFF Yahoo extension — Yahoo's API is OAuth-only, no direct path) -->
+<!-- Yahoo League Import (direct proxy sync for publicly viewable leagues; MFF Yahoo extension for the rest) -->
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative">
 <div style="position:absolute;top:10px;right:10px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">YAHOO LEAGUE</div>
-<div id="mtYahooHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Install the <a data-ext-store="yahoo" target="_blank" rel="noopener">MFF Yahoo extension</a>, open your league on football.fantasysports.yahoo.com, and click "Export league to MFF" — synced leagues appear here.</div>
-<div id="mtYahooLeagueList"></div>
+<div id="mtYahooHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px">Paste your Yahoo league ID or league URL (from football.fantasysports.yahoo.com — pasting your team's URL auto-selects your team). Leagues that aren't publicly viewable sync via the <a data-ext-store="yahoo" target="_blank" rel="noopener">MFF Yahoo extension</a> instead.</div>
+<div style="display:flex;gap:6px">
+<input type="text" id="mtYahooLeagueId" placeholder="League ID or football.fantasysports.yahoo.com URL" style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem">
+<button id="mtYahooImportBtn" onclick="window._mtImportYahooById()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">IMPORT</button>
+</div>
+<div id="mtYahooLeagueList" style="margin-top:8px"></div>
 <div id="mtYahooStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
 </div>
 
@@ -5006,7 +5010,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-11o"></script>
+<script defer src="app.js?v=2026-08-11p"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

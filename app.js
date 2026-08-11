@@ -42938,11 +42938,13 @@ Rules:
     window._mtImportEspnById();
   };
 
-  // ─── Yahoo League Import (via the MFF Yahoo extension) ───────────────────
-  // Yahoo's API is OAuth-only (no cookie-auth reads, no CORS), so there is
-  // no direct in-site path — the yahoo-extension scrapes the server-rendered
-  // league pages, normalizes to the same payload contract as ESPN, and its
-  // mff-bridge.js re-dispatches stored leagues here.
+  // ─── Yahoo League Import ─────────────────────────────────────────────────
+  // Two paths, same payload contract as ESPN:
+  //   1. Extension bridge — the yahoo-extension scrapes the server-rendered
+  //      league pages with the user's cookies and mff-bridge.js re-dispatches
+  //      stored leagues here (works for any league the user can see).
+  //   2. Direct sync (below) — link-viewable leagues fetched anonymously via
+  //      the yahooProxy Cloud Function, no extension needed.
   document.addEventListener('mff-yahoo-league-from-extension', function (e) {
     try {
       const leagues = e.detail && e.detail.leagues;
@@ -42970,6 +42972,7 @@ Rules:
       html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:5px">`;
       html += `<div style="flex:1;min-width:0"><div style="font-size:.75rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(lg.name || 'Yahoo League')}</div>`;
       html += `<div style="font-size:.62rem;color:var(--text2)">${fmt.join(' · ')}${synced ? ' · synced ' + synced : ''}${lg.drafted ? '' : ' · <span style="color:#f59e0b">pre-draft</span>'}</div></div>`;
+      if (lg.direct) html += `<button onclick="window._mtResyncYahoo('${_esc(lg.leagueId)}')" title="Re-fetch fresh rosters from Yahoo" style="padding:6px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--text2);cursor:pointer">↻</button>`;
       html += `<button onclick="window._mtImportYahoo('${_esc(lg.leagueId)}')" style="padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer">IMPORT</button>`;
       html += `</div>`;
     });
@@ -42980,10 +42983,163 @@ Rules:
     const lg = _mtYahooLeagues && _mtYahooLeagues[String(leagueId)];
     const status = document.getElementById('mtYahooStatus');
     if (!lg) {
-      if (status) { status.textContent = 'League not found — re-export from the extension.'; status.style.color = '#ef4444'; }
+      if (status) { status.textContent = 'League not found — re-sync it.'; status.style.color = '#ef4444'; }
       return;
     }
     _mtImportNormalized(lg, 'yahoo', status);
+  };
+
+  // ─── Direct Yahoo sync (no extension) ────────────────────────────────────
+  // Yahoo's pages + pub-api answer anonymously for link-viewable leagues but
+  // send no CORS headers for our origin, so the yahooProxy Cloud Function
+  // (functions repo, strict GET allowlist) relays them. Rosters only exist in
+  // the server-rendered team pages — the JSON API has no roster route — so
+  // the flow is: settings JSON (exact scoring + slots, better than the
+  // extension's ½PPR guess) → league home HTML (team ids/names/records) →
+  // one page per team (rosters), all parsed with yahoo_normalize.js (synced
+  // copy of the extension's normalizer) so both paths produce the identical
+  // payload _mtImportYahoo consumes. Non-viewable leagues 403 at the proxy →
+  // steered to the extension.
+  const _YAHOO_PROXY = 'https://us-central1-jackb933-website.cloudfunctions.net/yahooProxy?url=';
+  let _mtYahooNormReady = null;
+  function _mtLoadYahooNormalizer() {
+    if (window.MFF_YAHOO) return Promise.resolve();
+    if (_mtYahooNormReady) return _mtYahooNormReady;
+    _mtYahooNormReady = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      // Ride the app.js ?v= so the SW treats it cache-first + version-busted
+      // (bare same-origin URLs get stale-while-revalidate = one load behind).
+      const av = ((document.querySelector('script[src^="app.js"]') || {}).src || '').match(/[?&]v=([^&]+)/);
+      s.src = 'yahoo_normalize.js' + (av ? '?v=' + av[1] : '');
+      s.onload = () => window.MFF_YAHOO ? resolve() : reject(new Error('normalizer failed to load'));
+      s.onerror = () => { _mtYahooNormReady = null; reject(new Error('normalizer failed to load')); };
+      document.head.appendChild(s);
+    });
+    return _mtYahooNormReady;
+  }
+
+  async function _mtYahooProxyFetch(url) {
+    const resp = await fetch(_YAHOO_PROXY + encodeURIComponent(url));
+    if (resp.status === 403) throw new Error('This league isn\'t publicly viewable — use the MFF Yahoo extension to sync it (or set "Make league viewable to public" to Yes in Yahoo commissioner settings).');
+    if (resp.status === 404) throw new Error('League not found — double-check the ID.');
+    if (!resp.ok) throw new Error('Yahoo returned ' + resp.status + ' — try again in a minute.');
+    return resp;
+  }
+
+  window._mtImportYahooById = async function () {
+    const input = document.getElementById('mtYahooLeagueId');
+    const status = document.getElementById('mtYahooStatus');
+    const btn = document.getElementById('mtYahooImportBtn');
+    const raw = (input && input.value || '').trim();
+    // Accept a bare ID or a pasted league/team URL (…/f1/<id>[/<teamId>]).
+    // A team URL carries the teamId — use it to auto-select "my team".
+    const urlMatch = raw.match(/\/f1\/(\d+)(?:\/(\d+))?/);
+    const id = urlMatch ? urlMatch[1] : (raw.match(/^\d+$/) || [''])[0];
+    const urlTeamId = urlMatch && urlMatch[2] ? parseInt(urlMatch[2], 10) : null;
+    if (!id) {
+      if (status) { status.textContent = 'Paste your Yahoo league ID (or the league URL).'; status.style.color = '#f59e0b'; }
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
+    const say = (msg) => { if (status) { status.textContent = msg; status.style.color = 'var(--text2)'; } };
+    say('Fetching league from Yahoo…');
+    try {
+      await _mtLoadYahooNormalizer();
+      const N = window.MFF_YAHOO;
+
+      // 1) Settings JSON — exact scoring + lineup slots (authoritative over
+      //    the page scrape; the extension path can only default to ½PPR).
+      const sResp = await _mtYahooProxyFetch('https://pub-api.fantasysports.yahoo.com/fantasy/v3/settings/nfl/' + id + '?format=rawjson');
+      const sJson = await sResp.json().catch(() => null);
+      const svc = (sJson && (sJson.service || sJson)) || {};
+      if (!svc.league_id && !svc.name) throw new Error('League not found — double-check the ID.');
+      const apiSlots = [];
+      ((svc.settings && svc.settings.roster_positions) || []).forEach(r => {
+        const lbl = N.SLOT_MAP[String(r.position || '').toUpperCase().replace(/\s+/g, '')];
+        if (!lbl || lbl === 'BN' || lbl === 'IR') return;
+        const n = parseInt(r.count, 10) || 0;
+        for (let i = 0; i < n; i++) apiSlots.push(lbl);
+      });
+      let rec = null;
+      ((svc.settings && svc.settings.stat_categories) || []).forEach(c => {
+        if (Number(c.stat_id) === 11) rec = parseFloat(c.stat_modifier) || 0;
+      });
+
+      // 2) League home HTML — team ids/names/records via the standings parse;
+      //    teams API fallback (names only) for skins without a standings module.
+      const homeResp = await _mtYahooProxyFetch('https://football.fantasysports.yahoo.com/f1/' + id);
+      const homeDoc = new DOMParser().parseFromString(await homeResp.text(), 'text/html');
+      const standings = N.parseStandingsDoc(homeDoc, id);
+      if (!standings.teams.length) {
+        const tResp = await _mtYahooProxyFetch('https://pub-api.fantasysports.yahoo.com/fantasy/v3/teams/nfl/' + id + '?format=rawjson');
+        const tJson = await tResp.json().catch(() => null);
+        const list = (tJson && tJson.service && tJson.service.team_list) || [];
+        standings.teams = list.map(t => ({ teamId: t.id, name: t.teamname || ('Team ' + t.id), wins: 0, losses: 0, fpts: 0 }));
+      }
+      if (!standings.teams.length) throw new Error('No teams found — double-check the league ID.');
+
+      // 3) One page per team for rosters (the JSON API has no roster route).
+      for (let i = 0; i < standings.teams.length; i++) {
+        const t = standings.teams[i];
+        say('Reading rosters… ' + (i + 1) + '/' + standings.teams.length);
+        try {
+          const tr = await _mtYahooProxyFetch('https://football.fantasysports.yahoo.com/f1/' + id + '/' + t.teamId);
+          const doc = new DOMParser().parseFromString(await tr.text(), 'text/html');
+          const parsed = N.parseTeamDoc(doc);
+          t.roster = parsed ? parsed.roster : [];
+          t.slots = parsed ? parsed.slots : [];
+        } catch (_) { t.roster = []; t.slots = []; }
+      }
+
+      const norm = N.buildLeaguePayload({
+        leagueId: id,
+        name: svc.name || standings.name,
+        teams: standings.teams,
+        myTeamId: urlTeamId,
+        scoringPrefs: rec != null ? { rec: rec } : null
+      });
+      if (apiSlots.length) {
+        norm.rosterPositions = apiSlots;
+        norm.sf = apiSlots.indexOf('SUPER_FLEX') >= 0 || apiSlots.filter(s => s === 'QB').length >= 2;
+      }
+      norm.syncedAt = Date.now();
+      norm.direct = true; // in-site fetch, not the extension — enables the ↻ re-sync button
+      // My-team flag: anonymous pages carry no "My Team" nav link, so take
+      // the teamId from a pasted team URL; a bare-ID re-sync keeps the
+      // previous selection (same fallbacks as the ESPN direct path).
+      if (urlTeamId == null) {
+        let prevMineId = null;
+        const prev = _mtYahooLeagues && _mtYahooLeagues[norm.leagueId];
+        if (prev && prev.teams) {
+          const m = prev.teams.find(t => t.isMine);
+          if (m) prevMineId = m.teamId;
+        }
+        if (prevMineId == null && _mtActiveSource === 'yahoo' && _mtActiveYahooId === norm.leagueId && window._mtTeams) {
+          const m = window._mtTeams.find(t => t.isMyTeam);
+          if (m) prevMineId = m.id;
+        }
+        if (prevMineId != null) norm.teams.forEach(t => { t.isMine = t.teamId === prevMineId; });
+      }
+      if (!_mtYahooLeagues) _mtYahooLeagues = {};
+      _mtYahooLeagues[norm.leagueId] = norm;
+      _mtRenderYahooCard();
+      window._mtImportYahoo(norm.leagueId);
+    } catch (err) {
+      console.warn('[MyTeams] Yahoo direct sync error:', err);
+      if (status) {
+        status.textContent = err instanceof TypeError
+          ? 'Couldn\'t reach Yahoo — check your connection and try again.'
+          : 'Error: ' + err.message;
+        status.style.color = '#ef4444';
+      }
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'IMPORT'; }
+  };
+
+  window._mtResyncYahoo = function (leagueId) {
+    const input = document.getElementById('mtYahooLeagueId');
+    if (input) input.value = String(leagueId);
+    window._mtImportYahooById();
   };
 
   let _mtSortBy = 'total'; // current sort key

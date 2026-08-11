@@ -25,9 +25,9 @@ Shared across all four listings:
 
 ---
 
-## 1. MFF Underdog Draft Helper — UPDATE existing listing (v0.16.3? → 0.16.4)
+## 1. MFF Underdog Draft Helper — UPDATE existing listing (→ 0.17.0)
 
-Upload: `mff-underdog-draft-helper-0.16.4.zip`
+Upload: `mff-underdog-draft-helper-0.17.0.zip`
 
 Paste-ready replacements for the existing listing (the old copy in
 `underdog-extension/CHROME_STORE_SUBMISSION.md` references the dead `.org`
@@ -75,9 +75,9 @@ no new permissions, so mention in the "What's new" notes only if asked.
 
 ---
 
-## 2. MFF Sleeper Helper — NEW listing (v0.27.0)
+## 2. MFF Sleeper Helper — NEW listing (v0.28.0)
 
-Upload: `mff-sleeper-helper-0.27.0.zip`
+Upload: `mff-sleeper-helper-0.28.0.zip`
 
 **Short summary (130 chars, matches manifest):**
 ```
@@ -131,9 +131,9 @@ Sleeper's API to power recommendations, stored locally only). Everything else No
 
 ---
 
-## 3. MFF ESPN Helper — NEW listing (v0.18.0)
+## 3. MFF ESPN Helper — NEW listing (v0.19.0)
 
-Upload: `mff-espn-helper-0.18.0.zip`
+Upload: `mff-espn-helper-0.19.0.zip`
 
 **Short summary (129 chars, matches manifest):**
 ```
@@ -186,9 +186,9 @@ Display draft-pick recommendations and lineup/waiver/season-sim advice on ESPN F
 
 ---
 
-## 4. MFF Yahoo Helper — NEW listing (v0.7.0)
+## 4. MFF Yahoo Helper — NEW listing (v0.8.0)
 
-Upload: `mff-yahoo-helper-0.7.0.zip`
+Upload: `mff-yahoo-helper-0.8.0.zip`
 
 **Short summary (124 chars, matches manifest):**
 ```

@@ -45268,7 +45268,14 @@ Rules:
       const sel = document.getElementById('qaLeague-' + type);
       if (!sel) return;
       const cur = parseInt(sel.value, 10);
-      sel.innerHTML = _qaLeagueOptions(isNaN(cur) ? -1 : cur);
+      const fresh = _qaLeagueOptions(isNaN(cur) ? -1 : cur);
+      // Idempotent: only rewrite when the option list actually changed.
+      // Rebuilding identical options closes any open dropdown mid-pick
+      // (native select/datalist popups die on any element mutation).
+      if (sel._qaOptsSig !== fresh) {
+        sel._qaOptsSig = fresh;
+        sel.innerHTML = fresh;
+      }
       // League list may have changed under a live selection — re-scope the
       // player suggestion datalists to whatever is selected now.
       window._qaLeagueChanged(type);
@@ -45288,6 +45295,12 @@ Rules:
       dl.id = id;
       document.body.appendChild(dl); // body: survives #mtAskJack re-renders
     }
+    // Idempotent: mutating an open datalist closes its dropdown instantly
+    // (Chrome kills the popup on any list/input mutation), so skip the
+    // rebuild when the roster hasn't changed.
+    const sig = names.join('|');
+    if (dl._qaSig === sig) return;
+    dl._qaSig = sig;
     dl.innerHTML = names.map(n => '<option value="' + _jtEsc(n) + '">').join('');
   }
   window._qaLeagueChanged = function(type) {
@@ -45310,13 +45323,16 @@ Rules:
       if (el) inputs.push({ el, i });
     }
     // Per-type datalist ids — start/sit and trade can attach different leagues.
+    // setAttribute is guarded (mutating the list attr of a focused input
+    // closes its open suggestion dropdown, so only touch it on real change).
+    const _setList = (el, listId) => { if (el.getAttribute('list') !== listId) el.setAttribute('list', listId); };
     const mineId = 'qaRosterMine-' + type, othersId = 'qaRosterOthers-' + type;
     if (type === 'startsit') {
       if (myNames.length) {
         _qaEnsureDatalist(mineId, myNames);
-        inputs.forEach(x => x.el.setAttribute('list', mineId));
+        inputs.forEach(x => _setList(x.el, mineId));
       } else {
-        inputs.forEach(x => x.el.setAttribute('list', 'qaPlayerList'));
+        inputs.forEach(x => _setList(x.el, 'qaPlayerList'));
       }
     } else {
       if (myNames.length) _qaEnsureDatalist(mineId, myNames);
@@ -45326,7 +45342,7 @@ Rules:
         const listId = wantMine
           ? (myNames.length ? mineId : 'qaPlayerList')
           : (otherNames.length ? othersId : 'qaPlayerList');
-        x.el.setAttribute('list', listId);
+        _setList(x.el, listId);
       });
     }
   };
@@ -45407,22 +45423,31 @@ Rules:
         '</div></details>';
     }
 
-    // Preserve in-progress form state across re-renders. This panel is
-    // rebuilt wholesale by premium re-checks and auth churn (the
-    // checkPremiumStatus hook and onAuthStateChanged both re-invoke
-    // _qaRenderPanel) — without this snapshot, the league select and any
-    // typed players silently reset to defaults mid-composition.
-    const _prevVals = {};
-    sect.querySelectorAll('input, select').forEach(el => {
-      if (el.id && el.value) _prevVals[el.id] = el.value;
-    });
-    sect.innerHTML =
+    const _newHtml =
       '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
       header +
       '<div style="font-size:.62rem;color:var(--text2);margin-bottom:10px">Jack picks the player or trade side he likes better · ' + _qaResetLabel() + '</div>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch">' + slots + '</div>' +
       pastHtml + _qaDatalist() +
       '</div>';
+    // Idempotent render: if nothing changed (questions, leagues — the
+    // league options are baked into the form html — reset label, player
+    // pool), leave the live DOM completely alone. Any innerHTML swap kills
+    // an open suggestion dropdown and steals focus mid-typing, and this
+    // panel gets re-invoked by premium re-checks / auth churn constantly.
+    if (sect._qaLastHtml === _newHtml) {
+      sect.style.display = 'block';
+      return;
+    }
+    sect._qaLastHtml = _newHtml;
+    // Preserve in-progress form state across real re-renders — without this
+    // snapshot, the league select and any typed players reset to defaults
+    // mid-composition.
+    const _prevVals = {};
+    sect.querySelectorAll('input, select').forEach(el => {
+      if (el.id && el.value) _prevVals[el.id] = el.value;
+    });
+    sect.innerHTML = _newHtml;
     sect.style.display = 'block';
     window._qaRefreshLeagues();
     Object.keys(_prevVals).forEach(id => {

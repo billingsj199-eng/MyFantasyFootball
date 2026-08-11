@@ -54,8 +54,19 @@
     try {
       var vb = window.versionBoards, D = window.D;
       if (!vb || !vb.mine || !Array.isArray(D) || !D.length) return null;
+      // A virgin (never-saved) mine format is a live MIRROR of Jack's premium
+      // board (site seeding, 2026-08-10) — shipping it to a free session would
+      // leak the full board the sliced bundle just stopped shipping. Custom
+      // formats are the user's own work and ship for everyone.
+      var u = readUser();
+      var prem = !!(u && u.premium);
       var out = {}, any = false;
       for (var k in BOARD_TO_MODE) {
+        if (!prem) {
+          var custom = false;
+          try { custom = !!(window._mineIsCustom && window._mineIsCustom(k)); } catch (_) {}
+          if (!custom) continue;
+        }
         var arr = vb.mine[k];
         if (!Array.isArray(arr) || !arr.length) continue;
         var rows = [];

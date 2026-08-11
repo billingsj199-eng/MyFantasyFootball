@@ -3117,6 +3117,19 @@
   // slower than storage), so the Firestore copy — always >= bridge freshness
   // — wins; a live bridge push mid-session still applies via onChanged.
   function refreshJackBoards() {
+    // PREMIUM (v0.17.2): the bundle only carries the free top-36 slice of
+    // Jack's boards — the live full-board pull is premium-only. A non-premium
+    // session is lock-screened anyway, so skipping the fetch changes nothing
+    // visible; it just stops the full board from landing in a free install.
+    try {
+      chrome.storage.local.get(['mff_user'], (gu) => {
+        const u = gu && gu.mff_user;
+        if (!(u && u.premium && u.syncedAt && (Date.now() - u.syncedAt) < 24 * 60 * 60 * 1000)) return;
+        _refreshJackBoardsNow();
+      });
+    } catch (_) {}
+  }
+  function _refreshJackBoardsNow() {
     try {
       chrome.runtime.sendMessage({ type: 'mff-jacks-fetch' }, (res) => {
         if (chrome.runtime.lastError || !res || !res.ok || !res.data) return;
@@ -5855,6 +5868,12 @@
         // lock screen without a page reload.
         if (changes.mff_user) {
           try { applyPremiumGate(changes.mff_user.newValue || null); } catch (_) {}
+          // Newly premium → pull the live full boards now (the bundle only
+          // carries the free top-36 slice; the boot-time fetch was skipped).
+          try {
+            const nu = changes.mff_user.newValue, was = changes.mff_user.oldValue;
+            if (nu && nu.premium && !(was && was.premium) && typeof refreshJackBoards === 'function') refreshJackBoards();
+          } catch (_) {}
         }
         if (changes.mff_portfolio && changes.mff_portfolio.newValue) {
           state.portfolio = changes.mff_portfolio.newValue;

@@ -479,12 +479,20 @@ def main():
     assign_vor(players, sigma_map)
     print("Wrote", len([p for p in players if p.get("vor") is not None]), "with VOR")
     print("QB hcPpg count:", len([p for p in players if p.get("s")=="QB" and p.get("hcPpg") is not None]))
+    # PREMIUM LEAK FIX: bundle only the free slice of Jack's boards (top 36
+    # real, deeper ranks re-numbered in Underdog-ADP order, tiers cut at 36).
+    # Premium sessions restore the live board via the gated Firestore refresh.
+    _sx.slice_jack_fields(players, {"rank": ["udA", "fpR", "slR"],
+                                    "jSf":  ["udA", "fpR", "slR"]})
+    jacks_tiers = _sx.slice_board_tiers(jacks_tiers)
     import os, json, time
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
     with open(OUT_PATH, "w", encoding="utf-8") as f:
-        json.dump({"version":7,"exported_at":time.strftime("%Y-%m-%d %H:%M:%S"),"players":players,
+        json.dump({"version":7,"exported_at":time.strftime("%Y-%m-%d %H:%M:%S"),
+                   "jackSlice":_sx.JACK_FREE_CUTOFF,"players":players,
                    # Jack's tier boundaries per rank field ("rank"=bestball, "jSf"):
                    # sorted [{a, l, n}], tier = last entry with a <= rank.
+                   # SLICED: only boundaries within the free top-36 ship here.
                    "tiers":jacks_tiers}, f, ensure_ascii=False, indent=1)
     print("Wrote", len(players), "players ->", OUT_PATH)
     if ir_dropped:

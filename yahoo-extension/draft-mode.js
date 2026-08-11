@@ -185,6 +185,60 @@
     return fetch(chrome.runtime.getURL('data/players.json')).then((r) => r.json());
   }
 
+  // ---------- live Jack's boards (premium-only; Firestore REST sends CORS *) ----------
+  // The bundled players.json only carries the free top-36 slice of Jack's
+  // boards (deeper ranks are market-ADP order) — a premium session pulls the
+  // live full board here, same doc + same gate as sidebar.js.
+  const FIRESTORE_URL =
+    'https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)' +
+    '/documents/rankings/jacks-official?key=AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY';
+  function refreshJackBoards() {
+    if (MOCK) return;
+    try {
+      chrome.storage.local.get(['mff_user'], (gu) => {
+        const u = (gu && gu.mff_user) || _gateUser;
+        if (!(u && u.premium && u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS)) return;
+        fetch(FIRESTORE_URL, { headers: { Accept: 'application/json' } })
+          .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then((doc) => {
+            const payload = JSON.parse(doc.fields.data.stringValue);
+            const jacks = payload.jacks || {};
+            const byNorm = {};
+            for (const p of st.board) (byNorm[norm(p.n)] = byNorm[norm(p.n)] || []).push(p);
+            let applied = 0;
+            for (const [mode, key] of [['redraft', 'rank'], ['superflex', 'jSf']]) {
+              const order = (jacks[mode] || {})._order || [];
+              order.forEach((name, i) => {
+                const list = byNorm[norm(name)];
+                if (list) for (const p of list) { p[key] = i + 1; applied++; }
+              });
+              const pt = ((jacks[mode] || {})._posTiers || {}).ALL;
+              if (Array.isArray(pt)) {
+                st.tiers[key] = pt
+                  .filter((t) => t && t.afterRank >= 1 && t.label)
+                  .map((t) => ({ a: t.afterRank, l: String(t.label), n: String(t.name || '') }))
+                  .sort((x, y) => x.a - y.a);
+              }
+            }
+            if (applied) {
+              console.log('[MFF/yahoo-draft] live Jack boards applied (' + applied + ' ranks)');
+              if (st.ready) render();
+            }
+          })
+          .catch(() => { /* sliced bundle stays in effect */ });
+      });
+    } catch (_) {}
+  }
+  // Premium sync can land mid-draft (user opens the site in another tab) —
+  // pull the live boards the moment the gate user turns premium.
+  try {
+    chrome.storage.onChanged.addListener((ch, area) => {
+      if (area !== 'local' || !ch.mff_user) return;
+      const nu = ch.mff_user.newValue, was = ch.mff_user.oldValue;
+      if (nu && nu.premium && !(was && was.premium)) refreshJackBoards();
+    });
+  } catch (_) {}
+
   function applySettings(svc) {
     st.leagueName = svc.name || ('League ' + st.leagueId);
     const sl = st.slots;
@@ -1353,7 +1407,7 @@
     getJson(API + 'teams/nfl/' + st.leagueId + '?format=rawjson').then((j) => applyTeams(j.service || j)),
     getJson(API + 'players/nfl/' + st.leagueId + '?images=1&team_id=' + st.myTeamId + '&projected=1&average=1&format=rawjson')
       .then((j) => applyPlayers(j.service || j)),
-    loadBoard().then((pj) => { st.board = (pj && pj.players) || []; st.tiers = (pj && pj.tiers) || {}; indexBoard(); }),
+    loadBoard().then((pj) => { st.board = (pj && pj.players) || []; st.tiers = (pj && pj.tiers) || {}; indexBoard(); refreshJackBoards(); }),
   ]).then(backfill).then(() => {
     linkBoard();
     applyLeagueScoring();

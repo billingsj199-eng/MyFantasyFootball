@@ -337,6 +337,48 @@ def extract_board_tiers(mode_obj):
     return out
 
 
+# ---- FREE-SLICE (premium leak fix, 2026-08-11) ------------------------
+# The public store zips must not ship Jack's full board: players.json keeps
+# his REAL rank only for the site's free tier (top 36), and every deeper rank
+# is re-numbered in market-ADP order — public data, so a zip reader learns
+# nothing beyond what myfantasyfootball.co already shows signed-out users.
+# Premium sessions restore the live full board at runtime via the extensions'
+# premium-gated Firestore refresh (refreshJackBoards).
+JACK_FREE_CUTOFF = 36
+
+
+def slice_jack_fields(players, key_specs, cutoff=JACK_FREE_CUTOFF):
+    """Re-number every Jack-board field deeper than `cutoff` in ADP order.
+
+    key_specs: {rank_field: [ADP-ish fields, best first]}. Players whose field
+    is <= cutoff keep the true value; the rest are sorted by the first present
+    fallback field (alphabetical when none) and re-assigned cutoff+1, +2, ...
+    so ordering stays sane for the engines without leaking the real board.
+    """
+    for key, order_fields in key_specs.items():
+        deep = [p for p in players if isinstance(p.get(key), (int, float)) and p[key] > cutoff]
+
+        def sort_key(p):
+            for f in order_fields:
+                v = p.get(f)
+                if isinstance(v, (int, float)) and v < 9000:
+                    return (0, float(v), norm(p.get("n") or ""))
+            # No market signal anywhere: alphabetical, NOT Jack's relative
+            # order — even the deep-board ordering of obscure names is his.
+            return (1, 0.0, norm(p.get("n") or ""))
+
+        deep.sort(key=sort_key)
+        for i, p in enumerate(deep):
+            p[key] = cutoff + 1 + i
+    return players
+
+
+def slice_board_tiers(tiers, cutoff=JACK_FREE_CUTOFF):
+    """Drop tier boundaries beyond the cutoff — deep boundaries map his board structure."""
+    return {k: [t for t in (v or []) if t.get("a", 10**9) <= cutoff]
+            for k, v in (tiers or {}).items()}
+
+
 def load_jacks_boards():
     """name-norm -> rank for Jack's live boards, plus his tier boundaries.
 
@@ -617,16 +659,29 @@ def main():
     if unmatched:
         print("Top-200 players missing sleeper id:", unmatched)
 
+    # PREMIUM LEAK FIX: only the free slice of Jack's boards ships in the
+    # bundle (top 36 real, deeper ranks re-numbered in market-ADP order,
+    # tier boundaries cut at 36). See slice_jack_fields.
+    slice_jack_fields(players, {
+        "rank": ["a", "fpR", "slR"],
+        "jSf":  ["sfa", "fpSf", "slSf"],
+        "jDy":  ["da", "fpDy", "slDy"],
+        "jDsf": ["sa", "fpDsf", "slDsf"],
+    })
+    jacks_tiers = slice_board_tiers(jacks_tiers)
+
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         json.dump(
             {
                 "version": 1,
                 "exported_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "jackSlice": JACK_FREE_CUTOFF,
                 "players": players,
                 "pickAssets": picks_out,
                 # Jack's tier boundaries per rank field ("rank"/jSf/jDy/jDsf):
                 # sorted [{a, l, n}], tier = last entry with a <= rank.
+                # SLICED: only boundaries within the free top-36 ship here.
                 "tiers": jacks_tiers,
             },
             f,

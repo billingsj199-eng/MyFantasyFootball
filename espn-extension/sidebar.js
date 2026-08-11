@@ -187,6 +187,15 @@
     '/documents/rankings/jacks-official?key=AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY';
   async function refreshJackBoards() {
     if (MOCK) return;
+    // PREMIUM (v0.19.2): the bundle only carries the free top-36 slice of
+    // Jack's boards — the live full-board pull is premium-only. Read the
+    // synced user straight from storage: the gate's async boot read may not
+    // have landed in _gateUser yet the first time this runs.
+    try {
+      const gu = await store.get(['mff_user']);
+      const u = (gu && gu.mff_user) || _gateUser;
+      if (!(u && u.premium && u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS)) return;
+    } catch (e) { return; }
     try {
       // v0.17.2: fetchJson (direct + background relay fallback) instead of a
       // bare fetch, so a future ESPN CSP change can't silently kill live boards.
@@ -234,6 +243,16 @@
     _boardsFetchedAt = Date.now();
     refreshJackBoards();
   });
+  // Premium sync can land AFTER boot (user opens the site in another tab) —
+  // pull the live boards the moment the gate user turns premium instead of
+  // leaving the sliced bundle in effect until the next refocus.
+  try {
+    chrome.storage.onChanged.addListener((ch, area) => {
+      if (area !== 'local' || !ch.mff_user) return;
+      const nu = ch.mff_user.newValue, was = ch.mff_user.oldValue;
+      if (nu && nu.premium && !(was && was.premium)) { _boardsFetchedAt = Date.now(); refreshJackBoards(); }
+    });
+  } catch (_) {}
 
   // ---------- live Vegas overlay (GitHub Pages serves CORS *, direct fetch OK) ----------
   function applyLiveVegas(gameTotals) {

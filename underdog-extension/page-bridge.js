@@ -70,22 +70,34 @@
   function extractRankings() {
     const D = window.D;
     if (!Array.isArray(D) || !D.length) return null;
-    // Prefer Jack's official boards (loaded for all users from Firestore);
-    // fall back to user's personal "MY RANKS" board if jacks didn't load.
+    // PREMIUM (v0.17.2): Jack's boards only ship to a premium session — the
+    // bundled players.json carries just the free top-36 slice, and this bridge
+    // must not become the free path around that. The user's own "MY RANKS"
+    // fallback still ships for everyone, but ONLY when the format was actually
+    // customized: a virgin mine board is a live mirror of Jack's (site seeding
+    // 2026-08-10), so shipping it would be the same leak with extra steps.
+    const gu = readUser();
+    const prem = !!(gu && gu.premium);
+    const mineCustom = function (k) {
+      try { return !!(window._mineIsCustom && window._mineIsCustom(k)); } catch (_) { return false; }
+    };
     let bbMap = null, sfMap = null;
     try {
       const vb = window.versionBoards;
-      if (vb && vb.jacks) {
+      if (prem && vb && vb.jacks) {
         bbMap = buildRankMapFromBoard(vb.jacks.bestball, D);
         sfMap = buildRankMapFromBoard(vb.jacks.superflex, D);
       }
-      if (!bbMap && vb && vb.mine) {
+      if (!bbMap && vb && vb.mine && (prem || mineCustom('bestball'))) {
         bbMap = buildRankMapFromBoard(vb.mine.bestball, D);
       }
-      if (!sfMap && vb && vb.mine) {
+      if (!sfMap && vb && vb.mine && (prem || mineCustom('superflex'))) {
         sfMap = buildRankMapFromBoard(vb.mine.superflex, D);
       }
     } catch(_){}
+    // Free session with no custom boards: ship nothing — the d.myRank
+    // fallback below is Jack's baked board order, same leak by another door.
+    if (!prem && !bbMap && !sfMap) return null;
     const rows = [];
     const irOut = [];
     for (let i = 0; i < D.length; i++) {

@@ -5208,7 +5208,7 @@ document.getElementById('btnExportTiers').addEventListener('click', () => {
   toast(`Exported ${payload.tierCount} tier${payload.tierCount === 1 ? '' : 's'} to JSON`);
 });
 
-// Export to Underdog format CSV (id, firstName, lastName, rank)
+// Export to Underdog format CSV (id, playerId, firstName, lastName, rank — Aug 2026 underdogsports.com schema)
 document.getElementById('btnExportUnderdog').addEventListener('click', () => {
   let data = getFiltered();
   const _cut = _exportCutoff();
@@ -5229,7 +5229,7 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
   const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
   const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
 
-  const headers = ['id','firstName','lastName','adp','projectedPoints','salary','positionRank','slotName','teamName','lineupStatus','byeWeek'];
+  const headers = ['id','playerId','firstName','lastName','adp','projectedPoints','salary','positionRank','slotName','teamName','lineupStatus','byeWeek'];
   const rows = [headers.map(esc).join(',')];
   let matched = 0, skipped = 0;
 
@@ -5254,6 +5254,7 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
 
     rows.push([
       esc(udId),
+      esc(meta ? (meta.pid || '') : ''),
       esc(firstName),
       esc(lastName),
       esc(displayRank),
@@ -5266,8 +5267,10 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
       ''
     ].join(','));
   });
-  
-  const csv = '\uFEFF' + rows.join('\r\n');
+
+  // Underdog Sports (Aug 2026 platform) exports with no BOM and LF endings;
+  // their importer rejects files that deviate, so mirror exactly.
+  const csv = rows.join('\n');
   const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);

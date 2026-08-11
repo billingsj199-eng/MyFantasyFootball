@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Rebuild data/underdog_ids.js from a fresh Underdog rankings CSV export.
 
-Underdog periodically regenerates their player IDs (and changed the export
-schema in July 2026 to add a `salary` column). When that happens, rankings
-exported from the site stop loading on Underdog. Fix:
+Underdog periodically regenerates their player IDs or changes the export
+schema (July 2026: added `salary`; Aug 2026: app moved to
+app.underdogsports.com, added `playerId` after `id`, dropped the BOM,
+LF line endings). When that happens, rankings exported from the site stop
+loading on Underdog. Fix:
 
     1. Download the current rankings CSV from Underdog (My Rankings -> Export).
     2. python scripts/build_underdog_ids.py "path/to/rankings-....csv"
@@ -101,6 +103,7 @@ def main() -> int:
             "l": r["lastName"],
             "sal": r.get("salary", ""),
             "tm": r["teamName"],
+            "pid": r.get("playerId", ""),
         }
 
     header = (

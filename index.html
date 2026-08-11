@@ -65,14 +65,14 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-11o" as="script">
+<link rel="preload" href="app.js?v=2026-08-11p" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous">
 <link rel="preload" href="data/combine_data.js?v=2026-04-25b" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
-<link rel="preload" href="data/_bundle_lookups.js?v=2026-08-11" as="script">
+<link rel="preload" href="data/_bundle_lookups.js?v=2026-08-11a" as="script">
 <link rel="preload" href="data/d.js?v=2026-08-11" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-08-07a">
@@ -3697,7 +3697,7 @@ ADD TO CHROME
      bundled — they keep loading as separate script tags so the pipeline doesn't
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
-<script src="data/_bundle_lookups.js?v=2026-08-11" defer></script>
+<script src="data/_bundle_lookups.js?v=2026-08-11a" defer></script>
 <script src="data/d.js?v=2026-08-11" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
@@ -5006,7 +5006,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-11o"></script>
+<script defer src="app.js?v=2026-08-11p"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -587,6 +587,9 @@ const versionTierCounters = {
   jacks: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
 };
+// MAIN-world content scripts read tier boundaries too (extension jacks-boards
+// bridge, board-gating Phase B) — attach like versionBoards above.
+window.versionTiers = versionTiers;
 
 // === MINE-FOLLOWS-JACKS SEEDING ===
 // Until a user's first save of a format, their "My Ranks" board mirrors Jack's

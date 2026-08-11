@@ -47730,7 +47730,10 @@ Rules:
       // mid-draft sync grows a pick count and recomputes just this draft.
       const _dSig = _atVals.length + ':' +
         _atVals.reduce((s, t) => s + ((t.picks || []).length), 0) + ':' +
-        (d.picks || []).length;
+        (d.picks || []).length + ':' +
+        // Username count: a re-sync that backfills entrant usernames must
+        // recompute this draft's cached row even though pick counts didn't move.
+        _atVals.reduce((s, t) => s + (t.username ? 1 : 0), 0);
       const _cached = _udByDraft[dk];
       if (_cached && _cached.sig === _dSig) { _udTeamsRows.push(_cached.row); return; }
       const sourceTeams = (_atVals.length >= 2)
@@ -47809,6 +47812,7 @@ Rules:
         const construction = _isSf ? null : _udComputeRosterConstruction(rosterDetails);
         return {
           entryId: t.entryId,
+          username: t.username || null,
           isMine: !!t.isMine,
           picks: picks,
           rosterDetails: rosterDetails,
@@ -47989,7 +47993,13 @@ Rules:
         row.teams.forEach((t, ti) => {
           const isMine = t.isMine;
           const rowBg = isMine ? 'background:linear-gradient(90deg,rgba(251,191,36,0.18),transparent);' : 'background:var(--surface2);';
-          const teamLabel = isMine ? '<span style="color:var(--accent);font-weight:700">YOU</span>' : 'Opponent ' + ((t.entryId || '').slice(0, 6) || (ti + 1));
+          // Entrant usernames arrive with extension syncs (v0.17.5+); older
+          // synced drafts have no username, so keep the YOU / Opponent-id
+          // fallbacks until a re-sync backfills them.
+          const _uname = t.username ? _esc(t.username) : '';
+          const teamLabel = isMine
+            ? '<span style="color:var(--accent);font-weight:700">' + (_uname || 'YOU') + '</span>' + (_uname ? ' <span style="font-size:.55rem;color:var(--accent);letter-spacing:.5px">(YOU)</span>' : '')
+            : (_uname || 'Opponent ' + ((t.entryId || '').slice(0, 6) || (ti + 1)));
           html += `<div onclick="event.stopPropagation();window._udToggleTeamsRoster(${i}, ${ti})" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;${rowBg}cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">`;
           html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
           html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--text);width:30px">#${t.rank}</div>`;

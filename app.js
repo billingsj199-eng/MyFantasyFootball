@@ -18883,6 +18883,14 @@ window.fmtHeight = fmtHeight;
       const refreshed = JSON.parse(localStorage.getItem('jb_premium') || 'null');
       const existingExpires = (refreshed && refreshed.uid === myUid && refreshed.expires) || 0;
       if (expires >= existingExpires) {
+        // Only re-broadcast when something material changed. This loader
+        // re-runs on boot + several auth-retry timers with identical data,
+        // and an unconditional checkPremiumStatus() here cascades (via the
+        // premium hook) into full panel re-renders — the Ask Jack forms
+        // were resetting mid-typing on every pass.
+        const changed = !refreshed || refreshed.source !== 'stripe' || refreshed.uid !== myUid ||
+          refreshed.expires !== expires || refreshed.plan !== planLabel ||
+          !!refreshed.cancelAtPeriodEnd !== !!prem.cancelAtPeriodEnd;
         localStorage.setItem('jb_premium', JSON.stringify({
           plan: planLabel,
           activated: Date.now(),
@@ -18892,8 +18900,10 @@ window.fmtHeight = fmtHeight;
           subscriptionId: prem.stripeSubscriptionId || null,
           cancelAtPeriodEnd: !!prem.cancelAtPeriodEnd
         }));
-        console.log('[Premium] Stripe premium applied — plan ' + planLabel + ', expires ' + new Date(expires).toLocaleDateString());
-        if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();
+        if (changed) {
+          console.log('[Premium] Stripe premium applied — plan ' + planLabel + ', expires ' + new Date(expires).toLocaleDateString());
+          if (typeof window.checkPremiumStatus === 'function') window.checkPremiumStatus();
+        }
       }
     }).catch(e => console.warn('[Premium] stripe load error:', e));
   }
@@ -45338,6 +45348,15 @@ Rules:
         '</div></details>';
     }
 
+    // Preserve in-progress form state across re-renders. This panel is
+    // rebuilt wholesale by premium re-checks and auth churn (the
+    // checkPremiumStatus hook and onAuthStateChanged both re-invoke
+    // _qaRenderPanel) — without this snapshot, the league select and any
+    // typed players silently reset to defaults mid-composition.
+    const _prevVals = {};
+    sect.querySelectorAll('input, select').forEach(el => {
+      if (el.id && el.value) _prevVals[el.id] = el.value;
+    });
     sect.innerHTML =
       '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
       header +
@@ -45347,6 +45366,23 @@ Rules:
       '</div>';
     sect.style.display = 'block';
     window._qaRefreshLeagues();
+    Object.keys(_prevVals).forEach(id => {
+      let el = document.getElementById(id);
+      // Extra start/sit inputs (3rd/4th player) don't exist on a fresh
+      // rebuild — re-add slots until the captured id comes back.
+      if (!el && /^qaOpt-startsit-[23]$/.test(id)) {
+        let guard = 0;
+        while (!el && guard++ < 2) {
+          window._qaAddOption('startsit');
+          el = document.getElementById(id);
+        }
+      }
+      if (!el) return;
+      el.value = _prevVals[id];
+      // League select: if the saved-league list changed and the old index
+      // no longer exists, fall back to "No league attached" over a blank.
+      if (el.tagName === 'SELECT' && el.value !== _prevVals[id]) el.value = '-1';
+    });
   }
 
   function _qaOptionInput(type, idx, placeholder) {

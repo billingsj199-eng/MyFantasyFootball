@@ -43386,7 +43386,7 @@ Rules:
         const ppgColor = p.ppg >= 15 ? '#22c55e' : p.ppg >= 10 ? '#4ade80' : p.ppg >= 6 ? '#facc15' : '#f59e0b';
         html += `<div style="flex:1;display:flex;align-items:center;gap:6px">`;
         html += `<span style="font-size:.55rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'};padding:1px 4px;border-radius:3px;background:${(posColors[p.pos] || '#666')}20">${p.pos}</span>`;
-        html += `<span style="font-size:.78rem;font-weight:600;color:var(--text)">${_esc(p.name)}</span>`;
+        html += `<span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="font-size:.78rem;font-weight:600;color:var(--text);cursor:pointer">${_esc(p.name)}</span>`;
         if (isWeekly && p.out) html += `<span style="font-size:.55rem;font-weight:700;color:#ef4444">${p.out}</span>`;
         html += `</div>`;
         if (isWeekly) {
@@ -43416,7 +43416,7 @@ Rules:
         html += `<div style="display:flex;align-items:center;gap:8px;padding:3px 8px;opacity:.65">`;
         html += `<div style="min-width:28px;text-align:center;font-size:.55rem;color:var(--text2)">BN</div>`;
         html += `<span style="font-size:.5rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'}">${p.pos}</span>`;
-        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)">${_esc(p.name)}${isWeekly && p.out ? ' <span style="color:#ef4444;font-size:.55rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
+        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)"><span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="cursor:pointer">${_esc(p.name)}</span>${isWeekly && p.out ? ' <span style="color:#ef4444;font-size:.55rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
         if (isWeekly) html += `<span style="font-size:.72rem;color:var(--accent);min-width:30px;text-align:right" title="Jack's weekly rank">${p.wkRank != null ? '#' + p.wkRank : '—'}</span>`;
         html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg > 0 ? p.ppg : '—'}</span>`;
         html += `</div>`;
@@ -45735,6 +45735,19 @@ Rules:
     return tryAll(false) || tryAll(true);
   }
 
+  // Open a player's card from anywhere on My Teams. Resolves the name via
+  // the league matcher first, then the Underdog fuzzy matcher. Pass
+  // useLeagueMode=true from league-sync contexts so the card opens in the
+  // league's ranking mode; Underdog contexts keep the site's current mode.
+  window._mtOpenCardByName = function(name, useLeagueMode) {
+    if (!name) return;
+    let d = (typeof _mtLookupD === 'function') ? _mtLookupD(name) : null;
+    if (!d && typeof _udMatchPlayer === 'function') d = _udMatchPlayer(name);
+    if (!d || typeof openPlayerCard !== 'function') return;
+    if (useLeagueMode && typeof _mtGetRankingMode === 'function') openPlayerCard(d, _mtGetRankingMode());
+    else openPlayerCard(d);
+  };
+
   // Get trade value for a player by name — uses the global trade value curve
   function _udGetValue(name) {
     const matched = _udMatchPlayer(name);
@@ -47331,7 +47344,7 @@ Rules:
       } else {
         out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:20px"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">PICKS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)"><span data-gloss="Average % drafted past ADP across your picks of this player. +50% means you got him half a draft-stage later than the market — 10 picks late at ADP 20 beats 30 picks late at ADP 200. Hover the value for the raw pick difference.">VALUE</span></th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
         lists.steals.slice(0, 20).forEach(vp => {
-          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(vp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(vp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e" title="${_vpValueTitle(vp)}">+${vp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${lists.drafts}</td></tr>`;
+          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)"><span onclick="window._mtOpenCardByName('${String(vp.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" style="cursor:pointer" title="Open player card">${_esc(vp.name)}</span></td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(vp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e" title="${_vpValueTitle(vp)}">+${vp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${lists.drafts}</td></tr>`;
         });
         out += `</tbody></table></div>`;
       }
@@ -47343,7 +47356,7 @@ Rules:
       } else {
         out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:24px"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">PICKS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)"><span data-gloss="Average % drafted ahead of ADP across your picks of this player. −50% means you paid half a draft-stage early — reaching 10 picks at ADP 20 costs more than 30 picks at ADP 200. Hover the value for the raw pick difference.">VALUE</span></th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
         lists.reaches.slice(0, 20).forEach(bp => {
-          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(bp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(bp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444" title="${_vpValueTitle(bp)}">${bp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${lists.drafts}</td></tr>`;
+          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)"><span onclick="window._mtOpenCardByName('${String(bp.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" style="cursor:pointer" title="Open player card">${_esc(bp.name)}</span></td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(bp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444" title="${_vpValueTitle(bp)}">${bp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${lists.drafts}</td></tr>`;
         });
         out += `</tbody></table></div>`;
       }
@@ -47983,7 +47996,7 @@ Rules:
             html += `<tr style="border-bottom:1px solid var(--border)">
               <td style="padding:3px 6px;color:var(--text2)">${p.round}</td>
               <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.pick}</td>
-              <td style="padding:3px 6px;color:var(--text);white-space:nowrap">${_bbHsHtml}${_esc(p.name)}${wkBadge}</td>
+              <td style="padding:3px 6px;color:var(--text);white-space:nowrap"><span onclick="window._mtOpenCardByName('${String(_bbMatch ? _bbMatch.n : p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" style="cursor:pointer" title="Open player card">${_bbHsHtml}${_esc(p.name)}</span>${wkBadge}</td>
               <td style="padding:3px 6px;color:${posColors[p.pos] || 'var(--text2)'};font-weight:600">${p.pos || '—'}</td>
               <td style="padding:3px 6px;color:var(--text2)">${_esc(p.team || '')}</td>
               <td style="padding:3px 6px;text-align:right;font-weight:700;color:${projColor}">${p.proj != null ? p.proj.toFixed(1) : '—'}</td>
@@ -48080,7 +48093,7 @@ Rules:
         else { ownColor = '#22c55e'; ownBg = 'rgba(34,197,94,.18)'; }
 
         html += `<td style="padding:2px;border:1px solid var(--border)">`;
-        html += `<div style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownColor}30;min-height:32px">`;
+        html += `<div onclick="window._mtOpenCardByName('${String(player.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="Open player card" style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownColor}30;min-height:32px;cursor:pointer">`;
         html += `<div style="font-size:.58rem;font-weight:600;color:${ownColor};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(player.name)}</div>`;
         html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:1px">`;
         html += `<span style="font-size:.48rem;color:var(--text2)">${player.pos}</span>`;
@@ -48122,7 +48135,7 @@ Rules:
       html += headshotHtml;
       html += `<span style="font-size:.55rem;padding:1px 4px;border-radius:3px;background:${posColors[info.pos] || 'var(--text2)'}20;color:${posColors[info.pos] || 'var(--text2)'};font-weight:600">${info.pos}</span>`;
       html += `<div style="flex:1;min-width:0">`;
-      html += `<div style="font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(name)} <span style="font-weight:400;color:var(--text2);font-size:.65rem">${info.team || ''}</span></div>`;
+      html += `<div style="font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span onclick="event.stopPropagation();window._mtOpenCardByName('${String(name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="Open player card — click anywhere else on the row to expand drafts" style="cursor:pointer">${_esc(name)}</span> <span style="font-weight:400;color:var(--text2);font-size:.65rem">${info.team || ''}</span></div>`;
       html += `<div style="display:flex;align-items:center;gap:6px;margin-top:2px">`;
       html += `<div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;max-width:120px"><div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px"></div></div>`;
       html += `<span style="font-size:.65rem;color:var(--text2)">Avg pick: ${Math.round(info.avgPick)} (${info.minPick}–${info.maxPick})</span>`;
@@ -48384,7 +48397,7 @@ Rules:
       } else {
         // Fallback (cache miss / sim failure): plain pick list from the draft.
         const rows = (d.picks || []).slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map(p =>
-          `<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 8px;text-align:right;color:var(--text2)">${p.pick}</td><td style="padding:4px 8px;color:var(--text)">${_esc(p.name)}</td><td style="padding:4px 8px;color:var(--text2)">${_esc(p.pos || '')}</td></tr>`).join('');
+          `<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 8px;text-align:right;color:var(--text2)">${p.pick}</td><td style="padding:4px 8px;color:var(--text)"><span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="Open player card" style="cursor:pointer">${_esc(p.name)}</span></td><td style="padding:4px 8px;color:var(--text2)">${_esc(p.pos || '')}</td></tr>`).join('');
         body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:right;padding:4px 8px;color:var(--text2)">PICK</th><th style="text-align:left;padding:4px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:4px 8px;color:var(--text2)">POS</th></tr></thead><tbody>${rows}</tbody></table>`;
       }
       // Highlight the clicked player's row so the eye lands on the pick.

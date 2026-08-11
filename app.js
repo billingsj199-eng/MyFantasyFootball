@@ -48042,8 +48042,11 @@ Rules:
     // column to its widest name and the grid overflows even on wide screens
     // (forcing a horizontal scroll). Fixed layout splits the full width
     // evenly across the team columns and lets names ellipsize; min-width
-    // keeps ~95px/column so narrow screens still scroll instead of crushing.
-    html += `<table style="border-collapse:collapse;font-size:.6rem;min-width:${teamCount * 95}px;width:100%;table-layout:fixed">`;
+    // keeps ~78px/column so narrow screens still scroll instead of crushing.
+    // (95 → 78 on 2026-08-11: at 125% Windows display scaling a maximized
+    // 1080p-class window only yields a ~1000px container, which sat under
+    // the old 1140px floor and still scrolled.)
+    html += `<table style="border-collapse:collapse;font-size:.6rem;min-width:${teamCount * 78}px;width:100%;table-layout:fixed">`;
     html += `<colgroup><col style="width:34px">${'<col>'.repeat(teamCount)}</colgroup>`;
 
     // Header row

@@ -1,4 +1,4 @@
-// COPY of ../sim_lab/engine.js (synced 2026-08-10 19:18:47 by export_sleeper_extension_data.py — edit the sim_lab original)
+// COPY of ../sim_lab/engine.js (synced 2026-08-11 09:27:34 by export_sleeper_extension_data.py — edit the sim_lab original)
 // ============================================================================
 // SIM LAB ENGINE — projections + Monte Carlo simulation core.
 // Private research tool. Not part of the deployed MFF site.

@@ -48238,9 +48238,13 @@ Rules:
       h += `<div style="font-size:.55rem;color:var(--text2);letter-spacing:1px;text-align:right" title="Pick − ADP. Positive = you got them later than market (value). Negative = reached.">Δ</div>`;
     }
     h += `<div style="font-size:.55rem;color:var(--text2);letter-spacing:1px;text-align:right">RD</div>`;
+    // Tournament links open the draft-roster POPUP (with this player's row
+    // highlighted) instead of deep-linking to the TEAMS tab — the popup's
+    // own "OPEN IN TEAMS TAB →" link still covers the full-field view.
+    const _expNmSafe = String(name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
     rows.forEach(r => {
-      const safeDraftId = String(r.draftId).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-      h += `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="#" onclick="event.preventDefault();event.stopPropagation();window._udJumpToDraft('${safeDraftId}')" style="color:var(--accent);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:pointer">${_esc(r.tournament)}</a></div>`;
+      const safeDraftId = String(r.draftId).replace(/[^\w-]/g, '');
+      h += `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="#" onclick="event.preventDefault();event.stopPropagation();window._vpOpenDraft('${safeDraftId}','${_expNmSafe}')" style="color:var(--accent);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:pointer" title="Click to view this team">${_esc(r.tournament)}</a></div>`;
       h += `<div style="text-align:right;color:var(--text)">${r.slot != null ? r.slot : '—'}${r.size ? '/' + r.size : ''}</div>`;
       h += `<div style="text-align:right;color:var(--text);font-weight:600">${r.pickNum}</div>`;
       if (_withAdp) {

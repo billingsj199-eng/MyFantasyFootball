@@ -42943,10 +42943,81 @@ Rules:
   // Multiple teams can be open at once; the set survives list re-renders.
   const _mtOpenTeams = new Set();
 
+  // ── Starter-weighted positional league ranks ──
+  // The positional boxes show a 1..N rank against the rest of the league
+  // instead of the raw summed trade value. Strength is starter-weighted:
+  // starting slots count in full, the flex share fractionally, and bench
+  // depth decays hard (0.2 / 0.08 / 0.03) — so one elite starter at a
+  // 1-starter position outranks two mid guys, but a near-elite starter
+  // plus real depth can still edge past a slightly better lone starter.
+  function _mtPosStarterSlots() {
+    let rp = (_mtFormat && _mtFormat.rosterPositions) || [];
+    if (!rp.length) {
+      // Same default shape _mtBestLineup falls back to
+      rp = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX'];
+      if (_mtFormat && _mtFormat.sf) rp.push('SUPER_FLEX');
+    }
+    const c = s => rp.filter(x => x === s).length;
+    const flex = c('FLEX') + c('WRRB_FLEX') + c('WR_RB_FLEX') + c('REC_FLEX');
+    const sf = c('SUPER_FLEX');
+    return {
+      QB: (c('QB') || 1) + sf * 0.8,
+      RB: (c('RB') || 2) + flex * 0.45,
+      WR: (c('WR') || 2) + flex * 0.45,
+      TE: (c('TE') || 1) + flex * 0.1,
+      K: c('K') || 1,
+      DST: (c('DEF') || c('DST')) || 1
+    };
+  }
+  // group = one team's players at a position, sorted by val desc
+  function _mtPosStrength(group, starters) {
+    const full = Math.floor(starters);
+    const frac = starters - full;
+    let bench = 0, total = 0;
+    group.forEach((p, i) => {
+      let w;
+      if (i < full) w = 1;
+      else if (i === full && frac > 0.001) w = 0.2 + 0.7 * frac;
+      else { w = bench === 0 ? 0.2 : bench === 1 ? 0.08 : 0.03; bench++; }
+      total += (p.val || 0) * w;
+    });
+    return total;
+  }
+  // Stamps t.posRanks = { QB: {rank, strength}, ... } on every team.
+  function _mtComputePosRanks(teams) {
+    if (!teams || !teams.length) return;
+    const slots = _mtPosStarterSlots();
+    const POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+    teams.forEach(t => { t.posRanks = {}; });
+    POS.forEach(pos => {
+      const entries = teams.map((t, i) => {
+        const group = (t.score && t.score.players ? t.score.players : []).filter(p => p.pos === pos);
+        return { i, v: _mtPosStrength(group, slots[pos]) };
+      }).sort((a, b) => b.v - a.v);
+      entries.forEach((e, idx) => {
+        // Ties share the better rank (two teams can both be "1st")
+        const rank = (idx > 0 && Math.abs(e.v - entries[idx - 1].v) < 0.001)
+          ? teams[entries[idx - 1].i].posRanks[pos].rank
+          : idx + 1;
+        teams[e.i].posRanks[pos] = { rank, strength: Math.round(e.v) };
+      });
+    });
+  }
+  function _mtOrdinal(n) {
+    if (n % 100 >= 11 && n % 100 <= 13) return n + 'th';
+    return n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th');
+  }
+  // Rank color: green when you own the position, red when you're last
+  function _mtPosRankColor(rank, teamCount) {
+    const pct = teamCount > 1 ? (rank - 1) / (teamCount - 1) : 0;
+    return rank === 1 ? '#22c55e' : pct <= 0.33 ? '#4ade80' : pct <= 0.66 ? '#facc15' : '#ef4444';
+  }
+
   function _mtRenderTeamList(teams) {
     // Rebuild positional-rank maps on every list render — cheap, and keeps
     // them in sync with value-source switches and live rankings edits.
     _mtPosRankCache = {};
+    _mtComputePosRanks(teams);
     const pr = document.getElementById('mtPowerRankings');
     let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">POWER RANKINGS</div>';
 
@@ -43000,8 +43071,9 @@ Rules:
       if (_mtSortBy === 'total') return b.score.total - a.score.total;
       if (_mtSortBy === 'ppg') return (b.lineupPpg || 0) - (a.lineupPpg || 0);
       if (_mtSortBy === 'picks') return (b.score.pickTotal || 0) - (a.score.pickTotal || 0);
-      const posA = (a.score.posScores[_mtSortBy] || { pts: 0 }).pts;
-      const posB = (b.score.posScores[_mtSortBy] || { pts: 0 }).pts;
+      // Positional sort: starter-weighted strength, not raw depth total
+      const posA = ((a.posRanks || {})[_mtSortBy] || { strength: 0 }).strength;
+      const posB = ((b.posRanks || {})[_mtSortBy] || { strength: 0 }).strength;
       return posB - posA;
     });
 
@@ -43009,7 +43081,7 @@ Rules:
       if (_mtSortBy === 'total') return x.score.total;
       if (_mtSortBy === 'ppg') return x.lineupPpg || 0;
       if (_mtSortBy === 'picks') return x.score.pickTotal || 0;
-      return (x.score.posScores[_mtSortBy] || { pts: 0 }).pts;
+      return ((x.posRanks || {})[_mtSortBy] || { strength: 0 }).strength;
     });
     const maxScore = Math.max(...allScores);
     const avgScore = allScores.length ? Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length) : 0;
@@ -43018,14 +43090,19 @@ Rules:
       const sc = t.score;
       const isMe = t.isMyTeam;
       const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
-      const displayScore = _mtSortBy === 'total' ? sc.total : _mtSortBy === 'ppg' ? (t.lineupPpg || 0) : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : (sc.posScores[_mtSortBy] || { pts: 0 }).pts;
-      const scoreColor = displayScore >= maxScore ? '#22c55e' : displayScore >= avgScore ? '#4ade80' : displayScore >= avgScore * 0.7 ? '#f59e0b' : '#ef4444';
+      const isPosSort = _mtSortBy !== 'total' && _mtSortBy !== 'ppg' && _mtSortBy !== 'picks';
+      const posRankEntry = isPosSort ? ((t.posRanks || {})[_mtSortBy] || { rank: teams.length, strength: 0 }) : null;
+      const displayScore = _mtSortBy === 'total' ? sc.total : _mtSortBy === 'ppg' ? (t.lineupPpg || 0) : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : posRankEntry.strength;
+      const scoreColor = isPosSort
+        ? _mtPosRankColor(posRankEntry.rank, teams.length)
+        : (displayScore >= maxScore ? '#22c55e' : displayScore >= avgScore ? '#4ade80' : displayScore >= avgScore * 0.7 ? '#f59e0b' : '#ef4444');
+      const scoreLabel = isPosSort ? _mtOrdinal(posRankEntry.rank) : displayScore;
       // Find original index for click handler
       const origIdx = teams.indexOf(t);
       html += `<div onclick="window._mtShowTeam(${origIdx})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;${meStyle};border-radius:8px;cursor:pointer;transition:all .15s;position:relative" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">`;
       if (isMe) html += `<div style="position:absolute;top:-6px;right:10px;font-size:.5rem;background:var(--accent);color:#000;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px">MY TEAM</div>`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--text2);width:24px;text-align:center">${i + 1}</div>`;
-      html += `<div style="width:48px;height:48px;border-radius:10px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor};letter-spacing:1px">${displayScore}</div>`;
+      html += `<div style="width:48px;height:48px;border-radius:10px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor};letter-spacing:1px">${scoreLabel}</div>`;
       html += `<div style="flex:1;min-width:0">`;
       html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}</div>`;
       html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div>`;
@@ -43039,8 +43116,11 @@ Rules:
       const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
       ['QB','RB','WR','TE'].forEach(pos => {
         const ps = sc.posScores[pos] || { pts: 0 };
+        const pr = (t.posRanks || {})[pos];
         const highlight = _mtSortBy === pos ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
-        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">${pos}</div><div style="${highlight};font-weight:700;color:${posColors[pos]}">${ps.pts}</div></div>`;
+        const lbl = pr ? _mtOrdinal(pr.rank) : ps.pts;
+        const tip = pr ? `title="${pos} rank in league (starter-weighted) · strength ${pr.strength} · raw value ${ps.pts}"` : '';
+        html += `<div ${tip} style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">${pos}</div><div style="${highlight};font-weight:700;color:${posColors[pos]}">${lbl}</div></div>`;
       });
       if (isDynasty && _mtViewMode === 'value') {
         const pickHighlight = _mtSortBy === 'picks' ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
@@ -43406,7 +43486,10 @@ Rules:
     html += `<button onclick="window._mtCloseTeam(${idx})" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕ Close</button>`;
     html += `</div>`;
 
-    // Position breakdown
+    // Position breakdown — starter-weighted league rank per position (raw
+    // summed value demoted to the subtext; total value keeps the big number
+    // treatment in the header box above).
+    if (!t.posRanks) _mtComputePosRanks(teams);
     html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(65px,1fr));gap:8px;margin-bottom:16px">`;
     const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a855f7', DST: '#94a3b8' };
     // Always show QB/RB/WR/TE; show K/DST only if the roster has them
@@ -43415,10 +43498,13 @@ Rules:
     if ((sc.posScores.DST || {}).count) _gridPositions.push('DST');
     _gridPositions.forEach(pos => {
       const ps = sc.posScores[pos] || { pts: 0, count: 0 };
-      html += `<div style="text-align:center;padding:8px;background:${posColors[pos]}10;border:1px solid ${posColors[pos]}40;border-radius:8px">`;
+      const pr = (t.posRanks || {})[pos];
+      const big = pr ? _mtOrdinal(pr.rank) : ps.pts;
+      const tip = pr ? ` title="${pos} rank of ${teams.length} teams, starter-weighted — elite starters count in full, bench depth barely. Strength ${pr.strength} · raw value ${ps.pts}"` : '';
+      html += `<div${tip} style="text-align:center;padding:8px;background:${posColors[pos]}10;border:1px solid ${posColors[pos]}40;border-radius:8px">`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;color:var(--text2)">${pos}</div>`;
-      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${posColors[pos]}">${ps.pts}</div>`;
-      html += `<div style="font-size:.6rem;color:var(--text2)">${ps.count} player${ps.count !== 1 ? 's' : ''}</div>`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${posColors[pos]}">${big}</div>`;
+      html += `<div style="font-size:.6rem;color:var(--text2)">${ps.count} player${ps.count !== 1 ? 's' : ''} · ${ps.pts} val</div>`;
       html += `</div>`;
     });
     html += `</div>`;
@@ -43459,13 +43545,14 @@ Rules:
       const posPlayers = sc.players.filter(p => p.pos === pos).sort((a,b) => (a.rank||999) - (b.rank||999));
       if (!posPlayers.length) return;
       const ps = sc.posScores[pos] || { pts: 0, count: 0 };
+      const secRank = (t.posRanks || {})[pos];
       // Section total PPG: sum of every player's projected PPG at this position.
       const posPpgTotal = Math.round(posPlayers.reduce((s, p) => s + (ppgByName[p.name] || 0), 0) * 10) / 10;
       html += `<div class="mt-pos-section" style="margin-bottom:14px">`;
       // Section header
       html += `<div class="mt-pos-header" style="display:flex;align-items:baseline;gap:10px;padding:0 4px 4px;margin-bottom:6px;border-bottom:2px solid ${posColors[pos]}40">`;
       html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:2px;color:${posColors[pos]}">${pos}</span>`;
-      html += `<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">${ps.count} player${ps.count!==1?'s':''}${posPpgTotal > 0 ? ' · ' + posPpgTotal + ' PPG' : ''}</span>`;
+      html += `<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">${ps.count} player${ps.count!==1?'s':''}${posPpgTotal > 0 ? ' · ' + posPpgTotal + ' PPG' : ''}${secRank ? ' · <b style="color:' + _mtPosRankColor(secRank.rank, teams.length) + '">' + _mtOrdinal(secRank.rank) + '</b> in league' : ''}</span>`;
       html += `</div>`;
       // Player rows
       posPlayers.forEach(p => {
@@ -46923,19 +47010,30 @@ Rules:
         if (!matched) return;
         const adp = _vpFormatAdp(matched, fmt);
         if (adp == null) return;
+        // Value is graded per individual pick and weighted by draft stage:
+        // pct = (pick − ADP) / ADP. Ten picks of slippage at ADP 20 (+50%)
+        // outranks 30 picks at ADP 200 (+15%) — early-board value is scarcer.
+        const perPick = info.picks
+          .slice().sort((a, b) => a - b)
+          .map(pk => ({ pick: pk, pct: (pk - adp) / adp * 100 }));
+        const avgPct = perPick.reduce((s, p) => s + p.pct, 0) / perPick.length;
         const avgPick = info.picks.reduce((s, v) => s + v, 0) / info.picks.length;
-        const value = avgPick - adp; // positive = drafted LATER than ADP = steal
+        const rawDiff = avgPick - adp; // picks later (+) / earlier (−) than ADP
         const row = {
           name: matched.n,
           pos: matched.s,
           team: matched.t,
           adp: Math.round(adp * 10) / 10,
+          picks: perPick,
           avgPick: Math.round(avgPick),
-          value: Math.round(value),
+          value: Math.round(avgPct),
+          rawDiff: Math.round(rawDiff),
           count: info.picks.length
         };
-        if (value > 15) steals.push(row);
-        if (value < -15) reaches.push(row);
+        // Gates: pct threshold does the stage weighting; the small raw-pick
+        // floor keeps 1–2-pick jitter at the very top of the board out.
+        if (avgPct >= 15 && rawDiff >= 4) steals.push(row);
+        if (avgPct <= -15 && rawDiff <= -4) reaches.push(row);
       });
       steals.sort((a, b) => b.value - a.value);
       reaches.sort((a, b) => a.value - b.value);
@@ -47090,28 +47188,49 @@ Rules:
       let out = '';
       if (!lists.drafts) return ''; // user has no drafts in this format
       const headerColor = '#fbbf24';
+      // Individual picks cell: every pick shown (capped at 14 + "+N more"),
+      // each tinted by its OWN % vs ADP so one steal-priced share stands out
+      // inside an otherwise market-priced stack.
+      function _vpPicksCell(row) {
+        const MAX_SHOWN = 14;
+        const shown = row.picks.slice(0, MAX_SHOWN);
+        const rest = row.picks.slice(MAX_SHOWN);
+        let cell = shown.map(p => {
+          const c = p.pct >= 15 ? '#22c55e' : (p.pct <= -15 ? '#ef4444' : 'var(--text2)');
+          const sign = p.pct >= 0 ? '+' : '';
+          return `<span title="Pick ${p.pick} · ${sign}${Math.round(p.pct)}% vs ADP" style="color:${c}">${p.pick}</span>`;
+        }).join('<span style="color:var(--text2)">, </span>');
+        if (rest.length) {
+          cell += `<span title="${rest.map(p => p.pick).join(', ')}" style="color:var(--text2)"> +${rest.length} more</span>`;
+        }
+        return cell;
+      }
+      function _vpValueTitle(row) {
+        const sign = row.rawDiff >= 0 ? '+' : '';
+        return `avg pick ${row.avgPick} · ${sign}${row.rawDiff} picks vs ADP`;
+      }
       out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${headerColor};margin:6px 0 10px;padding:6px 10px;background:rgba(251,191,36,.06);border-left:3px solid ${headerColor};border-radius:4px">${label} <span style="color:var(--text2);font-size:.7rem;letter-spacing:.5px;font-weight:400">· ${lists.drafts} draft${lists.drafts === 1 ? '' : 's'}</span></div>`;
       // STEALS
       out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#22c55e;margin-bottom:8px">🔥 BIGGEST STEALS</div>`;
-      out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted well after their current ADP (great value)</div>`;
+      out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted after their current ADP — value is % past ADP, so early-round discounts count for more than late-round ones</div>`;
       if (lists.steals.length === 0) {
         out += `<div style="padding:12px;color:var(--text2);font-size:.78rem;margin-bottom:20px">No major value picks found</div>`;
       } else {
-        out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:20px"><table style="width:100%;min-width:540px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
+        out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:20px"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">PICKS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)"><span data-gloss="Average % drafted past ADP across your picks of this player. +50% means you got him half a draft-stage later than the market — 10 picks late at ADP 20 beats 30 picks late at ADP 200. Hover the value for the raw pick difference.">VALUE</span></th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
         lists.steals.slice(0, 20).forEach(vp => {
-          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(vp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.adp}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e">+${vp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${lists.drafts}</td></tr>`;
+          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(vp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(vp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e" title="${_vpValueTitle(vp)}">+${vp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${lists.drafts}</td></tr>`;
         });
         out += `</tbody></table></div>`;
       }
       // REACHES
       out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#ef4444;margin-bottom:8px">📉 BIGGEST REACHES</div>`;
-      out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted well before their current ADP (overpay)</div>`;
+      out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted before their current ADP — % ahead of ADP, so early-round reaches count for more than late-round ones</div>`;
       if (lists.reaches.length === 0) {
         out += `<div style="padding:12px;color:var(--text2);font-size:.78rem;margin-bottom:24px">No major reaches found</div>`;
       } else {
-        out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:24px"><table style="width:100%;min-width:540px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
+        out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:24px"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">PICKS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)"><span data-gloss="Average % drafted ahead of ADP across your picks of this player. −50% means you paid half a draft-stage early — reaching 10 picks at ADP 20 costs more than 30 picks at ADP 200. Hover the value for the raw pick difference.">VALUE</span></th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
         lists.reaches.slice(0, 20).forEach(bp => {
-          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(bp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.adp}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444">${bp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${lists.drafts}</td></tr>`;
+          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(bp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(bp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444" title="${_vpValueTitle(bp)}">${bp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${lists.drafts}</td></tr>`;
         });
         out += `</tbody></table></div>`;
       }

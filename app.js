@@ -47011,7 +47011,7 @@ Rules:
     // its own per-player avgPick and draft count.
     const _vpFmtAgg = { bbm: {}, sf: {} };
     const _vpFmtDraftCount = { bbm: 0, sf: 0 };
-    Object.values(data.drafts).forEach(d => {
+    Object.entries(data.drafts).forEach(([did, d]) => {
       const fmt = d.phase === 'superflex' ? 'sf' : 'bbm';
       _vpFmtDraftCount[fmt]++;
       const picks = d.picks || [];
@@ -47019,7 +47019,9 @@ Rules:
         if (!p || !p.name || !p.pick) return;
         const bucket = _vpFmtAgg[fmt];
         if (!bucket[p.name]) bucket[p.name] = { picks: [], pos: p.pos, team: p.team };
-        bucket[p.name].picks.push(p.pick);
+        // Keep the draft id with each pick so the rendered pick numbers can
+        // deep-link to that draft's roster (click → popup).
+        bucket[p.name].picks.push({ pick: p.pick, did: did });
         if (!bucket[p.name].pos && p.pos) bucket[p.name].pos = p.pos;
         if (!bucket[p.name].team && p.team) bucket[p.name].team = p.team;
       });
@@ -47050,10 +47052,10 @@ Rules:
         // pct = (pick − ADP) / ADP. Ten picks of slippage at ADP 20 (+50%)
         // outranks 30 picks at ADP 200 (+15%) — early-board value is scarcer.
         const perPick = info.picks
-          .slice().sort((a, b) => a - b)
-          .map(pk => ({ pick: pk, pct: (pk - adp) / adp * 100 }));
+          .slice().sort((a, b) => a.pick - b.pick)
+          .map(pk => ({ pick: pk.pick, did: pk.did, pct: (pk.pick - adp) / adp * 100 }));
         const avgPct = perPick.reduce((s, p) => s + p.pct, 0) / perPick.length;
-        const avgPick = info.picks.reduce((s, v) => s + v, 0) / info.picks.length;
+        const avgPick = info.picks.reduce((s, v) => s + v.pick, 0) / info.picks.length;
         const rawDiff = avgPick - adp; // picks later (+) / earlier (−) than ADP
         const row = {
           name: matched.n,
@@ -47231,13 +47233,23 @@ Rules:
         const MAX_SHOWN = 14;
         const shown = row.picks.slice(0, MAX_SHOWN);
         const rest = row.picks.slice(MAX_SHOWN);
-        let cell = shown.map(p => {
+        // Safe-for-onclick versions of the player name (used to highlight the
+        // row inside the popup roster).
+        const nmSafe = String(row.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
+        const pickSpan = p => {
           const c = p.pct >= 15 ? '#22c55e' : (p.pct <= -15 ? '#ef4444' : 'var(--text2)');
           const sign = p.pct >= 0 ? '+' : '';
-          return `<span title="Pick ${p.pick} · ${sign}${Math.round(p.pct)}% vs ADP" style="color:${c}">${p.pick}</span>`;
-        }).join('<span style="color:var(--text2)">, </span>');
+          const didSafe = String(p.did || '').replace(/[^\w-]/g, '');
+          const click = didSafe ? ` onclick="window._vpOpenDraft('${didSafe}','${nmSafe}')"` : '';
+          return `<span${click} title="Pick ${p.pick} · ${sign}${Math.round(p.pct)}% vs ADP — click to view this team" style="color:${c};cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px">${p.pick}</span>`;
+        };
+        const sep = '<span style="color:var(--text2)">, </span>';
+        let cell = shown.map(pickSpan).join(sep);
         if (rest.length) {
-          cell += `<span title="${rest.map(p => p.pick).join(', ')}" style="color:var(--text2)"> +${rest.length} more</span>`;
+          // Overflow picks render hidden behind a "+N more" toggle so long
+          // stacks stay compact but every pick is still clickable.
+          cell += `<span style="display:none">` + sep + rest.map(pickSpan).join(sep) + `</span>` +
+            `<span onclick="this.previousElementSibling.style.display='';this.remove()" style="color:var(--accent);cursor:pointer"> +${rest.length} more</span>`;
         }
         return cell;
       }
@@ -48238,6 +48250,77 @@ Rules:
       }
       row.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 40));
+  };
+
+  // ── VALUE PICKS pick-click popup ──────────────────────────────────
+  // Clicking an individual pick number on the VALUE PICKS tab pops up that
+  // draft's roster (the same table the TEAMS tab renders, via the cached BB
+  // field sim) with the clicked player's row highlighted.
+  window._vpCloseDraftModal = function() {
+    const m = document.getElementById('vpDraftModal');
+    if (m) m.remove();
+    document.removeEventListener('keydown', _vpModalEsc);
+  };
+  function _vpModalEsc(e) { if (e.key === 'Escape') window._vpCloseDraftModal(); }
+  window._vpOpenDraft = function(draftId, highlightName) {
+    window._vpCloseDraftModal();
+    const data = window._udData;
+    const d = data && data.drafts ? data.drafts[draftId] : null;
+    if (!d) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'vpDraftModal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);padding:20px;overflow:auto';
+    overlay.addEventListener('click', e => { if (e.target === overlay) window._vpCloseDraftModal(); });
+    document.addEventListener('keydown', _vpModalEsc);
+    const meta = [];
+    if (d.date) meta.push(_esc(String(d.date).slice(0, 10)));
+    if (d.fee) meta.push('$' + d.fee);
+    if (d.phase === 'superflex') meta.push('Superflex');
+    const didSafe = String(draftId).replace(/[^\w-]/g, '');
+    overlay.innerHTML =
+      `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;max-width:880px;width:100%;max-height:88vh;overflow:auto;padding:16px" onclick="event.stopPropagation()">` +
+        `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">` +
+          `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent)">${_esc(d.tournament || 'Draft')}</span>` +
+          (meta.length ? `<span style="font-size:.65rem;color:var(--text2)">${meta.join(' · ')}</span>` : '') +
+          `<span id="vpDraftModalRank" style="font-size:.65rem;color:var(--text2)"></span>` +
+          `<a href="#" onclick="event.preventDefault();window._vpCloseDraftModal();window._udJumpToDraft('${didSafe}')" style="margin-left:auto;font-size:.62rem;color:var(--accent);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px">OPEN IN TEAMS TAB →</a>` +
+          `<button onclick="window._vpCloseDraftModal()" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕</button>` +
+        `</div>` +
+        `<div id="vpDraftModalBody" style="min-height:80px"><div style="text-align:center;padding:24px;color:var(--text2);font-size:.75rem">Crunching team projections…</div></div>` +
+      `</div>`;
+    document.body.appendChild(overlay);
+    // The full roster table comes from the TEAMS-tab per-draft cache; ensure
+    // that build has run (first click pays the sim once, then it's instant).
+    _udEnsureTeamsTab(() => {
+      const body = document.getElementById('vpDraftModalBody');
+      if (!body) return; // modal closed while building
+      const cached = window._udTeamsCache && window._udTeamsCache.byDraft && window._udTeamsCache.byDraft[draftId];
+      const row = cached && cached.row;
+      const me = row && (row.myEntry || (row.teams || []).find(t => t.isMine));
+      if (me) {
+        if (row.myRank && row.fieldComplete) {
+          const rk = document.getElementById('vpDraftModalRank');
+          if (rk) rk.textContent = '· build rank ' + row.myRank + ' of ' + row.teams.length;
+        }
+        body.innerHTML = `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">` + _udBuildTeamsRosterHtml(me) + `</div>`;
+      } else {
+        // Fallback (cache miss / sim failure): plain pick list from the draft.
+        const rows = (d.picks || []).slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map(p =>
+          `<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 8px;text-align:right;color:var(--text2)">${p.pick}</td><td style="padding:4px 8px;color:var(--text)">${_esc(p.name)}</td><td style="padding:4px 8px;color:var(--text2)">${_esc(p.pos || '')}</td></tr>`).join('');
+        body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:right;padding:4px 8px;color:var(--text2)">PICK</th><th style="text-align:left;padding:4px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:4px 8px;color:var(--text2)">POS</th></tr></thead><tbody>${rows}</tbody></table>`;
+      }
+      // Highlight the clicked player's row so the eye lands on the pick.
+      if (highlightName) {
+        const want = String(highlightName).toLowerCase();
+        body.querySelectorAll('tbody tr').forEach(tr => {
+          if (tr.textContent.toLowerCase().includes(want)) {
+            tr.style.background = 'rgba(245,158,11,.12)';
+            tr.style.outline = '1px solid var(--accent)';
+            try { tr.scrollIntoView({ block: 'nearest' }); } catch (_) {}
+          }
+        });
+      }
+    });
   };
 
   window._udExpPosFilter = 'ALL';

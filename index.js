@@ -474,3 +474,41 @@ exports.stripeWebhook = onRequest(
     }
   }
 );
+
+// === Export feed: full Jack's boards for the local data exporters ===
+// Board-gating Phase B (2026-08-11): rankings/jacks-official goes premium-only
+// read in Phase C, which would break the tokenless REST fetch the players.json
+// exporters use. This endpoint returns the full doc via the admin SDK, gated
+// by a static secret only Jack's PC holds (E:\MyFantasyFootball\secrets\
+// export_feed_key.txt, sent as the x-export-key header). The response mirrors
+// the Firestore REST document shape so the exporters' existing parser
+// (doc.fields.data.stringValue) works unchanged.
+const EXPORT_FEED_KEY = defineSecret("EXPORT_FEED_KEY");
+exports.exportJacksBoards = onRequest(
+  { secrets: [EXPORT_FEED_KEY] },
+  async (req, res) => {
+    try {
+      const supplied = req.get("x-export-key") || "";
+      if (!supplied || supplied !== EXPORT_FEED_KEY.value()) {
+        res.status(403).json({ error: "forbidden" });
+        return;
+      }
+      const snap = await getFirestore().collection("rankings").doc("jacks-official").get();
+      if (!snap.exists) {
+        res.status(404).json({ error: "missing" });
+        return;
+      }
+      const d = snap.data() || {};
+      res.json({
+        fields: {
+          data: { stringValue: d.data || "" },
+          ir: { stringValue: d.ir || "" },
+          updatedAt: { stringValue: d.updatedAt || "" },
+        },
+      });
+    } catch (err) {
+      console.error("exportJacksBoards error:", err);
+      res.status(500).json({ error: "internal" });
+    }
+  }
+);

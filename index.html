@@ -2213,7 +2213,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 
 <!-- Source Toggle -->
 <div style="display:flex;gap:4px;margin-bottom:16px;justify-content:center">
-<button onclick="window._mtSwitchSource('sleeper')" id="mtSrcSleeper" style="padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;border-radius:6px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#000">REDRAFT</button>
+<button onclick="window._mtSwitchSource('sleeper')" id="mtSrcSleeper" style="padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;border-radius:6px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#000">LEAGUES</button>
 <button onclick="window._mtSwitchSource('underdog')" id="mtSrcUnderdog" style="padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)">UNDERDOG</button>
 </div>
 
@@ -2335,6 +2335,14 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- Saved Teams -->
 <div id="mtSavedTeams" style="margin-top:20px"></div>
 
+<!-- ASK JACK — premium weekly Q&A (1 start/sit + 1 trade per week, Tuesday
+     reset). Populated by _qaRenderPanel at runtime: locked teaser for
+     signed-in free users, forms/answers for premium. Hidden for anonymous.
+     Lives INSIDE the leagues section (2026-08-11, Jack's request) so it only
+     shows on the LEAGUES source view, below the synced teams — the Underdog
+     portfolio view hides it along with the rest of this section. -->
+<div id="mtAskJack" style="display:none;margin-top:20px;margin-bottom:20px"></div>
+
 </div><!-- end mtSectionSleeper -->
 
 <!-- UNDERDOG SECTION -->
@@ -2377,13 +2385,6 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="mtUnderdogDashboard" style="display:none"></div>
 
 </div><!-- end mtSectionUnderdog -->
-
-<!-- ASK JACK — premium weekly Q&A (1 start/sit + 1 trade per week, Tuesday
-     reset). Populated by _qaRenderPanel at runtime: locked teaser for
-     signed-in free users, forms/answers for premium. Hidden for anonymous.
-     Moved below the teams sections 2026-08-11 (Jack's request) so synced
-     rosters render above the question forms. -->
-<div id="mtAskJack" style="display:none;margin-top:20px;margin-bottom:20px"></div>
 
 </div>
 </div>

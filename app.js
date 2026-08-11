@@ -45269,7 +45269,66 @@ Rules:
       if (!sel) return;
       const cur = parseInt(sel.value, 10);
       sel.innerHTML = _qaLeagueOptions(isNaN(cur) ? -1 : cur);
+      // League list may have changed under a live selection — re-scope the
+      // player suggestion datalists to whatever is selected now.
+      window._qaLeagueChanged(type);
     });
+  };
+
+  // Roster-scoped player suggestions. With a league attached, the player
+  // inputs suggest only players from that league's synced rosters: start/sit
+  // and the trade YOU-GIVE side draw from MY roster, the trade YOU-GET side
+  // from every OTHER roster in the league. "No league attached" (or a league
+  // with no usable roster data) falls back to the full-player datalist.
+  // Free text always stays allowed — datalists are suggestions only.
+  function _qaEnsureDatalist(id, names) {
+    let dl = document.getElementById(id);
+    if (!dl) {
+      dl = document.createElement('datalist');
+      dl.id = id;
+      document.body.appendChild(dl); // body: survives #mtAskJack re-renders
+    }
+    dl.innerHTML = names.map(n => '<option value="' + _jtEsc(n) + '">').join('');
+  }
+  window._qaLeagueChanged = function(type) {
+    const sel = document.getElementById('qaLeague-' + type);
+    if (!sel) return;
+    const idx = parseInt(sel.value, 10);
+    const lg = (!isNaN(idx) && idx >= 0 && window._mtSavedLeagues) ? window._mtSavedLeagues[idx] : null;
+    const teams = lg && Array.isArray(lg.teams) ? lg.teams : [];
+    const mine = teams.find(t => t && t.isMyTeam);
+    const myNames = mine && Array.isArray(mine.players) ? mine.players.slice().sort() : [];
+    const otherNames = [];
+    teams.forEach(t => {
+      if (!t || t.isMyTeam) return;
+      (t.players || []).forEach(n => otherNames.push(n));
+    });
+    otherNames.sort();
+    const inputs = [];
+    for (let i = 0; i < 4; i++) {
+      const el = document.getElementById('qaOpt-' + type + '-' + i);
+      if (el) inputs.push({ el, i });
+    }
+    // Per-type datalist ids — start/sit and trade can attach different leagues.
+    const mineId = 'qaRosterMine-' + type, othersId = 'qaRosterOthers-' + type;
+    if (type === 'startsit') {
+      if (myNames.length) {
+        _qaEnsureDatalist(mineId, myNames);
+        inputs.forEach(x => x.el.setAttribute('list', mineId));
+      } else {
+        inputs.forEach(x => x.el.setAttribute('list', 'qaPlayerList'));
+      }
+    } else {
+      if (myNames.length) _qaEnsureDatalist(mineId, myNames);
+      if (otherNames.length) _qaEnsureDatalist(othersId, otherNames);
+      inputs.forEach(x => {
+        const wantMine = x.i === 0; // SIDE A — YOU GIVE
+        const listId = wantMine
+          ? (myNames.length ? mineId : 'qaPlayerList')
+          : (otherNames.length ? othersId : 'qaPlayerList');
+        x.el.setAttribute('list', listId);
+      });
+    }
   };
 
   window._qaRenderPanel = function() {
@@ -45383,6 +45442,9 @@ Rules:
       // no longer exists, fall back to "No league attached" over a blank.
       if (el.tagName === 'SELECT' && el.value !== _prevVals[id]) el.value = '-1';
     });
+    // Re-apply roster-scoped suggestion lists for whatever league each form
+    // has selected after the restore.
+    ['startsit', 'trade'].forEach(t => window._qaLeagueChanged(t));
   }
 
   function _qaOptionInput(type, idx, placeholder) {
@@ -45407,7 +45469,7 @@ Rules:
       opts +
       '<input type="text" id="qaNote-' + type + '" placeholder="Optional context (scoring quirks, injuries, league situation…)" maxlength="1000" ' +
         'style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 9px;font-size:.72rem;margin-bottom:6px">' +
-      '<select id="qaLeague-' + type + '" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:7px 9px;font-size:.72rem;margin-bottom:8px" title="Attach a synced league so Jack sees your actual roster">' +
+      '<select id="qaLeague-' + type + '" onchange="window._qaLeagueChanged(\'' + type + '\')" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:7px 9px;font-size:.72rem;margin-bottom:8px" title="Attach a synced league so Jack sees your actual roster — player suggestions narrow to that league\'s rosters">' +
       _qaLeagueOptions(-1) + '</select>' +
       '<button onclick="window._qaSubmit(\'' + type + '\')" id="qaSendBtn-' + type + '" style="width:100%;padding:8px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer">SEND TO JACK</button>' +
       '<div id="qaMsg-' + type + '" style="font-size:.65rem;color:#ef4444;margin-top:5px"></div>';
@@ -45438,6 +45500,9 @@ Rules:
     const div = document.createElement('div');
     div.innerHTML = _qaOptionInput(type, idx, 'Player ' + (idx + 1));
     wrap.appendChild(div.firstChild);
+    // New input ships with the full-player datalist — re-scope it to the
+    // attached league's roster if one is selected.
+    if (typeof window._qaLeagueChanged === 'function') window._qaLeagueChanged(type);
     if (btn) {
       if (idx === 3) btn.style.display = 'none';
       else btn.textContent = '+ add a 4th player';
@@ -47973,7 +48038,13 @@ Rules:
 
     let html = '';
     html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%">`;
-    html += `<table style="border-collapse:collapse;font-size:.6rem;min-width:${teamCount * 95}px;width:100%">`;
+    // table-layout:fixed — without it, the nowrap player names size each
+    // column to its widest name and the grid overflows even on wide screens
+    // (forcing a horizontal scroll). Fixed layout splits the full width
+    // evenly across the team columns and lets names ellipsize; min-width
+    // keeps ~95px/column so narrow screens still scroll instead of crushing.
+    html += `<table style="border-collapse:collapse;font-size:.6rem;min-width:${teamCount * 95}px;width:100%;table-layout:fixed">`;
+    html += `<colgroup><col style="width:34px">${'<col>'.repeat(teamCount)}</colgroup>`;
 
     // Header row
     html += `<thead><tr>`;

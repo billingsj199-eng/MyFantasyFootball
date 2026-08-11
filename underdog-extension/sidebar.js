@@ -3920,8 +3920,17 @@
 
   // v0.9.29: background-worker fetch — bypasses page CORS by running in
   // the extension's own origin context.
+  // v0.17.6: reloading/updating the extension at chrome://extensions orphans
+  // content scripts already injected into open tabs — chrome.runtime evaporates
+  // and sendMessage throws. Detect the dead context and surface a plain-English
+  // fix instead of the raw TypeError.
+  const DEAD_CTX_MSG = 'Extension was updated — refresh this tab';
+  function extAlive() {
+    try { return !!(chrome && chrome.runtime && chrome.runtime.id); } catch (e) { return false; }
+  }
   function bgFetch(url, token) {
     return new Promise((resolve) => {
+      if (!extAlive()) return resolve({ ok: false, error: DEAD_CTX_MSG });
       try {
         chrome.runtime.sendMessage({ type: 'mff-bg-fetch', url, token }, (res) => {
           if (chrome.runtime.lastError) {
@@ -3931,7 +3940,7 @@
           }
         });
       } catch (e) {
-        resolve({ ok: false, error: e.message });
+        resolve({ ok: false, error: extAlive() ? e.message : DEAD_CTX_MSG });
       }
     });
   }

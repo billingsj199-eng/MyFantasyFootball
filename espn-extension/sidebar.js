@@ -333,18 +333,27 @@
 
   // Direct fetch first (ESPN's page CSP allows it today), background-worker
   // relay as the fallback if a CSP change ever blocks content-script fetches.
+  // v0.20.5: reloading/updating the extension at chrome://extensions orphans
+  // content scripts already injected into open tabs — chrome.runtime evaporates
+  // and sendMessage throws. Detect the dead context and surface a plain-English
+  // fix instead of the raw TypeError.
+  const DEAD_CTX_MSG = 'Extension was updated — refresh this tab';
+  function extAlive() {
+    try { return !!(chrome && chrome.runtime && chrome.runtime.id); } catch (e) { return false; }
+  }
   function fetchJson(url) {
     return fetch(url).then((r) => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     }).catch((e) => new Promise((resolve, reject) => {
+      if (!extAlive()) return reject(new Error(DEAD_CTX_MSG));
       try {
         chrome.runtime.sendMessage({ type: 'mffFetch', url }, (resp) => {
           if (chrome.runtime.lastError) return reject(e);
           if (!resp || !resp.ok) return reject(new Error(resp ? resp.error : String(e)));
           resolve(resp.data);
         });
-      } catch (_) { reject(e); }
+      } catch (_) { reject(extAlive() ? e : new Error(DEAD_CTX_MSG)); }
     }));
   }
 

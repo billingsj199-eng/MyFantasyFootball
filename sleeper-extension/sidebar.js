@@ -221,15 +221,24 @@
   };
 
   // ---------- API via background service worker (content scripts hit page CORS) ----------
+  // v0.29.4: reloading/updating the extension at chrome://extensions orphans
+  // content scripts already injected into open tabs — chrome.runtime evaporates
+  // and every sendMessage throws "Cannot read properties of undefined". Detect
+  // the dead context and surface a plain-English fix instead of the TypeError.
+  const DEAD_CTX_MSG = 'Extension was updated — refresh this tab';
+  function extAlive() {
+    try { return !!(chrome && chrome.runtime && chrome.runtime.id); } catch (e) { return false; }
+  }
   function bgFetch(url) {
     return new Promise((resolve, reject) => {
+      if (!extAlive()) return reject(new Error(DEAD_CTX_MSG));
       try {
         chrome.runtime.sendMessage({ type: 'mffFetch', url }, (resp) => {
           if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
           if (!resp || !resp.ok) return reject(new Error(resp ? resp.error : 'no response'));
           resolve(resp.data);
         });
-      } catch (e) { reject(e); }
+      } catch (e) { reject(extAlive() ? e : new Error(DEAD_CTX_MSG)); }
     });
   }
   function api(path) {
@@ -2720,14 +2729,14 @@
         ).slice(0, 3);
         const haveRows = have.map((r) =>
           `<div class="mff-proj-roster-player"><span class="t">${esc(r.pos)}</span>
-            <span class="n" style="color:#6dd0a8">${esc(r.name)} ✓</span>
+            <span class="n" style="color:#58a7ff">${esc(r.name)} ✓</span>
             <span class="v">${r.p && r.p.ktcSf != null ? r.p.ktcSf : '—'}</span></div>`).join('');
         const targetRows = targets.map((t) =>
           `<div class="mff-proj-roster-player"><span class="t">${esc(t.s)}</span>
             <span class="n">${esc(t.n)}</span>
             <span class="v">${t[modeKeys().ktc] != null ? t[modeKeys().ktc] : '—'}</span></div>`).join('');
         return `<div class="mff-proj-roster-group">
-          <div class="mff-proj-roster-grouphead" style="color:#6dd0a8">${esc(qb.name)} <span class="ct">(${esc(tm)})</span></div>
+          <div class="mff-proj-roster-grouphead" style="color:#58a7ff">${esc(qb.name)} <span class="ct">(${esc(tm)})</span></div>
           ${haveRows}
           ${targetRows || '<div class="mff-proj-empty" style="padding:4px">No pass-catchers left on ' + esc(tm) + '</div>'}
         </div>`;
@@ -2799,11 +2808,170 @@
       <div style="font-size:10px;color:#8b94b3">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>`;
   }
 
+  // ---------- RULES tab: draft-rules checklist + platform value board ----------
+  // The rules are Jack's redraft doctrine, checked LIVE against the roster:
+  // each one is pending (○) until its window closes, then locks ✓/✗. Rounds
+  // come from the pick's real overall slot (manual adds fall back to pick
+  // order) so trades/keeper slots don't skew the windows.
+  const PLATFORM_RANK = { field: 'slR', label: 'Sleeper' };
+  function draftRules() {
+    const ds = (state.draft && state.draft.settings) || {};
+    const teams = ds.teams || 12;
+    const rounds = ds.rounds || 15;
+    const sf = state.mode.endsWith('_sf');
+    const picks = state.myRoster.slice().sort((a, b) => (a.pickNo || 1e9) - (b.pickNo || 1e9));
+    const rdOf = (r, i) => (r.pickNo ? Math.ceil(r.pickNo / teams) : i + 1);
+    const made = picks.length; // my rounds completed (snake = one pick a round)
+    const cntThru = (pos, thruRd) =>
+      picks.filter((r, i) => r.pos === pos && rdOf(r, i) <= thruRd).length;
+    const rules = [];
+    const add = (label, status, detail, tip) => rules.push({ label, status, detail, tip });
+
+    if (!sf) {
+      const earlyQB = picks.map((r, i) => ({ r, rd: rdOf(r, i) }))
+        .find((x) => x.r.pos === 'QB' && x.rd <= 5);
+      add('Fade early-round QB',
+        earlyQB ? 'fail' : (made >= 5 ? 'pass' : 'track'),
+        earlyQB ? 'QB taken Rd ' + earlyQB.rd : (made >= 5 ? 'No QB in Rds 1-5' : 'On track — no QB yet'),
+        'QB is deep — mid-round QBs score nearly as much as the early ones. Best value lands Rd 6+.');
+    } else {
+      const q8 = cntThru('QB', 8);
+      add('2 QBs through 8 rounds (SF)',
+        q8 >= 2 ? 'pass' : (made >= 8 ? 'fail' : 'track'),
+        q8 + '/2 QBs' + (made > 0 && made < 8 && q8 < 2 ? ' · thru Rd ' + made : ''),
+        'Superflex flips the QB rule: QB is the scarcest asset — leave Rd 8 with two starters.');
+    }
+
+    const rb3 = cntThru('RB', 3);
+    add('2 RBs through 3 rounds',
+      rb3 >= 2 ? 'pass' : (made >= 3 ? 'fail' : 'track'),
+      rb3 + '/2 RBs' + (made > 0 && made < 3 && rb3 < 2 ? ' · thru Rd ' + made : ''),
+      'RB value falls off a cliff after Rd 2 — leave Rd 3 with two you trust.');
+
+    const wr8 = cntThru('WR', 8);
+    add('4 WRs through 8 rounds',
+      wr8 >= 4 ? 'pass' : (made >= 8 ? 'fail' : 'track'),
+      wr8 + '/4 WRs' + (made > 0 && made < 8 && wr8 < 4 ? ' · thru Rd ' + made : ''),
+      'WR volume wins leagues — four by Rd 8 keeps the flex strong and survives busts.');
+
+    const dbl = picks.map((r, i) => ({ r, rd: rdOf(r, i) }))
+      .filter((x) => x.rd < 10 && (x.r.pos === 'TE' || (!sf && x.r.pos === 'QB')))
+      .reduce((m, x) => { m[x.r.pos] = (m[x.r.pos] || 0) + 1; return m; }, {});
+    const dblPos = Object.keys(dbl).find((pos) => dbl[pos] >= 2);
+    add(sf ? 'One TE is enough early' : 'One QB / one TE is enough',
+      dblPos ? 'fail' : (made >= 9 ? 'pass' : 'track'),
+      dblPos ? '2nd ' + dblPos + ' before Rd 10' : 'No doubles before Rd 10',
+      'Your starter closes the position — a backup ' + (sf ? 'TE' : 'QB or TE') +
+      ' before Rd 10 costs a WR/RB pick that actually plays.');
+
+    const lateRd = rounds - 2;
+    const earlyKD = picks.map((r, i) => ({ r, rd: rdOf(r, i) }))
+      .find((x) => (x.r.pos === 'K' || x.r.pos === 'DST') && x.rd <= lateRd);
+    add('K + DST in the last 2 rounds',
+      earlyKD ? 'fail' : (made >= lateRd ? 'pass' : 'track'),
+      earlyKD ? earlyKD.r.pos + ' taken Rd ' + earlyKD.rd : 'None before Rd ' + (lateRd + 1),
+      'K and D/ST barely repeat year to year — stream them; never spend a real pick.');
+
+    return rules;
+  }
+  // Platform value board: where Sleeper's own draft-room rank disagrees with
+  // Jack's board the most. Positive gap = Sleeper underrates him (he'll come
+  // cheap in this room — TARGET); negative = the room will overpay (TRAP).
+  // Redraft modes only: slR is a redraft list, so it's compared against
+  // Jack's redraft board.
+  function platformValueOf(p) {
+    if (state.mode.indexOf('re_') !== 0) return null;
+    if (p.s === 'K' || p.s === 'DST') return null; // K/DST rank scales don't compare
+    const plat = p[PLATFORM_RANK.field], jack = p.rank;
+    if (plat == null || jack == null) return null;
+    const diff = plat - jack;
+    const thresh = Math.max(8, Math.round(0.25 * Math.min(plat, jack)));
+    if (diff >= thresh) return { verdict: 'good', diff, plat, jack };
+    if (-diff >= thresh) return { verdict: 'bad', diff, plat, jack };
+    return null;
+  }
+  function platformValueBoard() {
+    // Only names inside the draftable range matter — a +200 gap on a
+    // late-bench player is trivia, not a draft plan.
+    const ds = (state.draft && state.draft.settings) || {};
+      const maxJack = (ds.teams || 12) * (ds.rounds || 15);
+    const rows = [];
+    for (const p of availablePlayers()) {
+      const v = platformValueOf(p);
+      if (v && v.jack <= maxJack) rows.push({ p, v });
+    }
+    return {
+      targets: rows.filter((r) => r.v.verdict === 'good')
+        .sort((a, b) => b.v.diff - a.v.diff).slice(0, 8),
+      fades: rows.filter((r) => r.v.verdict === 'bad')
+        .sort((a, b) => a.v.diff - b.v.diff).slice(0, 5),
+    };
+  }
+  function valueRowHTML(row, i) {
+    const p = row.p, v = row.v, k = keyOf(p);
+    const good = v.verdict === 'good';
+    const col = good ? '#6dd06d' : '#d06d6d';
+    return `
+      <div class="mff-rec" data-key="${esc(k)}">
+        <div class="num" style="color:${col}">${i + 1}</div>
+        <div class="info">
+          <div class="name">${esc(p.n)}</div>
+          <div class="meta">
+            <span class="pos ${p.s}">${p.s}</span>
+            <span>${esc(p.sTm || p.t || '')}</span>
+            <span>${PLATFORM_RANK.label} #${v.plat}</span>
+            <span>Jack #${v.jack}</span>
+            ${p.pPg != null ? `<span>${p.pPg}ppg</span>` : ''}
+          </div>
+        </div>
+        <div class="score" style="color:${col}" title="${PLATFORM_RANK.label} rank minus Jack's rank — ${good ? 'the room will let him fall to you' : 'the room will take him way before Jack would'}">${good ? '+' : ''}${v.diff}</div>
+        ${state.expandedKey === k ? profileHTML(p, k) : ''}
+      </div>`;
+  }
+  const RULE_ICONS = { pass: ['✓', '#6dd06d'], fail: ['✗', '#d06d6d'], track: ['○', '#8b94b3'] };
+  function rulesTabHTML() {
+    const ruleRows = draftRules().map((r) => {
+      const [icon, col] = RULE_ICONS[r.status];
+      return `<div title="${esc(r.tip)}" style="display:flex;gap:7px;align-items:baseline;padding:4px 2px;border-bottom:1px solid #1d2438">
+        <span style="color:${col};font-weight:800;flex:0 0 12px">${icon}</span>
+        <span style="flex:1;font-size:11px;font-weight:600;color:${r.status === 'fail' ? '#d06d6d' : '#eef1f9'}">${esc(r.label)}</span>
+        <span style="font-size:10px;color:${col}">${esc(r.detail)}</span>
+      </div>`;
+    }).join('');
+    let valueHtml = '';
+    if (state.mode.indexOf('re_') === 0) {
+      const vb = platformValueBoard();
+      const tgt = vb.targets.length
+        ? vb.targets.map(valueRowHTML).join('')
+        : '<div class="mff-proj-empty">No big gaps left on the board</div>';
+      valueHtml = `
+      <div class="mff-section"><h3>Targets — ${PLATFORM_RANK.label} undervalues</h3>
+        <div style="font-size:10px;color:#8b94b3;padding:0 2px 4px">Jack ranks them far above ${PLATFORM_RANK.label}'s own list — the room lets them fall</div>
+        ${tgt}
+      </div>` + (vb.fades.length ? `
+      <div class="mff-section"><h3>Traps — ${PLATFORM_RANK.label} overvalues</h3>
+        <div style="font-size:10px;color:#8b94b3;padding:0 2px 4px">${PLATFORM_RANK.label}'s list will make someone pay ${PLATFORM_RANK.label}'s price — don't let it be you</div>
+        ${vb.fades.map(valueRowHTML).join('')}
+      </div>` : '');
+    } else {
+      valueHtml = '<div class="mff-section"><h3>Targets</h3><div class="mff-proj-empty">Value board is redraft-only (' +
+        PLATFORM_RANK.label + "'s room rank is a redraft list)</div></div>";
+    }
+    return `
+      ${pickLineHTML()}
+      <div class="mff-section"><h3>Draft Rules</h3>
+        <div style="font-size:10px;color:#8b94b3;padding:0 2px 4px">Checked live against your picks — hover a rule for the why</div>
+        ${ruleRows}
+      </div>
+      ${valueHtml}`;
+  }
+
   function trackingHTML() {
-    const tabs = [['draft', 'DRAFT'], ['roster', 'ROSTER'], ['settings', 'SETTINGS']].map(([id, lbl]) =>
+    const tabs = [['draft', 'DRAFT'], ['roster', 'ROSTER'], ['rules', 'RULES'], ['settings', 'SETTINGS']].map(([id, lbl]) =>
       `<button class="mff-tab ${state.tab === id ? 'active' : ''}" data-tab="${id}">${lbl}</button>`).join('');
     const content = state.tab === 'roster' ? rosterTabHTML()
       : state.tab === 'settings' ? settingsTabHTML()
+      : state.tab === 'rules' ? rulesTabHTML()
       : draftTabHTML();
     return `
       <div id="mff-tabs">${tabs}</div>
@@ -3674,7 +3842,6 @@
     if (!state.players.length) return;
     const rows = document.querySelectorAll('.player-rank-item2');
     if (!rows.length) return;
-    const mk = modeKeys();
     const need = needPositions();
     const sosData = window.MFF_PLAYOFF_SOS;
     for (const row of rows) {
@@ -3700,8 +3867,8 @@
       // cyan inset edge for positional NEED.
       const stk = stackInfo(p);
       if (stk && stk.type === 'stack') {
-        row.style.setProperty('background', 'rgba(109, 208, 168, 0.10)', 'important');
-        row.style.setProperty('outline', '1px solid #6dd0a8', 'important');
+        row.style.setProperty('background', 'rgba(88, 167, 255, 0.10)', 'important');
+        row.style.setProperty('outline', '1px solid #58a7ff', 'important');
         row.style.setProperty('outline-offset', '-1px', 'important');
         row.style.removeProperty('box-shadow');
       } else if (stk && stk.type === 'team') {
@@ -3718,36 +3885,20 @@
         clearRowStyle(row);
       }
 
-      // Three injection points per row (all one-line, fixed-height safe):
-      //  - RK cell: #jackrank + KTC pills stacked under Sleeper's rank number
+      // Two injection points per row (all one-line, fixed-height safe):
       //  - top-right of the name cell: ★ STACK <QB> + $$/$ value badge
       //  - under the name: playoff pills WITH opponents (15 @PIT …)
-      const jm = p[mk.jack] != null ? p[mk.jack] : p.rank;
-      const ktc = p[mk.ktc];
+      // (RK-cell rank/tier/KTC/JM pills removed 0.29.1 — Jack: cluttered the
+      // board; ranks still live in the sidebar list.)
       const tag = adpTag(p);
       const sos = sosData && p.sTm && sosData[p.sTm] && sosData[p.sTm][p.s];
 
       let cornerInner = '';
       if (stk && stk.type === 'stack') {
-        cornerInner += pillHTML('★ ' + lastName(stk.names[0]), '#2a4a36', '#6dd0a8', 'STACK with ' + stk.names.join(', '));
+        cornerInner += pillHTML('★ ' + lastName(stk.names[0]), '#1e3a5f', '#58a7ff', 'STACK with ' + stk.names.join(', '));
       }
       if (tag === 'STEAL') cornerInner += pillHTML('$$', TAG_COLORS.STEAL[0], TAG_COLORS.STEAL[1], 'STEAL — 2+ rounds past ADP');
       else if (tag === 'Value') cornerInner += pillHTML('$', TAG_COLORS.Value[0], TAG_COLORS.Value[1], 'VALUE — a round past ADP');
-
-      let rankInner = pillHTML('#' + (jm != null ? jm : '—'), '#00ceb8', '#0b1220', "Jack's " + MODES[state.mode].label + ' rank');
-      // Jack's board-tier pill, tinted with the site's tier color cycle.
-      // p[mk.jack] only — the p.rank fallback above is a different board.
-      const jkTier = jackTierFor(p[mk.jack]);
-      if (jkTier) rankInner += pillHTML(jkTier.l, jackTierColor(jkTier.l), '#0b1220', "Jack's tier: " + (jkTier.n || 'Tier ' + jkTier.l));
-      if (ktc != null) rankInner += pillHTML(String(ktc), '#26304d', '#eef1f9', 'KTC ' + MODES[state.mode].label + ' value');
-      // JM prospect-model score pill (dynasty only), tinted with the site's
-      // position-specific tier color. Long Shot slate is too dark for dark text.
-      if (state.mode.startsWith('dyn') && p.jmS != null) {
-        const jmBg = p.jmCol || '#26304d';
-        const jmFg = (jmBg === '#475569' || jmBg === '#26304d') ? '#eef1f9' : '#0b1220';
-        rankInner += pillHTML('JM ' + p.jmS, jmBg, jmFg,
-          'JM prospect model score' + (p.jmT ? ' · ' + p.jmT : '') + (p.jmC ? ' · class of ' + p.jmC : ''));
-      }
 
       let sosInner = '';
       if (sos) {
@@ -3759,36 +3910,12 @@
         }
       }
 
-      const sig = cornerInner + '||' + rankInner + '||' + sosInner;
+      const sig = cornerInner + '||' + sosInner;
       if (row.dataset.mffSig === sig) continue;
       row.dataset.mffSig = sig;
+      // .mff-rank-pills stays in the removal selectors so pills injected by a
+      // pre-0.29.1 build get cleaned up when the extension reloads mid-page.
       row.querySelectorAll('.mff-page-chip, .mff-corner, .mff-rank-pills').forEach((el) => el.remove());
-
-      // RK cell pills — BESIDE the rank number (vertically centered pair),
-      // not underneath. Position after the number's actual text width so
-      // 1-3 digit ranks all clear it.
-      const rankCell = row.querySelector('.rank');
-      if (rankCell) {
-        if (getComputedStyle(rankCell).position === 'static') rankCell.style.position = 'relative';
-        let leftPx = 26;
-        const tn = [...rankCell.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
-        if (tn) {
-          const rge = document.createRange();
-          rge.selectNodeContents(tn);
-          leftPx = Math.round(rankCell.getBoundingClientRect().width / 2 + rge.getBoundingClientRect().width / 2 + 3);
-        }
-        const rp = document.createElement('span');
-        rp.className = 'mff-rank-pills';
-        rp.innerHTML = rankInner;
-        rp.style.cssText = 'position:absolute;left:' + leftPx + 'px;top:50%;transform:translateY(-50%);' +
-          'display:flex;flex-direction:column;gap:1px;align-items:flex-start;z-index:2;';
-        rp.querySelectorAll('span').forEach((s) => {
-          s.style.fontSize = '7px';
-          s.style.lineHeight = '10px';
-          s.style.padding = '0 2px';
-        });
-        rankCell.appendChild(rp);
-      }
 
       // ★ STACK + value badge sit NEXT TO the name, anchored to the name
       // text's own measured line (anchoring to the cell top clips — Sleeper
@@ -3854,15 +3981,15 @@
         ((p.s === 'WR' || p.s === 'TE') && mates.some((r) => r.pos === 'QB')) ||
         (p.s === 'QB' && mates.some((r) => r.pos === 'WR' || r.pos === 'TE')));
       if (isStack) {
-        row.style.setProperty('outline', '1px solid #6dd0a8', 'important');
+        row.style.setProperty('outline', '1px solid #58a7ff', 'important');
         row.style.setProperty('outline-offset', '-1px', 'important');
-        row.style.setProperty('background', 'rgba(109, 208, 168, 0.08)', 'important');
+        row.style.setProperty('background', 'rgba(88, 167, 255, 0.08)', 'important');
       } else {
         clearRowStyle(row);
       }
       const pills = [];
       if (isStack) {
-        pills.push(pillHTML('★', '#2a4a36', '#6dd0a8', 'STACK with ' + mates.map((m) => m.name).join(', ')));
+        pills.push(pillHTML('★', '#1e3a5f', '#58a7ff', 'STACK with ' + mates.map((m) => m.name).join(', ')));
       }
       if (p.pPg != null) {
         pills.push(pillHTML(p.pPg + 'ppg', '#26304d', '#00ceb8', 'Clay projection: ' + p.pPg + ' PPG (' + state.scoringLabel + ')' + (p.szn != null ? ' · ' + p.szn + ' season pts' : '')));

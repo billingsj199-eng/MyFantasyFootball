@@ -1439,7 +1439,7 @@
       // v0.16.1: STACK NOW (urgent — QB completes an existing stack and his
       // ADP window is this pick) outranks the passive STACK chip.
       if (r.flags && r.flags.stackNow) chips.push('<span style="background:#713f12;color:#fbbf24;padding:0 4px;border-radius:2px;font-weight:700">STACK NOW</span>');
-      else if (stack) chips.push('<span style="background:#14532d;color:#6dd0a8;padding:0 4px;border-radius:2px">STACK</span>');
+      else if (stack) chips.push('<span style="background:#1e3a5f;color:#58a7ff;padding:0 4px;border-radius:2px">STACK</span>');
       if (r.flags && r.flags.need) chips.push('<span style="background:#1e3a5f;color:#7dd3fc;padding:0 4px;border-radius:2px">NEED ' + r.flags.need.toUpperCase() + '</span>');
       if (r.flags && r.flags.tier) chips.push('<span style="background:#3b0764;color:#d8b4fe;padding:0 4px;border-radius:2px">' + (r.flags.tier.type === "cliff" ? "TIER!" : "TIER") + '</span>');
       if (r.flags && r.flags.wait) chips.push('<span style="background:#334155;color:#cbd5e1;padding:0 4px;border-radius:2px">WAIT</span>');
@@ -4858,6 +4858,29 @@
         _diag.droppedNoPicks.push(draft.id || path);
         continue;
       }
+      // v0.17.5: entrant usernames. The same /v2/drafts payload carries the
+      // draft's entries (and sometimes a users[] block) alongside picks —
+      // map entry_id -> username defensively (UD has changed shapes before):
+      // embedded e.user first, then users[] matched by user_id. A miss just
+      // leaves the site's "Opponent xxxxxx" fallback label.
+      const entryUserMap = {};
+      try {
+        const usersById = new Map();
+        [d.users, draft.users].forEach((ua) => {
+          if (!Array.isArray(ua)) return;
+          for (const u of ua) {
+            if (u && u.id != null) usersById.set(u.id, u.username || u.display_name || null);
+          }
+        });
+        const entryArr = draft.draft_entries || draft.entries || d.draft_entries || [];
+        for (const e of entryArr) {
+          if (!e || e.id == null) continue;
+          const uname = (e.user && (e.user.username || e.user.display_name)) ||
+                        (e.user_id != null ? usersById.get(e.user_id) : null) ||
+                        e.username || null;
+          if (uname) entryUserMap[e.id] = String(uname);
+        }
+      } catch (_) {}
       const teamsByEntry = new Map();
       let _pickTotal = 0, _pickResolved = 0;
       for (const p of draft.picks) {
@@ -4904,6 +4927,7 @@
       for (const [eid, picks] of teamsByEntry.entries()) {
         allTeams[eid] = {
           entryId: eid,
+          username: entryUserMap[eid] || null,
           isMine: eid === myEntryId,
           pickCount: picks.length,
           picks: picks

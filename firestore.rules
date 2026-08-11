@@ -5,9 +5,26 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
-    match /rankings/{docId} {
+    // rankings/jacks-official: Jack's shared boards. Public read — the site
+    // loads them before sign-in (rankings page, ticker, IR flags) and the
+    // helper extensions read the same doc over REST. Admin-only write.
+    match /rankings/jacks-official {
       allow read: if true;
       allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    // rankings/{uid}: each user's personal boards + email address.
+    // 2026-08-11 fix, two bugs in one rule:
+    //  - read was `if true`, so an anonymous REST list exposed every user's
+    //    full boards AND email (privacy leak).
+    //  - write was admin-only, so every non-admin saveUserRankings() has been
+    //    silently rejected server-side since ~May (offline persistence made
+    //    the Save button report success while the sync was denied — no
+    //    non-admin doc had an updatedAt newer than 2026-05-05).
+    // Owner + admin, both ways.
+    match /rankings/{docId} {
+      allow read, write: if request.auth != null
+                         && (request.auth.uid == docId
+                             || request.auth.token.email == 'billingsj199@gmail.com');
     }
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;

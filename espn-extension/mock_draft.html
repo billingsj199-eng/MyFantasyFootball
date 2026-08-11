@@ -17,6 +17,18 @@
   #strip .pk { font-size: 9px; color: #9aa0a6; letter-spacing: .4px; }
   #strip .tm { font-size: 11px; color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #strip .tile.mine { background: #14532d; }
+  /* Players-list mock (the room's PLAYERS tab). Light theme like real ESPN,
+     narrow two-line player cell — the exact geometry that hid names when
+     stranded pill strips piled up (v0.20.4 bug). */
+  #plist { background: #fff; color: #0f172a; border-radius: 8px; margin: 12px 0; max-width: 760px; }
+  #plist .prow { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #e5e7eb; }
+  #plist .prow:nth-child(odd) { background: #f8fafc; }
+  #plist .rk { width: 24px; font-size: 12px; color: #64748b; flex: 0 0 auto; }
+  #plist .pcell { width: 210px; flex: 0 0 auto; overflow: hidden; }
+  #plist .pl-name { display: flex; align-items: center; }
+  #plist .playerinfo__playername { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #plist .pl-team { font-size: 10px; color: #64748b; text-transform: uppercase; }
+  #plist .fpts { margin-left: auto; font-size: 12px; color: #334155; }
 </style>
 </head>
 <body>
@@ -34,6 +46,10 @@ watch the sidebar track it.</p>
      finds these tiles by the label TEXT, so this also proves the locator does
      not depend on markup we can't see. -->
 <div id="strip"></div>
+<!-- Players-list mock: rows are RECYCLED React-style — after every pick the
+     harness re-texts the SAME row nodes to shift players up (never removes
+     them), exactly what the room does and what strands foreign pill spans. -->
+<div id="plist"></div>
 <div id="log"></div>
 <!-- Real ESPN board structure, populated when "simulate board" is on -->
 <div class="draftBoardGrid" style="display:none"></div>
@@ -126,6 +142,38 @@ watch the sidebar track it.</p>
         '<div class="tm">' + (tm ? tm.name : 'Team ' + s.teamId) + '</div></div>';
     }).join('');
   }
+  // ── Players-list mock with RECYCLED rows ──────────────────────────────
+  // Rows are created once; renderPlist() re-texts them in place as players
+  // come off the board (ESPN's virtualized list does the same). The name
+  // anchor sits inside .playerinfo__playername to also exercise the
+  // nested-anchor double-inject guard.
+  const plistEl = document.getElementById('plist');
+  const PLIST_ROWS = 20;
+  const rankOf = {};
+  draftable.forEach((d, i) => { rankOf[d.id] = i + 1; });
+  for (let i = 0; i < PLIST_ROWS; i++) {
+    const row = document.createElement('div');
+    row.className = 'prow';
+    row.innerHTML =
+      '<span class="rk"></span>' +
+      '<div class="pcell">' +
+        '<div class="pl-name"><span class="playerinfo__playername"><a href="#"></a></span></div>' +
+        '<div class="pl-team"></div>' +
+      '</div>' +
+      '<span class="fpts"></span>';
+    plistEl.appendChild(row);
+  }
+  function renderPlist() {
+    const rows = plistEl.children;
+    for (let i = 0; i < rows.length; i++) {
+      const d = avail[i];
+      const p = d ? idToPlayer[d.id] : null;
+      rows[i].querySelector('.rk').textContent = d ? rankOf[d.id] : '';
+      rows[i].querySelector('.playerinfo__playername a').textContent = p ? p.n : '';
+      rows[i].querySelector('.pl-team').textContent = p ? (p.sTm || p.t || '') + ' ' + p.s : '';
+      rows[i].querySelector('.fpts').textContent = p ? (200 - rankOf[d.id]) + '.1' : '';
+    }
+  }
   let pickIdx = 0, avail = draftable.slice(), paused = false;
   function nextPick() {
     if (pickIdx >= ddPicks.length || !avail.length) { log('DRAFT COMPLETE'); clearInterval(timer); return; }
@@ -142,6 +190,7 @@ watch the sidebar track it.</p>
       if (nxt) emit('SELECTING ' + nxt.teamId + ' 30000');
     }
     renderStrip();
+    renderPlist();
     log('pick #' + slot.overallPickNumber + ' team ' + slot.teamId + ' → playerId ' + chosen.id);
   }
   // Simulate ESPN's mid-draft join CATCH-UP: the first 4 picks arrive in ONE
@@ -158,6 +207,7 @@ watch the sidebar track it.</p>
   catchupParts.push('SELECTING ' + ddPicks[pickIdx].teamId + ' 30000');
   emit(catchupParts.join('\r'));
   renderStrip();
+  renderPlist();
   const timer = setInterval(() => { if (!paused) nextPick(); }, 2000);
   document.getElementById('force').addEventListener('click', nextPick);
   document.getElementById('pause').addEventListener('click', () => { paused = !paused; log(paused ? 'PAUSED' : 'RESUMED'); });

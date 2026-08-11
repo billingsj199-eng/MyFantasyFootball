@@ -11,7 +11,7 @@
 // draft ends, which is why the WS feed is the pick source).
 (() => {
   'use strict';
-  console.log('[MFF/ESPN] sidebar.js evaluating (v0.17.2)');
+  console.log('[MFF/ESPN] sidebar.js evaluating (v0.20.0)');
   if (window.__mffEspn) return;
 
   const LM_API = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/';
@@ -2777,7 +2777,10 @@
       // Our own appendChild re-triggers this; the signature cache makes that
       // repaint a no-op, which mutates nothing, so it settles after one pass.
       clearTimeout(stripDebounce);
-      stripDebounce = setTimeout(decorateDraftStrip, 100);
+      // Rows repaint here too: the same re-render that rebuilds the strip
+      // re-texts the player list's recycled rows, stranding pill strips —
+      // waiting for the 2s interval leaves dead chips visible after a pick.
+      stripDebounce = setTimeout(() => { decorateDraftStrip(); decorateDraftRows(); }, 100);
     });
     stripObserver.observe(root, { childList: true, subtree: true });
   }
@@ -2786,6 +2789,7 @@
     if (stripTimer) return;
     stripTimer = setInterval(decorateDraftStrip, 2000);  // safety net / first find
     decorateDraftStrip();
+    startRowDecorating();
   }
   function stopStripDecorating() {
     if (stripTimer) { clearInterval(stripTimer); stripTimer = null; }
@@ -2793,6 +2797,140 @@
     clearTimeout(stripDebounce);
     stripRoot = null;
     clearStripNeeds();
+    stopRowDecorating();
+  }
+
+  // ---------- on-page draft-row decoration (DRAFT mode) ----------
+  // The draft room's own player list gets the Sleeper-helper treatment:
+  // playoff-matchup pills (W15-17) beside every matched name, plus a
+  // whole-row wash — BLUE = stacks with someone you drafted, GREEN = ESPN's
+  // own list underrates him vs Jack's board (target), RED = ESPN overrates
+  // him (trap). Light tints: ESPN is a white page, the sidebar's dark pill
+  // palette reads as mud there (same reason OPP_TINT exists).
+  const ROW_TINT = {
+    stack: ['rgba(59, 130, 246, 0.16)', '#3b82f6'],
+    good:  ['rgba(34, 197, 94, 0.16)',  '#22a04a'],
+    bad:   ['rgba(220, 38, 38, 0.12)',  '#d24a4a'],
+  };
+  function draftRowVerdict(p) {
+    const stk = stackInfo(p);
+    if (stk && stk.type === 'stack') {
+      return { cls: 'stack', tip: 'STACK — pairs with ' + stk.names.join(', ') + ' on your roster' };
+    }
+    const v = platformValueOf(p);
+    if (v && v.verdict === 'good') {
+      return { cls: 'good', v, tip: 'VALUE — Jack #' + v.jack + ' vs ESPN #' + v.plat + ' (+' + v.diff + '): the room lets him fall to you' };
+    }
+    if (v && v.verdict === 'bad') {
+      return { cls: 'bad', v, tip: 'TRAP — ESPN #' + v.plat + ' vs Jack #' + v.jack + ' (' + v.diff + '): the room prices him way above Jack' };
+    }
+    return null;
+  }
+  function clearDraftRows() {
+    document.querySelectorAll('.mff-draft-pills').forEach((el) => el.remove());
+    document.querySelectorAll('[data-mff-row-hl]').forEach((row) => {
+      row.style.removeProperty('background');
+      row.style.removeProperty('box-shadow');
+      row.removeAttribute('title');
+      delete row.dataset.mffRowHl;
+    });
+  }
+  function tintDraftRow(row, g) {
+    if (!g) {
+      if (row.dataset.mffRowHl) {
+        row.style.removeProperty('background');
+        row.style.removeProperty('box-shadow');
+        row.removeAttribute('title');
+        delete row.dataset.mffRowHl;
+      }
+      return;
+    }
+    if (row.dataset.mffRowHl === g.cls + '|' + g.tip) return;
+    row.dataset.mffRowHl = g.cls + '|' + g.tip;
+    const [bg, edge] = ROW_TINT[g.cls];
+    // box-shadow, not outline: table rows collapse outlines inconsistently,
+    // and an inset shadow survives ESPN's row hover styles.
+    row.style.setProperty('background', bg, 'important');
+    row.style.setProperty('box-shadow', 'inset 3px 0 0 ' + edge + ', inset 0 0 0 1px ' + edge, 'important');
+    row.title = g.tip;
+  }
+  function decorateDraftRows() {
+    if (!gateAllowed()) return;
+    if (state.appMode !== 'draft' || !state.players.length) { clearDraftRows(); return; }
+    const seenRows = new Set();
+    // Every span this pass re-validates lands here; anything left over at the
+    // end is a STRANDED pill strip. ESPN's list is React-virtualized — when a
+    // pick lands it re-texts recycled row nodes in place to shift players up,
+    // and our foreign spans stay behind, piling other players' chips into the
+    // row until they crush the name out of its box entirely.
+    const liveSpans = new Set();
+    for (const el of document.querySelectorAll('.playerinfo__playername, a')) {
+      if (el.closest('#mff-sidebar')) continue;
+      if (el.querySelector('.playerinfo__playername')) continue; // anchor wrapping the span — the span pass handles it
+      if (el.tagName === 'A' && el.parentElement && el.parentElement.closest('.playerinfo__playername')) continue; // anchor INSIDE the span — ditto, else both passes inject
+      const txt = (el.textContent || '').trim();
+      if (!txt || txt.length > 40) continue;
+      const p = findPlayer(txt, '');
+      const host = el.closest('.truncate') || el;
+      const existing = host.nextElementSibling && host.nextElementSibling.classList &&
+        host.nextElementSibling.classList.contains('mff-draft-pills')
+        ? host.nextElementSibling : null;
+      const row = el.closest('tr');
+      if (!p || isDrafted(p)) {
+        if (existing) existing.remove();
+        if (row && !seenRows.has(row)) tintDraftRow(row, null);
+        continue;
+      }
+      const g = draftRowVerdict(p);
+      if (row && !seenRows.has(row)) {
+        seenRows.add(row);
+        tintDraftRow(row, g);
+      }
+      // Pills beside the name: value gap first (it explains the wash), then
+      // the W15-17 playoff matchups — same data the Sleeper helper paints.
+      let inner = '';
+      if (g && g.v) {
+        const good = g.cls === 'good';
+        inner += `<span style="background:${good ? '#e2f3e6' : '#fbe7e7'};color:${good ? '#1d7a34' : '#b33636'};border-radius:2px;padding:0 2px;font-size:7px;font-weight:800;line-height:10px;white-space:nowrap" title="${esc(g.tip)}">${good ? '+' : ''}${g.v.diff} v ESPN</span>`;
+      } else if (g && g.cls === 'stack') {
+        inner += `<span style="background:#e3ecfb;color:#2255c4;border-radius:2px;padding:0 2px;font-size:7px;font-weight:800;line-height:10px;white-space:nowrap" title="${esc(g.tip)}">★ STACK</span>`;
+      }
+      const sosData = window.MFF_PLAYOFF_SOS;
+      const sos = sosData && p.sTm && sosData[p.sTm] && sosData[p.sTm][p.s];
+      if (sos) {
+        for (const w of ['15', '16', '17']) {
+          const m = sos[w];
+          if (!m) continue;
+          inner += `<span style="background:${esc(m.color)};color:#0e0f12;border-radius:2px;padding:0 2px;font-size:7px;font-weight:700;line-height:10px;white-space:nowrap" title="Week ${w} playoff matchup · SOS rank ${m.rank}/32 for ${p.s} · implied ${m.impliedTotal} pts">${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
+        }
+      }
+      if (existing && existing.dataset.mffSig === inner) { liveSpans.add(existing); continue; }
+      if (existing) existing.remove();
+      if (!inner) continue;
+      const span = document.createElement('span');
+      span.className = 'mff-draft-pills';
+      span.dataset.mffSig = inner;
+      span.innerHTML = inner;
+      // flex 0 1000 auto: in a flex name line the pills absorb ~all the shrink,
+      // so a long name keeps its width and the CHIPS clip — never the name.
+      span.style.cssText = 'display:inline-flex;flex-wrap:nowrap;gap:2px;margin-left:4px;' +
+        'vertical-align:middle;overflow:hidden;position:relative;z-index:5;flex:0 1000 auto;min-width:0;max-width:60%;';
+      host.insertAdjacentElement('afterend', span);
+      liveSpans.add(span);
+    }
+    for (const s of document.querySelectorAll('.mff-draft-pills')) {
+      if (!liveSpans.has(s)) s.remove();
+    }
+  }
+  let rowTimer = null;
+  function startRowDecorating() {
+    if (rowTimer) return;
+    rowTimer = setInterval(decorateDraftRows, 2000);
+    decorateDraftRows();
+  }
+  function stopRowDecorating() {
+    if (rowTimer) { clearInterval(rowTimer); rowTimer = null; }
+    clearDraftRows();
   }
 
   function setAppMode(mode) {
@@ -3055,6 +3193,22 @@
     return `<div id="mff-target-row">${cells}</div>`;
   }
 
+  // Inline playoff-matchup pill line (W15-17, color = per-week positional SOS)
+  // — the Underdog helper's rec-card treatment, shared by the Recommended
+  // cards and the on-page row decorator.
+  function playoffPillLineHTML(p) {
+    const sosData = window.MFF_PLAYOFF_SOS;
+    const sos = sosData && p.sTm && sosData[p.sTm] && sosData[p.sTm][p.s];
+    if (!sos) return '';
+    const pills = ['15', '16', '17'].map((w) => {
+      const m = sos[w];
+      if (!m) return '';
+      return `<span style="background:${esc(m.color)};color:#0e0f12;border-radius:3px;padding:0 4px;font-size:8px;font-weight:700;line-height:12px" title="Week ${w} playoff matchup · SOS rank ${m.rank}/32 for ${p.s} · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
+    }).join('');
+    if (!pills) return '';
+    return `<div class="meta" style="margin-top:2px;display:flex;gap:3px;align-items:center;flex-wrap:wrap"><span style="color:#8a8d96;font-size:8px;letter-spacing:.4px">PLAYOFFS</span>${pills}</div>`;
+  }
+
   function recommendedHTML() {
     const recs = recommendPicks();
     if (!recs.length) return '';
@@ -3079,6 +3233,7 @@
             ${p.pPg != null ? `<span>${p.pPg}ppg</span>` : ''}
             ${p[modeKeys().adp] != null ? `<span>ADP ${p[modeKeys().adp]}</span>` : ''}
           </div>
+          ${playoffPillLineHTML(p)}
           ${reasonTags ? `<div class="why">${reasonTags}</div>` : ''}
         </div>
         <div class="score" style="color:${MEDALS[i]}">${r.score}</div>
@@ -3138,14 +3293,14 @@
         ).slice(0, 3);
         const haveRows = have.map((r) =>
           `<div class="mff-proj-roster-player"><span class="t">${esc(r.pos)}</span>
-            <span class="n" style="color:#6dd0a8">${esc(r.name)} ✓</span>
+            <span class="n" style="color:#58a7ff">${esc(r.name)} ✓</span>
             <span class="v">${r.p && r.p.pPg != null ? r.p.pPg + 'ppg' : '—'}</span></div>`).join('');
         const targetRows = targets.map((t) =>
           `<div class="mff-proj-roster-player"><span class="t">${esc(t.s)}</span>
             <span class="n">${esc(t.n)}</span>
             <span class="v">${t.pPg != null ? t.pPg + 'ppg' : '—'}</span></div>`).join('');
         return `<div class="mff-proj-roster-group">
-          <div class="mff-proj-roster-grouphead" style="color:#6dd0a8">${esc(qb.name)} <span class="ct">(${esc(tm)})</span></div>
+          <div class="mff-proj-roster-grouphead" style="color:#58a7ff">${esc(qb.name)} <span class="ct">(${esc(tm)})</span></div>
           ${haveRows}
           ${targetRows || '<div class="mff-proj-empty" style="padding:4px">No pass-catchers left on ' + esc(tm) + '</div>'}
         </div>`;
@@ -3199,11 +3354,170 @@
       <div style="font-size:10px;color:#8a8d96">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>`;
   }
 
+  // ---------- RULES tab: draft-rules checklist + platform value board ----------
+  // The rules are Jack's redraft doctrine, checked LIVE against the roster:
+  // each one is pending (○) until its window closes, then locks ✓/✗. Rounds
+  // come from the pick's real overall slot (manual adds fall back to pick
+  // order) so trades/keeper slots don't skew the windows.
+  const PLATFORM_RANK = { field: 'espnAdp', label: 'ESPN' };
+  function draftRules() {
+    const st = state.slots || {};
+    const teams = st.teams || 12;
+    const rounds = st.rounds || 16;
+    const sf = state.mode.endsWith('_sf');
+    const picks = state.myRoster.slice().sort((a, b) => (a.pickNo || 1e9) - (b.pickNo || 1e9));
+    const rdOf = (r, i) => (r.pickNo ? Math.ceil(r.pickNo / teams) : i + 1);
+    const made = picks.length; // my rounds completed (snake = one pick a round)
+    const cntThru = (pos, thruRd) =>
+      picks.filter((r, i) => r.pos === pos && rdOf(r, i) <= thruRd).length;
+    const rules = [];
+    const add = (label, status, detail, tip) => rules.push({ label, status, detail, tip });
+
+    if (!sf) {
+      const earlyQB = picks.map((r, i) => ({ r, rd: rdOf(r, i) }))
+        .find((x) => x.r.pos === 'QB' && x.rd <= 5);
+      add('Fade early-round QB',
+        earlyQB ? 'fail' : (made >= 5 ? 'pass' : 'track'),
+        earlyQB ? 'QB taken Rd ' + earlyQB.rd : (made >= 5 ? 'No QB in Rds 1-5' : 'On track — no QB yet'),
+        'QB is deep — mid-round QBs score nearly as much as the early ones. Best value lands Rd 6+.');
+    } else {
+      const q8 = cntThru('QB', 8);
+      add('2 QBs through 8 rounds (SF)',
+        q8 >= 2 ? 'pass' : (made >= 8 ? 'fail' : 'track'),
+        q8 + '/2 QBs' + (made > 0 && made < 8 && q8 < 2 ? ' · thru Rd ' + made : ''),
+        'Superflex flips the QB rule: QB is the scarcest asset — leave Rd 8 with two starters.');
+    }
+
+    const rb3 = cntThru('RB', 3);
+    add('2 RBs through 3 rounds',
+      rb3 >= 2 ? 'pass' : (made >= 3 ? 'fail' : 'track'),
+      rb3 + '/2 RBs' + (made > 0 && made < 3 && rb3 < 2 ? ' · thru Rd ' + made : ''),
+      'RB value falls off a cliff after Rd 2 — leave Rd 3 with two you trust.');
+
+    const wr8 = cntThru('WR', 8);
+    add('4 WRs through 8 rounds',
+      wr8 >= 4 ? 'pass' : (made >= 8 ? 'fail' : 'track'),
+      wr8 + '/4 WRs' + (made > 0 && made < 8 && wr8 < 4 ? ' · thru Rd ' + made : ''),
+      'WR volume wins leagues — four by Rd 8 keeps the flex strong and survives busts.');
+
+    const dbl = picks.map((r, i) => ({ r, rd: rdOf(r, i) }))
+      .filter((x) => x.rd < 10 && (x.r.pos === 'TE' || (!sf && x.r.pos === 'QB')))
+      .reduce((m, x) => { m[x.r.pos] = (m[x.r.pos] || 0) + 1; return m; }, {});
+    const dblPos = Object.keys(dbl).find((pos) => dbl[pos] >= 2);
+    add(sf ? 'One TE is enough early' : 'One QB / one TE is enough',
+      dblPos ? 'fail' : (made >= 9 ? 'pass' : 'track'),
+      dblPos ? '2nd ' + dblPos + ' before Rd 10' : 'No doubles before Rd 10',
+      'Your starter closes the position — a backup ' + (sf ? 'TE' : 'QB or TE') +
+      ' before Rd 10 costs a WR/RB pick that actually plays.');
+
+    const lateRd = rounds - 2;
+    const earlyKD = picks.map((r, i) => ({ r, rd: rdOf(r, i) }))
+      .find((x) => (x.r.pos === 'K' || x.r.pos === 'DST') && x.rd <= lateRd);
+    add('K + DST in the last 2 rounds',
+      earlyKD ? 'fail' : (made >= lateRd ? 'pass' : 'track'),
+      earlyKD ? earlyKD.r.pos + ' taken Rd ' + earlyKD.rd : 'None before Rd ' + (lateRd + 1),
+      'K and D/ST barely repeat year to year — stream them; never spend a real pick.');
+
+    return rules;
+  }
+  // Platform value board: where the host site's own list disagrees with
+  // Jack's board the most. Positive gap = the platform underrates him (he'll
+  // come cheap in this room — TARGET); negative = the platform will make
+  // someone overpay (TRAP). Redraft modes only: the editorial list is a
+  // redraft 1QB board, so it's compared against Jack's redraft board.
+  function platformValueOf(p) {
+    if (state.mode.indexOf('re_') !== 0) return null;
+    if (p.s === 'K' || p.s === 'DST') return null; // K/DST rank scales don't compare
+    const plat = p[PLATFORM_RANK.field], jack = p.rank;
+    if (plat == null || jack == null) return null;
+    const diff = plat - jack;
+    const thresh = Math.max(8, Math.round(0.25 * Math.min(plat, jack)));
+    if (diff >= thresh) return { verdict: 'good', diff, plat, jack };
+    if (-diff >= thresh) return { verdict: 'bad', diff, plat, jack };
+    return null;
+  }
+  function platformValueBoard() {
+    // Only names inside the draftable range matter — a +200 gap on a
+    // late-bench player is trivia, not a draft plan.
+    const st = state.slots || {};
+      const maxJack = (st.teams || 12) * (st.rounds || 16);
+    const rows = [];
+    for (const p of availablePlayers()) {
+      const v = platformValueOf(p);
+      if (v && v.jack <= maxJack) rows.push({ p, v });
+    }
+    return {
+      targets: rows.filter((r) => r.v.verdict === 'good')
+        .sort((a, b) => b.v.diff - a.v.diff).slice(0, 8),
+      fades: rows.filter((r) => r.v.verdict === 'bad')
+        .sort((a, b) => a.v.diff - b.v.diff).slice(0, 5),
+    };
+  }
+  function valueRowHTML(row, i) {
+    const p = row.p, v = row.v, k = keyOf(p);
+    const good = v.verdict === 'good';
+    const col = good ? '#6dd06d' : '#d06d6d';
+    return `
+      <div class="mff-rec" data-key="${esc(k)}">
+        <div class="num" style="color:${col}">${i + 1}</div>
+        <div class="info">
+          <div class="name">${esc(p.n)}</div>
+          <div class="meta">
+            <span class="pos ${p.s}">${p.s}</span>
+            <span>${esc(p.sTm || p.t || '')}</span>
+            <span>${PLATFORM_RANK.label} #${v.plat}</span>
+            <span>Jack #${v.jack}</span>
+            ${p.pPg != null ? `<span>${p.pPg}ppg</span>` : ''}
+          </div>
+        </div>
+        <div class="score" style="color:${col}" title="${PLATFORM_RANK.label} rank minus Jack's rank — ${good ? 'the room will let him fall to you' : 'the room will take him way before Jack would'}">${good ? '+' : ''}${v.diff}</div>
+        ${state.expandedKey === k ? profileHTML(p, k) : ''}
+      </div>`;
+  }
+  const RULE_ICONS = { pass: ['✓', '#6dd06d'], fail: ['✗', '#d06d6d'], track: ['○', '#8a8d96'] };
+  function rulesTabHTML() {
+    const ruleRows = draftRules().map((r) => {
+      const [icon, col] = RULE_ICONS[r.status];
+      return `<div title="${esc(r.tip)}" style="display:flex;gap:7px;align-items:baseline;padding:4px 2px;border-bottom:1px solid #26282e">
+        <span style="color:${col};font-weight:800;flex:0 0 12px">${icon}</span>
+        <span style="flex:1;font-size:11px;font-weight:600;color:${r.status === 'fail' ? '#d06d6d' : '#e9e9ec'}">${esc(r.label)}</span>
+        <span style="font-size:10px;color:${col}">${esc(r.detail)}</span>
+      </div>`;
+    }).join('');
+    let valueHtml = '';
+    if (state.mode.indexOf('re_') === 0) {
+      const vb = platformValueBoard();
+      const tgt = vb.targets.length
+        ? vb.targets.map(valueRowHTML).join('')
+        : '<div class="mff-proj-empty">No big gaps left on the board</div>';
+      valueHtml = `
+      <div class="mff-section"><h3>Targets — ${PLATFORM_RANK.label} undervalues</h3>
+        <div style="font-size:10px;color:#8a8d96;padding:0 2px 4px">Jack ranks them far above ${PLATFORM_RANK.label}'s own list — the room lets them fall</div>
+        ${tgt}
+      </div>` + (vb.fades.length ? `
+      <div class="mff-section"><h3>Traps — ${PLATFORM_RANK.label} overvalues</h3>
+        <div style="font-size:10px;color:#8a8d96;padding:0 2px 4px">${PLATFORM_RANK.label}'s list will make someone pay ${PLATFORM_RANK.label}'s price — don't let it be you</div>
+        ${vb.fades.map(valueRowHTML).join('')}
+      </div>` : '');
+    } else {
+      valueHtml = '<div class="mff-section"><h3>Targets</h3><div class="mff-proj-empty">Value board is redraft-only (' +
+        PLATFORM_RANK.label + "'s list is a redraft board)</div></div>";
+    }
+    return `
+      ${pickLineHTML()}
+      <div class="mff-section"><h3>Draft Rules</h3>
+        <div style="font-size:10px;color:#8a8d96;padding:0 2px 4px">Checked live against your picks — hover a rule for the why</div>
+        ${ruleRows}
+      </div>
+      ${valueHtml}`;
+  }
+
   function trackingHTML() {
-    const tabs = [['draft', 'DRAFT'], ['roster', 'ROSTER'], ['settings', 'SETTINGS']].map(([id, lbl]) =>
+    const tabs = [['draft', 'DRAFT'], ['roster', 'ROSTER'], ['rules', 'RULES'], ['settings', 'SETTINGS']].map(([id, lbl]) =>
       `<button class="mff-tab ${state.tab === id ? 'active' : ''}" data-tab="${id}">${lbl}</button>`).join('');
     const content = state.tab === 'roster' ? rosterTabHTML()
       : state.tab === 'settings' ? settingsTabHTML()
+      : state.tab === 'rules' ? rulesTabHTML()
       : draftTabHTML();
     const onClock = state.onClockTeamId ? teamLabel(state.onClockTeamId) : '';
     return `

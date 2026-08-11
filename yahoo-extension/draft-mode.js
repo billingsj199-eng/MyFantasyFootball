@@ -393,6 +393,24 @@
     re_1qb: { jack: 'rank', fp: 'fpR',  sl: 'slR',  adp: 'a',   vor: 'vor',   up: 'up'   },
   };
   function modeKeys() { return MODE_KEYS[st.mode] || MODE_KEYS.re_1qb; }
+  // ---------- Jack's board tiers ----------
+  // st.tiers[field] = sorted [{a, l, n}] boundaries on that board (from
+  // players.json). A tier applies from rank `a` until the next boundary —
+  // same as the site's _tierLabelForRank. Colors = site's tier color cycle.
+  const JACK_TIER_LABELS = ['S','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','T','U','V','W','X','Y','Z'];
+  const JACK_TIER_COLORS = ['#eab308','#ef4444','#3b82f6','#22c55e','#a855f7','#f97316','#9ca3af','#ec4899','#06b6d4','#84cc16','#f43f5e','#6366f1','#fbbf24','#14b8a6','#d946ef','#ea580c','#38bdf8','#a3e635','#fb7185'];
+  function jackTierColor(label) {
+    const i = JACK_TIER_LABELS.indexOf(label);
+    return JACK_TIER_COLORS[(i >= 0 ? i : 0) % JACK_TIER_COLORS.length];
+  }
+  function jackTierList() { return (st.tiers || {})[modeKeys().jack] || null; }
+  function jackTierFor(rank) {
+    const list = jackTierList();
+    if (!list || !list.length || rank == null) return null;
+    let cur = null;
+    for (const t of list) { if (t.a <= rank) cur = t; else break; }
+    return cur;
+  }
   const SOURCES = {
     jack: { label: "Jack's Rank",  get: (p) => p[modeKeys().jack], desc: false },
     fp:   { label: 'FantasyPros',  get: (p) => p[modeKeys().fp],   desc: false },
@@ -1133,6 +1151,7 @@
         '<span style="margin-left:auto;color:' + MEDALS[i] + ';font-weight:700">' + x.score + '</span></div>' +
         '<div style="color:#a89cc8;font-size:10px;margin-top:2px">' +
         'Jack #' + (p[modeKeys().jack] != null ? p[modeKeys().jack] : p.rank) +
+        (function () { const t = jackTierFor(p[modeKeys().jack]); return t ? ' <b style="color:' + jackTierColor(t.l) + '" title="Jack\'s tier: ' + esc(t.n || t.l) + '">' + esc(t.l) + '</b>' : ''; })() +
         (p.pPg != null ? ' · ' + p.pPg + ' ppg' : '') +
         (padp != null ? ' · ADP ' + padp : '') +
         (rec && rec.yAdp < 900 ? ' · Y! ' + rec.yAdp.toFixed(1) : '') + '</div>' +
@@ -1252,12 +1271,27 @@
       bar += '<span id="mffYdVor" title="Sort by VOR (format-aware)" style="' + CSS.posBtn(st.sortVor) + '">VOR</span></div>';
       const vk = modeKeys().vor;
       const avail = sortedAvailable();
+      // Tier separators only make sense while the list IS Jack's board order.
+      const showTierSeps = st.rankSource === 'jack' && !st.sortVor && !!jackTierList();
+      let lastTierLabel = null;
       body.innerHTML = bar + avail.slice(0, 60).map((p) => {
         const rec = poolByBoard.get(p);
         const tag = adpTag(p);
         const rk = SOURCES[st.rankSource].get(p);
-        return '<div style="' + CSS.row + '">' +
-          '<span style="color:#7a6f99;min-width:28px">' + (rk != null ? '#' + rk : '') + '</span>' +
+        const tier = jackTierFor(p[modeKeys().jack]);
+        let sep = '';
+        if (showTierSeps && tier && tier.l !== lastTierLabel) {
+          const c = jackTierColor(tier.l);
+          sep = '<div style="display:flex;align-items:center;gap:5px;margin:6px 2px 2px;padding:2px 4px 2px 0;' +
+            'font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;opacity:.9;' +
+            'border-bottom:1px solid ' + c + ';color:' + c + '">' +
+            '<span style="background:' + c + ';color:#0b1220;border-radius:3px;padding:0 5px;line-height:14px">' + esc(tier.l) + '</span>' +
+            esc(tier.n || 'TIER ' + tier.l) + '</div>';
+          lastTierLabel = tier.l;
+        }
+        return sep + '<div style="' + CSS.row + '">' +
+          '<span style="color:#7a6f99;min-width:28px">' + (rk != null ? '#' + rk : '') +
+          (tier ? ' <b style="color:' + jackTierColor(tier.l) + '" title="Jack\'s tier: ' + esc(tier.n || tier.l) + '">' + esc(tier.l) + '</b>' : '') + '</span>' +
           '<span style="flex:1"><b>' + esc(p.n) + '</b> <span style="color:' + (POS_COLORS[p.s] || '#a89cc8') + '">' + p.s + '</span>' +
           ' <span style="color:#7a6f99">' + esc(p.sTm || '') + '</span>' +
           (tag ? ' <span style="font-size:9px;border-radius:3px;padding:0 4px;' + (TAG_COLORS[tag] || '') + '">' + tag + '</span>' : '') + '</span>' +
@@ -1319,7 +1353,7 @@
     getJson(API + 'teams/nfl/' + st.leagueId + '?format=rawjson').then((j) => applyTeams(j.service || j)),
     getJson(API + 'players/nfl/' + st.leagueId + '?images=1&team_id=' + st.myTeamId + '&projected=1&average=1&format=rawjson')
       .then((j) => applyPlayers(j.service || j)),
-    loadBoard().then((pj) => { st.board = (pj && pj.players) || []; indexBoard(); }),
+    loadBoard().then((pj) => { st.board = (pj && pj.players) || []; st.tiers = (pj && pj.tiers) || {}; indexBoard(); }),
   ]).then(backfill).then(() => {
     linkBoard();
     applyLeagueScoring();

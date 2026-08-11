@@ -1002,3 +1002,17 @@ button.mff-proj-bl[disabled] {
 .mff-top3-row .t3-pos.pos-te { color: #60a5fa; }
 .mff-top3-row .t3-chips { display: flex; gap: 3px; font-size: 8px; font-weight: 700; letter-spacing: .3px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .mff-top3-row .t3-score { font-weight: 700; font-size: 11px; flex: 0 0 auto; margin-left: auto; }
+
+/* Jack's board-tier separators + inline tier letter in the rec list.
+   Color comes inline per tier (site's tier color cycle). */
+.mff-tier-sep {
+  display: flex; align-items: center; gap: 5px;
+  margin: 6px 2px 2px; padding: 2px 4px 2px 0;
+  font-size: 9px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
+  border-bottom: 1px solid; opacity: .9;
+}
+.mff-tier-sep-badge {
+  color: #0b1220; border-radius: 3px; padding: 0 5px;
+  font-size: 9px; font-weight: 800; line-height: 14px;
+}
+.mff-jtier { font-weight: 800; }

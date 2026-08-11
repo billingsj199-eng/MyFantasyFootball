@@ -72,6 +72,7 @@
     players: [],
     byName: Object.create(null),      // "norm|POS" -> player
     byNameLoose: Object.create(null), // "norm" -> player (best rank wins)
+    tiers: {},   // Jack's tier boundaries per rank field: {rank/jSf/jDy/jDsf: [{a,l,n}]}
     exportedAt: '',
     leagueId: null,
     teamName: '',
@@ -207,6 +208,15 @@
           const list = byNorm[norm(name)];
           if (list) for (const p of list) { p[key] = i + 1; applied++; }
         });
+        // Jack's ALL-board tier boundaries ride the same doc — keep them in
+        // lockstep with the live re-rank above (baked tiers would drift).
+        const pt = ((jacks[mode] || {})._posTiers || {}).ALL;
+        if (Array.isArray(pt)) {
+          state.tiers[key] = pt
+            .filter(t => t && t.afterRank >= 1 && t.label)
+            .map(t => ({ a: t.afterRank, l: String(t.label), n: String(t.name || '') }))
+            .sort((x, y) => x.a - y.a);
+        }
       }
       if (applied) {
         const upd = doc.fields.updatedAt ? doc.fields.updatedAt.stringValue.slice(0, 10) : '';
@@ -286,6 +296,7 @@
       data = await (await fetch(url)).json();
     }
     state.players = data.players || [];
+    state.tiers = data.tiers || {}; // Jack's tier boundaries per rank field
     state.exportedAt = data.exported_at || '';
     for (const p of state.players) {
       const k = keyOf(p);
@@ -314,6 +325,25 @@
   // Redraft leagues have no use for dynasty tooling — KTC values (a dynasty
   // trade market) disappear everywhere unless the dynasty mode is on.
   function isDynMode() { return state.mode.indexOf('dyn') === 0; }
+  // ---------- Jack's board tiers ----------
+  // state.tiers[field] = sorted [{a, l, n}] boundaries on that board (from
+  // players.json, live-refreshed by refreshJackBoards). A tier applies from
+  // rank `a` until the next boundary — same as the site's _tierLabelForRank.
+  // Color cycle is the site's .myrank-num tier-X palette (styles/main.css).
+  const JACK_TIER_LABELS = ['S','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','T','U','V','W','X','Y','Z'];
+  const JACK_TIER_COLORS = ['#eab308','#ef4444','#3b82f6','#22c55e','#a855f7','#f97316','#9ca3af','#ec4899','#06b6d4','#84cc16','#f43f5e','#6366f1','#fbbf24','#14b8a6','#d946ef','#ea580c','#38bdf8','#a3e635','#fb7185'];
+  function jackTierColor(label) {
+    const i = JACK_TIER_LABELS.indexOf(label);
+    return JACK_TIER_COLORS[(i >= 0 ? i : 0) % JACK_TIER_COLORS.length];
+  }
+  function jackTierList() { return state.tiers[modeKeys().jack] || null; }
+  function jackTierFor(rank) {
+    const list = jackTierList();
+    if (!list || !list.length || rank == null) return null;
+    let cur = null;
+    for (const t of list) { if (t.a <= rank) cur = t; else break; }
+    return cur;
+  }
   const SOURCES = {
     ktc:  { label: 'KTC',          get: (p) => p[modeKeys().ktc],  desc: true },
     jack: { label: "Jack's Rank",  get: (p) => p[modeKeys().jack], desc: false },
@@ -1520,7 +1550,8 @@
     const modeLbl = MODES[state.mode].label;
     const sfMode = state.mode.endsWith('_sf');
     const rows = [
-      ["Jack " + modeLbl, p[mk.jack] == null ? null : '#' + p[mk.jack]],
+      ["Jack " + modeLbl, p[mk.jack] == null ? null
+        : '#' + p[mk.jack] + (() => { const t = jackTierFor(p[mk.jack]); return t ? ' · ' + (t.n || 'Tier ' + t.l) : ''; })()],
       ["Jack Redraft", mk.jack !== 'rank' && p.rank != null ? '#' + p.rank : null],
       ['FP ' + modeLbl, p[mk.fp] == null ? null : '#' + p[mk.fp]],
       ['Sleeper ' + modeLbl, p[mk.sl] == null ? null : '#' + p[mk.sl]],
@@ -1717,11 +1748,13 @@
       const rows = list.map((p) => {
         const v = val(p);
         const inj = injOf(p);
+        const t = srcId === 'jack' ? jackTierFor(p[modeKeys().jack]) : null;
+        const tierB = t ? ` <b class="mff-jtier" style="color:${jackTierColor(t.l)}" title="Jack's tier: ${esc(t.n || t.l)}">${esc(t.l)}</b>` : '';
         return `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 2px;border-bottom:1px solid #232529;font-size:12px">
             <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${esc(p.n)}
               <span style="color:#8a8d96;font-size:10px">${esc(p.sTm || '')}${p.age ? ' · ' + p.age : ''}${inj ? ' · <span style="color:#d06d6d">' + inj + '</span>' : ''}</span></span>
             <span style="font-weight:600;color:${v == null ? '#8a8d96' : '#e9e9ec'}">${
-              v == null ? '—' : src.desc ? v.toLocaleString() : '#' + v}</span>
+              v == null ? '—' : src.desc ? v.toLocaleString() : '#' + v}${tierB}</span>
           </div>`;
       }).join('');
       return `<div style="display:flex;justify-content:space-between;font-size:10px;color:#8a8d96;text-transform:uppercase;letter-spacing:.5px;margin:8px 0 2px">

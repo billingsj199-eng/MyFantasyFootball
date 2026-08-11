@@ -106,6 +106,7 @@
     byName: Object.create(null),      // "norm|POS" -> player
     byNameLoose: Object.create(null), // "norm" -> player (best rank wins)
     pickAssets: [],
+    tiers: {},   // Jack's tier boundaries per rank field: {rank/jSf/jDy/jDsf: [{a,l,n}]}
     exportedAt: '',
     draftId: null,
     draft: null,
@@ -256,6 +257,15 @@
           const list = byNorm[norm(name)];
           if (list) for (const p of list) { p[key] = i + 1; applied++; }
         });
+        // Jack's ALL-board tier boundaries ride the same doc — keep them in
+        // lockstep with the live re-rank above (baked tiers would drift).
+        const pt = ((jacks[mode] || {})._posTiers || {}).ALL;
+        if (Array.isArray(pt)) {
+          state.tiers[key] = pt
+            .filter(t => t && t.afterRank >= 1 && t.label)
+            .map(t => ({ a: t.afterRank, l: String(t.label), n: String(t.name || '') }))
+            .sort((x, y) => x.a - y.a);
+        }
       }
       if (applied) {
         const upd = doc.fields.updatedAt ? doc.fields.updatedAt.stringValue.slice(0, 10) : '';
@@ -287,6 +297,7 @@
     state.players = data.players || [];
     applyLeagueScoring(null); // full-PPR/4-pt baseline until the league loads
     state.pickAssets = data.pickAssets || [];
+    state.tiers = data.tiers || {}; // Jack's tier boundaries per rank field
     state.exportedAt = data.exported_at || '';
     for (const p of state.players) {
       if (p.sid) state.byId[p.sid] = p;
@@ -490,6 +501,25 @@
     re_1qb:  { ktc: 'ktc1qb', jack: 'rank', fp: 'fpR',   sl: 'slR',   adp: 'a',   vor: 'vor',   up: 'up'   },
   };
   function modeKeys() { return MODE_KEYS[state.mode] || MODE_KEYS.dyn_sf; }
+  // ---------- Jack's board tiers ----------
+  // state.tiers[field] = sorted [{a, l, n}] boundaries on that board (from
+  // players.json, live-refreshed by refreshJackBoards). A tier applies from
+  // rank `a` until the next boundary — same as the site's _tierLabelForRank.
+  // Color cycle is the site's .myrank-num tier-X palette (styles/main.css).
+  const JACK_TIER_LABELS = ['S','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','T','U','V','W','X','Y','Z'];
+  const JACK_TIER_COLORS = ['#eab308','#ef4444','#3b82f6','#22c55e','#a855f7','#f97316','#9ca3af','#ec4899','#06b6d4','#84cc16','#f43f5e','#6366f1','#fbbf24','#14b8a6','#d946ef','#ea580c','#38bdf8','#a3e635','#fb7185'];
+  function jackTierColor(label) {
+    const i = JACK_TIER_LABELS.indexOf(label);
+    return JACK_TIER_COLORS[(i >= 0 ? i : 0) % JACK_TIER_COLORS.length];
+  }
+  function jackTierList() { return state.tiers[modeKeys().jack] || null; }
+  function jackTierFor(rank) {
+    const list = jackTierList();
+    if (!list || !list.length || rank == null) return null;
+    let cur = null;
+    for (const t of list) { if (t.a <= rank) cur = t; else break; }
+    return cur;
+  }
   const SOURCES = {
     ktc:  { label: 'KTC',          get: (p) => p[modeKeys().ktc],  desc: true },
     jack: { label: "Jack's Rank",  get: (p) => p[modeKeys().jack], desc: false },
@@ -3195,6 +3225,9 @@
     const src = SOURCES[state.rankSource];
     const avail = sortedAvailable().slice(0, 60);
     if (!avail.length) return '<div class="mff-proj-empty">No players available</div>';
+    // Tier separators only make sense while the list IS Jack's board order.
+    const showTierSeps = state.rankSource === 'jack' && !state.sortVor && !!jackTierList();
+    let lastTierLabel = null;
     return avail.map((p, i) => {
       const k = keyOf(p);
       const expanded = state.expandedKey === k;
@@ -3204,10 +3237,17 @@
       const adp = p[modeKeys().adp];
       const tag = adpTag(p);
       const stk = stackInfo(p);
+      const tier = jackTierFor(p[modeKeys().jack]);
+      let sep = '';
+      if (showTierSeps && tier && tier.l !== lastTierLabel) {
+        const c = jackTierColor(tier.l);
+        sep = `<div class="mff-tier-sep" style="color:${c};border-color:${c}"><span class="mff-tier-sep-badge" style="background:${c}">${esc(tier.l)}</span>${esc(tier.n || 'TIER ' + tier.l)}</div>`;
+        lastTierLabel = tier.l;
+      }
       const corner = stk
         ? `<span class="mff-corner-badge"><span class="${stk.type === 'stack' ? 'stack-badge' : 'team-badge'}">${stk.type === 'stack' ? 'STACK' : 'TEAM'}</span></span>`
         : '';
-      return `
+      return `${sep}
       <div class="mff-rec ${i === 0 ? 'top' : ''} ${need.has(p.s) ? 'need' : ''} ${stk ? stk.type : ''}" data-key="${esc(k)}">
         ${corner}
         <div class="num">${i + 1}</div>
@@ -3217,7 +3257,7 @@
             <span class="pos ${p.s}">${p.s}</span>
             <span>${esc(team)}</span>
             ${p.age != null ? `<span>${p.age}y</span>` : ''}
-            <span>JM #${jm}</span>
+            <span>JM #${jm}${tier ? ` <b class="mff-jtier" style="color:${jackTierColor(tier.l)}" title="Jack's tier: ${esc(tier.n || tier.l)}">${esc(tier.l)}</b>` : ''}</span>
             ${state.mode.startsWith('dyn') && p.jmS != null ? `<span style="color:${esc(p.jmCol || '#8b94b3')}" title="JM prospect model score${p.jmT ? ' · ' + esc(p.jmT) : ''}${p.jmC ? ' · class of ' + p.jmC : ''}">JM ${p.jmS}</span>` : ''}
             ${adp != null ? `<span>ADP ${adp}</span>` : ''}
             ${p.pPg != null ? `<span>${p.pPg}ppg</span>` : ''}
@@ -3239,7 +3279,8 @@
       ['KTC Superflex', p.ktcSf], ['KTC 1QB', p.ktc1qb],
       ['JM Score' + (p.jmC ? " ('" + String(p.jmC).slice(2) + ' class)' : ''),
         p.jmS != null ? p.jmS + (p.jmT ? ' · ' + p.jmT : '') : null],
-      ["Jack " + modeLbl, p[mk.jack] == null ? null : '#' + p[mk.jack]],
+      ["Jack " + modeLbl, p[mk.jack] == null ? null
+        : '#' + p[mk.jack] + (() => { const t = jackTierFor(p[mk.jack]); return t ? ' · ' + (t.n || 'Tier ' + t.l) : ''; })()],
       ["Jack Redraft", mk.jack !== 'rank' && p.rank != null ? '#' + p.rank : null],
       ['FP ' + modeLbl, p[mk.fp] == null ? null : '#' + p[mk.fp]],
       ['Sleeper ' + modeLbl, p[mk.sl] == null ? null : '#' + p[mk.sl]],
@@ -3637,6 +3678,10 @@
       else if (tag === 'Value') cornerInner += pillHTML('$', TAG_COLORS.Value[0], TAG_COLORS.Value[1], 'VALUE — a round past ADP');
 
       let rankInner = pillHTML('#' + (jm != null ? jm : '—'), '#00ceb8', '#0b1220', "Jack's " + MODES[state.mode].label + ' rank');
+      // Jack's board-tier pill, tinted with the site's tier color cycle.
+      // p[mk.jack] only — the p.rank fallback above is a different board.
+      const jkTier = jackTierFor(p[mk.jack]);
+      if (jkTier) rankInner += pillHTML(jkTier.l, jackTierColor(jkTier.l), '#0b1220', "Jack's tier: " + (jkTier.n || 'Tier ' + jkTier.l));
       if (ktc != null) rankInner += pillHTML(String(ktc), '#26304d', '#eef1f9', 'KTC ' + MODES[state.mode].label + ' value');
       // JM prospect-model score pill (dynasty only), tinted with the site's
       // position-specific tier color. Long Shot slate is too dark for dark text.

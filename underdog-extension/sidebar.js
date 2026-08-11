@@ -229,6 +229,7 @@
 
   const state = {
     players: [], byName: new Map(), drafted: new Set(),
+    tiers: null, // Jack's tier boundaries per rank field: {rank (bestball), jSf: [{a,l,n}]}
     myRoster: [], pickNum: 1, slot: null, history: [],
     mode: "manual", portfolio: null,
     rankSrc: "jacks", // 'jacks' | 'ud' | 'fp' | 'consensus'
@@ -294,12 +295,43 @@
     return '<span style="font-size:9px;opacity:.7;margin-left:2px" title="Dome — ' + host + '">Ⓓ</span>';
   }
 
+  // ---------- Jack's board tiers ----------
+  // state.tiers[field] = sorted [{a, l, n}] boundaries baked by the exporter
+  // ("rank" = his live bestball board, "jSf" = superflex). A tier applies from
+  // rank `a` until the next boundary — same as the site's _tierLabelForRank.
+  // Color cycle is the site's .myrank-num tier-X palette (styles/main.css).
+  // NOTE: r.flags.tier (VOR cliff) is a different, unrelated concept.
+  const JACK_TIER_LABELS = ['S','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','T','U','V','W','X','Y','Z'];
+  const JACK_TIER_COLORS = ['#eab308','#ef4444','#3b82f6','#22c55e','#a855f7','#f97316','#9ca3af','#ec4899','#06b6d4','#84cc16','#f43f5e','#6366f1','#fbbf24','#14b8a6','#d946ef','#ea580c','#38bdf8','#a3e635','#fb7185'];
+  function jackTierColor(label) {
+    const i = JACK_TIER_LABELS.indexOf(label);
+    return JACK_TIER_COLORS[(i >= 0 ? i : 0) % JACK_TIER_COLORS.length];
+  }
+  function jackTierList() {
+    if (!state.tiers) return null;
+    return (state.isSuperflex ? state.tiers.jSf : state.tiers.rank) || null;
+  }
+  // Rank on the board the active tier list describes. In SF mode p.sfRank can
+  // be an ADP fallback when Jack hasn't ranked the player — only a real jSf
+  // counts there; bestball/redraft use the baked bestball rank.
+  function jackTierRank(p) {
+    return state.isSuperflex ? (p.jSf != null ? p.jSf : null) : (p.jBb != null ? p.jBb : p.rank);
+  }
+  function jackTierFor(rank) {
+    const list = jackTierList();
+    if (!list || !list.length || rank == null) return null;
+    let cur = null;
+    for (const t of list) { if (t.a <= rank) cur = t; else break; }
+    return cur;
+  }
+
   async function loadPlayers() {
     const url = chrome.runtime.getURL("data/players.json");
     const res = await fetch(url);
     if (!res.ok) throw new Error("HTTP " + res.status);
     const j = await res.json();
     state.players = j.players;
+    state.tiers = j.tiers || null; // Jack's tier boundaries per rank field
     state.byName = new Map(state.players.map(p => [p.n, p]));
     // v0.9.72: overlay the latest live ADP snapshot so the extension uses
     // today's ADP instead of whatever was baked into players.json. The
@@ -1698,8 +1730,23 @@
       return { lift: 0.50 * qL + 0.30 * sL + 0.20 * fL, nextRank: nextRank };
     }
 
+    // Jack's-tier separators: only while the list IS Jack's board order.
+    const _showTierSeps = state.sortBy === "rank" && state.rankSrc === "jacks" && !!jackTierList();
+    let _lastTierLabel = null;
     recs.forEach((r, idx) => {
       const p = r.player;
+      const _jkTier = state.rankSrc === "jacks" ? jackTierFor(jackTierRank(p)) : null;
+      if (_showTierSeps && _jkTier && _jkTier.l !== _lastTierLabel) {
+        const _tc = jackTierColor(_jkTier.l);
+        const sepEl = document.createElement("div");
+        sepEl.className = "mff-tier-sep";
+        sepEl.style.color = _tc;
+        sepEl.style.borderColor = _tc;
+        sepEl.innerHTML = '<span class="mff-tier-sep-badge" style="background:' + _tc + '">' + _jkTier.l + '</span>'
+          + ((_jkTier.n || ('TIER ' + _jkTier.l)).replace(/[<>&]/g, ''));
+        recsEl.appendChild(sepEl);
+        _lastTierLabel = _jkTier.l;
+      }
       const stack = detectStack(p, state.myRoster);
       // v0.9.74: TEAM is a softer correlation. Only surface when no STACK is
       // present — STACK takes precedence since QB-skill correlation is the
@@ -1896,7 +1943,7 @@
           '<div class="meta">' +
             '<span class="pos ' + p.s + '">' + p.s + '</span>' +
             '<span>' + teamAbbr(p.t) + '</span>' +
-            '<span>R#' + p.rank + '</span>' +
+            '<span>R#' + p.rank + (_jkTier ? ' <b class="mff-jtier" style="color:' + jackTierColor(_jkTier.l) + '" title="Jack\'s tier: ' + (_jkTier.n || _jkTier.l).replace(/[<>&"]/g, '') + '">' + _jkTier.l + '</b>' : '') + '</span>' +
             udAdpHtml +
             '<span>PPG ' + ppg + '</span>' +
             '<span>Port ' + portfolio + '</span>' +
@@ -2002,7 +2049,8 @@
     div.addEventListener("click", (e) => e.stopPropagation());
     div.innerHTML = '' +
       '<div class="prof-row"><span class="k">Position</span><span class="v">' + p.s + ' — ' + (p.t || "") + '</span></div>' +
-      '<div class="prof-row"><span class="k">Jack\'s rank</span><span class="v">#' + p.rank + '</span></div>' +
+      '<div class="prof-row"><span class="k">Jack\'s rank</span><span class="v">#' + p.rank +
+        (function () { const t = jackTierFor(jackTierRank(p)); return t ? ' · ' + (t.n || 'Tier ' + t.l).replace(/[<>&]/g, '') : ''; })() + '</span></div>' +
       '<div class="prof-row"><span class="k">Underdog ADP</span><span class="v">' + udVal + (function(){
         // v0.9.69: inline movement indicator on the ADP row.
         try {
@@ -3093,9 +3141,14 @@
           // page-bridge's buildRankMapFromBoard numbering.
           const sfRankByName = new Map();
           let sr = 0;
-          for (const n of sfOrder) {
+          for (let si = 0; si < sfOrder.length; si++) {
+            const n = sfOrder[si];
             if (!state.byName.has(n) || irSet.has(n)) continue;
             sfRankByName.set(n, ++sr);
+            // Live-refresh Jack's RAW superflex rank too: jSf is what the SF
+            // tier chips key off (sfRank can be the user's own board), and it
+            // must stay in the same raw numbering as the _posTiers boundaries.
+            state.byName.get(n).jSf = si + 1;
           }
           const rows = [];
           let r = 0;
@@ -3110,6 +3163,40 @@
           }
           if (!rows.length) return;
           applyRankings(rows, irOut);
+          // Jack's ALL-board tier boundaries, re-based onto the same COMPACT
+          // numbering as the live ranks above (raw board positions include
+          // names we don't carry + IR — baked boundaries would drift by the
+          // skipped count, up to ~30 rows deep in the board).
+          const compactTierList = (order, tiersRaw, skip) => {
+            if (!Array.isArray(tiersRaw) || !tiersRaw.length || !order.length) return null;
+            const carriedBefore = []; // carried count among order[0..i-1]
+            let c = 0;
+            for (let i = 0; i < order.length; i++) {
+              carriedBefore[i] = c;
+              const nm = order[i];
+              if (state.byName.has(nm) && !skip.has(nm)) c++;
+            }
+            const out = [];
+            for (const t of tiersRaw) {
+              if (!t || !(t.afterRank >= 1) || !t.label) continue;
+              const idx = Math.min(t.afterRank - 1, order.length - 1);
+              out.push({ a: carriedBefore[idx] + 1, l: String(t.label), n: String(t.name || '') });
+            }
+            out.sort((x, y) => x.a - y.a);
+            return out;
+          };
+          const bbT = compactTierList(bbOrder, ((jacks.bestball || {})._posTiers || {}).ALL, irSet);
+          state.tiers = state.tiers || {};
+          if (bbT) state.tiers.rank = bbT;
+          // SF tiers stay in RAW board positions — they pair with p.jSf
+          // (updated raw above), not the compacted sfRank.
+          const sfRaw = ((jacks.superflex || {})._posTiers || {}).ALL;
+          if (Array.isArray(sfRaw) && sfRaw.length) {
+            state.tiers.jSf = sfRaw
+              .filter(t => t && t.afterRank >= 1 && t.label)
+              .map(t => ({ a: t.afterRank, l: String(t.label), n: String(t.name || '') }))
+              .sort((x, y) => x.a - y.a);
+          }
           const upd = doc.fields.updatedAt ? ' · saved ' + doc.fields.updatedAt.stringValue.slice(0, 10) : '';
           console.log('[MFF] live Jack boards from Firestore: ' + rows.length + ' ranked' + upd);
           if (document.getElementById('mff-recs') && typeof render === 'function') render();

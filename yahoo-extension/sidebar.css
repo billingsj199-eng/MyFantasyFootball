@@ -527,6 +527,20 @@
 .mff-rec .meta .pos.WR { background: #303a4a; color: #9bb3ff; }
 .mff-rec .meta .pos.TE { background: #4a3f30; color: #ffc99b; }
 .mff-rec .why { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+/* Jack's board-tier separators + inline tier letter in the rec list.
+   Color comes inline per tier (site's tier color cycle). */
+.mff-tier-sep {
+  display: flex; align-items: center; gap: 5px;
+  margin: 6px 2px 2px; padding: 2px 4px 2px 0;
+  font-size: 9px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
+  border-bottom: 1px solid; opacity: .9;
+}
+.mff-tier-sep-badge {
+  color: #0b1220; border-radius: 3px; padding: 0 5px;
+  font-size: 9px; font-weight: 800; line-height: 14px;
+}
+.mff-jtier { font-weight: 800; }
+
 .mff-rec .tag {
   font-size: 9px;
   padding: 1px 5px;

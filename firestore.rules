@@ -5,10 +5,43 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
+    // ---- Premium helpers (board-gating Phase C) ----
+    // Server-checkable premium, mirroring the client's two sources:
+    //  - users/{uid}.premium — written by the stripeWebhook Cloud Function
+    //    ({status: 'active'|'trialing', currentPeriodEnd: ms})
+    //  - gifted_premium/{email-key} — admin gift panel + redeemCode function
+    //    ({expires: ms}); doc id = email lowercased, non-alphanumerics -> '_'
+    // Any rules-evaluation error denies (fail closed).
+    function isJack() {
+      return request.auth != null
+             && request.auth.token.email == 'billingsj199@gmail.com';
+    }
+    function _premMap() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('premium', {});
+    }
+    function hasStripePremium() {
+      return request.auth != null
+             && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+             && _premMap().get('status', '') in ['active', 'trialing']
+             && _premMap().get('currentPeriodEnd', 0) > request.time.toMillis();
+    }
+    function _giftKey() {
+      return request.auth.token.email.lower().replace('[^a-z0-9]', '_');
+    }
+    function hasGiftedPremium() {
+      return request.auth != null
+             && 'email' in request.auth.token
+             && exists(/databases/$(database)/documents/gifted_premium/$(_giftKey()))
+             && get(/databases/$(database)/documents/gifted_premium/$(_giftKey())).data.get('expires', 0) > request.time.toMillis();
+    }
+
     // rankings/*: single block, no overlapping matches.
-    //  - jacks-official: Jack's full shared boards — public read (the site
-    //    loads them pre-auth; extensions read them over REST), admin write.
-    //    Goes premium-only-read in board-gating Phase C.
+    //  - jacks-official: Jack's full shared boards — PREMIUM-ONLY read since
+    //    board-gating Phase C (2026-08-11); free/anon sessions read the
+    //    jacks-public slice and every reader falls back gracefully. Writes
+    //    stay admin-only. (Full-board consumers that outlived the public
+    //    read: site premium sessions, extension bridge payloads, and the
+    //    exportJacksBoards Cloud Function for the exporters.)
     //  - jacks-public: free-tier slice (top 36, tiers inside the free window,
     //    IR flags, precomputed ticker movers) — public read, admin write.
     //  - every other doc id: a user's personal boards + EMAIL. Owner + admin
@@ -17,11 +50,13 @@ service cloud.firestore {
     //    which had silently rejected all non-admin saves since ~May; offline
     //    persistence made the Save button report success anyway).
     match /rankings/{docId} {
-      allow read: if docId == 'jacks-official'
-                  || docId == 'jacks-public'
-                  || (request.auth != null
-                      && (request.auth.uid == docId
-                          || request.auth.token.email == 'billingsj199@gmail.com'));
+      allow read: if docId == 'jacks-public'
+                  || (docId == 'jacks-official'
+                      && (isJack() || hasStripePremium() || hasGiftedPremium()))
+                  || (docId != 'jacks-official'
+                      && docId != 'jacks-public'
+                      && request.auth != null
+                      && (request.auth.uid == docId || isJack()));
       allow write: if request.auth != null
                    && (request.auth.token.email == 'billingsj199@gmail.com'
                        || (docId != 'jacks-official'

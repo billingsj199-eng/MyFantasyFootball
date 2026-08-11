@@ -42564,6 +42564,21 @@ Rules:
           // e.g., league.season = "2026" means the 2026 rookie draft is the current one
           const currentDraftYear = season;
 
+          // If this season's rookie draft is already COMPLETE, its picks are
+          // spent — the drafted rookies are on rosters, so counting the picks
+          // too double-counts (Jack 2026-08-11: jimmyg15's 2026 picks showed
+          // alongside the players they became). Slide the pick window forward
+          // a year instead, matching what Sleeper itself displays post-draft.
+          let currentDraftDone = false;
+          try {
+            const draftsResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/drafts`);
+            if (draftsResp.ok) {
+              const drafts = await draftsResp.json();
+              currentDraftDone = (drafts || []).some(d => String(d.season) === String(currentDraftYear) && d.status === 'complete');
+            }
+          } catch(e) { console.warn('[MyTeams] Drafts status fetch error:', e); }
+          console.log('[MyTeams] currentDraftDone:', currentDraftDone);
+
           // Compute draft order from previous season standings (worst team = pick 1)
           const rostersByRecord = rosters.slice().sort((a, b) => {
             const aW = a.settings ? a.settings.wins || 0 : 0;
@@ -42581,7 +42596,10 @@ Rules:
 
           if (picksResp.ok) {
             const tradedPicks = await picksResp.json();
-            const pickYears = [currentDraftYear, currentDraftYear + 1, currentDraftYear + 2];
+            // Post-draft the window slides to the next 3 future drafts.
+            const pickYears = currentDraftDone
+              ? [currentDraftYear + 1, currentDraftYear + 2, currentDraftYear + 3]
+              : [currentDraftYear, currentDraftYear + 1, currentDraftYear + 2];
             const rounds = ['1st', '2nd', '3rd', '4th'];
             const ownershipMap = {};
             rosters.forEach(r => {
@@ -42591,10 +42609,11 @@ Rules:
                 });
               });
             });
-            // Apply trades
+            // Apply trades. Seasons before the pick window are spent drafts —
+            // skip them so traded picks from a completed draft don't resurface.
             (tradedPicks || []).forEach(tp => {
               const rd = tp.round ? (tp.round === 1 ? '1st' : tp.round === 2 ? '2nd' : tp.round === 3 ? '3rd' : '4th') : null;
-              if (rd && tp.season && tp.roster_id && tp.owner_id) {
+              if (rd && tp.season && tp.roster_id && tp.owner_id && parseInt(tp.season) >= pickYears[0]) {
                 const key = `${tp.season}-${rd}-${tp.roster_id}`;
                 ownershipMap[key] = tp.owner_id;
               }
@@ -43897,7 +43916,10 @@ Rules:
           losses: t.losses || 0,
           fpts: t.fpts || 0
         })),
-        savedAt: new Date().toISOString()
+        savedAt: new Date().toISOString(),
+        // Pick-window version: v2 = spent-draft picks excluded (2026-08-11).
+        // Auto-refresh forces one full re-import on older snapshots.
+        pickV: 2
       };
 
       return docRef.set({ savedLeagues: existing }, { merge: true });
@@ -44072,7 +44094,10 @@ Rules:
       const teams = lg.teams || [];
       // Empty slIds arrays are valid (vacant rosters); only a MISSING slIds
       // property marks a legacy snapshot that needs one refresh to acquire it.
-      const haveIds = teams.length && teams.every(t => Array.isArray(t.slIds));
+      // Snapshots saved before pickV 2 may still carry spent current-season
+      // picks (double-counted alongside the drafted rookies) — force one
+      // full re-import to rebuild the pick window, then diff as normal.
+      const haveIds = teams.length && teams.every(t => Array.isArray(t.slIds)) && lg.pickV === 2;
       const savedSig = haveIds ? teams.map(t => t.slIds.join(',')).sort().join('|') : null;
       if (savedSig === liveSig) {
         if (status) {

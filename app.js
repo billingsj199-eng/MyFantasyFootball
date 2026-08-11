@@ -46923,19 +46923,30 @@ Rules:
         if (!matched) return;
         const adp = _vpFormatAdp(matched, fmt);
         if (adp == null) return;
+        // Value is graded per individual pick and weighted by draft stage:
+        // pct = (pick − ADP) / ADP. Ten picks of slippage at ADP 20 (+50%)
+        // outranks 30 picks at ADP 200 (+15%) — early-board value is scarcer.
+        const perPick = info.picks
+          .slice().sort((a, b) => a - b)
+          .map(pk => ({ pick: pk, pct: (pk - adp) / adp * 100 }));
+        const avgPct = perPick.reduce((s, p) => s + p.pct, 0) / perPick.length;
         const avgPick = info.picks.reduce((s, v) => s + v, 0) / info.picks.length;
-        const value = avgPick - adp; // positive = drafted LATER than ADP = steal
+        const rawDiff = avgPick - adp; // picks later (+) / earlier (−) than ADP
         const row = {
           name: matched.n,
           pos: matched.s,
           team: matched.t,
           adp: Math.round(adp * 10) / 10,
+          picks: perPick,
           avgPick: Math.round(avgPick),
-          value: Math.round(value),
+          value: Math.round(avgPct),
+          rawDiff: Math.round(rawDiff),
           count: info.picks.length
         };
-        if (value > 15) steals.push(row);
-        if (value < -15) reaches.push(row);
+        // Gates: pct threshold does the stage weighting; the small raw-pick
+        // floor keeps 1–2-pick jitter at the very top of the board out.
+        if (avgPct >= 15 && rawDiff >= 4) steals.push(row);
+        if (avgPct <= -15 && rawDiff <= -4) reaches.push(row);
       });
       steals.sort((a, b) => b.value - a.value);
       reaches.sort((a, b) => a.value - b.value);
@@ -47090,28 +47101,49 @@ Rules:
       let out = '';
       if (!lists.drafts) return ''; // user has no drafts in this format
       const headerColor = '#fbbf24';
+      // Individual picks cell: every pick shown (capped at 14 + "+N more"),
+      // each tinted by its OWN % vs ADP so one steal-priced share stands out
+      // inside an otherwise market-priced stack.
+      function _vpPicksCell(row) {
+        const MAX_SHOWN = 14;
+        const shown = row.picks.slice(0, MAX_SHOWN);
+        const rest = row.picks.slice(MAX_SHOWN);
+        let cell = shown.map(p => {
+          const c = p.pct >= 15 ? '#22c55e' : (p.pct <= -15 ? '#ef4444' : 'var(--text2)');
+          const sign = p.pct >= 0 ? '+' : '';
+          return `<span title="Pick ${p.pick} · ${sign}${Math.round(p.pct)}% vs ADP" style="color:${c}">${p.pick}</span>`;
+        }).join('<span style="color:var(--text2)">, </span>');
+        if (rest.length) {
+          cell += `<span title="${rest.map(p => p.pick).join(', ')}" style="color:var(--text2)"> +${rest.length} more</span>`;
+        }
+        return cell;
+      }
+      function _vpValueTitle(row) {
+        const sign = row.rawDiff >= 0 ? '+' : '';
+        return `avg pick ${row.avgPick} · ${sign}${row.rawDiff} picks vs ADP`;
+      }
       out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${headerColor};margin:6px 0 10px;padding:6px 10px;background:rgba(251,191,36,.06);border-left:3px solid ${headerColor};border-radius:4px">${label} <span style="color:var(--text2);font-size:.7rem;letter-spacing:.5px;font-weight:400">· ${lists.drafts} draft${lists.drafts === 1 ? '' : 's'}</span></div>`;
       // STEALS
       out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#22c55e;margin-bottom:8px">🔥 BIGGEST STEALS</div>`;
-      out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted well after their current ADP (great value)</div>`;
+      out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted after their current ADP — value is % past ADP, so early-round discounts count for more than late-round ones</div>`;
       if (lists.steals.length === 0) {
         out += `<div style="padding:12px;color:var(--text2);font-size:.78rem;margin-bottom:20px">No major value picks found</div>`;
       } else {
-        out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:20px"><table style="width:100%;min-width:540px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
+        out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:20px"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">PICKS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)"><span data-gloss="Average % drafted past ADP across your picks of this player. +50% means you got him half a draft-stage later than the market — 10 picks late at ADP 20 beats 30 picks late at ADP 200. Hover the value for the raw pick difference.">VALUE</span></th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
         lists.steals.slice(0, 20).forEach(vp => {
-          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(vp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.adp}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e">+${vp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${lists.drafts}</td></tr>`;
+          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(vp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(vp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e" title="${_vpValueTitle(vp)}">+${vp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${lists.drafts}</td></tr>`;
         });
         out += `</tbody></table></div>`;
       }
       // REACHES
       out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#ef4444;margin-bottom:8px">📉 BIGGEST REACHES</div>`;
-      out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted well before their current ADP (overpay)</div>`;
+      out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted before their current ADP — % ahead of ADP, so early-round reaches count for more than late-round ones</div>`;
       if (lists.reaches.length === 0) {
         out += `<div style="padding:12px;color:var(--text2);font-size:.78rem;margin-bottom:24px">No major reaches found</div>`;
       } else {
-        out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:24px"><table style="width:100%;min-width:540px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">AVG PICK</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">VALUE</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
+        out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:24px"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">PICKS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)"><span data-gloss="Average % drafted ahead of ADP across your picks of this player. −50% means you paid half a draft-stage early — reaching 10 picks at ADP 20 costs more than 30 picks at ADP 200. Hover the value for the raw pick difference.">VALUE</span></th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
         lists.reaches.slice(0, 20).forEach(bp => {
-          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(bp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.adp}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.avgPick}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444">${bp.value}</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${lists.drafts}</td></tr>`;
+          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)">${_esc(bp.name)}</td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(bp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444" title="${_vpValueTitle(bp)}">${bp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${lists.drafts}</td></tr>`;
         });
         out += `</tbody></table></div>`;
       }

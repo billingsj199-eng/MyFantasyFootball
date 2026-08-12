@@ -1,6 +1,46 @@
 {
-  "updated": "2026-08-12T02:11:42Z",
+  "updated": "2026-08-12T16:15:00Z",
   "items": [
+    {
+      "player": "DK Metcalf",
+      "team": "PIT",
+      "pos": "WR",
+      "date": "2026-08-11",
+      "headline": "Missed Tuesday's practice with undisclosed injury, questionable for Thursday's opener",
+      "take": "Not seen as serious, but Steelers' top two WRs both banged up at once is worth tracking before Week 1.",
+      "url": "https://www.rotoballer.com/player-news/dk-metcalf-out-with-undisclosed-injury-on-tuesday/1907116",
+      "tag": "injury"
+    },
+    {
+      "player": "Michael Pittman Jr.",
+      "team": "PIT",
+      "pos": "WR",
+      "date": "2026-08-11",
+      "headline": "Missed back-to-back practices with a right leg injury, questionable for Thursday's opener",
+      "take": "Not considered long-term, but paired with Metcalf's absence it clouds the Steelers' WR room right before their opener.",
+      "url": "https://www.wpxi.com/sports/nfl/pittsburgh-steelers/steelers-wr-michael-pittman-misses-practice-with-injury/KJ2OPKBIJZFZHHQNE3NFLVSSYU/",
+      "tag": "injury"
+    },
+    {
+      "player": "Matthew Golden",
+      "team": "GB",
+      "pos": "WR",
+      "date": "2026-08-11",
+      "headline": "Returned to full practice Tuesday after missing time with a toe injury",
+      "take": "LaFleur said the toe issue isn't long-term \u2014 good sign for the Round 1 WR heading into Year 2.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-11/matthew-golden-toe-returns-to-practice",
+      "tag": "injury"
+    },
+    {
+      "player": "Jayden Reed",
+      "team": "GB",
+      "pos": "WR",
+      "date": "2026-08-11",
+      "headline": "Battling an ankle injury, may sit Thursday's opener as a precaution",
+      "take": "Not considered long-term; still on track for Week 1 vs. Minnesota.",
+      "url": "https://www.draftsharks.com/fantasy-football-news/82190/jayden-reed-returns-to-practice-after-brief-ankle-injury",
+      "tag": "injury"
+    },
     {
       "player": "Kyler Murray",
       "team": "MIN",

@@ -995,7 +995,7 @@ COLS
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="l4ppg" checked> L4 PPG</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="age" checked> Age</label>
 </div>
-<button class="tb-btn" id="btnDraftHelper" title="Get the MFF Draft Helper Chrome extension for live Underdog draft recommendations" style="font-size:.55rem">
+<button class="tb-btn" id="btnDraftHelper" title="Get the MFF Helper Chrome extensions — live draft recs on Underdog, Sleeper, ESPN & Yahoo" style="font-size:.55rem">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
 HELPER
 </button>
@@ -1026,6 +1026,11 @@ CLEAR ALL
 <style>
   .ext-hub-chip{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.2px;padding:5px 13px;border:1px solid var(--border);border-radius:6px;text-decoration:none!important;background:var(--surface);white-space:nowrap;transition:border-color .15s}
   .ext-hub-chip:hover{border-color:var(--accent)}
+  /* platform tiles in the Draft Helpers install modal */
+  .ext-tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:11px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-decoration:none!important;text-align:center;transition:border-color .15s}
+  .ext-tile:hover{border-color:var(--accent)}
+  .ext-tile-name{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px}
+  .ext-tile-sub{font-size:.62rem;color:var(--text2);font-weight:400;line-height:1.3}
 </style>
 <div id="extHubStrip" style="display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin:0 0 .9rem;padding:9px 14px;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.03));border:1px solid rgba(245,158,11,.3);border-radius:10px">
 <div style="display:flex;align-items:center;gap:9px;flex-shrink:1;min-width:0">
@@ -3430,28 +3435,30 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 
 <div class="toast" id="toast"></div>
 
-<!-- Underdog Draft Helper install modal — opens from the toolbar 🔧 button
-     and from the Mock Draft tab promo card. Update DOWNLOAD_URL when the
-     extension lands on the Chrome Web Store. -->
+<!-- MFF Draft Helpers install modal — opens from the toolbar 🔧 button and
+     from the Mock Draft tab promo card. All four platform tiles get their
+     store URLs from the MFF_EXT_STORE resolver (data-ext-store). -->
 <div id="draftHelperOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)">
 <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:22px 24px 18px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:'DM Sans',sans-serif">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--accent)">🔧 MFF DRAFT HELPER</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--accent)">🔧 MFF DRAFT HELPERS</div>
 <button id="draftHelperClose" style="background:none;border:none;color:var(--text2);font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
 </div>
-<div style="font-size:.78rem;color:var(--text2);margin-bottom:14px;line-height:1.5">A Chrome extension that runs on Underdog drafts and recommends picks live, powered by Jack's rankings + a BBM advance-rate optimizer. Stacking analysis, true-cliff milestones, recency-weighted historical data.</div>
+<div style="font-size:.78rem;color:var(--text2);margin-bottom:14px;line-height:1.5">Free Chrome extensions for Underdog, Sleeper, ESPN, and Yahoo. Live pick recommendations powered by Jack's boards right in your draft room, plus in-season lineup, waiver, and trade tools on the league platforms.</div>
 
 <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 14px 12px;margin-bottom:14px">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">INSTALL</div>
-<a id="draftHelperStoreBtn" href="https://chromewebstore.google.com/detail/mff-underdog-draft-helper/jflkoplljldeahkdlagncceajpgemngi" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:11px 14px;background:var(--accent);color:#000;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer;font-weight:700;text-decoration:none;margin-bottom:8px">
-<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="14.31" y1="8" x2="20.05" y2="17.94"/><line x1="9.69" y1="8" x2="21.17" y2="8"/><line x1="7.38" y1="12" x2="13.12" y2="2.06"/><line x1="9.69" y1="16" x2="3.95" y2="6.06"/><line x1="14.31" y1="16" x2="2.83" y2="16"/><line x1="16.62" y1="12" x2="10.88" y2="21.94"/></svg>
-ADD TO CHROME
-</a>
-<div style="font-size:.7rem;color:var(--text2);text-align:center;line-height:1.5">One click — opens the Chrome Web Store. The sidebar appears automatically on every Underdog draft.</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">INSTALL — PICK YOUR PLATFORM</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<a class="ext-tile" data-ext-store="underdog" target="_blank" rel="noopener" title="MFF Underdog Draft Helper on the Chrome Web Store"><span class="ext-tile-name">UNDERDOG</span><span class="ext-tile-sub">Best ball · BBM optimizer</span></a>
+<a class="ext-tile" data-ext-store="sleeper" target="_blank" rel="noopener" title="MFF Sleeper Helper on the Chrome Web Store"><span class="ext-tile-name">SLEEPER</span><span class="ext-tile-sub">Draft + season · dynasty sims</span></a>
+<a class="ext-tile" data-ext-store="espn" target="_blank" rel="noopener" title="MFF ESPN Helper on the Chrome Web Store"><span class="ext-tile-name">ESPN</span><span class="ext-tile-sub">Draft + season · league import</span></a>
+<a class="ext-tile" data-ext-store="yahoo" target="_blank" rel="noopener" title="MFF Yahoo Helper on the Chrome Web Store"><span class="ext-tile-name">YAHOO</span><span class="ext-tile-sub">Draft + season · league import</span></a>
+</div>
+<div style="font-size:.7rem;color:var(--text2);text-align:center;line-height:1.5;margin-top:8px">One click — opens the Chrome Web Store. The sidebar appears automatically in your draft room.</div>
 </div>
 
 <details style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 14px;margin-bottom:14px">
-<summary style="cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--text2)">MANUAL INSTALL (POWER USERS)</summary>
+<summary style="cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--text2)">MANUAL INSTALL — UNDERDOG (POWER USERS)</summary>
 <ol style="margin:8px 0 4px;padding-left:20px;font-size:.78rem;line-height:1.7;color:var(--text)">
 <li><a id="draftHelperDownload" href="/mff-draft-helper.zip" download style="color:var(--accent);font-weight:600">Download the .zip</a> and unzip anywhere</li>
 <li>Open <code style="background:var(--surface);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:.74rem">chrome://extensions</code> and toggle <b>Developer mode</b></li>
@@ -3460,12 +3467,12 @@ ADD TO CHROME
 </details>
 
 <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--text);margin-bottom:8px">WHAT IT DOES</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--text);margin-bottom:8px">WHAT THEY DO</div>
 <ul style="margin:0;padding-left:20px;font-size:.78rem;line-height:1.7;color:var(--text)">
-<li>Live BPA recommendations using Jack's rankings + ADP value</li>
-<li>BBM advance-rate optimizer with statistical shrinkage</li>
-<li>Stacking detection (QB+WR/TE) and round priors</li>
-<li>True-cliff milestones — know when the position falls off</li>
+<li>Live BPA recommendations using Jack's rankings + ADP value — all four platforms</li>
+<li>Underdog: BBM advance-rate optimizer, stacking detection, true-cliff milestones</li>
+<li>Sleeper / ESPN / Yahoo season mode: optimal lineups, waiver ranks, trade verdicts</li>
+<li>Sleeper: Monte Carlo season sims — standings, title odds, dynasty pick values</li>
 </ul>
 </div>
 

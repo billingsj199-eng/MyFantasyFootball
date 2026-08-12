@@ -2005,9 +2005,12 @@
     return !!(window.SimEngine && typeof MIKE_CLAY_PROJ !== 'undefined' &&
       typeof PLAYER_WEEKLY_SIGMA !== 'undefined');
   }
-  function pkTabVisible() {
+  function pkDynasty() { // Sleeper settings.type: 0 redraft, 1 keeper, 2 dynasty
     const lg = state.seasonLeague;
-    return simAvailable() && !!(lg && lg.settings && lg.settings.type >= 1); // dynasty/keeper only
+    return !!(lg && lg.settings && lg.settings.type >= 1);
+  }
+  function pkTabVisible() {
+    return simAvailable() && !!state.seasonLeague; // standings/odds for every league type; pick sections are dynasty/keeper only
   }
   let _pkSchedule = null;
   function pkSchedule() {
@@ -3249,8 +3252,9 @@
     }
     if (ps.status === 'idle') setTimeout(ensurePickSim, 0); // landed here via saved prefs
     const sf = pkSf();
+    const dyn = pkDynasty();
     const note = ps.status === 'error'
-      ? `<div style="background:#402a2a;color:#d06d6d;font-size:10px;padding:4px 6px;border-radius:4px;margin-bottom:6px">Sim unavailable (${esc(ps.note || 'unknown')}) — showing generic KTC tier pick values</div>` : '';
+      ? `<div style="background:#402a2a;color:#d06d6d;font-size:10px;padding:4px 6px;border-radius:4px;margin-bottom:6px">Sim unavailable (${esc(ps.note || 'unknown')})${dyn ? ' — showing generic KTC tier pick values' : ''}</div>` : '';
     const myRid = state.myLeagueRosterId;
     const nameById = {};
     state.seasonRosters.forEach((r) => { nameById[r.roster_id] = state.userNames[r.owner_id] || 'Team ' + r.roster_id; });
@@ -3352,7 +3356,7 @@
       ? PK_SIMS.toLocaleString() + ' sims' + (ps.synthPairs ? ' · synth schedule' : '')
         + (ps.tradedCount ? ' · ' + ps.tradedCount + ' traded picks applied' : '')
       : '';
-    return `${note}${standingsHtml}
+    const picksHtml = !dyn ? '' : `
       <div style="font-size:10px;color:#8b94b3;text-transform:uppercase;letter-spacing:.5px;margin:${standingsHtml ? '12px' : '2px'} 0 3px">My picks · future drafts</div>
       ${myRows || `<div style="font-size:11px;color:#8b94b3;padding:4px 2px">${myRid == null ? 'Pick your team on the SETTINGS tab to see your pick inventory.' : 'No 2027/2028 picks — all dealt away.'}</div>`}
       <div style="font-size:10px;color:#8b94b3;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 3px">League pick board</div>
@@ -3362,12 +3366,13 @@
           <th style="text-align:right;padding:2px 4px">'27 1st</th>
           <th style="text-align:right;padding:2px 4px">'27 2nd</th>
           <th style="text-align:right;padding:2px 4px">'28 1st</th>
-        </tr></thead><tbody>${boardRows}</tbody></table>
+        </tr></thead><tbody>${boardRows}</tbody></table>`;
+    return `${note}${standingsHtml}${picksHtml}
       <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
         <button id="mff-pk-rerun" style="background:#26304d;border:none;color:#eef1f9;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600">RE-RUN SIM</button>
         <span style="font-size:9px;color:#8b94b3">${statTxt}</span>
       </div>
-      <div style="font-size:9px;color:#8b94b3;margin-top:6px;line-height:1.35">Standings/odds = ${PK_SIMS.toLocaleString()} Monte Carlo seasons (Clay projections × Vegas lines, league-scored, real matchups${ps.synthPairs ? ' — synth round-robin until Sleeper publishes them' : ''}). Pick values: draft order = inverse simmed standings; each pick's EV integrates the owner-of-record team's FULL finish distribution over the KTC ${sf ? 'Superflex' : '1QB'} Early/Mid/Late curve — collapse-tail risk earns extra credit (early slots are convex). 2028s regress 50% toward league average; ~2029s are extrapolated off the 2028 curve (KTC has no anchors there yet). Assumes rest-of-season rosters as-is; players without a Clay projection score 0 in the sim.</div>`;
+      <div style="font-size:9px;color:#8b94b3;margin-top:6px;line-height:1.35">Standings/odds = ${PK_SIMS.toLocaleString()} Monte Carlo seasons (Clay projections × Vegas lines, league-scored, real matchups${ps.synthPairs ? ' — synth round-robin until Sleeper publishes them' : ''}). ${dyn ? `Pick values: draft order = inverse simmed standings; each pick's EV integrates the owner-of-record team's FULL finish distribution over the KTC ${sf ? 'Superflex' : '1QB'} Early/Mid/Late curve — collapse-tail risk earns extra credit (early slots are convex). 2028s regress 50% toward league average; ~2029s are extrapolated off the 2028 curve (KTC has no anchors there yet). ` : ''}Assumes rest-of-season rosters as-is; players without a Clay projection score 0 in the sim.</div>`;
   }
 
   function seasonHTML() {
@@ -4430,7 +4435,7 @@
     const conts = [...wrap.querySelectorAll('.roster-trade-container')];
     if (!conts.length) return;
     // team-aware pick values need the season sim — kick it lazily
-    if (state.seasonLeague && pkTabVisible() && state.pickSim.status === 'idle') setTimeout(ensurePickSim, 0);
+    if (state.seasonLeague && pkDynasty() && simAvailable() && state.pickSim.status === 'idle') setTimeout(ensurePickSim, 0);
     const mk = modeKeys();
     const sides = conts.map((c) => {
       const unameEl = c.querySelector('.username');

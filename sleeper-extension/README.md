@@ -170,7 +170,9 @@ attribution never guesses (the Underdog helper's biggest failure mode).
 
 ## SIMS tab (v0.14.0 picks → v0.15.0 full sims) — Monte Carlo season sims
 
-Dynasty/keeper leagues get a SIMS tab in season mode. It runs the Sim Lab
+Every league gets a SIMS tab in season mode (v0.29.6; the pick sections
+below are dynasty/keeper only — redraft shows standings/odds/week-by-week
+without them). It runs the Sim Lab
 season-sim engine (`engine_sim.js`, a verbatim copy synced by the export
 script) over the league — 1,500 sims, fixed seed, real matchups (or a
 round-robin synth preseason), mid-season records carried, IR/PUP exclusions,

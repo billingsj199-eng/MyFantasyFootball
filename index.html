@@ -1196,7 +1196,10 @@ CLEAR ALL
      every one of ~500 rows, ~130 KB of the 1.2 MB tbody HTML string). pc-row only
      on the main ranking rows — devy rows keep the base .player-cell column layout. */
   #pageRankings tbody .player-cell.pc-row{flex-direction:row;align-items:center}
-  #pageRankings tbody .pc-namecol{display:flex;flex-direction:column;gap:1px}
+  #pageRankings tbody .pc-namecol{display:flex;flex-direction:column;gap:1px;min-width:0}
+  /* Long team names (e.g. "Los Angeles Chargers") were hard-clipped mid-word by the
+     cell's overflow:hidden on narrow/mobile card rows — elide with … instead. */
+  #pageRankings tbody .pc-namecol .player-team{overflow:hidden;text-overflow:ellipsis}
 </style>
 <!-- Shared drag-handle glyph: defined once, referenced via <use href="#dragDots"> in every
      ranking row. Previously the full 6-circle SVG (~215 B) was inlined per row (~500 rows =

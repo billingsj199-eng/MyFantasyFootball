@@ -25,9 +25,9 @@ Shared across all four listings:
 
 ---
 
-## 1. MFF Underdog Draft Helper — UPDATE existing listing (→ 0.17.2)
+## 1. MFF Underdog Draft Helper — UPDATE existing listing (→ 0.17.7)
 
-Upload: `mff-underdog-draft-helper-0.17.2.zip`
+Upload: `mff-underdog-draft-helper-0.17.7.zip`
 
 Paste-ready replacements for the existing listing (the old copy in
 `underdog-extension/CHROME_STORE_SUBMISSION.md` references the dead `.org`

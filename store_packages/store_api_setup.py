@@ -54,9 +54,34 @@ class _CodeCatcher(http.server.BaseHTTPRequestHandler):
         pass
 
 
+def _find_downloaded_client():
+    """Auto-discover the client_secret_*.json Google's console downloads."""
+    import glob
+    hits = []
+    for pat in (r"C:\Users\billi\Downloads\client_secret_*.json",
+                r"E:\MyFantasyFootball\secrets\client_secret_*.json"):
+        hits.extend(glob.glob(pat))
+    if not hits:
+        return None, None
+    newest = max(hits, key=os.path.getmtime)
+    try:
+        blob = json.load(open(newest))
+        cfg = blob.get("installed") or blob.get("web") or {}
+        cid, sec = cfg.get("client_id"), cfg.get("client_secret")
+        if cid and sec:
+            print("Using downloaded client file:", newest)
+            return cid, sec
+    except Exception:
+        pass
+    return None, None
+
+
 def main():
-    client_id = input("OAuth Client ID: ").strip()
-    client_secret = input("OAuth Client secret: ").strip()
+    client_id, client_secret = _find_downloaded_client()
+    if not client_id:
+        default_id = "732824763527-oto90ph9pdphr6u10hmomojfej45q1v7.apps.googleusercontent.com"
+        client_id = input(f"OAuth Client ID [{default_id}]: ").strip() or default_id
+        client_secret = input("OAuth Client secret: ").strip()
 
     srv = http.server.HTTPServer(("127.0.0.1", 0), _CodeCatcher)
     port = srv.server_address[1]

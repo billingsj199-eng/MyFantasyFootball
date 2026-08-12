@@ -1,6 +1,96 @@
 {
-  "updated": "2026-08-11T16:16:50Z",
+  "updated": "2026-08-12T02:11:42Z",
   "items": [
+    {
+      "player": "Kyler Murray",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-08-11",
+      "headline": "Named Vikings' Week 1 starting QB over J.J. McCarthy",
+      "take": "Locks in as a streaming-caliber QB1 with Justin Jefferson now that O'Connell has settled the summer-long battle.",
+      "url": "https://www.espn.com/nfl/story/_/id/49583297/vikings-name-kyler-murray-starting-qb-sources-say",
+      "tag": "role"
+    },
+    {
+      "player": "J.J. McCarthy",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-08-11",
+      "headline": "Officially the backup after losing Vikings' QB1 competition to Kyler Murray",
+      "take": "Dynasty stash only for 2026 -- no Week 1 fantasy relevance behind Murray.",
+      "url": "https://www.cbssports.com/nfl/news/vikings-name-kyler-murray-starting-qb-over-j-j-mccarthy/",
+      "tag": "faller"
+    },
+    {
+      "player": "Josh Jacobs",
+      "team": "GB",
+      "pos": "RB",
+      "date": "2026-08-11",
+      "headline": "Out 'at least this week' with groin injury, will miss Thursday's preseason opener",
+      "take": "Escalation from last week's 'not long-term' framing -- MarShawn Lloyd steps into 1st-team reps in his place.",
+      "url": "https://wsau.com/2026/08/11/lafleur-josh-jacobs-to-miss-at-least-this-week-due-to-groin-injury/",
+      "tag": "injury"
+    },
+    {
+      "player": "MarShawn Lloyd",
+      "team": "GB",
+      "pos": "RB",
+      "date": "2026-08-11",
+      "headline": "Getting 1st-team preseason reps with Josh Jacobs out (groin)",
+      "take": "Real short-term handcuff value if Jacobs' absence extends beyond this week.",
+      "url": "https://sports.yahoo.com/articles/packers-confirm-jordan-love-start-150818224.html",
+      "tag": "role"
+    },
+    {
+      "player": "Rico Dowdle",
+      "team": "PIT",
+      "pos": "RB",
+      "date": "2026-08-11",
+      "headline": "Emerging as Steelers' early-down RB1 over Jaylen Warren through 4 practices",
+      "take": "Slight lean toward Dowdle in early drafts, though Pittsburgh is still expected to run a real committee.",
+      "url": "https://sports.yahoo.com/articles/steelers-rb-room-rico-dowdle-210004825.html",
+      "tag": "role"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-08-11",
+      "headline": "Left Rams-Cowboys joint practice early with groin soreness, described as minor",
+      "take": "Low concern per Rapoport, but worth a glance before Thursday's practice given his WR1 profile.",
+      "url": "https://sports.yahoo.com/articles/puka-nacua-exits-rams-cowboys-192225469.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Denzel Boston",
+      "team": "CLE",
+      "pos": "WR",
+      "date": "2026-08-11",
+      "headline": "Drawing 'clear new No. 1 receiver' buzz even as Jeudy remains the named starter",
+      "take": "Strong best-ball/dynasty stash as camp hype keeps building for the 2nd-round rookie.",
+      "url": "https://twsn.net/2026/08/08/denzel-boston-is-the-clear-new-no-1-receiver-for-the-cleveland-browns",
+      "tag": "riser"
+    },
+    {
+      "player": "Malik Benson",
+      "team": "LV",
+      "pos": "WR",
+      "date": "2026-08-11",
+      "headline": "Still holding a top-3 WR spot through 6 Raiders practices, staff calls him 'a steal'",
+      "take": "Deep-league/dynasty value continues to build behind Tre Tucker and Jalen Nailor.",
+      "url": "https://atozsports.com/nfl/las-vegas-raiders-news/training-camp-steal-day-3-sixth-round-wide-receivers-malik-benson/",
+      "tag": "riser"
+    },
+    {
+      "player": "Jeremiyah Love",
+      "team": "ARI",
+      "pos": "RB",
+      "date": "2026-08-11",
+      "headline": "Reportedly looked faster/more explosive than Trey Benson in head-to-head camp look",
+      "take": "Still behind Tyler Allgeier on the depth chart but keeps closing the gap in a crowded RB room.",
+      "url": "https://sports.yahoo.com/videos/jeremiah-love-looked-faster-and-more-explosive-than-trey-benson-at-cardinals-camp-234158331.html",
+      "tag": "riser"
+    },
     {
       "player": "Isiah Pacheco",
       "team": "DET",

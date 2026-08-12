@@ -14,7 +14,7 @@ const ALLOWED_PREFIXES = [
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg && msg.type === 'mffFetch' && typeof msg.url === 'string' &&
       ALLOWED_PREFIXES.some((p) => msg.url.startsWith(p))) {
-    fetch(msg.url)
+    fetch(msg.url, { cache: 'no-store' })
       .then((r) => {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
@@ -61,7 +61,10 @@ async function checkDrafts() {
     if (!prefs || !prefs.tracking || prefs.notify === false || !prefs.slot || !prefs.meta || prefs.done) continue;
     const draftId = key.slice('sleeperDraft_'.length);
     try {
-      const picks = await (await fetch('https://api.sleeper.app/v1/draft/' + draftId + '/picks')).json();
+      // Cache-buster: Cloudflare serves this endpoint up to 5 min stale under
+      // stale-while-revalidate — late picks data means late on-the-clock
+      // notifications. Unique query string per request skips the CDN cache.
+      const picks = await (await fetch('https://api.sleeper.app/v1/draft/' + draftId + '/picks?_=' + Date.now(), { cache: 'no-store' })).json();
       if (!Array.isArray(picks)) continue;
       const meta = prefs.meta;
       const total = meta.teams * meta.rounds;

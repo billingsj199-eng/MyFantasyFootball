@@ -243,7 +243,13 @@
   }
   function api(path) {
     if (MOCK && MOCK.api) return Promise.resolve(MOCK.api(path));
-    return bgFetch(API + path);
+    // v0.29.5: cache-buster. api.sleeper.app sits behind Cloudflare with
+    // s-maxage=15 + stale-while-revalidate=300, so a plain GET can return
+    // picks up to 15s stale (5 MINUTES under SWR) no matter how fast we
+    // poll — the draft board (websocket-driven) races ahead of the helper.
+    // A unique query string per request skips the CDN cache entirely.
+    const sep = path.indexOf('?') >= 0 ? '&' : '?';
+    return bgFetch(API + path + sep + '_=' + Date.now());
   }
 
   // ---------- live Jack's boards (same Firestore doc the export script reads) ----------

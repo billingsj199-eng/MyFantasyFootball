@@ -1,6 +1,66 @@
 {
-  "updated": "2026-08-12T16:15:00Z",
+  "updated": "2026-08-13T02:10:00Z",
   "items": [
+    {
+      "player": "Deshaun Watson",
+      "team": "CLE",
+      "pos": "QB",
+      "date": "2026-08-12",
+      "headline": "Named Browns' starter for Saturday's preseason opener vs. Bears; Sanders starts Week 2",
+      "take": "First live game action since 2024 -- small edge in the QB battle, though Monken says the competition stays open.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/deshaun-watson-will-start-the-browns-preseason-opener",
+      "tag": "role"
+    },
+    {
+      "player": "Shedeur Sanders",
+      "team": "CLE",
+      "pos": "QB",
+      "date": "2026-08-12",
+      "headline": "Will start Browns' 2nd preseason game (Aug. 22 vs. Bills) after Watson gets the Week 1 exhibition nod",
+      "take": "Split starts keep the QB battle alive into the summer's final stretch -- don't price in either QB's Week 1 job yet.",
+      "url": "https://www.nfl.com/news/qb-deshaun-watson-to-start-browns-first-preseason-game",
+      "tag": "role"
+    },
+    {
+      "player": "Tua Tagovailoa",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-08-12",
+      "headline": "Named Falcons' starter for their preseason opener vs. Broncos",
+      "take": "First real signal in Atlanta's QB race, but Stefanski stresses it's preseason-only -- Week 1 still unresolved.",
+      "url": "https://www.foxsports.com/stories/nfl/tua-tagovailoa-will-start-falcons-preseason-opener-week-1-qb-still-unclear",
+      "tag": "role"
+    },
+    {
+      "player": "Michael Penix Jr.",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-08-12",
+      "headline": "Not yet cleared for full 11-on-11 work as Tua gets the Falcons' preseason-opener start",
+      "take": "ACL rehab pace, not merit, is driving Atlanta's QB pecking order right now -- watch for his practice status to escalate.",
+      "url": "https://www.foxsports.com/stories/nfl/tua-tagovailoa-will-start-falcons-preseason-opener-week-1-qb-still-unclear",
+      "tag": "injury"
+    },
+    {
+      "player": "Emeka Egbuka",
+      "team": "TB",
+      "pos": "WR",
+      "date": "2026-08-12",
+      "headline": "Left Wednesday's joint practice vs. Jets with a minor toe injury",
+      "take": "Not considered serious, and Bucs starters were expected to see limited snaps in Thursday's opener anyway.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/report-emeka-egbuka-has-a-minor-toe-injury",
+      "tag": "injury"
+    },
+    {
+      "player": "Malik Nabers",
+      "team": "NYG",
+      "pos": "WR",
+      "date": "2026-08-12",
+      "headline": "Still limited to individual drills, but Harbaugh says team drills could come as soon as next week",
+      "take": "Recovery pace keeps trending toward a Week 1 return off the torn ACL.",
+      "url": "https://www.cbssports.com/fantasy/football/news/giants-malik-nabers-still-contained-to-individual-drills/",
+      "tag": "riser"
+    },
     {
       "player": "DK Metcalf",
       "team": "PIT",

@@ -21532,12 +21532,26 @@ window.fmtHeight = fmtHeight;
         data.mineMeta = window._mineMetaForSave();
       }
       console.log('[Save] Writing user doc (' + JSON.stringify(data).length + ' bytes)...');
+      const _savedAt = new Date().toISOString();
       await db.collection('rankings').doc(currentUser.uid).set({
         data: JSON.stringify(data),
         email: currentUser.email || '',
-        updatedAt: new Date().toISOString()
+        updatedAt: _savedAt
       }, {merge: true});
       console.log('[Save] User rankings saved OK');
+
+      // ── POST-SAVE SERVER VERIFY ─────────────────────────────────────────
+      // Confirm the write actually reached the server. Offline persistence
+      // made rules-rejected user saves look successful for ~3 months (fixed
+      // 2026-08-11) — this catches any future regression loudly instead.
+      try {
+        const ver = await db.collection('rankings').doc(currentUser.uid).get({ source: 'server' });
+        if (!ver.exists || ver.data().updatedAt !== _savedAt) {
+          console.error('[Save] USER VERIFY FAILED: server updatedAt='
+            + (ver.exists ? ver.data().updatedAt : '(missing)') + ' expected ' + _savedAt);
+          toast('WARNING: rankings save not confirmed on server — try again');
+        }
+      } catch(vfErr) { console.warn('[Save] Could not verify user save on server:', vfErr); }
     } catch(e) {
       console.error('[Save] User save error:', e.code, e.message, e);
       throw e;

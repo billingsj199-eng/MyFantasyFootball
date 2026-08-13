@@ -600,6 +600,25 @@ def pull_rosters():
     return open(d_path, 'rb').read() != before
 
 
+def pull_injuries():
+    """Phase I — run pull_injuries.py (Sleeper injury tags ->
+    data/injury_updates.js). Returns True if the file changed. Non-fatal:
+    the app.js merge has an 8-day staleness guard, so a dead phase fails
+    safe (old tags stop applying) rather than lingering."""
+    out_path = os.path.join(ROOT, 'data', 'injury_updates.js')
+    before = open(out_path, 'rb').read() if os.path.exists(out_path) else b''
+    res = subprocess.run(
+        [sys.executable, os.path.join(ROOT, 'scripts', 'pull_injuries.py')],
+        cwd=ROOT, capture_output=True, text=True)
+    print(res.stdout)
+    if res.returncode != 0:
+        print(res.stderr)
+        print('  !! injury pull failed — previous injury_updates.js kept')
+        return False
+    after = open(out_path, 'rb').read() if os.path.exists(out_path) else b''
+    return after != before
+
+
 def run_inject():
     """Run inject_rankings.py; return True if data/d.js actually changed
     (a quiet morning re-injects identical values -> no bump, no commit)."""
@@ -664,13 +683,19 @@ def main():
         print('\nPhase H — NFL roster sync (Sleeper -> d.js teams):')
         roster_changed = pull_rosters()
 
+    print('\nPhase I — Sleeper injury tags:')
+    inj_changed = pull_injuries()
+    if inj_changed:
+        bump_version(r'data/injury_updates\.js')
+
     total = n_fp + n_espn + n_cbs + n_yah + n_ud
     print(f'\nCSV sources refreshed: {total}/9 (FP {n_fp}/4, ESPN {n_espn}/1, '
           f'CBS {n_cbs}/1, Yahoo {n_yah}/1, UD {n_ud}/2) '
           f'+ KTC {"updated" if ktc_changed else "unchanged/skipped"}'
           f' + Clay {"updated" if clay_changed else "unchanged/skipped"}'
-          f' + rosters {"updated" if roster_changed else "unchanged/skipped"}')
-    if total == 0 and not ktc_changed and not roster_changed:
+          f' + rosters {"updated" if roster_changed else "unchanged/skipped"}'
+          f' + injuries {"updated" if inj_changed else "unchanged/skipped"}')
+    if total == 0 and not ktc_changed and not roster_changed and not inj_changed:
         print('Nothing refreshed — aborting before inject.')
         sys.exit(1)
 

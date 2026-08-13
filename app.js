@@ -13620,99 +13620,62 @@ function _rerunAllPlayersEnrich() {
 document.addEventListener('DOMContentLoaded', _rerunAllPlayersEnrich);
 document.addEventListener('mff:retireddata', _rerunAllPlayersEnrich);
 
-// === LIVE INJURY UPDATES: Load from Firestore and merge into D array ===
-// The injury_scanner.py script pushes injury data to Firestore doc 'site_data/injury_updates'.
-// This loads it on page load so the JS model injury discount system has fresh data.
-// Also loads team/roster updates from 'site_data/roster_updates' for FA signings, trades, etc.
+// === LIVE INJURY UPDATES: merge data/injury_updates.js into the D array ===
+// window.INJURY_UPDATES is a static data file written daily by the 9am job
+// (scripts/pull_injuries.py, Phase I of pull_consensus_adp.py) from Sleeper's
+// public injury statuses. This replaces the old Firestore site_data feed,
+// which never ran: the reader bailed at parse time (no SDK yet) and the
+// writer was a console-paste snippet nobody pasted.
+// Roster/team moves are NOT handled here — Phase H bakes those into d.js.
 (function() {
-  // firebase (app) now initializes early via the head loader, but firestore-compat stays
-  // deferred, so `firebase.firestore` is still undefined during parse — bail cleanly then,
-  // exactly as before. (NOTE: this loader has effectively no-op'd on load for a while because
-  // the SDK isn't present at parse time; see the separately-flagged fix to run it via
-  // _whenFirebaseReady if the injury/roster feed should actually apply.)
-  if (typeof firebase === 'undefined' || !firebase.firestore || typeof D === 'undefined') return;
-  var _pendingUpdates = 0;
-  var _completedUpdates = 0;
+  if (typeof D === 'undefined') return;
+  var data = window.INJURY_UPDATES;
+  if (!data || !data.players) { console.log('[InjuryUpdates] no data file loaded'); return; }
 
-  function _rebuildIfDone() {
-    _completedUpdates++;
+  // Staleness guard: if the daily job dies, old "Questionable" tags are worse
+  // than no tags. 8 days covers a long weekend + a few failed runs.
+  var STALE_MS = 8 * 24 * 60 * 60 * 1000;
+  var age = Date.now() - new Date(data.updated || 0).getTime();
+  if (!Number.isFinite(age) || age > STALE_MS) {
+    console.warn('[InjuryUpdates] data stale (updated ' + (data.updated || 'unknown') + ') — not applied');
+    return;
   }
 
-  // --- Injury Updates ---
-  _pendingUpdates++;
-  try {
-    firebase.firestore().collection('site_data').doc('injury_updates').get().then(function(doc) {
-      if (!doc.exists) { _rebuildIfDone(); return; }
-      var data = doc.data();
-      if (!data || !data.players) { _rebuildIfDone(); return; }
-      var updated = 0;
-      var cleared = 0;
-      var players = data.players;
-      var clearedList = data.cleared || []; // players Sleeper shows as healthy now
-      
-      // Apply injury tags
-      D.forEach(function(d) {
-        if (!d.n) return;
-        if (players[d.n]) {
-          var p = players[d.n];
-          if (!d.inj || d._injFromFirestore) {
-            d.inj = p.inj;
-            d._injFromFirestore = true;
-            updated++;
-          }
-        }
-      });
-      
-      // Clear injuries for players Sleeper now shows as healthy
-      if (clearedList.length > 0) {
-        var clearedSet = {};
-        clearedList.forEach(function(name) { clearedSet[name] = true; });
-        D.forEach(function(d) {
-          if (d.n && d._injFromFirestore && clearedSet[d.n]) {
-            d.inj = null;
-            d._injFromFirestore = false;
-            d._injDiscount = null;
-            cleared++;
-          }
-        });
-      }
-      
-      if (updated > 0 || cleared > 0) {
-        console.log('[InjuryUpdates] Applied ' + updated + ' injuries, cleared ' + cleared + ' (updated: ' + (data.updated || 'unknown') + ')');
-      }
-      _rebuildIfDone();
-    }).catch(function(e) {
-      console.log('[InjuryUpdates] Could not load:', e.message || e);
-      _rebuildIfDone();
-    });
-  } catch(e) { _rebuildIfDone(); }
+  // Normalized-name index so Sleeper naming (suffixes, punctuation) still
+  // matches d.js names: "Marvin Harrison Jr." -> "marvinharrison".
+  var norm = function(n) {
+    return String(n || '').toLowerCase()
+      .replace(/\b(jr|sr|ii|iii|iv|v)\.?$/, '').replace(/[^a-z]/g, '');
+  };
+  var byNorm = {};
+  Object.keys(data.players).forEach(function(k) {
+    var nk = norm(k);
+    if (!(nk in byNorm)) byNorm[nk] = data.players[k];
+  });
+  var clearedSet = {};
+  (data.cleared || []).forEach(function(name) { clearedSet[norm(name)] = true; });
 
-  // --- Roster/Team Updates ---
-  _pendingUpdates++;
-  try {
-    firebase.firestore().collection('site_data').doc('roster_updates').get().then(function(doc) {
-      if (!doc.exists) { _rebuildIfDone(); return; }
-      var data = doc.data();
-      if (!data || !data.players) { _rebuildIfDone(); return; }
-      var updated = 0;
-      var players = data.players;
-      D.forEach(function(d) {
-        if (!d.n || !players[d.n]) return;
-        var newTeam = players[d.n];
-        if (newTeam && d.t !== newTeam) {
-          d.t = newTeam;
-          updated++;
-        }
-      });
-      if (updated > 0) {
-        console.log('[RosterUpdates] Updated ' + updated + ' team assignments (updated: ' + (data.updated || 'unknown') + ')');
+  var updated = 0, cleared = 0;
+  D.forEach(function(d) {
+    if (!d.n) return;
+    var tag = data.players[d.n] !== undefined ? data.players[d.n] : byNorm[norm(d.n)];
+    if (tag) {
+      // Never overwrite a hand-set tag; only refresh tags this feed applied.
+      if (!d.inj || d._injFromFirestore) {
+        d.inj = tag;
+        d._injFromFirestore = true;
+        updated++;
       }
-      _rebuildIfDone();
-    }).catch(function(e) {
-      console.log('[RosterUpdates] Could not load:', e.message || e);
-      _rebuildIfDone();
-    });
-  } catch(e) { _rebuildIfDone(); }
+    } else if (d._injFromFirestore && clearedSet[norm(d.n)]) {
+      // Sleeper now shows them healthy — clear only feed-applied tags.
+      d.inj = null;
+      d._injFromFirestore = false;
+      d._injDiscount = null;
+      cleared++;
+    }
+  });
+  console.log('[InjuryUpdates] Applied ' + updated + ' injuries, cleared ' + cleared
+    + ' (updated: ' + (data.updated || 'unknown') + ')');
 })();
 
 // === NAME COLLISION FIX: Clear old career data for current players with same name as retired NFL players ===

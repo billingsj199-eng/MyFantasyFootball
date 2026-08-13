@@ -6616,12 +6616,13 @@ function _campNewsNorm(n) {
       const d = dIdx[_campNewsNorm(m.name)];
       if (d) { m.pos = d.s; m.img = d._slImg || null; }
     });
-    // One left-to-right strip: biggest risers first (green), then biggest
-    // fallers (red). Chips flex-shrink so a full set stays on 1-2 rows.
-    const risers = movers.filter(m => m.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 6);
-    const fallers = movers.filter(m => m.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 6);
-    if (!risers.length && !fallers.length) return;
-    body.innerHTML = risers.map(_playerChip).join('') + fallers.map(_playerChip).join('');
+    // One left-to-right strip ordered by MAGNITUDE of the percent move
+    // (risers and fallers interleaved — the colors carry direction). Chips
+    // are natural-width so full names show; the strip scrolls horizontally.
+    movers.forEach(m => { m.pct = m.from > 0 ? Math.abs(m.delta) / m.from : 0; });
+    const top = movers.sort((a, b) => b.pct - a.pct).slice(0, 12);
+    if (!top.length) return;
+    body.innerHTML = top.map(_playerChip).join('');
     sub.textContent = 'Underdog BBM ADP · last ' + span + ' day' + (span === 1 ? '' : 's');
     body.addEventListener('click', e => {
       const row = e.target.closest('.adp-mover-chip');

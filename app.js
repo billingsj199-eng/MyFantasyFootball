@@ -6563,17 +6563,25 @@ function _campNewsNorm(n) {
     return Math.round((Date.parse(b + 'T12:00:00') - Date.parse(a + 'T12:00:00')) / 86400000);
   }
 
-  function _playerRow(m) {
+  function _playerChip(m) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const up = m.delta < 0; // ADP number falling = drafted earlier = riser
     const fmt = v => String(+v.toFixed(1)); // trim float dust, drop trailing .0
-    const chip = (up ? '▲' : '▼') + fmt(Math.abs(m.delta));
-    const chipColor = up ? '#22c55e' : '#ef4444';
-    const pos = m.pos ? `<span style="font-size:.56rem;font-weight:700;color:var(--text2);letter-spacing:.5px">${esc(m.pos)}</span>` : '';
-    return `<div class="adp-mover-row" data-mover="${esc(m.name)}" style="display:flex;align-items:center;gap:7px;padding:3px 2px;border-radius:5px;cursor:pointer;min-width:0">
-      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.74rem">${esc(m.name)}</span>${pos}
-      <span style="font-size:.66rem;color:var(--text2);white-space:nowrap">${fmt(m.from)} → ${fmt(m.to)}</span>
-      <span style="font-size:.66rem;font-weight:700;color:${chipColor};min-width:32px;text-align:right">${chip}</span>
+    const color = up ? '#22c55e' : '#ef4444';
+    const pct = m.from > 0 ? Math.round(Math.abs(m.delta) / m.from * 100) : null;
+    const img = m.img
+      ? `<img class="amc-img" src="${esc(m.img)}" alt="" loading="eager" onerror="this.style.display='none'">`
+      : `<span class="amc-img amc-initials">${esc(m.name.split(' ').map(w => w[0] || '').join('').slice(0, 2))}</span>`;
+    return `<div class="adp-mover-chip" data-mover="${esc(m.name)}" style="border-left:2px solid ${color}">
+      ${img}
+      <span class="amc-txt">
+        <span class="amc-name">${esc(m.name)}</span>
+        <span class="amc-adp">${m.pos ? esc(m.pos) + ' · ' : ''}${fmt(m.from)} → ${fmt(m.to)}</span>
+      </span>
+      <span class="amc-delta" style="color:${color}">
+        <span>${up ? '▲' : '▼'}${fmt(Math.abs(m.delta))}</span>
+        ${pct != null ? `<span class="amc-pct">${up ? '+' : '−'}${pct}%</span>` : ''}
+      </span>
     </div>`;
   }
 
@@ -6601,24 +6609,22 @@ function _campNewsNorm(n) {
       movers.push({ name, from: oldE.bbm, to: nowE.bbm, delta });
     });
     if (!movers.length) return;
-    // Position pills + card-click wiring via the D array where names resolve.
+    // Position pills + headshots + card-click wiring via the D array.
     const dIdx = {};
     (window.D || []).forEach(d => { if (d && d.n) dIdx[_campNewsNorm(d.n)] = d; });
-    movers.forEach(m => { const d = dIdx[_campNewsNorm(m.name)]; if (d) m.pos = d.s; });
+    movers.forEach(m => {
+      const d = dIdx[_campNewsNorm(m.name)];
+      if (d) { m.pos = d.s; m.img = d._slImg || null; }
+    });
+    // One left-to-right strip: biggest risers first (green), then biggest
+    // fallers (red). Chips flex-shrink so a full set stays on 1-2 rows.
     const risers = movers.filter(m => m.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 6);
     const fallers = movers.filter(m => m.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 6);
     if (!risers.length && !fallers.length) return;
-    const col = (title, color, list) =>
-      `<div style="flex:1;min-width:230px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1.5px;color:${color};margin-bottom:2px">${title}</div>
-        ${list.length ? list.map(_playerRow).join('') : '<div style="font-size:.68rem;color:var(--text2);padding:3px 2px">none</div>'}
-      </div>`;
-    body.innerHTML =
-      col('RISERS', '#22c55e', risers) +
-      col('FALLERS', '#ef4444', fallers);
+    body.innerHTML = risers.map(_playerChip).join('') + fallers.map(_playerChip).join('');
     sub.textContent = 'Underdog BBM ADP · last ' + span + ' day' + (span === 1 ? '' : 's');
     body.addEventListener('click', e => {
-      const row = e.target.closest('.adp-mover-row');
+      const row = e.target.closest('.adp-mover-chip');
       if (!row) return;
       const d = dIdx[_campNewsNorm(row.dataset.mover)];
       if (d && typeof openPlayerCard === 'function') openPlayerCard(d);

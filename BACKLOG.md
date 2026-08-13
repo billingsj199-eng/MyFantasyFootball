@@ -1,8 +1,47 @@
 # MyFantasyFootball — Backlog
 
-_Last updated: 2026-07-22_
+_Last updated: 2026-08-13_
 
 Running backlog for myfantasyfootball.co. Items are grouped by what's blocking them, then by effort. **Read DEPLOY_NOTES.md first** if any "Shipped" item below mentions Firestore rules — those features won't work in prod until rules are pushed.
+
+---
+
+## Shipped 2026-08-13 (single-session sweep)
+
+Everything below went from "sitting unmerged/broken" to live on production in one day.
+
+### Merged + deployed (four worktree branches)
+- **Yahoo direct league import** (a4aa346) — paste league URL/ID on My Teams, browser-direct via the `yahooProxy` Cloud Function (deployed + backed up 4bf7baf on functions-backup). Live smoke test: Jack's league 1301476 imported 10 teams, ½ PPR detected from the API.
+- **Draft Strategy page** (14553ce) — `#draftstrategy`, nav "STRATEGY": written guide + 6-season ESPN ADP value tables. Prose lives in app.js next to the numbers by design.
+- **Research page** (e8893b8, admin-only) — `#research` ADP-vs-outcome explorer (4,820 player-seasons 1999-2025) + player lookup + OTC contracts. Merge had real conflicts (pageMap union, two modules sharing one trailing `})();` — draft-strategy IIFE re-closed explicitly). Also fixed the non-admin blank-'home' redirect (falls back to rankings).
+- **K/DST Playoff SOS** (3fded38) — `POSITION_SIGNAL_MIX` (K 1:3 def:tot, DST 1:2), DST matchup axis = opposing offense, DST implied-total **baseline-relative** via `_mtOppImpliedBaselines` (the raw-number bug Jack caught 2026-08-04). Also landed the weekly-only-columns sort fix + 2 D/ST research scripts. Verified: skill ranks byte-identical to prior live; K distinct from WR (8/10 teams); DST independent (NE DST#4 vs K#25).
+
+### Chrome Web Store
+- ESPN Helper **0.20.7** + Yahoo Helper **0.9.4** uploaded + submitted for review via `store_upload.py` API (store was at 0.19.3/0.8.3). `jackSlice:36` verified in both zips — no premium-board leak. Sleeper 0.29.6 confirmed already published (same-version re-upload rejected = review passed). Underdog untouched (appeal freeze). extensions-backup pushed (a5ff886 + 4c6cb6d).
+
+### Rankings save-path hardening (65af1c2 + 59aeb33)
+- **Blind-save guard**: pre-save read failure now requires explicit confirm instead of silently skipping the safety check — the exact chain behind the 2026-08-07 wipe.
+- **Post-save server verify** on BOTH jacks + user save paths (`get({source:'server'})`, warn toast on mismatch) — catches offline-masked/rules-rejected writes (user saves were silently broken ~3 months once).
+- `rankings_history` backup failure now toasts. Backup confirmed ALIVE (92 docs — started working with the 2026-08-11 rules deploy; the "rules missing" note was stale).
+
+### Injury feed — live for the first time ever (ddb2295)
+- Old Firestore design was triply dead (parse-time bail, no site_data rules, writer was console-paste code). Replaced with `scripts/pull_injuries.py` → `data/injury_updates.js` (Sleeper, QB/RB/WR/TE/K + healthy-cleared list), running as **Phase I of the 9am daily job**. app.js merge: suffix-tolerant names, never overwrites hand-set tags, 8-day staleness guard (dead job fails safe). 86 tags applied at ship; offseason filter correctly shows long-term only (Aiyuk ACL) until September.
+
+### Bug fixes + data
+- **`?embed=trivia` fixed** (1cb60a3) — embed mode exempted from the trivia admin gate; builder stays admin-only.
+- **Mario Bates 1994-1998 backfilled** (b725fb6) — wiki-sourced, totals verified vs official career line; legend_careers only (all_players is nflverse-regenerated).
+- **QB rushing backfill** (c47a6ca) — 135 seasons / 29 QBs adopted from all_players (2%-passing collision guard, suffix fallback, d.js for 2025). Lamar 2019 = 1,206 ry in trivia/compare at last. Residual: ~1,129 pre-1999 zero-rush seasons (needs PFR; Young/Cunningham/Elway already clean).
+- **Kyle Williams COMBINE_DATA** — verified already fixed by `combine_d_patches.js` (memory was stale).
+
+### Old top-3 backlog priorities — ALL closed
+- **Cloud-sync completion** (18edcb0) — audit found the stragglers: FG college highscores, 10 unlimited Guess-Who era counters, fg_scoring/mff_sosRange/mt_value_src prefs; triggers added at set-sites. My Teams leagues were already cloud-native.
+- **Mobile pass** (656007b) — full 375px sweep; ONE real bug: the new Strategy tab pushed GAMES off the bottom bar (fixed: tabs flex:1, 40px floor, 44px+ touch height, desktop untouched). Compare/Trade/modal/all pages verified clean. **Jack: real-iPhone thumb-through still worthwhile.**
+- ESPN import had shipped 2026-08-10.
+
+### Awaiting external action
+- Jack's Season Pass checkout click-test (site side verified live; Stripe session opening is the only unverified step).
+- ESPN 0.20.7 + Yahoo 0.9.4 store reviews (keep jdhpsports@gmail.com premium).
+- Real-device iOS pass (emulated Chrome only).
 
 ---
 
@@ -18,16 +57,16 @@ Running backlog for myfantasyfootball.co. Items are grouped by what's blocking t
 If picking the next thing to do, in order:
 
 1. **Activate analytics** — the 2-minute Jack-only step above. Everything else on this list gets prioritized better once real usage data exists.
-2. **Dynasty JS Model** — see "JS Model roadmap" below. Biggest model credibility gap (dynasty/dynastySF show the identical redraft board; age-29 CMC ranks top-6 "dynasty"). Design already agreed 2026-07-21. Dynasty startup season is NOW.
+2. ~~**Dynasty JS Model**~~ — shipped 2026-07-22, then the whole JS Model moved OFF-SITE 2026-07-23 to `E:\MyFantasyFootball\js_model_site\` (see roadmap note below).
 3. **Draft-season data hygiene sweep** — kickers + K projections DONE 2026-07-22:
    - ~~Stale kickers~~ — Sleeper depth-chart audit (`scripts/fix_kickers_20260722.py`): added missing starters Tyler Bass (BUF, K13), Trey Smack (GB rookie, K18), Jason Sanders (NYJ, K21); existing editorial K order preserved (splice + renumber, NOT a p-sort — first attempt p-sorted and clobbered the board, reverted from `d.js.bak_pre_kickers_20260722`). Bass/Sanders have no 2025 stats (ESPN-confirmed didn't play) so their `p` values are hand-estimates; Clay's PDF independently confirms Bass as BUF K1.
    - ~~K Clay projections~~ — `extract_clay_projections.py` now parses the per-team kicker row (FGM/FGA/XPM/XPA; pts = 3×FGM+XPM, no distance-bonus data) → 32 K entries in `mike_clay_projections.js`; `adjProjPpg()` prefers Clay for K with `d.p/17` fallback. DST stays on `d.p/17` — the PDF has only a unit rank, no DST points.
    - Still open: 151 COMBINE↔ALL name collisions (2026-07-21 stats audit); MIA rank order (Patterson K17 above Gonzalez K31) contradicts Sleeper's current depth chart (Gonzalez is the listed starter) — Jack call, since it's an editorial board.
-4. **Fix the injury/roster Firestore feed** — it silently never runs (known bug). Tolerable in July, trust-killing in-season. Diagnose before NFL Week 1.
+4. ~~**Fix the injury/roster Firestore feed**~~ — DONE 2026-08-13 (see Shipped section: static-file rebuild, daily Phase I, staleness guard).
 5. **Weekly format completion → public launch by Week 1** — see "Weekly format expansion" below. Weekly props + board sync landed 2026-07-21/22; remaining: true weekly projections (consensus blend), weekly player-card tab, K/DST support, un-gate `_weeklyAdminCheck`.
-6. **Phone-test mobile responsiveness on real devices** — August drafts happen on phones at draft parties.
+6. ~~**Phone-test mobile responsiveness**~~ — emulated 375px sweep DONE 2026-08-13 (nav-tab overflow fixed; all pages clean). Real-iOS thumb-through by Jack still recommended.
 7. **ADP movement tracking** _(new idea 2026-07-22)_ — the betting-lines pull already fetches live UD ADP daily; snapshot it to a dated file each run and ship a "risers/fallers this week" view. Most shareable content type of draft season; pairs with the "smart alerts" future idea.
-8. **ESPN league import** — biggest TAM unlock, but multi-week; start AFTER kickoff (league import is more valuable in-season for waivers/trades than at draft time, and starting now lands it half-tested mid-August).
+8. ~~**ESPN league import**~~ — SHIPPED 2026-08-10 (direct in-site sync for public leagues + extension for private). Yahoo direct import followed 2026-08-13.
 
 Still open, lower urgency: per-year top-25 trivia sweep (452-slug seed list); light-mode inline-color audit (only when a new broken element is spotted).
 

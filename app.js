@@ -1,6 +1,11 @@
 // Global auth state flag — used by canEdit() before Firebase auth module loads
 window._authCurrentUser = null;
 
+// Positions that get a Strength-of-Schedule rating. K and DST use different
+// signals from the skill positions (see POSITION_SIGNAL_MIX in the SOS block)
+// but they are rated on the same 1-32 scale.
+const _SOS_POS = new Set(['QB', 'RB', 'WR', 'TE', 'K', 'DST']);
+
 // === ADP HISTORY BACKUP TO FIRESTORE ===
 // The Underdog Draft Helper extension captures daily ADP snapshots into
 // chrome.storage.local.mff_adp_history. That storage can be wiped (extension
@@ -2278,13 +2283,39 @@ function getFiltered() {
         case 'landing': av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
           // Sort by SOS rank in the active week window (1 = easiest schedule).
-          // K/DST and unknown teams sink to the bottom.
+          // Teams we can't resolve sink to the bottom.
           const _wk = typeof window._sosActiveWeeks === 'function' ? window._sosActiveWeeks() : null;
-          const _sosRk = d => (d.s === 'K' || d.s === 'DST' || typeof window._mtGetPlayoffSos !== 'function') ? 999
+          const _sosRk = d => (typeof window._mtGetPlayoffSos !== 'function') ? 999
             : (window._mtGetPlayoffSos(d.t, d.s, _wk) || { rank: 999 }).rank;
           av = _sosRk(a); bv = _sosRk(b); break;
         }
         case 'diff': av = (a.s==='K'||a.s==='DST') ? 0 : (rnkAdp(a)??a.myRank) - a.myRank; bv = (b.s==='K'||b.s==='DST') ? 0 : (rnkAdp(b)??b.myRank) - b.myRank; break;
+        // Weekly-only columns (Opp / Spread / Team Total). These read the same
+        // values the cells render — note Team Total shows the OPPONENT's
+        // implied total on D/ST rows, so the sort has to branch the same way
+        // or a D/ST-filtered board sorts by a number it isn't displaying.
+        case 'opp': {
+          const _o = d => {
+            const v = (typeof window._weeklyOppFor === 'function') ? window._weeklyOppFor(d.t) : null;
+            return v ? String(v).replace(/^@/, '') : '~~';  // no game sorts last
+          };
+          return sortDir * _o(a).localeCompare(_o(b));
+        }
+        case 'spread': {
+          const _s = d => {
+            const v = (typeof window._weeklySpreadFor === 'function') ? window._weeklySpreadFor(d.t) : null;
+            return v == null ? Infinity : v;
+          };
+          av = _s(a); bv = _s(b); break;
+        }
+        case 'teamTotal': {
+          const _tt = d => {
+            const fn = (d.s === 'DST') ? window._weeklyOppTeamTotalFor : window._weeklyTeamTotalFor;
+            const v = (typeof fn === 'function') ? fn(d.t) : null;
+            return v == null ? -Infinity : v;
+          };
+          av = _tt(a); bv = _tt(b); break;
+        }
         default: av = a.myRank; bv = b.myRank;
       }
       return sortDir * (av - bv);
@@ -2940,7 +2971,7 @@ function render() {
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell" style="display:none">${showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
-      <td class="psos-cell">${(()=>{if(d.s==='K'||d.s==='DST')return '—';if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
+      <td class="psos-cell">${(()=>{if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
     </tr>`;
 
@@ -5007,7 +5038,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
@@ -7309,15 +7340,15 @@ function openPlayerCard(d, ctxMode) {
         <button class="card-view-btn" data-cardview="info">INFO</button>
       </div>` : ''}
       <div class="card-fantasy-view${(d._isDevy || _is2026) ? ' hidden' : ''}" id="cardFantasyView">
-      ${(!d._retired && (d.bye || (d.s === 'QB' || d.s === 'RB' || d.s === 'WR' || d.s === 'TE'))) ? (() => {
+      ${(!d._retired && (d.bye || _SOS_POS.has(d.s))) ? (() => {
         // Playoff Schedule row: Bye + W15 + W16 + W17 + Total P-SOS
         // Per-week ratings use _mtGetPlayoffSosWeekly; total uses _mtGetPlayoffSos.
-        const _isSkill = d.s === 'QB' || d.s === 'RB' || d.s === 'WR' || d.s === 'TE';
+        const _hasSos = _SOS_POS.has(d.s);
         const _wkRatings = {};
-        if (_isSkill && typeof window._mtGetPlayoffSosWeekly === 'function') {
+        if (_hasSos && typeof window._mtGetPlayoffSosWeekly === 'function') {
           [15, 16, 17].forEach(w => { _wkRatings[w] = window._mtGetPlayoffSosWeekly(d.t, d.s, w); });
         }
-        const _totRating = (_isSkill && typeof window._mtGetPlayoffSos === 'function')
+        const _totRating = (_hasSos && typeof window._mtGetPlayoffSos === 'function')
                            ? window._mtGetPlayoffSos(d.t, d.s) : null;
         const _byeBox = `
           <div class="card-rank-box">
@@ -7329,8 +7360,13 @@ function openPlayerCard(d, ctxMode) {
           if (!r) return `<div class="card-rank-box"><div class="lbl">Week ${w}</div><div class="num" style="color:var(--text2)">—</div></div>`;
           const _arrow = r.home ? 'vs' : '@';
           const _sub = [];
-          if (r.posUnits) _sub.push(r.posUnits);
-          if (typeof r.oppg === 'number') _sub.push(r.oppg.toFixed(1) + ' PA');
+          if (r.isDst) {
+            if (r.clayOffRk) _sub.push('Clay O#' + r.clayOffRk);
+            if (typeof r.oppImplied === 'number') _sub.push(r.oppImplied.toFixed(1) + ' opp impl');
+          } else {
+            if (r.posUnits) _sub.push(r.posUnits);
+            if (typeof r.oppg === 'number') _sub.push(r.oppg.toFixed(1) + ' PA');
+          }
           if (typeof r.gameTotal === 'number') _sub.push('O/U ' + r.gameTotal.toFixed(1));
           const _title = `W${w} ${_arrow} ${r.opp} · rank ${r.rank}/${r.n}` + (_sub.length ? ' · ' + _sub.join(', ') : '');
           return `
@@ -7352,9 +7388,9 @@ function openPlayerCard(d, ctxMode) {
           </div>`;
         return `<div class="card-section">
           <div class="card-section-title">Playoff Schedule <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· W15-17 SOS, position-weighted</span></div>
-          <div class="card-rank-row" style="grid-template-columns:${_isSkill ? '0.7fr 1fr 1fr 1fr 1fr' : '1fr'}">
+          <div class="card-rank-row" style="grid-template-columns:${_hasSos ? '0.7fr 1fr 1fr 1fr 1fr' : '1fr'}">
             ${_byeBox}
-            ${_isSkill ? _wkBox(15) + _wkBox(16) + _wkBox(17) + _totBox : ''}
+            ${_hasSos ? _wkBox(15) + _wkBox(16) + _wkBox(17) + _totBox : ''}
           </div>
         </div>`;
       })() : ''}
@@ -41709,7 +41745,47 @@ Rules:
     RB:  0.25,  // favorites get clock-killer carries (strongest signal)
     WR:  0.08,  // mild favorite bias; underdogs get garbage-time targets
     TE:  0.08,  // similar to WR
+    // K/DST already get most of the favorite effect through the implied-total
+    // signal, so these are deliberately small — they only carry the RESIDUAL
+    // game-script effect on top of expected points.
+    K:   0.05,  // marginal: blowout leads trade late FGs for kneeldowns
+    DST: 0.15,  // trailing opponents throw → sacks + INTs beyond points allowed
   };
+
+  // How the two SOS axes are weighted per position: `def` = opponent-quality
+  // signal, `tot` = implied-total (scoring environment) signal. Skill positions
+  // keep the original 3:1 defense-led blend.
+  //
+  // K is inverted (1:3) because kicker scoring is driven by how many scoring
+  // drives his own offense sustains far more than by opponent unit grades —
+  // and a stiff defense partly cancels itself out for a kicker, converting
+  // some opponent TDs into FG attempts.
+  //
+  // DST is 1:2 because its opponent-quality axis is a single Clay grade
+  // (preseason roster opinion) while the implied total is a live market
+  // estimate of the points the unit will actually face.
+  const POSITION_SIGNAL_MIX = {
+    K:   { def: 1, tot: 3 },
+    DST: { def: 1, tot: 2 },
+  };
+  const _mtSignalMix = posKey => POSITION_SIGNAL_MIX[posKey] || { def: 3, tot: 1 };
+
+  // Positions with their own SOS treatment. Anything else (IDP, FLEX rows,
+  // unknown) falls back to the team-wide OVERALL blend.
+  function _mtPosKey(pos) {
+    return (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE'
+            || pos === 'K' || pos === 'DST') ? pos : 'OVERALL';
+  }
+
+  // The opponent-quality z for a given position (higher = tougher matchup).
+  //   DST → the opposing OFFENSE (a defense's matchup is who it has to stop)
+  //   K   → opponent's overall defense (no unit weighting fits FG kicking)
+  //   else → the position-weighted defensive unit blend
+  function _mtMatchupZ(oppRec, posKey) {
+    if (posKey === 'DST') return oppRec.zOff;
+    if (posKey === 'K' || posKey === 'OVERALL') return oppRec.defZOverall;
+    return oppRec.defZByPos[posKey];
+  }
 
   function _mtClayUnitGrade(clayG, pos) {
     if (!clayG) return null;
@@ -41747,13 +41823,17 @@ Rules:
     const posGradesArr = {};
     POSITIONS.forEach(pos => { posGradesArr[pos] = []; });
     const overallClayDefs = [];
+    const overallClayOffs = [];
     Object.values(clay).forEach(g => {
       if (typeof g.defGr === 'number') overallClayDefs.push(g.defGr);
+      if (typeof g.offGr === 'number') overallClayOffs.push(g.offGr);
       POSITIONS.forEach(pos => {
         const v = _mtClayUnitGrade(g, pos);
         if (typeof v === 'number') posGradesArr[pos].push(v);
       });
     });
+    const offMu = overallClayOffs.length ? mean(overallClayOffs) : 0;
+    const offSd = overallClayOffs.length ? std(overallClayOffs)  : 1;
     const cMuOverall = overallClayDefs.length ? mean(overallClayDefs) : 0;
     const cSdOverall = overallClayDefs.length ? std(overallClayDefs)  : 1;
     const cMuByPos = {}, cSdByPos = {};
@@ -41783,8 +41863,13 @@ Rules:
         defZByPos[pos] = (zP + zO + zCByPos[pos]) / 3;
       });
       const defZOverall = (zP + zO + zCOverall) / 3;
+      // Clay OFFENSE z — opponent-quality signal for DST SOS (a DST's
+      // "matchup" is the opposing offense, not the opposing defense).
+      const zOff = clayG && typeof clayG.offGr === 'number'
+                   ? (clayG.offGr - offMu) / offSd
+                   : 0;
       _mtDstByAbbrCache[upper] = {
-        dst: d, clay: clayG, zP, zO,
+        dst: d, clay: clayG, zP, zO, zOff,
         zCByPos, zCOverall,
         defZByPos, defZOverall,
       };
@@ -41824,6 +41909,44 @@ Rules:
     return _mtImplBaseCache;
   }
 
+  // The DST mirror of _mtImpliedBaselines: for each team, the median implied
+  // total of the OPPONENT across all 18 weeks — i.e. the points this defense
+  // is normally priced to face.
+  //
+  // This baseline is not optional. A raw opponent implied total is heavily
+  // contaminated by the defense's OWN quality, because the market prices
+  // offenses down when they face a good defense. Measured on the 2026 lines,
+  // a team's season-median opponent implied total correlates 0.74 with its
+  // own Clay defensive rank — so ranking on the raw number scores "is this
+  // defense good", not "is this schedule easy", and every elite defense
+  // floats to the top of the easy list in every window. Subtracting each
+  // team's own median cancels that constant and leaves the schedule effect,
+  // exactly as _mtImpliedBaselines does for skill positions.
+  let _mtOppImplBaseCache = null;
+  function _mtOppImpliedBaselines() {
+    if (_mtOppImplBaseCache) return _mtOppImplBaseCache;
+    _mtOppImplBaseCache = {};
+    if (typeof window.getNflScheduleForTeam !== 'function'
+        || typeof window.getNflTeamImpliedTotal !== 'function') return _mtOppImplBaseCache;
+    Object.keys(_mtBuildDstByAbbr()).forEach(team => {
+      const sched = window.getNflScheduleForTeam(team);
+      if (!sched) return;
+      const vals = [];
+      for (let w = 1; w <= 18; w++) {
+        const g = sched[w];
+        if (!g || g.bye || !g.opp) continue;
+        const oi = window.getNflTeamImpliedTotal(w, g.opp, team, !g.home);
+        if (typeof oi === 'number') vals.push(oi);
+      }
+      if (vals.length >= 6) {
+        vals.sort((a, b) => a - b);
+        const m = Math.floor(vals.length / 2);
+        _mtOppImplBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
+      }
+    });
+    return _mtOppImplBaseCache;
+  }
+
   // === Adjustable SOS week window (rankings table) ===
   // null = the playoff default (W15-17); {from,to} = a custom range (e.g. 1-5).
   // Persisted to localStorage so the rankings view keeps your window.
@@ -41854,7 +41977,9 @@ Rules:
   const _mtPlayoffSosCache = {};
   function _mtBuildPlayoffSos(pos, weeks) {
     const wks = (Array.isArray(weeks) && weeks.length) ? weeks : [15, 16, 17];
-    const posKey = (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE') ? pos : 'OVERALL';
+    const posKey = _mtPosKey(pos);
+    const isDstView = posKey === 'DST';
+    const mix = _mtSignalMix(posKey);
     const key = posKey + '_' + wks.join('_');
     if (_mtPlayoffSosCache[key]) return _mtPlayoffSosCache[key];
     _mtPlayoffSosCache[key] = {};
@@ -41892,10 +42017,16 @@ Rules:
         const impliedTot = (typeof window.getNflTeamImpliedTotal === 'function')
                            ? window.getNflTeamImpliedTotal(g.wk, team, g.opp, g.home)
                            : null;
-        if (typeof impliedTot === 'number') { totSum += impliedTot; totN++; }
+        // A DST's scoring environment is the points it must ALLOW, so its
+        // implied-total signal is the opponent's, not its own.
+        const oppImplied = (typeof window.getNflTeamImpliedTotal === 'function')
+                           ? window.getNflTeamImpliedTotal(g.wk, g.opp, team, !g.home)
+                           : null;
+        const envTot = isDstView ? oppImplied : impliedTot;
+        if (typeof envTot === 'number') { totSum += envTot; totN++; }
         if (typeof teamSpread === 'number') { sprSum += teamSpread; sprN++; }
         if (oppRec) {
-          const defZ = (posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
+          const defZ = _mtMatchupZ(oppRec, posKey);
           defSum += defZ; defN++;
           const posUnits = (posKey !== 'OVERALL' && POSITION_DEF_WEIGHTS[posKey] && oppRec.clay)
                            ? Object.keys(POSITION_DEF_WEIGHTS[posKey])
@@ -41907,7 +42038,9 @@ Rules:
             dstRank: oppRec.dst.r, oppg: oppRec.dst.oppg,
             clayDefRk: oppRec.clay ? oppRec.clay.defRk : null,
             clayDefGr: oppRec.clay ? oppRec.clay.defGr : null,
+            clayOffRk: oppRec.clay ? oppRec.clay.offRk : null,
             posUnits, gameTotal: gt, teamSpread, impliedTotal: impliedTot,
+            oppImplied,
           });
         }
       });
@@ -41922,10 +42055,15 @@ Rules:
     // window's avg implied total and the team's own season median
     // (_mtImpliedBaselines) — isolates the schedule's effect on scoring
     // environment instead of rewarding good offenses in every window.
-    const _implBase = _mtImpliedBaselines();
+    // DST measures the same way against its own mirror baseline: the window's
+    // avg OPPONENT implied total minus the opponent implied total this defense
+    // normally faces (_mtOppImpliedBaselines). Same reason as above — the raw
+    // number mostly encodes the defense's own quality, not its schedule.
+    const _implBase = isDstView ? _mtOppImpliedBaselines() : _mtImpliedBaselines();
     const teamRel = {};
     Object.keys(teamTot).forEach(t => {
-      if (teamTot[t].n >= minN && typeof _implBase[t] === 'number') teamRel[t] = teamTot[t].avg - _implBase[t];
+      if (teamTot[t].n < minN) return;
+      if (typeof _implBase[t] === 'number') teamRel[t] = teamTot[t].avg - _implBase[t];
     });
     let tMu = 0, tSd = 1, totalsReady = false;
     if (useTotals) {
@@ -41955,8 +42093,12 @@ Rules:
       let blendAvg = d.avg;
       let totalAdjusted = false;
       if (totalsReady && teamRel[team] != null) {
-        const zT = -(teamRel[team] - tMu) / tSd;
-        blendAvg = (d.avg * 3 + zT) / 4;
+        // Skill/K: implied total above the team's own norm = more expected
+        // scoring = EASIER, so invert. DST: opponent implied total above the
+        // league norm = more points to allow = HARDER, so don't.
+        const zRaw = (teamRel[team] - tMu) / tSd;
+        const zT = isDstView ? zRaw : -zRaw;
+        blendAvg = (d.avg * mix.def + zT * mix.tot) / (mix.def + mix.tot);
         totalAdjusted = true;
       }
       // Add spread contribution. Favored teams have NEGATIVE spreads, so zS
@@ -41992,17 +42134,25 @@ Rules:
       const tip = tipPrefix + posTag + ' #' + rank + '/' + _fsN + ' (1 = easiest) · ' + data.opps.map(o => {
         const parts = ['W' + o.wk + ' ' + (o.home ? 'vs ' : '@ ') + o.opp];
         const sub = [];
-        if (o.posUnits) sub.push(o.posUnits);
-        else if (o.clayDefRk) sub.push('Clay D#' + o.clayDefRk);
-        if (typeof o.oppg === 'number') sub.push(o.oppg.toFixed(1) + ' PA');
+        if (isDstView) {
+          // A DST's matchup is the opposing OFFENSE — show offense rank and
+          // the points that offense is priced to score.
+          if (o.clayOffRk) sub.push('Clay O#' + o.clayOffRk);
+          if (typeof o.oppImplied === 'number') sub.push(o.oppImplied.toFixed(1) + ' opp impl');
+        } else {
+          if (o.posUnits) sub.push(o.posUnits);
+          else if (o.clayDefRk) sub.push('Clay D#' + o.clayDefRk);
+          if (typeof o.oppg === 'number') sub.push(o.oppg.toFixed(1) + ' PA');
+          if (typeof o.impliedTotal === 'number') sub.push('impl ' + o.impliedTotal.toFixed(1));
+        }
         if (typeof o.gameTotal === 'number') sub.push('O/U ' + o.gameTotal.toFixed(1));
-        if (typeof o.impliedTotal === 'number') sub.push('impl ' + o.impliedTotal.toFixed(1));
         if (typeof o.teamSpread === 'number') sub.push((o.teamSpread > 0 ? '+' : '') + o.teamSpread + ' sprd');
         if (sub.length) parts.push('(' + sub.join(', ') + ')');
         return parts.join(' ');
       }).join(', ')
         + (data.totalAdjusted && data.teamTot && typeof _implBase[data.team] === 'number'
-            ? ' · impl ' + data.teamTot.avg.toFixed(1) + ' vs szn ' + _implBase[data.team].toFixed(1)
+            ? ' · ' + (isDstView ? 'opp impl ' : 'impl ') + data.teamTot.avg.toFixed(1)
+              + ' vs szn ' + _implBase[data.team].toFixed(1)
               + ' (' + (teamRel[data.team] >= 0 ? '+' : '') + teamRel[data.team].toFixed(1) + ')'
             : '')
         + (data.spreadAdjusted ? ' · spread-blended' : (data.totalAdjusted ? ' · implied-blended' : ''));
@@ -42024,7 +42174,9 @@ Rules:
   // for 2026 — no byes — but the fallback is here just in case).
   const _mtPlayoffSosWeeklyCache = {};
   function _mtBuildPlayoffSosWeekly(pos, week) {
-    const posKey = (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE') ? pos : 'OVERALL';
+    const posKey = _mtPosKey(pos);
+    const isDstView = posKey === 'DST';
+    const mix = _mtSignalMix(posKey);
     const cacheKey = posKey + '_' + week;
     if (_mtPlayoffSosWeeklyCache[cacheKey]) return _mtPlayoffSosWeeklyCache[cacheKey];
     _mtPlayoffSosWeeklyCache[cacheKey] = {};
@@ -42038,7 +42190,7 @@ Rules:
       if (g.bye) return;
       const oppRec = dstByAbbr[String(g.opp).toUpperCase()];
       if (!oppRec) return;
-      const defZ = (posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
+      const defZ = _mtMatchupZ(oppRec, posKey);
       const away = g.home ? g.opp : team;
       const home = g.home ? team : g.opp;
       const gt = (typeof window.getNflGameTotal === 'function')
@@ -42048,15 +42200,22 @@ Rules:
       // v0.10.31: implied team total replaces raw O/U as the SOS signal.
       const it = (typeof window.getNflTeamImpliedTotal === 'function')
                  ? window.getNflTeamImpliedTotal(week, team, g.opp, g.home) : null;
-      teamRows[team] = { defZ, gt, sp, it, g, oppRec };
+      // For a DST, the points the OPPONENT is priced to score.
+      const oppIt = (typeof window.getNflTeamImpliedTotal === 'function')
+                    ? window.getNflTeamImpliedTotal(week, g.opp, team, !g.home) : null;
+      teamRows[team] = { defZ, gt, sp, it, oppIt, g, oppRec };
     });
     // z-score implied-total DIFFS (vs each team's season median baseline —
     // see _mtImpliedBaselines) AND spreads across this week's matchups.
     const mean = a => a.reduce((s,v)=>s+v,0)/a.length;
     const std  = a => { const m=mean(a); return Math.sqrt(mean(a.map(v=>(v-m)*(v-m))))||1; };
-    const _implBase = _mtImpliedBaselines();
+    const _implBase = isDstView ? _mtOppImpliedBaselines() : _mtImpliedBaselines();
     Object.entries(teamRows).forEach(([t, x]) => {
-      x.rel = (typeof x.it === 'number' && typeof _implBase[t] === 'number') ? x.it - _implBase[t] : null;
+      // DST reads the OPPONENT's implied total against the opponent-implied
+      // baseline; skill/K read their own against their own. Both are diffs —
+      // the raw number encodes roster quality, not schedule.
+      const v = isDstView ? x.oppIt : x.it;
+      x.rel = (typeof v === 'number' && typeof _implBase[t] === 'number') ? v - _implBase[t] : null;
     });
     const rels = Object.values(teamRows).map(x => x.rel).filter(v => typeof v === 'number');
     const spreads = Object.values(teamRows).map(x => x.sp).filter(v => typeof v === 'number');
@@ -42071,9 +42230,11 @@ Rules:
       let blend = x.defZ;
       if (useTotals && typeof x.rel === 'number') {
         // Invert: implied total ABOVE the team's own season norm = more
-        // expected scoring than usual = EASIER for the player.
-        const zT = -(x.rel - tMu) / tSd;
-        blend = (x.defZ * 3 + zT) / 4;
+        // expected scoring than usual = EASIER for the player. DST is the
+        // exception — a higher opponent implied total is HARDER.
+        const zRaw = (x.rel - tMu) / tSd;
+        const zT = isDstView ? zRaw : -zRaw;
+        blend = (x.defZ * mix.def + zT * mix.tot) / (mix.def + mix.tot);
       }
       if (useSpreads && sprWeight !== 0 && typeof x.sp === 'number') {
         const zS = (x.sp - sMu) / sSd;
@@ -42100,10 +42261,11 @@ Rules:
                              .join('/')
                        : null;
       _mtPlayoffSosWeeklyCache[cacheKey][d.t] = {
-        label, color, rank, n,
+        label, color, rank, n, isDst: isDstView,
         opp: d.g.opp, home: d.g.home,
         gameTotal: d.gt, teamSpread: d.sp, impliedTotal: d.it,
-        clayDefRk: c.defRk || null,
+        oppImplied: d.oppIt,
+        clayDefRk: c.defRk || null, clayOffRk: c.offRk || null,
         posUnits, oppg: d.oppRec.dst.oppg,
       };
     });

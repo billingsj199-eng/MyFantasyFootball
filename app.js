@@ -11225,6 +11225,7 @@ document.addEventListener('click', function(e) {
     const newWins = getGwWins() + (won ? 1 : 0);
     localStorage.setItem(gwStatsKey('games'), newGames.toString());
     localStorage.setItem(gwStatsKey('wins'), newWins.toString());
+    if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
 
     gwResult.style.display = 'block';
     const _gwTeamLabel = gwMode === 'college' ? (gwTarget.team || '') : gwModernTeamAbbr(gwTarget.team);
@@ -13344,6 +13345,7 @@ document.addEventListener('click', function(e) {
       if (fgScoring === 'half') return;
       fgScoring = 'half';
       localStorage.setItem('fg_scoring', 'half');
+      if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
       fgScoringHalfBtn.classList.add('active');
       fgScoringPprBtn.classList.remove('active');
       renderRoster();
@@ -13352,6 +13354,7 @@ document.addEventListener('click', function(e) {
       if (fgScoring === 'ppr') return;
       fgScoring = 'ppr';
       localStorage.setItem('fg_scoring', 'ppr');
+      if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
       fgScoringPprBtn.classList.add('active');
       fgScoringHalfBtn.classList.remove('active');
       renderRoster();
@@ -19043,8 +19046,8 @@ window.fmtHeight = fmtHeight;
 
 // === CLOUD SYNC — Game data across devices ===
 (function(){
-  const SYNC_KEYS_MAX = ['ep_streak','ep_longest_streak','epu_played','epu_correct','epu_streak','epu_best_streak','fg_games_played','fg_highscore','fg_highscore_week','md_games_played','gw_daily_streak','gw_daily_00s_streak','gw_daily_10s_streak','gw_daily_00s150_streak','gw_daily_10s150_streak','lastSavedAt'];
-  const SYNC_KEYS_STR = ['ep_last_win','jb_active_badge','jb_is_founder','gw_daily_last_win','gw_daily_00s_last_win','gw_daily_10s_last_win','gw_daily_00s150_last_win','gw_daily_10s150_last_win','mff_seen_intro','mff_theme'];
+  const SYNC_KEYS_MAX = ['ep_streak','ep_longest_streak','epu_played','epu_correct','epu_streak','epu_best_streak','fg_games_played','fg_highscore','fg_highscore_week','fg_highscore_college_week','fg_highscore_college_season','md_games_played','gw_daily_streak','gw_daily_00s_streak','gw_daily_10s_streak','gw_daily_00s150_streak','gw_daily_10s150_streak','gw_games','gw_wins','gw_col_games','gw_col_wins','gw_00s_games','gw_00s_wins','gw_10s_games','gw_10s_wins','gw_at_games','gw_at_wins','lastSavedAt'];
+  const SYNC_KEYS_STR = ['ep_last_win','jb_active_badge','jb_is_founder','gw_daily_last_win','gw_daily_00s_last_win','gw_daily_10s_last_win','gw_daily_00s150_last_win','gw_daily_10s150_last_win','mff_seen_intro','mff_theme','fg_scoring','mff_sosRange','mt_value_src'];
   const SYNC_KEYS_JSON = ['jb_unlocked_badges'];
   // Object-array merge: dedupe by `ts`, sort by ts desc, cap to most recent N.
   // Used for things like md_draft_history where each entry is a {ts, ...} object.
@@ -41998,6 +42001,7 @@ Rules:
       if (_sosRange) localStorage.setItem('mff_sosRange', JSON.stringify(_sosRange));
       else localStorage.removeItem('mff_sosRange');
     } catch (_) {}
+    if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
   };
 
   // Cache keyed by position + week window. _mtPlayoffSosCache[posKey_wks][team]
@@ -49153,6 +49157,7 @@ Rules:
       btn.classList.add('active');
       _mtValueSrc = src;
       try { localStorage.setItem('mt_value_src', src); } catch(e) {}
+      if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
       _mtRefreshAfterSrcChange();
     });
   });

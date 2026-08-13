@@ -21693,8 +21693,10 @@ window.fmtHeight = fmtHeight;
       // Firestore. Refuse the write (and warn) if any mode shrinks by >50%
       // or drops to zero — that's the "boards-not-loaded" trap that wiped
       // dynasty/bestball tiers on 2026-05-14. User can override via prompt.
+      let _safetyReadOk = false;
       try {
         const existing = await db.collection('rankings').doc('jacks-official').get();
+        _safetyReadOk = true;
         if (existing.exists && existing.data().data) {
           const prev = JSON.parse(existing.data().data);
           const SHRINK_THRESHOLD = 0.5;
@@ -21718,7 +21720,27 @@ window.fmtHeight = fmtHeight;
             console.warn('[Save] Safety check warned, user overrode:', shrunk);
           }
         }
-      } catch(scErr) { console.warn('[Save] Safety check skipped:', scErr); }
+      } catch(scErr) { console.warn('[Save] Safety check read failed:', scErr); }
+      // ── BLIND-SAVE GUARD ────────────────────────────────────────────────
+      // If we could not read the existing cloud doc at all (network down,
+      // Firestore erroring, empty cache), the safety check above proved
+      // nothing — and if this page happened to boot from a stale local
+      // snapshot, writing now clobbers the good board. That exact chain
+      // caused the 2026-08-07 wipe, because this path used to fall through
+      // silently. Require an explicit override instead.
+      if (!_safetyReadOk) {
+        const blindMsg = 'SAFETY CHECK: could not read the existing cloud board, so this save '
+          + 'cannot be verified against what\'s already saved.\n\n'
+          + 'If this page loaded from a stale snapshot (e.g. after a network hiccup), '
+          + 'saving now could overwrite good rankings.\n\nSave anyway?';
+        if (!confirm(blindMsg)) {
+          console.warn('[Save] Aborted: cloud board unreadable, user declined blind save');
+          hideSaving();
+          toast('Save cancelled — could not verify cloud board');
+          return;
+        }
+        console.warn('[Save] Blind save — cloud board unreadable, user overrode');
+      }
 
       // ── LOCAL ROLLING BACKUP (PRE-WRITE) ────────────────────────────────
       // Snapshot to localStorage BEFORE writing — if the write goes wrong,
@@ -21732,12 +21754,34 @@ window.fmtHeight = fmtHeight;
       } catch(bkErr) { console.warn('[Save] Local backup failed (likely quota):', bkErr); }
 
       console.log('[Save] Writing jacks doc (' + JSON.stringify(data).length + ' bytes)...');
+      const _savedAt = new Date().toISOString();
       await db.collection('rankings').doc('jacks-official').set({
         data: JSON.stringify(data),
         updatedBy: currentUser.email || '',
-        updatedAt: new Date().toISOString()
+        updatedAt: _savedAt
       }, {merge: true});
       console.log('[Save] Jacks rankings saved OK');
+
+      // ── POST-SAVE SERVER VERIFY ─────────────────────────────────────────
+      // Read the doc back FROM THE SERVER (bypassing the offline cache) and
+      // confirm our updatedAt actually landed. Offline persistence can make a
+      // rules-rejected or queued write look locally successful — user saves
+      // were silently broken for ~3 months this way (see 2026-08-11 rules
+      // fix). Warn loudly rather than block: the write may legitimately still
+      // be in flight on a flaky connection.
+      try {
+        const ver = await db.collection('rankings').doc('jacks-official').get({ source: 'server' });
+        if (!ver.exists || ver.data().updatedAt !== _savedAt) {
+          console.error('[Save] VERIFY FAILED: server doc updatedAt='
+            + (ver.exists ? ver.data().updatedAt : '(missing)') + ' expected ' + _savedAt);
+          toast('WARNING: save not confirmed on server — check connection and re-save');
+        } else {
+          console.log('[Save] Server verify OK (' + _savedAt + ')');
+        }
+      } catch(vfErr) {
+        console.warn('[Save] Could not verify save on server:', vfErr);
+        toast('WARNING: save not confirmed on server — check connection');
+      }
 
       // ── CLOUD ROLLING BACKUP (POST-WRITE) ───────────────────────────────
       // Mirror to a timestamped doc in rankings_history. Survives if the
@@ -21752,7 +21796,10 @@ window.fmtHeight = fmtHeight;
           source: 'jacks-official'
         });
         console.log('[Save] Cloud backup written: rankings_history/' + historyId);
-      } catch(hbErr) { console.warn('[Save] Cloud backup failed:', hbErr); }
+      } catch(hbErr) {
+        console.warn('[Save] Cloud backup failed:', hbErr);
+        toast('Note: cloud backup failed (board saved OK) — rankings_history write error');
+      }
 
       // ── PUBLIC SLICE (POST-WRITE) ───────────────────────────────────────
       // Refresh the free-tier jacks-public doc from the payload just saved.

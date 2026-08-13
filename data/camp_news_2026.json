@@ -1,6 +1,66 @@
 {
-  "updated": "2026-08-13T02:10:00Z",
+  "updated": "2026-08-13T16:30:30Z",
   "items": [
+    {
+      "player": "Anthony Richardson",
+      "team": "IND",
+      "pos": "QB",
+      "date": "2026-08-13",
+      "headline": "Named starter for tonight's preseason opener vs. Patriots, will play entire 1st half",
+      "take": "Riley Leonard gets the 2nd half as Daniel Jones (Achilles) sits out all preseason -- extended look at Richardson's roster case.",
+      "url": "https://www.colts.com/news/anthony-richardson-sr-to-start-at-qb-for-colts-in-preseason-opener-vs-patriots-riley-leonard-to-start-vs-falcons",
+      "tag": "role"
+    },
+    {
+      "player": "Roman Wilson",
+      "team": "PIT",
+      "pos": "WR",
+      "date": "2026-08-13",
+      "headline": "Updated depth chart has him starting at slot WR tonight with Metcalf and Pittman both out",
+      "take": "Continued 1st-team reps and a punt-return role now project into a real game look -- deep-league/best-ball stash.",
+      "url": "https://steelersdepot.com/2026/08/steelers-release-updated-depth-chart-ahead-of-2026-preseason-opener/",
+      "tag": "riser"
+    },
+    {
+      "player": "Denzel Boston",
+      "team": "CLE",
+      "pos": "WR",
+      "date": "2026-08-12",
+      "headline": "Promoted to Browns' first-team offense, catches back-shoulder TD from Watson in practice",
+      "take": "Camp buzz is translating into real reps alongside Jeudy/Concepcion -- strengthens his rookie fantasy case.",
+      "url": "https://www.clevelandbrowns.com/news/denzel-boston-posts-standout-performance-on-day-12-training-camp-observations",
+      "tag": "riser"
+    },
+    {
+      "player": "J.J. McCarthy",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-08-12",
+      "headline": "Trade rumors (Jets, Panthers, Browns speculated) swirl after losing Vikings' QB1 job to Murray",
+      "take": "Says he wants to stay in Minnesota, but a trade before cutdowns would reset his fantasy outlook with a new team.",
+      "url": "https://thecomeback.com/nfl/jj-mccarthy-wants-to-stay-with-vikings.html",
+      "tag": "faller"
+    },
+    {
+      "player": "Jeremiyah Love",
+      "team": "ARI",
+      "pos": "RB",
+      "date": "2026-08-12",
+      "headline": "Trading 1st-team series with Allgeier and flashing as a receiver, but Hackett downplays the hype",
+      "take": "Real receiving flashes, but OC still frames Conner as the starter -- don't overpay in redraft yet.",
+      "url": "https://www.azcardinals.com/news/no-rookie-mistake-jeremiyah-love-knows-what-he-s-in-camp-to-do",
+      "tag": "role"
+    },
+    {
+      "player": "Jared Wiley",
+      "team": "KC",
+      "pos": "TE",
+      "date": "2026-08-12",
+      "headline": "Strained hamstring Wednesday, already back at practice Thursday",
+      "take": "No lasting concern for the depth piece competing for scraps behind Travis Kelce.",
+      "url": "https://heavy.com/sports/nfl/kansas-city-chiefs/jared-wiley-injury-setback-battling-2026/",
+      "tag": "injury"
+    },
     {
       "player": "Deshaun Watson",
       "team": "CLE",
@@ -1782,26 +1842,6 @@
       "tag": "role"
     },
     {
-      "player": "Bucky Irving",
-      "team": "TB",
-      "pos": "RB",
-      "date": "2026-07-22",
-      "headline": "Full participant for camp start after shoulder surgery; tests pads Aug. 3",
-      "take": "On track to open as Tampa Bay's lead back with no restrictions reported so far.",
-      "url": "https://sports.yahoo.com/articles/bucky-irving-gets-big-shoulder-172314093.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Sam LaPorta",
-      "team": "DET",
-      "pos": "TE",
-      "date": "2026-07-22",
-      "headline": "Fully cleared after herniated disc surgery, expected full-go for camp",
-      "take": "Removes the lingering health question for a top-5 fantasy TE entering a contract year.",
-      "url": "https://www.espn.com/nfl/story/_/id/49420546/source-lions-sam-laporta-back-fully-cleared-training-camp",
-      "tag": "injury"
-    },
-    {
       "player": "Jonathan Taylor",
       "team": "IND",
       "pos": "RB",
@@ -1990,16 +2030,6 @@
       "take": "First healthy camp since back-to-back ACL tears - trending toward a 1-2 punch with Chuba Hubbard.",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-07-23/brooks-hubbard-etienne-take-first-team-reps",
       "tag": "riser"
-    },
-    {
-      "player": "Zach Charbonnet",
-      "team": "SEA",
-      "pos": "RB",
-      "date": "2026-07-22",
-      "headline": "Placed on active/PUP list recovering from torn ACL",
-      "take": "Confirms an early-season absence and clears the runway for rookie Jadarian Price to start.",
-      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-07-22/seahawks-place-zach-charbonnet-on-pup-list",
-      "tag": "injury"
     }
   ]
 }

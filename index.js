@@ -632,3 +632,49 @@ exports.premiumCheck = onRequest(
     }
   }
 );
+
+// === yahooProxy: CORS bridge for the in-site Yahoo league importer ===
+// Yahoo's fantasy endpoints answer anonymously for link-viewable leagues but
+// send no CORS headers for our origin, so the browser can't read them from
+// myfantasyfootball.co. This proxies a strict GET allowlist:
+//   - pub-api settings/teams JSON (exact scoring + lineup slots + team list)
+//   - football.fantasysports.yahoo.com/f1/<id>[/<teamId>] HTML (standings +
+//     rosters — the JSON API has no roster route)
+// Truly private leagues redirect to login.yahoo.com upstream → 403 "private"
+// so the site can steer those users to the Yahoo extension instead.
+// Request: GET ?url=<encoded absolute url>
+const YAHOO_PROXY_ALLOWED = [
+  /^https:\/\/pub-api\.fantasysports\.yahoo\.com\/fantasy\/v3\/(settings|teams)\/nfl\/\d{1,10}\?format=rawjson$/,
+  /^https:\/\/football\.fantasysports\.yahoo\.com\/f1\/\d{1,10}(\/\d{1,4})?$/,
+];
+exports.yahooProxy = onRequest(
+  { cors: ALLOWED_ORIGINS },
+  async (req, res) => {
+    try {
+      const url = String(req.query.url || "");
+      if (!YAHOO_PROXY_ALLOWED.some((re) => re.test(url))) {
+        res.status(400).json({ error: "url not allowed" });
+        return;
+      }
+      const upstream = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MFF-league-import",
+          "Accept": "text/html,application/json",
+        },
+        redirect: "follow",
+      });
+      if (/login\.yahoo\.com/.test(upstream.url)) {
+        res.status(403).json({ error: "private" });
+        return;
+      }
+      const body = await upstream.text();
+      res.status(upstream.status)
+        .set("Content-Type", upstream.headers.get("content-type") || "text/plain")
+        .set("Cache-Control", "private, max-age=60")
+        .send(body);
+    } catch (err) {
+      console.error("yahooProxy error:", err);
+      res.status(502).json({ error: "upstream unreachable" });
+    }
+  }
+);

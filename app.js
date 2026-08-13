@@ -4233,7 +4233,12 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   //   4. Fallback heuristic: season-long PPG × (team_total / slate_avg) ×
   //      (opp_def_factor from Clay's defensive rank, 1 = toughest), clamped.
   //      Kickers ride this path: ttFactor IS the right Vegas signal for a K.
-  window._weeklyAdjustPpg = function(d, basePpg) {
+  // Optional `out` object: on return, out.src names the path that produced
+  // the number ('bye'|'out'|'dst'|'props'|'consensus'|'heuristic'|'base') —
+  // surfaced on the player card's WEEKLY tab so the projection is auditable.
+  window._weeklyAdjustPpg = function(d, basePpg, out) {
+    const _tag = s => { if (out) out.src = s; };
+    _tag('base');
     if (!d || !d.t) return basePpg;
     const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
     const sched = window.getNflScheduleForTeam && window.getNflScheduleForTeam(abbr);
@@ -4241,13 +4246,13 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const wk = window._weeklyActiveWeek || 1;
     const entry = sched[wk];
     if (!entry) return basePpg;
-    if (entry.bye) return 0;
+    if (entry.bye) { _tag('bye'); return 0; }
     // Injury gate (in-season only — offseason tags are stale)
     let injMult = 1;
     const _offseason = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
     if (!_offseason && d.inj) {
       const t = String(d.inj).toLowerCase();
-      if (/\bir\b|\bpup\b|suspend|\bout\b|out for season|season.?ending/.test(t)) return 0;
+      if (/\bir\b|\bpup\b|suspend|\bout\b|out for season|season.?ending/.test(t)) { _tag('out'); return 0; }
       if (/doubtful/.test(t)) injMult = 0.5;
     }
     // In-season decay of preseason projections: shrink the base toward the
@@ -4273,6 +4278,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       if (dv == null) return basePpg;
       const oppTT = window._weeklyOppTeamTotalFor(d.t);
       if (oppTT != null) dv += (21.5 - oppTT) * 0.35;
+      _tag('dst');
       return Math.round(Math.max(1, dv * injMult) * 10) / 10;
     }
     // Props-first: score the posted weekly lines directly. Requires a Clay
@@ -4306,7 +4312,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       }
       const pts = pick('py') / 25 - pick('int') * 2 + pick('ptd') * 4
         + pick('ry') / 10 + pick('rcy') / 10 + pick('rec') * recMult + rrtd * 6;
-      if (isFinite(pts)) return Math.round(pts * injMult * 10) / 10;
+      if (isFinite(pts)) { _tag('props'); return Math.round(pts * injMult * 10) / 10; }
     }
     // Consensus weekly projection (data/weekly_projections.js, Sleeper —
     // Phase J of the daily job). Real per-week numbers for the players the
@@ -4330,6 +4336,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       if (row) {
         const v = rankingScoringFmt === 'ppr' ? row.p : rankingScoringFmt === 'std' ? row.s : row.h;
         if (typeof v === 'number' && isFinite(v)) {
+          _tag('consensus');
           return Math.round(v * injMult * 10) / 10;
         }
       }
@@ -4365,6 +4372,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       oppFactor = 1 + (cg.defRk - 16.5) * 0.0075;
       oppFactor = Math.max(0.85, Math.min(1.15, oppFactor));
     }
+    _tag('heuristic');
     return Math.round(basePpg * ttFactor * oppFactor * injMult * 10) / 10;
   };
 
@@ -6676,6 +6684,111 @@ function _campNewsSectionHtml(d) {
 // Weekly prop lines section for the LINES tab: latest week in
 // BETTING_2026.weeklyProps that has this player. Books: UD/PP (DK reserved).
 // Returns '' when no weekly lines exist so callers can append unconditionally.
+// === WEEKLY card tab ========================================================
+// The active week's matchup + projection story for one player: Vegas context,
+// the weekly PROJ with its SOURCE labeled (props / consensus / heuristic —
+// the rankings table shows the number, this shows where it came from),
+// opponent defense vs this position, and recent 2026 games once the season
+// starts. Full prop-line detail stays on the LINES tab.
+function buildWeeklyCardView(d) {
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const wk = window._weeklyActiveWeek || 1;
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
+  const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+  const entry = sched ? sched[wk] : null;
+  const title = (label) => '<div class="card-section-title">Week ' + wk + ' ' + label + '</div>';
+  if (!entry) {
+    return '<div class="card-section">' + title('Matchup')
+      + '<div style="text-align:center;padding:1.4rem 1rem;color:var(--text2);font-size:.75rem">No Week ' + wk + ' schedule data for ' + esc(d.t) + '.</div></div>';
+  }
+  if (entry.bye) {
+    return '<div class="card-section">' + title('Matchup')
+      + '<div style="text-align:center;padding:1.4rem 1rem;color:var(--text2);font-size:.8rem"><b style="color:var(--accent)">BYE WEEK</b> — no game.</div></div>';
+  }
+  const fmt1 = v => (typeof v === 'number') ? (Math.round(v * 10) / 10).toFixed(1) : '—';
+  const box = (lbl, val, cls, tip) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '">' + val + '</div></div>';
+
+  // One call carries the whole matchup: Vegas numbers + position-weighted
+  // opponent read + this week's E/M/H rating across the league.
+  const r = (typeof window._mtGetPlayoffSosWeekly === 'function') ? window._mtGetPlayoffSosWeekly(d.t, d.s, wk) : null;
+  const tt = (typeof window._weeklyTeamTotalFor === 'function') ? window._weeklyTeamTotalFor(d.t) : null;
+  const oppTT = (typeof window._weeklyOppTeamTotalFor === 'function') ? window._weeklyOppTeamTotalFor(d.t) : null;
+  const sp = r && typeof r.teamSpread === 'number' ? r.teamSpread : null;
+  const ou = r && typeof r.gameTotal === 'number' ? r.gameTotal : (tt != null && oppTT != null ? tt + oppTT : null);
+  const isDst = d.s === 'DST';
+  let html = '<div class="card-section">' + title('Matchup');
+  html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
+  html += box('OPP', (entry.home ? 'vs ' : '@ ') + esc(entry.opp), 'accent');
+  html += box('SPREAD', sp != null ? (sp > 0 ? '+' : '') + sp : '—', sp != null && sp < 0 ? 'green' : '');
+  html += isDst
+    ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)')
+    : box('TEAM TOTAL', tt != null ? fmt1(tt) : '—', '', 'This team\'s implied points: (game total − spread) / 2');
+  html += box('O/U', ou != null ? fmt1(ou) : '—', '');
+  html += '</div>';
+  if (r) {
+    html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">';
+    html += box('WK ' + wk + ' MATCHUP', '<span style="color:' + r.color + '">' + r.label + '</span> <span style="font-size:.62rem;color:var(--text2)">#' + r.rank + '/' + r.n + '</span>', '',
+      'Position-weighted matchup rating for this week (1 = easiest schedule slot league-wide)');
+    html += box(isDst ? 'OPP OFFENSE' : 'OPP DEFENSE',
+      isDst ? (r.clayOffRk ? 'Clay #' + r.clayOffRk : '—')
+            : ((r.posUnits ? '' : (r.clayDefRk ? 'Clay #' + r.clayDefRk : '—')) + (r.posUnits ? '<span style="font-size:.68rem">' + esc(r.posUnits) + '</span>' : '')),
+      '', isDst ? 'Opponent\'s Clay offense rank — a D/ST\'s matchup is the offense it must stop'
+                : (r.posUnits ? 'Opponent\'s Clay unit grades weighted for ' + d.s + ' scoring' : 'Opponent\'s overall Clay defense rank'));
+    html += '</div>';
+    if (typeof r.oppg === 'number' && !isDst) {
+      html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">Opponent allows ' + fmt1(r.oppg) + ' PA/gm.</div>';
+    }
+  }
+  html += '</div>';
+
+  // Projection + provenance
+  const base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+  const out = {};
+  const proj = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, base, out) : null;
+  const SRC = {
+    props:     { lbl: 'Sportsbook props', tip: 'Scored directly from posted weekly prop lines (books price matchup + injuries); unposted stats filled from Clay per-game. Full board on the LINES tab.' },
+    consensus: { lbl: 'Sleeper consensus', tip: 'Sleeper\'s weekly projection for this exact week — used when no prop board is posted.' },
+    heuristic: { lbl: 'Season-based estimate', tip: 'Season projection scaled by team implied total and opponent defense rank — used when neither props nor a consensus projection exist.' },
+    dst:       { lbl: 'D/ST model', tip: 'Season baseline adjusted by the opponent\'s implied total.' },
+    out:       { lbl: 'Ruled out', tip: 'Injury status zeroes this week.' },
+    bye:       { lbl: 'Bye', tip: '' },
+    base:      { lbl: 'Season projection', tip: 'No weekly signal available — season number shown unadjusted.' },
+  };
+  const src = SRC[out.src] || SRC.base;
+  const cw = (window.WEEKLY_PROJ && window.WEEKLY_PROJ.week === wk && window.WEEKLY_PROJ.players) ? window.WEEKLY_PROJ.players[d.n] : null;
+  const cwV = cw ? (rankingScoringFmt === 'ppr' ? cw.p : rankingScoringFmt === 'std' ? cw.s : cw.h) : null;
+  html += '<div class="card-section"><div class="card-section-title">Weekly Projection '
+    + '<span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
+  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr)">';
+  html += box('WK ' + wk + ' PROJ', proj != null ? '<span class="accent">' + fmt1(proj) + '</span>' : '—', '', 'The number the WEEKLY rankings PROJ column shows');
+  html += box('SLEEPER', cwV != null ? fmt1(cwV) : '—', '', 'Sleeper\'s weekly consensus projection for reference');
+  html += box('SEASON /GM', base != null ? fmt1(base) : '—', '', 'Season-long projected PPG for reference');
+  html += '</div>';
+  html += '<div style="margin-top:7px;font-size:.62rem;color:var(--text2)">Source: <span style="color:var(--accent);cursor:help" title="' + esc(src.tip) + '">' + src.lbl + '</span>'
+    + (out.src === 'props' ? ' · full prop board on the <b>LINES</b> tab' : '') + '</div>';
+  html += '</div>';
+
+  // Recent games (in-season only — WEEKLY_STATS gets 2026 rows from the
+  // Tuesday stats pull; empty preseason so the section self-hides).
+  try {
+    const wd = (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS) ? WEEKLY_STATS[d.n] : null;
+    const rows = wd && wd.seasons && wd.seasons['2026'];
+    if (rows && rows.length) {
+      const recAdj = rankingScoringFmt === 'ppr' ? 0.5 : rankingScoringFmt === 'std' ? -0.5 : 0;
+      const last5 = rows.slice(-5).reverse();
+      html += '<div class="card-section"><div class="card-section-title">Recent Games <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· 2026</span></div>';
+      html += '<div class="card-rank-row" style="grid-template-columns:repeat(' + last5.length + ',1fr)">';
+      last5.forEach(g => {
+        const pts = (g.fpts || 0) + (g.rec || 0) * recAdj;
+        html += box('W' + g.wk + (g.opp ? ' ' + esc(String(g.opp).replace(/^vs\s*/i, '')) : ''), fmt1(pts), pts >= 15 ? 'green' : '');
+      });
+      html += '</div></div>';
+    }
+  } catch (_e) {}
+
+  return html;
+}
+
 function _buildWeeklyLinesSection(d) {
   const wp = (window.BETTING_2026 && window.BETTING_2026.weeklyProps) || {};
   const wks = Object.keys(wp).filter(w => wp[w] && wp[w][d.n]).map(Number).sort((a, b) => b - a);
@@ -7466,6 +7579,7 @@ function openPlayerCard(d, ctxMode) {
         <button class="card-view-btn" data-cardview="career">CAREER</button>` : ''}
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
         <button class="card-view-btn" data-cardview="comps">COMPS</button>
+        ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? `<button class="card-view-btn" data-cardview="weekly">WEEKLY</button>` : ''}
         ${(!d._isDevy && !_is2026 && !d._retired) ? `<button class="card-view-btn" data-cardview="lines">LINES</button>` : ''}
         <button class="card-view-btn" data-cardview="info">INFO</button>
       </div>` : ''}
@@ -8055,6 +8169,9 @@ function openPlayerCard(d, ctxMode) {
         </div>
       </div>` : ''}
       </div>
+      <div class="card-prospect-view" id="cardWeeklyView" style="display:none">
+      ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? buildWeeklyCardView(d) : ''}
+      </div>
       <div class="card-prospect-view" id="cardLinesView" style="display:none">
       ${buildLinesView(d)}
       </div>
@@ -8163,6 +8280,7 @@ function openPlayerCard(d, ctxMode) {
         const cv = document.getElementById('cardCompsView');
         const iv = document.getElementById('cardInfoView');
         const lv = document.getElementById('cardLinesView');
+        const wv = document.getElementById('cardWeeklyView');
         const crv = document.getElementById('cardCareerView');
         const lgv = document.getElementById('cardLogsView');
         fv.classList.add('hidden');
@@ -8170,6 +8288,7 @@ function openPlayerCard(d, ctxMode) {
         if (cv) cv.style.display = 'none';
         if (iv) iv.style.display = 'none';
         if (lv) lv.style.display = 'none';
+        if (wv) wv.style.display = 'none';
         if (crv) crv.style.display = 'none';
         if (lgv) lgv.style.display = 'none';
         if (view === 'prospect') {
@@ -8180,6 +8299,8 @@ function openPlayerCard(d, ctxMode) {
           if (iv) iv.style.display = 'block';
         } else if (view === 'lines') {
           if (lv) lv.style.display = 'block';
+        } else if (view === 'weekly') {
+          if (wv) wv.style.display = 'block';
         } else if (view === 'career') {
           if (crv) crv.style.display = 'block';
         } else if (view === 'logs') {
@@ -8189,6 +8310,12 @@ function openPlayerCard(d, ctxMode) {
         }
       });
     });
+    // WEEKLY format active → the weekly matchup view is what the click was
+    // about; open the card on that tab (falls back to FANTASY if hidden).
+    if (currentMode === 'weekly') {
+      const _wkBtn = _cvToggle.querySelector('.card-view-btn[data-cardview="weekly"]');
+      if (_wkBtn) _wkBtn.click();
+    }
   }
 
   // College career log scoring toggle + SEASON/WEEKLY mode toggle

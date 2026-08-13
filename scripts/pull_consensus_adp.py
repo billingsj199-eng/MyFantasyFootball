@@ -619,6 +619,25 @@ def pull_injuries():
     return after != before
 
 
+def pull_weekly_projections():
+    """Phase J — run pull_weekly_projections.py (Sleeper weekly consensus ->
+    data/weekly_projections.js). Returns True if the file changed. Non-fatal:
+    _weeklyAdjustPpg only uses the feed when its week matches the active
+    week, so a stale file quietly yields to the heuristic."""
+    out_path = os.path.join(ROOT, 'data', 'weekly_projections.js')
+    before = open(out_path, 'rb').read() if os.path.exists(out_path) else b''
+    res = subprocess.run(
+        [sys.executable, os.path.join(ROOT, 'scripts', 'pull_weekly_projections.py')],
+        cwd=ROOT, capture_output=True, text=True)
+    print(res.stdout)
+    if res.returncode != 0:
+        print(res.stderr)
+        print('  !! weekly projections pull failed — previous file kept')
+        return False
+    after = open(out_path, 'rb').read() if os.path.exists(out_path) else b''
+    return after != before
+
+
 def run_inject():
     """Run inject_rankings.py; return True if data/d.js actually changed
     (a quiet morning re-injects identical values -> no bump, no commit)."""
@@ -688,14 +707,20 @@ def main():
     if inj_changed:
         bump_version(r'data/injury_updates\.js')
 
+    print('\nPhase J — Sleeper weekly projections:')
+    wp_changed = pull_weekly_projections()
+    if wp_changed:
+        bump_version(r'data/weekly_projections\.js')
+
     total = n_fp + n_espn + n_cbs + n_yah + n_ud
     print(f'\nCSV sources refreshed: {total}/9 (FP {n_fp}/4, ESPN {n_espn}/1, '
           f'CBS {n_cbs}/1, Yahoo {n_yah}/1, UD {n_ud}/2) '
           f'+ KTC {"updated" if ktc_changed else "unchanged/skipped"}'
           f' + Clay {"updated" if clay_changed else "unchanged/skipped"}'
           f' + rosters {"updated" if roster_changed else "unchanged/skipped"}'
-          f' + injuries {"updated" if inj_changed else "unchanged/skipped"}')
-    if total == 0 and not ktc_changed and not roster_changed and not inj_changed:
+          f' + injuries {"updated" if inj_changed else "unchanged/skipped"}'
+          f' + weeklyproj {"updated" if wp_changed else "unchanged/skipped"}')
+    if total == 0 and not ktc_changed and not roster_changed and not inj_changed and not wp_changed:
         print('Nothing refreshed — aborting before inject.')
         sys.exit(1)
 

@@ -4308,6 +4308,32 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
         + pick('ry') / 10 + pick('rcy') / 10 + pick('rec') * recMult + rrtd * 6;
       if (isFinite(pts)) return Math.round(pts * injMult * 10) / 10;
     }
+    // Consensus weekly projection (data/weekly_projections.js, Sleeper —
+    // Phase J of the daily job). Real per-week numbers for the players the
+    // books don't post boards for; replaces the position-blind heuristic
+    // below. Books stay primary (props path above, Jack's rule). Only valid
+    // for the week the feed was pulled for — other weeks (admin previewing
+    // ahead) fall through to the heuristic. No decay/matchup factors here:
+    // the projection source already prices usage and opponent.
+    const _cwp = window.WEEKLY_PROJ;
+    if (_cwp && _cwp.week === wk && _cwp.players) {
+      let row = _cwp.players[d.n];
+      if (!row && typeof _campNewsNorm === 'function') {
+        let idx = window._weeklyProjIdx;
+        if (!idx || idx._src !== _cwp) {
+          idx = { _src: _cwp };
+          Object.keys(_cwp.players).forEach(k => { idx[_campNewsNorm(k)] = _cwp.players[k]; });
+          window._weeklyProjIdx = idx;
+        }
+        row = idx[_campNewsNorm(d.n)];
+      }
+      if (row) {
+        const v = rankingScoringFmt === 'ppr' ? row.p : rankingScoringFmt === 'std' ? row.s : row.h;
+        if (typeof v === 'number' && isFinite(v)) {
+          return Math.round(v * injMult * 10) / 10;
+        }
+      }
+    }
     if (basePpg == null || !isFinite(basePpg)) return basePpg;
     // Team-total factor, normalized to THIS week's slate average so the
     // factor redistributes around 1.0 instead of inflating every player in

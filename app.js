@@ -9221,7 +9221,12 @@ function switchPage(page) {
   const ADMIN_ONLY_PAGES = ['backtest', 'trivia', 'research'];
   if (ADMIN_ONLY_PAGES.includes(page)) {
     const admin = typeof window.isAdmin === 'function' && window.isAdmin();
-    if (!admin) { page = 'rankings'; } // 'home' isn't in pageMap — it renders a blank page
+    // ?embed=trivia is a deliberate PUBLIC share surface (iframe embeds of
+    // catalog boards — trivia_catalog is public-read). The builder page stays
+    // admin-only; embed mode strips the chrome and the admin affordances are
+    // already gated inside the trivia code itself.
+    const triviaEmbed = page === 'trivia' && document.body.classList.contains('mff-embed');
+    if (!admin && !triviaEmbed) { page = 'rankings'; } // 'home' isn't in pageMap — it renders a blank page
   }
   Object.values(pageMap).forEach(id => {
     const el = document.getElementById(id);

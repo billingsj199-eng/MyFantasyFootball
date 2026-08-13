@@ -920,12 +920,16 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .sidebar::-webkit-scrollbar{display:none}
   .nav-spacer{display:none}
   .sidebar-logo{display:none}
-  .nav-btn{width:auto;height:auto;min-width:48px;min-height:44px;padding:4px 6px;border-radius:6px;flex-shrink:0}
+  /* flex:1 lets the visible tabs share the bar evenly — 8 public tabs (Strategy
+     added 2026-08-13) no longer fit at the old fixed 48px min. 40px floor keeps
+     a 9th (admin Research) usable; overflow-x:auto on .sidebar stays as the
+     safety valve beyond that. */
+  .nav-btn{width:auto;height:auto;flex:1 1 0;min-width:40px;min-height:44px;padding:4px 6px;border-radius:6px;flex-shrink:1}
   .nav-btn svg{width:22px;height:22px}
   /* On mobile, allow multi-word labels ("Trade Calc", "My Teams", "Mock Draft") to wrap
      back to two lines so the bottom tab bar fits in viewport without horizontal scroll.
      Desktop sets white-space:nowrap; this overrides for the narrow-screen layout. */
-  .nav-btn .nav-label{font-size:.52rem;margin-top:1px;white-space:normal;line-height:1.05;max-width:44px;text-align:center;word-spacing:100vw}
+  .nav-btn .nav-label{font-size:.5rem;margin-top:1px;white-space:normal;line-height:1.05;max-width:42px;text-align:center;word-spacing:100vw}
   .nav-btn{padding:4px 3px}
 
   /* My Teams import grid: long placeholders (e.g. Sleeper "League ID (e.g. 1312075626064134144)")

@@ -65,7 +65,7 @@ If picking the next thing to do, in order:
 4. ~~**Fix the injury/roster Firestore feed**~~ — DONE 2026-08-13 (see Shipped section: static-file rebuild, daily Phase I, staleness guard).
 5. **Weekly format completion → public launch by Week 1** — see "Weekly format expansion" below. Weekly props + board sync landed 2026-07-21/22; remaining: true weekly projections (consensus blend), weekly player-card tab, K/DST support, un-gate `_weeklyAdminCheck`.
 6. ~~**Phone-test mobile responsiveness**~~ — emulated 375px sweep DONE 2026-08-13 (nav-tab overflow fixed; all pages clean). Real-iOS thumb-through by Jack still recommended.
-7. **ADP movement tracking** _(new idea 2026-07-22)_ — the betting-lines pull already fetches live UD ADP daily; snapshot it to a dated file each run and ship a "risers/fallers this week" view. Most shareable content type of draft season; pairs with the "smart alerts" future idea.
+7. ~~**ADP movement tracking**~~ — SHIPPED 2026-08-13 (4a1a909): ADP MOVERS card on the rankings page, top-6 BBM risers/fallers vs the snapshot ~7 days back, computed client-side from `data/ud_adp_history.json` (Phase F snapshots, accumulating since 2026-07-26). Rows open the player card; collapsible; hidden gracefully with <2 snapshot days. Future: share button / OG image (pairs with "smart alerts").
 8. ~~**ESPN league import**~~ — SHIPPED 2026-08-10 (direct in-site sync for public leagues + extension for private). Yahoo direct import followed 2026-08-13.
 
 Still open, lower urgency: per-year top-25 trivia sweep (452-slug seed list); light-mode inline-color audit (only when a new broken element is spotted).

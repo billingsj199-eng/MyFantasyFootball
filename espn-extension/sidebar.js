@@ -2811,11 +2811,15 @@
 
   // ---------- on-page draft-row decoration (DRAFT mode) ----------
   // The draft room's own player list gets the Sleeper-helper treatment:
-  // playoff-matchup pills (W15-17) beside every matched name, plus a
-  // whole-row wash — BLUE = stacks with someone you drafted, GREEN = ESPN's
-  // own list underrates him vs Jack's board (target), RED = ESPN overrates
-  // him (trap). Light tints: ESPN is a white page, the sidebar's dark pill
+  // a value/stack chip beside every matched name, plus a whole-row wash —
+  // BLUE = stacks with someone you drafted, GREEN = ESPN's own list
+  // underrates him vs Jack's board (target), RED = ESPN overrates him
+  // (trap). Light tints: ESPN is a white page, the sidebar's dark pill
   // palette reads as mud there (same reason OPP_TINT exists).
+  // NOTE 2026-08-12: the W15-17 playoff chips were REMOVED from the room's
+  // list per Jack — three matchup chips never fit the narrow player cell,
+  // and docking them after the QUEUE button didn't hold up in the real room.
+  // Playoff matchups still show on the sidebar's rec cards and profiles.
   const ROW_TINT = {
     stack: ['rgba(59, 130, 246, 0.16)', '#3b82f6'],
     good:  ['rgba(34, 197, 94, 0.16)',  '#22a04a'],
@@ -2884,7 +2888,7 @@
       const existing = host.nextElementSibling && host.nextElementSibling.classList &&
         host.nextElementSibling.classList.contains('mff-draft-pills')
         ? host.nextElementSibling : null;
-      const row = el.closest('tr');
+      const row = el.closest('tr') || el.closest('.prow'); // .prow = mock_draft harness rows
       if (!p || isDrafted(p)) {
         if (existing) existing.remove();
         if (row && !seenRows.has(row)) tintDraftRow(row, null);
@@ -2895,23 +2899,14 @@
         seenRows.add(row);
         tintDraftRow(row, g);
       }
-      // Pills beside the name: value gap first (it explains the wash), then
-      // the W15-17 playoff matchups — same data the Sleeper helper paints.
+      // Only the value gap (it explains the wash) or the stack star goes
+      // beside the name — small enough to never crowd it out.
       let inner = '';
       if (g && g.v) {
         const good = g.cls === 'good';
         inner += `<span style="background:${good ? '#e2f3e6' : '#fbe7e7'};color:${good ? '#1d7a34' : '#b33636'};border-radius:2px;padding:0 2px;font-size:7px;font-weight:800;line-height:10px;white-space:nowrap" title="${esc(g.tip)}">${good ? '+' : ''}${g.v.diff} v ESPN</span>`;
       } else if (g && g.cls === 'stack') {
         inner += `<span style="background:#e3ecfb;color:#2255c4;border-radius:2px;padding:0 2px;font-size:7px;font-weight:800;line-height:10px;white-space:nowrap" title="${esc(g.tip)}">★ STACK</span>`;
-      }
-      const sosData = window.MFF_PLAYOFF_SOS;
-      const sos = sosData && p.sTm && sosData[p.sTm] && sosData[p.sTm][p.s];
-      if (sos) {
-        for (const w of ['15', '16', '17']) {
-          const m = sos[w];
-          if (!m) continue;
-          inner += `<span style="background:${esc(m.color)};color:#0e0f12;border-radius:2px;padding:0 2px;font-size:7px;font-weight:700;line-height:10px;white-space:nowrap" title="Week ${w} playoff matchup · SOS rank ${m.rank}/32 for ${p.s} · implied ${m.impliedTotal} pts">${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
-        }
       }
       if (existing && existing.dataset.mffSig === inner) { liveSpans.add(existing); continue; }
       if (existing) existing.remove();

@@ -21,7 +21,8 @@ FIRESTORE_URL = (
 )
 KEEP_KEYS = ("n", "s", "t", "age", "bye", "p25",
              "fpR", "fpSf", "fpDy", "fpDsf", "slR", "slSf", "slDy", "slDsf",
-             "a", "sfa", "da", "sa")  # mode-aware ADPs: redraft/superflex/dynasty/dynastysf
+             "a", "sfa", "da", "sa",  # mode-aware ADPs: redraft/superflex/dynasty/dynastysf
+             "espnAdp", "yahooAdp")  # platform editorial ranks — RULES-tab value targets
 POSITIONS = {"QB", "RB", "WR", "TE", "K", "DST"}
 SLEEPER_POSITIONS = {"QB", "RB", "WR", "TE", "K"}  # DST maps by team abbr instead
 

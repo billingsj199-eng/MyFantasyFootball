@@ -55,9 +55,15 @@
     if (!a) return null;
     var name = a.textContent.trim();
     if (!name) return null;
-    var span = box.querySelector("span");
-    var meta = span ? span.textContent.trim() : "";
-    var mm = meta.match(/([A-Za-z]{2,3})\s*-\s*(QB|WR|RB|TE|K|DEF|D)\b/i);
+    // The "Buf - RB" meta span isn't always the first span in the cell —
+    // some page skins (e.g. logged-out league views) lead with a
+    // player-status/notes span — so scan for the first span whose text
+    // looks like "team - pos".
+    var spans = box.querySelectorAll("span");
+    var mm = null;
+    for (var si = 0; si < spans.length && !mm; si++) {
+      mm = spans[si].textContent.trim().match(/^([A-Za-z]{2,3})\s*-\s*(QB|WR|RB|TE|K|DEF|D)\b/i);
+    }
     var team = mm ? fixAbbr(mm[1]) : "";
     var pos = mm ? mm[2].toUpperCase() : "";
     if (pos === "DEF" || pos === "D") {

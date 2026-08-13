@@ -1,4 +1,5 @@
-/* MFF Yahoo Helper — draft-mode.js (v0.5.0)
+/* MFF Yahoo Helper — draft-mode.js (v0.9.0: RULES tab — live draft-rules
+ * checklist + Yahoo-vs-Jack value targets/traps)
  *
  * The Yahoo DRAFT assistant. Standalone content script — the season sidebar
  * (sidebar.js) is untouched; this activates only in the draft client
@@ -1281,14 +1282,149 @@
         availablePlayers().filter((p) => p.sTm === tm && (p.s === 'WR' || p.s === 'TE'))
       ).slice(0, 3);
       return '<div style="margin-bottom:6px">' +
-        '<div style="color:#6dd0a8;font-weight:700;font-size:11px">' + esc(qb.name) + ' <span style="color:#7a6f99">(' + esc(tm) + ')</span></div>' +
-        have.map((r) => '<div style="' + CSS.row + '"><span style="color:#7a6f99">' + esc(r.pos) + '</span><span style="flex:1;color:#6dd0a8">' + esc(r.name) + ' ✓</span></div>').join('') +
+        '<div style="color:#58a7ff;font-weight:700;font-size:11px">' + esc(qb.name) + ' <span style="color:#7a6f99">(' + esc(tm) + ')</span></div>' +
+        have.map((r) => '<div style="' + CSS.row + '"><span style="color:#7a6f99">' + esc(r.pos) + '</span><span style="flex:1;color:#58a7ff">' + esc(r.name) + ' ✓</span></div>').join('') +
         (targets.map((t) => '<div style="' + CSS.row + '"><span style="color:#7a6f99">' + esc(t.s) + '</span><span style="flex:1">' + esc(t.n) + '</span>' +
           '<span style="color:#a89cc8">' + (t.pPg != null ? t.pPg + 'ppg' : '—') + '</span></div>').join('') ||
           '<div style="color:#544a70;padding:2px 6px">No pass-catchers left on ' + esc(tm) + '</div>') +
         '</div>';
     }).join('');
     return '<div style="margin-top:8px"><div style="color:#8d81ad;font-size:10px;font-weight:700;letter-spacing:.6px;margin-bottom:3px">STACKS</div>' + inner + '</div>';
+  }
+
+  // ---------- RULES tab: draft-rules checklist + platform value board ----------
+  // Jack's redraft doctrine, checked LIVE against the roster: each rule is
+  // pending (○) until its window closes, then locks ✓/✗. Rounds come from
+  // the pick's real overall slot (manual adds fall back to pick order).
+  const PLATFORM_RANK = { field: 'yahooAdp', label: 'Yahoo' };
+  function draftRules() {
+    const teams = st.slots.teams || 10;
+    const rounds = st.slots.rounds || 15;
+    const sf = st.mode.endsWith('_sf');
+    const picks = st.myRoster.slice().sort((a, b) => (a.pickNo || 1e9) - (b.pickNo || 1e9));
+    const rdOf = (r, i) => (r.pickNo ? Math.ceil(r.pickNo / teams) : i + 1);
+    const made = picks.length; // my rounds completed (snake = one pick a round)
+    const cntThru = (pos, thruRd) =>
+      picks.filter((r, i) => r.pos === pos && rdOf(r, i) <= thruRd).length;
+    const rules = [];
+    const add = (label, status, detail, tip) => rules.push({ label, status, detail, tip });
+
+    if (!sf) {
+      const earlyQB = picks.map((r, i) => ({ r, rd: rdOf(r, i) }))
+        .find((x) => x.r.pos === 'QB' && x.rd <= 5);
+      add('Fade early-round QB',
+        earlyQB ? 'fail' : (made >= 5 ? 'pass' : 'track'),
+        earlyQB ? 'QB taken Rd ' + earlyQB.rd : (made >= 5 ? 'No QB in Rds 1-5' : 'On track — no QB yet'),
+        'QB is deep — mid-round QBs score nearly as much as the early ones. Best value lands Rd 6+.');
+    } else {
+      const q8 = cntThru('QB', 8);
+      add('2 QBs through 8 rounds (SF)',
+        q8 >= 2 ? 'pass' : (made >= 8 ? 'fail' : 'track'),
+        q8 + '/2 QBs' + (made > 0 && made < 8 && q8 < 2 ? ' · thru Rd ' + made : ''),
+        'Superflex flips the QB rule: QB is the scarcest asset — leave Rd 8 with two starters.');
+    }
+
+    const rb3 = cntThru('RB', 3);
+    add('2 RBs through 3 rounds',
+      rb3 >= 2 ? 'pass' : (made >= 3 ? 'fail' : 'track'),
+      rb3 + '/2 RBs' + (made > 0 && made < 3 && rb3 < 2 ? ' · thru Rd ' + made : ''),
+      'RB value falls off a cliff after Rd 2 — leave Rd 3 with two you trust.');
+
+    const wr8 = cntThru('WR', 8);
+    add('4 WRs through 8 rounds',
+      wr8 >= 4 ? 'pass' : (made >= 8 ? 'fail' : 'track'),
+      wr8 + '/4 WRs' + (made > 0 && made < 8 && wr8 < 4 ? ' · thru Rd ' + made : ''),
+      'WR volume wins leagues — four by Rd 8 keeps the flex strong and survives busts.');
+
+    const dbl = picks.map((r, i) => ({ r, rd: rdOf(r, i) }))
+      .filter((x) => x.rd < 10 && (x.r.pos === 'TE' || (!sf && x.r.pos === 'QB')))
+      .reduce((m, x) => { m[x.r.pos] = (m[x.r.pos] || 0) + 1; return m; }, {});
+    const dblPos = Object.keys(dbl).find((pos) => dbl[pos] >= 2);
+    add(sf ? 'One TE is enough early' : 'One QB / one TE is enough',
+      dblPos ? 'fail' : (made >= 9 ? 'pass' : 'track'),
+      dblPos ? '2nd ' + dblPos + ' before Rd 10' : 'No doubles before Rd 10',
+      'Your starter closes the position — a backup ' + (sf ? 'TE' : 'QB or TE') +
+      ' before Rd 10 costs a WR/RB pick that actually plays.');
+
+    const lateRd = rounds - 2;
+    const earlyKD = picks.map((r, i) => ({ r, rd: rdOf(r, i) }))
+      .find((x) => (x.r.pos === 'K' || x.r.pos === 'DST') && x.rd <= lateRd);
+    add('K + DST in the last 2 rounds',
+      earlyKD ? 'fail' : (made >= lateRd ? 'pass' : 'track'),
+      earlyKD ? earlyKD.r.pos + ' taken Rd ' + earlyKD.rd : 'None before Rd ' + (lateRd + 1),
+      'K and D/ST barely repeat year to year — stream them; never spend a real pick.');
+
+    return rules;
+  }
+  // Platform value board: where Yahoo's own list (O-Rank) disagrees with
+  // Jack's board the most. Positive gap = Yahoo underrates him (he'll come
+  // cheap in this room — TARGET); negative = the room will overpay (TRAP).
+  // Redraft modes only: the editorial list is a redraft 1QB board.
+  function platformValueOf(p) {
+    if (st.mode.indexOf('re_') !== 0) return null;
+    if (p.s === 'K' || p.s === 'DST') return null; // K/DST rank scales don't compare
+    const plat = p[PLATFORM_RANK.field], jack = p.rank;
+    if (plat == null || jack == null) return null;
+    const diff = plat - jack;
+    const thresh = Math.max(8, Math.round(0.25 * Math.min(plat, jack)));
+    if (diff >= thresh) return { verdict: 'good', diff, plat, jack };
+    if (-diff >= thresh) return { verdict: 'bad', diff, plat, jack };
+    return null;
+  }
+  function platformValueBoard() {
+    // Only names inside the draftable range matter — a +200 gap on a
+    // late-bench player is trivia, not a draft plan.
+    const maxJack = (st.slots.teams || 10) * (st.slots.rounds || 15);
+    const rows = [];
+    for (const p of availablePlayers()) {
+      const v = platformValueOf(p);
+      if (v && v.jack <= maxJack) rows.push({ p, v });
+    }
+    return {
+      targets: rows.filter((r) => r.v.verdict === 'good')
+        .sort((a, b) => b.v.diff - a.v.diff).slice(0, 8),
+      fades: rows.filter((r) => r.v.verdict === 'bad')
+        .sort((a, b) => a.v.diff - b.v.diff).slice(0, 5),
+    };
+  }
+  function valueRowHTML(row, i) {
+    const p = row.p, v = row.v;
+    const good = v.verdict === 'good';
+    const col = good ? '#4ade80' : '#f87171';
+    return '<div style="' + CSS.row + '">' +
+      '<span style="color:' + col + ';font-weight:800;min-width:14px">' + (i + 1) + '</span>' +
+      '<span style="flex:1"><b>' + esc(p.n) + '</b> <span style="color:' + (POS_COLORS[p.s] || '#a89cc8') + '">' + p.s + '</span>' +
+      ' <span style="color:#7a6f99">' + esc(p.sTm || '') + '</span></span>' +
+      '<span style="color:#a89cc8;font-size:10px">Y! #' + v.plat + ' · Jack #' + v.jack + '</span>' +
+      '<span title="Yahoo rank minus Jack\'s rank" style="color:' + col + ';font-weight:800;min-width:30px;text-align:right">' + (good ? '+' : '') + v.diff + '</span></div>';
+  }
+  const RULE_ICONS = { pass: ['✓', '#4ade80'], fail: ['✗', '#f87171'], track: ['○', '#a89cc8'] };
+  function rulesTabHTML() {
+    const ruleRows = draftRules().map((r) => {
+      const ic = RULE_ICONS[r.status];
+      return '<div title="' + esc(r.tip) + '" style="display:flex;gap:7px;align-items:baseline;padding:4px 2px;border-bottom:1px solid #251a3e">' +
+        '<span style="color:' + ic[1] + ';font-weight:800;flex:0 0 12px">' + ic[0] + '</span>' +
+        '<span style="flex:1;font-size:11px;font-weight:600;color:' + (r.status === 'fail' ? '#f87171' : '#e5e7eb') + '">' + esc(r.label) + '</span>' +
+        '<span style="font-size:10px;color:' + ic[1] + '">' + esc(r.detail) + '</span></div>';
+    }).join('');
+    let valueHtml = '';
+    if (st.mode.indexOf('re_') === 0) {
+      const vb = platformValueBoard();
+      valueHtml =
+        '<div style="color:#8d81ad;font-size:10px;font-weight:700;letter-spacing:.6px;margin:10px 0 3px">TARGETS — YAHOO UNDERVALUES</div>' +
+        '<div style="font-size:10px;color:#7a6f99;margin-bottom:3px">Jack ranks them far above Yahoo\'s own list — the room lets them fall</div>' +
+        (vb.targets.length ? vb.targets.map(valueRowHTML).join('') : '<div style="color:#544a70;padding:2px 6px">No big gaps left on the board</div>') +
+        (vb.fades.length
+          ? '<div style="color:#8d81ad;font-size:10px;font-weight:700;letter-spacing:.6px;margin:10px 0 3px">TRAPS — YAHOO OVERVALUES</div>' +
+            '<div style="font-size:10px;color:#7a6f99;margin-bottom:3px">Yahoo\'s list will make someone pay Yahoo\'s price — don\'t let it be you</div>' +
+            vb.fades.map(valueRowHTML).join('')
+          : '');
+    } else {
+      valueHtml = '<div style="color:#544a70;padding:6px 2px">Value board is redraft-only (Yahoo\'s list is a redraft board)</div>';
+    }
+    return '<div style="color:#8d81ad;font-size:10px;font-weight:700;letter-spacing:.6px;margin-bottom:3px">DRAFT RULES</div>' +
+      '<div style="font-size:10px;color:#7a6f99;margin-bottom:3px">Checked live against your picks — hover a rule for the why</div>' +
+      ruleRows + valueHtml;
   }
 
   function render() {
@@ -1320,7 +1456,8 @@
     h += '<div style="' + CSS.tabs + '">' +
       '<div data-t="recs" style="' + CSS.tab(st.tab === 'recs') + '">RECS</div>' +
       '<div data-t="board" style="' + CSS.tab(st.tab === 'board') + '">BOARD</div>' +
-      '<div data-t="roster" style="' + CSS.tab(st.tab === 'roster') + '">ROSTER (' + st.myRoster.length + ')</div></div>';
+      '<div data-t="roster" style="' + CSS.tab(st.tab === 'roster') + '">ROSTER (' + st.myRoster.length + ')</div>' +
+      '<div data-t="rules" style="' + CSS.tab(st.tab === 'rules') + '">RULES</div></div>';
     h += '<div style="' + CSS.body + '" id="mffYdBody"></div>';
     h += '<div id="mffYdResize" title="Drag to resize" style="position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;z-index:5;background:linear-gradient(135deg,transparent 50%,#7d2eff 50%);opacity:.65;border-radius:0 0 9px 0"></div>';
     root.innerHTML = h;
@@ -1390,6 +1527,8 @@
         s.addEventListener('click', () => { st.posFilter = s.getAttribute('data-p'); render(); }));
       const vb = body.querySelector('#mffYdVor');
       if (vb) vb.addEventListener('click', () => { st.sortVor = !st.sortVor; render(); });
+    } else if (st.tab === 'rules') {
+      body.innerHTML = rulesTabHTML();
     } else {
       const bySlot = {};
       st.myRoster.forEach((r) => { (bySlot[r.pos] = bySlot[r.pos] || []).push(r); });

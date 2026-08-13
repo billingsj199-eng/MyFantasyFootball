@@ -42,7 +42,9 @@
    "vor": 150,
    "up": 11.9,
    "vorSf": 150,
-   "upSf": 11.9
+   "upSf": 11.9,
+   "espnAdp": 2,
+   "yahooAdp": 2
   },
   {
    "n": "Jahmyr Gibbs",
@@ -83,7 +85,9 @@
    "vor": 166,
    "up": 15.5,
    "vorSf": 166,
-   "upSf": 15.5
+   "upSf": 15.5,
+   "espnAdp": 1,
+   "yahooAdp": 1
   },
   {
    "n": "Puka Nacua",
@@ -124,7 +128,9 @@
    "vor": 151,
    "up": 12.1,
    "vorSf": 127,
-   "upSf": 8.0
+   "upSf": 8.0,
+   "espnAdp": 3,
+   "yahooAdp": 4
   },
   {
    "n": "Ja'Marr Chase",
@@ -165,7 +171,9 @@
    "vor": 132,
    "up": 13.2,
    "vorSf": 108,
-   "upSf": 9.1
+   "upSf": 9.1,
+   "espnAdp": 4,
+   "yahooAdp": 3
   },
   {
    "n": "Jaxon Smith-Njigba",
@@ -206,7 +214,9 @@
    "vor": 124,
    "up": 9.2,
    "vorSf": 100,
-   "upSf": 5.1
+   "upSf": 5.1,
+   "espnAdp": 5,
+   "yahooAdp": 7
   },
   {
    "n": "Jonathan Taylor",
@@ -247,7 +257,9 @@
    "vor": 126,
    "up": 10.8,
    "vorSf": 126,
-   "upSf": 10.8
+   "upSf": 10.8,
+   "espnAdp": 7,
+   "yahooAdp": 8
   },
   {
    "n": "Christian McCaffrey",
@@ -288,7 +300,9 @@
    "vor": 138,
    "up": 9.4,
    "vorSf": 138,
-   "upSf": 9.4
+   "upSf": 9.4,
+   "espnAdp": 6,
+   "yahooAdp": 5
   },
   {
    "n": "CeeDee Lamb",
@@ -329,7 +343,9 @@
    "vor": 98,
    "up": 7.1,
    "vorSf": 74,
-   "upSf": 3.0
+   "upSf": 3.0,
+   "espnAdp": 9,
+   "yahooAdp": 9
   },
   {
    "n": "Amon-Ra St. Brown",
@@ -370,7 +386,9 @@
    "vor": 122,
    "up": 10.6,
    "vorSf": 98,
-   "upSf": 6.5
+   "upSf": 6.5,
+   "espnAdp": 8,
+   "yahooAdp": 6
   },
   {
    "n": "Justin Jefferson",
@@ -411,7 +429,9 @@
    "vor": 94,
    "up": 7.6,
    "vorSf": 70,
-   "upSf": 3.5
+   "upSf": 3.5,
+   "espnAdp": 11,
+   "yahooAdp": 11
   },
   {
    "n": "James Cook",
@@ -452,7 +472,9 @@
    "vor": 96,
    "up": 7.1,
    "vorSf": 96,
-   "upSf": 7.1
+   "upSf": 7.1,
+   "espnAdp": 12,
+   "yahooAdp": 10
   },
   {
    "n": "Ashton Jeanty",
@@ -493,7 +515,9 @@
    "vor": 83,
    "up": 7.7,
    "vorSf": 83,
-   "upSf": 7.7
+   "upSf": 7.7,
+   "espnAdp": 15,
+   "yahooAdp": 13
   },
   {
    "n": "De'Von Achane",
@@ -534,7 +558,9 @@
    "vor": 95,
    "up": 7.2,
    "vorSf": 95,
-   "upSf": 7.2
+   "upSf": 7.2,
+   "espnAdp": 10,
+   "yahooAdp": 18
   },
   {
    "n": "Omarion Hampton",
@@ -575,7 +601,9 @@
    "vor": 86,
    "up": 6.9,
    "vorSf": 86,
-   "upSf": 6.9
+   "upSf": 6.9,
+   "espnAdp": 18,
+   "yahooAdp": 16
   },
   {
    "n": "Jeremiyah Love",
@@ -615,7 +643,9 @@
    "vor": 81,
    "up": 6.5,
    "vorSf": 81,
-   "upSf": 6.5
+   "upSf": 6.5,
+   "espnAdp": 13,
+   "yahooAdp": 27
   },
   {
    "n": "Saquon Barkley",
@@ -656,7 +686,9 @@
    "vor": 87,
    "up": 7.3,
    "vorSf": 87,
-   "upSf": 7.3
+   "upSf": 7.3,
+   "espnAdp": 19,
+   "yahooAdp": 12
   },
   {
    "n": "Trey McBride",
@@ -697,7 +729,9 @@
    "vor": 58,
    "up": 4.8,
    "vorSf": 58,
-   "upSf": 4.8
+   "upSf": 4.8,
+   "espnAdp": 17,
+   "yahooAdp": 25
   },
   {
    "n": "Malik Nabers",
@@ -738,7 +772,9 @@
    "vor": 59,
    "up": 8.6,
    "vorSf": 35,
-   "upSf": 4.5
+   "upSf": 4.5,
+   "espnAdp": 32,
+   "yahooAdp": 31
   },
   {
    "n": "Drake London",
@@ -779,7 +815,9 @@
    "vor": 74,
    "up": 7.1,
    "vorSf": 50,
-   "upSf": 3.0
+   "upSf": 3.0,
+   "espnAdp": 14,
+   "yahooAdp": 17
   },
   {
    "n": "Kenneth Walker III",
@@ -810,7 +848,9 @@
    "ktc1qb": 6315,
    "sid": "8151",
    "sTm": "KC",
-   "bye": 5
+   "bye": 5,
+   "espnAdp": 22,
+   "yahooAdp": 14
   },
   {
    "n": "Derrick Henry",
@@ -847,7 +887,9 @@
    "vor": 98,
    "up": 7.9,
    "vorSf": 98,
-   "upSf": 7.9
+   "upSf": 7.9,
+   "espnAdp": 20,
+   "yahooAdp": 19
   },
   {
    "n": "Chase Brown",
@@ -888,7 +930,9 @@
    "vor": 74,
    "up": 7.9,
    "vorSf": 74,
-   "upSf": 7.9
+   "upSf": 7.9,
+   "espnAdp": 21,
+   "yahooAdp": 15
   },
   {
    "n": "Brock Bowers",
@@ -929,7 +973,9 @@
    "vor": 60,
    "up": 6.9,
    "vorSf": 60,
-   "upSf": 6.9
+   "upSf": 6.9,
+   "espnAdp": 24,
+   "yahooAdp": 21
   },
   {
    "n": "George Pickens",
@@ -970,7 +1016,9 @@
    "vor": 54,
    "up": 4.9,
    "vorSf": 30,
-   "upSf": 0.8
+   "upSf": 0.8,
+   "espnAdp": 29,
+   "yahooAdp": 22
   },
   {
    "n": "Nico Collins",
@@ -1011,7 +1059,9 @@
    "vor": 62,
    "up": 4.6,
    "vorSf": 38,
-   "upSf": 0.5
+   "upSf": 0.5,
+   "espnAdp": 25,
+   "yahooAdp": 20
   },
   {
    "n": "Chris Olave",
@@ -1052,7 +1102,9 @@
    "vor": 55,
    "up": 3.4,
    "vorSf": 31,
-   "upSf": -0.7
+   "upSf": -0.7,
+   "espnAdp": 28,
+   "yahooAdp": 29
   },
   {
    "n": "Josh Jacobs",
@@ -1093,7 +1145,9 @@
    "vor": 90,
    "up": 6.9,
    "vorSf": 90,
-   "upSf": 6.9
+   "upSf": 6.9,
+   "espnAdp": 23,
+   "yahooAdp": 36
   },
   {
    "n": "Josh Allen",
@@ -1134,7 +1188,9 @@
    "vor": 82,
    "up": 7.1,
    "vorSf": 131,
-   "upSf": 9.0
+   "upSf": 9.0,
+   "espnAdp": 36,
+   "yahooAdp": 26
   },
   {
    "n": "A.J. Brown",
@@ -1175,7 +1231,9 @@
    "vor": 60,
    "up": 7.0,
    "vorSf": 36,
-   "upSf": 2.9
+   "upSf": 2.9,
+   "espnAdp": 27,
+   "yahooAdp": 23
   },
   {
    "n": "Travis Etienne",
@@ -1216,7 +1274,9 @@
    "vor": 54,
    "up": 3.2,
    "vorSf": 54,
-   "upSf": 3.2
+   "upSf": 3.2,
+   "espnAdp": 38,
+   "yahooAdp": 44
   },
   {
    "n": "Breece Hall",
@@ -1257,7 +1317,9 @@
    "vor": 82,
    "up": 7.7,
    "vorSf": 82,
-   "upSf": 7.7
+   "upSf": 7.7,
+   "espnAdp": 30,
+   "yahooAdp": 33
   },
   {
    "n": "Tetairoa McMillan",
@@ -1298,7 +1360,9 @@
    "vor": 54,
    "up": 4.5,
    "vorSf": 30,
-   "upSf": 0.4
+   "upSf": 0.4,
+   "espnAdp": 33,
+   "yahooAdp": 41
   },
   {
    "n": "Tee Higgins",
@@ -1339,7 +1403,9 @@
    "vor": 37,
    "up": 5.1,
    "vorSf": 13,
-   "upSf": 1.0
+   "upSf": 1.0,
+   "espnAdp": 46,
+   "yahooAdp": 28
   },
   {
    "n": "Rashee Rice",
@@ -1380,7 +1446,9 @@
    "vor": 78,
    "up": 5.6,
    "vorSf": 54,
-   "upSf": 1.5
+   "upSf": 1.5,
+   "espnAdp": 16,
+   "yahooAdp": 34
   },
   {
    "n": "Kyren Williams",
@@ -1421,7 +1489,9 @@
    "vor": 50,
    "up": 2.8,
    "vorSf": 50,
-   "upSf": 2.8
+   "upSf": 2.8,
+   "espnAdp": 37,
+   "yahooAdp": 30
   },
   {
    "n": "Bucky Irving",
@@ -1462,7 +1532,9 @@
    "vor": 24,
    "up": 0.6,
    "vorSf": 24,
-   "upSf": 0.6
+   "upSf": 0.6,
+   "espnAdp": 41,
+   "yahooAdp": 59
   },
   {
    "n": "Garrett Wilson",
@@ -1503,7 +1575,9 @@
    "vor": 54,
    "up": 5.0,
    "vorSf": 30,
-   "upSf": 0.9
+   "upSf": 0.9,
+   "espnAdp": 26,
+   "yahooAdp": 40
   },
   {
    "n": "Ladd McConkey",
@@ -1544,7 +1618,9 @@
    "vor": 36,
    "up": 3.3,
    "vorSf": 12,
-   "upSf": -0.8
+   "upSf": -0.8,
+   "espnAdp": 44,
+   "yahooAdp": 42
   },
   {
    "n": "Emeka Egbuka",
@@ -1585,7 +1661,9 @@
    "vor": 50,
    "up": 5.2,
    "vorSf": 26,
-   "upSf": 1.1
+   "upSf": 1.1,
+   "espnAdp": 42,
+   "yahooAdp": 38
   },
   {
    "n": "Javonte Williams",
@@ -1626,7 +1704,9 @@
    "vor": 75,
    "up": 4.8,
    "vorSf": 75,
-   "upSf": 4.8
+   "upSf": 4.8,
+   "espnAdp": 31,
+   "yahooAdp": 37
   },
   {
    "n": "Zay Flowers",
@@ -1667,7 +1747,9 @@
    "vor": 54,
    "up": 4.7,
    "vorSf": 30,
-   "upSf": 0.6
+   "upSf": 0.6,
+   "espnAdp": 34,
+   "yahooAdp": 32
   },
   {
    "n": "DeVonta Smith",
@@ -1708,7 +1790,9 @@
    "vor": 50,
    "up": 5.1,
    "vorSf": 26,
-   "upSf": 1.0
+   "upSf": 1.0,
+   "espnAdp": 35,
+   "yahooAdp": 24
   },
   {
    "n": "Luther Burden III",
@@ -1749,7 +1833,9 @@
    "vor": 24,
    "up": 4.0,
    "vorSf": 0,
-   "upSf": -0.1
+   "upSf": -0.1,
+   "espnAdp": 53,
+   "yahooAdp": 43
   },
   {
    "n": "Jameson Williams",
@@ -1790,7 +1876,9 @@
    "vor": 32,
    "up": 5.0,
    "vorSf": 8,
-   "upSf": 0.9
+   "upSf": 0.9,
+   "espnAdp": 48,
+   "yahooAdp": 58
   },
   {
    "n": "Colston Loveland",
@@ -1831,7 +1919,9 @@
    "vor": 36,
    "up": 5.9,
    "vorSf": 36,
-   "upSf": 5.9
+   "upSf": 5.9,
+   "espnAdp": 49,
+   "yahooAdp": 39
   },
   {
    "n": "Davante Adams",
@@ -1868,7 +1958,9 @@
    "vor": 54,
    "up": 5.2,
    "vorSf": 30,
-   "upSf": 1.1
+   "upSf": 1.1,
+   "espnAdp": 43,
+   "yahooAdp": 51
   },
   {
    "n": "Jaylen Waddle",
@@ -1909,7 +2001,9 @@
    "vor": 30,
    "up": 1.7,
    "vorSf": 6,
-   "upSf": -2.4
+   "upSf": -2.4,
+   "espnAdp": 47,
+   "yahooAdp": 35
   },
   {
    "n": "Terry McLaurin",
@@ -1950,7 +2044,9 @@
    "vor": 36,
    "up": 2.7,
    "vorSf": 12,
-   "upSf": -1.4
+   "upSf": -1.4,
+   "espnAdp": 45,
+   "yahooAdp": 45
   },
   {
    "n": "TreVeyon Henderson",
@@ -1991,7 +2087,9 @@
    "vor": 21,
    "up": 3.4,
    "vorSf": 21,
-   "upSf": 3.4
+   "upSf": 3.4,
+   "espnAdp": 59,
+   "yahooAdp": 65
   },
   {
    "n": "Lamar Jackson",
@@ -2032,7 +2130,9 @@
    "vor": 35,
    "up": 4.5,
    "vorSf": 84,
-   "upSf": 6.4
+   "upSf": 6.4,
+   "espnAdp": 56,
+   "yahooAdp": 48
   },
   {
    "n": "Mike Evans",
@@ -2069,7 +2169,9 @@
    "vor": 10,
    "up": 0.9,
    "vorSf": -14,
-   "upSf": -3.2
+   "upSf": -3.2,
+   "espnAdp": 76,
+   "yahooAdp": 55
   },
   {
    "n": "Quinshon Judkins",
@@ -2110,7 +2212,9 @@
    "vor": 44,
    "up": 4.2,
    "vorSf": 44,
-   "upSf": 4.2
+   "upSf": 4.2,
+   "espnAdp": 40,
+   "yahooAdp": 52
   },
   {
    "n": "Rome Odunze",
@@ -2151,7 +2255,9 @@
    "vor": 39,
    "up": 4.9,
    "vorSf": 15,
-   "upSf": 0.8
+   "upSf": 0.8,
+   "espnAdp": 52,
+   "yahooAdp": 57
   },
   {
    "n": "Cam Skattebo",
@@ -2192,7 +2298,9 @@
    "vor": 52,
    "up": 5.4,
    "vorSf": 52,
-   "upSf": 5.4
+   "upSf": 5.4,
+   "espnAdp": 39,
+   "yahooAdp": 46
   },
   {
    "n": "Carnell Tate",
@@ -2232,7 +2340,9 @@
    "vor": 28,
    "up": 3.3,
    "vorSf": 4,
-   "upSf": -0.8
+   "upSf": -0.8,
+   "espnAdp": 51,
+   "yahooAdp": 68
   },
   {
    "n": "Christian Watson",
@@ -2269,7 +2379,9 @@
    "vor": 14,
    "up": 0.8,
    "vorSf": -10,
-   "upSf": -3.3
+   "upSf": -3.3,
+   "espnAdp": 78,
+   "yahooAdp": 50
   },
   {
    "n": "D'Andre Swift",
@@ -2310,7 +2422,9 @@
    "vor": 32,
    "up": 2.4,
    "vorSf": 32,
-   "upSf": 2.4
+   "upSf": 2.4,
+   "espnAdp": 61,
+   "yahooAdp": 47
   },
   {
    "n": "Bhayshul Tuten",
@@ -2351,7 +2465,9 @@
    "vor": 22,
    "up": 4.4,
    "vorSf": 22,
-   "upSf": 4.4
+   "upSf": 4.4,
+   "espnAdp": 60,
+   "yahooAdp": 54
   },
   {
    "n": "Brian Thomas Jr.",
@@ -2392,7 +2508,9 @@
    "vor": 3,
    "up": 0.0,
    "vorSf": -21,
-   "upSf": -4.1
+   "upSf": -4.1,
+   "espnAdp": 81,
+   "yahooAdp": 70
   },
   {
    "n": "D.J. Moore",
@@ -2433,7 +2551,9 @@
    "vor": 32,
    "up": 4.7,
    "vorSf": 8,
-   "upSf": 0.6
+   "upSf": 0.6,
+   "espnAdp": 54,
+   "yahooAdp": 56
   },
   {
    "n": "RJ Harvey",
@@ -2474,7 +2594,9 @@
    "vor": -23,
    "up": -1.0,
    "vorSf": -23,
-   "upSf": -1.0
+   "upSf": -1.0,
+   "espnAdp": 109,
+   "yahooAdp": 97
   },
   {
    "n": "Jayden Daniels",
@@ -2515,7 +2637,9 @@
    "vor": 31,
    "up": 2.2,
    "vorSf": 80,
-   "upSf": 4.1
+   "upSf": 4.1,
+   "espnAdp": 55,
+   "yahooAdp": 62
   },
   {
    "n": "David Montgomery",
@@ -2556,7 +2680,9 @@
    "vor": 11,
    "up": 1.4,
    "vorSf": 11,
-   "upSf": 1.4
+   "upSf": 1.4,
+   "espnAdp": 62,
+   "yahooAdp": 53
   },
   {
    "n": "Makai Lemon",
@@ -2596,7 +2722,9 @@
    "vor": -1,
    "up": 1.9,
    "vorSf": -25,
-   "upSf": -2.2
+   "upSf": -2.2,
+   "espnAdp": 91,
+   "yahooAdp": 102
   },
   {
    "n": "Joe Burrow",
@@ -2637,7 +2765,9 @@
    "vor": 17,
    "up": 3.4,
    "vorSf": 66,
-   "upSf": 5.3
+   "upSf": 5.3,
+   "espnAdp": 74,
+   "yahooAdp": 61
   },
   {
    "n": "Marvin Harrison Jr.",
@@ -2678,7 +2808,9 @@
    "vor": 15,
    "up": 0.7,
    "vorSf": -9,
-   "upSf": -3.4
+   "upSf": -3.4,
+   "espnAdp": 68,
+   "yahooAdp": 69
   },
   {
    "n": "Tyler Warren",
@@ -2719,7 +2851,9 @@
    "vor": 34,
    "up": 2.4,
    "vorSf": 34,
-   "upSf": 2.4
+   "upSf": 2.4,
+   "espnAdp": 50,
+   "yahooAdp": 49
   },
   {
    "n": "Jordyn Tyson",
@@ -2759,7 +2893,9 @@
    "vor": 10,
    "up": 2.0,
    "vorSf": -14,
-   "upSf": -2.1
+   "upSf": -2.1,
+   "espnAdp": 70,
+   "yahooAdp": 76
   },
   {
    "n": "Caleb Williams",
@@ -2800,7 +2936,9 @@
    "vor": -5,
    "up": 0.8,
    "vorSf": 44,
-   "upSf": 2.7
+   "upSf": 2.7,
+   "espnAdp": 87,
+   "yahooAdp": 72
   },
   {
    "n": "Jalen Hurts",
@@ -2841,7 +2979,9 @@
    "vor": 34,
    "up": 2.7,
    "vorSf": 83,
-   "upSf": 4.6
+   "upSf": 4.6,
+   "espnAdp": 58,
+   "yahooAdp": 64
   },
   {
    "n": "Alec Pierce",
@@ -2882,7 +3022,9 @@
    "vor": 25,
    "up": 1.9,
    "vorSf": 1,
-   "upSf": -2.2
+   "upSf": -2.2,
+   "espnAdp": 67,
+   "yahooAdp": 79
   },
   {
    "n": "Drake Maye",
@@ -2923,7 +3065,9 @@
    "vor": 32,
    "up": 0.9,
    "vorSf": 81,
-   "upSf": 2.8
+   "upSf": 2.8,
+   "espnAdp": 57,
+   "yahooAdp": 60
   },
   {
    "n": "Courtland Sutton",
@@ -2964,7 +3108,9 @@
    "vor": 25,
    "up": 1.8,
    "vorSf": 1,
-   "upSf": -2.3
+   "upSf": -2.3,
+   "espnAdp": 65,
+   "yahooAdp": 100
   },
   {
    "n": "Parker Washington",
@@ -3005,7 +3151,9 @@
    "vor": 10,
    "up": 2.3,
    "vorSf": -14,
-   "upSf": -1.8
+   "upSf": -1.8,
+   "espnAdp": 77,
+   "yahooAdp": 63
   },
   {
    "n": "DK Metcalf",
@@ -3042,7 +3190,9 @@
    "vor": 18,
    "up": 1.3,
    "vorSf": -6,
-   "upSf": -2.8
+   "upSf": -2.8,
+   "espnAdp": 69,
+   "yahooAdp": 81
   },
   {
    "n": "Jaylen Warren",
@@ -3083,7 +3233,9 @@
    "vor": 2,
    "up": -1.0,
    "vorSf": 2,
-   "upSf": -1.0
+   "upSf": -1.0,
+   "espnAdp": 96,
+   "yahooAdp": 73
   },
   {
    "n": "Michael Wilson",
@@ -3124,7 +3276,9 @@
    "vor": -3,
    "up": 2.2,
    "vorSf": -27,
-   "upSf": -1.9
+   "upSf": -1.9,
+   "espnAdp": 80,
+   "yahooAdp": 91
   },
   {
    "n": "Chuba Hubbard",
@@ -3165,7 +3319,9 @@
    "vor": -3,
    "up": 0.5,
    "vorSf": -3,
-   "upSf": 0.5
+   "upSf": 0.5,
+   "espnAdp": 100,
+   "yahooAdp": 78
   },
   {
    "n": "Harold Fannin",
@@ -3206,7 +3362,9 @@
    "vor": 15,
    "up": 1.5,
    "vorSf": 15,
-   "upSf": 1.5
+   "upSf": 1.5,
+   "espnAdp": 72,
+   "yahooAdp": 80
   },
   {
    "n": "Rhamondre Stevenson",
@@ -3247,7 +3405,9 @@
    "vor": 6,
    "up": 1.9,
    "vorSf": 6,
-   "upSf": 1.9
+   "upSf": 1.9,
+   "espnAdp": 97,
+   "yahooAdp": 67
   },
   {
    "n": "Dak Prescott",
@@ -3284,7 +3444,9 @@
    "vor": 0,
    "up": 0.0,
    "vorSf": 49,
-   "upSf": 1.9
+   "upSf": 1.9,
+   "espnAdp": 83,
+   "yahooAdp": 83
   },
   {
    "n": "Ricky Pearsall",
@@ -3314,7 +3476,8 @@
    "ktc1qb": 3220,
    "sid": "11638",
    "sTm": "SF",
-   "bye": 8
+   "bye": 8,
+   "yahooAdp": 358
   },
   {
    "n": "Justin Herbert",
@@ -3355,7 +3518,9 @@
    "vor": -5,
    "up": 0.3,
    "vorSf": 44,
-   "upSf": 2.2
+   "upSf": 2.2,
+   "espnAdp": 94,
+   "yahooAdp": 74
   },
   {
    "n": "Trevor Lawrence",
@@ -3396,7 +3561,9 @@
    "vor": 0,
    "up": -0.5,
    "vorSf": 49,
-   "upSf": 1.4
+   "upSf": 1.4,
+   "espnAdp": 82,
+   "yahooAdp": 82
   },
   {
    "n": "Jaxson Dart",
@@ -3437,7 +3604,9 @@
    "vor": 14,
    "up": 2.9,
    "vorSf": 63,
-   "upSf": 4.8
+   "upSf": 4.8,
+   "espnAdp": 75,
+   "yahooAdp": 95
   },
   {
    "n": "Jakobi Meyers",
@@ -3478,7 +3647,9 @@
    "vor": 2,
    "up": 0.0,
    "vorSf": -22,
-   "upSf": -4.1
+   "upSf": -4.1,
+   "espnAdp": 88,
+   "yahooAdp": 118
   },
   {
    "n": "Tucker Kraft",
@@ -3519,7 +3690,9 @@
    "vor": 8,
    "up": 2.4,
    "vorSf": 8,
-   "upSf": 2.4
+   "upSf": 2.4,
+   "espnAdp": 103,
+   "yahooAdp": 71
   },
   {
    "n": "Tyler Allgeier",
@@ -3560,7 +3733,9 @@
    "vor": -84,
    "up": -5.1,
    "vorSf": -84,
-   "upSf": -5.1
+   "upSf": -5.1,
+   "espnAdp": 157,
+   "yahooAdp": 137
   },
   {
    "n": "Jordan Addison",
@@ -3601,7 +3776,9 @@
    "vor": -4,
    "up": 0.2,
    "vorSf": -28,
-   "upSf": -3.9
+   "upSf": -3.9,
+   "espnAdp": 93,
+   "yahooAdp": 96
   },
   {
    "n": "Patrick Mahomes",
@@ -3642,7 +3819,9 @@
    "vor": 3,
    "up": 0.0,
    "vorSf": 52,
-   "upSf": 1.9
+   "upSf": 1.9,
+   "espnAdp": 95,
+   "yahooAdp": 111
   },
   {
    "n": "Kyle Monangai",
@@ -3683,7 +3862,9 @@
    "vor": -2,
    "up": 1.0,
    "vorSf": -2,
-   "upSf": 1.0
+   "upSf": 1.0,
+   "espnAdp": 116,
+   "yahooAdp": 103
   },
   {
    "n": "Rico Dowdle",
@@ -3724,7 +3905,9 @@
    "vor": 5,
    "up": 2.2,
    "vorSf": 5,
-   "upSf": 2.2
+   "upSf": 2.2,
+   "espnAdp": 98,
+   "yahooAdp": 89
   },
   {
    "n": "Michael Pittman Jr.",
@@ -3765,7 +3948,9 @@
    "vor": 8,
    "up": 0.3,
    "vorSf": -16,
-   "upSf": -3.8
+   "upSf": -3.8,
+   "espnAdp": 66,
+   "yahooAdp": 104
   },
   {
    "n": "Kyle Pitts",
@@ -3806,7 +3991,9 @@
    "vor": 14,
    "up": 0.9,
    "vorSf": 14,
-   "upSf": 0.9
+   "upSf": 0.9,
+   "espnAdp": 71,
+   "yahooAdp": 84
   },
   {
    "n": "Brock Purdy",
@@ -3847,7 +4034,9 @@
    "vor": 5,
    "up": -1.4,
    "vorSf": 54,
-   "upSf": 0.5
+   "upSf": 0.5,
+   "espnAdp": 85,
+   "yahooAdp": 92
   },
   {
    "n": "Chris Godwin",
@@ -3888,7 +4077,9 @@
    "vor": -16,
    "up": -1.4,
    "vorSf": -40,
-   "upSf": -5.5
+   "upSf": -5.5,
+   "espnAdp": 129,
+   "yahooAdp": 87
   },
   {
    "n": "Bo Nix",
@@ -3929,7 +4120,9 @@
    "vor": 8,
    "up": 1.8,
    "vorSf": 57,
-   "upSf": 3.7
+   "upSf": 3.7,
+   "espnAdp": 84,
+   "yahooAdp": 99
   },
   {
    "n": "Quentin Johnston",
@@ -3970,7 +4163,9 @@
    "vor": -6,
    "up": 0.7,
    "vorSf": -30,
-   "upSf": -3.4
+   "upSf": -3.4,
+   "espnAdp": 125,
+   "yahooAdp": 85
   },
   {
    "n": "Sam LaPorta",
@@ -4011,7 +4206,9 @@
    "vor": 20,
    "up": 1.9,
    "vorSf": 20,
-   "upSf": 1.9
+   "upSf": 1.9,
+   "espnAdp": 73,
+   "yahooAdp": 75
   },
   {
    "n": "Blake Corum",
@@ -4052,7 +4249,9 @@
    "vor": -15,
    "up": 1.9,
    "vorSf": -15,
-   "upSf": 1.9
+   "upSf": 1.9,
+   "espnAdp": 122,
+   "yahooAdp": 93
   },
   {
    "n": "Matthew Stafford",
@@ -4089,7 +4288,9 @@
    "vor": 6,
    "up": -0.3,
    "vorSf": 55,
-   "upSf": 1.6
+   "upSf": 1.6,
+   "espnAdp": 86,
+   "yahooAdp": 112
   },
   {
    "n": "Tony Pollard",
@@ -4130,7 +4331,9 @@
    "vor": 10,
    "up": 0.9,
    "vorSf": 10,
-   "upSf": 0.9
+   "upSf": 0.9,
+   "espnAdp": 64,
+   "yahooAdp": 77
   },
   {
    "n": "Wan'Dale Robinson",
@@ -4171,7 +4374,9 @@
    "vor": -10,
    "up": 0.0,
    "vorSf": -34,
-   "upSf": -4.1
+   "upSf": -4.1,
+   "espnAdp": 89,
+   "yahooAdp": 126
   },
   {
    "n": "Jadarian Price",
@@ -4211,7 +4416,9 @@
    "vor": 15,
    "up": 2.7,
    "vorSf": 15,
-   "upSf": 2.7
+   "upSf": 2.7,
+   "espnAdp": 63,
+   "yahooAdp": 66
   },
   {
    "n": "Jared Goff",
@@ -4248,7 +4455,9 @@
    "vor": -19,
    "up": -1.7,
    "vorSf": 30,
-   "upSf": 0.2
+   "upSf": 0.2,
+   "espnAdp": 136,
+   "yahooAdp": 115
   },
   {
    "n": "Romeo Doubs",
@@ -4289,7 +4498,9 @@
    "vor": -12,
    "up": 0.4,
    "vorSf": -36,
-   "upSf": -3.7
+   "upSf": -3.7,
+   "espnAdp": 130,
+   "yahooAdp": 125
   },
   {
    "n": "Xavier Worthy",
@@ -4330,7 +4541,9 @@
    "vor": 0,
    "up": 0.4,
    "vorSf": -24,
-   "upSf": -3.7
+   "upSf": -3.7,
+   "espnAdp": 115,
+   "yahooAdp": 120
   },
   {
    "n": "Jayden Reed",
@@ -4371,7 +4584,9 @@
    "vor": -5,
    "up": 0.7,
    "vorSf": -29,
-   "upSf": -3.4
+   "upSf": -3.4,
+   "espnAdp": 114,
+   "yahooAdp": 98
   },
   {
    "n": "Jordan Love",
@@ -4412,7 +4627,9 @@
    "vor": -28,
    "up": -2.0,
    "vorSf": 21,
-   "upSf": -0.1
+   "upSf": -0.1,
+   "espnAdp": 198,
+   "yahooAdp": 127
   },
   {
    "n": "Kyler Murray",
@@ -4453,7 +4670,9 @@
    "vor": -36,
    "up": -4.9,
    "vorSf": 13,
-   "upSf": -3.0
+   "upSf": -3.0,
+   "espnAdp": 134,
+   "yahooAdp": 110
   },
   {
    "n": "J.K. Dobbins",
@@ -4494,7 +4713,9 @@
    "vor": -2,
    "up": -1.0,
    "vorSf": -2,
-   "upSf": -1.0
+   "upSf": -1.0,
+   "espnAdp": 108,
+   "yahooAdp": 86
   },
   {
    "n": "Oronde Gadsden II",
@@ -4535,7 +4756,9 @@
    "vor": -46,
    "up": -3.0,
    "vorSf": -46,
-   "upSf": -3.0
+   "upSf": -3.0,
+   "espnAdp": 258,
+   "yahooAdp": 167
   },
   {
    "n": "Baker Mayfield",
@@ -4576,7 +4799,9 @@
    "vor": -22,
    "up": -1.6,
    "vorSf": 27,
-   "upSf": 0.3
+   "upSf": 0.3,
+   "espnAdp": 149,
+   "yahooAdp": 130
   },
   {
    "n": "Kenneth Gainwell",
@@ -4650,7 +4875,9 @@
    "vor": -4,
    "up": -0.8,
    "vorSf": -4,
-   "upSf": -0.8
+   "upSf": -0.8,
+   "espnAdp": 119,
+   "yahooAdp": 109
   },
   {
    "n": "Jalen Coker",
@@ -4691,7 +4918,9 @@
    "vor": -26,
    "up": -0.6,
    "vorSf": -50,
-   "upSf": -4.7
+   "upSf": -4.7,
+   "espnAdp": 132,
+   "yahooAdp": 124
   },
   {
    "n": "Tyler Shough",
@@ -4732,7 +4961,9 @@
    "vor": -22,
    "up": 0.2,
    "vorSf": 27,
-   "upSf": 2.1
+   "upSf": 2.1,
+   "espnAdp": 135,
+   "yahooAdp": 135
   },
   {
    "n": "Matthew Golden",
@@ -4773,7 +5004,9 @@
    "vor": 8,
    "up": 1.8,
    "vorSf": -16,
-   "upSf": -2.3
+   "upSf": -2.3,
+   "espnAdp": 79,
+   "yahooAdp": 114
   },
   {
    "n": "Jordan Mason",
@@ -4814,7 +5047,9 @@
    "vor": -42,
    "up": -1.6,
    "vorSf": -42,
-   "upSf": -1.6
+   "upSf": -1.6,
+   "espnAdp": 138,
+   "yahooAdp": 107
   },
   {
    "n": "Malik Willis",
@@ -4854,7 +5089,9 @@
    "vor": -50,
    "up": -2.3,
    "vorSf": -1,
-   "upSf": -0.4
+   "upSf": -0.4,
+   "espnAdp": 150,
+   "yahooAdp": 129
   },
   {
    "n": "George Kittle",
@@ -4895,7 +5132,9 @@
    "vor": 12,
    "up": 3.4,
    "vorSf": 12,
-   "upSf": 3.4
+   "upSf": 3.4,
+   "espnAdp": 102,
+   "yahooAdp": 94
   },
   {
    "n": "Jonah Coleman",
@@ -4935,7 +5174,9 @@
    "vor": -131,
    "up": -9.2,
    "vorSf": -131,
-   "upSf": -9.2
+   "upSf": -9.2,
+   "espnAdp": 212,
+   "yahooAdp": 149
   },
   {
    "n": "Khalil Shakir",
@@ -4976,7 +5217,9 @@
    "vor": -8,
    "up": 0.3,
    "vorSf": -32,
-   "upSf": -3.8
+   "upSf": -3.8,
+   "espnAdp": 113,
+   "yahooAdp": 144
   },
   {
    "n": "Kenyon Sadiq",
@@ -5016,7 +5259,9 @@
    "vor": -2,
    "up": 0.9,
    "vorSf": -2,
-   "upSf": 0.9
+   "upSf": 0.9,
+   "espnAdp": 117,
+   "yahooAdp": 181
   },
   {
    "n": "KC Concepcion",
@@ -5054,7 +5299,9 @@
    "vor": -13,
    "up": 0.4,
    "vorSf": -37,
-   "upSf": -3.7
+   "upSf": -3.7,
+   "espnAdp": 126,
+   "yahooAdp": 128
   },
   {
    "n": "Jayden Higgins",
@@ -5095,7 +5342,9 @@
    "vor": -31,
    "up": -1.7,
    "vorSf": -55,
-   "upSf": -5.8
+   "upSf": -5.8,
+   "espnAdp": 131,
+   "yahooAdp": 123
   },
   {
    "n": "Jake Ferguson",
@@ -5136,7 +5385,9 @@
    "vor": 0,
    "up": 0.0,
    "vorSf": 0,
-   "upSf": 0.0
+   "upSf": 0.0,
+   "espnAdp": 110,
+   "yahooAdp": 136
   },
   {
    "n": "Jauan Jennings",
@@ -5177,7 +5428,9 @@
    "vor": -52,
    "up": -3.2,
    "vorSf": -76,
-   "upSf": -7.3
+   "upSf": -7.3,
+   "espnAdp": 164,
+   "yahooAdp": 199
   },
   {
    "n": "Josh Downs",
@@ -5218,7 +5471,9 @@
    "vor": -11,
    "up": -0.3,
    "vorSf": -35,
-   "upSf": -4.4
+   "upSf": -4.4,
+   "espnAdp": 92,
+   "yahooAdp": 88
   },
   {
    "n": "Rachaad White",
@@ -5259,7 +5514,9 @@
    "vor": -15,
    "up": -0.7,
    "vorSf": -15,
-   "upSf": -0.7
+   "upSf": -0.7,
+   "espnAdp": 106,
+   "yahooAdp": 106
   },
   {
    "n": "Sam Darnold",
@@ -5300,7 +5557,9 @@
    "vor": -45,
    "up": -1.9,
    "vorSf": 4,
-   "upSf": 0.0
+   "upSf": 0.0,
+   "espnAdp": 218,
+   "yahooAdp": 154
   },
   {
    "n": "Jacory Croskey-Merritt",
@@ -5341,7 +5600,9 @@
    "vor": -20,
    "up": 0.4,
    "vorSf": -20,
-   "upSf": 0.4
+   "upSf": 0.4,
+   "espnAdp": 121,
+   "yahooAdp": 105
   },
   {
    "n": "Denzel Boston",
@@ -5381,7 +5642,9 @@
    "vor": -38,
    "up": -2.0,
    "vorSf": -62,
-   "upSf": -6.1
+   "upSf": -6.1,
+   "espnAdp": 147,
+   "yahooAdp": 163
   },
   {
    "n": "Mike Washington Jr.",
@@ -5421,7 +5684,9 @@
    "vor": -104,
    "up": -6.1,
    "vorSf": -104,
-   "upSf": -6.1
+   "upSf": -6.1,
+   "espnAdp": 156,
+   "yahooAdp": 189
   },
   {
    "n": "C.J. Stroud",
@@ -5462,7 +5727,9 @@
    "vor": -41,
    "up": -2.0,
    "vorSf": 8,
-   "upSf": -0.1
+   "upSf": -0.1,
+   "espnAdp": 200,
+   "yahooAdp": 160
   },
   {
    "n": "Dallas Goedert",
@@ -5503,7 +5770,9 @@
    "vor": 12,
    "up": 1.8,
    "vorSf": 12,
-   "upSf": 1.8
+   "upSf": 1.8,
+   "espnAdp": 104,
+   "yahooAdp": 116
   },
   {
    "n": "Jalen McMillan",
@@ -5544,7 +5813,9 @@
    "vor": -35,
    "up": -1.3,
    "vorSf": -59,
-   "upSf": -5.4
+   "upSf": -5.4,
+   "espnAdp": 145,
+   "yahooAdp": 145
   },
   {
    "n": "Rashid Shaheed",
@@ -5581,7 +5852,9 @@
    "vor": -22,
    "up": -0.2,
    "vorSf": -46,
-   "upSf": -4.3
+   "upSf": -4.3,
+   "espnAdp": 144,
+   "yahooAdp": 134
   },
   {
    "n": "Stefon Diggs",
@@ -5618,7 +5891,9 @@
    "vor": -16,
    "up": -1.2,
    "vorSf": -40,
-   "upSf": -5.3
+   "upSf": -5.3,
+   "espnAdp": 128,
+   "yahooAdp": 101
   },
   {
    "n": "Cam Ward",
@@ -5659,7 +5934,9 @@
    "vor": -68,
    "up": -4.4,
    "vorSf": -19,
-   "upSf": -2.5
+   "upSf": -2.5,
+   "espnAdp": 199,
+   "yahooAdp": 162
   },
   {
    "n": "Travis Kelce",
@@ -5696,7 +5973,9 @@
    "vor": 10,
    "up": 0.4,
    "vorSf": 10,
-   "upSf": 0.4
+   "upSf": 0.4,
+   "espnAdp": 105,
+   "yahooAdp": 113
   },
   {
    "n": "Tyrone Tracy Jr.",
@@ -5737,7 +6016,9 @@
    "vor": -86,
    "up": -5.7,
    "vorSf": -86,
-   "upSf": -5.7
+   "upSf": -5.7,
+   "espnAdp": 155,
+   "yahooAdp": 133
   },
   {
    "n": "Aaron Jones",
@@ -5778,7 +6059,9 @@
    "vor": 0,
    "up": 0.2,
    "vorSf": 0,
-   "upSf": 0.2
+   "upSf": 0.2,
+   "espnAdp": 101,
+   "yahooAdp": 122
   },
   {
    "n": "Zach Charbonnet",
@@ -5819,7 +6102,9 @@
    "vor": -42,
    "up": 2.8,
    "vorSf": -42,
-   "upSf": 2.8
+   "upSf": 2.8,
+   "espnAdp": 124,
+   "yahooAdp": 140
   },
   {
    "n": "Brenton Strange",
@@ -5860,7 +6145,9 @@
    "vor": -18,
    "up": 0.2,
    "vorSf": -18,
-   "upSf": 0.2
+   "upSf": 0.2,
+   "espnAdp": 194,
+   "yahooAdp": 157
   },
   {
    "n": "Bryce Young",
@@ -5901,7 +6188,9 @@
    "vor": -49,
    "up": -1.9,
    "vorSf": 0,
-   "upSf": 0.0
+   "upSf": 0.0,
+   "espnAdp": 219,
+   "yahooAdp": 170
   },
   {
    "n": "Fernando Mendoza",
@@ -5941,7 +6230,9 @@
    "vor": -100,
    "up": -4.6,
    "vorSf": -51,
-   "upSf": -2.7
+   "upSf": -2.7,
+   "espnAdp": 220,
+   "yahooAdp": 224
   },
   {
    "n": "Isaiah Likely",
@@ -5982,7 +6273,9 @@
    "vor": -6,
    "up": 2.4,
    "vorSf": -6,
-   "upSf": 2.4
+   "upSf": 2.4,
+   "espnAdp": 118,
+   "yahooAdp": 119
   },
   {
    "n": "Daniel Jones",
@@ -6023,7 +6316,9 @@
    "vor": -20,
    "up": -0.2,
    "vorSf": 29,
-   "upSf": 1.7
+   "upSf": 1.7,
+   "espnAdp": 137,
+   "yahooAdp": 150
   },
   {
    "n": "Chris Rodriguez Jr.",
@@ -6064,7 +6359,9 @@
    "vor": -96,
    "up": -6.4,
    "vorSf": -96,
-   "upSf": -6.4
+   "upSf": -6.4,
+   "espnAdp": 141,
+   "yahooAdp": 117
   },
   {
    "n": "Mark Andrews",
@@ -6105,7 +6402,9 @@
    "vor": 10,
    "up": 2.8,
    "vorSf": 10,
-   "upSf": 2.8
+   "upSf": 2.8,
+   "espnAdp": 111,
+   "yahooAdp": 121
   },
   {
    "n": "Omar Cooper Jr.",
@@ -6145,7 +6444,9 @@
    "vor": -60,
    "up": -3.3,
    "vorSf": -84,
-   "upSf": -7.4
+   "upSf": -7.4,
+   "espnAdp": 162,
+   "yahooAdp": 176
   },
   {
    "n": "Brandon Aiyuk",
@@ -6175,7 +6476,9 @@
    "ktc1qb": 1655,
    "sid": "6803",
    "sTm": "SF",
-   "bye": 8
+   "bye": 8,
+   "espnAdp": 231,
+   "yahooAdp": 301
   },
   {
    "n": "Deebo Samuel",
@@ -6216,7 +6519,9 @@
    "vor": 0,
    "up": 0.4,
    "vorSf": -24,
-   "upSf": -3.7
+   "upSf": -3.7,
+   "espnAdp": 127,
+   "yahooAdp": 141
   },
   {
    "n": "Travis Hunter",
@@ -6257,7 +6562,9 @@
    "vor": -54,
    "up": -3.1,
    "vorSf": -78,
-   "upSf": -7.2
+   "upSf": -7.2,
+   "espnAdp": 90,
+   "yahooAdp": 158
   },
   {
    "n": "Juwan Johnson",
@@ -6298,7 +6605,9 @@
    "vor": -20,
    "up": -1.5,
    "vorSf": -20,
-   "upSf": -1.5
+   "upSf": -1.5,
+   "espnAdp": 160,
+   "yahooAdp": 155
   },
   {
    "n": "Jonathon Brooks",
@@ -6338,7 +6647,9 @@
    "vor": -19,
    "up": 0.7,
    "vorSf": -19,
-   "upSf": 0.7
+   "upSf": 0.7,
+   "espnAdp": 107,
+   "yahooAdp": 90
   },
   {
    "n": "Woody Marks",
@@ -6379,7 +6690,9 @@
    "vor": -50,
    "up": -2.9,
    "vorSf": -50,
-   "upSf": -2.9
+   "upSf": -2.9,
+   "espnAdp": 123,
+   "yahooAdp": 139
   },
   {
    "n": "James Conner",
@@ -6410,7 +6723,9 @@
    "ktc1qb": 2097,
    "sid": "4137",
    "sTm": "ARI",
-   "bye": 14
+   "bye": 14,
+   "espnAdp": 195,
+   "yahooAdp": 214
   },
   {
    "n": "Keaton Mitchell",
@@ -6450,7 +6765,9 @@
    "vor": -108,
    "up": -7.1,
    "vorSf": -108,
-   "upSf": -7.1
+   "upSf": -7.1,
+   "espnAdp": 168,
+   "yahooAdp": 131
   },
   {
    "n": "Jacoby Brissett",
@@ -6486,7 +6803,9 @@
    "vor": -87,
    "up": -5.2,
    "vorSf": -38,
-   "upSf": -3.3
+   "upSf": -3.3,
+   "espnAdp": 269,
+   "yahooAdp": 216
   },
   {
    "n": "Hunter Henry",
@@ -6523,7 +6842,9 @@
    "vor": -8,
    "up": 0.7,
    "vorSf": -8,
-   "upSf": 0.7
+   "upSf": 0.7,
+   "espnAdp": 120,
+   "yahooAdp": 164
   },
   {
    "n": "Jerry Jeudy",
@@ -6564,7 +6885,9 @@
    "vor": -32,
    "up": -1.9,
    "vorSf": -56,
-   "upSf": -6.0
+   "upSf": -6.0,
+   "espnAdp": 133,
+   "yahooAdp": 197
   },
   {
    "n": "Emmett Johnson",
@@ -6604,7 +6927,9 @@
    "vor": -124,
    "up": -10.3,
    "vorSf": -124,
-   "upSf": -10.3
+   "upSf": -10.3,
+   "espnAdp": 248,
+   "yahooAdp": 186
   },
   {
    "n": "Tyreek Hill",
@@ -6629,7 +6954,8 @@
    "jDsf": 164,
    "ktcSf": 1257,
    "ktc1qb": 1697,
-   "sid": "3321"
+   "sid": "3321",
+   "yahooAdp": 302
   },
   {
    "n": "Kayshon Boutte",
@@ -6670,7 +6996,9 @@
    "vor": -80,
    "up": -5.5,
    "vorSf": -104,
-   "upSf": -9.6
+   "upSf": -9.6,
+   "espnAdp": 230,
+   "yahooAdp": 237
   },
   {
    "n": "Chig Okonkwo",
@@ -6710,7 +7038,9 @@
    "vor": -35,
    "up": -3.3,
    "vorSf": -35,
-   "upSf": -3.3
+   "upSf": -3.3,
+   "espnAdp": 216,
+   "yahooAdp": 142
   },
   {
    "n": "Isiah Pacheco",
@@ -6751,7 +7081,9 @@
    "vor": -50,
    "up": -2.4,
    "vorSf": -50,
-   "upSf": -2.4
+   "upSf": -2.4,
+   "espnAdp": 140,
+   "yahooAdp": 151
   },
   {
    "n": "Tyjae Spears",
@@ -6792,7 +7124,9 @@
    "vor": -42,
    "up": -2.8,
    "vorSf": -42,
-   "upSf": -2.8
+   "upSf": -2.8,
+   "espnAdp": 166,
+   "yahooAdp": 146
   },
   {
    "n": "Adonai Mitchell",
@@ -6833,7 +7167,9 @@
    "vor": -40,
    "up": -0.3,
    "vorSf": -64,
-   "upSf": -4.4
+   "upSf": -4.4,
+   "espnAdp": 148,
+   "yahooAdp": 153
   },
   {
    "n": "Emanuel Wilson",
@@ -6870,7 +7206,9 @@
    "vor": -156,
    "up": -8.8,
    "vorSf": -156,
-   "upSf": -8.8
+   "upSf": -8.8,
+   "espnAdp": 266,
+   "yahooAdp": 256
   },
   {
    "n": "A.J. Barner",
@@ -6911,7 +7249,9 @@
    "vor": -39,
    "up": -2.5,
    "vorSf": -39,
-   "upSf": -2.5
+   "upSf": -2.5,
+   "espnAdp": 217,
+   "yahooAdp": 183
   },
   {
    "n": "Calvin Ridley",
@@ -6952,7 +7292,9 @@
    "vor": -24,
    "up": -0.5,
    "vorSf": -48,
-   "upSf": -4.6
+   "upSf": -4.6,
+   "espnAdp": 146,
+   "yahooAdp": 221
   },
   {
    "n": "Isaac TeSlaa",
@@ -6993,7 +7335,9 @@
    "vor": -84,
    "up": -4.5,
    "vorSf": -108,
-   "upSf": -8.6
+   "upSf": -8.6,
+   "espnAdp": 210,
+   "yahooAdp": 188
   },
   {
    "n": "T.J. Hockenson",
@@ -7034,7 +7378,9 @@
    "vor": -12,
    "up": -1.2,
    "vorSf": -12,
-   "upSf": -1.2
+   "upSf": -1.2,
+   "espnAdp": 112,
+   "yahooAdp": 195
   },
   {
    "n": "Geno Smith",
@@ -7069,7 +7415,9 @@
    "vor": -55,
    "up": -2.3,
    "vorSf": -6,
-   "upSf": -0.4
+   "upSf": -0.4,
+   "espnAdp": 267,
+   "yahooAdp": 241
   },
   {
    "n": "Dalton Schultz",
@@ -7110,7 +7458,9 @@
    "vor": -27,
    "up": -2.2,
    "vorSf": -27,
-   "upSf": -2.2
+   "upSf": -2.2,
+   "espnAdp": 207,
+   "yahooAdp": 207
   },
   {
    "n": "Tank Dell",
@@ -7150,7 +7500,9 @@
    "vor": -58,
    "up": -3.9,
    "vorSf": -82,
-   "upSf": -8.0
+   "upSf": -8.0,
+   "espnAdp": 165,
+   "yahooAdp": 274
   },
   {
    "n": "Jalen Nailor",
@@ -7190,7 +7542,9 @@
    "vor": -42,
    "up": -1.3,
    "vorSf": -66,
-   "upSf": -5.4
+   "upSf": -5.4,
+   "espnAdp": 161,
+   "yahooAdp": 148
   },
   {
    "n": "Sean Tucker",
@@ -7231,7 +7585,9 @@
    "vor": -130,
    "up": -8.5,
    "vorSf": -130,
-   "upSf": -8.5
+   "upSf": -8.5,
+   "espnAdp": 250,
+   "yahooAdp": 222
   },
   {
    "n": "Dylan Sampson",
@@ -7272,7 +7628,9 @@
    "vor": -94,
    "up": -5.5,
    "vorSf": -94,
-   "upSf": -5.5
+   "upSf": -5.5,
+   "espnAdp": 158,
+   "yahooAdp": 166
   },
   {
    "n": "Tre' Harris",
@@ -7311,7 +7669,9 @@
    "vor": -72,
    "up": -4.9,
    "vorSf": -96,
-   "upSf": -9.0
+   "upSf": -9.0,
+   "espnAdp": 202,
+   "yahooAdp": 191
   },
   {
    "n": "Trey Benson",
@@ -7342,7 +7702,8 @@
    "ktc1qb": 2572,
    "sid": "11589",
    "sTm": "ARI",
-   "bye": 14
+   "bye": 14,
+   "yahooAdp": 329
   },
   {
    "n": "Chimere Dike",
@@ -7383,7 +7744,8 @@
    "vor": -118,
    "up": -9.0,
    "vorSf": -142,
-   "upSf": -13.1
+   "upSf": -13.1,
+   "yahooAdp": 315
   },
   {
    "n": "Eli Stowers",
@@ -7423,7 +7785,9 @@
    "vor": -100,
    "up": -8.6,
    "vorSf": -100,
-   "upSf": -8.6
+   "upSf": -8.6,
+   "espnAdp": 324,
+   "yahooAdp": 283
   },
   {
    "n": "David Njoku",
@@ -7464,7 +7828,9 @@
    "vor": -70,
    "up": -5.8,
    "vorSf": -70,
-   "upSf": -5.8
+   "upSf": -5.8,
+   "espnAdp": 291,
+   "yahooAdp": 309
   },
   {
    "n": "Pat Bryant",
@@ -7505,7 +7871,9 @@
    "vor": -86,
    "up": -5.9,
    "vorSf": -110,
-   "upSf": -10.0
+   "upSf": -10.0,
+   "espnAdp": 261,
+   "yahooAdp": 248
   },
   {
    "n": "Tank Bigsby",
@@ -7546,7 +7914,9 @@
    "vor": -104,
    "up": -5.5,
    "vorSf": -104,
-   "upSf": -5.5
+   "upSf": -5.5,
+   "espnAdp": 143,
+   "yahooAdp": 138
   },
   {
    "n": "Alvin Kamara",
@@ -7587,7 +7957,9 @@
    "vor": -56,
    "up": -4.0,
    "vorSf": -56,
-   "upSf": -4.0
+   "upSf": -4.0,
+   "espnAdp": 139,
+   "yahooAdp": 143
   },
   {
    "n": "Tre Tucker",
@@ -7628,7 +8000,9 @@
    "vor": -30,
    "up": -0.5,
    "vorSf": -54,
-   "upSf": -4.6
+   "upSf": -4.6,
+   "espnAdp": 153,
+   "yahooAdp": 178
   },
   {
    "n": "Darnell Mooney",
@@ -7669,7 +8043,9 @@
    "vor": -72,
    "up": -4.3,
    "vorSf": -96,
-   "upSf": -8.4
+   "upSf": -8.4,
+   "espnAdp": 201,
+   "yahooAdp": 232
   },
   {
    "n": "Troy Franklin",
@@ -7710,7 +8086,9 @@
    "vor": -102,
    "up": -7.8,
    "vorSf": -126,
-   "upSf": -11.9
+   "upSf": -11.9,
+   "espnAdp": 376,
+   "yahooAdp": 264
   },
   {
    "n": "Kimani Vidal",
@@ -7751,7 +8129,9 @@
    "vor": -130,
    "up": -8.8,
    "vorSf": -130,
-   "upSf": -8.8
+   "upSf": -8.8,
+   "espnAdp": 223,
+   "yahooAdp": 227
   },
   {
    "n": "Mason Taylor",
@@ -7792,7 +8172,9 @@
    "vor": -88,
    "up": -7.7,
    "vorSf": -88,
-   "upSf": -7.7
+   "upSf": -7.7,
+   "espnAdp": 325,
+   "yahooAdp": 313
   },
   {
    "n": "Malik Washington",
@@ -7831,7 +8213,9 @@
    "vor": -59,
    "up": -5.7,
    "vorSf": -83,
-   "upSf": -9.8
+   "upSf": -9.8,
+   "espnAdp": 224,
+   "yahooAdp": 219
   },
   {
    "n": "Cade Otton",
@@ -7872,7 +8256,9 @@
    "vor": -51,
    "up": -3.9,
    "vorSf": -51,
-   "upSf": -3.9
+   "upSf": -3.9,
+   "espnAdp": 260,
+   "yahooAdp": 272
   },
   {
    "n": "Braelon Allen",
@@ -7913,7 +8299,9 @@
    "vor": -96,
    "up": -6.0,
    "vorSf": -96,
-   "upSf": -6.0
+   "upSf": -6.0,
+   "espnAdp": 167,
+   "yahooAdp": 198
   },
   {
    "n": "Nicholas Singleton",
@@ -7953,7 +8341,9 @@
    "vor": -148,
    "up": -10.9,
    "vorSf": -148,
-   "upSf": -10.9
+   "upSf": -10.9,
+   "espnAdp": 221,
+   "yahooAdp": 194
   },
   {
    "n": "Christian Kirk",
@@ -7994,7 +8384,9 @@
    "vor": -106,
    "up": -8.3,
    "vorSf": -130,
-   "upSf": -12.4
+   "upSf": -12.4,
+   "espnAdp": 379,
+   "yahooAdp": 323
   },
   {
    "n": "Brian Robinson Jr.",
@@ -8035,7 +8427,9 @@
    "vor": -76,
    "up": -3.2,
    "vorSf": -76,
-   "upSf": -3.2
+   "upSf": -3.2,
+   "espnAdp": 142,
+   "yahooAdp": 152
   },
   {
    "n": "Tua Tagovailoa",
@@ -8075,7 +8469,9 @@
    "vor": -172,
    "up": -12.8,
    "vorSf": -123,
-   "upSf": -10.9
+   "upSf": -10.9,
+   "espnAdp": 296,
+   "yahooAdp": 242
   },
   {
    "n": "Gunnar Helm",
@@ -8115,7 +8511,9 @@
    "vor": -34,
    "up": -2.9,
    "vorSf": -34,
-   "upSf": -2.9
+   "upSf": -2.9,
+   "espnAdp": 215,
+   "yahooAdp": 220
   },
   {
    "n": "Kaytron Allen",
@@ -8155,7 +8553,9 @@
    "vor": -152,
    "up": -11.4,
    "vorSf": -152,
-   "upSf": -11.4
+   "upSf": -11.4,
+   "espnAdp": 214,
+   "yahooAdp": 187
   },
   {
    "n": "Elijah Sarratt",
@@ -8195,7 +8595,9 @@
    "vor": -102,
    "up": -7.0,
    "vorSf": -126,
-   "upSf": -11.1
+   "upSf": -11.1,
+   "espnAdp": 263,
+   "yahooAdp": 267
   },
   {
    "n": "Ryan Flournoy",
@@ -8235,7 +8637,9 @@
    "vor": -72,
    "up": -3.4,
    "vorSf": -96,
-   "upSf": -7.5
+   "upSf": -7.5,
+   "espnAdp": 203,
+   "yahooAdp": 171
   },
   {
    "n": "Terrance Ferguson",
@@ -8276,7 +8680,9 @@
    "vor": -18,
    "up": 1.9,
    "vorSf": -18,
-   "upSf": 1.9
+   "upSf": 1.9,
+   "espnAdp": 159,
+   "yahooAdp": 203
   },
   {
    "n": "Michael Penix Jr.",
@@ -8317,7 +8723,9 @@
    "vor": -173,
    "up": -11.6,
    "vorSf": -124,
-   "upSf": -9.7
+   "upSf": -9.7,
+   "espnAdp": 310,
+   "yahooAdp": 257
   },
   {
    "n": "Tory Horton",
@@ -8358,7 +8766,9 @@
    "vor": -90,
    "up": -5.2,
    "vorSf": -114,
-   "upSf": -9.3
+   "upSf": -9.3,
+   "espnAdp": 262,
+   "yahooAdp": 258
   },
   {
    "n": "Ray Davis",
@@ -8399,7 +8809,9 @@
    "vor": -132,
    "up": -8.2,
    "vorSf": -132,
-   "upSf": -8.2
+   "upSf": -8.2,
+   "espnAdp": 154,
+   "yahooAdp": 168
   },
   {
    "n": "Aaron Rodgers",
@@ -8435,7 +8847,9 @@
    "vor": -69,
    "up": -4.8,
    "vorSf": -20,
-   "upSf": -2.9
+   "upSf": -2.9,
+   "espnAdp": 268,
+   "yahooAdp": 259
   },
   {
    "n": "Pat Freiermuth",
@@ -8474,7 +8888,9 @@
    "vor": -24,
    "up": 0.7,
    "vorSf": -24,
-   "upSf": 0.7
+   "upSf": 0.7,
+   "espnAdp": 206,
+   "yahooAdp": 285
   },
   {
    "n": "Zachariah Branch",
@@ -8514,7 +8930,9 @@
    "vor": -62,
    "up": -2.8,
    "vorSf": -86,
-   "upSf": -6.9
+   "upSf": -6.9,
+   "espnAdp": 197,
+   "yahooAdp": 226
   },
   {
    "n": "Chris Brazzell II",
@@ -8543,7 +8961,8 @@
    "ktc1qb": 2872,
    "sid": "13353",
    "sTm": "CAR",
-   "bye": 5
+   "bye": 5,
+   "yahooAdp": 305
   },
   {
    "n": "Marquise Brown",
@@ -8582,7 +9001,9 @@
    "vor": -103,
    "up": -7.9,
    "vorSf": -127,
-   "upSf": -12.0
+   "upSf": -12.0,
+   "espnAdp": 375,
+   "yahooAdp": 339
   },
   {
    "n": "Jake Tonges",
@@ -8623,7 +9044,9 @@
    "vor": -104,
    "up": -8.9,
    "vorSf": -104,
-   "upSf": -8.9
+   "upSf": -8.9,
+   "espnAdp": 293,
+   "yahooAdp": 322
   },
   {
    "n": "George Holani",
@@ -8659,7 +9082,9 @@
    "vor": -128,
    "up": -8.1,
    "vorSf": -128,
-   "upSf": -8.1
+   "upSf": -8.1,
+   "espnAdp": 244,
+   "yahooAdp": 213
   },
   {
    "n": "Elic Ayomanor",
@@ -8700,7 +9125,8 @@
    "vor": -132,
    "up": -10.5,
    "vorSf": -156,
-   "upSf": -14.6
+   "upSf": -14.6,
+   "yahooAdp": 303
   },
   {
    "n": "Germie Bernard",
@@ -8740,7 +9166,9 @@
    "vor": -41,
    "up": -1.9,
    "vorSf": -65,
-   "upSf": -6.0
+   "upSf": -6.0,
+   "espnAdp": 152,
+   "yahooAdp": 253
   },
   {
    "n": "Ollie Gordon",
@@ -8779,7 +9207,9 @@
    "vor": -132,
    "up": -8.6,
    "vorSf": -132,
-   "upSf": -8.6
+   "upSf": -8.6,
+   "espnAdp": 226,
+   "yahooAdp": 204
   },
   {
    "n": "Kyle Williams",
@@ -8810,7 +9240,8 @@
    "ktc1qb": 2573,
    "sid": "12547",
    "sTm": "NE",
-   "bye": 11
+   "bye": 11,
+   "yahooAdp": 344
   },
   {
    "n": "Devaughn Vele",
@@ -8851,7 +9282,9 @@
    "vor": -96,
    "up": -6.0,
    "vorSf": -120,
-   "upSf": -10.1
+   "upSf": -10.1,
+   "espnAdp": 370,
+   "yahooAdp": 304
   },
   {
    "n": "Shedeur Sanders",
@@ -8892,7 +9325,9 @@
    "vor": -191,
    "up": -13.2,
    "vorSf": -142,
-   "upSf": -11.3
+   "upSf": -11.3,
+   "espnAdp": 301,
+   "yahooAdp": 270
   },
   {
    "n": "Colby Parkinson",
@@ -8933,7 +9368,9 @@
    "vor": -78,
    "up": -6.1,
    "vorSf": -78,
-   "upSf": -6.1
+   "upSf": -6.1,
+   "espnAdp": 312,
+   "yahooAdp": 280
   },
   {
    "n": "Demond Claiborne",
@@ -8973,7 +9410,9 @@
    "vor": -144,
    "up": -10.6,
    "vorSf": -144,
-   "upSf": -10.6
+   "upSf": -10.6,
+   "espnAdp": 222,
+   "yahooAdp": 206
   },
   {
    "n": "Ja'Kobi Lane",
@@ -9013,7 +9452,9 @@
    "vor": -60,
    "up": -2.7,
    "vorSf": -84,
-   "upSf": -6.8
+   "upSf": -6.8,
+   "espnAdp": 232,
+   "yahooAdp": 277
   },
   {
    "n": "Jaydon Blue",
@@ -9053,7 +9494,9 @@
    "vor": -123,
    "up": -8.0,
    "vorSf": -123,
-   "upSf": -8.0
+   "upSf": -8.0,
+   "espnAdp": 243,
+   "yahooAdp": 169
   },
   {
    "n": "Cooper Kupp",
@@ -9094,7 +9537,9 @@
    "vor": -62,
    "up": -3.9,
    "vorSf": -86,
-   "upSf": -8.0
+   "upSf": -8.0,
+   "espnAdp": 228,
+   "yahooAdp": 282
   },
   {
    "n": "Justin Fields",
@@ -9132,7 +9577,9 @@
    "vor": -276,
    "up": -20.2,
    "vorSf": -227,
-   "upSf": -18.3
+   "upSf": -18.3,
+   "espnAdp": 317,
+   "yahooAdp": 356
   },
   {
    "n": "Theo Johnson",
@@ -9173,7 +9620,9 @@
    "vor": -82,
    "up": -7.2,
    "vorSf": -82,
-   "upSf": -7.2
+   "upSf": -7.2,
+   "espnAdp": 326,
+   "yahooAdp": 331
   },
   {
    "n": "Najee Harris",
@@ -9202,7 +9651,8 @@
    "jmCol": "#60a5fa",
    "ktcSf": 1032,
    "ktc1qb": 1320,
-   "sid": "7528"
+   "sid": "7528",
+   "yahooAdp": 281
   },
   {
    "n": "Tez Johnson",
@@ -9241,7 +9691,8 @@
    "vor": -126,
    "up": -9.7,
    "vorSf": -150,
-   "upSf": -13.8
+   "upSf": -13.8,
+   "yahooAdp": 395
   },
   {
    "n": "Jaylin Noel",
@@ -9282,7 +9733,9 @@
    "vor": -83,
    "up": -5.2,
    "vorSf": -107,
-   "upSf": -9.3
+   "upSf": -9.3,
+   "espnAdp": 205,
+   "yahooAdp": 212
   },
   {
    "n": "Mike Gesicki",
@@ -9321,7 +9774,9 @@
    "vor": -44,
    "up": -1.4,
    "vorSf": -44,
-   "upSf": -1.4
+   "upSf": -1.4,
+   "espnAdp": 289,
+   "yahooAdp": 308
   },
   {
    "n": "Dontayvion Wicks",
@@ -9360,7 +9815,9 @@
    "vor": -90,
    "up": -5.6,
    "vorSf": -114,
-   "upSf": -9.7
+   "upSf": -9.7,
+   "espnAdp": 252,
+   "yahooAdp": 192
   },
   {
    "n": "Ty Simpson",
@@ -9400,7 +9857,8 @@
    "vor": -277,
    "up": -20.1,
    "vorSf": -228,
-   "upSf": -18.2
+   "upSf": -18.2,
+   "espnAdp": 336
   },
   {
    "n": "Justice Hill",
@@ -9436,7 +9894,9 @@
    "vor": -71,
    "up": -1.9,
    "vorSf": -71,
-   "upSf": -1.9
+   "upSf": -1.9,
+   "espnAdp": 196,
+   "yahooAdp": 239
   },
   {
    "n": "Keon Coleman",
@@ -9477,7 +9937,9 @@
    "vor": -94,
    "up": -7.0,
    "vorSf": -118,
-   "upSf": -11.1
+   "upSf": -11.1,
+   "espnAdp": 234,
+   "yahooAdp": 307
   },
   {
    "n": "Rashod Bateman",
@@ -9518,7 +9980,9 @@
    "vor": -42,
    "up": -1.6,
    "vorSf": -66,
-   "upSf": -5.7
+   "upSf": -5.7,
+   "espnAdp": 163,
+   "yahooAdp": 246
   },
   {
    "n": "Emari Demercado",
@@ -9554,7 +10018,9 @@
    "vor": -110,
    "up": -9.1,
    "vorSf": -110,
-   "upSf": -9.1
+   "upSf": -9.1,
+   "espnAdp": 246,
+   "yahooAdp": 236
   },
   {
    "n": "Jalen Tolbert",
@@ -9590,7 +10056,9 @@
    "vor": -72,
    "up": -4.4,
    "vorSf": -96,
-   "upSf": -8.5
+   "upSf": -8.5,
+   "espnAdp": 227,
+   "yahooAdp": 275
   },
   {
    "n": "Greg Dulcich",
@@ -9626,7 +10094,9 @@
    "vor": -38,
    "up": -2.9,
    "vorSf": -38,
-   "upSf": -2.9
+   "upSf": -2.9,
+   "espnAdp": 259,
+   "yahooAdp": 179
   },
   {
    "n": "LeQuint Allen",
@@ -9664,7 +10134,9 @@
    "vor": -130,
    "up": -9.6,
    "vorSf": -130,
-   "upSf": -9.6
+   "upSf": -9.6,
+   "espnAdp": 241,
+   "yahooAdp": 332
   },
   {
    "n": "Chris Bell",
@@ -9704,7 +10176,9 @@
    "vor": -72,
    "up": -5.0,
    "vorSf": -96,
-   "upSf": -9.1
+   "upSf": -9.1,
+   "espnAdp": 211,
+   "yahooAdp": 266
   },
   {
    "n": "Ted Hurst",
@@ -9744,7 +10218,9 @@
    "vor": -91,
    "up": -5.9,
    "vorSf": -115,
-   "upSf": -10.0
+   "upSf": -10.0,
+   "espnAdp": 233,
+   "yahooAdp": 268
   },
   {
    "n": "Jordan James",
@@ -9782,7 +10258,9 @@
    "vor": -108,
    "up": -5.7,
    "vorSf": -108,
-   "upSf": -5.7
+   "upSf": -5.7,
+   "espnAdp": 193,
+   "yahooAdp": 233
   },
   {
    "n": "Evan Engram",
@@ -9821,7 +10299,9 @@
    "vor": -48,
    "up": -3.9,
    "vorSf": -48,
-   "upSf": -3.9
+   "upSf": -3.9,
+   "espnAdp": 290,
+   "yahooAdp": 291
   },
   {
    "n": "Jaylen Wright",
@@ -9861,7 +10341,9 @@
    "vor": -126,
    "up": -7.7,
    "vorSf": -126,
-   "upSf": -7.7
+   "upSf": -7.7,
+   "espnAdp": 225,
+   "yahooAdp": 294
   },
   {
    "n": "Adam Randall",
@@ -9899,7 +10381,9 @@
    "vor": -142,
    "up": -9.4,
    "vorSf": -142,
-   "upSf": -9.4
+   "upSf": -9.4,
+   "espnAdp": 239,
+   "yahooAdp": 235
   },
   {
    "n": "Tyquan Thornton",
@@ -9937,7 +10421,9 @@
    "vor": -80,
    "up": -4.9,
    "vorSf": -104,
-   "upSf": -9.0
+   "upSf": -9.0,
+   "espnAdp": 273,
+   "yahooAdp": 252
   },
   {
    "n": "Joe Mixon",
@@ -9963,7 +10449,8 @@
    "jmC": 2017,
    "jmT": "Top Prospect",
    "jmCol": "#34d399",
-   "sid": "4018"
+   "sid": "4018",
+   "yahooAdp": 381
   },
   {
    "n": "Keenan Allen",
@@ -9988,7 +10475,8 @@
    "jDsf": 253,
    "ktcSf": 1175,
    "ktc1qb": 1431,
-   "sid": "1479"
+   "sid": "1479",
+   "yahooAdp": 271
   },
   {
    "n": "Marvin Mims Jr.",
@@ -10028,7 +10516,9 @@
    "vor": -86,
    "up": -5.6,
    "vorSf": -110,
-   "upSf": -9.7
+   "upSf": -9.7,
+   "espnAdp": 284,
+   "yahooAdp": 319
   },
   {
    "n": "Darius Slayton",
@@ -10065,7 +10555,9 @@
    "vor": -79,
    "up": -5.5,
    "vorSf": -103,
-   "upSf": -9.6
+   "upSf": -9.6,
+   "espnAdp": 271,
+   "yahooAdp": 261
   },
   {
    "n": "Deshaun Watson",
@@ -10104,7 +10596,9 @@
    "vor": -163,
    "up": -13.0,
    "vorSf": -114,
-   "upSf": -11.1
+   "upSf": -11.1,
+   "espnAdp": 270,
+   "yahooAdp": 299
   },
   {
    "n": "Antonio Williams",
@@ -10144,7 +10638,9 @@
    "vor": -80,
    "up": -4.8,
    "vorSf": -104,
-   "upSf": -8.9
+   "upSf": -8.9,
+   "espnAdp": 204,
+   "yahooAdp": 215
   },
   {
    "n": "Tutu Atwell",
@@ -10179,7 +10675,8 @@
    "vor": -102,
    "up": -7.8,
    "vorSf": -126,
-   "upSf": -11.9
+   "upSf": -11.9,
+   "espnAdp": 373
   },
   {
    "n": "Jahan Dotson",
@@ -10217,7 +10714,9 @@
    "vor": -84,
    "up": -4.6,
    "vorSf": -108,
-   "upSf": -8.7
+   "upSf": -8.7,
+   "espnAdp": 275,
+   "yahooAdp": 250
   },
   {
    "n": "J.J. McCarthy",
@@ -10258,7 +10757,9 @@
    "vor": -247,
    "up": -16.5,
    "vorSf": -198,
-   "upSf": -14.6
+   "upSf": -14.6,
+   "espnAdp": 315,
+   "yahooAdp": 393
   },
   {
    "n": "Darnell Washington",
@@ -10296,7 +10797,9 @@
    "vor": -74,
    "up": -6.0,
    "vorSf": -74,
-   "upSf": -6.0
+   "upSf": -6.0,
+   "espnAdp": 313,
+   "yahooAdp": 288
   },
   {
    "n": "Olamide Zaccheaus",
@@ -10332,7 +10835,9 @@
    "vor": -120,
    "up": -8.6,
    "vorSf": -144,
-   "upSf": -12.7
+   "upSf": -12.7,
+   "espnAdp": 400,
+   "yahooAdp": 388
   },
   {
    "n": "DJ Giddens",
@@ -10370,7 +10875,9 @@
    "vor": -134,
    "up": -8.3,
    "vorSf": -134,
-   "upSf": -8.3
+   "upSf": -8.3,
+   "espnAdp": 251,
+   "yahooAdp": 234
   },
   {
    "n": "Dawson Knox",
@@ -10407,7 +10914,9 @@
    "vor": -75,
    "up": -6.1,
    "vorSf": -75,
-   "upSf": -6.1
+   "upSf": -6.1,
+   "espnAdp": 314,
+   "yahooAdp": 361
   },
   {
    "n": "Mack Hollins",
@@ -10443,7 +10952,8 @@
    "vor": -122,
    "up": -9.4,
    "vorSf": -146,
-   "upSf": -13.5
+   "upSf": -13.5,
+   "yahooAdp": 347
   },
   {
    "n": "Kirk Cousins",
@@ -10479,7 +10989,9 @@
    "vor": -241,
    "up": -16.9,
    "vorSf": -192,
-   "upSf": -15.0
+   "upSf": -15.0,
+   "espnAdp": 302,
+   "yahooAdp": 244
   },
   {
    "n": "Jerome Ford",
@@ -10544,7 +11056,8 @@
    "vor": -278,
    "up": -19.2,
    "vorSf": -229,
-   "upSf": -17.3
+   "upSf": -17.3,
+   "espnAdp": 319
   },
   {
    "n": "Ty Johnson",
@@ -10580,7 +11093,9 @@
    "vor": -92,
    "up": -4.3,
    "vorSf": -92,
-   "upSf": -4.3
+   "upSf": -4.3,
+   "espnAdp": 245,
+   "yahooAdp": 316
   },
   {
    "n": "Seth McGowan",
@@ -10615,7 +11130,9 @@
    "vor": -152,
    "up": -10.1,
    "vorSf": -152,
-   "upSf": -10.1
+   "upSf": -10.1,
+   "espnAdp": 281,
+   "yahooAdp": 330
   },
   {
    "n": "Elijah Arroyo",
@@ -10654,7 +11171,8 @@
    "vor": -82,
    "up": -6.2,
    "vorSf": -82,
-   "upSf": -6.2
+   "upSf": -6.2,
+   "espnAdp": 323
   },
   {
    "n": "Kaleb Johnson",
@@ -10694,7 +11212,9 @@
    "vor": -160,
    "up": -11.9,
    "vorSf": -160,
-   "upSf": -11.9
+   "upSf": -11.9,
+   "espnAdp": 303,
+   "yahooAdp": 321
   },
   {
    "n": "Isaiah Bond",
@@ -10731,7 +11251,8 @@
    "vor": -120,
    "up": -9.5,
    "vorSf": -144,
-   "upSf": -13.6
+   "upSf": -13.6,
+   "yahooAdp": 345
   },
   {
    "n": "Skyler Bell",
@@ -10769,7 +11290,9 @@
    "vor": -109,
    "up": -7.9,
    "vorSf": -133,
-   "upSf": -12.0
+   "upSf": -12.0,
+   "espnAdp": 383,
+   "yahooAdp": 255
   },
   {
    "n": "Andrei Iosivas",
@@ -10805,7 +11328,9 @@
    "vor": -81,
    "up": -4.3,
    "vorSf": -105,
-   "upSf": -8.4
+   "upSf": -8.4,
+   "espnAdp": 274,
+   "yahooAdp": 318
   },
   {
    "n": "Brashard Smith",
@@ -10844,7 +11369,9 @@
    "vor": -164,
    "up": -14.3,
    "vorSf": -164,
-   "upSf": -14.3
+   "upSf": -14.3,
+   "espnAdp": 306,
+   "yahooAdp": 342
   },
   {
    "n": "Malachi Fields",
@@ -10879,7 +11406,9 @@
    "vor": -117,
    "up": -8.5,
    "vorSf": -141,
-   "upSf": -12.6
+   "upSf": -12.6,
+   "espnAdp": 396,
+   "yahooAdp": 260
   },
   {
    "n": "Jack Bech",
@@ -10920,7 +11449,9 @@
    "vor": -79,
    "up": -5.5,
    "vorSf": -103,
-   "upSf": -9.6
+   "upSf": -9.6,
+   "espnAdp": 209,
+   "yahooAdp": 228
   },
   {
    "n": "MarShawn Lloyd",
@@ -10956,7 +11487,9 @@
    "vor": -106,
    "up": -6.2,
    "vorSf": -106,
-   "upSf": -6.2
+   "upSf": -6.2,
+   "espnAdp": 242,
+   "yahooAdp": 172
   },
   {
    "n": "Anthony Richardson",
@@ -10985,7 +11518,8 @@
    "ktc1qb": 2070,
    "sid": "9229",
    "sTm": "IND",
-   "bye": 13
+   "bye": 13,
+   "espnAdp": 337
   },
   {
    "n": "Chris Brooks",
@@ -11021,7 +11555,9 @@
    "vor": -130,
    "up": -8.1,
    "vorSf": -130,
-   "upSf": -8.1
+   "upSf": -8.1,
+   "espnAdp": 249,
+   "yahooAdp": 293
   },
   {
    "n": "Xavier Legette",
@@ -11059,7 +11595,9 @@
    "vor": -54,
    "up": -1.8,
    "vorSf": -78,
-   "upSf": -5.9
+   "upSf": -5.9,
+   "espnAdp": 208,
+   "yahooAdp": 298
   },
   {
    "n": "Ja'Tavion Sanders",
@@ -11098,7 +11636,9 @@
    "vor": -70,
    "up": -5.5,
    "vorSf": -70,
-   "upSf": -5.5
+   "upSf": -5.5,
+   "espnAdp": 311,
+   "yahooAdp": 394
   },
   {
    "n": "Max Klare",
@@ -11138,7 +11678,8 @@
    "vor": -122,
    "up": -11.0,
    "vorSf": -122,
-   "upSf": -11.0
+   "upSf": -11.0,
+   "espnAdp": 328
   },
   {
    "n": "Cole Kmet",
@@ -11177,7 +11718,9 @@
    "vor": -88,
    "up": -7.7,
    "vorSf": -88,
-   "upSf": -7.7
+   "upSf": -7.7,
+   "espnAdp": 331,
+   "yahooAdp": 370
   },
   {
    "n": "Calvin Austin III",
@@ -11212,7 +11755,8 @@
    "vor": -132,
    "up": -10.0,
    "vorSf": -156,
-   "upSf": -14.1
+   "upSf": -14.1,
+   "yahooAdp": 349
   },
   {
    "n": "Bryce Lance",
@@ -11248,7 +11792,8 @@
    "vor": -110,
    "up": -7.9,
    "vorSf": -134,
-   "upSf": -12.0
+   "upSf": -12.0,
+   "espnAdp": 384
   },
   {
    "n": "Treylon Burks",
@@ -11284,7 +11829,9 @@
    "vor": -107,
    "up": -8.1,
    "vorSf": -131,
-   "upSf": -12.2
+   "upSf": -12.2,
+   "espnAdp": 272,
+   "yahooAdp": 311
   },
   {
    "n": "Kendrick Bourne",
@@ -11320,7 +11867,9 @@
    "vor": -106,
    "up": -7.9,
    "vorSf": -130,
-   "upSf": -12.0
+   "upSf": -12.0,
+   "espnAdp": 377,
+   "yahooAdp": 351
   },
   {
    "n": "Trevor Etienne",
@@ -11358,7 +11907,9 @@
    "vor": -150,
    "up": -11.0,
    "vorSf": -150,
-   "upSf": -11.0
+   "upSf": -11.0,
+   "espnAdp": 280,
+   "yahooAdp": 334
   },
   {
    "n": "Tanner Koziol",
@@ -11422,7 +11973,8 @@
    "ktc1qb": 2384,
    "sid": "12476",
    "sTm": "NO",
-   "bye": 8
+   "bye": 8,
+   "yahooAdp": 296
   },
   {
    "n": "J'Mari Taylor",
@@ -11487,7 +12039,9 @@
    "vor": -68,
    "up": -5.1,
    "vorSf": -68,
-   "upSf": -5.1
+   "upSf": -5.1,
+   "espnAdp": 292,
+   "yahooAdp": 379
   },
   {
    "n": "Kareem Hunt",
@@ -11509,7 +12063,8 @@
    "jmC": 2017,
    "jmT": "Starter",
    "jmCol": "#60a5fa",
-   "sid": "4098"
+   "sid": "4098",
+   "yahooAdp": 355
   },
   {
    "n": "Darren Waller",
@@ -11527,7 +12082,8 @@
    "jSf": 413,
    "jDy": 335,
    "jDsf": 326,
-   "sid": "2505"
+   "sid": "2505",
+   "yahooAdp": 352
   },
   {
    "n": "Tyler Higbee",
@@ -11559,7 +12115,9 @@
    "vor": -100,
    "up": -8.8,
    "vorSf": -100,
-   "upSf": -8.8
+   "upSf": -8.8,
+   "espnAdp": 327,
+   "yahooAdp": 287
   },
   {
    "n": "Josh Oliver",
@@ -11592,7 +12150,9 @@
    "vor": -101,
    "up": -8.4,
    "vorSf": -101,
-   "upSf": -8.4
+   "upSf": -8.4,
+   "espnAdp": 389,
+   "yahooAdp": 375
   },
   {
    "n": "Devontez Walker",
@@ -11627,7 +12187,8 @@
    "vor": -123,
    "up": -9.1,
    "vorSf": -147,
-   "upSf": -13.2
+   "upSf": -13.2,
+   "yahooAdp": 350
   },
   {
    "n": "Dresser Winn",
@@ -11714,7 +12275,9 @@
    "vor": -121,
    "up": -7.3,
    "vorSf": -121,
-   "upSf": -7.3
+   "upSf": -7.3,
+   "espnAdp": 247,
+   "yahooAdp": 209
   },
   {
    "n": "Chris Oladokun",
@@ -11778,7 +12341,9 @@
    "vor": -276,
    "up": -19.6,
    "vorSf": -227,
-   "upSf": -17.7
+   "upSf": -17.7,
+   "espnAdp": 318,
+   "yahooAdp": 385
   },
   {
    "n": "Tanner Conner",
@@ -11831,7 +12396,9 @@
    "vor": -86,
    "up": -5.8,
    "vorSf": -110,
-   "upSf": -9.9
+   "upSf": -9.9,
+   "espnAdp": 294,
+   "yahooAdp": 382
   },
   {
    "n": "Tahj Brooks",
@@ -11866,7 +12433,9 @@
    "vor": -148,
    "up": -9.9,
    "vorSf": -148,
-   "upSf": -9.9
+   "upSf": -9.9,
+   "espnAdp": 279,
+   "yahooAdp": 240
   },
   {
    "n": "Luke McCaffrey",
@@ -11901,7 +12470,8 @@
    "vor": -130,
    "up": -10.2,
    "vorSf": -154,
-   "upSf": -14.3
+   "upSf": -14.3,
+   "yahooAdp": 325
   },
   {
    "n": "Dont'e Thornton",
@@ -11938,7 +12508,8 @@
    "vor": -118,
    "up": -9.5,
    "vorSf": -142,
-   "upSf": -13.6
+   "upSf": -13.6,
+   "espnAdp": 399
   },
   {
    "n": "Malik Flowers",
@@ -11988,7 +12559,9 @@
    "vor": -102,
    "up": -8.4,
    "vorSf": -102,
-   "upSf": -8.4
+   "upSf": -8.4,
+   "espnAdp": 392,
+   "yahooAdp": 312
   },
   {
    "n": "Malik Davis",
@@ -12024,7 +12597,9 @@
    "vor": -132,
    "up": -8.4,
    "vorSf": -132,
-   "upSf": -8.4
+   "upSf": -8.4,
+   "espnAdp": 265,
+   "yahooAdp": 314
   },
   {
    "n": "Brock Wright",
@@ -12058,7 +12633,8 @@
    "vor": -116,
    "up": -10.1,
    "vorSf": -116,
-   "upSf": -10.1
+   "upSf": -10.1,
+   "yahooAdp": 378
   },
   {
    "n": "Jaylin Lane",
@@ -12093,7 +12669,8 @@
    "vor": -114,
    "up": -8.8,
    "vorSf": -138,
-   "upSf": -12.9
+   "upSf": -12.9,
+   "espnAdp": 295
   },
   {
    "n": "Luke Musgrave",
@@ -12194,7 +12771,8 @@
    "vor": -124,
    "up": -11.2,
    "vorSf": -124,
-   "upSf": -11.2
+   "upSf": -11.2,
+   "yahooAdp": 328
   },
   {
    "n": "Savion Williams",
@@ -12230,7 +12808,9 @@
    "vor": -86,
    "up": -5.9,
    "vorSf": -110,
-   "upSf": -10.0
+   "upSf": -10.0,
+   "espnAdp": 253,
+   "yahooAdp": 341
   },
   {
    "n": "Jaydn Ott",
@@ -12291,7 +12871,9 @@
    "vor": -95,
    "up": -6.7,
    "vorSf": -119,
-   "upSf": -10.8
+   "upSf": -10.8,
+   "espnAdp": 369,
+   "yahooAdp": 348
   },
   {
    "n": "Noah Gray",
@@ -12328,7 +12910,8 @@
    "vor": -82,
    "up": -7.2,
    "vorSf": -82,
-   "upSf": -7.2
+   "upSf": -7.2,
+   "espnAdp": 330
   },
   {
    "n": "KeAndre Lambert-Smith",
@@ -12397,7 +12980,8 @@
    "vor": -277,
    "up": -18.8,
    "vorSf": -228,
-   "upSf": -16.9
+   "upSf": -16.9,
+   "espnAdp": 342
   },
   {
    "n": "Mitchell Trubisky",
@@ -12489,7 +13073,8 @@
    "vor": -164,
    "up": -11.0,
    "vorSf": -164,
-   "upSf": -11.0
+   "upSf": -11.0,
+   "espnAdp": 305
   },
   {
    "n": "Noah Fant",
@@ -12524,7 +13109,9 @@
    "vor": -96,
    "up": -8.5,
    "vorSf": -96,
-   "upSf": -8.5
+   "upSf": -8.5,
+   "espnAdp": 332,
+   "yahooAdp": 364
   },
   {
    "n": "John Metchie III",
@@ -12586,7 +13173,8 @@
    "vor": -139,
    "up": -11.4,
    "vorSf": -163,
-   "upSf": -15.5
+   "upSf": -15.5,
+   "yahooAdp": 390
   },
   {
    "n": "Erick All",
@@ -12621,7 +13209,9 @@
    "vor": -99,
    "up": -8.4,
    "vorSf": -99,
-   "upSf": -8.4
+   "upSf": -8.4,
+   "espnAdp": 386,
+   "yahooAdp": 320
   },
   {
    "n": "Drew Allar",
@@ -12703,7 +13293,8 @@
    "vor": -120,
    "up": -8.1,
    "vorSf": -144,
-   "upSf": -12.2
+   "upSf": -12.2,
+   "yahooAdp": 306
   },
   {
    "n": "Kalif Raymond",
@@ -12732,7 +13323,9 @@
    "vor": -106,
    "up": -7.6,
    "vorSf": -130,
-   "upSf": -11.7
+   "upSf": -11.7,
+   "espnAdp": 378,
+   "yahooAdp": 346
   },
   {
    "n": "Zamir White",
@@ -12786,7 +13379,8 @@
    "vor": -130,
    "up": -9.3,
    "vorSf": -154,
-   "upSf": -13.4
+   "upSf": -13.4,
+   "yahooAdp": 380
   },
   {
    "n": "Devin Singletary",
@@ -12823,7 +13417,9 @@
    "vor": -148,
    "up": -10.2,
    "vorSf": -148,
-   "upSf": -10.2
+   "upSf": -10.2,
+   "espnAdp": 277,
+   "yahooAdp": 333
   },
   {
    "n": "Tyler Conklin",
@@ -12911,7 +13507,8 @@
    "vor": -278,
    "up": -19.6,
    "vorSf": -229,
-   "upSf": -17.7
+   "upSf": -17.7,
+   "espnAdp": 335
   },
   {
    "n": "Jeremy McNichols",
@@ -12963,7 +13560,8 @@
    "ktc1qb": 1974,
    "sid": "11569",
    "sTm": "LAR",
-   "bye": 11
+   "bye": 11,
+   "yahooAdp": 335
   },
   {
    "n": "Rahsul Faison",
@@ -13117,7 +13715,8 @@
    "jmCol": "#60a5fa",
    "ktcSf": 653,
    "ktc1qb": 870,
-   "sid": "4144"
+   "sid": "4144",
+   "yahooAdp": 360
   },
   {
    "n": "Dyami Brown",
@@ -13152,7 +13751,8 @@
    "vor": -106,
    "up": -7.3,
    "vorSf": -130,
-   "upSf": -11.4
+   "upSf": -11.4,
+   "espnAdp": 264
   },
   {
    "n": "Le'Veon Moss",
@@ -13208,7 +13808,8 @@
    "vor": -166,
    "up": -11.7,
    "vorSf": -166,
-   "upSf": -11.7
+   "upSf": -11.7,
+   "espnAdp": 309
   },
   {
    "n": "Xavier Hutchinson",
@@ -13243,7 +13844,9 @@
    "vor": -116,
    "up": -8.6,
    "vorSf": -140,
-   "upSf": -12.7
+   "upSf": -12.7,
+   "espnAdp": 397,
+   "yahooAdp": 400
   },
   {
    "n": "Samaje Perine",
@@ -13279,7 +13882,9 @@
    "vor": -74,
    "up": -2.8,
    "vorSf": -74,
-   "upSf": -2.8
+   "upSf": -2.8,
+   "espnAdp": 240,
+   "yahooAdp": 289
   },
   {
    "n": "Jalen Royals",
@@ -13383,7 +13988,8 @@
    "vor": -96,
    "up": -6.6,
    "vorSf": -120,
-   "upSf": -10.7
+   "upSf": -10.7,
+   "espnAdp": 371
   },
   {
    "n": "Audric Estime",
@@ -13410,7 +14016,8 @@
    "ktc1qb": 1747,
    "sid": "11579",
    "sTm": "NO",
-   "bye": 8
+   "bye": 8,
+   "yahooAdp": 372
   },
   {
    "n": "Jalen Milroe",
@@ -13760,7 +14367,8 @@
    "vor": -110,
    "up": -9.5,
    "vorSf": -110,
-   "upSf": -9.5
+   "upSf": -9.5,
+   "yahooAdp": 396
   },
   {
    "n": "Josh Palmer",
@@ -13795,7 +14403,8 @@
    "vor": -108,
    "up": -8.7,
    "vorSf": -132,
-   "upSf": -12.8
+   "upSf": -12.8,
+   "espnAdp": 381
   },
   {
    "n": "Quinn Ewers",
@@ -13888,7 +14497,8 @@
    "ktc1qb": 1080,
    "sid": "11729",
    "sTm": "DET",
-   "bye": 6
+   "bye": 6,
+   "yahooAdp": 337
   },
   {
    "n": "DeAndre Hopkins",
@@ -13993,7 +14603,9 @@
    "vor": -52,
    "up": -3.1,
    "vorSf": -76,
-   "upSf": -7.2
+   "upSf": -7.2,
+   "espnAdp": 151,
+   "yahooAdp": 132
   },
   {
    "n": "Drew Plitt",
@@ -14106,7 +14718,9 @@
    "vor": -138,
    "up": -8.5,
    "vorSf": -138,
-   "upSf": -8.5
+   "upSf": -8.5,
+   "espnAdp": 213,
+   "yahooAdp": 218
   },
   {
    "n": "Patrick Taylor Jr.",
@@ -14158,7 +14772,8 @@
    "vor": -98,
    "up": -8.4,
    "vorSf": -98,
-   "upSf": -8.4
+   "upSf": -8.4,
+   "espnAdp": 334
   },
   {
    "n": "Will Shipley",
@@ -14193,7 +14808,8 @@
    "vor": -143,
    "up": -9.8,
    "vorSf": -143,
-   "upSf": -9.8
+   "upSf": -9.8,
+   "espnAdp": 276
   },
   {
    "n": "Van Jefferson",
@@ -14245,7 +14861,9 @@
    "vor": -98,
    "up": -8.7,
    "vorSf": -98,
-   "upSf": -8.7
+   "upSf": -8.7,
+   "espnAdp": 333,
+   "yahooAdp": 377
   },
   {
    "n": "Mitchell Evans",
@@ -14280,7 +14898,9 @@
    "vor": -103,
    "up": -8.9,
    "vorSf": -103,
-   "upSf": -8.9
+   "upSf": -8.9,
+   "espnAdp": 393,
+   "yahooAdp": 324
   },
   {
    "n": "Jackson Hawes",
@@ -14347,7 +14967,9 @@
    "vor": -82,
    "up": -5.9,
    "vorSf": -82,
-   "upSf": -5.9
+   "upSf": -5.9,
+   "espnAdp": 329,
+   "yahooAdp": 398
   },
   {
    "n": "Luke Schoonmaker",
@@ -14416,7 +15038,9 @@
    "vor": -158,
    "up": -11.9,
    "vorSf": -158,
-   "upSf": -11.9
+   "upSf": -11.9,
+   "espnAdp": 283,
+   "yahooAdp": 336
   },
   {
    "n": "Spencer Rattler",
@@ -14468,7 +15092,8 @@
    "jDsf": 449,
    "sid": "3161",
    "sTm": "MIN",
-   "bye": 6
+   "bye": 6,
+   "yahooAdp": 362
   },
   {
    "n": "Dillon Gabriel",
@@ -14557,7 +15182,9 @@
    "vor": -158,
    "up": -11.4,
    "vorSf": -158,
-   "upSf": -11.4
+   "upSf": -11.4,
+   "espnAdp": 282,
+   "yahooAdp": 326
   },
   {
    "n": "Jake Bobo",
@@ -14607,7 +15234,9 @@
    "vor": -98,
    "up": -6.7,
    "vorSf": -122,
-   "upSf": -10.8
+   "upSf": -10.8,
+   "espnAdp": 372,
+   "yahooAdp": 340
   },
   {
    "n": "John Michael Gyllenborg",
@@ -14647,7 +15276,8 @@
    "jDsf": 337,
    "ktcSf": 477,
    "ktc1qb": 571,
-   "sid": "1339"
+   "sid": "1339",
+   "yahooAdp": 353
   },
   {
    "n": "Brenen Thompson",
@@ -14685,7 +15315,8 @@
    "vor": -122,
    "up": -9.3,
    "vorSf": -146,
-   "upSf": -13.4
+   "upSf": -13.4,
+   "yahooAdp": 317
   },
   {
    "n": "Kenny Pickett",
@@ -14755,7 +15386,9 @@
    "vor": -103,
    "up": -8.2,
    "vorSf": -127,
-   "upSf": -12.3
+   "upSf": -12.3,
+   "espnAdp": 374,
+   "yahooAdp": 343
   },
   {
    "n": "AJ Dillon",
@@ -14830,7 +15463,8 @@
    "vor": -110,
    "up": -7.3,
    "vorSf": -134,
-   "upSf": -11.4
+   "upSf": -11.4,
+   "espnAdp": 385
   },
   {
    "n": "Joe Milton",
@@ -15051,7 +15685,9 @@
    ],
    "sid": "4227",
    "sTm": "KC",
-   "bye": 5
+   "bye": 5,
+   "espnAdp": 187,
+   "yahooAdp": 245
   },
   {
    "n": "Tyler Bass",
@@ -15082,7 +15718,8 @@
    ],
    "sid": "7042",
    "sTm": "BUF",
-   "bye": 7
+   "bye": 7,
+   "espnAdp": 347
   },
   {
    "n": "Jason Sanders",
@@ -15111,7 +15748,8 @@
    ],
    "sid": "5119",
    "sTm": "NYJ",
-   "bye": 13
+   "bye": 13,
+   "espnAdp": 358
   },
   {
    "n": "Trey Smack",
@@ -15135,7 +15773,9 @@
    "kXpa": 44.0,
    "sid": "13545",
    "sTm": "GB",
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 287,
+   "yahooAdp": 269
   },
   {
    "n": "Jake Moody",
@@ -15169,7 +15809,9 @@
    ],
    "sid": "10937",
    "sTm": "WAS",
-   "bye": 7
+   "bye": 7,
+   "espnAdp": 350,
+   "yahooAdp": 359
   },
   {
    "n": "Brandon Aubrey",
@@ -15203,7 +15845,9 @@
    ],
    "sid": "11533",
    "sTm": "DAL",
-   "bye": 14
+   "bye": 14,
+   "espnAdp": 181,
+   "yahooAdp": 165
   },
   {
    "n": "Cameron Dicker",
@@ -15237,7 +15881,9 @@
    ],
    "sid": "8259",
    "sTm": "LAC",
-   "bye": 7
+   "bye": 7,
+   "espnAdp": 182,
+   "yahooAdp": 180
   },
   {
    "n": "Ka'imi Fairbairn",
@@ -15271,7 +15917,9 @@
    ],
    "sid": "3451",
    "sTm": "HOU",
-   "bye": 8
+   "bye": 8,
+   "espnAdp": 185,
+   "yahooAdp": 177
   },
   {
    "n": "Evan McPherson",
@@ -15305,7 +15953,9 @@
    ],
    "sid": "7839",
    "sTm": "CIN",
-   "bye": 6
+   "bye": 6,
+   "espnAdp": 256,
+   "yahooAdp": 201
   },
   {
    "n": "Chris Boswell",
@@ -15339,7 +15989,9 @@
    ],
    "sid": "1945",
    "sTm": "PIT",
-   "bye": 9
+   "bye": 9,
+   "espnAdp": 237,
+   "yahooAdp": 238
   },
   {
    "n": "Younghoe Koo",
@@ -15387,7 +16039,9 @@
    ],
    "sid": "2747",
    "sTm": "SEA",
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 183,
+   "yahooAdp": 190
   },
   {
    "n": "Cam Little",
@@ -15420,7 +16074,9 @@
    ],
    "sid": "11786",
    "sTm": "JAX",
-   "bye": 7
+   "bye": 7,
+   "espnAdp": 188,
+   "yahooAdp": 184
   },
   {
    "n": "Will Reichard",
@@ -15453,7 +16109,9 @@
    ],
    "sid": "11792",
    "sTm": "MIN",
-   "bye": 6
+   "bye": 6,
+   "espnAdp": 192,
+   "yahooAdp": 243
   },
   {
    "n": "Chase McLaughlin",
@@ -15486,7 +16144,9 @@
    ],
    "sid": "6650",
    "sTm": "TB",
-   "bye": 10
+   "bye": 10,
+   "espnAdp": 238,
+   "yahooAdp": 230
   },
   {
    "n": "Jake Bates",
@@ -15519,7 +16179,9 @@
    ],
    "sid": "11539",
    "sTm": "DET",
-   "bye": 6
+   "bye": 6,
+   "espnAdp": 189,
+   "yahooAdp": 200
   },
   {
    "n": "Andy Borregales",
@@ -15551,7 +16213,9 @@
    ],
    "sid": "12713",
    "sTm": "NE",
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 351,
+   "yahooAdp": 223
   },
   {
    "n": "Tyler Loop",
@@ -15584,7 +16248,9 @@
    ],
    "sid": "12711",
    "sTm": "BAL",
-   "bye": 13
+   "bye": 13,
+   "espnAdp": 190,
+   "yahooAdp": 202
   },
   {
    "n": "Eddy Pineiro",
@@ -15616,7 +16282,9 @@
    ],
    "sid": "5189",
    "sTm": "SF",
-   "bye": 8
+   "bye": 8,
+   "espnAdp": 186,
+   "yahooAdp": 210
   },
   {
    "n": "Wil Lutz",
@@ -15649,7 +16317,9 @@
    ],
    "sid": "3678",
    "sTm": "DEN",
-   "bye": 10
+   "bye": 10,
+   "espnAdp": 346,
+   "yahooAdp": 273
   },
   {
    "n": "Riley Patterson",
@@ -15664,7 +16334,8 @@
    "jDsf": 537,
    "sid": "7922",
    "sTm": "MIA",
-   "bye": 6
+   "bye": 6,
+   "yahooAdp": 383
   },
   {
    "n": "Joey Slye",
@@ -15695,7 +16366,9 @@
    ],
    "sid": "6528",
    "sTm": "TEN",
-   "bye": 9
+   "bye": 9,
+   "espnAdp": 355,
+   "yahooAdp": 365
   },
   {
    "n": "Cairo Santos",
@@ -15727,7 +16400,9 @@
    ],
    "sid": "2020",
    "sTm": "CHI",
-   "bye": 10
+   "bye": 10,
+   "espnAdp": 191,
+   "yahooAdp": 211
   },
   {
    "n": "Nick Folk",
@@ -15758,7 +16433,9 @@
    ],
    "sid": "650",
    "sTm": "ATL",
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 257,
+   "yahooAdp": 371
   },
   {
    "n": "Chad Ryland",
@@ -15789,7 +16466,9 @@
    ],
    "sid": "10955",
    "sTm": "ARI",
-   "bye": 14
+   "bye": 14,
+   "espnAdp": 356,
+   "yahooAdp": 368
   },
   {
    "n": "Blake Grupe",
@@ -15820,7 +16499,9 @@
    ],
    "sid": "11058",
    "sTm": "IND",
-   "bye": 13
+   "bye": 13,
+   "espnAdp": 349,
+   "yahooAdp": 369
   },
   {
    "n": "Jake Elliott",
@@ -15853,7 +16534,9 @@
    ],
    "sid": "4195",
    "sTm": "PHI",
-   "bye": 10
+   "bye": 10,
+   "espnAdp": 288,
+   "yahooAdp": 286
   },
   {
    "n": "Andre Szmyt",
@@ -15883,7 +16566,8 @@
    ],
    "sid": "11261",
    "sTm": "CLE",
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 357
   },
   {
    "n": "Brandon McManus",
@@ -15897,7 +16581,8 @@
    "jSf": 466,
    "jDy": 386,
    "jDsf": 464,
-   "sid": "1433"
+   "sid": "1433",
+   "yahooAdp": 363
   },
   {
    "n": "Matt Prater",
@@ -15908,7 +16593,8 @@
    "jSf": 530,
    "jDy": 529,
    "jDsf": 526,
-   "sid": "17"
+   "sid": "17",
+   "yahooAdp": 384
   },
   {
    "n": "Ryan Fitzgerald",
@@ -15939,7 +16625,8 @@
    ],
    "sid": "12961",
    "sTm": "CAR",
-   "bye": 5
+   "bye": 5,
+   "espnAdp": 354
   },
   {
    "n": "Daniel Carlson",
@@ -15982,7 +16669,9 @@
    ],
    "sid": "4233",
    "sTm": "MIA",
-   "bye": 6
+   "bye": 6,
+   "espnAdp": 352,
+   "yahooAdp": 357
   },
   {
    "n": "Matt Gay",
@@ -16013,7 +16702,9 @@
    ],
    "sid": "6083",
    "sTm": "LV",
-   "bye": 13
+   "bye": 13,
+   "espnAdp": 353,
+   "yahooAdp": 373
   },
   {
    "n": "Harrison Mevis",
@@ -16045,7 +16736,9 @@
    ],
    "sid": "12015",
    "sTm": "LAR",
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 184,
+   "yahooAdp": 217
   },
   {
    "n": "Michael Badgley",
@@ -16073,7 +16766,8 @@
    "jDsf": 542,
    "sid": "12185",
    "sTm": "IND",
-   "bye": 13
+   "bye": 13,
+   "yahooAdp": 354
   },
   {
    "n": "Charlie Smyth",
@@ -16104,7 +16798,9 @@
    ],
    "sid": "11653",
    "sTm": "NO",
-   "bye": 8
+   "bye": 8,
+   "espnAdp": 345,
+   "yahooAdp": 265
   },
   {
    "n": "Joshua Karty",
@@ -16117,7 +16813,8 @@
    "jSf": 513,
    "jDy": 360,
    "jDsf": 511,
-   "sid": "11789"
+   "sid": "11789",
+   "yahooAdp": 387
   },
   {
    "n": "Parker Romo",
@@ -16205,7 +16902,9 @@
    "sid": "HOU",
    "sTm": "HOU",
    "dRk": 3,
-   "bye": 8
+   "bye": 8,
+   "espnAdp": 170,
+   "yahooAdp": 147
   },
   {
    "n": "Denver Broncos D/ST",
@@ -16220,7 +16919,9 @@
    "sid": "DEN",
    "sTm": "DEN",
    "dRk": 10,
-   "bye": 10
+   "bye": 10,
+   "espnAdp": 169,
+   "yahooAdp": 156
   },
   {
    "n": "Seattle Seahawks D/ST",
@@ -16235,7 +16936,9 @@
    "sid": "SEA",
    "sTm": "SEA",
    "dRk": 6,
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 172,
+   "yahooAdp": 159
   },
   {
    "n": "Philadelphia Eagles D/ST",
@@ -16250,7 +16953,9 @@
    "sid": "PHI",
    "sTm": "PHI",
    "dRk": 5,
-   "bye": 10
+   "bye": 10,
+   "espnAdp": 175,
+   "yahooAdp": 173
   },
   {
    "n": "Los Angeles Rams D/ST",
@@ -16265,7 +16970,9 @@
    "sid": "LAR",
    "sTm": "LAR",
    "dRk": 1,
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 173,
+   "yahooAdp": 161
   },
   {
    "n": "Minnesota Vikings D/ST",
@@ -16280,7 +16987,9 @@
    "sid": "MIN",
    "sTm": "MIN",
    "dRk": 21,
-   "bye": 6
+   "bye": 6,
+   "espnAdp": 359,
+   "yahooAdp": 175
   },
   {
    "n": "New England Patriots D/ST",
@@ -16295,7 +17004,9 @@
    "sid": "NE",
    "sTm": "NE",
    "dRk": 8,
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 177,
+   "yahooAdp": 174
   },
   {
    "n": "Jacksonville Jaguars D/ST",
@@ -16310,7 +17021,9 @@
    "sid": "JAX",
    "sTm": "JAX",
    "dRk": 22,
-   "bye": 7
+   "bye": 7,
+   "espnAdp": 254,
+   "yahooAdp": 182
   },
   {
    "n": "Los Angeles Chargers D/ST",
@@ -16325,7 +17038,9 @@
    "sid": "LAC",
    "sTm": "LAC",
    "dRk": 19,
-   "bye": 7
+   "bye": 7,
+   "espnAdp": 180,
+   "yahooAdp": 196
   },
   {
    "n": "Pittsburgh Steelers D/ST",
@@ -16340,7 +17055,9 @@
    "sid": "PIT",
    "sTm": "PIT",
    "dRk": 2,
-   "bye": 9
+   "bye": 9,
+   "espnAdp": 171,
+   "yahooAdp": 185
   },
   {
    "n": "Green Bay Packers D/ST",
@@ -16355,7 +17072,9 @@
    "sid": "GB",
    "sTm": "GB",
    "dRk": 15,
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 236,
+   "yahooAdp": 205
   },
   {
    "n": "Cleveland Browns D/ST",
@@ -16370,7 +17089,9 @@
    "sid": "CLE",
    "sTm": "CLE",
    "dRk": 9,
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 176,
+   "yahooAdp": 290
   },
   {
    "n": "Baltimore Ravens D/ST",
@@ -16385,7 +17106,9 @@
    "sid": "BAL",
    "sTm": "BAL",
    "dRk": 4,
-   "bye": 13
+   "bye": 13,
+   "espnAdp": 174,
+   "yahooAdp": 193
   },
   {
    "n": "Kansas City Chiefs D/ST",
@@ -16400,7 +17123,9 @@
    "sid": "KC",
    "sTm": "KC",
    "dRk": 12,
-   "bye": 5
+   "bye": 5,
+   "espnAdp": 179,
+   "yahooAdp": 208
   },
   {
    "n": "Buffalo Bills D/ST",
@@ -16415,7 +17140,9 @@
    "sid": "BUF",
    "sTm": "BUF",
    "dRk": 29,
-   "bye": 7
+   "bye": 7,
+   "espnAdp": 366,
+   "yahooAdp": 229
   },
   {
    "n": "Detroit Lions D/ST",
@@ -16430,7 +17157,9 @@
    "sid": "DET",
    "sTm": "DET",
    "dRk": 7,
-   "bye": 6
+   "bye": 6,
+   "espnAdp": 178,
+   "yahooAdp": 225
   },
   {
    "n": "San Francisco 49ers D/ST",
@@ -16445,7 +17174,9 @@
    "sid": "SF",
    "sTm": "SF",
    "dRk": 17,
-   "bye": 8
+   "bye": 8,
+   "espnAdp": 297,
+   "yahooAdp": 247
   },
   {
    "n": "Atlanta Falcons D/ST",
@@ -16459,7 +17190,9 @@
    "sid": "ATL",
    "sTm": "ATL",
    "dRk": 28,
-   "bye": 11
+   "bye": 11,
+   "espnAdp": 364,
+   "yahooAdp": 254
   },
   {
    "n": "Indianapolis Colts D/ST",
@@ -16473,7 +17206,9 @@
    "sid": "IND",
    "sTm": "IND",
    "dRk": 24,
-   "bye": 13
+   "bye": 13,
+   "espnAdp": 255,
+   "yahooAdp": 262
   },
   {
    "n": "Carolina Panthers D/ST",
@@ -16487,7 +17222,9 @@
    "sid": "CAR",
    "sTm": "CAR",
    "dRk": 16,
-   "bye": 5
+   "bye": 5,
+   "espnAdp": 300,
+   "yahooAdp": 276
   },
   {
    "n": "New Orleans Saints D/ST",
@@ -16502,7 +17239,9 @@
    "sid": "NO",
    "sTm": "NO",
    "dRk": 23,
-   "bye": 8
+   "bye": 8,
+   "espnAdp": 299,
+   "yahooAdp": 300
   },
   {
    "n": "Chicago Bears D/ST",
@@ -16517,7 +17256,9 @@
    "sid": "CHI",
    "sTm": "CHI",
    "dRk": 14,
-   "bye": 10
+   "bye": 10,
+   "espnAdp": 286,
+   "yahooAdp": 263
   },
   {
    "n": "New York Giants D/ST",
@@ -16532,7 +17273,9 @@
    "sid": "NYG",
    "sTm": "NYG",
    "dRk": 20,
-   "bye": 8
+   "bye": 8,
+   "espnAdp": 360,
+   "yahooAdp": 249
   },
   {
    "n": "Tampa Bay Buccaneers D/ST",
@@ -16546,7 +17289,9 @@
    "sid": "TB",
    "sTm": "TB",
    "dRk": 13,
-   "bye": 10
+   "bye": 10,
+   "espnAdp": 235,
+   "yahooAdp": 295
   },
   {
    "n": "Miami Dolphins D/ST",
@@ -16561,7 +17306,9 @@
    "sid": "MIA",
    "sTm": "MIA",
    "dRk": 32,
-   "bye": 6
+   "bye": 6,
+   "espnAdp": 368,
+   "yahooAdp": 376
   },
   {
    "n": "Tennessee Titans D/ST",
@@ -16575,7 +17322,9 @@
    "sid": "TEN",
    "sTm": "TEN",
    "dRk": 26,
-   "bye": 9
+   "bye": 9,
+   "espnAdp": 361,
+   "yahooAdp": 292
   },
   {
    "n": "Dallas Cowboys D/ST",
@@ -16590,7 +17339,9 @@
    "sid": "DAL",
    "sTm": "DAL",
    "dRk": 18,
-   "bye": 14
+   "bye": 14,
+   "espnAdp": 362,
+   "yahooAdp": 231
   },
   {
    "n": "New York Jets D/ST",
@@ -16604,7 +17355,8 @@
    "sid": "NYJ",
    "sTm": "NYJ",
    "dRk": 11,
-   "bye": 13
+   "bye": 13,
+   "espnAdp": 298
   },
   {
    "n": "Washington Commanders D/ST",
@@ -16617,7 +17369,8 @@
    "sid": "WAS",
    "sTm": "WAS",
    "dRk": 30,
-   "bye": 7
+   "bye": 7,
+   "espnAdp": 363
   },
   {
    "n": "Las Vegas Raiders D/ST",
@@ -16631,7 +17384,8 @@
    "sid": "LV",
    "sTm": "LV",
    "dRk": 27,
-   "bye": 13
+   "bye": 13,
+   "espnAdp": 365
   },
   {
    "n": "Cincinnati Bengals D/ST",
@@ -16645,7 +17399,9 @@
    "sid": "CIN",
    "sTm": "CIN",
    "dRk": 25,
-   "bye": 6
+   "bye": 6,
+   "espnAdp": 285,
+   "yahooAdp": 251
   },
   {
    "n": "Arizona Cardinals D/ST",
@@ -16659,7 +17415,8 @@
    "sid": "ARI",
    "sTm": "ARI",
    "dRk": 31,
-   "bye": 14
+   "bye": 14,
+   "espnAdp": 367
   },
   {
    "n": "Dean Connors",
@@ -16710,7 +17467,9 @@
    "vor": -102,
    "up": -8.8,
    "vorSf": -102,
-   "upSf": -8.8
+   "upSf": -8.8,
+   "espnAdp": 390,
+   "yahooAdp": 310
   },
   {
    "n": "Eli Heidenreich",
@@ -16814,7 +17573,8 @@
    "vor": -114,
    "up": -8.3,
    "vorSf": -138,
-   "upSf": -12.4
+   "upSf": -12.4,
+   "espnAdp": 391
   },
   {
    "n": "Amare Thomas",
@@ -16946,7 +17706,9 @@
    "vor": -258,
    "up": -1.4,
    "vorSf": -209,
-   "upSf": 0.5
+   "upSf": 0.5,
+   "espnAdp": 316,
+   "yahooAdp": 327
   },
   {
    "n": "Josh Cameron",
@@ -17167,7 +17929,9 @@
    "vor": -80,
    "up": -5.7,
    "vorSf": -104,
-   "upSf": -9.8
+   "upSf": -9.8,
+   "espnAdp": 229,
+   "yahooAdp": 279
   },
   {
    "n": "Jordan Hudson",
@@ -17870,7 +18634,8 @@
    "vor": -100,
    "up": -8.6,
    "vorSf": -100,
-   "upSf": -8.6
+   "upSf": -8.6,
+   "espnAdp": 387
   },
   {
    "n": "Riley Nowakowski",
@@ -17928,7 +18693,9 @@
    "vor": -108,
    "up": -7.4,
    "vorSf": -132,
-   "upSf": -11.5
+   "upSf": -11.5,
+   "espnAdp": 382,
+   "yahooAdp": 278
   },
   {
    "n": "Seydou Traore",
@@ -18088,7 +18855,8 @@
    "vor": -130,
    "up": -7.8,
    "vorSf": -130,
-   "upSf": -7.8
+   "upSf": -7.8,
+   "espnAdp": 380
   },
   {
    "n": "Xavier Smith",
@@ -18216,7 +18984,8 @@
    "vor": -164,
    "up": -11.4,
    "vorSf": -164,
-   "upSf": -11.4
+   "upSf": -11.4,
+   "espnAdp": 308
   },
   {
    "n": "Nick Chubb",
@@ -18235,7 +19004,8 @@
    "jmC": 2018,
    "jmT": "Starter",
    "jmCol": "#60a5fa",
-   "sid": "4988"
+   "sid": "4988",
+   "yahooAdp": 284
   },
   {
    "n": "Drew Sample",
@@ -18262,7 +19032,8 @@
    "vor": -100,
    "up": -8.2,
    "vorSf": -100,
-   "upSf": -8.2
+   "upSf": -8.2,
+   "espnAdp": 388
   },
   {
    "n": "Zavier Scott",
@@ -18328,7 +19099,8 @@
    "ktc1qb": 1560,
    "sid": "12738",
    "sTm": "DAL",
-   "bye": 14
+   "bye": 14,
+   "yahooAdp": 297
   },
   {
    "n": "Skyy Moore",
@@ -18426,7 +19198,8 @@
    "vor": -118,
    "up": -8.8,
    "vorSf": -142,
-   "upSf": -12.9
+   "upSf": -12.9,
+   "espnAdp": 398
   },
   {
    "n": "Taysom Hill",
@@ -18440,7 +19213,8 @@
    "jSf": 441,
    "jDy": 471,
    "jDsf": 435,
-   "sid": "4381"
+   "sid": "4381",
+   "yahooAdp": 367
   },
   {
    "n": "Dane Key",
@@ -18525,7 +19299,8 @@
    "vor": -277,
    "up": -20.2,
    "vorSf": -228,
-   "upSf": -18.3
+   "upSf": -18.3,
+   "espnAdp": 343
   },
   {
    "n": "Dominic Zvada",
@@ -18547,7 +19322,8 @@
    "kXpa": 37.0,
    "sid": "13833",
    "sTm": "NYG",
-   "bye": 8
+   "bye": 8,
+   "espnAdp": 348
   }
  ],
  "pickAssets": [

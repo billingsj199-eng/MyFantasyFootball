@@ -29,6 +29,9 @@
   #plist .playerinfo__playername { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #plist .pl-team { font-size: 10px; color: #64748b; text-transform: uppercase; }
   #plist .fpts { margin-left: auto; font-size: 12px; color: #334155; }
+  /* Per-row QUEUE button like the real room (kept for row-geometry realism;
+     the sidebar no longer docks anything to it). */
+  #plist .qbtn { background: #fff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 14px; padding: 2px 12px; font-size: 10px; font-weight: 700; margin: 0; flex: 0 0 auto; }
 </style>
 </head>
 <body>
@@ -160,6 +163,7 @@ watch the sidebar track it.</p>
         '<div class="pl-name"><span class="playerinfo__playername"><a href="#"></a></span></div>' +
         '<div class="pl-team"></div>' +
       '</div>' +
+      '<button class="qbtn">QUEUE</button>' +
       '<span class="fpts"></span>';
     plistEl.appendChild(row);
   }

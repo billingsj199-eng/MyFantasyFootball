@@ -9178,8 +9178,8 @@ function renderSearchChips() {
 render();
 
 // === Page Navigation ===
-const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest' };
-const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest' };
+const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest', draftstrategy: 'pageDraftStrategy' };
+const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest', draftstrategy: 'authAnchorDraftStrategy' };
 function switchPage(page) {
   // Admin-only pages — silently redirect non-admins to home
   const ADMIN_ONLY_PAGES = ['backtest', 'trivia'];
@@ -9245,6 +9245,15 @@ function switchPage(page) {
   // non-rankings surface (Compare, Trivia, Prospect, Mock, Games, retired cards), so fire it
   // on any non-rankings navigation as a catch-all. Idempotent + idle-preloaded, so it's a net.
   if (page !== 'rankings' && typeof window._loadRetiredData === 'function') window._loadRetiredData();
+  // Draft Strategy reads DRAFT_HISTORY, which is lazy — render once the file lands.
+  // _ensureDraftHistory memoizes, so repeat visits resolve immediately and just re-render.
+  if (page === 'draftstrategy' && typeof window._ensureDraftHistory === 'function') {
+    window._ensureDraftHistory().then(function() {
+      if (typeof window._renderDraftStrategy === 'function') {
+        try { window._renderDraftStrategy(); } catch (e) { console.warn('[DraftStrategy]', e); }
+      }
+    });
+  }
   // Render compare grid when navigating to compare page
   if (page === 'compare') renderCompareGrid();
   // Render backtest when navigating to backtest page
@@ -48971,5 +48980,341 @@ Rules:
   _mtUpdateJacksLock();
   window._mtUpdateJacksLock = _mtUpdateJacksLock;
   _mtUpdateAdpSrcVisibility();
+
+})();
+
+// ============================================================================
+// === DRAFT STRATEGY PAGE ====================================================
+// ============================================================================
+// Renders the written draft guide plus the historical tables behind it, off
+// window.DRAFT_HISTORY (data/draft_history.js, lazy-loaded on page open).
+//
+// The prose lives here rather than in index.html on purpose: every number the
+// writeup quotes is pulled from the same object the tables render from, so
+// re-running scripts/pull_espn_historical_adp.py can never leave the guide
+// asserting a figure the tables contradict.
+(function() {
+
+  const POS = ['QB', 'RB', 'WR', 'TE'];
+  const POS_VAR = { QB: '--qb', RB: '--rb', WR: '--wr', TE: '--te' };
+  const MIN_N = 4;   // matches the pull script — below this a cell is too thin to lean on
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  const signed = v => (v > 0 ? '+' : '') + Math.round(v);
+  const pct = v => Math.round(v * 100) + '%';
+  const posChip = p => '<span class="ds-pos" style="color:var(' + POS_VAR[p] + ')">' + p + '</span>';
+
+  // Heat fill for a VOR cell. Saturates at 130 pts — roughly a round-1 back.
+  function vorBg(v) {
+    const m = Math.min(1, Math.abs(v) / 130);
+    const a = (0.10 + 0.42 * m).toFixed(3);
+    return v >= 0 ? 'rgba(34,197,94,' + a + ')' : 'rgba(231,76,60,' + a + ')';
+  }
+  function rateBg(v) {
+    const a = (0.06 + 0.40 * Math.max(0, (v - 0.15)) / 0.85).toFixed(3);
+    return 'rgba(245,158,11,' + a + ')';
+  }
+
+  function cell(H, pos, rnd) {
+    const g = H.grid[pos];
+    return g ? g[rnd] || g[String(rnd)] : null;
+  }
+  function board(H, rnd) {
+    return H.board[rnd] || H.board[String(rnd)] || [];
+  }
+
+  // -- Round-by-round guidance ------------------------------------------------
+  // Editorial: what to do with the pick. The position ordering shown next to
+  // each line is computed from the data, so these read as the "why", not the
+  // ranking itself.
+  const PLAN = {
+    1:  'Take the best back or receiver on your board. Both are worth roughly a full extra starter here, and the gap between them is smaller than the gap between you and the next tier.',
+    2:  'Backs and receivers still — this is the last round where a running back is a genuine difference maker rather than just a starter. The tight end figure here rests on very few picks.',
+    3:  'Receiver, or the quarterback you actually want. Running back value has already collapsed — a third-round back is worth about a fifth of a first-round one.',
+    4:  'A tight end, if a starting-caliber one is still there. Otherwise a back — round 4 backs have held up better than round 3 backs.',
+    5:  'Quarterback if you skipped one, otherwise a back. Receivers are still fine but no longer a bargain.',
+    6:  'Tight end or back. Receivers taken here finish as startable less than half the time.',
+    7:  'Running back. This is the sweet spot for a backup with a path to volume.',
+    8:  'Running back again. Your last round with a better-than-even chance of finding a starter.',
+    9:  'Back or quarterback. Everything else here is roughly a waiver-wire player.',
+    10: 'Tight end if you punted the position. Nothing else in this round beats the waiver wire on average.',
+    11: 'Tight end or a second quarterback. Upside darts only.',
+    12: 'Quarterback, if you waited. Then start thinking about a kicker and a defense.',
+    13: 'Kicker and defense. Do not spend anything earlier than this on either.',
+  };
+
+  // -- Rules ------------------------------------------------------------------
+  // Each returns {n, rule, why} with every figure read live off the data.
+  function buildRules(H) {
+    const R = [];
+    const rbCliff = (H.cliffs.RB || [])[0];
+    const wrCliff = (H.cliffs.WR || [])[0];
+    const g = (p, r) => cell(H, p, r);
+
+    R.push({
+      rule: 'Rounds 1 and 2 are your only real shot at a difference-making running back.',
+      why: 'Backs drafted in round 1 averaged ' + signed(g('RB', 1).vor) + ' points over replacement and round 2 ' +
+           signed(g('RB', 2).vor) + '. Round 3 drops to ' + signed(g('RB', 3).vor) + ' — a ' +
+           Math.round(rbCliff.drop) + '-point fall, the steepest single-round drop anywhere in this study. ' +
+           'The common advice that the running back cliff arrives in rounds 3 and 4 is one round late.'
+    });
+    R.push({
+      rule: 'Receivers stay worth drafting about four rounds longer than backs — then stop abruptly.',
+      why: 'Receiver value decays gently and stays positive through round 7 (' + signed(g('WR', 7).vor) +
+           '), then goes negative and never recovers. The startable rate tells it more bluntly: ' +
+           pct(g('WR', 8).hit) + ' in round 8, ' + pct(g('WR', 9).hit) + ' in round 9. ' +
+           'That is the sharpest one-round collapse in the dataset.'
+    });
+    R.push({
+      rule: 'If you want a real quarterback advantage, round 3 is the window. Otherwise wait until round 12.',
+      why: 'Round 3 quarterbacks averaged ' + signed(g('QB', 3).vor) + ' and finished top-five ' +
+           pct(g('QB', 3).elite) + ' of the time — the most reliable cell on the board, though on only ' +
+           g('QB', 3).n + ' picks. The trap is round 10 (' + signed(g('QB', 10).vor) +
+           '), the worst quarterback round; round 12 is positive again at ' + signed(g('QB', 12).vor) + '.'
+    });
+    R.push({
+      rule: 'Tight end is elite or punt. The middle rounds are where the position eats picks.',
+      why: 'The early tight end cells are strongly positive but rest on ' + g('TE', 2).n + ' and ' +
+           g('TE', 4).n + ' picks, so treat them as suggestive. What is better supported is the middle: rounds 8 and 9 ' +
+           'came in at ' + signed(g('TE', 8).vor) + ' and ' + signed(g('TE', 9).vor) +
+           ', while rounds 10 and 11 are positive again. A round-8 tight end is the worst version of this decision.'
+    });
+    R.push({
+      rule: 'Your late-round dart throws should be running backs, not receivers.',
+      why: 'In rounds 7 and 8 backs finished startable ' + pct(g('RB', 7).hit) + ' and ' + pct(g('RB', 8).hit) +
+           ' of the time against ' + pct(g('WR', 7).hit) + ' and ' + pct(g('WR', 8).hit) +
+           ' for receivers. Backup backs inherit injury-driven workloads in a way backup receivers do not.'
+    });
+    R.push({
+      rule: 'Do not spend a meaningful pick on a kicker or a defense.',
+      why: 'Only ' + pct(H.stream.K.hit) + ' of drafted kickers and ' + pct(H.stream.DST.hit) +
+           ' of drafted defenses finished as startable, and draft order predicts their finish worse than any ' +
+           'skill position (rank correlation ' + H.predictability.K.rho.toFixed(2) + ' and ' +
+           H.predictability.DST.rho.toFixed(2) + ' against ' + H.predictability.WR.rho.toFixed(2) +
+           ' for receivers). Take both in your last two rounds.'
+    });
+    R.push({
+      rule: 'Aim to have your starters finished by round 8.',
+      why: 'From round 9 onward the average pick at every skill position is worth about a waiver-wire player or less, ' +
+           'with the single exception of tight end. Picks after that are lottery tickets, and should be treated as such.'
+    });
+    R.push({
+      rule: 'The market is mostly right, so fade it selectively rather than systematically.',
+      why: 'Within each position, draft order and finishing order correlate at ' + H.predictability.RB.rho.toFixed(2) +
+           ' for backs, ' + H.predictability.WR.rho.toFixed(2) + ' for receivers and ' +
+           H.predictability.QB.rho.toFixed(2) + ' for quarterbacks. ADP knows a lot. Tight end is the softest at ' +
+           H.predictability.TE.rho.toFixed(2) + ', which is where a strong opinion is worth the most.'
+    });
+    return R;
+  }
+
+  // -- Section builders -------------------------------------------------------
+
+  function secRules(H) {
+    const rules = buildRules(H);
+    return '<section class="ds-section"><h2 class="ds-h2">The rules</h2>' +
+      '<p class="ds-lede">Eight things the last six drafts agree on. None of them are laws — they are the way to bet ' +
+      'when you have no better information about a specific player.</p>' +
+      '<ol class="ds-rules">' +
+      rules.map(function(r, i) {
+        return '<li class="ds-rule"><div class="ds-rule-num">' + (i + 1) + '</div>' +
+          '<div><div class="ds-rule-title">' + esc(r.rule) + '</div>' +
+          '<div class="ds-rule-why">' + r.why + '</div></div></li>';
+      }).join('') +
+      '</ol></section>';
+  }
+
+  function secPlan(H) {
+    let rows = '';
+    for (let r = 1; r <= H.meta.maxRound; r++) {
+      const ranked = board(H, r);
+      const chips = ranked.length
+        ? ranked.map(function(x) {
+            return '<span class="ds-plan-chip">' + posChip(x.pos) +
+              '<span class="ds-plan-vor">' + signed(x.vor) + '</span></span>';
+          }).join('')
+        : '<span class="ds-thin">not enough picks</span>';
+      rows += '<div class="ds-plan-row">' +
+        '<div class="ds-plan-rnd">R' + r + '</div>' +
+        '<div class="ds-plan-body"><div class="ds-plan-chips">' + chips + '</div>' +
+        '<div class="ds-plan-text">' + esc(PLAN[r] || '') + '</div></div></div>';
+    }
+    return '<section class="ds-section"><h2 class="ds-h2">Round by round</h2>' +
+      '<p class="ds-lede">Positions are ordered by how much the average pick there beat a replacement-level player, ' +
+      'across ' + H.meta.seasons.length + ' seasons. Positions with fewer than ' + MIN_N +
+      ' picks in a round are left out of the ordering.</p>' +
+      '<div class="ds-plan">' + rows + '</div></section>';
+  }
+
+  function gridTable(H, key, fmt, bg, caption) {
+    let head = '<tr><th class="ds-rnd-h">Rnd</th>' +
+      POS.map(function(p) { return '<th>' + posChip(p) + '</th>'; }).join('') + '</tr>';
+    let body = '';
+    for (let r = 1; r <= H.meta.maxRound; r++) {
+      body += '<tr><td class="ds-rnd">' + r + '</td>';
+      POS.forEach(function(p) {
+        const c = cell(H, p, r);
+        if (!c) { body += '<td class="ds-empty"></td>'; return; }
+        const thin = c.n < MIN_N;
+        body += '<td class="ds-cell' + (thin ? ' ds-cell-thin' : '') + '" ' +
+          'style="background:' + bg(c[key]) + '" ' +
+          'title="' + esc(p + ', round ' + r + ' — ' + c.n + ' picks') + '">' +
+          '<span class="ds-cell-v">' + fmt(c[key]) + '</span>' +
+          '<span class="ds-cell-n">' + c.n + '</span></td>';
+      });
+      body += '</tr>';
+    }
+    return '<div class="ds-tablewrap"><table class="ds-table"><thead>' + head +
+      '</thead><tbody>' + body + '</tbody></table></div>' +
+      '<p class="ds-caption">' + caption + '</p>';
+  }
+
+  function secGrids(H) {
+    return '<section class="ds-section"><h2 class="ds-h2">Value by position and round</h2>' +
+      '<p class="ds-lede">Each cell is the average <span data-gloss="Points over replacement — how much better a player finished than the last startable player at their position. Replacement is QB13, RB30, WR30, TE13 in a 12-team league.">points over replacement</span> ' +
+      'for players drafted at that position in that round. Green beat replacement, red did not. The small number is how many picks the cell is built on.</p>' +
+      gridTable(H, 'vor', signed, vorBg,
+        'Positive means the average pick there gave you more than a freely available player would have.') +
+      '<h3 class="ds-h3">How often the pick worked</h3>' +
+      '<p class="ds-lede">Share that finished as a startable player — top 12 for quarterbacks and tight ends, top 24 for backs and receivers in a 12-team league.</p>' +
+      gridTable(H, 'hit', pct, rateBg,
+        'Read this alongside the table above: value tells you the size of the win, this tells you the odds of one.') +
+      '</section>';
+  }
+
+  // Last round where the average pick at this position still beat replacement.
+  // This is the actionable number. The raw biggest-drop figure is reported
+  // underneath it, but on its own it is misleading — the steepest fall at
+  // receiver is round 1 to round 2 simply because that is where the largest
+  // numbers live, which is not a cliff anyone can act on.
+  function lastWorthIt(H, pos) {
+    let last = null;
+    for (let r = 1; r <= H.meta.maxRound; r++) {
+      const c = cell(H, pos, r);
+      if (c && c.n >= MIN_N && c.vor >= 0) last = { round: r, vor: c.vor };
+    }
+    return last;
+  }
+
+  function secCliffs(H) {
+    const items = POS.map(function(p) {
+      const lw = lastWorthIt(H, p);
+      const c = (H.cliffs[p] || [])[0];
+      let main = '<span class="ds-thin">no round beat replacement</span>';
+      if (lw) {
+        main = 'Worth a pick through <strong>round ' + lw.round + '</strong>' +
+          ' <span class="ds-thin">(' + signed(lw.vor) + ')</span>';
+      }
+      const sub = c
+        ? 'Steepest single-round fall: after round ' + c.after + ', ' +
+          signed(c.from) + ' &rarr; ' + signed(c.to)
+        : '';
+      return '<div class="ds-cliff"><div class="ds-cliff-pos">' + posChip(p) + '</div>' +
+        '<div class="ds-cliff-main">' + main + '</div>' +
+        '<div class="ds-cliff-sub">' + sub + '</div></div>';
+    }).join('');
+    return '<section class="ds-section"><h2 class="ds-h2">Where each position stops paying</h2>' +
+      '<p class="ds-lede">The last round in which the average pick at each position still beat a replacement-level ' +
+      'player. Past that point you are drafting on upside, not on expectation.</p>' +
+      '<div class="ds-cliffs">' + items + '</div></section>';
+  }
+
+  function secStream(H) {
+    const rows = ['K', 'DST'].map(function(p) {
+      const s = H.stream[p];
+      const pr = H.predictability[p];
+      return '<tr><td class="ds-strm-pos">' + (p === 'K' ? 'Kicker' : 'Defense') + '</td>' +
+        '<td>' + pct(s.hit) + '</td>' +
+        '<td>' + (s.earlyHit == null ? '&mdash;' : pct(s.earlyHit)) +
+        ' <span class="ds-thin">(' + s.earlyN + ')</span></td>' +
+        '<td>' + (s.lateHit == null ? '&mdash;' : pct(s.lateHit)) +
+        ' <span class="ds-thin">(' + s.lateN + ')</span></td>' +
+        '<td>' + (pr ? pr.rho.toFixed(2) : '&mdash;') + '</td></tr>';
+    }).join('');
+    return '<section class="ds-section"><h2 class="ds-h2">Kickers and defenses</h2>' +
+      '<p class="ds-lede">These get no value grid. Their scoring pool is small enough that points over replacement ' +
+      'stops being a meaningful unit, so here is the plainer version: how often a drafted one actually finished startable, ' +
+      'and how well draft order predicted it.</p>' +
+      '<div class="ds-tablewrap"><table class="ds-table ds-table-plain"><thead><tr>' +
+      '<th class="ds-strm-h"></th><th>Finished startable</th><th>Taken by R11</th><th>Taken R12+</th>' +
+      '<th>ADP&nbsp;&harr;&nbsp;finish</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<p class="ds-caption">The last column is a rank correlation: 1.00 would mean the draft order got the finishing ' +
+      'order exactly right, 0.00 would mean it was noise. Every skill position scores higher than both of these. ' +
+      'Taking one early does raise your odds, but it costs a pick that a running back dart would have used better.</p>' +
+      '</section>';
+  }
+
+  function secExtremes(H) {
+    const col = function(list, title, sub) {
+      return '<div class="ds-ext-col"><h3 class="ds-h3">' + title + '</h3>' +
+        '<p class="ds-lede ds-lede-sm">' + sub + '</p><ol class="ds-ext-list">' +
+        list.map(function(x) {
+          return '<li><span class="ds-ext-name">' + esc(x.name) + '</span>' +
+            '<span class="ds-ext-meta">' + posChip(x.pos) + ' &middot; ' + x.year +
+            ' &middot; R' + x.round + '</span>' +
+            '<span class="ds-ext-vor ' + (x.vor >= 0 ? 'pos' : 'neg') + '">' + signed(x.vor) + '</span></li>';
+        }).join('') + '</ol></div>';
+    };
+    return '<section class="ds-section"><h2 class="ds-h2">The extremes</h2>' +
+      '<div class="ds-ext">' +
+      col(H.extremes.hits, 'Biggest wins', 'Most points over replacement returned by any pick in the sample.') +
+      col(H.extremes.busts, 'Costliest misses', 'Worst returns among picks made in the first five rounds.') +
+      '</div></section>';
+  }
+
+  function secMethod(H) {
+    const m = H.meta;
+    const years = m.seasons.join(', ');
+    const winners = Object.keys(H.seasonWinners).sort(function(a, b) { return a - b; }).map(function(r) {
+      const row = H.seasonWinners[r];
+      return '<tr><td class="ds-rnd">R' + r + '</td>' +
+        m.seasons.map(function(y) {
+          const p = row[y] || row[String(y)];
+          return '<td>' + (p ? posChip(p) : '<span class="ds-thin">&mdash;</span>') + '</td>';
+        }).join('') + '</tr>';
+    }).join('');
+    return '<section class="ds-section"><h2 class="ds-h2">How stable is this?</h2>' +
+      '<p class="ds-lede">Which position led each round, season by season. The averages above are real, but they are ' +
+      'averages — the winning position in a given round moved around a lot.</p>' +
+      '<div class="ds-tablewrap"><table class="ds-table ds-table-plain"><thead><tr><th class="ds-rnd-h">Rnd</th>' +
+      m.seasons.map(function(y) { return '<th>' + y + '</th>'; }).join('') +
+      '</tr></thead><tbody>' + winners + '</tbody></table></div>' +
+      '<h3 class="ds-h3">Method and caveats</h3>' +
+      '<ul class="ds-method">' +
+      '<li>Every figure comes from ESPN\'s own record of what each player\'s final preseason ADP was and what they ' +
+      'actually scored, for ' + m.sample.toLocaleString() + ' drafted player-seasons across ' + years + '.</li>' +
+      '<li>Scoring is ' + m.scoring + ', assuming a ' + m.teams + '-team league. Rounds are ADP divided by ' + m.teams + '.</li>' +
+      '<li>2019 and 2025 are missing because ESPN no longer returns ADP for those seasons, and 2017 and earlier are ' +
+      'not available at all. Six seasons is enough to see the shape and not enough to trust any single cell.</li>' +
+      '<li>Cells built on fewer than ' + MIN_N + ' picks are shown faded and excluded from the round-by-round ordering ' +
+      'and from the steepest-drop figures.</li>' +
+      '<li>ADP is capped at 170, so the last round of a draft is a pile of near-undrafted players rather than real ' +
+      'draft data. It is excluded — the tables stop at round ' + m.maxRound + '.</li>' +
+      '<li>This measures when a position paid off on average, not what any particular player will do. It is a tiebreaker ' +
+      'for close calls, not a replacement for your board.</li>' +
+      '</ul>' +
+      '<p class="ds-caption">Refresh with <code>scripts/pull_espn_historical_adp.py</code>.</p>' +
+      '</section>';
+  }
+
+  // -- Entry point ------------------------------------------------------------
+
+  window._renderDraftStrategy = function() {
+    const host = document.getElementById('dsBody');
+    if (!host) return;
+    const H = window.DRAFT_HISTORY;
+    if (!H || !H.grid || !H.meta) {
+      host.innerHTML = '<div class="ds-loading">Draft history is unavailable right now. ' +
+        'Reload the page to try again.</div>';
+      return;
+    }
+    host.innerHTML =
+      secRules(H) + secPlan(H) + secGrids(H) + secCliffs(H) +
+      secStream(H) + secExtremes(H) + secMethod(H);
+  };
 
 })();

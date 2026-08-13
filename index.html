@@ -60,12 +60,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-08-07a" as="style">
+<link rel="preload" href="styles/main.css?v=2026-08-13a" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-13a" as="script">
+<link rel="preload" href="app.js?v=2026-08-13b" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -75,7 +75,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-08-12" as="script">
 <link rel="preload" href="data/d.js?v=2026-08-12" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-08-07a">
+<link rel="stylesheet" href="styles/main.css?v=2026-08-13a">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -265,6 +265,10 @@ Continue with Google
 <button class="nav-btn" data-page="mockdraft" title="Mock Draft" aria-label="Mock Draft">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
 <span class="nav-label">Mock Draft</span>
+</button>
+<button class="nav-btn" data-page="draftstrategy" title="Draft Strategy" aria-label="Draft Strategy">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V6"/><path d="M4 6c4-2.5 8 2.5 12 0v8c-4 2.5-8-2.5-12 0"/><circle cx="4" cy="20" r="1.5" fill="currentColor" stroke="none"/></svg>
+<span class="nav-label">Strategy</span>
 </button>
 <button class="nav-btn" data-page="prospect" title="Prospect Model" aria-label="Prospect Model">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/><circle cx="12" cy="7" r="2"/><circle cx="18" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="6" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
@@ -3238,6 +3242,22 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- MOCK DRAFT PAGE -->
+<!-- Draft Strategy — written guide + the historical ADP tables it's derived from.
+     Everything below #dsBody is rendered by _renderDraftStrategy() in app.js off
+     window.DRAFT_HISTORY (data/draft_history.js, lazy). Keeping the prose in JS
+     next to the numbers means re-running the pull script can't leave the writeup
+     quoting stale figures. -->
+<div class="page page-draftstrategy" id="pageDraftStrategy" style="padding:0;overflow-y:auto">
+<div class="auth-anchor" id="authAnchorDraftStrategy"></div>
+<div class="ds-wrapper">
+<div class="ds-header">
+<div class="ds-title">DRAFT STRATEGY</div>
+<div class="ds-subtitle">What six seasons of ESPN draft data say about when to take each position</div>
+</div>
+<div id="dsBody"><div class="ds-loading">Loading draft history…</div></div>
+</div>
+</div>
+
 <div class="page page-mockdraft" id="pageMockdraft">
 <div class="auth-anchor" id="authAnchorMockdraft"></div>
 <div class="md-wrapper">
@@ -4814,6 +4834,26 @@ window._ensureBacktestOutcomes = (function() {
   };
 })();
 
+// draft_history.js (~10 KB) — DRAFT_HISTORY is the ESPN ADP-vs-finish study (2018 +
+// 2020-2024) behind the Draft Strategy page, and that page is its only consumer, so
+// it loads on first open rather than at boot. Regenerate with
+// scripts/pull_espn_historical_adp.py and bump the ?v= below.
+window._ensureDraftHistory = (function() {
+  let promise = null;
+  return function _ensureDraftHistory() {
+    if (promise) return promise;
+    promise = new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = 'data/draft_history.js?v=2026-08-04';
+      s.async = false;
+      s.onload  = function() { resolve(); };
+      s.onerror = function() { console.warn('[DraftHistory] load failed'); resolve(); };
+      document.head.appendChild(s);
+    });
+    return promise;
+  };
+})();
+
 // historical_draft_picks.js (~92 KB) — HISTORICAL_DRAFT_PICKS is consumed only inside
 // the prospect-model build (nflTeam fallback + _pmComputeRoomAdj room-crowding) and
 // admin console studies that require a completed build. Same lifecycle as
@@ -5042,7 +5082,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-13a"></script>
+<script defer src="app.js?v=2026-08-13b"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">
@@ -5193,6 +5233,7 @@ window.addEventListener('load', function() {
     { kind: 'page', label: 'Compare',        page: 'compare',   hint: 'Side-by-side player view' },
     { kind: 'page', label: 'Trade Calculator', page: 'trade',   hint: 'Evaluate trades' },
     { kind: 'page', label: 'Mock Draft',     page: 'mockdraft', hint: 'CPU draft simulator' },
+    { kind: 'page', label: 'Draft Strategy', page: 'draftstrategy', hint: 'Rules + historical ADP value' },
     { kind: 'page', label: 'Prospect Model', page: 'prospect',  hint: 'JM Score · 2026 class' },
     { kind: 'page', label: 'Trivia Builder', page: 'trivia',    hint: 'Build & play trivia boards' },
     { kind: 'page', label: 'Games',          page: 'games',     hint: 'Daily Elite Pull · Guess Who' },

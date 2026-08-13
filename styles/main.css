@@ -5,6 +5,7 @@
 :focus-visible{outline:2px solid var(--accent,#f59e0b);outline-offset:2px;border-radius:4px}
 /* Don't double-up the focus ring on the sidebar nav buttons (they have their own active style) */
 .nav-btn:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--accent,#f59e0b)}
+.adp-mover-row:hover{background:var(--elev-1)}
 /* Embed mode — hide chrome so a single feature can be iframed (e.g. ?embed=trivia&id=...) */
 body.mff-embed .sidebar,
 body.mff-embed .global-auth-bar,

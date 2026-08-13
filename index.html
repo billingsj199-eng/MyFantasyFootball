@@ -60,12 +60,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-08-13b" as="style">
+<link rel="preload" href="styles/main.css?v=2026-08-13c" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-13i" as="script">
+<link rel="preload" href="app.js?v=2026-08-13j" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -75,7 +75,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-08-12" as="script">
 <link rel="preload" href="data/d.js?v=2026-08-12" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-08-13b">
+<link rel="stylesheet" href="styles/main.css?v=2026-08-13c">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1054,6 +1054,19 @@ CLEAR ALL
 <a class="ext-hub-chip" data-ext-store="espn" target="_blank" rel="noopener" title="MFF ESPN Helper on the Chrome Web Store">ESPN</a>
 <a class="ext-hub-chip" data-ext-store="yahoo" target="_blank" rel="noopener" title="MFF Yahoo Helper on the Chrome Web Store">YAHOO</a>
 </div>
+</div>
+
+<!-- ADP MOVERS — risers/fallers computed client-side from data/ud_adp_history.json
+     (daily snapshots appended by the 9am job's Phase F). Hidden until the fetch
+     succeeds with at least two snapshot days. Rendered by _renderAdpMovers in app.js. -->
+<div id="adpMoversCard" style="display:none;margin:0 0 .9rem;padding:10px 14px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+<div id="adpMoversHead" style="display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none">
+<span style="font-size:1.05rem;line-height:1">📈</span>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1.5px;color:var(--accent);line-height:1.15">ADP MOVERS</div>
+<div id="adpMoversSub" style="font-size:.62rem;color:var(--text2)"></div>
+<span id="adpMoversToggle" style="margin-left:auto;color:var(--text2);font-size:.8rem;transition:transform .15s">▾</span>
+</div>
+<div id="adpMoversBody" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px"></div>
 </div>
 
 <div class="controls">
@@ -5152,7 +5165,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-13i"></script>
+<script defer src="app.js?v=2026-08-13j"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

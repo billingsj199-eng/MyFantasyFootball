@@ -6498,6 +6498,110 @@ function _campNewsNorm(n) {
     .catch(() => {});
 })();
 
+// === ADP MOVERS (rankings-page risers/fallers card) =========================
+// data/ud_adp_history.json holds dated Underdog ADP snapshots appended by the
+// 9am job (Phase F). Compare the newest day against the snapshot closest to a
+// week older and show the biggest BBM movers. Same fetch conventions as camp
+// news: hour-stamped param (NOT "v=" — the SW pins v= cache-first), 404 or
+// short history silently leaves the card hidden.
+(function _adpMovers() {
+  const card = document.getElementById('adpMoversCard');
+  if (!card) return;
+  const head = document.getElementById('adpMoversHead');
+  const body = document.getElementById('adpMoversBody');
+  const sub = document.getElementById('adpMoversSub');
+  const tog = document.getElementById('adpMoversToggle');
+  const OPEN_KEY = 'mff_adpMoversOpen';
+
+  let open = true;
+  try { open = localStorage.getItem(OPEN_KEY) !== '0'; } catch (_) {}
+  function _applyOpen() {
+    body.style.display = open ? 'flex' : 'none';
+    tog.style.transform = open ? '' : 'rotate(-90deg)';
+  }
+  head.addEventListener('click', () => {
+    open = !open;
+    try { localStorage.setItem(OPEN_KEY, open ? '1' : '0'); } catch (_) {}
+    _applyOpen();
+  });
+
+  function _daysBetween(a, b) {
+    return Math.round((Date.parse(b + 'T12:00:00') - Date.parse(a + 'T12:00:00')) / 86400000);
+  }
+
+  function _playerRow(m) {
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const up = m.delta < 0; // ADP number falling = drafted earlier = riser
+    const fmt = v => String(+v.toFixed(1)); // trim float dust, drop trailing .0
+    const chip = (up ? '▲' : '▼') + fmt(Math.abs(m.delta));
+    const chipColor = up ? '#22c55e' : '#ef4444';
+    const pos = m.pos ? `<span style="font-size:.56rem;font-weight:700;color:var(--text2);letter-spacing:.5px">${esc(m.pos)}</span>` : '';
+    return `<div class="adp-mover-row" data-mover="${esc(m.name)}" style="display:flex;align-items:center;gap:7px;padding:3px 2px;border-radius:5px;cursor:pointer;min-width:0">
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.74rem">${esc(m.name)}</span>${pos}
+      <span style="font-size:.66rem;color:var(--text2);white-space:nowrap">${fmt(m.from)} → ${fmt(m.to)}</span>
+      <span style="font-size:.66rem;font-weight:700;color:${chipColor};min-width:32px;text-align:right">${chip}</span>
+    </div>`;
+  }
+
+  function _render(hist) {
+    const days = (hist.days || []).filter(d => d && d.date && d.adps);
+    if (days.length < 2) return;
+    days.sort((a, b) => a.date.localeCompare(b.date));
+    const latest = days[days.length - 1];
+    // Baseline: the older day closest to 7 days before the latest snapshot.
+    let base = days[0];
+    for (const d of days.slice(0, -1)) {
+      const span = _daysBetween(d.date, latest.date);
+      const bestSpan = _daysBetween(base.date, latest.date);
+      if (Math.abs(span - 7) < Math.abs(bestSpan - 7)) base = d;
+    }
+    const span = _daysBetween(base.date, latest.date);
+    if (span < 1) return;
+    const movers = [];
+    Object.keys(latest.adps).forEach(name => {
+      const nowE = latest.adps[name], oldE = base.adps[name];
+      if (!nowE || !oldE || typeof nowE.bbm !== 'number' || typeof oldE.bbm !== 'number') return;
+      if (Math.min(nowE.bbm, oldE.bbm) > 250) return; // undrafted noise
+      const delta = nowE.bbm - oldE.bbm;
+      if (Math.abs(delta) < 3) return;
+      movers.push({ name, from: oldE.bbm, to: nowE.bbm, delta });
+    });
+    if (!movers.length) return;
+    // Position pills + card-click wiring via the D array where names resolve.
+    const dIdx = {};
+    (window.D || []).forEach(d => { if (d && d.n) dIdx[_campNewsNorm(d.n)] = d; });
+    movers.forEach(m => { const d = dIdx[_campNewsNorm(m.name)]; if (d) m.pos = d.s; });
+    const risers = movers.filter(m => m.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 6);
+    const fallers = movers.filter(m => m.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 6);
+    if (!risers.length && !fallers.length) return;
+    const col = (title, color, list) =>
+      `<div style="flex:1;min-width:230px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1.5px;color:${color};margin-bottom:2px">${title}</div>
+        ${list.length ? list.map(_playerRow).join('') : '<div style="font-size:.68rem;color:var(--text2);padding:3px 2px">none</div>'}
+      </div>`;
+    body.innerHTML =
+      col('RISERS', '#22c55e', risers) +
+      col('FALLERS', '#ef4444', fallers);
+    sub.textContent = 'Underdog BBM ADP · last ' + span + ' day' + (span === 1 ? '' : 's');
+    body.addEventListener('click', e => {
+      const row = e.target.closest('.adp-mover-row');
+      if (!row) return;
+      const d = dIdx[_campNewsNorm(row.dataset.mover)];
+      if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
+    });
+    _applyOpen();
+    card.style.display = '';
+  }
+
+  const now = new Date();
+  const stamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0') + String(now.getHours()).padStart(2, '0');
+  fetch('data/ud_adp_history.json?d=' + stamp)
+    .then(r => (r && r.ok) ? r.json() : null)
+    .then(j => { if (j) _render(j); })
+    .catch(() => {});
+})();
+
 // Camp News section — sits directly under ADP Comparison on the FANTASY tab.
 // Newest ≤3 items from the last 14 days for this player; each headline links
 // out to the source article / X post. Returns '' when there's nothing to show.

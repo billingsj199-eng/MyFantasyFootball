@@ -7618,7 +7618,7 @@ function _renderCardPinStrip(d, ctxMode) {
   const chips = _cardPins.map(n => {
     const active = n === d.n;
     const esc = _cardPinEsc(n);
-    return '<span class="card-pin-chip' + (active ? ' active' : '') + '" data-pin="' + esc + '" title="' + (active ? 'Currently viewing' : 'View ' + esc + ' — or cycle pinned players with &larr; &rarr;') + '">' + esc
+    return '<span class="card-pin-chip' + (active ? ' active' : '') + '" data-pin="' + esc + '" title="' + (active ? 'Currently viewing — drag to reorder' : 'View ' + esc + ' — drag to reorder, cycle with &larr; &rarr;') + '">' + esc
       + '<button class="card-pin-x" data-unpin="' + esc + '" aria-label="Remove ' + esc + ' from this card">&times;</button></span>';
   }).join('');
   strip.innerHTML = chips
@@ -7632,14 +7632,63 @@ function _renderCardPinStrip(d, ctxMode) {
   const input = strip.querySelector('#cardPinInput');
   const suggest = strip.querySelector('#cardPinSuggest');
 
+  // Chip wiring: click swaps the card, pointer-drag reorders (works for mouse
+  // and touch alike — HTML5 drag-and-drop never fires on touch). A drag past
+  // the 6px threshold live-moves the chip in the DOM; on release the DOM order
+  // becomes the new _cardPins order (which is also the ← → cycle order).
+  let _dragEl = null, _dragX = 0, _dragY = 0, _didDrag = false;
   strip.querySelectorAll('.card-pin-chip').forEach(chip => {
     chip.addEventListener('click', e => {
       if (e.target.closest('.card-pin-x')) return;
+      if (_didDrag) { _didDrag = false; return; } // drag release, not a click
       const name = chip.dataset.pin;
       if (name === d.n) return;
       const pd = _cardPinLookup(name);
       if (pd) openPlayerCard(pd, ctxMode);
     });
+    chip.style.touchAction = 'none';
+    chip.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest('.card-pin-x')) return;
+      if (strip.querySelectorAll('.card-pin-chip').length < 2) return;
+      _dragEl = chip; _dragX = e.clientX; _dragY = e.clientY; _didDrag = false;
+      try { chip.setPointerCapture(e.pointerId); } catch (_e) {}
+    });
+    chip.addEventListener('pointermove', e => {
+      if (_dragEl !== chip) return;
+      if (!_didDrag) {
+        if (Math.abs(e.clientX - _dragX) + Math.abs(e.clientY - _dragY) < 6) return;
+        _didDrag = true;
+        chip.classList.add('dragging');
+      }
+      e.preventDefault();
+      // Nearest other chip, row-first (strip wraps on mobile), then insert
+      // before/after it depending on which side of its midpoint we're on
+      const others = Array.from(strip.querySelectorAll('.card-pin-chip')).filter(c => c !== chip);
+      let best = null, bestDist = Infinity;
+      for (const c of others) {
+        const b = c.getBoundingClientRect();
+        const dist = Math.abs(e.clientY - (b.top + b.height / 2)) * 1000 + Math.abs(e.clientX - (b.left + b.width / 2));
+        if (dist < bestDist) { bestDist = dist; best = c; }
+      }
+      if (!best) return;
+      const b = best.getBoundingClientRect();
+      if (e.clientX < b.left + b.width / 2) strip.insertBefore(chip, best);
+      else strip.insertBefore(chip, best.nextSibling);
+    });
+    const _dragFinish = () => {
+      if (_dragEl !== chip) return;
+      chip.classList.remove('dragging');
+      _dragEl = null;
+      if (_didDrag) {
+        // _didDrag stays true so the trailing click on this (now replaced)
+        // chip is swallowed by the guard above instead of swapping the card
+        _cardPins = Array.from(strip.querySelectorAll('.card-pin-chip')).map(c => c.dataset.pin);
+        _renderCardPinStrip(d, ctxMode);
+      }
+    };
+    chip.addEventListener('pointerup', _dragFinish);
+    chip.addEventListener('pointercancel', _dragFinish);
   });
   strip.querySelectorAll('.card-pin-x').forEach(btn => {
     btn.addEventListener('click', e => {

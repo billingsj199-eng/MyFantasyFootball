@@ -2102,6 +2102,34 @@ function _bookPpgCellHtml(d) {
     tip.replace(/"/g, '&quot;') + '">' + v.toFixed(1) + '</span>';
 }
 
+// CLAY PPG: Mike Clay's 2026 stat line scored in the current format (site
+// scoring incl. receptions — Clay projects them; INTs he doesn't) ÷ 17 games,
+// same season-value semantics as Book PPG so the two columns read on one
+// scale. Season PROJECTIONS view's 4th column on the repurposed Y/RR cell.
+function _clayPpgFor(d) {
+  if (d.s !== 'QB' && d.s !== 'RB' && d.s !== 'WR' && d.s !== 'TE') return null;
+  if (typeof clayLookup !== 'function') return null;
+  const cp = clayLookup(d.n);
+  if (!cp) return null;
+  const recMult = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 0 : 0.5;
+  const total = (cp.py || 0) / 25 + (cp.ptd || 0) * 4 + (cp.ry || 0) / 10 + (cp.rtd || 0) * 6 +
+                (cp.rcy || 0) / 10 + (cp.rctd || 0) * 6 + (cp.rec || 0) * recMult;
+  if (!total) return null;
+  const G = window._PROPS_GAMES || 17;
+  return { ppg: Math.round((total / G) * 10) / 10, total: Math.round(total * 10) / 10, games: G, gm: cp.gm || null };
+}
+function _clayPpgCellHtml(d) {
+  const C = _clayPpgFor(d);
+  if (!C) return '—';
+  const c = posFptsColor(C.ppg, d.s);
+  const tip = 'Mike Clay 2026 stat line scored as ' + (_scoringLabelsRnk[rankingScoringFmt] || 'PPR') +
+    ': ' + C.total + ' pts ÷ ' + C.games + ' games' +
+    (C.gm && C.gm !== C.games ? ' (Clay projects ' + C.gm + ' gm)' : '') +
+    (d.s === 'QB' ? ' — INTs not in Clay\'s lines' : '');
+  return '<span style="color:' + c + ';font-weight:700;cursor:help" title="' +
+    tip.replace(/"/g, '&quot;') + '">' + C.ppg.toFixed(1) + '</span>';
+}
+
 // TEAM PPG: season average of Vegas implied team totals across every game in
 // BETTING_2026.gameTotals ('W{wk}_{AWAY}_{HOME}', spread = home spread).
 // Cached on first use; keyed by team abbreviation.
@@ -2298,7 +2326,7 @@ function getFiltered() {
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' && currentMode !== 'weekly') { const _bp = d => { const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; }; av = _bp(a); bv = _bp(b); break; } if(filter==='RB'){const _ac=a.career&&a.career.length?a.career[a.career.length-1]:null;const _bc=b.career&&b.career.length?b.career[b.career.length-1]:null;av=_ac&&_ac.gp?(_ac.ry||0)/_ac.gp:0;bv=_bc&&_bc.gp?(_bc.ry||0)/_bc.gp:0;}else{av=a._yrr||0;bv=b._yrr||0;} break;
+        case 'yrr': if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' && currentMode !== 'weekly') { const _bp = d => { const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; }; av = _bp(a); bv = _bp(b); break; } if (_sm === 'proj' && currentMode !== 'weekly') { const _cp = d => { const C = _clayPpgFor(d); return C ? C.ppg : -Infinity; }; av = _cp(a); bv = _cp(b); break; } if(filter==='RB'){const _ac=a.career&&a.career.length?a.career[a.career.length-1]:null;const _bc=b.career&&b.career.length?b.career[b.career.length-1]:null;av=_ac&&_ac.gp?(_ac.ry||0)/_ac.gp:0;bv=_bc&&_bc.gp?(_bc.ry||0)/_bc.gp:0;}else{av=a._yrr||0;bv=b._yrr||0;} break;
         case 'jm': av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
@@ -2801,9 +2829,10 @@ function render() {
   // (non-weekly, non-dynasty) view. Reused by the header/cell toggles after the loop.
   const _isWeekly = currentMode === 'weekly';
   const _statMode = _effStatMode();
-  // Season BETTING LINES view repurposes the Y/RR cell as the blended-books
-  // PPG column (same pattern as the ADP view's CBS column).
+  // Season BETTING LINES / PROJECTIONS views repurpose the Y/RR cell as a
+  // PPG column — book-blended or Clay-based (same pattern as ADP's CBS column).
   const _linesPpgMode = _statMode === 'lines' && !_isWeekly;
+  const _projPpgMode = _statMode === 'proj' && !_isWeekly;
   const showYrr = filter === 'WR' || filter === 'TE' || filter === 'RB';
   const showJm = currentMode === 'dynasty' || currentMode === 'dynastysf';
   const showLanding = showJm && filter === 'ROOKIE';
@@ -2990,7 +3019,7 @@ function render() {
         if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
         if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>` : '<td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
       ${_statTds}
-      <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_linesPpgMode ? _bookPpgCellHtml(d) : (showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—'))}</td>
+      <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_linesPpgMode ? _bookPpgCellHtml(d) : (_projPpgMode ? _clayPpgCellHtml(d) : (showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—')))}</td>
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell" style="display:none">${showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
@@ -3036,20 +3065,23 @@ function render() {
   // ADP column and shown for every position filter.
   const _adpCmpMode = _statMode === 'adp';
   const yrrH = document.getElementById('yrrHeader');
-  yrrH.style.display = (showYrr || _adpCmpMode || _linesPpgMode) ? '' : 'none';
+  const _yrrShow = showYrr || _adpCmpMode || _linesPpgMode || _projPpgMode;
+  yrrH.style.display = _yrrShow ? '' : 'none';
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : (_linesPpgMode ? 'Book PPG ' : (filter === 'RB' ? 'Rush YPG ' : 'Y/RR '));
+    yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : (_linesPpgMode ? 'Book PPG ' : (_projPpgMode ? 'Clay PPG ' : (filter === 'RB' ? 'Rush YPG ' : 'Y/RR ')));
   }
   if (yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].setAttribute('data-gloss', _adpCmpMode
       ? 'CBS expert-consensus rank (their PPR top200 list) compared to the current ranks. Green = CBS has the player later than this rank (value), red = earlier (reach).'
       : _linesPpgMode
       ? 'Projected fantasy PPG from sportsbook season props — every posted line (yards, TDs, receptions) scored in the current format, averaged across DK / FanDuel / BetMGM / Underdog, ÷ 17 games. Same number as the player card LINES tab.'
+      : _projPpgMode
+      ? 'Projected fantasy PPG from Mike Clay\'s 2026 stat lines — yards, TDs and receptions scored in the current format, ÷ 17 games. Same season-value scale as the betting-lines Book PPG column.'
       : 'Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.');
   }
-  document.querySelectorAll('.yrr-cell').forEach(c => c.style.display = (showYrr || _adpCmpMode || _linesPpgMode) ? '' : 'none');
+  document.querySelectorAll('.yrr-cell').forEach(c => c.style.display = _yrrShow ? '' : 'none');
   document.getElementById('jmHeader').style.display = showJm ? '' : 'none';
   document.querySelectorAll('.jm-cell').forEach(c => c.style.display = showJm ? '' : 'none');
   // Landing Spot only meaningful for rookies — show only in dynasty modes when ROOKIE filter is active.

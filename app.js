@@ -2082,6 +2082,26 @@ function _linesStatLine(d) {
   };
 }
 
+// BOOK PPG: blended-books projected PPG in the current scoring format — the
+// same headline number as the player card's LINES tab (every posted season
+// prop scored and averaged, ÷ 17 games). Season BETTING LINES view only;
+// rides the repurposed Y/RR cell like the ADP view's CBS column.
+function _bookPpgFor(d) {
+  const P = (typeof window._propsProjectionFor === 'function') ? window._propsProjectionFor(d) : null;
+  return (P && P.ppg && P.ppg[rankingScoringFmt] != null) ? P : null;
+}
+function _bookPpgCellHtml(d) {
+  const P = _bookPpgFor(d);
+  if (!P) return '—';
+  const v = P.ppg[rankingScoringFmt];
+  const c = posFptsColor(v, d.s);
+  const tip = 'Blended ' + P.books.join('/') + ' season props scored as ' +
+    (_scoringLabelsRnk[rankingScoringFmt] || 'PPR') + ': ' + P.total[rankingScoringFmt] +
+    ' pts ÷ ' + P.games + ' games' + (P.asOf ? ' (as of ' + P.asOf + ')' : '');
+  return '<span style="color:' + c + ';font-weight:700;cursor:help" title="' +
+    tip.replace(/"/g, '&quot;') + '">' + v.toFixed(1) + '</span>';
+}
+
 // TEAM PPG: season average of Vegas implied team totals across every game in
 // BETTING_2026.gameTotals ('W{wk}_{AWAY}_{HOME}', spread = home spread).
 // Cached on first use; keyed by team abbreviation.
@@ -2278,7 +2298,7 @@ function getFiltered() {
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if(filter==='RB'){const _ac=a.career&&a.career.length?a.career[a.career.length-1]:null;const _bc=b.career&&b.career.length?b.career[b.career.length-1]:null;av=_ac&&_ac.gp?(_ac.ry||0)/_ac.gp:0;bv=_bc&&_bc.gp?(_bc.ry||0)/_bc.gp:0;}else{av=a._yrr||0;bv=b._yrr||0;} break;
+        case 'yrr': if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' && currentMode !== 'weekly') { const _bp = d => { const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; }; av = _bp(a); bv = _bp(b); break; } if(filter==='RB'){const _ac=a.career&&a.career.length?a.career[a.career.length-1]:null;const _bc=b.career&&b.career.length?b.career[b.career.length-1]:null;av=_ac&&_ac.gp?(_ac.ry||0)/_ac.gp:0;bv=_bc&&_bc.gp?(_bc.ry||0)/_bc.gp:0;}else{av=a._yrr||0;bv=b._yrr||0;} break;
         case 'jm': av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
@@ -2781,6 +2801,9 @@ function render() {
   // (non-weekly, non-dynasty) view. Reused by the header/cell toggles after the loop.
   const _isWeekly = currentMode === 'weekly';
   const _statMode = _effStatMode();
+  // Season BETTING LINES view repurposes the Y/RR cell as the blended-books
+  // PPG column (same pattern as the ADP view's CBS column).
+  const _linesPpgMode = _statMode === 'lines' && !_isWeekly;
   const showYrr = filter === 'WR' || filter === 'TE' || filter === 'RB';
   const showJm = currentMode === 'dynasty' || currentMode === 'dynastysf';
   const showLanding = showJm && filter === 'ROOKIE';
@@ -2967,7 +2990,7 @@ function render() {
         if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
         if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>` : '<td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
       ${_statTds}
-      <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—')}</td>
+      <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_linesPpgMode ? _bookPpgCellHtml(d) : (showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—'))}</td>
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell" style="display:none">${showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
@@ -3013,18 +3036,20 @@ function render() {
   // ADP column and shown for every position filter.
   const _adpCmpMode = _statMode === 'adp';
   const yrrH = document.getElementById('yrrHeader');
-  yrrH.style.display = (showYrr || _adpCmpMode) ? '' : 'none';
+  yrrH.style.display = (showYrr || _adpCmpMode || _linesPpgMode) ? '' : 'none';
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : (filter === 'RB' ? 'Rush YPG ' : 'Y/RR ');
+    yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : (_linesPpgMode ? 'Book PPG ' : (filter === 'RB' ? 'Rush YPG ' : 'Y/RR '));
   }
   if (yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].setAttribute('data-gloss', _adpCmpMode
       ? 'CBS expert-consensus rank (their PPR top200 list) compared to the current ranks. Green = CBS has the player later than this rank (value), red = earlier (reach).'
+      : _linesPpgMode
+      ? 'Projected fantasy PPG from sportsbook season props — every posted line (yards, TDs, receptions) scored in the current format, averaged across DK / FanDuel / BetMGM / Underdog, ÷ 17 games. Same number as the player card LINES tab.'
       : 'Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.');
   }
-  document.querySelectorAll('.yrr-cell').forEach(c => c.style.display = (showYrr || _adpCmpMode) ? '' : 'none');
+  document.querySelectorAll('.yrr-cell').forEach(c => c.style.display = (showYrr || _adpCmpMode || _linesPpgMode) ? '' : 'none');
   document.getElementById('jmHeader').style.display = showJm ? '' : 'none';
   document.querySelectorAll('.jm-cell').forEach(c => c.style.display = showJm ? '' : 'none');
   // Landing Spot only meaningful for rookies — show only in dynasty modes when ROOKIE filter is active.
@@ -3916,8 +3941,8 @@ window._updateRnkStatHeaders = function() {
       _set(c1, null, 'This week\'s sportsbook yardage prop lines (O/U), averaged across the books that posted one (Underdog / PrizePicks). Combined passing + rushing + receiving. Blank = no board posted yet for this player. Hover a value for the breakdown.', 'Yds', 'Wk' + _wkNum + ' Lines');
       _set(c2, 'ppg25Header', 'This week\'s touchdown prop line (O/U), averaged across the books that posted one. QBs show their PASSING TD line; RB/WR/TE show the rush+rec TD line (≈ anytime TD) with the anytime-TD odds beneath — the real signal of TD likelihood.', 'TD', 'Wk' + _wkNum + ' O/U');
     } else {
-      _set(c1, null, 'Season-long sportsbook yardage lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving. Hover a value for the breakdown.', 'Yds', 'Book Avg');
-      _set(c2, 'ppg25Header', 'Season-long sportsbook touchdown lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM). Combined passing + rushing + receiving.', 'TD', 'Book Avg');
+      _set(c1, null, 'Season-long sportsbook yardage lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM / Underdog). Combined passing + rushing + receiving. Hover a value for the breakdown.', 'Yds', 'Book Avg');
+      _set(c2, 'ppg25Header', 'Season-long sportsbook touchdown lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM / Underdog). Combined passing + rushing + receiving.', 'TD', 'Book Avg');
     }
     _set(c3, 'l4ppgHeader', 'Team PPG — season average of Vegas implied team totals across the full schedule (DK game totals + spreads). Higher = better scoring environment.', 'Team PPG', 'Vegas');
   }

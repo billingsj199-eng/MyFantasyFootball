@@ -1,6 +1,96 @@
 {
-  "updated": "2026-08-13T16:30:30Z",
+  "updated": "2026-08-14T02:15:00Z",
   "items": [
+    {
+      "player": "Brock Purdy",
+      "team": "SF",
+      "pos": "QB",
+      "date": "2026-08-13",
+      "headline": "Went 23/30 for 295 yards, 3 TDs (140.3 rating) plus 44 rush yards in 37-24 preseason win over Titans",
+      "take": "Sharp, extended look with a reshuffled WR room (Pearsall out) -- good early sign for SF's passing game.",
+      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/live-updates-score-highlights-brock-purdy-4/1898093/",
+      "tag": "riser"
+    },
+    {
+      "player": "George Kittle",
+      "team": "SF",
+      "pos": "TE",
+      "date": "2026-08-13",
+      "headline": "Caught 8 passes for 88 yards and a TD in preseason opener vs. Titans",
+      "take": "Heavy target share early with Pearsall out for the year -- TE1 role looks unchanged.",
+      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/live-updates-score-highlights-brock-purdy-4/1898093/",
+      "tag": "riser"
+    },
+    {
+      "player": "Jauan Jennings",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-08-13",
+      "headline": "Caught 2 TDs (3 rec, 37 yards) in preseason win over Titans",
+      "take": "Direct beneficiary of the Pearsall injury -- WR2 stock climbing fast in Purdy's offense.",
+      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/live-updates-score-highlights-brock-purdy-4/1898093/",
+      "tag": "riser"
+    },
+    {
+      "player": "Christian McCaffrey",
+      "team": "SF",
+      "pos": "RB",
+      "date": "2026-08-13",
+      "headline": "Carried 22 times for 73 yards and a TD plus a catch in preseason opener vs. Titans",
+      "take": "Unusually heavy preseason workload for a starter -- encouraging health/workload signal after 2024's injury issues.",
+      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/live-updates-score-highlights-brock-purdy-4/1898093/",
+      "tag": "riser"
+    },
+    {
+      "player": "Cam Ward",
+      "team": "TEN",
+      "pos": "QB",
+      "date": "2026-08-13",
+      "headline": "Threw for 170 yards and 2 TDs, including a 34-yard score to rookie TE Gunnar Helm, in preseason opener",
+      "take": "Efficient extended look in Year 2 -- early chemistry with a new-look pass-catching group.",
+      "url": "https://www.tennesseetitans.com/news/titans-fall-37-24-to-49ers-drop-to-2-12",
+      "tag": "riser"
+    },
+    {
+      "player": "Gunnar Helm",
+      "team": "TEN",
+      "pos": "TE",
+      "date": "2026-08-13",
+      "headline": "Rookie TE caught a 34-yard TD from Cam Ward in preseason opener vs. 49ers",
+      "take": "Early camp-to-game chemistry with Ward -- worth a dynasty/TE-premium watch.",
+      "url": "https://www.tennesseetitans.com/news/titans-fall-37-24-to-49ers-drop-to-2-12",
+      "tag": "riser"
+    },
+    {
+      "player": "Anthony Richardson",
+      "team": "IND",
+      "pos": "QB",
+      "date": "2026-08-13",
+      "headline": "Went 11/14 for 145 yards with a rushing TD (6 car, 53 yards) in his half of preseason opener vs. Patriots",
+      "take": "Strong per-play efficiency continues to build his QB1 case even after a fumble and a deflected INT; Daniel Jones sat out all preseason.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/anthony-richardson-completes-11-of-14-passes-in-first-half-of-preseason-opener",
+      "tag": "riser"
+    },
+    {
+      "player": "Michael Mayer",
+      "team": "LV",
+      "pos": "TE",
+      "date": "2026-08-13",
+      "headline": "Caught a 13-yard TD from Kirk Cousins on the Raiders' first-team opening drive vs. Cardinals",
+      "take": "Early rapport-building rep with the starting QB -- positive signal for his TE1 role in Vegas.",
+      "url": "https://www.raiders.com/video/kirk-cousins-michael-mayer-touchdown-nfl-preseason-week-1-arizona-cardinals",
+      "tag": "riser"
+    },
+    {
+      "player": "Malik Benson",
+      "team": "LV",
+      "pos": "WR",
+      "date": "2026-08-13",
+      "headline": "Rookie WR flashed speed and route-running, including a 19-yard grab from Fernando Mendoza",
+      "take": "Deep-league/dynasty stash watch after a strong preseason debut.",
+      "url": "https://www.raiders.com/video/kirk-cousins-michael-mayer-touchdown-nfl-preseason-week-1-arizona-cardinals",
+      "tag": "riser"
+    },
     {
       "player": "Anthony Richardson",
       "team": "IND",

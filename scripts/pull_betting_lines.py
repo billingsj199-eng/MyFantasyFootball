@@ -283,6 +283,29 @@ def _page_fetch(driver, url):
     return json.loads(res['body'])
 
 
+def _parse_season_over_lines(body, stat, players):
+    """Collect 'Over' season lines from one DK subcategory payload into
+    players{name: {stat: line}}; returns the number of lines added."""
+    markets = {m['id']: m for m in body.get('markets', [])}
+    count = 0
+    for sel in body.get('selections', []):
+        if sel.get('outcomeType') != 'Over':
+            continue
+        m = markets.get(sel.get('marketId'))
+        if not m:
+            continue
+        # "NFL 2026/27 - Josh Allen Regular Season Passing Yards"
+        pm = re.match(r'NFL \d{4}/\d{2}\s*-\s*(.+?)\s+(?:Regular Season|Rookie)',
+                      m.get('name', ''))
+        lm = re.search(r'Over\s+([\d,]+\.?\d*)', sel.get('label', ''))
+        if not pm or not lm:
+            continue
+        players.setdefault(pm.group(1).strip(), {})[stat] = \
+            float(lm.group(1).replace(',', ''))
+        count += 1
+    return count
+
+
 def pull_season_props():
     """Return {dk_player_name: {statKey: line}} from DK Player Futures + Rookie Watch."""
     driver = _make_driver()
@@ -309,24 +332,7 @@ def pull_season_props():
             except Exception as e:
                 print(f'    {cat_name} / {sub_name}: FAILED ({e})')
                 continue
-            markets = {m['id']: m for m in body.get('markets', [])}
-            count = 0
-            for sel in body.get('selections', []):
-                if sel.get('outcomeType') != 'Over':
-                    continue
-                m = markets.get(sel.get('marketId'))
-                if not m:
-                    continue
-                # "NFL 2026/27 - Josh Allen Regular Season Passing Yards"
-                name = m.get('name', '')
-                pm = re.match(r'NFL \d{4}/\d{2}\s*-\s*(.+?)\s+(?:Regular Season|Rookie)', name)
-                lm = re.search(r'Over\s+([\d,]+\.?\d*)', sel.get('label', ''))
-                if not pm or not lm:
-                    continue
-                player = pm.group(1).strip()
-                line = float(lm.group(1).replace(',', ''))
-                players.setdefault(player, {})[stat] = line
-                count += 1
+            count = _parse_season_over_lines(body, stat, players)
             print(f'    {cat_name} / {sub_name} -> {stat}: {count} lines')
             time.sleep(1.0)
         return players
@@ -607,6 +613,54 @@ def pull_ud_weekly(week_by_matchup):
     return out
 
 
+# Season RECEPTIONS watch (Jack, 2026-08-14): no book posts a season
+# receptions prop yet, so PPR/Half/STD come out equal for pass-catchers.
+# Underdog would flow in through Phase C automatically the day they post one;
+# DK needs this check because the daily job skips the slow --season-props
+# phase. It piggybacks on the league payload the weekly Anytime-TD pull
+# already fetches — zero extra requests until the market actually appears,
+# then the lines are merged into seasonProps[DK] the same morning.
+_DK_SEASON_REC = None   # set by pull_dk_weekly_atd; {} = checked, none posted
+
+
+def _check_dk_season_receptions(driver, league):
+    global _DK_SEASON_REC
+    cats = {c['id']: c.get('name', '') for c in league.get('categories', [])}
+    players = {}
+    for s in league.get('subcategories', []):
+        if cats.get(s.get('categoryId'), '').lower() not in PROP_CATEGORIES:
+            continue
+        name = (s.get('name') or '').lower()
+        if STAT_KEYS.get(name) != 'rec' and 'reception' not in name:
+            continue
+        body = _page_fetch(driver,
+                           f"{DK_API}/leagues/88808/categories/{s.get('categoryId')}/subcategories/{s['id']}")
+        n = _parse_season_over_lines(body, 'rec', players)
+        print(f"  DK season receptions: subcategory '{s.get('name')}' -> {n} lines")
+    _DK_SEASON_REC = players
+    if not players:
+        print('  DK season receptions: not posted yet (watch continues)')
+
+
+def apply_dk_season_receptions(src):
+    """Merge the receptions lines the watch found into seasonProps[DK],
+    preserving each player's other DK stat lines."""
+    lookup = load_d_names()
+    canon = canonize(_DK_SEASON_REC, lookup, 'DK receptions')
+    block = extract_block(src, '_SEASON_PROPS_2026')
+    existing = {}
+    for m in re.finditer(r"^\s*(?:'((?:[^'\\]|\\.)*)'|\"([^\"]*)\"):\s*\{(.*)\},?\s*$",
+                         block, re.M):
+        name = (m.group(1) or m.group(2)).replace("\\'", "'")
+        existing[name] = parse_props_entry(m.group(3))
+    full = {}
+    for name, stats in canon.items():
+        cur = _raw_stats_to_dict(existing.get(name, {}).get('DK'))
+        cur.update(stats)
+        full[name] = cur
+    return merge_props_book(src, 'DK', full)
+
+
 def pull_dk_weekly_atd(week_by_matchup):
     """Return {wk: {player: {'atd': american_odds}}} from DK's Anytime TD
     Scorer market (per-event, posted a few days before games in season —
@@ -619,6 +673,10 @@ def pull_dk_weekly_atd(week_by_matchup):
         driver.get(DK_LEAGUE_PAGE)
         time.sleep(8)
         league = _page_fetch(driver, f'{DK_API}/leagues/88808')
+        try:
+            _check_dk_season_receptions(driver, league)
+        except Exception as e:
+            print(f'  DK season receptions check failed ({e})')
         # DK names the league-level subcategory "TD Scorer" (category "TD
         # Scorers"); the per-event markets inside are "Anytime TD Scorer".
         subs = [s for s in league.get('subcategories', [])
@@ -972,6 +1030,20 @@ def main():
     if do_weekly:
         src, n = update_weekly_props(src)
         total_changed += n
+        if _DK_SEASON_REC:
+            print(f'  DK posted a season RECEPTIONS market '
+                  f'({len(_DK_SEASON_REC)} players) — merging into seasonProps')
+            src, n = apply_dk_season_receptions(src)
+            total_changed += n
+
+    # Season-receptions watch banner: fires the first run any book's season
+    # `rec` lines land (DK via the check above, UD via Phase C). The daily
+    # wrapper greps for this to flag the commit for Jack.
+    def _n_season_rec(s):
+        return len(re.findall(r'\brec:', extract_block(s, '_SEASON_PROPS_2026')))
+    if _n_season_rec(src) and not _n_season_rec(orig):
+        print(f'*** SEASON RECEPTIONS PROP POSTED ({_n_season_rec(src)} lines) — '
+              f'PPR/Half/STD projections now split for pass-catchers')
 
     emit_json_export(src)
     if src == orig:

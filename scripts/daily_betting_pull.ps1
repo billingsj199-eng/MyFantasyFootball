@@ -37,12 +37,19 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Season-receptions watch: the puller prints this banner the first run any
+# book posts a season receptions prop (PPR/Half/STD split from then on).
+$recPosted = $out -match '\*\*\* SEASON RECEPTIONS PROP POSTED'
+if ($recPosted) { Write-Log 'ALERT: season receptions prop posted - commit flagged for Jack' }
+
 $changed = git status --porcelain -- @Files
 if (-not $changed) {
     Write-Log 'no line movement - nothing to commit'
 } else {
     git add @Files
-    git commit -m ('Auto betting-lines scan {0} (game lines + UD season + weekly props)' -f (Get-Date -Format 'yyyy-MM-dd'))
+    $msg = ('Auto betting-lines scan {0} (game lines + UD season + weekly props)' -f (Get-Date -Format 'yyyy-MM-dd'))
+    if ($recPosted) { $msg = 'SEASON RECEPTIONS POSTED - ' + $msg }
+    git commit -m $msg
     git push origin main
     if ($LASTEXITCODE -eq 0) { Write-Log 'pushed updated lines' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }

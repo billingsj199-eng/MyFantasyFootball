@@ -4983,7 +4983,10 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       try {
         firebase.auth().onAuthStateChanged(u => {
           _weeklyAdminCheck(u);
-          if (u) _weeklyLoadActiveWeek();
+          // Re-fire for EVERY auth state incl. signed-out — the boot-time call
+          // ran before Firebase init, and logged-out visitors need the
+          // published-week state too (listener attach is guarded, no dupes).
+          _weeklyLoadActiveWeek();
         });
       } catch(_e) {}
     }
@@ -4994,13 +4997,14 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
 document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.dataset.mode === currentMode) return;
-    // WEEKLY format is admin-only. Guard at click time so a user who somehow
-    // sees a leftover tab can't enter the mode.
+    // WEEKLY goes live via the PUBLISH button: once a week is published,
+    // everyone can enter (locked to that week by _weeklyAdminCheck below).
+    // Admin-only guard applies only while nothing is published.
     if (btn.dataset.mode === 'weekly') {
       const isAdm = (typeof window.isAdmin === 'function' && window.isAdmin())
         || (window._JSMODEL_ADMIN_EMAILS && window._authCurrentUser && window._authCurrentUser.email
             && window._JSMODEL_ADMIN_EMAILS.includes(window._authCurrentUser.email.toLowerCase()));
-      if (!isAdm) { if (typeof toast === 'function') toast('Weekly format is admin-only for now'); return; }
+      if (!isAdm && window._weeklyPublishedWeek == null) { if (typeof toast === 'function') toast('Weekly rankings unlock when a week goes live'); return; }
     }
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -5020,6 +5024,9 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     document.body.classList.toggle('format-weekly', currentMode === 'weekly');
     const wkSelWrap = document.getElementById('weeklyWeekSelectorWrap');
     if (wkSelWrap) wkSelWrap.style.display = (currentMode === 'weekly') ? 'inline-flex' : 'none';
+    // Entering WEEKLY: apply the non-admin published-week lock + LIVE chip
+    // BEFORE the boards reconcile and the render below read _weeklyActiveWeek.
+    if (currentMode === 'weekly' && typeof window._weeklyAdminCheck === 'function') window._weeklyAdminCheck();
     // Entering WEEKLY: an untouched week's board re-derives from the current
     // Redraft order (picks up any redraft moves made since last visit).
     if (currentMode === 'weekly' && typeof window._weeklyReconcileBoard === 'function') {
@@ -5067,7 +5074,7 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
       if (typeof window._ensureDraftPicksData === 'function') window._ensureDraftPicksData();
     }
     render();
-    toast(currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'Best Ball' : 'Redraft');
+    toast(currentMode === 'weekly' ? ('Weekly — Week ' + (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1)) : currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'Best Ball' : 'Redraft');
     // Show/hide "Copy from Redraft" button (Best Ball only)
     if (typeof window._updateCopyFromRedraftBtn === 'function') window._updateCopyFromRedraftBtn();
     // Show/hide rookie pick toggle

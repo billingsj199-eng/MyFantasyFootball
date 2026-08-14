@@ -7596,7 +7596,130 @@ function _adminInjectSnapButtons(playerName) {
   window._snapObserver.observe(cardEl, { childList: true, subtree: true });
 }
 
+// === Player-card compare strip ==============================================
+// KTC-style pinned-player tabs at the top of the card body: + ADD PLAYER
+// searches the same pool as the header search bar, each added player becomes a
+// chip, clicking a chip swaps the card to that player in place, × unpins.
+// Pins live for the page session only (deliberately not persisted — a stale
+// name after a data refresh would render a dead chip).
+var _cardPins = [];
+
+function _cardPinEsc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+
+function _cardPinLookup(name) {
+  return D.find(p => p && p.n === name && !p._isFuturePick) || null;
+}
+
+function _renderCardPinStrip(d, ctxMode) {
+  const strip = document.getElementById('cardPinStrip');
+  if (!strip) return;
+  // D rebuilds on data refreshes — drop pins that no longer resolve
+  _cardPins = _cardPins.filter(n => _cardPinLookup(n));
+  const chips = _cardPins.map(n => {
+    const active = n === d.n;
+    const esc = _cardPinEsc(n);
+    return '<span class="card-pin-chip' + (active ? ' active' : '') + '" data-pin="' + esc + '" title="' + (active ? 'Currently viewing' : 'View ' + esc + ' — or cycle pinned players with &larr; &rarr;') + '">' + esc
+      + '<button class="card-pin-x" data-unpin="' + esc + '" aria-label="Remove ' + esc + ' from this card">&times;</button></span>';
+  }).join('');
+  strip.innerHTML = chips
+    + '<span class="card-pin-search" id="cardPinSearch" hidden>'
+    + '<input type="text" class="card-pin-input" id="cardPinInput" placeholder="Search player…" autocomplete="off" aria-label="Add player to compare strip">'
+    + '<div class="card-pin-suggest" id="cardPinSuggest" hidden></div></span>'
+    + '<button class="card-pin-add" id="cardPinAdd" title="Pin players to this card — click a chip to swap between them">+ ADD PLAYER</button>';
+
+  const addBtn = strip.querySelector('#cardPinAdd');
+  const searchWrap = strip.querySelector('#cardPinSearch');
+  const input = strip.querySelector('#cardPinInput');
+  const suggest = strip.querySelector('#cardPinSuggest');
+
+  strip.querySelectorAll('.card-pin-chip').forEach(chip => {
+    chip.addEventListener('click', e => {
+      if (e.target.closest('.card-pin-x')) return;
+      const name = chip.dataset.pin;
+      if (name === d.n) return;
+      const pd = _cardPinLookup(name);
+      if (pd) openPlayerCard(pd, ctxMode);
+    });
+  });
+  strip.querySelectorAll('.card-pin-x').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      _cardPins = _cardPins.filter(n => n !== btn.dataset.unpin);
+      _renderCardPinStrip(d, ctxMode);
+    });
+  });
+
+  addBtn.addEventListener('click', () => {
+    addBtn.hidden = true;
+    searchWrap.hidden = false;
+    input.focus();
+  });
+
+  // Same scoring as the header search autocomplete, minus already-pinned players
+  let items = [], activeIdx = -1;
+  function buildItems(q) {
+    if (!q || q.length < 2) return [];
+    const lc = q.toLowerCase();
+    const out = [];
+    for (const p of D) {
+      if (!p || !p.n || p._isFuturePick) continue;
+      if (p.n === d.n || _cardPins.includes(p.n)) continue;
+      const name = p.n.toLowerCase(), team = (p.t || '').toLowerCase();
+      let score = 0;
+      if (name.startsWith(lc)) score = 100;
+      else if (name.includes(lc)) score = 60;
+      else if (team === lc) score = 50;
+      else if (team.startsWith(lc)) score = 30;
+      if (score > 0) out.push({ p, score });
+    }
+    out.sort((a, b) => b.score - a.score || (a.p.myRank || 999) - (b.p.myRank || 999));
+    return out.slice(0, 5).map(m => m.p);
+  }
+  function draw() {
+    if (!items.length) { suggest.hidden = true; suggest.innerHTML = ''; return; }
+    suggest.hidden = false;
+    suggest.innerHTML = items.map((p, i) =>
+      '<div class="card-pin-sug' + (i === activeIdx ? ' active' : '') + '" data-idx="' + i + '"><span class="pos-badge ' + p.s + '">' + p.s + '</span> '
+      + _cardPinEsc(p.n) + ' <span class="card-pin-sug-team">' + _cardPinEsc(p.t || 'FA') + '</span></div>').join('');
+  }
+  function closeSearch() {
+    items = []; activeIdx = -1;
+    suggest.hidden = true; suggest.innerHTML = '';
+    input.value = '';
+    searchWrap.hidden = true;
+    addBtn.hidden = false;
+  }
+  function addPin(p) {
+    if (!p) return;
+    // The player being viewed joins the strip too, so there's a chip to come back to
+    if (!_cardPins.includes(d.n)) _cardPins.push(d.n);
+    if (!_cardPins.includes(p.n)) _cardPins.push(p.n);
+    _renderCardPinStrip(d, ctxMode);
+  }
+  input.addEventListener('input', () => { items = buildItems(input.value); activeIdx = items.length ? 0 : -1; draw(); });
+  input.addEventListener('keydown', e => {
+    // Escape must close the search, not the whole card (document-level listener)
+    if (e.key === 'Escape') { e.stopPropagation(); closeSearch(); return; }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.stopPropagation(); return; }
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); draw(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); draw(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (activeIdx >= 0) addPin(items[activeIdx]); }
+  });
+  suggest.addEventListener('mousedown', e => {
+    // mousedown (not click) so we beat the input's blur from closing the dropdown
+    const item = e.target.closest('.card-pin-sug');
+    if (!item) return;
+    e.preventDefault();
+    addPin(items[parseInt(item.dataset.idx, 10)]);
+  });
+  input.addEventListener('blur', () => { setTimeout(closeSearch, 150); });
+}
+
 function openPlayerCard(d, ctxMode) {
+  // Compare-strip cycling (← →) needs to know which player is on screen
+  window._cardOpenName = d && d.n ? d.n : null;
+  window._cardOpenCtx = ctxMode;
   // PFF grades + college stats are lazy-loaded; opening any player card may render
   // prospect/JM/career info that consumes them, so fire the loads on click.
   if (typeof window._ensurePffData === 'function') window._ensurePffData();
@@ -7717,6 +7840,7 @@ function openPlayerCard(d, ctxMode) {
       </div>
     </div>
     <div class="card-body">
+      <div class="card-pin-strip" id="cardPinStrip"></div>
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
         ${!d._isDevy && !_is2026 && d.career && d.career.length > 0 ? `<button class="card-view-btn" data-cardview="logs" id="cardLogsTabBtn"${hasWeeklyData(d) ? '' : ' style="display:none"'}>LOGS</button>
@@ -8331,6 +8455,7 @@ function openPlayerCard(d, ctxMode) {
 
   modal.classList.add('open');
   document.getElementById('cardClose').addEventListener('click', closeCard);
+  _renderCardPinStrip(d, _ctxMode);
 
   // FIND TRADE FOR ME — appears when the player is rostered in a synced league
   // (and isn't on your team). One click → Trade Calc → Find Trade with target pre-filled.
@@ -8628,6 +8753,20 @@ window.addEventListener('popstate', () => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeCard(); }
+});
+// ← / → cycle through compare-strip pins while a card is open (not while typing)
+document.addEventListener('keydown', e => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  if (!modal.classList.contains('open')) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+  if (_cardPins.length < 2) return;
+  const cur = _cardPins.indexOf(window._cardOpenName);
+  const dir = e.key === 'ArrowRight' ? 1 : -1;
+  // Viewing an unpinned player: → starts at the first pin, ← at the last
+  const next = cur < 0 ? (dir === 1 ? 0 : _cardPins.length - 1) : (cur + dir + _cardPins.length) % _cardPins.length;
+  const pd = _cardPinLookup(_cardPins[next]);
+  if (pd && pd.n !== window._cardOpenName) { e.preventDefault(); openPlayerCard(pd, window._cardOpenCtx); }
 });
 
 // Compare Page

@@ -854,6 +854,23 @@ td.adp-reach{background:rgba(239,68,68,.10);color:var(--red);font-weight:600}
 .card-view-btn{flex:1;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;padding:5px 0;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .15s;text-align:center}
 .card-view-btn.active{background:var(--chip-active-bg);color:var(--chip-active-fg);font-weight:700;box-shadow:inset 0 0 0 1px var(--chip-active-border)}
 .card-view-btn:hover:not(.active){background:var(--elev-2)}
+/* Player-card compare strip (pinned-player chips + add-player search) */
+.card-pin-strip{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.card-pin-chip{display:inline-flex;align-items:center;gap:6px;background:var(--elev-1);border:1px solid var(--border);border-radius:14px;padding:3px 6px 3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1px;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.card-pin-chip:hover:not(.active){background:var(--elev-2)}
+.card-pin-chip.active{background:var(--chip-active-bg);color:var(--chip-active-fg);font-weight:700;box-shadow:inset 0 0 0 1px var(--chip-active-border);cursor:default}
+.card-pin-x{border:none;background:none;color:inherit;opacity:.55;font-size:.85rem;line-height:1;padding:0 2px;cursor:pointer;border-radius:50%}
+.card-pin-x:hover{opacity:1;color:var(--red)}
+.card-pin-add{border:1px dashed var(--border);background:none;border-radius:14px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1px;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.card-pin-add:hover{background:var(--elev-1);color:var(--text)}
+.card-pin-search{position:relative;display:inline-flex}
+.card-pin-input{background:var(--elev-1);border:1px solid var(--border);border-radius:14px;padding:3px 10px;font-size:.72rem;color:var(--text);width:170px;outline:none}
+.card-pin-input:focus{border-color:var(--accent)}
+.card-pin-suggest{position:absolute;top:calc(100% + 4px);left:0;min-width:230px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.5);z-index:90;font-family:'DM Sans',sans-serif;padding:4px}
+.card-pin-sug{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;color:var(--text);font-size:.78rem;line-height:1.2;white-space:nowrap}
+.card-pin-sug:hover,.card-pin-sug.active{background:var(--elev-2)}
+.card-pin-sug .pos-badge{font-size:.58rem;padding:1px 5px}
+.card-pin-sug-team{color:var(--text2);font-size:.68rem;margin-left:auto}
 .card-prospect-view{display:none}
 .card-prospect-view.active{display:block}
 .card-fantasy-view{display:block}

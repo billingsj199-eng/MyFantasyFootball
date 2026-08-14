@@ -2596,6 +2596,11 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   return card;
 }
 
+// CENTER layout preference (pyramid look for vertical video) — survives re-renders.
+function _tcvCenteredPref() {
+  try { return localStorage.getItem('tcv_centered') === '1'; } catch(_) { return false; }
+}
+
 function _renderTierCardView(data, container) {
   // Decide whether to use position-rank (for QB/RB/WR/TE filters) or overall myRank for tier lookup
   const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
@@ -2624,6 +2629,7 @@ function _renderTierCardView(data, container) {
   // zoom scales every fixed-px card element together; full boards stay at 1×.
   const _tcvN = data.length;
   root.style.zoom = _tcvN <= 12 ? 1.9 : _tcvN <= 24 ? 1.65 : _tcvN <= 40 ? 1.45 : _tcvN <= 60 ? 1.3 : _tcvN <= 90 ? 1.15 : _tcvN <= 140 ? 1.05 : 1;
+  if (_tcvCenteredPref()) root.classList.add('tcv-centered');
 
   // Header: filter context
   const header = document.createElement('div');
@@ -2644,6 +2650,7 @@ function _renderTierCardView(data, container) {
     '<button class="tcv-reveal-btn" data-tcvaction="hideAll" title="Hide every player — start the reveal flow">⊘ HIDE ALL</button>' +
     '<button class="tcv-reveal-btn tcv-primary" data-tcvaction="revealNext" title="Reveal the next hidden player from the top">▶ REVEAL NEXT</button>' +
     '<button class="tcv-reveal-btn" data-tcvaction="revealAll" title="Show every player">◉ REVEAL ALL</button>' +
+    '<button class="tcv-reveal-btn' + (_tcvCenteredPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCenter" title="Center each tier\'s cards (pyramid layout — fits vertical video). The tier letter rides against the leftmost card.">⇔ CENTER</button>' +
     '<span class="tcv-reveal-status" id="tcvRevealStatus"></span>';
   root.appendChild(controls);
 
@@ -2712,6 +2719,13 @@ function _renderTierCardView(data, container) {
   root.querySelectorAll('[data-tcvaction]').forEach(btn => {
     btn.addEventListener('click', () => {
       const action = btn.getAttribute('data-tcvaction');
+      if (action === 'toggleCenter') {
+        const on = !root.classList.contains('tcv-centered');
+        root.classList.toggle('tcv-centered', on);
+        btn.classList.toggle('tcv-primary', on);
+        try { localStorage.setItem('tcv_centered', on ? '1' : '0'); } catch(_) {}
+        return;
+      }
       const cards = root.querySelectorAll('.tcv-card');
       if (action === 'hideAll') {
         cards.forEach(c => c.classList.add('tcv-covered'));

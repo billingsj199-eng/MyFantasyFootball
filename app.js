@@ -1713,6 +1713,10 @@ window._updateCopyFromRedraftBtn = function() {
 
 // State
 let filter = 'ALL', sortKey = 'myrank', sortDir = 1, query = '', viewMode = 'all';
+// TOP-N range (rankings toolbar): show only the first N rows of whatever the
+// current filter/sort view is (top 40 overall on ALL, top 15 QBs on QB, ...).
+// null = show everything.
+let rankTopN = null;
 let rookiePosFilter = 'ALL'; // sub-filter applied only when filter === 'ROOKIE'
 let rankingScoringFmt = 'ppr';
 let rnkAdpSrc = 'consensus';
@@ -2533,16 +2537,6 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
 
   const projVal = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
 
-  // Age color coding (matches main rankings table logic)
-  function _tcvAgeColor(age, pos) {
-    if (age == null) return null;
-    const COLORS = { green: '#22c55e', yellow: '#eab308', orange: '#f97316', red: '#ef4444' };
-    if (pos === 'RB') return age >= 30 ? COLORS.red : age >= 28 ? COLORS.yellow : COLORS.green;
-    if (pos === 'QB') return age >= 35 ? COLORS.red : age >= 32 ? COLORS.orange : age >= 24 ? COLORS.green : COLORS.yellow;
-    if (pos === 'WR') return age >= 32 ? COLORS.red : age >= 29 ? COLORS.orange : age >= 24 ? COLORS.green : COLORS.yellow;
-    if (pos === 'TE') return age >= 33 ? COLORS.red : age >= 31 ? COLORS.orange : age >= 25 ? COLORS.green : COLORS.yellow;
-    return null;
-  }
   const projColor = (projVal != null && typeof posFptsColor === 'function') ? posFptsColor(projVal, d.s) : null;
 
   const headshotHtml = d._slImg
@@ -2566,34 +2560,18 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     return color ? '<span style="color:' + color + '">' + v + '</span>' : String(v);
   };
 
-  // Per-position / per-format stat slots (top→bottom on each card):
-  //   1) ADP   2) Proj PPG   3) dynasty→Age · WR/TE→Team PPG · QB/RB/other→+/- vs ADP
-  const _isDyn = (typeof currentMode !== 'undefined') && (currentMode === 'dynasty' || currentMode === 'dynastysf');
-  const _adpVal = (typeof rnkAdp === 'function') ? rnkAdp(d) : null;
+  // Uniform stat stack (top→bottom on every card, all positions/formats):
+  //   1) '25 PPG   2) Proj PPG   3) Vegas implied Team PPG (season avg, no rank)
+  const _25Val = (typeof adj25ppg === 'function') ? adj25ppg(d) : null;
+  const _25Color = (_25Val != null && typeof posFptsColor === 'function') ? posFptsColor(_25Val, d.s) : null;
+  const _tp = (typeof _impliedTeamPpg === 'function') ? _impliedTeamPpg(d.t) : null;
+  const _tc = _tp ? (_tp.ppg >= 24.5 ? '#22c55e' : _tp.ppg <= 20.5 ? '#ef4444' : '#facc15') : null;
   const _statSlots = [
-    { v: _adpVal, c: null, lbl: 'ADP' },
-    { v: projVal, c: projColor, lbl: 'Proj PPG' }
+    { v: _25Val, c: _25Color, lbl: "'25 PPG" },
+    { v: projVal, c: projColor, lbl: 'Proj PPG' },
+    { v: _tp ? _tp.ppg.toFixed(1) : null, c: _tc, lbl: 'Team PPG' }
   ];
-  if (_isDyn) {
-    _statSlots.push({ v: (d.age != null ? d.age : null), c: _tcvAgeColor(d.age, d.s), lbl: 'Age' });
-  } else if (d.s === 'WR' || d.s === 'TE') {
-    // Vegas implied Team PPG + league rank (season avg — same source as the
-    // table column and player-card box).
-    const _tp = (typeof _impliedTeamPpg === 'function') ? _impliedTeamPpg(d.t) : null;
-    const _tc = _tp ? (_tp.ppg >= 24.5 ? '#22c55e' : _tp.ppg <= 20.5 ? '#ef4444' : '#facc15') : null;
-    _statSlots.push({ v: _tp ? _tp.ppg.toFixed(1) + '<span style="font-size:.75em;color:var(--text2)">(' + _tp.rank + ')</span>' : null, c: _tc, lbl: 'Team PPG' });
-  } else {
-    // QB / RB / K / DST → +/- ADP value arrow (ranked vs the market)
-    let _arrow = '<span class="tcv-stat-blank">—</span>';
-    if (_adpVal != null && d.myRank != null) {
-      const _df = _adpVal - d.myRank;
-      if (Math.abs(_df) < 0.5) _arrow = '<span style="color:var(--text2)">—</span>';
-      else if (_df > 0) _arrow = '<span style="color:var(--green)">▲' + Math.abs(_df).toFixed(0) + '</span>';
-      else _arrow = '<span style="color:var(--red)">▼' + Math.abs(_df).toFixed(0) + '</span>';
-    }
-    _statSlots.push({ html: _arrow, lbl: '+/- vs ADP' });
-  }
-  const _statsHtml = _statSlots.map(s => s.html != null ? s.html : fmtStat(s.v, s.c)).join('<br>');
+  const _statsHtml = _statSlots.map(s => fmtStat(s.v, s.c)).join('<br>');
   const _statsTitle = _statSlots.map(s => s.lbl).join(' / ');
 
   card.innerHTML =
@@ -2642,6 +2620,10 @@ function _renderTierCardView(data, container) {
   // Build DOM
   const root = document.createElement('div');
   root.className = 'tier-card-view';
+  // Auto-size: fewer players on screen (e.g. a TOP-N view) → bigger cards.
+  // zoom scales every fixed-px card element together; full boards stay at 1×.
+  const _tcvN = data.length;
+  root.style.zoom = _tcvN <= 12 ? 1.9 : _tcvN <= 24 ? 1.65 : _tcvN <= 40 ? 1.45 : _tcvN <= 60 ? 1.3 : _tcvN <= 90 ? 1.15 : _tcvN <= 140 ? 1.05 : 1;
 
   // Header: filter context
   const header = document.createElement('div');
@@ -2671,8 +2653,8 @@ function _renderTierCardView(data, container) {
   keyCard.className = 'tcv-key-card';
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
-    '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span>4</span>/<span style="color:#facc15">17.3</span>/<span style="color:#22c55e">▲6</span></span>' +
-    '<span>= ADP / PROJ PPG (' + scoreFmtLabel + ') / VALUE — <b>WR/TE</b> show Team PPG (rank), <b>dynasty</b> shows Age</span>' +
+    '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#facc15">15.8</span>/<span style="color:#22c55e">17.3</span>/<span style="color:#facc15">23.4</span></span>' +
+    '<span>= \'25 PPG / PROJ PPG (' + scoreFmtLabel + ') / TEAM TOTAL (Vegas implied PPG)</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 
@@ -2789,7 +2771,11 @@ function render() {
       }
     }
   }
-  const data = getFiltered();
+  let data = getFiltered();
+  // TOP-N range: slice AFTER filter+sort so N follows the ranks on screen
+  // (top 15 QBs on the QB filter, top 40 overall on ALL). A typed search
+  // bypasses it so search can always find anyone.
+  if (rankTopN != null && rankTopN > 0 && !query) data = data.slice(0, rankTopN);
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
   const editable = canEdit();
@@ -3855,6 +3841,22 @@ document.querySelectorAll('.pos-btn[data-pos]').forEach(btn => {
     render();
   });
 });
+
+// TOP-N range input — type a number to cap the view at the top N of whatever
+// ranks are showing (position filter included); clear it to see everyone.
+(function _wireRankTopN() {
+  const inp = document.getElementById('rankTopNInput');
+  if (!inp) return;
+  let _t = null;
+  inp.addEventListener('input', () => {
+    clearTimeout(_t);
+    _t = setTimeout(() => {
+      const v = parseInt(inp.value, 10);
+      rankTopN = (!isNaN(v) && v > 0) ? v : null;
+      render();
+    }, 250);
+  });
+})();
 
 // Rookie sub-position filter (only relevant when filter === 'ROOKIE')
 document.querySelectorAll('.rookie-sub-btn[data-rookiepos]').forEach(btn => {

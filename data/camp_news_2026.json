@@ -1,6 +1,56 @@
 {
- "updated": "2026-08-14T16:21:00Z",
+ "updated": "2026-08-15T02:09:11Z",
  "items": [
+  {
+   "player": "Tua Tagovailoa",
+   "team": "ATL",
+   "pos": "QB",
+   "date": "2026-08-14",
+   "headline": "Rough preseason debut with Falcons: 3/5 for 22 yards (70.4 rating), fumbled a shotgun snap in 17-0 loss to Denver",
+   "take": "Shaky first look at Atlanta's new QB1 job after leaving Miami -- not a panic move yet, but worth watching the rest of preseason.",
+   "url": "https://www.yardbarker.com/nfl/articles/falcons_qb_situation_looks_bleak_after_tua_tagovailoas_performance_vs_broncos/s1_13132_44176718",
+   "tag": "faller"
+  },
+  {
+   "player": "Malik Willis",
+   "team": "MIA",
+   "pos": "QB",
+   "date": "2026-08-14",
+   "headline": "Went 4/5 for 43 yards passing plus 2 carries for 9 yards on Dolphins' lone starters' drive in 16-13 preseason win",
+   "take": "Clean, efficient first look as Miami's new QB1 after taking over for the departed Tua.",
+   "url": "https://sports.yahoo.com/articles/dolphins-making-call-malik-willis-213000748.html",
+   "tag": "role"
+  },
+  {
+   "player": "Cade Klubnik",
+   "team": "NYJ",
+   "pos": "QB",
+   "date": "2026-08-14",
+   "headline": "Rookie 4th-rounder impresses in NFL debut: 5/7 for 56 yards, leads Jets to a 10-0 lead with Geno Smith (sore foot) resting",
+   "take": "Strong debut strengthens his case in the Jets' backup QB competition over Bailey Zappe and Brady Cook -- dynasty stash.",
+   "url": "https://www.newyorkjets.com/news/cade-klubnik-preseason-debut-recap-jets-vs-buccaneers-08-14-2026",
+   "tag": "riser"
+  },
+  {
+   "player": "Braelon Allen",
+   "team": "NYJ",
+   "pos": "RB",
+   "date": "2026-08-14",
+   "headline": "Breaks a 31-yard TD run in the first quarter of Jets' preseason opener vs. Buccaneers",
+   "take": "Early explosive-play flash as he looks to hold off the rest of New York's backfield for touches.",
+   "url": "https://www.newyorkjets.com/news/cade-klubnik-preseason-debut-recap-jets-vs-buccaneers-08-14-2026",
+   "tag": "riser"
+  },
+  {
+   "player": "Josh Jacobs",
+   "team": "GB",
+   "pos": "RB",
+   "date": "2026-08-14",
+   "headline": "Could return to practice as soon as late next week, per Matt LaFleur",
+   "take": "Upgrade from the prior 'out at least this week' groin-injury framing -- trending toward a normal Week 1 timeline.",
+   "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/josh-jacobs-could-return-to-packers-practice-next-week?cid=nbcnews",
+   "tag": "injury"
+  },
   {
    "player": "Puka Nacua",
    "team": "LAR",

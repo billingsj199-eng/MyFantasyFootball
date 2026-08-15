@@ -1,6 +1,56 @@
 {
- "updated": "2026-08-15T02:09:11Z",
+ "updated": "2026-08-15T16:15:00Z",
  "items": [
+  {
+   "player": "Jahan Dotson",
+   "team": "ATL",
+   "pos": "WR",
+   "date": "2026-08-14",
+   "headline": "Played 100% of Tua Tagovailoa's snaps as Falcons WR2 in preseason opener vs. Broncos",
+   "take": "Locks in as Atlanta's clear No. 2 receiver opposite Drake London, ahead of Olamide Zaccheaus.",
+   "url": "https://www.draftsharks.com/fantasy-football-news/82233/jahan-dotson-gets-prominent-role-kyle-pitts-gets-featured",
+   "tag": "role"
+  },
+  {
+   "player": "Kyle Pitts",
+   "team": "ATL",
+   "pos": "TE",
+   "date": "2026-08-14",
+   "headline": "All 4 of Tua Tagovailoa's targets on the opening series went to Pitts (3 catches, 22 yards) vs. Broncos",
+   "take": "Clear first read early with Drake London playing just 2 snaps and Bijan Robinson resting -- strong TE1-range signal.",
+   "url": "https://www.thefalcoholic.com/atlanta-falcons-game-information/95119/falcons-broncos-instant-recap-for-preseason-week-1-jack-strand-malcolm-dewalt-iv",
+   "tag": "riser"
+  },
+  {
+   "player": "Graham Mertz",
+   "team": "HOU",
+   "pos": "QB",
+   "date": "2026-08-13",
+   "headline": "Tore his ACL in Thursday's preseason opener vs. Chargers, needs season-ending surgery",
+   "take": "No standalone fantasy value, but leaves Houston with just two healthy QBs on the roster.",
+   "url": "https://www.cbssports.com/fantasy/football/news/texans-graham-mertz-suffers-torn-acl/",
+   "tag": "injury"
+  },
+  {
+   "player": "Will Mallory",
+   "team": "IND",
+   "pos": "TE",
+   "date": "2026-08-13",
+   "headline": "Led all Colts pass-catchers with 6 catches on 7 targets for 80 yards in 13-13 tie vs. Patriots",
+   "take": "Standout usage behind Anthony Richardson's clean half in a Colts TE room without a clear-cut starter.",
+   "url": "https://www.colts.com/news/5-colts-things-will-mallory-caden-curry-george-gumbs-jr-among-preseason-week-1-standouts",
+   "tag": "riser"
+  },
+  {
+   "player": "De'Zhaun Stribling",
+   "team": "SF",
+   "pos": "WR",
+   "date": "2026-08-13",
+   "headline": "7 catches on 8 targets for 63 yards, all in the first half of preseason win over Titans",
+   "take": "Camp buzz turns into real production -- with Pearsall out for the year and Kirk banged up, he's carving out Year 1 FLEX appeal.",
+   "url": "https://www.49ers.com/news/breaking-down-wr-de-zhaun-stribling-s-impressive-preseason-debut",
+   "tag": "riser"
+  },
   {
    "player": "Tua Tagovailoa",
    "team": "ATL",
@@ -2102,16 +2152,6 @@
    "tag": "injury"
   },
   {
-   "player": "Rashee Rice",
-   "team": "KC",
-   "pos": "WR",
-   "date": "2026-07-24",
-   "headline": "Andy Reid says WR is 'doing great,' cleared to practice for camp",
-   "take": "Removes the last real cloud over Chiefs' passing game - locks in as Mahomes' top target entering 2026.",
-   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-07-24/reid-rice-knee-doing-great-cleared-to-practice",
-   "tag": "injury"
-  },
-  {
    "player": "Travis Hunter",
    "team": "JAX",
    "pos": "WR",
@@ -2219,16 +2259,6 @@
    "headline": "Coach Liam Coen says he's expecting a 'big year' from Tuten",
    "take": "With Etienne now in New Orleans, Tuten profiles as Jacksonville's clear early-down/goal-line back.",
    "url": "https://www.nfl.com/news/liam-coen-hypes-bhayshul-tuten-jags-expecting-rb-to-have-a-big-year",
-   "tag": "riser"
-  },
-  {
-   "player": "Jonathon Brooks",
-   "team": "CAR",
-   "pos": "RB",
-   "date": "2026-07-24",
-   "headline": "Takes first-team reps, coach says he looks like 'the guy I remember'",
-   "take": "First healthy camp since back-to-back ACL tears - trending toward a 1-2 punch with Chuba Hubbard.",
-   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-07-23/brooks-hubbard-etienne-take-first-team-reps",
    "tag": "riser"
   }
  ]

@@ -5027,6 +5027,48 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   });
 })();
 
+// The rankings filter bar is position:sticky at the top of the page scroller
+// (main.css), so the sticky thead has to dock directly BENEATH it instead of at
+// 0 — otherwise the column headers hide behind the bar. The bar's height isn't
+// a constant: it wraps at narrow widths, grows a week-selector row in WEEKLY,
+// and carries extra buttons for admins. So measure it and publish the result as
+// --rnk-sticky-top rather than hardcoding an offset.
+// Reports 0 wherever the bar isn't sticky (<=600px keeps it static), which lets
+// the CSS fall back to top:0 without a second breakpoint to keep in sync.
+(function _stickyFilterBar() {
+  const page = document.getElementById('pageRankings');
+  const controls = page && page.querySelector('.controls');
+  if (!page || !controls) return;
+  const sync = () => {
+    const stuck = getComputedStyle(controls).position === 'sticky';
+    const h = stuck ? Math.round(controls.getBoundingClientRect().height) : 0;
+    page.style.setProperty('--rnk-sticky-top', h + 'px');
+  };
+  sync();
+  // border-box explicitly: `top` is measured against the bar's outer edge, and
+  // the default content-box would miss a padding/border change.
+  if (window.ResizeObserver) {
+    try { new ResizeObserver(sync).observe(controls, { box: 'border-box' }); }
+    catch (_e) { new ResizeObserver(sync).observe(controls); }
+  }
+  window.addEventListener('resize', sync);
+  // Breakpoint crossings flip the bar between sticky and static WITHOUT changing
+  // its height, so neither the observer nor (in some embedded/emulated viewports)
+  // a resize event necessarily lands. matchMedia fires on the flip itself.
+  try {
+    const _mq = window.matchMedia('(max-width:600px)');
+    if (_mq.addEventListener) _mq.addEventListener('change', sync);
+    else if (_mq.addListener) _mq.addListener(sync);
+  } catch (_e) {}
+  // The observer alone measured 8px short in practice: the bar grows when the
+  // Bebas/DM Sans webfonts swap in, and that settles after the first callback.
+  // Re-measure once layout and fonts are actually final.
+  requestAnimationFrame(sync);
+  window.addEventListener('load', sync);
+  try { if (document.fonts && document.fonts.ready) document.fonts.ready.then(sync); } catch (_e) {}
+  window._syncRnkStickyTop = sync;
+})();
+
 // Mode tabs: switch between redraft and dynasty
 document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
   btn.addEventListener('click', () => {

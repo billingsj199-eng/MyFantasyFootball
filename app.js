@@ -1049,6 +1049,24 @@ const TIER_LABELS = ['S','A','B','C','D','E','F','G','H','I','J','K','L','M','N'
 const _TIER_COLOR_CYCLE = ['S','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
 function tierColor(label) { const i = TIER_LABELS.indexOf(label); return i >= 0 ? _TIER_COLOR_CYCLE[i % _TIER_COLOR_CYCLE.length] : _TIER_COLOR_CYCLE[0]; }
 
+// Re-letter a tier array top-down so the sequence never has holes: S, A, B, C…
+// Auto-generated names ride along ("TIER B" → "TIER C"); a name the user typed
+// themselves is left alone. tierColor() keys off the label, so this keeps the
+// colour ramp in order too.
+// Callers: inserting a tier between two others, and removing one — before this
+// existed only the insert path relabelled, so deleting TIER A left the board
+// reading S, B, C with A missing (Jack, 2026-08-18).
+function _resequenceTiers(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    const newLabel = TIER_LABELS[i] || ('T' + i);
+    if (arr[i].label === newLabel) continue;
+    const oldLabel = arr[i].label;
+    const wasAutoName = arr[i].name === 'ELITE' || arr[i].name === 'TIER ' + oldLabel;
+    arr[i].label = newLabel;
+    if (wasAutoName) arr[i].name = newLabel === 'S' ? 'ELITE' : 'TIER ' + newLabel;
+  }
+}
+
 let _bypassEditCheck = false;
 
 function addTier(afterRank, label, name, _pk) {
@@ -1074,21 +1092,7 @@ function addTier(afterRank, label, name, _pk) {
   // sequentially so the new one gets the correct letter and everything
   // below shifts down. E.g. inserting between A and B → new one becomes B,
   // old B becomes C, old C becomes D, etc.
-  if (userInitiated && arr.length > 1) {
-    for (let i = 0; i < arr.length; i++) {
-      const newLabel = TIER_LABELS[i] || ('T' + i);
-      if (arr[i].label !== newLabel) {
-        // Update name if it was auto-generated (e.g. "TIER B" → "TIER C")
-        // but preserve custom user-edited names
-        const oldLabel = arr[i].label;
-        const wasAutoName = arr[i].name === 'ELITE' || arr[i].name === 'TIER ' + oldLabel;
-        arr[i].label = newLabel;
-        if (wasAutoName) {
-          arr[i].name = newLabel === 'S' ? 'ELITE' : 'TIER ' + newLabel;
-        }
-      }
-    }
-  }
+  if (userInitiated && arr.length > 1) _resequenceTiers(arr);
 
   tiers = versionTiers[currentVersion][currentMode][_tierPK()];
   tierCounter = versionTierCounters[currentVersion][currentMode][_tierPK()];
@@ -1108,6 +1112,10 @@ function removeTier(id) {
   const pk = _tierPK();
   versionTiers[currentVersion][currentMode][pk] = versionTiers[currentVersion][currentMode][pk].filter(t => t.id !== id);
   tiers = versionTiers[currentVersion][currentMode][pk];
+  // Close the gap the removal left — otherwise deleting A leaves S, B, C.
+  // Runs before the caller's _syncPairedMode(), so paired formats copy the
+  // already-resequenced labels rather than the holed ones.
+  _resequenceTiers(tiers);
 }
 
 // Rename tier (preserve label/color, only update display name)

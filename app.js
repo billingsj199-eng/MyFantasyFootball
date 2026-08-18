@@ -5027,29 +5027,43 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   });
 })();
 
-// The rankings filter bar is position:sticky at the top of the page scroller
-// (main.css), so the sticky thead has to dock directly BENEATH it instead of at
-// 0 — otherwise the column headers hide behind the bar. The bar's height isn't
-// a constant: it wraps at narrow widths, grows a week-selector row in WEEKLY,
-// and carries extra buttons for admins. So measure it and publish the result as
-// --rnk-sticky-top rather than hardcoding an offset.
-// Reports 0 wherever the bar isn't sticky (<=600px keeps it static), which lets
-// the CSS fall back to top:0 without a second breakpoint to keep in sync.
+// The rankings filter rows are position:sticky at the top of the page scroller
+// (main.css): the .controls bar, then the SCORING / STATS / ADP row beneath it.
+// Each has to pin at the cumulative height of the rows above it, and the sticky
+// thead has to dock under the whole stack instead of at 0 — otherwise the rows
+// pile up on each other and the column headers hide behind them.
+// None of those heights are constants: they wrap at narrow widths, grow a
+// week-selector row in WEEKLY, and carry extra buttons for admins. So measure
+// the stack and publish the offsets instead of hardcoding them.
+//   --rnk-sticky-N   -> where row N pins (cumulative height of the rows above)
+//   --rnk-sticky-top -> where thead pins (height of the whole stack)
+// A row that isn't sticky contributes 0 (<=600px keeps them static), so the CSS
+// falls back to top:0 without a second breakpoint to keep in sync.
 (function _stickyFilterBar() {
   const page = document.getElementById('pageRankings');
-  const controls = page && page.querySelector('.controls');
-  if (!page || !controls) return;
+  if (!page) return;
+  // DOM order, top-down — the running total is what makes each row stack.
+  const rows = ['.controls', '.rnk-scoring-row']
+    .map(sel => page.querySelector(sel))
+    .filter(Boolean);
+  if (!rows.length) return;
   const sync = () => {
-    const stuck = getComputedStyle(controls).position === 'sticky';
-    const h = stuck ? Math.round(controls.getBoundingClientRect().height) : 0;
-    page.style.setProperty('--rnk-sticky-top', h + 'px');
+    let offset = 0;
+    rows.forEach((el, i) => {
+      page.style.setProperty('--rnk-sticky-' + (i + 1), offset + 'px');
+      if (getComputedStyle(el).position !== 'sticky') return;
+      offset += Math.round(el.getBoundingClientRect().height);
+    });
+    page.style.setProperty('--rnk-sticky-top', offset + 'px');
   };
   sync();
-  // border-box explicitly: `top` is measured against the bar's outer edge, and
+  // border-box explicitly: `top` is measured against each row's outer edge, and
   // the default content-box would miss a padding/border change.
   if (window.ResizeObserver) {
-    try { new ResizeObserver(sync).observe(controls, { box: 'border-box' }); }
-    catch (_e) { new ResizeObserver(sync).observe(controls); }
+    const ro = new ResizeObserver(sync);
+    rows.forEach(el => {
+      try { ro.observe(el, { box: 'border-box' }); } catch (_e) { ro.observe(el); }
+    });
   }
   window.addEventListener('resize', sync);
   // Breakpoint crossings flip the bar between sticky and static WITHOUT changing
@@ -5060,7 +5074,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     if (_mq.addEventListener) _mq.addEventListener('change', sync);
     else if (_mq.addListener) _mq.addListener(sync);
   } catch (_e) {}
-  // The observer alone measured 8px short in practice: the bar grows when the
+  // The observer alone measured 8px short in practice: the rows grow when the
   // Bebas/DM Sans webfonts swap in, and that settles after the first callback.
   // Re-measure once layout and fonts are actually final.
   requestAnimationFrame(sync);

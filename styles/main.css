@@ -581,16 +581,24 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:3px;backg
    The <=600px block near the end sets its own variant of this. */
 #pageRankings{overflow:auto}
 #pageRankings .table-wrap{flex:none;overflow:visible}
-/* ...but the filter bar stays put (2026-08-18). Handing the scroll to the page
+/* ...but the filter rows stay put (2026-08-18). Handing the scroll to the page
    sent MODEL / FORMAT / POSITION / VIEW away with it — fine for the banners,
-   annoying for the controls you click while scanning the board. Only .controls
-   is pinned, so the ticker, title header, helper strip and ADP movers still
-   scroll off and the row count stays close to the unpinned layout.
-   thead docks directly BENEATH the bar rather than at 0: --rnk-sticky-top is
-   kept equal to the bar's live height by _stickyFilterBar() in app.js, because
-   the bar reflows (wraps at narrow widths, grows a week-selector row in WEEKLY,
-   carries extra buttons for admins). z-index outranks thead's 10. */
-#pageRankings .controls{position:sticky;top:0;z-index:20}
+   annoying for the controls you click while scanning the board. Pinned: the
+   .controls bar and the SCORING / STATS / ADP row beneath it. NOT pinned: the
+   ticker, title header, helper strip, ADP movers, and the stats-bar counts —
+   they still scroll off, which is what keeps the row count respectable.
+   Each pinned row sits at the cumulative height of the ones above it, and thead
+   docks under the whole stack rather than at 0. _stickyFilterBar() in app.js
+   keeps those offsets equal to the rows' LIVE heights, because they reflow
+   (wrap at narrow widths, grow a week-selector row in WEEKLY, carry extra
+   buttons for admins). z-indexes descend down the stack and outrank thead's 10. */
+#pageRankings .controls{position:sticky;top:var(--rnk-sticky-1,0px);z-index:20}
+/* SCORING / STATS / ADP-source row pins directly under the filter bar, at an
+   offset equal to the bar's live height. Its own markup carries only inline
+   LAYOUT styles (display/gap/padding), so position, background and border land
+   here without an inline-specificity fight. The opaque background is load
+   bearing: table rows scroll underneath it. */
+#pageRankings .rnk-scoring-row{position:sticky;top:var(--rnk-sticky-2,0px);z-index:19;background:var(--bg);border-bottom:1px solid var(--border)}
 #pageRankings thead th{top:var(--rnk-sticky-top,0px)}
 table{width:100%;border-collapse:collapse;min-width:1100px}
 thead th{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#a8b3c7;padding:.6rem .4rem;text-align:left;border-bottom:2px solid var(--accent);position:sticky;top:0;background:var(--surface);z-index:10;cursor:pointer;user-select:none;white-space:nowrap}
@@ -1027,9 +1035,10 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .subtitle{font-size:.7rem}
 
   .controls{padding:.5rem .75rem;gap:.35rem;border-bottom:none}
-  /* Not sticky on phones: the bar is tall relative to the screen, and pinning
-     it would eat back most of what the full-page scroll just bought. */
-  #pageRankings .controls{position:static}
+  /* Not sticky on phones: these are tall relative to the screen, and pinning
+     them would eat back most of what the full-page scroll just bought. */
+  #pageRankings .controls,
+  #pageRankings .rnk-scoring-row{position:static}
   .search-box{max-width:none;min-width:unset}
   .search-box input{padding:.5rem .75rem .5rem 2rem;font-size:.8rem}
   .filter-rows{gap:4px}

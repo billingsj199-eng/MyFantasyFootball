@@ -5028,7 +5028,8 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
 })();
 
 // The rankings filter rows are position:sticky at the top of the page scroller
-// (main.css): the .controls bar, then the SCORING / STATS / ADP row beneath it.
+// (main.css): the .controls bar, the SCORING / STATS / ADP row, then the
+// .stats-bar counts.
 // Each has to pin at the cumulative height of the rows above it, and the sticky
 // thead has to dock under the whole stack instead of at 0 — otherwise the rows
 // pile up on each other and the column headers hide behind them.
@@ -5043,7 +5044,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   const page = document.getElementById('pageRankings');
   if (!page) return;
   // DOM order, top-down — the running total is what makes each row stack.
-  const rows = ['.controls', '.rnk-scoring-row']
+  const rows = ['.controls', '.rnk-scoring-row', '.stats-bar']
     .map(sel => page.querySelector(sel))
     .filter(Boolean);
   if (!rows.length) return;

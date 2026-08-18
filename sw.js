@@ -1,15 +1,22 @@
 /* MyFantasyFootball service worker.
    Strategy:
-   - HTML navigations  → stale-while-revalidate: serve the cached shell instantly (~0ms),
-     refetch in the background so the NEXT load gets the newest deploy. Trades one-visit-behind
-     freshness for a ~330–440ms faster repeat load (the network HTML fetch is off the critical
-     path). First-ever visit (no cache) still awaits the network.
+   - HTML navigations  → network-first with a short timeout, cached shell as the fallback.
+     This was stale-while-revalidate until 2026-08-18: it served the cached shell instantly
+     and only picked the new deploy up on the NEXT load, so every returning visitor ran one
+     version behind and a fresh deploy looked like it simply hadn't shipped. This site deploys
+     several times a day, so shipping correctly beats the ~330–440ms SWR bought on repeat
+     loads. NAV_TIMEOUT_MS bounds the cost: a slow or dead network falls back to the cached
+     shell instead of hanging, so offline still works.
    - Versioned static assets (/styles/*.css?v=…, /data/*.js?v=…) → cache-first (URL changes when content does).
    - Unversioned same-origin GETs and Google Fonts woff2 / ESPN images → stale-while-revalidate.
    - Firebase / ESPN / Sleeper / Cloudflare APIs → bypass entirely.
    Bump SW_VERSION when changing SW logic so old caches get wiped on activate. */
 
-const SW_VERSION   = '2026-08-04a';
+const SW_VERSION   = '2026-08-18a';
+// How long a navigation waits for the network before falling back to the cached
+// shell. Long enough to win on any normal connection, short enough that a dead
+// one doesn't feel broken.
+const NAV_TIMEOUT_MS = 1500;
 const SHELL_CACHE  = 'mff-shell-' + SW_VERSION;
 const STATIC_CACHE = 'mff-static-' + SW_VERSION;
 const RUNTIME_CACHE = 'mff-runtime-' + SW_VERSION;
@@ -66,9 +73,9 @@ self.addEventListener('fetch', (event) => {
 
   if (BYPASS_HOSTS.some((h) => url.hostname.endsWith(h))) return;
 
-  // HTML navigations → stale-while-revalidate (instant repeat loads, background refresh).
+  // HTML navigations → network-first (deploys land on the next load), cache as fallback.
   if (req.mode === 'navigate' || req.destination === 'document') {
-    event.respondWith(navigationSWR(req, SHELL_CACHE));
+    event.respondWith(navigationNetworkFirst(req, SHELL_CACHE, event));
     return;
   }
 
@@ -90,20 +97,39 @@ self.addEventListener('fetch', (event) => {
   // Everything else: pass through.
 });
 
-// HTML navigations: serve the cached shell instantly (falling back to the precached
-// /index.html or / when the exact URL — e.g. a deep link with a query — isn't cached),
-// and revalidate in the background so the next load gets the freshest deploy. Only awaits
-// the network when there's nothing cached at all (first-ever visit / cleared cache).
-async function navigationSWR(req, cacheName) {
+// HTML navigations: try the network first so a deploy is live on the very next
+// load, and fall back to the cached shell if the network is slow or gone.
+// The cache lookup falls back to the precached /index.html or / when the exact
+// URL — a deep link with a query, say — was never cached under its own key.
+async function navigationNetworkFirst(req, cacheName, event) {
   const cache = await caches.open(cacheName);
-  const cached = (await cache.match(req)) || (await cache.match('/index.html')) || (await cache.match('/'));
+
   const network = fetch(req)
     .then((res) => {
       if (res && res.ok) cache.put(req, res.clone()).catch(() => {});
       return res;
     })
     .catch(() => null);
-  return cached || (await network) || new Response('', { status: 504, statusText: 'offline' });
+
+  // Race the fetch against the timeout. A failed fetch resolves null rather than
+  // rejecting, so an offline visit drops to the cache immediately instead of
+  // sitting out the full timeout.
+  let timer;
+  const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve(null), NAV_TIMEOUT_MS); });
+  const fresh = await Promise.race([network, timeout]);
+  clearTimeout(timer);
+  if (fresh && fresh.ok) return fresh;
+
+  const cached = (await cache.match(req)) || (await cache.match('/index.html')) || (await cache.match('/'));
+  if (cached) {
+    // Serving stale because the network was slow, not because it failed — let the
+    // fetch finish and refresh the cache. waitUntil keeps the worker alive for it,
+    // otherwise the browser may kill us the moment we return the response.
+    if (event && typeof event.waitUntil === 'function') event.waitUntil(network);
+    return cached;
+  }
+  // Nothing cached: wait the fetch out rather than failing at the timeout.
+  return (await network) || new Response('', { status: 504, statusText: 'offline' });
 }
 
 async function cacheFirst(req, cacheName) {

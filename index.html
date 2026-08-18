@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-14j" as="script">
+<link rel="preload" href="app.js?v=2026-08-18a" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -728,8 +728,7 @@ Build a stylized PNG of your top players (uses your personal board order). Pick 
 <div class="acct-field">
 <label class="acct-label">Format</label>
 <select id="adminGfxFormat" aria-label="Rankings graphic scoring format" class="acct-input" style="padding:.55rem .75rem">
-<option value="redraft">Redraft</option>
-<option value="bestball" selected>Best Ball</option>
+<option value="redraft" selected>Redraft</option>
 <option value="superflex">Superflex</option>
 <option value="dynasty">Dynasty 1QB</option>
 <option value="dynastysf">Dynasty SF</option>
@@ -1238,7 +1237,9 @@ CLEAR ALL
 <span class="filter-row-label">Format</span>
 <div class="mode-tabs">
 <button class="mode-tab active" data-mode="redraft">REDRAFT</button>
-<button class="mode-tab" data-mode="bestball">BEST BALL</button>
+<!-- BEST BALL format retired 2026-08-18 (redraft season) — Redraft is the single
+     season board now. The `bestball` data slot is still read/written by app.js and
+     Firestore, so restoring this one button brings the whole format back. -->
 <button class="mode-tab" data-mode="superflex">SUPERFLEX</button>
 <button class="mode-tab" data-mode="dynasty">DYNASTY 1QB</button>
 <button class="mode-tab" data-mode="dynastysf">DYNASTY SF</button>
@@ -1262,11 +1263,9 @@ CLEAR ALL
 <span style="width:6px;height:6px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e"></span>
 <span id="weeklyPublishedChipLabel" style="font-size:.62rem;color:#22c55e;letter-spacing:1px;font-family:'Bebas Neue',sans-serif;font-weight:700">LIVE — WEEK 1</span>
 </div>
-<button id="copyFromRedraftBtn" onclick="window._copyRedraftToBestBall()" style="display:none;margin-left:4px;padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Replace your Best Ball board and tiers with an exact copy of your Redraft rankings.">⇩ COPY FROM REDRAFT</button>
-<button id="copyFromBestBallBtn" onclick="window._copyBestBallToRedraft()" style="display:none;margin-left:4px;padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Replace your Redraft board and tiers with an exact copy of your Best Ball rankings. Kickers and D/ST keep their current Redraft order at the end.">⇧ COPY FROM BEST BALL</button>
 <div class="sync-toggle-wrap" id="syncToggleWrap" style="display:flex;align-items:center;gap:5px;margin-left:4px;position:relative">
-<div class="pm-toggle" id="syncToggle" onclick="window._togglePosSync()" title="When ON, positional rankings (RB1, RB2, etc.) stay synced across Redraft / Best Ball / Superflex and across Dynasty 1QB / Dynasty SF. Only the overall interleaving changes per format."></div>
-<span style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.55rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced across these groups:<br><br>• <b>Redraft ↔ Best Ball ↔ Superflex</b><br>• <b>Dynasty 1QB ↔ Dynasty SF</b><br><br>Only the <em>overall</em> interleaving changes between formats (QBs rank higher in SF, K/DST excluded from Best Ball). Your within-position order and tiers stay identical across all paired modes.<br><br>Move any player or add/remove a tier in one mode and every paired mode updates instantly. Toggle ON to also do an initial sync from your current mode right now.</div></span></span>
+<div class="pm-toggle" id="syncToggle" onclick="window._togglePosSync()" title="When ON, positional rankings (RB1, RB2, etc.) stay synced across Redraft / Superflex and across Dynasty 1QB / Dynasty SF. Only the overall interleaving changes per format."></div>
+<span style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.55rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced across these groups:<br><br>• <b>Redraft ↔ Superflex</b><br>• <b>Dynasty 1QB ↔ Dynasty SF</b><br><br>Only the <em>overall</em> interleaving changes between formats (QBs rank higher in SF). Your within-position order and tiers stay identical across all paired modes.<br><br>Move any player or add/remove a tier in one mode and every paired mode updates instantly. Toggle ON to also do an initial sync from your current mode right now.</div></span></span>
 </div>
 </div>
 <div class="pos-filters">
@@ -5175,7 +5174,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-14j"></script>
+<script defer src="app.js?v=2026-08-18a"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

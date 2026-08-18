@@ -1481,12 +1481,13 @@ window._showSyncHelp = function() {
 
 // Position-sync partner groups. Modes within a group share within-position
 // rankings (RB1, RB2, etc.) and position-specific tiers, while keeping their
-// own overall interleaving. Redraft / Best Ball / Superflex form a 3-way
-// mesh; Dynasty 1QB and Dynasty SF form a 2-way pair.
+// own overall interleaving. Redraft and Superflex form a 2-way pair, as do
+// Dynasty 1QB and Dynasty SF.
+// 2026-08-18: Best Ball retired from the UI, so it left the mesh — an
+// unreachable mode must not keep pulling live edits out of Redraft.
 function _syncPartners(mode) {
-  if (mode === 'redraft')   return ['superflex', 'bestball'];
-  if (mode === 'superflex') return ['redraft', 'bestball'];
-  if (mode === 'bestball')  return ['redraft', 'superflex'];
+  if (mode === 'redraft')   return ['superflex'];
+  if (mode === 'superflex') return ['redraft'];
   if (mode === 'dynasty')   return ['dynastysf'];
   if (mode === 'dynastysf') return ['dynasty'];
   return [];
@@ -1704,6 +1705,9 @@ window._copyBestBallToRedraft = function() {
 
 // Show the copy buttons only in their target mode + when the user can edit:
 // "Copy from Redraft" in Best Ball, "Copy from Best Ball" in Redraft.
+// 2026-08-18: both buttons were removed from index.html with the Best Ball
+// format. The handlers stay as a console-only escape hatch for restoring the
+// dormant bestball slot; the getElementById guards below make this a no-op.
 window._updateCopyFromRedraftBtn = function() {
   const btn = document.getElementById('copyFromRedraftBtn');
   if (btn) btn.style.display = (currentMode === 'bestball' && canEdit()) ? '' : 'none';
@@ -4556,10 +4560,10 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     }
     // If a non-admin lands in WEEKLY without a published week, bounce them.
     if (!admin && currentMode === 'weekly' && published == null) {
-      currentMode = 'bestball';
+      currentMode = 'redraft';
       document.body.classList.remove('format-weekly');
       document.querySelectorAll('.mode-tab').forEach(b => {
-        b.classList.toggle('active', b.dataset.mode === 'bestball');
+        b.classList.toggle('active', b.dataset.mode === 'redraft');
       });
       try { syncMode(); renumber(); render(); } catch(_e) {}
     }
@@ -5056,10 +5060,8 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
       window._weeklyReconcileBoard('jacks');
       window._weeklyReconcileBoard('mine');
     }
-    // If sync is on, pull the entering mode's positional order from one of its
-    // partners. With the 3-way redraft/bestball/superflex mesh, we pick a
-    // primary source per mode so the user gets a deterministic result:
-    //   bestball  ← redraft (canonical source for best ball)
+    // If sync is on, pull the entering mode's positional order from its
+    // partner. One primary source per mode so the result is deterministic:
     //   superflex ← redraft (canonical source for superflex)
     //   redraft   ← superflex (preserves prior behavior)
     //   dynasty(sf) ← its single pair
@@ -5067,7 +5069,6 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
       const primarySrc = {
         redraft: 'superflex',
         superflex: 'redraft',
-        bestball: 'redraft',
         dynasty: 'dynastysf',
         dynastysf: 'dynasty'
       }[currentMode];

@@ -85,11 +85,11 @@
     try {
       const vb = window.versionBoards;
       if (prem && vb && vb.jacks) {
-        bbMap = buildRankMapFromBoard(vb.jacks.bestball, D);
+        bbMap = buildRankMapFromBoard(vb.jacks.redraft, D);
         sfMap = buildRankMapFromBoard(vb.jacks.superflex, D);
       }
-      if (!bbMap && vb && vb.mine && (prem || mineCustom('bestball'))) {
-        bbMap = buildRankMapFromBoard(vb.mine.bestball, D);
+      if (!bbMap && vb && vb.mine && (prem || mineCustom('redraft'))) {
+        bbMap = buildRankMapFromBoard(vb.mine.redraft, D);
       }
       if (!sfMap && vb && vb.mine && (prem || mineCustom('superflex'))) {
         sfMap = buildRankMapFromBoard(vb.mine.superflex, D);

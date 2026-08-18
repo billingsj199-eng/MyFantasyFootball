@@ -766,9 +766,10 @@
       if (player.udA != null) arr.push(Math.round(player.udA));
       return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 9999;
     }
-    // Standard = best ball: prefer Jack's official bestball board (jBb,
-    // baked at export) over the d.js redraft order. Bridge myRank overrides
-    // still land on player.rank, so jBb-missing players keep working.
+    // Standard = best ball: prefer Jack's official board (jBb, baked at
+    // export — his REDRAFT board with K/DST squeezed out since Best Ball was
+    // retired 2026-08-18) over the d.js order. Bridge myRank overrides still
+    // land on player.rank, so jBb-missing players keep working.
     return player.jBb || player.rank || 9999;
   }
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MFF Underdog Draft Helper",
-  "version": "0.17.7",
+  "version": "0.17.8",
   "description": "Live Underdog draft picks from Jack's rankings + BBM advance-rate optimizer. Stacks, cliffs, and live PPG-by-position projections.",
   "permissions": [
     "storage",

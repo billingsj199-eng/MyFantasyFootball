@@ -383,13 +383,37 @@ def lookup_with_aliases(name_norm, lookup_map):
     return None
 
 
-def load_jacks_format_boards():
-    """Jack's official bestball + superflex boards (Firestore, public read).
+def _shift_tiers(tiers, raw_to_dense):
+    """Remap tier boundaries from raw board ranks onto densified ranks.
+
+    `raw_to_dense[i]` is the rank the player sitting at raw index i ends up
+    with after the dropped names are squeezed out. A boundary that lands on a
+    dropped name slides down to the next kept player, which is what "tier
+    starts here" means once that name is gone."""
+    out = []
+    for t in tiers:
+        a = t["a"]
+        out.append({**t, "a": raw_to_dense[a - 1] if 1 <= a <= len(raw_to_dense) else a})
+    out.sort(key=lambda t: t["a"])
+    return out
+
+
+def load_jacks_format_boards(drop_names=None):
+    """Jack's official redraft + superflex boards (Firestore, public read).
     Reuses the Sleeper export's fetcher; returns ({}, {}) on network failure.
 
+    2026-08-18: `rank` used to come from Jack's BESTBALL board. Best Ball was
+    retired from the site that day (one season board in-season), so Redraft is
+    now the source. Redraft and Superflex both carry K/DST inline while this
+    helper is best-ball-only, so `drop_names` (the K/DST name keys) are
+    stripped and the surviving ranks re-densified — leaving the holes in place
+    would push every rank below the first kicker out by the gap count. Tier
+    boundaries ride the same shift so each break still lands on its player.
+
     Second return is his tier boundaries keyed by the FIELD NAME the extension
-    reads the rank from ("rank" = bestball here, "jSf" = superflex): sorted
+    reads the rank from ("rank" = redraft here, "jSf" = superflex): sorted
     [{a, l, n}] where a tier applies from rank `a` until the next boundary."""
+    drop = drop_names or set()
     try:
         import export_sleeper_extension_data as sx
 
@@ -399,10 +423,33 @@ def load_jacks_format_boards():
         jacks = payload.get("jacks", {})
         out = {}
         tiers = {}
-        for mode, key in [("bestball", "jBb"), ("superflex", "jSf")]:
+        # Superflex stays in RAW board numbering on purpose: the sidebar pairs
+        # p.jSf with _posTiers boundaries that are also raw, and its live
+        # Firestore refresh re-writes jSf raw. Only the redraft -> `rank` path
+        # is squeezed, which is what the old bestball board looked like anyway
+        # (it never carried K/DST).
+        for mode, key in [("redraft", "jBb"), ("superflex", "jSf")]:
             order = (jacks.get(mode) or {}).get("_order") or []
-            out[key] = {norm(name): i + 1 for i, name in enumerate(order)}
-            tiers["rank" if key == "jBb" else key] = sx.extract_board_tiers(jacks.get(mode))
+            tier_key = "rank" if key == "jBb" else key
+            raw_tiers = sx.extract_board_tiers(jacks.get(mode))
+            if key != "jBb":
+                out[key] = {norm(name): i + 1 for i, name in enumerate(order)}
+                tiers[tier_key] = raw_tiers
+                continue
+            dense = {}
+            raw_to_dense = []
+            kept = 0
+            for name in order:
+                raw_to_dense.append(kept + 1)   # rank a kept player here would get
+                nk = norm(name)
+                if nk in drop:
+                    continue
+                kept += 1
+                dense[nk] = kept
+            out[key] = dense
+            tiers[tier_key] = _shift_tiers(raw_tiers, raw_to_dense)
+            if len(order) != kept:
+                print(f"  {mode}: squeezed {len(order) - kept} K/DST out of {len(order)} board slots")
         print("Jacks format boards:", {k: len(v) for k, v in out.items()},
               " tiers:", {k: len(v) for k, v in tiers.items()})
         return out, tiers
@@ -416,7 +463,14 @@ def main():
     ud_names = load_underdog_names()
     clay_ppg = load_clay_projections()
     sigma_map = load_player_sigma()
-    format_boards, jacks_tiers = load_jacks_format_boards()   # also populates sx.IR_OUT
+    # Jack's Redraft/Superflex boards carry K/DST inline; this helper never
+    # drafts them, so hand the board loader their names to squeeze out.
+    kdst_names = set()
+    for _s, _e in walk_d_array(src):
+        _ent = parse_entry(src[_s:_e])
+        if _ent.get("n") and _ent.get("s") in DROP_POS:
+            kdst_names.add(norm(_ent["n"]))
+    format_boards, jacks_tiers = load_jacks_format_boards(kdst_names)  # also populates sx.IR_OUT
     # Imported here, not at module scope: the Sleeper exporter imports THIS
     # module, so a top-level import would be circular.
     import export_sleeper_extension_data as _sx
@@ -438,15 +492,15 @@ def main():
         if entry.get("t") in (None, "TBD", ""):
             continue
         nk = norm(entry["n"])
-        # Best ball is one of the site's IR-hidden formats, and this helper is
+        # Redraft is one of the site's IR-hidden formats, and this helper is
         # best-ball only — so an OUT FOR SEASON player is simply dropped here,
         # no flag needed (unlike the Sleeper/ESPN export, which also serves
         # dynasty modes where he must stay).
         if nk in _sx.IR_OUT:
             ir_dropped.append(entry["n"])
             continue
-        # `rank` = Jack's position on his LIVE BESTBALL board (this is the
-        # Underdog helper — best ball is its format), not the d.js array index.
+        # `rank` = Jack's position on his LIVE REDRAFT board, K/DST squeezed
+        # out (Best Ball retired 2026-08-18), not the d.js array index.
         # d.js order drifts badly from the live boards, so board edits never
         # reached the extension. Absent from the board = he removed the player,
         # so drop him from the export.
@@ -488,7 +542,7 @@ def main():
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         json.dump({"version":7,"exported_at":time.strftime("%Y-%m-%d %H:%M:%S"),
                    "jackSlice":_sx.JACK_FREE_CUTOFF,"players":players,
-                   # Jack's tier boundaries per rank field ("rank"=bestball, "jSf"):
+                   # Jack's tier boundaries per rank field ("rank"=redraft, "jSf"):
                    # sorted [{a, l, n}], tier = last entry with a <= rank.
                    # SLICED: only boundaries within the free top-36 ship here.
                    "tiers":jacks_tiers}, f, ensure_ascii=False, indent=1)
@@ -497,7 +551,7 @@ def main():
         print(f"IR-DROPPED {len(ir_dropped)} flagged out for the season: " + ", ".join(ir_dropped))
     # Never drop silently — see the matching note in the Sleeper exporter.
     if dropped:
-        print(f"DROPPED {len(dropped)} not on Jack's live bestball board: "
+        print(f"DROPPED {len(dropped)} not on Jack's live redraft board: "
               + ", ".join(dropped[:15]) + (" ..." if len(dropped) > 15 else ""))
 
 

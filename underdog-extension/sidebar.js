@@ -229,7 +229,7 @@
 
   const state = {
     players: [], byName: new Map(), drafted: new Set(),
-    tiers: null, // Jack's tier boundaries per rank field: {rank (bestball), jSf: [{a,l,n}]}
+    tiers: null, // Jack's tier boundaries per rank field: {rank (redraft), jSf: [{a,l,n}]}
     myRoster: [], pickNum: 1, slot: null, history: [],
     mode: "manual", portfolio: null,
     rankSrc: "jacks", // 'jacks' | 'ud' | 'fp' | 'consensus'
@@ -297,7 +297,7 @@
 
   // ---------- Jack's board tiers ----------
   // state.tiers[field] = sorted [{a, l, n}] boundaries baked by the exporter
-  // ("rank" = his live bestball board, "jSf" = superflex). A tier applies from
+  // ("rank" = his live redraft board, "jSf" = superflex). A tier applies from
   // rank `a` until the next boundary — same as the site's _tierLabelForRank.
   // Color cycle is the site's .myrank-num tier-X palette (styles/main.css).
   // NOTE: r.flags.tier (VOR cliff) is a different, unrelated concept.
@@ -313,7 +313,7 @@
   }
   // Rank on the board the active tier list describes. In SF mode p.sfRank can
   // be an ADP fallback when Jack hasn't ranked the player — only a real jSf
-  // counts there; bestball/redraft use the baked bestball rank.
+  // counts there; best-ball/redraft use the baked redraft rank.
   function jackTierRank(p) {
     return state.isSuperflex ? (p.jSf != null ? p.jSf : null) : (p.jBb != null ? p.jBb : p.rank);
   }
@@ -3146,7 +3146,7 @@
           try { irMap = JSON.parse((doc.fields.ir && doc.fields.ir.stringValue) || '{}') || {}; } catch (_) {}
           const irOut = Object.keys(irMap).filter((n) => irMap[n] === irSeason);
           const irSet = new Set(irOut);
-          const bbOrder = (jacks.bestball && jacks.bestball._order) || [];
+          const bbOrder = (jacks.redraft && jacks.redraft._order) || [];
           const sfOrder = (jacks.superflex && jacks.superflex._order) || [];
           if (!bbOrder.length) return;
           // Compact ranks over players we actually carry (players.json pool
@@ -3198,7 +3198,7 @@
             out.sort((x, y) => x.a - y.a);
             return out;
           };
-          const bbT = compactTierList(bbOrder, ((jacks.bestball || {})._posTiers || {}).ALL, irSet);
+          const bbT = compactTierList(bbOrder, ((jacks.redraft || {})._posTiers || {}).ALL, irSet);
           state.tiers = state.tiers || {};
           if (bbT) state.tiers.rank = bbT;
           // SF tiers stay in RAW board positions — they pair with p.jSf

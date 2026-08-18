@@ -3332,8 +3332,9 @@ function attachTierListeners() {
   let dragRow = null, dragIdx = null, clone = null, lastIndicatorRow = null, _devyDragName = null;
   let pointerY = 0, cloneX = 0, cloneOffsetY = 0;
   let rafId = null, isDragging = false;
-  // Scroller to auto-scroll during drag: .table-wrap on desktop, but on phones
-  // (≤600px card layout) #pageRankings is what scrolls (main.css overflow swap).
+  // Scroller to auto-scroll during drag. Resolved per-drag in the pointerdown
+  // handler below, because which element owns the vertical scroll depends on
+  // the layout (see the #pageRankings overflow rules in main.css).
   let _dragScroller = scrollContainer;
   let _rowRects = [];
   // POS LOCK group-mate rows, split by side of the dragged row. tick()
@@ -3446,8 +3447,14 @@ function attachTierListeners() {
     const rowRect = row.getBoundingClientRect();
     cloneX = rowRect.left; // == table left on desktop; card's inset left on phones
     cloneOffsetY = e.clientY - rowRect.top;
+    // Ask the DOM which element actually scrolls rather than guessing from a
+    // breakpoint: since 2026-08-18 #pageRankings owns the vertical scroll at
+    // every width, and this probe keeps working if .table-wrap ever gets it
+    // back (it still does at some widths / in other layouts).
     const _pg = document.getElementById('pageRankings');
-    _dragScroller = (_pg && window.matchMedia('(max-width:600px)').matches) ? _pg : scrollContainer;
+    _dragScroller = (scrollContainer.scrollHeight > scrollContainer.clientHeight + 1)
+      ? scrollContainer
+      : (_pg || scrollContainer);
 
     row.classList.add('dragging');
     tbody.classList.add('is-dragging');

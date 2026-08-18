@@ -567,6 +567,20 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:3px;backg
 .ranked-count{color:var(--green)}
 
 .table-wrap{padding:0 2rem 2rem;overflow:auto;flex:1;-webkit-overflow-scrolling:touch}
+/* The rankings page scrolls as a whole, not just the table body (2026-08-18).
+   Before this, .table-wrap was the only scroller — flex:1 inside the 100vh
+   column — so ~520px of ticker + header + helper banner + ADP movers + filter
+   rows stayed pinned on screen and the table got whatever was left: 7 rows on
+   a 900px-tall window. Handing the vertical scroll to #pageRankings lets all
+   that chrome scroll away (~17 rows visible) while thead's existing
+   position:sticky keeps the column headers docked to the top.
+   overflow:auto on BOTH axes is deliberate: the table runs a little wider than
+   the viewport at some widths, and keeping the x-axis on the page scroller
+   pins that scrollbar to the bottom of the window — leaving it on the wrap
+   would strand it ~25,000px down at the foot of the now-full-height element.
+   The <=600px block near the end sets its own variant of this. */
+#pageRankings{overflow:auto}
+#pageRankings .table-wrap{flex:none;overflow:visible}
 table{width:100%;border-collapse:collapse;min-width:1100px}
 thead th{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#a8b3c7;padding:.6rem .4rem;text-align:left;border-bottom:2px solid var(--accent);position:sticky;top:0;background:var(--surface);z-index:10;cursor:pointer;user-select:none;white-space:nowrap}
 thead th:hover{color:var(--accent)}

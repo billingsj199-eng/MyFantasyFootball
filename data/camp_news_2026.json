@@ -1,6 +1,66 @@
 {
-  "updated": "2026-08-17T16:12:00Z",
+  "updated": "2026-08-18T02:15:00Z",
   "items": [
+    {
+      "player": "Malik Nabers",
+      "team": "NYG",
+      "pos": "WR",
+      "date": "2026-08-17",
+      "headline": "Worked in full team drills (11-on-11 and 7-on-7) for the first time since ACL tear",
+      "take": "Biggest step yet in his rehab; trending toward a regular-season role sooner than previously expected",
+      "url": "https://www.cbssports.com/fantasy/football/news/giants-malik-nabers-works-in-team-drills-for-first-time/",
+      "tag": "injury"
+    },
+    {
+      "player": "Breece Hall",
+      "team": "NYJ",
+      "pos": "RB",
+      "date": "2026-08-17",
+      "headline": "Left practice early with a right groin strain; heading for imaging",
+      "take": "HC Aaron Glenn downplayed it as 'not a big deal,' but worth monitoring test results before Week 1 drafts",
+      "url": "https://www.espn.com/nfl/story/_/id/49639624/jets-rb-hall-strains-right-groin-likely-not-serious-injury",
+      "tag": "injury"
+    },
+    {
+      "player": "Jordyn Tyson",
+      "team": "NO",
+      "pos": "WR",
+      "date": "2026-08-17",
+      "headline": "Hamstring injury reportedly expected to sideline him roughly two months",
+      "take": "Rookie WR8 pick now a real threat to miss Week 1 and beyond \u2014 fades as an early-season fantasy option",
+      "url": "https://www.knoe.com/2026/08/17/report-jordyn-tyson-expected-be-sidelined-two-months-with-hamstring-injury/",
+      "tag": "injury"
+    },
+    {
+      "player": "Najee Harris",
+      "team": "NYG",
+      "pos": "RB",
+      "date": "2026-08-17",
+      "headline": "Free-agent RB visiting the Giants for a workout",
+      "take": "Giants' backfield behind an ailing Cam Skattebo is thin enough to make Harris a real add \u2014 monitor for a signing",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-17/najee-harris-visiting-with-giants-on-monday",
+      "tag": "transaction"
+    },
+    {
+      "player": "Chris Bell",
+      "team": "MIA",
+      "pos": "WR",
+      "date": "2026-08-17",
+      "headline": "Activated from the non-football injury list after offseason ACL tear",
+      "take": "3rd-round rookie can now compete for WR reps behind Tyreek-less Miami's Tolbert/Washington/Atwell group",
+      "url": "https://www.upi.com/Sports_News/NFL/2026/08/17/Miami-Dolphins-Chris-Bell-non-football-injury/1381786972644",
+      "tag": "role"
+    },
+    {
+      "player": "Alec Pierce",
+      "team": "IND",
+      "pos": "WR",
+      "date": "2026-08-17",
+      "headline": "Confirmed out for Colts-Falcons joint practices, will miss all of camp",
+      "take": "Ankle-surgery recovery could cost him the first four regular-season games \u2014 fading Pierce's Week 1 value",
+      "url": "https://sports.yahoo.com/articles/colts-injury-updates-alec-pierce-010113036.html",
+      "tag": "injury"
+    },
     {
       "player": "Zane Gonzalez",
       "team": "MIA",

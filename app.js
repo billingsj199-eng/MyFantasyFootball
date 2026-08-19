@@ -1190,12 +1190,21 @@ function loadModeData(mode, obj, ver) {
   const prevMode = currentMode, prevVer = currentVersion;
   currentMode = mode; currentVersion = ver;
   // New format: per-position tiers
+  // Saved boards can carry a lettering gap: tiers deleted before removeTier()
+  // learned to resequence (pre-2026-08-18) left holes behind, and addTier()
+  // honours a stored label verbatim, so a board saved as S, B, C reloads as
+  // S, B, C forever — fixing the delete path alone never repairs it.
+  // Labels are positional and system-assigned (renameTier only touches `name`;
+  // nothing lets a user pick a letter), so a hole is always an artifact and is
+  // safe to close on read. Display corrects immediately; it persists on the
+  // next save.
   if (obj._posTiers && typeof obj._posTiers === 'object') {
     POS_TIER_KEYS.forEach(pk => {
       versionTiers[ver][mode][pk] = [];
       versionTierCounters[ver][mode][pk] = 0;
       if (obj._posTiers[pk] && Array.isArray(obj._posTiers[pk])) {
         obj._posTiers[pk].forEach(t => addTier(t.afterRank, t.label, t.name, pk));
+        _resequenceTiers(versionTiers[ver][mode][pk]);
       }
     });
   }
@@ -1204,6 +1213,7 @@ function loadModeData(mode, obj, ver) {
     versionTiers[ver][mode].ALL = [];
     versionTierCounters[ver][mode].ALL = 0;
     obj._tiers.forEach(t => addTier(t.afterRank, t.label, t.name, 'ALL'));
+    _resequenceTiers(versionTiers[ver][mode].ALL);
   }
   currentMode = prevMode; currentVersion = prevVer;
   syncMode();

@@ -1,6 +1,56 @@
 {
-  "updated": "2026-08-19T02:09:04Z",
+  "updated": "2026-08-19T16:15:00Z",
   "items": [
+    {
+      "player": "Alvin Kamara",
+      "team": "NO",
+      "pos": "RB",
+      "date": "2026-08-19",
+      "headline": "Diagnosed with MCL sprain, expected out at least 4-6 weeks per Schefter",
+      "take": "Real IR candidate for Week 1 vs. Detroit \u2014 Audric Estime is the clearest early-down beneficiary in the Saints backfield",
+      "url": "https://www.espn.com/nfl/story/_/id/49658952/source-saints-rb-kamara-least-month-mcl-sprain",
+      "tag": "injury"
+    },
+    {
+      "player": "Tyler Biadasz",
+      "team": "LAC",
+      "pos": "C",
+      "date": "2026-08-19",
+      "headline": "Injury now considered long-term with ACL damage and multiple ligaments hurt, per Schefter/Garafolo",
+      "take": "Worse than initially feared for Chargers' O-line \u2014 rookie Jake Slaughter now the presumptive starting center",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-19/garafolo-biadasz-injury-considered-long-term",
+      "tag": "injury"
+    },
+    {
+      "player": "Mike Evans",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-08-19",
+      "headline": "Shanahan says Tuesday's exit was just tightness tied to his existing quad issue, not a new injury",
+      "take": "De-escalates Tuesday's scare \u2014 no change to his outlook as 49ers' WR1",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/49ers-wr-mike-evans-left-the-joint-practice-early-with-tightness",
+      "tag": "injury"
+    },
+    {
+      "player": "Quentin Johnston",
+      "team": "LAC",
+      "pos": "WR",
+      "date": "2026-08-19",
+      "headline": "Schefter reports he's \u201ctotally fine\u201d after Tuesday's practice scare, not expected to miss time",
+      "take": "Non-issue \u2014 safe to ignore for redraft purposes",
+      "url": "https://clutchpoints.com/nfl/los-angeles-chargers/chargers-news-quentin-johnston-laundry-list-injuries-49ers-joint-practice",
+      "tag": "injury"
+    },
+    {
+      "player": "Tyquan Thornton",
+      "team": "KC",
+      "pos": "WR",
+      "date": "2026-08-18",
+      "headline": "Carted off Tuesday's practice with a confirmed hamstring strain",
+      "take": "Worth monitoring in a Chiefs WR room that's thin behind Rice/Worthy",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-18/tyquan-thornton-carted-to-locker-room-tuesday",
+      "tag": "injury"
+    },
     {
       "player": "Alvin Kamara",
       "team": "NO",

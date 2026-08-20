@@ -1,6 +1,26 @@
 {
-  "updated": "2026-08-20T02:10:00Z",
+  "updated": "2026-08-20T16:10:00Z",
   "items": [
+    {
+      "player": "Tyler Warren",
+      "team": "IND",
+      "pos": "TE",
+      "date": "2026-08-20",
+      "headline": "Injury is a minor abductor strain, 'going to be fine,' should be back next week per Schultz",
+      "take": "Big de-escalation from Wednesday's no-timeline scare — re-lock him near his current TE1-adjacent draft price",
+      "url": "https://x.com/Schultz_Report/status/2090249571490218109",
+      "tag": "riser"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-08-20",
+      "headline": "Still day-to-day with psoas/lower-back soreness; McVay says he may not return to practice until next week",
+      "take": "Precautionary preseason absence for a WR1 — no draft downgrade, but monitor his Week 1 availability",
+      "url": "https://sports.yahoo.com/articles/puka-nacua-injury-214206670.html",
+      "tag": "injury"
+    },
     {
       "player": "Jayden Higgins",
       "team": "HOU",
@@ -2289,196 +2309,6 @@
       "headline": "Returns to practice Thursday for individual drills after back flare-up",
       "take": "Minor issue as expected - Falcons QB1 job unaffected, on track for Week 1.",
       "url": "https://www.nfl.com/news/nfl-news-roundup-latest-league-updates-from-thursday-july-30",
-      "tag": "injury"
-    },
-    {
-      "player": "Malik Nabers",
-      "team": "NYG",
-      "pos": "WR",
-      "date": "2026-07-29",
-      "headline": "Full participant in first camp practice, running full routes with no setback",
-      "take": "Biggest green light yet on his ACL/meniscus recovery - Giants' WR1 role fully intact for Week 1 barring a setback.",
-      "url": "https://www.foxnews.com/sports/malik-nabers-looked-good-surprising-full-practice-giants-kick-off-training-camp-west-virginia",
-      "tag": "riser"
-    },
-    {
-      "player": "Jonathan Taylor",
-      "team": "IND",
-      "pos": "RB",
-      "date": "2026-07-29",
-      "headline": "Reports to camp fully, no hold-in despite contract standoff",
-      "take": "Hold-in fears defused for now - workhorse role and volume unaffected entering his extension year.",
-      "url": "https://www.si.com/nfl/colts/onsi/colts-star-rb-jonathan-taylor-sends-clear-message-about-colts-future",
-      "tag": "role"
-    },
-    {
-      "player": "Bhayshul Tuten",
-      "team": "JAX",
-      "pos": "RB",
-      "date": "2026-07-29",
-      "headline": "Named 'strongest offensive player, period' at Jaguars camp Day 1",
-      "take": "Further separates from Chris Rodriguez Jr. early, cementing his lead for Jacksonville's early-down/RB1 role.",
-      "url": "https://sports.yahoo.com/articles/bhayshul-tuten-makes-strong-opening-171816869.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Chris Rodriguez Jr.",
-      "team": "JAX",
-      "pos": "RB",
-      "date": "2026-07-29",
-      "headline": "Limited to individual work as he's eased back from offseason foot surgery",
-      "take": "Missed all of OTAs/minicamp recovering - gives Tuten a real head start on early-down/Week 1 committee touches.",
-      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-07-29/c-rod-doing-individual-work-to-start-camp",
-      "tag": "faller"
-    },
-    {
-      "player": "Jeremiyah Love",
-      "team": "ARI",
-      "pos": "RB",
-      "date": "2026-07-29",
-      "headline": "Dominates red-zone reps with 1st/2nd team in first padded practice",
-      "take": "Rookie flashing home-run ability and pass-game upside - real threat to eat into Allgeier/Conner's early-down share.",
-      "url": "https://www.si.com/nfl/albert-breer-five-biggest-cardinals-training-camp-takeaways-jeremiyah-love",
-      "tag": "riser"
-    },
-    {
-      "player": "Cyrus Allen",
-      "team": "KC",
-      "pos": "WR",
-      "date": "2026-07-29",
-      "headline": "Catches TD from Mahomes in 7-on-7, earns 1st-team reps as a 5th-round rookie",
-      "take": "Deep-league buzz stock in a crowded Chiefs WR room - worth a late-round dynasty/best-ball flier if reps keep climbing.",
-      "url": "https://www.yardbarker.com/nfl/articles/cyrus_allen_earns_starting_reps_and_6_more_takeaways_from_day_1_of_kansas_city_chiefs_training_camp_practice_in_st_joe/s1_17313_44115069",
-      "tag": "riser"
-    },
-    {
-      "player": "Chris Brazzell II",
-      "team": "CAR",
-      "pos": "WR",
-      "date": "2026-07-29",
-      "headline": "Confirmed with moderate LCL tear, could miss up to 8 weeks",
-      "take": "Erases his camp helium for now and could cost him the start of the regular season - opens reps in a thin Panthers WR room.",
-      "url": "https://sports.yahoo.com/articles/chris-brazzell-ii-injury-former-191727445.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Ricky Pearsall",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-07-29",
-      "headline": "Knee swelling from 2025 PCL injury flares up, team 'exploring all options'",
-      "take": "Adds a third question mark (with Kirk's calf and Aiyuk's limbo) to an already muddled 49ers WR2/3 picture behind Mike Evans.",
-      "url": "https://www.espn.com/nfl/story/_/id/49482528/49ers-concern-pearsall-latest-knee-flare-up",
-      "tag": "injury"
-    },
-    {
-      "player": "Adonai Mitchell",
-      "team": "NYJ",
-      "pos": "WR",
-      "date": "2026-07-29",
-      "headline": "Continues beating corners deep in camp, cementing Jets WR2 role",
-      "take": "Camp's clearest ADP riser - solidifying the No. 2 job behind Garrett Wilson after a buzzy OTA/minicamp stretch.",
-      "url": "https://www.si.com/nfl/jets/onsi/jets-training-camp-day-1-takeaways-ad-mitchell-david-bailey-shine-01kyqwb4ta1m",
-      "tag": "riser"
-    },
-    {
-      "player": "Tua Tagovailoa",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-07-29",
-      "headline": "Back tightness flare-up sidelines Falcons QB1 to open camp",
-      "take": "Not considered serious and expected back 'next week' per Schefter, but worth confirming before locking in Atlanta's passing game plans.",
-      "url": "https://www.nfl.com/news/michael-penix-jr-tua-tagovailoa-injuries-falcons-shuffle-qbs-camp",
-      "tag": "injury"
-    },
-    {
-      "player": "Michael Penix Jr.",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-07-29",
-      "headline": "Still not cleared for full team drills as ACL recovery drags into camp",
-      "take": "Recovery timeline lagging expectations keeps Tua firmly in the Week 1 driver's seat once healthy.",
-      "url": "https://www.nfl.com/news/michael-penix-jr-tua-tagovailoa-injuries-falcons-shuffle-qbs-camp",
-      "tag": "injury"
-    },
-    {
-      "player": "Cooper Rush",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-07-29",
-      "headline": "Signs with Falcons for emergency camp depth as Tua/Penix both sidelined",
-      "take": "Pure depth add, but worth a passing glance if Atlanta's QB situation stays messy into the week.",
-      "url": "https://www.thefalcoholic.com/atlanta-falcons-roster/94665/cooper-rush-signed-tua-tagovailoa-michael-penix-jr-trevor-siemian",
-      "tag": "transaction"
-    },
-    {
-      "player": "Jahmyr Gibbs",
-      "team": "DET",
-      "pos": "RB",
-      "date": "2026-07-29",
-      "headline": "Stages hold-in at Lions camp amid contract extension talks",
-      "take": "Business decision, not injury - expect him back as Detroit's lead back once a deal lands, reportedly could come 'relatively quickly.'",
-      "url": "https://clutchpoints.com/nfl/detroit-lions/lions-news-jahmyr-gibbs-not-spotted-training-camp-practice-amid-contract-negotiations",
-      "tag": "role"
-    },
-    {
-      "player": "Bijan Robinson",
-      "team": "ATL",
-      "pos": "RB",
-      "date": "2026-07-29",
-      "headline": "Also sitting out camp practices seeking a market-resetting extension",
-      "take": "Same hold-in dynamic as Gibbs - no fantasy downside expected, just a contract-leverage play to track.",
-      "url": "https://sports.yahoo.com/nfl/live/nfl-news-live-updates-training-camp-2026-schedule-injury-news-174255317.html",
-      "tag": "role"
-    },
-    {
-      "player": "Chris Brazzell II",
-      "team": "CAR",
-      "pos": "WR",
-      "date": "2026-07-29",
-      "headline": "Helped off practice field with a leg injury, couldn't bear weight",
-      "take": "Real threat to a camp-buzz rookie's path onto Carolina's Week 1 roster in an already thin WR corps.",
-      "url": "https://www.cbssports.com/fantasy/football/news/panthers-chris-brazzell-helped-off-practice-field/",
-      "tag": "injury"
-    },
-    {
-      "player": "De'Zhaun Stribling",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-07-29",
-      "headline": "Rookie WR turning heads early, earning Brock Purdy's trust",
-      "take": "Speculative dynasty/deep-league stash given an unsettled 49ers WR room behind Evans and Pearsall.",
-      "url": "https://sports.yahoo.com/articles/brock-purdy-explains-why-49ers-163621214.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Makai Lemon",
-      "team": "PHI",
-      "pos": "WR",
-      "date": "2026-07-29",
-      "headline": "Rookie 1st-rounder an early frontrunner for Eagles' WR2 job",
-      "take": "Reportedly ahead of incumbent Dontayvion Wicks early in camp - a real target-share battle worth tracking.",
-      "url": "https://gridironexperts.com/eagles-news-dontayvion-wicks-in-serious-competition-for-wr2/",
-      "tag": "riser"
-    },
-    {
-      "player": "Dontayvion Wicks",
-      "team": "PHI",
-      "pos": "WR",
-      "date": "2026-07-29",
-      "headline": "Facing serious competition from rookie Makai Lemon for the WR2 job",
-      "take": "Prior familiarity with new OC Sean Mannion (both ex-Packers) hasn't been enough to hold off the rookie early on.",
-      "url": "https://gridironexperts.com/eagles-news-dontayvion-wicks-in-serious-competition-for-wr2/",
-      "tag": "faller"
-    },
-    {
-      "player": "Tucker Kraft",
-      "team": "GB",
-      "pos": "TE",
-      "date": "2026-07-29",
-      "headline": "GM says Week 1 return from ACL tear is 'very much a possibility'",
-      "take": "Modestly more optimistic update on an already-positive outlook for a top-8 fantasy TE.",
-      "url": "https://sports.yahoo.com/nfl/live/nfl-news-live-updates-training-camp-2026-schedule-injury-news-174255317.html",
       "tag": "injury"
     }
   ]

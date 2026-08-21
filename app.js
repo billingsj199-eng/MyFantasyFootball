@@ -23939,6 +23939,10 @@ window.fmtHeight = fmtHeight;
 (function() {
   let mdMode = 'redraft', mdTeams = 12, mdUserPick = 1;
   let mdCpuStyle = 'mixed';
+  // A/B switch for the roster-construction guardrails in cpuPick. Always on in
+  // normal play; window._mdSimCpuDraft({rules:false}) flips it off so the two
+  // scoring models can be measured against each other on identical boards.
+  let _mdUseConstructionRules = true;
   let mdRookieRounds = 4, mdRookieScoring = '1qb', mdRookieRankSrc = 'consensus';
   let mdRankSrc = 'consensus';
   let mdAdpSrc = 'consensus';
@@ -24805,6 +24809,87 @@ window.fmtHeight = fmtHeight;
     ).join('');
   }
 
+  // === ROSTER CONSTRUCTION GUARDRAILS ===
+  // The CPU picks BPA off the selected ADP source, but a pure-BPA bot builds
+  // nonsense rosters: four RBs with its first four picks, a second TE in round
+  // 3, a backup QB in round 6. These act as near-hard gates rather than nudges
+  // — the penalties are far larger than any archetype bias (max +32) or need
+  // bonus, so BPA still decides every pick, it just only ever chooses among
+  // roster-legal players. Returns a signed adjustment (blocking penalties are
+  // negative; an unfilled required position pulls positive).
+  //
+  // Rookie drafts opt out of most of this: they have no real starting lineup,
+  // so raw value is the right objective and only mild dupe-penalties apply.
+  // How many QBs were already off the board when this team took its own QB1.
+  // Returns null if the team has not drafted a QB yet.
+  function _qbsGoneWhenTeamTookQb1(teamIdx) {
+    let seen = 0;
+    for (const p of mdState.picks) {
+      if (!p.player || p.player.pos !== 'QB') continue;
+      if (p.teamIdx === teamIdx) return seen;
+      seen++;
+    }
+    return null;
+  }
+
+  function _rosterConstructionBias(pos, counts, teamRound, picksRemaining, isRookie, teamIdx) {
+    if (pos === 'K' || pos === 'DST') return 0;   // K/DST run on their own schedule
+    const sfx = isMdEffectivelySuperflex();
+
+    // --- QB: one starter closes the position until the endgame ---
+    // 1QB formats seat exactly one starter, so a team that landed an early
+    // starter has no use for a second arm until the last couple of picks.
+    // The exception is the team that WAITED: if their QB1 was the 8th or later
+    // QB off the board they are running a late/committee plan, and a second
+    // arm is a real target — just never a priority, so it carries a penalty
+    // big enough (~18 board slots) that it only happens when that QB is
+    // clearly the best value left on their board.
+    if (pos === 'QB') {
+      const qbSlots = (mdLineup.QB || 0) + (sfx ? (mdLineup.SFLEX || 0) : 0);
+      if (counts.QB >= qbSlots) {
+        if (isRookie) return -40;
+        if (picksRemaining <= 1) return -20;
+        const goneAtQb1 = _qbsGoneWhenTeamTookQb1(teamIdx);
+        const midpoint = Math.floor(getMdRounds() * 0.55);
+        if (goneAtQb1 != null && goneAtQb1 >= 7 && teamRound >= midpoint) return -55;
+        return -250;
+      }
+      return 0;
+    }
+
+    // --- TE: no second TE anywhere near the early rounds ---
+    if (pos === 'TE') {
+      const teSlots = mdLineup.TE || 0;
+      if (counts.TE >= teSlots) {
+        if (isRookie) return -25;
+        if (teamRound < 5) return -220;           // hard block: first 5 rounds
+        if (picksRemaining > 3) return -80;
+        return -15;                               // late TE2 as bench depth is fine
+      }
+      return 0;
+    }
+
+    if (pos !== 'RB' && pos !== 'WR') return 0;
+    if (isRookie) return 0;
+
+    // --- RB / WR: an unfilled required position pulls harder the longer it
+    // stays empty. This is what produces balance without hard quotas. ---
+    if ((mdLineup[pos] || 0) > 0 && counts[pos] === 0) {
+      return 12 + Math.min(24, teamRound * 3);
+    }
+
+    // --- RB / WR: depth budget that widens as the draft goes on ---
+    // Justifiable bodies entering this pick = starters + one flex, then one
+    // more bench body every two rounds once the starters are notionally set.
+    // With RB2/WR2/FLEX1 that caps a team at 3 RBs through round 4, 4 by
+    // round 5, 5 by round 7 — RB-heavy builds stay legal, absurd ones don't.
+    const starters = mdLineup[pos] || 0;
+    const flexish = Math.min(1, (mdLineup.FLEX || 0) + (mdLineup.SFLEX || 0));
+    const cap = starters + flexish + Math.floor(Math.max(0, teamRound - starters) / 2);
+    if (counts[pos] >= cap) return -(60 + (counts[pos] - cap) * 45);
+    return 0;
+  }
+
   function cpuPick(available, teamIdx) {
     const counts = getTeamCounts(teamIdx);
     const totalPicked = mdState.picks.filter(p => p.teamIdx === teamIdx).length;
@@ -24860,8 +24945,12 @@ window.fmtHeight = fmtHeight;
         score += 200;
       }
 
-      // In rookie mode, slightly penalize 2nd QB (dynasty rookie drafts are RB/WR heavy)
-      if (pos === 'QB' && counts.QB >= 1 && (isRookie || ((mdLineup.QB || 0) <= 1 && (mdMode === 'redraft' || mdMode === 'dynasty')))) score -= 15;
+      // Roster construction guardrails (QB/TE locks + RB/WR depth budget +
+      // empty-position pull). Replaces the old flat -15 second-QB nudge, which
+      // was small enough that any archetype bias walked straight through it.
+      if (_mdUseConstructionRules) {
+        score += _rosterConstructionBias(pos, counts, teamRound, picksRemaining, isRookie, teamIdx);
+      }
 
       // Archetype personality bias
       score += _archetypeScoreBias(arch, pos, player, counts, teamRound, teamIdx);
@@ -24886,6 +24975,46 @@ window.fmtHeight = fmtHeight;
     for (let i = 0; i < pool.length; i++) { cum += weights[i]; if (r <= cum) return pool[i].player; }
     return pool[0].player;
   }
+
+  // Headless CPU-only draft sim — every seat drafted by cpuPick, no timers, no
+  // DOM. Exists to measure roster-construction quality across many drafts when
+  // tuning the scoring above; `rules:false` reruns the same board through the
+  // pre-guardrail model for a direct A/B. Returns picks as {team, round, pos, name}.
+  window._mdSimCpuDraft = function (opts) {
+    opts = opts || {};
+    const prevState = mdState, prevRules = _mdUseConstructionRules;
+    _mdUseConstructionRules = opts.rules !== false;
+    try {
+      const board = getADPBoardDefault();
+      const rounds = getMdRounds();
+      mdState = {
+        picks: [], currentPick: 0, totalPicks: mdTeams * rounds,
+        userTeamIdx: -1, available: board.slice(), cpuAvailable: board.slice(),
+        archetypes: {}, done: false
+      };
+      for (let t = 0; t < mdTeams; t++) {
+        mdState.archetypes[t] = opts.archetype || _pickWeightedArchetype(null);
+      }
+      for (let p = 0; p < mdState.totalPicks; p++) {
+        const teamIdx = getCurrentTeamIdx(p);
+        const picked = cpuPick(mdState.cpuAvailable, teamIdx);
+        if (!picked) break;
+        mdState.picks.push({ teamIdx, player: picked, isUser: false });
+        mdState.cpuAvailable = mdState.cpuAvailable.filter(x => x.idx !== picked.idx);
+        mdState.available = mdState.cpuAvailable;
+        mdState.currentPick = p + 1;
+      }
+      return mdState.picks.map((pk, i) => ({
+        team: pk.teamIdx,
+        round: Math.floor(i / mdTeams) + 1,
+        pos: pk.player.pos,
+        name: pk.player.name
+      }));
+    } finally {
+      mdState = prevState;
+      _mdUseConstructionRules = prevRules;
+    }
+  };
 
   function getCurrentTeamIdx(overallPick) {
     const round = Math.floor(overallPick / mdTeams);

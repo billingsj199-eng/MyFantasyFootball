@@ -1,6 +1,96 @@
 {
-  "updated": "2026-08-21T02:06:00Z",
+  "updated": "2026-08-21T16:10:00Z",
   "items": [
+    {
+      "player": "Fernando Mendoza",
+      "team": "LV",
+      "pos": "QB",
+      "date": "2026-08-20",
+      "headline": "Threw a pick-six on his 2nd pass vs. Texans, 2nd shaky preseason outing",
+      "take": "Rookie growing pains continue - cools near-term streamer buzz before Week 1",
+      "url": "https://www.profootballnetwork.com/nfl-world-reacts-fernando-mendoza-pick-6-texans/",
+      "tag": "faller"
+    },
+    {
+      "player": "Woody Marks",
+      "team": "HOU",
+      "pos": "RB",
+      "date": "2026-08-20",
+      "headline": "Got every RB carry vs. Raiders, scored a 20-yard TD; Montgomery sat out",
+      "take": "Real-game data point favoring Marks in Houston's backfield timeshare",
+      "url": "https://www.espn.com/nfl/recap/_/gameId/401873286",
+      "tag": "riser"
+    },
+    {
+      "player": "C.J. Stroud",
+      "team": "HOU",
+      "pos": "QB",
+      "date": "2026-08-20",
+      "headline": "Made his preseason debut, led a TD drive (4/6, 27 yds) before exiting",
+      "take": "Confirms he's healthy and on track for a normal Week 1 workload",
+      "url": "https://www.espn.com/nfl/recap/_/gameId/401873286",
+      "tag": "role"
+    },
+    {
+      "player": "Brock Purdy",
+      "team": "SF",
+      "pos": "QB",
+      "date": "2026-08-20",
+      "headline": "First preseason look of 2026, went 4/6 for 29 yards in the 1st quarter",
+      "take": "Healthy, on-track vet cameo - nothing to change his Week 1 outlook",
+      "url": "https://sundayguardianlive.com/sports/49ers-vs-chargers-result-brock-purdy-mac-jones-power-san-francisco-to-41-17-win-over-los-angeles-in-nfl-preseason-266184/",
+      "tag": "role"
+    },
+    {
+      "player": "Justin Herbert",
+      "team": "LAC",
+      "pos": "QB",
+      "date": "2026-08-20",
+      "headline": "Played just the opening series (1/2 passing), his only preseason look",
+      "take": "Standard healthy vet cameo, no injury or role concern ahead of Week 1",
+      "url": "https://sundayguardianlive.com/sports/49ers-vs-chargers-result-brock-purdy-mac-jones-power-san-francisco-to-41-17-win-over-los-angeles-in-nfl-preseason-266184/",
+      "tag": "role"
+    },
+    {
+      "player": "De'Zhaun Stribling",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-08-20",
+      "headline": "Strung together several sharp catches vs. Chargers' starting corner",
+      "take": "Climbing SF's banged-up WR depth chart - real deep-league stash appeal",
+      "url": "https://www.pff.com/news/2026-nfl-preseason-week-2-recap-immediate-fantasy-football-takeaways-from-thursdays-games",
+      "tag": "riser"
+    },
+    {
+      "player": "Jacob Cowing",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-08-20",
+      "headline": "Took a punt back 83 yards for a TD in the 49ers' 41-17 win",
+      "take": "Special-teams flash boosts his bid to make SF's 53-man roster",
+      "url": "https://www.cbssports.com/nfl/news/cowing-returns-punt-for-td-to-spark-the-49ers-in-41-17-preseason-win-over-the-chargers/",
+      "tag": "riser"
+    },
+    {
+      "player": "Khalil Herbert",
+      "team": "SF",
+      "pos": "RB",
+      "date": "2026-08-20",
+      "headline": "Re-signed by SF on 8/20 weeks after being cut, scored a TD that night",
+      "take": "Deep RB4/5 churn in San Francisco's backfield - fringe relevance only",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-20/49ers-sign-rb-khalil-herbert",
+      "tag": "transaction"
+    },
+    {
+      "player": "Sincere McCormick",
+      "team": "SF",
+      "pos": "RB",
+      "date": "2026-08-20",
+      "headline": "Scored a 7-yard rushing TD in the 49ers' preseason win over the Chargers",
+      "take": "Minor camp-battle flash in a crowded backfield - deep-league watch only",
+      "url": "https://sports.yahoo.com/articles/49ers-bounce-back-sofi-learned-052830043.html",
+      "tag": "riser"
+    },
     {
       "player": "Danny Pinter",
       "team": "BAL",
@@ -2170,156 +2260,6 @@
       "take": "Early flash for a rookie pass-catcher group looking to contribute in Year 1.",
       "url": "https://www.baltimoreravens.com/news/jakobi-lane-soaring-catch-ravens-rookie-wide-receiver-practice-report-2026",
       "tag": "riser"
-    },
-    {
-      "player": "Chris Olave",
-      "team": "NO",
-      "pos": "WR",
-      "date": "2026-07-30",
-      "headline": "Signs 4-year, $132M extension ($90M gtd) with Saints",
-      "take": "Locks in as New Orleans' clear long-term WR1 with zero hold-in risk.",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/chris-olave-agrees-to-four-year-extension-with-saints",
-      "tag": "transaction"
-    },
-    {
-      "player": "Deebo Samuel",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-07-30",
-      "headline": "Reunites with 49ers on 1-year deal worth up to $7M",
-      "take": "Adds instant target competition to an already banged-up SF WR room (Kirk's calf, Pearsall's knee).",
-      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-07-30/receiver-needy-49ers-reunite-with-deebo-samuel",
-      "tag": "transaction"
-    },
-    {
-      "player": "Bijan Robinson",
-      "team": "ATL",
-      "pos": "RB",
-      "date": "2026-07-30",
-      "headline": "Misses practice again in hold-in; Falcons talks trending positive",
-      "take": "No missed-game risk yet, but extension momentum is real - worth tracking for dynasty value.",
-      "url": "https://www.espn.com/nfl/story/_/id/49480189/star-rbs-robinson-gibbs-appear-hold-ins-seeking-deals",
-      "tag": "role"
-    },
-    {
-      "player": "Jahmyr Gibbs",
-      "team": "DET",
-      "pos": "RB",
-      "date": "2026-07-30",
-      "headline": "Hold-in continues; Rapoport calls contract talks \"concerning\"",
-      "take": "Less extension momentum than Robinson's parallel situation - a dynasty value watch, not a workload risk yet.",
-      "url": "https://heavy.com/sports/nfl/detroit-lions/ian-rapoport-jahmyr-gibbs-update/",
-      "tag": "role"
-    },
-    {
-      "player": "Baker Mayfield",
-      "team": "TB",
-      "pos": "QB",
-      "date": "2026-07-30",
-      "headline": "Says he feels \"disrespected,\" contract talks stall well short of ask",
-      "take": "Distraction risk for the Bucs offense entering his walk year; no in-season talks expected.",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/baker-mayfield-feeling-disrespected-undervalued-by-buccaneers",
-      "tag": "other"
-    },
-    {
-      "player": "De'Von Achane",
-      "team": "MIA",
-      "pos": "RB",
-      "date": "2026-07-30",
-      "headline": "Fully cleared, \"full go\" for camp after offseason shoulder cleanup",
-      "take": "No restrictions entering camp off his 1,838-yard, 12-TD breakout - workhorse role fully intact.",
-      "url": "https://www.draftsharks.com/fantasy-football-news/82039/devon-achane-a-full-go-for-training-camp",
-      "tag": "injury"
-    },
-    {
-      "player": "Rome Odunze",
-      "team": "CHI",
-      "pos": "WR",
-      "date": "2026-07-30",
-      "headline": "Says lingering foot injury \"feels amazing\" entering camp",
-      "take": "Confirms full health - Bears WR1 track next to Luther Burden III stays intact.",
-      "url": "https://www.shawlocal.com/bears/2026/07/30/chicago-bears-training-camp-update-rome-odunze-clarifies-foot-injury-says-it-feels-amazing/",
-      "tag": "injury"
-    },
-    {
-      "player": "Luther Burden III",
-      "team": "CHI",
-      "pos": "WR",
-      "date": "2026-07-30",
-      "headline": "Drawing majority of early-camp targets, working at a \"quicker pace\"",
-      "take": "Buzz stock in the race to absorb DJ Moore's vacated ~85 targets, though 2nd-year WR leaps are inconsistent.",
-      "url": "https://chicago.suntimes.com/bears/2026/07/30/bears-training-camp-luther-burden-wide-receiver-buzz-builds-second-year-tricky-ryan-poles-ben-johnson-caleb-williams-nfl",
-      "tag": "role"
-    },
-    {
-      "player": "Christian Kirk",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-07-30",
-      "headline": "Held out of practice with a calf strain",
-      "take": "With Deebo's signing and Pearsall's knee also in play, SF's WR2/3 picture is genuinely unsettled.",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/christian-kirk-out-of-49ers-practice-with-a-calf-strain",
-      "tag": "injury"
-    },
-    {
-      "player": "Jordan James",
-      "team": "SF",
-      "pos": "RB",
-      "date": "2026-07-30",
-      "headline": "Diagnosed with a fractured rib, out indefinitely",
-      "take": "Hurts his bid for the backup RB job behind McCaffrey; rookie Kaelon Black could rise in his absence.",
-      "url": "https://www.cbssports.com/fantasy/football/news/49ers-jordan-james-diagnosed-with-fractured-rib/",
-      "tag": "injury"
-    },
-    {
-      "player": "Tucker Kraft",
-      "team": "GB",
-      "pos": "TE",
-      "date": "2026-07-30",
-      "headline": "Opens camp on PUP (ACL); GM says Week 1 \"very much a possibility\"",
-      "take": "Monitor closely for dynasty/best-ball TE1 status as camp progresses.",
-      "url": "https://www.cbssports.com/fantasy/football/news/packers-tucker-kraft-may-start-camp-on-pup-list/",
-      "tag": "injury"
-    },
-    {
-      "player": "Dalton Kincaid",
-      "team": "BUF",
-      "pos": "TE",
-      "date": "2026-07-30",
-      "headline": "Misses practice with knee soreness, recurring PCL issue",
-      "take": "He played through this most of 2025 - worth tracking but not an alarm yet.",
-      "url": "https://www.si.com/nfl/bills/latest-news/tight-end-dalton-kincaid-misses-training-camp-practice-due-to-recurring-injury-",
-      "tag": "injury"
-    },
-    {
-      "player": "Taysom Hill",
-      "team": "NO",
-      "pos": "TE",
-      "date": "2026-07-30",
-      "headline": "Confirms his time with the Saints is over, remains unsigned",
-      "take": "No retirement announced, but closes the book on Saints goal-line/gadget TD-vulture risk for now.",
-      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-07-29/taysom-hill-announces-departure-from-saints",
-      "tag": "other"
-    },
-    {
-      "player": "Parker Washington",
-      "team": "JAX",
-      "pos": "WR",
-      "date": "2026-07-30",
-      "headline": "Makes leaping, twisting catch vs. Trevor Lawrence in 7-on-7",
-      "take": "Deep-league WR3/4 buzz stock in a Jaguars camp already featuring the Tuten backfield story.",
-      "url": "https://www.espn.com/nfl/story/_/id/49427691/jacksonville-jaguars-training-camp-2026-intel-updates",
-      "tag": "riser"
-    },
-    {
-      "player": "Tua Tagovailoa",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-07-30",
-      "headline": "Returns to practice Thursday for individual drills after back flare-up",
-      "take": "Minor issue as expected - Falcons QB1 job unaffected, on track for Week 1.",
-      "url": "https://www.nfl.com/news/nfl-news-roundup-latest-league-updates-from-thursday-july-30",
-      "tag": "injury"
     }
   ]
 }

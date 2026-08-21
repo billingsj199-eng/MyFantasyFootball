@@ -24486,6 +24486,47 @@ window.fmtHeight = fmtHeight;
     }).filter(Boolean).sort((a, b) => a.adp - b.adp);
   }
 
+  // Raw ADP for the CURRENTLY-SELECTED mock ADP source, used by the available
+  // list's ADP sort + "ADP x.x" label. buildBoard already reads the selected
+  // source for the draft order, but both of those used to be hardcoded to d.a
+  // — a hand-maintained board ordering frozen since 2026-06-17 — so an ESPN
+  // mock showed ESPN's rank in the row number and a stale, unrelated consensus
+  // value right next to it. Mode splits mirror buildBoard exactly (Sleeper's
+  // slR/slSf/slDy/slDsf, Underdog's udA/sfa/da/sa, effective-superflex detect).
+  // ESPN/CBS/Yahoo publish 1QB rank order only, so the same value serves every
+  // lineup. Returns null when the source doesn't rank the player; callers sort
+  // those to the bottom and hide the label.
+  function mdSourceAdp(d) {
+    if (!d) return null;
+    if (mdMode === 'rookie' || mdAdpSrc === 'ktc') return null; // KTC is a value, not an ADP
+    if (mdAdpSrc === 'espn') return d.espnAdp != null ? d.espnAdp : null;
+    if (mdAdpSrc === 'cbs') return d.cbsAdp != null ? d.cbsAdp : null;
+    if (mdAdpSrc === 'yahoo') return d.yahooAdp != null ? d.yahooAdp : null;
+    if (mdAdpSrc === 'sleeper') {
+      const sv = mdMode === 'dynastysf' ? d.slDsf
+               : mdMode === 'dynasty' ? d.slDy
+               : isMdEffectivelySuperflex() ? d.slSf
+               : d.slR;
+      return sv != null ? sv : null;
+    }
+    // consensus + underdog both price off the market ADP fields. K/DST carry a
+    // d.a=240 placeholder rather than a real ADP (same gate as modeAdp), so they
+    // report no value here — ESPN/CBS/Yahoo/Sleeper above do rank them for real.
+    if (d.s === 'K' || d.s === 'DST') return null;
+    if (mdMode === 'dynastysf') return d.sa != null ? d.sa : null;
+    if (mdMode === 'dynasty') return d.da != null ? d.da : null;
+    if (isMdEffectivelySuperflex()) return d.sfa != null ? d.sfa : null;
+    if (d.udA != null) return d.udA;
+    return d.a != null && d.a < 900 ? d.a : null;
+  }
+
+  // Rank-order sources (ESPN/CBS/Yahoo/Sleeper) are whole numbers — don't dress
+  // them up as "12.0"; Underdog's raw ADP keeps its decimal.
+  function mdFmtAdp(v) {
+    if (v == null) return '—';
+    return Number.isInteger(v) ? String(v) : v.toFixed(1);
+  }
+
   // --- Roster-need-aware CPU AI ---
   function getTeamCounts(teamIdx) {
     const counts = { QB: 0, RB: 0, WR: 0, TE: 0, K: 0, DST: 0 };
@@ -25057,9 +25098,9 @@ window.fmtHeight = fmtHeight;
     // Sort by ADP if selected (otherwise default rank order from available array)
     if (mdSortBy === 'adp') {
       list.sort((a, b) => {
-        const aAdp = D[a.idx] ? (D[a.idx].a || 999) : 999;
-        const bAdp = D[b.idx] ? (D[b.idx].a || 999) : 999;
-        return aAdp - bAdp;
+        const aAdp = mdSourceAdp(D[a.idx]);
+        const bAdp = mdSourceAdp(D[b.idx]);
+        return (aAdp != null ? aAdp : 9999) - (bAdp != null ? bAdp : 9999);
       });
     }
 
@@ -25144,7 +25185,7 @@ window.fmtHeight = fmtHeight;
       const maxed = (userCounts[pc] || 0) >= getMaxForPos(pc);
       const needTag = needed ? '<span style="font-size:.55rem;background:rgba(34,197,94,.15);color:#22c55e;padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:700">NEED</span>' : '';
       const rowStyle = maxed ? 'opacity:.35;pointer-events:none' : '';
-      const rawAdp = D[p.idx] ? (D[p.idx].a || 999) : 999;
+      const rawAdp = mdSourceAdp(D[p.idx]);
       const rankNum = Math.round(p.adp);
       const _isRookieMode = mdMode === 'rookie';
       // For K/DST in default ADP mode, p.adp is inflated (900+) — show real ADP instead
@@ -25197,9 +25238,12 @@ window.fmtHeight = fmtHeight;
 
         return '<div class="md-avail-row" data-pidx="'+p.idx+'" style="'+rowStyle+'"><span class="md-ar-rank">'+displayRank+'</span><span class="md-ar-pos '+pc+'">'+escapeHTML(pc)+'</span><div class="md-ar-info"><div class="md-ar-name"><a class="md-card-link" data-didx="'+p.idx+'" href="javascript:void(0)" style="color:var(--text);text-decoration:none">'+escapeHTML(p.name)+'</a>'+jmHtml+needTag+'</div><div class="md-ar-meta">'+adpLabel+'</div></div><button class="md-ar-btn" data-pidx="'+p.idx+'">'+(maxed?'FULL':'DRAFT')+'</button></div>';
       } else {
-        displayRank = mdSortBy === 'adp' ? rawAdp.toFixed(1) : (isInflated ? rawAdp.toFixed(1) : String(rankNum));
-        adpLabel = mdSortBy === 'adp' ? (isInflated ? '' : 'Rank #' + rankNum) : 'ADP ' + rawAdp.toFixed(1);
-        return '<div class="md-avail-row" data-pidx="'+p.idx+'" style="'+rowStyle+'"><span class="md-ar-rank">'+displayRank+'</span><span class="md-ar-pos '+pc+'">'+escapeHTML(pc)+'</span><div class="md-ar-info"><div class="md-ar-name"><a class="md-card-link" data-didx="'+p.idx+'" href="javascript:void(0)" style="color:var(--text);text-decoration:none">'+escapeHTML(p.name)+'</a>'+needTag+'</div><div class="md-ar-meta">'+escapeHTML(p.team)+' · '+adpLabel+'</div></div><button class="md-ar-btn" data-pidx="'+p.idx+'">'+(maxed?'FULL':'DRAFT')+'</button></div>';
+        displayRank = (mdSortBy === 'adp' || isInflated) ? mdFmtAdp(rawAdp) : String(rankNum);
+        adpLabel = mdSortBy === 'adp'
+          ? (isInflated ? '' : 'Rank #' + rankNum)
+          : (rawAdp != null ? 'ADP ' + mdFmtAdp(rawAdp) : '');
+        const metaLine = [escapeHTML(p.team), adpLabel].filter(Boolean).join(' · ');
+        return '<div class="md-avail-row" data-pidx="'+p.idx+'" style="'+rowStyle+'"><span class="md-ar-rank">'+displayRank+'</span><span class="md-ar-pos '+pc+'">'+escapeHTML(pc)+'</span><div class="md-ar-info"><div class="md-ar-name"><a class="md-card-link" data-didx="'+p.idx+'" href="javascript:void(0)" style="color:var(--text);text-decoration:none">'+escapeHTML(p.name)+'</a>'+needTag+'</div><div class="md-ar-meta">'+metaLine+'</div></div><button class="md-ar-btn" data-pidx="'+p.idx+'">'+(maxed?'FULL':'DRAFT')+'</button></div>';
       }
     }).join('');
     // Name clicks open player card

@@ -1,6 +1,26 @@
 {
-  "updated": "2026-08-21T16:10:00Z",
+  "updated": "2026-08-22T02:08:52Z",
   "items": [
+    {
+      "player": "Jake Bobo",
+      "team": "SEA",
+      "pos": "WR",
+      "date": "2026-08-21",
+      "headline": "Carted off Friday's joint practice with Titans with a 'serious' knee injury",
+      "take": "HC Macdonald expects it to be long-term - opens up WR reps behind Seattle's top options",
+      "url": "https://www.espn.com/nfl/story/_/id/49683636/seahawks-wr-jake-bobo-suffers-serious-knee-injury-says-coach",
+      "tag": "injury"
+    },
+    {
+      "player": "Xavier Hutchinson",
+      "team": "HOU",
+      "pos": "WR",
+      "date": "2026-08-21",
+      "headline": "Emerging as Texans' in-house favorite for WR2 job after Higgins' ACL tear",
+      "take": "Deep-league streamer name now, though Houston is reportedly still shopping the trade market",
+      "url": "https://www.battleredblog.com/houston-texans-analysis/77096/replacing-higgins-sign-or-trade",
+      "tag": "role"
+    },
     {
       "player": "Fernando Mendoza",
       "team": "LV",

@@ -1,6 +1,86 @@
 {
-  "updated": "2026-08-22T02:08:52Z",
+  "updated": "2026-08-22T16:10:00Z",
   "items": [
+    {
+      "player": "Geno Smith",
+      "team": "NYJ",
+      "pos": "QB",
+      "date": "2026-08-21",
+      "headline": "Perfect 7-for-7 on Jets' opening TD drive vs. Steelers before being pulled; team wins 17-0",
+      "take": "Sharp, efficient look in his final extended preseason action - trending toward a strong Week 1 floor",
+      "url": "https://www.nfl.com/news/2026-nfl-preseason-week-2-what-we-learned-friday-games",
+      "tag": "riser"
+    },
+    {
+      "player": "Jelani Woods",
+      "team": "NYJ",
+      "pos": "TE",
+      "date": "2026-08-21",
+      "headline": "Hauled in a 13-yard TD from Geno Smith on Jets' opening drive vs. Steelers",
+      "take": "Puts himself in the mix for red-zone TE work if he can stay healthy - deep-league TE watch",
+      "url": "https://www.nfl.com/news/2026-nfl-preseason-week-2-what-we-learned-friday-games",
+      "tag": "riser"
+    },
+    {
+      "player": "Adonai Mitchell",
+      "team": "NYJ",
+      "pos": "WR",
+      "date": "2026-08-21",
+      "headline": "2 catches (2 targets) for 29 yards on Jets' opening TD drive vs. Steelers",
+      "take": "Continues to build camp buzz as a complementary piece behind Garrett Wilson",
+      "url": "https://www.newyorkjets.com/video/geno-smith-adonai-mitchell-21-yard-completion-jets-steelers-preseason-highlight-08-21-2026",
+      "tag": "riser"
+    },
+    {
+      "player": "Jonathon Brooks",
+      "team": "CAR",
+      "pos": "RB",
+      "date": "2026-08-21",
+      "headline": "Scored his first career NFL touchdown in Panthers' 34-17 win over Jaguars",
+      "take": "First real payoff of his comeback from two ACL tears - still buried on Carolina's RB depth chart but a name to monitor",
+      "url": "https://www.washingtonpost.com/sports/nfl/2026/08/21/panthers-jaguars-score/aba01b84-9dd3-11f1-9cc4-2dc9b46e2d5c_story.html",
+      "tag": "riser"
+    },
+    {
+      "player": "Ameer Abdullah",
+      "team": "JAX",
+      "pos": "RB",
+      "date": "2026-08-21",
+      "headline": "45 yards on 6 carries (7.5 YPC) plus 3 catches for 37 yards in loss to Panthers",
+      "take": "33-year-old showing he still has juice - could carve out a passing-down/change-of-pace role in Jacksonville",
+      "url": "https://www.nfl.com/news/2026-nfl-preseason-week-2-what-we-learned-friday-games",
+      "tag": "riser"
+    },
+    {
+      "player": "Bryce Young",
+      "team": "CAR",
+      "pos": "QB",
+      "date": "2026-08-21",
+      "headline": "Went 5-of-6 for 49 yards and set up a TD in Panthers' 34-17 win over Jaguars",
+      "take": "Another clean, efficient camp showing - continues to build confidence for Carolina's passing attack",
+      "url": "https://www.washingtonpost.com/sports/nfl/2026/08/21/panthers-jaguars-score/aba01b84-9dd3-11f1-9cc4-2dc9b46e2d5c_story.html",
+      "tag": "riser"
+    },
+    {
+      "player": "RJ Harvey",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-08-21",
+      "headline": "Caught a 21-yard TD from Bo Nix in Broncos' 33-13 loss to Packers",
+      "take": "Flashes receiving juice out of the backfield - a plus in PPR formats if he locks down passing-down work",
+      "url": "https://www.denverbroncos.com/video/rb-rj-harvey-hauls-in-21-yard-touchdown-pass-broncos-vs-packers",
+      "tag": "riser"
+    },
+    {
+      "player": "MarShawn Lloyd",
+      "team": "GB",
+      "pos": "RB",
+      "date": "2026-08-21",
+      "headline": "Caught a TD pass from Jordan Love in Packers' 33-13 win over Broncos",
+      "take": "Getting run with the 1s while Josh Jacobs is out (groin) - worth a speculative add in deeper leagues",
+      "url": "https://www.espn.com/nfl/game/_/gameId/401873613/packers-broncos",
+      "tag": "riser"
+    },
     {
       "player": "Jake Bobo",
       "team": "SEA",
@@ -2082,16 +2162,6 @@
       "tag": "injury"
     },
     {
-      "player": "Jeremiyah Love",
-      "team": "ARI",
-      "pos": "RB",
-      "date": "2026-07-31",
-      "headline": "Pads-on debut draws raves; Breer calls him headline of Cardinals camp",
-      "take": "Touches still shared early - Allgeier has out-carried him 21-18 through the first week despite the buzz.",
-      "url": "https://www.si.com/nfl/albert-breer-five-biggest-cardinals-training-camp-takeaways-jeremiyah-love",
-      "tag": "role"
-    },
-    {
       "player": "Kaelon Black",
       "team": "SF",
       "pos": "RB",
@@ -2100,186 +2170,6 @@
       "take": "Deep-league/dynasty stash if James' rib recovery drags into the season.",
       "url": "https://www.cbssports.com/fantasy/football/news/49ers-jordan-james-diagnosed-with-fractured-rib/",
       "tag": "role"
-    },
-    {
-      "player": "Colston Loveland",
-      "team": "CHI",
-      "pos": "TE",
-      "date": "2026-07-31",
-      "headline": "Drawing \"best TE in the NFL\" buzz from Caleb Williams and beat reporters",
-      "take": "Dominant camp reps have him in real conversation to challenge for fantasy TE1 as a Year 2 breakout.",
-      "url": "https://www.bleachernation.com/bears/2026/07/31/caleb-on-colston-loveland/",
-      "tag": "riser"
-    },
-    {
-      "player": "Deshaun Watson",
-      "team": "CLE",
-      "pos": "QB",
-      "date": "2026-07-31",
-      "headline": "Throws 3rd interception in 3 straight camp practices",
-      "take": "Keeps Cleveland's QB competition alive and Shedeur Sanders squarely in the mix.",
-      "url": "https://www.espn.com/nfl/story/_/id/49449000/cleveland-browns-training-camp-2026-intel-updates",
-      "tag": "faller"
-    },
-    {
-      "player": "Quinshon Judkins",
-      "team": "CLE",
-      "pos": "RB",
-      "date": "2026-07-31",
-      "headline": "RB coach: \"sky is the limit,\" can play all 3 downs after 2025 ankle/fibula injury",
-      "take": "Recovery looks ahead of schedule - trending toward a full workhorse role for the Browns.",
-      "url": "https://www.cleveland19.com/2026/07/31/duce-staley-quinshon-judkins-recovery-upcoming-season/",
-      "tag": "injury"
-    },
-    {
-      "player": "Tua Tagovailoa",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-07-31",
-      "headline": "Says back \"feels great,\" limited work is purely precautionary",
-      "take": "Reassuring step up from Wednesday's flare-up - QB1 job unaffected, on track for Week 1.",
-      "url": "https://www.espn.com/nfl/story/_/id/49497586/tua-tagovailoa-not-fretting-back-issue-unsure-full-return",
-      "tag": "injury"
-    },
-    {
-      "player": "Brian Thomas Jr.",
-      "team": "JAX",
-      "pos": "WR",
-      "date": "2026-07-31",
-      "headline": "Erupts with three 20+ yard catches off Trevor Lawrence in camp practice",
-      "take": "Reverses an earlier slow-chemistry note - trending back toward his breakout WR1 form.",
-      "url": "https://www.bigcatcountry.com/jacksonville-jaguars-training-camp/86941/10-observations-from-day-2-of-jaguars-training-camp",
-      "tag": "riser"
-    },
-    {
-      "player": "Denzel Boston",
-      "team": "CLE",
-      "pos": "WR",
-      "date": "2026-07-31",
-      "headline": "Makes leaping sideline grab, called the \"catch of camp\"",
-      "take": "Continues building on his early-camp buzz in a crowded but talent-thin Browns WR room.",
-      "url": "https://www.clevelandbrowns.com/video/shedeur-sanders-throws-a-quick-strike-over-the-middle-to-denzel-boston-training-camp-highlights",
-      "tag": "riser"
-    },
-    {
-      "player": "Eli Raridon",
-      "team": "NE",
-      "pos": "TE",
-      "date": "2026-07-31",
-      "headline": "Emerging as clear No. 2 TE behind Hunter Henry, 2 red-zone TDs Thursday",
-      "take": "Julian Hill's season-ending IR opened the door, and the rookie is taking full advantage - deep-league TE stash.",
-      "url": "https://www.si.com/nfl/patriots/onsi/rookie-te-eli-raridon-turning-heads-at-patriots-training-camp",
-      "tag": "riser"
-    },
-    {
-      "player": "Cyrus Allen",
-      "team": "KC",
-      "pos": "WR",
-      "date": "2026-07-31",
-      "headline": "Andy Reid: \"Pat's got some trust there\" as rookie WR keeps stacking good days",
-      "take": "Continues to separate in a crowded Chiefs WR room - late-round dynasty/best-ball flier gaining real momentum.",
-      "url": "https://www.si.com/nfl/chiefs/onsi/cyrus-allen-standing-out-at-chiefs-training-camp-pats-got-some-trust-there",
-      "tag": "riser"
-    },
-    {
-      "player": "J.J. McCarthy",
-      "team": "MIN",
-      "pos": "QB",
-      "date": "2026-07-31",
-      "headline": "Murray trade rumors reportedly go quiet after 2 good weeks from McCarthy",
-      "take": "A real swing back in McCarthy's favor after Murray was said to be closing the gap earlier in the week - battle still expected to run into preseason.",
-      "url": "https://www.si.com/nfl/vikings/onsi/news/kyler-murray-vikings-rumors-go-silent-after-2-good-weeks-from-jj-mccarthy",
-      "tag": "role"
-    },
-    {
-      "player": "Chris Brazzell II",
-      "team": "CAR",
-      "pos": "WR",
-      "date": "2026-07-31",
-      "headline": "Will undergo season-ending surgery on torn LCL",
-      "take": "Erases his rookie season entirely and opens real reps at Panthers WR3.",
-      "url": "https://www.espn.com/nfl/story/_/id/49489959/panthers-wr-brazzell-season-ending-surgery-source-says",
-      "tag": "injury"
-    },
-    {
-      "player": "Tua Tagovailoa",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-07-31",
-      "headline": "Back \"flare-up\" recurs; Falcons sign Cooper Rush for QB depth",
-      "take": "Not considered long-term, but Atlanta's healthy QB depth is thinning with Penix Jr. also not full-go.",
-      "url": "https://www.espn.com/nfl/story/_/id/49479437/tua-tagovailoa-flare-falcons-add-cooper-rush",
-      "tag": "injury"
-    },
-    {
-      "player": "Jahmyr Gibbs",
-      "team": "DET",
-      "pos": "RB",
-      "date": "2026-07-31",
-      "headline": "Misses third straight practice in hold-in, plus a minor back note",
-      "take": "Still a business dispute, not a workload risk, but now tangled with a (downplayed) back issue.",
-      "url": "https://www.espn.com/nfl/story/_/id/49490010/2026-training-camp-holdin-tracking-updates-bijan-robinson-jahmyr-gibbs-vita-vea-tuli-tuipulotu",
-      "tag": "role"
-    },
-    {
-      "player": "Bijan Robinson",
-      "team": "ATL",
-      "pos": "RB",
-      "date": "2026-07-31",
-      "headline": "Hold-in continues; Falcons talks reportedly more active than Gibbs'",
-      "take": "No missed-game risk yet - still a dynasty-value watch as extension momentum builds.",
-      "url": "https://www.espn.com/nfl/story/_/id/49490010/2026-training-camp-holdin-tracking-updates-bijan-robinson-jahmyr-gibbs-vita-vea-tuli-tuipulotu",
-      "tag": "role"
-    },
-    {
-      "player": "Terrance Ferguson",
-      "team": "LAR",
-      "pos": "TE",
-      "date": "2026-07-31",
-      "headline": "Drawing \"de facto WR3\" buzz early in Rams camp",
-      "take": "Averaged 21 yds/catch as a rookie; Rams' 13-personnel shift could get him real Year 2 target volume.",
-      "url": "https://ramblinfan.com/rams-intel-hints-terrance-fergusons-year-2-leap-already-in-works",
-      "tag": "riser"
-    },
-    {
-      "player": "Ladd McConkey",
-      "team": "LAC",
-      "pos": "WR",
-      "date": "2026-07-31",
-      "headline": "Full go for camp after fully rehabbing spring hamstring strain",
-      "take": "New OC Mike McDaniel's quick-throw scheme sets up a potential bounce-back season.",
-      "url": "https://www.thefantasyfootballers.com/news/632003/ladd-mcconkey-will-be-full-go-for-camp/",
-      "tag": "injury"
-    },
-    {
-      "player": "Tre Harris",
-      "team": "LAC",
-      "pos": "WR",
-      "date": "2026-07-31",
-      "headline": "Expected to be a \"legitimate part of the passing offense\" in Year 2",
-      "take": "A third real target alongside McConkey and Johnston in a deepening Chargers WR room.",
-      "url": "https://www.profootballnetwork.com/fantasy-football/chargers-wrs-fantasy-outlook-2025/",
-      "tag": "riser"
-    },
-    {
-      "player": "Matthew Golden",
-      "team": "GB",
-      "pos": "WR",
-      "date": "2026-07-31",
-      "headline": "Early camp standout after a quiet rookie year",
-      "take": "Packers cleared out Doubs and Wicks, opening a bigger Year 2 target share for him.",
-      "url": "https://sportsnaut.com/nfl/fantasy-football-news-matthew-golden-packers-training-camp",
-      "tag": "riser"
-    },
-    {
-      "player": "Ja'Kobi Lane",
-      "team": "BAL",
-      "pos": "WR",
-      "date": "2026-07-31",
-      "headline": "Soaring catch highlights Day 2 of Ravens rookie camp report",
-      "take": "Early flash for a rookie pass-catcher group looking to contribute in Year 1.",
-      "url": "https://www.baltimoreravens.com/news/jakobi-lane-soaring-catch-ravens-rookie-wide-receiver-practice-report-2026",
-      "tag": "riser"
     }
   ]
 }

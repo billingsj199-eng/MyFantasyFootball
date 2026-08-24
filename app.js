@@ -6781,32 +6781,44 @@ function _campNewsNorm(n) {
     .catch(() => {});
 })();
 
-// === ADP MOVERS (top-ticker segment) ========================================
+// === ADP MOVERS (page-top chip bar) =========================================
 // data/ud_adp_history.json holds dated Underdog ADP snapshots appended by the
 // 9am job (Phase F). Compare the newest day against the snapshot closest to a
 // week older and show the biggest BBM movers. Same fetch conventions as camp
 // news: hour-stamped param (NOT "v=" — the SW pins v= cache-first), 404 or
-// short history silently leaves the segment hidden. Renders into the WEEKLY
-// MOVERS ticker (second labeled segment) — the standalone card is gone.
+// short history silently leaves the bar hidden. Renders the headshot chips of
+// the retired standalone card into the page-top bar (which replaced the old
+// WEEKLY MOVERS text ticker).
 (function _adpMovers() {
-  const items = document.getElementById('liveTickerAdpItems');
-  const label = document.getElementById('liveTickerAdpLabel');
-  if (!items || !label) return;
+  const bar = document.getElementById('adpMoversBar');
+  const items = document.getElementById('adpMoversItems');
+  const sub = document.getElementById('adpMoversSub');
+  if (!bar || !items || !sub) return;
 
   function _daysBetween(a, b) {
     return Math.round((Date.parse(b + 'T12:00:00') - Date.parse(a + 'T12:00:00')) / 86400000);
   }
 
-  function _entry(m) {
+  function _playerChip(m) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const up = m.delta < 0; // ADP number falling = drafted earlier = riser
     const fmt = v => String(+v.toFixed(1)); // trim float dust, drop trailing .0
-    const cls = up ? 'lt-up' : 'lt-down';
-    const tt = esc(m.name) + ' — Underdog ADP ' + fmt(m.from) + ' → ' + fmt(m.to);
-    return '<span class="lt-name lt-adp" data-mover="' + esc(m.name) + '" title="' + tt + '">'
-      + esc(m.name) + (m.pos ? ' <span style="opacity:.55">' + esc(m.pos) + '</span>' : '') + '</span>'
-      + '<span class="' + cls + '" title="' + tt + '">' + (up ? '▲' : '▼') + ' '
-      + fmt(m.from) + '→' + fmt(m.to) + '</span>';
+    const color = up ? '#22c55e' : '#ef4444';
+    const pct = m.from > 0 ? Math.round(Math.abs(m.delta) / m.from * 100) : null;
+    const img = m.img
+      ? `<img class="amc-img" src="${esc(m.img)}" alt="" loading="eager" onerror="this.style.display='none'">`
+      : `<span class="amc-img amc-initials">${esc(m.name.split(' ').map(w => w[0] || '').join('').slice(0, 2))}</span>`;
+    return `<div class="adp-mover-chip" data-mover="${esc(m.name)}" style="border-left:2px solid ${color}">
+      ${img}
+      <span class="amc-txt">
+        <span class="amc-name">${esc(m.name)}</span>
+        <span class="amc-adp">${m.pos ? esc(m.pos) + ' · ' : ''}${fmt(m.from)} → ${fmt(m.to)}</span>
+      </span>
+      <span class="amc-delta" style="color:${color}">
+        <span>${up ? '▲' : '▼'}${fmt(Math.abs(m.delta))}</span>
+        ${pct != null ? `<span class="amc-pct">${up ? '+' : '−'}${pct}%</span>` : ''}
+      </span>
+    </div>`;
   }
 
   function _render(hist) {
@@ -6833,27 +6845,27 @@ function _campNewsNorm(n) {
       movers.push({ name, from: oldE.bbm, to: nowE.bbm, delta });
     });
     if (!movers.length) return;
-    // Position tags + card-click wiring via the D array.
+    // Position pills + headshots + card-click wiring via the D array.
     const dIdx = {};
     (window.D || []).forEach(d => { if (d && d.n) dIdx[_campNewsNorm(d.n)] = d; });
     movers.forEach(m => {
       const d = dIdx[_campNewsNorm(m.name)];
-      if (d) m.pos = d.s;
+      if (d) { m.pos = d.s; m.img = d._slImg || null; }
     });
     // Ordered by MAGNITUDE of the percent move (risers and fallers
     // interleaved — the colors carry direction), same as the old card.
     movers.forEach(m => { m.pct = m.from > 0 ? Math.abs(m.delta) / m.from : 0; });
     const top = movers.sort((a, b) => b.pct - a.pct).slice(0, 12);
     if (!top.length) return;
-    items.innerHTML = top.map(_entry).join('');
-    label.style.display = '';
-    label.title = 'Underdog BBM ADP · last ' + span + ' day' + (span === 1 ? '' : 's');
+    items.innerHTML = top.map(_playerChip).join('');
+    sub.textContent = 'Underdog BBM ADP · last ' + span + ' day' + (span === 1 ? '' : 's');
     items.addEventListener('click', e => {
-      const el = e.target.closest('.lt-adp');
+      const el = e.target.closest('.adp-mover-chip');
       if (!el) return;
       const d = dIdx[_campNewsNorm(el.dataset.mover)];
       if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
     });
+    bar.style.display = '';
     if (window._mffResizeTicker) window._mffResizeTicker();
   }
 

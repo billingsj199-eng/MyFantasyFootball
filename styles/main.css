@@ -60,21 +60,28 @@ body.mff-embed .main-content{padding-bottom:0!important}
 thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 
 /* === HOME REDESIGN STYLES === */
-.live-ticker{width:100%;align-self:stretch;background:var(--ticker-bg);border-bottom:1px solid var(--border);overflow:hidden;white-space:nowrap;padding:7px 0;font-size:.7rem;letter-spacing:.5px;flex-shrink:0}
-.live-ticker-inner{display:inline-block;animation:tickerScroll 35s linear infinite;padding-left:100%}
+/* ADP MOVERS page-top bar (replaced the WEEKLY MOVERS text ticker 2026-08-24):
+   fixed label block on the left, headshot chips auto-scrolling behind it. */
+.live-ticker{width:100%;align-self:stretch;display:flex;align-items:center;background:var(--ticker-bg);border-bottom:1px solid var(--border);overflow:hidden;white-space:nowrap;padding:4px 0;font-size:.7rem;letter-spacing:.5px;flex-shrink:0}
+.amb-fixed{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:0 14px;position:relative;z-index:1;background:var(--ticker-bg)}
+.amb-title{font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1.5px;color:var(--accent);line-height:1.15}
+.amb-sub{font-size:.58rem;color:var(--text2)}
+.amb-scroll{flex:1;overflow:hidden;white-space:nowrap}
+.live-ticker-inner{display:inline-flex;align-items:center;gap:8px;animation:tickerScroll 35s linear infinite;padding-left:100%}
 .live-ticker:hover .live-ticker-inner{animation-play-state:paused}
-.live-ticker .lt-name{cursor:help}
-.live-ticker .lt-label{color:var(--accent);font-weight:700;padding:0 14px;letter-spacing:.8px}
-.live-ticker .lt-name{padding-right:6px;color:var(--text)}
-.live-ticker .lt-up{color:var(--green);font-weight:600;padding-right:18px}
-.live-ticker .lt-down{color:var(--red);font-weight:600;padding-right:18px}
-.live-ticker .lt-flat{color:var(--accent);font-weight:600;padding-right:18px}
-/* second ticker segment (ADP MOVERS) — separator gap before its label, and its
-   entries open the player card on click */
-.live-ticker .lt-sep{margin-left:26px}
-.live-ticker .lt-adp{cursor:pointer}
-.live-ticker .lt-adp:hover{color:var(--accent)}
+#adpMoversItems{display:inline-flex;align-items:center;gap:8px}
 @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+/* ADP MOVERS chips — headshot + name + from→to + delta/pct, risers green edge /
+   fallers red edge; click opens the player card */
+.adp-mover-chip{display:flex;align-items:center;gap:7px;flex:0 0 auto;padding:3px 9px 3px 7px;background:var(--elev-1);border-radius:7px;cursor:pointer}
+.adp-mover-chip:hover{background:var(--elev-2)}
+.amc-img{width:26px;height:26px;border-radius:50%;object-fit:cover;object-position:top;background:var(--elev-2);flex-shrink:0}
+.amc-initials{display:inline-flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:var(--text2)}
+.amc-txt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.amc-name{font-size:.66rem;font-weight:600;color:var(--text);white-space:nowrap}
+.amc-adp{font-size:.55rem;color:var(--text2);white-space:nowrap}
+.amc-delta{display:flex;flex-direction:column;align-items:flex-end;line-height:1.2;font-weight:700;font-size:.6rem;flex-shrink:0}
+.amc-pct{font-size:.53rem;opacity:.85}
 .home-teams-hero{background:linear-gradient(135deg,rgba(13,26,38,.6) 0%,var(--surface) 100%);border:1px solid var(--border);border-radius:12px;padding:18px}
 .home-teams-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .home-teams-chips{display:flex;align-items:center;gap:6px}
@@ -183,7 +190,7 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
   .mt-roster-grouped .mt-roster-stats{gap:6px!important}
 }
 
-@media (max-width:760px){.home-action-row{grid-template-columns:repeat(2,1fr)}.live-ticker{font-size:.62rem;padding:5px 0}}
+@media (max-width:760px){.home-action-row{grid-template-columns:repeat(2,1fr)}.live-ticker{font-size:.62rem;padding:3px 0}.amb-sub{display:none}.amb-fixed{padding:0 10px}}
 
 html{overflow:hidden;width:100%;height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:row;width:100%;max-width:100vw}

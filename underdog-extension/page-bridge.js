@@ -95,9 +95,9 @@
         sfMap = buildRankMapFromBoard(vb.mine.superflex, D);
       }
     } catch(_){}
-    // Free session with no custom boards: ship nothing — the d.myRank
-    // fallback below is Jack's baked board order, same leak by another door.
-    if (!prem && !bbMap && !sfMap) return null;
+    // No real board to ship — say nothing. (Was: free sessions bailed here but
+    // premium ones fell through to the fabricated ranks below.)
+    if (!bbMap && !sfMap) return null;
     const rows = [];
     const irOut = [];
     for (let i = 0; i < D.length; i++) {
@@ -106,13 +106,28 @@
       if (d.s === "K" || d.s === "DST") continue;
       if (!d.t || d.t === "TBD") continue;
       if (_irOut(d.n)) { irOut.push(d.n); continue; }
-      const rank = (bbMap && bbMap.get(d.n)) || d.myRank || (i + 1);
+      // v0.18.1 — NEVER fabricate a rank. The old fallback chain was
+      //   (bbMap && bbMap.get(d.n)) || d.myRank || (i + 1)
+      // and both fallbacks are wrong boards that LOOK right: `d.myRank` is
+      // whichever version tab the site happens to be showing (consensus by
+      // default, since renumber() numbers getBoard()), and `i + 1` is raw
+      // d.js array order. Either one produces a complete, monotone,
+      // plausible ranking that then overwrites the sidebar's correct
+      // jacks-official pull via storage.onChanged — the helper silently
+      // drafts off the consensus board instead of Jack's. Off the board =
+      // no rank shipped; the sidebar keeps whatever it already had.
+      const rank = bbMap ? (bbMap.get(d.n) || null) : null;
       const mineSfRank = (sfMap && sfMap.get(d.n)) || null;
+      if (rank == null && mineSfRank == null && d.sfa == null) continue;
       rows.push({ n: d.n, s: d.s, t: d.t, myRank: rank, sfa: (d.sfa != null ? d.sfa : null), mineSfRank: mineSfRank });
     }
     if (!rows.length) return null;
-    rows.sort(function(a,b){ return a.myRank - b.myRank; });
-    for (let j = 0; j < rows.length; j++) rows[j].myRank = j + 1;
+    // Densify over the rows that actually carry a board rank; rank-less rows
+    // ride along for sfa/mineSfRank only and keep myRank null (applyRankings
+    // skips a falsy myRank, so they never touch p.rank).
+    const ranked = rows.filter(function(r){ return r.myRank != null; })
+                       .sort(function(a,b){ return a.myRank - b.myRank; });
+    for (let j = 0; j < ranked.length; j++) ranked[j].myRank = j + 1;
     return { rows: rows, irOut: irOut };
   }
   function rankingsHash(rows, irOut) {

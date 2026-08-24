@@ -195,10 +195,15 @@
       </div>
 
       <h3 style="margin-top:8px">Format</h3>
-      <select id="mff-format-select" class="mff-select" title="Draft format">
-        <option value="bb">Best Ball</option>
-        <option value="sf">Superflex</option>
+      <!-- v0.18.0: "Best Ball" removed as a format. Jack's best-ball board was
+           consolidated into the redraft board, so the only rank boards left are
+           Redraft (p.rank) and Superflex (p.jSf). Underdog is a best-ball site,
+           so the ALGORITHM here always runs best-ball tuning (mode "bb": BBM
+           advance rates, stacks, structural checks) regardless of this pick —
+           see state.isRedraft, which is pinned false in this extension. -->
+      <select id="mff-format-select" class="mff-select" title="Rank board. Underdog always scores with best-ball tuning.">
         <option value="rd">Redraft</option>
+        <option value="sf">Superflex</option>
       </select>
       <span id="mff-fmt-auto" title="Format auto-detected from page" style="font-size:9px;color:#22c55e;font-style:italic;display:none;margin-top:2px">auto-detected</span>
 
@@ -235,7 +240,12 @@
     rankSrc: "jacks", // 'jacks' | 'ud' | 'fp' | 'consensus'
     posFilter: "ALL", // 'ALL' | 'QB' | 'RB' | 'WR' | 'TE'
     sortBy: "rank",   // 'rank' | 'rec' | 'vor' — toggleable in the rec list header
-    isRedraft: false, // v0.10.56: regular-redraft format — bench value dies fast, heavier fill nerfs
+    // v0.18.0: PINNED FALSE on Underdog. Every UD contest is best ball, so the
+    // algorithm always runs mode "bb" (BBM advance rates, stack bonuses,
+    // structural checklist, best-ball value curves). The FORMAT dropdown now
+    // only picks which of Jack's rank BOARDS to read (redraft vs superflex) —
+    // his best-ball board was consolidated into the redraft board.
+    isRedraft: false,
     expandedRec: null,
     // Format toggle. When superflex is on, ranks come from p.sfRank (derived
     // from p.sfa, the Underdog Superflex ADP). Auto-detected from the page;
@@ -313,9 +323,9 @@
   }
   // Rank on the board the active tier list describes. In SF mode p.sfRank can
   // be an ADP fallback when Jack hasn't ranked the player — only a real jSf
-  // counts there; best-ball/redraft use the baked redraft rank.
+  // counts there; otherwise p.rank, the consolidated redraft/best-ball board.
   function jackTierRank(p) {
-    return state.isSuperflex ? (p.jSf != null ? p.jSf : null) : (p.jBb != null ? p.jBb : p.rank);
+    return state.isSuperflex ? (p.jSf != null ? p.jSf : null) : p.rank;
   }
   function jackTierFor(rank) {
     const list = jackTierList();
@@ -452,7 +462,9 @@
         if (saved.posFilter) state.posFilter = saved.posFilter;
         if (saved.sortBy) state.sortBy = saved.sortBy;
         if (typeof saved.isSuperflex === "boolean") state.isSuperflex = saved.isSuperflex;
-        if (typeof saved.isRedraft === "boolean") state.isRedraft = saved.isRedraft;
+        // v0.18.0: isRedraft is pinned false on Underdog (always best-ball
+        // tuning). Older saves may carry isRedraft:true — deliberately ignored.
+        state.isRedraft = false;
         if (saved.superflexSource) state.superflexSource = saved.superflexSource;
         if (saved.teamSize && saved.teamSize !== TEAM_SIZE) {
           setTeamSize(saved.teamSize);
@@ -514,7 +526,7 @@
 
   function applyFormatUI() {
     const sel = document.getElementById("mff-format-select");
-    if (sel) sel.value = state.isRedraft ? "rd" : state.isSuperflex ? "sf" : "bb";
+    if (sel) sel.value = state.isSuperflex ? "sf" : "rd";
     const auto = document.getElementById("mff-fmt-auto");
     if (auto) auto.style.display = (state.superflexSource === "auto") ? "" : "none";
   }
@@ -986,13 +998,15 @@
       });
     }
 
-    // Format dropdown — Best Ball vs Superflex. Manual change overrides auto-detect.
+    // Format dropdown — Redraft board vs Superflex board. Manual change
+    // overrides auto-detect. isRedraft stays false either way: Underdog is a
+    // best-ball site, so the scoring/tuning is always mode "bb".
     const fmtSelect = document.getElementById("mff-format-select");
     if (fmtSelect) {
-      fmtSelect.value = state.isRedraft ? "rd" : state.isSuperflex ? "sf" : "bb";
+      fmtSelect.value = state.isSuperflex ? "sf" : "rd";
       fmtSelect.addEventListener("change", () => {
         state.isSuperflex = fmtSelect.value === "sf";
-        state.isRedraft = fmtSelect.value === "rd";
+        state.isRedraft = false;
         state.superflexSource = "manual";
         applyFormatUI();
         persistState();
@@ -3045,7 +3059,13 @@
   // superflex rank stored on each player as p.sfRank. We rank by sorting
   // every player who has an sfa, then numbering 1..N. Players without sfa
   // get sfRank = null (they fall back to standard rank in the engine).
-  function applyRankings(rankings, irOut) {
+  // v0.18.1: set once the jacks-official Firestore pull has landed. After
+  // that, a site-bridge push may still refresh sfa/mineSfRank/IR but is no
+  // longer allowed to move p.rank — the bridge reads whatever board the site
+  // tab has in memory, and a tab sitting on Consensus (or one that hasn't
+  // finished loading Jack's cloud board) used to clobber the correct ranks.
+  let _jacksLiveApplied = false;
+  function applyRankings(rankings, irOut, fromLive) {
     if (!Array.isArray(rankings) || !rankings.length) return 0;
     // OUT FOR SEASON (IR) names from the site — flagged players keep their
     // board slot on the site but are hidden from season rankings, so hide
@@ -3057,7 +3077,7 @@
     const mineSfMap = new Map();
     for (const r of rankings) {
       if (!r || !r.n) continue;
-      if (r.myRank) rankMap.set(r.n, r.myRank);
+      if (r.myRank && (fromLive || !_jacksLiveApplied)) rankMap.set(r.n, r.myRank);
       if (r.sfa != null) sfaMap.set(r.n, r.sfa);
       if (r.mineSfRank != null) mineSfMap.set(r.n, r.mineSfRank);
     }
@@ -3175,7 +3195,8 @@
                         mineSfRank: sfRankByName.has(n) ? sfRankByName.get(n) : null });
           }
           if (!rows.length) return;
-          applyRankings(rows, irOut);
+          applyRankings(rows, irOut, true);
+          _jacksLiveApplied = true;
           // Jack's ALL-board tier boundaries, re-based onto the same COMPACT
           // numbering as the live ranks above (raw board positions include
           // names we don't carry + IR — baked boundaries would drift by the

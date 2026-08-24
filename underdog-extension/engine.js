@@ -766,11 +766,12 @@
       if (player.udA != null) arr.push(Math.round(player.udA));
       return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 9999;
     }
-    // Standard = best ball: prefer Jack's official board (jBb, baked at
-    // export — his REDRAFT board with K/DST squeezed out since Best Ball was
-    // retired 2026-08-18) over the d.js order. Bridge myRank overrides still
-    // land on player.rank, so jBb-missing players keep working.
-    return player.jBb || player.rank || 9999;
+    // Jack's official board, baked at export as player.rank — his REDRAFT
+    // board with K/DST squeezed out. That board IS the best-ball board since
+    // Best Ball was retired/consolidated 2026-08-18, which is what Underdog
+    // wants. Bridge myRank overrides and the live Firestore refresh both
+    // write player.rank, so this stays current mid-draft.
+    return player.rank || 9999;
   }
 
   // NEED = short at the position AND the position is actually drying up.

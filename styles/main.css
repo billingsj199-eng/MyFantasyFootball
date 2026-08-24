@@ -5,18 +5,6 @@
 :focus-visible{outline:2px solid var(--accent,#f59e0b);outline-offset:2px;border-radius:4px}
 /* Don't double-up the focus ring on the sidebar nav buttons (they have their own active style) */
 .nav-btn:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--accent,#f59e0b)}
-/* ADP MOVERS chips — one left-to-right strip, risers (green edge) then
-   fallers (red edge); flex-basis lets a full 12-chip set shrink onto 1-2
-   rows instead of the old two tall columns. */
-.adp-mover-chip{display:flex;align-items:center;gap:7px;flex:0 0 auto;padding:4px 9px 4px 7px;background:var(--elev-1);border-radius:7px;cursor:pointer}
-.adp-mover-chip:hover{background:var(--elev-2)}
-.amc-img{width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:top;background:var(--elev-2);flex-shrink:0}
-.amc-initials{display:inline-flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:var(--text2)}
-.amc-txt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
-.amc-name{font-size:.68rem;font-weight:600;color:var(--text);white-space:nowrap}
-.amc-adp{font-size:.57rem;color:var(--text2);white-space:nowrap}
-.amc-delta{display:flex;flex-direction:column;align-items:flex-end;line-height:1.2;font-weight:700;font-size:.63rem;flex-shrink:0}
-.amc-pct{font-size:.55rem;opacity:.85}
 /* Embed mode — hide chrome so a single feature can be iframed (e.g. ?embed=trivia&id=...) */
 body.mff-embed .sidebar,
 body.mff-embed .global-auth-bar,
@@ -81,6 +69,11 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 .live-ticker .lt-up{color:var(--green);font-weight:600;padding-right:18px}
 .live-ticker .lt-down{color:var(--red);font-weight:600;padding-right:18px}
 .live-ticker .lt-flat{color:var(--accent);font-weight:600;padding-right:18px}
+/* second ticker segment (ADP MOVERS) — separator gap before its label, and its
+   entries open the player card on click */
+.live-ticker .lt-sep{margin-left:26px}
+.live-ticker .lt-adp{cursor:pointer}
+.live-ticker .lt-adp:hover{color:var(--accent)}
 @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
 .home-teams-hero{background:linear-gradient(135deg,rgba(13,26,38,.6) 0%,var(--surface) 100%);border:1px solid var(--border);border-radius:12px;padding:18px}
 .home-teams-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}

@@ -61,12 +61,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-08-18e" as="style">
+<link rel="preload" href="styles/main.css?v=2026-08-24a" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-21c" as="script">
+<link rel="preload" href="app.js?v=2026-08-24a" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -76,7 +76,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-08-24b" as="script">
 <link rel="preload" href="data/d.js?v=2026-08-24b" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-08-18e">
+<link rel="stylesheet" href="styles/main.css?v=2026-08-24a">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -269,7 +269,7 @@ Continue with Google
 </button>
 <button class="nav-btn" data-page="draftstrategy" title="Draft Strategy" aria-label="Draft Strategy">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V6"/><path d="M4 6c4-2.5 8 2.5 12 0v8c-4 2.5-8-2.5-12 0"/><circle cx="4" cy="20" r="1.5" fill="currentColor" stroke="none"/></svg>
-<span class="nav-label">Strategy</span>
+<span class="nav-label">Draft Strategy</span>
 </button>
 <button class="nav-btn" data-page="prospect" title="Prospect Model" aria-label="Prospect Model">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/><circle cx="12" cy="7" r="2"/><circle cx="18" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="6" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
@@ -942,16 +942,21 @@ Build a stylized PNG of your most- or least-drafted Underdog players (% exposure
 <!-- RANKINGS PAGE (existing content) -->
 <div class="page active" id="pageRankings">
 <!-- === HOME REDESIGN: ticker + teams hero + action row === -->
+<!-- Movers ticker — carries BOTH feeds now that the standalone ADP MOVERS card
+     is gone: weekly rank movers off Jack's board, then Underdog BBM ADP movers.
+     The ADP half stays hidden (label included) until its fetch succeeds, and
+     _mffResizeTicker scales the scroll duration to the rendered width so the
+     speed stays constant no matter how many chips land in it. -->
 <div class="live-ticker" id="liveTicker">
-<div class="live-ticker-inner">
+<div class="live-ticker-inner" id="liveTickerInner">
 <span class="lt-label">WEEKLY MOVERS</span>
 <span id="liveTickerItems"><span class="lt-name" style="opacity:.55">Loading weekly rank movers…</span></span>
+<span class="lt-label lt-sep" id="liveTickerAdpLabel" style="display:none">ADP MOVERS</span>
+<span id="liveTickerAdpItems"></span>
 </div>
 </div>
 <header>
 <div class="logo-row">
-<h1><svg viewBox="0 0 42 32" width="28" height="22" style="display:inline-block;vertical-align:middle;margin-right:6px;margin-top:-2px"><rect x="0" y="20" width="8" height="12" rx="1.5" fill="#f59e0b" opacity=".25"/><rect x="11" y="14" width="8" height="18" rx="1.5" fill="#f59e0b" opacity=".4"/><rect x="22" y="7" width="8" height="25" rx="1.5" fill="#f59e0b" opacity=".6"/><rect x="33" y="0" width="8" height="32" rx="1.5" fill="#f59e0b" opacity=".85"/><polyline points="4,17 15,11 26,4 37,-3" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/><circle cx="37" cy="-3" r="3" fill="#f59e0b"/></svg>FANTASY FOOTBALL RANKINGS</h1>
-<span class="tag">2026 NFL</span>
 <div class="toolbar">
 <button class="tb-btn" id="btnSave" title="Save rankings & tiers to cloud" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -1029,45 +1034,9 @@ CLEAR ALL
 <p class="subtitle"><span id="rankingsCountText">413 players ranked 1–413</span><span id="rankingsUpdatedText" style="display:none;color:var(--accent);margin-left:6px" title=""></span><span id="rankingsUnsavedText" style="display:none;color:var(--accent);margin-left:8px;font-weight:600"></span></p>
 </header>
 
-<!-- MFF Helper extensions hub — all four Chrome Web Store links in one place
-     (hrefs filled by the MFF_EXT_STORE resolver at the bottom of the page) -->
-<style>
-  .ext-hub-chip{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.2px;padding:5px 13px;border:1px solid var(--border);border-radius:6px;text-decoration:none!important;background:var(--surface);white-space:nowrap;transition:border-color .15s}
-  .ext-hub-chip:hover{border-color:var(--accent)}
-  /* platform tiles in the Draft Helpers install modal */
-  .ext-tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:11px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-decoration:none!important;text-align:center;transition:border-color .15s}
-  .ext-tile:hover{border-color:var(--accent)}
-  .ext-tile-name{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px}
-  .ext-tile-sub{font-size:.62rem;color:var(--text2);font-weight:400;line-height:1.3}
-</style>
-<div id="extHubStrip" style="display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin:0 0 .9rem;padding:9px 14px;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.03));border:1px solid rgba(245,158,11,.3);border-radius:10px">
-<div style="display:flex;align-items:center;gap:9px;flex-shrink:1;min-width:0">
-<span style="font-size:1.25rem;line-height:1">🔧</span>
-<div style="min-width:0">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1.5px;color:var(--accent);line-height:1.15">MFF DRAFT HELPERS</div>
-<div style="font-size:.64rem;color:var(--text2);line-height:1.3">Free Chrome extensions — live pick recs from Jack's boards + in-season lineup tools, right in your draft room</div>
-</div>
-</div>
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto">
-<a class="ext-hub-chip" data-ext-store="underdog" target="_blank" rel="noopener" title="MFF Underdog Draft Helper on the Chrome Web Store">UNDERDOG</a>
-<a class="ext-hub-chip" data-ext-store="sleeper" target="_blank" rel="noopener" title="MFF Sleeper Helper on the Chrome Web Store">SLEEPER</a>
-<a class="ext-hub-chip" data-ext-store="espn" target="_blank" rel="noopener" title="MFF ESPN Helper on the Chrome Web Store">ESPN</a>
-<a class="ext-hub-chip" data-ext-store="yahoo" target="_blank" rel="noopener" title="MFF Yahoo Helper on the Chrome Web Store">YAHOO</a>
-</div>
-</div>
-
-<!-- ADP MOVERS — risers/fallers computed client-side from data/ud_adp_history.json
-     (daily snapshots appended by the 9am job's Phase F). Hidden until the fetch
-     succeeds with at least two snapshot days. Rendered by _renderAdpMovers in app.js. -->
-<div id="adpMoversCard" style="display:none;margin:0 0 .9rem;padding:10px 14px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-<div id="adpMoversHead" style="display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none">
-<span style="font-size:1.05rem;line-height:1">📈</span>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1.5px;color:var(--accent);line-height:1.15">ADP MOVERS</div>
-<div id="adpMoversSub" style="font-size:.62rem;color:var(--text2)"></div>
-<span id="adpMoversToggle" style="margin-left:auto;color:var(--text2);font-size:.8rem;transition:transform .15s">▾</span>
-</div>
-<div id="adpMoversBody" style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;margin-top:8px;padding-bottom:2px"></div>
-</div>
+<!-- The MFF Draft Helpers hub strip moved to the Draft Strategy page, and the
+     standalone ADP MOVERS card was folded into the movers ticker at the top of
+     this page — both to keep the space above the rankings table clear. -->
 
 <div class="controls">
 <div class="search-box" style="position:relative">
@@ -3318,6 +3287,36 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="ds-title">DRAFT STRATEGY</div>
 <div class="ds-subtitle">What six seasons of ESPN draft data say about when to take each position</div>
 </div>
+
+<!-- MFF Helper extensions hub — all four Chrome Web Store links in one place
+     (hrefs filled by the MFF_EXT_STORE resolver at the bottom of the page).
+     Lives here rather than above the rankings table: this is the page people
+     read while planning a draft, so it's where the draft-room tools belong. -->
+<style>
+  .ext-hub-chip{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.2px;padding:5px 13px;border:1px solid var(--border);border-radius:6px;text-decoration:none!important;background:var(--surface);white-space:nowrap;transition:border-color .15s}
+  .ext-hub-chip:hover{border-color:var(--accent)}
+  /* platform tiles in the Draft Helpers install modal */
+  .ext-tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:11px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-decoration:none!important;text-align:center;transition:border-color .15s}
+  .ext-tile:hover{border-color:var(--accent)}
+  .ext-tile-name{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px}
+  .ext-tile-sub{font-size:.62rem;color:var(--text2);font-weight:400;line-height:1.3}
+</style>
+<div id="extHubStrip" style="display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin:0 0 1.1rem;padding:9px 14px;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.03));border:1px solid rgba(245,158,11,.3);border-radius:10px">
+<div style="display:flex;align-items:center;gap:9px;flex-shrink:1;min-width:0">
+<span style="font-size:1.25rem;line-height:1">🔧</span>
+<div style="min-width:0">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1.5px;color:var(--accent);line-height:1.15">MFF DRAFT HELPERS</div>
+<div style="font-size:.64rem;color:var(--text2);line-height:1.3">Free Chrome extensions — live pick recs from Jack's boards + in-season lineup tools, right in your draft room</div>
+</div>
+</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto">
+<a class="ext-hub-chip" data-ext-store="underdog" target="_blank" rel="noopener" title="MFF Underdog Draft Helper on the Chrome Web Store">UNDERDOG</a>
+<a class="ext-hub-chip" data-ext-store="sleeper" target="_blank" rel="noopener" title="MFF Sleeper Helper on the Chrome Web Store">SLEEPER</a>
+<a class="ext-hub-chip" data-ext-store="espn" target="_blank" rel="noopener" title="MFF ESPN Helper on the Chrome Web Store">ESPN</a>
+<a class="ext-hub-chip" data-ext-store="yahoo" target="_blank" rel="noopener" title="MFF Yahoo Helper on the Chrome Web Store">YAHOO</a>
+</div>
+</div>
+
 <div id="dsBody"><div class="ds-loading">Loading draft history…</div></div>
 </div>
 </div>
@@ -5174,7 +5173,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-21c"></script>
+<script defer src="app.js?v=2026-08-24a"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

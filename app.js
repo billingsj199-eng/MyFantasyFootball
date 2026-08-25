@@ -5821,12 +5821,79 @@ function getCurrentTeamAbbr(playerName, fallbackTeam) {
 
 // Weekly stats data (from Sleeper API, 2018-2025)
 function hasWeeklyData(d) {
+  const _kd = _kdstWeeklyData(d);
+  if (_kd) return Object.keys(_kd).length > 0;
   return !!(WEEKLY_STATS[d.n] && Object.keys(WEEKLY_STATS[d.n].seasons).length > 0);
 }
 
 function getWeeklySeasons(d) {
+  const _kd = _kdstWeeklyData(d);
+  if (_kd) return Object.keys(_kd).sort((a,b) => +b - +a);
   if (!WEEKLY_STATS[d.n]) return [];
   return Object.keys(WEEKLY_STATS[d.n].seasons).sort((a,b) => +b - +a);
+}
+
+// === K/DST profile data helpers ===
+// Kickers key their history/game-log bundles by nflverse display name; D/ST
+// bundles are keyed by the site team abbr (dst_history.js folds franchise
+// moves into the current abbr, so LAC includes the San Diego seasons).
+function _kickerHistRows(name) {
+  if (typeof KICKER_HISTORY === 'undefined') return null;
+  let rows = KICKER_HISTORY[name];
+  if (!rows) {
+    const _nk = _normalizeNameForLookup(name);
+    const _hit = Object.keys(KICKER_HISTORY).find(k => _normalizeNameForLookup(k) === _nk);
+    if (_hit) rows = KICKER_HISTORY[_hit];
+  }
+  return rows || null;
+}
+
+// Per-game rows for a K/DST card: { "2024": [ {wk,opp,...,fpts} ] } or null.
+function _kdstWeeklyData(d) {
+  if (d.s === 'K' && typeof KICKER_WEEKLY !== 'undefined') {
+    let w = KICKER_WEEKLY[d.n];
+    if (!w) {
+      const _nk = _normalizeNameForLookup(d.n);
+      const _hit = Object.keys(KICKER_WEEKLY).find(k => _normalizeNameForLookup(k) === _nk);
+      if (_hit) w = KICKER_WEEKLY[_hit];
+    }
+    return w || null;
+  }
+  if (d.s === 'DST' && typeof DST_WEEKLY !== 'undefined') return DST_WEEKLY[teamAbbr(d.t)] || null;
+  return null;
+}
+
+// Career/logs sections render for K/DST off the history bundles even when the
+// d.career placeholder rows are missing.
+function _kdstHasHistory(d) {
+  if (d.s === 'K') { const r = _kickerHistRows(d.n); return !!(r && r.length); }
+  if (d.s === 'DST') return typeof DST_HISTORY !== 'undefined' && !!(DST_HISTORY[teamAbbr(d.t)] || []).length;
+  return false;
+}
+
+// Weekly positional rank for K/DST, computed across the weekly bundles
+// (WEEKLY_STATS has no K/DST rows, so _weeklyPosRank can't rank them).
+let _kdstWeeklyRankCache = {};
+function _kdstWeeklyRank(pos, season, wk, fpts) {
+  if (fpts == null) return null;
+  const src = pos === 'K'
+    ? (typeof KICKER_WEEKLY !== 'undefined' ? KICKER_WEEKLY : null)
+    : (typeof DST_WEEKLY !== 'undefined' ? DST_WEEKLY : null);
+  if (!src) return null;
+  const key = pos + '|' + season;
+  let byWk = _kdstWeeklyRankCache[key];
+  if (!byWk) {
+    byWk = {};
+    for (const name in src) {
+      const rows = src[name][season];
+      if (!rows) continue;
+      for (const w of rows) (byWk[w.wk] = byWk[w.wk] || []).push(w.fpts);
+    }
+    _kdstWeeklyRankCache[key] = byWk;
+  }
+  const list = byWk[wk];
+  if (!list || list.length < 8) return null;
+  return list.filter(v => v > fpts).length + 1;
 }
 
 // === Enriched career-log helpers ===
@@ -6208,7 +6275,80 @@ function _fptsBarChartHtml(items, caption) {
     + '<div class="fbc-row">' + bars + '</div></div>';
 }
 
+// K/DST game logs off KICKER_WEEKLY / DST_WEEKLY (WEEKLY_STATS has no K/DST
+// rows). Scoring is fixed (kicker FG 3/4/5 + XP 1; D/ST standard w/ PA tiers),
+// so the PPR/HALF/STD toggle is a no-op here by design.
+function _buildKdstWeeklyTable(d, season, withChart) {
+  const wd = _kdstWeeklyData(d);
+  const weeks = wd && wd[season];
+  if (!weeks || !weeks.length) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
+  const pos = d.s;
+  const isK = pos === 'K';
+  const bestFpts = Math.max(...weeks.map(w => w.fpts));
+
+  let hdr = '<tr><th>WK</th><th>OPP</th><th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points">RNK</span></th>';
+  if (isK) hdr += '<th><span data-gloss="Field goals made">FGM</span></th><th><span data-gloss="Field goal attempts">FGA</span></th><th><span data-gloss="Makes from 40-49 yards">40-49</span></th><th><span data-gloss="Makes from 50+ yards">50+</span></th><th><span data-gloss="Longest make">LNG</span></th><th>XPM</th><th>XPA</th>';
+  else hdr += '<th><span data-gloss="Sacks">SCK</span></th><th>INT</th><th><span data-gloss="Opponent fumbles recovered">FR</span></th><th><span data-gloss="Defensive + special-teams TDs">TD</span></th><th><span data-gloss="Safeties">SFTY</span></th><th><span data-gloss="Blocked kicks">BLK</span></th><th><span data-gloss="Points allowed">PA</span></th>';
+  hdr += '</tr>';
+
+  let rows = weeks.map(w => {
+    let row = '<tr>';
+    row += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
+    row += '<td style="color:var(--text2)">' + (w.opp || '—') + '</td>';
+    const _wkColor = posFptsColor(w.fpts, pos);
+    if (_wkColor) {
+      row += '<td class="fpts-cell" style="color:' + _wkColor + ';font-weight:700">' + w.fpts + '</td>';
+    } else {
+      const fptsClass = w.fpts === bestFpts && bestFpts > 0 ? ' class="fpts-cell best-yr"' : ' class="fpts-cell"';
+      row += '<td' + fptsClass + '>' + w.fpts + '</td>';
+    }
+    const _wkRank = _kdstWeeklyRank(pos, season, w.wk, w.fpts);
+    row += '<td' + _posRankStyle(_wkRank, pos) + '>' + (_wkRank != null ? _wkRank : '—') + '</td>';
+    if (isK) {
+      row += _statCell(w.fgm || 0, w.fgm || 0, 0, 4) + _statCell(w.fga || 0, w.fga || 0, 0.5, 4.5)
+        + _statCell(w.m40 || 0, w.m40 || 0, 0, 2) + _statCell(w.m50 || 0, w.m50 || 0, 0, 1.5)
+        + '<td>' + (w.lng || '—') + '</td>'
+        + _statCell(w.xpm || 0, w.xpm || 0, 0, 5) + '<td>' + (w.xpa || 0) + '</td>';
+    } else {
+      row += _statCell(w.sck || 0, w.sck || 0, 0.5, 5) + _statCell(w.itc || 0, w.itc || 0, 0, 2.5)
+        + _statCell(w.fr || 0, w.fr || 0, 0, 2) + _statCell(w.td || 0, w.td || 0, 0, 1.2)
+        + '<td>' + (w.sfty || 0) + '</td><td>' + (w.blk || 0) + '</td>'
+        + _statCell(w.pa, w.pa, 10, 31, true);
+    }
+    row += '</tr>';
+    return row;
+  }).join('');
+
+  const tot = {};
+  ['fpts','fgm','fga','m40','m50','xpm','xpa','sck','itc','fr','td','sfty','blk','pa'].forEach(k => {
+    tot[k] = Math.round(weeks.reduce((a, w) => a + (w[k] || 0), 0) * 10) / 10;
+  });
+  let totalRow = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
+  totalRow += '<td style="color:var(--accent)">TOT</td><td></td><td style="font-weight:700">' + tot.fpts + '</td><td style="color:var(--text2)">—</td>';
+  if (isK) {
+    const lng = Math.max(...weeks.map(w => w.lng || 0));
+    totalRow += '<td>' + tot.fgm + '</td><td>' + tot.fga + '</td><td>' + tot.m40 + '</td><td>' + tot.m50 + '</td><td>' + (lng || '—') + '</td><td>' + tot.xpm + '</td><td>' + tot.xpa + '</td>';
+  } else {
+    totalRow += '<td>' + tot.sck + '</td><td>' + tot.itc + '</td><td>' + tot.fr + '</td><td>' + tot.td + '</td><td>' + tot.sfty + '</td><td>' + tot.blk + '</td><td>' + tot.pa + '</td>';
+  }
+  totalRow += '</tr>';
+  rows += totalRow;
+
+  let chart = '';
+  if (withChart) {
+    chart = _fptsBarChartHtml(weeks.map(w => ({
+      label: w.wk,
+      value: w.fpts,
+      color: posFptsColor(w.fpts, pos),
+      title: 'Wk ' + w.wk + (w.opp ? ' ' + w.opp : '') + ': ' + w.fpts + ' pts'
+    })), 'Points by week');
+  }
+
+  return chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
+}
+
 function buildWeeklyTable(d, season, scoringFormat, withChart) {
+  if (d.s === 'K' || d.s === 'DST') return _buildKdstWeeklyTable(d, season, withChart);
   const wd = WEEKLY_STATS[d.n];
   if (!wd || !wd.seasons[season]) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
   const weeks = wd.seasons[season];
@@ -6327,18 +6467,18 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
   // the raw kicker season on y._k: fgm/fga per distance bucket
   // [1-19,20-29,30-39,40-49,50+], xpm/xpa, long, gw, fpts (FG 3/4/5 + XP 1),
   // ppg and the season-end positional finish (fin).
-  let _khRows = null;
-  if (d.s === 'K' && typeof KICKER_HISTORY !== 'undefined') {
-    _khRows = KICKER_HISTORY[d.n];
-    if (!_khRows) {
-      const _nk = _normalizeNameForLookup(d.n);
-      const _hit = Object.keys(KICKER_HISTORY).find(k => _normalizeNameForLookup(k) === _nk);
-      if (_hit) _khRows = KICKER_HISTORY[_hit];
-    }
-  }
+  const _khRows = d.s === 'K' ? _kickerHistRows(d.n) : null;
+  // D/ST: same swap off DST_HISTORY (keyed by site team abbr; franchise moves
+  // folded in, so e.g. the Chargers card carries its San Diego seasons). The
+  // d.career DST rows are unusable — their fpts is point differential, not
+  // fantasy points (see _mtGetPlayerPpg).
+  const _dhRows = (d.s === 'DST' && typeof DST_HISTORY !== 'undefined')
+    ? (DST_HISTORY[teamAbbr(d.t)] || null) : null;
   const c = (_khRows && _khRows.length)
     ? _khRows.map(y => ({ yr: y.yr, tm: y.tm, gp: y.gp, fpts: y.fpts, ppg: y.ppg, rc: 0, _k: y }))
-    : d.career;
+    : (_dhRows && _dhRows.length)
+      ? _dhRows.map(y => ({ yr: y.yr, tm: y.tm, gp: y.gp, fpts: y.fpts, ppg: y.ppg, rc: 0, _d: y }))
+      : d.career;
   if (!c || !c.length) return '';
 
   // Helper: get actual team for a player-year using universal lookup
@@ -6456,6 +6596,33 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
       ['XPM', 'Extra points made per game', y => y._k ? _avg(y._k.xpm, y.gp) : '—', kc.xpm],
       ['GW', 'Game-winning field goals', y => y._k ? (y._k.gw || 0) : '—', null],
     ];
+  } else if (_dhRows && _dhRows.length) {
+    // D/ST columns from DST_HISTORY. Sacks/INT/PA drive most of the scoring
+    // spread, so those get the color scales; TD volume is pure noise year to
+    // year but still worth showing.
+    const dc = {
+      sck: { f: y => (y._d && y.gp > 0) ? y._d.sck / y.gp : null, lo: 1.5, hi: 3.3 },
+      itc: { f: y => (y._d && y.gp > 0) ? y._d.itc / y.gp : null, lo: 0.4, hi: 1.3 },
+      td:  { f: y => (y._d && y.gp > 0) ? y._d.td / y.gp : null, lo: 0.05, hi: 0.45 },
+      pa:  { f: y => (y._d && y.gp > 0) ? y._d.pa / y.gp : null, lo: 16, hi: 28, inv: true },
+    };
+    cols = mode === 'tot' ? [
+      ['SCK', 'Sacks', y => y._d ? y._d.sck : '—', dc.sck],
+      ['INT', 'Interceptions', y => y._d ? y._d.itc : '—', dc.itc],
+      ['FR', 'Opponent fumbles recovered', y => y._d ? y._d.fr : '—', null],
+      ['TD', 'Defensive + special-teams TDs', y => y._d ? y._d.td : '—', dc.td],
+      ['SFTY', 'Safeties', y => y._d ? y._d.sfty : '—', null],
+      ['BLK', 'Blocked kicks (punt/FG/PAT)', y => y._d ? y._d.blk : '—', null],
+      ['PA', 'Points allowed', y => y._d ? y._d.pa : '—', dc.pa],
+    ] : [
+      ['SCK', 'Sacks per game', y => y._d ? _avg(y._d.sck, y.gp) : '—', dc.sck],
+      ['INT', 'Interceptions per game', y => y._d ? _avg(y._d.itc, y.gp) : '—', dc.itc],
+      ['FR', 'Opponent fumbles recovered (season total)', y => y._d ? y._d.fr : '—', null],
+      ['TD', 'Defensive + special-teams TDs (season total)', y => y._d ? y._d.td : '—', dc.td],
+      ['SFTY', 'Safeties (season total)', y => y._d ? y._d.sfty : '—', null],
+      ['BLK', 'Blocked kicks (season total)', y => y._d ? y._d.blk : '—', null],
+      ['PA', 'Points allowed per game', y => y._d ? _avg(y._d.pa, y.gp) : '—', dc.pa],
+    ];
   } else if (!isK) {
     // Color scales differ by position: RB receiving volume ≠ WR volume
     const S = isRB
@@ -6556,7 +6723,9 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
       // TOT mode ranks the season by total points; AVG mode by PPG (8+ games).
       // Kicker seasons carry their real season-end finish from KICKER_HISTORY.
       const _rkVal = mode === 'tot' ? y.fpts : (y.gp >= 8 ? y.ppg : null);
-      const _seasonRk = (y._k && y._k.fin != null) ? y._k.fin
+      const _histFin = (y._k && y._k.fin != null) ? y._k.fin
+        : (y._d && y._d.fin != null) ? y._d.fin : null;
+      const _seasonRk = _histFin != null ? _histFin
         : _seasonPosRank(d.s, y.yr, d.n, _rkVal, fmt, mode === 'tot' ? 'tot' : 'ppg');
       row += '<td' + _posRankStyle(_seasonRk, d.s) + '>' + (_seasonRk != null ? _seasonRk : '—') + '</td>';
       const _snp = _snapSeason(d.n, y.yr);
@@ -6589,7 +6758,7 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
 // Career Stats section — lives in the CAREER card tab (inline on K/DST cards,
 // which have no tab bar). Scoring toggle + AVG/TOT stat-mode toggle.
 function _careerSectionHtml(d) {
-  if (!d.career || !d.career.length) return '';
+  if ((!d.career || !d.career.length) && !_kdstHasHistory(d)) return '';
   const bestSeasonsNote = d._retired && d._debut && d._last && d.career.length < (d._last - d._debut + 1) * 0.5
     ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : '';
   return `<div class="card-section">
@@ -6644,7 +6813,7 @@ function _kickerSplitsSectionHtml(d) {
 // renders a loading note until the bundle lands (see the mff:weeklydata hook
 // in the card wiring, which also reveals the LOGS tab button).
 function _logsSectionHtml(d) {
-  if (!d.career || !d.career.length) return '';
+  if ((!d.career || !d.career.length) && !_kdstHasHistory(d)) return '';
   const seasons = getWeeklySeasons(d);
   return `<div class="card-section">
     <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
@@ -8162,7 +8331,7 @@ function openPlayerCard(d, ctxMode) {
 
       ${(!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d) : ''}
 
-      ${(d.s === 'K' || d.s === 'DST') && !_is2026 && d.career && d.career.length > 0
+      ${(d.s === 'K' || d.s === 'DST') && !_is2026 && ((d.career && d.career.length > 0) || _kdstHasHistory(d))
         ? _kickerSplitsSectionHtml(d) + _careerSectionHtml(d) + _logsSectionHtml(d)
         : (!_is2026 && d.career && d.career.length > 0) ? '' : d._retired ? `<div class="card-section">
         <div class="card-section-title">Career Summary</div>

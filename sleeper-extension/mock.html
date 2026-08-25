@@ -297,10 +297,23 @@ Out player, so LINEUP should flag moves and WAIVERS should rank vs your team.</p
     VEGAS.weeklyProps['3']['Jaylen Waddle'] = { UD: { rcy: 48.5, atd: 210 } };
     VEGAS.weeklyProps['3']['Bijan Robinson'] = { UD: { ry: 84.5, rcy: 24.5, atd: -170 }, PP: { ry: 86.5, rcy: 25.5 } };
 
+    // Site consensus feed (weekly_projections.json shape) → "Wk 3 sources"
+    // profile row. Sleeper h/p/s + ESPN/FP [half, ppr, std] arrays.
+    var CONSENSUS = { week: 3, players: {} };
+    (data.players || []).slice(0, 80).forEach(function (p, i) {
+      var base = 18 - (i % 15);
+      CONSENSUS.players[p.n] = {
+        h: base, p: base + 2, s: base - 2,
+        e: [base - 0.4, base + 1.6, base - 2.4],
+        f: [base + 0.3, base + 2.3, base - 1.7],
+      };
+    });
+
     window.__MFF_MOCK = {
       draftId: '9990001112223334445',
       players: data,
       vegas: VEGAS,
+      consensus: CONSENSUS,
       api: function (path) {
         document.getElementById('log').textContent = 'last api: ' + path + ' (picks made: ' + made + ')';
         if (/\/picks$/.test(path)) return buildPicks();

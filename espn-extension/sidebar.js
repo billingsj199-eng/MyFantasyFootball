@@ -105,6 +105,8 @@
     rosteredKeys: null,      // Set of keys rostered by ANY team (waiver pool filter)
     espnInj: Object.create(null), // key -> OUT|D|Q from mRoster injuryStatus
     seasonWeek: 1,
+    wkConsensus: null,       // site weekly_projections.json payload (Sleeper/ESPN/FP)
+    wkConsensusIdx: null,    // lazy norm-name index into wkConsensus.players
     byesActive: false,
     nflState: null,          // Sleeper /state/nfl (week + season_type)
     slMeta: {},              // sid -> {n,pos,tm,inj} from Sleeper /players/nfl (FA injuries)
@@ -329,6 +331,18 @@
         if (n) console.log('[MFF/ESPN] live Vegas overlay: ' + n + ' SOS records refreshed');
         if (state.appMode === 'season') render();
       }).catch(() => {});
+    // Site consensus weekly projections (Sleeper h/p/s + ESPN/FP e/f arrays) —
+    // reference row in the expanded player profile, never a scoring input.
+    fetch('https://www.myfantasyfootball.co/data/weekly_projections.json?t=' + Date.now())
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d || !d.players) return;
+        state.wkConsensus = d;
+        state.wkConsensusIdx = null; // rebuilt lazily on first lookup
+        if (state.appMode === 'season') render();
+      }).catch(() => {});
+  } else if (MOCK.consensus) {
+    state.wkConsensus = MOCK.consensus;
   }
 
   // Direct fetch first (ESPN's page CSP allows it today), background-worker
@@ -3969,6 +3983,32 @@
     }).join('');
   }
 
+  // Site consensus weekly numbers (Sleeper h/p/s, ESPN/FP [half,ppr,std]) in
+  // the league's rec-scoring bucket. Only for the week the feed was pulled for.
+  function wkConsensusRow(p) {
+    const c = state.wkConsensus || (MOCK && MOCK.consensus) || null;
+    if (!c || !c.players || c.week !== state.seasonWeek) return '';
+    let row = c.players[p.n];
+    if (!row) {
+      if (!state.wkConsensusIdx) {
+        const idx = Object.create(null);
+        for (const n of Object.keys(c.players)) idx[norm(n)] = c.players[n];
+        state.wkConsensusIdx = idx;
+      }
+      row = state.wkConsensusIdx[norm(p.n)];
+    }
+    if (!row) return '';
+    const recPts = state.scoringVals ? state.scoringVals.recPts : 1;
+    const fi = recPts >= 0.75 ? 1 : recPts >= 0.25 ? 0 : 2; // [half, ppr, std]
+    const slp = fi === 1 ? row.p : fi === 0 ? row.h : row.s;
+    const parts = [];
+    if (typeof slp === 'number') parts.push('SLP ' + slp.toFixed(1));
+    if (row.e && typeof row.e[fi] === 'number') parts.push('ESPN ' + row.e[fi].toFixed(1));
+    if (row.f && typeof row.f[fi] === 'number') parts.push('FP ' + row.f[fi].toFixed(1));
+    if (!parts.length) return '';
+    return `<div class="prof-row"><span class="k" title="Site consensus weekly projections (Sleeper / ESPN / FantasyPros), ${fi === 1 ? 'PPR' : fi === 0 ? 'half-PPR' : 'standard'} — reference only, not the sim number">Wk ${c.week} sources</span><span class="v">${esc(parts.join(' · '))}</span></div>`;
+  }
+
   function profileHTML(p, k) {
     const mk = modeKeys();
     const modeLbl = MODES[state.mode].label;
@@ -4010,7 +4050,7 @@
     const markBtn = state.appMode === 'draft'
       ? `<button data-markdrafted="${esc(k)}" style="background:#402a2a;border:none;color:#d06d6d;padding:5px;border-radius:4px;cursor:pointer;font-weight:600;font-size:10px;margin-top:4px">MARK DRAFTED (manual)</button>`
       : '';
-    return `<div class="mff-profile" style="pointer-events:auto">${rows}${sosRow}${stackRow}${markBtn}</div>`;
+    return `<div class="mff-profile" style="pointer-events:auto">${rows}${wkConsensusRow(p)}${sosRow}${stackRow}${markBtn}</div>`;
   }
 
   function searchSuggestionsHTML() {

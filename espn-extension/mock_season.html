@@ -151,11 +151,24 @@ append verdict / matchup / proj pills after each within ~2s.</p>
   const weeklyProps = { '1': {} };
   if (star) weeklyProps['1'][star.n] = { UD: { ry: 88, rcy: 28, atd: -145 }, PP: { ry: 91.5 } };
 
+  // Site consensus feed (weekly_projections.json shape) → "Wk 1 sources"
+  // profile row. Sleeper h/p/s + ESPN/FP [half, ppr, std] arrays.
+  const consensusPlayers = {};
+  (data.players || []).slice(0, 80).forEach((p, i) => {
+    const base = 18 - (i % 15);
+    consensusPlayers[p.n] = {
+      h: base, p: base + 2, s: base - 2,
+      e: [base - 0.4, base + 1.6, base - 2.4],
+      f: [base + 0.3, base + 2.3, base - 1.7],
+    };
+  });
+
   window.__MFF_ESPN_MOCK = {
     seasonLeagueId: '424242', seasonId: '2026', myTeamId: 2,
     players: data, seasonLeague: league,
     nflState: { season_type: 'regular', week: 1, season: '2026' },
     vegas: { gameTotals, weeklyProps },
+    consensus: { week: 1, players: consensusPlayers },
     slMeta: {}, trendAdds: { [star && star.sid]: 4200 },
   };
 

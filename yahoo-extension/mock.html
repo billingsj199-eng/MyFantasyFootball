@@ -68,11 +68,23 @@ team page. <button class="h" id="toPlayers">Switch to fake Players page</button>
     gameTotals['W1_' + abbrs[i] + '_' + abbrs[i + 1]] = { total: 40 + (i % 13), spread: (i % 7) - 3 };
   }
   const star = (data.players || []).find((p) => p.n === 'Jahmyr Gibbs') || {};
+  // Site consensus feed (weekly_projections.json shape) → "Wk 1 sources"
+  // profile row. Sleeper h/p/s + ESPN/FP [half, ppr, std] arrays.
+  const consensusPlayers = {};
+  (data.players || []).slice(0, 80).forEach((p, i) => {
+    const base = 18 - (i % 15);
+    consensusPlayers[p.n] = {
+      h: base, p: base + 2, s: base - 2,
+      e: [base - 0.4, base + 1.6, base - 2.4],
+      f: [base + 0.3, base + 2.3, base - 1.7],
+    };
+  });
   window.__MFF_YAHOO_MOCK = {
     leagueId: '987654',
     players: data,
     nflState: { season_type: 'regular', week: 1, season: '2026' },
     vegas: { gameTotals, weeklyProps: { '1': { 'Jahmyr Gibbs': { UD: { ry: 92, rcy: 34, atd: -160 }, PP: { ry: 95.5 } } } } },
+    consensus: { week: 1, players: consensusPlayers },
     slMeta: {}, trendAdds: { [star.sid]: 3100 },
     playersPage: false,
   };

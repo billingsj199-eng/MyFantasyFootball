@@ -42,6 +42,7 @@ import requests
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'data', 'weekly_projections.js')
+OUT_JSON = os.path.join(ROOT, 'data', 'weekly_projections.json')
 STATE_URL = 'https://api.sleeper.app/v1/state/nfl'
 PROJ_URL = ('https://api.sleeper.com/projections/nfl/{season}/{week}'
             '?season_type=regular'
@@ -203,6 +204,11 @@ def main():
     open(OUT, 'w', encoding='utf-8', newline='\n').write(body)
     print(f'data/weekly_projections.js written ({len(body):,} bytes, '
           f'{"changed" if body != old else "no change"})')
+    # Pure-JSON twin for the helper extensions (the .js twin gets minified at
+    # deploy into unquoted-key JS they can't JSON.parse) — betting_lines pattern.
+    jbody = json.dumps(payload, separators=(',', ':'), ensure_ascii=False)
+    open(OUT_JSON, 'w', encoding='utf-8', newline='\n').write(jbody)
+    print(f'data/weekly_projections.json written ({len(jbody):,} bytes)')
 
 
 if __name__ == '__main__':

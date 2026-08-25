@@ -1934,12 +1934,79 @@ function l4PpgCellHtml(l4, seasonPpg) {
   return { html: v + ' <span style="font-size:.6rem;color:var(--text2)">·</span>', color: null };
 }
 
+// === Kicker projection model (2026-08-25 correlate study) ===
+// Fit on 837 primary-kicker seasons 1999-2025 (kicker_history + Vegas lines):
+//   season PPG = 0.703 + 0.1953*seasonImplied + 3.154*careerFG% + 3.219*career50+AttShare
+// (R2=0.23 — the draft-time ceiling; ~80% of a kicker season is unknowable in
+// August, which is WHY Vegas is the whole model). No-career fallback:
+//   2.944 + 0.2241*seasonImplied + 0.142*homeDome.
+// Weekly tilt (fit on 2,661 kicker-games 2020-25): +0.125 per point of THIS
+// game's implied vs the team's season average, +0.45 indoor-vs-usual. Wind is
+// real (-0.06/mph) but the site carries no forecast feed, so it's left out.
+// Dome drops out of the season model — Vegas totals + accuracy already price it.
+const _K_INDOOR = { ARI: 1, ATL: 1, DAL: 1, DET: 1, HOU: 1, IND: 1, LAC: 1, LAR: 1, LV: 1, MIN: 1, NO: 1 };
+let _kImpliedCache = {};
+// Season-average Vegas implied total across every posted game line (needs 4+
+// posted games; early offseason with a thin board returns null → Clay fallback)
+function _kSeasonImplied(abbr) {
+  if (_kImpliedCache[abbr] !== undefined) return _kImpliedCache[abbr];
+  let v = null;
+  if (typeof window.getNflTeamImpliedTotal === 'function' && typeof window.getNflScheduleForTeam === 'function') {
+    const sched = window.getNflScheduleForTeam(abbr);
+    if (sched) {
+      let sum = 0, n = 0;
+      for (let wk = 1; wk <= 18; wk++) {
+        const e = sched[wk];
+        if (!e || e.bye) continue;
+        const imp = window.getNflTeamImpliedTotal(wk, abbr, e.opp, !!e.home);
+        if (typeof imp === 'number' && isFinite(imp)) { sum += imp; n++; }
+      }
+      if (n >= 4) v = sum / n;
+    }
+  }
+  _kImpliedCache[abbr] = v;
+  return v;
+}
+// Share of the team's scheduled games played indoors (venue = home side's roof)
+function _kIndoorShare(abbr) {
+  const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+  if (!sched) return _K_INDOOR[abbr] ? 0.6 : 0.1;
+  let ind = 0, n = 0;
+  for (let wk = 1; wk <= 18; wk++) {
+    const e = sched[wk];
+    if (!e || e.bye) continue;
+    n++;
+    if (_K_INDOOR[e.home ? abbr : e.opp]) ind++;
+  }
+  return n ? ind / n : 0;
+}
+function _kickerProjPpg(d) {
+  const abbr = teamAbbr(d.t);
+  const imp = _kSeasonImplied(abbr);
+  if (imp == null) return null;
+  const rows = (typeof _kickerHistRows === 'function') ? _kickerHistRows(d.n) : null;
+  let fgm = 0, fga = 0, a50 = 0;
+  (rows || []).forEach(y => {
+    fgm += y.fgm.reduce((a, b) => a + b, 0);
+    fga += y.fga.reduce((a, b) => a + b, 0);
+    a50 += y.fga[4] || 0;
+  });
+  const v = fga >= 30
+    ? 0.703 + 0.1953 * imp + 3.154 * (fgm / fga) + 3.219 * (a50 / fga)
+    : 2.944 + 0.2241 * imp + 0.142 * (_K_INDOOR[abbr] ? 1 : 0);
+  return Math.round(Math.max(5.5, Math.min(11, v)) * 10) / 10;
+}
+
 function adjProjPpg(d) {
-  // K: Clay projects FG/XP per team (extract_clay_projections.py parses the
-  // kicker row since 2026-07-22; pts = 3*FGM+XPM, no distance bonuses — flat
-  // across all kickers so K-vs-K order is right). Fall back to d.p/17.
+  // K: Vegas-first model above (implied total + career accuracy + 50+ leg).
+  // Clay's flat FG/XP line and d.p/17 stay as fallbacks for when the betting
+  // board is too thin to average (early offseason).
   // DST: the PDF only has a unit RANK, no points — d.p/17 stays the source.
   if (d.s === 'K' || d.s === 'DST') {
+    if (d.s === 'K') {
+      const kv = _kickerProjPpg(d);
+      if (kv != null) return kv;
+    }
     if (d.s === 'K' && typeof MIKE_CLAY_PROJ !== 'undefined' && typeof clayLookup === 'function') {
       const cp = clayLookup(d.n);
       if (cp && cp.pos === 'K' && cp.pts > 0 && cp.gm > 0) return Math.round((cp.pts / cp.gm) * 10) / 10;
@@ -4468,6 +4535,22 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       if (oppTT != null) dv += (21.5 - oppTT) * 0.35;
       _tag('dst');
       return Math.round(Math.max(1, dv * injMult) * 10) / 10;
+    }
+    // Kickers: per the 2026-08 correlate study, the only matchup signals that
+    // move a kicker week are THIS game's implied total and the roof — the
+    // opponent-DEFENSE factor in the heuristic below is the wrong lever for a
+    // K. Anchor on the season model (basePpg, already decayed toward 2026
+    // actuals above) and tilt by the game's Vegas delta + venue.
+    if (d.s === 'K') {
+      let kv = (basePpg != null && isFinite(basePpg) && basePpg > 0) ? basePpg : null;
+      if (kv == null) return basePpg;
+      const gImp = window._weeklyTeamTotalFor(d.t);
+      const sImp = _kSeasonImplied(abbr);
+      if (gImp != null && sImp != null) kv += 0.125 * (gImp - sImp);
+      const venueIndoor = _K_INDOOR[entry.home ? abbr : entry.opp] ? 1 : 0;
+      kv += 0.45 * (venueIndoor - _kIndoorShare(abbr));
+      _tag('kicker');
+      return Math.round(Math.max(2, Math.min(14, kv * injMult)) * 10) / 10;
     }
     // Props-first: score the posted weekly lines directly. Requires a Clay
     // projection as the fill source for stats the books don't post (weekly
@@ -7161,6 +7244,7 @@ function buildWeeklyCardView(d) {
     consensus: { lbl: 'Sleeper consensus', tip: 'Sleeper\'s weekly projection for this exact week — used when no prop board is posted.' },
     heuristic: { lbl: 'Season-based estimate', tip: 'Season projection scaled by team implied total and opponent defense rank — used when neither props nor a consensus projection exist.' },
     dst:       { lbl: 'D/ST model', tip: 'Season baseline adjusted by the opponent\'s implied total.' },
+    kicker:    { lbl: 'Kicker model', tip: 'Vegas-first kicker model (season implied total + career FG% + 50+ leg), tilted by this game\'s implied total and the venue roof.' },
     out:       { lbl: 'Ruled out', tip: 'Injury status zeroes this week.' },
     bye:       { lbl: 'Bye', tip: '' },
     base:      { lbl: 'Season projection', tip: 'No weekly signal available — season number shown unadjusted.' },

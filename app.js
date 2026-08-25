@@ -163,6 +163,18 @@ function validateImportData(obj) {
   _expandDailyRetiredPool();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _expandDailyRetiredPool);
 
+  // D/ST rows: seed the team logo as the row/card image. They ship without
+  // _slImg like kickers, but a roster lookup makes no sense for a unit — the
+  // ESPN team logo IS their headshot. (Excluded from playersToFix below by
+  // the D/ST name guard, so the roster fix never touches these.)
+  if (typeof TEAM_LOGO_IDS !== 'undefined') {
+    D.forEach(p => {
+      if (p.s === 'DST' && !p._slImg && TEAM_LOGO_IDS[p.t]) {
+        p._slImg = 'https://a.espncdn.com/i/teamlogos/nfl/500/' + TEAM_LOGO_IDS[p.t] + '.png';
+      }
+    });
+  }
+
   // Kickers ship WITHOUT an _slImg seed (the rankings injector never gives K
   // rows an image), so they also enter the fix set to GAIN a headshot from the
   // baked ids / roster lookup — not just to correct a scrambled one.

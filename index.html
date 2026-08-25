@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-25" as="script">
+<link rel="preload" href="app.js?v=2026-08-25b" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -3866,6 +3866,12 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      section only — every reader is typeof-guarded. -->
 <script src="data/kicker_history.js?v=2026-08-06" defer></script>
 <script src="data/kicker_splits.js?v=2026-08-06" defer></script>
+<!-- K/DST profile bundles (nflverse): D/ST season history 1999+ w/ finishes,
+     plus kicker + D/ST game logs (2020+). Feed the K/DST card career table
+     and GAME LOGS section only — every reader is typeof-guarded. -->
+<script src="data/dst_history.js?v=2026-08-25" defer></script>
+<script src="data/dst_weekly.js?v=2026-08-25" defer></script>
+<script src="data/kicker_weekly.js?v=2026-08-25" defer></script>
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
 <script src="data/player_weekly_sigma.js?v=2026-07-30" defer></script>
@@ -5175,7 +5181,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-25"></script>
+<script defer src="app.js?v=2026-08-25b"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

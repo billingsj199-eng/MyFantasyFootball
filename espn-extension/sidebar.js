@@ -4009,6 +4009,51 @@
     return `<div class="prof-row"><span class="k" title="Site consensus weekly projections (Sleeper / ESPN / FantasyPros), ${fi === 1 ? 'PPR' : fi === 0 ? 'half-PPR' : 'standard'} — reference only, not the sim number">Wk ${c.week} sources</span><span class="v">${esc(parts.join(' · '))}</span></div>`;
   }
 
+  // K/DST full-season weekly projection strip (mirrors the site card's strip):
+  // all 18 weeks scored with the league-scored Vegas models above against each
+  // week's line from the site schedule map. Colored by matchup delta vs the
+  // neutral-implied baseline; W15-17 carry the playoff border. Pure model —
+  // no injury/actuals decay (it's a planning strip, not a lineup verdict).
+  function kdstWeekStripHTML(p) {
+    if ((p.s !== 'K' && p.s !== 'DST') || !p.sTm) return '';
+    const sched = state.schedule[p.sTm];
+    if (!sched || !Object.keys(sched).length) return '';
+    const base = p.s === 'K' ? kickerProjFor(p, null) : dstProjFor(p, null);
+    if (base == null || !isFinite(base)) return '';
+    let cells = '';
+    for (let wk = 1; wk <= 18; wk++) {
+      const g = sched[wk];
+      const border = (wk >= 15 && wk <= 17)
+        ? 'border:1px solid rgba(224,160,96,.55);' : 'border:1px solid #26304d;';
+      if (!g) {
+        const isBye = p.bye != null && +p.bye === wk;
+        cells += `<div style="flex:0 0 44px;text-align:center;padding:3px 1px;border-radius:4px;background:#141a2e;${border}${isBye ? '' : 'opacity:.5;'}" title="${isBye ? 'Bye week' : 'W' + wk + ' — line not posted yet'}">` +
+          `<div style="font-size:8px;color:#8b94b3">W${wk}</div>` +
+          `<div style="font-size:10px;font-weight:700;color:#8b94b3;padding:3px 0 2px">${isBye ? 'BYE' : '—'}</div></div>`;
+        continue;
+      }
+      const v = p.s === 'K' ? kickerProjFor(p, g) : dstProjFor(p, g);
+      const delta = v - base;
+      const clr = delta >= 0.4 ? '#6dd06d' : delta >= 0.15 ? '#9ed08f'
+        : delta <= -0.4 ? '#d06d6d' : delta <= -0.15 ? '#e0a060' : '#cbd2e6';
+      const oppTxt = (g.home ? 'vs' : '@') + g.opp;
+      const imp = p.s === 'DST'
+        ? (g.total != null && g.implied != null ? g.total - g.implied : null)
+        : g.implied;
+      const tip = 'W' + wk + ' ' + oppTxt +
+        (imp != null ? ' · ' + (p.s === 'DST' ? 'opp implied ' : 'implied ') + (Math.round(imp * 10) / 10) : '') +
+        (g.total != null ? ' · O/U ' + g.total : '') +
+        ' · ' + (delta >= 0 ? '+' : '') + delta.toFixed(1) + ' vs ' + base.toFixed(1) + ' baseline (league scoring)';
+      cells += `<div style="flex:0 0 44px;text-align:center;padding:3px 1px;border-radius:4px;background:#141a2e;cursor:help;${border}" title="${esc(tip)}">` +
+        `<div style="font-size:8px;color:#8b94b3">W${wk}</div>` +
+        `<div style="font-size:12px;font-weight:800;line-height:1.15;color:${clr}">${v.toFixed(1)}</div>` +
+        `<div style="font-size:7.5px;color:#8b94b3;white-space:nowrap">${esc(oppTxt)}${imp != null ? '·' + Math.round(imp) : ''}</div></div>`;
+    }
+    return `<div class="prof-row" style="display:block">` +
+      `<span class="k" style="display:block;margin-bottom:3px">WEEKLY PROJ <span style="color:#8b94b3;font-weight:400">· Vegas model, league scoring · amber = W15-17</span></span>` +
+      `<div style="display:flex;gap:3px;overflow-x:auto;padding-bottom:3px">${cells}</div></div>`;
+  }
+
   function profileHTML(p, k) {
     const mk = modeKeys();
     const modeLbl = MODES[state.mode].label;
@@ -4050,7 +4095,7 @@
     const markBtn = state.appMode === 'draft'
       ? `<button data-markdrafted="${esc(k)}" style="background:#402a2a;border:none;color:#d06d6d;padding:5px;border-radius:4px;cursor:pointer;font-weight:600;font-size:10px;margin-top:4px">MARK DRAFTED (manual)</button>`
       : '';
-    return `<div class="mff-profile" style="pointer-events:auto">${rows}${wkConsensusRow(p)}${sosRow}${stackRow}${markBtn}</div>`;
+    return `<div class="mff-profile" style="pointer-events:auto">${rows}${wkConsensusRow(p)}${sosRow}${stackRow}${kdstWeekStripHTML(p)}${markBtn}</div>`;
   }
 
   function searchSuggestionsHTML() {

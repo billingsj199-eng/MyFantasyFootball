@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MFF ESPN Helper",
-  "version": "0.20.8",
+  "version": "0.20.9",
   "description": "Draft helper + season mode for ESPN leagues: live pick recs, optimal lineups, waiver upgrades, sims, and one-click league import.",
   "permissions": [
     "storage"

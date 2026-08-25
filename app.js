@@ -2015,6 +2015,86 @@ function _dstProjPpg(d) {
   return Math.round(Math.max(3, Math.min(12, v)) * 10) / 10;
 }
 
+// Single-week projection for a K/DST from the fitted models, for ANY week —
+// powers the card's Weekly Projections strip (streaming planner). Pure model:
+// no injury/bye-zeroing here (byes render as BYE cells, injuries are a
+// lineup-day concern, not a planning-strip one).
+// Returns { proj, imp, est } — est=true when no line is posted for that week
+// yet and the season-average implied filled in (proj ≈ season base).
+function _kdstProjForWeek(d, wk, base) {
+  const abbr = teamAbbr(d.t);
+  const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+  const e = sched && sched[wk];
+  if (!e || e.bye || base == null) return null;
+  if (d.s === 'K') {
+    const sImp = _kSeasonImplied(abbr);
+    let gImp = (typeof window.getNflTeamImpliedTotal === 'function')
+      ? window.getNflTeamImpliedTotal(wk, abbr, e.opp, !!e.home) : null;
+    const est = gImp == null || sImp == null;
+    let v = base;
+    if (!est) v += 0.125 * (gImp - sImp);
+    const venueIndoor = _K_INDOOR[e.home ? abbr : e.opp] ? 1 : 0;
+    v += 0.45 * (venueIndoor - _kIndoorShare(abbr));
+    return { proj: Math.round(Math.max(2, Math.min(14, v)) * 10) / 10, imp: est ? null : gImp, est };
+  }
+  if (d.s === 'DST') {
+    const oppImp = (typeof window.getNflTeamImpliedTotal === 'function')
+      ? window.getNflTeamImpliedTotal(wk, e.opp, abbr, !e.home) : null;
+    if (oppImp == null) return { proj: base, imp: null, est: true };
+    const v = 0.781 * base + 8.076 - 0.2984 * oppImp;
+    return { proj: Math.round(Math.max(1, Math.min(16, v)) * 10) / 10, imp: oppImp, est: false };
+  }
+  return null;
+}
+
+// Weekly Projections strip (K/DST cards): all 18 weeks scored off each week's
+// posted total+spread. Colored by matchup delta vs the season baseline; dim
+// cells = no line posted yet (season-average estimate); W15-17 get the
+// playoff border.
+function _kdstWeeklyProjSectionHtml(d) {
+  if (d.s !== 'K' && d.s !== 'DST') return '';
+  const abbr = teamAbbr(d.t);
+  const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+  const base = adjProjPpg(d);
+  if (!sched || base == null) return '';
+  const isDst = d.s === 'DST';
+  let cells = '', nPosted = 0;
+  for (let wk = 1; wk <= 18; wk++) {
+    const e = sched[wk];
+    const playoffStyle = (wk >= 15 && wk <= 17) ? 'border:1px solid rgba(245,158,11,.45);' : 'border:1px solid var(--line);';
+    if (!e || e.bye) {
+      cells += '<div style="flex:0 0 54px;text-align:center;padding:5px 2px;border-radius:6px;background:rgba(255,255,255,.02);' + playoffStyle + '">'
+        + '<div style="font-size:.55rem;color:var(--text2)">W' + wk + '</div>'
+        + '<div style="font-size:.8rem;font-weight:700;color:var(--text2);padding:4px 0 3px">BYE</div></div>';
+      continue;
+    }
+    const r = _kdstProjForWeek(d, wk, base);
+    if (!r) continue;
+    if (!r.est) nPosted++;
+    const delta = r.proj - base;
+    const clr = r.est ? 'var(--text2)'
+      : delta >= 0.4 ? '#22c55e' : delta >= 0.15 ? '#4ade80'
+      : delta <= -0.4 ? '#ef4444' : delta <= -0.15 ? '#f59e0b' : '#facc15';
+    const oppTxt = (e.home ? 'vs ' : '@ ') + e.opp;
+    const tip = 'W' + wk + ' ' + oppTxt
+      + (r.imp != null ? ' · ' + (isDst ? 'opp implied ' : 'implied ') + r.imp.toFixed(1) : ' · line not posted — season-avg estimate')
+      + ' · ' + (delta >= 0 ? '+' : '') + delta.toFixed(1) + ' vs baseline ' + base;
+    cells += '<div title="' + tip.replace(/"/g, '&quot;') + '" style="flex:0 0 54px;text-align:center;padding:5px 2px;border-radius:6px;background:rgba(255,255,255,.02);cursor:help;' + playoffStyle + (r.est ? 'opacity:.55;' : '') + '">'
+      + '<div style="font-size:.55rem;color:var(--text2)">W' + wk + '</div>'
+      + '<div style="font-family:\'Bebas Neue\',Impact,Arial,sans-serif;font-size:1.05rem;line-height:1.1;color:' + clr + '">' + r.proj.toFixed(1) + '</div>'
+      + '<div style="font-size:.5rem;color:var(--text2);white-space:nowrap">' + oppTxt + (r.imp != null ? ' · ' + Math.round(r.imp) : '') + '</div></div>';
+  }
+  if (!cells) return '';
+  const note = nPosted < 17 ? ' <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:0">· dim = line not posted yet</span>' : '';
+  return '<div class="card-section">'
+    + '<div class="card-section-title">Weekly Projections <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· '
+    + (isDst ? 'D/ST model, per-week opponent implied totals' : 'kicker model, per-week implied totals')
+    + '</span>' + note + '</div>'
+    + '<div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch">' + cells + '</div>'
+    + '<div style="font-size:.55rem;color:var(--text2);margin-top:2px">Colored vs the ' + base + ' PPG season baseline · amber border = fantasy playoffs (W15-17)</div>'
+    + '</div>';
+}
+
 function _kickerProjPpg(d) {
   const abbr = teamAbbr(d.t);
   const imp = _kSeasonImplied(abbr);
@@ -8462,7 +8542,7 @@ function openPlayerCard(d, ctxMode) {
       ${(!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d) : ''}
 
       ${(d.s === 'K' || d.s === 'DST') && !_is2026 && ((d.career && d.career.length > 0) || _kdstHasHistory(d))
-        ? _kickerSplitsSectionHtml(d) + _careerSectionHtml(d) + _logsSectionHtml(d)
+        ? _kdstWeeklyProjSectionHtml(d) + _kickerSplitsSectionHtml(d) + _careerSectionHtml(d) + _logsSectionHtml(d)
         : (!_is2026 && d.career && d.career.length > 0) ? '' : d._retired ? `<div class="card-section">
         <div class="card-section-title">Career Summary</div>
         <div class="card-grid">

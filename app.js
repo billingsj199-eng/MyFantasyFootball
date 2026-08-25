@@ -7001,10 +7001,20 @@ function buildWeeklyCardView(d) {
   const cwV = cw ? (rankingScoringFmt === 'ppr' ? cw.p : rankingScoringFmt === 'std' ? cw.s : cw.h) : null;
   html += '<div class="card-section"><div class="card-section-title">Weekly Projection '
     + '<span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
-  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr)">';
+  html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr">';
   html += box('WK ' + wk + ' PROJ', proj != null ? '<span class="accent">' + fmt1(proj) + '</span>' : '—', '', 'The number the WEEKLY rankings PROJ column shows');
-  html += box('SLEEPER', cwV != null ? fmt1(cwV) : '—', '', 'Sleeper\'s weekly consensus projection for reference');
   html += box('SEASON /GM', base != null ? fmt1(base) : '—', '', 'Season-long projected PPG for reference');
+  html += '</div>';
+  // Reference row: other sites' weekly numbers in the active scoring format.
+  // e/f are [half, ppr, std] arrays (see pull_weekly_projections.py); Yahoo
+  // is absent because they publish no projections outside a league login.
+  const pickHps = a => (a && a.length === 3) ? a[rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0] : null;
+  const eV = cw ? pickHps(cw.e) : null;
+  const fV = cw ? pickHps(cw.f) : null;
+  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr);margin-top:.4rem">';
+  html += box('SLEEPER', cwV != null ? fmt1(cwV) : '—', '', 'Sleeper\'s weekly consensus projection for reference');
+  html += box('ESPN', eV != null ? fmt1(eV) : '—', '', 'ESPN\'s weekly projection for reference');
+  html += box('FANTASYPROS', fV != null ? fmt1(fV) : '—', '', 'FantasyPros\' expert-consensus weekly points (rank-to-points) for reference');
   html += '</div>';
   html += '<div style="margin-top:7px;font-size:.62rem;color:var(--text2)">Source: <span style="color:var(--accent);cursor:help" title="' + esc(src.tip) + '">' + src.lbl + '</span>'
     + (out.src === 'props' ? ' · full prop board on the <b>LINES</b> tab' : '') + '</div>';

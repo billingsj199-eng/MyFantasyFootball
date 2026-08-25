@@ -1980,6 +1980,41 @@ function _kIndoorShare(abbr) {
   }
   return n ? ind / n : 0;
 }
+// === D/ST projection model (2026-08-25 study, 861 team-seasons 1999-2025) ===
+// Season PPG = 21.691 - 0.7057*seasonAvgOPPONENTimplied + 0.0411*ownImplied
+// (R2=0.52 — every opponent's implied total already has the market's rating of
+// THIS defense priced in, so the lines board IS Vegas's defense projection;
+// prior-year DST ppg adds nothing once it's in the model). Weekly recalibration
+// lives in _weeklyAdjustPpg's DST branch (fit on 3,230 games 2020-25).
+let _dstOppImpCache = {};
+function _dstOppImplied(abbr) { // season-avg implied total of the OPPONENTS faced
+  if (_dstOppImpCache[abbr] !== undefined) return _dstOppImpCache[abbr];
+  let v = null;
+  if (typeof window.getNflTeamImpliedTotal === 'function' && typeof window.getNflScheduleForTeam === 'function') {
+    const sched = window.getNflScheduleForTeam(abbr);
+    if (sched) {
+      let sum = 0, n = 0;
+      for (let wk = 1; wk <= 18; wk++) {
+        const e = sched[wk];
+        if (!e || e.bye) continue;
+        const imp = window.getNflTeamImpliedTotal(wk, e.opp, abbr, !e.home);
+        if (typeof imp === 'number' && isFinite(imp)) { sum += imp; n++; }
+      }
+      if (n >= 4) v = sum / n;
+    }
+  }
+  _dstOppImpCache[abbr] = v;
+  return v;
+}
+function _dstProjPpg(d) {
+  const abbr = teamAbbr(d.t);
+  const oppImp = _dstOppImplied(abbr);
+  if (oppImp == null) return null;
+  const ownImp = _kSeasonImplied(abbr);
+  const v = 21.691 - 0.7057 * oppImp + 0.0411 * (ownImp != null ? ownImp : 22.5);
+  return Math.round(Math.max(3, Math.min(12, v)) * 10) / 10;
+}
+
 function _kickerProjPpg(d) {
   const abbr = teamAbbr(d.t);
   const imp = _kSeasonImplied(abbr);
@@ -1998,14 +2033,18 @@ function _kickerProjPpg(d) {
 }
 
 function adjProjPpg(d) {
-  // K: Vegas-first model above (implied total + career accuracy + 50+ leg).
-  // Clay's flat FG/XP line and d.p/17 stay as fallbacks for when the betting
-  // board is too thin to average (early offseason).
-  // DST: the PDF only has a unit RANK, no points — d.p/17 stays the source.
+  // K/DST: Vegas-first fitted models above (K: implied + career accuracy +
+  // 50+ leg; DST: season-avg opponent implied). Clay's flat kicker line and
+  // d.p/17 stay as fallbacks for when the betting board is too thin to
+  // average (early offseason).
   if (d.s === 'K' || d.s === 'DST') {
     if (d.s === 'K') {
       const kv = _kickerProjPpg(d);
       if (kv != null) return kv;
+    }
+    if (d.s === 'DST') {
+      const dv = _dstProjPpg(d);
+      if (dv != null) return dv;
     }
     if (d.s === 'K' && typeof MIKE_CLAY_PROJ !== 'undefined' && typeof clayLookup === 'function') {
       const cp = clayLookup(d.n);
@@ -4531,8 +4570,11 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
         if (own && typeof own.defRk === 'number') dv = 8.5 - 4.5 * (own.defRk - 1) / 31;
       }
       if (dv == null) return basePpg;
+      // Refit 2026-08-25 on 3,230 DST games 2020-25 (R2=0.14): the old
+      // hand-tuned (21.5 - oppTT) * 0.35 was close; the fitted form also
+      // shrinks the season baseline 22% toward the mean, which the data wants.
       const oppTT = window._weeklyOppTeamTotalFor(d.t);
-      if (oppTT != null) dv += (21.5 - oppTT) * 0.35;
+      if (oppTT != null) dv = 0.781 * dv + 8.076 - 0.2984 * oppTT;
       _tag('dst');
       return Math.round(Math.max(1, dv * injMult) * 10) / 10;
     }
@@ -7243,7 +7285,7 @@ function buildWeeklyCardView(d) {
     props:     { lbl: 'Sportsbook props', tip: 'Scored directly from posted weekly prop lines (books price matchup + injuries); unposted stats filled from Clay per-game. Full board on the LINES tab.' },
     consensus: { lbl: 'Sleeper consensus', tip: 'Sleeper\'s weekly projection for this exact week — used when no prop board is posted.' },
     heuristic: { lbl: 'Season-based estimate', tip: 'Season projection scaled by team implied total and opponent defense rank — used when neither props nor a consensus projection exist.' },
-    dst:       { lbl: 'D/ST model', tip: 'Season baseline adjusted by the opponent\'s implied total.' },
+    dst:       { lbl: 'D/ST model', tip: 'Fitted Vegas model: season baseline (shrunk toward the mean) plus this game\'s opponent implied total — lower opponent total = better D/ST week.' },
     kicker:    { lbl: 'Kicker model', tip: 'Vegas-first kicker model (season implied total + career FG% + 50+ leg), tilted by this game\'s implied total and the venue roof.' },
     out:       { lbl: 'Ruled out', tip: 'Injury status zeroes this week.' },
     bye:       { lbl: 'Bye', tip: '' },

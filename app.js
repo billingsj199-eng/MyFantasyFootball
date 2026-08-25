@@ -163,7 +163,10 @@ function validateImportData(obj) {
   _expandDailyRetiredPool();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _expandDailyRetiredPool);
 
-  const playersToFix = D.filter(p => p._slImg && p._slImg.includes('espncdn.com') && p.n && !p.n.includes('D/ST') && !(p._retired && window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.n]));
+  // Kickers ship WITHOUT an _slImg seed (the rankings injector never gives K
+  // rows an image), so they also enter the fix set to GAIN a headshot from the
+  // baked ids / roster lookup — not just to correct a scrambled one.
+  const playersToFix = D.filter(p => ((p._slImg && p._slImg.includes('espncdn.com')) || (p.s === 'K' && !p._slImg)) && p.n && !p.n.includes('D/ST') && !(p._retired && window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.n]));
 
   // Apply cached fixes immediately
   let cachedCount = 0;
@@ -1905,7 +1908,40 @@ function adj25ppg(d) {
 // Average fantasy PPG over a player's last 4 games of their most recent season.
 // Used as a "trending" signal alongside full-season '25 PPG. Respects the active
 // ranking scoring format (weekly fpts are stored as Half PPR, like buildWeeklyTable).
+// Projected starting kicker per NFL team: the best-ranked K on Jack's board
+// for that team wears the "S" badge (camp battles resolve to Jack's call).
+// FAs and unsigned legs never get one. Cached for the page life — the board
+// order this derives from is fixed at boot.
+let _kStarterByTeam = null;
+function _kStarterBadge(d) {
+  if (!d || d.s !== 'K' || !d.t || d.t === 'FA' || d.t === 'TBD') return '';
+  if (!_kStarterByTeam) {
+    _kStarterByTeam = {};
+    (typeof D !== 'undefined' ? D : []).forEach(p => {
+      if (p.s !== 'K' || !p.t || p.t === 'FA' || p.t === 'TBD') return;
+      const rk = parseInt(String(p.r || '').replace(/^K/, ''), 10) || 999;
+      if (!_kStarterByTeam[p.t] || rk < _kStarterByTeam[p.t].rk) _kStarterByTeam[p.t] = { n: p.n, rk };
+    });
+  }
+  const s = _kStarterByTeam[d.t];
+  if (!s || s.n !== d.n) return '';
+  return ' <span data-gloss="Projected starting kicker for this team (best-ranked K on the board)" style="display:inline-block;background:rgba(34,197,94,.16);color:#22c55e;border:1px solid rgba(34,197,94,.45);border-radius:3px;font-size:.55rem;font-weight:800;line-height:1;padding:1px 3px;vertical-align:1px">S</span>';
+}
+
 function last4Ppg(d) {
+  // K/DST: WEEKLY_STATS has no rows for them — read the KICKER_WEEKLY /
+  // DST_WEEKLY game-log bundles instead (fixed scoring, no rec adjustment).
+  const _kd = (typeof _kdstWeeklyData === 'function') ? _kdstWeeklyData(d) : null;
+  if (_kd) {
+    const yrs = Object.keys(_kd).map(y => parseInt(y, 10)).filter(y => !isNaN(y));
+    if (!yrs.length) return null;
+    const wks = _kd[String(Math.max(...yrs))];
+    if (!wks || !wks.length) return null;
+    const l4 = wks.slice(-4);
+    let s = 0;
+    for (const w of l4) s += (w.fpts || 0);
+    return Math.round((s / l4.length) * 10) / 10;
+  }
   if (typeof WEEKLY_STATS === 'undefined' || !WEEKLY_STATS) return null;
   const wd = WEEKLY_STATS[d.n];
   if (!wd || !wd.seasons) return null;
@@ -3129,7 +3165,7 @@ function render() {
       html += `<tr style="border-bottom:1px solid rgba(30,42,66,.4)" data-devy-idx="${d._devyIdx}" data-devy-name="${d.n.replace(/"/g,'&quot;')}">
         <td>${editable ? '<div class="drag-handle devy-drag" tabindex="0" role="button" aria-label="Reorder ' + d.n.replace(/"/g,'&quot;') + '. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div>' : ''}</td>
         <td class="myrank-cell"><span class="myrank-num">${d.myRank}</span></td>
-        <td><div class="player-cell"><span class="player-name">${d.n}</span><span class="player-team">${d.t}</span></div></td>
+        <td><div class="player-cell"><span class="player-name">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell">${d._devyEligYr}</td>
         <td class="adp-cell">${d._devyKtc > 0 ? d._devyKtc.toLocaleString() : '—'}</td>
@@ -3295,7 +3331,7 @@ function render() {
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? (i + 1) : d.myRank}</span></td>
-      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span>`}</div></div></td>
+      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div></div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       <td class="adp-cell${_adpDelta==null?'':(_adpDelta>=3?' adp-value':(_adpDelta<=-3?' adp-reach':''))}" title="${_adpDelta==null?'':(()=>{const df=Math.round(_adpDelta);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${_adp != null ? _adp : '—'}</td>

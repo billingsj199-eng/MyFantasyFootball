@@ -2,6 +2,10 @@
   var FALLBACK_IDS = {
     "Austin Ekeler":"3068267","Cam Skattebo":"4696981","Dalvin Cook":"3116593","D.J. Moore":"3915416","DJ Moore":"3915416","Darren Waller":"2576925","Harold Fannin":"5083076","Harold Fannin Jr.":"5083076","James Cook":"4379399","James Cook III":"4379399","James Conner":"3045147","Marvin Harrison Jr.":"4432708","Nick Chubb":"3128720","Odell Beckham Jr.":"16733","Russell Wilson":"14881","Todd Gurley":"2977644","Tyreek Hill":"3116406",
     "Arian Foster":"12497","DeAndre Hopkins":"15795","Steve Smith Sr.":"2622","Steve Smith":"2622","Jamaal Charles":"11307","Devonta Freeman":"16944","Brandon Marshall":"9705","Allen Robinson":"16799","Matt Forte":"11278","Julio Jones":"13982","Antonio Brown":"13934","Le'Veon Bell":"15825","Keenan Allen":"15818","Julian Edelman":"12649","Sammy Watkins":"16725","Adrian Peterson":"10452","Mark Ingram":"13981","Mark Ingram II":"13981","Tyrell Williams":"2587819","Todd Gurley II":"2977644",
+    // === Kickers off current ESPN rosters (FAs/camp legs; resolved 2026-08-25 via ESPN search API, all URLs verified 200) ===
+    "Jake Moody":"4372066","Younghoe Koo":"3049899","Brandon McManus":"16339","Matt Prater":"11122",
+    "Zane Gonzalez":"3043234","Michael Badgley":"3123052","Joshua Karty":"4566192","Parker Romo":"4051167",
+    "Graham Gano":"12460","Matthew Wright":"3128444","Lucas Havrisik":"4245661","Jude McAtamney":"5092436",
     // === Corrected active-player IDs (d.js contained scrambled IDs; fixed via ESPN API audit) ===
     "A.J. Brown":"4047646","Alvin Kamara":"3054850","Bijan Robinson":"4430807","Bo Nix":"4426338","Brandon Aiyuk":"4360438","Breece Hall":"4427366","Brian Robinson":"4241474","Brock Bowers":"4432665","Bryce Young":"4685720","Caleb Williams":"4431611",
     "Calvin Ridley":"3925357","Carson Wentz":"2573079","Chris Olave":"4361370","Christian Watson":"4248528","Chuba Hubbard":"4241416","Colby Parkinson":"4242557","Cole Kmet":"4258595","Cooper Kupp":"2977187","Courtland Sutton":"3128429","D'Andre Swift":"4259545",

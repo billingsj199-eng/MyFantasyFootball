@@ -1925,12 +1925,24 @@ function adj25ppg(d) {
 // FAs and unsigned legs never get one. Cached for the page life — the board
 // order this derives from is fixed at boot.
 let _kStarterByTeam = null;
+// Ruled-out check for the starter scan: the admin out-for-season flag always
+// counts; injury-report tags (from the daily Sleeper feed) only count
+// in-season — offseason tags are stale, same rule as _weeklyAdjustPpg. When
+// a starter goes on IR / gets cut (cuts move d.t in the daily roster sync),
+// the S passes to the team's next-ranked kicker automatically.
+function _kRuledOut(p) {
+  if (p.out) return true;
+  const _offseason = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
+  if (_offseason || !p.inj) return false;
+  return /\bir\b|\bpup\b|suspend|out for season|season.?ending|\bout\b/i.test(String(p.inj));
+}
 function _kStarterBadge(d) {
   if (!d || d.s !== 'K' || !d.t || d.t === 'FA' || d.t === 'TBD') return '';
+  if (_kRuledOut(d)) return '';
   if (!_kStarterByTeam) {
     _kStarterByTeam = {};
     (typeof D !== 'undefined' ? D : []).forEach(p => {
-      if (p.s !== 'K' || !p.t || p.t === 'FA' || p.t === 'TBD') return;
+      if (p.s !== 'K' || !p.t || p.t === 'FA' || p.t === 'TBD' || _kRuledOut(p)) return;
       const rk = parseInt(String(p.r || '').replace(/^K/, ''), 10) || 999;
       if (!_kStarterByTeam[p.t] || rk < _kStarterByTeam[p.t].rk) _kStarterByTeam[p.t] = { n: p.n, rk };
     });

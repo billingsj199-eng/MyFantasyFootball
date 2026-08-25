@@ -8120,8 +8120,12 @@ function openPlayerCard(d, ctxMode) {
   const diffClass = _cardAdp == null ? 'accent' : Math.abs(diffVal) < 0.5 ? 'accent' : diffVal > 0 ? 'green' : 'red';
   const diffText = _cardAdp == null ? '—' : Math.abs(diffVal) < 0.5 ? '—' : (diffVal > 0 ? '▲ ' : '▼ ') + Math.abs(diffVal).toFixed(0);
 
-  // Detect 2026 draft class prospects (not yet in NFL)
-  const _is2026 = !d._isDevy && (d.t === 'TBD' || (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n] && COMBINE_DATA[d.n].yr === 2026 && (!d.career || !d.career.length)));
+  // Detect draft-class prospects not yet on an NFL roster. A drafted/signed
+  // rookie (real team on the board, or a draft team in COMBINE_DATA) gets the
+  // full NFL card even though their career array stays empty until Week 1.
+  const _cbRow = (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n]) ? COMBINE_DATA[d.n] : null;
+  const _onNflRoster = !!(d.t && d.t !== 'TBD' && d.t !== 'FA') || !!(_cbRow && _cbRow.dt);
+  const _is2026 = !d._isDevy && !_onNflRoster && (d.t === 'TBD' || (_cbRow && _cbRow.yr === 2026 && (!d.career || !d.career.length)));
 
   // JM Score badge for player card
   let _cardJm = null;

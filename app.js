@@ -2173,6 +2173,18 @@ function _kickerProjPpg(d) {
 }
 
 function adjProjPpg(d) {
+  // SIM-FIRST (Jack 2026-08-26): the Sim Lab rest-of-season PPG is THE
+  // season projection wherever a row exists — every consumer (rankings,
+  // player card, My Teams, mock draft, trade tools) inherits it from here.
+  // The chain below is the fallback for no-sim rows (devy, deep dynasty,
+  // retired) and for the pre-export boot window.
+  if (typeof _simSeasonPpgRow === 'function') {
+    const _sp = _simSeasonPpgRow(d);
+    if (_sp) {
+      const _v = _sp[rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0];
+      if (typeof _v === 'number' && isFinite(_v)) return _v;
+    }
+  }
   // K/DST: Vegas-first fitted models above (K: implied + career accuracy +
   // 50+ leg; DST: season-avg opponent implied). Clay's flat kicker line and
   // d.p/17 stay as fallbacks for when the betting board is too thin to
@@ -4822,6 +4834,19 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const t = String(d.inj).toLowerCase();
       if (/\bir\b|\bpup\b|suspend|\bout\b|out for season|season.?ending/.test(t)) { _tag('out'); return 0; }
       if (/doubtful/.test(t)) injMult = 0.5;
+    }
+    // SIM-FIRST (Jack 2026-08-26): the Sim Lab weekly export is THE weekly
+    // number wherever it has a row — same value as the PROJ column and the
+    // card's 2026 log, all positions. Sim rows already price injuries as of
+    // the last run (daily + 30-min-pre-kickoff), so injMult is NOT re-applied
+    // here (the hard-zero gate above still catches statuses fresher than the
+    // last run). Everything below is fallback for players without a sim row.
+    if (typeof _simProjRow === 'function') {
+      const _sr = _simProjRow(d, wk);
+      if (_sr) {
+        const _sv = _sr[rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0];
+        if (typeof _sv === 'number' && isFinite(_sv)) { _tag('sim'); return _sv; }
+      }
     }
     // In-season decay of preseason projections: shrink the base toward the
     // player's ACTUAL 2026 per-game scoring as games accumulate — the prior
@@ -7847,6 +7872,7 @@ function buildWeeklyCardView(d) {
   const out = {};
   const proj = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, base, out) : null;
   const SRC = {
+    sim:       { lbl: 'Sim Lab', tip: '1,000 Monte Carlo sims for this game — Vegas lines, matchup, usage trends and injuries priced in. Refreshed daily and ~30 min before kickoffs, frozen at kickoff.' },
     props:     { lbl: 'Sportsbook props', tip: 'Scored directly from posted weekly prop lines (books price matchup + injuries); unposted stats filled from Clay per-game. Full board on the LINES tab.' },
     consensus: { lbl: 'Sleeper consensus', tip: 'Sleeper\'s weekly projection for this exact week — used when no prop board is posted.' },
     heuristic: { lbl: 'Season-based estimate', tip: 'Season projection scaled by team implied total and opponent defense rank — used when neither props nor a consensus projection exist.' },

@@ -28,6 +28,14 @@
 #   Phase G — Mike Clay projections: re-downloads ESPN's draft-kit PDF from
 #             its stable CDN URL; when the bytes change, re-runs
 #             extract_clay_projections.py -> data/mike_clay_projections.js.
+#   Phase K — Sleeper per-mode ADP ranks (added 2026-08-26): runs repo-root
+#             pull_sleeper_adp.py (git-excluded local tooling, same as
+#             inject_rankings.py) against Sleeper's keyless projections API
+#             (api.sleeper.com, adp_ppr/adp_2qb/adp_dynasty_ppr/adp_dynasty_2qb)
+#             -> Sleeper1QBADP.csv + SleeperSFADP.csv + SleeperDynasty1QB.csv
+#             + SleeperDynastySF.csv. Rows encode the RANK slot in that
+#             format's ADP ordering (== Sleeper's draft-room RK column),
+#             per Jack 2026-08-07 "use rank and not adp".
 #
 # ESPN/CBS/Yahoo values are stored as SEQUENTIAL RANK ORDER (1..N by that
 # site's own EDITORIAL rank — the order its player list displays, not crowd
@@ -37,8 +45,6 @@
 # the player's true position in that site's full list. Underdog (and Sleeper)
 # have no editorial ranks, so those stay ADP-based.
 #
-# Sleeper (Sleeper*.csv) has NO public endpoint — those files are left
-# untouched and re-injected as-is, so the manual refresh cadence still works.
 # Underdog needs a logged-in session, but Phase F closes that loop via the
 # extension: Jack's browser captures live UD ADP, the site mirrors it to a
 # public Firestore doc, and this script folds it back into d.js.
@@ -355,6 +361,31 @@ def pull_yahoo():
     except Exception as e:
         print(f'  !! Yahoo1QB.csv: {e} — kept old file')
         return 0
+
+
+# ---------------------------------------------------------------------------
+# Phase K — Sleeper per-mode ADP ranks (repo-root pull_sleeper_adp.py)
+# ---------------------------------------------------------------------------
+
+def pull_sleeper():
+    """Run pull_sleeper_adp.py to rebuild the 4 Sleeper CSVs from Sleeper's
+    keyless projections API. Returns the number of CSVs refreshed (0-4).
+    The script aborts (nonzero exit) on a thin payload, keeping old files —
+    same fail-safe convention as the other phases. It lives at repo root as
+    git-excluded local tooling (beside inject_rankings.py), so skip politely
+    on a checkout that doesn't have it."""
+    script = os.path.join(ROOT, 'pull_sleeper_adp.py')
+    if not os.path.exists(script):
+        print('  !! pull_sleeper_adp.py not found (local tooling) — kept old Sleeper CSVs')
+        return 0
+    res = subprocess.run([sys.executable, script],
+                         cwd=ROOT, capture_output=True, text=True)
+    print((res.stdout or '').rstrip())
+    if res.returncode != 0:
+        print((res.stderr or '').strip()[-500:])
+        print('  !! Sleeper pull failed — previous Sleeper CSVs kept')
+        return 0
+    return (res.stdout or '').count('wrote ')
 
 
 # ---------------------------------------------------------------------------
@@ -686,6 +717,8 @@ def main():
     n_cbs = pull_cbs()
     print('\nPhase D — Yahoo O-Rank:')
     n_yah = pull_yahoo()
+    print('\nPhase K — Sleeper ADP ranks:')
+    n_sl = pull_sleeper()
     print('\nPhase E — KeepTradeCut dynasty values:')
     ktc_changed = pull_ktc()
     if ktc_changed:
@@ -712,9 +745,9 @@ def main():
     if wp_changed:
         bump_version(r'data/weekly_projections\.js')
 
-    total = n_fp + n_espn + n_cbs + n_yah + n_ud
-    print(f'\nCSV sources refreshed: {total}/9 (FP {n_fp}/4, ESPN {n_espn}/1, '
-          f'CBS {n_cbs}/1, Yahoo {n_yah}/1, UD {n_ud}/2) '
+    total = n_fp + n_espn + n_cbs + n_yah + n_ud + n_sl
+    print(f'\nCSV sources refreshed: {total}/13 (FP {n_fp}/4, ESPN {n_espn}/1, '
+          f'CBS {n_cbs}/1, Yahoo {n_yah}/1, Sleeper {n_sl}/4, UD {n_ud}/2) '
           f'+ KTC {"updated" if ktc_changed else "unchanged/skipped"}'
           f' + Clay {"updated" if clay_changed else "unchanged/skipped"}'
           f' + rosters {"updated" if roster_changed else "unchanged/skipped"}'

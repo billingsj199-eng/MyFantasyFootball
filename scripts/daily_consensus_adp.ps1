@@ -1,13 +1,13 @@
 # Daily consensus-ADP refresh (Task Scheduler: "MFF Consensus ADP Daily").
 #
 # Runs scripts/pull_consensus_adp.py every morning — FantasyPros consensus
-# rankings (4 modes), ESPN ADP, CBS ADP, Yahoo ADP, KeepTradeCut dynasty
-# values, and an NFL roster sync (Sleeper players dump -> d.js team
-# assignments, scripts/update_rosters.py) — which rewrites the Site Rankings
-# CSVs + KTC maps, re-runs inject_rankings.py into data/d.js, and bumps the
-# touched ?v= tags in index.html. Commits + pushes ONLY when data changed.
-# Sleeper/Underdog CSVs have no public endpoint and are left on their
-# manual refresh cadence (they are re-injected as-is each run).
+# rankings (4 modes), ESPN rank, CBS rank, Yahoo O-Rank, Sleeper ADP ranks
+# (4 modes, via repo-root pull_sleeper_adp.py; wired 2026-08-26), Underdog
+# ADP (extension Firestore mirror), KeepTradeCut dynasty values, and an NFL
+# roster sync (Sleeper players dump -> d.js team assignments,
+# scripts/update_rosters.py) — which rewrites the Site Rankings CSVs + KTC
+# maps, re-runs inject_rankings.py into data/d.js, and bumps the touched
+# ?v= tags in index.html. Commits + pushes ONLY when data changed.
 #
 # Log: scripts/consensus_adp_log.txt (kept to last ~400 lines).
 

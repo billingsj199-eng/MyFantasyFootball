@@ -6219,8 +6219,8 @@ function _simProjCells(d, wk, fmt, isBye) {
   return out;
 }
 const _SIM_PROJ_HDR = '<th><span data-gloss="Sim Lab projected fantasy points for this game — recomputed daily and again before kickoffs, then frozen once the game starts. Reflects Vegas lines, matchup, usage trends, and injuries (a ruled-out player shows 0 and his points shift to teammates).">PROJ</span></th>'
-  + '<th><span data-gloss="Chance of a boom week from 1,000 Sim Lab Monte Carlo runs (position-specific bar, e.g. RB/WR 20+ half-PPR points).">BOOM</span></th>'
-  + '<th><span data-gloss="Chance of a bust week from 1,000 Sim Lab Monte Carlo runs (position-specific bar, e.g. RB <6 half-PPR points).">BUST</span></th>';
+  + '<th><span data-gloss="Chance of finishing 50%+ ABOVE his own median sim outcome for this game (1,000 Monte Carlo runs). High boom + high bust = wide-range player.">BOOM</span></th>'
+  + '<th><span data-gloss="Chance of finishing 50%+ BELOW his own median sim outcome for this game (1,000 Monte Carlo runs). Steady floor players run low on both boom and bust.">BUST</span></th>';
 
 // === K/DST profile data helpers ===
 // Kickers key their history/game-log bundles by nflverse display name; D/ST

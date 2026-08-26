@@ -1107,8 +1107,10 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
      show rules (display:table-cell !important) in index.html. */
   body.format-weekly #pageRankings th#spreadHeader,
   body.format-weekly #pageRankings th#teamTotalHeader,
+  body.format-weekly #pageRankings th#simProjHeader,
   body.format-weekly #pageRankings td.spread-cell,
-  body.format-weekly #pageRankings td.teamtotal-cell{display:none !important}
+  body.format-weekly #pageRankings td.teamtotal-cell,
+  body.format-weekly #pageRankings td.simproj-cell{display:none !important}
   /* Verbose label suffixes — hidden on mobile to keep column widths compact. */
   .hide-on-mobile{display:none}
   /* Constrain the Player column so long names truncate instead of stretching

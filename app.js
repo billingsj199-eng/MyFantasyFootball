@@ -6151,6 +6151,34 @@ function getWeeklySeasons(d) {
   return Object.keys(WEEKLY_STATS[d.n].seasons).sort((a,b) => +b - +a);
 }
 
+// Regular-season length for a year — used to pad game logs with bye/DNP rows.
+function _seasonWeekCount(yr) {
+  yr = +yr;
+  if (yr >= 2021) return 18;
+  if (yr >= 1990) return 17;
+  if (yr >= 1978) return 16;
+  return 14;
+}
+
+// Season list for the card LOGS tab only (NOT the Compare page or splits
+// engine): weekly-data seasons plus the upcoming 2026 schedule for current
+// NFL players whose team appears in NFL_SCHEDULE_2026.
+function _logSeasons(d) {
+  const seasons = getWeeklySeasons(d);
+  if (!seasons.includes('2026') && !d._retired && !d._isDevy && d.t
+      && typeof getNflScheduleForTeam === 'function'
+      && getNflScheduleForTeam(teamAbbr(d.t))) {
+    return ['2026'].concat(seasons);
+  }
+  return seasons;
+}
+
+// 2026 schedule rows for a card, or null when the team isn't in the schedule.
+function _sched2026For(d) {
+  if (typeof getNflScheduleForTeam !== 'function' || !d.t) return null;
+  return getNflScheduleForTeam(teamAbbr(d.t));
+}
+
 // === K/DST profile data helpers ===
 // Kickers key their history/game-log bundles by nflverse display name; D/ST
 // bundles are keyed by the site team abbr (dst_history.js folds franchise
@@ -6598,18 +6626,45 @@ function _fptsBarChartHtml(items, caption) {
 // so the PPR/HALF/STD toggle is a no-op here by design.
 function _buildKdstWeeklyTable(d, season, withChart) {
   const wd = _kdstWeeklyData(d);
-  const weeks = wd && wd[season];
-  if (!weeks || !weeks.length) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
+  const _sched = +season === 2026 ? _sched2026For(d) : null;
+  const weeks = (wd && wd[season]) || [];
+  if (!weeks.length && !_sched) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
   const pos = d.s;
   const isK = pos === 'K';
-  const bestFpts = Math.max(...weeks.map(w => w.fpts));
+  const bestFpts = weeks.length ? Math.max(...weeks.map(w => w.fpts)) : 0;
+
+  // Fill every regular-season week (bye/DNP/upcoming placeholders) — same
+  // treatment as buildWeeklyTable for skill positions.
+  const _byWk = {};
+  weeks.forEach(w => { _byWk[w.wk] = w; });
+  const _seasonLen = _sched ? 18 : _seasonWeekCount(season);
+  const _maxWk = weeks.length ? Math.max(...weeks.map(w => w.wk)) : 0;
+  const full = [];
+  for (let wk = 1; wk <= Math.max(_seasonLen, _maxWk); wk++) {
+    if (_byWk[wk]) { full.push(_byWk[wk]); continue; }
+    if (wk > _seasonLen) continue;
+    const g = _sched ? _sched[wk] : null;
+    if (g && g.bye) full.push({ wk, _bye: true });
+    else if (g) full.push({ wk, opp: (g.home ? '' : '@') + g.opp, _upcoming: true });
+    else full.push({ wk, _dnp: true });
+  }
 
   let hdr = '<tr><th>WK</th><th>OPP</th><th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points">RNK</span></th>';
   if (isK) hdr += '<th><span data-gloss="Field goals made">FGM</span></th><th><span data-gloss="Field goal attempts">FGA</span></th><th><span data-gloss="Makes from 40-49 yards">40-49</span></th><th><span data-gloss="Makes from 50+ yards">50+</span></th><th><span data-gloss="Longest make">LNG</span></th><th>XPM</th><th>XPA</th>';
   else hdr += '<th><span data-gloss="Sacks">SCK</span></th><th>INT</th><th><span data-gloss="Opponent fumbles recovered">FR</span></th><th><span data-gloss="Defensive + special-teams TDs">TD</span></th><th><span data-gloss="Safeties">SFTY</span></th><th><span data-gloss="Blocked kicks">BLK</span></th><th><span data-gloss="Points allowed">PA</span></th>';
   hdr += '</tr>';
 
-  let rows = weeks.map(w => {
+  let rows = full.map(w => {
+    if (w._bye || w._dnp || w._upcoming) {
+      const oppCell = w._bye ? '<span style="font-style:italic">BYE</span>'
+        : w._upcoming ? w.opp : '—';
+      let r = '<tr style="opacity:.55"' + (w._dnp ? ' title="No game data (did not play or bye)"' : w._upcoming ? ' title="Upcoming game"' : '') + '>';
+      r += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
+      r += '<td style="color:var(--text2)">' + oppCell + '</td>';
+      r += '<td class="fpts-cell" style="color:var(--text2)">' + (w._dnp ? '0' : '—') + '</td>';
+      for (let i = 0; i < 8; i++) r += '<td style="color:var(--text2)">—</td>';
+      return r + '</tr>';
+    }
     let row = '<tr>';
     row += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
     row += '<td style="color:var(--text2)">' + (w.opp || '—') + '</td>';
@@ -6650,26 +6705,36 @@ function _buildKdstWeeklyTable(d, season, withChart) {
     totalRow += '<td>' + tot.sck + '</td><td>' + tot.itc + '</td><td>' + tot.fr + '</td><td>' + tot.td + '</td><td>' + tot.sfty + '</td><td>' + tot.blk + '</td><td>' + tot.pa + '</td>';
   }
   totalRow += '</tr>';
-  rows += totalRow;
+  if (weeks.length) rows += totalRow;
 
   let chart = '';
   if (withChart) {
-    chart = _fptsBarChartHtml(weeks.map(w => ({
+    chart = _fptsBarChartHtml(full.map(w => ({
       label: w.wk,
-      value: w.fpts,
+      value: (w._bye || w._dnp || w._upcoming) ? 0 : w.fpts,
+      dim: !!(w._bye || w._dnp || w._upcoming),
       color: posFptsColor(w.fpts, pos),
-      title: 'Wk ' + w.wk + (w.opp ? ' ' + w.opp : '') + ': ' + w.fpts + ' pts'
+      title: 'Wk ' + w.wk + (w._bye ? ': BYE' : w._dnp ? ': DNP' : w._upcoming
+        ? (' ' + w.opp + ' (upcoming)')
+        : ((w.opp ? ' ' + w.opp : '') + ': ' + w.fpts + ' pts'))
     })), 'Points by week');
   }
 
-  return chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
+  const _schedNote = (_sched && !weeks.length)
+    ? '<div style="text-align:center;padding:6px 0 10px;color:var(--text2);font-size:.7rem">2026 schedule — game logs will fill in as the season is played.</div>'
+    : '';
+
+  return _schedNote + chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 function buildWeeklyTable(d, season, scoringFormat, withChart) {
   if (d.s === 'K' || d.s === 'DST') return _buildKdstWeeklyTable(d, season, withChart);
   const wd = WEEKLY_STATS[d.n];
-  if (!wd || !wd.seasons[season]) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
-  const weeks = wd.seasons[season];
+  // 2026 renders the upcoming schedule (from nfl_schedule_2026.js) for weeks
+  // without stats yet — so the tab shows the full slate before/mid-season.
+  const _sched = +season === 2026 ? _sched2026For(d) : null;
+  if ((!wd || !wd.seasons[season]) && !_sched) return '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No weekly data for ' + season + '</div>';
+  const weeks = (wd && wd.seasons[season]) ? wd.seasons[season] : [];
   const pos = d.s;
   const isQB = pos === 'QB';
   const isRB = pos === 'RB';
@@ -6685,7 +6750,24 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   });
 
   // Find best week fpts for highlighting
-  const bestFpts = Math.max(...adjusted.map(w => w.fpts));
+  const bestFpts = adjusted.length ? Math.max(...adjusted.map(w => w.fpts)) : 0;
+
+  // Fill every regular-season week: missing weeks become dimmed placeholder
+  // rows — BYE/opponent from the 2026 schedule when we have it, otherwise a
+  // generic DNP row (historical byes vs. injuries aren't distinguishable).
+  const _byWk = {};
+  adjusted.forEach(w => { _byWk[w.wk] = w; });
+  const _seasonLen = _sched ? 18 : _seasonWeekCount(season);
+  const _maxWk = adjusted.length ? Math.max(...adjusted.map(w => w.wk)) : 0;
+  const full = [];
+  for (let wk = 1; wk <= Math.max(_seasonLen, _maxWk); wk++) {
+    if (_byWk[wk]) { full.push(_byWk[wk]); continue; }
+    if (wk > _seasonLen) continue;
+    const g = _sched ? _sched[wk] : null;
+    if (g && g.bye) full.push({ wk, _bye: true });
+    else if (g) full.push({ wk, opp: (g.home ? '' : '@') + g.opp, _upcoming: true });
+    else full.push({ wk, _dnp: true });
+  }
 
   let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th><th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
@@ -6693,7 +6775,18 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   else hdr += '<th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>RyD</th><th>FL</th>';
   hdr += '</tr>';
 
-  let rows = adjusted.map(w => {
+  const _posStatCols = isQB ? 8 : isRB ? 9 : 7;
+  let rows = full.map(w => {
+    if (w._bye || w._dnp || w._upcoming) {
+      const oppCell = w._bye ? '<span style="font-style:italic">BYE</span>'
+        : w._upcoming ? w.opp : '—';
+      let r = '<tr style="opacity:.55"' + (w._dnp ? ' title="Did not play (injury, inactive, or bye)"' : w._upcoming ? ' title="Upcoming game"' : '') + '>';
+      r += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
+      r += '<td style="color:var(--text2)">' + oppCell + '</td>';
+      r += '<td class="fpts-cell" style="color:var(--text2)">' + (w._dnp ? '0' : '—') + '</td>';
+      for (let i = 0; i < 2 + _posStatCols; i++) r += '<td style="color:var(--text2)">—</td>';
+      return r + '</tr>';
+    }
     const isBest = w.fpts === bestFpts && bestFpts > 0 ? ' class="best-yr"' : '';
     // Show opponent (`opp`) when populated. Pre-2025 weekly rows often have
     // empty `opp` strings (older data wasn't captured with opponent info) —
@@ -6764,19 +6857,27 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   else if (isRB) totalRow += '<td>'+totals.ra+'</td>'+_totCarCell+'<td>'+totals.ry+'</td><td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td>'+_totTsCell+'<td>'+totals.fl+'</td>';
   else totalRow += '<td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td>'+_totTsCell+'<td>'+totals.ry+'</td><td>'+totals.fl+'</td>';
   totalRow += '</tr>';
-  rows += totalRow;
+  if (adjusted.length) rows += totalRow;
 
   let chart = '';
   if (withChart) {
-    chart = _fptsBarChartHtml(adjusted.map(w => ({
+    chart = _fptsBarChartHtml(full.map(w => ({
       label: w.wk,
-      value: w.fpts,
+      value: (w._bye || w._dnp || w._upcoming) ? 0 : w.fpts,
+      dim: !!(w._bye || w._dnp || w._upcoming),
       color: posFptsColor(w.fpts, pos),
-      title: 'Wk ' + w.wk + (w.opp && w.opp.trim() ? ' ' + w.opp.trim() : '') + ': ' + w.fpts + ' pts'
+      title: 'Wk ' + w.wk + (w._bye ? ': BYE' : w._dnp ? ': DNP' : w._upcoming
+        ? (' ' + w.opp + ' (upcoming)')
+        : ((w.opp && w.opp.trim() ? ' ' + w.opp.trim() : '') + ': ' + w.fpts + ' pts'))
     })), 'Points by week');
   }
 
-  return chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
+  // Pure-schedule view (2026 before any games): note instead of an empty chart.
+  const _schedNote = (_sched && !adjusted.length)
+    ? '<div style="text-align:center;padding:6px 0 10px;color:var(--text2);font-size:.7rem">2026 schedule — game logs will fill in as the season is played.</div>'
+    : '';
+
+  return _schedNote + chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 function buildCareerTable(d, scoringFormat, statMode, withChart) {
@@ -7132,7 +7233,11 @@ function _kickerSplitsSectionHtml(d) {
 // in the card wiring, which also reveals the LOGS tab button).
 function _logsSectionHtml(d) {
   if ((!d.career || !d.career.length) && !_kdstHasHistory(d)) return '';
-  const seasons = getWeeklySeasons(d);
+  // Selector carries 2026 (upcoming schedule) on top, but defaults to the
+  // most recent season that actually has game data.
+  const dataSeasons = getWeeklySeasons(d);
+  const seasons = _logSeasons(d);
+  const defSeason = dataSeasons[0] || seasons[0];
   return `<div class="card-section">
     <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
       <span id="glScoringLabel">Game Logs (PPR)</span>
@@ -7143,12 +7248,12 @@ function _logsSectionHtml(d) {
           <button class="gl-scoring-btn" data-glscoring="std">STD</button>
         </div>
         <select class="career-log-year-select" id="glYearSelect">
-          ${seasons.map(s => '<option value="'+s+'">'+s+'</option>').join('')}
+          ${seasons.map(s => '<option value="'+s+'"'+(s === defSeason ? ' selected' : '')+'>'+s+'</option>').join('')}
         </select>
       </div>
     </div>
     <div id="gameLogContent">${seasons.length
-      ? buildWeeklyTable(d, seasons[0], 'ppr', true)
+      ? buildWeeklyTable(d, defSeason, 'ppr', true)
       : (typeof WEEKLY_STATS !== 'undefined' && Object.keys(WEEKLY_STATS).length > 0)
         ? '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">No game-by-game data available for this player.</div>'
         : '<div style="text-align:center;padding:12px;color:var(--text2);font-size:.72rem">Game-by-game data is loading…</div>'}</div>
@@ -9385,8 +9490,13 @@ function openPlayerCard(d, ctxMode) {
       }
       const glTabBtn = document.getElementById('cardLogsTabBtn');
       if (glTabBtn) glTabBtn.style.display = '';
-      if (glYearSelect && !glYearSelect.options.length) {
-        glYearSelect.innerHTML = getWeeklySeasons(d).map(s => '<option value="'+s+'">'+s+'</option>').join('');
+      if (glYearSelect) {
+        // Rebuild in full: pre-bundle the selector may hold only the 2026
+        // schedule entry. Default to the newest season with real game data.
+        const _dataSeasons = getWeeklySeasons(d);
+        const _allSeasons = _logSeasons(d);
+        const _def = _dataSeasons[0] || _allSeasons[0];
+        glYearSelect.innerHTML = _allSeasons.map(s => '<option value="'+s+'"'+(s === _def ? ' selected' : '')+'>'+s+'</option>').join('');
       }
       _glRefresh();
       // Splits + Stats sections render empty when the card opens pre-bundle — fill + wire now.

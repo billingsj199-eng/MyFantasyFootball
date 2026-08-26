@@ -5520,7 +5520,7 @@ window._toggleRookiePickView = function() {
 // Hide non-applicable ADP tabs based on mode
 // Best Ball: only Underdog + DK (the two best ball platforms)
 // Dynasty: only Consensus + Sleeper + KTC
-// Superflex: show all incl. DK (Underdog data-backed via d.sfa, DK Best Ball values shared)
+// Superflex: Consensus + Underdog (d.sfa) + Sleeper — 1QB-only sources (ESPN/CBS/Yahoo/DK) hidden
 // Redraft: show all incl. DK
 // Per-mode default: dynasty/dynastysf default to Sleeper, bestball defaults to Underdog,
 // redraft/superflex default to Consensus.
@@ -5541,9 +5541,10 @@ function updateRnkAdpForMode() {
       tab.style.display = (src === 'sleeper' || src === 'ktc') ? '' : 'none';
     } else {
       if (src === 'consensus') { tab.style.display = ''; return; }
-      // ESPN, CBS & Yahoo publish 1QB redraft boards only — show in redraft, hide in superflex.
-      if (src === 'espn' || src === 'cbs' || src === 'yahoo') { tab.style.display = currentMode === 'redraft' ? '' : 'none'; return; }
-      // In non-dynasty/non-bestball modes: hide KTC (dynasty-only). DK is allowed.
+      // ESPN, CBS, Yahoo & DK publish 1QB boards only (DK best ball has no
+      // superflex format) — show in redraft, hide in superflex.
+      if (src === 'espn' || src === 'cbs' || src === 'yahoo' || src === 'dk') { tab.style.display = currentMode === 'redraft' ? '' : 'none'; return; }
+      // In non-dynasty/non-bestball modes: hide KTC (dynasty-only).
       tab.style.display = src === 'ktc' ? 'none' : '';
     }
   });
@@ -5566,7 +5567,8 @@ function updateRnkAdpForMode() {
       _setRnkSrc('underdog');
     } else if (isDynasty && rnkAdpSrc !== 'consensus' && rnkAdpSrc !== 'sleeper' && rnkAdpSrc !== 'ktc') {
       _setRnkSrc('sleeper');
-    } else if (!isDynasty && !isBestBall && rnkAdpSrc === 'ktc') {
+    } else if (!isDynasty && !isBestBall && (rnkAdpSrc === 'ktc' ||
+        (currentMode !== 'redraft' && ['espn', 'cbs', 'yahoo', 'dk'].includes(rnkAdpSrc)))) {
       _setRnkSrc('consensus');
     }
   }

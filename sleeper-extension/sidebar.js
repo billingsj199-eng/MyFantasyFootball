@@ -2912,14 +2912,19 @@
     return null;
   }
   function platformValueBoard() {
-    // Only names inside the draftable range matter — a +200 gap on a
-    // late-bench player is trivia, not a draft plan.
+    // Only names inside the truly draftable range matter — a +200 gap on a
+    // late-bench player is trivia, not a draft plan. Hard cap at Jack's top
+    // 150 (per Jack: nobody should draft outside that range), tighter if the
+    // room itself is smaller. TARGETS gate on Jack's rank (would WE draft
+    // him); TRAPS gate on the platform's rank (will the ROOM draft him —
+    // Jack ranking him deep is exactly what makes it a trap).
     const ds = (state.draft && state.draft.settings) || {};
-      const maxJack = (ds.teams || 12) * (ds.rounds || 15);
+    const cap = Math.min(150, (ds.teams || 12) * (ds.rounds || 15));
     const rows = [];
     for (const p of availablePlayers()) {
       const v = platformValueOf(p);
-      if (v && v.jack <= maxJack) rows.push({ p, v });
+      if (!v) continue;
+      if (v.verdict === 'good' ? v.jack <= cap : v.plat <= cap) rows.push({ p, v });
     }
     return {
       targets: rows.filter((r) => r.v.verdict === 'good')

@@ -343,6 +343,24 @@
 
   // ---------- league-scoring adjustment (identical to the ESPN helper:
   // Clay cPts is full-PPR / 4-pt paTD; shift to THIS league's settings) ----------
+  // Sim Lab rest-of-season PPG (site sim_proj_2026.json, fetched at boot via
+  // the background relay) replaces the flat Clay season/gm wherever a row
+  // exists — the league's rec/paTD delta is re-applied additively.
+  let simSeasonIdx = null;
+  function loadSimProj() {
+    try {
+      chrome.runtime.sendMessage(
+        { type: 'mffFetch',
+          url: 'https://www.myfantasyfootball.co/data/sim_proj_2026.json?t=' + Date.now() },
+        (res) => {
+          if (chrome.runtime.lastError || !res || !res.ok || !res.data || !res.data.seasonPpg) return;
+          simSeasonIdx = Object.create(null);
+          for (const k of Object.keys(res.data.seasonPpg)) simSeasonIdx[norm(k)] = res.data.seasonPpg[k];
+          if (st.ready) { applyLeagueScoring(); render(); }
+          console.log('[MFF/yahoo-draft] Sim Lab projections loaded');
+        });
+    } catch (_) {}
+  }
   function applyLeagueScoring() {
     const recPts = st.scoringVals.recPts, passTd = st.scoringVals.passTd;
     for (const p of st.board) {
@@ -352,6 +370,14 @@
       p.pPg = Math.round((adj / p.cGm) * 10) / 10;
       p.scDelta = Math.round((((recPts - 0.5) * (p.cRec || 0) +
         (passTd - 4) * (p.cPtd || 0)) / p.cGm) * 10) / 10;
+      if (simSeasonIdx && p.s !== 'K' && p.s !== 'DST') {
+        const sp = simSeasonIdx[norm(p.n)];
+        if (sp && typeof sp[1] === 'number') {
+          const deltaPg = ((recPts - 1) * (p.cRec || 0) + (passTd - 4) * (p.cPtd || 0)) / p.cGm;
+          p.pPg = Math.round((sp[1] + deltaPg) * 10) / 10;
+          p.szn = Math.round(p.pPg * p.cGm * 10) / 10;
+        }
+      }
     }
   }
 
@@ -1574,6 +1600,7 @@
 
   // ---------- boot ----------
   gateInit(() => { try { render(); } catch (_) {} });
+  loadSimProj();
   Promise.all([
     getJson(API + 'settings/nfl/' + st.leagueId + '?format=rawjson').then((j) => applySettings(j.service || j)),
     getJson(API + 'teams/nfl/' + st.leagueId + '?format=rawjson').then((j) => applyTeams(j.service || j)),

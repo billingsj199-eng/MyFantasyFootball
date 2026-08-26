@@ -52,6 +52,48 @@
     });
   } catch (_) {}
 
+  // --- Sim Lab season PPG overlay (v0.18.3) --------------------------------
+  // sim_proj_2026.json seasonPpg rows are [half, ppr, std] keyed by Clay
+  // names — Underdog is half-PPR, so index 0 replaces the baked pPg
+  // verbatim. Applied once both the fetch and players.json have landed;
+  // K/DST keep the baked numbers (their site models are separate).
+  let _mffSimSeason = null;
+  function _mffSimNorm(n) {
+    let s = String(n || '').toLowerCase().trim()
+      .replace(/\s+(jr\.?|sr\.?|iii|ii|iv|v)$/, '')
+      .replace(/['’`.,]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+    return s;
+  }
+  const _MFF_SIM_ALIASES = [
+    ['kenneth walker', 'ken walker'], ['cameron ward', 'cam ward'],
+    ['kenneth gainwell', 'kenny gainwell'], ['chigoziem okonkwo', 'chig okonkwo'],
+    ['marquise brown', 'hollywood brown'], ['joshua palmer', 'josh palmer'],
+  ];
+  function _mffApplySimSeason() {
+    if (!_mffSimSeason || !state.players || !state.players.length) return;
+    let n = 0;
+    for (const p of state.players) {
+      if (p.s === 'K' || p.s === 'DST') continue;
+      const sp = _mffSimSeason[_mffSimNorm(p.n)];
+      if (sp && typeof sp[0] === 'number') { p.pPg = sp[0]; n++; }
+    }
+    if (n) console.log('[MFF] Sim Lab season PPG applied to ' + n + ' players');
+  }
+  try {
+    chrome.runtime.sendMessage({ type: 'mff-simproj-fetch' }, (res) => {
+      if (chrome.runtime.lastError || !res || !res.ok || !res.data || !res.data.seasonPpg) return;
+      const ix = Object.create(null);
+      const sp = res.data.seasonPpg;
+      for (const k of Object.keys(sp)) ix[_mffSimNorm(k)] = sp[k];
+      for (const [a, b] of _MFF_SIM_ALIASES) {
+        if (ix[a] === undefined && ix[b] !== undefined) ix[a] = ix[b];
+        if (ix[b] === undefined && ix[a] !== undefined) ix[b] = ix[a];
+      }
+      _mffSimSeason = ix;
+      _mffApplySimSeason();
+    });
+  } catch (_) {}
+
   // TEAM_SIZE/TOTAL_PICKS are mutable now — auto-detect updates them when the
   // ribbon shows we're in a non-12-team draft (Underdog runs 6/8/10/12).
   let TEAM_SIZE = 12;
@@ -364,6 +406,7 @@
         } catch (_) { r(); }
       });
     } catch (_) {}
+    _mffApplySimSeason(); // sim fetch may have landed before players.json
   }
 
   // v0.9.72: apply a live-ADP map to state.players. Map shape:

@@ -152,6 +152,46 @@
     (ALIASES[a] || (ALIASES[a] = [])).push(b);
     (ALIASES[b] || (ALIASES[b] = [])).push(a);
   }
+  // ---------- Sim Lab projection lookups (state.simProj) ----------
+  // seasonPpg / weeks rows are [half, ppr, std(, boom, bust)] keyed by CLAY
+  // names (DST rows keyed DST_<abbr>). Index by norm() with the ALIASES fold.
+  function simProjIdx() {
+    if (!state.simProj) return null;
+    if (!state.simProjIdx) {
+      const fold = (m) => {
+        for (const a of Object.keys(ALIASES)) {
+          if (m[a] === undefined) {
+            for (const alt of ALIASES[a]) { if (m[alt] !== undefined) { m[a] = m[alt]; break; } }
+          }
+        }
+        return m;
+      };
+      const ix = { season: Object.create(null), weeks: Object.create(null) };
+      const sp = state.simProj.seasonPpg || {};
+      for (const k of Object.keys(sp)) ix.season[norm(k)] = sp[k];
+      fold(ix.season);
+      const wks = state.simProj.weeks || {};
+      for (const w of Object.keys(wks)) {
+        const m = Object.create(null);
+        for (const k of Object.keys(wks[w])) m[norm(k)] = wks[w][k];
+        ix.weeks[w] = fold(m);
+      }
+      state.simProjIdx = ix;
+    }
+    return state.simProjIdx;
+  }
+  function simKeyFor(p) {
+    if (p.s === 'DST') return 'dst_' + String(p.sTm || p.t || '').toLowerCase();
+    return norm(p.n);
+  }
+  // League-scoring delta vs the sim's PPR frame, per game (additive — exact
+  // for rec value / pass-TD value; sim stat mix = Clay's).
+  function simLeagueDeltaPg(p) {
+    if (p.cPts == null || !p.cGm || !state.scoringVals) return 0;
+    const sv = state.scoringVals;
+    return ((sv.recPts - 1) * (p.cRec || 0) + (sv.passTd - 4) * (p.cPtd || 0)) / p.cGm;
+  }
+
   // Single lookup path for every ESPN-name → site-player match (board scrape,
   // restored picks, player map, season rosters).
   function findPlayer(name, pos) {
@@ -339,6 +379,21 @@
         if (!d || !d.players) return;
         state.wkConsensus = d;
         state.wkConsensusIdx = null; // rebuilt lazily on first lookup
+        if (state.appMode === 'season') render();
+      }).catch(() => {});
+    // Sim Lab export (site sim_proj_2026.json — same file the site's PROJ
+    // columns read): rest-of-season seasonPpg + per-week rows, refreshed on
+    // the site daily + ~30 min before kickoffs, frozen at kickoff. THE
+    // projection source wherever a row exists (Jack 2026-08-26); the Clay /
+    // engine / props chain stays as the fallback.
+    fetch('https://www.myfantasyfootball.co/data/sim_proj_2026.json?t=' + Date.now())
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d || !d.weeks) return;
+        state.simProj = d;
+        state.simProjIdx = null;
+        if (state.players && state.players.length) applyLeagueScoring(state.leagueScoring);
+        console.log('[MFF/ESPN] Sim Lab projections loaded (wk ' + d.currentWeek + ')');
         if (state.appMode === 'season') render();
       }).catch(() => {});
   } else if (MOCK.consensus) {
@@ -768,6 +823,16 @@
       const adj = p.cPts + (recPts - 1) * (p.cRec || 0) + (passTd - 4) * (p.cPtd || 0);
       p.szn = Math.round(adj * 10) / 10;
       p.pPg = Math.round((adj / p.cGm) * 10) / 10;
+      // SIM-FIRST: Sim Lab rest-of-season PPG (PPR frame) + this league's
+      // additive scoring delta replaces the flat Clay season/gm number.
+      const _six = simProjIdx();
+      if (_six && p.s !== 'K' && p.s !== 'DST') {
+        const sp = _six.season[simKeyFor(p)];
+        if (sp && typeof sp[1] === 'number') {
+          p.pPg = Math.round((sp[1] + simLeagueDeltaPg(p)) * 10) / 10;
+          p.szn = Math.round(p.pPg * p.cGm * 10) / 10;
+        }
+      }
       // scDelta = per-game PPG shift this league's scoring gives the player
       // vs the ½PPR / 4-pt-paTD baseline the rank sources assume. Feeds the
       // Recommended score so full-PPR bumps reception hogs and STD fades them.
@@ -2161,18 +2226,39 @@
       }
       v = Math.max(1, v);
     } else {
-      // Engine mean is the projection wherever the sim engine covers the
-      // player; the old props/Clay blend survives only as the fallback for
-      // players outside the Clay universe (or when engine data isn't loaded).
-      const em = engineMeanFor(p);
-      if (em != null) {
-        v = em;
+      // SIM-FIRST: the site's Sim Lab weekly row (full engine — correlations,
+      // in-season actuals blend, injury zeros/redistribution, frozen at
+      // kickoff) is the number wherever it exists; the local engine port,
+      // then props/Clay blend, remain the fallbacks.
+      let _fromSim = false;
+      const _six = simProjIdx();
+      const _wkMap = _six && (_six.weeks[state.seasonWeek] || _six.weeks[state.simProj.currentWeek]);
+      const _sr = _wkMap && _wkMap[simKeyFor(p)];
+      if (_sr && typeof _sr[1] === 'number') {
+        if (_sr[1] === 0 && _sr[3] == null) return 0; // ruled out at export time
+        v = _sr[1] + simLeagueDeltaPg(p);
+        _fromSim = true;
       } else {
-        let base = p.pPg != null ? p.pPg : 0;
-        if (act) base += (act.ppg - base) * shrink; // preseason proj decays per game played
-        v = base;
-        const props = propsProjFor(p);
-        if (props != null) v = (p.pPg != null || act) ? 0.8 * props + 0.2 * base : props;
+        const em = engineMeanFor(p);
+        if (em != null) {
+          v = em;
+        } else {
+          let base = p.pPg != null ? p.pPg : 0;
+          if (act) base += (act.ppg - base) * shrink; // preseason proj decays per game played
+          v = base;
+          const props = propsProjFor(p);
+          if (props != null) v = (p.pPg != null || act) ? 0.8 * props + 0.2 * base : props;
+        }
+      }
+      // Sim rows already price designations as of the last export run —
+      // no D/Q re-discount on top; OUT (fresher live status) still zeroes.
+      if (_fromSim) {
+        if (injOf(p) === 'OUT') return 0;
+        if (v > 0 && p.rank != null && !p._unmatched) {
+          v += Math.max(-0.67, Math.min(1, (100 - p.rank) / 100)) * 1.5;
+          if (v < 0) v = 0;
+        }
+        return Math.round(v * 100) / 100;
       }
     }
     const inj = injOf(p);

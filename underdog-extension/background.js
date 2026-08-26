@@ -109,11 +109,16 @@ const MFF_ADP_HISTORY_URL = 'https://www.myfantasyfootball.co/data/ud_adp_histor
 const MFF_JACKS_URL =
   'https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)' +
   '/documents/rankings/jacks-official?key=AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY';
+// v0.18.3: Sim Lab weekly/season projections export (written by the site's
+// "MFF Sim Proj Export" task — daily + ~30 min before kickoffs). sidebar.js
+// overrides the baked half-PPR pPg with the sim rest-of-season number.
+const MFF_SIMPROJ_URL = 'https://www.myfantasyfootball.co/data/sim_proj_2026.json';
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg) return false;
   const url = msg.type === 'mff-vegas-fetch' ? MFF_VEGAS_URL
             : msg.type === 'mff-adp-history-fetch' ? MFF_ADP_HISTORY_URL
             : msg.type === 'mff-jacks-fetch' ? MFF_JACKS_URL
+            : msg.type === 'mff-simproj-fetch' ? MFF_SIMPROJ_URL
             : null;
   if (!url) return false;
   // Cache-bust the GitHub-Pages JSON only — Firestore REST sends no-cache

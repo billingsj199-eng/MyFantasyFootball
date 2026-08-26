@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-26" as="script">
+<link rel="preload" href="app.js?v=2026-08-26b" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -3822,6 +3822,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/d.js?v=2026-08-26c" defer></script>
 <script src="data/injury_updates.js?v=2026-08-26b" defer></script>
 <script src="data/weekly_projections.js?v=2026-08-26b" defer></script>
+<script src="data/site_projections.js?v=2026-08-26" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
 <!-- ep_retired.js (~795 KB) + daily_retired_pool.js DEFERRED (2026-07-10). EP_RETIRED is
@@ -5181,7 +5182,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-26"></script>
+<script defer src="app.js?v=2026-08-26b"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

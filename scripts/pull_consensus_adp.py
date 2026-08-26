@@ -36,6 +36,11 @@
 #             + SleeperDynastySF.csv. Rows encode the RANK slot in that
 #             format's ADP ordering (== Sleeper's draft-room RK column),
 #             per Jack 2026-08-07 "use rank and not adp".
+#   Phase M — Per-site SEASON projections (added 2026-08-26): runs
+#             scripts/pull_site_projections.py (Sleeper + ESPN + CBS season
+#             fantasy-point totals, each site kept separate) ->
+#             data/site_projections.js, feeding the player-card
+#             "Season Projections" comparison.
 #   Phase L — DraftKings best-ball ADP (added 2026-08-26): runs
 #             scripts/update_dk_adp.py, which reads Occupy Fantasy's public
 #             JSON feed (DK-sponsored, SportsData.io-powered, daily 2pm ET)
@@ -694,6 +699,25 @@ def pull_weekly_projections():
     return after != before
 
 
+def pull_site_projections():
+    """Phase M — run pull_site_projections.py (Sleeper/ESPN/CBS season
+    projections -> data/site_projections.js). Returns True if the file
+    changed. Non-fatal: the card section shows dashes per missing source,
+    and a total failure keeps yesterday's file."""
+    out_path = os.path.join(ROOT, 'data', 'site_projections.js')
+    before = open(out_path, 'rb').read() if os.path.exists(out_path) else b''
+    res = subprocess.run(
+        [sys.executable, os.path.join(ROOT, 'scripts', 'pull_site_projections.py')],
+        cwd=ROOT, capture_output=True, text=True)
+    print(res.stdout)
+    if res.returncode != 0:
+        print(res.stderr)
+        print('  !! site projections pull failed — previous file kept')
+        return False
+    after = open(out_path, 'rb').read() if os.path.exists(out_path) else b''
+    return after != before
+
+
 def run_inject():
     """Run inject_rankings.py; return True if data/d.js actually changed
     (a quiet morning re-injects identical values -> no bump, no commit)."""
@@ -772,6 +796,11 @@ def main():
     if wp_changed:
         bump_version(r'data/weekly_projections\.js')
 
+    print('\nPhase M — per-site season projections:')
+    sp_changed = pull_site_projections()
+    if sp_changed:
+        bump_version(r'data/site_projections\.js')
+
     total = n_fp + n_espn + n_cbs + n_yah + n_ud + n_sl
     print(f'\nCSV sources refreshed: {total}/13 (FP {n_fp}/4, ESPN {n_espn}/1, '
           f'CBS {n_cbs}/1, Yahoo {n_yah}/1, Sleeper {n_sl}/4, UD {n_ud}/2) '
@@ -780,9 +809,10 @@ def main():
           f' + rosters {"updated" if roster_changed else "unchanged/skipped"}'
           f' + DK {"updated" if dk_changed else "unchanged/skipped"}'
           f' + injuries {"updated" if inj_changed else "unchanged/skipped"}'
-          f' + weeklyproj {"updated" if wp_changed else "unchanged/skipped"}')
+          f' + weeklyproj {"updated" if wp_changed else "unchanged/skipped"}'
+          f' + siteproj {"updated" if sp_changed else "unchanged/skipped"}')
     if (total == 0 and not ktc_changed and not roster_changed and not dk_changed
-            and not inj_changed and not wp_changed):
+            and not inj_changed and not wp_changed and not sp_changed):
         print('Nothing refreshed — aborting before inject.')
         sys.exit(1)
 

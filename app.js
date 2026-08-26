@@ -2475,6 +2475,57 @@ function _clayWkPpgCellHtml(d) {
     tip.replace(/"/g, '&quot;') + '">' + ppg.toFixed(1) + '</span>';
 }
 
+// SEASON PROJECTIONS comparison (player card): each source's season total in
+// the current scoring format ÷ 17 games — the same season-value scale as
+// Book PPG / Clay PPG, so all five boxes read against each other.
+// sl/es/cb come from data/site_projections.js (SITE_PROJ, Phase M of the
+// daily 9am job; keyed by d.js-canonical name at pull time). CBS is rescored
+// to house scoring by the puller (their native totals use 6-pt passing TDs).
+function _siteProjPpgFor(d, key) {
+  const sp = (window.SITE_PROJ && SITE_PROJ.players) ? SITE_PROJ.players[d.n] : null;
+  const vals = sp && sp[key];
+  if (!vals) return null;
+  const i = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+  const total = vals[i];
+  if (!total) return null;
+  const G = window._PROPS_GAMES || 17;
+  return { ppg: Math.round((total / G) * 10) / 10, total: total, games: G };
+}
+function _seasonProjBoxHtml(lbl, ppg, pos, tip) {
+  const has = ppg != null;
+  const col = has ? posFptsColor(ppg, pos) : null;
+  const style = col ? `color:${col};` : (has ? '' : 'color:var(--text2);');
+  return `<div class="card-rank-box">
+    <div class="lbl">${lbl}</div>
+    <div class="num${has && !col ? ' accent' : ''}" style="${style}${has ? 'cursor:help' : ''}"${has ? ` title="${tip.replace(/"/g, '&quot;')}"` : ''}>${has ? ppg.toFixed(1) : '—'}</div>
+  </div>`;
+}
+function _seasonProjSectionHtml(d) {
+  if (d._retired || d.s === 'DST') return '';
+  const scLbl = _scoringLabelsRnk[rankingScoringFmt] || 'PPR';
+  const book = _bookPpgFor(d);
+  const clay = _clayPpgFor(d);
+  const sl = _siteProjPpgFor(d, 'sl');
+  const es = _siteProjPpgFor(d, 'es');
+  const cb = _siteProjPpgFor(d, 'cb');
+  if (!book && !clay && !sl && !es && !cb) return '';
+  const boxes =
+    _seasonProjBoxHtml('Books', book ? book.ppg[rankingScoringFmt] : null, d.s,
+      book ? `Blended ${book.books.join('/')} season props scored as ${scLbl}: ${book.total[rankingScoringFmt]} pts ÷ ${book.games} games` + (book.asOf ? ` (as of ${book.asOf})` : '') : '') +
+    _seasonProjBoxHtml('Clay', clay ? clay.ppg : null, d.s,
+      clay ? `Mike Clay 2026 stat line scored as ${scLbl}: ${clay.total} pts ÷ ${clay.games} games` : '') +
+    _seasonProjBoxHtml('Sleeper', sl ? sl.ppg : null, d.s,
+      sl ? `Sleeper season projection (${scLbl}): ${sl.total} pts ÷ ${sl.games} games` : '') +
+    _seasonProjBoxHtml('ESPN', es ? es.ppg : null, d.s,
+      es ? `ESPN season projection (${scLbl}): ${es.total} pts ÷ ${es.games} games` : '') +
+    _seasonProjBoxHtml('CBS', cb ? cb.ppg : null, d.s,
+      cb ? `CBS season projection rescored to site scoring (${scLbl}): ${cb.total} pts ÷ ${cb.games} games` : '');
+  return `<div class="card-section">
+    <div class="card-section-title">Season Projections <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· PPG, ${scLbl}</span></div>
+    <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">${boxes}</div>
+  </div>`;
+}
+
 // TEAM PPG: season average of Vegas implied team totals across every game in
 // BETTING_2026.gameTotals ('W{wk}_{AWAY}_{HOME}', spread = home spread).
 // Cached on first use; keyed by team abbreviation.
@@ -8532,6 +8583,8 @@ function openPlayerCard(d, ctxMode) {
           ${_teamPpgBoxHtml(d.t)}
         </div>
       </div>` : ''}
+
+      ${_seasonProjSectionHtml(d)}
 
       ${!d._retired ? (() => {
         // Mode-aware ADPs scoped to the calling context (Trade Calc dynasty,

@@ -6262,6 +6262,20 @@ function _sched2026For(d) {
   return getNflScheduleForTeam(teamAbbr(d.t));
 }
 
+// Sim export keys are CLAY names — fold the same nickname aliases clayLookup
+// uses (Kenneth/Ken Walker, Cameron/Cam Ward, Chig Okonkwo...) into a
+// normalized sim-lookup index, both directions. _CLAY_ALIASES lives in the
+// inline clayLookup block (top-level var → window property).
+function _foldSimAliases(idx) {
+  const A = window._CLAY_ALIASES || {};
+  Object.keys(A).forEach(a => {
+    const b = A[a];
+    if (idx[b] !== undefined && idx[a] === undefined) idx[a] = idx[b];
+    if (idx[a] !== undefined && idx[b] === undefined) idx[b] = idx[a];
+  });
+  return idx;
+}
+
 // Sim Lab per-week projection row for the 2026 LOGS view (data/sim_proj_2026.js,
 // exported offline by sim_lab/export_site_proj.js — no sims run on the site).
 // Row = [half, ppr, std, boom%, bust%]; null boom/bust = player ruled out that
@@ -6279,6 +6293,7 @@ function _simProjRow(d, wk) {
       Object.keys(SP.weeks).forEach(w => {
         idx[w] = {};
         Object.keys(SP.weeks[w]).forEach(k => { idx[w][_campNewsNorm(k)] = SP.weeks[w][k]; });
+        _foldSimAliases(idx[w]);
       });
       window._simProjIdx = idx;
     }
@@ -6314,6 +6329,7 @@ function _simSeasonPpgRow(d) {
     if (!idx || idx._src !== SP) {
       idx = { _src: SP };
       Object.keys(sp).forEach(k => { idx[_campNewsNorm(k)] = sp[k]; });
+      _foldSimAliases(idx);
       window._simSeasonPpgIdx = idx;
     }
     r = idx[_campNewsNorm(d.n)];
@@ -6333,6 +6349,7 @@ function _simBaselinePpgRow(d) {
     if (!idx || idx._src !== SP) {
       idx = { _src: SP };
       Object.keys(bp).forEach(k => { idx[_campNewsNorm(k)] = bp[k]; });
+      _foldSimAliases(idx);
       window._simBaselineIdx = idx;
     }
     r = idx[_campNewsNorm(d.n)];
@@ -6375,6 +6392,7 @@ function _simSeasonRow(d) {
     if (!idx || idx._src !== SP) {
       idx = { _src: SP };
       Object.keys(ss).forEach(k => { idx[_campNewsNorm(k)] = ss[k]; });
+      _foldSimAliases(idx);
       window._seasonSimIdx = idx;
     }
     r = idx[_campNewsNorm(d.n)];

@@ -6179,6 +6179,49 @@ function _sched2026For(d) {
   return getNflScheduleForTeam(teamAbbr(d.t));
 }
 
+// Sim Lab per-week projection row for the 2026 LOGS view (data/sim_proj_2026.js,
+// exported offline by sim_lab/export_site_proj.js — no sims run on the site).
+// Row = [half, ppr, std, boom%, bust%]; null boom/bust = player ruled out that
+// week. Rows for started games are frozen upstream by the exporter.
+function _simProjRow(d, wk) {
+  const SP = window.SIM_PROJ_2026;
+  if (!SP || !SP.weeks || !SP.weeks[wk]) return null;
+  const wkMap = SP.weeks[wk];
+  if (d.s === 'DST') return wkMap['DST_' + teamAbbr(d.t)] || null;
+  let r = wkMap[d.n];
+  if (!r && typeof _campNewsNorm === 'function') {
+    let idx = window._simProjIdx;
+    if (!idx || idx._src !== SP) {
+      idx = { _src: SP };
+      Object.keys(SP.weeks).forEach(w => {
+        idx[w] = {};
+        Object.keys(SP.weeks[w]).forEach(k => { idx[w][_campNewsNorm(k)] = SP.weeks[w][k]; });
+      });
+      window._simProjIdx = idx;
+    }
+    r = idx[wk] && idx[wk][_campNewsNorm(d.n)];
+  }
+  return r || null;
+}
+
+// The three PROJ/BOOM/BUST cells for one 2026 log row ('' outside 2026).
+function _simProjCells(d, wk, fmt, isBye) {
+  if (isBye) return '<td style="color:var(--text2)">—</td><td style="color:var(--text2)">—</td><td style="color:var(--text2)">—</td>';
+  const r = _simProjRow(d, wk);
+  if (!r) return '<td style="color:var(--text2)">—</td><td style="color:var(--text2)">—</td><td style="color:var(--text2)">—</td>';
+  const fi = fmt === 'ppr' ? 1 : fmt === 'std' ? 2 : 0;
+  const proj = r[fi];
+  let out = (proj === 0 && r[3] == null)
+    ? '<td style="color:#ef4444;font-weight:700" title="Ruled out (injury/suspension)">0</td>'
+    : '<td style="font-weight:700">' + proj + '</td>';
+  out += _statCell(r[3] != null ? r[3] + '%' : '—', r[3], 8, 35);
+  out += _statCell(r[4] != null ? r[4] + '%' : '—', r[4], 12, 40, true);
+  return out;
+}
+const _SIM_PROJ_HDR = '<th><span data-gloss="Sim Lab projected fantasy points for this game — recomputed daily and again before kickoffs, then frozen once the game starts. Reflects Vegas lines, matchup, usage trends, and injuries (a ruled-out player shows 0 and his points shift to teammates).">PROJ</span></th>'
+  + '<th><span data-gloss="Chance of a boom week from 1,000 Sim Lab Monte Carlo runs (position-specific bar, e.g. RB/WR 20+ half-PPR points).">BOOM</span></th>'
+  + '<th><span data-gloss="Chance of a bust week from 1,000 Sim Lab Monte Carlo runs (position-specific bar, e.g. RB <6 half-PPR points).">BUST</span></th>';
+
 // === K/DST profile data helpers ===
 // Kickers key their history/game-log bundles by nflverse display name; D/ST
 // bundles are keyed by the site team abbr (dst_history.js folds franchise
@@ -6649,7 +6692,8 @@ function _buildKdstWeeklyTable(d, season, withChart) {
     else full.push({ wk, _dnp: true });
   }
 
-  let hdr = '<tr><th>WK</th><th>OPP</th><th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points">RNK</span></th>';
+  const _is26 = +season === 2026;
+  let hdr = '<tr><th>WK</th><th>OPP</th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points">RNK</span></th>';
   if (isK) hdr += '<th><span data-gloss="Field goals made">FGM</span></th><th><span data-gloss="Field goal attempts">FGA</span></th><th><span data-gloss="Makes from 40-49 yards">40-49</span></th><th><span data-gloss="Makes from 50+ yards">50+</span></th><th><span data-gloss="Longest make">LNG</span></th><th>XPM</th><th>XPA</th>';
   else hdr += '<th><span data-gloss="Sacks">SCK</span></th><th>INT</th><th><span data-gloss="Opponent fumbles recovered">FR</span></th><th><span data-gloss="Defensive + special-teams TDs">TD</span></th><th><span data-gloss="Safeties">SFTY</span></th><th><span data-gloss="Blocked kicks">BLK</span></th><th><span data-gloss="Points allowed">PA</span></th>';
   hdr += '</tr>';
@@ -6661,6 +6705,7 @@ function _buildKdstWeeklyTable(d, season, withChart) {
       let r = '<tr style="opacity:.55"' + (w._dnp ? ' title="No game data (did not play or bye)"' : w._upcoming ? ' title="Upcoming game"' : '') + '>';
       r += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
       r += '<td style="color:var(--text2)">' + oppCell + '</td>';
+      if (_is26) r += _simProjCells(d, w.wk, 'half', !!w._bye);
       r += '<td class="fpts-cell" style="color:var(--text2)">' + (w._dnp ? '0' : '—') + '</td>';
       for (let i = 0; i < 8; i++) r += '<td style="color:var(--text2)">—</td>';
       return r + '</tr>';
@@ -6668,6 +6713,7 @@ function _buildKdstWeeklyTable(d, season, withChart) {
     let row = '<tr>';
     row += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
     row += '<td style="color:var(--text2)">' + (w.opp || '—') + '</td>';
+    if (_is26) row += _simProjCells(d, w.wk, 'half', false);
     const _wkColor = posFptsColor(w.fpts, pos);
     if (_wkColor) {
       row += '<td class="fpts-cell" style="color:' + _wkColor + ';font-weight:700">' + w.fpts + '</td>';
@@ -6697,7 +6743,7 @@ function _buildKdstWeeklyTable(d, season, withChart) {
     tot[k] = Math.round(weeks.reduce((a, w) => a + (w[k] || 0), 0) * 10) / 10;
   });
   let totalRow = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
-  totalRow += '<td style="color:var(--accent)">TOT</td><td></td><td style="font-weight:700">' + tot.fpts + '</td><td style="color:var(--text2)">—</td>';
+  totalRow += '<td style="color:var(--accent)">TOT</td><td></td>' + (_is26 ? '<td></td><td></td><td></td>' : '') + '<td style="font-weight:700">' + tot.fpts + '</td><td style="color:var(--text2)">—</td>';
   if (isK) {
     const lng = Math.max(...weeks.map(w => w.lng || 0));
     totalRow += '<td>' + tot.fgm + '</td><td>' + tot.fga + '</td><td>' + tot.m40 + '</td><td>' + tot.m50 + '</td><td>' + (lng || '—') + '</td><td>' + tot.xpm + '</td><td>' + tot.xpa + '</td>';
@@ -6769,7 +6815,8 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
     else full.push({ wk, _dnp: true });
   }
 
-  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th><th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
+  const _is26 = +season === 2026;
+  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
   else if (isRB) hdr += '<th>ATT</th><th><span data-gloss="Share of team carries that week">CAR%</span></th><th>RyD</th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>FL</th>';
   else hdr += '<th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>RyD</th><th>FL</th>';
@@ -6783,6 +6830,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
       let r = '<tr style="opacity:.55"' + (w._dnp ? ' title="Did not play (injury, inactive, or bye)"' : w._upcoming ? ' title="Upcoming game"' : '') + '>';
       r += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
       r += '<td style="color:var(--text2)">' + oppCell + '</td>';
+      if (_is26) r += _simProjCells(d, w.wk, fmt, !!w._bye);
       r += '<td class="fpts-cell" style="color:var(--text2)">' + (w._dnp ? '0' : '—') + '</td>';
       for (let i = 0; i < 2 + _posStatCols; i++) r += '<td style="color:var(--text2)">—</td>';
       return r + '</tr>';
@@ -6795,6 +6843,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
     let row = '<tr>';
     row += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
     row += '<td style="color:var(--text2)">' + oppCell + '</td>';
+    if (_is26) row += _simProjCells(d, w.wk, fmt, false);
     const _wkColor = posFptsColor(w.fpts, pos);
     if (_wkColor) {
       row += '<td class="fpts-cell" style="color:' + _wkColor + ';font-weight:700">' + w.fpts + '</td>';
@@ -6839,7 +6888,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   let totalRow = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
   // Season-level SNP% and TS% for the totals row
   const _totSnp = _snapSeason(d.n, season);
-  totalRow += '<td style="color:var(--accent)">TOT</td><td></td><td style="font-weight:700">' + totals.fpts + '</td><td style="color:var(--text2)">—</td>';
+  totalRow += '<td style="color:var(--accent)">TOT</td><td></td>' + (_is26 ? '<td></td><td></td><td></td>' : '') + '<td style="font-weight:700">' + totals.fpts + '</td><td style="color:var(--text2)">—</td>';
   totalRow += '<td>' + (_totSnp != null ? Math.round(_totSnp) + '%' : '—') + '</td>';
   let _totTsCell = '<td style="color:var(--text2)">—</td>';
   let _totCarCell = '<td style="color:var(--text2)">—</td>';

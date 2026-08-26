@@ -7493,16 +7493,29 @@ function buildWeeklyCardView(d) {
   html += box('WK ' + wk + ' PROJ', proj != null ? '<span class="accent">' + fmt1(proj) + '</span>' : '—', '', 'The number the WEEKLY rankings PROJ column shows');
   html += box('SEASON /GM', base != null ? fmt1(base) : '—', '', 'Season-long projected PPG for reference');
   html += '</div>';
-  // Reference row: other sites' weekly numbers in the active scoring format.
-  // e/f are [half, ppr, std] arrays (see pull_weekly_projections.py); Yahoo
-  // is absent because they publish no projections outside a league login.
+  // Reference rows: every weekly source in the active scoring format —
+  // Books (this week's prop board scored) + Clay (per-game pace) on top of
+  // the site feeds. e/f/c are [half, ppr, std] arrays (see
+  // pull_weekly_projections.py); Yahoo is absent because they publish no
+  // projections outside a league login.
   const pickHps = a => (a && a.length === 3) ? a[rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0] : null;
   const eV = cw ? pickHps(cw.e) : null;
   const fV = cw ? pickHps(cw.f) : null;
+  const cV = cw ? pickHps(cw.c) : null;
+  const wkBook = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
+  const clayC = (typeof _clayPpgFor === 'function') ? _clayPpgFor(d) : null;
+  const clayPace = clayC ? Math.round((clayC.total / (clayC.gm || clayC.games)) * 10) / 10 : null;
   html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr);margin-top:.4rem">';
+  html += box('BOOKS', wkBook != null ? fmt1(wkBook.ppg) : '—', '',
+    wkBook ? 'This week\'s ' + wkBook.books.join('/') + ' prop board scored in the current format' + (wkBook.asOf ? ' (as of ' + wkBook.asOf + ')' : '') : 'No weekly prop board posted for this player');
+  html += box('CLAY', clayPace != null ? fmt1(clayPace) : '—', '',
+    clayC ? 'Mike Clay 2026 per-game pace: season stat line ÷ ' + (clayC.gm || clayC.games) + ' projected games' : 'No Clay projection');
   html += box('SLEEPER', cwV != null ? fmt1(cwV) : '—', '', 'Sleeper\'s weekly consensus projection for reference');
+  html += '</div>';
+  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr);margin-top:.4rem">';
   html += box('ESPN', eV != null ? fmt1(eV) : '—', '', 'ESPN\'s weekly projection for reference');
   html += box('FANTASYPROS', fV != null ? fmt1(fV) : '—', '', 'FantasyPros\' expert-consensus weekly points (rank-to-points) for reference');
+  html += box('CBS', cV != null ? fmt1(cV) : '—', '', 'CBS\'s weekly projection, rescored from their stat components to site scoring');
   html += '</div>';
   html += '<div style="margin-top:7px;font-size:.62rem;color:var(--text2)">Source: <span style="color:var(--accent);cursor:help" title="' + esc(src.tip) + '">' + src.lbl + '</span>'
     + (out.src === 'props' ? ' · full prop board on the <b>LINES</b> tab' : '') + '</div>';

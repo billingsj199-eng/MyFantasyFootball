@@ -2573,7 +2573,7 @@ function _teamPpgBoxHtml(team) {
   </div>`;
 }
 
-function getFiltered() {
+function getFiltered(applyTopN) {
   // DEVY filter: build list from COMBINE_DATA devy players, with custom ordering
   if (filter === 'DEVY') {
     if (typeof COMBINE_DATA === 'undefined') return [];
@@ -2697,6 +2697,12 @@ function getFiltered() {
     }
     return true;
   });
+  // TOP-N pool cap (render path only): applied BEFORE the secondary sort so
+  // "TOP 125 + sort by value" means "my best values among MY top 125", not
+  // "the 125 biggest deltas" — which is all deep-bench trivia. A typed search
+  // bypasses it (search can always find anyone). Post-sort, render's own
+  // slice is a no-op since the pool is already ≤ N.
+  if (applyTopN && rankTopN != null && rankTopN > 0 && !query) f = f.slice(0, rankTopN);
   // Secondary sorts (non-myrank)
   if (sortKey !== 'myrank') {
     // STATS view repurposes the three PPG sort keys: pts → yards, fpts25 → TDs,
@@ -3117,10 +3123,10 @@ function render() {
       }
     }
   }
-  let data = getFiltered();
-  // TOP-N range: slice AFTER filter+sort so N follows the ranks on screen
-  // (top 15 QBs on the QB filter, top 40 overall on ALL). A typed search
-  // bypasses it so search can always find anyone.
+  let data = getFiltered(true);
+  // TOP-N: the board-rank pool cap lives inside getFiltered (pre-sort). This
+  // post-sort slice only still matters for the DEVY early-return path, which
+  // skips the shared cap; everywhere else data.length is already ≤ N.
   if (rankTopN != null && rankTopN > 0 && !query) data = data.slice(0, rankTopN);
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');

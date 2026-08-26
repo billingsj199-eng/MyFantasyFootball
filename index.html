@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-26g" as="script">
+<link rel="preload" href="app.js?v=2026-08-26h" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1252,7 +1252,7 @@ CLEAR ALL
 <button class="pos-btn" data-pos="K">K</button>
 <button class="pos-btn" data-pos="DST">D/ST</button>
 <span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-left:6px">TOP</span>
-<input type="number" id="rankTopNInput" min="1" max="600" inputmode="numeric" placeholder="ALL" title="Show only the top N of whatever you're looking at — 40 on ALL = top 40 overall, 15 on QB = top 15 QBs. Clear to show everyone." style="width:56px;padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem">
+<input type="number" id="rankTopNInput" min="1" max="600" inputmode="numeric" placeholder="ALL" title="Show only the top N of the current board — 40 on ALL = top 40 overall, 15 on QB = top 15 QBs. Column sorts reorder within that pool, so TOP 125 + the value sort = best values among the top 125. Clear to show everyone." style="width:56px;padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem">
 <button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
 <button id="posLockToggle" onclick="window._togglePosLock()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Position Lock: while ON, a drag pushes along only the position-mates you drag PAST — drag a QB from 14 to 20 and the QBs that sat between land right below him, while a QB at 21+ just slots in under them and a QB at 60 doesn't move at all. Works both directions. Positional order always preserved. Resets on page reload.">🔒 POS LOCK</button>
 </div>
@@ -5183,7 +5183,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-26g"></script>
+<script defer src="app.js?v=2026-08-26h"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

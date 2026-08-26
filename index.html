@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-26j" as="script">
+<link rel="preload" href="app.js?v=2026-08-26k" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1295,6 +1295,7 @@ CLEAR ALL
 <span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">STATS:</span>
 <div class="career-log-toggle" id="rankingStatModeToggle">
 <button class="rnk-statmode-btn active" data-rnkstatmode="fantasy" title="Fantasy points per game columns (Proj PPG / '25 PPG / L4 PPG)">FANTASY</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and top-12 finish odds. WEEKLY board shows this week's 1,000-sim numbers.">SIMS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs, team PPG and Clay-based fantasy PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM / Underdog, Vegas implied team PPG, plus the blended-books projected PPG">BETTING LINES</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="adp" title="Every platform side by side — Underdog + Sleeper ADP, ESPN + CBS site ranks — compared to the current ranks — green = that platform has them later than this rank (value), red = earlier (reach)">ADP</button>
@@ -1401,7 +1402,7 @@ CLEAR ALL
 <th data-sort="pos" tabindex="0" aria-sort="none">Pos <span class="arrow"></span></th>
 <th data-sort="posRank" tabindex="0" aria-sort="none">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
 <th data-sort="adp" id="adpHeader" tabindex="0" aria-sort="none"><span data-gloss="Average Draft Position — where this player goes on average in the selected ADP source.">ADP</span> <span class="arrow"></span></th>
-<th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Sim Lab projected fantasy points per game — season boards show the per-game average across all 18 simulated weeks; the WEEKLY board shows this week's sim. Refreshed daily and ~30 min before kickoffs (Vegas lines, matchups, usage, injuries priced in).">Proj PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
+<th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Sim Lab projected fantasy points per game — season boards show the REST-OF-SEASON average (games already played excluded); the WEEKLY board shows this week's sim. Refreshed daily and ~30 min before kickoffs (Vegas lines, matchups, usage, injuries priced in).">Proj PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="simBoom" id="simBoomHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Chance of finishing 50%+ ABOVE his own median sim outcome this week (1,000 Sim Lab runs). High boom + high bust = wide-range player.">Boom</span> <span class="arrow"></span></th>
 <th data-sort="simBust" id="simBustHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Chance of finishing 50%+ BELOW his own median sim outcome this week (1,000 Sim Lab runs). Steady floor players run low on both boom and bust.">Bust</span> <span class="arrow"></span></th>
 <th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week. Color reflects defensive difficulty: green = bottom 1/3, amber = middle, red = top 1/3.">Opp</span> <span class="arrow"></span></th>
@@ -3830,7 +3831,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/d.js?v=2026-08-26c" defer></script>
 <script src="data/injury_updates.js?v=2026-08-26-11" defer></script>
 <script src="data/weekly_projections.js?v=2026-08-26c" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-08-26-14" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-08-26-15" defer></script>
 <script src="data/site_projections.js?v=2026-08-26" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
@@ -5191,7 +5192,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-26j"></script>
+<script defer src="app.js?v=2026-08-26k"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

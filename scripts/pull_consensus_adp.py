@@ -36,6 +36,12 @@
 #             + SleeperDynastySF.csv. Rows encode the RANK slot in that
 #             format's ADP ordering (== Sleeper's draft-room RK column),
 #             per Jack 2026-08-07 "use rank and not adp".
+#   Phase L — DraftKings best-ball ADP (added 2026-08-26): runs
+#             scripts/update_dk_adp.py, which reads Occupy Fantasy's public
+#             JSON feed (DK-sponsored, SportsData.io-powered, daily 2pm ET)
+#             and splices raw ADP decimals into d.js "dk" fields directly —
+#             no CSV/inject step, since inject_rankings.py never parsed the
+#             manual DkPreDraftRankings.csv (its April values were a one-off).
 #
 # ESPN/CBS/Yahoo values are stored as SEQUENTIAL RANK ORDER (1..N by that
 # site's own EDITORIAL rank — the order its player list displays, not crowd
@@ -631,6 +637,25 @@ def pull_rosters():
     return open(d_path, 'rb').read() != before
 
 
+def pull_dk_adp():
+    """Phase L — run update_dk_adp.py (Occupy Fantasy DK feed -> d.js "dk"
+    fields, --no-bump so main() bumps d.js's ?v= once at the end). Returns
+    True if d.js changed. Non-fatal: a dead feed keeps yesterday's values
+    (the script's own max-age guard refuses stale data beyond 7 days)."""
+    d_path = os.path.join(ROOT, 'data', 'd.js')
+    before = open(d_path, 'rb').read()
+    res = subprocess.run(
+        [sys.executable, os.path.join(ROOT, 'scripts', 'update_dk_adp.py'),
+         '--no-bump'],
+        cwd=ROOT, capture_output=True, text=True)
+    print(res.stdout)
+    if res.returncode != 0:
+        print(res.stderr)
+        print('  !! DK ADP refresh failed — previous dk values kept')
+        return False
+    return open(d_path, 'rb').read() != before
+
+
 def pull_injuries():
     """Phase I — run pull_injuries.py (Sleeper injury tags ->
     data/injury_updates.js). Returns True if the file changed. Non-fatal:
@@ -730,10 +755,12 @@ def main():
     if clay_changed:
         bump_version(r'data/mike_clay_projections\.js')
 
-    roster_changed = False
+    roster_changed = dk_changed = False
     if not args.no_inject:
         print('\nPhase H — NFL roster sync (Sleeper -> d.js teams):')
         roster_changed = pull_rosters()
+        print('\nPhase L — DraftKings best-ball ADP (Occupy Fantasy feed):')
+        dk_changed = pull_dk_adp()
 
     print('\nPhase I — Sleeper injury tags:')
     inj_changed = pull_injuries()
@@ -751,13 +778,15 @@ def main():
           f'+ KTC {"updated" if ktc_changed else "unchanged/skipped"}'
           f' + Clay {"updated" if clay_changed else "unchanged/skipped"}'
           f' + rosters {"updated" if roster_changed else "unchanged/skipped"}'
+          f' + DK {"updated" if dk_changed else "unchanged/skipped"}'
           f' + injuries {"updated" if inj_changed else "unchanged/skipped"}'
           f' + weeklyproj {"updated" if wp_changed else "unchanged/skipped"}')
-    if total == 0 and not ktc_changed and not roster_changed and not inj_changed and not wp_changed:
+    if (total == 0 and not ktc_changed and not roster_changed and not dk_changed
+            and not inj_changed and not wp_changed):
         print('Nothing refreshed — aborting before inject.')
         sys.exit(1)
 
-    d_changed = roster_changed
+    d_changed = roster_changed or dk_changed
     if not args.no_inject and total > 0:
         d_changed = run_inject() or d_changed
     if d_changed:

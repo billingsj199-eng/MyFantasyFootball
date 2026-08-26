@@ -61,12 +61,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-08-26a" as="style">
+<link rel="preload" href="styles/main.css?v=2026-08-26b" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-26g" as="script">
+<link rel="preload" href="app.js?v=2026-08-26h" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -76,7 +76,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-08-26b" as="script">
 <link rel="preload" href="data/d.js?v=2026-08-26c" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-08-26a">
+<link rel="stylesheet" href="styles/main.css?v=2026-08-26b">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1165,9 +1165,11 @@ CLEAR ALL
   body.format-weekly #pageRankings #oppHeader,
   body.format-weekly #pageRankings #spreadHeader,
   body.format-weekly #pageRankings #teamTotalHeader,
+  body.format-weekly #pageRankings #simProjHeader,
   body.format-weekly #pageRankings .opp-cell,
   body.format-weekly #pageRankings .spread-cell,
-  body.format-weekly #pageRankings .teamtotal-cell { display: table-cell !important; }
+  body.format-weekly #pageRankings .teamtotal-cell,
+  body.format-weekly #pageRankings .simproj-cell { display: table-cell !important; }
   /* Hide ALL + ROOKIES position pills in weekly (irrelevant to weekly scoring) */
   body.format-weekly .pos-btn[data-pos="ALL"],
   body.format-weekly .pos-btn[data-pos="ROOKIE"] { display: none !important; }
@@ -1177,6 +1179,7 @@ CLEAR ALL
   #pageRankings tbody .opp-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:54px}
   #pageRankings tbody .spread-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:54px}
   #pageRankings tbody .teamtotal-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:56px}
+  #pageRankings tbody .simproj-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:46px}
   #pageRankings tbody .opp-cell.opp-home{color:#a7f3d0}
   #pageRankings tbody .opp-cell.opp-bye{color:var(--text2);font-style:italic}
   /* Matchup difficulty — opponent's Clay defensive rank.
@@ -1396,6 +1399,7 @@ CLEAR ALL
 <th data-sort="posRank" tabindex="0" aria-sort="none">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
 <th data-sort="adp" id="adpHeader" tabindex="0" aria-sort="none"><span data-gloss="Average Draft Position — where this player goes on average in the selected ADP source.">ADP</span> <span class="arrow"></span></th>
 <th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Projected fantasy points per game for the upcoming season (PPR scoring).">Proj PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
+<th data-sort="simProj" id="simProjHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Sim Lab projection for this week — 1,000 Monte Carlo sims off Vegas lines, matchup, usage, and injuries; re-run daily and ~30 min before kickoffs, frozen once the game starts. Hover a value for boom/bust %.">Sim</span> <span class="arrow"></span></th>
 <th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week. Color reflects defensive difficulty: green = bottom 1/3, amber = middle, red = top 1/3.">Opp</span> <span class="arrow"></span></th>
 <th data-sort="spread" id="spreadHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="DK point spread for this team. Negative = favored, positive = underdog.">Spread</span> <span class="arrow"></span></th>
 <th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
@@ -5183,7 +5187,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-26g"></script>
+<script defer src="app.js?v=2026-08-26h"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -9890,8 +9890,13 @@ function _cmpFullStatsSectionHtml(d, instKey, scoresrc) {
     const b = document.querySelector('#playerCard .gl-scoring-btn.active');
     fmtOverride = b ? b.dataset.glscoring : 'ppr';
   }
-  return '<div class="card-section"><div class="card-section-title">Stats <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· follows Splits &amp; Filters</span></div>'
-    + '<div class="cmp-fullstats" data-cmpplayer="' + esc + '"' + (scoresrc ? ' data-scoresrc="' + scoresrc + '"' : '') + '>' + _cmpFullStatsHtml(key, fmtOverride) + '</div></div>';
+  // Collapsible (like SPLITS & FILTERS); hidden/shown state is a single
+  // shared preference persisted in localStorage across all cards.
+  let _statsOpen = true;
+  try { _statsOpen = localStorage.getItem('mff_cardStatsOpen') !== '0'; } catch (_) {}
+  return '<div class="card-section"><details class="card-collapse cmp-stats-collapse"' + (_statsOpen ? ' open' : '') + '>'
+    + '<summary>STATS <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· follows Splits &amp; Filters</span></summary>'
+    + '<div class="cmp-fullstats" data-cmpplayer="' + esc + '"' + (scoresrc ? ' data-scoresrc="' + scoresrc + '"' : '') + '>' + _cmpFullStatsHtml(key, fmtOverride) + '</div></details></div>';
 }
 
 // AVG/TOTAL buttons live inside the repainted div — rewire after every paint.
@@ -9988,6 +9993,12 @@ function _cmpWireSplits(root) {
     // interaction from bubbling into that handler.
     det.addEventListener('click', e => e.stopPropagation());
     det.addEventListener('toggle', () => { _cmpSplitSt(det.dataset.cmpplayer).open = det.open; });
+  });
+  root.querySelectorAll('details.cmp-stats-collapse').forEach(det => {
+    det.addEventListener('click', e => e.stopPropagation());
+    det.addEventListener('toggle', () => {
+      try { localStorage.setItem('mff_cardStatsOpen', det.open ? '1' : '0'); } catch (_) {}
+    });
   });
   root.querySelectorAll('.cmp-split-chip[data-season]').forEach(btn => {
     btn.addEventListener('click', () => {

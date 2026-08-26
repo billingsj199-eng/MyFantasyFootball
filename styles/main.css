@@ -2196,10 +2196,10 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
 }
 
 /* ─── Compare card SPLITS & FILTERS (season/week filters + teammate split) ── */
-.cmp-split summary{cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--accent);list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
-.cmp-split summary::-webkit-details-marker{display:none}
-.cmp-split summary::before{content:'\25B8';font-size:.6rem;transition:transform .15s}
-.cmp-split[open] summary::before{transform:rotate(90deg)}
+.cmp-split summary,.card-collapse summary{cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--accent);list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+.cmp-split summary::-webkit-details-marker,.card-collapse summary::-webkit-details-marker{display:none}
+.cmp-split summary::before,.card-collapse summary::before{content:'\25B8';font-size:.6rem;transition:transform .15s}
+.cmp-split[open] summary::before,.card-collapse[open] summary::before{transform:rotate(90deg)}
 .cmp-split-body{margin-top:8px;display:flex;flex-direction:column;gap:8px}
 .cmp-split-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .cmp-split-lbl{font-size:.58rem;color:var(--text2);font-family:'Bebas Neue',sans-serif;letter-spacing:1px;min-width:56px}

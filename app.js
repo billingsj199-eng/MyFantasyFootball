@@ -2777,6 +2777,16 @@ function getFiltered(applyTopN) {
           };
           av = _sp(a); bv = _sp(b); break;
         }
+        case 'simBoom': case 'simBust': {
+          const _bi = sortKey === 'simBoom' ? 3 : 4;
+          const _bb = d => {
+            const SP = window.SIM_PROJ_2026;
+            const wk = window._weeklyActiveWeek || (SP && SP.currentWeek) || 1;
+            const r = (typeof _simProjRow === 'function') ? _simProjRow(d, wk) : null;
+            return (r && r[_bi] != null) ? r[_bi] : -Infinity;
+          };
+          av = _bb(a); bv = _bb(b); break;
+        }
         default: av = a.myRank; bv = b.myRank;
       }
       return sortDir * (av - bv);
@@ -3263,6 +3273,8 @@ function render() {
         <td class="adp-cell">${d._devyKtc > 0 ? d._devyKtc.toLocaleString() : '—'}</td>
         <td class="pts-cell ppg-proj-cell">—</td>
         <td class="simproj-cell weekly-only-cell" style="display:none">—</td>
+        <td class="simboom-cell weekly-only-cell" style="display:none">—</td>
+        <td class="simbust-cell weekly-only-cell" style="display:none">—</td>
         <td class="opp-cell weekly-only-cell" style="display:none">—</td>
         <td class="spread-cell weekly-only-cell" style="display:none">—</td>
         <td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>
@@ -3430,6 +3442,8 @@ function render() {
       <td class="adp-cell${_adpDelta==null?'':(_adpDelta>=3?' adp-value':(_adpDelta<=-3?' adp-reach':''))}" title="${_adpDelta==null?'':(()=>{const df=Math.round(_adpDelta);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${_adp != null ? _adp : '—'}</td>
       ${_statTd1}
       ${_isWeekly ? `<td class="simproj-cell weekly-only-cell" style="display:none">${_wkSimProjHtml(d)}</td>
+      ${_wkSimBoomBustCell(d, 'boom')}
+      ${_wkSimBoomBustCell(d, 'bust')}
       <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return o || '—'; })()}</td>
       <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{
@@ -3437,7 +3451,7 @@ function render() {
         // with the color scale inverted accordingly. Everyone else shows their
         // own team's implied total (higher = better environment).
         if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
-        if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>` : '<td class="simproj-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
+        if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>` : '<td class="simproj-cell weekly-only-cell" style="display:none">—</td><td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
       ${_statTds}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—'))}</td>
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
@@ -5658,7 +5672,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'simProj' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'simProj' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
@@ -6256,6 +6270,57 @@ function _wkSimProjHtml(d) {
   return '<span' + tip + ' style="' + (c ? 'color:' + c + ';' : '') + 'font-weight:700' + (tip ? ';cursor:help' : '') + '">' + v + '</span>';
 }
 
+// Season-sim summary strip shown above the 2026 game log: median / floor /
+// ceiling season totals, median-relative season boom/bust (+/-25%), and
+// top-12 positional finish odds — from SIM_PROJ_2026.seasonSim (400
+// simulated seasons incl. the wrecked-season shock + games-played layers).
+function _seasonSimStripHtml(d) {
+  const SP = window.SIM_PROJ_2026;
+  const ss = SP && SP.seasonSim;
+  if (!ss) return '';
+  let r = d.s === 'DST' ? ss['DST_' + teamAbbr(d.t)] : ss[d.n];
+  if (!r && d.s !== 'DST' && typeof _campNewsNorm === 'function') {
+    let idx = window._seasonSimIdx;
+    if (!idx || idx._src !== SP) {
+      idx = { _src: SP };
+      Object.keys(ss).forEach(k => { idx[_campNewsNorm(k)] = ss[k]; });
+      window._seasonSimIdx = idx;
+    }
+    r = idx[_campNewsNorm(d.n)];
+  }
+  if (!r) return '';
+  const med = r[0], p10 = r[1], p90 = r[2], boom = r[3], bust = r[4], top12 = r[5], games = r[6] || 17;
+  const chip = (lbl, val, color, gloss) =>
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:1px">'
+    + '<span style="font-size:.55rem;letter-spacing:.8px;color:var(--text2);font-family:\'Bebas Neue\',sans-serif">' + (gloss ? '<span data-gloss="' + gloss.replace(/"/g, '&quot;') + '">' + lbl + '</span>' : lbl) + '</span>'
+    + '<span style="font-size:.82rem;font-weight:700' + (color ? ';color:' + color : '') + '">' + val + '</span></div>';
+  const ppg = games > 0 ? ' <span style="font-size:.62rem;font-weight:600;color:var(--text2)">(' + (Math.round(med / games * 10) / 10) + '/g)</span>' : '';
+  return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:8px 10px;margin-bottom:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)">'
+    + '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--accent)"><span data-gloss="400 simulated 2026 seasons (Sim Lab): every week simmed with Vegas/matchup/usage inputs plus a per-season health/role shock. Totals are half-PPR. Re-run daily.">SEASON SIM</span></span>'
+    + chip('MEDIAN', med + ppg, null, 'Median simulated season total (half-PPR)')
+    + chip('FLOOR', p10, '#f87171', '10th percentile season — the bad-outcome case (injury/role loss priced in)')
+    + chip('CEILING', p90, '#4ade80', '90th percentile season — the smash case')
+    + chip('BOOM', boom != null ? boom + '%' : '—', boom >= 25 ? '#22c55e' : boom >= 15 ? '#4ade80' : null, 'Chance of finishing 25%+ ABOVE his own median season')
+    + chip('BUST', bust != null ? bust + '%' : '—', bust >= 30 ? '#ef4444' : bust >= 20 ? '#f59e0b' : null, 'Chance of finishing 25%+ BELOW his own median season (injuries and role collapse drive this tail)')
+    + chip('TOP-12 ' + d.s, top12 != null ? top12 + '%' : '—', top12 >= 50 ? '#22c55e' : top12 >= 25 ? '#4ade80' : null, 'Share of simulated seasons finishing top-12 at the position — correlated booms/busts priced in')
+    + '</div>';
+}
+
+// BOOM/BUST cells for the rankings WEEKLY view — the active week's
+// median-relative tail odds from SIM_PROJ_2026 (same row _wkSimProjHtml reads).
+function _wkSimBoomBustCell(d, which) {
+  const cls = which === 'boom' ? 'simboom-cell' : 'simbust-cell';
+  const SP = window.SIM_PROJ_2026;
+  const wk = window._weeklyActiveWeek || (SP && SP.currentWeek) || 1;
+  const r = _simProjRow(d, wk);
+  const v = r ? r[which === 'boom' ? 3 : 4] : null;
+  if (v == null) return '<td class="' + cls + ' weekly-only-cell" style="display:none">—</td>';
+  const c = which === 'boom'
+    ? (v >= 30 ? '#22c55e' : v >= 22 ? '#4ade80' : v >= 15 ? '#facc15' : 'var(--text2)')
+    : (v >= 35 ? '#ef4444' : v >= 25 ? '#f59e0b' : v >= 18 ? '#facc15' : 'var(--text2)');
+  return '<td class="' + cls + ' weekly-only-cell" style="display:none"><span style="color:' + c + ';font-weight:700">' + v + '%</span></td>';
+}
+
 const _SIM_PROJ_HDR = '<th><span data-gloss="Sim Lab projected fantasy points for this game — recomputed daily and again before kickoffs, then frozen once the game starts. Reflects Vegas lines, matchup, usage trends, and injuries (a ruled-out player shows 0 and his points shift to teammates).">PROJ</span></th>'
   + '<th><span data-gloss="Chance of finishing 50%+ ABOVE his own median sim outcome for this game (1,000 Monte Carlo runs). High boom + high bust = wide-range player.">BOOM</span></th>'
   + '<th><span data-gloss="Chance of finishing 50%+ BELOW his own median sim outcome for this game (1,000 Monte Carlo runs). Steady floor players run low on both boom and bust.">BUST</span></th>';
@@ -6808,7 +6873,7 @@ function _buildKdstWeeklyTable(d, season, withChart) {
     ? '<div style="text-align:center;padding:6px 0 10px;color:var(--text2);font-size:.7rem">2026 schedule — game logs will fill in as the season is played.</div>'
     : '';
 
-  return _schedNote + chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
+  return (_is26 ? _seasonSimStripHtml(d) : '') + _schedNote + chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 function buildWeeklyTable(d, season, scoringFormat, withChart) {
@@ -6964,7 +7029,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
     ? '<div style="text-align:center;padding:6px 0 10px;color:var(--text2);font-size:.7rem">2026 schedule — game logs will fill in as the season is played.</div>'
     : '';
 
-  return _schedNote + chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
+  return (_is26 ? _seasonSimStripHtml(d) : '') + _schedNote + chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 function buildCareerTable(d, scoringFormat, statMode, withChart) {

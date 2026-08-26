@@ -793,16 +793,22 @@
 /* Recs list grows with the actual sidebar height (not viewport), so resizing
    the panel taller via the bottom drag handle reveals more rankings instead
    of leaving empty space below the cap. Flex chain: sidebar → body → recs-wrap
-   → recs, with overflow scrolling pinned to recs. */
+   → recs, with overflow scrolling pinned to recs.
+   The wrap must NOT get min-height:0 — when the body's content is taller than
+   the panel that lets the whole Available section flex-shrink to 0px while the
+   280px-floored list overflows it, painting rows over the search bar below.
+   Instead `contain:size` on the list keeps its 60-row content out of the
+   wrap's intrinsic min-height, so the wrap naturally floors at header +
+   controls + the list's 280px min and the body scrolls past it. */
 #mff-recs-wrap {
   flex: 1;
-  min-height: 0;
 }
 #mff-recs {
   flex: 1;
   min-height: 280px;
   overflow-y: auto;
   padding-right: 4px;
+  contain: size;
 }
 #mff-recs::-webkit-scrollbar { width: 6px; }
 #mff-recs::-webkit-scrollbar-thumb { background: #2a2c33; border-radius: 3px; }

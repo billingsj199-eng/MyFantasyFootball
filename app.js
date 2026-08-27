@@ -2585,6 +2585,46 @@ function _teamPpgBoxHtml(team) {
   </div>`;
 }
 
+// === Watchlist (★) ===
+// v1 is device-local (localStorage `mff_watchlist`, array of player names) —
+// deliberately NOT synced to Firestore yet, to stay clear of the rankings
+// save paths. Star toggles live on each rankings row (delegated below); the
+// ★ pill next to the position filters shows only watched players and ANDs
+// with the current position filter.
+window._watchSet = (() => {
+  try { const a = JSON.parse(localStorage.getItem('mff_watchlist')); return new Set(Array.isArray(a) ? a : []); }
+  catch (e) { return new Set(); }
+})();
+window._watchOnly = false;
+function _watchBadge() {
+  const b = document.getElementById('watchFilterCount');
+  if (b) b.textContent = window._watchSet.size ? String(window._watchSet.size) : '';
+}
+window._toggleWatchOnly = function () {
+  if (!window._watchOnly && !window._watchSet.size) {
+    if (typeof toast === 'function') toast('Click the ☆ on any row to start a watchlist');
+    return;
+  }
+  window._watchOnly = !window._watchOnly;
+  const btn = document.getElementById('watchFilterBtn');
+  if (btn) btn.classList.toggle('on', window._watchOnly);
+  render();
+};
+window._watchToggleName = function (name) {
+  if (!name) return;
+  if (window._watchSet.has(name)) window._watchSet.delete(name); else window._watchSet.add(name);
+  try { localStorage.setItem('mff_watchlist', JSON.stringify([...window._watchSet])); } catch (e) {}
+  _watchBadge();
+  // Last star removed while the ★ view is on — drop back to the full list.
+  if (window._watchOnly && !window._watchSet.size) {
+    window._watchOnly = false;
+    const btn = document.getElementById('watchFilterBtn');
+    if (btn) btn.classList.remove('on');
+  }
+  render();
+};
+_watchBadge();
+
 function getFiltered(applyTopN) {
   // DEVY filter: build list from COMBINE_DATA devy players, with custom ordering
   if (filter === 'DEVY') {
@@ -2709,6 +2749,12 @@ function getFiltered(applyTopN) {
     }
     return true;
   });
+  // Watchlist-only view (★ pill): AND with the current position filter.
+  // TOP-N is skipped here — a starred deep sleeper always shows in the ★ view.
+  if (window._watchOnly && window._watchSet) {
+    f = f.filter(d => window._watchSet.has(d.n));
+    applyTopN = false;
+  }
   // TOP-N pool cap (render path only): applied BEFORE the secondary sort so
   // "TOP 125 + sort by value" means "my best values among MY top 125", not
   // "the 125 biggest deltas" — which is all deep-bench trivia. A typed search
@@ -3484,10 +3530,10 @@ function render() {
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? (i + 1) : d.myRank}</span></td>
-      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div></div></td>
+      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
-      <td class="adp-cell${_adpDelta==null?'':(_adpDelta>=3?' adp-value':(_adpDelta<=-3?' adp-reach':''))}" title="${_adpDelta==null?'':(()=>{const df=Math.round(_adpDelta);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${_adp != null ? _adp : '—'}</td>
+      <td class="adp-cell${_adpDelta==null?'':(_adpDelta>=3?' adp-value':(_adpDelta<=-3?' adp-reach':''))}" title="${_adpDelta==null?'':(()=>{const df=Math.round(_adpDelta);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${_adp != null ? _adp : '—'}${_adpSparkHtml(d)}</td>
       ${_statTd1}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
       ${_wkSimBoomBustCell(d, 'bust')}
@@ -3648,6 +3694,8 @@ function attachTierListeners() {
 
   // Player card click
   tbody.addEventListener('click', e => {
+    const star = e.target.closest('.watch-star');
+    if (star) { e.stopPropagation(); window._watchToggleName(star.dataset.watch); return; }
     const nameLink = e.target.closest('.player-name-link');
     if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
     // Cut line controls (all formats). data-cut-pos marks a WEEKLY QB/K/DST
@@ -7757,6 +7805,58 @@ function _campNewsNorm(n) {
 // short history silently leaves the bar hidden. Renders the headshot chips of
 // the retired standalone card into the page-top bar (which replaced the old
 // WEEKLY MOVERS text ticker).
+// === ADP-trend sparklines (rankings ADP column) ===
+// Built from the same ud_adp_history.json the MOVERS ticker fetches: per
+// player, the last ~15 daily Underdog BBM ADP snapshots. Rendered inline in
+// each row's ADP cell (hidden ≤600px). Y is inverted so a RISER (ADP number
+// falling — drafted earlier) slopes UP and draws green. The trend is always
+// Underdog data regardless of the selected ADP source — the tooltip says so.
+function _adpSparkBuild(hist) {
+  const days = (hist.days || []).filter(d => d && d.date && d.adps)
+    .sort((a, b) => a.date.localeCompare(b.date)).slice(-15);
+  if (days.length < 3) return;
+  const norm = (typeof _campNewsNorm === 'function') ? _campNewsNorm : (s => String(s).toLowerCase());
+  const map = {};
+  days.forEach(day => {
+    Object.keys(day.adps).forEach(name => {
+      const e = day.adps[name];
+      if (!e || typeof e.bbm !== 'number') return;
+      const k = norm(name);
+      (map[k] = map[k] || []).push(e.bbm);
+    });
+  });
+  // Drop stubs and undrafted flat-liners pinned at the 216 draft-pool cap.
+  Object.keys(map).forEach(k => {
+    const s = map[k];
+    if (s.length < 3 || Math.min(...s) >= 216) delete map[k];
+  });
+  window._adpSparkMap = map;
+  window._adpSparkDayCount = days.length;
+  try { render(); } catch (e) {}
+}
+
+function _adpSparkHtml(d) {
+  const m = window._adpSparkMap;
+  if (!m || !d || !d.n) return '';
+  const norm = (typeof _campNewsNorm === 'function') ? _campNewsNorm : (s => String(s).toLowerCase());
+  const s = m[norm(d.n)];
+  if (!s || s.length < 3) return '';
+  const first = s[0], last = s[s.length - 1], delta = last - first;
+  const col = delta <= -2 ? '#22c55e' : delta >= 2 ? '#ef4444' : 'var(--text2)';
+  let mn = Math.min(...s), mx = Math.max(...s);
+  if (mx - mn < 1) mx = mn + 1; // flat line renders mid-box, not on the edge
+  const W = 40, H = 12, P = 1.5;
+  const pts = s.map((v, i) => {
+    const x = P + i * (W - 2 * P) / (s.length - 1);
+    const y = P + (v - mn) / (mx - mn) * (H - 2 * P);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  const fmt = v => String(Math.round(v * 10) / 10);
+  return '<div class="adp-spark" title="Underdog ADP trend · last ' + s.length + ' daily pulls: ' + fmt(first) + ' → ' + fmt(last) + '">'
+    + '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" preserveAspectRatio="none" aria-hidden="true">'
+    + '<polyline points="' + pts + '" fill="none" stroke="' + col + '" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/></svg></div>';
+}
+
 // === In-season strip (top of the rankings page) ===
 // Hardcoded 2026-season calendar: each week's FIRST kickoff (UTC ms) + a
 // display label. A week is "current" from the moment the previous week's
@@ -7969,6 +8069,7 @@ _renderDataFreshness();
     .then(j => {
       if (!j) return;
       if (j.updated) { window._adpHistUpdated = j.updated; if (window._renderDataFreshness) window._renderDataFreshness(); }
+      _adpSparkBuild(j); // rankings ADP-cell sparklines (re-renders the table once)
       _render(j);
     })
     .catch(() => {});

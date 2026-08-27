@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-27b" as="script">
+<link rel="preload" href="app.js?v=2026-08-27c" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1281,6 +1281,19 @@ CLEAR ALL
 <button class="pos-btn" data-pos="DEVY" id="devyPosBtn" style="display:none">DEVY</button>
 <button class="pos-btn" data-pos="K">K</button>
 <button class="pos-btn" data-pos="DST">D/ST</button>
+<button class="pos-btn watch-filter-btn" id="watchFilterBtn" onclick="window._toggleWatchOnly()" title="Show only your watchlist — click the ☆ on any row to add a player">★<span id="watchFilterCount" style="margin-left:3px"></span></button>
+<style>
+/* Watchlist star (rankings rows) + ★ filter pill + ADP sparklines */
+.watch-filter-btn.on{background:rgba(245,158,11,.16);border-color:var(--accent);color:var(--accent)}
+.watch-star{flex:0 0 auto;margin-left:auto;padding:0 4px;font-size:.85rem;line-height:1;color:var(--text2);opacity:0;cursor:pointer;transition:opacity .12s,color .12s;user-select:none}
+tr:hover .watch-star{opacity:.55}
+.watch-star:hover{opacity:1!important;color:var(--accent)}
+.watch-star.on{opacity:1;color:var(--accent)}
+@media (pointer:coarse){.watch-star{opacity:.35}}
+.adp-spark{line-height:0;margin-top:2px}
+.adp-spark svg{display:block}
+@media (max-width:600px){.adp-spark{display:none}}
+</style>
 <span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-left:6px">TOP</span>
 <input type="number" id="rankTopNInput" min="1" max="600" inputmode="numeric" placeholder="ALL" title="Show only the top N of the current board — 40 on ALL = top 40 overall, 15 on QB = top 15 QBs. Column sorts reorder within that pool, so TOP 125 + the value sort = best values among the top 125. Clear to show everyone." style="width:56px;padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem">
 <button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
@@ -5220,7 +5233,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-27b"></script>
+<script defer src="app.js?v=2026-08-27c"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

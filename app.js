@@ -5033,6 +5033,8 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     if (!admin && published != null) {
       window._weeklyActiveWeek = published;
     }
+    // Weekly-tab visibility feeds the in-season strip's WEEKLY button.
+    if (window._seasonStripRefresh) window._seasonStripRefresh();
   }
   window._weeklyAdminCheck = _weeklyAdminCheck;
   _weeklyAdminCheck();
@@ -7755,6 +7757,82 @@ function _campNewsNorm(n) {
 // short history silently leaves the bar hidden. Renders the headshot chips of
 // the retired standalone card into the page-top bar (which replaced the old
 // WEEKLY MOVERS text ticker).
+// === In-season strip (top of the rankings page) ===
+// Hardcoded 2026-season calendar: each week's FIRST kickoff (UTC ms) + a
+// display label. A week is "current" from the moment the previous week's
+// window closes until kickoff + 5 days (Tuesday evening ET — matches the
+// fantasy-week rollover). Before kickoff: countdown; after: "in progress".
+// Auto-hides once the Week 18 window closes — regenerate the table for 2027.
+// UTC offsets baked in: EDT (-4) through W8, EST (-5) from W9 (DST ends
+// Nov 1 2026); W12 = Thanksgiving early slate; W18 has no TNF (final Sunday).
+const _SEASON_KICKS_2026 = [
+  { wk: 1,  kick: Date.UTC(2026, 8, 11, 0, 20),   label: 'Thu Sep 10 · 8:20pm ET' },
+  { wk: 2,  kick: Date.UTC(2026, 8, 18, 0, 15),   label: 'Thu Sep 17 · 8:15pm ET' },
+  { wk: 3,  kick: Date.UTC(2026, 8, 25, 0, 15),   label: 'Thu Sep 24 · 8:15pm ET' },
+  { wk: 4,  kick: Date.UTC(2026, 9, 2, 0, 15),    label: 'Thu Oct 1 · 8:15pm ET' },
+  { wk: 5,  kick: Date.UTC(2026, 9, 9, 0, 15),    label: 'Thu Oct 8 · 8:15pm ET' },
+  { wk: 6,  kick: Date.UTC(2026, 9, 16, 0, 15),   label: 'Thu Oct 15 · 8:15pm ET' },
+  { wk: 7,  kick: Date.UTC(2026, 9, 23, 0, 15),   label: 'Thu Oct 22 · 8:15pm ET' },
+  { wk: 8,  kick: Date.UTC(2026, 9, 30, 0, 15),   label: 'Thu Oct 29 · 8:15pm ET' },
+  { wk: 9,  kick: Date.UTC(2026, 10, 6, 1, 15),   label: 'Thu Nov 5 · 8:15pm ET' },
+  { wk: 10, kick: Date.UTC(2026, 10, 13, 1, 15),  label: 'Thu Nov 12 · 8:15pm ET' },
+  { wk: 11, kick: Date.UTC(2026, 10, 20, 1, 15),  label: 'Thu Nov 19 · 8:15pm ET' },
+  { wk: 12, kick: Date.UTC(2026, 10, 26, 17, 30), label: 'Thanksgiving · Thu Nov 26 · 12:30pm ET' },
+  { wk: 13, kick: Date.UTC(2026, 11, 4, 1, 15),   label: 'Thu Dec 3 · 8:15pm ET' },
+  { wk: 14, kick: Date.UTC(2026, 11, 11, 1, 15),  label: 'Thu Dec 10 · 8:15pm ET' },
+  { wk: 15, kick: Date.UTC(2026, 11, 18, 1, 15),  label: 'Thu Dec 17 · 8:15pm ET' },
+  { wk: 16, kick: Date.UTC(2026, 11, 25, 1, 15),  label: 'Thu Dec 24 · 8:15pm ET' },
+  { wk: 17, kick: Date.UTC(2027, 0, 1, 1, 15),    label: 'Thu Dec 31 · 8:15pm ET' },
+  { wk: 18, kick: Date.UTC(2027, 0, 10, 18, 0),   label: 'Sun Jan 10 · 1:00pm ET' }
+];
+
+function _seasonStrip() {
+  const bar = document.getElementById('seasonStrip');
+  if (!bar) return;
+  const wkEl = document.getElementById('ssWeek');
+  const msgEl = document.getElementById('ssMsg');
+  const cntEl = document.getElementById('ssCount');
+  const btn = document.getElementById('ssWeeklyBtn');
+  const now = window._seasonStripNow || Date.now(); // _seasonStripNow = test hook
+  // A week ends the Tuesday 09:00 UTC (~4/5am ET) after its Monday-night game —
+  // safely past any MNF overtime, and it makes the strip roll to the next week
+  // on Tuesday morning, matching the fantasy-week rollover. Derived rather than
+  // stored so the one table stays kickoff-only (handles Thanksgiving's early
+  // Thursday slate and Week 18's Sunday-only finale correctly).
+  const wkEnd = kick => {
+    const d = new Date(kick + 2 * 86400000);
+    while (d.getUTCDay() !== 2) d.setUTCDate(d.getUTCDate() + 1);
+    d.setUTCHours(9, 0, 0, 0);
+    return d.getTime();
+  };
+  const cur = _SEASON_KICKS_2026.find(w => now < wkEnd(w.kick));
+  if (!cur || !wkEl || !msgEl || !cntEl || !btn) { bar.style.display = 'none'; return; }
+  wkEl.textContent = '🏈 WEEK ' + cur.wk;
+  if (now < cur.kick) {
+    msgEl.textContent = (cur.wk === 1 ? 'Season kicks off ' : 'Kickoff ') + cur.label;
+    const ms = cur.kick - now;
+    const dd = Math.floor(ms / 86400000), hh = Math.floor(ms % 86400000 / 3600000), mm = Math.floor(ms % 3600000 / 60000);
+    cntEl.textContent = 'in ' + (dd > 0 ? dd + 'd ' + hh + 'h' : hh > 0 ? hh + 'h ' + mm + 'm' : mm + 'm');
+    cntEl.style.display = '';
+  } else {
+    msgEl.textContent = 'Games in progress';
+    cntEl.style.display = 'none';
+  }
+  const tab = document.getElementById('weeklyModeTab');
+  btn.style.display = (tab && tab.style.display !== 'none') ? '' : 'none';
+  bar.style.display = 'flex';
+}
+window._seasonStripRefresh = _seasonStrip;
+(function () {
+  const btn = document.getElementById('ssWeeklyBtn');
+  if (btn) btn.addEventListener('click', () => {
+    const tab = document.getElementById('weeklyModeTab');
+    if (tab) tab.click();
+  });
+  _seasonStrip();
+  setInterval(_seasonStrip, 60000);
+})();
+
 // === Data-freshness line (rankings page, under the stats bar) ===
 // Shows when each auto-pulled feed last refreshed: ADP (ud_adp_history.json
 // `updated`, stashed by the movers fetch below), betting lines (newest per-entry

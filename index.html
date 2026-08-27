@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-27a" as="script">
+<link rel="preload" href="app.js?v=2026-08-27b" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -941,6 +941,26 @@ Build a stylized PNG of your most- or least-drafted Underdog players (% exposure
 <!-- HOME PAGE -->
 <!-- RANKINGS PAGE (existing content) -->
 <div class="page active" id="pageRankings">
+<!-- IN-SEASON STRIP — current week + kickoff countdown + WEEKLY jump.
+     Rendered by _seasonStrip() in app.js from a hardcoded 2026 week calendar
+     (_SEASON_KICKS_2026 — regenerate for 2027); auto-hides after the season.
+     The WEEKLY button only shows when #weeklyModeTab is visible to this user
+     (admin, or a published week — _weeklyAdminCheck re-renders the strip). -->
+<div class="season-strip" id="seasonStrip" style="display:none">
+<span class="ss-week" id="ssWeek"></span>
+<span class="ss-msg" id="ssMsg"></span>
+<span class="ss-count" id="ssCount" style="display:none"></span>
+<button class="ss-btn" id="ssWeeklyBtn" style="display:none" title="Jump to the weekly rankings board">WEEKLY RANKINGS →</button>
+</div>
+<style>
+.season-strip{display:flex;align-items:center;gap:10px;background:var(--ticker-bg);border-bottom:1px solid var(--border);padding:5px 14px;font-family:'DM Sans',sans-serif;font-size:.7rem;letter-spacing:.4px;color:var(--text2);flex-wrap:wrap}
+.ss-week{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--accent);white-space:nowrap}
+.ss-count{background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:1px 9px;font-weight:600;color:var(--text1);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ss-btn{margin-left:auto;background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:6px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.2px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
+.ss-btn:hover{background:var(--accent);color:var(--bg)}
+body.mff-embed .season-strip{display:none!important}
+@media (max-width:600px){.season-strip{font-size:.62rem;padding:4px 10px;gap:7px}.ss-week{font-size:.75rem}}
+</style>
 <!-- === HOME REDESIGN: ticker + teams hero + action row === -->
 <!-- ADP MOVERS top bar — the old rankings-page card promoted to the page-top
      strip (replacing the WEEKLY MOVERS text ticker, retired 2026-08-24 at
@@ -5200,7 +5220,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-27a"></script>
+<script defer src="app.js?v=2026-08-27b"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

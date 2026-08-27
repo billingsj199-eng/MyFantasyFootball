@@ -2760,10 +2760,70 @@ window._toggleWatchOnly = function () {
   if (btn) btn.classList.toggle('on', window._watchOnly);
   render();
 };
+// --- Cloud sync (users/{uid}/data/watchlist — existing per-user rules, no
+// rules change needed). Local stays the source of truth for signed-out use;
+// on sign-in the newer side wins (localStorage mff_watchlist_at vs the doc's
+// updatedAt), except a DIFFERENT account's existing cloud list always wins
+// over this device's leftovers (mff_watchlist_uid tracks the last-synced
+// account). Writes are full set() (no merge — the array replaces wholesale)
+// and debounced so rapid starring is one write.
+let _watchPushTimer = null;
+function _watchCloudDoc(uid) {
+  return firebase.firestore().collection('users').doc(uid).collection('data').doc('watchlist');
+}
+function _watchPersist() {
+  try {
+    localStorage.setItem('mff_watchlist', JSON.stringify([...window._watchSet]));
+    localStorage.setItem('mff_watchlist_at', new Date().toISOString());
+  } catch (e) {}
+  clearTimeout(_watchPushTimer);
+  _watchPushTimer = setTimeout(_watchCloudPush, 1500);
+}
+function _watchCloudPush() {
+  try {
+    if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return;
+    const u = firebase.auth().currentUser;
+    if (!u) return;
+    const names = [...window._watchSet].slice(0, 500);
+    _watchCloudDoc(u.uid).set({ names, updatedAt: new Date().toISOString() })
+      .then(() => { try { localStorage.setItem('mff_watchlist_uid', u.uid); } catch (e) {} })
+      .catch(() => {});
+  } catch (e) {}
+}
+function _watchCloudInit(u) {
+  if (!u) return;
+  try {
+    _watchCloudDoc(u.uid).get().then(doc => {
+      const cloud = doc.exists ? doc.data() : null;
+      let lastUid = null, localAt = null;
+      try { lastUid = localStorage.getItem('mff_watchlist_uid'); localAt = localStorage.getItem('mff_watchlist_at'); } catch (e) {}
+      if (cloud && Array.isArray(cloud.names)) {
+        const differentAccount = lastUid && lastUid !== u.uid;
+        const cloudNewer = !localAt || (cloud.updatedAt && cloud.updatedAt > localAt);
+        if (differentAccount || cloudNewer) {
+          window._watchSet = new Set(cloud.names);
+          try {
+            localStorage.setItem('mff_watchlist', JSON.stringify(cloud.names));
+            localStorage.setItem('mff_watchlist_at', cloud.updatedAt || new Date().toISOString());
+            localStorage.setItem('mff_watchlist_uid', u.uid);
+          } catch (e) {}
+          _watchBadge();
+          try { render(); } catch (e) {}
+          return;
+        }
+      }
+      // No cloud doc, or local is newer — push local up (also claims the uid).
+      if (window._watchSet.size || cloud) _watchCloudPush();
+      else { try { localStorage.setItem('mff_watchlist_uid', u.uid); } catch (e) {} }
+    }).catch(() => {});
+  } catch (e) {}
+}
+try { firebase.auth().onAuthStateChanged(u => { if (u) _watchCloudInit(u); }); } catch (e) {}
+
 window._watchToggleName = function (name) {
   if (!name) return;
   if (window._watchSet.has(name)) window._watchSet.delete(name); else window._watchSet.add(name);
-  try { localStorage.setItem('mff_watchlist', JSON.stringify([...window._watchSet])); } catch (e) {}
+  _watchPersist();
   _watchBadge();
   // Last star removed while the ★ view is on — drop back to the full list.
   if (window._watchOnly && !window._watchSet.size) {
@@ -8232,6 +8292,10 @@ _renderDataFreshness();
     if (!top.length) return;
     items.innerHTML = top.map(_playerChip).join('');
     sub.textContent = 'Underdog BBM ADP · last ' + span + ' day' + (span === 1 ? '' : 's');
+    // Share payload for the ticker's share button (shown once movers render).
+    window._adpMoversShare = { top, span };
+    const shareBtn = document.getElementById('adpMoversShareBtn');
+    if (shareBtn) shareBtn.style.display = '';
     items.addEventListener('click', e => {
       const el = e.target.closest('.adp-mover-chip');
       if (!el) return;
@@ -8241,6 +8305,32 @@ _renderDataFreshness();
     bar.style.display = '';
     if (window._mffResizeTicker) window._mffResizeTicker();
   }
+
+  // Share button: Web Share sheet where available (mobile), clipboard
+  // fallback everywhere else. Text built from the rendered movers.
+  const _shareBtn = document.getElementById('adpMoversShareBtn');
+  if (_shareBtn) _shareBtn.addEventListener('click', () => {
+    const s = window._adpMoversShare;
+    if (!s || !s.top || !s.top.length) return;
+    const fmt = v => String(+(+v).toFixed(1));
+    const lines = s.top.map(m => {
+      const up = m.delta < 0;
+      const pct = m.from > 0 ? Math.round(Math.abs(m.delta) / m.from * 100) : null;
+      return (up ? '▲' : '▼') + ' ' + m.name + (m.pos ? ' (' + m.pos + ')' : '') + ' ' +
+        fmt(m.from) + ' → ' + fmt(m.to) + (pct != null ? ' (' + (up ? '+' : '−') + pct + '%)' : '');
+    });
+    const text = '📈 ADP Movers — Underdog BBM, last ' + s.span + ' day' + (s.span === 1 ? '' : 's') + '\n'
+      + lines.join('\n') + '\n\nmyfantasyfootball.co';
+    const copy = () => {
+      try {
+        navigator.clipboard.writeText(text).then(
+          () => { if (typeof toast === 'function') toast('Movers copied — paste anywhere'); },
+          () => { if (typeof toast === 'function') toast('Could not copy'); });
+      } catch (e) {}
+    };
+    if (navigator.share) navigator.share({ text }).catch(err => { if (err && err.name !== 'AbortError') copy(); });
+    else copy();
+  });
 
   const now = new Date();
   const stamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') +

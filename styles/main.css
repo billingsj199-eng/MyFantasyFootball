@@ -65,6 +65,9 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 .live-ticker{width:100%;align-self:stretch;display:flex;align-items:center;background:var(--ticker-bg);border-bottom:1px solid var(--border);overflow:hidden;white-space:nowrap;padding:4px 0;font-size:.7rem;letter-spacing:.5px;flex-shrink:0}
 .amb-fixed{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:0 14px;position:relative;z-index:1;background:var(--ticker-bg)}
 .amb-title{font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1.5px;color:var(--accent);line-height:1.15}
+.amb-share{flex:none;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin-left:2px;transition:color .12s,border-color .12s}
+.amb-share svg{width:12px;height:12px}
+.amb-share:hover{color:var(--accent);border-color:var(--accent)}
 .amb-sub{font-size:.58rem;color:var(--text2)}
 .amb-scroll{flex:1;overflow:hidden;white-space:nowrap}
 .live-ticker-inner{display:inline-flex;align-items:center;gap:8px;animation:tickerScroll 35s linear infinite;padding-left:100%}

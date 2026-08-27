@@ -85,7 +85,22 @@ team page. <button class="h" id="toPlayers">Switch to fake Players page</button>
     nflState: { season_type: 'regular', week: 1, season: '2026' },
     vegas: { gameTotals, weeklyProps: { '1': { 'Jahmyr Gibbs': { UD: { ry: 92, rcy: 34, atd: -160 }, PP: { ry: 95.5 } } } } },
     consensus: { week: 1, players: consensusPlayers },
-    slMeta: {}, trendAdds: { [star.sid]: 3100 },
+    slMeta: (() => {
+      // Injury-popover fixtures: give the fake team page's scraped-status
+      // players (Michael Wilson Q, Jonah Coleman O) full slMeta detail so
+      // their chips are clickable in the harness (mirrors sleeper mock).
+      // A name that isn't in the players export simply stays a plain chip.
+      const m = {};
+      const fix = [
+        ['Michael Wilson', { inj: 'Q', is: 'Questionable', ib: 'Shoulder', idt: '2026-08-21', inx: 'Limited in practice with a shoulder sprain; trending toward playing.' }],
+        ['Jonah Coleman', { inj: 'OUT', is: 'Out', ib: 'Ankle', idt: '2026-08-18', inx: 'High-ankle sprain; expected back mid-September.' }],
+      ];
+      fix.forEach(([nm, det]) => {
+        const p = data.players.find((x) => x.n === nm);
+        if (p && p.sid) m[String(p.sid)] = Object.assign({ n: p.n, pos: p.s, tm: p.sTm || '' }, det);
+      });
+      return m;
+    })(), trendAdds: { [star.sid]: 3100 },
     playersPage: false,
   };
   document.getElementById('toPlayers').addEventListener('click', () => {

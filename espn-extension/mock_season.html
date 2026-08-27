@@ -80,19 +80,29 @@ append verdict / matchup / proj pills after each within ~2s.</p>
     if (sabotage) flexCands.reverse();
     if (flexCands[0]) { used.add(flexCands[0]); entries.push({ e: flexCands[0], slotId: 23 }); }
     list.forEach((e) => { if (!used.has(e)) entries.push({ e, slotId: 20 }); });
-    return entries.map(({ e, slotId }, i) => ({
-      lineupSlotId: slotId,
-      playerPoolEntry: { player: {
-        id: e.espnId,
-        fullName: e.p.n.replace(/ D\/ST$/, e.p.s === 'DST' ? ' D/ST' : ''),
-        defaultPositionId: POS_TO_ID[e.p.s],
-        proTeamId: ABBR_TO_ID[e.p.sTm] || 0,
-        // my team: flag two starters to exercise injury handling
-        injuryStatus: (slotId !== 20 && sabotage && i === 1) ? 'OUT'
-          : (slotId !== 20 && sabotage && i === 3) ? 'QUESTIONABLE' : 'ACTIVE',
-      } },
-    }));
+    return entries.map(({ e, slotId }, i) => {
+      // my team: flag two starters to exercise injury handling. Record the
+      // flagged players' sids so the mock slMeta below can attach full
+      // detail (body/since/note) — that makes their chips CLICKABLE and
+      // gives the injury popover harness regression coverage.
+      const injStatus = (slotId !== 20 && sabotage && i === 1) ? 'OUT'
+        : (slotId !== 20 && sabotage && i === 3) ? 'QUESTIONABLE' : 'ACTIVE';
+      if (injStatus !== 'ACTIVE' && e.p.sid) {
+        sabotagedInj.push({ sid: String(e.p.sid), n: e.p.n, pos: e.p.s, tm: e.p.sTm || '', kind: injStatus });
+      }
+      return {
+        lineupSlotId: slotId,
+        playerPoolEntry: { player: {
+          id: e.espnId,
+          fullName: e.p.n.replace(/ D\/ST$/, e.p.s === 'DST' ? ' D/ST' : ''),
+          defaultPositionId: POS_TO_ID[e.p.s],
+          proTeamId: ABBR_TO_ID[e.p.sTm] || 0,
+          injuryStatus: injStatus,
+        } },
+      };
+    });
   }
+  const sabotagedInj = [];
   const league = {
     id: 424242, seasonId: 2026, scoringPeriodId: 1,
     status: { currentMatchupPeriod: 1, latestScoringPeriod: 1 },
@@ -169,7 +179,23 @@ append verdict / matchup / proj pills after each within ~2s.</p>
     nflState: { season_type: 'regular', week: 1, season: '2026' },
     vegas: { gameTotals, weeklyProps },
     consensus: { week: 1, players: consensusPlayers },
-    slMeta: {}, trendAdds: { [star && star.sid]: 4200 },
+    slMeta: (() => {
+      // Injury-popover fixtures: the sabotaged starters get full detail so
+      // their chips are clickable in the harness (mirrors sleeper mock).
+      const m = {};
+      sabotagedInj.forEach((s, i) => {
+        m[s.sid] = {
+          n: s.n, pos: s.pos, tm: s.tm,
+          inj: s.kind === 'OUT' ? 'OUT' : 'Q',
+          is: s.kind === 'OUT' ? 'Out' : 'Questionable',
+          ib: i === 0 ? 'Hamstring' : 'Back',
+          idt: i === 0 ? '2026-08-24' : '2026-08-20',
+          inx: i === 0 ? 'Re-aggravated the hamstring in camp; multi-week absence expected.'
+                       : 'Day-to-day with lower-back soreness; expected to play Week 1.',
+        };
+      });
+      return m;
+    })(), trendAdds: { [star && star.sid]: 4200 },
   };
 
   await new Promise((res) => {

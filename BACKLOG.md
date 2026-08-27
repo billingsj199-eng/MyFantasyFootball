@@ -350,7 +350,7 @@ Ideas that aren't on the active backlog but are worth considering for future roa
 
 ### Power user / admin tools
 - **Bulk paste import** for My Rankings — paste a list of player names (Twitter cheat sheet, copied from a forum post, etc.) and auto-add them to your rankings in order.
-- **Custom notes per player** — text field on the player card visible only to the user (synced to Firestore). "Watch his preseason snaps", "Sleeper for week 14", etc.
+- ~~**Custom notes per player**~~ — _Shipped 2026-08-27 (4267d68): MY NOTES section on the player card (collapsed when empty, autosave textarea). localStorage `mff_player_notes` + Firestore `users/{uid}/data/player_notes` (existing rules); PER-NOTE newer-wins merge with empty-text tombstones for deletes (pruned after 60d); account-switch takes cloud wholesale. Merge verified vs stubbed Firestore — same Jack two-device check as the watchlist applies._
 - ~~**Watchlist**~~ — _Shipped 2026-08-27: row stars + ★ filter pill + Firestore sync (users/{uid}/data/watchlist)._
 - ~~**Saved filter presets**~~ — _Shipped 2026-08-27 as view presets (MORE ▸ SAVE VIEW; chips above the stats bar)._
 - **Tier templates** — save your common tier breakpoints (e.g. "S=top 6, A=top 12, B=top 24") and apply across modes.

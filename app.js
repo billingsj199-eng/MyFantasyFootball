@@ -3465,6 +3465,7 @@ function render() {
   const showJm = currentMode === 'dynasty' || currentMode === 'dynastysf';
   const showLanding = showJm && filter === 'ROOKIE';
   let html = '';
+  let _chunkLen = 0; // progressive render: html length at the ~120-row boundary
   data.forEach((d, i) => {
     // DEVY filter: custom row rendering
     if (d._isDevy) {
@@ -3711,6 +3712,9 @@ function render() {
       const _addCutPos = (currentMode === 'weekly' && window._weeklyPosCutGroups && window._weeklyPosCutGroups.includes(filter)) ? filter : null;
       html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button><button class="add-tier-btn" data-add-cut="${_addCutPos ? (i + 1) : d.myRank}"${_addCutPos ? ` data-cut-pos="${_addCutPos}"` : ''} style="color:#ef4444;border-color:#ef4444" title="Place the cut line here — players below are hidden from viewers">✂ CUT</button></td></tr>`;
     }
+    // Progressive-render chunk boundary: snapshot at end of an iteration so
+    // the split always lands between complete <tr>s (tier/cut rows included).
+    if (_chunkLen === 0 && i >= 119) _chunkLen = html.length;
   });
 
   // Tiers that come after the last player
@@ -3731,8 +3735,27 @@ function render() {
     });
   }
 
-  tbody.innerHTML = html;
-
+  // Progressive render (viewers only): paint the first ~120 rows now — covers
+  // the viewport plus the premium wall — and append the tail on the next tick,
+  // re-running the cell-visibility pass over the late rows. Layout/paint of
+  // 500+ rows dominates sort/filter latency (~300ms measured), so chunking
+  // cuts the blocking paint to the visible slice. Editors always get the full
+  // synchronous render: drag rect-caching and the keyboard-reorder re-grab
+  // (setTimeout 0 after render) assume every row exists immediately.
+  // _renderSeq discards a stale append when another render lands in the gap.
+  window._renderSeq = (window._renderSeq || 0) + 1;
+  if (!editable && _chunkLen > 0 && (html.length - _chunkLen) > 20000) {
+    const _seq = window._renderSeq;
+    tbody.innerHTML = html.slice(0, _chunkLen);
+    const _rest = html.slice(_chunkLen);
+    setTimeout(() => {
+      if (window._renderSeq !== _seq) return;
+      tbody.insertAdjacentHTML('beforeend', _rest);
+      if (typeof window._applyCellVisibility === 'function') window._applyCellVisibility();
+    }, 30);
+  } else {
+    tbody.innerHTML = html;
+  }
 
   updateStats(data);
   attachRowListeners();
@@ -3765,15 +3788,20 @@ function render() {
       ? 'Projected yards PER GAME (passing + rushing + receiving) — Mike Clay season projection divided by projected games. Hover a value for the breakdown.'
       : 'Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.');
   }
-  document.querySelectorAll('.yrr-cell').forEach(c => c.style.display = _yrrShow ? '' : 'none');
-  document.getElementById('jmHeader').style.display = showJm ? '' : 'none';
-  document.querySelectorAll('.jm-cell').forEach(c => c.style.display = showJm ? '' : 'none');
-  // Landing Spot only meaningful for rookies — show only in dynasty modes when ROOKIE filter is active.
-  const _landH = document.getElementById('landingHeader');
-  if (_landH) _landH.style.display = showLanding ? '' : 'none';
-  document.querySelectorAll('.landing-cell').forEach(c => c.style.display = showLanding ? '' : 'none');
-  // Re-apply user-saved column toggles after tbody rebuild
-  if (typeof window._applyColumnToggles === 'function') window._applyColumnToggles();
+  // Cell-visibility pass — assigned per render (captures this render's flags)
+  // so the progressive-render tail can re-run it over late-appended rows.
+  window._applyCellVisibility = function () {
+    document.querySelectorAll('.yrr-cell').forEach(c => c.style.display = _yrrShow ? '' : 'none');
+    document.getElementById('jmHeader').style.display = showJm ? '' : 'none';
+    document.querySelectorAll('.jm-cell').forEach(c => c.style.display = showJm ? '' : 'none');
+    // Landing Spot only meaningful for rookies — show only in dynasty modes when ROOKIE filter is active.
+    const _landH = document.getElementById('landingHeader');
+    if (_landH) _landH.style.display = showLanding ? '' : 'none';
+    document.querySelectorAll('.landing-cell').forEach(c => c.style.display = showLanding ? '' : 'none');
+    // Re-apply user-saved column toggles after tbody rebuild
+    if (typeof window._applyColumnToggles === 'function') window._applyColumnToggles();
+  };
+  window._applyCellVisibility();
 }
 
 function updateStats(data) {

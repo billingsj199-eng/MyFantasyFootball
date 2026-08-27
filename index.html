@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-27e" as="script">
+<link rel="preload" href="app.js?v=2026-08-27f" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1488,9 +1488,33 @@ tr:hover .watch-star{opacity:.55}
 <th data-sort="diff" tabindex="0" aria-sort="none"><span data-gloss="Rank vs. selected ADP source. ▲ = ranked higher than market (value pick). ▼ = ranked lower (fade).">+/-</span> <span class="arrow"></span></th>
 </tr>
 </thead>
-<tbody id="tbody"></tbody>
+<tbody id="tbody">
+<!-- Boot skeleton: shows while the boot chain loads (data files + app.js are
+     deferred), replaced wholesale by the first render(). Pure CSS shimmer. -->
+<tr class="skel-row"><td colspan="17"><div class="skel-cells"><span class="skel skel-rank"></span><span class="skel skel-name" style="width:38%"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span></div></td></tr>
+<tr class="skel-row"><td colspan="17"><div class="skel-cells"><span class="skel skel-rank"></span><span class="skel skel-name" style="width:30%"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span></div></td></tr>
+<tr class="skel-row"><td colspan="17"><div class="skel-cells"><span class="skel skel-rank"></span><span class="skel skel-name" style="width:42%"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span></div></td></tr>
+<tr class="skel-row"><td colspan="17"><div class="skel-cells"><span class="skel skel-rank"></span><span class="skel skel-name" style="width:28%"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span></div></td></tr>
+<tr class="skel-row"><td colspan="17"><div class="skel-cells"><span class="skel skel-rank"></span><span class="skel skel-name" style="width:36%"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span></div></td></tr>
+<tr class="skel-row"><td colspan="17"><div class="skel-cells"><span class="skel skel-rank"></span><span class="skel skel-name" style="width:32%"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span></div></td></tr>
+<tr class="skel-row"><td colspan="17"><div class="skel-cells"><span class="skel skel-rank"></span><span class="skel skel-name" style="width:40%"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span></div></td></tr>
+<tr class="skel-row"><td colspan="17"><div class="skel-cells"><span class="skel skel-rank"></span><span class="skel skel-name" style="width:29%"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span></div></td></tr>
+<tr class="skel-row"><td colspan="17"><div class="skel-cells"><span class="skel skel-rank"></span><span class="skel skel-name" style="width:35%"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span></div></td></tr>
+<tr class="skel-row"><td colspan="17"><div class="skel-cells"><span class="skel skel-rank"></span><span class="skel skel-name" style="width:31%"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span><span class="skel skel-bar"></span></div></td></tr>
+</tbody>
 <tfoot><tr><td colspan="99"><div id="kbReorderLive" role="status" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0"></div></td></tr></tfoot>
 </table>
+<style>
+/* Boot skeleton shimmer (rows live in #tbody until the first render) */
+.skel-row td{padding:9px 12px;border-bottom:1px solid var(--border)}
+.skel-cells{display:flex;align-items:center;gap:14px}
+.skel{display:inline-block;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--elev-1) 25%,var(--elev-2) 50%,var(--elev-1) 75%);background-size:200% 100%;animation:skelShimmer 1.2s linear infinite}
+.skel-rank{width:26px;height:26px;border-radius:50%;flex:none}
+.skel-name{height:14px}
+.skel-bar{width:9%;min-width:34px}
+@keyframes skelShimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+</style>
 <div class="empty-state" id="empty" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 <p>No players match your filters.</p>
@@ -5295,7 +5319,7 @@ body.mff-embed{padding-bottom:0}
 .bn-btn.active{color:var(--accent)}
 }
 </style>
-<script defer src="app.js?v=2026-08-27e"></script>
+<script defer src="app.js?v=2026-08-27f"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

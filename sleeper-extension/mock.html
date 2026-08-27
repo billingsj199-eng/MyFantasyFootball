@@ -266,8 +266,21 @@ Out player, so LINEUP should flag moves and WAIVERS should rank vs your team.</p
         first_name: parts[0], last_name: parts.slice(1).join(' '), status: 'Active',
       };
     });
-    if (sid('Puka Nacua')) SL_PLAYERS[sid('Puka Nacua')].injury_status = 'Questionable';
-    if (sid('Jahmyr Gibbs')) SL_PLAYERS[sid('Jahmyr Gibbs')].injury_status = 'Out';
+    if (sid('Puka Nacua')) {
+      var pk = SL_PLAYERS[sid('Puka Nacua')];
+      pk.injury_status = 'Questionable';
+      // Detail fields exercise the injury popover (status/body/since/note).
+      pk.injury_body_part = 'Back';
+      pk.injury_start_date = '2026-08-20';
+      pk.injury_notes = 'Day-to-day with lower-back soreness; expected to play Week 3.';
+    }
+    if (sid('Jahmyr Gibbs')) {
+      var gb = SL_PLAYERS[sid('Jahmyr Gibbs')];
+      gb.injury_status = 'Out';
+      gb.injury_body_part = 'Hamstring';
+      gb.injury_start_date = '2026-09-14';
+      gb.injury_notes = 'Re-aggravated the hamstring in Week 2; multi-week absence expected.';
+    }
     var TRENDING = pool.slice(0, 5).map(function (p, i) {
       return { player_id: String(p.sid), count: 4200 - i * 700 };
     });

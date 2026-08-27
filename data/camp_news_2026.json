@@ -1,6 +1,46 @@
 {
-  "updated": "2026-08-26T16:16:10Z",
+  "updated": "2026-08-27T02:10:00Z",
   "items": [
+    {
+      "player": "John Metchie III",
+      "team": "CAR",
+      "pos": "WR",
+      "date": "2026-08-26",
+      "headline": "Caught a TD from Kenny Pickett in Wednesday's joint practice with the Texans",
+      "take": "Boosts his bid for Carolina's WR3 role behind McMillan/Coker with Legette out; deep dynasty watch only",
+      "url": "https://www.si.com/nfl/panthers/onsi/good-bad-panthers-joint-practice-texans-bryce-young-struggles",
+      "tag": "riser"
+    },
+    {
+      "player": "Jimmy Horn Jr.",
+      "team": "CAR",
+      "pos": "WR",
+      "date": "2026-08-26",
+      "headline": "Made a leaping TD grab to end Wednesday's joint practice with the Texans",
+      "take": "Real boost for a rookie reportedly in danger of missing the 53-man cut; deep dynasty stash only",
+      "url": "https://www.si.com/nfl/panthers/onsi/jimmy-horn-jr-danger-missing-final-cut-panthers-roster",
+      "tag": "riser"
+    },
+    {
+      "player": "Josh Jacobs",
+      "team": "GB",
+      "pos": "RB",
+      "date": "2026-08-26",
+      "headline": "Packers GM Gutekunst says team is \"prepared\" for a possible suspension",
+      "take": "Real discipline risk resurfaces despite a clean return to practice — monitor closely into Week 1",
+      "url": "https://ca.sports.yahoo.com/news/packers-gm-brian-gutekunst-says-team-is-prepared-for-possible-josh-jacobs-suspension-165824357.html",
+      "tag": "faller"
+    },
+    {
+      "player": "Ashton Jeanty",
+      "team": "LV",
+      "pos": "RB",
+      "date": "2026-08-26",
+      "headline": "Practiced Wednesday and said he \"feels good overall\" after Sunday's ankle sprain",
+      "take": "De-escalates the injury further — trending toward a normal Week 1 workload",
+      "url": "https://www.cbssports.com/nfl/news/raiders-ashton-jeanty-injured-helped-off-practice-field/",
+      "tag": "injury"
+    },
     {
       "player": "Calvin Austin III",
       "team": "NYG",

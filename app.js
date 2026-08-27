@@ -8456,8 +8456,10 @@ _renderDataFreshness();
       return (up ? '▲' : '▼') + ' ' + m.name + (m.pos ? ' (' + m.pos + ')' : '') + ' ' +
         fmt(m.from) + ' → ' + fmt(m.to) + (pct != null ? ' (' + (up ? '+' : '−') + pct + '%)' : '');
     });
+    // /movers.html carries OG tags + the daily-rendered og/movers.png card,
+    // so pasting this link unfurls a rich movers image on Discord/X/Slack.
     const text = '📈 ADP Movers — Underdog BBM, last ' + s.span + ' day' + (s.span === 1 ? '' : 's') + '\n'
-      + lines.join('\n') + '\n\nmyfantasyfootball.co';
+      + lines.join('\n') + '\n\nhttps://www.myfantasyfootball.co/movers.html';
     const copy = () => {
       try {
         navigator.clipboard.writeText(text).then(

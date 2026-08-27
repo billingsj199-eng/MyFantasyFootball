@@ -28,7 +28,7 @@ Write-Log '=== daily consensus ADP pull start ==='
 
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
 # (Site Rankings CSVs are git-excluded local files — these are the tracked targets.)
-$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/mike_clay_projections.js', 'data/injury_updates.js', 'data/weekly_projections.js', 'data/weekly_projections.json', 'data/site_projections.js')
+$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/mike_clay_projections.js', 'data/injury_updates.js', 'data/weekly_projections.js', 'data/weekly_projections.json', 'data/site_projections.js', 'og/movers.png', 'movers.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -41,6 +41,13 @@ if ($LASTEXITCODE -ne 0) {
     Write-Log "PULL FAILED (exit $LASTEXITCODE) - nothing committed"
     exit 1
 }
+
+# ADP MOVERS share card (og/movers.png + movers.html) — the OG image the
+# share button's /movers.html link unfurls. Non-fatal: a render failure
+# just leaves yesterday's card up.
+$out = & $Python 'scripts\build_movers_og.py' 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "movers OG card FAILED (exit $LASTEXITCODE) - continuing with yesterday's card" }
 
 $changed = git status --porcelain -- @Files
 if (-not $changed) {

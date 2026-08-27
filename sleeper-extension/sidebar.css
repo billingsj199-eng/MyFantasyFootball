@@ -1053,3 +1053,15 @@ button.mff-proj-bl[disabled] {
   border-bottom-color: #22c55e;
 }
 #mff-sidebar.on-clock #mff-header .title { color: #22c55e; }
+
+/* Injury detail popover (chips in rec rows + season rows are clickable) */
+#mff-inj-popover {
+  display: none; position: absolute; z-index: 2147483647; max-width: 280px;
+  background: #171b26; border: 1px solid #2c3350; border-radius: 10px;
+  padding: 10px 12px; box-shadow: 0 14px 36px rgba(0,0,0,.6);
+  font: 11px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; color: #dfe4f2;
+}
+#mff-inj-popover .mip-name { font-weight: 700; font-size: 12px; margin-bottom: 6px; }
+#mff-inj-popover .mip-grid { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; }
+#mff-inj-popover .mip-k { color: #8b94b3; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding-top: 2px; white-space: nowrap; }
+#mff-inj-popover .mip-foot { margin-top: 7px; font-size: 9px; color: #8b94b3; opacity: .75; }

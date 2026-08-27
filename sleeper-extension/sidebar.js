@@ -1998,11 +1998,11 @@
   // Cached 12h in extension storage; fantasy positions only.
   async function fetchInjuries() {
     try {
-      const saved = await store.get(['sleeperHelper.slMeta3']);
-      const cached = saved['sleeperHelper.slMeta3'];
+      const saved = await store.get(['sleeperHelper.slMeta4']);
+      const cached = saved['sleeperHelper.slMeta4'];
       if (cached && cached.ts && Date.now() - cached.ts < INJ_TTL_MS) {
         state.slMeta = cached.map || {};
-        if (state.appMode === 'season') render();
+        render(); // both modes show injury chips now
         return;
       }
     } catch (e) {}
@@ -2029,11 +2029,16 @@
         if (typeof pl.years_exp === 'number') entry.exp = pl.years_exp;
         if (pl.injury_status) entry.is = pl.injury_status;
         if (pl.status && pl.status !== 'Active') entry.st = pl.status;
+        // Detail fields for the injury popover (2026-08-27): body part, start
+        // date, note — same Sleeper dump, so no extra request.
+        if (pl.injury_body_part) entry.ib = pl.injury_body_part;
+        if (pl.injury_start_date) entry.idt = pl.injury_start_date;
+        if (pl.injury_notes) entry.inx = String(pl.injury_notes).slice(0, 200);
         map[sid] = entry;
       }
       state.slMeta = map;
-      store.set({ 'sleeperHelper.slMeta3': { ts: Date.now(), map } });
-      if (state.appMode === 'season') render();
+      store.set({ 'sleeperHelper.slMeta4': { ts: Date.now(), map } });
+      render(); // both modes show injury chips now
     } catch (e) { /* flags just stay off */ }
   }
   // ---- in-season decay of preseason projections ----
@@ -2723,7 +2728,7 @@
       <div class="mff-rec ${i === 0 ? 'top' : ''}" data-key="rec|${esc(k)}">
         <div class="num" style="color:${MEDALS[i]};font-weight:800">${i + 1}</div>
         <div class="info">
-          <div class="name">${esc(p.n)}</div>
+          <div class="name">${esc(p.n)} ${injTagHTML(p)}</div>
           <div class="meta">
             <span class="pos ${p.s}">${p.s}</span>
             <span>${esc(team)}</span>
@@ -3100,21 +3105,67 @@
       </div>`;
   }
 
+  // Injury chip — clickable (opens the detail popover below) wherever it
+  // renders: season lineup/waiver rows AND draft rec rows.
+  function injTagHTML(p) {
+    const m = p && p.sid && state.slMeta[p.sid];
+    if (!m || !m.inj) return '';
+    const cfg = m.inj === 'OUT' ? ['#402a2a', '#d06d6d', 'OUT']
+      : m.inj === 'D' ? ['#453325', '#e0a060', 'DTD']
+      : ['#4a3f30', '#ffc99b', 'Q'];
+    return `<span class="tag mff-inj-tag" data-sid="${esc(String(p.sid))}" title="Click for injury detail" style="background:${cfg[0]};color:${cfg[1]};cursor:pointer">${cfg[2]}</span>`;
+  }
   // ---------- season-mode UI ----------
   function snBadges(p) {
     let out = '';
     if (onByeThisWeek(p)) {
       out += '<span class="tag" style="background:#3a3040;color:#c0a0d0">BYE</span>';
     }
-    const m = p.sid && state.slMeta[p.sid];
-    if (m && m.inj) {
-      const cfg = m.inj === 'OUT' ? ['#402a2a', '#d06d6d', 'OUT']
-        : m.inj === 'D' ? ['#453325', '#e0a060', 'DTD']
-        : ['#4a3f30', '#ffc99b', 'Q'];
-      out += `<span class="tag" style="background:${cfg[0]};color:${cfg[1]}">${cfg[2]}</span>`;
-    }
+    out += injTagHTML(p);
     return out;
   }
+  // Injury detail popover: anchored to the clicked chip, appended to the host
+  // page body (the sidebar re-renders its innerHTML too often to own it).
+  function showInjPopover(sid, anchor) {
+    let pop = document.getElementById('mff-inj-popover');
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'mff-inj-popover';
+      document.body.appendChild(pop);
+      document.addEventListener('click', (e) => {
+        if (pop.style.display === 'block' && !pop.contains(e.target) && !e.target.closest('.mff-inj-tag')) pop.style.display = 'none';
+      }, true);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') pop.style.display = 'none'; });
+      window.addEventListener('scroll', () => { pop.style.display = 'none'; }, true);
+    }
+    if (pop.style.display === 'block' && pop._sid === sid) { pop.style.display = 'none'; return; }
+    const m = state.slMeta[sid];
+    if (!m) return;
+    const rows = [];
+    rows.push(['Status', m.is || (m.inj === 'OUT' ? 'Out' : m.inj === 'D' ? 'Doubtful' : 'Questionable')]);
+    if (m.st) rows.push(['Roster', m.st]);
+    rows.push(['Injury', m.ib || 'Undisclosed']);
+    if (m.idt) rows.push(['Since', m.idt]);
+    if (m.inx) rows.push(['Note', m.inx]);
+    pop.innerHTML = '<div class="mip-name">' + esc(m.n || '') + '</div>'
+      + '<div class="mip-grid">' + rows.map((r) => '<span class="mip-k">' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span>').join('') + '</div>'
+      + '<div class="mip-foot">Sleeper injury feed</div>';
+    pop._sid = sid;
+    pop.style.display = 'block';
+    const r = anchor.getBoundingClientRect();
+    const pw = pop.offsetWidth;
+    let left = r.left + window.scrollX - 10;
+    left = Math.min(Math.max(8, left), window.scrollX + document.documentElement.clientWidth - pw - 8);
+    pop.style.left = left + 'px';
+    pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  }
+  document.addEventListener('click', (e) => {
+    const tag = e.target.closest && e.target.closest('.mff-inj-tag');
+    if (!tag) return;
+    e.stopPropagation();
+    e.preventDefault();
+    showInjPopover(tag.getAttribute('data-sid'), tag);
+  }, true);
   function seasonHeaderHTML() {
     const lg = state.seasonLeague;
     const name = lg ? lg.name : 'League';
@@ -5040,6 +5091,7 @@
     buildPanel();
     startDecorating();
     render();
+    fetchInjuries(); // draft rec rows show injury chips too (12h-cached dump)
     try {
       const saved = await store.get(['sleeperDraft_' + draftId, 'sleeperHelper.username']);
       const prefs = saved['sleeperDraft_' + draftId];

@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-27c" as="script">
+<link rel="preload" href="app.js?v=2026-08-27d" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -76,7 +76,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-08-27" as="script">
 <link rel="preload" href="data/d.js?v=2026-08-27" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-08-26d">
+<link rel="stylesheet" href="styles/main.css?v=2026-08-27a">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1063,6 +1063,10 @@ MORE
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
 IMPORT
 </button>
+<button class="tb-btn export-menu-item" id="btnSaveView" title="Save the current view — board, format, scoring, stats, position, ADP source, TOP N — as a one-click chip above the table" style="width:100%;justify-content:flex-start;padding:6px 8px;font-size:.7rem" onclick="window._saveViewPreset()">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+SAVE VIEW
+</button>
 <button class="tb-btn export-menu-item" id="btnClear" title="Clear all your rankings & notes" style="width:100%;justify-content:flex-start;padding:6px 8px;font-size:.7rem">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
 CLEAR ALL
@@ -1357,6 +1361,19 @@ tr:hover .watch-star{opacity:.55}
 <span id="rnkAdpHintText">Additional ADP sources require a Premium account.</span>
 </div>
 
+<!-- Saved view presets: chips render here only when presets exist
+     (_renderViewPresets in app.js; SAVE VIEW lives in the MORE menu). -->
+<div class="view-presets" id="viewPresetsRow" style="display:none"></div>
+<style>
+.view-presets{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 2rem 0;font-family:'DM Sans',sans-serif}
+.vp-label{font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:1.5px;color:var(--text2)}
+.vp-chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border:1px solid var(--border);border-radius:99px;background:var(--surface2);color:var(--text1);font-size:.68rem;cursor:pointer;transition:border-color .12s,color .12s}
+.vp-chip:hover{border-color:var(--accent);color:var(--accent)}
+.vp-chip.on{border-color:var(--accent);background:rgba(245,158,11,.12);color:var(--accent)}
+.vp-x{opacity:.5;font-size:.6rem;padding:0 1px}
+.vp-x:hover{opacity:1;color:#ef4444}
+@media (max-width:600px){.view-presets{margin:6px 10px 0}}
+</style>
 <div class="stats-bar" id="statsBar"></div>
 <!-- Data-freshness line: when each auto-pulled feed last refreshed.
      Populated by _renderDataFreshness() in app.js; hidden until at least
@@ -5233,7 +5250,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-27c"></script>
+<script defer src="app.js?v=2026-08-27d"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

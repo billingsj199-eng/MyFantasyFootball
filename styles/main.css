@@ -671,6 +671,22 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 .myrank-num.tier-B{color:#3b82f6;background:rgba(59,130,246,.1)}
 .myrank-num.tier-C{color:#22c55e;background:rgba(34,197,94,.1)}
 .myrank-num.tier-D{color:#a855f7;background:rgba(168,85,247,.1)}
+/* Tier bands: a left-edge stripe carries each tier's color through the rows
+   between tier divider rows. Class set in render() only when tiers are shown
+   (board order, no search, no column sort). Desktop only — the ≤600px card
+   layout already carries tier color on the rank chip. */
+@media (min-width:601px){
+tr.tierband-S>td:first-child{box-shadow:inset 3px 0 0 0 #eab308}
+tr.tierband-A>td:first-child{box-shadow:inset 3px 0 0 0 #ef4444}
+tr.tierband-B>td:first-child{box-shadow:inset 3px 0 0 0 #3b82f6}
+tr.tierband-C>td:first-child{box-shadow:inset 3px 0 0 0 #22c55e}
+tr.tierband-D>td:first-child{box-shadow:inset 3px 0 0 0 #a855f7}
+tr.tierband-E>td:first-child{box-shadow:inset 3px 0 0 0 #f97316}
+tr.tierband-F>td:first-child{box-shadow:inset 3px 0 0 0 #9ca3af}
+tr.tierband-G>td:first-child{box-shadow:inset 3px 0 0 0 #ec4899}
+tr.tierband-H>td:first-child{box-shadow:inset 3px 0 0 0 #06b6d4}
+tr.tierband-I>td:first-child{box-shadow:inset 3px 0 0 0 #84cc16}
+}
 .myrank-num.tier-E{color:#f97316;background:rgba(249,115,22,.1)}
 .myrank-num.tier-F{color:#9ca3af;background:rgba(107,114,128,.12)}
 .myrank-num.tier-G{color:#ec4899;background:rgba(236,72,153,.12)}

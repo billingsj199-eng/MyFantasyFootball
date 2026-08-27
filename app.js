@@ -2585,6 +2585,98 @@ function _teamPpgBoxHtml(team) {
   </div>`;
 }
 
+// === Saved view presets ===
+// One-click chips snapshotting the rankings control state (board, format,
+// scoring, stats mode, position, ADP source, TOP-N). Applied by
+// programmatically clicking the same buttons the user would, so every
+// existing gate still runs (weekly publish lock, premium ADP sources,
+// mode-dependent source resets). Device-local: localStorage
+// `mff_view_presets`. SAVE VIEW lives in the MORE menu; the chip row only
+// renders when at least one preset exists (zero presets = zero chrome).
+function _viewPresetsLoad() {
+  try { const a = JSON.parse(localStorage.getItem('mff_view_presets')); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+}
+function _viewPresetsStore(list) {
+  try { localStorage.setItem('mff_view_presets', JSON.stringify(list)); } catch (e) {}
+}
+function _viewPresetDefaultName(s) {
+  const ver = { consensus: 'Consensus', jacks: "Jack's", mine: 'Mine' }[s.version] || s.version;
+  const mode = { redraft: 'Redraft', superflex: 'SFLEX', dynasty: 'Dyn 1QB', dynastysf: 'Dyn SF', weekly: 'Weekly', bestball: 'Best Ball' }[s.mode] || s.mode;
+  const sc = { ppr: 'PPR', half: 'Half', std: 'STD' }[s.scoring] || s.scoring;
+  const parts = [ver, mode, sc];
+  if (s.pos && s.pos !== 'ALL') parts.push(s.pos);
+  if (s.topN) parts.push('Top ' + s.topN);
+  return parts.join(' · ');
+}
+window._saveViewPreset = function () {
+  const s = {
+    version: currentVersion, mode: currentMode, pos: filter,
+    scoring: rankingScoringFmt,
+    stats: (typeof rnkStatMode !== 'undefined' ? rnkStatMode : 'fantasy'),
+    adp: (typeof rnkAdpSrc !== 'undefined' ? rnkAdpSrc : 'consensus'),
+    topN: (typeof rankTopN !== 'undefined' && rankTopN != null) ? rankTopN : null
+  };
+  const list = _viewPresetsLoad();
+  if (list.length >= 8) { if (typeof toast === 'function') toast('Preset limit reached (8) — remove one first'); return; }
+  let name = null;
+  try { name = window.prompt('Name this view:', _viewPresetDefaultName(s)); } catch (e) {}
+  if (name == null) return; // cancelled
+  name = String(name).trim().slice(0, 40) || _viewPresetDefaultName(s);
+  list.push({ name, s });
+  _viewPresetsStore(list);
+  _renderViewPresets();
+  if (typeof toast === 'function') toast('View saved — chip added above the table');
+};
+window._applyViewPreset = function (i) {
+  const p = _viewPresetsLoad()[i];
+  if (!p) return;
+  const s = p.s || {};
+  const clickIfNeeded = sel => { const b = document.querySelector(sel); if (b && !b.classList.contains('active')) b.click(); };
+  // Order matters: version + mode first (their handlers can reset the ADP
+  // source and bounce the position filter), the ADP source last so nothing
+  // clobbers it.
+  if (s.version) clickIfNeeded(`.version-tab[data-version="${s.version}"]`);
+  if (s.mode) clickIfNeeded(`.mode-tab[data-mode="${s.mode}"]`);
+  if (s.scoring) clickIfNeeded(`.rnk-scoring-btn[data-rnkscoring="${s.scoring}"]`);
+  if (s.stats) clickIfNeeded(`.rnk-statmode-btn[data-rnkstatmode="${s.stats}"]`);
+  if (s.pos) clickIfNeeded(`.pos-btn[data-pos="${s.pos}"]`);
+  if (s.adp) clickIfNeeded(`.md-rank-src-tab[data-rnkadp="${s.adp}"]`);
+  const tn = document.getElementById('rankTopNInput');
+  if (tn) {
+    const want = s.topN != null ? String(s.topN) : '';
+    if (tn.value !== want) { tn.value = want; tn.dispatchEvent(new Event('input', { bubbles: true })); }
+  }
+  _renderViewPresets(i);
+};
+window._deleteViewPreset = function (i) {
+  const list = _viewPresetsLoad();
+  const gone = list.splice(i, 1)[0];
+  _viewPresetsStore(list);
+  _renderViewPresets();
+  if (gone && typeof toast === 'function') toast('Removed "' + gone.name + '"');
+};
+function _renderViewPresets(activeIdx) {
+  const row = document.getElementById('viewPresetsRow');
+  if (!row) return;
+  const list = _viewPresetsLoad();
+  if (!list.length) { row.style.display = 'none'; row.innerHTML = ''; return; }
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  row.innerHTML = '<span class="vp-label">MY VIEWS</span>' + list.map((p, i) =>
+    `<span class="vp-chip${i === activeIdx ? ' on' : ''}" data-vp-apply="${i}" title="Apply this view">${esc(p.name)}<span class="vp-x" data-vp-del="${i}" title="Delete this view">✕</span></span>`
+  ).join('');
+  row.style.display = 'flex';
+}
+(function () {
+  const row = document.getElementById('viewPresetsRow');
+  if (row) row.addEventListener('click', e => {
+    const del = e.target.closest('[data-vp-del]');
+    if (del) { e.stopPropagation(); window._deleteViewPreset(+del.dataset.vpDel); return; }
+    const ap = e.target.closest('[data-vp-apply]');
+    if (ap) window._applyViewPreset(+ap.dataset.vpApply);
+  });
+  _renderViewPresets();
+})();
+
 // === Watchlist (★) ===
 // v1 is device-local (localStorage `mff_watchlist`, array of player names) —
 // deliberately NOT synced to Firestore yet, to stay clear of the rankings
@@ -3527,7 +3619,7 @@ function render() {
       }
     }
 
-    html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}">
+    html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? (i + 1) : d.myRank}</span></td>
       <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>

@@ -1,8 +1,39 @@
 # MyFantasyFootball — Backlog
 
-_Last updated: 2026-08-13_
+_Last updated: 2026-08-27_
 
 Running backlog for myfantasyfootball.co. Items are grouped by what's blocking them, then by effort. **Read DEPLOY_NOTES.md first** if any "Shipped" item below mentions Firestore rules — those features won't work in prod until rules are pushed.
+
+---
+
+## Shipped 2026-08-27 (draft-week UI sweep — 12 features, one session)
+
+All merged to main and deploy-verified on production the same day (commits `fbeb429`..`e6fb101`, app.js `?v=` walked 2026-08-26m → 2026-08-27g). Rankings-page focus, timed for the Labor Day draft weekend + Week 1.
+
+### Draft-week wins
+- **Print cheat sheet** — EXPORT ▸ PRINT SHEET: standalone 3-column printable doc from `getFiltered()` (mode/format/scoring/position/TOP-N carry over), tier section breaks, cross-off box per row, hidden-iframe print. Same premium cutoff + toasts as the CSV export. Works with the ★ watchlist filter on = print your watchlist.
+- **Data-freshness line** (`#dataFreshness`, under the stats bar) — "⟳ ADP today 9:00am · Lines today · Projections today 9:00am" from ud_adp_history `updated`, newest `asOf` in BETTING_2026, `WEEKLY_PROJ.updated`.
+- **In-season strip** (`#seasonStrip`, top of rankings) — current week + kickoff countdown (ticks each minute), "Games in progress" Thu–Mon, rolls to next week Tuesday 09:00 UTC, WEEKLY RANKINGS jump button gated on `#weeklyModeTab` visibility. ⚠️ `_SEASON_KICKS_2026` in app.js is a hardcoded 18-week kickoff table (DST flip W9, Thanksgiving W12, W18 Sunday finale) — **regenerate for the 2027 season**. Test hook: `window._seasonStripNow`.
+
+### Rankings-table features
+- **ADP-trend sparklines** — 40×12 inline SVG in the ADP cell: last ~15 daily Underdog BBM snapshots (same ud_adp_history.json the MOVERS ticker fetches). Risers slope UP green, fallers red, |Δ|<2 gray; hidden ≤600px; tooltip labels the source (always Underdog regardless of selected ADP column).
+- **Watchlist** — ☆ star per row (hover-reveal desktop / faint-always touch) + ★ pill by the position filters (ANDs with position filter, skips TOP-N, auto-exits when emptied). localStorage `mff_watchlist`.
+- **Watchlist cloud sync** — `users/{uid}/data/watchlist` (existing per-user rules — NO rules deploy needed). Newer-side-wins reconcile (`mff_watchlist_at` vs doc `updatedAt`); a different account's existing cloud list beats device leftovers (`mff_watchlist_uid`); full-array `set()` debounced 1.5s. Reconcile verified against a stubbed Firestore — **Jack action: real two-device round-trip while signed in**.
+- **Saved view presets** — MORE ▸ SAVE VIEW snapshots board/format/scoring/stats/position/ADP-source/TOP-N as named chips above the stats bar (localStorage `mff_view_presets`, cap 8). Applies by clicking the real control buttons so every gate still runs; ADP source applied last. Chip row renders only when presets exist.
+- **Tier bands** — 3px left-edge stripe per row in its tier's color (`tierband-<letter>` class, gated on `showTiers` so it vanishes on sort/search). Desktop only; mobile cards already tier-color the rank chip.
+
+### Layout / navigation
+- **Control-bar declutter** — SCORING / STATS / ADP-source rows collapse behind one ⚙ toggle (default collapsed, persists in `mff_view_opts_open`); live summary beside it tints accent when off-default, so collapsed ≠ hidden state.
+- **Mobile bottom nav** — fixed 4-tab bar ≤600px (Rankings / My Teams / Trade / Mock) with safe-area padding; taps click the real `.nav-btn`s, `switchPage` syncs the bar via `_syncBottomNav`; hidden in embed mode. **Jack action: real-iOS thumb-through still recommended.**
+
+### Performance
+- **Boot skeleton rows** — 10 static shimmer rows in `#tbody` (pure CSS, theme tokens, reduced-motion respected) replaced by the first render; no more blank table during the boot chain.
+- **Progressive table rendering** — viewers get the first ~120 rows painted synchronously (~28ms measured live vs ~300ms for all 502), tail appended next tick with the cell-visibility pass re-run (`window._applyCellVisibility`); `_renderSeq` guards racing renders. **Editors keep the full synchronous render** (drag rect-caching + keyboard-reorder re-grab assume all rows exist).
+
+### Small pieces
+- **Shortcuts help completed** — the `?` overlay's KEYBOARD SHORTCUTS section (already existed, with `g <letter>` nav) gained the drag-handle reorder keys and the player-card ←/→ pin cycling.
+- **ADP MOVERS share button** — Web Share sheet on mobile / clipboard elsewhere; text lists the rendered movers with arrows + % moves.
+- **Preload gotcha fixed twice** — app.js AND styles/main.css each appear in index.html as a `<link rel="preload">` (~lines 64–69) **plus** the real tag: any `?v=` bump must hit both or the preload double-fetches the old URL.
 
 ---
 
@@ -65,10 +96,12 @@ If picking the next thing to do, in order:
 4. ~~**Fix the injury/roster Firestore feed**~~ — DONE 2026-08-13 (see Shipped section: static-file rebuild, daily Phase I, staleness guard).
 5. **Weekly format completion → public launch by Week 1** — see "Weekly format expansion" below. Weekly props + board sync landed 2026-07-21/22; remaining: true weekly projections (consensus blend), weekly player-card tab, K/DST support, un-gate `_weeklyAdminCheck`.
 6. ~~**Phone-test mobile responsiveness**~~ — emulated 375px sweep DONE 2026-08-13 (nav-tab overflow fixed; all pages clean). Real-iOS thumb-through by Jack still recommended.
-7. ~~**ADP movement tracking**~~ — SHIPPED 2026-08-13 (4a1a909): ADP MOVERS card on the rankings page, top-6 BBM risers/fallers vs the snapshot ~7 days back, computed client-side from `data/ud_adp_history.json` (Phase F snapshots, accumulating since 2026-07-26). Rows open the player card; collapsible; hidden gracefully with <2 snapshot days. Future: share button / OG image (pairs with "smart alerts").
+7. ~~**ADP movement tracking**~~ — SHIPPED 2026-08-13 (4a1a909): ADP MOVERS card on the rankings page, top-6 BBM risers/fallers vs the snapshot ~7 days back, computed client-side from `data/ud_adp_history.json` (Phase F snapshots, accumulating since 2026-07-26). Rows open the player card; collapsible; hidden gracefully with <2 snapshot days. Share button shipped 2026-08-27 (Web Share / clipboard); OG image still future (pairs with "smart alerts").
 8. ~~**ESPN league import**~~ — SHIPPED 2026-08-10 (direct in-site sync for public leagues + extension for private). Yahoo direct import followed 2026-08-13.
 
 Still open, lower urgency: per-year top-25 trivia sweep (452-slug seed list); light-mode inline-color audit (only when a new broken element is spotted).
+
+**New Jack-only checks from the 2026-08-27 sweep:** (a) watchlist cloud sync — star a player while signed in on one device, reload signed in on another, confirm it appears (client logic verified against a stubbed Firestore only); (b) mobile bottom nav — real-iOS thumb-through (emulated 375px verified, joins the standing real-device check from item 6); (c) January reminder — regenerate `_SEASON_KICKS_2026` in app.js for the 2027 season or the in-season strip stays dark after Week 18.
 
 ---
 
@@ -256,7 +289,7 @@ When you next deploy:
 ### Quick wins (<1 day each, doable now)
 
 - ~~**Bye week column**~~ — _Shipped 2026-07-22 as a player-card field instead (Jack: no rankings column). `scripts/pull_bye_weeks.py` → `data/bye_weeks.js`._
-- **Performance: virtualize the rankings table** — ~500 rows render at once. Risky without test coverage; do this on a quiet branch.
+- ~~**Performance: virtualize the rankings table**~~ — _mostly superseded 2026-08-27: progressive rendering paints the first ~120 rows sync (viewers) and appends the tail next tick, plus boot skeleton rows. True windowed virtualization only worth revisiting if scroll-perf complaints surface._
 - ~~**Analytics on tool usage**~~ — _GA4 stub shipped 2026-07-22; needs Jack to create the property + paste the measurement ID (see priorities above)._
 - **Inline-style color audit for light mode** — ~30 places in `index.html` use hardcoded hex/rgba colors that don't follow the dark→light flip. Each is small; do them as you spot broken elements in light mode.
 - ~~**Sticky first column on the rankings table**~~ — _Shipped 2026-05-06._
@@ -318,8 +351,8 @@ Ideas that aren't on the active backlog but are worth considering for future roa
 ### Power user / admin tools
 - **Bulk paste import** for My Rankings — paste a list of player names (Twitter cheat sheet, copied from a forum post, etc.) and auto-add them to your rankings in order.
 - **Custom notes per player** — text field on the player card visible only to the user (synced to Firestore). "Watch his preseason snaps", "Sleeper for week 14", etc.
-- **Watchlist** — separate from rankings; just "players I'm tracking". Smaller commitment than ranking, useful for waiver wire targets.
-- **Saved filter presets** — "QB-only, Half PPR, Dynasty SF" as a one-click view.
+- ~~**Watchlist**~~ — _Shipped 2026-08-27: row stars + ★ filter pill + Firestore sync (users/{uid}/data/watchlist)._
+- ~~**Saved filter presets**~~ — _Shipped 2026-08-27 as view presets (MORE ▸ SAVE VIEW; chips above the stats bar)._
 - **Tier templates** — save your common tier breakpoints (e.g. "S=top 6, A=top 12, B=top 24") and apply across modes.
 - **Bulk edit rankings** — multi-select players in the table, move them all up/down N spots.
 
@@ -368,8 +401,8 @@ Ideas that aren't on the active backlog but are worth considering for future roa
 - **Saved mock comparisons** — see which draft strategies (Hero RB vs Zero RB) gave you better grades over your last 10 mocks.
 
 ### Quality of life
-- **Print-friendly cheat sheet view** — `?print=1` on rankings flattens to a clean printable list. Power users print for in-person drafts.
-- **Keyboard shortcuts overlay** — `?` key shows a help dialog of all shortcuts (Cmd+K, drag handles, etc.).
+- ~~**Print-friendly cheat sheet view**~~ — _Shipped 2026-08-27 as EXPORT ▸ PRINT SHEET (no URL param; tier breaks + cross-off boxes)._
+- ~~**Keyboard shortcuts overlay**~~ — _Already existed (`?` help overlay + `g <letter>` nav); completed 2026-08-27 with the drag-handle and card-pin rows._
 - **Undo/redo** for ranking edits within a session.
 - **Conflict resolution** when same user has unsaved local changes and signs in with newer cloud data.
 

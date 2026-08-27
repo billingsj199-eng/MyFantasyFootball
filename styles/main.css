@@ -68,6 +68,16 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 .amb-share{flex:none;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin-left:2px;transition:color .12s,border-color .12s}
 .amb-share svg{width:12px;height:12px}
 .amb-share:hover{color:var(--accent);border-color:var(--accent)}
+/* Player-card private notes (📝 MY NOTES — collapsed head when empty) */
+.card-notes{margin:2px 0 10px;border:1px dashed var(--border);border-radius:8px;background:var(--elev-1)}
+.cn-head{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:6px 10px;cursor:pointer;text-align:left}
+.cn-title{font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1.5px;color:var(--text2)}
+.card-notes.open .cn-title{color:var(--accent)}
+.cn-hint{font-family:'DM Sans',sans-serif;font-size:.62rem;color:var(--text2);opacity:.7}
+.cn-status{margin-left:auto;font-family:'DM Sans',sans-serif;font-size:.62rem;color:#22c55e}
+.cn-text{display:none;width:calc(100% - 20px);margin:0 10px 8px;padding:7px 9px;background:var(--surface2);color:var(--text1);border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.78rem;line-height:1.45;resize:vertical;min-height:48px}
+.card-notes.open .cn-text{display:block}
+.cn-text:focus{outline:none;border-color:var(--accent)}
 .amb-sub{font-size:.58rem;color:var(--text2)}
 .amb-scroll{flex:1;overflow:hidden;white-space:nowrap}
 .live-ticker-inner{display:inline-flex;align-items:center;gap:8px;animation:tickerScroll 35s linear infinite;padding-left:100%}

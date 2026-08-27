@@ -2735,6 +2735,136 @@ function _renderViewPresets(activeIdx) {
   _renderViewPresets();
 })();
 
+// === Player notes (private, per-user) ===
+// A per-player free-text note on the player card, visible only to this user.
+// Same storage shape as the watchlist: localStorage first (`mff_player_notes`,
+// map name → {t, at}), Firestore users/{uid}/data/player_notes for signed-in
+// sync (existing per-user rules — no rules change). Reconcile is PER NOTE
+// (newer `at` wins per player, so editing different players on different
+// devices merges cleanly); deleting writes an empty-text tombstone so the
+// delete survives the merge (tombstones >60 days old are pruned on push).
+// A different account's existing cloud doc replaces this device's leftovers
+// wholesale (`mff_player_notes_uid`) — notes must never leak across accounts.
+window._playerNotes = (() => {
+  try { const o = JSON.parse(localStorage.getItem('mff_player_notes')); return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {}; }
+  catch (e) { return {}; }
+})();
+let _notesPushTimer = null;
+function _notesCloudDoc(uid) {
+  return firebase.firestore().collection('users').doc(uid).collection('data').doc('player_notes');
+}
+function _notesLocalSave() {
+  try { localStorage.setItem('mff_player_notes', JSON.stringify(window._playerNotes)); } catch (e) {}
+  clearTimeout(_notesPushTimer);
+  _notesPushTimer = setTimeout(_notesCloudPush, 1500);
+}
+function _notesCloudPush() {
+  try {
+    if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return;
+    const u = firebase.auth().currentUser;
+    if (!u) return;
+    // Prune old tombstones so the doc doesn't accumulate empties forever.
+    const cutoff = new Date(Date.now() - 60 * 86400000).toISOString();
+    const notes = {};
+    Object.keys(window._playerNotes).forEach(n => {
+      const e = window._playerNotes[n];
+      if (!e) return;
+      if (!e.t && (!e.at || e.at < cutoff)) return;
+      notes[n] = { t: String(e.t || '').slice(0, 500), at: e.at || new Date().toISOString() };
+    });
+    _notesCloudDoc(u.uid).set({ notes, updatedAt: new Date().toISOString() })
+      .then(() => { try { localStorage.setItem('mff_player_notes_uid', u.uid); } catch (e) {} })
+      .catch(() => {});
+  } catch (e) {}
+}
+function _notesCloudInit(u) {
+  if (!u) return;
+  try {
+    _notesCloudDoc(u.uid).get().then(doc => {
+      const cloud = (doc.exists && doc.data() && doc.data().notes && typeof doc.data().notes === 'object') ? doc.data().notes : null;
+      let lastUid = null;
+      try { lastUid = localStorage.getItem('mff_player_notes_uid'); } catch (e) {}
+      if (cloud && lastUid && lastUid !== u.uid) {
+        // Different account with its own notes: take cloud wholesale.
+        window._playerNotes = cloud;
+      } else if (cloud) {
+        // Per-note newer-wins merge across the union of names.
+        const merged = {};
+        const names = new Set([...Object.keys(cloud), ...Object.keys(window._playerNotes)]);
+        names.forEach(n => {
+          const c = cloud[n], l = window._playerNotes[n];
+          if (c && l) merged[n] = ((c.at || '') > (l.at || '')) ? c : l;
+          else merged[n] = c || l;
+        });
+        window._playerNotes = merged;
+      }
+      try {
+        localStorage.setItem('mff_player_notes', JSON.stringify(window._playerNotes));
+        localStorage.setItem('mff_player_notes_uid', u.uid);
+      } catch (e) {}
+      // Push the merged result up (no-op diffing isn't worth the complexity).
+      if (Object.keys(window._playerNotes).length || cloud) _notesCloudPush();
+      // Refresh an open card so its note reflects the merge.
+      if (window._cardOpenName && typeof window._renderCardNotes === 'function') {
+        const d = (window.D || []).find(p => p && p.n === window._cardOpenName);
+        if (d) window._renderCardNotes(d);
+      }
+    }).catch(() => {});
+  } catch (e) {}
+}
+try { firebase.auth().onAuthStateChanged(u => { if (u) _notesCloudInit(u); }); } catch (e) {}
+
+window._noteFor = function (name) {
+  const e = window._playerNotes[name];
+  return (e && e.t) ? e.t : '';
+};
+window._noteSave = function (name, text) {
+  if (!name) return;
+  const t = String(text || '').trim().slice(0, 500);
+  const cur = window._noteFor(name);
+  if (t === cur) return;
+  window._playerNotes[name] = { t, at: new Date().toISOString() }; // empty = tombstone
+  _notesLocalSave();
+};
+
+// Card section: collapsed "ADD NOTE" affordance when empty, open textarea when
+// a note exists. Autosaves (debounced input + blur); local instantly, cloud 1.5s.
+window._renderCardNotes = function (d) {
+  const wrap = document.getElementById('cardNotesWrap');
+  if (!wrap || !d || !d.n) return;
+  const note = window._noteFor(d.n);
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  wrap.innerHTML =
+    `<div class="card-notes${note ? ' open' : ''}">
+      <button class="cn-head" id="cnHead" aria-expanded="${note ? 'true' : 'false'}">
+        <span class="cn-title">📝 MY NOTES</span>
+        <span class="cn-hint">${note ? 'private · only you can see this' : 'private · click to add'}</span>
+        <span class="cn-status" id="cnStatus"></span>
+      </button>
+      <textarea class="cn-text" id="cnText" maxlength="500" rows="2" placeholder="e.g. &quot;Watch his preseason snaps&quot;, &quot;Sell high after Week 3&quot;">${esc(note)}</textarea>
+    </div>`;
+  const box = wrap.firstElementChild;
+  const head = wrap.querySelector('#cnHead');
+  const ta = wrap.querySelector('#cnText');
+  const status = wrap.querySelector('#cnStatus');
+  head.addEventListener('click', () => {
+    const open = box.classList.toggle('open');
+    head.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) ta.focus();
+  });
+  let t = null, flashT = null;
+  const save = () => {
+    window._noteSave(d.n, ta.value);
+    if (status) {
+      status.textContent = 'saved ✓';
+      clearTimeout(flashT);
+      flashT = setTimeout(() => { status.textContent = ''; }, 1400);
+    }
+  };
+  ta.addEventListener('input', () => { clearTimeout(t); t = setTimeout(save, 700); });
+  ta.addEventListener('blur', () => { clearTimeout(t); save(); });
+};
+
 // === Watchlist (★) ===
 // v1 is device-local (localStorage `mff_watchlist`, array of player names) —
 // deliberately NOT synced to Firestore yet, to stay clear of the rankings
@@ -9485,6 +9615,7 @@ function openPlayerCard(d, ctxMode) {
     </div>
     <div class="card-body">
       <div class="card-pin-strip" id="cardPinStrip"></div>
+      <div id="cardNotesWrap"></div>
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
         ${!d._isDevy && !_is2026 && d.career && d.career.length > 0 ? `<button class="card-view-btn" data-cardview="logs" id="cardLogsTabBtn"${hasWeeklyData(d) ? '' : ' style="display:none"'}>LOGS</button>
@@ -10102,6 +10233,7 @@ function openPlayerCard(d, ctxMode) {
   modal.classList.add('open');
   document.getElementById('cardClose').addEventListener('click', closeCard);
   _renderCardPinStrip(d, _ctxMode);
+  if (typeof window._renderCardNotes === 'function') window._renderCardNotes(d);
 
   // FIND TRADE FOR ME — appears when the player is rostered in a synced league
   // (and isn't on your team). One click → Trade Calc → Find Trade with target pre-filled.

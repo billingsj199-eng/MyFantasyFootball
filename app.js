@@ -27112,14 +27112,14 @@ window.fmtHeight = fmtHeight;
         if (ktcVal) metaParts.push('KTC ' + ktcVal);
         adpLabel = metaParts.join(' · ');
 
-        return '<div class="md-avail-row" data-pidx="'+p.idx+'" style="'+rowStyle+'"><span class="md-ar-rank">'+displayRank+'</span><span class="md-ar-pos '+pc+'">'+escapeHTML(pc)+'</span><div class="md-ar-info"><div class="md-ar-name"><a class="md-card-link" data-didx="'+p.idx+'" href="javascript:void(0)" style="color:var(--text);text-decoration:none">'+escapeHTML(p.name)+'</a>'+jmHtml+needTag+'</div><div class="md-ar-meta">'+adpLabel+'</div></div><button class="md-ar-btn" data-pidx="'+p.idx+'">'+(maxed?'FULL':'DRAFT')+'</button></div>';
+        return '<div class="md-avail-row" data-pidx="'+p.idx+'" style="'+rowStyle+'"><span class="md-ar-rank">'+displayRank+'</span><span class="md-ar-pos '+pc+'">'+escapeHTML(pc)+'</span><div class="md-ar-info"><div class="md-ar-name"><a class="md-card-link" data-didx="'+p.idx+'" href="javascript:void(0)" style="color:var(--text);text-decoration:none">'+escapeHTML(p.name)+'</a>'+_injPill(D[p.idx])+jmHtml+needTag+'</div><div class="md-ar-meta">'+adpLabel+'</div></div><button class="md-ar-btn" data-pidx="'+p.idx+'">'+(maxed?'FULL':'DRAFT')+'</button></div>';
       } else {
         displayRank = (mdSortBy === 'adp' || isInflated) ? mdFmtAdp(rawAdp) : String(rankNum);
         adpLabel = mdSortBy === 'adp'
           ? (isInflated ? '' : 'Rank #' + rankNum)
           : (rawAdp != null ? 'ADP ' + mdFmtAdp(rawAdp) : '');
         const metaLine = [escapeHTML(p.team), adpLabel].filter(Boolean).join(' · ');
-        return '<div class="md-avail-row" data-pidx="'+p.idx+'" style="'+rowStyle+'"><span class="md-ar-rank">'+displayRank+'</span><span class="md-ar-pos '+pc+'">'+escapeHTML(pc)+'</span><div class="md-ar-info"><div class="md-ar-name"><a class="md-card-link" data-didx="'+p.idx+'" href="javascript:void(0)" style="color:var(--text);text-decoration:none">'+escapeHTML(p.name)+'</a>'+needTag+'</div><div class="md-ar-meta">'+metaLine+'</div></div><button class="md-ar-btn" data-pidx="'+p.idx+'">'+(maxed?'FULL':'DRAFT')+'</button></div>';
+        return '<div class="md-avail-row" data-pidx="'+p.idx+'" style="'+rowStyle+'"><span class="md-ar-rank">'+displayRank+'</span><span class="md-ar-pos '+pc+'">'+escapeHTML(pc)+'</span><div class="md-ar-info"><div class="md-ar-name"><a class="md-card-link" data-didx="'+p.idx+'" href="javascript:void(0)" style="color:var(--text);text-decoration:none">'+escapeHTML(p.name)+'</a>'+_injPill(D[p.idx])+needTag+'</div><div class="md-ar-meta">'+metaLine+'</div></div><button class="md-ar-btn" data-pidx="'+p.idx+'">'+(maxed?'FULL':'DRAFT')+'</button></div>';
       }
     }).join('');
     // Name clicks open player card
@@ -27129,6 +27129,15 @@ window.fmtHeight = fmtHeight;
         const dIdx = parseInt(link.dataset.didx);
         const d = D[dIdx];
         if (d && typeof openPlayerCard === 'function') openPlayerCard(d, mdMode);
+      });
+    });
+    // Injury pills → shared detail popover (same one the rankings table uses).
+    container.querySelectorAll('.inj-pill').forEach(pill => {
+      pill.addEventListener('click', e => {
+        e.stopPropagation();
+        const row = pill.closest('.md-avail-row');
+        const d = row && D[parseInt(row.dataset.pidx, 10)];
+        if (d && typeof _injShowDetail === 'function') _injShowDetail(d, pill);
       });
     });
     container.querySelectorAll('.md-ar-btn').forEach(btn => {

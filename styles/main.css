@@ -79,7 +79,7 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 .card-notes.open .cn-text{display:block}
 .cn-text:focus{outline:none;border-color:var(--accent)}
 /* Injury detail popover (rankings inj pills) */
-#tbody .inj-pill{cursor:pointer}
+#tbody .inj-pill,.md-avail-row .inj-pill{cursor:pointer}
 .inj-popover{display:none;position:absolute;z-index:1200;max-width:300px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;box-shadow:0 14px 36px rgba(0,0,0,.5);font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--text1);line-height:1.45}
 .injp-head{display:flex;align-items:center;gap:7px;margin-bottom:7px}
 .injp-name{font-weight:700;font-size:.78rem}

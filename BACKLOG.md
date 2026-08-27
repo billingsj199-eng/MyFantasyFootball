@@ -81,6 +81,7 @@ Everything below went from "sitting unmerged/broken" to live on production in on
 - Jack's Season Pass checkout click-test (site side verified live; Stripe session opening is the only unverified step).
 - ESPN 0.20.7 + Yahoo 0.9.4 store reviews (keep jdhpsports@gmail.com premium).
 - Real-device iOS pass (emulated Chrome only).
+- **UD helper injury popover — QUEUED behind the 0.17.7 store appeal** (agreed 2026-08-27). When the appeal clears: port the Sleeper-0.29.12 pattern (`fetchInjuries` slMeta capture w/ ib/idt/inx + `injTagHTML` chips on rec rows + `showInjPopover` appended to host body — reference implementation in `sleeper-extension/sidebar.js`). UD-specific work: the helper has NO Sleeper API plumbing today, so manifest.json needs a new `https://api.sleeper.app/*` host permission (expect extra store scrutiny — ship it WITH the next feature release, not alone), and UD rec rows render from `sidebar.js`/`content.js` name-based templates, so matching is name→sid via the players.json export (sids are in the shared export). Bump manifest version; commit to extensions-backup (`git add -f` exact paths).
 
 ---
 

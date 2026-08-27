@@ -4067,6 +4067,13 @@ function attachTierListeners() {
   tbody.addEventListener('click', e => {
     const star = e.target.closest('.watch-star');
     if (star) { e.stopPropagation(); window._watchToggleName(star.dataset.watch); return; }
+    // Injury pill sits inside the player-name link — intercept it first so a
+    // tap opens the injury popover instead of the player card.
+    const injPill = e.target.closest('.inj-pill');
+    if (injPill) {
+      const prow = injPill.closest('tr[data-idx]');
+      if (prow && D[+prow.dataset.idx]) { e.stopPropagation(); e.preventDefault(); _injShowDetail(D[+prow.dataset.idx], injPill); return; }
+    }
     const nameLink = e.target.closest('.player-name-link');
     if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
     // Cut line controls (all formats). data-cut-pos marks a WEEKLY QB/K/DST
@@ -9069,7 +9076,11 @@ function _filterCollegeWeeks(weeks) {
 // ending surgeries, and anything explicitly noting a return year >= current.
 function _isOffseasonNow() {
   var m = new Date().getMonth(); // 0=Jan, 8=Sep
-  return m >= 1 && m <= 7; // Feb (1) → Aug (7)
+  // Feb → Jul. August rejoined the "in-season" side 2026-08-27: camp
+  // Q/O tags are live daily-refreshed Sleeper data (8-day staleness guard)
+  // and are exactly what draft-season users need on the rankings; the old
+  // Feb–Aug window predates the automated feed and was hiding them.
+  return m >= 1 && m <= 6;
 }
 function _isLongTermInjuryTag(tag) {
   if (!tag) return false;
@@ -9110,6 +9121,95 @@ function _injPill(d) {
   var tt = tag.replace(/"/g, '&quot;');
   return '<span class="inj-pill" data-status="' + code + '" title="' + tt + '">' + code + '</span>';
 }
+
+// === Injury detail popover (rankings-table inj pills) ===
+// Clicking a Q/D/O/IR/PUP/SUS pill in the rankings rows opens a small anchored
+// popover: full status word, the injury (body part), start date + full note
+// when Sleeper provides them (INJURY_UPDATES.detail — added to the daily pull
+// 2026-08-27), an outlook line derived from the tag, the injury model's
+// projection discount, and the newest camp-news line for the player. Pills
+// elsewhere (player card header) keep their plain tooltip.
+var _INJ_STATUS_WORDS = { Q: 'Questionable', D: 'Doubtful', O: 'Out', IR: 'Injured Reserve', PUP: 'PUP list', SUS: 'Suspended' };
+function _injReturnText(tag) {
+  var t = String(tag).toLowerCase();
+  var wk = t.match(/(\d+)[\s-]*(?:to[\s-]*\d+[\s-]*)?week/);
+  var mo = t.match(/(\d+)[\s-]*(?:to[\s-]*\d+[\s-]*)?month/);
+  var yr = t.match(/\b(20\d\d)\b/);
+  if (wk) return 'Est. ' + wk[1] + '+ weeks';
+  if (mo) return 'Est. ' + mo[1] + '+ months';
+  if (yr && parseInt(yr[1], 10) > new Date().getFullYear()) return 'Est. return ' + yr[1];
+  if (/season.?ending|out for season/.test(t)) return 'Out for the season';
+  if (/acl|achilles/.test(t)) return 'Major injury — return TBD';
+  if (/\bir\b/.test(t)) return 'On injured reserve — extended absence, return TBD';
+  if (/\bpup\b/.test(t)) return 'On PUP — misses at least the first 4 games if not activated';
+  if (/suspend/.test(t)) return 'Suspended — return per league ruling';
+  if (/questionable|doubtful|day.?to.?day|gtd/.test(t)) return 'Day-to-day / game-time decision';
+  return '';
+}
+function _injShowDetail(d, pillEl) {
+  if (!d || !d.inj || !pillEl) return;
+  var pop = document.getElementById('injPopover');
+  if (!pop) {
+    pop = document.createElement('div');
+    pop.id = 'injPopover';
+    pop.className = 'inj-popover';
+    document.body.appendChild(pop);
+    document.addEventListener('click', function (e) {
+      if (pop.style.display === 'block' && !pop.contains(e.target) && !e.target.closest('.inj-pill')) pop.style.display = 'none';
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') pop.style.display = 'none'; });
+    window.addEventListener('scroll', function () { pop.style.display = 'none'; }, true);
+  }
+  if (pop.style.display === 'block' && pop._forName === d.n) { pop.style.display = 'none'; return; }
+  var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  var tag = String(d.inj);
+  var code = pillEl.getAttribute('data-status') || '';
+  var statusWord = _INJ_STATUS_WORDS[code] || code;
+  // Body part = everything before the mapped status word in the feed tag.
+  var bm = tag.match(/^(.*?),\s*(IR|PUP|Out|Doubtful|Questionable|Suspended|DNR)\b/i);
+  var body = bm ? bm[1].trim() : '';
+  var det = (window.INJURY_UPDATES && INJURY_UPDATES.detail && INJURY_UPDATES.detail[d.n]) || null;
+  var rows = [];
+  rows.push(['Injury', body && body.toLowerCase() !== 'undisclosed' ? body : 'Undisclosed']);
+  if (det && det.d) {
+    var dd = new Date(det.d + 'T12:00:00');
+    rows.push(['Since', isNaN(dd) ? det.d
+      : dd.toLocaleDateString([], { month: 'short', day: 'numeric' }) + (dd.getFullYear() !== new Date().getFullYear() ? ' ' + dd.getFullYear() : '')]);
+  }
+  var ret = _injReturnText(tag);
+  if (ret) rows.push(['Outlook', ret]);
+  if (d._injDiscount && d._injDiscount.mult < 1 && d._injDiscount.mult > 0) {
+    rows.push(['Proj impact', '-' + Math.round((1 - d._injDiscount.mult) * 100) + '% baked into Proj PPG']);
+  }
+  if (det && det.n && det.n.toLowerCase() !== (body || '').toLowerCase()) rows.push(['Note', det.n]);
+  var newsHtml = '';
+  if (window._campNewsIdx) {
+    var arr = window._campNewsIdx[_campNewsNorm(d.n)];
+    if (arr && arr.length) {
+      var latest = arr.slice().sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); })[0];
+      if (latest && latest.headline) {
+        newsHtml = '<div class="injp-news"><span class="injp-news-date">' + esc(latest.date || '') + '</span>' + esc(latest.headline) + '</div>';
+      }
+    }
+  }
+  var upd = (window.INJURY_UPDATES && INJURY_UPDATES.updated) ? new Date(INJURY_UPDATES.updated) : null;
+  pop.innerHTML =
+    '<div class="injp-head"><span class="injp-name">' + esc(d.n) + '</span>' +
+    '<span class="inj-pill" data-status="' + esc(code) + '">' + esc(code) + '</span>' +
+    '<span class="injp-status">' + esc(statusWord) + '</span></div>' +
+    '<div class="injp-grid">' + rows.map(function (r) {
+      return '<span class="injp-k">' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span>';
+    }).join('') + '</div>' + newsHtml +
+    '<div class="injp-foot">Sleeper injury feed' + (upd && !isNaN(upd) ? ' · updated ' + upd.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '') + '</div>';
+  pop._forName = d.n;
+  pop.style.display = 'block';
+  var r = pillEl.getBoundingClientRect();
+  var pw = pop.offsetWidth;
+  var left = Math.min(Math.max(8, r.left + window.scrollX - 10), window.scrollX + document.documentElement.clientWidth - pw - 8);
+  pop.style.left = left + 'px';
+  pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
+}
+window._injShowDetail = _injShowDetail;
 
 // --- Injury Badge Helper: builds enhanced injury display for player cards ---
 function _buildInjuryBadge(d) {

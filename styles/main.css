@@ -78,6 +78,17 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 .cn-text{display:none;width:calc(100% - 20px);margin:0 10px 8px;padding:7px 9px;background:var(--surface2);color:var(--text1);border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.78rem;line-height:1.45;resize:vertical;min-height:48px}
 .card-notes.open .cn-text{display:block}
 .cn-text:focus{outline:none;border-color:var(--accent)}
+/* Injury detail popover (rankings inj pills) */
+#tbody .inj-pill{cursor:pointer}
+.inj-popover{display:none;position:absolute;z-index:1200;max-width:300px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;box-shadow:0 14px 36px rgba(0,0,0,.5);font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--text1);line-height:1.45}
+.injp-head{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.injp-name{font-weight:700;font-size:.78rem}
+.injp-status{color:var(--text2);font-size:.68rem}
+.injp-grid{display:grid;grid-template-columns:auto 1fr;gap:3px 10px}
+.injp-k{color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1.2px;padding-top:2px;white-space:nowrap}
+.injp-news{margin-top:8px;padding-top:7px;border-top:1px dashed var(--border)}
+.injp-news-date{color:var(--accent);font-weight:600;font-size:.62rem;margin-right:5px}
+.injp-foot{margin-top:7px;font-size:.6rem;color:var(--text2);opacity:.75}
 .amb-sub{font-size:.58rem;color:var(--text2)}
 .amb-scroll{flex:1;overflow:hidden;white-space:nowrap}
 .live-ticker-inner{display:inline-flex;align-items:center;gap:8px;animation:tickerScroll 35s linear infinite;padding-left:100%}

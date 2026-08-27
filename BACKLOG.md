@@ -34,6 +34,13 @@ All merged to main and deploy-verified on production the same day (commits `fbeb
 - **Shortcuts help completed** — the `?` overlay's KEYBOARD SHORTCUTS section (already existed, with `g <letter>` nav) gained the drag-handle reorder keys and the player-card ←/→ pin cycling.
 - **ADP MOVERS share button** — Web Share sheet on mobile / clipboard elsewhere; text lists the rendered movers with arrows + % moves.
 - **Preload gotcha fixed twice** — app.js AND styles/main.css each appear in index.html as a `<link rel="preload">` (~lines 64–69) **plus** the real tag: any `?v=` bump must hit both or the preload double-fetches the old URL.
+- **Private player notes** (4267d68) — MY NOTES on the player card (collapsed when empty, autosave textarea). localStorage `mff_player_notes` + Firestore `users/{uid}/data/player_notes`; PER-NOTE newer-wins merge, empty-text tombstones for deletes (60d prune), account-switch takes cloud wholesale. Same Jack two-device check as the watchlist.
+
+### Injury system (evening additions — 611bd9b, 551214c, 9519209)
+- **Clickable injury detail popover** — tapping a Q/D/O/IR/PUP/SUS pill opens an anchored popover: full status word, injury (body part), start date + full Sleeper note, an outlook line derived from the tag, the injury model's projection discount, the newest camp-news line for the player, and the feed's refresh date. Toggle / outside-click / Esc / scroll close it. Shared entry points: `_injShowDetail(d, pillEl)` and `_injPillByName(name)` (wraps the pill with a `data-injname` hook), plus a document-level delegate scoped to `.trade-player-chip` / `[data-injname]`.
+- **Coverage: every player surface** — rankings table (all formats incl. WEEKLY — same tbody), Mock Draft available list (both standard + rookie row templates), Trade Calc side chips, My Teams rosters (by-position rows, lineup starters, bench — name-keyed via `_injPillByName`, unresolvable names silently skip like headshots). Card-header pills and the popover's own header pill deliberately keep plain tooltips.
+- **Pipeline enrichment** — `pull_injuries.py` now emits a parallel `detail` map (Sleeper `injury_start_date` + full `injury_notes`, 200-char cap) alongside the untouched name→tag `players` map; regenerated same day (225 injured, 32 with notes). Rides the daily 9am job from here.
+- **August tags un-hidden** — `_isOffseasonNow()` window shortened Feb–Aug → Feb–Jul: camp Q/O tags are live daily-refreshed feed data behind the 8-day staleness guard and are exactly what draft-season users need. Rankings went from long-term-only pills to ~97 visible statuses. (The old window predates the automated feed — it was guarding against stale hand-set tags.)
 
 ---
 

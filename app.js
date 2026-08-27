@@ -9210,6 +9210,40 @@ function _injShowDetail(d, pillEl) {
   pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
 }
 window._injShowDetail = _injShowDetail;
+// Name-keyed pill for surfaces that render rows from name strings (My Teams):
+// resolves the D row via nameToIdx and wraps the pill with the data-injname
+// hook the document-level delegate below reads. Empty string when healthy or
+// the name doesn't resolve (same silent failure mode as headshots there).
+window._injPillByName = function (name) {
+  const i = (typeof nameToIdx !== 'undefined') ? nameToIdx[name] : undefined;
+  const d = (i != null) ? D[i] : null;
+  if (!d || !d.inj) return '';
+  const pill = _injPill(d);
+  if (!pill) return '';
+  return '<span data-injname="' + String(d.n).replace(/"/g, '&quot;') + '">' + pill + '</span>';
+};
+// Document-level delegate for injury pills on Trade Calc chips and My Teams
+// rosters. The rankings table and Mock Draft list wire their own handlers and
+// stopPropagation, so clicks from there never reach this. Pills elsewhere
+// (player-card header, the popover's own header) match neither branch and
+// keep their plain tooltip.
+document.addEventListener('click', function (e) {
+  const pill = e.target.closest('.inj-pill');
+  if (!pill) return;
+  const chip = pill.closest('.trade-player-chip');
+  if (chip) {
+    const link = chip.querySelector('.tp-card-link');
+    const d = link ? D[parseInt(link.dataset.didx, 10)] : null;
+    if (d) { e.stopPropagation(); _injShowDetail(d, pill); }
+    return;
+  }
+  const named = pill.closest('[data-injname]');
+  if (named) {
+    const i = (typeof nameToIdx !== 'undefined') ? nameToIdx[named.getAttribute('data-injname')] : undefined;
+    const d = (i != null) ? D[i] : null;
+    if (d) { e.stopPropagation(); _injShowDetail(d, pill); }
+  }
+});
 
 // --- Injury Badge Helper: builds enhanced injury display for player cards ---
 function _buildInjuryBadge(d) {
@@ -21967,7 +22001,7 @@ window.fmtHeight = fmtHeight;
         const tierHtml = tier ? `<span class="tier-badge ${tierColor(tier)}" style="font-size:.55rem;padding:1px 5px;min-width:auto;margin-left:auto">${tier}</span>` : '';
         html += `<div class="trade-player-chip">
           <span class="tp-pos ${d.s}">${d.s}</span>
-          <a class="tp-name tp-card-link" href="javascript:void(0)" data-didx="${idx}" style="color:inherit;text-decoration:none;cursor:pointer">${d.n}</a>
+          <a class="tp-name tp-card-link" href="javascript:void(0)" data-didx="${idx}" style="color:inherit;text-decoration:none;cursor:pointer">${d.n}</a>${_injPill(d)}
           ${tierHtml}
           <span class="tp-val">${val}</span>
           <button class="tp-remove" data-idx="${idx}" data-side="${sideClass}">&times;</button>
@@ -46447,6 +46481,7 @@ Rules:
         html += `<div style="flex:1;display:flex;align-items:center;gap:6px">`;
         html += `<span style="font-size:.55rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'};padding:1px 4px;border-radius:3px;background:${(posColors[p.pos] || '#666')}20">${p.pos}</span>`;
         html += `<span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="font-size:.78rem;font-weight:600;color:var(--text);cursor:pointer">${_esc(p.name)}</span>`;
+        html += (typeof window._injPillByName === 'function') ? window._injPillByName(p.name) : '';
         if (isWeekly && p.out) html += `<span style="font-size:.55rem;font-weight:700;color:#ef4444">${p.out}</span>`;
         html += `</div>`;
         if (isWeekly) {
@@ -46476,7 +46511,7 @@ Rules:
         html += `<div style="display:flex;align-items:center;gap:8px;padding:3px 8px;opacity:.65">`;
         html += `<div style="min-width:28px;text-align:center;font-size:.55rem;color:var(--text2)">BN</div>`;
         html += `<span style="font-size:.5rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'}">${p.pos}</span>`;
-        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)"><span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="cursor:pointer">${_esc(p.name)}</span>${isWeekly && p.out ? ' <span style="color:#ef4444;font-size:.55rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
+        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)"><span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="cursor:pointer">${_esc(p.name)}</span>${(typeof window._injPillByName === 'function') ? window._injPillByName(p.name) : ''}${isWeekly && p.out ? ' <span style="color:#ef4444;font-size:.55rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
         if (isWeekly) html += `<span style="font-size:.72rem;color:var(--accent);min-width:30px;text-align:right" title="Jack's weekly rank">${p.wkRank != null ? '#' + p.wkRank : '—'}</span>`;
         html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg > 0 ? p.ppg : '—'}</span>`;
         html += `</div>`;
@@ -46645,7 +46680,7 @@ Rules:
         }
         // Name only — team/bye/age all dropped per Jack (Flock-style one-liner).
         html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0" data-mtname="${_esc(p.name)}">`;
-        html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(p.name)}</div>`;
+        html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(p.name)}${dEntry && dEntry.inj ? '<span data-injname="' + _esc(dEntry.n) + '">' + _injPill(dEntry) + '</span>' : ''}</div>`;
         html += `</div>`;
         // Stat blocks — bare numbers, labels dropped 2026-07-21 per Jack
         // (hover titles disambiguate): overall rank · pos rank · PPG.

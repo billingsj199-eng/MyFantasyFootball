@@ -5948,6 +5948,88 @@ document.getElementById('btnExportTiers').addEventListener('click', () => {
   toast(`Exported ${payload.tierCount} tier${payload.tierCount === 1 ? '' : 's'} to JSON`);
 });
 
+// Print-friendly cheat sheet of the current view. Builds a standalone doc from
+// getFiltered() (so mode/format/scoring/position/TOP-N all carry over), with
+// tier section breaks and a cross-off box per row, and prints it from a hidden
+// same-origin iframe (no popup blockers). Same premium cutoff as the exports.
+document.getElementById('btnPrintSheet').addEventListener('click', () => {
+  let data = getFiltered();
+  if (!data.length) { toast('Nothing to print'); return; }
+  const _cut = _exportCutoff();
+  const _truncated = data.length > _cut;
+  if (_truncated) data = data.slice(0, _cut);
+  if (_truncated) {
+    if (!window._authCurrentUser && currentVersion === 'mine') {
+      toast('Sign in to print your rankings');
+      if (typeof window.openAuthModal === 'function') window.openAuthModal();
+      return;
+    }
+    toast('Printing top ' + _cut + ' — upgrade to PRO for the full list');
+  }
+  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const verLabel = currentVersion === 'consensus' ? 'CONSENSUS' : currentVersion === 'jacks' ? "JACK'S BOARD" : currentVersion === 'mine' ? 'MY RANKINGS' : 'MODEL';
+  const modeLabel = currentMode === 'dynastysf' ? 'DYNASTY SF' : currentMode === 'dynasty' ? 'DYNASTY 1QB' : currentMode === 'superflex' ? 'SUPERFLEX' : currentMode === 'weekly' ? 'WEEKLY' : currentMode === 'bestball' ? 'BEST BALL' : 'REDRAFT';
+  const _sl = { ppr: 'PPR', half: 'HALF PPR', std: 'STANDARD' };
+  const _adpNames = { consensus: 'Consensus', underdog: 'Underdog', dk: 'DraftKings', espn: 'ESPN', cbs: 'CBS', sleeper: 'Sleeper', yahoo: 'Yahoo', ktc: 'KTC' };
+  const posLabel = filter === 'ALL' ? 'ALL POSITIONS' : filter;
+  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+  const sortedTiers = tiers.slice().sort((a, b) => a.afterRank - b.afterRank);
+
+  let body = '', lastTier = '';
+  data.forEach((d, i) => {
+    const displayRank = useFilteredRank ? (i + 1) : d.myRank;
+    let owner = null;
+    for (const t of sortedTiers) { if (t.afterRank <= displayRank) owner = t; else break; }
+    if (owner && owner.label !== lastTier) {
+      lastTier = owner.label;
+      // Unnamed tiers default name to "Tier X" / "X" — skip the redundant echo.
+      const tn = (owner.name || '').trim();
+      const redundant = !tn || tn.toUpperCase() === ('TIER ' + owner.label).toUpperCase() || tn.toUpperCase() === String(owner.label).toUpperCase();
+      body += `<div class="tiersep">TIER ${esc(owner.label)}${redundant ? '' : ' · ' + esc(tn)}</div>`;
+    }
+    const ab = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || 'FA';
+    const pr = d.myPosRank || d.r;
+    const posRank = (pr != null && /^\d+$/.test(String(pr))) ? d.s + pr : (pr || d.s);
+    const adp = rnkAdp(d);
+    const meta = [posRank, ab, d.bye != null ? 'bye ' + d.bye : null, adp != null ? 'ADP ' + adp : null].filter(Boolean).join(' · ');
+    body += `<div class="pr"><span class="cb"></span><span class="rk">${displayRank}</span><span class="nm">${esc(d.n)}</span><span class="meta">${esc(meta)}</span></div>`;
+  });
+
+  const dateStr = new Date().toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+  const subtitle = [verLabel, modeLabel, _sl[rankingScoringFmt] || '', posLabel, (_adpNames[rnkAdpSrc] || 'Consensus') + ' ADP'].filter(Boolean).join('  ·  ');
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>MFF Cheat Sheet — ${esc(dateStr)}</title><style>
+    @page { margin: 0.45in; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font: 8.5pt/1.35 'Segoe UI', Arial, sans-serif; color: #111; background: #fff; }
+    .hdr { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 2px solid #111; padding-bottom: 4px; margin-bottom: 8px; }
+    .hdr h1 { font-size: 13pt; letter-spacing: 1px; }
+    .hdr .sub { font-size: 7.5pt; color: #444; letter-spacing: .5px; }
+    .cols { column-count: 3; column-gap: .32in; column-rule: 1px solid #ddd; }
+    .pr { display: flex; align-items: baseline; gap: 5px; padding: 1.5px 0; border-bottom: 1px dotted #e2e2e2; break-inside: avoid; }
+    .cb { flex: none; width: 8px; height: 8px; border: 1px solid #999; align-self: center; }
+    .rk { flex: none; min-width: 20px; text-align: right; color: #777; font-variant-numeric: tabular-nums; font-size: 7.5pt; }
+    .nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .meta { margin-left: auto; color: #555; font-size: 7pt; white-space: nowrap; }
+    .tiersep { break-inside: avoid; break-after: avoid; font-weight: 700; font-size: 7.5pt; letter-spacing: 1.2px; background: #efefef; border-left: 3px solid #111; padding: 2px 5px; margin: 5px 0 2px; }
+    .ftr { margin-top: 8px; padding-top: 4px; border-top: 1px solid #ccc; font-size: 7pt; color: #666; text-align: center; }
+  </style></head><body>
+    <div class="hdr"><h1>MYFANTASYFOOTBALL CHEAT SHEET</h1><div class="sub">${esc(subtitle)}</div></div>
+    <div class="cols">${body}</div>
+    <div class="ftr">myfantasyfootball.co · printed ${esc(dateStr)} · ${data.length} players</div>
+  </body></html>`;
+
+  const frame = document.createElement('iframe');
+  frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+  document.body.appendChild(frame);
+  const fdoc = frame.contentDocument;
+  fdoc.open(); fdoc.write(html); fdoc.close();
+  setTimeout(() => {
+    try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (e) {}
+    // Leave the frame alive long enough for the print dialog to consume it.
+    setTimeout(() => frame.remove(), 60000);
+  }, 150);
+});
+
 // Export to Underdog format CSV (id, playerId, firstName, lastName, rank — Aug 2026 underdogsports.com schema)
 document.getElementById('btnExportUnderdog').addEventListener('click', () => {
   let data = getFiltered();
@@ -7673,6 +7755,54 @@ function _campNewsNorm(n) {
 // short history silently leaves the bar hidden. Renders the headshot chips of
 // the retired standalone card into the page-top bar (which replaced the old
 // WEEKLY MOVERS text ticker).
+// === Data-freshness line (rankings page, under the stats bar) ===
+// Shows when each auto-pulled feed last refreshed: ADP (ud_adp_history.json
+// `updated`, stashed by the movers fetch below), betting lines (newest per-entry
+// asOf in BETTING_2026 — asOf only moves when a line moves, so this is "last
+// line movement", which is the honest number), and weekly/consensus projections
+// (WEEKLY_PROJ.updated). Hidden if nothing is readable.
+function _renderDataFreshness() {
+  const el = document.getElementById('dataFreshness');
+  if (!el) return;
+  const fmt = iso => {
+    if (!iso) return null;
+    const hasTime = String(iso).length > 10;
+    // Date-only stamps parse at local noon so timezone can't shift the day.
+    const dt = new Date(hasTime ? iso : iso + 'T12:00:00');
+    if (isNaN(dt)) return null;
+    const now = new Date();
+    const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    const yest = new Date(now); yest.setDate(now.getDate() - 1);
+    const t = hasTime ? dt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase().replace(/\s/g, '') : '';
+    if (sameDay(dt, now)) return 'today' + (t ? ' ' + t : '');
+    if (sameDay(dt, yest)) return 'yesterday';
+    return dt.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  };
+  const parts = [];
+  const adp = fmt(window._adpHistUpdated);
+  if (adp) parts.push(['ADP', adp]);
+  try {
+    const B = window.BETTING_2026;
+    if (B) {
+      let max = '';
+      for (const k in (B.gameTotals || {})) { const a = B.gameTotals[k] && B.gameTotals[k].asOf; if (a && a > max) max = a; }
+      for (const k in (B.seasonProps || {})) { const a = B.seasonProps[k] && B.seasonProps[k].asOf; if (a && a > max) max = a; }
+      const lines = fmt(max || null);
+      if (lines) parts.push(['Lines', lines]);
+    }
+  } catch (e) {}
+  const proj = fmt(window.WEEKLY_PROJ && WEEKLY_PROJ.updated);
+  if (proj) parts.push(['Projections', proj]);
+  if (!parts.length) { el.style.display = 'none'; return; }
+  el.innerHTML = '<span style="opacity:.7">⟳</span> ' +
+    parts.map(p => `<span style="white-space:nowrap">${p[0]} <strong style="color:var(--text1);font-weight:600">${p[1]}</strong></span>`)
+         .join('<span style="opacity:.45;margin:0 .45em">·</span>');
+  el.title = 'When each data feed last refreshed. ADPs and projections re-pull every morning; betting lines rescan daily (timestamp moves when a line moves).';
+  el.style.display = '';
+}
+window._renderDataFreshness = _renderDataFreshness;
+_renderDataFreshness();
+
 (function _adpMovers() {
   const bar = document.getElementById('adpMoversBar');
   const items = document.getElementById('adpMoversItems');
@@ -7758,7 +7888,11 @@ function _campNewsNorm(n) {
                 String(now.getDate()).padStart(2, '0') + String(now.getHours()).padStart(2, '0');
   fetch('data/ud_adp_history.json?d=' + stamp)
     .then(r => (r && r.ok) ? r.json() : null)
-    .then(j => { if (j) _render(j); })
+    .then(j => {
+      if (!j) return;
+      if (j.updated) { window._adpHistUpdated = j.updated; if (window._renderDataFreshness) window._renderDataFreshness(); }
+      _render(j);
+    })
     .catch(() => {});
 })();
 

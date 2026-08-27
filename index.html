@@ -1011,6 +1011,10 @@ UNDERDOG CSV
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 TIERS (.JSON)
 </button>
+<button class="tb-btn export-menu-item" id="btnPrintSheet" title="Print-friendly cheat sheet of the current view (tiers as section breaks)" style="width:100%;justify-content:flex-start;padding:6px 8px;font-size:.7rem">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+PRINT SHEET
+</button>
 </div>
 </div>
 <div style="position:relative;display:inline-flex"><button class="tb-btn" id="btnColumnToggle" title="Show/hide columns" style="position:relative">
@@ -1321,6 +1325,10 @@ CLEAR ALL
 </div>
 
 <div class="stats-bar" id="statsBar"></div>
+<!-- Data-freshness line: when each auto-pulled feed last refreshed.
+     Populated by _renderDataFreshness() in app.js; hidden until at least
+     one timestamp is readable. -->
+<div id="dataFreshness" style="display:none;margin:2px 2rem 6px;font-family:'DM Sans',sans-serif;font-size:.66rem;color:var(--text2);letter-spacing:.3px"></div>
 
 <style>
 /* Tier Card View (admin) */
@@ -5192,7 +5200,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-08-26m"></script>
+<script defer src="app.js?v=2026-08-27a"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -2585,6 +2585,64 @@ function _teamPpgBoxHtml(team) {
   </div>`;
 }
 
+// === View-options collapse (SCORING / STATS / ADP rows) ===
+// Collapsed by default; the summary text beside the toggle mirrors the live
+// state (updated from updateStats on every render) and tints accent when
+// anything is off-default, so collapsed never means hidden state.
+function _viewOptsApply(open) {
+  const wrap = document.getElementById('viewOptsWrap');
+  if (!wrap) return;
+  wrap.style.display = open ? '' : 'none';
+  const arrow = document.getElementById('viewOptsArrow');
+  if (arrow) arrow.textContent = open ? '▾' : '▸';
+  const btn = document.getElementById('viewOptsToggle');
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  _updateViewOptsSummary();
+}
+window._toggleViewOpts = function () {
+  const wrap = document.getElementById('viewOptsWrap');
+  if (!wrap) return;
+  const open = wrap.style.display === 'none';
+  try { localStorage.setItem('mff_view_opts_open', open ? '1' : '0'); } catch (e) {}
+  _viewOptsApply(open);
+};
+function _updateViewOptsSummary() {
+  const el = document.getElementById('viewOptsSummary');
+  const wrap = document.getElementById('viewOptsWrap');
+  if (!el || !wrap) return;
+  if (wrap.style.display !== 'none') { el.textContent = ''; return; }
+  const _st = (typeof rnkStatMode !== 'undefined') ? rnkStatMode : 'fantasy';
+  const _ad = (typeof rnkAdpSrc !== 'undefined') ? rnkAdpSrc : 'consensus';
+  const sc = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' }[rankingScoringFmt] || rankingScoringFmt;
+  const st = { fantasy: 'Fantasy', sims: 'Sims', proj: 'Projections', lines: 'Betting Lines', adp: 'ADP compare' }[_st] || _st;
+  const ad = { consensus: 'Consensus', underdog: 'Underdog', dk: 'DK', espn: 'ESPN', cbs: 'CBS', sleeper: 'Sleeper', ktc: 'KTC', yahoo: 'Yahoo' }[_ad] || _ad;
+  el.textContent = sc + ' · ' + st + ' · ' + ad + ' ADP';
+  el.style.color = (rankingScoringFmt !== 'ppr' || _st !== 'fantasy' || _ad !== 'consensus') ? 'var(--accent)' : 'var(--text2)';
+}
+(function () {
+  let open = false;
+  try { open = localStorage.getItem('mff_view_opts_open') === '1'; } catch (e) {}
+  _viewOptsApply(open);
+})();
+
+// === Mobile bottom nav (≤600px) ===
+// Taps click the real .nav-btn tabs so switchPage gating stays in charge;
+// switchPage calls _syncBottomNav so any navigation path updates the bar.
+(function () {
+  const bar = document.getElementById('bottomNav');
+  if (!bar) return;
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('[data-bnav]');
+    if (!b) return;
+    const nav = document.querySelector('.nav-btn[data-page="' + b.dataset.bnav + '"]');
+    if (nav) nav.click();
+    try { window.scrollTo({ top: 0 }); } catch (err) {}
+  });
+  window._syncBottomNav = function (page) {
+    bar.querySelectorAll('[data-bnav]').forEach(b => b.classList.toggle('active', b.dataset.bnav === page));
+  };
+})();
+
 // === Saved view presets ===
 // One-click chips snapshotting the rankings control state (board, format,
 // scoring, stats mode, position, ADP source, TOP-N). Applied by
@@ -3742,6 +3800,9 @@ function updateStats(data) {
     <span class="stat-chip">Rookies <strong>${rookies}</strong></span>
     <span class="stat-chip">Moved: <strong class="ranked-count">${moved}</strong></span>
   `;
+  // Collapsed view-options summary mirrors scoring/stats/ADP state — every
+  // control click re-renders, so this stays current from here.
+  if (typeof _updateViewOptsSummary === 'function') _updateViewOptsSummary();
   const _cntEl = document.getElementById('rankingsCountText');
   if (_cntEl) {
     const _useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
@@ -11260,6 +11321,7 @@ function switchPage(page) {
   if (target) target.classList.add('active');
   const btn = document.querySelector(`.nav-btn[data-page="${page}"]`);
   if (btn) btn.classList.add('active');
+  if (window._syncBottomNav) window._syncBottomNav(page);
   // Move auth bar into this page's anchor
   const authBar = document.getElementById('globalAuthBar');
   const anchor = document.getElementById(anchorMap[page]);

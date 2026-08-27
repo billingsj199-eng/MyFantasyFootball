@@ -1,6 +1,56 @@
 {
-  "updated": "2026-08-27T02:10:00Z",
+  "updated": "2026-08-27T16:11:02Z",
   "items": [
+    {
+      "player": "Mike Washington Jr.",
+      "team": "LV",
+      "pos": "RB",
+      "date": "2026-08-27",
+      "headline": "Took 1st-team RB reps with Jeanty out, caught a red-zone TD in Wednesday's practice",
+      "take": "Real complementary role brewing behind Jeanty; already over 8 YPC through two preseason games",
+      "url": "https://www.reviewjournal.com/sports/raiders/rookie-handles-running-back-reps-with-ashton-jeanty-out-of-raiders-practice-3868867/",
+      "tag": "riser"
+    },
+    {
+      "player": "Ashton Jeanty",
+      "team": "LV",
+      "pos": "RB",
+      "date": "2026-08-27",
+      "headline": "Kubiak vague on timeline (\"on the mend\"); Rapoport calls it a low ankle sprain, no clear return date",
+      "take": "Walks back Wednesday's optimism \u2014 treat as week-to-week with real Week 1 doubt, not resolved",
+      "url": "https://lastwordonsports.com/nfl/2026/08/26/ashton-jeanty-injury-update-2/",
+      "tag": "injury"
+    },
+    {
+      "player": "Malik Nabers",
+      "team": "NYG",
+      "pos": "WR",
+      "date": "2026-08-27",
+      "headline": "Practicing in a white (contact) jersey multiple days running, first live team drills since ACL tear",
+      "take": "Harbaugh: \"moving the best we've seen him look,\" though still no Week 1 guarantee from team or player",
+      "url": "https://www.si.com/nfl/giants/onsi/malik-nabers-red-jersey-week-1-status-01m0ts2yj5vy",
+      "tag": "riser"
+    },
+    {
+      "player": "Cyrus Allen",
+      "team": "KC",
+      "pos": "WR",
+      "date": "2026-08-27",
+      "headline": "Back at practice after a shin bruise, eased back in rather than given a full workload",
+      "take": "Stock stays hot \u2014 was drawing Stefon Diggs comps before the injury; monitor for full participation",
+      "url": "https://www.si.com/nfl/chiefs/onsi/chiefs-injury-update-rookie-wr-cyrus-allen-returns-long-list-of-others-sidelined",
+      "tag": "injury"
+    },
+    {
+      "player": "Josh Jacobs",
+      "team": "GB",
+      "pos": "RB",
+      "date": "2026-08-27",
+      "headline": "Schefter: possible suspension (6-8 games) still on the table, no ruling yet",
+      "take": "Unresolved bust risk continues into final camp week \u2014 check news before locking him in on draft day",
+      "url": "https://sports.yahoo.com/articles/raiders-news-ian-rapoports-harsh-134131522.html",
+      "tag": "faller"
+    },
     {
       "player": "John Metchie III",
       "team": "CAR",
@@ -27,7 +77,7 @@
       "pos": "RB",
       "date": "2026-08-26",
       "headline": "Packers GM Gutekunst says team is \"prepared\" for a possible suspension",
-      "take": "Real discipline risk resurfaces despite a clean return to practice — monitor closely into Week 1",
+      "take": "Real discipline risk resurfaces despite a clean return to practice \u2014 monitor closely into Week 1",
       "url": "https://ca.sports.yahoo.com/news/packers-gm-brian-gutekunst-says-team-is-prepared-for-possible-josh-jacobs-suspension-165824357.html",
       "tag": "faller"
     },
@@ -37,7 +87,7 @@
       "pos": "RB",
       "date": "2026-08-26",
       "headline": "Practiced Wednesday and said he \"feels good overall\" after Sunday's ankle sprain",
-      "take": "De-escalates the injury further — trending toward a normal Week 1 workload",
+      "take": "De-escalates the injury further \u2014 trending toward a normal Week 1 workload",
       "url": "https://www.cbssports.com/nfl/news/raiders-ashton-jeanty-injured-helped-off-practice-field/",
       "tag": "injury"
     },
@@ -1702,16 +1752,6 @@
       "tag": "injury"
     },
     {
-      "player": "Chase Brown",
-      "team": "CIN",
-      "pos": "RB",
-      "date": "2026-08-05",
-      "headline": "Bengals expanding his role with slot snaps, WR routes and jet sweeps in camp",
-      "take": "Zac Taylor deploying him as a true every-down weapon -- raises his receiving-work ceiling for a 3rd straight 1,000-yard season bid.",
-      "url": "https://sports.yahoo.com/articles/why-zac-taylor-expanding-chase-235702271.html",
-      "tag": "role"
-    },
-    {
       "player": "Christian McCaffrey",
       "team": "SF",
       "pos": "RB",
@@ -1942,26 +1982,6 @@
       "tag": "role"
     },
     {
-      "player": "Tarik Black",
-      "team": "DET",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Re-signed by Lions two days after being released",
-      "take": "Depth-chart shuffle with minimal fantasy value, but fills a WR room now thinner at TE too.",
-      "url": "https://www.fantasypros.com/nfl/news/600707/tarik-black-signs-with-lions.php",
-      "tag": "transaction"
-    },
-    {
-      "player": "Miles Kitselman",
-      "team": "DET",
-      "pos": "TE",
-      "date": "2026-08-05",
-      "headline": "Placed on injured reserve with a significant leg injury, out for the season",
-      "take": "Deep TE depth piece behind Sam LaPorta -- negligible fantasy impact.",
-      "url": "https://www.cbssports.com/fantasy/football/news/lions-miles-kitselman-placed-on-reserveinjured-list/",
-      "tag": "injury"
-    },
-    {
       "player": "Jahmyr Gibbs",
       "team": "DET",
       "pos": "RB",
@@ -1969,16 +1989,6 @@
       "headline": "Officially signs 3-yr, $75.75M extension ($51.5M gtd), becomes NFL's highest-paid RB",
       "take": "Locks in a true bell-cow role for years with Montgomery gone to Houston -- no committee risk, elite RB1.",
       "url": "https://www.detroitlions.com/news/lions-sign-rb-jahmyr-gibbs-to-contract-extension-through-the-2030-season",
-      "tag": "transaction"
-    },
-    {
-      "player": "Stefon Diggs",
-      "team": "WAS",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Signs 1-year, $12M deal with Commanders, projects as immediate WR2 behind McLaurin",
-      "take": "Real weekly target volume in Kingsbury's offense makes him a legit mid-round pick; slight target drag on McLaurin.",
-      "url": "https://www.fantasypros.com/nfl/news/600577/stefon-diggs-signs-with-commanders.php",
       "tag": "transaction"
     },
     {
@@ -2169,146 +2179,6 @@
       "headline": "Named starter for tonight's Hall of Fame Game vs. Panthers",
       "take": "First extended pro look at Arizona's 3rd-round rookie QB with Jacoby Brissett held out; no near-term fantasy value but a dynasty watch.",
       "url": "https://www.cbssports.com/nfl/news/2026-hall-of-fame-game-where-to-watch-carson-beck-cardinals/",
-      "tag": "role"
-    },
-    {
-      "player": "Deshaun Watson",
-      "team": "CLE",
-      "pos": "QB",
-      "date": "2026-08-05",
-      "headline": "Bounces back with best practice of camp, 7 TDs in red-zone period",
-      "take": "Snaps his interception skid; Browns QB1 job remains a genuine coin flip with Sanders.",
-      "url": "https://www.brownszone.com/2026/08/05/training-camp-log-day-7-deshaun-watson-has-best-day-plus-news-camper-play-and-quote-of-the-day",
-      "tag": "role"
-    },
-    {
-      "player": "Shedeur Sanders",
-      "team": "CLE",
-      "pos": "QB",
-      "date": "2026-08-05",
-      "headline": "Throws first interception of camp as reps keep splitting with Watson",
-      "take": "First blemish of camp, but doesn't change a true 50/50 QB battle in Cleveland.",
-      "url": "https://www.brownszone.com/2026/08/05/training-camp-log-day-7-deshaun-watson-has-best-day-plus-news-camper-play-and-quote-of-the-day",
-      "tag": "faller"
-    },
-    {
-      "player": "Rashee Rice",
-      "team": "KC",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Takes part in 11-on-11 team drills for first time this camp",
-      "take": "Real recovery milestone off his knee scope and suspension; trending toward Week 1 availability.",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/rashee-rice-progresses-to-11-on-11-drills-in-wednesdays-practice",
-      "tag": "riser"
-    },
-    {
-      "player": "Jaylen Waddle",
-      "team": "DEN",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Exits practice early with lower-body issue, called 'muscle tightness'",
-      "take": "Walked off on his own; Payton expects him fine, but worth a Thursday recheck.",
-      "url": "https://www.cbssports.com/fantasy/football/news/broncos-jaylen-waddle-exits-practice-wednesday/",
-      "tag": "injury"
-    },
-    {
-      "player": "Jordan Addison",
-      "team": "MIN",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Sits out team drills with jammed thumb, imaging comes back clean",
-      "take": "O'Connell doesn't expect a long absence; low fantasy concern.",
-      "url": "https://www.vikings.com/news/jordan-addison-sidelined-thumb-injury-training-camp-2026",
-      "tag": "injury"
-    },
-    {
-      "player": "Jalen Reagor",
-      "team": "LAC",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Misses practice with finger injury, could miss more time per Harbaugh",
-      "take": "Opens up first-team reps for rookies Tre Harris and KeAndre Lambert-Smith.",
-      "url": "https://www.rotowire.com/football/headlines/jalen-reagor-injury-misses-practice-wednesday-590189",
-      "tag": "injury"
-    },
-    {
-      "player": "Ja'Kobi Lane",
-      "team": "BAL",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Another highlight red-zone TD grab, this time over Marlon Humphrey",
-      "take": "Third-round rookie keeps stacking standout reps, trending toward a real WR3 role.",
-      "url": "https://www.baltimoreravens.com/news/practice-report-jakobi-lane-defense-takeaways-ravens-training-camp-2026",
-      "tag": "riser"
-    },
-    {
-      "player": "George Pickens",
-      "team": "DAL",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Signs $27.3M franchise tag as long-term deal deadline passes",
-      "take": "Locked in as Dallas's clear WR1 alongside CeeDee Lamb for 2026, no distraction expected.",
-      "url": "https://www.espn.com/nfl/story/_/id/49367546/cowboys-george-pickens-play-273m-tag-deadline-passes",
-      "tag": "transaction"
-    },
-    {
-      "player": "Tank Dell",
-      "team": "HOU",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Works on the side during Wednesday's practice, ramping up in early camp",
-      "take": "First real practice involvement since his 2025 multi-ligament knee injury \u2014 trajectory looks encouraging but no full-team timetable yet.",
-      "url": "https://www.cbssports.com/fantasy/football/news/texans-tank-dell-being-ramped-up/",
-      "tag": "riser"
-    },
-    {
-      "player": "Kenyon Sadiq",
-      "team": "NYJ",
-      "pos": "TE",
-      "date": "2026-08-05",
-      "headline": "Aaron Glenn \"very confident\" rookie TE will be ready for Week 1 vs. Titans despite hernia setback",
-      "take": "Coach's endorsed timeline keeps his rookie outlook intact even as he misses camp reps now.",
-      "url": "https://www.espn.com/nfl/story/_/id/49529675/jets-rookie-te-kenyon-sadiq-miss-hernia-setback",
-      "tag": "injury"
-    },
-    {
-      "player": "Makai Lemon",
-      "team": "PHI",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Missed Tuesday's practice with a second hamstring flare-up, called minor",
-      "take": "Mild yellow flag on his push to win the Eagles' WR2 job over Dontayvion Wicks.",
-      "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/devonta-smith-makai-lemon-injury-hamstring-eagles-training-camp/745330/",
-      "tag": "faller"
-    },
-    {
-      "player": "DeVonta Smith",
-      "team": "PHI",
-      "pos": "WR",
-      "date": "2026-08-05",
-      "headline": "Missed Tuesday's practice with a hamstring injury, considered minor",
-      "take": "No real concern for Eagles' established WR1 \u2014 day-to-day.",
-      "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/devonta-smith-makai-lemon-injury-hamstring-eagles-training-camp/745330/",
-      "tag": "injury"
-    },
-    {
-      "player": "Princeton Fant",
-      "team": "DAL",
-      "pos": "TE",
-      "date": "2026-08-05",
-      "headline": "Out for the season with torn ACL, partial MCL tear",
-      "take": "Minimal fantasy impact as a backup/special-teams TE, but Dallas's first season-ending camp injury.",
-      "url": "https://www.dallascowboys.com/news/princeton-fant-suffers-acl-partial-mcl-injury-in-practice",
-      "tag": "injury"
-    },
-    {
-      "player": "Kenny Gainwell",
-      "team": "TB",
-      "pos": "RB",
-      "date": "2026-08-05",
-      "headline": "Carving out a real passing-down role alongside Bucky Irving in camp",
-      "take": "Adds legitimate two-back PPR utility to Tampa Bay's backfield even with Irving healthy and full-go.",
-      "url": "https://heavy.com/sports/nfl/tampa-bay-buccaneers/running-back-kenneth-gainwell-major-standout/",
       "tag": "role"
     }
   ]

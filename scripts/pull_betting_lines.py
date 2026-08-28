@@ -82,8 +82,15 @@ def load_d_names():
 # Phase A — game lines from ESPN (DraftKings provider)
 # ---------------------------------------------------------------------------
 
-SCOREBOARD = ('https://site.api.espn.com/apis/site/v2/sports/football/nfl/'
-              'scoreboard?seasontype=2&week={wk}&dates=2026')
+# NOTE 2026-08-28: site.api.espn.com/scoreboard started hard-403ing plain
+# requests (empty body, any UA) — every week logged "scoreboard failed".
+# Week schedules now come from the core API (same host as the odds calls,
+# still open); the odds payload itself supplies away/home team ids.
+# The 2026s are the season year — bump yearly like the old dates=2026.
+WEEK_EVENTS = ('https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/'
+               'seasons/2026/types/2/weeks/{wk}/events?limit=100')
+TEAMS_LIST = ('https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/'
+              'seasons/2026/teams?limit=40')
 ODDS = ('https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/'
         'events/{eid}/competitions/{eid}/odds')
 
@@ -96,33 +103,48 @@ def _fix(abbr):
     return TEAM_FIX.get(a, a)
 
 
+def _team_abbr_map(sess):
+    """One-time ESPN team-id -> site abbr map off the core API (32 small
+    fetches at start; the odds payloads only carry team ids in $ref URLs)."""
+    m = {}
+    try:
+        refs = sess.get(TEAMS_LIST, timeout=30).json().get('items', [])
+    except Exception as e:
+        print(f'  teams list failed ({e})')
+        return m
+    for r in refs:
+        try:
+            t = sess.get(str(r.get('$ref', '')), timeout=30).json()
+            tid, ab = str(t.get('id', '')), _fix(t.get('abbreviation'))
+            if tid and ab:
+                m[tid] = ab
+        except Exception:
+            pass
+    return m
+
+
 def pull_game_lines():
     """Return {key: {'total': float|None, 'spread': float|None, 'source': str}}."""
     sess = requests.Session()
     sess.headers.update({'User-Agent': UA, 'Accept': 'application/json'})
+    teams = _team_abbr_map(sess)
+    if len(teams) < 32:
+        print(f'  WARN: only {len(teams)}/32 team abbrs resolved — expect misses')
     out = {}
     misses = []
     for wk in range(1, 19):
         try:
-            sb = sess.get(SCOREBOARD.format(wk=wk), timeout=30).json()
+            evs = sess.get(WEEK_EVENTS.format(wk=wk), timeout=30).json().get('items', [])
         except Exception as e:
-            print(f'  W{wk}: scoreboard failed ({e}), skipping week')
+            print(f'  W{wk}: events list failed ({e}), skipping week')
             continue
-        events = sb.get('events', [])
-        print(f'  W{wk}: {len(events)} games')
-        for ev in events:
-            eid = ev.get('id')
-            comp = (ev.get('competitions') or [{}])[0]
-            away = home = None
-            for c in comp.get('competitors', []):
-                abbr = _fix(((c.get('team') or {}).get('abbreviation')))
-                if c.get('homeAway') == 'home':
-                    home = abbr
-                elif c.get('homeAway') == 'away':
-                    away = abbr
-            if not away or not home:
+        print(f'  W{wk}: {len(evs)} games')
+        for evref in evs:
+            em = re.search(r'/events/(\d+)', str(evref.get('$ref', '')))
+            if not em:
                 continue
-            key = f'W{wk}_{away}_{home}'
+            eid = em.group(1)
+            away = home = None
             total = spread = None
             source = 'DK'
             try:
@@ -132,6 +154,19 @@ def pull_game_lines():
                 # prefer DraftKings, else first provider with numbers
                 items.sort(key=lambda it: 0 if 'draftkings' in
                            str((it.get('provider') or {}).get('name', '')).lower() else 1)
+                # away/home from any item's team $refs (same game on every item)
+                for it in items:
+                    for side in ('awayTeamOdds', 'homeTeamOdds'):
+                        ref = str(((it.get(side) or {}).get('team') or {}).get('$ref', ''))
+                        tm = re.search(r'/teams/(\d+)', ref)
+                        ab = teams.get(tm.group(1)) if tm else None
+                        if ab:
+                            if side == 'awayTeamOdds':
+                                away = ab
+                            else:
+                                home = ab
+                    if away and home:
+                        break
                 for it in items:
                     ou = it.get('overUnder')
                     sp = it.get('spread')
@@ -157,6 +192,10 @@ def pull_game_lines():
                     break
             except Exception:
                 pass
+            if not away or not home:
+                misses.append(f'W{wk}_eid{eid}')
+                continue
+            key = f'W{wk}_{away}_{home}'
             if total is None and spread is None:
                 misses.append(key)
                 continue

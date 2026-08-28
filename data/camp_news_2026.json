@@ -1,6 +1,76 @@
 {
-  "updated": "2026-08-28T02:09:27Z",
+  "updated": "2026-08-28T16:09:55Z",
   "items": [
+    {
+      "player": "Michael Penix Jr.",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-08-27",
+      "headline": "Rapoport: Falcons' starting QB job is \"Penix's to lose\" after Tua's uneven camp",
+      "take": "First real crack in what looked like a locked-in Tua QB1 job -- don't finalize either Falcon's Week 1 outlook yet",
+      "url": "https://www.cbssports.com/nfl/news/falcons-qb-battle-michael-penix-jr-tua-tagovailoa/",
+      "tag": "role"
+    },
+    {
+      "player": "Tua Tagovailoa",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-08-27",
+      "headline": "Losing ground in Falcons' QB battle after an uneven camp, door reportedly open for Penix",
+      "take": "Real downgrade risk for Atlanta's presumed starter -- monitor closely before drafting him as a lock",
+      "url": "https://www.cbssports.com/nfl/news/falcons-qb-battle-michael-penix-jr-tua-tagovailoa/",
+      "tag": "faller"
+    },
+    {
+      "player": "James Conner",
+      "team": "ARI",
+      "pos": "RB",
+      "date": "2026-08-26",
+      "headline": "Cardinals HC Mike LaFleur: \"too early to tell\" if Conner will be ready for Week 1",
+      "take": "Still not in team drills recovering from last year's season-ending ankle injury -- Tyler Allgeier is the direct Week 1 beneficiary if he sits",
+      "url": "https://www.draftsharks.com/fantasy-football-news/82362/james-conner-uncertain-for-week-1-tyler-allgeier-the-lead-back",
+      "tag": "faller"
+    },
+    {
+      "player": "Kenneth Walker III",
+      "team": "SEA",
+      "pos": "RB",
+      "date": "2026-08-25",
+      "headline": "Missed practice this week with a foot injury",
+      "take": "No severity confirmed yet, but any missed camp time this late is worth tracking before Week 1 drafts",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-25/kenneth-walker-foot-missing-practice-tuesday",
+      "tag": "injury"
+    },
+    {
+      "player": "Alec Pierce",
+      "team": "IND",
+      "pos": "WR",
+      "date": "2026-08-27",
+      "headline": "Activated off the PUP list, working individual drills after offseason ankle surgery",
+      "take": "Real positive signal for a WR who led the NFL in yards/catch each of the last two seasons -- trending toward Week 1 availability",
+      "url": "https://www.espn.com/nfl/story/_/id/49742187/source-colts-activating-no-1-wr-alex-pierce-pup-list",
+      "tag": "riser"
+    },
+    {
+      "player": "Tucker Kraft",
+      "team": "GB",
+      "pos": "TE",
+      "date": "2026-08-26",
+      "headline": "Says he's playing \"free\" with no restrictions after a physical joint practice vs. Cardinals",
+      "take": "Sounds fully on track for a normal Week 1 workload -- reinforces his TE1-caliber outlook",
+      "url": "https://lombardiave.com/tucker-kraft-week-1-promise-feels-real-after-packers-activate-him-from-pup",
+      "tag": "riser"
+    },
+    {
+      "player": "Germie Bernard",
+      "team": "PIT",
+      "pos": "WR",
+      "date": "2026-08-27",
+      "headline": "Appears to have won Pittsburgh's WR3 job over Roman Wilson after a strong camp",
+      "take": "Real dynasty/best-ball stash behind Metcalf/Pittman, especially if either misses time",
+      "url": "https://www.steelernation.com/2026/08/27/steelers-rookie-germie-bernard-battle",
+      "tag": "riser"
+    },
     {
       "player": "Josh Jacobs",
       "team": "GB",

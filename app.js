@@ -9712,14 +9712,22 @@ function openPlayerCard(d, ctxMode) {
   // Detect draft-class prospects not yet on an NFL roster. A drafted/signed
   // rookie (real team on the board, or a draft team in COMBINE_DATA) gets the
   // full NFL card even though their career array stays empty until Week 1.
-  const _cbRow = (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n]) ? COMBINE_DATA[d.n] : null;
+  // _getValidCB (not a raw COMBINE_DATA hit): the combine map is name-keyed
+  // across 11k+ combine athletes, so a retired vet who shares a name with a
+  // recent prospect would otherwise inherit the kid's draft team / class here
+  // (Jeff George vs the 2018 combine Jeff George — the "COMBINE↔ALL
+  // collision" family, closed 2026-08-28). The validator's suffix fallbacks
+  // and era/school/draft-pick guards make it strictly safer for this use too.
+  const _cbRow = _getValidCB(d);
   const _onNflRoster = !!(d.t && d.t !== 'TBD' && d.t !== 'FA') || !!(_cbRow && _cbRow.dt);
   const _is2026 = !d._isDevy && !_onNflRoster && (d.t === 'TBD' || (_cbRow && _cbRow.yr === 2026 && (!d.career || !d.career.length)));
 
-  // JM Score badge for player card
+  // JM Score badge for player card — never for retired players (the prospect
+  // model's name-keyed lookup would decorate a retired vet with a same-name
+  // college prospect's score).
   let _cardJm = null;
   let _cardJmLowConf = false;
-  if (window._pmBuiltData && window._jmClass) {
+  if (!d._retired && window._pmBuiltData && window._jmClass) {
     const _pmData = window._pmBuiltData();
     if (_pmData && _pmData.length) {
       const _pmMatch = _pmData.find(p => p.name === d.n);

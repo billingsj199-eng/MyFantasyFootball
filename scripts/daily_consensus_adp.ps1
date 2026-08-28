@@ -10,6 +10,9 @@
 # scripts/update_rosters.py) — which rewrites the Site Rankings CSVs + KTC
 # maps, re-runs inject_rankings.py into data/d.js, and bumps the touched
 # ?v= tags in index.html. Commits + pushes ONLY when data changed.
+# Then re-exports the draft-helper players.json (sleeper/espn/yahoo
+# extensions) so their baked ranks/ADPs track the fresh d.js — the "v ESPN"
+# value chips went 17 days stale when this was manual (wired 2026-08-28).
 #
 # Log: scripts/consensus_adp_log.txt (kept to last ~400 lines).
 
@@ -60,6 +63,14 @@ if (-not $changed) {
     git push origin main
     if ($LASTEXITCODE -eq 0) { Write-Log 'pushed updated ADPs' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
+
+# Draft-helper extension data (players.json x3 + sim packs) from the fresh
+# d.js + Jack's live Firestore boards. Extension dirs are git-excluded from
+# main, so this never touches the commit above. Non-fatal: a failure just
+# leaves yesterday's export on disk.
+$out = & $Python 'export_sleeper_extension_data.py' 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "extension export FAILED (exit $LASTEXITCODE) - helpers keep yesterday's data" }
 
 # Trim log to last 400 lines.
 $lines = Get-Content $Log

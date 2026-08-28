@@ -2592,7 +2592,12 @@ function _teamPpgBoxHtml(team) {
 function _viewOptsApply(open) {
   const wrap = document.getElementById('viewOptsWrap');
   if (!wrap) return;
-  wrap.style.display = open ? '' : 'none';
+  // 'contents', not '': position:sticky can't escape its parent's box, so a
+  // block wrap pins .rnk-scoring-row within the wrap's own height (nowhere) and
+  // the row scrolls away leaving a gap under the controls that table rows bleed
+  // through. display:contents puts the children back in #pageRankings' flow so
+  // the row docks against the page scroller like it did pre-declutter.
+  wrap.style.display = open ? 'contents' : 'none';
   const arrow = document.getElementById('viewOptsArrow');
   if (arrow) arrow.textContent = open ? '▾' : '▸';
   const btn = document.getElementById('viewOptsToggle');

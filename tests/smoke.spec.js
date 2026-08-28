@@ -129,7 +129,9 @@ test.describe('rankings page', () => {
     await expect(page.locator('#viewOptsWrap')).toBeHidden();
     await expect(page.locator('#viewOptsSummary')).toContainText('PPR');
     await page.click('#viewOptsToggle');
-    await expect(page.locator('#viewOptsWrap')).toBeVisible();
+    // The open wrap is display:contents (no box of its own — sticky children
+    // must sit in #pageRankings' flow), so assert on a child, not the wrap.
+    await expect(page.locator('#pageRankings .rnk-scoring-row')).toBeVisible();
     await expect(page.locator('#viewOptsSummary')).toHaveText('');
   });
 
@@ -151,10 +153,23 @@ test.describe('rankings page', () => {
     // ResizeObserver can't see; _viewOptsApply now resyncs explicitly).
     await page.evaluate(() => { document.getElementById('pageRankings').scrollTop = 0; window._toggleViewOpts(); });
     const expandedGap = await gapAfter();
-    const scoringH = await page.evaluate(() =>
-      Math.round(document.querySelector('#pageRankings .rnk-scoring-row').getBoundingClientRect().height));
-    expect(scoringH).toBeGreaterThan(0);
-    expect(expandedGap).toBe(scoringH); // stats-bar sits exactly below the scoring row
+    // The gap must not just EQUAL the scoring row's height — the row has to be
+    // physically pinned inside it. The 2026-08-28 follow-up bug: a block
+    // #viewOptsWrap was the row's sticky containing block, so the offsets were
+    // right but the row scrolled away with the wrap and table rows bled
+    // through. The wrap now opens as display:contents.
+    const scoring = await page.evaluate(() => new Promise(r => {
+      const pg = document.getElementById('pageRankings');
+      pg.scrollTop = 600;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const c = pg.querySelector('.controls').getBoundingClientRect();
+        const s = pg.querySelector('.rnk-scoring-row').getBoundingClientRect();
+        r({ h: Math.round(s.height), pinGap: Math.round(s.top - c.bottom) || 0 });
+      }));
+    }));
+    expect(scoring.h).toBeGreaterThan(0);
+    expect(expandedGap).toBe(scoring.h); // stats-bar sits exactly below the scoring row
+    expect(scoring.pinGap).toBe(0);      // ...and the scoring row is actually docked in that slot
     // Collapse again: back to flush (this was the user-visible gap bug).
     await page.evaluate(() => { document.getElementById('pageRankings').scrollTop = 0; window._toggleViewOpts(); });
     expect(await gapAfter()).toBe(0);

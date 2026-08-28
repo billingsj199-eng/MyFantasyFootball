@@ -1,0 +1,9 @@
+{
+  "name": "mff-smoke-tests",
+  "private": true,
+  "description": "Playwright smoke tests for myfantasyfootball.co — run from tests/ with `npx playwright test`",
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "http-server": "^14.1.1"
+  }
+}

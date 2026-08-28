@@ -24,3 +24,8 @@ scripts/_bbm_*.json
 
 # Obsolete pre-split data (replaced by weekly_stats_retired_1/2/3.js)
 *.REPLACED_BY_SPLITS
+
+# Playwright smoke tests — deps + artifacts stay local
+tests/node_modules/
+tests/test-results/
+tests/playwright-report/

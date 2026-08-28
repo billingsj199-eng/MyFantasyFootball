@@ -133,6 +133,33 @@ test.describe('rankings page', () => {
     await expect(page.locator('#viewOptsSummary')).toHaveText('');
   });
 
+  test('sticky header stack stays flush through the view-options toggle', async ({ page }) => {
+    await bootRankings(page);
+    const gapAfter = async () => page.evaluate(() => new Promise(r => {
+      const pg = document.getElementById('pageRankings');
+      pg.scrollTop = 600;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const c = pg.querySelector('.controls').getBoundingClientRect();
+        const s = pg.querySelector('.stats-bar').getBoundingClientRect();
+        r(Math.round(s.top - c.bottom) || 0); // || 0 normalizes -0 (Object.is)
+      }));
+    }));
+    // Collapsed (default): stats-bar flush under the controls block.
+    expect(await gapAfter()).toBe(0);
+    // Expand: the sticky scoring row joins the stack — offset must grow with it
+    // (the 2026-08-28 regression: the wrap hides it via PARENT display, which
+    // ResizeObserver can't see; _viewOptsApply now resyncs explicitly).
+    await page.evaluate(() => { document.getElementById('pageRankings').scrollTop = 0; window._toggleViewOpts(); });
+    const expandedGap = await gapAfter();
+    const scoringH = await page.evaluate(() =>
+      Math.round(document.querySelector('#pageRankings .rnk-scoring-row').getBoundingClientRect().height));
+    expect(scoringH).toBeGreaterThan(0);
+    expect(expandedGap).toBe(scoringH); // stats-bar sits exactly below the scoring row
+    // Collapse again: back to flush (this was the user-visible gap bug).
+    await page.evaluate(() => { document.getElementById('pageRankings').scrollTop = 0; window._toggleViewOpts(); });
+    expect(await gapAfter()).toBe(0);
+  });
+
   test('season strip states via the time-machine hook', async ({ page }) => {
     await bootRankings(page);
     const probe = () => page.evaluate(() => ({

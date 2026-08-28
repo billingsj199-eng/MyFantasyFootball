@@ -2598,6 +2598,9 @@ function _viewOptsApply(open) {
   const btn = document.getElementById('viewOptsToggle');
   if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   _updateViewOptsSummary();
+  // The wrap hides the sticky .rnk-scoring-row via parent display — the
+  // sticky-offset ResizeObserver can't see that, so resync explicitly.
+  if (window._stickyFilterSync) window._stickyFilterSync();
 }
 window._toggleViewOpts = function () {
   const wrap = document.getElementById('viewOptsWrap');
@@ -5941,6 +5944,12 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     page.style.setProperty('--rnk-sticky-top', offset + 'px');
   };
   sync();
+  // The view-options collapse (2026-08-27) hides .rnk-scoring-row by toggling
+  // display on its PARENT (#viewOptsWrap) — ResizeObserver does not fire for
+  // ancestor-display changes, so the offsets went stale in both directions
+  // (gap over the stats bar after collapsing, overlap when expanding).
+  // _viewOptsApply calls this exported sync explicitly on every toggle.
+  window._stickyFilterSync = sync;
   // border-box explicitly: `top` is measured against each row's outer edge, and
   // the default content-box would miss a padding/border change.
   if (window.ResizeObserver) {

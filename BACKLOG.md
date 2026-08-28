@@ -351,9 +351,9 @@ Ideas that aren't on the active backlog but are worth considering for future roa
 ### SEO / social (high-leverage, low-effort)
 - ~~**Open Graph + Twitter Card meta tags for `?player=slug` URLs**~~ — _Shipped 2026-05-06_ via static `/p/<slug>.html` pages.
 - **Same OG approach for `?ranks=ID` shared rankings URLs** — harder because the data is dynamic (Firestore docs created ad-hoc). Options: (a) write a Cloud Function meta-tag proxy and migrate hosting from GitHub Pages to Firebase Hosting, (b) at share-creation time, also write a static HTML stub somewhere, (c) skip for now (ranks shares are less viral than player profiles).
-- **Improve OG image coverage** — only ~100 of 580 active players have ESPN headshot URLs in `data/fallback_espn_ids.js`. Build a maintenance script that extracts more name→ESPN-ID mappings from the live site's runtime resolution and appends to the fallback file. Each new mapping adds rich `summary_large_image` previews for that player.
+- ~~**Improve OG image coverage**~~ — _Done 2026-08-28 (41ba587): build_player_og_pages.py now also reads BAKED_ESPN_IDS (data/headshot_espn_ids.js) — image cards 102 → 453 of 585 pages. **Same commit SHIPPED the entire /p/ + sitemap + robots layer for the first time — it had 404'd on prod since May** (the .git/info/exclude `/*` whitelist silently blocked the adds; 4th occurrence of the check-ignore-first gotcha) while the player-card SHARE button copied /p/ links. All 200 + verified live._
 - **OG image generator** — an SVG → PNG image showing "Bijan Robinson · RB1 · Atlanta Falcons" for embedding when shared. Cloud Function that renders on demand and caches.
-- **sitemap.xml** for the player-profile URLs — Google Search Console picks these up, helps with indexing player names as keywords.
+- ~~**sitemap.xml** for the player-profile URLs~~ — _Live 2026-08-28 (41ba587, existed locally since May): 587 URLs incl. /movers.html (daily changefreq), XML-validated, robots.txt Sitemap line. **Jack action: register https://www.myfantasyfootball.co/sitemap.xml in Google Search Console.**_
 
 ### PWA / install
 - ~~**Add to Home Screen / PWA**~~ — _Shipped 2026-05-06; PNG icons (192/512 + 180 apple-touch) shipped 2026-07-22 via `scripts/make_icons.py`, so Chrome's auto install prompt criteria are met._

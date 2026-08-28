@@ -50,6 +50,9 @@ if ($dirty) {
 
 # 0a. Fresh sportsbook lines (quiet no-op when nothing moved; commits its own
 #     files). The Sun 9:00/15:35/19:50 runs have no other pregame line pull.
+#     NOTE: this nested script also re-exports the draft-helper players.json
+#     (wired 2026-08-28), so every sim-proj run refreshes the extensions too —
+#     do NOT add a second export step here; nothing produced below feeds it.
 $out = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Repo 'scripts\daily_betting_pull.ps1') 2>&1 | Out-String
 Write-Log ("betting pull: exit " + $LASTEXITCODE)
 

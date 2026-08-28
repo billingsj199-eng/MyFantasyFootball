@@ -6,6 +6,9 @@
 # data actually changed, so quiet offseason mornings are silent no-ops.
 # The DK season-props phase (Selenium, visible Chrome) is NOT run here;
 # run it manually when wanted: python scripts/pull_betting_lines.py --season-props
+# Then re-exports the draft-helper players.json (sleeper/espn/yahoo
+# extensions) — the export derives team byes from betting_lines_2026.json,
+# and the 9am ADP task runs the same step (wired 2026-08-28).
 #
 # Log: scripts/betting_pull_log.txt (kept to last ~400 lines).
 
@@ -53,6 +56,14 @@ if (-not $changed) {
     git push origin main
     if ($LASTEXITCODE -eq 0) { Write-Log 'pushed updated lines' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
+
+# Draft-helper extension data (players.json x3 + sim packs) from the fresh
+# betting lines + d.js + Jack's live Firestore boards. Extension dirs are
+# git-excluded from main, so this never touches the commit above.
+# Non-fatal: a failure just leaves the previous export on disk.
+$out = & $Python 'export_sleeper_extension_data.py' 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "extension export FAILED (exit $LASTEXITCODE) - helpers keep previous data" }
 
 # Trim log to last 400 lines.
 $lines = Get-Content $Log

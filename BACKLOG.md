@@ -1,8 +1,17 @@
 # MyFantasyFootball — Backlog
 
-_Last updated: 2026-08-27_
+_Last updated: 2026-08-28_
 
 Running backlog for myfantasyfootball.co. Items are grouped by what's blocking them, then by effort. **Read DEPLOY_NOTES.md first** if any "Shipped" item below mentions Firestore rules — those features won't work in prod until rules are pushed.
+
+---
+
+## Shipped 2026-08-28 (chip sweep + fixes)
+
+Five queued task chips resolved in one session — each struck in place where it lived (FPA SOS blend in Day-scale items, Playwright suite in Code health, SEO pack + the /p/-layer rescue in SEO/social, COMBINE↔ALL collision closure in next-session priorities; UD injury popover stays properly queued behind the store appeal in Awaiting external action). Plus one bugfix with no prior backlog line:
+
+- **Sticky header gap/overlap after the view-options toggle** (e486061) — Jack's screenshot: table rows bled through a gap above the stuck stats bar. Root cause: the 08-27 declutter hides the sticky `.rnk-scoring-row` by toggling display on its PARENT (`#viewOptsWrap`), and **ResizeObserver never fires for ancestor-display changes**, so `_stickyFilterBar`'s measured offsets went stale in both directions (gap after collapsing, overlap after expanding). Fix: the sync is exported as `window._stickyFilterSync` and `_viewOptsApply` calls it on every toggle. Locked in by a new smoke test ("sticky header stack stays flush through the view-options toggle" — gap 0 collapsed, gap = scoring-row height expanded, gap 0 re-collapsed); suite now 10/10. Durable lesson for any future sticky-stack change: if an element in the measured stack can be hidden via an ancestor, the observer won't see it — resync explicitly at the toggle site.
+- **Ops note (same session):** GitHub billing incidents can fail ONLY the deploy-pages step (all build steps green, 3 runs in a row) — retrigger commit-free via the workflow's `workflow_dispatch` endpoint using the token from `git credential fill`.
 
 ---
 

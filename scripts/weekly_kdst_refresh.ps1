@@ -6,6 +6,9 @@
 # and bumps the touched ?v= tags. Keeps game logs, L4 PPG, career tables,
 # FG splits, and the kicker model's career inputs current all season.
 # Commits + pushes ONLY when data changed. Mirrors daily_consensus_adp.ps1.
+# Then re-exports the draft-helper players.json (sleeper/espn/yahoo
+# extensions) — the export bakes kicker_splits.js FG-distance tables; the
+# 8am betting + 9am ADP tasks run the same step (wired 2026-08-28).
 #
 # Log: scripts/kdst_refresh_log.txt (kept to last ~300 lines).
 
@@ -48,6 +51,14 @@ if (-not $changed) {
     git push origin main
     if ($LASTEXITCODE -eq 0) { Write-Log 'pushed K/DST refresh' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
+
+# Draft-helper extension data (players.json x3 + sim packs) from the fresh
+# K/DST tables + d.js + Jack's live Firestore boards. Extension dirs are
+# git-excluded from main, so this never touches the commit above.
+# Non-fatal: a failure just leaves the previous export on disk.
+$out = & $Python 'export_sleeper_extension_data.py' 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "extension export FAILED (exit $LASTEXITCODE) - helpers keep previous data" }
 
 # Trim log to last 300 lines.
 $lines = Get-Content $Log

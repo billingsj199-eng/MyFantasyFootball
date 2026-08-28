@@ -44466,11 +44466,94 @@ Rules:
   //   DST → the opposing OFFENSE (a defense's matchup is who it has to stop)
   //   K   → opponent's overall defense (no unit weighting fits FG kicking)
   //   else → the position-weighted defensive unit blend
-  function _mtMatchupZ(oppRec, posKey) {
-    if (posKey === 'DST') return oppRec.zOff;
-    if (posKey === 'K' || posKey === 'OVERALL') return oppRec.defZOverall;
-    return oppRec.defZByPos[posKey];
+  // === In-season observed FPA (fantasy points allowed per position group) ===
+  // Jack's 2026-07-24 spec: once 2026 games are in the weekly stats, compute
+  // fantasy points allowed to QB/RB/WR/TE per game from our own
+  // WEEKLY_STATS_ACTIVE (each row has opp + fpts — no new data source) and
+  // phase it into the SOS blend IN PLACE of the preseason defensive priors
+  // (Clay unit grades / DST proj / opp PA). Ramp: observed share =
+  // (weeksPlayed − 1) / 4 → W1 0%, W2 25%, W3 50%, W4 75%, W5+ 100% (priors
+  // fully dropped). The Vegas layer (baseline-relative implied totals +
+  // spreads) stays throughout — this replaces only the defensive signal.
+  // Preseason: no 2026 rows → share 0 → behavior identical to today.
+  // fpts basis (half-PPR) doesn't matter — the signal is z-scored per week.
+  const _MT_FPA_POS = ['QB', 'RB', 'WR', 'TE'];
+  let _mtFpaCache = null;
+  function _mtObservedFpa() {
+    if (_mtFpaCache) return _mtFpaCache;
+    _mtFpaCache = { weeksPlayed: 0, share: 0, z: null };
+    const WS = (typeof WEEKLY_STATS_ACTIVE !== 'undefined') ? WEEKLY_STATS_ACTIVE : window.WEEKLY_STATS_ACTIVE;
+    if (!WS) return _mtFpaCache; // lazy weekly bundle not landed yet
+    const YEAR = '2026';
+    // pos -> team -> { pts, wks:Set } (wks = distinct weeks faced = games)
+    const acc = {};
+    _MT_FPA_POS.forEach(p => { acc[p] = {}; });
+    let maxWk = 0;
+    for (const name in WS) {
+      const rec = WS[name];
+      if (!rec || !acc[rec.pos] || !rec.seasons) continue;
+      const rows = rec.seasons[YEAR];
+      if (!rows) continue;
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const opp = r && r.opp ? String(r.opp).toUpperCase() : '';
+        if (!opp || typeof r.fpts !== 'number') continue;
+        const slot = acc[rec.pos][opp] || (acc[rec.pos][opp] = { pts: 0, wks: new Set() });
+        slot.pts += r.fpts;
+        slot.wks.add(r.wk);
+        if (r.wk > maxWk) maxWk = r.wk;
+      }
+    }
+    if (!maxWk) return _mtFpaCache;
+    const share = Math.min(1, Math.max(0, (maxWk - 1) / 4));
+    // Per-position z across teams: MORE points allowed = weaker defense =
+    // EASIER, and in this system lower z = easier — so invert the sign
+    // (mirrors zO = -(oppg − mu)/sd in the preseason priors).
+    const z = {};
+    _MT_FPA_POS.forEach(pos => {
+      const perGame = {};
+      Object.keys(acc[pos]).forEach(team => {
+        const s = acc[pos][team];
+        if (s.wks.size >= 1) perGame[team] = s.pts / s.wks.size;
+      });
+      const vals = Object.values(perGame);
+      if (vals.length < 24) return; // need most of the league before z-scoring
+      const mu = vals.reduce((a, b) => a + b, 0) / vals.length;
+      const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mu) * (b - mu), 0) / vals.length) || 1;
+      z[pos] = {};
+      Object.keys(perGame).forEach(team => { z[pos][team] = -(perGame[team] - mu) / sd; });
+    });
+    // OVERALL (K fallback + mixed views): mean of the four position z's.
+    if (_MT_FPA_POS.every(p => z[p])) {
+      z.OVERALL = {};
+      Object.keys(z.QB).forEach(team => {
+        let s = 0, n = 0;
+        _MT_FPA_POS.forEach(p => { if (typeof z[p][team] === 'number') { s += z[p][team]; n++; } });
+        if (n) z.OVERALL[team] = s / n;
+      });
+    }
+    if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share, z };
+    return _mtFpaCache;
   }
+  window._mtObservedFpa = _mtObservedFpa; // console inspection / testing
+
+  function _mtMatchupZ(oppRec, posKey) {
+    if (posKey === 'DST') return oppRec.zOff; // DST matchup = opposing OFFENSE — FPA doesn't apply
+    const prior = (posKey === 'K' || posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
+    const fpa = _mtObservedFpa();
+    if (!fpa.share || !fpa.z) return prior;
+    const zMap = fpa.z[(posKey === 'K' || posKey === 'OVERALL') ? 'OVERALL' : posKey];
+    const zObs = zMap ? zMap[oppRec.abbr] : undefined;
+    if (typeof zObs !== 'number') return prior;
+    return prior * (1 - fpa.share) + zObs * fpa.share;
+  }
+  // Weekly stats land lazily (and refresh in-season): rebuild FPA + every SOS
+  // cache downstream of _mtMatchupZ when the bundle arrives.
+  document.addEventListener('mff:weeklydata', () => {
+    _mtFpaCache = null;
+    Object.keys(_mtPlayoffSosCache).forEach(k => { delete _mtPlayoffSosCache[k]; });
+    Object.keys(_mtPlayoffSosWeeklyCache).forEach(k => { delete _mtPlayoffSosWeeklyCache[k]; });
+  });
 
   function _mtClayUnitGrade(clayG, pos) {
     if (!clayG) return null;
@@ -44554,6 +44637,7 @@ Rules:
                    ? (clayG.offGr - offMu) / offSd
                    : 0;
       _mtDstByAbbrCache[upper] = {
+        abbr: upper,
         dst: d, clay: clayG, zP, zO, zOff,
         zCByPos, zCOverall,
         defZByPos, defZOverall,

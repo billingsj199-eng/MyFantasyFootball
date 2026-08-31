@@ -3285,6 +3285,9 @@ function _tcvTeamOutline(teamName){
   return _tcvLum(c.p) < 0.16 ? c.s : c.p;
 }
 
+// Generic head-and-shoulders fallback for covered cards with no headshot
+const _TCV_SIL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.7 0 4.8-2.2 4.8-4.9S14.7 2.2 12 2.2 7.2 4.4 7.2 7.1 9.3 12 12 12zm0 2.2c-4 0-9 2-9 6v1.6h18v-1.6c0-4-5-6-9-6z"/></svg>';
+
 function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   const card = document.createElement('div');
   card.className = 'tcv-card';
@@ -3347,7 +3350,14 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     logoHtml +
     '<div class="tcv-pos-pill ' + (d.s || '') + '">' + (d.s || '') + '</div>' +
     '<div class="tcv-card-name" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>' +
-    '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div><div class="tcv-cover-q">?</div></div>';
+    '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
+      // Mystery silhouette: the player's REAL headshot blacked out to a ghost
+      // cut-out (ESPN headshots are transparent PNGs); generic bust if none.
+      (d._slImg
+        ? '<div class="tcv-cover-sil">' + _TCV_SIL_SVG.replace('<svg ', '<svg style="display:none" ') +
+            '<img class="tcv-cover-sil-img" src="' + window._fixHeadshotUrl(d._slImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.previousElementSibling.style.display=\'\'"/></div>'
+        : '<div class="tcv-cover-sil">' + _TCV_SIL_SVG + '</div>') +
+    '</div>';
 
   card.addEventListener('click', () => {
     // While covered, a click reveals just this one player (don't open the card)
@@ -3363,6 +3373,12 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
 // CENTER layout preference (pyramid look for vertical video) — survives re-renders.
 function _tcvCenteredPref() {
   try { return localStorage.getItem('tcv_centered') === '1'; } catch(_) { return false; }
+}
+
+// REVEAL NEXT direction preference — false = top of board first (1→N),
+// true = countdown from the bottom (N→1, streaming-style build-up to #1).
+function _tcvCountdownPref() {
+  try { return localStorage.getItem('tcv_countdown') === '1'; } catch(_) { return false; }
 }
 
 function _renderTierCardView(data, container) {
@@ -3412,7 +3428,8 @@ function _renderTierCardView(data, container) {
   controls.className = 'tcv-reveal-controls';
   controls.innerHTML =
     '<button class="tcv-reveal-btn" data-tcvaction="hideAll" title="Hide every player — start the reveal flow">⊘ HIDE ALL</button>' +
-    '<button class="tcv-reveal-btn tcv-primary" data-tcvaction="revealNext" title="Reveal the next hidden player from the top">▶ REVEAL NEXT</button>' +
+    '<button class="tcv-reveal-btn tcv-primary" data-tcvaction="revealNext" title="Reveal the next hidden player (Spacebar works too)">▶ REVEAL NEXT</button>' +
+    '<button class="tcv-reveal-btn" data-tcvaction="toggleOrder" title="Flip the REVEAL NEXT direction — top of the board first (1→' + data.length + ') or countdown from the bottom (' + data.length + '→1)">⇅ ' + (_tcvCountdownPref() ? (data.length + ' → 1') : ('1 → ' + data.length)) + '</button>' +
     '<button class="tcv-reveal-btn" data-tcvaction="revealAll" title="Show every player">◉ REVEAL ALL</button>' +
     '<button class="tcv-reveal-btn' + (_tcvCenteredPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCenter" title="Center each tier\'s cards (pyramid layout — fits vertical video). The tier letter rides against the leftmost card.">⇔ CENTER</button>' +
     '<span class="tcv-reveal-status" id="tcvRevealStatus"></span>';
@@ -3490,14 +3507,24 @@ function _renderTierCardView(data, container) {
         try { localStorage.setItem('tcv_centered', on ? '1' : '0'); } catch(_) {}
         return;
       }
+      if (action === 'toggleOrder') {
+        const on = !_tcvCountdownPref();
+        try { localStorage.setItem('tcv_countdown', on ? '1' : '0'); } catch(_) {}
+        const n = root.querySelectorAll('.tcv-card').length;
+        btn.textContent = '⇅ ' + (on ? (n + ' → 1') : ('1 → ' + n));
+        return;
+      }
       const cards = root.querySelectorAll('.tcv-card');
       if (action === 'hideAll') {
         cards.forEach(c => c.classList.add('tcv-covered'));
       } else if (action === 'revealAll') {
         cards.forEach(c => c.classList.remove('tcv-covered'));
       } else if (action === 'revealNext') {
-        // Reveal the next single covered player, in rank order (top tier → left to right)
-        for (const c of cards) {
+        // Reveal the next single covered player — from the top of the board
+        // (rank order) or, in countdown mode, from the bottom up toward #1
+        const list = Array.prototype.slice.call(cards);
+        if (_tcvCountdownPref()) list.reverse();
+        for (const c of list) {
           if (c.classList.contains('tcv-covered')) {
             c.classList.remove('tcv-covered');
             c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3511,6 +3538,24 @@ function _renderTierCardView(data, container) {
   // Update status after any direct card/tier-letter click (bubble phase, so it
   // runs after the card's own handler has flipped its covered state).
   root.addEventListener('click', _tcvUpdateStatus, false);
+
+  // Spacebar = REVEAL NEXT while a tier-card view is on screen. Wired once at
+  // the document level (the view itself is torn down on every re-render).
+  if (!window._tcvSpaceWired) {
+    window._tcvSpaceWired = true;
+    document.addEventListener('keydown', e => {
+      if (e.key !== ' ' && e.code !== 'Space') return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      const view = document.querySelector('.tier-card-view');
+      if (!view || !view.getClientRects().length) return;
+      // preventDefault stops page scroll AND a focused button's native space-click
+      // (which would otherwise double-fire the reveal)
+      e.preventDefault();
+      const nextBtn = view.querySelector('[data-tcvaction="revealNext"]');
+      if (nextBtn) nextBtn.click();
+    });
+  }
 
   container.innerHTML = '';
   container.appendChild(root);

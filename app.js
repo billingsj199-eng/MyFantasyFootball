@@ -46425,6 +46425,133 @@ Rules:
     return { auction: false, slotCount, roundCount, picks };
   }
 
+  // ── TRADE FINDER (league-aware suggestions) ──────────────────────────
+  // Crosses the user's positional SURPLUS against each partner's NEED (and
+  // vice versa) using the starter-weighted posRanks, generates 1-for-1 and
+  // consolidating 2-for-1 offers, and grades fairness in RAW trade-calc
+  // units with the shared package math — every suggestion survives a
+  // double-check in the trade calculator. Rules: never a side's best player
+  // at the position, never K/DST, players only (no picks in v1).
+  let _mtTradesOpen = false;
+
+  window._mtToggleTradeFinder = function () {
+    const box = document.getElementById('mtTradeFinder');
+    if (!box) return;
+    _mtTradesOpen = !_mtTradesOpen;
+    box.style.display = _mtTradesOpen ? '' : 'none';
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+    if (_mtTradesOpen) _mtRenderTradeFinder();
+  };
+
+  function _mtRenderTradeFinder() {
+    const box = document.getElementById('mtTradeFinder');
+    const teams = window._mtTeams;
+    if (!box || !teams || !teams.length) return;
+    const me = teams.find(t => t.isMyTeam);
+    let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
+      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#a855f7">TRADE FINDER</span>` +
+      `<span style="font-size:.6rem;color:var(--text2)">Your surplus for their need · fairness in trade-calc values · players only, no K/DST</span></div>`;
+    if (!me) {
+      box.innerHTML = html + `<div style="font-size:.75rem;color:var(--text2);padding:8px">Pick your team first (My Team dropdown above).</div>`;
+      return;
+    }
+    if (!me.posRanks) _mtComputePosRanks(teams);
+
+    const POS = ['QB', 'RB', 'WR', 'TE'];
+    const mode = _mtGetRankingMode();
+    const n = teams.length;
+    const half = Math.ceil(n / 2), third = Math.max(2, Math.ceil(n / 3));
+    const rankOf = (t, pos) => ((t.posRanks || {})[pos] || { rank: n }).rank;
+    const needs = t => POS.filter(p => rankOf(t, p) > half);
+    const surpluses = t => POS.filter(p => rankOf(t, p) <= third);
+    // Tradeable pieces at a position: raw trade-calc valued, best-at-pos
+    // excluded, K/DST never reach here (POS list).
+    const pieces = (t, pos) => {
+      const grp = (t.players || []).map(nm => {
+        const d = _mtLookupD(nm);
+        if (!d || d.s !== pos) return null;
+        return { name: nm, d, val: window._getTradeValue(d, _mtValueSrc, mode) };
+      }).filter(Boolean).sort((a, b) => b.val - a.val);
+      return grp.slice(1); // never the best at the position
+    };
+    const pkgCost = (typeof window._packageRosterCost === 'function') ? window._packageRosterCost(mode) : 0;
+
+    const myNeeds = needs(me), mySurplus = surpluses(me);
+    const offers = [];
+    teams.forEach(them => {
+      if (them === me) return;
+      const theirNeeds = needs(them), theirSurplus = surpluses(them);
+      mySurplus.filter(p => theirNeeds.indexOf(p) >= 0).forEach(givePos => {
+        myNeeds.filter(p => theirSurplus.indexOf(p) >= 0).forEach(getPos => {
+          const mine = pieces(me, givePos), theirs = pieces(them, getPos);
+          // 1-for-1: values within 15% of each other
+          mine.forEach(a => theirs.forEach(b => {
+            const diff = Math.abs(a.val - b.val);
+            if (diff <= Math.max(8, 0.15 * Math.min(a.val, b.val))) {
+              offers.push({ them, givePos, getPos, send: [a], get: b, diff,
+                gain: b.val, kind: '1-1' });
+            }
+          }));
+          // 2-for-1 consolidation: two of my depth pieces for one better player
+          for (let i = 0; i < mine.length; i++) for (let j = i + 1; j < mine.length; j++) {
+            const pkg = Math.max(mine[i].val, mine[j].val) + Math.max(Math.min(mine[i].val, mine[j].val) - pkgCost, 0);
+            theirs.forEach(b => {
+              if (b.val <= Math.max(mine[i].val, mine[j].val)) return; // must be an upgrade
+              const diff = Math.abs(pkg - b.val);
+              if (diff <= Math.max(8, 0.15 * Math.min(pkg, b.val))) {
+                offers.push({ them, givePos, getPos, send: [mine[i], mine[j]], get: b, diff,
+                  gain: b.val, kind: '2-1' });
+              }
+            });
+          }
+        });
+      });
+    });
+
+    if (!offers.length) {
+      const why = !myNeeds.length ? 'no weak positions to fix (all top-half)' :
+        !mySurplus.length ? 'no positional surplus to trade from' :
+        'no partner with the complementary surplus/need inside the fairness band';
+      box.innerHTML = html + `<div style="font-size:.75rem;color:var(--text2);padding:8px">No balanced trades found — ${why}. Needs: ${myNeeds.join('/') || 'none'} · Surplus: ${mySurplus.join('/') || 'none'}</div>`;
+      return;
+    }
+
+    // Best get first, tightest value diff as tiebreak; max 2 per partner, 10 total
+    offers.sort((a, b) => b.gain - a.gain || a.diff - b.diff);
+    const perTeam = {}, picked = [];
+    for (const o of offers) {
+      const k = o.them.owner;
+      if ((perTeam[k] || 0) >= 2) continue;
+      perTeam[k] = (perTeam[k] || 0) + 1;
+      picked.push(o);
+      if (picked.length >= 10) break;
+    }
+
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    const chip = (p, pos) => `<span style="font-weight:600;color:var(--text)">${_esc(p.name)}</span> <span style="font-size:.6rem;font-weight:700;color:${posColors[pos]}">${pos}</span> <span style="font-size:.6rem;color:var(--text2)">${Math.round(p.val)}</span>`;
+    html += `<div style="display:flex;flex-direction:column;gap:6px">`;
+    picked.forEach(o => {
+      const sendHtml = o.send.map(p => chip(p, o.givePos)).join(' <span style="color:var(--text2)">+</span> ');
+      const sendVal = o.kind === '2-1'
+        ? Math.max(o.send[0].val, o.send[1].val) + Math.max(Math.min(o.send[0].val, o.send[1].val) - pkgCost, 0)
+        : o.send[0].val;
+      const pct = Math.round(o.diff / Math.max(sendVal, o.get.val) * 100);
+      html += `<div style="border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:8px 12px">` +
+        `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.78rem">` +
+        `<span style="font-weight:700;color:#a855f7">${_esc(o.them.owner)}</span>` +
+        `<span style="font-size:.6rem;color:var(--text2)">their ${o.getPos}: ${_mtOrdinal(rankOf(o.them, o.getPos))} · their ${o.givePos}: ${_mtOrdinal(rankOf(o.them, o.givePos))}</span></div>` +
+        `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;font-size:.78rem">` +
+        `<span style="font-size:.6rem;color:#ef4444;font-weight:700">SEND</span> ${sendHtml}` +
+        `<span style="color:var(--text2)">⇄</span>` +
+        `<span style="font-size:.6rem;color:#22c55e;font-weight:700">GET</span> ${chip(o.get, o.getPos)}` +
+        `<span title="Value gap in trade-calc units — under 15% reads as balanced" style="margin-left:auto;font-size:.6rem;color:${pct <= 7 ? '#22c55e' : '#f59e0b'}">±${pct}% value gap</span></div>` +
+        `<div style="font-size:.6rem;color:var(--text2);margin-top:3px">Fixes your ${o.getPos} (${_mtOrdinal(rankOf(me, o.getPos))} of ${n}) from your ${o.givePos} depth (${_mtOrdinal(rankOf(me, o.givePos))})</div>` +
+        `</div>`;
+    });
+    html += `</div>`;
+    box.innerHTML = html;
+  }
+
   // ── WAIVER WIRE (best available free agents) ─────────────────────────
   // Diffs the current value-source board against every rostered player in
   // the loaded league (all sources — rosters are already imported) and
@@ -46665,6 +46792,9 @@ Rules:
     _mtWaiversOpen = false;
     const _ww = document.getElementById('mtWaiverWire');
     if (_ww) { _ww.style.display = 'none'; _ww.innerHTML = ''; }
+    _mtTradesOpen = false;
+    const _tf = document.getElementById('mtTradeFinder');
+    if (_tf) { _tf.style.display = 'none'; _tf.innerHTML = ''; }
     _mtRenderTeamList(teams);
 
     // Update format display
@@ -46820,6 +46950,8 @@ Rules:
     {
       const wwActive = _mtWaiversOpen;
       html += `<button onclick="window._mtToggleWaivers()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${wwActive ? '#4ade80' : 'var(--border)'};background:${wwActive ? '#4ade80' : 'var(--surface)'};color:${wwActive ? '#000' : 'var(--text2)'}">WAIVERS</button>`;
+      const tfActive = _mtTradesOpen;
+      html += `<button onclick="window._mtToggleTradeFinder()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${tfActive ? '#a855f7' : 'var(--border)'};background:${tfActive ? '#a855f7' : 'var(--surface)'};color:${tfActive ? '#fff' : 'var(--text2)'}">TRADE FINDER</button>`;
     }
     html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)"></span>`;
     html += `</div>`;
@@ -52577,9 +52709,12 @@ Rules:
     if (window._mtTeams && typeof _mtRenderTeamList === 'function') {
       try { _mtRenderTeamList(window._mtTeams); } catch(e) { console.warn('[MyTeams] re-render teams failed:', e); }
     }
-    // Waiver wire ranks/values follow the source too
+    // Waiver wire + trade finder ranks/values follow the source too
     if (typeof _mtRenderWaivers === 'function' && _mtWaiversOpen) {
       try { _mtRenderWaivers(); } catch(e) {}
+    }
+    if (typeof _mtRenderTradeFinder === 'function' && _mtTradesOpen) {
+      try { _mtRenderTradeFinder(); } catch(e) {}
     }
     // Re-render manual roster if shown
     if (typeof _mtRenderManualRoster === 'function') {

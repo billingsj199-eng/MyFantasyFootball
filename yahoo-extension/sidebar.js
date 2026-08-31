@@ -172,6 +172,15 @@
     if (p.s === 'DST') return 'dst_' + String(p.sTm || p.t || '').toLowerCase();
     return norm(p.n);
   }
+  // This week's raw sim row [half, ppr, std, boom, bust] — [3]/[4] are the
+  // site's exported weekly odds (% of 1,000 draws ≥1.5× / ≤0.5× his median).
+  function simWeekRowFor(p) {
+    const ix = simProjIdx();
+    if (!ix) return null;
+    const m = ix.weeks[state.seasonWeek] ||
+      (state.simProj.currentWeek != null ? ix.weeks[state.simProj.currentWeek] : null);
+    return (m && m[simKeyFor(p)]) || null;
+  }
   // League-scoring delta vs the sim's PPR frame, per game (additive — exact
   // for rec value / pass-TD value; sim stat mix = Clay's).
   function simLeagueDeltaPg(p) {
@@ -674,6 +683,10 @@
   function onPlayersPage() {
     if (MOCK) return !!MOCK.playersPage;
     return /\/f1\/\d+\/players/.test(location.pathname);
+  }
+  function onMatchupPage() {
+    if (MOCK) return !!MOCK.matchupPage;
+    return /\/f1\/\d+\/matchup/.test(location.pathname);
   }
   // Team pages are /f1/<league>/<teamId>. Matchup pages ALSO render slot-
   // labeled rosters (both teams'), so scraping is gated to team URLs only.
@@ -2234,6 +2247,108 @@
       'font-size:10px;font-weight:700;border-radius:3px;padding:0 4px;line-height:15px;' +
       'white-space:nowrap;flex:0 0 auto">' + esc(text) + '</span>';
   }
+  // Weekly odds pill — the site's exported boom/bust for this week's sim row.
+  function simOddsPillHTML(sr) {
+    const tip = 'From the site sim: ' + sr[3] + '% boom (≥1.5× his median game) · ' +
+      sr[4] + '% bust (≤0.5× his median game)';
+    return `<span title="${esc(tip)}" style="background:#2a2c33;font-size:10px;font-weight:700;` +
+      'border-radius:3px;padding:0 4px;line-height:15px;white-space:nowrap;flex:0 0 auto">' +
+      `<span style="color:#6dd06d">▲${sr[3]}</span>&nbsp;<span style="color:#d06d6d">▼${sr[4]}</span></span>`;
+  }
+  // ---- MFF matchup strip (Yahoo matchup page): our proj totals + win odds ----
+  // The matchup page renders BOTH teams' slot-labeled starter rows (mirrored
+  // one-row-per-slot on desktop, a column per team otherwise). Scrape both
+  // sides, score them with the same wkVal the row pills use, and pin a strip
+  // with our totals + win odds above the first roster table — right under
+  // Yahoo's own projected-points header. Win odds = normal approximation
+  // (each starter sd = proj × position sigma; correlations ignored).
+  const POS_SIG_DEFAULT = { QB: 0.42, RB: 0.52, WR: 0.58, TE: 0.65, K: 0.55, DST: 0.6 };
+  function normCdf(z) {
+    const t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+    const p = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    return z >= 0 ? 1 - p : p;
+  }
+  function scrapeMatchupSides() {
+    const sides = [[], []];
+    const singles = [];
+    let firstTable = null;
+    let twoCol = false;
+    for (const row of document.querySelectorAll('tr')) {
+      if (row.closest('#mff-sidebar')) continue;
+      const cells = row.querySelectorAll('td,th');
+      if (!cells.length) continue;
+      let slot = null;
+      for (const c of cells) {
+        const tok = (c.textContent || '').trim().toUpperCase().replace(/\s+/g, '');
+        if (tok && tok.length <= 7 && SLOT_MAP[tok]) { slot = SLOT_MAP[tok]; break; }
+      }
+      if (!slot || slot === 'BN' || slot === 'IR') continue;
+      const boxes = [...row.querySelectorAll('.ysf-player-name')];
+      if (!boxes.length) continue;
+      if (!firstTable) firstTable = row.closest('table');
+      if (boxes.length >= 2) { // mirrored row: first cell = left team
+        twoCol = true;
+        const i0 = parsePlayerCell(boxes[0].closest('td') || row);
+        const i1 = parsePlayerCell(boxes[boxes.length - 1].closest('td') || row);
+        if (i0) sides[0].push(i0);
+        if (i1) sides[1].push(i1);
+      } else {
+        const info = parsePlayerCell(boxes[0].closest('td') || row);
+        if (info) singles.push({ row, info });
+      }
+    }
+    if (!twoCol && singles.length) { // column-per-team layout: split at midline
+      const midX = document.documentElement.clientWidth / 2;
+      for (const s of singles) {
+        const r = s.row.getBoundingClientRect();
+        sides[r.left + r.width / 2 < midX ? 0 : 1].push(s.info);
+      }
+    }
+    return { sides, firstTable };
+  }
+  function matchupStripTick() {
+    const existing = document.getElementById('mff-matchup-strip');
+    if (!onMatchupPage() || !state.players.length) { if (existing) existing.remove(); return; }
+    const scr = scrapeMatchupSides();
+    const L = scr.sides[0], R = scr.sides[1];
+    if (!scr.firstTable || L.length < 4 || R.length < 4) { if (existing) existing.remove(); return; }
+    const proj = [L, R].map((side) => {
+      let total = 0, varSum = 0, missing = 0;
+      for (const info of side) {
+        if (!info.p) { missing++; continue; }
+        const v = wkVal(info.p);
+        total += v;
+        const sig = POS_SIG_DEFAULT[info.p.s] || 0.55;
+        varSum += (v * sig) * (v * sig);
+      }
+      return { total: Math.round(total * 10) / 10, varSum, missing };
+    });
+    const sd = Math.sqrt(proj[0].varSum + proj[1].varSum) || 1;
+    const winL = Math.round(normCdf((proj[0].total - proj[1].total) / sd) * 100);
+    const missing = proj[0].missing + proj[1].missing;
+    const tip = 'MFF numbers for this matchup — our proj totals (same weekly projection as the row ' +
+      'pills: site sim first, ' + state.scoringLabel + ' scored, injuries priced) summed over the ' +
+      'starters shown on each side, and our win odds (normal approximation; player correlations ' +
+      'ignored). Left/right match the page\'s two teams.' +
+      (missing ? ' ' + missing + ' starter(s) without a projection count 0.' : '');
+    const wCol = (w) => (w >= 55 ? '#1d7a34' : w <= 45 ? '#b33636' : '#a06a00');
+    const inner =
+      `<span style="flex:1"><b>${proj[0].total.toFixed(1)}</b> <b style="color:${wCol(winL)}">${winL}%</b></span>` +
+      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px">MFF PROJ · WIN ODDS · WK ${state.seasonWeek}</span>` +
+      `<span style="flex:1;text-align:right"><b style="color:${wCol(100 - winL)}">${100 - winL}%</b> <b>${proj[1].total.toFixed(1)}</b></span>`;
+    if (existing && existing.dataset.mffSig === inner && existing.isConnected) return;
+    if (existing) existing.remove();
+    const strip = document.createElement('div');
+    strip.id = 'mff-matchup-strip';
+    strip.dataset.mffSig = inner;
+    strip.title = tip;
+    strip.style.cssText = 'display:flex;align-items:baseline;gap:10px;margin:6px 0;padding:5px 12px;' +
+      'background:#f4f6f8;border:1px solid #dfe3e8;border-radius:6px;' +
+      "font:600 12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2a2c33;";
+    strip.innerHTML = inner;
+    scr.firstTable.parentNode.insertBefore(strip, scr.firstTable);
+  }
   function decorateYahooRows() {
     if (!gateAllowed()) return;
     if (!state.leagueId || !state.players.length) return;
@@ -2243,7 +2358,10 @@
     document.querySelectorAll('.ysf-player-name').forEach((box) => {
       if (box.closest('#mff-sidebar')) return;
       const row = box.closest('tr') || box;
-      const info = parsePlayerCell(row);
+      // Parse THIS box's own cell, not the whole row: matchup rows are
+      // mirrored (left team | slot | right team) and a row-wide parse hands
+      // the right-hand player the LEFT player's pills.
+      const info = parsePlayerCell(box.closest('td') || row);
       const existing = box.querySelector(':scope > .mff-page-pills');
       if (!info || !info.p) { if (existing) existing.remove(); return; }
       const p = info.p;
@@ -2259,6 +2377,8 @@
       if (v > 0 || p.pPg != null) {
         pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#2a2c33', '#b9e28c',
           'Projected points this week (' + state.scoringLabel + ' · MFF blend of props + Clay + Jack)'));
+        const sr = simWeekRowFor(p);
+        if (sr && sr[3] != null && sr[4] != null) pills.push(simOddsPillHTML(sr));
       }
       if (playersPage && !isMine && state.faSeen[info.key] && calc) {
         if (base == null) { mine = myPlayerObjs(); base = optimalLineup(mine).total; }
@@ -2307,6 +2427,7 @@
     }
     if (scrapePlayersPage() > 0) render();
     decorateYahooRows();
+    matchupStripTick();
   }
   async function initForLeague(leagueId) {
     state.leagueId = leagueId;
@@ -2351,6 +2472,10 @@
       state.wkPropsAll = MOCK.vegas.weeklyProps || null;
       window.BETTING_2026 = MOCK.vegas; // season-sim engine reads gameTotals here
       if (MOCK.consensus) state.wkConsensus = MOCK.consensus;
+      if (MOCK.simProj) { // harness stand-in for the sim_proj_2026.json fetch
+        state.simProj = MOCK.simProj;
+        state.simProjIdx = null;
+      }
     } else {
       fetchJson('https://www.myfantasyfootball.co/data/betting_lines_2026.json?t=' + Date.now())
         .then((d) => {

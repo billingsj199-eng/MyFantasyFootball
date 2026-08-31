@@ -1,0 +1,545 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>vertical promo stage 1080x1920</title>
+<style>
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+  #bg { position: fixed; inset: 0; background:
+    radial-gradient(1000px 900px at 82% 12%, var(--glow) 0%, transparent 60%),
+    radial-gradient(900px 900px at 15% 88%, var(--glow2) 0%, transparent 65%),
+    linear-gradient(160deg, #0b0d12 0%, #12141c 55%, #0b0d12 100%); }
+  #grid { position: fixed; inset: 0; opacity: .35;
+    background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size: 60px 60px; }
+
+  /* ---------- copy block ---------- */
+  #copy { position: absolute; left: 84px; top: 108px; width: 912px; color: #e8eaf0; z-index: 1; }
+  #mark { font-size: 24px; font-weight: 800; letter-spacing: 7px; color: var(--accent); margin-bottom: 26px; }
+  #title { font-size: 82px; font-weight: 800; line-height: 1.08; margin-bottom: 26px; letter-spacing: -1px; }
+  #tag { font-size: 31px; color: #aab0bf; line-height: 1.5; margin-bottom: 40px; }
+  .b { display: flex; gap: 16px; align-items: baseline; font-size: 28px; color: #cdd2de; margin-bottom: 20px; }
+  .b::before { content: "●"; color: var(--accent); font-size: 14px; }
+  #store { display: inline-flex; align-items: center; gap: 12px; margin-top: 26px;
+    border: 1px solid var(--accent); color: var(--accent); border-radius: 999px;
+    padding: 10px 24px; font-size: 21px; font-weight: 700; letter-spacing: 2px; }
+
+  /* ---------- panel stage ---------- */
+  #stage { position: absolute; left: 50%; bottom: -36px; transform: translateX(-50%); z-index: 2; }
+  .panel { zoom: 2.04; width: 400px; background: #0f1116; border: 1px solid rgba(255,255,255,.09);
+    border-radius: 12px; box-shadow: 0 40px 90px rgba(0,0,0,.65); color: #dfe3ec;
+    overflow: hidden; font-size: 12px; }
+  .phead { display: flex; align-items: center; gap: 8px; background: #161923;
+    padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .ptitle { color: var(--accent); font-weight: 800; font-size: 13px; letter-spacing: .4px; }
+  .spacer { flex: 1; }
+  .modes { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); }
+  .modes span { font-size: 9.5px; font-weight: 800; letter-spacing: .6px; padding: 4px 9px; color: #8b93a5; background: #10131a; }
+  .modes span.on { background: var(--accent); color: #0b0d12; }
+  .winbtn { width: 22px; height: 20px; border-radius: 4px; background: #232735; color: #cfd4e0;
+    display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .clock { color: #fff; font-weight: 800; font-size: 12px; }
+  .dim { color: #8b93a5; font-weight: 400; font-size: 10px; }
+
+  .tabs { display: flex; gap: 4px; padding: 0 12px; background: #12151d; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .tab { padding: 9px 10px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: #8b93a5; }
+  .tab.on { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+  .tabs.pills { padding: 8px 10px; border-bottom: 0; gap: 6px; }
+  .tabs.pills .tab { background: #1a1e29; border-radius: 6px; padding: 7px 0; flex: 1; text-align: center; }
+  .tabs.pills .tab.on { background: var(--accent); color: #0b0d12; box-shadow: none; }
+
+  .bar { display: flex; gap: 10px; align-items: baseline; margin: 8px 10px; padding: 7px 10px;
+    background: #151823; border-radius: 6px; font-size: 11px; color: #aab0bf; }
+  .bar b { color: #fff; } .bar .acc { color: var(--accent); font-weight: 700; }
+  .bar .grn { color: #22c55e; font-weight: 700; }
+
+  .feed { margin: 2px 12px 6px; }
+  .feed div { font-size: 9.5px; color: #6d7485; margin-bottom: 2px; }
+  .feed b { color: #b9bfcd; font-size: 10px; }
+
+  .sec { font-size: 9.5px; font-weight: 700; letter-spacing: 1.6px; color: #7b8294;
+    margin: 10px 12px 6px; display: flex; gap: 8px; align-items: baseline; }
+  .sec .acc { color: var(--accent); letter-spacing: .5px; }
+
+  .rrow { display: flex; gap: 6px; margin: 0 10px; }
+  .rrow .cell { flex: 1; text-align: center; background: #171a24; border-radius: 5px; padding: 5px 0;
+    font-size: 9px; color: #8b93a5; letter-spacing: 1px; border-top: 2px solid transparent; }
+  .rrow .cell b { color: #fff; font-size: 12px; margin-right: 3px; }
+  .rrow .qb { border-color: #ef4444; } .rrow .qb b { color: #ef4444; }
+  .rrow .rb { border-color: #22c55e; } .rrow .rb b { color: #22c55e; }
+  .rrow .wr { border-color: #3b82f6; } .rrow .wr b { color: #3b82f6; }
+  .rrow .te { border-color: #f59e0b; } .rrow .te b { color: #f59e0b; }
+
+  .dds { display: flex; gap: 8px; margin: 8px 10px; }
+  .dd { flex: 1; background: #171a24; border: 1px solid rgba(255,255,255,.1); border-radius: 5px;
+    padding: 6px 9px; font-size: 10.5px; color: #cdd2de; display: flex; }
+  .dd::after { content: "▾"; margin-left: auto; color: #8b93a5; }
+
+  .rcard { margin: 0 10px 8px; background: #141722; border: 1px solid rgba(255,255,255,.07);
+    border-radius: 8px; padding: 8px 10px; display: flex; gap: 10px; align-items: flex-start; }
+  .rcard.hot { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 6px 22px var(--glow); }
+  .rnum { font-size: 20px; font-weight: 800; color: var(--accent); width: 18px; text-align: center; padding-top: 2px; }
+  .rmid { flex: 1; min-width: 0; }
+  .rname { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+  .rname .meta { font-size: 10px; font-weight: 400; color: #8b93a5; margin-left: 6px; }
+  .rsub { font-size: 9.5px; color: #8b93a5; margin-bottom: 5px; }
+  .rscore { font-size: 16px; font-weight: 800; color: #fff; padding-top: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { font-size: 8.5px; font-weight: 700; padding: 2.5px 6px; border-radius: 4px;
+    background: #1c2130; color: #aab3c5; border: 1px solid rgba(255,255,255,.08); }
+  .chip.grn { background: #0e2a1c; color: #34d399; border-color: #1d5c3e; }
+  .chip.acc { background: transparent; color: var(--accent); border-color: var(--accent); }
+  .chip.warn { background: #2a1c0e; color: #f59e0b; border-color: #6b4a12; }
+  .posb { display: inline-block; font-size: 8.5px; font-weight: 800; padding: 2px 5px; border-radius: 3px;
+    color: #fff; vertical-align: 1px; margin-right: 5px; }
+  .posb.WR { background: #2b52c7; } .posb.RB { background: #1c8a4b; }
+  .posb.QB { background: #c03434; } .posb.TE { background: #b5720f; }
+  .posb.K { background: #6d28d9; } .posb.DST { background: #475569; } .posb.FLX { background: #0e7490; }
+
+  .lrow { display: flex; align-items: center; gap: 7px; margin: 0 10px 4px; padding: 5px 8px;
+    background: #141722; border-radius: 5px; border-left: 3px solid #1d5c3e; }
+  .lrow.bench { border-left-color: #6b2525; }
+  .lrow .nm { font-size: 11px; font-weight: 700; color: #fff; }
+  .lrow .opp { font-size: 8.5px; color: #8b93a5; background: #1c2130; padding: 2px 5px; border-radius: 3px; }
+  .lrow .up { font-size: 8.5px; color: #34d399; } .lrow .dn { font-size: 8.5px; color: #f87171; }
+  .lrow .pts { margin-left: auto; font-size: 12px; font-weight: 800; color: var(--accent); }
+  .lrow.bench .pts { color: #cdd2de; }
+  .ssline { display: flex; gap: 5px; align-items: baseline; margin: 0 12px 5px; font-size: 10px; color: #aab0bf; }
+  .ssline .tri { color: #34d399; font-size: 9px; }
+  .ssline b { color: #fff; } .ssline .ovr { color: #f87171; font-weight: 700; }
+  .ssline .pl { color: #34d399; font-weight: 700; margin-left: auto; }
+
+  .search { margin: 8px 10px; background: #171a24; border: 1px solid rgba(255,255,255,.1);
+    border-radius: 6px; padding: 8px 10px; font-size: 10.5px; color: #6d7485; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 10px 12px; }
+  .btn { flex: 1 1 45%; text-align: center; font-size: 10px; font-weight: 800; letter-spacing: .8px;
+    padding: 8px 0; border-radius: 6px; background: #1c2130; color: #cdd2de; border: 1px solid rgba(255,255,255,.1); }
+  .btn.acc { background: var(--accent); color: #0b0d12; border-color: var(--accent); }
+  .pfoot { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #12151d;
+    border-top: 1px solid rgba(255,255,255,.06); font-size: 9.5px; color: #8b93a5; }
+  .pfoot .chip.grn { font-size: 9px; }
+
+  /* hero (hook) variant */
+  #hero { position: absolute; inset: 0; z-index: 1; text-align: center; color: #fff; }
+  .hmark { margin-top: 88px; font-size: 24px; letter-spacing: 8px; color: var(--accent); font-weight: 800; }
+  .hq { margin-top: 46px; font-size: 66px; font-weight: 900; letter-spacing: 0; line-height: 1.1; }
+  .hbest { font-size: 225px; font-weight: 900; color: var(--accent); line-height: .98; letter-spacing: -6px;
+    text-shadow: 0 0 100px rgba(240,180,41,.45); }
+  .hwin { color: var(--accent); }
+  .hpill { display: inline-block; margin-top: 40px; border: 2px solid var(--accent); color: var(--accent);
+    border-radius: 999px; padding: 13px 36px; font-size: 25px; font-weight: 800; letter-spacing: 3px; }
+  .hglow { position: absolute; left: 50%; bottom: -260px; transform: translateX(-50%); width: 1500px; height: 1100px;
+    background: radial-gradient(ellipse at center, var(--glow) 0%, transparent 62%); }
+  .himg { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 1010px;
+    filter: drop-shadow(0 24px 70px rgba(0,0,0,.75)); }
+  .hphoto { position: absolute; left: 0; right: 0; bottom: 0; height: 1250px;
+    background: url("assets/gibbs_hero.png") no-repeat; background-size: cover; background-position: 42% 50%; }
+  .hphoto::before { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, #0b0d12 0%, rgba(11,13,18,.85) 12%, transparent 40%),
+      linear-gradient(0deg, rgba(11,13,18,.75) 0%, transparent 22%); }
+  .hpill2 { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); white-space: nowrap;
+    background: rgba(11,13,18,.82); border: 2px solid var(--accent); color: var(--accent); border-radius: 999px;
+    padding: 15px 42px; font-size: 27px; font-weight: 800; letter-spacing: 4px; }
+
+  /* tools grid (site-tools variant) */
+  .tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+  .tool { background: #141722; border: 1px solid rgba(255,255,255,.07); border-radius: 10px;
+    padding: 10px; min-height: 118px; }
+  .ttl { font-size: 9.5px; font-weight: 800; letter-spacing: 1.6px; color: var(--accent); margin-bottom: 8px; }
+  .mini { display: flex; align-items: center; gap: 6px; font-size: 9.5px; color: #cdd2de; margin-bottom: 5px; }
+  .mini .rk2 { color: var(--accent); font-weight: 800; min-width: 10px; margin-right: 3px; }
+  .mini b { color: #fff; font-size: 10px; }
+  .mini .end { margin-left: auto; }
+  .big { font-size: 25px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+  .big .acc { color: var(--accent); font-size: 13px; font-weight: 800; margin-right: 5px; vertical-align: 3px; }
+  .stat { margin-bottom: 7px; }
+  .stat .lbl { display: flex; font-size: 8.5px; color: #8b93a5; margin-bottom: 3px; }
+  .stat .lbl b { margin-left: auto; color: #fff; }
+  .stat .track { height: 6px; background: #1c2130; border-radius: 3px; overflow: hidden; }
+  .stat .fill { height: 100%; background: var(--accent); border-radius: 3px; }
+  .minitabs { display: flex; gap: 4px; margin-bottom: 8px; }
+  .minitabs span { font-size: 8px; font-weight: 800; letter-spacing: .8px; color: #8b93a5;
+    background: #1c2130; border-radius: 4px; padding: 3px 6px; }
+  .minitabs span.on { background: var(--accent); color: #0b0d12; }
+  .bub { font-size: 9px; line-height: 1.35; border-radius: 8px; padding: 5px 8px; margin-bottom: 5px; }
+  .bub.q { background: #1c2130; color: #cdd2de; border-bottom-right-radius: 2px; margin-left: 14px; }
+  .bub.a { background: rgba(240,180,41,.12); border: 1px solid rgba(240,180,41,.35);
+    color: #f4d78c; border-bottom-left-radius: 2px; margin-right: 14px; }
+
+  .drag { color: #4a5162; font-size: 13px; }
+  .chip.red { background: #2a1414; color: #f87171; border-color: #5c2626; }
+
+  /* site board extras */
+  .tierband { margin: 8px 10px 4px; font-size: 9px; font-weight: 800; letter-spacing: 2px;
+    color: var(--accent); border-bottom: 1px solid var(--glow); padding-bottom: 3px; }
+  .brow { display: flex; align-items: center; gap: 9px; margin: 0 10px 6px; padding: 7px 10px;
+    background: #141722; border: 1px solid rgba(255,255,255,.07); border-radius: 8px; }
+  .brow .rk { font-size: 15px; font-weight: 800; color: var(--accent); width: 20px; text-align: center; }
+  .brow .nm { font-size: 12.5px; font-weight: 700; color: #fff; }
+  .brow .meta { font-size: 9.5px; color: #8b93a5; }
+  .brow .right { margin-left: auto; display: flex; gap: 5px; align-items: center; }
+</style>
+<div id="bg"></div><div id="grid"></div>
+<div id="copy">
+  <div id="mark">MYFANTASYFOOTBALL.CO</div>
+  <div id="title"></div>
+  <div id="tag"></div>
+  <div id="bullets"></div>
+  <div id="storewrap"></div>
+</div>
+<div id="stage"><div class="panel" id="panel"></div></div>
+
+<script>
+const V = {
+/* ------------------------------------------------ SITE ------------- */
+site: {
+  accent: '#f0b429',
+  title: "Jack's rankings.\nEvery format.",
+  tag: "Redraft, dynasty, best ball, superflex and weekly boards — with live ADP value, player cards, Vegas lines and playoff SOS.",
+  bullets: [
+    "Boards updated all offseason",
+    "Draft Strategy + Research explorers",
+    "Draft helpers for Underdog, Sleeper, ESPN & Yahoo",
+  ],
+  store: "MYFANTASYFOOTBALL.CO",
+  panel: `
+    <div class="phead"><span class="ptitle">JACK'S BOARD</span><span class="spacer"></span>
+      <div class="modes"><span>REDRAFT</span><span class="on">BEST BALL</span><span>DYNASTY</span></div></div>
+    <div class="tabs"><span class="tab on">RANKINGS</span><span class="tab">WEEKLY</span><span class="tab">STRATEGY</span><span class="tab">RESEARCH</span></div>
+    <div class="tierband">TIER 1</div>
+    <div class="brow"><span class="rk">1</span><div><div class="nm"><span class="posb WR">WR</span>Ja'Marr Chase</div><div class="meta">CIN · Bye 10 · ADP 1.2</div></div><div class="right"><span class="chip grn">VALUE +0.2</span></div></div>
+    <div class="brow"><span class="rk">2</span><div><div class="nm"><span class="posb RB">RB</span>Bijan Robinson</div><div class="meta">ATL · Bye 5 · ADP 2.8</div></div><div class="right"><span class="chip grn">VALUE +0.8</span></div></div>
+    <div class="brow"><span class="rk">3</span><div><div class="nm"><span class="posb WR">WR</span>Justin Jefferson</div><div class="meta">MIN · Bye 6 · ADP 3.4</div></div><div class="right"><span class="chip grn">VALUE +0.4</span></div></div>
+    <div class="brow"><span class="rk">4</span><div><div class="nm"><span class="posb WR">WR</span>CeeDee Lamb</div><div class="meta">DAL · Bye 10 · ADP 4.1</div></div><div class="right"><span class="chip">EVEN</span></div></div>
+    <div class="tierband">TIER 2</div>
+    <div class="brow"><span class="rk">5</span><div><div class="nm"><span class="posb RB">RB</span>Saquon Barkley</div><div class="meta">PHI · Bye 9 · ADP 4.9</div></div><div class="right"><span class="chip">EVEN</span></div></div>
+    <div class="brow"><span class="rk">6</span><div><div class="nm"><span class="posb WR">WR</span>Puka Nacua</div><div class="meta">LAR · Bye 8 · ADP 7.6</div></div><div class="right"><span class="chip grn">VALUE +1.6</span></div></div>
+    <div class="brow"><span class="rk">7</span><div><div class="nm"><span class="posb TE">TE</span>Brock Bowers</div><div class="meta">LV · Bye 8 · ADP 11.3</div></div><div class="right"><span class="chip grn">VALUE +4.3</span></div></div>
+    <div class="pfoot"><span class="chip acc">PLAYER CARDS</span><span>projections · Vegas lines · playoff SOS · camp news</span></div>`
+},
+/* ------------------------------------------------ HERO (HOOK) ------ */
+hero: {
+  accent: '#f0b429',
+  hero: `
+    <div class="hphoto"></div>
+    <div style="position:relative; z-index:2">
+      <div class="hmark">MYFANTASYFOOTBALL.CO</div>
+      <div class="hq" style="margin-top:38px">I CREATED THE</div>
+      <div class="hbest">BEST</div>
+      <div class="hq">FANTASY FOOTBALL TOOL</div>
+      <div class="hq" style="margin-top:8px">TO <span class="hwin">WIN</span> YOUR LEAGUES</div>
+    </div>
+    <div class="hpill2">MYFANTASYFOOTBALL.CO</div>`
+},
+/* ------------------------------------------------ HERO: BIJAN ------ */
+bijan: {
+  accent: '#e8323c',
+  hero: `
+    <style>
+      .hphoto { background-image: url("assets/bijan_hero.png"); background-position: 47% 0%; }
+      .hphoto::before { background:
+        linear-gradient(180deg, #0b0d12 0%, rgba(11,13,18,.7) 8%, transparent 30%),
+        linear-gradient(0deg, rgba(11,13,18,.75) 0%, transparent 22%); }
+      .hbest { text-shadow: 0 0 100px rgba(232,50,60,.5); }
+    </style>
+    <div class="hphoto"></div>
+    <div style="position:relative; z-index:2">
+      <div class="hmark">MYFANTASYFOOTBALL.CO</div>
+      <div class="hq" style="margin-top:38px">I CREATED THE</div>
+      <div class="hbest">BEST</div>
+      <div class="hq">FANTASY FOOTBALL TOOL</div>
+      <div class="hq" style="margin-top:8px">TO <span class="hwin">WIN</span> YOUR LEAGUES</div>
+    </div>
+    <div class="hpill2">MYFANTASYFOOTBALL.CO</div>`
+},
+/* ------------------------------------------------ HERO: CHASE ------ */
+chase: {
+  accent: '#fb4f14',
+  hero: `
+    <style>
+      .hphoto { background-image: url("assets/chase_hero.png"); background-position: 50% 0%; }
+      .hphoto::before { background:
+        linear-gradient(180deg, #0b0d12 0%, rgba(11,13,18,.7) 8%, transparent 30%),
+        linear-gradient(0deg, rgba(11,13,18,.75) 0%, transparent 22%); }
+      .hbest { text-shadow: 0 0 100px rgba(251,79,20,.5); }
+    </style>
+    <div class="hphoto"></div>
+    <div style="position:relative; z-index:2">
+      <div class="hmark">MYFANTASYFOOTBALL.CO</div>
+      <div class="hq" style="margin-top:38px">I CREATED THE</div>
+      <div class="hbest">BEST</div>
+      <div class="hq">FANTASY FOOTBALL TOOL</div>
+      <div class="hq" style="margin-top:8px">TO <span class="hwin">WIN</span> YOUR LEAGUES</div>
+    </div>
+    <div class="hpill2">MYFANTASYFOOTBALL.CO</div>`
+},
+/* ------------------------------------------------ MY RANKS --------- */
+myranks: {
+  accent: '#f0b429',
+  stageStyle: 'bottom:24px;',
+  title: "Make your own rankings",
+  tag: "Start from Jack's board, then make it yours — drag to reorder, set your own tiers, save and share.",
+  bullets: [
+    "Seeded from Jack's board until your first save",
+    "Your board powers mocks, trades and the draft helpers",
+    "Share your rankings with one link",
+  ],
+  store: "MYFANTASYFOOTBALL.CO",
+  panel: `
+    <div class="phead"><span class="ptitle">MY RANKS</span><span class="spacer"></span>
+      <div class="modes"><span>JACK'S</span><span class="on">MINE</span></div></div>
+    <div class="bar"><span class="acc">Best Ball</span><span>·</span><span>seeded from Jack's board</span><span>·</span><b>4 edits</b></div>
+    <div class="tierband">TIER 1 — YOUR TIER</div>
+    <div class="brow"><span class="drag">⠿</span><span class="rk">1</span><div><div class="nm"><span class="posb WR">WR</span>Ja'Marr Chase</div><div class="meta">CIN · Bye 10 · ADP 1.2 · Proj 21.6 ppg · SOS A</div></div><div class="right"><span class="chip">JACK #1</span></div></div>
+    <div class="brow"><span class="drag">⠿</span><span class="rk">2</span><div><div class="nm"><span class="posb WR">WR</span>Justin Jefferson</div><div class="meta">MIN · Bye 6 · ADP 3.4 · Proj 20.2 ppg · SOS B+</div></div><div class="right"><span class="chip grn">YOU ▲1</span></div></div>
+    <div class="brow"><span class="drag">⠿</span><span class="rk">3</span><div><div class="nm"><span class="posb RB">RB</span>Bijan Robinson</div><div class="meta">ATL · Bye 5 · ADP 2.8 · Proj 20.8 ppg · SOS B</div></div><div class="right"><span class="chip red">YOU ▼1</span></div></div>
+    <div class="tierband">TIER 2 — YOUR TIER</div>
+    <div class="brow hot"><span class="drag" style="color:var(--accent)">⠿</span><span class="rk">4</span><div><div class="nm"><span class="posb WR">WR</span>Puka Nacua</div><div class="meta">LAR · Bye 8 · ADP 7.6 · Proj 19.4 ppg · SOS A−</div></div><div class="right"><span class="chip grn">YOU ▲2</span><span class="chip acc">DRAGGING</span></div></div>
+    <div class="brow"><span class="drag">⠿</span><span class="rk">5</span><div><div class="nm"><span class="posb WR">WR</span>CeeDee Lamb</div><div class="meta">DAL · Bye 10 · ADP 4.1 · Proj 19.1 ppg · SOS B</div></div><div class="right"><span class="chip red">YOU ▼1</span></div></div>
+    <div class="brow"><span class="drag">⠿</span><span class="rk">6</span><div><div class="nm"><span class="posb RB">RB</span>Saquon Barkley</div><div class="meta">PHI · Bye 9 · ADP 4.9 · Proj 18.7 ppg · SOS C+</div></div><div class="right"><span class="chip red">YOU ▼1</span></div></div>
+    <div class="brow"><span class="drag">⠿</span><span class="rk">7</span><div><div class="nm"><span class="posb TE">TE</span>Brock Bowers</div><div class="meta">LV · Bye 8 · ADP 11.3 · Proj 15.2 ppg · SOS B−</div></div><div class="right"><span class="chip grn">VALUE +4.3</span></div></div>
+    <div class="btns"><span class="btn acc">SAVE MY BOARD</span><span class="btn">SHARE LINK</span></div>`
+},
+/* ------------------------------------------------ SITE TOOLS ------- */
+tools: {
+  accent: '#f0b429',
+  panelStyle: 'width:480px; zoom:2.0;',
+  stageStyle: 'bottom:24px;',
+  title: "Rankings — plus the whole toolkit",
+  tag: "Jack's boards for every format, and the tools around them: prospect model, advanced stats, player cards, mock drafts and Ask Jack.",
+  bullets: [
+    "JM prospect scores for every rookie",
+    "Player cards: projections, Vegas lines, playoff SOS",
+    "Ask Jack: weekly start/sit + trade answers",
+  ],
+  store: "MYFANTASYFOOTBALL.CO",
+  panel: `
+    <div class="phead"><span class="ptitle">MYFANTASYFOOTBALL.CO</span><span class="spacer"></span>
+      <div class="modes"><span>FREE</span><span class="on">PREMIUM</span></div></div>
+    <div class="tgrid">
+      <div class="tool"><div class="ttl">RANKINGS · 5 FORMATS</div>
+        <div class="mini"><span class="rk2">1</span><span class="posb WR">WR</span><b>Ja'Marr Chase</b><span class="chip grn end">+0.2</span></div>
+        <div class="mini"><span class="rk2">2</span><span class="posb RB">RB</span><b>Bijan Robinson</b><span class="chip grn end">+0.8</span></div>
+        <div class="mini"><span class="rk2">3</span><span class="posb WR">WR</span><b>Justin Jefferson</b><span class="chip end">EVEN</span></div>
+        <div class="mini"><span class="rk2">4</span><span class="posb WR">WR</span><b>CeeDee Lamb</b><span class="chip end">EVEN</span></div></div>
+      <div class="tool"><div class="ttl">PLAYER CARDS</div>
+        <div class="minitabs"><span class="on">STATS</span><span>PROJ</span><span>LINES</span><span>WEEKLY</span></div>
+        <div class="mini"><b>Puka Nacua</b><span class="end">WR · LAR</span></div>
+        <div class="mini">Proj <b>17.8 ppg</b><span class="chip end">O/U 47.5</span></div>
+        <div class="mini">Playoff SOS <b>A−</b><span class="chip grn end">CAMP NEWS</span></div></div>
+      <div class="tool"><div class="ttl">PROSPECT MODEL</div>
+        <div class="big"><span class="acc">JM</span>91.4</div>
+        <div class="mini"><b>Jeremiah Smith</b><span class="end">WR · OSU</span></div>
+        <div class="chips"><span class="chip acc">TIER 1</span><span class="chip">Round 1 DC</span></div></div>
+      <div class="tool"><div class="ttl">ADVANCED STATS</div>
+        <div class="stat"><div class="lbl">YPRR<b>2.84</b></div><div class="track"><div class="fill" style="width:88%"></div></div></div>
+        <div class="stat"><div class="lbl">TARGET SHARE<b>27%</b></div><div class="track"><div class="fill" style="width:76%"></div></div></div>
+        <div class="stat"><div class="lbl">EPA / PLAY<b>+0.21</b></div><div class="track"><div class="fill" style="width:64%"></div></div></div></div>
+      <div class="tool"><div class="ttl">MOCK DRAFT</div>
+        <div class="mini"><span class="rk2">1.01</span><b>Ja'Marr Chase</b><span class="end">you</span></div>
+        <div class="mini"><span class="rk2">1.02</span><b>Bijan Robinson</b><span class="end">CPU</span></div>
+        <div class="mini"><span class="rk2">1.03</span><b>Justin Jefferson</b><span class="end">CPU</span></div>
+        <div class="chips"><span class="chip grn">ON THE CLOCK · 2.12</span></div></div>
+      <div class="tool"><div class="ttl">ASK JACK</div>
+        <div class="bub q">Start Nacua or Addison this week?</div>
+        <div class="bub a">Nacua — volume + matchup. Addison's shadow draw is rough.</div>
+        <div class="chips"><span class="chip acc">1 START/SIT + 1 TRADE / WEEK</span></div></div>
+    </div>
+    <div class="pfoot"><span>+ trade calculator · draft strategy · research · weekly rankings · fantasy game</span></div>`
+},
+/* ------------------------------------------------ UNDERDOG --------- */
+underdog: {
+  accent: '#f2b53d',
+  title: "Your edge in every Underdog draft",
+  tag: "Best Ball Mania recommendations from Jack's board + the BBM advance-rate optimizer, live on your clock.",
+  bullets: [
+    "BPA blended with real BBM advance rates",
+    "Stacking and true-cliff alerts",
+    "ADP value and pick-timing context",
+  ],
+  store: "CHROME WEB STORE · MFF UNDERDOG DRAFT HELPER",
+  panel: `
+    <div class="phead"><span class="ptitle">MFF DRAFT HELPER</span><span class="spacer"></span>
+      <span class="winbtn">–</span><span class="winbtn">×</span></div>
+    <div class="sec">STATUS</div>
+    <div class="rrow">
+      <span class="cell"><b>30/216</b>PICK</span><span class="cell"><b>3</b>ROUND</span>
+      <span class="cell"><b>2</b>MINE</span><span class="cell"><b style="color:var(--accent)">NOW</b>UNTIL NEXT</span></div>
+    <div class="sec">ROSTER</div>
+    <div class="rrow">
+      <span class="cell qb"><b>0</b>QB</span><span class="cell rb"><b>1</b>RB</span>
+      <span class="cell wr"><b>1</b>WR</span><span class="cell te"><b>0</b>TE</span></div>
+    <div class="sec">RECOMMENDED</div>
+    <div class="rcard hot"><span class="rnum">1</span><div class="rmid">
+      <div class="rname"><span class="posb WR">WR</span>Chris Olave<span class="meta">NO · R#26 · UD 30.1</span></div>
+      <div class="chips"><span class="chip grn">STEAL</span><span class="chip">Best on board</span><span class="chip">Stack: no QB yet</span></div>
+      </div><span class="rscore">72.3</span></div>
+    <div class="rcard"><span class="rnum">2</span><div class="rmid">
+      <div class="rname"><span class="posb RB">RB</span>Javonte Williams<span class="meta">DAL · R#31 · UD 36.2</span></div>
+      <div class="chips"><span class="chip">Advance-rate fit</span><span class="chip">Open RB slot</span></div>
+      </div><span class="rscore">67.9</span></div>
+    <div class="rcard"><span class="rnum">3</span><div class="rmid">
+      <div class="rname"><span class="posb WR">WR</span>Zay Flowers<span class="meta">BAL · R#32 · UD 31.0</span></div>
+      <div class="chips"><span class="chip">Needs WR value</span></div>
+      </div><span class="rscore">67.0</span></div>
+    <div class="rcard"><span class="rnum">4</span><div class="rmid">
+      <div class="rname"><span class="posb RB">RB</span>Josh Jacobs<span class="meta">GB · R#33 · UD 40.8</span></div>
+      <div class="chips"><span class="chip warn">TIER CLIFF!</span><span class="chip">Open RB slot</span></div>
+      </div><span class="rscore">66.2</span></div>
+    <div class="sec">LOG PICK (ANY TEAM)</div>
+    <div class="search">Search a player…</div>
+    <div class="btns"><span class="btn acc">ADD TO MY ROSTER</span><span class="btn">DRAFTED (OTHER)</span></div>`
+},
+/* ------------------------------------------------ SLEEPER ---------- */
+sleeper: {
+  accent: '#2dd4bf',
+  title: "Draft and season helper for Sleeper",
+  tag: "Live pick recommendations in drafts, optimal lineups and waiver upgrades all season — from Jack's boards + KTC + Vegas.",
+  bullets: [
+    "Format-aware recs: superflex, PPR, dynasty",
+    "Optimal lineup from your exact league settings",
+    "KTC market values for dynasty rosters",
+  ],
+  store: "CHROME WEB STORE · MFF SLEEPER HELPER",
+  panel: `
+    <div class="phead"><span class="ptitle">MFF SLEEPER HELPER</span><span class="spacer"></span>
+      <div class="modes"><span class="on">DRAFT</span><span>SEASON</span></div>
+      <span class="winbtn">–</span><span class="winbtn">×</span></div>
+    <div class="tabs"><span class="tab on">DRAFT</span><span class="tab">ROSTER</span><span class="tab">SETTINGS</span></div>
+    <div class="bar"><span class="acc">Pick 1.10</span><span>·</span><b>#10</b><span>·</span><span>You: 1</span><span>·</span><span>10 until you</span></div>
+    <div class="feed">
+      <div>1.09 <b>Joe Burrow</b> QB — rival_9</div>
+      <div>1.08 <b>Drake Maye</b> QB — rival_8</div>
+      <div>1.07 <b>Jahmyr Gibbs</b> RB — rival_7</div></div>
+    <div class="sec">MY ROSTER</div>
+    <div class="rrow">
+      <span class="cell qb"><b>1</b>QB</span><span class="cell rb"><b>0</b>RB</span>
+      <span class="cell wr"><b>0</b>WR</span><span class="cell te"><b>0</b>TE</span></div>
+    <div class="dds"><span class="dd">Dynasty SF ✓</span><span class="dd">KTC</span></div>
+    <div class="sec">RECOMMENDED</div>
+    <div class="rcard hot"><span class="rnum">1</span><div class="rmid">
+      <div class="rname"><span class="posb WR">WR</span>Jaxon Smith-Njigba<span class="meta">SEA · 19.2 ppg · ADP 7</span></div>
+      <div class="chips"><span class="chip grn">BEST ON BOARD</span><span class="chip">Tier 1 WR</span><span class="chip">Open WR slot</span><span class="chip grn">SCORING +3.4 PPG</span></div>
+      </div><span class="rscore">55.1</span></div>
+    <div class="rcard"><span class="rnum">2</span><div class="rmid">
+      <div class="rname"><span class="posb WR">WR</span>Puka Nacua<span class="meta">LAR · 21.0 ppg · ADP 8</span></div>
+      <div class="chips"><span class="chip">Tier 1 WR</span><span class="chip">Open WR slot</span><span class="chip warn">CLIFF: next WR −29 VOR</span></div>
+      </div><span class="rscore">54.6</span></div>
+    <div class="rcard"><span class="rnum">3</span><div class="rmid">
+      <div class="rname"><span class="posb QB">QB</span>Caleb Williams<span class="meta">CHI · 18.1 ppg · ADP 9</span></div>
+      <div class="chips"><span class="chip">Tier 1 QB</span><span class="chip">Superflex: NEED QB</span><span class="chip grn">SCORING +1.5 PPG</span></div>
+      </div><span class="rscore">47.7</span></div>
+    <div class="sec">AVAILABLE <span class="acc">KTC · dynasty SF</span></div>
+    <div class="lrow"><span class="posb WR">WR</span><span class="nm">Jaxon Smith-Njigba</span><span class="opp">24y · JM #7</span><span class="up">JM 89.5</span><span class="pts">9225</span></div>
+    <div class="lrow"><span class="posb WR">WR</span><span class="nm">Puka Nacua</span><span class="opp">24y · JM #8</span><span class="up">JM 35.8</span><span class="pts">8888</span></div>`
+},
+/* ------------------------------------------------ ESPN ------------- */
+espn: {
+  accent: '#e5453d',
+  title: "Season mode for your ESPN league",
+  tag: "Optimal lineups from your league's real slots and scoring, waiver upgrades, and Monte Carlo season sims.",
+  bullets: [
+    "Start/sit moves the moment news hits",
+    "Waivers ranked by points added to YOUR lineup",
+    "Projected standings, playoff and title odds",
+  ],
+  store: "CHROME WEB STORE · MFF ESPN HELPER",
+  panel: `
+    <div class="phead"><span class="ptitle">MFF ESPN HELPER</span><span class="spacer"></span>
+      <div class="modes"><span>DRAFT</span><span class="on">SEASON</span></div>
+      <span class="winbtn">–</span><span class="winbtn">×</span></div>
+    <div class="tabs"><span class="tab on">LINEUP</span><span class="tab">TEAM</span><span class="tab">WAIVERS</span><span class="tab">SIMS</span><span class="tab">SETTINGS</span></div>
+    <div class="bar"><span class="acc">My ESPN League</span><span>·</span><span>Wk 1</span><span>·</span><span>PPR</span><span>·</span><span>Redraft 1QB</span><span>·</span><span class="grn">W1 props</span></div>
+    <div class="sec">START / SIT MOVES</div>
+    <div class="ssline"><span class="tri">▲</span>Start <b>Puka Nacua</b> over <span class="ovr">Jordan Addison</span><span class="pl">+12.7</span></div>
+    <div class="ssline"><span class="tri">▲</span>Start <b>Bijan Robinson</b> over <span class="ovr">Jacory Croskey-Merritt</span><span class="pl">+20.8</span></div>
+    <div class="ssline"><span class="tri">▲</span>Start <b>Lamar Jackson</b> over <span class="ovr">Tyler Shough</span><span class="pl">+4.6</span></div>
+    <div class="ssline"><span class="tri">▲</span>Start <b>Emeka Egbuka</b> over <span class="ovr">Makai Lemon</span><span class="pl">+3.9</span></div>
+    <div class="sec">OPTIMAL LINEUP <span class="acc">136 PPG</span></div>
+    <div class="lrow"><span class="posb QB">QB</span><span class="nm">Lamar Jackson</span><span class="opp">@HOU</span><span class="up">▲23</span><span class="dn">▼11</span><span class="pts">19.4</span></div>
+    <div class="lrow"><span class="posb RB">RB</span><span class="nm">Bijan Robinson</span><span class="opp">@BUF</span><span class="up">▲45</span><span class="dn">▼5</span><span class="pts">20.8</span></div>
+    <div class="lrow"><span class="posb RB">RB</span><span class="nm">Cam Skattebo</span><span class="opp">@NYJ</span><span class="up">▲27</span><span class="dn">▼21</span><span class="pts">15.3</span></div>
+    <div class="lrow"><span class="posb WR">WR</span><span class="nm">Puka Nacua</span><span class="opp">vs LV</span><span class="up">▲47</span><span class="dn">▼3</span><span class="pts">21.4</span></div>
+    <div class="lrow"><span class="posb WR">WR</span><span class="nm">Emeka Egbuka</span><span class="opp">@WSH</span><span class="up">▲25</span><span class="dn">▼26</span><span class="pts">14.4</span></div>
+    <div class="lrow"><span class="posb TE">TE</span><span class="nm">Trey McBride</span><span class="opp">vs PHI</span><span class="up">▲45</span><span class="dn">▼4</span><span class="pts">15.6</span></div>
+    <div class="lrow"><span class="posb FLX">FLX</span><span class="nm">Terry McLaurin</span><span class="opp">▲17 ▼12</span><span class="pts">13.1</span></div>
+    <div class="sec">BENCH</div>
+    <div class="lrow bench"><span class="posb QB">QB</span><span class="nm">Tyler Shough</span><span class="opp">vs NE</span><span class="pts">14.8</span></div>
+    <div class="lrow bench"><span class="posb WR">WR</span><span class="nm">Jordan Addison</span><span class="opp">vs MIA</span><span class="chip warn" style="font-size:8px">Q</span><span class="pts">8.7</span></div>
+    <div class="pfoot"><span class="chip grn">SEASON</span><span>10 teams · week 1 · 1,500 sims</span></div>`
+},
+/* ------------------------------------------------ YAHOO ------------ */
+yahoo: {
+  accent: '#8b5cf6',
+  title: "Live draft recs in your Yahoo draft room",
+  tag: "Jack's board, your league's real scoring and roster slots, and pick-by-pick timing — all live on your clock.",
+  bullets: [
+    "Top-3 picks with the reasons why",
+    "STEAL / Value / Reach tags from live ADP",
+    "Tracks every pick — refresh-proof",
+  ],
+  store: "CHROME WEB STORE · MFF YAHOO HELPER",
+  panel: `
+    <div class="phead"><span class="ptitle">MFF YAHOO HELPER</span><span class="spacer"></span>
+      <div class="modes"><span class="on">DRAFT</span><span>SEASON</span></div>
+      <span class="dim">Yahoo…</span><span class="clock">0:54</span></div>
+    <div class="bar"><span>Pick 12.10</span><span>·</span><b>#120</b><span>·</span><b>Goal Line Daven</b><span>·</span><span class="grn">you in 2</span></div>
+    <div class="tabs pills"><span class="tab on">RECS</span><span class="tab">BOARD</span><span class="tab">ROSTER (4)</span></div>
+    <div class="feed">
+      <div>12.09 <b>Jacory Croskey-Merritt</b> RB — Goal Line Stand Jack</div>
+      <div>12.08 <b>Brenton Strange</b> TE — Monday Night Ryan</div>
+      <div>12.07 <b>Chig Okonkwo</b> TE — Air Attack cesar</div></div>
+    <div class="rrow">
+      <span class="cell qb"><b>1</b>QB</span><span class="cell rb"><b>0</b>RB</span>
+      <span class="cell wr"><b>1</b>WR</span><span class="cell te"><b>0</b>TE</span></div>
+    <div class="dds"><span class="dd">Redraft 1QB</span><span class="dd">Jack's Rank</span></div>
+    <div class="sec">RECOMMENDED</div>
+    <div class="rcard hot"><span class="rnum">1</span><div class="rmid">
+      <div class="rname"><span class="posb WR">WR</span>Rashee Rice<span class="meta">KC · Bye 5</span></div>
+      <div class="rsub">Jack #23 · 13.1 ppg · ADP 22 · Y! 32.7</div>
+      <div class="chips"><span class="chip grn">STEAL</span><span class="chip">Best on board</span><span class="chip">Tier 1 WR</span><span class="chip">NEED WR</span><span class="chip">Open WR slot</span><span class="chip warn">Cliff: next WR −31 VOR</span></div>
+      </div><span class="rscore" style="color:var(--accent)">63.7</span></div>
+    <div class="rcard"><span class="rnum">2</span><div class="rmid">
+      <div class="rname"><span class="posb WR">WR</span>Malik Nabers<span class="meta">NYG · Bye 8</span></div>
+      <div class="rsub">Jack #25 · 12.0 ppg · ADP 17 · Y! 35.6</div>
+      <div class="chips"><span class="chip grn">STEAL</span><span class="chip">Needs WR value</span><span class="chip">NEED WR</span><span class="chip">Open WR slot</span><span class="chip warn">Q</span></div>
+      </div><span class="rscore">47.9</span></div>
+    <div class="rcard"><span class="rnum">3</span><div class="rmid">
+      <div class="rname"><span class="posb WR">WR</span>Garrett Wilson<span class="meta">NYJ · Bye 13</span></div>
+      <div class="rsub">Jack #35 · 11.6 ppg · ADP 36 · Y! 48.5</div>
+      <div class="chips"><span class="chip grn">STEAL</span><span class="chip">Needs WR value</span><span class="chip">NEED WR</span><span class="chip">Open WR slot</span></div>
+      </div><span class="rscore">47.4</span></div>
+    <div class="search">Search… (✕ drafted / + my pick)</div>`
+},
+};
+
+const q = new URLSearchParams(location.search);
+const v = V[q.get('p')] || V.site;
+document.documentElement.style.setProperty('--accent', v.accent);
+document.documentElement.style.setProperty('--glow', v.accent + '30');
+document.documentElement.style.setProperty('--glow2', v.accent + '14');
+const titleEl = document.getElementById('title');
+(v.title || '').split('\n').forEach((line, i) => { if (i) titleEl.appendChild(document.createElement('br')); titleEl.appendChild(document.createTextNode(line)); });
+document.getElementById('tag').textContent = v.tag || '';
+(v.bullets || []).forEach((t) => {
+  const d = document.createElement('div'); d.className = 'b';
+  const s = document.createElement('span'); s.textContent = t;
+  d.appendChild(s); document.getElementById('bullets').appendChild(d);
+});
+if (v.store) {
+  const s = document.createElement('div'); s.id = 'store'; s.textContent = v.store;
+  document.getElementById('storewrap').appendChild(s);
+}
+if (v.hero) {
+  document.getElementById('copy').style.display = 'none';
+  document.getElementById('stage').style.display = 'none';
+  const h = document.createElement('div');
+  h.id = 'hero';
+  h.innerHTML = v.hero;
+  document.body.appendChild(h);
+}
+if (v.panelStyle) document.getElementById('panel').style.cssText += v.panelStyle;
+if (v.stageStyle) document.getElementById('stage').style.cssText += v.stageStyle;
+document.getElementById('panel').innerHTML = v.panel || '';
+document.title = 'STAGED';
+</script>

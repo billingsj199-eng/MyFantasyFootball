@@ -1814,6 +1814,51 @@
       `<span style="color:#6dd06d">▲${Math.round(bb.boom * 100)}</span>&nbsp;` +
       `<span style="color:#d06d6d">▼${Math.round(bb.bust * 100)}</span></span>`;
   }
+  // ---- H2H matchup: our proj totals + win odds ----
+  // Both sides summed with the SAME wkVal the row pills show (sim-first,
+  // league-scored, injuries priced), over each team's CURRENT Sleeper
+  // starters. Win odds = normal approximation: each starter contributes
+  // sd = proj × sigmaPct (engine sigma, position default when he's outside
+  // the engine); player correlations are ignored — a headline number that
+  // mirrors Sleeper's own "proj total + win%" header with OUR projections.
+  const POS_SIG_DEFAULT = { QB: 0.42, RB: 0.52, WR: 0.58, TE: 0.65, K: 0.55, DST: 0.6 };
+  function normCdf(z) {
+    const t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+    const p = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    return z >= 0 ? 1 - p : p;
+  }
+  function sideProjOf(objs) {
+    let total = 0, varSum = 0, missing = 0;
+    for (const p of objs) {
+      if (!p || p._unmatched) { missing++; continue; }
+      const v = wkVal(p);
+      total += v;
+      const r = engineRecFor(p);
+      const sig = r && r.sig > 0 ? r.sig : (POS_SIG_DEFAULT[p.s] || 0.55);
+      varSum += (v * sig) * (v * sig);
+    }
+    return { total: Math.round(total * 10) / 10, varSum, missing };
+  }
+  function matchupOddsOf(aObjs, bObjs) {
+    const a = sideProjOf(aObjs), b = sideProjOf(bObjs);
+    const sd = Math.sqrt(a.varSum + b.varSum) || 1;
+    return { a, b, winA: Math.round(normCdf((a.total - b.total) / sd) * 100) };
+  }
+  // A team's CURRENT starters (this week's matchup doc, roster doc fallback)
+  // as player objects — unmatched ids become stubs that count as "no proj".
+  function starterObjsFor(rid) {
+    const m = state.seasonMatchups.find((x) => x.roster_id === rid);
+    const r = state.seasonRosters.find((x) => x.roster_id === rid);
+    const arr = (m && Array.isArray(m.starters) && m.starters.length ? m.starters
+      : (r && r.starters) || []).filter((x) => x && x !== '0').map(String);
+    return arr.map((sid) => {
+      const p = state.byId[sid];
+      if (p) return p;
+      const meta = state.slMeta[sid];
+      return { n: meta ? meta.n : '#' + sid, s: meta ? meta.pos : '?', sid, sTm: meta ? meta.tm : '', rank: 9999, _unmatched: true };
+    });
+  }
   function wkVal(p) {
     if (onByeThisWeek(p)) return 0;
     const act = actualPpgFor(p);
@@ -3230,6 +3275,38 @@
         ${hasProps ? '<span class="pl-sep">·</span><span class="pl-mine" style="color:#6dd06d" title="Wk ' + state.seasonWeek + ' prop boards (UD+PP) loaded — weekly values are the sim-engine mean (Vegas priced in); props cover players outside the engine">W' + state.seasonWeek + ' props</span>' : ''}
       </div>`;
   }
+  // MFF matchup card: Sleeper's matchup header prints ITS proj totals and
+  // win% — this card is the same H2H scored with OUR projections (wkVal
+  // totals + normal-approx win odds), pinned to the top of the LINEUP tab.
+  function seasonMatchupHTML() {
+    const rid = state.myLeagueRosterId;
+    if (rid == null || !state.seasonMatchups.length) return '';
+    const mine = state.seasonMatchups.find((x) => x.roster_id === rid);
+    if (!mine || mine.matchup_id == null) return '';
+    const opp = state.seasonMatchups.find((x) => x.matchup_id === mine.matchup_id && x.roster_id !== rid);
+    if (!opp) return '';
+    const oppRoster = state.seasonRosters.find((x) => x.roster_id === opp.roster_id);
+    const oppName = (oppRoster && state.userNames[oppRoster.owner_id]) || 'Opponent';
+    const o = matchupOddsOf(starterObjsFor(rid), starterObjsFor(opp.roster_id));
+    const winB = 100 - o.winA;
+    const myCol = o.winA >= 55 ? '#6dd06d' : o.winA <= 45 ? '#d06d6d' : '#ffc166';
+    const missing = o.a.missing + o.b.missing;
+    const missNote = missing
+      ? `<div style="font-size:9px;color:#8b94b3;margin-top:3px">${missing} starter${missing === 1 ? '' : 's'} without a projection count${missing === 1 ? 's' : ''} 0</div>` : '';
+    const tip = 'Our proj totals: the same weekly projection as the row pills (site sim first, ' +
+      state.scoringLabel + ' league-scored, injuries priced), summed over each side\'s current starters. ' +
+      'Win odds: normal approximation over the starters\' sim spreads (player correlations ignored).';
+    return `<div class="mff-section" title="${esc(tip)}">
+      <h3>Wk ${state.seasonWeek} matchup · our numbers</h3>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:12px;padding:2px 2px">
+        <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">You <b style="color:#00ceb8">${o.a.total.toFixed(1)}</b></span>
+        <span style="flex:0 0 auto;font-weight:800;color:${myCol}">${o.winA}%<span style="color:#8b94b3;font-weight:600"> – ${winB}%</span></span>
+        <span style="flex:1;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b style="color:#cbd2e6">${o.b.total.toFixed(1)}</b> ${esc(oppName)}</span>
+      </div>
+      <div style="height:4px;border-radius:2px;overflow:hidden;display:flex;background:#26304d">
+        <span style="width:${o.winA}%;background:${myCol}"></span>
+      </div>${missNote}</div>`;
+  }
   function seasonLineupHTML() {
     if (!myRosterDoc()) {
       return '<div class="mff-proj-empty">Pick your team in SETTINGS' +
@@ -3304,6 +3381,7 @@
     }).join('');
     return `
       ${seasonHeaderHTML()}
+      ${seasonMatchupHTML()}
       ${movesHtml}
       <div class="mff-section"><h3>Optimal lineup <span style="color:#00ceb8">${opt.total} ppg</span></h3>
         <div class="mff-proj-roster">${rows}</div></div>
@@ -5235,6 +5313,10 @@
       window.BETTING_2026 = MOCK.vegas; // season-sim engine reads gameTotals here
       buildSchedule(MOCK.vegas.gameTotals);
       state.wkPropsAll = MOCK.vegas.weeklyProps || null;
+    }
+    if (MOCK && MOCK.simProj) { // harness stand-in for the sim_proj_2026.json fetch
+      state.simProj = MOCK.simProj;
+      state.simProjIdx = null;
     }
     try {
       const saved = await store.get(['sleeperHelper.username']);

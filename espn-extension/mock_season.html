@@ -24,6 +24,16 @@ over HTTP (players.json fetch) and open this page.</p>
 append verdict / matchup / proj pills after each within ~2s.</p>
 <div id="fakeroster" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px;font-size:13px;line-height:2"></div>
 
+<h2 style="font-size:15px;color:#fbbf24">Fake ESPN matchup header (MFF strip target)</h2>
+<p style="font-size:12px">Boxscore-style header with two "Proj Total" cells — the MFF matchup strip
+(our proj totals + win odds) should insert itself right below within ~2s.</p>
+<div id="fakeMatchupHeader" style="background:#fff;color:#222;border-radius:8px;padding:10px 14px;font-size:13px">
+  <div style="display:flex;justify-content:space-between;gap:16px">
+    <span>In Play 0 &nbsp; To Play 9 &nbsp; <span style="font-weight:700">Proj Total: 115.8</span></span>
+    <span><span style="font-weight:700">Proj Total: 119.0</span> &nbsp; To Play 9 &nbsp; In Play 0</span>
+  </div>
+</div>
+
 <script src="normalize.js"></script>
 <script src="data/playoff_sos_2026.js"></script>
 <script src="data/sim_pack.js"></script>

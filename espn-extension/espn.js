@@ -15,7 +15,10 @@
   window.__mffEspnLoaded = true;
 
   var API = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/";
-  var VIEWS = "?view=mTeam&view=mRoster&view=mSettings";
+  // mDraftDetail rides along (credentialed, so private leagues included) —
+  // normalize.js turns it into the payload's `draft` block for the MFF
+  // My Teams draft board.
+  var VIEWS = "?view=mTeam&view=mRoster&view=mSettings&view=mDraftDetail";
 
   function leagueIdFromUrl() {
     try {
@@ -99,8 +102,11 @@
     btn = document.createElement("button");
     btn.id = "mffEspnExportBtn";
     btn.textContent = "Export league to MFF";
+    // Bottom-LEFT, stacked above the draft-probe pill (bottom:14px, left:14px)
+    // — ESPN's Fantasy Chat panel owns the bottom-right corner and was
+    // covering the button (Jack 2026-08-31).
     btn.style.cssText = [
-      "position:fixed", "bottom:18px", "right:18px", "z-index:99999",
+      "position:fixed", "bottom:56px", "left:14px", "z-index:99999",
       "padding:10px 16px", "border-radius:8px", "border:1px solid #fbbf24",
       "background:#111827", "color:#fbbf24", "font:600 13px/1.2 system-ui,sans-serif",
       "cursor:pointer", "box-shadow:0 4px 14px rgba(0,0,0,.4)"

@@ -446,8 +446,12 @@
         console.log('[MFF/ESPN] Sim Lab projections loaded (wk ' + d.currentWeek + ')');
         if (state.appMode === 'season') render();
       }).catch(() => {});
-  } else if (MOCK.consensus) {
-    state.wkConsensus = MOCK.consensus;
+  } else {
+    if (MOCK.consensus) state.wkConsensus = MOCK.consensus;
+    if (MOCK.simProj) { // harness stand-in for the sim_proj_2026.json fetch
+      state.simProj = MOCK.simProj;
+      state.simProjIdx = null;
+    }
   }
 
   // Direct fetch first (ESPN's page CSP allows it today), background-worker
@@ -2728,6 +2732,92 @@
       'font-size:10px;font-weight:700;border-radius:3px;padding:0 4px;line-height:15px;' +
       'white-space:nowrap;flex:0 0 auto">' + esc(text) + '</span>';
   }
+  // ---- MFF matchup strip: our proj totals + win odds under ESPN's own
+  // "Proj Total" header on the boxscore/matchup page ----
+  // Anchored by the header TEXT (ESPN's class names churn): the strip drops
+  // in right after the lowest common ancestor of the two "Proj Total" cells.
+  // Teams come from the boxscore URL's teamId + the mMatchup pairs; totals
+  // are the same wkVal the row pills show, summed over each side's current
+  // starters (slotId ≠ bench/IR); win odds = normal approximation over the
+  // starters' sim spreads (engine sigma, position default outside it),
+  // player correlations ignored.
+  const POS_SIG_DEFAULT = { QB: 0.42, RB: 0.52, WR: 0.58, TE: 0.65, K: 0.55, DST: 0.6 };
+  function normCdf(z) {
+    const t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+    const p = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    return z >= 0 ? 1 - p : p;
+  }
+  function sideProjOf(entries) {
+    let total = 0, varSum = 0, missing = 0;
+    for (const en of entries) {
+      if (en.slotId === 20 || en.slotId === 21) continue; // bench / IR
+      if (!en.p) { missing++; continue; }
+      const v = wkVal(en.p);
+      total += v;
+      const r = engineRecFor(en.p);
+      const sig = r && r.sig > 0 ? r.sig : (POS_SIG_DEFAULT[en.p.s] || 0.55);
+      varSum += (v * sig) * (v * sig);
+    }
+    return { total: Math.round(total * 10) / 10, varSum, missing };
+  }
+  function matchupStripTick() {
+    const existing = document.getElementById('mff-matchup-strip');
+    const leaves = [];
+    for (const el of document.querySelectorAll('div,span')) {
+      if (el.childElementCount || el.closest('#mff-sidebar') || el.closest('#mff-matchup-strip')) continue;
+      if (/proj\s*total/i.test(el.textContent || '')) {
+        leaves.push(el);
+        if (leaves.length === 2) break;
+      }
+    }
+    if (!leaves.length || !state.seasonTeams.length) { if (existing) existing.remove(); return; }
+    const urlTeam = parseInt(urlParams().get('teamId'), 10);
+    const tid = isFinite(urlTeam) ? urlTeam : state.myTeamId;
+    const period = parseInt(urlParams().get('matchupPeriodId'), 10) || state.seasonWeek;
+    const pb = state.seasonPairs || {};
+    const pairs = pb[period] || pb[state.seasonWeek] || [];
+    const pair = pairs.find((x) => x.a === tid || x.b === tid) || pairs[0];
+    const tA = pair && state.seasonTeams.find((t) => t.teamId === pair.a);
+    const tB = pair && state.seasonTeams.find((t) => t.teamId === pair.b);
+    if (!tA || !tB) { if (existing) existing.remove(); return; }
+    const a = sideProjOf(tA.entries), b = sideProjOf(tB.entries);
+    const sd = Math.sqrt(a.varSum + b.varSum) || 1;
+    const winA = Math.round(normCdf((a.total - b.total) / sd) * 100);
+    const missing = a.missing + b.missing;
+    const tip = 'MFF numbers for this matchup — our proj totals (same weekly projection as the row pills: ' +
+      'site sim first, ' + state.scoringLabel + ' league-scored, injuries priced) summed over each side\'s ' +
+      'current starters, and our win odds (normal approximation over the starters\' sim spreads; ' +
+      'player correlations ignored).' +
+      (missing ? ' ' + missing + ' starter(s) without a projection count 0.' : '');
+    const wCol = (w) => (w >= 55 ? '#1d7a34' : w <= 45 ? '#b33636' : '#a06a00');
+    const inner =
+      `<span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(tA.name)} ` +
+      `<b>${a.total.toFixed(1)}</b> <b style="color:${wCol(winA)}">${winA}%</b></span>` +
+      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px">MFF PROJ · WIN ODDS · WK ${period}</span>` +
+      `<span style="flex:1;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">` +
+      `<b style="color:${wCol(100 - winA)}">${100 - winA}%</b> <b>${b.total.toFixed(1)}</b> ${esc(tB.name)}</span>`;
+    if (existing && existing.dataset.mffSig === inner && existing.isConnected) return;
+    if (existing) existing.remove();
+    let anchor = leaves[0].parentElement;
+    if (leaves[1]) {
+      const ups = new Set();
+      for (let n = leaves[0]; n; n = n.parentElement) ups.add(n);
+      let m = leaves[1];
+      while (m && !ups.has(m)) m = m.parentElement;
+      if (m && m !== document.body && m !== document.documentElement) anchor = m;
+    }
+    if (!anchor || anchor === document.body || anchor === document.documentElement) return;
+    const strip = document.createElement('div');
+    strip.id = 'mff-matchup-strip';
+    strip.dataset.mffSig = inner;
+    strip.title = tip;
+    strip.style.cssText = 'display:flex;align-items:baseline;gap:10px;margin:4px 0;padding:5px 12px;' +
+      'background:#f4f6f8;border:1px solid #dfe3e8;border-radius:6px;' +
+      "font:600 12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2a2c33;";
+    strip.innerHTML = inner;
+    anchor.insertAdjacentElement('afterend', strip);
+  }
   function decorateSeasonPages() {
     if (!gateAllowed()) return;
     if (state.appMode !== 'season' || !state.seasonTeams.length) return;
@@ -2784,6 +2874,7 @@
         'vertical-align:middle;overflow:hidden;position:relative;z-index:5;flex:0 0 auto;';
       host.insertAdjacentElement('afterend', span);
     }
+    matchupStripTick();
   }
   function startDecorating() {
     if (decorateTimer) return;
@@ -2793,6 +2884,8 @@
   function stopDecorating() {
     if (decorateTimer) { clearInterval(decorateTimer); decorateTimer = null; }
     document.querySelectorAll('.mff-page-pills').forEach((el) => el.remove());
+    const ms = document.getElementById('mff-matchup-strip');
+    if (ms) ms.remove();
     untintOpps();
   }
 

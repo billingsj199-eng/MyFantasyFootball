@@ -341,10 +341,11 @@ When you next deploy:
 ## Session-discovered follow-ups
 
 ### Stale data
-- **10 backup kickers in d.js** — ATL/Romo, BUF/Badgley, GB/Havrisik, HOU/Wright, IND/Shrader, LAR/Karty, NYG (Gano+Sauls+McAtamney — three!), SF/Gay. None have `myRank`. Revisit before 2026 season prep.
+- ~~**10 backup kickers in d.js**~~ — **DONE 2026-08-31** (`scripts/fix_kickers_20260831.py`, splice+renumber, no p-sort). Teams were already fixed by the daily roster sync (Phase H); the audit against Sleeper post-cutdown depth charts found 8 of the 10 genuinely FA/backup (left in place: Romo/Badgley/Havrisik/Wright/Karty/Gano/McAtamney FA, Sauls NYG backup) and 2 now STARTERS who got promoted: Shrader IND K36→K26 (swapped slots+p with Grupe, now the IND backup, K24→K38) and Gay LV K32→K24. Also promoted two starters found buried during the audit: Zvada NYG K46→K33 (p null→99.9, null broke the d.p/17 fallback) and Stevens WAS K47→K14.
 - **`mike_clay_projections.js` has zero K and zero DST entries** — 2026 PPG values for those positions come from `d.js d.p / 17`. Re-extract from source if you want true K/DST projections.
 
 ### Behavioral choices needing your call
+- **MIA kicker order (Patterson vs Gonzalez)** — the old open question resolved itself at cutdowns: Sleeper (2026-08-31) lists Riley Patterson as the MIA starter (depth 1) and Zane Gonzalez as teamless/Inactive. Patterson kept his starter slot (now K18 after the 08-31 renumber); Gonzalez sits K34 among the buried FA vets. Confirm you're happy with Patterson as the MIA K, or demote further if you think MIA brings in a vet before Week 1.
 - **SUPERFLEX trade mode shows pick selectors** — system is *intentionally* designed this way per `PICK_BASE` analysis. Change to `(tradeMode === 'dynasty' || tradeMode === 'dynastysf')` if you want redraft-style (no picks). One-line edit.
 
 ### Code health

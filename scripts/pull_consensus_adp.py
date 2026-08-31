@@ -743,7 +743,16 @@ def bump_version(fname=r'data/d\.js'):
     old = m.group(2)
     if old.startswith(TODAY):
         suffix = old[len(TODAY):]
-        new = TODAY + ('b' if not suffix else chr(ord(suffix[-1]) + 1))
+        if not suffix:
+            new = TODAY + 'b'
+        elif re.fullmatch(r'[a-y]', suffix):
+            new = TODAY + chr(ord(suffix) + 1)
+        else:
+            # same-day stamp in a foreign format — sim_proj_task.ps1 writes
+            # hour-stamped values like 2026-08-31-08 to the same tags; naive
+            # last-char increment turned that into 2026-08-319, then ':', ';'…
+            new = next(TODAY + c for c in 'bcdefghijklmnopqrstuvwxyz'
+                       if TODAY + c != old)
     else:
         new = TODAY
     html = re.sub(pat, r'\g<1>' + new, html)

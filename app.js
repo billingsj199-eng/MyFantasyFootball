@@ -45817,8 +45817,73 @@ Rules:
       if (!leagues || typeof leagues !== 'object') return;
       _mtEspnLeagues = leagues;
       _mtRenderEspnCard();
+      _mtAutoCommitEspnLeagues();
     } catch (err) { console.warn('[MyTeams] ESPN bridge event error:', err); }
   });
+
+  // ── Auto-commit fresh extension syncs ────────────────────────────────────
+  // "Export to MFF" on ESPN + opening the site is enough: when the bridge
+  // delivers a payload for a league that is ALREADY in the user's cloud saves
+  // and the payload is newer than the save, silently re-save its rosters,
+  // records and schedule. IMPORT still exists to save a league the first time
+  // and to load one into the page — staying fresh no longer needs the click.
+  // Runs from the bridge event AND after the saved-league list loads
+  // (whichever arrives last does the work); the committedAt map plus the
+  // newer-than-save check stop the save→reload→commit cycle from looping.
+  const _mtAutoCommittedAt = {};
+  let _mtAutoCommitTries = 0;
+  function _mtAutoCommitEspnLeagues() {
+    if (!_mtEspnLeagues) return;
+    const saved = window._mtSavedLeagues;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!saved || !saved.length || !user) return; // re-triggered when saves load
+    if (typeof D === 'undefined' || !D.length) {  // player data not booted yet —
+      if (_mtAutoCommitTries++ < 10) setTimeout(_mtAutoCommitEspnLeagues, 3000);
+      return;                                     // names would save unresolved
+    }
+    Object.values(_mtEspnLeagues).forEach(lg => {
+      try {
+        if (!lg || !lg.leagueId || !Array.isArray(lg.teams)) return;
+        const key = 'espn_' + lg.leagueId;
+        const sv = saved.find(l => l && String(l.leagueId) === key);
+        if (!sv) return;                                            // never saved — IMPORT decides
+        if (String(_mtActiveEspnId) === String(lg.leagueId)) return; // active league saves on import
+        if (_mtAutoCommittedAt[key] === (lg.syncedAt || 'once')) return;
+        if (lg.syncedAt && sv.savedAt && lg.syncedAt <= Date.parse(sv.savedAt)) return; // save is newer
+        // League-specific format without clobbering the active league's state
+        const prevFormat = _mtFormat;
+        _mtDetectFormat({
+          roster_positions: lg.rosterPositions || [],
+          settings: { type: lg.keeper ? 1 : 0 },
+          scoring_settings: { rec: lg.pprValue != null ? lg.pprValue : 0 }
+        });
+        const fmt = { ..._mtFormat };
+        _mtFormat = prevFormat;
+        const savedMine = (sv.teams || []).find(t => t && t.isMyTeam);
+        const anyMine = (lg.teams || []).some(t => t.isMine);
+        const teams = (lg.teams || []).map(t => ({
+          id: t.teamId,
+          owner: t.name || t.owner || ('Team ' + t.teamId),
+          ownerId: t.owner || '',
+          logo: t.logo || '',
+          isMyTeam: anyMine ? !!t.isMine : !!(savedMine && t.teamId === savedMine.id),
+          players: (t.roster || []).map(r => {
+            const res = _mtResolveEspnName(r && r.name);
+            return res ? res.name : null;
+          }).filter(Boolean),
+          draftPicks: [],
+          wins: t.wins || 0,
+          losses: t.losses || 0,
+          fpts: t.fpts || 0
+        }));
+        _mtAutoCommittedAt[key] = lg.syncedAt || 'once';
+        _mtSaveLeagueToCloud(key, { name: lg.name, season: String(lg.season || ''), schedule: lg.schedule || null }, teams, fmt);
+        console.log('[MyTeams] Auto-saved fresh extension sync:', lg.name || key);
+        const hint = document.getElementById('mtEspnHint');
+        if (hint) hint.textContent = 'Fresh sync auto-saved — click IMPORT to load a league.';
+      } catch (e) { console.warn('[MyTeams] auto-commit error:', e); }
+    });
+  }
 
   function _mtRenderEspnCard() {
     const list = document.getElementById('mtEspnLeagueList');
@@ -48127,7 +48192,7 @@ Rules:
   // FIRESTORE TEAM PERSISTENCE
   // ═══════════════════════════════════════════════════════════
 
-  function _mtSaveLeagueToCloud(leagueId, league, teams) {
+  function _mtSaveLeagueToCloud(leagueId, league, teams, fmtOverride) {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
@@ -48145,7 +48210,10 @@ Rules:
         // extension/direct payload). Callers that don't carry one (my-team
         // re-save) must not wipe a previously saved schedule.
         schedule: league.schedule || (existing[leagueId] && existing[leagueId].schedule) || null,
-        format: { ..._mtFormat },
+        // fmtOverride: background auto-commits pass the league's own format —
+        // this callback runs async, so the _mtFormat global may belong to
+        // whichever league is active by then.
+        format: { ...(fmtOverride || _mtFormat) },
         teams: teams.map(t => ({
           id: t.id,
           owner: t.owner,
@@ -48187,6 +48255,8 @@ Rules:
       if (typeof window._calcRefreshLeagues === 'function') window._calcRefreshLeagues();
       if (typeof window._finderPopulateLeagueDropdown === 'function') window._finderPopulateLeagueDropdown();
       if (typeof window._qaRefreshLeagues === 'function') window._qaRefreshLeagues();
+      // Extension payload may have arrived before the saved list — commit now.
+      _mtAutoCommitEspnLeagues();
     }).catch(e => { console.warn('[MyTeams] Load error:', e); });
   }
 

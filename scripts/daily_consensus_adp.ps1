@@ -72,6 +72,12 @@ $out = & $Python 'export_sleeper_extension_data.py' 2>&1 | Out-String
 Write-Log $out
 if ($LASTEXITCODE -ne 0) { Write-Log "extension export FAILED (exit $LASTEXITCODE) - helpers keep yesterday's data" }
 
+# Underdog helper has its own players.json (was left out of the daily run and
+# went 12 days stale by 2026-08-31). Same non-fatal contract as above.
+$out = & $Python 'export_extension_data.py' 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "underdog export FAILED (exit $LASTEXITCODE) - UD helper keeps yesterday's data" }
+
 # Trim log to last 400 lines.
 $lines = Get-Content $Log
 if ($lines.Count -gt 400) { $lines | Select-Object -Last 400 | Set-Content -Path $Log -Encoding utf8 }

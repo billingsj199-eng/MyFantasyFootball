@@ -46425,6 +46425,119 @@ Rules:
     return { auction: false, slotCount, roundCount, picks };
   }
 
+  // ── WAIVER WIRE (best available free agents) ─────────────────────────
+  // Diffs the current value-source board against every rostered player in
+  // the loaded league (all sources — rosters are already imported) and
+  // lists the best available, valued through the same _mtScoreRoster
+  // pipeline (VOR / tier steps), with season + weekly projections and an
+  // upgrade badge when a FA out-projects the user's weakest starter at his
+  // position. Capped at board top-150 (Jack's draftable-range rule).
+  let _mtWaiversOpen = false;
+  let _mtWaiverPos = 'ALL';
+
+  window._mtToggleWaivers = function () {
+    const box = document.getElementById('mtWaiverWire');
+    if (!box) return;
+    _mtWaiversOpen = !_mtWaiversOpen;
+    box.style.display = _mtWaiversOpen ? '' : 'none';
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+    if (_mtWaiversOpen) _mtRenderWaivers();
+  };
+  window._mtSetWaiverPos = function (pos) {
+    _mtWaiverPos = pos;
+    _mtRenderWaivers();
+  };
+
+  function _mtRenderWaivers() {
+    const box = document.getElementById('mtWaiverWire');
+    if (!box || !window._mtTeams || !window._mtTeams.length) return;
+    const rostered = new Set();
+    window._mtTeams.forEach(t => (t.players || []).forEach(n => rostered.add(n)));
+
+    // Board-ordered free agents, top-150 only
+    const fas = [];
+    if (typeof D !== 'undefined') {
+      for (const d of D) {
+        if (rostered.has(d.n)) continue;
+        const rank = _mtGetPlayerRank(d.n);
+        if (rank > 150) continue;
+        fas.push({ d, rank });
+      }
+    }
+    fas.sort((a, b) => a.rank - b.rank);
+
+    // Value via the exact team-scoring pipeline
+    const scored = _mtScoreRoster(fas.map(f => f.d.n), []);
+    const valByName = {};
+    (scored.players || []).forEach(p => { valByName[p.name] = p.val; });
+
+    // The user's weakest starter PPG per position (best season lineup)
+    const me = window._mtTeams.find(t => t.isMyTeam);
+    const weakest = {};
+    if (me && me.players && me.players.length) {
+      const lu = _mtBestLineup(me.players, 'ppg');
+      if (lu) lu.slots.forEach(s => {
+        if (!s.player || !s.player.ppg) return;
+        const pos = s.player.pos;
+        if (!(pos in weakest) || s.player.ppg < weakest[pos]) weakest[pos] = s.player.ppg;
+      });
+    }
+
+    // Weekly column only when the weekly machinery is live (same gate as
+    // the WK sort lens)
+    const _off = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
+    const wkNum = (!_off || window._weeklyPublishedWeek) ? (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1) : 0;
+
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a78bfa', DST: '#94a3b8' };
+    let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
+      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#4ade80">WAIVER WIRE</span>` +
+      `<span style="font-size:.6rem;color:var(--text2)">Best available in this league · your selected rankings, top 150 · <span style="color:#22c55e;font-weight:700">▲ = beats your weakest starter</span></span></div>`;
+    html += `<div style="display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap">`;
+    ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'].forEach(p => {
+      const act = _mtWaiverPos === p;
+      html += `<button onclick="window._mtSetWaiverPos('${p}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${act ? '#4ade80' : 'var(--border)'};background:${act ? '#4ade80' : 'var(--surface)'};color:${act ? '#000' : 'var(--text2)'}">${p}</button>`;
+    });
+    html += `</div>`;
+
+    const list = fas.filter(f => _mtWaiverPos === 'ALL' || f.d.s === _mtWaiverPos).slice(0, 30);
+    if (!list.length) {
+      html += `<div style="font-size:.75rem;color:var(--text2);padding:8px">Nothing available inside the board's top 150${_mtWaiverPos !== 'ALL' ? ' at ' + _mtWaiverPos : ''}.</div>`;
+      box.innerHTML = html;
+      return;
+    }
+    html += `<div style="border:1px solid var(--border);border-radius:8px;background:var(--bg);overflow:hidden">`;
+    list.forEach((f, i) => {
+      const d = f.d;
+      const ppg = _mtGetPlayerPpg(d.n);
+      let wkHtml = '';
+      if (wkNum) {
+        const out = {};
+        const wv = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, ppg, out) : null;
+        const wkTxt = out.src === 'bye' ? 'BYE' : out.src === 'out' ? 'OUT' : (wv != null && isFinite(wv) ? wv : '—');
+        const wkColor = out.src === 'bye' || out.src === 'out' ? '#ef4444' : 'var(--text)';
+        wkHtml = `<div style="min-width:44px;text-align:right"><span style="font-size:.5rem;color:var(--text2)">WK${wkNum} </span><span style="font-weight:700;color:${wkColor}">${wkTxt}</span></div>`;
+      }
+      const w = weakest[d.s];
+      const delta = (w != null && ppg > 0) ? Math.round((ppg - w) * 10) / 10 : null;
+      const upgrade = delta != null && delta >= 0.5
+        ? `<span title="Projects ${delta} PPG over your weakest ${d.s} starter" style="font-size:.6rem;font-weight:700;color:#22c55e;background:#22c55e18;border:1px solid #22c55e;border-radius:4px;padding:1px 6px">▲ +${delta}</span>`
+        : '';
+      const val = valByName[d.n] != null ? Math.round(valByName[d.n]) : 0;
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 12px;${i ? 'border-top:1px solid var(--border);' : ''}">` +
+        `<div style="width:30px;text-align:right;font-family:'Bebas Neue',sans-serif;color:var(--text2)">#${f.rank}</div>` +
+        `<div style="flex:1;min-width:0"><span style="font-weight:600;font-size:.8rem;color:var(--text)">${_esc(d.n)}</span>` +
+        ` <span style="font-size:.6rem;font-weight:700;color:${posColors[d.s] || 'var(--text2)'}">${d.s}</span>` +
+        ` <span style="font-size:.6rem;color:var(--text2)">${_esc(d.t || 'FA')}</span></div>` +
+        upgrade +
+        `<div style="min-width:52px;text-align:right"><span style="font-size:.5rem;color:var(--text2)">VAL </span><span style="font-weight:700;color:var(--text)">${val}</span></div>` +
+        `<div style="min-width:44px;text-align:right"><span style="font-size:.5rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:#22c55e">${ppg || '—'}</span></div>` +
+        wkHtml +
+        `</div>`;
+    });
+    html += `</div>`;
+    box.innerHTML = html;
+  }
+
   window._mtToggleDraftBoard = async function () {
     const box = document.getElementById('mtDraftBoard');
     if (!box) return;
@@ -46544,11 +46657,14 @@ Rules:
 
     window._mtTeams = teams;
     window._mtLeague = league;
-    // Close any open draft board — this render may be a different league
-    // (the per-league fetch cache makes reopening instant).
+    // Close any open draft board / waiver wire — this render may be a
+    // different league (the draft cache makes reopening instant).
     _mtDraftBoardOpen = false;
     const _db = document.getElementById('mtDraftBoard');
     if (_db) { _db.style.display = 'none'; _db.innerHTML = ''; }
+    _mtWaiversOpen = false;
+    const _ww = document.getElementById('mtWaiverWire');
+    if (_ww) { _ww.style.display = 'none'; _ww.innerHTML = ''; }
     _mtRenderTeamList(teams);
 
     // Update format display
@@ -46699,6 +46815,11 @@ Rules:
     if (_dbEligible) {
       const dbActive = _mtDraftBoardOpen;
       html += `<button onclick="window._mtToggleDraftBoard()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${dbActive ? '#22d3ee' : 'var(--border)'};background:${dbActive ? '#22d3ee' : 'var(--surface)'};color:${dbActive ? '#000' : 'var(--text2)'}">DRAFT BOARD</button>`;
+    }
+    // Waiver wire — any loaded league (rosters are all we need)
+    {
+      const wwActive = _mtWaiversOpen;
+      html += `<button onclick="window._mtToggleWaivers()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${wwActive ? '#4ade80' : 'var(--border)'};background:${wwActive ? '#4ade80' : 'var(--surface)'};color:${wwActive ? '#000' : 'var(--text2)'}">WAIVERS</button>`;
     }
     html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)"></span>`;
     html += `</div>`;
@@ -52455,6 +52576,10 @@ Rules:
     // Re-render anything that depends on values
     if (window._mtTeams && typeof _mtRenderTeamList === 'function') {
       try { _mtRenderTeamList(window._mtTeams); } catch(e) { console.warn('[MyTeams] re-render teams failed:', e); }
+    }
+    // Waiver wire ranks/values follow the source too
+    if (typeof _mtRenderWaivers === 'function' && _mtWaiversOpen) {
+      try { _mtRenderWaivers(); } catch(e) {}
     }
     // Re-render manual roster if shown
     if (typeof _mtRenderManualRoster === 'function') {

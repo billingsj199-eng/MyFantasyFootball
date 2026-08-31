@@ -15,10 +15,10 @@
   window.__mffEspnLoaded = true;
 
   var API = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/";
-  // mDraftDetail rides along (credentialed, so private leagues included) —
-  // normalize.js turns it into the payload's `draft` block for the MFF
-  // My Teams draft board.
-  var VIEWS = "?view=mTeam&view=mRoster&view=mSettings&view=mDraftDetail";
+  // mDraftDetail + mMatchup ride along (credentialed, so private leagues
+  // included) — normalize.js turns them into the payload's `draft` block
+  // (My Teams draft board) and `schedule` (My Teams matchup view).
+  var VIEWS = "?view=mTeam&view=mRoster&view=mSettings&view=mDraftDetail&view=mMatchup";
 
   function leagueIdFromUrl() {
     try {

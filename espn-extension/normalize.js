@@ -197,6 +197,21 @@
       };
     }
 
+    // Head-to-head schedule — present only when the fetch included
+    // ?view=mMatchup. Slim {week, home, away} teamId pairs for the MFF
+    // My Teams matchup view.
+    var schedule = null;
+    if (Array.isArray(raw.schedule) && raw.schedule.length) {
+      schedule = raw.schedule.map(function (g) {
+        return {
+          week: g.matchupPeriodId,
+          home: g.home ? g.home.teamId : null,
+          away: g.away ? g.away.teamId : null
+        };
+      }).filter(function (g) { return g.week && g.home != null && g.away != null; });
+      if (!schedule.length) schedule = null;
+    }
+
     return {
       platform: "espn",
       leagueId: String(raw.id),
@@ -210,6 +225,7 @@
       teamCount: teams.length,
       drafted: teams.some(function (t) { return t.roster.length > 0; }),
       draft: draft,
+      schedule: schedule,
       teams: teams
     };
   }

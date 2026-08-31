@@ -46329,10 +46329,13 @@ Rules:
       if (_mtSortBy === 'total') return b.score.total - a.score.total;
       if (_mtSortBy === 'ppg') return (b.lineupPpg || 0) - (a.lineupPpg || 0);
       if (_mtSortBy === 'picks') return (b.score.pickTotal || 0) - (a.score.pickTotal || 0);
-      // Positional sort: starter-weighted strength, not raw depth total
-      const posA = ((a.posRanks || {})[_mtSortBy] || { strength: 0 }).strength;
-      const posB = ((b.posRanks || {})[_mtSortBy] || { strength: 0 }).strength;
-      return posB - posA;
+      // Positional sort: rank first — rank comes from the unrounded strength
+      // in _mtComputePosRanks, while .strength is rounded for display, so
+      // sorting on strength lets rounded-equal teams scramble past lower
+      // ranks. Strength breaks tie-shared ranks.
+      const posA = (a.posRanks || {})[_mtSortBy] || { rank: teams.length + 1, strength: 0 };
+      const posB = (b.posRanks || {})[_mtSortBy] || { rank: teams.length + 1, strength: 0 };
+      return (posA.rank - posB.rank) || (posB.strength - posA.strength);
     });
 
     const allScores = sorted.map(x => {

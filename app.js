@@ -46226,8 +46226,11 @@ Rules:
   // window widens: 1-starter QB/TE keep raw top-heavy vals (alpha 1),
   // 2RB+flex lands ~0.74, 2-flex / 3-WR formats push toward 0.55 — so two
   // solid starters beat one stud plus a hole where the format demands it.
-  function _mtPosStrength(group, starters) {
-    const alpha = starters <= 1.2 ? 1 : Math.max(0.55, 1 - 0.18 * (starters - 1));
+  function _mtPosStrength(group, starters, alphaOverride) {
+    // alphaOverride=1 keeps raw trade-value units (used by the team-wide
+    // strength total, where cross-position sums must stay comparable);
+    // default concave alpha only shapes WITHIN-position room comparisons.
+    const alpha = alphaOverride != null ? alphaOverride : (starters <= 1.2 ? 1 : Math.max(0.55, 1 - 0.18 * (starters - 1)));
     const full = Math.floor(starters);
     const frac = starters - full;
     // Win-now 1-start positions (1QB / 1TE): you can only start one, so the
@@ -46267,6 +46270,19 @@ Rules:
           : idx + 1;
         teams[e.i].posRanks[pos] = { rank, strength: Math.round(e.v) };
       });
+    });
+    // Starter-weighted TEAM total (Jack 2026-08-31: raw roster sums bury real
+    // gaps under the ~replacement-value bench baseline every team carries).
+    // Same weight schedule as the position ranks but alpha=1 so QB/RB/WR/TE
+    // stay in comparable raw-value units; K/DST credited as 1-start slots;
+    // picks add their already-quantity-discounted total. score.total (raw
+    // sum) is untouched — other surfaces still consume it.
+    teams.forEach(t => {
+      const players = (t.score && t.score.players) ? t.score.players : [];
+      let sw = 0;
+      POS.forEach(pos => { sw += _mtPosStrength(players.filter(p => p.pos === pos), slots[pos], 1); });
+      ['K', 'DST'].forEach(pos => { sw += _mtPosStrength(players.filter(p => p.pos === pos), 1, 1); });
+      t.strengthTotal = Math.round(sw + ((t.score && t.score.pickTotal) || 0));
     });
   }
   function _mtOrdinal(n) {
@@ -46334,7 +46350,8 @@ Rules:
 
     // Sort teams
     const sorted = teams.slice().sort((a, b) => {
-      if (_mtSortBy === 'total') return b.score.total - a.score.total;
+      // TOTAL = starter-weighted strength (raw score.total breaks the tie)
+      if (_mtSortBy === 'total') return (b.strengthTotal || 0) - (a.strengthTotal || 0) || b.score.total - a.score.total;
       if (_mtSortBy === 'ppg') return (b.lineupPpg || 0) - (a.lineupPpg || 0);
       if (_mtSortBy === 'picks') return (b.score.pickTotal || 0) - (a.score.pickTotal || 0);
       // Positional sort: rank first — rank comes from the unrounded strength
@@ -46347,13 +46364,14 @@ Rules:
     });
 
     const allScores = sorted.map(x => {
-      if (_mtSortBy === 'total') return x.score.total;
+      if (_mtSortBy === 'total') return x.strengthTotal || 0;
       if (_mtSortBy === 'ppg') return x.lineupPpg || 0;
       if (_mtSortBy === 'picks') return x.score.pickTotal || 0;
       return ((x.posRanks || {})[_mtSortBy] || { strength: 0 }).strength;
     });
     const maxScore = Math.max(...allScores);
-    const avgScore = allScores.length ? Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length) : 0;
+    const avgExact = allScores.length ? allScores.reduce((s, v) => s + v, 0) / allScores.length : 0;
+    const avgScore = Math.round(avgExact);
 
     sorted.forEach((t, i) => {
       const sc = t.score;
@@ -46361,7 +46379,12 @@ Rules:
       const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
       const isPosSort = _mtSortBy !== 'total' && _mtSortBy !== 'ppg' && _mtSortBy !== 'picks';
       const posRankEntry = isPosSort ? ((t.posRanks || {})[_mtSortBy] || { rank: teams.length, strength: 0 }) : null;
-      const displayScore = _mtSortBy === 'total' ? sc.total : _mtSortBy === 'ppg' ? (t.lineupPpg || 0) : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : posRankEntry.strength;
+      const displayScore = _mtSortBy === 'total' ? (t.strengthTotal || 0) : _mtSortBy === 'ppg' ? (t.lineupPpg || 0) : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : posRankEntry.strength;
+      // League-relative delta for the numeric sorts — raw totals cluster (the
+      // shared bench baseline), so ± vs league avg is where separation reads.
+      const delta = (_mtSortBy === 'total' || _mtSortBy === 'ppg') ? Math.round((displayScore - avgExact) * 10) / 10 : null;
+      const deltaHtml = delta === null ? '' : ` · <span style="color:${delta >= 0 ? '#22c55e' : '#ef4444'};font-weight:700">${delta >= 0 ? '+' : ''}${delta} vs avg</span>`;
+      const chipTip = _mtSortBy === 'total' ? `title="Starter-weighted team strength (bench mostly discounted) · raw roster value ${sc.total} · league avg ${avgScore}"` : '';
       const scoreColor = isPosSort
         ? _mtPosRankColor(posRankEntry.rank, teams.length)
         : (displayScore >= maxScore ? '#22c55e' : displayScore >= avgScore ? '#4ade80' : displayScore >= avgScore * 0.7 ? '#f59e0b' : '#ef4444');
@@ -46371,10 +46394,10 @@ Rules:
       html += `<div onclick="window._mtShowTeam(${origIdx})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;${meStyle};border-radius:8px;cursor:pointer;transition:all .15s;position:relative" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">`;
       if (isMe) html += `<div style="position:absolute;top:-6px;right:10px;font-size:.5rem;background:var(--accent);color:#000;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px">MY TEAM</div>`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--text2);width:24px;text-align:center">${i + 1}</div>`;
-      html += `<div style="width:48px;height:48px;border-radius:10px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor};letter-spacing:1px">${scoreLabel}</div>`;
+      html += `<div ${chipTip} style="width:48px;height:48px;border-radius:10px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor};letter-spacing:1px">${scoreLabel}</div>`;
       html += `<div style="flex:1;min-width:0">`;
       html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}</div>`;
-      html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div>`;
+      html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}${deltaHtml}</div>`;
       html += `</div>`;
       // Position scores mini + picks for dynasty
       html += `<div style="display:flex;gap:4px">`;
@@ -46741,18 +46764,22 @@ Rules:
     if (!detail) return;
     detail.style.display = '';
 
-    const allScores = teams.map(x => x.score.total);
+    // Header chip = starter-weighted strength, same number as the list chip
+    // (raw roster value stays in the sub-line as "Player val").
+    if (!t.posRanks || t.strengthTotal == null) _mtComputePosRanks(teams);
+    const allScores = teams.map(x => x.strengthTotal || 0);
     const maxScore = Math.max(...allScores);
     const avgScore = Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length);
-    const scoreColor = sc.total >= maxScore ? '#22c55e' : sc.total >= avgScore ? '#4ade80' : sc.total >= avgScore * 0.7 ? '#f59e0b' : '#ef4444';
+    const stVal = t.strengthTotal || 0;
+    const scoreColor = stVal >= maxScore ? '#22c55e' : stVal >= avgScore ? '#4ade80' : stVal >= avgScore * 0.7 ? '#f59e0b' : '#ef4444';
 
     let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">`;
-    html += `<div style="width:56px;height:56px;border-radius:12px;background:${scoreColor}15;border:3px solid ${scoreColor};display:flex;flex-direction:column;align-items:center;justify-content:center">`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${scoreColor};line-height:1">${sc.total}</div>`;
+    html += `<div title="Starter-weighted team strength · raw roster value ${sc.total} · league avg ${avgScore}" style="width:56px;height:56px;border-radius:12px;background:${scoreColor}15;border:3px solid ${scoreColor};display:flex;flex-direction:column;align-items:center;justify-content:center">`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${scoreColor};line-height:1">${stVal}</div>`;
     if (sc.pickTotal) html += `<div style="font-size:.5rem;color:var(--text2)">+${sc.pickTotal} picks</div>`;
     html += `</div>`;
     html += `<div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text)">${_esc(t.owner)}${t.isMyTeam ? ' <span style="font-size:.7rem;color:var(--accent)">⭐ MY TEAM</span>' : ''}</div>`;
-    html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Player val: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div></div>`;
+    html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Player val: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''} · <span style="color:${stVal >= avgScore ? '#22c55e' : '#ef4444'};font-weight:700">${stVal - avgScore >= 0 ? '+' : ''}${stVal - avgScore} vs avg</span></div></div>`;
     html += `<button onclick="window._mtCloseTeam(${idx})" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕ Close</button>`;
     html += `</div>`;
 

@@ -1,9 +1,36 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // leaderboard/{uid}: public-read game leaderboards. 2026-08-31 audit
+    // hardening: owner-only writes now also pin the doc shape. All client
+    // writers use set(..., {merge:true}), and rules see the MERGED doc as
+    // request.resource.data — so create checks the whole doc while update
+    // constrains only the keys actually changing (diff), which keeps old
+    // docs carrying legacy fields writable. Delete stays owner-only for the
+    // account-deletion cleanup flow.
     match /leaderboard/{userId} {
+      function _lbKeys() {
+        return ['name', 'email', 'activeBadge', 'activeBadgeIcon', 'updatedAt',
+                'daily', 'unlimited', 'fantasygame', 'fantasygameWeek',
+                'collegeSeason', 'collegeWeek', 'gwDaily', 'gwDaily00s',
+                'gwDaily10s', 'gwDaily00s150', 'gwDaily10s150'];
+      }
+      function _lbIdentityOk() {
+        return (!('name' in request.resource.data) || (request.resource.data.name is string && request.resource.data.name.size() <= 120))
+            && (!('email' in request.resource.data) || (request.resource.data.email is string && request.resource.data.email.size() <= 254))
+            && (!('activeBadge' in request.resource.data) || (request.resource.data.activeBadge is string && request.resource.data.activeBadge.size() <= 40))
+            && (!('activeBadgeIcon' in request.resource.data) || request.resource.data.activeBadgeIcon == null
+                || (request.resource.data.activeBadgeIcon is string && request.resource.data.activeBadgeIcon.size() <= 16))
+            && (!('updatedAt' in request.resource.data) || (request.resource.data.updatedAt is string && request.resource.data.updatedAt.size() <= 32));
+      }
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId
+                    && request.resource.data.keys().hasOnly(_lbKeys())
+                    && _lbIdentityOk();
+      allow update: if request.auth != null && request.auth.uid == userId
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(_lbKeys())
+                    && _lbIdentityOk();
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
     // ---- Premium helpers (board-gating Phase C) ----
     // Server-checkable premium, mirroring the client's two sources:
@@ -12,9 +39,15 @@ service cloud.firestore {
     //  - gifted_premium/{email-key} — admin gift panel + redeemCode function
     //    ({expires: ms}); doc id = email lowercased, non-alphanumerics -> '_'
     // Any rules-evaluation error denies (fail closed).
+    // email_verified guard (2026-08-31 audit): blocks a spoofed unverified
+    // email/password signup from claiming the admin address. Jack signs in
+    // with Google, which always carries email_verified=true.
     function isJack() {
       return request.auth != null
-             && request.auth.token.email == 'billingsj199@gmail.com';
+             && 'email' in request.auth.token
+             && request.auth.token.email == 'billingsj199@gmail.com'
+             && 'email_verified' in request.auth.token
+             && request.auth.token.email_verified == true;
     }
     function _premMap() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('premium', {});
@@ -31,6 +64,8 @@ service cloud.firestore {
     function hasGiftedPremium() {
       return request.auth != null
              && 'email' in request.auth.token
+             && 'email_verified' in request.auth.token
+             && request.auth.token.email_verified == true
              && exists(/databases/$(database)/documents/gifted_premium/$(_giftKey()))
              && get(/databases/$(database)/documents/gifted_premium/$(_giftKey())).data.get('expires', 0) > request.time.toMillis();
     }
@@ -58,7 +93,7 @@ service cloud.firestore {
                       && request.auth != null
                       && (request.auth.uid == docId || isJack()));
       allow write: if request.auth != null
-                   && (request.auth.token.email == 'billingsj199@gmail.com'
+                   && (isJack()
                        || (docId != 'jacks-official'
                            && docId != 'jacks-public'
                            && request.auth.uid == docId));
@@ -75,53 +110,68 @@ service cloud.firestore {
     match /user_game_data/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+    // gifted_badges: keyed by uid (admin gift panel resolves email -> uid),
+    // with legacy 'email_<sanitized>' ids for gifts to not-yet-registered
+    // emails (the client never reads those). Own-doc read only (2026-08-31
+    // audit — was any-authed-read, which listed every giftee's email).
+    // Jack's admin panel does a full-collection scan in findUserUid.
     match /gifted_badges/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow read: if request.auth != null
+                  && (docId == request.auth.uid || isJack());
+      allow write: if isJack();
     }
+    // gifted_premium: keyed by sanitized lowercased email (= _giftKey()).
+    // Own-doc read only, and only with a VERIFIED email — the client mirrors
+    // this doc into localStorage premium, so an unverified signup claiming
+    // someone else's address must not be able to read their gift.
     match /gifted_premium/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow read: if request.auth != null
+                  && (('email' in request.auth.token
+                       && 'email_verified' in request.auth.token
+                       && request.auth.token.email_verified == true
+                       && docId == _giftKey())
+                      || isJack());
+      allow write: if isJack();
     }
     match /founders/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow write: if isJack();
     }
     match /app_meta/{docId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow write: if isJack();
     }
     // settings/{docId}: site-wide config (e.g. active_week with publishedWeek).
     // Public read so non-admin users can see what week is currently published;
     // admin-only write since these toggle live UI state.
     match /settings/{docId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow write: if isJack();
     }
     match /prospect_draft_capital/{doc} {
-      allow read, write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow read, write: if isJack();
     }
     match /prospect_bio/{doc} {
-      allow read, write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow read, write: if isJack();
     }
     match /trivia_catalog/{docId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow write: if isJack();
     }
     // trivia_daily/{YYYY-MM-DD}: locked daily snapshots curated by admin.
     // Public read so anonymous players see the curated board; admin-only
     // write since this is the live "daily challenge" surface.
     match /trivia_daily/{date} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow write: if isJack();
     }
     // trivia_reports/{reportId}: user-submitted "this cell looks wrong"
     // flags. Anyone can create (no auth required so anonymous players
     // can report) with strict shape validation; admin reads + deletes
     // to triage and clear queue. Cap text fields to prevent abuse.
     match /trivia_reports/{reportId} {
-      allow read: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
-      allow delete: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow read: if isJack();
+      allow delete: if isJack();
       allow create: if request.resource.data.keys().hasOnly(['date','itemIdx','expected','guess','reason','createdAt','title'])
                     && (request.resource.data.date is string && request.resource.data.date.size() <= 16)
                     && (request.resource.data.expected is string && request.resource.data.expected.size() <= 200)
@@ -134,9 +184,9 @@ service cloud.firestore {
       allow update: if false;
     }
     match /promo_uses/{docId} {
-      allow read: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow read: if isJack();
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow update, delete: if isJack();
     }
     // premium_codes/{CODE}: admin-created redeem codes. The admin panel does
     // full client-side CRUD (create / list / toggle disabled / delete). Regular
@@ -144,20 +194,20 @@ service cloud.firestore {
     // reads/validates codes and bumps `uses` with the admin SDK (which bypasses
     // these rules) — so client access is admin-only.
     match /premium_codes/{code} {
-      allow read, write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow read, write: if isJack();
     }
     // redeem_uses/{id}: per-redeem log + once-per-user enforcement source.
     // Written and read only by the redeemCode Cloud Function via the admin SDK;
     // no legitimate client path touches it, so client access is admin-only.
     match /redeem_uses/{id} {
-      allow read, write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow read, write: if isJack();
     }
     // creator_attributions/{uid}: tracks which creator referred the signup.
     // Written once by the user at signup, then locked. Admin can read/edit/delete.
     match /creator_attributions/{userId} {
-      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.email == 'billingsj199@gmail.com');
+      allow read: if request.auth != null && (request.auth.uid == userId || isJack());
       allow create: if request.auth != null && request.auth.uid == userId;
-      allow update, delete: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow update, delete: if isJack();
     }
     // shared/jacks_portfolio: mirror of Jack's Underdog portfolio so premium
     // members can view it. Read by any authed user (premium gating done
@@ -165,7 +215,7 @@ service cloud.firestore {
     // only by Jack so other accounts can't overwrite the shared portfolio.
     match /shared/jacks_portfolio {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow write: if isJack();
     }
     // shared/ud_adp_latest: latest Underdog ADP snapshot (per-player BBM +
     // Superflex ADP), mirrored from Jack's session whenever the Draft Helper
@@ -175,20 +225,20 @@ service cloud.firestore {
     // Underdog ADP numbers, nothing sensitive. Write only by Jack.
     match /shared/ud_adp_latest {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow write: if isJack();
     }
     // rankings_history/{timestamp}: rolling cloud backup of Jack's rankings,
     // written after every saveJacksRankings. Admin-only both ways — it's a
     // disaster-recovery mirror, never read by the app at runtime.
     match /rankings_history/{docId} {
-      allow read, write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow read, write: if isJack();
     }
     // roster_overrides/{playerKey}: post-draft roster moves (trades/cuts) that
     // adjust prospect landing-spot signals. Loaded for ALL users (public read,
     // no auth required) so signals are consistent; admin-only write.
     match /roster_overrides/{playerKey} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow write: if isJack();
     }
     // qa_questions/{uid}_{weekIdx}_{type}: premium "Ask Jack" weekly Q&A.
     // Each user gets 1 start/sit + 1 trade question per week (Tuesday reset).
@@ -203,7 +253,7 @@ service cloud.firestore {
     match /qa_questions/{qId} {
       allow read: if request.auth != null
                   && (resource.data.uid == request.auth.uid
-                      || request.auth.token.email == 'billingsj199@gmail.com');
+                      || isJack());
       allow create: if request.auth != null
                     && request.resource.data.uid == request.auth.uid
                     && request.resource.data.type in ['startsit', 'trade']
@@ -230,20 +280,37 @@ service cloud.firestore {
                           && (!('fmt' in request.resource.data.league) || (request.resource.data.league.fmt is string && request.resource.data.league.fmt.size() <= 80))
                        ))
                     && (!('roster' in request.resource.data) || (request.resource.data.roster is list && request.resource.data.roster.size() <= 60));
-      allow update, delete: if request.auth != null && request.auth.token.email == 'billingsj199@gmail.com';
+      allow update, delete: if isJack();
     }
     // shared_rankings/{shareId}: snapshots of a user's My Rankings, generated
     // by the SHARE button in the rankings toolbar. Anyone with the link can
     // view; only signed-in users can create one (and only owned by themselves);
     // only the owner can update or delete. Size cap prevents abuse.
+    // 2026-08-31 audit hardening: create pins the exact doc shape the SHARE
+    // button writes (app.js btnShareRanks); update can't reassign ownerUid
+    // (which would have orphaned the doc from its owner) and re-asserts the
+    // order cap so an owner can't balloon a doc after creation.
     match /shared_rankings/{shareId} {
       allow read: if true;
       allow create: if request.auth != null
                     && request.resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['v','mode','order','posTiers','ownerUid','ownerName','createdAt'])
+                    && request.resource.data.order is list
+                    && request.resource.data.order.size() > 0
+                    && request.resource.data.order.size() <= 600
+                    && (!('mode' in request.resource.data) || (request.resource.data.mode is string && request.resource.data.mode.size() <= 40))
+                    && (!('ownerName' in request.resource.data) || (request.resource.data.ownerName is string && request.resource.data.ownerName.size() <= 120))
+                    && (!('createdAt' in request.resource.data) || (request.resource.data.createdAt is string && request.resource.data.createdAt.size() <= 32))
+                    && (!('posTiers' in request.resource.data) || request.resource.data.posTiers is map);
+      allow update: if request.auth != null
+                    && request.auth.uid == resource.data.ownerUid
+                    && request.resource.data.ownerUid == resource.data.ownerUid
+                    && request.resource.data.keys().hasOnly(['v','mode','order','posTiers','ownerUid','ownerName','createdAt'])
+                    && request.resource.data.order is list
                     && request.resource.data.order.size() > 0
                     && request.resource.data.order.size() <= 600;
-      allow update, delete: if request.auth != null
-                            && request.auth.uid == resource.data.ownerUid;
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.ownerUid;
     }
   }
 }

@@ -46262,6 +46262,62 @@ Rules:
     return { auction: false, slotCount, roundCount: Math.max(...picks.map(p => p.round || 0)), picks };
   }
 
+  // Yahoo: the draftresults page is the only place draft history exists
+  // (the JSON API has no draft route). Server-rendered per-round tables —
+  // <th>Round N</th>, rows of [pick#, player a.name + "(Tm - POS)" span,
+  // team cell whose title attr carries the UNtruncated team name]. Team
+  // mapping is therefore by owner name. Rides yahooProxy (allowlist gained
+  // /draftresults 2026-08-31); non-viewable leagues 403 → clear message.
+  async function _mtFetchYahooDraft(leagueId) {
+    const resp = await _mtYahooProxyFetch('https://football.fantasysports.yahoo.com/f1/' + leagueId + '/draftresults');
+    const doc = new DOMParser().parseFromString(await resp.text(), 'text/html');
+    const scope = doc.getElementById('drafttables') || doc;
+    const rows = [];
+    let dollarRows = 0;
+    scope.querySelectorAll('table').forEach(tbl => {
+      const hdr = tbl.querySelector('thead th');
+      const rm = hdr && hdr.textContent.match(/Round\s+(\d+)/i);
+      if (!rm) return; // standings/other table — not a draft round
+      const round = parseInt(rm[1], 10);
+      tbl.querySelectorAll('tbody tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length < 2) return;
+        const inRound = parseInt(tds[0].textContent, 10);
+        if (!isFinite(inRound)) return;
+        const nameEl = tds[1].querySelector('a.name') || tds[1].querySelector('a');
+        const name = nameEl ? nameEl.textContent.trim() : '';
+        if (!name) return;
+        const posM = tds[1].textContent.match(/\(([^)]*)\)/);
+        let pos = '?';
+        if (posM) {
+          const parts = posM[1].split('-');
+          pos = (parts[parts.length - 1] || '').trim().toUpperCase();
+          if (pos === 'DEF') pos = 'DST';
+        }
+        const teamCell = tds[tds.length - 1];
+        const teamName = (teamCell.getAttribute('title') || teamCell.textContent || '').trim();
+        if (/\$\d/.test(tr.textContent)) dollarRows++;
+        rows.push({ round, inRound, name, pos, teamName });
+      });
+    });
+    if (!rows.length) throw new Error('no completed draft found for this league yet');
+    if (dollarRows > rows.length / 2) return { auction: true };
+    const teams = window._mtTeams || [];
+    const slotCount = teams.length || Math.max(...rows.filter(r => r.round === 1).map(r => r.inRound));
+    const roundCount = Math.max(...rows.map(r => r.round));
+    const findTeam = nm => teams.find(t => t.owner === nm)
+      || teams.find(t => String(t.owner).toLowerCase() === String(nm).toLowerCase()) || null;
+    const picks = rows.map(r => ({
+      no: (r.round - 1) * slotCount + r.inRound,
+      round: r.round,
+      // Physical board column: Yahoo defaults to snake — mirror even rounds
+      slot: (r.round % 2 === 1) ? r.inRound : (slotCount + 1 - r.inRound),
+      name: r.name, pos: r.pos,
+      team: findTeam(r.teamName)
+    }));
+    return { auction: false, slotCount, roundCount, picks };
+  }
+
   window._mtToggleDraftBoard = async function () {
     const box = document.getElementById('mtDraftBoard');
     if (!box) return;
@@ -46275,7 +46331,7 @@ Rules:
     box.style.display = '';
     if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
     const src = _mtActiveSource;
-    const leagueId = src === 'sleeper' ? _mtActiveSleeperId : src === 'espn' ? _mtActiveEspnId : null;
+    const leagueId = src === 'sleeper' ? _mtActiveSleeperId : src === 'espn' ? _mtActiveEspnId : src === 'yahoo' ? _mtActiveYahooId : null;
     if (!leagueId) { box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">No league loaded.</div>'; return; }
     box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Loading draft board…</div>';
     try {
@@ -46284,7 +46340,8 @@ Rules:
       if (!data) {
         data = _mtDraftCache[cacheKey] = src === 'sleeper'
           ? await _mtFetchSleeperDraft(leagueId)
-          : await _mtFetchEspnDraft(leagueId);
+          : src === 'espn' ? await _mtFetchEspnDraft(leagueId)
+          : await _mtFetchYahooDraft(leagueId);
       }
       // Guard: user may have loaded a different league while we fetched
       if (!_mtDraftBoardOpen) return;
@@ -46526,10 +46583,12 @@ Rules:
       html += `<option value="${i}" ${sel}>${_esc(t.owner)}</option>`;
     });
     html += `</select>`;
-    // Draft board toggle — redraft Sleeper + ESPN leagues (both have public
-    // draft-history endpoints; Yahoo would need the draftresults page scrape).
+    // Draft board toggle — redraft leagues, all three sources (Sleeper picks
+    // API, ESPN mDraftDetail, Yahoo draftresults page via yahooProxy).
     const _dbEligible = _mtFormat.type === 'redraft' &&
-      ((_mtActiveSource === 'sleeper' && _mtActiveSleeperId) || (_mtActiveSource === 'espn' && _mtActiveEspnId));
+      ((_mtActiveSource === 'sleeper' && _mtActiveSleeperId) ||
+       (_mtActiveSource === 'espn' && _mtActiveEspnId) ||
+       (_mtActiveSource === 'yahoo' && _mtActiveYahooId));
     if (_dbEligible) {
       const dbActive = _mtDraftBoardOpen;
       html += `<button onclick="window._mtToggleDraftBoard()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${dbActive ? '#22d3ee' : 'var(--border)'};background:${dbActive ? '#22d3ee' : 'var(--surface)'};color:${dbActive ? '#000' : 'var(--text2)'}">DRAFT BOARD</button>`;

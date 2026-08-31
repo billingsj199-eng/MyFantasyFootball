@@ -46282,7 +46282,11 @@ Rules:
       let sw = 0;
       POS.forEach(pos => { sw += _mtPosStrength(players.filter(p => p.pos === pos), slots[pos], 1); });
       ['K', 'DST'].forEach(pos => { sw += _mtPosStrength(players.filter(p => p.pos === pos), 1, 1); });
-      t.strengthTotal = Math.round(sw + ((t.score && t.score.pickTotal) || 0));
+      // Picks scaled 0.65 (Jack 2026-08-31 "scale the pick total down a
+      // bit"): starter-weighting shrank the player base ~1/3, so raw picks
+      // were over-counted against it; 0.65 restores their old relative
+      // weight vs rostered talent.
+      t.strengthTotal = Math.round(sw + 0.65 * ((t.score && t.score.pickTotal) || 0));
     });
   }
   function _mtOrdinal(n) {

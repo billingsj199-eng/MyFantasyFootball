@@ -19,6 +19,13 @@
 # are: Romo, Badgley, Havrisik, Wright, Karty, Gano, McAtamney (all FA) and
 # Sauls (NYG backup behind Zvada, Questionable).
 #
+# DEPTH-CHART AUTHORITY (Jack's rule, 2026-08-31): starters must be verified
+# against ESPN's depth charts, not Sleeper alone — Sleeper is only a fast
+# first pass. This script pre-flight-checks every mover's expected role via
+# the ESPN depthcharts API and ABORTS before touching d.js if reality has
+# changed. (--skip-verify for offline runs.) The 08-31 audit was ESPN-
+# confirmed on all four promotions + the Grupe demotion + Patterson MIA #1.
+#
 # LESSON FROM fix_kickers_20260722.py, KEPT HERE: the K board is editorial,
 # NOT p-sorted (Butker p=148 at K11, buried-FA Koo/Moody are deliberate).
 # We splice movers in after named anchors and renumber sequentially; the
@@ -28,16 +35,18 @@
 # Shrader takes Grupe's old IND-job number and vice versa; Gay 105.3 (LV
 # job, weak offense); Zvada 99.9 (NYG job, rookie). Stevens keeps his 139.4.
 #
-# MIA is deliberately NOT touched: Riley Patterson stays (Sleeper now lists
-# him as the MIA starter and Zane Gonzalez is teamless/Inactive) — Jack's
-# call, see the session report.
+# MIA is deliberately NOT touched: Riley Patterson stays (ESPN + Sleeper +
+# Clay all list him as the MIA starter; Zane Gonzalez teamless/Inactive) —
+# Jack's call, see BACKLOG "Behavioral choices needing your call".
 #
-# Re-runnable: no-ops (asserts) if the moves have already been applied.
+# Re-runnable: exits cleanly if the moves have already been applied.
 
+import argparse
 import datetime
 import json
 import os
 import re
+import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 D_PATH = os.path.join(ROOT, "data", "d.js")
@@ -53,7 +62,63 @@ MOVES = {
     "Dominic Zvada":   ("Daniel Carlson",  "null",  "99.9"),
 }
 
+# ESPN team id -> the kicker this script assumes is that team's starter.
+# Grupe is checked implicitly: he must NOT be IND's rank-1 pk.
+ESPN_EXPECTED_STARTER = {
+    11: ("IND", "Spencer Shrader"),
+    13: ("LV",  "Matt Gay"),
+    19: ("NYG", "Dominic Zvada"),
+    28: ("WAS", "Drew Stevens"),
+}
+ESPN_DC_URL = ("https://sports.core.api.espn.com/v2/sports/football/leagues/"
+               "nfl/seasons/{yr}/teams/{tid}/depthcharts")
+
+
+def verify_espn_depth_charts(year):
+    """Abort (SystemExit) unless ESPN's rank-1 placekicker matches every
+    expected starter. Network/shape errors also abort — never edit the board
+    on unverified assumptions."""
+    import requests
+    for tid, (abbr, expected) in ESPN_EXPECTED_STARTER.items():
+        dc = requests.get(ESPN_DC_URL.format(yr=year, tid=tid), timeout=20).json()
+        starter = None
+        for grp in dc.get("items", []):
+            pk = grp.get("positions", {}).get("pk")
+            if not pk:
+                continue
+            for a in pk.get("athletes", []):
+                if a.get("rank") == 1:
+                    starter = requests.get(a["athlete"]["$ref"], timeout=20
+                                           ).json().get("displayName")
+        if starter != expected:
+            sys.exit(f"ABORT: ESPN lists {starter!r} as {abbr}'s starting K, "
+                     f"expected {expected!r} — depth chart changed, re-audit "
+                     f"before running (or --skip-verify to override).")
+        print(f"  ESPN {abbr}: {starter} confirmed rank-1 pk")
+
+
+ap = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else "")
+ap.add_argument("--skip-verify", action="store_true",
+                help="skip the ESPN depth-chart pre-flight (offline runs)")
+args = ap.parse_args()
+
+if args.skip_verify:
+    print("ESPN depth-chart verification SKIPPED (--skip-verify)")
+else:
+    print("Verifying movers against ESPN depth charts...")
+    verify_espn_depth_charts(2026)
+
 src = open(D_PATH, encoding="utf-8").read()
+
+# --- 0. already applied? (all new p values in place, no old ones left) ---
+def p_pat(name, p_lit):
+    return r'"n":"' + re.escape(name) + r'","a":\d+,"p":' + re.escape(p_lit) + r',"s":"K"'
+
+movers_p = [(n, o, p) for n, (_, o, p) in MOVES.items() if o is not None]
+if (all(re.search(p_pat(n, new), src) for n, _, new in movers_p)
+        and not any(re.search(p_pat(n, old), src) for n, old, _ in movers_p)):
+    print("Moves already applied — nothing to do.")
+    sys.exit(0)
 
 # --- 1. splice new p values (compact JSON: "n":"Name","a":240,"p":<old>) ---
 for name, (_, old_p, new_p) in MOVES.items():
@@ -61,7 +126,7 @@ for name, (_, old_p, new_p) in MOVES.items():
         continue
     pat = re.compile(r'("n":"' + re.escape(name) + r'","a":\d+,"p":)' + re.escape(old_p) + r'(,"s":"K")')
     src, n = pat.subn(r"\g<1>" + new_p + r"\g<2>", src, count=1)
-    assert n == 1, f"could not update p for {name} (already applied?)"
+    assert n == 1, f"could not update p for {name} (partially applied state?)"
 
 # --- 2. rebuild the board order: current r order, movers re-anchored ---
 data = json.loads(src[src.index("["): src.rindex("]") + 1])

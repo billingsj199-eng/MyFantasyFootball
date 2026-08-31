@@ -46445,6 +46445,44 @@ Rules:
     return { auction: false, slotCount, roundCount, picks };
   }
 
+  // ── Row-level availability flags + team playoff SOS ──────────────────
+  // Season best-lineup starters for a team (basis 'ppg' — injuries ignored
+  // on purpose so a ruled-out starter still counts as a starter here).
+  // Cached on the team object; team objects rebuild on every league load.
+  function _mtTeamStarters(t) {
+    if (t._starterCache) return t._starterCache;
+    const lu = _mtBestLineup(t.players || [], 'ppg');
+    t._starterCache = lu ? lu.slots.map(s => s.player).filter(Boolean) : [];
+    return t._starterCache;
+  }
+  // Starters with an out-level injury tag (IR/PUP/SUS/Out/season-ending) —
+  // offseason months only surface long-term tags, matching site convention.
+  function _mtTeamInjuredStarters(t) {
+    const offseason = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
+    const out = [];
+    _mtTeamStarters(t).forEach(p => {
+      const d = p.d || _mtLookupD(p.name);
+      const tag = d && d.inj ? String(d.inj) : '';
+      if (!tag) return;
+      if (offseason && typeof _isLongTermInjuryTag === 'function' && !_isLongTermInjuryTag(tag)) return;
+      if (/\bir\b|\bpup\b|suspend|\bout\b|out for season|season.?ending/i.test(tag)) out.push({ name: p.name, tag });
+    });
+    return out;
+  }
+  // Average W15-17 playoff-SOS rank of a team's projected starters
+  // (1 = easiest schedule). null when the SOS tables aren't loaded.
+  function _mtTeamPlayoffSos(t) {
+    if (typeof window._mtGetPlayoffSos !== 'function') return null;
+    let sum = 0, n = 0;
+    _mtTeamStarters(t).forEach(p => {
+      const d = p.d || _mtLookupD(p.name);
+      if (!d || !d.t) return;
+      const ps = window._mtGetPlayoffSos(d.t, d.s, null);
+      if (ps && isFinite(ps.rank)) { sum += ps.rank; n++; }
+    });
+    return n ? Math.round(sum / n * 10) / 10 : null;
+  }
+
   // Best weekly-lineup projection per team, cached by week (shared by the
   // WK sort lens and the matchup view).
   function _mtEnsureWeekPpg(teams, wkNum) {
@@ -47359,7 +47397,12 @@ Rules:
       html += `<div ${chipTip} style="width:48px;height:48px;border-radius:10px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor};letter-spacing:1px">${scoreLabel}</div>`;
       html += _mtTeamLogoHtml(t, 28);
       html += `<div style="flex:1;min-width:0">`;
-      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}</div>`;
+      // Availability flag: projected starters ruled out (IR/PUP/SUS/Out)
+      const _injOut = _mtTeamInjuredStarters(t);
+      const _injChip = _injOut.length
+        ? ` <span title="Projected starters ruled out: ${_esc(_injOut.map(x => x.name + ' (' + x.tag + ')').join(', '))}" style="font-size:.55rem;font-weight:700;color:#ef4444;background:#ef444418;border:1px solid #ef4444;border-radius:3px;padding:0 5px;vertical-align:1px">${_injOut.length} OUT</span>`
+        : '';
+      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}${_injChip}</div>`;
       html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}${deltaHtml}</div>`;
       html += `</div>`;
       // Position scores mini + picks for dynasty
@@ -47740,7 +47783,16 @@ Rules:
     html += `</div>`;
     html += _mtTeamLogoHtml(t, 40);
     html += `<div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text)">${_esc(t.owner)}${t.isMyTeam ? ' <span style="font-size:.7rem;color:var(--accent)">⭐ MY TEAM</span>' : ''}</div>`;
-    html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Player val: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''} · <span style="color:${stVal >= avgScore ? '#22c55e' : '#ef4444'};font-weight:700">${stVal - avgScore >= 0 ? '+' : ''}${stVal - avgScore} vs avg</span></div></div>`;
+    // Team playoff SOS: avg W15-17 rank of projected starters, league-relative
+    let _psosHtml = '';
+    const _myPsos = _mtTeamPlayoffSos(t);
+    if (_myPsos != null) {
+      const all = teams.map(x => _mtTeamPlayoffSos(x)).filter(v => v != null).sort((a, b) => a - b);
+      const pos = all.indexOf(_myPsos) + 1;
+      const col = _mtPosRankColor(pos, all.length);
+      _psosHtml = ` · <span title="Average W15-17 playoff-SOS rank of this team's projected starters (1 = easiest NFL schedule) — ${_mtOrdinal(pos)} easiest in this league" style="cursor:help">P-SOS <span style="color:${col};font-weight:700">${_myPsos}</span> <span style="color:${col}">(${_mtOrdinal(pos)} easiest)</span></span>`;
+    }
+    html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Player val: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''} · <span style="color:${stVal >= avgScore ? '#22c55e' : '#ef4444'};font-weight:700">${stVal - avgScore >= 0 ? '+' : ''}${stVal - avgScore} vs avg</span>${_psosHtml}</div></div>`;
     html += `<button onclick="window._mtCloseTeam(${idx})" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕ Close</button>`;
     html += `</div>`;
 

@@ -22022,6 +22022,26 @@ window.fmtHeight = fmtHeight;
   window._mtTierFor = function (d, src, mode) {
     try { return _getTierForPlayerFull(d, src, mode) || ''; } catch (_) { return ''; }
   };
+  // Tier RANGE lookup for the My Teams tier-step values: the player's board
+  // rank plus his tier's [from, to] rank span (to = next tier's start − 1;
+  // last tier runs to the board end, capped at 200). Returns null for ADP
+  // sources, off-board players, or boards without tiers.
+  window._mtTierRangeFor = function (d, src, mode) {
+    try {
+      const srcTiers = (versionTiers[src][mode].ALL || []).slice().sort((a, b) => a.afterRank - b.afterRank);
+      if (!srcTiers.length) return null;
+      const srcBoard = window._verBoardFor(src, mode) || versionBoards[src][mode];
+      const boardPos = srcBoard.indexOf(d.idx);
+      if (boardPos < 0) return null;
+      const rank = boardPos + 1;
+      let cur = null, next = null;
+      for (let i = 0; i < srcTiers.length; i++) {
+        if (srcTiers[i].afterRank <= rank) { cur = srcTiers[i]; next = srcTiers[i + 1] || null; }
+      }
+      if (!cur) return null;
+      return { label: cur.label, rank, from: cur.afterRank, to: next ? next.afterRank - 1 : Math.min(srcBoard.length || 200, 200) };
+    } catch (_) { return null; }
+  };
 
   function getPlayerValue(d) {
     return window._getTradeValue(d, tradeSource, tradeMode);
@@ -45301,30 +45321,41 @@ Rules:
   // cap") — pure presentation, order and ratios untouched. Top guy ~2-3k,
   // starters in the hundreds, bench 0, team totals in the thousands.
   const _MT_VOR_SCALE = 10;
-  // My Teams-only tier factor: scales each global TIER_MULT's distance from
-  // 1.0 WITHOUT touching the global table (trade calc + pick pricing
-  // calibrate on it). Shipped at 1.5 (stretch), Jack same-day: "needs to be
-  // way closer — values way too far apart" → 0.6 COMPRESSES the band below
-  // even the global table: S 1.45→1.27, A 1.20→1.12, B 1.07→1.04,
-  // D 0.88→0.93, E 0.72→0.83, F 0.50→0.70 — tiers nudge, not cliff.
-  // Order-safe either direction (tiers are contiguous board ranges).
-  // Version-board sources only (ADP has no tiers).
-  const _MT_TIER_AMP = 0.6;
-  const _MT_ADP_SRCS = ['underdog', 'ktc', 'espn', 'cbs', 'sleeper', 'yahoo'];
+  // My Teams tier semantics (Jack 2026-08-31, refined twice same day): with
+  // his many small tiers, a tier is a statement about GAPS — same tier =
+  // "basically interchangeable", a break = "real gap" — NOT a premium/
+  // discount system. So on this page:
+  //   1. Multipliers nearly flat (_MT_TIER_AMP 0.15 scales each global
+  //      TIER_MULT's distance from 1.0: S ≈ +7%, F ≈ −7%). Global table
+  //      untouched — trade calc + pick pricing calibrate on it.
+  //   2. Within-tier FLATTEN (_MT_TIER_FLATTEN 0.5): each player's curve
+  //      value blends halfway toward his tier's midpoint value — same-tier
+  //      players cluster, and the staircase widens gaps at tier breaks
+  //      (tier bottom blends UP, next tier's top blends DOWN). Order-safe:
+  //      affine blend toward a shared midpoint never flips within a tier,
+  //      and boundary gaps only grow.
+  // Version-board sources with tiers only (consensus/ADP have none → plain
+  // curve value). History: amp 1.5 "way too far apart" → 0.6 → this.
+  const _MT_TIER_AMP = 0.15;
+  const _MT_TIER_FLATTEN = 0.5;
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();
     const includePicks = !modeOverride; // contender mode skips picks
     const winNow = !!modeOverride || !(_mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper');
-    const amplifyTiers = winNow && _MT_ADP_SRCS.indexOf(_mtValueSrc) < 0 &&
-      window._TIER_MULT && typeof window._mtTierFor === 'function';
     const ranked = players.map(name => {
       const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
       const rank = _mtGetPlayerRank(name);
       let val = (d && typeof window._getTradeValue === 'function') ? window._getTradeValue(d, _mtValueSrc, mode) : 1;
       if (winNow) {
-        if (amplifyTiers && d) {
-          const m0 = window._TIER_MULT[window._mtTierFor(d, _mtValueSrc, mode)];
-          if (m0 && m0 !== 1) val = Math.round(val / m0 * (1 + (m0 - 1) * _MT_TIER_AMP));
+        // Tier-step reshape (win-now curve = the redraft 1000-formula)
+        const tr = (d && typeof window._mtTierRangeFor === 'function') ? window._mtTierRangeFor(d, _mtValueSrc, mode) : null;
+        if (tr && tr.rank < 400 && window._TIER_MULT) {
+          const curveAt = r => 1000 / (Math.pow(r, 0.8) + 3);
+          const mid = (tr.from + tr.to) / 2;
+          let v = curveAt(tr.rank) + _MT_TIER_FLATTEN * (curveAt(mid) - curveAt(tr.rank));
+          const m0 = window._TIER_MULT[tr.label];
+          if (m0 && m0 !== 1) v = v * (1 + (m0 - 1) * _MT_TIER_AMP);
+          val = Math.round(v);
         }
         val = Math.max(val - _MT_REPLACEMENT_VAL, 0) * _MT_VOR_SCALE;
       }

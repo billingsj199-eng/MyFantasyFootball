@@ -45281,13 +45281,26 @@ Rules:
   }
 
   // Score a roster using the trade value system (same curve as trade calc)
+  // Win-now player values are VOR — value ABOVE REPLACEMENT (Jack
+  // 2026-08-31: "larger spreads between teams"). The raw curve's fat tail
+  // (~10-17 val for every warm bench body) is a shared ballast that makes
+  // different rosters read alike; subtracting the curve's value at the
+  // roster cutoff zeroes the fodder and widens real gaps WITHOUT changing
+  // any ordering. My Teams-scoped: the trade calc keeps raw values.
+  // Replacement point = redraft curve at rank 160 (~12tm × 15rd pool).
+  // Dynasty/keeper VALUE view stays raw — stashes hold real value there and
+  // the pick machinery (full-replacement discount, 0.65 strength scale) is
+  // calibrated in raw units. Contender view = win-now → VOR applies.
+  const _MT_REPLACEMENT_VAL = Math.round(1000 / (Math.pow(160, 0.8) + 3)); // ≈ 16
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();
     const includePicks = !modeOverride; // contender mode skips picks
+    const winNow = !!modeOverride || !(_mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper');
     const ranked = players.map(name => {
       const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
       const rank = _mtGetPlayerRank(name);
-      const val = (d && typeof window._getTradeValue === 'function') ? window._getTradeValue(d, _mtValueSrc, mode) : 1;
+      let val = (d && typeof window._getTradeValue === 'function') ? window._getTradeValue(d, _mtValueSrc, mode) : 1;
+      if (winNow) val = Math.max(val - _MT_REPLACEMENT_VAL, 0);
       return {
         name, rank, val,
         pos: _mtGetPlayerPos(name),
@@ -46726,7 +46739,7 @@ Rules:
       // shared bench baseline), so ± vs league avg is where separation reads.
       const delta = (_mtSortBy === 'total' || _mtSortBy === 'ppg' || _mtSortBy === 'week') ? Math.round((displayScore - avgExact) * 10) / 10 : null;
       const deltaHtml = delta === null ? '' : ` · <span style="color:${delta >= 0 ? '#22c55e' : '#ef4444'};font-weight:700">${delta >= 0 ? '+' : ''}${delta} vs avg</span>`;
-      const chipTip = _mtSortBy === 'total' ? `title="Starter-weighted team strength (bench mostly discounted) · raw roster value ${sc.total} · league avg ${avgScore}"`
+      const chipTip = _mtSortBy === 'total' ? `title="Starter-weighted team strength (bench mostly discounted) · roster value ${sc.total} (win-now = above replacement) · league avg ${avgScore}"`
         : _mtSortBy === 'week' ? `title="Week ${wkNum} best-lineup projected points (weekly props/Vegas/sim-adjusted; byes and ruled-out players benched; K/DST not counted) · league avg ${avgScore}"` : '';
       const scoreColor = isPosSort
         ? _mtPosRankColor(posRankEntry.rank, teams.length)
@@ -47122,7 +47135,7 @@ Rules:
     const scoreColor = stVal >= maxScore ? '#22c55e' : stVal >= avgScore ? '#4ade80' : stVal >= avgScore * 0.7 ? '#f59e0b' : '#ef4444';
 
     let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">`;
-    html += `<div title="Starter-weighted team strength · raw roster value ${sc.total} · league avg ${avgScore}" style="width:56px;height:56px;border-radius:12px;background:${scoreColor}15;border:3px solid ${scoreColor};display:flex;flex-direction:column;align-items:center;justify-content:center">`;
+    html += `<div title="Starter-weighted team strength · roster value ${sc.total} (win-now = above replacement) · league avg ${avgScore}" style="width:56px;height:56px;border-radius:12px;background:${scoreColor}15;border:3px solid ${scoreColor};display:flex;flex-direction:column;align-items:center;justify-content:center">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${scoreColor};line-height:1">${stVal}</div>`;
     if (sc.pickTotal) html += `<div style="font-size:.5rem;color:var(--text2)">+${sc.pickTotal} picks</div>`;
     html += `</div>`;
@@ -52427,6 +52440,20 @@ Rules:
   // Hide lock icon on premium-gated tabs for premium users (icons are hardcoded in HTML)
   function _mtUpdateJacksLock() {
     const prem = typeof hasPremium === 'function' && hasPremium();
+    // Default the value source to Jack's rankings once premium resolves
+    // (Jack 2026-08-31: team values should be based off his board). An
+    // explicit saved choice always wins — this only fills the blank — and
+    // free users stay on consensus (jacks-official is premium-gated; a
+    // top-36 public slice would rank most rosters 999).
+    if (prem && _mtValueSrc === 'consensus') {
+      let stored = null;
+      try { stored = localStorage.getItem('mt_value_src'); } catch (e) {}
+      if (!stored) {
+        _mtValueSrc = 'jacks';
+        document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.toggle('active', b.dataset.mtsrc === 'jacks'));
+        _mtRefreshAfterSrcChange();
+      }
+    }
     ['jacks', 'underdog', 'espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
       const tab = document.querySelector('.mt-src-tab[data-mtsrc="' + srcKey + '"]');
       if (!tab) return;

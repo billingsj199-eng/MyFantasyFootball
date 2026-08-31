@@ -1,6 +1,106 @@
 {
- "updated": "2026-08-30T16:12:34Z",
+ "updated": "2026-08-31T02:08:39Z",
  "items": [
+  {
+   "player": "Jaydon Blue",
+   "team": "DAL",
+   "pos": "RB",
+   "date": "2026-08-30",
+   "headline": "Cowboys waive RB Jaydon Blue at the 53-man cutdown",
+   "take": "Out of the Dallas RB mix for Week 1; only Javonte Williams and Malik Davis remain on the roster",
+   "url": "https://www.espn.com/nfl/story/_/id/49775363/dallas-cowboys-waive-running-back-jaydon-blue",
+   "tag": "transaction"
+  },
+  {
+   "player": "Phil Mafah",
+   "team": "DAL",
+   "pos": "RB",
+   "date": "2026-08-30",
+   "headline": "Cowboys waive RB Phil Mafah despite leading team in preseason finale carries",
+   "take": "Cut anyway, leaving Dallas with just two RBs on the 53-man roster",
+   "url": "https://heavy.com/sports/nfl/dallas-cowboys/cowboys-waive-phil-mafah-before-deadline/",
+   "tag": "transaction"
+  },
+  {
+   "player": "Israel Abanikanda",
+   "team": "DAL",
+   "pos": "RB",
+   "date": "2026-08-30",
+   "headline": "Cowboys also waive RB Israel Abanikanda, down to 2 RBs on roster",
+   "take": "Confirms Dallas is thin at RB entering the season \u2014 Malik Davis is the clear backup",
+   "url": "https://dallassportsjournal.com/dallas-cowboys-waive-israel-abanikanda-running-back-cuts/",
+   "tag": "transaction"
+  },
+  {
+   "player": "Malik Davis",
+   "team": "DAL",
+   "pos": "RB",
+   "date": "2026-08-30",
+   "headline": "Malik Davis is now Dallas' clear backup RB after Blue, Mafah, Abanikanda all waived",
+   "take": "Surprise ascension to the No. 2 RB job behind Javonte Williams \u2014 a real stash in deeper leagues",
+   "url": "https://dallassportsjournal.com/dallas-cowboys-waive-israel-abanikanda-running-back-cuts/",
+   "tag": "riser"
+  },
+  {
+   "player": "Brian Robinson Jr.",
+   "team": "SF",
+   "pos": "RB",
+   "date": "2026-08-30",
+   "headline": "Commanders trade Brian Robinson Jr. to the 49ers for a 2026 sixth-round pick",
+   "take": "Becomes CMC's early-down/goal-line complement in San Francisco",
+   "url": "https://www.nfl.com/news/brian-robinson-trade-commanders-49ers",
+   "tag": "transaction"
+  },
+  {
+   "player": "Isaac Guerendo",
+   "team": "SF",
+   "pos": "RB",
+   "date": "2026-08-30",
+   "headline": "Guerendo devalued as a McCaffrey handcuff after 49ers trade for Brian Robinson Jr.",
+   "take": "No longer the primary CMC injury-replacement play \u2014 largely undraftable in redraft now",
+   "url": "https://www.cbssports.com/fantasy/football/news/fantasy-football-fallout-commanders-trade-brian-robinson-jr-to-the-49ers-heres-what-to-know-before-drafts/",
+   "tag": "faller"
+  },
+  {
+   "player": "Austin Ekeler",
+   "team": "WAS",
+   "pos": "RB",
+   "date": "2026-08-30",
+   "headline": "Ekeler tops Commanders' RB depth chart after Brian Robinson Jr. trade",
+   "take": "Ahead of McNichols, Rodriguez, and rookie Croskey-Merritt, but touches likely to be shared in a committee",
+   "url": "https://www.nfl.com/news/brian-robinson-trade-commanders-49ers",
+   "tag": "role"
+  },
+  {
+   "player": "Will Levis",
+   "team": "TEN",
+   "pos": "QB",
+   "date": "2026-08-30",
+   "headline": "Titans waive former starting QB Will Levis",
+   "take": "No fantasy relevance in Tennessee now; watch for a landing spot as a backup/competition arm elsewhere",
+   "url": "https://www.espn.com/nfl/story/_/id/49774800/titans-waive-former-starting-qb-levis",
+   "tag": "transaction"
+  },
+  {
+   "player": "Justin Joly",
+   "team": "DEN",
+   "pos": "TE",
+   "date": "2026-08-30",
+   "headline": "Broncos waive rookie 5th-round TE Justin Joly despite 88-yard preseason TD",
+   "take": "Surprise cut given the draft capital invested; likely a practice-squad re-sign candidate to watch",
+   "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/broncos-waive-fifth-round-rookie-justin-joly",
+   "tag": "faller"
+  },
+  {
+   "player": "Kaleb Johnson",
+   "team": "GB",
+   "pos": "RB",
+   "date": "2026-08-30",
+   "headline": "Kaleb Johnson traded from Steelers to Packers, not cut as had been rumored",
+   "take": "Buried on Green Bay's depth chart for now, but a speculative deep-dynasty add given the change of scenery",
+   "url": "https://www.si.com/nfl/steelers/onsi/pittsburgh-steelers-trade-kaleb-johnson-packers",
+   "tag": "transaction"
+  },
   {
    "player": "Tutu Atwell",
    "team": "LAR",

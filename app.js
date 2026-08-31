@@ -104,10 +104,12 @@ function validateImportData(obj) {
 // Cached in sessionStorage for instant loads after first run.
 (function() {
   const IMG_BASE = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/';
-  // Native ESPN headshot is 350×254 (landscape). Requesting any other ratio
-  // makes ESPN's combiner server-side-stretch the image, which no amount of
-  // client-side CSS can fix. Always request native; let the browser scale.
-  const IMG_SUFFIX = '.png&w=350&h=254';
+  // Requesting w AND h makes ESPN's combiner server-side-stretch the image to
+  // that exact box, ignoring aspect ratio — and native sizes VARY per asset
+  // (most are 600×436 landscape, but newer photoshoots upload 1024×1024
+  // square, e.g. Gainwell's 2026 Bucs photo). Request width only so the
+  // combiner preserves each asset's own ratio; CSS crops/fits client-side.
+  const IMG_SUFFIX = '.png&w=350';
   const CACHE_KEY = 'espnIdCache12';
   const NOT_FOUND_KEY = 'espnIdNotFound1';
   let cache = {};
@@ -327,17 +329,17 @@ function validateImportData(obj) {
 // === END ESPN HEADSHOT ID FIX ===
 
 // ESPN's combiner endpoint stretches the source PNG to whatever dimensions
-// the URL asks for, ignoring aspect ratio. The native headshot is 350×254
-// (≈1.38:1 landscape); requesting &w=64&h=64 returns a server-side-squished
-// thumbnail that no amount of CSS object-fit:cover can un-distort. Always
-// fetch the native aspect ratio and let the browser handle the resize +
+// the URL asks for, ignoring aspect ratio — and native sizes vary per asset
+// (most headshots are 600×436, but newer photoshoots are 1024×1024 square),
+// so no single w×h is safe to force. Requesting width ONLY makes the
+// combiner preserve each asset's own ratio; the browser handles the resize +
 // circle-crop locally. Cost: ~30 KB vs ~6 KB per headshot, but every image
 // is already cached by the service worker / runtime cache after first load.
 window._fixHeadshotUrl = function(url) {
   if (!url || typeof url !== 'string') return url;
-  // Only rewrite ESPN combiner URLs that force a non-native aspect ratio.
+  // Only rewrite ESPN combiner URLs that force a fixed w×h box.
   if (!url.includes('a.espncdn.com/combiner')) return url;
-  return url.replace(/&w=\d+&h=\d+/, '&w=350&h=254');
+  return url.replace(/&w=\d+&h=\d+/, '&w=350');
 };
 
 // === FUTURE DRAFT PICKS (dynasty/SF rankings) ===
@@ -8460,7 +8462,7 @@ _renderDataFreshness();
     const color = up ? '#22c55e' : '#ef4444';
     const pct = m.from > 0 ? Math.round(Math.abs(m.delta) / m.from * 100) : null;
     const img = m.img
-      ? `<img class="amc-img" src="${esc(m.img)}" alt="" loading="eager" onerror="this.style.display='none'">`
+      ? `<img class="amc-img" src="${esc(window._fixHeadshotUrl(m.img))}" alt="" loading="eager" onerror="this.style.display='none'">`
       : `<span class="amc-img amc-initials">${esc(m.name.split(' ').map(w => w[0] || '').join('').slice(0, 2))}</span>`;
     return `<div class="adp-mover-chip" data-mover="${esc(m.name)}" style="border-left:2px solid ${color}">
       ${img}
@@ -11445,7 +11447,7 @@ function renderCompareGrid() {
         || window.RETIRED_ESPN_IDS[d.n + ' Jr.']
         || window.RETIRED_ESPN_IDS[d.n + ' III']
         || window.RETIRED_ESPN_IDS[(d.n || '').replace(/ Jr\.?$/i, '').replace(/ III$/i, '').trim()];
-      if (rid) d._slImg = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + rid + '.png&w=350&h=254';
+      if (rid) d._slImg = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + rid + '.png&w=350';
     }
 
     // Duplicate cards get a stable instance key from their DUP seq so each
@@ -12163,7 +12165,7 @@ document.addEventListener('click', function(e) {
         id = cache[poolPlayer.name];
       }
     }
-    return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350&h=254`;
+    return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350`;
   }
 
   // Retired players pool for daily Guess Who (from NFL database)
@@ -12732,7 +12734,7 @@ document.addEventListener('click', function(e) {
         }
       }
     }
-    return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350&h=254`;
+    return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350`;
   }
 
   // allNamesU is declared and populated above in _rebuildAllNamesU (kept in sync with EP_PLAYERS_U)
@@ -16178,7 +16180,7 @@ function _enrichFromAllPlayers() {
     if (p.last >= 2024) return;
     const seasons = p.last - p.debut + 1;
     const imgUrl = (window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.name])
-      ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + window.RETIRED_ESPN_IDS[p.name] + '.png&w=350&h=254'
+      ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + window.RETIRED_ESPN_IDS[p.name] + '.png&w=350'
       : null;
     // Get last team from career data or team history
     const lastTeam = (p.career && p.career.length && p.career[p.career.length-1].tm)
@@ -40825,14 +40827,14 @@ window.fmtHeight = fmtHeight;
     // Only use sources we trust completely:
 
     // ESPN combiner stretches non-native aspect ratios server-side, so always
-    // route through _fixHeadshotUrl (forces &w=350&h=254 native).
+    // route through _fixHeadshotUrl (forces width-only &w=350, ratio-safe).
     const _fix = (typeof window._fixHeadshotUrl === 'function') ? window._fixHeadshotUrl : (u => u);
 
     // 1. FALLBACK_IDS (manually verified active/recent players)
     if (window.FALLBACK_IDS) {
       for (const v of nameVariants) {
         if (window.FALLBACK_IDS[v]) {
-          return _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.FALLBACK_IDS[v]}.png&w=350&h=254`);
+          return _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.FALLBACK_IDS[v]}.png&w=350`);
         }
       }
     }
@@ -40841,7 +40843,7 @@ window.fmtHeight = fmtHeight;
     if (window.RETIRED_ESPN_IDS) {
       for (const v of nameVariants) {
         if (window.RETIRED_ESPN_IDS[v]) {
-          return _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.RETIRED_ESPN_IDS[v]}.png&w=350&h=254`);
+          return _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.RETIRED_ESPN_IDS[v]}.png&w=350`);
         }
       }
     }

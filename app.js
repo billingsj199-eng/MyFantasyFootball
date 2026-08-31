@@ -45472,6 +45472,17 @@ Rules:
     if (!d) return 0;
     const isKDst = d.s === 'K' || d.s === 'DST';
     const pprVal = _mtFormat.bestBall ? 1 : (_mtFormat.ppr != null ? _mtFormat.ppr : 0.5);
+    // SIM LAB FIRST (Jack 2026-08-31, matching the rankings-page convention):
+    // the daily export's per-player season sim means (SIM_PROJ_2026.seasonPpg,
+    // [half, ppr, std] — K/DST included) beat Clay wherever a row exists. No
+    // sims run in-browser; this just reads the exported numbers.
+    if (typeof _simSeasonPpgRow === 'function') {
+      const sp = _simSeasonPpgRow(d);
+      if (sp) {
+        const v = sp[pprVal === 1 ? 1 : pprVal === 0 ? 2 : 0];
+        if (typeof v === 'number' && isFinite(v) && v > 0) return v;
+      }
+    }
     // K/DST: skip Clay (no kicker/defense projections) and use the precomputed
     // s25.ppg / career.ppg fields. The s25.fpts field on DSTs is a different
     // stat (≈ point differential), not fantasy points — DON'T divide fpts/gp.
@@ -46550,6 +46561,135 @@ Rules:
     return html;
   }
 
+  // ── SEASON OUTLOOK (projected records + playoff odds) ────────────────
+  // Full-season head-to-head schedule × each team's best-lineup season PPG
+  // (sim-export means via _mtGetPlayerPpg — NO player sims run in-browser;
+  // the heavy Monte Carlo lives in Sim Lab's daily export). Per-game win
+  // probs from the same normal model as the matchup view; playoff odds from
+  // a light Bernoulli sweep over those probs (standings arithmetic only).
+  let _mtSeasonOpen = false;
+  const _mtSeasonCache = {};
+  const _MT_REG_SEASON_WEEKS = 14; // standard fantasy regular season
+  const _MT_PLAYOFF_SPOTS = 6;
+
+  async function _mtFetchSeasonSchedule() {
+    const src = _mtActiveSource;
+    const teams = window._mtTeams || [];
+    const byId = {};
+    teams.forEach(t => { byId[String(t.id)] = t; });
+    if (src === 'espn') {
+      const extLg = _mtEspnLeagues && _mtEspnLeagues[String(_mtActiveEspnId)];
+      const sched = extLg && extLg.schedule;
+      if (!sched || !sched.length) throw new Error('no schedule synced — re-export the league with the MFF ESPN extension (v0.20.19+)');
+      const byWeek = {};
+      sched.forEach(g => {
+        if (g.week > _MT_REG_SEASON_WEEKS) return;
+        const a = byId[String(g.home)], b = byId[String(g.away)];
+        if (a && b) (byWeek[g.week] = byWeek[g.week] || []).push([a, b]);
+      });
+      return byWeek;
+    }
+    if (src === 'sleeper') {
+      const leagueId = _mtActiveSleeperId;
+      if (!leagueId) throw new Error('no Sleeper league ID loaded');
+      const weeks = [];
+      for (let w = 1; w <= _MT_REG_SEASON_WEEKS; w++) weeks.push(w);
+      const results = await Promise.all(weeks.map(w =>
+        fetch(`https://api.sleeper.app/v1/league/${leagueId}/matchups/${w}`)
+          .then(r => r.ok ? r.json() : []).catch(() => [])));
+      const byWeek = {};
+      results.forEach((rows, i) => {
+        const groups = {};
+        (rows || []).forEach(r => {
+          if (r.matchup_id == null) return;
+          (groups[r.matchup_id] = groups[r.matchup_id] || []).push(byId[String(r.roster_id)]);
+        });
+        const pairs = Object.values(groups).filter(g => g.length === 2 && g[0] && g[1]);
+        if (pairs.length) byWeek[i + 1] = pairs;
+      });
+      return byWeek;
+    }
+    throw new Error('season outlook isn\'t available for Yahoo leagues yet');
+  }
+
+  window._mtToggleSeason = async function () {
+    const box = document.getElementById('mtSeasonSim');
+    if (!box) return;
+    if (_mtSeasonOpen) {
+      _mtSeasonOpen = false;
+      box.style.display = 'none';
+      if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+      return;
+    }
+    _mtSeasonOpen = true;
+    box.style.display = '';
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+    box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Projecting the season…</div>';
+    try {
+      const cacheKey = _mtActiveSource + '_' + (_mtActiveSleeperId || _mtActiveEspnId);
+      let byWeek = _mtSeasonCache[cacheKey];
+      if (!byWeek) byWeek = _mtSeasonCache[cacheKey] = await _mtFetchSeasonSchedule();
+      if (!_mtSeasonOpen) return;
+      box.innerHTML = _mtBuildSeasonHtml(byWeek);
+    } catch (err) {
+      console.warn('[MyTeams] Season outlook error:', err);
+      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t project the season: ' + _esc(err.message) + '</div>';
+    }
+  };
+
+  function _mtBuildSeasonHtml(byWeek) {
+    const teams = window._mtTeams || [];
+    const winProb = diff => 1 / (1 + Math.exp(-1.702 * (diff / 39.6)));
+    const games = []; // {a, b, pA}
+    const weekList = Object.keys(byWeek).map(Number).sort((x, y) => x - y);
+    weekList.forEach(w => byWeek[w].forEach(pr => {
+      games.push({ a: pr[0], b: pr[1], pA: winProb((pr[0].lineupPpg || 0) - (pr[1].lineupPpg || 0)) });
+    }));
+    if (!games.length) return '<div style="color:var(--text2);font-size:.75rem;padding:10px">No schedule found.</div>';
+
+    // Expected wins (closed form) + playoff odds (Bernoulli sweep, 1000
+    // standings draws — arithmetic on exported projections, not player sims)
+    const exp = new Map(), gp = new Map(), poCount = new Map();
+    teams.forEach(t => { exp.set(t, 0); gp.set(t, 0); poCount.set(t, 0); });
+    games.forEach(g => {
+      exp.set(g.a, exp.get(g.a) + g.pA); exp.set(g.b, exp.get(g.b) + (1 - g.pA));
+      gp.set(g.a, gp.get(g.a) + 1); gp.set(g.b, gp.get(g.b) + 1);
+    });
+    const ITERS = 1000;
+    const spots = Math.min(_MT_PLAYOFF_SPOTS, Math.max(2, teams.length - 1));
+    for (let it = 0; it < ITERS; it++) {
+      const wins = new Map();
+      teams.forEach(t => wins.set(t, 0));
+      games.forEach(g => {
+        if (Math.random() < g.pA) wins.set(g.a, wins.get(g.a) + 1);
+        else wins.set(g.b, wins.get(g.b) + 1);
+      });
+      teams.slice().sort((x, y) =>
+        (wins.get(y) - wins.get(x)) || ((y.lineupPpg || 0) - (x.lineupPpg || 0)) || (Math.random() - 0.5))
+        .slice(0, spots).forEach(t => poCount.set(t, poCount.get(t) + 1));
+    }
+
+    let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
+      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#fb923c">SEASON OUTLOOK</span>` +
+      `<span style="font-size:.6rem;color:var(--text2)">Weeks ${weekList[0]}–${weekList[weekList.length - 1]} schedule × Sim Lab export projections · top ${spots} make the playoffs · no player sims run in-browser</span></div>`;
+    html += `<div style="border:1px solid var(--border);border-radius:8px;background:var(--bg);overflow:hidden">`;
+    teams.slice().sort((x, y) => exp.get(y) - exp.get(x)).forEach((t, i) => {
+      const g = gp.get(t) || 0, w = exp.get(t) || 0;
+      const rec = `${Math.round(w * 10) / 10}–${Math.round((g - w) * 10) / 10}`;
+      const po = Math.round(poCount.get(t) / ITERS * 100);
+      const mine = t.isMyTeam;
+      html += `<div style="display:flex;align-items:center;gap:12px;padding:7px 12px;${i ? 'border-top:1px solid var(--border);' : ''}${mine ? 'background:rgba(245,158,11,.07);' : ''}">` +
+        `<div style="width:22px;text-align:right;font-family:'Bebas Neue',sans-serif;color:var(--text2)">${i + 1}</div>` +
+        `<div style="flex:1;min-width:0;font-weight:${mine ? 700 : 600};font-size:.8rem;color:${mine ? 'var(--accent)' : 'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${mine ? '⭐ ' : ''}${_esc(t.owner)}</div>` +
+        `<div style="min-width:64px;text-align:right;font-size:.75rem"><span style="font-size:.5rem;color:var(--text2)">PROJ </span><span style="font-weight:700;color:var(--text)">${rec}</span></div>` +
+        `<div style="min-width:56px;text-align:right;font-size:.75rem"><span style="font-size:.5rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:#22c55e">${t.lineupPpg || 0}</span></div>` +
+        `<div style="width:120px;flex-shrink:0;display:flex;align-items:center;gap:6px"><div style="flex:1;height:6px;border-radius:3px;background:var(--surface2,#222);overflow:hidden"><div style="height:100%;width:${po}%;background:${po >= 50 ? '#22c55e' : po >= 25 ? '#f59e0b' : '#ef4444'}"></div></div><span style="font-size:.65rem;font-weight:700;color:${po >= 50 ? '#22c55e' : po >= 25 ? '#f59e0b' : '#ef4444'};min-width:32px;text-align:right">${po}%</span></div>` +
+        `</div>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
   // ── TRADE FINDER (league-aware suggestions) ──────────────────────────
   // Crosses the user's positional SURPLUS against each partner's NEED (and
   // vice versa) using the starter-weighted posRanks, generates 1-for-1 and
@@ -46923,6 +47063,9 @@ Rules:
     _mtMatchupsOpen = false;
     const _mu = document.getElementById('mtMatchups');
     if (_mu) { _mu.style.display = 'none'; _mu.innerHTML = ''; }
+    _mtSeasonOpen = false;
+    const _ss = document.getElementById('mtSeasonSim');
+    if (_ss) { _ss.style.display = 'none'; _ss.innerHTML = ''; }
     _mtRenderTeamList(teams);
 
     // Update format display
@@ -47088,6 +47231,8 @@ Rules:
       if (_muWk && (_mtActiveSource === 'sleeper' || _mtActiveSource === 'espn')) {
         const muActive = _mtMatchupsOpen;
         html += `<button onclick="window._mtToggleMatchups()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${muActive ? '#f472b6' : 'var(--border)'};background:${muActive ? '#f472b6' : 'var(--surface)'};color:${muActive ? '#000' : 'var(--text2)'}">MATCHUPS</button>`;
+        const ssActive = _mtSeasonOpen;
+        html += `<button onclick="window._mtToggleSeason()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${ssActive ? '#fb923c' : 'var(--border)'};background:${ssActive ? '#fb923c' : 'var(--surface)'};color:${ssActive ? '#000' : 'var(--text2)'}">SEASON</button>`;
       }
     }
     html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)"></span>`;
@@ -47330,20 +47475,12 @@ Rules:
         const entry = sched && sched[wkNum || 1];
         if (entry && entry.bye) out = 'BYE';
       }
-      if (d.s === 'K' || d.s === 'DST') return { name, pos: d.s, ppg: 0, wkRank, out, d };
       _dbgFound++;
-      let ppg = 0;
-      // Clay projections ONLY — matches _mtGetPlayerPpg. Players Clay doesn't
-      // project (unsigned FAs, deep rookies) get no PPG and drop from the pool
-      // rather than ranking on a stale last-played-season number.
-      if (typeof MIKE_CLAY_PROJ !== 'undefined') {
-        const cp = clayLookup(name);
-        if (cp) {
-          const recs = cp.rec || 0;
-          const clayAdj = pprVal === 1 ? 0 : pprVal === 0 ? -1.0 : -0.5; // Clay pts = full PPR base
-          ppg = Math.round(((cp.pts + recs * clayAdj) / cp.gm) * 10) / 10;
-        }
-      }
+      // Sim-first season PPG via _mtGetPlayerPpg (SIM_PROJ_2026.seasonPpg
+      // → Clay → K/DST s25/career fallbacks). K/DST now carry real values
+      // into K/DEF slots instead of a hardcoded 0 — lineup totals include
+      // the whole starting lineup.
+      let ppg = _mtGetPlayerPpg(name);
       if (isWkBasis && ppg > 0 && typeof window._weeklyAdjustPpg === 'function') {
         const adj = window._weeklyAdjustPpg(d, ppg);
         // Adjusted 0 with a real season projection = the injury gate fired

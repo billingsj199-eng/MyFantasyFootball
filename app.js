@@ -45301,13 +45301,15 @@ Rules:
   // cap") — pure presentation, order and ratios untouched. Top guy ~2-3k,
   // starters in the hundreds, bench 0, team totals in the thousands.
   const _MT_VOR_SCALE = 10;
-  // My Teams-only tier amplifier (Jack 2026-08-31): stretch each global
-  // TIER_MULT's distance from 1.0 by this factor so tier cliffs read loud on
-  // this page WITHOUT touching the global table (trade calc + pick pricing
-  // calibrate on it). 1.5 → S 1.45→1.675, A 1.20→1.30, D 0.88→0.82, F
-  // 0.50→0.25. Order-safe: tiers are contiguous board ranges, so stretching
-  // never flips two players. Version-board sources only (ADP has no tiers).
-  const _MT_TIER_AMP = 1.5;
+  // My Teams-only tier factor: scales each global TIER_MULT's distance from
+  // 1.0 WITHOUT touching the global table (trade calc + pick pricing
+  // calibrate on it). Shipped at 1.5 (stretch), Jack same-day: "needs to be
+  // way closer — values way too far apart" → 0.6 COMPRESSES the band below
+  // even the global table: S 1.45→1.27, A 1.20→1.12, B 1.07→1.04,
+  // D 0.88→0.93, E 0.72→0.83, F 0.50→0.70 — tiers nudge, not cliff.
+  // Order-safe either direction (tiers are contiguous board ranges).
+  // Version-board sources only (ADP has no tiers).
+  const _MT_TIER_AMP = 0.6;
   const _MT_ADP_SRCS = ['underdog', 'ktc', 'espn', 'cbs', 'sleeper', 'yahoo'];
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();

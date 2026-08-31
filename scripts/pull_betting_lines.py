@@ -380,7 +380,7 @@ def pull_season_props():
 
 
 BOOK_ORDER = ('DK', 'FD', 'MGM', 'UD', 'PP')
-STAT_ORDER = ['py', 'ptd', 'int', 'ry', 'rtd', 'ra', 'rec', 'rcy', 'rctd', 'rrtd', 'atd']
+STAT_ORDER = ['py', 'ptd', 'int', 'ry', 'rtd', 'ra', 'rec', 'rcy', 'rctd', 'rrtd', 'fgm', 'kpts', 'atd']
 
 
 def parse_props_entry(raw):
@@ -562,12 +562,14 @@ UD_WEEKLY_STAT_KEYS = {
     'passing_yds': 'py', 'passing_tds': 'ptd', 'passing_ints': 'int',
     'rushing_yds': 'ry', 'receiving_yds': 'rcy', 'rush_rec_tds': 'rrtd',
     'receptions': 'rec', 'rushing_rec_yds': None,  # combined yds: no clean key
+    'kicking_points': 'kpts', 'field_goals_made': 'fgm',  # kicker boards, if/when UD posts them
 }
 
 PP_STAT_KEYS = {
     'Pass Yards': 'py', 'Pass TDs': 'ptd', 'INT': 'int',
     'Rush Yards': 'ry', 'Receiving Yards': 'rcy', 'Rush+Rec TDs': 'rrtd',
     'Receptions': 'rec',
+    'Kicking Points': 'kpts', 'FG Made': 'fgm', 'Field Goals Made': 'fgm',
 }
 
 # W1 games start Thu 2026-09-10; weeks roll over on Tuesdays.
@@ -718,6 +720,117 @@ def apply_dk_season_receptions(src):
     return merge_props_book(src, 'DK', full)
 
 
+def _dk_event_weeks(body, week_by_matchup):
+    """{eventId: wk} for one DK subcategory payload — matchup-name mapping
+    cross-checked against the kickoff date via _validated_week (preseason
+    games reuse regular-season pairings; the date is the tiebreaker)."""
+    events = {}
+    for ev in body.get('events', []):
+        mwk = None
+        # Event names look like "NE Patriots @ SEA Seahawks" — the
+        # abbreviation is the first token on each side of the '@'.
+        nm = ev.get('name') or ''
+        if '@' in nm:
+            away, _, home = nm.partition('@')
+            a = (away.strip().split() or [''])[0]
+            h = (home.strip().split() or [''])[0]
+            mwk = week_by_matchup.get((a, h))
+        dt = None
+        start = ev.get('startEventDate') or ev.get('startDate')
+        if start:
+            try:
+                dt = datetime.datetime.fromisoformat(
+                    str(start).replace('Z', '+00:00')).replace(tzinfo=None)
+            except ValueError:
+                pass
+        wk = _validated_week(mwk, dt)
+        if wk is not None:
+            events[ev.get('id')] = wk
+    return events
+
+
+# DK weekly O/U player-prop subcategories -> our stat keys, resolved BY NAME
+# (subcategory ids drift). Only the clean O/U boards — the ladder markets
+# ('160+' at -1440) in the sibling subcategories are alt lines, not medians.
+# Kicker boards aren't posted preseason; the names are wired so they flow in
+# the day DK posts them (they feed the sim-lab K prop anchor).
+DK_WEEKLY_OU_SUBS = {
+    'pass yards o/u': 'py', 'passing yards o/u': 'py',
+    'pass tds o/u': 'ptd', 'passing tds o/u': 'ptd',
+    'rush yards o/u': 'ry', 'rushing yards o/u': 'ry',
+    'rec yards o/u': 'rcy', 'receiving yards o/u': 'rcy',
+    'receptions o/u': 'rec',
+    'kicking points o/u': 'kpts', 'kicking pts o/u': 'kpts',
+    'field goals o/u': 'fgm', 'field goals made o/u': 'fgm', 'fg made o/u': 'fgm',
+}
+
+# strip the stat suffix off a DK O/U market name to get the player name
+_DK_MKT_SUFFIX = re.compile(
+    r'\s+(?:passing|rushing|receiving)\s+(?:yards|touchdowns)(?:\s+o/u)?$'
+    r'|\s+receptions(?:\s+o/u)?$|\s+kicking\s+(?:points|pts)(?:\s+o/u)?$'
+    r'|\s+field\s+goals(?:\s+made)?(?:\s+o/u)?$', re.I)
+
+
+def pull_dk_weekly_stats(week_by_matchup):
+    """Return {wk: {player: {stat: line}}} from DK's weekly O/U player-prop
+    boards (pass/rush/rec yards, pass TDs, receptions; kicker markets join
+    automatically once posted). One market per player per stat; the line is
+    the Over selection's `points`. Same Selenium in-page fetch pattern as
+    the Anytime TD pull."""
+    driver = _make_driver()
+    try:
+        print(f'  loading {DK_LEAGUE_PAGE} for weekly O/U props (Chrome window — ignore it)')
+        driver.get(DK_LEAGUE_PAGE)
+        time.sleep(8)
+        league = _page_fetch(driver, f'{DK_API}/leagues/88808')
+        subs = [(s, DK_WEEKLY_OU_SUBS[(s.get('name') or '').strip().lower()])
+                for s in league.get('subcategories', [])
+                if (s.get('name') or '').strip().lower() in DK_WEEKLY_OU_SUBS]
+        if not subs:
+            print('  DK weekly O/U: no prop subcategories posted (normal in offseason)')
+            return {}
+        out = {}
+        total = 0
+        for s, stat in subs:
+            try:
+                body = _page_fetch(driver,
+                                   f"{DK_API}/leagues/88808/categories/{s.get('categoryId')}/subcategories/{s['id']}")
+            except Exception as e:
+                print(f"  DK weekly {s.get('name')}: FAILED ({e})")
+                continue
+            events = _dk_event_weeks(body, week_by_matchup)
+            markets = {m['id']: m for m in body.get('markets', [])}
+            added = 0
+            for sel in body.get('selections', []):
+                if (sel.get('outcomeType') or '').lower() != 'over':
+                    continue
+                line = sel.get('points')
+                if not isinstance(line, (int, float)) or line <= 0:
+                    continue
+                mkt = markets.get(sel.get('marketId'))
+                if not mkt:
+                    continue
+                wk = events.get(mkt.get('eventId'))
+                if wk is None:
+                    continue
+                player = _DK_MKT_SUFFIX.sub('', (mkt.get('name') or '').strip()).strip()
+                if not player:
+                    continue
+                wkd = out.setdefault(wk, {})
+                if stat in wkd.get(player, {}):
+                    continue
+                wkd.setdefault(player, {})[stat] = float(line)
+                added += 1
+            total += added
+            print(f"  DK weekly {s.get('name')}: {added} lines")
+            time.sleep(1.0)
+        print(f'  DK weekly O/U: {total} lines, weeks {sorted(out)}, '
+              f'{sum(len(v) for v in out.values())} player-weeks')
+        return out
+    finally:
+        driver.quit()
+
+
 def pull_dk_weekly_atd(week_by_matchup):
     """Return {wk: {player: {'atd': american_odds}}} from DK's Anytime TD
     Scorer market (per-event, posted a few days before games in season —
@@ -751,28 +864,7 @@ def pull_dk_weekly_atd(week_by_matchup):
             except Exception as e:
                 print(f"  DK Anytime TD subcategory {s.get('name')}: FAILED ({e})")
                 continue
-            events = {}
-            for ev in body.get('events', []):
-                mwk = None
-                # Event names look like "NE Patriots @ SEA Seahawks" — the
-                # abbreviation is the first token on each side of the '@'.
-                nm = ev.get('name') or ''
-                if '@' in nm:
-                    away, _, home = nm.partition('@')
-                    a = (away.strip().split() or [''])[0]
-                    h = (home.strip().split() or [''])[0]
-                    mwk = week_by_matchup.get((a, h))
-                dt = None
-                start = ev.get('startEventDate') or ev.get('startDate')
-                if start:
-                    try:
-                        dt = datetime.datetime.fromisoformat(
-                            str(start).replace('Z', '+00:00')).replace(tzinfo=None)
-                    except ValueError:
-                        pass
-                wk = _validated_week(mwk, dt)
-                if wk is not None:
-                    events[ev.get('id')] = wk
+            events = _dk_event_weeks(body, week_by_matchup)
             markets = {m['id']: m for m in body.get('markets', [])}
             for sel in body.get('selections', []):
                 mkt = markets.get(sel.get('marketId'))
@@ -917,10 +1009,21 @@ def update_weekly_props(src):
         pulls.append(('PP', pull_pp_weekly()))
     except Exception as e:
         print(f'  !! PrizePicks weekly failed ({e}) — PP untouched')
+    dk = {}
     try:
-        pulls.append(('DK', pull_dk_weekly_atd(week_by_matchup)))
+        dk = pull_dk_weekly_atd(week_by_matchup)
     except Exception as e:
-        print(f'  !! DK Anytime TD failed ({e}) — DK untouched')
+        print(f'  !! DK Anytime TD failed ({e}) — DK atd untouched')
+    try:
+        # merge the O/U stat lines into the same DK dict — update_weekly_props
+        # replaces each book's entry wholesale, so DK must arrive as ONE pull
+        for wk, players_wk in pull_dk_weekly_stats(week_by_matchup).items():
+            for name, stats in players_wk.items():
+                dk.setdefault(wk, {}).setdefault(name, {}).update(stats)
+    except Exception as e:
+        print(f'  !! DK weekly O/U failed ({e}) — DK stat lines untouched')
+    if dk:
+        pulls.append(('DK', dk))
 
     weeks = parse_weekly_block(src)
     changed = 0

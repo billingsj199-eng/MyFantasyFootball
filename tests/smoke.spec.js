@@ -197,15 +197,21 @@ test.describe('rankings page', () => {
 
 test.describe('mobile', () => {
   test.use({ viewport: { width: 375, height: 812 } });
-  test('bottom nav shows and switches pages', async ({ page }) => {
+  test('sidebar tab bar is the single bottom nav and switches pages', async ({ page }) => {
     await bootRankings(page);
-    const nav = page.locator('#bottomNav');
-    await expect(nav).toBeVisible();
-    await nav.locator('[data-bnav="myteams"]').click();
+    // The sidebar converts to the full 8-tab bottom bar on <=600px; the old
+    // 4-item #bottomNav is retired (it doubled the nav and its body padding
+    // left a dead band above the tabs — 2026-08-31) and must stay hidden.
+    await expect(page.locator('#bottomNav')).toBeHidden();
+    const bar = page.locator('nav.sidebar');
+    await expect(bar).toBeVisible();
+    const box = await bar.boundingBox();
+    const vh = page.viewportSize().height;
+    expect(box.y + box.height).toBeGreaterThan(vh - 2); // pinned to the bottom
+    await bar.locator('.nav-btn[data-page="myteams"]').click();
     await page.waitForFunction(() =>
       document.querySelector('.page.active').id === 'pageMyTeams');
-    await expect(nav.locator('[data-bnav="myteams"]')).toHaveClass(/active/);
-    await nav.locator('[data-bnav="rankings"]').click();
+    await bar.locator('.nav-btn[data-page="rankings"]').click();
     await page.waitForFunction(() =>
       document.querySelector('.page.active').id === 'pageRankings');
   });

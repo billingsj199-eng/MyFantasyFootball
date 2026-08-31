@@ -46425,6 +46425,131 @@ Rules:
     return { auction: false, slotCount, roundCount, picks };
   }
 
+  // Best weekly-lineup projection per team, cached by week (shared by the
+  // WK sort lens and the matchup view).
+  function _mtEnsureWeekPpg(teams, wkNum) {
+    teams.forEach(t => {
+      if (t._weekPpgWk !== wkNum) {
+        const lu = _mtBestLineup(t.players, 'weekppg');
+        t.weekPpg = lu ? lu.totalPpg : 0;
+        t._weekPpgWk = wkNum;
+      }
+    });
+  }
+
+  // ── THIS-WEEK MATCHUPS (head-to-head + win probability) ──────────────
+  // Pairs come from the league platform: Sleeper's public matchups API, or
+  // the ESPN schedule the extension ships in its payload (private leagues
+  // included) with an anonymous mMatchup fetch as the public fallback.
+  // Yahoo's scoreboard needs query strings the proxy allowlist forbids —
+  // not supported yet. Win prob = normal CDF on the weekly-projection
+  // difference with a ~28-pt per-team sigma (39.6 on the diff).
+  let _mtMatchupsOpen = false;
+  const _mtMatchupCache = {};
+
+  async function _mtFetchMatchupPairs(wkNum) {
+    const src = _mtActiveSource;
+    const teams = window._mtTeams || [];
+    const byId = {};
+    teams.forEach(t => { byId[String(t.id)] = t; });
+    if (src === 'sleeper') {
+      const leagueId = _mtActiveSleeperId;
+      if (!leagueId) throw new Error('no Sleeper league ID loaded');
+      const resp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/matchups/${wkNum}`);
+      if (!resp.ok) throw new Error('Sleeper returned ' + resp.status);
+      const rows = (await resp.json()) || [];
+      const groups = {};
+      rows.forEach(r => {
+        if (r.matchup_id == null) return;
+        (groups[r.matchup_id] = groups[r.matchup_id] || []).push(byId[String(r.roster_id)]);
+      });
+      const pairs = Object.values(groups).filter(g => g.length === 2 && g[0] && g[1]);
+      if (!pairs.length) throw new Error('no matchups posted for week ' + wkNum + ' yet');
+      return pairs;
+    }
+    if (src === 'espn') {
+      const leagueId = _mtActiveEspnId;
+      if (!leagueId) throw new Error('no ESPN league loaded');
+      const extLg = _mtEspnLeagues && _mtEspnLeagues[String(leagueId)];
+      let sched = extLg && extLg.schedule;
+      if (!sched) {
+        const resp = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + _mtEspnSeason() +
+          '/segments/0/leagues/' + leagueId + '?view=mMatchup');
+        if (resp.status === 401) throw new Error('this league is private — re-sync it with the MFF ESPN extension (v0.20.19+) and the schedule comes along');
+        if (!resp.ok) throw new Error('ESPN returned ' + resp.status);
+        const raw0 = await resp.json();
+        const raw = Array.isArray(raw0) ? raw0[0] : raw0;
+        sched = ((raw && raw.schedule) || []).map(g => ({
+          week: g.matchupPeriodId, home: g.home ? g.home.teamId : null, away: g.away ? g.away.teamId : null
+        })).filter(g => g.week && g.home != null && g.away != null);
+      }
+      const pairs = sched.filter(g => g.week === wkNum)
+        .map(g => [byId[String(g.home)], byId[String(g.away)]])
+        .filter(p => p[0] && p[1]);
+      if (!pairs.length) throw new Error('no matchups found for week ' + wkNum);
+      return pairs;
+    }
+    throw new Error('matchups aren\'t available for Yahoo leagues yet');
+  }
+
+  window._mtToggleMatchups = async function () {
+    const box = document.getElementById('mtMatchups');
+    if (!box) return;
+    if (_mtMatchupsOpen) {
+      _mtMatchupsOpen = false;
+      box.style.display = 'none';
+      if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+      return;
+    }
+    _mtMatchupsOpen = true;
+    box.style.display = '';
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+    const _off = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
+    const wkNum = (!_off || window._weeklyPublishedWeek) ? (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1) : 0;
+    if (!wkNum) { box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Matchups unlock in-season.</div>'; return; }
+    box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Loading week ' + wkNum + ' matchups…</div>';
+    try {
+      const cacheKey = _mtActiveSource + '_' + (_mtActiveSleeperId || _mtActiveEspnId || _mtActiveYahooId) + '_' + wkNum;
+      let pairs = _mtMatchupCache[cacheKey];
+      if (!pairs) pairs = _mtMatchupCache[cacheKey] = await _mtFetchMatchupPairs(wkNum);
+      if (!_mtMatchupsOpen) return;
+      _mtEnsureWeekPpg(window._mtTeams, wkNum);
+      box.innerHTML = _mtBuildMatchupsHtml(pairs, wkNum);
+    } catch (err) {
+      console.warn('[MyTeams] Matchups error:', err);
+      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t load matchups: ' + _esc(err.message) + '</div>';
+    }
+  };
+
+  function _mtBuildMatchupsHtml(pairs, wkNum) {
+    // Normal CDF via the 1.702-logistic approximation; sd(teamA − teamB)
+    // ≈ √2 × 28-pt weekly team sigma.
+    const winProb = diff => 1 / (1 + Math.exp(-1.702 * (diff / 39.6)));
+    let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
+      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#f472b6">WEEK ${wkNum} MATCHUPS</span>` +
+      `<span style="font-size:.6rem;color:var(--text2)">Best-lineup weekly projections (byes & ruled-out benched) · win odds from the projection gap</span></div>`;
+    // My matchup first
+    const sorted = pairs.slice().sort((a, b) => (b[0].isMyTeam || b[1].isMyTeam ? 1 : 0) - (a[0].isMyTeam || a[1].isMyTeam ? 1 : 0));
+    html += `<div style="display:flex;flex-direction:column;gap:6px">`;
+    sorted.forEach(pr => {
+      let [a, b] = pr;
+      if (b.isMyTeam) { const tmp = a; a = b; b = tmp; }
+      const pa = a.weekPpg || 0, pb = b.weekPpg || 0;
+      const wp = Math.round(winProb(pa - pb) * 100);
+      const mine = a.isMyTeam || b.isMyTeam;
+      const side = (t, ppg, pct, alignRight) => `<div style="flex:1;min-width:0;display:flex;flex-direction:column;${alignRight ? 'align-items:flex-end;text-align:right' : ''}">` +
+        `<span style="font-weight:${t.isMyTeam ? 700 : 600};font-size:.8rem;color:${t.isMyTeam ? 'var(--accent)' : 'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${t.isMyTeam ? '⭐ ' : ''}${_esc(t.owner)}</span>` +
+        `<span style="font-size:.65rem;color:var(--text2)">${ppg} proj · <span style="font-weight:700;color:${pct >= 50 ? '#22c55e' : '#ef4444'}">${pct}%</span></span></div>`;
+      html += `<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border:${mine ? '2px solid var(--accent)' : '1px solid var(--border)'};border-radius:8px;background:${mine ? 'rgba(245,158,11,.06)' : 'var(--surface)'}">` +
+        side(a, pa, wp, false) +
+        `<div style="width:110px;flex-shrink:0"><div style="height:6px;border-radius:3px;background:#ef444455;overflow:hidden"><div style="height:100%;width:${wp}%;background:#22c55e"></div></div></div>` +
+        side(b, pb, 100 - wp, true) +
+        `</div>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
   // ── TRADE FINDER (league-aware suggestions) ──────────────────────────
   // Crosses the user's positional SURPLUS against each partner's NEED (and
   // vice versa) using the starter-weighted posRanks, generates 1-for-1 and
@@ -46795,6 +46920,9 @@ Rules:
     _mtTradesOpen = false;
     const _tf = document.getElementById('mtTradeFinder');
     if (_tf) { _tf.style.display = 'none'; _tf.innerHTML = ''; }
+    _mtMatchupsOpen = false;
+    const _mu = document.getElementById('mtMatchups');
+    if (_mu) { _mu.style.display = 'none'; _mu.innerHTML = ''; }
     _mtRenderTeamList(teams);
 
     // Update format display
@@ -46952,6 +47080,15 @@ Rules:
       html += `<button onclick="window._mtToggleWaivers()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${wwActive ? '#4ade80' : 'var(--border)'};background:${wwActive ? '#4ade80' : 'var(--surface)'};color:${wwActive ? '#000' : 'var(--text2)'}">WAIVERS</button>`;
       const tfActive = _mtTradesOpen;
       html += `<button onclick="window._mtToggleTradeFinder()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${tfActive ? '#a855f7' : 'var(--border)'};background:${tfActive ? '#a855f7' : 'var(--surface)'};color:${tfActive ? '#fff' : 'var(--text2)'}">TRADE FINDER</button>`;
+      // Matchups — Sleeper API / ESPN schedule payload (Yahoo lacks a
+      // proxy-reachable scoreboard); in-season or published week only.
+      // (Local week calc — the sort-chip wkNum const is declared later.)
+      const _muOff = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
+      const _muWk = (!_muOff || window._weeklyPublishedWeek) ? (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1) : 0;
+      if (_muWk && (_mtActiveSource === 'sleeper' || _mtActiveSource === 'espn')) {
+        const muActive = _mtMatchupsOpen;
+        html += `<button onclick="window._mtToggleMatchups()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${muActive ? '#f472b6' : 'var(--border)'};background:${muActive ? '#f472b6' : 'var(--surface)'};color:${muActive ? '#000' : 'var(--text2)'}">MATCHUPS</button>`;
+      }
     }
     html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)"></span>`;
     html += `</div>`;
@@ -46977,15 +47114,7 @@ Rules:
     const wkNum = (!_offseasonNow || window._weeklyPublishedWeek)
       ? (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1) : 0;
     if (_mtSortBy === 'week' && !wkNum) _mtSortBy = 'total';
-    if (_mtSortBy === 'week') {
-      teams.forEach(t => {
-        if (t._weekPpgWk !== wkNum) {
-          const lu = _mtBestLineup(t.players, 'weekppg');
-          t.weekPpg = lu ? lu.totalPpg : 0;
-          t._weekPpgWk = wkNum;
-        }
-      });
-    }
+    if (_mtSortBy === 'week') _mtEnsureWeekPpg(teams, wkNum);
 
     // Sort buttons
     html += `<div style="display:flex;gap:3px;margin-bottom:10px;align-items:center;flex-wrap:wrap">`;

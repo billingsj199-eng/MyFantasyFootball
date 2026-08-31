@@ -3381,6 +3381,14 @@ function _tcvCountdownPref() {
   try { return localStorage.getItem('tcv_countdown') === '1'; } catch(_) { return false; }
 }
 
+// Manual size multiplier on top of the player-count auto-zoom (SIZE − / + controls)
+function _tcvZoomMult() {
+  try {
+    const v = parseFloat(localStorage.getItem('tcv_zoom_mult'));
+    return (isFinite(v) && v >= 0.4 && v <= 2.5) ? v : 1;
+  } catch(_) { return 1; }
+}
+
 function _renderTierCardView(data, container) {
   // Decide whether to use position-rank (for QB/RB/WR/TE filters) or overall myRank for tier lookup
   const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
@@ -3408,7 +3416,8 @@ function _renderTierCardView(data, container) {
   // Auto-size: fewer players on screen (e.g. a TOP-N view) → bigger cards.
   // zoom scales every fixed-px card element together; full boards stay at 1×.
   const _tcvN = data.length;
-  root.style.zoom = _tcvN <= 12 ? 1.9 : _tcvN <= 24 ? 1.65 : _tcvN <= 40 ? 1.45 : _tcvN <= 60 ? 1.3 : _tcvN <= 90 ? 1.15 : _tcvN <= 140 ? 1.05 : 1;
+  const _tcvBaseZoom = _tcvN <= 12 ? 1.9 : _tcvN <= 24 ? 1.65 : _tcvN <= 40 ? 1.45 : _tcvN <= 60 ? 1.3 : _tcvN <= 90 ? 1.15 : _tcvN <= 140 ? 1.05 : 1;
+  root.style.zoom = _tcvBaseZoom * _tcvZoomMult();
   if (_tcvCenteredPref()) root.classList.add('tcv-centered');
 
   // Header: filter context
@@ -3432,6 +3441,12 @@ function _renderTierCardView(data, container) {
     '<button class="tcv-reveal-btn" data-tcvaction="toggleOrder" title="Flip the REVEAL NEXT direction — top of the board first (1→' + data.length + ') or countdown from the bottom (' + data.length + '→1)">⇅ ' + (_tcvCountdownPref() ? (data.length + ' → 1') : ('1 → ' + data.length)) + '</button>' +
     '<button class="tcv-reveal-btn" data-tcvaction="revealAll" title="Show every player">◉ REVEAL ALL</button>' +
     '<button class="tcv-reveal-btn' + (_tcvCenteredPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCenter" title="Center each tier\'s cards (pyramid layout — fits vertical video). The tier letter rides against the leftmost card.">⇔ CENTER</button>' +
+    '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
+      '<span class="tcv-zoom-lbl">SIZE</span>' +
+      '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomOut" title="Smaller cards">−</button>' +
+      '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomReset" id="tcvZoomPct" title="Click to reset to 100%">' + Math.round(_tcvZoomMult() * 100) + '%</button>' +
+      '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomIn" title="Bigger cards">+</button>' +
+    '</span>' +
     '<span class="tcv-reveal-status" id="tcvRevealStatus"></span>';
   root.appendChild(controls);
 
@@ -3505,6 +3520,16 @@ function _renderTierCardView(data, container) {
         root.classList.toggle('tcv-centered', on);
         btn.classList.toggle('tcv-primary', on);
         try { localStorage.setItem('tcv_centered', on ? '1' : '0'); } catch(_) {}
+        return;
+      }
+      if (action === 'zoomIn' || action === 'zoomOut' || action === 'zoomReset') {
+        let m = _tcvZoomMult();
+        m = action === 'zoomReset' ? 1 : Math.max(0.4, Math.min(2.5, m + (action === 'zoomIn' ? 0.05 : -0.05)));
+        m = Math.round(m * 100) / 100;
+        try { localStorage.setItem('tcv_zoom_mult', String(m)); } catch(_) {}
+        root.style.zoom = _tcvBaseZoom * m;
+        const pct = root.querySelector('#tcvZoomPct');
+        if (pct) pct.textContent = Math.round(m * 100) + '%';
         return;
       }
       if (action === 'toggleOrder') {

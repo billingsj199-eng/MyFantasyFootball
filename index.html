@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-08-31ac" as="script">
+<link rel="preload" href="app.js?v=2026-08-31ad" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1427,6 +1427,9 @@ tr:hover .watch-star{opacity:.55}
 .tcv-reveal-btn.tcv-primary{background:linear-gradient(135deg,rgba(124,58,237,.3),rgba(236,72,153,.25));border-color:rgba(167,139,250,.5);color:#fff}
 .tcv-reveal-btn.tcv-primary:hover{background:linear-gradient(135deg,rgba(124,58,237,.5),rgba(236,72,153,.4));border-color:#a78bfa}
 .tcv-reveal-status{margin-left:8px;font-family:system-ui,sans-serif;font-size:.7rem;color:var(--text2);letter-spacing:.5px}
+.tcv-zoom-ctl{display:inline-flex;align-items:center;gap:3px;margin-left:6px}
+.tcv-zoom-lbl{font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:1px;color:var(--text2);margin-right:2px}
+.tcv-zoom-btn{padding:.3rem .5rem;min-width:30px;text-align:center}
 .tcv-letter.tcv-letter-light{color:#1a1a1a;text-shadow:0 1px 2px rgba(255,255,255,.3)}
 .tcv-letter.tier-default{background:#1f2937;color:#6b7280}
 .tcv-cards{flex:1;display:flex;flex-wrap:wrap;gap:7px;padding:6px 8px;background:transparent}
@@ -5340,7 +5343,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-08-31ac"></script>
+<script defer src="app.js?v=2026-08-31ad"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

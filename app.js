@@ -22034,12 +22034,12 @@ window.fmtHeight = fmtHeight;
       const boardPos = srcBoard.indexOf(d.idx);
       if (boardPos < 0) return null;
       const rank = boardPos + 1;
-      let cur = null, next = null;
+      let cur = null, next = null, idx = -1;
       for (let i = 0; i < srcTiers.length; i++) {
-        if (srcTiers[i].afterRank <= rank) { cur = srcTiers[i]; next = srcTiers[i + 1] || null; }
+        if (srcTiers[i].afterRank <= rank) { cur = srcTiers[i]; next = srcTiers[i + 1] || null; idx = i; }
       }
       if (!cur) return null;
-      return { label: cur.label, rank, from: cur.afterRank, to: next ? next.afterRank - 1 : Math.min(srcBoard.length || 200, 200) };
+      return { label: cur.label, rank, from: cur.afterRank, to: next ? next.afterRank - 1 : Math.min(srcBoard.length || 200, 200), index: idx, count: srcTiers.length };
     } catch (_) { return null; }
   };
 
@@ -45321,23 +45321,19 @@ Rules:
   // cap") — pure presentation, order and ratios untouched. Top guy ~2-3k,
   // starters in the hundreds, bench 0, team totals in the thousands.
   const _MT_VOR_SCALE = 10;
-  // My Teams tier semantics (Jack 2026-08-31, refined twice same day): with
-  // his many small tiers, a tier is a statement about GAPS — same tier =
-  // "basically interchangeable", a break = "real gap" — NOT a premium/
-  // discount system. So on this page:
-  //   1. Multipliers nearly flat (_MT_TIER_AMP 0.15 scales each global
-  //      TIER_MULT's distance from 1.0: S ≈ +7%, F ≈ −7%). Global table
-  //      untouched — trade calc + pick pricing calibrate on it.
-  //   2. Within-tier FLATTEN (_MT_TIER_FLATTEN 0.5): each player's curve
-  //      value blends halfway toward his tier's midpoint value — same-tier
-  //      players cluster, and the staircase widens gaps at tier breaks
-  //      (tier bottom blends UP, next tier's top blends DOWN). Order-safe:
-  //      affine blend toward a shared midpoint never flips within a tier,
-  //      and boundary gaps only grow.
-  // Version-board sources with tiers only (consensus/ADP have none → plain
-  // curve value). History: amp 1.5 "way too far apart" → 0.6 → this.
-  const _MT_TIER_AMP = 0.15;
-  const _MT_TIER_FLATTEN = 0.5;
+  // My Teams tier semantics (Jack 2026-08-31, FINAL after several rounds):
+  // tiers are pure SEPARATORS. Within a tier nothing changes — players keep
+  // their exact curve values ("I don't want the tiers to flatten value").
+  // Each tier break adds a fixed ADDITIVE step, so a tier's only effect is
+  // pushing differently-tiered players apart. No TIER_MULT on this page at
+  // all (the global table still drives the trade calc, untouched).
+  //   value = curve(rank) + (tiersBelow × _MT_TIER_STEP)   [pre-VOR units]
+  // Order-safe: within-tier = raw curve; each boundary gap widens by
+  // exactly one step. Version-board sources with tiers only (consensus/ADP
+  // have none → plain value). 6 curve units = 60 displayed post-×10.
+  // History: mult amp 1.5 "way too far apart" → 0.6 "still too far" →
+  // flatten 0.5 "don't flatten" → this.
+  const _MT_TIER_STEP = 6;
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();
     const includePicks = !modeOverride; // contender mode skips picks
@@ -45347,17 +45343,20 @@ Rules:
       const rank = _mtGetPlayerRank(name);
       let val = (d && typeof window._getTradeValue === 'function') ? window._getTradeValue(d, _mtValueSrc, mode) : 1;
       if (winNow) {
-        // Tier-step reshape (win-now curve = the redraft 1000-formula)
+        // Tier-step values (win-now curve = the redraft 1000-formula).
+        // FULL PRECISION — an early Math.round collapsed close same-tier
+        // neighbors into equal values, which tied team position ranks
+        // (Jack 2026-08-31: Daniels/Burrow both "4TH"). Aggregates round
+        // at display; p.val stays float.
         const tr = (d && typeof window._mtTierRangeFor === 'function') ? window._mtTierRangeFor(d, _mtValueSrc, mode) : null;
-        if (tr && tr.rank < 400 && window._TIER_MULT) {
-          const curveAt = r => 1000 / (Math.pow(r, 0.8) + 3);
-          const mid = (tr.from + tr.to) / 2;
-          let v = curveAt(tr.rank) + _MT_TIER_FLATTEN * (curveAt(mid) - curveAt(tr.rank));
-          const m0 = window._TIER_MULT[tr.label];
-          if (m0 && m0 !== 1) v = v * (1 + (m0 - 1) * _MT_TIER_AMP);
-          val = Math.round(v);
+        if (tr && tr.rank < 400) {
+          val = 1000 / (Math.pow(tr.rank, 0.8) + 3) + (tr.count - 1 - tr.index) * _MT_TIER_STEP;
         }
         val = Math.max(val - _MT_REPLACEMENT_VAL, 0) * _MT_VOR_SCALE;
+        // Strict board-order guarantee: integer ADP values can still tie
+        // across adjacent ranks — a rank-keyed epsilon (monotonic, ≤10)
+        // ensures ranked-above ⇒ strictly higher, everywhere.
+        if (rank < 999) val += (1000 - rank) * 0.01;
       }
       return {
         name, rank, val,
@@ -45368,7 +45367,9 @@ Rules:
     });
     ranked.sort((a, b) => b.val - a.val || a.rank - b.rank);
 
-    const playerTotal = ranked.reduce((s, p) => s + p.val, 0);
+    // p.val is float (strict-order precision) — round the aggregates here so
+    // every display stays integer.
+    const playerTotal = Math.round(ranked.reduce((s, p) => s + p.val, 0));
 
     // Draft pick values (dynasty only, skip in contender mode)
     let pickTotal = 0;
@@ -45397,7 +45398,7 @@ Rules:
     const posScores = {};
     ['QB','RB','WR','TE','K','DST'].forEach(pos => {
       const group = ranked.filter(p => p.pos === pos);
-      const pts = group.reduce((s, p) => s + p.val, 0);
+      const pts = Math.round(group.reduce((s, p) => s + p.val, 0));
       posScores[pos] = { pts, count: group.length };
     });
 

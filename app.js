@@ -13408,7 +13408,18 @@ document.addEventListener('click', function(e) {
     window._gwGetPoolAlltime = function() { return gwPoolAlltime; };
     window._gwGetPool2000s = function() { return gwPool2000s; };
     window._gwGetPool2010s = function() { return gwPool2010s; };
-    window._gwGetPoolCollege = function() { return gwPoolCollege; };
+    // Latent-dependency guard (bug ledger): daily Elite Pull games build from
+    // these getters, but nothing on the DAILY path loads the lazy COLLEGE_STATS
+    // bundle. Asking for the college pool before it exists kicks off the load;
+    // _gwEnsureCollege rebuilds the pools and fires _gwDailyReinit on arrival,
+    // so a daily college game that inited against an empty pool self-heals.
+    window._gwGetPoolCollege = function() {
+      if (typeof COLLEGE_STATS === 'undefined' && !window.__gwCollegeKick) {
+        window.__gwCollegeKick = 1;
+        _gwEnsureCollege(function(){});
+      }
+      return gwPoolCollege;
+    };
     // Expose pool builder so callers (WEEKLY_STATS_RETIRED post-merge,
     // daily Elite Pull init) can trigger a rebuild after upstream data grows.
     // The signature check inside initGwPool() makes repeated calls cheap.
@@ -13794,6 +13805,10 @@ document.addEventListener('click', function(e) {
     window._ensureCollegeStatsData().then(function() {
       _gwPoolBuildSig = ''; // force initGwPool to rebuild now that college data exists
       initGwPool();
+      // Daily Elite Pull games init from the pool getters and bail on empty
+      // pools; re-init them now that the college pool exists — the same
+      // contract the era pools get from the retired-stats merge.
+      if (typeof window._gwDailyReinit === 'function') { try { window._gwDailyReinit(); } catch(e){} }
       cb();
     });
   }

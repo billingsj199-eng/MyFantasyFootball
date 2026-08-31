@@ -90,6 +90,7 @@ const ALLOWED_ORIGINS = [
   /^https:\/\/(www\.)?myfantasyfootball\.co$/,
   /^https:\/\/(www\.)?myfantasyfootball\.org$/,
   /^https:\/\/billingsj199-eng\.github\.io$/,
+  /^https:\/\/jb-simlab-2026\.web\.app$/, // Sim Lab (unlisted) — Yahoo league import rides yahooProxy
   /^http:\/\/localhost(:\d+)?$/,
 ];
 

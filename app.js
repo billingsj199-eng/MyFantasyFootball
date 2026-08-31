@@ -46042,7 +46042,10 @@ Rules:
     return resp;
   }
 
-  window._mtImportYahooById = async function () {
+  // silentErrors: set by the saved-league auto-refresh — sync problems
+  // (403 non-viewable, proxy hiccups) must not paint the status line red
+  // over a perfectly usable snapshot.
+  window._mtImportYahooById = async function (silentErrors) {
     const input = document.getElementById('mtYahooLeagueId');
     const status = document.getElementById('mtYahooStatus');
     const btn = document.getElementById('mtYahooImportBtn');
@@ -46143,10 +46146,14 @@ Rules:
     } catch (err) {
       console.warn('[MyTeams] Yahoo direct sync error:', err);
       if (status) {
-        status.textContent = err instanceof TypeError
-          ? 'Couldn\'t reach Yahoo — check your connection and try again.'
-          : 'Error: ' + err.message;
-        status.style.color = '#ef4444';
+        if (silentErrors) {
+          status.textContent = ''; // don't strand "Reading rosters… 3/12"
+        } else {
+          status.textContent = err instanceof TypeError
+            ? 'Couldn\'t reach Yahoo — check your connection and try again.'
+            : 'Error: ' + err.message;
+          status.style.color = '#ef4444';
+        }
       }
     }
     if (btn) { btn.disabled = false; btn.textContent = 'IMPORT'; }
@@ -46377,6 +46384,12 @@ Rules:
     const avgExact = allScores.length ? allScores.reduce((s, v) => s + v, 0) / allScores.length : 0;
     const avgScore = Math.round(avgExact);
 
+    // PPG mini color = league-relative (was hardcoded green): rank the teams
+    // by lineup PPG once and reuse the positional rank palette.
+    const ppgRankByTeam = new Map();
+    teams.slice().sort((a, b) => (b.lineupPpg || 0) - (a.lineupPpg || 0))
+      .forEach((t, i) => ppgRankByTeam.set(t, i + 1));
+
     sorted.forEach((t, i) => {
       const sc = t.score;
       const isMe = t.isMyTeam;
@@ -46408,7 +46421,8 @@ Rules:
       // PPG mini display
       const ppgVal = t.lineupPpg || 0;
       const ppgHighlight = _mtSortBy === 'ppg' ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
-      html += `<div style="text-align:center;min-width:32px"><div style="font-size:.5rem;color:var(--text2)">PPG</div><div style="${ppgHighlight};font-weight:700;color:#22c55e">${ppgVal}</div></div>`;
+      const ppgColor = _mtPosRankColor(ppgRankByTeam.get(t) || teams.length, teams.length);
+      html += `<div title="Best-lineup projected PPG · ${_mtOrdinal(ppgRankByTeam.get(t) || teams.length)} in league" style="text-align:center;min-width:32px"><div style="font-size:.5rem;color:var(--text2)">PPG</div><div style="${ppgHighlight};font-weight:700;color:${ppgColor}">${ppgVal}</div></div>`;
       const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
       ['QB','RB','WR','TE'].forEach(pos => {
         const ps = sc.posScores[pos] || { pts: 0 };
@@ -47281,9 +47295,12 @@ Rules:
       status.textContent = `Loaded "${lg.name}" from saved data (${lg.savedAt ? new Date(lg.savedAt).toLocaleDateString() : ''})`;
       status.style.color = '#22c55e';
     }
-    // Kick off the background roster-freshness check (Sleeper only — the
-    // API is public; ESPN/Yahoo need auth or the extension to re-sync).
+    // Kick off the background roster-freshness check. Sleeper + public ESPN
+    // probe on every load; Yahoo's per-team page scrape is throttled to 6h.
+    // Private ESPN / non-viewable Yahoo leagues fail their probes silently.
     if (lg.leagueId && !isEspn && !isYahoo) _mtAutoRefreshSleeper(lg);
+    else if (isEspn) _mtAutoRefreshEspn(lg);
+    else if (isYahoo) _mtAutoRefreshYahoo(lg);
   };
 
   // ── Sleeper auto-refresh ─────────────────────────────────────────────
@@ -47327,6 +47344,71 @@ Rules:
       }
       window._mtImportSleeper();
     } catch (_) { /* offline / API hiccup — the snapshot stays */ }
+  }
+
+  // ── ESPN auto-refresh ────────────────────────────────────────────────
+  // Same contract as the Sleeper check: loading a saved ESPN league probes
+  // the public read API once, diffs the resolved-name roster sets against
+  // the snapshot, and re-runs the importer only when transactions landed.
+  // Private leagues 401 here (extension-synced snapshots) — every error
+  // path bails silently and the snapshot stays.
+  async function _mtAutoRefreshEspn(lg) {
+    const id = String(lg.leagueId || '').replace(/^espn_/, '');
+    if (!id) return;
+    const status = document.getElementById('mtSleeperStatus');
+    try {
+      await _mtLoadEspnNormalizer();
+      const resp = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + _mtEspnSeason() +
+        '/segments/0/leagues/' + id + '?view=mTeam&view=mRoster&view=mSettings');
+      if (!resp.ok) return;
+      const rawLg = await resp.json();
+      const norm = window.MFF_ESPN.normalizeEspnLeague(Array.isArray(rawLg) ? rawLg[0] : rawLg, null);
+      if (!norm) return;
+      // Bail if the user loaded a different league while we were fetching.
+      if (_mtActiveSource !== 'espn' || String(_mtActiveEspnId) !== String(norm.leagueId)) return;
+      // Both sides pass through _mtResolveEspnName, so resolver quirks can't
+      // fake a transaction.
+      const sigOf = roster => roster.map(r => _mtResolveEspnName(r && r.name)).filter(Boolean).map(x => x.name).sort().join(',');
+      const liveSig = (norm.teams || []).map(t => sigOf(t.roster || [])).sort().join('|');
+      const savedSig = (lg.teams || []).map(t => (t.players || []).slice().sort().join(',')).sort().join('|');
+      if (liveSig === savedSig) {
+        if (status) {
+          status.textContent = `Loaded "${lg.name}" — rosters up to date`;
+          status.style.color = '#22c55e';
+        }
+        return;
+      }
+      if (status) {
+        status.textContent = 'League transactions detected — refreshing rosters…';
+        status.style.color = '';
+      }
+      // Carry my-team over from the snapshot (saved team.id = ESPN teamId),
+      // then stash + re-import, which also re-saves the cloud snapshot.
+      const savedMine = (lg.teams || []).find(t => t.isMyTeam);
+      if (savedMine) norm.teams.forEach(t => { t.isMine = String(t.teamId) === String(savedMine.id); });
+      norm.syncedAt = Date.now();
+      norm.direct = true;
+      if (!_mtEspnLeagues) _mtEspnLeagues = {};
+      _mtEspnLeagues[String(norm.leagueId)] = norm;
+      _mtRenderEspnCard();
+      window._mtImportEspn(norm.leagueId);
+    } catch (_) { /* offline / API hiccup — the snapshot stays */ }
+  }
+
+  // ── Yahoo auto-refresh ───────────────────────────────────────────────
+  // Yahoo rosters live only in server-rendered team pages (one proxied
+  // fetch per team) — there's no cheap probe like Sleeper/ESPN, so the
+  // full silent re-sync is throttled to snapshots older than 6 hours.
+  // Non-link-viewable leagues 403 at the proxy; the silent flag keeps
+  // that (and any other error) off the status line.
+  function _mtAutoRefreshYahoo(lg) {
+    const id = String(lg.leagueId || '').replace(/^yahoo_/, '');
+    if (!id) return;
+    const age = Date.now() - new Date(lg.savedAt || 0).getTime();
+    if (isFinite(age) && age < 6 * 3600 * 1000) return;
+    const input = document.getElementById('mtYahooLeagueId');
+    if (input) input.value = id;
+    window._mtImportYahooById(true);
   }
 
   window._mtDeleteSavedLeague = function(leagueId) {

@@ -9862,7 +9862,7 @@ function openPlayerCard(d, ctxMode) {
           </div>
           ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d));return `<div class="card-rank-box">
             <div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div>
-            <div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div>
+            <div class="num card-l4-num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div>
           </div>`;})()}
           ${_teamPpgBoxHtml(d.t)}
         </div>
@@ -10609,6 +10609,20 @@ function openPlayerCard(d, ctxMode) {
     document.addEventListener('mff:weeklydata', function _clSnapRepaint() {
       document.removeEventListener('mff:weeklydata', _clSnapRepaint);
       if (document.getElementById('careerLogContent') === clContent) _clRefresh();
+    });
+  }
+  // L4 PPG also comes from the lazy weekly bundle — a card opened before it
+  // lands (?player= deep links) renders "—"; back-fill the box once data
+  // arrives. Registered after the boot-time merge listener, so the recompute
+  // sees merged rows.
+  const _l4Num = cardEl.querySelector('.card-l4-num');
+  if (_l4Num) {
+    document.addEventListener('mff:weeklydata', function _l4Backfill() {
+      document.removeEventListener('mff:weeklydata', _l4Backfill);
+      if (!_l4Num.isConnected) return;
+      const c = l4PpgCellHtml(last4Ppg(d), adj25ppg(d));
+      _l4Num.innerHTML = c.html;
+      _l4Num.style.color = c.color || '';
     });
   }
 

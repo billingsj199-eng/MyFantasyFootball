@@ -45690,6 +45690,7 @@ Rules:
       // Render
       _mtActiveSource = 'sleeper';
       _mtActiveEspnId = null;
+      _mtActiveSleeperId = String(leagueId);
       _mtRenderLeague(league, teams);
       status.textContent = `Imported ${teams.length} teams from "${league.name}"`;
 
@@ -45717,6 +45718,7 @@ Rules:
   let _mtActiveSource = 'sleeper';  // which importer produced window._mtTeams
   let _mtActiveEspnId = null;
   let _mtActiveYahooId = null;
+  let _mtActiveSleeperId = null;    // set BEFORE render (the input fills after)
 
   document.addEventListener('mff-espn-league-from-extension', function (e) {
     try {
@@ -45841,6 +45843,7 @@ Rules:
       _mtActiveSource = source;
       _mtActiveEspnId = source === 'espn' ? String(lg.leagueId) : null;
       _mtActiveYahooId = source === 'yahoo' ? String(lg.leagueId) : null;
+      _mtActiveSleeperId = null;
       _mtRenderLeague({ name: lg.name, season: String(lg.season || '') }, teams);
 
       const unmatched = totalCount - matchedCount;
@@ -46167,6 +46170,134 @@ Rules:
 
   let _mtSortBy = 'total'; // current sort key
 
+  // ── DRAFT BOARD (redraft Sleeper leagues) ────────────────────────────
+  // Imports the league's completed draft from Sleeper's public API and
+  // grades every pick against the league's chosen value-source board:
+  // green = value (board rank beat the pick by the threshold), red = reach.
+  // Jack's standing rules apply: no K/DST verdicts (1-slot noise), and
+  // steals only inside the board's top 150 — otherwise every late flier
+  // vs rank-999 glows green.
+  let _mtDraftBoardOpen = false;
+  const _mtDraftCache = {};
+
+  window._mtToggleDraftBoard = async function () {
+    const box = document.getElementById('mtDraftBoard');
+    if (!box) return;
+    if (_mtDraftBoardOpen) {
+      _mtDraftBoardOpen = false;
+      box.style.display = 'none';
+      if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+      return;
+    }
+    _mtDraftBoardOpen = true;
+    box.style.display = '';
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+    const leagueId = _mtActiveSleeperId;
+    if (!leagueId) { box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">No Sleeper league ID loaded.</div>'; return; }
+    box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Loading draft board…</div>';
+    try {
+      let data = _mtDraftCache[leagueId];
+      if (!data) {
+        const dResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/drafts`);
+        if (!dResp.ok) throw new Error('Sleeper returned ' + dResp.status);
+        const drafts = (await dResp.json()) || [];
+        const draft = drafts.filter(d => d && d.status === 'complete')
+          .sort((a, b) => (b.start_time || 0) - (a.start_time || 0))[0];
+        if (!draft) throw new Error('no completed draft found for this league yet');
+        const pResp = await fetch(`https://api.sleeper.app/v1/draft/${draft.draft_id}/picks`);
+        if (!pResp.ok) throw new Error('Sleeper returned ' + pResp.status);
+        const picks = (await pResp.json()) || [];
+        if (!picks.length) throw new Error('the draft has no picks');
+        data = _mtDraftCache[leagueId] = { draft, picks };
+      }
+      // Guard: user may have loaded a different league while we fetched
+      if (!_mtDraftBoardOpen) return;
+      box.innerHTML = _mtBuildDraftBoardHtml(data.draft, data.picks);
+    } catch (err) {
+      console.warn('[MyTeams] Draft board error:', err);
+      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t load the draft: ' + _esc(err.message) + '</div>';
+    }
+  };
+
+  function _mtBuildDraftBoardHtml(draft, picks) {
+    if (draft.type === 'auction') {
+      return '<div style="color:var(--text2);font-size:.75rem;padding:10px">Auction drafts aren\'t supported on the board view yet.</div>';
+    }
+    const slotCount = (draft.settings && draft.settings.teams) || Math.max(...picks.map(p => p.draft_slot || 0));
+    const roundCount = (draft.settings && draft.settings.rounds) || Math.max(...picks.map(p => p.round || 0));
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a78bfa', DST: '#94a3b8' };
+
+    // Column owner: match each slot's picks to a team (roster_id first, then
+    // Sleeper user id) — redraft snake keeps draft_slot constant per column.
+    const teams = window._mtTeams || [];
+    const slotTeam = {};
+    picks.forEach(p => {
+      if (slotTeam[p.draft_slot]) return;
+      slotTeam[p.draft_slot] = teams.find(t => p.roster_id != null && String(t.id) === String(p.roster_id))
+        || teams.find(t => p.picked_by && String(t.ownerId) === String(p.picked_by)) || null;
+    });
+
+    // Grade every pick once; tally per-column steals/reaches for the header.
+    const cells = {}; // `${round}-${slot}` -> html
+    const tally = {}; // slot -> {steal, reach}
+    picks.forEach(p => {
+      const md = p.metadata || {};
+      const rawName = ((md.first_name || '') + ' ' + (md.last_name || '')).trim() || 'Unknown';
+      let pos = (md.position || '?').toUpperCase();
+      if (pos === 'DEF') pos = 'DST';
+      const res = _mtResolveEspnName(rawName);
+      const rank = (res && res.matched) ? _mtGetPlayerRank(res.name) : 999;
+      const isKD = pos === 'K' || pos === 'DST';
+      let verdict = 0;
+      if (!isKD && rank < 999) {
+        // Verdict unit ≈ ¾ of a round (league-size aware), widening with
+        // pick depth — a 6-spot delta is noise at pick 40, signal at pick 8.
+        const thresh = Math.max(5, Math.round(slotCount * 0.75), Math.round(p.pick_no * 0.2));
+        if (rank <= 150 && p.pick_no - rank >= thresh) verdict = 1;
+        else if (rank - p.pick_no >= thresh) verdict = -1;
+      }
+      if (verdict) {
+        const tl = tally[p.draft_slot] = tally[p.draft_slot] || { steal: 0, reach: 0 };
+        verdict > 0 ? tl.steal++ : tl.reach++;
+      }
+      const vColor = verdict > 0 ? '#22c55e' : verdict < 0 ? '#ef4444' : null;
+      const border = vColor ? `border:1px solid ${vColor};background:${vColor}14` : 'border:1px solid var(--border);background:var(--surface)';
+      const tip = isKD ? `${_esc(rawName)} · pick ${p.pick_no} · K/DST picks aren't graded`
+        : rank >= 999 ? `${_esc(rawName)} · pick ${p.pick_no} · not on the board — ungraded`
+        : `${_esc(rawName)} · pick ${p.pick_no} vs board #${rank} (${rank <= p.pick_no ? '+' : '−'}${Math.abs(p.pick_no - rank)})`;
+      cells[p.round + '-' + p.draft_slot] =
+        `<div title="${tip}" style="${border};border-radius:5px;padding:3px 5px;min-height:30px">` +
+        `<div style="display:flex;justify-content:space-between;font-size:.5rem;color:var(--text2)"><span>${p.round}.${String(p.pick_no - (p.round - 1) * slotCount).padStart(2, '0')}</span><span style="color:${posColors[pos] || 'var(--text2)'};font-weight:700">${pos}</span></div>` +
+        `<div style="font-size:.62rem;font-weight:600;color:${vColor || 'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(rawName)}</div>` +
+        `</div>`;
+    });
+
+    let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
+      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#22d3ee">DRAFT BOARD</span>` +
+      `<span style="font-size:.6rem;color:var(--text2)">Graded vs your selected rankings · <span style="color:#22c55e;font-weight:700">green = value</span> · <span style="color:#ef4444;font-weight:700">red = reach</span> · K/DST and off-board picks ungraded</span></div>`;
+    html += `<div style="overflow-x:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--bg)">`;
+    html += `<div style="display:grid;grid-template-columns:26px repeat(${slotCount},minmax(88px,1fr));gap:3px;min-width:${26 + slotCount * 92}px">`;
+    // Header row
+    html += `<div></div>`;
+    for (let s = 1; s <= slotCount; s++) {
+      const t = slotTeam[s];
+      const tl = tally[s] || { steal: 0, reach: 0 };
+      const mine = t && t.isMyTeam;
+      html += `<div style="text-align:center;padding:3px 2px;border-radius:5px;${mine ? 'border:1px solid var(--accent);background:rgba(245,158,11,.08)' : ''}">` +
+        `<div style="font-size:.58rem;font-weight:700;color:${mine ? 'var(--accent)' : 'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(t ? t.owner : 'Slot ' + s)}</div>` +
+        `<div style="font-size:.52rem"><span style="color:#22c55e">${tl.steal}▲</span> <span style="color:#ef4444">${tl.reach}▼</span></div></div>`;
+    }
+    // Round rows
+    for (let r = 1; r <= roundCount; r++) {
+      html += `<div style="display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.7rem;color:var(--text2)">${r}</div>`;
+      for (let s = 1; s <= slotCount; s++) {
+        html += cells[r + '-' + s] || `<div style="border:1px dashed var(--border);border-radius:5px;min-height:30px"></div>`;
+      }
+    }
+    html += `</div></div>`;
+    return html;
+  }
+
   function _mtRenderLeague(league, teams) {
     const view = document.getElementById('mtLeagueView');
     view.style.display = '';
@@ -46183,6 +46314,11 @@ Rules:
 
     window._mtTeams = teams;
     window._mtLeague = league;
+    // Close any open draft board — this render may be a different league
+    // (the per-league fetch cache makes reopening instant).
+    _mtDraftBoardOpen = false;
+    const _db = document.getElementById('mtDraftBoard');
+    if (_db) { _db.style.display = 'none'; _db.innerHTML = ''; }
     _mtRenderTeamList(teams);
 
     // Update format display
@@ -46324,6 +46460,12 @@ Rules:
       html += `<option value="${i}" ${sel}>${_esc(t.owner)}</option>`;
     });
     html += `</select>`;
+    // Draft board toggle — redraft Sleeper leagues only (public draft API;
+    // ESPN/Yahoo expose no anonymous draft endpoint).
+    if (_mtActiveSource === 'sleeper' && _mtFormat.type === 'redraft' && _mtActiveSleeperId) {
+      const dbActive = _mtDraftBoardOpen;
+      html += `<button onclick="window._mtToggleDraftBoard()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${dbActive ? '#22d3ee' : 'var(--border)'};background:${dbActive ? '#22d3ee' : 'var(--surface)'};color:${dbActive ? '#000' : 'var(--text2)'}">DRAFT BOARD</button>`;
+    }
     html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)"></span>`;
     html += `</div>`;
 
@@ -47301,19 +47443,21 @@ Rules:
 
     teams.sort((a, b) => b.score.total - a.score.total);
 
-    // Render using a fake league object
-    const fakeLg = { name: lg.name || 'League', season: lg.season || '' };
-    _mtRenderLeague(fakeLg, teams);
-
     // Track the source so _mtSelectMyTeam re-saves instead of re-importing a
     // non-Sleeper id against the Sleeper API. ESPN leagues save as
-    // 'espn_<id>', Yahoo as 'yahoo_<id>'.
+    // 'espn_<id>', Yahoo as 'yahoo_<id>'. Set BEFORE the render — the team
+    // list's draft-board eligibility check reads these during the render.
     const savedId = String(lg.leagueId || '');
     const isEspn = savedId.indexOf('espn_') === 0;
     const isYahoo = savedId.indexOf('yahoo_') === 0;
     _mtActiveSource = isEspn ? 'espn' : isYahoo ? 'yahoo' : 'sleeper';
     _mtActiveEspnId = isEspn ? savedId.slice(5) : null;
     _mtActiveYahooId = isYahoo ? savedId.slice(6) : null;
+    _mtActiveSleeperId = (!isEspn && !isYahoo && savedId) ? savedId : null;
+
+    // Render using a fake league object
+    const fakeLg = { name: lg.name || 'League', season: lg.season || '' };
+    _mtRenderLeague(fakeLg, teams);
     // Update league ID field (Sleeper leagues only)
     if (lg.leagueId && !isEspn && !isYahoo) document.getElementById('mtSleeperLeagueId').value = lg.leagueId;
     const status = document.getElementById('mtSleeperStatus');

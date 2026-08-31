@@ -103,11 +103,11 @@ Everything below went from "sitting unmerged/broken" to live on production in on
 **Shipped 2026-07-22 (draft-season quick wins):**
 - **Bye weeks** — `scripts/pull_bye_weeks.py` (ESPN scoreboard API) → `data/bye_weeks.js` → `d.bye` stamped at boot → fills the Bye box in the player card's Playoff Schedule row (that box existed but always showed `—`). Per Jack: player card only, NO rankings column. Cross-checked against the hand-typed `BB_BYE_WEEKS_2026` table in app.js (~line 44264) — identical; that table is still its own copy inside the BBM sim closure.
 - **PWA PNG icons** — `scripts/make_icons.py` (Pillow, redraws the manifest SVG logo) → `icons/icon-180/192/512.png`, registered in manifest.webmanifest. Chrome auto-install prompt criteria now met. The old `apple-touch-icon` was a data-URI SVG which iOS *ignores* — now a real 180px PNG.
-- **GA4 analytics stub** — inert loader in index.html head (`MFF_GA_ID = ''`); `switchPage()` in app.js sends SPA `page_view` events once live. **Jack action required**: create the GA4 property at analytics.google.com (web data stream for www.myfantasyfootball.co) and paste the `G-…` measurement ID into `MFF_GA_ID`. Do this BEFORE August draft-season traffic or the season's usage data is lost.
+- **GA4 analytics stub** — inert loader in index.html head; `switchPage()` in app.js sends SPA `page_view` events. ~~Jack action required~~ **DONE**: `MFF_GA_ID = 'G-EJSTRKFBXZ'` is live on prod — gtag loads and the dataLayer populates (verified 2026-08-31).
 
 If picking the next thing to do, in order:
 
-1. **Activate analytics** — the 2-minute Jack-only step above. Everything else on this list gets prioritized better once real usage data exists.
+1. ~~**Activate analytics**~~ — DONE (verified live 2026-08-31: `G-EJSTRKFBXZ`, gtag firing). Real usage data is accumulating for future prioritization.
 2. ~~**Dynasty JS Model**~~ — shipped 2026-07-22, then the whole JS Model moved OFF-SITE 2026-07-23 to `E:\MyFantasyFootball\js_model_site\` (see roadmap note below).
 3. **Draft-season data hygiene sweep** — kickers + K projections DONE 2026-07-22:
    - ~~Stale kickers~~ — Sleeper depth-chart audit (`scripts/fix_kickers_20260722.py`): added missing starters Tyler Bass (BUF, K13), Trey Smack (GB rookie, K18), Jason Sanders (NYJ, K21); existing editorial K order preserved (splice + renumber, NOT a p-sort — first attempt p-sorted and clobbered the board, reverted from `d.js.bak_pre_kickers_20260722`). Bass/Sanders have no 2025 stats (ESPN-confirmed didn't play) so their `p` values are hand-estimates; Clay's PDF independently confirms Bass as BUF K1.

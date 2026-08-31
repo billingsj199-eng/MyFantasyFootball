@@ -1,9 +1,4 @@
-/* MFF ESPN League Import — espn_normalize.js
- *
- * SYNCED COPY of espn-extension/normalize.js (the extension folder is
- * untracked, so the site needs its own deployable copy). If you edit the
- * extension's normalize.js, re-copy it here verbatim below this header.
- * Lazy-loaded by app.js (_mtLoadEspnNormalizer) for the direct league sync.
+/* MFF ESPN League Import — normalize.js
  *
  * Pure functions: raw ESPN league JSON → the MFF league payload.
  * No chrome.* / DOM access, so mock.html can load this file directly and
@@ -169,6 +164,39 @@
     var keeperCount = 0;
     try { keeperCount = settings.draftSettings.keeperCount || 0; } catch (_) {}
 
+    // Draft history — present only when the fetch included ?view=mDraftDetail.
+    // Names resolve from the roster player map; a pick whose player was
+    // dropped post-draft keeps name:null + the playerId so the site can
+    // back-fill from ESPN's season players list.
+    var draft = null;
+    var dd = raw.draftDetail;
+    if (dd && dd.drafted && Array.isArray(dd.picks) && dd.picks.length) {
+      var playerById = {};
+      raw.teams.forEach(function (t) {
+        ((t.roster && t.roster.entries) || []).forEach(function (e) {
+          var p = e.playerPoolEntry && e.playerPoolEntry.player;
+          if (p && p.id != null) playerById[p.id] = p;
+        });
+      });
+      var dtype = "";
+      try { dtype = String(settings.draftSettings.type || "").toUpperCase(); } catch (_) {}
+      draft = {
+        type: dtype || null,
+        picks: dd.picks.map(function (p) {
+          var pl = playerById[p.playerId];
+          var pos = pl ? (POS[pl.defaultPositionId] || "") : "";
+          var name = pl ? pl.fullName : null;
+          if (pl && pos === "D/ST" && PRO_TEAM_FULL[pl.proTeamId]) {
+            name = PRO_TEAM_FULL[pl.proTeamId] + " D/ST";
+          }
+          return {
+            no: p.overallPickNumber, round: p.roundId, rpn: p.roundPickNumber,
+            teamId: p.teamId, playerId: p.playerId, name: name, pos: pos
+          };
+        })
+      };
+    }
+
     return {
       platform: "espn",
       leagueId: String(raw.id),
@@ -181,6 +209,7 @@
       keeper: keeperCount > 0,
       teamCount: teams.length,
       drafted: teams.some(function (t) { return t.roster.length > 0; }),
+      draft: draft,
       teams: teams
     };
   }

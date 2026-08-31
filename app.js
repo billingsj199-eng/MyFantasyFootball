@@ -45873,7 +45873,10 @@ Rules:
     if (_mtEspnNormReady) return _mtEspnNormReady;
     _mtEspnNormReady = new Promise((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = 'espn_normalize.js';
+      // Ride the app.js ?v= so the SW treats it cache-first + version-busted
+      // (bare same-origin URLs get stale-while-revalidate = one load behind).
+      const av = ((document.querySelector('script[src^="app.js"]') || {}).src || '').match(/[?&]v=([^&]+)/);
+      s.src = 'espn_normalize.js' + (av ? '?v=' + av[1] : '');
       s.onload = () => window.MFF_ESPN ? resolve() : reject(new Error('normalizer failed to load'));
       s.onerror = () => { _mtEspnNormReady = null; reject(new Error('normalizer failed to load')); };
       document.head.appendChild(s);
@@ -46218,12 +46221,52 @@ Rules:
   // resolve from the mRoster payload (covers everyone still rostered), with
   // the season players list as a gap-filler for drafted-then-dropped guys;
   // anything still unresolved renders neutral — never a false red.
+  // PRIVATE leagues: the extension (v0.20.18+) fetches mDraftDetail with the
+  // user's cookies and ships a `draft` block in its normalized payload — when
+  // that's present in _mtEspnLeagues, use it and skip the anonymous fetch.
   const _MT_ESPN_POS = { 1: 'QB', 2: 'RB', 3: 'WR', 4: 'TE', 5: 'K', 16: 'DST' };
+  // players_wl is game-wide (not league-scoped), so it answers anonymously
+  // even when the league itself is private.
+  async function _mtEspnPlayersWlInto(pmap, season) {
+    try {
+      const pr = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + season + '/players?view=players_wl');
+      if (pr.ok) ((await pr.json()) || []).forEach(p => {
+        if (p && p.id != null && !pmap[p.id]) pmap[p.id] = { name: p.fullName, pos: _MT_ESPN_POS[p.defaultPositionId] || '?' };
+      });
+    } catch (_) { /* gap-filler only — unresolved picks stay neutral */ }
+  }
   async function _mtFetchEspnDraft(leagueId) {
     const season = _mtEspnSeason();
+    const teams = window._mtTeams || [];
+
+    // Extension-synced draft block (works for private leagues)
+    const extLg = _mtEspnLeagues && _mtEspnLeagues[String(leagueId)];
+    const extDraft = extLg && extLg.draft;
+    if (extDraft && Array.isArray(extDraft.picks) && extDraft.picks.length) {
+      const dtype = String(extDraft.type || '').toUpperCase();
+      if (dtype === 'AUCTION') return { auction: true };
+      const pmap = {};
+      if (extDraft.picks.some(p => !p.name)) await _mtEspnPlayersWlInto(pmap, season);
+      const slotCount = teams.length || Math.max(...extDraft.picks.map(p => p.rpn || 0));
+      const linear = dtype === 'LINEAR';
+      const picks = extDraft.picks.map(p => {
+        const fill = !p.name && pmap[p.playerId];
+        const rawPos = fill ? fill.pos : (p.pos || '?');
+        return {
+          no: p.no, round: p.round,
+          slot: (linear || p.round % 2 === 1) ? p.rpn : (slotCount + 1 - p.rpn),
+          name: p.name || (fill ? fill.name : 'ESPN #' + p.playerId),
+          pos: rawPos === 'D/ST' ? 'DST' : rawPos,
+          unresolved: !p.name && !fill,
+          team: teams.find(t => String(t.id) === String(p.teamId)) || null
+        };
+      });
+      return { auction: false, slotCount, roundCount: Math.max(...picks.map(p => p.round || 0)), picks };
+    }
+
     const base = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + season + '/segments/0/leagues/' + leagueId;
     const resp = await fetch(base + '?view=mDraftDetail&view=mRoster&view=mSettings');
-    if (resp.status === 401) throw new Error('this league is private — the draft board needs a publicly viewable ESPN league');
+    if (resp.status === 401) throw new Error('this league is private — re-sync it with the MFF ESPN extension ("Export league to MFF" on your ESPN league page) and the draft comes along');
     if (!resp.ok) throw new Error('ESPN returned ' + resp.status);
     const raw0 = await resp.json();
     const raw = Array.isArray(raw0) ? raw0[0] : raw0;
@@ -46236,15 +46279,7 @@ Rules:
       const p = e.playerPoolEntry && e.playerPoolEntry.player;
       if (p && p.id != null) pmap[p.id] = { name: p.fullName, pos: _MT_ESPN_POS[p.defaultPositionId] || '?' };
     }));
-    if (dd.picks.some(p => !pmap[p.playerId])) {
-      try {
-        const pr = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + season + '/players?view=players_wl');
-        if (pr.ok) ((await pr.json()) || []).forEach(p => {
-          if (p && p.id != null && !pmap[p.id]) pmap[p.id] = { name: p.fullName, pos: _MT_ESPN_POS[p.defaultPositionId] || '?' };
-        });
-      } catch (_) { /* gap-filler only — unresolved picks stay neutral */ }
-    }
-    const teams = window._mtTeams || [];
+    if (dd.picks.some(p => !pmap[p.playerId])) await _mtEspnPlayersWlInto(pmap, season);
     const slotCount = teams.length || Math.max(...dd.picks.map(p => p.roundPickNumber || 0));
     const linear = dtype === 'LINEAR';
     const picks = dd.picks.map(p => {

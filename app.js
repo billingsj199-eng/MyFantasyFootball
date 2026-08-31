@@ -46892,12 +46892,18 @@ Rules:
     if (!box || !window._mtTeams || !window._mtTeams.length) return;
     const rostered = new Set();
     window._mtTeams.forEach(t => (t.players || []).forEach(n => rostered.add(n)));
+    // Suffix/punctuation-normalized roster set: retired legend entries
+    // ("Marvin Harrison", "Michael Pittman" the RB) otherwise leak onto the
+    // wire with their rostered Junior's board rank via alias folding
+    // (found live on Jack's league 2026-08-31).
+    const _wwNorm = n => String(n).toLowerCase().replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v)$/i, '').replace(/[.'’]/g, '').trim();
+    const rosteredNorm = new Set([...rostered].map(_wwNorm));
 
     // Board-ordered free agents, top-150 only
     const fas = [];
     if (typeof D !== 'undefined') {
       for (const d of D) {
-        if (rostered.has(d.n)) continue;
+        if (rostered.has(d.n) || rosteredNorm.has(_wwNorm(d.n))) continue;
         const rank = _mtGetPlayerRank(d.n);
         if (rank > 150) continue;
         fas.push({ d, rank });

@@ -34109,11 +34109,28 @@ window.fmtHeight = fmtHeight;
       return (s.stud + s.hit) / evald; // 'hit' = hit+stud combined
     }
 
-    function _btTierTableHtml(stats, metric) {
+    // JM threshold display for a tier label. Thresholds live in POS_TIERS and are
+    // position-specific, so with no position filter this shows the cross-position range.
+    function _btTierMinStr(label, posSel) {
+      const PT = window._POS_TIERS;
+      if (!PT) return '';
+      const posList = (posSel && posSel !== 'all') ? [posSel] : Object.keys(PT);
+      const mins = [];
+      posList.forEach(p => {
+        const row = (PT[p] || []).find(x => x.label === label);
+        if (row && row.min != null) mins.push(row.min);
+      });
+      if (!mins.length) return '';
+      const lo = Math.min(...mins), hi = Math.max(...mins);
+      return lo === hi ? lo + '+' : lo + '–' + hi + '+';
+    }
+
+    function _btTierTableHtml(stats, metric, posSel) {
       const labels = { stud: 'Stud Rate', hit: 'Hit Rate (Hit+)', elite: 'Elite Rate', bust: 'Bust Rate' };
       const rows = BT_TIERS.map(t => {
         const s = stats[t.label];
         if (s.total === 0) return null;
+        const minStr = _btTierMinStr(t.label, posSel);
         const evald = s.total - s.pending;
         function pctCell(n) {
           if (evald === 0) return '—';
@@ -34129,7 +34146,7 @@ window.fmtHeight = fmtHeight;
         const barLbl = rate != null ? Math.round(rate * 100) + '%' : '—';
         const expanded = _expandedTier === t.label;
         let html = `<tr class="bt-tier-row${expanded ? ' expanded' : ''}" data-bt-tier="${t.label}">`
-          + `<td><span class="bt-tier-badge" style="background:${t.color}22;color:${t.color}">${t.label}</span><span style="opacity:.5;font-size:.7rem;margin-left:6px">${t.min}+</span></td>`
+          + `<td><span class="bt-tier-badge" style="background:${t.color}22;color:${t.color}">${t.label}</span>${minStr ? `<span style="opacity:.5;font-size:.7rem;margin-left:6px">${minStr}</span>` : ''}</td>`
           + `<td class="bt-pct-cell">${s.total}${s.pending ? ` <span style="opacity:.5">(${s.pending} pend)</span>` : ''}</td>`
           + `<td class="bt-pct-cell" style="color:#fbbf24" title="Rookie-window top-6 PPG finish">${pctCell(s.elite || 0)}</td>`
           + `<td class="bt-pct-cell" style="color:#22c55e">${pctCell(s.stud)}</td>`
@@ -34217,7 +34234,7 @@ window.fmtHeight = fmtHeight;
       const filtered = _btFilter(all, classSel, posSel);
       const stats = _btTierStats(filtered);
       document.getElementById('btSummary').innerHTML = _btSummaryHtml(filtered);
-      wrapper.innerHTML = _btTierTableHtml(stats, metric);
+      wrapper.innerHTML = _btTierTableHtml(stats, metric, posSel);
       document.getElementById('btCalChart').innerHTML = _btCalChartHtml(stats, metric);
       const metricLbl = metric === 'stud' ? 'Stud Rate'
         : metric === 'bust' ? 'Bust Rate'

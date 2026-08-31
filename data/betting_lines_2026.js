@@ -898,22 +898,6 @@ const _WEEKLY_PROPS_2026 = {
     'Chris Bell': { UD: { rrtd: 0.5, atd: 762 }, asOf: '2026-08-31' },
     'Eli Heidenreich': { UD: { rrtd: 0.5, atd: 1270 }, asOf: '2026-08-31' }
   },
-  // ===== Week 15 =====
-  '15': {
-    'Omarion Hampton': { UD: { ry: 14.5, rrtd: 0.5, atd: 321 }, asOf: '2026-08-20' },
-    'Mac Jones': { UD: { py: 64.5, ptd: 0.5 }, asOf: '2026-08-20' },
-    'Deebo Samuel': { UD: { rcy: 13.5, rrtd: 0.5, atd: 602 }, asOf: '2026-08-20' },
-    'Ladd McConkey': { UD: { rcy: 10.5, rrtd: 0.5, atd: 572 }, asOf: '2026-08-20' },
-    'Justin Herbert': { UD: { py: 28.5, ptd: 0.5 }, asOf: '2026-08-20' },
-    'Brock Purdy': { UD: { py: 41.5, ptd: 0.5 }, asOf: '2026-08-20' },
-    'Kimani Vidal': { UD: { ry: 17.5, rrtd: 0.5, atd: 220 }, asOf: '2026-08-20' },
-    'KeAndre Lambert-Smith': { UD: { rcy: 24.5, rrtd: 0.5, atd: 536 }, asOf: '2026-08-20' },
-    'Oronde Gadsden II': { UD: { rcy: 13.5, rrtd: 0.5, atd: 449 }, asOf: '2026-08-20' },
-    'Brenen Thompson': { UD: { rcy: 22.5, rrtd: 0.5, atd: 521 }, asOf: '2026-08-20' },
-    'De\'Zhaun Stribling': { UD: { rcy: 20.5, rrtd: 0.5, atd: 667 }, asOf: '2026-08-20' },
-    'Kaelon Black': { UD: { ry: 21.5, rrtd: 0.5, atd: 232 }, asOf: '2026-08-20' },
-    'Trey Lance': { UD: { py: 98.5, ptd: 0.5, ry: 17.5 }, asOf: '2026-08-20' }
-  },
 };
 
 // ===== UNIFIED NAMESPACE ===================================================

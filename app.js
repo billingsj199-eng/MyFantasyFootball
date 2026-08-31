@@ -46230,12 +46230,20 @@ Rules:
     const alpha = starters <= 1.2 ? 1 : Math.max(0.55, 1 - 0.18 * (starters - 1));
     const full = Math.floor(starters);
     const frac = starters - full;
+    // Win-now 1-start positions (1QB / 1TE): you can only start one, so the
+    // top guy IS the position — the team with the QB1/TE1 should rank 1st
+    // there almost every time, and bench bodies barely register (Jack
+    // 2026-08-31). Dynasty's value view keeps the fuller bench credit:
+    // stashes hold real long-term value there.
+    const winNow = !(_mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper') || _mtViewMode === 'contender';
+    const oneStart = winNow && starters <= 1.2;
+    const benchW = oneStart ? [0.06, 0.02, 0.01] : [0.2, 0.08, 0.03];
     let bench = 0, total = 0;
     group.forEach((p, i) => {
       let w;
       if (i < full) w = 1;
-      else if (i === full && frac > 0.001) w = 0.2 + 0.7 * frac;
-      else { w = bench === 0 ? 0.2 : bench === 1 ? 0.08 : 0.03; bench++; }
+      else if (i === full && frac > 0.001) w = benchW[0] + 0.7 * frac;
+      else { w = benchW[Math.min(bench, 2)]; bench++; }
       total += Math.pow(Math.max(p.val || 0, 0), alpha) * w;
     });
     return total;
@@ -46744,7 +46752,7 @@ Rules:
     if (sc.pickTotal) html += `<div style="font-size:.5rem;color:var(--text2)">+${sc.pickTotal} picks</div>`;
     html += `</div>`;
     html += `<div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text)">${_esc(t.owner)}${t.isMyTeam ? ' <span style="font-size:.7rem;color:var(--accent)">⭐ MY TEAM</span>' : ''}</div>`;
-    html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Players: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div></div>`;
+    html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Player val: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}</div></div>`;
     html += `<button onclick="window._mtCloseTeam(${idx})" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕ Close</button>`;
     html += `</div>`;
 

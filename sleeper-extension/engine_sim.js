@@ -1,4 +1,4 @@
-// COPY of ../sim_lab/engine.js (synced 2026-08-11 10:56:31 by export_sleeper_extension_data.py — edit the sim_lab original)
+// COPY of ../sim_lab/engine.js (synced 2026-08-31 09:00:51 by export_sleeper_extension_data.py — edit the sim_lab original)
 // ============================================================================
 // SIM LAB ENGINE — projections + Monte Carlo simulation core.
 // Private research tool. Not part of the deployed MFF site.
@@ -240,6 +240,11 @@
       bySid[tm] = p; // Sleeper DEF player_id IS the team abbr
     });
 
+    // Norm-name aliases so leagues imported by NAME (ESPN) can address players
+    // with no Sleeper id through the same bySid map. Lowercase norm keys can't
+    // collide with numeric Sleeper ids or uppercase DST team abbrs.
+    players.forEach(function (p) { if (!bySid[p.norm]) bySid[p.norm] = p; });
+
     applyQbWindows(players, byNorm);
     applyInjuryWindows(players);
     applyRookieRamps(players);
@@ -258,7 +263,55 @@
       var tot = recByTeam[tm2].reduce(function (s, r) { return s + r.rp; }, 0);
       recByTeam[tm2].forEach(function (r) { r.w = Math.sqrt(r.rp / tot); delete r.rp; });
     });
-    return { list: players, byNorm: byNorm, bySid: bySid, recByTeam: recByTeam };
+    return { list: players, byNorm: byNorm, bySid: bySid, recByTeam: recByTeam,
+             _ix: buildIndex(players, recByTeam, schedule) };
+  }
+
+  // ---------- Monte-Carlo fast-path index ----------
+  // The sampler used to key each sim's environment off strings — env.v['KC'],
+  // env.g[sleeperId] — which meant ~2M dictionary inserts and lookups per
+  // season sim. Profiling put that layout at ~55% of the runtime against ~17%
+  // for the actual random draws. Everything the inner loop touches is resolved
+  // to an integer slot ONCE here so the hot path reads Float64Arrays by index.
+  // Draw order, draw count and every resulting number are unchanged — this is
+  // purely a memory-layout change.
+  function buildIndex(list, recByTeam, schedule) {
+    var teams = [], tIdx = Object.create(null);
+    function teamSlot(tm) {
+      if (tm == null) return -1;
+      var i = tIdx[tm];
+      if (i === undefined) { i = teams.length; teams.push(tm); tIdx[tm] = i; }
+      return i;
+    }
+    // every team that plays a game gets a slot first, so drawWeekEnv can never
+    // meet an abbreviation it has no column for
+    var bw = (schedule && schedule.byWeek) || {};
+    Object.keys(bw).forEach(function (wk) {
+      bw[wk].forEach(function (g0) { teamSlot(g0.away); teamSlot(g0.home); });
+    });
+    // receiver hub slots, grouped by team index
+    var recByTi = [], nRec = 0, keySlot = Object.create(null);
+    Object.keys(recByTeam).forEach(function (tm) {
+      var ti = teamSlot(tm), arr = recByTeam[tm];
+      arr.forEach(function (r) { r.i = nRec++; keySlot[r.key] = r.i; });
+      recByTi[ti] = arr;
+    });
+    for (var t = 0; t < teams.length; t++) if (!recByTi[t]) recByTi[t] = null;
+    list.forEach(function (p) {
+      p._ti = teamSlot(p.tm);
+      var gi = keySlot[p.sid || p.norm];
+      p._gi = gi === undefined ? -1 : gi;
+      p._fv = CORR.fV[p.pos] || 0;
+      p._fg = CORR.fG[p.pos] || 0;
+      // relative width is a pure function of the player; samplePlayerScore
+      // used to recompute this pow+sqrt on every one of millions of draws
+      p._relW = Math.sqrt(Math.pow(RESID_SHRINK * p.sigmaPct, 2) + 0.04);
+    });
+    return { teams: teams, tIdx: tIdx, recByTi: recByTi, nRec: nRec };
+  }
+  function ensureIndex(players) {
+    return players._ix ||
+      (players._ix = buildIndex(players.list || [], players.recByTeam || {}, players.schedule));
   }
 
   // ---------- injury start-of-season windows ----------
@@ -597,54 +650,70 @@
   // One draw of the week's common factors: per-team passing environment V
   // (correlated across each game), per-receiver draws g + the QB hub
   // (share-weighted sum of his receivers' g), antisymmetric rush script.
+  // v/hub/rush are indexed by team slot, g by receiver slot (see buildIndex).
   function drawWeekEnv(gamesThisWeek, rng, players) {
-    var env = { v: {}, hub: {}, g: {}, rush: {} };
+    var ix = ensureIndex(players || {});
+    var nT = ix.teams.length;
+    var v = new Float64Array(nT), hub = new Float64Array(nT), rush = new Float64Array(nT);
+    var g = new Float64Array(ix.nRec);
     var a = Math.sqrt(CORR.gV), b = Math.sqrt(1 - CORR.gV);
-    (gamesThisWeek || []).forEach(function (g0) {
+    var gl = gamesThisWeek || [], live = [], seen = new Uint8Array(nT);
+    for (var i = 0; i < gl.length; i++) {
+      var ai = ix.tIdx[gl[i].away], hi = ix.tIdx[gl[i].home];
+      if (ai === undefined || hi === undefined) continue;
       var zGame = rng.normal();
-      env.v[g0.away] = a * zGame + b * rng.normal();
-      env.v[g0.home] = a * zGame + b * rng.normal();
+      v[ai] = a * zGame + b * rng.normal();
+      v[hi] = a * zGame + b * rng.normal();
       var zR = rng.normal();
-      env.rush[g0.home] = zR;
-      env.rush[g0.away] = -zR;
-    });
-    var rbt = (players && players.recByTeam) || {};
-    Object.keys(env.v).forEach(function (tm2) {
-      var hub = 0;
-      (rbt[tm2] || []).forEach(function (r) {
+      rush[hi] = zR;
+      rush[ai] = -zR;
+      if (!seen[ai]) { seen[ai] = 1; live.push(ai); }
+      if (!seen[hi]) { seen[hi] = 1; live.push(hi); }
+    }
+    for (var j = 0; j < live.length; j++) {
+      var ti = live[j], rs = ix.recByTi[ti];
+      if (!rs) continue;
+      var h = 0;
+      for (var r = 0; r < rs.length; r++) {
         var z = rng.normal();
-        env.g[r.key] = z;
-        hub += r.w * z;
-      });
-      env.hub[tm2] = hub;
-    });
-    return env;
+        g[rs[r].i] = z;
+        h += rs[r].w * z;
+      }
+      hub[ti] = h;
+    }
+    return { v: v, hub: hub, g: g, rush: rush, ti: ix.tIdx };
   }
 
+  // Fills and returns the shared _LD scratch {L, f2} — the common-factor draw
+  // and its variance share. Reused rather than freshly allocated because this
+  // runs once per sampled player-week (millions per season sim).
+  var _LD = { L: 0, f2: 0 };
   function playerLoading(p, wkProj, env, rng) {
-    // returns {L, f2}: the common-factor draw and its variance share
     if (p.isDST) {
-      var vo = env.v[wkProj.slot.opp] || 0;
-      return { L: CORR.fDST_oppV * vo, f2: CORR.fDST_oppV * CORR.fDST_oppV };
+      var oi = env.ti[wkProj.slot.opp];
+      var vo = oi === undefined ? 0 : env.v[oi];
+      _LD.L = CORR.fDST_oppV * vo;
+      _LD.f2 = CORR.fDST_oppV * CORR.fDST_oppV;
+      return _LD;
     }
-    var L = 0, f2 = 0;
-    var fv = CORR.fV[p.pos] || 0;
-    L += fv * (env.v[p.tm] || 0);
+    var ti = p._ti, L = 0, f2 = 0;
+    var fv = p._fv;
+    L += fv * (ti >= 0 ? env.v[ti] : 0);
     f2 += fv * fv;
     if (p.pos === 'QB') {
-      L += CORR.fH_QB * (env.hub[p.tm] || 0);
+      L += CORR.fH_QB * (ti >= 0 ? env.hub[ti] : 0);
       f2 += CORR.fH_QB * CORR.fH_QB;
-    } else if (CORR.fG[p.pos]) {
-      var gz = env.g[p.sid || p.norm];
-      if (gz == null) gz = rng.normal(); // receiver outside the hub pool
-      L += CORR.fG[p.pos] * gz;
-      f2 += CORR.fG[p.pos] * CORR.fG[p.pos];
+    } else if (p._fg) {
+      var gz = p._gi >= 0 ? env.g[p._gi] : rng.normal(); // outside the hub pool
+      L += p._fg * gz;
+      f2 += p._fg * p._fg;
     }
     if (p.pos === 'RB') {
-      L += CORR.fR_RB * (env.rush[p.tm] || 0);
+      L += CORR.fR_RB * (ti >= 0 ? env.rush[ti] : 0);
       f2 += CORR.fR_RB * CORR.fR_RB;
     }
-    return { L: L, f2: f2 };
+    _LD.L = L; _LD.f2 = f2;
+    return _LD;
   }
 
   // meanScale (optional): scales the player's whole level for this draw —
@@ -652,10 +721,22 @@
   // Total per-player weekly variance is the SAME as the pre-QB-hub engine
   // ((0.9 sigma)^2 + 0.04); the loadings only re-apportion it between common
   // factors and idiosyncratic residual, so marginal calibration is untouched.
+  //
+  // IN-SEASON the sampler centers on the JS Weekly blend (Clay prior shrunk
+  // toward actual 2026 PPG, prior strength 5, + live FPA opponent adj) — the
+  // P5 blend beat pure Clay at EVERY mid-season checkpoint in the 2019-25
+  // backtests (backtest_midseason.py, backtest_blend_weekly.py). Preseason
+  // jsMean === mean identically, so this is a provable no-op until real
+  // games exist. Kill switch for A/B: window.SIM_USE_JS_MEAN = false.
+  function effMean(wkProj) {
+    var useJs = typeof window === 'undefined' || window.SIM_USE_JS_MEAN !== false;
+    return (useJs && wkProj.jsMean != null) ? wkProj.jsMean : wkProj.mean;
+  }
   function samplePlayerScore(p, wkProj, env, rng, meanScale) {
     if (!wkProj || wkProj.mean <= 0.05) return 0;
-    var base = wkProj.mean * (meanScale || 1);
-    var totalRel = Math.sqrt(Math.pow(RESID_SHRINK * p.sigmaPct, 2) + 0.04);
+    var base = effMean(wkProj) * (meanScale || 1);
+    var totalRel = p._relW !== undefined ? p._relW
+      : Math.sqrt(Math.pow(RESID_SHRINK * p.sigmaPct, 2) + 0.04);
     var ld = playerLoading(p, wkProj, env, rng);
     var m = base * Math.max(0.25, 1 + totalRel * ld.L);
     var sd = base * totalRel * Math.sqrt(Math.max(0.06, 1 - ld.f2));
@@ -682,26 +763,32 @@
       p._wk = wp;
       return wp.mean > (p.isDST ? 0 : 0.4);
     });
-    var res = pool.map(function () { return []; });
+    var res = pool.map(function () { return new Float64Array(sims); });
     var games = schedule.byWeek[wk] || [];
     for (var s = 0; s < sims; s++) {
       var env = drawWeekEnv(games, rng, players);
       for (var i = 0; i < pool.length; i++) {
-        res[i].push(samplePlayerScore(pool[i], pool[i]._wk, env, rng));
+        res[i][s] = samplePlayerScore(pool[i], pool[i]._wk, env, rng);
       }
     }
     return pool.map(function (p, i) {
-      var arr = res[i].sort(function (a, b) { return a - b; });
+      var arr = res[i].sort(); // typed array: numeric ascending, no comparator
       var mean = arr.reduce(function (t, v) { return t + v; }, 0) / arr.length;
       var bb = BOOM_BUST[p.pos] || { boom: 20, bust: 5 };
+      // one pass for both tails instead of two filter() allocations
+      var nBoom = 0, nBust = 0;
+      for (var q = 0; q < arr.length; q++) {
+        if (arr[q] >= bb.boom) nBoom++;
+        if (arr[q] < bb.bust) nBust++;
+      }
       return {
         player: p, week: wk, mean: mean,
         proj: p._wk.mean, jsProj: p._wk.jsMean, mult: p._wk.mult, slot: p._wk.slot, comps: p._wk.comps,
         p10: pct(arr, 0.10), p25: pct(arr, 0.25), p50: pct(arr, 0.50),
         p75: pct(arr, 0.75), p90: pct(arr, 0.90),
         boomAt: bb.boom, bustAt: bb.bust,
-        boom: arr.filter(function (v) { return v >= bb.boom; }).length / arr.length,
-        bust: arr.filter(function (v) { return v < bb.bust; }).length / arr.length
+        boom: nBoom / arr.length,
+        bust: nBust / arr.length
       };
     });
   }
@@ -808,7 +895,7 @@
       var wks = [];
       for (var w = wFrom; w <= wTo; w++) {
         var wp = weeklyProjection(p, w, sc, schedule);
-        if (wp && wp.mean > 0.05) wks.push({ wk: w, wp: wp });
+        if (wp && wp.mean > 0.05) wks.push({ wk: w, wi: w - wFrom, wp: wp });
       }
       if (!wks.length) return;
       var seasonMean = wks.reduce(function (t, x) { return t + x.wp.mean; }, 0);
@@ -827,41 +914,62 @@
 
     var byPos = {};
     pool.forEach(function (e, i) { (byPos[e.p.pos] = byPos[e.p.pos] || []).push(i); });
+    // one scratch array per position, sorted IN PLACE every sim — the
+    // membership never changes, only the order, so re-slicing each sim was
+    // pure allocation (and leaving them near-sorted speeds the next sort up)
+    var posGroups = Object.keys(byPos).map(function (pos) { return byPos[pos]; });
+    var nWks = wTo - wFrom + 1, envByWeek = new Array(nWks), sNow = 0;
+    function cmpTotals(a, b) { return pool[b].totals[sNow] - pool[a].totals[sNow]; }
 
     for (var s = 0; s < sims; s++) {
       // one env draw per NFL game of this simulated season, shared league-wide
-      var envByWeek = {};
-      for (var w2 = wFrom; w2 <= wTo; w2++) envByWeek[w2] = drawWeekEnv(schedule.byWeek[w2] || [], rng, players);
+      for (var w2 = wFrom; w2 <= wTo; w2++) envByWeek[w2 - wFrom] = drawWeekEnv(schedule.byWeek[w2] || [], rng, players);
       for (var i = 0; i < pool.length; i++) {
-        var e = pool[i], tot = 0;
+        var e = pool[i], tot = 0, wks = e.wks;
         var scale = (e.shocked ? drawSeasonShock(rng, halfPtsOf(e.p)) : 1) * e.inf;
-        for (var j = 0; j < e.wks.length; j++) {
+        for (var j = 0; j < wks.length; j++) {
           if (e.pPlay < 1 && rng.rand() >= e.pPlay) continue; // missed game
-          tot += samplePlayerScore(e.p, e.wks[j].wp, envByWeek[e.wks[j].wk], rng, scale);
+          tot += samplePlayerScore(e.p, wks[j].wp, envByWeek[wks[j].wi], rng, scale);
         }
         e.totals[s] = tot;
       }
       // positional finish THIS season
-      Object.keys(byPos).forEach(function (pos) {
-        var idxs = byPos[pos].slice().sort(function (a, b) { return pool[b].totals[s] - pool[a].totals[s]; });
+      sNow = s;
+      for (var gi = 0; gi < posGroups.length; gi++) {
+        var idxs = posGroups[gi];
+        idxs.sort(cmpTotals);
         for (var r = 0; r < idxs.length; r++) {
           var e2 = pool[idxs[r]];
           e2.rankSum += r + 1;
           e2.rankCounts[r + 1] = (e2.rankCounts[r + 1] || 0) + 1;
         }
-      });
+      }
     }
 
     return pool.map(function (e) {
-      var arr = Array.prototype.slice.call(e.totals).sort(function (a, b) { return a - b; });
+      // typed-array sort is numeric-ascending by default — no comparator
+      // callback and no Float64Array -> Array copy
+      var arr = e.totals.slice().sort();
       var mean = arr.reduce(function (t, v) { return t + v; }, 0) / sims;
       function topN(n) {
         var c = 0;
         for (var r = 1; r <= n; r++) c += e.rankCounts[r] || 0;
         return c / sims;
       }
+      // Median-relative season tails (site export): boom = >=125% of own
+      // median season, bust = <=75% (seasons are tighter than single weeks,
+      // so the band is +/-25% where the weekly one is +/-50%). Additive
+      // fields — the Sim Lab UI ignores them.
+      var _med = pct(arr, 0.50), _nB = 0, _nD = 0;
+      if (_med > 0) {
+        for (var q = 0; q < sims; q++) {
+          if (arr[q] >= _med * 1.25) _nB++;
+          if (arr[q] <= _med * 0.75) _nD++;
+        }
+      }
       return {
         player: e.p, games: e.wks.length, seasonProj: e.seasonMean, clayPts: seasonPoints(e.p, sc),
+        seasonBoom: _med > 0 ? _nB / sims : null, seasonBust: _med > 0 ? _nD / sims : null,
         mean: mean, p10: pct(arr, 0.10), p25: pct(arr, 0.25), p50: pct(arr, 0.50),
         p75: pct(arr, 0.75), p90: pct(arr, 0.90),
         avgRank: e.rankSum / sims, rankCounts: e.rankCounts,
@@ -909,7 +1017,7 @@
         }).map(function (p) {
           var wp = weeklyProjection(p, wk, sc, schedule);
           return wp ? { p: p, wp: wp } : null;
-        }).filter(Boolean).sort(function (a, b) { return b.wp.mean - a.wp.mean; });
+        }).filter(Boolean).sort(function (a, b) { return effMean(b.wp) - effMean(a.wp); });
         prep[t.rosterId][wk] = pickLineup(cands, lineupSlots);
       });
     });
@@ -920,7 +1028,7 @@
       playoffProj[t.rosterId] = {};
       for (var w2 = playoffStart; w2 < playoffStart + 3; w2++) {
         var lu = prep[t.rosterId][w2] || [];
-        playoffProj[t.rosterId][w2] = lu.reduce(function (s2, slot) { return s2 + slot.wp.mean; }, 0);
+        playoffProj[t.rosterId][w2] = lu.reduce(function (s2, slot) { return s2 + effMean(slot.wp); }, 0);
       }
     });
 
@@ -1069,6 +1177,257 @@
     }
   }
 
+  // ---------- BEST BALL SIM (Underdog-style) ----------
+  // squads: array of rosters (arrays of engine player refs) — the user's
+  // imported teams AND any synthetic field teams, all in one list so a
+  // player shared between squads is sampled ONCE per sim and scores
+  // identically everywhere (portfolio + pod correlation is real).
+  // teams: [{ key, squad: squadIdx, field: [squadIdx...]|null, advN }]
+  // Lineup auto-picked per week: 1 QB / 2 RB / 3 WR / 1 TE / 1 FLEX.
+  // Regular season = weeks 1..regTo (Underdog BBM: 14), playoff weeks
+  // regTo+1..regTo+3 simmed separately per team. Same season layers as
+  // simSeason: shared league-wide envs, wrecked-season shock mixture,
+  // missed-game Bernoulli draws for Clay gm<17.
+  function simBestBall(opts) {
+    var sims = opts.sims || 300, sc = opts.scoring || PRESETS.half;
+    var rng = makeRng(opts.seed != null ? opts.seed : null);
+    var schedule = opts.schedule, players = opts.players;
+    var regTo = Math.min(17, Math.max(4, opts.regTo || 14));
+    var wTo = Math.min(17, regTo + 3);
+    var squads = opts.squads, teams = opts.teams;
+    var sqSf = opts.sqSf || []; // per-squad superflex-lineup flag
+    // Mid-season continuation: weeks < fromWeek use ACTUAL points (banked,
+    // identical in every sim) from actualsBySid[wk][sid]; only fromWeek..wTo
+    // are sampled. unavailable[sid] = 'ir' zeroes every remaining week
+    // (news the preseason Clay guide can't know), 'out' just this week.
+    var fromWeek = Math.max(1, Math.min(wTo, opts.fromWeek || 1));
+    var actuals = opts.actualsBySid || {};
+    var unavailable = opts.unavailable || {};
+
+    // one entry per unique player across every squad
+    var entries = [], eIx = {};
+    function entryOf(p) {
+      var k = p.sid || p.norm;
+      if (eIx[k] !== undefined) return eIx[k];
+      var wps = new Array(wTo + 1), any = false;
+      for (var w = 1; w <= wTo; w++) {
+        var wp = weeklyProjection(p, w, sc, schedule);
+        wps[w] = (wp && wp.mean > 0.05) ? wp : null;
+        if (wps[w]) any = true;
+      }
+      var gm = Math.min(17, Math.max(2, p.clayGames || 17));
+      var useInj = !p.qbWindow && !p.isDST && gm < 17;
+      var act = null;
+      if (fromWeek > 1) {
+        act = new Float64Array(fromWeek - 1);
+        for (var w0 = 1; w0 < fromWeek; w0++) {
+          var wkMap = actuals[w0];
+          act[w0 - 1] = (wkMap && p.sid != null && wkMap[p.sid] != null) ? wkMap[p.sid] : 0;
+        }
+      }
+      eIx[k] = entries.length;
+      entries.push({
+        p: p, wps: any ? wps : null, act: act,
+        unav: p.sid != null ? (unavailable[p.sid] || null) : null,
+        shocked: !p.isDST && p.pos !== 'K',
+        inf: useInj ? 17 / gm : 1, pPlay: useInj ? gm / 17 : 1
+      });
+      return eIx[k];
+    }
+    var sqEntries = squads.map(function (sq) { return sq.map(entryOf); });
+
+    var nE = entries.length;
+    var S = new Float64Array(nE * wTo); // sampled scores [e*wTo + wk-1]
+    var envs = new Array(wTo);
+    var sqReg = new Float64Array(squads.length);
+
+    // Underdog lineup from this week's sampled scores: keep the top few at
+    // each position (module scratch arrays, no allocation), then
+    //   standard:  1QB + 2RB + 3WR + 1TE + FLEX(best leftover RB/WR/TE)
+    //   superflex: the above + a SUPERFLEX slot (best leftover incl. QB2)
+    var _qbT = [0, 0], _rbT = [0, 0, 0, 0], _wrT = [0, 0, 0, 0, 0], _teT = [0, 0, 0];
+    function topInsert(arr, v) {
+      for (var i = 0; i < arr.length; i++) {
+        if (v > arr[i]) {
+          for (var j = arr.length - 1; j > i; j--) arr[j] = arr[j - 1];
+          arr[i] = v;
+          return;
+        }
+      }
+    }
+    function bbWeekPoints(ixs, wk, sf) {
+      _qbT[0] = _qbT[1] = 0;
+      _rbT[0] = _rbT[1] = _rbT[2] = _rbT[3] = 0;
+      _wrT[0] = _wrT[1] = _wrT[2] = _wrT[3] = _wrT[4] = 0;
+      _teT[0] = _teT[1] = _teT[2] = 0;
+      for (var i = 0; i < ixs.length; i++) {
+        var e = ixs[i], v = S[e * wTo + wk - 1];
+        if (v <= 0) continue;
+        var pos = entries[e].p.pos;
+        if (pos === 'QB') topInsert(_qbT, v);
+        else if (pos === 'RB') topInsert(_rbT, v);
+        else if (pos === 'WR') topInsert(_wrT, v);
+        else if (pos === 'TE') topInsert(_teT, v);
+      }
+      var flex = Math.max(_rbT[2], Math.max(_wrT[3], _teT[1]));
+      var total = _qbT[0] + _rbT[0] + _rbT[1] + _wrT[0] + _wrT[1] + _wrT[2] + _teT[0] + flex;
+      if (sf) {
+        var sfSlot;
+        if (flex > 0 && flex === _rbT[2]) sfSlot = Math.max(_qbT[1], Math.max(_rbT[3], Math.max(_wrT[3], _teT[1])));
+        else if (flex > 0 && flex === _wrT[3]) sfSlot = Math.max(_qbT[1], Math.max(_rbT[2], Math.max(_wrT[4], _teT[1])));
+        else sfSlot = Math.max(_qbT[1], Math.max(_rbT[2], Math.max(_wrT[3], _teT[2])));
+        total += sfSlot;
+      }
+      return total;
+    }
+
+    var poWeeks = [];
+    for (var w0b = regTo + 1; w0b <= wTo; w0b++) poWeeks.push(w0b);
+    var res = teams.map(function (t) {
+      return {
+        key: t.key, regTotals: new Float64Array(sims),
+        adv: 0, win: 0, rankCounts: {}, fieldSum: 0, advF: new Uint8Array(sims),
+        po: poWeeks.map(function () { return new Float64Array(sims); }),
+        // Eliminator survivor chain (teams flagged elim, field required):
+        // per-sim P(alive through wk k) chained probabilistically so 1-in-65k
+        // tails resolve without 65k sims.
+        elimCurve: t.elim ? new Float64Array(wTo) : null, elimFinal: 0, elimWin: 0,
+        // pooled FIELD playoff-week scores (ladder-mode EV derives its advance
+        // cutoffs from these at the tournament's structural selectivity — so a
+        // superflex field's higher scoring raises its own cutoffs automatically)
+        fieldPo: (t.collectFieldPo && t.field && t.field.length)
+          ? poWeeks.map(function () { return new Float64Array(t.field.length * sims); }) : null
+      };
+    });
+
+    // Eliminator: wk1 = top-6 of the 12-team pod by WEEK-1 score; wks 2..16 =
+    // 50% head-to-head cut vs a random SURVIVOR; wk17 = 3-person final,
+    // highest score wins. Weekly win odds are chained as FRACTIONS (not
+    // Bernoulli draws) so the ~1/65,536 tail resolves at a few hundred sims.
+    // Survivor-quality bias is handled with a mean-field pod model: every pod
+    // member carries a survival WEIGHT (wk1 indicator, then x its own weekly
+    // win fraction), and each week's win odds are computed against the
+    // survival-WEIGHTED field — so late-week opponents are implicitly the
+    // healthy/hot teams, not random pod members. In a symmetric pod this
+    // reproduces the structural 0.5^15 chain exactly; naive unweighted
+    // chaining inflated a strong team's finals odds ~70x.
+    function elimSim(tm, r) {
+      var field = tm.field, n = field.length;
+      if (!n) return;
+      var members = [tm.squad].concat(field), M = members.length;
+      var sc2 = new Array(M), w = new Array(M), nw = new Array(M);
+      for (var m0 = 0; m0 < M; m0++) sc2[m0] = bbWeekPoints(sqEntries[members[m0]], 1, sqSf[members[m0]]);
+      for (var m1 = 0; m1 < M; m1++) {
+        var beat = 0;
+        for (var f1 = 0; f1 < M; f1++) if (sc2[f1] > sc2[m1]) beat++;
+        w[m1] = beat < 6 ? 1 : 0; // top-6 of 12 advance wk1
+      }
+      r.elimCurve[0] += w[0];
+      for (var wk = 2; wk <= Math.min(16, wTo); wk++) {
+        if (w[0] <= 0) return;
+        for (var m2 = 0; m2 < M; m2++) sc2[m2] = bbWeekPoints(sqEntries[members[m2]], wk, sqSf[members[m2]]);
+        for (var m3 = 0; m3 < M; m3++) {
+          if (w[m3] <= 0) { nw[m3] = 0; continue; }
+          var num = 0, den = 0;
+          for (var f2 = 0; f2 < M; f2++) {
+            if (f2 === m3) continue;
+            den += w[f2];
+            if (sc2[f2] < sc2[m3]) num += w[f2];
+            else if (sc2[f2] === sc2[m3]) num += 0.5 * w[f2];
+          }
+          nw[m3] = w[m3] * (den > 0 ? num / den : 0.5);
+        }
+        for (var m4 = 0; m4 < M; m4++) w[m4] = nw[m4];
+        r.elimCurve[wk - 1] += w[0];
+      }
+      if (w[0] > 0 && wTo >= 17) {
+        for (var m5 = 0; m5 < M; m5++) sc2[m5] = bbWeekPoints(sqEntries[members[m5]], 17, sqSf[members[m5]]);
+        var num2 = 0, den2 = 0;
+        for (var f3 = 1; f3 < M; f3++) {
+          den2 += w[f3];
+          if (sc2[f3] < sc2[0]) num2 += w[f3];
+          else if (sc2[f3] === sc2[0]) num2 += 0.5 * w[f3];
+        }
+        var p1 = den2 > 0 ? num2 / den2 : 0.5;
+        r.elimFinal += w[0];
+        r.elimWin += w[0] * p1 * p1; // beat both other finalists
+      }
+    }
+
+    for (var s = 0; s < sims; s++) {
+      for (var w1 = fromWeek; w1 <= wTo; w1++) envs[w1 - 1] = drawWeekEnv(schedule.byWeek[w1] || [], rng, players);
+      for (var e = 0; e < nE; e++) {
+        var en = entries[e], base = e * wTo;
+        // banked weeks: real points, identical every sim
+        for (var wb = 1; wb < fromWeek; wb++) S[base + wb - 1] = en.act ? en.act[wb - 1] : 0;
+        if (!en.wps || en.unav === 'ir') { for (var wz = fromWeek; wz <= wTo; wz++) S[base + wz - 1] = 0; continue; }
+        var scale = (en.shocked ? drawSeasonShock(rng, halfPtsOf(en.p)) : 1) * en.inf;
+        for (var w2 = fromWeek; w2 <= wTo; w2++) {
+          var wp2 = en.wps[w2];
+          S[base + w2 - 1] = (!wp2 || (en.unav === 'out' && w2 === fromWeek) || (en.pPlay < 1 && rng.rand() >= en.pPlay)) ? 0
+            : samplePlayerScore(en.p, wp2, envs[w2 - 1], rng, scale);
+        }
+      }
+      for (var q = 0; q < squads.length; q++) {
+        var tot = 0;
+        for (var w3 = 1; w3 <= regTo; w3++) tot += bbWeekPoints(sqEntries[q], w3, sqSf[q]);
+        sqReg[q] = tot;
+      }
+      for (var t = 0; t < teams.length; t++) {
+        var tm = teams[t], r = res[t];
+        var mine = sqReg[tm.squad];
+        r.regTotals[s] = mine;
+        if (tm.field && tm.field.length) {
+          var beat = 0;
+          for (var f = 0; f < tm.field.length; f++) {
+            var fv = sqReg[tm.field[f]];
+            r.fieldSum += fv;
+            if (fv > mine) beat++;
+          }
+          var rank = beat + 1;
+          r.rankCounts[rank] = (r.rankCounts[rank] || 0) + 1;
+          if (rank <= (tm.advN || 2)) { r.adv++; r.advF[s] = 1; }
+          if (rank === 1) r.win++;
+        }
+        for (var pw = 0; pw < poWeeks.length; pw++) {
+          r.po[pw][s] = bbWeekPoints(sqEntries[tm.squad], poWeeks[pw], sqSf[tm.squad]);
+          if (r.fieldPo) {
+            var nFf = tm.field.length;
+            for (var ff = 0; ff < nFf; ff++) {
+              r.fieldPo[pw][s * nFf + ff] = bbWeekPoints(sqEntries[tm.field[ff]], poWeeks[pw], sqSf[tm.field[ff]]);
+            }
+          }
+        }
+        if (tm.elim && tm.field && tm.field.length) elimSim(tm, r);
+      }
+    }
+
+    return res.map(function (r, t) {
+      var arr = r.regTotals.slice().sort();
+      var mean = arr.reduce(function (a, v) { return a + v; }, 0) / sims;
+      var nF = (teams[t].field || []).length;
+      return {
+        key: r.key, sims: sims, regTo: regTo, fromWeek: fromWeek,
+        mean: mean, p10: pct(arr, 0.10), p25: pct(arr, 0.25), p50: pct(arr, 0.50),
+        p75: pct(arr, 0.75), p90: pct(arr, 0.90),
+        adv: nF ? r.adv / sims : null, win: nF ? r.win / sims : null,
+        rankCounts: r.rankCounts, podSize: nF ? nF + 1 : null,
+        fieldAvg: nF ? r.fieldSum / (sims * nF) : null,
+        advFlags: nF ? r.advF : null, poRaw: r.po,
+        fieldPo: r.fieldPo,
+        elim: (r.elimCurve && nF) ? {
+          curve: Array.prototype.slice.call(r.elimCurve, 0, 16).map(function (v) { return v / sims; }),
+          pFinal: r.elimFinal / sims, pWin: r.elimWin / sims
+        } : null,
+        po: poWeeks.map(function (w, i) {
+          var a = r.po[i].slice().sort();
+          var m = a.reduce(function (x, v) { return x + v; }, 0) / sims;
+          return { wk: w, mean: m, p10: pct(a, 0.10), p50: pct(a, 0.50), p90: pct(a, 0.90) };
+        })
+      };
+    });
+  }
+
   // Fill lineup slots greedily from mean-sorted candidates.
   var SLOT_ELIGIBLE = {
     QB: ['QB'], RB: ['RB'], WR: ['WR'], TE: ['TE'], K: ['K'], DEF: ['DST'], DST: ['DST'],
@@ -1101,8 +1460,8 @@
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, snapMult: snapMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult,
-    simWeek: simWeek, simSeason: simSeason, simLeague: simLeague, pickLineup: pickLineup,
-    drawWeekEnv: drawWeekEnv, samplePlayerScore: samplePlayerScore, CORR: CORR,
+    simWeek: simWeek, simSeason: simSeason, simLeague: simLeague, simBestBall: simBestBall, pickLineup: pickLineup,
+    drawWeekEnv: drawWeekEnv, samplePlayerScore: samplePlayerScore, effMean: effMean, CORR: CORR,
     drawSeasonShock: drawSeasonShock, SLOT_ELIGIBLE: SLOT_ELIGIBLE
   };
 })();

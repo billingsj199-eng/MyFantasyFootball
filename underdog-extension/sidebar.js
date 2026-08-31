@@ -3193,93 +3193,143 @@
     } catch (_) {}
   }
   function _refreshJackBoardsNow() {
+    const send = (type) => new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage({ type }, (res) => {
+          if (chrome.runtime.lastError || !res || !res.ok || !res.data) return resolve(null);
+          resolve(res.data);
+        });
+      } catch (_) { resolve(null); }
+    });
+    // v0.18.4: jacks-official is premium-only read since 2026-08-13, so the
+    // tokenless fetch 403s — fall back to the public top-36 mirror
+    // (jacks-public, written on the same site save) so a session without a
+    // fresh site-bridge push still gets a live top of the board.
+    send('mff-jacks-fetch').then((doc) => {
+      if (doc) return _applyJacksDoc(doc, true);
+      send('mff-jacks-public-fetch').then((pub) => { if (pub) _applyJacksDoc(pub, false); });
+    });
+  }
+  function _applyJacksDoc(doc, full) {
     try {
-      chrome.runtime.sendMessage({ type: 'mff-jacks-fetch' }, (res) => {
-        if (chrome.runtime.lastError || !res || !res.ok || !res.data) return;
-        try {
-          const doc = res.data;
-          const payload = JSON.parse(doc.fields.data.stringValue);
-          const jacks = payload.jacks || {};
-          // OUT FOR SEASON flag: {name: seasonYear} on the same doc; only
-          // hides during the current season (season year rolls over March 1,
-          // mirroring IR_SEASON in the site's app.js).
-          const d0 = new Date();
-          const irSeason = d0.getMonth() >= 2 ? d0.getFullYear() : d0.getFullYear() - 1;
-          let irMap = {};
-          try { irMap = JSON.parse((doc.fields.ir && doc.fields.ir.stringValue) || '{}') || {}; } catch (_) {}
-          const irOut = Object.keys(irMap).filter((n) => irMap[n] === irSeason);
-          const irSet = new Set(irOut);
-          const bbOrder = (jacks.redraft && jacks.redraft._order) || [];
-          const sfOrder = (jacks.superflex && jacks.superflex._order) || [];
-          if (!bbOrder.length) return;
-          // Compact ranks over players we actually carry (players.json pool
-          // already excludes K/DST/retired) and skip IR names — matches the
-          // page-bridge's buildRankMapFromBoard numbering.
-          const sfRankByName = new Map();
-          let sr = 0;
-          for (let si = 0; si < sfOrder.length; si++) {
-            const n = sfOrder[si];
-            if (!state.byName.has(n) || irSet.has(n)) continue;
-            sfRankByName.set(n, ++sr);
-            // Live-refresh Jack's RAW superflex rank too: jSf is what the SF
-            // tier chips key off (sfRank can be the user's own board), and it
-            // must stay in the same raw numbering as the _posTiers boundaries.
-            state.byName.get(n).jSf = si + 1;
-          }
-          const rows = [];
-          let r = 0;
-          for (const n of bbOrder) {
-            const p = state.byName.get(n);
-            if (!p || irSet.has(n)) continue;
-            r++;
-            // sfa deliberately null — keeps the baked/live-ADP value; the
-            // boards only carry rank order.
-            rows.push({ n: n, s: p.s, t: p.t, myRank: r, sfa: null,
-                        mineSfRank: sfRankByName.has(n) ? sfRankByName.get(n) : null });
-          }
-          if (!rows.length) return;
-          applyRankings(rows, irOut, true);
-          _jacksLiveApplied = true;
-          // Jack's ALL-board tier boundaries, re-based onto the same COMPACT
-          // numbering as the live ranks above (raw board positions include
-          // names we don't carry + IR — baked boundaries would drift by the
-          // skipped count, up to ~30 rows deep in the board).
-          const compactTierList = (order, tiersRaw, skip) => {
-            if (!Array.isArray(tiersRaw) || !tiersRaw.length || !order.length) return null;
-            const carriedBefore = []; // carried count among order[0..i-1]
-            let c = 0;
-            for (let i = 0; i < order.length; i++) {
-              carriedBefore[i] = c;
-              const nm = order[i];
-              if (state.byName.has(nm) && !skip.has(nm)) c++;
-            }
-            const out = [];
-            for (const t of tiersRaw) {
-              if (!t || !(t.afterRank >= 1) || !t.label) continue;
-              const idx = Math.min(t.afterRank - 1, order.length - 1);
-              out.push({ a: carriedBefore[idx] + 1, l: String(t.label), n: String(t.name || '') });
-            }
-            out.sort((x, y) => x.a - y.a);
-            return out;
-          };
-          const bbT = compactTierList(bbOrder, ((jacks.redraft || {})._posTiers || {}).ALL, irSet);
-          state.tiers = state.tiers || {};
-          if (bbT) state.tiers.rank = bbT;
-          // SF tiers stay in RAW board positions — they pair with p.jSf
-          // (updated raw above), not the compacted sfRank.
-          const sfRaw = ((jacks.superflex || {})._posTiers || {}).ALL;
-          if (Array.isArray(sfRaw) && sfRaw.length) {
-            state.tiers.jSf = sfRaw
-              .filter(t => t && t.afterRank >= 1 && t.label)
-              .map(t => ({ a: t.afterRank, l: String(t.label), n: String(t.name || '') }))
+      const payload = JSON.parse(doc.fields.data.stringValue);
+      const jacks = payload.jacks || {};
+      // OUT FOR SEASON flag: {name: seasonYear} on the same doc; only
+      // hides during the current season (season year rolls over March 1,
+      // mirroring IR_SEASON in the site's app.js).
+      const d0 = new Date();
+      const irSeason = d0.getMonth() >= 2 ? d0.getFullYear() : d0.getFullYear() - 1;
+      let irMap = {};
+      try { irMap = JSON.parse((doc.fields.ir && doc.fields.ir.stringValue) || '{}') || {}; } catch (_) {}
+      const irOut = Object.keys(irMap).filter((n) => irMap[n] === irSeason);
+      const irSet = new Set(irOut);
+      const bbOrder = (jacks.redraft && jacks.redraft._order) || [];
+      const sfOrder = (jacks.superflex && jacks.superflex._order) || [];
+      if (!bbOrder.length) return;
+      // Compact ranks over players we actually carry (players.json pool
+      // already excludes K/DST/retired) and skip IR names — matches the
+      // page-bridge's buildRankMapFromBoard numbering.
+      const sfRankByName = new Map();
+      let sr = 0;
+      for (let si = 0; si < sfOrder.length; si++) {
+        const n = sfOrder[si];
+        if (!state.byName.has(n) || irSet.has(n)) continue;
+        sfRankByName.set(n, ++sr);
+        // Live-refresh Jack's RAW superflex rank too: jSf is what the SF
+        // tier chips key off (sfRank can be the user's own board), and it
+        // must stay in the same raw numbering as the _posTiers boundaries.
+        state.byName.get(n).jSf = si + 1;
+      }
+      if (!full) {
+        // Top-36 slice: renumber every carried player NOT on the live SF
+        // slice from N+1 in existing jSf order, so a player who fell out of
+        // the live top-36 can't share a jSf with his replacement.
+        const liveSf = new Set(sfOrder);
+        const restSf = state.players
+          .filter((p) => !liveSf.has(p.n) && typeof p.jSf === 'number')
+          .sort((a, b) => a.jSf - b.jSf);
+        let jr = sfOrder.length;
+        for (const p of restSf) { p.jSf = ++jr; }
+      }
+      const rows = [];
+      let r = 0;
+      for (const n of bbOrder) {
+        const p = state.byName.get(n);
+        if (!p || irSet.has(n)) continue;
+        r++;
+        // sfa deliberately null — keeps the baked/live-ADP value; the
+        // boards only carry rank order.
+        rows.push({ n: n, s: p.s, t: p.t, myRank: r, sfa: null,
+                    mineSfRank: full && sfRankByName.has(n) ? sfRankByName.get(n) : null });
+      }
+      if (!rows.length) return;
+      const liveCount = rows.length;
+      if (!full) {
+        // Extend the rows over everyone else in their existing rank order —
+        // applyRankings only touches listed rows, and a stale baked rank
+        // <= 36 must not survive next to a live one. mineSfRank stays null
+        // on every partial row so applyRankings derives sfRank from the
+        // jSf ordering rebuilt above.
+        const inLive = new Set(rows.map((row) => row.n));
+        const rest = state.players
+          .filter((p) => !inLive.has(p.n) && !irSet.has(p.n) && typeof p.rank === 'number')
+          .sort((a, b) => a.rank - b.rank);
+        for (const p of rest) {
+          r++;
+          rows.push({ n: p.n, s: p.s, t: p.t, myRank: r, sfa: null, mineSfRank: null });
+        }
+      }
+      applyRankings(rows, irOut, true);
+      if (full) _jacksLiveApplied = true;
+      // Jack's ALL-board tier boundaries, re-based onto the same COMPACT
+      // numbering as the live ranks above (raw board positions include
+      // names we don't carry + IR — baked boundaries would drift by the
+      // skipped count, up to ~30 rows deep in the board).
+      const compactTierList = (order, tiersRaw, skip) => {
+        if (!Array.isArray(tiersRaw) || !tiersRaw.length || !order.length) return null;
+        const carriedBefore = []; // carried count among order[0..i-1]
+        let c = 0;
+        for (let i = 0; i < order.length; i++) {
+          carriedBefore[i] = c;
+          const nm = order[i];
+          if (state.byName.has(nm) && !skip.has(nm)) c++;
+        }
+        const out = [];
+        for (const t of tiersRaw) {
+          if (!t || !(t.afterRank >= 1) || !t.label) continue;
+          const idx = Math.min(t.afterRank - 1, order.length - 1);
+          out.push({ a: carriedBefore[idx] + 1, l: String(t.label), n: String(t.name || '') });
+        }
+        out.sort((x, y) => x.a - y.a);
+        return out;
+      };
+      const bbT = compactTierList(bbOrder, ((jacks.redraft || {})._posTiers || {}).ALL, irSet);
+      state.tiers = state.tiers || {};
+      if (bbT) {
+        // Partial docs cut tiers at 36 — keep any deeper boundaries a
+        // full/bridge apply already installed.
+        state.tiers.rank = full ? bbT
+          : bbT.filter((t) => t.a <= liveCount)
+              .concat((state.tiers.rank || []).filter((t) => t.a > liveCount))
               .sort((x, y) => x.a - y.a);
-          }
-          const upd = doc.fields.updatedAt ? ' · saved ' + doc.fields.updatedAt.stringValue.slice(0, 10) : '';
-          console.log('[MFF] live Jack boards from Firestore: ' + rows.length + ' ranked' + upd);
-          if (document.getElementById('mff-recs') && typeof render === 'function') render();
-        } catch (e) { console.warn('[MFF] jacks board apply failed:', e); }
-      });
-    } catch (_) {}
+      }
+      // SF tiers stay in RAW board positions — they pair with p.jSf
+      // (updated raw above), not the compacted sfRank.
+      const sfRaw = ((jacks.superflex || {})._posTiers || {}).ALL;
+      if (Array.isArray(sfRaw) && sfRaw.length) {
+        const freshSf = sfRaw
+          .filter(t => t && t.afterRank >= 1 && t.label)
+          .map(t => ({ a: t.afterRank, l: String(t.label), n: String(t.name || '') }));
+        state.tiers.jSf = full ? freshSf.sort((x, y) => x.a - y.a)
+          : freshSf.filter((t) => t.a <= sfOrder.length)
+              .concat((state.tiers.jSf || []).filter((t) => t.a > sfOrder.length))
+              .sort((x, y) => x.a - y.a);
+      }
+      const upd = doc.fields.updatedAt ? ' · saved ' + doc.fields.updatedAt.stringValue.slice(0, 10) : '';
+      console.log('[MFF] live Jack boards from Firestore: ' + liveCount + ' ranked' +
+        (full ? '' : ' (top-36 slice)') + upd);
+      if (document.getElementById('mff-recs') && typeof render === 'function') render();
+    } catch (e) { console.warn('[MFF] jacks board apply failed:', e); }
   }
 
   // v0.15.2: long-lived tabs never re-fetched boards — re-pull when the tab is

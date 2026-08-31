@@ -1,4 +1,4 @@
-// COPY of ../sim_lab/overrides.js (synced 2026-08-11 10:56:31 by export_sleeper_extension_data.py — edit the sim_lab original)
+// COPY of ../sim_lab/overrides.js (synced 2026-08-31 09:00:51 by export_sleeper_extension_data.py — edit the sim_lab original)
 // ============================================================================
 // MANUAL OVERRIDES — edit this file as camp/season news breaks, then reload.
 //
@@ -21,4 +21,16 @@ window.QB_ROOM_OVERRIDES = {
 //   'Malik Nabers': 0,        // cleared — plays the full season
 //   'Zach Charbonnet': 8,     // setback — now out the first 8 games
 window.INJURY_WINDOW_OVERRIDES = {
+};
+
+// IN_SEASON_OUT_OVERRIDES (used by export_site_proj.js, in-season only):
+// force a mid-season absence window when the news has a real timeline —
+// value = [fromWeek, toWeek] (inclusive), 0 or null = confirmed healthy
+// (kills the automatic designation-based window). The zeroed player's
+// projected points partially redistribute to his position group for those
+// weeks (QB 85% to the next man up; RB/WR/TE 60% across the group).
+// Examples:
+//   'Puka Nacua': [5, 6],     // "out ~2 weeks" — weeks 5-6 zeroed
+//   'Bijan Robinson': 0,      // tag is stale — confirmed playing
+window.IN_SEASON_OUT_OVERRIDES = {
 };

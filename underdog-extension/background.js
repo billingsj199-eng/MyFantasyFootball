@@ -109,6 +109,12 @@ const MFF_ADP_HISTORY_URL = 'https://www.myfantasyfootball.co/data/ud_adp_histor
 const MFF_JACKS_URL =
   'https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)' +
   '/documents/rankings/jacks-official?key=AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY';
+// v0.18.4: jacks-official is premium-only read since 2026-08-13 (the fetch
+// above 403s tokenless) — jacks-public mirrors the top 36 of every board on
+// the same site save and stays publicly readable; sidebar falls back to it.
+const MFF_JACKS_PUBLIC_URL =
+  'https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)' +
+  '/documents/rankings/jacks-public?key=AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY';
 // v0.18.3: Sim Lab weekly/season projections export (written by the site's
 // "MFF Sim Proj Export" task — daily + ~30 min before kickoffs). sidebar.js
 // overrides the baked half-PPR pPg with the sim rest-of-season number.
@@ -118,6 +124,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   const url = msg.type === 'mff-vegas-fetch' ? MFF_VEGAS_URL
             : msg.type === 'mff-adp-history-fetch' ? MFF_ADP_HISTORY_URL
             : msg.type === 'mff-jacks-fetch' ? MFF_JACKS_URL
+            : msg.type === 'mff-jacks-public-fetch' ? MFF_JACKS_PUBLIC_URL
             : msg.type === 'mff-simproj-fetch' ? MFF_SIMPROJ_URL
             : null;
   if (!url) return false;

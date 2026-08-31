@@ -227,21 +227,57 @@
   const FIRESTORE_URL =
     'https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)' +
     '/documents/rankings/jacks-official?key=AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY';
+  // v0.20.16: jacks-official is premium-only read since 2026-08-13, so the
+  // tokenless fetch above 403s — without a site-bridge push, boards silently
+  // stayed baked. jacks-public mirrors the top 36 of every board (written on
+  // the same site save) and is publicly readable: it is the fallback for
+  // every install, free or premium.
+  const FIRESTORE_PUBLIC_URL =
+    'https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)' +
+    '/documents/rankings/jacks-public?key=AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY';
+  // Partial (top-36) apply: live names take ranks 1..N; everyone deeper is
+  // renumbered from N+1 in their existing relative order, so a player who
+  // fell out of the live top-36 can't share a rank with his replacement.
+  function applyPartialOrder(key, order, byNorm) {
+    const inTop = new Set();
+    for (const name of order) {
+      const list = byNorm[norm(name)];
+      if (list) for (const p of list) inTop.add(p);
+    }
+    const rest = state.players
+      .filter((p) => !inTop.has(p) && typeof p[key] === 'number')
+      .sort((a, b) => a[key] - b[key]);
+    let applied = 0;
+    order.forEach((name, i) => {
+      const list = byNorm[norm(name)];
+      if (list) for (const p of list) { p[key] = i + 1; applied++; }
+    });
+    let r = order.length;
+    for (const p of rest) { p[key] = ++r; }
+    return applied;
+  }
   async function refreshJackBoards() {
     if (MOCK) return;
-    // PREMIUM (v0.19.2): the bundle only carries the free top-36 slice of
-    // Jack's boards — the live full-board pull is premium-only. Read the
+    // PREMIUM (v0.19.2): the full-board pull is premium-only. Read the
     // synced user straight from storage: the gate's async boot read may not
     // have landed in _gateUser yet the first time this runs.
+    let premium = false;
     try {
       const gu = await store.get(['mff_user']);
       const u = (gu && gu.mff_user) || _gateUser;
-      if (!(u && u.premium && u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS)) return;
-    } catch (e) { return; }
-    try {
+      premium = !!(u && u.premium && u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS);
+    } catch (e) {}
+    let doc = null, full = false;
+    if (premium) {
       // v0.17.2: fetchJson (direct + background relay fallback) instead of a
       // bare fetch, so a future ESPN CSP change can't silently kill live boards.
-      const doc = await fetchJson(FIRESTORE_URL);
+      try { doc = await fetchJson(FIRESTORE_URL); full = true; } catch (e) {}
+    }
+    if (!doc) {
+      try { doc = await fetchJson(FIRESTORE_PUBLIC_URL); } catch (e) { return; }
+      full = false;
+    }
+    try {
       const payload = JSON.parse(doc.fields.data.stringValue);
       const jacks = payload.jacks || {};
       const keyByMode = { superflex: 'jSf', dynasty: 'jDy', dynastysf: 'jDsf', redraft: 'rank' };
@@ -250,23 +286,37 @@
       let applied = 0;
       for (const [mode, key] of Object.entries(keyByMode)) {
         const order = (jacks[mode] || {})._order || [];
-        order.forEach((name, i) => {
-          const list = byNorm[norm(name)];
-          if (list) for (const p of list) { p[key] = i + 1; applied++; }
-        });
+        if (full) {
+          order.forEach((name, i) => {
+            const list = byNorm[norm(name)];
+            if (list) for (const p of list) { p[key] = i + 1; applied++; }
+          });
+        } else {
+          applied += applyPartialOrder(key, order, byNorm);
+        }
         // Jack's ALL-board tier boundaries ride the same doc — keep them in
         // lockstep with the live re-rank above (baked tiers would drift).
         const pt = ((jacks[mode] || {})._posTiers || {}).ALL;
         if (Array.isArray(pt)) {
-          state.tiers[key] = pt
+          const fresh = pt
             .filter(t => t && t.afterRank >= 1 && t.label)
-            .map(t => ({ a: t.afterRank, l: String(t.label), n: String(t.name || '') }))
-            .sort((x, y) => x.a - y.a);
+            .map(t => ({ a: t.afterRank, l: String(t.label), n: String(t.name || '') }));
+          if (full) {
+            state.tiers[key] = fresh.sort((x, y) => x.a - y.a);
+          } else {
+            // Public doc cuts tiers at 36 — keep any deeper boundaries a
+            // full/bridge apply already installed.
+            const cutoff = order.length;
+            const deep = (state.tiers[key] || []).filter(t => t.a > cutoff);
+            state.tiers[key] = fresh.filter(t => t.a <= cutoff).concat(deep)
+              .sort((x, y) => x.a - y.a);
+          }
         }
       }
       if (applied) {
         const upd = doc.fields.updatedAt ? doc.fields.updatedAt.stringValue.slice(0, 10) : '';
-        state.statusMsg = state.players.length + ' players · boards live' + (upd ? ' ' + upd : '');
+        state.statusMsg = state.players.length + ' players · ' +
+          (full ? 'boards live' : 'top-36 live') + (upd ? ' ' + upd : '');
         // v0.17.2: season mode must re-render too (same fix Sleeper got in
         // v0.20.0) — renderStatusOnly() left stale ranks in TEAM/WAIVERS
         // profiles when the Firestore fetch landed after the initial render.

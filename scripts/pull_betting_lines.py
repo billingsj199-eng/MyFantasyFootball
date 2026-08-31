@@ -579,6 +579,22 @@ def _week_of(dt):
     return wk if 1 <= wk <= 18 else None
 
 
+def _validated_week(matchup_wk, dt):
+    """Resolve a game's NFL week, cross-checking the matchup-derived week
+    against the actual kickoff datetime (UTC, naive or aware).
+
+    Preseason games reuse regular-season pairings, so a week_by_matchup hit
+    alone is NOT proof (Aug 2026: UD preseason props landed in weeklyProps
+    week 15). The kickoff must fall inside the same week's window; a game
+    with no parseable kickoff is dropped rather than trusted. UTC → ET-ish
+    (-5h) before taking the date, else Monday night games (00:15 UTC Tue)
+    land in the next week."""
+    dwk = _week_of(dt - datetime.timedelta(hours=5)) if dt else None
+    if matchup_wk is not None:
+        return matchup_wk if dwk == matchup_wk else None
+    return dwk
+
+
 def pull_ud_weekly(week_by_matchup):
     """Return {wk: {player: {stat: line}}} from Underdog's weekly board.
     Week resolved from the game title ('WAS @ PHI') via the gameTotals
@@ -608,16 +624,18 @@ def pull_ud_weekly(week_by_matchup):
         g = games.get((app or {}).get('match_id'))
         if not g:
             continue
-        wk = None
+        mwk = None
         m = re.match(r'([A-Z]{2,4})\s*@\s*([A-Z]{2,4})', g.get('title') or '')
         if m:
-            wk = week_by_matchup.get((m.group(1), m.group(2)))
-        if wk is None and g.get('scheduled_at'):
+            mwk = week_by_matchup.get((m.group(1), m.group(2)))
+        dt = None
+        if g.get('scheduled_at'):
             try:
-                wk = _week_of(datetime.datetime.fromisoformat(
-                    g['scheduled_at'].replace('Z', '+00:00')))
+                dt = datetime.datetime.fromisoformat(
+                    g['scheduled_at'].replace('Z', '+00:00'))
             except ValueError:
                 pass
+        wk = _validated_week(mwk, dt)
         if wk is None:
             continue
         try:
@@ -735,7 +753,7 @@ def pull_dk_weekly_atd(week_by_matchup):
                 continue
             events = {}
             for ev in body.get('events', []):
-                wk = None
+                mwk = None
                 # Event names look like "NE Patriots @ SEA Seahawks" — the
                 # abbreviation is the first token on each side of the '@'.
                 nm = ev.get('name') or ''
@@ -743,18 +761,16 @@ def pull_dk_weekly_atd(week_by_matchup):
                     away, _, home = nm.partition('@')
                     a = (away.strip().split() or [''])[0]
                     h = (home.strip().split() or [''])[0]
-                    wk = week_by_matchup.get((a, h))
-                if wk is None:
-                    start = ev.get('startEventDate') or ev.get('startDate')
-                    if start:
-                        try:
-                            # UTC → ET-ish before taking the date, else Monday
-                            # night games (00:15 UTC Tue) land in the next week.
-                            dt = datetime.datetime.fromisoformat(
-                                str(start).replace('Z', '+00:00')).replace(tzinfo=None)
-                            wk = _week_of(dt - datetime.timedelta(hours=5))
-                        except ValueError:
-                            pass
+                    mwk = week_by_matchup.get((a, h))
+                dt = None
+                start = ev.get('startEventDate') or ev.get('startDate')
+                if start:
+                    try:
+                        dt = datetime.datetime.fromisoformat(
+                            str(start).replace('Z', '+00:00')).replace(tzinfo=None)
+                    except ValueError:
+                        pass
+                wk = _validated_week(mwk, dt)
                 if wk is not None:
                     events[ev.get('id')] = wk
             markets = {m['id']: m for m in body.get('markets', [])}

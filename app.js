@@ -46340,6 +46340,24 @@ Rules:
       html += `</div>`;
     }
 
+    // WEEK lens: in-season (or once a week is published), rank teams by the
+    // projected points of their best WEEKLY lineup — weekly-adjusted PPG
+    // (props/Vegas/sim), byes and ruled-out players benched. Offseason with
+    // nothing published, the chip hides (stale W17 tags would poison it).
+    const _offseasonNow = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
+    const wkNum = (!_offseasonNow || window._weeklyPublishedWeek)
+      ? (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1) : 0;
+    if (_mtSortBy === 'week' && !wkNum) _mtSortBy = 'total';
+    if (_mtSortBy === 'week') {
+      teams.forEach(t => {
+        if (t._weekPpgWk !== wkNum) {
+          const lu = _mtBestLineup(t.players, 'weekppg');
+          t.weekPpg = lu ? lu.totalPpg : 0;
+          t._weekPpgWk = wkNum;
+        }
+      });
+    }
+
     // Sort buttons
     html += `<div style="display:flex;gap:3px;margin-bottom:10px;align-items:center;flex-wrap:wrap">`;
     html += `<span style="font-size:.65rem;color:var(--text2);margin-right:4px">SORT BY:</span>`;
@@ -46351,11 +46369,12 @@ Rules:
       { key: 'WR', label: 'WR', color: '#3b82f6' },
       { key: 'TE', label: 'TE', color: '#f59e0b' }
     ];
+    if (wkNum) sortOpts.splice(2, 0, { key: 'week', label: 'WK ' + wkNum, color: '#22d3ee' });
     // Add PICKS sort for dynasty/keeper leagues (only in value mode)
     if (isDynasty && _mtViewMode === 'value') sortOpts.push({ key: 'picks', label: 'PICKS', color: '#a855f7' });
     sortOpts.forEach(o => {
       const active = _mtSortBy === o.key;
-      html += `<button onclick="window._mtSortTeams('${o.key}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? o.color : 'var(--border)'};background:${active ? o.color : 'var(--surface)'};color:${active ? (o.key === 'total' || o.key === 'picks' ? '#000' : '#fff') : 'var(--text2)'}">${o.label}</button>`;
+      html += `<button onclick="window._mtSortTeams('${o.key}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? o.color : 'var(--border)'};background:${active ? o.color : 'var(--surface)'};color:${active ? (o.key === 'total' || o.key === 'picks' || o.key === 'week' ? '#000' : '#fff') : 'var(--text2)'}">${o.label}</button>`;
     });
     html += `</div>`;
 
@@ -46364,6 +46383,7 @@ Rules:
       // TOTAL = starter-weighted strength (raw score.total breaks the tie)
       if (_mtSortBy === 'total') return (b.strengthTotal || 0) - (a.strengthTotal || 0) || b.score.total - a.score.total;
       if (_mtSortBy === 'ppg') return (b.lineupPpg || 0) - (a.lineupPpg || 0);
+      if (_mtSortBy === 'week') return (b.weekPpg || 0) - (a.weekPpg || 0);
       if (_mtSortBy === 'picks') return (b.score.pickTotal || 0) - (a.score.pickTotal || 0);
       // Positional sort: rank first — rank comes from the unrounded strength
       // in _mtComputePosRanks, while .strength is rounded for display, so
@@ -46377,6 +46397,7 @@ Rules:
     const allScores = sorted.map(x => {
       if (_mtSortBy === 'total') return x.strengthTotal || 0;
       if (_mtSortBy === 'ppg') return x.lineupPpg || 0;
+      if (_mtSortBy === 'week') return x.weekPpg || 0;
       if (_mtSortBy === 'picks') return x.score.pickTotal || 0;
       return ((x.posRanks || {})[_mtSortBy] || { strength: 0 }).strength;
     });
@@ -46394,14 +46415,15 @@ Rules:
       const sc = t.score;
       const isMe = t.isMyTeam;
       const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
-      const isPosSort = _mtSortBy !== 'total' && _mtSortBy !== 'ppg' && _mtSortBy !== 'picks';
+      const isPosSort = _mtSortBy !== 'total' && _mtSortBy !== 'ppg' && _mtSortBy !== 'picks' && _mtSortBy !== 'week';
       const posRankEntry = isPosSort ? ((t.posRanks || {})[_mtSortBy] || { rank: teams.length, strength: 0 }) : null;
-      const displayScore = _mtSortBy === 'total' ? (t.strengthTotal || 0) : _mtSortBy === 'ppg' ? (t.lineupPpg || 0) : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : posRankEntry.strength;
+      const displayScore = _mtSortBy === 'total' ? (t.strengthTotal || 0) : _mtSortBy === 'ppg' ? (t.lineupPpg || 0) : _mtSortBy === 'week' ? (t.weekPpg || 0) : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : posRankEntry.strength;
       // League-relative delta for the numeric sorts — raw totals cluster (the
       // shared bench baseline), so ± vs league avg is where separation reads.
-      const delta = (_mtSortBy === 'total' || _mtSortBy === 'ppg') ? Math.round((displayScore - avgExact) * 10) / 10 : null;
+      const delta = (_mtSortBy === 'total' || _mtSortBy === 'ppg' || _mtSortBy === 'week') ? Math.round((displayScore - avgExact) * 10) / 10 : null;
       const deltaHtml = delta === null ? '' : ` · <span style="color:${delta >= 0 ? '#22c55e' : '#ef4444'};font-weight:700">${delta >= 0 ? '+' : ''}${delta} vs avg</span>`;
-      const chipTip = _mtSortBy === 'total' ? `title="Starter-weighted team strength (bench mostly discounted) · raw roster value ${sc.total} · league avg ${avgScore}"` : '';
+      const chipTip = _mtSortBy === 'total' ? `title="Starter-weighted team strength (bench mostly discounted) · raw roster value ${sc.total} · league avg ${avgScore}"`
+        : _mtSortBy === 'week' ? `title="Week ${wkNum} best-lineup projected points (weekly props/Vegas/sim-adjusted; byes and ruled-out players benched; K/DST not counted) · league avg ${avgScore}"` : '';
       const scoreColor = isPosSort
         ? _mtPosRankColor(posRankEntry.rank, teams.length)
         : (displayScore >= maxScore ? '#22c55e' : displayScore >= avgScore ? '#4ade80' : displayScore >= avgScore * 0.7 ? '#f59e0b' : '#ef4444');
@@ -46497,8 +46519,12 @@ Rules:
   // basis: 'ppg' (default) ranks the pool by Clay season PPG; 'weekly' ranks it by
   // Jack's WEEKLY board order for the active/published week, shows week-adjusted
   // PPG (_weeklyAdjustPpg: props/team-total/opp-defense), and benches bye/out players.
+  // 'weekppg' (power-rankings WEEK lens) applies the same weekly adjustments and
+  // bye/out gates but fills by adjusted PPG alone — the max-points lineup, no
+  // dependency on Jack's weekly board coverage.
   function _mtBestLineup(playerNames, basis) {
     basis = basis || 'ppg';
+    const isWkBasis = basis === 'weekly' || basis === 'weekppg';
     let rp = _mtFormat.rosterPositions || [];
     // Fallback: if rosterPositions wasn't stored, build a default from format info
     if (!rp.length && _mtFormat.starters) {
@@ -46523,13 +46549,13 @@ Rules:
     // versionBoards.jacks.weekly is D indices in board order; follows Redraft
     // until Jack touches the week, so there's always an order to rank against.
     let wkRankByName = null, wkNum = null;
+    if (isWkBasis) wkNum = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     if (basis === 'weekly' && window.versionBoards && window.versionBoards.jacks && window.versionBoards.jacks.weekly) {
       wkRankByName = {};
       window.versionBoards.jacks.weekly.forEach((di, i) => {
         const dp = (typeof D !== 'undefined') ? D[di] : null;
         if (dp && wkRankByName[dp.n] == null) wkRankByName[dp.n] = i + 1;
       });
-      wkNum = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     }
 
     let _dbgFound = 0, _dbgNoD = 0, _dbgNoPpg = 0;
@@ -46540,7 +46566,7 @@ Rules:
       // Bye/ruled-out gate (weekly basis only): keep them in the pool so they
       // show on the bench, but never start them regardless of Jack's rank.
       let out = null;
-      if (basis === 'weekly' && d.t && typeof window.getNflScheduleForTeam === 'function') {
+      if (isWkBasis && d.t && typeof window.getNflScheduleForTeam === 'function') {
         const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
         const sched = window.getNflScheduleForTeam(abbr);
         const entry = sched && sched[wkNum || 1];
@@ -46560,7 +46586,7 @@ Rules:
           ppg = Math.round(((cp.pts + recs * clayAdj) / cp.gm) * 10) / 10;
         }
       }
-      if (basis === 'weekly' && ppg > 0 && typeof window._weeklyAdjustPpg === 'function') {
+      if (isWkBasis && ppg > 0 && typeof window._weeklyAdjustPpg === 'function') {
         const adj = window._weeklyAdjustPpg(d, ppg);
         // Adjusted 0 with a real season projection = the injury gate fired
         // (IR/PUP/Out in-season) — bench them like a bye.

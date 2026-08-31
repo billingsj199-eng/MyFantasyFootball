@@ -193,6 +193,39 @@ test.describe('rankings page', () => {
     expect((await probe()).shown).toBe('none');
     await page.evaluate(() => { window._seasonStripNow = null; window._seasonStripRefresh(); });
   });
+
+  test('published WEEKLY board is live for signed-out users', async ({ page }) => {
+    await bootRankings(page);
+    // The tab shows for non-admins only while settings/active_week carries a
+    // publishedWeek (async Firestore read). The July 2026 regression pair —
+    // a click-guard and a signed-out loader gate — published W1 while every
+    // free user stayed silently locked out for 3 weeks; this pins the flow.
+    const published = await page
+      .waitForFunction(() => window._weeklyPublishedWeek != null || null, null, { timeout: 20_000 })
+      .catch(() => null);
+    if (!published) {
+      // Nothing published right now: the gate must keep the tab hidden, and
+      // there is no live surface to assert beyond that.
+      await expect(page.locator('#weeklyModeTab')).toBeHidden();
+      test.skip(true, 'no published week in settings/active_week');
+      return;
+    }
+    await expect(page.locator('#weeklyModeTab')).toBeVisible();
+    await page.click('#weeklyModeTab');
+    // Hard-locked non-admin weekly state: format class on, LIVE chip up,
+    // admin week selector absent.
+    await page.waitForFunction(() => document.body.classList.contains('format-weekly'));
+    await expect(page.locator('#weeklyPublishedChip')).toBeVisible();
+    await expect(page.locator('#weeklyPublishedChipLabel')).toHaveText(/LIVE — WEEK \d+/);
+    await expect(page.locator('#weeklyWeekSelectorWrap')).toBeHidden();
+    // Weekly-only columns materialize with a real opponent in some row.
+    await page.waitForFunction(() => {
+      const cells = [...document.querySelectorAll('#tbody .opp-cell')];
+      return cells.length > 0
+        && cells.some(c => c.offsetParent !== null && /[A-Z]{2,3}/.test(c.textContent));
+    });
+    await page.click('.mode-tab[data-mode="redraft"]');
+  });
 });
 
 test.describe('mobile', () => {

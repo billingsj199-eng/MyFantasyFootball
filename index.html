@@ -5313,16 +5313,11 @@ window.addEventListener('load', function() {
 </button>
 </nav>
 <style>
-.bottom-nav{display:none}
-@media (max-width:600px){
-.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:500;display:flex;background:var(--surface2);border-top:1px solid var(--border);padding:4px 0 calc(4px + env(safe-area-inset-bottom))}
-body{padding-bottom:calc(52px + env(safe-area-inset-bottom))}
-body.mff-embed .bottom-nav{display:none!important}
-body.mff-embed{padding-bottom:0}
-.bn-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:1px;cursor:pointer;padding:2px 0}
-.bn-btn svg{width:20px;height:20px}
-.bn-btn.active{color:var(--accent)}
-}
+/* Retired: the sidebar already converts to the full 8-tab bottom bar on ≤600px
+   (styles/main.css), so this 4-item bar doubled the nav and its body padding
+   stacked with .main-content's, leaving a dead band above the tabs on phones.
+   Markup stays (app.js guards on its absence) but it never displays. */
+.bottom-nav{display:none!important}
 </style>
 <script defer src="app.js?v=2026-08-28c"></script>
 

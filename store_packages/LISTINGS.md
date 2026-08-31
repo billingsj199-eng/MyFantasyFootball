@@ -1,10 +1,13 @@
 # Chrome Web Store — listing copy for all four MFF extensions
 
 Dashboard: https://chrome.google.com/webstore/devconsole/
-Prepared 2026-08-10. Upload zips are in this folder; rebuild them with the
-session scratchpad `package_store.py` (or re-zip the extension dir minus
-`mock*` / `*.md` / `*.bak*` / `*.tmp`) after any source change — the Store
-requires each upload's `manifest.json` version to be HIGHER than the listed one.
+Prepared 2026-08-10. Upload zips are in this folder; rebuild them with
+`python scripts/build_store_zips.py` (defaults to sleeper+espn+yahoo; pass
+`underdog` explicitly — it is frozen pending the 0.17.7 appeal) after any
+source change — the Store requires each upload's `manifest.json` version to
+be HIGHER than the listed one. The script zips each extension dir flat,
+excluding `mock*` / `*.md` / `*.bak*` / `*.tmp`, and names the zip from the
+manifest version; `store_upload.py` picks the newest matching zip.
 
 Shared across all four listings:
 - **Category:** Sports · **Language:** English (US)

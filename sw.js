@@ -12,7 +12,7 @@
    - Firebase / ESPN / Sleeper / Cloudflare APIs → bypass entirely.
    Bump SW_VERSION when changing SW logic so old caches get wiped on activate. */
 
-const SW_VERSION   = '2026-08-18a';
+const SW_VERSION   = '2026-08-31a';
 // How long a navigation waits for the network before falling back to the cached
 // shell. Long enough to win on any normal connection, short enough that a dead
 // one doesn't feel broken.
@@ -103,10 +103,14 @@ self.addEventListener('fetch', (event) => {
 // URL — a deep link with a query, say — was never cached under its own key.
 async function navigationNetworkFirst(req, cacheName, event) {
   const cache = await caches.open(cacheName);
+  // Cache navigations under the bare pathname: deep links like ?player=slug all
+  // serve the same shell, and per-query keys would strand a full index.html copy
+  // for every distinct shared URL.
+  const key = new URL(req.url).pathname;
 
   const network = fetch(req)
     .then((res) => {
-      if (res && res.ok) cache.put(req, res.clone()).catch(() => {});
+      if (res && res.ok) cache.put(key, res.clone()).catch(() => {});
       return res;
     })
     .catch(() => null);
@@ -120,7 +124,7 @@ async function navigationNetworkFirst(req, cacheName, event) {
   clearTimeout(timer);
   if (fresh && fresh.ok) return fresh;
 
-  const cached = (await cache.match(req)) || (await cache.match('/index.html')) || (await cache.match('/'));
+  const cached = (await cache.match(key)) || (await cache.match('/index.html')) || (await cache.match('/'));
   if (cached) {
     // Serving stale because the network was slow, not because it failed — let the
     // fetch finish and refresh the cache. waitUntil keeps the worker alive for it,
@@ -170,7 +174,16 @@ async function staleWhileRevalidate(req, cacheName) {
   const cached = await cache.match(req);
   const fetchAndUpdate = fetch(req)
     .then((res) => {
-      if (res && res.ok) cache.put(req, res.clone()).catch(() => {});
+      if (res && res.ok) {
+        // Same-origin only: camp_news / ud_adp_history carry an hour-granular ?d=
+        // stamp, so without pruning every hour strands another ~300KB pair in
+        // RUNTIME_CACHE. Cross-origin stays unpruned — ESPN combiner headshots all
+        // share one pathname and differ only by query, so pruning would evict them.
+        const sameOrigin = new URL(req.url).origin === self.location.origin;
+        cache.put(req, res.clone())
+          .then(() => sameOrigin ? pruneSupersededVersions(cache, req) : null)
+          .catch(() => {});
+      }
       return res;
     })
     .catch(() => cached);

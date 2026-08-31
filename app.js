@@ -45945,7 +45945,7 @@ Rules:
         status.style.color = unmatched > 0 ? '#f59e0b' : '#22c55e';
       }
 
-      _mtSaveLeagueToCloud(source + '_' + lg.leagueId, { name: lg.name, season: String(lg.season || '') }, teams);
+      _mtSaveLeagueToCloud(source + '_' + lg.leagueId, { name: lg.name, season: String(lg.season || ''), schedule: lg.schedule || null }, teams);
     } catch (err) {
       console.warn('[MyTeams] ' + source + ' import error:', err);
       if (status) { status.textContent = 'Error: ' + err.message; status.style.color = '#ef4444'; }
@@ -46529,7 +46529,7 @@ Rules:
       const leagueId = _mtActiveEspnId;
       if (!leagueId) throw new Error('no ESPN league loaded');
       const extLg = _mtEspnLeagues && _mtEspnLeagues[String(leagueId)];
-      let sched = extLg && extLg.schedule;
+      let sched = (extLg && extLg.schedule) || _mtSavedSchedule(leagueId);
       if (!sched) {
         const resp = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + _mtEspnSeason() +
           '/segments/0/leagues/' + leagueId + '?view=mMatchup');
@@ -46619,6 +46619,14 @@ Rules:
   const _MT_REG_SEASON_WEEKS = 14; // standard fantasy regular season
   const _MT_PLAYOFF_SPOTS = 6;
 
+  // Cloud-persisted schedule for a saved ESPN league — lets the matchup views
+  // work in sessions where the extension bridge hasn't fired (schedule saves
+  // with the league on import; private leagues can't be re-fetched here).
+  function _mtSavedSchedule(leagueId) {
+    const sv = (window._mtSavedLeagues || []).find(l => l && String(l.leagueId) === 'espn_' + String(leagueId));
+    return (sv && sv.schedule && sv.schedule.length) ? sv.schedule : null;
+  }
+
   async function _mtFetchSeasonSchedule() {
     const src = _mtActiveSource;
     const teams = window._mtTeams || [];
@@ -46626,7 +46634,7 @@ Rules:
     teams.forEach(t => { byId[String(t.id)] = t; });
     if (src === 'espn') {
       const extLg = _mtEspnLeagues && _mtEspnLeagues[String(_mtActiveEspnId)];
-      const sched = extLg && extLg.schedule;
+      const sched = (extLg && extLg.schedule) || _mtSavedSchedule(_mtActiveEspnId);
       if (!sched || !sched.length) throw new Error('no schedule synced — re-export the league with the MFF ESPN extension (v0.20.19+)');
       const byWeek = {};
       sched.forEach(g => {
@@ -48133,6 +48141,10 @@ Rules:
         leagueId: leagueId,
         name: league.name || 'League',
         season: league.season || '',
+        // Head-to-head schedule (slim {week,home,away} teamId pairs from the
+        // extension/direct payload). Callers that don't carry one (my-team
+        // re-save) must not wipe a previously saved schedule.
+        schedule: league.schedule || (existing[leagueId] && existing[leagueId].schedule) || null,
         format: { ..._mtFormat },
         teams: teams.map(t => ({
           id: t.id,

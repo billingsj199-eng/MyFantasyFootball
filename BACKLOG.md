@@ -345,7 +345,7 @@ When you next deploy:
 - ~~**`mike_clay_projections.js` has zero K and zero DST entries**~~ — **STALE, closed 2026-08-31**: this bullet predated the 2026-07-22 extractor fix (see "Draft-season data hygiene sweep" above). The file carries 32 K entries, auto-refreshed by the daily job (verified 08-31: guide updated post-cutdown, all 32 current Sleeper starters present by name incl. Shrader/Zvada/Stevens/Gay, and Clay lists Patterson as the MIA K). Zero DST remains **by design** — the Clay PDF has only unit ranks, no DST points, so DST stays on `d.p/17`.
 
 ### Behavioral choices needing your call
-- **MIA kicker order (Patterson vs Gonzalez)** — the old open question resolved itself at cutdowns: Sleeper (2026-08-31) lists Riley Patterson as the MIA starter (depth 1) and Zane Gonzalez as teamless/Inactive. Patterson kept his starter slot (now K18 after the 08-31 renumber); Gonzalez sits K34 among the buried FA vets. Confirm you're happy with Patterson as the MIA K, or demote further if you think MIA brings in a vet before Week 1.
+- ~~**MIA kicker order (Patterson vs Gonzalez)**~~ — **CLOSED 2026-08-31, Jack approved Patterson.** The old question resolved itself at cutdowns: ESPN depth chart, Sleeper, and Clay's guide all list Riley Patterson as the MIA starter; Zane Gonzalez is teamless/Inactive (absent from Clay entirely). Patterson stays K18, Gonzalez K34 among the buried FA vets. No board change needed.
 - **SUPERFLEX trade mode shows pick selectors** — system is *intentionally* designed this way per `PICK_BASE` analysis. Change to `(tradeMode === 'dynasty' || tradeMode === 'dynastysf')` if you want redraft-style (no picks). One-line edit.
 
 ### Code health

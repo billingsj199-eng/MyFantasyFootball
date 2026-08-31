@@ -149,6 +149,8 @@
         teamId: t.id,
         name: teamDisplayName(t),
         owner: ownerName(t, membersById),
+        logo: t.logo || null,
+        abbrev: t.abbrev || '',
         isMine: isMine,
         wins: rec.wins || 0,
         losses: rec.losses || 0,

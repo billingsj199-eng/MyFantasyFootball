@@ -22017,6 +22017,11 @@ window.fmtHeight = fmtHeight;
 
   // Expose TIER_MULT globally so other IIFEs can read it
   window._TIER_MULT = TIER_MULT;
+  // Safe tier lookup for other modules (My Teams tier amplifier). Returns ''
+  // for ADP sources / missing tier data instead of throwing.
+  window._mtTierFor = function (d, src, mode) {
+    try { return _getTierForPlayerFull(d, src, mode) || ''; } catch (_) { return ''; }
+  };
 
   function getPlayerValue(d) {
     return window._getTradeValue(d, tradeSource, tradeMode);
@@ -45296,15 +45301,31 @@ Rules:
   // cap") — pure presentation, order and ratios untouched. Top guy ~2-3k,
   // starters in the hundreds, bench 0, team totals in the thousands.
   const _MT_VOR_SCALE = 10;
+  // My Teams-only tier amplifier (Jack 2026-08-31): stretch each global
+  // TIER_MULT's distance from 1.0 by this factor so tier cliffs read loud on
+  // this page WITHOUT touching the global table (trade calc + pick pricing
+  // calibrate on it). 1.5 → S 1.45→1.675, A 1.20→1.30, D 0.88→0.82, F
+  // 0.50→0.25. Order-safe: tiers are contiguous board ranges, so stretching
+  // never flips two players. Version-board sources only (ADP has no tiers).
+  const _MT_TIER_AMP = 1.5;
+  const _MT_ADP_SRCS = ['underdog', 'ktc', 'espn', 'cbs', 'sleeper', 'yahoo'];
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();
     const includePicks = !modeOverride; // contender mode skips picks
     const winNow = !!modeOverride || !(_mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper');
+    const amplifyTiers = winNow && _MT_ADP_SRCS.indexOf(_mtValueSrc) < 0 &&
+      window._TIER_MULT && typeof window._mtTierFor === 'function';
     const ranked = players.map(name => {
       const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
       const rank = _mtGetPlayerRank(name);
       let val = (d && typeof window._getTradeValue === 'function') ? window._getTradeValue(d, _mtValueSrc, mode) : 1;
-      if (winNow) val = Math.max(val - _MT_REPLACEMENT_VAL, 0) * _MT_VOR_SCALE;
+      if (winNow) {
+        if (amplifyTiers && d) {
+          const m0 = window._TIER_MULT[window._mtTierFor(d, _mtValueSrc, mode)];
+          if (m0 && m0 !== 1) val = Math.round(val / m0 * (1 + (m0 - 1) * _MT_TIER_AMP));
+        }
+        val = Math.max(val - _MT_REPLACEMENT_VAL, 0) * _MT_VOR_SCALE;
+      }
       return {
         name, rank, val,
         pos: _mtGetPlayerPos(name),

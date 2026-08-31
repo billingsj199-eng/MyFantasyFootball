@@ -45528,8 +45528,15 @@ Rules:
       const usersResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/users`);
       const users = await usersResp.json();
       const userMap = {};
+      const userAvatarMap = {};
       users.forEach(u => {
         userMap[u.user_id] = u.display_name || u.username || 'Team';
+        // Team avatar: custom uploaded image (metadata.avatar, full URL) beats
+        // the account avatar id on Sleeper's CDN.
+        const _uMeta = u.metadata || {};
+        userAvatarMap[u.user_id] = (_uMeta.avatar && String(_uMeta.avatar).indexOf('http') === 0)
+          ? _uMeta.avatar
+          : (u.avatar ? 'https://sleepercdn.com/avatars/thumbs/' + u.avatar : '');
         // Auto-detect if current Firebase user matches any Sleeper user
         if (typeof firebase !== 'undefined' && firebase.auth) {
           const fbUser = firebase.auth().currentUser;
@@ -45629,6 +45636,7 @@ Rules:
           id: r.roster_id,
           owner: ownerName,
           ownerId: r.owner_id,
+          logo: userAvatarMap[r.owner_id] || '',
           isMyTeam: r.owner_id === _myUidForLeague,
           players: playerNames,
           // Raw Sleeper player-id set — persisted with the snapshot so the
@@ -45896,6 +45904,7 @@ Rules:
           id: t.teamId,
           owner: t.name || t.owner || ('Team ' + t.teamId),
           ownerId: t.owner || '',
+          logo: t.logo || '',
           isMyTeam: !!t.isMine,
           players: players,
           draftPicks: [],
@@ -47046,6 +47055,17 @@ Rules:
     return rank === 1 ? '#22c55e' : pct <= 0.33 ? '#4ade80' : pct <= 0.66 ? '#facc15' : '#ef4444';
   }
 
+  // Team avatar circle: league-provided logo with an initials badge fallback
+  // (broken/blocked images — e.g. ESPN custom uploads are member-only — swap
+  // to the badge via onerror; teams saved before logos existed get the badge).
+  function _mtTeamLogoHtml(t, size) {
+    const initials = _esc((t.owner || '?').trim().split(/\s+/).map(w => w.charAt(0)).join('').slice(0, 3).toUpperCase() || '?');
+    const badgeStyle = `width:${size}px;height:${size}px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);align-items:center;justify-content:center;font-size:${Math.max(9, Math.round(size * 0.3))}px;font-weight:700;color:var(--text2);flex-shrink:0;letter-spacing:.5px`;
+    if (!t.logo) return `<div style="display:flex;${badgeStyle}">${initials}</div>`;
+    return `<img src="${_esc(t.logo)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid var(--border);background:var(--surface);flex-shrink:0">` +
+      `<div style="display:none;${badgeStyle}">${initials}</div>`;
+  }
+
   function _mtRenderTeamList(teams) {
     // Rebuild positional-rank maps on every list render — cheap, and keeps
     // them in sync with value-source switches and live rankings edits.
@@ -47192,6 +47212,7 @@ Rules:
       if (isMe) html += `<div style="position:absolute;top:-6px;right:10px;font-size:.5rem;background:var(--accent);color:#000;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px">MY TEAM</div>`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--text2);width:24px;text-align:center">${i + 1}</div>`;
       html += `<div ${chipTip} style="width:48px;height:48px;border-radius:10px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor};letter-spacing:1px">${scoreLabel}</div>`;
+      html += _mtTeamLogoHtml(t, 28);
       html += `<div style="flex:1;min-width:0">`;
       html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}</div>`;
       html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}${deltaHtml}</div>`;
@@ -47580,6 +47601,7 @@ Rules:
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${scoreColor};line-height:1">${stVal}</div>`;
     if (sc.pickTotal) html += `<div style="font-size:.5rem;color:var(--text2)">+${sc.pickTotal} picks</div>`;
     html += `</div>`;
+    html += _mtTeamLogoHtml(t, 40);
     html += `<div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text)">${_esc(t.owner)}${t.isMyTeam ? ' <span style="font-size:.7rem;color:var(--accent)">⭐ MY TEAM</span>' : ''}</div>`;
     html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Player val: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''} · <span style="color:${stVal >= avgScore ? '#22c55e' : '#ef4444'};font-weight:700">${stVal - avgScore >= 0 ? '+' : ''}${stVal - avgScore} vs avg</span></div></div>`;
     html += `<button onclick="window._mtCloseTeam(${idx})" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕ Close</button>`;
@@ -47921,6 +47943,7 @@ Rules:
           id: t.id,
           owner: t.owner,
           ownerId: t.ownerId || '',
+          logo: t.logo || '',
           isMyTeam: t.isMyTeam || false,
           players: t.players,
           slIds: t.slIds || [],   // raw Sleeper ids — auto-refresh diff basis

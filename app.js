@@ -45292,6 +45292,10 @@ Rules:
   // the pick machinery (full-replacement discount, 0.65 strength scale) is
   // calibrated in raw units. Contender view = win-now → VOR applies.
   const _MT_REPLACEMENT_VAL = Math.round(1000 / (Math.pow(160, 0.8) + 3)); // ≈ 16
+  // Display scale on the VOR values (Jack 2026-08-31: "larger numbers, no
+  // cap") — pure presentation, order and ratios untouched. Top guy ~2-3k,
+  // starters in the hundreds, bench 0, team totals in the thousands.
+  const _MT_VOR_SCALE = 10;
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();
     const includePicks = !modeOverride; // contender mode skips picks
@@ -45300,7 +45304,7 @@ Rules:
       const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
       const rank = _mtGetPlayerRank(name);
       let val = (d && typeof window._getTradeValue === 'function') ? window._getTradeValue(d, _mtValueSrc, mode) : 1;
-      if (winNow) val = Math.max(val - _MT_REPLACEMENT_VAL, 0);
+      if (winNow) val = Math.max(val - _MT_REPLACEMENT_VAL, 0) * _MT_VOR_SCALE;
       return {
         name, rank, val,
         pos: _mtGetPlayerPos(name),

@@ -641,12 +641,14 @@ exports.premiumCheck = onRequest(
 //   - pub-api settings/teams JSON (exact scoring + lineup slots + team list)
 //   - football.fantasysports.yahoo.com/f1/<id>[/<teamId>] HTML (standings +
 //     rosters — the JSON API has no roster route)
+//   - football.fantasysports.yahoo.com/f1/<id>/draftresults HTML (My Teams
+//     draft board, added 2026-08-31)
 // Truly private leagues redirect to login.yahoo.com upstream → 403 "private"
 // so the site can steer those users to the Yahoo extension instead.
 // Request: GET ?url=<encoded absolute url>
 const YAHOO_PROXY_ALLOWED = [
   /^https:\/\/pub-api\.fantasysports\.yahoo\.com\/fantasy\/v3\/(settings|teams)\/nfl\/\d{1,10}\?format=rawjson$/,
-  /^https:\/\/football\.fantasysports\.yahoo\.com\/f1\/\d{1,10}(\/\d{1,4})?$/,
+  /^https:\/\/football\.fantasysports\.yahoo\.com\/f1\/\d{1,10}(\/\d{1,4}|\/draftresults)?$/,
 ];
 exports.yahooProxy = onRequest(
   { cors: ALLOWED_ORIGINS },

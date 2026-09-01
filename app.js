@@ -22038,7 +22038,32 @@ window.fmtHeight = fmtHeight;
   // drift): linear rank value zeroing at 500, ×0.5 slope (≈250 at #1), and
   // Jack's tier ladder at 3% per tier below the top (A/B'd 1-5% live on the
   // Clitphen league 2026-08-31, 3% FINAL), floored at ×0.5.
-  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierPct: 0.03, floor: 0.5, replRank: 160, extraPieceW: 0.5 };
+  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierPct: 0.03, floor: 0.5, replRank: 160, extraPieceW: 0.5,
+    // Stand-in tier ladder for boards WITHOUT tier data (consensus + ADP
+    // sources): tier START ranks, snapshot of Jack's live redraft ladder
+    // 2026-09-01 (Jack: consensus should "decrease on the same path" as his
+    // tiers). Index = boundaries at-or-before the rank − 1, same 3%/tier ×
+    // floor as real tiers. A stale snapshot only shapes tierless boards —
+    // his own board always uses its live tiers.
+    pseudoTiers: [1, 5, 9, 13, 19, 26, 30, 34, 46, 59, 67, 76, 86, 96, 109, 118, 137, 157, 175, 192] };
+  // Win-now tier factor, shared by _getTradeValue and _mtScoreRoster: real
+  // tier index when the board has tiers, pseudo-ladder index by rank when it
+  // doesn't (previously tierless boards got factor 1, leaving consensus
+  // values flat — rank 60 priced at 88% of #1).
+  window._winnowTierFactor = function(d, src, mode, rank) {
+    const WN = window._WINNOW_VAL;
+    let idx = null;
+    const tr = window._mtTierRangeFor(d, src, mode);
+    if (tr) {
+      idx = tr.index;
+    } else if (isFinite(rank) && rank >= 1 && rank < 999) {
+      const L = WN.pseudoTiers || [];
+      idx = 0;
+      for (let i = 0; i < L.length; i++) { if (L[i] <= rank) idx = i; else break; }
+    }
+    if (idx == null) return 1;
+    return Math.max(1 - idx * WN.tierPct, WN.floor);
+  };
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
     const m = mode || tradeMode;
@@ -22072,11 +22097,10 @@ window.fmtHeight = fmtHeight;
       // replaced the old 1000/(rank^0.8+3) curve + TIER_MULT here
       // (2026-09-01, Jack: "trade calc should reflect the My Teams player
       // ratings"). Much flatter by design — tier boundaries, not raw rank
-      // depth, carry the separation. _mtTierRangeFor returns null for ADP
-      // sources / boards without tiers (factor 1), same as My Teams.
+      // depth, carry the separation. Boards without tiers (consensus/ADP)
+      // taper via the pseudo-ladder inside _winnowTierFactor.
       const WN = window._WINNOW_VAL;
-      const tr = window._mtTierRangeFor(d, s, m);
-      const tierFactor = tr ? Math.max(1 - tr.index * WN.tierPct, WN.floor) : 1;
+      const tierFactor = window._winnowTierFactor(d, s, m, rank);
       val = Math.max(WN.zero - rank, 0) * WN.slope * tierFactor;
       // Strict board-order epsilon, mirroring _mtScoreRoster: ranked-above
       // ⇒ strictly higher even past the linear zero.
@@ -45507,8 +45531,13 @@ Rules:
         // PRECISION — an early Math.round once collapsed close neighbors
         // into equal values and tied team position ranks (Daniels/Burrow
         // both "4TH"); aggregates round at display, p.val stays float.
-        const tr = (d && typeof window._mtTierRangeFor === 'function') ? window._mtTierRangeFor(d, _mtValueSrc, mode) : null;
-        const tierFactor = tr ? Math.max(1 - tr.index * _MT_TIER_PCT, _MT_TIER_FLOOR) : 1;
+        // Tier factor via the shared helper: real board tiers when present,
+        // Jack's pseudo-ladder for tierless sources (consensus/ADP) — keeps
+        // free-user/consensus room values on "the same path" as his tiers
+        // and identical to the trade calc (2026-09-01).
+        const tierFactor = (d && typeof window._winnowTierFactor === 'function')
+          ? window._winnowTierFactor(d, _mtValueSrc, mode, rank)
+          : 1;
         val = Math.max(_MT_RANK_ZERO - rank, 0) * _MT_RANK_SLOPE * tierFactor;
         // Strict board-order guarantee: the linear base only ties past
         // rank 500 — a tiny rank-keyed epsilon (monotonic, ≤1 on the

@@ -135,7 +135,11 @@
           }
         } catch (_) {}
       }
-      return any ? { boards: boards, tiers: tiers } : null;
+      // Current-season OUT FOR SEASON names ride along so the helper's IR
+      // flags track live toggles, not just the last players.json export.
+      var ir = null;
+      try { ir = typeof window._irFlagged === "function" ? window._irFlagged() : null; } catch (_) {}
+      return any ? { boards: boards, tiers: tiers, ir: ir } : null;
     } catch (_) { return null; }
   }
   var lastJacks = "";
@@ -145,11 +149,11 @@
       if (!j) return;
       var h = Object.keys(j.boards).map(function (k) {
         return k + ":" + j.boards[k].length + ":" + j.boards[k].slice(0, 12).join(",");
-      }).join("|");
+      }).join("|") + "§ir:" + (j.ir ? j.ir.join(",") : "");
       if (h === lastJacks) return;
       lastJacks = h;
       document.dispatchEvent(new CustomEvent("mff-jacks-boards-update", {
-        detail: { boards: j.boards, tiers: j.tiers, syncedAt: Date.now() }
+        detail: { boards: j.boards, tiers: j.tiers, ir: j.ir, syncedAt: Date.now() }
       }));
     } catch (_) {}
   }

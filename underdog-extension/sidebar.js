@@ -2401,7 +2401,7 @@
     const mode = state.isRedraft ? "rd" : "bb";
     const round = Math.max(1, Math.min(18, Math.ceil((state.pickNum || 1) / (TEAM_SIZE || 12))));
     try {
-      const avail = state.players.filter(p => !state.drafted.has(p.n) && !p.ir);
+      const avail = state.players.filter(p => !state.drafted.has(p.n) && !p.ir && !p.rm);
       const data = ENGINE.recValueChartData(avail, state.myRoster || [], state.isSuperflex, mode, round);
       chart = data.positions;
       source = data.source;
@@ -2886,7 +2886,7 @@
 
         // Stack opportunity hint when state.players is available
         if (window.MFFEngine.bbmStackOpportunities && state.players && state.drafted) {
-          const avail = state.players.filter(function(p){ return !state.drafted.has(p.n) && !p.ir; });
+          const avail = state.players.filter(function(p){ return !state.drafted.has(p.n) && !p.ir && !p.rm; });
           const opps = window.MFFEngine.bbmStackOpportunities(state.myRoster, avail);
           if (opps && opps.length) {
             const top = opps[0];
@@ -3272,7 +3272,7 @@
         // jSf ordering rebuilt above.
         const inLive = new Set(rows.map((row) => row.n));
         const rest = state.players
-          .filter((p) => !inLive.has(p.n) && !irSet.has(p.n) && typeof p.rank === 'number')
+          .filter((p) => !inLive.has(p.n) && !irSet.has(p.n) && !p.rm && typeof p.rank === 'number')
           .sort((a, b) => a.rank - b.rank);
         for (const p of rest) {
           r++;
@@ -3281,6 +3281,21 @@
       }
       applyRankings(rows, irOut, true);
       if (full) _jacksLiveApplied = true;
+      // Players ABSENT from the live full redraft board were removed since
+      // the last export (the export drops them from players.json entirely) —
+      // clear their stale baked rank and hide them from recs/charts (p.rm).
+      // Guarded on order size so a truncated doc can't mass-remove the pool.
+      if (full && bbOrder.length >= 50) {
+        const inBoard = new Set(bbOrder);
+        for (const p of state.players) {
+          if (inBoard.has(p.n)) {
+            if (p.rm) delete p.rm;
+          } else if (!irSet.has(p.n)) {
+            p.rm = 1;
+            if (typeof p.rank === 'number') p.rank = 9999;
+          }
+        }
+      }
       // Jack's ALL-board tier boundaries, re-based onto the same COMPACT
       // numbering as the live ranks above (raw board positions include
       // names we don't carry + IR — baked boundaries would drift by the

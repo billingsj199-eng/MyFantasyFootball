@@ -260,6 +260,53 @@
   const FIRESTORE_PUBLIC_URL =
     'https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)' +
     '/documents/rankings/jacks-public?key=AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY';
+  // ---- live IR (OUT FOR SEASON) sync ----
+  // Both rankings docs (official + public) carry a top-level `ir` field:
+  // {"Player Name": seasonYear}. Recompute p.ir on every apply so a flag Jack
+  // sets mid-day reaches the helper without waiting for the next players.json
+  // export (baked flags go stale the same way baked ranks do).
+  function applyIrList(names) {
+    const out = new Set(names.map((n) => norm(n)));
+    for (const p of state.players) {
+      if (out.has(norm(p.n))) p.ir = 1;
+      else if (p.ir) delete p.ir;
+    }
+  }
+  function applyIrField(raw) {
+    try {
+      const map = JSON.parse(raw || '');
+      if (!map || typeof map !== 'object') return;
+      const d = new Date(); // IR season rolls over March 1, same as the site
+      const season = d.getMonth() >= 2 ? d.getFullYear() : d.getFullYear() - 1;
+      applyIrList(Object.keys(map).filter((n) => map[n] === season));
+    } catch (_) { /* field absent/corrupt — baked flags stay in effect */ }
+  }
+  // FULL-board apply for one mode key: live names take ranks 1..N, and a
+  // player ABSENT from the live order was removed from that board since the
+  // last export — his stale baked rank now belongs to someone else, so clear
+  // it. A redraft removal additionally sets p.rm: the daily export drops the
+  // player from players.json entirely, and the live path must match (the FA
+  // pool filters rm). Guarded on order size so a truncated doc can't
+  // mass-remove the pool.
+  function applyFullOrder(key, order, byNorm) {
+    let applied = 0;
+    order.forEach((name, i) => {
+      const list = byNorm[norm(name)];
+      if (list) for (const p of list) { p[key] = i + 1; applied++; }
+    });
+    if (order.length >= 50) {
+      const inBoard = new Set(order.map((n) => norm(n)));
+      for (const p of state.players) {
+        if (inBoard.has(norm(p.n))) {
+          if (key === 'rank' && p.rm) delete p.rm;
+        } else {
+          if (typeof p[key] === 'number') delete p[key];
+          if (key === 'rank') p.rm = 1;
+        }
+      }
+    }
+    return applied;
+  }
   // Partial (top-36) apply: live names take ranks 1..N; everyone deeper is
   // renumbered from N+1 in their existing relative order, so a player who
   // fell out of the live top-36 can't share a rank with his replacement.
@@ -303,6 +350,8 @@
     try {
       const payload = JSON.parse(doc.fields.data.stringValue);
       const jacks = payload.jacks || {};
+      // Live IR flags ride the same doc (official AND public carry `ir`).
+      applyIrField(doc.fields.ir && doc.fields.ir.stringValue);
       const keyByMode = { superflex: 'jSf', dynasty: 'jDy', dynastysf: 'jDsf', redraft: 'rank' };
       const byNorm = {};
       for (const p of state.players) (byNorm[norm(p.n)] = byNorm[norm(p.n)] || []).push(p);
@@ -310,10 +359,7 @@
       for (const [mode, key] of Object.entries(keyByMode)) {
         const order = (jacks[mode] || {})._order || [];
         if (full) {
-          order.forEach((name, i) => {
-            const list = byNorm[norm(name)];
-            if (list) for (const p of list) { p[key] = i + 1; applied++; }
-          });
+          applied += applyFullOrder(key, order, byNorm);
         } else {
           applied += applyPartialOrder(key, order, byNorm);
         }
@@ -384,13 +430,12 @@
       for (const key of ['rank', 'jSf', 'jDy', 'jDsf']) {
         const order = v.boards[key];
         if (!Array.isArray(order) || !order.length) continue;
-        order.forEach((name, i) => {
-          const list = byNorm[norm(name)];
-          if (list) for (const p of list) { p[key] = i + 1; applied++; }
-        });
+        applied += applyFullOrder(key, order, byNorm);
         const tl = v.tiers && v.tiers[key];
         if (Array.isArray(tl) && tl.length) state.tiers[key] = tl;
       }
+      // Site sessions also ship the current-season IR names (see mff-page-user)
+      if (Array.isArray(v.ir)) applyIrList(v.ir);
       if (applied) {
         state.seasonStatus = state.players.length + ' players · boards synced from site';
         render();
@@ -1226,8 +1271,9 @@
   function freeAgents() {
     // `p.ir` = the site's OUT FOR SEASON flag. Never surface one as a free
     // agent worth adding; dynasty keeps them, matching the site's split.
+    // `p.rm` = removed from Jack's live redraft board (see applyFullOrder).
     return state.players.filter((p) => state.faSeen[keyOf(p)] && !state.myKeys.has(keyOf(p)) &&
-      !(p.ir && !isDynMode()));
+      !(p.ir && !isDynMode()) && !p.rm);
   }
   function waiverRecs() {
     const mine = myPlayerObjs();

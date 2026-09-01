@@ -1,4 +1,4 @@
-// COPY of ../sim_lab/overrides.js (synced 2026-08-31 10:01:55 by export_sleeper_extension_data.py — edit the sim_lab original)
+// COPY of ../sim_lab/overrides.js (synced 2026-09-01 07:45:38 by export_sleeper_extension_data.py — edit the sim_lab original)
 // ============================================================================
 // MANUAL OVERRIDES — edit this file as camp/season news breaks, then reload.
 //
@@ -33,4 +33,13 @@ window.INJURY_WINDOW_OVERRIDES = {
 //   'Puka Nacua': [5, 6],     // "out ~2 weeks" — weeks 5-6 zeroed
 //   'Bijan Robinson': 0,      // tag is stale — confirmed playing
 window.IN_SEASON_OUT_OVERRIDES = {
+};
+
+// PROP_ANCHOR_OVERRIDES: per-player prop-anchor weight (PROP_ANCHOR_SPEC.md).
+// 0 = don't anchor this player this week (his lines are stale — late scratch,
+// role news the books haven't repriced); 0..1 = custom market weight (engine
+// default PROP_W = 0.70, i.e. 70% market / 30% model). Examples:
+//   'Bijan Robinson': 0,      // ruled out late — books pulled his lines
+//   'Puka Nacua': 0.4,        // trust the model more this week
+window.PROP_ANCHOR_OVERRIDES = {
 };

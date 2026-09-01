@@ -55,7 +55,8 @@
       var d = e.detail || {};
       if (!d.boards) return;
       chrome.storage.local.set({ mff_jacks_boards: {
-        boards: d.boards, tiers: d.tiers || {}, syncedAt: d.syncedAt || Date.now()
+        boards: d.boards, tiers: d.tiers || {}, ir: d.ir || null,
+        syncedAt: d.syncedAt || Date.now()
       } });
     } catch (_) {}
   });

@@ -1,4 +1,4 @@
-// COPY of ../sim_lab/engine.js (synced 2026-08-31 10:01:55 by export_sleeper_extension_data.py — edit the sim_lab original)
+// COPY of ../sim_lab/engine.js (synced 2026-09-01 07:45:38 by export_sleeper_extension_data.py — edit the sim_lab original)
 // ============================================================================
 // SIM LAB ENGINE — projections + Monte Carlo simulation core.
 // Private research tool. Not part of the deployed MFF site.
@@ -606,6 +606,207 @@
     return Math.max(1.0, 16.2 - 0.436 * oppImplied);
   }
 
+  // ---------- prop anchor (market-anchored weekly mean) ----------
+  // See PROP_ANCHOR_SPEC.md. Where weekly prop lines exist
+  // (BETTING_2026.weeklyProps — UD/PP stat medians + DK anytime-TD odds),
+  // the shipped weekly mean blends toward the market. The CLEAN model and
+  // JS Weekly keep racing in every lock, and comps are never touched, so
+  // the vsBooks grading and the LINES divergence view stay non-circular.
+  // weeklyProps is empty preseason -> the whole layer is a provable no-op
+  // until Week 1 lines land. Kill switch: window.SIM_PROP_ANCHOR = false;
+  // per-player weight override: PROP_ANCHOR_OVERRIDES (overrides.js).
+  var PROP_W            = 0.70; // market weight; retroactively tunable from lock history
+  var PROP_COVERAGE_MIN = 0.60; // covered non-TD share of model points required
+  var PROP_ATD_JUICE    = 1.06; // flat devig on anytime-TD implied probability
+  var PROP_MAX_AGE_DAYS = 8;    // freshness guard: entries whose asOf is older
+  // are ignored — weeklyProps has been seen carrying preseason-game lines
+  // mis-keyed to future regular-season weeks (13 W15 entries dated 08-20);
+  // real slates re-pull pregame so live entries are always days old at most
+  var PROP_STATS = ['py', 'ry', 'rcy', 'rec']; // non-TD anchor stats
+  var PROP_SC    = { py: 'pass_yd', ry: 'rush_yd', rcy: 'rec_yd', rec: 'rec' };
+
+  var _propWkCache = {};
+  function propCacheReset() { _propWkCache = {}; }
+  function propMap(wk) {
+    var props = (typeof window !== 'undefined' && window.BETTING_2026 &&
+      window.BETTING_2026.weeklyProps && window.BETTING_2026.weeklyProps[String(wk)]) || null;
+    var c = _propWkCache[wk];
+    if (c && c.src === props) return c.map; // per-week cache — marketRate walks many weeks per call
+    var map = {};
+    // No stale filtering here: the direct anchor applies PROP_MAX_AGE_DAYS
+    // itself, while the market rate track reads old entries on purpose.
+    if (props) Object.keys(props).forEach(function (nm) { map[norm(nm)] = props[nm]; });
+    _propWkCache[wk] = { src: props, map: map };
+    return map;
+  }
+  // Consensus line per stat = median across books — same rule as the LINES
+  // view and the scoreWeek grading.
+  function propConsensus(entry, k) {
+    var vals = [];
+    ['UD', 'PP', 'DK'].forEach(function (b) {
+      if (entry[b] && typeof entry[b][k] === 'number') vals.push(entry[b][k]);
+    });
+    if (!vals.length) return null;
+    vals.sort(function (a, b) { return a - b; });
+    return vals[Math.floor(vals.length / 2)];
+  }
+  // Closed-form gamma median/mean ratio from the player's SAMPLED weekly
+  // shape (same total relative sd as samplePlayerScore) — converts a prop
+  // line (a median) to mean scale without running a sim. Also used by the
+  // LINES view so its divergence read stays pure-model when the anchor is on.
+  function gammaMedRatio(p) {
+    var rel = p._relW !== undefined ? p._relW
+      : Math.sqrt(Math.pow(RESID_SHRINK * (p.sigmaPct || 0.5), 2) + 0.04);
+    var k = 1 / (rel * rel);
+    return Math.min(1.0, Math.max(0.75, (3 * k - 0.8) / (3 * k + 0.2)));
+  }
+  function amToProb(odds) { return odds < 0 ? -odds / (-odds + 100) : 100 / (odds + 100); }
+  // Prop-implied blended weekly mean for player p in week wk, or null when
+  // there is no anchor (no lines / K / DST / coverage gate / override 0).
+  // base = what effMean would return without the anchor (jsMean in-season,
+  // Clay-layer mean preseason). compsWk = the CLEAN per-week component means.
+  // Market weight for player p: per-player override -> global console
+  // override -> PROP_W. 0 disables ALL market influence for the player
+  // (direct anchor AND the market rate track).
+  function propWeight(p) {
+    var ov = (typeof window !== 'undefined' && window.PROP_ANCHOR_OVERRIDES) || {};
+    var w = ov[p.name] != null ? ov[p.name]
+      : (typeof window !== 'undefined' && typeof window.PROP_W_OVERRIDE === 'number')
+        ? window.PROP_W_OVERRIDE : PROP_W;
+    return w > 0 ? Math.min(1, w) : 0;
+  }
+
+  // Prop-implied fantasy MEAN for one player + one week's prop entry, in
+  // the given scoring — or null when the lines can't carry it (no K lines /
+  // coverage gate). compsWk = that week's CLEAN model component means; the
+  // uncovered stats fall back to them, so fp is on the same weekly-mean
+  // scale as compsWk (this is what lets the rate track divide the factor
+  // back out exactly).
+  function propImpliedFp(p, entry, sc, compsWk) {
+    var medRatio = gammaMedRatio(p);
+    // Kickers (Phase 3): a kicking-points line IS the fantasy stat — no
+    // coverage gate (one line is full coverage). FG-made fallback: 3/FG +
+    // the model's XP mean.
+    if (p.pos === 'K') {
+      var kpts = propConsensus(entry, 'kpts');
+      var fgmL = propConsensus(entry, 'fgm');
+      if (kpts != null && kpts > 0) return kpts / medRatio;
+      if (fgmL != null && fgmL > 0) return (fgmL / medRatio) * 3 + (compsWk.xpm || 0);
+      return null;
+    }
+    function scv(k) {
+      var v = sc[PROP_SC[k]];
+      if (k === 'rec' && p.pos === 'TE' && sc.bonus_rec_te) v += sc.bonus_rec_te;
+      return v;
+    }
+    // Non-TD stats: line (median -> mean scale) where posted, model comp
+    // (already mean scale) where not. Gate: posted lines must cover >=60%
+    // of the model's non-TD points or we don't anchor at all.
+    var covered = 0, modelNonTd = 0, fp = 0;
+    PROP_STATS.forEach(function (k) {
+      var mPts = (compsWk[k] || 0) * scv(k);
+      modelNonTd += mPts;
+      var line = propConsensus(entry, k);
+      if (line != null && line > 0) {
+        covered += mPts;
+        fp += (line / medRatio) * scv(k);
+      } else {
+        fp += mPts;
+      }
+    });
+    if (!(modelNonTd > 0) || covered / modelNonTd < PROP_COVERAGE_MIN) return null;
+    // Pass TDs: the posted line when there is one, else the model.
+    var ptdLine = propConsensus(entry, 'ptd');
+    fp += (ptdLine != null && ptdLine > 0 ? ptdLine / medRatio : (compsWk.ptd || 0)) * sc.pass_td;
+    // Rush+rec TDs: devigged anytime-TD odds -> Poisson mean, split rush/rec
+    // by the model's own ratio; raw 0.5 rtd/rctd novelty lines are ignored.
+    var atd = propConsensus(entry, 'atd');
+    var rtdM = compsWk.rtd || 0, rctdM = compsWk.rctd || 0;
+    if (atd != null) {
+      var pTd = Math.min(0.85, Math.max(0.01, amToProb(atd) / PROP_ATD_JUICE));
+      var lam = -Math.log(1 - pTd);
+      var tot = rtdM + rctdM;
+      var rushShare = tot > 0 ? rtdM / tot : (p.pos === 'QB' ? 1 : p.pos === 'RB' ? 0.85 : 0.03);
+      fp += lam * rushShare * sc.rush_td + lam * (1 - rushShare) * sc.rec_td;
+    } else {
+      fp += rtdM * sc.rush_td + rctdM * sc.rec_td;
+    }
+    return fp;
+  }
+
+  function propAnchorMean(p, wk, sc, compsWk, base) {
+    if (p.isDST || !(base > 0)) return null;
+    var entry = propMap(wk)[p.norm];
+    if (!entry) return null;
+    // Freshness guard for the DIRECT anchor only: an outdated line is not
+    // the market's current view of THIS week. (The rate track deliberately
+    // reads old entries — past weeks' lines are archival observations.)
+    if (entry.asOf && new Date(entry.asOf).getTime() < Date.now() - PROP_MAX_AGE_DAYS * 86400000) return null;
+    var w = propWeight(p);
+    if (!w) return null;
+    var fp = propImpliedFp(p, entry, sc, compsWk);
+    if (fp == null) return null;
+    return w * fp + (1 - w) * base;
+  }
+
+  // ---------- Phase 4: market rate track ----------
+  // A weekly prop is the market's estimate of the player's per-game rate,
+  // conditional on playing. Divide each observed week's prop-implied mean
+  // by that week's known multipliers -> a matchup-free neutral rate; EWMA
+  // the observations (recency half-life MKT_HALF_LIFE weeks) into the
+  // market's standing opinion, blended into the base rate for weeks with
+  // NO direct lines (future weeks in simSeason/simLeague, and un-lined
+  // players). Weight = propWeight x confidence, confidence ramping to 1 at
+  // MKT_FULL_TRUST effective observations — one slate gets half the direct
+  // anchor's weight. Injury/games stay owned by the availability layers:
+  // props are conditional on playing, so this anchors RATE only.
+  // Kill switch: window.SIM_MKT_RATE = false (independent of the direct
+  // anchor's SIM_PROP_ANCHOR).
+  var MKT_HALF_LIFE  = 3; // weeks; EWMA recency half-life
+  var MKT_FULL_TRUST = 2; // effective observations for full market weight
+  function marketRate(p, wk, sc, schedule) {
+    if (p.isDST) return null;
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (wnd && wnd.SIM_MKT_RATE === false) return null;
+    var wp = (wnd && wnd.BETTING_2026 && wnd.BETTING_2026.weeklyProps) || {};
+    var obs = [];
+    Object.keys(wp).forEach(function (k) {
+      var owk = +k;
+      if (!owk || owk === wk) return; // the projected week itself is the direct anchor's job
+      var entry = propMap(owk)[p.norm];
+      if (!entry) return;
+      // rebuild that week's factor exactly as weeklyProjection builds it
+      var slot = schedule.byTeam[p.tm] && schedule.byTeam[p.tm][owk];
+      if (!slot) return;
+      var gi = (schedule.gameWeeks[p.tm] || []).indexOf(owk) + 1;
+      if (p.qbWindow && (gi < p.qbWindow.s || gi > p.qbWindow.e)) return;
+      var perGameDiv = p.qbWindow ? p.qbWindow.games : 17;
+      var rampF = 1;
+      if (p.ramp) {
+        var R = RAMP[p.ramp];
+        rampF = (gi > 0 && gi <= R.head.length) ? R.head[gi - 1] : R.tail;
+      }
+      var f = vegasMult(slot.implied, schedule.avgImplied, p.pos)
+        * ((defenseAdj()[slot.opp] || {})[p.pos] || 1)
+        * snapMult(p, owk) * rampF;
+      if (!(f > 0)) return;
+      var cw = {};
+      Object.keys(p.comps).forEach(function (ck) { if (p.comps[ck]) cw[ck] = p.comps[ck] / perGameDiv * f; });
+      var fp = propImpliedFp(p, entry, sc, cw);
+      if (fp == null) return;
+      obs.push({ wk: owk, rate: fp / f });
+    });
+    if (!obs.length) return null;
+    var maxWk = 0;
+    obs.forEach(function (o) { if (o.wk > maxWk) maxWk = o.wk; });
+    var wsum = 0, rsum = 0;
+    obs.forEach(function (o) {
+      var wt = Math.pow(0.5, (maxWk - o.wk) / MKT_HALF_LIFE);
+      wsum += wt; rsum += wt * o.rate;
+    });
+    return { rate: rsum / wsum, conf: Math.min(1, wsum / MKT_FULL_TRUST), n: obs.length };
+  }
+
   // Weekly mean + per-stat component means for player p in week wk.
   // Returns null on bye / no game.
   function weeklyProjection(p, wk, sc, schedule) {
@@ -637,13 +838,32 @@
     // actual FPA-by-position opponent adj replacing Clay unit grades as the
     // sample grows. Preseason (no 2026 data) both terms collapse to Clay's,
     // so jsMean === mean until real games exist.
-    var jsMean = jsBasePg(p, sc, clayPg) * mult * jsOppMult(slot.opp, p.pos, dAdj) * sM * rampF;
+    var jsPg = jsBasePg(p, sc, clayPg);
+    var jsChain = mult * jsOppMult(slot.opp, p.pos, dAdj) * sM * rampF;
+    var jsMean = jsPg * jsChain;
     var compsWk = {};
     Object.keys(p.comps).forEach(function (k) {
       if (p.comps[k]) compsWk[k] = +(p.comps[k] / perGameDiv * factor).toFixed(2);
     });
     compsWk.rrtd = +(((p.comps.rtd || 0) + (p.comps.rctd || 0)) / perGameDiv * factor).toFixed(3);
-    return { mean: mean, mult: mult, slot: slot, comps: compsWk, gameIdx: gameIdx, jsMean: jsMean };
+    // Prop anchor (see PROP_ANCHOR_SPEC.md): blend toward the books' weekly
+    // lines where they exist. Base = what effMean would pick without it.
+    var propMean = propAnchorMean(p, wk, sc, compsWk, jsMean != null ? jsMean : mean);
+    var propSrc = propMean != null ? 'line' : null;
+    if (propMean == null) {
+      // Phase 4: no lines for THIS week — fall back to the market's standing
+      // per-game rate from other observed weeks, re-multiplied through this
+      // week's own JS chain (Vegas/FPA/snaps/ramp), confidence-weighted.
+      var mkt = marketRate(p, wk, sc, schedule);
+      if (mkt) {
+        var mw = propWeight(p) * mkt.conf;
+        if (mw > 0) {
+          propMean = (mw * mkt.rate + (1 - mw) * jsPg) * jsChain;
+          propSrc = 'rate';
+        }
+      }
+    }
+    return { mean: mean, mult: mult, slot: slot, comps: compsWk, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc };
   }
 
   // ---------- correlated sampling ----------
@@ -729,7 +949,11 @@
   // jsMean === mean identically, so this is a provable no-op until real
   // games exist. Kill switch for A/B: window.SIM_USE_JS_MEAN = false.
   function effMean(wkProj) {
-    var useJs = typeof window === 'undefined' || window.SIM_USE_JS_MEAN !== false;
+    var w = typeof window !== 'undefined' ? window : null;
+    // Prop anchor first (default ON, kill switch window.SIM_PROP_ANCHOR =
+    // false) — null propMean (no lines / gate / K / DST) falls through.
+    if ((!w || w.SIM_PROP_ANCHOR !== false) && wkProj.propMean != null) return wkProj.propMean;
+    var useJs = !w || w.SIM_USE_JS_MEAN !== false;
     return (useJs && wkProj.jsMean != null) ? wkProj.jsMean : wkProj.mean;
   }
   function samplePlayerScore(p, wkProj, env, rng, meanScale) {
@@ -783,7 +1007,9 @@
       }
       return {
         player: p, week: wk, mean: mean,
-        proj: p._wk.mean, jsProj: p._wk.jsMean, mult: p._wk.mult, slot: p._wk.slot, comps: p._wk.comps,
+        proj: p._wk.mean, jsProj: p._wk.jsMean, propProj: p._wk.propMean != null ? p._wk.propMean : null,
+        propSrc: p._wk.propSrc || null,
+        mult: p._wk.mult, slot: p._wk.slot, comps: p._wk.comps,
         p10: pct(arr, 0.10), p25: pct(arr, 0.25), p50: pct(arr, 0.50),
         p75: pct(arr, 0.75), p90: pct(arr, 0.90),
         boomAt: bb.boom, bustAt: bb.bust,
@@ -1004,21 +1230,152 @@
 
     // Precompute each team's optimal starters + weekly projections per week.
     // Starters chosen by projected mean (that's how real managers set lineups).
-    var prep = {}; // prep[rosterId][week] = [{p, wp}]
+    var allWeeks = regWeeks.slice();
+    for (var w = playoffStart; w < playoffStart + 3; w++) allWeeks.push(w);
+    var candsBy = {}; // candsBy[rosterId][week] = sorted candidate list
     teams.forEach(function (t) {
-      prep[t.rosterId] = {};
+      candsBy[t.rosterId] = {};
       var roster = t.playerIds.map(function (sid) { return players.bySid[sid]; }).filter(Boolean)
         .filter(function (p) { return unavailable[p.sid] !== 'ir'; });
-      var allWeeks = regWeeks.slice();
-      for (var w = playoffStart; w < playoffStart + 3; w++) allWeeks.push(w);
       allWeeks.forEach(function (wk) {
-        var cands = roster.filter(function (p) {
+        candsBy[t.rosterId][wk] = roster.filter(function (p) {
           return !(wk === currentWeek && unavailable[p.sid] === 'out');
         }).map(function (p) {
           var wp = weeklyProjection(p, wk, sc, schedule);
           return wp ? { p: p, wp: wp } : null;
         }).filter(Boolean).sort(function (a, b) { return effMean(b.wp) - effMean(a.wp); });
-        prep[t.rosterId][wk] = pickLineup(cands, lineupSlots);
+      });
+    });
+
+    // ---- D/ST streaming (league-size aware) ----
+    // Real managers churn D/ST weekly, and the model already says DST value is
+    // pure matchup (dstWeeklyMean = f(opp implied)) — so a roster locked to one
+    // DST would eat bad matchups and a bye week that nobody actually eats.
+    // Each week: teams whose rostered DST projects STREAM_TOL points below the
+    // best D/ST still on waivers (or whose DST is on bye) claim a DISTINCT
+    // waiver DST — worst rostered unit claims first, mirroring waiver priority —
+    // while close calls keep the rostered unit. The pool is the truly
+    // unrostered DSTs, so a deeper league (or 2-DST rosters) gets a thinner
+    // streaming baseline automatically. Claimed DSTs are real player objects,
+    // so sampling, sigma and game correlations all price normally.
+    // "significantly worse" threshold, in projected pts. Backtested
+    // (backtest_stream_tol.py, 2019-25 closing lines + pbp DST actuals):
+    // projected gap → realized points at slope ~1.07 (the edge is real at
+    // every size), and the season policy sweep is FLAT from TOL 1.5 down to
+    // 0 (±0.3 ppg noise) — 1.0 sits within 2.3 season pts of the noisy
+    // optimum while modeling that managers don't churn for slivers.
+    var STREAM_TOL = 1.0;
+    // A/B kill switch (mirrors SIM_USE_JS_MEAN): window.SIM_WAIVER_FILLS = false
+    // reverts to fully roster-locked lineups (no DST streaming, no hole fills).
+    var waiversOn = typeof window === 'undefined' || window.SIM_WAIVER_FILLS !== false;
+    var rosteredIds = {};
+    teams.forEach(function (t) { t.playerIds.forEach(function (id) { rosteredIds[id] = 1; }); });
+    // waiver pool for a position in a week: unrostered, playing, not IR/out
+    function waiverPool(list, wk) {
+      return list.filter(function (p) {
+        if (unavailable[p.sid] === 'ir') return false;
+        if (wk === currentWeek && unavailable[p.sid] === 'out') return false;
+        return true;
+      }).map(function (p) {
+        var wp = weeklyProjection(p, wk, sc, schedule);
+        return wp ? { p: p, wp: wp } : null;
+      }).filter(Boolean).sort(function (a, b) { return effMean(b.wp) - effMean(a.wp); });
+    }
+    var hasDefSlot = lineupSlots.some(function (s) { return (SLOT_ELIGIBLE[s] || []).indexOf('DST') >= 0; });
+    if (waiversOn && hasDefSlot) {
+      var waiverDsts = players.list.filter(function (p) { return p.isDST && !rosteredIds[p.sid]; });
+      allWeeks.forEach(function (wk) {
+        var pool = waiverPool(waiverDsts, wk);
+        if (!pool.length) return;
+        var order = teams.map(function (t) {
+          var have = -1;
+          candsBy[t.rosterId][wk].forEach(function (c) {
+            if (c.p.isDST) have = Math.max(have, effMean(c.wp));
+          });
+          return { rid: t.rosterId, have: have }; // -1 = no DST playing (bye / none rostered)
+        }).sort(function (a, b) { return a.have - b.have; });
+        var next = 0;
+        order.forEach(function (o) {
+          if (next >= pool.length) return;
+          var claim = pool[next];
+          if (o.have < 0 || effMean(claim.wp) - o.have > STREAM_TOL) {
+            var cands = candsBy[o.rid][wk];
+            cands.push(claim);
+            cands.sort(function (a, b) { return effMean(b.wp) - effMean(a.wp); });
+            next++;
+          }
+        });
+      });
+    }
+
+    // ---- lineup-hole fills (every slot) ----
+    // The objective: NO simulated team ever fields an incomplete lineup.
+    // A slot the roster literally cannot fill this week (byes, IR/Out
+    // exclusions, thin rosters — QB with no backup, TE hole, empty FLEX)
+    // gets the best eligible player still on waivers, because that's what a
+    // real manager does rather than start an empty slot. No tolerance and no
+    // upgrade streaming here — rostered players always keep their jobs; only
+    // genuinely unfillable slots trigger a claim. Claims are distinct across
+    // teams within a week (shared byes = waiver contention), and the pool is
+    // this league's actual unrostered list, so replacement level scales with
+    // league size and roster depth automatically.
+    var waiverByPos = {}; // pos -> unrostered players (DST handled above too)
+    players.list.forEach(function (p) {
+      if (rosteredIds[p.sid]) return;
+      (waiverByPos[p.pos] = waiverByPos[p.pos] || []).push(p);
+    });
+    function unfilledSlots(cands, slots) {
+      var used = {}, un = [];
+      var order = slots.map(function (s, i) { return { s: s, i: i }; })
+        .sort(function (a, b) {
+          var fa = a.s.indexOf('FLEX') >= 0 ? 1 : 0, fb = b.s.indexOf('FLEX') >= 0 ? 1 : 0;
+          return fa - fb || a.i - b.i;
+        });
+      order.forEach(function (o) {
+        var elig = SLOT_ELIGIBLE[o.s] || [];
+        if (!elig.length) return; // IDP etc. — can never fill, don't count
+        for (var i = 0; i < cands.length; i++) {
+          if (used[i]) continue;
+          if (elig.indexOf(cands[i].p.pos) >= 0) { used[i] = 1; return; }
+        }
+        un.push(o.s);
+      });
+      return un;
+    }
+    if (waiversOn) allWeeks.forEach(function (wk) {
+      var pools = {};   // pos -> sorted waiver pool this week (lazy)
+      var claimed = {}; // sid -> 1, distinct claims across teams this week
+      teams.forEach(function (t) {
+        var cands = candsBy[t.rosterId][wk];
+        var holes = unfilledSlots(cands, lineupSlots);
+        if (!holes.length) return;
+        var changed = false;
+        holes.forEach(function (slot) {
+          var best = null;
+          (SLOT_ELIGIBLE[slot] || []).forEach(function (pos) {
+            if (!(pos in pools)) pools[pos] = waiverPool(waiverByPos[pos] || [], wk);
+            for (var i = 0; i < pools[pos].length; i++) {
+              var c = pools[pos][i];
+              if (claimed[c.p.sid]) continue;
+              if (!best || effMean(c.wp) > effMean(best.wp)) best = c;
+              break; // pools are sorted — first unclaimed is that pos's best
+            }
+          });
+          if (best) {
+            claimed[best.p.sid] = 1;
+            cands.push(best);
+            changed = true;
+          }
+        });
+        if (changed) cands.sort(function (a, b) { return effMean(b.wp) - effMean(a.wp); });
+      });
+    });
+
+    var prep = {}; // prep[rosterId][week] = [{p, wp}]
+    teams.forEach(function (t) {
+      prep[t.rosterId] = {};
+      allWeeks.forEach(function (wk) {
+        prep[t.rosterId][wk] = pickLineup(candsBy[t.rosterId][wk], lineupSlots);
       });
     });
 
@@ -1045,6 +1402,7 @@
     teams.forEach(function (t) {
       tally[t.rosterId] = {
         team: t, wins: 0, pf: 0, playoffs: 0, byes: 0, titles: 0, finals: 0,
+        pfLead: 0, pfs: new Float64Array(sims), // per-sim season PF -> O/U totals lines
         seedCounts: {}, winCounts: {}, placeCounts: {}
       };
       weekTally[t.rosterId] = {};
@@ -1071,6 +1429,12 @@
           if (sa > sb) { rec[m.a].w++; rec[m.b].l++; wa.w++; } else { rec[m.b].w++; rec[m.a].l++; wb.w++; }
         });
       });
+      // scoring title: who led the league in PF this sim (incl. carried actuals)
+      var pfBest = null;
+      teams.forEach(function (t) {
+        if (pfBest === null || rec[t.rosterId].pf > rec[pfBest].pf) pfBest = t.rosterId;
+      });
+      tally[pfBest].pfLead++;
       // standings + seeds
       var order = teams.slice().sort(function (a, b) {
         var ra = rec[a.rosterId], rb = rec[b.rosterId];
@@ -1080,6 +1444,7 @@
         var tl = tally[t.rosterId];
         tl.wins += rec[t.rosterId].w;
         tl.pf += rec[t.rosterId].pf;
+        tl.pfs[s] = rec[t.rosterId].pf;
         tl.winCounts[rec[t.rosterId].w] = (tl.winCounts[rec[t.rosterId].w] || 0) + 1;
         tl.placeCounts[i + 1] = (tl.placeCounts[i + 1] || 0) + 1;
         if (i < playoffTeams) {
@@ -1105,6 +1470,7 @@
         avgWins: tl.wins / sims, avgPF: tl.pf / sims,
         playoffOdds: tl.playoffs / sims, byeOdds: tl.byes / sims,
         titleOdds: tl.titles / sims, finalsOdds: tl.finals / sims,
+        pfLeadOdds: tl.pfLead / sims, pfDist: tl.pfs,
         winCounts: tl.winCounts, placeCounts: tl.placeCounts, seedCounts: tl.seedCounts,
         weekly: weekly, playoffProj: playoffProj[t.rosterId], playoffOpps: tl.pOpp || {}, sims: sims
       };
@@ -1460,6 +1826,7 @@
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, snapMult: snapMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult,
+    propAnchorMean: propAnchorMean, gammaMedRatio: gammaMedRatio, marketRate: marketRate, propImpliedFp: propImpliedFp, propCacheReset: propCacheReset,
     simWeek: simWeek, simSeason: simSeason, simLeague: simLeague, simBestBall: simBestBall, pickLineup: pickLineup,
     drawWeekEnv: drawWeekEnv, samplePlayerScore: samplePlayerScore, effMean: effMean, CORR: CORR,
     drawSeasonShock: drawSeasonShock, SLOT_ELIGIBLE: SLOT_ELIGIBLE

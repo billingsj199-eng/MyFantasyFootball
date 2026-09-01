@@ -45394,7 +45394,7 @@ Rules:
   // separator steps → ×(1 − 0.01·tierIndex).
   const _MT_RANK_ZERO = 500;  // board rank worth 0
   const _MT_RANK_SLOPE = 0.5; // 250 at #1, −0.5 per rank
-  const _MT_TIER_PCT = 0.04;  // each tier below the top: ×4% less (Jack 2026-08-31: tried 1/2/3/5%, settled toward 4%)
+  const _MT_TIER_PCT = 0.03;  // each tier below the top: ×3% less (Jack 2026-08-31 FINAL: A/B'd 1/2/3/4/5% live on the Clitphen league, picked 3%)
   const _MT_TIER_FLOOR = 0.5; // safety floor on deep-tier multipliers
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();
@@ -47428,13 +47428,12 @@ Rules:
       // bit"): starter-weighting shrank the player base ~1/3, so raw picks
       // were over-counted against it; 0.65 restores their old relative
       // weight vs rostered talent.
-      // Display divisor (Jack 2026-08-31: "lower the ratings scale…
-      // divide by about 3 — large enough having teams over 1000 but not
-      // too much spread"). He asked ÷3 against the PRE-soft-cap live
-      // totals; the rating cap already trims top totals ~25-30%, so ÷2
-      // here lands where his ÷3 was aiming (top teams ~1100-1200, avg
-      // ~700-800). Pure presentation — ± vs avg scales with it.
-      t.strengthTotal = Math.round((sw + 0.65 * ((t.score && t.score.pickTotal) || 0)) / 2);
+      // Display scale ×1.5 (Jack 2026-08-31, after settling on the linear
+      // basis + 3% tiers: "let's increase the number, multiply it by 3" —
+      // ×3 on the totals he was seeing under the old ÷2, so net ×1.5 on
+      // the raw weighted sum). Top teams land ~1800-2000 in a 14-teamer.
+      // Pure presentation — ± vs avg scales with it.
+      t.strengthTotal = Math.round((sw + 0.65 * ((t.score && t.score.pickTotal) || 0)) * 1.5);
     });
   }
   function _mtOrdinal(n) {

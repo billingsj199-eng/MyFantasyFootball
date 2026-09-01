@@ -45402,10 +45402,13 @@ Rules:
   //   value = curve(rank) + (tiersBelow × _MT_TIER_STEP)   [pre-VOR units]
   // Order-safe: within-tier = raw curve; each boundary gap widens by
   // exactly one step. Version-board sources with tiers only (consensus/ADP
-  // have none → plain value). 6 curve units = 60 displayed post-×10.
+  // have none → plain value). 2 curve units = 20 displayed post-×10.
   // History: mult amp 1.5 "way too far apart" → 0.6 "still too far" →
-  // flatten 0.5 "don't flatten" → this.
-  const _MT_TIER_STEP = 6;
+  // flatten 0.5 "don't flatten" → additive step 6 → step 2 (Jack
+  // 2026-08-31 later: "not massive drops between tiers, more of a very
+  // small boost" — #7/#8 same tier should sit closer than #8/#9 across a
+  // break, "that's really all it should be used for").
+  const _MT_TIER_STEP = 2;
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();
     const includePicks = !modeOverride; // contender mode skips picks
@@ -47316,6 +47319,22 @@ Rules:
   // RB/WR the best single player can't carry the room rank by himself: the
   // stud team still wins WHEN its depth is also solid, but two-three real
   // starters beat one stud plus a hole (Jack 2026-08-31, slope 0.18→0.25).
+  // Rating-only soft cap (Jack 2026-08-31): the trade curve's top prices
+  // market scarcity, not weekly production — raw VOR had the #1 player
+  // (~2340) out-rating the #13+#14 players COMBINED (~1500), so the team
+  // that drafted 1st dominated ratings "just because of where they
+  // drafted". Above the knee (~overall rank 30 in VOR-display units)
+  // rating credit grows logarithmically: the top couple guys stay really
+  // important (#1 ≈ 1.6× a mid-first, ~3× a rank-50 guy) but two
+  // mid-firsts now outrate one stud, and the slot-1 vs turn-team gap
+  // drops from ~+50% to low double digits. Ratings only: p.val displays,
+  // trade calc, score.total, and pick pricing all keep raw values; only
+  // win-now contexts apply it (dynasty value view stays in raw units —
+  // its pick-total calibration depends on them).
+  const _MT_RATING_KNEE = 300;
+  function _mtRatingVal(v) {
+    return v <= _MT_RATING_KNEE ? v : _MT_RATING_KNEE * (1 + Math.log(v / _MT_RATING_KNEE));
+  }
   function _mtPosStrength(group, starters, alphaOverride) {
     // alphaOverride=1 keeps raw trade-value units (used by the team-wide
     // strength total, where cross-position sums must stay comparable);
@@ -47337,7 +47356,8 @@ Rules:
       if (i < full) w = 1;
       else if (i === full && frac > 0.001) w = benchW[0] + 0.7 * frac;
       else { w = benchW[Math.min(bench, 2)]; bench++; }
-      total += Math.pow(Math.max(p.val || 0, 0), alpha) * w;
+      const v = Math.max(p.val || 0, 0);
+      total += Math.pow(winNow ? _mtRatingVal(v) : v, alpha) * w;
     });
     return total;
   }

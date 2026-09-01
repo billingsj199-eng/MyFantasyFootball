@@ -1,6 +1,36 @@
 {
-  "updated": "2026-08-31T16:11:21Z",
+  "updated": "2026-09-01T02:11:56Z",
   "items": [
+    {
+      "player": "Emari Demercado",
+      "team": "DAL",
+      "pos": "RB",
+      "date": "2026-08-31",
+      "headline": "Cowboys claim RB Emari Demercado off waivers from Chiefs",
+      "take": "Becomes Dallas's clear No. 3 RB behind Javonte Williams/Malik Davis \u2014 stash value if either gets hurt",
+      "url": "https://sports.yahoo.com/articles/cowboys-claim-rb-emari-demercado-182803682.html",
+      "tag": "transaction"
+    },
+    {
+      "player": "Jaydon Blue",
+      "team": "PHI",
+      "pos": "RB",
+      "date": "2026-08-31",
+      "headline": "Jaydon Blue clears waivers, signs with Eagles practice squad",
+      "take": "No path to fantasy relevance on Philly practice squad; drop from stash lists unless he's later elevated",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-31/jaydon-blue-goes-unclaimed-on-waivers",
+      "tag": "transaction"
+    },
+    {
+      "player": "Justin Joly",
+      "team": "MIA",
+      "pos": "TE",
+      "date": "2026-08-31",
+      "headline": "Dolphins claim rookie TE Justin Joly off waivers from Broncos",
+      "take": "Lands in a thin Miami TE room (Dulcich, Kacmarek, Sims) \u2014 deep dynasty stash only",
+      "url": "https://sports.yahoo.com/articles/dolphins-claim-broncos-5th-round-175353629.html",
+      "tag": "transaction"
+    },
     {
       "player": "Josh Jacobs",
       "team": "GB",
@@ -120,16 +150,6 @@
       "take": "No fantasy relevance in Tennessee now; watch for a landing spot as a backup/competition arm elsewhere",
       "url": "https://www.espn.com/nfl/story/_/id/49774800/titans-waive-former-starting-qb-levis",
       "tag": "transaction"
-    },
-    {
-      "player": "Justin Joly",
-      "team": "DEN",
-      "pos": "TE",
-      "date": "2026-08-30",
-      "headline": "Broncos waive rookie 5th-round TE Justin Joly despite 88-yard preseason TD",
-      "take": "Surprise cut given the draft capital invested; likely a practice-squad re-sign candidate to watch",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/broncos-waive-fifth-round-rookie-justin-joly",
-      "tag": "faller"
     },
     {
       "player": "Kaleb Johnson",

@@ -22038,13 +22038,20 @@ window.fmtHeight = fmtHeight;
   // drift): linear rank value zeroing at 500, ×0.5 slope (≈250 at #1), and
   // Jack's tier ladder at 3% per tier below the top (A/B'd 1-5% live on the
   // Clitphen league 2026-08-31, 3% FINAL), floored at ×0.5.
-  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierPct: 0.03, floor: 0.5, replRank: 160, extraPieceW: 0.5,
-    // Consolidation premium (Jack 2026-09-01, benchmarked vs flockfantasy):
-    // every piece AFTER the best on a side pays this flat tax off the package
-    // total, on top of the spot cost — uneven returns (2-for-1/3-for-1 of
-    // mid pieces) now lose decisively, and only an elite second piece can
-    // balance an elite single. ~one early tier step per extra piece.
-    pkgTax: 30,
+  // tierDrop (Jack 2026-09-01 evening, replacing the 3%-arithmetic ladder):
+  // each tier break below the top costs ×(1−tierDrop) MULTIPLICATIVELY —
+  // "Flock-steep, but tier-driven, not a copy". Benchmarked against
+  // flockfantasy's probed curve (pure rank exponential, tiers decorative):
+  // at 0.15 with Jack's 20-tier ladder the macro curve shadows theirs
+  // (#10 71% / #30 36% / #100 10% of #1 vs their 64/32/3) while same-tier
+  // players stay near-interchangeable and moving a tier boundary on the
+  // board actually moves prices. tierDrop is the live A/B lever.
+  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 0.5,
+    // Consolidation premium (benchmarked vs flockfantasy): every piece AFTER
+    // the best on a side pays this flat tax off the package total, on top of
+    // the spot cost. Reduced 30 → 10 when tierDrop landed — the steep curve
+    // now does most of the consolidation work on its own.
+    pkgTax: 10,
     // Stand-in tier ladder for boards WITHOUT tier data (consensus + ADP
     // sources): tier START ranks, snapshot of Jack's live redraft ladder
     // 2026-09-01 (Jack: consensus should "decrease on the same path" as his
@@ -22068,7 +22075,18 @@ window.fmtHeight = fmtHeight;
       for (let i = 0; i < L.length; i++) { if (L[i] <= rank) idx = i; else break; }
     }
     if (idx == null) return 1;
-    return Math.max(1 - idx * WN.tierPct, WN.floor);
+    // Geometric ladder: each tier break compounds. No floor — deep tiers are
+    // supposed to approach worthless on the win-now scale (Flock-steep).
+    return Math.pow(1 - WN.tierDrop, idx);
+  };
+  // Source-independent win-now value at a board rank (linear base × the
+  // pseudo-ladder tier factor) — the baseline for package economics.
+  window._winnowBaseValue = function(rank) {
+    const WN = window._WINNOW_VAL;
+    const L = WN.pseudoTiers || [];
+    let idx = 0;
+    for (let i = 0; i < L.length; i++) { if (L[i] <= rank) idx = i; else break; }
+    return Math.max(WN.zero - rank, 0) * WN.slope * Math.pow(1 - WN.tierDrop, idx);
   };
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
@@ -22140,7 +22158,9 @@ window.fmtHeight = fmtHeight;
     const isDyn = (m === 'dynasty' || m === 'dynastysf');
     const WN = window._WINNOW_VAL;
     if (isDyn) return Math.round(7750 / (Math.pow(140, 0.8) + 30) / 2); // ≈ 47
-    return Math.round((WN.zero - WN.replRank) * WN.slope); // (500-160)*0.5 = 170
+    // Waiver-line replacement evaluated on the ACTUAL curve (tier ladder
+    // included) — on the geometric ladder rank 160 is worth ~11, not 170.
+    return Math.max(Math.round(window._winnowBaseValue(WN.replRank)), 1);
   };
   window._packageAdjustedTotal = function(values, mode) {
     if (!values || !values.length) return 0;
@@ -45526,8 +45546,9 @@ Rules:
   const _WN_SRC = window._WINNOW_VAL || {};
   const _MT_RANK_ZERO = _WN_SRC.zero || 500;  // board rank worth 0
   const _MT_RANK_SLOPE = _WN_SRC.slope || 0.5; // 250 at #1, −0.5 per rank
-  const _MT_TIER_PCT = _WN_SRC.tierPct || 0.03;  // each tier below the top: ×3% less (Jack 2026-08-31 FINAL: A/B'd 1/2/3/4/5% live on the Clitphen league, picked 3%)
-  const _MT_TIER_FLOOR = _WN_SRC.floor || 0.5; // safety floor on deep-tier multipliers
+  // (Tier factor now comes entirely from window._winnowTierFactor — the
+  // geometric tierDrop ladder since 2026-09-01 evening; the old 3%-arithmetic
+  // _MT_TIER_PCT/_MT_TIER_FLOOR consts are gone with it.)
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();
     const includePicks = !modeOverride; // contender mode skips picks

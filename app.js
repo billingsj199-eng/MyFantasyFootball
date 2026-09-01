@@ -22039,6 +22039,12 @@ window.fmtHeight = fmtHeight;
   // Jack's tier ladder at 3% per tier below the top (A/B'd 1-5% live on the
   // Clitphen league 2026-08-31, 3% FINAL), floored at ×0.5.
   window._WINNOW_VAL = { zero: 500, slope: 0.5, tierPct: 0.03, floor: 0.5, replRank: 160, extraPieceW: 0.5,
+    // Consolidation premium (Jack 2026-09-01, benchmarked vs flockfantasy):
+    // every piece AFTER the best on a side pays this flat tax off the package
+    // total, on top of the spot cost — uneven returns (2-for-1/3-for-1 of
+    // mid pieces) now lose decisively, and only an elite second piece can
+    // balance an elite single. ~one early tier step per extra piece.
+    pkgTax: 30,
     // Stand-in tier ladder for boards WITHOUT tier data (consensus + ADP
     // sources): tier START ranks, snapshot of Jack's live redraft ladder
     // 2026-09-01 (Jack: consensus should "decrease on the same path" as his
@@ -22151,7 +22157,12 @@ window.fmtHeight = fmtHeight;
     const sorted = values.slice().sort((a, b) => b - a);
     let total = sorted[0];
     for (let i = 1; i < sorted.length; i++) total += Math.max(sorted[i] - cost, 0) * w;
-    return Math.round(total);
+    // Single-season consolidation premium: each extra piece taxes the package
+    // total flat (see _WINNOW_VAL.pkgTax) — a junk throw-in now actively
+    // HURTS the package side (it costs a roster spot and covers nothing),
+    // and mid-piece 2-for-1s fall decisively short of the deal's best player.
+    if (!isDyn) total -= (window._WINNOW_VAL.pkgTax || 0) * (sorted.length - 1);
+    return Math.max(Math.round(total), 1);
   };
 
   // Expose TIER_MULT globally so other IIFEs can read it
@@ -22252,7 +22263,7 @@ window.fmtHeight = fmtHeight;
       }
       adjEl.textContent = 'multi-piece adj ' + det.adj + ' (raw ' + det.raw + ')';
       adjEl.title = 'Each asset after this side\'s best pays a roster-spot cost of ' + window._packageRosterCost(tradeMode) +
-        ((tradeMode === 'dynasty' || tradeMode === 'dynastysf') ? '' : ', then counts ' + Math.round((window._WINNOW_VAL.extraPieceW || 1) * 100) + '% of what remains') +
+        ((tradeMode === 'dynasty' || tradeMode === 'dynastysf') ? '' : ', counts ' + Math.round((window._WINNOW_VAL.extraPieceW || 1) * 100) + '% of what remains, and the package pays a ' + (window._WINNOW_VAL.pkgTax || 0) + '-point consolidation premium per extra piece') +
         ' — the best player in the deal takes priority, packages can\'t win on quantity alone';
     } else if (adjEl) {
       adjEl.remove();
@@ -23005,9 +23016,10 @@ window.fmtHeight = fmtHeight;
     // EXTRA piece. With the extra-piece surplus weight w, an extra worth V
     // contributes w·(V−cost), so the gap is w·cost + (1−w)·V — bound V by the
     // win-now scale max (~250). Collapses to _pkgCost when w = 1 (dynasty).
-    const _extraW = (tradeMode === 'dynasty' || tradeMode === 'dynastysf')
-      ? 1 : (window._WINNOW_VAL.extraPieceW || 1);
-    const _pkgSlack = Math.ceil(_extraW * _pkgCost + (1 - _extraW) * 260);
+    const _isDynMode = (tradeMode === 'dynasty' || tradeMode === 'dynastysf');
+    const _extraW = _isDynMode ? 1 : (window._WINNOW_VAL.extraPieceW || 1);
+    const _pkgSlack = Math.ceil(_extraW * _pkgCost + (1 - _extraW) * 260
+      + (_isDynMode ? 0 : (window._WINNOW_VAL.pkgTax || 0)));
     const _pkgSideTotal = side => window._packageAdjustedTotal(side.map(a => a.value), tradeMode);
 
     function scoreCombo(giveSide, getSide, getTotal) {

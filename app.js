@@ -45377,38 +45377,25 @@ Rules:
     }
   }
 
-  // Score a roster using the trade value system (same curve as trade calc)
-  // Win-now player values are VOR — value ABOVE REPLACEMENT (Jack
-  // 2026-08-31: "larger spreads between teams"). The raw curve's fat tail
-  // (~10-17 val for every warm bench body) is a shared ballast that makes
-  // different rosters read alike; subtracting the curve's value at the
-  // roster cutoff zeroes the fodder and widens real gaps WITHOUT changing
-  // any ordering. My Teams-scoped: the trade calc keeps raw values.
-  // Replacement point = redraft curve at rank 160 (~12tm × 15rd pool).
-  // Dynasty/keeper VALUE view stays raw — stashes hold real value there and
-  // the pick machinery (full-replacement discount, 0.65 strength scale) is
-  // calibrated in raw units. Contender view = win-now → VOR applies.
-  const _MT_REPLACEMENT_VAL = Math.round(1000 / (Math.pow(160, 0.8) + 3)); // ≈ 16
-  // Display scale on the VOR values (Jack 2026-08-31: "larger numbers, no
-  // cap") — pure presentation, order and ratios untouched. Top guy ~2-3k,
-  // starters in the hundreds, bench 0, team totals in the thousands.
-  const _MT_VOR_SCALE = 10;
-  // My Teams tier semantics (Jack 2026-08-31, FINAL after several rounds):
-  // tiers are pure SEPARATORS. Within a tier nothing changes — players keep
-  // their exact curve values ("I don't want the tiers to flatten value").
-  // Each tier break adds a fixed ADDITIVE step, so a tier's only effect is
-  // pushing differently-tiered players apart. No TIER_MULT on this page at
-  // all (the global table still drives the trade calc, untouched).
-  //   value = curve(rank) + (tiersBelow × _MT_TIER_STEP)   [pre-VOR units]
-  // Order-safe: within-tier = raw curve; each boundary gap widens by
-  // exactly one step. Version-board sources with tiers only (consensus/ADP
-  // have none → plain value). 2 curve units = 20 displayed post-×10.
-  // History: mult amp 1.5 "way too far apart" → 0.6 "still too far" →
-  // flatten 0.5 "don't flatten" → additive step 6 → step 2 (Jack
-  // 2026-08-31 later: "not massive drops between tiers, more of a very
-  // small boost" — #7/#8 same tier should sit closer than #8/#9 across a
-  // break, "that's really all it should be used for").
-  const _MT_TIER_STEP = 2;
+  // Win-now player values — LINEAR RANK BASIS (Jack 2026-08-31, his own
+  // spec after several curve iterations): ratings "go down chronologically"
+  // with board rank — 250 at #1, falling half a point per rank to 0 at
+  // rank 500 (explicitly NOT zero at replacement: "0 would be the 500th
+  // ranked player" — bench stashes keep small value). Then the tier
+  // multiplier: "250 × 1.00 for highest tier then next tier is ×.99 etc"
+  // — each tier down the board is worth 1% less. My Teams-scoped: the
+  // trade calc stays on _getTradeValue's curve, and dynasty/keeper VALUE
+  // view stays raw (stash value + pick machinery calibrated in raw
+  // units). Contender view = win-now → linear basis applies.
+  // History (same day): curve+VOR ×10 "larger spreads" → rating soft-cap
+  // (draft-slot fairness) → tier additive 6 → 2 → tier % → Jack replaced
+  // the whole basis with this. Tier history: mult amp 1.5 "way too far
+  // apart" → 0.6 "still too far" → flatten "don't flatten" → small
+  // separator steps → ×(1 − 0.01·tierIndex).
+  const _MT_RANK_ZERO = 500;  // board rank worth 0
+  const _MT_RANK_SLOPE = 0.5; // 250 at #1, −0.5 per rank
+  const _MT_TIER_PCT = 0.01;  // each tier below the top: ×1% less
+  const _MT_TIER_FLOOR = 0.5; // safety floor on deep-tier multipliers
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();
     const includePicks = !modeOverride; // contender mode skips picks
@@ -45418,20 +45405,19 @@ Rules:
       const rank = _mtGetPlayerRank(name);
       let val = (d && typeof window._getTradeValue === 'function') ? window._getTradeValue(d, _mtValueSrc, mode) : 1;
       if (winNow) {
-        // Tier-step values (win-now curve = the redraft 1000-formula).
-        // FULL PRECISION — an early Math.round collapsed close same-tier
-        // neighbors into equal values, which tied team position ranks
-        // (Jack 2026-08-31: Daniels/Burrow both "4TH"). Aggregates round
-        // at display; p.val stays float.
+        // Linear rank basis for EVERY win-now player (tiered boards and
+        // consensus/ADP sources alike — rank is the one input all sources
+        // share, so on- and off-tier values stay commensurate). FULL
+        // PRECISION — an early Math.round once collapsed close neighbors
+        // into equal values and tied team position ranks (Daniels/Burrow
+        // both "4TH"); aggregates round at display, p.val stays float.
         const tr = (d && typeof window._mtTierRangeFor === 'function') ? window._mtTierRangeFor(d, _mtValueSrc, mode) : null;
-        if (tr && tr.rank < 400) {
-          val = 1000 / (Math.pow(tr.rank, 0.8) + 3) + (tr.count - 1 - tr.index) * _MT_TIER_STEP;
-        }
-        val = Math.max(val - _MT_REPLACEMENT_VAL, 0) * _MT_VOR_SCALE;
-        // Strict board-order guarantee: integer ADP values can still tie
-        // across adjacent ranks — a rank-keyed epsilon (monotonic, ≤10)
-        // ensures ranked-above ⇒ strictly higher, everywhere.
-        if (rank < 999) val += (1000 - rank) * 0.01;
+        const tierFactor = tr ? Math.max(1 - tr.index * _MT_TIER_PCT, _MT_TIER_FLOOR) : 1;
+        val = Math.max(_MT_RANK_ZERO - rank, 0) * _MT_RANK_SLOPE * tierFactor;
+        // Strict board-order guarantee: the linear base only ties past
+        // rank 500 — a tiny rank-keyed epsilon (monotonic, ≤1 on the
+        // 0-250 scale) keeps ranked-above ⇒ strictly higher there too.
+        if (rank < 999) val += (1000 - rank) * 0.001;
       }
       return {
         name, rank, val,
@@ -47319,18 +47305,13 @@ Rules:
   // RB/WR the best single player can't carry the room rank by himself: the
   // stud team still wins WHEN its depth is also solid, but two-three real
   // starters beat one stud plus a hole (Jack 2026-08-31, slope 0.18→0.25).
-  // Rating-only soft cap (Jack 2026-08-31): the trade curve's top prices
-  // market scarcity, not weekly production — raw VOR had the #1 player
-  // (~2340) out-rating the #13+#14 players COMBINED (~1500), so the team
-  // that drafted 1st dominated ratings "just because of where they
-  // drafted". Above the knee (~overall rank 30 in VOR-display units)
-  // rating credit grows logarithmically: the top couple guys stay really
-  // important (#1 ≈ 1.6× a mid-first, ~3× a rank-50 guy) but two
-  // mid-firsts now outrate one stud, and the slot-1 vs turn-team gap
-  // drops from ~+50% to low double digits. Ratings only: p.val displays,
-  // trade calc, score.total, and pick pricing all keep raw values; only
-  // win-now contexts apply it (dynasty value view stays in raw units —
-  // its pick-total calibration depends on them).
+  // Rating-only soft cap: built when win-now values were curve+VOR (the
+  // #1 player out-rated #13+#14 combined; log growth above the knee fixed
+  // draft-slot unfairness). Under the 2026-08-31 LINEAR rank basis
+  // (max ≈ 250, see _MT_RANK_ZERO) the knee never binds for win-now
+  // values — the linear basis is flat at the top by construction. Kept
+  // inert (returns v unchanged below the knee) so the mechanism is ready
+  // if a curve-shaped basis ever returns.
   const _MT_RATING_KNEE = 300;
   function _mtRatingVal(v) {
     return v <= _MT_RATING_KNEE ? v : _MT_RATING_KNEE * (1 + Math.log(v / _MT_RATING_KNEE));

@@ -21859,7 +21859,9 @@ window.fmtHeight = fmtHeight;
     '3rd': { redraft: 15, superflex: 18 },
     '4th': { redraft: 5, superflex: 7 }
   };
-  const YEAR_MULT = { '2026': 1.15, '2027': 1.0, '2028': 0.85, '2029': 0.7 };
+  // Shifted forward 2026-09-01 (2026 draft spent): the NEXT draft carries the
+  // premium. Fallback-path only — board-placed picks price at Jack's ranks.
+  const YEAR_MULT = { '2027': 1.15, '2028': 1.0, '2029': 0.85, '2030': 0.7 };
   const SLOT_MULT = { 'early': 1.2, 'mid': 1.0, 'late': 0.8 };
 
   // Look up a pick entry in D by name and get its trade value from the board

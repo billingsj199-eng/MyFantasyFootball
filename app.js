@@ -6134,15 +6134,13 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     toast(currentMode === 'weekly' ? ('Weekly — Week ' + (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1)) : currentMode === 'dynastysf' ? 'Dynasty Superflex' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'Best Ball' : 'Redraft');
     // Show/hide "Copy from Redraft" button (Best Ball only)
     if (typeof window._updateCopyFromRedraftBtn === 'function') window._updateCopyFromRedraftBtn();
-    // Show/hide rookie pick toggle
+    // Rookie pick view RETIRED for the 2026 class (Jack 2026-09-01: post-draft
+    // the rookies rank as themselves — Jeremiyah Love is Jeremiyah Love, not
+    // "1.01"). Toggle stays hidden in every mode; revive with the 2027 class
+    // detection when next year's pre-draft window opens (~Feb 2027).
     const rpToggle = document.getElementById('rookiePickToggle');
-    if (rpToggle) rpToggle.style.display = (currentMode === 'dynasty' || currentMode === 'dynastysf') ? '' : 'none';
-    if (rpToggle && currentMode !== 'dynasty' && currentMode !== 'dynastysf') {
-      window._rookiePickView = false;
-      rpToggle.style.background = 'var(--surface)';
-      rpToggle.style.color = 'var(--text2)';
-      rpToggle.style.borderColor = 'var(--border)';
-    }
+    if (rpToggle) rpToggle.style.display = 'none';
+    window._rookiePickView = false;
     // Show/hide DEVY position filter
     const devyBtn = document.getElementById('devyPosBtn');
     if (devyBtn) {
@@ -6184,11 +6182,8 @@ window._toggleRookiePickView = function() {
   render();
 };
 
-// Show toggle on load if already in dynasty mode
-(function() {
-  const rpToggle = document.getElementById('rookiePickToggle');
-  if (rpToggle && (currentMode === 'dynasty' || currentMode === 'dynastysf')) rpToggle.style.display = '';
-})();
+// Rookie pick view retired for the 2026 class — toggle stays hidden on load
+// too (see the mode-switch handler note; revive for the 2027 class).
 
 // Hide non-applicable ADP tabs based on mode
 // Best Ball: only Underdog + DK (the two best ball platforms)

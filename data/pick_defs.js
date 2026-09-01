@@ -27,15 +27,17 @@
     { n: "2028 Late 2nd",   s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '2nd', _pickSlot: 'late',   da: 165, sa: 160 },
     { n: "2028 3rd",        s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '3rd', _pickSlot: 'mid',    da: 210, sa: 205 },
     { n: "2028 4th",        s: 'PICK', t: '2028', _isFuturePick: true, _pickYr: 2028, _pickRd: '4th', _pickSlot: 'mid',    da: 270, sa: 265 },
-    // 2029 (not ranked, high ADP = off board by default)
-    { n: "2029 Early 1st",  s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
-    { n: "2029 Mid 1st",    s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
-    { n: "2029 Late 1st",   s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'late',   da: 900, sa: 900, _unranked: true },
-    { n: "2029 Early 2nd",  s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
-    { n: "2029 Mid 2nd",    s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
-    { n: "2029 Late 2nd",   s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'late',   da: 900, sa: 900, _unranked: true },
-    { n: "2029 3rd",        s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '3rd', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
-    { n: "2029 4th",        s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '4th', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },
+    // 2029 — RANKED since 2026-09-01 (Jack: "add the ability to rank the 2029
+    // picks"); ADP seeds continue the 2027->2028 year progression, Jack
+    // re-ranks on his boards. 2030 stays unranked (search-only).
+    { n: "2029 Early 1st",  s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'early',  da: 65, sa: 60 },
+    { n: "2029 Mid 1st",    s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'mid',    da: 90, sa: 85 },
+    { n: "2029 Late 1st",   s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '1st', _pickSlot: 'late',   da: 115, sa: 110 },
+    { n: "2029 Early 2nd",  s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'early',  da: 150, sa: 145 },
+    { n: "2029 Mid 2nd",    s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'mid',    da: 180, sa: 175 },
+    { n: "2029 Late 2nd",   s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '2nd', _pickSlot: 'late',   da: 205, sa: 200 },
+    { n: "2029 3rd",        s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '3rd', _pickSlot: 'mid',    da: 260, sa: 255 },
+    { n: "2029 4th",        s: 'PICK', t: '2029', _isFuturePick: true, _pickYr: 2029, _pickRd: '4th', _pickSlot: 'mid',    da: 320, sa: 315 },
     // 2030
     { n: "2030 Early 1st",  s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '1st', _pickSlot: 'early',  da: 900, sa: 900, _unranked: true },
     { n: "2030 Mid 1st",    s: 'PICK', t: '2030', _isFuturePick: true, _pickYr: 2030, _pickRd: '1st', _pickSlot: 'mid',    da: 900, sa: 900, _unranked: true },

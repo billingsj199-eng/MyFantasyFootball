@@ -31,8 +31,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'data', 'snap_counts.js')
 URL = 'https://github.com/nflverse/nflverse-data/releases/download/snap_counts/snap_counts_{yr}.csv'
 TEAM_URL = 'https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_{yr}.csv'
-YEARS = range(2012, 2026)
-TEAM_YEARS = range(1999, 2026)
+YEARS = range(2012, 2027)
+TEAM_YEARS = range(1999, 2027)
 POSITIONS = {'QB', 'RB', 'WR', 'TE', 'FB'}
 TEAM_FIX = {'LA': 'LAR'}  # nflverse "LA" = modern Rams; site uses "LAR"
 

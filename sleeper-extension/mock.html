@@ -54,6 +54,16 @@ Out player, so LINEUP should flag moves and WAIVERS should rank vs your team.</p
 </div></div>
 <h3>Fake league TEAM page (season decorator target — abbreviated names like the real page)</h3>
 <div id="fake-team-page" style="max-width:460px"></div>
+<h3>Fake MATCHUP page (matchup decorator target — real Sleeper classes)</h3>
+<p style="font-size:12px;color:#9aa0a6">In SEASON mode each header side should
+grow an <b>MFF total · win%</b> chip under Sleeper's own numbers, every matched
+row should get proj + ▲boom ▼bust pills, and the game line should tint by
+matchup. The "Wk. 3" label matches the mock week — edit it to "Wk. 4" and all
+matchup decorations must clear.</p>
+<div class="matchup-panel" style="max-width:780px;background:#161a26;padding:10px;border-radius:8px">
+  <div class="label" style="color:#889;font-size:12px;text-align:right">Wk. 3</div>
+  <div id="fake-matchup-page"></div>
+</div>
 <h3>Fake Trade Offer modal (trade decorator target — real Sleeper classes)</h3>
 <div class="trade-center-wrapper" style="max-width:460px;background:#182138;padding:10px;border-radius:8px">
   <div class="trade-header"><div class="title" style="font-weight:700">Trade Offer</div></div>
@@ -187,9 +197,10 @@ Out player, so LINEUP should flag moves and WAIVERS should rank vs your team.</p
     var myIds = MY_NAMES.map(sid).filter(Boolean);
     // Wrong on purpose: Gibbs (OUT) still started over Chase Brown, and
     // Waddle started in FLEX over the better (if Questionable) Puka.
-    var MY_STARTERS = ['Josh Allen', 'Bijan Robinson', 'Jahmyr Gibbs', "Ja'Marr Chase",
+    var MY_STARTER_NAMES = ['Josh Allen', 'Bijan Robinson', 'Jahmyr Gibbs', "Ja'Marr Chase",
       'Zay Flowers', 'Brock Bowers', 'Jaylen Waddle', 'Bryce Young',
-      'Harrison Butker', 'Houston Texans D/ST'].map(sid);
+      'Harrison Butker', 'Houston Texans D/ST'];
+    var MY_STARTERS = MY_STARTER_NAMES.map(sid);
     // Rosters 2-12 absorb the next 14 best players each, so waivers are the
     // realistic mid/low tier.
     var taken = {};
@@ -400,6 +411,66 @@ Out player, so LINEUP should flag moves and WAIVERS should rank vs your team.</p
       '<span style="color:#889;margin-left:6px">RB -</span></div><div class="row"></div></div></div>';
     ftpHtml += '<div class="team-roster-item" style="padding:5px"><div class="cell-empty"></div></div>';
     ftp.innerHTML = ftpHtml;
+
+    // Fake MATCHUP page (jack vs rival_2 — matchup_id 1 in MATCHUPS): the real
+    // page's header (.team-name "@handle" + Sleeper's own win%/proj bottom-row)
+    // over mirrored per-slot rows. Same abbreviated names as the real rows.
+    (function () {
+      var fmp = document.getElementById('fake-matchup-page');
+      if (!fmp) return;
+      var bySidP = {};
+      data.players.forEach(function (p) { if (p.sid) bySidP[String(p.sid)] = p; });
+      function mkItem(p, flip, i) {
+        if (!p) return '<div class="matchup-player-item' + (flip ? ' flip' : '') + '"></div>';
+        var isDst = p.s === 'DST';
+        var parts = p.n.replace(' D/ST', '').split(' ');
+        var disp = isDst ? parts.slice(0, -1).join(' ') : parts[0].charAt(0) + '. ' + parts.slice(1).join(' ');
+        var opp = p.sTm && MOCK_OPP[p.sTm] ? MOCK_OPP[p.sTm] : 'vs FA';
+        return '<div class="matchup-player-item' + (flip ? ' flip' : '') + '" style="flex:1;min-width:0">' +
+          '<div class="header-row' + (flip ? ' flip' : '') + '" style="display:flex;justify-content:space-between;gap:6px">' +
+          '<div class="row' + (flip ? ' flip' : '') + '"><div><div class="player-name" style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">' +
+          '<div>' + disp + '</div><div class="player-pos" style="color:#889;font-size:11px;display:flex;align-items:center">' +
+          (isDst ? 'DEF' : p.s) + ' - ' + (p.sTm || '') + '</div><div class="injury-container"></div>' +
+          '</div></div></div>' +
+          '<div class="player-scoring"><div><div class="score" style="color:#ccc">-</div></div></div></div>' +
+          '<div class="matchup-player-body-item"><div class="container-row" style="display:flex;justify-content:space-between;font-size:11px;color:#889">' +
+          '<div class="game-schedule-wrapper"><div class="game-schedule-live-description">' +
+          '<span>Sun 1:00 PM </span><span>' + opp + '</span></div></div>' +
+          '<div class="column"><div class="player-scoring"><div><div class="projections">' + (19.5 - i * 1.3).toFixed(2) + '</div></div></div></div>' +
+          '</div></div></div>';
+      }
+      function side(handle, teamNm, winPct, proj, reverse) {
+        return '<div class="user' + (reverse ? ' reverse' : '') + '" style="flex:1"><div class="matchup-owner-item"><div class="owner-container">' +
+          '<div class="row space-between" style="display:flex;justify-content:space-between">' +
+          '<div class="row"><div class="meta"><div class="team-name" style="font-weight:700">@' + handle + '</div>' +
+          '<div class="name" style="color:#889;font-size:11px">' + teamNm + '</div></div></div>' +
+          '<div class="roster-score-and-projection-matchup"><div class="score">-</div></div></div>' +
+          '<div class="win-bar" style="height:3px;background:#2b3242;margin:4px 0"><div></div></div>' +
+          '<div class="bottom-row space-between" style="display:flex;justify-content:space-between;align-items:flex-start">' +
+          '<div class="row" style="display:flex;gap:6px"><div class="win-percentage-number">' + winPct + '</div>' +
+          '<div class="description" style="color:#889">0-0</div></div>' +
+          '<div class="roster-score-and-projection-matchup" style="text-align:right">' +
+          '<div class="projections" style="color:#889">' + proj + '</div></div></div>' +
+          '</div></div></div>';
+      }
+      var rivStarters = (ROSTERS[1].starters || []).map(function (id) { return bySidP[id]; });
+      var myStarters = MY_STARTER_NAMES.map(function (n) { return playersByName[n]; });
+      var SLOT_LBLS = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'WRT', 'SF', 'K', 'DEF'];
+      var html = '<div class="matchup-header-container"><div class="matchup-header"><div class="matchup-row" style="display:flex;gap:14px;align-items:stretch;margin-bottom:10px">' +
+        side('jack', 'Team jack', '48%', '151.97', false) +
+        '<div class="vs-label" style="align-self:center;color:#889"><div class="label">VS</div></div>' +
+        side('rival_2', 'Team rival_2', '52%', '164.42', true) +
+        '</div></div></div>';
+      for (var mi = 0; mi < SLOT_LBLS.length; mi++) {
+        html += '<div class="matchup-player-row-container" style="border-bottom:1px solid #262c3a;padding:5px 0">' +
+          '<div class="player-matchup-body-row" style="display:flex;gap:8px;align-items:flex-start">' +
+          mkItem(myStarters[mi], false, mi) +
+          '<div class="position" style="flex:0 0 34px;text-align:center;color:#667;font-weight:700;font-size:11px">' + SLOT_LBLS[mi] + '</div>' +
+          mkItem(rivStarters[mi], true, mi) +
+          '</div></div>';
+      }
+      fmp.innerHTML = html;
+    })();
 
     var s = document.createElement('script');
     s.src = 'sidebar.js?t=' + Date.now(); // bust the browser cache on every harness reload

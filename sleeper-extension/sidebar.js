@@ -4573,6 +4573,139 @@
     }
   }
 
+  // ---------- matchup-page decoration (v0.29.18) ----------
+  // sleeper.com/leagues/<id>/matchup renders a .matchup-header (each side:
+  // .team-name "@handle", .bottom-row with Sleeper's own win% + proj total)
+  // over mirrored per-slot rows (.matchup-player-row-container >
+  // .matchup-player-item ×2, middle .position label). We add OUR numbers
+  // beside Sleeper's: an MFF chip in each side's header bottom-row — the same
+  // wkVal proj totals + normal-approx win odds as the LINEUP-tab card — and
+  // teal proj + ▲boom ▼bust pills on every matched player row, with the
+  // native game line ("Sun 1:00 PM vs TB") tinted by Vegas matchup quality
+  // like the team page. Current week only: the page's week selector ("Wk. N")
+  // is client-side, and our projections exist for THIS week — any other week
+  // shown clears the decorations instead of printing wrong numbers.
+  function matchupWeekShown() {
+    const panel = document.querySelector('.matchup-panel');
+    if (!panel) return null;
+    for (const el of panel.querySelectorAll('div,span,label')) {
+      if (el.childElementCount || el.closest('#mff-sidebar')) continue;
+      const m = (el.textContent || '').trim().match(/^Wk\.?\s*(\d+)$/i);
+      if (m) return parseInt(m[1], 10);
+    }
+    return null;
+  }
+  function ridByHandle(handle) {
+    const h = String(handle || '').replace(/^@/, '').trim().toLowerCase();
+    if (!h) return null;
+    const uid = Object.keys(state.userNames).find((id) => String(state.userNames[id]).toLowerCase() === h);
+    if (!uid) return null;
+    const r = state.seasonRosters.find((x) => x.owner_id === uid ||
+      (Array.isArray(x.co_owners) && x.co_owners.indexOf(uid) !== -1));
+    return r ? r.roster_id : null;
+  }
+  function decorateMatchupHeader(weekOk) {
+    const clearChips = () => document.querySelectorAll('.mff-mu-chip').forEach((c) => c.remove());
+    const hdr = document.querySelector('.matchup-header');
+    if (!hdr) return;
+    const sides = [...hdr.querySelectorAll('.matchup-row > .user')];
+    if (!weekOk || sides.length !== 2) { clearChips(); return; }
+    const rids = sides.map((s) => {
+      const tn = s.querySelector('.team-name');
+      return ridByHandle(tn ? tn.textContent : '');
+    });
+    if (rids[0] == null || rids[1] == null || rids[0] === rids[1]) { clearChips(); return; }
+    // Pairing sanity: when both rosters have current-week matchup docs they
+    // must face each other — otherwise the page shows some other pairing.
+    const mA = state.seasonMatchups.find((x) => x.roster_id === rids[0]);
+    const mB = state.seasonMatchups.find((x) => x.roster_id === rids[1]);
+    if (mA && mB && mA.matchup_id != null && mA.matchup_id !== mB.matchup_id) { clearChips(); return; }
+    const o = matchupOddsOf(starterObjsFor(rids[0]), starterObjsFor(rids[1]));
+    const wins = [o.winA, 100 - o.winA];
+    const totals = [o.a.total, o.b.total];
+    const missing = o.a.missing + o.b.missing;
+    const tip = 'MFF numbers for this matchup — our proj total (same weekly projection as the row pills: ' +
+      'site sim first, ' + state.scoringLabel + ' league-scored, injuries priced) over this side\'s current ' +
+      'starters, and our win odds (normal approximation over the starters\' sim spreads; player ' +
+      'correlations ignored).' +
+      (missing ? ' ' + missing + ' starter(s) without a projection count 0.' : '');
+    sides.forEach((s, i) => {
+      const host = s.querySelector('.bottom-row .roster-score-and-projection-matchup') || s.querySelector('.bottom-row');
+      if (!host) return;
+      const wCol = wins[i] >= 55 ? '#6dd06d' : wins[i] <= 45 ? '#d06d6d' : '#ffc166';
+      const inner = '<span style="color:#8b94b3;font-weight:800;letter-spacing:.5px">MFF</span> ' +
+        `<b style="color:#00ceb8">${totals[i].toFixed(1)}</b> <b style="color:${wCol}">${wins[i]}%</b>`;
+      let chip = s.querySelector('.mff-mu-chip');
+      if (chip && chip.dataset.mffSig === inner) return;
+      if (chip) chip.remove();
+      chip = document.createElement('div');
+      chip.className = 'mff-mu-chip';
+      chip.dataset.mffSig = inner;
+      chip.title = tip;
+      chip.style.cssText = 'font-size:11px;font-weight:700;white-space:nowrap;margin-top:2px;position:relative;z-index:2;';
+      chip.innerHTML = inner;
+      host.appendChild(chip);
+    });
+  }
+  function decorateMatchupRows(weekOk) {
+    for (const item of document.querySelectorAll('.matchup-player-row-container .matchup-player-item')) {
+      const clearIt = () => {
+        const ex = item.querySelector('.mff-mu-pills');
+        if (ex) ex.remove();
+        item.querySelectorAll('.mff-opp-hl').forEach(clearOppTint);
+        delete item.dataset.mffSig;
+      };
+      if (!weekOk) { clearIt(); continue; }
+      const nameBox = item.querySelector('.player-name');
+      const posEl = nameBox && nameBox.querySelector('.player-pos');
+      const nameEl = nameBox && nameBox.children[0] && !nameBox.children[0].classList.contains('player-pos')
+        ? nameBox.children[0] : null;
+      const nm = nameEl ? nameEl.textContent.trim() : '';
+      const pm = posEl ? posEl.textContent.trim().match(/^(QB|RB|WR|TE|K|DEF|DST)(?:\s*-\s*([A-Z]{2,4}))?/) : null;
+      if (!nm || !pm) { clearIt(); continue; }
+      const p = matchAbbrevPlayer(nm, pm[1] === 'DEF' ? 'DST' : pm[1], pm[2] || null);
+      if (!p) { clearIt(); continue; }
+      // Tint the native game line by matchup quality (no room for an opp pill
+      // in the mirrored half-width rows — tint or nothing).
+      const g = wkOppInfo(p);
+      if (g) tintGameLine(item, nameBox, g);
+      const pills = [];
+      const v = wkVal(p);
+      if (v > 0 || p.pPg != null) {
+        pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#26304d', '#00ceb8',
+          'Our projected points this week (' + state.scoringLabel + ' · site sim first, league-scored, injuries priced)'));
+        const bb = boomBustFor(p, v);
+        if (bb) pills.push(bbPillHTML(bb));
+      }
+      const inner = pills.join('');
+      if (item.dataset.mffSig === inner) continue;
+      item.dataset.mffSig = inner;
+      const ex = item.querySelector('.mff-mu-pills');
+      if (ex) ex.remove();
+      if (!inner) continue;
+      const span = document.createElement('span');
+      span.className = 'mff-mu-pills';
+      span.innerHTML = inner;
+      span.style.cssText = 'display:inline-flex;flex-wrap:nowrap;gap:3px;margin-left:5px;' +
+        'vertical-align:middle;overflow:hidden;position:relative;z-index:2;';
+      // Boom/bust nests colored spans — size only the direct children.
+      span.querySelectorAll(':scope > span').forEach((el) => {
+        el.style.fontSize = '9px';
+        el.style.lineHeight = '14px';
+        el.style.padding = '0 3px';
+      });
+      (posEl || nameBox).appendChild(span);
+    }
+  }
+  function decorateMatchupPage() {
+    if (state.appMode !== 'season' || !state.seasonLeague || !state.players.length) return;
+    if (!document.querySelector('.matchup-header') && !document.querySelector('.matchup-player-row-container')) return;
+    const shown = matchupWeekShown();
+    const weekOk = shown == null || shown === state.seasonWeek;
+    decorateMatchupHeader(weekOk);
+    decorateMatchupRows(weekOk);
+  }
+
   // ---------- trade decoration (v0.16.0) ----------
   // Sleeper's Trade Offer modal (.trade-center-wrapper → one
   // .roster-trade-container per manager → RECEIVES/SENDS .panels of
@@ -5215,24 +5348,27 @@
     decorateTimer = setInterval(() => {
       if (!gateAllowed()) return;
       decoratePlayerList(); decorateRosterPanel(); decorateTeamPage();
-      decorateTradeModal(); decorateDraftHeader();
+      decorateMatchupPage(); decorateTradeModal(); decorateDraftHeader();
     }, 2000);
     if (gateAllowed()) {
       decoratePlayerList();
       decorateRosterPanel();
       decorateTeamPage();
+      decorateMatchupPage();
       decorateTradeModal();
       decorateDraftHeader();
     }
   }
   function stopDecorating() {
     if (decorateTimer) { clearInterval(decorateTimer); decorateTimer = null; }
-    document.querySelectorAll('.mff-page-chip, .mff-roster-pills, .mff-corner, .mff-rank-pills, .mff-tr-pills, .mff-trade-pill, .mff-trade-net, .mff-hdr-needs').forEach((c) => c.remove());
+    document.querySelectorAll('.mff-page-chip, .mff-roster-pills, .mff-corner, .mff-rank-pills, .mff-tr-pills, .mff-trade-pill, .mff-trade-net, .mff-hdr-needs, .mff-mu-pills, .mff-mu-chip').forEach((c) => c.remove());
     document.querySelectorAll('.mff-opp-hl').forEach(clearOppTint);
     document.querySelectorAll('.player-rank-item2, .draft-roster-list-item, .team-roster-item').forEach((r) => {
       clearRowStyle(r);
       delete r.dataset.mffSig;
     });
+    // matchup items only carry the signature — never row styling
+    document.querySelectorAll('.matchup-player-item').forEach((r) => { delete r.dataset.mffSig; });
     document.querySelectorAll('[data-mff-hdr-grow]').forEach((el) => {
       try {
         const o = JSON.parse(el.dataset.mffHdrGrow);

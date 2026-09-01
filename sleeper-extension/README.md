@@ -76,6 +76,16 @@ room it reuses the draft's league, or lists your leagues by username).
   (+ team), roster first then full pool; DST rows match by team abbr;
   "POS -" free agents and empty slots are skipped. 2s re-scan like the
   draft decorators.
+- **On-page MATCHUP decoration** (v0.29.18) — the league matchup page gets
+  our numbers beside Sleeper's: an MFF chip in each header side's bottom row
+  (`.matchup-header` → `.bottom-row`) with our proj total + win odds — the
+  same wkVal totals + normal-approx odds as the LINEUP-tab card, teams
+  resolved from the header's "@handle" `.team-name` — and teal proj +
+  ▲boom ▼bust pills on every matched row (`.matchup-player-row-container` →
+  `.matchup-player-item`, same abbrev-name matcher), with the native game
+  line tinted by Vegas matchup quality. Current week only: the page's
+  "Wk. N" selector is client-side, so any other week shown clears the
+  decorations instead of printing wrong numbers.
 - Data refreshes every 60s while the tab is open. Read-only by design — it
   recommends; you click Sleeper's own buttons to make moves.
 

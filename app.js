@@ -47396,7 +47396,13 @@ Rules:
       // bit"): starter-weighting shrank the player base ~1/3, so raw picks
       // were over-counted against it; 0.65 restores their old relative
       // weight vs rostered talent.
-      t.strengthTotal = Math.round(sw + 0.65 * ((t.score && t.score.pickTotal) || 0));
+      // Display divisor (Jack 2026-08-31: "lower the ratings scale…
+      // divide by about 3 — large enough having teams over 1000 but not
+      // too much spread"). He asked ÷3 against the PRE-soft-cap live
+      // totals; the rating cap already trims top totals ~25-30%, so ÷2
+      // here lands where his ÷3 was aiming (top teams ~1100-1200, avg
+      // ~700-800). Pure presentation — ± vs avg scales with it.
+      t.strengthTotal = Math.round((sw + 0.65 * ((t.score && t.score.pickTotal) || 0)) / 2);
     });
   }
   function _mtOrdinal(n) {

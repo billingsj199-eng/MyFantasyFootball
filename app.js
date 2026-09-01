@@ -21914,7 +21914,9 @@ window.fmtHeight = fmtHeight;
     // boards and ALL picks in dynasty SF. Static dynasty base × year
     // discount (× slot for 1st/2nd; 3rds/4ths carry no slot) instead —
     // deliberately a touch under Jack's board placements.
-    const DYN_PICK_BASE = { '1st': 150, '2nd': 65, '3rd': 30, '4th': 15 };
+    // Rescaled ÷2 on 2026-09-01 when dynasty joined the geometric tierDrop
+    // curve (mid-board values roughly halved vs the old 7750 curve).
+    const DYN_PICK_BASE = { '1st': 75, '2nd': 33, '3rd': 15, '4th': 8 };
     const base = (DYN_PICK_BASE[round] || 15) * (mode === 'dynastysf' ? 1.1 : 1);
     const slotM = (round === '1st' || round === '2nd') ? (SLOT_MULT[slot] || 1.0) : 1.0;
     return Math.round(base * (YEAR_MULT[year] || 0.7) * slotM);
@@ -22027,17 +22029,15 @@ window.fmtHeight = fmtHeight;
   // Expose for other modules (My Teams, etc.)
   window._getAdpBoard = _getAdpBoard;
 
-  // Global trade value function — single source of truth for rankings, trade calc, My Teams, portfolio
-  // Mode-specific power law CALIBRATED against KeepTradeCut:
-  //   redraft/superflex:  1000 / (rank^0.8 + 3)   — steep top, rewards elite picks
-  //   dynasty/dynastysf:  7750 / (rank^0.8 + 30)  — KTC-shaped: flat top, long depth tail
-  // The dynasty offset of 30 flattens rank #1 vs #50 ratio to ~1.7x (matches KTC) instead of ~5x.
+  // Global trade value function — single source of truth for rankings, trade
+  // calc, My Teams, portfolio. ONE basis for ALL modes since 2026-09-01 late
+  // (the old mode-specific power laws — 1000/(rank^0.8+3) redraft and the
+  // KTC-calibrated 7750/(rank^0.8+30) dynasty — are gone).
   const _ADP_SRCS = ['underdog', 'ktc', 'espn', 'cbs', 'sleeper', 'yahoo'];
-  // WIN-NOW value basis — the SAME numbers as the My Teams player ratings
+  // Value basis — the SAME numbers as the My Teams player ratings
   // (_mtScoreRoster reads these too via window._WINNOW_VAL, so the two can't
-  // drift): linear rank value zeroing at 500, ×0.5 slope (≈250 at #1), and
-  // Jack's tier ladder at 3% per tier below the top (A/B'd 1-5% live on the
-  // Clitphen league 2026-08-31, 3% FINAL), floored at ×0.5.
+  // drift): linear rank value zeroing at 500, ×0.5 slope (≈250 at #1),
+  // × the geometric tier ladder below.
   // tierDrop (Jack 2026-09-01 evening, replacing the 3%-arithmetic ladder):
   // each tier break below the top costs ×(1−tierDrop) MULTIPLICATIVELY —
   // "Flock-steep, but tier-driven, not a copy". Benchmarked against
@@ -22070,7 +22070,7 @@ window.fmtHeight = fmtHeight;
     const WN = window._WINNOW_VAL;
     let idx = null;
     const tr = window._mtTierRangeFor(d, src, mode);
-    if (tr) {
+    if (tr && tr.count >= _WN_MIN_TIERS) {
       idx = tr.index;
     } else if (isFinite(rank) && rank >= 1 && rank < 999) {
       const L = WN.pseudoTiers || [];
@@ -22082,6 +22082,12 @@ window.fmtHeight = fmtHeight;
     // supposed to approach worthless on the win-now scale (Flock-steep).
     return Math.pow(1 - WN.tierDrop, idx);
   };
+  // A board's OWN tiers drive the ladder only when dense enough to price with
+  // (Jack's dynasty/superflex boards carry just 4-7 boundaries — real tiers
+  // there would leave the curve nearly flat); sparse-tiered boards use the
+  // 20-break pseudo-ladder like tierless ones. Enforced inside
+  // _winnowTierFactor via this gate.
+  const _WN_MIN_TIERS = 8;
   // Source-independent win-now value at a board rank (linear base × the
   // pseudo-ladder tier factor) — the baseline for package economics.
   window._winnowBaseValue = function(rank) {
@@ -22103,88 +22109,43 @@ window.fmtHeight = fmtHeight;
     if (!srcBoard) return 1;
     const boardPos = srcBoard.indexOf(d.idx);
     const rank = boardPos >= 0 ? boardPos + 1 : 999;
-    const isDyn = (m === 'dynasty' || m === 'dynastysf');
-    let val;
-    if (isDyn) {
-      if (rank >= 400) return 1;
-      val = Math.max(Math.round(7750 / (Math.pow(rank, 0.8) + 30)), 1);
-      // Tier multiplier only applies to version-based sources (consensus/jacks/mine).
-      // Picks included ON PURPOSE: Jack prices picks by where he ranks them
-      // in the tiers, same as players — a briefly-shipped pick exemption was
-      // reverted at his request (2026-08-11). Move the pick entry on the
-      // board to change its value.
-      if (!isAdpSrc) {
-        const tierLabel = _getTierForPlayerFull(d, s, m);
-        if (tierLabel && TIER_MULT[tierLabel] !== undefined) {
-          val = Math.round(val * TIER_MULT[tierLabel]);
-        }
-      }
-    } else {
-      // Single-season modes (redraft/superflex): the My Teams rating basis
-      // replaced the old 1000/(rank^0.8+3) curve + TIER_MULT here
-      // (2026-09-01, Jack: "trade calc should reflect the My Teams player
-      // ratings"). Much flatter by design — tier boundaries, not raw rank
-      // depth, carry the separation. Boards without tiers (consensus/ADP)
-      // taper via the pseudo-ladder inside _winnowTierFactor.
-      const WN = window._WINNOW_VAL;
-      const tierFactor = window._winnowTierFactor(d, s, m, rank);
-      val = Math.max(WN.zero - rank, 0) * WN.slope * tierFactor;
-      // Strict board-order epsilon, mirroring _mtScoreRoster: ranked-above
-      // ⇒ strictly higher even past the linear zero.
-      if (rank < 999) val += (1000 - rank) * 0.001;
-      val = Math.round(val);
-    }
-    return Math.max(val, 1);
+    // ONE curve for every mode since 2026-09-01 late (Jack: "can we also fix
+    // dynasty") — linear base zeroing at 500 × the geometric tierDrop ladder
+    // (board tiers when dense enough, else the pseudo-ladder; see
+    // _winnowTierFactor). Replaced the dynasty 7750/(rank^0.8+30) curve +
+    // TIER_MULT label multipliers. Picks are board entries, so pick prices
+    // still come from Jack's board placement incl. tiers — his lever
+    // (2026-08-11 rule) is unchanged.
+    const WN = window._WINNOW_VAL;
+    const tierFactor = window._winnowTierFactor(d, s, m, rank);
+    let val = Math.max(WN.zero - rank, 0) * WN.slope * tierFactor;
+    // Strict board-order epsilon, mirroring _mtScoreRoster: ranked-above
+    // ⇒ strictly higher even past the linear zero.
+    if (rank < 999) val += (1000 - rank) * 0.001;
+    return Math.max(Math.round(val), 1);
   };
 
-  // Package (consolidation) adjustment — shared by trade calc, trade finder, suggest.
-  // Raw sums let 2-for-1 / 3-for-1 packages win on quantity: three mid assets out-sum
-  // one elite player even though the elite side wins the trade in practice (roster
-  // spots are scarce, only the best pieces start). Fix: the best asset on a side
-  // counts in full, every additional asset pays a roster-spot cost. Assets below
-  // the cost contribute nothing — junk throw-ins can't tilt a trade.
-  //
-  // DYNASTY: cost = HALF a replacement-level player (the dynasty curve at rank
-  // 140) — half keeps 2-for-1s of two genuine starters competitive, matching how
-  // KTC's own multi-piece adjustment behaves on its flat dynasty curve.
-  //
-  // SINGLE-SEASON (2026-09-01, retuned with the My Teams linear basis): cost =
-  // the FULL linear value at the waiver line (_WINNOW_VAL.replRank, ~12 teams ×
-  // ~13 rostered skill players ≈ top 160 rostered). Rationale: trading two
-  // players for one frees a roster spot that gets refilled from waivers at
-  // replacement value, so an extra piece only contributes what it offers ABOVE
-  // that free agent. On the flat 0-250 scale the old half-curve cost (9→90)
-  // let any two mid starters bury an elite player. replRank is the tuning
-  // lever: lower ⇒ pricier spots ⇒ consolidation favored more.
+  // Package adjustment — shared by trade calc, trade finder, suggest, ALL
+  // modes (dynasty unified 2026-09-01 late). Flock-mimic plain sums: every
+  // piece counts in full and the steep tierDrop curve polices quality; the
+  // one guard Flock lacks is the waiver-spot cost each extra piece pays
+  // (~11 = curve value at _WINNOW_VAL.replRank), which keeps junk throw-ins
+  // from tilting a deal. extraPieceW/pkgTax remain as levers should the
+  // curve ever flatten again (a flat curve needs package taxes — see the
+  // 09-01 morning history in the repo log).
   window._packageRosterCost = function(mode) {
-    const m = mode || tradeMode;
-    const isDyn = (m === 'dynasty' || m === 'dynastysf');
     const WN = window._WINNOW_VAL;
-    if (isDyn) return Math.round(7750 / (Math.pow(140, 0.8) + 30) / 2); // ≈ 47
-    // Waiver-line replacement evaluated on the ACTUAL curve (tier ladder
-    // included) — on the geometric ladder rank 160 is worth ~11, not 170.
     return Math.max(Math.round(window._winnowBaseValue(WN.replRank)), 1);
   };
   window._packageAdjustedTotal = function(values, mode) {
     if (!values || !values.length) return 0;
     const m = mode || tradeMode;
-    const isDyn = (m === 'dynasty' || m === 'dynastysf');
     const cost = window._packageRosterCost(m);
-    // Best-player priority (Jack 2026-09-01): in single-season deals the best
-    // piece counts in full and every extra piece's above-replacement surplus
-    // counts at extraPieceW (0.5) — on the flat win-now scale two near-studs
-    // were still outvoting the deal's single best player even after the spot
-    // cost. Dynasty keeps the full surplus (KTC-like, its steep curve already
-    // makes the best player dominate).
-    const w = isDyn ? 1 : window._WINNOW_VAL.extraPieceW;
+    const w = window._WINNOW_VAL.extraPieceW;
     const sorted = values.slice().sort((a, b) => b - a);
     let total = sorted[0];
     for (let i = 1; i < sorted.length; i++) total += Math.max(sorted[i] - cost, 0) * w;
-    // Single-season consolidation premium: each extra piece taxes the package
-    // total flat (see _WINNOW_VAL.pkgTax) — a junk throw-in now actively
-    // HURTS the package side (it costs a roster spot and covers nothing),
-    // and mid-piece 2-for-1s fall decisively short of the deal's best player.
-    if (!isDyn) total -= (window._WINNOW_VAL.pkgTax || 0) * (sorted.length - 1);
+    total -= (window._WINNOW_VAL.pkgTax || 0) * (sorted.length - 1);
     return Math.max(Math.round(total), 1);
   };
 
@@ -22286,11 +22247,10 @@ window.fmtHeight = fmtHeight;
       }
       adjEl.textContent = 'multi-piece adj ' + det.adj + ' (raw ' + det.raw + ')';
       adjEl.title = (() => {
-        const isDynT = tradeMode === 'dynasty' || tradeMode === 'dynastysf';
         const WN = window._WINNOW_VAL;
         let t = 'Each asset after this side\'s best pays a roster-spot cost of ' + window._packageRosterCost(tradeMode);
-        if (!isDynT && (WN.extraPieceW || 1) < 1) t += ', then counts ' + Math.round(WN.extraPieceW * 100) + '% of what remains';
-        if (!isDynT && WN.pkgTax > 0) t += ', plus a ' + WN.pkgTax + '-point consolidation premium per extra piece';
+        if ((WN.extraPieceW || 1) < 1) t += ', then counts ' + Math.round(WN.extraPieceW * 100) + '% of what remains';
+        if (WN.pkgTax > 0) t += ', plus a ' + WN.pkgTax + '-point consolidation premium per extra piece';
         return t + ' — junk throw-ins can\'t tilt a trade';
       })();
     } else if (adjEl) {
@@ -23042,12 +23002,12 @@ window.fmtHeight = fmtHeight;
     const _pkgCost = window._packageRosterCost(tradeMode);
     // Loop-prune slack: the widest possible raw-sum vs adjusted-total gap per
     // EXTRA piece. With the extra-piece surplus weight w, an extra worth V
-    // contributes w·(V−cost), so the gap is w·cost + (1−w)·V — bound V by the
-    // win-now scale max (~250). Collapses to _pkgCost when w = 1 (dynasty).
-    const _isDynMode = (tradeMode === 'dynasty' || tradeMode === 'dynastysf');
-    const _extraW = _isDynMode ? 1 : (window._WINNOW_VAL.extraPieceW || 1);
+    // contributes w·(V−cost) − tax, so the gap is w·cost + (1−w)·V + tax —
+    // bound V by the scale max (~250). Collapses to cost when w=1, tax=0
+    // (the Flock-mimic full-sum config, all modes since dynasty unified).
+    const _extraW = window._WINNOW_VAL.extraPieceW || 1;
     const _pkgSlack = Math.ceil(_extraW * _pkgCost + (1 - _extraW) * 260
-      + (_isDynMode ? 0 : (window._WINNOW_VAL.pkgTax || 0)));
+      + (window._WINNOW_VAL.pkgTax || 0));
     const _pkgSideTotal = side => window._packageAdjustedTotal(side.map(a => a.value), tradeMode);
 
     function scoreCombo(giveSide, getSide, getTotal) {
@@ -48314,7 +48274,7 @@ Rules:
       html += `<span style="font-size:.62rem;color:var(--text2);letter-spacing:.5px">${sc.picks.length} · +${sc.pickTotal} val</span>`;
       html += `</div>`;
       sc.picks.forEach(pk => {
-        const valColor = pk.val >= 150 ? '#22c55e' : pk.val >= 75 ? '#4ade80' : pk.val >= 30 ? '#facc15' : '#f59e0b';
+        const valColor = pk.val >= 75 ? '#22c55e' : pk.val >= 40 ? '#4ade80' : pk.val >= 15 ? '#facc15' : '#f59e0b'; // thresholds ÷2 with the 09-01 curve rescale
         const label = pk._pickNum ? pk.year + ' ' + pk._pickNum : pk.year + ' ' + pk.round;
         // Secondary text: rookie name for exact picks, otherwise slot tier + origin.
         const metaParts = [];

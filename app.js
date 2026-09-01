@@ -22036,6 +22036,10 @@ window.fmtHeight = fmtHeight;
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
     const m = mode || tradeMode;
+    // OUT FOR SEASON: worthless in single-season modes (redraft/superflex) —
+    // mirrors the IR flag hiding him from those boards. Dynasty untouched.
+    if (typeof window._irHiddenHere === 'function' && window._irHiddenHere(m)
+        && typeof window._irIsOut === 'function' && window._irIsOut(d.n)) return 1;
     const isAdpSrc = _ADP_SRCS.indexOf(s) >= 0;
     const srcBoard = isAdpSrc ? _getAdpBoard(s, m) : window._verBoardFor(s, m);
     if (!srcBoard) return 1;
@@ -26310,11 +26314,16 @@ window.fmtHeight = fmtHeight;
       const _vbM = _mdBoardsFor(mdRankSrc);
       const rankBoard = _vbM ? (_vbM[rankModeKey] || _vbM[mdMode] || _vbM.redraft) : null;
       if (rankBoard && rankBoard.length) {
-        const boardEntries = rankBoard.map((dIdx, rank) => {
+        // OUT FOR SEASON players are hidden from single-season mock pools,
+        // same as the rankings table (dynasty/rookie mocks keep them).
+        const _irHide = (mdMode === 'redraft' || mdMode === 'superflex') && typeof window._irIsOut === 'function';
+        const boardEntries = [];
+        rankBoard.forEach((dIdx) => {
           const d = D[dIdx];
-          if (!d) return null;
-          return { idx: dIdx, adp: rank + 1, pos: d.s, name: d.n, team: d.t };
-        }).filter(Boolean);
+          if (!d) return;
+          if (_irHide && window._irIsOut(d.n)) return;
+          boardEntries.push({ idx: dIdx, adp: boardEntries.length + 1, pos: d.s, name: d.n, team: d.t });
+        });
         if (boardEntries.length > 0) return boardEntries;
       }
     }
@@ -26359,6 +26368,10 @@ window.fmtHeight = fmtHeight;
       if (isRookie && !_isRookiePlayer(d)) return null;
       // In rookie mode, also skip K/DST
       if (isRookie && (d.s === 'K' || d.s === 'DST')) return null;
+      // OUT FOR SEASON: hidden from single-season mock pools, same as the
+      // rankings table (dynasty/rookie mocks keep him).
+      if ((mdMode === 'redraft' || mdMode === 'superflex')
+          && typeof window._irIsOut === 'function' && window._irIsOut(d.n)) return null;
 
       let adp;
       if (mdAdpSrc === 'ktc' || isRookie) {
@@ -44447,6 +44460,13 @@ Rules:
 
     // Get the correct board for this league's format
     const mode = _mtGetRankingMode();
+
+    // OUT FOR SEASON: the IR flag hides a player from single-season boards
+    // (redraft/superflex) — unranked on those surfaces too, so the waiver
+    // wire / roster values / pick grades match the rankings page.
+    if (typeof window._irHiddenHere === 'function' && window._irHiddenHere(mode)
+        && typeof window._irIsOut === 'function' && window._irIsOut(d.n)) return 999;
+
     let rank = 999;
 
     const ADP_SRCS = ['underdog', 'ktc', 'espn', 'cbs', 'sleeper', 'yahoo'];
@@ -44465,14 +44485,37 @@ Rules:
     if (board && board.length) {
       const pos = board.indexOf(d.idx);
       if (pos >= 0) rank = pos + 1;
+      else if (_mtBoardRanksPos(board, d.s)) {
+        // Absent from a loaded board that DOES rank this position: the player
+        // was removed from it (or sits outside the source's pool) — never
+        // resurrect him via the d.js-order fallback below, which put removed
+        // players back on the waiver wire with stale ranks. Boards that skip
+        // a whole position (consensus/CBS carry no K/DST) still fall through
+        // so K/DST keep working there.
+        return 999;
+      }
     }
 
-    // Fallback to myRank if board lookup failed
+    // Fallback to myRank only when no board covers this player's position
     if (rank === 999) {
       rank = d.myRank || d.idx || 999;
     }
 
     return rank;
+  }
+
+  // Positions a board actually ranks, cached per board reference (cleared
+  // alongside _mtPosRankCache on every team-list render).
+  let _mtBoardPosCache = new Map();
+  function _mtBoardRanksPos(board, pos) {
+    if (!pos) return false;
+    let set = _mtBoardPosCache.get(board);
+    if (!set) {
+      set = new Set();
+      for (const idx of board) { const p = D[idx]; if (p && p.s) set.add(p.s); }
+      _mtBoardPosCache.set(board, set);
+    }
+    return set.has(pos);
   }
 
   // Positional rank on the SAME board _mtGetPlayerRank uses (value source +
@@ -47475,6 +47518,7 @@ Rules:
     // Rebuild positional-rank maps on every list render — cheap, and keeps
     // them in sync with value-source switches and live rankings edits.
     _mtPosRankCache = {};
+    _mtBoardPosCache = new Map();
     _mtComputePosRanks(teams);
     const pr = document.getElementById('mtPowerRankings');
     let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">POWER RANKINGS</div>';

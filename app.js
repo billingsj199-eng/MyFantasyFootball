@@ -22046,12 +22046,15 @@ window.fmtHeight = fmtHeight;
   // (#10 71% / #30 36% / #100 10% of #1 vs their 64/32/3) while same-tier
   // players stay near-interchangeable and moving a tier boundary on the
   // board actually moves prices. tierDrop is the live A/B lever.
-  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 0.5,
-    // Consolidation premium (benchmarked vs flockfantasy): every piece AFTER
-    // the best on a side pays this flat tax off the package total, on top of
-    // the spot cost. Reduced 30 → 10 when tierDrop landed — the steep curve
-    // now does most of the consolidation work on its own.
-    pkgTax: 10,
+  // extraPieceW 1 + pkgTax 0 (Jack 2026-09-01 late: "mimic their trade
+  // calculator with the boosts for 2-for-1/3-for-1"): with the geometric
+  // tierDrop curve in place, packages now count at FULL value like Flock's
+  // plain-sum calculator — the steep curve alone polices quality, so the
+  // old surplus haircut + consolidation tax would double-punish packages.
+  // Extras still pay the waiver-spot cost (~11 = curve value at replRank),
+  // the one guard Flock lacks, so junk throw-ins stay worthless.
+  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 1,
+    pkgTax: 0,
     // Stand-in tier ladder for boards WITHOUT tier data (consensus + ADP
     // sources): tier START ranks, snapshot of Jack's live redraft ladder
     // 2026-09-01 (Jack: consensus should "decrease on the same path" as his
@@ -22282,9 +22285,14 @@ window.fmtHeight = fmtHeight;
         totalEl.parentElement.appendChild(adjEl);
       }
       adjEl.textContent = 'multi-piece adj ' + det.adj + ' (raw ' + det.raw + ')';
-      adjEl.title = 'Each asset after this side\'s best pays a roster-spot cost of ' + window._packageRosterCost(tradeMode) +
-        ((tradeMode === 'dynasty' || tradeMode === 'dynastysf') ? '' : ', counts ' + Math.round((window._WINNOW_VAL.extraPieceW || 1) * 100) + '% of what remains, and the package pays a ' + (window._WINNOW_VAL.pkgTax || 0) + '-point consolidation premium per extra piece') +
-        ' — the best player in the deal takes priority, packages can\'t win on quantity alone';
+      adjEl.title = (() => {
+        const isDynT = tradeMode === 'dynasty' || tradeMode === 'dynastysf';
+        const WN = window._WINNOW_VAL;
+        let t = 'Each asset after this side\'s best pays a roster-spot cost of ' + window._packageRosterCost(tradeMode);
+        if (!isDynT && (WN.extraPieceW || 1) < 1) t += ', then counts ' + Math.round(WN.extraPieceW * 100) + '% of what remains';
+        if (!isDynT && WN.pkgTax > 0) t += ', plus a ' + WN.pkgTax + '-point consolidation premium per extra piece';
+        return t + ' — junk throw-ins can\'t tilt a trade';
+      })();
     } else if (adjEl) {
       adjEl.remove();
     }

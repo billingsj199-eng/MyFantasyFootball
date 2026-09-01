@@ -47296,6 +47296,34 @@ Rules:
       TE: (c('TE') || 1) + flex * 0.1
     };
   }
+  // League-wide STARTABLE POOL per position (Jack 2026-08-31: "identify
+  // the format… in a 12 team league starting 1 QB and 1 TE, QBs and TEs
+  // for the most part go in order from rank, but the top 30ish RBs are
+  // starting-level players and 36ish WRs… in 14-team leagues it scales…
+  // ideally 3×league-size WRs and 2.5× RBs, with a 2nd flex 4× WRs,
+  // 3.5× RBs and 1.5× TEs"). Multiplier = base starters plus a flex
+  // share fit to Jack's numbers (WR +1 per flex; RB +0.5 for the first
+  // flex then +1 each; TE +0.5 from the second flex on), × real league
+  // size — so 14-team and 3-WR formats grow the pool automatically.
+  // Bench players INSIDE the pool are startable depth and keep their
+  // bench credit; bench players OUTSIDE it get the nerf (see below).
+  function _mtStartablePools(teamCount) {
+    let rp = (_mtFormat && _mtFormat.rosterPositions) || [];
+    if (!rp.length) {
+      rp = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX'];
+      if (_mtFormat && _mtFormat.sf) rp.push('SUPER_FLEX');
+    }
+    const c = s => rp.filter(x => x === s).length;
+    const flex = c('FLEX') + c('WRRB_FLEX') + c('WR_RB_FLEX') + c('REC_FLEX');
+    const sf = c('SUPER_FLEX');
+    const L = teamCount || 12;
+    return {
+      QB: ((c('QB') || 1) + sf * 0.8) * L,
+      RB: ((c('RB') || 2) + (flex > 0 ? flex - 0.5 : 0)) * L,
+      WR: ((c('WR') || 2) + flex) * L,
+      TE: ((c('TE') || 1) + 0.5 * Math.max(flex - 1, 0)) * L
+    };
+  }
   // group = one team's players at a position, sorted by val desc.
   // Trade values curve hard toward the elite, so a raw sum lets one stud
   // carry a position even where the lineup starts 2-3 bodies every week.
@@ -47316,7 +47344,7 @@ Rules:
   function _mtRatingVal(v) {
     return v <= _MT_RATING_KNEE ? v : _MT_RATING_KNEE * (1 + Math.log(v / _MT_RATING_KNEE));
   }
-  function _mtPosStrength(group, starters, alphaOverride) {
+  function _mtPosStrength(group, starters, alphaOverride, pool) {
     // alphaOverride=1 keeps raw trade-value units (used by the team-wide
     // strength total, where cross-position sums must stay comparable);
     // default concave alpha only shapes WITHIN-position room comparisons.
@@ -47336,7 +47364,21 @@ Rules:
       let w;
       if (i < full) w = 1;
       else if (i === full && frac > 0.001) w = benchW[0] + 0.7 * frac;
-      else { w = benchW[Math.min(bench, 2)]; bench++; }
+      else {
+        w = benchW[Math.min(bench, 2)]; bench++;
+        // Startable-pool bench nerf (Jack 2026-08-31): a bench player
+        // inside the league's startable pool (e.g. RB28 in a 12-team
+        // 2RB+flex league, pool 30) is real depth and keeps his bench
+        // credit; outside the pool the credit fades to a floor — "the
+        // rest of the bench players get a nerf". Bigger formats grow the
+        // pool, so depth automatically matters more there. Win-now only:
+        // dynasty value view keeps stash credit. Lineup-window slots are
+        // never nerfed — a weak starter's low value is penalty enough.
+        if (winNow && pool > 0) {
+          const pr = p.posRank;
+          w *= pr == null ? 0.15 : pr <= pool ? 1 : Math.max(0.15, 1 - (pr - pool) / pool);
+        }
+      }
       const v = Math.max(p.val || 0, 0);
       total += Math.pow(winNow ? _mtRatingVal(v) : v, alpha) * w;
     });
@@ -47347,12 +47389,20 @@ Rules:
   function _mtComputePosRanks(teams) {
     if (!teams || !teams.length) return;
     const slots = _mtPosStarterSlots();
+    const pools = _mtStartablePools(teams.length);
     const POS = ['QB', 'RB', 'WR', 'TE'];
-    teams.forEach(t => { t.posRanks = {}; });
+    // Board positional rank per player (cached per source+mode) — the
+    // input to the startable-pool bench nerf in _mtPosStrength.
+    teams.forEach(t => {
+      ((t.score && t.score.players) || []).forEach(p => {
+        if (p.posRank === undefined) p.posRank = _mtGetPlayerPosRank(p.name);
+      });
+      t.posRanks = {};
+    });
     POS.forEach(pos => {
       const entries = teams.map((t, i) => {
         const group = (t.score && t.score.players ? t.score.players : []).filter(p => p.pos === pos);
-        return { i, v: _mtPosStrength(group, slots[pos]) };
+        return { i, v: _mtPosStrength(group, slots[pos], null, pools[pos]) };
       }).sort((a, b) => b.v - a.v);
       entries.forEach((e, idx) => {
         // Ties share the better rank (two teams can both be "1st")
@@ -47371,8 +47421,9 @@ Rules:
     teams.forEach(t => {
       const players = (t.score && t.score.players) ? t.score.players : [];
       let sw = 0;
-      POS.forEach(pos => { sw += _mtPosStrength(players.filter(p => p.pos === pos), slots[pos], 1); });
-      ['K', 'DST'].forEach(pos => { sw += _mtPosStrength(players.filter(p => p.pos === pos), 1, 1); });
+      POS.forEach(pos => { sw += _mtPosStrength(players.filter(p => p.pos === pos), slots[pos], 1, pools[pos]); });
+      // K/DST: 1-start slots, startable pool = one per team
+      ['K', 'DST'].forEach(pos => { sw += _mtPosStrength(players.filter(p => p.pos === pos), 1, 1, teams.length); });
       // Picks scaled 0.65 (Jack 2026-08-31 "scale the pick total down a
       // bit"): starter-weighting shrank the player base ~1/3, so raw picks
       // were over-counted against it; 0.65 restores their old relative

@@ -47054,12 +47054,17 @@ Rules:
       mySurplus.filter(p => theirNeeds.indexOf(p) >= 0).forEach(givePos => {
         myNeeds.filter(p => theirSurplus.indexOf(p) >= 0).forEach(getPos => {
           const mine = pieces(me, givePos), theirs = pieces(them, getPos);
-          // 1-for-1: values within 15% of each other
+          // Fairness band = the calculator's own FAIR threshold (diff ≤ 5% of
+          // the larger side), so every suggestion survives its double-check.
+          // The old 15%-of-min band was calibrated on the steep pre-2026-09-01
+          // curve; on the flat win-now scale it spanned whole tiers and
+          // suggested trades the calc itself called a clear win.
+          const fair = (x, y) => Math.abs(x - y) <= Math.max(6, 0.05 * Math.max(x, y));
+          // 1-for-1
           mine.forEach(a => theirs.forEach(b => {
-            const diff = Math.abs(a.val - b.val);
-            if (diff <= Math.max(8, 0.15 * Math.min(a.val, b.val))) {
-              offers.push({ them, givePos, getPos, send: [a], get: b, diff,
-                gain: b.val, kind: '1-1' });
+            if (fair(a.val, b.val)) {
+              offers.push({ them, givePos, getPos, send: [a], get: b,
+                diff: Math.abs(a.val - b.val), gain: b.val, kind: '1-1' });
             }
           }));
           // 2-for-1 consolidation: two of my depth pieces for one better player.
@@ -47069,10 +47074,9 @@ Rules:
             const pkg = window._packageAdjustedTotal([mine[i].val, mine[j].val], mode);
             theirs.forEach(b => {
               if (b.val <= Math.max(mine[i].val, mine[j].val)) return; // must be an upgrade
-              const diff = Math.abs(pkg - b.val);
-              if (diff <= Math.max(8, 0.15 * Math.min(pkg, b.val))) {
-                offers.push({ them, givePos, getPos, send: [mine[i], mine[j]], get: b, diff,
-                  gain: b.val, kind: '2-1' });
+              if (fair(pkg, b.val)) {
+                offers.push({ them, givePos, getPos, send: [mine[i], mine[j]], get: b,
+                  diff: Math.abs(pkg - b.val), gain: b.val, kind: '2-1' });
               }
             });
           }

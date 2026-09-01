@@ -47358,12 +47358,26 @@ Rules:
     // stashes hold real long-term value there.
     const winNow = !(_mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper') || _mtViewMode === 'contender';
     const oneStart = winNow && starters <= 1.2;
-    const benchW = oneStart ? [0.06, 0.02, 0.01] : [0.2, 0.08, 0.03];
+    // Room-rank starter dominance (Jack 2026-08-31: positional ranks
+    // "heavily based on the starters with the depth being kind of a
+    // tiebreak" — and in a 2RB+flex format the STARTERS include the
+    // flex-quality 3rd: Big Red (Saquon/Henry/Bucky Irving RB20) and
+    // S E X (Achane/Hampton/Harvey RB31) belong ABOVE a team whose two
+    // stars sit on an RB40 third). In ROOM-RANK mode only (alphaOverride
+    // null — the TOTAL path keeps its depth weighting, "overall team
+    // rating is good"), win-now positions with 2+ dedicated slots weight
+    // the flex share as a near-starter (~0.78 with 1 flex, full weight
+    // by 2 flexes) and drop the bench past it to 0.06/0.025/0.01: the
+    // startable trio decides the rank, RB4+/WR4+ break near-ties. QB/TE
+    // ride the oneStart branch ("qb and te seem good"); SF QB (full=1)
+    // keeps its own fuller share — the QB2 there is a real starter.
+    const roomStarters = winNow && alphaOverride == null && full >= 2;
+    const benchW = oneStart ? [0.06, 0.02, 0.01] : roomStarters ? [0.06, 0.025, 0.01] : [0.2, 0.08, 0.03];
     let bench = 0, total = 0;
     group.forEach((p, i) => {
       let w;
       if (i < full) w = 1;
-      else if (i === full && frac > 0.001) w = benchW[0] + 0.7 * frac;
+      else if (i === full && frac > 0.001) w = roomStarters ? Math.min(1, 0.55 + 0.5 * frac) : benchW[0] + 0.7 * frac;
       else {
         w = benchW[Math.min(bench, 2)]; bench++;
         // Startable-pool bench nerf (Jack 2026-08-31): a bench player

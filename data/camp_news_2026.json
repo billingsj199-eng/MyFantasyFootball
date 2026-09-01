@@ -1,6 +1,26 @@
 {
-  "updated": "2026-09-01T02:11:56Z",
+  "updated": "2026-09-01T16:12:06Z",
   "items": [
+    {
+      "player": "George Kittle",
+      "team": "SF",
+      "pos": "TE",
+      "date": "2026-09-01",
+      "headline": "Lingering groin injury has GM John Lynch voicing \"concern\" ahead of Week 1",
+      "take": "Still expected to play Week 1, but stacked on last season's Achilles tear, this is added bust risk for a TE1 pick",
+      "url": "https://www.cbssports.com/nfl/news/49ers-george-kittle-sidelined-with-lingering-groin-injury-gm-john-lynch-has-concern-ahead-of-week-1",
+      "tag": "injury"
+    },
+    {
+      "player": "Jalon Daniels",
+      "team": "TB",
+      "pos": "QB",
+      "date": "2026-09-01",
+      "headline": "UDFA rookie confirmed as Bucs' QB2 after team releases veteran Jake Browning",
+      "take": "Deep-league Mayfield handcuff only, but now the clear backup in Tampa Bay",
+      "url": "https://sports.yahoo.com/nfl/article/bucs-cut-jake-browning-elevating-udfa-jalon-daniels-to-qb2-behind-baker-mayfield-151614591.html",
+      "tag": "role"
+    },
     {
       "player": "Emari Demercado",
       "team": "DAL",
@@ -2260,56 +2280,6 @@
       "take": "Still behind Tyler Allgeier on the depth chart but keeps closing the gap in a crowded RB room.",
       "url": "https://sports.yahoo.com/videos/jeremiah-love-looked-faster-and-more-explosive-than-trey-benson-at-cardinals-camp-234158331.html",
       "tag": "riser"
-    },
-    {
-      "player": "Isiah Pacheco",
-      "team": "DET",
-      "pos": "RB",
-      "date": "2026-08-10",
-      "headline": "Diagnosed with MCL sprain, missed 4 straight practices, expected ready for Week 1",
-      "take": "Handcuff-only value behind Jahmyr Gibbs -- no long-term concern per Dan Campbell.",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/isiah-pacheco-has-an-mcl-sprain-but-should-be-ready-for-week-1",
-      "tag": "injury"
-    },
-    {
-      "player": "Christian McCaffrey",
-      "team": "SF",
-      "pos": "RB",
-      "date": "2026-08-10",
-      "headline": "Sat out Monday's practice with tightness/soreness, first missed day of camp",
-      "take": "Team calls it managed rest, not a real concern, but worth a glance given his injury history",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/christian-mccaffrey-sore-but-ok-as-49ers-manage-his-workload",
-      "tag": "injury"
-    },
-    {
-      "player": "Luther Burden III",
-      "team": "CHI",
-      "pos": "WR",
-      "date": "2026-08-10",
-      "headline": "Sidelined with groin injury from Saturday's practice, expected to miss about a month",
-      "take": "Targeted for a Week 1 return, but loses real camp reps in an already-thin Bears WR room right as his 2025 buzz was building.",
-      "url": "https://www.espn.com/nfl/story/_/id/49569087/bears-wr-luther-burden-groin-injury-source-says",
-      "tag": "injury"
-    },
-    {
-      "player": "Hunter Henry",
-      "team": "NE",
-      "pos": "TE",
-      "date": "2026-08-10",
-      "headline": "Signs 2-year, up to $20M extension ($14.5M gtd) with Patriots",
-      "take": "Locks in his role as Drake Maye's top-of-the-seam TE through 2028 with zero contract-year distraction \u2014 steady mid-TE2 outlook.",
-      "url": "https://www.espn.com/nfl/story/_/id/49574198/sources-patriots-te-hunter-henry-agree-2-year-extension",
-      "tag": "transaction"
-    },
-    {
-      "player": "Josh Dobbs",
-      "team": "DET",
-      "pos": "QB",
-      "date": "2026-08-10",
-      "headline": "Signed by Lions as new QB2 after Teddy Bridgewater retired mid-camp",
-      "take": "Pure backup/streaming note behind Jared Goff \u2014 no standalone fantasy value.",
-      "url": "https://www.cbssports.com/nfl/news/teddy-bridgewater-retires-lions-backup-quarterback-jared-goff/",
-      "tag": "transaction"
     }
   ]
 }

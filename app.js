@@ -3725,6 +3725,11 @@ function render() {
   // (non-weekly, non-dynasty) view. Reused by the header/cell toggles after the loop.
   const _isWeekly = currentMode === 'weekly';
   const _statMode = _effStatMode();
+  // WEEKLY + SIMS: the always-on weekly Boom/Bust columns (simboom/simbust,
+  // next to PROJ PPG) already show the active week's tail odds — hide the
+  // repurposed ppg25/l4ppg pair so the same numbers don't render twice
+  // (CSS body.stats-sims rules in index.html).
+  document.body.classList.toggle('stats-sims', _statMode === 'sims');
   // Season BETTING LINES / PROJECTIONS views repurpose the Y/RR cell as a
   // PPG column — book-blended or Clay-based (same pattern as ADP's CBS column).
   const _linesPpgMode = _statMode === 'lines' && !_isWeekly;

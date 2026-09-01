@@ -22038,7 +22038,7 @@ window.fmtHeight = fmtHeight;
   // drift): linear rank value zeroing at 500, ×0.5 slope (≈250 at #1), and
   // Jack's tier ladder at 3% per tier below the top (A/B'd 1-5% live on the
   // Clitphen league 2026-08-31, 3% FINAL), floored at ×0.5.
-  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierPct: 0.03, floor: 0.5 };
+  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierPct: 0.03, floor: 0.5, replRank: 160 };
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
     const m = mode || tradeMode;
@@ -22090,20 +22090,27 @@ window.fmtHeight = fmtHeight;
   // Raw sums let 2-for-1 / 3-for-1 packages win on quantity: three mid assets out-sum
   // one elite player even though the elite side wins the trade in practice (roster
   // spots are scarce, only the best pieces start). Fix: the best asset on a side
-  // counts in full, every additional asset pays a roster-spot cost equal to HALF a
-  // replacement-level player (the value curve at rank 140). Assets below the cost
-  // contribute nothing — junk throw-ins can't tilt a trade. Half (not full)
-  // replacement keeps 2-for-1s of two genuine starters competitive, matching how
+  // counts in full, every additional asset pays a roster-spot cost. Assets below
+  // the cost contribute nothing — junk throw-ins can't tilt a trade.
+  //
+  // DYNASTY: cost = HALF a replacement-level player (the dynasty curve at rank
+  // 140) — half keeps 2-for-1s of two genuine starters competitive, matching how
   // KTC's own multi-piece adjustment behaves on its flat dynasty curve.
+  //
+  // SINGLE-SEASON (2026-09-01, retuned with the My Teams linear basis): cost =
+  // the FULL linear value at the waiver line (_WINNOW_VAL.replRank, ~12 teams ×
+  // ~13 rostered skill players ≈ top 160 rostered). Rationale: trading two
+  // players for one frees a roster spot that gets refilled from waivers at
+  // replacement value, so an extra piece only contributes what it offers ABOVE
+  // that free agent. On the flat 0-250 scale the old half-curve cost (9→90)
+  // let any two mid starters bury an elite player. replRank is the tuning
+  // lever: lower ⇒ pricier spots ⇒ consolidation favored more.
   window._packageRosterCost = function(mode) {
     const m = mode || tradeMode;
     const isDyn = (m === 'dynasty' || m === 'dynastysf');
-    // Replacement anchor stays rank 140, evaluated on each mode's own value
-    // basis (dynasty curve vs the win-now linear basis the single-season
-    // calc now shares with My Teams).
     const WN = window._WINNOW_VAL;
-    const repl = isDyn ? 7750 / (Math.pow(140, 0.8) + 30) : (WN.zero - 140) * WN.slope;
-    return Math.round(repl / 2); // dynasty ≈ 47, redraft = 90
+    if (isDyn) return Math.round(7750 / (Math.pow(140, 0.8) + 30) / 2); // ≈ 47
+    return Math.round((WN.zero - WN.replRank) * WN.slope); // (500-160)*0.5 = 170
   };
   window._packageAdjustedTotal = function(values, mode) {
     if (!values || !values.length) return 0;

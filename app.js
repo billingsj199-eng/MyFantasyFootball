@@ -45394,7 +45394,7 @@ Rules:
   // separator steps → ×(1 − 0.01·tierIndex).
   const _MT_RANK_ZERO = 500;  // board rank worth 0
   const _MT_RANK_SLOPE = 0.5; // 250 at #1, −0.5 per rank
-  const _MT_TIER_PCT = 0.01;  // each tier below the top: ×1% less
+  const _MT_TIER_PCT = 0.02;  // each tier below the top: ×2% less (Jack 2026-08-31: "I think we try 2%" — was 1%)
   const _MT_TIER_FLOOR = 0.5; // safety floor on deep-tier multipliers
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();

@@ -22038,7 +22038,7 @@ window.fmtHeight = fmtHeight;
   // drift): linear rank value zeroing at 500, ×0.5 slope (≈250 at #1), and
   // Jack's tier ladder at 3% per tier below the top (A/B'd 1-5% live on the
   // Clitphen league 2026-08-31, 3% FINAL), floored at ×0.5.
-  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierPct: 0.03, floor: 0.5, replRank: 160 };
+  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierPct: 0.03, floor: 0.5, replRank: 160, extraPieceW: 0.5 };
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
     const m = mode || tradeMode;
@@ -22114,10 +22114,19 @@ window.fmtHeight = fmtHeight;
   };
   window._packageAdjustedTotal = function(values, mode) {
     if (!values || !values.length) return 0;
-    const cost = window._packageRosterCost(mode);
+    const m = mode || tradeMode;
+    const isDyn = (m === 'dynasty' || m === 'dynastysf');
+    const cost = window._packageRosterCost(m);
+    // Best-player priority (Jack 2026-09-01): in single-season deals the best
+    // piece counts in full and every extra piece's above-replacement surplus
+    // counts at extraPieceW (0.5) — on the flat win-now scale two near-studs
+    // were still outvoting the deal's single best player even after the spot
+    // cost. Dynasty keeps the full surplus (KTC-like, its steep curve already
+    // makes the best player dominate).
+    const w = isDyn ? 1 : window._WINNOW_VAL.extraPieceW;
     const sorted = values.slice().sort((a, b) => b - a);
     let total = sorted[0];
-    for (let i = 1; i < sorted.length; i++) total += Math.max(sorted[i] - cost, 0);
+    for (let i = 1; i < sorted.length; i++) total += Math.max(sorted[i] - cost, 0) * w;
     return Math.round(total);
   };
 
@@ -22218,7 +22227,9 @@ window.fmtHeight = fmtHeight;
         totalEl.parentElement.appendChild(adjEl);
       }
       adjEl.textContent = 'multi-piece adj ' + det.adj + ' (raw ' + det.raw + ')';
-      adjEl.title = 'Each asset after this side\'s best pays a roster-spot cost of ' + window._packageRosterCost(tradeMode) + ' — packages can\'t win on quantity alone';
+      adjEl.title = 'Each asset after this side\'s best pays a roster-spot cost of ' + window._packageRosterCost(tradeMode) +
+        ((tradeMode === 'dynasty' || tradeMode === 'dynastysf') ? '' : ', then counts ' + Math.round((window._WINNOW_VAL.extraPieceW || 1) * 100) + '% of what remains') +
+        ' — the best player in the deal takes priority, packages can\'t win on quantity alone';
     } else if (adjEl) {
       adjEl.remove();
     }
@@ -22966,6 +22977,13 @@ window.fmtHeight = fmtHeight;
 
     // Same package adjustment as the calculator, so loaded suggestions match its verdict
     const _pkgCost = window._packageRosterCost(tradeMode);
+    // Loop-prune slack: the widest possible raw-sum vs adjusted-total gap per
+    // EXTRA piece. With the extra-piece surplus weight w, an extra worth V
+    // contributes w·(V−cost), so the gap is w·cost + (1−w)·V — bound V by the
+    // win-now scale max (~250). Collapses to _pkgCost when w = 1 (dynasty).
+    const _extraW = (tradeMode === 'dynasty' || tradeMode === 'dynastysf')
+      ? 1 : (window._WINNOW_VAL.extraPieceW || 1);
+    const _pkgSlack = Math.ceil(_extraW * _pkgCost + (1 - _extraW) * 260);
     const _pkgSideTotal = side => window._packageAdjustedTotal(side.map(a => a.value), tradeMode);
 
     function scoreCombo(giveSide, getSide, getTotal) {
@@ -23023,7 +23041,7 @@ window.fmtHeight = fmtHeight;
           for (let j = i + 1; j < mySorted.length; j++) {
             const sum = mySorted[i].value + mySorted[j].value;
             if (sum < minVal) break;
-            if (sum > maxVal + _pkgCost) continue;
+            if (sum > maxVal + _pkgSlack) continue;
             const s = scoreCombo([mySorted[i], mySorted[j]], getSide, getTotal);
             if (s.score > 0) raw.push({ give: [mySorted[i], mySorted[j]], get: getSide, getTotal, ...s });
           }
@@ -23036,11 +23054,11 @@ window.fmtHeight = fmtHeight;
           if (mySorted[i].value >= maxVal) continue;
           for (let j = i + 1; j < mySorted.length; j++) {
             const sum2 = mySorted[i].value + mySorted[j].value;
-            if (sum2 >= maxVal + 2 * _pkgCost) continue;
+            if (sum2 >= maxVal + 2 * _pkgSlack) continue;
             for (let k = j + 1; k < mySorted.length; k++) {
               const sum3 = sum2 + mySorted[k].value;
               if (sum3 < minVal) break;
-              if (sum3 > maxVal + 2 * _pkgCost) continue;
+              if (sum3 > maxVal + 2 * _pkgSlack) continue;
               const s = scoreCombo([mySorted[i], mySorted[j], mySorted[k]], getSide, getTotal);
               if (s.score > 0) raw.push({ give: [mySorted[i], mySorted[j], mySorted[k]], get: getSide, getTotal, ...s });
             }
@@ -46998,7 +47016,6 @@ Rules:
       }).filter(Boolean).sort((a, b) => b.val - a.val);
       return grp.slice(1); // never the best at the position
     };
-    const pkgCost = (typeof window._packageRosterCost === 'function') ? window._packageRosterCost(mode) : 0;
 
     const myNeeds = needs(me), mySurplus = surpluses(me);
     const offers = [];
@@ -47016,9 +47033,11 @@ Rules:
                 gain: b.val, kind: '1-1' });
             }
           }));
-          // 2-for-1 consolidation: two of my depth pieces for one better player
+          // 2-for-1 consolidation: two of my depth pieces for one better player.
+          // Same package math as the calculator (spot cost + extra-piece
+          // surplus weight) so finder offers match its verdict.
           for (let i = 0; i < mine.length; i++) for (let j = i + 1; j < mine.length; j++) {
-            const pkg = Math.max(mine[i].val, mine[j].val) + Math.max(Math.min(mine[i].val, mine[j].val) - pkgCost, 0);
+            const pkg = window._packageAdjustedTotal([mine[i].val, mine[j].val], mode);
             theirs.forEach(b => {
               if (b.val <= Math.max(mine[i].val, mine[j].val)) return; // must be an upgrade
               const diff = Math.abs(pkg - b.val);
@@ -47057,7 +47076,7 @@ Rules:
     picked.forEach(o => {
       const sendHtml = o.send.map(p => chip(p, o.givePos)).join(' <span style="color:var(--text2)">+</span> ');
       const sendVal = o.kind === '2-1'
-        ? Math.max(o.send[0].val, o.send[1].val) + Math.max(Math.min(o.send[0].val, o.send[1].val) - pkgCost, 0)
+        ? window._packageAdjustedTotal([o.send[0].val, o.send[1].val], mode)
         : o.send[0].val;
       const pct = Math.round(o.diff / Math.max(sendVal, o.get.val) * 100);
       html += `<div style="border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:8px 12px">` +

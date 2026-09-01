@@ -1856,11 +1856,13 @@
       `<span style="color:#6dd06d">▲${Math.round(bb.boom * 100)}</span> ` +
       `<span style="color:#d06d6d">▼${Math.round(bb.bust * 100)}</span></span>`;
   }
+  // On-page only (bbTagHTML above is the sidebar's dark variant) — light chip
+  // matching the ESPN/Yahoo on-page palette per Jack (v0.29.20).
   function bbPillHTML(bb) {
-    return `<span title="${esc(bbTip(bb))}" style="background:#26304d;font-size:10px;font-weight:700;` +
+    return `<span title="${esc(bbTip(bb))}" style="background:#f0f2f5;font-size:10px;font-weight:700;` +
       'border-radius:3px;padding:0 4px;line-height:15px;white-space:nowrap;flex:0 0 auto">' +
-      `<span style="color:#6dd06d">▲${Math.round(bb.boom * 100)}</span>&nbsp;` +
-      `<span style="color:#d06d6d">▼${Math.round(bb.bust * 100)}</span></span>`;
+      `<span style="color:#1d7a34">▲${Math.round(bb.boom * 100)}</span>&nbsp;` +
+      `<span style="color:#b33636">▼${Math.round(bb.bust * 100)}</span></span>`;
   }
   // ---- H2H matchup: our proj totals + win odds ----
   // Both sides summed with the SAME wkVal the row pills show (sim-first,
@@ -4515,18 +4517,23 @@
       if (!p) { clearIt(); continue; }
       const verdict = calc ? calc.cls[keyOf(p)] : null;
       const pills = [];
-      if (verdict === 'go') pills.push(pillHTML('▲ START', '#2a4030', '#6dd06d', 'Projects better than a current starter — put him in'));
-      else if (verdict === 'sit') pills.push(pillHTML('▼ SIT', '#402a2a', '#d06d6d', 'A benched player projects better — take him out'));
-      else if (verdict === 'close') pills.push(pillHTML('≈ TOSS-UP', '#4a3f30', '#ffc99b', 'Projections within ' + CLOSE_PPG + ' ppg — either is fine'));
+      // Season on-page pills are LIGHT chips (ESPN/Yahoo palette) per Jack —
+      // they pop on Sleeper's dark rows; draft-room chips keep the dark theme.
+      if (verdict === 'go') pills.push(pillHTML('▲ START', '#e2f3e6', '#1d7a34', 'Projects better than a current starter — put him in'));
+      else if (verdict === 'sit') pills.push(pillHTML('▼ SIT', '#fbe7e7', '#b33636', 'A benched player projects better — take him out'));
+      else if (verdict === 'close') pills.push(pillHTML('≈ TOSS-UP', '#fdf1dc', '#a06a00', 'Projections within ' + CLOSE_PPG + ' ppg — either is fine'));
       // Matchup: Sleeper's row already prints the game line ("Sun 1:00 PM
       // @ IND"), so instead of a duplicate opp pill we tint that line (green =
       // plus matchup, red = tough) with the Vegas tooltip. Rows where the game
-      // line can't be found keep the pill.
+      // line can't be found keep the pill (light remap of wkOppInfo's colors).
       const g = wkOppInfo(p);
-      if (g && !tintGameLine(row, nameRow, g)) pills.push(pillHTML(g.txt, g.bg, g.fg, g.tip));
+      if (g && !tintGameLine(row, nameRow, g)) {
+        const oc = g.cls === 'good' ? ['#e2f3e6', '#1d7a34'] : g.cls === 'bad' ? ['#fbe7e7', '#b33636'] : ['#f0f2f5', '#5b6068'];
+        pills.push(pillHTML(g.txt, oc[0], oc[1], g.tip));
+      }
       const v = wkVal(p);
       if (v > 0 || p.pPg != null) {
-        pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#26304d', '#00ceb8',
+        pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#f0f2f5', '#2a2c33',
           'Projected points this week (' + state.scoringLabel + ' · sim-engine mean: Clay × Vegas × matchup, league-scored)'));
         const bb = boomBustFor(p, v);
         if (bb) pills.push(bbPillHTML(bb));
@@ -4632,9 +4639,10 @@
     sides.forEach((s, i) => {
       const host = s.querySelector('.bottom-row .roster-score-and-projection-matchup') || s.querySelector('.bottom-row');
       if (!host) return;
-      const wCol = wins[i] >= 55 ? '#6dd06d' : wins[i] <= 45 ? '#d06d6d' : '#ffc166';
-      const inner = '<span style="color:#8b94b3;font-weight:800;letter-spacing:.5px">MFF</span> ' +
-        `<b style="color:#00ceb8">${totals[i].toFixed(1)}</b> <b style="color:${wCol}">${wins[i]}%</b>`;
+      // Light chip like the row pills (ESPN/Yahoo palette) per Jack (v0.29.20)
+      const wCol = wins[i] >= 55 ? '#1d7a34' : wins[i] <= 45 ? '#b33636' : '#a06a00';
+      const inner = '<span style="color:#5b6068;font-weight:800;letter-spacing:.5px">MFF</span> ' +
+        `<b style="color:#2a2c33">${totals[i].toFixed(1)}</b> <b style="color:${wCol}">${wins[i]}%</b>`;
       let chip = s.querySelector('.mff-mu-chip');
       if (chip && chip.dataset.mffSig === inner) return;
       if (chip) chip.remove();
@@ -4642,7 +4650,8 @@
       chip.className = 'mff-mu-chip';
       chip.dataset.mffSig = inner;
       chip.title = tip;
-      chip.style.cssText = 'font-size:11px;font-weight:700;white-space:nowrap;margin-top:2px;position:relative;z-index:2;';
+      chip.style.cssText = 'display:inline-block;background:#f0f2f5;border-radius:3px;padding:0 5px;' +
+        'font-size:11px;font-weight:700;line-height:17px;white-space:nowrap;margin-top:3px;position:relative;z-index:2;';
       chip.innerHTML = inner;
       host.appendChild(chip);
     });
@@ -4674,7 +4683,7 @@
       if (v > 0 || p.pPg != null) {
         // Proj only — no boom/bust pill here per Jack (the mirrored half-width
         // rows are cramped; odds still live on the team page + sidebar rows).
-        pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#26304d', '#00ceb8',
+        pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#f0f2f5', '#2a2c33',
           'Our projected points this week (' + state.scoringLabel + ' · site sim first, league-scored, injuries priced)'));
       }
       const inner = pills.join('');

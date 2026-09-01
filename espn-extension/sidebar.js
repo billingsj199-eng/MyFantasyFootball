@@ -2313,11 +2313,14 @@
       `<span style="color:#6dd06d">▲${Math.round(bb.boom * 100)}</span> ` +
       `<span style="color:#d06d6d">▼${Math.round(bb.bust * 100)}</span></span>`;
   }
+  // On-page only (bbTagHTML above is the sidebar's dark variant) — light chip
+  // matching ESPN's theme (v0.20.22).
   function bbPillHTML(bb) {
-    return `<span title="${esc(bbTip(bb))}" style="background:#2a2c33;font-size:10px;font-weight:700;` +
-      'border-radius:3px;padding:0 4px;line-height:15px;white-space:nowrap;flex:0 0 auto">' +
-      `<span style="color:#6dd06d">▲${Math.round(bb.boom * 100)}</span>&nbsp;` +
-      `<span style="color:#d06d6d">▼${Math.round(bb.bust * 100)}</span></span>`;
+    return `<span title="${esc(bbTip(bb))}" style="background:#f0f2f5;font-size:10px;font-weight:700;` +
+      'border-radius:3px;padding:0 4px;line-height:15px;border:1px solid rgba(0,0,0,.08);' +
+      'white-space:nowrap;flex:0 0 auto">' +
+      `<span style="color:#1d7a34">▲${Math.round(bb.boom * 100)}</span>&nbsp;` +
+      `<span style="color:#b33636">▼${Math.round(bb.bust * 100)}</span></span>`;
   }
   function wkVal(p) {
     if (onByeThisWeek(p)) return 0;
@@ -2775,10 +2778,13 @@
       delete el.dataset.mffOppSig;
     });
   }
+  // On-page pills only (the sidebar keeps its own dark .tag styling) — ESPN is
+  // a light theme, so these are light chips (OPP_TINT palette family) with a
+  // hairline border so they read as chips on the white rows (v0.20.22).
   function pillHTML(text, bg, fg, title) {
     return `<span ${title ? 'title="' + esc(title) + '"' : ''} style="background:${bg};color:${fg};` +
       'font-size:10px;font-weight:700;border-radius:3px;padding:0 4px;line-height:15px;' +
-      'white-space:nowrap;flex:0 0 auto">' + esc(text) + '</span>';
+      'border:1px solid rgba(0,0,0,.08);white-space:nowrap;flex:0 0 auto">' + esc(text) + '</span>';
   }
   // ---- MFF matchup strip: our proj totals + win odds under ESPN's own
   // "Proj Total" header on the boxscore/matchup page ----
@@ -2897,18 +2903,22 @@
       const p = rec.p;
       const pills = [];
       const verdict = rec.mine && calc ? calc.cls[keyOf(p)] : null;
-      if (verdict === 'go') pills.push(pillHTML('▲ START', '#2a4030', '#6dd06d', 'Projects better than a current starter — put him in'));
-      else if (verdict === 'sit') pills.push(pillHTML('▼ SIT', '#402a2a', '#d06d6d', 'A benched player projects better — take him out'));
-      else if (verdict === 'close') pills.push(pillHTML('≈ TOSS-UP', '#4a3f30', '#ffc99b', 'Projections within ' + CLOSE_PPG + ' ppg — either is fine'));
+      if (verdict === 'go') pills.push(pillHTML('▲ START', '#e2f3e6', '#1d7a34', 'Projects better than a current starter — put him in'));
+      else if (verdict === 'sit') pills.push(pillHTML('▼ SIT', '#fbe7e7', '#b33636', 'A benched player projects better — take him out'));
+      else if (verdict === 'close') pills.push(pillHTML('≈ TOSS-UP', '#fdf1dc', '#a06a00', 'Projections within ' + CLOSE_PPG + ' ppg — either is fine'));
       // Matchup: ESPN's roster tables already print the opponent in their own
       // OPP column, so instead of a duplicate pill we tint that cell (green =
       // plus matchup, red = tough) and hang the Vegas tooltip on it. Rows with
       // no OPP cell (player cards, news modules) keep the pill.
       const g = wkOppInfo(p);
-      if (g && !tintNativeOpp(a, g)) pills.push(pillHTML(g.txt, g.bg, g.fg, g.tip));
+      if (g && !tintNativeOpp(a, g)) {
+        // wkOppInfo carries the sidebar's dark palette — remap to the light one
+        const oc = g.cls === 'good' ? ['#e2f3e6', '#1d7a34'] : g.cls === 'bad' ? ['#fbe7e7', '#b33636'] : ['#f0f2f5', '#5b6068'];
+        pills.push(pillHTML(g.txt, oc[0], oc[1], g.tip));
+      }
       const v = wkVal(p);
       if (v > 0 || p.pPg != null) {
-        pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#2a2c33', '#b9e28c',
+        pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#f0f2f5', '#2a2c33',
           'Projected points this week (' + state.scoringLabel + ' · sim-engine mean: Clay × Vegas × matchup, league-scored)'));
         if (!onBoxscore) {
           const bb = boomBustFor(p, v);

@@ -47312,13 +47312,15 @@ Rules:
   // carry a position even where the lineup starts 2-3 bodies every week.
   // Concave transform (val^alpha) flattens that credit as the starter
   // window widens: 1-starter QB/TE keep raw top-heavy vals (alpha 1),
-  // 2RB+flex lands ~0.74, 2-flex / 3-WR formats push toward 0.55 — so two
-  // solid starters beat one stud plus a hole where the format demands it.
+  // 2RB+flex lands ~0.64, 2-flex / 3-WR formats bottom out at 0.5 — so at
+  // RB/WR the best single player can't carry the room rank by himself: the
+  // stud team still wins WHEN its depth is also solid, but two-three real
+  // starters beat one stud plus a hole (Jack 2026-08-31, slope 0.18→0.25).
   function _mtPosStrength(group, starters, alphaOverride) {
     // alphaOverride=1 keeps raw trade-value units (used by the team-wide
     // strength total, where cross-position sums must stay comparable);
     // default concave alpha only shapes WITHIN-position room comparisons.
-    const alpha = alphaOverride != null ? alphaOverride : (starters <= 1.2 ? 1 : Math.max(0.55, 1 - 0.18 * (starters - 1)));
+    const alpha = alphaOverride != null ? alphaOverride : (starters <= 1.2 ? 1 : Math.max(0.5, 1 - 0.25 * (starters - 1)));
     const full = Math.floor(starters);
     const frac = starters - full;
     // Win-now 1-start positions (1QB / 1TE): you can only start one, so the

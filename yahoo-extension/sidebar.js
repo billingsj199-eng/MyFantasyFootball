@@ -2400,6 +2400,9 @@
     if (!state.leagueId || !state.players.length) return;
     const calc = state.roster.length && state.seasonSlots ? seasonLineupCalc() : null;
     const playersPage = onPlayersPage();
+    // Matchup page: proj pill only, no boom/bust per Jack (v0.9.15) — the
+    // mirrored rows + strip already crowd it. Other pages keep both.
+    const matchupPage = onMatchupPage();
     let mine = null, base = null; // lazy — only when an FA delta is needed
     document.querySelectorAll('.ysf-player-name').forEach((box) => {
       if (box.closest('#mff-sidebar')) return;
@@ -2423,8 +2426,10 @@
       if (v > 0 || p.pPg != null) {
         pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#2a2c33', '#b9e28c',
           'Projected points this week (' + state.scoringLabel + ' · MFF blend of props + Clay + Jack)'));
-        const sr = simWeekRowFor(p);
-        if (sr && sr[3] != null && sr[4] != null) pills.push(simOddsPillHTML(sr));
+        if (!matchupPage) {
+          const sr = simWeekRowFor(p);
+          if (sr && sr[3] != null && sr[4] != null) pills.push(simOddsPillHTML(sr));
+        }
       }
       if (playersPage && !isMine && state.faSeen[info.key] && calc) {
         if (base == null) { mine = myPlayerObjs(); base = optimalLineup(mine).total; }

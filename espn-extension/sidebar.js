@@ -2869,6 +2869,9 @@
   function decorateSeasonPages() {
     if (!gateAllowed()) return;
     if (state.appMode !== 'season' || !state.seasonTeams.length) return;
+    // Boxscore/matchup page: proj pill only, no boom/bust per Jack (v0.20.21)
+    // — the strip + row pills already crowd it. Other season pages keep both.
+    const onBoxscore = /\bboxscore\b/i.test(location.pathname);
     const map = Object.create(null);
     state.seasonTeams.forEach((t) => t.entries.forEach((en) => {
       if (!en.p) return;
@@ -2907,8 +2910,10 @@
       if (v > 0 || p.pPg != null) {
         pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#2a2c33', '#b9e28c',
           'Projected points this week (' + state.scoringLabel + ' · sim-engine mean: Clay × Vegas × matchup, league-scored)'));
-        const bb = boomBustFor(p, v);
-        if (bb) pills.push(bbPillHTML(bb));
+        if (!onBoxscore) {
+          const bb = boomBustFor(p, v);
+          if (bb) pills.push(bbPillHTML(bb));
+        }
       }
       const inner = pills.join('');
       if (existing && existing.dataset.mffSig === inner) continue;

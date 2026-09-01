@@ -22033,6 +22033,12 @@ window.fmtHeight = fmtHeight;
   //   dynasty/dynastysf:  7750 / (rank^0.8 + 30)  — KTC-shaped: flat top, long depth tail
   // The dynasty offset of 30 flattens rank #1 vs #50 ratio to ~1.7x (matches KTC) instead of ~5x.
   const _ADP_SRCS = ['underdog', 'ktc', 'espn', 'cbs', 'sleeper', 'yahoo'];
+  // WIN-NOW value basis — the SAME numbers as the My Teams player ratings
+  // (_mtScoreRoster reads these too via window._WINNOW_VAL, so the two can't
+  // drift): linear rank value zeroing at 500, ×0.5 slope (≈250 at #1), and
+  // Jack's tier ladder at 3% per tier below the top (A/B'd 1-5% live on the
+  // Clitphen league 2026-08-31, 3% FINAL), floored at ×0.5.
+  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierPct: 0.03, floor: 0.5 };
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
     const m = mode || tradeMode;
@@ -22045,24 +22051,37 @@ window.fmtHeight = fmtHeight;
     if (!srcBoard) return 1;
     const boardPos = srcBoard.indexOf(d.idx);
     const rank = boardPos >= 0 ? boardPos + 1 : 999;
-    if (rank >= 400) return 1;
     const isDyn = (m === 'dynasty' || m === 'dynastysf');
     let val;
     if (isDyn) {
+      if (rank >= 400) return 1;
       val = Math.max(Math.round(7750 / (Math.pow(rank, 0.8) + 30)), 1);
-    } else {
-      val = Math.max(Math.round(1000 / (Math.pow(rank, 0.8) + 3)), 1);
-    }
-    // Tier multiplier only applies to version-based sources (consensus/jacks/mine).
-    // Picks included ON PURPOSE: Jack prices picks by where he ranks them
-    // in the tiers, same as players — a briefly-shipped pick exemption was
-    // reverted at his request (2026-08-11). Move the pick entry on the
-    // board to change its value.
-    if (!isAdpSrc) {
-      const tierLabel = _getTierForPlayerFull(d, s, m);
-      if (tierLabel && TIER_MULT[tierLabel] !== undefined) {
-        val = Math.round(val * TIER_MULT[tierLabel]);
+      // Tier multiplier only applies to version-based sources (consensus/jacks/mine).
+      // Picks included ON PURPOSE: Jack prices picks by where he ranks them
+      // in the tiers, same as players — a briefly-shipped pick exemption was
+      // reverted at his request (2026-08-11). Move the pick entry on the
+      // board to change its value.
+      if (!isAdpSrc) {
+        const tierLabel = _getTierForPlayerFull(d, s, m);
+        if (tierLabel && TIER_MULT[tierLabel] !== undefined) {
+          val = Math.round(val * TIER_MULT[tierLabel]);
+        }
       }
+    } else {
+      // Single-season modes (redraft/superflex): the My Teams rating basis
+      // replaced the old 1000/(rank^0.8+3) curve + TIER_MULT here
+      // (2026-09-01, Jack: "trade calc should reflect the My Teams player
+      // ratings"). Much flatter by design — tier boundaries, not raw rank
+      // depth, carry the separation. _mtTierRangeFor returns null for ADP
+      // sources / boards without tiers (factor 1), same as My Teams.
+      const WN = window._WINNOW_VAL;
+      const tr = window._mtTierRangeFor(d, s, m);
+      const tierFactor = tr ? Math.max(1 - tr.index * WN.tierPct, WN.floor) : 1;
+      val = Math.max(WN.zero - rank, 0) * WN.slope * tierFactor;
+      // Strict board-order epsilon, mirroring _mtScoreRoster: ranked-above
+      // ⇒ strictly higher even past the linear zero.
+      if (rank < 999) val += (1000 - rank) * 0.001;
+      val = Math.round(val);
     }
     return Math.max(val, 1);
   };
@@ -22079,8 +22098,12 @@ window.fmtHeight = fmtHeight;
   window._packageRosterCost = function(mode) {
     const m = mode || tradeMode;
     const isDyn = (m === 'dynasty' || m === 'dynastysf');
-    const repl = isDyn ? 7750 / (Math.pow(140, 0.8) + 30) : 1000 / (Math.pow(140, 0.8) + 3);
-    return Math.round(repl / 2); // dynasty ≈ 47, redraft ≈ 9
+    // Replacement anchor stays rank 140, evaluated on each mode's own value
+    // basis (dynasty curve vs the win-now linear basis the single-season
+    // calc now shares with My Teams).
+    const WN = window._WINNOW_VAL;
+    const repl = isDyn ? 7750 / (Math.pow(140, 0.8) + 30) : (WN.zero - 140) * WN.slope;
+    return Math.round(repl / 2); // dynasty ≈ 47, redraft = 90
   };
   window._packageAdjustedTotal = function(values, mode) {
     if (!values || !values.length) return 0;
@@ -45435,10 +45458,15 @@ Rules:
   // the whole basis with this. Tier history: mult amp 1.5 "way too far
   // apart" → 0.6 "still too far" → flatten "don't flatten" → small
   // separator steps → ×(1 − 0.01·tierIndex).
-  const _MT_RANK_ZERO = 500;  // board rank worth 0
-  const _MT_RANK_SLOPE = 0.5; // 250 at #1, −0.5 per rank
-  const _MT_TIER_PCT = 0.03;  // each tier below the top: ×3% less (Jack 2026-08-31 FINAL: A/B'd 1/2/3/4/5% live on the Clitphen league, picked 3%)
-  const _MT_TIER_FLOOR = 0.5; // safety floor on deep-tier multipliers
+  // Shared with the trade calc since 2026-09-01: window._WINNOW_VAL (defined
+  // in the trade-calc module, which runs first) is the single source for the
+  // win-now basis — _getTradeValue's single-season branch uses the exact same
+  // numbers, so My Teams ratings and trade values can't drift apart.
+  const _WN_SRC = window._WINNOW_VAL || {};
+  const _MT_RANK_ZERO = _WN_SRC.zero || 500;  // board rank worth 0
+  const _MT_RANK_SLOPE = _WN_SRC.slope || 0.5; // 250 at #1, −0.5 per rank
+  const _MT_TIER_PCT = _WN_SRC.tierPct || 0.03;  // each tier below the top: ×3% less (Jack 2026-08-31 FINAL: A/B'd 1/2/3/4/5% live on the Clitphen league, picked 3%)
+  const _MT_TIER_FLOOR = _WN_SRC.floor || 0.5; // safety floor on deep-tier multipliers
   function _mtScoreRoster(players, draftPicks, modeOverride) {
     const mode = modeOverride || _mtGetRankingMode();
     const includePicks = !modeOverride; // contender mode skips picks

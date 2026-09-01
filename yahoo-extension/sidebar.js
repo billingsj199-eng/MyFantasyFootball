@@ -1079,7 +1079,7 @@
     const col = good ? ['#2a4030', '#6dd06d'] : bad ? ['#402a2a', '#d06d6d'] : ['#2a2c33', '#c8ccd4'];
     const txt = (g.home ? 'vs' : '@') + g.opp;
     return {
-      txt, bg: col[0], fg: col[1],
+      txt, bg: col[0], fg: col[1], cls: good ? 'good' : bad ? 'bad' : 'mid',
       tip: 'Wk ' + state.seasonWeek + ' ' + txt +
         (g.total != null ? ' · O/U ' + g.total : '') +
         (g.implied != null ? ' · implied ' + g.implied : '') +
@@ -2288,18 +2288,22 @@
   // pill, this week's projected ppg — and on the league Players page, the
   // "LINEUP +x.x" upgrade delta each free agent would add to your optimal
   // lineup. Runs on the same 2.5s scrape tick, signature-cached per row.
+  // On-page pills only (the sidebar keeps its own dark .tag styling) — Yahoo is
+  // a light theme, so these are light chips with a hairline border, mirroring
+  // ESPN 0.20.22 (v0.9.16).
   function pillHTML(text, bg, fg, title) {
     return `<span ${title ? 'title="' + esc(title) + '"' : ''} style="background:${bg};color:${fg};` +
       'font-size:10px;font-weight:700;border-radius:3px;padding:0 4px;line-height:15px;' +
-      'white-space:nowrap;flex:0 0 auto">' + esc(text) + '</span>';
+      'border:1px solid rgba(0,0,0,.08);white-space:nowrap;flex:0 0 auto">' + esc(text) + '</span>';
   }
   // Weekly odds pill — the site's exported boom/bust for this week's sim row.
   function simOddsPillHTML(sr) {
     const tip = 'From the site sim: ' + sr[3] + '% boom (≥1.5× his median game) · ' +
       sr[4] + '% bust (≤0.5× his median game)';
-    return `<span title="${esc(tip)}" style="background:#2a2c33;font-size:10px;font-weight:700;` +
-      'border-radius:3px;padding:0 4px;line-height:15px;white-space:nowrap;flex:0 0 auto">' +
-      `<span style="color:#6dd06d">▲${sr[3]}</span>&nbsp;<span style="color:#d06d6d">▼${sr[4]}</span></span>`;
+    return `<span title="${esc(tip)}" style="background:#f0f2f5;font-size:10px;font-weight:700;` +
+      'border-radius:3px;padding:0 4px;line-height:15px;border:1px solid rgba(0,0,0,.08);' +
+      'white-space:nowrap;flex:0 0 auto">' +
+      `<span style="color:#1d7a34">▲${sr[3]}</span>&nbsp;<span style="color:#b33636">▼${sr[4]}</span></span>`;
   }
   // ---- MFF matchup strip (Yahoo matchup page): our proj totals + win odds ----
   // The matchup page renders BOTH teams' slot-labeled starter rows (mirrored
@@ -2417,14 +2421,18 @@
       const pills = [];
       const isMine = state.myKeys.has(info.key);
       const verdict = isMine && calc ? calc.cls[keyOf(p)] : null;
-      if (verdict === 'go') pills.push(pillHTML('▲ START', '#2a4030', '#6dd06d', 'Projects better than a current starter — put him in'));
-      else if (verdict === 'sit') pills.push(pillHTML('▼ SIT', '#402a2a', '#d06d6d', 'A benched player projects better — take him out'));
-      else if (verdict === 'close') pills.push(pillHTML('≈ TOSS-UP', '#4a3f30', '#ffc99b', 'Projections within ' + CLOSE_PPG + ' ppg — either is fine'));
+      if (verdict === 'go') pills.push(pillHTML('▲ START', '#e2f3e6', '#1d7a34', 'Projects better than a current starter — put him in'));
+      else if (verdict === 'sit') pills.push(pillHTML('▼ SIT', '#fbe7e7', '#b33636', 'A benched player projects better — take him out'));
+      else if (verdict === 'close') pills.push(pillHTML('≈ TOSS-UP', '#fdf1dc', '#a06a00', 'Projections within ' + CLOSE_PPG + ' ppg — either is fine'));
       const g = wkOppInfo(p);
-      if (g) pills.push(pillHTML(g.txt, g.bg, g.fg, g.tip));
+      if (g) {
+        // wkOppInfo carries the sidebar's dark palette — remap to the light one
+        const oc = g.cls === 'good' ? ['#e2f3e6', '#1d7a34'] : g.cls === 'bad' ? ['#fbe7e7', '#b33636'] : ['#f0f2f5', '#5b6068'];
+        pills.push(pillHTML(g.txt, oc[0], oc[1], g.tip));
+      }
       const v = wkVal(p);
       if (v > 0 || p.pPg != null) {
-        pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#2a2c33', '#b9e28c',
+        pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#f0f2f5', '#2a2c33',
           'Projected points this week (' + state.scoringLabel + ' · MFF blend of props + Clay + Jack)'));
         if (!matchupPage) {
           const sr = simWeekRowFor(p);
@@ -2434,8 +2442,8 @@
       if (playersPage && !isMine && state.faSeen[info.key] && calc) {
         if (base == null) { mine = myPlayerObjs(); base = optimalLineup(mine).total; }
         const delta = Math.round((optimalLineup(mine.concat([p])).total - base) * 10) / 10;
-        if (delta >= 0.5) pills.push(pillHTML('LINEUP +' + delta.toFixed(1), '#2a4030', '#6dd06d', 'Adding him upgrades your optimal lineup by ' + delta.toFixed(1) + ' ppg'));
-        else if (delta > 0) pills.push(pillHTML('+' + delta.toFixed(1), '#2a3a40', '#6dc0d0', 'Marginal lineup upgrade'));
+        if (delta >= 0.5) pills.push(pillHTML('LINEUP +' + delta.toFixed(1), '#e2f3e6', '#1d7a34', 'Adding him upgrades your optimal lineup by ' + delta.toFixed(1) + ' ppg'));
+        else if (delta > 0) pills.push(pillHTML('+' + delta.toFixed(1), '#e3f0f7', '#1c6e8c', 'Marginal lineup upgrade'));
       }
       const inner = pills.join('');
       if (existing && existing.dataset.mffSig === inner) return;

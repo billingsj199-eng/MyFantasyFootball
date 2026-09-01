@@ -4672,10 +4672,10 @@
       const pills = [];
       const v = wkVal(p);
       if (v > 0 || p.pPg != null) {
+        // Proj only — no boom/bust pill here per Jack (the mirrored half-width
+        // rows are cramped; odds still live on the team page + sidebar rows).
         pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#26304d', '#00ceb8',
           'Our projected points this week (' + state.scoringLabel + ' · site sim first, league-scored, injuries priced)'));
-        const bb = boomBustFor(p, v);
-        if (bb) pills.push(bbPillHTML(bb));
       }
       const inner = pills.join('');
       if (item.dataset.mffSig === inner) continue;

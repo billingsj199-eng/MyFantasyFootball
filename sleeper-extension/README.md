@@ -80,9 +80,10 @@ room it reuses the draft's league, or lists your leagues by username).
   our numbers beside Sleeper's: an MFF chip in each header side's bottom row
   (`.matchup-header` → `.bottom-row`) with our proj total + win odds — the
   same wkVal totals + normal-approx odds as the LINEUP-tab card, teams
-  resolved from the header's "@handle" `.team-name` — and teal proj +
-  ▲boom ▼bust pills on every matched row (`.matchup-player-row-container` →
-  `.matchup-player-item`, same abbrev-name matcher), with the native game
+  resolved from the header's "@handle" `.team-name` — and a teal proj pill
+  on every matched row (`.matchup-player-row-container` →
+  `.matchup-player-item`, same abbrev-name matcher; no boom/bust pill here
+  as of v0.29.19 — the mirrored rows are cramped), with the native game
   line tinted by Vegas matchup quality. Current week only: the page's
   "Wk. N" selector is client-side, so any other week shown clears the
   decorations instead of printing wrong numbers.

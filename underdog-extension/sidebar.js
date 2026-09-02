@@ -6196,6 +6196,15 @@
         if (changes.mff_portfolio && changes.mff_portfolio.newValue) {
           state.portfolio = changes.mff_portfolio.newValue;
           shouldRender = true;
+          // v0.18.10: the page decorator skips rows it already stamped, so
+          // exposure chips painted BEFORE a sync finished kept the old
+          // denominator (Jack: sidebar said 287 drafts, rows still showed
+          // 17%/33% = the stale 6-draft values). Wipe and repaint now.
+          try {
+            if (typeof clearExposureBadges === 'function') clearExposureBadges();
+            if (typeof decoratePlayerList === 'function') decoratePlayerList();
+            console.log('[MFF/decorate] portfolio changed → badges repainted from', state.portfolio.numTeams, 'drafts');
+          } catch (_) {}
         }
         if (changes.mff_rankings && changes.mff_rankings.newValue && Array.isArray(changes.mff_rankings.newValue.rankings)) {
           if (typeof applyRankings === "function") applyRankings(changes.mff_rankings.newValue.rankings, changes.mff_rankings.newValue.irOut);

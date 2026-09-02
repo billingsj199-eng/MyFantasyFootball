@@ -3431,6 +3431,16 @@ function _tcvOppChipHtml(d) {
   return '<div class="tcv-opp-chip' + (diff ? ' tcv-opp-' + diff : '') + '" title="Week ' + wk + ': ' + (away ? 'at ' : 'vs ') + abbr + diffLbl + '"><span class="tcv-opp-pre">' + (away ? '@' : 'vs') + '</span>' + logoHtml + '</div>';
 }
 
+// Season PPG for the card's second line: actual '26 PPG to date (site scoring)
+// as soon as the in-season weekly-stats pull has 2026 rows for the player;
+// until then last season's adjusted '25 PPG. Same helper feeds the KEY label.
+function _tcvSeasonPpg(d) {
+  const act = (typeof window._seasonActualPpg2026 === 'function') ? window._seasonActualPpg2026(d) : null;
+  if (act && act.gp > 0) return { v: Math.round(act.ppg * 10) / 10, lbl: "'26 PPG (" + act.gp + ' gp)', yr: 26 };
+  const v25 = (typeof adj25ppg === 'function') ? adj25ppg(d) : null;
+  return { v: v25, lbl: "'25 PPG", yr: 25 };
+}
+
 function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   const card = document.createElement('div');
   card.className = 'tcv-card' + ((typeof currentMode !== 'undefined' && currentMode === 'weekly') ? ' tcv-card-wk' : '');
@@ -3471,8 +3481,10 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   };
 
   // Uniform stat stack (top→bottom on every card, all positions/formats):
-  //   1) '25 PPG   2) Proj PPG   3) Vegas implied Team PPG (season avg, no rank)
-  const _25Val = (typeof adj25ppg === 'function') ? adj25ppg(d) : null;
+  //   1) Proj PPG   2) season PPG ('26 to date once 2026 games are in
+  //   WEEKLY_STATS, otherwise last year's '25)   3) team total
+  const _seasonPpg = _tcvSeasonPpg(d);
+  const _25Val = _seasonPpg.v;
   const _25Color = (_25Val != null && typeof posFptsColor === 'function') ? posFptsColor(_25Val, d.s) : null;
   // WEEKLY: third slot is THIS WEEK's Vegas implied team total (DK total +
   // spread for the active week's game), not the season average. D/ST cards
@@ -3493,8 +3505,8 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     _ttSlot = { v: _tp ? _tp.ppg.toFixed(1) : null, c: _tc, lbl: 'Team PPG' };
   }
   const _statSlots = [
-    { v: _25Val, c: _25Color, lbl: "'25 PPG" },
     { v: projVal, c: projColor, lbl: 'Proj PPG' },
+    { v: _25Val, c: _25Color, lbl: _seasonPpg.lbl },
     _ttSlot
   ];
   const _statsHtml = _statSlots.map(s => fmtStat(s.v, s.c)).join('<br>');
@@ -3634,8 +3646,8 @@ function _renderTierCardView(data, container) {
   keyCard.className = 'tcv-key-card';
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
-    '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#facc15">15.8</span>/<span style="color:#22c55e">17.3</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= \'25 PPG / PROJ PPG (' + scoreFmtLabel + ') / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo (bottom-left) = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
+    '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
+    '<span>= PROJ PPG (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo (bottom-left) = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 

@@ -48,6 +48,20 @@
     } catch (_) { return null; }
   }
 
+  // Completed trades ride along from the league activity feed (message type
+  // 244 = traded player); normalize.js turns raw.activityTopics into the
+  // payload's `trades` block (site trade log for private leagues). A feed
+  // failure never blocks the export.
+  var ACTIVITY_FILTER = JSON.stringify({ topics: { filterType: { value: ["ACTIVITY_TRANSACTIONS"] }, limit: 250, limitPerMessageSet: { value: 25 }, offset: 0, sortMessageDate: { sortPriority: 1, sortAsc: false }, sortFor: { sortPriority: 2, sortAsc: false }, filterIncludeMessageTypeIds: { value: [244] } } });
+  function fetchActivity(leagueId, season) {
+    return fetch(API + season + "/segments/0/leagues/" + leagueId + "?view=kona_league_communication", {
+      credentials: "include",
+      headers: { Accept: "application/json", "X-Fantasy-Filter": ACTIVITY_FILTER }
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { var o = Array.isArray(j) ? j[0] : j; return (o && o.topics) || []; })
+      .catch(function () { return []; });
+  }
+
   function fetchLeague(leagueId, season) {
     return fetch(API + season + "/segments/0/leagues/" + leagueId + VIEWS, {
       credentials: "include",
@@ -55,6 +69,9 @@
     }).then(function (r) {
       if (!r.ok) throw new Error("ESPN API " + r.status + (r.status === 401 ? " (not logged in?)" : ""));
       return r.json();
+    }).then(function (raw) {
+      var lg = Array.isArray(raw) ? raw[0] : raw;
+      return fetchActivity(leagueId, season).then(function (topics) { if (lg) lg.activityTopics = topics; return raw; });
     });
   }
 

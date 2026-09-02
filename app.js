@@ -23242,7 +23242,8 @@ window.fmtHeight = fmtHeight;
     }
     sel.disabled = false;
     sel.innerHTML = leagues.map((lg, i) => {
-      const label = (lg.name || 'League ' + (i + 1)) + (lg.season ? ' · ' + lg.season : '');
+      const tier = (typeof window._mtSavedLeagueTier === 'function') ? window._mtSavedLeagueTier(lg) : null;
+      const label = (lg.name || 'League ' + (i + 1)) + (lg.season ? ' · ' + lg.season : '') + (tier ? ' · ' + tier.label : '');
       return '<option value="' + i + '">' + _esc(label) + '</option>';
     }).join('');
     if (_finderState.leagueIdx >= leagues.length) _finderState.leagueIdx = 0;
@@ -23742,7 +23743,10 @@ window.fmtHeight = fmtHeight;
     if (_calcPicker) _calcPicker.style.display = '';
     if (_calcLeagueSel) {
       _calcLeagueSel.innerHTML = leagues.map((lg, i) => {
-        const label = (lg.name || 'League ' + (i + 1)) + (lg.season ? ' · ' + lg.season : '');
+        // My team's tier in that league (Jack 2026-09-02) — native <option>
+        // can't hold a chip, so it rides the label text.
+        const tier = (typeof window._mtSavedLeagueTier === 'function') ? window._mtSavedLeagueTier(lg) : null;
+        const label = (lg.name || 'League ' + (i + 1)) + (lg.season ? ' · ' + lg.season : '') + (tier ? ' · ' + tier.label : '');
         return '<option value="' + i + '">' + _esc(label) + '</option>';
       }).join('');
       if (_finderState.leagueIdx >= leagues.length) _finderState.leagueIdx = 0;
@@ -48956,21 +48960,31 @@ Rules:
   // in that league, computed under the league's own format with the global
   // _mtFormat saved/restored so the active league keeps its state. Needs
   // the board (D) loaded — the card renderer re-renders once it is.
+  // Memoized per snapshot + value source (10 min) — the trade calc / finder
+  // league pickers re-populate often and share this via window._mtSavedLeagueTier.
+  const _mtSavedTierCache = new Map();
   function _mtSavedLeagueMyTier(lg) {
     try {
       if (typeof D === 'undefined' || !D.length || !lg || !lg.format) return null;
       if (!(lg.teams || []).some(t => t && t.isMyTeam)) return null;
+      const key = String(lg.leagueId || lg.name) + '|' + (lg.savedAt || '') + '|' + _mtValueSrc;
+      const hit = _mtSavedTierCache.get(key);
+      if (hit && Date.now() - hit.ts < 10 * 60 * 1000) return hit.tier;
       const prevFormat = _mtFormat;
       _mtFormat = { ...lg.format };
+      let tier = null;
       try {
         const teams = _mtScoreSnapshotTeams(lg);
         _mtComputePosRanks(teams);
         const info = _mtTeamTiers(teams);
         const me = teams.find(t => t.isMyTeam);
-        return info && me ? info.byTeam.get(me) || null : null;
+        tier = info && me ? info.byTeam.get(me) || null : null;
       } finally { _mtFormat = prevFormat; }
+      _mtSavedTierCache.set(key, { ts: Date.now(), tier });
+      return tier;
     } catch (_) { return null; }
   }
+  window._mtSavedLeagueTier = _mtSavedLeagueMyTier; // trade calc / finder league pickers
 
   window._mtLoadSavedLeague = function(idx) {
     const leagues = window._mtSavedLeagues;

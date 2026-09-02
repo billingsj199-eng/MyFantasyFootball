@@ -46025,6 +46025,12 @@ Rules:
           // background auto-refresh can diff live rosters without touching
           // the name map.
           slIds: playerIds.map(String).sort(),
+          // CURRENT lineup (Sleeper `starters`, slot order = roster_positions
+          // minus BN; "0" = empty slot → ''). Names feed the LINEUP CHECK;
+          // the raw ids ride the refresh signature so a lineup change alone
+          // re-syncs the snapshot.
+          starters: (r.starters || []).map(id => (id && String(id) !== '0') ? (sleeperNameMap[String(id)] || '') : ''),
+          slStarters: (r.starters || []).filter(id => id && String(id) !== '0').map(String).sort(),
           draftPicks: [],
           wins: r.settings ? r.settings.wins : 0,
           losses: r.settings ? r.settings.losses : 0,
@@ -46354,6 +46360,19 @@ Rules:
   // Normalized payload → cloud-save team shape: name-resolved rosters, with
   // my-team taken from the payload when it knows (extension SWID / pasted
   // team URL) and carried over from the saved snapshot otherwise.
+  // CURRENT lineup from a normalized ESPN/Yahoo team: roster entries carry a
+  // Sleeper-style `slot` (normalizers since 2026-09-02); anything not BN/IR
+  // is a starter. Payloads without slot info (older extension builds) yield
+  // null so the LINEUP CHECK can say "re-sync" instead of guessing.
+  function _mtNormalizedStarters(t) {
+    const roster = (t && t.roster) || [];
+    if (!roster.some(r => r && r.slot)) return null;
+    return roster.filter(r => r && r.slot && r.slot !== 'BN' && r.slot !== 'IR').map(r => {
+      const res = _mtResolveEspnName(r.name);
+      return res ? res.name : '';
+    });
+  }
+
   function _mtNormalizedSaveTeams(lg, savedMine) {
     const anyMine = (lg.teams || []).some(t => t.isMine);
     return (lg.teams || []).map(t => ({
@@ -46366,6 +46385,7 @@ Rules:
         const res = _mtResolveEspnName(r && r.name);
         return res ? res.name : null;
       }).filter(Boolean),
+      starters: _mtNormalizedStarters(t),
       draftPicks: [],
       wins: t.wins || 0,
       losses: t.losses || 0,
@@ -46501,6 +46521,7 @@ Rules:
           logo: t.logo || '',
           isMyTeam: !!t.isMine,
           players: players,
+          starters: _mtNormalizedStarters(t),
           draftPicks: [],
           wins: t.wins || 0,
           losses: t.losses || 0,
@@ -47953,6 +47974,12 @@ Rules:
     _mtSeasonOpen = false;
     const _ss = document.getElementById('mtSeasonSim');
     if (_ss) { _ss.style.display = 'none'; _ss.innerHTML = ''; }
+    _mtLineupCheckOpen = false;
+    const _lc = document.getElementById('mtLineupCheck');
+    if (_lc) { _lc.style.display = 'none'; _lc.innerHTML = ''; }
+    _mtActivityOpen = false;
+    const _ac = document.getElementById('mtActivity');
+    if (_ac) { _ac.style.display = 'none'; _ac.innerHTML = ''; }
     _mtRenderTeamList(teams);
 
     // Update format display
@@ -48363,6 +48390,24 @@ Rules:
       html += `<button onclick="window._mtToggleWaivers()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${wwActive ? '#4ade80' : 'var(--border)'};background:${wwActive ? '#4ade80' : 'var(--surface)'};color:${wwActive ? '#000' : 'var(--text2)'}">WAIVERS</button>`;
       const tfActive = _mtTradesOpen;
       html += `<button onclick="window._mtToggleTradeFinder()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${tfActive ? '#a855f7' : 'var(--border)'};background:${tfActive ? '#a855f7' : 'var(--surface)'};color:${tfActive ? '#fff' : 'var(--text2)'}">TRADE FINDER</button>`;
+      // Lineup check — set lineup vs best lineup (needs the platform's
+      // starters; the panel explains when a snapshot predates them).
+      {
+        const lcActive = _mtLineupCheckOpen;
+        const _lcMe = teams.find(t => t.isMyTeam);
+        const _lcA = (_lcMe && Array.isArray(_lcMe.starters) && !lcActive) ? _mtLineupAnalysis(_lcMe) : null;
+        const _lcBad = _lcA && (_lcA.delta >= 1 || _lcA.empty || _lcA.flagged.length);
+        html += `<button onclick="window._mtToggleLineupCheck()" title="Your set lineup vs the best lineup for your roster" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${lcActive ? '#22d3ee' : _lcBad ? '#f59e0b' : 'var(--border)'};background:${lcActive ? '#22d3ee' : 'var(--surface)'};color:${lcActive ? '#000' : _lcBad ? '#f59e0b' : 'var(--text2)'}">LINEUP${_lcBad ? ' · ' + (_lcA.delta >= 1 ? '+' + _lcA.delta : '!') : ''}</button>`;
+      }
+      // Activity feed — saved leagues only (the log lives on the snapshot).
+      {
+        const _acLg = _mtActiveSavedLeague();
+        if (_acLg) {
+          const acActive = _mtActivityOpen;
+          const _acNew = acActive ? 0 : _mtUnseenChanges(_acLg).length;
+          html += `<button onclick="window._mtToggleActivity()" title="Roster moves and standings changes since your last visit" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${acActive ? '#fbbf24' : _acNew ? '#fbbf24' : 'var(--border)'};background:${acActive ? '#fbbf24' : 'var(--surface)'};color:${acActive ? '#000' : _acNew ? '#fbbf24' : 'var(--text2)'}">ACTIVITY${_acNew ? ' · ' + _acNew + ' NEW' : ''}</button>`;
+        }
+      }
       // Trade log — Sleeper only (transactions API); offseason trades included.
       if (_mtActiveSource === 'sleeper' && _mtActiveSleeperId) {
         const tlActive = _mtTradeLogOpen;
@@ -49226,6 +49271,11 @@ Rules:
     return docRef.get().then(doc => {
       const existing = doc.exists && doc.data().savedLeagues ? doc.data().savedLeagues : {};
 
+      // Activity feed: diff the outgoing snapshot against the one being
+      // replaced (adds / drops / trades / standings) and append an entry.
+      // Unchanged re-saves (my-team pick, plain reload) append nothing.
+      const changeLog = _mtAppendChangeLog(existing[leagueId], teams);
+
       existing[leagueId] = {
         leagueId: leagueId,
         name: league.name || 'League',
@@ -49249,6 +49299,10 @@ Rules:
           isMyTeam: t.isMyTeam || false,
           players: t.players,
           slIds: t.slIds || [],   // raw Sleeper ids — auto-refresh diff basis
+          // Current lineup (names; '' = empty slot) + raw Sleeper starter ids
+          // for the refresh signature. null = platform payload had no slots.
+          starters: Array.isArray(t.starters) ? t.starters : null,
+          slStarters: Array.isArray(t.slStarters) ? t.slStarters : null,
           draftPicks: t.draftPicks || [],
           wins: t.wins || 0,
           losses: t.losses || 0,
@@ -49260,7 +49314,8 @@ Rules:
         savedAt: new Date().toISOString(),
         // Pick-window version: v2 = spent-draft picks excluded (2026-08-11).
         // Auto-refresh forces one full re-import on older snapshots.
-        pickV: 2
+        pickV: 2,
+        changeLog: changeLog
       };
 
       return docRef.set({ savedLeagues: existing }, { merge: true });
@@ -49283,6 +49338,10 @@ Rules:
       // leagues not in the order list fall to the end, newest first.
       leagues = _mtApplyLeagueOrder(leagues, doc.data().savedLeagueOrder);
       window._mtSavedLeagues = leagues;
+      // Activity "seen" stamps from the cloud (merged with localStorage per read).
+      if (doc.data().leagueSeenAt && typeof doc.data().leagueSeenAt === 'object') {
+        window._mtLeagueSeenAt = Object.assign({}, window._mtLeagueSeenAt || {}, doc.data().leagueSeenAt);
+      }
       _mtRenderSavedTeams(leagues);
       // Notify Trade Calc pickers so they re-populate with the fresh league list
       if (typeof window._calcRefreshLeagues === 'function') window._calcRefreshLeagues();
@@ -49567,6 +49626,12 @@ Rules:
       html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(lg.name || 'League')}${_myTier ? _mtTeamTierChip(_myTier) : ''}</div>`;
       html += `<div style="font-size:.65rem;color:var(--text2)">${teamCount} teams · ${fmtParts.join(' · ')}${lg.season ? ' · ' + lg.season : ''}${savedRel ? ' · <span title="' + _esc(savedAbs) + '" style="cursor:help">Saved ' + savedRel + '</span>' : ''}</div>`;
       html += rosterPreview;
+      // Unread activity since this league's ACTIVITY panel was last opened.
+      const _unseen = _mtUnseenChanges(lg);
+      if (_unseen.length) {
+        const _sum = _mtChangeSummary(_unseen);
+        if (_sum) html += `<div style="font-size:.62rem;color:#fbbf24;margin-top:3px"><span style="font-weight:700">● Since your last visit:</span> ${_esc(_sum)}</div>`;
+      }
       html += `</div>`;
       const _isSleeperLg = !!lg.leagueId && !isEspnId && !isYahooId;
       if (_isSleeperLg) html += `<button onclick="event.stopPropagation();window._mtToggleSavedTradeLog(${i})" title="League trade history, priced on your value board" style="padding:6px 10px;background:var(--surface2);color:#38bdf8;border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;cursor:pointer">TRADES</button>`;
@@ -49870,11 +49935,15 @@ Rules:
   // Player-id/name sets AND win-loss-points, so a week's results freshen
   // the snapshot even with zero transactions (records used to go stale
   // until a roster move happened to land).
+  // Starters ride the signature too (2026-09-02 LINEUP CHECK): a lineup
+  // change alone re-syncs the snapshot. Legacy snapshots without saved
+  // starter ids compare as '' and refresh once to acquire them.
   function _mtSleeperLiveSig(rosters) {
     return rosters.map(r => {
       const s = r.settings || {};
       const fp = (s.fpts || 0) + (s.fpts_decimal || 0) / 100;
-      return (r.players || []).map(String).sort().join(',') + '#' + (s.wins || 0) + '-' + (s.losses || 0) + '-' + fp.toFixed(2);
+      const st = (r.starters || []).filter(id => id && String(id) !== '0').map(String).sort().join(',');
+      return (r.players || []).map(String).sort().join(',') + '#' + (s.wins || 0) + '-' + (s.losses || 0) + '-' + fp.toFixed(2) + '#' + st;
     }).sort().join('|');
   }
   function _mtSleeperSavedSig(lg) {
@@ -49887,7 +49956,7 @@ Rules:
     // null never matches a live signature, so both cases refresh.
     const haveIds = teams.length && teams.every(t => Array.isArray(t.slIds)) && lg.pickV === 2;
     if (!haveIds) return null;
-    return teams.map(t => t.slIds.join(',') + '#' + (t.wins || 0) + '-' + (t.losses || 0) + '-' + (Number(t.fpts) || 0).toFixed(2)).sort().join('|');
+    return teams.map(t => t.slIds.join(',') + '#' + (t.wins || 0) + '-' + (t.losses || 0) + '-' + (Number(t.fpts) || 0).toFixed(2) + '#' + (Array.isArray(t.slStarters) ? t.slStarters.join(',') : '')).sort().join('|');
   }
   // Both ESPN sides pass through _mtResolveEspnName (live via
   // _mtEspnLiveSig, saved rosters at save time), so resolver quirks can't
@@ -49895,11 +49964,13 @@ Rules:
   function _mtEspnLiveSig(norm) {
     return (norm.teams || []).map(t => {
       const names = (t.roster || []).map(r => _mtResolveEspnName(r && r.name)).filter(Boolean).map(x => x.name).sort().join(',');
-      return names + '#' + (t.wins || 0) + '-' + (t.losses || 0) + '-' + (Number(t.fpts) || 0).toFixed(2);
+      const st = _mtNormalizedStarters(t);
+      const stSig = st ? st.filter(Boolean).sort().join(',') : '';
+      return names + '#' + (t.wins || 0) + '-' + (t.losses || 0) + '-' + (Number(t.fpts) || 0).toFixed(2) + '#' + stSig;
     }).sort().join('|');
   }
   function _mtEspnSavedSig(lg) {
-    return (lg.teams || []).map(t => (t.players || []).slice().sort().join(',') + '#' + (t.wins || 0) + '-' + (t.losses || 0) + '-' + (Number(t.fpts) || 0).toFixed(2)).sort().join('|');
+    return (lg.teams || []).map(t => (t.players || []).slice().sort().join(',') + '#' + (t.wins || 0) + '-' + (t.losses || 0) + '-' + (Number(t.fpts) || 0).toFixed(2) + '#' + (Array.isArray(t.starters) ? t.starters.filter(Boolean).slice().sort().join(',') : '')).sort().join('|');
   }
 
   // ── Background refresh of ALL saved leagues ──────────────────────────
@@ -50004,6 +50075,342 @@ Rules:
       { name: norm.name, season: String(norm.season || ''), schedule: norm.schedule || null },
       teams, _mtNormalizedFormat(norm));
     console.log('[MyTeams] Background-refreshed Yahoo league:', norm.name || id);
+  }
+
+  // ── ACTIVITY FEED ("what changed since your last visit", Jack 2026-09-02) ──
+  // Every cloud save diffs the outgoing snapshot against the one it replaces
+  // (same team ids, resolved player names) and appends one entry to the
+  // league's `changeLog`: trades (a name leaves A and lands on B while
+  // another goes the other way), adds (from the pool), drops (to the pool)
+  // and a standings flag when any W-L moved. Background refreshes only save
+  // on a signature change, so entries are real transactions. "Seen" =
+  // when the user last opened the league's ACTIVITY panel (localStorage +
+  // `leagueSeenAt` on the user doc so phones agree with desktops).
+  function _mtDiffLeagueSnapshot(prevTeams, teams) {
+    const byId = new Map();
+    (prevTeams || []).forEach(t => { if (t && t.id != null) byId.set(String(t.id), t); });
+    const moved = {};
+    const perTeam = [];
+    let records = false;
+    (teams || []).forEach(t => {
+      const old = t && t.id != null ? byId.get(String(t.id)) : null;
+      if (!old) return;
+      const oldSet = new Set(old.players || []);
+      const newSet = new Set(t.players || []);
+      const added = [...newSet].filter(n => !oldSet.has(n));
+      const dropped = [...oldSet].filter(n => !newSet.has(n));
+      if ((old.wins || 0) !== (t.wins || 0) || (old.losses || 0) !== (t.losses || 0)) records = true;
+      added.forEach(n => { (moved[n] = moved[n] || { from: [], to: [] }).to.push(t.owner); });
+      dropped.forEach(n => { (moved[n] = moved[n] || { from: [], to: [] }).from.push(t.owner); });
+      perTeam.push({ team: t.owner, mine: !!t.isMyTeam, added, dropped });
+    });
+    // Team-to-team flows; a pair with traffic both ways is a trade.
+    const flows = {};
+    Object.keys(moved).forEach(n => {
+      const m = moved[n];
+      if (m.from.length === 1 && m.to.length === 1 && m.from[0] !== m.to[0]) {
+        const k = m.from[0] + '\u0001' + m.to[0];
+        (flows[k] = flows[k] || []).push(n);
+      }
+    });
+    const trades = [];
+    const usedFlow = new Set();
+    Object.keys(flows).forEach(k => {
+      if (usedFlow.has(k)) return;
+      const parts = k.split('\u0001');
+      const rk = parts[1] + '\u0001' + parts[0];
+      if (!flows[rk]) return;
+      usedFlow.add(k); usedFlow.add(rk);
+      trades.push({ a: parts[0], b: parts[1], aToB: flows[k].slice(0, 8), bToA: flows[rk].slice(0, 8) });
+    });
+    const adds = [], drops = [];
+    perTeam.forEach(pt => {
+      const tradedIn = new Set(), tradedOut = new Set();
+      trades.forEach(tr => {
+        if (tr.a === pt.team) { tr.bToA.forEach(n => tradedIn.add(n)); tr.aToB.forEach(n => tradedOut.add(n)); }
+        if (tr.b === pt.team) { tr.aToB.forEach(n => tradedIn.add(n)); tr.bToA.forEach(n => tradedOut.add(n)); }
+      });
+      const a = pt.added.filter(n => !tradedIn.has(n));
+      const d = pt.dropped.filter(n => !tradedOut.has(n));
+      if (a.length) adds.push({ team: pt.team, mine: pt.mine, names: a.slice(0, 8) });
+      if (d.length) drops.push({ team: pt.team, mine: pt.mine, names: d.slice(0, 8) });
+    });
+    if (!trades.length && !adds.length && !drops.length && !records) return null;
+    return { trades, adds, drops, records };
+  }
+  window._mtDiffLeagueSnapshot = _mtDiffLeagueSnapshot; // debug/harness hook
+  function _mtAppendChangeLog(prev, teams) {
+    const log = (prev && Array.isArray(prev.changeLog)) ? prev.changeLog.slice() : [];
+    if (!prev || !Array.isArray(prev.teams) || !prev.teams.length) return log;
+    let diff = null;
+    try { diff = _mtDiffLeagueSnapshot(prev.teams, teams); } catch (e) { console.warn('[MyTeams] change diff failed:', e); }
+    if (!diff) return log;
+    log.push(Object.assign({ at: new Date().toISOString(), since: prev.savedAt || null }, diff));
+    return log.slice(-15);
+  }
+  window._mtLeagueSeenAt = window._mtLeagueSeenAt || {};
+  function _mtSeenAt(key) {
+    let local = null;
+    try { local = localStorage.getItem('mt_seen_' + key); } catch (_) {}
+    const cloud = window._mtLeagueSeenAt[key] || null;
+    if (local && cloud) return local > cloud ? local : cloud;
+    return local || cloud || null;
+  }
+  function _mtMarkSeen(key) {
+    if (!key) return;
+    const now = new Date().toISOString();
+    try { localStorage.setItem('mt_seen_' + key, now); } catch (_) {}
+    window._mtLeagueSeenAt[key] = now;
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (db && user) {
+      const patch = {}; patch['leagueSeenAt.' + key] = now;
+      db.collection('user_game_data').doc(user.uid).update(patch).catch(() => {
+        db.collection('user_game_data').doc(user.uid).set({ leagueSeenAt: { [key]: now } }, { merge: true }).catch(() => {});
+      });
+    }
+  }
+  function _mtUnseenChanges(lg) {
+    const log = (lg && Array.isArray(lg.changeLog)) ? lg.changeLog : [];
+    if (!log.length) return [];
+    const seen = _mtSeenAt(String(lg.leagueId || ''));
+    return seen ? log.filter(e => e && e.at && e.at > seen) : log.slice();
+  }
+  // "1 trade · 3 adds · 2 drops · standings updated" for a set of entries.
+  function _mtChangeSummary(entries) {
+    let trades = 0, adds = 0, drops = 0, rec = false;
+    entries.forEach(e => {
+      trades += (e.trades || []).length;
+      (e.adds || []).forEach(a => { adds += (a.names || []).length; });
+      (e.drops || []).forEach(d => { drops += (d.names || []).length; });
+      if (e.records) rec = true;
+    });
+    const parts = [];
+    if (trades) parts.push(trades + (trades === 1 ? ' trade' : ' trades'));
+    if (adds) parts.push(adds + (adds === 1 ? ' add' : ' adds'));
+    if (drops) parts.push(drops + (drops === 1 ? ' drop' : ' drops'));
+    if (rec) parts.push('standings updated');
+    return parts.join(' · ');
+  }
+  function _mtActiveSavedLeague() {
+    const key = _mtActiveLeagueKey();
+    if (!key) return null;
+    return (window._mtSavedLeagues || []).find(l => l && String(l.leagueId) === key) || null;
+  }
+  let _mtActivityOpen = false;
+  window._mtToggleActivity = function () {
+    const box = document.getElementById('mtActivity');
+    if (!box) return;
+    _mtActivityOpen = !_mtActivityOpen;
+    box.style.display = _mtActivityOpen ? '' : 'none';
+    if (_mtActivityOpen) {
+      _mtRenderActivity();
+      const lg = _mtActiveSavedLeague();
+      if (lg) {
+        _mtMarkSeen(String(lg.leagueId));
+        _mtRenderSavedTeams(window._mtSavedLeagues || []); // drop the card's "since last visit" line
+      }
+    }
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams); // button state / NEW badge
+  };
+  function _mtNameLink(n) {
+    const safe = String(n).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
+    return `<span onclick="window._mtOpenCardByName('${safe}', true)" style="cursor:pointer;color:var(--text);font-weight:600">${_esc(n)}</span>`;
+  }
+  function _mtRenderActivity() {
+    const box = document.getElementById('mtActivity');
+    if (!box) return;
+    const lg = _mtActiveSavedLeague();
+    const log = (lg && Array.isArray(lg.changeLog)) ? lg.changeLog.slice().reverse() : [];
+    const seen = lg ? _mtSeenAt(String(lg.leagueId || '')) : null;
+    let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#fbbf24">LEAGUE ACTIVITY</span>`;
+    html += `<span style="font-size:.6rem;color:var(--text2)">roster moves and standings changes caught by the auto-refresh · newest first</span>`;
+    html += `<button onclick="window._mtToggleActivity()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
+    html += `</div>`;
+    if (!lg) {
+      html += `<div style="font-size:.72rem;color:var(--text2)">Activity is tracked for saved leagues — sign in and this league will be saved automatically.</div>`;
+    } else if (!log.length) {
+      html += `<div style="font-size:.72rem;color:var(--text2)">Nothing logged yet. Each time this league auto-refreshes with a roster or standings change, the moves land here.</div>`;
+    } else {
+      const teamOf = n => (window._mtTeams || []).find(t => t.owner === n);
+      const teamHtml = n => {
+        const t = teamOf(n);
+        return `<b style="color:${t && t.isMyTeam ? 'var(--accent)' : 'var(--text)'}">${_esc(n)}</b>`;
+      };
+      const list = ns => (ns || []).map(_mtNameLink).join(', ');
+      html += `<div style="display:flex;flex-direction:column;gap:6px">`;
+      log.forEach(e => {
+        const isNew = !seen || (e.at && e.at > seen);
+        html += `<div style="padding:7px 10px;border:1px solid ${isNew ? '#fbbf2455' : 'var(--border)'};border-radius:6px;background:${isNew ? 'rgba(251,191,36,.05)' : 'var(--bg)'}">`;
+        html += `<div style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;margin-bottom:3px">${_esc(_mtRelTime(e.at))}${e.at ? ' · ' + _esc(new Date(e.at).toLocaleString()) : ''}${isNew ? ' <span style="color:#fbbf24;font-weight:700">NEW</span>' : ''}</div>`;
+        const lines = [];
+        (e.trades || []).forEach(tr => {
+          lines.push(`<span style="color:#38bdf8;font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">TRADE</span>${teamHtml(tr.a)} sent ${list(tr.aToB)} to ${teamHtml(tr.b)} for ${list(tr.bToA)}`);
+        });
+        (e.adds || []).forEach(a => {
+          lines.push(`<span style="color:#22c55e;font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">ADD</span>${teamHtml(a.team)} added ${list(a.names)}`);
+        });
+        (e.drops || []).forEach(d => {
+          lines.push(`<span style="color:#ef4444;font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">DROP</span>${teamHtml(d.team)} dropped ${list(d.names)}`);
+        });
+        if (e.records) lines.push(`<span style="color:#a855f7;font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">STANDINGS</span><span style="color:var(--text2)">Records updated — week results are in</span>`);
+        html += lines.map(l => `<div style="font-size:.72rem;color:var(--text2);line-height:1.5">${l}</div>`).join('');
+        html += `</div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
+    box.innerHTML = html;
+  }
+
+  // ── LINEUP CHECK (Jack 2026-09-02: "compare to what you actually set") ──
+  // The platform's CURRENT starters (team.starters — Sleeper `starters`,
+  // ESPN lineupSlotId, Yahoo slot column) against the site's best lineup
+  // for the same roster: weekly basis in-season (props/Vegas/sim-adjusted,
+  // byes + ruled-out benched), season PPG otherwise. Moves pair a bench
+  // player who should start with the starter he replaces at a compatible
+  // slot. Also a league-wide "left on the bench" table for every team the
+  // platform reported a lineup for.
+  let _mtLineupCheckOpen = false;
+  function _mtLineupWeek() {
+    const off = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
+    return (!off || window._weeklyPublishedWeek) ? (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1) : 0;
+  }
+  function _mtLineupAnalysis(t) {
+    if (!t || !Array.isArray(t.starters)) return null;
+    const wk = _mtLineupWeek();
+    const basis = wk ? 'weekppg' : 'ppg';
+    const lu = _mtBestLineup(t.players || [], basis);
+    if (!lu) return null;
+    const info = new Map();
+    lu.slots.forEach(s => { if (s.player) info.set(s.player.name, s.player); });
+    lu.bench.forEach(p => info.set(p.name, p));
+    const optimalSet = new Set(lu.slots.map(s => s.player && s.player.name).filter(Boolean));
+    const actual = t.starters.map(n => n || '');
+    const actualSet = new Set(actual.filter(Boolean));
+    const r1 = v => Math.round(v * 10) / 10;
+    // Only players the site can value take part: IDP / unknown names are
+    // neither counted nor flagged (the optimizer skips those slots too).
+    const known = n => info.has(n) || !!_mtLookupD(n);
+    const entry = n => info.get(n) || { name: n, pos: (_mtLookupD(n) || {}).s || '?', ppg: 0, out: null, d: _mtLookupD(n) };
+    const actualPts = actual.reduce((s, n) => s + (n && info.get(n) ? info.get(n).ppg : 0), 0);
+    const optimalPts = lu.totalPpg;
+    const shouldStart = lu.slots.map(s => s.player).filter(p => p && !actualSet.has(p.name));
+    // A starter with no projection (K/DST without a model line, deep
+    // depth) is only a "sit" when the optimizer found someone better —
+    // otherwise it's noise (Denver DST on the Rville preview). Ruled-out /
+    // bye starters always stay flagged.
+    const shouldSit = actual.filter(n => n && known(n) && !optimalSet.has(n)).map(entry)
+      .filter(q => q.ppg > 0 || q.out || lu.slots.some(s => s.player && !actualSet.has(s.player.name) && (s.player.pos === q.pos)));
+    const empty = actual.filter(n => !n).length;
+    const flagged = actual.filter(n => n && info.get(n) && info.get(n).out).map(n => info.get(n));
+    // Pair moves: same position first, then flex-compatible, then SF.
+    const hasSf = ((_mtFormat && _mtFormat.rosterPositions) || []).indexOf('SUPER_FLEX') >= 0 || !!(_mtFormat && _mtFormat.sf);
+    const flexy = p => p === 'RB' || p === 'WR' || p === 'TE';
+    const compatible = (a, b) => a === b || (flexy(a) && flexy(b)) || (hasSf && (a === 'QB' || b === 'QB') && (flexy(a) || flexy(b) || a === b));
+    const sitPool = shouldSit.slice().sort((a, b) => a.ppg - b.ppg);
+    const moves = [];
+    shouldStart.slice().sort((a, b) => b.ppg - a.ppg).forEach(p => {
+      let qi = sitPool.findIndex(q => q.pos === p.pos);
+      if (qi < 0) qi = sitPool.findIndex(q => compatible(p.pos, q.pos));
+      const q = qi >= 0 ? sitPool.splice(qi, 1)[0] : null;
+      moves.push({ start: p, sit: q, gain: r1(p.ppg - (q ? q.ppg : 0)) });
+    });
+    sitPool.forEach(q => moves.push({ start: null, sit: q, gain: 0 }));
+    return { lineup: lu, basis, week: wk, actual, actualPts: r1(actualPts), optimalPts: r1(optimalPts), delta: r1(optimalPts - actualPts), shouldStart, shouldSit, moves, empty, flagged, entry };
+  }
+  window._mtToggleLineupCheck = function () {
+    const box = document.getElementById('mtLineupCheck');
+    if (!box) return;
+    _mtLineupCheckOpen = !_mtLineupCheckOpen;
+    box.style.display = _mtLineupCheckOpen ? '' : 'none';
+    if (_mtLineupCheckOpen) _mtRenderLineupCheck();
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+  };
+  function _mtRenderLineupCheck() {
+    const box = document.getElementById('mtLineupCheck');
+    if (!box || !window._mtTeams || !window._mtTeams.length) return;
+    const teams = window._mtTeams;
+    const me = teams.find(t => t.isMyTeam);
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a855f7', DST: '#94a3b8' };
+    const posBadge = p => `<span style="font-size:.55rem;font-weight:700;color:${posColors[p] || 'var(--text2)'};padding:1px 4px;border-radius:3px;background:${(posColors[p] || '#666')}20">${_esc(p || '?')}</span>`;
+    const wk = _mtLineupWeek();
+    const basisLbl = wk ? 'WK ' + wk + ' PROJ' : 'SEASON PROJ';
+    let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#22d3ee">LINEUP CHECK · ${basisLbl}</span>`;
+    html += `<span style="font-size:.6rem;color:var(--text2)">your set lineup vs the best lineup for your roster${wk ? ' — weekly props/Vegas/sim-adjusted, byes and ruled-out players benched' : ''}</span>`;
+    html += `<button onclick="window._mtToggleLineupCheck()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
+    html += `</div>`;
+    if (!me) {
+      html += `<div style="font-size:.72rem;color:var(--text2)">Pick your team in the <b>My Team</b> dropdown first.</div>`;
+    } else if (!Array.isArray(me.starters)) {
+      html += `<div style="font-size:.72rem;color:var(--text2)">No lineup data in this snapshot yet — it arrives on the next sync${_mtActiveSource === 'espn' ? ' (private ESPN leagues: re-export from the ESPN Helper extension)' : ''}.</div>`;
+    } else {
+      const a = _mtLineupAnalysis(me);
+      if (!a) {
+        html += `<div style="font-size:.72rem;color:var(--text2)">Couldn't build a lineup for this league's roster settings.</div>`;
+      } else {
+        const good = a.delta < 0.5 && !a.empty && !a.flagged.length;
+        const chipCol = good ? '#22c55e' : a.delta >= 5 || a.empty || a.flagged.length ? '#ef4444' : '#f59e0b';
+        const chipTxt = good ? '✓ LINEUP IS OPTIMAL' : (a.delta >= 0.5 ? '+' + a.delta + ' PPG ON YOUR BENCH' : 'CHECK YOUR LINEUP');
+        html += `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">`;
+        html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:${chipCol};background:${chipCol}15;border:1px solid ${chipCol};border-radius:6px;padding:3px 10px">${chipTxt}</span>`;
+        html += `<span style="font-size:.72rem;color:var(--text2)">Set lineup <b style="color:var(--text)">${a.actualPts}</b> · best lineup <b style="color:#22c55e">${a.optimalPts}</b></span>`;
+        if (a.empty) html += `<span style="font-size:.62rem;font-weight:700;color:#ef4444;background:#ef444418;border:1px solid #ef4444;border-radius:3px;padding:1px 6px">${a.empty} EMPTY SLOT${a.empty > 1 ? 'S' : ''}</span>`;
+        if (a.flagged.length) html += `<span title="${_esc(a.flagged.map(p => p.name + ' (' + p.out + ')').join(', '))}" style="font-size:.62rem;font-weight:700;color:#ef4444;background:#ef444418;border:1px solid #ef4444;border-radius:3px;padding:1px 6px;cursor:help">${a.flagged.length} STARTER${a.flagged.length > 1 ? 'S' : ''} ON BYE/OUT</span>`;
+        html += `</div>`;
+        if (a.moves.length) {
+          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--text2);margin-bottom:4px">SUGGESTED MOVES</div>`;
+          html += `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
+          a.moves.forEach(m => {
+            html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px">`;
+            if (m.start) html += `<span style="color:#22c55e;font-weight:700;font-size:.62rem">▲ START</span>${posBadge(m.start.pos)}${_mtNameLink(m.start.name)}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:#22c55e">${m.start.ppg}</span>`;
+            if (m.start && m.sit) html += `<span style="color:var(--text2);font-size:.7rem">over</span>`;
+            if (m.sit) html += `<span style="color:#ef4444;font-weight:700;font-size:.62rem">▼ SIT</span>${posBadge(m.sit.pos)}${_mtNameLink(m.sit.name)}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:#ef4444">${m.sit.ppg > 0 ? m.sit.ppg : '—'}</span>${m.sit.out ? '<span style="font-size:.55rem;font-weight:700;color:#ef4444">' + m.sit.out + '</span>' : ''}`;
+            if (m.start && m.gain > 0) html += `<span style="margin-left:auto;font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:#22c55e">+${m.gain}</span>`;
+            if (!m.start && m.sit) html += `<span style="margin-left:auto;font-size:.6rem;color:var(--text2)">${m.sit.out ? 'not playing' : 'no projection'} — nobody better on your bench</span>`;
+            html += `</div>`;
+          });
+          html += `</div>`;
+        }
+        // Set lineup (actual) + bench, side by side; wraps on mobile.
+        const benchNames = (me.players || []).filter(n => !a.actual.includes(n));
+        const row = (n, mark) => {
+          const p = a.entry(n);
+          const col = p.ppg >= 15 ? '#22c55e' : p.ppg >= 10 ? '#4ade80' : p.ppg >= 6 ? '#facc15' : p.ppg > 0 ? '#f59e0b' : 'var(--text2)';
+          return `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid rgba(30,42,66,.4);${mark === 'sit' ? 'background:rgba(239,68,68,.07)' : mark === 'start' ? 'background:rgba(34,197,94,.08)' : ''}">${mark === 'sit' ? '<span style="color:#ef4444;font-size:.6rem;font-weight:700">▼</span>' : mark === 'start' ? '<span style="color:#22c55e;font-size:.6rem;font-weight:700">▲</span>' : '<span style="width:8px"></span>'}${posBadge(p.pos)}<span style="flex:1;min-width:0;font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_mtNameLink(n)}</span>${p.out ? '<span style="font-size:.55rem;font-weight:700;color:#ef4444">' + p.out + '</span>' : ''}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:${col}">${p.ppg > 0 ? p.ppg : '—'}</span></div>`;
+        };
+        const sitSet = new Set(a.shouldSit.map(p => p.name));
+        const startSet = new Set(a.shouldStart.map(p => p.name));
+        html += `<div style="display:flex;gap:12px;flex-wrap:wrap">`;
+        html += `<div style="flex:1 1 260px;min-width:0"><div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--text2);margin-bottom:4px">YOUR SET LINEUP · ${a.actualPts}</div>`;
+        a.actual.forEach(n => {
+          html += n ? row(n, sitSet.has(n) ? 'sit' : '') : `<div style="padding:4px 8px;border-bottom:1px solid rgba(30,42,66,.4);font-size:.7rem;color:#ef4444;font-weight:700">EMPTY SLOT</div>`;
+        });
+        html += `</div>`;
+        html += `<div style="flex:1 1 260px;min-width:0"><div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--text2);margin-bottom:4px">BENCH</div>`;
+        benchNames.map(n => ({ n, p: a.entry(n) })).sort((x, y) => y.p.ppg - x.p.ppg).forEach(x => { html += row(x.n, startSet.has(x.n) ? 'start' : ''); });
+        if (!benchNames.length) html += `<div style="font-size:.7rem;color:var(--text2);padding:4px 8px">Empty bench.</div>`;
+        html += `</div></div>`;
+      }
+    }
+    // League-wide lineup efficiency (every team the platform reported a lineup for).
+    const rows = teams.filter(t => Array.isArray(t.starters)).map(t => ({ t, a: _mtLineupAnalysis(t) })).filter(x => x.a);
+    if (rows.length >= 2) {
+      rows.sort((x, y) => y.a.delta - x.a.delta);
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--text2);margin:14px 0 4px">LEAGUE · POINTS LEFT ON THE BENCH</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px">`;
+      rows.forEach(x => {
+        const col = x.a.delta >= 5 ? '#ef4444' : x.a.delta >= 1 ? '#f59e0b' : '#22c55e';
+        html += `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--bg);border:1px solid ${x.t.isMyTeam ? 'var(--accent)' : 'var(--border)'};border-radius:6px;font-size:.7rem">${_mtTeamLogoHtml(x.t, 18)}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${x.t.isMyTeam ? 'var(--accent)' : 'var(--text)'}">${_esc(x.t.owner)}</span><span style="color:var(--text2)">${x.a.actualPts}</span><span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:${col};min-width:34px;text-align:right">${x.a.delta > 0 ? '−' + x.a.delta : '✓'}</span></div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
+    box.innerHTML = html;
   }
 
   window._mtDeleteSavedLeague = function(leagueId) {

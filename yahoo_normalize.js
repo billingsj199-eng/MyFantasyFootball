@@ -97,7 +97,7 @@
       if (!slotLbl) continue;
       if (slotLbl !== "BN" && slotLbl !== "IR") slots.push(slotLbl);
       var info = parsePlayerCell(row);
-      if (info) roster.push(info);
+      if (info) { info.slot = slotLbl; roster.push(info); } // current lineup slot → site LINEUP CHECK
     }
     if (!slots.length) return null;
     return { roster: roster, slots: slots };

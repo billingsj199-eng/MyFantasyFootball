@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-02u" as="script">
+<link rel="preload" href="app.js?v=2026-09-02v" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2411,6 +2411,83 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- SLEEPER SECTION -->
 <div id="mtSectionSleeper">
 
+<!-- League View (populated after import) — sits at the top once a league is loaded.
+     Header (2026-09-02 declutter): ‹ MY LEAGUES back button + a league switcher
+     <select> over the saved leagues (name · tier), so changing leagues is one pick. -->
+<div id="mtLeagueView" style="display:none">
+<div id="mtLeagueHeader" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+<button onclick="window._mtBackToLeagues()" title="Back to your leagues" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">‹ MY LEAGUES</button>
+<select id="mtLeagueSwitch" onchange="window._mtSwitchLeague(this.value)" title="Switch league" style="display:none;max-width:340px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;cursor:pointer"></select>
+<span id="mtLeagueName" style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text)">LEAGUE</span>
+<span id="mtLeagueInfo" style="font-size:.7rem;color:var(--text2)"></span>
+</div>
+
+<!-- Draft board (redraft Sleeper leagues — filled by _mtToggleDraftBoard) -->
+<div id="mtDraftBoard" style="display:none;margin-bottom:16px"></div>
+
+<!-- Waiver wire (best available free agents — filled by _mtToggleWaivers) -->
+<div id="mtWaiverWire" style="display:none;margin-bottom:16px"></div>
+
+<!-- Trade finder (league-aware suggestions — filled by _mtToggleTradeFinder) -->
+<div id="mtTradeFinder" style="display:none;margin-bottom:16px"></div>
+
+<!-- This-week matchups (head-to-head + win prob — filled by _mtToggleMatchups) -->
+<div id="mtMatchups" style="display:none;margin-bottom:16px"></div>
+
+<!-- League trade log (completed trades priced on the value board — filled by _mtToggleTradeLog) -->
+<div id="mtTradeLog" style="display:none;margin-bottom:16px"></div>
+
+<!-- Season outlook (projected records + playoff odds — filled by _mtToggleSeason) -->
+<div id="mtSeasonSim" style="display:none;margin-bottom:16px"></div>
+
+<!-- Power Rankings -->
+<div id="mtPowerRankings" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+
+<!-- Expanded Team View -->
+<!-- Team details now render inline below each standings row (#mtTeamDetailInline-N inside #mtPowerRankings) -->
+
+</div>
+
+<!-- Value source — one-line bar; the rankings/ADP tabs collapse underneath (2026-09-02 declutter) -->
+<div id="mtValueSrcBar" onclick="window._mtToggleValueSrc()" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 14px;margin-top:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+<span style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text)">VALUE SOURCE</span>
+<span id="mtValueSrcLabel" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;color:var(--accent)">CONSENSUS</span>
+<span style="font-size:.6rem;color:var(--text2)">team grades &amp; player values</span>
+<span id="mtValueSrcChevron" style="margin-left:auto;color:var(--text2);font-size:.8rem">▾</span>
+</div>
+<div id="mtValueSrcPanel" style="display:none;margin-top:6px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:4px">RANKINGS</div>
+<div class="trade-mode-tabs" style="margin-bottom:.5rem;background:var(--bg);padding:3px;border-radius:6px;display:inline-flex;flex-wrap:wrap">
+<button class="trade-src-tab mt-src-tab active" data-mtsrc="consensus">CONSENSUS</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="mine">MY RANKS</button>
+</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1.5px;color:var(--text2);margin:6px 0 4px">ADP SOURCE</div>
+<div class="trade-mode-tabs" style="background:var(--bg);padding:3px;border-radius:6px;display:inline-flex;flex-wrap:wrap">
+<button class="trade-src-tab mt-src-tab" data-mtsrc="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="cbs"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>CBS</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="sleeper">SLEEPER</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="ktc">KTC</button>
+</div>
+</div>
+
+<!-- Saved Teams -->
+<div id="mtSavedTeams" style="margin-top:20px"></div>
+
+<!-- Portfolio summary across saved leagues (filled by _mtRenderPortfolioSummary; the
+     2026-09-02 exposure table was dropped per Jack — Underdog tab has its own) -->
+<div id="mtPortfolio" style="margin-top:20px"></div>
+
+<!-- ADD A LEAGUE — explainer + import cards, collapsible (2026-09-02 declutter: auto-collapses once a league is saved or loaded; window._mtToggleSetup) -->
+<div id="mtSetup" style="margin-top:20px;margin-bottom:16px">
+<div onclick="window._mtToggleSetup()" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--accent)">ADD A LEAGUE</span>
+<span style="font-size:.65rem;color:var(--text2)">Sleeper · ESPN · Yahoo · or every league from a Sleeper username</span>
+<span id="mtSetupChevron" style="margin-left:auto;color:var(--text2);font-size:.8rem">▾</span>
+</div>
+<div id="mtSetupBody" style="margin-top:10px">
 <!-- Empty-state preview — what you unlock after importing a league. Auto-hides via JS once
      teams are loaded (the import grid stays at top until then for completion-rate reasons). -->
 <div id="mtImportPreview" style="margin-bottom:16px;padding:16px;background:linear-gradient(135deg,rgba(245,158,11,.04),rgba(245,158,11,.01));border:1px solid rgba(245,158,11,.18);border-radius:12px">
@@ -2492,69 +2569,8 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      in app.js (event-driven only, inert without this card). -->
 
 </div>
-
-<!-- Ranking Source Selector -->
-<div style="margin-bottom:16px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
-<span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:var(--text)">VALUE SOURCE</span>
-<span style="font-size:.65rem;color:var(--text2)">Used for team grades and player values</span>
-</div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:4px">RANKINGS</div>
-<div class="trade-mode-tabs" style="margin-bottom:.5rem;background:var(--bg);padding:3px;border-radius:6px;display:inline-flex;flex-wrap:wrap">
-<button class="trade-src-tab mt-src-tab active" data-mtsrc="consensus">CONSENSUS</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="mine">MY RANKS</button>
-</div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1.5px;color:var(--text2);margin:6px 0 4px">ADP SOURCE</div>
-<div class="trade-mode-tabs" style="background:var(--bg);padding:3px;border-radius:6px;display:inline-flex;flex-wrap:wrap">
-<button class="trade-src-tab mt-src-tab" data-mtsrc="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="cbs"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>CBS</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="sleeper">SLEEPER</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="ktc">KTC</button>
-</div>
-</div>
-
-<!-- League View (populated after import) -->
-<div id="mtLeagueView" style="display:none">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text);margin-bottom:4px">
-<span id="mtLeagueName">LEAGUE</span>
-<span id="mtLeagueInfo" style="font-size:.7rem;color:var(--text2);letter-spacing:0;font-family:'DM Sans',sans-serif;margin-left:8px"></span>
-</div>
-
-<!-- Draft board (redraft Sleeper leagues — filled by _mtToggleDraftBoard) -->
-<div id="mtDraftBoard" style="display:none;margin-bottom:16px"></div>
-
-<!-- Waiver wire (best available free agents — filled by _mtToggleWaivers) -->
-<div id="mtWaiverWire" style="display:none;margin-bottom:16px"></div>
-
-<!-- Trade finder (league-aware suggestions — filled by _mtToggleTradeFinder) -->
-<div id="mtTradeFinder" style="display:none;margin-bottom:16px"></div>
-
-<!-- This-week matchups (head-to-head + win prob — filled by _mtToggleMatchups) -->
-<div id="mtMatchups" style="display:none;margin-bottom:16px"></div>
-
-<!-- League trade log (completed trades priced on the value board — filled by _mtToggleTradeLog) -->
-<div id="mtTradeLog" style="display:none;margin-bottom:16px"></div>
-
-<!-- Season outlook (projected records + playoff odds — filled by _mtToggleSeason) -->
-<div id="mtSeasonSim" style="display:none;margin-bottom:16px"></div>
-
-<!-- Power Rankings -->
-<div id="mtPowerRankings" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
-
-<!-- Expanded Team View -->
-<!-- Team details now render inline below each standings row (#mtTeamDetailInline-N inside #mtPowerRankings) -->
-
-</div>
-
-<!-- Saved Teams -->
-<div id="mtSavedTeams" style="margin-top:20px"></div>
-
-<!-- Portfolio summary across saved leagues (filled by _mtRenderPortfolioSummary; the
-     2026-09-02 exposure table was dropped per Jack — Underdog tab has its own) -->
-<div id="mtPortfolio" style="margin-top:20px"></div>
+</div><!-- /mtSetupBody -->
+</div><!-- /mtSetup -->
 
 <!-- ASK JACK — premium weekly Q&A (1 start/sit + 1 trade per week, Tuesday
      reset). Populated by _qaRenderPanel at runtime: locked teaser for
@@ -5361,7 +5377,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-02u"></script>
+<script defer src="app.js?v=2026-09-02v"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

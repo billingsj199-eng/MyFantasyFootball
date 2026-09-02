@@ -47911,6 +47911,9 @@ Rules:
 
     window._mtTeams = teams;
     window._mtLeague = league;
+    // Header chrome: league switcher (saved leagues) + collapse the setup panel.
+    _mtPopulateLeagueSwitch();
+    _mtAutoSetupState();
     // Close any open draft board / waiver wire — this render may be a
     // different league (the draft cache makes reopening instant).
     _mtDraftBoardOpen = false;
@@ -49257,6 +49260,81 @@ Rules:
     return y === 1 ? '1 year ago' : y + ' years ago';
   }
 
+  // ── Page chrome (Jack 2026-09-02: "the top is very cluttered and we need
+  // an easier way to switch the league") ────────────────────────────────
+  // Flock-style layout: the loaded league sits at the top with a ‹ MY
+  // LEAGUES back button and a league-switcher <select> (name · tier) over
+  // the saved leagues; the value-source tabs collapse behind a one-line
+  // bar; the explainer + import cards live in a collapsible ADD A LEAGUE
+  // panel at the bottom that auto-collapses once anything is saved or
+  // loaded (a manual toggle is respected for the rest of the session).
+  let _mtSetupUserToggled = false;
+  function _mtSetSetupOpen(open) {
+    const body = document.getElementById('mtSetupBody');
+    const chev = document.getElementById('mtSetupChevron');
+    if (body) body.style.display = open ? '' : 'none';
+    if (chev) chev.textContent = open ? '▴' : '▾';
+  }
+  window._mtToggleSetup = function () {
+    _mtSetupUserToggled = true;
+    const body = document.getElementById('mtSetupBody');
+    _mtSetSetupOpen(!!(body && body.style.display === 'none'));
+  };
+  function _mtAutoSetupState() {
+    if (_mtSetupUserToggled) return;
+    const haveSomething = ((window._mtSavedLeagues || []).length > 0) || !!(window._mtTeams && window._mtTeams.length);
+    _mtSetSetupOpen(!haveSomething);
+  }
+  window._mtToggleValueSrc = function () {
+    const panel = document.getElementById('mtValueSrcPanel');
+    const chev = document.getElementById('mtValueSrcChevron');
+    if (!panel) return;
+    const open = panel.style.display === 'none';
+    panel.style.display = open ? '' : 'none';
+    if (chev) chev.textContent = open ? '▴' : '▾';
+  };
+  const _MT_SRC_NAMES = { consensus: 'CONSENSUS', jacks: "JACK'S RANKINGS", mine: 'MY RANKS', underdog: 'UNDERDOG ADP', espn: 'ESPN ADP', cbs: 'CBS ADP', sleeper: 'SLEEPER ADP', yahoo: 'YAHOO ADP', ktc: 'KTC' };
+  function _mtUpdateValueSrcLabel() {
+    const el = document.getElementById('mtValueSrcLabel');
+    if (el) el.textContent = _MT_SRC_NAMES[_mtValueSrc] || String(_mtValueSrc || '').toUpperCase();
+  }
+  function _mtActiveLeagueKey() {
+    if (_mtActiveSource === 'espn') return _mtActiveEspnId ? 'espn_' + _mtActiveEspnId : null;
+    if (_mtActiveSource === 'yahoo') return _mtActiveYahooId ? 'yahoo_' + _mtActiveYahooId : null;
+    return _mtActiveSleeperId ? String(_mtActiveSleeperId) : null;
+  }
+  function _mtPopulateLeagueSwitch() {
+    const sel = document.getElementById('mtLeagueSwitch');
+    const nameEl = document.getElementById('mtLeagueName');
+    if (!sel) return;
+    const leagues = window._mtSavedLeagues || [];
+    const key = _mtActiveLeagueKey();
+    if (!leagues.length) { sel.style.display = 'none'; if (nameEl) nameEl.style.display = ''; return; }
+    let html = '';
+    let found = false;
+    leagues.forEach((lg, i) => {
+      const tier = _mtSavedLeagueMyTier(lg);
+      const isActive = !!key && String(lg.leagueId) === key;
+      if (isActive) found = true;
+      html += `<option value="${i}"${isActive ? ' selected' : ''}>${_esc(lg.name || 'League')}${tier ? ' · ' + tier.label : ''}</option>`;
+    });
+    if (!found && window._mtLeague) html = `<option value="__current" selected>${_esc(window._mtLeague.name || 'League')} · NOT SAVED</option>` + html;
+    sel.innerHTML = html;
+    sel.style.display = '';
+    if (nameEl) nameEl.style.display = 'none';
+  }
+  window._mtSwitchLeague = function (v) {
+    if (v === '__current') return;
+    const idx = parseInt(v, 10);
+    if (!isNaN(idx) && window._mtSavedLeagues && window._mtSavedLeagues[idx]) window._mtLoadSavedLeague(idx);
+  };
+  window._mtBackToLeagues = function () {
+    const v = document.getElementById('mtLeagueView');
+    if (v) v.style.display = 'none';
+    const s = document.getElementById('mtSavedTeams');
+    if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   let _mtSavedTierRetry = false;
   window._mtRenderSavedTeams = function(leagues) { return _mtRenderSavedTeams(leagues || window._mtSavedLeagues || []); }; // debug/harness hook
   function _mtRenderSavedTeams(leagues) {
@@ -49313,6 +49391,8 @@ Rules:
     container.innerHTML = html;
     // Portfolio summary rides the same render (and the same D-boot retry).
     _mtRenderPortfolioSummary(leagues);
+    _mtPopulateLeagueSwitch();
+    _mtAutoSetupState();
   }
 
   // Score a saved snapshot's teams with current rankings under the ACTIVE
@@ -54361,6 +54441,7 @@ Rules:
   }
 
   function _mtRefreshAfterSrcChange() {
+    if (typeof _mtUpdateValueSrcLabel === 'function') _mtUpdateValueSrcLabel();
     // Re-render anything that depends on values
     if (window._mtTeams && typeof _mtRenderTeamList === 'function') {
       try { _mtRenderTeamList(window._mtTeams); } catch(e) { console.warn('[MyTeams] re-render teams failed:', e); }
@@ -54411,6 +54492,7 @@ Rules:
       _mtRefreshAfterSrcChange();
     });
   });
+  if (typeof _mtUpdateValueSrcLabel === 'function') _mtUpdateValueSrcLabel();
 
   // Hide lock icon on premium-gated tabs for premium users (icons are hardcoded in HTML)
   function _mtUpdateJacksLock() {

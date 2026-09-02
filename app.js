@@ -3428,12 +3428,12 @@ function _tcvOppChipHtml(d) {
   }
   const logoId = window._tcvAbbrToLogoId ? window._tcvAbbrToLogoId[abbr] : null;
   const logoHtml = logoId ? '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '';
-  return '<div class="tcv-opp-chip' + (diff ? ' tcv-opp-' + diff : '') + '" title="Week ' + wk + ': ' + (away ? 'at ' : 'vs ') + abbr + diffLbl + '"><span>' + (away ? '@' : 'vs') + '</span>' + logoHtml + '<span>' + abbr + '</span></div>';
+  return '<div class="tcv-opp-chip' + (diff ? ' tcv-opp-' + diff : '') + '" title="Week ' + wk + ': ' + (away ? 'at ' : 'vs ') + abbr + diffLbl + '"><span class="tcv-opp-pre">' + (away ? '@' : 'vs') + '</span>' + logoHtml + '</div>';
 }
 
 function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   const card = document.createElement('div');
-  card.className = 'tcv-card';
+  card.className = 'tcv-card' + ((typeof currentMode !== 'undefined' && currentMode === 'weekly') ? ' tcv-card-wk' : '');
   card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
   // Outline the card in its NFL team's colors
   {
@@ -3635,7 +3635,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#facc15">15.8</span>/<span style="color:#22c55e">17.3</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= \'25 PPG / PROJ PPG (' + scoreFmtLabel + ') / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> chip = W' + (window._weeklyActiveWeek || 1) + ' opponent logo (<b>green</b> soft · <i>red</i> tough matchup)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
+    '<span>= \'25 PPG / PROJ PPG (' + scoreFmtLabel + ') / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo (bottom-left) = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 

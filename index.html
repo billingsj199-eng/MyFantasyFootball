@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-02zt" as="script">
+<link rel="preload" href="app.js?v=2026-09-02zu" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1464,12 +1464,15 @@ tr:hover .watch-star{opacity:.55}
 .tcv-pos-pill.TE{background:#f59e0b}
 .tcv-pos-pill.K,.tcv-pos-pill.DST{background:#64748b}
 /* WEEKLY matchup chip (vs / @ opponent) — sits under the rank number */
-.tcv-opp-chip{position:absolute;top:22px;left:4px;z-index:3;display:inline-flex;align-items:center;gap:2px;font-family:'Bebas Neue',Impact,sans-serif;font-size:9.5px;letter-spacing:.6px;line-height:1.2;padding:1px 4px 1px 3px;border-radius:3px;background:rgba(0,0,0,.66);color:#e2e8f0;border:1px solid rgba(255,255,255,.14);white-space:nowrap;backdrop-filter:blur(2px)}
-.tcv-opp-chip img{width:14px;height:14px;object-fit:contain;display:block;filter:drop-shadow(0 0 1px rgba(0,0,0,.8))}
-.tcv-opp-chip.tcv-opp-easy{color:#4ade80;border-color:rgba(74,222,128,.55)}
-.tcv-opp-chip.tcv-opp-medium{color:#facc15;border-color:rgba(250,204,21,.45)}
-.tcv-opp-chip.tcv-opp-hard{color:#f87171;border-color:rgba(248,113,113,.55)}
-.tcv-opp-chip.tcv-opp-bye{color:#94a3b8;border-color:rgba(148,163,184,.4)}
+.tcv-opp-chip{position:absolute;bottom:26px;left:3px;z-index:3;display:inline-flex;align-items:center;gap:2px;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:.5px;line-height:1;padding:1px 3px 1px 4px;border-radius:3px;background:rgba(0,0,0,.66);color:#e2e8f0;border:1px solid rgba(255,255,255,.12);white-space:nowrap;backdrop-filter:blur(2px)}
+.tcv-opp-chip img{width:18px;height:18px;object-fit:contain;display:block;filter:drop-shadow(0 0 1px rgba(0,0,0,.8))}
+.tcv-opp-chip .tcv-opp-pre{font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.9)}
+.tcv-opp-chip.tcv-opp-easy .tcv-opp-pre{color:#4ade80}
+.tcv-opp-chip.tcv-opp-medium .tcv-opp-pre{color:#facc15}
+.tcv-opp-chip.tcv-opp-hard .tcv-opp-pre{color:#f87171}
+.tcv-opp-chip.tcv-opp-bye{color:#94a3b8;padding:2px 4px}
+/* Weekly: own-team logo moves up under the rank so the matchup chip owns the bottom-left */
+.tcv-card.tcv-card-wk .tcv-card-team{bottom:auto;top:22px}
 /* Per-player reveal cover — sits over the card while it's "covered" */
 .tcv-card-cover{display:none;position:absolute;inset:0;z-index:6;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:linear-gradient(160deg,#1e293b 0%,#0b1220 100%);cursor:pointer}
 .tcv-card.tcv-covered .tcv-card-cover{display:flex}
@@ -5414,7 +5417,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-02zt"></script>
+<script defer src="app.js?v=2026-09-02zu"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

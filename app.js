@@ -48671,7 +48671,11 @@ Rules:
 
     let _dbgFound = 0, _dbgNoD = 0, _dbgNoPpg = 0;
     const pool = playerNames.map(name => {
-      const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
+      // _mtLookupD, not a strict D.find: Sleeper names the unit "Denver
+      // Broncos" while the board says "Denver Broncos D/ST" — the strict
+      // match left every DEF slot empty and D/ST PPG out of lineup totals
+      // (found via the LINEUP CHECK, 2026-09-02).
+      const d = _mtLookupD(name);
       if (!d) { _dbgNoD++; return { name, pos: '?', ppg: 0, wkRank: null, d: null }; }
       const wkRank = wkRankByName ? (wkRankByName[name] != null ? wkRankByName[name] : null) : null;
       // Bye/ruled-out gate (weekly basis only): keep them in the pool so they
@@ -48704,9 +48708,9 @@ Rules:
       console.log('[BestLineup] Top 3:', pool.slice(0,3).map(p => p.name + '=' + p.ppg).join(', '));
     } else if (_dbgFound > 0) {
       // Debug: show what a sample player looks like
-      const sampleName = playerNames.find(n => { const d = D.find(p => p.n === n); return d && d.s !== 'K' && d.s !== 'DST'; });
+      const sampleName = playerNames.find(n => { const d = _mtLookupD(n); return d && d.s !== 'K' && d.s !== 'DST'; });
       if (sampleName) {
-        const sd = D.find(p => p.n === sampleName);
+        const sd = _mtLookupD(sampleName);
         console.log('[BestLineup] Sample player:', sampleName, 'p:', sd.p, 's25:', !!sd.s25, 'career:', sd.career ? sd.career.length : 0);
         if (sd.career && sd.career.length) {
           const last = sd.career[sd.career.length - 1];

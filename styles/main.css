@@ -194,6 +194,9 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
   #mtLeagueHeader{gap:8px!important}
   #mtLeagueSwitch{flex:1 1 100%;max-width:100%!important}
   #mtValueSrcBar .mt-vs-hint{display:none}
+  #mtOwnerSearchWrap{flex:1 1 100%;margin-left:0!important}
+  #mtOwnerSearch{width:100%!important}
+  #mtOwnerSearchResults{left:0;right:auto;max-width:100%}
   /* Underdog draft board: 12-slot grid scrolls sideways on phones — show the swipe hint */
   #udTab_board .ud-scroll-hint{display:flex!important}
   #udTab_board .ud-scroll-hint.seen{display:none!important}

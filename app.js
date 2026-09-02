@@ -49277,8 +49277,11 @@ Rules:
     db.collection('user_game_data').doc(user.uid).get().then(doc => {
       if (!doc.exists || !doc.data().savedLeagues) { _mtRenderSavedTeams([]); return; }
       const saved = doc.data().savedLeagues;
-      const leagues = Object.values(saved);
+      let leagues = Object.values(saved);
       leagues.sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
+      // User's manual order wins (cloud savedLeagueOrder, localStorage mirror);
+      // leagues not in the order list fall to the end, newest first.
+      leagues = _mtApplyLeagueOrder(leagues, doc.data().savedLeagueOrder);
       window._mtSavedLeagues = leagues;
       _mtRenderSavedTeams(leagues);
       // Notify Trade Calc pickers so they re-populate with the fresh league list
@@ -49385,6 +49388,127 @@ Rules:
     if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // ── "Who owns…?" (Flock-audit item 8, Jack 2026-09-02) ───────────────
+  // Searches every roster in the loaded league; a hit shows the owner (⭐
+  // mine) and the player's board rank, click opens that team's detail. A
+  // board player nobody rosters shows as a free agent.
+  window._mtOwnerSearch = function (q) {
+    const box = document.getElementById('mtOwnerSearchResults');
+    if (!box) return;
+    q = String(q || '').trim().toLowerCase();
+    const teams = window._mtTeams || [];
+    if (q.length < 2 || !teams.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    const hits = [];
+    teams.forEach((t, ti) => {
+      (t.players || []).forEach(name => {
+        if (String(name).toLowerCase().indexOf(q) < 0) return;
+        const d = _mtLookupD(name);
+        hits.push({ name, pos: d ? d.s : (_mtGetPlayerPos(name) || ''), rank: _mtGetPlayerRank(name), owner: t.owner, mine: !!t.isMyTeam, ti });
+      });
+    });
+    hits.sort((a, b) => a.rank - b.rank);
+    let html = '';
+    hits.slice(0, 10).forEach(h => {
+      html += `<div onmousedown="event.preventDefault()" onclick="window._mtOwnerSearchPick(${h.ti})" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(30,42,66,.5);cursor:pointer" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">` +
+        `<span style="font-size:.55rem;font-weight:700;color:var(--text2);min-width:22px">${_esc(h.pos || '')}</span>` +
+        `<span style="flex:1;min-width:0;font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(h.name)}</span>` +
+        `<span style="font-size:.62rem;color:var(--text2)">#${h.rank < 999 ? h.rank : '—'}</span>` +
+        `<span style="font-size:.68rem;font-weight:${h.mine ? 700 : 500};color:${h.mine ? 'var(--accent)' : 'var(--text)'};white-space:nowrap">${h.mine ? '⭐ ' : ''}${_esc(h.owner)}</span></div>`;
+    });
+    if (!hits.length) {
+      // Not rostered anywhere — is it a real player on the board?
+      const fa = (typeof D !== 'undefined') ? D.filter(p => p.n && p.n.toLowerCase().indexOf(q) >= 0 && !p._isFuturePick).slice(0, 5) : [];
+      if (fa.length) fa.forEach(p => { html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(30,42,66,.5)"><span style="font-size:.55rem;font-weight:700;color:var(--text2);min-width:22px">${_esc(p.s || '')}</span><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--text)">${_esc(p.n)}</span><span style="font-size:.62rem;font-weight:700;color:#22c55e">FREE AGENT</span></div>`; });
+      else html += `<div style="padding:8px 10px;font-size:.72rem;color:var(--text2)">No match</div>`;
+    }
+    box.innerHTML = html;
+    box.style.display = '';
+  };
+  window._mtOwnerSearchPick = function (ti) {
+    const box = document.getElementById('mtOwnerSearchResults');
+    const inp = document.getElementById('mtOwnerSearch');
+    if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+    if (inp) inp.value = '';
+    if (!_mtOpenTeams.has(String(ti))) window._mtShowTeam(ti);
+    const det = document.getElementById('mtTeamDetailInline-' + ti);
+    if (det) det.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // ── Saved-card tier filter + reorder (Flock-audit items 6-7) ────────
+  // Filter chips bucket the tier labels; order persists to the user doc
+  // (savedLeagueOrder) with a localStorage mirror, applied when the saved
+  // list loads. Drag-and-drop on desktop, ▲▼ arrows everywhere.
+  let _mtSavedFilter = 'all';
+  const _MT_TIER_BUCKET = {
+    contend: ['JUGGERNAUT', 'STRONG CONTENDER', 'CONTENDER', 'ALL IN', 'TITLE CONTENDER', 'PLAYOFF TEAM', 'DARK HORSE', 'OVERACHIEVER'],
+    rebuild: ['STRONG REBUILDER', 'REBUILDER', 'RETOOLING', 'LOADED']
+  };
+  function _mtSavedCardMatches(lg) {
+    if (_mtSavedFilter === 'all') return true;
+    if (_mtSavedFilter === 'dynasty') return !!(lg.format && (lg.format.type === 'dynasty' || lg.format.type === 'keeper'));
+    if (_mtSavedFilter === 'redraft') return !(lg.format && (lg.format.type === 'dynasty' || lg.format.type === 'keeper'));
+    const tier = _mtSavedLeagueMyTier(lg);
+    if (!tier) return false;
+    return (_MT_TIER_BUCKET[_mtSavedFilter] || []).indexOf(tier.label) >= 0;
+  }
+  window._mtSetSavedFilter = function (f) { _mtSavedFilter = f; _mtRenderSavedTeams(window._mtSavedLeagues || []); };
+  function _mtPersistLeagueOrder() {
+    const ids = (window._mtSavedLeagues || []).map(lg => String(lg.leagueId));
+    try { localStorage.setItem('mt_league_order', JSON.stringify(ids)); } catch (_) {}
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (db && user) db.collection('user_game_data').doc(user.uid).set({ savedLeagueOrder: ids }, { merge: true }).catch(e => console.warn('[MyTeams] order save error:', e));
+  }
+  function _mtApplyLeagueOrder(leagues, cloudOrder) {
+    let order = Array.isArray(cloudOrder) ? cloudOrder : null;
+    if (!order) { try { order = JSON.parse(localStorage.getItem('mt_league_order') || 'null'); } catch (_) { order = null; } }
+    if (!Array.isArray(order) || !order.length) return leagues;
+    const pos = {};
+    order.forEach((id, i) => { pos[String(id)] = i; });
+    return leagues.slice().sort((a, b) => {
+      const pa = pos[String(a.leagueId)], pb = pos[String(b.leagueId)];
+      if (pa == null && pb == null) return 0;
+      if (pa == null) return 1;
+      if (pb == null) return -1;
+      return pa - pb;
+    });
+  }
+  window._mtMoveSavedLeague = function (i, dir) {
+    const L = window._mtSavedLeagues || [];
+    const j = i + dir;
+    if (i < 0 || i >= L.length || j < 0 || j >= L.length) return;
+    const tmp = L[i]; L[i] = L[j]; L[j] = tmp;
+    _mtPersistLeagueOrder();
+    _mtRenderSavedTeams(L);
+  };
+  let _mtDragIdx = null;
+  function _mtWireSavedDrag(container) {
+    if (container._mtDragWired) return;
+    container._mtDragWired = true;
+    container.addEventListener('dragstart', e => {
+      const card = e.target.closest && e.target.closest('[data-mtidx]');
+      if (!card) return;
+      _mtDragIdx = parseInt(card.dataset.mtidx, 10);
+      card.style.opacity = '.5';
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(_mtDragIdx)); } catch (_) {}
+    });
+    container.addEventListener('dragend', e => { const card = e.target.closest && e.target.closest('[data-mtidx]'); if (card) card.style.opacity = ''; });
+    container.addEventListener('dragover', e => { if (_mtDragIdx == null) return; e.preventDefault(); const card = e.target.closest && e.target.closest('[data-mtidx]'); container.querySelectorAll('[data-mtidx]').forEach(c => { c.style.outline = ''; }); if (card && parseInt(card.dataset.mtidx, 10) !== _mtDragIdx) card.style.outline = '2px dashed var(--accent)'; });
+    container.addEventListener('drop', e => {
+      e.preventDefault();
+      const card = e.target.closest && e.target.closest('[data-mtidx]');
+      const from = _mtDragIdx; _mtDragIdx = null;
+      if (!card || from == null) return;
+      const to = parseInt(card.dataset.mtidx, 10);
+      if (isNaN(to) || to === from) return;
+      const L = window._mtSavedLeagues || [];
+      const [moved] = L.splice(from, 1);
+      L.splice(to, 0, moved);
+      _mtPersistLeagueOrder();
+      _mtRenderSavedTeams(L);
+    });
+  }
+
   let _mtSavedTierRetry = false;
   let _mtAutoOpenedOnce = false;
   window._mtRenderSavedTeams = function(leagues) { return _mtRenderSavedTeams(leagues || window._mtSavedLeagues || []); }; // debug/harness hook
@@ -49400,7 +49524,19 @@ Rules:
     }
 
     let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">SAVED LEAGUES <span style="font-family:system-ui,sans-serif;font-size:.6rem;letter-spacing:.2px;font-weight:400;color:var(--text2);margin-left:6px;vertical-align:2px">rosters &amp; records auto-update when you visit</span></div>';
+    // Filter chips (2+ leagues): tier buckets + format.
+    if (leagues.length >= 2) {
+      html += `<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:8px">`;
+      [['all', 'ALL', 'var(--accent)'], ['contend', 'CONTENDING', '#22c55e'], ['rebuild', 'REBUILDING', '#38bdf8'], ['dynasty', 'DYNASTY', '#a855f7'], ['redraft', 'REDRAFT', '#f472b6']].forEach(([k, lbl, col]) => {
+        const on = _mtSavedFilter === k;
+        html += `<button onclick="window._mtSetSavedFilter('${k}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${on ? col : 'var(--border)'};background:${on ? col : 'var(--surface)'};color:${on ? '#000' : 'var(--text2)'}">${lbl}</button>`;
+      });
+      html += `<span style="font-size:.55rem;color:var(--text2);margin-left:6px">drag cards or use ▲▼ to reorder</span></div>`;
+    }
+    let shown = 0;
     leagues.forEach((lg, i) => {
+      if (!_mtSavedCardMatches(lg)) return;
+      shown++;
       const teamCount = lg.teams ? lg.teams.length : 0;
       const fmtParts = [];
       if (lg.format) {
@@ -49424,7 +49560,8 @@ Rules:
         }
       }
 
-      html += `<div onclick="window._mtLoadSavedLeague(${i})" title="Click to load league" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap;cursor:pointer;transition:border-color .15s,background .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(245,158,11,.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">`;
+      html += `<div class="mt-saved-card" draggable="true" data-mtidx="${i}" onclick="window._mtLoadSavedLeague(${i})" title="Click to load league · drag to reorder" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap;cursor:pointer;transition:border-color .15s,background .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(245,158,11,.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">`;
+      if (leagues.length >= 2) html += `<div class="mt-saved-order" style="display:flex;flex-direction:column;gap:2px;flex:0 0 auto"><button onclick="event.stopPropagation();window._mtMoveSavedLeague(${i},-1)" title="Move up" ${i === 0 ? 'disabled' : ''} style="padding:0 6px;font-size:.6rem;line-height:1.3;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text2);cursor:pointer;${i === 0 ? 'opacity:.3;cursor:default' : ''}">▲</button><button onclick="event.stopPropagation();window._mtMoveSavedLeague(${i},1)" title="Move down" ${i === leagues.length - 1 ? 'disabled' : ''} style="padding:0 6px;font-size:.6rem;line-height:1.3;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text2);cursor:pointer;${i === leagues.length - 1 ? 'opacity:.3;cursor:default' : ''}">▼</button></div>`;
       const _myTier = _mtSavedLeagueMyTier(lg);
       html += `<div style="flex:1;min-width:0">`;
       html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(lg.name || 'League')}${_myTier ? _mtTeamTierChip(_myTier) : ''}</div>`;
@@ -49439,7 +49576,9 @@ Rules:
       // Inline trade-log panel for this card (Sleeper leagues; filled on demand).
       if (_isSleeperLg) html += `<div id="mtSavedTradeLog-${i}" style="display:none;margin:-2px 0 8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px"></div>`;
     });
+    if (!shown) html += `<div style="padding:10px 12px;font-size:.72rem;color:var(--text2);border:1px dashed var(--border);border-radius:8px">No saved leagues match this filter.</div>`;
     container.innerHTML = html;
+    _mtWireSavedDrag(container);
     // Portfolio summary rides the same render (and the same D-boot retry).
     _mtRenderPortfolioSummary(leagues);
     _mtPopulateLeagueSwitch();

@@ -45509,6 +45509,7 @@ Rules:
                        : null;
       _mtPlayoffSosWeeklyCache[cacheKey][d.t] = {
         label, color, rank, n, isDst: isDstView,
+        blend: d.blend, // z-score (lower = easier) — My Teams PLAYOFFS tilt
         opp: d.g.opp, home: d.g.home,
         gameTotal: d.gt, teamSpread: d.sp, impliedTotal: d.it,
         oppImplied: d.oppIt,
@@ -48141,8 +48142,8 @@ Rules:
     _mtResultsOpen = false;
     const _rs = document.getElementById('mtResults');
     if (_rs) { _rs.style.display = 'none'; _rs.innerHTML = ''; }
-    _mtDraftCapitalOpen = false; _mtByesOpen = false; _mtShareOpen = false;
-    ['mtDraftCapital', 'mtByeStress', 'mtShareCard'].forEach(id => { const el = document.getElementById(id); if (el) { el.style.display = 'none'; el.innerHTML = ''; } });
+    _mtDraftCapitalOpen = false; _mtByesOpen = false; _mtShareOpen = false; _mtPlayoffsOpen = false;
+    ['mtDraftCapital', 'mtByeStress', 'mtShareCard', 'mtPlayoffStrength'].forEach(id => { const el = document.getElementById(id); if (el) { el.style.display = 'none'; el.innerHTML = ''; } });
     // Checklist FIX → keep the lineup panel open across the load + refresh renders.
     _mtHonorLineupOpenPending();
     _mtRenderTeamList(teams);
@@ -48602,6 +48603,11 @@ Rules:
         const byActive = _mtByesOpen;
         html += `<button onclick="window._mtToggleByes()" title="Projected starters on bye, every team, every week" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${byActive ? '#facc15' : 'var(--border)'};background:${byActive ? '#facc15' : 'var(--surface)'};color:${byActive ? '#000' : 'var(--text2)'}">BYES</button>`;
       }
+      // Playoff-week strength — W15-17 lineups with per-week matchup ratings.
+      if (typeof window._mtGetPlayoffSosWeekly === 'function') {
+        const poActive = _mtPlayoffsOpen;
+        html += `<button onclick="window._mtTogglePlayoffs()" title="Best lineups for weeks 15-17 with each player's playoff matchups priced in" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${poActive ? '#f97316' : 'var(--border)'};background:${poActive ? '#f97316' : 'var(--surface)'};color:${poActive ? '#000' : 'var(--text2)'}">PLAYOFFS</button>`;
+      }
       // Share card — PNG of the power rankings for the league chat.
       {
         const shActive = _mtShareOpen;
@@ -48838,7 +48844,9 @@ Rules:
   // 'weekppg' (power-rankings WEEK lens) applies the same weekly adjustments and
   // bye/out gates but fills by adjusted PPG alone — the max-points lineup, no
   // dependency on Jack's weekly board coverage.
-  function _mtBestLineup(playerNames, basis) {
+  // ppgOverride(name, d) → per-player PPG replacing _mtGetPlayerPpg (the
+  // PLAYOFFS view feeds week-specific matchup-adjusted numbers through it).
+  function _mtBestLineup(playerNames, basis, ppgOverride) {
     basis = basis || 'ppg';
     const isWkBasis = basis === 'weekly' || basis === 'weekppg';
     let rp = _mtFormat.rosterPositions || [];
@@ -48897,7 +48905,7 @@ Rules:
       // → Clay → K/DST s25/career fallbacks). K/DST now carry real values
       // into K/DEF slots instead of a hardcoded 0 — lineup totals include
       // the whole starting lineup.
-      let ppg = _mtGetPlayerPpg(name);
+      let ppg = (typeof ppgOverride === 'function') ? (ppgOverride(name, d) || 0) : _mtGetPlayerPpg(name);
       if (isWkBasis && ppg > 0 && typeof window._weeklyAdjustPpg === 'function') {
         // Weekly sources price standard scoring — adjust the base, then
         // re-add the league's TE-premium / pass-TD delta.
@@ -51150,6 +51158,93 @@ Rules:
     });
     html += `</div>`;
     return html;
+  }
+
+  // ── PLAYOFF-WEEK STRENGTH (Jack 2026-09-02) ─────────────────────────────
+  // For each team and each fantasy playoff week (15-17): the best lineup
+  // when every player's season PPG (scoring-aware) is tilted by THAT week's
+  // position-weighted matchup rating (_mtGetPlayoffSosWeekly blend z-score:
+  // −1 = easy → +6%, +1 = hard → −6%, clamped ±15%), byes zeroed, long-term
+  // injuries (IR/PUP/season-ending) zeroed, K/DST from the fitted per-week
+  // Vegas models where a line exists. Ranked by the 3-week average; the vs
+  // SEASON column shows who the December schedule helps or hurts.
+  let _mtPlayoffsOpen = false;
+  const _MT_PLAYOFF_WEEKS = [15, 16, 17];
+  window._mtTogglePlayoffs = function () {
+    const box = document.getElementById('mtPlayoffStrength');
+    if (!box) return;
+    _mtPlayoffsOpen = !_mtPlayoffsOpen;
+    box.style.display = _mtPlayoffsOpen ? '' : 'none';
+    if (_mtPlayoffsOpen) _mtRenderPlayoffs();
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+  };
+  function _mtPlayoffWeekPpg(d, wk, basePpg) {
+    if (!d || !(basePpg > 0)) return 0;
+    const tag = d.inj ? String(d.inj) : '';
+    if (tag && typeof _isLongTermInjuryTag === 'function' && _isLongTermInjuryTag(tag)) return 0;
+    if (_mtByeWeekFor(d) === wk) return 0;
+    if ((d.s === 'K' || d.s === 'DST') && typeof _kdstProjForWeek === 'function') {
+      try { const r = _kdstProjForWeek(d, wk, basePpg); if (r && r.proj > 0) return r.proj; } catch (_) {}
+      return basePpg;
+    }
+    const r = window._mtGetPlayoffSosWeekly(d.t, d.s, wk);
+    if (!r) return basePpg;
+    let z = (typeof r.blend === 'number') ? r.blend : (r.rank && r.n > 1 ? ((r.rank - 1) / (r.n - 1)) * 2 - 1 : 0);
+    z = Math.max(-2.5, Math.min(2.5, z));
+    const mult = Math.max(0.85, Math.min(1.15, 1 - 0.06 * z));
+    return Math.round(basePpg * mult * 10) / 10;
+  }
+  function _mtRenderPlayoffs() {
+    const box = document.getElementById('mtPlayoffStrength');
+    if (!box || !window._mtTeams || !window._mtTeams.length) return;
+    const teams = window._mtTeams;
+    const baseCache = new Map();
+    const basePpg = name => { if (!baseCache.has(name)) baseCache.set(name, _mtGetPlayerPpg(name)); return baseCache.get(name); };
+    const rows = teams.map(t => {
+      const wk = {};
+      _MT_PLAYOFF_WEEKS.forEach(w => {
+        const lu = _mtBestLineup(t.players || [], 'ppg', (name, d) => _mtPlayoffWeekPpg(d, w, basePpg(name)));
+        wk[w] = lu ? lu.totalPpg : 0;
+      });
+      const avg = Math.round(_MT_PLAYOFF_WEEKS.reduce((s, w) => s + wk[w], 0) / _MT_PLAYOFF_WEEKS.length * 10) / 10;
+      const season = t.lineupPpg || 0;
+      return { t, wk, avg, season, delta: Math.round((avg - season) * 10) / 10 };
+    }).sort((a, b) => b.avg - a.avg);
+    const seasonOrder = teams.slice().sort((a, b) => (b.lineupPpg || 0) - (a.lineupPpg || 0));
+    const bestWk = {}; _MT_PLAYOFF_WEEKS.forEach(w => { bestWk[w] = Math.max(...rows.map(r => r.wk[w])); });
+    let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#f97316">PLAYOFF STRENGTH · WEEKS 15-17</span>`;
+    html += `<span style="font-size:.6rem;color:var(--text2)">best lineup each playoff week with that week's matchups priced in · byes and long-term injuries zeroed · vs SEASON = playoff average minus season lineup PPG</span>`;
+    html += `<button onclick="window._mtTogglePlayoffs()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
+    html += `</div>`;
+    const riser = rows.slice().sort((a, b) => b.delta - a.delta)[0];
+    const faller = rows.slice().sort((a, b) => a.delta - b.delta)[0];
+    html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:.66rem;color:var(--text2)">`;
+    if (rows[0]) html += `<span style="padding:3px 8px;border:1px solid #f9731655;border-radius:5px">🏆 Best in December: <b style="color:var(--text)">${_esc(rows[0].t.owner)}</b> <span style="color:#f97316;font-weight:700">${rows[0].avg}</span></span>`;
+    if (riser && riser.delta > 0) html += `<span style="padding:3px 8px;border:1px solid #22c55e55;border-radius:5px">📈 Schedule helps: <b style="color:var(--text)">${_esc(riser.t.owner)}</b> <span style="color:#22c55e;font-weight:700">+${riser.delta}</span></span>`;
+    if (faller && faller.delta < 0) html += `<span style="padding:3px 8px;border:1px solid #ef444455;border-radius:5px">📉 Schedule hurts: <b style="color:var(--text)">${_esc(faller.t.owner)}</b> <span style="color:#ef4444;font-weight:700">${faller.delta}</span></span>`;
+    html += `</div>`;
+    html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.7rem;min-width:560px">`;
+    html += `<thead><tr style="color:var(--text2);font-size:.55rem;letter-spacing:.5px;text-align:right"><th style="text-align:left;padding:4px 6px">#</th><th style="text-align:left;padding:4px 6px">TEAM</th>`;
+    _MT_PLAYOFF_WEEKS.forEach(w => { html += `<th style="padding:4px 6px">WK ${w}</th>`; });
+    html += `<th style="padding:4px 6px">PLAYOFF AVG</th><th style="padding:4px 6px">SEASON</th><th style="padding:4px 6px" title="Playoff average minus season best-lineup PPG">VS SEASON</th><th style="padding:4px 6px" title="Playoff rank vs season PPG rank">MOVE</th></tr></thead><tbody>`;
+    rows.forEach((r, i) => {
+      const mine = r.t.isMyTeam;
+      const sRank = seasonOrder.indexOf(r.t) + 1;
+      const move = sRank - (i + 1);
+      const dc = r.delta > 0.5 ? '#22c55e' : r.delta < -0.5 ? '#ef4444' : 'var(--text2)';
+      html += `<tr style="border-top:1px solid var(--border);text-align:right;${mine ? 'background:rgba(245,158,11,.08)' : ''}">`;
+      html += `<td style="text-align:left;padding:5px 6px;color:var(--text2)">${i + 1}</td>`;
+      html += `<td style="text-align:left;padding:5px 6px;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${_mtTeamLogoHtml(r.t, 18)}<span style="font-weight:${mine ? 700 : 600};color:${mine ? 'var(--accent)' : 'var(--text)'}">${_esc(r.t.owner)}</span></span></td>`;
+      _MT_PLAYOFF_WEEKS.forEach(w => { html += `<td style="padding:5px 6px;color:${r.wk[w] >= bestWk[w] ? '#22c55e' : 'var(--text)'};font-weight:${r.wk[w] >= bestWk[w] ? 700 : 400}">${r.wk[w]}</td>`; });
+      html += `<td style="padding:5px 6px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:#f97316">${r.avg}</td>`;
+      html += `<td style="padding:5px 6px;color:var(--text2)">${r.season}</td>`;
+      html += `<td style="padding:5px 6px;font-weight:700;color:${dc}">${r.delta > 0 ? '+' : ''}${r.delta}</td>`;
+      html += `<td style="padding:5px 6px;font-weight:700;color:${move > 0 ? '#22c55e' : move < 0 ? '#ef4444' : 'var(--text2)'}">${move > 0 ? '▲' + move : move < 0 ? '▼' + Math.abs(move) : '·'}</td></tr>`;
+    });
+    html += `</tbody></table></div><div style="font-size:.55rem;color:var(--text2);margin-top:4px">Matchup tilt = position-weighted P-SOS z-score per week (±6% per σ, capped ±15%); K/DST use the per-week Vegas models where a line is posted. Green week cell = league-best that week.</div></div>`;
+    box.innerHTML = html;
   }
 
   // ── SHARE CARD (Jack 2026-09-02: "share card export") ───────────────────

@@ -47762,35 +47762,23 @@ Rules:
   }
 
   // ── Team tiers (Jack 2026-09-02: "when I said tiers I meant the teams") ──
-  // Groups the league by starter-weighted strength (the TOTAL number, so it
-  // follows the DYNASTY VALUE / CONTENDER view) with gap-based breaks, the
-  // same idea as the pick-slot early/mid/late logic: sort desc, take the
-  // largest drops between neighbours, and break wherever a drop is at least
-  // _MT_TEAM_TIER_GAP of the league's top-to-bottom spread (max 4 tiers).
-  // A flat league (spread under 5% of the average) is one tier. Labels
-  // read by tier count, with separate vocabularies (Jack 2026-09-02):
-  // dynasty/keeper = roster-window framing, redraft = this-season framing.
-  const _MT_TEAM_TIER_GAP = 0.12;
+  // Bands on the "vs avg" number every row already shows, scaled to the
+  // league: r = (strength − avg) / (top − avg) above average, (strength −
+  // avg) / (avg − bottom) below — so +1 is the top team, −1 the bottom, 0
+  // the league average. Six fixed bands, each with its own label, so a
+  // tier never spans half the league (v1 used largest-gap breaks and
+  // lumped +109…+552 vs avg into one "CONTENDERS" — Jack: "not
+  // overarching, labels appropriate for each"). Follows the DYNASTY VALUE
+  // / CONTENDER view via strengthTotal. A flat league (spread under 5% of
+  // the average) is one tier. Separate vocabularies: dynasty/keeper =
+  // roster-window framing, redraft = this-season framing.
+  const _MT_TEAM_TIER_BANDS = [0.75, 0.35, 0, -0.35, -0.75]; // band i = r >= BANDS[i]; below the last = band 5
   const _MT_TEAM_TIER_LABELS = {
-    dynasty: {
-      1: ['EVEN LEAGUE'],
-      2: ['CONTENDERS', 'REBUILDING'],
-      3: ['CONTENDERS', 'RETOOLING', 'REBUILDING'],
-      4: ['DYNASTY POWERS', 'CONTENDERS', 'RETOOLING', 'REBUILDING']
-    },
-    redraft: {
-      1: ['EVEN LEAGUE'],
-      2: ['PLAYOFF TEAMS', 'LONG SHOTS'],
-      3: ['PLAYOFF TEAMS', 'BUBBLE', 'LONG SHOTS'],
-      4: ['TITLE FAVORITES', 'PLAYOFF TEAMS', 'BUBBLE', 'LONG SHOTS']
-    }
+    dynasty: ['DYNASTY POWERS', 'CONTENDERS', 'IN THE HUNT', 'RETOOLING', 'REBUILDING', 'FULL REBUILD'],
+    redraft: ['TITLE FAVORITES', 'CONTENDERS', 'IN THE HUNT', 'MIDDLE OF THE PACK', 'LONG SHOTS', 'CELLAR']
   };
-  const _MT_TEAM_TIER_COLORS = {
-    1: ['#94a3b8'],
-    2: ['#22c55e', '#ef4444'],
-    3: ['#22c55e', '#facc15', '#ef4444'],
-    4: ['#22c55e', '#4ade80', '#facc15', '#ef4444']
-  };
+  const _MT_TEAM_TIER_COLORS = ['#22c55e', '#4ade80', '#a3e635', '#facc15', '#f59e0b', '#ef4444'];
+  const _MT_TEAM_TIER_DESC = ['top of the league', 'well above average', 'above average', 'below average', 'well below average', 'bottom of the league'];
   function _mtTeamTiers(teams) {
     const n = teams ? teams.length : 0;
     if (n < 2) return null;
@@ -47798,36 +47786,37 @@ Rules:
     const v = sorted.map(t => t.strengthTotal || 0);
     const spread = v[0] - v[n - 1];
     const avg = v.reduce((s, x) => s + x, 0) / n;
-    let breaks = []; // a break AFTER sorted[i]
-    if (spread > 0 && spread >= avg * 0.05) {
-      const gaps = [];
-      for (let i = 0; i < n - 1; i++) gaps.push({ i, g: v[i] - v[i + 1] });
-      gaps.sort((a, b) => b.g - a.g);
-      for (const gp of gaps) {
-        if (breaks.length >= 3) break;
-        if (gp.g >= spread * _MT_TEAM_TIER_GAP) breaks.push(gp.i);
-      }
-      breaks.sort((a, b) => a - b);
-    }
-    const groups = [];
-    let start = 0;
-    breaks.concat([n - 1]).forEach(end => { groups.push(sorted.slice(start, end + 1)); start = end + 1; });
-    const count = groups.length;
     const isDyn = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
     const vocab = _MT_TEAM_TIER_LABELS[isDyn ? 'dynasty' : 'redraft'];
-    const labels = vocab[count] || vocab[4];
-    const colors = _MT_TEAM_TIER_COLORS[count] || _MT_TEAM_TIER_COLORS[4];
     const byTeam = new Map();
-    const tiers = groups.map((g, gi) => {
-      const tier = { idx: gi, label: labels[gi], color: colors[gi], teams: g, hi: g[0].strengthTotal || 0, lo: g[g.length - 1].strengthTotal || 0 };
-      g.forEach(t => byTeam.set(t, tier));
-      return tier;
+    if (!(spread > 0) || spread < avg * 0.05) {
+      const tier = { idx: 3, label: 'EVEN LEAGUE', color: '#94a3b8', desc: 'no real separation', teams: sorted, hi: v[0], lo: v[n - 1] };
+      sorted.forEach(t => byTeam.set(t, tier));
+      return { tiers: [tier], byTeam };
+    }
+    const up = v[0] - avg, down = avg - v[n - 1];
+    const bandOf = s => {
+      const r = s >= avg ? (up > 0 ? (s - avg) / up : 0) : (down > 0 ? (s - avg) / down : 0);
+      for (let i = 0; i < _MT_TEAM_TIER_BANDS.length; i++) if (r >= _MT_TEAM_TIER_BANDS[i]) return i;
+      return _MT_TEAM_TIER_BANDS.length;
+    };
+    const tiers = [];
+    sorted.forEach(t => {
+      const b = bandOf(t.strengthTotal || 0);
+      let tier = tiers[tiers.length - 1];
+      if (!tier || tier.idx !== b) {
+        tier = { idx: b, label: vocab[b], color: _MT_TEAM_TIER_COLORS[b], desc: _MT_TEAM_TIER_DESC[b], teams: [], hi: t.strengthTotal || 0, lo: t.strengthTotal || 0 };
+        tiers.push(tier);
+      }
+      tier.teams.push(t);
+      tier.lo = t.strengthTotal || 0;
+      byTeam.set(t, tier);
     });
     return { tiers, byTeam };
   }
   function _mtTeamTierChip(tier) {
     if (!tier) return '';
-    return ` <span title="Team tier by starter-weighted strength (${tier.teams.length} team${tier.teams.length === 1 ? '' : 's'} · ${tier.lo}–${tier.hi})" style="font-size:.5rem;font-weight:700;color:${tier.color};background:${tier.color}18;border:1px solid ${tier.color};border-radius:3px;padding:0 5px;vertical-align:1px;letter-spacing:.5px;white-space:nowrap">${tier.label}</span>`;
+    return ` <span title="Team tier — ${tier.desc || ''} by starter-weighted strength vs league avg (${tier.teams.length} team${tier.teams.length === 1 ? '' : 's'} · ${tier.lo}–${tier.hi})" style="font-size:.5rem;font-weight:700;color:${tier.color};background:${tier.color}18;border:1px solid ${tier.color};border-radius:3px;padding:0 5px;vertical-align:1px;letter-spacing:.5px;white-space:nowrap">${tier.label}</span>`;
   }
 
   function _mtRenderTeamList(teams) {

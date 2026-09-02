@@ -48986,8 +48986,6 @@ Rules:
       html += `</div>`;
     });
     container.innerHTML = html;
-    // Portfolio views ride the same render (and the same D-boot retry).
-    _mtRenderPortfolio(leagues);
   }
 
   // Score a saved snapshot's teams with current rankings under the ACTIVE
@@ -49062,93 +49060,6 @@ Rules:
     return info ? info.tier : null;
   }
   window._mtSavedLeagueTier = _mtSavedLeagueMyTier; // trade calc / finder league pickers
-
-  // ── PORTFOLIO · player exposure across every saved league ─────────────
-  // (Flock-style, Jack 2026-09-02): every player on MY team in any saved
-  // league — shares, exposure %, value (average of the per-league values,
-  // since dynasty and redraft leagues price differently), best positional
-  // rank, and which leagues. Position chips + search + top-40 fold.
-  let _mtPfPos = 'ALL', _mtPfQuery = '', _mtPfShowAll = false;
-  window._mtPfSetPos = function (pos) { _mtPfPos = pos; _mtRenderPortfolio(window._mtSavedLeagues || []); };
-  window._mtPfSearch = function (q) { _mtPfQuery = String(q || '').trim().toLowerCase(); _mtRenderPortfolio(window._mtSavedLeagues || [], true); };
-  window._mtPfToggleAll = function () { _mtPfShowAll = !_mtPfShowAll; _mtRenderPortfolio(window._mtSavedLeagues || []); };
-  function _mtPortfolioHoldings(leagues) {
-    const byName = new Map();
-    let leagueCount = 0;
-    (leagues || []).forEach(lg => {
-      const info = _mtSavedLeagueInfo(lg);
-      if (!info) return;
-      leagueCount++;
-      info.players.forEach(p => {
-        if (!p.name) return;
-        let h = byName.get(p.name);
-        if (!h) { h = { name: p.name, pos: p.pos, vals: [], leagues: [], bestPosRank: null, bestRank: 999 }; byName.set(p.name, h); }
-        h.vals.push(p.val || 0);
-        h.leagues.push(lg.name || 'League');
-        if (p.posRank && (h.bestPosRank == null || p.posRank < h.bestPosRank)) h.bestPosRank = p.posRank;
-        if (p.rank && p.rank < h.bestRank) h.bestRank = p.rank;
-      });
-    });
-    const rows = Array.from(byName.values()).map(h => ({
-      ...h,
-      shares: h.leagues.length,
-      value: Math.round(h.vals.reduce((s, v) => s + v, 0) / h.vals.length),
-      expo: leagueCount ? Math.round(h.leagues.length / leagueCount * 100) : 0
-    }));
-    rows.sort((a, b) => b.value - a.value || b.shares - a.shares || a.name.localeCompare(b.name));
-    return { rows, leagueCount };
-  }
-  function _mtRenderPortfolio(leagues, keepFocus) {
-    const box = document.getElementById('mtPortfolio');
-    if (!box) return;
-    if (typeof D === 'undefined' || !D.length) { box.innerHTML = ''; return; }
-    const { rows, leagueCount } = _mtPortfolioHoldings(leagues);
-    if (!leagueCount) { box.innerHTML = ''; return; }
-    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a855f7', DST: '#94a3b8' };
-    let filtered = rows.filter(r => (_mtPfPos === 'ALL' || r.pos === _mtPfPos) && (!_mtPfQuery || r.name.toLowerCase().indexOf(_mtPfQuery) >= 0));
-    const total = filtered.length;
-    const LIMIT = 40;
-    if (!_mtPfShowAll && !_mtPfQuery) filtered = filtered.slice(0, LIMIT);
-    let html = `<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
-    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text)">PLAYER EXPOSURE</span>`;
-    html += `<span style="font-size:.62rem;color:var(--text2)">${rows.length} players across ${leagueCount} league${leagueCount === 1 ? '' : 's'} · your teams only</span>`;
-    html += `</div>`;
-    html += `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">`;
-    ['ALL', 'QB', 'RB', 'WR', 'TE'].forEach(p => {
-      const on = _mtPfPos === p;
-      const col = p === 'ALL' ? 'var(--accent)' : posColors[p];
-      html += `<button onclick="window._mtPfSetPos('${p}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${on ? col : 'var(--border)'};background:${on ? col : 'var(--surface)'};color:${on ? (p === 'ALL' || p === 'TE' || p === 'RB' ? '#000' : '#fff') : 'var(--text2)'}">${p}</button>`;
-    });
-    html += `<input id="mtPfSearch" type="text" value="${_esc(_mtPfQuery)}" placeholder="Search player…" oninput="window._mtPfSearch(this.value)" style="margin-left:auto;padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.72rem;min-width:150px">`;
-    html += `</div>`;
-    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden">`;
-    html += `<div style="display:grid;grid-template-columns:minmax(0,1fr) 54px 54px 56px 52px;gap:6px;padding:6px 10px;font-size:.55rem;letter-spacing:.8px;color:var(--text2);border-bottom:1px solid var(--border)"><span>PLAYER</span><span style="text-align:center">POS</span><span style="text-align:center">SHARES</span><span style="text-align:center" title="Average of this player's value across the leagues you own him in">VALUE</span><span style="text-align:center" title="Share of your saved leagues that roster this player">EXPO</span></div>`;
-    if (!filtered.length) html += `<div style="padding:12px;font-size:.72rem;color:var(--text2)">No players match.</div>`;
-    filtered.forEach(r => {
-      const d = _mtLookupD(r.name);
-      const hs = d && d._slImg && typeof window._fixHeadshotUrl === 'function' ? window._fixHeadshotUrl(d._slImg) : '';
-      const pc = posColors[r.pos] || '#94a3b8';
-      const valColor = r.bestRank <= 24 ? '#22c55e' : r.bestRank <= 60 ? '#4ade80' : r.bestRank <= 120 ? '#facc15' : r.bestRank <= 200 ? '#f59e0b' : '#ef4444';
-      const safe = String(r.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
-      html += `<div style="display:grid;grid-template-columns:minmax(0,1fr) 54px 54px 56px 52px;gap:6px;align-items:center;padding:5px 10px;border-bottom:1px solid rgba(30,42,66,.4)">`;
-      html += `<div style="display:flex;align-items:center;gap:8px;min-width:0">`;
-      html += hs ? `<img src="${hs}" alt="" loading="lazy" onerror="this.style.display='none'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;object-position:center 18%;border:2px solid var(--border);background:var(--surface);flex-shrink:0">` : `<div style="width:24px;height:24px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);flex-shrink:0"></div>`;
-      html += `<div style="min-width:0"><div onclick="window._mtOpenCardByName('${safe}', true)" title="Open player card" style="font-size:.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">${_esc(r.name)}</div>`;
-      html += `<div style="font-size:.58rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(r.leagues.join(' · '))}</div></div>`;
-      html += `</div>`;
-      html += `<div style="text-align:center"><span style="font-size:.58rem;font-weight:700;color:${pc};background:${pc}20;border-radius:3px;padding:1px 5px">${_esc(r.pos || '—')}${r.bestPosRank ? r.bestPosRank : ''}</span></div>`;
-      html += `<div style="text-align:center;font-size:.78rem;font-weight:700;color:var(--text)">${r.shares}</div>`;
-      html += `<div style="text-align:center;font-size:.78rem;font-weight:700;color:${valColor}">${r.value}</div>`;
-      html += `<div style="text-align:center;font-size:.72rem;color:var(--text2)">${r.expo}%</div>`;
-      html += `</div>`;
-    });
-    if (!_mtPfQuery && total > LIMIT) {
-      html += `<div onclick="window._mtPfToggleAll()" style="padding:7px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:var(--accent);cursor:pointer">${_mtPfShowAll ? 'SHOW TOP ' + LIMIT + ' ▴' : 'SHOW ALL ' + total + ' ▾'}</div>`;
-    }
-    html += `</div>`;
-    box.innerHTML = html;
-    if (keepFocus) { const inp = document.getElementById('mtPfSearch'); if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } }
-  }
 
   window._mtLoadSavedLeague = function(idx) {
     const leagues = window._mtSavedLeagues;

@@ -5474,15 +5474,40 @@
     // v0.9.36: read existing draft IDs from chrome.storage (populated by
     // mff-bridge from the site's _udPortfolio). We'll skip these during
     // discovery so subsequent syncs only process new drafts.
+    // v0.18.9: skip a draft ONLY when this extension already holds its roster
+    // — in its own cumulative sync store (mff_portfolio_sync) or in the copy
+    // of the site's portfolio pushed by page-bridge (mff_site_drafts). The
+    // site's bare id list (mff_existing_draft_ids) is no longer a skip
+    // reason on its own: after a reinstall / storage reset it made every
+    // older draft "already in portfolio" forever, so the exposure store only
+    // ever held the newest few drafts (Jack's 6-draft denominator).
     const existingDraftIds = await new Promise((resolve) => {
       try {
-        chrome.storage.local.get(['mff_existing_draft_ids'], (res) => {
-          resolve(new Set(res && Array.isArray(res.mff_existing_draft_ids) ? res.mff_existing_draft_ids : []));
+        chrome.storage.local.get(['mff_portfolio_sync', 'mff_site_drafts', 'mff_existing_draft_ids'], (res) => {
+          const have = new Set();
+          const sync = res && res.mff_portfolio_sync;
+          if (sync && Array.isArray(sync.drafts)) {
+            for (const d of sync.drafts) {
+              if (d && d.id != null && Array.isArray(d.picks) && d.picks.length) have.add(String(d.id));
+            }
+          }
+          const site = res && res.mff_site_drafts;
+          if (site && site.byId) {
+            for (const id of Object.keys(site.byId)) {
+              if (Array.isArray(site.byId[id]) && site.byId[id].length) have.add(String(id));
+            }
+          }
+          const siteIds = (res && Array.isArray(res.mff_existing_draft_ids)) ? res.mff_existing_draft_ids.length : 0;
+          console.log('[MFF/sync] rosters held locally:', have.size,
+                      '(sync store', (sync && sync.drafts && sync.drafts.length) || 0,
+                      '· site copy', (site && site.byId) ? Object.keys(site.byId).length : 0,
+                      '· site id list', siteIds + ')');
+          resolve(have);
         });
       } catch (e) { resolve(new Set()); }
     });
     if (existingDraftIds.size) {
-      console.log('[MFF/sync] will skip', existingDraftIds.size, 'drafts already in portfolio');
+      console.log('[MFF/sync] will skip', existingDraftIds.size, 'drafts whose rosters are already held');
     }
 
     if (status) status.textContent = 'Loading cached data…';
@@ -5714,7 +5739,7 @@
         const dArr = (dRes.data && dRes.data.drafts) || [];
         for (const d of dArr) {
           if (!d || !d.id) continue;
-          if (existingDraftIds.has(d.id)) {
+          if (existingDraftIds.has(String(d.id))) {
             skippedExisting++;
             continue;
           }

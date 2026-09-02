@@ -46038,6 +46038,35 @@ Rules:
         } catch(e) { console.warn('[MyTeams] Draft picks fetch error:', e); }
       }
 
+      // 6. Head-to-head schedule — slim {week, home, away} roster-id pairs
+      // for the regular season (Sleeper posts matchups once the schedule is
+      // set; empty in the offseason). Persisted with the snapshot so Sim Lab
+      // and the SEASON view get the REAL pairings, not a round-robin.
+      try {
+        const lgSet = league.settings || {};
+        const playoffStart = +lgSet.playoff_week_start || 15;
+        league.playoffStart = playoffStart;
+        league.playoffTeams = +lgSet.playoff_teams || 6;
+        const wks = [];
+        for (let w = 1; w < playoffStart; w++) wks.push(w);
+        const lists = await Promise.all(wks.map(w =>
+          fetch(`https://api.sleeper.app/v1/league/${leagueId}/matchups/${w}`)
+            .then(r => r.ok ? r.json() : []).catch(() => [])));
+        const sched = [];
+        lists.forEach((rows, i) => {
+          const byMid = {};
+          (rows || []).forEach(m => {
+            if (m.matchup_id == null) return;
+            (byMid[m.matchup_id] = byMid[m.matchup_id] || []).push(m.roster_id);
+          });
+          Object.keys(byMid).forEach(mid => {
+            const g = byMid[mid];
+            if (g.length === 2) sched.push({ week: wks[i], home: g[0], away: g[1] });
+          });
+        });
+        league.schedule = sched.length ? sched : null;
+      } catch(e) { console.warn('[MyTeams] Sleeper schedule fetch error:', e); }
+
       return { league, teams, fmt };
   }
 
@@ -48762,6 +48791,9 @@ Rules:
         // extension/direct payload). Callers that don't carry one (my-team
         // re-save) must not wipe a previously saved schedule.
         schedule: league.schedule || (existing[leagueId] && existing[leagueId].schedule) || null,
+        // Playoff shape (Sleeper settings) — consumers default wk15 / 6 teams.
+        playoffStart: league.playoffStart || (existing[leagueId] && existing[leagueId].playoffStart) || null,
+        playoffTeams: league.playoffTeams || (existing[leagueId] && existing[leagueId].playoffTeams) || null,
         // fmtOverride: background auto-commits pass the league's own format —
         // this callback runs async, so the _mtFormat global may belong to
         // whichever league is active by then.
@@ -49129,7 +49161,14 @@ Rules:
     if (!resp.ok) return;
     const rosters = await resp.json();
     if (!Array.isArray(rosters) || !rosters.length) return;
-    if (_mtSleeperSavedSig(lg) === _mtSleeperLiveSig(rosters)) return;
+    if (_mtSleeperSavedSig(lg) === _mtSleeperLiveSig(rosters)) {
+      // Rosters unchanged — still refresh once to acquire the schedule when
+      // the snapshot predates schedule persistence and Sleeper has one posted.
+      if (lg.schedule && lg.schedule.length) return;
+      const m1 = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/matchups/1`)
+        .then(r => r.ok ? r.json() : []).catch(() => []);
+      if (!Array.isArray(m1) || !m1.length) return;
+    }
     const savedMine = (lg.teams || []).find(t => t && t.isMyTeam);
     const built = await _mtFetchSleeperLeague(leagueId, { myUid: savedMine && savedMine.ownerId });
     await _mtSaveLeagueToCloud(leagueId, built.league, built.teams, built.fmt);

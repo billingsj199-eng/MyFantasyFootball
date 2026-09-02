@@ -46151,6 +46151,62 @@ Rules:
     btn.textContent = 'IMPORT';
   };
 
+  // ── Import ALL leagues by Sleeper username (Flock-audit item 3) ────────
+  // /v1/user/<name> → user_id → /v1/user/<id>/leagues/nfl/<season> (falls
+  // back to last season before the new one exists). Every league builds
+  // headlessly with myUid = that user_id, so "my team" is right in each
+  // one without touching the dropdown; cloud saves run one at a time
+  // (parallel saves clobber the shared doc); the first league then loads
+  // into view through the normal importer. Signed-out: nothing persists —
+  // the status line says so.
+  window._mtImportSleeperUser = async function () {
+    const input = document.getElementById('mtSleeperUser');
+    const status = document.getElementById('mtSleeperStatus');
+    const btn = document.getElementById('mtSleeperUserBtn');
+    const name = ((input && input.value) || '').trim().replace(/^@/, '');
+    const say = (msg, color) => { if (status) { status.textContent = msg; status.style.color = color || ''; } };
+    if (!name) { say('Enter your Sleeper username.', '#f59e0b'); return; }
+    if (btn) { btn.disabled = true; btn.textContent = 'LOADING…'; }
+    try {
+      say('Looking up ' + name + ' on Sleeper…');
+      const uResp = await fetch('https://api.sleeper.app/v1/user/' + encodeURIComponent(name));
+      const user = uResp.ok ? await uResp.json() : null;
+      if (!user || !user.user_id) throw new Error('Sleeper user "' + name + '" not found');
+      let season = new Date().getFullYear();
+      let leagues = [];
+      for (let tries = 0; tries < 2 && !leagues.length; tries++, season--) {
+        const lResp = await fetch('https://api.sleeper.app/v1/user/' + user.user_id + '/leagues/nfl/' + season);
+        leagues = lResp.ok ? (await lResp.json()) || [] : [];
+      }
+      season++; // the season that actually had leagues
+      if (!leagues.length) throw new Error('No Sleeper leagues found for ' + name);
+      const signedIn = !!((typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null);
+      _mtMyUserId = user.user_id;
+      let done = 0;
+      const failed = [];
+      for (let i = 0; i < leagues.length; i++) {
+        const lg = leagues[i];
+        const prefix = '(' + (i + 1) + '/' + leagues.length + ') ' + (lg.name || 'League') + ': ';
+        try {
+          say(prefix + 'fetching…');
+          const built = await _mtFetchSleeperLeague(String(lg.league_id), { myUid: user.user_id, say: m => say(prefix + m) });
+          if (signedIn) { say(prefix + 'saving…'); await _mtSaveLeagueToCloud(String(lg.league_id), built.league, built.teams, built.fmt); }
+          done++;
+        } catch (e) { console.warn('[MyTeams] username import failed for', lg.name, e); failed.push(lg.name || String(lg.league_id)); }
+      }
+      // Show the first league through the normal importer (renders + saves).
+      const idInput = document.getElementById('mtSleeperLeagueId');
+      if (idInput) idInput.value = String(leagues[0].league_id);
+      await window._mtImportSleeper();
+      say('Imported ' + done + ' of ' + leagues.length + ' ' + season + ' league' + (leagues.length === 1 ? '' : 's') + ' for ' + name +
+        (signedIn ? ' — saved to your account' : ' — sign in to keep them saved') +
+        (failed.length ? ' · failed: ' + failed.join(', ') : ''), failed.length ? '#f59e0b' : '#22c55e');
+    } catch (err) {
+      say(err instanceof TypeError ? 'Couldn\'t reach Sleeper — check your connection and try again.' : 'Error: ' + err.message, '#ef4444');
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'IMPORT ALL'; }
+  };
+
   // ─── ESPN League Import (via the MFF ESPN extension) ────────────────────
   // The espn-extension content script on fantasy.espn.com normalizes leagues
   // into chrome.storage; its mff-bridge.js content script on THIS site

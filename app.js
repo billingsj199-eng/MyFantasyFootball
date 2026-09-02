@@ -47262,8 +47262,20 @@ Rules:
       (tx.draft_picks || []).forEach(pk => {
         if (String(pk.owner_id) !== String(rid)) return;
         const orig = byId[String(pk.roster_id)];
-        const val = typeof window._getPickValue === 'function' ? Math.round(window._getPickValue(rdLabel(pk.round), String(pk.season), 'mid', mode, null)) : 0;
-        assets.push({ type: 'k', name: pk.season + ' ' + rdLabel(pk.round) + (orig && String(pk.roster_id) !== String(rid) ? ' (via ' + orig.owner + ')' : ''), pos: 'PICK', val, matched: true });
+        const rd = rdLabel(pk.round), yr = String(pk.season);
+        // Price at the ORIGINAL team's projected slot (early/mid/late, or the
+        // exact pick number in a current-year draft) — the loaded league's
+        // scored teams already carry every pick with its slot assigned
+        // (_mtAssignPickSlots); find this pick by year/round/original roster
+        // wherever it now lives. Falls back to mid when unknown.
+        let slot = 'mid', pickNum = null;
+        for (const t of teams) {
+          const hit = (t.draftPicks || []).find(p => String(p.year) === yr && p.round === rd && String(p._origId != null ? p._origId : (p._origIdx != null ? (teams[p._origIdx] || {}).id : '')) === String(pk.roster_id));
+          if (hit) { slot = hit.slot || 'mid'; pickNum = hit._pickNum || null; break; }
+        }
+        const val = typeof window._getPickValue === 'function' ? Math.round(window._getPickValue(rd, yr, slot, mode, pickNum)) : 0;
+        const slotLbl = pickNum ? pickNum : (slot !== 'mid' ? slot.charAt(0).toUpperCase() + slot.slice(1) + ' ' : '');
+        assets.push({ type: 'k', name: (pickNum ? yr + ' ' + pickNum : yr + ' ' + slotLbl + rd) + (orig && String(pk.roster_id) !== String(rid) ? ' (via ' + orig.owner + ')' : ''), pos: 'PICK', val, matched: true, slot });
       });
       assets.sort((a, b) => b.val - a.val);
       const vals = assets.map(a => a.val);
@@ -47304,7 +47316,7 @@ Rules:
     const shown = ctx.mine ? priced.filter(x => x.p.sides.some(s => s.mine)) : priced;
     let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
       `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#38bdf8">TRADE LOG</span>` +
-      `<span style="font-size:.6rem;color:var(--text2)">${trades.length} completed trade${trades.length === 1 ? '' : 's'} · priced on today's ${_mtValueSrc === 'jacks' ? "Jack's" : _mtValueSrc === 'mine' ? 'My Ranks' : _mtValueSrc} board, calc package math · picks at mid slot</span>`;
+      `<span style="font-size:.6rem;color:var(--text2)">${trades.length} completed trade${trades.length === 1 ? '' : 's'} · priced on today's ${_mtValueSrc === 'jacks' ? "Jack's" : _mtValueSrc === 'mine' ? 'My Ranks' : _mtValueSrc} board, calc package math · picks at the original team's projected slot</span>`;
     if (hasMine) {
       html += `<span style="margin-left:auto;display:flex;gap:2px;background:var(--surface2);padding:2px;border-radius:6px">`;
       [[false, 'ALL'], [true, 'MINE']].forEach(([v, lbl]) => {
@@ -47397,7 +47409,15 @@ Rules:
       if (!trades) trades = _mtTradeLogCache['sleeper_' + leagueId] = await _mtFetchSleeperTrades(leagueId);
       if (box.style.display === 'none') return;
       _mtTradeLogCache[key] = trades;
-      _mtRenderTradeLog(trades, { key, box, teams: lg.teams || [], mode: _mtModeForFormat(lg.format), mine: !!((_mtTradeLogCtx[key] || {}).mine) });
+      // Score the snapshot under its own format so picks carry projected
+      // slots (same as the loaded-league path); fall back to raw teams.
+      let teams = lg.teams || [];
+      if (lg.format && typeof D !== 'undefined' && D.length) {
+        const prevFormat = _mtFormat;
+        _mtFormat = { ...lg.format };
+        try { teams = _mtScoreSnapshotTeams(lg); } catch (_) { teams = lg.teams || []; } finally { _mtFormat = prevFormat; }
+      }
+      _mtRenderTradeLog(trades, { key, box, teams, mode: _mtModeForFormat(lg.format), mine: !!((_mtTradeLogCtx[key] || {}).mine) });
     } catch (err) {
       console.warn('[MyTeams] Saved trade log error:', err);
       box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:6px 0">Couldn\'t load trades: ' + _esc(err.message) + '</div>';
@@ -47914,6 +47934,8 @@ Rules:
     // Header chrome: league switcher (saved leagues) + collapse the setup panel.
     _mtPopulateLeagueSwitch();
     _mtAutoSetupState();
+    // Remember the league for next visit (auto-open — Flock's "default league").
+    try { const k = _mtActiveLeagueKey(); if (k) localStorage.setItem('mt_last_opened', k); } catch (_) {}
     // Close any open draft board / waiver wire — this render may be a
     // different league (the draft cache makes reopening instant).
     _mtDraftBoardOpen = false;
@@ -49364,6 +49386,7 @@ Rules:
   };
 
   let _mtSavedTierRetry = false;
+  let _mtAutoOpenedOnce = false;
   window._mtRenderSavedTeams = function(leagues) { return _mtRenderSavedTeams(leagues || window._mtSavedLeagues || []); }; // debug/harness hook
   function _mtRenderSavedTeams(leagues) {
     const container = document.getElementById('mtSavedTeams');
@@ -49421,6 +49444,18 @@ Rules:
     _mtRenderPortfolioSummary(leagues);
     _mtPopulateLeagueSwitch();
     _mtAutoSetupState();
+    // Auto-open the league you had open last time (Jack 2026-09-02) — once
+    // per page load, only if nothing is loaded yet, and only once the board
+    // has booted (scoring needs D). Removed leagues simply don't match.
+    if (!_mtAutoOpenedOnce && !(window._mtTeams && window._mtTeams.length) && typeof D !== 'undefined' && D.length) {
+      let key = null;
+      try { key = localStorage.getItem('mt_last_opened'); } catch (_) {}
+      const idx = key ? leagues.findIndex(lg => String(lg.leagueId) === key) : -1;
+      if (idx >= 0) {
+        _mtAutoOpenedOnce = true;
+        try { window._mtLoadSavedLeague(idx); } catch (e) { console.warn('[MyTeams] auto-open failed:', e); }
+      }
+    }
   }
 
   // Score a saved snapshot's teams with current rankings under the ACTIVE
@@ -49844,6 +49879,7 @@ Rules:
       if (!doc.exists || !doc.data().savedLeagues) return;
       const saved = doc.data().savedLeagues;
       delete saved[leagueId];
+      try { if (localStorage.getItem('mt_last_opened') === String(leagueId)) localStorage.removeItem('mt_last_opened'); } catch (_) {}
       return docRef.set({ savedLeagues: saved }, { merge: true });
     })
     .then(() => {

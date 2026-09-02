@@ -215,6 +215,12 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 @media (min-width:760px){
   .udexp-headshot{width:44px!important;height:44px!important}
 }
+/* Mid widths (small laptop / iPad landscape / narrow window, 2026-09-02): five
+   side-by-side columns leave names ~50px, so wrap to three per row here. */
+@media (min-width:760px) and (max-width:1000px){
+  .mt-roster-grouped{flex-wrap:wrap!important}
+  .mt-roster-grouped .mt-pos-section{flex:1 1 30%!important;min-width:30%!important;margin-bottom:12px!important}
+}
 /* Desktop — all positions (plus PICKS) side by side as columns, players fall
    underneath (Flock-style). Each player is a single line: headshot + name
    (truncates) + RANK / POS RANK / PPG stat blocks on the right. */

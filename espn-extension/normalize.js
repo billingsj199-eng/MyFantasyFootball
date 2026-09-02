@@ -138,7 +138,10 @@
           espnId: p.id,
           name: name,
           pos: pos,
-          team: PRO_TEAM[p.proTeamId] || ""
+          team: PRO_TEAM[p.proTeamId] || "",
+          // Current lineup slot (Sleeper-style label; null = IR/IDP/unknown)
+          // — the site's LINEUP CHECK compares it to the best lineup.
+          slot: LINEUP_SLOT[e.lineupSlotId] || null
         };
       }).filter(Boolean);
       var rec = (t.record && t.record.overall) || {};

@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-01n" as="script">
+<link rel="preload" href="app.js?v=2026-09-02a" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -3303,7 +3303,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="trade-layout">
 <!-- Side A -->
 <div class="trade-side">
-<div class="trade-side-label side-a">TEAM A</div>
+<div class="trade-side-label side-a">TEAM B RECEIVES<span style="display:block;font-size:.6rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">from Team A</span></div>
 <div class="trade-search-wrap">
 <svg class="trade-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-width="2" d="m21 21-4.35-4.35"/></svg>
 <input type="text" class="trade-search" id="tradeSearchA" placeholder="Search player..." autocomplete="off">
@@ -3334,7 +3334,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 
 <!-- Side B -->
 <div class="trade-side">
-<div class="trade-side-label side-b">TEAM B</div>
+<div class="trade-side-label side-b">TEAM A RECEIVES<span style="display:block;font-size:.6rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">from Team B</span></div>
 <div class="trade-search-wrap">
 <svg class="trade-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-width="2" d="m21 21-4.35-4.35"/></svg>
 <input type="text" class="trade-search" id="tradeSearchB" placeholder="Search player..." autocomplete="off">
@@ -5350,7 +5350,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-01n"></script>
+<script defer src="app.js?v=2026-09-02a"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

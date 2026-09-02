@@ -27,13 +27,58 @@
     for (const name in counts) percent[name] = (counts[name] / numTeams) * 100;
     return { teams, counts, pairs, percent, numTeams };
   }
+  // v0.18.7: union of the site's portfolio (by draft id) and the extension's
+  // own cumulative sync store. Before this, the site push and each extension
+  // sync overwrote mff_portfolio with DIFFERENT scopes (site = everything,
+  // sync = only drafts not already on the site), so the exposure % flipped
+  // depending on which writer ran last.
+  function unionTeams(siteDrafts, syncStore) {
+    const byId = {};
+    const noId = [];
+    if (siteDrafts && siteDrafts.byId) {
+      Object.keys(siteDrafts.byId).forEach(function (id) { byId[id] = siteDrafts.byId[id]; });
+      (siteDrafts.noId || []).forEach(function (t) { noId.push(t); });
+    }
+    const syncDrafts = (syncStore && Array.isArray(syncStore.drafts)) ? syncStore.drafts : [];
+    syncDrafts.forEach(function (d) {
+      if (!d || !Array.isArray(d.picks)) return;
+      const picks = d.picks.map(function (p) { return p && (p.name || p); }).filter(Boolean);
+      if (!picks.length) return;
+      if (d.id == null) { noId.push(picks); return; }
+      if (!byId[String(d.id)]) byId[String(d.id)] = picks;   // site copy wins when both know it
+    });
+    return Object.keys(byId).map(function (id) { return byId[id]; }).concat(noId);
+  }
   document.addEventListener("mff-portfolio-update", function (e) {
     try {
       const teams = e.detail && e.detail.teams;
       if (!Array.isArray(teams) || !teams.length) return;
-      const p = buildPortfolio(teams);
-      p.syncedAt = (e.detail && e.detail.syncedAt) || Date.now();
-      safeSet("mff_portfolio", p);
+      const syncedAt = (e.detail && e.detail.syncedAt) || Date.now();
+      const drafts = e.detail && Array.isArray(e.detail.drafts) ? e.detail.drafts : null;
+      if (!drafts) {
+        // legacy shape (no ids) — old behaviour
+        const p = buildPortfolio(teams);
+        p.syncedAt = syncedAt;
+        safeSet("mff_portfolio", p);
+        return;
+      }
+      const siteDrafts = { byId: {}, noId: [], syncedAt: syncedAt };
+      drafts.forEach(function (d) {
+        if (!d || !Array.isArray(d.picks) || !d.picks.length) return;
+        if (d.id != null) siteDrafts.byId[String(d.id)] = d.picks; else siteDrafts.noId.push(d.picks);
+      });
+      safeSet("mff_site_drafts", siteDrafts);
+      if (!chrome || !chrome.runtime || !chrome.runtime.id) return;
+      chrome.storage.local.get(["mff_portfolio_sync"], function (res) {
+        try {
+          const all = unionTeams(siteDrafts, res && res.mff_portfolio_sync);
+          const p = buildPortfolio(all.length ? all : teams);
+          p.syncedAt = syncedAt;
+          p.numSite = Object.keys(siteDrafts.byId).length + siteDrafts.noId.length;
+          p.source = "site+sync";
+          safeSet("mff_portfolio", p);
+        } catch(_){}
+      });
     } catch(_){}
   });
   document.addEventListener("mff-rankings-update", function (e) {
@@ -69,7 +114,7 @@
   document.addEventListener("mff-clear-extension-cache", function () {
     try {
       if (!chrome || !chrome.runtime || !chrome.runtime.id) return;
-      chrome.storage.local.remove(["mff_portfolio_sync","mff_player_adps_snapshot","mff_existing_draft_ids","mff_existing_draft_ids_at","mff_portfolio"], function(){});
+      chrome.storage.local.remove(["mff_portfolio_sync","mff_player_adps_snapshot","mff_existing_draft_ids","mff_existing_draft_ids_at","mff_portfolio","mff_site_drafts"], function(){});
     } catch(_){}
   });
 

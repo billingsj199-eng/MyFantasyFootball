@@ -117,7 +117,7 @@
   const SIDEBAR_HTML = `
 <div id="mff-sidebar">
   <div id="mff-header">
-    <div class="title">MFF DRAFT HELPER</div>
+    <div class="title">MFF DRAFT HELPER <span id="mff-ver" style="font-size:9px;font-weight:500;opacity:.6;margin-left:4px"></span></div>
     <div class="controls">
       <button id="mff-collapse" title="Collapse">_</button>
       <button id="mff-close" title="Hide">×</button>
@@ -443,6 +443,12 @@
     const wrap = document.createElement("div");
     wrap.innerHTML = SIDEBAR_HTML;
     document.body.appendChild(wrap.firstElementChild);
+    // v0.18.7: show the running version so "did the reload take?" is answerable.
+    try {
+      const v = chrome.runtime.getManifest().version;
+      const el = document.getElementById('mff-ver');
+      if (el && v) el.textContent = 'v' + v;
+    } catch (_) {}
     wireUp();
   }
 
@@ -1855,6 +1861,10 @@
       const portfolio = (_percentMap && _percentKey != null && _percentMap[_percentKey] != null)
         ? _percentMap[_percentKey].toFixed(0) + "%"
         : "—";
+      // v0.18.7: hover shows "n of N drafts" so a bad denominator is obvious.
+      const _portN = state.portfolio && state.portfolio.numTeams;
+      const _portCount = (state.portfolio && state.portfolio.counts && _percentKey != null) ? (state.portfolio.counts[_percentKey] || 0) : 0;
+      const _portTitle = _portN ? (' title="Portfolio exposure: ' + _portCount + ' of ' + _portN + ' drafts"') : ' title="Portfolio not synced yet"';
       // v0.9.65 VOR badge — half-PPR season-pts marginal value above
       // replacement-level. v0.9.67: format-aware — uses vor/up for standard
       // (QB12/RB30/WR42/TE13), vorSf/upSf for superflex (QB24/RB30/WR30/TE13).
@@ -2003,7 +2013,7 @@
             '<span>R#' + p.rank + (_jkTier ? ' <b class="mff-jtier" style="color:' + jackTierColor(_jkTier.l) + '" title="Jack\'s tier: ' + (_jkTier.n || _jkTier.l).replace(/[<>&"]/g, '') + '">' + _jkTier.l + '</b>' : '') + '</span>' +
             udAdpHtml +
             '<span>PPG ' + ppg + '</span>' +
-            '<span>Port ' + portfolio + '</span>' +
+            '<span' + _portTitle + '>Port ' + portfolio + '</span>' +
             vorSpan +
             upSpan +
             hcSpan +
@@ -4390,17 +4400,45 @@
       return;
     }
     try {
-      chrome.storage.local.get(['mff_portfolio_sync'], function (res) {
+      chrome.storage.local.get(['mff_portfolio_sync', 'mff_site_drafts'], function (res) {
         const existing = res && res.mff_portfolio_sync;
         const merged = _mergeSitePortfolios(existing, sitePortfolio);
         // v0.18.6: sidebar exposure portfolio from the merged union, so
         // Port % / badges divide by EVERY synced draft, not just this run's.
+        // v0.18.7: ALSO union the site's portfolio (mff_site_drafts, pushed
+        // by page-bridge with draft ids). Incremental syncs skip drafts the
+        // site already has (mff_existing_draft_ids), so after a reinstall the
+        // extension's own store can be just the newest few drafts — the
+        // site copy is the only full list until then. By-id merge: this
+        // sync's fresh drafts win, then site, then retained older syncs.
         let sidebarPortfolio = null;
         try {
-          const teams = (merged.drafts || []).map(function (d) {
+          const byId = {};
+          const noId = [];
+          const site = res && res.mff_site_drafts;
+          const namesOf = function (d) {
             return Array.isArray(d && d.picks) ? d.picks.map(function (p) { return p && (p.name || p); }).filter(Boolean) : [];
-          }).filter(function (t) { return t.length > 0; });
-          if (teams.length) sidebarPortfolio = buildPortfolioFromTeams(teams);
+          };
+          if (site && site.byId) {
+            Object.keys(site.byId).forEach(function (id) { if (Array.isArray(site.byId[id]) && site.byId[id].length) byId[id] = site.byId[id]; });
+            (site.noId || []).forEach(function (t) { if (Array.isArray(t) && t.length) noId.push(t); });
+          }
+          (sitePortfolio.drafts || []).forEach(function (d) {
+            const t = namesOf(d); if (!t.length) return;
+            if (d.id != null) byId[String(d.id)] = t; else noId.push(t);
+          });
+          (merged.drafts || []).forEach(function (d) {
+            const t = namesOf(d); if (!t.length) return;
+            if (d.id == null) { noId.push(t); return; }
+            if (!byId[String(d.id)]) byId[String(d.id)] = t;
+          });
+          const teams = Object.keys(byId).map(function (id) { return byId[id]; }).concat(noId);
+          if (teams.length) {
+            sidebarPortfolio = buildPortfolioFromTeams(teams);
+            sidebarPortfolio.numSite = site && site.byId ? Object.keys(site.byId).length : 0;
+            sidebarPortfolio.source = 'sync+site';
+            console.log('[MFF/sync] sidebar exposure portfolio:', teams.length, 'drafts (site', sidebarPortfolio.numSite + ', synced', (merged.drafts || []).length + ')');
+          }
         } catch (e) { console.warn('[MFF/sync] sidebar portfolio build error:', e && e.message); }
         const toStore = { mff_portfolio_sync: merged };
         if (sidebarPortfolio) toStore.mff_portfolio = sidebarPortfolio;

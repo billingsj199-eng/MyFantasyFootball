@@ -31,15 +31,33 @@
     return null;
   }
 
+  // v0.18.7: same rosters WITH draft ids so the extension can union the
+  // site's portfolio with its own synced store by id (no double counting).
+  function extractDrafts(src) {
+    if (!src || Array.isArray(src) || !src.drafts) return null;
+    const list = Array.isArray(src.drafts) ? src.drafts : Object.values(src.drafts);
+    const out = [];
+    list.forEach(function(d){
+      if (!d || !Array.isArray(d.picks)) return;
+      const picks = d.picks.map(function(p){ return p && (p.name || p); }).filter(Boolean);
+      if (!picks.length) return;
+      out.push({ id: d.id != null ? String(d.id) : null, picks: picks });
+    });
+    return out.length ? out : null;
+  }
+
   let lastPortHash = "";
   function tickPortfolio() {
     try {
-      const teams = extractTeams(window._udPortfolio || window.udPortfolio || null);
+      const src = window._udPortfolio || window.udPortfolio || null;
+      const teams = extractTeams(src);
       if (!teams) return;
       const h = teamsHash(teams);
       if (h === lastPortHash) return;
       lastPortHash = h;
-      document.dispatchEvent(new CustomEvent("mff-portfolio-update", { detail: { teams: teams, syncedAt: Date.now() } }));
+      document.dispatchEvent(new CustomEvent("mff-portfolio-update", {
+        detail: { teams: teams, drafts: extractDrafts(src), syncedAt: Date.now() }
+      }));
     } catch(_){}
   }
 

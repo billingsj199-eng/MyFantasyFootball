@@ -45728,25 +45728,25 @@ Rules:
     return 0;
   }
 
-  // Sleeper League Import
-  window._mtImportSleeper = async function() {
-    const leagueId = document.getElementById('mtSleeperLeagueId').value.trim();
-    if (!leagueId) return;
-    const status = document.getElementById('mtSleeperStatus');
-    const btn = document.getElementById('mtSleeperImportBtn');
-    btn.disabled = true;
-    btn.textContent = 'LOADING...';
-    status.textContent = 'Fetching league data...';
-    status.style.color = '';
-
-    try {
+  // Headless Sleeper fetch+build — shared by the interactive importer and
+  // the background saved-league refresh. Fetches league/rosters/users/picks
+  // and returns { league, teams, fmt } without touching the DOM, the global
+  // _mtFormat, or the cloud. opts.say gets progress strings (the interactive
+  // path routes them to the status line); opts.myUid marks isMyTeam (falls
+  // back to the firebase-name auto-detect captured while processing users).
+  async function _mtFetchSleeperLeague(leagueId, opts) {
+    const say = (opts && opts.say) || function () {};
       // 1. Get league info
       const leagueResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}`);
       if (!leagueResp.ok) throw new Error('League not found');
       const league = await leagueResp.json();
 
-      // Detect format
+      // Detect format via the shared detector without clobbering the active
+      // league's global — background refreshes run while another league is up.
+      const prevFormat = _mtFormat;
       _mtDetectFormat(league);
+      const fmt = { ..._mtFormat };
+      _mtFormat = prevFormat;
 
       // 2. Get rosters
       const rostersResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/rosters`);
@@ -45779,7 +45779,7 @@ Rules:
       });
 
       // 4. Map player IDs to names — cached Sleeper player map
-      status.textContent = 'Mapping players...';
+      say('Mapping players...');
 
       // Collect all player IDs from rosters
       const allIds = new Set();
@@ -45804,7 +45804,7 @@ Rules:
       if (unresolvedIds.length > 0) {
         // Need to fetch from Sleeper
         try {
-          status.textContent = 'Downloading player database (one-time, may take a moment)...';
+          say('Downloading player database (one-time, may take a moment)...');
           const ctrl = new AbortController();
           const timeoutId = setTimeout(() => ctrl.abort(), 30000); // 30s timeout
           const playersResp = await fetch('https://api.sleeper.app/v1/players/nfl', { signal: ctrl.signal });
@@ -45825,7 +45825,7 @@ Rules:
           }
         } catch(e) {
           console.warn('[MyTeams] Sleeper players API failed:', e.message);
-          status.textContent = 'Player database download failed — using available data...';
+          say('Player database download failed — using available data...');
           // Fallback: try to match IDs from D array by searching for any stored sleeper references
           if (typeof D !== 'undefined') {
             D.forEach(d => {
@@ -45836,23 +45836,10 @@ Rules:
       }
 
       // 5. Build teams
-      // MY TEAM resolution: a manual pick (dropdown) beats name auto-detect —
-      // re-imports (my-team change, background auto-refresh) rebuild teams
-      // from scratch, and auto-detect alone silently dropped the star for
-      // users whose Sleeper name doesn't resemble their account name.
-      // Sleeper owner_ids are GLOBAL user ids, so carrying the user's id
-      // over from the current view or the saved snapshot is safe.
-      let _myUidForLeague = null;
-      if (_mtActiveSource === 'sleeper' && window._mtTeams) {
-        const cur = window._mtTeams.find(t => t && t.isMyTeam);
-        if (cur && cur.ownerId) _myUidForLeague = cur.ownerId;
-      }
-      if (!_myUidForLeague && window._mtSavedLeagues) {
-        const prev = window._mtSavedLeagues.find(l => String(l.leagueId) === String(leagueId));
-        const prevMine = prev && (prev.teams || []).find(t => t && t.isMyTeam);
-        if (prevMine && prevMine.ownerId) _myUidForLeague = prevMine.ownerId;
-      }
-      if (!_myUidForLeague) _myUidForLeague = _mtMyUserId;
+      // isMyTeam: the caller-resolved uid wins (manual dropdown pick / saved
+      // snapshot — see _mtImportSleeper); otherwise fall back to the
+      // firebase-name auto-detect captured in the users pass above.
+      const _myUidForLeague = (opts && opts.myUid) || _mtMyUserId;
       const teams = rosters.map(r => {
         const playerIds = r.players || [];
         const playerNames = playerIds.map(id => {
@@ -45879,9 +45866,9 @@ Rules:
       });
 
       // 5b. Fetch traded draft picks for dynasty leagues
-      if (_mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper') {
+      if (fmt.type === 'dynasty' || fmt.type === 'keeper') {
         try {
-          status.textContent = 'Fetching draft picks...';
+          say('Fetching draft picks...');
           const picksResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/traded_picks`);
           const season = parseInt(league.season || new Date().getFullYear());
           // The rookie draft for this league season happens IN this season year
@@ -45974,6 +45961,44 @@ Rules:
         } catch(e) { console.warn('[MyTeams] Draft picks fetch error:', e); }
       }
 
+      return { league, teams, fmt };
+  }
+
+  // Sleeper League Import
+  window._mtImportSleeper = async function() {
+    const leagueId = document.getElementById('mtSleeperLeagueId').value.trim();
+    if (!leagueId) return;
+    const status = document.getElementById('mtSleeperStatus');
+    const btn = document.getElementById('mtSleeperImportBtn');
+    btn.disabled = true;
+    btn.textContent = 'LOADING...';
+    status.textContent = 'Fetching league data...';
+    status.style.color = '';
+
+    try {
+      // MY TEAM resolution: a manual pick (dropdown) beats name auto-detect —
+      // re-imports (my-team change, background auto-refresh) rebuild teams
+      // from scratch, and auto-detect alone silently dropped the star for
+      // users whose Sleeper name doesn't resemble their account name.
+      // Sleeper owner_ids are GLOBAL user ids, so carrying the user's id
+      // over from the current view or the saved snapshot is safe.
+      let _myUid = null;
+      if (_mtActiveSource === 'sleeper' && window._mtTeams) {
+        const cur = window._mtTeams.find(t => t && t.isMyTeam);
+        if (cur && cur.ownerId) _myUid = cur.ownerId;
+      }
+      if (!_myUid && window._mtSavedLeagues) {
+        const prev = window._mtSavedLeagues.find(l => String(l.leagueId) === String(leagueId));
+        const prevMine = prev && (prev.teams || []).find(t => t && t.isMyTeam);
+        if (prevMine && prevMine.ownerId) _myUid = prevMine.ownerId;
+      }
+
+      const built = await _mtFetchSleeperLeague(leagueId, { myUid: _myUid, say: m => { status.textContent = m; } });
+      const league = built.league, teams = built.teams;
+      // The interactive import makes this league active — its format becomes
+      // the global one (the headless builder deliberately doesn't set it).
+      _mtFormat = { ...built.fmt };
+
       // Score all teams
       teams.forEach(t => {
         const result = _mtScoreRoster(t.players, _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper' ? t.draftPicks : []);
@@ -46049,6 +46074,44 @@ Rules:
   // newer-than-save check stop the save→reload→commit cycle from looping.
   const _mtAutoCommittedAt = {};
   let _mtAutoCommitTries = 0;
+
+  // Normalized payload (ESPN/Yahoo contract) → league format, without
+  // clobbering the active league's global _mtFormat. Shared by the extension
+  // auto-commit and the background saved-league refresh.
+  function _mtNormalizedFormat(lg) {
+    const prevFormat = _mtFormat;
+    _mtDetectFormat({
+      roster_positions: lg.rosterPositions || [],
+      settings: { type: lg.keeper ? 1 : 0 },
+      scoring_settings: { rec: lg.pprValue != null ? lg.pprValue : 0 }
+    });
+    const fmt = { ..._mtFormat };
+    _mtFormat = prevFormat;
+    return fmt;
+  }
+
+  // Normalized payload → cloud-save team shape: name-resolved rosters, with
+  // my-team taken from the payload when it knows (extension SWID / pasted
+  // team URL) and carried over from the saved snapshot otherwise.
+  function _mtNormalizedSaveTeams(lg, savedMine) {
+    const anyMine = (lg.teams || []).some(t => t.isMine);
+    return (lg.teams || []).map(t => ({
+      id: t.teamId,
+      owner: t.name || t.owner || ('Team ' + t.teamId),
+      ownerId: t.owner || '',
+      logo: t.logo || '',
+      isMyTeam: anyMine ? !!t.isMine : !!(savedMine && t.teamId === savedMine.id),
+      players: (t.roster || []).map(r => {
+        const res = _mtResolveEspnName(r && r.name);
+        return res ? res.name : null;
+      }).filter(Boolean),
+      draftPicks: [],
+      wins: t.wins || 0,
+      losses: t.losses || 0,
+      fpts: t.fpts || 0
+    }));
+  }
+
   function _mtAutoCommitEspnLeagues() {
     if (!_mtEspnLeagues) return;
     const saved = window._mtSavedLeagues;
@@ -46067,32 +46130,9 @@ Rules:
         if (String(_mtActiveEspnId) === String(lg.leagueId)) return; // active league saves on import
         if (_mtAutoCommittedAt[key] === (lg.syncedAt || 'once')) return;
         if (lg.syncedAt && sv.savedAt && lg.syncedAt <= Date.parse(sv.savedAt)) return; // save is newer
-        // League-specific format without clobbering the active league's state
-        const prevFormat = _mtFormat;
-        _mtDetectFormat({
-          roster_positions: lg.rosterPositions || [],
-          settings: { type: lg.keeper ? 1 : 0 },
-          scoring_settings: { rec: lg.pprValue != null ? lg.pprValue : 0 }
-        });
-        const fmt = { ..._mtFormat };
-        _mtFormat = prevFormat;
+        const fmt = _mtNormalizedFormat(lg);
         const savedMine = (sv.teams || []).find(t => t && t.isMyTeam);
-        const anyMine = (lg.teams || []).some(t => t.isMine);
-        const teams = (lg.teams || []).map(t => ({
-          id: t.teamId,
-          owner: t.name || t.owner || ('Team ' + t.teamId),
-          ownerId: t.owner || '',
-          logo: t.logo || '',
-          isMyTeam: anyMine ? !!t.isMine : !!(savedMine && t.teamId === savedMine.id),
-          players: (t.roster || []).map(r => {
-            const res = _mtResolveEspnName(r && r.name);
-            return res ? res.name : null;
-          }).filter(Boolean),
-          draftPicks: [],
-          wins: t.wins || 0,
-          losses: t.losses || 0,
-          fpts: t.fpts || 0
-        }));
+        const teams = _mtNormalizedSaveTeams(lg, savedMine);
         _mtAutoCommittedAt[key] = lg.syncedAt || 'once';
         _mtSaveLeagueToCloud(key, { name: lg.name, season: String(lg.season || ''), schedule: lg.schedule || null }, teams, fmt);
         console.log('[MyTeams] Auto-saved fresh extension sync:', lg.name || key);
@@ -46422,27 +46462,14 @@ Rules:
     return resp;
   }
 
-  // silentErrors: set by the saved-league auto-refresh — sync problems
-  // (403 non-viewable, proxy hiccups) must not paint the status line red
-  // over a perfectly usable snapshot.
-  window._mtImportYahooById = async function (silentErrors) {
-    const input = document.getElementById('mtYahooLeagueId');
-    const status = document.getElementById('mtYahooStatus');
-    const btn = document.getElementById('mtYahooImportBtn');
-    const raw = (input && input.value || '').trim();
-    // Accept a bare ID or a pasted league/team URL (…/f1/<id>[/<teamId>]).
-    // A team URL carries the teamId — use it to auto-select "my team".
-    const urlMatch = raw.match(/\/f1\/(\d+)(?:\/(\d+))?/);
-    const id = urlMatch ? urlMatch[1] : (raw.match(/^\d+$/) || [''])[0];
-    const urlTeamId = urlMatch && urlMatch[2] ? parseInt(urlMatch[2], 10) : null;
-    if (!id) {
-      if (status) { status.textContent = 'Paste your Yahoo league ID (or the league URL).'; status.style.color = '#f59e0b'; }
-      return;
-    }
-    if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
-    const say = (msg) => { if (status) { status.textContent = msg; status.style.color = 'var(--text2)'; } };
-    say('Fetching league from Yahoo…');
-    try {
+  // Headless Yahoo direct fetch+normalize — settings JSON → league home →
+  // one page per team — shared by the interactive importer and the
+  // background saved-league refresh. Returns the normalized payload (same
+  // contract as the extension). Heavier than the Sleeper/ESPN probes:
+  // ~teamCount+2 proxied fetches per call, so background callers throttle.
+  async function _mtFetchYahooLeague(id, opts) {
+    const say = (opts && opts.say) || function () {};
+    const myTeamId = (opts && opts.myTeamId) != null ? opts.myTeamId : null;
       await _mtLoadYahooNormalizer();
       const N = window.MFF_YAHOO;
 
@@ -46494,7 +46521,7 @@ Rules:
         leagueId: id,
         name: svc.name || standings.name,
         teams: standings.teams,
-        myTeamId: urlTeamId,
+        myTeamId: myTeamId,
         scoringPrefs: rec != null ? { rec: rec } : null
       });
       if (apiSlots.length) {
@@ -46503,6 +46530,31 @@ Rules:
       }
       norm.syncedAt = Date.now();
       norm.direct = true; // in-site fetch, not the extension — enables the ↻ re-sync button
+      return norm;
+  }
+
+  // silentErrors: set by the saved-league auto-refresh — sync problems
+  // (403 non-viewable, proxy hiccups) must not paint the status line red
+  // over a perfectly usable snapshot.
+  window._mtImportYahooById = async function (silentErrors) {
+    const input = document.getElementById('mtYahooLeagueId');
+    const status = document.getElementById('mtYahooStatus');
+    const btn = document.getElementById('mtYahooImportBtn');
+    const raw = (input && input.value || '').trim();
+    // Accept a bare ID or a pasted league/team URL (…/f1/<id>[/<teamId>]).
+    // A team URL carries the teamId — use it to auto-select "my team".
+    const urlMatch = raw.match(/\/f1\/(\d+)(?:\/(\d+))?/);
+    const id = urlMatch ? urlMatch[1] : (raw.match(/^\d+$/) || [''])[0];
+    const urlTeamId = urlMatch && urlMatch[2] ? parseInt(urlMatch[2], 10) : null;
+    if (!id) {
+      if (status) { status.textContent = 'Paste your Yahoo league ID (or the league URL).'; status.style.color = '#f59e0b'; }
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
+    const say = (msg) => { if (status) { status.textContent = msg; status.style.color = 'var(--text2)'; } };
+    say('Fetching league from Yahoo…');
+    try {
+      const norm = await _mtFetchYahooLeague(id, { say: say, myTeamId: urlTeamId });
       // My-team flag: anonymous pages carry no "My Team" nav link, so take
       // the teamId from a pasted team URL; a bare-ID re-sync keeps the
       // previous selection (same fallbacks as the ESPN direct path).
@@ -48504,9 +48556,11 @@ Rules:
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
 
-    // Load existing saved leagues first, then add/update this one
+    // Load existing saved leagues first, then add/update this one.
+    // Returns the promise so the background refresh can await each save —
+    // parallel saves read-modify-write the same doc and drop each other.
     const docRef = db.collection('user_game_data').doc(user.uid);
-    docRef.get().then(doc => {
+    return docRef.get().then(doc => {
       const existing = doc.exists && doc.data().savedLeagues ? doc.data().savedLeagues : {};
 
       existing[leagueId] = {
@@ -48564,6 +48618,8 @@ Rules:
       if (typeof window._qaRefreshLeagues === 'function') window._qaRefreshLeagues();
       // Extension payload may have arrived before the saved list — commit now.
       _mtAutoCommitEspnLeagues();
+      // Silently freshen every snapshot in the background (probe-guarded).
+      _mtBgRefreshSavedLeagues(leagues);
     }).catch(e => { console.warn('[MyTeams] Load error:', e); });
   }
 
@@ -48590,7 +48646,7 @@ Rules:
     if (!container) return;
     if (!leagues.length) { container.innerHTML = ''; return; }
 
-    let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">SAVED LEAGUES</div>';
+    let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">SAVED LEAGUES <span style="font-family:system-ui,sans-serif;font-size:.6rem;letter-spacing:.2px;font-weight:400;color:var(--text2);margin-left:6px;vertical-align:2px">rosters &amp; records auto-update when you visit</span></div>';
     leagues.forEach((lg, i) => {
       const teamCount = lg.teams ? lg.teams.length : 0;
       const fmtParts = [];
@@ -48715,16 +48771,9 @@ Rules:
       // Bail if the user loaded a different league while we were fetching.
       const curId = document.getElementById('mtSleeperLeagueId');
       if (!curId || curId.value.trim() !== leagueId) return;
-      const liveSig = rosters.map(r => (r.players || []).map(String).sort().join(',')).sort().join('|');
-      const teams = lg.teams || [];
-      // Empty slIds arrays are valid (vacant rosters); only a MISSING slIds
-      // property marks a legacy snapshot that needs one refresh to acquire it.
-      // Snapshots saved before pickV 2 may still carry spent current-season
-      // picks (double-counted alongside the drafted rookies) — force one
-      // full re-import to rebuild the pick window, then diff as normal.
-      const haveIds = teams.length && teams.every(t => Array.isArray(t.slIds)) && lg.pickV === 2;
-      const savedSig = haveIds ? teams.map(t => t.slIds.join(',')).sort().join('|') : null;
-      if (savedSig === liveSig) {
+      const liveSig = _mtSleeperLiveSig(rosters);
+      const savedSig = _mtSleeperSavedSig(lg);
+      if (savedSig !== null && savedSig === liveSig) {
         if (status) {
           status.textContent = `Loaded "${lg.name}" — rosters up to date`;
           status.style.color = '#22c55e';
@@ -48759,11 +48808,8 @@ Rules:
       if (!norm) return;
       // Bail if the user loaded a different league while we were fetching.
       if (_mtActiveSource !== 'espn' || String(_mtActiveEspnId) !== String(norm.leagueId)) return;
-      // Both sides pass through _mtResolveEspnName, so resolver quirks can't
-      // fake a transaction.
-      const sigOf = roster => roster.map(r => _mtResolveEspnName(r && r.name)).filter(Boolean).map(x => x.name).sort().join(',');
-      const liveSig = (norm.teams || []).map(t => sigOf(t.roster || [])).sort().join('|');
-      const savedSig = (lg.teams || []).map(t => (t.players || []).slice().sort().join(',')).sort().join('|');
+      const liveSig = _mtEspnLiveSig(norm);
+      const savedSig = _mtEspnSavedSig(lg);
       if (liveSig === savedSig) {
         if (status) {
           status.textContent = `Loaded "${lg.name}" — rosters up to date`;
@@ -48802,6 +48848,139 @@ Rules:
     const input = document.getElementById('mtYahooLeagueId');
     if (input) input.value = id;
     window._mtImportYahooById(true);
+  }
+
+  // ── Roster+record signatures ─────────────────────────────────────────
+  // Player-id/name sets AND win-loss-points, so a week's results freshen
+  // the snapshot even with zero transactions (records used to go stale
+  // until a roster move happened to land).
+  function _mtSleeperLiveSig(rosters) {
+    return rosters.map(r => {
+      const s = r.settings || {};
+      const fp = (s.fpts || 0) + (s.fpts_decimal || 0) / 100;
+      return (r.players || []).map(String).sort().join(',') + '#' + (s.wins || 0) + '-' + (s.losses || 0) + '-' + fp.toFixed(2);
+    }).sort().join('|');
+  }
+  function _mtSleeperSavedSig(lg) {
+    const teams = lg.teams || [];
+    // Empty slIds arrays are valid (vacant rosters); only a MISSING slIds
+    // property marks a legacy snapshot that needs one refresh to acquire it.
+    // Snapshots saved before pickV 2 may still carry spent current-season
+    // picks (double-counted alongside the drafted rookies) — force one
+    // full re-import to rebuild the pick window, then diff as normal.
+    // null never matches a live signature, so both cases refresh.
+    const haveIds = teams.length && teams.every(t => Array.isArray(t.slIds)) && lg.pickV === 2;
+    if (!haveIds) return null;
+    return teams.map(t => t.slIds.join(',') + '#' + (t.wins || 0) + '-' + (t.losses || 0) + '-' + (Number(t.fpts) || 0).toFixed(2)).sort().join('|');
+  }
+  // Both ESPN sides pass through _mtResolveEspnName (live via
+  // _mtEspnLiveSig, saved rosters at save time), so resolver quirks can't
+  // fake a transaction.
+  function _mtEspnLiveSig(norm) {
+    return (norm.teams || []).map(t => {
+      const names = (t.roster || []).map(r => _mtResolveEspnName(r && r.name)).filter(Boolean).map(x => x.name).sort().join(',');
+      return names + '#' + (t.wins || 0) + '-' + (t.losses || 0) + '-' + (Number(t.fpts) || 0).toFixed(2);
+    }).sort().join('|');
+  }
+  function _mtEspnSavedSig(lg) {
+    return (lg.teams || []).map(t => (t.players || []).slice().sort().join(',') + '#' + (t.wins || 0) + '-' + (t.losses || 0) + '-' + (Number(t.fpts) || 0).toFixed(2)).sort().join('|');
+  }
+
+  // ── Background refresh of ALL saved leagues ──────────────────────────
+  // Loading the site used to freshen only the league you clicked LOAD on;
+  // every other snapshot (and the Trade Calc / trade finder / Ask Jack
+  // pickers that read them) stayed frozen at its last manual import. This
+  // sweep runs after the saved list loads and silently re-syncs each
+  // league's cloud snapshot — rosters, records, points, picks:
+  //   · Sleeper + public ESPN: one cheap probe per league; the full
+  //     rebuild+save runs only when the roster/record signature moved.
+  //   · Yahoo: no cheap probe exists (rosters are server-rendered pages,
+  //     one proxied fetch per team) — re-syncs only snapshots >6h old.
+  //   · The ACTIVE league is skipped — the on-LOAD refresh owns it, and a
+  //     background save under it would fight the render.
+  // Leagues run sequentially and each save is awaited: parallel
+  // _mtSaveLeagueToCloud calls read-modify-write the same Firestore doc
+  // and would drop each other's leagues. The 10-minute per-league probe
+  // guard stops the save → _mtLoadSavedLeagues → sweep chain looping.
+  const _mtBgProbedAt = {};
+  let _mtBgSweepRunning = false;
+  let _mtBgWaitingForD = false;
+  async function _mtBgRefreshSavedLeagues(leagues) {
+    if (_mtBgSweepRunning) return;
+    if (!Array.isArray(leagues) || !leagues.length) return;
+    if (typeof D === 'undefined' || !D.length) { // ESPN/Yahoo name resolution needs the board
+      if (!_mtBgWaitingForD) {
+        _mtBgWaitingForD = true;
+        setTimeout(() => { _mtBgWaitingForD = false; _mtBgRefreshSavedLeagues(window._mtSavedLeagues || []); }, 3000);
+      }
+      return;
+    }
+    _mtBgSweepRunning = true;
+    try {
+      for (const lg of leagues) {
+        const key = String((lg && lg.leagueId) || '');
+        if (!key) continue;
+        if (_mtBgProbedAt[key] && Date.now() - _mtBgProbedAt[key] < 10 * 60 * 1000) continue;
+        _mtBgProbedAt[key] = Date.now();
+        try {
+          if (key.indexOf('espn_') === 0) await _mtBgRefreshEspn(lg);
+          else if (key.indexOf('yahoo_') === 0) await _mtBgRefreshYahoo(lg);
+          else await _mtBgRefreshSleeper(lg);
+        } catch (e) { console.warn('[MyTeams] bg refresh failed:', key, e); }
+      }
+    } finally { _mtBgSweepRunning = false; }
+  }
+
+  async function _mtBgRefreshSleeper(lg) {
+    const leagueId = String(lg.leagueId || '');
+    if (_mtActiveSource === 'sleeper' && String(_mtActiveSleeperId) === leagueId) return;
+    const resp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/rosters`);
+    if (!resp.ok) return;
+    const rosters = await resp.json();
+    if (!Array.isArray(rosters) || !rosters.length) return;
+    if (_mtSleeperSavedSig(lg) === _mtSleeperLiveSig(rosters)) return;
+    const savedMine = (lg.teams || []).find(t => t && t.isMyTeam);
+    const built = await _mtFetchSleeperLeague(leagueId, { myUid: savedMine && savedMine.ownerId });
+    await _mtSaveLeagueToCloud(leagueId, built.league, built.teams, built.fmt);
+    console.log('[MyTeams] Background-refreshed Sleeper league:', (built.league && built.league.name) || leagueId);
+  }
+
+  async function _mtBgRefreshEspn(lg) {
+    const id = String(lg.leagueId || '').replace(/^espn_/, '');
+    if (!id) return;
+    if (_mtActiveSource === 'espn' && String(_mtActiveEspnId) === id) return;
+    await _mtLoadEspnNormalizer();
+    const resp = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + _mtEspnSeason() +
+      '/segments/0/leagues/' + id + '?view=mTeam&view=mRoster&view=mSettings');
+    if (!resp.ok) return; // private leagues 401 — the extension auto-commit path covers those
+    const rawLg = await resp.json();
+    const norm = window.MFF_ESPN.normalizeEspnLeague(Array.isArray(rawLg) ? rawLg[0] : rawLg, null);
+    if (!norm) return;
+    if (_mtEspnLiveSig(norm) === _mtEspnSavedSig(lg)) return;
+    const savedMine = (lg.teams || []).find(t => t && t.isMyTeam);
+    const teams = _mtNormalizedSaveTeams(norm, savedMine);
+    await _mtSaveLeagueToCloud('espn_' + norm.leagueId,
+      { name: norm.name, season: String(norm.season || ''), schedule: norm.schedule || null },
+      teams, _mtNormalizedFormat(norm));
+    console.log('[MyTeams] Background-refreshed ESPN league:', norm.name || id);
+  }
+
+  async function _mtBgRefreshYahoo(lg) {
+    const id = String(lg.leagueId || '').replace(/^yahoo_/, '');
+    if (!id) return;
+    if (_mtActiveSource === 'yahoo' && String(_mtActiveYahooId) === id) return;
+    // No cheap probe — the full per-team-page re-scrape only runs on
+    // snapshots that have aged out (same 6h throttle as the on-LOAD path).
+    const age = Date.now() - new Date(lg.savedAt || 0).getTime();
+    if (isFinite(age) && age < 6 * 3600 * 1000) return;
+    const savedMine = (lg.teams || []).find(t => t && t.isMyTeam);
+    const norm = await _mtFetchYahooLeague(id, { myTeamId: savedMine ? savedMine.id : null });
+    if (!norm) return; // non-viewable leagues throw at the proxy → caught by the sweep
+    const teams = _mtNormalizedSaveTeams(norm, savedMine);
+    await _mtSaveLeagueToCloud('yahoo_' + norm.leagueId,
+      { name: norm.name, season: String(norm.season || ''), schedule: norm.schedule || null },
+      teams, _mtNormalizedFormat(norm));
+    console.log('[MyTeams] Background-refreshed Yahoo league:', norm.name || id);
   }
 
   window._mtDeleteSavedLeague = function(leagueId) {

@@ -391,6 +391,32 @@ D.forEach((d, i) => {
   }
 });
 
+// Legend/retired pools (HP+LEGEND_CAREERS, ALL_PLAYERS_DB, EP_RETIRED, Guess Who
+// all-time) append to D behind exact-name guards, so a punctuation variant slips
+// through: HP carries "DJ Moore" while d.js has "D.J. Moore", which pushed a
+// second, unranked "DJ Moore" row that My Teams then resolved by exact name
+// (rank —, pos rank 1335, no headshot, team "Carolina Panthers"). This guard also
+// matches on the punctuation/whitespace-collapsed name (suffixes are KEPT —
+// "Marvin Harrison" the HOFer must not collapse into "Marvin Harrison Jr.") and
+// aliases the variant into nameToIdx so exact-name consumers (legend pool cards,
+// _mtLookupD) land on the active card. Index grows incrementally with D.length —
+// D is append-only, so pushes inside a pool loop stay O(1) per player.
+const _dCollapseName = s => String(s || '').toLowerCase().replace(/[.\-'\s]/g, '');
+const _dCollapsedIdx = {};
+let _dCollapsedLen = 0;
+function _dHasPlayerName(name) {
+  if (!name) return false;
+  for (; _dCollapsedLen < D.length; _dCollapsedLen++) {
+    const k = _dCollapseName(D[_dCollapsedLen].n);
+    if (k && _dCollapsedIdx[k] === undefined) _dCollapsedIdx[k] = _dCollapsedLen;
+  }
+  const i = _dCollapsedIdx[_dCollapseName(name)];
+  if (i === undefined) return false;
+  if (nameToIdx[name] === undefined) nameToIdx[name] = i;
+  return true;
+}
+window._dHasPlayerName = _dHasPlayerName;
+
 // Stamp d.bye from data/bye_weeks.js (regenerate via scripts/pull_bye_weeks.py).
 // Fills the Bye box in the player card's Playoff Schedule row. FA/TBD have no
 // TEAM_ABBR_MAP entry so d.bye stays undefined and the card renders '—'.
@@ -12186,7 +12212,7 @@ document.addEventListener('click', function(e) {
     var _existingNames = new Set();
     for (var _i = 0; _i < D.length; _i++) _existingNames.add(D[_i].n);
     EP_RETIRED.forEach(p => {
-      if (!_existingNames.has(p.name)) {
+      if (!_existingNames.has(p.name) && !_dHasPlayerName(p.name)) {
         const seasons = p.last - p.debut + 1;
         D.push({n:p.name,a:999,p:0,s:p.pos,r:p.pos+"\u2014",t:"Retired",p25:null,p24:null,p23:null,age:null,cyr:null,out:null,sal:null,dr:null,exp:seasons,role:null,inj:null,s25:null,career:p.career||[],da:999,sa:999,idx:D.length,myRank:D.length+1,round:99,notes:"",_retired:true,_debut:p.debut,_last:p.last});
         _existingNames.add(p.name);
@@ -13514,7 +13540,7 @@ document.addEventListener('click', function(e) {
     // Ensure all-time pool players (legends) exist in D so player cards can open for them
     if (gwPoolAlltime && gwPoolAlltime.length) {
       gwPoolAlltime.forEach(function(p) {
-        if (D.find(function(dd) { return dd.n.toLowerCase() === p.name.toLowerCase(); })) return;
+        if (_dHasPlayerName(p.name)) return; // exact/case-insensitive + collapsed-name dedupe
         // Find the LDB entry for extra data (seasons array, birthYear, headshot)
         var ldb = (typeof LDB !== 'undefined') ? LDB.find(function(l) { return l.n === p.name; }) : null;
         // ldb.seasons is year-by-year career array (attached from LEGEND_CAREERS)
@@ -16174,7 +16200,7 @@ function _enrichFromAllPlayers() {
   const _dNames = new Set(D.map(d => d.n));
   let _apAdded = 0;
   ALL_PLAYERS_DB.forEach(p => {
-    if (_dNames.has(p.name)) return;
+    if (_dNames.has(p.name) || _dHasPlayerName(p.name)) return;
     if (p.pos === 'K' || p.pos === 'DST') return;
     // Only add players who are actually retired (last season before 2024)
     if (p.last >= 2024) return;
@@ -16343,7 +16369,7 @@ window._fixNameCollisions();
 if (typeof LEGEND_CAREERS !== 'undefined') HP.forEach(p => {
   if (!p.n || !p.s || p.s === 'K' || p.s === 'DST') return;
   if (!LEGEND_CAREERS[p.n]) return; // No career data available
-  if (D.find(d => d.n === p.n)) return; // Already in D
+  if (_dHasPlayerName(p.n)) return; // Already in D (exact or punctuation variant)
   const career = LEGEND_CAREERS[p.n];
   const teams = (p._teams || []);
   const primaryTeam = teams.length ? teams[0] : 'Retired';
@@ -16391,7 +16417,7 @@ function _applyLegendCareerBindings() {
     HP.forEach(p => {
       if (!p.n || !p.s || p.s === 'K' || p.s === 'DST') return;
       if (!LEGEND_CAREERS[p.n]) return;
-      if (D.find(d => d.n === p.n)) return;
+      if (_dHasPlayerName(p.n)) return; // exact or punctuation variant already in D
       const career = LEGEND_CAREERS[p.n];
       const teams = (p._teams || []);
       const primaryTeam = teams.length ? teams[0] : 'Retired';

@@ -47810,6 +47810,75 @@ Rules:
       `<div style="display:none;${badgeStyle}">${initials}</div>`;
   }
 
+  // ── Team tiers (Jack 2026-09-02: "when I said tiers I meant the teams") ──
+  // Groups the league by starter-weighted strength (the TOTAL number, so it
+  // follows the DYNASTY VALUE / CONTENDER view) with gap-based breaks, the
+  // same idea as the pick-slot early/mid/late logic: sort desc, take the
+  // largest drops between neighbours, and break wherever a drop is at least
+  // _MT_TEAM_TIER_GAP of the league's top-to-bottom spread (max 4 tiers).
+  // A flat league (spread under 5% of the average) is one tier. Labels
+  // read by tier count, with separate vocabularies (Jack 2026-09-02):
+  // dynasty/keeper = roster-window framing, redraft = this-season framing.
+  const _MT_TEAM_TIER_GAP = 0.12;
+  const _MT_TEAM_TIER_LABELS = {
+    dynasty: {
+      1: ['EVEN LEAGUE'],
+      2: ['CONTENDERS', 'REBUILDING'],
+      3: ['CONTENDERS', 'RETOOLING', 'REBUILDING'],
+      4: ['DYNASTY POWERS', 'CONTENDERS', 'RETOOLING', 'REBUILDING']
+    },
+    redraft: {
+      1: ['EVEN LEAGUE'],
+      2: ['PLAYOFF TEAMS', 'LONG SHOTS'],
+      3: ['PLAYOFF TEAMS', 'BUBBLE', 'LONG SHOTS'],
+      4: ['TITLE FAVORITES', 'PLAYOFF TEAMS', 'BUBBLE', 'LONG SHOTS']
+    }
+  };
+  const _MT_TEAM_TIER_COLORS = {
+    1: ['#94a3b8'],
+    2: ['#22c55e', '#ef4444'],
+    3: ['#22c55e', '#facc15', '#ef4444'],
+    4: ['#22c55e', '#4ade80', '#facc15', '#ef4444']
+  };
+  function _mtTeamTiers(teams) {
+    const n = teams ? teams.length : 0;
+    if (n < 2) return null;
+    const sorted = teams.slice().sort((a, b) => (b.strengthTotal || 0) - (a.strengthTotal || 0));
+    const v = sorted.map(t => t.strengthTotal || 0);
+    const spread = v[0] - v[n - 1];
+    const avg = v.reduce((s, x) => s + x, 0) / n;
+    let breaks = []; // a break AFTER sorted[i]
+    if (spread > 0 && spread >= avg * 0.05) {
+      const gaps = [];
+      for (let i = 0; i < n - 1; i++) gaps.push({ i, g: v[i] - v[i + 1] });
+      gaps.sort((a, b) => b.g - a.g);
+      for (const gp of gaps) {
+        if (breaks.length >= 3) break;
+        if (gp.g >= spread * _MT_TEAM_TIER_GAP) breaks.push(gp.i);
+      }
+      breaks.sort((a, b) => a - b);
+    }
+    const groups = [];
+    let start = 0;
+    breaks.concat([n - 1]).forEach(end => { groups.push(sorted.slice(start, end + 1)); start = end + 1; });
+    const count = groups.length;
+    const isDyn = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
+    const vocab = _MT_TEAM_TIER_LABELS[isDyn ? 'dynasty' : 'redraft'];
+    const labels = vocab[count] || vocab[4];
+    const colors = _MT_TEAM_TIER_COLORS[count] || _MT_TEAM_TIER_COLORS[4];
+    const byTeam = new Map();
+    const tiers = groups.map((g, gi) => {
+      const tier = { idx: gi, label: labels[gi], color: colors[gi], teams: g, hi: g[0].strengthTotal || 0, lo: g[g.length - 1].strengthTotal || 0 };
+      g.forEach(t => byTeam.set(t, tier));
+      return tier;
+    });
+    return { tiers, byTeam };
+  }
+  function _mtTeamTierChip(tier) {
+    if (!tier) return '';
+    return ` <span title="Team tier by starter-weighted strength (${tier.teams.length} team${tier.teams.length === 1 ? '' : 's'} · ${tier.lo}–${tier.hi})" style="font-size:.5rem;font-weight:700;color:${tier.color};background:${tier.color}18;border:1px solid ${tier.color};border-radius:3px;padding:0 5px;vertical-align:1px;letter-spacing:.5px;white-space:nowrap">${tier.label}</span>`;
+  }
+
   function _mtRenderTeamList(teams) {
     // Rebuild positional-rank maps on every list render — cheap, and keeps
     // them in sync with value-source switches and live rankings edits.
@@ -47936,9 +48005,24 @@ Rules:
     teams.slice().sort((a, b) => (b.lineupPpg || 0) - (a.lineupPpg || 0))
       .forEach((t, i) => ppgRankByTeam.set(t, i + 1));
 
+    // Team tiers: group headers when the list is in strength order (TOTAL
+    // sort), a per-row chip under any other sort so the label travels.
+    const _tierInfo = _mtTeamTiers(teams);
+    let _lastTier = null;
+
     sorted.forEach((t, i) => {
       const sc = t.score;
       const isMe = t.isMyTeam;
+      const _tier = _tierInfo ? _tierInfo.byTeam.get(t) : null;
+      if (_tier && _mtSortBy === 'total' && _tier !== _lastTier) {
+        _lastTier = _tier;
+        html += `<div class="mt-team-tier-hdr" style="display:flex;align-items:center;gap:8px;margin:${i === 0 ? 0 : 12}px 0 6px;padding:0 4px">`;
+        html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${_tier.color}">${_tier.label}</span>`;
+        html += `<span style="font-size:.58rem;color:var(--text2)">${_tier.teams.length} team${_tier.teams.length === 1 ? '' : 's'} · ${_tier.lo === _tier.hi ? _tier.hi : _tier.lo + '–' + _tier.hi}</span>`;
+        html += `<span style="flex:1;height:1px;background:${_tier.color}40"></span>`;
+        html += `</div>`;
+      }
+      const _tierChip = (_tier && _mtSortBy !== 'total') ? _mtTeamTierChip(_tier) : '';
       const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
       const isPosSort = _mtSortBy !== 'total' && _mtSortBy !== 'ppg' && _mtSortBy !== 'picks' && _mtSortBy !== 'week';
       const posRankEntry = isPosSort ? ((t.posRanks || {})[_mtSortBy] || { rank: teams.length, strength: 0 }) : null;
@@ -47966,7 +48050,7 @@ Rules:
       const _injChip = _injOut.length
         ? ` <span title="Projected starters ruled out: ${_esc(_injOut.map(x => x.name + ' (' + x.tag + ')').join(', '))}" style="font-size:.55rem;font-weight:700;color:#ef4444;background:#ef444418;border:1px solid #ef4444;border-radius:3px;padding:0 5px;vertical-align:1px">${_injOut.length} OUT</span>`
         : '';
-      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}${_injChip}</div>`;
+      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}${_tierChip}${_injChip}</div>`;
       html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}${deltaHtml}</div>`;
       html += `</div>`;
       // Position scores mini + picks for dynasty
@@ -48347,7 +48431,9 @@ Rules:
     if (sc.pickTotal) html += `<div style="font-size:.5rem;color:var(--text2)">+${sc.pickTotal} picks</div>`;
     html += `</div>`;
     html += _mtTeamLogoHtml(t, 40);
-    html += `<div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text)">${_esc(t.owner)}${t.isMyTeam ? ' <span style="font-size:.7rem;color:var(--accent)">⭐ MY TEAM</span>' : ''}</div>`;
+    const _dtTiers = _mtTeamTiers(teams);
+    const _dtTierChip = _dtTiers ? _mtTeamTierChip(_dtTiers.byTeam.get(t)).replace('font-size:.5rem', 'font-size:.6rem') : '';
+    html += `<div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--text)">${_esc(t.owner)}${t.isMyTeam ? ' <span style="font-size:.7rem;color:var(--accent)">⭐ MY TEAM</span>' : ''}<span style="font-family:'DM Sans',sans-serif;letter-spacing:0;vertical-align:middle">${_dtTierChip}</span></div>`;
     // Team playoff SOS: avg W15-17 rank of projected starters, league-relative
     let _psosHtml = '';
     const _myPsos = _mtTeamPlayoffSos(t);

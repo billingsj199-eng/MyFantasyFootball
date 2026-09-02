@@ -47123,7 +47123,6 @@ Rules:
   // outlined. Picks price at their MID slot (a completed trade's pick has
   // no live slot projection worth pretending to know).
   let _mtTradeLogOpen = false;
-  let _mtTradeLogMine = false;
   const _mtTradeLogCache = {};
   function _mtSleeperNameMap() {
     let map = {};
@@ -47155,9 +47154,9 @@ Rules:
     trades.sort((a, b) => (b.status_updated || b.created || 0) - (a.status_updated || a.created || 0));
     return trades;
   }
-  function _mtPriceTrade(tx, nameMap) {
-    const mode = _mtGetRankingMode();
-    const teams = window._mtTeams || [];
+  function _mtPriceTrade(tx, nameMap, teams, mode) {
+    teams = teams || window._mtTeams || [];
+    mode = mode || _mtGetRankingMode();
     const byId = {};
     teams.forEach(t => { byId[String(t.id)] = t; });
     const rdLabel = r => (r === 1 ? '1st' : r === 2 ? '2nd' : r === 3 ? '3rd' : '4th');
@@ -47195,26 +47194,32 @@ Rules:
     }
     return { sides, verdict };
   }
-  window._mtSetTradeLogFilter = function (mine) {
-    _mtTradeLogMine = !!mine;
-    const key = 'sleeper_' + _mtActiveSleeperId;
-    if (_mtTradeLogCache[key]) _mtRenderTradeLog(_mtTradeLogCache[key]);
+  // Render context per log instance (the loaded league's panel AND any
+  // saved-card panels): { key, box, teams, mode, mine } — teams/mode come
+  // from the loaded league or the saved snapshot's format.
+  const _mtTradeLogCtx = {};
+  window._mtSetTradeLogFilter = function (key, mine) {
+    const ctx = _mtTradeLogCtx[key];
+    if (!ctx) return;
+    ctx.mine = !!mine;
+    if (_mtTradeLogCache[key]) _mtRenderTradeLog(_mtTradeLogCache[key], ctx);
   };
-  function _mtRenderTradeLog(trades) {
-    const box = document.getElementById('mtTradeLog');
+  function _mtRenderTradeLog(trades, ctx) {
+    const box = ctx && ctx.box;
     if (!box) return;
+    _mtTradeLogCtx[ctx.key] = ctx;
     const nameMap = _mtSleeperNameMap();
-    const priced = trades.map(tx => ({ tx, p: _mtPriceTrade(tx, nameMap) }));
-    const hasMine = (window._mtTeams || []).some(t => t.isMyTeam);
-    const shown = _mtTradeLogMine ? priced.filter(x => x.p.sides.some(s => s.mine)) : priced;
+    const priced = trades.map(tx => ({ tx, p: _mtPriceTrade(tx, nameMap, ctx.teams, ctx.mode) }));
+    const hasMine = (ctx.teams || []).some(t => t.isMyTeam);
+    const shown = ctx.mine ? priced.filter(x => x.p.sides.some(s => s.mine)) : priced;
     let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
       `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#38bdf8">TRADE LOG</span>` +
       `<span style="font-size:.6rem;color:var(--text2)">${trades.length} completed trade${trades.length === 1 ? '' : 's'} · priced on today's ${_mtValueSrc === 'jacks' ? "Jack's" : _mtValueSrc === 'mine' ? 'My Ranks' : _mtValueSrc} board, calc package math · picks at mid slot</span>`;
     if (hasMine) {
       html += `<span style="margin-left:auto;display:flex;gap:2px;background:var(--surface2);padding:2px;border-radius:6px">`;
       [[false, 'ALL'], [true, 'MINE']].forEach(([v, lbl]) => {
-        const on = _mtTradeLogMine === v;
-        html += `<button onclick="window._mtSetTradeLogFilter(${v})" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1px;border:none;border-radius:4px;cursor:pointer;background:${on ? 'var(--surface)' : 'transparent'};color:${on ? 'var(--accent)' : 'var(--text2)'};${on ? 'box-shadow:0 0 0 1px var(--border);' : ''}">${lbl}</button>`;
+        const on = !!ctx.mine === v;
+        html += `<button onclick="event.stopPropagation();window._mtSetTradeLogFilter('${_esc(ctx.key)}', ${v})" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1px;border:none;border-radius:4px;cursor:pointer;background:${on ? 'var(--surface)' : 'transparent'};color:${on ? 'var(--accent)' : 'var(--text2)'};${on ? 'box-shadow:0 0 0 1px var(--border);' : ''}">${lbl}</button>`;
       });
       html += `</span>`;
     }
@@ -47271,10 +47276,41 @@ Rules:
       let trades = _mtTradeLogCache[key];
       if (!trades) trades = _mtTradeLogCache[key] = await _mtFetchSleeperTrades(_mtActiveSleeperId);
       if (!_mtTradeLogOpen) return;
-      _mtRenderTradeLog(trades);
+      _mtRenderTradeLog(trades, { key, box, teams: window._mtTeams || [], mode: _mtGetRankingMode(), mine: !!((_mtTradeLogCtx[key] || {}).mine) });
     } catch (err) {
       console.warn('[MyTeams] Trade log error:', err);
       box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t load trades: ' + _esc(err.message) + '</div>';
+    }
+  };
+
+  // Saved-card trade log (Jack 2026-09-02: "show the trade log on the
+  // saved league cards too") — same fetch/render, but teams + mode come
+  // from the snapshot so nothing has to be loaded into view. Sleeper only.
+  function _mtModeForFormat(f) {
+    if (!f) return 'redraft';
+    if (f.type === 'dynasty' && f.sf) return 'dynastysf';
+    if (f.type === 'dynasty') return 'dynasty';
+    if (f.sf) return 'superflex';
+    return 'redraft';
+  }
+  window._mtToggleSavedTradeLog = async function (idx) {
+    const lg = (window._mtSavedLeagues || [])[idx];
+    const box = document.getElementById('mtSavedTradeLog-' + idx);
+    if (!lg || !box) return;
+    const leagueId = String(lg.leagueId || '');
+    if (box.style.display !== 'none') { box.style.display = 'none'; return; }
+    box.style.display = '';
+    const key = 'saved_' + leagueId;
+    if (!_mtTradeLogCache['sleeper_' + leagueId]) box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:6px 0">Loading trade history…</div>';
+    try {
+      let trades = _mtTradeLogCache['sleeper_' + leagueId];
+      if (!trades) trades = _mtTradeLogCache['sleeper_' + leagueId] = await _mtFetchSleeperTrades(leagueId);
+      if (box.style.display === 'none') return;
+      _mtTradeLogCache[key] = trades;
+      _mtRenderTradeLog(trades, { key, box, teams: lg.teams || [], mode: _mtModeForFormat(lg.format), mine: !!((_mtTradeLogCtx[key] || {}).mine) });
+    } catch (err) {
+      console.warn('[MyTeams] Saved trade log error:', err);
+      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:6px 0">Couldn\'t load trades: ' + _esc(err.message) + '</div>';
     }
   };
 
@@ -49155,6 +49191,8 @@ Rules:
       }
       const savedAbs = lg.savedAt ? new Date(lg.savedAt).toLocaleString() : '';
       const savedRel = _mtRelTime(lg.savedAt);
+      const isEspnId = String(lg.leagueId || '').indexOf('espn_') === 0;
+      const isYahooId = String(lg.leagueId || '').indexOf('yahoo_') === 0;
 
       // Find user's team for roster preview
       const myTeam = (lg.teams || []).find(t => t.isMyTeam);
@@ -49174,9 +49212,13 @@ Rules:
       html += `<div style="font-size:.65rem;color:var(--text2)">${teamCount} teams · ${fmtParts.join(' · ')}${lg.season ? ' · ' + lg.season : ''}${savedRel ? ' · <span title="' + _esc(savedAbs) + '" style="cursor:help">Saved ' + savedRel + '</span>' : ''}</div>`;
       html += rosterPreview;
       html += `</div>`;
+      const _isSleeperLg = !!lg.leagueId && !isEspnId && !isYahooId;
+      if (_isSleeperLg) html += `<button onclick="event.stopPropagation();window._mtToggleSavedTradeLog(${i})" title="League trade history, priced on your value board" style="padding:6px 10px;background:var(--surface2);color:#38bdf8;border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;cursor:pointer">TRADES</button>`;
       html += `<button onclick="event.stopPropagation();window._mtLoadSavedLeague(${i})" style="padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;cursor:pointer">LOAD</button>`;
       html += `<button onclick="event.stopPropagation();window._mtDeleteSavedLeague('${_esc(lg.leagueId)}')" title="Remove this saved league" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;color:#ef4444;cursor:pointer;font-weight:700">✕</button>`;
       html += `</div>`;
+      // Inline trade-log panel for this card (Sleeper leagues; filled on demand).
+      if (_isSleeperLg) html += `<div id="mtSavedTradeLog-${i}" style="display:none;margin:-2px 0 8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px"></div>`;
     });
     container.innerHTML = html;
     // Portfolio summary rides the same render (and the same D-boot retry).

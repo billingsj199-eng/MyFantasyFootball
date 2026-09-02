@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-02zi" as="script">
+<link rel="preload" href="app.js?v=2026-09-02zj" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2486,10 +2486,6 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- Cross-league lineup checklist (set lineup vs best lineup, every saved league — filled by _mtRenderLineupChecklist) -->
 <div id="mtLineupChecklist" style="margin-top:20px"></div>
 <div id="mtSavedTeams" style="margin-top:20px"></div>
-
-<!-- Portfolio summary across saved leagues (filled by _mtRenderPortfolioSummary; the
-     2026-09-02 exposure table was dropped per Jack — Underdog tab has its own) -->
-<div id="mtPortfolio" style="margin-top:20px"></div>
 
 <!-- ADD A LEAGUE — explainer + import cards, collapsible (2026-09-02 declutter: auto-collapses once a league is saved or loaded; window._mtToggleSetup) -->
 <div id="mtSetup" style="margin-top:20px;margin-bottom:16px">
@@ -5404,7 +5400,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-02zi"></script>
+<script defer src="app.js?v=2026-09-02zj"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

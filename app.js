@@ -45812,11 +45812,18 @@ Rules:
     const rp = league.roster_positions || [];
     const sf = rp.includes('SUPER_FLEX') || rp.filter(p => p === 'QB').length >= 2;
     const type = league.settings && league.settings.type === 2 ? 'dynasty' : (league.settings && league.settings.type === 1 ? 'keeper' : 'redraft');
-    const ppr = league.scoring_settings ? (league.scoring_settings.rec || 0) : 1;
+    const ss = league.scoring_settings || {};
+    const ppr = league.scoring_settings ? (ss.rec || 0) : 1;
     const starters = rp.filter(p => p !== 'BN').length;
     const bestBall = !!(league.settings && league.settings.best_ball);
+    // Scoring-aware projections (Jack 2026-09-02): TE premium (Sleeper
+    // bonus_rec_te = extra points per TE reception) and passing-TD points
+    // (default 4) feed _mtScoringDelta so PPG-driven surfaces (best lineup,
+    // lineup check, tiers, matchups, waivers) price the league's scoring.
+    const tep = Math.max(0, Number(ss.bonus_rec_te) || 0);
+    const passTd = (ss.pass_td != null && isFinite(Number(ss.pass_td))) ? Number(ss.pass_td) : 4;
 
-    _mtFormat = { type, sf, ppr, starters, rosterPositions: rp, bestBall };
+    _mtFormat = { type, sf, ppr, starters, rosterPositions: rp, bestBall, tep, passTd };
 
     // Update format display
     const fmtEl = document.getElementById('mtFormatDisplay');
@@ -45826,6 +45833,8 @@ Rules:
       labels.push(type.charAt(0).toUpperCase() + type.slice(1));
       if (sf) labels.push('Superflex');
       labels.push(ppr === 1 ? 'PPR' : ppr === 0.5 ? 'Half PPR' : ppr === 0 ? 'Standard' : ppr + ' PPR');
+      if (tep) labels.push('TEP +' + tep);
+      if (passTd !== 4) labels.push(passTd + 'pt pass TD');
       labels.push(starters + ' starters');
       fmtEl.textContent = labels.join(' · ');
     }
@@ -45861,7 +45870,32 @@ Rules:
     return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
   }
 
+  // Per-game scoring delta for the active league's non-standard settings:
+  // TE premium = tep × projected receptions per game (TEs only), passing
+  // TDs = (passTd − 4) × projected pass TDs per game (QBs). Per-game rates
+  // from Clay (season line ÷ projected games), else last season's line.
+  // Format-independent, so weekly numbers add the same delta after the
+  // weekly sim/props adjustment (which prices 4-pt TDs and plain PPR).
+  function _mtScoringDelta(d) {
+    if (!d || !_mtFormat) return 0;
+    const tep = _mtFormat.tep || 0;
+    const tdPts = _mtFormat.passTd != null ? _mtFormat.passTd : 4;
+    if (!(d.s === 'TE' && tep) && !(d.s === 'QB' && tdPts !== 4)) return 0;
+    let perGame = null;
+    const cp = (typeof MIKE_CLAY_PROJ !== 'undefined' && typeof clayLookup === 'function') ? clayLookup(d.n) : null;
+    if (cp && cp.gm > 0) perGame = d.s === 'TE' ? (cp.rec || 0) / cp.gm : (cp.ptd || 0) / cp.gm;
+    else if (d.s25 && d.s25.gp > 0) perGame = d.s === 'TE' ? (d.s25.rc || 0) / d.s25.gp : (d.s25.ptd || 0) / d.s25.gp;
+    if (!perGame) return 0;
+    const delta = d.s === 'TE' ? tep * perGame : (tdPts - 4) * perGame;
+    return Math.round(delta * 10) / 10;
+  }
   function _mtGetPlayerPpg(name) {
+    const base = _mtGetPlayerPpgBase(name);
+    if (!base) return base;
+    const delta = _mtScoringDelta(_mtLookupD(name));
+    return delta ? Math.round((base + delta) * 10) / 10 : base;
+  }
+  function _mtGetPlayerPpgBase(name) {
     const d = _mtLookupD(name);
     if (!d) return 0;
     const isKDst = d.s === 'K' || d.s === 'DST';
@@ -46355,12 +46389,22 @@ Rules:
   // Normalized payload (ESPN/Yahoo contract) → league format, without
   // clobbering the active league's global _mtFormat. Shared by the extension
   // auto-commit and the background saved-league refresh.
+  // Normalized payloads carry optional `tePremium` (extra pts per TE
+  // reception) and `passTd` (points per passing TD) from the ESPN/Yahoo
+  // scoring settings — mapped onto the Sleeper keys _mtDetectFormat reads.
+  function _mtNormalizedScoring(lg) {
+    return {
+      rec: lg.pprValue != null ? lg.pprValue : 0,
+      bonus_rec_te: lg.tePremium != null ? lg.tePremium : 0,
+      pass_td: lg.passTd != null ? lg.passTd : 4
+    };
+  }
   function _mtNormalizedFormat(lg) {
     const prevFormat = _mtFormat;
     _mtDetectFormat({
       roster_positions: lg.rosterPositions || [],
       settings: { type: lg.keeper ? 1 : 0 },
-      scoring_settings: { rec: lg.pprValue != null ? lg.pprValue : 0 }
+      scoring_settings: _mtNormalizedScoring(lg)
     });
     const fmt = { ..._mtFormat };
     _mtFormat = prevFormat;
@@ -46512,7 +46556,7 @@ Rules:
       _mtDetectFormat({
         roster_positions: lg.rosterPositions || [],
         settings: { type: lg.keeper ? 1 : 0 },
-        scoring_settings: { rec: lg.pprValue != null ? lg.pprValue : 0 }
+        scoring_settings: _mtNormalizedScoring(lg)
       });
 
       let matchedCount = 0, totalCount = 0;
@@ -46778,9 +46822,10 @@ Rules:
         const n = parseInt(r.count, 10) || 0;
         for (let i = 0; i < n; i++) apiSlots.push(lbl);
       });
-      let rec = null;
+      let rec = null, passTd = null;
       ((svc.settings && svc.settings.stat_categories) || []).forEach(c => {
         if (Number(c.stat_id) === 11) rec = parseFloat(c.stat_modifier) || 0;
+        if (Number(c.stat_id) === 5) passTd = parseFloat(c.stat_modifier); // passing TDs (Yahoo default 4)
       });
 
       // 2) League home HTML — team ids/names/records via the standings parse;
@@ -46820,6 +46865,7 @@ Rules:
         norm.rosterPositions = apiSlots;
         norm.sf = apiSlots.indexOf('SUPER_FLEX') >= 0 || apiSlots.filter(s => s === 'QB').length >= 2;
       }
+      if (passTd != null && isFinite(passTd)) norm.passTd = passTd;
       norm.syncedAt = Date.now();
       norm.direct = true; // in-site fetch, not the extension — enables the ↻ re-sync button
       return norm;
@@ -48057,6 +48103,8 @@ Rules:
     fmtParts.push(_mtFormat.type.charAt(0).toUpperCase() + _mtFormat.type.slice(1));
     if (_mtFormat.sf) fmtParts.push('Superflex');
     fmtParts.push(_mtFormat.ppr === 1 ? 'PPR' : _mtFormat.ppr === 0.5 ? 'Half PPR' : 'Standard');
+    if (_mtFormat.tep) fmtParts.push('TEP +' + _mtFormat.tep);
+    if (_mtFormat.passTd != null && _mtFormat.passTd !== 4) fmtParts.push(_mtFormat.passTd + 'pt pass TD');
     fmtParts.push(league.season || '');
     document.getElementById('mtLeagueInfo').textContent = fmtParts.join(' · ');
 
@@ -48109,6 +48157,8 @@ Rules:
       labels.push(_mtFormat.type.charAt(0).toUpperCase() + _mtFormat.type.slice(1));
       if (_mtFormat.sf) labels.push('SF');
       labels.push(_mtFormat.ppr === 1 ? 'PPR' : _mtFormat.ppr === 0.5 ? '.5 PPR' : 'STD');
+      if (_mtFormat.tep) labels.push('TEP +' + _mtFormat.tep);
+      if (_mtFormat.passTd != null && _mtFormat.passTd !== 4) labels.push(_mtFormat.passTd + 'pt pass TD');
       const modeNames = { redraft: 'Redraft', superflex: 'Superflex', dynasty: 'Dynasty 1QB', dynastysf: 'Dynasty SF' };
       labels.push('Using: ' + (modeNames[_mtGetRankingMode()] || 'Redraft') + ' Rankings');
       fmtEl.textContent = labels.join(' · ');
@@ -48849,11 +48899,14 @@ Rules:
       // the whole starting lineup.
       let ppg = _mtGetPlayerPpg(name);
       if (isWkBasis && ppg > 0 && typeof window._weeklyAdjustPpg === 'function') {
-        const adj = window._weeklyAdjustPpg(d, ppg);
+        // Weekly sources price standard scoring — adjust the base, then
+        // re-add the league's TE-premium / pass-TD delta.
+        const sDelta = _mtScoringDelta(d);
+        const adj = window._weeklyAdjustPpg(d, Math.max(0, ppg - sDelta));
         // Adjusted 0 with a real season projection = the injury gate fired
         // (IR/PUP/Out in-season) — bench them like a bye.
         if (!adj && !out) out = 'OUT';
-        ppg = adj || 0;
+        ppg = adj ? Math.round((adj + sDelta) * 10) / 10 : 0;
       }
       if (!ppg) _dbgNoPpg++;
       return { name, pos: d.s, ppg, wkRank, out, d };
@@ -49806,9 +49859,8 @@ Rules:
     if (!shown) html += `<div style="padding:10px 12px;font-size:.72rem;color:var(--text2);border:1px dashed var(--border);border-radius:8px">No saved leagues match this filter.</div>`;
     container.innerHTML = html;
     _mtWireSavedDrag(container);
-    // Portfolio summary + lineup checklist ride the same render (and the
-    // same D-boot retry).
-    _mtRenderPortfolioSummary(leagues);
+    // Lineup checklist rides the same render (and the same D-boot retry).
+    // (Portfolio summary REMOVED 2026-09-02 at Jack's request.)
     _mtRenderLineupChecklist(leagues);
     _mtPopulateLeagueSwitch();
     _mtAutoSetupState();
@@ -49988,68 +50040,6 @@ Rules:
     _mtLineupCheckOpen = true;
     box.style.display = '';
     _mtRenderLineupCheck();
-  }
-
-  // ── PORTFOLIO SUMMARY (Flock-audit item 5, Jack 2026-09-02) ──────────
-  // Across every saved league where my team is marked: average placement
-  // percentile (my starter-weighted strength rank vs the league; 100% =
-  // best team) with a grade word, per-position percentile bars from the
-  // league position ranks, and a one-line placement + tier per league.
-  function _mtRenderPortfolioSummary(leagues) {
-    const box = document.getElementById('mtPortfolio');
-    if (!box) return;
-    if (typeof D === 'undefined' || !D.length) { box.innerHTML = ''; return; }
-    const rows = (leagues || []).map(lg => ({ lg, info: _mtSavedLeagueInfo(lg) })).filter(x => x.info && x.info.n > 1);
-    if (!rows.length) { box.innerHTML = ''; return; }
-    const pct = (rank, n) => n > 1 ? 1 - (rank - 1) / (n - 1) : 1;
-    const overall = rows.reduce((s, x) => s + pct(x.info.rank, x.info.n), 0) / rows.length;
-    const grade = overall >= 0.8 ? ['ELITE', '#22c55e'] : overall >= 0.65 ? ['GOOD', '#4ade80'] : overall >= 0.45 ? ['AVERAGE', '#facc15'] : overall >= 0.3 ? ['BELOW AVG', '#f59e0b'] : ['WEAK', '#ef4444'];
-    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-    const posPct = {};
-    ['QB', 'RB', 'WR', 'TE'].forEach(p => {
-      const vals = [];
-      rows.forEach(x => { const pr = x.info.posRanks && x.info.posRanks[p]; if (pr && pr.rank) vals.push(pct(pr.rank, x.info.n)); });
-      posPct[p] = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
-    });
-    let html = `<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text)">PORTFOLIO</span><span style="font-size:.62rem;color:var(--text2)">${rows.length} league${rows.length === 1 ? '' : 's'} with your team marked · strength vs each league</span></div>`;
-    html += `<div class="mt-pf-grid" style="display:grid;grid-template-columns:minmax(150px,1fr) minmax(220px,2fr);gap:10px;align-items:stretch">`;
-    // Left: average percentile + grade
-    html += `<div title="Average of your team's strength percentile in each league (100% = best team in the league)" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-align:center">` +
-      `<div style="font-size:.6rem;letter-spacing:1px;color:var(--text2)">AVG PERCENTILE</div>` +
-      `<div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:1;color:${grade[1]};margin:4px 0">${Math.round(overall * 100)}%</div>` +
-      `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${grade[1]}">${grade[0]}</div>` +
-      `<div style="font-size:.58rem;color:var(--text2);margin-top:4px">stronger than ${Math.round(overall * 100)}% of the teams in your leagues</div></div>`;
-    // Right: positional percentile bars
-    html += `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">` +
-      `<div style="font-size:.6rem;letter-spacing:1px;color:var(--text2);margin-bottom:8px">AVG POSITIONAL PERCENTILE</div>` +
-      `<div style="display:flex;align-items:flex-end;gap:14px;height:84px">`;
-    ['QB', 'RB', 'WR', 'TE'].forEach(p => {
-      const v = posPct[p];
-      const h = v == null ? 0 : Math.max(4, Math.round(v * 64));
-      html += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%" title="${p}: average league position-rank percentile across your teams">` +
-        `<div style="font-size:.62rem;font-weight:700;color:var(--text);margin-bottom:3px">${v == null ? '—' : Math.round(v * 100) + '%'}</div>` +
-        `<div style="width:100%;max-width:38px;height:${h}px;border-radius:4px 4px 0 0;background:${posColors[p]}"></div>` +
-        `<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:${posColors[p]};margin-top:4px">${p}</div></div>`;
-    });
-    html += `</div></div></div>`;
-    // Per-league placement line
-    html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">`;
-    rows.forEach(x => {
-      const tier = x.info.tier;
-      // Rank movement vs the oldest history point in the last 30 days.
-      const me = (x.lg.teams || []).find(t => t && t.isMyTeam);
-      const tr = me ? _mtTeamTrend(x.lg, me) : null;
-      let moveHtml = '';
-      if (tr && tr.rankFrom != null && tr.rankFrom !== x.info.rank) {
-        const up = x.info.rank < tr.rankFrom;
-        moveHtml = `<span title="Was ${_mtOrdinal(tr.rankFrom)} ${tr.days} day${tr.days === 1 ? '' : 's'} ago" style="font-weight:700;color:${up ? '#22c55e' : '#ef4444'}">${up ? '▲' : '▼'} from ${_mtOrdinal(tr.rankFrom)}</span>`;
-      }
-      html += `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.66rem;color:var(--text2)">` +
-        `<span style="font-weight:600;color:var(--text)">${_esc(x.lg.name || 'League')}</span>` +
-        `<span>${_mtOrdinal(x.info.rank)} of ${x.info.n}</span>${moveHtml}${tier ? _mtTeamTierChip(tier) : ''}</span>`;
-    });
-    html += `</div>`;
-    box.innerHTML = html;
   }
 
   window._mtLoadSavedLeague = function(idx) {

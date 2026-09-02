@@ -84,6 +84,30 @@
     return 0;
   }
 
+  // Points per passing TD (stat 4; ESPN default 4) and TE premium: the
+  // receptions item (stat 53) carries per-position overrides keyed by
+  // position id (6 = TE) — extra over the base reception value.
+  function passTdValue(settings) {
+    try {
+      var items = settings.scoringSettings.scoringItems || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].statId === 4 && typeof items[i].points === "number") return items[i].points;
+      }
+    } catch (_) {}
+    return 4;
+  }
+  function tePremiumValue(settings, basePpr) {
+    try {
+      var items = settings.scoringSettings.scoringItems || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].statId !== 53) continue;
+        var ov = items[i].pointsOverrides || {};
+        if (typeof ov["6"] === "number") return Math.max(0, ov["6"] - basePpr);
+      }
+    } catch (_) {}
+    return 0;
+  }
+
   function scoringLabel(ppr) {
     if (ppr >= 1) return "ppr";
     if (ppr > 0) return "half";
@@ -254,6 +278,8 @@
       name: settings.name || ("ESPN League " + raw.id),
       scoring: scoringLabel(ppr),
       pprValue: ppr,
+      passTd: passTdValue(settings),
+      tePremium: tePremiumValue(settings, ppr),
       rosterPositions: rp,
       sf: rp.indexOf("SUPER_FLEX") >= 0 || qbSlots >= 2,
       keeper: keeperCount > 0,

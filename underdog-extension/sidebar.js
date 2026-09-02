@@ -4393,7 +4393,18 @@
       chrome.storage.local.get(['mff_portfolio_sync'], function (res) {
         const existing = res && res.mff_portfolio_sync;
         const merged = _mergeSitePortfolios(existing, sitePortfolio);
-        chrome.storage.local.set({ mff_portfolio_sync: merged }, function () {
+        // v0.18.6: sidebar exposure portfolio from the merged union, so
+        // Port % / badges divide by EVERY synced draft, not just this run's.
+        let sidebarPortfolio = null;
+        try {
+          const teams = (merged.drafts || []).map(function (d) {
+            return Array.isArray(d && d.picks) ? d.picks.map(function (p) { return p && (p.name || p); }).filter(Boolean) : [];
+          }).filter(function (t) { return t.length > 0; });
+          if (teams.length) sidebarPortfolio = buildPortfolioFromTeams(teams);
+        } catch (e) { console.warn('[MFF/sync] sidebar portfolio build error:', e && e.message); }
+        const toStore = { mff_portfolio_sync: merged };
+        if (sidebarPortfolio) toStore.mff_portfolio = sidebarPortfolio;
+        chrome.storage.local.set(toStore, function () {
           if (chrome.runtime && chrome.runtime.lastError) {
             console.warn('[MFF/sync] storage.set error:', chrome.runtime.lastError.message);
             return;
@@ -4895,14 +4906,36 @@
         if (es && es.id) esFeeMap.set(es.id, parseFloat(es.fee) || 0);
       }
     }
+    // v0.18.6: draft meta (user_draft_entry_id etc.) from EVERY cached list
+    // of drafts — tournament_rounds/<id>/drafts as before, plus
+    // /v4/user/active_drafts (in-progress drafts) and any future list shape
+    // whose items carry user_draft_entry_id. The tournament_rounds-only walk
+    // left the live draft (and anything UD moved off that endpoint) with no
+    // meta, and the old fallback below then attributed the FIRST entry's
+    // roster to the user.
     const draftMetaMap = new Map();
     for (const p of Object.keys(bulk)) {
-      if (!p.includes('/tournament_rounds/') || !p.endsWith('/drafts')) continue;
-      const arr = (bulk[p] && bulk[p].drafts) || [];
+      const isRoundList = p.includes('/tournament_rounds/') && p.endsWith('/drafts');
+      const arr = (bulk[p] && Array.isArray(bulk[p].drafts)) ? bulk[p].drafts : null;
+      if (!arr) continue;
       for (const d of arr) {
-        if (d && d.id) draftMetaMap.set(d.id, d);
+        if (!d || !d.id) continue;
+        if (!isRoundList && d.user_draft_entry_id == null) continue;
+        const prev = draftMetaMap.get(d.id);
+        // Keep whichever record actually names the user's entry.
+        if (prev && prev.user_draft_entry_id != null && d.user_draft_entry_id == null) continue;
+        draftMetaMap.set(d.id, d);
       }
     }
+    // v0.18.6: logged-in user id (snooped /v1/user) — lets us match the
+    // user's entry inside the /v2/drafts payload itself when no list meta
+    // names it. Shape walked defensively (wrapped {user:{...}} or bare).
+    let myUserId = null;
+    try {
+      let me = bulk['/v1/user'];
+      if (me && me.user) me = me.user;
+      if (me && me.id != null) myUserId = me.id;
+    } catch (_) {}
     const teamMap = new Map();
     const teamsCache = bulk['/v1/teams'];
     if (teamsCache && Array.isArray(teamsCache.teams)) {
@@ -5046,10 +5079,23 @@
         });
       }
       const meta = draftMetaMap.get(draft.id) || {};
-      const myEntryId = meta.user_draft_entry_id || null;
-      const myTeamPicks = myEntryId && teamsByEntry.has(myEntryId)
+      let myEntryId = meta.user_draft_entry_id || null;
+      // v0.18.6: fall back to matching MY user id against the draft's own
+      // entries (same walk detectSlotByUsername uses for slot detection).
+      if (!myEntryId && myUserId != null) {
+        try {
+          const entryArr = draft.draft_entries || draft.entries || d.draft_entries || [];
+          const mine = entryArr.find((e) => e && (e.user_id === myUserId || (e.user && e.user.id === myUserId)));
+          if (mine && mine.id != null) myEntryId = mine.id;
+        } catch (_) {}
+      }
+      // v0.18.6: NEVER guess. The old fallback took the first entry's roster
+      // when the user's entry was unknown, which silently counted somebody
+      // else's team as ours (wrong exposure % on every player they drafted).
+      // A draft we can't attribute is dropped and reported in the diag.
+      const myTeamPicks = (myEntryId && teamsByEntry.has(myEntryId))
         ? teamsByEntry.get(myEntryId)
-        : (teamsByEntry.size ? teamsByEntry.values().next().value : null);
+        : null;
       if (!myTeamPicks) {
         _diag.droppedNoTeam.push({
           id: draft.id,
@@ -5057,7 +5103,8 @@
           pickTotal: _pickTotal,
           pickResolved: _pickResolved,
           teamsByEntrySize: teamsByEntry.size,
-          myEntryId: myEntryId
+          myEntryId: myEntryId,
+          reason: myEntryId ? 'entry-has-no-picks' : (myUserId == null ? 'no-user-id-and-no-meta' : 'user-not-in-entries')
         });
         continue;
       }
@@ -5161,11 +5208,15 @@
     try {
       const { aggregated, aggregatedRaw } = buildAggregatedFromBulk(bulk);
       if (!aggregatedRaw.length) return 0;
-      const portfolio = buildPortfolioFromTeams(aggregated);
       const sitePortfolio = buildSitePortfolio(aggregatedRaw);
-      if (_isExtensionContextValid()) {
-        try { chrome.storage.local.set({ mff_portfolio: portfolio }); } catch (_) {}
-      }
+      // v0.18.6: mff_portfolio (the sidebar's Port % / page exposure badges)
+      // is now derived from the CUMULATIVE merged store inside
+      // publishPortfolioToSite. Writing buildPortfolioFromTeams(aggregated)
+      // here — this sync's drafts only — was the "wrong ownership %" bug:
+      // incremental syncs skip drafts already in the portfolio, so after a
+      // draft-complete auto-sync the denominator collapsed to the handful
+      // of NEW drafts (e.g. 3 of 6 → 50%) until the next site visit
+      // re-pushed the full set.
       publishPortfolioToSite(sitePortfolio);
       console.log('[MFF/sync] checkpoint (' + (label || 'mid-sync') + '):',
                   aggregatedRaw.length, 'drafts published');
@@ -5373,7 +5424,7 @@
     // players, slate metadata — that the background fetch can't replicate
     // (it 401s or 404s on the same endpoints). Pre-loading means even if
     // we never explicitly request a path, if the page snooped it, we use it.
-    const preCache = await udBulk(['/v1/slates/', '/v2/slates/', '/v1/user/', '/v2/drafts/', '/v2/user/', '/v4/user/', '/v2/entry_styles', '/v1/teams']);
+    const preCache = await udBulk(['/v1/slates/', '/v2/slates/', '/v1/user', '/v2/drafts/', '/v2/user/', '/v4/user/', '/v2/entry_styles', '/v1/teams']);
     Object.keys(preCache).forEach(p => { bulk[p] = preCache[p]; });
     console.log('[MFF/sync] pre-loaded', Object.keys(preCache).length, 'cached endpoints');
 
@@ -5840,7 +5891,7 @@
       }
     }
 
-    const final = await udBulk(['/v1/slates/', '/v2/slates/', '/v2/drafts/', '/v1/user/']);
+    const final = await udBulk(['/v1/slates/', '/v2/slates/', '/v2/drafts/', '/v1/user', '/v4/user/']);
     Object.keys(final).forEach(p => { if (!bulk[p]) bulk[p] = final[p]; });
 
     // v0.10.14: final publish after post-loop player metadata recovery and

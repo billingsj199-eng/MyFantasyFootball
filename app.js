@@ -44618,6 +44618,55 @@ Rules:
     return 'redraft';
   }
 
+  // ── Tier chips (Jack 2026-09-02: "add tiers or labels to My Teams") ──
+  // A player's tier LABEL on the league's value board (src = _mtValueSrc,
+  // mode = league format), rendered as a small chip beside the name in the
+  // roster / optimal-lineup rows. Colors cycle through the rankings page's
+  // tier-letter palette by tier index so the chip reads the same as the
+  // tier row header there. Boards without tier data (consensus / ADP
+  // sources) get NO chip — the pricing pseudo-ladder is scaffolding, not a
+  // label Jack set. Tooltip carries the tier name + rank span.
+  const _MT_TIER_COLORS = [
+    { bg: 'linear-gradient(135deg,#dc2626,#f87171)', light: false },  // red
+    { bg: 'linear-gradient(135deg,#ea580c,#fb923c)', light: false },  // orange
+    { bg: 'linear-gradient(135deg,#ca8a04,#facc15)', light: true  },  // yellow (dark text)
+    { bg: 'linear-gradient(135deg,#16a34a,#4ade80)', light: false },  // green
+    { bg: 'linear-gradient(135deg,#0284c7,#38bdf8)', light: false },  // blue
+    { bg: 'linear-gradient(135deg,#7c3aed,#a78bfa)', light: false },  // purple
+    { bg: 'linear-gradient(135deg,#475569,#94a3b8)', light: false }   // gray
+  ];
+  // variant: undefined = inline chip (lineup starters), 'small' = bench chip,
+  // 'badge' = corner badge on the roster headshot — zero width cost, because
+  // the desktop 4-column roster leaves names ~50px and an inline chip
+  // truncated them to "J…" (verified 2026-09-02 at 1100px).
+  function _mtTierChipHtml(name, variant) {
+    const small = variant === 'small';
+    try {
+      if (typeof window._mtTierRangeFor !== 'function' || typeof D === 'undefined') return '';
+      const d = _mtLookupD(name);
+      if (!d) return '';
+      const src = _mtValueSrc, mode = _mtGetRankingMode();
+      const tr = window._mtTierRangeFor(d, src, mode);
+      if (!tr || !tr.label) return '';
+      // Tier NAME (e.g. "ELITE") lives on the versionTiers entry, keyed by afterRank.
+      let tierName = '';
+      try {
+        const ent = (versionTiers[src][mode].ALL || []).find(t => t.afterRank === tr.from);
+        if (ent && ent.name) tierName = ent.name;
+      } catch (_) {}
+      const c = _MT_TIER_COLORS[tr.index % _MT_TIER_COLORS.length];
+      const srcLbl = src === 'jacks' ? "Jack's" : src === 'mine' ? 'My' : src;
+      const tip = `${tierName ? tierName + ' · ' : ''}Tier ${tr.label} on ${srcLbl} ${mode} board · ranks ${tr.from}–${tr.to}`;
+      const lbl = _esc(String(tr.label));
+      const fg = c.light ? '#111' : '#fff';
+      if (variant === 'badge') {
+        return `<span class="mt-tier-chip mt-tier-badge" title="${_esc(tip)}" style="position:absolute;right:-5px;bottom:-4px;min-width:9px;height:12px;padding:0 2px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:9px;letter-spacing:.5px;line-height:12px;text-align:center;background:${c.bg};color:${fg};border:1.5px solid var(--bg);box-shadow:0 0 0 1px rgba(0,0,0,.25);cursor:help;white-space:nowrap;overflow:hidden;max-width:22px;text-overflow:ellipsis;z-index:1">${lbl}</span>`;
+      }
+      const fs = small ? '.5rem' : '.55rem';
+      return `<span class="mt-tier-chip" title="${_esc(tip)}" style="flex:0 0 auto;display:inline-block;font-family:'Bebas Neue',sans-serif;font-size:${fs};letter-spacing:.8px;line-height:1;padding:3px 5px 2px;border-radius:4px;background:${c.bg};color:${fg};cursor:help;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle">${lbl}</span>`;
+    } catch (_) { return ''; }
+  }
+
   function _mtGetPlayerRank(name) {
     if (typeof D === 'undefined') return 999;
     const d = _mtLookupD(name);
@@ -48188,6 +48237,7 @@ Rules:
         html += `<span style="font-size:.55rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'};padding:1px 4px;border-radius:3px;background:${(posColors[p.pos] || '#666')}20">${p.pos}</span>`;
         html += `<span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="font-size:.78rem;font-weight:600;color:var(--text);cursor:pointer">${_esc(p.name)}</span>`;
         html += (typeof window._injPillByName === 'function') ? window._injPillByName(p.name) : '';
+        html += _mtTierChipHtml(p.name);
         if (isWeekly && p.out) html += `<span style="font-size:.55rem;font-weight:700;color:#ef4444">${p.out}</span>`;
         html += `</div>`;
         if (isWeekly) {
@@ -48217,7 +48267,7 @@ Rules:
         html += `<div style="display:flex;align-items:center;gap:8px;padding:3px 8px;opacity:.65">`;
         html += `<div style="min-width:28px;text-align:center;font-size:.55rem;color:var(--text2)">BN</div>`;
         html += `<span style="font-size:.5rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'}">${p.pos}</span>`;
-        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)"><span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="cursor:pointer">${_esc(p.name)}</span>${(typeof window._injPillByName === 'function') ? window._injPillByName(p.name) : ''}${isWeekly && p.out ? ' <span style="color:#ef4444;font-size:.55rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
+        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)"><span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="cursor:pointer">${_esc(p.name)}</span>${(typeof window._injPillByName === 'function') ? window._injPillByName(p.name) : ''} ${_mtTierChipHtml(p.name, 'small')}${isWeekly && p.out ? ' <span style="color:#ef4444;font-size:.55rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
         if (isWeekly) html += `<span style="font-size:.72rem;color:var(--accent);min-width:30px;text-align:right" title="Jack's weekly rank">${p.wkRank != null ? '#' + p.wkRank : '—'}</span>`;
         html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg > 0 ? p.ppg : '—'}</span>`;
         html += `</div>`;
@@ -48393,11 +48443,16 @@ Rules:
         // at 56px on desktop — swap for a 200-wide variant so the circle stays
         // sharp. Falls back to a colour-block circle if no image.
         const _hsUrl = dEntry && dEntry._slImg ? window._fixHeadshotUrl(dEntry._slImg) : '';
+        // Headshot sits in a relative wrapper so the tier badge can ride its
+        // bottom-right corner without taking any row width from the name.
+        html += `<div class="mt-roster-hs-wrap" style="position:relative;flex:0 0 auto;line-height:0">`;
         if (_hsUrl) {
           html += `<img class="mt-roster-headshot" src="${_hsUrl}" alt="" loading="lazy" onerror="this.style.display='none'" style="border-radius:50%">`;
         } else {
           html += `<div class="mt-roster-headshot" style="border-radius:50%"></div>`;
         }
+        html += _mtTierChipHtml(p.name, 'badge');
+        html += `</div>`;
         // Name only — team/bye/age all dropped per Jack (Flock-style one-liner).
         html += `<div class="mt-roster-name-wrap" style="flex:1 1 auto;min-width:0" data-mtname="${_esc(p.name)}">`;
         html += `<div class="mt-roster-name" style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(p.name)}${dEntry && dEntry.inj ? '<span data-injname="' + _esc(dEntry.n) + '">' + _injPill(dEntry) + '</span>' : ''}</div>`;

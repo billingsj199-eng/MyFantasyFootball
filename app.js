@@ -9734,6 +9734,146 @@ function _renderCardPinStrip(d, ctxMode) {
   input.addEventListener('blur', () => { setTimeout(closeSearch, 150); });
 }
 
+// ── AGE COMPS (rebuilt live 2026-09-02) ─────────────────────────────────
+// The COMPS tab used to read data/player_comps.js — a static April build
+// covering 209 players with last-season ages baked in, so most current
+// players got "No historical comparisons" and the rest showed stale ages
+// (Jack: "fix the age comps"). Now built at card-open time from
+// ALL_PLAYERS_DB: same-position seasons played at the SAME AGE (±1, exact
+// preferred) as the player's most recent season, PPG (half-PPR — the DB
+// basis) within ±15% (min ±2), that HAVE a following season → what
+// happened next. Birth dates: LEGEND_BIRTH_YEARS → ALL_PLAYERS_DB
+// birthYear → D (birthDate / 2026 age); seasons with no birth data can't
+// be age-matched and are skipped. Age = age on Sept 1 of that season.
+let _ageCompsDIdx = null;
+function _ageCompsD(name) {
+  if (typeof D === 'undefined') return null;
+  if (!_ageCompsDIdx || _ageCompsDIdx._n !== D.length) {
+    _ageCompsDIdx = { _n: D.length, m: {} };
+    for (const p of D) if (p && p.n && !_ageCompsDIdx.m[p.n]) _ageCompsDIdx.m[p.n] = p;
+  }
+  return _ageCompsDIdx.m[name] || null;
+}
+function _ageAtSeason(name, ap, yr) {
+  let bd = (typeof LEGEND_BIRTH_YEARS !== 'undefined' && LEGEND_BIRTH_YEARS && LEGEND_BIRTH_YEARS[name]) || (ap && ap.birthYear) || null;
+  const d = _ageCompsD(name);
+  if (!bd && d && d.birthDate) bd = d.birthDate;
+  if (bd) {
+    const s = String(bd);
+    const y = parseInt(s.slice(0, 4), 10);
+    if (!y || y < 1900) return null;
+    const m = s.length >= 7 ? parseInt(s.slice(5, 7), 10) : 6;
+    const day = s.length >= 10 ? parseInt(s.slice(8, 10), 10) : 15;
+    return yr - y - ((m > 9 || (m === 9 && day > 1)) ? 1 : 0);
+  }
+  if (d && d.age != null) return d.age - (2026 - yr);
+  return null;
+}
+function _buildAgeComps(d) {
+  if (typeof ALL_PLAYERS_DB === 'undefined' || typeof _apdbGet !== 'function') return null;
+  const me = _apdbGet(d.n);
+  if (!me || !me.career || !me.career.length) return null;
+  const pos = me.pos || d.s;
+  const seasons = me.career.filter(s => (s.gp || 0) >= 4 && s.ppg != null);
+  if (!seasons.length) return null;
+  const last = seasons.reduce((a, b) => (b.yr > a.yr ? b : a));
+  const myAge = _ageAtSeason(d.n, me, last.yr);
+  const out = { a: myAge, f: last.ppg, yr: last.yr, gp: last.gp, c: [] };
+  if (myAge == null) return out;
+  const tol = Math.max(2, last.ppg * 0.15);
+  const rows = [];
+  for (const p of ALL_PLAYERS_DB) {
+    if (!p || p.pos !== pos || p.name === me.name || !p.career) continue;
+    for (let i = 0; i < p.career.length; i++) {
+      const s = p.career[i];
+      if ((s.gp || 0) < 8 || s.ppg == null) continue;
+      const diff = Math.abs(s.ppg - last.ppg);
+      if (diff > tol) continue;
+      const age = _ageAtSeason(p.name, p, s.yr);
+      if (age == null || Math.abs(age - myAge) > 1) continue;
+      const next = p.career.find(x => x.yr === s.yr + 1);
+      if (!next || (next.gp || 0) < 4 || next.ppg == null) continue;
+      rows.push({ name: p.name, yr: s.yr, age, ppg: s.ppg, next: next.ppg, nextGp: next.gp,
+        score: diff / tol + Math.abs(age - myAge) * 0.6 + (s.yr < 2005 ? 0.1 : 0) });
+    }
+  }
+  rows.sort((a, b) => a.score - b.score);
+  const seen = new Set();
+  for (const r of rows) {
+    if (seen.has(r.name)) continue;
+    seen.add(r.name);
+    out.c.push([r.name, r.yr, r.age, r.ppg, r.next, r.nextGp]);
+    if (out.c.length >= 8) break;
+  }
+  return out;
+}
+function _ageCompsHtml(d) {
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  if (typeof ALL_PLAYERS_DB === 'undefined') {
+    // Career DB is lazy — repaint this view once when it lands.
+    window._ageCompsPendingD = d;
+    document.addEventListener('mff:retireddata', function _acRepaint() {
+      document.removeEventListener('mff:retireddata', _acRepaint);
+      const v = document.getElementById('cardCompsView');
+      const pd = window._ageCompsPendingD;
+      if (v && pd) { const wrap = v.querySelector('#ageCompsWrap'); if (wrap) wrap.outerHTML = _ageCompsHtml(pd); }
+    });
+    return '<div id="ageCompsWrap" style="text-align:center;padding:1.5rem;color:var(--text2);font-size:.8rem">Loading career data…</div>';
+  }
+  const pc = _buildAgeComps(d);
+  let html = '<div id="ageCompsWrap">';
+  if (!pc) {
+    html += '<div style="text-align:center;padding:1.5rem;color:var(--text2);font-size:.8rem">No NFL seasons on record yet — see Prospect Comps below.</div></div>';
+    return html;
+  }
+  const basis = pc.yr + ': ' + pc.gp + ' GP · ' + pc.f.toFixed(1) + ' half-PPR PPG';
+  html += '<div class="card-section"><div class="card-section-title">Age Comps' + (pc.a != null ? ' <span style="color:var(--accent)">' + pc.a + ' → ' + (pc.a + 1) + '</span>' : '') +
+    ' <span style="font-size:.55rem;color:var(--text2);font-weight:400">· based on ' + esc(basis) + '</span></div>';
+  if (pc.a == null) {
+    html += '<div style="font-size:.7rem;color:var(--text2);padding:6px 0">Birth date unknown — can\'t age-match this player yet.</div></div></div>';
+    return html;
+  }
+  const comps = pc.c;
+  if (!comps.length) {
+    html += '<div style="font-size:.7rem;color:var(--text2);padding:6px 0">No same-age ' + esc(d.s || '') + ' seasons within ±15% PPG (with a following season) in the database.</div></div></div>';
+    return html;
+  }
+  const avgNext = comps.reduce((s, c) => s + c[4], 0) / comps.length;
+  const bestNext = Math.max.apply(null, comps.map(c => c[4]));
+  const worstNext = Math.min.apply(null, comps.map(c => c[4]));
+  html += '<div style="font-size:.55rem;color:var(--text2);margin-bottom:6px">Same position · age ' + pc.a + ' season (±1) · PPG within ±' + Math.max(2, pc.f * 0.15).toFixed(1) + ' · must have played the following season</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">';
+  html += '<div class="card-rank-box"><div class="lbl">Comp Avg Next</div><div class="num green">' + avgNext.toFixed(1) + '</div></div>';
+  html += '<div class="card-rank-box"><div class="lbl">Ceiling</div><div class="num accent">' + bestNext.toFixed(1) + '</div></div>';
+  html += '<div class="card-rank-box"><div class="lbl">Floor</div><div class="num" style="color:var(--red)">' + worstNext.toFixed(1) + '</div></div>';
+  html += '</div>';
+  const rangeMin = Math.max(0, Math.min(worstNext, pc.f) - 1);
+  const rangeMax = Math.max(bestNext, pc.f) + 1;
+  const rangeSpan = rangeMax - rangeMin || 1;
+  const avgPct = (avgNext - rangeMin) / rangeSpan * 100;
+  const curPct = (pc.f - rangeMin) / rangeSpan * 100;
+  html += '<div style="margin:8px 0 12px;position:relative;height:24px;background:linear-gradient(90deg,rgba(239,68,68,.15),rgba(245,158,11,.15),rgba(34,197,94,.15));border-radius:12px;overflow:hidden">';
+  html += '<div style="position:absolute;left:' + avgPct + '%;top:0;bottom:0;width:2px;background:var(--accent);z-index:2" title="Comp avg next season: ' + avgNext.toFixed(1) + '"></div>';
+  html += '<div style="position:absolute;left:' + Math.max(0, Math.min(100, curPct)) + '%;top:2px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);z-index:3;display:flex;align-items:center;justify-content:center;font-size:.5rem;font-weight:700;color:var(--bg)" title="' + esc(d.n) + ' ' + pc.yr + ': ' + pc.f.toFixed(1) + '">' + pc.f.toFixed(0) + '</div>';
+  html += '</div>';
+  html += '<div style="display:flex;justify-content:space-between;font-size:.5rem;color:var(--text2);margin-top:-6px;margin-bottom:8px"><span>Floor ' + worstNext.toFixed(1) + '</span><span>' + pc.yr + ' ' + pc.f.toFixed(1) + '</span><span>Ceiling ' + bestNext.toFixed(1) + '</span></div>';
+  html += '<table class="career-table"><thead><tr><th style="text-align:left">Player</th><th>Year</th><th>Age</th><th>PPG</th><th>→ Next</th><th>Δ</th></tr></thead><tbody>';
+  comps.forEach(c => {
+    const delta = c[4] - c[3];
+    const color = delta >= 0 ? 'var(--green)' : 'var(--red)';
+    html += '<tr><td style="text-align:left;font-weight:600">' + esc(c[0]) + '</td><td>' + c[1] + '</td><td' + (c[2] !== pc.a ? ' style="color:var(--text2)"' : '') + '>' + c[2] + '</td><td>' + c[3].toFixed(1) + '</td><td style="font-weight:700;color:' + color + '" title="' + c[5] + ' GP">' + c[4].toFixed(1) + '</td><td style="color:' + color + '">' + (delta >= 0 ? '+' : '') + delta.toFixed(1) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  const improved = comps.filter(c => c[4] >= c[3]).length;
+  const declined = comps.length - improved;
+  const trend = improved > declined ? 'improved' : improved === declined ? 'split' : 'declined';
+  const trendColor = trend === 'improved' ? 'var(--green)' : trend === 'declined' ? 'var(--red)' : 'var(--accent)';
+  html += '<div style="text-align:center;padding:8px;margin-top:6px;border-radius:6px;background:var(--elev-1);font-size:.7rem;color:var(--text2)">';
+  html += '<span style="font-weight:700;color:' + trendColor + '">' + improved + '/' + comps.length + '</span> same-age comps ' + trend + ' the following year';
+  html += '</div></div></div>';
+  return html;
+}
+
 function openPlayerCard(d, ctxMode) {
   // Compare-strip cycling (← →) needs to know which player is on screen
   window._cardOpenName = d && d.n ? d.n : null;
@@ -10259,57 +10399,7 @@ function openPlayerCard(d, ctxMode) {
       </div>` : ''}`; })()}
       </div>
       <div class="card-prospect-view" id="cardCompsView" style="display:none">
-      ${(function(){
-        if (typeof _PLAYER_COMPS === 'undefined' || !_PLAYER_COMPS[d.n]) return '<div style="text-align:center;padding:2rem;color:var(--text2);font-size:.8rem">No historical comparisons available for this player.</div>';
-        var pc = _PLAYER_COMPS[d.n];
-        var comps = pc.c || [];
-        if (!comps.length) return '<div style="text-align:center;padding:2rem;color:var(--text2);font-size:.8rem">No historical comparisons available.</div>';
-        var avgNext = comps.reduce(function(s,c){return s+c[4];},0)/comps.length;
-        var bestNext = Math.max.apply(null,comps.map(function(c){return c[4];}));
-        var worstNext = Math.min.apply(null,comps.map(function(c){return c[4];}));
-
-        var html = '<div class="card-section"><div class="card-section-title">Season Outlook</div>';
-        html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">';
-        html += '<div class="card-rank-box"><div class="lbl">Comp Avg</div><div class="num green">'+avgNext.toFixed(1)+'</div></div>';
-        html += '<div class="card-rank-box"><div class="lbl">Ceiling</div><div class="num accent">'+bestNext.toFixed(1)+'</div></div>';
-        html += '<div class="card-rank-box"><div class="lbl">Floor</div><div class="num" style="color:var(--red)">'+worstNext.toFixed(1)+'</div></div>';
-        html += '</div>';
-
-        // Range bar visualization
-        var rangeMin = Math.max(0, worstNext - 1);
-        var rangeMax = bestNext + 1;
-        var rangeSpan = rangeMax - rangeMin || 1;
-        var avgPct = ((avgNext - rangeMin) / rangeSpan * 100);
-        var curPct = ((pc.f - rangeMin) / rangeSpan * 100);
-        html += '<div style="margin:8px 0 12px;position:relative;height:24px;background:linear-gradient(90deg,rgba(239,68,68,.15),rgba(245,158,11,.15),rgba(34,197,94,.15));border-radius:12px;overflow:hidden">';
-        html += '<div style="position:absolute;left:'+avgPct+'%;top:0;bottom:0;width:2px;background:var(--accent);z-index:2" title="Comp avg: '+avgNext.toFixed(1)+'"></div>';
-        html += '<div style="position:absolute;left:'+Math.max(0,Math.min(100,curPct))+'%;top:2px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);z-index:3;display:flex;align-items:center;justify-content:center;font-size:.5rem;font-weight:700;color:var(--bg)">'+pc.f.toFixed(0)+'</div>';
-        html += '</div>';
-        html += '<div style="display:flex;justify-content:space-between;font-size:.5rem;color:var(--text2);margin-top:-6px;margin-bottom:8px"><span>Floor '+worstNext.toFixed(1)+'</span><span>Current '+pc.f.toFixed(1)+'</span><span>Ceiling '+bestNext.toFixed(1)+'</span></div>';
-        html += '</div>';
-
-        // NFL Season comps table
-        html += '<div class="card-section"><div class="card-section-title">Most Similar NFL Seasons <span style="font-size:.55rem;color:var(--text2);font-weight:400">→ What Happened Next</span></div>';
-        html += '<div style="font-size:.55rem;color:var(--text2);margin-bottom:6px">Matched on position, age, PPG, and PFF grade</div>';
-        html += '<table class="career-table"><thead><tr><th style="text-align:left">Player</th><th>Year</th><th>Age</th><th>PPG</th><th>→ Next</th><th>Δ</th></tr></thead><tbody>';
-        comps.forEach(function(c){
-          var delta = c[4] - c[3];
-          var color = delta >= 0 ? 'var(--green)' : 'var(--red)';
-          html += '<tr><td style="text-align:left;font-weight:600">'+c[0]+'</td><td>'+c[1]+'</td><td>'+c[2]+'</td><td>'+c[3].toFixed(1)+'</td><td style="font-weight:700;color:'+color+'">'+c[4].toFixed(1)+'</td><td style="color:'+color+'">'+(delta>=0?'+':'')+delta.toFixed(1)+'</td></tr>';
-        });
-        html += '</tbody></table></div>';
-
-        // Summary insight
-        var improvedCount = comps.filter(function(c){return c[4]>=c[3];}).length;
-        var declinedCount = comps.length - improvedCount;
-        var trend = improvedCount > declinedCount ? 'improved' : improvedCount === declinedCount ? 'split' : 'declined';
-        var trendColor = trend === 'improved' ? 'var(--green)' : trend === 'declined' ? 'var(--red)' : 'var(--accent)';
-        html += '<div style="text-align:center;padding:8px;margin-top:4px;border-radius:6px;background:var(--elev-1);font-size:.7rem;color:var(--text2)">';
-        html += '<span style="font-weight:700;color:'+trendColor+'">'+improvedCount+'/'+comps.length+'</span> similar seasons '+trend+' the following year';
-        html += '</div>';
-
-        return html;
-      })()}
+      ${_ageCompsHtml(d)}
       ${(function(){
         // === PROSPECT COMPS ===
         if (!window._pmBuiltData) return '';

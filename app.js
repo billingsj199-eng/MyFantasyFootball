@@ -3455,7 +3455,12 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     card.addEventListener('mouseleave', () => { card.style.boxShadow = baseShadow; });
   }
 
-  const projVal = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+  // Same number the rankings table's PROJ PPG column shows: weekly = the
+  // active week's sim row (consensus blend on the CONSENSUS tab), season
+  // boards = sim season PPG — via _displayProjPpg, not the season-only
+  // adjProjPpg (which made weekly cards disagree with the table).
+  const projVal = (typeof _displayProjPpg === 'function') ? _displayProjPpg(d)
+    : ((typeof adjProjPpg === 'function') ? adjProjPpg(d) : null);
 
   const projColor = (projVal != null && typeof posFptsColor === 'function') ? posFptsColor(projVal, d.s) : null;
 

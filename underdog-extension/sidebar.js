@@ -4394,6 +4394,64 @@
   // sync the extension has ever done. Prevents data loss when the MFF tab
   // missed a prior dispatch and a later sync would otherwise overwrite the
   // entry down to just the latest sync's drafts.
+  // v0.18.8: the by-id union behind the sidebar's exposure portfolio.
+  // Precedence for the same draft id: this sync's fresh drafts, then the
+  // site's copy (mff_site_drafts, pushed by page-bridge), then older synced
+  // drafts retained in mff_portfolio_sync. Returns null when nothing known.
+  function _sidebarPortfolioUnion(freshDrafts, mergedDrafts, siteDrafts) {
+    try {
+      const byId = {};
+      const noId = [];
+      const namesOf = function (d) {
+        return Array.isArray(d && d.picks) ? d.picks.map(function (p) { return p && (p.name || p); }).filter(Boolean) : [];
+      };
+      const site = siteDrafts;
+      if (site && site.byId) {
+        Object.keys(site.byId).forEach(function (id) { if (Array.isArray(site.byId[id]) && site.byId[id].length) byId[id] = site.byId[id]; });
+        (site.noId || []).forEach(function (t) { if (Array.isArray(t) && t.length) noId.push(t); });
+      }
+      (freshDrafts || []).forEach(function (d) {
+        const t = namesOf(d); if (!t.length) return;
+        if (d.id != null) byId[String(d.id)] = t; else noId.push(t);
+      });
+      (mergedDrafts || []).forEach(function (d) {
+        const t = namesOf(d); if (!t.length) return;
+        if (d.id == null) { noId.push(t); return; }
+        if (!byId[String(d.id)]) byId[String(d.id)] = t;
+      });
+      const teams = Object.keys(byId).map(function (id) { return byId[id]; }).concat(noId);
+      if (!teams.length) return null;
+      const out = buildPortfolioFromTeams(teams);
+      out.numSite = site && site.byId ? Object.keys(site.byId).length : 0;
+      out.source = 'sync+site';
+      console.log('[MFF/sync] sidebar exposure portfolio:', teams.length, 'drafts (site', out.numSite + ', synced', (mergedDrafts || []).length + ')');
+      return out;
+    } catch (e) {
+      console.warn('[MFF/sync] sidebar portfolio build error:', e && e.message);
+      return null;
+    }
+  }
+
+  // v0.18.8: rebuild mff_portfolio from the stores alone. Runs at the end of
+  // every sync — including "Synced 0 drafts" (everything already known), which
+  // previously left the stale sidebar snapshot untouched because no checkpoint
+  // publish ever fired. Resolves with the draft count used (0 if nothing).
+  function rebuildSidebarPortfolioFromStores() {
+    return new Promise(function (resolve) {
+      if (!_isExtensionContextValid()) return resolve(0);
+      try {
+        chrome.storage.local.get(['mff_portfolio_sync', 'mff_site_drafts'], function (res) {
+          try {
+            const merged = res && res.mff_portfolio_sync;
+            const sp = _sidebarPortfolioUnion(null, merged && merged.drafts, res && res.mff_site_drafts);
+            if (!sp) return resolve(0);
+            chrome.storage.local.set({ mff_portfolio: sp }, function () { resolve(sp.numTeams || 0); });
+          } catch (_) { resolve(0); }
+        });
+      } catch (_) { resolve(0); }
+    });
+  }
+
   function publishPortfolioToSite(sitePortfolio) {
     if (!_isExtensionContextValid()) {
       console.warn('[MFF/sync] publish skipped — extension context invalidated. Refresh tab and re-sync.');
@@ -4411,35 +4469,7 @@
         // extension's own store can be just the newest few drafts — the
         // site copy is the only full list until then. By-id merge: this
         // sync's fresh drafts win, then site, then retained older syncs.
-        let sidebarPortfolio = null;
-        try {
-          const byId = {};
-          const noId = [];
-          const site = res && res.mff_site_drafts;
-          const namesOf = function (d) {
-            return Array.isArray(d && d.picks) ? d.picks.map(function (p) { return p && (p.name || p); }).filter(Boolean) : [];
-          };
-          if (site && site.byId) {
-            Object.keys(site.byId).forEach(function (id) { if (Array.isArray(site.byId[id]) && site.byId[id].length) byId[id] = site.byId[id]; });
-            (site.noId || []).forEach(function (t) { if (Array.isArray(t) && t.length) noId.push(t); });
-          }
-          (sitePortfolio.drafts || []).forEach(function (d) {
-            const t = namesOf(d); if (!t.length) return;
-            if (d.id != null) byId[String(d.id)] = t; else noId.push(t);
-          });
-          (merged.drafts || []).forEach(function (d) {
-            const t = namesOf(d); if (!t.length) return;
-            if (d.id == null) { noId.push(t); return; }
-            if (!byId[String(d.id)]) byId[String(d.id)] = t;
-          });
-          const teams = Object.keys(byId).map(function (id) { return byId[id]; }).concat(noId);
-          if (teams.length) {
-            sidebarPortfolio = buildPortfolioFromTeams(teams);
-            sidebarPortfolio.numSite = site && site.byId ? Object.keys(site.byId).length : 0;
-            sidebarPortfolio.source = 'sync+site';
-            console.log('[MFF/sync] sidebar exposure portfolio:', teams.length, 'drafts (site', sidebarPortfolio.numSite + ', synced', (merged.drafts || []).length + ')');
-          }
-        } catch (e) { console.warn('[MFF/sync] sidebar portfolio build error:', e && e.message); }
+        const sidebarPortfolio = _sidebarPortfolioUnion(sitePortfolio.drafts, merged.drafts, res && res.mff_site_drafts);
         const toStore = { mff_portfolio_sync: merged };
         if (sidebarPortfolio) toStore.mff_portfolio = sidebarPortfolio;
         chrome.storage.local.set(toStore, function () {
@@ -5993,11 +6023,23 @@
       const noPicks = (window.__mffSyncDiag && Array.isArray(window.__mffSyncDiag.droppedNoPicks))
         ? window.__mffSyncDiag.droppedNoPicks.length : 0;
       const emitted = draftsFetched - noPicks;
-      let msg = 'Synced ' + emitted + ' drafts';
+      let msg = 'Synced ' + emitted + ' new draft' + (emitted === 1 ? '' : 's');
       if (missing > 0) msg += ' (' + missing + ' couldn\'t be fetched)';
       if (noPicks > 0) msg += ' — ' + noPicks + ' not yet finalized on UD (will sync on retry)';
       status.textContent = msg;
     }
+    // v0.18.8: the sidebar's exposure store is rebuilt from the cumulative
+    // stores regardless of how many NEW drafts this run found — the store
+    // publish above only fires on checkpoints, so a "0 new" sync used to
+    // leave whatever partial snapshot was written last.
+    try {
+      const n = await rebuildSidebarPortfolioFromStores();
+      if (status) {
+        status.textContent += n
+          ? ' · exposure % from ' + n + ' draft' + (n === 1 ? '' : 's')
+          : ' · no portfolio in cache yet — open myfantasyfootball.co once, then Sync again';
+      }
+    } catch (_) {}
   }
 
   const PREMIUM_TTL_MS = 24 * 60 * 60 * 1000;

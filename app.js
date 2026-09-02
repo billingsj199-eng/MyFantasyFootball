@@ -927,6 +927,9 @@ function rebuildConsensusBoards() {
     ['redraft','bestball','superflex','dynasty','dynastysf'].forEach(m => {
       versionBoards.consensus[m] = _computeConsensusBoard(m);
     });
+    // Weekly consensus (FP expert ranks + projection sources) — defined in the
+    // weekly IIFE below; this runs in a deferred microtask so it exists by now.
+    if (typeof window._rebuildConsensusWeekly === 'function') window._rebuildConsensusWeekly();
     // If currently viewing consensus, re-render
     if (typeof currentVersion !== 'undefined' && currentVersion === 'consensus') {
       if (typeof syncMode === 'function') syncMode();
@@ -3987,7 +3990,17 @@ function render() {
       // one shared scale there; positional pills keep the per-position scale.
       const _projColor = (_projPpg != null) ? ((currentMode === 'weekly' && filter === 'FLEX') ? flexFptsColor(_projPpg) : posFptsColor(_projPpg, d.s)) : null;
       const _25Color = (_25ppg != null) ? posFptsColor(_25ppg, d.s) : null;
-      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${_projPpg==null?'—':_projPpg}</td>`;
+      let _cwTip = '';
+      if (currentMode === 'weekly' && currentVersion === 'consensus' && window._consensusWeeklyProj) {
+        const c = window._consensusWeeklyProj[d.n];
+        if (c) {
+          const parts = Object.keys(c.pts || {}).map(l => l + ' ' + c.pts[l]);
+          const head = c.status ? (c.status === 'bye' ? 'On bye' : 'Ruled out') : ('Consensus of ' + c.n + ' source' + (c.n === 1 ? '' : 's'));
+          const fp = c.fe != null ? ' · FP expert rank ' + d.s + c.fe + (c.grade ? ' (' + c.grade + ')' : '') : '';
+          _cwTip = ' title="' + (head + (parts.length ? ': ' + parts.join(', ') : '') + fp).replace(/"/g, '&quot;') + '"';
+        }
+      }
+      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_cwTip}${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${_projPpg==null?'—':_projPpg}</td>`;
       _statTds = `<td class="pts-cell ppg25-cell"${_25Color?' style="color:'+_25Color+';font-weight:700"':''}>${_25ppg!=null?_25ppg:'—'}</td>
       <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
     } else if (_statMode === 'sims') {
@@ -5072,6 +5085,7 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
     document.querySelectorAll('.rnk-scoring-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     rankingScoringFmt = btn.dataset.rnkscoring;
+    if (currentMode === 'weekly' && typeof window._rebuildConsensusWeekly === 'function') window._rebuildConsensusWeekly();
     // In proj/lines STATS view the three columns aren't scoring-dependent —
     // leave their headers alone (the updater owns them).
     if (rnkStatMode === 'fantasy') {
@@ -5973,6 +5987,147 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     });
   };
 
+  // === CONSENSUS WEEKLY BOARD ===
+  // The CONSENSUS tab's weekly board used to be a never-rebuilt copy of the
+  // default redraft order. Now it's a real weekly consensus built from
+  // data/weekly_projections.js (WEEKLY_PROJ, daily Phase J) + the site's
+  // book-priced projection:
+  //   SCORE  = mean of every available weekly projection for the active
+  //            scoring format — Sleeper, ESPN, FantasyPros (rank-to-points),
+  //            CBS, and the Underdog/DraftKings props path of
+  //            _weeklyAdjustPpg (only when a prop board is posted, or the
+  //            D/ST branch). Ruled-out / bye players score 0.
+  //   ORDER  = within each position, the average of every source's rank:
+  //            FantasyPros expert-consensus rank (fe) + rank-by-points from
+  //            each projection source — the same rank-average recipe the
+  //            season Consensus board uses. Cross-position: RB/WR/TE are
+  //            interleaved by FantasyPros' FLX expert rank (fx) when present,
+  //            else by consensus score; then QB, K, D/ST blocks; players with
+  //            no weekly source trail in season-consensus order.
+  // Rebuilt on every weekly reconcile (week change, data load), on scoring
+  // toggles, and at boot via rebuildConsensusBoards. Read-only for users —
+  // canEdit() is false on consensus, so no drag/tier/cut/save paths touch it.
+  window._consensusWeeklyProj = {};   // name -> {v, n, srcs:[label,...]} for the last build
+  window._consensusWeeklyMeta = null; // {week, fmt, experts}
+  window._computeConsensusWeekly = function() {
+    const cw = window.WEEKLY_PROJ;
+    const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    if (!cw || !cw.players || cw.week !== wk) return null;
+    const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+    const pk = rankingScoringFmt === 'ppr' ? 'p' : rankingScoringFmt === 'std' ? 's' : 'h';
+    // name index (suffix-stripped) — same normalizer _weeklyAdjustPpg uses
+    const idx = {};
+    Object.keys(cw.players).forEach(k => { idx[_campNewsNorm(k)] = cw.players[k]; });
+    const rowOf = d => cw.players[d.n] || idx[_campNewsNorm(d.n)] || null;
+    const num = v => (typeof v === 'number' && isFinite(v)) ? v : null;
+    const entries = [];            // {i, d, v, n, srcs, pts:{label:v}, fe, fx}
+    const projMap = {};
+    for (let i = 0; i < D.length; i++) {
+      const d = D[i];
+      if (!d || !d.n || d._retired || d._isFuturePick) continue;
+      if (d.s !== 'QB' && d.s !== 'RB' && d.s !== 'WR' && d.s !== 'TE' && d.s !== 'K' && d.s !== 'DST') continue;
+      const row = rowOf(d);
+      const base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+      if (!row && !(base > 0)) continue;   // nobody projects this player this week
+      const pts = {};
+      if (row) {
+        const sl = num(row[pk]); if (sl != null) pts['Sleeper'] = sl;
+        const es = row.e && num(row.e[fi]); if (es != null) pts['ESPN'] = es;
+        const fp = row.f && num(row.f[fi]); if (fp != null) pts['FantasyPros'] = fp;
+        const cb = row.c && num(row.c[fi]); if (cb != null) pts['CBS'] = cb;
+      }
+      let status = null;
+      if (typeof window._weeklyAdjustPpg === 'function' && base != null) {
+        const out = {};
+        const bv = window._weeklyAdjustPpg(d, base, out);
+        if (out.src === 'props' || out.src === 'dst') { const b = num(bv); if (b != null) pts['Books (UD/DK)'] = b; }
+        else if (out.src === 'bye' || out.src === 'out') status = out.src;
+      }
+      const labels = Object.keys(pts);
+      let v = null, n = labels.length;
+      if (status) { v = 0; n = Math.max(1, n); }
+      else if (n) { v = Math.round(labels.reduce((a, l) => a + pts[l], 0) / n * 10) / 10; }
+      const fe = row && row.fe ? num(row.fe[fi]) : null;
+      const fx = row && row.fx ? num(row.fx[fi]) : null;
+      if (v == null && fe == null) continue;
+      entries.push({ i, d, v, n, srcs: labels, pts, fe, fx, status, grade: row && row.fg ? row.fg : null });
+      projMap[d.n] = { v, n, srcs: labels, pts, status, fe, fx, grade: row && row.fg ? row.fg : null };
+    }
+    if (!entries.length) return null;
+    // ---- positional rank-average ----
+    const byPos = {};
+    entries.forEach(e => { (byPos[e.d.s] = byPos[e.d.s] || []).push(e); });
+    Object.keys(byPos).forEach(pos => {
+      const list = byPos[pos];
+      const rankSets = [];
+      // one rank list per points source (desc by points)
+      const srcLabels = {}; list.forEach(e => e.srcs.forEach(l => { srcLabels[l] = 1; }));
+      Object.keys(srcLabels).forEach(l => {
+        const have = list.filter(e => e.pts[l] != null).sort((a, b) => b.pts[l] - a.pts[l]);
+        const rk = {}; have.forEach((e, r) => { rk[e.i] = r + 1; });
+        rankSets.push(rk);
+      });
+      // FantasyPros expert-consensus position rank
+      const feRk = {}; list.forEach(e => { if (e.fe != null) feRk[e.i] = e.fe; });
+      rankSets.push(feRk);
+      list.forEach(e => {
+        const rs = rankSets.map(rk => rk[e.i]).filter(x => x != null);
+        e.avgRank = rs.length ? rs.reduce((a, b) => a + b, 0) / rs.length : null;
+        e.rankN = rs.length;
+        if (projMap[e.d.s === e.d.s ? e.d.n : e.d.n]) projMap[e.d.n].posRank = e.avgRank;
+      });
+      list.sort((a, b) => {
+        if (a.avgRank == null && b.avgRank != null) return 1;
+        if (b.avgRank == null && a.avgRank != null) return -1;
+        if (a.avgRank != null && a.avgRank !== b.avgRank) return a.avgRank - b.avgRank;
+        return (b.v || 0) - (a.v || 0);
+      });
+    });
+    // ---- cross-position: FLX by FantasyPros FLX rank, else by score ----
+    const flex = [].concat(byPos.RB || [], byPos.WR || [], byPos.TE || []);
+    const ranked = flex.filter(e => e.avgRank != null);
+    const withFx = ranked.filter(e => e.fx != null).sort((a, b) => a.fx - b.fx);
+    const noFx = ranked.filter(e => e.fx == null);
+    // Preserve each position's consensus order inside the interleave:
+    // walk the FLX order but always emit the next-unemitted player of that
+    // position (so a player FP ranks above a teammate never jumps his own
+    // position's consensus order).
+    const posQueue = { RB: (byPos.RB || []).filter(e => e.avgRank != null), WR: (byPos.WR || []).filter(e => e.avgRank != null), TE: (byPos.TE || []).filter(e => e.avgRank != null) };
+    const heads = { RB: 0, WR: 0, TE: 0 };
+    const emitted = new Set();
+    const order = [];
+    const take = pos => { const q = posQueue[pos]; while (heads[pos] < q.length && emitted.has(q[heads[pos]].i)) heads[pos]++; if (heads[pos] < q.length) { const e = q[heads[pos]++]; emitted.add(e.i); order.push(e.i); } };
+    withFx.forEach(e => { if (!emitted.has(e.i)) take(e.d.s); });
+    // leftovers (no FLX rank): greedy by score across the three queues
+    for (;;) {
+      let best = null, bs = -Infinity;
+      ['RB', 'WR', 'TE'].forEach(pos => { const q = posQueue[pos]; while (heads[pos] < q.length && emitted.has(q[heads[pos]].i)) heads[pos]++; const e = q[heads[pos]]; if (e && (e.v == null ? -1 : e.v) > bs) { best = pos; bs = (e.v == null ? -1 : e.v); } });
+      if (best == null) break;
+      take(best);
+    }
+    noFx.length; // (consumed by the greedy pass above)
+    ['QB', 'K', 'DST'].forEach(pos => (byPos[pos] || []).forEach(e => { if (e.avgRank != null && !emitted.has(e.i)) { emitted.add(e.i); order.push(e.i); } }));
+    // everyone else in season-consensus order (unranked weekly sources, deep bench, retired, picks)
+    const rest = (versionBoards.consensus.redraft || []).filter(i => !emitted.has(i));
+    rest.forEach(i => emitted.add(i));
+    for (let i = 0; i < D.length; i++) if (!emitted.has(i)) rest.push(i);
+    window._consensusWeeklyProj = projMap;
+    window._consensusWeeklyMeta = { week: wk, fmt: rankingScoringFmt, updated: cw.updated, n: order.length };
+    return order.concat(rest);
+  };
+  window._rebuildConsensusWeekly = function() {
+    if (!versionBoards.consensus) return;
+    let b = null;
+    try { b = window._computeConsensusWeekly(); } catch (e) { console.warn('[Consensus weekly] build failed:', e); }
+    if (!b) {
+      window._consensusWeeklyProj = {};
+      window._consensusWeeklyMeta = null;
+      b = (versionBoards.consensus.redraft || []).slice();
+    }
+    versionBoards.consensus.weekly = b;
+    if (currentVersion === 'consensus' && currentMode === 'weekly') { syncMode(); renumber(); }
+  };
+
   window._weeklyStashSaved = function(obj, ver) {
     // Empty _order = a degraded save (or an old-build overwrite) — never let
     // it clobber a live board; reconcile will derive from redraft instead.
@@ -6006,6 +6161,9 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   window._weeklyReconcileBoard = function(ver) {
     ver = ver || 'jacks';
     if (!versionBoards[ver]) return;
+    // Call sites reconcile 'jacks' first — piggyback the consensus weekly
+    // rebuild there (it needs the same week/data inputs, nothing per-user).
+    if (ver === 'jacks' && typeof window._rebuildConsensusWeekly === 'function') window._rebuildConsensusWeekly();
     const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     // Virgin "mine" week: mirror Jack's weekly board (order and tiers)
     // instead of deriving from the user's redraft. Call sites always reconcile
@@ -7137,6 +7295,12 @@ function _simBaselinePpgRow(d) {
 function _displayProjPpg(d) {
   const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
   if (currentMode === 'weekly') {
+    // CONSENSUS tab: the multi-source weekly blend (see _computeConsensusWeekly),
+    // not Jack's Sim Lab / props number. No sources this week → '—'.
+    if (currentVersion === 'consensus') {
+      const c = window._consensusWeeklyProj && window._consensusWeeklyProj[d.n];
+      return (c && c.v != null) ? c.v : null;
+    }
     const SP = window.SIM_PROJ_2026;
     const wk = window._weeklyActiveWeek || (SP && SP.currentWeek) || 1;
     const r = _simProjRow(d, wk);

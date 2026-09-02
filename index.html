@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-02zq" as="script">
+<link rel="preload" href="app.js?v=2026-09-02zr" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1505,7 +1505,7 @@ tr:hover .watch-star{opacity:.55}
 <th data-sort="landing" id="landingHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Landing Spot (0-100) — quality of the NFL fantasy opportunity (depth chart, scheme, target share). Separate from JM (prospect quality).">Land</span> <span class="arrow"></span></th>
 <th data-sort="age" id="ageHeader" tabindex="0" aria-sort="none">Age <span class="arrow"></span></th>
 <th data-sort="psos" id="psosHeader" tabindex="0" aria-sort="none"><span data-gloss="Strength of schedule over the selected week window (default: BBM playoff weeks 15-17) — facing opponents weighted by your position. 1 = easiest schedule, 32 = hardest; green/yellow/red by league thirds. Blends Mike Clay defensive unit grades, DST proj, opp PA, DK implied team totals vs the team's own season median (so a good offense doesn't make every window look easy), and position-weighted spreads. Click the header to sort; click ▾ to change the week window (e.g. weeks 1-5)." id="psosHeaderLabel">P-SOS</span><button id="psosRangeBtn" type="button" title="Adjust SOS week range" aria-label="Adjust SOS week range">▾</button> <span class="arrow"></span></th>
-<th data-sort="diff" tabindex="0" aria-sort="none"><span data-gloss="Rank vs. selected ADP source. ▲ = ranked higher than market (value pick). ▼ = ranked lower (fade).">+/-</span> <span class="arrow"></span></th>
+<th data-sort="diff" tabindex="0" aria-sort="none"><span data-gloss="Rank vs. selected ADP source. ▲ = ranked higher than market (value pick). ▼ = ranked lower (fade). WEEKLY: position rank vs the consensus weekly board (on the Consensus tab, vs Jack's).">+/-</span> <span class="arrow"></span></th>
 </tr>
 </thead>
 <tbody id="tbody">
@@ -5407,7 +5407,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-02zq"></script>
+<script defer src="app.js?v=2026-09-02zr"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

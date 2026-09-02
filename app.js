@@ -1067,6 +1067,7 @@ function _irHiddenAbove(pos) {
 
 // Renumber all myRank values from the board order
 function renumber() {
+  window._wkPosRankCache = null; // weekly +/- position-rank maps (see _posRankMapFor)
   const posCounts = {QB: 0, RB: 0, WR: 0, TE: 0, K: 0, DST: 0};
   // Out-for-season players keep their board slot but are skipped in the
   // numbering (season formats only), so the visible table stays contiguous
@@ -1216,6 +1217,7 @@ function moveTier(id, delta) {
 }
 
 function saveLocal() {
+  window._wkPosRankCache = null; // board edited — weekly +/- maps must rebuild
   userData = {};
   function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
   const _cutOf = (ver, mode) => (typeof window._boardCutoffFor === 'function') ? window._boardCutoffFor(ver, mode) : null;
@@ -3222,7 +3224,9 @@ function getFiltered(applyTopN) {
             : (window._mtGetPlayoffSos(d.t, d.s, _wk) || { rank: 999 }).rank;
           av = _sosRk(a); bv = _sosRk(b); break;
         }
-        case 'diff': av = (a.s==='K'||a.s==='DST') ? 0 : (rnkAdp(a)??a.myRank) - a.myRank; bv = (b.s==='K'||b.s==='DST') ? 0 : (rnkAdp(b)??b.myRank) - b.myRank; break;
+        case 'diff':
+          if (currentMode === 'weekly') { const wa = _weeklyDiff(a), wb = _weeklyDiff(b); av = wa ? wa.diff : 0; bv = wb ? wb.diff : 0; break; }
+          av = (a.s==='K'||a.s==='DST') ? 0 : (rnkAdp(a)??a.myRank) - a.myRank; bv = (b.s==='K'||b.s==='DST') ? 0 : (rnkAdp(b)??b.myRank) - b.myRank; break;
         // Weekly-only columns (Opp / Spread / Team Total). These read the same
         // values the cells render — note Team Total shows the OPPONENT's
         // implied total on D/ST rows, so the sort has to branch the same way
@@ -3273,6 +3277,38 @@ function getFiltered(applyTopN) {
   return f;
 }
 
+// WEEKLY +/-: ADP is a season-draft signal and meaningless week to week, so
+// in WEEKLY the column is a POSITION-RANK delta against the other board —
+// Jack's / My Ranks vs the consensus weekly board (_computeConsensusWeekly),
+// and on the CONSENSUS tab vs Jack's weekly. ▲ = ranked higher than
+// consensus, ▼ = lower. Players the consensus has no weekly source for → —.
+function _posRankMapFor(ver) {
+  const b = versionBoards[ver] && versionBoards[ver].weekly;
+  if (!Array.isArray(b) || !b.length) return null;
+  const cache = (window._wkPosRankCache = window._wkPosRankCache || {});
+  let c = cache[ver];
+  if (!c || c.src !== b) {
+    const map = {}, seen = {};
+    b.forEach(i => {
+      const q = D[i];
+      if (!q || q._retired || (typeof window._irIsOut === 'function' && window._irIsOut(q.n))) return;
+      seen[q.s] = (seen[q.s] || 0) + 1;
+      map[q.n] = seen[q.s];
+    });
+    c = cache[ver] = { src: b, map };
+  }
+  return c.map;
+}
+function _weeklyDiff(d) {
+  if (currentMode !== 'weekly' || !d) return null;
+  const otherVer = currentVersion === 'consensus' ? 'jacks' : 'consensus';
+  if (otherVer === 'consensus' && window._consensusWeeklyProj && !window._consensusWeeklyProj[d.n]) return null;
+  const mineMap = _posRankMapFor(currentVersion), otherMap = _posRankMapFor(otherVer);
+  const mine = mineMap && mineMap[d.n], other = otherMap && otherMap[d.n];
+  if (!mine || !other) return null;
+  return { diff: other - mine, mine, other, otherLabel: otherVer === 'jacks' ? "Jack's" : 'consensus' };
+}
+
 function diffHtml(d) {
   const adp = rnkAdp(d);
   const _srcLabel = ({consensus:'Consensus',underdog:'Underdog',dk:'DK',espn:'ESPN',cbs:'CBS',sleeper:'Sleeper',ktc:'KTC',yahoo:'Yahoo'})[rnkAdpSrc] || rnkAdpSrc;
@@ -3295,6 +3331,16 @@ function diffHtml(d) {
     .map(x => `${_verLabels[x.v]} #${x.r}`)
     .join(' · ');
   const _verSuffix = _verRanks ? ' || ' + _verRanks : '';
+  if (currentMode === 'weekly') {
+    const wd = _weeklyDiff(d);
+    const _otherName = currentVersion === 'consensus' ? "Jack's" : 'consensus weekly';
+    if (!wd) return `<span class="diff-even" title="No ${_otherName} rank for this player this week${_verSuffix}">—</span>`;
+    const _pl = d.s === 'DST' ? 'D/ST' : d.s;
+    const _wt = `${_pl}${wd.mine} vs ${wd.otherLabel} ${_pl}${wd.other}${_verSuffix}`;
+    if (wd.diff === 0) return `<span class="diff-even" title="${_wt} — even with ${wd.otherLabel}">—</span>`;
+    if (wd.diff > 0) return `<span class="diff-up" title="${_wt} — ranked ${wd.diff} spot${wd.diff === 1 ? '' : 's'} higher than ${wd.otherLabel}">▲ ${wd.diff}</span>`;
+    return `<span class="diff-down" title="${_wt} — ranked ${-wd.diff} spot${wd.diff === -1 ? '' : 's'} lower than ${wd.otherLabel}">▼ ${-wd.diff}</span>`;
+  }
   if (adp == null) return `<span class="diff-even" title="No ${_srcLabel} ADP available for this player${_verSuffix}">—</span>`;
   if (d.s === 'K' || d.s === 'DST') {
     // Sites rank K/DST inside their overall lists; this board seats them at
@@ -4229,7 +4275,9 @@ function updateStats(data) {
   const rbs = data.filter(d=>d.s==='RB').length;
   const wrs = data.filter(d=>d.s==='WR').length;
   const tes = data.filter(d=>d.s==='TE').length;
-  const moved = D.filter(d => d.s !== 'K' && d.s !== 'DST' && rnkAdp(d) != null && Math.abs(rnkAdp(d) - d.myRank) >= 1).length;
+  const moved = currentMode === 'weekly'
+    ? D.filter(d => { const w = _weeklyDiff(d); return !!w && Math.abs(w.diff) >= 1; }).length
+    : D.filter(d => d.s !== 'K' && d.s !== 'DST' && rnkAdp(d) != null && Math.abs(rnkAdp(d) - d.myRank) >= 1).length;
   const rookies = data.filter(d => {
     if (d.career && d.career.length) return false;
     const _cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;

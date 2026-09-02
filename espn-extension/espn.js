@@ -115,14 +115,55 @@
     document.body.appendChild(btn);
   }
 
+  // ── Auto-export ─────────────────────────────────────────────────────
+  // v0.20.23: landing on a league page silently re-exports leagues that
+  // have been exported at least once before — checking your team on ESPN
+  // is enough to keep MFF fresh (the site auto-commits newer payloads to
+  // your saved leagues on load; Jack 2026-09-02). First-time exports stay
+  // on the button so browsing other people's leagues doesn't clutter the
+  // synced list. Throttled per league (storage syncedAt + an in-page map,
+  // 10 min — matches the site's probe guard); failures (logged out, API
+  // hiccup) stay silent — the button remains the manual fallback.
+  var AUTO_SYNC_MIN_MS = 10 * 60 * 1000;
+  var autoTriedAt = {};
+  function maybeAutoExport() {
+    var leagueId = leagueIdFromUrl();
+    if (!leagueId) return;
+    if (autoTriedAt[leagueId] && Date.now() - autoTriedAt[leagueId] < AUTO_SYNC_MIN_MS) return;
+    autoTriedAt[leagueId] = Date.now();
+    try {
+      if (!chrome || !chrome.runtime || !chrome.runtime.id) return;
+      chrome.storage.local.get(["mff_espn_leagues"], function (cur) {
+        var all = (cur && cur.mff_espn_leagues) || {};
+        var prev = all[leagueId];
+        if (!prev) return; // never exported — the button owns the first time
+        if (prev.syncedAt && Date.now() - prev.syncedAt < AUTO_SYNC_MIN_MS) return;
+        fetchLeague(leagueId, seasonFromUrl())
+          .then(function (raw) {
+            var norm = window.MFF_ESPN.normalizeEspnLeague(raw, readSwid());
+            if (!norm) throw new Error("unexpected league payload");
+            return saveLeague(norm).then(function () { return norm; });
+          })
+          .then(function (norm) {
+            console.log("[MFF/espn] auto-synced league", leagueId);
+            setBtn("✓ Auto-synced " + norm.teamCount + " teams", false);
+            setTimeout(function () { setBtn("Export league to MFF", false); }, 6000);
+          })
+          .catch(function (e) { console.warn("[MFF/espn] auto-sync skipped:", e.message); });
+      });
+    } catch (_) {}
+  }
+
   // ESPN is a SPA — the leagueId can appear after client-side navigation.
   mount();
+  maybeAutoExport();
   var lastHref = location.href;
   setInterval(function () {
     if (location.href !== lastHref) {
       lastHref = location.href;
       if (!leagueIdFromUrl() && btn) { btn.remove(); btn = null; }
       mount();
+      maybeAutoExport();
     }
   }, 1000);
 })();

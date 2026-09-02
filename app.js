@@ -22273,6 +22273,16 @@ window.fmtHeight = fmtHeight;
     updateResult();
   }
 
+  // Each panel holds what that team GIVES UP, so Team A receives side B's
+  // total and vice versa — the winner is whoever receives the bigger package.
+  function _tradeSideNames() {
+    const f = window._calcSideFilters || {};
+    return {
+      nameA: f.a ? f.a.owner : 'Team A',
+      nameB: f.b ? f.b.owner : 'Team B'
+    };
+  }
+
   function updateResult() {
     const totalA = calcSideTotal(sideA);
     const totalB = calcSideTotal(sideB);
@@ -22293,9 +22303,16 @@ window.fmtHeight = fmtHeight;
       return;
     }
     if (resultEl) resultEl.classList.remove('is-empty');
-    // Symmetric bar widths: clamp to [8, 92] so the losing side always shows a sliver,
-    // and swapping A↔B produces a mirror image rather than a vanishing bar.
-    const pctA = Math.max(8, Math.min(92, Math.round((totalA / sum) * 100)));
+    const { nameA, nameB } = _tradeSideNames();
+    const lblA = barA.querySelector('.trade-result-bar-label');
+    const lblB = barB.querySelector('.trade-result-bar-label');
+    if (lblA) lblA.textContent = nameA.toUpperCase();
+    if (lblB) lblB.textContent = nameB.toUpperCase();
+    // Bars show value RECEIVED: Team A receives side B's total, so the bigger
+    // bar is the winner. Symmetric widths clamped to [8, 92] so the losing
+    // side always shows a sliver and swapping A↔B mirrors cleanly.
+    const recvA = totalB, recvB = totalA;
+    const pctA = Math.max(8, Math.min(92, Math.round((recvA / sum) * 100)));
     barA.style.width = pctA + '%'; barB.style.width = (100 - pctA) + '%';
     const diff = Math.abs(totalA - totalB);
     // Use diff / max(A,B) instead of diff / (A+B): symmetric, bounded [0,100%],
@@ -22306,12 +22323,12 @@ window.fmtHeight = fmtHeight;
     if (diffPct <= 5) {
       verdict.textContent = 'FAIR TRADE'; verdict.className = 'trade-verdict even';
       sub.textContent = 'Both sides are roughly equal in value';
-    } else if (totalA > totalB) {
-      verdict.textContent = 'TEAM A WINS'; verdict.className = 'trade-verdict win-a';
-      sub.textContent = `Team A gets +${diff} more value (${diffPct}% advantage)`;
+    } else if (recvA > recvB) {
+      verdict.textContent = nameA.toUpperCase() + ' WINS'; verdict.className = 'trade-verdict win-a';
+      sub.textContent = `${nameA} gives ${totalA}, gets ${totalB} back (+${diff} · ${diffPct}% advantage)`;
     } else {
-      verdict.textContent = 'TEAM B WINS'; verdict.className = 'trade-verdict win-b';
-      sub.textContent = `Team B gets +${diff} more value (${diffPct}% advantage)`;
+      verdict.textContent = nameB.toUpperCase() + ' WINS'; verdict.className = 'trade-verdict win-b';
+      sub.textContent = `${nameB} gives ${totalB}, gets ${totalA} back (+${diff} · ${diffPct}% advantage)`;
     }
 
     // Insights — peak, depth, age, picks, position split
@@ -22328,8 +22345,13 @@ window.fmtHeight = fmtHeight;
   }
 
   // Rule-based 1-3 sentence summary of what each side is getting.
+  // Side a's panel is what Team A GIVES — i.e. what Team B receives — so every
+  // "gets" attribution below names the OPPOSITE team from the panel it reads.
   function _buildTradeInsights(a, b) {
     const out = [];
+    // Escaped once here — these strings land in insightsEl.innerHTML
+    const _names = _tradeSideNames();
+    const nameA = _esc(_names.nameA), nameB = _esc(_names.nameB);
     const aPlayers = a.players.map(i => D[i]).filter(Boolean);
     const bPlayers = b.players.map(i => D[i]).filter(Boolean);
     const aValues = aPlayers.map(d => getPlayerValue(d));
@@ -22340,14 +22362,14 @@ window.fmtHeight = fmtHeight;
 
     const isDyn = tradeMode === 'dynasty' || tradeMode === 'dynastysf';
 
-    // 0. Consolidation — flag when a multi-piece side is paying the roster-spot discount
+    // 0. Consolidation — the roster-spot discount lands on whoever RECEIVES the multi-piece bundle
     const aDet = calcSideDetail(a);
     const bDet = calcSideDetail(b);
     if (aDet.adj < 0 || bDet.adj < 0) {
       const parts = [];
-      if (aDet.adj < 0) parts.push('Team A ' + aDet.adj);
-      if (bDet.adj < 0) parts.push('Team B ' + bDet.adj);
-      out.push('Multi-piece discount applied: ' + parts.join(', ') + ' — extra pieces cost roster spots');
+      if (aDet.adj < 0) parts.push(nameB + ' ' + aDet.adj);
+      if (bDet.adj < 0) parts.push(nameA + ' ' + bDet.adj);
+      out.push('Multi-piece discount on the incoming package: ' + parts.join(', ') + ' — extra pieces cost roster spots');
     }
 
     // 1. Peak — highest single-asset value
@@ -22356,9 +22378,9 @@ window.fmtHeight = fmtHeight;
     if (aPeak && bPeak) {
       const peakDiffPct = Math.round((Math.abs(aPeak - bPeak) / Math.max(aPeak, bPeak)) * 100);
       if (peakDiffPct >= 15) {
-        const winSide = aPeak > bPeak ? 'A' : 'B';
+        const winSide = aPeak > bPeak ? nameB : nameA;
         const winName = (aPeak > bPeak ? aPlayers[aValues.indexOf(aPeak)] : bPlayers[bValues.indexOf(bPeak)]).n;
-        out.push(`Team ${winSide} gets the higher peak (${_esc(winName)})`);
+        out.push(`${winSide} gets the higher peak (${_esc(winName)})`);
       }
     }
 
@@ -22366,10 +22388,10 @@ window.fmtHeight = fmtHeight;
     const aCount = aPlayers.length + a.picks.length;
     const bCount = bPlayers.length + b.picks.length;
     if (Math.abs(aCount - bCount) >= 2) {
-      const moreSide = aCount > bCount ? 'A' : 'B';
+      const moreSide = aCount > bCount ? nameB : nameA;
       const moreN = Math.max(aCount, bCount);
       const lessN = Math.min(aCount, bCount);
-      out.push(`Team ${moreSide} gets more depth (${moreN} assets vs ${lessN})`);
+      out.push(`${moreSide} gets more depth (${moreN} assets vs ${lessN})`);
     }
 
     // 3. Age — only meaningful in dynasty
@@ -22380,16 +22402,17 @@ window.fmtHeight = fmtHeight;
         const aAvg = aAges.reduce((s, v) => s + v, 0) / aAges.length;
         const bAvg = bAges.reduce((s, v) => s + v, 0) / bAges.length;
         if (Math.abs(aAvg - bAvg) >= 2) {
-          const youngSide = aAvg < bAvg ? 'A' : 'B';
-          out.push(`Team ${youngSide} leans younger (avg age ${aAvg.toFixed(1)} vs ${bAvg.toFixed(1)})`);
+          const youngSide = aAvg < bAvg ? nameB : nameA;
+          const youngAvg = Math.min(aAvg, bAvg), oldAvg = Math.max(aAvg, bAvg);
+          out.push(`${youngSide} gets the younger package (avg age ${youngAvg.toFixed(1)} vs ${oldAvg.toFixed(1)})`);
         }
       }
     }
 
     // 4. Pick capital — dynasty only
     if (isDyn && (a.picks.length || b.picks.length) && a.picks.length !== b.picks.length) {
-      const moreSide = a.picks.length > b.picks.length ? 'A' : 'B';
-      out.push(`Team ${moreSide} gets more pick capital (${Math.max(a.picks.length, b.picks.length)} picks vs ${Math.min(a.picks.length, b.picks.length)})`);
+      const moreSide = a.picks.length > b.picks.length ? nameB : nameA;
+      out.push(`${moreSide} gets more pick capital (${Math.max(a.picks.length, b.picks.length)} picks vs ${Math.min(a.picks.length, b.picks.length)})`);
     }
 
     // 5. Position concentration — which side is loading up where
@@ -22402,8 +22425,8 @@ window.fmtHeight = fmtHeight;
     const bPos = posTotal(bPlayers);
     ['QB','RB','WR','TE'].forEach(pos => {
       const aN = aPos[pos] || 0, bN = bPos[pos] || 0;
-      if (aN >= 2 && bN === 0) out.push(`Team A loads up at ${pos} (${aN} ${pos}s)`);
-      else if (bN >= 2 && aN === 0) out.push(`Team B loads up at ${pos} (${bN} ${pos}s)`);
+      if (aN >= 2 && bN === 0) out.push(`${nameB} loads up at ${pos} (${aN} ${pos}s)`);
+      else if (bN >= 2 && aN === 0) out.push(`${nameA} loads up at ${pos} (${bN} ${pos}s)`);
     });
 
     // Cap at 3 to keep it scannable
@@ -23505,12 +23528,22 @@ window.fmtHeight = fmtHeight;
       const tipPrefix = (override === 'auto' || !override) ? 'Auto-detected · ' : 'Manual · ';
       return '<span class="team-arch-badge ' + cls + '" data-arch-side="' + sideLetter + '" title="' + tipPrefix + 'Click to cycle">' + icon + ' ' + lbl + '</span>';
     }
-    function fmt(f, sideLetter) {
-      const sub = f.idxSet.size + ' player' + (f.idxSet.size === 1 ? '' : 's') + (f.pickCount ? ' · ' + f.pickCount + ' pick' + (f.pickCount === 1 ? '' : 's') : '');
-      return _esc(f.owner) + ' <span style="display:block;font-size:.6rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">' + sub + '</span>' + archBadge(f.team, sideLetter);
+    // Flock-style headers: each panel is titled by the team that RECEIVES its
+    // assets, with a "from <sender>" sub-line (the panel lists the sender's
+    // roster/picks, and the archetype badge still describes the sender).
+    function fmt(sendF, recvF, sendLetter, genericSend, genericRecv) {
+      const title = recvF
+        ? ((recvF.team && recvF.team.isMyTeam) ? 'I RECEIVE' : _esc(recvF.owner) + ' RECEIVES')
+        : ((sendF && sendF.team && sendF.team.isMyTeam) ? 'THEY RECEIVE' : genericRecv + ' RECEIVES');
+      let sub = 'from ' + (sendF ? _esc(sendF.owner) : genericSend);
+      if (sendF) {
+        sub += ' · ' + sendF.idxSet.size + ' player' + (sendF.idxSet.size === 1 ? '' : 's') +
+          (sendF.pickCount ? ' · ' + sendF.pickCount + ' pick' + (sendF.pickCount === 1 ? '' : 's') : '');
+      }
+      return title + ' <span style="display:block;font-size:.6rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">' + sub + '</span>' + (sendF ? archBadge(sendF.team, sendLetter) : '');
     }
-    if (labelA) labelA.innerHTML = _calcSideFilters.a ? fmt(_calcSideFilters.a, 'a') : 'TEAM A';
-    if (labelB) labelB.innerHTML = _calcSideFilters.b ? fmt(_calcSideFilters.b, 'b') : 'TEAM B';
+    if (labelA) labelA.innerHTML = fmt(_calcSideFilters.a, _calcSideFilters.b, 'a', 'Team A', 'TEAM B');
+    if (labelB) labelB.innerHTML = fmt(_calcSideFilters.b, _calcSideFilters.a, 'b', 'Team B', 'TEAM A');
     // Wire badge click → cycle override (auto → contender → retool → rebuilder → auto)
     document.querySelectorAll('#tradeCalcView .team-arch-badge[data-arch-side]').forEach(b => {
       b.addEventListener('click', () => {
@@ -23567,6 +23600,10 @@ window.fmtHeight = fmtHeight;
     }
     _calcRenderRealPicks('a');
     _calcRenderRealPicks('b');
+    // Verdict + bar labels use the selected owners' names; renderAll (not bare
+    // updateResult) so side totals re-price in the same pass and can't desync
+    // from the verdict when async board data has arrived since the last render.
+    renderAll();
   }
 
   // When a team is selected on a side in dynasty mode, replace the generic

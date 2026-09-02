@@ -48878,10 +48878,18 @@ Rules:
     return y === 1 ? '1 year ago' : y + ' years ago';
   }
 
+  let _mtSavedTierRetry = false;
+  window._mtRenderSavedTeams = function(leagues) { return _mtRenderSavedTeams(leagues || window._mtSavedLeagues || []); }; // debug/harness hook
   function _mtRenderSavedTeams(leagues) {
     const container = document.getElementById('mtSavedTeams');
     if (!container) return;
     if (!leagues.length) { container.innerHTML = ''; return; }
+    // Tier chips need the board — first auth render can beat the data
+    // boot; re-render once it lands.
+    if ((typeof D === 'undefined' || !D.length) && !_mtSavedTierRetry) {
+      _mtSavedTierRetry = true;
+      setTimeout(() => { _mtSavedTierRetry = false; _mtRenderSavedTeams(window._mtSavedLeagues || []); }, 3000);
+    }
 
     let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">SAVED LEAGUES <span style="font-family:system-ui,sans-serif;font-size:.6rem;letter-spacing:.2px;font-weight:400;color:var(--text2);margin-left:6px;vertical-align:2px">rosters &amp; records auto-update when you visit</span></div>';
     leagues.forEach((lg, i) => {
@@ -48907,8 +48915,9 @@ Rules:
       }
 
       html += `<div onclick="window._mtLoadSavedLeague(${i})" title="Click to load league" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap;cursor:pointer;transition:border-color .15s,background .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(245,158,11,.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">`;
+      const _myTier = _mtSavedLeagueMyTier(lg);
       html += `<div style="flex:1;min-width:0">`;
-      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(lg.name || 'League')}</div>`;
+      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(lg.name || 'League')}${_myTier ? _mtTeamTierChip(_myTier) : ''}</div>`;
       html += `<div style="font-size:.65rem;color:var(--text2)">${teamCount} teams · ${fmtParts.join(' · ')}${lg.season ? ' · ' + lg.season : ''}${savedRel ? ' · <span title="' + _esc(savedAbs) + '" style="cursor:help">Saved ' + savedRel + '</span>' : ''}</div>`;
       html += rosterPreview;
       html += `</div>`;
@@ -48917,6 +48926,50 @@ Rules:
       html += `</div>`;
     });
     container.innerHTML = html;
+  }
+
+  // Score a saved snapshot's teams with current rankings under the ACTIVE
+  // _mtFormat (callers set it first): roster value, best-lineup PPG, pick
+  // slots, sorted by total. Shared by the saved-league load and the
+  // saved-card tier chips. Picks are cloned so scoring never mutates the
+  // snapshot itself.
+  function _mtScoreSnapshotTeams(lg) {
+    const teams = (lg.teams || []).map(t => ({
+      ...t,
+      players: t.players || [],
+      draftPicks: (t.draftPicks || []).map(p => ({ ...p }))
+    }));
+    const isDynasty = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
+    teams.forEach(t => {
+      t.score = _mtScoreRoster(t.players, isDynasty ? t.draftPicks : []);
+      const lineup = _mtBestLineup(t.players);
+      t.lineupPpg = lineup ? lineup.totalPpg : 0;
+    });
+    // Exact pick numbers for the current year, then re-score with them.
+    _mtAssignPickSlots(teams, parseInt(lg.season || new Date().getFullYear()));
+    teams.forEach(t => { t.score = _mtScoreRoster(t.players, isDynasty ? t.draftPicks : []); });
+    teams.sort((a, b) => b.score.total - a.score.total);
+    return teams;
+  }
+
+  // Tier chip for the saved-league cards (Jack 2026-09-02): MY team's label
+  // in that league, computed under the league's own format with the global
+  // _mtFormat saved/restored so the active league keeps its state. Needs
+  // the board (D) loaded — the card renderer re-renders once it is.
+  function _mtSavedLeagueMyTier(lg) {
+    try {
+      if (typeof D === 'undefined' || !D.length || !lg || !lg.format) return null;
+      if (!(lg.teams || []).some(t => t && t.isMyTeam)) return null;
+      const prevFormat = _mtFormat;
+      _mtFormat = { ...lg.format };
+      try {
+        const teams = _mtScoreSnapshotTeams(lg);
+        _mtComputePosRanks(teams);
+        const info = _mtTeamTiers(teams);
+        const me = teams.find(t => t.isMyTeam);
+        return info && me ? info.byTeam.get(me) || null : null;
+      } finally { _mtFormat = prevFormat; }
+    } catch (_) { return null; }
   }
 
   window._mtLoadSavedLeague = function(idx) {
@@ -48930,34 +48983,8 @@ Rules:
     // scoring so a fallback to consensus applies to this league's grades.
     _mtUpdateAdpSrcVisibility();
 
-    // Re-score teams with current rankings
-    const teams = (lg.teams || []).map(t => ({
-      ...t,
-      players: t.players || [],
-      draftPicks: t.draftPicks || []
-    }));
-
-    teams.forEach(t => {
-      const isDynasty = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
-      const result = _mtScoreRoster(t.players, isDynasty ? t.draftPicks : []);
-      t.score = result;
-      // Compute best lineup projected PPG
-      const lineup = _mtBestLineup(t.players);
-      t.lineupPpg = lineup ? lineup.totalPpg : 0;
-    });
-
-    // Assign exact pick numbers for current year
-    const savedSeason = parseInt(lg.season || new Date().getFullYear());
-    _mtAssignPickSlots(teams, savedSeason);
-
-    // Re-score now that pick slots are finalized
-    teams.forEach(t => {
-      const isDynasty = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
-      const result = _mtScoreRoster(t.players, isDynasty ? t.draftPicks : []);
-      t.score = result;
-    });
-
-    teams.sort((a, b) => b.score.total - a.score.total);
+    // Re-score teams with current rankings (value, lineup PPG, pick slots).
+    const teams = _mtScoreSnapshotTeams(lg);
 
     // Track the source so _mtSelectMyTeam re-saves instead of re-importing a
     // non-Sleeper id against the Sleeper API. ESPN leagues save as

@@ -3407,6 +3407,22 @@ function _tcvTeamOutline(teamName){
 // Generic head-and-shoulders fallback for covered cards with no headshot
 const _TCV_SIL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.7 0 4.8-2.2 4.8-4.9S14.7 2.2 12 2.2 7.2 4.4 7.2 7.1 9.3 12 12 12zm0 2.2c-4 0-9 2-9 6v1.6h18v-1.6c0-4-5-6-9-6z"/></svg>';
 
+// WEEKLY-only matchup chip: "vs KC" / "@ KC" / "BYE" for the active week,
+// colored by opponent difficulty (Clay def rank; D/ST = opp offense rank).
+function _tcvOppChipHtml(d) {
+  if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return '';
+  if (typeof window._weeklyOppFor !== 'function') return '';
+  const opp = window._weeklyOppFor(d.t);
+  if (!opp) return '';
+  const wk = window._weeklyActiveWeek || 1;
+  if (opp === 'BYE') return '<div class="tcv-opp-chip tcv-opp-bye" title="Week ' + wk + ': BYE">BYE</div>';
+  const away = opp.charAt(0) === '@';
+  const abbr = away ? opp.slice(1) : opp;
+  const diff = (typeof window._weeklyOppDifficulty === 'function') ? window._weeklyOppDifficulty(d.t, d.s) : null;
+  const diffLbl = diff === 'hard' ? ' · tough matchup' : diff === 'easy' ? ' · soft matchup' : '';
+  return '<div class="tcv-opp-chip' + (diff ? ' tcv-opp-' + diff : '') + '" title="Week ' + wk + ': ' + (away ? 'at ' : 'vs ') + abbr + diffLbl + '">' + (away ? '@ ' : 'vs ') + abbr + '</div>';
+}
+
 function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   const card = document.createElement('div');
   card.className = 'tcv-card';
@@ -3484,6 +3500,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     headshotHtml +
     logoHtml +
     '<div class="tcv-pos-pill ' + (d.s || '') + '">' + (d.s || '') + '</div>' +
+    _tcvOppChipHtml(d) +
     '<div class="tcv-card-name" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>' +
     '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
       // Mystery silhouette: the player's REAL headshot blacked out to a ghost
@@ -3610,7 +3627,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#facc15">15.8</span>/<span style="color:#22c55e">17.3</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= \'25 PPG / PROJ PPG (' + scoreFmtLabel + ') / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
+    '<span>= \'25 PPG / PROJ PPG (' + scoreFmtLabel + ') / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> chip = W' + (window._weeklyActiveWeek || 1) + ' opponent (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 

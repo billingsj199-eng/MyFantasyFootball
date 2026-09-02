@@ -48437,12 +48437,11 @@ Rules:
       const scoreLabel = isPosSort ? _mtOrdinal(posRankEntry.rank) : displayScore;
       // Find original index for click handler
       const origIdx = teams.indexOf(t);
-      html += `<div onclick="window._mtShowTeam(${origIdx})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;${meStyle};border-radius:8px;cursor:pointer;transition:all .15s;position:relative" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">`;
-      if (isMe) html += `<div style="position:absolute;top:-6px;right:10px;font-size:.5rem;background:var(--accent);color:#000;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px">MY TEAM</div>`;
+      html += `<div class="mt-pr-row" onclick="window._mtShowTeam(${origIdx})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;${meStyle};border-radius:8px;cursor:pointer;transition:all .15s;position:relative" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--text2);width:24px;text-align:center">${i + 1}</div>`;
       html += `<div ${chipTip} style="width:48px;height:48px;border-radius:10px;background:${scoreColor}15;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${scoreColor};letter-spacing:1px">${scoreLabel}</div>`;
       html += _mtTeamLogoHtml(t, 28);
-      html += `<div style="flex:1;min-width:0">`;
+      html += `<div class="mt-pr-main" style="flex:1;min-width:0">`;
       // Availability flag: projected starters ruled out (IR/PUP/SUS/Out)
       const _injOut = _mtTeamInjuredStarters(t);
       const _injChip = _injOut.length
@@ -48454,8 +48453,8 @@ Rules:
       const _recHtml = _mtRecordHtml(t);
       html += `<div style="font-size:.68rem;color:var(--text2)">${_recHtml} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}${deltaHtml}</div>`;
       html += `</div>`;
-      // Position scores mini + picks for dynasty
-      html += `<div style="display:flex;gap:4px">`;
+      // Position scores mini + picks for dynasty (wraps under the name on mobile — .mt-pr-stats)
+      html += `<div class="mt-pr-stats" style="display:flex;gap:4px">`;
       // PPG mini display
       const ppgVal = t.lineupPpg || 0;
       const ppgHighlight = _mtSortBy === 'ppg' ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
@@ -48475,6 +48474,10 @@ Rules:
         html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">PICKS</div><div style="${pickHighlight};font-weight:700;color:#a855f7">${sc.pickTotal || 0}</div></div>`;
       }
       html += `</div>`;
+      // MY TEAM badge is the row's LAST child — the mobile stylesheet styles
+      // :first-child (rank) and :nth-child(2) (score chip) by position, and
+      // the badge squeezed to "MY / TEA" when it came first.
+      if (isMe) html += `<div class="mt-pr-mine" style="position:absolute;top:-6px;right:10px;font-size:.5rem;background:var(--accent);color:#000;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px;white-space:nowrap;line-height:1.4">MY TEAM</div>`;
       html += `</div>`;
       // Inline detail container — the team expands here, directly below its
       // row, when clicked. Sibling of the row so row clicks can't bubble in.
@@ -49489,8 +49492,8 @@ Rules:
       rows.forEach(x => { const pr = x.info.posRanks && x.info.posRanks[p]; if (pr && pr.rank) vals.push(pct(pr.rank, x.info.n)); });
       posPct[p] = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
     });
-    let html = `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">PORTFOLIO <span style="font-family:'DM Sans',sans-serif;font-size:.62rem;letter-spacing:.2px;font-weight:400;color:var(--text2);margin-left:6px">${rows.length} league${rows.length === 1 ? '' : 's'} with your team marked · strength vs each league</span></div>`;
-    html += `<div style="display:grid;grid-template-columns:minmax(150px,1fr) minmax(220px,2fr);gap:10px;align-items:stretch">`;
+    let html = `<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text)">PORTFOLIO</span><span style="font-size:.62rem;color:var(--text2)">${rows.length} league${rows.length === 1 ? '' : 's'} with your team marked · strength vs each league</span></div>`;
+    html += `<div class="mt-pf-grid" style="display:grid;grid-template-columns:minmax(150px,1fr) minmax(220px,2fr);gap:10px;align-items:stretch">`;
     // Left: average percentile + grade
     html += `<div title="Average of your team's strength percentile in each league (100% = best team in the league)" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-align:center">` +
       `<div style="font-size:.6rem;letter-spacing:1px;color:var(--text2)">AVG PERCENTILE</div>` +

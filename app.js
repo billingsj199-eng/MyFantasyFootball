@@ -48178,8 +48178,8 @@ Rules:
     _mtResultsOpen = false;
     const _rs = document.getElementById('mtResults');
     if (_rs) { _rs.style.display = 'none'; _rs.innerHTML = ''; }
-    _mtDraftCapitalOpen = false; _mtByesOpen = false; _mtShareOpen = false; _mtPlayoffsOpen = false;
-    ['mtDraftCapital', 'mtByeStress', 'mtShareCard', 'mtPlayoffStrength'].forEach(id => { const el = document.getElementById(id); if (el) { el.style.display = 'none'; el.innerHTML = ''; } });
+    _mtDraftCapitalOpen = false; _mtByesOpen = false; _mtShareOpen = false; _mtPlayoffsOpen = false; _mtHistoryOpen = false;
+    ['mtDraftCapital', 'mtByeStress', 'mtShareCard', 'mtPlayoffStrength', 'mtValueHistory'].forEach(id => { const el = document.getElementById(id); if (el) { el.style.display = 'none'; el.innerHTML = ''; } });
     // Checklist FIX → keep the lineup panel open across the load + refresh renders.
     _mtHonorLineupOpenPending();
     _mtRenderTeamList(teams);
@@ -48614,10 +48614,12 @@ Rules:
         const _lcBad = _lcA && (_lcA.delta >= 1 || _lcA.empty || _lcA.flagged.length);
         html += `<button onclick="window._mtToggleLineupCheck()" title="Your set lineup vs the best lineup for your roster" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${lcActive ? '#22d3ee' : _lcBad ? '#f59e0b' : 'var(--border)'};background:${lcActive ? '#22d3ee' : 'var(--surface)'};color:${lcActive ? '#000' : _lcBad ? '#f59e0b' : 'var(--text2)'}">LINEUP${_lcBad ? ' · ' + (_lcA.delta >= 1 ? '+' + _lcA.delta : '!') : ''}</button>`;
       }
-      // Activity feed — saved leagues only (the log lives on the snapshot).
+      // Activity feed + value history — saved leagues only (both live on the snapshot).
       {
         const _acLg = _mtActiveSavedLeague();
         if (_acLg) {
+          const hsActive = _mtHistoryOpen;
+          html += `<button onclick="window._mtToggleHistory()" title="Team strength, PPG and rank over time, with trades marked" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${hsActive ? '#2dd4bf' : 'var(--border)'};background:${hsActive ? '#2dd4bf' : 'var(--surface)'};color:${hsActive ? '#000' : 'var(--text2)'}">HISTORY</button>`;
           const acActive = _mtActivityOpen;
           const _acNew = acActive ? 0 : _mtUnseenChanges(_acLg).length;
           html += `<button onclick="window._mtToggleActivity()" title="Roster moves and standings changes since your last visit" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${acActive ? '#fbbf24' : _acNew ? '#fbbf24' : 'var(--border)'};background:${acActive ? '#fbbf24' : 'var(--surface)'};color:${acActive ? '#000' : _acNew ? '#fbbf24' : 'var(--text2)'}">ACTIVITY${_acNew ? ' · ' + _acNew + ' NEW' : ''}</button>`;
@@ -51280,6 +51282,123 @@ Rules:
       html += `<td style="padding:5px 6px;font-weight:700;color:${move > 0 ? '#22c55e' : move < 0 ? '#ef4444' : 'var(--text2)'}">${move > 0 ? '▲' + move : move < 0 ? '▼' + Math.abs(move) : '·'}</td></tr>`;
     });
     html += `</tbody></table></div><div style="font-size:.55rem;color:var(--text2);margin-top:4px">Matchup tilt = position-weighted P-SOS z-score per week (±6% per σ, capped ±15%); K/DST use the per-week Vegas models where a line is posted. Green week cell = league-best that week.</div></div>`;
+    box.innerHTML = html;
+  }
+
+  // ── VALUE HISTORY CHART (Jack 2026-09-02: "do the value history chart") ─
+  // Inline SVG line chart of every team over the recorded daily points
+  // (same value source as the current view): STRENGTH / PROJ PPG / RANK.
+  // Trade dates from the activity log are marked on the timeline. Needs
+  // 2+ points on different days — the panel says so until then.
+  let _mtHistoryOpen = false;
+  let _mtHistoryMetric = 'v'; // v = strength, p = ppg, r = rank
+  const _MT_HISTORY_COLORS = ['#3b82f6', '#22c55e', '#ef4444', '#a855f7', '#06b6d4', '#f472b6', '#84cc16', '#fb923c', '#e879f9', '#14b8a6', '#facc15', '#94a3b8', '#60a5fa', '#4ade80'];
+  window._mtToggleHistory = function () {
+    const box = document.getElementById('mtValueHistory');
+    if (!box) return;
+    _mtHistoryOpen = !_mtHistoryOpen;
+    box.style.display = _mtHistoryOpen ? '' : 'none';
+    if (_mtHistoryOpen) _mtRenderHistory();
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+  };
+  window._mtSetHistoryMetric = function (m) { _mtHistoryMetric = m; _mtRenderHistory(); };
+  function _mtRenderHistory() {
+    const box = document.getElementById('mtValueHistory');
+    if (!box) return;
+    const lg = _mtActiveSavedLeague();
+    const teams = window._mtTeams || [];
+    const metricIdx = _mtHistoryMetric === 'p' ? 1 : _mtHistoryMetric === 'r' ? 2 : 0;
+    const metricLbl = _mtHistoryMetric === 'p' ? 'PROJ PPG' : _mtHistoryMetric === 'r' ? 'RANK' : 'STRENGTH';
+    let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#2dd4bf">VALUE HISTORY</span>`;
+    html += `<span style="display:flex;gap:2px;background:var(--surface2);padding:2px;border-radius:6px">`;
+    [['v', 'STRENGTH'], ['p', 'PROJ PPG'], ['r', 'RANK']].forEach(([k, l]) => {
+      const on = _mtHistoryMetric === k;
+      html += `<button onclick="window._mtSetHistoryMetric('${k}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1px;border:none;border-radius:4px;cursor:pointer;background:${on ? 'var(--surface)' : 'transparent'};color:${on ? 'var(--accent)' : 'var(--text2)'};${on ? 'box-shadow:0 0 0 1px var(--border);' : ''}">${l}</button>`;
+    });
+    html += `</span>`;
+    html += `<span style="font-size:.6rem;color:var(--text2)">one point per day you visit · ${_esc((_MT_SRC_NAMES && _MT_SRC_NAMES[_mtValueSrc]) || _mtValueSrc)} values · dashed lines = trades</span>`;
+    html += `<button onclick="window._mtToggleHistory()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
+    html += `</div>`;
+    const pts = (lg && Array.isArray(lg.history) ? lg.history : []).filter(h => h && h.s === _mtValueSrc && h.t && h.d).slice().sort((a, b) => a.d < b.d ? -1 : 1);
+    const days = [...new Set(pts.map(h => h.d))];
+    if (!lg) {
+      html += `<div style="font-size:.72rem;color:var(--text2)">History is kept for saved leagues — sign in and this league is saved automatically.</div></div>`;
+      box.innerHTML = html; return;
+    }
+    if (days.length < 2) {
+      html += `<div style="font-size:.72rem;color:var(--text2)">Collecting… ${days.length ? 'one day recorded so far' : 'no points yet'}. Each day you open My Teams adds a point for this league under the current value source, and the chart draws once there are two.</div></div>`;
+      box.innerHTML = html; return;
+    }
+    // Series per team (by id), x = ms since first day
+    const toMs = d => new Date(d + 'T12:00:00').getTime();
+    const x0 = toMs(pts[0].d), x1 = toMs(pts[pts.length - 1].d);
+    const W = 860, H = 320, L = 46, R = 130, T = 16, B = 34;
+    const series = teams.map((t, i) => {
+      const id = String(t.id);
+      const arr = pts.filter(h => h.t[id]).map(h => ({ x: toMs(h.d), y: h.t[id][metricIdx], d: h.d }));
+      return { t, id, color: t.isMyTeam ? '#f59e0b' : _MT_HISTORY_COLORS[i % _MT_HISTORY_COLORS.length], arr };
+    }).filter(s => s.arr.length >= 1);
+    const ys = series.flatMap(s => s.arr.map(p => p.y)).filter(v => typeof v === 'number');
+    let ymin = Math.min(...ys), ymax = Math.max(...ys);
+    if (metricIdx === 2) { ymin = 1; ymax = Math.max(teams.length, ymax); }
+    else { const pad = (ymax - ymin) * 0.08 || 5; ymin -= pad; ymax += pad; }
+    const sx = x => L + (x1 > x0 ? (x - x0) / (x1 - x0) : 0.5) * (W - L - R);
+    const sy = y => metricIdx === 2
+      ? T + ((y - ymin) / (ymax - ymin || 1)) * (H - T - B)        // rank: 1 at the top
+      : T + (1 - (y - ymin) / (ymax - ymin || 1)) * (H - T - B);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;font-family:'DM Sans',system-ui,sans-serif">`;
+    // Gridlines + y labels
+    const ticks = 4;
+    for (let i = 0; i <= ticks; i++) {
+      const v = ymin + (ymax - ymin) * i / ticks;
+      const y = sy(v);
+      svg += `<line x1="${L}" x2="${W - R}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(148,163,184,.18)" stroke-width="1"/>`;
+      svg += `<text x="${L - 6}" y="${(y + 3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="#94a3b8">${metricIdx === 2 ? Math.round(v) : metricIdx === 1 ? (Math.round(v * 10) / 10) : Math.round(v)}</text>`;
+    }
+    // X labels: first, last, and up to 4 in between
+    const labelDays = days.length <= 6 ? days : [days[0], ...[1, 2, 3, 4].map(k => days[Math.round(k * (days.length - 1) / 5)]), days[days.length - 1]];
+    let lastLx = -Infinity;
+    [...new Set(labelDays)].forEach((d, i, arr) => {
+      const x = sx(toMs(d));
+      // Skip a label that would collide with the previous one (the last day
+      // always wins — drop the neighbour instead when it's the runner-up).
+      const isLast = i === arr.length - 1;
+      if (x - lastLx < 52 && !isLast) return;
+      if (isLast && x - lastLx < 52) svg = svg.replace(/<text x="[^"]+" y="[^"]+" text-anchor="middle" font-size="10" fill="#94a3b8">[^<]*<\/text>$/, '');
+      lastLx = x;
+      svg += `<text x="${x.toFixed(1)}" y="${H - B + 16}" text-anchor="middle" font-size="10" fill="#94a3b8">${new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</text>`;
+    });
+    // Trade markers from the activity log
+    const trades = (Array.isArray(lg.changeLog) ? lg.changeLog : []).filter(e => e && e.at && (e.trades || []).length);
+    trades.forEach(e => {
+      const ms = new Date(e.at).getTime();
+      if (!(ms >= x0 - 86400000 && ms <= x1 + 86400000)) return;
+      const x = sx(Math.max(x0, Math.min(x1, ms)));
+      const tip = e.trades.map(tr => `${tr.a} ↔ ${tr.b}: ${(tr.aToB || []).join(', ')} for ${(tr.bToA || []).join(', ')}`).join(' · ');
+      svg += `<g><title>${_esc(new Date(e.at).toLocaleDateString())} · ${_esc(tip)}</title><line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${T}" y2="${H - B}" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4 3" opacity=".7"/><text x="${x.toFixed(1)}" y="${T - 4}" text-anchor="middle" font-size="9" fill="#38bdf8">TRADE</text></g>`;
+    });
+    // Lines (my team last so it sits on top)
+    const ordered = series.slice().sort((a, b) => (a.t.isMyTeam ? 1 : 0) - (b.t.isMyTeam ? 1 : 0));
+    ordered.forEach(s => {
+      const d = s.arr.map(p => `${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join(' ');
+      const mine = s.t.isMyTeam;
+      svg += `<polyline fill="none" points="${d}" stroke="${s.color}" stroke-width="${mine ? 3 : 1.6}" stroke-linejoin="round" stroke-linecap="round" opacity="${mine ? 1 : 0.85}"><title>${_esc(s.t.owner)}</title></polyline>`;
+      s.arr.forEach(p => { svg += `<circle cx="${sx(p.x).toFixed(1)}" cy="${sy(p.y).toFixed(1)}" r="${mine ? 3.2 : 2.2}" fill="${s.color}"><title>${_esc(s.t.owner)} · ${_esc(p.d)} · ${metricLbl} ${metricIdx === 2 ? _mtOrdinal(p.y) : p.y}</title></circle>`; });
+    });
+    // End labels, staggered so they don't overlap
+    const ends = series.map(s => { const p = s.arr[s.arr.length - 1]; return { s, y: sy(p.y), val: p.y }; }).sort((a, b) => a.y - b.y);
+    let lastY = -Infinity;
+    ends.forEach(e => { let y = Math.max(e.y, lastY + 11); y = Math.min(y, H - B - 2); e.ly = y; lastY = y; });
+    ends.forEach(e => {
+      const mine = e.s.t.isMyTeam;
+      svg += `<text x="${W - R + 8}" y="${(e.ly + 3.5).toFixed(1)}" font-size="${mine ? 11 : 10}" font-weight="${mine ? 700 : 500}" fill="${e.s.color}">${_esc(String(e.s.t.owner).slice(0, 16))} <tspan fill="#94a3b8" font-weight="400">${metricIdx === 2 ? _mtOrdinal(e.val) : e.val}</tspan></text>`;
+    });
+    svg += `</svg>`;
+    html += `<div style="overflow-x:auto">${svg}</div>`;
+    const first = pts[0], last = pts[pts.length - 1];
+    html += `<div style="font-size:.6rem;color:var(--text2);margin-top:4px">${days.length} day${days.length === 1 ? '' : 's'} recorded, ${_esc(first.d)} → ${_esc(last.d)} · ${trades.length} trade date${trades.length === 1 ? '' : 's'} in range · switch the value source to see its own history</div></div>`;
     box.innerHTML = html;
   }
 

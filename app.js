@@ -47108,6 +47108,171 @@ Rules:
     return html;
   }
 
+  // ── TRADE LOG (Flock-audit item 2, Jack 2026-09-02) ──────────────────
+  // Every completed trade in the loaded Sleeper league (transactions API,
+  // legs 1-18 — offseason deals all sit in leg 1), priced on the current
+  // value board with the trade calc's own numbers (_getTradeValue +
+  // _getPickValue, package-adjusted like the calc) so the verdict here
+  // matches what the calc would say today. Sleeper only: ESPN/Yahoo carry
+  // no proxy-reachable trade history. ALL / MINE filter; my trades are
+  // outlined. Picks price at their MID slot (a completed trade's pick has
+  // no live slot projection worth pretending to know).
+  let _mtTradeLogOpen = false;
+  let _mtTradeLogMine = false;
+  const _mtTradeLogCache = {};
+  function _mtSleeperNameMap() {
+    let map = {};
+    try {
+      const cached = localStorage.getItem('mt_sleeper_players');
+      if (cached) { const parsed = JSON.parse(cached); if (parsed && parsed.map) map = parsed.map; }
+    } catch (_) {}
+    if (typeof D !== 'undefined') D.forEach(d => { if (d._slId && !map[String(d._slId)]) map[String(d._slId)] = d.n; });
+    return map;
+  }
+  async function _mtFetchSleeperTrades(leagueId) {
+    const legs = [];
+    for (let i = 1; i <= 18; i++) legs.push(i);
+    const lists = await Promise.all(legs.map(leg =>
+      fetch(`https://api.sleeper.app/v1/league/${leagueId}/transactions/${leg}`)
+        .then(r => r.ok ? r.json() : [])
+        .catch(() => [])
+    ));
+    const seen = new Set();
+    const trades = [];
+    lists.forEach((rows, i) => {
+      (rows || []).forEach(tx => {
+        if (!tx || tx.type !== 'trade' || tx.status !== 'complete') return;
+        if (seen.has(tx.transaction_id)) return;
+        seen.add(tx.transaction_id);
+        trades.push({ ...tx, leg: i + 1 });
+      });
+    });
+    trades.sort((a, b) => (b.status_updated || b.created || 0) - (a.status_updated || a.created || 0));
+    return trades;
+  }
+  function _mtPriceTrade(tx, nameMap) {
+    const mode = _mtGetRankingMode();
+    const teams = window._mtTeams || [];
+    const byId = {};
+    teams.forEach(t => { byId[String(t.id)] = t; });
+    const rdLabel = r => (r === 1 ? '1st' : r === 2 ? '2nd' : r === 3 ? '3rd' : '4th');
+    const sides = (tx.roster_ids || []).map(rid => {
+      const assets = [];
+      Object.entries(tx.adds || {}).forEach(([pid, toRid]) => {
+        if (String(toRid) !== String(rid)) return;
+        const name = nameMap[String(pid)] || ('Player ' + pid);
+        const d = _mtLookupD(name);
+        const val = d && typeof window._getTradeValue === 'function' ? Math.round(window._getTradeValue(d, _mtValueSrc, mode)) : 0;
+        assets.push({ type: 'p', name: d ? d.n : name, pos: d ? d.s : '', val, matched: !!d });
+      });
+      (tx.draft_picks || []).forEach(pk => {
+        if (String(pk.owner_id) !== String(rid)) return;
+        const orig = byId[String(pk.roster_id)];
+        const val = typeof window._getPickValue === 'function' ? Math.round(window._getPickValue(rdLabel(pk.round), String(pk.season), 'mid', mode, null)) : 0;
+        assets.push({ type: 'k', name: pk.season + ' ' + rdLabel(pk.round) + (orig && String(pk.roster_id) !== String(rid) ? ' (via ' + orig.owner + ')' : ''), pos: 'PICK', val, matched: true });
+      });
+      assets.sort((a, b) => b.val - a.val);
+      const vals = assets.map(a => a.val);
+      const raw = vals.reduce((s, v) => s + v, 0);
+      const total = (typeof window._packageAdjustedTotal === 'function' && vals.length) ? Math.round(window._packageAdjustedTotal(vals, mode)) : raw;
+      const team = byId[String(rid)];
+      return { rid, team, owner: team ? team.owner : ('Roster ' + rid), mine: !!(team && team.isMyTeam), assets, raw, total };
+    });
+    let verdict = { text: 'FAIR', color: '#94a3b8', winner: null };
+    if (sides.length >= 2) {
+      const sorted = sides.slice().sort((a, b) => b.total - a.total);
+      const hi = sorted[0].total, lo = sorted[1].total;
+      const diff = hi - lo;
+      if (hi > 0 && diff > Math.max(6, hi * 0.05)) {
+        const pct = Math.round(diff / Math.max(lo, 1) * 100);
+        verdict = { text: sorted[0].owner + ' +' + (pct >= 1000 ? '999+' : pct) + '%', color: pct >= 40 ? '#22c55e' : '#4ade80', winner: sorted[0].rid };
+      }
+    }
+    return { sides, verdict };
+  }
+  window._mtSetTradeLogFilter = function (mine) {
+    _mtTradeLogMine = !!mine;
+    const key = 'sleeper_' + _mtActiveSleeperId;
+    if (_mtTradeLogCache[key]) _mtRenderTradeLog(_mtTradeLogCache[key]);
+  };
+  function _mtRenderTradeLog(trades) {
+    const box = document.getElementById('mtTradeLog');
+    if (!box) return;
+    const nameMap = _mtSleeperNameMap();
+    const priced = trades.map(tx => ({ tx, p: _mtPriceTrade(tx, nameMap) }));
+    const hasMine = (window._mtTeams || []).some(t => t.isMyTeam);
+    const shown = _mtTradeLogMine ? priced.filter(x => x.p.sides.some(s => s.mine)) : priced;
+    let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
+      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#38bdf8">TRADE LOG</span>` +
+      `<span style="font-size:.6rem;color:var(--text2)">${trades.length} completed trade${trades.length === 1 ? '' : 's'} · priced on today's ${_mtValueSrc === 'jacks' ? "Jack's" : _mtValueSrc === 'mine' ? 'My Ranks' : _mtValueSrc} board, calc package math · picks at mid slot</span>`;
+    if (hasMine) {
+      html += `<span style="margin-left:auto;display:flex;gap:2px;background:var(--surface2);padding:2px;border-radius:6px">`;
+      [[false, 'ALL'], [true, 'MINE']].forEach(([v, lbl]) => {
+        const on = _mtTradeLogMine === v;
+        html += `<button onclick="window._mtSetTradeLogFilter(${v})" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1px;border:none;border-radius:4px;cursor:pointer;background:${on ? 'var(--surface)' : 'transparent'};color:${on ? 'var(--accent)' : 'var(--text2)'};${on ? 'box-shadow:0 0 0 1px var(--border);' : ''}">${lbl}</button>`;
+      });
+      html += `</span>`;
+    }
+    html += `</div>`;
+    if (!shown.length) {
+      html += `<div style="color:var(--text2);font-size:.75rem;padding:10px">${trades.length ? 'No trades involving your team yet.' : 'No completed trades in this league yet.'}</div>`;
+      box.innerHTML = html;
+      return;
+    }
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a855f7', DST: '#94a3b8', PICK: '#a855f7' };
+    const assetHtml = a => `<span title="${_esc(a.name)} · ${a.val}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);font-size:.68rem;max-width:100%">` +
+      `<span style="font-size:.5rem;font-weight:700;color:${posColors[a.pos] || 'var(--text2)'}">${_esc(a.pos || '?')}</span>` +
+      `<span style="color:${a.matched ? 'var(--text)' : 'var(--text2)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(a.name)}</span>` +
+      `<span style="font-weight:700;color:${a.val >= 100 ? '#22c55e' : a.val >= 40 ? '#4ade80' : a.val >= 15 ? '#facc15' : 'var(--text2)'}">${a.val}</span></span>`;
+    html += `<div style="display:flex;flex-direction:column;gap:6px">`;
+    shown.forEach(({ tx, p }) => {
+      const when = new Date(tx.status_updated || tx.created || 0);
+      const mine = p.sides.some(s => s.mine);
+      html += `<div style="padding:8px 12px;border:${mine ? '2px solid var(--accent)' : '1px solid var(--border)'};border-radius:8px;background:${mine ? 'rgba(245,158,11,.06)' : 'var(--surface)'}">`;
+      html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;font-size:.62rem;color:var(--text2)">` +
+        `<span>${when.toLocaleDateString()}${tx.leg > 1 ? ' · wk ' + tx.leg : ''}</span>` +
+        `<span style="margin-left:auto;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;color:${p.verdict.color}">${_esc(p.verdict.text)}</span></div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">`;
+      p.sides.forEach(s => {
+        html += `<div style="min-width:0">` +
+          `<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px"><span style="font-weight:${s.mine ? 700 : 600};font-size:.78rem;color:${s.mine ? 'var(--accent)' : 'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.mine ? '⭐ ' : ''}${_esc(s.owner)} receives</span>` +
+          `<span title="Package-adjusted total (raw ${s.raw})" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${p.verdict.winner === s.rid ? '#22c55e' : 'var(--text2)'}">${s.total}</span></div>` +
+          `<div style="display:flex;flex-wrap:wrap;gap:4px">${s.assets.length ? s.assets.map(assetHtml).join('') : '<span style="font-size:.65rem;color:var(--text2)">nothing</span>'}</div></div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+    box.innerHTML = html;
+  }
+  window._mtToggleTradeLog = async function () {
+    const box = document.getElementById('mtTradeLog');
+    if (!box) return;
+    if (_mtTradeLogOpen) {
+      _mtTradeLogOpen = false;
+      box.style.display = 'none';
+      if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+      return;
+    }
+    _mtTradeLogOpen = true;
+    box.style.display = '';
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+    if (_mtActiveSource !== 'sleeper' || !_mtActiveSleeperId) {
+      box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Trade log is available for Sleeper leagues.</div>';
+      return;
+    }
+    const key = 'sleeper_' + _mtActiveSleeperId;
+    box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Loading trade history…</div>';
+    try {
+      let trades = _mtTradeLogCache[key];
+      if (!trades) trades = _mtTradeLogCache[key] = await _mtFetchSleeperTrades(_mtActiveSleeperId);
+      if (!_mtTradeLogOpen) return;
+      _mtRenderTradeLog(trades);
+    } catch (err) {
+      console.warn('[MyTeams] Trade log error:', err);
+      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t load trades: ' + _esc(err.message) + '</div>';
+    }
+  };
+
   // ── SEASON OUTLOOK (projected records + playoff odds) ────────────────
   // Full-season head-to-head schedule × each team's best-lineup season PPG
   // (sim-export means via _mtGetPlayerPpg — NO player sims run in-browser;
@@ -48005,6 +48170,11 @@ Rules:
       html += `<button onclick="window._mtToggleWaivers()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${wwActive ? '#4ade80' : 'var(--border)'};background:${wwActive ? '#4ade80' : 'var(--surface)'};color:${wwActive ? '#000' : 'var(--text2)'}">WAIVERS</button>`;
       const tfActive = _mtTradesOpen;
       html += `<button onclick="window._mtToggleTradeFinder()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${tfActive ? '#a855f7' : 'var(--border)'};background:${tfActive ? '#a855f7' : 'var(--surface)'};color:${tfActive ? '#fff' : 'var(--text2)'}">TRADE FINDER</button>`;
+      // Trade log — Sleeper only (transactions API); offseason trades included.
+      if (_mtActiveSource === 'sleeper' && _mtActiveSleeperId) {
+        const tlActive = _mtTradeLogOpen;
+        html += `<button onclick="window._mtToggleTradeLog()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${tlActive ? '#38bdf8' : 'var(--border)'};background:${tlActive ? '#38bdf8' : 'var(--surface)'};color:${tlActive ? '#000' : 'var(--text2)'}">TRADE LOG</button>`;
+      }
       // Matchups — Sleeper API / ESPN schedule payload (Yahoo lacks a
       // proxy-reachable scoreboard); in-season or published week only.
       // (Local week calc — the sort-chip wkNum const is declared later.)

@@ -48194,7 +48194,7 @@ Rules:
     'JUGGERNAUT':       { color: '#22c55e', desc: '#1 on both fronts — best projected lineup AND the strongest roster' },
     'STRONG CONTENDER': { color: '#4ade80', desc: 'top-tier assets and a top-tier lineup' },
     'CONTENDER':        { color: '#a3e635', desc: 'average assets, lineup scoring above them — a real threat this year' },
-    'ALL IN':           { color: '#f472b6', desc: 'scoring now on a thin asset base (bottom third in value) — window is open, future is mortgaged' },
+    'ALL IN':           { color: '#f472b6', desc: 'scoring near the top of the league on a thin asset base — window is open, future is mortgaged' },
     'STRONG REBUILDER': { color: '#38bdf8', desc: 'top-tier assets (young core / picks) not scoring yet' },
     'REBUILDER':        { color: '#60a5fa', desc: 'assets well ahead of the lineup — a rebuild in progress' },
     'RETOOLING':        { color: '#facc15', desc: 'average assets, lineup a step behind them — a couple of moves away' },
@@ -48245,6 +48245,10 @@ Rules:
     // mid-value team with a top lineup is just a contender (Jack 2026-09-02:
     // "if you are high in ppg you also don't have to be all in").
     if (pv <= 0.33) return (d >= 0.3 && pp >= 0.5) ? 'ALL IN' : 'PURGATORY';
+    // Bottom-40% value with a top-quarter lineup is also ALL IN (Jack: "if
+    // the value is low and they are first in ppg like matthev all in is
+    // fine" — val #8 / ppg #1 of 12); val #7 / ppg #3 stays CONTENDER.
+    if (pv <= 0.4 && pp >= 0.75) return 'ALL IN';
     if (d >= 0.2 && pp >= 0.5) return 'CONTENDER';
     if (d <= -0.4) return 'REBUILDER';
     if (d <= -0.2) return 'RETOOLING';

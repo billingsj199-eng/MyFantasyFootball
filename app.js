@@ -49179,6 +49179,8 @@ Rules:
       html += `</div>`;
     });
     container.innerHTML = html;
+    // Portfolio summary rides the same render (and the same D-boot retry).
+    _mtRenderPortfolioSummary(leagues);
   }
 
   // Score a saved snapshot's teams with current rankings under the ACTIVE
@@ -49253,6 +49255,60 @@ Rules:
     return info ? info.tier : null;
   }
   window._mtSavedLeagueTier = _mtSavedLeagueMyTier; // trade calc / finder league pickers
+
+  // ── PORTFOLIO SUMMARY (Flock-audit item 5, Jack 2026-09-02) ──────────
+  // Across every saved league where my team is marked: average placement
+  // percentile (my starter-weighted strength rank vs the league; 100% =
+  // best team) with a grade word, per-position percentile bars from the
+  // league position ranks, and a one-line placement + tier per league.
+  function _mtRenderPortfolioSummary(leagues) {
+    const box = document.getElementById('mtPortfolio');
+    if (!box) return;
+    if (typeof D === 'undefined' || !D.length) { box.innerHTML = ''; return; }
+    const rows = (leagues || []).map(lg => ({ lg, info: _mtSavedLeagueInfo(lg) })).filter(x => x.info && x.info.n > 1);
+    if (!rows.length) { box.innerHTML = ''; return; }
+    const pct = (rank, n) => n > 1 ? 1 - (rank - 1) / (n - 1) : 1;
+    const overall = rows.reduce((s, x) => s + pct(x.info.rank, x.info.n), 0) / rows.length;
+    const grade = overall >= 0.8 ? ['ELITE', '#22c55e'] : overall >= 0.65 ? ['GOOD', '#4ade80'] : overall >= 0.45 ? ['AVERAGE', '#facc15'] : overall >= 0.3 ? ['BELOW AVG', '#f59e0b'] : ['WEAK', '#ef4444'];
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    const posPct = {};
+    ['QB', 'RB', 'WR', 'TE'].forEach(p => {
+      const vals = [];
+      rows.forEach(x => { const pr = x.info.posRanks && x.info.posRanks[p]; if (pr && pr.rank) vals.push(pct(pr.rank, x.info.n)); });
+      posPct[p] = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+    });
+    let html = `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">PORTFOLIO <span style="font-family:'DM Sans',sans-serif;font-size:.62rem;letter-spacing:.2px;font-weight:400;color:var(--text2);margin-left:6px">${rows.length} league${rows.length === 1 ? '' : 's'} with your team marked · strength vs each league</span></div>`;
+    html += `<div style="display:grid;grid-template-columns:minmax(150px,1fr) minmax(220px,2fr);gap:10px;align-items:stretch">`;
+    // Left: average percentile + grade
+    html += `<div title="Average of your team's strength percentile in each league (100% = best team in the league)" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-align:center">` +
+      `<div style="font-size:.6rem;letter-spacing:1px;color:var(--text2)">AVG PERCENTILE</div>` +
+      `<div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:1;color:${grade[1]};margin:4px 0">${Math.round(overall * 100)}%</div>` +
+      `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${grade[1]}">${grade[0]}</div>` +
+      `<div style="font-size:.58rem;color:var(--text2);margin-top:4px">stronger than ${Math.round(overall * 100)}% of the teams in your leagues</div></div>`;
+    // Right: positional percentile bars
+    html += `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">` +
+      `<div style="font-size:.6rem;letter-spacing:1px;color:var(--text2);margin-bottom:8px">AVG POSITIONAL PERCENTILE</div>` +
+      `<div style="display:flex;align-items:flex-end;gap:14px;height:84px">`;
+    ['QB', 'RB', 'WR', 'TE'].forEach(p => {
+      const v = posPct[p];
+      const h = v == null ? 0 : Math.max(4, Math.round(v * 64));
+      html += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%" title="${p}: average league position-rank percentile across your teams">` +
+        `<div style="font-size:.62rem;font-weight:700;color:var(--text);margin-bottom:3px">${v == null ? '—' : Math.round(v * 100) + '%'}</div>` +
+        `<div style="width:100%;max-width:38px;height:${h}px;border-radius:4px 4px 0 0;background:${posColors[p]}"></div>` +
+        `<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:${posColors[p]};margin-top:4px">${p}</div></div>`;
+    });
+    html += `</div></div></div>`;
+    // Per-league placement line
+    html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">`;
+    rows.forEach(x => {
+      const tier = x.info.tier;
+      html += `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.66rem;color:var(--text2)">` +
+        `<span style="font-weight:600;color:var(--text)">${_esc(x.lg.name || 'League')}</span>` +
+        `<span>${_mtOrdinal(x.info.rank)} of ${x.info.n}</span>${tier ? _mtTeamTierChip(tier) : ''}</span>`;
+    });
+    html += `</div>`;
+    box.innerHTML = html;
+  }
 
   window._mtLoadSavedLeague = function(idx) {
     const leagues = window._mtSavedLeagues;

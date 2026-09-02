@@ -48218,26 +48218,35 @@ Rules:
     'CELLAR':           { color: '#ef4444', desc: 'bottom of the league on both fronts' },
     'EVEN LEAGUE':      { color: '#94a3b8', desc: 'no real separation' }
   };
-  function _mtRedraftTierLabel(rv, rp) {
-    if (rv <= -0.75 && rp <= -0.3) return 'CELLAR';
-    const d = rp - rv;
-    if (rv >= 0.3) return d <= -0.3 ? 'LOADED' : 'TITLE CONTENDER';
-    if (rv <= -0.3) return d >= 0.3 ? 'OVERACHIEVER' : 'LONG SHOT';
-    if (d >= 0.6) return 'DARK HORSE';
-    if (d >= 0.3) return 'PLAYOFF TEAM';
-    if (d <= -0.6) return 'PAPER TIGER';
-    if (d <= -0.3) return 'BUBBLE';
+  function _mtRedraftTierLabel(pv, pp) {
+    if (pv <= 0.1 && pp <= 0.35) return 'CELLAR';
+    const d = pp - pv;
+    if (pv >= 0.67) return (d <= -0.25 && pp < 0.5) ? 'LOADED' : 'TITLE CONTENDER';
+    if (pv <= 0.33) return (d >= 0.3 && pp >= 0.5) ? 'OVERACHIEVER' : 'LONG SHOT';
+    if (d >= 0.35 && pp >= 0.5) return 'DARK HORSE';
+    if (d >= 0.2 && pp >= 0.5) return 'PLAYOFF TEAM';
+    if (d <= -0.4) return 'PAPER TIGER';
+    if (d <= -0.2) return 'BUBBLE';
+    if (pv >= 0.5 && pp >= 0.5) return 'PLAYOFF TEAM';
     return 'MIDDLE OF THE PACK';
   }
-  function _mtDynastyTierLabel(rv, rp) {
-    if (rv <= -0.75 && rp <= -0.3) return 'PIP SQUEAK';
-    const d = rp - rv;
-    if (rv >= 0.3) return d <= -0.3 ? 'STRONG REBUILDER' : 'STRONG CONTENDER';
-    if (rv <= -0.3) return d >= 0.3 ? 'ALL IN' : d <= -0.6 ? 'REBUILDER' : 'PURGATORY';
-    if (d >= 0.6) return 'ALL IN';
-    if (d >= 0.3) return 'CONTENDER';
-    if (d <= -0.6) return 'REBUILDER';
-    if (d <= -0.3) return 'RETOOLING';
+  // v4 (Jack 2026-09-02 pm: "how am I a strong rebuilder but 3rd in proj
+  // ppg"): both axes are now league RANK PERCENTILES (1 = best, 0 = worst)
+  // instead of scaled vs-avg distances — one runaway top scorer was
+  // stretching the PPG scale so 3rd of 12 read as "middling now". Any
+  // win-now label (ALL IN / CONTENDER / TITLE CONTENDER…) also requires an
+  // above-median lineup, so a below-average scorer can never be "all in".
+  //   pv = value percentile, pp = lineup-PPG percentile, d = pp − pv
+  function _mtDynastyTierLabel(pv, pp) {
+    if (pv <= 0.1 && pp <= 0.35) return 'PIP SQUEAK';
+    const d = pp - pv;
+    if (pv >= 0.67) return (d <= -0.25 && pp < 0.5) ? 'STRONG REBUILDER' : 'STRONG CONTENDER';
+    if (pv <= 0.33) return (d >= 0.3 && pp >= 0.5) ? 'ALL IN' : 'PURGATORY';
+    if (d >= 0.35 && pp >= 0.5) return 'ALL IN';
+    if (d >= 0.2 && pp >= 0.5) return 'CONTENDER';
+    if (d <= -0.4) return 'REBUILDER';
+    if (d <= -0.2) return 'RETOOLING';
+    if (pv >= 0.5 && pp >= 0.5) return 'CONTENDER';
     return 'BALANCED';
   }
   function _mtTeamTiers(teams) {
@@ -48253,26 +48262,36 @@ Rules:
     };
     const V = scaled(teams.map(t => t.strengthTotal || 0));
     const P = scaled(teams.map(t => t.lineupPpg || 0));
+    // Rank percentiles (ties share the better rank): 1 = best, 0 = worst.
+    const pctOf = (vals) => {
+      const sorted = vals.slice().sort((a, b) => b - a);
+      return vals.map(v => { const rank = sorted.indexOf(v) + 1; return n > 1 ? 1 - (rank - 1) / (n - 1) : 1; });
+    };
+    const PV = pctOf(teams.map(t => t.strengthTotal || 0));
+    const PP = pctOf(teams.map(t => t.lineupPpg || 0));
+    const rankOf = (vals, v) => vals.slice().sort((a, b) => b - a).indexOf(v) + 1;
     const isDyn = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
-    // Juggernaut = ONE team: best combined score, and top-half on both fronts.
+    // Juggernaut = ONE team: best combined percentile, top quarter on both fronts.
     let jug = -1, jugBest = -Infinity;
     teams.forEach((t, i) => {
-      if (V.r[i] >= 0.5 && P.r[i] >= 0.5 && V.r[i] + P.r[i] > jugBest) { jugBest = V.r[i] + P.r[i]; jug = i; }
+      if (PV[i] >= 0.75 && PP[i] >= 0.75 && PV[i] + PP[i] > jugBest) { jugBest = PV[i] + PP[i]; jug = i; }
     });
     const byTeam = new Map();
     const tiersByLabel = {};
     teams.forEach((t, i) => {
-      const rv = V.r[i], rp = P.r[i];
+      const pv = PV[i], pp = PP[i];
       let label;
       if (V.flat && P.flat) label = 'EVEN LEAGUE';
       else if (i === jug) label = 'JUGGERNAUT';
-      else label = isDyn ? _mtDynastyTierLabel(rv, rp) : _mtRedraftTierLabel(rv, rp);
+      else label = isDyn ? _mtDynastyTierLabel(pv, pp) : _mtRedraftTierLabel(pv, pp);
       const st = _MT_TEAM_TIER_STYLE[label] || _MT_TEAM_TIER_STYLE['BALANCED'];
       let tier = tiersByLabel[label];
       if (!tier) { tier = tiersByLabel[label] = { label, color: st.color, desc: st.desc, teams: [] }; }
       tier.teams.push(t);
       const dv = Math.round(((t.strengthTotal || 0) - V.avg)), dp = Math.round(((t.lineupPpg || 0) - P.avg) * 10) / 10;
-      byTeam.set(t, { ...tier, teams: tier.teams, tip: `${isDyn ? 'Value' : 'Roster value'} ${dv >= 0 ? '+' : ''}${dv} vs avg · Proj PPG ${dp >= 0 ? '+' : ''}${dp} vs avg` });
+      const rvk = rankOf(teams.map(x => x.strengthTotal || 0), t.strengthTotal || 0);
+      const rpk = rankOf(teams.map(x => x.lineupPpg || 0), t.lineupPpg || 0);
+      byTeam.set(t, { ...tier, teams: tier.teams, tip: `${isDyn ? 'Value' : 'Roster value'} #${rvk} of ${n} (${dv >= 0 ? '+' : ''}${dv} vs avg) · Proj PPG #${rpk} of ${n} (${dp >= 0 ? '+' : ''}${dp} vs avg)` });
     });
     return { tiers: Object.values(tiersByLabel), byTeam };
   }

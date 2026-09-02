@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-02w" as="script">
+<link rel="preload" href="app.js?v=2026-09-02x" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2388,20 +2388,6 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="color:var(--text2);font-size:.82rem;margin-top:4px">Import your fantasy teams, analyze rosters, and track your portfolio</div>
 </div>
 
-<!-- JACKS TEAMS — premium panel, populated by _renderJacksTeams at runtime.
-     Premium: card grid of Jack's recent Underdog drafts (shared/jacks_portfolio).
-     Signed-in free: blurred teaser + upgrade CTA. Anonymous: stays hidden. -->
-<div class="jt-section" id="mtJacksTeams">
-<div class="jt-head">
-<div class="jt-title">
-<span class="jt-badge">PREMIUM</span>
-<span class="jt-name">JACK'S TEAMS</span>
-</div>
-<span style="font-size:.65rem;color:var(--text2);font-style:italic">visible to premium members</span>
-</div>
-<div class="jt-grid"></div>
-</div>
-
 <!-- Source Toggle -->
 <div style="display:flex;gap:4px;margin-bottom:16px;justify-content:center">
 <button onclick="window._mtSwitchSource('sleeper')" id="mtSrcSleeper" style="padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;border-radius:6px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#000">LEAGUES</button>
@@ -2622,6 +2608,22 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="mtUnderdogDashboard" style="display:none"></div>
 
 </div><!-- end mtSectionUnderdog -->
+
+<!-- JACK'S TEAMS moved to the bottom of the page 2026-09-02 (Jack) — it shows on both the LEAGUES and UNDERDOG views. -->
+<!-- JACKS TEAMS (bottom) — premium panel, populated by _renderJacksTeams at runtime.
+     Premium: card grid of Jack's recent Underdog drafts (shared/jacks_portfolio).
+     Signed-in free: blurred teaser + upgrade CTA. Anonymous: stays hidden. -->
+<div class="jt-section" id="mtJacksTeams">
+<div class="jt-head">
+<div class="jt-title">
+<span class="jt-badge">PREMIUM</span>
+<span class="jt-name">JACK'S TEAMS</span>
+</div>
+<span style="font-size:.65rem;color:var(--text2);font-style:italic">visible to premium members</span>
+</div>
+<div class="jt-grid"></div>
+</div>
+
 
 </div>
 </div>
@@ -5377,7 +5379,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-02w"></script>
+<script defer src="app.js?v=2026-09-02x"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

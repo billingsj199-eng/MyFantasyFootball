@@ -3061,16 +3061,22 @@ function getFiltered(applyTopN) {
   // Always get board-ordered list first
   // Cut line (all formats): non-editors only see players above it; the
   // editing owner sees the full list with the draggable-across divider.
+  // The editor keeps the below-cut players in the list, but they're pinned to
+  // the BOTTOM of every secondary sort (window._rankBelowCut, consumed after
+  // the sort below, by the table's divider row and by the tier-card view) —
+  // sorting by a metric shouldn't float 300 irrelevant names to the top.
   let _boardSrc = board;
-  if (typeof window._boardCutoffFor === 'function' && !(typeof canEdit === 'function' && canEdit())) {
+  window._rankBelowCut = null;
+  if (typeof window._boardCutoffFor === 'function') {
     const _cutN = window._boardCutoffFor(currentVersion, currentMode);
+    let _keep = null; // (board idx, board pos) -> visible-to-viewers?
     if (currentMode === 'weekly' && typeof window._weeklyPosCutoffFor === 'function') {
       // WEEKLY: the overall cut governs only RB/WR/TE; QB/K/DST each enforce
       // their own position-rank cut line (unset = whole group visible).
       const _pc = {};
       window._weeklyPosCutGroups.forEach(p => { _pc[p] = window._weeklyPosCutoffFor(currentVersion, p); });
       const _posSeen = {};
-      _boardSrc = board.filter((idx, bi) => {
+      _keep = (idx, bi) => {
         const p = D[idx];
         if (!p) return false;
         if (_pc[p.s] === undefined) return _cutN == null || bi < _cutN; // flex group
@@ -3078,9 +3084,15 @@ function getFiltered(applyTopN) {
         if (window._irIsOut(p.n)) return false; // out-for-season: same alignment reason
         _posSeen[p.s] = (_posSeen[p.s] || 0) + 1;
         return _pc[p.s] == null || _posSeen[p.s] <= _pc[p.s];
-      });
+      };
     } else if (_cutN != null) {
-      _boardSrc = board.slice(0, _cutN);
+      _keep = (idx, bi) => bi < _cutN;
+    }
+    if (_keep) {
+      const _below = new Set();
+      const _kept = board.filter((idx, bi) => { const k = _keep(idx, bi); if (!k && D[idx]) _below.add(D[idx].n); return k; });
+      if (typeof canEdit === 'function' && canEdit()) { if (_below.size) window._rankBelowCut = _below; }
+      else _boardSrc = _kept;
     }
   }
   let f = _boardSrc.map(idx => D[idx]);
@@ -3235,6 +3247,12 @@ function getFiltered(applyTopN) {
       }
       return sortDir * (av - bv);
     });
+    // Below-cut players (editor view only) stay at the bottom, sorted among
+    // themselves — a metric sort re-orders the real board, not the cut tail.
+    if (window._rankBelowCut) {
+      const _bc = window._rankBelowCut;
+      f = f.filter(d => !_bc.has(d.n)).concat(f.filter(d => _bc.has(d.n)));
+    }
   }
   return f;
 }
@@ -3437,13 +3455,18 @@ function _renderTierCardView(data, container) {
   let currentLabel = null;
   let currentGroup = null;
 
+  // Below-cut players (editor only; getFiltered pins them to the tail) get
+  // their own red ✂ group instead of being bucketed into whatever tier their
+  // board rank happens to fall in.
+  const _tcvBelowCut = window._rankBelowCut || null;
   data.forEach((d, i) => {
+    const _isCut = !!(_tcvBelowCut && _tcvBelowCut.has(d.n));
     const rankForTier = useFilteredRank ? (i + 1) : (d.myRank || (i + 1));
-    const tierLabel = (typeof getTierForRank === 'function') ? getTierForRank(rankForTier) : '';
-    const groupKey = tierLabel || '__none__';
+    const tierLabel = _isCut ? '' : ((typeof getTierForRank === 'function') ? getTierForRank(rankForTier) : '');
+    const groupKey = _isCut ? '__cut__' : (tierLabel || '__none__');
     if (groupKey !== currentLabel) {
       currentLabel = groupKey;
-      currentGroup = { label: tierLabel, players: [] };
+      currentGroup = { label: tierLabel, cut: _isCut, players: [] };
       groups.push(currentGroup);
     }
     currentGroup.players.push({ d: d, displayRank: i + 1 });
@@ -3517,7 +3540,12 @@ function _renderTierCardView(data, container) {
     row.setAttribute('data-tcv-group', String(gIdx));
     const letter = document.createElement('div');
     let glowRgb = null;
-    if (!g.label) {
+    if (g.cut) {
+      // Below the cut line — hidden from viewers, shown to the editor only
+      letter.className = 'tcv-letter';
+      letter.style.background = 'linear-gradient(135deg,#991b1b,#ef4444)';
+      glowRgb = '239,68,68';
+    } else if (!g.label) {
       // No tier set — neutral placeholder
       letter.className = 'tcv-letter tier-default';
     } else {
@@ -3527,8 +3555,8 @@ function _renderTierCardView(data, container) {
       glowRgb = c.glow;
       _coloredTierIdx++;
     }
-    letter.textContent = g.label || '—';
-    letter.title = 'Click to hide / reveal every player in this tier (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
+    letter.textContent = g.cut ? '✂' : (g.label || '—');
+    letter.title = (g.cut ? 'BELOW THE CUT LINE — hidden from viewers. ' : '') + 'Click to hide / reveal every player in this tier (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
     letter.addEventListener('click', () => {
       const rowCards = row.querySelectorAll('.tcv-card');
       // If any card in the tier is currently shown, cover the whole tier; otherwise reveal it.
@@ -3825,7 +3853,15 @@ function render() {
         // position rank; overall views cross on d.myRank.
         const _rowRank = _isPosCutView ? (i + 1) : d.myRank;
         const _prevRank = i > 0 ? (_isPosCutView ? i : data[i - 1].myRank) : 0;
-        if (_rowRank > _cutN && _prevRank <= _cutN) {
+        // Editor view: getFiltered pins below-cut players to the tail under
+        // any sort, so the divider goes at the first below-cut row (the rank
+        // compare alone misfires once rows are out of board order).
+        const _bcSet = window._rankBelowCut;
+        const _atCut = _bcSet
+          ? (_bcSet.has(d.n) && (i === 0 || !_bcSet.has(data[i - 1].n)))
+          : (_rowRank > _cutN && _prevRank <= _cutN);
+        const _cutCtrls = editable && sortKey === 'myrank' && sortDir === 1;
+        if (_atCut) {
           const _cutUp = Math.max(1, _prevRank > 0 ? _prevRank - 1 : 0);
           const _cutPosAttr = _isPosCutView ? ` data-cut-pos="${filter}"` : '';
           const _cutName = _isPosCutView ? ((filter === 'DST' ? 'D/ST' : filter) + ' CUT LINE — ' + filter + _cutN) : ('CUT LINE — #' + _cutN);
@@ -3834,7 +3870,7 @@ function render() {
             <td colspan="17"><div class="tier-inner" style="border-color:#ef4444">
               <span class="tier-badge" style="background:#ef4444;color:#fff">✂</span>
               <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#ef4444">${_cutName} · ${_cutLbl}</span>
-              ${editable ? `<div class="tier-controls">
+              ${_cutCtrls ? `<div class="tier-controls">
                 ${_prevRank > 0 ? `<button class="tier-btn" data-cut-set="${_cutUp}"${_cutPosAttr} title="Move line up (cut one more player)">▲</button>` : ''}
                 <button class="tier-btn" data-cut-set="${_rowRank}"${_cutPosAttr} title="Move line down (keep ${d.n})">▼</button>
                 <button class="tier-btn del" data-cut-clear="1"${_cutPosAttr} title="Remove the cut line (everyone visible)">✕</button>

@@ -3420,7 +3420,15 @@ function _tcvOppChipHtml(d) {
   const abbr = away ? opp.slice(1) : opp;
   const diff = (typeof window._weeklyOppDifficulty === 'function') ? window._weeklyOppDifficulty(d.t, d.s) : null;
   const diffLbl = diff === 'hard' ? ' · tough matchup' : diff === 'easy' ? ' · soft matchup' : '';
-  return '<div class="tcv-opp-chip' + (diff ? ' tcv-opp-' + diff : '') + '" title="Week ' + wk + ': ' + (away ? 'at ' : 'vs ') + abbr + diffLbl + '">' + (away ? '@ ' : 'vs ') + abbr + '</div>';
+  // Opponent logo: schedule gives the abbr, TEAM_LOGO_IDS is keyed by full
+  // name — reverse TEAM_ABBR_MAP once and cache it.
+  if (!window._tcvAbbrToLogoId && typeof TEAM_ABBR_MAP !== 'undefined' && typeof TEAM_LOGO_IDS !== 'undefined') {
+    window._tcvAbbrToLogoId = {};
+    Object.keys(TEAM_ABBR_MAP).forEach(full => { if (TEAM_LOGO_IDS[full]) window._tcvAbbrToLogoId[TEAM_ABBR_MAP[full]] = TEAM_LOGO_IDS[full]; });
+  }
+  const logoId = window._tcvAbbrToLogoId ? window._tcvAbbrToLogoId[abbr] : null;
+  const logoHtml = logoId ? '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '';
+  return '<div class="tcv-opp-chip' + (diff ? ' tcv-opp-' + diff : '') + '" title="Week ' + wk + ': ' + (away ? 'at ' : 'vs ') + abbr + diffLbl + '"><span>' + (away ? '@' : 'vs') + '</span>' + logoHtml + '<span>' + abbr + '</span></div>';
 }
 
 function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
@@ -3627,7 +3635,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#facc15">15.8</span>/<span style="color:#22c55e">17.3</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= \'25 PPG / PROJ PPG (' + scoreFmtLabel + ') / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> chip = W' + (window._weeklyActiveWeek || 1) + ' opponent (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
+    '<span>= \'25 PPG / PROJ PPG (' + scoreFmtLabel + ') / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> chip = W' + (window._weeklyActiveWeek || 1) + ' opponent logo (<b>green</b> soft · <i>red</i> tough matchup)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 

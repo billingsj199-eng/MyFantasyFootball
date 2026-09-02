@@ -45938,7 +45938,12 @@ Rules:
           draftPicks: [],
           wins: r.settings ? r.settings.wins : 0,
           losses: r.settings ? r.settings.losses : 0,
+          ties: r.settings ? (r.settings.ties || 0) : 0,
           fpts: r.settings ? (r.settings.fpts || 0) + (r.settings.fpts_decimal || 0) / 100 : 0,
+          // Points against + streak (Flock-audit item 4): Sleeper carries PA
+          // in settings and the streak ("3W") in roster metadata in-season.
+          fptsAgainst: r.settings ? (r.settings.fpts_against || 0) + (r.settings.fpts_against_decimal || 0) / 100 : 0,
+          streak: (r.metadata && r.metadata.streak) ? String(r.metadata.streak) : '',
         };
       });
 
@@ -47994,6 +47999,18 @@ Rules:
       t.strengthTotal = Math.round((sw + 0.65 * ((t.score && t.score.pickTotal) || 0)) * 1.5);
     });
   }
+  // "3-1 · PF 412.3 · PA 388.1 · W2" — PF/PA only once points exist (any
+  // team scoring > 0), streak only when the source carries one (Sleeper).
+  function _mtRecordHtml(t) {
+    const rec = (t.wins || 0) + '-' + (t.losses || 0) + (t.ties ? '-' + t.ties : '');
+    const anyPts = (window._mtTeams || []).some(x => (x.fpts || 0) > 0);
+    if (!anyPts) return rec;
+    const f1 = v => (Math.round((v || 0) * 10) / 10).toFixed(1);
+    let s = rec + ` · <span title="Points for">PF ${f1(t.fpts)}</span>`;
+    if (t.fptsAgainst) s += ` · <span title="Points against">PA ${f1(t.fptsAgainst)}</span>`;
+    if (t.streak) s += ` · <span title="Current streak" style="font-weight:700;color:${/W/i.test(t.streak) ? '#22c55e' : '#ef4444'}">${_esc(t.streak)}</span>`;
+    return s;
+  }
   function _mtOrdinal(n) {
     if (n % 100 >= 11 && n % 100 <= 13) return n + 'th';
     return n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th');
@@ -48303,7 +48320,10 @@ Rules:
         ? ` <span title="Projected starters ruled out: ${_esc(_injOut.map(x => x.name + ' (' + x.tag + ')').join(', '))}" style="font-size:.55rem;font-weight:700;color:#ef4444;background:#ef444418;border:1px solid #ef4444;border-radius:3px;padding:0 5px;vertical-align:1px">${_injOut.length} OUT</span>`
         : '';
       html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}${_tierChip}${_injChip}</div>`;
-      html += `<div style="font-size:.68rem;color:var(--text2)">${t.wins}-${t.losses} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}${deltaHtml}</div>`;
+      // Record line: W-L(-T) · PF · PA · streak once the season has points
+      // (Flock-audit item 4); offseason it stays "0-0 · N players".
+      const _recHtml = _mtRecordHtml(t);
+      html += `<div style="font-size:.68rem;color:var(--text2)">${_recHtml} · ${t.players.length} players${sc.pickTotal ? ' · Picks: +' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''}${deltaHtml}</div>`;
       html += `</div>`;
       // Position scores mini + picks for dynasty
       html += `<div style="display:flex;gap:4px">`;
@@ -48694,7 +48714,7 @@ Rules:
       const col = _mtPosRankColor(pos, all.length);
       _psosHtml = ` · <span title="Average W15-17 playoff-SOS rank of this team's projected starters (1 = easiest NFL schedule) — ${_mtOrdinal(pos)} easiest in this league" style="cursor:help">P-SOS <span style="color:${col};font-weight:700">${_myPsos}</span> <span style="color:${col}">(${_mtOrdinal(pos)} easiest)</span></span>`;
     }
-    html += `<div style="font-size:.75rem;color:var(--text2)">${t.wins}-${t.losses} · Player val: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''} · <span style="color:${stVal >= avgScore ? '#22c55e' : '#ef4444'};font-weight:700">${stVal - avgScore >= 0 ? '+' : ''}${stVal - avgScore} vs avg</span>${_psosHtml}</div></div>`;
+    html += `<div style="font-size:.75rem;color:var(--text2)">${_mtRecordHtml(t)} · Player val: ${sc.playerTotal}${sc.pickTotal ? ' · Picks: ' + sc.pickTotal : ''}${sc.dynastyNote ? ' · ' + sc.dynastyNote : ''} · <span style="color:${stVal >= avgScore ? '#22c55e' : '#ef4444'};font-weight:700">${stVal - avgScore >= 0 ? '+' : ''}${stVal - avgScore} vs avg</span>${_psosHtml}</div></div>`;
     html += `<button onclick="window._mtCloseTeam(${idx})" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕ Close</button>`;
     html += `</div>`;
 
@@ -49053,7 +49073,10 @@ Rules:
           draftPicks: t.draftPicks || [],
           wins: t.wins || 0,
           losses: t.losses || 0,
-          fpts: t.fpts || 0
+          ties: t.ties || 0,
+          fpts: t.fpts || 0,
+          fptsAgainst: t.fptsAgainst || 0,
+          streak: t.streak || ''
         })),
         savedAt: new Date().toISOString(),
         // Pick-window version: v2 = spent-draft picks excluded (2026-08-11).

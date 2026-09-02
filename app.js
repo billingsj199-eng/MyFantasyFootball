@@ -963,6 +963,17 @@ function getTiers() { return versionTiers[currentVersion][currentMode][_tierPK()
 function setBoard(b) { versionBoards[currentVersion][currentMode] = b; }
 function setTiers(t) { versionTiers[currentVersion][currentMode][_tierPK()] = t; }
 
+// Whether tier afterRank values for the active filter are POSITION ranks
+// (1..N within the filtered list) rather than overall board ranks. QB/RB/WR/TE
+// always tier by position rank; on the WEEKLY board so do K and D/ST — their
+// tiers are added from the table's position-rank ADD TIER row, so every tier
+// consumer (table rows, tier cards, exports, count line) must look them up on
+// the same scale or K/DST collapse into the last tier.
+function _tierRankIsPositional() {
+  if (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE') return true;
+  return currentMode === 'weekly' && filter !== 'ALL' && filter !== 'ROOKIE';
+}
+
 // Map current position filter to tier bucket key
 function _tierPK() {
   if (typeof filter !== 'undefined' && (filter==='QB'||filter==='RB'||filter==='WR'||filter==='TE'||filter==='K'||filter==='DST'||filter==='ROOKIE')) return filter;
@@ -3419,7 +3430,7 @@ function _tcvZoomMult() {
 
 function _renderTierCardView(data, container) {
   // Decide whether to use position-rank (for QB/RB/WR/TE filters) or overall myRank for tier lookup
-  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+  const useFilteredRank = _tierRankIsPositional();
 
   // Group consecutive players sharing the same tier label
   const groups = [];
@@ -3701,8 +3712,7 @@ function render() {
 
   // Build a map of afterRank -> tier for tier rows (only in default sort, no search, ALL/position filter)
   const showTiers = (sortKey === 'myrank' && sortDir === 1 && !query);
-  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE')
-    || (currentMode === 'weekly' && filter !== 'ALL' && filter !== 'ROOKIE');
+  const useFilteredRank = _tierRankIsPositional();
   const tierMap = {};
   if (showTiers) {
     tiers.forEach(t => { tierMap[t.afterRank] = t; });
@@ -4134,7 +4144,7 @@ function updateStats(data) {
   if (typeof _updateViewOptsSummary === 'function') _updateViewOptsSummary();
   const _cntEl = document.getElementById('rankingsCountText');
   if (_cntEl) {
-    const _useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+    const _useFilteredRank = _tierRankIsPositional();
     const _maxRank = _useFilteredRank ? data.length : data.reduce((m, d) => Math.max(m, d.myRank || 0), 0);
     _cntEl.textContent = data.length + ' players ranked 1–' + (_maxRank || data.length);
   }
@@ -6335,7 +6345,7 @@ document.getElementById('btnExport').addEventListener('click', () => {
   
   // Build CSV
   const esc = v => { const s = String(v ?? ''); return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+  const useFilteredRank = _tierRankIsPositional();
   
   const _sl = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
   const headers = ['Rank', 'Tier', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', 'PPG Proj (' + _sl[rankingScoringFmt] + ')', 'PPG 2025 (' + _sl[rankingScoringFmt] + ')', 'Age', 'ADP Diff'];
@@ -6397,7 +6407,7 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
   const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
-  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+  const useFilteredRank = _tierRankIsPositional();
 
   const players = data.map((d, i) => {
     const displayRank = useFilteredRank ? (i + 1) : d.myRank;
@@ -6446,7 +6456,7 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
 document.getElementById('btnExportTiers').addEventListener('click', () => {
   const data = getFiltered();
   if (!data.length) { toast('Nothing to export'); return; }
-  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+  const useFilteredRank = _tierRankIsPositional();
   // Sort tier boundaries ascending for grouping
   const sortedTiers = tiers.slice().sort((a, b) => a.afterRank - b.afterRank);
   const groups = [];
@@ -6512,7 +6522,7 @@ document.getElementById('btnPrintSheet').addEventListener('click', () => {
   const _sl = { ppr: 'PPR', half: 'HALF PPR', std: 'STANDARD' };
   const _adpNames = { consensus: 'Consensus', underdog: 'Underdog', dk: 'DraftKings', espn: 'ESPN', cbs: 'CBS', sleeper: 'Sleeper', yahoo: 'Yahoo', ktc: 'KTC' };
   const posLabel = filter === 'ALL' ? 'ALL POSITIONS' : filter;
-  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+  const useFilteredRank = _tierRankIsPositional();
   const sortedTiers = tiers.slice().sort((a, b) => a.afterRank - b.afterRank);
 
   let body = '', lastTier = '';
@@ -6589,7 +6599,7 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
   const posLabel = filter === 'ALL' ? 'All' : filter;
   // Underdog's current export quotes every populated field; mirror that exactly.
   const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const useFilteredRank = (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE');
+  const useFilteredRank = _tierRankIsPositional();
 
   const headers = ['id','playerId','firstName','lastName','adp','projectedPoints','salary','positionRank','slotName','teamName','lineupStatus','byeWeek'];
   const rows = [headers.map(esc).join(',')];

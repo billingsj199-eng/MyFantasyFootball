@@ -47820,7 +47820,7 @@ Rules:
   // what the assets say (win-now / aging), −d = assets ahead of scoring
   // (young core / picks).
   const _MT_TEAM_TIER_STYLE = {
-    'JUGGERNAUT':       { color: '#22c55e', desc: '#1 on both fronts — best lineup AND the most assets' },
+    'JUGGERNAUT':       { color: '#22c55e', desc: '#1 on both fronts — best projected lineup AND the strongest roster' },
     'STRONG CONTENDER': { color: '#4ade80', desc: 'top-tier assets and a top-tier lineup' },
     'CONTENDER':        { color: '#a3e635', desc: 'average assets, lineup scoring above them — a real threat this year' },
     'ALL IN':           { color: '#f472b6', desc: 'lineup far ahead of the asset base — window is open now, thin future' },
@@ -47830,14 +47830,34 @@ Rules:
     'BALANCED':         { color: '#94a3b8', desc: 'middle of the league on both fronts' },
     'PURGATORY':        { color: '#f59e0b', desc: 'below-average assets with no clear direction' },
     'PIP SQUEAK':       { color: '#ef4444', desc: 'bottom of the league on both fronts' },
-    // redraft ladder
-    'TITLE FAVORITE': { color: '#22c55e', desc: 'top of the league' },
-    'IN THE HUNT':   { color: '#a3e635', desc: 'above average' },
-    'MIDDLE OF THE PACK': { color: '#facc15', desc: 'below average' },
-    'LONG SHOT':     { color: '#f59e0b', desc: 'well below average' },
-    'CELLAR':        { color: '#ef4444', desc: 'bottom of the league' },
-    'EVEN LEAGUE':   { color: '#94a3b8', desc: 'no real separation' }
+    // Redraft grid (Jack 2026-09-02: "do the same for redraft leagues" —
+    // Flock has NO redraft labels, so this is ours): VALUE = roster value
+    // on the redraft board, WIN-NOW = projected PPG. +d = lineup producing
+    // above what the rankings say, −d = big names not showing up in the
+    // projected lineup (injuries / byes / depth stuck on the bench).
+    'TITLE CONTENDER':  { color: '#4ade80', desc: 'top-tier roster AND a top-tier projected lineup' },
+    'LOADED':           { color: '#38bdf8', desc: 'top-tier roster talent, projected lineup lagging it — injuries, byes or depth stuck on the bench' },
+    'DARK HORSE':       { color: '#a3e635', desc: 'average roster on paper, projected lineup far above it' },
+    'PLAYOFF TEAM':     { color: '#86efac', desc: 'average roster, projected lineup running ahead of it' },
+    'MIDDLE OF THE PACK': { color: '#94a3b8', desc: 'middle of the league on both fronts' },
+    'BUBBLE':           { color: '#facc15', desc: 'average roster, projected lineup a step behind it' },
+    'PAPER TIGER':      { color: '#fb923c', desc: 'names on the roster, but the projected lineup is well below them' },
+    'OVERACHIEVER':     { color: '#f472b6', desc: 'thin roster on paper, but the projected lineup produces' },
+    'LONG SHOT':        { color: '#f59e0b', desc: 'below-average roster and lineup' },
+    'CELLAR':           { color: '#ef4444', desc: 'bottom of the league on both fronts' },
+    'EVEN LEAGUE':      { color: '#94a3b8', desc: 'no real separation' }
   };
+  function _mtRedraftTierLabel(rv, rp) {
+    if (rv <= -0.75 && rp <= -0.3) return 'CELLAR';
+    const d = rp - rv;
+    if (rv >= 0.3) return d <= -0.3 ? 'LOADED' : 'TITLE CONTENDER';
+    if (rv <= -0.3) return d >= 0.3 ? 'OVERACHIEVER' : 'LONG SHOT';
+    if (d >= 0.6) return 'DARK HORSE';
+    if (d >= 0.3) return 'PLAYOFF TEAM';
+    if (d <= -0.6) return 'PAPER TIGER';
+    if (d <= -0.3) return 'BUBBLE';
+    return 'MIDDLE OF THE PACK';
+  }
   function _mtDynastyTierLabel(rv, rp) {
     if (rv <= -0.75 && rp <= -0.3) return 'PIP SQUEAK';
     const d = rp - rv;
@@ -47849,7 +47869,6 @@ Rules:
     if (d <= -0.3) return 'RETOOLING';
     return 'BALANCED';
   }
-  const _MT_TEAM_TIER_REDRAFT = [[0.75, 'TITLE FAVORITE'], [0.35, 'CONTENDER'], [0, 'IN THE HUNT'], [-0.35, 'MIDDLE OF THE PACK'], [-0.75, 'LONG SHOT']];
   function _mtTeamTiers(teams) {
     const n = teams ? teams.length : 0;
     if (n < 2) return null;
@@ -47866,7 +47885,7 @@ Rules:
     const isDyn = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
     // Juggernaut = ONE team: best combined score, and top-half on both fronts.
     let jug = -1, jugBest = -Infinity;
-    if (isDyn) teams.forEach((t, i) => {
+    teams.forEach((t, i) => {
       if (V.r[i] >= 0.5 && P.r[i] >= 0.5 && V.r[i] + P.r[i] > jugBest) { jugBest = V.r[i] + P.r[i]; jug = i; }
     });
     const byTeam = new Map();
@@ -47875,13 +47894,8 @@ Rules:
       const rv = V.r[i], rp = P.r[i];
       let label;
       if (V.flat && P.flat) label = 'EVEN LEAGUE';
-      else if (isDyn) {
-        label = i === jug ? 'JUGGERNAUT' : _mtDynastyTierLabel(rv, rp);
-      } else {
-        const r = (rv + rp) / 2;
-        label = 'CELLAR';
-        for (const [cut, lb] of _MT_TEAM_TIER_REDRAFT) { if (r >= cut) { label = lb; break; } }
-      }
+      else if (i === jug) label = 'JUGGERNAUT';
+      else label = isDyn ? _mtDynastyTierLabel(rv, rp) : _mtRedraftTierLabel(rv, rp);
       const st = _MT_TEAM_TIER_STYLE[label] || _MT_TEAM_TIER_STYLE['BALANCED'];
       let tier = tiersByLabel[label];
       if (!tier) { tier = tiersByLabel[label] = { label, color: st.color, desc: st.desc, teams: [] }; }

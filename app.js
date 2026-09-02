@@ -47772,51 +47772,99 @@ Rules:
   // / CONTENDER view via strengthTotal. A flat league (spread under 5% of
   // the average) is one tier. Separate vocabularies: dynasty/keeper =
   // roster-window framing, redraft = this-season framing.
-  const _MT_TEAM_TIER_BANDS = [0.75, 0.35, 0, -0.35, -0.75]; // band i = r >= BANDS[i]; below the last = band 5
-  const _MT_TEAM_TIER_LABELS = {
-    dynasty: ['DYNASTY POWERS', 'CONTENDERS', 'IN THE HUNT', 'RETOOLING', 'REBUILDING', 'FULL REBUILD'],
-    redraft: ['TITLE FAVORITES', 'CONTENDERS', 'IN THE HUNT', 'MIDDLE OF THE PACK', 'LONG SHOTS', 'CELLAR']
+  // v3 (Jack 2026-09-02 pm): TWO axes, not a ladder — "someone lower in
+  // total value can be a contender by PPG, and someone can be retooling or
+  // rebuilding depending on their value + PPG". Each team gets a scaled
+  // vs-avg score on VALUE (strengthTotal — dynasty assets incl. picks in
+  // value view) and on WIN-NOW (best-lineup projected PPG); each axis is
+  // lo / mid / hi (±0.35), and the label comes from the pair. Labels
+  // therefore need NOT be contiguous in TOTAL order, so the list shows a
+  // chip per row instead of group headers. Redraft has no separate asset
+  // axis worth reading, so it blends the two scores into one ladder.
+  // Dynasty vocabulary = Flock Fantasy's (Jack 2026-09-02: "look at flock
+  // fantasy in my rville dynasty league" — probed their Rville Dynasty
+  // page under all three lenses: labels are a VALUE LEVEL × DIRECTION grid.
+  // Juggernaut = #1 on both fronts; Strong Contender / Strong Rebuilder at
+  // high value; Balanced in the middle; All In = win-now far ahead of
+  // asset value; Purgatory = low value, no direction; Pip Squeak = bottom).
+  // Direction here = PPG score minus value score (d): +d = scoring above
+  // what the assets say (win-now / aging), −d = assets ahead of scoring
+  // (young core / picks).
+  const _MT_TEAM_TIER_STYLE = {
+    'JUGGERNAUT':       { color: '#22c55e', desc: '#1 on both fronts — best lineup AND the most assets' },
+    'STRONG CONTENDER': { color: '#4ade80', desc: 'top-tier assets and a top-tier lineup' },
+    'CONTENDER':        { color: '#a3e635', desc: 'average assets, lineup scoring above them — a real threat this year' },
+    'ALL IN':           { color: '#f472b6', desc: 'lineup far ahead of the asset base — window is open now, thin future' },
+    'STRONG REBUILDER': { color: '#38bdf8', desc: 'top-tier assets (young core / picks) not scoring yet' },
+    'REBUILDER':        { color: '#60a5fa', desc: 'assets well ahead of the lineup — a rebuild in progress' },
+    'RETOOLING':        { color: '#facc15', desc: 'average assets, lineup a step behind them — a couple of moves away' },
+    'BALANCED':         { color: '#94a3b8', desc: 'middle of the league on both fronts' },
+    'PURGATORY':        { color: '#f59e0b', desc: 'below-average assets with no clear direction' },
+    'PIP SQUEAK':       { color: '#ef4444', desc: 'bottom of the league on both fronts' },
+    // redraft ladder
+    'TITLE FAVORITE': { color: '#22c55e', desc: 'top of the league' },
+    'IN THE HUNT':   { color: '#a3e635', desc: 'above average' },
+    'MIDDLE OF THE PACK': { color: '#facc15', desc: 'below average' },
+    'LONG SHOT':     { color: '#f59e0b', desc: 'well below average' },
+    'CELLAR':        { color: '#ef4444', desc: 'bottom of the league' },
+    'EVEN LEAGUE':   { color: '#94a3b8', desc: 'no real separation' }
   };
-  const _MT_TEAM_TIER_COLORS = ['#22c55e', '#4ade80', '#a3e635', '#facc15', '#f59e0b', '#ef4444'];
-  const _MT_TEAM_TIER_DESC = ['top of the league', 'well above average', 'above average', 'below average', 'well below average', 'bottom of the league'];
+  function _mtDynastyTierLabel(rv, rp) {
+    if (rv <= -0.75 && rp <= -0.3) return 'PIP SQUEAK';
+    const d = rp - rv;
+    if (rv >= 0.3) return d <= -0.3 ? 'STRONG REBUILDER' : 'STRONG CONTENDER';
+    if (rv <= -0.3) return d >= 0.3 ? 'ALL IN' : d <= -0.6 ? 'REBUILDER' : 'PURGATORY';
+    if (d >= 0.6) return 'ALL IN';
+    if (d >= 0.3) return 'CONTENDER';
+    if (d <= -0.6) return 'REBUILDER';
+    if (d <= -0.3) return 'RETOOLING';
+    return 'BALANCED';
+  }
+  const _MT_TEAM_TIER_REDRAFT = [[0.75, 'TITLE FAVORITE'], [0.35, 'CONTENDER'], [0, 'IN THE HUNT'], [-0.35, 'MIDDLE OF THE PACK'], [-0.75, 'LONG SHOT']];
   function _mtTeamTiers(teams) {
     const n = teams ? teams.length : 0;
     if (n < 2) return null;
-    const sorted = teams.slice().sort((a, b) => (b.strengthTotal || 0) - (a.strengthTotal || 0));
-    const v = sorted.map(t => t.strengthTotal || 0);
-    const spread = v[0] - v[n - 1];
-    const avg = v.reduce((s, x) => s + x, 0) / n;
-    const isDyn = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
-    const vocab = _MT_TEAM_TIER_LABELS[isDyn ? 'dynasty' : 'redraft'];
-    const byTeam = new Map();
-    if (!(spread > 0) || spread < avg * 0.05) {
-      const tier = { idx: 3, label: 'EVEN LEAGUE', color: '#94a3b8', desc: 'no real separation', teams: sorted, hi: v[0], lo: v[n - 1] };
-      sorted.forEach(t => byTeam.set(t, tier));
-      return { tiers: [tier], byTeam };
-    }
-    const up = v[0] - avg, down = avg - v[n - 1];
-    const bandOf = s => {
-      const r = s >= avg ? (up > 0 ? (s - avg) / up : 0) : (down > 0 ? (s - avg) / down : 0);
-      for (let i = 0; i < _MT_TEAM_TIER_BANDS.length; i++) if (r >= _MT_TEAM_TIER_BANDS[i]) return i;
-      return _MT_TEAM_TIER_BANDS.length;
+    // Scaled vs-avg per axis: +1 = top team, 0 = league average, −1 = bottom.
+    const scaled = (vals) => {
+      const avg = vals.reduce((s, x) => s + x, 0) / n;
+      const top = Math.max(...vals), bot = Math.min(...vals);
+      const up = top - avg, down = avg - bot;
+      const flat = !(top - bot > 0) || (top - bot) < Math.abs(avg) * 0.05;
+      return { avg, flat, r: vals.map(s => flat ? 0 : (s >= avg ? (up > 0 ? (s - avg) / up : 0) : (down > 0 ? (s - avg) / down : 0))) };
     };
-    const tiers = [];
-    sorted.forEach(t => {
-      const b = bandOf(t.strengthTotal || 0);
-      let tier = tiers[tiers.length - 1];
-      if (!tier || tier.idx !== b) {
-        tier = { idx: b, label: vocab[b], color: _MT_TEAM_TIER_COLORS[b], desc: _MT_TEAM_TIER_DESC[b], teams: [], hi: t.strengthTotal || 0, lo: t.strengthTotal || 0 };
-        tiers.push(tier);
-      }
-      tier.teams.push(t);
-      tier.lo = t.strengthTotal || 0;
-      byTeam.set(t, tier);
+    const V = scaled(teams.map(t => t.strengthTotal || 0));
+    const P = scaled(teams.map(t => t.lineupPpg || 0));
+    const isDyn = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
+    // Juggernaut = ONE team: best combined score, and top-half on both fronts.
+    let jug = -1, jugBest = -Infinity;
+    if (isDyn) teams.forEach((t, i) => {
+      if (V.r[i] >= 0.5 && P.r[i] >= 0.5 && V.r[i] + P.r[i] > jugBest) { jugBest = V.r[i] + P.r[i]; jug = i; }
     });
-    return { tiers, byTeam };
+    const byTeam = new Map();
+    const tiersByLabel = {};
+    teams.forEach((t, i) => {
+      const rv = V.r[i], rp = P.r[i];
+      let label;
+      if (V.flat && P.flat) label = 'EVEN LEAGUE';
+      else if (isDyn) {
+        label = i === jug ? 'JUGGERNAUT' : _mtDynastyTierLabel(rv, rp);
+      } else {
+        const r = (rv + rp) / 2;
+        label = 'CELLAR';
+        for (const [cut, lb] of _MT_TEAM_TIER_REDRAFT) { if (r >= cut) { label = lb; break; } }
+      }
+      const st = _MT_TEAM_TIER_STYLE[label] || _MT_TEAM_TIER_STYLE['BALANCED'];
+      let tier = tiersByLabel[label];
+      if (!tier) { tier = tiersByLabel[label] = { label, color: st.color, desc: st.desc, teams: [] }; }
+      tier.teams.push(t);
+      const dv = Math.round(((t.strengthTotal || 0) - V.avg)), dp = Math.round(((t.lineupPpg || 0) - P.avg) * 10) / 10;
+      byTeam.set(t, { ...tier, teams: tier.teams, tip: `${isDyn ? 'Value' : 'Roster value'} ${dv >= 0 ? '+' : ''}${dv} vs avg · Proj PPG ${dp >= 0 ? '+' : ''}${dp} vs avg` });
+    });
+    return { tiers: Object.values(tiersByLabel), byTeam };
   }
   function _mtTeamTierChip(tier) {
     if (!tier) return '';
-    return ` <span title="Team tier — ${tier.desc || ''} by starter-weighted strength vs league avg (${tier.teams.length} team${tier.teams.length === 1 ? '' : 's'} · ${tier.lo}–${tier.hi})" style="font-size:.5rem;font-weight:700;color:${tier.color};background:${tier.color}18;border:1px solid ${tier.color};border-radius:3px;padding:0 5px;vertical-align:1px;letter-spacing:.5px;white-space:nowrap">${tier.label}</span>`;
+    return ` <span title="${_esc(tier.label)} — ${_esc(tier.desc || '')}${tier.tip ? ' · ' + _esc(tier.tip) : ''} (${tier.teams.length} team${tier.teams.length === 1 ? '' : 's'} in this tier)" style="font-size:.5rem;font-weight:700;color:${tier.color};background:${tier.color}18;border:1px solid ${tier.color};border-radius:3px;padding:0 5px;vertical-align:1px;letter-spacing:.5px;white-space:nowrap">${tier.label}</span>`;
   }
 
   function _mtRenderTeamList(teams) {
@@ -47945,24 +47993,15 @@ Rules:
     teams.slice().sort((a, b) => (b.lineupPpg || 0) - (a.lineupPpg || 0))
       .forEach((t, i) => ppgRankByTeam.set(t, i + 1));
 
-    // Team tiers: group headers when the list is in strength order (TOTAL
-    // sort), a per-row chip under any other sort so the label travels.
+    // Team tiers: a chip per row (labels come from value × PPG, so they
+    // aren't contiguous in any sort order — no group headers).
     const _tierInfo = _mtTeamTiers(teams);
-    let _lastTier = null;
 
     sorted.forEach((t, i) => {
       const sc = t.score;
       const isMe = t.isMyTeam;
       const _tier = _tierInfo ? _tierInfo.byTeam.get(t) : null;
-      if (_tier && _mtSortBy === 'total' && _tier !== _lastTier) {
-        _lastTier = _tier;
-        html += `<div class="mt-team-tier-hdr" style="display:flex;align-items:center;gap:8px;margin:${i === 0 ? 0 : 12}px 0 6px;padding:0 4px">`;
-        html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${_tier.color}">${_tier.label}</span>`;
-        html += `<span style="font-size:.58rem;color:var(--text2)">${_tier.teams.length} team${_tier.teams.length === 1 ? '' : 's'} · ${_tier.lo === _tier.hi ? _tier.hi : _tier.lo + '–' + _tier.hi}</span>`;
-        html += `<span style="flex:1;height:1px;background:${_tier.color}40"></span>`;
-        html += `</div>`;
-      }
-      const _tierChip = (_tier && _mtSortBy !== 'total') ? _mtTeamTierChip(_tier) : '';
+      const _tierChip = _tier ? _mtTeamTierChip(_tier) : '';
       const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
       const isPosSort = _mtSortBy !== 'total' && _mtSortBy !== 'ppg' && _mtSortBy !== 'picks' && _mtSortBy !== 'week';
       const posRankEntry = isPosSort ? ((t.posRanks || {})[_mtSortBy] || { rank: teams.length, strength: 0 }) : null;

@@ -70,7 +70,11 @@ ESPN_URL = ('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/{se
 ESPN_POS = {1: 'QB', 2: 'RB', 3: 'WR', 4: 'TE', 5: 'K'}  # 16=DST skipped
 FP_URL = ('https://partners.fantasypros.com/api/v1/consensus-rankings.php'
           '?sport=NFL&year={season}&week={week}&position={pos}&type=weekly&scoring={sc}')
-FP_POS = ['QB', 'RB', 'WR', 'TE', 'K']
+FP_POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DST']
+# FLX = FantasyPros' cross-position RB/WR/TE weekly list (no r2p_pts) — its
+# rank_ecr is the expert-consensus interleave the CONSENSUS weekly board uses.
+FP_FLX = 'FLX'
+FP_TEAM_DST = '{team} D/ST'  # site naming for defenses ("Houston Texans D/ST")
 CBS_URL = ('https://www.cbssports.com/fantasy/football/stats/{pos}/{season}'
            '/{week}/projections/ppr/')
 CBS_POS = ['QB', 'RB', 'WR', 'TE']
@@ -144,25 +148,53 @@ def pull_espn(season, week):
     return out
 
 
+def _fp_name(p):
+    """FP player_name, with defenses renamed to the site's '<Team> D/ST'."""
+    name = (p.get('player_name') or '').strip()
+    if name and p.get('player_position_id') == 'DST' and not name.endswith('D/ST'):
+        name = FP_TEAM_DST.format(team=name)
+    return name
+
+
 def pull_fp(season, week):
-    """{name: [half, ppr, std]} from FantasyPros weekly r2p_pts, per scoring."""
-    out = {}
+    """FantasyPros weekly expert consensus, per scoring (half, ppr, std):
+         f  = [r2p_pts ...]          rank-to-points (reference points)
+         fe = [rank_ecr ...]         POSITION expert-consensus rank
+         fx = [rank_ecr ...]         FLX cross-position rank (RB/WR/TE only)
+         fg = start_sit_grade        (PPR list)
+       Returns ({name: [h,p,s]}, {name: [h,p,s]}, {name: [h,p,s]}, {name: grade})."""
+    pts, ecr, flx, grade = {}, {}, {}, {}
     for sc_i, sc in enumerate(('HALF', 'PPR', 'STD')):
-        for pos in FP_POS:
+        for pos in FP_POS + [FP_FLX]:
             r = requests.get(FP_URL.format(season=season, pos=pos, week=week, sc=sc),
                              headers=UA, timeout=60)
             r.raise_for_status()
             for p in r.json().get('players', []):
-                name = (p.get('player_name') or '').strip()
+                name = _fp_name(p)
+                if not name:
+                    continue
+                try:
+                    rk = int(p.get('rank_ecr'))
+                except (TypeError, ValueError):
+                    rk = None
+                if pos == FP_FLX:
+                    if rk:
+                        flx.setdefault(name, [None, None, None])[sc_i] = rk
+                    continue
+                if rk:
+                    ecr.setdefault(name, [None, None, None])[sc_i] = rk
+                if sc == 'PPR' and p.get('start_sit_grade'):
+                    grade[name] = str(p.get('start_sit_grade'))
                 try:
                     v = round(float(p.get('r2p_pts')), 1)
                 except (TypeError, ValueError):
                     continue
-                if name and v > 0:
-                    out.setdefault(name, [None, None, None])[sc_i] = v
+                if v > 0:
+                    pts.setdefault(name, [None, None, None])[sc_i] = v
             time.sleep(0.4)
-    # keep only players with all three formats (partial rows render inconsistently)
-    return {n: v for n, v in out.items() if all(x is not None for x in v)}
+    # keep only rows with all three formats (partial rows render inconsistently)
+    full = lambda d: {n: v for n, v in d.items() if all(x is not None for x in v)}
+    return full(pts), full(ecr), full(flx), grade
 
 
 def pull_cbs(season, week):
@@ -246,7 +278,6 @@ def main():
     print(f'{len(players)} Sleeper weekly projections (season {season} week {week})')
 
     for label, key, fn in (('ESPN', 'e', lambda: pull_espn(season, week)),
-                           ('FantasyPros', 'f', lambda: pull_fp(season, week)),
                            ('CBS', 'c', lambda: pull_cbs(season, week))):
         try:
             src = fn()
@@ -256,6 +287,22 @@ def main():
             print(f'{len(src)} {label} projections ({m} matched, {a} new names)')
         except Exception as e:
             print(f'!! {label} pull failed ({e}) — card shows dashes for it this run')
+    # FantasyPros: points (f) + expert-consensus ranks (fe position / fx FLX)
+    # + start/sit grade (fg). The ranks drive the CONSENSUS weekly board.
+    try:
+        fp_pts, fp_ecr, fp_flx, fp_grade = pull_fp(season, week)
+        if len(fp_pts) < 50 or len(fp_ecr) < 50:
+            raise ValueError(f'only {len(fp_pts)} pts / {len(fp_ecr)} ecr rows parsed')
+        m, a = attach(players, fp_pts, 'f')
+        print(f'{len(fp_pts)} FantasyPros projections ({m} matched, {a} new names)')
+        m, a = attach(players, fp_ecr, 'fe')
+        print(f'{len(fp_ecr)} FantasyPros position ECR ({m} matched, {a} new names)')
+        m, a = attach(players, fp_flx, 'fx')
+        print(f'{len(fp_flx)} FantasyPros FLX ECR ({m} matched, {a} new names)')
+        m, a = attach(players, fp_grade, 'fg')
+        print(f'{len(fp_grade)} FantasyPros start/sit grades ({m} matched, {a} new names)')
+    except Exception as e:
+        print(f'!! FantasyPros pull failed ({e}) — card shows dashes for it this run')
 
     if dry:
         for n in list(players)[:8]:
@@ -272,7 +319,9 @@ def main():
     body = ('// Auto-generated by scripts/pull_weekly_projections.py — do not hand-edit.\n'
             '// Consensus weekly projections consumed by _weeklyAdjustPpg in app.js.\n'
             "// Per player: h/p/s = Sleeper (scoring source); e/f/c = ESPN/\n"
-            '// FantasyPros/CBS reference-only [half, ppr, std] for the WEEKLY tab.\n'
+            '// FantasyPros/CBS reference-only [half, ppr, std] for the WEEKLY tab;\n'
+            '// fe/fx = FantasyPros expert-consensus rank [half, ppr, std] (position /\n'
+            '// FLX cross-position), fg = FP start/sit grade — CONSENSUS weekly board.\n'
             'window.WEEKLY_PROJ = '
             + json.dumps(payload, separators=(',', ':'), ensure_ascii=False) + ';\n')
     old = open(OUT, encoding='utf-8').read() if os.path.exists(OUT) else ''

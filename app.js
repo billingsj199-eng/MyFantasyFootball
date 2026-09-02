@@ -45545,7 +45545,17 @@ Rules:
     teams.forEach((t, tIdx) => {
       t.draftPicks.forEach(pk => {
         totalPicks++;
-        const origIdx = pk._origIdx !== undefined ? pk._origIdx : tIdx;
+        // Original team → CURRENT array position. Resolve by stable roster id
+        // first, then by the saved owner name (snapshots from before _origId
+        // existed), and only then trust _origIdx — that build-order index is
+        // stale on every saved-league load (teams are sorted before save),
+        // which graded a top team's traded 1st as an EARLY pick (Jack
+        // 2026-09-02: cenzo2's 2027 1st on jimmyg15 priced at 90).
+        let origIdx = pk._origIdx !== undefined ? pk._origIdx : tIdx;
+        let resolved = -1;
+        if (pk._origId != null) resolved = teams.findIndex(x => String(x.id) === String(pk._origId));
+        if (resolved < 0 && pk.original && pk.original !== '?') resolved = teams.findIndex(x => x.owner === pk.original);
+        if (resolved >= 0) origIdx = resolved;
         if (pk.year === currentDraftYear) {
           // If Sleeper already gave us an exact pick number, keep it; otherwise compute from PPG
           if (!pk._pickNum) {
@@ -46001,7 +46011,11 @@ Rules:
               const ownerIdx = rosterIdToTeamIdx[ownerId];
               if (ownerIdx !== undefined) {
                 const origTeam = origIdx !== undefined ? teams[origIdx] : null;
-                const pk = { round, year, slot: 'mid', original: origTeam ? origTeam.owner : '?', _origIdx: origIdx };
+                // _origId (roster_id) is the stable link to the original team —
+                // _origIdx is a build-order array index that goes stale once
+                // teams are sorted for save, which had future-year picks
+                // slotting off the WRONG team on every saved-league load.
+                const pk = { round, year, slot: 'mid', original: origTeam ? origTeam.owner : '?', _origIdx: origIdx, _origId: parseInt(origRosterId) };
 
                 // For current draft year: assign exact pick number from standings-based draft order
                 if (parseInt(year) === currentDraftYear) {

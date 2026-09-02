@@ -48095,6 +48095,8 @@ Rules:
     if (_rs) { _rs.style.display = 'none'; _rs.innerHTML = ''; }
     _mtDraftCapitalOpen = false; _mtByesOpen = false; _mtShareOpen = false;
     ['mtDraftCapital', 'mtByeStress', 'mtShareCard'].forEach(id => { const el = document.getElementById(id); if (el) { el.style.display = 'none'; el.innerHTML = ''; } });
+    // Checklist FIX → keep the lineup panel open across the load + refresh renders.
+    _mtHonorLineupOpenPending();
     _mtRenderTeamList(teams);
     // Value history: one point per day per value source for the saved
     // snapshot of this league (posRanks/strength were just computed).
@@ -49804,8 +49806,10 @@ Rules:
     if (!shown) html += `<div style="padding:10px 12px;font-size:.72rem;color:var(--text2);border:1px dashed var(--border);border-radius:8px">No saved leagues match this filter.</div>`;
     container.innerHTML = html;
     _mtWireSavedDrag(container);
-    // Portfolio summary rides the same render (and the same D-boot retry).
+    // Portfolio summary + lineup checklist ride the same render (and the
+    // same D-boot retry).
     _mtRenderPortfolioSummary(leagues);
+    _mtRenderLineupChecklist(leagues);
     _mtPopulateLeagueSwitch();
     _mtAutoSetupState();
     // Auto-open the league you had open last time (Jack 2026-09-02) — once
@@ -49860,7 +49864,7 @@ Rules:
     try {
       if (typeof D === 'undefined' || !D.length || !lg || !lg.format) return null;
       if (!(lg.teams || []).some(t => t && t.isMyTeam)) return null;
-      const key = String(lg.leagueId || lg.name) + '|' + (lg.savedAt || '') + '|' + _mtValueSrc;
+      const key = String(lg.leagueId || lg.name) + '|' + (lg.savedAt || '') + '|' + _mtValueSrc + '|wk' + _mtLineupWeek();
       const hit = _mtSavedTierCache.get(key);
       if (hit && Date.now() - hit.ts < 10 * 60 * 1000) return hit.info;
       const prevFormat = _mtFormat;
@@ -49882,7 +49886,22 @@ Rules:
             strengthTotal: me.strengthTotal || 0,
             lineupPpg: me.lineupPpg || 0,
             mode: _mtGetRankingMode(),
-            players: ((me.score && me.score.players) || []).map(p => ({ name: p.name, pos: p.pos, rank: p.rank, val: p.val, posRank: p.posRank, age: p.age }))
+            players: ((me.score && me.score.players) || []).map(p => ({ name: p.name, pos: p.pos, rank: p.rank, val: p.val, posRank: p.posRank, age: p.age })),
+            // Lineup check summary for the cross-league checklist (computed
+            // here because _mtBestLineup reads the swapped-in _mtFormat).
+            lineup: (function () {
+              if (!Array.isArray(me.starters)) return { hasStarters: false };
+              let a = null;
+              try { a = _mtLineupAnalysis(me); } catch (_) { a = null; }
+              if (!a) return { hasStarters: true, ok: false };
+              const slim = p => p ? { name: p.name, pos: p.pos, ppg: p.ppg, out: p.out || null } : null;
+              return {
+                hasStarters: true, ok: true, basis: a.basis, week: a.week,
+                delta: a.delta, actualPts: a.actualPts, optimalPts: a.optimalPts, empty: a.empty,
+                flagged: a.flagged.map(p => p.name + (p.out ? ' (' + p.out + ')' : '')),
+                moves: a.moves.filter(m => m.start).slice(0, 3).map(m => ({ start: slim(m.start), sit: slim(m.sit), gain: m.gain }))
+              };
+            })()
           };
         }
       } finally { _mtFormat = prevFormat; }
@@ -49895,6 +49914,81 @@ Rules:
     return info ? info.tier : null;
   }
   window._mtSavedLeagueTier = _mtSavedLeagueMyTier; // trade calc / finder league pickers
+
+  // ── CROSS-LEAGUE LINEUP CHECKLIST (Jack 2026-09-02) ─────────────────────
+  // One block above the saved leagues: every league where my team is marked
+  // and the platform reported a lineup, with the LINEUP CHECK verdict
+  // (optimal / points on the bench / empty slots / bye-out starters), the
+  // top suggested move, and a FIX button that loads the league with the
+  // lineup panel open. Rides _mtSavedLeagueInfo's memo (per snapshot, value
+  // source and week).
+  function _mtRenderLineupChecklist(leagues) {
+    const box = document.getElementById('mtLineupChecklist');
+    if (!box) return;
+    if (typeof D === 'undefined' || !D.length) { box.innerHTML = ''; return; }
+    const rows = (leagues || []).map((lg, idx) => ({ lg, idx, info: _mtSavedLeagueInfo(lg) })).filter(x => x.info && x.info.lineup);
+    if (!rows.length) { box.innerHTML = ''; return; }
+    const wk = _mtLineupWeek();
+    const state = r => {
+      const l = r.info.lineup;
+      if (!l.hasStarters) return { key: 'nodata', col: 'var(--text2)', label: 'NO LINEUP DATA', order: 3 };
+      if (!l.ok) return { key: 'nodata', col: 'var(--text2)', label: 'CAN\'T SCORE', order: 3 };
+      if (l.empty) return { key: 'bad', col: '#ef4444', label: l.empty + ' EMPTY SLOT' + (l.empty > 1 ? 'S' : ''), order: 0 };
+      if (l.flagged.length) return { key: 'bad', col: '#ef4444', label: l.flagged.length + ' ON BYE/OUT', order: 0 };
+      if (l.delta >= 1) return { key: 'warn', col: '#f59e0b', label: '+' + l.delta + ' ON BENCH', order: 1 };
+      if (l.delta >= 0.5) return { key: 'minor', col: '#facc15', label: '+' + l.delta + ' ON BENCH', order: 2 };
+      return { key: 'ok', col: '#22c55e', label: '✓ OPTIMAL', order: 4 };
+    };
+    rows.forEach(r => { r.st = state(r); });
+    rows.sort((a, b) => a.st.order - b.st.order);
+    const scored = rows.filter(r => r.st.key !== 'nodata');
+    const okCount = scored.filter(r => r.st.key === 'ok').length;
+    const needs = scored.length - okCount;
+    const headCol = needs === 0 ? '#22c55e' : scored.some(r => r.st.key === 'bad') ? '#ef4444' : '#f59e0b';
+    let html = `<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text)">LINEUPS${wk ? ' · WK ' + wk : ''}</span>`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:${headCol}">${scored.length ? (needs === 0 ? 'ALL ' + scored.length + ' SET' : needs + ' OF ' + scored.length + ' NEED A LOOK') : 'WAITING FOR LINEUP DATA'}</span>`;
+    html += `<span style="font-size:.62rem;color:var(--text2)">your set lineup vs the best lineup in every saved league${wk ? ' · weekly projections' : ' · season projections'}</span>`;
+    html += `</div><div style="display:flex;flex-direction:column;gap:5px">`;
+    rows.forEach(r => {
+      const l = r.info.lineup;
+      const st = r.st;
+      html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--surface);border:1px solid ${st.key === 'bad' ? '#ef444455' : st.key === 'warn' ? '#f59e0b55' : 'var(--border)'};border-radius:8px">`;
+      html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.5px;color:${st.col};background:${st.col}15;border:1px solid ${st.col};border-radius:4px;padding:2px 8px;white-space:nowrap">${st.label}</span>`;
+      html += `<span style="font-weight:600;font-size:.82rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(r.lg.name || 'League')}</span>`;
+      if (l.ok) html += `<span style="font-size:.65rem;color:var(--text2)">set <b style="color:var(--text)">${l.actualPts}</b> · best <b style="color:#22c55e">${l.optimalPts}</b></span>`;
+      if (l.ok && l.flagged.length) html += `<span style="font-size:.65rem;color:#ef4444">${_esc(l.flagged.join(', '))}</span>`;
+      const mv = l.ok && l.moves && l.moves[0];
+      if (mv && mv.start) html += `<span style="font-size:.65rem;color:var(--text2)"><span style="color:#22c55e;font-weight:700">▲</span> ${_esc(mv.start.name)}${mv.sit ? ` over <span style="color:#ef4444;font-weight:700">▼</span> ${_esc(mv.sit.name)}` : ''}${mv.gain > 0 ? ` <span style="color:#22c55e;font-weight:700">+${mv.gain}</span>` : ''}${l.moves.length > 1 ? ` <span style="opacity:.7">+${l.moves.length - 1} more</span>` : ''}</span>`;
+      if (!l.hasStarters) html += `<span style="font-size:.65rem;color:var(--text2)">arrives on the next sync${String(r.lg.leagueId || '').indexOf('espn_') === 0 ? ' (private ESPN: re-export from the ESPN Helper)' : ''}</span>`;
+      html += `<button onclick="window._mtOpenLeagueLineup(${r.idx})" style="margin-left:auto;padding:4px 10px;background:${st.key === 'ok' || st.key === 'nodata' ? 'var(--surface2)' : 'var(--accent)'};color:${st.key === 'ok' || st.key === 'nodata' ? 'var(--text2)' : '#000'};border:1px solid ${st.key === 'ok' || st.key === 'nodata' ? 'var(--border)' : 'var(--accent)'};border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;cursor:pointer">${st.key === 'ok' || st.key === 'nodata' ? 'OPEN' : 'FIX'}</button>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+    box.innerHTML = html;
+  }
+  // The load renders synchronously, but the on-load auto-refresh can
+  // re-import and re-render moments later (which closes every panel) — so
+  // the "open the lineup panel" intent is kept as a short-lived pending key
+  // that _mtRenderLeague honors on each render for the next 20s.
+  let _mtLineupOpenPending = null;
+  window._mtOpenLeagueLineup = function (idx) {
+    const lg = (window._mtSavedLeagues || [])[idx];
+    _mtLineupOpenPending = lg ? { key: String(lg.leagueId || ''), until: Date.now() + 20000 } : null;
+    window._mtLoadSavedLeague(idx);
+    const v = document.getElementById('mtLeagueView');
+    if (v) v.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  function _mtHonorLineupOpenPending() {
+    if (!_mtLineupOpenPending) return;
+    if (Date.now() > _mtLineupOpenPending.until) { _mtLineupOpenPending = null; return; }
+    if (_mtActiveLeagueKey() !== _mtLineupOpenPending.key) return;
+    const box = document.getElementById('mtLineupCheck');
+    if (!box) return;
+    _mtLineupCheckOpen = true;
+    box.style.display = '';
+    _mtRenderLineupCheck();
+  }
 
   // ── PORTFOLIO SUMMARY (Flock-audit item 5, Jack 2026-09-02) ──────────
   // Across every saved league where my team is marked: average placement

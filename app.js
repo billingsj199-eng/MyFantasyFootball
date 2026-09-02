@@ -51029,7 +51029,7 @@ Rules:
     }).sort((a, b) => b.worst - a.worst || (b.t.strengthTotal || 0) - (a.t.strengthTotal || 0));
     let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
     html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
-    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#facc15">BYE-WEEK STRESS</span>`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#facc15">BYES &amp; FILL PLAN</span>`;
     html += `<span style="font-size:.6rem;color:var(--text2)">projected starters on bye each week · hover a cell for names · amber = fantasy playoffs (W15-17)</span>`;
     html += `<button onclick="window._mtToggleByes()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
     html += `</div>`;
@@ -51040,6 +51040,7 @@ Rules:
     }
     const me = rows.find(r => r.t.isMyTeam);
     if (me && me.worst) html += `<div style="font-size:.7rem;color:var(--text2);margin-bottom:8px">Your worst week is <b style="color:${me.worst >= 3 ? '#ef4444' : me.worst === 2 ? '#f59e0b' : 'var(--text)'}">Week ${me.worstWk}</b> with <b style="color:var(--text)">${me.worst}</b> starter${me.worst === 1 ? '' : 's'} on bye: ${_esc(me.byWeek[me.worstWk].join(', '))}.</div>`;
+    if (me) html += _mtFillPlanHtml(me.t);
     html += `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:.7rem;width:100%;min-width:${200 + WEEKS * 30}px">`;
     html += `<thead><tr style="color:var(--text2);font-size:.5rem;letter-spacing:.3px"><th style="text-align:left;padding:4px 6px">TEAM</th>`;
     for (let wk = 1; wk <= WEEKS; wk++) html += `<th style="padding:3px 2px;text-align:center;${wk >= 15 ? 'color:var(--accent)' : ''}">W${wk}</th>`;
@@ -51059,6 +51060,96 @@ Rules:
     });
     html += `</tbody></table></div><div style="font-size:.55rem;color:var(--text2);margin-top:4px">Starters = each team's best season lineup (K/DST included); players without a known NFL team are skipped.</div></div>`;
     box.innerHTML = html;
+  }
+
+  // ── BYE + INJURY FILL PLANNER (Jack 2026-09-02) ─────────────────────────
+  // For MY team: every week a projected starter is on bye, plus any starter
+  // currently ruled out (IR/PUP/SUS/Out), with the best cover from my own
+  // bench and the best free agents at that position who actually play that
+  // week (not on bye themselves). Bench/FA candidates rank by season PPG
+  // (scoring-aware via _mtGetPlayerPpg); FAs come from the same board-vs-
+  // rosters diff the WAIVERS panel uses (top-150 rule).
+  function _mtFreeAgentPool() {
+    const rostered = new Set();
+    (window._mtTeams || []).forEach(t => (t.players || []).forEach(n => rostered.add(n)));
+    const norm = n => String(n).toLowerCase().replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v)$/i, '').replace(/[.'’]/g, '').trim();
+    const rosteredNorm = new Set([...rostered].map(norm));
+    const pool = { QB: [], RB: [], WR: [], TE: [], K: [], DST: [] };
+    if (typeof D === 'undefined') return pool;
+    for (const d of D) {
+      if (!pool[d.s]) continue;
+      if (rostered.has(d.n) || rosteredNorm.has(norm(d.n))) continue;
+      if (d.rm) continue;
+      // Top-150 draftable rule for skill spots; K/DST are streamers and sit
+      // past 150 on every board, so any projected K/DST qualifies.
+      if (d.s !== 'K' && d.s !== 'DST' && _mtGetPlayerRank(d.n) > 150) continue;
+      const ppg = _mtGetPlayerPpg(d.n);
+      if (!(ppg > 0)) continue;
+      pool[d.s].push({ d, name: d.n, pos: d.s, ppg, bye: _mtByeWeekFor(d), inj: d.inj ? String(d.inj) : '' });
+    }
+    Object.keys(pool).forEach(p => pool[p].sort((a, b) => b.ppg - a.ppg));
+    return pool;
+  }
+  function _mtFillPlanHtml(t) {
+    const starters = _mtTeamStarters(t);
+    if (!starters.length) return '';
+    const startSet = new Set(starters.map(p => p.name));
+    const flexy = p => p === 'RB' || p === 'WR' || p === 'TE';
+    const hasSf = ((_mtFormat && _mtFormat.rosterPositions) || []).indexOf('SUPER_FLEX') >= 0 || !!(_mtFormat && _mtFormat.sf);
+    const compatible = (need, have) => need === have || (flexy(need) && flexy(have)) || (hasSf && need === 'QB' && flexy(have));
+    const outRe = /\bir\b|\bpup\b|suspend|\bout\b|out for season|season.?ending/i;
+    const bench = (t.players || []).filter(n => !startSet.has(n)).map(n => {
+      const d = _mtLookupD(n);
+      return d ? { d, name: d.n, pos: d.s, ppg: _mtGetPlayerPpg(d.n), bye: _mtByeWeekFor(d), inj: d.inj ? String(d.inj) : '' } : null;
+    }).filter(p => p && p.ppg > 0 && !outRe.test(p.inj));
+    const fa = _mtFreeAgentPool();
+    const holes = []; // {wk|null, label, player, pos}
+    // Byes by week
+    const byWk = {};
+    starters.forEach(p => {
+      const d = p.d || _mtLookupD(p.name);
+      const wk = _mtByeWeekFor(d);
+      if (wk != null) (byWk[wk] = byWk[wk] || []).push({ name: p.name, pos: (d && d.s) || p.pos, ppg: p.ppg, d });
+    });
+    Object.keys(byWk).map(Number).sort((a, b) => a - b).forEach(wk => byWk[wk].forEach(p => holes.push({ wk, why: 'BYE', player: p })));
+    // Injured starters (now)
+    _mtTeamInjuredStarters(t).forEach(x => {
+      const p = starters.find(s => s.name === x.name);
+      const d = (p && p.d) || _mtLookupD(x.name);
+      holes.push({ wk: null, why: x.tag, player: { name: x.name, pos: (d && d.s) || (p && p.pos) || '?', ppg: p ? p.ppg : 0, d } });
+    });
+    if (!holes.length) return `<div style="font-size:.68rem;color:#22c55e;margin-bottom:10px">✓ No byes or ruled-out starters to plan around.</div>`;
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a855f7', DST: '#94a3b8' };
+    const posBadge = p => `<span style="font-size:.55rem;font-weight:700;color:${posColors[p] || 'var(--text2)'};padding:1px 4px;border-radius:3px;background:${(posColors[p] || '#666')}20">${_esc(p || '?')}</span>`;
+    const link = n => { const safe = String(n).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'"); return `<span onclick="window._mtOpenCardByName('${safe}', true)" style="cursor:pointer;color:var(--text);font-weight:600">${_esc(n)}</span>`; };
+    let html = `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--text2);margin:4px 0 4px">YOUR FILL PLAN <span style="font-family:'DM Sans',sans-serif;font-size:.58rem;letter-spacing:0;font-weight:400">bench cover first, then the best free agents who play that week</span></div>`;
+    html += `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
+    // Group by week for readability
+    const groups = [];
+    holes.forEach(h => { const k = h.wk == null ? 'now' : 'w' + h.wk; let g = groups.find(x => x.k === k); if (!g) { g = { k, wk: h.wk, items: [] }; groups.push(g); } g.items.push(h); });
+    groups.sort((a, b) => (a.wk == null ? -1 : a.wk) - (b.wk == null ? -1 : b.wk));
+    groups.forEach(g => {
+      const usedBench = new Set();
+      html += `<div style="padding:7px 10px;background:var(--bg);border:1px solid ${g.wk == null ? '#ef444455' : g.items.length >= 3 ? '#ef444455' : g.items.length === 2 ? '#f59e0b55' : 'var(--border)'};border-radius:6px">`;
+      html += `<div style="font-size:.62rem;font-weight:700;letter-spacing:.5px;color:${g.wk == null ? '#ef4444' : 'var(--text2)'};margin-bottom:4px">${g.wk == null ? 'RULED OUT NOW' : 'WEEK ' + g.wk + ' · ' + g.items.length + ' ON BYE'}${g.wk != null && g.wk >= 15 ? ' <span style="color:var(--accent)">· playoffs</span>' : ''}</div>`;
+      g.items.forEach(h => {
+        const p = h.player;
+        const benchPick = bench.filter(b => !usedBench.has(b.name) && compatible(p.pos, b.pos) && (g.wk == null || b.bye !== g.wk)).sort((a, b) => b.ppg - a.ppg)[0] || null;
+        if (benchPick) usedBench.add(benchPick.name);
+        const faPicks = (fa[p.pos] || []).filter(f => (g.wk == null || f.bye !== g.wk) && !outRe.test(f.inj)).slice(0, 2);
+        html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.7rem;padding:3px 0">`;
+        html += `<span style="min-width:0">${posBadge(p.pos)} ${link(p.name)} <span style="color:var(--text2)">${p.ppg ? p.ppg : ''}${h.wk == null ? ' · <span style="color:#ef4444;font-weight:700">' + _esc(h.why) + '</span>' : ''}</span></span>`;
+        html += `<span style="color:var(--text2)">→</span>`;
+        if (benchPick) html += `<span title="Best bench cover at a compatible slot" style="color:var(--text2)">bench: ${link(benchPick.name)} <span style="color:${benchPick.ppg >= p.ppg * 0.8 ? '#22c55e' : '#f59e0b'};font-weight:700">${benchPick.ppg}</span></span>`;
+        else html += `<span style="color:#ef4444">no bench cover</span>`;
+        if (faPicks.length) html += `<span style="color:var(--text2)">· FA: ${faPicks.map(f => link(f.name) + ' <span style="font-weight:700;color:' + (f.ppg >= p.ppg * 0.8 ? '#22c55e' : 'var(--text)') + '">' + f.ppg + '</span>').join(', ')}</span>`;
+        else html += `<span style="color:var(--text2)">· no draftable FA at ${_esc(p.pos)}</span>`;
+        html += `</div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
+    return html;
   }
 
   // ── SHARE CARD (Jack 2026-09-02: "share card export") ───────────────────

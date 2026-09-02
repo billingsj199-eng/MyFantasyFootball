@@ -48093,6 +48093,8 @@ Rules:
     _mtResultsOpen = false;
     const _rs = document.getElementById('mtResults');
     if (_rs) { _rs.style.display = 'none'; _rs.innerHTML = ''; }
+    _mtDraftCapitalOpen = false; _mtByesOpen = false; _mtShareOpen = false;
+    ['mtDraftCapital', 'mtByeStress', 'mtShareCard'].forEach(id => { const el = document.getElementById(id); if (el) { el.style.display = 'none'; el.innerHTML = ''; } });
     _mtRenderTeamList(teams);
     // Value history: one point per day per value source for the saved
     // snapshot of this league (posRanks/strength were just computed).
@@ -48529,6 +48531,21 @@ Rules:
       if ((_mtActiveSource === 'sleeper' && _mtActiveSleeperId) || (_mtActiveSource === 'espn' && _mtActiveEspnId) || (_mtActiveSource === 'yahoo' && _mtActiveYahooId)) {
         const tlActive = _mtTradeLogOpen;
         html += `<button onclick="window._mtToggleTradeLog()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${tlActive ? '#38bdf8' : 'var(--border)'};background:${tlActive ? '#38bdf8' : 'var(--surface)'};color:${tlActive ? '#000' : 'var(--text2)'}">TRADE LOG</button>`;
+      }
+      // Draft capital grid — dynasty/keeper leagues with picks on rosters.
+      if ((_mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper') && teams.some(t => (t.draftPicks || []).length)) {
+        const dcActive = _mtDraftCapitalOpen;
+        html += `<button onclick="window._mtToggleDraftCapital()" title="Every future pick by team, year and round" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${dcActive ? '#a855f7' : 'var(--border)'};background:${dcActive ? '#a855f7' : 'var(--surface)'};color:${dcActive ? '#fff' : 'var(--text2)'}">PICKS</button>`;
+      }
+      // Bye-week stress — needs the NFL schedule tables.
+      if (typeof window.getNflScheduleForTeam === 'function') {
+        const byActive = _mtByesOpen;
+        html += `<button onclick="window._mtToggleByes()" title="Projected starters on bye, every team, every week" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${byActive ? '#facc15' : 'var(--border)'};background:${byActive ? '#facc15' : 'var(--surface)'};color:${byActive ? '#000' : 'var(--text2)'}">BYES</button>`;
+      }
+      // Share card — PNG of the power rankings for the league chat.
+      {
+        const shActive = _mtShareOpen;
+        html += `<button onclick="window._mtToggleShare()" title="Export the power rankings as an image" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${shActive ? 'var(--accent)' : 'var(--border)'};background:${shActive ? 'var(--accent)' : 'var(--surface)'};color:${shActive ? '#000' : 'var(--text2)'}">SHARE</button>`;
       }
       // Results — completed weeks (Sleeper matchups / ESPN schedule scores);
       // shows once a week is in the books, or for a past-season league.
@@ -50805,6 +50822,315 @@ Rules:
     html += `</tbody></table></div></div>`;
     return html;
   }
+
+  // ── DRAFT CAPITAL GRID (Jack 2026-09-02: "draft capital grid") ─────────
+  // Every future pick on every roster, by year and round, priced at the
+  // slot the roster already carries (_mtAssignPickSlots): count per cell,
+  // dim red when a team has traded its own pick away, green when it holds
+  // extras; war chest = the same package-adjusted pick total the power
+  // rankings use (sc.pickTotal).
+  let _mtDraftCapitalOpen = false;
+  window._mtToggleDraftCapital = function () {
+    const box = document.getElementById('mtDraftCapital');
+    if (!box) return;
+    _mtDraftCapitalOpen = !_mtDraftCapitalOpen;
+    box.style.display = _mtDraftCapitalOpen ? '' : 'none';
+    if (_mtDraftCapitalOpen) _mtRenderDraftCapital();
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+  };
+  function _mtRenderDraftCapital() {
+    const box = document.getElementById('mtDraftCapital');
+    if (!box || !window._mtTeams) return;
+    const teams = window._mtTeams;
+    const mode = _mtGetRankingMode();
+    const rounds = ['1st', '2nd', '3rd', '4th'];
+    const years = [...new Set(teams.flatMap(t => (t.draftPicks || []).map(p => String(p.year))))].sort();
+    const roundsUsed = rounds.filter(r => teams.some(t => (t.draftPicks || []).some(p => p.round === r)));
+    const val = p => (typeof window._getPickValue === 'function') ? Math.round(window._getPickValue(p.round, p.year, p.slot, mode, p._pickNum)) : 0;
+    const slotLbl = p => p._pickNum ? p._pickNum : (p.slot ? p.slot.charAt(0).toUpperCase() + p.slot.slice(1) + ' ' : '');
+    const rows = teams.map(t => {
+      const picks = t.draftPicks || [];
+      const cells = {};
+      years.forEach(y => roundsUsed.forEach(r => { cells[y + r] = picks.filter(p => String(p.year) === y && p.round === r); }));
+      const raw = picks.reduce((s, p) => s + val(p), 0);
+      const firsts = picks.filter(p => p.round === '1st').length;
+      return { t, picks, cells, raw, firsts, chest: (t.score && t.score.pickTotal) || 0 };
+    }).sort((a, b) => b.chest - a.chest || b.raw - a.raw);
+    let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#a855f7">DRAFT CAPITAL</span>`;
+    html += `<span style="font-size:.6rem;color:var(--text2)">picks per year/round · <span style="color:#22c55e">green</span> = holds extras · <span style="color:#ef4444">red</span> = own pick traded away · hover a cell for slots · WAR CHEST = package-adjusted pick value (bench-spot cost applied)</span>`;
+    html += `<button onclick="window._mtToggleDraftCapital()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
+    html += `</div>`;
+    const mostFirsts = rows.slice().sort((a, b) => b.firsts - a.firsts)[0];
+    const fewest = rows.slice().sort((a, b) => a.picks.length - b.picks.length)[0];
+    html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:.66rem;color:var(--text2)">`;
+    if (rows[0]) html += `<span style="padding:3px 8px;border:1px solid #a855f755;border-radius:5px">💰 Biggest war chest: <b style="color:var(--text)">${_esc(rows[0].t.owner)}</b> <span style="color:#a855f7;font-weight:700">${rows[0].chest}</span> (${rows[0].picks.length} picks)</span>`;
+    if (mostFirsts && mostFirsts.firsts) html += `<span style="padding:3px 8px;border:1px solid var(--border);border-radius:5px">🥇 Most 1sts: <b style="color:var(--text)">${_esc(mostFirsts.t.owner)}</b> <span style="font-weight:700;color:var(--text)">${mostFirsts.firsts}</span></span>`;
+    if (fewest) html += `<span style="padding:3px 8px;border:1px solid var(--border);border-radius:5px">🪫 Fewest picks: <b style="color:var(--text)">${_esc(fewest.t.owner)}</b> <span style="font-weight:700;color:var(--text)">${fewest.picks.length}</span></span>`;
+    html += `</div>`;
+    html += `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:.7rem;min-width:${260 + years.length * roundsUsed.length * 44}px;width:100%">`;
+    html += `<thead><tr style="color:var(--text2);font-size:.55rem;letter-spacing:.5px"><th rowspan="2" style="text-align:left;padding:4px 6px;vertical-align:bottom">TEAM</th>`;
+    years.forEach(y => { html += `<th colspan="${roundsUsed.length}" style="padding:3px 4px;border-left:1px solid var(--border);color:var(--text)">${_esc(y)}</th>`; });
+    html += `<th rowspan="2" style="padding:4px 6px;text-align:right;vertical-align:bottom;border-left:1px solid var(--border)">PICKS</th><th rowspan="2" style="padding:4px 6px;text-align:right;vertical-align:bottom" title="Package-adjusted pick value">WAR CHEST</th></tr><tr style="color:var(--text2);font-size:.5rem">`;
+    years.forEach(() => roundsUsed.forEach((r, i) => { html += `<th style="padding:2px 4px;${i === 0 ? 'border-left:1px solid var(--border)' : ''}">${r.toUpperCase()}</th>`; }));
+    html += `</tr></thead><tbody>`;
+    rows.forEach(x => {
+      const mine = x.t.isMyTeam;
+      html += `<tr style="border-top:1px solid var(--border);${mine ? 'background:rgba(245,158,11,.08)' : ''}">`;
+      html += `<td style="padding:5px 6px;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${_mtTeamLogoHtml(x.t, 18)}<span style="font-weight:${mine ? 700 : 600};color:${mine ? 'var(--accent)' : 'var(--text)'}">${_esc(x.t.owner)}</span></span></td>`;
+      years.forEach(y => roundsUsed.forEach((r, i) => {
+        const ps = x.cells[y + r] || [];
+        const own = ps.some(p => String(p._origId != null ? p._origId : '') === String(x.t.id) || p.original === x.t.owner);
+        const n = ps.length;
+        const col = n === 0 ? '#ef4444' : (n > 1 || !own) ? '#22c55e' : 'var(--text)';
+        const tip = ps.length ? ps.map(p => `${p.year} ${slotLbl(p)}${p.round}${p.original && p.original !== x.t.owner ? ' (via ' + p.original + ')' : ''} · ${val(p)}`).join('\n') : 'Own pick traded away';
+        html += `<td title="${_esc(tip)}" style="padding:5px 4px;text-align:center;${i === 0 ? 'border-left:1px solid var(--border);' : ''}color:${col};font-weight:${n ? 700 : 400};${n === 0 ? 'opacity:.55' : ''}">${n ? n : '—'}${n && !own ? '<span style="font-size:.5rem;vertical-align:top">†</span>' : ''}</td>`;
+      }));
+      html += `<td style="padding:5px 6px;text-align:right;border-left:1px solid var(--border);color:var(--text)">${x.picks.length}</td>`;
+      html += `<td style="padding:5px 6px;text-align:right;font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:#a855f7">${x.chest}</td></tr>`;
+    });
+    html += `</tbody></table></div><div style="font-size:.55rem;color:var(--text2);margin-top:4px">† includes a pick acquired from another team · picks price at the original team's projected slot (current-year picks by exact number, next year early/mid/late, later years mid)</div></div>`;
+    box.innerHTML = html;
+  }
+
+  // ── BYE-WEEK STRESS (Jack 2026-09-02) ───────────────────────────────────
+  // Projected season starters (_mtTeamStarters, injuries ignored) mapped to
+  // their NFL team's bye via the schedule tables; count per fantasy week for
+  // every team, worst week flagged. K/DST included (they start too).
+  let _mtByesOpen = false;
+  window._mtToggleByes = function () {
+    const box = document.getElementById('mtByeStress');
+    if (!box) return;
+    _mtByesOpen = !_mtByesOpen;
+    box.style.display = _mtByesOpen ? '' : 'none';
+    if (_mtByesOpen) _mtRenderByes();
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+  };
+  function _mtByeWeekFor(d) {
+    if (!d || !d.t || typeof window.getNflScheduleForTeam !== 'function') return null;
+    const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
+    const sched = window.getNflScheduleForTeam(abbr);
+    if (!sched) return null;
+    for (let wk = 1; wk <= 18; wk++) { const e = sched[wk]; if (e && e.bye) return wk; }
+    return null;
+  }
+  function _mtRenderByes() {
+    const box = document.getElementById('mtByeStress');
+    if (!box || !window._mtTeams) return;
+    const teams = window._mtTeams;
+    const WEEKS = 17;
+    const rows = teams.map(t => {
+      const starters = _mtTeamStarters(t);
+      const byWeek = {};
+      let known = 0;
+      starters.forEach(p => {
+        const d = p.d || _mtLookupD(p.name);
+        const wk = _mtByeWeekFor(d);
+        if (wk == null) return;
+        known++;
+        (byWeek[wk] = byWeek[wk] || []).push(p.name + (d && d.s ? ' (' + d.s + ')' : ''));
+      });
+      let worst = 0, worstWk = null;
+      Object.keys(byWeek).forEach(wk => { if (byWeek[wk].length > worst) { worst = byWeek[wk].length; worstWk = parseInt(wk, 10); } });
+      return { t, byWeek, worst, worstWk, known, n: starters.length };
+    }).sort((a, b) => b.worst - a.worst || (b.t.strengthTotal || 0) - (a.t.strengthTotal || 0));
+    let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#facc15">BYE-WEEK STRESS</span>`;
+    html += `<span style="font-size:.6rem;color:var(--text2)">projected starters on bye each week · hover a cell for names · amber = fantasy playoffs (W15-17)</span>`;
+    html += `<button onclick="window._mtToggleByes()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
+    html += `</div>`;
+    if (!rows.some(r => r.known)) {
+      html += `<div style="font-size:.72rem;color:var(--text2)">NFL bye weeks aren't loaded yet — the schedule tables arrive with the season data.</div></div>`;
+      box.innerHTML = html;
+      return;
+    }
+    const me = rows.find(r => r.t.isMyTeam);
+    if (me && me.worst) html += `<div style="font-size:.7rem;color:var(--text2);margin-bottom:8px">Your worst week is <b style="color:${me.worst >= 3 ? '#ef4444' : me.worst === 2 ? '#f59e0b' : 'var(--text)'}">Week ${me.worstWk}</b> with <b style="color:var(--text)">${me.worst}</b> starter${me.worst === 1 ? '' : 's'} on bye: ${_esc(me.byWeek[me.worstWk].join(', '))}.</div>`;
+    html += `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:.7rem;width:100%;min-width:${200 + WEEKS * 30}px">`;
+    html += `<thead><tr style="color:var(--text2);font-size:.5rem;letter-spacing:.3px"><th style="text-align:left;padding:4px 6px">TEAM</th>`;
+    for (let wk = 1; wk <= WEEKS; wk++) html += `<th style="padding:3px 2px;text-align:center;${wk >= 15 ? 'color:var(--accent)' : ''}">W${wk}</th>`;
+    html += `<th style="padding:4px 6px;text-align:right">WORST</th></tr></thead><tbody>`;
+    rows.forEach(r => {
+      const mine = r.t.isMyTeam;
+      html += `<tr style="border-top:1px solid var(--border);${mine ? 'background:rgba(245,158,11,.08)' : ''}">`;
+      html += `<td style="padding:4px 6px;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${_mtTeamLogoHtml(r.t, 18)}<span style="font-weight:${mine ? 700 : 600};color:${mine ? 'var(--accent)' : 'var(--text)'}">${_esc(r.t.owner)}</span></span></td>`;
+      for (let wk = 1; wk <= WEEKS; wk++) {
+        const list = r.byWeek[wk] || [];
+        const n = list.length;
+        const bg = n >= 3 ? 'rgba(239,68,68,.35)' : n === 2 ? 'rgba(245,158,11,.3)' : n === 1 ? 'rgba(250,204,21,.15)' : 'transparent';
+        const col = n >= 3 ? '#fca5a5' : n === 2 ? '#fcd34d' : n === 1 ? 'var(--text)' : 'var(--text2)';
+        html += `<td title="${n ? _esc('Week ' + wk + ': ' + list.join(', ')) : ''}" style="padding:4px 2px;text-align:center;background:${bg};color:${col};font-weight:${n ? 700 : 400};${wk >= 15 ? 'box-shadow:inset 0 -2px 0 rgba(245,158,11,.35);' : ''}">${n ? n : '·'}</td>`;
+      }
+      html += `<td style="padding:4px 6px;text-align:right;white-space:nowrap;color:${r.worst >= 3 ? '#ef4444' : r.worst === 2 ? '#f59e0b' : 'var(--text2)'};font-weight:700">${r.worst ? 'W' + r.worstWk + ' · ' + r.worst : '—'}</td></tr>`;
+    });
+    html += `</tbody></table></div><div style="font-size:.55rem;color:var(--text2);margin-top:4px">Starters = each team's best season lineup (K/DST included); players without a known NFL team are skipped.</div></div>`;
+    box.innerHTML = html;
+  }
+
+  // ── SHARE CARD (Jack 2026-09-02: "share card export") ───────────────────
+  // Draws the power rankings onto a canvas (league name, date, rank, team,
+  // tier, strength, PPG, record) and shows it as a PNG with download + copy
+  // buttons. Team avatars load with crossOrigin=anonymous; if any host
+  // taints the canvas, it redraws with initials so export still works.
+  let _mtShareOpen = false;
+  window._mtToggleShare = function () {
+    const box = document.getElementById('mtShareCard');
+    if (!box) return;
+    _mtShareOpen = !_mtShareOpen;
+    box.style.display = _mtShareOpen ? '' : 'none';
+    if (_mtShareOpen) _mtRenderShareCard();
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+  };
+  function _mtLoadImg(url, ms) {
+    return new Promise(res => {
+      if (!url) return res(null);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const to = setTimeout(() => res(null), ms || 3000);
+      img.onload = () => { clearTimeout(to); res(img); };
+      img.onerror = () => { clearTimeout(to); res(null); };
+      img.src = url;
+    });
+  }
+  async function _mtDrawShareCanvas(withAvatars) {
+    const teams = (window._mtTeams || []).slice();
+    if (!teams.some(t => t.strengthTotal != null)) _mtComputePosRanks(teams);
+    teams.sort((a, b) => (b.strengthTotal || 0) - (a.strengthTotal || 0) || (b.score.total - a.score.total));
+    const tiers = _mtTeamTiers(teams);
+    const lg = window._mtLeague || {};
+    const W = 1080, HEAD = 170, ROW = 66, FOOT = 70;
+    const H = HEAD + teams.length * ROW + FOOT;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    try { await Promise.all([document.fonts.load('40px "Bebas Neue"'), document.fonts.load('bold 26px "DM Sans"')]); } catch (_) {}
+    const BEBAS = '"Bebas Neue", Impact, "Arial Narrow", sans-serif';
+    const SANS = '"DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#0b1220'; ctx.fillRect(0, 0, W, H);
+    // Header
+    ctx.fillStyle = '#f59e0b'; ctx.fillRect(0, 0, W, 6);
+    ctx.fillStyle = '#f59e0b'; ctx.font = `48px ${BEBAS}`; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(String(lg.name || 'LEAGUE').toUpperCase(), 40, 74);
+    const fmt = [];
+    fmt.push(_mtFormat.type ? _mtFormat.type.charAt(0).toUpperCase() + _mtFormat.type.slice(1) : '');
+    if (_mtFormat.sf) fmt.push('Superflex');
+    fmt.push(_mtFormat.ppr === 1 ? 'PPR' : _mtFormat.ppr === 0.5 ? 'Half PPR' : 'Standard');
+    ctx.fillStyle = '#e5e7eb'; ctx.font = `30px ${BEBAS}`;
+    ctx.fillText('POWER RANKINGS', 40, 116);
+    ctx.fillStyle = '#94a3b8'; ctx.font = `18px ${SANS}`;
+    ctx.fillText(`${teams.length} teams · ${fmt.join(' · ')} · ${new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} · values: ${(_MT_SRC_NAMES && _MT_SRC_NAMES[_mtValueSrc]) || _mtValueSrc}`, 40, 146);
+    // Column headers
+    ctx.fillStyle = '#64748b'; ctx.font = `14px ${SANS}`; ctx.textAlign = 'right';
+    ctx.fillText('STRENGTH', 840, 162); ctx.fillText('PROJ PPG', 960, 162); ctx.fillText('RECORD', 1040, 162);
+    ctx.textAlign = 'left';
+    // Avatars: only hosts that answer CORS can be drawn without tainting
+    // the canvas. sleepercdn.com sends no ACAO header (verified 2026-09-02:
+    // every load fails + console noise), so Sleeper logos always fall back
+    // to initials; other hosts get one anonymous attempt.
+    const canTry = url => !!url && !/sleepercdn\.com/i.test(url);
+    const avatars = withAvatars ? await Promise.all(teams.map(t => canTry(t.logo) ? _mtLoadImg(t.logo, 2500) : Promise.resolve(null))) : teams.map(() => null);
+    const allS = teams.map(t => t.strengthTotal || 0);
+    const maxS = Math.max(...allS), avgS = allS.reduce((s, v) => s + v, 0) / (allS.length || 1);
+    const tierColor = tier => (tier && tier.color) || '#94a3b8';
+    teams.forEach((t, i) => {
+      const y = HEAD + i * ROW;
+      const mine = !!t.isMyTeam;
+      ctx.fillStyle = mine ? 'rgba(245,158,11,.10)' : (i % 2 ? 'rgba(255,255,255,.025)' : 'transparent');
+      ctx.fillRect(24, y, W - 48, ROW - 6);
+      if (mine) { ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2; ctx.strokeRect(24, y, W - 48, ROW - 6); }
+      // Rank
+      ctx.fillStyle = '#94a3b8'; ctx.font = `34px ${BEBAS}`; ctx.textAlign = 'center';
+      ctx.fillText(String(i + 1), 58, y + 44);
+      // Avatar / initials
+      const cx = 118, cy = y + 30, r = 22;
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+      if (avatars[i]) { try { ctx.drawImage(avatars[i], cx - r, cy - r, r * 2, r * 2); } catch (_) { avatars[i] = null; } }
+      if (!avatars[i]) {
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+        ctx.fillStyle = '#94a3b8'; ctx.font = `bold 15px ${SANS}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText((t.owner || '?').trim().split(/\s+/).map(w => w.charAt(0)).join('').slice(0, 3).toUpperCase(), cx, cy + 1);
+        ctx.textBaseline = 'alphabetic';
+      }
+      ctx.restore();
+      ctx.strokeStyle = '#334155'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      // Owner + tier chip
+      ctx.textAlign = 'left'; ctx.fillStyle = mine ? '#f59e0b' : '#f1f5f9'; ctx.font = `bold 24px ${SANS}`;
+      let owner = String(t.owner || 'Team');
+      while (ctx.measureText(owner).width > 330 && owner.length > 3) owner = owner.slice(0, -2) + '…';
+      ctx.fillText(owner, 158, y + 38);
+      const tier = tiers ? tiers.byTeam.get(t) : null;
+      if (tier && tier.label) {
+        const col = tierColor(tier);
+        const label = String(tier.label).toUpperCase();
+        ctx.font = `bold 24px ${SANS}`;
+        const chipX = 158 + Math.min(330, ctx.measureText(owner).width) + 12;
+        ctx.font = `13px ${BEBAS}`;
+        const tw = ctx.measureText(label).width + 16;
+        ctx.fillStyle = col + '22'; ctx.strokeStyle = col; ctx.lineWidth = 1.2;
+        ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(chipX, y + 22, tw, 20, 4); else ctx.rect(chipX, y + 22, tw, 20); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = col; ctx.fillText(label, chipX + 8, y + 37);
+      }
+      // Record line
+      ctx.fillStyle = '#94a3b8'; ctx.font = `14px ${SANS}`;
+      ctx.fillText(`${t.wins || 0}-${t.losses || 0}${t.ties ? '-' + t.ties : ''}${t.fpts ? ' · PF ' + Math.round(t.fpts * 10) / 10 : ''}`, 158, y + 56);
+      // Numbers
+      const s = t.strengthTotal || 0;
+      const sCol = s >= maxS ? '#22c55e' : s >= avgS ? '#4ade80' : s >= avgS * 0.7 ? '#f59e0b' : '#ef4444';
+      ctx.textAlign = 'right';
+      ctx.fillStyle = sCol; ctx.font = `36px ${BEBAS}`; ctx.fillText(String(Math.round(s)), 840, y + 44);
+      ctx.fillStyle = '#e5e7eb'; ctx.font = `28px ${BEBAS}`; ctx.fillText(String(t.lineupPpg || 0), 960, y + 44);
+      ctx.fillStyle = '#cbd5e1'; ctx.font = `22px ${BEBAS}`; ctx.fillText(`${t.wins || 0}-${t.losses || 0}`, 1040, y + 44);
+      ctx.textAlign = 'left';
+    });
+    // Footer
+    ctx.fillStyle = '#1e293b'; ctx.fillRect(24, H - FOOT + 8, W - 48, 1);
+    ctx.fillStyle = '#f59e0b'; ctx.font = `24px ${BEBAS}`; ctx.fillText('MYFANTASYFOOTBALL.CO', 40, H - 26);
+    ctx.fillStyle = '#64748b'; ctx.font = `14px ${SANS}`; ctx.textAlign = 'right';
+    ctx.fillText('Starter-weighted team strength · best-lineup projected PPG · import your league at myfantasyfootball.co → My Teams', W - 40, H - 26);
+    ctx.textAlign = 'left';
+    return c;
+  }
+  async function _mtRenderShareCard() {
+    const box = document.getElementById('mtShareCard');
+    if (!box || !window._mtTeams || !window._mtTeams.length) return;
+    box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Drawing the card…</div>';
+    let canvas = null, dataUrl = null;
+    try {
+      canvas = await _mtDrawShareCanvas(true);
+      dataUrl = canvas.toDataURL('image/png');
+    } catch (e) {
+      // Tainted by a cross-origin avatar host → redraw with initials.
+      try { canvas = await _mtDrawShareCanvas(false); dataUrl = canvas.toDataURL('image/png'); } catch (e2) { console.warn('[MyTeams] share card failed:', e2); }
+    }
+    if (!_mtShareOpen) return;
+    if (!dataUrl) { box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t draw the card in this browser.</div>'; return; }
+    window._mtShareDataUrl = dataUrl;
+    const fname = 'power-rankings-' + String((window._mtLeague || {}).name || 'league').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() + '.png';
+    let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)">SHARE CARD</span>`;
+    html += `<span style="font-size:.6rem;color:var(--text2)">drop it in the league chat · long-press to save on a phone</span>`;
+    html += `<a download="${_esc(fname)}" href="${dataUrl}" style="margin-left:auto;padding:5px 12px;background:var(--accent);color:#000;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;text-decoration:none">DOWNLOAD PNG</a>`;
+    html += `<button onclick="window._mtCopyShareCard(this)" style="padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;cursor:pointer">COPY IMAGE</button>`;
+    html += `<button onclick="window._mtToggleShare()" style="padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
+    html += `</div>`;
+    html += `<img src="${dataUrl}" alt="Power rankings share card" style="display:block;width:100%;max-width:720px;height:auto;border-radius:8px;border:1px solid var(--border)">`;
+    html += `</div>`;
+    box.innerHTML = html;
+  }
+  window._mtCopyShareCard = async function (btn) {
+    try {
+      const url = window._mtShareDataUrl;
+      if (!url || !navigator.clipboard || typeof ClipboardItem === 'undefined') throw new Error('unsupported');
+      const blob = await (await fetch(url)).blob();
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      if (btn) { btn.textContent = '✓ COPIED'; setTimeout(() => { btn.textContent = 'COPY IMAGE'; }, 2500); }
+    } catch (e) {
+      if (btn) { btn.textContent = 'USE DOWNLOAD'; setTimeout(() => { btn.textContent = 'COPY IMAGE'; }, 2500); }
+    }
+  };
 
   window._mtDeleteSavedLeague = function(leagueId) {
     if (!confirm('Remove this saved league?')) return;

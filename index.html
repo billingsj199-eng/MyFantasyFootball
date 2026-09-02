@@ -1464,13 +1464,13 @@ tr:hover .watch-star{opacity:.55}
 .tcv-pos-pill.TE{background:#f59e0b}
 .tcv-pos-pill.K,.tcv-pos-pill.DST{background:#64748b}
 /* WEEKLY matchup chip (vs / @ opponent) — sits under the rank number */
-.tcv-opp-chip{position:absolute;bottom:26px;left:3px;z-index:3;display:inline-flex;align-items:center;gap:2px;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:.5px;line-height:1;padding:1px 3px 1px 4px;border-radius:3px;background:rgba(0,0,0,.66);color:#e2e8f0;border:1px solid rgba(255,255,255,.12);white-space:nowrap;backdrop-filter:blur(2px)}
-.tcv-opp-chip img{width:18px;height:18px;object-fit:contain;display:block;filter:drop-shadow(0 0 1px rgba(0,0,0,.8))}
-.tcv-opp-chip .tcv-opp-pre{font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.9)}
+.tcv-opp-chip{position:absolute;bottom:26px;left:3px;z-index:3;display:inline-flex;align-items:center;gap:2px;font-family:'Bebas Neue',Impact,sans-serif;font-size:12px;letter-spacing:.5px;line-height:1;padding:0;border-radius:0;background:transparent;color:#e2e8f0;border:none;white-space:nowrap}
+.tcv-opp-chip img{width:27px;height:27px;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)) drop-shadow(0 0 3px rgba(0,0,0,.6))}
+.tcv-opp-chip .tcv-opp-pre{font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.8)}
 .tcv-opp-chip.tcv-opp-easy .tcv-opp-pre{color:#4ade80}
 .tcv-opp-chip.tcv-opp-medium .tcv-opp-pre{color:#facc15}
 .tcv-opp-chip.tcv-opp-hard .tcv-opp-pre{color:#f87171}
-.tcv-opp-chip.tcv-opp-bye{color:#94a3b8;padding:2px 4px}
+.tcv-opp-chip.tcv-opp-bye{color:#94a3b8;padding:1px 4px;background:rgba(0,0,0,.6);border-radius:3px}
 /* Weekly: own-team logo moves up under the rank so the matchup chip owns the bottom-left */
 .tcv-card.tcv-card-wk .tcv-card-team{bottom:auto;top:21px}
 /* Per-player reveal cover — sits over the card while it's "covered" */

@@ -21908,8 +21908,19 @@ window.fmtHeight = fmtHeight;
     const pickName = (round === '3rd' || round === '4th') ? `${year} ${rdLabel}` : `${year} ${slotLabel} ${rdLabel}`;
     const entry = D.find(d => d.n === pickName && d._isFuturePick);
     if (entry && typeof window._getTradeValue === 'function') {
-      const v = window._getTradeValue(entry, src, mode);
-      if (v > 1) return v;
+      // Only trust the board value when the pick entry is genuinely placed
+      // inside the draftable range. SF boards carry pick entries at tail
+      // ranks (200+), where the tier ladder prices an Early 1st like a
+      // waiver body (v=8 slipped past the v>1 unplaced guard below).
+      let placed = false;
+      try {
+        const b = window._verBoardFor(src, mode);
+        if (b) { const bi = b.indexOf(D.indexOf(entry)); placed = bi >= 0 && bi < 150; }
+      } catch (_e) {}
+      if (placed) {
+        const v = window._getTradeValue(entry, src, mode);
+        if (v > 1) return v;
+      }
     }
     // Pick entry missing from (or unplaced on) this board — the value curve
     // returns 1 past rank 400, which silently zeroed picks on the baked
@@ -23290,7 +23301,21 @@ window.fmtHeight = fmtHeight;
     _finderRenderResults(out);
   }
 
+  // A league-sourced trade must price in the league's own format — the calc
+  // boots in redraft, which silently mispriced dynasty/SF finder trades.
+  function _tradeApplyLeagueMode(lg) {
+    const f = lg && lg.format;
+    if (!f) return;
+    const dyn = f.type === 'dynasty' || f.type === 'keeper';
+    const m = dyn ? (f.sf ? 'dynastysf' : 'dynasty') : (f.sf ? 'superflex' : 'redraft');
+    if (m === tradeMode) return;
+    const tab = document.querySelector('.trade-mode-tab[data-tmode="' + m + '"]');
+    if (tab) tab.click();
+  }
+
   function _finderLoadIntoCalc(r) {
+    const _lgInfo = _finderGetActiveLeague();
+    if (_lgInfo) _tradeApplyLeagueMode(_lgInfo.league);
     sideA.players = []; sideA.picks = [];
     sideB.players = []; sideB.picks = [];
     r.give.forEach(a => {
@@ -23666,6 +23691,7 @@ window.fmtHeight = fmtHeight;
   if (_calcLeagueSel) {
     _calcLeagueSel.addEventListener('change', () => {
       _finderState.leagueIdx = parseInt(_calcLeagueSel.value) || 0;
+      _tradeApplyLeagueMode((window._mtSavedLeagues || [])[_finderState.leagueIdx]);
       // Sync FIND TRADE tab
       const flSel = document.getElementById('finderLeague');
       if (flSel && flSel.value !== _calcLeagueSel.value) {
@@ -23689,6 +23715,7 @@ window.fmtHeight = fmtHeight;
         _calcLeagueSel.value = _flSelInit.value;
         _calcPopulateTeams();
       }
+      _tradeApplyLeagueMode((window._mtSavedLeagues || [])[parseInt(_flSelInit.value) || 0]);
     });
   }
 
@@ -23709,6 +23736,7 @@ window.fmtHeight = fmtHeight;
             return;
           }
           const r = out.results[0];
+          _tradeApplyLeagueMode(lg);
           sideA.players = []; sideA.picks = [];
           sideB.players = []; sideB.picks = [];
           r.give.forEach(a => {

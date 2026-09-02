@@ -208,13 +208,43 @@
     var schedule = null;
     if (Array.isArray(raw.schedule) && raw.schedule.length) {
       schedule = raw.schedule.map(function (g) {
-        return {
+        var o = {
           week: g.matchupPeriodId,
           home: g.home ? g.home.teamId : null,
           away: g.away ? g.away.teamId : null
         };
+        // Final scores once played (My Teams RESULTS view): hp/ap = points,
+        // w = "HOME" | "AWAY" | "TIE" (UNDECIDED omitted).
+        var hp = g.home && typeof g.home.totalPoints === "number" ? g.home.totalPoints : null;
+        var ap = g.away && typeof g.away.totalPoints === "number" ? g.away.totalPoints : null;
+        if (g.winner && g.winner !== "UNDECIDED" && (hp || ap)) { o.hp = hp; o.ap = ap; o.w = g.winner; }
+        return o;
       }).filter(function (g) { return g.week && g.home != null && g.away != null; });
       if (!schedule.length) schedule = null;
+    }
+
+    // Completed trades from the league activity feed (kona_league_communication
+    // topics the extension attaches as raw.activityTopics; message type 244
+    // = traded player targetId from → to). Names from the roster map when the
+    // player is still rostered; the site gap-fills the rest.
+    var trades = null;
+    if (Array.isArray(raw.activityTopics) && raw.activityTopics.length) {
+      var nameById = {};
+      raw.teams.forEach(function (t) {
+        ((t.roster && t.roster.entries) || []).forEach(function (e) {
+          var p = e.playerPoolEntry && e.playerPoolEntry.player;
+          if (p && p.id != null) nameById[p.id] = p.fullName || null;
+        });
+      });
+      trades = raw.activityTopics.map(function (tp) {
+        return {
+          id: tp.id, date: tp.date || 0,
+          moves: (tp.messages || []).filter(function (m) { return m && m.messageTypeId === 244; }).map(function (m) {
+            return { playerId: m.targetId, from: m.from, to: m.to, name: nameById[m.targetId] || null };
+          })
+        };
+      }).filter(function (t) { return t.moves.length; });
+      if (!trades.length) trades = [];
     }
 
     return {
@@ -231,6 +261,7 @@
       drafted: teams.some(function (t) { return t.roster.length > 0; }),
       draft: draft,
       schedule: schedule,
+      trades: trades,
       teams: teams
     };
   }

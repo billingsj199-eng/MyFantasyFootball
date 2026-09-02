@@ -47275,7 +47275,9 @@ Rules:
       const assets = [];
       Object.entries(tx.adds || {}).forEach(([pid, toRid]) => {
         if (String(toRid) !== String(rid)) return;
-        const name = nameMap[String(pid)] || ('Player ' + pid);
+        // ESPN/Yahoo trades carry their own names (tx._names); Sleeper ids
+        // resolve through the cached player map.
+        const name = (tx._names && tx._names[String(pid)]) || nameMap[String(pid)] || ('Player ' + pid);
         const d = _mtLookupD(name);
         const val = d && typeof window._getTradeValue === 'function' ? Math.round(window._getTradeValue(d, _mtValueSrc, mode)) : 0;
         assets.push({ type: 'p', name: d ? d.n : name, pos: d ? d.s : '', val, matched: !!d });
@@ -47389,15 +47391,16 @@ Rules:
     _mtTradeLogOpen = true;
     box.style.display = '';
     if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
-    if (_mtActiveSource !== 'sleeper' || !_mtActiveSleeperId) {
-      box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Trade log is available for Sleeper leagues.</div>';
+    const _tlId = _mtActiveSource === 'sleeper' ? _mtActiveSleeperId : _mtActiveSource === 'espn' ? _mtActiveEspnId : _mtActiveYahooId;
+    if (!_tlId) {
+      box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Load a league first.</div>';
       return;
     }
-    const key = 'sleeper_' + _mtActiveSleeperId;
+    const key = _mtActiveSource + '_' + _tlId;
     box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Loading trade history…</div>';
     try {
       let trades = _mtTradeLogCache[key];
-      if (!trades) trades = _mtTradeLogCache[key] = await _mtFetchSleeperTrades(_mtActiveSleeperId);
+      if (!trades) trades = _mtTradeLogCache[key] = await _mtFetchTradesFor(_mtActiveSource, _tlId);
       if (!_mtTradeLogOpen) return;
       _mtRenderTradeLog(trades, { key, box, teams: window._mtTeams || [], mode: _mtGetRankingMode(), mine: !!((_mtTradeLogCtx[key] || {}).mine) });
     } catch (err) {
@@ -47406,9 +47409,101 @@ Rules:
     }
   };
 
+  // ── ESPN + Yahoo trade sources (Jack 2026-09-02: "trade log for ESPN and
+  // Yahoo") — both normalize to the Sleeper transaction shape _mtPriceTrade
+  // already prices: { roster_ids:[teamIds], adds:{assetKey: toTeamId},
+  // _names:{assetKey: name}, draft_picks:[], status_updated: ms }.
+  //   ESPN: the league activity feed (kona_league_communication with the
+  //   X-Fantasy-Filter header — lm-api-reads preflights it fine); message
+  //   type 244 = traded player (targetId) from → to. Public leagues fetch
+  //   here; private ones come through the extension payload's `trades`
+  //   block (ESPN Helper 0.20.25+). Names: roster map → players_wl gap-fill.
+  //   Yahoo: the league's transactions page (?transactionsfilter=trade)
+  //   through yahooProxy, parsed by yahoo_normalize.js.
+  async function _mtFetchTradesFor(src, id, lgSnapshot) {
+    if (src === 'sleeper') return _mtFetchSleeperTrades(id);
+    if (src === 'espn') return _mtFetchEspnTrades(id, lgSnapshot);
+    if (src === 'yahoo') return _mtFetchYahooTrades(id, lgSnapshot);
+    throw new Error('unknown league source');
+  }
+  window._mtFetchTradesFor = _mtFetchTradesFor; // debug/harness hook
+  const _MT_ESPN_ACTIVITY_FILTER = JSON.stringify({ topics: { filterType: { value: ['ACTIVITY_TRANSACTIONS'] }, limit: 250, limitPerMessageSet: { value: 25 }, offset: 0, sortMessageDate: { sortPriority: 1, sortAsc: false }, sortFor: { sortPriority: 2, sortAsc: false }, filterIncludeMessageTypeIds: { value: [244] } } });
+  function _mtEspnTradesFromMoves(list, nameOf) {
+    // list: [{id, date, moves:[{playerId, from, to, name?}]}] (extension
+    // payload block, or the site's own topic conversion)
+    return (list || []).map(tp => {
+      const rids = new Set(), adds = {}, names = {};
+      (tp.moves || []).forEach(m => {
+        if (m.playerId == null || m.to == null) return;
+        if (m.from != null) rids.add(String(m.from));
+        rids.add(String(m.to));
+        const k = 'e' + m.playerId;
+        adds[k] = String(m.to);
+        names[k] = m.name || nameOf(m.playerId) || ('ESPN #' + m.playerId);
+      });
+      if (!Object.keys(adds).length) return null;
+      return { transaction_id: 'espn_' + (tp.id || tp.date), type: 'trade', status: 'complete', roster_ids: [...rids], adds, draft_picks: [], status_updated: tp.date || 0, leg: 0, _names: names };
+    }).filter(Boolean).sort((a, b) => (b.status_updated || 0) - (a.status_updated || 0));
+  }
+  function _mtEspnTopicsToMoves(topics) {
+    return (topics || []).map(tp => ({
+      id: tp.id, date: tp.date || 0,
+      moves: (tp.messages || []).filter(m => m && m.messageTypeId === 244).map(m => ({ playerId: m.targetId, from: m.from, to: m.to }))
+    })).filter(t => t.moves.length);
+  }
+  async function _mtFetchEspnTrades(leagueId, lgSnapshot) {
+    const season = _mtEspnSeason();
+    const extLg = _mtEspnLeagues && _mtEspnLeagues[String(leagueId)];
+    // Name map: extension/direct payload rosters first, then the loaded or
+    // saved snapshot (names already resolved), then ESPN's players list.
+    const pmap = {};
+    if (extLg) (extLg.teams || []).forEach(t => (t.roster || []).forEach(r => { if (r && r.espnId != null) pmap[r.espnId] = { name: r.name }; }));
+    let needWl = false;
+    const nameOf = pid => (pmap[pid] && pmap[pid].name) || null;
+    let moves = null;
+    if (extLg && Array.isArray(extLg.trades)) moves = extLg.trades;
+    if (!moves) {
+      const resp = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + season + '/segments/0/leagues/' + leagueId + '?view=kona_league_communication',
+        { headers: { 'X-Fantasy-Filter': _MT_ESPN_ACTIVITY_FILTER } });
+      if (resp.status === 401) throw new Error('this league is private — re-export it with the MFF ESPN extension (v0.20.25+) and the trades come along');
+      if (!resp.ok) throw new Error('ESPN returned ' + resp.status);
+      const raw0 = await resp.json();
+      const raw = Array.isArray(raw0) ? raw0[0] : raw0;
+      moves = _mtEspnTopicsToMoves(raw && raw.topics);
+    }
+    moves.forEach(tp => tp.moves.forEach(m => { if (!m.name && !nameOf(m.playerId)) needWl = true; }));
+    if (needWl) await _mtEspnPlayersWlInto(pmap, season);
+    return _mtEspnTradesFromMoves(moves, nameOf);
+  }
+  async function _mtFetchYahooTrades(leagueId, lgSnapshot) {
+    await _mtLoadYahooNormalizer();
+    const N = window.MFF_YAHOO;
+    if (!N || typeof N.parseTransactionsDoc !== 'function') throw new Error('Yahoo parser not loaded — refresh the page');
+    const resp = await _mtYahooProxyFetch('https://football.fantasysports.yahoo.com/f1/' + leagueId + '/transactions?transactionsfilter=trade');
+    const doc = new DOMParser().parseFromString(await resp.text(), 'text/html');
+    const teams = (window._mtTeams && _mtActiveSource === 'yahoo' && String(_mtActiveYahooId) === String(leagueId)) ? window._mtTeams : ((lgSnapshot && lgSnapshot.teams) || []);
+    const teamNames = {};
+    teams.forEach(t => { teamNames[String(t.id)] = t.owner; });
+    const rows = N.parseTransactionsDoc(doc, String(leagueId), teamNames);
+    return rows.map(r => {
+      const rids = new Set(), adds = {}, names = {};
+      (r.players || []).forEach(p => {
+        if (p.to == null) return;
+        rids.add(String(p.to));
+        if (p.from != null) rids.add(String(p.from));
+        const k = 'y' + p.playerId;
+        adds[k] = String(p.to);
+        names[k] = p.name;
+      });
+      (r.teamIds || []).forEach(id => rids.add(String(id)));
+      if (!Object.keys(adds).length) return null;
+      return { transaction_id: 'yahoo_' + r.key, type: 'trade', status: 'complete', roster_ids: [...rids], adds, draft_picks: [], status_updated: r.date || 0, leg: 0, _names: names };
+    }).filter(Boolean);
+  }
+
   // Saved-card trade log (Jack 2026-09-02: "show the trade log on the
   // saved league cards too") — same fetch/render, but teams + mode come
-  // from the snapshot so nothing has to be loaded into view. Sleeper only.
+  // from the snapshot so nothing has to be loaded into view.
   function _mtModeForFormat(f) {
     if (!f) return 'redraft';
     if (f.type === 'dynasty' && f.sf) return 'dynastysf';
@@ -47424,10 +47519,15 @@ Rules:
     if (box.style.display !== 'none') { box.style.display = 'none'; return; }
     box.style.display = '';
     const key = 'saved_' + leagueId;
-    if (!_mtTradeLogCache['sleeper_' + leagueId]) box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:6px 0">Loading trade history…</div>';
+    // Saved ids are 'espn_<id>' / 'yahoo_<id>' / bare Sleeper id → same
+    // cache keys the loaded-league panel uses.
+    const _src = leagueId.indexOf('espn_') === 0 ? 'espn' : leagueId.indexOf('yahoo_') === 0 ? 'yahoo' : 'sleeper';
+    const _pid = leagueId.replace(/^(espn|yahoo)_/, '');
+    const _ck = _src + '_' + _pid;
+    if (!_mtTradeLogCache[_ck]) box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:6px 0">Loading trade history…</div>';
     try {
-      let trades = _mtTradeLogCache['sleeper_' + leagueId];
-      if (!trades) trades = _mtTradeLogCache['sleeper_' + leagueId] = await _mtFetchSleeperTrades(leagueId);
+      let trades = _mtTradeLogCache[_ck];
+      if (!trades) trades = _mtTradeLogCache[_ck] = await _mtFetchTradesFor(_src, _pid, lg);
       if (box.style.display === 'none') return;
       _mtTradeLogCache[key] = trades;
       // Score the snapshot under its own format so picks carry projected
@@ -47980,7 +48080,13 @@ Rules:
     _mtActivityOpen = false;
     const _ac = document.getElementById('mtActivity');
     if (_ac) { _ac.style.display = 'none'; _ac.innerHTML = ''; }
+    _mtResultsOpen = false;
+    const _rs = document.getElementById('mtResults');
+    if (_rs) { _rs.style.display = 'none'; _rs.innerHTML = ''; }
     _mtRenderTeamList(teams);
+    // Value history: one point per day per value source for the saved
+    // snapshot of this league (posRanks/strength were just computed).
+    try { const _hl = _mtActiveSavedLeague(); if (_hl) _mtRecordHistoryPoint(_hl, teams); } catch (e) { console.warn('[MyTeams] history point failed:', e); }
 
     // Update format display
     const fmtEl = document.getElementById('mtFormatDisplay');
@@ -48408,10 +48514,17 @@ Rules:
           html += `<button onclick="window._mtToggleActivity()" title="Roster moves and standings changes since your last visit" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${acActive ? '#fbbf24' : _acNew ? '#fbbf24' : 'var(--border)'};background:${acActive ? '#fbbf24' : 'var(--surface)'};color:${acActive ? '#000' : _acNew ? '#fbbf24' : 'var(--text2)'}">ACTIVITY${_acNew ? ' · ' + _acNew + ' NEW' : ''}</button>`;
         }
       }
-      // Trade log — Sleeper only (transactions API); offseason trades included.
-      if (_mtActiveSource === 'sleeper' && _mtActiveSleeperId) {
+      // Trade log — Sleeper transactions API / ESPN activity feed / Yahoo
+      // transactions page; offseason trades included.
+      if ((_mtActiveSource === 'sleeper' && _mtActiveSleeperId) || (_mtActiveSource === 'espn' && _mtActiveEspnId) || (_mtActiveSource === 'yahoo' && _mtActiveYahooId)) {
         const tlActive = _mtTradeLogOpen;
         html += `<button onclick="window._mtToggleTradeLog()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${tlActive ? '#38bdf8' : 'var(--border)'};background:${tlActive ? '#38bdf8' : 'var(--surface)'};color:${tlActive ? '#000' : 'var(--text2)'}">TRADE LOG</button>`;
+      }
+      // Results — completed weeks (Sleeper matchups / ESPN schedule scores);
+      // shows once a week is in the books, or for a past-season league.
+      if (_mtResultsAvailable()) {
+        const rsActive = _mtResultsOpen;
+        html += `<button onclick="window._mtToggleResults()" title="Week-by-week scores, all-play record and luck" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${rsActive ? '#c084fc' : 'var(--border)'};background:${rsActive ? '#c084fc' : 'var(--surface)'};color:${rsActive ? '#000' : 'var(--text2)'}">RESULTS</button>`;
       }
       // Matchups — Sleeper API / ESPN schedule payload (Yahoo lacks a
       // proxy-reachable scoreboard); in-season or published week only.
@@ -48507,6 +48620,9 @@ Rules:
     // Team tiers: a chip per row (labels come from value × PPG, so they
     // aren't contiguous in any sort order — no group headers).
     const _tierInfo = _mtTeamTiers(teams);
+    // Value-history source for the trend cells (the saved snapshot of the
+    // loaded league, if any).
+    const _trendLg = _mtActiveSavedLeague();
 
     sorted.forEach((t, i) => {
       const sc = t.score;
@@ -48547,6 +48663,8 @@ Rules:
       html += `</div>`;
       // Position scores mini + picks for dynasty (wraps under the name on mobile — .mt-pr-stats)
       html += `<div class="mt-pr-stats" style="display:flex;gap:4px">`;
+      // Value trend sparkline (saved leagues; needs 2+ days of history)
+      html += _mtTrendCellHtml(_trendLg, t);
       // PPG mini display
       const ppgVal = t.lineupPpg || 0;
       const ppgHighlight = _mtSortBy === 'ppg' ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
@@ -49291,6 +49409,9 @@ Rules:
         // Playoff shape (Sleeper settings) — consumers default wk15 / 6 teams.
         playoffStart: league.playoffStart || (existing[leagueId] && existing[leagueId].playoffStart) || null,
         playoffTeams: league.playoffTeams || (existing[leagueId] && existing[leagueId].playoffTeams) || null,
+        // Value history (daily points written by _mtRecordHistoryPoint) —
+        // never wiped by a roster re-save.
+        history: (existing[leagueId] && Array.isArray(existing[leagueId].history)) ? existing[leagueId].history : null,
         // fmtOverride: background auto-commits pass the league's own format —
         // this callback runs async, so the _mtFormat global may belong to
         // whichever league is active by then.
@@ -49637,7 +49758,7 @@ Rules:
         if (_sum) html += `<div style="font-size:.62rem;color:#fbbf24;margin-top:3px"><span style="font-weight:700">● Since your last visit:</span> ${_esc(_sum)}</div>`;
       }
       html += `</div>`;
-      const _isSleeperLg = !!lg.leagueId && !isEspnId && !isYahooId;
+      const _isSleeperLg = !!lg.leagueId; // every source has a trade log now (Sleeper API / ESPN feed / Yahoo page)
       if (_isSleeperLg) html += `<button onclick="event.stopPropagation();window._mtToggleSavedTradeLog(${i})" title="League trade history, priced on your value board" style="padding:6px 10px;background:var(--surface2);color:#38bdf8;border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;cursor:pointer">TRADES</button>`;
       html += `<button onclick="event.stopPropagation();window._mtLoadSavedLeague(${i})" style="padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;cursor:pointer">LOAD</button>`;
       html += `<button onclick="event.stopPropagation();window._mtDeleteSavedLeague('${_esc(lg.leagueId)}')" title="Remove this saved league" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;color:#ef4444;cursor:pointer;font-weight:700">✕</button>`;
@@ -49715,6 +49836,7 @@ Rules:
         _mtComputePosRanks(teams);
         const tiers = _mtTeamTiers(teams);
         const me = teams.find(t => t.isMyTeam);
+        try { _mtRecordHistoryPoint(lg, teams); } catch (_) {}
         if (me) {
           const byStrength = teams.slice().sort((a, b) => (b.strengthTotal || 0) - (a.strengthTotal || 0));
           info = {
@@ -49785,9 +49907,17 @@ Rules:
     html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">`;
     rows.forEach(x => {
       const tier = x.info.tier;
+      // Rank movement vs the oldest history point in the last 30 days.
+      const me = (x.lg.teams || []).find(t => t && t.isMyTeam);
+      const tr = me ? _mtTeamTrend(x.lg, me) : null;
+      let moveHtml = '';
+      if (tr && tr.rankFrom != null && tr.rankFrom !== x.info.rank) {
+        const up = x.info.rank < tr.rankFrom;
+        moveHtml = `<span title="Was ${_mtOrdinal(tr.rankFrom)} ${tr.days} day${tr.days === 1 ? '' : 's'} ago" style="font-weight:700;color:${up ? '#22c55e' : '#ef4444'}">${up ? '▲' : '▼'} from ${_mtOrdinal(tr.rankFrom)}</span>`;
+      }
       html += `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.66rem;color:var(--text2)">` +
         `<span style="font-weight:600;color:var(--text)">${_esc(x.lg.name || 'League')}</span>` +
-        `<span>${_mtOrdinal(x.info.rank)} of ${x.info.n}</span>${tier ? _mtTeamTierChip(tier) : ''}</span>`;
+        `<span>${_mtOrdinal(x.info.rank)} of ${x.info.n}</span>${moveHtml}${tier ? _mtTeamTierChip(tier) : ''}</span>`;
     });
     html += `</div>`;
     box.innerHTML = html;
@@ -50415,6 +50545,255 @@ Rules:
     }
     html += `</div>`;
     box.innerHTML = html;
+  }
+
+  // ── VALUE HISTORY (Jack 2026-09-02: "value history sparkline per team") ──
+  // One point per day per value source per saved league: {d:'YYYY-MM-DD',
+  // s: valueSrc, t: {teamId: [strengthTotal, lineupPpg, rank]}}, capped at
+  // 60 points, stored as `history` on the saved snapshot (merge write, so a
+  // roster re-save never wipes it — _mtSaveLeagueToCloud carries it). Points
+  // are written whenever a league is scored with posRanks (league load,
+  // saved-card render); background refreshes don't score, so nothing is
+  // written from them. Trend = latest vs the oldest point inside 30 days
+  // for the SAME value source.
+  const _MT_HISTORY_MAX = 60;
+  const _mtHistoryWriteAt = {};
+  function _mtDayKey(dt) { const d = dt || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function _mtRecordHistoryPoint(lg, teams) {
+    if (!lg || !Array.isArray(teams) || !teams.length) return;
+    if (!teams.some(t => t && t.strengthTotal != null)) return;
+    const key = String(lg.leagueId || '');
+    if (!key) return;
+    const byStrength = teams.slice().sort((a, b) => (b.strengthTotal || 0) - (a.strengthTotal || 0));
+    const pt = { d: _mtDayKey(), s: _mtValueSrc, t: {} };
+    teams.forEach(t => {
+      if (!t || t.id == null) return;
+      pt.t[String(t.id)] = [Math.round(t.strengthTotal || 0), Math.round((t.lineupPpg || 0) * 10) / 10, byStrength.indexOf(t) + 1];
+    });
+    const hist = Array.isArray(lg.history) ? lg.history.slice() : [];
+    const idx = hist.findIndex(h => h && h.d === pt.d && h.s === pt.s);
+    if (idx >= 0) {
+      if (JSON.stringify(hist[idx].t) === JSON.stringify(pt.t)) return; // nothing moved today
+      hist[idx] = pt;
+    } else hist.push(pt);
+    while (hist.length > _MT_HISTORY_MAX) hist.shift();
+    lg.history = hist;
+    if (_mtHistoryWriteAt[key] && Date.now() - _mtHistoryWriteAt[key] < 10 * 60 * 1000) return;
+    _mtHistoryWriteAt[key] = Date.now();
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user) return;
+    db.collection('user_game_data').doc(user.uid).set({ savedLeagues: { [key]: { history: hist } } }, { merge: true })
+      .catch(e => console.warn('[MyTeams] history write failed:', e));
+  }
+  function _mtTeamTrend(lg, t) {
+    if (!lg || !t || t.id == null || !Array.isArray(lg.history)) return null;
+    const id = String(t.id);
+    const pts = lg.history.filter(h => h && h.s === _mtValueSrc && h.t && h.t[id]).map(h => ({ d: h.d, v: h.t[id][0], p: h.t[id][1], r: h.t[id][2] }));
+    if (pts.length < 2) return null;
+    const last = pts[pts.length - 1];
+    const cutKey = _mtDayKey(new Date(Date.now() - 30 * 86400000));
+    let base = pts.find(p => p.d >= cutKey) || pts[0];
+    if (base === last) base = pts[pts.length - 2];
+    const days = Math.max(0, Math.round((new Date(last.d) - new Date(base.d)) / 86400000));
+    return { pts: pts.slice(-30), delta: last.v - base.v, ppgDelta: Math.round((last.p - base.p) * 10) / 10, rankFrom: base.r, rankNow: last.r, days };
+  }
+  function _mtTrendCellHtml(lg, t) {
+    const tr = _mtTeamTrend(lg, t);
+    if (!tr) return '';
+    const vals = tr.pts.map(p => p.v);
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const W = 52, H = 16;
+    const xy = vals.map((v, i) => {
+      const x = vals.length > 1 ? (i / (vals.length - 1)) * (W - 2) + 1 : W / 2;
+      const y = hi > lo ? H - 1 - ((v - lo) / (hi - lo)) * (H - 2) : H / 2;
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    }).join(' ');
+    const col = tr.delta > 0 ? '#22c55e' : tr.delta < 0 ? '#ef4444' : 'var(--text2)';
+    const tip = `Value trend (${_mtValueSrc}) over ${tr.days} day${tr.days === 1 ? '' : 's'}: ${tr.delta >= 0 ? '+' : ''}${tr.delta} strength · PPG ${tr.ppgDelta >= 0 ? '+' : ''}${tr.ppgDelta} · rank ${_mtOrdinal(tr.rankFrom)} → ${_mtOrdinal(tr.rankNow)}`;
+    return `<div class="mt-pr-trend" title="${_esc(tip)}" style="text-align:center;min-width:${W}px;cursor:help"><div style="font-size:.5rem;color:var(--text2)">TREND</div>` +
+      `<div style="display:flex;align-items:center;justify-content:center;gap:3px"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block"><polyline fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="${xy}"/></svg>` +
+      `<span style="font-size:.6rem;font-weight:700;color:${col}">${tr.delta > 0 ? '▲' + tr.delta : tr.delta < 0 ? '▼' + Math.abs(tr.delta) : 'flat'}</span></div></div>`;
+  }
+
+  // ── RESULTS (Jack 2026-09-02: "past results view") ─────────────────────
+  // Completed weeks only: Sleeper matchups (points per roster per week) or
+  // the ESPN schedule with final scores (payload hp/ap/w from the normalizer,
+  // or an anonymous mMatchup fetch for public leagues). Per team: record,
+  // PF/PA, ALL-PLAY record (vs every team every week), expected wins from
+  // all-play, luck = actual − expected. Yahoo has no proxy-reachable
+  // scoreboard (same gap as MATCHUPS).
+  let _mtResultsOpen = false;
+  const _mtResultsCache = {};
+  function _mtCompletedWeekCap() {
+    const now = new Date();
+    const curSeason = now.getMonth() < 7 ? now.getFullYear() - 1 : now.getFullYear();
+    const lgSeason = parseInt((window._mtLeague || {}).season, 10);
+    if (isFinite(lgSeason) && lgSeason < curSeason) return 19;
+    if (isFinite(lgSeason) && lgSeason === curSeason && now.getMonth() < 7) return 19; // season finished (Jan–Jun)
+    const off = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
+    const wk = window._weeklyActiveWeek || 0;
+    return (!off && wk) ? wk : 0; // in week N, weeks 1..N-1 are complete
+  }
+  function _mtResultsAvailable() {
+    if (!((_mtActiveSource === 'sleeper' && _mtActiveSleeperId) || (_mtActiveSource === 'espn' && _mtActiveEspnId))) return false;
+    return _mtCompletedWeekCap() > 1;
+  }
+  async function _mtFetchResults() {
+    const cap = _mtCompletedWeekCap();
+    const teams = window._mtTeams || [];
+    const byId = {};
+    teams.forEach(t => { byId[String(t.id)] = t; });
+    const games = [];
+    if (_mtActiveSource === 'sleeper') {
+      const leagueId = _mtActiveSleeperId;
+      const weeks = [];
+      for (let w = 1; w < Math.min(cap, 19); w++) weeks.push(w);
+      const lists = await Promise.all(weeks.map(w => fetch(`https://api.sleeper.app/v1/league/${leagueId}/matchups/${w}`).then(r => r.ok ? r.json() : []).catch(() => [])));
+      lists.forEach((rows, i) => {
+        const groups = {};
+        (rows || []).forEach(r => { if (r && r.matchup_id != null) (groups[r.matchup_id] = groups[r.matchup_id] || []).push(r); });
+        Object.values(groups).forEach(g => {
+          if (g.length !== 2) return;
+          const a = byId[String(g[0].roster_id)], b = byId[String(g[1].roster_id)];
+          const pa = Number(g[0].points) || 0, pb = Number(g[1].points) || 0;
+          if (a && b && (pa > 0 || pb > 0)) games.push({ wk: i + 1, a, b, pa, pb });
+        });
+      });
+      return games;
+    }
+    if (_mtActiveSource === 'espn') {
+      const leagueId = _mtActiveEspnId;
+      const extLg = _mtEspnLeagues && _mtEspnLeagues[String(leagueId)];
+      let sched = (extLg && extLg.schedule) || _mtSavedSchedule(leagueId);
+      if (!sched || !sched.some(g => g.w)) {
+        const resp = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + _mtEspnSeason() + '/segments/0/leagues/' + leagueId + '?view=mMatchup');
+        if (resp.status === 401) throw new Error('this league is private — re-export it with the MFF ESPN extension (v0.20.25+) and the scores come along');
+        if (!resp.ok) throw new Error('ESPN returned ' + resp.status);
+        const raw0 = await resp.json();
+        const raw = Array.isArray(raw0) ? raw0[0] : raw0;
+        sched = ((raw && raw.schedule) || []).map(g => ({
+          week: g.matchupPeriodId, home: g.home ? g.home.teamId : null, away: g.away ? g.away.teamId : null,
+          hp: g.home ? g.home.totalPoints : null, ap: g.away ? g.away.totalPoints : null,
+          w: (g.winner && g.winner !== 'UNDECIDED') ? g.winner : null
+        }));
+      }
+      sched.forEach(g => {
+        if (!g.w || !g.week || g.week >= cap) return;
+        const a = byId[String(g.home)], b = byId[String(g.away)];
+        if (a && b) games.push({ wk: g.week, a, b, pa: Number(g.hp) || 0, pb: Number(g.ap) || 0 });
+      });
+      return games;
+    }
+    throw new Error('results aren\'t available for Yahoo leagues yet');
+  }
+  window._mtToggleResults = async function () {
+    const box = document.getElementById('mtResults');
+    if (!box) return;
+    if (_mtResultsOpen) {
+      _mtResultsOpen = false;
+      box.style.display = 'none';
+      if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+      return;
+    }
+    _mtResultsOpen = true;
+    box.style.display = '';
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+    box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Loading results…</div>';
+    try {
+      const cacheKey = _mtActiveSource + '_' + (_mtActiveSleeperId || _mtActiveEspnId) + '_' + _mtCompletedWeekCap();
+      let games = _mtResultsCache[cacheKey];
+      if (!games) games = _mtResultsCache[cacheKey] = await _mtFetchResults();
+      if (!_mtResultsOpen) return;
+      box.innerHTML = _mtBuildResultsHtml(games);
+    } catch (err) {
+      console.warn('[MyTeams] Results error:', err);
+      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t load results: ' + _esc(err.message) + '</div>';
+    }
+  };
+  function _mtBuildResultsHtml(games) {
+    const teams = window._mtTeams || [];
+    const r1 = v => Math.round(v * 10) / 10;
+    let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#c084fc">RESULTS</span>`;
+    html += `<span style="font-size:.6rem;color:var(--text2)">completed weeks · all-play = your record if you'd played every team each week · luck = actual wins − all-play expected wins</span>`;
+    html += `<button onclick="window._mtToggleResults()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
+    html += `</div>`;
+    if (!games.length) {
+      html += `<div style="font-size:.72rem;color:var(--text2)">No completed weeks yet — results land here once Week 1 is final.</div></div>`;
+      return html;
+    }
+    const stat = new Map();
+    teams.forEach(t => stat.set(t, { w: 0, l: 0, t: 0, pf: 0, pa: 0, apW: 0, apL: 0, exp: 0, weeks: {} }));
+    const byWeek = {};
+    games.forEach(g => { (byWeek[g.wk] = byWeek[g.wk] || []).push(g); });
+    const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b);
+    weeks.forEach(wk => {
+      const scores = [];
+      byWeek[wk].forEach(g => {
+        const sa = stat.get(g.a), sb = stat.get(g.b);
+        if (!sa || !sb) return;
+        sa.pf += g.pa; sa.pa += g.pb; sb.pf += g.pb; sb.pa += g.pa;
+        if (g.pa > g.pb) { sa.w++; sb.l++; } else if (g.pb > g.pa) { sb.w++; sa.l++; } else { sa.t++; sb.t++; }
+        sa.weeks[wk] = { opp: g.b, my: g.pa, their: g.pb };
+        sb.weeks[wk] = { opp: g.a, my: g.pb, their: g.pa };
+        scores.push([g.a, g.pa], [g.b, g.pb]);
+      });
+      const n = scores.length;
+      scores.forEach(([t, s]) => {
+        const st = stat.get(t);
+        if (!st || n < 2) return;
+        let w = 0, l = 0;
+        scores.forEach(([o, os]) => { if (o === t) return; if (s > os) w++; else if (s < os) l++; });
+        st.apW += w; st.apL += l; st.exp += w / (n - 1);
+        st.weeks[wk].apRank = 1 + scores.filter(([o, os]) => o !== t && os > s).length;
+        st.weeks[wk].n = n;
+      });
+    });
+    const me = teams.find(t => t.isMyTeam);
+    if (me && stat.get(me)) {
+      const st = stat.get(me);
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--text2);margin-bottom:4px">YOUR SEASON · ${st.w}-${st.l}${st.t ? '-' + st.t : ''} · all-play ${st.apW}-${st.apL}</div>`;
+      html += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">`;
+      weeks.forEach(wk => {
+        const g = st.weeks[wk];
+        if (!g) { html += `<div style="padding:5px 8px;border:1px dashed var(--border);border-radius:6px;font-size:.62rem;color:var(--text2)">WK ${wk}<br>bye</div>`; return; }
+        const won = g.my > g.their, tie = g.my === g.their;
+        const col = tie ? 'var(--text2)' : won ? '#22c55e' : '#ef4444';
+        html += `<div title="Week ${wk} vs ${_esc(g.opp.owner)} · ${_mtOrdinal(g.apRank || 0)} highest score of ${g.n || '?'}" style="padding:5px 8px;border:1px solid ${col}55;background:${col}12;border-radius:6px;font-size:.62rem;color:var(--text2);min-width:74px">` +
+          `<div style="display:flex;justify-content:space-between;gap:6px"><span>WK ${wk}</span><span style="font-weight:700;color:${col}">${tie ? 'T' : won ? 'W' : 'L'}</span></div>` +
+          `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:var(--text)">${r1(g.my)} <span style="color:var(--text2)">– ${r1(g.their)}</span></div>` +
+          `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px">vs ${_esc(g.opp.owner)}</div></div>`;
+      });
+      html += `</div>`;
+    }
+    // League table
+    const rows = teams.map(t => ({ t, s: stat.get(t) })).filter(x => x.s && (x.s.w + x.s.l + x.s.t) > 0)
+      .map(x => Object.assign(x, { luck: r1(x.s.w - x.s.exp) }))
+      .sort((x, y) => (y.s.w - x.s.w) || (y.s.pf - x.s.pf));
+    const luckiest = rows.slice().sort((x, y) => y.luck - x.luck)[0];
+    const unluckiest = rows.slice().sort((x, y) => x.luck - y.luck)[0];
+    if (luckiest && unluckiest && luckiest !== unluckiest) {
+      html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:.66rem;color:var(--text2)">` +
+        `<span style="padding:3px 8px;border:1px solid #22c55e55;border-radius:5px">🍀 Luckiest: <b style="color:var(--text)">${_esc(luckiest.t.owner)}</b> <span style="color:#22c55e;font-weight:700">+${luckiest.luck}</span> wins over all-play</span>` +
+        `<span style="padding:3px 8px;border:1px solid #ef444455;border-radius:5px">😤 Unluckiest: <b style="color:var(--text)">${_esc(unluckiest.t.owner)}</b> <span style="color:#ef4444;font-weight:700">${unluckiest.luck}</span> wins vs all-play</span></div>`;
+    }
+    html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.7rem;min-width:520px">`;
+    html += `<thead><tr style="color:var(--text2);font-size:.55rem;letter-spacing:.5px;text-align:right"><th style="text-align:left;padding:4px 6px">#</th><th style="text-align:left;padding:4px 6px">TEAM</th><th style="padding:4px 6px">W-L</th><th style="padding:4px 6px">PF</th><th style="padding:4px 6px">PA</th><th style="padding:4px 6px" title="Record vs every team every week">ALL-PLAY</th><th style="padding:4px 6px" title="Actual wins minus all-play expected wins">LUCK</th></tr></thead><tbody>`;
+    rows.forEach((x, i) => {
+      const mine = x.t.isMyTeam;
+      const lc = x.luck > 0.5 ? '#22c55e' : x.luck < -0.5 ? '#ef4444' : 'var(--text2)';
+      html += `<tr style="border-top:1px solid var(--border);text-align:right;${mine ? 'background:rgba(245,158,11,.08)' : ''}">` +
+        `<td style="text-align:left;padding:5px 6px;color:var(--text2)">${i + 1}</td>` +
+        `<td style="text-align:left;padding:5px 6px;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${_mtTeamLogoHtml(x.t, 18)}<span style="font-weight:${mine ? 700 : 600};color:${mine ? 'var(--accent)' : 'var(--text)'}">${_esc(x.t.owner)}</span></span></td>` +
+        `<td style="padding:5px 6px;font-weight:700;color:var(--text)">${x.s.w}-${x.s.l}${x.s.t ? '-' + x.s.t : ''}</td>` +
+        `<td style="padding:5px 6px">${r1(x.s.pf)}</td><td style="padding:5px 6px">${r1(x.s.pa)}</td>` +
+        `<td style="padding:5px 6px">${x.s.apW}-${x.s.apL}</td>` +
+        `<td style="padding:5px 6px;font-weight:700;color:${lc}">${x.luck > 0 ? '+' : ''}${x.luck}</td></tr>`;
+    });
+    html += `</tbody></table></div></div>`;
+    return html;
   }
 
   window._mtDeleteSavedLeague = function(leagueId) {

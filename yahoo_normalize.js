@@ -196,9 +196,93 @@
     };
   }
 
+  // Transactions page (/f1/<id>/transactions?transactionsfilter=trade) →
+  // completed trades for the site's My Teams trade log. Rows are the
+  // .Tst-transaction-table <tr>s whose icon cell is titled "Trade"; each
+  // player anchor (sports.yahoo.com/nfl/players/<id>) sits in a div with an
+  // <h6> caption. Destination team: an "…to <Team>" caption matching a
+  // league team name wins; otherwise the nearest team link (/f1/<id>/<tid>)
+  // before the player inside the same cell; otherwise the row's first team.
+  // teamNames = {teamId: name} from the site's league (optional).
+  function parseTransactionsDoc(doc, leagueId, teamNames) {
+    teamNames = teamNames || {};
+    var out = [];
+    var table = doc.querySelector(".Tst-transaction-table") || doc;
+    var rows = table.querySelectorAll("tr");
+    var teamRe = new RegExp("/f1/" + leagueId + "/(\\d+)(?:$|[/?#])");
+    var playerRe = /sports\.yahoo\.com\/nfl\/players\/(\d+)(?:$|[/?#])/;
+    var nameToId = {};
+    Object.keys(teamNames).forEach(function (id) { nameToId[String(teamNames[id]).trim().toLowerCase()] = id; });
+    var now = new Date();
+    function parseWhen(txt) {
+      var m = String(txt || "").match(/([A-Z][a-z]{2})\s+(\d{1,2})(?:,\s*(\d{4}))?(?:,?\s*(\d{1,2}):(\d{2})\s*(am|pm))?/i);
+      if (!m) return 0;
+      var months = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+      var mo = months[m[1].toLowerCase()];
+      if (mo == null) return 0;
+      var yr = m[3] ? parseInt(m[3], 10) : now.getFullYear();
+      if (!m[3] && mo > now.getMonth()) yr -= 1; // no year printed → most recent past occurrence
+      var hh = m[4] ? parseInt(m[4], 10) % 12 + (/pm/i.test(m[6] || "") ? 12 : 0) : 12;
+      return new Date(yr, mo, parseInt(m[2], 10), hh, m[5] ? parseInt(m[5], 10) : 0).getTime();
+    }
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var cells = row.querySelectorAll("td");
+      if (cells.length < 2) continue;
+      var titles = [];
+      var titled = cells[0].querySelectorAll("[title]");
+      for (var t = 0; t < titled.length; t++) titles.push(titled[t].getAttribute("title") || "");
+      if (!/trade/i.test(titles.join(" ") + " " + cells[0].textContent)) continue;
+      var teamIds = [];
+      var anchors = row.querySelectorAll("a");
+      for (var a = 0; a < anchors.length; a++) {
+        var tm = (anchors[a].getAttribute("href") || "").match(teamRe);
+        if (tm && teamIds.indexOf(tm[1]) < 0 && anchors[a].textContent.trim()) teamIds.push(tm[1]);
+      }
+      var players = [];
+      for (var p = 0; p < anchors.length; p++) {
+        var pa = anchors[p];
+        var pm = (pa.getAttribute("href") || "").match(playerRe);
+        if (!pm || !pa.textContent.trim()) continue;
+        var box = pa.parentElement;
+        var h6 = box ? box.querySelector("h6") : null;
+        var cap = h6 ? h6.textContent.replace(/\s+/g, " ").trim() : "";
+        var to = null, from = null;
+        var toM = cap.match(/to\s+(.+)$/i);
+        if (toM && nameToId[toM[1].trim().toLowerCase()] != null) to = nameToId[toM[1].trim().toLowerCase()];
+        var fromM = cap.match(/from\s+(.+?)(?:\s+to\s+.+)?$/i);
+        if (fromM && nameToId[fromM[1].trim().toLowerCase()] != null) from = nameToId[fromM[1].trim().toLowerCase()];
+        if (to == null) {
+          // nearest team link before this player inside the same cell
+          var cell = pa.closest ? pa.closest("td") : null;
+          if (cell) {
+            var cellAnchors = cell.querySelectorAll("a");
+            var last = null;
+            for (var c = 0; c < cellAnchors.length; c++) {
+              if (cellAnchors[c] === pa) break;
+              var cm = (cellAnchors[c].getAttribute("href") || "").match(teamRe);
+              if (cm) last = cm[1];
+            }
+            if (last != null) to = last;
+          }
+        }
+        if (to == null && teamIds.length) to = teamIds[0];
+        var posSpan = box ? box.querySelector(".F-position") : null;
+        var posTxt = posSpan ? posSpan.textContent.trim() : "";
+        var posM = posTxt.match(/-\s*([A-Z\/]+)\s*$/);
+        players.push({ playerId: pm[1], name: pa.textContent.trim(), pos: posM ? posM[1] : "", to: to, from: from });
+      }
+      if (!players.length) continue;
+      var stamp = row.querySelector(".F-timestamp");
+      out.push({ key: (stamp ? stamp.textContent.trim() : "") + "|" + players.map(function (x) { return x.playerId; }).join(","), date: parseWhen(stamp ? stamp.textContent : ""), teamIds: teamIds, players: players });
+    }
+    return out;
+  }
+
   root.MFF_YAHOO = {
     parseTeamDoc: parseTeamDoc,
     parseStandingsDoc: parseStandingsDoc,
+    parseTransactionsDoc: parseTransactionsDoc,
     buildLeaguePayload: buildLeaguePayload,
     SLOT_MAP: SLOT_MAP,
     ABBR_FULL: ABBR_FULL

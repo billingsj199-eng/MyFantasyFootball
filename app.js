@@ -1216,9 +1216,11 @@ function saveLocal() {
   userData = {};
   function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
   const _cutOf = (ver, mode) => (typeof window._boardCutoffFor === 'function') ? window._boardCutoffFor(ver, mode) : null;
+  const _cutPosOf = (ver, mode) => (typeof window._posCutsOf === 'function') ? window._posCutsOf(ver, mode) : {};
   ['jacks','mine'].forEach(function(ver) {
     userData[ver] = {
-      redraft: { _order: boardToNames(versionBoards[ver].redraft), _posTiers: _serPT(versionTiers[ver].redraft), _cut: _cutOf(ver, 'redraft') },
+      // _cutPos = per-position K / D/ST cut lines (position-rank keyed)
+      redraft: { _order: boardToNames(versionBoards[ver].redraft), _posTiers: _serPT(versionTiers[ver].redraft), _cut: _cutOf(ver, 'redraft'), _cutPos: _cutPosOf(ver, 'redraft') },
       bestball: { _order: boardToNames(versionBoards[ver].bestball), _posTiers: _serPT(versionTiers[ver].bestball), _cut: _cutOf(ver, 'bestball') },
       superflex: { _order: boardToNames(versionBoards[ver].superflex), _posTiers: _serPT(versionTiers[ver].superflex), _cut: _cutOf(ver, 'superflex') },
       dynasty: { _order: boardToNames(versionBoards[ver].dynasty), _posTiers: _serPT(versionTiers[ver].dynasty), _cut: _cutOf(ver, 'dynasty') },
@@ -1231,8 +1233,7 @@ function saveLocal() {
         _ownedPos: Object.keys((window._weeklyOwnedPos && window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][window._weeklyActiveWeek || 1]) || {}),
         _cut: (typeof window._weeklyCutoffFor === 'function' ? window._weeklyCutoffFor(ver) : null),
         // Per-group QB/K/DST position-rank cut lines (only set groups saved)
-        _cutPos: (function() { const o = {}; if (typeof window._weeklyPosCutoffFor === 'function') {
-          window._weeklyPosCutGroups.forEach(p => { const n = window._weeklyPosCutoffFor(ver, p); if (n != null) o[p] = n; }); } return o; })() }
+        _cutPos: _cutPosOf(ver, 'weekly') }
     };
   });
 }
@@ -1244,6 +1245,12 @@ function loadModeData(mode, obj, ver) {
   // _weeklyStashSaved instead).
   if (mode !== 'weekly' && typeof window._setBoardCutoff === 'function') {
     window._setBoardCutoff(ver, mode, (obj._cut >= 1) ? obj._cut : null);
+    // Per-position group lines (redraft K / D/ST). Groups absent from the
+    // save are cleared so a removed line doesn't linger from an older load.
+    if (typeof window._posCutGroupsFor === 'function') {
+      const _cp = obj._cutPos || {};
+      window._posCutGroupsFor(mode).forEach(p => window._setPosCutoff(ver, mode, p, (_cp[p] >= 1) ? _cp[p] : null));
+    }
   }
   if (obj._order && Array.isArray(obj._order)) {
     const fallback = mode === 'dynastysf' ? sfDefaultBoard : mode === 'dynasty' ? dynastyDefaultBoard : mode === 'superflex' ? superflexDefaultBoard : mode === 'bestball' ? bestBallDefaultBoard : defaultBoard;
@@ -3070,23 +3077,29 @@ function getFiltered(applyTopN) {
   if (typeof window._boardCutoffFor === 'function') {
     const _cutN = window._boardCutoffFor(currentVersion, currentMode);
     let _keep = null; // (board idx, board pos) -> visible-to-viewers?
-    if (currentMode === 'weekly' && typeof window._weeklyPosCutoffFor === 'function') {
-      // WEEKLY: the overall cut governs only RB/WR/TE; QB/K/DST each enforce
-      // their own position-rank cut line (unset = whole group visible).
+    const _cutGroups = (typeof window._posCutGroupsFor === 'function') ? window._posCutGroupsFor(currentMode) : [];
+    if (_cutGroups.length) {
+      // WEEKLY (QB/K/DST) and REDRAFT (K/DST): the overall cut governs only
+      // the non-group positions; each group enforces its own position-rank
+      // cut line (unset = whole group visible).
       const _pc = {};
-      window._weeklyPosCutGroups.forEach(p => { _pc[p] = window._weeklyPosCutoffFor(currentVersion, p); });
+      _cutGroups.forEach(p => { _pc[p] = window._posCutoffFor(currentVersion, currentMode, p); });
       const _posSeen = {};
       _keep = (idx, bi) => {
         const p = D[idx];
         if (!p) return false;
-        if (_pc[p.s] === undefined) return _cutN == null || bi < _cutN; // flex group
+        // Non-group positions cross on the DISPLAYED rank (myRank), not the
+        // board slot: IR-flagged players keep their slot but are skipped in
+        // numbering, so the two drift apart and a slot-based cut put the
+        // divider / arrows (rank-based) out of step with what viewers saw.
+        if (_pc[p.s] === undefined) return _cutN == null || p.myRank <= _cutN; // flex group
         if (p._retired) return false; // dropped downstream — keep pos-rank count aligned with display
         if (window._irIsOut(p.n)) return false; // out-for-season: same alignment reason
         _posSeen[p.s] = (_posSeen[p.s] || 0) + 1;
         return _pc[p.s] == null || _posSeen[p.s] <= _pc[p.s];
       };
     } else if (_cutN != null) {
-      _keep = (idx, bi) => bi < _cutN;
+      _keep = (idx, bi) => { const p = D[idx]; return !!p && p.myRank <= _cutN; }; // rank-based (see above)
     }
     if (_keep) {
       const _below = new Set();
@@ -3840,15 +3853,15 @@ function render() {
     // Players below it are hidden from non-editors; the editor drags players
     // across it to add/remove them from the visible list.
     if (typeof window._boardCutoffFor === 'function') {
-      // WEEKLY QB/K/DST views run their own position-rank cut line; the
-      // overall (flex) line is suppressed there so it can't blanket-hide a
-      // whole group that ranks below the flex tail.
-      const _isPosCutView = currentMode === 'weekly' && typeof window._weeklyPosCutoffFor === 'function'
-        && window._weeklyPosCutGroups.includes(filter);
+      // WEEKLY QB/K/DST and REDRAFT K/DST views run their own position-rank
+      // cut line; the overall line is suppressed for those groups so it
+      // can't blanket-hide a whole group that ranks below the flex tail.
+      const _cutGroups = (typeof window._posCutGroupsFor === 'function') ? window._posCutGroupsFor(currentMode) : [];
+      const _isPosCutView = _cutGroups.includes(filter);
       const _cutN = _isPosCutView
-        ? window._weeklyPosCutoffFor(currentVersion, filter)
+        ? window._posCutoffFor(currentVersion, currentMode, filter)
         : window._boardCutoffFor(currentVersion, currentMode);
-      if (_cutN != null && !(currentMode === 'weekly' && !_isPosCutView && window._weeklyPosCutGroups && window._weeklyPosCutGroups.includes(d.s))) {
+      if (_cutN != null && !(!_isPosCutView && _cutGroups.includes(d.s))) {
         // Positional views are filtered to one position, so i+1 IS the
         // position rank; overall views cross on d.myRank.
         const _rowRank = _isPosCutView ? (i + 1) : d.myRank;
@@ -4056,7 +4069,7 @@ function render() {
     if (editable && showTiers && !tierMap[displayRank]) {
       // WEEKLY QB/K/DST views place that group's own position-rank cut line
       // (i+1 = position rank there); everywhere else it's the overall cut.
-      const _addCutPos = (currentMode === 'weekly' && window._weeklyPosCutGroups && window._weeklyPosCutGroups.includes(filter)) ? filter : null;
+      const _addCutPos = (typeof window._posCutGroupsFor === 'function' && window._posCutGroupsFor(currentMode).includes(filter)) ? filter : null;
       html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button><button class="add-tier-btn" data-add-cut="${_addCutPos ? (i + 1) : d.myRank}"${_addCutPos ? ` data-cut-pos="${_addCutPos}"` : ''} style="color:#ef4444;border-color:#ef4444" title="Place the cut line here — players below are hidden from viewers">✂ CUT</button></td></tr>`;
     }
     // Progressive-render chunk boundary: snapshot at end of an iteration so
@@ -4233,11 +4246,12 @@ function attachTierListeners() {
     }
     const nameLink = e.target.closest('.player-name-link');
     if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
-    // Cut line controls (all formats). data-cut-pos marks a WEEKLY QB/K/DST
-    // group line (position-rank based); without it, the overall cut.
+    // Cut line controls (all formats). data-cut-pos marks a position-group
+    // line (WEEKLY QB/K/DST, REDRAFT K/DST — position-rank based); without
+    // it, the overall cut.
     const _applyCut = (el, n) => {
       const cp = el.dataset.cutPos;
-      if (cp && typeof window._weeklySetPosCutoff === 'function') window._weeklySetPosCutoff(currentVersion, cp, n);
+      if (cp && typeof window._setPosCutoff === 'function') window._setPosCutoff(currentVersion, currentMode, cp, n);
       else if (typeof window._setBoardCutoff === 'function') window._setBoardCutoff(currentVersion, currentMode, n);
       saveLocal(); render();
     };
@@ -5804,16 +5818,34 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // hides every kicker. Each group gets its own POSITION-RANK cut, keyed per
   // week; the overall weekly _cut now governs only RB/WR/TE (the flex group).
   window._weeklyPosCutGroups = ['QB', 'K', 'DST'];
-  window._weeklyPosCutoffFor = function(ver, pos) {
+  // REDRAFT has the same problem for K / D/ST (they rank #1900+ on the
+  // overall board, so an overall cut at #220 hid every kicker from premium
+  // viewers) — they get their own position-rank lines too. QB stays on the
+  // overall redraft line since QBs are ranked inline there.
+  window._redraftPosCutGroups = ['K', 'DST'];
+  window._posCutGroupsFor = function(mode) {
+    return mode === 'weekly' ? window._weeklyPosCutGroups
+         : mode === 'redraft' ? window._redraftPosCutGroups
+         : [];
+  };
+  window._posCutoffFor = function(ver, mode, pos) {
     const m = window._boardCutoff[ver];
-    const n = m && m[window._cutKeyFor('weekly') + ':' + pos];
+    const n = m && m[window._cutKeyFor(mode) + ':' + pos];
     return (n >= 1) ? n : null;
   };
-  window._weeklySetPosCutoff = function(ver, pos, n) {
+  window._setPosCutoff = function(ver, mode, pos, n) {
     const m = (window._boardCutoff[ver] = window._boardCutoff[ver] || {});
-    const k = window._cutKeyFor('weekly') + ':' + pos;
+    const k = window._cutKeyFor(mode) + ':' + pos;
     if (n >= 1) m[k] = n; else delete m[k];
   };
+  // Serializer helper: {POS: n} for the mode's set groups (empty when none).
+  window._posCutsOf = function(ver, mode) {
+    const o = {};
+    window._posCutGroupsFor(mode).forEach(p => { const n = window._posCutoffFor(ver, mode, p); if (n != null) o[p] = n; });
+    return o;
+  };
+  window._weeklyPosCutoffFor = function(ver, pos) { return window._posCutoffFor(ver, 'weekly', pos); };
+  window._weeklySetPosCutoff = function(ver, pos, n) { window._setPosCutoff(ver, 'weekly', pos, n); };
 
   window._weeklySaved = window._weeklySaved || {};           // ver -> {_order,_posTiers,_week,_ownedPos,_cut} (persisted snapshot)
   window._weeklySessionBoards = window._weeklySessionBoards || {}; // ver -> { wk: [board indices] } (this session's edits)
@@ -24405,6 +24437,7 @@ window.fmtHeight = fmtHeight;
     try {
       function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
       const _cutOf = (m) => (typeof window._boardCutoffFor === 'function') ? window._boardCutoffFor('mine', m) : null;
+      const _cutPosOf = (m) => (typeof window._posCutsOf === 'function') ? window._posCutsOf('mine', m) : {};
       if ((!versionBoards.mine.weekly || !versionBoards.mine.weekly.length) && versionBoards.mine.redraft.length
           && typeof window._weeklyReconcileBoard === 'function') {
         console.warn('[Save] mine weekly board was empty — rebuilding from redraft before save');
@@ -24412,14 +24445,14 @@ window.fmtHeight = fmtHeight;
       }
       const data = {
         mine: {
-          redraft: { _order: boardToNames(versionBoards.mine.redraft), _posTiers: _serPT(versionTiers.mine.redraft), _cut: _cutOf('redraft') },
+          redraft: { _order: boardToNames(versionBoards.mine.redraft), _posTiers: _serPT(versionTiers.mine.redraft), _cut: _cutOf('redraft'), _cutPos: _cutPosOf('redraft') },
           bestball: { _order: boardToNames(versionBoards.mine.bestball), _posTiers: _serPT(versionTiers.mine.bestball), _cut: _cutOf('bestball') },
           superflex: { _order: boardToNames(versionBoards.mine.superflex), _posTiers: _serPT(versionTiers.mine.superflex), _cut: _cutOf('superflex') },
           dynasty: { _order: boardToNames(versionBoards.mine.dynasty), _posTiers: _serPT(versionTiers.mine.dynasty), _cut: _cutOf('dynasty') },
           dynastysf: { _order: boardToNames(versionBoards.mine.dynastysf), _posTiers: _serPT(versionTiers.mine.dynastysf), _cut: _cutOf('dynastysf') },
           weekly: { _order: boardToNames(versionBoards.mine.weekly), _posTiers: _serPT(versionTiers.mine.weekly), _week: (window._weeklyActiveWeek || 1),
             _ownedPos: Object.keys((window._weeklyOwnedPos && window._weeklyOwnedPos.mine && window._weeklyOwnedPos.mine[window._weeklyActiveWeek || 1]) || {}),
-            _cut: _cutOf('weekly') }
+            _cut: _cutOf('weekly'), _cutPos: _cutPosOf('weekly') }
         }
       };
       // Per-format custom flags: virgin formats keep mirroring Jack's latest on
@@ -24580,6 +24613,7 @@ window.fmtHeight = fmtHeight;
 
       function _serPT(obj) { const o={}; POS_TIER_KEYS.forEach(pk => { if(obj[pk]&&obj[pk].length) o[pk]=obj[pk].map(t=>({label:t.label,name:t.name,afterRank:t.afterRank})); }); return o; }
       const _cutOf = (m) => (typeof window._boardCutoffFor === 'function') ? window._boardCutoffFor('jacks', m) : null;
+      const _cutPosOf = (m) => (typeof window._posCutsOf === 'function') ? window._posCutsOf('jacks', m) : {};
       // Never serialize an empty weekly board while redraft is populated —
       // rebuild it from redraft first (guards the empty-weekly save Jack hit).
       if ((!versionBoards.jacks.weekly || !versionBoards.jacks.weekly.length) && versionBoards.jacks.redraft.length
@@ -24589,14 +24623,14 @@ window.fmtHeight = fmtHeight;
       }
       const data = {
         jacks: {
-          redraft: { _order: boardToNames(versionBoards.jacks.redraft), _posTiers: _serPT(versionTiers.jacks.redraft), _cut: _cutOf('redraft') },
+          redraft: { _order: boardToNames(versionBoards.jacks.redraft), _posTiers: _serPT(versionTiers.jacks.redraft), _cut: _cutOf('redraft'), _cutPos: _cutPosOf('redraft') },
           bestball: { _order: boardToNames(versionBoards.jacks.bestball), _posTiers: _serPT(versionTiers.jacks.bestball), _cut: _cutOf('bestball') },
           superflex: { _order: boardToNames(versionBoards.jacks.superflex), _posTiers: _serPT(versionTiers.jacks.superflex), _cut: _cutOf('superflex') },
           dynasty: { _order: boardToNames(versionBoards.jacks.dynasty), _posTiers: _serPT(versionTiers.jacks.dynasty), _cut: _cutOf('dynasty') },
           dynastysf: { _order: boardToNames(versionBoards.jacks.dynastysf), _posTiers: _serPT(versionTiers.jacks.dynastysf), _cut: _cutOf('dynastysf') },
           weekly: { _order: boardToNames(versionBoards.jacks.weekly), _posTiers: _serPT(versionTiers.jacks.weekly), _week: (window._weeklyActiveWeek || 1),
             _ownedPos: Object.keys((window._weeklyOwnedPos && window._weeklyOwnedPos.jacks && window._weeklyOwnedPos.jacks[window._weeklyActiveWeek || 1]) || {}),
-            _cut: _cutOf('weekly') }
+            _cut: _cutOf('weekly'), _cutPos: _cutPosOf('weekly') }
         },
         _prev: prevSnapshot
       };

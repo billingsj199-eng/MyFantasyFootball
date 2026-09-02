@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-02zo" as="script">
+<link rel="preload" href="app.js?v=2026-09-02zp" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1444,6 +1444,7 @@ tr:hover .watch-star{opacity:.55}
    unit — the cards shrink-to-fit and the tier letter rides against the leftmost
    card instead of sitting in a fixed left rail. Wrapped lines center too. */
 .tier-card-view.tcv-centered .tcv-tier-row{justify-content:center}
+.tier-card-view.tcv-hide-cut .tcv-tier-row.tcv-cut-row{display:none}
 .tier-card-view.tcv-centered .tcv-cards{flex:0 1 auto;justify-content:center}
 .tier-card-view.tcv-centered .tcv-tier-row.tcv-hidden .tcv-hidden-placeholder{flex:0 1 auto}
 .tcv-card{width:92px;background:linear-gradient(160deg,#1f2937 0%,#0f172a 100%);border-radius:5px;padding:4px 4px 5px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s;border:none;user-select:none;box-shadow:0 0 0 1px rgba(255,255,255,.04)}
@@ -5406,7 +5407,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-02zo"></script>
+<script defer src="app.js?v=2026-09-02zp"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

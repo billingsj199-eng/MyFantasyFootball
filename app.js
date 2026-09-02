@@ -3401,12 +3401,28 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   //   1) '25 PPG   2) Proj PPG   3) Vegas implied Team PPG (season avg, no rank)
   const _25Val = (typeof adj25ppg === 'function') ? adj25ppg(d) : null;
   const _25Color = (_25Val != null && typeof posFptsColor === 'function') ? posFptsColor(_25Val, d.s) : null;
-  const _tp = (typeof _impliedTeamPpg === 'function') ? _impliedTeamPpg(d.t) : null;
-  const _tc = _tp ? (_tp.ppg >= 24.5 ? '#22c55e' : _tp.ppg <= 20.5 ? '#ef4444' : '#facc15') : null;
+  // WEEKLY: third slot is THIS WEEK's Vegas implied team total (DK total +
+  // spread for the active week's game), not the season average. D/ST cards
+  // show the opponent's implied total (lower = better) with the scale inverted.
+  let _ttSlot;
+  if (typeof currentMode !== 'undefined' && currentMode === 'weekly') {
+    const _isDst = d.s === 'DST';
+    const _fn = _isDst ? window._weeklyOppTeamTotalFor : window._weeklyTeamTotalFor;
+    const _wt = (typeof _fn === 'function') ? _fn(d.t) : null;
+    let _wc = null;
+    if (_wt != null) _wc = _isDst
+      ? (_wt <= 19 ? '#22c55e' : _wt <= 21.5 ? '#4ade80' : _wt <= 24.5 ? '#facc15' : _wt <= 27 ? '#f59e0b' : '#ef4444')
+      : (_wt >= 27 ? '#22c55e' : _wt >= 24.5 ? '#4ade80' : _wt >= 21.5 ? '#facc15' : _wt >= 19 ? '#f59e0b' : '#ef4444');
+    _ttSlot = { v: _wt != null ? _wt.toFixed(1) : null, c: _wc, lbl: _isDst ? 'Opp Team Total (this week)' : 'Team Total (this week)' };
+  } else {
+    const _tp = (typeof _impliedTeamPpg === 'function') ? _impliedTeamPpg(d.t) : null;
+    const _tc = _tp ? (_tp.ppg >= 24.5 ? '#22c55e' : _tp.ppg <= 20.5 ? '#ef4444' : '#facc15') : null;
+    _ttSlot = { v: _tp ? _tp.ppg.toFixed(1) : null, c: _tc, lbl: 'Team PPG' };
+  }
   const _statSlots = [
     { v: _25Val, c: _25Color, lbl: "'25 PPG" },
     { v: projVal, c: projColor, lbl: 'Proj PPG' },
-    { v: _tp ? _tp.ppg.toFixed(1) : null, c: _tc, lbl: 'Team PPG' }
+    _ttSlot
   ];
   const _statsHtml = _statSlots.map(s => fmtStat(s.v, s.c)).join('<br>');
   const _statsTitle = _statSlots.map(s => s.lbl).join(' / ');
@@ -3459,6 +3475,12 @@ function _tcvZoomMult() {
   } catch(_) { return 1; }
 }
 
+// HIDE CUT preference — drop the below-cut ✂ row from the tier-card view
+// entirely (no covered silhouettes), so the board reads like viewers see it.
+function _tcvHideCutPref() {
+  try { return localStorage.getItem('tcv_hide_cut') === '1'; } catch(_) { return false; }
+}
+
 function _renderTierCardView(data, container) {
   // Decide whether to use position-rank (for QB/RB/WR/TE filters) or overall myRank for tier lookup
   const useFilteredRank = _tierRankIsPositional();
@@ -3494,6 +3516,8 @@ function _renderTierCardView(data, container) {
   const _tcvBaseZoom = _tcvN <= 12 ? 1.9 : _tcvN <= 24 ? 1.65 : _tcvN <= 40 ? 1.45 : _tcvN <= 60 ? 1.3 : _tcvN <= 90 ? 1.15 : _tcvN <= 140 ? 1.05 : 1;
   root.style.zoom = _tcvBaseZoom * _tcvZoomMult();
   if (_tcvCenteredPref()) root.classList.add('tcv-centered');
+  const _tcvCutCount = _tcvBelowCut ? data.filter(d => _tcvBelowCut.has(d.n)).length : 0;
+  if (_tcvCutCount && _tcvHideCutPref()) root.classList.add('tcv-hide-cut');
 
   // Header: filter context
   const header = document.createElement('div');
@@ -3503,7 +3527,11 @@ function _renderTierCardView(data, container) {
   const filterLabel = filter === 'ROOKIE' && rookiePosFilter && rookiePosFilter !== 'ALL'
     ? 'ROOKIE ' + rookiePosFilter
     : filter;
-  ctx.textContent = 'TIER CARDS — ' + filterLabel + ' · ' + data.length + ' PLAYERS';
+  function _tcvHeaderText() {
+    const n = root.classList.contains('tcv-hide-cut') ? (data.length - _tcvCutCount) : data.length;
+    return 'TIER CARDS — ' + filterLabel + ' · ' + n + ' PLAYERS' + (_tcvCutCount && root.classList.contains('tcv-hide-cut') ? ' · ' + _tcvCutCount + ' CUT HIDDEN' : '');
+  }
+  ctx.textContent = _tcvHeaderText();
   header.appendChild(ctx);
   root.appendChild(header);
 
@@ -3515,6 +3543,7 @@ function _renderTierCardView(data, container) {
     '<button class="tcv-reveal-btn tcv-primary" data-tcvaction="revealNext" title="Reveal the next hidden player (Spacebar works too)">▶ REVEAL NEXT</button>' +
     '<button class="tcv-reveal-btn" data-tcvaction="toggleOrder" title="Flip the REVEAL NEXT direction — top of the board first (1→' + data.length + ') or countdown from the bottom (' + data.length + '→1)">⇅ ' + (_tcvCountdownPref() ? (data.length + ' → 1') : ('1 → ' + data.length)) + '</button>' +
     '<button class="tcv-reveal-btn" data-tcvaction="revealAll" title="Show every player">◉ REVEAL ALL</button>' +
+    (_tcvCutCount ? '<button class="tcv-reveal-btn' + (_tcvHideCutPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCut" title="Hide / show the ' + _tcvCutCount + ' below-the-cut-line player' + (_tcvCutCount === 1 ? '' : 's') + ' (the red ✂ row). Hidden = gone from the view entirely, no silhouettes — what viewers see.">✂ ' + (_tcvHideCutPref() ? 'SHOW CUT' : 'HIDE CUT') + '</button>' : '') +
     '<button class="tcv-reveal-btn' + (_tcvCenteredPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCenter" title="Center each tier\'s cards (pyramid layout — fits vertical video). The tier letter rides against the leftmost card.">⇔ CENTER</button>' +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
@@ -3532,7 +3561,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#facc15">15.8</span>/<span style="color:#22c55e">17.3</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= \'25 PPG / PROJ PPG (' + scoreFmtLabel + ') / TEAM TOTAL (Vegas implied PPG)</span>' +
+    '<span>= \'25 PPG / PROJ PPG (' + scoreFmtLabel + ') / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 
@@ -3551,6 +3580,7 @@ function _renderTierCardView(data, container) {
     const row = document.createElement('div');
     row.className = 'tcv-tier-row';
     row.setAttribute('data-tcv-group', String(gIdx));
+    if (g.cut) row.classList.add('tcv-cut-row');
     const letter = document.createElement('div');
     let glowRgb = null;
     if (g.cut) {
@@ -3584,12 +3614,17 @@ function _renderTierCardView(data, container) {
     root.appendChild(row);
   });
 
+  // Cards the reveal flow operates on — excludes the ✂ row while HIDE CUT is on
+  function _tcvVisibleCards() {
+    const sel = root.classList.contains('tcv-hide-cut') ? '.tcv-tier-row:not(.tcv-cut-row) .tcv-card' : '.tcv-card';
+    return Array.prototype.slice.call(root.querySelectorAll(sel));
+  }
   // Wire master reveal controls (operate one player at a time)
   function _tcvUpdateStatus() {
     const statusEl = root.querySelector('#tcvRevealStatus');
     if (!statusEl) return;
-    const total = root.querySelectorAll('.tcv-card').length;
-    const hidden = root.querySelectorAll('.tcv-card.tcv-covered').length;
+    const total = _tcvVisibleCards().length;
+    const hidden = _tcvVisibleCards().filter(c => c.classList.contains('tcv-covered')).length;
     statusEl.textContent = hidden === 0 ? '' : (hidden + ' of ' + total + ' players hidden');
   }
   root.querySelectorAll('[data-tcvaction]').forEach(btn => {
@@ -3615,11 +3650,23 @@ function _renderTierCardView(data, container) {
       if (action === 'toggleOrder') {
         const on = !_tcvCountdownPref();
         try { localStorage.setItem('tcv_countdown', on ? '1' : '0'); } catch(_) {}
-        const n = root.querySelectorAll('.tcv-card').length;
+        const n = _tcvVisibleCards().length;
         btn.textContent = '⇅ ' + (on ? (n + ' → 1') : ('1 → ' + n));
         return;
       }
-      const cards = root.querySelectorAll('.tcv-card');
+      if (action === 'toggleCut') {
+        const on = !root.classList.contains('tcv-hide-cut');
+        root.classList.toggle('tcv-hide-cut', on);
+        btn.classList.toggle('tcv-primary', on);
+        btn.textContent = '✂ ' + (on ? 'SHOW CUT' : 'HIDE CUT');
+        try { localStorage.setItem('tcv_hide_cut', on ? '1' : '0'); } catch(_) {}
+        ctx.textContent = _tcvHeaderText();
+        const ob = root.querySelector('[data-tcvaction="toggleOrder"]');
+        if (ob) { const n = _tcvVisibleCards().length; ob.textContent = '⇅ ' + (_tcvCountdownPref() ? (n + ' → 1') : ('1 → ' + n)); }
+        _tcvUpdateStatus();
+        return;
+      }
+      const cards = _tcvVisibleCards();
       if (action === 'hideAll') {
         cards.forEach(c => c.classList.add('tcv-covered'));
       } else if (action === 'revealAll') {

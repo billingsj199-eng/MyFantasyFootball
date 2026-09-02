@@ -270,6 +270,7 @@
       <h3 style="margin-top:8px">Portfolio</h3>
       <button id="mff-sync-btn" class="start-btn" style="margin-bottom:4px">Sync from Underdog</button>
       <div id="mff-sync-status" style="font-size:10px;color:#8a8d96;line-height:1.4"></div>
+      <div id="mff-portfolio-diag" style="font-size:9px;color:#8a8d96;line-height:1.4;margin-top:4px;opacity:.85"></div>
     </div>
   </div>
 </div>`;
@@ -4452,6 +4453,30 @@
     });
   }
 
+  // v0.18.11: one-line store inventory under the Sync button.
+  function renderPortfolioDiag() {
+    const el = document.getElementById('mff-portfolio-diag');
+    if (!el || !_isExtensionContextValid()) return;
+    try {
+      chrome.storage.local.get(['mff_portfolio', 'mff_portfolio_sync', 'mff_site_drafts', 'mff_existing_draft_ids'], function (res) {
+        try {
+          const p = res && res.mff_portfolio;
+          const sync = res && res.mff_portfolio_sync;
+          const site = res && res.mff_site_drafts;
+          const nP = p && p.numTeams ? p.numTeams : 0;
+          const nSync = (sync && Array.isArray(sync.drafts)) ? sync.drafts.length : 0;
+          const nSite = (site && site.byId) ? Object.keys(site.byId).length : 0;
+          const nIds = (res && Array.isArray(res.mff_existing_draft_ids)) ? res.mff_existing_draft_ids.length : 0;
+          const when = p && p.syncedAt ? new Date(p.syncedAt).toLocaleString() : '—';
+          el.textContent = 'Exposure % uses ' + nP + ' drafts · own sync store ' + nSync +
+                           ' · site copy ' + nSite + (site && site.lastPushCount != null ? ' (last push ' + site.lastPushCount + ')' : '') +
+                           ' · site id list ' + nIds + ' · written ' + when + (p && p.source ? ' via ' + p.source : '');
+          el.style.color = (nP && (nP < nSync || nP < nSite)) ? '#f59e0b' : '#8a8d96';
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }
+
   function publishPortfolioToSite(sitePortfolio) {
     if (!_isExtensionContextValid()) {
       console.warn('[MFF/sync] publish skipped — extension context invalidated. Refresh tab and re-sync.');
@@ -6173,6 +6198,13 @@
           state.portfolio = res.mff_portfolio;
           if (typeof startExposureDecorator === 'function') startExposureDecorator();
         }
+        // v0.18.11: self-heal — the stores (own sync + site copy) are the
+        // truth; if the last writer left a shorter mff_portfolio, rebuild it
+        // now. Then show the store counts in Settings so a wrong denominator
+        // is diagnosable from a screenshot.
+        try {
+          rebuildSidebarPortfolioFromStores().then(function () { renderPortfolioDiag(); });
+        } catch (_) { try { renderPortfolioDiag(); } catch (_) {} }
         if (res && res.mff_rankings && Array.isArray(res.mff_rankings.rankings)) {
           if (typeof applyRankings === 'function') applyRankings(res.mff_rankings.rankings, res.mff_rankings.irOut);
         }
@@ -6196,6 +6228,7 @@
         if (changes.mff_portfolio && changes.mff_portfolio.newValue) {
           state.portfolio = changes.mff_portfolio.newValue;
           shouldRender = true;
+          try { renderPortfolioDiag(); } catch (_) {}
           // v0.18.10: the page decorator skips rows it already stamped, so
           // exposure chips painted BEFORE a sync finished kept the old
           // denominator (Jack: sidebar said 287 drafts, rows still showed

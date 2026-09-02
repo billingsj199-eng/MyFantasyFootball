@@ -62,19 +62,34 @@
         safeSet("mff_portfolio", p);
         return;
       }
-      const siteDrafts = { byId: {}, noId: [], syncedAt: syncedAt };
+      const incoming = { byId: {}, noId: [] };
       drafts.forEach(function (d) {
         if (!d || !Array.isArray(d.picks) || !d.picks.length) return;
-        if (d.id != null) siteDrafts.byId[String(d.id)] = d.picks; else siteDrafts.noId.push(d.picks);
+        if (d.id != null) incoming.byId[String(d.id)] = d.picks; else incoming.noId.push(d.picks);
       });
-      safeSet("mff_site_drafts", siteDrafts);
       if (!chrome || !chrome.runtime || !chrome.runtime.id) return;
-      chrome.storage.local.get(["mff_portfolio_sync"], function (res) {
+      // v0.18.11: MERGE into the stored site copy by draft id — never replace
+      // it. The site's _mffSetPortfolio can momentarily expose a SHORT
+      // portfolio (the extension's own few drafts, before the cloud load
+      // merges in the rest); replacing the 286-draft copy with that 6-draft
+      // snapshot was what dragged the exposure denominator back to 6.
+      // Completed drafts are immutable, so keeping every id ever seen is safe;
+      // the incoming roster wins for an id both know (fresher picks).
+      chrome.storage.local.get(["mff_portfolio_sync", "mff_site_drafts"], function (res) {
         try {
+          const prev = (res && res.mff_site_drafts) || {};
+          const siteDrafts = { byId: {}, noId: [], syncedAt: syncedAt };
+          if (prev.byId) Object.keys(prev.byId).forEach(function (id) { siteDrafts.byId[id] = prev.byId[id]; });
+          Object.keys(incoming.byId).forEach(function (id) { siteDrafts.byId[id] = incoming.byId[id]; });
+          // no-id rosters can't be de-duped by id; keep the larger set only
+          siteDrafts.noId = (incoming.noId.length >= ((prev.noId && prev.noId.length) || 0)) ? incoming.noId : prev.noId;
+          siteDrafts.lastPushCount = Object.keys(incoming.byId).length + incoming.noId.length;
+          safeSet("mff_site_drafts", siteDrafts);
           const all = unionTeams(siteDrafts, res && res.mff_portfolio_sync);
           const p = buildPortfolio(all.length ? all : teams);
           p.syncedAt = syncedAt;
           p.numSite = Object.keys(siteDrafts.byId).length + siteDrafts.noId.length;
+          p.numSitePush = siteDrafts.lastPushCount;
           p.source = "site+sync";
           safeSet("mff_portfolio", p);
         } catch(_){}

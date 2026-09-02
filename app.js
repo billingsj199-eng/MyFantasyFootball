@@ -48358,7 +48358,7 @@ Rules:
   // what the assets say (win-now / aging), −d = assets ahead of scoring
   // (young core / picks).
   const _MT_TEAM_TIER_STYLE = {
-    'JUGGERNAUT':       { color: '#22c55e', desc: '#1 on both fronts — best projected lineup AND the strongest roster' },
+    'JUGGERNAUT':       { color: '#22c55e', desc: '#1 projected lineup AND the strongest roster by a clear margin (10%+ over the next team)' },
     'STRONG CONTENDER': { color: '#4ade80', desc: 'top-tier assets and a top-tier lineup' },
     'CONTENDER':        { color: '#a3e635', desc: 'average assets, lineup scoring above them — a real threat this year' },
     'ALL IN':           { color: '#f472b6', desc: 'scoring near the top of the league on a thin asset base — window is open, future is mortgaged' },
@@ -48444,11 +48444,19 @@ Rules:
     const PP = pctOf(teams.map(t => t.lineupPpg || 0));
     const rankOf = (vals, v) => vals.slice().sort((a, b) => b - a).indexOf(v) + 1;
     const isDyn = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
-    // Juggernaut = ONE team: best combined percentile, top quarter on both fronts.
-    let jug = -1, jugBest = -Infinity;
-    teams.forEach((t, i) => {
-      if (PV[i] >= 0.75 && PP[i] >= 0.75 && PV[i] + PP[i] > jugBest) { jugBest = PV[i] + PP[i]; jug = i; }
-    });
+    // Juggernaut (Jack 2026-09-02: "should only be someone that is highly
+    // above everyone in ratings and first in ppg"): #1 in value by a clear
+    // margin (≥10% over the #2 roster) AND #1 in projected PPG. Nobody
+    // qualifies in most leagues — that's the point.
+    let jug = -1;
+    {
+      const vals = teams.map(t => t.strengthTotal || 0);
+      const ppgs = teams.map(t => t.lineupPpg || 0);
+      const vSorted = vals.slice().sort((a, b) => b - a);
+      const top = vSorted[0], second = vSorted[1] || 0;
+      const i = vals.indexOf(top);
+      if (i >= 0 && top > 0 && top >= second * 1.10 && ppgs[i] >= Math.max(...ppgs) && ppgs.filter(p => p === ppgs[i]).length === 1) jug = i;
+    }
     const byTeam = new Map();
     const tiersByLabel = {};
     teams.forEach((t, i) => {

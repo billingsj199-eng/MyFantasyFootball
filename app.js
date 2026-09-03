@@ -3711,8 +3711,8 @@ function _tcvUpdateSelCount(root) {
   if (b) { b.textContent = '⬇ PNG SELECTED (' + n + ')'; b.classList.toggle('tcv-primary', n > 0); }
   const sb = root.querySelector('[data-tcvaction="toggleSelect"]');
   if (sb) sb.textContent = root.classList.contains('tcv-select') ? '☑ SELECTING… (click cards)' : '☐ SELECT';
-  const zb = root.querySelector('[data-tcvaction="dlZip"]');
-  if (zb && !zb._tcvBusy) zb.textContent = n > 0 ? '📦 ZIP SELECTED (' + n + ')' : '📦 ZIP ALL';
+  const zb = root.querySelector('[data-tcvaction="dlZipSel"]');
+  if (zb && !zb._tcvBusy) { zb.textContent = '📦 ZIP SELECTED (' + n + ')'; zb.classList.toggle('tcv-primary', n > 0); }
 }
 
 // ── ROW CARD → PNG (canvas) ───────────────────────────────────────────────
@@ -3964,10 +3964,9 @@ function _tcvSaveBlob(blob, filename) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
-// ONE zip of row-card PNGs — the ticked cards if any are selected, else every
-// revealed card. Button text shows progress while the cards render.
-async function _tcvDownloadRowsZip(root, prefix, btn) {
-  const onlySelected = root.querySelectorAll('.tcv-row-card.tcv-selected').length > 0;
+// ONE zip of row-card PNGs — every revealed card (ZIP ALL) or just the
+// ticked ones (ZIP SELECTED). Button text shows progress while cards render.
+async function _tcvDownloadRowsZip(root, prefix, btn, onlySelected) {
   const list = _tcvCollectRowCards(root, onlySelected);
   if (!list.length) { if (typeof toast === 'function') toast(_tcvNoCardsMsg(onlySelected)); return; }
   if (btn && btn._tcvBusy) return;
@@ -4113,7 +4112,8 @@ function _renderTierCardView(data, container) {
       '<button class="tcv-reveal-btn' + (window._tcvSel.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleSelect" title="Pick cards to export: turn this on, click cards to tick them (Shift-click for a range), then ⬇ PNG SELECTED. Clicking a card will not open it while selecting.">☐ SELECT</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlSel" title="Download just the ticked cards, one PNG each">⬇ PNG SELECTED (0)</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="clearSel" title="Untick every card">✕ CLEAR</button>' +
-      '<button class="tcv-reveal-btn" data-tcvaction="dlZip" title="One .zip of card PNGs — the ticked cards if any are selected, otherwise every revealed card. File: ' + _tcvFilePrefix + '_row_cards.zip">📦 ZIP ALL</button>' : '') +
+      '<button class="tcv-reveal-btn" data-tcvaction="dlZipSel" title="One .zip of just the ticked cards\' PNGs. File: ' + _tcvFilePrefix + '_row_cards_selected.zip">📦 ZIP SELECTED (0)</button>' +
+      '<button class="tcv-reveal-btn" data-tcvaction="dlZipAll" title="One .zip of every revealed row card\'s PNG. File: ' + _tcvFilePrefix + '_row_cards.zip">📦 ZIP ALL</button>' : '') +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
       '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomOut" title="Smaller cards">−</button>' +
@@ -4209,7 +4209,8 @@ function _renderTierCardView(data, container) {
       }
       if (action === 'dlAll') { _tcvDownloadAllRows(root, _tcvFilePrefix); return; }
       if (action === 'dlSel') { _tcvDownloadAllRows(root, _tcvFilePrefix, true); return; }
-      if (action === 'dlZip') { _tcvDownloadRowsZip(root, _tcvFilePrefix, btn); return; }
+      if (action === 'dlZipAll') { _tcvDownloadRowsZip(root, _tcvFilePrefix, btn, false); return; }
+      if (action === 'dlZipSel') { _tcvDownloadRowsZip(root, _tcvFilePrefix, btn, true); return; }
       if (action === 'toggleSelect') {
         const on = !root.classList.contains('tcv-select');
         root.classList.toggle('tcv-select', on);

@@ -3598,6 +3598,16 @@ function _tcvRowBandCss(band) {
 function _tcvIsAdminViewer() {
   return typeof window.isAdmin === 'function' && window.isAdmin();
 }
+// Season boards have no weekly matchup, so the row card's matchup slot shows
+// the player's BYE week instead (draft-graphic friendly). null in weekly mode
+// or when the schedule has no bye for the team.
+function _tcvSeasonBye(d) {
+  if (typeof currentMode !== 'undefined' && currentMode === 'weekly') return null;
+  if (!window.BYE_WEEKS || typeof TEAM_ABBR_MAP === 'undefined') return null;
+  const abbr = TEAM_ABBR_MAP[d.t] || d.t;
+  const wk = window.BYE_WEEKS[abbr];
+  return (wk != null && isFinite(wk)) ? wk : null;
+}
 // SELECT-mode state, kept OUTSIDE the DOM: the rankings table re-renders in
 // the background (auth, data pulls, refresh) and rebuilds the tier view from
 // scratch, which would otherwise drop every tick. Keyed by player name.
@@ -3643,7 +3653,10 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
     '<div class="tcv-row-stat" title="' + safe(sl.lbl) + '"><span class="tcv-row-stat-v">' + _tcvFmtStat(sl.v, sl.c) + '</span><span class="tcv-row-stat-l">' + safe(sl.short) + '</span></div>'
   ).join('');
   let oppHtml = '';
-  if (opp) {
+  const seasonBye = opp ? null : _tcvSeasonBye(d);
+  if (seasonBye != null) {
+    oppHtml = '<div class="tcv-row-opp tcv-row-bye" title="Bye week ' + seasonBye + '"><span class="tcv-row-bye-l">BYE</span><span class="tcv-row-bye-n">' + seasonBye + '</span></div>';
+  } else if (opp) {
     oppHtml = opp.bye
       ? '<div class="tcv-row-opp tcv-opp-bye" title="' + _tcvOppTitle(opp) + '">BYE</div>'
       : '<div class="tcv-row-opp' + (opp.diff ? ' tcv-opp-' + opp.diff : '') + '" title="' + _tcvOppTitle(opp) + '"><span class="tcv-opp-pre">' + (opp.away ? '@' : 'vs') + '</span>' +
@@ -3865,6 +3878,19 @@ async function _tcvRowCardCanvas(d, displayRank) {
       ctx.fillStyle = preColor;
       ctx.fillText(opp.away ? '@' : 'vs', ox, Y + H / 2 + 20);
     }
+  }
+
+  // Season boards: BYE week chip in the matchup slot
+  const seasonBye = opp ? null : _tcvSeasonBye(d);
+  if (seasonBye != null) {
+    const ox = L.OPP_X + 2, ow = L.OPP_W - 4, oh = 34;
+    _tcvRoundRect(ctx, ox, Y + H / 2 - oh / 2, ow, oh, 5);
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '600 8px ' + SANS; ctx.fillStyle = 'rgba(255,255,255,.62)';
+    ctx.fillText('BYE', ox + ow / 2, Y + H / 2 - 9);
+    ctx.font = 'bold 15px ' + SANS; ctx.fillStyle = '#fff';
+    ctx.fillText(String(seasonBye), ox + ow / 2, Y + H / 2 + 6);
   }
 
   // Team logo
@@ -4130,7 +4156,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= PROJ PPG (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
+    '<span>= PROJ PPG (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 

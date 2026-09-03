@@ -4460,6 +4460,7 @@
   // every sync — including "Synced 0 drafts" (everything already known), which
   // previously left the stale sidebar snapshot untouched because no checkpoint
   // publish ever fired. Resolves with the draft count used (0 if nothing).
+  let _lastPortfolioWriteError = null;
   function rebuildSidebarPortfolioFromStores() {
     return new Promise(function (resolve) {
       if (!_isExtensionContextValid()) return resolve(0);
@@ -4469,7 +4470,28 @@
             const merged = res && res.mff_portfolio_sync;
             const sp = _sidebarPortfolioUnion(null, merged && merged.drafts, res && res.mff_site_drafts);
             if (!sp) return resolve(0);
-            chrome.storage.local.set({ mff_portfolio: sp }, function () { resolve(sp.numTeams || 0); });
+            chrome.storage.local.set({ mff_portfolio: sp }, function () {
+              // v0.18.14: the write was silently failing (Jack: status said
+              // 287, store line kept the 12:56 six-draft snapshot). Surface
+              // chrome.runtime.lastError — QUOTA_BYTES at 10 MB without the
+              // unlimitedStorage permission is the usual cause — and apply
+              // the rebuilt portfolio in-memory regardless so THIS tab is
+              // right even if the store isn't.
+              const err = chrome.runtime && chrome.runtime.lastError ? chrome.runtime.lastError.message : null;
+              if (err) {
+                console.warn('[MFF/portfolio] mff_portfolio write FAILED:', err);
+                _lastPortfolioWriteError = err;
+              } else {
+                _lastPortfolioWriteError = null;
+              }
+              try {
+                state.portfolio = sp;
+                if (typeof clearExposureBadges === 'function') clearExposureBadges();
+                if (typeof decoratePlayerList === 'function') decoratePlayerList();
+                if (typeof render === 'function') render();
+              } catch (_) {}
+              resolve(sp.numTeams || 0);
+            });
           } catch (_) { resolve(0); }
         });
       } catch (_) { resolve(0); }
@@ -4496,6 +4518,12 @@
                            ' · site id list ' + nIds + ' · written ' + when + (p && p.source ? ' via ' + p.source : ' via UNTAGGED writer') +
                            (p && p.season ? ' · season ' + p.season + (p.excludedOld ? ' (' + p.excludedOld + ' older excluded)' : '') : '');
           el.style.color = (nP && (nP < nSync || nP < nSite)) ? '#f59e0b' : '#8a8d96';
+          if (_lastPortfolioWriteError) el.textContent += ' · LAST WRITE FAILED: ' + _lastPortfolioWriteError;
+          try {
+            chrome.storage.local.getBytesInUse(null, function (b) {
+              if (typeof b === 'number') el.textContent += ' · storage ' + (b / 1048576).toFixed(1) + ' MB';
+            });
+          } catch (_) {}
         } catch (_) {}
       });
     } catch (_) {}
@@ -6141,7 +6169,11 @@
         status.textContent += n
           ? ' · exposure % from ' + n + ' draft' + (n === 1 ? '' : 's')
           : ' · no portfolio in cache yet — open myfantasyfootball.co once, then Sync again';
+        if (_lastPortfolioWriteError) {
+          status.innerHTML += '<br><span style="color:#ef4444">Store write failed: ' + _esc(_lastPortfolioWriteError) + '</span>';
+        }
       }
+      try { renderPortfolioDiag(); } catch (_) {}
     } catch (_) {}
   }
 

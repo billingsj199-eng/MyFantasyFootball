@@ -1,6 +1,56 @@
 {
-  "updated": "2026-09-02T16:14:36Z",
+  "updated": "2026-09-03T02:08:26Z",
   "items": [
+    {
+      "player": "Kyle Monangai",
+      "team": "CHI",
+      "pos": "RB",
+      "date": "2026-09-02",
+      "headline": "Still not practicing with hyperextended knee; Week 1 status in 'serious doubt'",
+      "take": "Outlook has worsened since the initial positive read -- fade him for Week 1 and watch Roschon Johnson for early-season touches behind D'Andre Swift.",
+      "url": "https://sports.yahoo.com/articles/kyle-monangai-week-1-status-205533985.html",
+      "tag": "faller"
+    },
+    {
+      "player": "George Kittle",
+      "team": "SF",
+      "pos": "TE",
+      "date": "2026-09-02",
+      "headline": "Flying to Australia with team, no setbacks, 'still got a shot' to play Week 1 vs. Rams",
+      "take": "More encouraging than yesterday's GM-voiced concern -- trending back toward a Week 1 TE1 look, though still recovering from a torn Achilles.",
+      "url": "https://www.cbssports.com/nfl/news/george-kittle-nick-bosa-49ers-rams-australia/",
+      "tag": "riser"
+    },
+    {
+      "player": "Emeka Egbuka",
+      "team": "TB",
+      "pos": "WR",
+      "date": "2026-09-02",
+      "headline": "Toe sprain diagnosed as 'stable,' not expected to threaten season-opener status",
+      "take": "Removes the worst-case fear from Tuesday's absence -- safe to keep him as Tampa Bay's clear WR1 on draft day.",
+      "url": "https://www.bucsnation.com/tampa-bay-buccaneers-injuries/68151/egbuka-toe-injury-deemed-stable",
+      "tag": "riser"
+    },
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-02",
+      "headline": "Expected back at full practice next week, on track to play Week 1 vs. Colts",
+      "take": "Quad issue looks like load management rather than a real injury concern -- stay confident starting him in Week 1.",
+      "url": "https://sports.yahoo.com/articles/ravens-news-zay-flowers-gets-131503274.html",
+      "tag": "riser"
+    },
+    {
+      "player": "Ashton Jeanty",
+      "team": "LV",
+      "pos": "RB",
+      "date": "2026-09-02",
+      "headline": "Remained out of Wednesday practice with ankle injury despite GM/HC optimism",
+      "take": "Tempers this morning's optimistic framing -- still trending toward Week 1 vs. MIA, but each missed day raises Mike Washington Jr.'s handcuff value.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-02/no-practice-for-jeanty-ankle-wednesday",
+      "tag": "injury"
+    },
     {
       "player": "Isiah Pacheco",
       "team": "DET",

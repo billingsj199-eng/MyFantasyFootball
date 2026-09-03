@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-03g" as="script">
+<link rel="preload" href="app.js?v=2026-09-03h" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1491,21 +1491,22 @@ tr:hover .watch-star{opacity:.55}
 .tcv-key-color-note i{color:#ef4444;font-style:normal;font-weight:600}
 /* ROW CARDS layout — horizontal graphic cards (rank | headshot | name/pos | stats | matchup | team logo)
    on a team-color band. One card per line under each tier letter; sized to mirror the
-   PNG export in _tcvRowCardCanvas (456×72 CSS px) so what you see is what downloads. */
+   PNG export in _tcvRowCardCanvas (448×72 CSS px) so what you see is what downloads. */
 .tier-card-view.tcv-rows .tcv-cards{flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:9px;padding:10px 12px 12px 10px}
 .tier-card-view.tcv-rows.tcv-centered .tcv-cards{align-items:center}
-.tcv-card.tcv-row-card{width:456px;height:72px;padding:0;display:flex;align-items:center;gap:0;border-radius:8px;overflow:visible;box-shadow:0 0 0 1.5px rgba(255,255,255,.28),0 6px 16px rgba(0,0,0,.65);color:#fff}
+.tcv-card.tcv-row-card{width:448px;height:72px;padding:0;display:flex;align-items:center;gap:0;border-radius:8px;overflow:visible;box-shadow:0 0 0 1.5px rgba(255,255,255,.28),0 6px 16px rgba(0,0,0,.65);color:#fff}
 .tcv-card.tcv-row-card.tcv-row-light{color:#0f172a}
 .tcv-row-rank{position:absolute;top:1px;left:5px;z-index:2;font-family:'Bebas Neue',Impact,sans-serif;font-size:34px;font-weight:900;line-height:1;color:#fff;-webkit-text-stroke:1.6px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7)}
 .tcv-row-img{flex:0 0 110px;height:86px;align-self:flex-end;margin:0 0 0 4px;display:flex;align-items:flex-end;justify-content:center;position:relative;z-index:1}
 .tcv-row-img img{width:110px;height:86px;object-fit:contain;object-position:center bottom;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .tcv-row-img .tcv-card-img-fallback{width:110px;height:60px;margin:0;font-size:26px}
 .tcv-card.tcv-covered .tcv-row-img{visibility:hidden}
-.tcv-row-id{flex:0 0 142px;min-width:0;padding:0 6px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.tcv-row-id{flex:0 0 140px;min-width:0;margin-left:-6px;padding:0 6px 0 4px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:3px}
 .tcv-row-name{font-family:'Bebas Neue',Impact,sans-serif;font-size:21px;line-height:1;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.55)}
 .tcv-row-light .tcv-row-name{text-shadow:none}
 .tcv-row-sub{display:flex;align-items:center;gap:5px;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;opacity:.9}
 .tcv-row-card .tcv-pos-pill{position:static;font-size:10px;padding:1px 5px;line-height:1.3}
+.tcv-row-rank.tcv-row-rank-3{font-size:28px;top:3px;-webkit-text-stroke:1.4px #0a0a0a}
 .tcv-row-team-mini{width:18px;height:18px;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
 .tcv-row-stats{flex:0 0 136px;height:44px;margin:0 0 0 6px;display:flex;align-items:stretch;background:rgba(0,0,0,.55);border-radius:6px;color:#fff}
 .tcv-row-stat{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1}
@@ -5470,7 +5471,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-03g"></script>
+<script defer src="app.js?v=2026-09-03h"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

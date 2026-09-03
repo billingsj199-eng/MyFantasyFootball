@@ -3585,7 +3585,7 @@ function _tcvRowsPref() {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { W: 456, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 120, NAME_END: 256, MINI_LOGO: 18, OPP_X: 260, OPP_W: 44, OPP_LOGO: 34, STATS_X: 310, STATS_W: 136, STATS_H: 44 };
+const _TCV_ROW = { W: 448, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 248, MINI_LOGO: 18, OPP_X: 252, OPP_W: 44, OPP_LOGO: 34, STATS_X: 302, STATS_W: 136, STATS_H: 44 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
@@ -3669,7 +3669,7 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
     : '';
 
   card.innerHTML =
-    '<div class="tcv-row-rank">' + displayRank + '.</div>' +
+    '<div class="tcv-row-rank' + (displayRank >= 100 ? ' tcv-row-rank-3' : '') + '">' + displayRank + '.</div>' +
     '<div class="tcv-row-img">' + headshotHtml + '</div>' +
     '<div class="tcv-row-id">' +
       '<div class="tcv-row-name" title="' + safe(d.n) + ' · ' + safe(abbr) + '">' + safe(d.n) + '</div>' +
@@ -3827,11 +3827,12 @@ async function _tcvRowCardCanvas(d, displayRank) {
 
   // Rank — top-left corner of the band, riding the headshot's shoulder
   ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.lineJoin = 'round';
-  ctx.font = '34px ' + BEBAS;
-  ctx.lineWidth = 3.2; ctx.strokeStyle = '#0a0a0a';
-  ctx.strokeText(displayRank + '.', 5, Y + 1);
+  const _rank3 = displayRank >= 100;   // 3 digits: a notch smaller so "100." fits the corner
+  ctx.font = (_rank3 ? 28 : 34) + 'px ' + BEBAS;
+  ctx.lineWidth = _rank3 ? 2.8 : 3.2; ctx.strokeStyle = '#0a0a0a';
+  ctx.strokeText(displayRank + '.', 5, Y + (_rank3 ? 3 : 1));
   ctx.fillStyle = '#fff';
-  ctx.fillText(displayRank + '.', 5, Y + 1);
+  ctx.fillText(displayRank + '.', 5, Y + (_rank3 ? 3 : 1));
 
   // Name + pos pill + mini team logo (no abbr text)
   const nameW = L.NAME_END - L.NAME_X - 6;

@@ -344,6 +344,139 @@ window._fixHeadshotUrl = function(url) {
   return url.replace(/&w=\d+&h=\d+/, '&w=350');
 };
 
+// === SQUARE HEADSHOT NORMALIZER ("floating heads") ===
+// ESPN's newer photoshoots (2026-09: Pitts, Gainwell, Singleton, Boston, Bond,
+// Ott, Pauling, Key at 1024×1024; Polk at 600×600) ship SQUARE PNGs where the
+// player occupies only the top ~68% — the bottom ~32% is fully transparent.
+// Classic 600×436 files run the jersey flush to the bottom edge. Any renderer
+// that bottom-anchors or center-fits the file therefore shows the newer heads
+// "floating" above an invisible band (ESPN's own pages included). Fix at the
+// pixel level so EVERY surface — rankings rows, player cards, tier cards, My
+// Teams, mock draft, canvas PNG/ZIP exports, html2canvas share cards — sees a
+// normal landscape headshot:
+//   • a capture-phase `load` listener catches every <img>; a square ESPN
+//     headshot is re-fetched CORS-clean, cropped to its last opaque row,
+//     padded back to the classic 600:436 ratio and swapped to a blob: URL
+//     (one blob per source URL, shared by every element that renders it)
+//   • canvas exporters run loaded images through window._hsNormImage(img)
+//   • html2canvas exporters await window._hsNormalizeAll(root) before capture
+// If the pixels are unreadable (no CORS) the <img> gets .hs-sq instead and
+// CSS object-view-box clips the band where the browser supports it.
+window._HS_NORM = (function() {
+  const RATIO = 600 / 436;
+  const blobCache = new Map();          // rawSrc -> Promise<string|null>
+  const cropCache = new Map();          // rawSrc -> HTMLCanvasElement
+  const pending = new WeakMap();        // img -> Promise (swap in flight)
+  const SKIP_IDS = { epImage: 1, epuImage: 1 };   // Guess Who games own their load handlers
+  function isHeadshot(src) {
+    return typeof src === 'string' && /a\.espncdn\.com\/.*headshots\/nfl\/players\/full\/\d+\.png/.test(src);
+  }
+  function dims(img) { return [img.naturalWidth || img.width || 0, img.naturalHeight || img.height || 0]; }
+  function isSquare(img) { const [w, h] = dims(img); return w > 0 && w === h; }
+  function lastOpaqueRow(ctx, w, h) {
+    const d = ctx.getImageData(0, 0, w, h).data;
+    for (let y = h - 1; y >= 0; y--) {
+      const row = y * w * 4;
+      for (let x = 0; x < w; x++) if (d[row + x * 4 + 3] > 8) return y + 1;
+    }
+    return h;
+  }
+  // img must be CORS-clean (crossOrigin=anonymous) or getImageData/toBlob throw.
+  function cropCanvas(img) {
+    const [w, h] = dims(img);
+    const probe = document.createElement('canvas');
+    probe.width = w; probe.height = h;
+    const pctx = probe.getContext('2d', { willReadFrequently: true });
+    pctx.drawImage(img, 0, 0);
+    let bottom;
+    try { bottom = lastOpaqueRow(pctx, w, h); } catch (e) { bottom = Math.round(h * 0.68); }
+    bottom = Math.min(h, bottom + Math.round(h * 0.005));
+    const outH = Math.max(bottom, Math.round(w / RATIO));
+    const out = document.createElement('canvas');
+    out.width = w; out.height = outH;
+    out.getContext('2d').drawImage(img, 0, 0, w, bottom, 0, outH - bottom, w, bottom);
+    return out;
+  }
+  function loadCors(src) {
+    return new Promise(res => {
+      const i = new Image();
+      i.crossOrigin = 'anonymous';
+      const t = setTimeout(() => res(null), 8000);
+      i.onload = () => { clearTimeout(t); res(i); };
+      i.onerror = () => { clearTimeout(t); res(null); };
+      i.src = src;
+    });
+  }
+  function normalizedUrl(src) {
+    if (blobCache.has(src)) return blobCache.get(src);
+    const p = (async () => {
+      const img = await loadCors(src);
+      if (!img || !isSquare(img)) return null;
+      try {
+        const c = cropCanvas(img);
+        cropCache.set(src, c);
+        const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+        return blob ? URL.createObjectURL(blob) : null;
+      } catch (e) { return null; }   // tainted canvas → CSS fallback
+    })();
+    blobCache.set(src, p);
+    return p;
+  }
+  function settled(img) {
+    return new Promise(r => {
+      if (img.complete) return r();
+      const done = () => r();
+      img.addEventListener('load', done, { once: true });
+      img.addEventListener('error', done, { once: true });
+      setTimeout(done, 4000);
+    });
+  }
+  // Returns a Promise while a swap is in flight, else null.
+  function check(img) {
+    if (!img || img.tagName !== 'IMG') return null;
+    if (pending.has(img)) return pending.get(img);
+    if (img.dataset.hsn || SKIP_IDS[img.id]) return null;
+    const src = img.currentSrc || img.src;
+    if (!isHeadshot(src) || !isSquare(img)) return null;
+    img.dataset.hsn = '1';
+    const p = normalizedUrl(src).then(async url => {
+      if (url) { img.src = url; await settled(img); }
+      else img.classList.add('hs-sq');
+    }).finally(() => pending.delete(img));
+    pending.set(img, p);
+    return p;
+  }
+  // Synchronous hook for canvas exporters: hand back a cropped canvas for a
+  // square headshot (img must be CORS-clean), else the image untouched.
+  function normImage(img) {
+    try {
+      if (!img || !isSquare(img)) return img;
+      const src = img.src || img.currentSrc || '';
+      if (!isHeadshot(src)) return img;
+      if (cropCache.has(src)) return cropCache.get(src);
+      const c = cropCanvas(img);
+      c.getContext('2d').getImageData(0, 0, 1, 1);   // taint probe — throws if unreadable
+      cropCache.set(src, c);
+      return c;
+    } catch (e) { return img; }
+  }
+  async function normalizeAll(root) {
+    const imgs = Array.from((root || document).querySelectorAll('img'));
+    await Promise.all(imgs.map(async img => {
+      await settled(img);
+      const p = check(img);
+      if (p) await p;
+    }));
+  }
+  document.addEventListener('load', e => { if (e.target && e.target.tagName === 'IMG') check(e.target); }, true);
+  // Images that finished loading before this ran (cached, eager).
+  const sweep = () => Array.from(document.images).forEach(img => { if (img.complete && img.naturalWidth) check(img); });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sweep); else sweep();
+  window._hsNormImage = normImage;
+  window._hsNormalizeAll = normalizeAll;
+  return { check, normImage, normalizeAll, isHeadshot, _blobCache: blobCache };
+})();
+
 // === FUTURE DRAFT PICKS (dynasty/SF rankings) ===
 // 2027 picks: Early/Mid 1st, Mid/Late 1st, Early/Mid 2nd, Mid/Late 2nd, 3rd, 4th
 // 2028 picks: same structure
@@ -3762,7 +3895,8 @@ function _tcvLoadImg(url, ms) {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     const to = setTimeout(() => res(null), ms || 6000);
-    img.onload = () => { clearTimeout(to); res(img); };
+    // Square ESPN headshots come back as a cropped canvas (see _HS_NORM).
+    img.onload = () => { clearTimeout(to); res(window._hsNormImage ? window._hsNormImage(img) : img); };
     img.onerror = () => { clearTimeout(to); res(null); };
     img.src = url;
   });
@@ -10424,6 +10558,7 @@ async function _snapElement(el, fileLabel) {
     if (c && c !== 'transparent' && c !== 'rgba(0, 0, 0, 0)') { bg = c; break; }
     n = n.parentElement;
   }
+  if (window._hsNormalizeAll) await window._hsNormalizeAll(el);   // square-headshot crop before capture
   const src = await window.html2canvas(el, {
     backgroundColor: bg, scale: SCALE, useCORS: true, logging: false,
     ignoreElements: node => !!((node.classList && (node.classList.contains('card-snap-btn') || node.classList.contains('card-share') || node.classList.contains('card-close') || node.classList.contains('card-finder-row'))) || node.id === 'cardIrToggle'),
@@ -21746,6 +21881,7 @@ window.fmtHeight = fmtHeight;
             img.onerror = () => { clearTimeout(t); res(); };
           });
         }));
+        if (window._hsNormalizeAll) await window._hsNormalizeAll(holder);   // square-headshot crop before capture
         const measuredHeight = built.node.offsetHeight;
         const canvas = await window.html2canvas(built.node, {
           backgroundColor: '#000',
@@ -22160,6 +22296,7 @@ window.fmtHeight = fmtHeight;
             img.onerror = () => { clearTimeout(t); res(); };
           });
         }));
+        if (window._hsNormalizeAll) await window._hsNormalizeAll(holder);   // square-headshot crop before capture
         const canvas = await window.html2canvas(node, {
           backgroundColor: '#000',
           scale: 1,
@@ -22420,6 +22557,7 @@ window.fmtHeight = fmtHeight;
             img.onerror = () => { clearTimeout(t); res(); };
           });
         }));
+        if (window._hsNormalizeAll) await window._hsNormalizeAll(holder);   // square-headshot crop before capture
         const canvas = await window.html2canvas(node, {
           backgroundColor: '#000',
           scale: 1,

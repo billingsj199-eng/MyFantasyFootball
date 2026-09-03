@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-03r" as="script">
+<link rel="preload" href="app.js?v=2026-09-03s" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -106,6 +106,104 @@ window._fbFlushReady = function(){
 // still boot on DOMContentLoaded so queued callbacks flush and the app enters offline
 // mode gracefully. _fbBoot is idempotent (early-returns once _fbReady is set).
 document.addEventListener('DOMContentLoaded', function(){ if (window._fbBootAuth) window._fbBootAuth(); if (window._fbBoot) window._fbBoot(); });
+</script>
+
+<!-- Auth diagnostics (2026-09-03): Jack reported intermittent sign-outs mid-session on desktop
+     Chrome. No site code signs out on its own, so this records WHY a session drops: every
+     token-refresh / identity-toolkit HTTP result, every auth-state transition, whether the app
+     itself called signOut(), and whether the browser wiped this origin's storage. Ring of the
+     last 80 events in localStorage `mff_auth_diag`. Console: _authDiag() (table) /
+     _authDiagText() (JSON to paste). Lives here, BEFORE the Firebase loader, so the boot-time
+     token refresh is captured too. Never stores tokens, emails or passwords. -->
+<script>
+(function(){
+  var KEY = 'mff_auth_diag', MAX = 80, T0 = Date.now();
+  function read(){ try { var a = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(a) ? a : []; } catch(e){ return []; } }
+  function push(type, info){
+    var e = { t: new Date().toISOString(), type: type, age: Math.round((Date.now() - T0)/1000), vis: document.visibilityState, online: navigator.onLine };
+    if (info) for (var k in info) e[k] = info[k];
+    try { var a = read(); a.push(e); if (a.length > MAX) a.splice(0, a.length - MAX); localStorage.setItem(KEY, JSON.stringify(a)); } catch(_){}
+    if (type === 'AUTH-HTTP-ERROR' || type === 'auth-http-fail') window._authDiagLastHttp = e;
+    window._authDiagLast = e;
+    return e;
+  }
+  window._authDiagPush = push;
+  window._authDiag = function(){ var a = read(); try { console.table(a); } catch(_){} return a; };
+  window._authDiagText = function(){ return JSON.stringify(read(), null, 1); };
+
+  // Storage-wipe detector: a cookie survives a site-data eviction that takes IndexedDB +
+  // localStorage (and with them the persisted Firebase session). Cookie present + log absent
+  // on boot = the browser wiped this origin between visits, which signs the user out.
+  var hadCookie = /(^|;\s*)mff_diag=/.test(document.cookie);
+  var hadLog = false; try { hadLog = localStorage.getItem(KEY) !== null; } catch(_){}
+  try { document.cookie = 'mff_diag=1; path=/; max-age=31536000; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); } catch(_){}
+  if (hadCookie && !hadLog) push('STORAGE-WIPED', { note: 'cookie survived but the localStorage log is gone: the browser evicted this site\'s data (sign-out expected)' });
+  push('boot', { hadLog: hadLog, hadCookie: hadCookie, ua: (navigator.userAgent.match(/(Chrome|Firefox|Edg|Version)\/[\d.]+/) || [''])[0] });
+  try {
+    if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(function(s){ push('storage', { usageMB: Math.round((s.usage||0)/1048576), quotaMB: Math.round((s.quota||0)/1048576) }); });
+    // Ask the browser not to evict this origin under disk pressure (no-op if already decided).
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().then(function(ok){ push('persist', { granted: ok }); });
+  } catch(_){}
+
+  // Auth HTTP observer: the Firebase Auth SDK signs the user out when the refresh endpoint
+  // rejects the refresh token (TOKEN_EXPIRED / INVALID_REFRESH_TOKEN / USER_DISABLED /
+  // USER_NOT_FOUND). The compat SDK swallows that reason; this captures it. The SDK reads
+  // self.fetch at call time, so wrapping it here (before the SDK loads) is sufficient.
+  var AUTH_HOSTS = ['securetoken.googleapis.com', 'identitytoolkit.googleapis.com'];
+  function authHost(u){ try { var h = new URL(u, location.href).hostname; for (var i=0;i<AUTH_HOSTS.length;i++) if (h === AUTH_HOSTS[i]) return h.split('.')[0]; } catch(_){} return null; }
+  function endpoint(u){ try { var p = new URL(u, location.href).pathname; return p.split('/').pop().split(':').pop(); } catch(_){ return '?'; } }
+  if (window.fetch) {
+    var _fetch = window.fetch;
+    window.fetch = function(input){
+      var url = (typeof input === 'string') ? input : (input && input.url) || '';
+      var host = authHost(url);
+      if (!host) return _fetch.apply(this, arguments);
+      var ep = endpoint(url);
+      return _fetch.apply(this, arguments).then(function(res){
+        if (res && res.ok) { if (host === 'securetoken') push('token-refresh-ok', { status: res.status }); return res; }
+        try {
+          res.clone().text().then(function(body){
+            var msg = ''; try { msg = (JSON.parse(body).error || {}).message || ''; } catch(_){ msg = String(body).slice(0, 120); }
+            push('AUTH-HTTP-ERROR', { host: host, ep: ep, status: res ? res.status : 0, err: msg });
+          }).catch(function(){ push('AUTH-HTTP-ERROR', { host: host, ep: ep, status: res ? res.status : 0 }); });
+        } catch(_){}
+        return res;
+      }, function(err){
+        push('auth-http-fail', { host: host, ep: ep, err: (err && err.message) || String(err) });
+        throw err;
+      });
+    };
+  }
+
+  // Auth-state transitions + "did THIS page's code call signOut()" attribution.
+  var prev; // undefined until the first emission
+  window._authDiagAuth = function(u){
+    var cur = u ? (u.uid || '').slice(0, 6) : null;
+    var first = (prev === undefined);
+    if (first || cur !== prev) {
+      var e = { user: cur, first: first };
+      if (!first && prev && !cur) {
+        var byApp = window._authDiagSignOutAt && (Date.now() - window._authDiagSignOutAt) < 15000;
+        var last = window._authDiagLastHttp;
+        e.reason = byApp ? 'this page called signOut()'
+          : ('not from this page\'s code' + (last ? '; last auth HTTP: ' + last.ep + ' ' + last.status + ' ' + (last.err || '') : '; no auth HTTP error seen (another tab signed out, or storage was cleared)'));
+        push(byApp ? 'signout-by-app' : 'UNEXPECTED-SIGNOUT', e);
+        if (!byApp) { window._authDiagUnexpected = e.reason; console.warn('[AuthDiag] UNEXPECTED sign-out: ' + e.reason + ' — run _authDiag() for the log'); }
+      } else push('auth-state', e);
+    }
+    prev = cur;
+  };
+  window._authDiagPatchSignOut = function(auth){
+    if (!auth || auth._diagPatched) return; auth._diagPatched = true;
+    var so = auth.signOut;
+    auth.signOut = function(){
+      window._authDiagSignOutAt = Date.now();
+      var st = ''; try { st = (new Error().stack || '').split('\n').slice(2, 5).join(' | ').replace(/\s+/g, ' ').slice(0, 300); } catch(_){}
+      push('signout-called', { stack: st });
+      return so.apply(this, arguments);
+    };
+  };
+})();
 </script>
 
 <!-- Firebase AUTH loader (optional — page works without it if blocked by privacy settings).
@@ -153,9 +251,11 @@ document.addEventListener('DOMContentLoaded', function(){ if (window._fbBootAuth
       try {
         if (!(firebase.apps && firebase.apps.length)) firebase.initializeApp(cfg);
         firebase.auth().onAuthStateChanged(function(u){
+          if (typeof window._authDiagAuth === 'function') { try { window._authDiagAuth(u); } catch(e){} }
           window._earlyAuthUser = u;
           if (typeof window.updateAccountUI === 'function') { try { window.updateAccountUI(u); } catch(e){} }
         });
+        if (typeof window._authDiagPatchSignOut === 'function') { try { window._authDiagPatchSignOut(firebase.auth()); } catch(e){} }
       } catch(e){ console.warn('[Auth] early boot failed:', e && e.message); }
     })
     // Firestore + Functions: loaded from THIS chain, not static defer tags. The old
@@ -5473,7 +5573,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-03r"></script>
+<script defer src="app.js?v=2026-09-03s"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

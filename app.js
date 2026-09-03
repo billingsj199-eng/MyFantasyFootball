@@ -25636,13 +25636,40 @@ window.fmtHeight = fmtHeight;
     try { console.table(list.map(b => ({ key: b.key, at: b.at, by: b.by, redraft: b.redraftLen, top5: b.top5.join(', ') }))); } catch (_) {}
     return list;
   };
-  window._jacksRestore = async function(key) {
+  window._jacksRestore = async function(key, opts) {
     if (!db || !isAdmin()) { toast('Admin only'); return false; }
     const list = await _jacksBackupList(10);
     const b = key ? list.find(x => x.key === key)
       : (list.find(x => x.key.indexOf('cloud:') === 0 && x.redraftLen > 100) || list.find(x => x.redraftLen > 100));
     if (!b) { toast('No usable backup found (cloud rankings_history or local)'); return false; }
-    if (!confirm("Restore Jack's official board from " + b.key + " (" + b.at + ", " + b.redraftLen + " redraft names; top: " + b.top5.join(', ') + ")?\n\nThis rewrites rankings/jacks-official.")) return false;
+    // Server guard (2026-09-03): never roll the live board back on a cached "missing". Read
+    // the live doc FROM THE SERVER; if it exists and is at least as new as the backup there is
+    // nothing to restore — refuse (console override: _jacksRestore(key, { force: true })).
+    // An unreadable server is a refusal too: we cannot prove the board is gone.
+    let _liveNote = '';
+    try {
+      const live = await db.collection('rankings').doc('jacks-official').get({ source: 'server' });
+      if (live.exists && live.data().data) {
+        const liveAt = live.data().updatedAt || '';
+        const liveMs = Date.parse(liveAt), bkMs = Date.parse(b.at);
+        const liveOlder = Number.isFinite(liveMs) && Number.isFinite(bkMs) && liveMs < bkMs;
+        if (!liveOlder && !(opts && opts.force)) {
+          const why = 'the server HAS a live board (updatedAt ' + (liveAt || '?') + ') that is not older than backup ' + b.key + ' (' + b.at + ')';
+          console.error('[Restore] REFUSED: ' + why);
+          toast('Restore refused — ' + why + '. Nothing to restore; reload the page.');
+          return false;
+        }
+        _liveNote = liveOlder
+          ? '\n\nNOTE: the server has a live board (updatedAt ' + (liveAt || '?') + ') that is OLDER than this backup; it will be overwritten.'
+          : '\n\nFORCE: the server has a live board (updatedAt ' + (liveAt || '?') + ') that is NEWER than this backup; it WILL be overwritten.';
+      } else _liveNote = '\n\nServer confirmed: rankings/jacks-official is missing.';
+    } catch (e) {
+      const code = (e && (e.code || e.message)) || String(e);
+      console.error('[Restore] REFUSED: could not read the live board from the server:', code);
+      toast('Restore refused — could not read the live board from the server (' + code + '). Check connection / sign-in, then retry.');
+      return false;
+    }
+    if (!confirm("Restore Jack's official board from " + b.key + " (" + b.at + ", " + b.redraftLen + " redraft names; top: " + b.top5.join(', ') + ")?\n\nThis rewrites rankings/jacks-official." + _liveNote)) return false;
     showSaving();
     try {
       const at = new Date().toISOString();
@@ -25928,14 +25955,38 @@ window.fmtHeight = fmtHeight;
       // bundled default order — nothing had loaded — and the Underdog export
       // shipped that). window._jacksOfficialLoaded gates saveJacksRankings.
       if (_jacksDocId() === 'jacks-official') {
-        const _ok = _docId === 'jacks-official' && doc && doc.exists && !!doc.data().data;
+        let _ok = _docId === 'jacks-official' && doc && doc.exists && !!doc.data().data;
+        // exists=false is NOT proof the doc is gone (2026-09-03 afternoon false alarm): a plain
+        // get() is answered from the offline cache whenever the client can't reach Firestore or
+        // its auth token is rejected, and this browser cached the doc as non-existent during the
+        // morning's real deletion. Confirm against the SERVER before offering a restore — an
+        // unreachable server is "could not verify", never "missing". (_jacksRestore guards the
+        // write side the same way, so a stale offer can't roll the live board back.)
+        let _serverMissing = false, _note = '';
+        if (!_ok && _docId === 'jacks-official' && doc && !doc.exists) {
+          _note = ', fromCache=' + !!(doc.metadata && doc.metadata.fromCache);
+          try {
+            const sdoc = await db.collection('rankings').doc('jacks-official').get({ source: 'server' });
+            if (sdoc.exists && sdoc.data().data) {
+              doc = sdoc; _ok = true;
+              console.warn('[Auth] official board: cached read said missing but the SERVER has it (updatedAt ' + (sdoc.data().updatedAt || '?') + ') — using the server copy');
+              if (typeof window._authDiagPush === 'function') window._authDiagPush('firestore-cache-stale', { doc: 'jacks-official', note: 'cache said missing, server has it' });
+            } else _serverMissing = true;
+          } catch (se) {
+            const _code = (se && (se.code || se.message)) || String(se);
+            _note += ', server read failed: ' + _code;
+            if (typeof window._authDiagPush === 'function') window._authDiagPush('firestore-server-read-failed', { doc: 'jacks-official', err: _code });
+          }
+        }
         if (_ok) { window._jacksOfficialLoaded = true; window._jacksOfficialLoadFailed = null; }
         else {
-          window._jacksOfficialLoadFailed = 'read ' + _docId + ', exists=' + !!(doc && doc.exists) + ', data=' + !!(doc && doc.exists && doc.data().data);
+          window._jacksOfficialLoadFailed = 'read ' + _docId + ', exists=' + !!(doc && doc.exists) + ', data=' + !!(doc && doc.exists && doc.data().data) + _note + (_serverMissing ? ', SERVER CONFIRMED missing' : '');
           console.error('[Auth] OFFICIAL BOARD NOT LOADED (' + window._jacksOfficialLoadFailed + ') — boards may be the bundled default. Do not save.');
-          if (_docId === 'jacks-official' && doc && !doc.exists && typeof window._jacksOfferRestore === 'function') {
+          if (_serverMissing && typeof window._jacksOfferRestore === 'function') {
             const _reason = window._jacksOfficialLoadFailed;
             setTimeout(() => { try { window._jacksOfferRestore(_reason); } catch (_) {} }, 600);
+          } else if (_docId === 'jacks-official' && doc && !doc.exists && typeof toast === 'function') {
+            toast("⚠ Could not verify Jack's official board against the server — NOT offering a restore. Check connection / sign-in, then reload.");
           }
           if (typeof toast === 'function') toast("⚠ Jack's official board did NOT load (" + window._jacksOfficialLoadFailed + "). Reload before saving.");
         }
@@ -26651,6 +26702,13 @@ window.fmtHeight = fmtHeight;
         }, ms));
       } else {
         console.log('[Auth] Signed out');
+        // Auth diagnostics (index.html head): flagged when the sign-out did not come from this
+        // page's own signOut() call — a rejected token refresh, another tab, or wiped storage.
+        if (window._authDiagUnexpected) {
+          const _why = window._authDiagUnexpected; window._authDiagUnexpected = null;
+          console.error('[Auth] UNEXPECTED sign-out — ' + _why + ' — run _authDiag() in the console and send the output');
+          if (typeof toast === 'function') toast('⚠ Signed out unexpectedly (' + _why + '). Console: _authDiag()');
+        }
         // Wipe any cached premium so the next account starts clean
         try {
           const lp = JSON.parse(localStorage.getItem('jb_premium') || 'null');

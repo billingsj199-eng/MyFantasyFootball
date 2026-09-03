@@ -344,26 +344,34 @@ window._fixHeadshotUrl = function(url) {
   return url.replace(/&w=\d+&h=\d+/, '&w=350');
 };
 
-// === SQUARE HEADSHOT NORMALIZER ("floating heads") ===
-// ESPN's newer photoshoots (2026-09: Pitts, Gainwell, Singleton, Boston, Bond,
-// Ott, Pauling, Key at 1024×1024; Polk at 600×600) ship SQUARE PNGs where the
-// player occupies only the top ~68% — the bottom ~32% is fully transparent.
-// Classic 600×436 files run the jersey flush to the bottom edge. Any renderer
-// that bottom-anchors or center-fits the file therefore shows the newer heads
-// "floating" above an invisible band (ESPN's own pages included). Fix at the
-// pixel level so EVERY surface — rankings rows, player cards, tier cards, My
-// Teams, mock draft, canvas PNG/ZIP exports, html2canvas share cards — sees a
-// normal landscape headshot:
-//   • a capture-phase `load` listener catches every <img>; a square ESPN
-//     headshot is re-fetched CORS-clean, cropped to its last opaque row,
-//     padded back to the classic 600:436 ratio and swapped to a blob: URL
+// === HEADSHOT NORMALIZER — square "floating heads" + tight 2026 crops ===
+// ESPN headshots are transparent PNG cutouts, but two newer templates render
+// badly on every surface (ESPN's own pages included):
+//   SQUARE (1024×1024 / 600×600; 2026-09: Pitts, Gainwell, Singleton, Boston,
+//     Bond, Ott, Pauling, Key, Polk) — player in the top ~68%, bottom ~32%
+//     fully transparent, so bottom-anchored renderers show the head hovering
+//     above an invisible band.
+//   TIGHT (600×436; 2026 rookie shoots — Hurst, McGowan, Fannin, K. Black…) —
+//     zoomed in so the face fills ~45-50% of the frame (veterans ~40-43%) and
+//     the shoulders run off both sides: a big head on a sliver of jersey.
+// Fix at the pixel level so EVERY surface — rankings rows, player cards, tier
+// cards, My Teams, mock draft, canvas PNG/ZIP exports, html2canvas share
+// cards — sees a normally framed 600:436 headshot:
+//   • data/headshot_framing.js (scripts/scan_headshot_framing.py, OpenCV
+//     face detection offline) lists the ids that need work: {sq:1} and/or
+//     {k:0.86} — k scales a tight crop down to normal face size
+//   • a capture-phase `load` listener catches every <img>; a flagged (or
+//     square) ESPN headshot is re-fetched CORS-clean, the square band is
+//     cropped off, the cutout is drawn at k× anchored bottom-centre with the
+//     clipped shoulder edges alpha-faded, and the <img> swaps to a blob: URL
 //     (one blob per source URL, shared by every element that renders it)
 //   • canvas exporters run loaded images through window._hsNormImage(img)
 //   • html2canvas exporters await window._hsNormalizeAll(root) before capture
 // If the pixels are unreadable (no CORS) the <img> gets .hs-sq instead and
-// CSS object-view-box clips the band where the browser supports it.
+// CSS object-view-box clips the square band where the browser supports it.
 window._HS_NORM = (function() {
   const RATIO = 600 / 436;
+  const FADE = 0.10;                    // shoulder-edge fade, fraction of frame width
   const blobCache = new Map();          // rawSrc -> Promise<string|null>
   const cropCache = new Map();          // rawSrc -> HTMLCanvasElement
   const pending = new WeakMap();        // img -> Promise (swap in flight)
@@ -371,30 +379,69 @@ window._HS_NORM = (function() {
   function isHeadshot(src) {
     return typeof src === 'string' && /a\.espncdn\.com\/.*headshots\/nfl\/players\/full\/\d+\.png/.test(src);
   }
+  function espnId(src) { const m = /headshots\/nfl\/players\/full\/(\d+)\.png/.exec(src || ''); return m ? m[1] : null; }
+  function framing(src) { const id = espnId(src), F = window.HS_FRAMING; return (id && F && F[id]) || null; }
   function dims(img) { return [img.naturalWidth || img.width || 0, img.naturalHeight || img.height || 0]; }
   function isSquare(img) { const [w, h] = dims(img); return w > 0 && w === h; }
-  function lastOpaqueRow(ctx, w, h) {
+  function scaleFor(src) { const f = framing(src); return (f && f.k > 0 && f.k < 0.985) ? f.k : 1; }
+  function needsWork(img, src) { return isSquare(img) || scaleFor(src) < 1; }
+  // Per-row opaque extents (alpha > 8) + last opaque row.
+  function scanAlpha(ctx, w, h) {
     const d = ctx.getImageData(0, 0, w, h).data;
-    for (let y = h - 1; y >= 0; y--) {
-      const row = y * w * 4;
-      for (let x = 0; x < w; x++) if (d[row + x * 4 + 3] > 8) return y + 1;
+    const rows = new Array(h);
+    let bottom = 0, minL = w, maxR = -1;
+    for (let y = 0; y < h; y++) {
+      const base = y * w * 4;
+      let l = -1, r = -1;
+      for (let x = 0; x < w; x++) if (d[base + x * 4 + 3] > 8) { if (l < 0) l = x; r = x; }
+      rows[y] = l < 0 ? null : [l, r];
+      if (l >= 0) { bottom = y + 1; if (l < minL) minL = l; if (r > maxR) maxR = r; }
     }
-    return h;
+    return { bottom, rows, minL, maxR };
   }
   // img must be CORS-clean (crossOrigin=anonymous) or getImageData/toBlob throw.
-  function cropCanvas(img) {
+  function normalize(img, src) {
     const [w, h] = dims(img);
     const probe = document.createElement('canvas');
     probe.width = w; probe.height = h;
     const pctx = probe.getContext('2d', { willReadFrequently: true });
     pctx.drawImage(img, 0, 0);
-    let bottom;
-    try { bottom = lastOpaqueRow(pctx, w, h); } catch (e) { bottom = Math.round(h * 0.68); }
-    bottom = Math.min(h, bottom + Math.round(h * 0.005));
-    const outH = Math.max(bottom, Math.round(w / RATIO));
+    let scan = null;
+    try { scan = scanAlpha(pctx, w, h); } catch (e) { scan = null; }
+    const square = (w === h);
+    let bottom = scan ? scan.bottom : (square ? Math.round(h * 0.68) : h);
+    if (square) bottom = Math.min(h, bottom + Math.round(h * 0.005));
+    const outH = square ? Math.max(bottom, Math.round(w / RATIO)) : h;
+    const k = scaleFor(src);
     const out = document.createElement('canvas');
     out.width = w; out.height = outH;
-    out.getContext('2d').drawImage(img, 0, 0, w, bottom, 0, outH - bottom, w, bottom);
+    const octx = out.getContext('2d', { willReadFrequently: true });
+    const dw = Math.round(w * k), dh = Math.round(bottom * k);
+    const dx = Math.round((w - dw) / 2), dy = outH - dh;
+    octx.drawImage(img, 0, 0, w, bottom, dx, dy, dw, dh);
+    if (k < 1 && scan) {
+      // Shoulders that ran off the original frame now end in hard vertical
+      // cuts inside the box — ramp their alpha to 0 over FADE·w on each side.
+      // Only rows whose extent touched the original crop boundary are faded.
+      const fade = Math.max(2, Math.round(w * FADE * k));
+      const clipL = scan.minL + 2, clipR = scan.maxR - 2;
+      const id = octx.getImageData(0, 0, w, outH), px = id.data;
+      for (let y = dy; y < outH; y++) {
+        const sy = Math.min(bottom - 1, Math.floor((y - dy) / k));
+        const ex = scan.rows[sy];
+        if (!ex) continue;
+        const base = y * w * 4;
+        if (ex[0] <= clipL) {
+          const L = dx + Math.round(ex[0] * k);
+          for (let i = 0; i < fade; i++) { const x = L + i; if (x >= 0 && x < w) px[base + x * 4 + 3] = Math.round(px[base + x * 4 + 3] * (i / fade)); }
+        }
+        if (ex[1] >= clipR) {
+          const R = dx + Math.round(ex[1] * k);
+          for (let i = 0; i < fade; i++) { const x = R - i; if (x >= 0 && x < w) px[base + x * 4 + 3] = Math.round(px[base + x * 4 + 3] * (i / fade)); }
+        }
+      }
+      octx.putImageData(id, 0, 0);
+    }
     return out;
   }
   function loadCors(src) {
@@ -411,9 +458,9 @@ window._HS_NORM = (function() {
     if (blobCache.has(src)) return blobCache.get(src);
     const p = (async () => {
       const img = await loadCors(src);
-      if (!img || !isSquare(img)) return null;
+      if (!img || !needsWork(img, src)) return null;
       try {
-        const c = cropCanvas(img);
+        const c = normalize(img, src);
         cropCache.set(src, c);
         const blob = await new Promise(r => c.toBlob(r, 'image/png'));
         return blob ? URL.createObjectURL(blob) : null;
@@ -437,24 +484,24 @@ window._HS_NORM = (function() {
     if (pending.has(img)) return pending.get(img);
     if (img.dataset.hsn || SKIP_IDS[img.id]) return null;
     const src = img.currentSrc || img.src;
-    if (!isHeadshot(src) || !isSquare(img)) return null;
+    if (!isHeadshot(src) || !needsWork(img, src)) return null;
     img.dataset.hsn = '1';
     const p = normalizedUrl(src).then(async url => {
       if (url) { img.src = url; await settled(img); }
-      else img.classList.add('hs-sq');
+      else if (isSquare(img)) img.classList.add('hs-sq');
     }).finally(() => pending.delete(img));
     pending.set(img, p);
     return p;
   }
-  // Synchronous hook for canvas exporters: hand back a cropped canvas for a
-  // square headshot (img must be CORS-clean), else the image untouched.
+  // Synchronous hook for canvas exporters: hand back a normalized canvas for
+  // a flagged/square headshot (img must be CORS-clean), else the image untouched.
   function normImage(img) {
     try {
-      if (!img || !isSquare(img)) return img;
+      if (!img) return img;
       const src = img.src || img.currentSrc || '';
-      if (!isHeadshot(src)) return img;
+      if (!isHeadshot(src) || !needsWork(img, src)) return img;
       if (cropCache.has(src)) return cropCache.get(src);
-      const c = cropCanvas(img);
+      const c = normalize(img, src);
       c.getContext('2d').getImageData(0, 0, 1, 1);   // taint probe — throws if unreadable
       cropCache.set(src, c);
       return c;
@@ -474,7 +521,7 @@ window._HS_NORM = (function() {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sweep); else sweep();
   window._hsNormImage = normImage;
   window._hsNormalizeAll = normalizeAll;
-  return { check, normImage, normalizeAll, isHeadshot, _blobCache: blobCache };
+  return { check, normImage, normalizeAll, isHeadshot, framing, _blobCache: blobCache };
 })();
 
 // === FUTURE DRAFT PICKS (dynasty/SF rankings) ===
@@ -3895,7 +3942,7 @@ function _tcvLoadImg(url, ms) {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     const to = setTimeout(() => res(null), ms || 6000);
-    // Square ESPN headshots come back as a cropped canvas (see _HS_NORM).
+    // Square / tight-crop ESPN headshots come back as a normalized canvas (see _HS_NORM).
     img.onload = () => { clearTimeout(to); res(window._hsNormImage ? window._hsNormImage(img) : img); };
     img.onerror = () => { clearTimeout(to); res(null); };
     img.src = url;

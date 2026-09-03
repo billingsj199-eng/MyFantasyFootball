@@ -3585,7 +3585,7 @@ function _tcvRowsPref() {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { W: 560, H: 72, PAD_TOP: 14, RANK_W: 38, IMG_W: 110, IMG_H: 86, NAME_X: 154, LOGO_X: 302, LOGO_W: 44, OPP_X: 350, OPP_W: 40, STATS_X: 400, STATS_W: 146, STATS_H: 44 };
+const _TCV_ROW = { W: 532, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, RANK_W: 38, IMG_W: 110, IMG_H: 86, NAME_X: 154, LOGO_X: 290, LOGO_W: 44, OPP_X: 338, OPP_W: 40, STATS_X: 386, STATS_W: 136, STATS_H: 44 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
@@ -3770,14 +3770,23 @@ function _tcvFitFont(ctx, text, maxW, px, minPx, family) {
   }
   ctx.font = size + 'px ' + family;
 }
+// Export headshot at ESPN's native 600px width (the on-screen card asks for
+// 350) so a 4× render stays sharp.
+function _tcvHiResHeadshot(url) {
+  const u = window._fixHeadshotUrl(url);
+  return (u && u.includes('a.espncdn.com/combiner')) ? u.replace(/&w=\d+(&h=\d+)?/, '&w=600') : u;
+}
 async function _tcvRowCardCanvas(d, displayRank) {
-  const L = _TCV_ROW, S = 3;
+  const L = _TCV_ROW, S = 4;   // 4× = 2240×432 px per card
   const BEBAS = '"Bebas Neue",Impact,"Arial Narrow",sans-serif';
   const SANS = '"DM Sans",system-ui,sans-serif';
   const c = document.createElement('canvas');
-  c.width = L.W * S; c.height = (L.H + L.PAD_TOP) * S;
+  c.width = (L.W + L.PAD_X * 2) * S; c.height = (L.H + L.PAD_TOP + L.PAD_BOTTOM) * S;
   const ctx = c.getContext('2d');
   ctx.scale(S, S);
+  ctx.translate(L.PAD_X, 0);   // every x below is band-relative; PAD_X holds the shadow
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   try { if (document.fonts && document.fonts.load) await Promise.all([document.fonts.load('26px "Bebas Neue"'), document.fonts.load('bold 15px "DM Sans"')]); } catch(_) {}
 
   const cs = _tcvCardStats(d);
@@ -3786,18 +3795,24 @@ async function _tcvRowCardCanvas(d, displayRank) {
   const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
   const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
   const [head, logo, oppLogo] = await Promise.all([
-    _tcvLoadImg(d._slImg ? window._fixHeadshotUrl(d._slImg) : null),
+    _tcvLoadImg(d._slImg ? _tcvHiResHeadshot(d._slImg) : null),
     _tcvLoadImg(logoId ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png' : null),
     _tcvLoadImg(opp && !opp.bye ? opp.logoUrl : null)
   ]);
 
   const Y = L.PAD_TOP, H = L.H;
-  // Band (team colors) with a soft outline
+  // Band (team colors): drop shadow underneath, then a crisp light edge
   const g = ctx.createLinearGradient(0, 0, L.W, 0);
   g.addColorStop(0, band.p); g.addColorStop(0.6, band.p); g.addColorStop(1, band.s);
-  _tcvRoundRect(ctx, 0.5, Y + 0.5, L.W - 1, H - 1, 8);
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,.65)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
+  _tcvRoundRect(ctx, 0, Y, L.W, H, 8);
+  ctx.fillStyle = band.p; ctx.fill();
+  ctx.restore();
+  _tcvRoundRect(ctx, 0, Y, L.W, H, 8);
   ctx.fillStyle = g; ctx.fill();
-  ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.stroke();
+  _tcvRoundRect(ctx, 0.75, Y + 0.75, L.W - 1.5, H - 1.5, 7.5);
+  ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.stroke();
   const fg = band.light ? '#0f172a' : '#ffffff';
 
   // Rank

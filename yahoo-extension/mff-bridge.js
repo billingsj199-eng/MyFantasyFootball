@@ -8,6 +8,17 @@
  */
 (function () {
   "use strict";
+  // Storage writes report chrome.runtime.lastError (quota etc.) instead of
+  // failing silently — the Underdog helper lost hours to a silent QUOTA_BYTES
+  // failure that looked like "the fix didn't take".
+  function _mffSetDone(key) {
+    return function () {
+      try {
+        var err = chrome.runtime && chrome.runtime.lastError ? chrome.runtime.lastError.message : null;
+        if (err) console.warn('[MFF/storage] write FAILED for', key + ':', err);
+      } catch (_) {}
+    };
+  }
   if (window.__mffYahooBridgeLoaded) return;
   window.__mffYahooBridgeLoaded = true;
 
@@ -41,7 +52,7 @@
       chrome.storage.local.set({ mff_user: u ? {
         uid: u.uid || null, email: u.email || null, premium: !!u.premium,
         syncedAt: d.syncedAt || Date.now()
-      } : null });
+      } : null }, _mffSetDone('mff_user'));
     } catch (_) {}
   });
 
@@ -57,7 +68,7 @@
       chrome.storage.local.set({ mff_jacks_boards: {
         boards: d.boards, tiers: d.tiers || {}, ir: d.ir || null,
         syncedAt: d.syncedAt || Date.now()
-      } });
+      } }, _mffSetDone('mff_jacks_boards'));
     } catch (_) {}
   });
 
@@ -65,7 +76,7 @@
     try {
       var d = e.detail || {};
       if (!d.boards) return;
-      chrome.storage.local.set({ mff_my_rankings: { boards: d.boards, syncedAt: d.syncedAt || Date.now() } });
+      chrome.storage.local.set({ mff_my_rankings: { boards: d.boards, syncedAt: d.syncedAt || Date.now() } }, _mffSetDone('mff_my_rankings'));
     } catch (_) {}
   });
 })();

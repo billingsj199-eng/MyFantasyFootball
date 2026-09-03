@@ -53,6 +53,11 @@
           savedAt: Date.now(),
           entries: log
         }
+      }, function () {
+        try {
+          var err = chrome.runtime && chrome.runtime.lastError ? chrome.runtime.lastError.message : null;
+          if (err) console.warn('[MFF/storage] write FAILED for mff_espn_draft_probe:', err);
+        } catch (_) {}
       });
     } catch (_) {}
   }

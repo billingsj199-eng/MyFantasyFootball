@@ -288,7 +288,14 @@
     },
     set(obj) {
       Object.assign(mem, obj);
-      try { chrome.storage.local.set(obj); } catch (e) {}
+      try {
+        chrome.storage.local.set(obj, function () {
+          try {
+            var err = chrome.runtime && chrome.runtime.lastError ? chrome.runtime.lastError.message : null;
+            if (err) console.warn('[MFF/storage] write FAILED for', Object.keys(obj).join(',') + ':', err);
+          } catch (_) {}
+        });
+      } catch (e) {}
     },
   };
 

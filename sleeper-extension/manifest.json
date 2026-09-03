@@ -1,13 +1,12 @@
 {
   "manifest_version": 3,
   "name": "MFF Sleeper Helper",
-  "version": "0.29.20",
+  "version": "0.29.21",
   "description": "Draft + season helper for Sleeper leagues: live pick recs, optimal lineups, waiver upgrades, and roster values from Jack's boards.",
   "permissions": [
     "storage",
     "alarms",
-    "notifications"
-  ],
+    "notifications", "unlimitedStorage"],
   "background": {
     "service_worker": "background.js"
   },

@@ -50,7 +50,11 @@
         chrome.storage.local.get(["mff_yahoo_leagues"], function (cur) {
           var all = (cur && cur.mff_yahoo_leagues) || {};
           all[payload.leagueId] = payload;
-          chrome.storage.local.set({ mff_yahoo_leagues: all }, function () { res(); });
+          chrome.storage.local.set({ mff_yahoo_leagues: all }, function () {
+            var err = chrome.runtime && chrome.runtime.lastError ? chrome.runtime.lastError.message : null;
+            if (err) { console.warn('[MFF/storage] write FAILED for mff_yahoo_leagues:', err); rej(new Error('storage write failed: ' + err)); return; }
+            res();
+          });
         });
       } catch (e) { rej(e); }
     });

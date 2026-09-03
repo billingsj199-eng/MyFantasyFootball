@@ -25805,6 +25805,10 @@ window.fmtHeight = fmtHeight;
     renumber();
     render();
     toast('Rankings loaded from cloud');
+    // Belt and braces: make sure the live listener follows the doc this
+    // (now authenticated) session is entitled to — an admin/premium session
+    // must not stay on the public slice (see the guard in listenForJacksUpdates).
+    try { if (typeof window._jacksResubscribe === 'function') window._jacksResubscribe(); } catch (_) {}
   }
 
   // Listen for real-time updates to Jack's rankings so all users stay in sync.
@@ -25822,6 +25826,17 @@ window.fmtHeight = fmtHeight;
       // Slice doc not written yet (bootstrap pending): follow the official
       // doc instead — it keeps public read until Phase C flips the rules.
       if (_docId === 'jacks-public' && (!doc.exists || !doc.data().data)) {
+        if (_jacksSubDocId === 'jacks-public') listenForJacksUpdates('jacks-official');
+        return;
+      }
+      // Admin / premium sessions must never apply the public slice: it holds
+      // only the top 36 per format and loadModeData back-fills the rest from
+      // the bundled default order, which reads as "my rankings reset" (Jack,
+      // 2026-09-03 — the slice rebuild on his own load fired this listener
+      // before the post-auth resubscribe to jacks-official). A save in that
+      // state would have overwritten the official board. Hop to the official
+      // doc instead of loading the slice.
+      if (_docId === 'jacks-public' && _jacksDocId() === 'jacks-official') {
         if (_jacksSubDocId === 'jacks-public') listenForJacksUpdates('jacks-official');
         return;
       }

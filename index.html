@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-03d" as="script">
+<link rel="preload" href="app.js?v=2026-09-03e" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1491,13 +1491,13 @@ tr:hover .watch-star{opacity:.55}
 .tcv-key-color-note i{color:#ef4444;font-style:normal;font-weight:600}
 /* ROW CARDS layout — horizontal graphic cards (rank | headshot | name/pos | stats | matchup | team logo)
    on a team-color band. One card per line under each tier letter; sized to mirror the
-   PNG export in _tcvRowCardCanvas (532×72 CSS px) so what you see is what downloads. */
+   PNG export in _tcvRowCardCanvas (498×72 CSS px) so what you see is what downloads. */
 .tier-card-view.tcv-rows .tcv-cards{flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:9px;padding:10px 12px 12px 10px}
 .tier-card-view.tcv-rows.tcv-centered .tcv-cards{align-items:center}
-.tcv-card.tcv-row-card{width:532px;height:72px;padding:0;display:flex;align-items:center;gap:0;border-radius:8px;overflow:visible;box-shadow:0 0 0 1.5px rgba(255,255,255,.28),0 6px 16px rgba(0,0,0,.65);color:#fff}
+.tcv-card.tcv-row-card{width:498px;height:72px;padding:0;display:flex;align-items:center;gap:0;border-radius:8px;overflow:visible;box-shadow:0 0 0 1.5px rgba(255,255,255,.28),0 6px 16px rgba(0,0,0,.65);color:#fff}
 .tcv-card.tcv-row-card.tcv-row-light{color:#0f172a}
-.tcv-row-rank{flex:0 0 38px;text-align:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;font-weight:900;line-height:1;color:#fff;-webkit-text-stroke:1.3px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7)}
-.tcv-row-img{flex:0 0 110px;height:86px;align-self:flex-end;margin-bottom:0;display:flex;align-items:flex-end;justify-content:center;position:relative;z-index:1}
+.tcv-row-rank{position:absolute;top:3px;left:5px;z-index:2;font-family:'Bebas Neue',Impact,sans-serif;font-size:24px;font-weight:900;line-height:1;color:#fff;-webkit-text-stroke:1.3px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7)}
+.tcv-row-img{flex:0 0 110px;height:86px;align-self:flex-end;margin:0 0 0 4px;display:flex;align-items:flex-end;justify-content:center;position:relative;z-index:1}
 .tcv-row-img img{width:110px;height:86px;object-fit:contain;object-position:center bottom;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .tcv-row-img .tcv-card-img-fallback{width:110px;height:60px;margin:0;font-size:26px}
 .tcv-card.tcv-covered .tcv-row-img{visibility:hidden}
@@ -5469,7 +5469,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-03d"></script>
+<script defer src="app.js?v=2026-09-03e"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

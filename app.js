@@ -3585,7 +3585,7 @@ function _tcvRowsPref() {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { W: 532, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, RANK_W: 38, IMG_W: 110, IMG_H: 86, NAME_X: 154, LOGO_X: 290, LOGO_W: 44, OPP_X: 338, OPP_W: 40, STATS_X: 386, STATS_W: 136, STATS_H: 44 };
+const _TCV_ROW = { W: 498, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 120, LOGO_X: 256, LOGO_W: 44, OPP_X: 304, OPP_W: 40, STATS_X: 352, STATS_W: 136, STATS_H: 44 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
@@ -3815,24 +3815,24 @@ async function _tcvRowCardCanvas(d, displayRank) {
   ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.stroke();
   const fg = band.light ? '#0f172a' : '#ffffff';
 
-  // Rank
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-  ctx.font = '26px ' + BEBAS;
-  ctx.lineWidth = 2.6; ctx.strokeStyle = '#0a0a0a';
-  ctx.strokeText(displayRank + '.', L.RANK_W / 2, Y + H / 2 + 1);
-  ctx.fillStyle = '#fff';
-  ctx.fillText(displayRank + '.', L.RANK_W / 2, Y + H / 2 + 1);
-
-  // Headshot — bottom-aligned on the band, may poke above it like the on-screen card
+  // Headshot — bottom-aligned on the band, pokes above it like the on-screen card
   if (head) {
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 2;
-    _tcvDrawContain(ctx, head, L.RANK_W, Y + H - L.IMG_H, L.IMG_W, L.IMG_H, 'bottom');
+    _tcvDrawContain(ctx, head, L.IMG_X, Y + H - L.IMG_H, L.IMG_W, L.IMG_H, 'bottom');
     ctx.restore();
   } else {
-    ctx.font = '26px ' + BEBAS; ctx.fillStyle = 'rgba(0,0,0,.35)';
-    ctx.fillText('?', L.RANK_W + L.IMG_W / 2, Y + H / 2);
+    ctx.font = '26px ' + BEBAS; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('?', L.IMG_X + L.IMG_W / 2, Y + H / 2);
   }
+
+  // Rank — top-left corner of the band, riding the headshot's shoulder
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.lineJoin = 'round';
+  ctx.font = '24px ' + BEBAS;
+  ctx.lineWidth = 2.6; ctx.strokeStyle = '#0a0a0a';
+  ctx.strokeText(displayRank + '.', 5, Y + 3);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(displayRank + '.', 5, Y + 3);
 
   // Name + pos pill (team is the logo right after — no abbr text)
   const nameW = L.LOGO_X - L.NAME_X - 6;

@@ -3407,19 +3407,21 @@ function _tcvTeamOutline(teamName){
 // Generic head-and-shoulders fallback for covered cards with no headshot
 const _TCV_SIL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.7 0 4.8-2.2 4.8-4.9S14.7 2.2 12 2.2 7.2 4.4 7.2 7.1 9.3 12 12 12zm0 2.2c-4 0-9 2-9 6v1.6h18v-1.6c0-4-5-6-9-6z"/></svg>';
 
-// WEEKLY-only matchup chip: "vs KC" / "@ KC" / "BYE" for the active week,
-// colored by opponent difficulty (Clay def rank; D/ST = opp offense rank).
-function _tcvOppChipHtml(d) {
-  if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return '';
-  if (typeof window._weeklyOppFor !== 'function') return '';
+// WEEKLY-only matchup for the active week, structured so the vertical card
+// chip, the ROW card and the PNG export all agree:
+//   null (not weekly / no schedule) | {bye:true, wk} |
+//   {bye:false, away, abbr, diff, logoId, logoUrl, wk}
+// diff = opponent difficulty (Clay def rank; D/ST = opp offense rank).
+function _tcvOppInfo(d) {
+  if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return null;
+  if (typeof window._weeklyOppFor !== 'function') return null;
   const opp = window._weeklyOppFor(d.t);
-  if (!opp) return '';
+  if (!opp) return null;
   const wk = window._weeklyActiveWeek || 1;
-  if (opp === 'BYE') return '<div class="tcv-opp-chip tcv-opp-bye" title="Week ' + wk + ': BYE">BYE</div>';
+  if (opp === 'BYE') return { bye: true, wk: wk };
   const away = opp.charAt(0) === '@';
   const abbr = away ? opp.slice(1) : opp;
   const diff = (typeof window._weeklyOppDifficulty === 'function') ? window._weeklyOppDifficulty(d.t, d.s) : null;
-  const diffLbl = diff === 'hard' ? ' · tough matchup' : diff === 'easy' ? ' · soft matchup' : '';
   // Opponent logo: schedule gives the abbr, TEAM_LOGO_IDS is keyed by full
   // name — reverse TEAM_ABBR_MAP once and cache it.
   if (!window._tcvAbbrToLogoId && typeof TEAM_ABBR_MAP !== 'undefined' && typeof TEAM_LOGO_IDS !== 'undefined') {
@@ -3427,8 +3429,22 @@ function _tcvOppChipHtml(d) {
     Object.keys(TEAM_ABBR_MAP).forEach(full => { if (TEAM_LOGO_IDS[full]) window._tcvAbbrToLogoId[TEAM_ABBR_MAP[full]] = TEAM_LOGO_IDS[full]; });
   }
   const logoId = window._tcvAbbrToLogoId ? window._tcvAbbrToLogoId[abbr] : null;
-  const logoHtml = logoId ? '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '';
-  return '<div class="tcv-opp-chip' + (diff ? ' tcv-opp-' + diff : '') + '" title="Week ' + wk + ': ' + (away ? 'at ' : 'vs ') + abbr + diffLbl + '"><span class="tcv-opp-pre">' + (away ? '@' : 'vs') + '</span>' + logoHtml + '</div>';
+  return { bye: false, away: away, abbr: abbr, diff: diff, logoId: logoId, wk: wk,
+    logoUrl: logoId ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png' : null };
+}
+function _tcvOppTitle(o) {
+  if (!o) return '';
+  if (o.bye) return 'Week ' + o.wk + ': BYE';
+  const diffLbl = o.diff === 'hard' ? ' · tough matchup' : o.diff === 'easy' ? ' · soft matchup' : '';
+  return 'Week ' + o.wk + ': ' + (o.away ? 'at ' : 'vs ') + o.abbr + diffLbl;
+}
+// Vertical-card chip: "vs" / "@" + opponent logo (or BYE), colored by difficulty
+function _tcvOppChipHtml(d) {
+  const o = _tcvOppInfo(d);
+  if (!o) return '';
+  if (o.bye) return '<div class="tcv-opp-chip tcv-opp-bye" title="' + _tcvOppTitle(o) + '">BYE</div>';
+  const logoHtml = o.logoUrl ? '<img src="' + o.logoUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '';
+  return '<div class="tcv-opp-chip' + (o.diff ? ' tcv-opp-' + o.diff : '') + '" title="' + _tcvOppTitle(o) + '"><span class="tcv-opp-pre">' + (o.away ? '@' : 'vs') + '</span>' + logoHtml + '</div>';
 }
 
 // Season PPG for the card's second line: actual '26 PPG to date (site scoring)
@@ -3441,53 +3457,20 @@ function _tcvSeasonPpg(d) {
   return { v: v25, lbl: "'25 PPG", yr: 25 };
 }
 
-function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
-  const card = document.createElement('div');
-  card.className = 'tcv-card' + ((typeof currentMode !== 'undefined' && currentMode === 'weekly') ? ' tcv-card-wk' : '');
-  card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
-  // Outline the card in its NFL team's colors
-  {
-    const teamRgb = _tcvHexToRgb(_tcvTeamOutline(d.t));
-    const baseShadow = '0 0 0 1.5px rgba(' + teamRgb + ',.9), 0 2px 7px rgba(' + teamRgb + ',.3)';
-    const hoverShadow = '0 0 0 2px rgba(' + teamRgb + ',1), 0 4px 14px rgba(' + teamRgb + ',.55)';
-    card.style.boxShadow = baseShadow;
-    card.addEventListener('mouseenter', () => { if (!card.classList.contains('tcv-covered')) card.style.boxShadow = hoverShadow; });
-    card.addEventListener('mouseleave', () => { card.style.boxShadow = baseShadow; });
-  }
-
-  // Same number the rankings table's PROJ PPG column shows: weekly = the
-  // active week's sim row (consensus blend on the CONSENSUS tab), season
-  // boards = sim season PPG — via _displayProjPpg, not the season-only
-  // adjProjPpg (which made weekly cards disagree with the table).
+// Same number the rankings table's PROJ PPG column shows: weekly = the
+// active week's sim row (consensus blend on the CONSENSUS tab), season
+// boards = sim season PPG — via _displayProjPpg, not the season-only
+// adjProjPpg (which made weekly cards disagree with the table).
+//
+// Returns { projVal, projColor, slots:[{v,c,lbl,short}] } — the uniform stat
+// stack every card style shows (vertical cards top→bottom, ROW cards
+// left→right, PNG export):
+//   1) Proj PPG   2) season PPG ('26 to date once 2026 games are in
+//   WEEKLY_STATS, otherwise last year's '25)   3) team total
+function _tcvCardStats(d) {
   const projVal = (typeof _displayProjPpg === 'function') ? _displayProjPpg(d)
     : ((typeof adjProjPpg === 'function') ? adjProjPpg(d) : null);
-
   const projColor = (projVal != null && typeof posFptsColor === 'function') ? posFptsColor(projVal, d.s) : null;
-
-  const headshotHtml = d._slImg
-    ? '<img class="tcv-card-img" src="' + window._fixHeadshotUrl(d._slImg) + '" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'tcv-card-img-fallback\',textContent:\'?\'}))"/>'
-    : '<div class="tcv-card-img-fallback">?</div>';
-
-  const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
-  const logoHtml = logoId
-    ? '<div class="tcv-card-team"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy"/></div>'
-    : '';
-
-  // Last name only (e.g., "Ja'Marr Chase" -> "CHASE", "Smith-Njigba" stays "SMITH-NJIGBA")
-  const parts = (d.n || '').trim().split(/\s+/);
-  let lastName = parts[parts.length - 1] || (d.n || '');
-  // Truncate to fit (~10 chars before ellipsis is added by CSS)
-  lastName = lastName.toUpperCase();
-
-  const safeName = (s) => (s || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const fmtStat = (v, color) => {
-    if (v == null || v === '' || (typeof v === 'number' && !isFinite(v))) return '<span class="tcv-stat-blank">—</span>';
-    return color ? '<span style="color:' + color + '">' + v + '</span>' : String(v);
-  };
-
-  // Uniform stat stack (top→bottom on every card, all positions/formats):
-  //   1) Proj PPG   2) season PPG ('26 to date once 2026 games are in
-  //   WEEKLY_STATS, otherwise last year's '25)   3) team total
   const _seasonPpg = _tcvSeasonPpg(d);
   const _25Val = _seasonPpg.v;
   const _25Color = (_25Val != null && typeof posFptsColor === 'function') ? posFptsColor(_25Val, d.s) : null;
@@ -3509,11 +3492,54 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     const _tc = _tp ? (_tp.ppg >= 24.5 ? '#22c55e' : _tp.ppg <= 20.5 ? '#ef4444' : '#facc15') : null;
     _ttSlot = { v: _tp ? _tp.ppg.toFixed(1) : null, c: _tc, lbl: 'Team PPG' };
   }
-  const _statSlots = [
-    { v: projVal, c: projColor, lbl: 'Proj PPG' },
-    { v: _25Val, c: _25Color, lbl: _seasonPpg.lbl },
+  _ttSlot.short = (typeof currentMode !== 'undefined' && currentMode === 'weekly') ? (d.s === 'DST' ? 'OPP TT' : 'TEAM TT') : 'TEAM PPG';
+  const slots = [
+    { v: projVal, c: projColor, lbl: 'Proj PPG', short: 'PROJ' },
+    { v: _25Val, c: _25Color, lbl: _seasonPpg.lbl, short: "'" + _seasonPpg.yr + ' PPG' },
     _ttSlot
   ];
+  return { projVal: projVal, projColor: projColor, slots: slots };
+}
+function _tcvFmtStat(v, color) {
+  if (v == null || v === '' || (typeof v === 'number' && !isFinite(v))) return '<span class="tcv-stat-blank">—</span>';
+  return color ? '<span style="color:' + color + '">' + v + '</span>' : String(v);
+}
+
+function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
+  const card = document.createElement('div');
+  card.className = 'tcv-card' + ((typeof currentMode !== 'undefined' && currentMode === 'weekly') ? ' tcv-card-wk' : '');
+  card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
+  // Outline the card in its NFL team's colors
+  {
+    const teamRgb = _tcvHexToRgb(_tcvTeamOutline(d.t));
+    const baseShadow = '0 0 0 1.5px rgba(' + teamRgb + ',.9), 0 2px 7px rgba(' + teamRgb + ',.3)';
+    const hoverShadow = '0 0 0 2px rgba(' + teamRgb + ',1), 0 4px 14px rgba(' + teamRgb + ',.55)';
+    card.style.boxShadow = baseShadow;
+    card.addEventListener('mouseenter', () => { if (!card.classList.contains('tcv-covered')) card.style.boxShadow = hoverShadow; });
+    card.addEventListener('mouseleave', () => { card.style.boxShadow = baseShadow; });
+  }
+
+  const _cs = _tcvCardStats(d);
+
+  const headshotHtml = d._slImg
+    ? '<img class="tcv-card-img" src="' + window._fixHeadshotUrl(d._slImg) + '" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'tcv-card-img-fallback\',textContent:\'?\'}))"/>'
+    : '<div class="tcv-card-img-fallback">?</div>';
+
+  const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
+  const logoHtml = logoId
+    ? '<div class="tcv-card-team"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy"/></div>'
+    : '';
+
+  // Last name only (e.g., "Ja'Marr Chase" -> "CHASE", "Smith-Njigba" stays "SMITH-NJIGBA")
+  const parts = (d.n || '').trim().split(/\s+/);
+  let lastName = parts[parts.length - 1] || (d.n || '');
+  // Truncate to fit (~10 chars before ellipsis is added by CSS)
+  lastName = lastName.toUpperCase();
+
+  const safeName = (s) => (s || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const fmtStat = _tcvFmtStat;
+
+  const _statSlots = _cs.slots;
   const _statsHtml = _statSlots.map(s => fmtStat(s.v, s.c)).join('<br>');
   const _statsTitle = _statSlots.map(s => s.lbl).join(' / ');
 
@@ -3545,6 +3571,314 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     if (typeof openPlayerCard === 'function') openPlayerCard(d);
   });
   return card;
+}
+
+// ── ROW CARDS (Jack 2026-09-02): horizontal graphic cards ─────────────────
+// rank | headshot | name + pos | PROJ / season PPG / team total | matchup |
+// team logo, on a band in the team's colors (like the "Before Week 1" tier
+// graphics). Same data as the vertical cards via _tcvCardStats/_tcvOppInfo.
+// Admin gets a hover ⬇ on each card + "⬇ PNG ALL" that exports every visible
+// card as its own PNG (drawn on a canvas in _tcvRowCardCanvas, not a DOM
+// screenshot, so ESPN headshots/logos load CORS-clean and never taint it).
+function _tcvRowsPref() {
+  try { return localStorage.getItem('tcv_rows') === '1'; } catch(_) { return false; }
+}
+// Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
+// card and the exported PNG match. Canvas draws at 3× for crisp output.
+const _TCV_ROW = { W: 560, H: 64, PAD_TOP: 10, RANK_W: 38, IMG_W: 76, IMG_H: 72, NAME_X: 120, STATS_X: 316, STATS_W: 146, STATS_H: 44, OPP_X: 470, OPP_W: 40, LOGO_X: 514, LOGO_W: 40 };
+const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
+function _tcvRowBand(teamName) {
+  const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
+  // Light primaries (Saints gold, Steelers gold, Chargers powder blue) need dark text
+  return { p: c.p, s: c.s, light: _tcvLum(c.p) > 0.55 };
+}
+function _tcvRowBandCss(band) {
+  return 'linear-gradient(90deg,' + band.p + ' 0%,' + band.p + ' 60%,' + band.s + ' 100%)';
+}
+function _tcvIsAdminViewer() {
+  return typeof window.isAdmin === 'function' && window.isAdmin();
+}
+
+// Name font size (px) that fits the row card's name column, measured with
+// the card's own Bebas Neue via an offscreen canvas (21px down to 13px).
+let _tcvMeasureCtx = null;
+function _tcvRowNameSize(name) {
+  const maxW = _TCV_ROW.STATS_X - _TCV_ROW.NAME_X - 8;
+  if (!_tcvMeasureCtx) { try { _tcvMeasureCtx = document.createElement('canvas').getContext('2d'); } catch(_) { return 21; } }
+  if (!_tcvMeasureCtx) return 21;
+  _tcvFitFont(_tcvMeasureCtx, name, maxW, 21, 13, '"Bebas Neue",Impact,"Arial Narrow",sans-serif');
+  return parseInt(_tcvMeasureCtx.font, 10) || 21;
+}
+
+function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
+  const card = document.createElement('div');
+  card.className = 'tcv-card tcv-row-card';
+  card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
+  card._tcvPlayer = d;
+  card._tcvRank = displayRank;
+  const band = _tcvRowBand(d.t);
+  card.style.background = _tcvRowBandCss(band);
+  if (band.light) card.classList.add('tcv-row-light');
+
+  const safe = (x) => (x || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const cs = _tcvCardStats(d);
+  const opp = _tcvOppInfo(d);
+  const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
+
+  const headshotHtml = d._slImg
+    ? '<img src="' + window._fixHeadshotUrl(d._slImg) + '" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'tcv-card-img-fallback\',textContent:\'?\'}))"/>'
+    : '<div class="tcv-card-img-fallback">?</div>';
+  const statsHtml = cs.slots.map(sl =>
+    '<div class="tcv-row-stat" title="' + safe(sl.lbl) + '"><span class="tcv-row-stat-v">' + _tcvFmtStat(sl.v, sl.c) + '</span><span class="tcv-row-stat-l">' + safe(sl.short) + '</span></div>'
+  ).join('');
+  let oppHtml = '';
+  if (opp) {
+    oppHtml = opp.bye
+      ? '<div class="tcv-row-opp tcv-opp-bye" title="' + _tcvOppTitle(opp) + '">BYE</div>'
+      : '<div class="tcv-row-opp' + (opp.diff ? ' tcv-opp-' + opp.diff : '') + '" title="' + _tcvOppTitle(opp) + '"><span class="tcv-opp-pre">' + (opp.away ? '@' : 'vs') + '</span>' +
+        (opp.logoUrl ? '<img src="' + opp.logoUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '<span style="font-family:\'Bebas Neue\',Impact,sans-serif;font-size:13px">' + safe(opp.abbr) + '</span>') + '</div>';
+  }
+  const logoHtml = logoId
+    ? '<div class="tcv-row-logo"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy"/></div>'
+    : '<div class="tcv-row-logo"></div>';
+
+  card.innerHTML =
+    '<div class="tcv-row-rank">' + displayRank + '.</div>' +
+    '<div class="tcv-row-img">' + headshotHtml + '</div>' +
+    '<div class="tcv-row-id">' +
+      '<div class="tcv-row-name" title="' + safe(d.n) + '">' + safe(d.n) + '</div>' +
+      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span><span>' + safe(abbr) + '</span></div>' +
+    '</div>' +
+    '<div class="tcv-row-stats">' + statsHtml + '</div>' +
+    oppHtml +
+    logoHtml +
+    (_tcvIsAdminViewer() ? '<button class="tcv-row-dl" type="button" title="Download this card as a PNG">⬇</button>' : '') +
+    '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
+      (d._slImg
+        ? '<div class="tcv-cover-sil">' + _TCV_SIL_SVG.replace('<svg ', '<svg style="display:none" ') +
+            '<img class="tcv-cover-sil-img" src="' + window._fixHeadshotUrl(d._slImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.previousElementSibling.style.display=\'\'"/></div>'
+        : '<div class="tcv-cover-sil">' + _TCV_SIL_SVG + '</div>') +
+    '</div>';
+
+  // Long names (Christian McCaffrey, Jaxon Smith-Njigba) shrink to fit the
+  // name column instead of truncating — same fit rule as the PNG export.
+  {
+    const nameEl = card.querySelector('.tcv-row-name');
+    const px = _tcvRowNameSize(d.n || '');
+    if (nameEl && px < 21) nameEl.style.fontSize = px + 'px';
+  }
+  const dl = card.querySelector('.tcv-row-dl');
+  if (dl) dl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    window._tcvDownloadRowCard(d, displayRank, filePrefix);
+  });
+  card.addEventListener('click', () => {
+    if (card.classList.contains('tcv-covered')) { card.classList.remove('tcv-covered'); return; }
+    if (typeof openPlayerCard === 'function') openPlayerCard(d);
+  });
+  return card;
+}
+
+// ── ROW CARD → PNG (canvas) ───────────────────────────────────────────────
+function _tcvLoadImg(url, ms) {
+  return new Promise(res => {
+    if (!url) return res(null);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const to = setTimeout(() => res(null), ms || 6000);
+    img.onload = () => { clearTimeout(to); res(img); };
+    img.onerror = () => { clearTimeout(to); res(null); };
+    img.src = url;
+  });
+}
+function _tcvRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+// object-fit:contain into a box; align = 'bottom' (headshots) or 'center'
+function _tcvDrawContain(ctx, img, x, y, w, h, align) {
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  if (!iw || !ih) return;
+  const k = Math.min(w / iw, h / ih);
+  const dw = iw * k, dh = ih * k;
+  const dx = x + (w - dw) / 2;
+  const dy = align === 'bottom' ? (y + h - dh) : (y + (h - dh) / 2);
+  ctx.drawImage(img, dx, dy, dw, dh);
+}
+function _tcvFitFont(ctx, text, maxW, px, minPx, family) {
+  let size = px;
+  while (size > minPx) {
+    ctx.font = size + 'px ' + family;
+    if (ctx.measureText(text).width <= maxW) break;
+    size -= 1;
+  }
+  ctx.font = size + 'px ' + family;
+}
+async function _tcvRowCardCanvas(d, displayRank) {
+  const L = _TCV_ROW, S = 3;
+  const BEBAS = '"Bebas Neue",Impact,"Arial Narrow",sans-serif';
+  const SANS = '"DM Sans",system-ui,sans-serif';
+  const c = document.createElement('canvas');
+  c.width = L.W * S; c.height = (L.H + L.PAD_TOP) * S;
+  const ctx = c.getContext('2d');
+  ctx.scale(S, S);
+  try { if (document.fonts && document.fonts.load) await Promise.all([document.fonts.load('26px "Bebas Neue"'), document.fonts.load('bold 15px "DM Sans"')]); } catch(_) {}
+
+  const cs = _tcvCardStats(d);
+  const opp = _tcvOppInfo(d);
+  const band = _tcvRowBand(d.t);
+  const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
+  const [head, logo, oppLogo] = await Promise.all([
+    _tcvLoadImg(d._slImg ? window._fixHeadshotUrl(d._slImg) : null),
+    _tcvLoadImg(logoId ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png' : null),
+    _tcvLoadImg(opp && !opp.bye ? opp.logoUrl : null)
+  ]);
+
+  const Y = L.PAD_TOP, H = L.H;
+  // Band (team colors) with a soft outline
+  const g = ctx.createLinearGradient(0, 0, L.W, 0);
+  g.addColorStop(0, band.p); g.addColorStop(0.6, band.p); g.addColorStop(1, band.s);
+  _tcvRoundRect(ctx, 0.5, Y + 0.5, L.W - 1, H - 1, 8);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.stroke();
+  const fg = band.light ? '#0f172a' : '#ffffff';
+
+  // Rank
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.font = '26px ' + BEBAS;
+  ctx.lineWidth = 2.6; ctx.strokeStyle = '#0a0a0a';
+  ctx.strokeText(displayRank + '.', L.RANK_W / 2, Y + H / 2 + 1);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(displayRank + '.', L.RANK_W / 2, Y + H / 2 + 1);
+
+  // Headshot — bottom-aligned on the band, may poke above it like the on-screen card
+  if (head) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 2;
+    _tcvDrawContain(ctx, head, L.RANK_W, Y + H - L.IMG_H, L.IMG_W, L.IMG_H, 'bottom');
+    ctx.restore();
+  } else {
+    ctx.font = '26px ' + BEBAS; ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.fillText('?', L.RANK_W + L.IMG_W / 2, Y + H / 2);
+  }
+
+  // Name + pos pill + team abbr
+  const nameW = L.STATS_X - L.NAME_X - 8;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  _tcvFitFont(ctx, d.n || '', nameW, 21, 13, BEBAS);
+  ctx.save();
+  if (!band.light) { ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1; }
+  ctx.fillStyle = fg;
+  ctx.fillText(d.n || '', L.NAME_X, Y + 30);
+  ctx.restore();
+  const pos = d.s || '';
+  ctx.font = '10px ' + BEBAS;
+  const pillW = ctx.measureText(pos).width + 10;
+  _tcvRoundRect(ctx, L.NAME_X, Y + 38, pillW, 14, 2);
+  ctx.fillStyle = _TCV_POS_COLORS[pos] || '#64748b'; ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
+  ctx.fillText(pos, L.NAME_X + 5, Y + 45.5);
+  ctx.font = '11px ' + BEBAS; ctx.fillStyle = fg; ctx.globalAlpha = 0.9;
+  ctx.fillText(abbr, L.NAME_X + pillW + 6, Y + 45.5);
+  ctx.globalAlpha = 1;
+
+  // Stats block (dark, so the green→red value colors stay readable on any band)
+  const sy = Y + (H - L.STATS_H) / 2;
+  _tcvRoundRect(ctx, L.STATS_X, sy, L.STATS_W, L.STATS_H, 6);
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
+  const colW = L.STATS_W / cs.slots.length;
+  ctx.textAlign = 'center';
+  cs.slots.forEach((sl, i) => {
+    const cx = L.STATS_X + colW * i + colW / 2;
+    const blank = (sl.v == null || sl.v === '' || (typeof sl.v === 'number' && !isFinite(sl.v)));
+    ctx.font = 'bold 15px ' + SANS;
+    ctx.fillStyle = blank ? 'rgba(255,255,255,.35)' : (sl.c || '#fff');
+    ctx.fillText(blank ? '—' : String(sl.v), cx, sy + 17);
+    ctx.font = '600 8px ' + SANS;
+    ctx.fillStyle = 'rgba(255,255,255,.62)';
+    ctx.fillText((sl.short || '').toUpperCase(), cx, sy + 34);
+  });
+
+  // Matchup (weekly only): opponent logo + vs/@ riding its bottom-left, or BYE
+  if (opp) {
+    const ox = L.OPP_X, ow = L.OPP_W;
+    if (opp.bye) {
+      _tcvRoundRect(ctx, ox + 2, Y + H / 2 - 11, ow - 4, 22, 4);
+      ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fill();
+      ctx.font = '12px ' + BEBAS; ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'center';
+      ctx.fillText('BYE', ox + ow / 2, Y + H / 2 + 0.5);
+    } else {
+      if (oppLogo) {
+        ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
+        _tcvDrawContain(ctx, oppLogo, ox + 4, Y + H / 2 - 16, 32, 32, 'center');
+        ctx.restore();
+      } else {
+        ctx.font = '13px ' + BEBAS; ctx.fillStyle = fg; ctx.textAlign = 'center';
+        ctx.fillText(opp.abbr, ox + ow / 2, Y + H / 2 - 4);
+      }
+      const preColor = opp.diff === 'easy' ? '#4ade80' : opp.diff === 'hard' ? '#f87171' : opp.diff === 'medium' ? '#facc15' : '#e2e8f0';
+      ctx.font = '12px ' + BEBAS; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      ctx.lineWidth = 1.6; ctx.strokeStyle = '#0a0a0a';
+      ctx.strokeText(opp.away ? '@' : 'vs', ox, Y + H / 2 + 20);
+      ctx.fillStyle = preColor;
+      ctx.fillText(opp.away ? '@' : 'vs', ox, Y + H / 2 + 20);
+    }
+  }
+
+  // Team logo
+  if (logo) {
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 1;
+    _tcvDrawContain(ctx, logo, L.LOGO_X, Y + H / 2 - L.LOGO_W / 2, L.LOGO_W, L.LOGO_W, 'center');
+    ctx.restore();
+  }
+  return c;
+}
+function _tcvSavePng(canvas, filename) {
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+function _tcvRowFileName(d, displayRank, prefix) {
+  const clean = (x) => (x || '').toString().replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return (clean(prefix) || 'CARD') + '_' + String(displayRank).padStart(2, '0') + '_' + (clean(d.n) || 'player') + '.png';
+}
+window._tcvDownloadRowCard = async function(d, displayRank, prefix) {
+  try {
+    const cv = await _tcvRowCardCanvas(d, displayRank);
+    _tcvSavePng(cv, _tcvRowFileName(d, displayRank, prefix));
+  } catch (e) {
+    console.warn('[TierCards] row card export failed:', e);
+    if (typeof toast === 'function') toast('Card export failed: ' + (e && e.message || e));
+  }
+};
+// Every visible row card (respects HIDE CUT; covered cards are skipped so a
+// mid-reveal board exports only what viewers have seen), one PNG each,
+// spaced out so Chrome's multi-download prompt fires once and the rest flow.
+async function _tcvDownloadAllRows(root, prefix) {
+  const sel = root.classList.contains('tcv-hide-cut') ? '.tcv-tier-row:not(.tcv-cut-row) .tcv-row-card' : '.tcv-row-card';
+  const list = Array.prototype.slice.call(root.querySelectorAll(sel)).filter(c => c._tcvPlayer && !c.classList.contains('tcv-covered'));
+  if (!list.length) { if (typeof toast === 'function') toast('No revealed row cards to export'); return; }
+  if (typeof toast === 'function') toast('Exporting ' + list.length + ' card PNG' + (list.length === 1 ? '' : 's') + '… allow multiple downloads if Chrome asks');
+  let n = 0;
+  for (const card of list) {
+    try {
+      const cv = await _tcvRowCardCanvas(card._tcvPlayer, card._tcvRank);
+      _tcvSavePng(cv, _tcvRowFileName(card._tcvPlayer, card._tcvRank, prefix));
+      n++;
+    } catch (e) { console.warn('[TierCards] row card export failed:', card._tcvPlayer && card._tcvPlayer.n, e); }
+    await new Promise(r => setTimeout(r, 350));
+  }
+  if (typeof toast === 'function') toast(n + ' of ' + list.length + ' card PNGs downloaded');
 }
 
 // CENTER layout preference (pyramid look for vertical video) — survives re-renders.
@@ -3607,6 +3941,8 @@ function _renderTierCardView(data, container) {
   const _tcvBaseZoom = _tcvN <= 12 ? 1.9 : _tcvN <= 24 ? 1.65 : _tcvN <= 40 ? 1.45 : _tcvN <= 60 ? 1.3 : _tcvN <= 90 ? 1.15 : _tcvN <= 140 ? 1.05 : 1;
   root.style.zoom = _tcvBaseZoom * _tcvZoomMult();
   if (_tcvCenteredPref()) root.classList.add('tcv-centered');
+  const _tcvRows = _tcvRowsPref();
+  if (_tcvRows) root.classList.add('tcv-rows');
   const _tcvCutCount = _tcvBelowCut ? data.filter(d => _tcvBelowCut.has(d.n)).length : 0;
   if (_tcvCutCount && _tcvHideCutPref()) root.classList.add('tcv-hide-cut');
 
@@ -3625,6 +3961,8 @@ function _renderTierCardView(data, container) {
   ctx.textContent = _tcvHeaderText();
   header.appendChild(ctx);
   root.appendChild(header);
+  // PNG file-name prefix for ROW card exports, e.g. W1_FLEX_01_Jordyn_Tyson.png
+  const _tcvFilePrefix = (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + '_' : '') + filterLabel;
 
   // Reveal/hide controls (streaming-style tier reveal)
   const controls = document.createElement('div');
@@ -3636,6 +3974,8 @@ function _renderTierCardView(data, container) {
     '<button class="tcv-reveal-btn" data-tcvaction="revealAll" title="Show every player">◉ REVEAL ALL</button>' +
     (_tcvCutCount ? '<button class="tcv-reveal-btn' + (_tcvHideCutPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCut" title="Hide / show the ' + _tcvCutCount + ' below-the-cut-line player' + (_tcvCutCount === 1 ? '' : 's') + ' (the red ✂ row). Hidden = gone from the view entirely, no silhouettes — what viewers see.">✂ ' + (_tcvHideCutPref() ? 'SHOW CUT' : 'HIDE CUT') + '</button>' : '') +
     '<button class="tcv-reveal-btn' + (_tcvCenteredPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCenter" title="Center each tier\'s cards (pyramid layout — fits vertical video). The tier letter rides against the leftmost card.">⇔ CENTER</button>' +
+    '<button class="tcv-reveal-btn' + (_tcvRows ? ' tcv-primary' : '') + '" data-tcvaction="toggleRows" title="Horizontal graphic cards — headshot, name, PROJ / season PPG / team total, matchup and team logo on a team-color band, one player per line (tier-list video look)">▤ ROW CARDS</button>' +
+    ((_tcvRows && _tcvIsAdminViewer()) ? '<button class="tcv-reveal-btn" data-tcvaction="dlAll" title="Admin: download every revealed row card as its own PNG (hover a card for a single ⬇). Files: ' + _tcvFilePrefix + '_01_Name.png …">⬇ PNG ALL</button>' : '') +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
       '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomOut" title="Smaller cards">−</button>' +
@@ -3652,7 +3992,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= PROJ PPG (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo (bottom-left) = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
+    '<span>= PROJ PPG (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 
@@ -3700,7 +4040,7 @@ function _renderTierCardView(data, container) {
     row.appendChild(letter);
     const cards = document.createElement('div');
     cards.className = 'tcv-cards';
-    g.players.forEach(p => cards.appendChild(_tcvBuildCard(p.d, p.displayRank, g.label, glowRgb)));
+    g.players.forEach(p => cards.appendChild(_tcvRows ? _tcvBuildRowCard(p.d, p.displayRank, g.label, glowRgb, _tcvFilePrefix) : _tcvBuildCard(p.d, p.displayRank, g.label, glowRgb)));
     row.appendChild(cards);
     root.appendChild(row);
   });
@@ -3721,6 +4061,13 @@ function _renderTierCardView(data, container) {
   root.querySelectorAll('[data-tcvaction]').forEach(btn => {
     btn.addEventListener('click', () => {
       const action = btn.getAttribute('data-tcvaction');
+      if (action === 'toggleRows') {
+        // Card DOM differs per layout — persist the pref and rebuild the view
+        try { localStorage.setItem('tcv_rows', _tcvRows ? '0' : '1'); } catch(_) {}
+        _renderTierCardView(data, container);
+        return;
+      }
+      if (action === 'dlAll') { _tcvDownloadAllRows(root, _tcvFilePrefix); return; }
       if (action === 'toggleCenter') {
         const on = !root.classList.contains('tcv-centered');
         root.classList.toggle('tcv-centered', on);

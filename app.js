@@ -3598,6 +3598,15 @@ function _tcvRowBandCss(band) {
 function _tcvIsAdminViewer() {
   return typeof window.isAdmin === 'function' && window.isAdmin();
 }
+// SELECT-mode state, kept OUTSIDE the DOM: the rankings table re-renders in
+// the background (auth, data pulls, refresh) and rebuilds the tier view from
+// scratch, which would otherwise drop every tick. Keyed by player name.
+window._tcvSel = window._tcvSel || { on: false, names: new Set() };
+function _tcvSetSelected(card, on) {
+  card.classList.toggle('tcv-selected', on);
+  const n = card._tcvPlayer && card._tcvPlayer.n;
+  if (n) { if (on) window._tcvSel.names.add(n); else window._tcvSel.names.delete(n); }
+}
 
 // Name font size (px) that fits the row card's name column, measured with
 // the card's own Bebas Neue via an offscreen canvas (21px down to 13px).
@@ -3619,6 +3628,7 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
   const band = _tcvRowBand(d.t);
   card.style.background = _tcvRowBandCss(band);
   if (band.light) card.classList.add('tcv-row-light');
+  if (window._tcvSel.names.has(d.n)) card.classList.add('tcv-selected');
 
   const safe = (x) => (x || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const cs = _tcvCardStats(d);
@@ -3653,7 +3663,7 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
     '<div class="tcv-row-stats">' + statsHtml + '</div>' +
     oppHtml +
     logoHtml +
-    (_tcvIsAdminViewer() ? '<button class="tcv-row-dl" type="button" title="Download this card as a PNG">⬇</button>' : '') +
+    (_tcvIsAdminViewer() ? '<button class="tcv-row-dl" type="button" title="Download this card as a PNG">⬇</button><div class="tcv-row-chk" title="Selected for PNG export">✓</div>' : '') +
     '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
       (d._slImg
         ? '<div class="tcv-cover-sil">' + _TCV_SIL_SVG.replace('<svg ', '<svg style="display:none" ') +
@@ -3673,11 +3683,34 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
     e.stopPropagation();
     window._tcvDownloadRowCard(d, displayRank, filePrefix);
   });
-  card.addEventListener('click', () => {
+  card.addEventListener('click', (e) => {
+    // SELECT mode (admin): clicks tick/untick the card for "⬇ PNG SELECTED"
+    // — Shift-click extends the selection from the last ticked card.
+    const view = card.closest('.tier-card-view');
+    if (view && view.classList.contains('tcv-select')) {
+      const on = !card.classList.contains('tcv-selected');
+      if (e.shiftKey && view._tcvLastSel && view._tcvLastSel !== card) {
+        const all = Array.prototype.slice.call(view.querySelectorAll('.tcv-row-card'));
+        const a = all.indexOf(view._tcvLastSel), b = all.indexOf(card);
+        if (a >= 0 && b >= 0) all.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(c => _tcvSetSelected(c, on));
+      } else {
+        _tcvSetSelected(card, on);
+      }
+      view._tcvLastSel = card;
+      _tcvUpdateSelCount(view);
+      return;
+    }
     if (card.classList.contains('tcv-covered')) { card.classList.remove('tcv-covered'); return; }
     if (typeof openPlayerCard === 'function') openPlayerCard(d);
   });
   return card;
+}
+function _tcvUpdateSelCount(root) {
+  const n = root.querySelectorAll('.tcv-row-card.tcv-selected').length;
+  const b = root.querySelector('[data-tcvaction="dlSel"]');
+  if (b) { b.textContent = '⬇ PNG SELECTED (' + n + ')'; b.classList.toggle('tcv-primary', n > 0); }
+  const sb = root.querySelector('[data-tcvaction="toggleSelect"]');
+  if (sb) sb.textContent = root.classList.contains('tcv-select') ? '☑ SELECTING… (click cards)' : '☐ SELECT';
 }
 
 // ── ROW CARD → PNG (canvas) ───────────────────────────────────────────────
@@ -3864,10 +3897,11 @@ window._tcvDownloadRowCard = async function(d, displayRank, prefix) {
 // Every visible row card (respects HIDE CUT; covered cards are skipped so a
 // mid-reveal board exports only what viewers have seen), one PNG each,
 // spaced out so Chrome's multi-download prompt fires once and the rest flow.
-async function _tcvDownloadAllRows(root, prefix) {
+async function _tcvDownloadAllRows(root, prefix, onlySelected) {
   const sel = root.classList.contains('tcv-hide-cut') ? '.tcv-tier-row:not(.tcv-cut-row) .tcv-row-card' : '.tcv-row-card';
-  const list = Array.prototype.slice.call(root.querySelectorAll(sel)).filter(c => c._tcvPlayer && !c.classList.contains('tcv-covered'));
-  if (!list.length) { if (typeof toast === 'function') toast('No revealed row cards to export'); return; }
+  let list = Array.prototype.slice.call(root.querySelectorAll(sel)).filter(c => c._tcvPlayer);
+  list = onlySelected ? list.filter(c => c.classList.contains('tcv-selected')) : list.filter(c => !c.classList.contains('tcv-covered'));
+  if (!list.length) { if (typeof toast === 'function') toast(onlySelected ? 'No cards selected — turn on SELECT and click the cards you want' : 'No revealed row cards to export'); return; }
   if (typeof toast === 'function') toast('Exporting ' + list.length + ' card PNG' + (list.length === 1 ? '' : 's') + '… allow multiple downloads if Chrome asks');
   let n = 0;
   for (const card of list) {
@@ -3943,6 +3977,7 @@ function _renderTierCardView(data, container) {
   if (_tcvCenteredPref()) root.classList.add('tcv-centered');
   const _tcvRows = _tcvRowsPref();
   if (_tcvRows) root.classList.add('tcv-rows');
+  if (_tcvRows && window._tcvSel.on && _tcvIsAdminViewer()) root.classList.add('tcv-select');
   const _tcvCutCount = _tcvBelowCut ? data.filter(d => _tcvBelowCut.has(d.n)).length : 0;
   if (_tcvCutCount && _tcvHideCutPref()) root.classList.add('tcv-hide-cut');
 
@@ -3975,7 +4010,10 @@ function _renderTierCardView(data, container) {
     (_tcvCutCount ? '<button class="tcv-reveal-btn' + (_tcvHideCutPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCut" title="Hide / show the ' + _tcvCutCount + ' below-the-cut-line player' + (_tcvCutCount === 1 ? '' : 's') + ' (the red ✂ row). Hidden = gone from the view entirely, no silhouettes — what viewers see.">✂ ' + (_tcvHideCutPref() ? 'SHOW CUT' : 'HIDE CUT') + '</button>' : '') +
     '<button class="tcv-reveal-btn' + (_tcvCenteredPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCenter" title="Center each tier\'s cards (pyramid layout — fits vertical video). The tier letter rides against the leftmost card.">⇔ CENTER</button>' +
     '<button class="tcv-reveal-btn' + (_tcvRows ? ' tcv-primary' : '') + '" data-tcvaction="toggleRows" title="Horizontal graphic cards — headshot, name, PROJ / season PPG / team total, matchup and team logo on a team-color band, one player per line (tier-list video look)">▤ ROW CARDS</button>' +
-    ((_tcvRows && _tcvIsAdminViewer()) ? '<button class="tcv-reveal-btn" data-tcvaction="dlAll" title="Admin: download every revealed row card as its own PNG (hover a card for a single ⬇). Files: ' + _tcvFilePrefix + '_01_Name.png …">⬇ PNG ALL</button>' : '') +
+    ((_tcvRows && _tcvIsAdminViewer()) ? '<button class="tcv-reveal-btn" data-tcvaction="dlAll" title="Admin: download every revealed row card as its own PNG (hover a card for a single ⬇). Files: ' + _tcvFilePrefix + '_01_Name.png …">⬇ PNG ALL</button>' +
+      '<button class="tcv-reveal-btn' + (window._tcvSel.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleSelect" title="Pick cards to export: turn this on, click cards to tick them (Shift-click for a range), then ⬇ PNG SELECTED. Clicking a card will not open it while selecting.">☐ SELECT</button>' +
+      '<button class="tcv-reveal-btn" data-tcvaction="dlSel" title="Download just the ticked cards, one PNG each">⬇ PNG SELECTED (0)</button>' +
+      '<button class="tcv-reveal-btn" data-tcvaction="clearSel" title="Untick every card">✕ CLEAR</button>' : '') +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
       '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomOut" title="Smaller cards">−</button>' +
@@ -4045,6 +4083,8 @@ function _renderTierCardView(data, container) {
     root.appendChild(row);
   });
 
+  if (_tcvRows) _tcvUpdateSelCount(root);
+
   // Cards the reveal flow operates on — excludes the ✂ row while HIDE CUT is on
   function _tcvVisibleCards() {
     const sel = root.classList.contains('tcv-hide-cut') ? '.tcv-tier-row:not(.tcv-cut-row) .tcv-card' : '.tcv-card';
@@ -4068,6 +4108,21 @@ function _renderTierCardView(data, container) {
         return;
       }
       if (action === 'dlAll') { _tcvDownloadAllRows(root, _tcvFilePrefix); return; }
+      if (action === 'dlSel') { _tcvDownloadAllRows(root, _tcvFilePrefix, true); return; }
+      if (action === 'toggleSelect') {
+        const on = !root.classList.contains('tcv-select');
+        root.classList.toggle('tcv-select', on);
+        btn.classList.toggle('tcv-primary', on);
+        window._tcvSel.on = on;
+        _tcvUpdateSelCount(root);
+        return;
+      }
+      if (action === 'clearSel') {
+        root.querySelectorAll('.tcv-row-card.tcv-selected').forEach(c => c.classList.remove('tcv-selected'));
+        window._tcvSel.names.clear();
+        _tcvUpdateSelCount(root);
+        return;
+      }
       if (action === 'toggleCenter') {
         const on = !root.classList.contains('tcv-centered');
         root.classList.toggle('tcv-centered', on);

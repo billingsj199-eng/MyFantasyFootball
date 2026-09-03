@@ -3585,7 +3585,7 @@ function _tcvRowsPref() {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { W: 498, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 120, LOGO_X: 256, LOGO_W: 44, OPP_X: 304, OPP_W: 40, STATS_X: 352, STATS_W: 136, STATS_H: 44 };
+const _TCV_ROW = { W: 456, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 120, NAME_END: 256, MINI_LOGO: 18, OPP_X: 260, OPP_W: 44, OPP_LOGO: 34, STATS_X: 310, STATS_W: 136, STATS_H: 44 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
@@ -3624,7 +3624,7 @@ let _tcvMeasureCtx = null;
 function _tcvRowNameSize(name) {
   // .tcv-row-name has letter-spacing:.5px, which canvas measureText ignores —
   // budget for it so the DOM never ellipsizes a name the PNG fits.
-  const maxW = _TCV_ROW.LOGO_X - _TCV_ROW.NAME_X - 6 - (0.5 * (name || '').length) - 2;
+  const maxW = _TCV_ROW.NAME_END - _TCV_ROW.NAME_X - 6 - (0.5 * (name || '').length) - 2;
   if (!_tcvMeasureCtx) { try { _tcvMeasureCtx = document.createElement('canvas').getContext('2d'); } catch(_) { return 21; } }
   if (!_tcvMeasureCtx) return 21;
   _tcvFitFont(_tcvMeasureCtx, name, maxW, 21, 13, '"Bebas Neue",Impact,"Arial Narrow",sans-serif');
@@ -3664,18 +3664,17 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
       : '<div class="tcv-row-opp' + (opp.diff ? ' tcv-opp-' + opp.diff : '') + '" title="' + _tcvOppTitle(opp) + '"><span class="tcv-opp-pre">' + (opp.away ? '@' : 'vs') + '</span>' +
         (opp.logoUrl ? '<img src="' + opp.logoUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '<span style="font-family:\'Bebas Neue\',Impact,sans-serif;font-size:13px">' + safe(opp.abbr) + '</span>') + '</div>';
   }
-  const logoHtml = logoId
-    ? '<div class="tcv-row-logo"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy"/></div>'
-    : '<div class="tcv-row-logo"></div>';
+  const miniLogoHtml = logoId
+    ? '<img class="tcv-row-team-mini" src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy" title="' + safe(d.t) + '"/>'
+    : '';
 
   card.innerHTML =
     '<div class="tcv-row-rank">' + displayRank + '.</div>' +
     '<div class="tcv-row-img">' + headshotHtml + '</div>' +
     '<div class="tcv-row-id">' +
       '<div class="tcv-row-name" title="' + safe(d.n) + ' · ' + safe(abbr) + '">' + safe(d.n) + '</div>' +
-      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span></div>' +
+      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span>' + miniLogoHtml + '</div>' +
     '</div>' +
-    logoHtml +
     oppHtml +
     '<div class="tcv-row-stats">' + statsHtml + '</div>' +
     (_tcvIsAdminViewer() ? '<button class="tcv-row-dl" type="button" title="Download this card as a PNG">⬇</button><div class="tcv-row-chk" title="Selected for PNG export">✓</div>' : '') +
@@ -3834,8 +3833,8 @@ async function _tcvRowCardCanvas(d, displayRank) {
   ctx.fillStyle = '#fff';
   ctx.fillText(displayRank + '.', 5, Y + 3);
 
-  // Name + pos pill (team is the logo right after — no abbr text)
-  const nameW = L.LOGO_X - L.NAME_X - 6;
+  // Name + pos pill + mini team logo (no abbr text)
+  const nameW = L.NAME_END - L.NAME_X - 6;
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   _tcvFitFont(ctx, d.n || '', nameW, 21, 13, BEBAS);
   ctx.save();
@@ -3850,11 +3849,9 @@ async function _tcvRowCardCanvas(d, displayRank) {
   ctx.fillStyle = _TCV_POS_COLORS[pos] || '#64748b'; ctx.fill();
   ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
   ctx.fillText(pos, L.NAME_X + 5, Y + 49.5);
-
-  // Team logo — between the name and the stats
   if (logo) {
-    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 1;
-    _tcvDrawContain(ctx, logo, L.LOGO_X, Y + H / 2 - L.LOGO_W / 2, L.LOGO_W, L.LOGO_W, 'center');
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
+    _tcvDrawContain(ctx, logo, L.NAME_X + pillW + 6, Y + 49 - L.MINI_LOGO / 2, L.MINI_LOGO, L.MINI_LOGO, 'center');
     ctx.restore();
   }
 
@@ -3884,20 +3881,22 @@ async function _tcvRowCardCanvas(d, displayRank) {
       ctx.font = '12px ' + BEBAS; ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'center';
       ctx.fillText('BYE', ox + ow / 2, Y + H / 2 + 0.5);
     } else {
+      const lg = L.OPP_LOGO;
       if (oppLogo) {
         ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
-        _tcvDrawContain(ctx, oppLogo, ox + 4, Y + H / 2 - 16, 32, 32, 'center');
+        _tcvDrawContain(ctx, oppLogo, ox + ow - lg, Y + H / 2 - lg / 2, lg, lg, 'center');
         ctx.restore();
       } else {
-        ctx.font = '13px ' + BEBAS; ctx.fillStyle = fg; ctx.textAlign = 'center';
-        ctx.fillText(opp.abbr, ox + ow / 2, Y + H / 2 - 4);
+        ctx.font = '13px ' + BEBAS; ctx.fillStyle = fg; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.fillText(opp.abbr, ox + ow, Y + H / 2);
       }
+      // vs / @ sits in FRONT of the logo (drawn after it), left edge of the slot
       const preColor = opp.diff === 'easy' ? '#4ade80' : opp.diff === 'hard' ? '#f87171' : opp.diff === 'medium' ? '#facc15' : '#e2e8f0';
-      ctx.font = '12px ' + BEBAS; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.lineWidth = 1.6; ctx.strokeStyle = '#0a0a0a';
-      ctx.strokeText(opp.away ? '@' : 'vs', ox, Y + H / 2 + 20);
+      ctx.font = '14px ' + BEBAS; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = 2; ctx.strokeStyle = '#0a0a0a';
+      ctx.strokeText(opp.away ? '@' : 'vs', ox, Y + H / 2 + 1);
       ctx.fillStyle = preColor;
-      ctx.fillText(opp.away ? '@' : 'vs', ox, Y + H / 2 + 20);
+      ctx.fillText(opp.away ? '@' : 'vs', ox, Y + H / 2 + 1);
     }
   }
 

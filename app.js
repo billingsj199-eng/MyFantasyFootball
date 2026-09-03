@@ -3917,18 +3917,15 @@ async function _tcvRowCardCanvas(d, displayRank) {
         ctx.font = '13px ' + BEBAS; ctx.fillStyle = fg; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
         ctx.fillText(opp.abbr, ox + ow, Y + H / 2);
       }
-      // vs / @ = small dark pill riding the logo's bottom-left corner, drawn
-      // after the logo so it overlaps the logo and never the reverse
+      // vs / @ = bold outlined text riding the logo's bottom-left corner,
+      // drawn after the logo so it overlaps the logo and never the reverse
       const preColor = opp.diff === 'easy' ? '#4ade80' : opp.diff === 'hard' ? '#f87171' : opp.diff === 'medium' ? '#facc15' : '#e2e8f0';
       const preTxt = opp.away ? '@' : 'vs';
-      ctx.font = '11px ' + BEBAS; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      const pw = ctx.measureText(preTxt).width + 6, ph = 13;
-      const px0 = lx - 2, py0 = Y + H / 2 + lg / 2 + 1 - ph;
-      _tcvRoundRect(ctx, px0, py0, pw, ph, 3);
-      ctx.fillStyle = 'rgba(5,8,15,.88)'; ctx.fill();
-      ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.stroke();
+      ctx.font = '16px ' + BEBAS; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+      ctx.lineWidth = 2.6; ctx.strokeStyle = '#0a0a0a';
+      ctx.strokeText(preTxt, lx - 3, Y + H / 2 + lg / 2);
       ctx.fillStyle = preColor;
-      ctx.fillText(preTxt, px0 + 3, py0 + ph / 2 + 0.5);
+      ctx.fillText(preTxt, lx - 3, Y + H / 2 + lg / 2);
     }
   }
 

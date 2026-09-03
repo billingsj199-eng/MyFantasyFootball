@@ -177,10 +177,12 @@ function validateImportData(obj) {
     });
   }
 
-  // Kickers ship WITHOUT an _slImg seed (the rankings injector never gives K
-  // rows an image), so they also enter the fix set to GAIN a headshot from the
-  // baked ids / roster lookup — not just to correct a scrambled one.
-  const playersToFix = D.filter(p => ((p._slImg && p._slImg.includes('espncdn.com')) || (p.s === 'K' && !p._slImg)) && p.n && !p.n.includes('D/ST') && !(p._retired && window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.n]));
+  // Players that ship WITHOUT an _slImg seed (kickers never get one from the
+  // rankings injector; rookies/UDFAs added mid-season arrive without one too —
+  // Cyrus Allen 2026-09-03) also enter the fix set to GAIN a headshot from the
+  // baked ids / roster lookup — not just to correct a scrambled one. D/ST rows
+  // were seeded with the team logo above, so they never reach this filter.
+  const playersToFix = D.filter(p => ((p._slImg && p._slImg.includes('espncdn.com')) || (!p._slImg && !p._retired && p.s !== 'PICK')) && p.n && !p.n.includes('D/ST') && !(p._retired && window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.n]));
 
   // Apply cached fixes immediately
   let cachedCount = 0;

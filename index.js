@@ -536,7 +536,10 @@ exports.refreshJacksPublic = onRequest(
       }
       const full = JSON.parse(snap.data().data);
       const CUT_ALL = 36, CUT_POS = 12;
-      const out = { jacks: {} };
+      // _pubSchema 2 (2026-09-03): slice carries _cut / _cutPos per mode so
+      // free/anon viewers get the cut line (keep in sync with the site's
+      // _buildJacksPublicPayload / _PUB_SCHEMA).
+      const out = { jacks: {}, _pubSchema: 2 };
       for (const m of ["redraft", "bestball", "superflex", "dynasty", "dynastysf", "weekly"]) {
         const src = full.jacks && full.jacks[m];
         if (!src) continue;
@@ -548,6 +551,8 @@ exports.refreshJacksPublic = onRequest(
           if (kept.length) slice._posTiers[pk] = kept;
         }
         if (m === "weekly" && src._week != null) slice._week = src._week;
+        if (src._cut >= 1) slice._cut = src._cut;
+        if (src._cutPos && typeof src._cutPos === "object" && Object.keys(src._cutPos).length) slice._cutPos = src._cutPos;
         out.jacks[m] = slice;
       }
       // Precomputed ticker movers (same rules as the site: 300-rank window,

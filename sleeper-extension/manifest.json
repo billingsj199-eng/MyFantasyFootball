@@ -6,7 +6,9 @@
   "permissions": [
     "storage",
     "alarms",
-    "notifications", "unlimitedStorage"],
+    "notifications",
+    "unlimitedStorage"
+  ],
   "background": {
     "service_worker": "background.js"
   },

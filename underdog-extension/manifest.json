@@ -5,7 +5,9 @@
   "description": "Live Underdog draft picks from Jack's rankings + BBM advance-rate optimizer. Stacks, cliffs, and live PPG-by-position projections.",
   "permissions": [
     "storage",
-    "cookies", "unlimitedStorage"],
+    "cookies",
+    "unlimitedStorage"
+  ],
   "background": {
     "service_worker": "background.js"
   },

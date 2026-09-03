@@ -4,7 +4,9 @@
   "version": "0.9.19",
   "description": "Draft assistant + season helper for Yahoo leagues: live pick recs, optimal lineups, waivers, season sims, and league export.",
   "permissions": [
-    "storage", "unlimitedStorage"],
+    "storage",
+    "unlimitedStorage"
+  ],
   "background": {
     "service_worker": "background.js"
   },

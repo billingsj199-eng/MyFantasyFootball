@@ -3585,7 +3585,7 @@ function _tcvRowsPref() {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { W: 560, H: 64, PAD_TOP: 10, RANK_W: 38, IMG_W: 76, IMG_H: 72, NAME_X: 120, STATS_X: 316, STATS_W: 146, STATS_H: 44, OPP_X: 470, OPP_W: 40, LOGO_X: 514, LOGO_W: 40 };
+const _TCV_ROW = { W: 560, H: 72, PAD_TOP: 14, RANK_W: 38, IMG_W: 110, IMG_H: 86, NAME_X: 154, LOGO_X: 302, LOGO_W: 44, OPP_X: 350, OPP_W: 40, STATS_X: 400, STATS_W: 146, STATS_H: 44 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
@@ -3622,7 +3622,9 @@ function _tcvSetSelected(card, on) {
 // the card's own Bebas Neue via an offscreen canvas (21px down to 13px).
 let _tcvMeasureCtx = null;
 function _tcvRowNameSize(name) {
-  const maxW = _TCV_ROW.STATS_X - _TCV_ROW.NAME_X - 8;
+  // .tcv-row-name has letter-spacing:.5px, which canvas measureText ignores —
+  // budget for it so the DOM never ellipsizes a name the PNG fits.
+  const maxW = _TCV_ROW.LOGO_X - _TCV_ROW.NAME_X - 6 - (0.5 * (name || '').length) - 2;
   if (!_tcvMeasureCtx) { try { _tcvMeasureCtx = document.createElement('canvas').getContext('2d'); } catch(_) { return 21; } }
   if (!_tcvMeasureCtx) return 21;
   _tcvFitFont(_tcvMeasureCtx, name, maxW, 21, 13, '"Bebas Neue",Impact,"Arial Narrow",sans-serif');
@@ -3670,12 +3672,12 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
     '<div class="tcv-row-rank">' + displayRank + '.</div>' +
     '<div class="tcv-row-img">' + headshotHtml + '</div>' +
     '<div class="tcv-row-id">' +
-      '<div class="tcv-row-name" title="' + safe(d.n) + '">' + safe(d.n) + '</div>' +
-      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span><span>' + safe(abbr) + '</span></div>' +
+      '<div class="tcv-row-name" title="' + safe(d.n) + ' · ' + safe(abbr) + '">' + safe(d.n) + '</div>' +
+      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span></div>' +
     '</div>' +
-    '<div class="tcv-row-stats">' + statsHtml + '</div>' +
-    oppHtml +
     logoHtml +
+    oppHtml +
+    '<div class="tcv-row-stats">' + statsHtml + '</div>' +
     (_tcvIsAdminViewer() ? '<button class="tcv-row-dl" type="button" title="Download this card as a PNG">⬇</button><div class="tcv-row-chk" title="Selected for PNG export">✓</div>' : '') +
     '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
       (d._slImg
@@ -3817,25 +3819,29 @@ async function _tcvRowCardCanvas(d, displayRank) {
     ctx.fillText('?', L.RANK_W + L.IMG_W / 2, Y + H / 2);
   }
 
-  // Name + pos pill + team abbr
-  const nameW = L.STATS_X - L.NAME_X - 8;
+  // Name + pos pill (team is the logo right after — no abbr text)
+  const nameW = L.LOGO_X - L.NAME_X - 6;
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   _tcvFitFont(ctx, d.n || '', nameW, 21, 13, BEBAS);
   ctx.save();
   if (!band.light) { ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1; }
   ctx.fillStyle = fg;
-  ctx.fillText(d.n || '', L.NAME_X, Y + 30);
+  ctx.fillText(d.n || '', L.NAME_X, Y + 34);
   ctx.restore();
   const pos = d.s || '';
   ctx.font = '10px ' + BEBAS;
   const pillW = ctx.measureText(pos).width + 10;
-  _tcvRoundRect(ctx, L.NAME_X, Y + 38, pillW, 14, 2);
+  _tcvRoundRect(ctx, L.NAME_X, Y + 42, pillW, 14, 2);
   ctx.fillStyle = _TCV_POS_COLORS[pos] || '#64748b'; ctx.fill();
   ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
-  ctx.fillText(pos, L.NAME_X + 5, Y + 45.5);
-  ctx.font = '11px ' + BEBAS; ctx.fillStyle = fg; ctx.globalAlpha = 0.9;
-  ctx.fillText(abbr, L.NAME_X + pillW + 6, Y + 45.5);
-  ctx.globalAlpha = 1;
+  ctx.fillText(pos, L.NAME_X + 5, Y + 49.5);
+
+  // Team logo — between the name and the stats
+  if (logo) {
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 1;
+    _tcvDrawContain(ctx, logo, L.LOGO_X, Y + H / 2 - L.LOGO_W / 2, L.LOGO_W, L.LOGO_W, 'center');
+    ctx.restore();
+  }
 
   // Stats block (dark, so the green→red value colors stay readable on any band)
   const sy = Y + (H - L.STATS_H) / 2;
@@ -3893,12 +3899,6 @@ async function _tcvRowCardCanvas(d, displayRank) {
     ctx.fillText(String(seasonBye), ox + ow / 2, Y + H / 2 + 6);
   }
 
-  // Team logo
-  if (logo) {
-    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 1;
-    _tcvDrawContain(ctx, logo, L.LOGO_X, Y + H / 2 - L.LOGO_W / 2, L.LOGO_W, L.LOGO_W, 'center');
-    ctx.restore();
-  }
   return c;
 }
 function _tcvSavePng(canvas, filename) {

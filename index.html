@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-03b" as="script">
+<link rel="preload" href="app.js?v=2026-09-03c" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1491,38 +1491,38 @@ tr:hover .watch-star{opacity:.55}
 .tcv-key-color-note i{color:#ef4444;font-style:normal;font-weight:600}
 /* ROW CARDS layout — horizontal graphic cards (rank | headshot | name/pos | stats | matchup | team logo)
    on a team-color band. One card per line under each tier letter; sized to mirror the
-   PNG export in _tcvRowCardCanvas (560×64 CSS px) so what you see is what downloads. */
+   PNG export in _tcvRowCardCanvas (560×72 CSS px) so what you see is what downloads. */
 .tier-card-view.tcv-rows .tcv-cards{flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:6px;padding:8px 8px 8px 10px}
 .tier-card-view.tcv-rows.tcv-centered .tcv-cards{align-items:center}
-.tcv-card.tcv-row-card{width:560px;height:64px;padding:0;display:flex;align-items:center;gap:4px;border-radius:8px;overflow:visible;box-shadow:0 0 0 1px rgba(255,255,255,.18),0 3px 10px rgba(0,0,0,.5);color:#fff}
+.tcv-card.tcv-row-card{width:560px;height:72px;padding:0;display:flex;align-items:center;gap:0;border-radius:8px;overflow:visible;box-shadow:0 0 0 1px rgba(255,255,255,.18),0 3px 10px rgba(0,0,0,.5);color:#fff}
 .tcv-card.tcv-row-card.tcv-row-light{color:#0f172a}
 .tcv-row-rank{flex:0 0 38px;text-align:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;font-weight:900;line-height:1;color:#fff;-webkit-text-stroke:1.3px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7)}
-.tcv-row-img{flex:0 0 76px;height:72px;align-self:flex-end;margin-bottom:0;display:flex;align-items:flex-end;justify-content:center;position:relative;z-index:1}
-.tcv-row-img img{width:76px;height:72px;object-fit:contain;object-position:center bottom;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
-.tcv-row-img .tcv-card-img-fallback{width:76px;height:52px;margin:0;font-size:26px}
+.tcv-row-img{flex:0 0 110px;height:86px;align-self:flex-end;margin-bottom:0;display:flex;align-items:flex-end;justify-content:center;position:relative;z-index:1}
+.tcv-row-img img{width:110px;height:86px;object-fit:contain;object-position:center bottom;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.tcv-row-img .tcv-card-img-fallback{width:110px;height:60px;margin:0;font-size:26px}
 .tcv-card.tcv-covered .tcv-row-img{visibility:hidden}
-.tcv-row-id{flex:1 1 0;min-width:0;padding:0 6px 0 2px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.tcv-row-id{flex:0 0 154px;min-width:0;padding:0 6px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:3px}
 .tcv-row-name{font-family:'Bebas Neue',Impact,sans-serif;font-size:21px;line-height:1;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.55)}
 .tcv-row-light .tcv-row-name{text-shadow:none}
 .tcv-row-sub{display:flex;align-items:center;gap:5px;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;opacity:.9}
 .tcv-row-card .tcv-pos-pill{position:static;font-size:10px;padding:1px 5px;line-height:1.3}
-.tcv-row-stats{flex:0 0 146px;height:44px;display:flex;align-items:stretch;background:rgba(0,0,0,.55);border-radius:6px;color:#fff}
+.tcv-row-stats{flex:0 0 146px;height:44px;margin:0 0 0 10px;display:flex;align-items:stretch;background:rgba(0,0,0,.55);border-radius:6px;color:#fff}
 .tcv-row-stat{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1}
 .tcv-row-stat-v{font-family:'DM Sans',system-ui,sans-serif;font-size:15px;font-weight:700}
 .tcv-row-stat-v .tcv-stat-blank{opacity:.35}
 .tcv-row-stat-l{font-family:'DM Sans',system-ui,sans-serif;font-size:8px;letter-spacing:.8px;color:rgba(255,255,255,.62);font-weight:600;white-space:nowrap}
-.tcv-row-opp{flex:0 0 40px;height:40px;position:relative;display:flex;align-items:center;justify-content:center;margin-left:4px}
+.tcv-row-opp{flex:0 0 40px;height:40px;position:relative;display:flex;align-items:center;justify-content:center;margin:0 0 0 4px}
 .tcv-row-opp img{width:32px;height:32px;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
 .tcv-row-opp .tcv-opp-pre{position:absolute;left:0;bottom:0;font-family:'Bebas Neue',Impact,sans-serif;font-size:12px;font-weight:700;color:#e2e8f0;-webkit-text-stroke:.8px #0a0a0a;paint-order:stroke fill;text-shadow:0 1px 2px rgba(0,0,0,.95)}
 .tcv-row-opp.tcv-opp-easy .tcv-opp-pre{color:#4ade80}
 .tcv-row-opp.tcv-opp-medium .tcv-opp-pre{color:#facc15}
 .tcv-row-opp.tcv-opp-hard .tcv-opp-pre{color:#f87171}
-.tcv-row-opp.tcv-row-bye{flex-direction:column;justify-content:center;gap:1px;height:34px;flex-basis:36px;margin-left:6px;background:rgba(0,0,0,.55);border-radius:5px;color:#fff;line-height:1}
+.tcv-row-opp.tcv-row-bye{flex-direction:column;justify-content:center;gap:1px;height:34px;flex-basis:36px;margin:0 4px 0 6px;background:rgba(0,0,0,.55);border-radius:5px;color:#fff;line-height:1}
 .tcv-row-bye-l{font-family:'DM Sans',system-ui,sans-serif;font-size:8px;font-weight:600;letter-spacing:.8px;color:rgba(255,255,255,.62)}
 .tcv-row-bye-n{font-family:'DM Sans',system-ui,sans-serif;font-size:15px;font-weight:700}
 .tcv-row-opp.tcv-opp-bye{font-family:'Bebas Neue',Impact,sans-serif;font-size:12px;color:#94a3b8;background:rgba(0,0,0,.6);border-radius:4px;height:22px;flex-basis:36px}
-.tcv-row-logo{flex:0 0 40px;height:40px;margin:0 6px 0 4px;display:flex;align-items:center;justify-content:center}
-.tcv-row-logo img{width:40px;height:40px;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)) drop-shadow(0 0 3px rgba(0,0,0,.5))}
+.tcv-row-logo{flex:0 0 44px;height:44px;margin:0;display:flex;align-items:center;justify-content:center}
+.tcv-row-logo img{width:44px;height:44px;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)) drop-shadow(0 0 3px rgba(0,0,0,.5))}
 /* Admin: hover ⬇ downloads this one card as a PNG */
 .tcv-row-dl{position:absolute;top:-9px;right:-9px;width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:#0f172a;color:#fff;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s,background .15s;z-index:7;padding:0}
 .tcv-card.tcv-row-card:hover .tcv-row-dl{opacity:1}
@@ -5469,7 +5469,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-03b"></script>
+<script defer src="app.js?v=2026-09-03c"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

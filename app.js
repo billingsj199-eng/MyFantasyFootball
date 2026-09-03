@@ -25462,6 +25462,80 @@ window.fmtHeight = fmtHeight;
     } catch (e) { console.warn('[Save] public slice backfill failed:', e); }
   }
 
+  // ── OFFICIAL BOARD RESTORE (2026-09-03: rankings/jacks-official vanished) ──
+  // Backups have always been written — rankings_history/{iso-ts} in the cloud
+  // after every save, and localStorage mff_jacks_backups (last 10 saves,
+  // pre-write) — but nothing ever read them back. Console:
+  //   await _jacksBackupList()        → table of cloud + local backups
+  //   await _jacksRestore('cloud:<id>' | 'local:<n>')   (no arg = newest cloud)
+  // loadJacksFromCloud auto-offers the newest cloud backup when the official
+  // doc is missing outright (exists=false) in an admin session.
+  async function _jacksBackupList(n) {
+    const out = [];
+    try {
+      const q = await db.collection('rankings_history')
+        .orderBy(firebase.firestore.FieldPath.documentId(), 'desc').limit(n || 10).get();
+      q.forEach(doc => { const d = doc.data() || {}; out.push({ key: 'cloud:' + doc.id, id: doc.id, at: d.updatedAt || doc.id, by: d.updatedBy || '', data: d.data }); });
+    } catch (e) { console.warn('[Restore] rankings_history read failed:', e && (e.code || e.message)); }
+    try {
+      const loc = JSON.parse(localStorage.getItem('mff_jacks_backups') || '[]');
+      loc.forEach((b, i) => out.push({ key: 'local:' + i, id: 'local #' + i, at: b.ts, by: b.updatedBy || '', data: JSON.stringify(b.data) }));
+    } catch (_) {}
+    return out.map(b => {
+      let top = [], len = 0;
+      try {
+        const o = JSON.parse(b.data);
+        const r = o && o.jacks && o.jacks.redraft && o.jacks.redraft._order;
+        if (Array.isArray(r)) { len = r.length; top = r.slice(0, 5); }
+      } catch (_) {}
+      return Object.assign(b, { redraftLen: len, top5: top });
+    });
+  }
+  window._jacksBackupList = async function(n) {
+    const list = await _jacksBackupList(n);
+    try { console.table(list.map(b => ({ key: b.key, at: b.at, by: b.by, redraft: b.redraftLen, top5: b.top5.join(', ') }))); } catch (_) {}
+    return list;
+  };
+  window._jacksRestore = async function(key) {
+    if (!db || !isAdmin()) { toast('Admin only'); return false; }
+    const list = await _jacksBackupList(10);
+    const b = key ? list.find(x => x.key === key)
+      : (list.find(x => x.key.indexOf('cloud:') === 0 && x.redraftLen > 100) || list.find(x => x.redraftLen > 100));
+    if (!b) { toast('No usable backup found (cloud rankings_history or local)'); return false; }
+    if (!confirm("Restore Jack's official board from " + b.key + " (" + b.at + ", " + b.redraftLen + " redraft names; top: " + b.top5.join(', ') + ")?\n\nThis rewrites rankings/jacks-official.")) return false;
+    showSaving();
+    try {
+      const at = new Date().toISOString();
+      await db.collection('rankings').doc('jacks-official').set({
+        data: b.data, updatedBy: (currentUser && currentUser.email) || '', updatedAt: at, restoredFrom: b.key + ' @ ' + b.at
+      }, { merge: true });
+      const ver = await db.collection('rankings').doc('jacks-official').get({ source: 'server' });
+      if (!ver.exists || ver.data().updatedAt !== at) throw new Error('server verify failed');
+      window._jacksOfficialDenied = false; window._jacksOfficialDeniedCount = 0;
+      await loadJacksFromCloud();
+      try { _ensureJacksPublicFresh(); } catch (_) {}
+      try { if (typeof window._jacksResubscribe === 'function') window._jacksResubscribe(); } catch (_) {}
+      syncMode(); renumber(); render();
+      toast("Restored Jack's official board from " + b.key);
+      console.log('[Restore] jacks-official restored from', b.key, b.at);
+      return true;
+    } catch (e) {
+      console.error('[Restore] failed:', e);
+      toast('Restore failed: ' + ((e && (e.code || e.message)) || e));
+      return false;
+    } finally { hideSaving(); }
+  };
+  window._jacksOfferRestore = async function(reason) {
+    if (window._jacksRestoreOffered || !isAdmin()) return;
+    window._jacksRestoreOffered = true;
+    const list = await _jacksBackupList(10);
+    const best = list.find(x => x.key.indexOf('cloud:') === 0 && x.redraftLen > 100) || list.find(x => x.redraftLen > 100);
+    if (!best) { toast('Official board is MISSING and no backup was found — do not save'); return; }
+    if (confirm("Jack's official board is MISSING in Firestore (" + reason + ").\n\nRestore the newest backup?\n" + best.key + " from " + best.at + "\n" + best.redraftLen + " redraft names; top: " + best.top5.join(', '))) {
+      await window._jacksRestore(best.key);
+    }
+  };
+
   // Admin only: save Jack's rankings to a shared document everyone reads
   async function saveJacksRankings() {
     if (!currentUser || !db || !isAdmin()) return;
@@ -25719,6 +25793,10 @@ window.fmtHeight = fmtHeight;
         else {
           window._jacksOfficialLoadFailed = 'read ' + _docId + ', exists=' + !!(doc && doc.exists) + ', data=' + !!(doc && doc.exists && doc.data().data);
           console.error('[Auth] OFFICIAL BOARD NOT LOADED (' + window._jacksOfficialLoadFailed + ') — boards may be the bundled default. Do not save.');
+          if (_docId === 'jacks-official' && doc && !doc.exists && typeof window._jacksOfferRestore === 'function') {
+            const _reason = window._jacksOfficialLoadFailed;
+            setTimeout(() => { try { window._jacksOfferRestore(_reason); } catch (_) {} }, 600);
+          }
           if (typeof toast === 'function') toast("⚠ Jack's official board did NOT load (" + window._jacksOfficialLoadFailed + "). Reload before saving.");
         }
       }

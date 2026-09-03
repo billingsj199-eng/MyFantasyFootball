@@ -3827,11 +3827,11 @@ async function _tcvRowCardCanvas(d, displayRank) {
 
   // Rank — top-left corner of the band, riding the headshot's shoulder
   ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.lineJoin = 'round';
-  ctx.font = '24px ' + BEBAS;
-  ctx.lineWidth = 2.6; ctx.strokeStyle = '#0a0a0a';
-  ctx.strokeText(displayRank + '.', 5, Y + 3);
+  ctx.font = '34px ' + BEBAS;
+  ctx.lineWidth = 3.2; ctx.strokeStyle = '#0a0a0a';
+  ctx.strokeText(displayRank + '.', 5, Y + 1);
   ctx.fillStyle = '#fff';
-  ctx.fillText(displayRank + '.', 5, Y + 3);
+  ctx.fillText(displayRank + '.', 5, Y + 1);
 
   // Name + pos pill + mini team logo (no abbr text)
   const nameW = L.NAME_END - L.NAME_X - 6;

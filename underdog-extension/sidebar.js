@@ -4399,11 +4399,30 @@
   // Precedence for the same draft id: this sync's fresh drafts, then the
   // site's copy (mff_site_drafts, pushed by page-bridge), then older synced
   // drafts retained in mff_portfolio_sync. Returns null when nothing known.
+  // v0.18.12: current-season filter — Jack wants "all my 2026 drafts", not
+  // last year's. A draft is excluded only when its slate/tournament title
+  // names a 4-digit year older than the current season (March rollover);
+  // untitled rosters (site copy) are kept.
+  function _seasonYear() {
+    const d = new Date();
+    return d.getMonth() >= 2 ? d.getFullYear() : d.getFullYear() - 1;
+  }
+  function _draftIsOldSeason(d, season) {
+    try {
+      const txt = ((d && d.slateTitle) || '') + ' ' + ((d && d.tournament) || '') + ' ' + ((d && d.title) || '');
+      const m = txt.match(/\b(20\d\d)\b/);
+      return !!(m && parseInt(m[1], 10) < season);
+    } catch (_) { return false; }
+  }
   function _sidebarPortfolioUnion(freshDrafts, mergedDrafts, siteDrafts) {
     try {
       const byId = {};
       const noId = [];
+      const season = _seasonYear();
+      const oldIds = {};
+      let excludedOld = 0;
       const namesOf = function (d) {
+        if (d && d.id != null && _draftIsOldSeason(d, season)) { oldIds[String(d.id)] = true; excludedOld++; return []; }
         return Array.isArray(d && d.picks) ? d.picks.map(function (p) { return p && (p.name || p); }).filter(Boolean) : [];
       };
       const site = siteDrafts;
@@ -4420,10 +4439,14 @@
         if (d.id == null) { noId.push(t); return; }
         if (!byId[String(d.id)]) byId[String(d.id)] = t;
       });
+      // drop site-copy rosters whose id we identified as an old-season draft
+      Object.keys(oldIds).forEach(function (id) { delete byId[id]; });
       const teams = Object.keys(byId).map(function (id) { return byId[id]; }).concat(noId);
       if (!teams.length) return null;
       const out = buildPortfolioFromTeams(teams);
       out.numSite = site && site.byId ? Object.keys(site.byId).length : 0;
+      out.season = season;
+      out.excludedOld = excludedOld;
       out.source = 'sync+site';
       console.log('[MFF/sync] sidebar exposure portfolio:', teams.length, 'drafts (site', out.numSite + ', synced', (mergedDrafts || []).length + ')');
       return out;
@@ -4470,7 +4493,8 @@
           const when = p && p.syncedAt ? new Date(p.syncedAt).toLocaleString() : '—';
           el.textContent = 'Exposure % uses ' + nP + ' drafts · own sync store ' + nSync +
                            ' · site copy ' + nSite + (site && site.lastPushCount != null ? ' (last push ' + site.lastPushCount + ')' : '') +
-                           ' · site id list ' + nIds + ' · written ' + when + (p && p.source ? ' via ' + p.source : '');
+                           ' · site id list ' + nIds + ' · written ' + when + (p && p.source ? ' via ' + p.source : ' via UNTAGGED writer') +
+                           (p && p.season ? ' · season ' + p.season + (p.excludedOld ? ' (' + p.excludedOld + ' older excluded)' : '') : '');
           el.style.color = (nP && (nP < nSync || nP < nSite)) ? '#f59e0b' : '#8a8d96';
         } catch (_) {}
       });
@@ -6226,7 +6250,20 @@
           } catch (_) {}
         }
         if (changes.mff_portfolio && changes.mff_portfolio.newValue) {
-          state.portfolio = changes.mff_portfolio.newValue;
+          const nv = changes.mff_portfolio.newValue;
+          // v0.18.12: a stale site tab (bridge code from before an extension
+          // reload) still writes buildPortfolio(teams) straight from whatever
+          // the page shows — 6 drafts in Jack's case — with no `source` tag.
+          // Never let an untagged write shrink the denominator below what our
+          // own stores hold: rebuild from the stores instead (that write
+          // carries source 'sync+site', so this does not loop).
+          const prevN = (state.portfolio && state.portfolio.numTeams) || 0;
+          if (nv.source !== 'sync+site' && nv.numTeams < prevN) {
+            console.warn('[MFF/portfolio] ignoring untagged write of', nv.numTeams, 'drafts (had', prevN + ') — rebuilding from stores');
+            try { rebuildSidebarPortfolioFromStores(); } catch (_) {}
+            return;
+          }
+          state.portfolio = nv;
           shouldRender = true;
           try { renderPortfolioDiag(); } catch (_) {}
           // v0.18.10: the page decorator skips rows it already stamped, so

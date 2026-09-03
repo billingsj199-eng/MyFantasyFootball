@@ -47,7 +47,15 @@
       if (d.id == null) { noId.push(picks); return; }
       if (!byId[String(d.id)]) byId[String(d.id)] = picks;   // site copy wins when both know it
     });
-    return Object.keys(byId).map(function (id) { return byId[id]; }).concat(noId);
+    const seen = {};
+    Object.keys(byId).forEach(function (id) { seen[[].concat(byId[id]).slice().sort().join("|")] = true; });
+    const extra = noId.filter(function (t) {
+      const k = [].concat(t).slice().sort().join("|");
+      if (seen[k]) return false;
+      seen[k] = true;
+      return true;
+    });
+    return Object.keys(byId).map(function (id) { return byId[id]; }).concat(extra);
   }
   document.addEventListener("mff-portfolio-update", function (e) {
     try {
@@ -56,10 +64,18 @@
       const syncedAt = (e.detail && e.detail.syncedAt) || Date.now();
       const drafts = e.detail && Array.isArray(e.detail.drafts) ? e.detail.drafts : null;
       if (!drafts) {
-        // legacy shape (no ids) — old behaviour
-        const p = buildPortfolio(teams);
-        p.syncedAt = syncedAt;
-        safeSet("mff_portfolio", p);
+        // legacy shape (no ids): v0.18.12 — still union with our own sync
+        // store so a page showing a partial portfolio can't shrink it.
+        if (!chrome || !chrome.runtime || !chrome.runtime.id) return;
+        chrome.storage.local.get(["mff_portfolio_sync"], function (res) {
+          try {
+            const all = unionTeams({ byId: {}, noId: teams }, res && res.mff_portfolio_sync);
+            const p = buildPortfolio(all.length ? all : teams);
+            p.syncedAt = syncedAt;
+            p.source = "site+sync";
+            safeSet("mff_portfolio", p);
+          } catch(_){}
+        });
         return;
       }
       const incoming = { byId: {}, noId: [] };

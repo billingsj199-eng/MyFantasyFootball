@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-03j" as="script">
+<link rel="preload" href="app.js?v=2026-09-03k" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1502,7 +1502,7 @@ tr:hover .watch-star{opacity:.55}
 .tcv-row-img .tcv-card-img-fallback{width:110px;height:60px;margin:0;font-size:26px}
 .tcv-card.tcv-covered .tcv-row-img{visibility:hidden}
 .tcv-row-id{flex:0 0 118px;min-width:0;margin-left:-6px;padding:0 6px 0 4px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:3px}
-.tcv-row-name{font-family:'Bebas Neue',Impact,sans-serif;font-size:21px;line-height:1;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+.tcv-row-name{font-family:'Bebas Neue',Impact,sans-serif;font-size:24px;line-height:1;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.55)}
 .tcv-row-light .tcv-row-name{text-shadow:none}
 .tcv-row-sub{display:flex;align-items:center;gap:5px;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;opacity:.9}
 .tcv-row-card .tcv-pos-pill{position:static;font-size:10px;padding:1px 5px;line-height:1.3}
@@ -1513,9 +1513,9 @@ tr:hover .watch-star{opacity:.55}
 .tcv-row-stat-v{font-family:'DM Sans',system-ui,sans-serif;font-size:15px;font-weight:700}
 .tcv-row-stat-v .tcv-stat-blank{opacity:.35}
 .tcv-row-stat-l{font-family:'DM Sans',system-ui,sans-serif;font-size:8px;letter-spacing:.8px;color:rgba(255,255,255,.62);font-weight:600;white-space:nowrap}
-.tcv-row-opp{flex:0 0 36px;height:40px;position:relative;display:flex;align-items:center;justify-content:flex-end;margin:0 0 0 4px}
-.tcv-row-opp img{width:34px;height:34px;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
-.tcv-row-opp .tcv-opp-pre{position:absolute;left:-3px;bottom:2px;z-index:2;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;font-weight:700;line-height:1;letter-spacing:.5px;color:#e2e8f0;padding:1px 3px;background:rgba(5,8,15,.88);border:1px solid rgba(255,255,255,.3);border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.6)}
+.tcv-row-opp{flex:0 0 36px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;margin:0 0 0 4px}
+.tcv-row-opp img{width:42px;height:42px;max-width:none;flex:none;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
+.tcv-row-opp .tcv-opp-pre{position:absolute;left:-5px;bottom:1px;z-index:2;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;font-weight:700;line-height:1;letter-spacing:.5px;color:#e2e8f0;padding:1px 3px;background:rgba(5,8,15,.88);border:1px solid rgba(255,255,255,.3);border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.6)}
 .tcv-row-opp.tcv-opp-easy .tcv-opp-pre{color:#4ade80}
 .tcv-row-opp.tcv-opp-medium .tcv-opp-pre{color:#facc15}
 .tcv-row-opp.tcv-opp-hard .tcv-opp-pre{color:#f87171}
@@ -4145,7 +4145,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- defer: window.BETTING_2026 feeds the on-demand player-card LINES tab (post-DCL) and
      a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
-<script src="data/betting_lines_2026.js?v=2026-09-02b" defer></script>
+<script src="data/betting_lines_2026.js?v=2026-09-03" defer></script>
 <script src="data/headshot_espn_ids.js?v=2026-08-25" defer></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
@@ -5471,7 +5471,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-03j"></script>
+<script defer src="app.js?v=2026-09-03k"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

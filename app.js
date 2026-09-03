@@ -25374,8 +25374,14 @@ window.fmtHeight = fmtHeight;
   // rules, jacks-official goes premium-only and this doc is all a free
   // session ever sees.
   const _PUB_CUT_ALL = 36, _PUB_CUT_POS = 12;
+  // Bump when the slice gains fields: _ensureJacksPublicFresh rebuilds a doc
+  // written by an older schema even if its timestamp is current.
+  //   2 (2026-09-03): + _cut / _cutPos per mode — free/anon viewers loaded the
+  //     slice with no cut line, so the fallback-filled board showed every
+  //     below-cut player (and a +/- sort floated them to the top).
+  const _PUB_SCHEMA = 2;
   function _buildJacksPublicPayload(fullData) {
-    const out = { jacks: {} };
+    const out = { jacks: {}, _pubSchema: _PUB_SCHEMA };
     ['redraft','bestball','superflex','dynasty','dynastysf','weekly'].forEach(m => {
       const src = fullData.jacks && fullData.jacks[m];
       if (!src) return;
@@ -25387,6 +25393,10 @@ window.fmtHeight = fmtHeight;
         if (kept.length) slice._posTiers[pk] = kept;
       });
       if (m === 'weekly' && src._week != null) slice._week = src._week;
+      // Cut lines ride along: loadModeData / _weeklyStashSaved apply them, and
+      // getFiltered then hides below-cut players from non-editors.
+      if (src._cut >= 1) slice._cut = src._cut;
+      if (src._cutPos && typeof src._cutPos === 'object' && Object.keys(src._cutPos).length) slice._cutPos = src._cutPos;
       out.jacks[m] = slice;
     });
     // Ticker movers off the FULL boards (same 300-rank window + top-8 rule as
@@ -25439,9 +25449,11 @@ window.fmtHeight = fmtHeight;
       const offAt = off.data().updatedAt || '';
       const pubOk = pub.exists && pub.data().data;
       const pubAt = (pub.exists && pub.data().updatedAt) || '';
-      if (pubOk && pubAt >= offAt) return;
+      let pubSchema = 0;
+      if (pubOk) { try { pubSchema = JSON.parse(pub.data().data)._pubSchema || 0; } catch (_) {} }
+      if (pubOk && pubAt >= offAt && pubSchema >= _PUB_SCHEMA) return;
       await _writeJacksPublicSlice(JSON.parse(off.data().data));
-      console.log('[Save] Public slice backfilled (was ' + (pubAt || 'missing') + ')');
+      console.log('[Save] Public slice backfilled (was ' + (pubAt || 'missing') + ', schema ' + pubSchema + ')');
     } catch (e) { console.warn('[Save] public slice backfill failed:', e); }
   }
 

@@ -7518,7 +7518,12 @@ document.getElementById('btnPrintSheet').addEventListener('click', () => {
 
 // Export to Underdog format CSV (id, playerId, firstName, lastName, rank — Aug 2026 underdogsports.com schema)
 document.getElementById('btnExportUnderdog').addEventListener('click', () => {
-  let data = getFiltered();
+  // Always export in BOARD order, whatever column the table is sorted by:
+  // Underdog's importer takes the ranking from row order (their 'adp' column
+  // is ADP, not rank), so a table sorted by +/- or PROJ shipped a scrambled
+  // file that looked like stale rankings (Jack, 2026-09-03).
+  let data;
+  { const _sk = sortKey, _sd = sortDir; sortKey = 'myrank'; sortDir = 1; try { data = getFiltered(); } finally { sortKey = _sk; sortDir = _sd; } }
   const _cut = _exportCutoff();
   const _truncated = data.length > _cut;
   if (_truncated) data = data.slice(0, _cut);
@@ -25460,6 +25465,17 @@ window.fmtHeight = fmtHeight;
   // Admin only: save Jack's rankings to a shared document everyone reads
   async function saveJacksRankings() {
     if (!currentUser || !db || !isAdmin()) return;
+    // Never loaded the official board this session (see loadJacksFromCloud)?
+    // Then what's on screen may be the bundled default — saving would
+    // overwrite the real rankings. Explicit override only.
+    if (!window._jacksOfficialLoaded) {
+      const _why = window._jacksOfficialLoadFailed ? ' (' + window._jacksOfficialLoadFailed + ')' : '';
+      if (!confirm("SAFETY CHECK: this session never loaded Jack's official board from the cloud" + _why + ", so the board on screen may be the bundled default order.\n\nSaving now would overwrite the real rankings.\n\nSave anyway?")) {
+        toast('Save cancelled — official board was never loaded this session');
+        return;
+      }
+      console.warn('[Save] Override: saving without an official-board load this session');
+    }
     showSaving();
     try {
       // === Capture previous snapshot (for the WEEKLY MOVERS ticker) ===
@@ -25693,6 +25709,19 @@ window.fmtHeight = fmtHeight;
       if (_docId === 'jacks-public' && (!doc.exists || !doc.data().data)) {
         doc = await db.collection('rankings').doc('jacks-official').get();
       }
+      // Admin/premium sessions: say so LOUDLY when the official board did not
+      // come back (Jack 2026-09-03: a hard refresh left his session on the
+      // bundled default order — nothing had loaded — and the Underdog export
+      // shipped that). window._jacksOfficialLoaded gates saveJacksRankings.
+      if (_jacksDocId() === 'jacks-official') {
+        const _ok = _docId === 'jacks-official' && doc && doc.exists && !!doc.data().data;
+        if (_ok) { window._jacksOfficialLoaded = true; window._jacksOfficialLoadFailed = null; }
+        else {
+          window._jacksOfficialLoadFailed = 'read ' + _docId + ', exists=' + !!(doc && doc.exists) + ', data=' + !!(doc && doc.exists && doc.data().data);
+          console.error('[Auth] OFFICIAL BOARD NOT LOADED (' + window._jacksOfficialLoadFailed + ') — boards may be the bundled default. Do not save.');
+          if (typeof toast === 'function') toast("⚠ Jack's official board did NOT load (" + window._jacksOfficialLoadFailed + "). Reload before saving.");
+        }
+      }
       // Out-for-season flags ride the same doc as a separate `ir` field
       if (doc.exists && typeof window._irApplyRemote === 'function' && window._irApplyRemote(doc.data().ir)) {
         renumber(); render();
@@ -25739,6 +25768,10 @@ window.fmtHeight = fmtHeight;
       }
     } catch(e) {
       console.error('[Auth] Jacks cloud load error:', e);
+      if (_jacksDocId() === 'jacks-official') {
+        window._jacksOfficialLoadFailed = 'error ' + ((e && (e.code || e.message)) || e);
+        if (typeof toast === 'function') toast("⚠ Jack's official board failed to load (" + window._jacksOfficialLoadFailed + "). Reload before saving.");
+      }
     }
   }
 
@@ -25797,6 +25830,14 @@ window.fmtHeight = fmtHeight;
     if (!currentUser || !db) return;
     // Load Jack's shared rankings first (for all users)
     await loadJacksFromCloud();
+    // Admin: the official board is the whole point of the session — retry a
+    // couple of times (auth token / persistence races at boot) before
+    // leaving the bundled default on screen.
+    for (let _try = 0; _try < 2 && isAdmin() && !window._jacksOfficialLoaded; _try++) {
+      await new Promise(r => setTimeout(r, 1500));
+      console.warn('[Auth] official board not loaded yet — retry ' + (_try + 1));
+      await loadJacksFromCloud();
+    }
     // Admin session: bootstrap/repair the public slice doc (fire-and-forget)
     if (isAdmin()) { try { _ensureJacksPublicFresh(); } catch (_) {} }
     // Then load user's personal rankings
@@ -25837,8 +25878,14 @@ window.fmtHeight = fmtHeight;
       // state would have overwritten the official board. Hop to the official
       // doc instead of loading the slice.
       if (_docId === 'jacks-public' && _jacksDocId() === 'jacks-official') {
-        if (_jacksSubDocId === 'jacks-public') listenForJacksUpdates('jacks-official');
-        return;
+        // ...unless the official doc keeps denying this session (rules say
+        // it isn't Jack/premium after all): stop the official<->public
+        // ping-pong and stay on the slice, flagged so a save asks first.
+        if (window._jacksOfficialDenied) { /* fall through: apply the slice */ }
+        else {
+          if (_jacksSubDocId === 'jacks-public') listenForJacksUpdates('jacks-official');
+          return;
+        }
       }
       // Out-for-season flags: apply live so a toggle in one tab (or by Jack)
       // hides/restores the player everywhere without a refresh.
@@ -25846,6 +25893,7 @@ window.fmtHeight = fmtHeight;
         renumber(); render();
       }
       if (doc.exists && doc.data().data) {
+        if (_docId === 'jacks-official') { window._jacksOfficialLoaded = true; window._jacksOfficialLoadFailed = null; }
         window._jacksUpdatedAt = doc.data().updatedAt || null;
         if (typeof window._renderRankingsUpdated === 'function') window._renderRankingsUpdated();
         const obj = JSON.parse(doc.data().data);
@@ -25899,6 +25947,17 @@ window.fmtHeight = fmtHeight;
       if (err && err.code === 'permission-denied') {
         jacksUnsubscribe = null;
         _jacksSubDocId = null;
+        if (_docId === 'jacks-official') {
+          window._jacksOfficialDeniedCount = (window._jacksOfficialDeniedCount || 0) + 1;
+          if (window._jacksOfficialDeniedCount >= 2 && !window._jacksOfficialDenied) {
+            window._jacksOfficialDenied = true;
+            if (_jacksDocId() === 'jacks-official') {
+              window._jacksOfficialLoadFailed = 'permission-denied on jacks-official (rules do not see this session as Jack/premium)';
+              console.error('[Auth] ' + window._jacksOfficialLoadFailed);
+              if (typeof toast === 'function') toast("⚠ Jack's official board: " + window._jacksOfficialLoadFailed);
+            }
+          }
+        }
         listenForJacksUpdates(_docId === 'jacks-official' ? 'jacks-public' : 'jacks-official');
       }
     });

@@ -3585,7 +3585,7 @@ function _tcvRowsPref() {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { W: 448, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 248, MINI_LOGO: 18, OPP_X: 252, OPP_W: 44, OPP_LOGO: 34, STATS_X: 302, STATS_W: 136, STATS_H: 44 };
+const _TCV_ROW = { W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 34, STATS_X: 272, STATS_W: 136, STATS_H: 44 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
@@ -3618,17 +3618,38 @@ function _tcvSetSelected(card, on) {
   if (n) { if (on) window._tcvSel.names.add(n); else window._tcvSel.names.delete(n); }
 }
 
-// Name font size (px) that fits the row card's name column, measured with
-// the card's own Bebas Neue via an offscreen canvas (21px down to 13px).
+// Fit a player's name into the row card's name column. Same rule on screen
+// and in the PNG: the full name may shrink from 21px down to 16px; if it
+// still doesn't fit, switch to first-initial form ("C. McCaffrey",
+// "J. Smith-Njigba", keeping suffixes and St./Van/De particles) and fit
+// that from 21px down to 13px. Measured with Bebas Neue on an offscreen
+// canvas; +.5px/char budgets for .tcv-row-name's letter-spacing.
+// Returns { text, px }.
 let _tcvMeasureCtx = null;
-function _tcvRowNameSize(name) {
-  // .tcv-row-name has letter-spacing:.5px, which canvas measureText ignores —
-  // budget for it so the DOM never ellipsizes a name the PNG fits.
-  const maxW = _TCV_ROW.NAME_END - _TCV_ROW.NAME_X - 6 - (0.5 * (name || '').length) - 2;
-  if (!_tcvMeasureCtx) { try { _tcvMeasureCtx = document.createElement('canvas').getContext('2d'); } catch(_) { return 21; } }
-  if (!_tcvMeasureCtx) return 21;
-  _tcvFitFont(_tcvMeasureCtx, name, maxW, 21, 13, '"Bebas Neue",Impact,"Arial Narrow",sans-serif');
-  return parseInt(_tcvMeasureCtx.font, 10) || 21;
+const _TCV_NAME_SUFFIX = { 'Jr.': 1, 'Sr.': 1, 'II': 1, 'III': 1, 'IV': 1, 'V': 1 };
+const _TCV_NAME_PARTICLE = { 'St.': 1, 'Van': 1, 'De': 1, 'Del': 1, 'La': 1, 'Le': 1, 'Da': 1, 'Di': 1, 'Von': 1, 'Mc': 1 };
+function _tcvShortName(name) {
+  const parts = (name || '').trim().split(/\s+/);
+  if (parts.length < 2) return name;
+  let i = parts.length - 1;
+  const tail = [parts[i]];
+  if (_TCV_NAME_SUFFIX[parts[i]] && i > 0) { i--; tail.unshift(parts[i]); }
+  while (i > 1 && _TCV_NAME_PARTICLE[parts[i - 1]]) { i--; tail.unshift(parts[i]); }
+  const first = parts[0];
+  if (first.length <= 2 && /\.$/.test(first)) return first + ' ' + tail.join(' ');   // already "J." style
+  return first.charAt(0) + '. ' + tail.join(' ');
+}
+function _tcvRowNameFit(name) {
+  name = (name || '').toString();
+  const maxW = _TCV_ROW.NAME_END - _TCV_ROW.NAME_X - 6;
+  if (!_tcvMeasureCtx) { try { _tcvMeasureCtx = document.createElement('canvas').getContext('2d'); } catch(_) { return { text: name, px: 21 }; } }
+  if (!_tcvMeasureCtx) return { text: name, px: 21 };
+  const ctx = _tcvMeasureCtx;
+  const fits = (txt, px) => { ctx.font = px + 'px "Bebas Neue",Impact,"Arial Narrow",sans-serif'; return ctx.measureText(txt).width + 0.5 * txt.length + 2 <= maxW; };
+  for (let px = 21; px >= 16; px--) if (fits(name, px)) return { text: name, px: px };
+  const short = _tcvShortName(name);
+  for (let px = 21; px >= 13; px--) if (fits(short, px)) return { text: short, px: px };
+  return { text: short, px: 13 };
 }
 
 function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
@@ -3685,12 +3706,15 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
         : '<div class="tcv-cover-sil">' + _TCV_SIL_SVG + '</div>') +
     '</div>';
 
-  // Long names (Christian McCaffrey, Jaxon Smith-Njigba) shrink to fit the
-  // name column instead of truncating — same fit rule as the PNG export.
+  // Long names shrink a little, then go to "C. McCaffrey" form — same rule as
+  // the PNG export (see _tcvRowNameFit). Full name stays in the tooltip.
   {
     const nameEl = card.querySelector('.tcv-row-name');
-    const px = _tcvRowNameSize(d.n || '');
-    if (nameEl && px < 21) nameEl.style.fontSize = px + 'px';
+    const fit = _tcvRowNameFit(d.n || '');
+    if (nameEl) {
+      if (fit.text !== (d.n || '')) nameEl.textContent = fit.text;
+      if (fit.px < 21) nameEl.style.fontSize = fit.px + 'px';
+    }
   }
   const dl = card.querySelector('.tcv-row-dl');
   if (dl) dl.addEventListener('click', (e) => {
@@ -3835,13 +3859,13 @@ async function _tcvRowCardCanvas(d, displayRank) {
   ctx.fillText(displayRank + '.', 5, Y + (_rank3 ? 3 : 1));
 
   // Name + pos pill + mini team logo (no abbr text)
-  const nameW = L.NAME_END - L.NAME_X - 6;
+  const nameFit = _tcvRowNameFit(d.n || '');
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  _tcvFitFont(ctx, d.n || '', nameW, 21, 13, BEBAS);
+  ctx.font = nameFit.px + 'px ' + BEBAS;
   ctx.save();
   if (!band.light) { ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1; }
   ctx.fillStyle = fg;
-  ctx.fillText(d.n || '', L.NAME_X, Y + 34);
+  ctx.fillText(nameFit.text, L.NAME_X, Y + 34);
   ctx.restore();
   const pos = d.s || '';
   ctx.font = '10px ' + BEBAS;
@@ -3891,13 +3915,18 @@ async function _tcvRowCardCanvas(d, displayRank) {
         ctx.font = '13px ' + BEBAS; ctx.fillStyle = fg; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
         ctx.fillText(opp.abbr, ox + ow, Y + H / 2);
       }
-      // vs / @ sits in FRONT of the logo (drawn after it), left edge of the slot
+      // vs / @ = small dark pill riding the logo's bottom-left corner, drawn
+      // after the logo so it overlaps the logo and never the reverse
       const preColor = opp.diff === 'easy' ? '#4ade80' : opp.diff === 'hard' ? '#f87171' : opp.diff === 'medium' ? '#facc15' : '#e2e8f0';
-      ctx.font = '14px ' + BEBAS; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      ctx.lineWidth = 2; ctx.strokeStyle = '#0a0a0a';
-      ctx.strokeText(opp.away ? '@' : 'vs', ox, Y + H / 2 + 1);
+      const preTxt = opp.away ? '@' : 'vs';
+      ctx.font = '11px ' + BEBAS; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      const pw = ctx.measureText(preTxt).width + 6, ph = 13;
+      const px0 = ox - 3, py0 = Y + H / 2 + lg / 2 + 1 - ph;
+      _tcvRoundRect(ctx, px0, py0, pw, ph, 3);
+      ctx.fillStyle = 'rgba(5,8,15,.88)'; ctx.fill();
+      ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.stroke();
       ctx.fillStyle = preColor;
-      ctx.fillText(opp.away ? '@' : 'vs', ox, Y + H / 2 + 1);
+      ctx.fillText(preTxt, px0 + 3, py0 + ph / 2 + 0.5);
     }
   }
 

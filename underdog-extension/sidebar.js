@@ -5499,7 +5499,27 @@
     // host resolution + UD headers + query params). The old bgFetch path
     // returns 401/404 because it can't replicate UD's full request shape.
     // mainfetch via injected.js mimics UD's own SPA exactly so it just works.
+    // v0.18.13: LIST endpoints (which slates / rounds / drafts exist) are
+    // fetched live first and only fall back to the snoop cache. That cache
+    // is sessionStorage — it survives F5 — so a drafts list snooped earlier
+    // in the day was reused all day and every draft completed since was
+    // never discovered ("it hasn't been adding new teams"). Per-draft and
+    // per-slate payloads are immutable, so those stay cache-first.
+    const _LIVE_FIRST = /\/(completed_slates|active_drafts|tournament_rounds)(\/|$)|\/tournament_rounds\/[^/]+\/drafts$/;
     async function getEndpoint(path, fullUrl) {
+      // NOTE: the live-first test runs BEFORE the pre-cache check — the sync
+      // pre-loads every snooped /v1/user, /v2/user, /v4/user entry into
+      // `bulk` at start, which would otherwise hand back the stale list.
+      if (_LIVE_FIRST.test(path)) {
+        const liveUrl = (fullUrl && fullUrl.startsWith('http')) ? fullUrl : _udUrl(path);
+        const live = await mainFetch(liveUrl, 12000);
+        if (live.ok && live.data) {
+          bulk[path] = live.data;
+          console.log('[MFF/sync] live list:', path);
+          return { ok: true, data: live.data, source: 'mainfetch-live' };
+        }
+        console.log('[MFF/sync] live list fetch failed, trying cache:', path, live.status || live.error);
+      }
       if (bulk[path]) {
         return { ok: true, data: bulk[path], source: 'pre-cache' };
       }
@@ -5533,19 +5553,28 @@
     const existingDraftIds = await new Promise((resolve) => {
       try {
         chrome.storage.local.get(['mff_portfolio_sync', 'mff_site_drafts', 'mff_existing_draft_ids'], (res) => {
+          // v0.18.13: only a COMPLETE roster counts as held. A draft synced
+          // while still in progress (the draft-complete auto-sync, or a
+          // checkpoint mid-draft) has 1-17 picks; skipping it forever meant
+          // the finished roster never replaced the partial one. Contests
+          // with fewer than 18 rounds simply get re-fetched each sync.
+          const FULL_ROSTER = 18;
           const have = new Set();
+          let partial = 0;
           const sync = res && res.mff_portfolio_sync;
           if (sync && Array.isArray(sync.drafts)) {
             for (const d of sync.drafts) {
-              if (d && d.id != null && Array.isArray(d.picks) && d.picks.length) have.add(String(d.id));
+              if (!d || d.id == null || !Array.isArray(d.picks) || !d.picks.length) continue;
+              if (d.picks.length >= FULL_ROSTER) have.add(String(d.id)); else partial++;
             }
           }
           const site = res && res.mff_site_drafts;
           if (site && site.byId) {
             for (const id of Object.keys(site.byId)) {
-              if (Array.isArray(site.byId[id]) && site.byId[id].length) have.add(String(id));
+              if (Array.isArray(site.byId[id]) && site.byId[id].length >= FULL_ROSTER) have.add(String(id));
             }
           }
+          if (partial) console.log('[MFF/sync]', partial, 'partial roster(s) in the sync store will be re-fetched');
           const siteIds = (res && Array.isArray(res.mff_existing_draft_ids)) ? res.mff_existing_draft_ids.length : 0;
           console.log('[MFF/sync] rosters held locally:', have.size,
                       '(sync store', (sync && sync.drafts && sync.drafts.length) || 0,

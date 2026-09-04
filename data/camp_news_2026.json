@@ -1,6 +1,56 @@
 {
-  "updated": "2026-09-04T02:10:01Z",
+  "updated": "2026-09-04T16:10:20Z",
   "items": [
+    {
+      "player": "D'Andre Swift",
+      "team": "CHI",
+      "pos": "RB",
+      "date": "2026-09-04",
+      "headline": "Left Thursday's practice in discomfort after goal-line carry; Schefter says just a cramp",
+      "take": "Not considered serious — expect normal participation Friday, no Week 1 downgrade.",
+      "url": "https://x.com/AdamSchefter/status/2095667939236061294",
+      "tag": "injury"
+    },
+    {
+      "player": "Rome Odunze",
+      "team": "CHI",
+      "pos": "WR",
+      "date": "2026-09-04",
+      "headline": "Also exited Thursday's practice early, hobbling on a leg issue",
+      "take": "Described as minor by beat reporters — low concern, but check Friday's report.",
+      "url": "https://sports.yahoo.com/articles/rome-odunze-d-andre-swift-010700324.html",
+      "tag": "injury"
+    },
+    {
+      "player": "George Kittle",
+      "team": "SF",
+      "pos": "TE",
+      "date": "2026-09-04",
+      "headline": "Officially making the trip to Australia after two clean practice days",
+      "take": "Trending toward playing Week 1 vs. Rams — real upgrade from earlier guarded language, final call after landing.",
+      "url": "https://www.espn.com/nfl/story/_/id/49802956/sources-49ers-george-kittle-nick-bosa-make-trip-australia",
+      "tag": "injury"
+    },
+    {
+      "player": "Alec Pierce",
+      "team": "IND",
+      "pos": "WR",
+      "date": "2026-09-04",
+      "headline": "Full practice participant for the first time all summer after ankle surgery",
+      "take": "GM Chris Ballard hopeful he's ready for the Sept. 13 opener at Baltimore.",
+      "url": "https://www.draftsharks.com/fantasy-football-news/82460/alec-pierce-returns-to-full-practice-ahead-of-week-1",
+      "tag": "riser"
+    },
+    {
+      "player": "Ashton Jeanty",
+      "team": "LV",
+      "pos": "RB",
+      "date": "2026-09-04",
+      "headline": "Still hasn't returned to team practice since Aug. 23 ankle sprain despite team optimism",
+      "take": "Real yellow flag for Week 1 vs. Miami — team confidence hasn't yet been backed up by practice reps.",
+      "url": "https://sports.yahoo.com/articles/everything-points-ashton-jeanty-playing-130000026.html",
+      "tag": "faller"
+    },
     {
       "player": "Christian Kirk",
       "team": "SF",
@@ -27,7 +77,7 @@
       "pos": "WR",
       "date": "2026-09-03",
       "headline": "Sat out Wednesday's practice with a heel contusion",
-      "take": "Same profile as Chase \u2014 expected Week 1, confirm before locking lineups.",
+      "take": "Same profile as Chase — expected Week 1, confirm before locking lineups.",
       "url": "https://www.cbssports.com/fantasy/football/news/bengals-tee-higgins-wont-take-practice-reps-wednesday/",
       "tag": "injury"
     },
@@ -37,7 +87,7 @@
       "pos": "WR",
       "date": "2026-09-03",
       "headline": "Signs 3-year, $75M contract extension with Cardinals",
-      "take": "Locks in as a long-term piece of Arizona's passing game \u2014 steady WR3/4 value.",
+      "take": "Locks in as a long-term piece of Arizona's passing game — steady WR3/4 value.",
       "url": "https://www.azcardinals.com/news/wide-receiver-michael-wilson-signs-three-year-contract-extension-with-cardinals",
       "tag": "transaction"
     },
@@ -67,7 +117,7 @@
       "pos": "RB",
       "date": "2026-09-03",
       "headline": "HC Sean Payton: \"moving well,\" on track for Week 1 vs. Chiefs",
-      "take": "Soft-tissue scare appears resolved \u2014 trending toward real Week 1 work in a crowded backfield.",
+      "take": "Soft-tissue scare appears resolved — trending toward real Week 1 work in a crowded backfield.",
       "url": "https://x.com/christomasson/status/2095208098889900315",
       "tag": "injury"
     },
@@ -217,7 +267,7 @@
       "pos": "RB",
       "date": "2026-09-02",
       "headline": "Placed on IR with MCL sprain plus back injury, out at least 4 games",
-      "take": "Misses Week 1 vs. Saints; possibly out into Week 7 with the bye \u2014 watch Lions backfield committee for waiver value",
+      "take": "Misses Week 1 vs. Saints; possibly out into Week 7 with the bye — watch Lions backfield committee for waiver value",
       "url": "https://www.espn.com/nfl/story/_/id/49796729/detroit-lions-place-rb-isiah-pacheco-injured-reserve",
       "tag": "injury"
     },
@@ -237,7 +287,7 @@
       "pos": "RB",
       "date": "2026-09-02",
       "headline": "DNP Tuesday with ankle tweak, but source says he avoided serious injury",
-      "take": "Expected 'good to go' for Week 1 opener at Seattle \u2014 scare, not a setback",
+      "take": "Expected 'good to go' for Week 1 opener at Seattle — scare, not a setback",
       "url": "https://www.yardbarker.com/nfl/articles/treveyon_henderson_injury_update_patriots_get_encouraging_week_1_news/s1_17702_44234732",
       "tag": "injury"
     },
@@ -367,7 +417,7 @@
       "pos": "RB",
       "date": "2026-08-31",
       "headline": "Cowboys claim RB Emari Demercado off waivers from Chiefs",
-      "take": "Becomes Dallas's clear No. 3 RB behind Javonte Williams/Malik Davis \u2014 stash value if either gets hurt",
+      "take": "Becomes Dallas's clear No. 3 RB behind Javonte Williams/Malik Davis — stash value if either gets hurt",
       "url": "https://sports.yahoo.com/articles/cowboys-claim-rb-emari-demercado-182803682.html",
       "tag": "transaction"
     },
@@ -387,7 +437,7 @@
       "pos": "TE",
       "date": "2026-08-31",
       "headline": "Dolphins claim rookie TE Justin Joly off waivers from Broncos",
-      "take": "Lands in a thin Miami TE room (Dulcich, Kacmarek, Sims) \u2014 deep dynasty stash only",
+      "take": "Lands in a thin Miami TE room (Dulcich, Kacmarek, Sims) — deep dynasty stash only",
       "url": "https://sports.yahoo.com/articles/dolphins-claim-broncos-5th-round-175353629.html",
       "tag": "transaction"
     },
@@ -457,7 +507,7 @@
       "pos": "RB",
       "date": "2026-08-30",
       "headline": "Cowboys also waive RB Israel Abanikanda, down to 2 RBs on roster",
-      "take": "Confirms Dallas is thin at RB entering the season \u2014 Malik Davis is the clear backup",
+      "take": "Confirms Dallas is thin at RB entering the season — Malik Davis is the clear backup",
       "url": "https://dallassportsjournal.com/dallas-cowboys-waive-israel-abanikanda-running-back-cuts/",
       "tag": "transaction"
     },
@@ -467,7 +517,7 @@
       "pos": "RB",
       "date": "2026-08-30",
       "headline": "Malik Davis is now Dallas' clear backup RB after Blue, Mafah, Abanikanda all waived",
-      "take": "Surprise ascension to the No. 2 RB job behind Javonte Williams \u2014 a real stash in deeper leagues",
+      "take": "Surprise ascension to the No. 2 RB job behind Javonte Williams — a real stash in deeper leagues",
       "url": "https://dallassportsjournal.com/dallas-cowboys-waive-israel-abanikanda-running-back-cuts/",
       "tag": "riser"
     },
@@ -487,7 +537,7 @@
       "pos": "RB",
       "date": "2026-08-30",
       "headline": "Guerendo devalued as a McCaffrey handcuff after 49ers trade for Brian Robinson Jr.",
-      "take": "No longer the primary CMC injury-replacement play \u2014 largely undraftable in redraft now",
+      "take": "No longer the primary CMC injury-replacement play — largely undraftable in redraft now",
       "url": "https://www.cbssports.com/fantasy/football/news/fantasy-football-fallout-commanders-trade-brian-robinson-jr-to-the-49ers-heres-what-to-know-before-drafts/",
       "tag": "faller"
     },
@@ -537,7 +587,7 @@
       "pos": "RB",
       "date": "2026-08-29",
       "headline": "Dolphins acquire RB Jarquez Hunter from Rams in Atwell trade",
-      "take": "Buried behind Miami's starter with zero 2025 offensive snaps \u2014 deep bench flier only.",
+      "take": "Buried behind Miami's starter with zero 2025 offensive snaps — deep bench flier only.",
       "url": "https://www.espn.com/nfl/story/_/id/49744695/dolphins-trade-tutu-atwell-rams-jarquez-hunter",
       "tag": "transaction"
     },
@@ -547,7 +597,7 @@
       "pos": "WR",
       "date": "2026-08-29",
       "headline": "Giants release WR Isaiah Hodgins in cutdown moves",
-      "take": "Thins Giants WR room below Nabers/Slayton/Mooney/Beckham/Fields \u2014 no fantasy impact.",
+      "take": "Thins Giants WR room below Nabers/Slayton/Mooney/Beckham/Fields — no fantasy impact.",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-29/isaiah-hodgins-amongst-giants-roster-cutdowns",
       "tag": "transaction"
     },
@@ -567,7 +617,7 @@
       "pos": "WR",
       "date": "2026-08-29",
       "headline": "Nabers leaves practice early, won't commit to a Week 1 return",
-      "take": "Red-flag setback in his ACL recovery \u2014 treat him as a game-time question for the opener.",
+      "take": "Red-flag setback in his ACL recovery — treat him as a game-time question for the opener.",
       "url": "https://bleacherreport.com/articles/25481686-malik-nabers-injury-status-updated-giants-john-harbaugh-ahead-2026-nfl-season",
       "tag": "faller"
     },
@@ -577,7 +627,7 @@
       "pos": "WR",
       "date": "2026-08-30",
       "headline": "OBJ confirmed on Giants' initial 53-man roster",
-      "take": "Officially makes the team \u2014 now a legitimate deep-league WR5/6 flier, not just speculative.",
+      "take": "Officially makes the team — now a legitimate deep-league WR5/6 flier, not just speculative.",
       "url": "https://gmenhq.com/new-york-giants-2026-53-man-roster-cut-tracker-2026-live-updates",
       "tag": "role"
     },
@@ -587,7 +637,7 @@
       "pos": "RB",
       "date": "2026-08-29",
       "headline": "Jones and Mason both listed as Vikings co-starters at RB",
-      "take": "Jones is 'RB1' on paper but Mason out-snapped him last year \u2014 real committee risk in redraft.",
+      "take": "Jones is 'RB1' on paper but Mason out-snapped him last year — real committee risk in redraft.",
       "url": "https://www.si.com/onsi/fantasy/rankings/depth-chart-debate-running-back-vikings-jordan-mason-aaron-jones",
       "tag": "role"
     },
@@ -607,7 +657,7 @@
       "pos": "RB",
       "date": "2026-08-29",
       "headline": "Tuten getting 1st-team reps after Jaguars traded Etienne to Saints",
-      "take": "Coen praising his contact balance and 4.28 speed \u2014 2026 breakout sleeper in a Rodriguez Jr. committee.",
+      "take": "Coen praising his contact balance and 4.28 speed — 2026 breakout sleeper in a Rodriguez Jr. committee.",
       "url": "https://www.espn.com/nfl/story/_/id/49725895/what-expect-jaguars-running-backs-bhayshul-tuten-chris-rodriguez-jr-2026",
       "tag": "riser"
     },
@@ -617,7 +667,7 @@
       "pos": "TE",
       "date": "2026-08-28",
       "headline": "Rookie TE Stowers struggling in camp, now dealing with a hamstring injury",
-      "take": "Poor camp as both receiver and blocker plus a new injury clouds his rookie outlook \u2014 could open on IR.",
+      "take": "Poor camp as both receiver and blocker plus a new injury clouds his rookie outlook — could open on IR.",
       "url": "https://www.inquirer.com/eagles/2026-roster-prediction-53-man-cuts-depth-chart-20260828.html",
       "tag": "faller"
     },
@@ -627,7 +677,7 @@
       "pos": "WR",
       "date": "2026-08-29",
       "headline": "Rookie Concepcion reported atop Browns' WR pecking order in camp",
-      "take": "Early ADP (~pick 125) may undervalue his role \u2014 dynasty rookie-draft riser to watch.",
+      "take": "Early ADP (~pick 125) may undervalue his role — dynasty rookie-draft riser to watch.",
       "url": "https://sports.yahoo.com/fantasy/article/cyrus-allen-leads-2026-nfl-rookies-already-generating-fantasy-football-buzz-in-training-camps-145843770.html",
       "tag": "riser"
     },
@@ -897,7 +947,7 @@
       "pos": "RB",
       "date": "2026-08-27",
       "headline": "Kubiak vague on timeline (\"on the mend\"); Rapoport calls it a low ankle sprain, no clear return date",
-      "take": "Walks back Wednesday's optimism \u2014 treat as week-to-week with real Week 1 doubt, not resolved",
+      "take": "Walks back Wednesday's optimism — treat as week-to-week with real Week 1 doubt, not resolved",
       "url": "https://lastwordonsports.com/nfl/2026/08/26/ashton-jeanty-injury-update-2/",
       "tag": "injury"
     },
@@ -917,7 +967,7 @@
       "pos": "WR",
       "date": "2026-08-27",
       "headline": "Back at practice after a shin bruise, eased back in rather than given a full workload",
-      "take": "Stock stays hot \u2014 was drawing Stefon Diggs comps before the injury; monitor for full participation",
+      "take": "Stock stays hot — was drawing Stefon Diggs comps before the injury; monitor for full participation",
       "url": "https://www.si.com/nfl/chiefs/onsi/chiefs-injury-update-rookie-wr-cyrus-allen-returns-long-list-of-others-sidelined",
       "tag": "injury"
     },
@@ -927,7 +977,7 @@
       "pos": "RB",
       "date": "2026-08-27",
       "headline": "Schefter: possible suspension (6-8 games) still on the table, no ruling yet",
-      "take": "Unresolved bust risk continues into final camp week \u2014 check news before locking him in on draft day",
+      "take": "Unresolved bust risk continues into final camp week — check news before locking him in on draft day",
       "url": "https://sports.yahoo.com/articles/raiders-news-ian-rapoports-harsh-134131522.html",
       "tag": "faller"
     },
@@ -957,7 +1007,7 @@
       "pos": "RB",
       "date": "2026-08-26",
       "headline": "Packers GM Gutekunst says team is \"prepared\" for a possible suspension",
-      "take": "Real discipline risk resurfaces despite a clean return to practice \u2014 monitor closely into Week 1",
+      "take": "Real discipline risk resurfaces despite a clean return to practice — monitor closely into Week 1",
       "url": "https://ca.sports.yahoo.com/news/packers-gm-brian-gutekunst-says-team-is-prepared-for-possible-josh-jacobs-suspension-165824357.html",
       "tag": "faller"
     },
@@ -967,7 +1017,7 @@
       "pos": "RB",
       "date": "2026-08-26",
       "headline": "Practiced Wednesday and said he \"feels good overall\" after Sunday's ankle sprain",
-      "take": "De-escalates the injury further \u2014 trending toward a normal Week 1 workload",
+      "take": "De-escalates the injury further — trending toward a normal Week 1 workload",
       "url": "https://www.cbssports.com/nfl/news/raiders-ashton-jeanty-injured-helped-off-practice-field/",
       "tag": "injury"
     },
@@ -1057,7 +1107,7 @@
       "pos": "TE",
       "date": "2026-08-25",
       "headline": "Held out of practice all week with a hip injury, Campbell non-committal on Week 1",
-      "take": "Real Week 1 doubt for a top-5 fantasy TE \u2014 monitor closely into cutdown week",
+      "take": "Real Week 1 doubt for a top-5 fantasy TE — monitor closely into cutdown week",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/sam-laporta-dealing-with-hip-injury-but-should-not-be-sidelined-for-long",
       "tag": "injury"
     },
@@ -1127,7 +1177,7 @@
       "pos": "WR",
       "date": "2026-08-25",
       "headline": "Left practice early after hard landing, but only had the wind knocked out",
-      "take": "Scare only \u2014 no lingering concern for Saints' top WR",
+      "take": "Scare only — no lingering concern for Saints' top WR",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-25/olave-leaves-practice-early-after-hard-landing",
       "tag": "injury"
     },
@@ -1167,7 +1217,7 @@
       "pos": "RB",
       "date": "2026-08-24",
       "headline": "Hit 20 mph in hamstring rehab, trending on track for Week 1",
-      "take": "Encouraging progress report \u2014 expect an early-season committee with Jonathon Brooks as he ramps back up",
+      "take": "Encouraging progress report — expect an early-season committee with Jonathon Brooks as he ramps back up",
       "url": "https://sports.yahoo.com/articles/panthers-news-chuba-hubbard-gets-190918133.html",
       "tag": "riser"
     },
@@ -1187,7 +1237,7 @@
       "pos": "WR",
       "date": "2026-08-24",
       "headline": "Sheds red no-contact jersey for first time since ACL tear, catches 6 passes",
-      "take": "Coach calls Week 1 return \"reasonable\" \u2014 bump him back toward WR1 consideration",
+      "take": "Coach calls Week 1 return \"reasonable\" — bump him back toward WR1 consideration",
       "url": "https://www.bigblueview.com/new-york-giants-news/168772/malik-nabers-sheds-red-jersey-takes-step-toward-week-1-dallas-cowboys",
       "tag": "riser"
     },
@@ -1337,7 +1387,7 @@
       "pos": "RB",
       "date": "2026-08-23",
       "headline": "CT scan negative, full movement, released from hospital after scary ambulance exit",
-      "take": "Relief story after Saturday's scary hit \u2014 minimal fantasy relevance as a deep-roster back",
+      "take": "Relief story after Saturday's scary hit — minimal fantasy relevance as a deep-roster back",
       "url": "https://www.espn.com/nfl/story/_/id/49697364/eagles-jaquinden-jackson-taken-hospital-tackle-movement",
       "tag": "injury"
     },
@@ -1347,7 +1397,7 @@
       "pos": "QB",
       "date": "2026-08-22",
       "headline": "Fully cleared for 11-on-11 work for first time since Nov. ACL surgery",
-      "take": "QB1 battle with Tua can finally start in earnest \u2014 watch closely into September",
+      "take": "QB1 battle with Tua can finally start in earnest — watch closely into September",
       "url": "https://www.espn.com/nfl/story/_/id/49694493/falcons-quarterback-michael-penix-fully-cleared-practice",
       "tag": "injury"
     },
@@ -1587,7 +1637,7 @@
       "pos": "TE",
       "date": "2026-08-20",
       "headline": "Injury is a minor abductor strain, 'going to be fine,' should be back next week per Schultz",
-      "take": "Big de-escalation from Wednesday's no-timeline scare \u2014 re-lock him near his current TE1-adjacent draft price",
+      "take": "Big de-escalation from Wednesday's no-timeline scare — re-lock him near his current TE1-adjacent draft price",
       "url": "https://x.com/Schultz_Report/status/2090249571490218109",
       "tag": "riser"
     },
@@ -1597,7 +1647,7 @@
       "pos": "WR",
       "date": "2026-08-20",
       "headline": "Still day-to-day with psoas/lower-back soreness; McVay says he may not return to practice until next week",
-      "take": "Precautionary preseason absence for a WR1 \u2014 no draft downgrade, but monitor his Week 1 availability",
+      "take": "Precautionary preseason absence for a WR1 — no draft downgrade, but monitor his Week 1 availability",
       "url": "https://sports.yahoo.com/articles/puka-nacua-injury-214206670.html",
       "tag": "injury"
     },
@@ -1607,7 +1657,7 @@
       "pos": "WR",
       "date": "2026-08-19",
       "headline": "Sources confirm torn ACL from Tuesday's joint practice, out for the season",
-      "take": "Season-ending loss for Houston's No. 2 WR \u2014 Xavier Hutchinson, Tank Dell, and Jaylin Noel all see a target bump behind Nico Collins",
+      "take": "Season-ending loss for Houston's No. 2 WR — Xavier Hutchinson, Tank Dell, and Jaylin Noel all see a target bump behind Nico Collins",
       "url": "https://www.espn.com/nfl/story/_/id/49660770/sources-texans-jayden-higgins-torn-acl-season",
       "tag": "injury"
     },
@@ -1617,7 +1667,7 @@
       "pos": "C",
       "date": "2026-08-19",
       "headline": "Carted off Wednesday's joint practice vs. Vikings after appearing to get rolled up on; no severity update yet",
-      "take": "Ravens' projected starting center \u2014 real O-line watch point if this is serious, monitor Thursday's update",
+      "take": "Ravens' projected starting center — real O-line watch point if this is serious, monitor Thursday's update",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/ravens-center-danny-pinter-carted-off-the-field-at-joint-practice-with-vikings",
       "tag": "injury"
     },
@@ -1627,7 +1677,7 @@
       "pos": "TE",
       "date": "2026-08-19",
       "headline": "Exited Wednesday's joint practice vs. Falcons with a groin injury, no timeline given",
-      "take": "TE1-caliber talent \u2014 re-check practice status before locking in his current draft price",
+      "take": "TE1-caliber talent — re-check practice status before locking in his current draft price",
       "url": "https://www.espn.com/nfl/story/_/id/49664278/colts-tight-end-tyler-warren-injures-groin-practice",
       "tag": "injury"
     },
@@ -1637,7 +1687,7 @@
       "pos": "WR",
       "date": "2026-08-19",
       "headline": "Signed a one-year deal (up to $8.32M) with the Colts, reuniting with HC Shane Steichen",
-      "take": "Lands in a WR room missing Alec Pierce (PUP, ankle) \u2014 real path to early-season targets in Indy's offense",
+      "take": "Lands in a WR room missing Alec Pierce (PUP, ankle) — real path to early-season targets in Indy's offense",
       "url": "https://www.espn.com/nfl/story/_/id/49644692/reports-wr-keenan-allen-agrees-one-year-deal-colts",
       "tag": "transaction"
     },
@@ -1647,7 +1697,7 @@
       "pos": "WR",
       "date": "2026-08-19",
       "headline": "Now expected to be ready for Week 1 vs. Falcons despite missing preseason practice time",
-      "take": "Upgrade from Wednesday morning's 'hard-pressed to return' framing \u2014 hold your draft-day price",
+      "take": "Upgrade from Wednesday morning's 'hard-pressed to return' framing — hold your draft-day price",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-19/pittman-metcalf-expect-to-face-falcons-in-week-1",
       "tag": "riser"
     },
@@ -1657,7 +1707,7 @@
       "pos": "WR",
       "date": "2026-08-19",
       "headline": "Now expected to be ready for Week 1 vs. Falcons despite missing preseason practice time",
-      "take": "Same positive update as Pittman \u2014 both Steelers WRs trending back on track for the opener",
+      "take": "Same positive update as Pittman — both Steelers WRs trending back on track for the opener",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-19/pittman-metcalf-expect-to-face-falcons-in-week-1",
       "tag": "riser"
     },
@@ -1677,7 +1727,7 @@
       "pos": "RB",
       "date": "2026-08-19",
       "headline": "Diagnosed with MCL sprain, expected out at least 4-6 weeks per Schefter",
-      "take": "Real IR candidate for Week 1 vs. Detroit \u2014 Audric Estime is the clearest early-down beneficiary in the Saints backfield",
+      "take": "Real IR candidate for Week 1 vs. Detroit — Audric Estime is the clearest early-down beneficiary in the Saints backfield",
       "url": "https://www.espn.com/nfl/story/_/id/49658952/source-saints-rb-kamara-least-month-mcl-sprain",
       "tag": "injury"
     },
@@ -1687,7 +1737,7 @@
       "pos": "C",
       "date": "2026-08-19",
       "headline": "Injury now considered long-term with ACL damage and multiple ligaments hurt, per Schefter/Garafolo",
-      "take": "Worse than initially feared for Chargers' O-line \u2014 rookie Jake Slaughter now the presumptive starting center",
+      "take": "Worse than initially feared for Chargers' O-line — rookie Jake Slaughter now the presumptive starting center",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-19/garafolo-biadasz-injury-considered-long-term",
       "tag": "injury"
     },
@@ -1697,7 +1747,7 @@
       "pos": "WR",
       "date": "2026-08-19",
       "headline": "Shanahan says Tuesday's exit was just tightness tied to his existing quad issue, not a new injury",
-      "take": "De-escalates Tuesday's scare \u2014 no change to his outlook as 49ers' WR1",
+      "take": "De-escalates Tuesday's scare — no change to his outlook as 49ers' WR1",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/49ers-wr-mike-evans-left-the-joint-practice-early-with-tightness",
       "tag": "injury"
     },
@@ -1706,8 +1756,8 @@
       "team": "LAC",
       "pos": "WR",
       "date": "2026-08-19",
-      "headline": "Schefter reports he's \u201ctotally fine\u201d after Tuesday's practice scare, not expected to miss time",
-      "take": "Non-issue \u2014 safe to ignore for redraft purposes",
+      "headline": "Schefter reports he's “totally fine” after Tuesday's practice scare, not expected to miss time",
+      "take": "Non-issue — safe to ignore for redraft purposes",
       "url": "https://clutchpoints.com/nfl/los-angeles-chargers/chargers-news-quentin-johnston-laundry-list-injuries-49ers-joint-practice",
       "tag": "injury"
     },
@@ -1727,7 +1777,7 @@
       "pos": "RB",
       "date": "2026-08-18",
       "headline": "Left Tuesday's joint practice vs. Cowboys early with an apparent knee injury",
-      "take": "Severity unknown as of Tuesday night \u2014 do not react until Wednesday's update",
+      "take": "Severity unknown as of Tuesday night — do not react until Wednesday's update",
       "url": "https://www.profootballnetwork.com/saints-star-alvin-kamara-injury-latest-return-timeline/",
       "tag": "injury"
     },
@@ -1747,7 +1797,7 @@
       "pos": "WR",
       "date": "2026-08-18",
       "headline": "Limped off Tuesday's joint practice vs. 49ers with an apparent injury",
-      "take": "Status unclear \u2014 low concern for now but worth tracking into Wednesday",
+      "take": "Status unclear — low concern for now but worth tracking into Wednesday",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/mike-evans-quentin-johnston-exit-49ers-chargers-joint-practice-early",
       "tag": "injury"
     },
@@ -1767,7 +1817,7 @@
       "pos": "RB",
       "date": "2026-08-18",
       "headline": "Shanahan confirms camp absence is tightness-related, not a contract holdout",
-      "take": "Removes the scariest read on his absence \u2014 still SF's clear workhorse plan",
+      "take": "Removes the scariest read on his absence — still SF's clear workhorse plan",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/kyle-shanahan-christian-mccaffreys-absence-is-not-contract-related",
       "tag": "other"
     },
@@ -1777,7 +1827,7 @@
       "pos": "RB",
       "date": "2026-08-18",
       "headline": "Returned to practice Tuesday after nearly two weeks out with a groin injury",
-      "take": "No long-term concern \u2014 green light for a full Week 1 workload",
+      "take": "No long-term concern — green light for a full Week 1 workload",
       "url": "https://wsau.com/2026/08/18/packers-rb-josh-jacobs-groin-returning-to-practice/",
       "tag": "riser"
     },
@@ -1787,7 +1837,7 @@
       "pos": "RB",
       "date": "2026-08-18",
       "headline": "Signed a one-year deal with the Giants after his Chargers stint fell apart",
-      "take": "Lands in a crowded backfield \u2014 deep-league/dynasty watch, not redraft-relevant yet",
+      "take": "Lands in a crowded backfield — deep-league/dynasty watch, not redraft-relevant yet",
       "url": "https://lastwordonsports.com/nfl/2026/08/18/najee-harris-pro-bowler-signs-1-year-contract-with-giants/",
       "tag": "transaction"
     },
@@ -1797,7 +1847,7 @@
       "pos": "RB",
       "date": "2026-08-18",
       "headline": "Follow-up MRI confirms groin strain is minor; Jets call it weeks, not months",
-      "take": "Real relief for Round 1-2 drafters \u2014 trending toward a Week 1 return, not a long-term issue",
+      "take": "Real relief for Round 1-2 drafters — trending toward a Week 1 return, not a long-term issue",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/report-follow-up-confirms-breece-halls-groin-injury-is-minor",
       "tag": "injury"
     },
@@ -1827,7 +1877,7 @@
       "pos": "WR",
       "date": "2026-08-18",
       "headline": "Left Tuesday's joint practice vs. Cowboys early with minor groin soreness",
-      "take": "Team and player sound unconcerned \u2014 worth a Wednesday practice-report check but no red flag yet",
+      "take": "Team and player sound unconcerned — worth a Wednesday practice-report check but no red flag yet",
       "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/puka-nacua-reportedly-dealing-with-only-minor-soreness-in-his-groin",
       "tag": "injury"
     },
@@ -1857,7 +1907,7 @@
       "pos": "WR",
       "date": "2026-08-17",
       "headline": "Hamstring injury reportedly expected to sideline him roughly two months",
-      "take": "Rookie WR8 pick now a real threat to miss Week 1 and beyond \u2014 fades as an early-season fantasy option",
+      "take": "Rookie WR8 pick now a real threat to miss Week 1 and beyond — fades as an early-season fantasy option",
       "url": "https://www.knoe.com/2026/08/17/report-jordyn-tyson-expected-be-sidelined-two-months-with-hamstring-injury/",
       "tag": "injury"
     },
@@ -1867,7 +1917,7 @@
       "pos": "RB",
       "date": "2026-08-17",
       "headline": "Free-agent RB visiting the Giants for a workout",
-      "take": "Giants' backfield behind an ailing Cam Skattebo is thin enough to make Harris a real add \u2014 monitor for a signing",
+      "take": "Giants' backfield behind an ailing Cam Skattebo is thin enough to make Harris a real add — monitor for a signing",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-17/najee-harris-visiting-with-giants-on-monday",
       "tag": "transaction"
     },
@@ -1887,7 +1937,7 @@
       "pos": "WR",
       "date": "2026-08-17",
       "headline": "Confirmed out for Colts-Falcons joint practices, will miss all of camp",
-      "take": "Ankle-surgery recovery could cost him the first four regular-season games \u2014 fading Pierce's Week 1 value",
+      "take": "Ankle-surgery recovery could cost him the first four regular-season games — fading Pierce's Week 1 value",
       "url": "https://sports.yahoo.com/articles/colts-injury-updates-alec-pierce-010113036.html",
       "tag": "injury"
     },
@@ -1967,7 +2017,7 @@
       "pos": "WR",
       "date": "2026-08-15",
       "headline": "UDFA rookie caught 2 TDs (incl. diving one-handed grab) in 17-7 preseason win over Seahawks",
-      "take": "Standout preseason debut for a Georgia Southern UDFA \u2014 deep-league/dynasty stash to track through roster cuts",
+      "take": "Standout preseason debut for a Georgia Southern UDFA — deep-league/dynasty stash to track through roster cuts",
       "url": "https://www.foxsports.com/articles/nfl/camden-brown-stands-out-for-cowboys-with-2-touchdown-catches-in-177-preseason-win-against-seahawks",
       "tag": "riser"
     },
@@ -1977,7 +2027,7 @@
       "pos": "QB",
       "date": "2026-08-15",
       "headline": "NFL debut: 21-of-25, 190 yds, 2 TD (both to Dean Connors), 0 INT in 20-12 win over Chiefs",
-      "take": "Electric preseason debut for the Rams' rookie signal-caller \u2014 a name to know in dynasty leagues.",
+      "take": "Electric preseason debut for the Rams' rookie signal-caller — a name to know in dynasty leagues.",
       "url": "https://www.arrowheadpride.com/kansas-city-chiefs-game-information/207703/final-score-rams-defeat-chiefs-20-12-in-nfl-preseason-week-1",
       "tag": "riser"
     },
@@ -2027,7 +2077,7 @@
       "pos": "QB",
       "date": "2026-08-15",
       "headline": "Went 3-of-5 for 18 yards behind a patchwork line missing both starting tackles",
-      "take": "Ugly debut with Ekwonu and Moton both out \u2014 don't overreact, but watch the OL news.",
+      "take": "Ugly debut with Ekwonu and Moton both out — don't overreact, but watch the OL news.",
       "url": "https://sports.yahoo.com/articles/panthers-14-bills-29-ugly-201052794.html",
       "tag": "faller"
     },
@@ -2037,7 +2087,7 @@
       "pos": "RB",
       "date": "2026-08-15",
       "headline": "UDFA rookie ran for 78 yards and the go-ahead 4th-quarter TD in 24-20 win over Saints",
-      "take": "Strong second half after a slow start \u2014 pushing hard for a roster/practice-squad spot.",
+      "take": "Strong second half after a slow start — pushing hard for a roster/practice-squad spot.",
       "url": "https://www.tsn.ca/nfl/article/taylor-aguilar-help-jaguars-beat-saints-in-preseason-opener/",
       "tag": "riser"
     },
@@ -2047,7 +2097,7 @@
       "pos": "QB",
       "date": "2026-08-15",
       "headline": "Made Vikings debut, went 2-of-3 for 10 yards on lone series in 13-10 win over Giants",
-      "take": "Small sample in his first game as Minnesota's new QB1 \u2014 chemistry still building.",
+      "take": "Small sample in his first game as Minnesota's new QB1 — chemistry still building.",
       "url": "https://www.vikings.com/news/jj-mccarthy-kyler-murray-preseason-debut-giants-2026",
       "tag": "role"
     },
@@ -2057,7 +2107,7 @@
       "pos": "QB",
       "date": "2026-08-15",
       "headline": "Played most of the first half at Giants, went 4-of-7 for 34 yards as Vikings' QB2",
-      "take": "Solid enough to muddy the QB2 battle \u2014 trade rumors haven't gone away, though.",
+      "take": "Solid enough to muddy the QB2 battle — trade rumors haven't gone away, though.",
       "url": "https://www.vikings.com/news/jj-mccarthy-kyler-murray-preseason-debut-giants-2026",
       "tag": "role"
     },
@@ -2067,7 +2117,7 @@
       "pos": "WR",
       "date": "2026-08-15",
       "headline": "4 catches, 51 yards, including a one-handed TD grab from Carson Wentz vs. Giants",
-      "take": "Standout showing in a crowded Vikings WR room behind Jefferson \u2014 deep-league watch.",
+      "take": "Standout showing in a crowded Vikings WR room behind Jefferson — deep-league watch.",
       "url": "https://www.yardbarker.com/nfl/articles/myles_price_stars_but_vikings_lose_jamal_adams_in_preseason_victory_over_giants/s1_17813_44179200",
       "tag": "riser"
     },
@@ -2077,7 +2127,7 @@
       "pos": "WR",
       "date": "2026-08-15",
       "headline": "Practiced in a red no-contact jersey pregame but sat out the preseason opener",
-      "take": "Trending toward a Week 1 return from his ACL tear, per Harbaugh \u2014 confirm next practice.",
+      "take": "Trending toward a Week 1 return from his ACL tear, per Harbaugh — confirm next practice.",
       "url": "https://sports.yahoo.com/articles/close-malik-nabers-appears-returning-110043773.html",
       "tag": "injury"
     },
@@ -2087,7 +2137,7 @@
       "pos": "QB",
       "date": "2026-08-15",
       "headline": "Took a scary hit and visited the medical tent, then returned to throw a 15-yard TD",
-      "take": "Passed the concussion check and finished 3-of-4, 26 yards, 1 TD \u2014 worth tracking his next reps.",
+      "take": "Passed the concussion check and finished 3-of-4, 26 yards, 1 TD — worth tracking his next reps.",
       "url": "https://sports.yahoo.com/articles/jaxson-dart-goes-medical-tent-180240238.html",
       "tag": "riser"
     },

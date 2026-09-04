@@ -1,6 +1,76 @@
 {
-  "updated": "2026-09-03T16:13:27Z",
+  "updated": "2026-09-04T02:10:01Z",
   "items": [
+    {
+      "player": "Christian Kirk",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-09-03",
+      "headline": "Placed on IR with calf strain, out at least 4 games",
+      "take": "Off Week 1-4 boards; opens up incremental target share for SF's other receivers.",
+      "url": "https://www.fantasypros.com/nfl/news/605085/christian-kirk-calf-placed-on-ir.php",
+      "tag": "injury"
+    },
+    {
+      "player": "Ja'Marr Chase",
+      "team": "CIN",
+      "pos": "WR",
+      "date": "2026-09-03",
+      "headline": "DNP Wednesday with knee issue, down from Tuesday's \"limited\"",
+      "take": "Mild concern short-term; still the presumed Week 1 starter barring a setback.",
+      "url": "https://www.yardbarker.com/nfl/articles/bengals_wrs_jamarr_chase_knee_tee_higgins_heel_limited_this_week/s1_17049_44247903",
+      "tag": "injury"
+    },
+    {
+      "player": "Tee Higgins",
+      "team": "CIN",
+      "pos": "WR",
+      "date": "2026-09-03",
+      "headline": "Sat out Wednesday's practice with a heel contusion",
+      "take": "Same profile as Chase \u2014 expected Week 1, confirm before locking lineups.",
+      "url": "https://www.cbssports.com/fantasy/football/news/bengals-tee-higgins-wont-take-practice-reps-wednesday/",
+      "tag": "injury"
+    },
+    {
+      "player": "Michael Wilson",
+      "team": "ARI",
+      "pos": "WR",
+      "date": "2026-09-03",
+      "headline": "Signs 3-year, $75M contract extension with Cardinals",
+      "take": "Locks in as a long-term piece of Arizona's passing game \u2014 steady WR3/4 value.",
+      "url": "https://www.azcardinals.com/news/wide-receiver-michael-wilson-signs-three-year-contract-extension-with-cardinals",
+      "tag": "transaction"
+    },
+    {
+      "player": "Malik Nabers",
+      "team": "NYG",
+      "pos": "WR",
+      "date": "2026-09-03",
+      "headline": "Feeling \"real good\" but still won't commit to playing Week 1",
+      "take": "Trending toward Week 1 vs. Dallas but treat as likely-to-play, not a lock yet.",
+      "url": "https://www.espn.com/nfl/story/_/id/49787690/giants-wr-nabers-feeling-good-mum-playing-week-1",
+      "tag": "riser"
+    },
+    {
+      "player": "Darren Waller",
+      "team": "CAR",
+      "pos": "TE",
+      "date": "2026-09-03",
+      "headline": "Gets first-team-offense reps Wednesday, HC Canales encouraged",
+      "take": "Trending toward a real Week 1 role as Carolina's starting TE.",
+      "url": "https://www.panthers.com/news/four-takeaways-from-wednesday-including-aj-dillon-finding-his-role-and-more",
+      "tag": "role"
+    },
+    {
+      "player": "J.K. Dobbins",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-03",
+      "headline": "HC Sean Payton: \"moving well,\" on track for Week 1 vs. Chiefs",
+      "take": "Soft-tissue scare appears resolved \u2014 trending toward real Week 1 work in a crowded backfield.",
+      "url": "https://x.com/christomasson/status/2095208098889900315",
+      "tag": "injury"
+    },
     {
       "player": "Kyle Monangai",
       "team": "CHI",
@@ -1962,16 +2032,6 @@
       "tag": "faller"
     },
     {
-      "player": "Chuba Hubbard",
-      "team": "CAR",
-      "pos": "RB",
-      "date": "2026-08-13",
-      "headline": "Ruled week-to-week with hamstring strain, sat out Saturday's loss to Bills",
-      "take": "Coach 'very confident' for Week 1, but monitor practice reports closely.",
-      "url": "https://www.panthers.com/news/training-camp-observations-chuba-hubbard-week-to-week-with-hamstring-darren-waller-preseason-bills",
-      "tag": "injury"
-    },
-    {
       "player": "J'Mari Taylor",
       "team": "JAX",
       "pos": "RB",
@@ -2062,36 +2122,6 @@
       "tag": "riser"
     },
     {
-      "player": "Graham Mertz",
-      "team": "HOU",
-      "pos": "QB",
-      "date": "2026-08-13",
-      "headline": "Tore his ACL in Thursday's preseason opener vs. Chargers, needs season-ending surgery",
-      "take": "No standalone fantasy value, but leaves Houston with just two healthy QBs on the roster.",
-      "url": "https://www.cbssports.com/fantasy/football/news/texans-graham-mertz-suffers-torn-acl/",
-      "tag": "injury"
-    },
-    {
-      "player": "Will Mallory",
-      "team": "IND",
-      "pos": "TE",
-      "date": "2026-08-13",
-      "headline": "Led all Colts pass-catchers with 6 catches on 7 targets for 80 yards in 13-13 tie vs. Patriots",
-      "take": "Standout usage behind Anthony Richardson's clean half in a Colts TE room without a clear-cut starter.",
-      "url": "https://www.colts.com/news/5-colts-things-will-mallory-caden-curry-george-gumbs-jr-among-preseason-week-1-standouts",
-      "tag": "riser"
-    },
-    {
-      "player": "De'Zhaun Stribling",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-08-13",
-      "headline": "7 catches on 8 targets for 63 yards, all in the first half of preseason win over Titans",
-      "take": "Camp buzz turns into real production -- with Pearsall out for the year and Kirk banged up, he's carving out Year 1 FLEX appeal.",
-      "url": "https://www.49ers.com/news/breaking-down-wr-de-zhaun-stribling-s-impressive-preseason-debut",
-      "tag": "riser"
-    },
-    {
       "player": "Tua Tagovailoa",
       "team": "ATL",
       "pos": "QB",
@@ -2150,176 +2180,6 @@
       "take": "Groin/psoas scare from last week's joint practice has resolved -- no reason to downgrade him in drafts.",
       "url": "https://www.cbssports.com/nfl/news/puka-nacua-injury-update-rams-wr-practicing-fully-ready-to-roll-for-week-1-after-dealing-with-knee-issue",
       "tag": "injury"
-    },
-    {
-      "player": "Jeremiyah Love",
-      "team": "ARI",
-      "pos": "RB",
-      "date": "2026-08-13",
-      "headline": "Preseason debut: 11 carries for 58 yards, 3 catches for 14 yards, 24 of 30 snaps before exiting",
-      "take": "Outsnapped Tyler Allgeier 24-6 in their shared run -- clear lead-back workload, draft him as a starter, not a committee back.",
-      "url": "https://sports.yahoo.com/articles/dude-stud-pfn-analysts-react-024439534.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Colbie Young",
-      "team": "CIN",
-      "pos": "WR",
-      "date": "2026-08-13",
-      "headline": "Worked into first-team reps opposite Chase/Higgins in preseason opener, passing Mitchell Tinsley in the slot competition",
-      "take": "Big-bodied 4th-round rookie is winning the Bengals' WR3 job in one of the NFL's best passing offenses.",
-      "url": "https://lastwordonsports.com/nfl/2026/08/13/bengals-preseason-colbie-young/",
-      "tag": "role"
-    },
-    {
-      "player": "Drew Allar",
-      "team": "PIT",
-      "pos": "QB",
-      "date": "2026-08-13",
-      "headline": "Preseason debut: 10-of-13 for 153 yards, 3 total TDs (2 pass, 1 rush), 154.8 rating in 28-9 win over Packers",
-      "take": "Dominant debut behind Rudolph/Howard adds real intrigue to Pittsburgh's post-Rodgers QB picture -- dynasty stash.",
-      "url": "https://sports.yahoo.com/nfl/article/rookie-qb-drew-allar-throws-2-passing-tds-rushes-for-another-in-steelers-preseason-debut-030057693.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Germie Bernard",
-      "team": "PIT",
-      "pos": "WR",
-      "date": "2026-08-13",
-      "headline": "4 catches for 51 yards on 5 targets, working with the 1s in place of injured Metcalf/Pittman",
-      "take": "Second-round rookie flashed real YAC juice in his debut -- deep-league/best-ball stash if the role sticks.",
-      "url": "https://sports.yahoo.com/articles/steelers-rookie-germie-bernard-dominates-010910820.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Marlin Klein",
-      "team": "HOU",
-      "pos": "TE",
-      "date": "2026-08-13",
-      "headline": "31-yard catch from Davis Mills on Texans' opening drive, limited to one series in preseason opener",
-      "take": "Early rapport with Mills in a Texans TE room without a clear-cut starter -- late dynasty TE to monitor.",
-      "url": "https://www.espn.com/nfl/boxscore/_/gameId/401873274",
-      "tag": "riser"
-    },
-    {
-      "player": "Amar Johnson",
-      "team": "LAC",
-      "pos": "RB",
-      "date": "2026-08-13",
-      "headline": "2 rushing TDs and a 55-yard catch in 27-7 preseason win over Texans",
-      "take": "Explosive plays behind the Chargers' RB1 make him a very late-round dynasty/best-ball flier.",
-      "url": "https://www.bozemandailychronicle.com/wire/sports/amar-johnson-scores-2-tds-as-chargers-beat-texans-27-7-in-preseason-opener/article_4cdc8045-df7b-507a-b759-78c2a2853826.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Brock Purdy",
-      "team": "SF",
-      "pos": "QB",
-      "date": "2026-08-13",
-      "headline": "Went 23/30 for 295 yards, 3 TDs (140.3 rating) plus 44 rush yards in 37-24 preseason win over Titans",
-      "take": "Sharp, extended look with a reshuffled WR room (Pearsall out) -- good early sign for SF's passing game.",
-      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/live-updates-score-highlights-brock-purdy-4/1898093/",
-      "tag": "riser"
-    },
-    {
-      "player": "George Kittle",
-      "team": "SF",
-      "pos": "TE",
-      "date": "2026-08-13",
-      "headline": "Caught 8 passes for 88 yards and a TD in preseason opener vs. Titans",
-      "take": "Heavy target share early with Pearsall out for the year -- TE1 role looks unchanged.",
-      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/live-updates-score-highlights-brock-purdy-4/1898093/",
-      "tag": "riser"
-    },
-    {
-      "player": "Jauan Jennings",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-08-13",
-      "headline": "Caught 2 TDs (3 rec, 37 yards) in preseason win over Titans",
-      "take": "Direct beneficiary of the Pearsall injury -- WR2 stock climbing fast in Purdy's offense.",
-      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/live-updates-score-highlights-brock-purdy-4/1898093/",
-      "tag": "riser"
-    },
-    {
-      "player": "Christian McCaffrey",
-      "team": "SF",
-      "pos": "RB",
-      "date": "2026-08-13",
-      "headline": "Carried 22 times for 73 yards and a TD plus a catch in preseason opener vs. Titans",
-      "take": "Unusually heavy preseason workload for a starter -- encouraging health/workload signal after 2024's injury issues.",
-      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/live-updates-score-highlights-brock-purdy-4/1898093/",
-      "tag": "riser"
-    },
-    {
-      "player": "Cam Ward",
-      "team": "TEN",
-      "pos": "QB",
-      "date": "2026-08-13",
-      "headline": "Threw for 170 yards and 2 TDs, including a 34-yard score to rookie TE Gunnar Helm, in preseason opener",
-      "take": "Efficient extended look in Year 2 -- early chemistry with a new-look pass-catching group.",
-      "url": "https://www.tennesseetitans.com/news/titans-fall-37-24-to-49ers-drop-to-2-12",
-      "tag": "riser"
-    },
-    {
-      "player": "Gunnar Helm",
-      "team": "TEN",
-      "pos": "TE",
-      "date": "2026-08-13",
-      "headline": "Rookie TE caught a 34-yard TD from Cam Ward in preseason opener vs. 49ers",
-      "take": "Early camp-to-game chemistry with Ward -- worth a dynasty/TE-premium watch.",
-      "url": "https://www.tennesseetitans.com/news/titans-fall-37-24-to-49ers-drop-to-2-12",
-      "tag": "riser"
-    },
-    {
-      "player": "Anthony Richardson",
-      "team": "IND",
-      "pos": "QB",
-      "date": "2026-08-13",
-      "headline": "Went 11/14 for 145 yards with a rushing TD (6 car, 53 yards) in his half of preseason opener vs. Patriots",
-      "take": "Strong per-play efficiency continues to build his QB1 case even after a fumble and a deflected INT; Daniel Jones sat out all preseason.",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/anthony-richardson-completes-11-of-14-passes-in-first-half-of-preseason-opener",
-      "tag": "riser"
-    },
-    {
-      "player": "Michael Mayer",
-      "team": "LV",
-      "pos": "TE",
-      "date": "2026-08-13",
-      "headline": "Caught a 13-yard TD from Kirk Cousins on the Raiders' first-team opening drive vs. Cardinals",
-      "take": "Early rapport-building rep with the starting QB -- positive signal for his TE1 role in Vegas.",
-      "url": "https://www.raiders.com/video/kirk-cousins-michael-mayer-touchdown-nfl-preseason-week-1-arizona-cardinals",
-      "tag": "riser"
-    },
-    {
-      "player": "Malik Benson",
-      "team": "LV",
-      "pos": "WR",
-      "date": "2026-08-13",
-      "headline": "Rookie WR flashed speed and route-running, including a 19-yard grab from Fernando Mendoza",
-      "take": "Deep-league/dynasty stash watch after a strong preseason debut.",
-      "url": "https://www.raiders.com/video/kirk-cousins-michael-mayer-touchdown-nfl-preseason-week-1-arizona-cardinals",
-      "tag": "riser"
-    },
-    {
-      "player": "Anthony Richardson",
-      "team": "IND",
-      "pos": "QB",
-      "date": "2026-08-13",
-      "headline": "Named starter for tonight's preseason opener vs. Patriots, will play entire 1st half",
-      "take": "Riley Leonard gets the 2nd half as Daniel Jones (Achilles) sits out all preseason -- extended look at Richardson's roster case.",
-      "url": "https://www.colts.com/news/anthony-richardson-sr-to-start-at-qb-for-colts-in-preseason-opener-vs-patriots-riley-leonard-to-start-vs-falcons",
-      "tag": "role"
-    },
-    {
-      "player": "Roman Wilson",
-      "team": "PIT",
-      "pos": "WR",
-      "date": "2026-08-13",
-      "headline": "Updated depth chart has him starting at slot WR tonight with Metcalf and Pittman both out",
-      "take": "Continued 1st-team reps and a punt-return role now project into a real game look -- deep-league/best-ball stash.",
-      "url": "https://steelersdepot.com/2026/08/steelers-release-updated-depth-chart-ahead-of-2026-preseason-opener/",
-      "tag": "riser"
     }
   ]
 }

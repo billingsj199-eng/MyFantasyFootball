@@ -1,6 +1,46 @@
 {
-  "updated": "2026-09-05T16:10:00Z",
+  "updated": "2026-09-06T02:10:48Z",
   "items": [
+    {
+      "player": "TreVeyon Henderson",
+      "team": "NE",
+      "pos": "RB",
+      "date": "2026-09-05",
+      "headline": "DNP again Saturday as Patriots file season's first injury report; hasn't practiced since Aug. 24 ankle injury",
+      "take": "Real questionable risk for Wednesday's opener at Seattle now \u2014 Rhamondre Stevenson is the direct beneficiary if he sits.",
+      "url": "https://www.fantasypros.com/nfl/news/606042/treveyon-henderson-ankle-not-practicing-saturday.php",
+      "tag": "injury"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-05",
+      "headline": "Groin/psoas injury 'making good progress' per McVay, separate from still-open conduct-policy review",
+      "take": "Adds a second, purely physical path to a Week 1 absence on top of the unresolved discipline question \u2014 still probable, but confirm both before the Melbourne opener.",
+      "url": "https://www.rotowire.com/football/headlines/puka-nacua-injury-making-progress-in-recovery-636301",
+      "tag": "injury"
+    },
+    {
+      "player": "Tua Tagovailoa",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-09-05",
+      "headline": "Falcons GM Ian Cunningham says team still hasn't named a Week 1 starter over Michael Penix Jr.",
+      "take": "Last unsettled starting QB job in the league days before kickoff \u2014 don't rely on either Falcon in Week 1 lineups yet.",
+      "url": "https://www.espn.com/nfl/story/_/id/49806953/falcons-not-announced-qb1-michael-penix-jr-tua-tagovailoa",
+      "tag": "role"
+    },
+    {
+      "player": "Michael Penix Jr.",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-09-05",
+      "headline": "Falcons GM Ian Cunningham says team still hasn't named a Week 1 starter over Tua Tagovailoa",
+      "take": "QB battle still unresolved with the opener days out \u2014 treat both Falcon QBs as unstartable until a starter is named.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/falcons-gm-ian-cunningham-we-havent-made-qb-decision-for-week-1-yet",
+      "tag": "role"
+    },
     {
       "player": "Puka Nacua",
       "team": "LAR",

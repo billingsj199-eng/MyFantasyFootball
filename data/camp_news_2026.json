@@ -1,6 +1,86 @@
 {
-  "updated": "2026-09-06T02:10:48Z",
+  "updated": "2026-09-06T16:09:52Z",
   "items": [
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-06",
+      "headline": "NFL has not suspended or placed Nacua on leave over conduct review; back at full practice Sunday",
+      "take": "Clear to start him for the Sept. 10 opener vs. SF \u2014 the discipline risk that clouded him all week didn't materialize for Week 1.",
+      "url": "https://www.cbssports.com/nfl/news/puka-nacua-suspension-watch-will-nfl-discipline-rams-star/",
+      "tag": "other"
+    },
+    {
+      "player": "Tua Tagovailoa",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-09-06",
+      "headline": "Falcons set Wednesday deadline for QB1 decision vs. Michael Penix Jr.; announcement could come as early as Monday",
+      "take": "A resolution is finally close \u2014 Tua remains the more startable name if Penix isn't tabbed, but confirm Monday before locking lineups.",
+      "url": "https://sports.yahoo.com/articles/falcons-set-wednesday-deadline-michael-100000835.html",
+      "tag": "role"
+    },
+    {
+      "player": "Michael Penix Jr.",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-09-06",
+      "headline": "Falcons set Wednesday deadline for QB1 decision vs. Tua Tagovailoa; announcement could come as early as Monday",
+      "take": "Still finishing his ACL recovery ramp-up \u2014 a real shot at the job, but treat as unstartable until named.",
+      "url": "https://www.profootballrumors.com/2026/09/falcons-undecided-on-starting-qb",
+      "tag": "role"
+    },
+    {
+      "player": "Cam Skattebo",
+      "team": "NYG",
+      "pos": "RB",
+      "date": "2026-09-06",
+      "headline": "Now sits unchallenged atop Giants' unofficial RB depth chart after Tracy's back-to-back mistakes",
+      "take": "Trending toward a true bell-cow role in New York \u2014 a buy in redraft leagues if his price hasn't caught up.",
+      "url": "https://www.profootballnetwork.com/giants-rb-depth-chart-tyrone-tracy-jr-cam-skattebo/",
+      "tag": "role"
+    },
+    {
+      "player": "Tyrone Tracy",
+      "team": "NYG",
+      "pos": "RB",
+      "date": "2026-09-06",
+      "headline": "Slides to RB2 mix with Najee Harris and Devin Singletary as Skattebo takes over the Giants' backfield",
+      "take": "Lost his co-starter standing outright \u2014 treat as a timeshare/handcuff piece rather than a lead back for now.",
+      "url": "https://www.cbssports.com/fantasy/football/news/giants-cam-skattebo-listed-as-co-starter-with-tracy/",
+      "tag": "faller"
+    },
+    {
+      "player": "Jonathon Brooks",
+      "team": "CAR",
+      "pos": "RB",
+      "date": "2026-09-06",
+      "headline": "Panthers plan series-based Week 1 committee with Chuba Hubbard, with Brooks getting extra passing-down work",
+      "take": "Real standalone value as a pass-catcher even with Hubbard atop the depth chart \u2014 a strong 18-months-post-ACL comeback story.",
+      "url": "https://sports.yahoo.com/articles/panthers-reveal-rb-plan-jonathan-163419638.html",
+      "tag": "role"
+    },
+    {
+      "player": "TreVeyon Henderson",
+      "team": "NE",
+      "pos": "RB",
+      "date": "2026-09-06",
+      "headline": "Still hasn't practiced since Aug. 24 ankle injury, but Boston Globe reports he should be \"good to go\" for Wednesday's opener",
+      "take": "Trending toward a Week 1 game-time decision \u2014 keep Rhamondre Stevenson ready as a pivot until Henderson actually returns to practice.",
+      "url": "https://www.complex.com/bets/a/matt-burke/treveyon-injury-update",
+      "tag": "injury"
+    },
+    {
+      "player": "Cyrus Allen",
+      "team": "KC",
+      "pos": "WR",
+      "date": "2026-09-06",
+      "headline": "Reportedly most-targeted player in Chiefs minicamp reps, climbs past Remigio/Royals into WR4 role",
+      "take": "PPR ADP has surged from off-the-board in July into the low 220s \u2014 a legitimate late-round dart throw on Mahomes chemistry.",
+      "url": "https://sports.yahoo.com/fantasy/article/cyrus-allen-leads-2026-nfl-rookies-already-generating-fantasy-football-buzz-in-training-camps-145843770.html",
+      "tag": "riser"
+    },
     {
       "player": "TreVeyon Henderson",
       "team": "NE",

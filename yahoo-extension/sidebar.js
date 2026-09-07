@@ -42,15 +42,20 @@
   function gateLockHTML() {
     const u = _gateUser;
     const signed = !!(u && u.email);
+    // Premium user whose site stamp lapsed (24h TTL) — a re-sync problem,
+    // not a missing subscription; say so instead of 'Premium required'.
+    const stale = !!(u && u.premium && !(u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS));
     return '<div style="padding:26px 16px;text-align:center;font-size:12px;line-height:1.5;color:#e5e7eb">' +
       '<div style="font-size:26px">\ud83d\udd12</div>' +
       '<div style="font-weight:800;font-size:13px;margin:6px 0">MFF YAHOO HELPER — Premium</div>' +
-      '<div style="color:#9aa0ab;margin-bottom:10px">' + (signed
+      '<div style="color:#9aa0ab;margin-bottom:10px">' + (stale
+        ? 'Signed in as ' + String(u.email).replace(/[&<>"]/g, '') + ' — Premium is active, but the helper has not synced with the site in over 24 hours. Open myfantasyfootball.co in this Chrome while signed in and it unlocks on its own.'
+        : signed
         ? 'Signed in as ' + String(u.email).replace(/[&<>"]/g, '') + ' — a Premium account is required.'
-        : 'Sign in at myfantasyfootball.co with a Premium account to unlock.') + '</div>' +
+        : 'Sign in at myfantasyfootball.co in this same Chrome profile with a Premium account to unlock.') + '</div>' +
       '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#7d2eff;color:#fff;border-radius:6px;padding:7px 14px;font-weight:700;text-decoration:none;font-size:12px">' +
-      (signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
-      '<div style="color:#6b7280;font-size:10px;margin-top:10px">Unlocks automatically once Premium is active — just open the site while signed in.</div></div>';
+      (stale ? 'Re-sync with MyFantasyFootball' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
+      '<div style="color:#6b7280;font-size:10px;margin-top:10px">Unlocks automatically — open the site signed in, in this Chrome profile, and revisit (or keep a tab open) at least once a day.</div></div>';
   }
   function gateInit(onChange) {
     try {

@@ -6203,7 +6203,13 @@
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
-      if (lockMsg) lockMsg.textContent = 'Sign in at myfantasyfootball.co to unlock the draft helper.';
+      // Premium user whose site stamp lapsed (24h TTL) = re-sync, not a
+      // missing subscription — say so (2026-09-07).
+      const _em = (user && user.email) ? String(user.email) : '';
+      if (lockMsg) lockMsg.textContent = (user && user.premium && !cacheFresh)
+        ? 'Signed in as ' + _em + ' — Premium is active, but the helper has not synced with the site in over 24 hours. Open myfantasyfootball.co in this Chrome while signed in and it unlocks on its own.'
+        : _em ? 'Signed in as ' + _em + ' — a Premium account is required to unlock the draft helper.'
+        : 'Sign in at myfantasyfootball.co in this same Chrome profile to unlock the draft helper.';
     } else {
       if (lockEl) lockEl.style.display = 'none';
       if (typeof enterDraftMode === 'function') enterDraftMode();

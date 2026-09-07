@@ -30,13 +30,17 @@
     } catch (_) {}
     return null;
   }
-  var last = "";
+  // The extension side treats the stamp as stale after 24h, so a site tab
+  // left open must keep re-sending it even when nothing changed — otherwise
+  // a premium user gets relocked a day into a pinned tab (2026-09-07).
+  var RESEND_MS = 10 * 60 * 1000;
+  var last = "", lastSent = 0;
   function tick() {
     try {
       var u = readUser();
       var h = u ? (u.uid + "|" + u.premium + "|" + u.email) : "null";
-      if (h === last) return;
-      last = h;
+      if (h === last && (Date.now() - lastSent) < RESEND_MS) return;
+      last = h; lastSent = Date.now();
       document.dispatchEvent(new CustomEvent("mff-user-update", {
         detail: { user: u, syncedAt: Date.now() }
       }));

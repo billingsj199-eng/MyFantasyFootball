@@ -189,13 +189,16 @@
     } catch(_){}
     return null;
   }
-  let lastUserHash = "";
+  // Re-send the user stamp every 10 min even when unchanged: the sidebar
+  // treats it as stale after 24h, so a pinned site tab must keep it fresh.
+  const USER_RESEND_MS = 10 * 60 * 1000;
+  let lastUserHash = "", lastUserSent = 0;
   function tickUser() {
     try {
       const u = readUser();
       const h = u ? (u.uid + "|" + u.premium + "|" + u.email) : "null";
-      if (h === lastUserHash) return;
-      lastUserHash = h;
+      if (h === lastUserHash && (Date.now() - lastUserSent) < USER_RESEND_MS) return;
+      lastUserHash = h; lastUserSent = Date.now();
       document.dispatchEvent(new CustomEvent("mff-user-update", { detail: { user: u, syncedAt: Date.now() } }));
     } catch(_){}
   }

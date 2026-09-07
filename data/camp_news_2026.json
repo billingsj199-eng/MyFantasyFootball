@@ -1,6 +1,86 @@
 {
-  "updated": "2026-09-06T16:09:52Z",
+  "updated": "2026-09-07T02:10:13Z",
   "items": [
+    {
+      "player": "Ricky Pearsall",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-09-05",
+      "headline": "Out for the season with a PCL injury; will undergo surgery on his right knee",
+      "take": "Drop him everywhere -- his absence pushes Deebo Samuel into a clear starting role",
+      "url": "https://www.cbssports.com/nfl/news/ricky-pearsall-injury-49ers-receiver-season-ending-surgery/",
+      "tag": "injury"
+    },
+    {
+      "player": "Christian Kirk",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-09-06",
+      "headline": "Opens the season on IR with a calf injury that's more serious than first believed",
+      "take": "Out at least 4 games -- deepens San Francisco's WR hit alongside Pearsall's season-ending injury",
+      "url": "https://sports.yahoo.com/articles/san-francisco-49ers-announce-major-014425844.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Deebo Samuel",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-09-06",
+      "headline": "Steps into a clear starting role after Pearsall's season-ending injury and Kirk's IR stint",
+      "take": "Immediate riser -- expect a bump in target share and snaps behind Mike Evans in Week 1",
+      "url": "https://www.espn.com/nfl/story/_/id/49493047/sources-deebo-samuel-returning-49ers-1-year-deal",
+      "tag": "riser"
+    },
+    {
+      "player": "Jadarian Price",
+      "team": "SEA",
+      "pos": "RB",
+      "date": "2026-09-06",
+      "headline": "Teammate Julian Love compares his burst to a \"prime Dalvin Cook\"",
+      "take": "Presumptive lead back replacing Kenneth Walker III, though Seattle plans a multi-back rotation",
+      "url": "https://sports.yahoo.com/articles/seahawks-news-jadarian-prices-prime-134847480.html",
+      "tag": "riser"
+    },
+    {
+      "player": "Jonah Coleman",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-06",
+      "headline": "ESPN's Dan Graziano says belief in Denver is he overtakes RJ Harvey on the depth chart",
+      "take": "Next in line for lead work if J.K. Dobbins misses time -- a real stash given Dobbins' injury history",
+      "url": "https://www.rotoballer.com/player-news/jonah-coleman-trending-toward-bigger-role-in-denver/1921887",
+      "tag": "riser"
+    },
+    {
+      "player": "Quinshon Judkins",
+      "team": "CLE",
+      "pos": "RB",
+      "date": "2026-09-06",
+      "headline": "RB coach Duce Staley says \"the sky is the limit\" and he can play all three downs",
+      "take": "Strengthens his case as Cleveland's clear lead back over Jerome Ford entering Week 1",
+      "url": "https://247sports.com/nfl/cleveland-browns/longformarticle/why-cleveland-browns-running-backs-coach-duce-staley-says-the-skys-the-limit-for-quinshon-judkins-288852820/",
+      "tag": "role"
+    },
+    {
+      "player": "Dontayvion Wicks",
+      "team": "PHI",
+      "pos": "WR",
+      "date": "2026-09-06",
+      "headline": "Emerging as Jalen Hurts' No. 2 target in camp after trade from Green Bay",
+      "take": "Speculative add as a potential WR2 behind A.J. Brown/DeVonta Smith if the role holds",
+      "url": "https://www.nbcphiladelphia.com/news/local/eagles-notebook-jalen-hurts-sees-some-rage-in-dontayvion-wicks/4444412/",
+      "tag": "riser"
+    },
+    {
+      "player": "Tory Horton",
+      "team": "SEA",
+      "pos": "WR",
+      "date": "2026-09-06",
+      "headline": "Limited in Sunday's practice with a hamstring issue ahead of the opener",
+      "take": "Not termed a significant injury by HC Macdonald, but confirm his Week 1 status before trusting him",
+      "url": "https://sports.yahoo.com/articles/seahawks-wr-tory-horton-going-150027726.html",
+      "tag": "injury"
+    },
     {
       "player": "Puka Nacua",
       "team": "LAR",

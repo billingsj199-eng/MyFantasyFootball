@@ -3712,9 +3712,13 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
     ? '<div class="tcv-card-team"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy"/></div>'
     : '';
 
-  // Last name only (e.g., "Ja'Marr Chase" -> "CHASE", "Smith-Njigba" stays "SMITH-NJIGBA")
+  // Last name only (e.g., "Ja'Marr Chase" -> "CHASE", "Smith-Njigba" stays "SMITH-NJIGBA").
+  // Generational suffixes are skipped so "Marvin Harrison Jr." -> "HARRISON"
+  // and "Brian Thomas III" -> "THOMAS" (not "JR." / "III").
   const parts = (d.n || '').trim().split(/\s+/);
-  let lastName = parts[parts.length - 1] || (d.n || '');
+  let _li = parts.length - 1;
+  while (_li > 0 && _TCV_NAME_SUFFIX[parts[_li]]) _li--;
+  let lastName = parts[_li] || (d.n || '');
   // Truncate to fit (~10 chars before ellipsis is added by CSS)
   lastName = lastName.toUpperCase();
 

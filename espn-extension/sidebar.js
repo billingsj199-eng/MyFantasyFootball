@@ -2222,10 +2222,12 @@
   }
 
   // ---- weekly value + optimal lineup (identity = keyOf, not sleeper sid) ----
-  // This-week value: site prop-board projection blended 80/20 with the
-  // league-scored Clay PPG when a board exists, zeroed on bye (regular season)
-  // and for OUT/IR players, discounted for Doubtful/Questionable, then nudged
-  // by Jack's redraft rank (±1.5 ppg). K/DST fully modeled above.
+  // This-week value (wkVal below): the site's Sim Lab weekly row + league
+  // scoring delta wherever a row exists (all positions, no rank nudge — Jack
+  // 2026-09-08). Fallback for row-less players: engine mean, then the site
+  // prop-board projection blended 80/20 with league-scored Clay PPG, zeroed
+  // on bye / OUT, discounted for D/Q, nudged by Jack's redraft rank (±1.5 ppg);
+  // K/DST fallback = the league-rule Vegas models above.
   // ---- engine-mean weekly projection (the SIMS number, deterministic) ----
   // Same mean the SIMS tab draws its distributions around: Clay rescored to
   // the league's real scoring × Vegas implied-total multiplier (backtested
@@ -2339,6 +2341,23 @@
     const act = actualPpgFor(p);
     const shrink = act ? act.gp / (act.gp + PRIOR_GAMES) : 0;
     let v;
+    // SIM-FIRST, ALL positions (Jack 2026-09-08: "take it directly off the
+    // site"): the site's Sim Lab weekly row IS the number — the same value
+    // the site's WEEKLY PROJ column shows (K/DST included) — plus the
+    // league-scoring delta (rec / pass-TD / TE premium) so custom leagues
+    // re-score correctly. No rank nudge, no D/Q re-discount (the export
+    // already prices designations); OUT (fresher live status) still zeroes.
+    // Everything below is fallback for players without a sim row.
+    {
+      const _six = simProjIdx();
+      const _wkMap = _six && (_six.weeks[state.seasonWeek] || _six.weeks[state.simProj.currentWeek]);
+      const _sr = _wkMap && _wkMap[simKeyFor(p)];
+      if (_sr && typeof _sr[1] === 'number') {
+        if (_sr[1] === 0 && _sr[3] == null) return 0; // ruled out at export time
+        if (injOf(p) === 'OUT') return 0;
+        return Math.round(Math.max(0, _sr[1] + simLeagueDeltaPg(p)) * 100) / 100;
+      }
+    }
     if (p.s === 'K' || p.s === 'DST') {
       const g = p.sTm && state.schedule[p.sTm] && state.schedule[p.sTm][state.seasonWeek];
       v = p.s === 'K' ? kickerProjFor(p, g) : dstProjFor(p, g);
@@ -2348,39 +2367,16 @@
       }
       v = Math.max(1, v);
     } else {
-      // SIM-FIRST: the site's Sim Lab weekly row (full engine — correlations,
-      // in-season actuals blend, injury zeros/redistribution, frozen at
-      // kickoff) is the number wherever it exists; the local engine port,
-      // then props/Clay blend, remain the fallbacks.
-      let _fromSim = false;
-      const _six = simProjIdx();
-      const _wkMap = _six && (_six.weeks[state.seasonWeek] || _six.weeks[state.simProj.currentWeek]);
-      const _sr = _wkMap && _wkMap[simKeyFor(p)];
-      if (_sr && typeof _sr[1] === 'number') {
-        if (_sr[1] === 0 && _sr[3] == null) return 0; // ruled out at export time
-        v = _sr[1] + simLeagueDeltaPg(p);
-        _fromSim = true;
+      // FALLBACK (no sim row): the local engine port, then props/Clay blend.
+      const em = engineMeanFor(p);
+      if (em != null) {
+        v = em;
       } else {
-        const em = engineMeanFor(p);
-        if (em != null) {
-          v = em;
-        } else {
-          let base = p.pPg != null ? p.pPg : 0;
-          if (act) base += (act.ppg - base) * shrink; // preseason proj decays per game played
-          v = base;
-          const props = propsProjFor(p);
-          if (props != null) v = (p.pPg != null || act) ? 0.8 * props + 0.2 * base : props;
-        }
-      }
-      // Sim rows already price designations as of the last export run —
-      // no D/Q re-discount on top; OUT (fresher live status) still zeroes.
-      if (_fromSim) {
-        if (injOf(p) === 'OUT') return 0;
-        if (v > 0 && p.rank != null && !p._unmatched) {
-          v += Math.max(-0.67, Math.min(1, (100 - p.rank) / 100)) * 1.5;
-          if (v < 0) v = 0;
-        }
-        return Math.round(v * 100) / 100;
+        let base = p.pPg != null ? p.pPg : 0;
+        if (act) base += (act.ppg - base) * shrink; // preseason proj decays per game played
+        v = base;
+        const props = propsProjFor(p);
+        if (props != null) v = (p.pPg != null || act) ? 0.8 * props + 0.2 * base : props;
       }
     }
     const inj = injOf(p);

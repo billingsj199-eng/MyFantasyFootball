@@ -1162,6 +1162,23 @@
     const act = actualPpgFor(p);
     const shrink = act ? act.gp / (act.gp + PRIOR_GAMES) : 0;
     let v;
+    // SIM-FIRST, ALL positions (Jack 2026-09-08: "take it directly off the
+    // site"): the site's Sim Lab weekly row IS the number — the same value
+    // the site's WEEKLY PROJ column shows (K/DST included) — plus the
+    // league-scoring delta (rec / pass-TD / TE premium) so custom leagues
+    // re-score correctly. No rank nudge, no D/Q re-discount (the export
+    // already prices designations); OUT (fresher live status) still zeroes.
+    // Everything below is fallback for players without a sim row.
+    {
+      const _six = simProjIdx();
+      const _wkMap = _six && (_six.weeks[state.seasonWeek] || _six.weeks[state.simProj.currentWeek]);
+      const _sr = _wkMap && _wkMap[simKeyFor(p)];
+      if (_sr && typeof _sr[1] === 'number') {
+        if (_sr[1] === 0 && _sr[3] == null) return 0; // ruled out at export time
+        if (injOf(p) === 'OUT') return 0;
+        return Math.round(Math.max(0, _sr[1] + simLeagueDeltaPg(p)) * 100) / 100;
+      }
+    }
     if (p.s === 'K' || p.s === 'DST') {
       const g = p.sTm && state.schedule[p.sTm] && state.schedule[p.sTm][state.seasonWeek];
       v = p.s === 'K' ? kickerProjFor(p, g) : dstProjFor(p, g);
@@ -1171,34 +1188,12 @@
       }
       v = Math.max(1, v);
     } else {
-      // SIM-FIRST: the site's Sim Lab weekly row (full engine — correlations,
-      // in-season actuals blend, injury zeros/redistribution, frozen at
-      // kickoff) is the number wherever it exists; props/Clay blend fallback.
-      let _fromSim = false;
-      const _six = simProjIdx();
-      const _wkMap = _six && (_six.weeks[state.seasonWeek] || _six.weeks[state.simProj.currentWeek]);
-      const _sr = _wkMap && _wkMap[simKeyFor(p)];
-      if (_sr && typeof _sr[1] === 'number') {
-        if (_sr[1] === 0 && _sr[3] == null) return 0; // ruled out at export time
-        v = _sr[1] + simLeagueDeltaPg(p);
-        _fromSim = true;
-      } else {
-        let base = p.pPg != null ? p.pPg : 0;
-        if (act) base += (act.ppg - base) * shrink;
-        v = base;
-        const props = propsProjFor(p);
-        if (props != null) v = (p.pPg != null || act) ? 0.8 * props + 0.2 * base : props;
-      }
-      // Sim rows already price designations as of the last export run —
-      // no D/Q re-discount on top; OUT (fresher live status) still zeroes.
-      if (_fromSim) {
-        if (injOf(p) === 'OUT') return 0;
-        if (v > 0 && p.rank != null && !p._unmatched) {
-          v += Math.max(-0.67, Math.min(1, (100 - p.rank) / 100)) * 1.5;
-          if (v < 0) v = 0;
-        }
-        return Math.round(v * 100) / 100;
-      }
+      // FALLBACK (no sim row): props/Clay blend.
+      let base = p.pPg != null ? p.pPg : 0;
+      if (act) base += (act.ppg - base) * shrink;
+      v = base;
+      const props = propsProjFor(p);
+      if (props != null) v = (p.pPg != null || act) ? 0.8 * props + 0.2 * base : props;
     }
     const inj = injOf(p);
     if (inj) {

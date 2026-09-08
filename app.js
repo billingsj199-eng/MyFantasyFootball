@@ -2137,6 +2137,46 @@ function _adpCmpCellCls(d, src) {
   return diff >= 3 ? ' adp-value' : diff <= -3 ? ' adp-reach' : '';
 }
 
+// Total yards (passing + rushing + receiving) for the FANTASY / SIMS stat
+// views' tail column. Season boards: last full season's total (s25, career
+// tail fallback). WEEKLY board (perGame): yards PER GAME over the latest
+// season with played games in WEEKLY_STATS — 2026 to date once in-season
+// rows land, else 2025 — so nothing full-season shows on the weekly view.
+// K/DST -> null (no yardage line). Returns {yr,gp,py,ry,rcy,tot,val}.
+function _totYds(d, perGame) {
+  if (!d || d.s === 'K' || d.s === 'DST') return null;
+  if (perGame && typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS) {
+    const wd = WEEKLY_STATS[d.n];
+    if (wd && wd.seasons) {
+      const years = Object.keys(wd.seasons).map(y => parseInt(y, 10)).filter(y => !isNaN(y)).sort((a, b) => b - a);
+      for (const yr of years) {
+        // Skip DNP/bye placeholder rows (no opponent, no touches).
+        const wks = (wd.seasons[String(yr)] || []).filter(w => w.opp || ((w.pa || 0) + (w.ra || 0) + (w.rec || 0) + (w.tgt || 0)) > 0);
+        if (!wks.length) continue;
+        let py = 0, ry = 0, rcy = 0;
+        for (const w of wks) { py += w.py || 0; ry += w.ry || 0; rcy += w.rcy || 0; }
+        const tot = py + ry + rcy;
+        return { yr, gp: wks.length, py, ry, rcy, tot, val: Math.round(tot / wks.length * 10) / 10 };
+      }
+    }
+  }
+  const c = d.s25 || (d.career && d.career.length ? d.career[d.career.length - 1] : null);
+  if (!c || !c.gp) return null;
+  const py = c.py || 0, ry = c.ry || 0, rcy = c.rcy || 0, tot = py + ry + rcy;
+  return { yr: c.yr, gp: c.gp, py, ry, rcy, tot, val: perGame ? Math.round(tot / c.gp * 10) / 10 : tot };
+}
+// Tail-column cell for _totYds: value + hover breakdown.
+function _totYdsCellHtml(d, perGame) {
+  const y = _totYds(d, perGame);
+  if (!y) return '—';
+  const parts = [];
+  if (y.py) parts.push('pass ' + y.py);
+  if (y.ry) parts.push('rush ' + y.ry);
+  if (y.rcy) parts.push('rec ' + y.rcy);
+  const tip = (y.yr || '') + ' · ' + y.gp + ' gp · ' + (parts.length ? parts.join(' · ') : 'no yards') + (perGame ? ' · ' + y.tot + ' total' : '');
+  return '<span style="font-weight:700;cursor:help" title="' + tip.replace(/"/g, '&quot;') + '">' + (perGame ? y.val.toFixed(1) : y.val.toLocaleString()) + '</span>';
+}
+
 function adj25ppg(d) {
   if (!d.s25) return null;
   // K/DST: s25.fpts is sometimes 0 even when ppg is populated. The rec
@@ -3395,7 +3435,7 @@ function getFiltered(applyTopN) {
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'sims') { av = _simsBB(a, 5); bv = _simsBB(b, 5); break; } if (_sm === 'lines' || _sm === 'proj') { av = _smYds(a); bv = _smYds(b); break; } if(filter==='RB'){const _ac=a.career&&a.career.length?a.career[a.career.length-1]:null;const _bc=b.career&&b.career.length?b.career[b.career.length-1]:null;av=_ac&&_ac.gp?(_ac.ry||0)/_ac.gp:0;bv=_bc&&_bc.gp?(_bc.ry||0)/_bc.gp:0;}else{av=a._yrr||0;bv=b._yrr||0;} break;
+        case 'yrr': if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { av = _smYds(a); bv = _smYds(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
         case 'jm': av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
@@ -4711,7 +4751,9 @@ function render() {
   const _projPpgMode = _statMode === 'proj' && !_isWeekly;
   const _wkLinesPpgMode = _statMode === 'lines' && _isWeekly;
   const _wkProjPpgMode = _statMode === 'proj' && _isWeekly;
-  const showYrr = filter === 'WR' || filter === 'TE' || filter === 'RB';
+  // FANTASY view: the tail column is Total Yds (all positions; K/DST have
+  // no yardage line so the K / D/ST pills hide it). Y/RR + Rush YPG retired.
+  const showYrr = _statMode === 'fantasy' && filter !== 'K' && filter !== 'DST';
   const showJm = currentMode === 'dynasty' || currentMode === 'dynastysf';
   const showLanding = showJm && filter === 'ROOKIE';
   let html = '';
@@ -4852,9 +4894,9 @@ function render() {
       _statTds = `<td class="pts-cell ppg25-cell"${_25Color?' style="color:'+_25Color+';font-weight:700"':''}>${_25ppg!=null?_25ppg:'—'}</td>
       <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
     } else if (_statMode === 'sims') {
-      // SIMS view: sim PPG / boom % / bust %, top-12 finish odds in the tail
-      // (yrr) column. Season boards read seasonSim + seasonPpg; the WEEKLY
-      // board reads the active week's sim row (season top-12 stays).
+      // SIMS view: sim PPG / boom % / bust %, Total Yds in the tail (yrr)
+      // column. Season boards read seasonSim + seasonPpg; the WEEKLY board
+      // reads the active week's sim row.
       const _fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
       const _ssRow = _simSeasonRow(d);
       let _v = null, _boom = null, _bust = null, _ppgTip = '';
@@ -4888,9 +4930,9 @@ function render() {
       const _dc = _bust == null ? null : (_bust >= 30 ? '#ef4444' : _bust >= 20 ? '#f59e0b' : _bust >= 12 ? '#facc15' : 'var(--text2)');
       _statTds = `<td class="pts-cell ppg25-cell"${_bc ? ' style="color:' + _bc + ';font-weight:700"' : ''}>${_boom == null ? '—' : _boom + '%'}</td>
       <td class="pts-cell l4ppg-cell"${_dc ? ' style="color:' + _dc + ';font-weight:700"' : ''}>${_bust == null ? '—' : _bust + '%'}</td>`;
-      const _t12 = _ssRow ? _ssRow[5] : null;
-      const _tc = _t12 == null ? null : (_t12 >= 50 ? '#22c55e' : _t12 >= 25 ? '#4ade80' : _t12 >= 10 ? '#facc15' : 'var(--text2)');
-      _statYdsTail = _t12 == null ? '—' : '<span style="' + (_tc ? 'color:' + _tc + ';' : '') + 'font-weight:700">' + _t12 + '%</span>';
+      // Tail column: Total Yds (per game on the weekly board). Season Top-12
+      // odds live on the player card's TOP-12 chip instead.
+      _statYdsTail = _totYdsCellHtml(d, _isWeekly);
     } else if (_statMode === 'adp') {
       // ADP comparison view: platform ADPs side by side vs the current board's rank
       // (4th column — CBS — rides the repurposed Y/RR cell below).
@@ -4965,7 +5007,7 @@ function render() {
         if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
         if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
       ${_statTds}
-      <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? (d.s==='RB' ? (()=>{const c=d.career&&d.career.length?d.career[d.career.length-1]:null;if(!c||!c.gp)return '—';const rypg=Math.round((c.ry||0)/c.gp*10)/10;return rypg.toFixed(1);})() : (d._yrr != null ? d._yrr.toFixed(2) : '—')) : '—'))}</td>
+      <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
       <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell" style="display:none">${showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
@@ -5034,18 +5076,16 @@ function render() {
   const _adpCmpMode = _statMode === 'adp';
   const _simsMode = _statMode === 'sims';
   const yrrH = document.getElementById('yrrHeader');
-  const _yrrShow = showYrr || _adpCmpMode || _simsMode || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
+  const _yrrShow = showYrr || _adpCmpMode || (_simsMode && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
   yrrH.style.display = _yrrShow ? '' : 'none';
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : _simsMode ? 'Top-12 ' : ((_linesPpgMode || _wkLinesPpgMode || _projPpgMode || _wkProjPpgMode) ? 'Yds ' : (filter === 'RB' ? 'Rush YPG ' : 'Y/RR '));
+    yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : ((_linesPpgMode || _wkLinesPpgMode || _projPpgMode || _wkProjPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   if (yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].setAttribute('data-gloss', _adpCmpMode
       ? 'CBS expert-consensus rank (their PPR top200 list) compared to the current ranks. Green = CBS has the player later than this rank (value), red = earlier (reach).'
-      : _simsMode
-      ? 'Share of 400 simulated seasons finishing top-12 at the position — correlated booms/busts priced in.'
       : _linesPpgMode
       ? 'Season-long sportsbook yardage lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM / Underdog). Combined passing + rushing + receiving. Hover a value for the breakdown.'
       : _wkLinesPpgMode
@@ -5054,7 +5094,9 @@ function render() {
       ? 'Projected total yards for 2026 (passing + rushing + receiving) — Mike Clay projections. Hover a value for the breakdown.'
       : _wkProjPpgMode
       ? 'Projected yards PER GAME (passing + rushing + receiving) — Mike Clay season projection divided by projected games. Hover a value for the breakdown.'
-      : 'Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.');
+      : _isWeekly
+      ? 'Total yards PER GAME — passing + rushing + receiving, over the latest season with games played (2026 to date once the season is underway, else 2025). Hover a value for the breakdown.'
+      : 'Total yards last season — passing + rushing + receiving (2025 actuals). Hover a value for the breakdown.');
   }
   // Cell-visibility pass — assigned per render (captures this render's flags)
   // so the progressive-render tail can re-run it over late-appended rows.

@@ -4238,7 +4238,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/kicker_weekly.js?v=2026-08-25" defer></script>
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
-<script src="data/player_weekly_sigma.js?v=2026-07-30" defer></script>
+<script src="data/player_weekly_sigma.js?v=2026-09-08" defer></script>
 <!-- injury_history.js tag removed 2026-07-23: its only consumer was the JS Model
      engine, which moved to the standalone js_model_site project. The data file
      stays in data/ — the standalone site loads it via a relative path. -->
@@ -5484,7 +5484,7 @@ window._loadWeeklyData = function(opts) {
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer). First in
     // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
     // merge listens on the same mff:weeklydata event as the retired merges.
-    'data/weekly_stats_active.js?v=2026-07-30',
+    'data/weekly_stats_active.js?v=2026-09-08',
     'data/weekly_stats_retired_1.js?v=2026-07-21',
     'data/weekly_stats_retired_2.js?v=2026-07-21',
     'data/weekly_stats_retired_3.js?v=2026-07-21',
@@ -5494,7 +5494,7 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-07-21b'
+    'data/snap_counts.js?v=2026-09-08'
   ];
   window._weeklyDataPromise = _injectScripts(files, 'WeeklyData', opts).then(function() {
     try { document.dispatchEvent(new Event('mff:weeklydata')); }

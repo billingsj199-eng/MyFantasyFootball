@@ -1,8 +1,9 @@
 # Daily betting-lines scan (Task Scheduler: "MFF Betting Lines Daily").
 #
 # Runs the keyless requests-only phases of pull_betting_lines.py every
-# morning — ESPN game lines (spreads/totals), Underdog season props, and
-# UD + PrizePicks weekly prop boards — then commits + pushes ONLY when the
+# morning — ESPN game lines (spreads/totals), Underdog + FanDuel + BetMGM
+# season props (FD/MGM automated 2026-09-08), and the UD + PrizePicks + DK +
+# FD + MGM weekly prop boards — then commits + pushes ONLY when the
 # data actually changed, so quiet offseason mornings are silent no-ops.
 # The DK season-props phase (Selenium, visible Chrome) is NOT run here;
 # run it manually when wanted: python scripts/pull_betting_lines.py --season-props
@@ -33,7 +34,7 @@ if ($dirty) {
     exit 0
 }
 
-$out = & $Python 'scripts\pull_betting_lines.py' '--game-lines' '--underdog' '--weekly-props' 2>&1 | Out-String
+$out = & $Python 'scripts\pull_betting_lines.py' '--game-lines' '--underdog' '--fanduel' '--betmgm' '--weekly-props' 2>&1 | Out-String
 Write-Log $out
 if ($LASTEXITCODE -ne 0) {
     Write-Log "PULL FAILED (exit $LASTEXITCODE) - nothing committed"

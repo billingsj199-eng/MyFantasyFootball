@@ -1115,6 +1115,386 @@ def prune_off_board(wkd, wk, book, canon, teams, kicks, games_by_team, now=None)
     return dropped
 
 
+# ---------------------------------------------------------------------------
+# Phase E — FanDuel (plain requests; added 2026-09-08)
+# ---------------------------------------------------------------------------
+# FanDuel's sportsbook front end reads sbapi.nj.sportsbook.fanduel.com with a
+# public app key (_ak) embedded in its JS — no login, no geo gate for odds
+# display, no bot wall as of Sep 2026. One content-managed-page call carries
+# the season props (REGULAR_SEASON_PROPS_* markets) and the week's events;
+# one event-page call per (game, tab) carries the player props. Market types
+# end in _HIGH/_MEDIUM/_LOW (FanDuel's player-prominence tiers, NOT alt
+# lines — alts are the _ALT_ types and are skipped).
+
+FD_AK = 'FhMFpcPWXMeyZxOx'
+FD_BASE = 'https://sbapi.nj.sportsbook.fanduel.com/api'
+FD_COMMON = ('betexRegion=GBR&capiJurisdiction=intl&currencyCode=GBP&exchangeLocale=en_GB'
+             '&includePrices=true&language=en&regionCode=NAMERICA&timezone=America%2FNew_York')
+FD_HEADERS = {'User-Agent': UA, 'Accept': 'application/json',
+              'Referer': 'https://sportsbook.fanduel.com/'}
+FD_WEEKLY_TABS = ('passing-props', 'rushing-props', 'receiving-props', 'td-scorer-props')
+FD_WEEKLY_TYPES = {'PASSING_YARDS': 'py', 'PASSING_TOUCHDOWNS': 'ptd', 'INTERCEPTIONS': 'int',
+                   'RUSHING_YARDS': 'ry', 'RECEIVING_YARDS': 'rcy', 'RECEPTIONS': 'rec'}
+FD_SEASON_STATS = {
+    'passing yards': 'py', 'passing tds': 'ptd', 'passing touchdowns': 'ptd',
+    'interceptions': 'int', 'interceptions thrown': 'int',
+    'rushing yards': 'ry', 'rushing tds': 'rtd', 'rushing touchdowns': 'rtd',
+    'receiving yards': 'rcy', 'receiving tds': 'rctd', 'receiving touchdowns': 'rctd',
+    'receptions': 'rec',
+}
+_FD_PAGE = None
+
+
+def _fd_get(url):
+    r = requests.get(url, headers=FD_HEADERS, timeout=60)
+    r.raise_for_status()
+    return r.json()
+
+
+def _fd_nfl_page():
+    global _FD_PAGE
+    if _FD_PAGE is None:
+        _FD_PAGE = _fd_get(f'{FD_BASE}/content-managed-page?{FD_COMMON}&_ak={FD_AK}'
+                           '&page=CUSTOM&customPageId=nfl')
+    return _FD_PAGE
+
+
+def _fd_american(runner):
+    try:
+        return int(((runner.get('winRunnerOdds') or {}).get('americanDisplayOdds') or {})
+                   .get('americanOdds'))
+    except (TypeError, ValueError):
+        return None
+
+
+def _matchup_from_name(name):
+    """'New England Patriots @ Seattle Seahawks' -> ('NE', 'SEA') or None."""
+    m = re.match(r'^\s*(.+?)\s*@\s*(.+?)\s*$', name or '')
+    if not m:
+        return None
+    away, home = TEAM_ABBR.get(m.group(1).strip()), TEAM_ABBR.get(m.group(2).strip())
+    return (away, home) if away and home else None
+
+
+def _parse_iso(s):
+    try:
+        return datetime.datetime.fromisoformat(str(s).replace('Z', '+00:00'))
+    except (TypeError, ValueError):
+        return None
+
+
+def pull_fd_season():
+    """{player: {stat: line}} from FanDuel's regular-season player props."""
+    page = _fd_nfl_page()
+    out = {}
+    for m in (page.get('attachments') or {}).get('markets', {}).values():
+        if not (m.get('marketType') or '').startswith('REGULAR_SEASON_PROPS'):
+            continue
+        mm = re.match(r'^(.+?) Regular Season (.+?) 20\d\d-\d\d$', m.get('marketName') or '')
+        if not mm:
+            continue
+        stat = FD_SEASON_STATS.get(mm.group(2).strip().lower())
+        if not stat:
+            continue
+        for r in m.get('runners', []):
+            mo = re.search(r'\bOver (\d+(?:\.\d+)?)$', r.get('runnerName') or '')
+            if mo:
+                out.setdefault(mm.group(1).strip(), {})[stat] = float(mo.group(1))
+                break
+    print(f'  FanDuel: {sum(len(v) for v in out.values())} season lines across {len(out)} players')
+    return out
+
+
+def update_fanduel_props(src):
+    print('Phase E: FanDuel season player props (requests)...')
+    lookup = load_d_names()
+    try:
+        pulled = pull_fd_season()
+    except Exception as e:
+        print(f'  !! FanDuel pull failed ({e}) — seasonProps FD untouched')
+        return src, 0
+    if len(pulled) < 20:
+        print(f'  !! only {len(pulled)} players pulled — refusing to rewrite FD props')
+        return src, 0
+    canon = canonize(pulled, lookup, 'FD', drop_unmatched=True)
+    return merge_props_book(src, 'FD', canon)
+
+
+def pull_fd_weekly(week_by_matchup):
+    """{wk: {player: {stat: line}}} from FanDuel's per-game prop tabs."""
+    page = _fd_nfl_page()
+    # FanDuel's NFL page also lists standalone games weeks out (TNF, holiday
+    # slates); only the nearest week is worth 4 requests per game.
+    slate = []
+    for e in (page.get('attachments') or {}).get('events', {}).values():
+        mu = _matchup_from_name(e.get('name'))
+        if not mu:
+            continue
+        wk = _validated_week(week_by_matchup.get(mu), _parse_iso(e.get('openDate')))
+        if wk is not None:
+            slate.append((wk, mu, e))
+    cur = min((wk for wk, _, _ in slate), default=None)
+    out = {}
+    n = games = 0
+    for wk, mu, e in slate:
+        if wk != cur:
+            continue
+        games += 1
+        wkd = out.setdefault(wk, {})
+        for tab in FD_WEEKLY_TABS:
+            try:
+                body = _fd_get(f'{FD_BASE}/event-page?{FD_COMMON}&_ak={FD_AK}'
+                               f'&eventId={e["eventId"]}&tab={tab}')
+            except Exception as ex:
+                print(f'    FanDuel {mu[0]}@{mu[1]} {tab}: {ex}')
+                continue
+            for m in (body.get('attachments') or {}).get('markets', {}).values():
+                mt = m.get('marketType') or ''
+                if mt == 'ANY_TIME_TOUCHDOWN_SCORER':
+                    for r in m.get('runners', []):
+                        odds = _fd_american(r)
+                        player = (r.get('runnerName') or '').strip()
+                        if player and odds is not None and 'atd' not in wkd.get(player, {}):
+                            wkd.setdefault(player, {})['atd'] = odds
+                            n += 1
+                    continue
+                t = re.match(r'^PLAYER_X_(PASSING_YARDS|PASSING_TOUCHDOWNS|INTERCEPTIONS|'
+                             r'RUSHING_YARDS|RECEIVING_YARDS|RECEPTIONS)_(HIGH|MEDIUM|LOW)$', mt)
+                if not t:
+                    continue   # _ALT_ ladders, milestones, specials
+                stat = FD_WEEKLY_TYPES[t.group(1)]
+                player = (m.get('marketName') or '').split(' - ')[0].strip()
+                for r in m.get('runners', []):
+                    if (r.get('runnerName') or '').endswith(' Over') and r.get('handicap') is not None:
+                        if player and stat not in wkd.get(player, {}):
+                            wkd.setdefault(player, {})[stat] = float(r['handicap'])
+                            n += 1
+                        break
+            time.sleep(0.4)
+    print(f'  FanDuel weekly: {n} lines, weeks {sorted(out)}, '
+          f'{sum(len(v) for v in out.values())} player-weeks ({games} games)')
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Phase F — BetMGM (plain requests; added 2026-09-08)
+# ---------------------------------------------------------------------------
+# Entain's CDS API (www.nj.betmgm.com/cds-api) answers plain requests once
+# the site's access id is supplied. The id is a site constant captured from
+# the app's own XHRs; if BetMGM ever rotates it ("Access id is invalid"), the
+# script re-captures it by loading the NFL page in Chrome and reading the
+# performance log. NFL = sportIds 11 / regionIds 9 / competitionIds 35.
+# Season props live in a separate 'Regular season stats' fixture; per-game
+# player props are optionMarkets on each PairGame fixture-view. Rushing
+# yards are posted only as 25+/50+ ladders (no main line) — skipped.
+
+MGM_ACCESS_ID = 'ZTllNjllODUtOWQwNS00YmU4LWE4NTEtZGZjOTkzMGM5OWU4'
+MGM_BASE = 'https://www.nj.betmgm.com/cds-api/bettingoffer'
+MGM_COMMON = 'lang=en-us&country=US&userCountry=US&subdivision=US-New%20Jersey'
+MGM_HEADERS = {'User-Agent': UA, 'Accept': 'application/json',
+               'Referer': 'https://www.nj.betmgm.com/en/sports'}
+MGM_NFL_PAGE = 'https://sports.nj.betmgm.com/en/sports/football-11/betting/usa-9/nfl-35'
+MGM_HAPPENING = {'PassingYards': 'py', 'TouchdownPass': 'ptd', 'InterceptionThrown': 'int',
+                 'RushingYards': 'ry', 'ReceivingYards': 'rcy', 'Reception': 'rec',
+                 'KickingPoint': 'kpts', 'FieldGoal': 'fgm'}
+MGM_SEASON_STATS = {
+    'passing yards': 'py', 'passing touchdowns': 'ptd', 'interceptions': 'int',
+    'interceptions thrown': 'int', 'rushing yards': 'ry', 'rushing touchdowns': 'rtd',
+    'receiving yards': 'rcy', 'receiving touchdowns': 'rctd', 'receptions': 'rec',
+}
+_MGM_AID = MGM_ACCESS_ID
+_MGM_FIXTURES = None
+
+
+def _mgm_capture_access_id():
+    """Load the NFL page in Chrome and read the access id off the app's own
+    cds-api requests (CDP performance log). Returns None on failure."""
+    try:
+        from selenium import webdriver
+        from selenium.webdriver.chrome.service import Service
+        from selenium.webdriver.chrome.options import Options
+        try:
+            from webdriver_manager.chrome import ChromeDriverManager
+            path = ChromeDriverManager().install()
+        except Exception:
+            path = None
+        opts = Options()
+        opts.add_argument('--disable-blink-features=AutomationControlled')
+        opts.add_argument('--no-sandbox')
+        opts.add_argument('--window-size=1400,900')
+        opts.add_experimental_option('excludeSwitches', ['enable-automation'])
+        opts.add_experimental_option('useAutomationExtension', False)
+        opts.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+        drv = webdriver.Chrome(service=Service(path) if path else Service(), options=opts)
+        try:
+            drv.set_page_load_timeout(60)
+            drv.get(MGM_NFL_PAGE)
+            time.sleep(15)
+            for entry in drv.get_log('performance'):
+                try:
+                    msg = json.loads(entry['message'])['message']
+                except (KeyError, ValueError):
+                    continue
+                if msg.get('method') != 'Network.requestWillBeSent':
+                    continue
+                mm = re.search(r'x-bwin-accessid=([A-Za-z0-9=_-]+)',
+                               msg['params']['request'].get('url', ''))
+                if mm:
+                    return mm.group(1)
+        finally:
+            drv.quit()
+    except Exception as e:
+        print(f'  BetMGM access-id capture failed ({e})')
+    return None
+
+
+def _mgm_get(path, params):
+    global _MGM_AID
+    for attempt in (1, 2):
+        url = f'{MGM_BASE}/{path}?x-bwin-accessid={_MGM_AID}&{MGM_COMMON}&{params}'
+        r = requests.get(url, headers=MGM_HEADERS, timeout=60)
+        if r.status_code == 400 and 'access id' in r.text.lower() and attempt == 1:
+            print('  BetMGM: access id rejected — re-capturing from the site (Chrome)')
+            new = _mgm_capture_access_id()
+            if new and new != _MGM_AID:
+                print(f'  BetMGM: new access id {new[:8]}… (update MGM_ACCESS_ID in the script)')
+                _MGM_AID = new
+                continue
+        r.raise_for_status()
+        return r.json()
+
+
+def _mgm_fixtures():
+    global _MGM_FIXTURES
+    if _MGM_FIXTURES is None:
+        d = _mgm_get('fixtures', 'fixtureTypes=Standard&state=Latest&offerMapping=Filtered'
+                     '&offerCategories=Gridable&fixtureCategories=Gridable,NonGridable,Other'
+                     '&sportIds=11&regionIds=9&competitionIds=35&skip=0&take=100&sortBy=Tags')
+        _MGM_FIXTURES = d.get('fixtures') or []
+    return _MGM_FIXTURES
+
+
+def _mgm_fixture_view(fid):
+    d = _mgm_get('fixture-view', f'offerMapping=All&scoreboardMode=Full&fixtureIds={fid}'
+                 '&state=Latest&useRegionalisedConfiguration=true&includeRelatedFixtures=false'
+                 '&statisticsModes=None')
+    return d.get('fixture') or d
+
+
+def _mgm_name(o):
+    n = o.get('name')
+    return (n.get('value') if isinstance(n, dict) else n) or ''
+
+
+def _mgm_params(g):
+    return {p.get('key'): p.get('value') for p in (g.get('parameters') or []) if p.get('key')}
+
+
+def _mgm_over_line(opts):
+    """Main O/U line from an options/results list: needs BOTH an 'Over X' and
+    an 'Under X' (milestone ladders are Yes-only)."""
+    over = under = None
+    for o in opts or []:
+        nm = _mgm_name(o)
+        mo = re.match(r'^Over (\d+(?:\.\d+)?)$', nm)
+        mu = re.match(r'^Under (\d+(?:\.\d+)?)$', nm)
+        if mo:
+            over = float(mo.group(1))
+        elif mu:
+            under = float(mu.group(1))
+    return over if (over is not None and under is not None) else None
+
+
+def pull_mgm_season():
+    """{player: {stat: line}} from BetMGM's 'Regular season stats' fixture."""
+    fx = [f for f in _mgm_fixtures() if 'regular season stats' in _mgm_name(f).lower()]
+    if not fx:
+        raise RuntimeError('no "Regular season stats" fixture in the NFL list')
+    view = _mgm_fixture_view(fx[0]['id'])
+    out = {}
+    for g in (view.get('games') or []) + (view.get('optionMarkets') or []):
+        mm = re.match(r'^(.+?) \([A-Z]{2,3}\): Regular season (.+?)$', _mgm_name(g))
+        if not mm:
+            continue
+        stat = MGM_SEASON_STATS.get(mm.group(2).strip().lower())
+        if not stat:
+            continue
+        line = _mgm_over_line(g.get('results') or g.get('options'))
+        if line is not None:
+            out.setdefault(mm.group(1).strip(), {})[stat] = line
+    print(f'  BetMGM: {sum(len(v) for v in out.values())} season lines across {len(out)} players')
+    return out
+
+
+def update_betmgm_props(src):
+    print('Phase F: BetMGM season player props (requests)...')
+    lookup = load_d_names()
+    try:
+        pulled = pull_mgm_season()
+    except Exception as e:
+        print(f'  !! BetMGM pull failed ({e}) — seasonProps MGM untouched')
+        return src, 0
+    if len(pulled) < 20:
+        print(f'  !! only {len(pulled)} players pulled — refusing to rewrite MGM props')
+        return src, 0
+    canon = canonize(pulled, lookup, 'MGM', drop_unmatched=True)
+    return merge_props_book(src, 'MGM', canon)
+
+
+def pull_mgm_weekly(week_by_matchup):
+    """{wk: {player: {stat: line}}} from each NFL game's fixture-view."""
+    out = {}
+    n = games = 0
+    for f in _mgm_fixtures():
+        mu = _matchup_from_name(_mgm_name(f))
+        if not mu or f.get('fixtureType') not in (None, 'PairGame'):
+            continue
+        wk = _validated_week(week_by_matchup.get(mu), _parse_iso(f.get('startDate')))
+        if wk is None:
+            continue
+        try:
+            view = _mgm_fixture_view(f['id'])
+        except Exception as ex:
+            print(f'    BetMGM {mu[0]}@{mu[1]}: {ex}')
+            continue
+        games += 1
+        wkd = out.setdefault(wk, {})
+        for g in view.get('optionMarkets') or []:
+            p = _mgm_params(g)
+            period = p.get('Period')
+            if period and period not in ('FullTime', 'RegularTime', 'Regular Time'):
+                continue
+            name = _mgm_name(g)
+            if p.get('Happening') == 'Touchdown':
+                mm = re.match(r'^(.+?) to score 1\+ TDs?$', name)
+                if not mm:
+                    continue
+                for o in g.get('options') or []:
+                    if _mgm_name(o).lower() == 'yes':
+                        odds = (o.get('price') or {}).get('americanOdds')
+                        if odds is not None and 'atd' not in wkd.get(mm.group(1).strip(), {}):
+                            wkd.setdefault(mm.group(1).strip(), {})['atd'] = int(odds)
+                            n += 1
+                continue
+            stat = MGM_HAPPENING.get(p.get('Happening'))
+            if not stat:
+                continue
+            line = _mgm_over_line(g.get('options'))
+            if line is None:
+                continue   # 25+/50+ ladders etc.
+            mm = re.match(r'^(.+?)(?: - |: )(.+)$', name)
+            if not mm:
+                continue
+            player = mm.group(1).strip()
+            if stat not in wkd.get(player, {}):
+                wkd.setdefault(player, {})[stat] = line
+                n += 1
+        time.sleep(0.5)
+    print(f'  BetMGM weekly: {n} lines, weeks {sorted(out)}, '
+          f'{sum(len(v) for v in out.values())} player-weeks ({games} games)')
+    return out
+
+
 def update_weekly_props(src):
     print('Phase D: weekly player props (Underdog + PrizePicks)...')
     lookup = load_d_names()
@@ -1133,6 +1513,14 @@ def update_weekly_props(src):
         pulls.append(('PP', pull_pp_weekly()))
     except Exception as e:
         print(f'  !! PrizePicks weekly failed ({e}) — PP untouched')
+    try:
+        pulls.append(('FD', pull_fd_weekly(week_by_matchup)))
+    except Exception as e:
+        print(f'  !! FanDuel weekly failed ({e}) — FD untouched')
+    try:
+        pulls.append(('MGM', pull_mgm_weekly(week_by_matchup)))
+    except Exception as e:
+        print(f'  !! BetMGM weekly failed ({e}) — MGM untouched')
     dk = {}
     try:
         dk = pull_dk_weekly_atd(week_by_matchup)
@@ -1300,10 +1688,15 @@ def main():
     ap.add_argument('--game-lines', action='store_true', help='ESPN spreads/totals only')
     ap.add_argument('--season-props', action='store_true', help='DK season props only')
     ap.add_argument('--underdog', action='store_true', help='Underdog season props only')
-    ap.add_argument('--weekly-props', action='store_true', help='UD+PP weekly props only')
+    ap.add_argument('--weekly-props', action='store_true',
+                    help='UD+PP+DK+FD+MGM weekly props only')
+    ap.add_argument('--fanduel', action='store_true', help='FanDuel season props only')
+    ap.add_argument('--betmgm', action='store_true', help='BetMGM season props only')
     args = ap.parse_args()
     all_phases = not (args.game_lines or args.season_props or args.underdog
-                      or args.weekly_props)
+                      or args.weekly_props or args.fanduel or args.betmgm)
+    do_fd = args.fanduel or all_phases
+    do_mgm = args.betmgm or all_phases
     do_games = args.game_lines or all_phases
     do_props = args.season_props or all_phases
     do_ud = args.underdog or all_phases
@@ -1320,6 +1713,12 @@ def main():
         total_changed += n
     if do_ud:
         src, n = update_underdog_props(src)
+        total_changed += n
+    if do_fd:
+        src, n = update_fanduel_props(src)
+        total_changed += n
+    if do_mgm:
+        src, n = update_betmgm_props(src)
         total_changed += n
     if do_weekly:
         src, n = update_weekly_props(src)

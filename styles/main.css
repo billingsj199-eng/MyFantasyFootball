@@ -1060,8 +1060,12 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   /* On mobile, allow multi-word labels ("Trade Calc", "My Teams", "Mock Draft") to wrap
      back to two lines so the bottom tab bar fits in viewport without horizontal scroll.
      Desktop sets white-space:nowrap; this overrides for the narrow-screen layout. */
-  .nav-btn .nav-label{font-size:.5rem;margin-top:1px;white-space:normal;line-height:1.05;max-width:42px;text-align:center;word-spacing:100vw}
-  .nav-btn{padding:4px 3px}
+  /* 9 public tabs since Start/Sit (2026-09-08): at 375px each tab is 42px, so the
+     longest labels (RANKINGS / DRAFT STRATEGY / PROSPECT / COMPARE / START/SIT)
+     touched their neighbours at .5rem + .5px tracking. .48rem with no tracking
+     tops out at 38px — 2px clear each side. */
+  .nav-btn .nav-label{font-size:.48rem;letter-spacing:0;margin-top:1px;white-space:normal;line-height:1.05;max-width:44px;text-align:center;word-spacing:100vw}
+  .nav-btn{padding:4px 1px}
 
   /* My Teams import grid: long placeholders (e.g. Sleeper "League ID (e.g. 1312075626064134144)")
      were forcing the input above viewport width via default flex min-width:auto. Allow shrink. */

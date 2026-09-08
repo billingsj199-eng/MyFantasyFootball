@@ -2508,7 +2508,7 @@ function _projStatLine(d) {
 
 // WEEKLY prop lines for the active week (BETTING_2026.weeklyProps, pulled by
 // scripts/pull_betting_lines.py --weekly-props). Averages each posted stat
-// across books (UD / PrizePicks). Returns { stats, books, asOf } or null.
+// across every posted book (DK / FD / MGM / UD / PP). Returns { stats, books, asOf } or null.
 function _weeklyPropLinesFor(name) {
   if (!window.BETTING_2026 || !window.BETTING_2026.weeklyProps) return null;
   const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
@@ -9926,8 +9926,8 @@ function _buildWeeklyLinesSection(d) {
   if (!wks.length) return '';
   const wk = wks[0];
   const rec = wp[String(wk)][d.n];
-  const LBL = { DK: 'DraftKings', UD: 'Underdog', PP: 'PrizePicks' };
-  const books = ['DK', 'UD', 'PP'].filter(b => rec[b]);
+  const LBL = { DK: 'DraftKings', FD: 'FanDuel', MGM: 'BetMGM', UD: 'Underdog', PP: 'PrizePicks' };
+  const books = ['DK', 'FD', 'MGM', 'UD', 'PP'].filter(b => rec[b]);
   if (!books.length) return '';
   const fmt1 = (v) => (typeof v === 'number') ? (Math.round(v * 10) / 10).toFixed(1) : '—';
   const fmt0 = (v) => (typeof v === 'number') ? String(Math.round(v)) : '—';

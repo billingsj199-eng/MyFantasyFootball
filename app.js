@@ -21545,9 +21545,10 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
   // Per-position prop rows: [key, label, formatter, higherIsBetter]
   const ROWS = {
     QB:  [['py', 'Pass Yds', fmt0, true], ['ptd', 'Pass TD', fmt1, true], ['int', 'INT', fmt1, false], ['ry', 'Rush Yds', fmt0, true], ['atd', 'Anytime TD', fmtOdds, true]],
-    RB:  [['ry', 'Rush Yds', fmt0, true], ['rec', 'Rec', fmt1, true], ['rcy', 'Rec Yds', fmt0, true], ['rrtd', 'Rush+Rec TD', fmt1, true], ['atd', 'Anytime TD', fmtOdds, true]],
-    WR:  [['rec', 'Rec', fmt1, true], ['rcy', 'Rec Yds', fmt0, true], ['ry', 'Rush Yds', fmt0, true], ['rrtd', 'Rush+Rec TD', fmt1, true], ['atd', 'Anytime TD', fmtOdds, true]],
-    TE:  [['rec', 'Rec', fmt1, true], ['rcy', 'Rec Yds', fmt0, true], ['rrtd', 'Rush+Rec TD', fmt1, true], ['atd', 'Anytime TD', fmtOdds, true]],
+    // (Rush+Rec TD 0.5 is omitted — it's the same market as the anytime-TD odds.)
+    RB:  [['ry', 'Rush Yds', fmt0, true], ['rec', 'Rec', fmt1, true], ['rcy', 'Rec Yds', fmt0, true], ['atd', 'Anytime TD', fmtOdds, true]],
+    WR:  [['rec', 'Rec', fmt1, true], ['rcy', 'Rec Yds', fmt0, true], ['ry', 'Rush Yds', fmt0, true], ['atd', 'Anytime TD', fmtOdds, true]],
+    TE:  [['rec', 'Rec', fmt1, true], ['rcy', 'Rec Yds', fmt0, true], ['atd', 'Anytime TD', fmtOdds, true]],
     K:   [['kpts', 'Kicking Pts', fmt1, true], ['fgm', 'FG Made', fmt1, true]],
     DST: []
   };
@@ -21727,8 +21728,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     // Sportsbook lines
     const rows = ROWS[d.s] || [];
     if (rows.length) {
-      html += '<div class="card-section"><div class="card-section-title">Week ' + wk + ' Lines'
-        + (c.books.length ? ' <span class="sst-dim">· ' + c.books.join(' / ') + '</span>' : '') + '</div>';
+      html += '<div class="card-section"><div class="card-section-title">Week ' + wk + ' Lines</div>';
       const posted = c.lines ? rows.filter(r => typeof c.lines[r[0]] === 'number') : [];
       if (!posted.length) {
         html += '<div class="sst-bye">No Week ' + wk + ' prop lines posted' + (c.bye ? '' : ' yet') + '.</div>';
@@ -21736,17 +21736,16 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
         html += '<table class="career-table sst-lines"><tbody>';
         posted.forEach(r => {
           const k = r[0], v = c.lines[k];
-          const per = [], short = [];
+          const per = [];
           if (c.raw) ['DK', 'FD', 'MGM', 'UD', 'PP'].forEach(b => {
-            if (c.raw[b] && typeof c.raw[b][k] === 'number') { per.push((BOOK_LBL[b] || b) + ' ' + r[2](c.raw[b][k])); short.push(b); }
+            if (c.raw[b] && typeof c.raw[b][k] === 'number') per.push((BOOK_LBL[b] || b) + ' ' + r[2](c.raw[b][k]));
           });
           const tip = per.length ? per.join(' · ') : '';
           html += '<tr><td class="sst-line-lbl">' + r[1] + (k === 'atd' ? ' <span class="sst-dim">odds</span>' : '') + '</td>'
-            + '<td class="sst-line-val' + (isBest('l:' + k, v) ? ' sst-best' : '') + '"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '>' + r[2](v) + '</td>'
-            + '<td class="sst-line-books">' + short.join(' ') + '</td></tr>';
+            + '<td class="sst-line-val' + (isBest('l:' + k, v) ? ' sst-best' : '') + '"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '>' + r[2](v) + '</td></tr>';
         });
         html += '</tbody></table>';
-        html += '<div class="sst-foot">O/U averaged across the books posting each stat — hover for the per-book lines. Anytime TD = american odds (more negative = likelier).'
+        html += '<div class="sst-foot">Consensus O/U lines. Anytime TD = american odds (more negative = likelier).'
           + (c.asOf ? ' As of ' + esc(c.asOf) + '.' : '') + '</div>';
       }
       html += '</div>';

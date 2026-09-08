@@ -2440,7 +2440,6 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
 .sst-lines tr:last-child td{border-bottom:none}
 .sst-line-lbl{text-align:left;font-weight:600;white-space:nowrap}
 .sst-line-val{text-align:right;font-weight:700;font-family:'DM Mono',monospace;white-space:nowrap}
-.sst-line-books{text-align:right;font-size:.55rem;color:var(--text2);letter-spacing:.3px;white-space:nowrap;width:1%}
 .sst-best{color:#22c55e!important}
 .sst-foot{font-size:.55rem;color:var(--text2);margin-top:6px;line-height:1.4}
 @media (max-width:600px){

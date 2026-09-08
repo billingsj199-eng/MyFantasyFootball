@@ -476,7 +476,15 @@ def update_season_props(src):
 # Phase C — Underdog season props (plain requests, no auth)
 # ---------------------------------------------------------------------------
 
-UD_URL = 'https://api.underdogfantasy.com/beta/v6/over_under_lines'
+# 2026-09-08: the beta/v6 route started answering 426 'upgrade_required'
+# (api_code) for every client — v1 serves the same schema (appearances /
+# games / players / over_under_lines) and is what the web app reads now.
+# Try in order; the first 2xx wins.
+UD_URLS = (
+    'https://api.underdogfantasy.com/v1/over_under_lines',
+    'https://api.underdogfantasy.com/beta/v6/over_under_lines',
+)
+UD_URL = UD_URLS[0]
 
 UD_STAT_KEYS = {
     'season_pass_yards': 'py', 'season_pass_tds': 'ptd',
@@ -494,10 +502,21 @@ def _fetch_ud():
     """Download the Underdog board once per run (season + weekly phases share it)."""
     global _UD_CACHE
     if _UD_CACHE is None:
-        r = requests.get(UD_URL, timeout=60,
-                         headers={'User-Agent': UA, 'Accept': 'application/json'})
-        r.raise_for_status()
-        _UD_CACHE = r.json()
+        last_err = None
+        for url in UD_URLS:
+            try:
+                r = requests.get(url, timeout=60,
+                                 headers={'User-Agent': UA, 'Accept': 'application/json'})
+                r.raise_for_status()
+                _UD_CACHE = r.json()
+                print(f'  Underdog board: {url.split("underdogfantasy.com")[1]} '
+                      f'({len(_UD_CACHE.get("over_under_lines", []))} lines)')
+                break
+            except Exception as e:  # 426 upgrade_required, 5xx, bad JSON
+                last_err = e
+                print(f'  Underdog {url.split("underdogfantasy.com")[1]} failed ({e}) - trying next')
+        if _UD_CACHE is None:
+            raise last_err
     return _UD_CACHE
 
 

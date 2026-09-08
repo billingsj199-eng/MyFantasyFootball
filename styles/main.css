@@ -93,7 +93,7 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 .amb-scroll{flex:1;overflow:hidden;white-space:nowrap}
 .live-ticker-inner{display:inline-flex;align-items:center;gap:8px;animation:tickerScroll 35s linear infinite;padding-left:100%}
 .live-ticker:hover .live-ticker-inner{animation-play-state:paused}
-#adpMoversItems{display:inline-flex;align-items:center;gap:8px}
+#adpMoversItems,#lineMoversItems{display:inline-flex;align-items:center;gap:8px}
 @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
 /* ADP MOVERS chips — headshot + name + from→to + delta/pct, risers green edge /
    fallers red edge; click opens the player card */

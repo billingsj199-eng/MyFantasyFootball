@@ -1,6 +1,76 @@
 {
-  "updated": "2026-09-07T16:10:57Z",
+  "updated": "2026-09-08T02:09:11Z",
   "items": [
+    {
+      "player": "TreVeyon Henderson",
+      "team": "NE",
+      "pos": "RB",
+      "date": "2026-09-07",
+      "headline": "DNP again Monday; Vrabel noncommittal as Week 1 outlook slides",
+      "take": "Trending toward missing the opener at Seattle -- Stevenson/Kiner would lead the backfield if he sits.",
+      "url": "https://www.espn.com/nfl/story/_/id/49830485/what-patriots-do-treveyon-henderson-injured-opener-week-1-2026-nfl-season",
+      "tag": "injury"
+    },
+    {
+      "player": "Christian McCaffrey",
+      "team": "SF",
+      "pos": "RB",
+      "date": "2026-09-07",
+      "headline": "Sat out team drills at 49ers' first full practice in Melbourne",
+      "take": "Likely just workload management two days before Kittle's return, but worth tracking into Wednesday's injury report.",
+      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/nick-bosa-christian-mccaffrey-injuries-practice/1961255/",
+      "tag": "injury"
+    },
+    {
+      "player": "Malik Nabers",
+      "team": "NYG",
+      "pos": "WR",
+      "date": "2026-09-07",
+      "headline": "Cryptic comments on his ACL recovery raise fresh Week 1 doubt",
+      "take": "Giants still have not confirmed he's cleared -- treat as a game-time-decision risk vs. Dallas.",
+      "url": "https://www.cbssports.com/nfl/news/malik-nabers-injury-status-giants-wr-shares-honest-assessment-of-progress-week-1-availability/",
+      "tag": "injury"
+    },
+    {
+      "player": "Ja'Marr Chase",
+      "team": "CIN",
+      "pos": "WR",
+      "date": "2026-09-07",
+      "headline": "Returned to practice Monday after two-week knee absence",
+      "take": "Zac Taylor encouraged by his progress -- trending toward a normal Week 1 workload vs. Tampa Bay.",
+      "url": "https://sports.yahoo.com/articles/jamarr-chase-tee-higgins-return-182413783.html",
+      "tag": "riser"
+    },
+    {
+      "player": "Tee Higgins",
+      "team": "CIN",
+      "pos": "WR",
+      "date": "2026-09-07",
+      "headline": "Returned to practice Monday after heel contusion",
+      "take": "Back alongside Chase with no setback reported -- on track to start Week 1.",
+      "url": "https://sports.yahoo.com/articles/jamarr-chase-tee-higgins-return-182413783.html",
+      "tag": "riser"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-07",
+      "headline": "McVay confirms he's expected available for Week 1 vs. 49ers",
+      "take": "Psoas issue no longer viewed as a real Week 1 threat -- start him with confidence in Melbourne.",
+      "url": "https://www.profootballrumors.com/2026/09/rams-expect-wr-puka-nacua-to-play-week-1",
+      "tag": "riser"
+    },
+    {
+      "player": "Rome Odunze",
+      "team": "CHI",
+      "pos": "WR",
+      "date": "2026-09-07",
+      "headline": "Bears' update on leg injury described as 'concerning' days before Week 1",
+      "take": "No official word until Wednesday's injury report -- monitor closely before locking him into lineups.",
+      "url": "https://sports.yahoo.com/articles/bears-concerning-rome-odunze-just-231723774.html",
+      "tag": "injury"
+    },
     {
       "player": "Tua Tagovailoa",
       "team": "ATL",

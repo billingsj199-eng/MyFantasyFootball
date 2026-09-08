@@ -3723,7 +3723,7 @@ function _tcvCardStats(d) {
   }
   _ttSlot.short = (typeof currentMode !== 'undefined' && currentMode === 'weekly') ? (d.s === 'DST' ? 'OPP TT' : 'TEAM TT') : 'TEAM PPG';
   const slots = [
-    { v: projVal, c: projColor, lbl: 'Proj PPG', short: 'PROJ' },
+    { v: projVal, c: projColor, lbl: (typeof currentMode !== 'undefined' && currentMode === 'weekly') ? 'Proj' : 'Proj PPG', short: 'PROJ' },
     { v: _25Val, c: _25Color, lbl: _seasonPpg.lbl, short: "'" + _seasonPpg.yr + ' PPG' },
     _ttSlot
   ];
@@ -4444,7 +4444,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= PROJ PPG (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + '</span>' +
+    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + ' PROJ' : 'PROJ PPG') + ' (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
   root.appendChild(keyCard);
 
@@ -6042,7 +6042,13 @@ window._updateRnkStatHeaders = function() {
   };
   const fmtLabel = _scoringLabelsRnk[rankingScoringFmt] || 'Half PPR';
   if (rnkStatMode === 'fantasy') {
-    _set(c1, null, 'Sim Lab projected fantasy points per game (' + fmtLabel + ' scoring) — rest-of-season on season boards, this week\'s sim on the WEEKLY board. Refreshed daily and before kickoffs.', 'Proj PPG', fmtLabel);
+    // WEEKLY is one game, so the column is just PROJ (Jack 2026-09-08) —
+    // "PPG" only makes sense on the season boards.
+    if (currentMode === 'weekly') {
+      _set(c1, null, 'Sim Lab projected fantasy points for THIS game (' + fmtLabel + ' scoring) — Week ' + (window._weeklyActiveWeek || 1) + ' sim, refreshed daily and ~30 min before kickoffs (Vegas lines, matchup, usage, injuries priced in). CONSENSUS tab = multi-source blend.', 'Proj', fmtLabel);
+    } else {
+      _set(c1, null, 'Sim Lab projected fantasy points per game (' + fmtLabel + ' scoring) — rest-of-season average, games already played excluded. Refreshed daily and before kickoffs.', 'Proj PPG', fmtLabel);
+    }
     _set(c2, 'ppg25Header', 'Actual fantasy points per game from the 2025 season (' + fmtLabel + ' scoring).', '\'25 PPG', fmtLabel);
     _set(c3, 'l4ppgHeader', 'Average fantasy PPG over the player\'s last 4 games of 2025. Compared to the full-season \'25 PPG it shows which way a player is trending: ▲ = trending up, ▼ = trending down.', 'L4 PPG', fmtLabel);
   } else if (rnkStatMode === 'proj') {

@@ -21593,11 +21593,6 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     return o;
   }
 
-  const SRC = {
-    sim: 'Sim Lab', props: 'Sportsbook props', consensus: 'Sleeper consensus', heuristic: 'Season-based estimate',
-    dst: 'D/ST model', kicker: 'Kicker model', out: 'Ruled out', bye: 'Bye week', base: 'Season projection'
-  };
-
   function render() {
     renderChips();
     const wk = week();
@@ -21690,9 +21685,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const projColor = (c.proj != null && typeof posFptsColor === 'function') ? posFptsColor(c.proj, d.s) : null;
     html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projection <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
     html += '<div class="sst-proj-row"><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
-      + (c.proj != null ? fmt1(c.proj) : '—') + '</div>';
-    html += '<div class="sst-proj-side"><div><span class="sst-dim">Season /gm</span> <b>' + fmt1(c.base) + '</b></div>'
-      + '<div><span class="sst-dim">Source</span> <span class="sst-src">' + esc(SRC[c.src] || SRC.base) + '</span></div></div></div></div>';
+      + (c.proj != null ? fmt1(c.proj) : '—') + '</div></div></div>';
 
     // Matchup
     html += '<div class="card-section"><div class="card-section-title">Matchup</div>';

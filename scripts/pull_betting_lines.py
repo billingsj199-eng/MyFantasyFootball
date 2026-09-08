@@ -580,7 +580,8 @@ def update_underdog_props(src):
 UD_WEEKLY_STAT_KEYS = {
     'passing_yds': 'py', 'passing_tds': 'ptd', 'passing_ints': 'int',
     'rushing_yds': 'ry', 'receiving_yds': 'rcy', 'rush_rec_tds': 'rrtd',
-    'receptions': 'rec', 'rushing_rec_yds': None,  # combined yds: no clean key
+    'receptions': 'rec', 'receiving_rec': 'rec',  # UD renamed it receiving_rec (v1 board, 2026-09)
+    'rushing_rec_yds': None, 'rush_rec_yds': None,  # combined yds: no clean key
     'kicking_points': 'kpts', 'field_goals_made': 'fgm',  # kicker boards, if/when UD posts them
 }
 
@@ -1021,6 +1022,99 @@ def parse_weekly_block(src):
     return weeks
 
 
+
+# ---------------------------------------------------------------------------
+# Off-board pruning for WEEKLY props (added 2026-09-08)
+# ---------------------------------------------------------------------------
+# Season props keep a player's last lines when a book delists him (asOf marks
+# the staleness). Weekly props must not: a scratched player kept looking like
+# he was playing (TreVeyon Henderson, W1 2026 — DK pulled his markets Tuesday,
+# the file still carried +295 anytime TD). Rule: after a book's pull succeeds
+# for a week, drop that book's entry for any player missing from the pull IF
+#   (a) the book posted lines for someone in the same game (so the slate is
+#       up — PP/DK post games progressively early in the week), and
+#   (b) the player's game has not kicked off (kickoff cache from the sim
+#       exporter; played games keep their lines for the LINES tab history).
+# No kickoff cache / unknown team → keep (fail safe).
+
+KICKOFF_CACHE = os.path.join(os.path.dirname(ROOT), 'sim_lab', 'data', 'kickoffs_2026.json')
+
+TEAM_ABBR = {
+    'Arizona Cardinals': 'ARI', 'Atlanta Falcons': 'ATL', 'Baltimore Ravens': 'BAL',
+    'Buffalo Bills': 'BUF', 'Carolina Panthers': 'CAR', 'Chicago Bears': 'CHI',
+    'Cincinnati Bengals': 'CIN', 'Cleveland Browns': 'CLE', 'Dallas Cowboys': 'DAL',
+    'Denver Broncos': 'DEN', 'Detroit Lions': 'DET', 'Green Bay Packers': 'GB',
+    'Houston Texans': 'HOU', 'Indianapolis Colts': 'IND', 'Jacksonville Jaguars': 'JAX',
+    'Kansas City Chiefs': 'KC', 'Las Vegas Raiders': 'LV', 'Los Angeles Chargers': 'LAC',
+    'Los Angeles Rams': 'LAR', 'Miami Dolphins': 'MIA', 'Minnesota Vikings': 'MIN',
+    'New England Patriots': 'NE', 'New Orleans Saints': 'NO', 'New York Giants': 'NYG',
+    'New York Jets': 'NYJ', 'Philadelphia Eagles': 'PHI', 'Pittsburgh Steelers': 'PIT',
+    'San Francisco 49ers': 'SF', 'Seattle Seahawks': 'SEA', 'Tampa Bay Buccaneers': 'TB',
+    'Tennessee Titans': 'TEN', 'Washington Commanders': 'WAS',
+}
+
+
+def load_d_teams():
+    """d.js canonical name -> team abbr (players on FA/unknown teams omitted)."""
+    src = open(os.path.join(ROOT, 'data', 'd.js'), encoding='utf-8').read()
+    out = {}
+    for m in re.finditer(r'"n":"([^"]+)"', src):
+        tail = src[m.end():m.end() + 400]
+        t = re.search(r'"t":"([^"]+)"', tail)
+        if not t:
+            continue
+        abbr = TEAM_ABBR.get(t.group(1)) or (t.group(1) if t.group(1) in TEAM_ABBR.values() else None)
+        if abbr:
+            out.setdefault(m.group(1), abbr)
+    return out
+
+
+def load_kickoffs():
+    """{wk(str): {abbr: datetime(UTC)}} from the sim exporter's ESPN cache."""
+    try:
+        raw = json.load(open(KICKOFF_CACHE, encoding='utf-8'))
+    except (OSError, ValueError) as e:
+        print(f'  kickoff cache unavailable ({e}) — off-board pruning skipped')
+        return {}
+    out = {}
+    for wk, teams in raw.items():
+        for abbr, iso in (teams or {}).items():
+            try:
+                out.setdefault(str(wk), {})[abbr] = datetime.datetime.fromisoformat(
+                    str(iso).replace('Z', '+00:00'))
+            except ValueError:
+                continue
+    return out
+
+
+def prune_off_board(wkd, wk, book, canon, teams, kicks, games_by_team, now=None):
+    """Delete `book` from players in week `wk` who are absent from the fresh
+    `canon` pull, per the rule above. Returns the list of names pruned."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    covered = set()
+    for name in canon:
+        g = games_by_team.get(teams.get(name))
+        if g:
+            covered.add(g)
+    kick_wk = kicks.get(str(wk)) or {}
+    dropped = []
+    for name in list(wkd):
+        entry = wkd[name]
+        if book not in entry or name in canon:
+            continue
+        t = teams.get(name)
+        g = games_by_team.get(t)
+        ko = kick_wk.get(t)
+        if not t or not g or g not in covered or not ko or ko <= now:
+            continue
+        del entry[book]
+        entry['asOf'] = TODAY
+        dropped.append(name)
+        if not any(k != 'asOf' for k in entry):
+            del wkd[name]
+    return dropped
+
+
 def update_weekly_props(src):
     print('Phase D: weekly player props (Underdog + PrizePicks)...')
     lookup = load_d_names()
@@ -1057,6 +1151,11 @@ def update_weekly_props(src):
 
     weeks = parse_weekly_block(src)
     changed = 0
+    teams = load_d_teams()
+    kicks = load_kickoffs()
+    games_by_team = {}   # (wk, abbr) -> game key
+    for (away, home), gwk in week_by_matchup.items():
+        games_by_team[(gwk, away)] = games_by_team[(gwk, home)] = f'W{gwk}_{away}_{home}'
     for book, by_week in pulls:
         for wk, pulled in by_week.items():
             if len(pulled) < 10:
@@ -1072,6 +1171,13 @@ def update_weekly_props(src):
                     entry[book] = raw
                     entry['asOf'] = TODAY
                     changed += 1
+            if kicks:
+                gbt = {abbr: g for (gwk, abbr), g in games_by_team.items() if gwk == wk}
+                dropped = prune_off_board(wkd, wk, book, canon, teams, kicks, gbt)
+                if dropped:
+                    changed += len(dropped)
+                    shown = ', '.join(dropped[:6]) + (' …' if len(dropped) > 6 else '')
+                    print(f'  {book} W{wk}: dropped {len(dropped)} off-board pre-kickoff ({shown})')
     if not changed:
         print('  weeklyProps: no changes')
         return src, 0

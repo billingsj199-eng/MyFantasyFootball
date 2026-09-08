@@ -2433,7 +2433,6 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
 .sst-src{color:var(--accent)}
 .sst-opp{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
 .sst-opp img{width:18px;height:18px;object-fit:contain;vertical-align:middle}
-.sst-sos{font-size:.62rem;color:var(--text2);margin-top:6px;line-height:1.4}
 .sst-bye{text-align:center;padding:.8rem .5rem;color:var(--text2);font-size:.74rem}
 .sst-lines{width:100%;table-layout:auto!important;min-width:0}
 .sst-lines td{padding:3px 4px;font-size:.78rem;border-bottom:1px solid var(--border)}

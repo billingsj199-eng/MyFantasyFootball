@@ -21558,7 +21558,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
   function build(d) {
     const wk = week();
     const o = { d: d, wk: wk, proj: null, src: 'base', base: null, bye: false, out: false,
-                opp: null, home: null, spread: null, tt: null, oppTT: null, ou: null, diff: null, sos: null,
+                opp: null, home: null, spread: null, tt: null, oppTT: null, ou: null, diff: null,
                 lines: null, raw: null, books: [], asOf: null };
     const abbr = teamAbbr(d.t);
     const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
@@ -21580,7 +21580,6 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     if (typeof window._weeklyOppTeamTotalFor === 'function') o.oppTT = window._weeklyOppTeamTotalFor(d.t);
     if (o.tt != null && o.oppTT != null) o.ou = Math.round((o.tt + o.oppTT) * 10) / 10;
     if (typeof window._weeklyOppDifficulty === 'function') o.diff = window._weeklyOppDifficulty(d.t, d.s);
-    try { if (typeof window._mtGetPlayoffSosWeekly === 'function') o.sos = window._mtGetPlayoffSosWeekly(d.t, d.s, wk); } catch (_) {}
     if (typeof _weeklyPropLinesFor === 'function') {
       const W = _weeklyPropLinesFor(d.n);
       if (W) { o.lines = W.stats; o.books = W.books; o.asOf = W.asOf; }
@@ -21714,14 +21713,6 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
         : box('TEAM TOTAL', '<span class="' + bestCls(isBest('tt', c.tt)) + '">' + fmt1(c.tt) + '</span>', '', 'Implied team points: (game total − spread) / 2');
       html += box('O/U', fmt1(c.ou), '', 'Game total');
       html += '</div>';
-      if (c.sos && c.sos.label) {
-        html += '<div class="sst-sos">Wk ' + wk + ' matchup <b style="color:' + esc(c.sos.color || 'var(--text)') + '">' + esc(c.sos.label) + '</b>'
-          + (c.sos.rank ? ' <span class="sst-dim">#' + c.sos.rank + '/' + c.sos.n + '</span>' : '')
-          + (!isDst && typeof c.sos.oppg === 'number' ? ' <span class="sst-dim">· opp allows ' + fmt1(c.sos.oppg) + ' PA/gm</span>' : '')
-          + (isDst && c.sos.clayOffRk ? ' <span class="sst-dim">· opp offense Clay #' + c.sos.clayOffRk + '</span>' : '')
-          + (!isDst && c.sos.posUnits ? ' <span class="sst-dim">· ' + esc(c.sos.posUnits) + '</span>' : '')
-          + '</div>';
-      }
     }
     html += '</div>';
 

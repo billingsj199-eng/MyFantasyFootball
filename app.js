@@ -4176,6 +4176,15 @@ async function _tcvRowCardCanvas(d, displayRank) {
     ctx.fillText(String(seasonBye), ox + ow / 2, Y + H / 2 + 6);
   }
 
+  // Site watermark: tiny translucent tag tucked in the band's bottom-right
+  // corner, under the pos pill / opp slot so it never covers a stat.
+  ctx.save();
+  ctx.font = '600 7.5px ' + SANS; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = 'rgba(255,255,255,.42)';
+  ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 2;
+  ctx.fillText('myfantasyfootball.co', L.W - 6, Y + H - 4);
+  ctx.restore();
+
   return c;
 }
 function _tcvSavePng(canvas, filename) {
@@ -4609,6 +4618,13 @@ function _renderTierCardView(data, container) {
 
   container.innerHTML = '';
   container.appendChild(root);
+  // Site watermark: quiet bottom-right tag so screenshots / recordings of the
+  // board say where it came from. pointer-events:none → never blocks a card.
+  const wm = document.createElement('div');
+  wm.className = 'tcv-watermark';
+  wm.setAttribute('aria-hidden', 'true');
+  wm.textContent = 'myfantasyfootball.co';
+  container.appendChild(wm);   // on the wrap, not root: root carries CSS zoom
 }
 
 // Check if user has active premium

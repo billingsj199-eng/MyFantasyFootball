@@ -10247,7 +10247,9 @@ function _buildWeeklyLinesSection(d) {
   const fmtOdds = (v) => (typeof v === 'number') ? ((v > 0 ? '+' : '') + Math.round(v)) : '—';
   const ROWS = [['py', 'Pass Yds', fmt0], ['ptd', 'Pass TD', fmt1], ['int', 'INT', fmt1],
                 ['ry', 'Rush Yds', fmt0], ['rec', 'Rec', fmt1], ['rcy', 'Rec Yds', fmt0],
-                ['rrtd', 'Rush+Rec TD', fmt1], ['atd', 'Anytime TD odds', fmtOdds]];
+                ['rrtd', 'Rush+Rec TD', fmt1], ['atd', 'Anytime TD odds', fmtOdds],
+                // kicker boards (DK / BetMGM / Underdog / PrizePicks post them)
+                ['kpts', 'Kicking Pts', fmt1], ['fgm', 'FG Made', fmt1]];
   // Game context (matchup + Vegas numbers) from the same file's gameTotals.
   // d.t is the full team name ("Philadelphia Eagles") — map to abbr first.
   let ctx = '', game = null, isHome = false;
@@ -10326,6 +10328,8 @@ function buildLinesView(d) {
   const P = (typeof window._propsProjectionFor === 'function') ? window._propsProjectionFor(d) : null;
 
   if (!P) {
+    const weekly = _buildWeeklyLinesSection(d);
+    if (weekly && (d.s === 'K' || d.s === 'DST')) return weekly;
     return '<div class="card-section"><div class="card-section-title">Sportsbook Lines</div>'
       + '<div style="text-align:center;padding:2rem 1rem;color:var(--text2);font-size:.8rem;line-height:1.5">'
       + 'No season-long prop lines posted for <b style="color:var(--text)">' + d.n + '</b> yet.<br>'

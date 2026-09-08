@@ -418,7 +418,100 @@ def canonize(pulled, lookup, label, drop_unmatched=False):
     return canon
 
 
-def merge_props_book(src, book, canon):
+# ---------------------------------------------------------------------------
+# Season "last seen" stamps (added 2026-09-08)
+# ---------------------------------------------------------------------------
+# _SEASON_SEEN_2026 = { 'Name': { DK: { ry: '2026-08-26', rec: '2026-09-08' }, … } }
+# — the last date each book's season pull CONFIRMED a stat line for the
+# player. A book that delists a market keeps its old line in seasonProps
+# (Jack's rule: the number is still informative) but its seen date stops
+# moving; the site greys a line not seen for 7+ days (vs the player's newest
+# stamp) and drops it from the consensus/projection. Seeded once from the
+# line-movement history (last change date per book/stat, else the player's
+# asOf), then stamped by every successful merge. Exported as seasonSeen.
+
+def parse_season_seen(src):
+    try:
+        block = extract_block(src, '_SEASON_SEEN_2026')
+    except ValueError:
+        return None
+    out = {}
+    for m in re.finditer(r"^\s*(?:'((?:[^'\\]|\\.)*)'|\"([^\"]*)\"):\s*\{(.*)\},?\s*$", block, re.M):
+        name = (m.group(1) or m.group(2)).replace("\\'", "'")
+        books = {}
+        for bm in re.finditer(r"(\w+):\s*\{([^}]*)\}", m.group(3)):
+            stats = {sm.group(1): sm.group(2) for sm in re.finditer(r"(\w+):\s*'(\d{4}-\d{2}-\d{2})'", bm.group(2))}
+            if stats:
+                books[bm.group(1)] = stats
+        out[name] = books
+    return out
+
+
+def _seed_season_seen(src):
+    """First-time seed: last change date per (book, stat) from the history
+    file, else the player's asOf."""
+    hist = load_lines_history().get('season', {})
+    seen = {}
+    block = extract_block(src, '_SEASON_PROPS_2026')
+    for m in re.finditer(r"^\s*(?:'((?:[^'\\]|\\.)*)'|\"([^\"]*)\"):\s*\{(.*)\},?\s*$", block, re.M):
+        name = (m.group(1) or m.group(2)).replace("\\'", "'")
+        books = parse_props_entry(m.group(3))
+        as_of = books.get('asOf') or TODAY
+        for b in BOOK_ORDER:
+            if not books.get(b):
+                continue
+            for stat in _raw_stats_to_dict(books[b]):
+                pts = ((hist.get(name) or {}).get(b) or {}).get(stat)
+                date = pts[-1][0][:10] if pts else as_of
+                seen.setdefault(name, {}).setdefault(b, {})[stat] = date
+    return seen
+
+
+def emit_season_seen(src, seen):
+    lines = []
+    for name in sorted(seen):
+        parts = []
+        for b in BOOK_ORDER:
+            stats = seen[name].get(b)
+            if not stats:
+                continue
+            inner = ', '.join(f"{k}: '{v}'" for k, v in sorted(stats.items(), key=lambda kv: STAT_ORDER.index(kv[0]) if kv[0] in STAT_ORDER else 99))
+            parts.append(f'{b}: {{ {inner} }}')
+        if not parts:
+            continue
+        q = name.replace("'", "\\'")
+        lines.append(f"  '{q}': {{ {', '.join(parts)} }},")
+    if lines:
+        lines[-1] = lines[-1].rstrip(',')
+    new_block = ('const _SEASON_SEEN_2026 = {\n' + '\n'.join(lines) + '\n};')
+    try:
+        return replace_block(src, '_SEASON_SEEN_2026', new_block)
+    except ValueError:
+        # first write: place the block right after the season props and wire
+        # it into window.BETTING_2026
+        s_end = _block_span(src, '_SEASON_PROPS_2026')[1]
+        src = (src[:s_end] + '\n\n// Last date each book confirmed a season stat line (see pull_betting_lines.py).\n'
+               + new_block + src[s_end:])
+        hook = '  seasonProps: _SEASON_PROPS_2026,'
+        if hook in src and 'seasonSeen:' not in src:
+            src = src.replace(hook, hook + '\n  seasonSeen: _SEASON_SEEN_2026,     // per-book/stat last-seen dates', 1)
+        return src
+
+
+def stamp_season_seen(src, book, canon, stats_only=None):
+    """Mark every (book, stat) in `canon` as seen TODAY."""
+    seen = parse_season_seen(src)
+    if seen is None:
+        seen = _seed_season_seen(src)
+    for name, stats in canon.items():
+        for stat in stats:
+            if stats_only is not None and stat not in stats_only:
+                continue
+            seen.setdefault(name, {}).setdefault(book, {})[stat] = TODAY
+    return emit_season_seen(src, seen)
+
+
+def merge_props_book(src, book, canon, seen_stats=None):
     """Rewrite _SEASON_PROPS_2026 with fresh `canon` lines for `book`;
     all other books' entries are preserved verbatim per player."""
     block = extract_block(src, '_SEASON_PROPS_2026')
@@ -458,7 +551,9 @@ def merge_props_book(src, book, canon):
     new_block = 'const _SEASON_PROPS_2026 = {\n' + '\n'.join(lines) + '\n};'
     print(f'  seasonProps[{book}]: {len(all_names)} players total, {len(canon)} with '
           f'fresh {book}, {changed} changed')
-    return replace_block(src, '_SEASON_PROPS_2026', new_block), changed
+    src = replace_block(src, '_SEASON_PROPS_2026', new_block)
+    src = stamp_season_seen(src, book, canon, seen_stats)
+    return src, changed
 
 
 def update_season_props(src):
@@ -737,7 +832,9 @@ def apply_dk_season_receptions(src):
         cur = _raw_stats_to_dict(existing.get(name, {}).get('DK'))
         cur.update(stats)
         full[name] = cur
-    return merge_props_book(src, 'DK', full)
+    # only the receptions line was confirmed by this check — the player's
+    # other DK stats ride along unchanged and keep their own seen dates
+    return merge_props_book(src, 'DK', full, seen_stats={'rec'})
 
 
 def _dk_event_weeks(body, week_by_matchup):
@@ -1601,6 +1698,14 @@ def _raw_stats_to_dict(raw):
     return {k: float(v) for k, v in re.findall(r'(\w+):\s*(-?[\d.]+)', raw or '')}
 
 
+def ensure_season_seen(src):
+    """Create _SEASON_SEEN_2026 on first run (seeded from history/asOf)."""
+    if parse_season_seen(src) is None:
+        print('  seasonSeen: seeding per-book/stat last-seen dates')
+        src = emit_season_seen(src, _seed_season_seen(src))
+    return src
+
+
 def emit_json_export(src):
     season = {}
     block = extract_block(src, '_SEASON_PROPS_2026')
@@ -1622,6 +1727,7 @@ def emit_json_export(src):
         'generatedAt': TODAY,
         'gameTotals': parse_game_totals(src),
         'seasonProps': season,
+        'seasonSeen': parse_season_seen(src) or {},
         'weeklyProps': weekly,
     }
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
@@ -1790,12 +1896,16 @@ def main():
     src = open(DATA_FILE, encoding='utf-8').read()
     orig = src
     total_changed = 0
+    src = ensure_season_seen(src)
     if do_games:
         src, n = update_game_lines(src)
         total_changed += n
     if do_props:
-        src, n = update_season_props(src)
-        total_changed += n
+        try:
+            src, n = update_season_props(src)
+            total_changed += n
+        except Exception as e:
+            print(f'  !! DK season props failed ({e}) — seasonProps DK untouched')
     if do_ud:
         src, n = update_underdog_props(src)
         total_changed += n

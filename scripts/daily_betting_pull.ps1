@@ -5,8 +5,9 @@
 # season props (FD/MGM automated 2026-09-08), and the UD + PrizePicks + DK +
 # FD + MGM weekly prop boards — then commits + pushes ONLY when the
 # data actually changed, so quiet offseason mornings are silent no-ops.
-# The DK season-props phase (Selenium, visible Chrome) is NOT run here;
-# run it manually when wanted: python scripts/pull_betting_lines.py --season-props
+# The DK season-props phase (Selenium) runs daily too since 2026-09-08 so
+# DK's season lines carry honest last-seen dates (stale ones grey out on
+# the card); it is wrapped in try/except inside main() and can't abort.
 # Then re-exports the draft-helper players.json (sleeper/espn/yahoo
 # extensions) — the export derives team byes from betting_lines_2026.json,
 # and the 9am ADP task runs the same step (wired 2026-08-28).
@@ -34,7 +35,7 @@ if ($dirty) {
     exit 0
 }
 
-$out = & $Python 'scripts\pull_betting_lines.py' '--game-lines' '--underdog' '--fanduel' '--betmgm' '--weekly-props' 2>&1 | Out-String
+$out = & $Python 'scripts\pull_betting_lines.py' '--game-lines' '--season-props' '--underdog' '--fanduel' '--betmgm' '--weekly-props' 2>&1 | Out-String
 Write-Log $out
 if ($LASTEXITCODE -ne 0) {
     Write-Log "PULL FAILED (exit $LASTEXITCODE) - nothing committed"

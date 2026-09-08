@@ -868,9 +868,12 @@ def pull_dk_weekly_atd(week_by_matchup):
             print(f'  DK season receptions check failed ({e})')
         # DK names the league-level subcategory "TD Scorer" (category "TD
         # Scorers"); the per-event markets inside are "Anytime TD Scorer".
+        # Exact names only: DK also posts 'Anytime TD Scorer - 1st Quarter' /
+        # '- 1st Half' subcategories whose market names contain 'anytime' —
+        # a substring match would let a +600 first-quarter price stand in for
+        # the full-game number (first subcategory seen wins below).
         subs = [s for s in league.get('subcategories', [])
-                if (s.get('name') or '').lower() in ('td scorer', 'anytime td scorer')
-                or 'anytime td' in (s.get('name') or '').lower()]
+                if (s.get('name') or '').strip().lower() in ('td scorer', 'anytime td scorer')]
         if not subs:
             print('  DK Anytime TD: no subcategory posted (normal in offseason)')
             return {}
@@ -889,8 +892,8 @@ def pull_dk_weekly_atd(week_by_matchup):
                 mkt = markets.get(sel.get('marketId'))
                 if not mkt:
                     continue
-                if 'anytime' not in (mkt.get('name') or '').lower():
-                    continue  # subcategory may later carry First TD etc.
+                if (mkt.get('name') or '').strip().lower() != 'anytime td scorer':
+                    continue  # skips First TD / 2+ TDs / period variants
                 wk = events.get(mkt.get('eventId'))
                 if wk is None:
                     continue

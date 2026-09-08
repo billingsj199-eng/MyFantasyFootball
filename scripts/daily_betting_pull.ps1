@@ -27,7 +27,7 @@ Set-Location $Repo
 Write-Log '=== daily betting pull start ==='
 
 # Refuse to run on a dirty data file so a half-finished manual session isn't clobbered.
-$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'index.html')
+$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"

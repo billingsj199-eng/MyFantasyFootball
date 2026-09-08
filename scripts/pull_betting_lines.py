@@ -1683,6 +1683,91 @@ def bump_version():
     print(f'  index.html: ?v={old} -> ?v={new}')
 
 
+# ---------------------------------------------------------------------------
+# Line-movement history (added 2026-09-08)
+# ---------------------------------------------------------------------------
+# data/lines_history_2026.json — every (week, player, book, stat) keeps a list
+# of [stamp, value] points appended ONLY when the value changes, so the site
+# can show "opened 41.5 → now 55.5" and the biggest movers. Seeded from the
+# git history of betting_lines_2026.json (scripts/backfill_lines_history.py),
+# then appended by every pull. Delistings are not recorded (the current file
+# no longer carries the row, so nothing renders anyway). Fetched lazily by the
+# player card with an hour-stamped ?d= param (never ?v= — sw.js would pin it).
+
+HISTORY_FILE = os.path.join(ROOT, 'data', 'lines_history_2026.json')
+
+
+def _hist_stamp(dt=None):
+    dt = dt or datetime.datetime.now(datetime.timezone.utc)
+    return dt.astimezone(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%MZ')
+
+
+def load_lines_history():
+    try:
+        return json.load(open(HISTORY_FILE, encoding='utf-8'))
+    except (OSError, ValueError):
+        return {'updated': None, 'weeks': {}, 'season': {}}
+
+
+def record_lines_into(hist, data, stamp, weeks_only=None):
+    """Append changed points from one betting_lines JSON payload. Returns the
+    number of points added. `weeks_only` restricts weekly recording (backfill
+    skips weeks the current file no longer carries)."""
+    added = 0
+
+    def rec(node, book, stat, val):
+        nonlocal added
+        if not isinstance(val, (int, float)):
+            return
+        arr = node.setdefault(book, {}).setdefault(stat, [])
+        if not arr or arr[-1][1] != val:
+            arr.append([stamp, val])
+            added += 1
+
+    for wk, players in (data.get('weeklyProps') or {}).items():
+        if weeks_only is not None and str(wk) not in weeks_only:
+            continue
+        for name, books in (players or {}).items():
+            node = hist.setdefault('weeks', {}).setdefault(str(wk), {}).setdefault(name, {})
+            for book, stats in (books or {}).items():
+                if book == 'asOf' or not isinstance(stats, dict):
+                    continue
+                for stat, val in stats.items():
+                    rec(node, book, stat, val)
+    for name, books in (data.get('seasonProps') or {}).items():
+        node = hist.setdefault('season', {}).setdefault(name, {})
+        for book, stats in (books or {}).items():
+            if book == 'asOf' or not isinstance(stats, dict):
+                continue
+            for stat, val in stats.items():
+                rec(node, book, stat, val)
+    if added:
+        hist['updated'] = stamp
+    return added
+
+
+def save_lines_history(hist):
+    body = json.dumps(hist, separators=(',', ':'), ensure_ascii=False)
+    open(HISTORY_FILE, 'w', encoding='utf-8').write(body)
+    return len(body.encode('utf-8'))
+
+
+def update_lines_history():
+    try:
+        data = json.load(open(JSON_FILE, encoding='utf-8'))
+    except (OSError, ValueError) as e:
+        print(f'  lines history: cannot read JSON export ({e}) — skipped')
+        return 0
+    hist = load_lines_history()
+    added = record_lines_into(hist, data, _hist_stamp())
+    if added:
+        size = save_lines_history(hist)
+        print(f'  lines history: +{added} points -> {os.path.relpath(HISTORY_FILE, ROOT)} ({size // 1024} KB)')
+    else:
+        print('  lines history: no line moved')
+    return added
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--game-lines', action='store_true', help='ESPN spreads/totals only')
@@ -1739,6 +1824,7 @@ def main():
               f'PPR/Half/STD projections now split for pass-catchers')
 
     emit_json_export(src)
+    update_lines_history()
     if src == orig:
         print('No JS changes — betting_lines_2026.js untouched, no version bump.')
         return

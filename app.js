@@ -9920,6 +9920,101 @@ function buildWeeklyCardView(d) {
   return html;
 }
 
+// === LINE MOVEMENT HISTORY ===================================================
+// data/lines_history_2026.json: {weeks:{wk:{name:{book:{stat:[[stamp,val],…]}}}},
+// season:{name:{…}}} — a point is appended by the betting pull only when a
+// line moves, seeded from git history so [0] is when the line first posted.
+// Loaded lazily on the first LINES render (hour-stamped ?d=, never ?v=: sw.js
+// would pin it cache-first) and the open card's LINES view re-renders once.
+window._LINES_HIST = window._LINES_HIST || null;
+function _loadLinesHistory() {
+  if (window._linesHistPromise) return window._linesHistPromise;
+  const now = new Date();
+  const stamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0') + String(now.getHours()).padStart(2, '0');
+  window._linesHistPromise = fetch('data/lines_history_2026.json?d=' + stamp)
+    .then(r => (r && r.ok) ? r.json() : null)
+    .then(j => {
+      if (!j || !j.weeks) return null;
+      window._LINES_HIST = j;
+      const host = document.getElementById('cardLinesView');
+      if (host && window._linesCardD && typeof buildLinesView === 'function') {
+        host.innerHTML = buildLinesView(window._linesCardD);
+      }
+      return j;
+    })
+    .catch(() => null);
+  return window._linesHistPromise;
+}
+// Fantasy-positive direction: yards/TD lines UP is good, anytime-TD odds and
+// INT lines DOWN is good.
+const _LM_NEG_GOOD = { atd: true, int: true };
+function _lmFmtDate(stamp) {
+  const d = new Date(stamp);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function _lmFmtVal(k, v) {
+  if (typeof v !== 'number') return '—';
+  if (k === 'atd') return (v > 0 ? '+' : '') + Math.round(v);
+  return (Math.round(v * 10) / 10).toString();
+}
+// History points for one (scope, name, book, stat); scope = week number or 'season'.
+function _lmPoints(scope, name, book, stat) {
+  const H = window._LINES_HIST;
+  if (!H) return null;
+  const node = scope === 'season' ? (H.season || {})[name]
+    : ((H.weeks || {})[String(scope)] || {})[name];
+  const arr = node && node[book] && node[book][stat];
+  return (Array.isArray(arr) && arr.length) ? arr : null;
+}
+// Cell decoration: value plus an arrow when the line has moved since it opened,
+// tooltip "opened 41.5 (Sep 2) → 55.5 (Sep 8)".
+function _lmCell(scope, name, book, stat, cur, fmtFn) {
+  const arr = _lmPoints(scope, name, book, stat);
+  const txt = fmtFn(cur);
+  if (!arr || arr.length < 2 || typeof cur !== 'number') return txt;
+  const open = arr[0][1], last = arr[arr.length - 1];
+  if (typeof open !== 'number' || open === cur) return txt;
+  const up = cur > open;
+  const good = _LM_NEG_GOOD[stat] ? !up : up;
+  const tip = 'opened ' + _lmFmtVal(stat, open) + ' (' + _lmFmtDate(arr[0][0]) + ') → '
+    + _lmFmtVal(stat, cur) + ' (' + _lmFmtDate(last[0]) + ')';
+  return txt + '<span title="' + tip + '" style="font-size:.6rem;margin-left:2px;color:'
+    + (good ? '#22c55e' : '#ef4444') + '">' + (up ? '▲' : '▼') + '</span>';
+}
+// Newest moves for one player in a scope, across books/stats: [{when, book, stat, from, to}].
+function _lmRecentMoves(scope, name, books, labels, limit) {
+  const out = [];
+  books.forEach(b => {
+    Object.keys(labels).forEach(k => {
+      const arr = _lmPoints(scope, name, b, k);
+      if (!arr || arr.length < 2) return;
+      const a = arr[arr.length - 2], z = arr[arr.length - 1];
+      out.push({ when: z[0], book: b, stat: k, from: a[1], to: z[1] });
+    });
+  });
+  out.sort((x, y) => (x.when < y.when ? 1 : x.when > y.when ? -1 : 0));
+  return out.slice(0, limit || 5);
+}
+function _lmMovesHtml(scope, name, books, labels) {
+  if (!window._LINES_HIST) {
+    _loadLinesHistory();
+    return '';
+  }
+  const moves = _lmRecentMoves(scope, name, books, labels, 5);
+  if (!moves.length) return '';
+  let html = '<div style="font-size:.6rem;color:var(--text2);margin-top:6px"><b style="color:var(--text)">Recent line moves</b>';
+  moves.forEach(m => {
+    const up = m.to > m.from;
+    const good = _LM_NEG_GOOD[m.stat] ? !up : up;
+    html += '<div>' + _lmFmtDate(m.when) + ' · ' + m.book + ' ' + labels[m.stat] + ' '
+      + _lmFmtVal(m.stat, m.from) + ' → <span style="color:' + (good ? '#22c55e' : '#ef4444')
+      + ';font-weight:600">' + _lmFmtVal(m.stat, m.to) + '</span></div>';
+  });
+  return html + '</div>';
+}
+
 function _buildWeeklyLinesSection(d) {
   const wp = (window.BETTING_2026 && window.BETTING_2026.weeklyProps) || {};
   const wks = Object.keys(wp).filter(w => wp[w] && wp[w][d.n]).map(Number).sort((a, b) => b - a);
@@ -9979,7 +10074,7 @@ function _buildWeeklyLinesSection(d) {
     const vals = books.map(b => rec[b][k]).filter(v => typeof v === 'number');
     if (!vals.length) return;
     html += '<tr><td style="text-align:left;font-weight:600">' + label + '</td>';
-    books.forEach(b => { html += '<td>' + fmtFn(rec[b][k]) + '</td>'; });
+    books.forEach(b => { html += '<td>' + _lmCell(wk, d.n, b, k, rec[b][k], fmtFn) + '</td>'; });
     if (books.length > 1) {
       // American odds can't be averaged directly (+115/+110/-105/+121 would
       // read +60): average the implied probabilities and convert back, the
@@ -9997,8 +10092,9 @@ function _buildWeeklyLinesSection(d) {
     html += '</tr>';
   });
   html += '</tbody></table>';
+  html += _lmMovesHtml(wk, d.n, books, Object.fromEntries(ROWS.map(r => [r[0], r[1]])));
   html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">'
-    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line.'
+    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line. ▲▼ = moved since first posted (hover for open → now).'
     + (rec.asOf ? ' As of ' + rec.asOf + '.' : '') + '</div>';
   html += '</div>';
   return html;
@@ -10008,6 +10104,7 @@ function _buildWeeklyLinesSection(d) {
 // blended fantasy projection (season total + PPG) + the weekly section.
 // Pulls from window._propsProjectionFor.
 function buildLinesView(d) {
+  window._linesCardD = d;
   const P = (typeof window._propsProjectionFor === 'function') ? window._propsProjectionFor(d) : null;
 
   if (!P) {
@@ -10086,10 +10183,11 @@ function buildLinesView(d) {
     if (!P.books.some(b => typeof P.lines[b][k] === 'number')) return;
     anyRow = true;
     html += '<tr><td style="text-align:left;font-weight:600">' + label + '</td>';
-    P.books.forEach(b => { html += '<td>' + fmtFn(P.lines[b][k]) + '</td>'; });
+    P.books.forEach(b => { html += '<td>' + _lmCell('season', d.n, b, k, P.lines[b][k], fmtFn) + '</td>'; });
     html += '<td style="font-weight:700;color:var(--accent)">' + fmtFn(P.consensus[k]) + '</td></tr>';
   });
   html += '</tbody></table>';
+  html += _lmMovesHtml('season', d.n, P.books, Object.fromEntries(ROWS.map(r => [r[0], r[1]])));
   if (P.asOf) html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">Lines as of ' + P.asOf + '.</div>';
   html += '</div>';
 

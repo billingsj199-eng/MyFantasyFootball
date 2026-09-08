@@ -4931,7 +4931,7 @@ function render() {
       _statTds = `<td class="pts-cell ppg25-cell"${_bc ? ' style="color:' + _bc + ';font-weight:700"' : ''}>${_boom == null ? '—' : _boom + '%'}</td>
       <td class="pts-cell l4ppg-cell"${_dc ? ' style="color:' + _dc + ';font-weight:700"' : ''}>${_bust == null ? '—' : _bust + '%'}</td>`;
       // Tail column: Total Yds (per game on the weekly board). Season Top-12
-      // odds live on the player card's TOP-12 chip instead.
+      // odds are no longer surfaced (table + card chip removed 2026-09-08).
       _statYdsTail = _totYdsCellHtml(d, _isWeekly);
     } else if (_statMode === 'adp') {
       // ADP comparison view: platform ADPs side by side vs the current board's rank
@@ -8243,9 +8243,10 @@ function _displayProjPpg(d) {
 }
 
 // Season-sim summary strip shown above the 2026 game log: median / floor /
-// ceiling season totals, median-relative season boom/bust (+/-25%), and
-// top-12 positional finish odds — from SIM_PROJ_2026.seasonSim (400
-// simulated seasons incl. the wrecked-season shock + games-played layers).
+// ceiling season totals and median-relative season boom/bust (+/-25%) —
+// from SIM_PROJ_2026.seasonSim (400 simulated seasons incl. the
+// wrecked-season shock + games-played layers). r[5] (top-12 odds) is
+// exported but no longer surfaced anywhere (removed 2026-09-08).
 function _simSeasonRow(d) {
   const SP = window.SIM_PROJ_2026;
   const ss = SP && SP.seasonSim;
@@ -8267,7 +8268,7 @@ function _simSeasonRow(d) {
 function _seasonSimStripHtml(d) {
   const r = _simSeasonRow(d);
   if (!r) return '';
-  const med = r[0], p10 = r[1], p90 = r[2], boom = r[3], bust = r[4], top12 = r[5], games = r[6] || 17;
+  const med = r[0], p10 = r[1], p90 = r[2], boom = r[3], bust = r[4], games = r[6] || 17;
   const chip = (lbl, val, color, gloss) =>
     '<div style="display:flex;flex-direction:column;align-items:center;gap:1px">'
     + '<span style="font-size:.55rem;letter-spacing:.8px;color:var(--text2);font-family:\'Bebas Neue\',sans-serif">' + (gloss ? '<span data-gloss="' + gloss.replace(/"/g, '&quot;') + '">' + lbl + '</span>' : lbl) + '</span>'
@@ -8280,7 +8281,6 @@ function _seasonSimStripHtml(d) {
     + chip('CEILING', p90, '#4ade80', '90th percentile season — the smash case')
     + chip('BOOM', boom != null ? boom + '%' : '—', boom >= 25 ? '#22c55e' : boom >= 15 ? '#4ade80' : null, 'Chance of finishing 25%+ ABOVE his own median season')
     + chip('BUST', bust != null ? bust + '%' : '—', bust >= 30 ? '#ef4444' : bust >= 20 ? '#f59e0b' : null, 'Chance of finishing 25%+ BELOW his own median season (injuries and role collapse drive this tail)')
-    + chip('TOP-12 ' + d.s, top12 != null ? top12 + '%' : '—', top12 >= 50 ? '#22c55e' : top12 >= 25 ? '#4ade80' : null, 'Share of simulated seasons finishing top-12 at the position — correlated booms/busts priced in')
     + '</div>';
 }
 

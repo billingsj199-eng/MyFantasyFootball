@@ -948,12 +948,15 @@ def pull_pp_weekly():
                                  odds: a.odds_type, start: a.start_time || a.board_time,
                                  player: pid ? (players[pid] || null) : null };
                      });
-                     done(JSON.stringify({n: rows.length, rows}));
+                     done(JSON.stringify({n: rows.length, rows, meta: j.meta || null}));
                   }).catch(e => done(JSON.stringify({error:String(e)})));
             """, page)
             r = json.loads(res)
             if r.get('error'):
-                print(f'    page {page}: {r["error"]} — stopping')
+                if page == 1:
+                    print(f'    page 1: {r["error"]} — no PrizePicks board this run')
+                else:
+                    print(f'    page {page}: {r["error"]} — keeping the {page - 1} page(s) already read')
                 break
             for row in r.get('rows', []):
                 stat = PP_STAT_KEYS.get(row.get('stat'))
@@ -974,7 +977,12 @@ def pull_pp_weekly():
                     continue
                 wkd.setdefault(row['player'], {})[stat] = val
                 n += 1
-            if r.get('n', 0) < 250:
+            # PP ignores per_page/page and returns the whole board in one
+            # response (meta.total_pages == 1, ~7k rows in-season). Trust its
+            # page count; the old "250+ rows means another page" rule asked for
+            # a page 2 that DataDome rate-limited into 'Failed to fetch'.
+            total_pages = int((r.get('meta') or {}).get('total_pages') or 1)
+            if page >= total_pages or r.get('n', 0) == 0:
                 break
             page += 1
             time.sleep(2)

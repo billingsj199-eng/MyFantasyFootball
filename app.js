@@ -11668,7 +11668,7 @@ function openPlayerCard(d, ctxMode) {
       ${(!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d) : ''}
 
       ${(d.s === 'K' || d.s === 'DST') && !_is2026 && ((d.career && d.career.length > 0) || _kdstHasHistory(d))
-        ? _kdstWeeklyProjSectionHtml(d) + _kickerSplitsSectionHtml(d) + _careerSectionHtml(d) + _logsSectionHtml(d)
+        ? _kdstWeeklyProjSectionHtml(d) + _buildWeeklyLinesSection(d) + _kickerSplitsSectionHtml(d) + _careerSectionHtml(d) + _logsSectionHtml(d)
         : (!_is2026 && d.career && d.career.length > 0) ? '' : d._retired ? `<div class="card-section">
         <div class="card-section-title">Career Summary</div>
         <div class="card-grid">
@@ -12053,7 +12053,7 @@ function openPlayerCard(d, ctxMode) {
       ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? buildWeeklyCardView(d) : ''}
       </div>
       <div class="card-prospect-view" id="cardLinesView" style="display:none">
-      ${buildLinesView(d)}
+      ${(d.s === 'K' || d.s === 'DST') ? '' : buildLinesView(d)}
       </div>
       ${d.s !== 'K' && d.s !== 'DST' && !d._isDevy && !_is2026 && d.career && d.career.length > 0 ? `
       <div class="card-prospect-view" id="cardCareerView" style="display:none">

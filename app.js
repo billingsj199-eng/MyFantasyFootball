@@ -9616,6 +9616,151 @@ function _renderDataFreshness() {
 window._renderDataFreshness = _renderDataFreshness;
 _renderDataFreshness();
 
+// === LINE MOVERS (page-top bar) =============================================
+// Biggest sportsbook line moves on the current week's prop board over the
+// last 3 days, from data/lines_history_2026.json (see _loadLinesHistory).
+// Each stat's move is averaged across the books that moved it and scored as
+// implied half-PPR points: rush/rec yds ÷10, pass yds ÷25, receptions ×0.5,
+// pass TD ×4, rush+rec TD line ×6, anytime-TD implied probability ×6, INT ×-2.
+// Chips reuse the ADP MOVERS styling; click opens the player card.
+(function _lineMovers() {
+  const bar = document.getElementById('lineMoversBar');
+  const items = document.getElementById('lineMoversItems');
+  const sub = document.getElementById('lineMoversSub');
+  if (!bar || !items || !sub) return;
+  const WINDOW_H = 72;
+  const STAT_PTS = { ry: v => v / 10, rcy: v => v / 10, py: v => v / 25, rec: v => v * 0.5,
+                     ptd: v => v * 4, rrtd: v => v * 6, int: v => -v * 2 };
+  const LBL = { ry: 'Rush', rcy: 'Rec yds', py: 'Pass', rec: 'Rec', ptd: 'Pass TD',
+                rrtd: 'R+R TD', atd: 'TD', int: 'INT' };
+  const prob = o => o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100);
+  const fmtV = (st, v) => st === 'atd' ? ((v > 0 ? '+' : '') + Math.round(v)) : String(+(+v).toFixed(1));
+  const esc = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  function baseline(arr, cutoff) {
+    let b = arr[0];
+    for (const p of arr) { if (Date.parse(p[0]) <= cutoff) b = p; else break; }
+    return b;
+  }
+
+  function compute(H, wk, board, dIdx) {
+    const cutoff = Date.now() - WINDOW_H * 3600e3;
+    const out = [];
+    Object.keys(board).forEach(name => {
+      const node = (H.weeks[String(wk)] || {})[name];
+      const rec = board[name];
+      const d = dIdx[_campNewsNorm(name)];
+      if (!node || !rec || !d || !/^(QB|RB|WR|TE)$/.test(d.s || '')) return;
+      const stats = new Set();
+      Object.keys(node).forEach(b => Object.keys(node[b] || {}).forEach(st => stats.add(st)));
+      let total = 0;
+      const parts = [];
+      stats.forEach(st => {
+        if (!STAT_PTS[st] && st !== 'atd') return;
+        let sum = 0, n = 0, best = null;
+        Object.keys(node).forEach(b => {
+          const arr = node[b] && node[b][st];
+          const cur = rec[b] && rec[b][st];
+          if (!Array.isArray(arr) || arr.length < 2 || typeof cur !== 'number') return;
+          if (Date.parse(arr[arr.length - 1][0]) <= cutoff) return; // nothing moved in the window
+          const from = baseline(arr, cutoff)[1];
+          if (typeof from !== 'number' || from === cur) return;
+          const dv = st === 'atd' ? (prob(cur) - prob(from)) * 6 : STAT_PTS[st](cur - from);
+          sum += dv; n++;
+          if (!best || Math.abs(dv) > Math.abs(best.dv)) best = { dv, book: b, from, to: cur };
+        });
+        if (!n) return;
+        const avg = sum / n;
+        total += avg;
+        parts.push({ st, dv: avg, book: best.book, from: best.from, to: best.to });
+      });
+      if (Math.abs(total) < 0.75) return;
+      parts.sort((a, b) => Math.abs(b.dv) - Math.abs(a.dv));
+      out.push({ name, pos: d.s, img: d._slImg || null, d, delta: total, parts: parts.slice(0, 2) });
+    });
+    return out.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta)).slice(0, 12);
+  }
+
+  function chip(m) {
+    const up = m.delta > 0;
+    const color = up ? '#22c55e' : '#ef4444';
+    const img = m.img
+      ? `<img class="amc-img" src="${esc(window._fixHeadshotUrl(m.img))}" alt="" loading="eager" onerror="this.style.display='none'">`
+      : `<span class="amc-img amc-initials">${esc(m.name.split(' ').map(w => w[0] || '').join('').slice(0, 2))}</span>`;
+    const detail = m.parts.map(p => p.book + ' ' + LBL[p.st] + ' ' + fmtV(p.st, p.from) + '→' + fmtV(p.st, p.to)).join(' · ');
+    return `<div class="adp-mover-chip" data-mover="${esc(m.name)}" style="border-left:2px solid ${color}">
+      ${img}
+      <span class="amc-txt">
+        <span class="amc-name">${esc(m.name)}</span>
+        <span class="amc-adp">${esc(m.pos)} · ${esc(detail)}</span>
+      </span>
+      <span class="amc-delta" style="color:${color}">
+        <span>${up ? '▲' : '▼'}${Math.abs(m.delta).toFixed(1)}</span>
+        <span class="amc-pct">pts</span>
+      </span>
+    </div>`;
+  }
+
+  let wired = false;
+  function render() {
+    const H = window._LINES_HIST;
+    const wp = window.BETTING_2026 && window.BETTING_2026.weeklyProps;
+    if (!H || !H.weeks || !wp) return;
+    const wks = Object.keys(wp).map(Number).filter(n => n > 0);
+    if (!wks.length) return;
+    const wk = Math.max(...wks);
+    const board = wp[String(wk)] || {};
+    const dIdx = {};
+    (window.D || []).forEach(d => { if (d && d.n) dIdx[_campNewsNorm(d.n)] = d; });
+    const top = compute(H, wk, board, dIdx);
+    if (!top.length) { bar.style.display = 'none'; return; }
+    items.innerHTML = top.map(chip).join('');
+    sub.textContent = 'Week ' + wk + ' props · last 3 days · implied half-PPR pts';
+    window._lineMoversShare = { top, wk };
+    const shareBtn = document.getElementById('lineMoversShareBtn');
+    if (shareBtn) shareBtn.style.display = '';
+    if (!wired) {
+      wired = true;
+      items.addEventListener('click', e => {
+        const el = e.target.closest('.adp-mover-chip');
+        if (!el) return;
+        const d = dIdx[_campNewsNorm(el.dataset.mover)];
+        if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
+      });
+    }
+    bar.style.display = '';
+    const inner = document.getElementById('lineTickerInner');
+    if (inner && inner.scrollWidth > 0) inner.style.animationDuration = Math.max(35, Math.round(inner.scrollWidth / 60)) + 's';
+  }
+  window._renderLineMovers = render;
+
+  const shareBtn = document.getElementById('lineMoversShareBtn');
+  if (shareBtn) shareBtn.addEventListener('click', () => {
+    const s = window._lineMoversShare;
+    if (!s || !s.top || !s.top.length) return;
+    const lines = s.top.map(m => (m.delta > 0 ? '▲' : '▼') + ' ' + m.name + ' (' + m.pos + ') '
+      + (m.delta > 0 ? '+' : '−') + Math.abs(m.delta).toFixed(1) + ' pts — '
+      + m.parts.map(p => p.book + ' ' + LBL[p.st] + ' ' + fmtV(p.st, p.from) + '→' + fmtV(p.st, p.to)).join(' · '));
+    const text = '🎯 Line Movers — Week ' + s.wk + ' props, last 3 days\n' + lines.join('\n')
+      + '\n\nhttps://www.myfantasyfootball.co/';
+    const copy = () => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => { if (typeof toast === 'function') toast('Line movers copied'); }).catch(() => {});
+      }
+    };
+    if (navigator.share) navigator.share({ text }).catch(() => copy()); else copy();
+  });
+
+  // Fetch the history at idle after load so the bar renders without a card
+  // open; the same promise feeds the card's LINES tab later.
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const go = () => { try { _loadLinesHistory().then(render); } catch (e) {} };
+      if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 4000 }); else go();
+    }, 3000);
+  });
+})();
+
 (function _adpMovers() {
   const bar = document.getElementById('adpMoversBar');
   const items = document.getElementById('adpMoversItems');

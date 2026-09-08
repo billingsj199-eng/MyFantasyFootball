@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-08d" as="script">
+<link rel="preload" href="app.js?v=2026-09-08e" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1085,6 +1085,27 @@ body.mff-embed .season-strip{display:none!important}
 </div>
 <div class="amb-scroll">
 <div class="live-ticker-inner" id="liveTickerInner"><span id="adpMoversItems"></span></div>
+</div>
+</div>
+<!-- LINE MOVERS bar (2026-09-08): same strip as ADP MOVERS, fed by
+     data/lines_history_2026.json — the biggest sportsbook line moves of the
+     current week's board over the last 3 days, scored as implied half-PPR
+     points (yards/10, pass yds/25, rec x0.5, pass TD x4, anytime-TD implied
+     probability x6). Hidden until the history fetch + weekly board exist.
+     Rendered by _lineMovers in app.js. -->
+<div class="live-ticker" id="lineMoversBar" style="display:none">
+<div class="amb-fixed">
+<span style="font-size:1.05rem;line-height:1">🎯</span>
+<div>
+<div class="amb-title">LINE MOVERS</div>
+<div class="amb-sub" id="lineMoversSub"></div>
+</div>
+<button class="amb-share" id="lineMoversShareBtn" title="Share these line moves (share sheet on mobile, copies text elsewhere)" aria-label="Share line movers" style="display:none">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+</button>
+</div>
+<div class="amb-scroll">
+<div class="live-ticker-inner" id="lineTickerInner"><span id="lineMoversItems"></span></div>
 </div>
 </div>
 <!-- page header element removed 2026-08-24 (declutter): the toolbar and
@@ -5574,7 +5595,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-08d"></script>
+<script defer src="app.js?v=2026-09-08e"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

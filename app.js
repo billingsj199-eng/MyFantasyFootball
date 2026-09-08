@@ -3931,6 +3931,7 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
     '</div>' +
     oppHtml +
     '<div class="tcv-row-stats">' + statsHtml + '</div>' +
+    '<div class="tcv-row-wm" aria-hidden="true">myfantasyfootball.co</div>' +
     (_tcvIsAdminViewer() ? '<button class="tcv-row-dl" type="button" title="Download this card as a PNG">⬇</button><div class="tcv-row-chk" title="Selected for PNG export">✓</div>' : '') +
     '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
       (d._slImg
@@ -4176,13 +4177,14 @@ async function _tcvRowCardCanvas(d, displayRank) {
     ctx.fillText(String(seasonBye), ox + ow / 2, Y + H / 2 + 6);
   }
 
-  // Site watermark: tiny translucent tag tucked in the band's bottom-right
-  // corner, under the pos pill / opp slot so it never covers a stat.
+  // Site watermark: centered in the strip under the stats box (mirrors the
+  // on-screen .tcv-row-wm) so a card posted anywhere still names the site.
   ctx.save();
-  ctx.font = '600 7.5px ' + SANS; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = 'rgba(255,255,255,.42)';
-  ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 2;
-  ctx.fillText('myfantasyfootball.co', L.W - 6, Y + H - 4);
+  ctx.font = '11px ' + BEBAS; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  try { ctx.letterSpacing = '1px'; } catch (_) {}
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 3;
+  ctx.fillText('MYFANTASYFOOTBALL.CO', L.STATS_X + L.STATS_W / 2, Y + H - 3);
   ctx.restore();
 
   return c;

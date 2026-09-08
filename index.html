@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-08q" as="script">
+<link rel="preload" href="app.js?v=2026-09-08r" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1607,8 +1607,10 @@ tr:hover .watch-star{opacity:.55}
 .tcv-key-color-note b{color:#22c55e;font-weight:600}
 .tcv-key-color-note i{color:#ef4444;font-style:normal;font-weight:600}
 #tierCardWrap{position:relative}
-.tcv-watermark{position:absolute;right:8px;bottom:4px;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1.4px;color:rgba(255,255,255,.28);pointer-events:none;user-select:none;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.6)}
-#tierCardWrap.tcv-fullscreen .tcv-watermark{position:fixed;right:16px;bottom:10px;font-size:14px;letter-spacing:1.8px;color:rgba(255,255,255,.38);text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.7);z-index:10000}
+.tcv-watermark{position:absolute;left:10px;bottom:4px;font-family:'Bebas Neue',Impact,sans-serif;font-size:18px;letter-spacing:2px;color:rgba(255,255,255,.6);pointer-events:none;user-select:none;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+#tierCardWrap.tcv-fullscreen .tcv-watermark{position:fixed;left:16px;bottom:12px;font-size:28px;letter-spacing:3px;color:rgba(255,255,255,.78);text-shadow:0 2px 4px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.8);z-index:10000}
+#tierCardWrap.tcv-fullscreen{padding-bottom:56px}
+.tcv-row-wm{position:absolute;left:272px;width:136px;bottom:1px;text-align:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;line-height:1;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.9);pointer-events:none;user-select:none}
 /* ROW CARDS layout — horizontal graphic cards (rank | headshot | name/pos | stats | matchup | team logo)
    on a team-color band. One card per line under each tier letter; sized to mirror the
    PNG export in _tcvRowCardCanvas (418×72 CSS px) so what you see is what downloads. */
@@ -5617,7 +5619,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-08q"></script>
+<script defer src="app.js?v=2026-09-08r"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

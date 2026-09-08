@@ -2608,7 +2608,7 @@ function _linesStatLine(d) {
   return {
     yds: hasYds ? py + ry + rcy : null,
     tds: hasTds ? ptd + rtd + rctd : null,
-    tip: 'O/U avg of ' + P.books.join('/') + (P.asOf ? ' (as of ' + P.asOf + ')' : '') + ': ' + parts.join(' · ')
+    tip: 'O/U avg of ' + (P.freshBooks || P.books).join('/') + (P.asOf ? ' (as of ' + P.asOf + ')' : '') + ': ' + parts.join(' · ')
   };
 }
 
@@ -2625,7 +2625,7 @@ function _bookPpgCellHtml(d) {
   if (!P) return '—';
   const v = P.ppg[rankingScoringFmt];
   const c = posFptsColor(v, d.s);
-  const tip = 'Blended ' + P.books.join('/') + ' season props scored as ' +
+  const tip = 'Blended ' + (P.freshBooks || P.books).join('/') + ' season props scored as ' +
     (_scoringLabelsRnk[rankingScoringFmt] || 'PPR') + ': ' + P.total[rankingScoringFmt] +
     ' pts ÷ ' + P.games + ' games' + (P.asOf ? ' (as of ' + P.asOf + ')' : '');
   return '<span style="color:' + c + ';font-weight:700;cursor:help" title="' +
@@ -2756,7 +2756,7 @@ function _seasonProjSectionHtml(d) {
   if (!book && !clay && !sl && !es && !cb) return '';
   const boxes =
     _seasonProjBoxHtml('Books', book ? book.ppg[rankingScoringFmt] : null, d.s,
-      book ? `Blended ${book.books.join('/')} season props scored as ${scLbl}: ${book.total[rankingScoringFmt]} pts ÷ ${book.games} games` + (book.asOf ? ` (as of ${book.asOf})` : '') : '') +
+      book ? `Blended ${(book.freshBooks || book.books).join('/')} season props scored as ${scLbl}: ${book.total[rankingScoringFmt]} pts ÷ ${book.games} games` + (book.asOf ? ` (as of ${book.asOf})` : '') : '') +
     _seasonProjBoxHtml('Clay', clay ? clay.ppg : null, d.s,
       clay ? `Mike Clay 2026 stat line scored as ${scLbl}: ${clay.total} pts ÷ ${clay.games} games` : '') +
     _seasonProjBoxHtml('Sleeper', sl ? sl.ppg : null, d.s,
@@ -6241,11 +6241,40 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const bookKeys = Object.keys(lines);
     if (!bookKeys.length) return null;
 
-    // Consensus per stat = average of the books that posted it.
+    // Stale lines: BETTING_2026.seasonSeen carries the last date each book's
+    // pull confirmed a stat line. A book that takes a market down keeps its
+    // old number in seasonProps (still informative on the card) but stops
+    // being confirmed; anything 7+ days older than the player's newest
+    // confirmation is greyed on the card and left out of the blend below.
+    const seenAll = (window.BETTING_2026.seasonSeen || {})[d.n] || null;
+    const stale = {};
+    if (seenAll) {
+      let newest = 0;
+      Object.keys(seenAll).forEach(b => Object.keys(seenAll[b] || {}).forEach(k => {
+        const t = Date.parse(seenAll[b][k] + 'T12:00:00');
+        if (t > newest) newest = t;
+      }));
+      const LIMIT = 7 * 86400000;
+      bookKeys.forEach(b => Object.keys(lines[b]).forEach(k => {
+        const dt = seenAll[b] && seenAll[b][k];
+        if (!dt) return;
+        if (newest - Date.parse(dt + 'T12:00:00') > LIMIT) (stale[b] = stale[b] || {})[k] = dt;
+      }));
+    }
+    const fresh = {};
+    bookKeys.forEach(b => {
+      const bag = {};
+      Object.keys(lines[b]).forEach(k => { if (!(stale[b] && stale[b][k])) bag[k] = lines[b][k]; });
+      if (Object.keys(bag).length) fresh[b] = bag;
+    });
+    const freshBooks = Object.keys(fresh).length ? Object.keys(fresh) : bookKeys.slice();
+    if (!Object.keys(fresh).length) bookKeys.forEach(b => { fresh[b] = lines[b]; });
+
+    // Consensus per stat = average of the books that currently post it.
     const STAT_KEYS = ['py', 'ptd', 'int', 'ry', 'rtd', 'ra', 'rec', 'rcy', 'rctd'];
     const consensus = {};
     STAT_KEYS.forEach(k => {
-      const vals = bookKeys.map(b => lines[b][k]).filter(v => typeof v === 'number');
+      const vals = freshBooks.map(b => fresh[b][k]).filter(v => typeof v === 'number');
       if (vals.length) consensus[k] = vals.reduce((s, v) => s + v, 0) / vals.length;
     });
 
@@ -6274,11 +6303,11 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const ppg = { ppr: ppgOf(total.ppr), half: ppgOf(total.half), std: ppgOf(total.std) };
 
     const perBook = {};
-    bookKeys.forEach(b => {
-      // Book's own lines override consensus; consensus fills stats this book
-      // doesn't post (e.g. DK lists passing yds but not TDs), so per-book
-      // projections stay comparable instead of cratering on partial coverage.
-      const merged = Object.assign({}, consensus, lines[b]);
+    freshBooks.forEach(b => {
+      // Book's own (fresh) lines override consensus; consensus fills stats
+      // this book doesn't post (e.g. DK lists passing yds but not TDs), so
+      // per-book projections stay comparable instead of cratering.
+      const merged = Object.assign({}, consensus, fresh[b]);
       const tot = { ppr: fpFrom(merged, 'ppr'), half: fpFrom(merged, 'half'), std: fpFrom(merged, 'std') };
       perBook[b] = { total: tot, ppg: { ppr: ppgOf(tot.ppr), half: ppgOf(tot.half), std: ppgOf(tot.std) } };
     });
@@ -6286,7 +6315,9 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     return {
       games: G,
       asOf: rec.asOf || null,
-      books: bookKeys,
+      books: bookKeys,          // every book with a line (display)
+      freshBooks: freshBooks,   // books feeding the blend
+      stale: stale,             // {book: {stat: lastSeenDate}} greyed on the card
       lines: lines,
       consensus: consensus,
       total: total,
@@ -10277,7 +10308,7 @@ function buildLinesView(d) {
   html += '<div class="card-section">';
   html += '<div class="card-section-title">Projected PPG '
     + '<span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· 2026 season props · blended '
-    + P.books.length + ' book' + (P.books.length > 1 ? 's' : '') + '</span></div>';
+    + (P.freshBooks || P.books).length + ' book' + ((P.freshBooks || P.books).length > 1 ? 's' : '') + '</span></div>';
   html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">';
   html += '<div class="card-rank-box" style="outline:1px solid var(--accent)"><div class="lbl">PPR</div><div class="num accent">' + fmt1(P.ppg.ppr) + '</div></div>';
   html += '<div class="card-rank-box"><div class="lbl">Half PPR</div><div class="num green">' + fmt1(P.ppg.half) + '</div></div>';
@@ -10328,20 +10359,33 @@ function buildLinesView(d) {
     if (!P.books.some(b => typeof P.lines[b][k] === 'number')) return;
     anyRow = true;
     html += '<tr><td style="text-align:left;font-weight:600">' + label + '</td>';
-    P.books.forEach(b => { html += '<td>' + _lmCell('season', d.n, b, k, P.lines[b][k], fmtFn) + '</td>'; });
+    P.books.forEach(b => {
+      const cell = _lmCell('season', d.n, b, k, P.lines[b][k], fmtFn);
+      const st = P.stale && P.stale[b] && P.stale[b][k];
+      html += st
+        ? '<td style="color:var(--text2);opacity:.55" title="' + BOOK_LBL[b] + ' has not listed this line since ' + st + ' — excluded from Avg and the projection">' + cell
+          + '<div style="font-size:.5rem;line-height:1">' + st.slice(5).replace('-', '/') + '</div></td>'
+        : '<td>' + cell + '</td>';
+    });
     html += '<td style="font-weight:700;color:var(--accent)">' + fmtFn(P.consensus[k]) + '</td></tr>';
   });
   html += '</tbody></table>';
   html += _lmMovesHtml('season', d.n, P.books, Object.fromEntries(ROWS.map(r => [r[0], r[1]])));
+  const staleBooks = Object.keys(P.stale || {});
+  if (staleBooks.length) {
+    html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">Greyed lines (' + staleBooks.map(b => BOOK_LBL[b]).join(', ')
+      + '): not listed by that book for 7+ days — kept for reference, excluded from Avg and the projection.</div>';
+  }
   if (P.asOf) html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">Lines as of ' + P.asOf + '.</div>';
   html += '</div>';
 
   // --- Per-book projection breakdown (PPR PPG) ---
-  if (P.books.length > 1) {
+  const byBook = P.freshBooks || P.books;
+  if (byBook.length > 1) {
     html += '<div class="card-section"><div class="card-section-title">By Book '
       + '<span style="font-size:.55rem;color:var(--text2);font-weight:400">→ PPR PPG</span></div>';
-    html += '<div class="card-rank-row" style="grid-template-columns:repeat(' + P.books.length + ',1fr)">';
-    P.books.forEach(b => {
+    html += '<div class="card-rank-row" style="grid-template-columns:repeat(' + byBook.length + ',1fr)">';
+    byBook.forEach(b => {
       html += '<div class="card-rank-box"><div class="lbl">' + BOOK_LBL[b] + '</div><div class="num accent">' + fmt1(P.perBook[b].ppg.ppr) + '</div></div>';
     });
     html += '</div></div>';

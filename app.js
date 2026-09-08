@@ -9981,8 +9981,18 @@ function _buildWeeklyLinesSection(d) {
     html += '<tr><td style="text-align:left;font-weight:600">' + label + '</td>';
     books.forEach(b => { html += '<td>' + fmtFn(rec[b][k]) + '</td>'; });
     if (books.length > 1) {
-      html += '<td style="font-weight:700;color:var(--accent)">'
-        + fmtFn(vals.reduce((a, v) => a + v, 0) / vals.length) + '</td>';
+      // American odds can't be averaged directly (+115/+110/-105/+121 would
+      // read +60): average the implied probabilities and convert back, the
+      // same math _weeklyPropLinesFor uses for the projection.
+      let avg;
+      if (k === 'atd') {
+        const ps = vals.map(o => o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100));
+        const pr = ps.reduce((a, b) => a + b, 0) / ps.length;
+        avg = Math.round(pr >= 0.5 ? -(pr * 100) / (1 - pr) : ((1 - pr) * 100) / pr);
+      } else {
+        avg = vals.reduce((a, v) => a + v, 0) / vals.length;
+      }
+      html += '<td style="font-weight:700;color:var(--accent)">' + fmtFn(avg) + '</td>';
     }
     html += '</tr>';
   });

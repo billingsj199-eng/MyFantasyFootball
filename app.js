@@ -5680,7 +5680,7 @@ document.getElementById('helpOverlay').addEventListener('click', e => {
 // freely in inputs / textareas / contenteditable.
 (function _initKeyboardShortcuts() {
   const NAV_KEYS = {
-    r: 'rankings', c: 'compare', g: 'games', t: 'trade', m: 'mockdraft',
+    r: 'rankings', c: 'compare', s: 'startsit', g: 'games', t: 'trade', m: 'mockdraft',
     p: 'prospect', y: 'myteams', a: 'account', v: 'trivia', b: 'backtest'
   };
   let pendingG = false;
@@ -6679,6 +6679,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       statusEl.style.color = window._weeklyPublishedWeek != null ? '#22c55e' : 'var(--text2)';
     }
     if (currentMode === 'weekly' && typeof render === 'function') render();
+    if (typeof window._sstRefresh === 'function') window._sstRefresh();
   }
 
   function _weeklyLoadActiveWeek() {
@@ -13417,8 +13418,8 @@ function renderSearchChips() {
 render();
 
 // === Page Navigation ===
-const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest', draftstrategy: 'pageDraftStrategy', research: 'pageResearch' };
-const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest', draftstrategy: 'authAnchorDraftStrategy', research: 'authAnchorResearch' };
+const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', startsit: 'pageStartSit', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest', draftstrategy: 'pageDraftStrategy', research: 'pageResearch' };
+const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', startsit: 'authAnchorStartSit', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest', draftstrategy: 'authAnchorDraftStrategy', research: 'authAnchorResearch' };
 function switchPage(page) {
   // Admin-only pages — silently redirect non-admins to home
   const ADMIN_ONLY_PAGES = ['backtest', 'trivia', 'research'];
@@ -13503,6 +13504,8 @@ function switchPage(page) {
   if (page === 'research' && typeof window._renderResearch === 'function') window._renderResearch();
   // Render compare grid when navigating to compare page
   if (page === 'compare') renderCompareGrid();
+  // Start/Sit: render on every open — week / lines / sim data may have landed since.
+  if (page === 'startsit' && typeof window._sstRender === 'function') window._sstRender();
   // Render backtest when navigating to backtest page
   if (page === 'backtest' && typeof window._renderBacktest === 'function') {
     window._renderBacktest();
@@ -21414,6 +21417,353 @@ sSE.addEventListener('focus',()=>{sDropOpen=true;sRD();});
 document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target!==sSE){sDropOpen=false;sDE.style.display='none';}});
 })();
 
+
+// === START / SIT PAGE ======================================================
+// One-mode sibling of the Compare page for the weekly lineup call: add the
+// players you're deciding between and every card shows the SAME five things
+// side by side — this week's projection (the WEEKLY rankings PROJ number,
+// via _weeklyAdjustPpg), the matchup (opp / spread / team total / O/U from
+// BETTING_2026.gameTotals + NFL_SCHEDULE_2026), and the week's sportsbook
+// prop lines (BETTING_2026.weeklyProps, averaged across DK/FD/MGM/UD/PP by
+// _weeklyPropLinesFor). The top-projected card gets the START verdict;
+// cards within 1.0 PPG of it are TOSS-UPs; the rest SIT with the gap shown.
+// Best value per row is highlighted green across the cards, the same way
+// the Compare page's bestOf() does it. Selection persists in localStorage
+// (mff_startsit) so a refresh keeps the lineup question open.
+(function(){
+  const gridEl = document.getElementById('sstGrid');
+  if (!gridEl) return;
+  const sE = document.getElementById('sstSearch'), dE = document.getElementById('sstDropdown'),
+        fE = document.getElementById('sstPosFilter'), chipsE = document.getElementById('sstChips'),
+        fmtE = document.getElementById('sstFmt'), wkE = document.getElementById('sstWeekLbl'),
+        clearE = document.getElementById('sstClear');
+  const POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+  const PC = {QB:'#e74c3c',RB:'#22c55e',WR:'#3b82f6',TE:'#a855f7',K:'#f59e0b',DST:'#6b7280'};
+  const PB = {QB:'rgba(231,76,60,.12)',RB:'rgba(34,197,94,.12)',WR:'rgba(59,130,246,.12)',TE:'rgba(168,85,247,.12)',K:'rgba(245,158,11,.12)',DST:'rgba(107,114,128,.12)'};
+  let sPos = 'ALL', dropOpen = false;
+  let fmt = 'ppr';           // page-local scoring format (does not touch the rankings table)
+  let names = [];            // selected player names, in add order
+  try { const a = JSON.parse(localStorage.getItem('mff_startsit') || '[]'); if (Array.isArray(a)) names = a.filter(n => typeof n === 'string').slice(0, 8); } catch (_) {}
+  try { const f = localStorage.getItem('mff_startsit_fmt'); if (f === 'ppr' || f === 'half' || f === 'std') fmt = f; } catch (_) {}
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const fmt1 = v => (typeof v === 'number' && isFinite(v)) ? (Math.round(v * 10) / 10).toFixed(1) : '—';
+  const fmt0 = v => (typeof v === 'number' && isFinite(v)) ? String(Math.round(v)) : '—';
+  const fmtOdds = v => (typeof v === 'number' && isFinite(v)) ? ((v > 0 ? '+' : '') + Math.round(v)) : '—';
+  const fmtSpread = s => s == null ? '—' : s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s));
+  const oddsProb = o => o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100);
+  const week = () => window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+  const save = () => { try { localStorage.setItem('mff_startsit', JSON.stringify(names)); localStorage.setItem('mff_startsit_fmt', fmt); } catch (_) {} };
+  const lookup = n => D.find(d => d.n === n && d.s && d.t);
+
+  // Searchable pool: current-season rostered players only (no retired /
+  // removed / devy rows) — this is a lineup tool, not the history explorer.
+  function pool() {
+    return D.filter(d => d.n && d.s && d.t && POS.indexOf(d.s) >= 0 && !d._retired && !d.rm && !d.devy);
+  }
+
+  // Pos filter buttons (same look as the Compare search filter).
+  ['ALL'].concat(POS).forEach(p => {
+    const b = document.createElement('button'); b.className = 'lg-pos-btn' + (p === sPos ? ' active' : ''); b.textContent = p;
+    if (p === 'ALL') b.style.cssText = 'border-color:var(--accent);background:var(--accent);color:#0a0e17';
+    b.onclick = () => {
+      sPos = p;
+      fE.querySelectorAll('.lg-pos-btn').forEach(x => {
+        const q = x.textContent, a = q === sPos; x.className = 'lg-pos-btn' + (a ? ' active' : '');
+        if (q === 'ALL') x.style.cssText = a ? 'border-color:var(--accent);background:var(--accent);color:#0a0e17' : '';
+        else x.style.cssText = a ? 'border-color:' + PC[q] + ';background:' + PC[q] + ';color:#fff' : '';
+      });
+      renderDrop();
+    };
+    fE.appendChild(b);
+  });
+
+  function renderDrop() {
+    const q = sE.value.toLowerCase().trim();
+    let list = pool();
+    if (sPos !== 'ALL') list = list.filter(d => d.s === sPos);
+    if (q) list = list.filter(d => d.n.toLowerCase().indexOf(q) >= 0 || (d.s === 'DST' && String(d.t).toLowerCase().indexOf(q) >= 0));
+    // Prefix matches first, then board order (D is already rank-ordered).
+    if (q) list.sort((a, b) => (b.n.toLowerCase().indexOf(q) === 0 ? 1 : 0) - (a.n.toLowerCase().indexOf(q) === 0 ? 1 : 0));
+    list = list.slice(0, 25);
+    if (!list.length || !dropOpen) { dE.style.display = 'none'; return; }
+    dE.style.display = 'block';
+    const have = new Set(names);
+    dE.innerHTML = list.map(d => {
+      const used = have.has(d.n);
+      const opp = (typeof window._weeklyOppFor === 'function') ? window._weeklyOppFor(d.t) : null;
+      return '<div class="lg-drop-item' + (used ? ' used' : '') + '" data-n="' + esc(d.n) + '">'
+        + '<span class="lg-badge" style="background:' + PB[d.s] + ';color:' + PC[d.s] + '">' + d.s + '</span>'
+        + '<span style="font-weight:600">' + esc(d.n) + '</span>'
+        + '<span style="color:var(--text2);font-size:.66rem;margin-left:auto">' + esc(teamAbbr(d.t)) + (opp ? ' · ' + esc(opp) : '') + '</span></div>';
+    }).join('');
+    dE.querySelectorAll('.lg-drop-item:not(.used)').forEach(el => {
+      el.onclick = () => { add(el.dataset.n); sE.value = ''; dropOpen = false; dE.style.display = 'none'; };
+    });
+  }
+  function add(n) {
+    if (!n || names.indexOf(n) >= 0) return;
+    if (names.length >= 8) { if (typeof toast === 'function') toast('Start/Sit holds up to 8 players — remove one first'); return; }
+    names.push(n); save(); render();
+  }
+  function remove(n) { names = names.filter(x => x !== n); save(); render(); }
+  window._sstAdd = add;
+
+  sE.addEventListener('input', () => { dropOpen = true; renderDrop(); });
+  sE.addEventListener('focus', () => { dropOpen = true; renderDrop(); });
+  sE.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { const first = dE.querySelector('.lg-drop-item:not(.used)'); if (first && dE.style.display !== 'none') { first.onclick(); e.preventDefault(); } }
+    if (e.key === 'Escape') { dropOpen = false; dE.style.display = 'none'; }
+  });
+  document.addEventListener('mousedown', e => { if (!dE.contains(e.target) && e.target !== sE) { dropOpen = false; dE.style.display = 'none'; } });
+  if (clearE) clearE.onclick = () => { if (!names.length) return; names = []; save(); render(); };
+  if (fmtE) {
+    fmtE.querySelectorAll('button[data-fmt]').forEach(b => {
+      b.classList.toggle('active', b.dataset.fmt === fmt);
+      b.onclick = () => { fmt = b.dataset.fmt; fmtE.querySelectorAll('button[data-fmt]').forEach(x => x.classList.toggle('active', x.dataset.fmt === fmt)); save(); render(); };
+    });
+  }
+
+  function renderChips() {
+    if (!names.length) { chipsE.innerHTML = ''; return; }
+    chipsE.innerHTML = names.map(n => {
+      const d = lookup(n); const s = d ? d.s : '?';
+      return '<div class="lg-chip" style="background:' + (PB[s] || 'transparent') + ';border:1px solid ' + (PC[s] || 'var(--border)') + '33"><span style="font-size:.6rem;font-weight:700;color:' + (PC[s] || 'var(--text2)') + '">' + s + '</span><span style="font-weight:600;font-size:.78rem">' + esc(n) + '</span><button class="lg-chip-x" data-n="' + esc(n) + '">&times;</button></div>';
+    }).join('');
+    chipsE.querySelectorAll('.lg-chip-x').forEach(b => { b.onclick = () => remove(b.dataset.n); });
+  }
+
+  // Opponent logo id: schedule gives the abbr, TEAM_LOGO_IDS is keyed by full
+  // name — reverse TEAM_ABBR_MAP once (same cache the tier cards use).
+  function abbrLogoId(abbr) {
+    if (!window._tcvAbbrToLogoId && typeof TEAM_ABBR_MAP !== 'undefined' && typeof TEAM_LOGO_IDS !== 'undefined') {
+      window._tcvAbbrToLogoId = {};
+      Object.keys(TEAM_ABBR_MAP).forEach(full => { if (TEAM_LOGO_IDS[full]) window._tcvAbbrToLogoId[TEAM_ABBR_MAP[full]] = TEAM_LOGO_IDS[full]; });
+    }
+    return window._tcvAbbrToLogoId ? window._tcvAbbrToLogoId[abbr] : null;
+  }
+
+  // Per-position prop rows: [key, label, formatter, higherIsBetter]
+  const ROWS = {
+    QB:  [['py', 'Pass Yds', fmt0, true], ['ptd', 'Pass TD', fmt1, true], ['int', 'INT', fmt1, false], ['ry', 'Rush Yds', fmt0, true], ['atd', 'Anytime TD', fmtOdds, true]],
+    RB:  [['ry', 'Rush Yds', fmt0, true], ['rec', 'Rec', fmt1, true], ['rcy', 'Rec Yds', fmt0, true], ['rrtd', 'Rush+Rec TD', fmt1, true], ['atd', 'Anytime TD', fmtOdds, true]],
+    WR:  [['rec', 'Rec', fmt1, true], ['rcy', 'Rec Yds', fmt0, true], ['ry', 'Rush Yds', fmt0, true], ['rrtd', 'Rush+Rec TD', fmt1, true], ['atd', 'Anytime TD', fmtOdds, true]],
+    TE:  [['rec', 'Rec', fmt1, true], ['rcy', 'Rec Yds', fmt0, true], ['rrtd', 'Rush+Rec TD', fmt1, true], ['atd', 'Anytime TD', fmtOdds, true]],
+    K:   [['kpts', 'Kicking Pts', fmt1, true], ['fgm', 'FG Made', fmt1, true]],
+    DST: []
+  };
+  const BOOK_LBL = { DK: 'DraftKings', FD: 'FanDuel', MGM: 'BetMGM', UD: 'Underdog', PP: 'PrizePicks' };
+
+  // Everything one card needs, computed under the page's scoring format.
+  function build(d) {
+    const wk = week();
+    const o = { d: d, wk: wk, proj: null, src: 'base', base: null, bye: false, out: false,
+                opp: null, home: null, spread: null, tt: null, oppTT: null, ou: null, diff: null, sos: null,
+                lines: null, raw: null, books: [], asOf: null };
+    const abbr = teamAbbr(d.t);
+    const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+    const entry = sched ? sched[wk] : null;
+    if (entry && entry.bye) o.bye = true;
+    else if (entry && entry.opp) { o.opp = entry.opp; o.home = !!entry.home; }
+    const prev = rankingScoringFmt;
+    rankingScoringFmt = fmt;
+    try {
+      o.base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+      const out = {};
+      o.proj = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, o.base, out) : o.base;
+      o.src = out.src || 'base';
+    } catch (e) { console.warn('[Start/Sit] proj', e); }
+    finally { rankingScoringFmt = prev; }
+    if (o.src === 'out') o.out = true;
+    if (typeof window._weeklySpreadFor === 'function') o.spread = window._weeklySpreadFor(d.t);
+    if (typeof window._weeklyTeamTotalFor === 'function') o.tt = window._weeklyTeamTotalFor(d.t);
+    if (typeof window._weeklyOppTeamTotalFor === 'function') o.oppTT = window._weeklyOppTeamTotalFor(d.t);
+    if (o.tt != null && o.oppTT != null) o.ou = Math.round((o.tt + o.oppTT) * 10) / 10;
+    if (typeof window._weeklyOppDifficulty === 'function') o.diff = window._weeklyOppDifficulty(d.t, d.s);
+    try { if (typeof window._mtGetPlayoffSosWeekly === 'function') o.sos = window._mtGetPlayoffSosWeekly(d.t, d.s, wk); } catch (_) {}
+    if (typeof _weeklyPropLinesFor === 'function') {
+      const W = _weeklyPropLinesFor(d.n);
+      if (W) { o.lines = W.stats; o.books = W.books; o.asOf = W.asOf; }
+    }
+    const wp = window.BETTING_2026 && window.BETTING_2026.weeklyProps;
+    const board = wp && (wp[wk] || wp[String(wk)]);
+    if (board) {
+      o.raw = board[d.n] || null;
+      if (!o.raw && typeof _PROSPECT_ALIASES !== 'undefined' && _PROSPECT_ALIASES && _PROSPECT_ALIASES[d.n]) o.raw = board[_PROSPECT_ALIASES[d.n]] || null;
+    }
+    return o;
+  }
+
+  const SRC = {
+    sim: 'Sim Lab', props: 'Sportsbook props', consensus: 'Sleeper consensus', heuristic: 'Season-based estimate',
+    dst: 'D/ST model', kicker: 'Kicker model', out: 'Ruled out', bye: 'Bye week', base: 'Season projection'
+  };
+
+  function render() {
+    renderChips();
+    const wk = week();
+    if (wkE) wkE.textContent = 'WEEK ' + wk;
+    const cards = names.map(lookup).filter(Boolean).map(build);
+    if (!cards.length) {
+      gridEl.innerHTML = '<div class="sst-empty">'
+        + '<div style="font-size:2rem;margin-bottom:8px;opacity:.25">&#9878;</div>'
+        + '<p>Search above to add the players you\'re deciding between.<br>'
+        + '<span style="font-size:.74rem">Each card shows the Week ' + wk + ' projection, matchup, spread, Vegas team total and this week\'s sportsbook lines — best number in each row lights up green.</span></p>'
+        + '</div>';
+      return;
+    }
+    // Verdicts: rank by projection WITHIN a lineup-slot family (QB / K / DST
+    // each alone, RB+WR+TE together as FLEX) so a QB is never "SIT" against a
+    // WR. Bye / out / no-proj cards sink to the bottom of their family; a
+    // family with one card gets no verdict.
+    const fam = c => (c.d.s === 'RB' || c.d.s === 'WR' || c.d.s === 'TE') ? 'FLEX' : c.d.s;
+    const groups = {};
+    cards.forEach(c => { (groups[fam(c)] = groups[fam(c)] || []).push(c); });
+    Object.keys(groups).forEach(f => {
+      const g = groups[f];
+      const ranked = g.slice().sort((a, b) => ((b.proj == null ? -1 : b.proj) - (a.proj == null ? -1 : a.proj)));
+      const top = ranked[0].proj;
+      g.forEach(c => {
+        c.rank = ranked.indexOf(c) + 1; c.famN = g.length; c.fam = f;
+        if (g.length < 2) c.verdict = null;
+        else if (c.bye) c.verdict = { cls: 'sit', lbl: 'BYE' };
+        else if (c.out) c.verdict = { cls: 'sit', lbl: 'OUT' };
+        else if (c.proj == null) c.verdict = { cls: 'na', lbl: 'NO PROJ' };
+        else if (c.rank === 1) c.verdict = { cls: 'start', lbl: 'START' };
+        else if (top != null && top - c.proj < 1.0) c.verdict = { cls: 'toss', lbl: 'TOSS-UP', sub: '−' + fmt1(top - c.proj) };
+        else c.verdict = { cls: 'sit', lbl: 'SIT', sub: '−' + fmt1(top - c.proj) };
+      });
+    });
+    // Best-in-row markers (green) — only when 2+ cards carry the number.
+    const best = {};
+    const mark = (key, vals, higher) => {
+      const v = vals.filter(x => typeof x === 'number' && isFinite(x));
+      if (v.length < 2) return;
+      best[key] = higher ? Math.max.apply(null, v) : Math.min.apply(null, v);
+    };
+    mark('proj', cards.map(c => c.proj), true);
+    mark('tt', cards.filter(c => c.d.s !== 'DST').map(c => c.tt), true);
+    mark('oppTT', cards.filter(c => c.d.s === 'DST').map(c => c.oppTT), false);
+    mark('spread', cards.map(c => c.spread), false);
+    const lineKeys = {};
+    cards.forEach(c => { if (c.lines) Object.keys(c.lines).forEach(k => { lineKeys[k] = true; }); });
+    Object.keys(lineKeys).forEach(k => {
+      const vals = cards.map(c => c.lines && c.lines[k]);
+      if (k === 'atd') mark('l:atd', vals.map(v => typeof v === 'number' ? oddsProb(v) : null), true);
+      else mark('l:' + k, vals, k !== 'int');
+    });
+    const isBest = (key, v) => best[key] != null && typeof v === 'number' && Math.abs((key === 'l:atd' ? oddsProb(v) : v) - best[key]) < 1e-9;
+
+    gridEl.innerHTML = cards.map(c => cardHtml(c, isBest)).join('');
+    gridEl.querySelectorAll('.sst-x').forEach(b => { b.onclick = e => { e.stopPropagation(); remove(b.dataset.n); }; });
+    gridEl.querySelectorAll('.sst-open').forEach(el => {
+      el.onclick = () => { const d = lookup(el.dataset.n); if (d && typeof openPlayerCard === 'function') openPlayerCard(d, 'weekly'); };
+    });
+  }
+
+  function cardHtml(c, isBest) {
+    const d = c.d, wk = c.wk, isDst = d.s === 'DST';
+    const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
+    const img = (d._slImg && !isDst)
+      ? '<img src="' + esc(window._fixHeadshotUrl(d._slImg)) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+      : (logoId ? '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy" style="object-fit:contain!important;padding:8px;background:var(--elev-1)">' : '');
+    const box = (lbl, val, cls, tip) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '">' + val + '</div></div>';
+    const bestCls = k => k ? 'sst-best' : '';
+
+    let html = '<div class="compare-col sst-card' + (c.verdict ? ' sst-v-' + c.verdict.cls : '') + '">';
+    html += '<div class="card-header" style="position:relative">';
+    html += '<button class="sst-x remove-from-compare" data-n="' + esc(d.n) + '" title="Remove">&times;</button>';
+    html += '<div class="card-hero">' + img + '<div>';
+    html += '<div class="card-name sst-open" data-n="' + esc(d.n) + '" title="Open player card" style="cursor:pointer">' + esc(d.n) + '</div>';
+    html += '<div class="card-meta"><span class="pos-badge ' + d.s + '">' + d.s + '</span><span class="card-team">' + esc(d.t) + '</span>'
+      + (d.myRank ? '<span class="card-team">#' + d.myRank + ' ovr</span>' : '')
+      + ((typeof _buildInjuryBadge === 'function') ? _buildInjuryBadge(d) : '') + '</div>';
+    html += '</div></div></div>';
+
+    html += '<div class="card-body">';
+    // Verdict strip
+    if (c.verdict) {
+      html += '<div class="sst-verdict sst-v-' + c.verdict.cls + '"><span class="sst-verdict-lbl">' + c.verdict.lbl + '</span>'
+        + (c.verdict.sub ? '<span class="sst-verdict-sub">' + c.verdict.sub + ' vs top</span>' : '')
+        + '<span class="sst-verdict-rank" title="Ranked against the other ' + (c.fam === 'FLEX' ? 'RB / WR / TE' : c.fam) + ' cards">#' + c.rank + ' of ' + c.famN + ' ' + esc(c.fam) + '</span></div>';
+    }
+    // Projection
+    const projColor = (c.proj != null && typeof posFptsColor === 'function') ? posFptsColor(c.proj, d.s) : null;
+    html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projection <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
+    html += '<div class="sst-proj-row"><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
+      + (c.proj != null ? fmt1(c.proj) : '—') + '</div>';
+    html += '<div class="sst-proj-side"><div><span class="sst-dim">Season /gm</span> <b>' + fmt1(c.base) + '</b></div>'
+      + '<div><span class="sst-dim">Source</span> <span class="sst-src">' + esc(SRC[c.src] || SRC.base) + '</span></div></div></div></div>';
+
+    // Matchup
+    html += '<div class="card-section"><div class="card-section-title">Matchup</div>';
+    if (c.bye) {
+      html += '<div class="sst-bye"><b style="color:var(--accent)">BYE WEEK</b> — no game in Week ' + wk + '.</div>';
+    } else if (!c.opp) {
+      html += '<div class="sst-bye">No Week ' + wk + ' schedule data.</div>';
+    } else {
+      const oppLogo = abbrLogoId(c.opp);
+      const diffColor = c.diff === 'hard' ? '#ef4444' : c.diff === 'easy' ? '#22c55e' : c.diff === 'medium' ? '#facc15' : null;
+      const oppHtml = '<span class="sst-opp' + (diffColor ? '" style="color:' + diffColor : '') + '">' + (c.home ? 'vs ' : '@ ')
+        + (oppLogo ? '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + oppLogo + '.png" alt="" loading="lazy">' : '') + esc(c.opp) + '</span>';
+      html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
+      html += box('OPP', oppHtml, '', c.diff ? (c.diff === 'hard' ? 'Tough matchup' : c.diff === 'easy' ? 'Soft matchup' : 'Average matchup') + ' (opponent Clay ' + (isDst ? 'offense' : 'defense') + ' rank)' : null);
+      html += box('SPREAD', '<span class="' + bestCls(isBest('spread', c.spread)) + (c.spread != null && c.spread < 0 ? ' green' : '') + '">' + fmtSpread(c.spread) + '</span>', '', 'This team\'s spread (negative = favored)');
+      html += isDst
+        ? box('OPP TOTAL', '<span class="' + bestCls(isBest('oppTT', c.oppTT)) + '">' + fmt1(c.oppTT) + '</span>', '', 'Points the opponent is priced to score — lower = better D/ST spot')
+        : box('TEAM TOTAL', '<span class="' + bestCls(isBest('tt', c.tt)) + '">' + fmt1(c.tt) + '</span>', '', 'Implied team points: (game total − spread) / 2');
+      html += box('O/U', fmt1(c.ou), '', 'Game total');
+      html += '</div>';
+      if (c.sos && c.sos.label) {
+        html += '<div class="sst-sos">Wk ' + wk + ' matchup <b style="color:' + esc(c.sos.color || 'var(--text)') + '">' + esc(c.sos.label) + '</b>'
+          + (c.sos.rank ? ' <span class="sst-dim">#' + c.sos.rank + '/' + c.sos.n + '</span>' : '')
+          + (!isDst && typeof c.sos.oppg === 'number' ? ' <span class="sst-dim">· opp allows ' + fmt1(c.sos.oppg) + ' PA/gm</span>' : '')
+          + (isDst && c.sos.clayOffRk ? ' <span class="sst-dim">· opp offense Clay #' + c.sos.clayOffRk + '</span>' : '')
+          + (!isDst && c.sos.posUnits ? ' <span class="sst-dim">· ' + esc(c.sos.posUnits) + '</span>' : '')
+          + '</div>';
+      }
+    }
+    html += '</div>';
+
+    // Sportsbook lines
+    const rows = ROWS[d.s] || [];
+    if (rows.length) {
+      html += '<div class="card-section"><div class="card-section-title">Week ' + wk + ' Lines'
+        + (c.books.length ? ' <span class="sst-dim">· ' + c.books.join(' / ') + '</span>' : '') + '</div>';
+      const posted = c.lines ? rows.filter(r => typeof c.lines[r[0]] === 'number') : [];
+      if (!posted.length) {
+        html += '<div class="sst-bye">No Week ' + wk + ' prop lines posted' + (c.bye ? '' : ' yet') + '.</div>';
+      } else {
+        html += '<table class="career-table sst-lines"><tbody>';
+        posted.forEach(r => {
+          const k = r[0], v = c.lines[k];
+          const per = [], short = [];
+          if (c.raw) ['DK', 'FD', 'MGM', 'UD', 'PP'].forEach(b => {
+            if (c.raw[b] && typeof c.raw[b][k] === 'number') { per.push((BOOK_LBL[b] || b) + ' ' + r[2](c.raw[b][k])); short.push(b); }
+          });
+          const tip = per.length ? per.join(' · ') : '';
+          html += '<tr><td class="sst-line-lbl">' + r[1] + (k === 'atd' ? ' <span class="sst-dim">odds</span>' : '') + '</td>'
+            + '<td class="sst-line-val' + (isBest('l:' + k, v) ? ' sst-best' : '') + '"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '>' + r[2](v) + '</td>'
+            + '<td class="sst-line-books">' + short.join(' ') + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        html += '<div class="sst-foot">O/U averaged across the books posting each stat — hover for the per-book lines. Anytime TD = american odds (more negative = likelier).'
+          + (c.asOf ? ' As of ' + esc(c.asOf) + '.' : '') + '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div></div>';
+    return html;
+  }
+
+  window._sstRender = render;
+  // Re-render if the page is already open when the Firestore week listener
+  // (_weeklyApplySettings) or a deferred data bundle lands.
+  window._sstRefresh = function() {
+    const pg = document.getElementById('pageStartSit');
+    if (pg && pg.classList.contains('active') && names.length) render();
+  };
+  window.addEventListener('load', () => setTimeout(window._sstRefresh, 800));
+})();
 
 // === PLAYER BIO HELPERS ===
 window.fmtHeight = fmtHeight;

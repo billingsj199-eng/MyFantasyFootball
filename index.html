@@ -61,12 +61,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-09-08a" as="style">
+<link rel="preload" href="styles/main.css?v=2026-09-08l" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-08k" as="script">
+<link rel="preload" href="app.js?v=2026-09-08m" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -76,7 +76,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-09-07" as="script">
 <link rel="preload" href="data/d.js?v=2026-09-08" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-09-08a">
+<link rel="stylesheet" href="styles/main.css?v=2026-09-08l">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -386,6 +386,10 @@ Continue with Google
 <button class="nav-btn" data-page="compare" title="Compare" aria-label="Compare Players">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
 <span class="nav-label">Compare</span>
+</button>
+<button class="nav-btn" data-page="startsit" title="Start/Sit" aria-label="Start / Sit">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h7l-3 10H3z"/><path d="M14 7h7v10h-7z"/><path d="M5.5 12l1.5 1.5 3-3"/><path d="M16 10l3 4M19 10l-3 4"/></svg>
+<span class="nav-label">Start/Sit</span>
 </button>
 <button class="nav-btn" data-page="games" title="Games" aria-label="Games">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
@@ -1740,6 +1744,29 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="lg-chips" id="lgChips"></div>
 <div id="compareSummary"></div>
 <div class="compare-grid" id="compareGrid"></div>
+</div>
+</div>
+
+<!-- START / SIT PAGE — one-mode sibling of Compare for the weekly lineup call (JS: app.js "START / SIT PAGE") -->
+<div class="page page-startsit" id="pageStartSit">
+<div class="auth-anchor" id="authAnchorStartSit"></div>
+<div style="max-width:1600px;margin:0 auto;width:100%;padding:1.5rem;flex:1;overflow-y:auto">
+<div class="compare-header" style="margin-bottom:.35rem;flex-wrap:wrap;gap:.5rem">
+<span class="compare-title">START / SIT <span id="sstWeekLbl" class="sst-week"></span></span>
+<div class="career-log-toggle" id="sstFmt" title="Scoring format for the projection"><button data-fmt="ppr" class="active">PPR</button><button data-fmt="half">HALF</button><button data-fmt="std">STD</button></div>
+</div>
+<div class="sst-sub">Add the players you're deciding between. Every card shows this week's projection, matchup, spread, Vegas team total and sportsbook lines side by side — the top projection gets the START call and the best number in each row lights up green.</div>
+<div class="lg-controls" style="margin-bottom:.6rem">
+<div class="lg-search-wrap">
+<input type="text" class="lg-search" id="sstSearch" placeholder="Add a player..." autocomplete="off">
+<svg class="lg-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-width="2" d="m21 21-4.35-4.35"/></svg>
+<div class="lg-dropdown" id="sstDropdown" style="display:none"></div>
+</div>
+<div class="lg-pos-btns" id="sstPosFilter"></div>
+<button class="lg-pos-btn" id="sstClear" title="Remove every player" style="margin-left:auto">CLEAR</button>
+</div>
+<div class="lg-chips" id="sstChips"></div>
+<div class="compare-grid" id="sstGrid"></div>
 </div>
 </div>
 
@@ -5587,7 +5614,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-08k"></script>
+<script defer src="app.js?v=2026-09-08m"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">
@@ -5736,6 +5763,7 @@ window.addEventListener('load', function() {
     { kind: 'page', label: 'Rankings',       page: 'rankings',  hint: 'Player rankings + tiers' },
     { kind: 'page', label: 'My Teams',       page: 'myteams',   hint: 'Sleeper / Underdog imports' },
     { kind: 'page', label: 'Compare',        page: 'compare',   hint: 'Side-by-side player view' },
+    { kind: 'page', label: 'Start / Sit',    page: 'startsit',  hint: 'Weekly proj · matchup · Vegas lines' },
     { kind: 'page', label: 'Trade Calculator', page: 'trade',   hint: 'Evaluate trades' },
     { kind: 'page', label: 'Mock Draft',     page: 'mockdraft', hint: 'CPU draft simulator' },
     { kind: 'page', label: 'Draft Strategy', page: 'draftstrategy', hint: 'Rules + historical ADP value' },

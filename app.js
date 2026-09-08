@@ -9498,9 +9498,10 @@ function _adpSparkHtml(d) {
 // fantasy-week rollover). Before kickoff: countdown; after: "in progress".
 // Auto-hides once the Week 18 window closes — regenerate the table for 2027.
 // UTC offsets baked in: EDT (-4) through W8, EST (-5) from W9 (DST ends
-// Nov 1 2026); W12 = Thanksgiving early slate; W18 has no TNF (final Sunday).
+// Nov 1 2026); W1 opens WEDNESDAY Sep 9 (NE@SEA) and W12 opens Wednesday
+// Nov 25 (GB@LAR, Thanksgiving eve) per ESPN; W18 has no TNF (final Sunday).
 const _SEASON_KICKS_2026 = [
-  { wk: 1,  kick: Date.UTC(2026, 8, 11, 0, 20),   label: 'Thu Sep 10 · 8:20pm ET' },
+  { wk: 1,  kick: Date.UTC(2026, 8, 10, 0, 20),   label: 'Wed Sep 9 · 8:20pm ET' },
   { wk: 2,  kick: Date.UTC(2026, 8, 18, 0, 15),   label: 'Thu Sep 17 · 8:15pm ET' },
   { wk: 3,  kick: Date.UTC(2026, 8, 25, 0, 15),   label: 'Thu Sep 24 · 8:15pm ET' },
   { wk: 4,  kick: Date.UTC(2026, 9, 2, 0, 15),    label: 'Thu Oct 1 · 8:15pm ET' },
@@ -9511,7 +9512,7 @@ const _SEASON_KICKS_2026 = [
   { wk: 9,  kick: Date.UTC(2026, 10, 6, 1, 15),   label: 'Thu Nov 5 · 8:15pm ET' },
   { wk: 10, kick: Date.UTC(2026, 10, 13, 1, 15),  label: 'Thu Nov 12 · 8:15pm ET' },
   { wk: 11, kick: Date.UTC(2026, 10, 20, 1, 15),  label: 'Thu Nov 19 · 8:15pm ET' },
-  { wk: 12, kick: Date.UTC(2026, 10, 26, 17, 30), label: 'Thanksgiving · Thu Nov 26 · 12:30pm ET' },
+  { wk: 12, kick: Date.UTC(2026, 10, 26, 1, 0),   label: 'Wed Nov 25 · 8:00pm ET' },
   { wk: 13, kick: Date.UTC(2026, 11, 4, 1, 15),   label: 'Thu Dec 3 · 8:15pm ET' },
   { wk: 14, kick: Date.UTC(2026, 11, 11, 1, 15),  label: 'Thu Dec 10 · 8:15pm ET' },
   { wk: 15, kick: Date.UTC(2026, 11, 18, 1, 15),  label: 'Thu Dec 17 · 8:15pm ET' },

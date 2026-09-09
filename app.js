@@ -14125,6 +14125,7 @@ function switchPage(page) {
   if (page === 'compare') renderCompareGrid();
   // Start/Sit: render on every open — week / lines / sim data may have landed since.
   if (page === 'startsit' && typeof window._sstRender === 'function') window._sstRender();
+  if (page === 'trade' && typeof window._realTradesPoke === 'function') window._realTradesPoke();
   // Render backtest when navigating to backtest page
   if (page === 'backtest' && typeof window._renderBacktest === 'function') {
     window._renderBacktest();
@@ -25063,6 +25064,7 @@ window.fmtHeight = fmtHeight;
       verdict.className = 'trade-verdict even'; sub.textContent = '';
       if (resultEl) resultEl.classList.add('is-empty');
       if (insightsEl) { insightsEl.style.display = 'none'; insightsEl.innerHTML = ''; }
+      if (typeof _realTradesRefresh === 'function') _realTradesRefresh();
       return;
     }
     if (resultEl) resultEl.classList.remove('is-empty');
@@ -25105,6 +25107,7 @@ window.fmtHeight = fmtHeight;
         insightsEl.innerHTML = '';
       }
     }
+    if (typeof _realTradesRefresh === 'function') _realTradesRefresh();
   }
 
   // Rule-based 1-3 sentence summary of what each side is getting.
@@ -26119,6 +26122,249 @@ window.fmtHeight = fmtHeight;
     if (typeof _calcRenderRealPicks === 'function') { _calcRenderRealPicks('a'); _calcRenderRealPicks('b'); }
     if (typeof toast === 'function') toast('Loaded — tweak as needed');
   }
+
+  // === RECENT REAL TRADES (FantasyCalc feed) — 2026-09-09 ===================
+  // Flock's calculator has "Find Similar Trades" over a database of real
+  // trades. Ours reads FantasyCalc's public trade feed (api.fantasycalc.com/
+  // trades — CORS-open, the ~50 most recent real Sleeper-league trades per
+  // format; the limit / player filter params are ignored server-side, so we
+  // filter client-side) and shows, under the verdict:
+  //   · trades involving any player currently in the calculator (both sides),
+  //     or the latest trades overall when the calculator is empty;
+  //   · each side RE-PRICED WITH OUR VALUES (same getPlayerValue /
+  //     getPickValue / package math as the calc) with our verdict, plus
+  //     FantasyCalc's own value gap for reference;
+  //   · LOAD → drops the trade into the calculator (side 1 → Team A).
+  // Every fetch is merged into a local pool (localStorage mff_fc_trades_v1,
+  // 14 days / 600 trades) so the searchable history grows the more the page
+  // is opened. Both QB formats of the active dynasty/redraft flag are
+  // fetched (100 trades per refresh); the calculator's exact format sorts
+  // first. Refresh: on entering the trade page or a calc render, at most
+  // every 10 minutes, plus the ↻ button.
+  var _rt = null;
+  (function _realTradesInit() {
+    const box = document.getElementById('tradeRealTrades');
+    if (!box) return;
+    const LS_KEY = 'mff_fc_trades_v1';
+    const MAX_AGE = 14 * 86400000, MAX_N = 600, REFRESH_MS = 10 * 60 * 1000;
+    _rt = { pool: {}, at: 0, busy: false, showAll: false, expanded: false, err: null, lastFmt: null };
+    try {
+      const j = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+      if (j && j.pool && typeof j.pool === 'object') { _rt.pool = j.pool; _rt.at = +j.at || 0; }
+    } catch (_) {}
+    const norm = n => (typeof _campNewsNorm === 'function') ? _campNewsNorm(n) : String(n || '').toLowerCase();
+    let _normIdx = null;
+    function lookupIdx(name) {
+      if (typeof nameToIdx !== 'undefined' && nameToIdx[name] !== undefined) return nameToIdx[name];
+      if (!_normIdx) { _normIdx = {}; D.forEach((d, i) => { if (d && d.n && !d._retired) { const k = norm(d.n); if (_normIdx[k] === undefined) _normIdx[k] = i; } }); }
+      const i = _normIdx[norm(name)];
+      return i === undefined ? null : i;
+    }
+    // "2027 1st" / "2026 Pick 3.08" → calc pick object (round label + year +
+    // mid slot; current-year exact picks keep the pick number so dynasty
+    // pricing resolves to the rookie taken there).
+    function parsePick(name) {
+      let m = /^(\d{4})\s+(1st|2nd|3rd|4th|5th|6th)$/i.exec(name);
+      if (m) return { round: m[2].toLowerCase(), year: m[1], slot: 'mid' };
+      m = /^(\d{4})\s+(?:Pick\s+)?(\d)\.(\d{2})$/i.exec(name);
+      if (m) { const r = +m[2]; return { round: r === 1 ? '1st' : r === 2 ? '2nd' : r === 3 ? '3rd' : r + 'th', year: m[1], slot: 'mid', _pickNum: m[2] + '.' + m[3] }; }
+      m = /^(\d{4})\s+Round\s+(\d)/i.exec(name);
+      if (m) { const r = +m[2]; return { round: r === 1 ? '1st' : r === 2 ? '2nd' : r === 3 ? '3rd' : r + 'th', year: m[1], slot: 'mid' }; }
+      return null;
+    }
+    function fmtOf() {
+      const dyn = tradeMode === 'dynasty' || tradeMode === 'dynastysf';
+      const qbs = (tradeMode === 'superflex' || tradeMode === 'dynastysf') ? 2 : 1;
+      return { dyn, qbs };
+    }
+    function compact(t) {
+      const side = s => (s || []).map(a => ({ n: a.name, p: a.position, sid: a.sleeperId || null }));
+      return { id: t.id, date: t.date, dyn: !!t.isDynasty, qbs: +t.numQbs || 1, ppr: t.ppr == null ? 1 : +t.ppr, tep: +t.tePremium || 0, teams: +t.numTeams || 12,
+               s1: side(t.side1), s2: side(t.side2), diff: t.maybeTradedValueDiff == null ? null : +t.maybeTradedValueDiff };
+    }
+    function prune() {
+      const now = Date.now();
+      const ids = Object.keys(_rt.pool).filter(id => { const t = _rt.pool[id]; return t && t.date && (now - Date.parse(t.date)) < MAX_AGE; });
+      ids.sort((a, b) => Date.parse(_rt.pool[b].date) - Date.parse(_rt.pool[a].date));
+      const keep = {};
+      ids.slice(0, MAX_N).forEach(id => { keep[id] = _rt.pool[id]; });
+      _rt.pool = keep;
+    }
+    function save() { try { localStorage.setItem(LS_KEY, JSON.stringify({ at: _rt.at, pool: _rt.pool })); } catch (_) {} }
+    async function fetchFeed(force) {
+      const now = Date.now();
+      const f = fmtOf();
+      const key = (f.dyn ? 'd' : 'r');
+      if (_rt.busy) return;
+      if (!force && _rt.lastFmt === key && now - _rt.at < REFRESH_MS) return;
+      _rt.busy = true; _rt.err = null;
+      render();
+      try {
+        const urls = [1, 2].map(q => 'https://api.fantasycalc.com/trades?isDynasty=' + f.dyn + '&numQbs=' + q + '&numTeams=12&ppr=1');
+        const res = await Promise.all(urls.map(u => fetch(u).then(r => r.ok ? r.json() : []).catch(() => [])));
+        let added = 0;
+        res.forEach(list => (Array.isArray(list) ? list : []).forEach(t => {
+          if (!t || !t.id || !t.date) return;
+          if (!_rt.pool[t.id]) added++;
+          _rt.pool[t.id] = compact(t);
+        }));
+        _rt.at = now; _rt.lastFmt = key;
+        prune(); save();
+        if (!res.some(l => Array.isArray(l) && l.length)) _rt.err = 'FantasyCalc feed unavailable right now';
+      } catch (e) { _rt.err = 'FantasyCalc feed unavailable right now'; }
+      finally { _rt.busy = false; render(); }
+    }
+    function calcIdxSet() {
+      const s = new Set();
+      sideA.players.forEach(i => s.add(i));
+      sideB.players.forEach(i => s.add(i));
+      return s;
+    }
+    // One side priced with OUR numbers: {vals, total, assets:[{kind, idx, pick, name, pos, val, inCalc}]}
+    function priceSide(assets, inCalc) {
+      const out = [];
+      const vals = [];
+      assets.forEach(a => {
+        if (a.p === 'PICK') {
+          const pk = parsePick(a.n);
+          const v = pk ? getPickValue(pk.round, pk.year, pk.slot, pk._pickNum) : null;
+          if (v != null) vals.push(v);
+          out.push({ kind: 'k', pick: pk, name: a.n, pos: 'PICK', val: v, inCalc: false });
+          return;
+        }
+        const idx = lookupIdx(a.n);
+        const d = idx != null ? D[idx] : null;
+        const v = d ? getPlayerValue(d) : null;
+        if (v != null) vals.push(v);
+        out.push({ kind: 'p', idx: idx, name: d ? d.n : a.n, pos: a.p || (d && d.s) || '', val: v, inCalc: idx != null && inCalc.has(idx) });
+      });
+      const total = vals.length ? window._packageAdjustedTotal(vals, tradeMode) : 0;
+      return { assets: out, total: total, unpriced: out.filter(x => x.val == null).length };
+    }
+    function ago(iso) {
+      const ms = Date.now() - Date.parse(iso);
+      if (!isFinite(ms) || ms < 0) return '';
+      const m = Math.round(ms / 60000);
+      if (m < 60) return m + 'm ago';
+      const h = Math.round(m / 60);
+      if (h < 36) return h + 'h ago';
+      return Math.round(h / 24) + 'd ago';
+    }
+    function fmtLbl(t) {
+      return (t.dyn ? (t.qbs === 2 ? 'DYN SF' : 'DYN 1QB') : (t.qbs === 2 ? 'SF' : '1QB'))
+        + ' · ' + (t.ppr === 1 ? 'PPR' : t.ppr === 0.5 ? '½ PPR' : t.ppr === 0 ? 'STD' : t.ppr + ' PPR')
+        + (t.tep ? ' · TEP ' + t.tep : '') + (t.teams && t.teams !== 12 ? ' · ' + t.teams + 'tm' : '');
+    }
+    function chip(a) {
+      const cls = a.kind === 'k' ? 'style="background:rgba(245,158,11,.12);color:var(--accent)"' : 'class="td-pos ' + _esc(a.pos) + '"';
+      const posHtml = a.kind === 'k' ? '<span class="td-pos" ' + cls + '>PICK</span>' : '<span ' + cls + '>' + _esc(a.pos) + '</span>';
+      const nameHtml = a.kind === 'p' && a.idx != null
+        ? '<a href="javascript:void(0)" class="rt-name rt-card" data-didx="' + a.idx + '">' + _esc(a.name) + '</a>'
+        : '<span class="rt-name' + (a.kind === 'p' ? ' rt-unknown" title="Not on our board — not priced' : '') + '">' + _esc(a.name) + '</span>';
+      return '<div class="finder-asset rt-asset' + (a.inCalc ? ' rt-in-calc' : '') + '">' + posHtml + nameHtml
+        + '<span class="td-val" title="Our value (' + _esc(tradeSource) + ' · ' + _esc(tradeMode) + ')">' + (a.val == null ? '?' : a.val) + '</span></div>';
+    }
+    function render() {
+      if (!box) return;
+      const pg = document.getElementById('pageTrade');
+      if (!pg || !pg.classList.contains('active')) return;
+      const inCalc = calcIdxSet();
+      const f = fmtOf();
+      const all = Object.keys(_rt.pool).map(id => _rt.pool[id]).filter(t => t && t.date)
+        .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+      const involving = inCalc.size ? all.filter(t => t.s1.concat(t.s2).some(a => a.p !== 'PICK' && inCalc.has(lookupIdx(a.n)))) : [];
+      const showInvolving = inCalc.size > 0 && !_rt.showAll;
+      let list = showInvolving ? involving : all;
+      // Exact calc format first, then the sibling QB format, newest within each.
+      list = list.slice().sort((a, b) => ((a.dyn === f.dyn && a.qbs === f.qbs) ? 0 : 1) - ((b.dyn === f.dyn && b.qbs === f.qbs) ? 0 : 1) || (Date.parse(b.date) - Date.parse(a.date)));
+      const cap = _rt.expanded ? 40 : 10;
+      const shown = list.slice(0, cap);
+      const names = [...inCalc].map(i => D[i] && D[i].n).filter(Boolean);
+      let html = '<div class="rt-head"><div><div class="rt-title">RECENT REAL TRADES</div>'
+        + '<div class="rt-sub">FantasyCalc · live Sleeper-league trades · priced with <b>' + _esc(tradeSource) + '</b> values · ' + all.length + ' in your pool'
+        + (_rt.at ? ' · updated ' + _esc(ago(new Date(_rt.at).toISOString())) : '') + '</div></div>'
+        + '<div class="rt-ctl">'
+        + (inCalc.size ? '<button class="rt-btn' + (showInvolving ? ' active' : '') + '" data-rt="involving" title="Only trades that include a player in this calculator">THIS TRADE\'S PLAYERS' + (involving.length ? ' <span class="rt-n">' + involving.length + '</span>' : '') + '</button>'
+            + '<button class="rt-btn' + (!showInvolving ? ' active' : '') + '" data-rt="all">ALL RECENT</button>' : '')
+        + '<button class="rt-btn rt-refresh" data-rt="refresh" title="Fetch the newest trades">' + (_rt.busy ? '…' : '↻') + '</button></div></div>';
+      if (!all.length) {
+        html += '<div class="rt-empty">' + (_rt.busy ? 'Loading trades…' : _esc(_rt.err || 'No trades loaded yet — tap ↻.')) + '</div>';
+      } else if (!shown.length) {
+        html += '<div class="rt-empty">No trade in the pool includes ' + (names.length === 1 ? _esc(names[0]) : 'these players') + ' yet. The pool grows each visit (' + all.length + ' trades so far) — try ALL RECENT.</div>';
+      } else {
+        html += '<div class="rt-list">' + shown.map(t => {
+          const s1 = priceSide(t.s1, inCalc), s2 = priceSide(t.s2, inCalc);
+          // Side 1 GIVES s1 and receives s2 (calc framing: bigger received = winner)
+          let verdict = '', vcls = 'even';
+          if (s1.total && s2.total) {
+            const diff = Math.abs(s1.total - s2.total), pct = Math.round(diff / Math.max(s1.total, s2.total) * 100);
+            if (pct <= 5) verdict = 'FAIR';
+            else if (s2.total > s1.total) { verdict = 'SIDE 1 WINS +' + pct + '%'; vcls = 'a'; }
+            else { verdict = 'SIDE 2 WINS +' + pct + '%'; vcls = 'b'; }
+          } else verdict = 'UNPRICED';
+          const unp = s1.unpriced + s2.unpriced;
+          const fcNote = t.diff != null ? '<span class="rt-fc" title="FantasyCalc\'s own value gap for this trade (positive = side 1 received more by their numbers)">FC ' + (t.diff > 0 ? '+' : '') + t.diff + '</span>' : '';
+          const exact = t.dyn === f.dyn && t.qbs === f.qbs;
+          return '<div class="rt-row' + (exact ? '' : ' rt-other-fmt') + '" data-rtid="' + _esc(t.id) + '">'
+            + '<div class="rt-meta"><span class="rt-ago">' + _esc(ago(t.date)) + '</span><span class="rt-fmt" title="League format the trade happened in">' + _esc(fmtLbl(t)) + '</span>' + fcNote + '</div>'
+            + '<div class="rt-sides">'
+            + '<div class="rt-side"><div class="rt-side-lbl">SIDE 1 GIVES <span class="rt-tot">' + (s1.total || '—') + '</span></div>' + s1.assets.map(chip).join('') + '</div>'
+            + '<div class="rt-arrow">⇄</div>'
+            + '<div class="rt-side"><div class="rt-side-lbl">SIDE 2 GIVES <span class="rt-tot">' + (s2.total || '—') + '</span></div>' + s2.assets.map(chip).join('') + '</div>'
+            + '</div>'
+            + '<div class="rt-foot"><span class="rt-verdict rt-v-' + vcls + '" title="By OUR values (package-adjusted, same math as the calculator)">' + verdict + (unp ? ' <span class="rt-unp" title="' + unp + ' asset' + (unp === 1 ? '' : 's') + ' not on our board — left out of the totals">· ' + unp + ' unpriced</span>' : '') + '</span>'
+            + '<button class="rt-btn rt-load" data-rt="load" data-rtid="' + _esc(t.id) + '" title="Put this trade in the calculator (side 1 → Team A)">LOAD</button></div>'
+            + '</div>';
+        }).join('') + '</div>';
+        if (list.length > shown.length) html += '<button class="rt-btn rt-more" data-rt="more">SHOW ' + Math.min(40, list.length) + ' OF ' + list.length + '</button>';
+        else if (_rt.expanded && list.length > 10) html += '<button class="rt-btn rt-more" data-rt="less">SHOW FEWER</button>';
+      }
+      box.innerHTML = html;
+      box.style.display = '';
+    }
+    box.addEventListener('click', e => {
+      const card = e.target.closest('.rt-card');
+      if (card) { const d = D[+card.dataset.didx]; if (d && typeof openPlayerCard === 'function') openPlayerCard(d, tradeMode); return; }
+      const b = e.target.closest('[data-rt]');
+      if (!b) return;
+      const act = b.dataset.rt;
+      if (act === 'refresh') { fetchFeed(true); return; }
+      if (act === 'involving') { _rt.showAll = false; render(); return; }
+      if (act === 'all') { _rt.showAll = true; render(); return; }
+      if (act === 'more') { _rt.expanded = true; render(); return; }
+      if (act === 'less') { _rt.expanded = false; render(); return; }
+      if (act === 'load') {
+        const t = _rt.pool[b.dataset.rtid];
+        if (!t) return;
+        const fill = (assets, side) => {
+          side.players = []; side.picks = [];
+          assets.forEach(a => {
+            if (a.p === 'PICK') { const pk = parsePick(a.n); if (pk) side.picks.push(pk); return; }
+            const idx = lookupIdx(a.n);
+            if (idx != null && side.players.indexOf(idx) < 0) side.players.push(idx);
+          });
+        };
+        fill(t.s1, sideA); fill(t.s2, sideB);
+        _rt.showAll = false;
+        renderAll();
+        if (typeof _calcRenderRealPicks === 'function') { _calcRenderRealPicks('a'); _calcRenderRealPicks('b'); }
+        const missing = t.s1.concat(t.s2).filter(a => a.p !== 'PICK' && lookupIdx(a.n) == null).map(a => a.n);
+        if (typeof toast === 'function') toast(missing.length ? 'Loaded — not on our board: ' + missing.join(', ') : 'Loaded real trade — tweak as needed');
+        const res = document.getElementById('tradeResult');
+        if (res && res.scrollIntoView) res.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+    _rt.render = render;
+    _rt.fetch = fetchFeed;
+  })();
+  function _realTradesRefresh() {
+    if (!_rt) return;
+    const pg = document.getElementById('pageTrade');
+    if (!pg || !pg.classList.contains('active')) return;
+    _rt.render();
+    _rt.fetch(false);
+  }
+  window._realTradesPoke = function() { setTimeout(_realTradesRefresh, 0); };
 
   // Target search autocomplete — scoped to rostered players in selected league (excluding your team)
   (function _setupFinderTargetSearch() {

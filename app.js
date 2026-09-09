@@ -9985,7 +9985,9 @@ window._seasonStripRefresh = _seasonStrip;
     const rk = document.getElementById('pageRankings');
     if (rk && rk.classList.contains('active') && typeof currentMode !== 'undefined' && currentMode === 'weekly') return true;
     const ss = document.getElementById('pageStartSit');
-    return !!(ss && ss.classList.contains('active'));
+    if (ss && ss.classList.contains('active')) return true;
+    const mt = document.getElementById('pageMyTeams'); // lineup check locks
+    return !!(mt && mt.classList.contains('active'));
   }
   // "Thu 8:15p" / "Sun 1p" in Eastern time.
   function kickLbl(iso) {
@@ -10120,6 +10122,7 @@ window._seasonStripRefresh = _seasonStrip;
       const rk = document.getElementById('pageRankings');
       if (rk && rk.classList.contains('active') && typeof currentMode !== 'undefined' && currentMode === 'weekly' && typeof render === 'function') render();
       if (typeof window._sstRefresh === 'function') window._sstRefresh();
+      if (typeof window._mtLiveRefresh === 'function') window._mtLiveRefresh();
     } catch (e) {}
   }
   // A weekly surface just painted: fetch if we have nothing fresh (30 s guard
@@ -52157,9 +52160,16 @@ Rules:
   // dependency on Jack's weekly board coverage.
   // ppgOverride(name, d) → per-player PPG replacing _mtGetPlayerPpg (the
   // PLAYOFFS view feeds week-specific matchup-adjusted numbers through it).
-  function _mtBestLineup(playerNames, basis, ppgOverride) {
+  // opts.starters (2026-09-09, lock-aware LINEUP CHECK): the platform's set
+  // lineup. On a weekly basis, any player whose game has kicked off (live-week
+  // module: _liveGameFor → 'in' / 'post') is LOCKED where he is — a locked
+  // starter keeps his slot (placed first, actual points once final), a locked
+  // bench player can no longer start and is skipped by the fill passes. So
+  // the "best lineup" is the best lineup you can STILL set.
+  function _mtBestLineup(playerNames, basis, ppgOverride, opts) {
     basis = basis || 'ppg';
     const isWkBasis = basis === 'weekly' || basis === 'weekppg';
+    const lockStarters = (opts && Array.isArray(opts.starters) && isWkBasis && typeof window._liveGameFor === 'function') ? opts.starters : null;
     let rp = _mtFormat.rosterPositions || [];
     // Fallback: if rosterPositions wasn't stored, build a default from format info
     if (!rp.length && _mtFormat.starters) {
@@ -52228,8 +52238,21 @@ Rules:
         ppg = adj ? Math.round((adj + sDelta) * 10) / 10 : 0;
       }
       if (!ppg) _dbgNoPpg++;
-      return { name, pos: d.s, ppg, wkRank, out, d };
-    }).filter(p => basis === 'weekly' ? (p.wkRank != null || p.ppg > 0) : p.ppg > 0);
+      // Game lock: kicked off → frozen in place. Final games swap the
+      // projection for the actual score so lineup totals reflect reality.
+      let locked = null, live = null;
+      if (lockStarters && !out) {
+        const g = window._liveGameFor(d);
+        if (g && g.st !== 'pre') {
+          const si = lockStarters.indexOf(name);
+          locked = si >= 0 ? 'start' : 'bench';
+          const act = (typeof window._liveActualFor === 'function') ? window._liveActualFor(d, _mtFormat.ppr === 1 ? 'ppr' : _mtFormat.ppr === 0 ? 'std' : 'half') : null;
+          live = { st: g.st, tag: g.tag, slotIdx: si >= 0 ? si : null, actual: act };
+          if (g.st === 'post' && act != null) ppg = Math.round(act * 10) / 10;
+        }
+      }
+      return { name, pos: d.s, ppg, wkRank, out, d, locked, live };
+    }).filter(p => p.locked || (basis === 'weekly' ? (p.wkRank != null || p.ppg > 0) : p.ppg > 0));
     console.log('[BestLineup] Found in D:', _dbgFound, 'Not in D:', _dbgNoD, 'No PPG:', _dbgNoPpg, 'Pool after filter:', pool.length);
     if (pool.length > 0) {
       console.log('[BestLineup] Top 3:', pool.slice(0,3).map(p => p.name + '=' + p.ppg).join(', '));
@@ -52272,9 +52295,22 @@ Rules:
     const filled = new Array(slots.length).fill(null);
     const used = new Set();
 
+    // Pass 0: locked starters keep their slot (the platform's starters array
+    // lines up with the starting slots; when it doesn't, first compatible
+    // free slot). Locked bench players are marked used so no pass starts them.
+    pool.forEach(p => {
+      if (!p.locked) return;
+      if (p.locked === 'bench') { used.add(p.name); return; }
+      let si = (p.live && p.live.slotIdx != null && p.live.slotIdx < slots.length && !filled[p.live.slotIdx] && canFill(slots[p.live.slotIdx], p.pos)) ? p.live.slotIdx : -1;
+      if (si < 0) si = slots.findIndex((s, i) => !filled[i] && canFill(s, p.pos));
+      if (si < 0) return; // no slot fits (IDP etc.) — leave him for the bench list
+      filled[si] = p; used.add(p.name);
+    });
+
     // Pass 1: fill exact position slots (QB, RB, WR, TE)
     const exactSlots = ['QB', 'RB', 'WR', 'TE'];
     for (let si = 0; si < slots.length; si++) {
+      if (filled[si]) continue;
       if (!exactSlots.includes(slots[si])) continue;
       for (const p of pool) {
         if (used.has(p.name)) continue;
@@ -52300,8 +52336,9 @@ Rules:
       }
     }
 
-    // Bench: everyone not starting
-    const bench = pool.filter(p => !used.has(p.name));
+    // Bench: everyone not starting (locked bench players included — they were
+    // marked used only so the fill passes would skip them)
+    const bench = pool.filter(p => !filled.includes(p));
 
     // Compute totals
     const starters = filled.filter(Boolean);
@@ -53235,7 +53272,9 @@ Rules:
     try {
       if (typeof D === 'undefined' || !D.length || !lg || !lg.format) return null;
       if (!(lg.teams || []).some(t => t && t.isMyTeam)) return null;
-      const key = String(lg.leagueId || lg.name) + '|' + (lg.savedAt || '') + '|' + _mtValueSrc + '|wk' + _mtLineupWeek();
+      // Live signature: a kickoff / final flips lineup locks, so the memo
+      // must not outlive the scoreboard state it was computed under.
+      const key = String(lg.leagueId || lg.name) + '|' + (lg.savedAt || '') + '|' + _mtValueSrc + '|wk' + _mtLineupWeek() + '|' + ((window._liveWeekState && window._liveWeekState.sig) || '');
       const hit = _mtSavedTierCache.get(key);
       if (hit && Date.now() - hit.ts < 10 * 60 * 1000) return hit.info;
       const prevFormat = _mtFormat;
@@ -53270,6 +53309,7 @@ Rules:
                 hasStarters: true, ok: true, basis: a.basis, week: a.week,
                 delta: a.delta, actualPts: a.actualPts, optimalPts: a.optimalPts, empty: a.empty,
                 flagged: a.flagged.map(p => p.name + (p.out ? ' (' + p.out + ')' : '')),
+                locked: (a.locked || []).length,
                 moves: a.moves.filter(m => m.start).slice(0, 3).map(m => ({ start: slim(m.start), sit: slim(m.sit), gain: m.gain }))
               };
             })()
@@ -53300,6 +53340,7 @@ Rules:
     const rows = (leagues || []).map((lg, idx) => ({ lg, idx, info: _mtSavedLeagueInfo(lg) })).filter(x => x.info && x.info.lineup);
     if (!rows.length) { box.innerHTML = ''; return; }
     const wk = _mtLineupWeek();
+    if (typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
     const state = r => {
       const l = r.info.lineup;
       if (!l.hasStarters) return { key: 'nodata', col: 'var(--text2)', label: 'NO LINEUP DATA', order: 3 };
@@ -53327,7 +53368,7 @@ Rules:
       html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--surface);border:1px solid ${st.key === 'bad' ? '#ef444455' : st.key === 'warn' ? '#f59e0b55' : 'var(--border)'};border-radius:8px">`;
       html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.5px;color:${st.col};background:${st.col}15;border:1px solid ${st.col};border-radius:4px;padding:2px 8px;white-space:nowrap">${st.label}</span>`;
       html += `<span style="font-weight:600;font-size:.82rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(r.lg.name || 'League')}</span>`;
-      if (l.ok) html += `<span style="font-size:.65rem;color:var(--text2)">set <b style="color:var(--text)">${l.actualPts}</b> · best <b style="color:#22c55e">${l.optimalPts}</b></span>`;
+      if (l.ok) html += `<span style="font-size:.65rem;color:var(--text2)">set <b style="color:var(--text)">${l.actualPts}</b> · best <b style="color:#22c55e">${l.optimalPts}</b>${l.locked ? ' · <span title="Players whose game has kicked off — locked where they are" style="cursor:help">🔒 ' + l.locked + '</span>' : ''}</span>`;
       if (l.ok && l.flagged.length) html += `<span style="font-size:.65rem;color:#ef4444">${_esc(l.flagged.join(', '))}</span>`;
       const mv = l.ok && l.moves && l.moves[0];
       if (mv && mv.start) html += `<span style="font-size:.65rem;color:var(--text2)"><span style="color:#22c55e;font-weight:700">▲</span> ${_esc(mv.start.name)}${mv.sit ? ` over <span style="color:#ef4444;font-weight:700">▼</span> ${_esc(mv.sit.name)}` : ''}${mv.gain > 0 ? ` <span style="color:#22c55e;font-weight:700">+${mv.gain}</span>` : ''}${l.moves.length > 1 ? ` <span style="opacity:.7">+${l.moves.length - 1} more</span>` : ''}</span>`;
@@ -53854,7 +53895,7 @@ Rules:
     if (!t || !Array.isArray(t.starters)) return null;
     const wk = _mtLineupWeek();
     const basis = wk ? 'weekppg' : 'ppg';
-    const lu = _mtBestLineup(t.players || [], basis);
+    const lu = _mtBestLineup(t.players || [], basis, null, { starters: t.starters });
     if (!lu) return null;
     const info = new Map();
     lu.slots.forEach(s => { if (s.player) info.set(s.player.name, s.player); });
@@ -53891,7 +53932,10 @@ Rules:
       moves.push({ start: p, sit: q, gain: r1(p.ppg - (q ? q.ppg : 0)) });
     });
     sitPool.forEach(q => moves.push({ start: null, sit: q, gain: 0 }));
-    return { lineup: lu, basis, week: wk, actual, actualPts: r1(actualPts), optimalPts: r1(optimalPts), delta: r1(optimalPts - actualPts), shouldStart, shouldSit, moves, empty, flagged, entry };
+    // Locked players (game kicked off) — starters stay, bench stays.
+    const locked = [];
+    info.forEach(p => { if (p.locked) locked.push(p); });
+    return { lineup: lu, basis, week: wk, actual, actualPts: r1(actualPts), optimalPts: r1(optimalPts), delta: r1(optimalPts - actualPts), shouldStart, shouldSit, moves, empty, flagged, entry, locked };
   }
   window._mtToggleLineupCheck = function () {
     const box = document.getElementById('mtLineupCheck');
@@ -53901,10 +53945,19 @@ Rules:
     if (_mtLineupCheckOpen) _mtRenderLineupCheck();
     if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
   };
+  // Live-week module repaints here when a game kicks off / goes final while
+  // My Teams is open (locks flip, actual points land).
+  window._mtLiveRefresh = function () {
+    try {
+      if (_mtLineupCheckOpen) _mtRenderLineupCheck();
+      if (window._mtSavedLeagues) _mtRenderLineupChecklist(window._mtSavedLeagues);
+    } catch (_) {}
+  };
   function _mtRenderLineupCheck() {
     const box = document.getElementById('mtLineupCheck');
     if (!box || !window._mtTeams || !window._mtTeams.length) return;
     const teams = window._mtTeams;
+    if (typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
     const me = teams.find(t => t.isMyTeam);
     const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a855f7', DST: '#94a3b8' };
     const posBadge = p => `<span style="font-size:.55rem;font-weight:700;color:${posColors[p] || 'var(--text2)'};padding:1px 4px;border-radius:3px;background:${(posColors[p] || '#666')}20">${_esc(p || '?')}</span>`;
@@ -53913,7 +53966,7 @@ Rules:
     let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
     html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
     html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#22d3ee">LINEUP CHECK · ${basisLbl}</span>`;
-    html += `<span style="font-size:.6rem;color:var(--text2)">your set lineup vs the best lineup for your roster${wk ? ' — weekly props/Vegas/sim-adjusted, byes and ruled-out players benched' : ''}</span>`;
+    html += `<span style="font-size:.6rem;color:var(--text2)">your set lineup vs the best lineup for your roster${wk ? ' — weekly props/Vegas/sim-adjusted, byes and ruled-out players benched, players whose game has kicked off locked where they are' : ''}</span>`;
     html += `<button onclick="window._mtToggleLineupCheck()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
     html += `</div>`;
     if (!me) {
@@ -53931,6 +53984,7 @@ Rules:
         html += `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">`;
         html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:${chipCol};background:${chipCol}15;border:1px solid ${chipCol};border-radius:6px;padding:3px 10px">${chipTxt}</span>`;
         html += `<span style="font-size:.72rem;color:var(--text2)">Set lineup <b style="color:var(--text)">${a.actualPts}</b> · best lineup <b style="color:#22c55e">${a.optimalPts}</b></span>`;
+        if (a.locked && a.locked.length) html += `<span title="${_esc(a.locked.map(p => p.name + ' (' + (p.live && p.live.st === 'post' ? 'final' : 'live') + (p.live && p.live.actual != null ? ', ' + p.live.actual + ' pts' : '') + ')').join(', '))}" style="font-size:.62rem;font-weight:700;color:#94a3b8;background:#94a3b818;border:1px solid #94a3b8;border-radius:3px;padding:1px 6px;cursor:help">🔒 ${a.locked.length} LOCKED${a.locked.some(p => p.live && p.live.st === 'in') ? ' · LIVE' : ''}</span>`;
         if (a.empty) html += `<span style="font-size:.62rem;font-weight:700;color:#ef4444;background:#ef444418;border:1px solid #ef4444;border-radius:3px;padding:1px 6px">${a.empty} EMPTY SLOT${a.empty > 1 ? 'S' : ''}</span>`;
         if (a.flagged.length) html += `<span title="${_esc(a.flagged.map(p => p.name + ' (' + p.out + ')').join(', '))}" style="font-size:.62rem;font-weight:700;color:#ef4444;background:#ef444418;border:1px solid #ef4444;border-radius:3px;padding:1px 6px;cursor:help">${a.flagged.length} STARTER${a.flagged.length > 1 ? 'S' : ''} ON BYE/OUT</span>`;
         html += `</div>`;
@@ -53953,7 +54007,7 @@ Rules:
         const row = (n, mark) => {
           const p = a.entry(n);
           const col = p.ppg >= 15 ? '#22c55e' : p.ppg >= 10 ? '#4ade80' : p.ppg >= 6 ? '#facc15' : p.ppg > 0 ? '#f59e0b' : 'var(--text2)';
-          return `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid rgba(30,42,66,.4);${mark === 'sit' ? 'background:rgba(239,68,68,.07)' : mark === 'start' ? 'background:rgba(34,197,94,.08)' : ''}">${mark === 'sit' ? '<span style="color:#ef4444;font-size:.6rem;font-weight:700">▼</span>' : mark === 'start' ? '<span style="color:#22c55e;font-size:.6rem;font-weight:700">▲</span>' : '<span style="width:8px"></span>'}${posBadge(p.pos)}<span style="flex:1;min-width:0;font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_mtNameLink(n)}</span>${p.out ? '<span style="font-size:.55rem;font-weight:700;color:#ef4444">' + p.out + '</span>' : ''}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:${col}">${p.ppg > 0 ? p.ppg : '—'}</span></div>`;
+          return `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid rgba(30,42,66,.4);${mark === 'sit' ? 'background:rgba(239,68,68,.07)' : mark === 'start' ? 'background:rgba(34,197,94,.08)' : ''}">${mark === 'sit' ? '<span style="color:#ef4444;font-size:.6rem;font-weight:700">▼</span>' : mark === 'start' ? '<span style="color:#22c55e;font-size:.6rem;font-weight:700">▲</span>' : '<span style="width:8px"></span>'}${posBadge(p.pos)}<span style="flex:1;min-width:0;font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_mtNameLink(n)}</span>${p.out ? '<span style="font-size:.55rem;font-weight:700;color:#ef4444">' + p.out + '</span>' : ''}${(p.d && typeof window._wkStatusChipHtml === 'function') ? window._wkStatusChipHtml(p.d, _mtFormat.ppr === 1 ? 'ppr' : _mtFormat.ppr === 0 ? 'std' : 'half') : ''}${p.locked ? '<span title="Game kicked off — locked ' + (p.locked === 'start' ? 'in your lineup' : 'on your bench') + '" style="font-size:.6rem;cursor:help">🔒</span>' : ''}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:${col}">${p.ppg > 0 ? p.ppg : '—'}</span></div>`;
         };
         const sitSet = new Set(a.shouldSit.map(p => p.name));
         const startSet = new Set(a.shouldStart.map(p => p.name));

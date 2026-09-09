@@ -118,6 +118,10 @@
     schedule: {},            // TEAM -> wk -> {opp,home,total,implied} from site Vegas lines
     wkPropsAll: null,        // site weeklyProps: {"1": {name: {UD:{...}, PP:{...}}}}
     seasonStats: null,       // {upToWk, byId: {sid: {ppr,half,std,gp}}} — 2026 actuals
+    liveGames: {},           // TEAM(site abbr) -> {st:'pre'|'in'|'post', f, tag, opp, home, pts, oppPts, kick} (ESPN public scoreboard)
+    livePts: {},             // entry key -> league-scored points this scoring period (mRoster appliedStatTotal, live)
+    liveAt: 0,               // last scoreboard parse (ms)
+    liveNextAt: 0,           // earliest next scoreboard fetch (ms)
     trendAdds: {},           // sid -> Sleeper 24h add count
     leagueScoring: null,     // full sleeper-style scoring dict (K buckets + DST values)
     seasonTab: 'lineup',
@@ -1851,8 +1855,11 @@
   // ---- league loading ----
   async function fetchSeasonLeague(leagueId, season) {
     if (MOCK && MOCK.seasonLeague) return MOCK.seasonLeague;
+    // scoringPeriodId pins mRoster's appliedStatTotal (+ live stats) to the
+    // current NFL week — the LIVE layer's per-player actuals (v0.20.31).
+    const spq = (state.byesActive && state.seasonWeek >= 1) ? '&scoringPeriodId=' + state.seasonWeek : '';
     const r = await fetch(LM_API + season + '/segments/0/leagues/' + leagueId +
-      '?view=mTeam&view=mRoster&view=mSettings&view=mMatchup', {
+      '?view=mTeam&view=mRoster&view=mSettings&view=mMatchup' + spq, {
       credentials: 'include', headers: { Accept: 'application/json' },
     });
     if (!r.ok) throw new Error('ESPN league API ' + r.status);
@@ -1880,10 +1887,13 @@
         const is = String(pl.injuryStatus || '').toUpperCase();
         const inj = /^(OUT|INJURY_RESERVE|SUSPEN|RESERVE)/.test(is) ? 'OUT'
           : is === 'DOUBTFUL' ? 'D' : is === 'QUESTIONABLE' ? 'Q' : null;
+        const ppe = e.playerPoolEntry;
         return {
           espnId: pl.id, name, raw: pl.fullName || '', pos, team: abbrevFor(pl.proTeamId),
           slotId: e.lineupSlotId, p, inj,
           key: p ? keyOf(p) : norm(name) + '|' + pos,
+          pts: typeof ppe.appliedStatTotal === 'number' ? ppe.appliedStatTotal : null, // this period, league-scored, live
+          locked: !!ppe.lineupLocked,
         };
       }).filter(Boolean);
       const rec = (t.record && t.record.overall) || {};
@@ -1893,6 +1903,11 @@
         record: { w: rec.wins || 0, l: rec.losses || 0, pf: Math.round((rec.pointsFor || 0) * 10) / 10 },
       };
     });
+    // LIVE actuals: ESPN's appliedStatTotal is this scoring period's
+    // league-scored total per roster entry and ticks during games.
+    const lp = Object.create(null);
+    state.seasonTeams.forEach((t) => t.entries.forEach((en) => { if (en.pts != null) lp[en.key] = en.pts; }));
+    state.livePts = lp;
     // full-season matchup pairs (mMatchup) + playoff shape for the sim
     const pairs = {};
     (raw.schedule || []).forEach((m) => {
@@ -2546,6 +2561,7 @@
       await ensureNflState();
       const raw = await fetchSeasonLeague(leagueId, state.seasonId);
       applySeasonLeague(raw);
+      await refreshScoreboard(false); // live game clocks (no-op preseason)
       const urlTeam = parseInt(urlParams().get('teamId'), 10);
       state.myTeamId = prefs.teamId ||
         (isFinite(urlTeam) ? urlTeam : null) || detectMyTeam() ||
@@ -2569,6 +2585,7 @@
     if (!state.seasonLeagueId) return;
     const raw = await fetchSeasonLeague(state.seasonLeagueId, state.seasonId);
     applySeasonLeague(raw);
+    await refreshScoreboard(false);
     state.seasonStatus = state.seasonTeams.length + ' teams · week ' + state.seasonWeek +
       (state.byesActive ? '' : ' (preseason)');
   }
@@ -2828,18 +2845,132 @@
     const p = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
     return z >= 0 ? 1 - p : p;
   }
+  // ---------- LIVE projections (v0.20.31, Sleeper 0.29.24 port) ----------
+  // Once a player's game kicks off his number becomes what he has scored +
+  // what he should still score: actual = ESPN's league-scored
+  // appliedStatTotal for this scoring period (mRoster, already polled every
+  // 60s) + remaining = pregame proj × (1 − f), f = fraction of the game
+  // played from the ESPN public scoreboard (period + clock; halftime 0.5;
+  // OT ≈ 0.97; final 1). A pace term (w = 0.25·f) nudges the remainder
+  // toward the player's own rate late. Pregame = wkVal; final = actual.
+  // START/SIT verdicts stay on the pregame projection.
+  const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
+  const ESPN_TEAM_FIX = { WSH: 'WAS', JAC: 'JAX', LA: 'LAR', OAK: 'LV', SD: 'LAC' };
+  function parseScoreboard(sb) {
+    const out = {};
+    for (const ev of (sb && sb.events) || []) {
+      const c = ev.competitions && ev.competitions[0];
+      if (!c) continue;
+      const st = (c.status && c.status.type) || {};
+      const nm = String(st.name || '');
+      const s = st.state === 'in' ? 'in' : (st.state === 'post' || st.completed) ? 'post' : 'pre';
+      const period = +(c.status && c.status.period) || 0;
+      const clock = String((c.status && c.status.displayClock) || '0:00');
+      const half = /HALFTIME/i.test(nm);
+      let f = 0;
+      if (s === 'post') f = 1;
+      else if (s === 'in') {
+        if (half) f = 0.5;
+        else if (period >= 5) f = 0.97;
+        else {
+          const mm = clock.match(/^(\d+):(\d+)/);
+          const left = mm ? (+mm[1] * 60 + +mm[2]) : 0;
+          f = Math.min(0.99, Math.max(0.01, ((Math.max(1, period) - 1) * 900 + (900 - left)) / 3600));
+        }
+      }
+      const comps = c.competitors || [];
+      const home = comps.find((x) => x.homeAway === 'home'), away = comps.find((x) => x.homeAway === 'away');
+      const abbr = (x) => { const a = String((x && x.team && x.team.abbreviation) || '').toUpperCase(); return ESPN_TEAM_FIX[a] || a; };
+      const sc = (x) => (x && x.score != null && x.score !== '') ? +x.score : null;
+      const h = abbr(home), a = abbr(away);
+      const tag = s === 'in' ? (half ? 'HALF' : period >= 5 ? 'OT ' + clock : 'Q' + period + ' ' + clock) : s === 'post' ? 'FINAL' : '';
+      if (h) out[h] = { st: s, f, tag, opp: a, home: true, pts: sc(home), oppPts: sc(away), kick: ev.date || null };
+      if (a) out[a] = { st: s, f, tag, opp: h, home: false, pts: sc(away), oppPts: sc(home), kick: ev.date || null };
+    }
+    return out;
+  }
+  async function refreshScoreboard(force) {
+    if (MOCK) {
+      if (MOCK.scoreboard) { state.liveGames = parseScoreboard(MOCK.scoreboard); state.liveAt = Date.now(); }
+      return;
+    }
+    if (!state.byesActive) return; // preseason — nothing can be live
+    const now = Date.now();
+    if (!force && now < state.liveNextAt) return;
+    state.liveNextAt = now + 60 * 1000;
+    try {
+      const sb = await fetchJson(SCOREBOARD_URL + '?t=' + now); // CORS * (direct), bg proxy fallback
+      state.liveGames = parseScoreboard(sb);
+      state.liveAt = now;
+      // Idle throttle: nothing in progress and no kickoff inside 20 min →
+      // one scoreboard call every 10 min instead of every poll.
+      const vals = Object.values(state.liveGames);
+      const anyIn = vals.some((g) => g.st === 'in');
+      const soon = vals.some((g) => g.st === 'pre' && g.kick && (Date.parse(g.kick) - now) < 20 * 60 * 1000);
+      if (!anyIn && !soon) state.liveNextAt = now + 10 * 60 * 1000;
+    } catch (e) { /* keep the last parse; pregame numbers still show */ }
+  }
+  function liveGameFor(p) {
+    const raw = p && (p.sTm || p.t);
+    const tm = raw ? (ESPN_TEAM_FIX[raw] || raw) : null;
+    const g = tm ? state.liveGames[tm] : null;
+    return g && g.st !== 'pre' ? g : null;
+  }
+  // {live, actual, rem, f, st, tag, proj}; live === wkVal(p) before kickoff.
+  // `key` = roster-entry key (defaults to keyOf(p)) — ESPN actuals live on
+  // the entry, not on a player id.
+  function wkLive(p, key) {
+    const proj = p && !p._unmatched ? wkVal(p) : 0;
+    const g = liveGameFor(p);
+    if (!g) return { live: proj, actual: null, rem: proj, f: 0, st: 'pre', tag: '', proj };
+    const k = key || (p._unmatched ? null : keyOf(p));
+    const raw = k != null ? state.livePts[k] : undefined;
+    const actual = typeof raw === 'number' ? Math.round(raw * 100) / 100 : 0;
+    if (g.st === 'post') return { live: actual, actual, rem: 0, f: 1, st: 'post', tag: g.tag, proj };
+    const f = g.f;
+    const pace = f >= 0.15 ? actual / f : proj;
+    const w = 0.25 * f;
+    const rem = Math.round(Math.max(0, (1 - f) * ((1 - w) * proj + w * pace)) * 100) / 100;
+    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj };
+  }
+  function liveTip(l) {
+    if (l.st === 'post') return 'FINAL — scored ' + l.actual.toFixed(1) + ' (pregame proj ' + l.proj.toFixed(1) + ')';
+    return 'LIVE ' + l.tag + ' — scored ' + l.actual.toFixed(1) + ' + ' + l.rem.toFixed(1) +
+      ' still expected (pregame proj ' + l.proj.toFixed(1) + '). Remaining = proj × game left, nudged toward his pace late.';
+  }
+  // Sidebar name-line tag (LINEUP rows): "● 12.3 live" / "✓ 8.2 final"
+  function liveTagHTML(p) {
+    const l = wkLive(p);
+    if (l.st === 'pre') return '';
+    const col = l.st === 'post' ? '#8a8d96' : '#6dd06d';
+    const txt = l.st === 'post' ? '✓ ' + l.live.toFixed(1) + ' final' : '● ' + l.live.toFixed(1) + ' live';
+    return ` <span title="${esc(liveTip(l))}" style="font-size:9px;font-weight:700;color:${col};white-space:nowrap">${txt}</span>`;
+  }
+  // On-page pill (roster / boxscore / FantasyCast rows): live/final replaces "N proj".
+  function livePillHTML(l) {
+    if (l.st === 'post') return pillHTML(l.live.toFixed(1) + ' final', '#f0f2f5', '#5b6068', liveTip(l));
+    return pillHTML(l.live.toFixed(1) + ' live', '#e2f3e6', '#1d7a34', liveTip(l));
+  }
+  // Live-aware side totals: each starter = wkLive (actual + remaining once
+  // his game starts); only the REMAINING part carries variance, so odds
+  // tighten toward 100/0 as the week plays out. Unmatched starters still
+  // count their live actuals (ESPN scores them even when we can't project).
   function sideProjOf(entries) {
-    let total = 0, varSum = 0, missing = 0;
+    let total = 0, varSum = 0, missing = 0, played = 0, done = 0, scored = 0, n = 0;
     for (const en of entries) {
       if (en.slotId === 20 || en.slotId === 21) continue; // bench / IR
-      if (!en.p) { missing++; continue; }
-      const v = wkVal(en.p);
-      total += v;
-      const r = engineRecFor(en.p);
-      const sig = r && r.sig > 0 ? r.sig : (POS_SIG_DEFAULT[en.p.s] || 0.55);
-      varSum += (v * sig) * (v * sig);
+      n++;
+      const p = en.p || { n: en.name, s: en.pos, sTm: ESPN_TEAM_FIX[en.team] || en.team, _unmatched: true };
+      const l = wkLive(p, en.key);
+      if (!en.p && l.st === 'pre') { missing++; continue; }
+      total += l.live;
+      const r = en.p ? engineRecFor(en.p) : null;
+      const sig = r && r.sig > 0 ? r.sig : (POS_SIG_DEFAULT[p.s] || 0.55);
+      varSum += (l.rem * sig) * (l.rem * sig);
+      if (l.st !== 'pre') { played++; scored += l.actual; }
+      if (l.st === 'post') done++;
     }
-    return { total: Math.round(total * 10) / 10, varSum, missing };
+    return { total: Math.round(total * 10) / 10, varSum, missing, played, done, scored: Math.round(scored * 10) / 10, n };
   }
   // "Proj Total" owners = elements whose OWN text node carries the label
   // (ESPN renders `<div class="statusLabel">Proj Total:<span>117.8</span></div>`,
@@ -2918,22 +3049,32 @@
     if (!teams) { if (existing) existing.remove(); return; }
     const tA = teams[0], tB = teams[1];
     const a = sideProjOf(tA.entries), b = sideProjOf(tB.entries);
-    const sd = Math.sqrt(a.varSum + b.varSum) || 1;
-    const winA = Math.round(normCdf((a.total - b.total) / sd) * 100);
+    const live = (a.played + b.played) > 0;
+    const sd = Math.sqrt(a.varSum + b.varSum);
+    const winA = sd < 0.05
+      ? (a.total > b.total ? 100 : a.total < b.total ? 0 : 50)
+      : Math.round(normCdf((a.total - b.total) / sd) * 100);
     const missing = a.missing + b.missing;
-    const tip = 'MFF numbers for ' + tA.name + ' vs ' + tB.name + ' — our proj totals (same weekly ' +
-      'projection as the row pills: site sim first, ' + state.scoringLabel + ' league-scored, injuries ' +
-      'priced) summed over each side\'s current starters, and our win odds (normal approximation ' +
-      'over the starters\' sim spreads; player correlations ignored).' +
+    const tip = (live
+      ? 'MFF LIVE numbers for ' + tA.name + ' vs ' + tB.name + ' — each starter = points scored so far (ESPN, ' +
+        'league-scored) + what he should still score (pregame proj × game left, nudged toward his pace late); ' +
+        'finals count as scored. Win odds only vary the unplayed part. ' +
+        tA.name + ': ' + a.scored.toFixed(1) + ' in, ' + a.done + '/' + a.n + ' final · ' +
+        tB.name + ': ' + b.scored.toFixed(1) + ' in, ' + b.done + '/' + b.n + ' final.'
+      : 'MFF numbers for ' + tA.name + ' vs ' + tB.name + ' — our proj totals (same weekly ' +
+        'projection as the row pills: site sim first, ' + state.scoringLabel + ' league-scored, injuries ' +
+        'priced) summed over each side\'s current starters, and our win odds (normal approximation ' +
+        'over the starters\' sim spreads; player correlations ignored).') +
       (missing ? ' ' + missing + ' starter(s) without a projection count 0.' : '');
     const wCol = (w) => (w >= 55 ? '#1d7a34' : w <= 45 ? '#b33636' : '#a06a00');
+    const lbl = live ? '<span style="color:#1d7a34">● live</span>' : '<span style="color:#5b6068">proj</span>';
     const side = (tot, w, right) =>
       `<span style="flex:1;min-width:0;white-space:nowrap;${right ? 'text-align:right' : ''}">` +
-      `<b style="font-size:15px">${tot.toFixed(1)}</b> <span style="color:#5b6068">proj</span>` +
+      `<b style="font-size:15px">${tot.toFixed(1)}</b> ${lbl}` +
       `<span style="color:#c8ccd4;margin:0 6px">|</span>` +
       `<b style="font-size:15px;color:${wCol(w)}">${w}%</b> <span style="color:#5b6068">win</span></span>`;
     const inner = side(a.total, winA, false) +
-      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px;text-align:center">MFF PROJ · WIN ODDS<br>WK ${period}</span>` +
+      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px;text-align:center">MFF ${live ? 'LIVE' : 'PROJ'} · WIN ODDS<br>WK ${period}</span>` +
       side(b.total, 100 - winA, true);
     const sig = inner + '|' + tA.teamId + '|' + tB.teamId;
     if (existing && existing.dataset.mffSig === sig && existing.isConnected &&
@@ -2995,8 +3136,11 @@
         const oc = g.cls === 'good' ? ['#e2f3e6', '#1d7a34'] : g.cls === 'bad' ? ['#fbe7e7', '#b33636'] : ['#f0f2f5', '#5b6068'];
         pills.push(pillHTML(g.txt, oc[0], oc[1], g.tip));
       }
-      const v = wkVal(p);
-      if (v > 0 || p.pPg != null) {
+      const lv = wkLive(p);
+      const v = lv.proj;
+      if (lv.st !== 'pre') {
+        pills.push(livePillHTML(lv)); // in-game: scored + remaining (final = scored)
+      } else if (v > 0 || p.pPg != null) {
         pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#f0f2f5', '#2a2c33',
           'Projected points this week (' + state.scoringLabel + ' · sim-engine mean: Clay × Vegas × matchup, league-scored)'));
         if (!onBoxscore) {
@@ -4034,7 +4178,7 @@
           : '<span style="color:#6dd06d;font-weight:800" title="Currently on your bench — start him">▲</span>';
       return `<div class="mff-proj-roster-player mff-rec ${cls}" data-key="${esc(k)}" style="cursor:pointer">
         <span class="t" style="color:${col}">${esc(slotLbl)}</span>
-        <span class="n">${mark} ${esc(p.n)} ${wkOppHTML(p)}${bbTagHTML(p, a.e.v)}${snBadges(p)}${p._unmatched ? ' <span style="color:#8a8d96;font-size:9px">(no proj)</span>' : ''}</span>
+        <span class="n">${mark} ${esc(p.n)} ${wkOppHTML(p)}${bbTagHTML(p, a.e.v)}${snBadges(p)}${liveTagHTML(p)}${p._unmatched ? ' <span style="color:#8a8d96;font-size:9px">(no proj)</span>' : ''}</span>
         <span class="v" title="Projected ppg this week (${esc(state.scoringLabel)})">${a.e.v ? a.e.v.toFixed(1) : '0'}</span>
         ${state.expandedKey === k && !p._unmatched ? profileHTML(p, k) : ''}
       </div>`;
@@ -4067,7 +4211,7 @@
       return `
       <div class="mff-proj-roster-player mff-rec ${cls}" data-key="${esc(k)}" style="cursor:pointer">
         <span class="t">${esc(b.p.s)}</span>
-        <span class="n">${mark}${esc(b.p.n)} ${wkOppHTML(b.p)}${bbTagHTML(b.p, b.v)}${snBadges(b.p)}</span>
+        <span class="n">${mark}${esc(b.p.n)} ${wkOppHTML(b.p)}${bbTagHTML(b.p, b.v)}${snBadges(b.p)}${liveTagHTML(b.p)}</span>
         <span class="v" title="Projected ppg this week (${esc(state.scoringLabel)})">${b.v ? b.v.toFixed(1) : '0'}</span>
         ${state.expandedKey === k && !b.p._unmatched ? profileHTML(b.p, k) : ''}
       </div>`;
@@ -4850,13 +4994,15 @@
       buildSchedule(MOCK.vegas.gameTotals);
       state.wkPropsAll = MOCK.vegas.weeklyProps || null;
     }
+    if (MOCK && MOCK.scoreboard) state.liveGames = parseScoreboard(MOCK.scoreboard); // harness live games
     lastHref = location.href;
     onUrlChange();
     watchUrl();
   }
 
   window.__mffEspn = { state, render, initForLeague, initSeason, handleProtoLine, rebuildFromPicks,
-    recommendPicks, wkVal, kickerProjFor, dstProjFor, optimalLineup, waiverRecs, seasonLineupCalc,
+    recommendPicks, wkVal, wkLive, parseScoreboard, refreshScoreboard, sideProjOf,
+    kickerProjFor, dstProjFor, optimalLineup, waiverRecs, seasonLineupCalc,
     engineMeanFor, engineWeekMap };
   gateInit(() => { try { render(); } catch (_) {} });
   main();

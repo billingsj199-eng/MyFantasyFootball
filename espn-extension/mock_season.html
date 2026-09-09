@@ -172,6 +172,32 @@ order) within ~2s. Rows below mimic FantasyCast's compact player column: no OPP 
     }
   }
 
+  // ---- LIVE fixture (v0.20.31): my starting QB's NFL team is in progress
+  // (Q3 7:30 → f = 0.625) and my first starting RB's team is FINAL; every
+  // roster entry on those teams gets a league-scored appliedStatTotal.
+  const LIVE_ST = {};
+  {
+    const mine = league.teams[1].roster.entries;
+    const teamOf = (posId) => {
+      const e = mine.find((x) => x.playerPoolEntry.player.defaultPositionId === posId && x.lineupSlotId !== 20);
+      return e ? e.playerPoolEntry.player.proTeamId : 0;
+    };
+    const qbT = teamOf(1), rbT = teamOf(2);
+    if (qbT) LIVE_ST[qbT] = 'in';
+    if (rbT && rbT !== qbT) LIVE_ST[rbT] = 'post';
+    league.teams.forEach((t) => t.roster.entries.forEach((e, i) => {
+      const st = LIVE_ST[e.playerPoolEntry.player.proTeamId];
+      if (!st) return;
+      e.playerPoolEntry.appliedStatTotal = Math.round(((i % 6) * 2.4 + (st === 'post' ? 5.5 : 1.5)) * 10) / 10;
+      e.playerPoolEntry.lineupLocked = true;
+    }));
+  }
+  const sbGame = (h, a, st, period, clock) => ({ date: '2026-09-13T17:00Z', competitions: [{
+    status: { period, displayClock: clock, type: { state: st, name: st === 'in' ? 'STATUS_IN_PROGRESS' : st === 'post' ? 'STATUS_FINAL' : 'STATUS_SCHEDULED', completed: st === 'post' } },
+    competitors: [{ homeAway: 'home', score: '17', team: { abbreviation: h } }, { homeAway: 'away', score: '14', team: { abbreviation: a } }] }] });
+  const scoreboard = { events: Object.keys(LIVE_ST).map((id) => sbGame(window.MFF_ESPN.PRO_TEAM[id] || '', 'OPP',
+    LIVE_ST[id], LIVE_ST[id] === 'in' ? 3 : 4, LIVE_ST[id] === 'in' ? '7:30' : '0:00')) };
+
   // ---- Vegas fixture: weeks 1-17 pairings over all 32 teams (sim needs a full season)
   const abbrs = Object.values(window.MFF_ESPN.PRO_TEAM).filter((a) => a !== 'FA');
   const gameTotals = {};
@@ -204,6 +230,7 @@ order) within ~2s. Rows below mimic FantasyCast's compact player column: no OPP 
     players: data, seasonLeague: league,
     nflState: { season_type: 'regular', week: 1, season: '2026' },
     vegas: { gameTotals, weeklyProps },
+    scoreboard,
     consensus: { week: 1, players: consensusPlayers },
     slMeta: (() => {
       // Injury-popover fixtures: the sabotaged starters get full detail so

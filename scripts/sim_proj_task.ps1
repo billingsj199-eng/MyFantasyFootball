@@ -8,6 +8,10 @@
 #
 # Schedule (one task, multiple triggers — all times local/ET):
 #   daily 10:00 (after the 9am consensus-ADP job + 9:45 Sim Lab refresh)
+#   daily 20:15 (added 2026-09-09: after the day's NFL practice reports post,
+#     ~4-7pm ET, west-coast teams last — so Wed/Thu/Fri game statuses reach
+#     the site the same evening instead of next morning; IgnoreNew keeps it
+#     clear of the Thu/Sun/Mon ~7:45 pre-kickoff runs)
 #   plus ~30 min before each in-season kickoff slot:
 #   Thu 19:40 | Sun 09:00, 12:30, 15:35, 19:50 | Mon 18:40, 19:45
 # Rows for games that already kicked off are FROZEN by the exporter itself

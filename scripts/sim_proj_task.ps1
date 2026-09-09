@@ -73,10 +73,32 @@ $out = & $Python (Join-Path $SimLab 'refresh_data.py') 2>&1 | Out-String
 Write-Log ("refresh_data: " + $out.Trim().Split("`n")[-1])
 if ($LASTEXITCODE -ne 0) { Write-Log "REFRESH FAILED (exit $LASTEXITCODE) - aborting"; exit 1 }
 
-# 2. Headless export into the repo data folder.
+# 2. Headless export into the repo data folder. The exporter also AUTO-LOCKS
+#    Sim Lab tracking snapshots for games kicking off within ~75 min
+#    (sim_lab/data/snapshots/*.json); when one changed, redeploy Sim Lab
+#    hosting so the TRACKING tab picks the lock up (step 2b).
+$SnapDir = Join-Path $SimLab 'data\snapshots'
+function Get-SnapSig {
+    $files = Get-ChildItem -Path $SnapDir -Filter '*.json' -ErrorAction SilentlyContinue
+    if (-not $files) { return '' }
+    return (($files | Get-FileHash -Algorithm MD5 | ForEach-Object { $_.Hash }) -join ',')
+}
+$snapBefore = Get-SnapSig
 $out = & $Node (Join-Path $SimLab 'export_site_proj.js') --repo $Repo 2>&1 | Out-String
 Write-Log $out
 if ($LASTEXITCODE -ne 0) { Write-Log "EXPORT FAILED (exit $LASTEXITCODE) - nothing committed"; exit 1 }
+
+# 2b. Sim Lab deploy when a per-game lock landed (hosting only — no data
+#     refresh; refresh_data.py already ran in step 1 for this same export).
+if ((Get-SnapSig) -ne $snapBefore) {
+    Write-Log 'auto-lock snapshot changed - deploying Sim Lab hosting'
+    Push-Location 'E:\MyFantasyFootball'
+    try {
+        $out = & 'C:\Users\billi\AppData\Roaming\npm\firebase.cmd' deploy --only hosting:simlab --project jackb933-website 2>&1 | Out-String
+        Write-Log ("simlab deploy: " + (($out -split "`n" | Where-Object { $_ -match 'Deploy complete|Error|error' } | Select-Object -First 2) -join ' | '))
+    } catch { Write-Log ("simlab deploy FAILED: " + $_.Exception.Message) }
+    finally { Pop-Location }
+}
 
 $changed = git status --porcelain -- @Files
 if (-not $changed) {

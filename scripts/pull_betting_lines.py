@@ -242,8 +242,21 @@ def update_game_lines(src):
     merged = {}
     for key, old in existing.items():
         merged[key] = dict(old)
+    # KICKOFF FREEZE (2026-09-09): a game that has already kicked off keeps
+    # its last pregame total/spread — ESPN flips to live lines (or blanks)
+    # once the game is on, and every site surface reading team totals
+    # (weekly board, Start/Sit, K/DST projections) must stay pregame.
+    kicks = load_kickoffs()
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    frozen = 0
     for key, rec in pulled.items():
         old = existing.get(key)
+        m = re.match(r'W(\d+)_([A-Z]+)_([A-Z]+)$', key)
+        if old and m:
+            k = (kicks.get(m.group(1)) or {}).get(m.group(3)) or (kicks.get(m.group(1)) or {}).get(m.group(2))
+            if k and now_utc >= k:
+                frozen += 1
+                continue
         rec = {'total': rec['total'], 'spread': rec['spread'],
                'asOf': TODAY, 'source': rec['source']}
         if rec['total'] is None and old:
@@ -257,7 +270,8 @@ def update_game_lines(src):
         merged[key] = rec
     block = emit_game_totals_block(merged)
     new_src = replace_block(src, '_GAME_TOTALS_2026', block)
-    print(f'  gameTotals: {len(merged)} games, {changed} lines new/changed')
+    print(f'  gameTotals: {len(merged)} games, {changed} lines new/changed'
+          + (f', {frozen} kicked-off games kept pregame' if frozen else ''))
     return new_src, changed
 
 
@@ -1648,7 +1662,18 @@ def update_weekly_props(src):
                 continue
             canon = canonize(pulled, lookup, f'{book} W{wk}', drop_unmatched=True)
             wkd = weeks.setdefault(str(wk), {})
+            # KICKOFF FREEZE (2026-09-09): once a player's game has kicked off
+            # his board is final — books that keep posting live in-game lines
+            # must not overwrite the pregame ones the LINES tab / Start-Sit /
+            # weekly board show and the Sim Lab lock graded against.
+            kick_wk = kicks.get(str(wk)) or {}
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            skipped_live = 0
             for name, stats in canon.items():
+                k_off = kick_wk.get(teams.get(name)) if kicks else None
+                if k_off and now_utc >= k_off:
+                    skipped_live += 1
+                    continue
                 raw = ', '.join(f'{k}: {v}' for k, v in
                                 sorted(stats.items(), key=lambda kv: STAT_ORDER.index(kv[0])))
                 entry = wkd.setdefault(name, {'asOf': TODAY})
@@ -1656,6 +1681,8 @@ def update_weekly_props(src):
                     entry[book] = raw
                     entry['asOf'] = TODAY
                     changed += 1
+            if skipped_live:
+                print(f'  {book} W{wk}: {skipped_live} players kept pregame (game already kicked off)')
             if kicks:
                 gbt = {abbr: g for (gwk, abbr), g in games_by_team.items() if gwk == wk}
                 dropped = prune_off_board(wkd, wk, book, canon, teams, kicks, gbt)

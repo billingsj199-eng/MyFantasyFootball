@@ -289,6 +289,54 @@ def attach(players, source, key):
     return matched, added
 
 
+KICKOFF_CACHE = os.path.join(os.path.dirname(ROOT), 'sim_lab', 'data', 'kickoffs_2026.json')
+TEAM_ABBR = {
+    'Arizona Cardinals': 'ARI', 'Atlanta Falcons': 'ATL', 'Baltimore Ravens': 'BAL',
+    'Buffalo Bills': 'BUF', 'Carolina Panthers': 'CAR', 'Chicago Bears': 'CHI',
+    'Cincinnati Bengals': 'CIN', 'Cleveland Browns': 'CLE', 'Dallas Cowboys': 'DAL',
+    'Denver Broncos': 'DEN', 'Detroit Lions': 'DET', 'Green Bay Packers': 'GB',
+    'Houston Texans': 'HOU', 'Indianapolis Colts': 'IND', 'Jacksonville Jaguars': 'JAX',
+    'Kansas City Chiefs': 'KC', 'Las Vegas Raiders': 'LV', 'Los Angeles Chargers': 'LAC',
+    'Los Angeles Rams': 'LAR', 'Miami Dolphins': 'MIA', 'Minnesota Vikings': 'MIN',
+    'New England Patriots': 'NE', 'New Orleans Saints': 'NO', 'New York Giants': 'NYG',
+    'New York Jets': 'NYJ', 'Philadelphia Eagles': 'PHI', 'Pittsburgh Steelers': 'PIT',
+    'San Francisco 49ers': 'SF', 'Seattle Seahawks': 'SEA', 'Tampa Bay Buccaneers': 'TB',
+    'Tennessee Titans': 'TEN', 'Washington Commanders': 'WAS',
+}
+
+
+def load_kickoffs():
+    """{wk(str): {abbr: aware UTC datetime}} from the sim exporter's ESPN cache."""
+    try:
+        raw = json.load(open(KICKOFF_CACHE, encoding='utf-8'))
+    except (OSError, ValueError):
+        return {}
+    out = {}
+    for wk, teams in raw.items():
+        for abbr, iso in (teams or {}).items():
+            try:
+                out.setdefault(str(wk), {})[abbr] = datetime.fromisoformat(str(iso).replace('Z', '+00:00'))
+            except ValueError:
+                continue
+    return out
+
+
+def load_d_teams():
+    """norm_name(d.js name) -> team abbr, for the kickoff freeze."""
+    import re as _re
+    src = open(os.path.join(ROOT, 'data', 'd.js'), encoding='utf-8').read()
+    out = {}
+    for m in _re.finditer(r'"n":"([^"]+)"', src):
+        tail = src[m.end():m.end() + 400]
+        t = _re.search(r'"t":"([^"]+)"', tail)
+        if not t:
+            continue
+        abbr = TEAM_ABBR.get(t.group(1)) or (t.group(1) if t.group(1) in TEAM_ABBR.values() else None)
+        if abbr:
+            out.setdefault(norm_name(m.group(1)), abbr)
+    return out
+
+
 def main():
     dry = '--dry' in sys.argv
     state = requests.get(STATE_URL, timeout=30).json()
@@ -329,6 +377,31 @@ def main():
         print(f'{len(fp_grade)} FantasyPros start/sit grades ({m} matched, {a} new names)')
     except Exception as e:
         print(f'!! FantasyPros pull failed ({e}) — card shows dashes for it this run')
+
+    # KICKOFF FREEZE (2026-09-09): a player whose game this week has already
+    # kicked off keeps the entry from the previous file verbatim — the
+    # sources keep moving after kickoff (Sleeper re-projects live, ESPN
+    # zeroes played games), which would rewrite the site's fallback
+    # projection, the Start/Sit stat line and the CONSENSUS weekly board for
+    # a game that is already being played. Same kickoff cache the sim
+    # exporter freezes on; no cache / unknown team -> not frozen (fail open).
+    frozen = 0
+    try:
+        prev = json.load(open(OUT_JSON, encoding='utf-8')) if os.path.exists(OUT_JSON) else None
+        if prev and int(prev.get('week') or 0) == week and int(prev.get('season') or 0) == season:
+            kicks = load_kickoffs().get(str(week), {})
+            teams = load_d_teams()
+            now = datetime.now(timezone.utc)
+            for name, entry in (prev.get('players') or {}).items():
+                abbr = teams.get(norm_name(name))
+                k = kicks.get(abbr) if abbr else None
+                if k and now >= k:
+                    players[name] = entry
+                    frozen += 1
+        if frozen:
+            print(f'{frozen} players frozen (games already kicked off)')
+    except Exception as e:
+        print(f'!! kickoff freeze skipped ({e})')
 
     if dry:
         for n in list(players)[:8]:

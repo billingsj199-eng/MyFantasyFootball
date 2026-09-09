@@ -249,9 +249,36 @@ should tint by matchup. The "Wk. 3" label matches the mock week — edit it to
           }).join('');
       }
     })();
+    // LIVE fixture (v0.29.24): Allen's team vs Waddle's team is in progress
+    // (Q3 7:30 → f = 0.625), Chase's team vs Gibbs' team is FINAL, everything
+    // else is pregame. players_points = league-scored actuals for anyone on
+    // those four teams (deterministic by roster slot).
+    var LIVE_ST = {};
+    function ltm(n) { return playersByName[n] ? playersByName[n].sTm : null; }
+    [ltm('Josh Allen'), ltm('Jaylen Waddle')].forEach(function (t) { if (t) LIVE_ST[t] = 'in'; });
+    [ltm("Ja'Marr Chase"), ltm('Jahmyr Gibbs')].forEach(function (t) { if (t) LIVE_ST[t] = 'post'; });
+    var SID2TM = {};
+    data.players.forEach(function (p) { if (p.sid) SID2TM[String(p.sid)] = p.sTm; });
     var MATCHUPS = ROSTERS.map(function (r) {
-      return { roster_id: r.roster_id, matchup_id: Math.ceil(r.roster_id / 2), starters: r.starters, players: r.players, points: 0 };
+      var pp = {};
+      (r.players || []).forEach(function (sid, i) {
+        var st = LIVE_ST[SID2TM[String(sid)]];
+        if (st) pp[String(sid)] = Math.round(((i % 6) * 2.4 + (st === 'post' ? 5.5 : 1.5)) * 10) / 10;
+      });
+      return { roster_id: r.roster_id, matchup_id: Math.ceil(r.roster_id / 2), starters: r.starters, players: r.players, points: 0, players_points: pp };
     });
+    function sbGame(h, a, st, period, clock, hs, as) {
+      return { date: '2026-09-20T17:00Z', competitions: [{
+        status: { period: period, displayClock: clock, type: { state: st, name: st === 'in' ? 'STATUS_IN_PROGRESS' : st === 'post' ? 'STATUS_FINAL' : 'STATUS_SCHEDULED', completed: st === 'post' } },
+        competitors: [
+          { homeAway: 'home', score: String(hs), team: { abbreviation: h } },
+          { homeAway: 'away', score: String(as), team: { abbreviation: a } }] }] };
+    }
+    var SCOREBOARD = { events: [
+      sbGame(ltm('Josh Allen'), ltm('Jaylen Waddle'), 'in', 3, '7:30', 17, 14),
+      sbGame(ltm("Ja'Marr Chase"), ltm('Jahmyr Gibbs'), 'post', 4, '0:00', 27, 24),
+      sbGame(ltm('Bijan Robinson'), ltm('Harrison Butker'), 'pre', 0, '0:00', 0, 0),
+    ].filter(function (g) { return g.competitions[0].competitors[0].team.abbreviation && g.competitions[0].competitors[1].team.abbreviation; }) };
     var LEAGUE = {
       name: 'Mock Dynasty League', total_rosters: 12,
       settings: { type: 2 },
@@ -338,6 +365,7 @@ should tint by matchup. The "Wk. 3" label matches the mock week — edit it to
       players: data,
       vegas: VEGAS,
       consensus: CONSENSUS,
+      scoreboard: SCOREBOARD,
       api: function (path) {
         document.getElementById('log').textContent = 'last api: ' + path + ' (picks made: ' + made + ')';
         if (/\/picks$/.test(path)) return buildPicks();

@@ -41,7 +41,8 @@ Set-Location $Repo
 Write-Log '=== sim proj export start ==='
 
 # Refuse to run over uncommitted work on the target files.
-$Files = @('data/sim_proj_2026.js', 'data/sim_proj_2026.json', 'data/injury_updates.js', 'data/weather_2026.js', 'index.html')
+$Files = @('data/sim_proj_2026.js', 'data/sim_proj_2026.json', 'data/injury_updates.js', 'data/weather_2026.js', 'index.html',
+           'data/practice_2026.js', 'data/depth_charts_2026.js')  # the .json twins are gitignored (local-only, like weather_2026.json)
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -60,6 +61,15 @@ Write-Log ("betting pull: exit " + $LASTEXITCODE)
 #     site's card tags; committed below alongside the projections).
 $out = & $Python (Join-Path $Repo 'scripts\pull_injuries.py') 2>&1 | Out-String
 Write-Log ("injury pull: " + $out.Trim().Split("`n")[-1])
+
+# 0b2. Official NFL practice report (latest practice participation + game
+#      status) and ESPN depth charts — the engine's in-season injury layer
+#      docks Questionable+DNP players and weights the vacated share by depth
+#      rank. Committed below alongside the projections.
+$out = & $Python (Join-Path $Repo 'scripts\pull_practice_reports.py') 2>&1 | Out-String
+Write-Log ("practice pull: " + $out.Trim().Split("`n")[-1])
+$out = & $Python (Join-Path $Repo 'scripts\pull_depth_charts.py') 2>&1 | Out-String
+Write-Log ("depth pull: " + $out.Trim().Split("`n")[-1])
 
 # 0c. Fresh game weather (ESPN roof/headline + Open-Meteo kickoff-hour
 #     forecast -> data/weather_2026.js; the Start/Sit WEATHER box and the
@@ -122,7 +132,7 @@ if (-not $changed) {
     }
     if ($html2 -ne $html) { [System.IO.File]::WriteAllText($idx, $html2) }
 
-    git add data/sim_proj_2026.js data/sim_proj_2026.json data/injury_updates.js data/weather_2026.js index.html
+    git add data/sim_proj_2026.js data/sim_proj_2026.json data/injury_updates.js data/weather_2026.js index.html data/practice_2026.js data/depth_charts_2026.js
     git commit -m ('Sim proj auto-export {0}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm'))
     git pull --rebase --autostash origin main
     git push origin main

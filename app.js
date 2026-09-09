@@ -50078,6 +50078,199 @@ Rules:
   // at the position, never K/DST, players only (no picks in v1).
   let _mtTradesOpen = false;
 
+  // ── TARGET A PLAYER (Jack 2026-09-09) ──────────────────────────────
+  // Type any QB/RB/WR/TE on another roster and the finder builds balanced
+  // packages FROM YOUR ROSTER for him: 1-, 2- and 3-piece combos priced
+  // with the calculator's own package math, kept inside a ±15% band and
+  // ranked by fairness, then fewer pieces, then roster sense (send from
+  // your surplus / their need, avoid your need positions and your best at
+  // a position). The generic surplus-for-need list stays underneath.
+  let _mtTfTarget = null;   // { name, ti } — the player we want + owner index
+
+  window._mtTfTargetSearch = function (q) {
+    const box = document.getElementById('mtTfTargetResults');
+    if (!box) return;
+    q = String(q || '').trim().toLowerCase();
+    const teams = window._mtTeams || [];
+    if (q.length < 2 || !teams.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    const hits = [];
+    teams.forEach((t, ti) => {
+      if (t.isMyTeam) return;
+      (t.players || []).forEach(name => {
+        if (String(name).toLowerCase().indexOf(q) < 0) return;
+        const d = _mtLookupD(name);
+        if (!d || ['QB', 'RB', 'WR', 'TE'].indexOf(d.s) < 0) return;
+        hits.push({ name, pos: d.s, rank: _mtGetPlayerRank(name), owner: t.owner, ti });
+      });
+    });
+    hits.sort((a, b) => a.rank - b.rank);
+    let html = '';
+    hits.slice(0, 8).forEach(h => {
+      html += `<div onmousedown="event.preventDefault()" onclick="window._mtTfPickTarget(${h.ti}, ${JSON.stringify(h.name).replace(/"/g, '&quot;')})" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(30,42,66,.5);cursor:pointer" onmouseover="this.style.background='rgba(168,85,247,.12)'" onmouseout="this.style.background=''">` +
+        `<span style="font-size:.55rem;font-weight:700;color:var(--text2);min-width:22px">${_esc(h.pos)}</span>` +
+        `<span style="flex:1;min-width:0;font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(h.name)}</span>` +
+        `<span style="font-size:.62rem;color:var(--text2)">#${h.rank < 999 ? h.rank : '—'}</span>` +
+        `<span style="font-size:.68rem;color:#a855f7;white-space:nowrap">${_esc(h.owner)}</span></div>`;
+    });
+    if (!hits.length) html = `<div style="padding:8px 10px;font-size:.72rem;color:var(--text2)">No QB/RB/WR/TE on another roster matches</div>`;
+    box.innerHTML = html;
+    box.style.display = '';
+  };
+  window._mtTfHideTargetResults = function () {
+    const box = document.getElementById('mtTfTargetResults');
+    if (box) setTimeout(() => { box.style.display = 'none'; }, 150);
+  };
+  window._mtTfPickTarget = function (ti, name) {
+    _mtTfTarget = { name, ti };
+    _mtRenderTradeFinder();
+    const out = document.getElementById('mtTfTargetOut');
+    if (out) out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+  window._mtTfClearTarget = function () {
+    _mtTfTarget = null;
+    _mtRenderTradeFinder();
+    const inp = document.getElementById('mtTfTargetInput');
+    if (inp) inp.focus();
+  };
+
+  // Packages from `me` for `targetName` on `them`. Returns [] when nothing
+  // lands inside the band. Each: { send: [{name,d,val,pos,flags}], pkg, tv,
+  // gap (signed, + = you overpay), pct, fairLbl, notes }.
+  function _mtTfBuildTargetOffers(me, them, targetName, teams) {
+    const mode = _mtGetRankingMode();
+    const td = _mtLookupD(targetName);
+    if (!td) return null;
+    const tv = window._getTradeValue(td, _mtValueSrc, mode);
+    if (!(tv > 0)) return null;
+    const n = teams.length;
+    const half = Math.ceil(n / 2), third = Math.max(2, Math.ceil(n / 3));
+    const rankOf = (t, pos) => ((t.posRanks || {})[pos] || { rank: n }).rank;
+    const myNeed = pos => rankOf(me, pos) > half;
+    const mySurplus = pos => rankOf(me, pos) <= third;
+    const theirNeed = pos => rankOf(them, pos) > half;
+    // My tradeable pieces: QB/RB/WR/TE, valued; best-at-position flagged.
+    const bestAt = {};
+    const mine = (me.players || []).map(nm => {
+      const d = _mtLookupD(nm);
+      if (!d || ['QB', 'RB', 'WR', 'TE'].indexOf(d.s) < 0) return null;
+      return { name: nm, d, pos: d.s, val: window._getTradeValue(d, _mtValueSrc, mode) };
+    }).filter(p => p && p.val > 0);
+    mine.forEach(p => { if (!bestAt[p.pos] || p.val > bestAt[p.pos].val) bestAt[p.pos] = p; });
+    const countAt = {};
+    mine.forEach(p => { countAt[p.pos] = (countAt[p.pos] || 0) + 1; });
+    // Candidates: nothing worth far more than the target (a 1-for-1 down
+    // is never "even"), nothing below the waiver-spot cost (pure throw-ins
+    // add ~0 in the package math). Top 14 by value keeps the combo count sane.
+    const cost = window._packageRosterCost(mode);
+    const cands = mine.filter(p => p.val <= tv * 1.12 && p.val > cost + 2)
+      .sort((a, b) => b.val - a.val).slice(0, 14);
+    const band = 0.15;
+    const fairBand = (x, y) => Math.abs(x - y) <= Math.max(6, 0.05 * Math.max(x, y));
+    const offers = [];
+    const consider = (pieces) => {
+      // Never empty a position or ship two starters from one spot in one deal.
+      const sentAt = {};
+      pieces.forEach(p => { sentAt[p.pos] = (sentAt[p.pos] || 0) + 1; });
+      for (const pos in sentAt) if ((countAt[pos] || 0) - sentAt[pos] < 1) return;
+      const vals = pieces.map(p => p.val);
+      const pkg = window._packageAdjustedTotal(vals, mode);
+      const gap = pkg - tv;
+      const pct = Math.abs(gap) / Math.max(pkg, tv);
+      if (pct > band) return;
+      let score = pct * 100 + (pieces.length - 1) * 6;
+      const notes = [];
+      pieces.forEach(p => {
+        if (bestAt[p.pos] === p) { score += 12; }
+        if (myNeed(p.pos)) score += 8;
+        else if (mySurplus(p.pos)) score -= 3;
+        if (theirNeed(p.pos)) score -= 4;
+      });
+      // Same-position swap for a downgrade in bodies is pointless: sending
+      // two at the target's own position for one of him is fine, but a
+      // 1-for-1 at his position must be an upgrade in value for us.
+      if (pieces.length === 1 && pieces[0].pos === td.s && pieces[0].val >= tv) score += 10;
+      const fromSurplus = [...new Set(pieces.filter(p => mySurplus(p.pos)).map(p => p.pos))];
+      const fillsTheir = [...new Set(pieces.filter(p => theirNeed(p.pos)).map(p => p.pos))];
+      if (fromSurplus.length) notes.push('from your ' + fromSurplus.join('/') + ' surplus');
+      if (fillsTheir.length) notes.push('fills their ' + fillsTheir.join('/') + ' need (' + fillsTheir.map(pos => _mtOrdinal(rankOf(them, pos))).join('/') + ')');
+      const warn = [];
+      pieces.forEach(p => { if (bestAt[p.pos] === p) warn.push('your best ' + p.pos); else if (myNeed(p.pos)) warn.push('thins your ' + p.pos + ' (' + _mtOrdinal(rankOf(me, p.pos)) + ')'); });
+      offers.push({ send: pieces, pkg, tv, gap, pct, score, notes, warn,
+        fairLbl: fairBand(pkg, tv) ? 'FAIR' : (gap > 0 ? 'YOU OVERPAY' : 'THEY OVERPAY') });
+    };
+    for (let i = 0; i < cands.length; i++) {
+      consider([cands[i]]);
+      for (let j = i + 1; j < cands.length; j++) {
+        consider([cands[i], cands[j]]);
+        for (let k = j + 1; k < cands.length; k++) consider([cands[i], cands[j], cands[k]]);
+      }
+    }
+    offers.sort((a, b) => a.score - b.score);
+    // Variety: don't show six packages that all lead with the same player.
+    const leadCount = {}, picked = [];
+    for (const o of offers) {
+      const lead = o.send[0].name;
+      if ((leadCount[lead] || 0) >= 2) continue;
+      leadCount[lead] = (leadCount[lead] || 0) + 1;
+      picked.push(o);
+      if (picked.length >= 6) break;
+    }
+    return { td, tv, offers: picked, candidates: cands.length, rankOf, half };
+  }
+
+  function _mtTfTargetSection(me, teams) {
+    const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    const chip = (name, pos, val) => `<span style="font-weight:600;color:var(--text)">${_esc(name)}</span> <span style="font-size:.6rem;font-weight:700;color:${posColors[pos] || 'var(--text2)'}">${_esc(pos)}</span> <span style="font-size:.6rem;color:var(--text2)">${Math.round(val)}</span>`;
+    const tgt = _mtTfTarget && teams[_mtTfTarget.ti] ? _mtTfTarget : null;
+    let html = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 8px">` +
+      `<span style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1px;color:var(--text2)">TARGET A PLAYER</span>` +
+      `<div style="position:relative;flex:1;min-width:200px;max-width:320px">` +
+      `<input id="mtTfTargetInput" type="text" placeholder="Type a player on another team…" autocomplete="off" value="${tgt ? _esc(tgt.name) : ''}" ` +
+      `oninput="window._mtTfTargetSearch(this.value)" onfocus="window._mtTfTargetSearch(this.value)" onblur="window._mtTfHideTargetResults()" ` +
+      `style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid ${tgt ? '#a855f7' : 'var(--border)'};background:var(--surface);color:var(--text);font-size:.78rem;font-family:inherit">` +
+      `<div id="mtTfTargetResults" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:40;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-height:280px;overflow:auto"></div></div>` +
+      (tgt ? `<button onclick="window._mtTfClearTarget()" style="padding:4px 9px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)">✕ CLEAR</button>` : '') +
+      `<span style="font-size:.6rem;color:var(--text2)">${tgt ? '' : 'Builds an even package from your roster for him'}</span></div>`;
+    html += `<div id="mtTfTargetOut">`;
+    if (tgt) {
+      const them = teams[tgt.ti];
+      const res = _mtTfBuildTargetOffers(me, them, tgt.name, teams);
+      if (!res) {
+        html += `<div style="font-size:.75rem;color:var(--text2);padding:6px 0 10px">Couldn't value ${_esc(tgt.name)} on the current board.</div>`;
+      } else {
+        const n = teams.length;
+        html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.78rem;margin-bottom:6px">` +
+          `<span style="font-size:.6rem;color:#22c55e;font-weight:700">GET</span> ${chip(tgt.name, res.td.s, res.tv)}` +
+          `<span style="font-size:.62rem;color:var(--text2)">from</span> <span style="font-weight:700;color:#a855f7">${_esc(them.owner)}</span>` +
+          `<span style="font-size:.6rem;color:var(--text2)">their ${res.td.s}: ${_mtOrdinal(res.rankOf(them, res.td.s))} of ${n} · your ${res.td.s}: ${_mtOrdinal(res.rankOf(me, res.td.s))}</span></div>`;
+        if (!res.offers.length) {
+          html += `<div style="font-size:.75rem;color:var(--text2);padding:4px 0 10px">No package from your roster lands within 15% of his value` +
+            (res.candidates ? ' — your pieces are either worth far more than him or too small to add up.' : ' — nothing tradeable at QB/RB/WR/TE above waiver value.') + `</div>`;
+        } else {
+          html += `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
+          res.offers.forEach(o => {
+            const pct = Math.round(o.pct * 100);
+            const col = o.fairLbl === 'FAIR' ? '#22c55e' : '#f59e0b';
+            const sendHtml = o.send.map(p => chip(p.name, p.pos, p.val)).join(' <span style="color:var(--text2)">+</span> ');
+            const gapTxt = o.fairLbl === 'FAIR' ? `FAIR · ±${pct}%` : (o.gap > 0 ? `you send +${pct}%` : `you get +${pct}%`);
+            html += `<div style="border:1px solid ${o.fairLbl === 'FAIR' ? 'rgba(34,197,94,.35)' : 'var(--border)'};border-radius:8px;background:var(--surface);padding:8px 12px">` +
+              `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.78rem">` +
+              `<span style="font-size:.6rem;color:#ef4444;font-weight:700">SEND</span> ${sendHtml}` +
+              `<span style="color:var(--text2)">⇄</span>` +
+              `<span style="font-size:.6rem;color:#22c55e;font-weight:700">GET</span> ${chip(tgt.name, res.td.s, res.tv)}` +
+              `<span title="Package value ${Math.round(o.pkg)} vs his ${Math.round(res.tv)} in trade-calc units (extra pieces count net of the roster-spot cost). FAIR = inside the calculator's own 5% band." style="margin-left:auto;font-size:.6rem;font-weight:700;color:${col};cursor:help">${gapTxt}</span></div>` +
+              `<div style="font-size:.6rem;color:var(--text2);margin-top:3px">${o.send.length} for 1` +
+              (o.notes.length ? ' · ' + _esc(o.notes.join(' · ')) : '') +
+              (o.warn.length ? ` · <span style="color:#f59e0b">⚠ ${_esc(o.warn.join(', '))}</span>` : '') + `</div></div>`;
+          });
+          html += `</div>`;
+        }
+      }
+    }
+    html += `</div>`;
+    return html;
+  }
+
   window._mtToggleTradeFinder = function () {
     const box = document.getElementById('mtTradeFinder');
     if (!box) return;
@@ -50100,6 +50293,9 @@ Rules:
       return;
     }
     if (!me.posRanks) _mtComputePosRanks(teams);
+    // Target-a-player row + its packages sit above the generic suggestions.
+    html += _mtTfTargetSection(me, teams);
+    if (_mtTfTarget) html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1px;color:var(--text2);margin:2px 0 6px">OTHER IDEAS · your surplus for their need</div>`;
 
     const POS = ['QB', 'RB', 'WR', 'TE'];
     const mode = _mtGetRankingMode();

@@ -52,13 +52,16 @@
   // 244 = traded player); normalize.js turns raw.activityTopics into the
   // payload's `trades` block (site trade log for private leagues). A feed
   // failure never blocks the export.
-  var ACTIVITY_FILTER = JSON.stringify({ topics: { filterType: { value: ["ACTIVITY_TRANSACTIONS"] }, limit: 250, limitPerMessageSet: { value: 25 }, offset: 0, sortMessageDate: { sortPriority: 1, sortAsc: false }, sortFor: { sortPriority: 2, sortAsc: false }, filterIncludeMessageTypeIds: { value: [244] } } });
+  // ESPN rejects a bare `topics` root (400) — the filter roots are players /
+  // transactions / communication / schedule; topics come back under
+  // communication.topics (fixed 0.20.33, 2026-09-09).
+  var ACTIVITY_FILTER = JSON.stringify({ communication: { topics: { filterType: { value: ["ACTIVITY_TRANSACTIONS"] }, limit: 250, limitPerMessageSet: { value: 25 }, offset: 0, sortMessageDate: { sortPriority: 1, sortAsc: false }, sortFor: { sortPriority: 2, sortAsc: false }, filterIncludeMessageTypeIds: { value: [244] } } } });
   function fetchActivity(leagueId, season) {
     return fetch(API + season + "/segments/0/leagues/" + leagueId + "?view=kona_league_communication", {
       credentials: "include",
       headers: { Accept: "application/json", "X-Fantasy-Filter": ACTIVITY_FILTER }
     }).then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { var o = Array.isArray(j) ? j[0] : j; return (o && o.topics) || []; })
+      .then(function (j) { var o = Array.isArray(j) ? j[0] : j; return (o && ((o.communication && o.communication.topics) || o.topics)) || []; })
       .catch(function () { return []; });
   }
 

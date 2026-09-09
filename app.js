@@ -12853,6 +12853,85 @@ function openCompare() {
 // Shared array of search-added players (from the search bar)
 var searchAdded = [];
 
+// === POSITIONAL AVERAGE BASELINES (Compare page) — 2026-09-09 ==============
+// Flock's Compare lets you line a player up against "Average WR1 … WR6";
+// ours builds the same thing from the real game logs. Tier k of position P
+// = the 12 players who finished (k-1)*12+1 … k*12 at the position in PPR
+// points that season (min 4 games). The synthetic WEEKLY_STATS entry
+// "Average WR2" carries one row per week whose stats are the MEAN of the
+// tier members' rows that week (members with no row — bye / DNP — are left
+// out of that week's mean, so per-game averages stay per-game). Every
+// season with k*12 qualifiers gets rows (2026 joins once its logs land), so
+// the card's SPLITS & FILTERS season chips and week range work as usual.
+// Entries are flagged _synthetic so the STATS rank pools skip them.
+const _AVG_TIERS = { QB: 3, RB: 5, WR: 6, TE: 3 };
+const _AVG_STAT_KEYS = ['fpts', 'py', 'ptd', 'int', 'pa', 'pc', 'ry', 'rtd', 'ra', 'fl', 'rec', 'rcy', 'rctd', 'tgt'];
+function _avgTierName(pos, k) { return 'Average ' + pos + k; }
+function _avgTierParse(name) { const m = /^Average (QB|RB|WR|TE)(\d)$/.exec(String(name || '')); return (m && _AVG_TIERS[m[1]] >= +m[2]) ? { pos: m[1], k: +m[2] } : null; }
+function _avgTierSrc(pos, k) {
+  return { n: _avgTierName(pos, k), s: pos, t: 'Positional average', _avgTier: { pos: pos, k: k }, _retired: false, career: [], idx: -1, myRank: 0 };
+}
+function _avgTierEnsure(pos, k) {
+  if (typeof WEEKLY_STATS === 'undefined' || !_AVG_TIERS[pos] || k < 1 || k > _AVG_TIERS[pos]) return null;
+  const name = _avgTierName(pos, k);
+  const n = Object.keys(WEEKLY_STATS).length;
+  const have = WEEKLY_STATS[name];
+  if (have && have._synthetic && have._n === n) return have;
+  if (n < 50) return null; // weekly bundle not merged yet
+  const bySeason = {};
+  for (const pn in WEEKLY_STATS) {
+    const wd = WEEKLY_STATS[pn];
+    if (!wd || wd._synthetic || wd.pos !== pos || !wd.seasons) continue;
+    for (const yr in wd.seasons) {
+      if (+yr < 2018) continue; // Sleeper-era logs only (targets / full lines); older seasons would drag the baseline
+      const rows = (wd.seasons[yr] || []).filter(r => r && r.wk >= 1 && r.wk <= 18 && (r.opp || r.fpts || r.tgt || r.ra || r.pa));
+      if (rows.length < 4) continue;
+      let tot = 0;
+      rows.forEach(r => { tot += (r.fpts || 0) + (r.rec || 0) * 0.5; }); // PPR (logs store half-PPR)
+      (bySeason[yr] = bySeason[yr] || []).push({ n: pn, tot: tot, rows: rows });
+    }
+  }
+  const seasons = {}, members = {};
+  Object.keys(bySeason).forEach(yr => {
+    const list = bySeason[yr].sort((a, b) => b.tot - a.tot);
+    if (list.length < k * 12) return;
+    const tier = list.slice((k - 1) * 12, k * 12);
+    const byWk = {};
+    tier.forEach(m => m.rows.forEach(r => { (byWk[r.wk] = byWk[r.wk] || []).push(r); }));
+    const out = [];
+    Object.keys(byWk).map(Number).sort((a, b) => a - b).forEach(wk => {
+      const rs = byWk[wk];
+      const row = { wk: wk, tm: '', opp: 'AVG' };
+      _AVG_STAT_KEYS.forEach(key => { let s = 0; rs.forEach(r => { s += (+r[key] || 0); }); row[key] = Math.round(s / rs.length * 100) / 100; });
+      out.push(row);
+    });
+    if (out.length) { seasons[yr] = out; members[yr] = tier.map(m => m.n); }
+  });
+  if (!Object.keys(seasons).length) return null;
+  WEEKLY_STATS[name] = { pos: pos, seasons: seasons, _synthetic: true, _n: n, _members: members };
+  // First paint defaults the card's season split to the latest COMPLETE
+  // season (a multi-year blend is rarely what "average WR2" means).
+  if (typeof _cmpSplitState !== 'undefined' && !_cmpSplitState[name]) {
+    const yrs = Object.keys(seasons).sort();
+    const ref = yrs.filter(y => (seasons[y] || []).length >= 10);
+    const pick = ref.length ? ref[ref.length - 1] : yrs[yrs.length - 1];
+    _cmpSplitState[name] = { open: false, seasons: new Set([pick]), wkFrom: 1, wkTo: 18, mate: null, minSnap: 0, side: 'both', agg: 'avg' };
+  }
+  return WEEKLY_STATS[name];
+}
+// Every baseline as a Compare-search entry (the search list adds these after
+// the real players; the card branch in renderCompareGrid builds on demand).
+function _avgTierSearchEntries() {
+  const out = [];
+  Object.keys(_AVG_TIERS).forEach(pos => {
+    for (let k = 1; k <= _AVG_TIERS[pos]; k++) {
+      const src = _avgTierSrc(pos, k);
+      out.push({ n: src.n, s: pos, t: src.t, yrs: 'AVG', _retired: false, _isAvg: true, _key: 'A:' + src.n, _src: src });
+    }
+  });
+  return out;
+}
+
 // === Compare card SPLITS & FILTERS ===
 // Per-card game-log filtering on the Compare page: limit the sample to specific
 // seasons and/or a week range, or split production by whether a chosen teammate
@@ -13042,7 +13121,7 @@ function _cmpRankPools(pos, st, fmtKey, mode) {
   pools = defs.map(() => []);
   for (const pn in WEEKLY_STATS) {
     const wd = WEEKLY_STATS[pn];
-    if (!wd || wd.pos !== pos || !wd.seasons) continue;
+    if (!wd || wd._synthetic || wd.pos !== pos || !wd.seasons) continue;
     const games = [];
     for (const yr in wd.seasons) {
       if (st.seasons && !st.seasons.has(yr)) continue;
@@ -13491,6 +13570,39 @@ function renderCompareGrid() {
     // keeps independent split state; originals keep the plain name.
     const instKey = (d && sr && sr._key && sr._key.indexOf('DUP:') === 0) ? d.n + '##' + sr._key.split(':')[1] : (d ? d.n : null);
     const dupBtn = d ? `<button class="cmp-dup-btn" data-i="${i}" title="Duplicate this card — compare the same player under different splits">&#10697;</button>` : '';
+
+    // Positional-average baseline card ("Average WR2"): synthetic WEEKLY_STATS
+    // entry built on demand — header tile + the same STATS / SPLITS sections a
+    // player card gets, nothing else (no ranks, ADP, combine or bio apply).
+    if (d && d._avgTier) {
+      const ent = _avgTierEnsure(d._avgTier.pos, d._avgTier.k);
+      const removeBtn = `<button class="remove-from-search" data-key="${sr ? sr._key : ''}">&times;</button>`;
+      const yrs = ent ? Object.keys(ent.seasons).sort() : [];
+      const lo = (d._avgTier.k - 1) * 12 + 1, hi = d._avgTier.k * 12;
+      const _AC = { QB: '#e74c3c', RB: '#22c55e', WR: '#3b82f6', TE: '#a855f7' };
+      const latest = yrs.length ? yrs[yrs.length - 1] : null;
+      const who = (ent && latest && ent._members && ent._members[latest]) ? ent._members[latest].join(', ') : '';
+      return `<div class="compare-col cmp-avg-col">
+        <div class="card-header" style="position:relative">
+          ${removeBtn}${dupBtn}
+          <div class="card-hero">
+            <div class="cmp-avg-hero" style="color:${_AC[d.s] || 'var(--accent)'};border-color:${_AC[d.s] || 'var(--accent)'}">${d.s}<span>${d._avgTier.k}</span></div>
+            <div>
+              <div class="card-name">${d.n}</div>
+              <div class="card-meta">
+                <span class="pos-badge ${d.s}">${d.s}</span>
+                <span class="card-team">${d.s}${lo}–${d.s}${hi} by PPR points</span>
+                <span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(59,130,246,.15);color:#60a5fa;font-weight:600">BASELINE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-section"><div class="cmp-split-note" style="text-align:left;line-height:1.45">Per-game average of the 12 ${d.s}s who finished ${lo}–${hi} at the position in PPR points that season (min 4 games) — each stat below is the tier's mean week. Seasons: ${yrs.length ? yrs.join(', ') : 'loading…'}. Use SPLITS &amp; FILTERS to pick a season or week range.${who ? '<div style="margin-top:4px;font-size:.6rem;opacity:.8" title="' + who.replace(/"/g, '&quot;') + '">' + latest + ' tier: ' + who + '</div>' : ''}</div></div>
+          ${ent ? _cmpFullStatsSectionHtml(d, instKey) + _cmpSplitSectionHtml(d, undefined, instKey) : '<div class="cmp-split-note">Weekly data loading&hellip;</div>'}
+        </div>
+      </div>`;
+    }
 
     // All retired players (from any source) use the same card
     if (d && (d._retired || (sr && sr._retired) || (sr && sr._key && sr._key.startsWith('L:')))) {
@@ -21786,7 +21898,9 @@ function allSearchable(){
     const teams=(p._teams||[]).join(' / ');
     return{n:p.n,s:p.s,t:teams,yrs:p._yrs||'',_retired:true,_isHP:true,_key:'H:'+p.n,_src:p};
   });
-  return[...legends,...current,...hpPlayers];
+  // Positional-average baselines ("Average WR2") — searchable like a player.
+  const avgs=(typeof _avgTierSearchEntries==='function')?_avgTierSearchEntries():[];
+  return[...legends,...current,...hpPlayers,...avgs];
 }
 
 ["ALL","QB","RB","WR","TE","K","DST"].forEach(pos=>{
@@ -21807,7 +21921,7 @@ function sRD(){
   const already=new Set([...searchAdded.map(p=>p._key),...[...compareSet].map(i=>'C:'+D[i].n)]);
   sDE.innerHTML=list.map(p=>{
     const used=already.has(p._key);
-    const tag=p._retired?'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(245,158,11,.15);color:#f59e0b;margin-left:4px">RETIRED</span>':'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(34,197,94,.15);color:#22c55e;margin-left:4px">ACTIVE</span>';
+    const tag=p._isAvg?'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(59,130,246,.15);color:#60a5fa;margin-left:4px">BASELINE</span>':p._retired?'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(245,158,11,.15);color:#f59e0b;margin-left:4px">RETIRED</span>':'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(34,197,94,.15);color:#22c55e;margin-left:4px">ACTIVE</span>';
     return '<div class="lg-drop-item'+(used?' used':'')+'" data-key="'+p._key+'"><span class="lg-badge" style="background:'+_PB[p.s]+';color:'+_PC[p.s]+'">'+p.s+'</span><span style="font-weight:600">'+p.n+'</span>'+tag+'<span style="color:var(--text2);font-size:.66rem;margin-left:auto">'+p.yrs+'</span></div>';
   }).join('');
   sDE.querySelectorAll('.lg-drop-item:not(.used)').forEach(el=>{
@@ -21815,6 +21929,9 @@ function sRD(){
       const all=allSearchable();
       const pl=all.find(p=>p._key===el.dataset.key);
       if(!pl)return;
+      // Baselines need the weekly bundle — force it if it hasn't landed yet
+      // (the mff:weeklydata listener re-renders the grid when it does).
+      if(pl._isAvg&&typeof window._loadWeeklyData==='function'){try{window._loadWeeklyData();}catch(_){}}
       searchAdded.push(pl);
       sSE.value='';sDropOpen=false;sDE.style.display='none';
       renderSearchChips();
@@ -21864,12 +21981,46 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
   const oddsProb = o => o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100);
   const week = () => window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
   const save = () => { try { localStorage.setItem('mff_startsit', JSON.stringify(names)); localStorage.setItem('mff_startsit_fmt', fmt); } catch (_) {} };
-  const lookup = n => D.find(d => d.n === n && d.s && d.t);
+  const lookup = n => D.find(d => d.n === n && d.s && d.t) || avgLookup(n);
+
+  // Positional-average baselines ("Average WR2"): a reference card whose
+  // projection is the mean Week-N projection of the 12 players projected
+  // 13th–24th at the position under this page's format — "is my WR3 above
+  // an average WR2 this week?". Baselines never take a verdict slot.
+  const AVG_TIERS = { QB: 2, RB: 3, WR: 3, TE: 2, K: 1, DST: 1 };
+  let avgCache = {};
+  function avgObj(p, k) { return { n: 'Average ' + p + k, s: p, t: '', _sstAvg: { pos: p, k: k } }; }
+  function avgLookup(n) { const m = /^Average (QB|RB|WR|TE|K|DST)(\d)$/.exec(String(n || '')); return (m && AVG_TIERS[m[1]] >= +m[2]) ? avgObj(m[1], +m[2]) : null; }
+  function avgList() { const out = []; Object.keys(AVG_TIERS).forEach(p => { for (let k = 1; k <= AVG_TIERS[p]; k++) out.push(avgObj(p, k)); }); return out; }
+  function avgProj(pos, k) {
+    const key = pos + '|' + fmt + '|' + week();
+    if (!avgCache[key]) {
+      const vals = [];
+      const prev = rankingScoringFmt;
+      rankingScoringFmt = fmt;
+      try {
+        D.forEach(d => {
+          if (!d || d.s !== pos || !d.t || d._retired || d.rm || d.devy) return;
+          const b = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+          const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, b, {}) : b;
+          if (typeof v === 'number' && isFinite(v) && v > 0) vals.push(v);
+        });
+      } catch (e) { console.warn('[Start/Sit] avg', e); }
+      finally { rankingScoringFmt = prev; }
+      vals.sort((a, b) => b - a);
+      avgCache[key] = vals;
+    }
+    const vals = avgCache[key], lo = (k - 1) * 12;
+    const slice = vals.slice(lo, lo + 12);
+    if (!slice.length) return null;
+    return { proj: slice.reduce((a, b) => a + b, 0) / slice.length, n: slice.length, lo: lo + 1, hi: lo + slice.length, top: slice[0], bottom: slice[slice.length - 1] };
+  }
 
   // Searchable pool: current-season rostered players only (no retired /
-  // removed / devy rows) — this is a lineup tool, not the history explorer.
+  // removed / devy rows) — this is a lineup tool, not the history explorer —
+  // plus the positional-average baselines.
   function pool() {
-    return D.filter(d => d.n && d.s && d.t && POS.indexOf(d.s) >= 0 && !d._retired && !d.rm && !d.devy);
+    return D.filter(d => d.n && d.s && d.t && POS.indexOf(d.s) >= 0 && !d._retired && !d.rm && !d.devy).concat(avgList());
   }
 
   // Pos filter buttons (same look as the Compare search filter).
@@ -21971,6 +22122,12 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const o = { d: d, wk: wk, proj: null, src: 'base', base: null, bye: false, out: false,
                 opp: null, home: null, spread: null, tt: null, oppTT: null, ou: null, diff: null,
                 lines: null, raw: null, books: [], asOf: null };
+    if (d._sstAvg) {
+      const a = avgProj(d._sstAvg.pos, d._sstAvg.k);
+      o.baseline = true; o.avg = a; o.src = 'avg';
+      o.proj = a ? Math.round(a.proj * 10) / 10 : null;
+      return o;
+    }
     const abbr = teamAbbr(d.t);
     const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
     const entry = sched ? sched[wk] : null;
@@ -22034,6 +22191,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     if (wkE) wkE.textContent = 'WEEK ' + wk;
     // Kickoff / LIVE / FINAL state for the cards (no-op when fresh).
     if (typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
+    avgCache = {}; // baseline projections follow the current week/format/injury state
     const cards = names.map(lookup).filter(Boolean).map(build);
     if (!cards.length) {
       gridEl.innerHTML = '<div class="sst-empty">'
@@ -22054,11 +22212,16 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       const g = groups[f];
       // Locked cards (game already kicked off) sit out the race: PLAYED /
       // LIVE with the actual score. The open cards rank among themselves.
-      const open = g.filter(c => !c.locked);
+      const open = g.filter(c => !c.locked && !c.baseline);
       const ranked = open.slice().sort((a, b) => ((b.proj == null ? -1 : b.proj) - (a.proj == null ? -1 : a.proj)));
       const top = ranked.length ? ranked[0].proj : null;
       g.forEach(c => {
         c.fam = f; c.famN = open.length;
+        if (c.baseline) {
+          c.rank = null;
+          c.verdict = { cls: 'na', lbl: 'BASELINE', sub: c.avg ? 'avg of ' + c.d.s + c.avg.lo + '–' + c.d.s + c.avg.hi : '', tag: 'REFERENCE' };
+          return;
+        }
         if (c.locked) {
           c.rank = null;
           const fin = c.live.st === 'post';
@@ -22130,6 +22293,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
 
   function cardHtml(c, isBest) {
     const d = c.d, wk = c.wk, isDst = d.s === 'DST';
+    if (c.baseline) return avgCardHtml(c, isBest);
     const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
     const img = (d._slImg && !isDst)
       ? '<img src="' + esc(window._fixHeadshotUrl(d._slImg)) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
@@ -22151,8 +22315,10 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     // Verdict strip
     if (c.verdict) {
       html += '<div class="sst-verdict sst-v-' + c.verdict.cls + '"><span class="sst-verdict-lbl">' + c.verdict.lbl + '</span>'
-        + (c.verdict.sub ? '<span class="sst-verdict-sub">' + esc(c.verdict.sub) + (c.locked ? '' : ' vs top') + '</span>' : '')
-        + (c.locked
+        + (c.verdict.sub ? '<span class="sst-verdict-sub">' + esc(c.verdict.sub) + ((c.locked || c.baseline) ? '' : ' vs top') + '</span>' : '')
+        + (c.baseline
+          ? '<span class="sst-verdict-rank" title="Positional average — a reference line, never a START/SIT call">' + esc(c.verdict.tag) + '</span>'
+          : c.locked
           ? '<span class="sst-verdict-rank" title="Game already kicked off — locked out of the start/sit call">' + esc(c.verdict.tag) + '</span>'
           : '<span class="sst-verdict-rank" title="Ranked against the other ' + (c.fam === 'FLEX' ? 'RB / WR / TE' : c.fam) + ' cards">#' + c.rank + ' of ' + c.famN + ' ' + esc(c.fam) + '</span>')
         + '</div>';
@@ -22237,6 +22403,43 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       }
       html += '</div>';
     }
+    html += '</div></div>';
+    return html;
+  }
+
+  // Baseline card: tile + projection + what the number is. No matchup, lines
+  // or stat line — it's a reference point, not a player.
+  function avgCardHtml(c, isBest) {
+    const d = c.d, wk = c.wk, a = c.avg;
+    let html = '<div class="compare-col sst-card sst-avg-card' + (c.verdict ? ' sst-v-' + c.verdict.cls : '') + '">';
+    html += '<div class="card-header" style="position:relative">';
+    html += '<button class="sst-x remove-from-compare" data-n="' + esc(d.n) + '" title="Remove">&times;</button>';
+    html += '<div class="card-hero"><div class="sst-avg-hero" style="color:' + PC[d.s] + ';border-color:' + PC[d.s] + '">' + d.s + '<span>' + d._sstAvg.k + '</span></div><div>';
+    html += '<div class="card-name">' + esc(d.n) + '</div>';
+    html += '<div class="card-meta"><span class="pos-badge ' + d.s + '">' + d.s + '</span>'
+      + (a ? '<span class="card-team">' + d.s + a.lo + '–' + d.s + a.hi + ' this week</span>' : '')
+      + '<span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(59,130,246,.15);color:#60a5fa;font-weight:600">BASELINE</span></div>';
+    html += '</div></div></div>';
+    html += '<div class="card-body">';
+    if (c.verdict) {
+      html += '<div class="sst-verdict sst-v-' + c.verdict.cls + '"><span class="sst-verdict-lbl">' + c.verdict.lbl + '</span>'
+        + (c.verdict.sub ? '<span class="sst-verdict-sub">' + esc(c.verdict.sub) + '</span>' : '')
+        + '<span class="sst-verdict-rank" title="Positional average — a reference line, never a START/SIT call">' + esc(c.verdict.tag) + '</span></div>';
+    }
+    const projColor = (c.proj != null && typeof posFptsColor === 'function') ? posFptsColor(c.proj, d.s) : null;
+    html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projection <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
+    html += '<div class="sst-proj-row"><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
+      + (c.proj != null ? fmt1(c.proj) : '—') + '</div>';
+    if (a) {
+      html += '<div class="sst-proj-stats" title="Range of the ' + a.n + ' projections averaged">'
+        + '<div class="sst-ps"><div class="sst-ps-lbl">' + d.s + a.lo + '</div><div class="sst-ps-val">' + fmt1(a.top) + '</div></div>'
+        + '<div class="sst-ps"><div class="sst-ps-lbl">' + d.s + a.hi + '</div><div class="sst-ps-val">' + fmt1(a.bottom) + '</div></div>'
+        + '</div>';
+    }
+    html += '</div></div>';
+    html += '<div class="card-section"><div class="card-section-title">What this is</div><div class="sst-bye" style="text-align:left;padding:.2rem 0 .4rem">'
+      + (a ? 'The mean Week ' + wk + ' projection of the ' + a.n + ' ' + d.s + 's projected ' + a.lo + (a.lo === a.hi ? '' : '–' + a.hi) + ' at the position (' + fmt.toUpperCase() + '). A player above this line is a better-than-average ' + d.s + d._sstAvg.k + ' start this week.'
+           : 'No Week ' + wk + ' projections yet for this position.') + '</div></div>';
     html += '</div></div>';
     return html;
   }

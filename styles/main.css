@@ -2460,6 +2460,10 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
   .sst-card{min-width:280px;max-width:320px}
   .sst-proj-big{font-size:2.1rem}
 }
+/* Positional-average baseline cards (Compare "Average WR2", Start/Sit) */
+.cmp-avg-hero,.sst-avg-hero{width:72px;height:72px;flex:0 0 72px;border-radius:50%;border:2px solid var(--border);background:var(--elev-1);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:1px;line-height:1}
+.cmp-avg-hero span,.sst-avg-hero span{font-size:1.9rem;line-height:.9}
+.cmp-avg-col .card-hero{align-items:center}
 /* Game-status chips (WEEKLY board Opp cell, Start/Sit matchup) — live-week module */
 .wk-live{display:inline-block;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.6px;line-height:1;padding:2px 5px;border-radius:3px;white-space:nowrap;vertical-align:middle;cursor:help}
 .opp-cell .wk-live{display:block;width:max-content;margin:3px auto 0}

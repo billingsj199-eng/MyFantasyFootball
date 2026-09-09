@@ -2449,7 +2449,22 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
 .sst-line-val{text-align:right;font-weight:700;font-family:'DM Mono',monospace;white-space:nowrap}
 .sst-best{color:#22c55e!important}
 .sst-foot{font-size:.55rem;color:var(--text2);margin-top:6px;line-height:1.4}
+/* Locked cards (game kicked off): PLAYED / LIVE verdict + actual points */
+.sst-v-lock .sst-verdict{border-color:rgba(148,163,184,.45);background:rgba(148,163,184,.08)}
+.sst-v-lock .sst-verdict-lbl{color:#94a3b8}
+.sst-actual{text-align:center;padding:0 .6rem;border-left:1px solid var(--border)}
+.sst-actual-num{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;line-height:1;letter-spacing:1px;margin-top:3px}
+.sst-actual-up .sst-actual-num{color:#22c55e}
+.sst-actual-down .sst-actual-num{color:#ef4444}
 @media (max-width:600px){
   .sst-card{min-width:280px;max-width:320px}
   .sst-proj-big{font-size:2.1rem}
 }
+/* Game-status chips (WEEKLY board Opp cell, Start/Sit matchup) — live-week module */
+.wk-live{display:inline-block;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.6px;line-height:1;padding:2px 5px;border-radius:3px;white-space:nowrap;vertical-align:middle;cursor:help}
+.opp-cell .wk-live{display:block;width:max-content;margin:3px auto 0}
+.wk-live-pre{color:var(--text2);background:var(--elev-1);border:1px solid var(--border);font-weight:400}
+.wk-live-in{color:#fff;background:#dc2626;animation:wkLivePulse 1.6s ease-in-out infinite}
+.wk-live-post{color:var(--text);background:rgba(148,163,184,.18);border:1px solid rgba(148,163,184,.35)}
+@keyframes wkLivePulse{0%,100%{opacity:1}50%{opacity:.6}}
+@media (prefers-reduced-motion:reduce){.wk-live-in{animation:none}}

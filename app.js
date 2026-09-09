@@ -5213,7 +5213,7 @@ function render() {
       ${_statTd1}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
       ${_wkSimBoomBustCell(d, 'bust')}
-      <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return o || '—'; })()}</td>
+      <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return (o || '—') + (o && o !== 'BYE' && typeof window._wkStatusChipHtml === 'function' ? window._wkStatusChipHtml(d) : ''); })()}</td>
       <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{
         // D/ST rows show the OPPONENT's implied total (lower = better matchup),
@@ -5285,6 +5285,9 @@ function render() {
   updateStats(data);
   attachRowListeners();
   attachTierListeners();
+  // WEEKLY board just painted — make sure the kickoff / LIVE / FINAL chips
+  // have fresh scoreboard data (no-op when the last fetch is recent).
+  if (currentMode === 'weekly' && typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
   // showYrr / showJm / showLanding hoisted above the row loop (reused here).
   // In the ADP comparison STATS view the Y/RR column is repurposed as the CBS
   // ADP column and shown for every position filter.
@@ -9866,6 +9869,198 @@ window._seasonStripRefresh = _seasonStrip;
   });
   _seasonStrip();
   setInterval(_seasonStrip, 60000);
+})();
+
+// === LIVE WEEK STATE — kickoff / LIVE / FINAL chips (2026-09-09) ============
+// Flock's weekly board carries a "Played" column; ours had no in-week
+// awareness at all — a player whose game kicked off Wednesday looked exactly
+// like a Sunday-afternoon player on the WEEKLY board and in Start/Sit.
+// Two public feeds, both CORS-open, polled ONLY while a weekly surface is
+// showing (WEEKLY rankings board or the Start/Sit page) and only inside the
+// current fantasy week's window (kickoff table above):
+//   · ESPN scoreboard (same feed the helper extensions read) — every
+//     current-week game's state (pre / in / post), quarter + clock, kickoff
+//     time, score. Idle cadence 10 min; 60 s while anything is live or a
+//     kickoff is within 20 min.
+//   · Sleeper weekly stats (api.sleeper.com, name-keyed rows) — each player's
+//     actual fantasy points once his game is under way. Fetched only after the
+//     first kickoff; 2 min while games are live, 15 min otherwise.
+// Exposed for the board, Start/Sit and anything else that wants them:
+//   window._liveGameFor(d)        -> {st:'pre'|'in'|'post', tag, f, kick, kickLbl, pts, oppPts, opp, home} | null
+//   window._liveActualFor(d, fmt) -> actual points this week in 'ppr'|'half'|'std' | null
+//   window._wkStatusChipHtml(d)   -> chip HTML: "Sun 1p" (pregame) / "LIVE Q2 7:31 · 6.2" / "FINAL · 14.3"; '' when nothing applies
+//   window._liveWeekPoke()        -> a weekly surface just rendered — fetch if stale
+// Chips only render when ESPN's week number matches the board's active week,
+// so a Tuesday-morning publish of next week never shows last week's finals.
+(function _liveWeek() {
+  const SB_URL = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
+  const ST_URL = wk => 'https://api.sleeper.com/stats/nfl/2026/' + wk
+    + '?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=K&position[]=DEF';
+  const FIX = { WSH: 'WAS', JAC: 'JAX', LA: 'LAR', OAK: 'LV', SD: 'LAC' };
+  const S = window._liveWeekState = { games: {}, sbWeek: null, at: 0, nextAt: 0,
+    act: null, actWeek: null, actAt: 0, actNextAt: 0, sig: '', busy: false };
+  const norm = n => (typeof _campNewsNorm === 'function') ? _campNewsNorm(n) : String(n || '').toLowerCase();
+  const abbrOf = d => { const t = d && d.t; return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) ? TEAM_ABBR_MAP[t] : t; };
+  const activeWeek = () => window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+
+  // Current fantasy-week window from the kickoff table — same Tuesday 09:00
+  // UTC rollover the season strip uses. null outside the season.
+  function curWindow() {
+    if (typeof _SEASON_KICKS_2026 === 'undefined') return null;
+    const now = window._seasonStripNow || Date.now();
+    const wkEnd = kick => { const d = new Date(kick + 2 * 86400000); while (d.getUTCDay() !== 2) d.setUTCDate(d.getUTCDate() + 1); d.setUTCHours(9, 0, 0, 0); return d.getTime(); };
+    const cur = _SEASON_KICKS_2026.find(w => now < wkEnd(w.kick));
+    return cur ? { wk: cur.wk, kick: cur.kick, end: wkEnd(cur.kick) } : null;
+  }
+  function surfaceOpen() {
+    const rk = document.getElementById('pageRankings');
+    if (rk && rk.classList.contains('active') && typeof currentMode !== 'undefined' && currentMode === 'weekly') return true;
+    const ss = document.getElementById('pageStartSit');
+    return !!(ss && ss.classList.contains('active'));
+  }
+  // "Thu 8:15p" / "Sun 1p" in Eastern time.
+  function kickLbl(iso) {
+    try {
+      const d = new Date(iso);
+      if (isNaN(d)) return '';
+      return new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit' })
+        .format(d).replace(',', '').replace(':00', '').replace(' AM', 'a').replace(' PM', 'p');
+    } catch (_) { return ''; }
+  }
+  function parseScoreboard(sb) {
+    const out = {};
+    for (const ev of (sb && sb.events) || []) {
+      const c = ev.competitions && ev.competitions[0];
+      if (!c) continue;
+      const st = (c.status && c.status.type) || {};
+      const nm = String(st.name || '');
+      const s = st.state === 'in' ? 'in' : (st.state === 'post' || st.completed) ? 'post' : 'pre';
+      const period = +(c.status && c.status.period) || 0;
+      const clock = String((c.status && c.status.displayClock) || '0:00');
+      const half = /HALFTIME/i.test(nm);
+      let f = 0;
+      if (s === 'post') f = 1;
+      else if (s === 'in') {
+        if (half) f = 0.5;
+        else if (period >= 5) f = 0.97;
+        else {
+          const mm = clock.match(/^(\d+):(\d+)/);
+          const left = mm ? (+mm[1] * 60 + +mm[2]) : 0;
+          f = Math.min(0.99, Math.max(0.01, ((Math.max(1, period) - 1) * 900 + (900 - left)) / 3600));
+        }
+      }
+      const comps = c.competitors || [];
+      const home = comps.find(x => x.homeAway === 'home'), away = comps.find(x => x.homeAway === 'away');
+      const abbr = x => { const a = String((x && x.team && x.team.abbreviation) || '').toUpperCase(); return FIX[a] || a; };
+      const sc = x => (x && x.score != null && x.score !== '') ? +x.score : null;
+      const h = abbr(home), a = abbr(away);
+      const tag = s === 'in' ? (half ? 'HALF' : period >= 5 ? 'OT ' + clock : 'Q' + period + ' ' + clock) : s === 'post' ? 'FINAL' : '';
+      const kl = kickLbl(ev.date);
+      if (h) out[h] = { st: s, f, tag, opp: a, home: true, pts: sc(home), oppPts: sc(away), kick: ev.date || null, kickLbl: kl };
+      if (a) out[a] = { st: s, f, tag, opp: h, home: false, pts: sc(away), oppPts: sc(home), kick: ev.date || null, kickLbl: kl };
+    }
+    return out;
+  }
+  async function refreshScoreboard(force) {
+    const now = Date.now();
+    if (!force && now < S.nextAt) return;
+    S.nextAt = now + 60 * 1000;
+    try {
+      const r = await fetch(SB_URL + '?t=' + now);
+      if (!r || !r.ok) return;
+      const sb = await r.json();
+      S.games = parseScoreboard(sb);
+      S.sbWeek = (sb && sb.week && +sb.week.number) || null;
+      S.at = now;
+      const vals = Object.values(S.games);
+      const anyIn = vals.some(g => g.st === 'in');
+      const soon = vals.some(g => g.st === 'pre' && g.kick && (Date.parse(g.kick) - now) < 20 * 60 * 1000);
+      if (!anyIn && !soon) S.nextAt = now + 10 * 60 * 1000;
+    } catch (e) { /* keep the last parse */ }
+  }
+  async function refreshActuals(force) {
+    const now = Date.now();
+    const vals = Object.values(S.games);
+    if (!vals.some(g => g.st !== 'pre')) return; // nothing has kicked off
+    const wk = activeWeek();
+    if (!force && now < S.actNextAt && S.actWeek === wk) return;
+    const anyIn = vals.some(g => g.st === 'in');
+    S.actNextAt = now + (anyIn ? 2 : 15) * 60 * 1000;
+    try {
+      const r = await fetch(ST_URL(wk));
+      if (!r || !r.ok) return;
+      const rows = await r.json();
+      const map = {};
+      (Array.isArray(rows) ? rows : []).forEach(row => {
+        const p = row && row.player, st = row && row.stats;
+        if (!p || !st) return;
+        if (st.pts_ppr == null && st.pts_half_ppr == null && st.pts_std == null && !st.gp) return;
+        const key = p.position === 'DEF' ? ('DEF:' + String(row.player_id || p.team || '').toUpperCase())
+                                          : norm((p.first_name || '') + ' ' + (p.last_name || ''));
+        map[key] = { ppr: +st.pts_ppr || 0, half: +st.pts_half_ppr || 0, std: +st.pts_std || 0, team: row.team || p.team || null };
+      });
+      S.act = map; S.actWeek = wk; S.actAt = now;
+    } catch (e) { /* stale actuals stay */ }
+  }
+  window._liveGameFor = function(d) {
+    if (!d || !curWindow() || !S.sbWeek || S.sbWeek !== activeWeek()) return null;
+    const ab = abbrOf(d);
+    return (ab && S.games[ab]) || null;
+  };
+  window._liveActualFor = function(d, fmt) {
+    const g = window._liveGameFor(d);
+    if (!g || g.st === 'pre' || !S.act || S.actWeek !== activeWeek()) return null;
+    const key = d.s === 'DST' ? ('DEF:' + abbrOf(d)) : norm(d.n);
+    const e = S.act[key];
+    if (!e) return null;
+    const f = fmt || (typeof rankingScoringFmt !== 'undefined' ? rankingScoringFmt : 'half');
+    return f === 'ppr' ? e.ppr : f === 'std' ? e.std : e.half;
+  };
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const f1 = v => (typeof v === 'number' && isFinite(v)) ? (Math.round(v * 10) / 10).toFixed(1) : null;
+  window._wkStatusChipHtml = function(d, fmt) {
+    const g = window._liveGameFor(d);
+    if (!g) return '';
+    if (g.st === 'pre') {
+      return g.kickLbl ? '<span class="wk-live wk-live-pre" title="Kicks off ' + esc(g.kickLbl) + ' ET">' + esc(g.kickLbl) + '</span>' : '';
+    }
+    const pts = f1(window._liveActualFor(d, fmt));
+    const score = (g.pts != null && g.oppPts != null) ? (g.home ? 'vs ' : '@ ') + esc(g.opp) + ' ' + g.pts + '–' + g.oppPts : '';
+    if (g.st === 'in') {
+      return '<span class="wk-live wk-live-in" title="In progress — ' + esc(g.tag) + (score ? ' · ' + score : '') + (pts != null ? ' · ' + pts + ' pts so far' : '') + '">LIVE ' + esc(g.tag) + (pts != null ? ' · ' + pts : '') + '</span>';
+    }
+    return '<span class="wk-live wk-live-post" title="Final' + (score ? ' — ' + score : '') + (pts != null ? ' · ' + pts + ' pts' : '') + '">FINAL' + (pts != null ? ' · ' + pts : '') + '</span>';
+  };
+  function signature() {
+    const g = S.games, keys = Object.keys(g).sort();
+    return S.sbWeek + '|' + keys.map(k => k + g[k].st + g[k].tag + g[k].pts).join(',') + '|' + S.actAt;
+  }
+  async function tick(force) {
+    if (S.busy) return;
+    if (!surfaceOpen() || !curWindow()) return;
+    S.busy = true;
+    try {
+      await refreshScoreboard(force);
+      await refreshActuals(force);
+    } finally { S.busy = false; }
+    const sig = signature();
+    if (sig === S.sig) return;
+    S.sig = sig;
+    // Something changed — repaint whichever weekly surface is showing.
+    try {
+      const rk = document.getElementById('pageRankings');
+      if (rk && rk.classList.contains('active') && typeof currentMode !== 'undefined' && currentMode === 'weekly' && typeof render === 'function') render();
+      if (typeof window._sstRefresh === 'function') window._sstRefresh();
+    } catch (e) {}
+  }
+  // A weekly surface just painted: fetch if we have nothing fresh (30 s guard
+  // so the repaint tick() triggers can't chase their own tail).
+  window._liveWeekPoke = function() {
+    const now = Date.now();
+    if (now - S.at > 30 * 1000) S.nextAt = 0;
+    tick(false);
+  };
+  setInterval(() => tick(false), 60 * 1000);
 })();
 
 // === Data-freshness line (rankings page, under the stats bar) ===
@@ -21791,6 +21986,13 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     } catch (e) { console.warn('[Start/Sit] proj', e); }
     finally { rankingScoringFmt = prev; }
     if (o.src === 'out') o.out = true;
+    // In-week game state (ESPN scoreboard via the live-week module): once the
+    // game has kicked off the player is LOCKED — his card leaves the verdict
+    // race and shows the actual points (Sleeper weekly stats) beside the
+    // projection instead.
+    o.live = (typeof window._liveGameFor === 'function') ? window._liveGameFor(d) : null;
+    o.locked = !!(o.live && o.live.st !== 'pre' && !o.bye);
+    o.actual = (o.locked && typeof window._liveActualFor === 'function') ? window._liveActualFor(d, fmt) : null;
     if (typeof window._weeklySpreadFor === 'function') o.spread = window._weeklySpreadFor(d.t);
     if (typeof window._weeklyTeamTotalFor === 'function') o.tt = window._weeklyTeamTotalFor(d.t);
     if (typeof window._weeklyOppTeamTotalFor === 'function') o.oppTT = window._weeklyOppTeamTotalFor(d.t);
@@ -21830,6 +22032,8 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     renderChips();
     const wk = week();
     if (wkE) wkE.textContent = 'WEEK ' + wk;
+    // Kickoff / LIVE / FINAL state for the cards (no-op when fresh).
+    if (typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
     const cards = names.map(lookup).filter(Boolean).map(build);
     if (!cards.length) {
       gridEl.innerHTML = '<div class="sst-empty">'
@@ -21848,11 +22052,23 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     cards.forEach(c => { (groups[fam(c)] = groups[fam(c)] || []).push(c); });
     Object.keys(groups).forEach(f => {
       const g = groups[f];
-      const ranked = g.slice().sort((a, b) => ((b.proj == null ? -1 : b.proj) - (a.proj == null ? -1 : a.proj)));
-      const top = ranked[0].proj;
+      // Locked cards (game already kicked off) sit out the race: PLAYED /
+      // LIVE with the actual score. The open cards rank among themselves.
+      const open = g.filter(c => !c.locked);
+      const ranked = open.slice().sort((a, b) => ((b.proj == null ? -1 : b.proj) - (a.proj == null ? -1 : a.proj)));
+      const top = ranked.length ? ranked[0].proj : null;
       g.forEach(c => {
-        c.rank = ranked.indexOf(c) + 1; c.famN = g.length; c.fam = f;
-        if (g.length < 2) c.verdict = null;
+        c.fam = f; c.famN = open.length;
+        if (c.locked) {
+          c.rank = null;
+          const fin = c.live.st === 'post';
+          c.verdict = { cls: 'lock', lbl: fin ? 'PLAYED' : 'LIVE',
+            sub: c.actual != null ? fmt1(c.actual) + ' pts' + (fin ? '' : ' so far') : '',
+            tag: fin ? 'FINAL' : (c.live.tag || 'IN PROGRESS') };
+          return;
+        }
+        c.rank = ranked.indexOf(c) + 1;
+        if (open.length < 2) c.verdict = null;
         else if (c.bye) c.verdict = { cls: 'sit', lbl: 'BYE' };
         else if (c.out) c.verdict = { cls: 'sit', lbl: 'OUT' };
         else if (c.proj == null) c.verdict = { cls: 'na', lbl: 'NO PROJ' };
@@ -21868,7 +22084,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       if (v.length < 2) return;
       best[key] = higher ? Math.max.apply(null, v) : Math.min.apply(null, v);
     };
-    mark('proj', cards.map(c => c.proj), true);
+    mark('proj', cards.filter(c => !c.locked).map(c => c.proj), true);
     mark('tt', cards.filter(c => c.d.s !== 'DST').map(c => c.tt), true);
     mark('oppTT', cards.filter(c => c.d.s === 'DST').map(c => c.oppTT), false);
     mark('spread', cards.map(c => c.spread), false);
@@ -21935,14 +22151,24 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     // Verdict strip
     if (c.verdict) {
       html += '<div class="sst-verdict sst-v-' + c.verdict.cls + '"><span class="sst-verdict-lbl">' + c.verdict.lbl + '</span>'
-        + (c.verdict.sub ? '<span class="sst-verdict-sub">' + c.verdict.sub + ' vs top</span>' : '')
-        + '<span class="sst-verdict-rank" title="Ranked against the other ' + (c.fam === 'FLEX' ? 'RB / WR / TE' : c.fam) + ' cards">#' + c.rank + ' of ' + c.famN + ' ' + esc(c.fam) + '</span></div>';
+        + (c.verdict.sub ? '<span class="sst-verdict-sub">' + esc(c.verdict.sub) + (c.locked ? '' : ' vs top') + '</span>' : '')
+        + (c.locked
+          ? '<span class="sst-verdict-rank" title="Game already kicked off — locked out of the start/sit call">' + esc(c.verdict.tag) + '</span>'
+          : '<span class="sst-verdict-rank" title="Ranked against the other ' + (c.fam === 'FLEX' ? 'RB / WR / TE' : c.fam) + ' cards">#' + c.rank + ' of ' + c.famN + ' ' + esc(c.fam) + '</span>')
+        + '</div>';
     }
     // Projection
     const projColor = (c.proj != null && typeof posFptsColor === 'function') ? posFptsColor(c.proj, d.s) : null;
     html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projection <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
     html += '<div class="sst-proj-row"><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
       + (c.proj != null ? fmt1(c.proj) : '—') + '</div>';
+    if (c.locked && c.actual != null) {
+      const fin = c.live.st === 'post';
+      const beat = (c.proj != null) ? (c.actual >= c.proj ? 'up' : 'down') : '';
+      html += '<div class="sst-actual sst-actual-' + beat + '" title="' + esc(fin ? 'Final — actual points this week' : 'Points so far — game in progress (' + (c.live.tag || '') + ')') + '">'
+        + '<div class="sst-ps-lbl">' + (fin ? 'ACTUAL' : 'SO FAR') + '</div>'
+        + '<div class="sst-actual-num">' + (c.actual != null ? fmt1(c.actual) : '—') + '</div></div>';
+    }
     if (c.st && c.stCols && c.stCols.length) {
       html += '<div class="sst-proj-stats" title="' + esc(c.stSrc === 'week'
         ? 'Sleeper Week ' + wk + ' projected stat line (best of the cards in green)'
@@ -21957,7 +22183,8 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     html += '</div></div>';
 
     // Matchup
-    html += '<div class="card-section"><div class="card-section-title">Matchup</div>';
+    const statusChip = (!c.bye && typeof window._wkStatusChipHtml === 'function') ? window._wkStatusChipHtml(d, fmt) : '';
+    html += '<div class="card-section"><div class="card-section-title" style="display:flex;align-items:center;gap:8px">Matchup' + (statusChip ? '<span style="margin-left:auto">' + statusChip + '</span>' : '') + '</div>';
     if (c.bye) {
       html += '<div class="sst-bye"><b style="color:var(--accent)">BYE WEEK</b> — no game in Week ' + wk + '.</div>';
     } else if (!c.opp) {

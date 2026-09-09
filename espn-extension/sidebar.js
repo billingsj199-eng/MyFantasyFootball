@@ -2919,6 +2919,28 @@
   // {live, actual, rem, f, st, tag, proj}; live === wkVal(p) before kickoff.
   // `key` = roster-entry key (defaults to keyOf(p)) — ESPN actuals live on
   // the entry, not on a player id.
+  // Sim Lab live model (sim_proj_2026.json `liveModel`, fitted on 2019-25
+  // play-by-play by sim_lab/backtest_live_remaining.py): remaining =
+  // a·proj·(1−f) + b·pace·(1−f) + m·proj·(1−f)·(margin/10), coefficients per
+  // position class (QB / RB / REC = WR+TE) interpolated over the game
+  // fraction. Captures the second-half discount (players score less after
+  // halftime than a uniform split says), the late-game pace weight and the
+  // trailing-team passing boost. K/DST (unmodeled) and a not-yet-loaded
+  // export fall back to the v1 heuristic (w = 0.25·f).
+  function liveModelCoefs(p, f) {
+    const lm = state.simProj && state.simProj.liveModel;
+    if (!lm || !lm.pos || !lm.grid || !lm.grid.length) return null;
+    const cls = p.s === 'QB' ? 'QB' : p.s === 'RB' ? 'RB' : (p.s === 'WR' || p.s === 'TE') ? 'REC' : null;
+    const rows = cls && lm.pos[cls];
+    if (!rows || rows.length !== lm.grid.length) return null;
+    const g = lm.grid;
+    if (f <= g[0]) return rows[0];
+    if (f >= g[g.length - 1]) return rows[rows.length - 1];
+    let i = 0;
+    while (i < g.length - 2 && g[i + 1] < f) i++;
+    const t = (f - g[i]) / (g[i + 1] - g[i]);
+    return rows[i].map((v, k) => v + (rows[i + 1][k] - v) * t);
+  }
   function wkLive(p, key) {
     const proj = p && !p._unmatched ? wkVal(p) : 0;
     const g = liveGameFor(p);
@@ -2928,15 +2950,27 @@
     const actual = typeof raw === 'number' ? Math.round(raw * 100) / 100 : 0;
     if (g.st === 'post') return { live: actual, actual, rem: 0, f: 1, st: 'post', tag: g.tag, proj };
     const f = g.f;
-    const pace = f >= 0.15 ? actual / f : proj;
-    const w = 0.25 * f;
-    const rem = Math.round(Math.max(0, (1 - f) * ((1 - w) * proj + w * pace)) * 100) / 100;
-    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj };
+    const co = liveModelCoefs(p, f);
+    let rem;
+    if (co) {
+      const pace = actual / Math.max(f, 0.1);
+      const margin = (typeof g.pts === 'number' && typeof g.oppPts === 'number') ? (g.pts - g.oppPts) : 0;
+      rem = (1 - f) * (co[0] * proj + co[1] * pace + co[2] * proj * (margin / 10));
+    } else {
+      const pace = f >= 0.15 ? actual / f : proj;
+      const w = 0.25 * f;
+      rem = (1 - f) * ((1 - w) * proj + w * pace);
+    }
+    rem = Math.round(Math.max(0, rem) * 100) / 100;
+    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj, model: co ? 'sim' : 'v1' };
   }
   function liveTip(l) {
     if (l.st === 'post') return 'FINAL — scored ' + l.actual.toFixed(1) + ' (pregame proj ' + l.proj.toFixed(1) + ')';
     return 'LIVE ' + l.tag + ' — scored ' + l.actual.toFixed(1) + ' + ' + l.rem.toFixed(1) +
-      ' still expected (pregame proj ' + l.proj.toFixed(1) + '). Remaining = proj × game left, nudged toward his pace late.';
+      ' still expected (pregame proj ' + l.proj.toFixed(1) + ').' +
+      (l.model === 'sim'
+        ? ' Remaining = Sim Lab live model (2019-25 play-by-play: second-half discount, pace, score margin).'
+        : ' Remaining = proj × game left, nudged toward his pace late.');
   }
   // Sidebar name-line tag (LINEUP rows): "● 12.3 live" / "✓ 8.2 final"
   function liveTagHTML(p) {

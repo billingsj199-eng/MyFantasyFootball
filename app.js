@@ -49814,7 +49814,12 @@ Rules:
     throw new Error('unknown league source');
   }
   window._mtFetchTradesFor = _mtFetchTradesFor; // debug/harness hook
-  const _MT_ESPN_ACTIVITY_FILTER = JSON.stringify({ topics: { filterType: { value: ['ACTIVITY_TRANSACTIONS'] }, limit: 250, limitPerMessageSet: { value: 25 }, offset: 0, sortMessageDate: { sortPriority: 1, sortAsc: false }, sortFor: { sortPriority: 2, sortAsc: false }, filterIncludeMessageTypeIds: { value: [244] } } });
+  // ESPN's filter parser only knows the roots players / transactions /
+  // communication / schedule — a bare `topics` root is a 400, and CloudFront's
+  // error page carries no CORS header, so the browser reported it as
+  // "Failed to fetch" (Jack, 2026-09-09). Wrapped in `communication`; the
+  // topics come back under communication.topics.
+  const _MT_ESPN_ACTIVITY_FILTER = JSON.stringify({ communication: { topics: { filterType: { value: ['ACTIVITY_TRANSACTIONS'] }, limit: 250, limitPerMessageSet: { value: 25 }, offset: 0, sortMessageDate: { sortPriority: 1, sortAsc: false }, sortFor: { sortPriority: 2, sortAsc: false }, filterIncludeMessageTypeIds: { value: [244] } } } });
   function _mtEspnTradesFromMoves(list, nameOf) {
     // list: [{id, date, moves:[{playerId, from, to, name?}]}] (extension
     // payload block, or the site's own topic conversion)
@@ -49850,13 +49855,19 @@ Rules:
     let moves = null;
     if (extLg && Array.isArray(extLg.trades)) moves = extLg.trades;
     if (!moves) {
-      const resp = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + season + '/segments/0/leagues/' + leagueId + '?view=kona_league_communication',
-        { headers: { 'X-Fantasy-Filter': _MT_ESPN_ACTIVITY_FILTER } });
+      let resp;
+      try {
+        resp = await fetch('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/' + season + '/segments/0/leagues/' + leagueId + '?view=kona_league_communication',
+          { headers: { 'X-Fantasy-Filter': _MT_ESPN_ACTIVITY_FILTER } });
+      } catch (e) {
+        // A TypeError here is the browser hiding a CORS-less ESPN error page.
+        throw new Error('ESPN did not answer (network/CORS) — try again in a minute');
+      }
       if (resp.status === 401) throw new Error('this league is private — re-export it with the MFF ESPN extension (v0.20.25+) and the trades come along');
       if (!resp.ok) throw new Error('ESPN returned ' + resp.status);
       const raw0 = await resp.json();
       const raw = Array.isArray(raw0) ? raw0[0] : raw0;
-      moves = _mtEspnTopicsToMoves(raw && raw.topics);
+      moves = _mtEspnTopicsToMoves(raw && ((raw.communication && raw.communication.topics) || raw.topics));
     }
     moves.forEach(tp => tp.moves.forEach(m => { if (!m.name && !nameOf(m.playerId)) needWl = true; }));
     if (needWl) await _mtEspnPlayersWlInto(pmap, season);

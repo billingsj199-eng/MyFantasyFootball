@@ -1607,8 +1607,9 @@ tr:hover .watch-star{opacity:.55}
 .tcv-key-color-note b{color:#22c55e;font-weight:600}
 .tcv-key-color-note i{color:#ef4444;font-style:normal;font-weight:600}
 #tierCardWrap{position:relative}
-.tcv-watermark{position:absolute;left:10px;bottom:4px;font-family:'Bebas Neue',Impact,sans-serif;font-size:18px;letter-spacing:2px;color:rgba(255,255,255,.6);pointer-events:none;user-select:none;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.8)}
-#tierCardWrap.tcv-fullscreen .tcv-watermark{position:fixed;left:16px;bottom:12px;font-size:28px;letter-spacing:3px;color:rgba(255,255,255,.78);text-shadow:0 2px 4px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.8);z-index:10000}
+/* Normal view: in-flow strip UNDER the last tier row (never overlaps cards); fullscreen: fixed corner tag */
+.tcv-watermark{display:block;position:relative;padding:8px 10px 6px;line-height:1;background:#0a0a0a;font-family:'Bebas Neue',Impact,sans-serif;font-size:18px;letter-spacing:2px;color:rgba(255,255,255,.6);pointer-events:none;user-select:none;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+#tierCardWrap.tcv-fullscreen .tcv-watermark{position:fixed;left:16px;bottom:12px;padding:0;background:none;font-size:28px;letter-spacing:3px;color:rgba(255,255,255,.78);text-shadow:0 2px 4px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.8);z-index:10000}
 #tierCardWrap.tcv-fullscreen{padding-bottom:56px}
 .tcv-row-wm{position:absolute;left:272px;width:136px;bottom:1px;text-align:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;line-height:1;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.9);pointer-events:none;user-select:none}
 /* ROW CARDS layout — horizontal graphic cards (rank | headshot | name/pos | stats | matchup | team logo)

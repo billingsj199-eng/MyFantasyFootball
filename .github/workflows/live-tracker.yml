@@ -1,0 +1,93 @@
+# Live-projection tracker — runs in the cloud at every NFL kickoff window so
+# the home machine can be off. scripts/live_tracker/live_tracker.py --all
+# tracks every game kicking off within 2h (or in progress), one row per
+# player per minute, and grades the slate against the finals when it ends.
+# Results are committed to the `live-tracker-logs` branch (never main), and
+# games are claimed there so the EDT+EST cron pairs and the overlapping
+# Sunday windows never double-track a game.
+#
+# Cron is UTC. Each local slot is listed twice (EDT = UTC-4 until Nov 1,
+# EST = UTC-5 after): the off-season-of-DST twin either finds nothing
+# (exits in seconds) or finds the games already claimed.
+name: Live projection tracker
+
+on:
+  schedule:
+    - cron: "5 0 * * 4"    # Wed 20:05 EDT
+    - cron: "5 1 * * 4"    # Wed 20:05 EST
+    - cron: "25 16 * * 4"  # Thu 12:25 EDT (Thanksgiving)
+    - cron: "25 17 * * 4"  # Thu 12:25 EST
+    - cron: "25 20 * * 4"  # Thu 16:25 EDT
+    - cron: "25 21 * * 4"  # Thu 16:25 EST
+    - cron: "5 0 * * 5"    # Thu 20:05 EDT
+    - cron: "5 1 * * 5"    # Thu 20:05 EST
+    - cron: "5 0 * * 6"    # Fri 20:05 EDT
+    - cron: "5 1 * * 6"    # Fri 20:05 EST
+    - cron: "55 16 * * 6"  # Sat 12:55 EDT
+    - cron: "55 17 * * 6"  # Sat 12:55 EST
+    - cron: "0 20 * * 6"   # Sat 16:00 EDT
+    - cron: "0 21 * * 6"   # Sat 16:00 EST
+    - cron: "5 0 * * 0"    # Sat 20:05 EDT
+    - cron: "5 1 * * 0"    # Sat 20:05 EST
+    - cron: "10 13 * * 0"  # Sun 09:10 EDT (international)
+    - cron: "10 14 * * 0"  # Sun 09:10 EST
+    - cron: "55 16 * * 0"  # Sun 12:55 EDT
+    - cron: "55 17 * * 0"  # Sun 12:55 EST
+    - cron: "0 20 * * 0"   # Sun 16:00 EDT
+    - cron: "0 21 * * 0"   # Sun 16:00 EST
+    - cron: "5 0 * * 1"    # Sun 20:05 EDT
+    - cron: "5 1 * * 1"    # Sun 20:05 EST
+    - cron: "55 22 * * 1"  # Mon 18:55 EDT
+    - cron: "55 23 * * 1"  # Mon 18:55 EST
+    - cron: "5 0 * * 2"    # Mon 20:05 EDT
+    - cron: "5 1 * * 2"    # Mon 20:05 EST
+  workflow_dispatch:
+    inputs:
+      teams:
+        description: "Explicit teams (e.g. NE,SEA); blank = --all within the window"
+        required: false
+        default: ""
+      window:
+        description: "Hours ahead to look for kickoffs (--all)"
+        required: false
+        default: "2"
+
+permissions:
+  contents: write
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - name: Checkout main (tracker script)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            scripts/live_tracker
+          sparse-checkout-cone-mode: true
+      - name: Checkout live-tracker-logs (results branch)
+        uses: actions/checkout@v4
+        with:
+          ref: live-tracker-logs
+          path: logs
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install --quiet requests
+      - name: Git identity (logs branch)
+        run: |
+          git -C logs config user.name "mff-live-tracker"
+          git -C logs config user.email "live-tracker@myfantasyfootball.co"
+      - name: Track
+        env:
+          TRACKER_GIT: "1"
+          PYTHONUNBUFFERED: "1"
+        run: |
+          if [ -n "${{ github.event.inputs.teams }}" ]; then
+            python scripts/live_tracker/live_tracker.py --teams "${{ github.event.inputs.teams }}" --logs-dir logs/data
+          else
+            python scripts/live_tracker/live_tracker.py --all --window "${{ github.event.inputs.window || '2' }}" --logs-dir logs/data
+          fi

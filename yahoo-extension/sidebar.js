@@ -2303,6 +2303,40 @@
       'font-size:10px;font-weight:700;border-radius:3px;padding:0 4px;line-height:15px;' +
       'border:1px solid rgba(0,0,0,.08);white-space:nowrap;flex:0 0 auto">' + esc(text) + '</span>';
   }
+  // Yahoo already prints the opponent in every player cell — the
+  // `.ysf-game-status` line ("Sun 4:25 pm @ Phi" / "… vs Bal") right under
+  // "Was - QB" — so instead of a duplicate @/vs pill we tint that native
+  // text (green = plus Vegas matchup, red = tough, mid = tooltip only) and
+  // hang the O/U + implied tooltip on it. Tinted whole, never split (Yahoo
+  // live-updates it to the score/clock during games). Mirrors ESPN 0.20.30 /
+  // Sleeper's tintGameLine. Returns the tinted element, null when the cell
+  // has no game line (then the caller keeps the pill).
+  const OPP_TINT = { good: ['#e2f3e6', '#1d7a34'], bad: ['#fbe7e7', '#b33636'] };
+  function tintYahooGameLine(box, g) {
+    const cell = box.closest('td') || box.parentElement;
+    const gs = cell && cell.querySelector('.ysf-game-status');
+    if (!gs) return null;
+    let tgt = null;
+    for (const cand of gs.querySelectorAll('a,span')) {
+      if (cand.childElementCount) continue;
+      const t = (cand.textContent || '').trim();
+      if (t && t.length <= 40 && /(^|\s)(vs|@)\s?[A-Za-z]{2,4}\b/.test(t)) { tgt = cand; break; }
+    }
+    if (!tgt) return null;
+    const sig = g.cls + '|' + g.tip;
+    if (tgt.dataset.mffOppSig !== sig) {
+      tgt.dataset.mffOppSig = sig;
+      tgt.classList.add('mff-opp-hl');
+      tgt.title = g.tip;
+      const c = OPP_TINT[g.cls];
+      tgt.style.background = c ? c[0] : '';
+      tgt.style.setProperty('color', c ? c[1] : '', c ? 'important' : '');
+      tgt.style.borderRadius = c ? '3px' : '';
+      tgt.style.padding = c ? '0 3px' : '';
+      tgt.style.fontWeight = c ? '700' : '';
+    }
+    return tgt;
+  }
   // Weekly odds pill — the site's exported boom/bust for this week's sim row.
   function simOddsPillHTML(sr) {
     const tip = 'From the site sim: ' + sr[3] + '% boom (≥1.5× his median game) · ' +
@@ -2364,6 +2398,36 @@
     }
     return { sides, firstTable };
   }
+  // Yahoo's matchup header ends with a "Chance to win N%" row + probability
+  // bar (both inside one block above the roster table). Anchor = the lowest
+  // common ancestor of the two "Chance to win" texts, then hop past the bar
+  // sibling so our strip sits right under Yahoo's odds. Null when the header
+  // isn't there (older layouts) → caller falls back to above-the-table.
+  function chanceToWinAnchor() {
+    const owners = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = walker.nextNode())) {
+      const tx = (n.nodeValue || '').trim();
+      if (tx.length > 40 || !/chance\s*to\s*win/i.test(tx)) continue;
+      const el = n.parentElement;
+      if (!el || el.closest('#mff-sidebar') || el.closest('#mff-matchup-strip')) continue;
+      if (owners.indexOf(el) < 0) owners.push(el);
+      if (owners.length === 2) break;
+    }
+    if (owners.length < 2) return null;
+    const ups = new Set();
+    for (let m = owners[0]; m; m = m.parentElement) ups.add(m);
+    let lca = owners[1];
+    while (lca && !ups.has(lca)) lca = lca.parentElement;
+    if (!lca || lca === document.body || lca === document.documentElement) return null;
+    let anchor = lca;
+    let sib = lca.nextElementSibling;
+    while (sib && sib.id === 'mff-matchup-strip') sib = sib.nextElementSibling;
+    // the probability bar: a text-free sibling right after the odds row
+    if (sib && !(sib.textContent || '').trim()) anchor = sib;
+    return anchor;
+  }
   function matchupStripTick() {
     const existing = document.getElementById('mff-matchup-strip');
     if (!onMatchupPage() || !state.players.length) { if (existing) existing.remove(); return; }
@@ -2390,21 +2454,28 @@
       'ignored). Left/right match the page\'s two teams.' +
       (missing ? ' ' + missing + ' starter(s) without a projection count 0.' : '');
     const wCol = (w) => (w >= 55 ? '#1d7a34' : w <= 45 ? '#b33636' : '#a06a00');
-    const inner =
-      `<span style="flex:1"><b>${proj[0].total.toFixed(1)}</b> <b style="color:${wCol(winL)}">${winL}%</b></span>` +
-      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px">MFF PROJ · WIN ODDS · WK ${state.seasonWeek}</span>` +
-      `<span style="flex:1;text-align:right"><b style="color:${wCol(100 - winL)}">${100 - winL}%</b> <b>${proj[1].total.toFixed(1)}</b></span>`;
-    if (existing && existing.dataset.mffSig === inner && existing.isConnected) return;
+    const side = (tot, w, right) =>
+      `<span style="flex:1;min-width:0;white-space:nowrap;${right ? 'text-align:right' : ''}">` +
+      `<b style="font-size:15px">${tot.toFixed(1)}</b> <span style="color:#5b6068">proj</span>` +
+      `<span style="color:#c8ccd4;margin:0 6px">|</span>` +
+      `<b style="font-size:15px;color:${wCol(w)}">${w}%</b> <span style="color:#5b6068">win</span></span>`;
+    const inner = side(proj[0].total, winL, false) +
+      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px;text-align:center">MFF PROJ · WIN ODDS<br>WK ${state.seasonWeek}</span>` +
+      side(proj[1].total, 100 - winL, true);
+    const anchor = chanceToWinAnchor();
+    if (existing && existing.dataset.mffSig === inner && existing.isConnected &&
+        (anchor ? existing.previousElementSibling === anchor : existing.nextElementSibling === scr.firstTable)) return;
     if (existing) existing.remove();
     const strip = document.createElement('div');
     strip.id = 'mff-matchup-strip';
     strip.dataset.mffSig = inner;
     strip.title = tip;
-    strip.style.cssText = 'display:flex;align-items:baseline;gap:10px;margin:6px 0;padding:5px 12px;' +
-      'background:#f4f6f8;border:1px solid #dfe3e8;border-radius:6px;' +
-      "font:600 12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2a2c33;";
+    strip.style.cssText = 'display:flex;align-items:center;gap:10px;margin:6px 0 2px;padding:6px 12px;' +
+      'background:#f4f6f8;border:1px solid #dfe3e8;border-radius:6px;text-align:left;' +
+      "font:600 12px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2a2c33;";
     strip.innerHTML = inner;
-    scr.firstTable.parentNode.insertBefore(strip, scr.firstTable);
+    if (anchor) anchor.insertAdjacentElement('afterend', strip);
+    else scr.firstTable.parentNode.insertBefore(strip, scr.firstTable);
   }
   function decorateYahooRows() {
     if (!gateAllowed()) return;
@@ -2432,7 +2503,8 @@
       else if (verdict === 'sit') pills.push(pillHTML('▼ SIT', '#fbe7e7', '#b33636', 'A benched player projects better — take him out'));
       else if (verdict === 'close') pills.push(pillHTML('≈ TOSS-UP', '#fdf1dc', '#a06a00', 'Projections within ' + CLOSE_PPG + ' ppg — either is fine'));
       const g = wkOppInfo(p);
-      if (g) {
+      if (g && !tintYahooGameLine(box, g)) {
+        // no native game line in this cell (news modules etc.) — keep the pill;
         // wkOppInfo carries the sidebar's dark palette — remap to the light one
         const oc = g.cls === 'good' ? ['#e2f3e6', '#1d7a34'] : g.cls === 'bad' ? ['#fbe7e7', '#b33636'] : ['#f0f2f5', '#5b6068'];
         pills.push(pillHTML(g.txt, oc[0], oc[1], g.tip));

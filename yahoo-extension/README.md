@@ -61,6 +61,15 @@ week/injuries/actuals/trending (players.json sids bridge the ids).
   Players page, the "LINEUP +x.x" upgrade delta each captured free agent
   would add to your optimal lineup. 2.5s re-scan, signature-cached.
 
+- **v0.9.22 — matchup page like ESPN 0.20.30:** the @/vs pill is gone
+  wherever Yahoo already prints the opponent — the player cell's own
+  `.ysf-game-status` line ("Sun 4:25 pm @ Phi") is tinted green/red for
+  plus/tough Vegas matchups with the O/U + implied tooltip (pill only where
+  no game line exists). The MFF matchup strip (starter-summed proj totals +
+  win odds per side) now sits right UNDER Yahoo's "Chance to win" row +
+  probability bar (anchored on that text's own node); above the first roster
+  table only when the header is absent.
+
 No SIMS tab: league sims need every team's roster and Yahoo's DOM only
 exposes yours — other rosters would take a page-by-page crawl. If the probe
 turns up a usable league-wide endpoint, sims come with the API v2.

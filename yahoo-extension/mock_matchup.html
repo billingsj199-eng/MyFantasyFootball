@@ -18,58 +18,74 @@
 </head>
 <body>
 <h1>Yahoo Helper — mock matchup page</h1>
-<p>Fakes the Yahoo MATCHUP page markup: mirrored one-row-per-slot starters
-(left team | slot | right team). The MFF matchup strip (our proj totals + win
-odds) should insert itself above the table within ~3s, and every player row
-should get a proj pill — NO ▲boom ▼bust pill here (removed v0.9.15; other
-pages keep both).</p>
+<p>Fakes the Yahoo MATCHUP page markup: a header block ending in Yahoo's
+"Chance to win" row + probability bar, then mirrored one-row-per-slot starters
+(left team | slot | right team) whose cells carry Yahoo's own
+<code>.ysf-game-status</code> "Sun 4:25 pm @ Phi" line. Within ~3s: the MFF
+matchup strip (our proj totals + win odds) should sit right UNDER the
+probability bar (v0.9.22; above the table only when no "Chance to win" header
+exists), every game line should be TINTED green/red for plus/tough matchups
+(no @/vs pill — v0.9.22), and every player gets a proj pill — NO ▲boom ▼bust
+pill here (removed v0.9.15; other pages keep both).</p>
+
+<div id="fakeHeader" style="max-width:900px;border:1px solid #ddd;padding:8px 10px">
+  <div style="display:flex;justify-content:space-between;font-weight:700"><span>2-Min Drill Jason &nbsp; 0.00 <small>110.51 Orig Proj</small></span><span><small>Orig Proj 110.77</small> 0.00 &nbsp; Blitz Tom</span></div>
+  <div class="Py-med">
+    <div class="D-f Fz-xs W-100 Nowrap Ai-c F-shade" style="display:flex;justify-content:space-between;font-size:12px">
+      <div><span><span class="F-reset Fw-b">9</span> Players Remaining</span> &nbsp; <span class="F-reset Fw-b">Chance to win 50%</span></div>
+      <div class="Mx-med Fw-xl">Projected Winner</div>
+      <div><span class="F-reset Fw-b">50% Chance to win</span> &nbsp; <span>Players Remaining <span class="F-reset Fw-b">9</span></span></div>
+    </div>
+    <div class="D-f Mtop-xs" style="display:flex;margin-top:4px"><div style="flex:1;height:5px;background:#6001d2"></div><div style="flex:1;height:5px;background:#0078ff"></div></div>
+  </div>
+</div>
 
 <table id="matchupTable">
   <tbody>
     <tr>
-      <td><div class="ysf-player-name"><a>Baker Mayfield</a><span>TB - QB</span></div></td>
+      <td><div class="ysf-player-name"><a>Baker Mayfield</a><span>TB - QB</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 4:25 pm @ Phi</a></span></div></td>
       <td class="slot">QB</td>
-      <td><div class="ysf-player-name"><a>Lamar Jackson</a><span>Bal - QB</span></div></td>
+      <td><div class="ysf-player-name"><a>Lamar Jackson</a><span>Bal - QB</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 1:00 pm vs Bal</a></span></div></td>
     </tr>
     <tr>
-      <td><div class="ysf-player-name"><a>Jordan Addison</a><span>Min - WR</span></div></td>
+      <td><div class="ysf-player-name"><a>Jordan Addison</a><span>Min - WR</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 8:20 pm @ NYG</a></span></div></td>
       <td class="slot">WR</td>
-      <td><div class="ysf-player-name"><a>Ja'Marr Chase</a><span>Cin - WR</span></div></td>
+      <td><div class="ysf-player-name"><a>Ja'Marr Chase</a><span>Cin - WR</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Thu 8:35 pm @ LAR</a></span></div></td>
     </tr>
     <tr>
-      <td><div class="ysf-player-name"><a>Michael Wilson</a><span>Ari - WR</span><span class="ysf-player-status">Q</span></div></td>
+      <td><div class="ysf-player-name"><a>Michael Wilson</a><span>Ari - WR</span><span class="ysf-player-status">Q</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 4:25 pm @ LAC</a></span></div></td>
       <td class="slot">WR</td>
-      <td><div class="ysf-player-name"><a>Zay Flowers</a><span>Bal - WR</span></div></td>
+      <td><div class="ysf-player-name"><a>Zay Flowers</a><span>Bal - WR</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 1:00 pm vs TB</a></span></div></td>
     </tr>
     <tr>
-      <td><div class="ysf-player-name"><a>Jonah Coleman</a><span>Den - RB</span><span class="ysf-player-status">O</span></div></td>
+      <td><div class="ysf-player-name"><a>Jonah Coleman</a><span>Den - RB</span><span class="ysf-player-status">O</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Mon 8:15 pm vs Den</a></span></div></td>
       <td class="slot">RB</td>
-      <td><div class="ysf-player-name"><a>Jahmyr Gibbs</a><span>Det - RB</span></div></td>
+      <td><div class="ysf-player-name"><a>Jahmyr Gibbs</a><span>Det - RB</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 1:00 pm @ Cle</a></span></div></td>
     </tr>
     <tr>
-      <td><div class="ysf-player-name"><a>Javonte Williams</a><span>Dal - RB</span></div></td>
+      <td><div class="ysf-player-name"><a>Javonte Williams</a><span>Dal - RB</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 4:05 pm vs SF</a></span></div></td>
       <td class="slot">RB</td>
-      <td><div class="ysf-player-name"><a>Aaron Jones</a><span>Min - RB</span></div></td>
+      <td><div class="ysf-player-name"><a>Aaron Jones</a><span>Min - RB</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 4:25 pm @ Phi</a></span></div></td>
     </tr>
     <tr>
-      <td><div class="ysf-player-name"><a>Juwan Johnson</a><span>NO - TE</span></div></td>
+      <td><div class="ysf-player-name"><a>Juwan Johnson</a><span>NO - TE</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 1:00 pm vs Bal</a></span></div></td>
       <td class="slot">TE</td>
-      <td><div class="ysf-player-name"><a>Brock Bowers</a><span>LV - TE</span></div></td>
+      <td><div class="ysf-player-name"><a>Brock Bowers</a><span>LV - TE</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 8:20 pm @ NYG</a></span></div></td>
     </tr>
     <tr>
-      <td><div class="ysf-player-name"><a>Cam Skattebo</a><span>NYG - RB</span></div></td>
+      <td><div class="ysf-player-name"><a>Cam Skattebo</a><span>NYG - RB</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Thu 8:35 pm @ LAR</a></span></div></td>
       <td class="slot">W/R/T</td>
-      <td><div class="ysf-player-name"><a>Rome Odunze</a><span>Chi - WR</span></div></td>
+      <td><div class="ysf-player-name"><a>Rome Odunze</a><span>Chi - WR</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 4:25 pm @ LAC</a></span></div></td>
     </tr>
     <tr>
-      <td><div class="ysf-player-name"><a>Tyler Bass</a><span>Buf - K</span></div></td>
+      <td><div class="ysf-player-name"><a>Tyler Bass</a><span>Buf - K</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 1:00 pm vs TB</a></span></div></td>
       <td class="slot">K</td>
-      <td><div class="ysf-player-name"><a>Jason Myers</a><span>Sea - K</span></div></td>
+      <td><div class="ysf-player-name"><a>Jason Myers</a><span>Sea - K</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Mon 8:15 pm vs Den</a></span></div></td>
     </tr>
     <tr>
-      <td><div class="ysf-player-name"><a>Denver</a><span>Den - DEF</span></div></td>
+      <td><div class="ysf-player-name"><a>Denver</a><span>Den - DEF</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 1:00 pm @ Cle</a></span></div></td>
       <td class="slot">DEF</td>
-      <td><div class="ysf-player-name"><a>Detroit</a><span>Det - DEF</span></div></td>
+      <td><div class="ysf-player-name"><a>Detroit</a><span>Det - DEF</span></div><div class="ysf-player-detail"><span class="ysf-game-status"><a style="font-size:10px;color:#777">Sun 4:05 pm vs SF</a></span></div></td>
     </tr>
   </tbody>
 </table>

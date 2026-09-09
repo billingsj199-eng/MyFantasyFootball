@@ -59,6 +59,14 @@ everything: rosters, each team's CURRENT lineup (`lineupSlotId`; 20=BN
   ppg. Matches on anchor TEXT (raw ESPN name or the D/ST rename), not
   selectors, so it survives ESPN markup churn; 2s re-scan,
   signature-cached.
+- **Matchup pages (v0.20.30)** — on the boxscore AND FantasyCast pages the
+  opponent is never duplicated as a pill: ESPN's own text (the OPP column, or
+  FantasyCast's "@PHI Sun 4:25 PM" game line) is tinted green/red for
+  plus/tough Vegas matchups with the O/U + implied tooltip. The MFF matchup
+  strip (our starter-summed proj totals + win odds) anchors on the "Proj
+  Total" label's own text node and drops in right under ESPN's "Chance to
+  Win" tracker when present; the two teams are read off the header's team
+  names (FantasyCast's carousel swaps matchups without touching the URL).
 - Not ported (yet): trade verdicts.
 - **Test without a league:** serve this folder over HTTP and open
   `mock_season.html` — a 10-team mock league (you are team 2, lineup

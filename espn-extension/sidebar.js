@@ -2759,11 +2759,29 @@
   // native OPP cell gets its own light tint pair. 'mid' stays untinted (just
   // the tooltip): a wall of colored cells would bury the actual signal.
   const OPP_TINT = { good: ['#e2f3e6', '#1d7a34'], bad: ['#fbe7e7', '#b33636'] };
-  function tintNativeOpp(a, g) {
+  // Two native homes for the opponent: the roster tables' OPP column
+  // (`.table--cell.opp`), and FantasyCast's compact rows, where ESPN prints
+  // "@PHI Sun 4:25 PM" on a `.game-status-inline` line under the name (no
+  // OPP cell at all — that's why the @/vs pill used to show there). Both get
+  // the same tint; the game-status line is tinted whole (never split its
+  // text node — React live-updates it during games).
+  function nativeOppTarget(a) {
     const tr = a.closest('tr');
     const cell = tr && tr.querySelector('.table--cell.opp');
-    if (!cell) return null;
-    const tgt = cell.querySelector('a') || cell;
+    if (cell) return cell.querySelector('a') || cell;
+    const info = a.closest('.player-column_info') || tr;
+    const gs = info && info.querySelector('.game-status-inline');
+    if (!gs) return null;
+    for (const cand of gs.querySelectorAll('span,a,div')) {
+      if (cand.childElementCount) continue;
+      const t = (cand.textContent || '').trim();
+      if (t && t.length <= 40 && /^(@|vs\.?\s?)?[A-Z]{2,4}\b/.test(t)) return cand;
+    }
+    return null;
+  }
+  function tintNativeOpp(a, g) {
+    const tgt = nativeOppTarget(a);
+    if (!tgt) return null;
     const sig = g.cls + '|' + g.tip;
     if (tgt.dataset.mffOppSig !== sig) {
       tgt.dataset.mffOppSig = sig;
@@ -2823,69 +2841,121 @@
     }
     return { total: Math.round(total * 10) / 10, varSum, missing };
   }
-  function matchupStripTick() {
-    const existing = document.getElementById('mff-matchup-strip');
-    const leaves = [];
-    for (const el of document.querySelectorAll('div,span')) {
-      if (el.childElementCount || el.closest('#mff-sidebar') || el.closest('#mff-matchup-strip')) continue;
-      if (/proj\s*total/i.test(el.textContent || '')) {
-        leaves.push(el);
-        if (leaves.length === 2) break;
-      }
+  // "Proj Total" owners = elements whose OWN text node carries the label
+  // (ESPN renders `<div class="statusLabel">Proj Total:<span>117.8</span></div>`,
+  // so a leaf-only test never matched on the real page — harness-only win).
+  function projTotalOwners() {
+    const out = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = walker.nextNode())) {
+      const tx = (n.nodeValue || '').trim();
+      if (tx.length > 40 || !/proj\s*total/i.test(tx)) continue; // label-length only, never prose
+      const el = n.parentElement;
+      if (!el || el.closest('#mff-sidebar') || el.closest('#mff-matchup-strip')) continue;
+      if (out.indexOf(el) < 0) out.push(el);
+      if (out.length === 2) break;
     }
-    if (!leaves.length || !state.seasonTeams.length) { if (existing) existing.remove(); return; }
+    return out;
+  }
+  // Which two teams the header is showing: match every known team name
+  // against the header's text (FantasyCast's carousel swaps matchups without
+  // touching the URL); left-to-right order = ESPN's away/home order. URL
+  // teamId / my team + the mMatchup pairs stay as the fallback.
+  function headerTeams(headerEl, period) {
+    const txt = headerEl ? (headerEl.textContent || '') : '';
+    const hits = [];
+    if (txt) {
+      state.seasonTeams.forEach((t) => {
+        if (!t.name || t.name.length < 3) return;
+        const i = txt.indexOf(t.name);
+        if (i >= 0) hits.push({ t, i, len: t.name.length });
+      });
+      // "Fantasy Focus" vs "Fantasy Focus 2": keep the longer name at a shared position
+      hits.sort((x, y) => x.i - y.i || y.len - x.len);
+      const picked = [];
+      hits.forEach((h) => {
+        if (picked.some((q) => h.i >= q.i && h.i < q.i + q.len)) return;
+        if (picked.length < 2) picked.push(h);
+      });
+      if (picked.length === 2) return [picked[0].t, picked[1].t];
+    }
     const urlTeam = parseInt(urlParams().get('teamId'), 10);
     const tid = isFinite(urlTeam) ? urlTeam : state.myTeamId;
-    const period = parseInt(urlParams().get('matchupPeriodId'), 10) || state.seasonWeek;
     const pb = state.seasonPairs || {};
     const pairs = pb[period] || pb[state.seasonWeek] || [];
     const pair = pairs.find((x) => x.a === tid || x.b === tid) || pairs[0];
     const tA = pair && state.seasonTeams.find((t) => t.teamId === pair.a);
     const tB = pair && state.seasonTeams.find((t) => t.teamId === pair.b);
-    if (!tA || !tB) { if (existing) existing.remove(); return; }
-    const a = sideProjOf(tA.entries), b = sideProjOf(tB.entries);
-    const sd = Math.sqrt(a.varSum + b.varSum) || 1;
-    const winA = Math.round(normCdf((a.total - b.total) / sd) * 100);
-    const missing = a.missing + b.missing;
-    const tip = 'MFF numbers for this matchup — our proj totals (same weekly projection as the row pills: ' +
-      'site sim first, ' + state.scoringLabel + ' league-scored, injuries priced) summed over each side\'s ' +
-      'current starters, and our win odds (normal approximation over the starters\' sim spreads; ' +
-      'player correlations ignored).' +
-      (missing ? ' ' + missing + ' starter(s) without a projection count 0.' : '');
-    const wCol = (w) => (w >= 55 ? '#1d7a34' : w <= 45 ? '#b33636' : '#a06a00');
-    const inner =
-      `<span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(tA.name)} ` +
-      `<b>${a.total.toFixed(1)}</b> <b style="color:${wCol(winA)}">${winA}%</b></span>` +
-      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px">MFF PROJ · WIN ODDS · WK ${period}</span>` +
-      `<span style="flex:1;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">` +
-      `<b style="color:${wCol(100 - winA)}">${100 - winA}%</b> <b>${b.total.toFixed(1)}</b> ${esc(tB.name)}</span>`;
-    if (existing && existing.dataset.mffSig === inner && existing.isConnected) return;
-    if (existing) existing.remove();
-    let anchor = leaves[0].parentElement;
-    if (leaves[1]) {
+    return tA && tB ? [tA, tB] : null;
+  }
+  function matchupStripTick() {
+    const existing = document.getElementById('mff-matchup-strip');
+    const owners = projTotalOwners();
+    if (!owners.length || !state.seasonTeams.length) { if (existing) existing.remove(); return; }
+    // anchor = lowest common ancestor of the two "Proj Total" cells; if ESPN's
+    // "Chance to Win" tracker follows it (FantasyCast), drop in under that
+    // instead so our odds sit right beneath theirs.
+    let anchor = owners[0].parentElement;
+    if (owners[1]) {
       const ups = new Set();
-      for (let n = leaves[0]; n; n = n.parentElement) ups.add(n);
-      let m = leaves[1];
+      for (let n = owners[0]; n; n = n.parentElement) ups.add(n);
+      let m = owners[1];
       while (m && !ups.has(m)) m = m.parentElement;
       if (m && m !== document.body && m !== document.documentElement) anchor = m;
     }
     if (!anchor || anchor === document.body || anchor === document.documentElement) return;
+    // The tracker is a sibling of the LCA on the real page (both "Proj Total"
+    // cells live in their own team-header subtree); climb a couple of levels
+    // in case ESPN nests the status row one deeper.
+    for (let node = anchor, k = 0; node && k < 3 && node !== document.body; node = node.parentElement, k++) {
+      let sib = node.nextElementSibling;
+      while (sib && sib.id === 'mff-matchup-strip') sib = sib.nextElementSibling;
+      if (sib && /chance\s*to\s*win/i.test(sib.textContent || '')) { anchor = sib; break; }
+    }
+    const period = parseInt(urlParams().get('matchupPeriodId'), 10) || state.seasonWeek;
+    const teams = headerTeams(anchor.parentElement, period);
+    if (!teams) { if (existing) existing.remove(); return; }
+    const tA = teams[0], tB = teams[1];
+    const a = sideProjOf(tA.entries), b = sideProjOf(tB.entries);
+    const sd = Math.sqrt(a.varSum + b.varSum) || 1;
+    const winA = Math.round(normCdf((a.total - b.total) / sd) * 100);
+    const missing = a.missing + b.missing;
+    const tip = 'MFF numbers for ' + tA.name + ' vs ' + tB.name + ' — our proj totals (same weekly ' +
+      'projection as the row pills: site sim first, ' + state.scoringLabel + ' league-scored, injuries ' +
+      'priced) summed over each side\'s current starters, and our win odds (normal approximation ' +
+      'over the starters\' sim spreads; player correlations ignored).' +
+      (missing ? ' ' + missing + ' starter(s) without a projection count 0.' : '');
+    const wCol = (w) => (w >= 55 ? '#1d7a34' : w <= 45 ? '#b33636' : '#a06a00');
+    const side = (tot, w, right) =>
+      `<span style="flex:1;min-width:0;white-space:nowrap;${right ? 'text-align:right' : ''}">` +
+      `<b style="font-size:15px">${tot.toFixed(1)}</b> <span style="color:#5b6068">proj</span>` +
+      `<span style="color:#c8ccd4;margin:0 6px">|</span>` +
+      `<b style="font-size:15px;color:${wCol(w)}">${w}%</b> <span style="color:#5b6068">win</span></span>`;
+    const inner = side(a.total, winA, false) +
+      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px;text-align:center">MFF PROJ · WIN ODDS<br>WK ${period}</span>` +
+      side(b.total, 100 - winA, true);
+    const sig = inner + '|' + tA.teamId + '|' + tB.teamId;
+    if (existing && existing.dataset.mffSig === sig && existing.isConnected &&
+        existing.previousElementSibling === anchor) return;
+    if (existing) existing.remove();
     const strip = document.createElement('div');
     strip.id = 'mff-matchup-strip';
-    strip.dataset.mffSig = inner;
+    strip.dataset.mffSig = sig;
     strip.title = tip;
-    strip.style.cssText = 'display:flex;align-items:baseline;gap:10px;margin:4px 0;padding:5px 12px;' +
+    strip.style.cssText = 'display:flex;align-items:center;gap:10px;margin:6px 0 2px;padding:6px 12px;' +
       'background:#f4f6f8;border:1px solid #dfe3e8;border-radius:6px;' +
-      "font:600 12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2a2c33;";
+      "font:600 12px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2a2c33;";
     strip.innerHTML = inner;
     anchor.insertAdjacentElement('afterend', strip);
   }
   function decorateSeasonPages() {
     if (!gateAllowed()) return;
     if (state.appMode !== 'season' || !state.seasonTeams.length) return;
-    // Boxscore/matchup page: proj pill only, no boom/bust per Jack (v0.20.21)
-    // — the strip + row pills already crowd it. Other season pages keep both.
-    const onBoxscore = /\bboxscore\b/i.test(location.pathname);
+    // Boxscore / FantasyCast matchup pages: proj pill only, no boom/bust per
+    // Jack (v0.20.21) — the strip + row pills already crowd them. Other season
+    // pages keep both.
+    const onBoxscore = /\b(boxscore|fantasycast)\b/i.test(location.pathname);
     const map = Object.create(null);
     state.seasonTeams.forEach((t) => t.entries.forEach((en) => {
       if (!en.p) return;
@@ -2914,10 +2984,11 @@
       if (verdict === 'go') pills.push(pillHTML('▲ START', '#e2f3e6', '#1d7a34', 'Projects better than a current starter — put him in'));
       else if (verdict === 'sit') pills.push(pillHTML('▼ SIT', '#fbe7e7', '#b33636', 'A benched player projects better — take him out'));
       else if (verdict === 'close') pills.push(pillHTML('≈ TOSS-UP', '#fdf1dc', '#a06a00', 'Projections within ' + CLOSE_PPG + ' ppg — either is fine'));
-      // Matchup: ESPN's roster tables already print the opponent in their own
-      // OPP column, so instead of a duplicate pill we tint that cell (green =
-      // plus matchup, red = tough) and hang the Vegas tooltip on it. Rows with
-      // no OPP cell (player cards, news modules) keep the pill.
+      // Matchup: ESPN already prints the opponent (roster tables' OPP column,
+      // FantasyCast's "@PHI Sun 4:25 PM" line), so instead of a duplicate pill
+      // we tint that native text (green = plus matchup, red = tough) and hang
+      // the Vegas tooltip on it. Rows with neither (player cards, news
+      // modules) keep the pill.
       const g = wkOppInfo(p);
       if (g && !tintNativeOpp(a, g)) {
         // wkOppInfo carries the sidebar's dark palette — remap to the light one

@@ -100,6 +100,29 @@ def clean_display(n):
     return re.sub(r'\s+(Jr\.?|Sr\.?|II|III|IV|V)$', '', n.strip())
 
 
+# Compact per-stat projection line (Sleeper is the only source here that posts
+# stat lines, not just points). Keys mirror the site's D-array stat names so
+# the Start/Sit cards can show "REC · REC YDS · RUSH YDS · TD" next to the
+# week's projection. Zero / missing stats are dropped to keep the payload small.
+# Since 2026-09-09: players[name]['st'].
+_ST_KEYS = (('pass_yd', 'py', 1), ('pass_td', 'ptd', 2), ('pass_int', 'int', 2),
+            ('rush_att', 'ra', 1), ('rush_yd', 'ry', 1), ('rush_td', 'rtd', 2),
+            ('rec_tgt', 'tgt', 1), ('rec', 'rec', 1), ('rec_yd', 'rcy', 1), ('rec_td', 'rctd', 2),
+            ('fgm', 'fgm', 2), ('fga', 'fga', 2), ('xpm', 'xpm', 2))
+
+
+def _stat_line(st):
+    out = {}
+    for src, key, dp in _ST_KEYS:
+        v = st.get(src)
+        if not isinstance(v, (int, float)):
+            continue
+        v = round(v, dp)
+        if v > 0:
+            out[key] = v
+    return out or None
+
+
 def pull_sleeper(season, week):
     r = requests.get(PROJ_URL.format(season=season, week=week), timeout=60)
     r.raise_for_status()
@@ -118,6 +141,9 @@ def pull_sleeper(season, week):
             'p': round(st.get('pts_ppr', h), 1),
             's': round(st.get('pts_std', h), 1),
         }
+        line = _stat_line(st)
+        if line:
+            players[name]['st'] = line
         if len(players) >= CAP:
             break
     return players

@@ -2591,6 +2591,71 @@ function _weeklyPropLinesFor(name) {
   return { stats: avg, books, asOf: rec.asOf || null };
 }
 
+// WEEKLY stat-line projection: Sleeper's per-stat weekly projection, kept by
+// scripts/pull_weekly_projections.py as players[name].st since 2026-09-09
+// ({py,ptd,int,ra,ry,rtd,tgt,rec,rcy,rctd | fgm,fga,xpm}, zeros dropped).
+// Direct name hit, then the suffix-stripped index _computeConsensusWeekly
+// uses. Null when the feed is for another week or the player has no row.
+function _weeklyStatProjFor(name) {
+  const cw = window.WEEKLY_PROJ;
+  if (!cw || !cw.players) return null;
+  const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+  if (cw.week !== wk) return null;
+  let row = cw.players[name];
+  if (!row && typeof _campNewsNorm === 'function') {
+    let idx = window._weeklyProjNameIdx;
+    if (!idx || idx._src !== cw) {
+      idx = { _src: cw, map: {} };
+      Object.keys(cw.players).forEach(k => { idx.map[_campNewsNorm(k)] = cw.players[k]; });
+      window._weeklyProjNameIdx = idx;
+    }
+    row = idx.map[_campNewsNorm(name)];
+  }
+  return (row && row.st && typeof row.st === 'object') ? row.st : null;
+}
+window._weeklyStatProjFor = _weeklyStatProjFor;
+
+// === GAME WEATHER (data/weather_2026.js — scripts/pull_weather.py) ===
+// Row for the game a team plays in week wk: {away, home, kick, venue, city,
+// indoor, cond, temp(°F), wind, gust(mph), pop(% precip), src} or null.
+// Accepts a full team name or a site abbreviation; weeks are keyed by string.
+function _weatherFor(team, wk) {
+  const W = window.WEATHER_2026;
+  if (!W || !W.weeks || !team) return null;
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[team]) ? TEAM_ABBR_MAP[team] : team;
+  const week = W.weeks[String(wk || window._weeklyActiveWeek || window._weeklyPublishedWeek || 1)];
+  if (!week) return null;
+  if (week[abbr]) return week[abbr];
+  const keys = Object.keys(week);
+  for (let i = 0; i < keys.length; i++) if (week[keys[i]] && week[keys[i]].away === abbr) return week[keys[i]];
+  return null;
+}
+window._weatherFor = _weatherFor;
+// Compact read of a weather row for a card box. Indoor → "DOME" (no weather
+// factor). Outdoor → lbl "76° · 8 mph", sub = condition (+ precip % when it
+// matters), sev = 'bad' (wind ≥ 15 / precip ≥ 50% / snow / thunder / heavy),
+// 'warn' (wind ≥ 10 / precip ≥ 30% / any rain), '' otherwise.
+function _weatherSummary(w) {
+  if (!w) return null;
+  if (w.indoor) return { lbl: 'DOME', sub: '', sev: 'dome', tip: (w.venue || 'Indoor venue') + ' — roof closed, no weather factor' };
+  const num = v => typeof v === 'number' && isFinite(v);
+  const cond = w.cond || '';
+  const c = cond.toLowerCase();
+  const parts = [];
+  if (num(w.temp)) parts.push(w.temp + '°');
+  if (num(w.wind)) parts.push(w.wind + ' mph' + (num(w.gust) && w.gust >= w.wind + 8 ? ' (g ' + w.gust + ')' : ''));
+  let sev = '';
+  if ((num(w.wind) && w.wind >= 15) || (num(w.pop) && w.pop >= 50) || /snow|thunder|heavy|freezing/.test(c)) sev = 'bad';
+  else if ((num(w.wind) && w.wind >= 10) || (num(w.pop) && w.pop >= 30) || /rain|shower|drizzle|storm|sleet/.test(c)) sev = 'warn';
+  const tip = [w.venue || '', cond, num(w.temp) ? w.temp + '°F' : '',
+    num(w.wind) ? 'wind ' + w.wind + ' mph' + (num(w.gust) ? ' (gusts ' + w.gust + ')' : '') : '',
+    num(w.pop) ? 'precip ' + w.pop + '%' : '',
+    w.src === 'meteo' ? 'Open-Meteo forecast at the kickoff hour' : 'ESPN headline forecast']
+    .filter(Boolean).join(' · ');
+  return { lbl: parts.join(' · ') || cond || '—', sub: cond + (num(w.pop) && w.pop >= 20 ? (cond ? ' · ' : '') + w.pop + '% precip' : ''), sev, tip };
+}
+window._weatherSummary = _weatherSummary;
+
 // BETTING LINES: combined yards + TDs from season-long sportsbook props,
 // each stat averaged across the books that posted it (DK / FD / MGM).
 // In WEEKLY mode this switches to the active week's prop board (UD / PP):
@@ -2949,6 +3014,7 @@ function _viewPresetDefaultName(s) {
   const parts = [ver, mode, sc];
   if (s.pos && s.pos !== 'ALL') parts.push(s.pos);
   if (s.topN) parts.push('Top ' + s.topN);
+  if (Array.isArray(s.teams) && s.teams.length) parts.push(s.teams.length <= 3 ? s.teams.map(_tfAbbr).join('+') : s.teams.length + ' teams');
   return parts.join(' · ');
 }
 window._saveViewPreset = function () {
@@ -2957,7 +3023,8 @@ window._saveViewPreset = function () {
     scoring: rankingScoringFmt,
     stats: (typeof rnkStatMode !== 'undefined' ? rnkStatMode : 'fantasy'),
     adp: (typeof rnkAdpSrc !== 'undefined' ? rnkAdpSrc : 'consensus'),
-    topN: (typeof rankTopN !== 'undefined' && rankTopN != null) ? rankTopN : null
+    topN: (typeof rankTopN !== 'undefined' && rankTopN != null) ? rankTopN : null,
+    teams: (window._teamFilter && window._teamFilter.size) ? [...window._teamFilter] : []
   };
   const list = _viewPresetsLoad();
   if (list.length >= 8) { if (typeof toast === 'function') toast('Preset limit reached (8) — remove one first'); return; }
@@ -2989,6 +3056,8 @@ window._applyViewPreset = function (i) {
     const want = s.topN != null ? String(s.topN) : '';
     if (tn.value !== want) { tn.value = want; tn.dispatchEvent(new Event('input', { bubbles: true })); }
   }
+  // Teams: presets saved before this field existed carry none → clears the pill.
+  if (typeof window._setTeamFilter === 'function') window._setTeamFilter(Array.isArray(s.teams) ? s.teams : [], true);
   _renderViewPresets(i);
 };
 window._deleteViewPreset = function (i) {
@@ -3175,6 +3244,114 @@ window._toggleWatchOnly = function () {
   if (btn) btn.classList.toggle('on', window._watchOnly);
   render();
 };
+
+// ── TEAMS filter (rankings): multi-select NFL teams — only players from the
+// picked teams show. ANDs with position / ★ / search, and is applied AFTER the
+// TOP-N cap so "TOP 40 + DET" = the Lions inside the top 40 (not the top 40
+// Lions). Session-only state (a stale team pick after a reload would be a
+// silent "where did everyone go?"), but saved into view presets (s.teams).
+window._teamFilter = new Set();
+const _TF_DIVISIONS = [
+  ['AFC East',  ['Buffalo Bills', 'Miami Dolphins', 'New England Patriots', 'New York Jets']],
+  ['AFC North', ['Baltimore Ravens', 'Cincinnati Bengals', 'Cleveland Browns', 'Pittsburgh Steelers']],
+  ['AFC South', ['Houston Texans', 'Indianapolis Colts', 'Jacksonville Jaguars', 'Tennessee Titans']],
+  ['AFC West',  ['Denver Broncos', 'Kansas City Chiefs', 'Las Vegas Raiders', 'Los Angeles Chargers']],
+  ['NFC East',  ['Dallas Cowboys', 'New York Giants', 'Philadelphia Eagles', 'Washington Commanders']],
+  ['NFC North', ['Chicago Bears', 'Detroit Lions', 'Green Bay Packers', 'Minnesota Vikings']],
+  ['NFC South', ['Atlanta Falcons', 'Carolina Panthers', 'New Orleans Saints', 'Tampa Bay Buccaneers']],
+  ['NFC West',  ['Arizona Cardinals', 'Los Angeles Rams', 'San Francisco 49ers', 'Seattle Seahawks']],
+];
+function _tfAbbr(t) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) || t; }
+function _tfLogo(t) {
+  const id = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[t] : null;
+  return id ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + id + '.png' : '';
+}
+// Short label for chips / preset names: "DET · GB · KC" up to 4, else "7 teams".
+window._tfSummary = function (arr) {
+  const a = (arr || [...window._teamFilter]).map(_tfAbbr);
+  return a.length <= 4 ? a.join(' · ') : a.length + ' teams';
+};
+function _tfBadge() {
+  const n = window._teamFilter.size;
+  const c = document.getElementById('teamFilterCount');
+  if (c) c.textContent = n ? String(n) : '';
+  const b = document.getElementById('teamFilterBtn');
+  if (b) {
+    b.classList.toggle('on', n > 0);
+    b.title = n ? 'Showing only: ' + [...window._teamFilter].map(_tfAbbr).join(', ') + ' — click to change'
+               : 'Filter by NFL team — pick one team or several; only players from those teams show. Stacks with the position filter, ★ and TOP N.';
+  }
+}
+function _tfRenderPop() {
+  const pop = document.getElementById('teamFilterPop');
+  if (!pop) return;
+  const esc = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const n = window._teamFilter.size;
+  let h = '<div class="tfp-head"><span class="tfp-title">TEAMS</span><span class="tfp-sub">'
+    + (n ? n + ' selected' : 'pick one team or several') + '</span>'
+    + '<div class="tfp-act"><button type="button" data-tfact="clear"' + (n ? '' : ' disabled style="opacity:.45;cursor:default"') + '>CLEAR</button>'
+    + '<button type="button" data-tfact="close">DONE</button></div></div>';
+  _TF_DIVISIONS.forEach(([div, teams]) => {
+    const allOn = teams.every(t => window._teamFilter.has(t));
+    h += '<div class="tfp-div"><button type="button" class="tfp-divname' + (allOn ? ' on' : '') + '" data-tfdiv="' + esc(div) + '" title="Toggle the whole ' + esc(div) + '">' + esc(div) + '</button>';
+    teams.forEach(t => {
+      const logo = _tfLogo(t);
+      const on = window._teamFilter.has(t);
+      h += '<button type="button" class="tfp-team' + (on ? ' on' : '') + '" data-tfteam="' + esc(t) + '" title="' + esc(t) + '" aria-pressed="' + (on ? 'true' : 'false') + '">'
+        + (logo ? '<img src="' + logo + '" alt="" loading="lazy">' : '') + esc(_tfAbbr(t)) + '</button>';
+    });
+    h += '</div>';
+  });
+  pop.innerHTML = h;
+}
+// Set the selection wholesale (presets) — `arr` = full team names.
+window._setTeamFilter = function (arr, rerender) {
+  window._teamFilter = new Set((Array.isArray(arr) ? arr : []).filter(t => _TF_DIVISIONS.some(d => d[1].includes(t))));
+  _tfBadge();
+  const pop = document.getElementById('teamFilterPop');
+  if (pop && pop.style.display !== 'none') _tfRenderPop();
+  if (rerender !== false && typeof render === 'function') render();
+};
+function _tfCloseOnOutside(e) {
+  const wrap = document.getElementById('teamFilterWrap');
+  if (wrap && wrap.contains(e.target)) return;
+  window._toggleTeamFilterPop(false);
+}
+function _tfEsc(e) { if (e.key === 'Escape') { window._toggleTeamFilterPop(false); e.stopPropagation(); } }
+window._toggleTeamFilterPop = function (force) {
+  const pop = document.getElementById('teamFilterPop');
+  if (!pop) return;
+  const open = (typeof force === 'boolean') ? force : pop.style.display === 'none';
+  if (open) {
+    _tfRenderPop();
+    pop.style.display = '';
+    setTimeout(() => { document.addEventListener('mousedown', _tfCloseOnOutside, true); document.addEventListener('keydown', _tfEsc, true); }, 0);
+  } else {
+    pop.style.display = 'none';
+    document.removeEventListener('mousedown', _tfCloseOnOutside, true);
+    document.removeEventListener('keydown', _tfEsc, true);
+  }
+};
+(function _wireTeamFilterPop() {
+  const pop = document.getElementById('teamFilterPop');
+  if (!pop) return;
+  pop.addEventListener('click', e => {
+    const t = e.target.closest('[data-tfteam],[data-tfdiv],[data-tfact]');
+    if (!t) return;
+    if (t.dataset.tfact === 'close') { window._toggleTeamFilterPop(false); return; }
+    if (t.dataset.tfact === 'clear') { if (!window._teamFilter.size) return; window._teamFilter.clear(); }
+    else if (t.dataset.tfteam) { const k = t.dataset.tfteam; if (window._teamFilter.has(k)) window._teamFilter.delete(k); else window._teamFilter.add(k); }
+    else if (t.dataset.tfdiv) {
+      const div = _TF_DIVISIONS.find(d => d[0] === t.dataset.tfdiv);
+      if (!div) return;
+      const allOn = div[1].every(x => window._teamFilter.has(x));
+      div[1].forEach(x => { if (allOn) window._teamFilter.delete(x); else window._teamFilter.add(x); });
+    }
+    _tfBadge();
+    _tfRenderPop();
+    render();
+  });
+})();
 // --- Cloud sync (users/{uid}/data/watchlist — existing per-user rules, no
 // rules change needed). Local stays the source of truth for signed-out use;
 // on sign-in the newer side wins (localStorage mff_watchlist_at vs the doc's
@@ -3404,6 +3581,10 @@ function getFiltered(applyTopN) {
   // bypasses it (search can always find anyone). Post-sort, render's own
   // slice is a no-op since the pool is already ≤ N.
   if (applyTopN && rankTopN != null && rankTopN > 0 && !query) f = f.slice(0, rankTopN);
+  // TEAMS filter (multi-select pill): after the TOP-N cap so the cap keeps its
+  // board meaning — "TOP 40 + DET" = Lions inside the top 40. d.t is the full
+  // team name for every row, D/ST included.
+  if (window._teamFilter && window._teamFilter.size) f = f.filter(d => window._teamFilter.has(d.t));
   // Secondary sorts (non-myrank)
   if (sortKey !== 'myrank') {
     // STATS view repurposes the three PPG sort keys: pts → yards, fpts25 → TDs,
@@ -5167,6 +5348,7 @@ function updateStats(data) {
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
     <span class="stat-chip">Showing <strong>${data.length}</strong></span>
+    ${(window._teamFilter && window._teamFilter.size) ? `<span class="stat-chip" style="color:#58a7ff;cursor:pointer" onclick="window._toggleTeamFilterPop(true)" title="Team filter is on — click to change">Teams <strong>${window._tfSummary()}</strong></span>` : ''}
     <span class="stat-chip">QB <strong>${qbs}</strong></span>
     <span class="stat-chip">RB <strong>${rbs}</strong></span>
     <span class="stat-chip">WR <strong>${wrs}</strong></span>
@@ -10107,6 +10289,16 @@ function buildWeeklyCardView(d) {
     if (typeof r.oppg === 'number' && !isDst) {
       html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">Opponent allows ' + fmt1(r.oppg) + ' PA/gm.</div>';
     }
+  }
+  // Game weather (data/weather_2026.js): DOME for roofed venues, otherwise
+  // temp · wind at the kickoff hour with the condition underneath.
+  const wx = (typeof _weatherFor === 'function') ? _weatherFor(d.t, wk) : null;
+  const ws = (typeof _weatherSummary === 'function') ? _weatherSummary(wx) : null;
+  if (ws) {
+    html += '<div class="card-rank-row" style="grid-template-columns:1fr;margin-top:.4rem">';
+    html += box('WEATHER', '<span class="wx-' + (ws.sev || 'ok') + '">' + esc(ws.lbl) + '</span>'
+      + (ws.sub ? ' <span style="font-size:.62rem;color:var(--text2)">' + esc(ws.sub) + '</span>' : ''), '', ws.tip);
+    html += '</div>';
   }
   html += '</div>';
 
@@ -21614,6 +21806,23 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       o.raw = board[d.n] || null;
       if (!o.raw && typeof _PROSPECT_ALIASES !== 'undefined' && _PROSPECT_ALIASES && _PROSPECT_ALIASES[d.n]) o.raw = board[_PROSPECT_ALIASES[d.n]] || null;
     }
+    // Projected stat line beside the projection: Sleeper's week-specific
+    // line (weekly_projections st) first, else Clay's season pace per game
+    // (flagged "season pace" on the card).
+    o.st = (typeof _weeklyStatProjFor === 'function') ? _weeklyStatProjFor(d.n) : null;
+    o.stSrc = o.st ? 'week' : null;
+    if (!o.st && d.s !== 'DST' && typeof clayLookup === 'function') {
+      const cp = clayLookup(d.n);
+      if (cp && (cp.py || cp.ry || cp.rcy || cp.fga)) {
+        const gm = cp.gm || 17;
+        const pg = (v, m) => v ? Math.round((v / gm) * m) / m : 0;
+        o.st = { py: pg(cp.py, 10), ptd: pg(cp.ptd, 100), int: pg(cp.int, 100), ry: pg(cp.ry, 10), rtd: pg(cp.rtd, 100),
+                 rec: pg(cp.rec, 10), rcy: pg(cp.rcy, 10), rctd: pg(cp.rctd, 100), fgm: pg(cp.fgm, 100), xpm: pg(cp.xpm, 100) };
+        o.stSrc = 'pace';
+      }
+    }
+    // Game weather for the WEATHER box (DOME / temp · wind · condition).
+    o.wx = (!o.bye && typeof _weatherFor === 'function') ? _weatherFor(d.t, wk) : null;
     return o;
   }
 
@@ -21663,6 +21872,30 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     mark('tt', cards.filter(c => c.d.s !== 'DST').map(c => c.tt), true);
     mark('oppTT', cards.filter(c => c.d.s === 'DST').map(c => c.oppTT), false);
     mark('spread', cards.map(c => c.spread), false);
+    // Stat-line columns: one set per lineup family so the cards line up
+    // (QB: passing + rushing; FLEX: rec / rec yds / rush yds / TD; K: FG / XP).
+    // A column drops out when no card in the family projects that stat.
+    const stVal = (st, k) => {
+      if (!st) return null;
+      if (k === 'td') { const v = (st.rtd || 0) + (st.rctd || 0); return v > 0 ? v : null; }
+      const v = st[k];
+      return (typeof v === 'number' && v > 0) ? v : null;
+    };
+    const ST_COLS = {
+      QB: [['py', 'PASS YDS', 0], ['ptd', 'PASS TD', 1], ['int', 'INT', 1], ['ry', 'RUSH YDS', 0], ['rtd', 'RUSH TD', 1]],
+      FLEX: [['rec', 'REC', 1], ['rcy', 'REC YDS', 0], ['ry', 'RUSH YDS', 0], ['td', 'TD', 1]],
+      K: [['fgm', 'FGM', 1], ['xpm', 'XPM', 1]],
+    };
+    // Column shows only when some card in the family projects a meaningful
+    // amount of it (yards >= 5, everything else >= 0.05) so a WR trio doesn't
+    // grow a RUSH YDS column over one carry.
+    const stMin = k => (k === 'py' || k === 'ry' || k === 'rcy') ? 5 : 0.05;
+    const famCols = {};
+    Object.keys(groups).forEach(f => { famCols[f] = (ST_COLS[f] || []).filter(col => groups[f].some(c => { const v = stVal(c.st, col[0]); return v != null && v >= stMin(col[0]); })); });
+    cards.forEach(c => { c.stCols = famCols[c.fam] || []; c.stVal = k => stVal(c.st, k); });
+    const stKeys = {};
+    cards.forEach(c => c.stCols.forEach(col => { stKeys[col[0]] = true; }));
+    Object.keys(stKeys).forEach(k => mark('st:' + k, cards.map(c => stVal(c.st, k)), k !== 'int'));
     const lineKeys = {};
     cards.forEach(c => { if (c.lines) Object.keys(c.lines).forEach(k => { lineKeys[k] = true; }); });
     Object.keys(lineKeys).forEach(k => {
@@ -21709,7 +21942,19 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const projColor = (c.proj != null && typeof posFptsColor === 'function') ? posFptsColor(c.proj, d.s) : null;
     html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projection <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
     html += '<div class="sst-proj-row"><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
-      + (c.proj != null ? fmt1(c.proj) : '—') + '</div></div></div>';
+      + (c.proj != null ? fmt1(c.proj) : '—') + '</div>';
+    if (c.st && c.stCols && c.stCols.length) {
+      html += '<div class="sst-proj-stats" title="' + esc(c.stSrc === 'week'
+        ? 'Sleeper Week ' + wk + ' projected stat line (best of the cards in green)'
+        : 'Mike Clay season projection per game — no Week ' + wk + ' stat line for this player yet') + '">';
+      c.stCols.forEach(col => {
+        const v = c.stVal(col[0]);
+        html += '<div class="sst-ps"><div class="sst-ps-lbl">' + col[1] + '</div><div class="sst-ps-val' + (isBest('st:' + col[0], v) ? ' sst-best' : '') + '">' + (v != null ? v.toFixed(col[2]) : '—') + '</div></div>';
+      });
+      if (c.stSrc === 'pace') html += '<div class="sst-ps-src">season pace</div>';
+      html += '</div>';
+    }
+    html += '</div></div>';
 
     // Matchup
     html += '<div class="card-section"><div class="card-section-title">Matchup</div>';
@@ -21730,6 +21975,13 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
         : box('TEAM TOTAL', '<span class="' + bestCls(isBest('tt', c.tt)) + '">' + fmt1(c.tt) + '</span>', '', 'Implied team points: (game total − spread) / 2');
       html += box('O/U', fmt1(c.ou), '', 'Game total');
       html += '</div>';
+      const ws = (typeof _weatherSummary === 'function') ? _weatherSummary(c.wx) : null;
+      if (ws) {
+        html += '<div class="card-rank-row" style="grid-template-columns:1fr;margin-top:.4rem">';
+        html += box('WEATHER', '<span class="wx-' + (ws.sev || 'ok') + '">' + esc(ws.lbl) + '</span>'
+          + (ws.sub ? ' <span class="sst-dim">' + esc(ws.sub) + '</span>' : ''), '', ws.tip);
+        html += '</div>';
+      }
     }
     html += '</div>';
 

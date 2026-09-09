@@ -2137,6 +2137,51 @@ function _adpCmpCellCls(d, src) {
   return diff >= 3 ? ' adp-value' : diff <= -3 ? ' adp-reach' : '';
 }
 
+// Cross-platform AVERAGE for the ADP comparison view (6th column, riding the
+// Landing cell): mean of every platform that lists the player — Underdog
+// (premium only, so free viewers' average is built without it), Sleeper,
+// ESPN, CBS, Yahoo. Tooltip carries which sources went in. Same ±3 value /
+// reach coloring vs the current rank as the single-platform cells.
+function _adpCmpAvg(d) {
+  const srcs = ['underdog', 'sleeper', 'espn', 'cbs', 'yahoo'];
+  const prem = typeof hasPremium === 'function' ? hasPremium() : false;
+  const used = [];
+  let sum = 0;
+  srcs.forEach(s => {
+    if (s === 'underdog' && !prem) return;
+    const v = _adpBySource(d, s);
+    if (v == null || !isFinite(v)) return;
+    sum += v; used.push(s);
+  });
+  if (!used.length) return null;
+  return { v: Math.round(sum / used.length * 10) / 10, n: used.length, srcs: used };
+}
+function _adpCmpAvgCellHtml(d) {
+  const a = _adpCmpAvg(d);
+  if (!a) return '—';
+  const lbl = { underdog: 'Underdog', sleeper: 'Sleeper', espn: 'ESPN', cbs: 'CBS', yahoo: 'Yahoo' };
+  const who = a.srcs.map(s => lbl[s]).join(' + ');
+  if (d.s === 'K' || d.s === 'DST') {
+    return '<span style="cursor:help" title="' + ('Average of ' + who).replace(/"/g, '&quot;') + '">' + a.v + '</span>';
+  }
+  const diff = Math.round(a.v - d.myRank);
+  const clr = diff >= 3 ? '#22c55e' : diff <= -3 ? '#ef4444' : null;
+  const tt = 'Average of ' + a.n + ' platform' + (a.n === 1 ? '' : 's') + ' (' + who + ') = ' + a.v + ' vs rank ' + d.myRank + (diff >= 3
+    ? ' — value: the market drafts them ' + diff + ' spots later than this rank'
+    : diff <= -3
+      ? ' — reach: the market drafts them ' + Math.abs(diff) + ' spots earlier than this rank'
+      : ' — even with this rank');
+  const badge = clr ? '<span style="font-size:.55rem"> ' + (diff > 0 ? '▲' : '▼') + Math.abs(diff) + '</span>' : '';
+  return '<span style="' + (clr ? 'color:' + clr + ';font-weight:700;' : 'font-weight:600;') + 'cursor:help" title="' + tt.replace(/"/g, '&quot;') + '">' + a.v + badge + '</span>';
+}
+function _adpCmpAvgCellCls(d) {
+  if (d.s === 'K' || d.s === 'DST') return '';
+  const a = _adpCmpAvg(d);
+  if (!a) return '';
+  const diff = Math.round(a.v - d.myRank);
+  return diff >= 3 ? ' adp-value' : diff <= -3 ? ' adp-reach' : '';
+}
+
 // Total yards (passing + rushing + receiving) for the FANTASY / SIMS stat
 // views' tail column. Season boards: last full season's total (s25, career
 // tail fallback). WEEKLY board (perGame): yards PER GAME over the latest
@@ -3624,8 +3669,8 @@ function getFiltered(applyTopN) {
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
         case 'yrr': if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
-        case 'jm': av = a._pmJm||0; bv = b._pmJm||0; break;
-        case 'landing': av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
+        case 'jm': if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
+        case 'landing': if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
           // Sort by SOS rank in the active week window (1 = easiest schedule).
           // Teams we can't resolve sink to the bottom.
@@ -4958,8 +5003,12 @@ function render() {
   // FANTASY view: the tail column is Total Yds (all positions; K/DST have
   // no yardage line so the K / D/ST pills hide it). Y/RR + Rush YPG retired.
   const showYrr = _statMode === 'fantasy' && filter !== 'K' && filter !== 'DST';
-  const showJm = currentMode === 'dynasty' || currentMode === 'dynastysf';
-  const showLanding = showJm && filter === 'ROOKIE';
+  // ADP comparison STATS view borrows the JM + Landing columns for Yahoo and
+  // the cross-platform AVERAGE (2026-09-09 — Flock's ADP matrix gap).
+  const _isAdpCmp = _statMode === 'adp';
+  const _isDynBoard = currentMode === 'dynasty' || currentMode === 'dynastysf';
+  const showJm = _isAdpCmp || _isDynBoard;
+  const showLanding = _isAdpCmp || (_isDynBoard && filter === 'ROOKIE');
   let html = '';
   let _chunkLen = 0; // progressive render: html length at the ~120-row boundary
   data.forEach((d, i) => {
@@ -5223,8 +5272,8 @@ function render() {
         if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
       ${_statTds}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
-      <td class="pts-cell jm-cell" style="display:none">${showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
-      <td class="pts-cell landing-cell" style="display:none">${showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
+      <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
+      <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
       <td class="psos-cell">${(()=>{if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
@@ -5301,6 +5350,26 @@ function render() {
   } else {
     yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
+  // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
+  // Originals are stashed on first use so leaving the view restores them.
+  ['jmHeader', 'landingHeader'].forEach(id => {
+    const h = document.getElementById(id);
+    const sp = h && h.childNodes[0];
+    if (!sp || !sp.setAttribute) return;
+    if (!h._origLbl) h._origLbl = { html: sp.innerHTML, gloss: sp.getAttribute('data-gloss') || '' };
+    if (_adpCmpMode) {
+      if (id === 'jmHeader') {
+        sp.innerHTML = '<img src="icons/adp_yahoo.png" alt="Yahoo" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
+        sp.setAttribute('data-gloss', 'Yahoo overall rank (their default draft order) compared to the current ranks. Green = Yahoo has the player later than this rank (value), red = earlier (reach).');
+      } else {
+        sp.innerHTML = 'AVG ';
+        sp.setAttribute('data-gloss', 'Cross-platform average — mean of every platform that lists the player (Underdog for premium, Sleeper, ESPN, CBS, Yahoo). Hover a value to see which went in. Green = the market as a whole drafts the player later than this rank (value), red = earlier (reach).');
+      }
+    } else {
+      sp.innerHTML = h._origLbl.html;
+      sp.setAttribute('data-gloss', h._origLbl.gloss);
+    }
+  });
   if (yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].setAttribute('data-gloss', _adpCmpMode
       ? 'CBS expert-consensus rank (their PPR top200 list) compared to the current ranks. Green = CBS has the player later than this rank (value), red = earlier (reach).'
@@ -10261,6 +10330,22 @@ _renderDataFreshness();
   const items = document.getElementById('adpMoversItems');
   const sub = document.getElementById('adpMoversSub');
   if (!bar || !items || !sub) return;
+  // Movement window (2026-09-09, Flock's ADP page offers 3D / 7D / 30D): the
+  // comparison snapshot is the day closest to N days before the latest pull.
+  // Persisted per device; the sub-line always states the real span used.
+  let _hist = null, _span = 7;
+  try { const s = +localStorage.getItem('mff_adp_movers_span'); if ([3, 7, 30].indexOf(s) >= 0) _span = s; } catch (_) {}
+  const spanBox = document.getElementById('adpMoversSpan');
+  const _syncSpanBtns = () => { if (spanBox) spanBox.querySelectorAll('button[data-span]').forEach(b => b.classList.toggle('active', +b.dataset.span === _span)); };
+  _syncSpanBtns();
+  if (spanBox) spanBox.addEventListener('click', e => {
+    const b = e.target.closest('button[data-span]');
+    if (!b) return;
+    _span = +b.dataset.span;
+    try { localStorage.setItem('mff_adp_movers_span', String(_span)); } catch (_) {}
+    _syncSpanBtns();
+    if (_hist) _render(_hist, _span);
+  });
 
   function _daysBetween(a, b) {
     return Math.round((Date.parse(b + 'T12:00:00') - Date.parse(a + 'T12:00:00')) / 86400000);
@@ -10288,17 +10373,19 @@ _renderDataFreshness();
     </div>`;
   }
 
-  function _render(hist) {
+  function _render(hist, target) {
+    _hist = hist;
+    target = target || _span;
     const days = (hist.days || []).filter(d => d && d.date && d.adps);
     if (days.length < 2) return;
     days.sort((a, b) => a.date.localeCompare(b.date));
     const latest = days[days.length - 1];
-    // Baseline: the older day closest to 7 days before the latest snapshot.
+    // Baseline: the older day closest to `target` days before the latest snapshot.
     let base = days[0];
     for (const d of days.slice(0, -1)) {
       const span = _daysBetween(d.date, latest.date);
       const bestSpan = _daysBetween(base.date, latest.date);
-      if (Math.abs(span - 7) < Math.abs(bestSpan - 7)) base = d;
+      if (Math.abs(span - target) < Math.abs(bestSpan - target)) base = d;
     }
     const span = _daysBetween(base.date, latest.date);
     if (span < 1) return;
@@ -10311,7 +10398,13 @@ _renderDataFreshness();
       if (Math.abs(delta) < 3) return;
       movers.push({ name, from: oldE.bbm, to: nowE.bbm, delta });
     });
-    if (!movers.length) return;
+    if (!movers.length) {
+      // Window too short for a ≥3-spot move — say so instead of leaving the last window's chips up.
+      items.innerHTML = '<span class="amc-empty">No moves of 3+ spots in the last ' + span + ' day' + (span === 1 ? '' : 's') + '</span>';
+      sub.textContent = 'Underdog BBM ADP · last ' + span + ' day' + (span === 1 ? '' : 's');
+      bar.style.display = '';
+      return;
+    }
     // Position pills + headshots + card-click wiring via the D array.
     const dIdx = {};
     (window.D || []).forEach(d => { if (d && d.n) dIdx[_campNewsNorm(d.n)] = d; });
@@ -10330,12 +10423,15 @@ _renderDataFreshness();
     window._adpMoversShare = { top, span };
     const shareBtn = document.getElementById('adpMoversShareBtn');
     if (shareBtn) shareBtn.style.display = '';
-    items.addEventListener('click', e => {
-      const el = e.target.closest('.adp-mover-chip');
-      if (!el) return;
-      const d = dIdx[_campNewsNorm(el.dataset.mover)];
-      if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
-    });
+    if (!items._moversWired) {
+      items._moversWired = true;
+      items.addEventListener('click', e => {
+        const el = e.target.closest('.adp-mover-chip');
+        if (!el) return;
+        const d = (window.D || []).find(x => x && x.n && _campNewsNorm(x.n) === _campNewsNorm(el.dataset.mover));
+        if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
+      });
+    }
     bar.style.display = '';
     if (window._mffResizeTicker) window._mffResizeTicker();
   }

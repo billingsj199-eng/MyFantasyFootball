@@ -90,6 +90,12 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 .injp-news-date{color:var(--accent);font-weight:600;font-size:.62rem;margin-right:5px}
 .injp-foot{margin-top:7px;font-size:.6rem;color:var(--text2);opacity:.75}
 .amb-sub{font-size:.58rem;color:var(--text2)}
+/* 3D / 7D / 30D movement-window toggle under the ADP MOVERS title */
+.amb-span{display:flex;gap:2px;margin-top:3px}
+.amb-span button{background:none;border:1px solid var(--border);border-radius:3px;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.6px;line-height:1;padding:2px 5px;cursor:pointer}
+.amb-span button:hover{color:var(--text);border-color:var(--text2)}
+.amb-span button.active{color:#0a0e17;background:var(--accent);border-color:var(--accent)}
+.amc-empty{font-size:.66rem;color:var(--text2);padding:0 10px;white-space:nowrap}
 .amb-scroll{flex:1;overflow:hidden;white-space:nowrap}
 .live-ticker-inner{display:inline-flex;align-items:center;gap:8px;animation:tickerScroll 35s linear infinite;padding-left:100%}
 .live-ticker:hover .live-ticker-inner{animation-play-state:paused}

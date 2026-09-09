@@ -61,12 +61,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-09-09a" as="style">
+<link rel="preload" href="styles/main.css?v=2026-09-09b" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-09e" as="script">
+<link rel="preload" href="app.js?v=2026-09-09f" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -76,7 +76,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-09-07" as="script">
 <link rel="preload" href="data/d.js?v=2026-09-09" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-09-09a">
+<link rel="stylesheet" href="styles/main.css?v=2026-09-09b">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1082,6 +1082,7 @@ body.mff-embed .season-strip{display:none!important}
 <div>
 <div class="amb-title">ADP MOVERS</div>
 <div class="amb-sub" id="adpMoversSub"></div>
+<div class="amb-span" id="adpMoversSpan" title="Movement window — how far back the comparison snapshot is"><button data-span="3">3D</button><button data-span="7" class="active">7D</button><button data-span="30">30D</button></div>
 </div>
 <button class="amb-share" id="adpMoversShareBtn" title="Share these movers (share sheet on mobile, copies text elsewhere)" aria-label="Share ADP movers" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -1510,7 +1511,7 @@ tr:hover .watch-star{opacity:.55}
 <button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and total yards. WEEKLY board shows this week's 1,000-sim numbers.">SIMS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs, team PPG and Clay-based fantasy PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM / Underdog, Vegas implied team PPG, plus the blended-books projected PPG">BETTING LINES</button>
-<button class="rnk-statmode-btn" data-rnkstatmode="adp" title="Every platform side by side — Underdog + Sleeper ADP, ESPN + CBS site ranks — compared to the current ranks — green = that platform has them later than this rank (value), red = earlier (reach)">ADP</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="adp" title="Every platform side by side — Underdog + Sleeper ADP, ESPN + CBS + Yahoo site ranks, plus the cross-platform AVERAGE — compared to the current ranks — green = that platform has them later than this rank (value), red = earlier (reach)">ADP</button>
 </div>
 </div>
 <div style="display:flex;align-items:center;gap:8px">
@@ -5651,7 +5652,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-09e"></script>
+<script defer src="app.js?v=2026-09-09f"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

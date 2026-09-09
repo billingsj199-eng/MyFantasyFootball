@@ -7,6 +7,7 @@ const ALLOWED_PREFIXES = [
   'https://firestore.googleapis.com/v1/projects/jackb933-website/',
   'https://myfantasyfootball.co/data/',
   'https://www.myfantasyfootball.co/data/',
+  'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard', // live game clocks (v0.9.23; CORS *)
 ];
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {

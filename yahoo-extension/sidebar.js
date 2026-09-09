@@ -104,6 +104,10 @@
     schedule: {},        // TEAM -> wk -> {opp,home,total,implied}
     wkPropsAll: null,
     seasonStats: null,
+    liveGames: {},       // TEAM(site abbr) -> {st:'pre'|'in'|'post', f, tag, opp, home, pts, oppPts, kick} (ESPN public scoreboard)
+    livePts: {},         // entry key -> Yahoo "Fan Pts" scraped off the page (league-scored, live)
+    liveAt: 0,           // last scoreboard parse (ms)
+    liveNextAt: 0,       // earliest next scoreboard fetch (ms)
     trendAdds: {},
     seasonTab: 'lineup',
     seasonPosFilter: 'ALL',
@@ -787,10 +791,41 @@
     else if (st === 'D') inj = 'D';
     else if (st === 'Q') inj = 'Q';
     const p = matchScraped(name, pos, team);
+    const key = p ? keyOf(p) : norm(name) + '|' + (pos || '?');
+    // LIVE (v0.9.23): Yahoo prints league-scored "Fan Pts" beside every row
+    // (matchup page: bold cell next to the Proj cell; team page: td.pts).
+    // "–" = not started → null. Numbers land in state.livePts by entry key.
+    const pts = livePtsFromCell(cell);
+    if (pts != null) state.livePts[key] = pts;
     return {
       name, pos: p ? p.s : (pos || '?'), team: p ? (p.sTm || team) : team, inj,
-      p: p || null, key: p ? keyOf(p) : norm(name) + '|' + (pos || '?'),
+      p: p || null, key, pts,
     };
+  }
+  function parsePtsText(t) {
+    const s = String(t || '').trim().replace(/,/g, '');
+    if (!s || /^[–—-]$/.test(s)) return null;
+    return /^-?\d+(?:\.\d+)?$/.test(s) ? Math.round(parseFloat(s) * 100) / 100 : null;
+  }
+  function livePtsFromCell(cell) {
+    const td = cell && cell.closest ? (cell.closest('td') || cell) : cell;
+    const row = td && td.closest ? td.closest('tr') : null;
+    if (!row) return null;
+    const direct = row.querySelector(':scope > td.pts');         // team / players page
+    if (direct) return parsePtsText(direct.textContent);
+    const cells = [...row.children];
+    const idx = cells.indexOf(td);
+    if (idx < 0 || cells.length < 4) return null;
+    // Matchup page: [.. player | Proj | Fan Pts | slot | Fan Pts | Proj | player ..]
+    // — walk from this player's cell toward the slot column; the first bold
+    // (Fw-b) numeric/dash cell is his Fan Pts.
+    const dir = idx < (cells.length - 1) / 2 ? 1 : -1;
+    for (let j = idx + dir, k = 0; j >= 0 && j < cells.length && k < 3; j += dir, k++) {
+      const c = cells[j];
+      if (c.querySelector('.ysf-player-name')) break;
+      if (/\bFw-b\b/.test(c.className || '')) return parsePtsText(c.textContent);
+    }
+    return null;
   }
   // Scrape the CURRENT page's roster table. Returns null when the page has no
   // slot-labeled roster rows (league home, players page, matchups…).
@@ -1995,7 +2030,7 @@
           : '<span style="color:#6dd06d;font-weight:800" title="Currently on your bench — start him">▲</span>';
       return `<div class="mff-proj-roster-player mff-rec ${cls}" data-key="${esc(k)}" style="cursor:pointer">
         <span class="t" style="color:${col}">${esc(slotLbl)}</span>
-        <span class="n">${mark} ${esc(p.n)} ${wkOppHTML(p)}${snBadges(p)}${p._unmatched ? ' <span style="color:#8a8d96;font-size:9px">(no proj)</span>' : ''}</span>
+        <span class="n">${mark} ${esc(p.n)} ${wkOppHTML(p)}${snBadges(p)}${liveTagHTML(p)}${p._unmatched ? ' <span style="color:#8a8d96;font-size:9px">(no proj)</span>' : ''}</span>
         <span class="v" title="Projected ppg this week (${esc(state.scoringLabel)})">${a.e.v ? a.e.v.toFixed(1) : '0'}</span>
         ${state.expandedKey === k && !p._unmatched ? profileHTML(p, k) : ''}
       </div>`;
@@ -2028,7 +2063,7 @@
       return `
       <div class="mff-proj-roster-player mff-rec ${cls}" data-key="${esc(k)}" style="cursor:pointer">
         <span class="t">${esc(b.p.s)}</span>
-        <span class="n">${mark}${esc(b.p.n)} ${wkOppHTML(b.p)}${snBadges(b.p)}</span>
+        <span class="n">${mark}${esc(b.p.n)} ${wkOppHTML(b.p)}${snBadges(b.p)}${liveTagHTML(b.p)}</span>
         <span class="v" title="Projected ppg this week (${esc(state.scoringLabel)})">${b.v ? b.v.toFixed(1) : '0'}</span>
         ${state.expandedKey === k && !b.p._unmatched ? profileHTML(b.p, k) : ''}
       </div>`;
@@ -2354,6 +2389,130 @@
   // Yahoo's own projected-points header. Win odds = normal approximation
   // (each starter sd = proj × position sigma; correlations ignored).
   const POS_SIG_DEFAULT = { QB: 0.42, RB: 0.52, WR: 0.58, TE: 0.65, K: 0.55, DST: 0.6 };
+  // ---------- LIVE projections (v0.9.23, Sleeper 0.29.24 / ESPN 0.20.31 port) ----------
+  // Once a player's game kicks off his number becomes what he has scored +
+  // what he should still score: actual = Yahoo's own Fan Pts cell (scraped
+  // off the page every tick, league-scored) + remaining = pregame proj ×
+  // (1 − f), f = fraction of the game played from the ESPN public scoreboard
+  // (period + clock; halftime 0.5; OT ≈ 0.97; final 1). A pace term
+  // (w = 0.25·f) nudges the remainder toward the player's own rate late.
+  // Pregame = wkVal; final = actual. START/SIT verdicts stay on the pregame
+  // projection. No new host permission: the scoreboard sends CORS *.
+  const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
+  const ESPN_TEAM_FIX = { WSH: 'WAS', JAC: 'JAX', LA: 'LAR', OAK: 'LV', SD: 'LAC' };
+  function parseScoreboard(sb) {
+    const out = {};
+    for (const ev of (sb && sb.events) || []) {
+      const c = ev.competitions && ev.competitions[0];
+      if (!c) continue;
+      const st = (c.status && c.status.type) || {};
+      const nm = String(st.name || '');
+      const s = st.state === 'in' ? 'in' : (st.state === 'post' || st.completed) ? 'post' : 'pre';
+      const period = +(c.status && c.status.period) || 0;
+      const clock = String((c.status && c.status.displayClock) || '0:00');
+      const half = /HALFTIME/i.test(nm);
+      let f = 0;
+      if (s === 'post') f = 1;
+      else if (s === 'in') {
+        if (half) f = 0.5;
+        else if (period >= 5) f = 0.97;
+        else {
+          const mm = clock.match(/^(\d+):(\d+)/);
+          const left = mm ? (+mm[1] * 60 + +mm[2]) : 0;
+          f = Math.min(0.99, Math.max(0.01, ((Math.max(1, period) - 1) * 900 + (900 - left)) / 3600));
+        }
+      }
+      const comps = c.competitors || [];
+      const home = comps.find((x) => x.homeAway === 'home'), away = comps.find((x) => x.homeAway === 'away');
+      const abbr = (x) => { const a = String((x && x.team && x.team.abbreviation) || '').toUpperCase(); return ESPN_TEAM_FIX[a] || a; };
+      const sc = (x) => (x && x.score != null && x.score !== '') ? +x.score : null;
+      const h = abbr(home), a = abbr(away);
+      const tag = s === 'in' ? (half ? 'HALF' : period >= 5 ? 'OT ' + clock : 'Q' + period + ' ' + clock) : s === 'post' ? 'FINAL' : '';
+      if (h) out[h] = { st: s, f, tag, opp: a, home: true, pts: sc(home), oppPts: sc(away), kick: ev.date || null };
+      if (a) out[a] = { st: s, f, tag, opp: h, home: false, pts: sc(away), oppPts: sc(home), kick: ev.date || null };
+    }
+    return out;
+  }
+  async function refreshScoreboard(force) {
+    if (MOCK) {
+      if (MOCK.scoreboard) { state.liveGames = parseScoreboard(MOCK.scoreboard); state.liveAt = Date.now(); }
+      return;
+    }
+    if (!state.byesActive) return; // preseason — nothing can be live
+    const now = Date.now();
+    if (!force && now < state.liveNextAt) return;
+    state.liveNextAt = now + 60 * 1000;
+    try {
+      const sb = await fetchJson(SCOREBOARD_URL + '?t=' + now); // CORS * (direct), bg proxy fallback
+      state.liveGames = parseScoreboard(sb);
+      state.liveAt = now;
+      // Idle throttle: nothing in progress and no kickoff inside 20 min →
+      // one scoreboard call every 10 min instead of every poll.
+      const vals = Object.values(state.liveGames);
+      const anyIn = vals.some((g) => g.st === 'in');
+      const soon = vals.some((g) => g.st === 'pre' && g.kick && (Date.parse(g.kick) - now) < 20 * 60 * 1000);
+      if (!anyIn && !soon) state.liveNextAt = now + 10 * 60 * 1000;
+    } catch (e) { /* keep the last parse; pregame numbers still show */ }
+  }
+  function liveGameFor(p) {
+    const raw = p && (p.sTm || p.t);
+    const tm = raw ? (ESPN_TEAM_FIX[raw] || raw) : null;
+    const g = tm ? state.liveGames[tm] : null;
+    return g && g.st !== 'pre' ? g : null;
+  }
+  // {live, actual, rem, f, st, tag, proj}; live === wkVal(p) before kickoff.
+  // `key` = scraped-row key (defaults to keyOf(p)).
+  function wkLive(p, key) {
+    const proj = p && !p._unmatched ? wkVal(p) : 0;
+    const g = liveGameFor(p);
+    if (!g) return { live: proj, actual: null, rem: proj, f: 0, st: 'pre', tag: '', proj };
+    const k = key || (p._unmatched ? null : keyOf(p));
+    const raw = k != null ? state.livePts[k] : undefined;
+    const actual = typeof raw === 'number' ? Math.round(raw * 100) / 100 : 0;
+    if (g.st === 'post') return { live: actual, actual, rem: 0, f: 1, st: 'post', tag: g.tag, proj };
+    const f = g.f;
+    const pace = f >= 0.15 ? actual / f : proj;
+    const w = 0.25 * f;
+    const rem = Math.round(Math.max(0, (1 - f) * ((1 - w) * proj + w * pace)) * 100) / 100;
+    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj };
+  }
+  function liveTip(l) {
+    if (l.st === 'post') return 'FINAL — scored ' + l.actual.toFixed(1) + ' (pregame proj ' + l.proj.toFixed(1) + ')';
+    return 'LIVE ' + l.tag + ' — scored ' + l.actual.toFixed(1) + ' + ' + l.rem.toFixed(1) +
+      ' still expected (pregame proj ' + l.proj.toFixed(1) + '). Remaining = proj × game left, nudged toward his pace late.';
+  }
+  // Sidebar name-line tag (LINEUP rows): "● 12.3 live" / "✓ 8.2 final"
+  function liveTagHTML(p) {
+    const l = wkLive(p);
+    if (l.st === 'pre') return '';
+    const col = l.st === 'post' ? '#8a8d96' : '#6dd06d';
+    const txt = l.st === 'post' ? '✓ ' + l.live.toFixed(1) + ' final' : '● ' + l.live.toFixed(1) + ' live';
+    return ` <span title="${esc(liveTip(l))}" style="font-size:9px;font-weight:700;color:${col};white-space:nowrap">${txt}</span>`;
+  }
+  // On-page pill (team / matchup / players rows): live/final replaces "N proj".
+  function livePillHTML(l) {
+    if (l.st === 'post') return pillHTML(l.live.toFixed(1) + ' final', '#f0f2f5', '#5b6068', liveTip(l));
+    return pillHTML(l.live.toFixed(1) + ' live', '#e2f3e6', '#1d7a34', liveTip(l));
+  }
+  // Live-aware side totals over scraped starter infos ({p, key, pos, team}):
+  // each = wkLive (actual + remaining once his game starts); only the
+  // REMAINING part carries variance, so odds tighten toward 100/0 as the
+  // week plays out. Unmatched starters still count their live Fan Pts.
+  function sideProjOf(infos) {
+    let total = 0, varSum = 0, missing = 0, played = 0, done = 0, scored = 0, n = 0;
+    for (const info of infos) {
+      n++;
+      const p = info.p || { n: info.name, s: info.pos, sTm: info.team, _unmatched: true };
+      const l = wkLive(p, info.key);
+      if (!info.p && l.st === 'pre') { missing++; continue; }
+      total += l.live;
+      const sig = POS_SIG_DEFAULT[p.s] || 0.55;
+      varSum += (l.rem * sig) * (l.rem * sig);
+      if (l.st !== 'pre') { played++; scored += l.actual; }
+      if (l.st === 'post') done++;
+    }
+    return { total: Math.round(total * 10) / 10, varSum, missing, played, done, scored: Math.round(scored * 10) / 10, n };
+  }
   function normCdf(z) {
     const t = 1 / (1 + 0.2316419 * Math.abs(z));
     const d = 0.3989422804014327 * Math.exp(-z * z / 2);
@@ -2434,33 +2593,32 @@
     const scr = scrapeMatchupSides();
     const L = scr.sides[0], R = scr.sides[1];
     if (!scr.firstTable || L.length < 4 || R.length < 4) { if (existing) existing.remove(); return; }
-    const proj = [L, R].map((side) => {
-      let total = 0, varSum = 0, missing = 0;
-      for (const info of side) {
-        if (!info.p) { missing++; continue; }
-        const v = wkVal(info.p);
-        total += v;
-        const sig = POS_SIG_DEFAULT[info.p.s] || 0.55;
-        varSum += (v * sig) * (v * sig);
-      }
-      return { total: Math.round(total * 10) / 10, varSum, missing };
-    });
-    const sd = Math.sqrt(proj[0].varSum + proj[1].varSum) || 1;
-    const winL = Math.round(normCdf((proj[0].total - proj[1].total) / sd) * 100);
+    const proj = [sideProjOf(L), sideProjOf(R)];
+    const live = (proj[0].played + proj[1].played) > 0;
+    const sd = Math.sqrt(proj[0].varSum + proj[1].varSum);
+    const winL = sd < 0.05
+      ? (proj[0].total > proj[1].total ? 100 : proj[0].total < proj[1].total ? 0 : 50)
+      : Math.round(normCdf((proj[0].total - proj[1].total) / sd) * 100);
     const missing = proj[0].missing + proj[1].missing;
-    const tip = 'MFF numbers for this matchup — our proj totals (same weekly projection as the row ' +
-      'pills: site sim first, ' + state.scoringLabel + ' scored, injuries priced) summed over the ' +
-      'starters shown on each side, and our win odds (normal approximation; player correlations ' +
-      'ignored). Left/right match the page\'s two teams.' +
+    const tip = (live
+      ? 'MFF LIVE numbers for this matchup — each starter = Yahoo\'s Fan Pts so far + what he should still ' +
+        'score (pregame proj × game left, nudged toward his pace late); finals count as scored. Win odds ' +
+        'only vary the unplayed part. Left: ' + proj[0].scored.toFixed(1) + ' in, ' + proj[0].done + '/' + proj[0].n +
+        ' final · Right: ' + proj[1].scored.toFixed(1) + ' in, ' + proj[1].done + '/' + proj[1].n + ' final.'
+      : 'MFF numbers for this matchup — our proj totals (same weekly projection as the row ' +
+        'pills: site sim first, ' + state.scoringLabel + ' scored, injuries priced) summed over the ' +
+        'starters shown on each side, and our win odds (normal approximation; player correlations ' +
+        'ignored). Left/right match the page\'s two teams.') +
       (missing ? ' ' + missing + ' starter(s) without a projection count 0.' : '');
     const wCol = (w) => (w >= 55 ? '#1d7a34' : w <= 45 ? '#b33636' : '#a06a00');
+    const lbl = live ? '<span style="color:#1d7a34">● live</span>' : '<span style="color:#5b6068">proj</span>';
     const side = (tot, w, right) =>
       `<span style="flex:1;min-width:0;white-space:nowrap;${right ? 'text-align:right' : ''}">` +
-      `<b style="font-size:15px">${tot.toFixed(1)}</b> <span style="color:#5b6068">proj</span>` +
+      `<b style="font-size:15px">${tot.toFixed(1)}</b> ${lbl}` +
       `<span style="color:#c8ccd4;margin:0 6px">|</span>` +
       `<b style="font-size:15px;color:${wCol(w)}">${w}%</b> <span style="color:#5b6068">win</span></span>`;
     const inner = side(proj[0].total, winL, false) +
-      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px;text-align:center">MFF PROJ · WIN ODDS<br>WK ${state.seasonWeek}</span>` +
+      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px;text-align:center">MFF ${live ? 'LIVE' : 'PROJ'} · WIN ODDS<br>WK ${state.seasonWeek}</span>` +
       side(proj[1].total, 100 - winL, true);
     const anchor = chanceToWinAnchor();
     if (existing && existing.dataset.mffSig === inner && existing.isConnected &&
@@ -2509,8 +2667,11 @@
         const oc = g.cls === 'good' ? ['#e2f3e6', '#1d7a34'] : g.cls === 'bad' ? ['#fbe7e7', '#b33636'] : ['#f0f2f5', '#5b6068'];
         pills.push(pillHTML(g.txt, oc[0], oc[1], g.tip));
       }
-      const v = wkVal(p);
-      if (v > 0 || p.pPg != null) {
+      const lv = wkLive(p, info.key);
+      const v = lv.proj;
+      if (lv.st !== 'pre') {
+        pills.push(livePillHTML(lv)); // in-game: scored + remaining (final = scored)
+      } else if (v > 0 || p.pPg != null) {
         pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#f0f2f5', '#2a2c33',
           'Projected points this week (' + state.scoringLabel + ' · MFF blend of props + Clay + Jack)'));
         if (!matchupPage) {
@@ -2577,12 +2738,14 @@
     await ensureNflState();
     state.seasonStatus = state.players.length + ' players · wk ' + state.seasonWeek +
       (state.byesActive ? '' : ' (preseason)');
+    await refreshScoreboard(false); // live game clocks (no-op preseason)
     scrapeTick();
     if (!state.scrapeTimer) state.scrapeTimer = setInterval(scrapeTick, SCRAPE_MS);
     if (!state.pollTimer) {
       state.pollTimer = setInterval(() => {
         fetchTrending();
         fetchSeasonStats();
+        refreshScoreboard(false).then(() => { if (state.leagueId) render(); });
       }, SEASON_POLL_MS);
     }
     fetchInjuries();
@@ -2648,6 +2811,7 @@
           render();
         }).catch(() => {});
     }
+    if (MOCK && MOCK.scoreboard) state.liveGames = parseScoreboard(MOCK.scoreboard); // harness live games
     gateInit(() => { try { render(); } catch (_) {} });
     lastHref = location.href;
     onUrlChange();
@@ -2659,6 +2823,7 @@
   }
 
   window.__mffYahoo = { state, render, initForLeague, scrapeTeamPage, scrapePlayersPage,
-    wkVal, kickerProjFor, dstProjFor, optimalLineup, waiverRecs, seasonLineupCalc };
+    wkVal, wkLive, parseScoreboard, refreshScoreboard, livePtsFromCell, sideProjOf,
+    kickerProjFor, dstProjFor, optimalLineup, waiverRecs, seasonLineupCalc };
   main();
 })();

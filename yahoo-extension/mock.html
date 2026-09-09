@@ -25,21 +25,21 @@ team page. <button class="h" id="toPlayers">Switch to fake Players page</button>
 <div id="teampage">
 <table id="statTable0">
   <tbody>
-    <tr><td>QB</td><td><div class="ysf-player-name"><a>Baker Mayfield</a><span>TB - QB</span></div></td></tr>
-    <tr><td>WR</td><td><div class="ysf-player-name"><a>Jordan Addison</a><span>Min - WR</span></div></td></tr>
-    <tr><td>WR</td><td><div class="ysf-player-name"><a>Michael Wilson</a><span>Ari - WR</span><span class="ysf-player-status">Q</span></div></td></tr>
-    <tr><td>RB</td><td><div class="ysf-player-name"><a>Jonah Coleman</a><span>Den - RB</span><span class="ysf-player-status">O</span></div></td></tr>
-    <tr><td>RB</td><td><div class="ysf-player-name"><a>Javonte Williams</a><span>Dal - RB</span></div></td></tr>
-    <tr><td>TE</td><td><div class="ysf-player-name"><a>Juwan Johnson</a><span>NO - TE</span></div></td></tr>
-    <tr><td>W/R/T</td><td><div class="ysf-player-name"><a>Cam Skattebo</a><span>NYG - RB</span></div></td></tr>
-    <tr><td>K</td><td><div class="ysf-player-name"><a>Tyler Bass</a><span>Buf - K</span></div></td></tr>
-    <tr><td>DEF</td><td><div class="ysf-player-name"><a>Denver</a><span>Den - DEF</span></div></td></tr>
-    <tr><td>BN</td><td><div class="ysf-player-name"><a>Lamar Jackson</a><span>Bal - QB</span></div></td></tr>
-    <tr><td>BN</td><td><div class="ysf-player-name"><a>Jahmyr Gibbs</a><span>Det - RB</span></div></td></tr>
-    <tr><td>BN</td><td><div class="ysf-player-name"><a>Ja'Marr Chase</a><span>Cin - WR</span></div></td></tr>
-    <tr><td>BN</td><td><div class="ysf-player-name"><a>Zay Flowers</a><span>Bal - WR</span></div></td></tr>
-    <tr><td>BN</td><td><div class="ysf-player-name"><a>Brock Bowers</a><span>LV - TE</span></div></td></tr>
-    <tr><td>IR</td><td><div class="ysf-player-name"><a>Jameson Williams</a><span>Det - WR</span></div></td></tr>
+    <tr><td>QB</td><td><div class="ysf-player-name"><a>Baker Mayfield</a><span>TB - QB</span></div></td><td class="Ta-end Nowrap pts Bdrstart">1.5</td></tr>
+    <tr><td>WR</td><td><div class="ysf-player-name"><a>Jordan Addison</a><span>Min - WR</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>WR</td><td><div class="ysf-player-name"><a>Michael Wilson</a><span>Ari - WR</span><span class="ysf-player-status">Q</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>RB</td><td><div class="ysf-player-name"><a>Jonah Coleman</a><span>Den - RB</span><span class="ysf-player-status">O</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>RB</td><td><div class="ysf-player-name"><a>Javonte Williams</a><span>Dal - RB</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>TE</td><td><div class="ysf-player-name"><a>Juwan Johnson</a><span>NO - TE</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>W/R/T</td><td><div class="ysf-player-name"><a>Cam Skattebo</a><span>NYG - RB</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>K</td><td><div class="ysf-player-name"><a>Tyler Bass</a><span>Buf - K</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>DEF</td><td><div class="ysf-player-name"><a>Denver</a><span>Den - DEF</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>BN</td><td><div class="ysf-player-name"><a>Lamar Jackson</a><span>Bal - QB</span></div></td><td class="Ta-end Nowrap pts Bdrstart">9.8</td></tr>
+    <tr><td>BN</td><td><div class="ysf-player-name"><a>Jahmyr Gibbs</a><span>Det - RB</span></div></td><td class="Ta-end Nowrap pts Bdrstart">12.7</td></tr>
+    <tr><td>BN</td><td><div class="ysf-player-name"><a>Ja'Marr Chase</a><span>Cin - WR</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>BN</td><td><div class="ysf-player-name"><a>Zay Flowers</a><span>Bal - WR</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>BN</td><td><div class="ysf-player-name"><a>Brock Bowers</a><span>LV - TE</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
+    <tr><td>IR</td><td><div class="ysf-player-name"><a>Jameson Williams</a><span>Det - WR</span></div></td><td class="Ta-end Nowrap pts Bdrstart">–</td></tr>
   </tbody>
 </table>
 </div>
@@ -81,6 +81,13 @@ team page. <button class="h" id="toPlayers">Switch to fake Players page</button>
   });
   window.__MFF_YAHOO_MOCK = {
     leagueId: '987654',
+    // LIVE fixture (v0.9.23): TB in progress (Q3 7:30), DET final; rows carry td.pts
+    scoreboard: { events: [
+      { date: '2026-09-13T17:00Z', competitions: [{ status: { period: 3, displayClock: '7:30', type: { state: 'in', name: 'STATUS_IN_PROGRESS', completed: false } },
+        competitors: [{ homeAway: 'home', score: '17', team: { abbreviation: 'TB' } }, { homeAway: 'away', score: '14', team: { abbreviation: 'BAL' } }] }] },
+      { date: '2026-09-13T17:00Z', competitions: [{ status: { period: 4, displayClock: '0:00', type: { state: 'post', name: 'STATUS_FINAL', completed: true } },
+        competitors: [{ homeAway: 'home', score: '27', team: { abbreviation: 'DET' } }, { homeAway: 'away', score: '24', team: { abbreviation: 'CLE' } }] }] },
+    ] },
     players: data,
     nflState: { season_type: 'regular', week: 1, season: '2026' },
     vegas: { gameTotals, weeklyProps: { '1': { 'Jahmyr Gibbs': { UD: { ry: 92, rcy: 34, atd: -160 }, PP: { ry: 95.5 } } } } },

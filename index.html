@@ -61,12 +61,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-09-08p" as="style">
+<link rel="preload" href="styles/main.css?v=2026-09-09a" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-08s" as="script">
+<link rel="preload" href="app.js?v=2026-09-09c" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -76,7 +76,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-09-07" as="script">
 <link rel="preload" href="data/d.js?v=2026-09-09" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-09-08p">
+<link rel="stylesheet" href="styles/main.css?v=2026-09-09a">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1417,6 +1417,35 @@ CLEAR ALL
 <button class="pos-btn" data-pos="K">K</button>
 <button class="pos-btn" data-pos="DST">D/ST</button>
 <button class="pos-btn watch-filter-btn" id="watchFilterBtn" onclick="window._toggleWatchOnly()" title="Show only your watchlist — click the ☆ on any row to add a player">★<span id="watchFilterCount" style="margin-left:3px"></span></button>
+<span id="teamFilterWrap" style="position:relative;display:inline-flex">
+<button class="pos-btn team-filter-btn" id="teamFilterBtn" onclick="window._toggleTeamFilterPop()" title="Filter by NFL team — pick one team or several; only players from those teams show. Stacks with the position filter, ★ and TOP N.">TEAMS<span id="teamFilterCount" style="margin-left:4px"></span></button>
+<div id="teamFilterPop" class="team-filter-pop" style="display:none" role="dialog" aria-label="Filter rankings by team"></div>
+</span>
+<style>
+/* TEAMS multi-select pill + division-grouped popover (rankings filter row) */
+.team-filter-btn.on{background:rgba(88,167,255,.16);border-color:#58a7ff;color:#58a7ff}
+.team-filter-pop{position:absolute;top:calc(100% + 6px);left:0;z-index:60;width:min(600px,calc(100vw - 24px));background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.55);padding:10px 12px 12px;text-align:left}
+.team-filter-pop .tfp-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.team-filter-pop .tfp-title{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.2px;color:var(--text)}
+.team-filter-pop .tfp-sub{font-size:.62rem;color:var(--text2)}
+.team-filter-pop .tfp-act{margin-left:auto;display:flex;gap:6px}
+.team-filter-pop .tfp-act button{padding:3px 9px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.6px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2)}
+.team-filter-pop .tfp-act button:hover{border-color:var(--text2);color:var(--text)}
+.team-filter-pop .tfp-act button[data-tfact="close"]{background:rgba(88,167,255,.16);border-color:#58a7ff;color:#58a7ff}
+.team-filter-pop .tfp-div{display:grid;grid-template-columns:70px repeat(4,1fr);gap:4px;align-items:stretch;margin-bottom:4px}
+.team-filter-pop .tfp-divname{font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.6px;color:var(--text2);background:transparent;border:1px solid transparent;border-radius:4px;cursor:pointer;text-align:left;padding:0 4px}
+.team-filter-pop .tfp-divname:hover{color:var(--text);border-color:var(--border)}
+.team-filter-pop .tfp-divname.on{color:#58a7ff}
+.team-filter-pop .tfp-team{display:flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);border-radius:4px;cursor:pointer;font-size:.68rem;font-weight:700;letter-spacing:.4px;font-family:inherit;transition:all .12s;min-height:30px}
+.team-filter-pop .tfp-team img{width:20px;height:20px;object-fit:contain;flex:0 0 auto}
+.team-filter-pop .tfp-team:hover{border-color:var(--text2);color:var(--text)}
+.team-filter-pop .tfp-team.on{background:rgba(88,167,255,.2);border-color:#58a7ff;color:#fff}
+@media (max-width:600px){
+  .team-filter-pop{position:fixed;left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:72vh;overflow:auto;z-index:1200}
+  .team-filter-pop .tfp-div{grid-template-columns:repeat(4,1fr)}
+  .team-filter-pop .tfp-divname{grid-column:1/-1;padding:4px 2px 0}
+}
+</style>
 <style>
 /* Watchlist star (rankings rows) + ★ filter pill + ADP sparklines */
 .watch-filter-btn.on{background:rgba(245,158,11,.16);border-color:var(--accent);color:var(--accent)}
@@ -4229,7 +4258,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/_bundle_lookups.js?v=2026-09-07" defer></script>
 <script src="data/d.js?v=2026-09-09" defer></script>
 <script src="data/injury_updates.js?v=2026-09-09" defer></script>
-<script src="data/weekly_projections.js?v=2026-09-09" defer></script>
+<script src="data/weekly_projections.js?v=2026-09-09b" defer></script>
+<script src="data/weather_2026.js?v=2026-09-09a" defer></script>
 <script src="data/sim_proj_2026.js?v=2026-09-08-10" defer></script>
 <script src="data/site_projections.js?v=2026-09-09" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
@@ -5620,7 +5650,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-08s"></script>
+<script defer src="app.js?v=2026-09-09c"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

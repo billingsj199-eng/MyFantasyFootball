@@ -699,6 +699,25 @@ def pull_weekly_projections():
     return after != before
 
 
+def pull_weather():
+    """Phase N — run pull_weather.py (ESPN scoreboard roof/headline + Open-Meteo
+    kickoff-hour forecast -> data/weather_2026.js). Feeds the Start/Sit WEATHER
+    box and the player card WEEKLY tab. Returns True if the file changed.
+    Non-fatal: a missing/stale file just hides the weather box."""
+    out_path = os.path.join(ROOT, 'data', 'weather_2026.js')
+    before = open(out_path, 'rb').read() if os.path.exists(out_path) else b''
+    res = subprocess.run(
+        [sys.executable, os.path.join(ROOT, 'scripts', 'pull_weather.py')],
+        cwd=ROOT, capture_output=True, text=True)
+    print(res.stdout)
+    if res.returncode != 0:
+        print(res.stderr)
+        print('  !! weather pull failed — previous file kept')
+        return False
+    after = open(out_path, 'rb').read() if os.path.exists(out_path) else b''
+    return after != before
+
+
 def pull_site_projections():
     """Phase M — run pull_site_projections.py (Sleeper/ESPN/CBS season
     projections -> data/site_projections.js). Returns True if the file
@@ -810,6 +829,11 @@ def main():
     if sp_changed:
         bump_version(r'data/site_projections\.js')
 
+    print('\nPhase N — game weather:')
+    wx_changed = pull_weather()
+    if wx_changed:
+        bump_version(r'data/weather_2026\.js')
+
     total = n_fp + n_espn + n_cbs + n_yah + n_ud + n_sl
     print(f'\nCSV sources refreshed: {total}/13 (FP {n_fp}/4, ESPN {n_espn}/1, '
           f'CBS {n_cbs}/1, Yahoo {n_yah}/1, Sleeper {n_sl}/4, UD {n_ud}/2) '
@@ -819,9 +843,10 @@ def main():
           f' + DK {"updated" if dk_changed else "unchanged/skipped"}'
           f' + injuries {"updated" if inj_changed else "unchanged/skipped"}'
           f' + weeklyproj {"updated" if wp_changed else "unchanged/skipped"}'
-          f' + siteproj {"updated" if sp_changed else "unchanged/skipped"}')
+          f' + siteproj {"updated" if sp_changed else "unchanged/skipped"}'
+          f' + weather {"updated" if wx_changed else "unchanged/skipped"}')
     if (total == 0 and not ktc_changed and not roster_changed and not dk_changed
-            and not inj_changed and not wp_changed and not sp_changed):
+            and not inj_changed and not wp_changed and not sp_changed and not wx_changed):
         print('Nothing refreshed — aborting before inject.')
         sys.exit(1)
 

@@ -1,4 +1,4 @@
-# Sim Lab weekly-projection export (Task Scheduler: "MFF Sim Proj Export").
+﻿# Sim Lab weekly-projection export (Task Scheduler: "MFF Sim Proj Export").
 #
 # Refreshes sim_lab's data mirror from the repo, runs the headless Sim Lab
 # exporter (sim_lab/export_site_proj.js — all 18 weeks of per-player
@@ -41,7 +41,7 @@ Set-Location $Repo
 Write-Log '=== sim proj export start ==='
 
 # Refuse to run over uncommitted work on the target files.
-$Files = @('data/sim_proj_2026.js', 'data/sim_proj_2026.json', 'data/injury_updates.js', 'index.html')
+$Files = @('data/sim_proj_2026.js', 'data/sim_proj_2026.json', 'data/injury_updates.js', 'data/weather_2026.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -60,6 +60,12 @@ Write-Log ("betting pull: exit " + $LASTEXITCODE)
 #     site's card tags; committed below alongside the projections).
 $out = & $Python (Join-Path $Repo 'scripts\pull_injuries.py') 2>&1 | Out-String
 Write-Log ("injury pull: " + $out.Trim().Split("`n")[-1])
+
+# 0c. Fresh game weather (ESPN roof/headline + Open-Meteo kickoff-hour
+#     forecast -> data/weather_2026.js; the Start/Sit WEATHER box and the
+#     card WEEKLY tab). Committed below alongside the projections.
+$out = & $Python (Join-Path $Repo 'scripts\pull_weather.py') 2>&1 | Out-String
+Write-Log ("weather pull: " + $out.Trim().Split("`n")[-1])
 
 # 1. Refresh sim_lab's data mirror from the repo (Clay, sigma, betting lines,
 #    Sleeper meta w/ injury designations, snaps).
@@ -89,9 +95,12 @@ if (-not $changed) {
     if ($changed -match 'injury_updates') {
         $html2 = $html2 -replace 'injury_updates\.js\?v=[\w.-]+', ('injury_updates.js?v=' + $stamp)
     }
+    if ($changed -match 'weather_2026') {
+        $html2 = $html2 -replace 'weather_2026\.js\?v=[\w.-]+', ('weather_2026.js?v=' + $stamp)
+    }
     if ($html2 -ne $html) { [System.IO.File]::WriteAllText($idx, $html2) }
 
-    git add data/sim_proj_2026.js data/sim_proj_2026.json data/injury_updates.js index.html
+    git add data/sim_proj_2026.js data/sim_proj_2026.json data/injury_updates.js data/weather_2026.js index.html
     git commit -m ('Sim proj auto-export {0}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm'))
     git pull --rebase --autostash origin main
     git push origin main

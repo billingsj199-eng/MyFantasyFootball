@@ -124,6 +124,9 @@ order) within ~2s. Rows below mimic FantasyCast's compact player column: no OPP 
           defaultPositionId: POS_TO_ID[e.p.s],
           proTeamId: ABBR_TO_ID[e.p.sTm] || 0,
           injuryStatus: injStatus,
+          // ESPN's own weekly projection (statSourceId 1 / statSplitTypeId 1)
+          stats: [{ scoringPeriodId: 1, seasonId: 2026, statSourceId: 1, statSplitTypeId: 1,
+            appliedTotal: Math.round((6 + (i * 7) % 17 + (e.p.rank ? Math.max(0, 12 - e.p.rank / 20) : 0)) * 100) / 100 }],
         } },
       };
     });
@@ -227,6 +230,7 @@ order) within ~2s. Rows below mimic FantasyCast's compact player column: no OPP 
 
   window.__MFF_ESPN_MOCK = {
     seasonLeagueId: '424242', seasonId: '2026', myTeamId: 2,
+    fantasycast: true, // rows get the grey "ESPN x.x" projection pill like the real FantasyCast page
     players: data, seasonLeague: league,
     nflState: { season_type: 'regular', week: 1, season: '2026' },
     vegas: { gameTotals, weeklyProps },

@@ -1888,9 +1888,16 @@
         const inj = /^(OUT|INJURY_RESERVE|SUSPEN|RESERVE)/.test(is) ? 'OUT'
           : is === 'DOUBTFUL' ? 'D' : is === 'QUESTIONABLE' ? 'Q' : null;
         const ppe = e.playerPoolEntry;
+        // ESPN's OWN projection for this week (stats: statSourceId 1 =
+        // projected, statSplitTypeId 1 = single period) — FantasyCast never
+        // prints it per player, so the on-page ESPN pill shows it (v0.20.34).
+        const wk = state.seasonWeek || (raw.scoringPeriodId | 0);
+        const pst = (pl.stats || []).find((x) => x && x.statSourceId === 1 && x.statSplitTypeId === 1 &&
+          x.scoringPeriodId === wk && typeof x.appliedTotal === 'number');
         return {
           espnId: pl.id, name, raw: pl.fullName || '', pos, team: abbrevFor(pl.proTeamId),
           slotId: e.lineupSlotId, p, inj,
+          espnProj: pst ? Math.round(pst.appliedTotal * 10) / 10 : null,
           key: p ? keyOf(p) : norm(name) + '|' + pos,
           pts: typeof ppe.appliedStatTotal === 'number' ? ppe.appliedStatTotal : null, // this period, league-scored, live
           locked: !!ppe.lineupLocked,
@@ -2785,31 +2792,35 @@
   function nativeOppTarget(a) {
     const tr = a.closest('tr');
     const cell = tr && tr.querySelector('.table--cell.opp');
-    if (cell) return cell.querySelector('a') || cell;
+    if (cell) return { el: cell.querySelector('a') || cell, chip: true };
     const info = a.closest('.player-column_info') || tr;
     const gs = info && info.querySelector('.game-status-inline');
     if (!gs) return null;
     for (const cand of gs.querySelectorAll('span,a,div')) {
       if (cand.childElementCount) continue;
       const t = (cand.textContent || '').trim();
-      if (t && t.length <= 40 && /^(@|vs\.?\s?)?[A-Z]{2,4}\b/.test(t)) return cand;
+      if (t && t.length <= 40 && /^(@|vs\.?\s?)?[A-Z]{2,4}\b/.test(t)) return { el: cand, chip: false };
     }
     return null;
   }
+  // OPP cell = light chip (background). The FantasyCast game line is a
+  // block-level span, so a background paints a full-width bar — it gets
+  // colored bold TEXT only (Jack, v0.20.34: "the red and green is too long").
   function tintNativeOpp(a, g) {
-    const tgt = nativeOppTarget(a);
-    if (!tgt) return null;
-    const sig = g.cls + '|' + g.tip;
+    const hit = nativeOppTarget(a);
+    if (!hit) return null;
+    const tgt = hit.el;
+    const sig = g.cls + '|' + g.tip + '|' + (hit.chip ? 'chip' : 'text');
     if (tgt.dataset.mffOppSig !== sig) {
       tgt.dataset.mffOppSig = sig;
       tgt.classList.add('mff-opp-hl');
       tgt.title = g.tip;
       const c = OPP_TINT[g.cls];
-      tgt.style.background = c ? c[0] : '';
-      tgt.style.color = c ? c[1] : '';
-      tgt.style.borderRadius = c ? '3px' : '';
-      tgt.style.padding = c ? '0 3px' : '';
-      tgt.style.fontWeight = c ? '600' : '';
+      tgt.style.background = c && hit.chip ? c[0] : '';
+      tgt.style.setProperty('color', c ? c[1] : '', c && !hit.chip ? 'important' : '');
+      tgt.style.borderRadius = c && hit.chip ? '3px' : '';
+      tgt.style.padding = c && hit.chip ? '0 3px' : '';
+      tgt.style.fontWeight = c ? '700' : '';
     }
     return tgt;
   }
@@ -2817,7 +2828,8 @@
     document.querySelectorAll('.mff-opp-hl').forEach((el) => {
       el.classList.remove('mff-opp-hl');
       el.removeAttribute('title');
-      el.style.background = el.style.color = el.style.borderRadius = el.style.padding = el.style.fontWeight = '';
+      el.style.background = el.style.borderRadius = el.style.padding = el.style.fontWeight = '';
+      el.style.removeProperty('color');
       delete el.dataset.mffOppSig;
     });
   }
@@ -3131,10 +3143,16 @@
     // Jack (v0.20.21) — the strip + row pills already crowd them. Other season
     // pages keep both.
     const onBoxscore = /\b(boxscore|fantasycast)\b/i.test(location.pathname);
+    // FantasyCast prints NO per-player projection (the score column is "--"
+    // pregame), so there — and only there — ESPN's own weekly projection rides
+    // along as a grey "ESPN 18.9" pill next to ours (Jack, v0.20.34: "I still
+    // want to see the espn projections"). Box score / team pages already show
+    // ESPN's PROJ column.
+    const onFantasyCast = /\bfantasycast\b/i.test(location.pathname) || !!(MOCK && MOCK.fantasycast);
     const map = Object.create(null);
     state.seasonTeams.forEach((t) => t.entries.forEach((en) => {
       if (!en.p) return;
-      const rec = { p: en.p, mine: t.teamId === state.myTeamId };
+      const rec = { p: en.p, mine: t.teamId === state.myTeamId, espnProj: en.espnProj };
       map[norm(en.name)] = rec;
       if (en.raw) map[norm(en.raw)] = rec;
     }));
@@ -3181,6 +3199,10 @@
           const bb = boomBustFor(p, v);
           if (bb) pills.push(bbPillHTML(bb));
         }
+      }
+      if (onFantasyCast && rec.espnProj != null) {
+        pills.push(pillHTML('ESPN ' + rec.espnProj.toFixed(1), '#f0f2f5', '#5b6068',
+          "ESPN's own projected points this week (league-scored) — FantasyCast doesn't print it per player"));
       }
       const inner = pills.join('');
       if (existing && existing.dataset.mffSig === inner) continue;

@@ -67,6 +67,10 @@ everything: rosters, each team's CURRENT lineup (`lineupSlotId`; 20=BN
   Total" label's own text node and drops in right under ESPN's "Chance to
   Win" tracker when present; the two teams are read off the header's team
   names (FantasyCast's carousel swaps matchups without touching the URL).
+  v0.20.34: the FantasyCast game line is colored bold TEXT only (no bar), and
+  because FantasyCast prints no per-player projection, ESPN's own weekly
+  projection (mRoster `stats` statSourceId 1 / statSplitTypeId 1) rides
+  along as a grey "ESPN 18.9" pill next to ours — that page only.
 - Not ported (yet): trade verdicts.
 - **Test without a league:** serve this folder over HTTP and open
   `mock_season.html` — a 10-team mock league (you are team 2, lineup

@@ -2363,11 +2363,9 @@
       tgt.dataset.mffOppSig = sig;
       tgt.classList.add('mff-opp-hl');
       tgt.title = g.tip;
+      // colored bold TEXT only — no background bar (Jack, 2026-09-09)
       const c = OPP_TINT[g.cls];
-      tgt.style.background = c ? c[0] : '';
       tgt.style.setProperty('color', c ? c[1] : '', c ? 'important' : '');
-      tgt.style.borderRadius = c ? '3px' : '';
-      tgt.style.padding = c ? '0 3px' : '';
       tgt.style.fontWeight = c ? '700' : '';
     }
     return tgt;

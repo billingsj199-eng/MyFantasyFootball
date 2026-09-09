@@ -68,7 +68,7 @@ week/injuries/actuals/trending (players.json sids bridge the ids).
   no game line exists). The MFF matchup strip (starter-summed proj totals +
   win odds per side) now sits right UNDER Yahoo's "Chance to win" row +
   probability bar (anchored on that text's own node); above the first roster
-  table only when the header is absent.
+  table only when the header is absent. v0.9.23+: the game-line tint is colored bold text only (no background bar).
 
 No SIMS tab: league sims need every team's roster and Yahoo's DOM only
 exposes yours — other rosters would take a page-by-page crawl. If the probe

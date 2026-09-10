@@ -6,41 +6,75 @@
 # games are claimed there so the EDT+EST cron pairs and the overlapping
 # Sunday windows never double-track a game.
 #
-# Cron is UTC. Each local slot is listed twice (EDT = UTC-4 until Nov 1,
-# EST = UTC-5 after): the off-season-of-DST twin either finds nothing
-# (exits in seconds) or finds the games already claimed.
+# Cron is UTC. Each local slot is listed FOUR times: a LEAD run 67 min before
+# the window and a MAIN run just after it, each in EDT (UTC-4 until Nov 1)
+# and EST (UTC-5 after). The lead run claims the games and waits for kickoff
+# (the tracker's --window 2 already covers that), so a GitHub cron delay of
+# up to an hour still catches kickoff; the main run is the fallback and
+# normally finds the games already claimed (exits in seconds). Minutes avoid
+# the top of the hour. Why: on 2026-09-10 GitHub started the 00:05/01:05 UTC
+# crons at 04:25 and 05:52 UTC, 4.5h late, and the W1 opener was already
+# FINAL — the results branch never saw the game.
 name: Live projection tracker
 
 on:
   schedule:
-    - cron: "5 0 * * 4"    # Wed 20:05 EDT
-    - cron: "5 1 * * 4"    # Wed 20:05 EST
-    - cron: "25 16 * * 4"  # Thu 12:25 EDT (Thanksgiving)
-    - cron: "25 17 * * 4"  # Thu 12:25 EST
-    - cron: "25 20 * * 4"  # Thu 16:25 EDT
-    - cron: "25 21 * * 4"  # Thu 16:25 EST
-    - cron: "5 0 * * 5"    # Thu 20:05 EDT
-    - cron: "5 1 * * 5"    # Thu 20:05 EST
-    - cron: "5 0 * * 6"    # Fri 20:05 EDT
-    - cron: "5 1 * * 6"    # Fri 20:05 EST
-    - cron: "55 16 * * 6"  # Sat 12:55 EDT
-    - cron: "55 17 * * 6"  # Sat 12:55 EST
-    - cron: "0 20 * * 6"   # Sat 16:00 EDT
-    - cron: "0 21 * * 6"   # Sat 16:00 EST
-    - cron: "5 0 * * 0"    # Sat 20:05 EDT
-    - cron: "5 1 * * 0"    # Sat 20:05 EST
-    - cron: "10 13 * * 0"  # Sun 09:10 EDT (international)
-    - cron: "10 14 * * 0"  # Sun 09:10 EST
-    - cron: "55 16 * * 0"  # Sun 12:55 EDT
-    - cron: "55 17 * * 0"  # Sun 12:55 EST
-    - cron: "0 20 * * 0"   # Sun 16:00 EDT
-    - cron: "0 21 * * 0"   # Sun 16:00 EST
-    - cron: "5 0 * * 1"    # Sun 20:05 EDT
-    - cron: "5 1 * * 1"    # Sun 20:05 EST
-    - cron: "55 22 * * 1"  # Mon 18:55 EDT
-    - cron: "55 23 * * 1"  # Mon 18:55 EST
-    - cron: "5 0 * * 2"    # Mon 20:05 EDT
-    - cron: "5 1 * * 2"    # Mon 20:05 EST
+    - cron: "58 22 * * 3"     # Wed 20:05 EDT lead (18:58 local)
+    - cron: "58 23 * * 3"     # Wed 20:05 EST lead (18:58 local)
+    - cron: "9 0 * * 4"       # Wed 20:05 EDT main (20:09 local)
+    - cron: "9 1 * * 4"       # Wed 20:05 EST main (20:09 local)
+    - cron: "18 15 * * 4"     # Thu 12:25 EDT lead (11:18 local, Thanksgiving)
+    - cron: "18 16 * * 4"     # Thu 12:25 EST lead (11:18 local, Thanksgiving)
+    - cron: "29 16 * * 4"     # Thu 12:25 EDT main (12:29 local, Thanksgiving)
+    - cron: "29 17 * * 4"     # Thu 12:25 EST main (12:29 local, Thanksgiving)
+    - cron: "18 19 * * 4"     # Thu 16:25 EDT lead (15:18 local)
+    - cron: "18 20 * * 4"     # Thu 16:25 EST lead (15:18 local)
+    - cron: "29 20 * * 4"     # Thu 16:25 EDT main (16:29 local)
+    - cron: "29 21 * * 4"     # Thu 16:25 EST main (16:29 local)
+    - cron: "58 22 * * 4"     # Thu 20:05 EDT lead (18:58 local)
+    - cron: "58 23 * * 4"     # Thu 20:05 EST lead (18:58 local)
+    - cron: "9 0 * * 5"       # Thu 20:05 EDT main (20:09 local)
+    - cron: "9 1 * * 5"       # Thu 20:05 EST main (20:09 local)
+    - cron: "58 22 * * 5"     # Fri 20:05 EDT lead (18:58 local)
+    - cron: "58 23 * * 5"     # Fri 20:05 EST lead (18:58 local)
+    - cron: "9 0 * * 6"       # Fri 20:05 EDT main (20:09 local)
+    - cron: "9 1 * * 6"       # Fri 20:05 EST main (20:09 local)
+    - cron: "48 15 * * 6"     # Sat 12:55 EDT lead (11:48 local)
+    - cron: "48 16 * * 6"     # Sat 12:55 EST lead (11:48 local)
+    - cron: "59 16 * * 6"     # Sat 12:55 EDT main (12:59 local)
+    - cron: "59 17 * * 6"     # Sat 12:55 EST main (12:59 local)
+    - cron: "53 18 * * 6"     # Sat 16:00 EDT lead (14:53 local)
+    - cron: "53 19 * * 6"     # Sat 16:00 EST lead (14:53 local)
+    - cron: "7 20 * * 6"      # Sat 16:00 EDT main (16:07 local)
+    - cron: "7 21 * * 6"      # Sat 16:00 EST main (16:07 local)
+    - cron: "58 22 * * 6"     # Sat 20:05 EDT lead (18:58 local)
+    - cron: "58 23 * * 6"     # Sat 20:05 EST lead (18:58 local)
+    - cron: "9 0 * * 0"       # Sat 20:05 EDT main (20:09 local)
+    - cron: "9 1 * * 0"       # Sat 20:05 EST main (20:09 local)
+    - cron: "3 12 * * 0"      # Sun 09:10 EDT lead (08:03 local, international)
+    - cron: "3 13 * * 0"      # Sun 09:10 EST lead (08:03 local, international)
+    - cron: "14 13 * * 0"     # Sun 09:10 EDT main (09:14 local, international)
+    - cron: "14 14 * * 0"     # Sun 09:10 EST main (09:14 local, international)
+    - cron: "48 15 * * 0"     # Sun 12:55 EDT lead (11:48 local)
+    - cron: "48 16 * * 0"     # Sun 12:55 EST lead (11:48 local)
+    - cron: "59 16 * * 0"     # Sun 12:55 EDT main (12:59 local)
+    - cron: "59 17 * * 0"     # Sun 12:55 EST main (12:59 local)
+    - cron: "53 18 * * 0"     # Sun 16:00 EDT lead (14:53 local)
+    - cron: "53 19 * * 0"     # Sun 16:00 EST lead (14:53 local)
+    - cron: "7 20 * * 0"      # Sun 16:00 EDT main (16:07 local)
+    - cron: "7 21 * * 0"      # Sun 16:00 EST main (16:07 local)
+    - cron: "58 22 * * 0"     # Sun 20:05 EDT lead (18:58 local)
+    - cron: "58 23 * * 0"     # Sun 20:05 EST lead (18:58 local)
+    - cron: "9 0 * * 1"       # Sun 20:05 EDT main (20:09 local)
+    - cron: "9 1 * * 1"       # Sun 20:05 EST main (20:09 local)
+    - cron: "48 21 * * 1"     # Mon 18:55 EDT lead (17:48 local)
+    - cron: "48 22 * * 1"     # Mon 18:55 EST lead (17:48 local)
+    - cron: "59 22 * * 1"     # Mon 18:55 EDT main (18:59 local)
+    - cron: "59 23 * * 1"     # Mon 18:55 EST main (18:59 local)
+    - cron: "58 22 * * 1"     # Mon 20:05 EDT lead (18:58 local)
+    - cron: "58 23 * * 1"     # Mon 20:05 EST lead (18:58 local)
+    - cron: "9 0 * * 2"       # Mon 20:05 EDT main (20:09 local)
+    - cron: "9 1 * * 2"       # Mon 20:05 EST main (20:09 local)
   workflow_dispatch:
     inputs:
       teams:

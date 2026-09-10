@@ -128,6 +128,50 @@ def remaining(model, pos, f, proj, actual, margin):
     return fit, v1, naive
 
 
+# ---------------- player-exited rule ----------------
+# A player whose league-scored total has not moved for a long stretch of GAME
+# CLOCK has very likely left the game (2026 W1: Darnold exited after 2 attempts
+# at 0.5 pts and every model kept projecting ~8 more at halftime). seen[sid] =
+# {"pts", "f0"}: the total and the game fraction at which it last changed
+# (0 when watched from kickoff, else the fraction at first sight). stale =
+# f - f0 scales the fitted remaining by a per-position ramp (start, full,
+# floor): a playing QB moves the total every drive, so his ramp is short and
+# floors at 0; RB/WR/TE have normal quiet stretches, so they ramp slower and
+# keep a floor. K/DST exempt. QB accelerator: another QB on the same team with
+# >= 2 live pts while this one is stale >= 0.10 -> 0 (the backup has the job).
+# Mirrors liveExitMult() in the helpers (Sleeper 0.29.26 / ESPN 0.20.36 /
+# Yahoo 0.9.26). Logged as `live_fitx` beside the un-scaled `live_fit`.
+EXIT_RAMP = {"QB": (0.15, 0.30, 0.0), "RB": (0.25, 0.50, 0.15), "WR": (0.30, 0.60, 0.15), "TE": (0.30, 0.60, 0.15)}
+QB_BY_TEAM = {}  # team -> [sleeper ids of every QB on the roster] (teammate rule)
+
+
+def seen_note(seen, sid, actual, f, st):
+    """Record the last change of a player's total; returns the stale fraction."""
+    s = seen.get(sid)
+    if st == "pre":
+        seen[sid] = {"pts": actual, "f0": 0.0}; return 0.0
+    if s is None:
+        seen[sid] = {"pts": actual, "f0": 0.0 if f <= 0.02 else f}; return 0.0
+    if s["pts"] != actual:
+        s["pts"] = actual; s["f0"] = f; return 0.0
+    return max(0.0, f - s["f0"])
+
+
+def exit_mult(pos, stale, teammate_qb=False):
+    ramp = EXIT_RAMP.get(pos)
+    if not ramp: return 1.0
+    if pos == "QB" and stale >= 0.10 and teammate_qb: return 0.0
+    lo, hi, floor = ramp
+    if stale <= lo: return 1.0
+    return 1.0 - (1.0 - floor) * min(1.0, (stale - lo) / (hi - lo))
+
+
+def teammate_qb(stats, sid, team):
+    for o in QB_BY_TEAM.get(team, []):
+        if o != sid and float((stats.get(o) or {}).get("pts_ppr") or 0) >= 2: return True
+    return False
+
+
 # ---------------- tracked players ----------------
 def tracked_players(teams, sim_proj):
     """Sleeper's player dump (id/name/pos/team) joined to the site's week rows."""
@@ -146,6 +190,7 @@ def tracked_players(teams, sim_proj):
             pos = "DST"
         else:
             if pos not in ("QB", "RB", "WR", "TE", "K"): continue
+            if pos == "QB": QB_BY_TEAM.setdefault(tm, []).append(str(sid))  # every QB, sim row or not (teammate rule)
             name = p.get("full_name") or (p.get("first_name", "") + " " + p.get("last_name", "")).strip()
             row = idx.get(norm(name))
         if not row or not isinstance(row, list) or row[1] in (None, 0): continue
@@ -207,10 +252,11 @@ def git_publish(logs_dir, msg, paths):
 
 
 FIELDS = ["ts", "team", "st", "f", "tag", "margin", "sid", "name", "pos", "proj", "actual",
-          "rem_fit", "live_fit", "live_v1", "live_naive"]
+          "rem_fit", "live_fit", "live_v1", "live_naive", "stale", "xmult", "live_fitx"]
 
 
-def tick(season, week, teams, players, model, writer=None, verbose=False):
+def tick(season, week, teams, players, model, writer=None, verbose=False, seen=None):
+    seen = seen if seen is not None else {}
     games = parse_scoreboard(get_json(SCOREBOARD + "?t=" + str(int(time.time()))))
     try:
         stats = get_json(SLEEPER_STATS.format(season=season, week=week) + "?t=" + str(int(time.time()))) or {}
@@ -227,15 +273,20 @@ def tick(season, week, teams, players, model, writer=None, verbose=False):
         actual = float(s.get("pts_ppr") or 0.0)
         margin = (g.get("pts") or 0) - (g.get("oppPts") or 0) if g.get("pts") is not None and g.get("oppPts") is not None else 0.0
         if st == "pre":
-            rem = p["proj"]; live = (p["proj"], p["proj"], p["proj"])
+            seen_note(seen, p["sid"], actual, 0.0, st); stale, xm = 0.0, 1.0
+            rem = p["proj"]; live = (p["proj"], p["proj"], p["proj"]); fitx = p["proj"]
         elif st == "post":
-            rem = 0.0; live = (actual, actual, actual)
+            stale, xm = 0.0, 1.0
+            rem = 0.0; live = (actual, actual, actual); fitx = actual
         else:
             fit, v1, nv = remaining(model, p["pos"], f, p["proj"], actual, margin)
-            rem = fit; live = (actual + fit, actual + v1, actual + nv)
+            stale = seen_note(seen, p["sid"], actual, f, st)
+            xm = exit_mult(p["pos"], stale, teammate_qb(stats, p["sid"], p["team"]))
+            rem = fit; live = (actual + fit, actual + v1, actual + nv); fitx = actual + fit * xm
         row = {"ts": now, "team": p["team"], "st": st, "f": round(f, 3), "tag": g["tag"], "margin": margin,
                "sid": p["sid"], "name": p["name"], "pos": p["pos"], "proj": round(p["proj"], 2), "actual": round(actual, 2),
-               "rem_fit": round(rem, 2), "live_fit": round(live[0], 2), "live_v1": round(live[1], 2), "live_naive": round(live[2], 2)}
+               "rem_fit": round(rem, 2), "live_fit": round(live[0], 2), "live_v1": round(live[1], 2), "live_naive": round(live[2], 2),
+               "stale": round(stale, 3), "xmult": round(xm, 3), "live_fitx": round(fitx, 2)}
         rows.append(row)
         if writer: writer.writerow(row)
     if verbose:
@@ -243,17 +294,36 @@ def tick(season, week, teams, players, model, writer=None, verbose=False):
             g = states[t]
             print(f"  {t}: {g['st']} {g['tag']} f={g['f']:.2f} score {g.get('pts')}-{g.get('oppPts')}")
         for r in sorted(rows, key=lambda r: -r["proj"])[:12]:
-            print(f"    {r['name']:<22}{r['pos']:<4} proj {r['proj']:5.1f}  scored {r['actual']:5.1f}  live fit {r['live_fit']:5.1f} | v1 {r['live_v1']:5.1f} | naive {r['live_naive']:5.1f}")
+            xt = f"  exit x{r['xmult']:.2f} (stale {r['stale']:.2f})" if r["xmult"] < 1 else ""
+            print(f"    {r['name']:<22}{r['pos']:<4} proj {r['proj']:5.1f}  scored {r['actual']:5.1f}  live fit {r['live_fit']:5.1f} | +exit {r['live_fitx']:5.1f} | v1 {r['live_v1']:5.1f} | naive {r['live_naive']:5.1f}{xt}")
     return states, rows
 
 
 # ---------------- grading ----------------
+def add_fitx(rows):
+    """Logs written before the exit rule: replay it from the rows (teammate-QB
+    signal limited to QBs that were in the log) so old and new logs grade alike."""
+    if rows and rows[0].get("live_fitx") not in ("", None): return
+    seen, qb_pts = {}, {}
+    for r in rows:
+        if r["pos"] == "QB": qb_pts.setdefault((r["ts"], r["team"]), {})[r["sid"]] = float(r["actual"])
+    for r in rows:
+        st, f, actual = r["st"], float(r["f"]), float(r["actual"])
+        stale = seen_note(seen, r["sid"], actual, f, st)
+        if st != "in":
+            r["live_fitx"] = r["live_fit"]; r["xmult"] = "1"; r["stale"] = "0"; continue
+        tq = r["pos"] == "QB" and any(v >= 2 for k, v in qb_pts.get((r["ts"], r["team"]), {}).items() if k != r["sid"])
+        xm = exit_mult(r["pos"], stale, tq)
+        r["live_fitx"] = str(round(actual + float(r["rem_fit"]) * xm, 2)); r["xmult"] = str(round(xm, 3)); r["stale"] = str(round(stale, 3))
+
+
 def grade(paths):
     paths = paths if isinstance(paths, list) else [paths]
     rows = []
     for pth in paths:
         rows += list(csv.DictReader(open(pth, encoding="utf-8")))
     if not rows: print("empty log"); return None
+    add_fitx(rows)
     out_path = (paths[0] if len(paths) == 1 else os.path.join(os.path.dirname(paths[0]), "live_track_COMBINED.csv")).replace(".csv", "_summary.json")
     finals = {}
     for r in rows:
@@ -265,31 +335,31 @@ def grade(paths):
     if not live: print("no in-game snapshots to grade"); return None
     bins = [(0.0, 0.25, "Q1"), (0.25, 0.5, "Q2"), (0.5, 0.75, "Q3"), (0.75, 1.01, "Q4")]
     print(f"\n=== LIVE GRADE {', '.join(os.path.basename(p) for p in paths)}: {len(live)} snapshots, {len(finals)} players ===")
-    print("|live - final|   fitted | v1 | naive   (n)")
+    print("|live - final|   fitted | fit+exit | v1 | naive   (n)")
     summary = {"files": [os.path.basename(p) for p in paths], "bins": {}, "players": {}}
-    tot = [0.0, 0.0, 0.0]; n = 0
+    tot = [0.0, 0.0, 0.0, 0.0]; n = 0
     for lo, hi, lbl in bins:
         sel = [r for r in live if lo <= float(r["f"]) < hi]
         if not sel: continue
-        e = [sum(abs(float(r[k]) - finals[r["sid"]]) for r in sel) / len(sel) for k in ("live_fit", "live_v1", "live_naive")]
-        for i in range(3): tot[i] += e[i] * len(sel)
+        e = [sum(abs(float(r[k]) - finals[r["sid"]]) for r in sel) / len(sel) for k in ("live_fit", "live_fitx", "live_v1", "live_naive")]
+        for i in range(4): tot[i] += e[i] * len(sel)
         n += len(sel)
-        summary["bins"][lbl] = {"fit": round(e[0], 3), "v1": round(e[1], 3), "naive": round(e[2], 3), "n": len(sel)}
-        print(f"  {lbl}   {e[0]:.2f} | {e[1]:.2f} | {e[2]:.2f}   ({len(sel)})")
+        summary["bins"][lbl] = {"fit": round(e[0], 3), "fitx": round(e[1], 3), "v1": round(e[2], 3), "naive": round(e[3], 3), "n": len(sel)}
+        print(f"  {lbl}   {e[0]:.2f} | {e[1]:.2f} | {e[2]:.2f} | {e[3]:.2f}   ({len(sel)})")
     if n:
-        print(f"  ALL  {tot[0]/n:.3f} | {tot[1]/n:.3f} | {tot[2]/n:.3f}   ({n})")
-        summary["all"] = {"fit": round(tot[0] / n, 3), "v1": round(tot[1] / n, 3), "naive": round(tot[2] / n, 3), "n": n}
+        print(f"  ALL  {tot[0]/n:.3f} | {tot[1]/n:.3f} | {tot[2]/n:.3f} | {tot[3]/n:.3f}   ({n})")
+        summary["all"] = {"fit": round(tot[0] / n, 3), "fitx": round(tot[1] / n, 3), "v1": round(tot[2] / n, 3), "naive": round(tot[3] / n, 3), "n": n}
     by = {}
     for r in live: by.setdefault(r["sid"], []).append(r)
-    wins = [0, 0, 0]
-    print("\nper player (mean |live - final| over the game):  proj -> final   fitted | v1 | naive")
+    wins = [0, 0, 0, 0]
+    print("\nper player (mean |live - final| over the game):  proj -> final   fitted | fit+exit | v1 | naive")
     for sid, rs in sorted(by.items(), key=lambda kv: -float(kv[1][0]["proj"])):
-        e = [sum(abs(float(r[k]) - finals[sid]) for r in rs) / len(rs) for k in ("live_fit", "live_v1", "live_naive")]
+        e = [sum(abs(float(r[k]) - finals[sid]) for r in rs) / len(rs) for k in ("live_fit", "live_fitx", "live_v1", "live_naive")]
         wins[e.index(min(e))] += 1
-        summary["players"][rs[0]["name"]] = {"pos": rs[0]["pos"], "proj": float(rs[0]["proj"]), "final": finals[sid], "fit": round(e[0], 2), "v1": round(e[1], 2), "naive": round(e[2], 2)}
-        print(f"  {rs[0]['name']:<22}{rs[0]['pos']:<4} {float(rs[0]['proj']):5.1f} -> {finals[sid]:5.1f}   {e[0]:.2f} | {e[1]:.2f} | {e[2]:.2f}")
-    print(f"closest model per player: fitted {wins[0]}  v1 {wins[1]}  naive {wins[2]}")
-    summary["wins"] = {"fit": wins[0], "v1": wins[1], "naive": wins[2]}
+        summary["players"][rs[0]["name"]] = {"pos": rs[0]["pos"], "proj": float(rs[0]["proj"]), "final": finals[sid], "fit": round(e[0], 2), "fitx": round(e[1], 2), "v1": round(e[2], 2), "naive": round(e[3], 2)}
+        print(f"  {rs[0]['name']:<22}{rs[0]['pos']:<4} {float(rs[0]['proj']):5.1f} -> {finals[sid]:5.1f}   {e[0]:.2f} | {e[1]:.2f} | {e[2]:.2f} | {e[3]:.2f}")
+    print(f"closest model per player: fitted {wins[0]}  fit+exit {wins[1]}  v1 {wins[2]}  naive {wins[3]}")
+    summary["wins"] = {"fit": wins[0], "fitx": wins[1], "v1": wins[2], "naive": wins[3]}
     json.dump(summary, open(out_path, "w"), indent=1)
     print("wrote", out_path)
     return out_path
@@ -325,18 +395,22 @@ def main():
     model = load_model(sim_proj)
     print(f"tracking {len(players)} players on {teams}, season {season} week {week}")
     if a.once:
-        tick(season, week, teams, players, model, verbose=True); return
+        tick(season, week, teams, players, model, verbose=True, seen={}); return
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M")
     label = "_".join(teams) if len(teams) <= 4 else f"{len(teams)//2}games_{stamp}"
     out = os.path.join(logs_dir, f"live_track_{season}_w{week}_{label}.csv")
+    if os.path.exists(out):  # a same-label log from before a column change: rotate it aside
+        with open(out, encoding="utf-8") as fh0: head = fh0.readline().strip()
+        if head != ",".join(FIELDS):
+            os.replace(out, out.replace(".csv", "_oldcols.csv")); print("rotated old-column log aside")
     new = not os.path.exists(out)
     fh = open(out, "a", newline="", encoding="utf-8")
     w = csv.DictWriter(fh, fieldnames=FIELDS)
     if new: w.writeheader()
-    t0 = time.time(); ticks = 0
+    t0 = time.time(); ticks = 0; seen = {}
     while time.time() - t0 < MAX_HOURS * 3600:
         try:
-            states, _ = tick(season, week, teams, players, model, writer=w, verbose=(ticks % 10 == 0))
+            states, _ = tick(season, week, teams, players, model, writer=w, verbose=(ticks % 10 == 0), seen=seen)
             fh.flush(); ticks += 1
             if all(states[t]["st"] == "post" for t in teams):
                 print("all tracked games FINAL"); break

@@ -182,6 +182,30 @@ def exit_mult(pos, stale, teammate_qb=False):
     return 1.0 - (1.0 - floor) * min(1.0, (stale - lo) / (hi - lo))
 
 
+# FEED-FROZEN guard: if no watched total in a game (either team) has moved for
+# FEED_FROZEN of game clock the stats feed is stalled -> exit rule paused
+# (xmult 1, `frozen` column 1). feed[team] = f at the last observed change.
+FEED_FROZEN = 0.10
+
+
+def feed_update(feed, seen, states, sids_by_team, stats):
+    """Per team: note changes vs last tick (before seen_note runs), seed new games."""
+    changed = set()
+    for t, sids in sids_by_team.items():
+        g = states[t]
+        if g["st"] != "in": continue
+        if t not in feed: feed[t] = g["f"]
+        for sid in sids:
+            prev = seen.get(sid)
+            pts = float((stats.get(sid) or {}).get("pts_ppr") or 0.0)
+            if prev is not None and prev["pts"] != pts: changed.add(t); break
+    for t in list(changed):
+        feed[t] = states[t]["f"]
+        opp = states[t].get("opp")
+        if opp in states: feed[opp] = states[t]["f"]
+    return {t: (states[t]["st"] == "in" and t in feed and states[t]["f"] - feed[t] >= FEED_FROZEN) for t in states}
+
+
 def teammate_qb(stats, sid, team):
     for o in QB_BY_TEAM.get(team, []):
         if o != sid and float((stats.get(o) or {}).get("pts_ppr") or 0) >= 2: return True
@@ -269,12 +293,13 @@ def git_publish(logs_dir, msg, paths):
 
 
 FIELDS = ["ts", "team", "st", "f", "tag", "margin", "sid", "name", "pos", "proj", "actual",
-          "rem_fit", "live_fit", "live_v1", "live_naive", "stale", "xmult", "live_fitx", "role", "f_in"]
+          "rem_fit", "live_fit", "live_v1", "live_naive", "stale", "xmult", "live_fitx", "role", "f_in", "frozen"]
 
 
-def tick(season, week, teams, players, model, writer=None, verbose=False, seen=None, backups=None):
+def tick(season, week, teams, players, model, writer=None, verbose=False, seen=None, backups=None, feed=None):
     seen = seen if seen is not None else {}
     backups = backups if backups is not None else {}
+    feed = feed if feed is not None else {}
     games = parse_scoreboard(get_json(SCOREBOARD + "?t=" + str(int(time.time()))))
     try:
         stats = get_json(SLEEPER_STATS.format(season=season, week=week) + "?t=" + str(int(time.time()))) or {}
@@ -287,6 +312,8 @@ def tick(season, week, teams, players, model, writer=None, verbose=False, seen=N
     # BACKUP QBs: watch every QB on the tracked teams; one without a sim row who
     # reaches BACKUP_MIN_PTS while the game is on is in for the starter.
     tracked = {p["sid"] for p in players}
+    watched = {t: [p["sid"] for p in players if p["team"] == t] + [o for o in QB_BY_TEAM.get(t, []) if o not in tracked] for t in teams}
+    frozen = feed_update(feed, seen, states, watched, stats)
     for t in teams:
         g = states[t]
         starter = max((p for p in players if p["team"] == t and p["pos"] == "QB"), key=lambda p: p["proj"], default=None)
@@ -318,19 +345,19 @@ def tick(season, week, teams, players, model, writer=None, verbose=False, seen=N
         else:
             fit, v1, nv = remaining(model, p["pos"], f, p["proj"], actual, margin, p.get("f_in", 0.0))
             stale = seen_note(seen, p["sid"], actual, f, st)
-            xm = exit_mult(p["pos"], stale, teammate_qb(stats, p["sid"], p["team"]))
+            xm = 1.0 if frozen.get(p["team"]) else exit_mult(p["pos"], stale, teammate_qb(stats, p["sid"], p["team"]))
             rem = fit; live = (actual + fit, actual + v1, actual + nv); fitx = actual + fit * xm
         row = {"ts": now, "team": p["team"], "st": st, "f": round(f, 3), "tag": g["tag"], "margin": margin,
                "sid": p["sid"], "name": p["name"], "pos": p["pos"], "proj": round(p["proj"], 2), "actual": round(actual, 2),
                "rem_fit": round(rem, 2), "live_fit": round(live[0], 2), "live_v1": round(live[1], 2), "live_naive": round(live[2], 2),
                "stale": round(stale, 3), "xmult": round(xm, 3), "live_fitx": round(fitx, 2),
-               "role": p.get("role", ""), "f_in": round(p.get("f_in", 0.0), 3)}
+               "role": p.get("role", ""), "f_in": round(p.get("f_in", 0.0), 3), "frozen": int(bool(frozen.get(p["team"])))}
         rows.append(row)
         if writer: writer.writerow(row)
     if verbose:
         for t in teams:
             g = states[t]
-            print(f"  {t}: {g['st']} {g['tag']} f={g['f']:.2f} score {g.get('pts')}-{g.get('oppPts')}")
+            print(f"  {t}: {g['st']} {g['tag']} f={g['f']:.2f} score {g.get('pts')}-{g.get('oppPts')}" + ("  FEED FROZEN (exit rule paused)" if frozen.get(t) else ""))
         for r in sorted(rows, key=lambda r: -r["proj"])[:12]:
             xt = f"  exit x{r['xmult']:.2f} (stale {r['stale']:.2f})" if r["xmult"] < 1 else ""
             if r["role"] == "backup": xt = f"  BACKUP in at f={r['f_in']:.2f}" + xt
@@ -436,7 +463,7 @@ def main():
     model = load_model(sim_proj)
     print(f"tracking {len(players)} players on {teams}, season {season} week {week}")
     if a.once:
-        tick(season, week, teams, players, model, verbose=True, seen={}, backups={}); return
+        tick(season, week, teams, players, model, verbose=True, seen={}, backups={}, feed={}); return
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M")
     label = "_".join(teams) if len(teams) <= 4 else f"{len(teams)//2}games_{stamp}"
     out = os.path.join(logs_dir, f"live_track_{season}_w{week}_{label}.csv")
@@ -448,10 +475,10 @@ def main():
     fh = open(out, "a", newline="", encoding="utf-8")
     w = csv.DictWriter(fh, fieldnames=FIELDS)
     if new: w.writeheader()
-    t0 = time.time(); ticks = 0; seen = {}; backups = {}
+    t0 = time.time(); ticks = 0; seen = {}; backups = {}; feed = {}
     while time.time() - t0 < MAX_HOURS * 3600:
         try:
-            states, _ = tick(season, week, teams, players, model, writer=w, verbose=(ticks % 10 == 0), seen=seen, backups=backups)
+            states, _ = tick(season, week, teams, players, model, writer=w, verbose=(ticks % 10 == 0), seen=seen, backups=backups, feed=feed)
             fh.flush(); ticks += 1
             if all(states[t]["st"] == "post" for t in teams):
                 print("all tracked games FINAL"); break

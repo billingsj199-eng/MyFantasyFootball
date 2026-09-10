@@ -2947,7 +2947,10 @@
   function liveModelCoefs(p, f) {
     const lm = state.simProj && state.simProj.liveModel;
     if (!lm || !lm.pos || !lm.grid || !lm.grid.length) return null;
-    const cls = p.s === 'QB' ? 'QB' : p.s === 'RB' ? 'RB' : (p.s === 'WR' || p.s === 'TE') ? 'REC' : null;
+    // K and DST rows (live model v2, sim_lab/backtest_live_kdst.py) carry a 4th
+    // coefficient on the score that matters to them (own team pts for K, points
+    // allowed for DST); an export without them falls back to v1 as before.
+    const cls = p.s === 'QB' ? 'QB' : p.s === 'RB' ? 'RB' : (p.s === 'WR' || p.s === 'TE') ? 'REC' : (p.s === 'K' || p.s === 'DST') ? p.s : null;
     const rows = cls && lm.pos[cls];
     if (!rows || rows.length !== lm.grid.length) return null;
     const g = lm.grid;
@@ -3106,24 +3109,31 @@
     if (co) {
       const pace = actual / span;
       const margin = (typeof g.pts === 'number' && typeof g.oppPts === 'number') ? (g.pts - g.oppPts) : 0;
-      rem = (1 - f) * (co[0] * pj + co[1] * pace + co[2] * pj * (margin / 10));
+      const rel = p.s === 'DST' ? g.oppPts : g.pts;  // K: own team score so far; DST: points allowed so far
+      const extra = co.length > 3 && typeof rel === 'number' ? co[3] * (rel / 10) : 0;
+      rem = (1 - f) * (co[0] * pj + co[1] * pace + co[2] * pj * (margin / 10) + extra);
     } else {
       const pace = span >= 0.15 ? actual / span : pj;
       const w = 0.25 * f;
       rem = (1 - f) * ((1 - w) * pj + w * pace);
     }
-    rem = Math.round(Math.max(0, rem) * 100) / 100;
+    // D/ST remaining is legitimately NEGATIVE (the points-allowed tier drops as the
+    // opponent scores): floor the live total at -4 (the lowest PA tier) instead of 0.
+    rem = Math.round(Math.max(p.s === 'DST' ? -4 - actual : 0, rem) * 100) / 100;
     const ex = liveExitMult(p, k, actual, f);
     if (ex.mult < 1) rem = Math.round(rem * ex.mult * 100) / 100;
-    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj, model: co ? 'sim' : 'v1', exitMult: ex.mult, stale: ex.stale, feedFrozen: !!ex.frozen,
+    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj, pos: p.s, model: co ? 'sim' : 'v1', exitMult: ex.mult, stale: ex.stale, feedFrozen: !!ex.frozen,
       backupFor: inh ? inh.starter : undefined, inhProj: inh ? inh.proj : undefined, inhShare: inh ? inh.share : undefined };
   }
   function liveTip(l) {
     if (l.st === 'post') return 'FINAL — scored ' + l.actual.toFixed(1) + ' (pregame proj ' + l.proj.toFixed(1) + ')';
-    return 'LIVE ' + l.tag + ' — scored ' + l.actual.toFixed(1) + ' + ' + l.rem.toFixed(1) +
-      ' still expected (pregame proj ' + l.proj.toFixed(1) + ').' +
+    return 'LIVE ' + l.tag + ' — scored ' + l.actual.toFixed(1) +
+      (l.rem < 0 ? ' − ' + (-l.rem).toFixed(1) + ' expected to come off as points are allowed' : ' + ' + l.rem.toFixed(1) + ' still expected') +
+      ' (pregame proj ' + l.proj.toFixed(1) + ').' +
       (l.model === 'sim'
-        ? ' Remaining = Sim Lab live model (2019-25 play-by-play: second-half discount, pace, score margin).'
+        ? (l.pos === 'K' || l.pos === 'DST'
+          ? ' Remaining = Sim Lab live model (2019-25 play-by-play: pace, score margin and ' + (l.pos === 'DST' ? 'points allowed' : 'own team score') + ' so far).'
+          : ' Remaining = Sim Lab live model (2019-25 play-by-play: second-half discount, pace, score margin).')
         : ' Remaining = proj × game left, nudged toward his pace late.') +
       (l.backupFor ? ' In for ' + l.backupFor + ' — remaining inherits ' + Math.round(l.inhShare * 100) + '% of his projection (' + l.inhProj.toFixed(1) + (l.inhShare < LIVE_BACKUP_SHARE ? ', blowout share' : '') + ').' : '') +
       (l.feedFrozen ? ' Live totals have not moved for a while — exit rule paused until the feed catches up.' : '') +

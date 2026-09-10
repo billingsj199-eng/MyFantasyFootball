@@ -2086,6 +2086,66 @@ function rnkAdp(d) {
   return modeAdp(d);
 }
 
+// === CONSENSUS-RANK column (replaced ADP on the season boards, Jack 2026-09-10:
+// drafts are done — in-season the useful comparison is where the market
+// blend has a player vs this board). Jack's / My boards show the CONSENSUS
+// board's rank; the Consensus tab shows JACK'S rank (its own rank is the #
+// column). K/DST get their positional rank on that board (they sit at the
+// bottom of the overall list by design). Map rebuilt once per render().
+let _consRankCache = { board: null, ovr: null, pos: null };
+function _consColSrc() { return currentVersion === 'consensus' ? 'jacks' : 'consensus'; }
+function _consColLabel() { return currentVersion === 'consensus' ? "Jack's" : 'Consensus'; }
+function _consRankFor(d) {
+  if (!d || currentMode === 'weekly') return null;
+  const src = _consColSrc();
+  const board = versionBoards[src] && versionBoards[src][currentMode];
+  if (!Array.isArray(board) || !board.length) return null;
+  if (_consRankCache.board !== board) {
+    const ovr = {}, pos = {}, cnt = {};
+    board.forEach((idx, r) => {
+      ovr[idx] = r + 1;
+      const p = D[idx];
+      if (!p) return;
+      cnt[p.s] = (cnt[p.s] || 0) + 1;
+      pos[idx] = cnt[p.s];
+    });
+    _consRankCache = { board, ovr, pos };
+  }
+  const r = (d.s === 'K' || d.s === 'DST') ? _consRankCache.pos[d.idx] : _consRankCache.ovr[d.idx];
+  return r == null ? null : r;
+}
+// Cell payload for the column: rank + value/reach tint (same ±3 thresholds
+// and classes the ADP column used — green = this board is higher on him
+// than the reference board, red = lower) + hover text.
+function _consCellInfo(d) {
+  const r = _consRankFor(d);
+  const lbl = _consColLabel();
+  if (r == null) return { r: null, cls: '', tip: 'No ' + lbl + ' rank for this player' };
+  if (d.s === 'K' || d.s === 'DST') return { r, cls: '', tip: lbl + ' ' + (d.s === 'DST' ? 'D/ST' : 'K') + r + ' (position rank)' };
+  const diff = r - d.myRank;
+  const cls = diff >= 3 ? ' adp-value' : diff <= -3 ? ' adp-reach' : '';
+  const tip = lbl + ' #' + r + ' vs this board #' + d.myRank
+    + (diff > 0 ? ' — ' + diff + ' spot' + (diff === 1 ? '' : 's') + ' higher here than ' + lbl
+      : diff < 0 ? ' — ' + (-diff) + ' spot' + (diff === -1 ? '' : 's') + ' lower here than ' + lbl : ' — even');
+  return { r, cls, tip };
+}
+// Header text for the column follows the tab (CONS on Jack's/My, JACK'S on
+// Consensus). Cheap DOM write, called from render().
+function _syncConsColHeader() {
+  const th = document.getElementById('adpHeader');
+  if (!th) return;
+  const lab = th.querySelector('[data-gloss]');
+  if (!lab) return;
+  const isC = currentVersion === 'consensus';
+  const want = isC ? "Jack's" : 'Cons';
+  if (lab.textContent !== want) {
+    lab.textContent = want;
+    lab.setAttribute('data-gloss', isC
+      ? "Jack's rank — where this player sits on Jack's board for this format. Green = the consensus is higher on him than Jack, red = lower."
+      : 'Consensus rank — where this player sits on the CONSENSUS board for this format (Jack\'s + market ADP + Sleeper + FantasyPros + Underdog/ESPN/CBS/Yahoo blend). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.');
+  }
+}
+
 // Per-source ADP lookup for the ADP comparison STATS view. Ignores rnkAdpSrc —
 // each column is pinned to one platform. Underdog respects the mode split
 // (sfa for superflex, udA otherwise), matching rnkAdp's own handling.
@@ -2235,8 +2295,67 @@ function adj25ppg(d) {
   return Math.round(((d.s25.fpts + recs * adj) / gp) * 10) / 10;
 }
 
-// Average fantasy PPG over a player's last 4 games of their most recent season.
-// Used as a "trending" signal alongside full-season '25 PPG. Respects the active
+// '25 PPG -> '26 PPG column flip (Jack 2026-09-10): once Week 1's Sunday late
+// slate is done (Sun Sep 13 2026 ~7:30pm ET) AND the post-game stats import
+// (scripts/pull_postgame_stats.py, every game window) has 2026 rows, the
+// season column becomes ACTUAL 2026 PPG to date in the site scoring format;
+// players without a 2026 game yet show —. Before that it stays last season's
+// adjusted '25 PPG. window._forcePpgYear = 25|26 is a test hook.
+const _PPG26_FLIP_UTC = Date.UTC(2026, 8, 13, 23, 30);
+let _any2026Cache = { at: 0, v: false };
+function _anyWeekly2026() {
+  if (_any2026Cache.v) return true;
+  const now = Date.now();
+  if (now - _any2026Cache.at < 5000) return _any2026Cache.v;
+  let v = false;
+  try {
+    if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS) {
+      for (const n in WEEKLY_STATS) {
+        const sx = WEEKLY_STATS[n] && WEEKLY_STATS[n].seasons;
+        if (sx && sx['2026'] && sx['2026'].length) { v = true; break; }
+      }
+    }
+  } catch (_) {}
+  _any2026Cache = { at: now, v };
+  return v;
+}
+function _seasonPpgYear() {
+  if (window._forcePpgYear === 25 || window._forcePpgYear === 26) return window._forcePpgYear;
+  return (Date.now() >= _PPG26_FLIP_UTC && _anyWeekly2026()) ? 26 : 25;
+}
+// Season PPG column value: { v, yr, gp } — yr 26 = actual 2026 to date
+// (WEEKLY_STATS for skill positions, KICKER_WEEKLY / DST_WEEKLY for K/DST).
+function adjSeasonPpg(d) {
+  if (_seasonPpgYear() === 26) {
+    const act = (typeof window._seasonActualPpg2026 === 'function') ? window._seasonActualPpg2026(d) : null;
+    if (act && act.gp > 0) return { v: Math.round(act.ppg * 10) / 10, yr: 26, gp: act.gp };
+    const kd = (typeof _kdstWeeklyData === 'function') ? _kdstWeeklyData(d) : null;
+    const kw = kd && kd['2026'];
+    if (kw && kw.length) {
+      let sum = 0;
+      for (const w of kw) sum += (w.fpts || 0);
+      return { v: Math.round(sum / kw.length * 10) / 10, yr: 26, gp: kw.length };
+    }
+    return { v: null, yr: 26, gp: 0 };
+  }
+  return { v: adj25ppg(d), yr: 25, gp: (d.s25 && d.s25.gp) || null };
+}
+function _seasonPpgLabel() { return "'" + _seasonPpgYear() + ' PPG'; }
+// Keep the '25/'26 header in step with the flip (called from render()).
+function _syncSeasonPpgHeader() {
+  const lab = document.querySelector('#ppg25Header [data-gloss]');
+  if (!lab || rnkStatMode !== 'fantasy') return;
+  const want = _seasonPpgLabel();
+  if (lab.textContent === want) return;
+  lab.textContent = want;
+  const fmtLabel = (typeof _scoringLabelsRnk !== 'undefined' && _scoringLabelsRnk[rankingScoringFmt]) || 'PPR';
+  lab.setAttribute('data-gloss', _seasonPpgYear() === 26
+    ? 'Actual 2026 fantasy points per game TO DATE (' + fmtLabel + ' scoring) — refreshed after every game. — = no 2026 game played yet.'
+    : 'Actual fantasy points per game from the 2025 season (' + fmtLabel + ' scoring).');
+}
+
+// Average fantasy PPG over a player's last 4 games PLAYED (across seasons).
+// Used as a "trending" signal alongside the season PPG column. Respects the active
 // ranking scoring format (weekly fpts are stored as Half PPR, like buildWeeklyTable).
 // Projected starting kicker per NFL team: the best-ranked K on Jack's board
 // for that team wears the "S" badge (camp battles resolve to Jack's call).
@@ -2273,13 +2392,24 @@ function _kStarterBadge(d) {
 function last4Ppg(d) {
   // K/DST: WEEKLY_STATS has no rows for them — read the KICKER_WEEKLY /
   // DST_WEEKLY game-log bundles instead (fixed scoring, no rec adjustment).
+  // In-season (2026-09-10): the window spans seasons — 2026 games to date,
+  // then the tail of 2025 — so Week 1 doesn't collapse L4 to one game.
+  // Pure placeholder rows (no team/opp, no touches, 0 pts) are skipped.
+  const _played = w => !!(w.opp || w.tm) || (w.fpts || 0) !== 0 || ((w.pa || 0) + (w.ra || 0) + (w.rec || 0) + (w.tgt || 0)) > 0;
+  const _lastN = (bySeason, n) => {
+    const yrs = Object.keys(bySeason).map(y => parseInt(y, 10)).filter(y => !isNaN(y)).sort((a, b) => b - a);
+    let rows = [];
+    for (const y of yrs) {
+      const wks = (bySeason[String(y)] || []).filter(_played);
+      rows = wks.concat(rows);            // older season goes in front → chronological
+      if (rows.length >= n) break;
+    }
+    return rows.slice(-n);
+  };
   const _kd = (typeof _kdstWeeklyData === 'function') ? _kdstWeeklyData(d) : null;
   if (_kd) {
-    const yrs = Object.keys(_kd).map(y => parseInt(y, 10)).filter(y => !isNaN(y));
-    if (!yrs.length) return null;
-    const wks = _kd[String(Math.max(...yrs))];
-    if (!wks || !wks.length) return null;
-    const l4 = wks.slice(-4);
+    const l4 = _lastN(_kd, 4);
+    if (!l4.length) return null;
     let s = 0;
     for (const w of l4) s += (w.fpts || 0);
     return Math.round((s / l4.length) * 10) / 10;
@@ -2287,13 +2417,8 @@ function last4Ppg(d) {
   if (typeof WEEKLY_STATS === 'undefined' || !WEEKLY_STATS) return null;
   const wd = WEEKLY_STATS[d.n];
   if (!wd || !wd.seasons) return null;
-  const years = Object.keys(wd.seasons).map(y => parseInt(y, 10)).filter(y => !isNaN(y));
-  if (!years.length) return null;
-  const latest = Math.max(...years);
-  const weeks = wd.seasons[String(latest)];
-  if (!weeks || !weeks.length) return null;
   const recAdj = rankingScoringFmt === 'ppr' ? 0.5 : rankingScoringFmt === 'std' ? -0.5 : 0;
-  const last4 = weeks.slice(-4);
+  const last4 = _lastN(wd.seasons, 4);
   if (!last4.length) return null;
   let sum = 0;
   for (const w of last4) sum += (w.fpts || 0) + (w.rec || 0) * recAdj;
@@ -3659,10 +3784,10 @@ function getFiltered(applyTopN) {
         case 'name': return sortDir * a.n.localeCompare(b.n);
         case 'pos': return sortDir * a.s.localeCompare(b.s);
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
-        case 'adp': av = rnkAdp(a) ?? 999; bv = rnkAdp(b) ?? 999; break;
+        case 'adp': av = _consRankFor(a) ?? 999; bv = _consRankFor(b) ?? 999; break;
         case 'round': av = a.round; bv = b.round; break;
         case 'pts': if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
-        case 'fpts25': if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adj25ppg(a)||0; bv = adj25ppg(b)||0; break;
+        case 'fpts25': if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
         case 'l4ppg': if (_sm === 'adp') { av = _smAdp(a,'espn'); bv = _smAdp(b,'espn'); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
@@ -3681,7 +3806,7 @@ function getFiltered(applyTopN) {
         }
         case 'diff':
           if (currentMode === 'weekly') { const wa = _weeklyDiff(a), wb = _weeklyDiff(b); av = wa ? wa.diff : 0; bv = wb ? wb.diff : 0; break; }
-          av = (a.s==='K'||a.s==='DST') ? 0 : (rnkAdp(a)??a.myRank) - a.myRank; bv = (b.s==='K'||b.s==='DST') ? 0 : (rnkAdp(b)??b.myRank) - b.myRank; break;
+          av = (a.s==='K'||a.s==='DST') ? 0 : (_consRankFor(a)??a.myRank) - a.myRank; bv = (b.s==='K'||b.s==='DST') ? 0 : (_consRankFor(b)??b.myRank) - b.myRank; break;
         // Weekly-only columns (Opp / Spread / Team Total). These read the same
         // values the cells render — note Team Total shows the OPPONENT's
         // implied total on D/ST rows, so the sort has to branch the same way
@@ -3765,8 +3890,10 @@ function _weeklyDiff(d) {
 }
 
 function diffHtml(d) {
-  const adp = rnkAdp(d);
-  const _srcLabel = ({consensus:'Consensus',underdog:'Underdog',dk:'DK',espn:'ESPN',cbs:'CBS',sleeper:'Sleeper',ktc:'KTC',yahoo:'Yahoo'})[rnkAdpSrc] || rnkAdpSrc;
+  // Season boards: rank vs the CONSENSUS board (Jack's on the Consensus tab)
+  // — same reference as the CONS column (ADP retired 2026-09-10).
+  const _cr = _consRankFor(d);
+  const _cl = _consColLabel();
   // Build a per-source rank breakdown so users can see at a glance how
   // each ranking source values this player. Skip the version they're
   // currently viewing (it'd just be the row's own rank).
@@ -3779,7 +3906,7 @@ function diffHtml(d) {
     } catch(_) { return null; }
   }
   const _verLabels = { jacks: "Jack's", consensus: 'Consensus', mine: 'My Ranks' };
-  const _otherVers = Object.keys(_verLabels).filter(v => v !== currentVersion);
+  const _otherVers = Object.keys(_verLabels).filter(v => v !== currentVersion && (currentMode === 'weekly' || v !== _consColSrc()));
   const _verRanks = _otherVers
     .map(v => ({ v, r: _rankInVer(v) }))
     .filter(x => x.r != null)
@@ -3796,17 +3923,17 @@ function diffHtml(d) {
     if (wd.diff > 0) return `<span class="diff-up" title="${_wt} — ranked ${wd.diff} spot${wd.diff === 1 ? '' : 's'} higher than ${wd.otherLabel}">▲ ${wd.diff}</span>`;
     return `<span class="diff-down" title="${_wt} — ranked ${-wd.diff} spot${wd.diff === -1 ? '' : 's'} lower than ${wd.otherLabel}">▼ ${-wd.diff}</span>`;
   }
-  if (adp == null) return `<span class="diff-even" title="No ${_srcLabel} ADP available for this player${_verSuffix}">—</span>`;
+  if (_cr == null) return `<span class="diff-even" title="No ${_cl} rank for this player${_verSuffix}">—</span>`;
   if (d.s === 'K' || d.s === 'DST') {
-    // Sites rank K/DST inside their overall lists; this board seats them at
-    // the bottom by design — suppress the ▲/▼ verdict, keep the rank in the tip.
-    return `<span class="diff-even" title="${_srcLabel} overall rank ${adp}${_verSuffix}">—</span>`;
+    // K/DST: position rank on the reference board — no ▲/▼ verdict (overall
+    // slots for them are a scale mismatch by design), keep it in the tip.
+    return `<span class="diff-even" title="${_cl} ${d.s === 'DST' ? 'D/ST' : 'K'}${_cr}${_verSuffix}">—</span>`;
   }
-  const diff = adp - d.myRank;
-  const _tt = `Rank ${d.myRank} vs ${_srcLabel} ADP ${adp}${_verSuffix}`;
-  if (Math.abs(diff) < 0.5) return `<span class="diff-even" title="${_tt} — even with the market">—</span>`;
-  if (diff > 0) return `<span class="diff-up" title="${_tt} — ranked ${Math.abs(diff).toFixed(0)} spots higher than ADP">▲ ${Math.abs(diff).toFixed(0)}</span>`;
-  return `<span class="diff-down" title="${_tt} — ranked ${Math.abs(diff).toFixed(0)} spots lower than ADP">▼ ${Math.abs(diff).toFixed(0)}</span>`;
+  const diff = _cr - d.myRank;
+  const _tt = `This board #${d.myRank} vs ${_cl} #${_cr}${_verSuffix}`;
+  if (diff === 0) return `<span class="diff-even" title="${_tt} — even with ${_cl}">—</span>`;
+  if (diff > 0) return `<span class="diff-up" title="${_tt} — ranked ${diff} spot${diff === 1 ? '' : 's'} higher than ${_cl}">▲ ${diff}</span>`;
+  return `<span class="diff-down" title="${_tt} — ranked ${-diff} spot${diff === -1 ? '' : 's'} lower than ${_cl}">▼ ${-diff}</span>`;
 }
 
 function getTierForRank(rank) {
@@ -4865,6 +4992,8 @@ function hasPremium() {
 window.hasPremium = hasPremium;
 
 function render() {
+  _consRankCache.board = null;   // boards can be reordered in place — rebuild per paint
+  try { _syncConsColHeader(); _syncSeasonPpgHeader(); } catch (_) {}
   // POS LOCK toggle visibility tracks whatever render tracks (version /
   // mode / filter / auth changes all funnel through here).
   updatePosLockVis();
@@ -5023,7 +5152,7 @@ function render() {
         <td><div class="player-cell"><span class="player-name">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell">${d._devyEligYr}</td>
-        <td class="adp-cell">${d._devyKtc > 0 ? d._devyKtc.toLocaleString() : '—'}</td>
+        <td class="adp-cell" data-lbl="KTC">${d._devyKtc > 0 ? d._devyKtc.toLocaleString() : '—'}</td>
         <td class="pts-cell ppg-proj-cell">—</td>
         <td class="simboom-cell weekly-only-cell" style="display:none">—</td>
         <td class="simbust-cell weekly-only-cell" style="display:none">—</td>
@@ -5106,8 +5235,8 @@ function render() {
       });
     }
 
-    const _adp = rnkAdp(d);
-    const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (_adp != null && Math.abs(_adp - d.myRank) >= 1);
+    const _cc = _consCellInfo(d);
+    const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (_cc.r != null && d.s !== 'K' && d.s !== 'DST' && Math.abs(_cc.r - d.myRank) >= 1);
     const checked = compareSet.has(d.idx) ? 'checked' : '';
     const blurred = shouldBlur && (i + 1) > blurCutoff ? 'premium-blur' : '';
     // Hoist per-row computations called 2-4× inside the row template. Saves
@@ -5125,10 +5254,13 @@ function render() {
       // Sim Lab first (season PPG on season boards, active-week sim in
       // weekly), site engine fallback — see _displayProjPpg.
       let _projPpg = _displayProjPpg(d);
-      const _25ppg = adj25ppg(d);
-      // Last-4-games PPG + trend arrow (compared to actual full-season '25 PPG).
+      // Season PPG column: '25 until the Week 1 Sunday slate is in, then
+      // actual '26 to date (adjSeasonPpg). L4 arrow trends vs that number.
+      const _sp = adjSeasonPpg(d);
+      const _25ppg = _sp.v;
+      const _25Tip = _sp.yr === 26 ? (_sp.v != null ? ' title="2026 to date · ' + _sp.gp + ' gp"' : ' title="No 2026 game played yet"') : '';
       const _l4ppg = last4Ppg(d);
-      const _l4Cell = l4PpgCellHtml(_l4ppg, adj25ppg(d));
+      const _l4Cell = l4PpgCellHtml(_l4ppg, _25ppg);
       // WEEKLY FLEX view compares RB/WR/TE head-to-head — color PROJ PPG on
       // one shared scale there; positional pills keep the per-position scale.
       const _projColor = (_projPpg != null) ? ((currentMode === 'weekly' && filter === 'FLEX') ? flexFptsColor(_projPpg) : posFptsColor(_projPpg, d.s)) : null;
@@ -5144,7 +5276,7 @@ function render() {
         }
       }
       _statTd1 = `<td class="pts-cell ppg-proj-cell"${_cwTip}${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${_projPpg==null?'—':_projPpg}</td>`;
-      _statTds = `<td class="pts-cell ppg25-cell"${_25Color?' style="color:'+_25Color+';font-weight:700"':''}>${_25ppg!=null?_25ppg:'—'}</td>
+      _statTds = `<td class="pts-cell ppg25-cell"${_25Tip}${_25Color?' style="color:'+_25Color+';font-weight:700"':''}>${_25ppg!=null?_25ppg:'—'}</td>
       <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
     } else if (_statMode === 'sims') {
       // SIMS view: sim PPG / boom % / bust %, Total Yds in the tail (yrr)
@@ -5233,9 +5365,6 @@ function render() {
       <td class="pts-cell l4ppg-cell"${_tp ? ' style="color:'+_tpColor+';font-weight:700;cursor:help" title="Season average of Vegas implied team totals (DK) across '+_tp.n+' games — ranked #'+_tp.rank+' of 32 teams"' : ''}>${_tp ? _tp.ppg.toFixed(1) + ' <span style="font-size:.65rem;font-weight:600;color:var(--text2)">(' + _tp.rank + ')</span>' : '—'}</td>`;
       }
     }
-    // K/DST: no value/reach tint — site overall ranks vs this board's
-    // bottom-of-list K/DST slots is a scale mismatch, not draft signal.
-    const _adpDelta = (_adp != null && d.s !== 'K' && d.s !== 'DST') ? (_adp - d.myRank) : null;
     const _displayTierLabel = _tierLabelForRank(displayRank);
 
     // Insert premium wall row right at the cutoff, above blurred rows
@@ -5258,7 +5387,7 @@ function render() {
       <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
-      <td class="adp-cell${_adpDelta==null?'':(_adpDelta>=3?' adp-value':(_adpDelta<=-3?' adp-reach':''))}" title="${_adpDelta==null?'':(()=>{const df=Math.round(_adpDelta);if(df>=3)return 'Value: ranked '+df+' spots earlier than ADP';if(df<=-3)return 'Reach: market drafts '+Math.abs(df)+' spots earlier than your rank';return '';})()}">${_adp != null ? _adp : '—'}${_adpSparkHtml(d)}</td>
+      <td class="adp-cell cons-cell${_cc.cls}" data-lbl="${currentVersion === 'consensus' ? "JACK'S" : 'CONS'}" title="${_cc.tip.replace(/"/g, '&quot;')}">${_cc.r != null ? _cc.r : '—'}</td>
       ${_statTd1}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
       ${_wkSimBoomBustCell(d, 'bust')}
@@ -5408,7 +5537,7 @@ function updateStats(data) {
   const tes = data.filter(d=>d.s==='TE').length;
   const moved = currentMode === 'weekly'
     ? D.filter(d => { const w = _weeklyDiff(d); return !!w && Math.abs(w.diff) >= 1; }).length
-    : D.filter(d => d.s !== 'K' && d.s !== 'DST' && rnkAdp(d) != null && Math.abs(rnkAdp(d) - d.myRank) >= 1).length;
+    : data.filter(d => { if (d.s === 'K' || d.s === 'DST') return false; const r = _consRankFor(d); return r != null && Math.abs(r - d.myRank) >= 1; }).length;  // rows on this view that sit off the consensus slot
   const rookies = data.filter(d => {
     if (d.career && d.career.length) return false;
     const _cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
@@ -6303,8 +6432,12 @@ window._updateRnkStatHeaders = function() {
     } else {
       _set(c1, null, 'Sim Lab projected fantasy points per game (' + fmtLabel + ' scoring) — rest-of-season average, games already played excluded. Refreshed daily and before kickoffs.', 'Proj PPG', fmtLabel);
     }
-    _set(c2, 'ppg25Header', 'Actual fantasy points per game from the 2025 season (' + fmtLabel + ' scoring).', '\'25 PPG', fmtLabel);
-    _set(c3, 'l4ppgHeader', 'Average fantasy PPG over the player\'s last 4 games of 2025. Compared to the full-season \'25 PPG it shows which way a player is trending: ▲ = trending up, ▼ = trending down.', 'L4 PPG', fmtLabel);
+    if (_seasonPpgYear() === 26) {
+      _set(c2, 'ppg25Header', 'Actual 2026 fantasy points per game TO DATE (' + fmtLabel + ' scoring) — refreshed after every game. — = no 2026 game played yet.', '\'26 PPG', fmtLabel);
+    } else {
+      _set(c2, 'ppg25Header', 'Actual fantasy points per game from the 2025 season (' + fmtLabel + ' scoring).', '\'25 PPG', fmtLabel);
+    }
+    _set(c3, 'l4ppgHeader', 'Average fantasy PPG over the player\'s last 4 games PLAYED — 2026 games to date, then the end of 2025 (refreshed after every game). Compared to the season PPG column it shows which way a player is trending: ▲ = trending up, ▼ = trending down.', 'L4 PPG', fmtLabel);
   } else if (rnkStatMode === 'proj') {
     if (currentMode === 'weekly') {
       // WEEKLY column order (Jack 2026-09-08): PPG · OPP · SPREAD · TEAM TOTAL · Yds · TD · Rec.
@@ -7843,7 +7976,8 @@ document.getElementById('btnExport').addEventListener('click', () => {
   const useFilteredRank = _tierRankIsPositional();
   
   const _sl = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
-  const headers = ['Rank', 'Tier', 'Player', 'Team', 'Pos', 'Pos Rank', 'ADP', 'PPG Proj (' + _sl[rankingScoringFmt] + ')', 'PPG 2025 (' + _sl[rankingScoringFmt] + ')', 'Age', 'ADP Diff'];
+  const _cLbl = _consColLabel() + ' Rank';
+  const headers = ['Rank', 'Tier', 'Player', 'Team', 'Pos', 'Pos Rank', _cLbl, 'PPG Proj (' + _sl[rankingScoringFmt] + ')', 'PPG 20' + _seasonPpgYear() + ' (' + _sl[rankingScoringFmt] + ')', 'Age', 'vs ' + _consColLabel()];
   const rows = [headers.join(',')];
 
   data.forEach((d, i) => {
@@ -7855,10 +7989,10 @@ document.getElementById('btnExport').addEventListener('click', () => {
       for (const tt of sorted) { if (tt.afterRank <= displayRank) cur = tt; else break; }
       return cur && cur.label === tierLabel && cur === t;
     });
-    const adp = rnkAdp(d);
-    const diff = adp != null ? Math.round(adp - d.myRank) : '';
+    const adp = _consRankFor(d);
+    const diff = (adp != null && d.s !== 'K' && d.s !== 'DST') ? Math.round(adp - d.myRank) : '';
     const ppgProj = adjProjPpg(d) != null ? adjProjPpg(d) : '';
-    const ppg25 = adj25ppg(d) != null ? adj25ppg(d) : '';
+    const ppg25 = adjSeasonPpg(d).v != null ? adjSeasonPpg(d).v : '';
     const age = d.s === 'DST' ? (d.oppg != null ? d.oppg : '') : (d.age != null ? d.age : '');
     
     rows.push([
@@ -7909,7 +8043,7 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
     const tierLabel = getTierForRank(displayRank);
     const adp = rnkAdp(d);
     const ppgProj = adjProjPpg(d);
-    const ppg25 = adj25ppg(d);
+    const ppg25 = adjSeasonPpg(d).v;
     const base = {
       rank: d.myRank,
       displayRank,
@@ -7922,7 +8056,8 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
     };
     base.tier = tierLabel || null;
     base.ppgProj = ppgProj != null ? ppgProj : null;
-    base.ppg2025 = ppg25 != null ? ppg25 : null;
+    base['ppg20' + _seasonPpgYear()] = ppg25 != null ? ppg25 : null;
+    base.consensusRank = _consRankFor(d);
     base.adpDiff = adp != null ? Math.round(adp - d.myRank) : null;
     return base;
   });
@@ -12115,11 +12250,11 @@ function openPlayerCard(d, ctxMode) {
             <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div>
           </div>
           <div class="card-rank-box">
-            <div class="lbl">'25 PPG</div>
-            <div class="num${(()=>{const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adj25ppg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adj25ppg(d);return v!=null?v.toFixed(1):'—';})()}</div>
+            <div class="lbl"${(()=>{const s=adjSeasonPpg(d);return s.yr===26?' title="2026 to date'+(s.gp?' · '+s.gp+' gp':'')+'"':'';})()}>${_seasonPpgLabel()}</div>
+            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div>
           </div>
-          ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d));return `<div class="card-rank-box">
-            <div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div>
+          ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adjSeasonPpg(d).v);return `<div class="card-rank-box">
+            <div class="lbl" title="Average PPG over the last 4 games played (2026 to date, then the end of 2025) — shows which way the player is trending vs the season PPG.">L4 PPG</div>
             <div class="num card-l4-num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div>
           </div>`;})()}
           ${_teamPpgBoxHtml(d.t)}
@@ -13827,7 +13962,7 @@ function renderCompareGrid() {
           </div>
           <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
             <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div></div>
-            <div class="card-rank-box"><div class="lbl">'25 PPG</div><div class="num green">${(()=>{const v=adj25ppg(d);return v!=null?v.toFixed(1):'—';})()}</div></div>
+            <div class="card-rank-box"><div class="lbl">${_seasonPpgLabel()}</div><div class="num green">${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div></div>
             ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d));return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div></div>`;})()}
             ${_teamPpgBoxHtml(d.t)}
           </div>

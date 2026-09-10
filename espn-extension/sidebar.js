@@ -2970,7 +2970,16 @@
   // another QB on the same team with ≥ 2 live pts while this one is stale
   // ≥ 0.10 → 0 (the backup has the job). Same math as sim_lab/live_tracker.py
   // (`live_fitx`): W1 NE@SEA replay MAE 3.17 → 2.85, Darnold 7.55 → 2.52.
-  const LIVE_EXIT_RAMP = { QB: [0.15, 0.30, 0], RB: [0.25, 0.50, 0.15], WR: [0.30, 0.60, 0.15], TE: [0.30, 0.60, 0.15] };
+  // CALIBRATED on nflverse pbp 2019-25 (sim_lab/backtest_exit_rule.py, empirical
+  // multiplier = actual remaining / fitted remaining by stale bucket, RMSE-fit so
+  // the live number stays a MEAN): QB [start 0.15, full 0.35, floor 0.40] on any
+  // total; RB [0.20, 0.80, 0.10] only once he has scored (a zero-total RB is a
+  // quiet committee back, not an exit); WR/TE NO ramp (their multiplier is ~1.0
+  // at every stale bucket — the hand-set ramp lost on holdout). Teammate-QB
+  // trigger keeps x0.30 (it is right ~68% of the time; 0 would over-cut).
+  const LIVE_EXIT_RAMP = { QB: [0.15, 0.35, 0.40], RB: [0.20, 0.80, 0.10] };
+  const LIVE_EXIT_GATED = { RB: true };       // ramp only after the player has scored
+  const LIVE_EXIT_TEAMMATE_MULT = 0.30;
   function liveTeamOf(p) { const raw = p && (p.sTm || p.t); return raw ? (ESPN_TEAM_FIX[raw] || raw) : null; }
   function livePreSeed(p, k) {
     const tm = liveTeamOf(p);
@@ -3030,10 +3039,13 @@
     if (!ramp || k == null) return { mult: 1, stale: 0 };
     const stale = liveSeenNote(k, actual, f);
     if (stale > ramp[0] && liveFeedFrozen(p)) return { mult: 1, stale, frozen: true };
-    if (p.s === 'QB' && stale >= 0.10 && liveTeammateQB(k, liveTeamOf(p))) return { mult: 0, stale };
-    if (stale <= ramp[0]) return { mult: 1, stale };
-    const t = Math.min(1, (stale - ramp[0]) / (ramp[1] - ramp[0]));
-    return { mult: Math.round((1 - (1 - ramp[2]) * t) * 1000) / 1000, stale };
+    let mult = 1;
+    if (!(LIVE_EXIT_GATED[p.s] && actual === 0) && stale > ramp[0]) {
+      const t = Math.min(1, (stale - ramp[0]) / (ramp[1] - ramp[0]));
+      mult = 1 - (1 - ramp[2]) * t;
+    }
+    if (p.s === 'QB' && stale >= 0.10 && liveTeammateQB(k, liveTeamOf(p))) mult = Math.min(mult, LIVE_EXIT_TEAMMATE_MULT);
+    return { mult: Math.round(mult * 1000) / 1000, stale };
   }
   // ---- BACKUP-QB inheritance (0.20.37; Jack 09-10: "track the backup QB when
   // the starter goes out") ----
@@ -3044,7 +3056,15 @@
   // "in for <starter>". Without it a backup shows actual + ~0. Same math as
   // sim_lab/live_tracker.py role=backup rows. The starter himself is zeroed
   // by the teammate rule above.
-  const LIVE_BACKUP_SHARE = 0.8, LIVE_BACKUP_RATIO = 0.4;
+  // Share calibrated 2019-25: backups score 0.95 of the starter's per-game
+  // expectation after an injury-like exit but 0.59 after a blowout pull
+  // (|margin| >= 17), so the share follows the scoreboard margin.
+  const LIVE_BACKUP_SHARE = 0.90, LIVE_BACKUP_SHARE_BLOWOUT = 0.60, LIVE_BLOWOUT_MARGIN = 17, LIVE_BACKUP_RATIO = 0.4;
+  function liveBackupShare(p) {
+    const tm = liveTeamOf(p), g = tm ? state.liveGames[tm] : null;
+    const margin = g && typeof g.pts === 'number' && typeof g.oppPts === 'number' ? Math.abs(g.pts - g.oppPts) : 0;
+    return margin >= LIVE_BLOWOUT_MARGIN ? LIVE_BACKUP_SHARE_BLOWOUT : LIVE_BACKUP_SHARE;
+  }
   function liveTeamTopQB(p) {
     const tm = liveTeamOf(p);
     if (!tm) return null;
@@ -3066,7 +3086,8 @@
     // total last moved (he left about then); else in from kickoff (conservative pace)
     let fIn = s && s.fIn != null ? s.fIn : null;
     if (fIn == null) { const ss = state.liveSeen[keyOf(top.p)]; fIn = ss && ss.f0 < f ? ss.f0 : 0; }
-    return { proj: Math.round(top.proj * LIVE_BACKUP_SHARE * 100) / 100, fIn, starter: top.p.n };
+    const share = liveBackupShare(p);
+    return { proj: Math.round(top.proj * share * 100) / 100, fIn, starter: top.p.n, share };
   }
   function wkLive(p, key) {
     const proj = p && !p._unmatched ? wkVal(p) : 0;
@@ -3095,7 +3116,7 @@
     const ex = liveExitMult(p, k, actual, f);
     if (ex.mult < 1) rem = Math.round(rem * ex.mult * 100) / 100;
     return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj, model: co ? 'sim' : 'v1', exitMult: ex.mult, stale: ex.stale, feedFrozen: !!ex.frozen,
-      backupFor: inh ? inh.starter : undefined, inhProj: inh ? inh.proj : undefined };
+      backupFor: inh ? inh.starter : undefined, inhProj: inh ? inh.proj : undefined, inhShare: inh ? inh.share : undefined };
   }
   function liveTip(l) {
     if (l.st === 'post') return 'FINAL — scored ' + l.actual.toFixed(1) + ' (pregame proj ' + l.proj.toFixed(1) + ')';
@@ -3104,7 +3125,7 @@
       (l.model === 'sim'
         ? ' Remaining = Sim Lab live model (2019-25 play-by-play: second-half discount, pace, score margin).'
         : ' Remaining = proj × game left, nudged toward his pace late.') +
-      (l.backupFor ? ' In for ' + l.backupFor + ' — remaining inherits ' + Math.round(LIVE_BACKUP_SHARE * 100) + '% of his projection (' + l.inhProj.toFixed(1) + ').' : '') +
+      (l.backupFor ? ' In for ' + l.backupFor + ' — remaining inherits ' + Math.round(l.inhShare * 100) + '% of his projection (' + l.inhProj.toFixed(1) + (l.inhShare < LIVE_BACKUP_SHARE ? ', blowout share' : '') + ').' : '') +
       (l.feedFrozen ? ' Live totals have not moved for a while — exit rule paused until the feed catches up.' : '') +
       (l.exitMult < 1
         ? ' No points for ' + Math.round(l.stale * 100) + '% of the game — remaining ×' + l.exitMult.toFixed(2) +

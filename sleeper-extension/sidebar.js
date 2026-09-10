@@ -2111,8 +2111,15 @@
   }
   function liveSeenNote(k, actual, f) {
     const s = state.liveSeen[k];
-    if (!s) { state.liveSeen[k] = { pts: actual, f0: f <= 0.02 ? 0 : f }; return 0; }
-    if (s.pts !== actual) { s.pts = actual; s.f0 = f; return 0; }
+    if (!s) {
+      const n = { pts: actual, f0: f <= 0.02 ? 0 : f };
+      if (actual > 0) { if (f <= 0.02) n.fIn = 0; else n.fInUnknown = true; }  // already producing at first sight: entry unknown
+      state.liveSeen[k] = n; return 0;
+    }
+    if (s.pts !== actual) {
+      if (actual > 0 && s.fIn == null && !s.fInUnknown) s.fIn = f;  // first points: entry fraction (backup rule)
+      s.pts = actual; s.f0 = f; return 0;
+    }
     return Math.max(0, f - s.f0);
   }
   // Another QB on the same team already producing (rostered somewhere in the
@@ -2135,6 +2142,39 @@
     const t = Math.min(1, (stale - ramp[0]) / (ramp[1] - ramp[0]));
     return { mult: Math.round((1 - (1 - ramp[2]) * t) * 1000) / 1000, stale };
   }
+  // ---- BACKUP-QB inheritance (0.29.27; Jack 09-10: "track the backup QB when
+  // the starter goes out") ----
+  // A QB projected under LIVE_BACKUP_RATIO of his team's top QB who has
+  // >= 2 live points is in for the starter (W1 2026: Lock for Darnold): his
+  // remaining inherits LIVE_BACKUP_SHARE of the starter's projection, paced
+  // from the fraction his points started (liveSeen.fIn), and the tooltip says
+  // "in for <starter>". Without it a backup shows actual + ~0. Same math as
+  // sim_lab/live_tracker.py role=backup rows. The starter himself is zeroed
+  // by the teammate rule above.
+  const LIVE_BACKUP_SHARE = 0.8, LIVE_BACKUP_RATIO = 0.4;
+  function liveTeamTopQB(p) {
+    const tm = liveTeamOf(p);
+    if (!tm) return null;
+    let best = null;
+    for (const q of state.players) {
+      if (q === p || q.s !== 'QB' || liveTeamOf(q) !== tm) continue;
+      const v = wkVal(q);
+      if (!best || v > best.proj) best = { p: q, proj: v };
+    }
+    return best;
+  }
+  function liveBackupInherit(p, k, actual, f, proj) {
+    if (!p || p.s !== 'QB' || k == null || !(actual >= 2)) return null;
+    const top = liveTeamTopQB(p);
+    if (!top || !(top.proj > 0) || proj >= top.proj * LIVE_BACKUP_RATIO) return null;
+    liveSeenNote(k, actual, f);
+    const s = state.liveSeen[k];
+    // entry fraction: his first points if we saw them; else when the starter's
+    // total last moved (he left about then); else in from kickoff (conservative pace)
+    let fIn = s && s.fIn != null ? s.fIn : null;
+    if (fIn == null) { const ss = state.liveSeen[String(top.p.sid)]; fIn = ss && ss.f0 < f ? ss.f0 : 0; }
+    return { proj: Math.round(top.proj * LIVE_BACKUP_SHARE * 100) / 100, fIn, starter: top.p.n };
+  }
   function wkLive(p) {
     const proj = wkVal(p);
     const g = liveGameFor(p);
@@ -2145,20 +2185,24 @@
     if (g.st === 'post') return { live: actual, actual, rem: 0, f: 1, st: 'post', tag: g.tag, proj };
     const f = g.f;
     const co = liveModelCoefs(p, f);
+    const inh = liveBackupInherit(p, sid, actual, f, proj);
+    const pj = inh ? inh.proj : proj;                    // projection the remaining is based on
+    const span = Math.max(f - (inh ? inh.fIn : 0), 0.1); // game fraction the player has been in
     let rem;
     if (co) {
-      const pace = actual / Math.max(f, 0.1);
+      const pace = actual / span;
       const margin = (typeof g.pts === 'number' && typeof g.oppPts === 'number') ? (g.pts - g.oppPts) : 0;
-      rem = (1 - f) * (co[0] * proj + co[1] * pace + co[2] * proj * (margin / 10));
+      rem = (1 - f) * (co[0] * pj + co[1] * pace + co[2] * pj * (margin / 10));
     } else {
-      const pace = f >= 0.15 ? actual / f : proj;
+      const pace = span >= 0.15 ? actual / span : pj;
       const w = 0.25 * f;
-      rem = (1 - f) * ((1 - w) * proj + w * pace);
+      rem = (1 - f) * ((1 - w) * pj + w * pace);
     }
     rem = Math.round(Math.max(0, rem) * 100) / 100;
     const ex = liveExitMult(p, sid, actual, f);
     if (ex.mult < 1) rem = Math.round(rem * ex.mult * 100) / 100;
-    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj, model: co ? 'sim' : 'v1', exitMult: ex.mult, stale: ex.stale };
+    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj, model: co ? 'sim' : 'v1', exitMult: ex.mult, stale: ex.stale,
+      backupFor: inh ? inh.starter : undefined, inhProj: inh ? inh.proj : undefined };
   }
   function liveTip(l) {
     if (l.st === 'post') return 'FINAL — scored ' + l.actual.toFixed(1) + ' (pregame proj ' + l.proj.toFixed(1) + ')';
@@ -2167,6 +2211,7 @@
       (l.model === 'sim'
         ? ' Remaining = Sim Lab live model (2019-25 play-by-play: second-half discount, pace, score margin).'
         : ' Remaining = proj × game left, nudged toward his pace late.') +
+      (l.backupFor ? ' In for ' + l.backupFor + ' — remaining inherits ' + Math.round(LIVE_BACKUP_SHARE * 100) + '% of his projection (' + l.inhProj.toFixed(1) + ').' : '') +
       (l.exitMult < 1
         ? ' No points for ' + Math.round(l.stale * 100) + '% of the game — remaining ×' + l.exitMult.toFixed(2) +
           (l.exitMult === 0 ? ' (out of the game).' : ' (likely out of the game).')
@@ -5758,7 +5803,7 @@
     watchUrl();
   }
 
-  window.__mffSleeper = { state, render, pollOnce, initForDraft, initForLeague, wkVal, wkLive, liveExitMult, parseScoreboard,
+  window.__mffSleeper = { state, render, pollOnce, initForDraft, initForLeague, wkVal, wkLive, liveExitMult, liveBackupInherit, parseScoreboard,
     refreshScoreboard, kickerProjFor, dstProjFor,
     ensurePickSim, pkTeamPickValue, pkExpFinish, simAvailable, engineMeanFor, engineWeekMap };
   gateInit(() => { try { render(); } catch (_) {} });

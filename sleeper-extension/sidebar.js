@@ -186,6 +186,7 @@
     seasonStats: null,       // {upToWk, byId: {sid: {ppr, half, std, gp}}} — 2026 actuals
     liveGames: {},           // TEAM -> {st:'pre'|'in'|'post', f, tag, opp, home, pts, oppPts, kick} (ESPN public scoreboard)
     livePts: {},             // sid -> league-scored points so far this week (matchup docs' players_points)
+    liveSeen: {},            // key -> {pts, f0}: live total + game fraction at its last change (player-exited rule)
     liveAt: 0,               // last scoreboard parse (ms)
     liveNextAt: 0,           // earliest next scoreboard fetch (ms)
     trendAdds: {},           // sid -> 24h add count
@@ -2089,11 +2090,56 @@
     const t = (f - g[i]) / (g[i + 1] - g[i]);
     return rows[i].map((v, k) => v + (rows[i + 1][k] - v) * t);
   }
+  // ---- PLAYER-EXITED rule (0.29.26) ----
+  // A player whose league-scored total has not moved for a long stretch of
+  // GAME CLOCK has very likely left the game (2026 W1: Darnold exited after 2
+  // attempts at 0.5 pts and this layer kept projecting ~8 more at halftime).
+  // state.liveSeen[key] = {pts, f0}: the total and the game fraction at which
+  // it last changed (0 when watched from kickoff, else first sight). stale =
+  // f − f0 scales `rem` by a per-position ramp [start, full, floor]: a playing
+  // QB moves the total every drive (short ramp, floor 0); RB/WR/TE have normal
+  // quiet stretches (slower ramp, floor 0.15); K/DST exempt. QB accelerator:
+  // another QB on the same team with ≥ 2 live pts while this one is stale
+  // ≥ 0.10 → 0 (the backup has the job). Same math as sim_lab/live_tracker.py
+  // (`live_fitx`): W1 NE@SEA replay MAE 3.17 → 2.85, Darnold 7.55 → 2.52.
+  const LIVE_EXIT_RAMP = { QB: [0.15, 0.30, 0], RB: [0.25, 0.50, 0.15], WR: [0.30, 0.60, 0.15], TE: [0.30, 0.60, 0.15] };
+  function liveTeamOf(p) { return (p && (p.sTm || p.t)) || null; }
+  function livePreSeed(p, k) {
+    const tm = liveTeamOf(p);
+    const g = tm ? state.liveGames[tm] : null;
+    if (k != null && g && g.st === 'pre') state.liveSeen[k] = { pts: 0, f0: 0 };
+  }
+  function liveSeenNote(k, actual, f) {
+    const s = state.liveSeen[k];
+    if (!s) { state.liveSeen[k] = { pts: actual, f0: f <= 0.02 ? 0 : f }; return 0; }
+    if (s.pts !== actual) { s.pts = actual; s.f0 = f; return 0; }
+    return Math.max(0, f - s.f0);
+  }
+  // Another QB on the same team already producing (rostered somewhere in the
+  // league, so he is in livePts): the starter is out.
+  function liveTeammateQB(k, tm) {
+    if (!tm) return false;
+    for (const o of Object.keys(state.livePts)) {
+      if (o === k || !(state.livePts[o] >= 2)) continue;
+      const q = state.byId[o] || state.slMeta[o];
+      if (q && (q.s || q.pos) === 'QB' && (q.sTm || q.tm) === tm) return true;
+    }
+    return false;
+  }
+  function liveExitMult(p, k, actual, f) {
+    const ramp = p && LIVE_EXIT_RAMP[p.s];
+    if (!ramp || k == null) return { mult: 1, stale: 0 };
+    const stale = liveSeenNote(k, actual, f);
+    if (p.s === 'QB' && stale >= 0.10 && liveTeammateQB(k, liveTeamOf(p))) return { mult: 0, stale };
+    if (stale <= ramp[0]) return { mult: 1, stale };
+    const t = Math.min(1, (stale - ramp[0]) / (ramp[1] - ramp[0]));
+    return { mult: Math.round((1 - (1 - ramp[2]) * t) * 1000) / 1000, stale };
+  }
   function wkLive(p) {
     const proj = wkVal(p);
     const g = liveGameFor(p);
-    if (!g) return { live: proj, actual: null, rem: proj, f: 0, st: 'pre', tag: '', proj };
     const sid = p.sid != null ? String(p.sid) : null;
+    if (!g) { livePreSeed(p, sid); return { live: proj, actual: null, rem: proj, f: 0, st: 'pre', tag: '', proj }; }
     const raw = sid != null ? state.livePts[sid] : undefined;
     const actual = typeof raw === 'number' ? Math.round(raw * 100) / 100 : 0;
     if (g.st === 'post') return { live: actual, actual, rem: 0, f: 1, st: 'post', tag: g.tag, proj };
@@ -2110,7 +2156,9 @@
       rem = (1 - f) * ((1 - w) * proj + w * pace);
     }
     rem = Math.round(Math.max(0, rem) * 100) / 100;
-    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj, model: co ? 'sim' : 'v1' };
+    const ex = liveExitMult(p, sid, actual, f);
+    if (ex.mult < 1) rem = Math.round(rem * ex.mult * 100) / 100;
+    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj, model: co ? 'sim' : 'v1', exitMult: ex.mult, stale: ex.stale };
   }
   function liveTip(l) {
     if (l.st === 'post') return 'FINAL — scored ' + l.actual.toFixed(1) + ' (pregame proj ' + l.proj.toFixed(1) + ')';
@@ -2118,7 +2166,11 @@
       ' still expected (pregame proj ' + l.proj.toFixed(1) + ').' +
       (l.model === 'sim'
         ? ' Remaining = Sim Lab live model (2019-25 play-by-play: second-half discount, pace, score margin).'
-        : ' Remaining = proj × game left, nudged toward his pace late.');
+        : ' Remaining = proj × game left, nudged toward his pace late.') +
+      (l.exitMult < 1
+        ? ' No points for ' + Math.round(l.stale * 100) + '% of the game — remaining ×' + l.exitMult.toFixed(2) +
+          (l.exitMult === 0 ? ' (out of the game).' : ' (likely out of the game).')
+        : '');
   }
   // Sidebar name-line tag (LINEUP rows): "● 12.3 live" / "✓ 8.2 final"
   function liveTagHTML(p) {
@@ -5706,7 +5758,7 @@
     watchUrl();
   }
 
-  window.__mffSleeper = { state, render, pollOnce, initForDraft, initForLeague, wkVal, wkLive, parseScoreboard,
+  window.__mffSleeper = { state, render, pollOnce, initForDraft, initForLeague, wkVal, wkLive, liveExitMult, parseScoreboard,
     refreshScoreboard, kickerProjFor, dstProjFor,
     ensurePickSim, pkTeamPickValue, pkExpFinish, simAvailable, engineMeanFor, engineWeekMap };
   gateInit(() => { try { render(); } catch (_) {} });

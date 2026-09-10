@@ -163,10 +163,12 @@ def seen_note(seen, sid, actual, f, st):
         seen[sid] = {"pts": actual, "f0": 0.0}; return 0.0
     if s is None:
         s = seen[sid] = {"pts": actual, "f0": 0.0 if f <= 0.02 else f}
-        if actual > 0: s["f_in"] = s["f0"]
+        if actual > 0:
+            if f <= 0.02: s["f_in"] = 0.0
+            else: s["f_in_unknown"] = True  # already producing at first sight: entry fraction unknown
         return 0.0
     if s["pts"] != actual:
-        if actual > 0 and "f_in" not in s: s["f_in"] = f
+        if actual > 0 and "f_in" not in s and not s.get("f_in_unknown"): s["f_in"] = f
         s["pts"] = actual; s["f0"] = f; return 0.0
     return max(0.0, f - s["f0"])
 
@@ -293,8 +295,13 @@ def tick(season, week, teams, players, model, writer=None, verbose=False, seen=N
             pts = float((stats.get(o) or {}).get("pts_ppr") or 0.0)
             seen_note(seen, o, pts, g["f"], g["st"])
             if o not in backups and g["st"] == "in" and pts >= BACKUP_MIN_PTS and starter:
+                # entry fraction: his first points if we saw them; else when the starter's total
+                # last moved (he left about then); else treat him as in from kickoff (conservative pace)
+                f_in = seen[o].get("f_in")
+                if f_in is None:
+                    ss = seen.get(starter["sid"]); f_in = ss["f0"] if ss and ss.get("f0", 0) < g["f"] else 0.0
                 backups[o] = {"sid": o, "name": QB_NAME.get(o, o), "pos": "QB", "team": t, "role": "backup",
-                              "proj": round(starter["proj"] * BACKUP_SHARE, 2), "f_in": seen[o].get("f_in", g["f"]), "for": starter["name"]}
+                              "proj": round(starter["proj"] * BACKUP_SHARE, 2), "f_in": round(f_in, 3), "for": starter["name"]}
                 print(f"  BACKUP IN: {backups[o]['name']} ({t}) at f={backups[o]['f_in']:.2f} with {pts:.1f} pts — inherits {starter['name']} {starter['proj']:.1f} x {BACKUP_SHARE}")
     for p in players + [b for b in backups.values() if b["team"] in states]:
         g = states[p["team"]]

@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-09h" as="script">
+<link rel="preload" href="app.js?v=2026-09-10a" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1176,9 +1176,9 @@ COLS
 </button>
 <div id="colTogglePopup" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;z-index:100;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.4);font-family:'DM Sans',sans-serif;font-size:.78rem">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px">SHOW COLUMNS</div>
-<label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="adp" checked> ADP</label>
+<label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="adp" checked> Consensus rank</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppgProj" checked> Proj PPG</label>
-<label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppg25" checked> '25 PPG</label>
+<label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppg25" checked> Season PPG ('25 → '26)</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="l4ppg" checked> L4 PPG</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="age" checked> Age</label>
 </div></div>
@@ -1279,7 +1279,7 @@ CLEAR ALL
     }
     #pageRankings tbody .adp-cell{margin-left:4px}
     #pageRankings tbody .ppg-proj-cell{min-width:42px!important}
-    #pageRankings tbody .adp-cell::after{content:"ADP";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
+    #pageRankings tbody .adp-cell::after{content:attr(data-lbl);display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
     #pageRankings tbody .ppg-proj-cell::after{content:"PROJ";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
     /* P-SOS — same value-on-top/label-below treatment as ADP/PROJ (previously
        rendered as a bare unlabeled number cramming the end of the card). */
@@ -1455,6 +1455,8 @@ tr:hover .watch-star{opacity:.55}
 .watch-star:hover{opacity:1!important;color:var(--accent)}
 .watch-star.on{opacity:1;color:var(--accent)}
 @media (pointer:coarse){.watch-star{opacity:.35}}
+/* ADP source pills + hint retired with the ADP column (2026-09-10) */
+#rnkAdpSrcRow,#rnkAdpHint{display:none!important}
 .adp-spark{line-height:0;margin-top:2px}
 .adp-spark svg{display:block}
 @media (max-width:600px){.adp-spark{display:none}}
@@ -1507,14 +1509,14 @@ tr:hover .watch-star{opacity:.55}
 <div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">STATS:</span>
 <div class="career-log-toggle" id="rankingStatModeToggle">
-<button class="rnk-statmode-btn active" data-rnkstatmode="fantasy" title="Fantasy points per game columns (Proj PPG / '25 PPG / L4 PPG)">FANTASY</button>
+<button class="rnk-statmode-btn active" data-rnkstatmode="fantasy" title="Fantasy points per game columns (Proj PPG / season PPG / L4 PPG)">FANTASY</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and total yards. WEEKLY board shows this week's 1,000-sim numbers.">SIMS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs, team PPG and Clay-based fantasy PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM / Underdog, Vegas implied team PPG, plus the blended-books projected PPG">BETTING LINES</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="adp" title="Every platform side by side — Underdog + Sleeper ADP, ESPN + CBS + Yahoo site ranks, plus the cross-platform AVERAGE — compared to the current ranks — green = that platform has them later than this rank (value), red = earlier (reach)">ADP</button>
 </div>
 </div>
-<div style="display:flex;align-items:center;gap:8px">
+<div id="rnkAdpSrcRow" style="display:flex;align-items:center;gap:8px">
 <span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">ADP:</span>
 <div class="md-rank-src-tabs" id="rnkAdpSrcTabs" style="border:none;background:var(--elev-1);padding:1px">
 <button class="md-rank-src-tab active" data-rnkadp="consensus" style="font-size:.65rem;padding:3px 10px">CONSENSUS</button>
@@ -1711,7 +1713,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <th data-sort="name" tabindex="0" aria-sort="none">Player <span class="arrow"></span></th>
 <th data-sort="pos" tabindex="0" aria-sort="none">Pos <span class="arrow"></span></th>
 <th data-sort="posRank" tabindex="0" aria-sort="none">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
-<th data-sort="adp" id="adpHeader" tabindex="0" aria-sort="none"><span data-gloss="Average Draft Position — where this player goes on average in the selected ADP source.">ADP</span> <span class="arrow"></span></th>
+<th data-sort="adp" id="adpHeader" tabindex="0" aria-sort="none"><span data-gloss="Consensus rank — where this player sits on the CONSENSUS board for this format (Jack's + market ADP + Sleeper + FantasyPros + Underdog/ESPN/CBS/Yahoo blend). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.">Cons</span> <span class="arrow"></span></th>
 <th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Sim Lab projected fantasy points per game — season boards show the REST-OF-SEASON average (games already played excluded); the WEEKLY board shows this week's sim. Refreshed daily and ~30 min before kickoffs (Vegas lines, matchups, usage, injuries priced in).">Proj PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="simBoom" id="simBoomHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Chance of finishing 50%+ ABOVE his own median sim outcome this week (1,000 Sim Lab runs). High boom + high bust = wide-range player.">Boom</span> <span class="arrow"></span></th>
 <th data-sort="simBust" id="simBustHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Chance of finishing 50%+ BELOW his own median sim outcome this week (1,000 Sim Lab runs). Steady floor players run low on both boom and bust.">Bust</span> <span class="arrow"></span></th>
@@ -1719,13 +1721,13 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <th data-sort="spread" id="spreadHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="DK point spread for this team. Negative = favored, positive = underdog.">Spread</span> <span class="arrow"></span></th>
 <th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
 <th data-sort="fpts25" id="ppg25HeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
-<th data-sort="l4ppg" id="l4ppgHeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="l4ppgHeader"><span data-gloss="Average fantasy PPG over the player's last 4 games of 2025. Compared to the full-season '25 PPG it shows which way a player is trending: ▲ = trending up, ▼ = trending down.">L4 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
+<th data-sort="l4ppg" id="l4ppgHeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="l4ppgHeader"><span data-gloss="Average fantasy PPG over the player's last 4 games PLAYED — 2026 games to date, then the end of 2025 (refreshed after every game). Compared to the season PPG column it shows which way a player is trending: ▲ = trending up, ▼ = trending down.">L4 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
 <th data-sort="jm" id="jmHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
 <th data-sort="landing" id="landingHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Landing Spot (0-100) — quality of the NFL fantasy opportunity (depth chart, scheme, target share). Separate from JM (prospect quality).">Land</span> <span class="arrow"></span></th>
 <th data-sort="age" id="ageHeader" tabindex="0" aria-sort="none">Age <span class="arrow"></span></th>
 <th data-sort="psos" id="psosHeader" tabindex="0" aria-sort="none"><span data-gloss="Strength of schedule over the selected week window (default: BBM playoff weeks 15-17) — facing opponents weighted by your position. 1 = easiest schedule, 32 = hardest; green/yellow/red by league thirds. Blends Mike Clay defensive unit grades, DST proj, opp PA, DK implied team totals vs the team's own season median (so a good offense doesn't make every window look easy), and position-weighted spreads. Click the header to sort; click ▾ to change the week window (e.g. weeks 1-5)." id="psosHeaderLabel">P-SOS</span><button id="psosRangeBtn" type="button" title="Adjust SOS week range" aria-label="Adjust SOS week range">▾</button> <span class="arrow"></span></th>
-<th data-sort="diff" tabindex="0" aria-sort="none"><span data-gloss="Rank vs. selected ADP source. ▲ = ranked higher than market (value pick). ▼ = ranked lower (fade). WEEKLY: position rank vs the consensus weekly board (on the Consensus tab, vs Jack's).">+/-</span> <span class="arrow"></span></th>
+<th data-sort="diff" tabindex="0" aria-sort="none"><span data-gloss="Rank vs the CONSENSUS board (on the Consensus tab, vs Jack's). ▲ = ranked higher here. ▼ = ranked lower. WEEKLY: position rank vs the consensus weekly board.">+/-</span> <span class="arrow"></span></th>
 </tr>
 </thead>
 <tbody id="tbody">
@@ -5656,7 +5658,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-09h"></script>
+<script defer src="app.js?v=2026-09-10a"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

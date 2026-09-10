@@ -1929,8 +1929,50 @@
     const v = lv.form === 'F4' ? co[0] + co[1] * rem * rem : lv.form === 'F3' ? co[0] * E * (1 - f) : (co[0] * rem) * (co[0] * rem);
     return Math.sqrt(Math.max(0, v));
   }
+  // ---- SAME-GAME correlation (0.29.32) ----
+  // Starters in the same game are not independent: a QB and his own receiver
+  // rise and fall together, a lineup facing the D/ST that plays its own QB is
+  // hedged. `liveCorr` (sim_lab/backtest_live_corr.py, pbp 2019-25) holds the
+  // correlation of standardized remaining residuals per relationship
+  // (same team / opponents) x class pair x game fraction. The matchup variance
+  // becomes var(A) + var(B) + 2 * sum_{i<j} s_i s_j rho sd_i sd_j over every
+  // pair in the same game across BOTH lineups (s = +1 mine, -1 theirs).
+  function liveClassOf(p) {
+    return p && (p.s === 'QB' ? 'QB' : p.s === 'RB' ? 'RB' : (p.s === 'WR' || p.s === 'TE') ? 'REC' : (p.s === 'K' || p.s === 'DST') ? p.s : null);
+  }
+  function liveCorrRho(key, f) {
+    const lm = state.simProj && state.simProj.liveModel, lc = lm && lm.liveCorr;
+    const e = lc && lc.pairs && lc.pairs[key];
+    if (!e || !e.rho || !lc.grid || e.rho.length !== lc.grid.length) return 0;
+    const g = lc.grid, r = e.rho;
+    if (f <= g[0]) return r[0];
+    if (f >= g[g.length - 1]) return r[r.length - 1];
+    let i = 0;
+    while (i < g.length - 2 && g[i + 1] < f) i++;
+    return r[i] + (r[i + 1] - r[i]) * (f - g[i]) / (g[i + 1] - g[i]);
+  }
+  // ents = [{tm, opp, cls, sd, f, st, ref}] from sideProjOf; returns the covariance term
+  function liveCovar(entsA, entsB) {
+    const all = entsA.map((e) => Object.assign({ s: 1 }, e)).concat(entsB.map((e) => Object.assign({ s: -1 }, e)));
+    let cov = 0;
+    for (let i = 0; i < all.length; i++) {
+      const a = all[i];
+      if (!a.tm || !a.cls || !(a.sd > 0) || a.st === 'post') continue;
+      for (let j = i + 1; j < all.length; j++) {
+        const b = all[j];
+        if (!b.tm || !b.cls || !(b.sd > 0) || b.st === 'post' || a.ref === b.ref) continue;
+        const same = a.tm === b.tm, opp = a.opp && a.opp === b.tm;
+        if (!same && !opp) continue;
+        const cls = a.cls < b.cls ? a.cls + '|' + b.cls : b.cls + '|' + a.cls;
+        const rho = liveCorrRho((same ? 'same:' : 'opp:') + cls, a.st === 'pre' ? 0 : a.f);
+        if (rho) cov += 2 * a.s * b.s * rho * a.sd * b.sd;
+      }
+    }
+    return cov;
+  }
   function sideProjOf(objs) {
     let total = 0, varSum = 0, missing = 0, played = 0, done = 0, scored = 0;
+    const ents = [];  // per counted starter: team/opp/class/sd for the same-game covariance
     for (const p of objs) {
       if (!p) { missing++; continue; }
       const l = wkLive(p);
@@ -1940,14 +1982,15 @@
       const sig = r && r.sig > 0 ? r.sig : (POS_SIG_DEFAULT[p.s] || 0.55);
       const sd = liveVarSd(p, l, sig);  // calibrated spread (liveVar table) or rem × sigma
       varSum += sd * sd;
+      { const tm = liveTeamOf(p), g = tm ? state.liveGames[tm] : null; ents.push({ tm, opp: g ? g.opp : null, cls: liveClassOf(p), sd, f: l.f, st: l.st, ref: p }); }
       if (l.st !== 'pre') { played++; scored += l.actual; }
       if (l.st === 'post') done++;
     }
-    return { total: Math.round(total * 10) / 10, varSum, missing, played, done, scored: Math.round(scored * 10) / 10, n: objs.length };
+    return { total: Math.round(total * 10) / 10, varSum, ents, missing, played, done, scored: Math.round(scored * 10) / 10, n: objs.length };
   }
   function matchupOddsOf(aObjs, bObjs) {
     const a = sideProjOf(aObjs), b = sideProjOf(bObjs);
-    const sd = Math.sqrt(a.varSum + b.varSum);
+    const sd = Math.sqrt(Math.max(0, a.varSum + b.varSum + liveCovar(a.ents, b.ents)));
     const winA = sd < 0.05
       ? (a.total > b.total ? 100 : a.total < b.total ? 0 : 50)
       : Math.round(normCdf((a.total - b.total) / sd) * 100);
@@ -5895,7 +5938,7 @@
     watchUrl();
   }
 
-  window.__mffSleeper = { state, render, pollOnce, initForDraft, initForLeague, wkVal, wkLive, liveExitMult, liveBackupInherit, liveVarSd, parseScoreboard,
+  window.__mffSleeper = { state, render, pollOnce, initForDraft, initForLeague, wkVal, wkLive, liveExitMult, liveBackupInherit, liveVarSd, liveCovar, parseScoreboard,
     refreshScoreboard, kickerProjFor, dstProjFor,
     ensurePickSim, pkTeamPickValue, pkExpFinish, simAvailable, engineMeanFor, engineWeekMap };
   gateInit(() => { try { render(); } catch (_) {} });

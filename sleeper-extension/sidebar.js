@@ -1900,6 +1900,35 @@
   // once his game kicks off) and only the REMAINING part carries variance —
   // odds tighten toward 100/0 as the week plays out. Unmatched starters still
   // count their live actuals (Sleeper scores them even when we can't project).
+  // ---- LIVE WIN-ODDS variance (0.29.31) ----
+  // sd of a starter's remaining points from the site export's `liveVar` table
+  // (sim_lab/backtest_live_variance.py, pbp 2019-25). The old sd = rem × sigma
+  // shrinks with the remaining projection: 1.3-1.5× too tight pregame and 2-4×
+  // too tight late, since a touchdown is 6 points whenever it lands, and it hits
+  // 0 the moment the remaining projection does. Forms: F4 sd = sqrt(c0 + c1·rem²)
+  // (floor + scale), F3 sd = sqrt(a·E·(1−f)), F2 sd = k·rem; rows interpolated
+  // over the grid (the last row, f = 1, is zero). Pregame uses the f = 0 row.
+  // Falls back to rem × sigma when the export has no table.
+  function liveVarSd(p, l, sigFallback) {
+    if (l.st === 'post') return 0;
+    const lm = state.simProj && state.simProj.liveModel, lv = lm && lm.liveVar;
+    const cls = p && (p.s === 'QB' ? 'QB' : p.s === 'RB' ? 'RB' : (p.s === 'WR' || p.s === 'TE') ? 'REC' : (p.s === 'K' || p.s === 'DST') ? p.s : null);
+    const rows = lv && lv.pos && cls && lv.pos[cls];
+    if (!rows || !lv.grid || rows.length !== lv.grid.length) return Math.abs(l.rem) * sigFallback;
+    const f = l.st === 'pre' ? 0 : l.f, g = lv.grid;
+    let co;
+    if (f <= g[0]) co = rows[0];
+    else if (f >= g[g.length - 1]) co = rows[rows.length - 1];
+    else {
+      let i = 0;
+      while (i < g.length - 2 && g[i + 1] < f) i++;
+      const t = (f - g[i]) / (g[i + 1] - g[i]);
+      co = rows[i].map((v, k) => v + (rows[i + 1][k] - v) * t);
+    }
+    const rem = Math.abs(l.rem), E = Math.max(0, l.proj);
+    const v = lv.form === 'F4' ? co[0] + co[1] * rem * rem : lv.form === 'F3' ? co[0] * E * (1 - f) : (co[0] * rem) * (co[0] * rem);
+    return Math.sqrt(Math.max(0, v));
+  }
   function sideProjOf(objs) {
     let total = 0, varSum = 0, missing = 0, played = 0, done = 0, scored = 0;
     for (const p of objs) {
@@ -1909,7 +1938,8 @@
       total += l.live;
       const r = p._unmatched ? null : engineRecFor(p);
       const sig = r && r.sig > 0 ? r.sig : (POS_SIG_DEFAULT[p.s] || 0.55);
-      varSum += (l.rem * sig) * (l.rem * sig);
+      const sd = liveVarSd(p, l, sig);  // calibrated spread (liveVar table) or rem × sigma
+      varSum += sd * sd;
       if (l.st !== 'pre') { played++; scored += l.actual; }
       if (l.st === 'post') done++;
     }
@@ -5865,7 +5895,7 @@
     watchUrl();
   }
 
-  window.__mffSleeper = { state, render, pollOnce, initForDraft, initForLeague, wkVal, wkLive, liveExitMult, liveBackupInherit, parseScoreboard,
+  window.__mffSleeper = { state, render, pollOnce, initForDraft, initForLeague, wkVal, wkLive, liveExitMult, liveBackupInherit, liveVarSd, parseScoreboard,
     refreshScoreboard, kickerProjFor, dstProjFor,
     ensurePickSim, pkTeamPickValue, pkExpFinish, simAvailable, engineMeanFor, engineWeekMap };
   gateInit(() => { try { render(); } catch (_) {} });

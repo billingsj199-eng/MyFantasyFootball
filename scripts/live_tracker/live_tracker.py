@@ -144,7 +144,14 @@ def remaining(model, pos, f, proj, actual, margin, f_in=0.0):
 # >= 2 live pts while this one is stale >= 0.10 -> 0 (the backup has the job).
 # Mirrors liveExitMult() in the helpers (Sleeper 0.29.26 / ESPN 0.20.36 /
 # Yahoo 0.9.26). Logged as `live_fitx` beside the un-scaled `live_fit`.
-EXIT_RAMP = {"QB": (0.15, 0.30, 0.0), "RB": (0.25, 0.50, 0.15), "WR": (0.30, 0.60, 0.15), "TE": (0.30, 0.60, 0.15)}
+# CALIBRATED on nflverse pbp 2019-25 (sim_lab/backtest_exit_rule.py): QB ramp on any
+# total, floor 0.40 (empirical multiplier ~0.4 from stale 0.35 on); RB only once he has
+# scored (zero-total RBs are quiet committee backs, not exits); WR/TE NO ramp (their
+# multiplier is ~1.0 at every stale bucket; the hand-set ramp lost on holdout).
+# Teammate-QB trigger -> x0.30 (right ~68% of the time; 0 over-cuts the mean).
+EXIT_RAMP = {"QB": (0.15, 0.35, 0.40), "RB": (0.20, 0.80, 0.10)}
+EXIT_GATED = {"RB"}          # ramp only after the player has scored
+EXIT_TEAMMATE_MULT = 0.30
 QB_BY_TEAM = {}  # team -> [sleeper ids of every QB on the roster] (teammate rule)
 QB_NAME = {}     # sleeper id -> name (backup rows)
 # BACKUP QB (Jack 09-10: "track the backup QB when the starter goes out"): a QB
@@ -152,7 +159,9 @@ QB_NAME = {}     # sleeper id -> name (backup rows)
 # starter -> logged as role=backup with proj = team starter's proj x
 # BACKUP_SHARE, remaining paced from the fraction his points started (f_in).
 # Mirrors liveBackupInherit() in the helpers.
-BACKUP_SHARE = 0.8
+BACKUP_SHARE = 0.90          # calibrated 2019-25: 0.95 after injury-like exits ...
+BACKUP_SHARE_BLOWOUT = 0.60  # ... 0.59 after blowout pulls (|margin| >= BLOWOUT_MARGIN)
+BLOWOUT_MARGIN = 17
 BACKUP_MIN_PTS = 2.0
 
 
@@ -173,13 +182,15 @@ def seen_note(seen, sid, actual, f, st):
     return max(0.0, f - s["f0"])
 
 
-def exit_mult(pos, stale, teammate_qb=False):
+def exit_mult(pos, stale, teammate_qb=False, actual=None):
     ramp = EXIT_RAMP.get(pos)
     if not ramp: return 1.0
-    if pos == "QB" and stale >= 0.10 and teammate_qb: return 0.0
+    mult = 1.0
     lo, hi, floor = ramp
-    if stale <= lo: return 1.0
-    return 1.0 - (1.0 - floor) * min(1.0, (stale - lo) / (hi - lo))
+    if stale > lo and not (pos in EXIT_GATED and actual == 0):
+        mult = 1.0 - (1.0 - floor) * min(1.0, (stale - lo) / (hi - lo))
+    if pos == "QB" and stale >= 0.10 and teammate_qb: mult = min(mult, EXIT_TEAMMATE_MULT)
+    return mult
 
 
 # FEED-FROZEN guard: if no watched total in a game (either team) has moved for
@@ -327,9 +338,11 @@ def tick(season, week, teams, players, model, writer=None, verbose=False, seen=N
                 f_in = seen[o].get("f_in")
                 if f_in is None:
                     ss = seen.get(starter["sid"]); f_in = ss["f0"] if ss and ss.get("f0", 0) < g["f"] else 0.0
+                mg = abs((g.get("pts") or 0) - (g.get("oppPts") or 0)) if g.get("pts") is not None and g.get("oppPts") is not None else 0
+                share = BACKUP_SHARE_BLOWOUT if mg >= BLOWOUT_MARGIN else BACKUP_SHARE
                 backups[o] = {"sid": o, "name": QB_NAME.get(o, o), "pos": "QB", "team": t, "role": "backup",
-                              "proj": round(starter["proj"] * BACKUP_SHARE, 2), "f_in": round(f_in, 3), "for": starter["name"]}
-                print(f"  BACKUP IN: {backups[o]['name']} ({t}) at f={backups[o]['f_in']:.2f} with {pts:.1f} pts — inherits {starter['name']} {starter['proj']:.1f} x {BACKUP_SHARE}")
+                              "proj": round(starter["proj"] * share, 2), "f_in": round(f_in, 3), "for": starter["name"]}
+                print(f"  BACKUP IN: {backups[o]['name']} ({t}) at f={backups[o]['f_in']:.2f} with {pts:.1f} pts — inherits {starter['name']} {starter['proj']:.1f} x {share}" + (" (blowout)" if share < BACKUP_SHARE else ""))
     for p in players + [b for b in backups.values() if b["team"] in states]:
         g = states[p["team"]]
         st, f = g["st"], g["f"]
@@ -345,7 +358,7 @@ def tick(season, week, teams, players, model, writer=None, verbose=False, seen=N
         else:
             fit, v1, nv = remaining(model, p["pos"], f, p["proj"], actual, margin, p.get("f_in", 0.0))
             stale = seen_note(seen, p["sid"], actual, f, st)
-            xm = 1.0 if frozen.get(p["team"]) else exit_mult(p["pos"], stale, teammate_qb(stats, p["sid"], p["team"]))
+            xm = 1.0 if frozen.get(p["team"]) else exit_mult(p["pos"], stale, teammate_qb(stats, p["sid"], p["team"]), actual)
             rem = fit; live = (actual + fit, actual + v1, actual + nv); fitx = actual + fit * xm
         row = {"ts": now, "team": p["team"], "st": st, "f": round(f, 3), "tag": g["tag"], "margin": margin,
                "sid": p["sid"], "name": p["name"], "pos": p["pos"], "proj": round(p["proj"], 2), "actual": round(actual, 2),
@@ -379,7 +392,7 @@ def add_fitx(rows):
         if st != "in":
             r["live_fitx"] = r["live_fit"]; r["xmult"] = "1"; r["stale"] = "0"; continue
         tq = r["pos"] == "QB" and any(v >= 2 for k, v in qb_pts.get((r["ts"], r["team"]), {}).items() if k != r["sid"])
-        xm = exit_mult(r["pos"], stale, tq)
+        xm = exit_mult(r["pos"], stale, tq, actual)
         r["live_fitx"] = str(round(actual + float(r["rem_fit"]) * xm, 2)); r["xmult"] = str(round(xm, 3)); r["stale"] = str(round(stale, 3))
 
 

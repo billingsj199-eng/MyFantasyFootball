@@ -106,6 +106,7 @@
     seasonStats: null,
     liveGames: {},       // TEAM(site abbr) -> {st:'pre'|'in'|'post', f, tag, opp, home, pts, oppPts, kick} (ESPN public scoreboard)
     livePts: {},         // entry key -> Yahoo "Fan Pts" scraped off the page (league-scored, live)
+    liveFeedF: null,         // TEAM -> game fraction at the last observed change of ANY live total (feed-frozen guard)
     liveSeen: {},        // key -> {pts, f0}: live total + game fraction at its last change (player-exited rule)
     liveMeta: {},        // entry key -> {tm, pos} of every scraped live row (teammate-QB rule)
     liveAt: 0,           // last scoreboard parse (ms)
@@ -798,7 +799,7 @@
     // (matchup page: bold cell next to the Proj cell; team page: td.pts).
     // "–" = not started → null. Numbers land in state.livePts by entry key.
     const pts = livePtsFromCell(cell);
-    if (pts != null) { state.livePts[key] = pts; state.liveMeta[key] = { tm: p ? (p.sTm || team) : team, pos: p ? p.s : (pos || '?') }; }
+    if (pts != null) { if (state.livePts[key] !== pts) liveFeedMark(); state.livePts[key] = pts; state.liveMeta[key] = { tm: p ? (p.sTm || team) : team, pos: p ? p.s : (pos || '?') }; }
     return {
       name, pos: p ? p.s : (pos || '?'), team: p ? (p.sTm || team) : team, inj,
       p: p || null, key, pts,
@@ -2435,7 +2436,7 @@
   }
   async function refreshScoreboard(force) {
     if (MOCK) {
-      if (MOCK.scoreboard) { state.liveGames = parseScoreboard(MOCK.scoreboard); state.liveAt = Date.now(); }
+      if (MOCK.scoreboard) { state.liveGames = parseScoreboard(MOCK.scoreboard); liveFeedBaseline(); state.liveAt = Date.now(); }
       return;
     }
     if (!state.byesActive) return; // preseason — nothing can be live
@@ -2444,7 +2445,7 @@
     state.liveNextAt = now + 60 * 1000;
     try {
       const sb = await fetchJson(SCOREBOARD_URL + '?t=' + now); // CORS * (direct), bg proxy fallback
-      state.liveGames = parseScoreboard(sb);
+      state.liveGames = parseScoreboard(sb); liveFeedBaseline();
       state.liveAt = now;
       // Idle throttle: nothing in progress and no kickoff inside 20 min →
       // one scoreboard call every 10 min instead of every poll.
@@ -2527,10 +2528,36 @@
     }
     return false;
   }
+  // ---- FEED-FROZEN guard (0.9.28) ----
+  // The exit rule assumes live totals keep flowing. If NO total anywhere in
+  // the league has changed for LIVE_FEED_FROZEN of game clock in this player's
+  // game (API stall, dead scrape), the rule is PAUSED rather than fading whole
+  // rosters. state.liveFeedF = every in-progress game's f at the last observed
+  // change (liveFeedMark, called by the harvesters); liveFeedBaseline seeds a
+  // game that kicks off after the last change so a feed dead from kickoff
+  // still trips the guard.
+  const LIVE_FEED_FROZEN = 0.10;
+  function liveFeedMark() {
+    const m = {};
+    for (const t of Object.keys(state.liveGames)) { const g = state.liveGames[t]; if (g && g.st === 'in') m[t] = g.f; }
+    state.liveFeedF = m;
+  }
+  function liveFeedBaseline() {
+    if (!state.liveFeedF) return;
+    for (const t of Object.keys(state.liveGames)) { const g = state.liveGames[t]; if (g && g.st === 'in' && state.liveFeedF[t] == null) state.liveFeedF[t] = g.f; }
+  }
+  function liveFeedFrozen(p) {
+    const m = state.liveFeedF, tm = liveTeamOf(p);
+    const g = tm ? state.liveGames[tm] : null;
+    if (!m || !g || g.st !== 'in') return false;
+    const at = m[tm] != null ? m[tm] : (g.opp && m[g.opp] != null ? m[g.opp] : null);
+    return at != null && g.f - at >= LIVE_FEED_FROZEN;
+  }
   function liveExitMult(p, k, actual, f) {
     const ramp = p && LIVE_EXIT_RAMP[p.s];
     if (!ramp || k == null) return { mult: 1, stale: 0 };
     const stale = liveSeenNote(k, actual, f);
+    if (stale > ramp[0] && liveFeedFrozen(p)) return { mult: 1, stale, frozen: true };
     if (p.s === 'QB' && stale >= 0.10 && liveTeammateQB(k, liveTeamOf(p))) return { mult: 0, stale };
     if (stale <= ramp[0]) return { mult: 1, stale };
     const t = Math.min(1, (stale - ramp[0]) / (ramp[1] - ramp[0]));
@@ -2595,7 +2622,7 @@
     rem = Math.round(Math.max(0, rem) * 100) / 100;
     const ex = liveExitMult(p, k, actual, f);
     if (ex.mult < 1) rem = Math.round(rem * ex.mult * 100) / 100;
-    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj, model: co ? 'sim' : 'v1', exitMult: ex.mult, stale: ex.stale,
+    return { live: Math.round((actual + rem) * 100) / 100, actual, rem, f, st: 'in', tag: g.tag, proj, model: co ? 'sim' : 'v1', exitMult: ex.mult, stale: ex.stale, feedFrozen: !!ex.frozen,
       backupFor: inh ? inh.starter : undefined, inhProj: inh ? inh.proj : undefined };
   }
   function liveTip(l) {
@@ -2606,6 +2633,7 @@
         ? ' Remaining = Sim Lab live model (2019-25 play-by-play: second-half discount, pace, score margin).'
         : ' Remaining = proj × game left, nudged toward his pace late.') +
       (l.backupFor ? ' In for ' + l.backupFor + ' — remaining inherits ' + Math.round(LIVE_BACKUP_SHARE * 100) + '% of his projection (' + l.inhProj.toFixed(1) + ').' : '') +
+      (l.feedFrozen ? ' Live totals have not moved for a while — exit rule paused until the feed catches up.' : '') +
       (l.exitMult < 1
         ? ' No points for ' + Math.round(l.stale * 100) + '% of the game — remaining ×' + l.exitMult.toFixed(2) +
           (l.exitMult === 0 ? ' (out of the game).' : ' (likely out of the game).')
@@ -2941,7 +2969,7 @@
           render();
         }).catch(() => {});
     }
-    if (MOCK && MOCK.scoreboard) state.liveGames = parseScoreboard(MOCK.scoreboard); // harness live games
+    if (MOCK && MOCK.scoreboard) state.liveGames = parseScoreboard(MOCK.scoreboard); liveFeedBaseline(); // harness live games
     gateInit(() => { try { render(); } catch (_) {} });
     lastHref = location.href;
     onUrlChange();

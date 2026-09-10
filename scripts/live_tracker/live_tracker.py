@@ -109,25 +109,29 @@ def coefs(grid, rows, f):
     i = 0
     while i < len(grid) - 2 and grid[i + 1] < f: i += 1
     t = (f - grid[i]) / (grid[i + 1] - grid[i])
-    return [rows[i][k] + (rows[i + 1][k] - rows[i][k]) * t for k in range(3)]
+    return [rows[i][k] + (rows[i + 1][k] - rows[i][k]) * t for k in range(len(rows[i]))]
 
 
-def remaining(model, pos, f, proj, actual, margin, f_in=0.0):
+def remaining(model, pos, f, proj, actual, margin, f_in=0.0, rel=None):
     """(fitted, v1, naive) remaining points — same arithmetic as the helpers.
     f_in = game fraction at which the player entered (backup QB); pace runs
-    over the span he has actually been in, so span == f for everyone else."""
+    over the span he has actually been in, so span == f for everyone else.
+    rel = own team score (K) / points allowed (DST) so far — the 4th coefficient
+    of the K and DST rows (live model v2); None when the model lacks them."""
     grid, table = model
-    cls = "QB" if pos == "QB" else "RB" if pos == "RB" else "REC" if pos in ("WR", "TE") else None
+    cls = "QB" if pos == "QB" else "RB" if pos == "RB" else "REC" if pos in ("WR", "TE") else pos if pos in ("K", "DST") else None
     span = max(f - f_in, 0.1)
     naive = max(0.0, proj * (1 - f))
     pace_v1 = actual / span if span >= 0.15 else proj
     w = 0.25 * f
     v1 = max(0.0, (1 - f) * ((1 - w) * proj + w * pace_v1))
     if cls and cls in table:
-        a, b, m = coefs(grid, table[cls], f)
-        fit = max(0.0, (1 - f) * (a * proj + b * (actual / span) + m * proj * (margin / 10.0)))
+        co = coefs(grid, table[cls], f)
+        extra = co[3] * (rel / 10.0) if len(co) > 3 and rel is not None else 0.0
+        floor = (-4.0 - actual) if pos == "DST" else 0.0  # DST remaining goes negative as points are allowed; live total floors at -4
+        fit = max(floor, (1 - f) * (co[0] * proj + co[1] * (actual / span) + co[2] * proj * (margin / 10.0) + extra))
     else:
-        fit = v1  # K/DST: the helpers fall back to v1 too
+        fit = v1  # class not in the export: the helpers fall back to v1 too
     return fit, v1, naive
 
 
@@ -356,7 +360,8 @@ def tick(season, week, teams, players, model, writer=None, verbose=False, seen=N
             stale, xm = 0.0, 1.0
             rem = 0.0; live = (actual, actual, actual); fitx = actual
         else:
-            fit, v1, nv = remaining(model, p["pos"], f, p["proj"], actual, margin, p.get("f_in", 0.0))
+            rel = g.get("oppPts") if p["pos"] == "DST" else g.get("pts")
+            fit, v1, nv = remaining(model, p["pos"], f, p["proj"], actual, margin, p.get("f_in", 0.0), rel)
             stale = seen_note(seen, p["sid"], actual, f, st)
             xm = 1.0 if frozen.get(p["team"]) else exit_mult(p["pos"], stale, teammate_qb(stats, p["sid"], p["team"]), actual)
             rem = fit; live = (actual + fit, actual + v1, actual + nv); fitx = actual + fit * xm

@@ -112,17 +112,20 @@ def coefs(grid, rows, f):
     return [rows[i][k] + (rows[i + 1][k] - rows[i][k]) * t for k in range(3)]
 
 
-def remaining(model, pos, f, proj, actual, margin):
-    """(fitted, v1, naive) remaining points — same arithmetic as the helpers."""
+def remaining(model, pos, f, proj, actual, margin, f_in=0.0):
+    """(fitted, v1, naive) remaining points — same arithmetic as the helpers.
+    f_in = game fraction at which the player entered (backup QB); pace runs
+    over the span he has actually been in, so span == f for everyone else."""
     grid, table = model
     cls = "QB" if pos == "QB" else "RB" if pos == "RB" else "REC" if pos in ("WR", "TE") else None
+    span = max(f - f_in, 0.1)
     naive = max(0.0, proj * (1 - f))
-    pace_v1 = actual / f if f >= 0.15 else proj
+    pace_v1 = actual / span if span >= 0.15 else proj
     w = 0.25 * f
     v1 = max(0.0, (1 - f) * ((1 - w) * proj + w * pace_v1))
     if cls and cls in table:
         a, b, m = coefs(grid, table[cls], f)
-        fit = max(0.0, (1 - f) * (a * proj + b * (actual / max(f, 0.1)) + m * proj * (margin / 10.0)))
+        fit = max(0.0, (1 - f) * (a * proj + b * (actual / span) + m * proj * (margin / 10.0)))
     else:
         fit = v1  # K/DST: the helpers fall back to v1 too
     return fit, v1, naive
@@ -143,6 +146,14 @@ def remaining(model, pos, f, proj, actual, margin):
 # Yahoo 0.9.26). Logged as `live_fitx` beside the un-scaled `live_fit`.
 EXIT_RAMP = {"QB": (0.15, 0.30, 0.0), "RB": (0.25, 0.50, 0.15), "WR": (0.30, 0.60, 0.15), "TE": (0.30, 0.60, 0.15)}
 QB_BY_TEAM = {}  # team -> [sleeper ids of every QB on the roster] (teammate rule)
+QB_NAME = {}     # sleeper id -> name (backup rows)
+# BACKUP QB (Jack 09-10: "track the backup QB when the starter goes out"): a QB
+# on a tracked team with no sim row who reaches >= 2 live pts is in for the
+# starter -> logged as role=backup with proj = team starter's proj x
+# BACKUP_SHARE, remaining paced from the fraction his points started (f_in).
+# Mirrors liveBackupInherit() in the helpers.
+BACKUP_SHARE = 0.8
+BACKUP_MIN_PTS = 2.0
 
 
 def seen_note(seen, sid, actual, f, st):
@@ -151,8 +162,11 @@ def seen_note(seen, sid, actual, f, st):
     if st == "pre":
         seen[sid] = {"pts": actual, "f0": 0.0}; return 0.0
     if s is None:
-        seen[sid] = {"pts": actual, "f0": 0.0 if f <= 0.02 else f}; return 0.0
+        s = seen[sid] = {"pts": actual, "f0": 0.0 if f <= 0.02 else f}
+        if actual > 0: s["f_in"] = s["f0"]
+        return 0.0
     if s["pts"] != actual:
+        if actual > 0 and "f_in" not in s: s["f_in"] = f
         s["pts"] = actual; s["f0"] = f; return 0.0
     return max(0.0, f - s["f0"])
 
@@ -190,7 +204,8 @@ def tracked_players(teams, sim_proj):
             pos = "DST"
         else:
             if pos not in ("QB", "RB", "WR", "TE", "K"): continue
-            if pos == "QB": QB_BY_TEAM.setdefault(tm, []).append(str(sid))  # every QB, sim row or not (teammate rule)
+            if pos == "QB":  # every QB, sim row or not (teammate + backup rules)
+                QB_BY_TEAM.setdefault(tm, []).append(str(sid)); QB_NAME[str(sid)] = name
             name = p.get("full_name") or (p.get("first_name", "") + " " + p.get("last_name", "")).strip()
             row = idx.get(norm(name))
         if not row or not isinstance(row, list) or row[1] in (None, 0): continue
@@ -252,11 +267,12 @@ def git_publish(logs_dir, msg, paths):
 
 
 FIELDS = ["ts", "team", "st", "f", "tag", "margin", "sid", "name", "pos", "proj", "actual",
-          "rem_fit", "live_fit", "live_v1", "live_naive", "stale", "xmult", "live_fitx"]
+          "rem_fit", "live_fit", "live_v1", "live_naive", "stale", "xmult", "live_fitx", "role", "f_in"]
 
 
-def tick(season, week, teams, players, model, writer=None, verbose=False, seen=None):
+def tick(season, week, teams, players, model, writer=None, verbose=False, seen=None, backups=None):
     seen = seen if seen is not None else {}
+    backups = backups if backups is not None else {}
     games = parse_scoreboard(get_json(SCOREBOARD + "?t=" + str(int(time.time()))))
     try:
         stats = get_json(SLEEPER_STATS.format(season=season, week=week) + "?t=" + str(int(time.time()))) or {}
@@ -266,7 +282,21 @@ def tick(season, week, teams, players, model, writer=None, verbose=False, seen=N
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
     states = {t: games.get(t, {"st": "pre", "f": 0.0, "tag": "PRE"}) for t in teams}
     rows = []
-    for p in players:
+    # BACKUP QBs: watch every QB on the tracked teams; one without a sim row who
+    # reaches BACKUP_MIN_PTS while the game is on is in for the starter.
+    tracked = {p["sid"] for p in players}
+    for t in teams:
+        g = states[t]
+        starter = max((p for p in players if p["team"] == t and p["pos"] == "QB"), key=lambda p: p["proj"], default=None)
+        for o in QB_BY_TEAM.get(t, []):
+            if o in tracked: continue
+            pts = float((stats.get(o) or {}).get("pts_ppr") or 0.0)
+            seen_note(seen, o, pts, g["f"], g["st"])
+            if o not in backups and g["st"] == "in" and pts >= BACKUP_MIN_PTS and starter:
+                backups[o] = {"sid": o, "name": QB_NAME.get(o, o), "pos": "QB", "team": t, "role": "backup",
+                              "proj": round(starter["proj"] * BACKUP_SHARE, 2), "f_in": seen[o].get("f_in", g["f"]), "for": starter["name"]}
+                print(f"  BACKUP IN: {backups[o]['name']} ({t}) at f={backups[o]['f_in']:.2f} with {pts:.1f} pts — inherits {starter['name']} {starter['proj']:.1f} x {BACKUP_SHARE}")
+    for p in players + [b for b in backups.values() if b["team"] in states]:
         g = states[p["team"]]
         st, f = g["st"], g["f"]
         s = stats.get(p["sid"]) or {}
@@ -279,14 +309,15 @@ def tick(season, week, teams, players, model, writer=None, verbose=False, seen=N
             stale, xm = 0.0, 1.0
             rem = 0.0; live = (actual, actual, actual); fitx = actual
         else:
-            fit, v1, nv = remaining(model, p["pos"], f, p["proj"], actual, margin)
+            fit, v1, nv = remaining(model, p["pos"], f, p["proj"], actual, margin, p.get("f_in", 0.0))
             stale = seen_note(seen, p["sid"], actual, f, st)
             xm = exit_mult(p["pos"], stale, teammate_qb(stats, p["sid"], p["team"]))
             rem = fit; live = (actual + fit, actual + v1, actual + nv); fitx = actual + fit * xm
         row = {"ts": now, "team": p["team"], "st": st, "f": round(f, 3), "tag": g["tag"], "margin": margin,
                "sid": p["sid"], "name": p["name"], "pos": p["pos"], "proj": round(p["proj"], 2), "actual": round(actual, 2),
                "rem_fit": round(rem, 2), "live_fit": round(live[0], 2), "live_v1": round(live[1], 2), "live_naive": round(live[2], 2),
-               "stale": round(stale, 3), "xmult": round(xm, 3), "live_fitx": round(fitx, 2)}
+               "stale": round(stale, 3), "xmult": round(xm, 3), "live_fitx": round(fitx, 2),
+               "role": p.get("role", ""), "f_in": round(p.get("f_in", 0.0), 3)}
         rows.append(row)
         if writer: writer.writerow(row)
     if verbose:
@@ -295,6 +326,7 @@ def tick(season, week, teams, players, model, writer=None, verbose=False, seen=N
             print(f"  {t}: {g['st']} {g['tag']} f={g['f']:.2f} score {g.get('pts')}-{g.get('oppPts')}")
         for r in sorted(rows, key=lambda r: -r["proj"])[:12]:
             xt = f"  exit x{r['xmult']:.2f} (stale {r['stale']:.2f})" if r["xmult"] < 1 else ""
+            if r["role"] == "backup": xt = f"  BACKUP in at f={r['f_in']:.2f}" + xt
             print(f"    {r['name']:<22}{r['pos']:<4} proj {r['proj']:5.1f}  scored {r['actual']:5.1f}  live fit {r['live_fit']:5.1f} | +exit {r['live_fitx']:5.1f} | v1 {r['live_v1']:5.1f} | naive {r['live_naive']:5.1f}{xt}")
     return states, rows
 
@@ -356,8 +388,10 @@ def grade(paths):
     for sid, rs in sorted(by.items(), key=lambda kv: -float(kv[1][0]["proj"])):
         e = [sum(abs(float(r[k]) - finals[sid]) for r in rs) / len(rs) for k in ("live_fit", "live_fitx", "live_v1", "live_naive")]
         wins[e.index(min(e))] += 1
-        summary["players"][rs[0]["name"]] = {"pos": rs[0]["pos"], "proj": float(rs[0]["proj"]), "final": finals[sid], "fit": round(e[0], 2), "fitx": round(e[1], 2), "v1": round(e[2], 2), "naive": round(e[3], 2)}
-        print(f"  {rs[0]['name']:<22}{rs[0]['pos']:<4} {float(rs[0]['proj']):5.1f} -> {finals[sid]:5.1f}   {e[0]:.2f} | {e[1]:.2f} | {e[2]:.2f} | {e[3]:.2f}")
+        role = rs[0].get("role") or ""
+        summary["players"][rs[0]["name"]] = {"pos": rs[0]["pos"], "proj": float(rs[0]["proj"]), "final": finals[sid], "fit": round(e[0], 2), "fitx": round(e[1], 2), "v1": round(e[2], 2), "naive": round(e[3], 2), **({"role": role, "f_in": float(rs[0].get("f_in") or 0)} if role else {})}
+        tag = " (backup)" if role == "backup" else ""
+        print(f"  {(rs[0]['name'] + tag):<22}{rs[0]['pos']:<4} {float(rs[0]['proj']):5.1f} -> {finals[sid]:5.1f}   {e[0]:.2f} | {e[1]:.2f} | {e[2]:.2f} | {e[3]:.2f}")
     print(f"closest model per player: fitted {wins[0]}  fit+exit {wins[1]}  v1 {wins[2]}  naive {wins[3]}")
     summary["wins"] = {"fit": wins[0], "fitx": wins[1], "v1": wins[2], "naive": wins[3]}
     json.dump(summary, open(out_path, "w"), indent=1)
@@ -395,7 +429,7 @@ def main():
     model = load_model(sim_proj)
     print(f"tracking {len(players)} players on {teams}, season {season} week {week}")
     if a.once:
-        tick(season, week, teams, players, model, verbose=True, seen={}); return
+        tick(season, week, teams, players, model, verbose=True, seen={}, backups={}); return
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M")
     label = "_".join(teams) if len(teams) <= 4 else f"{len(teams)//2}games_{stamp}"
     out = os.path.join(logs_dir, f"live_track_{season}_w{week}_{label}.csv")
@@ -407,10 +441,10 @@ def main():
     fh = open(out, "a", newline="", encoding="utf-8")
     w = csv.DictWriter(fh, fieldnames=FIELDS)
     if new: w.writeheader()
-    t0 = time.time(); ticks = 0; seen = {}
+    t0 = time.time(); ticks = 0; seen = {}; backups = {}
     while time.time() - t0 < MAX_HOURS * 3600:
         try:
-            states, _ = tick(season, week, teams, players, model, writer=w, verbose=(ticks % 10 == 0), seen=seen)
+            states, _ = tick(season, week, teams, players, model, writer=w, verbose=(ticks % 10 == 0), seen=seen, backups=backups)
             fh.flush(); ticks += 1
             if all(states[t]["st"] == "post" for t in teams):
                 print("all tracked games FINAL"); break

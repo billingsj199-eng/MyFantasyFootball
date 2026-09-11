@@ -1,6 +1,56 @@
 {
-  "updated": "2026-09-11T02:09:49Z",
+  "updated": "2026-09-11T16:15:00Z",
   "items": [
+    {
+      "player": "Kaelon Black",
+      "team": "SF",
+      "pos": "RB",
+      "date": "2026-09-10",
+      "headline": "Rookie 3rd-rounder out-carries Christian McCaffrey 14-10 (65 yds) in Thursday's win over the Rams",
+      "take": "Unexpected early-down work cuts into McCaffrey's bell-cow workload -- worth a speculative add and a real watch item for Week 2",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-10/kaelon-black-rushes-for-68-yards-in-debut-against-rams",
+      "tag": "riser"
+    },
+    {
+      "player": "Christian McCaffrey",
+      "team": "SF",
+      "pos": "RB",
+      "date": "2026-09-10",
+      "headline": "Held to 10 carries (68 total yds from scrimmage) as rookie Kaelon Black out-touched him in the opener",
+      "take": "Still involved (5 catches) but no longer a clear workhorse -- monitor the carry split before treating him as a lock RB1 again",
+      "url": "https://ca.sports.yahoo.com/news/meet-kaelon-black-49ers-rb-020359620.html",
+      "tag": "faller"
+    },
+    {
+      "player": "De'Zhaun Stribling",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-09-10",
+      "headline": "Shanahan: Achilles is intact on the injured ankle; MRI still pending to gauge severity",
+      "take": "Rules out the worst-case outcome from Thursday's cart-off, but no return timeline until MRI results are back",
+      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/dezhaun-stribling-injury-update/1962524/",
+      "tag": "injury"
+    },
+    {
+      "player": "Josh Jacobs",
+      "team": "GB",
+      "pos": "RB",
+      "date": "2026-09-11",
+      "headline": "NFL confirms no change to his commissioner's exempt-list status despite Thursday's no-contest plea",
+      "take": "Still can't practice or play with no suspension length or timeline set -- keep him on the shelf in redraft with zero clarity on a return week",
+      "url": "https://sports.yahoo.com/articles/packers-star-josh-jacobs-remains-185916420.html",
+      "tag": "other"
+    },
+    {
+      "player": "Breece Hall",
+      "team": "NYJ",
+      "pos": "RB",
+      "date": "2026-09-11",
+      "headline": "Full practice participant again Friday, jokes his groin-injury time off was a 'good vacation'",
+      "take": "No more hedging needed -- treat him as a normal-workload Week 1 RB1 at Tennessee",
+      "url": "https://www.espn.com/nfl/story/_/id/49895714/jets-breece-hall-says-ready-face-titans-opener",
+      "tag": "riser"
+    },
     {
       "player": "A.J. Brown",
       "team": "NE",

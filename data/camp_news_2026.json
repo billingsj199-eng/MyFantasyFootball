@@ -1,6 +1,96 @@
 {
-  "updated": "2026-09-10T16:10:03Z",
+  "updated": "2026-09-11T02:09:49Z",
   "items": [
+    {
+      "player": "A.J. Brown",
+      "team": "NE",
+      "pos": "WR",
+      "date": "2026-09-10",
+      "headline": "MRI confirms high-ankle sprain; Patriots WR expected out at least 4 weeks",
+      "take": "Downgrade from Thursday's earlier 2-6 week guess to a firmer 4+ week absence -- bench him and treat NE's passing game as a committee short-term",
+      "url": "https://www.espn.com/nfl/story/_/id/49897884/sources-patriots-aj-brown-likely-least-4-weeks",
+      "tag": "injury"
+    },
+    {
+      "player": "Sam Darnold",
+      "team": "SEA",
+      "pos": "QB",
+      "date": "2026-09-10",
+      "headline": "Hip diagnosed as muscle strain, not joint damage; HC says Seahawks 'dodged a bullet'",
+      "take": "Expected to miss Week 2 at Arizona but Rapoport says return could be sooner than first feared -- Drew Lock is a short streamer, not a season-long starter",
+      "url": "https://www.nfl.com/news/sam-darnold-hip-injury-miss-seahawks-week-2-game-cardinals",
+      "tag": "injury"
+    },
+    {
+      "player": "Josh Jacobs",
+      "team": "GB",
+      "pos": "RB",
+      "date": "2026-09-10",
+      "headline": "Pleads no contest to misdemeanor battery/property-damage charges from May incident",
+      "take": "NFL is now expected to lift him off the exempt list and hand down a suspension -- treat as a hold with unknown missed-games number until the league rules",
+      "url": "https://www.espn.com/nfl/story/_/id/49893018/packers-rb-josh-jacobs-pleads-no-contest-misdemeanor-charges",
+      "tag": "other"
+    },
+    {
+      "player": "Tua Tagovailoa",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-09-10",
+      "headline": "Grabbed his back with an oblique injury at Thursday practice, listed limited; Cooper Rush took 1st-team reps",
+      "take": "Newly-named Week 1 starter over Michael Penix Jr. now carries a real injury question ahead of Sunday at Pittsburgh -- check Friday's report before trusting Falcons pass-catchers",
+      "url": "https://www.espn.com/nfl/story/_/id/49895564/falcons-qb-tua-tagovailoa-suffers-oblique-injury-practice",
+      "tag": "injury"
+    },
+    {
+      "player": "De'Zhaun Stribling",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-09-10",
+      "headline": "Carted off with a left ankle injury in Thursday's opener at the Rams, re-aggravated it on a second attempt to return",
+      "take": "Rookie 2nd-rounder had been drawing 'best 49ers WR in camp' buzz -- injury clouds his Week 1 usage and early-season stock",
+      "url": "https://sports.yahoo.com/nfl/article/49ers-dezhaun-stribling-ruled-out-vs-rams-with-left-ankle-injury-014204879.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Jonathon Brooks",
+      "team": "CAR",
+      "pos": "RB",
+      "date": "2026-09-10",
+      "headline": "Limited at Wednesday's practice with groin soreness, but HC Dave Canales 'very confident' he plays Sunday vs. Bears",
+      "take": "Would be his first game action since Week 14 of the 2024 season (ACL) -- trending toward a role but treat as touch-capped in a long-awaited debut",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/rb-jonathon-brooks-limited-in-wednesdays-panthers-practice",
+      "tag": "injury"
+    },
+    {
+      "player": "Malik Nabers",
+      "team": "NYG",
+      "pos": "WR",
+      "date": "2026-09-10",
+      "headline": "Logs a second straight full practice; HC John Harbaugh: 'I think he's ready to go' for Sunday night vs. Cowboys",
+      "take": "Trending firmly toward a Week 1 return from his ACL tear, though still unconfirmed -- have a Plan B ready until he's active on Sunday's final report",
+      "url": "https://www.si.com/nfl/giants/onsi/giants-malik-nabers-injury-update-week-1-cowboys-01m23m9wyyb7",
+      "tag": "riser"
+    },
+    {
+      "player": "Dontayvion Wicks",
+      "team": "GB",
+      "pos": "WR",
+      "date": "2026-09-10",
+      "headline": "Ruled doubtful for Saturday vs. Vikings with a concussion after not practicing all week",
+      "take": "Likely out -- bumps Romeo Doubs and Matthew Golden up the Packers' Week 1 WR pecking order",
+      "url": "https://www.packers.com/news/packers-vikings-injury-report-sept-10-2026",
+      "tag": "injury"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-10",
+      "headline": "Active and playing through a psoas injury in Thursday's opener at the 49ers in Melbourne",
+      "take": "McVay cleared him to play and no setback was reported through the game -- treat as a full-workload WR1 while monitoring the next injury report",
+      "url": "https://www.profootballrumors.com/2026/09/rams-expect-wr-puka-nacua-to-play-week-1",
+      "tag": "riser"
+    },
     {
       "player": "A.J. Brown",
       "team": "NE",
@@ -2050,106 +2140,6 @@
       "take": "Injury watch now layered on top of another shaky camp performance",
       "url": "https://heavy.com/sports/nfl/minnesota-vikings/jj-mccarthy-injury-report-ravens-preseason/",
       "tag": "injury"
-    },
-    {
-      "player": "Geno Smith",
-      "team": "NYJ",
-      "pos": "QB",
-      "date": "2026-08-21",
-      "headline": "Perfect 7-for-7 on Jets' opening TD drive vs. Steelers before being pulled; team wins 17-0",
-      "take": "Sharp, efficient look in his final extended preseason action - trending toward a strong Week 1 floor",
-      "url": "https://www.nfl.com/news/2026-nfl-preseason-week-2-what-we-learned-friday-games",
-      "tag": "riser"
-    },
-    {
-      "player": "Jelani Woods",
-      "team": "NYJ",
-      "pos": "TE",
-      "date": "2026-08-21",
-      "headline": "Hauled in a 13-yard TD from Geno Smith on Jets' opening drive vs. Steelers",
-      "take": "Puts himself in the mix for red-zone TE work if he can stay healthy - deep-league TE watch",
-      "url": "https://www.nfl.com/news/2026-nfl-preseason-week-2-what-we-learned-friday-games",
-      "tag": "riser"
-    },
-    {
-      "player": "Adonai Mitchell",
-      "team": "NYJ",
-      "pos": "WR",
-      "date": "2026-08-21",
-      "headline": "2 catches (2 targets) for 29 yards on Jets' opening TD drive vs. Steelers",
-      "take": "Continues to build camp buzz as a complementary piece behind Garrett Wilson",
-      "url": "https://www.newyorkjets.com/video/geno-smith-adonai-mitchell-21-yard-completion-jets-steelers-preseason-highlight-08-21-2026",
-      "tag": "riser"
-    },
-    {
-      "player": "Jonathon Brooks",
-      "team": "CAR",
-      "pos": "RB",
-      "date": "2026-08-21",
-      "headline": "Scored his first career NFL touchdown in Panthers' 34-17 win over Jaguars",
-      "take": "First real payoff of his comeback from two ACL tears - still buried on Carolina's RB depth chart but a name to monitor",
-      "url": "https://www.washingtonpost.com/sports/nfl/2026/08/21/panthers-jaguars-score/aba01b84-9dd3-11f1-9cc4-2dc9b46e2d5c_story.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Ameer Abdullah",
-      "team": "JAX",
-      "pos": "RB",
-      "date": "2026-08-21",
-      "headline": "45 yards on 6 carries (7.5 YPC) plus 3 catches for 37 yards in loss to Panthers",
-      "take": "33-year-old showing he still has juice - could carve out a passing-down/change-of-pace role in Jacksonville",
-      "url": "https://www.nfl.com/news/2026-nfl-preseason-week-2-what-we-learned-friday-games",
-      "tag": "riser"
-    },
-    {
-      "player": "Bryce Young",
-      "team": "CAR",
-      "pos": "QB",
-      "date": "2026-08-21",
-      "headline": "Went 5-of-6 for 49 yards and set up a TD in Panthers' 34-17 win over Jaguars",
-      "take": "Another clean, efficient camp showing - continues to build confidence for Carolina's passing attack",
-      "url": "https://www.washingtonpost.com/sports/nfl/2026/08/21/panthers-jaguars-score/aba01b84-9dd3-11f1-9cc4-2dc9b46e2d5c_story.html",
-      "tag": "riser"
-    },
-    {
-      "player": "RJ Harvey",
-      "team": "DEN",
-      "pos": "RB",
-      "date": "2026-08-21",
-      "headline": "Caught a 21-yard TD from Bo Nix in Broncos' 33-13 loss to Packers",
-      "take": "Flashes receiving juice out of the backfield - a plus in PPR formats if he locks down passing-down work",
-      "url": "https://www.denverbroncos.com/video/rb-rj-harvey-hauls-in-21-yard-touchdown-pass-broncos-vs-packers",
-      "tag": "riser"
-    },
-    {
-      "player": "MarShawn Lloyd",
-      "team": "GB",
-      "pos": "RB",
-      "date": "2026-08-21",
-      "headline": "Caught a TD pass from Jordan Love in Packers' 33-13 win over Broncos",
-      "take": "Getting run with the 1s while Josh Jacobs is out (groin) - worth a speculative add in deeper leagues",
-      "url": "https://www.espn.com/nfl/game/_/gameId/401873613/packers-broncos",
-      "tag": "riser"
-    },
-    {
-      "player": "Jake Bobo",
-      "team": "SEA",
-      "pos": "WR",
-      "date": "2026-08-21",
-      "headline": "Carted off Friday's joint practice with Titans with a 'serious' knee injury",
-      "take": "HC Macdonald expects it to be long-term - opens up WR reps behind Seattle's top options",
-      "url": "https://www.espn.com/nfl/story/_/id/49683636/seahawks-wr-jake-bobo-suffers-serious-knee-injury-says-coach",
-      "tag": "injury"
-    },
-    {
-      "player": "Xavier Hutchinson",
-      "team": "HOU",
-      "pos": "WR",
-      "date": "2026-08-21",
-      "headline": "Emerging as Texans' in-house favorite for WR2 job after Higgins' ACL tear",
-      "take": "Deep-league streamer name now, though Houston is reportedly still shopping the trade market",
-      "url": "https://www.battleredblog.com/houston-texans-analysis/77096/replacing-higgins-sign-or-trade",
-      "tag": "role"
     }
   ]
 }

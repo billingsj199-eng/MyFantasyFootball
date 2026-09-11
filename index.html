@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-11f" as="script">
+<link rel="preload" href="app.js?v=2026-09-11g" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1671,6 +1671,10 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 .tcv-row-rank.tcv-rank-mv.tcv-row-rank-3{font-size:24px;top:4px}
 .tcv-rank-mv .tcv-mv-old{font-size:.6em;opacity:.85;-webkit-text-stroke:1px #0a0a0a}
 .tcv-rank-mv .tcv-mv-arr{font-size:.55em;opacity:.75;-webkit-text-stroke:.8px #0a0a0a;margin:0 1px}
+/* MOVEMENT on ROW cards: the wider "7 › 3." slot would sit on the face — slide the headshot right (transform only, no layout
+   change) and let the name column paint over the shoulder. Mirrored by MV_IMG_DX in _tcvRowCardCanvas. */
+.tier-card-view.tcv-move .tcv-row-card .tcv-row-img img,.tier-card-view.tcv-move .tcv-row-card .tcv-row-img .tcv-card-img-fallback{transform:translateX(14px)}
+.tier-card-view.tcv-move .tcv-row-card .tcv-row-id{position:relative;z-index:2}
 .tcv-card-rank.tcv-rank-mv{font-size:17px;top:2px}
 .tcv-card-rank.tcv-rank-mv .tcv-mv-old,.tcv-card-rank.tcv-rank-mv .tcv-mv-arr{-webkit-text-stroke:.7px #0a0a0a}
 .tcv-move-ctl{display:inline-flex;align-items:center;gap:4px}
@@ -5670,7 +5674,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-11f"></script>
+<script defer src="app.js?v=2026-09-11g"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

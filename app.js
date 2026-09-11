@@ -4354,7 +4354,7 @@ async function _tcvMoveLoadDate(dateStr) {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 136, STATS_H: 44 };
+const _TCV_ROW = { MV_IMG_DX: 14, W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 136, STATS_H: 44 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
@@ -4610,15 +4610,17 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.stroke();
   const fg = band.light ? '#0f172a' : '#ffffff';
 
-  // Headshot — bottom-aligned on the band, pokes above it like the on-screen card
+  // Headshot — bottom-aligned on the band, pokes above it like the on-screen card.
+  // MOVEMENT view slides it right so the wider "7 › 3." slot clears the face (mirrors .tcv-move .tcv-row-img).
+  const imgX = L.IMG_X + (prevRank !== undefined ? L.MV_IMG_DX : 0);
   if (head) {
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 2;
-    _tcvDrawContain(ctx, head, L.IMG_X, Y + H - L.IMG_H, L.IMG_W, L.IMG_H, 'bottom');
+    _tcvDrawContain(ctx, head, imgX, Y + H - L.IMG_H, L.IMG_W, L.IMG_H, 'bottom');
     ctx.restore();
   } else {
     ctx.font = '26px ' + BEBAS; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('?', L.IMG_X + L.IMG_W / 2, Y + H / 2);
+    ctx.fillText('?', imgX + L.IMG_W / 2, Y + H / 2);
   }
 
   // Rank — top-left corner of the band, riding the headshot's shoulder

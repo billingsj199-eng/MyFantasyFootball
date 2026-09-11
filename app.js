@@ -4306,26 +4306,25 @@ async function _tcvMoveLoadDate(dateStr) {
     const end = new Date(dateStr + 'T23:59:59.999');
     if (!isFinite(end.getTime())) throw new Error('bad date');
     const idMax = end.toISOString().replace(/[:.]/g, '-');
-    // Only "newest first, limit N" is index-free on this collection: both a
-    // where(documentId(), '<=') range and a startAt() cursor came back
-    // failed-precondition ("query requires an index") in Jack's admin session
-    // on 2026-09-11. So page the exact shape _jacksBackupList uses, widening
-    // until a doc on/before the date shows up (ids sort chronologically as
-    // strings). Newest dates resolve on the first small page; results cache
-    // per date so it's a one-time cost.
-    const col = db.collection('rankings_history').orderBy(firebase.firestore.FieldPath.documentId(), 'desc');
-    let doc = null, exhausted = false;
-    for (const n of [12, 40, 120]) {
-      const q = await col.limit(n).get();
-      const hits = q.docs.filter(dc => dc.id <= idMax);
-      if (hits.length) { doc = hits[0]; break; }
-      if (q.size < n) { exhausted = true; break; }
+    // ASCENDING documentId() order only. Every DESCENDING ordering on the id
+    // (plain orderBy desc + limit, desc + where '<=', desc + startAt) came
+    // back failed-precondition "query requires an index" in Jack's admin
+    // session on 2026-09-11 — Firestore auto-indexes __name__ ascending only.
+    // Ascending + cursors is the native order, so: fetch the chosen day's
+    // saves (ids sort chronologically as strings), take the LAST one; if the
+    // day has no saves walk back a day at a time (empty queries are cheap).
+    const col = db.collection('rankings_history').orderBy(firebase.firestore.FieldPath.documentId());
+    const toId = (dt) => dt.toISOString().replace(/[:.]/g, '-');
+    const day0 = new Date(dateStr + 'T00:00:00');
+    const MAX_BACK = 45;
+    let doc = null;
+    for (let back = 0; back < MAX_BACK && !doc; back++) {
+      const s = new Date(day0.getFullYear(), day0.getMonth(), day0.getDate() - back);   // calendar days (DST-safe)
+      const e = back === 0 ? end : new Date(new Date(s.getFullYear(), s.getMonth(), s.getDate() + 1).getTime() - 1);
+      const q = await col.startAt(toId(s)).endAt(toId(e)).limit(60).get();
+      if (!q.empty) doc = q.docs[q.docs.length - 1];   // ascending → last = newest that day
     }
-    if (!doc) {
-      st.err = exhausted ? 'No saved board on or before ' + dateStr
-        : 'That date is older than the last 120 saved boards — pick a more recent date';
-      return;
-    }
+    if (!doc) { st.err = 'No saved board on or before ' + dateStr + ' (looked back ' + MAX_BACK + ' days)'; return; }
     const dd = doc.data() || {};
     const obj = JSON.parse(dd.data || '{}');
     const orders = {};

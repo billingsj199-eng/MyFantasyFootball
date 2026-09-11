@@ -4292,9 +4292,13 @@ async function _tcvMoveLoadDate(dateStr) {
     const end = new Date(dateStr + 'T23:59:59.999');
     if (!isFinite(end.getTime())) throw new Error('bad date');
     const idMax = end.toISOString().replace(/[:.]/g, '-');
+    // Cursor, not a where() on the id: a documentId() range filter came back
+    // failed-precondition in Jack's session (2026-09-11). orderBy desc +
+    // startAt(idMax) = newest doc whose id <= idMax, same ordering the
+    // restore path (_jacksBackupList) already uses.
     const q = await db.collection('rankings_history')
-      .where(firebase.firestore.FieldPath.documentId(), '<=', idMax)
-      .orderBy(firebase.firestore.FieldPath.documentId(), 'desc').limit(1).get();
+      .orderBy(firebase.firestore.FieldPath.documentId(), 'desc')
+      .startAt(idMax).limit(1).get();
     if (q.empty) { st.err = 'No saved board on or before ' + dateStr; return; }
     const doc = q.docs[0];
     const dd = doc.data() || {};
@@ -4307,7 +4311,7 @@ async function _tcvMoveLoadDate(dateStr) {
     if (!Object.keys(orders).length) { st.err = 'Backup from ' + dateStr + ' has no board order'; return; }
     st.snap = st.cache[dateStr] = { id: doc.id, at: dd.updatedAt || doc.id, orders: orders };
   } catch (e) {
-    st.err = 'Could not load that date (' + ((e && (e.code || e.message)) || 'error') + ')';
+    st.err = 'Could not load that date (' + ((e && (e.code || 'error')) + (e && e.message ? ': ' + String(e.message).slice(0, 160) : '')) + ')';
     console.warn('[TierCards] movement snapshot load failed:', e);
   }
 }

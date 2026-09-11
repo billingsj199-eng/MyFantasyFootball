@@ -52,16 +52,24 @@ def pull_team(tid):
     if not off:
         return None
     out = {}
+    positions = off.get('positions') or {}
     for key, label in POS_KEYS.items():
-        slot = (off.get('positions') or {}).get(key)
-        if not slot:
+        # ESPN keys receivers by SLOT (wr1 / wr2 / wr3 in a 3WR set, wr1 / wr2
+        # in 2WR sets), never a bare 'wr' (2026-09-11 fix: every team lacked a
+        # WR list). Interleave the slots by depth: all slot starters first,
+        # then every slot's second man, and so on.
+        slots = [positions[key]] if positions.get(key) else                 [positions[k] for k in sorted(positions) if k.startswith(key) and k[len(key):].isdigit()]
+        if not slots:
             continue
-        ath = sorted(slot.get('athletes') or [], key=lambda a: a.get('rank') or 99)
+        ranked = []
+        for sl in slots:
+            ath = sorted(sl.get('athletes') or [], key=lambda a: a.get('rank') or 99)
+            ranked.append([(a.get('displayName') or '').strip() for a in ath])
         names = []
-        for a in ath:
-            n = (a.get('displayName') or '').strip()
-            if n and n not in names:
-                names.append(n)
+        for depth in range(max(len(r) for r in ranked)):
+            for r in ranked:
+                if depth < len(r) and r[depth] and r[depth] not in names:
+                    names.append(r[depth])
         if names:
             out[label] = names
     return out

@@ -4188,7 +4188,15 @@ function _tcvRowsPref() {
 function _tcvMovePref() {
   try { return localStorage.getItem('tcv_move') === '1'; } catch(_) { return false; }
 }
-window._tcvMove = window._tcvMove || { date: null, snap: null, cache: {}, err: null };
+// The chosen custom date persists (tcv_move_date) so a pinned comparison —
+// e.g. the day before the season started — survives reloads; the snapshot
+// itself is re-fetched on the first render (see _renderTierCardView).
+window._tcvMove = window._tcvMove || { date: (function () { try { return localStorage.getItem('tcv_move_date') || null; } catch (_) { return null; } })(), snap: null, cache: {}, err: null, loading: false };
+// One-click comparison dates (admin). Jack 2026-09-11: 9/8 = the day before
+// Week 1 kicked off (Wed Sep 9 opener), i.e. the final pre-season board.
+const _TCV_MOVE_PRESETS = [
+  { date: '2026-09-08', label: '9/8 PRE-SEASON', title: 'Compare against the board as saved on Sep 8, 2026 — the day before Week 1 kicked off' }
+];
 function _tcvMoveDateLabel(iso) {
   if (!iso) return '';
   const dt = new Date(iso);
@@ -4220,7 +4228,12 @@ function _tcvMoveSource() {
 function _tcvViewEligible(d) {
   if (!d || d._retired) return false;
   if (window._RETIRED_NAMES && window._RETIRED_NAMES.has(d.n)) return false;
-  if (typeof currentMode !== 'undefined' && currentMode === 'bestball' && (d.s === 'K' || d.s === 'DST')) return false;
+  const mode = (typeof currentMode !== 'undefined') ? currentMode : 'redraft';
+  // Out-for-season players are hidden on season boards (getFiltered) — skip
+  // them in the prior count too so "was" ranks line up with today's view.
+  if (typeof window._irHiddenHere === 'function' && typeof window._irIsOut === 'function' && window._irHiddenHere(mode) && window._irIsOut(d.n)) return false;
+  if (d._isFuturePick && ((mode !== 'dynasty' && mode !== 'dynastysf') || d._unranked)) return false;
+  if (mode === 'bestball' && (d.s === 'K' || d.s === 'DST')) return false;
   const f = (typeof filter !== 'undefined') ? filter : 'ALL';
   if (f === 'ROOKIE') {
     if (d.career && d.career.length > 0) return false;
@@ -4282,6 +4295,7 @@ function _tcvRankHtml(baseCls, displayRank, prev) {
 async function _tcvMoveLoadDate(dateStr) {
   const st = window._tcvMove;
   st.err = null;
+  try { if (dateStr) localStorage.setItem('tcv_move_date', dateStr); else localStorage.removeItem('tcv_move_date'); } catch (_) {}
   if (!dateStr) { st.date = null; st.snap = null; return; }
   st.date = dateStr;
   if (st.cache[dateStr]) { st.snap = st.cache[dateStr]; return; }
@@ -4926,6 +4940,20 @@ function _renderTierCardView(data, container) {
   // MOVEMENT view: prior-rank map for this view (null = on but no snapshot for
   // this board, undefined = off). Computed once per render, read per card.
   const _tcvMoveOn = _tcvMovePref();
+  // A persisted custom date has no snapshot yet after a reload — fetch it once
+  // (admin only; rankings_history is admin-read) and re-render when it lands.
+  if (_tcvMoveOn && window._tcvMove.date && !window._tcvMove.snap && !window._tcvMove.err && !window._tcvMove.loading) {
+    if (_tcvIsAdminViewer()) {
+      window._tcvMove.loading = true;
+      _tcvMoveLoadDate(window._tcvMove.date).then(() => {
+        window._tcvMove.loading = false;
+        if (window._tcvMove.err && typeof toast === 'function') toast(window._tcvMove.err);
+        if (container.isConnected) _renderTierCardView(data, container);
+      });
+    } else {
+      window._tcvMove.date = null;   // can't load it in this session — fall back to the anchor
+    }
+  }
   const _tcvMoveSrc = _tcvMoveOn ? _tcvMoveSource() : null;
   const _tcvMoveMap = _tcvMoveOn ? _tcvPrevRankMap() : undefined;
   if (_tcvMoveOn) root.classList.add('tcv-move');
@@ -4966,6 +4994,7 @@ function _renderTierCardView(data, container) {
     (_tcvMoveOn ? (_tcvIsAdminViewer()
       ? '<span class="tcv-move-ctl" title="Compare against the board as it was saved on or before this date (newest rankings backup that day)"><span class="tcv-zoom-lbl">VS</span>' +
           '<input type="date" class="tcv-move-date" data-tcvmovedate value="' + (window._tcvMove.date || '') + '" max="' + new Date().toISOString().slice(0, 10) + '">' +
+          _TCV_MOVE_PRESETS.map(p => '<button class="tcv-reveal-btn' + (window._tcvMove.date === p.date ? ' tcv-primary' : '') + '" data-tcvaction="movePreset" data-tcvdate="' + p.date + '" title="' + p.title + ' (or the last save before it)">⚑ ' + p.label + '</button>').join('') +
           (window._tcvMove.date ? '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="moveAnchor" title="Back to the weekly anchor (' + (_tcvMoveDateLabel(window._jacksPrevSavedAt) || 'last weekly snapshot') + ')">↺</button>' : '') +
         '</span>'
       : (_tcvMoveSrc && _tcvMoveSrc.at ? '<span class="tcv-move-ctl"><span class="tcv-zoom-lbl">VS ' + _tcvMoveDateLabel(_tcvMoveSrc.at).toUpperCase() + '</span></span>' : '')) : '') +
@@ -5000,7 +5029,9 @@ function _renderTierCardView(data, container) {
             (_tcvMoveSrc && _tcvMoveSrc.custom ? ' (saved board)' : ' (weekly anchor)') +
             ' · <b style="color:#22c55e">green</b> rose · <b style="color:#ef4444">red</b> fell · <span style="color:#93c5fd">NEW</span> = not on the board then' +
             ((filterLabel !== 'ALL') ? ' · ranks counted within ' + filterLabel : '')
-          : (window._tcvMove.err
+          : (window._tcvMove.loading
+              ? '<b style="color:#f59e0b">MOVEMENT:</b> loading the board saved on ' + _tcvMoveDateLabel(window._tcvMove.date + 'T12:00:00') + '…'
+            : window._tcvMove.err
               ? '<b style="color:#f59e0b">MOVEMENT:</b> ' + window._tcvMove.err
               : '<b style="color:#f59e0b">MOVEMENT:</b> no comparison snapshot for the ' + ((typeof currentMode !== 'undefined') ? currentMode.toUpperCase() : '') + ' board' +
                 (_tcvIsAdminViewer() ? ' — pick a date above' : ' (weekly anchor covers the redraft board only)'))
@@ -5102,7 +5133,17 @@ function _renderTierCardView(data, container) {
       }
       if (action === 'moveAnchor') {
         window._tcvMove.date = null; window._tcvMove.snap = null; window._tcvMove.err = null;
+        try { localStorage.removeItem('tcv_move_date'); } catch(_) {}
         _renderTierCardView(data, container);
+        return;
+      }
+      if (action === 'movePreset') {
+        const d = btn.getAttribute('data-tcvdate');
+        btn.disabled = true;
+        _tcvMoveLoadDate(d).then(() => {
+          if (window._tcvMove.err && typeof toast === 'function') toast(window._tcvMove.err);
+          _renderTierCardView(data, container);
+        });
         return;
       }
       if (action === 'dlAll') { _tcvDownloadAllRows(root, _tcvFilePrefix); return; }

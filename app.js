@@ -4087,7 +4087,7 @@ function _tcvFmtStat(v, color) {
   return color ? '<span style="color:' + color + '">' + v + '</span>' : String(v);
 }
 
-function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
+function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
   const card = document.createElement('div');
   card.className = 'tcv-card' + ((typeof currentMode !== 'undefined' && currentMode === 'weekly') ? ' tcv-card-wk' : '');
   card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
@@ -4130,7 +4130,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
   const _statsTitle = _statSlots.map(s => s.lbl).join(' / ');
 
   card.innerHTML =
-    '<div class="tcv-card-rank">' + displayRank + '.</div>' +
+    _tcvRankHtml('tcv-card-rank', displayRank, prevRank) +
     '<div class="tcv-card-stats" title="' + _statsTitle + '">' +
       _statsHtml +
     '</div>' +
@@ -4168,6 +4168,148 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb) {
 // screenshot, so ESPN headshots/logos load CORS-clean and never taint it).
 function _tcvRowsPref() {
   try { return localStorage.getItem('tcv_rows') === '1'; } catch(_) { return false; }
+}
+
+// ── RANK MOVEMENT view (Jack 2026-09-11) ──────────────────────────────────
+// Every card's rank slot becomes "7 › 3." — rank at the comparison date, then
+// the rank now, the second number green (rose) / red (fell) / white (same).
+// Comparison source, in order:
+//   1) a CUSTOM DATE (admin): the newest rankings_history/{iso} backup saved
+//      on or before that day (rankings_history is admin-read-only, so only an
+//      admin session gets the date picker). Has every board's order, so it
+//      works for dynasty / weekly / superflex too.
+//   2) the WEEKLY ANCHOR: window._jacksPrevOrder — the redraft order saved
+//      up to 7 days ago (the same snapshot the movers ticker uses). Redraft only.
+//   3) free/anon viewers: window._jacksPrevRanks — the public slice ships
+//      {name: overall rank at the anchor} for the top of the board.
+// Prior ranks are counted INSIDE the current view's filter (a RB view compares
+// RB ranks, FLEX compares RB/WR/TE, ALL is overall without K/DST) so the two
+// numbers on a card always mean the same thing.
+function _tcvMovePref() {
+  try { return localStorage.getItem('tcv_move') === '1'; } catch(_) { return false; }
+}
+window._tcvMove = window._tcvMove || { date: null, snap: null, cache: {}, err: null };
+function _tcvMoveDateLabel(iso) {
+  if (!iso) return '';
+  const dt = new Date(iso);
+  if (!isFinite(dt.getTime())) return String(iso).slice(0, 10);
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+// { order:[names] | null, ranks:{name:overallRank} | null, at: iso, custom: bool } or null
+function _tcvMoveSource() {
+  const mode = (typeof currentMode !== 'undefined') ? currentMode : 'redraft';
+  const st = window._tcvMove;
+  if (st.snap) {
+    const o = st.snap.orders && st.snap.orders[mode];
+    return { order: Array.isArray(o) && o.length ? o : null, ranks: null, at: st.snap.at, custom: true };
+  }
+  // A custom date that failed to load stays selected (↺ clears it) and shows
+  // its error in the key line rather than silently falling back to the anchor.
+  if (st.date) return null;
+  if (mode !== 'redraft') return null;
+  if (Array.isArray(window._jacksPrevOrder) && window._jacksPrevOrder.length) {
+    return { order: window._jacksPrevOrder, ranks: null, at: window._jacksPrevSavedAt || null, custom: false };
+  }
+  if (window._jacksPrevRanks && typeof window._jacksPrevRanks === 'object' && Object.keys(window._jacksPrevRanks).length) {
+    return { order: null, ranks: window._jacksPrevRanks, at: window._jacksPrevSavedAt || null, custom: false };
+  }
+  return null;
+}
+// Mirrors getFiltered()'s position / rookie gates (minus the text query) so a
+// prior rank is counted among the same players the view shows today.
+function _tcvViewEligible(d) {
+  if (!d || d._retired) return false;
+  if (window._RETIRED_NAMES && window._RETIRED_NAMES.has(d.n)) return false;
+  if (typeof currentMode !== 'undefined' && currentMode === 'bestball' && (d.s === 'K' || d.s === 'DST')) return false;
+  const f = (typeof filter !== 'undefined') ? filter : 'ALL';
+  if (f === 'ROOKIE') {
+    if (d.career && d.career.length > 0) return false;
+    const _cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
+    const is2026 = !!(_cb && _cb.yr === 2026);
+    if (!is2026 && d.t && d.t !== 'TBD' && d.t !== 'FA') return false;
+    if (typeof rookiePosFilter !== 'undefined' && rookiePosFilter && rookiePosFilter !== 'ALL' && d.s !== rookiePosFilter) return false;
+    return true;
+  }
+  if (f === 'ALL') return d.s !== 'K' && d.s !== 'DST';
+  if (f === 'FLEX') return d.s === 'RB' || d.s === 'WR' || d.s === 'TE';
+  if (f === 'QB' || f === 'RB' || f === 'WR' || f === 'TE' || f === 'K' || f === 'DST') return d.s === f;
+  return true;
+}
+// name → rank at the comparison date, counted inside the current view. null = no source.
+function _tcvPrevRankMap() {
+  const src = _tcvMoveSource();
+  if (!src) return null;
+  let names = src.order;
+  if (!names && src.ranks) {
+    names = Object.keys(src.ranks).sort((a, b) => src.ranks[a] - src.ranks[b]);
+  }
+  if (!names || !names.length) return null;
+  const map = {};
+  let n = 0;
+  names.forEach(name => {
+    const idx = (typeof nameToIdx !== 'undefined') ? nameToIdx[name] : undefined;
+    const d = (idx !== undefined && typeof D !== 'undefined') ? D[idx] : null;
+    if (!d || !_tcvViewEligible(d)) return;
+    n += 1;
+    if (map[name] === undefined) map[name] = n;
+  });
+  return map;
+}
+function _tcvMoveColor(prev, now) {
+  if (prev == null) return '#93c5fd';                 // new to the board
+  return now < prev ? '#22c55e' : now > prev ? '#ef4444' : '#ffffff';
+}
+function _tcvMoveTitle(prev, now) {
+  if (prev == null) return 'Not on this board at the comparison date';
+  if (prev === now) return 'Unchanged (' + prev + ')';
+  return (now < prev ? '▲ Up ' + (prev - now) : '▼ Down ' + (now - prev)) + ' — was ' + prev;
+}
+// Rank slot HTML for either card style. prev === undefined → movement view off.
+function _tcvRankHtml(baseCls, displayRank, prev) {
+  const three = displayRank >= 100 || (prev != null && prev >= 100);
+  if (prev === undefined) {
+    return '<div class="' + baseCls + (displayRank >= 100 ? ' ' + baseCls + '-3' : '') + '">' + displayRank + '.</div>';
+  }
+  const col = _tcvMoveColor(prev, displayRank);
+  const oldTxt = prev == null ? 'NEW' : String(prev);
+  return '<div class="' + baseCls + ' tcv-rank-mv' + (three ? ' ' + baseCls + '-3' : '') + '" title="' + _tcvMoveTitle(prev, displayRank) + '">' +
+    '<span class="tcv-mv-old">' + oldTxt + '</span><span class="tcv-mv-arr">›</span>' +
+    '<span class="tcv-mv-new" style="color:' + col + '">' + displayRank + '.</span></div>';
+}
+// Admin: pull the newest rankings_history backup saved on or before dateStr
+// (YYYY-MM-DD, local end of day). Doc ids are ISO stamps with ':' '.' → '-',
+// so they sort chronologically and a documentId() range query finds it.
+async function _tcvMoveLoadDate(dateStr) {
+  const st = window._tcvMove;
+  st.err = null;
+  if (!dateStr) { st.date = null; st.snap = null; return; }
+  st.date = dateStr;
+  if (st.cache[dateStr]) { st.snap = st.cache[dateStr]; return; }
+  st.snap = null;
+  try {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    if (!db) throw new Error('Firestore not ready');
+    const end = new Date(dateStr + 'T23:59:59.999');
+    if (!isFinite(end.getTime())) throw new Error('bad date');
+    const idMax = end.toISOString().replace(/[:.]/g, '-');
+    const q = await db.collection('rankings_history')
+      .where(firebase.firestore.FieldPath.documentId(), '<=', idMax)
+      .orderBy(firebase.firestore.FieldPath.documentId(), 'desc').limit(1).get();
+    if (q.empty) { st.err = 'No saved board on or before ' + dateStr; return; }
+    const doc = q.docs[0];
+    const dd = doc.data() || {};
+    const obj = JSON.parse(dd.data || '{}');
+    const orders = {};
+    Object.keys(obj.jacks || {}).forEach(m => {
+      const o = obj.jacks[m] && obj.jacks[m]._order;
+      if (Array.isArray(o) && o.length) orders[m] = o;
+    });
+    if (!Object.keys(orders).length) { st.err = 'Backup from ' + dateStr + ' has no board order'; return; }
+    st.snap = st.cache[dateStr] = { id: doc.id, at: dd.updatedAt || doc.id, orders: orders };
+  } catch (e) {
+    st.err = 'Could not load that date (' + ((e && (e.code || e.message)) || 'error') + ')';
+    console.warn('[TierCards] movement snapshot load failed:', e);
+  }
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
@@ -4238,12 +4380,13 @@ function _tcvRowNameFit(name) {
   return { text: short, px: 13 };
 }
 
-function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
+function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRank) {
   const card = document.createElement('div');
   card.className = 'tcv-card tcv-row-card';
   card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
   card._tcvPlayer = d;
   card._tcvRank = displayRank;
+  card._tcvPrev = prevRank;   // undefined = movement view off (PNG export reads it too)
   const band = _tcvRowBand(d.t);
   card.style.background = _tcvRowBandCss(band);
   if (band.light) card.classList.add('tcv-row-light');
@@ -4276,7 +4419,7 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
     : '';
 
   card.innerHTML =
-    '<div class="tcv-row-rank' + (displayRank >= 100 ? ' tcv-row-rank-3' : '') + '">' + displayRank + '.</div>' +
+    _tcvRankHtml('tcv-row-rank', displayRank, prevRank) +
     '<div class="tcv-row-img">' + headshotHtml + '</div>' +
     '<div class="tcv-row-id">' +
       '<div class="tcv-row-name" title="' + safe(d.n) + ' · ' + safe(abbr) + '">' + safe(d.n) + '</div>' +
@@ -4306,7 +4449,7 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix) {
   const dl = card.querySelector('.tcv-row-dl');
   if (dl) dl.addEventListener('click', (e) => {
     e.stopPropagation();
-    window._tcvDownloadRowCard(d, displayRank, filePrefix);
+    window._tcvDownloadRowCard(d, displayRank, filePrefix, prevRank);
   });
   card.addEventListener('click', (e) => {
     // SELECT mode (admin): clicks tick/untick the card for "⬇ PNG SELECTED"
@@ -4387,7 +4530,7 @@ function _tcvHiResHeadshot(url) {
   const u = window._fixHeadshotUrl(url);
   return (u && u.includes('a.espncdn.com/combiner')) ? u.replace(/&w=\d+(&h=\d+)?/, '&w=600') : u;
 }
-async function _tcvRowCardCanvas(d, displayRank) {
+async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   const L = _TCV_ROW, S = 4;   // 4× = 2240×432 px per card
   const BEBAS = '"Bebas Neue",Impact,"Arial Narrow",sans-serif';
   const SANS = '"DM Sans",system-ui,sans-serif';
@@ -4439,12 +4582,35 @@ async function _tcvRowCardCanvas(d, displayRank) {
 
   // Rank — top-left corner of the band, riding the headshot's shoulder
   ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.lineJoin = 'round';
-  const _rank3 = displayRank >= 100;   // 3 digits: a notch smaller so "100." fits the corner
-  ctx.font = (_rank3 ? 28 : 34) + 'px ' + BEBAS;
-  ctx.lineWidth = _rank3 ? 2.8 : 3.2; ctx.strokeStyle = '#0a0a0a';
-  ctx.strokeText(displayRank + '.', 5, Y + (_rank3 ? 3 : 1));
-  ctx.fillStyle = '#fff';
-  ctx.fillText(displayRank + '.', 5, Y + (_rank3 ? 3 : 1));
+  const _rank3 = displayRank >= 100 || (prevRank != null && prevRank >= 100);   // 3 digits: a notch smaller so "100." fits the corner
+  if (prevRank !== undefined) {
+    // MOVEMENT view: "7 › 3." — prior rank small and dim, arrow, current rank
+    // colored by direction (mirrors .tcv-rank-mv on screen).
+    const big = _rank3 ? 24 : 30, small = _rank3 ? 14 : 18, arr = _rank3 ? 13 : 16;
+    const yTop = Y + (_rank3 ? 4 : 2);
+    const oldTxt = prevRank == null ? 'NEW' : String(prevRank);
+    let x = 5;
+    const piece = (txt, px, color, alpha, lw) => {
+      ctx.font = px + 'px ' + BEBAS;
+      const y = yTop + (big - px) * 0.72;   // sit the smaller glyphs on the big number's baseline
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = lw; ctx.strokeStyle = '#0a0a0a';
+      ctx.strokeText(txt, x, y);
+      ctx.fillStyle = color;
+      ctx.fillText(txt, x, y);
+      ctx.globalAlpha = 1;
+      x += ctx.measureText(txt).width + 1;
+    };
+    piece(oldTxt, small, '#ffffff', 0.85, 2);
+    piece('›', arr, '#ffffff', 0.75, 1.8);
+    piece(displayRank + '.', big, _tcvMoveColor(prevRank, displayRank), 1, _rank3 ? 2.6 : 3);
+  } else {
+    ctx.font = (_rank3 ? 28 : 34) + 'px ' + BEBAS;
+    ctx.lineWidth = _rank3 ? 2.8 : 3.2; ctx.strokeStyle = '#0a0a0a';
+    ctx.strokeText(displayRank + '.', 5, Y + (_rank3 ? 3 : 1));
+    ctx.fillStyle = '#fff';
+    ctx.fillText(displayRank + '.', 5, Y + (_rank3 ? 3 : 1));
+  }
 
   // Name + pos pill + mini team logo (no abbr text)
   const nameFit = _tcvRowNameFit(d.n || '');
@@ -4554,9 +4720,9 @@ function _tcvRowFileName(d, displayRank, prefix) {
   const clean = (x) => (x || '').toString().replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
   return (clean(prefix) || 'CARD') + '_' + String(displayRank).padStart(2, '0') + '_' + (clean(d.n) || 'player') + '.png';
 }
-window._tcvDownloadRowCard = async function(d, displayRank, prefix) {
+window._tcvDownloadRowCard = async function(d, displayRank, prefix, prevRank) {
   try {
-    const cv = await _tcvRowCardCanvas(d, displayRank);
+    const cv = await _tcvRowCardCanvas(d, displayRank, prevRank);
     _tcvSavePng(cv, _tcvRowFileName(d, displayRank, prefix));
   } catch (e) {
     console.warn('[TierCards] row card export failed:', e);
@@ -4646,7 +4812,7 @@ async function _tcvDownloadRowsZip(root, prefix, btn, onlySelected) {
       const card = list[i];
       if (btn) btn.textContent = '📦 ' + (i + 1) + ' / ' + list.length + '…';
       try {
-        const cv = await _tcvRowCardCanvas(card._tcvPlayer, card._tcvRank);
+        const cv = await _tcvRowCardCanvas(card._tcvPlayer, card._tcvRank, card._tcvPrev);
         files.push({ name: _tcvRowFileName(card._tcvPlayer, card._tcvRank, prefix), data: await _tcvCanvasBytes(cv) });
       } catch (e) { failed++; console.warn('[TierCards] zip: card failed:', card._tcvPlayer && card._tcvPlayer.n, e); }
       // yield so the progress label paints and the tab stays responsive
@@ -4671,7 +4837,7 @@ async function _tcvDownloadAllRows(root, prefix, onlySelected) {
   let n = 0;
   for (const card of list) {
     try {
-      const cv = await _tcvRowCardCanvas(card._tcvPlayer, card._tcvRank);
+      const cv = await _tcvRowCardCanvas(card._tcvPlayer, card._tcvRank, card._tcvPrev);
       _tcvSavePng(cv, _tcvRowFileName(card._tcvPlayer, card._tcvRank, prefix));
       n++;
     } catch (e) { console.warn('[TierCards] row card export failed:', card._tcvPlayer && card._tcvPlayer.n, e); }
@@ -4742,6 +4908,12 @@ function _renderTierCardView(data, container) {
   if (_tcvCenteredPref()) root.classList.add('tcv-centered');
   const _tcvRows = _tcvRowsPref();
   if (_tcvRows) root.classList.add('tcv-rows');
+  // MOVEMENT view: prior-rank map for this view (null = on but no snapshot for
+  // this board, undefined = off). Computed once per render, read per card.
+  const _tcvMoveOn = _tcvMovePref();
+  const _tcvMoveSrc = _tcvMoveOn ? _tcvMoveSource() : null;
+  const _tcvMoveMap = _tcvMoveOn ? _tcvPrevRankMap() : undefined;
+  if (_tcvMoveOn) root.classList.add('tcv-move');
   if (_tcvRows && window._tcvSel.on && _tcvIsAdminViewer()) root.classList.add('tcv-select');
   const _tcvCutCount = _tcvBelowCut ? data.filter(d => _tcvBelowCut.has(d.n)).length : 0;
   if (_tcvCutCount && _tcvHideCutPref()) root.classList.add('tcv-hide-cut');
@@ -4775,6 +4947,13 @@ function _renderTierCardView(data, container) {
     (_tcvCutCount ? '<button class="tcv-reveal-btn' + (_tcvHideCutPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCut" title="Hide / show the ' + _tcvCutCount + ' below-the-cut-line player' + (_tcvCutCount === 1 ? '' : 's') + ' (the red ✂ row). Hidden = gone from the view entirely, no silhouettes — what viewers see.">✂ ' + (_tcvHideCutPref() ? 'SHOW CUT' : 'HIDE CUT') + '</button>' : '') +
     '<button class="tcv-reveal-btn' + (_tcvCenteredPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCenter" title="Center each tier\'s cards (pyramid layout — fits vertical video). The tier letter rides against the leftmost card.">⇔ CENTER</button>' +
     '<button class="tcv-reveal-btn' + (_tcvRows ? ' tcv-primary' : '') + '" data-tcvaction="toggleRows" title="Horizontal graphic cards — headshot, name, PROJ / season PPG / team total, matchup and team logo on a team-color band, one player per line (tier-list video look)">▤ ROW CARDS</button>' +
+    '<button class="tcv-reveal-btn' + (_tcvMoveOn ? ' tcv-primary' : '') + '" data-tcvaction="toggleMove" title="Rank movement: each card shows RANK THEN › RANK NOW — the second number green if the player rose, red if he fell. Compares against the weekly anchor (up to 7 days back)' + (_tcvIsAdminViewer() ? ', or pick any date to compare against the board saved that day' : '') + '.">↕ MOVEMENT</button>' +
+    (_tcvMoveOn ? (_tcvIsAdminViewer()
+      ? '<span class="tcv-move-ctl" title="Compare against the board as it was saved on or before this date (newest rankings backup that day)"><span class="tcv-zoom-lbl">VS</span>' +
+          '<input type="date" class="tcv-move-date" data-tcvmovedate value="' + (window._tcvMove.date || '') + '" max="' + new Date().toISOString().slice(0, 10) + '">' +
+          (window._tcvMove.date ? '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="moveAnchor" title="Back to the weekly anchor (' + (_tcvMoveDateLabel(window._jacksPrevSavedAt) || 'last weekly snapshot') + ')">↺</button>' : '') +
+        '</span>'
+      : (_tcvMoveSrc && _tcvMoveSrc.at ? '<span class="tcv-move-ctl"><span class="tcv-zoom-lbl">VS ' + _tcvMoveDateLabel(_tcvMoveSrc.at).toUpperCase() + '</span></span>' : '')) : '') +
     ((_tcvRows && _tcvIsAdminViewer()) ? '<button class="tcv-reveal-btn" data-tcvaction="dlAll" title="Admin: download every revealed row card as its own PNG (hover a card for a single ⬇). Files: ' + _tcvFilePrefix + '_01_Name.png …">⬇ PNG ALL</button>' +
       '<button class="tcv-reveal-btn' + (window._tcvSel.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleSelect" title="Pick cards to export: turn this on, click cards to tick them (Shift-click for a range), then ⬇ PNG SELECTED. Clicking a card will not open it while selecting.">☐ SELECT</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlSel" title="Download just the ticked cards, one PNG each">⬇ PNG SELECTED (0)</button>' +
@@ -4798,7 +4977,19 @@ function _renderTierCardView(data, container) {
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
     '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + ' PROJ' : 'PROJ PPG') + ' (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + '</span>' +
-    '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>';
+    '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
+    (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
+        _tcvMoveMap
+          ? '<b style="color:#e2e8f0">RANK</b> = <span style="opacity:.8">was</span> › <b style="color:#22c55e">now</b> vs ' +
+            (_tcvMoveSrc && _tcvMoveSrc.at ? _tcvMoveDateLabel(_tcvMoveSrc.at) : 'last snapshot') +
+            (_tcvMoveSrc && _tcvMoveSrc.custom ? ' (saved board)' : ' (weekly anchor)') +
+            ' · <b style="color:#22c55e">green</b> rose · <b style="color:#ef4444">red</b> fell · <span style="color:#93c5fd">NEW</span> = not on the board then' +
+            ((filterLabel !== 'ALL') ? ' · ranks counted within ' + filterLabel : '')
+          : (window._tcvMove.err
+              ? '<b style="color:#f59e0b">MOVEMENT:</b> ' + window._tcvMove.err
+              : '<b style="color:#f59e0b">MOVEMENT:</b> no comparison snapshot for the ' + ((typeof currentMode !== 'undefined') ? currentMode.toUpperCase() : '') + ' board' +
+                (_tcvIsAdminViewer() ? ' — pick a date above' : ' (weekly anchor covers the redraft board only)'))
+      ) + '</span>' : '');
   root.appendChild(keyCard);
 
   // Color cycle for tier letters — repeats after 7 tiers (matches tcv-key gradient palette)
@@ -4845,7 +5036,11 @@ function _renderTierCardView(data, container) {
     row.appendChild(letter);
     const cards = document.createElement('div');
     cards.className = 'tcv-cards';
-    g.players.forEach(p => cards.appendChild(_tcvRows ? _tcvBuildRowCard(p.d, p.displayRank, g.label, glowRgb, _tcvFilePrefix) : _tcvBuildCard(p.d, p.displayRank, g.label, glowRgb)));
+    g.players.forEach(p => {
+      // MOVEMENT view: undefined = off, null = not on the board at the comparison date
+      const _pr = _tcvMoveMap ? (_tcvMoveMap[p.d.n] != null ? _tcvMoveMap[p.d.n] : null) : undefined;
+      cards.appendChild(_tcvRows ? _tcvBuildRowCard(p.d, p.displayRank, g.label, glowRgb, _tcvFilePrefix, _pr) : _tcvBuildCard(p.d, p.displayRank, g.label, glowRgb, _pr));
+    });
     row.appendChild(cards);
     root.appendChild(row);
   });
@@ -4865,12 +5060,33 @@ function _renderTierCardView(data, container) {
     const hidden = _tcvVisibleCards().filter(c => c.classList.contains('tcv-covered')).length;
     statusEl.textContent = hidden === 0 ? '' : (hidden + ' of ' + total + ' players hidden');
   }
+  // MOVEMENT custom date (admin): load that day's saved board, then rebuild
+  {
+    const dateIn = root.querySelector('[data-tcvmovedate]');
+    if (dateIn) dateIn.addEventListener('change', async () => {
+      const v = dateIn.value;
+      dateIn.disabled = true;
+      await _tcvMoveLoadDate(v);
+      if (window._tcvMove.err && typeof toast === 'function') toast(window._tcvMove.err);
+      _renderTierCardView(data, container);
+    });
+  }
   root.querySelectorAll('[data-tcvaction]').forEach(btn => {
     btn.addEventListener('click', () => {
       const action = btn.getAttribute('data-tcvaction');
       if (action === 'toggleRows') {
         // Card DOM differs per layout — persist the pref and rebuild the view
         try { localStorage.setItem('tcv_rows', _tcvRows ? '0' : '1'); } catch(_) {}
+        _renderTierCardView(data, container);
+        return;
+      }
+      if (action === 'toggleMove') {
+        try { localStorage.setItem('tcv_move', _tcvMoveOn ? '0' : '1'); } catch(_) {}
+        _renderTierCardView(data, container);
+        return;
+      }
+      if (action === 'moveAnchor') {
+        window._tcvMove.date = null; window._tcvMove.snap = null; window._tcvMove.err = null;
         _renderTierCardView(data, container);
         return;
       }
@@ -27498,6 +27714,13 @@ window.fmtHeight = fmtHeight;
         });
         movers.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
         out._movers = movers.slice(0, 8);
+        // Tier-card MOVEMENT view for free viewers: {name: overall rank at the
+        // weekly anchor} for the top of the board (the public slice is top-36,
+        // so 80 names covers everyone it can show plus fallers just outside).
+        const pr = {};
+        cur.slice(0, 80).forEach(n => { if (prevRanks[n]) pr[n] = prevRanks[n]; });
+        out._prevRanks = pr;
+        out._prevSavedAt = fullData._prev.savedAt || null;
       }
     } catch (_) {}
     return out;
@@ -27943,6 +28166,9 @@ window.fmtHeight = fmtHeight;
           window._jacksPrevSavedAt = null;
         }
         window._jacksMovers = Array.isArray(obj._movers) ? obj._movers : null;
+        // Public slice: anchor ranks for the tier-card MOVEMENT view (no full prev order)
+        window._jacksPrevRanks = (obj._prevRanks && typeof obj._prevRanks === 'object') ? obj._prevRanks : null;
+        if (!window._jacksPrevSavedAt && obj._prevSavedAt) window._jacksPrevSavedAt = obj._prevSavedAt;
         if (obj.jacks) {
           _bypassEditCheck = true;
           if (obj.jacks.redraft) loadModeData('redraft', obj.jacks.redraft, 'jacks');
@@ -28109,6 +28335,9 @@ window.fmtHeight = fmtHeight;
           window._jacksPrevSavedAt = null;
         }
         window._jacksMovers = Array.isArray(obj._movers) ? obj._movers : null;
+        // Public slice: anchor ranks for the tier-card MOVEMENT view (no full prev order)
+        window._jacksPrevRanks = (obj._prevRanks && typeof obj._prevRanks === 'object') ? obj._prevRanks : null;
+        if (!window._jacksPrevSavedAt && obj._prevSavedAt) window._jacksPrevSavedAt = obj._prevSavedAt;
         if (obj.jacks) {
           _bypassEditCheck = true;
           if (obj.jacks.redraft) loadModeData('redraft', obj.jacks.redraft, 'jacks');

@@ -4289,9 +4289,31 @@ function _tcvRankHtml(baseCls, displayRank, prev) {
     '<span class="tcv-mv-old">' + oldTxt + '</span><span class="tcv-mv-arr">›</span>' +
     '<span class="tcv-mv-new" style="color:' + col + '">' + displayRank + '.</span></div>';
 }
+// Newest rankings_history backups, newest first, using ASCENDING documentId
+// queries only. Every DESCENDING ordering on __name__ (plain desc + limit
+// included) returns failed-precondition "query requires an index" on this
+// project (2026-09-11) — Firestore auto-indexes __name__ ascending only.
+// Doc ids are ISO stamps with ':' '.' → '-', so they sort chronologically as
+// strings: scan local calendar days backward from `until` (Date, default now),
+// take each day's docs last-to-first, stop at n docs or maxBack days (empty
+// days are cheap). Shared by the tier-card MOVEMENT date picker and the
+// admin restore listing (_jacksBackupList).
+async function _rhNewestBackups(db, n, until, maxBack) {
+  const col = db.collection('rankings_history').orderBy(firebase.firestore.FieldPath.documentId());
+  const toId = (dt) => dt.toISOString().replace(/[:.]/g, '-');
+  const base = until || new Date();
+  const out = [];
+  for (let back = 0; back < (maxBack || 45) && out.length < n; back++) {
+    const s = new Date(base.getFullYear(), base.getMonth(), base.getDate() - back);   // calendar days (DST-safe)
+    const e = back === 0 ? base : new Date(new Date(s.getFullYear(), s.getMonth(), s.getDate() + 1).getTime() - 1);
+    const q = await col.startAt(toId(s)).endAt(toId(e)).limit(200).get();
+    for (let i = q.docs.length - 1; i >= 0 && out.length < n; i--) out.push(q.docs[i]);
+  }
+  return out;
+}
+window._rhNewestBackups = _rhNewestBackups;
 // Admin: pull the newest rankings_history backup saved on or before dateStr
-// (YYYY-MM-DD, local end of day). Doc ids are ISO stamps with ':' '.' → '-',
-// so they sort chronologically and a documentId() range query finds it.
+// (YYYY-MM-DD, local end of day) via _rhNewestBackups.
 async function _tcvMoveLoadDate(dateStr) {
   const st = window._tcvMove;
   st.err = null;
@@ -4313,17 +4335,8 @@ async function _tcvMoveLoadDate(dateStr) {
     // Ascending + cursors is the native order, so: fetch the chosen day's
     // saves (ids sort chronologically as strings), take the LAST one; if the
     // day has no saves walk back a day at a time (empty queries are cheap).
-    const col = db.collection('rankings_history').orderBy(firebase.firestore.FieldPath.documentId());
-    const toId = (dt) => dt.toISOString().replace(/[:.]/g, '-');
-    const day0 = new Date(dateStr + 'T00:00:00');
     const MAX_BACK = 45;
-    let doc = null;
-    for (let back = 0; back < MAX_BACK && !doc; back++) {
-      const s = new Date(day0.getFullYear(), day0.getMonth(), day0.getDate() - back);   // calendar days (DST-safe)
-      const e = back === 0 ? end : new Date(new Date(s.getFullYear(), s.getMonth(), s.getDate() + 1).getTime() - 1);
-      const q = await col.startAt(toId(s)).endAt(toId(e)).limit(60).get();
-      if (!q.empty) doc = q.docs[q.docs.length - 1];   // ascending → last = newest that day
-    }
+    const doc = (await _rhNewestBackups(db, 1, end, MAX_BACK))[0] || null;
     if (!doc) { st.err = 'No saved board on or before ' + dateStr + ' (looked back ' + MAX_BACK + ' days)'; return; }
     const dd = doc.data() || {};
     const obj = JSON.parse(dd.data || '{}');
@@ -27825,9 +27838,11 @@ window.fmtHeight = fmtHeight;
   async function _jacksBackupList(n) {
     const out = [];
     try {
-      const q = await db.collection('rankings_history')
-        .orderBy(firebase.firestore.FieldPath.documentId(), 'desc').limit(n || 10).get();
-      q.forEach(doc => { const d = doc.data() || {}; out.push({ key: 'cloud:' + doc.id, id: doc.id, at: d.updatedAt || doc.id, by: d.updatedBy || '', data: d.data }); });
+      // Ascending-only day scan (see _rhNewestBackups): the old
+      // orderBy(documentId(), 'desc').limit(n) needed a composite index this
+      // project doesn't have and failed silently, so this list was cloud-empty.
+      const docs = await _rhNewestBackups(db, n || 10);
+      docs.forEach(doc => { const d = doc.data() || {}; out.push({ key: 'cloud:' + doc.id, id: doc.id, at: d.updatedAt || doc.id, by: d.updatedBy || '', data: d.data }); });
     } catch (e) { console.warn('[Restore] rankings_history read failed:', e && (e.code || e.message)); }
     try {
       const loc = JSON.parse(localStorage.getItem('mff_jacks_backups') || '[]');

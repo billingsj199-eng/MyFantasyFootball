@@ -1,0 +1,1942 @@
+{
+ "files": [
+  "live_track_2026_w1_8games_20260913_1608.csv"
+ ],
+ "bins": {
+  "Q1": {
+   "fit": 3.802,
+   "fitx": 3.799,
+   "v1": 4.104,
+   "naive": 4.069,
+   "n": 7904
+  },
+  "Q2": {
+   "fit": 3.119,
+   "fitx": 3.109,
+   "v1": 3.396,
+   "naive": 3.351,
+   "n": 11079
+  },
+  "Q3": {
+   "fit": 2.385,
+   "fitx": 2.38,
+   "v1": 2.667,
+   "naive": 2.637,
+   "n": 10847
+  },
+  "Q4": {
+   "fit": 1.309,
+   "fitx": 1.308,
+   "v1": 1.383,
+   "naive": 1.38,
+   "n": 9832
+  }
+ },
+ "players": {
+  "Jahmyr Gibbs": {
+   "pos": "RB",
+   "proj": 25.5,
+   "final": 33.6,
+   "fit": 3.71,
+   "fitx": 3.71,
+   "v1": 3.43,
+   "naive": 3.62
+  },
+  "Ja'Marr Chase": {
+   "pos": "WR",
+   "proj": 22.8,
+   "final": 3.2,
+   "fit": 7.69,
+   "fitx": 7.69,
+   "v1": 9.19,
+   "naive": 9.95
+  },
+  "Joe Burrow": {
+   "pos": "QB",
+   "proj": 22.5,
+   "final": 15.16,
+   "fit": 2.83,
+   "fitx": 2.83,
+   "v1": 4.5,
+   "naive": 4.64
+  },
+  "Josh Allen": {
+   "pos": "QB",
+   "proj": 21.7,
+   "final": 35.66,
+   "fit": 6.17,
+   "fitx": 6.17,
+   "v1": 6.58,
+   "naive": 6.53
+  },
+  "Lamar Jackson": {
+   "pos": "QB",
+   "proj": 21.1,
+   "final": 24.96,
+   "fit": 3.15,
+   "fitx": 3.15,
+   "v1": 4.99,
+   "naive": 4.14
+  },
+  "Bijan Robinson": {
+   "pos": "RB",
+   "proj": 20.6,
+   "final": 31.3,
+   "fit": 3.02,
+   "fitx": 3.02,
+   "v1": 2.76,
+   "naive": 2.67
+  },
+  "Amon-Ra St. Brown": {
+   "pos": "WR",
+   "proj": 20.2,
+   "final": 28.7,
+   "fit": 9.39,
+   "fitx": 9.39,
+   "v1": 8.44,
+   "naive": 8.34
+  },
+  "Trevor Lawrence": {
+   "pos": "QB",
+   "proj": 18.9,
+   "final": 26.1,
+   "fit": 2.2,
+   "fitx": 2.19,
+   "v1": 4.11,
+   "naive": 3.33
+  },
+  "Caleb Williams": {
+   "pos": "QB",
+   "proj": 18.8,
+   "final": 37.26,
+   "fit": 5.42,
+   "fitx": 5.42,
+   "v1": 5.66,
+   "naive": 5.75
+  },
+  "Tyler Shough": {
+   "pos": "QB",
+   "proj": 18.7,
+   "final": 25.24,
+   "fit": 10.64,
+   "fitx": 10.69,
+   "v1": 11.97,
+   "naive": 11.47
+  },
+  "Jonathan Taylor": {
+   "pos": "RB",
+   "proj": 18.7,
+   "final": 25.1,
+   "fit": 2.57,
+   "fitx": 2.57,
+   "v1": 2.48,
+   "naive": 2.31
+  },
+  "Chase Brown": {
+   "pos": "RB",
+   "proj": 18.0,
+   "final": 18.8,
+   "fit": 1.89,
+   "fitx": 1.89,
+   "v1": 1.86,
+   "naive": 1.66
+  },
+  "Baker Mayfield": {
+   "pos": "QB",
+   "proj": 17.9,
+   "final": 11.64,
+   "fit": 2.67,
+   "fitx": 2.67,
+   "v1": 2.94,
+   "naive": 2.59
+  },
+  "Daniel Jones": {
+   "pos": "QB",
+   "proj": 17.7,
+   "final": 10.04,
+   "fit": 4.27,
+   "fitx": 4.29,
+   "v1": 2.77,
+   "naive": 3.04
+  },
+  "Jared Goff": {
+   "pos": "QB",
+   "proj": 17.3,
+   "final": 16.44,
+   "fit": 3.83,
+   "fitx": 3.83,
+   "v1": 2.98,
+   "naive": 2.7
+  },
+  "Derrick Henry": {
+   "pos": "RB",
+   "proj": 17.2,
+   "final": 35.3,
+   "fit": 8.31,
+   "fitx": 8.31,
+   "v1": 7.93,
+   "naive": 8.64
+  },
+  "Chris Olave": {
+   "pos": "WR",
+   "proj": 17.1,
+   "final": 28.2,
+   "fit": 9.64,
+   "fitx": 9.64,
+   "v1": 10.47,
+   "naive": 10.32
+  },
+  "Bryce Young": {
+   "pos": "QB",
+   "proj": 16.9,
+   "final": 32.44,
+   "fit": 4.15,
+   "fitx": 4.15,
+   "v1": 4.98,
+   "naive": 5.78
+  },
+  "James Cook": {
+   "pos": "RB",
+   "proj": 16.6,
+   "final": 9.9,
+   "fit": 3.21,
+   "fitx": 3.19,
+   "v1": 3.4,
+   "naive": 3.55
+  },
+  "C.J. Stroud": {
+   "pos": "QB",
+   "proj": 16.6,
+   "final": 16.46,
+   "fit": 2.62,
+   "fitx": 2.64,
+   "v1": 2.81,
+   "naive": 2.5
+  },
+  "Nico Collins": {
+   "pos": "WR",
+   "proj": 16.0,
+   "final": 21.2,
+   "fit": 2.9,
+   "fitx": 2.9,
+   "v1": 3.07,
+   "naive": 3.03
+  },
+  "Breece Hall": {
+   "pos": "RB",
+   "proj": 15.7,
+   "final": 19.8,
+   "fit": 3.9,
+   "fitx": 3.9,
+   "v1": 3.64,
+   "naive": 3.45
+  },
+  "Tee Higgins": {
+   "pos": "WR",
+   "proj": 15.6,
+   "final": 8.9,
+   "fit": 1.63,
+   "fitx": 1.63,
+   "v1": 2.05,
+   "naive": 2.4
+  },
+  "Luther Burden": {
+   "pos": "WR",
+   "proj": 15.3,
+   "final": 9.5,
+   "fit": 2.23,
+   "fitx": 2.23,
+   "v1": 2.75,
+   "naive": 2.99
+  },
+  "Emeka Egbuka": {
+   "pos": "WR",
+   "proj": 15.2,
+   "final": 11.3,
+   "fit": 6.3,
+   "fitx": 6.3,
+   "v1": 5.28,
+   "naive": 5.11
+  },
+  "Aaron Rodgers": {
+   "pos": "QB",
+   "proj": 15.0,
+   "final": 12.54,
+   "fit": 2.11,
+   "fitx": 2.11,
+   "v1": 2.37,
+   "naive": 2.35
+  },
+  "Garrett Wilson": {
+   "pos": "WR",
+   "proj": 15.0,
+   "final": 13.9,
+   "fit": 1.92,
+   "fitx": 1.92,
+   "v1": 1.82,
+   "naive": 1.61
+  },
+  "Colston Loveland": {
+   "pos": "TE",
+   "proj": 14.9,
+   "final": 0.0,
+   "fit": 6.33,
+   "fitx": 6.33,
+   "v1": 6.72,
+   "naive": 7.36
+  },
+  "Zay Flowers": {
+   "pos": "WR",
+   "proj": 14.9,
+   "final": 26.0,
+   "fit": 5.64,
+   "fitx": 5.64,
+   "v1": 6.76,
+   "naive": 5.93
+  },
+  "D'Andre Swift": {
+   "pos": "RB",
+   "proj": 14.8,
+   "final": 32.4,
+   "fit": 9.66,
+   "fitx": 9.66,
+   "v1": 9.62,
+   "naive": 10.28
+  },
+  "Tetairoa McMillan": {
+   "pos": "WR",
+   "proj": 14.6,
+   "final": 10.5,
+   "fit": 1.62,
+   "fitx": 1.62,
+   "v1": 1.93,
+   "naive": 1.71
+  },
+  "Travis Etienne": {
+   "pos": "RB",
+   "proj": 14.3,
+   "final": 14.8,
+   "fit": 3.83,
+   "fitx": 3.83,
+   "v1": 3.79,
+   "naive": 3.42
+  },
+  "Jameson Williams": {
+   "pos": "WR",
+   "proj": 14.1,
+   "final": 8.5,
+   "fit": 1.98,
+   "fitx": 1.98,
+   "v1": 2.45,
+   "naive": 2.61
+  },
+  "Parker Washington": {
+   "pos": "WR",
+   "proj": 13.9,
+   "final": 19.3,
+   "fit": 4.29,
+   "fitx": 4.29,
+   "v1": 6.59,
+   "naive": 5.44
+  },
+  "Drake London": {
+   "pos": "WR",
+   "proj": 13.7,
+   "final": 5.5,
+   "fit": 3.72,
+   "fitx": 3.72,
+   "v1": 3.26,
+   "naive": 3.7
+  },
+  "Bucky Irving": {
+   "pos": "RB",
+   "proj": 13.4,
+   "final": 20.3,
+   "fit": 3.84,
+   "fitx": 3.85,
+   "v1": 3.98,
+   "naive": 4.06
+  },
+  "Geno Smith": {
+   "pos": "QB",
+   "proj": 12.7,
+   "final": 9.3,
+   "fit": 1.45,
+   "fitx": 1.45,
+   "v1": 1.95,
+   "naive": 2.05
+  },
+  "David Montgomery": {
+   "pos": "RB",
+   "proj": 12.7,
+   "final": 28.9,
+   "fit": 5.69,
+   "fitx": 5.69,
+   "v1": 5.81,
+   "naive": 6.44
+  },
+  "Bhayshul Tuten": {
+   "pos": "RB",
+   "proj": 12.6,
+   "final": 9.8,
+   "fit": 1.02,
+   "fitx": 1.02,
+   "v1": 1.26,
+   "naive": 1.38
+  },
+  "Tyler Warren": {
+   "pos": "TE",
+   "proj": 12.5,
+   "final": 10.3,
+   "fit": 1.46,
+   "fitx": 1.46,
+   "v1": 1.91,
+   "naive": 1.65
+  },
+  "Quinshon Judkins": {
+   "pos": "RB",
+   "proj": 12.3,
+   "final": 7.0,
+   "fit": 2.57,
+   "fitx": 2.57,
+   "v1": 2.41,
+   "naive": 2.53
+  },
+  "Jaylen Warren": {
+   "pos": "RB",
+   "proj": 12.3,
+   "final": 10.3,
+   "fit": 1.13,
+   "fitx": 1.13,
+   "v1": 1.2,
+   "naive": 1.12
+  },
+  "Rome Odunze": {
+   "pos": "WR",
+   "proj": 12.3,
+   "final": 7.2,
+   "fit": 4.11,
+   "fitx": 4.11,
+   "v1": 4.62,
+   "naive": 4.57
+  },
+  "Sam LaPorta": {
+   "pos": "TE",
+   "proj": 12.3,
+   "final": 9.8,
+   "fit": 2.06,
+   "fitx": 2.06,
+   "v1": 2.7,
+   "naive": 2.59
+  },
+  "DJ Moore": {
+   "pos": "WR",
+   "proj": 12.2,
+   "final": 21.0,
+   "fit": 6.3,
+   "fitx": 6.3,
+   "v1": 6.58,
+   "naive": 5.94
+  },
+  "Rico Dowdle": {
+   "pos": "RB",
+   "proj": 11.9,
+   "final": 4.1,
+   "fit": 3.03,
+   "fitx": 2.96,
+   "v1": 3.41,
+   "naive": 3.78
+  },
+  "DK Metcalf": {
+   "pos": "WR",
+   "proj": 11.8,
+   "final": 8.0,
+   "fit": 2.72,
+   "fitx": 2.72,
+   "v1": 3.06,
+   "naive": 3.04
+  },
+  "Deshaun Watson": {
+   "pos": "QB",
+   "proj": 11.7,
+   "final": 15.0,
+   "fit": 4.17,
+   "fitx": 4.2,
+   "v1": 6.46,
+   "naive": 6.13
+  },
+  "Chris Godwin": {
+   "pos": "WR",
+   "proj": 11.6,
+   "final": 8.3,
+   "fit": 3.6,
+   "fitx": 3.6,
+   "v1": 2.82,
+   "naive": 2.83
+  },
+  "Josh Downs": {
+   "pos": "WR",
+   "proj": 11.5,
+   "final": 5.7,
+   "fit": 6.99,
+   "fitx": 6.99,
+   "v1": 5.96,
+   "naive": 5.88
+  },
+  "Carnell Tate": {
+   "pos": "WR",
+   "proj": 11.4,
+   "final": 7.8,
+   "fit": 1.96,
+   "fitx": 1.96,
+   "v1": 1.52,
+   "naive": 1.57
+  },
+  "Chuba Hubbard": {
+   "pos": "RB",
+   "proj": 11.4,
+   "final": 23.7,
+   "fit": 3.93,
+   "fitx": 3.93,
+   "v1": 4.19,
+   "naive": 4.73
+  },
+  "Cooper Rush": {
+   "pos": "QB",
+   "proj": 11.3,
+   "final": 7.72,
+   "fit": 4.07,
+   "fitx": 4.07,
+   "v1": 3.44,
+   "naive": 3.39
+  },
+  "Wan'Dale Robinson": {
+   "pos": "WR",
+   "proj": 11.3,
+   "final": 8.8,
+   "fit": 1.03,
+   "fitx": 1.03,
+   "v1": 1.4,
+   "naive": 1.15
+  },
+  "Mark Andrews": {
+   "pos": "TE",
+   "proj": 11.3,
+   "final": 8.9,
+   "fit": 1.4,
+   "fitx": 1.4,
+   "v1": 0.79,
+   "naive": 0.69
+  },
+  "Juwan Johnson": {
+   "pos": "TE",
+   "proj": 11.1,
+   "final": 11.6,
+   "fit": 5.34,
+   "fitx": 5.34,
+   "v1": 5.98,
+   "naive": 5.57
+  },
+  "Tony Pollard": {
+   "pos": "RB",
+   "proj": 11.0,
+   "final": 4.4,
+   "fit": 2.93,
+   "fitx": 2.86,
+   "v1": 2.94,
+   "naive": 3.23
+  },
+  "Harold Fannin": {
+   "pos": "TE",
+   "proj": 10.7,
+   "final": 4.1,
+   "fit": 3.52,
+   "fitx": 3.52,
+   "v1": 2.09,
+   "naive": 2.38
+  },
+  "Michael Pittman": {
+   "pos": "WR",
+   "proj": 10.7,
+   "final": 8.8,
+   "fit": 1.46,
+   "fitx": 1.46,
+   "v1": 1.37,
+   "naive": 1.28
+  },
+  "Jalen Coker": {
+   "pos": "WR",
+   "proj": 10.7,
+   "final": 33.8,
+   "fit": 10.19,
+   "fitx": 10.19,
+   "v1": 10.14,
+   "naive": 11.16
+  },
+  "Kyle Pitts": {
+   "pos": "TE",
+   "proj": 10.5,
+   "final": 0.0,
+   "fit": 5.32,
+   "fitx": 5.32,
+   "v1": 4.94,
+   "naive": 5.38
+  },
+  "Brenton Strange": {
+   "pos": "TE",
+   "proj": 10.4,
+   "final": 10.3,
+   "fit": 1.84,
+   "fitx": 1.84,
+   "v1": 2.69,
+   "naive": 2.4
+  },
+  "Jakobi Meyers": {
+   "pos": "WR",
+   "proj": 10.3,
+   "final": 12.2,
+   "fit": 3.9,
+   "fitx": 3.9,
+   "v1": 3.6,
+   "naive": 3.31
+  },
+  "Khalil Shakir": {
+   "pos": "WR",
+   "proj": 10.0,
+   "final": 9.0,
+   "fit": 2.06,
+   "fitx": 2.06,
+   "v1": 2.25,
+   "naive": 2.07
+  },
+  "Devaughn Vele": {
+   "pos": "WR",
+   "proj": 10.0,
+   "final": 22.8,
+   "fit": 9.66,
+   "fitx": 9.66,
+   "v1": 10.14,
+   "naive": 10.09
+  },
+  "Alec Pierce": {
+   "pos": "WR",
+   "proj": 9.8,
+   "final": 10.1,
+   "fit": 1.27,
+   "fitx": 1.27,
+   "v1": 1.91,
+   "naive": 1.75
+  },
+  "Brian Thomas": {
+   "pos": "WR",
+   "proj": 9.7,
+   "final": 7.0,
+   "fit": 2.33,
+   "fitx": 2.33,
+   "v1": 3.88,
+   "naive": 3.67
+  },
+  "KC Concepcion": {
+   "pos": "WR",
+   "proj": 9.7,
+   "final": 7.8,
+   "fit": 1.68,
+   "fitx": 1.68,
+   "v1": 1.17,
+   "naive": 1.06
+  },
+  "Dalton Kincaid": {
+   "pos": "TE",
+   "proj": 9.5,
+   "final": 18.0,
+   "fit": 8.41,
+   "fitx": 8.41,
+   "v1": 8.29,
+   "naive": 8.16
+  },
+  "Kyle Monangai": {
+   "pos": "RB",
+   "proj": 9.5,
+   "final": 20.4,
+   "fit": 9.34,
+   "fitx": 9.35,
+   "v1": 9.12,
+   "naive": 9.1
+  },
+  "Jake Bates": {
+   "pos": "K",
+   "proj": 9.4,
+   "final": 7.0,
+   "fit": 1.23,
+   "fitx": 1.23,
+   "v1": 1.23,
+   "naive": 1.09
+  },
+  "Evan McPherson": {
+   "pos": "K",
+   "proj": 9.2,
+   "final": 19.0,
+   "fit": 7.05,
+   "fitx": 7.05,
+   "v1": 7.05,
+   "naive": 7.13
+  },
+  "Jacksonville Jaguars D/ST": {
+   "pos": "DST",
+   "proj": 9.2,
+   "final": 15.0,
+   "fit": 3.0,
+   "fitx": 3.0,
+   "v1": 6.61,
+   "naive": 5.46
+  },
+  "Pat Freiermuth": {
+   "pos": "TE",
+   "proj": 9.1,
+   "final": 15.6,
+   "fit": 3.04,
+   "fitx": 3.04,
+   "v1": 3.39,
+   "naive": 2.9
+  },
+  "Chris Boswell": {
+   "pos": "K",
+   "proj": 9.0,
+   "final": 8.0,
+   "fit": 3.64,
+   "fitx": 3.64,
+   "v1": 3.64,
+   "naive": 3.34
+  },
+  "Tyjae Spears": {
+   "pos": "RB",
+   "proj": 9.0,
+   "final": 4.4,
+   "fit": 1.75,
+   "fitx": 2.06,
+   "v1": 1.78,
+   "naive": 1.74
+  },
+  "Dalton Schultz": {
+   "pos": "TE",
+   "proj": 9.0,
+   "final": 7.5,
+   "fit": 2.15,
+   "fitx": 2.15,
+   "v1": 2.37,
+   "naive": 2.07
+  },
+  "Jonathon Brooks": {
+   "pos": "RB",
+   "proj": 8.9,
+   "final": 7.2,
+   "fit": 1.92,
+   "fitx": 1.92,
+   "v1": 1.91,
+   "naive": 1.77
+  },
+  "Pittsburgh Steelers D/ST": {
+   "pos": "DST",
+   "proj": 8.8,
+   "final": 20.0,
+   "fit": 9.53,
+   "fitx": 9.53,
+   "v1": 4.49,
+   "naive": 4.85
+  },
+  "Cade Otton": {
+   "pos": "TE",
+   "proj": 8.7,
+   "final": 5.6,
+   "fit": 2.27,
+   "fitx": 2.27,
+   "v1": 1.73,
+   "naive": 1.8
+  },
+  "Adonai Mitchell": {
+   "pos": "WR",
+   "proj": 8.4,
+   "final": 9.0,
+   "fit": 2.35,
+   "fitx": 2.35,
+   "v1": 2.31,
+   "naive": 2.1
+  },
+  "Tyler Loop": {
+   "pos": "K",
+   "proj": 8.4,
+   "final": 14.0,
+   "fit": 3.79,
+   "fitx": 3.79,
+   "v1": 3.79,
+   "naive": 3.91
+  },
+  "Cairo Santos": {
+   "pos": "K",
+   "proj": 8.4,
+   "final": 12.0,
+   "fit": 1.59,
+   "fitx": 1.59,
+   "v1": 1.59,
+   "naive": 1.58
+  },
+  "Cam Little": {
+   "pos": "K",
+   "proj": 8.3,
+   "final": 12.0,
+   "fit": 1.71,
+   "fitx": 1.71,
+   "v1": 1.71,
+   "naive": 1.76
+  },
+  "Ka'imi Fairbairn": {
+   "pos": "K",
+   "proj": 8.3,
+   "final": 9.0,
+   "fit": 2.26,
+   "fitx": 2.26,
+   "v1": 2.26,
+   "naive": 2.1
+  },
+  "Chase McLaughlin": {
+   "pos": "K",
+   "proj": 8.2,
+   "final": 11.0,
+   "fit": 1.9,
+   "fitx": 1.9,
+   "v1": 1.9,
+   "naive": 1.86
+  },
+  "Tyler Bass": {
+   "pos": "K",
+   "proj": 8.2,
+   "final": 13.0,
+   "fit": 1.89,
+   "fitx": 1.89,
+   "v1": 1.89,
+   "naive": 2.09
+  },
+  "Keenan Allen": {
+   "pos": "WR",
+   "proj": 8.2,
+   "final": 9.2,
+   "fit": 0.81,
+   "fitx": 0.81,
+   "v1": 1.21,
+   "naive": 1.16
+  },
+  "Kayshon Boutte": {
+   "pos": "WR",
+   "proj": 8.1,
+   "final": 3.1,
+   "fit": 1.47,
+   "fitx": 1.47,
+   "v1": 1.38,
+   "naive": 1.59
+  },
+  "Tennessee Titans D/ST": {
+   "pos": "DST",
+   "proj": 8.1,
+   "final": 0.0,
+   "fit": 3.13,
+   "fitx": 3.13,
+   "v1": 6.96,
+   "naive": 6.99
+  },
+  "Woody Marks": {
+   "pos": "RB",
+   "proj": 8.0,
+   "final": 5.0,
+   "fit": 1.12,
+   "fitx": 1.12,
+   "v1": 1.22,
+   "naive": 1.34
+  },
+  "Jerry Jeudy": {
+   "pos": "WR",
+   "proj": 7.8,
+   "final": 4.6,
+   "fit": 2.77,
+   "fitx": 2.77,
+   "v1": 1.77,
+   "naive": 1.8
+  },
+  "Calvin Ridley": {
+   "pos": "WR",
+   "proj": 7.8,
+   "final": 0.0,
+   "fit": 4.07,
+   "fitx": 4.07,
+   "v1": 3.53,
+   "naive": 3.85
+  },
+  "Spencer Shrader": {
+   "pos": "K",
+   "proj": 7.8,
+   "final": 6.0,
+   "fit": 1.7,
+   "fitx": 1.7,
+   "v1": 1.7,
+   "naive": 1.41
+  },
+  "Denzel Boston": {
+   "pos": "WR",
+   "proj": 7.7,
+   "final": 13.9,
+   "fit": 8.33,
+   "fitx": 8.33,
+   "v1": 9.51,
+   "naive": 9.2
+  },
+  "New York Jets D/ST": {
+   "pos": "DST",
+   "proj": 7.5,
+   "final": 9.0,
+   "fit": 1.57,
+   "fitx": 1.57,
+   "v1": 5.11,
+   "naive": 4.54
+  },
+  "Ryan Fitzgerald": {
+   "pos": "K",
+   "proj": 7.5,
+   "final": 7.0,
+   "fit": 2.01,
+   "fitx": 2.01,
+   "v1": 2.01,
+   "naive": 1.86
+  },
+  "Daniel Carlson": {
+   "pos": "K",
+   "proj": 7.3,
+   "final": 5.0,
+   "fit": 1.15,
+   "fitx": 1.15,
+   "v1": 1.15,
+   "naive": 1.0
+  },
+  "Mike Gesicki": {
+   "pos": "TE",
+   "proj": 7.0,
+   "final": 18.8,
+   "fit": 4.6,
+   "fitx": 4.6,
+   "v1": 4.46,
+   "naive": 4.41
+  },
+  "Joey Slye": {
+   "pos": "K",
+   "proj": 7.0,
+   "final": 5.0,
+   "fit": 2.08,
+   "fitx": 2.08,
+   "v1": 2.08,
+   "naive": 1.99
+  },
+  "Rashod Bateman": {
+   "pos": "WR",
+   "proj": 7.0,
+   "final": 0.0,
+   "fit": 2.78,
+   "fitx": 2.78,
+   "v1": 3.35,
+   "naive": 3.65
+  },
+  "Gunnar Helm": {
+   "pos": "TE",
+   "proj": 6.9,
+   "final": 6.8,
+   "fit": 1.51,
+   "fitx": 1.51,
+   "v1": 1.93,
+   "naive": 1.75
+  },
+  "Detroit Lions D/ST": {
+   "pos": "DST",
+   "proj": 6.9,
+   "final": 11.0,
+   "fit": 2.06,
+   "fitx": 2.06,
+   "v1": 4.59,
+   "naive": 3.82
+  },
+  "Samaje Perine": {
+   "pos": "RB",
+   "proj": 6.8,
+   "final": 8.0,
+   "fit": 1.85,
+   "fitx": 1.87,
+   "v1": 1.6,
+   "naive": 1.55
+  },
+  "Buffalo Bills D/ST": {
+   "pos": "DST",
+   "proj": 6.8,
+   "final": 8.0,
+   "fit": 2.94,
+   "fitx": 2.94,
+   "v1": 3.96,
+   "naive": 3.66
+  },
+  "Chris Rodriguez": {
+   "pos": "RB",
+   "proj": 6.7,
+   "final": 2.3,
+   "fit": 2.04,
+   "fitx": 2.03,
+   "v1": 2.49,
+   "naive": 2.63
+  },
+  "Nick Folk": {
+   "pos": "K",
+   "proj": 6.7,
+   "final": 8.0,
+   "fit": 3.34,
+   "fitx": 3.34,
+   "v1": 3.34,
+   "naive": 3.12
+  },
+  "Justice Hill": {
+   "pos": "RB",
+   "proj": 6.7,
+   "final": 3.8,
+   "fit": 0.99,
+   "fitx": 1.01,
+   "v1": 0.9,
+   "naive": 0.95
+  },
+  "Chicago Bears D/ST": {
+   "pos": "DST",
+   "proj": 6.5,
+   "final": 6.0,
+   "fit": 1.39,
+   "fitx": 1.39,
+   "v1": 2.15,
+   "naive": 1.99
+  },
+  "Xavier Hutchinson": {
+   "pos": "WR",
+   "proj": 6.4,
+   "final": 6.2,
+   "fit": 0.9,
+   "fitx": 0.9,
+   "v1": 0.98,
+   "naive": 0.87
+  },
+  "Baltimore Ravens D/ST": {
+   "pos": "DST",
+   "proj": 6.4,
+   "final": 7.0,
+   "fit": 1.78,
+   "fitx": 1.78,
+   "v1": 6.02,
+   "naive": 5.3
+  },
+  "Houston Texans D/ST": {
+   "pos": "DST",
+   "proj": 6.2,
+   "final": -1.0,
+   "fit": 4.07,
+   "fitx": 4.07,
+   "v1": 7.06,
+   "naive": 7.0
+  },
+  "Mason Taylor": {
+   "pos": "TE",
+   "proj": 6.2,
+   "final": 1.8,
+   "fit": 1.76,
+   "fitx": 1.76,
+   "v1": 2.14,
+   "naive": 2.31
+  },
+  "Atlanta Falcons D/ST": {
+   "pos": "DST",
+   "proj": 6.0,
+   "final": 6.0,
+   "fit": 1.02,
+   "fitx": 1.02,
+   "v1": 5.27,
+   "naive": 4.74
+  },
+  "Cincinnati Bengals D/ST": {
+   "pos": "DST",
+   "proj": 6.0,
+   "final": 22.0,
+   "fit": 4.75,
+   "fitx": 4.75,
+   "v1": 4.46,
+   "naive": 3.04
+  },
+  "Jaylin Noel": {
+   "pos": "WR",
+   "proj": 5.8,
+   "final": 7.3,
+   "fit": 2.08,
+   "fitx": 2.08,
+   "v1": 2.18,
+   "naive": 2.06
+  },
+  "Blake Grupe": {
+   "pos": "K",
+   "proj": 5.8,
+   "final": 0.0,
+   "fit": 2.63,
+   "fitx": 2.63,
+   "v1": 2.63,
+   "naive": 2.86
+  },
+  "Kenyon Sadiq": {
+   "pos": "TE",
+   "proj": 5.6,
+   "final": 11.4,
+   "fit": 1.1,
+   "fitx": 1.1,
+   "v1": 1.09,
+   "naive": 0.92
+  },
+  "Darren Waller": {
+   "pos": "TE",
+   "proj": 5.6,
+   "final": 4.8,
+   "fit": 1.05,
+   "fitx": 1.05,
+   "v1": 1.04,
+   "naive": 0.92
+  },
+  "Cleveland Browns D/ST": {
+   "pos": "DST",
+   "proj": 5.5,
+   "final": 1.0,
+   "fit": 1.21,
+   "fitx": 1.21,
+   "v1": 4.1,
+   "naive": 4.14
+  },
+  "Xavier Legette": {
+   "pos": "WR",
+   "proj": 5.5,
+   "final": 0.0,
+   "fit": 2.72,
+   "fitx": 2.72,
+   "v1": 2.48,
+   "naive": 2.72
+  },
+  "Isaac TeSlaa": {
+   "pos": "WR",
+   "proj": 5.3,
+   "final": 0.0,
+   "fit": 1.86,
+   "fitx": 1.86,
+   "v1": 2.07,
+   "naive": 2.27
+  },
+  "Andre Szmyt": {
+   "pos": "K",
+   "proj": 5.2,
+   "final": 4.0,
+   "fit": 0.88,
+   "fitx": 0.88,
+   "v1": 0.88,
+   "naive": 0.74
+  },
+  "Carolina Panthers D/ST": {
+   "pos": "DST",
+   "proj": 5.2,
+   "final": 1.0,
+   "fit": 2.58,
+   "fitx": 2.58,
+   "v1": 5.57,
+   "naive": 5.42
+  },
+  "Ja'Kobi Lane": {
+   "pos": "WR",
+   "proj": 5.1,
+   "final": 2.1,
+   "fit": 1.57,
+   "fitx": 1.57,
+   "v1": 2.03,
+   "naive": 2.1
+  },
+  "Andrei Iosivas": {
+   "pos": "WR",
+   "proj": 4.9,
+   "final": 3.2,
+   "fit": 1.23,
+   "fitx": 1.23,
+   "v1": 1.61,
+   "naive": 1.58
+  },
+  "Indianapolis Colts D/ST": {
+   "pos": "DST",
+   "proj": 4.9,
+   "final": 1.0,
+   "fit": 1.8,
+   "fitx": 1.8,
+   "v1": 4.2,
+   "naive": 4.22
+  },
+  "Darnell Washington": {
+   "pos": "TE",
+   "proj": 4.8,
+   "final": 3.8,
+   "fit": 1.36,
+   "fitx": 1.36,
+   "v1": 1.33,
+   "naive": 1.14
+  },
+  "Jahan Dotson": {
+   "pos": "WR",
+   "proj": 4.7,
+   "final": 2.9,
+   "fit": 0.81,
+   "fitx": 0.81,
+   "v1": 0.88,
+   "naive": 0.8
+  },
+  "Braelon Allen": {
+   "pos": "RB",
+   "proj": 4.6,
+   "final": 4.0,
+   "fit": 0.77,
+   "fitx": 0.76,
+   "v1": 0.81,
+   "naive": 0.74
+  },
+  "Ted Hurst": {
+   "pos": "WR",
+   "proj": 4.6,
+   "final": 6.6,
+   "fit": 3.65,
+   "fitx": 3.65,
+   "v1": 3.99,
+   "naive": 3.81
+  },
+  "Dylan Sampson": {
+   "pos": "RB",
+   "proj": 4.5,
+   "final": 0.0,
+   "fit": 2.19,
+   "fitx": 2.19,
+   "v1": 2.09,
+   "naive": 2.28
+  },
+  "Brian Robinson": {
+   "pos": "RB",
+   "proj": 4.4,
+   "final": 3.1,
+   "fit": 0.55,
+   "fitx": 0.58,
+   "v1": 0.57,
+   "naive": 0.6
+  },
+  "Tampa Bay Buccaneers D/ST": {
+   "pos": "DST",
+   "proj": 4.4,
+   "final": 9.0,
+   "fit": 4.08,
+   "fitx": 4.08,
+   "v1": 3.34,
+   "naive": 3.25
+  },
+  "Dawson Knox": {
+   "pos": "TE",
+   "proj": 4.3,
+   "final": 1.7,
+   "fit": 0.76,
+   "fitx": 0.76,
+   "v1": 0.78,
+   "naive": 0.85
+  },
+  "Keon Coleman": {
+   "pos": "WR",
+   "proj": 4.3,
+   "final": 1.1,
+   "fit": 1.79,
+   "fitx": 1.79,
+   "v1": 1.84,
+   "naive": 1.92
+  },
+  "Kalif Raymond": {
+   "pos": "WR",
+   "proj": 4.3,
+   "final": 16.4,
+   "fit": 5.79,
+   "fitx": 5.79,
+   "v1": 5.52,
+   "naive": 5.94
+  },
+  "Cole Kmet": {
+   "pos": "TE",
+   "proj": 4.2,
+   "final": 11.5,
+   "fit": 2.25,
+   "fitx": 2.25,
+   "v1": 2.41,
+   "naive": 2.16
+  },
+  "Erick All": {
+   "pos": "TE",
+   "proj": 4.1,
+   "final": 0.0,
+   "fit": 1.56,
+   "fitx": 1.56,
+   "v1": 1.82,
+   "naive": 1.99
+  },
+  "Jalen McMillan": {
+   "pos": "WR",
+   "proj": 4.0,
+   "final": 0.0,
+   "fit": 2.09,
+   "fitx": 2.09,
+   "v1": 1.78,
+   "naive": 1.94
+  },
+  "Omar Cooper": {
+   "pos": "WR",
+   "proj": 3.9,
+   "final": 4.0,
+   "fit": 1.72,
+   "fitx": 1.72,
+   "v1": 2.0,
+   "naive": 1.78
+  },
+  "New Orleans Saints D/ST": {
+   "pos": "DST",
+   "proj": 3.9,
+   "final": 3.0,
+   "fit": 1.26,
+   "fitx": 1.26,
+   "v1": 3.86,
+   "naive": 3.57
+  },
+  "Tommy Tremble": {
+   "pos": "TE",
+   "proj": 3.8,
+   "final": 5.5,
+   "fit": 0.79,
+   "fitx": 0.79,
+   "v1": 0.71,
+   "naive": 0.57
+  },
+  "Germie Bernard": {
+   "pos": "WR",
+   "proj": 3.5,
+   "final": 0.0,
+   "fit": 1.57,
+   "fitx": 1.57,
+   "v1": 1.65,
+   "naive": 1.79
+  },
+  "Roman Wilson": {
+   "pos": "WR",
+   "proj": 3.4,
+   "final": 5.6,
+   "fit": 1.61,
+   "fitx": 1.61,
+   "v1": 1.67,
+   "naive": 1.54
+  },
+  "Drew Sample": {
+   "pos": "TE",
+   "proj": 3.3,
+   "final": 4.9,
+   "fit": 1.11,
+   "fitx": 1.11,
+   "v1": 1.01,
+   "naive": 0.95
+  },
+  "Isaiah Williams": {
+   "pos": "WR",
+   "proj": 3.1,
+   "final": 1.7,
+   "fit": 0.62,
+   "fitx": 0.62,
+   "v1": 0.79,
+   "naive": 0.81
+  },
+  "Bryce Lance": {
+   "pos": "WR",
+   "proj": 2.9,
+   "final": 7.2,
+   "fit": 3.56,
+   "fitx": 3.56,
+   "v1": 3.69,
+   "naive": 3.68
+  },
+  "Jacob Saylors": {
+   "pos": "RB",
+   "proj": 2.8,
+   "final": 0.0,
+   "fit": 0.98,
+   "fitx": 0.98,
+   "v1": 1.09,
+   "naive": 1.2
+  },
+  "Isaiah Davis": {
+   "pos": "RB",
+   "proj": 2.7,
+   "final": 0.0,
+   "fit": 1.09,
+   "fitx": 1.09,
+   "v1": 1.22,
+   "naive": 1.33
+  },
+  "LeQuint Allen": {
+   "pos": "RB",
+   "proj": 2.7,
+   "final": 0.0,
+   "fit": 1.05,
+   "fitx": 1.05,
+   "v1": 1.26,
+   "naive": 1.37
+  },
+  "Devontez Walker": {
+   "pos": "WR",
+   "proj": 2.6,
+   "final": 0.0,
+   "fit": 1.03,
+   "fitx": 1.03,
+   "v1": 1.24,
+   "naive": 1.36
+  },
+  "Zachariah Branch": {
+   "pos": "WR",
+   "proj": 2.5,
+   "final": 0.0,
+   "fit": 1.27,
+   "fitx": 1.27,
+   "v1": 1.18,
+   "naive": 1.28
+  },
+  "Tez Johnson": {
+   "pos": "WR",
+   "proj": 2.5,
+   "final": -0.4,
+   "fit": 1.29,
+   "fitx": 1.29,
+   "v1": 1.09,
+   "naive": 1.22
+  },
+  "Austin Hooper": {
+   "pos": "TE",
+   "proj": 2.4,
+   "final": 0.0,
+   "fit": 1.22,
+   "fitx": 1.22,
+   "v1": 1.13,
+   "naive": 1.23
+  },
+  "Ray Davis": {
+   "pos": "RB",
+   "proj": 2.4,
+   "final": 0.3,
+   "fit": 0.98,
+   "fitx": 0.73,
+   "v1": 1.03,
+   "naive": 1.11
+  },
+  "Ja'Tavion Sanders": {
+   "pos": "TE",
+   "proj": 2.4,
+   "final": 0.0,
+   "fit": 1.19,
+   "fitx": 1.19,
+   "v1": 1.08,
+   "naive": 1.19
+  },
+  "Chimere Dike": {
+   "pos": "WR",
+   "proj": 2.3,
+   "final": -0.3,
+   "fit": 1.77,
+   "fitx": 1.77,
+   "v1": 1.62,
+   "naive": 1.66
+  },
+  "Noah Fant": {
+   "pos": "TE",
+   "proj": 2.3,
+   "final": 13.3,
+   "fit": 9.6,
+   "fitx": 9.6,
+   "v1": 9.69,
+   "naive": 9.78
+  },
+  "Cade Stover": {
+   "pos": "TE",
+   "proj": 2.0,
+   "final": 0.8,
+   "fit": 0.7,
+   "fitx": 0.7,
+   "v1": 0.68,
+   "naive": 0.71
+  },
+  "Isaiah Bond": {
+   "pos": "WR",
+   "proj": 1.9,
+   "final": 0.0,
+   "fit": 1.18,
+   "fitx": 1.18,
+   "v1": 0.88,
+   "naive": 0.96
+  },
+  "Ashton Dulin": {
+   "pos": "WR",
+   "proj": 1.8,
+   "final": 0.0,
+   "fit": 1.04,
+   "fitx": 1.04,
+   "v1": 0.86,
+   "naive": 0.94
+  },
+  "Olamide Zaccheaus": {
+   "pos": "WR",
+   "proj": 1.7,
+   "final": 1.5,
+   "fit": 0.45,
+   "fitx": 0.45,
+   "v1": 0.45,
+   "naive": 0.4
+  },
+  "Jackson Hawes": {
+   "pos": "TE",
+   "proj": 1.6,
+   "final": 0.0,
+   "fit": 0.66,
+   "fitx": 0.66,
+   "v1": 0.67,
+   "naive": 0.74
+  },
+  "Mo Alie-Cox": {
+   "pos": "TE",
+   "proj": 1.6,
+   "final": 0.0,
+   "fit": 0.92,
+   "fitx": 0.92,
+   "v1": 0.76,
+   "naive": 0.83
+  },
+  "Daniel Bellinger": {
+   "pos": "TE",
+   "proj": 1.5,
+   "final": 1.7,
+   "fit": 0.73,
+   "fitx": 0.73,
+   "v1": 0.69,
+   "naive": 0.59
+  },
+  "Durham Smythe": {
+   "pos": "TE",
+   "proj": 1.5,
+   "final": 1.4,
+   "fit": 0.51,
+   "fitx": 0.51,
+   "v1": 0.67,
+   "naive": 0.59
+  },
+  "Jeremy Ruckert": {
+   "pos": "TE",
+   "proj": 1.4,
+   "final": 1.4,
+   "fit": 0.55,
+   "fitx": 0.55,
+   "v1": 0.5,
+   "naive": 0.45
+  },
+  "Elic Ayomanor": {
+   "pos": "WR",
+   "proj": 1.4,
+   "final": 8.1,
+   "fit": 6.84,
+   "fitx": 6.84,
+   "v1": 6.93,
+   "naive": 6.87
+  },
+  "Tahj Brooks": {
+   "pos": "RB",
+   "proj": 1.2,
+   "final": 0.0,
+   "fit": 0.47,
+   "fitx": 0.47,
+   "v1": 0.53,
+   "naive": 0.58
+  },
+  "Jimmy Horn": {
+   "pos": "WR",
+   "proj": 1.2,
+   "final": -2.0,
+   "fit": 1.19,
+   "fitx": 1.19,
+   "v1": 1.11,
+   "naive": 1.27
+  },
+  "Brock Wright": {
+   "pos": "TE",
+   "proj": 1.2,
+   "final": 1.5,
+   "fit": 0.58,
+   "fitx": 0.58,
+   "v1": 0.55,
+   "naive": 0.51
+  },
+  "Zavion Thomas": {
+   "pos": "WR",
+   "proj": 1.2,
+   "final": 0.0,
+   "fit": 0.58,
+   "fitx": 0.58,
+   "v1": 0.61,
+   "naive": 0.65
+  },
+  "Sean Tucker": {
+   "pos": "RB",
+   "proj": 1.1,
+   "final": 0.0,
+   "fit": 0.49,
+   "fitx": 0.49,
+   "v1": 0.49,
+   "naive": 0.53
+  },
+  "Payne Durham": {
+   "pos": "TE",
+   "proj": 1.1,
+   "final": 0.0,
+   "fit": 0.57,
+   "fitx": 0.57,
+   "v1": 0.49,
+   "naive": 0.53
+  },
+  "Foster Moreau": {
+   "pos": "TE",
+   "proj": 1.1,
+   "final": 3.5,
+   "fit": 1.25,
+   "fitx": 1.25,
+   "v1": 1.23,
+   "naive": 1.27
+  },
+  "Seth McGowan": {
+   "pos": "RB",
+   "proj": 1.1,
+   "final": 1.0,
+   "fit": 0.3,
+   "fitx": 0.3,
+   "v1": 0.3,
+   "naive": 0.26
+  },
+  "Kendre Miller": {
+   "pos": "RB",
+   "proj": 1.1,
+   "final": 9.0,
+   "fit": 4.46,
+   "fitx": 4.47,
+   "v1": 4.45,
+   "naive": 4.41
+  },
+  "Colbie Young": {
+   "pos": "WR",
+   "proj": 1.0,
+   "final": 0.0,
+   "fit": 0.38,
+   "fitx": 0.38,
+   "v1": 0.44,
+   "naive": 0.48
+  },
+  "Skyler Bell": {
+   "pos": "WR",
+   "proj": 1.0,
+   "final": 0.0,
+   "fit": 0.41,
+   "fitx": 0.41,
+   "v1": 0.42,
+   "naive": 0.46
+  },
+  "Rasheen Ali": {
+   "pos": "RB",
+   "proj": 1.0,
+   "final": 0.0,
+   "fit": 0.42,
+   "fitx": 0.42,
+   "v1": 0.48,
+   "naive": 0.52
+  },
+  "Laquon Treadwell": {
+   "pos": "WR",
+   "proj": 1.0,
+   "final": 0.0,
+   "fit": 0.58,
+   "fitx": 0.58,
+   "v1": 0.48,
+   "naive": 0.52
+  },
+  "DJ Giddens": {
+   "pos": "RB",
+   "proj": 0.9,
+   "final": 0.0,
+   "fit": 0.43,
+   "fitx": 0.43,
+   "v1": 0.43,
+   "naive": 0.47
+  },
+  "Malachi Corley": {
+   "pos": "WR",
+   "proj": 0.8,
+   "final": 0.0,
+   "fit": 0.5,
+   "fitx": 0.5,
+   "v1": 0.37,
+   "naive": 0.41
+  },
+  "Blake Whiteheart": {
+   "pos": "TE",
+   "proj": 0.8,
+   "final": 2.4,
+   "fit": 0.71,
+   "fitx": 0.71,
+   "v1": 0.61,
+   "naive": 0.41
+  },
+  "Elijah Sarratt": {
+   "pos": "WR",
+   "proj": 0.8,
+   "final": 0.0,
+   "fit": 0.32,
+   "fitx": 0.32,
+   "v1": 0.38,
+   "naive": 0.42
+  },
+  "Tay Martin": {
+   "pos": "WR",
+   "proj": 0.8,
+   "final": 0.0,
+   "fit": 0.28,
+   "fitx": 0.28,
+   "v1": 0.31,
+   "naive": 0.34
+  },
+  "Joe Flacco": {
+   "pos": "QB",
+   "proj": 0.7,
+   "final": 0.0,
+   "fit": 0.25,
+   "fitx": 0.15,
+   "v1": 0.31,
+   "naive": 0.34
+  },
+  "Barion Brown": {
+   "pos": "WR",
+   "proj": 0.7,
+   "final": 0.3,
+   "fit": 0.27,
+   "fitx": 0.27,
+   "v1": 0.23,
+   "naive": 0.24
+  },
+  "Sione Vaki": {
+   "pos": "RB",
+   "proj": 0.7,
+   "final": 2.8,
+   "fit": 1.18,
+   "fitx": 1.19,
+   "v1": 1.17,
+   "naive": 1.19
+  },
+  "Dohnte Meyers": {
+   "pos": "WR",
+   "proj": 0.6,
+   "final": 3.8,
+   "fit": 3.16,
+   "fitx": 3.16,
+   "v1": 3.12,
+   "naive": 3.1
+  },
+  "Nate Boerkircher": {
+   "pos": "TE",
+   "proj": 0.6,
+   "final": 1.9,
+   "fit": 0.54,
+   "fitx": 0.54,
+   "v1": 0.64,
+   "naive": 0.52
+  },
+  "Jalon Daniels": {
+   "pos": "QB",
+   "proj": 0.6,
+   "final": 0.0,
+   "fit": 0.32,
+   "fitx": 0.19,
+   "v1": 0.27,
+   "naive": 0.29
+  },
+  "Nicholas Singleton": {
+   "pos": "RB",
+   "proj": 0.6,
+   "final": 0.0,
+   "fit": 0.27,
+   "fitx": 0.27,
+   "v1": 0.27,
+   "naive": 0.3
+  },
+  "Tyler Conklin": {
+   "pos": "TE",
+   "proj": 0.6,
+   "final": 0.0,
+   "fit": 0.21,
+   "fitx": 0.21,
+   "v1": 0.23,
+   "naive": 0.26
+  },
+  "Joshua Dobbs": {
+   "pos": "QB",
+   "proj": 0.6,
+   "final": 0.0,
+   "fit": 0.2,
+   "fitx": 0.1,
+   "v1": 0.23,
+   "naive": 0.26
+  },
+  "Davis Mills": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.22,
+   "fitx": 0.12,
+   "v1": 0.21,
+   "naive": 0.23
+  },
+  "Ko Kieft": {
+   "pos": "TE",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.26,
+   "fitx": 0.26,
+   "v1": 0.22,
+   "naive": 0.24
+  },
+  "Mitchell Trubisky": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.27,
+   "fitx": 0.16,
+   "v1": 0.23,
+   "naive": 0.25
+  },
+  "Quinn Ewers": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.15,
+   "fitx": 0.07,
+   "v1": 0.23,
+   "naive": 0.25
+  },
+  "Drew Allar": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.22,
+   "fitx": 0.13,
+   "v1": 0.24,
+   "naive": 0.26
+  },
+  "Jahdae Walker": {
+   "pos": "WR",
+   "proj": 0.5,
+   "final": 7.1,
+   "fit": 5.9,
+   "fitx": 5.9,
+   "v1": 5.88,
+   "naive": 5.85
+  },
+  "Tyler Huntley": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.18,
+   "fitx": 0.08,
+   "v1": 0.24,
+   "naive": 0.26
+  },
+  "Kenny Pickett": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 2.4,
+   "fit": 2.12,
+   "fitx": 2.27,
+   "v1": 2.14,
+   "naive": 2.12
+  },
+  "Riley Leonard": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.3,
+   "fitx": 0.16,
+   "v1": 0.24,
+   "naive": 0.26
+  },
+  "Spencer Rattler": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.23,
+   "fitx": 0.13,
+   "v1": 0.2,
+   "naive": 0.21
+  },
+  "Tyson Bagent": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.2,
+   "fitx": 0.09,
+   "v1": 0.23,
+   "naive": 0.25
+  },
+  "Nick Schuessler": {
+   "pos": "QB",
+   "proj": 0.45,
+   "final": 11.7,
+   "fit": 7.17,
+   "fitx": 7.19,
+   "v1": 7.34,
+   "naive": 7.6,
+   "role": "backup",
+   "f_in": 0.101
+  },
+  "Cade Klubnik": {
+   "pos": "QB",
+   "proj": 0.4,
+   "final": 0.0,
+   "fit": 0.15,
+   "fitx": 0.1,
+   "v1": 0.18,
+   "naive": 0.2
+  },
+  "Kyle Allen": {
+   "pos": "QB",
+   "proj": 0.4,
+   "final": 0.0,
+   "fit": 0.16,
+   "fitx": 0.09,
+   "v1": 0.17,
+   "naive": 0.18
+  }
+ },
+ "all": {
+  "fit": 2.606,
+  "fitx": 2.601,
+  "v1": 2.839,
+  "naive": 2.81,
+  "n": 39662
+ },
+ "wins": {
+  "fit": 89,
+  "fitx": 20,
+  "v1": 39,
+  "naive": 62
+ }
+}

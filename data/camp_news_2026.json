@@ -1,6 +1,76 @@
 {
-  "updated": "2026-09-13T02:08:25Z",
+  "updated": "2026-09-13T16:15:00Z",
   "items": [
+    {
+      "player": "Alvin Kamara",
+      "team": "NO",
+      "pos": "RB",
+      "date": "2026-09-13",
+      "headline": "Officially not expected to play vs. Lions despite full Friday practice",
+      "take": "Bench Kamara Week 1 entirely; now targeting a Week 2 debut at Baltimore",
+      "url": "https://www.nfl.com/news/week-1-injuries-sunday-pregame-2026-nfl-season",
+      "tag": "injury"
+    },
+    {
+      "player": "A.J. Brown",
+      "team": "NE",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Suffers high ankle sprain in Wednesday's opener vs. Seahawks, in a boot",
+      "take": "X-rays negative for fracture but he's week-to-week; bench through at least Week 2",
+      "url": "https://www.espn.com/nfl/story/_/id/49891924/sources-aj-brown-believed-high-ankle-sprain-set-mri",
+      "tag": "injury"
+    },
+    {
+      "player": "De'Zhaun Stribling",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Rookie WR out at least a month with deltoid sprain in ankle",
+      "take": "Injured in Week 1 win over Rams in Australia; stash and wait, more volume to Pearsall/Jennings meanwhile",
+      "url": "https://x.com/RapSheet/status/2099129423673102581",
+      "tag": "injury"
+    },
+    {
+      "player": "Sam Darnold",
+      "team": "SEA",
+      "pos": "QB",
+      "date": "2026-09-13",
+      "headline": "Exits opener vs. Patriots with unusual hip muscle strain",
+      "take": "No fracture, no immediate IR, but expected to miss time possibly into Week 3 -- bench until a return plan is clear",
+      "url": "https://www.cbssports.com/nfl/news/sam-darnold-hip-exits-seahawks-patriots-season-opener/",
+      "tag": "injury"
+    },
+    {
+      "player": "Rome Odunze",
+      "team": "CHI",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Trending to play vs. Panthers per Rapoport despite calf/questionable tag",
+      "take": "Start with slight caution and confirm inactives; Burden/Loveland are the hedge if he's a late scratch",
+      "url": "https://www.espn.com/nfl/story/_/id/49907338/bears-odunze-feels-ready-panthers-questionable-tag",
+      "tag": "injury"
+    },
+    {
+      "player": "Ja'Marr Chase",
+      "team": "CIN",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "No injury designation for Sunday vs. Buccaneers after knee scare",
+      "take": "Full practice participant this week; start with confidence in his usual role",
+      "url": "https://www.si.com/nfl/bengals/onsi/zac-taylor-updates-ja-marr-chase-s-injury-status-as-week-1-preparation-begins-01m1c7bk29sh",
+      "tag": "injury"
+    },
+    {
+      "player": "Carnell Tate",
+      "team": "TEN",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Off the injury report, cleared for NFL debut vs. Jets",
+      "take": "Favorable Week 1 matchup for his debut, but a catch-less preseason keeps him a deep-league flex, not a confident starter",
+      "url": "https://sports.yahoo.com/articles/carnell-tate-fantasy-week-1-092252070.html",
+      "tag": "riser"
+    },
     {
       "player": "Malik Davis",
       "team": "DAL",

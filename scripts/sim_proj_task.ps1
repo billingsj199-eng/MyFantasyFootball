@@ -69,18 +69,10 @@ Write-Log ("betting pull: exit " + $LASTEXITCODE)
 #     so it is no longer repeated here. The injury_updates entries in $Files
 #     and the ?v= bump below stay as a harmless safety net.
 
-# 0b2. ESPN depth charts — the engine's in-season injury layer docks
-#      Questionable+DNP players and weights the vacated share by depth
-#      rank. (The NFL practice report is pulled by the nested betting pull
-#      since 2026-09-13, like injuries.) Committed below alongside the projections.
-$out = & $Python (Join-Path $Repo 'scripts\pull_depth_charts.py') 2>&1 | Out-String
-Write-Log ("depth pull: " + $out.Trim().Split("`n")[-1])
-
-# 0c. Fresh game weather (ESPN roof/headline + Open-Meteo kickoff-hour
-#     forecast -> data/weather_2026.js; the Start/Sit WEATHER box and the
-#     card WEEKLY tab). Committed below alongside the projections.
-$out = & $Python (Join-Path $Repo 'scripts\pull_weather.py') 2>&1 | Out-String
-Write-Log ("weather pull: " + $out.Trim().Split("`n")[-1])
+# 0b2/0c. Depth charts + weather: since 2026-09-13 the nested betting pull
+#     above pulls pull_depth_charts.py and pull_weather.py itself (and
+#     commits them, bumping weather's ?v=), like injuries + practice. The
+#     $Files entries and the ?v= bumps below stay as a harmless safety net.
 
 # 1. Refresh sim_lab's data mirror from the repo (Clay, sigma, betting lines,
 #    Sleeper meta w/ injury designations, snaps).

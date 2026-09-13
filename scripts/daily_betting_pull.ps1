@@ -15,7 +15,10 @@
 # pregame / sim-export runs all refresh injuries together with the lines.
 # Same for the official NFL practice report (pull_practice_reports.py ->
 # data/practice_2026.js, a Sim Lab engine input; no index.html tag, so no
-# ?v= bump) since 2026-09-13 as well.
+# ?v= bump) since 2026-09-13 as well, plus ESPN depth charts
+# (pull_depth_charts.py -> data/depth_charts_2026.js, engine input, no tag)
+# and game weather (pull_weather.py -> data/weather_2026.js, Start/Sit
+# WEATHER box + card WEEKLY tab, ?v= bumped when changed).
 # Then re-exports the draft-helper players.json (sleeper/espn/yahoo
 # extensions) — the export derives team byes from betting_lines_2026.json,
 # and the 9am ADP task runs the same step (wired 2026-08-28).
@@ -36,7 +39,7 @@ Set-Location $Repo
 Write-Log '=== daily betting pull start ==='
 
 # Refuse to run on a dirty data file so a half-finished manual session isn't clobbered.
-$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'data/injury_updates.js', 'data/practice_2026.js', 'index.html')
+$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'data/injury_updates.js', 'data/practice_2026.js', 'data/depth_charts_2026.js', 'data/weather_2026.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -74,14 +77,33 @@ $out = & $Python 'scripts\pull_practice_reports.py' 2>&1 | Out-String
 Write-Log ('practice pull: ' + $out.Trim().Split("`n")[-1])
 $pracChanged = git status --porcelain -- data/practice_2026.js
 
+# ESPN depth charts (engine input for the vacated-share layer). Non-fatal.
+$out = & $Python 'scripts\pull_depth_charts.py' 2>&1 | Out-String
+Write-Log ('depth pull: ' + $out.Trim().Split("`n")[-1])
+$depthChanged = git status --porcelain -- data/depth_charts_2026.js
+
+# Game weather (ESPN roof/headline + Open-Meteo kickoff-hour forecast).
+# Bump its ?v= when changed - same read-from-disk rule as injuries.
+$out = & $Python 'scripts\pull_weather.py' 2>&1 | Out-String
+Write-Log ('weather pull: ' + $out.Trim().Split("`n")[-1])
+$wxChanged = git status --porcelain -- data/weather_2026.js
+if ($wxChanged) {
+    $idx = Join-Path $Repo 'index.html'
+    $html = [System.IO.File]::ReadAllText($idx)
+    $html2 = $html -replace 'weather_2026\.js\?v=[\w.-]+', ('weather_2026.js?v=' + (Get-Date -Format 'yyyy-MM-dd-HH'))
+    if ($html2 -ne $html) { [System.IO.File]::WriteAllText($idx, $html2) }
+}
+
 $changed = git status --porcelain -- @Files
 if (-not $changed) {
-    Write-Log 'no line movement, no injury/practice change - nothing to commit'
+    Write-Log 'no line movement, no injury/practice/depth/weather change - nothing to commit'
 } else {
     git add @Files
     $msg = ('Auto betting-lines scan {0} (game lines + UD season + weekly props)' -f (Get-Date -Format 'yyyy-MM-dd'))
     if ($injChanged) { $msg += ' + injuries' }
     if ($pracChanged) { $msg += ' + practice' }
+    if ($depthChanged) { $msg += ' + depth' }
+    if ($wxChanged) { $msg += ' + weather' }
     if ($recPosted) { $msg = 'SEASON RECEPTIONS POSTED - ' + $msg }
     git commit -m $msg
     git push origin main

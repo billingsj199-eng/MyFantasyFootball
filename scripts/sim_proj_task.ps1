@@ -69,12 +69,10 @@ Write-Log ("betting pull: exit " + $LASTEXITCODE)
 #     so it is no longer repeated here. The injury_updates entries in $Files
 #     and the ?v= bump below stay as a harmless safety net.
 
-# 0b2. Official NFL practice report (latest practice participation + game
-#      status) and ESPN depth charts — the engine's in-season injury layer
-#      docks Questionable+DNP players and weights the vacated share by depth
-#      rank. Committed below alongside the projections.
-$out = & $Python (Join-Path $Repo 'scripts\pull_practice_reports.py') 2>&1 | Out-String
-Write-Log ("practice pull: " + $out.Trim().Split("`n")[-1])
+# 0b2. ESPN depth charts — the engine's in-season injury layer docks
+#      Questionable+DNP players and weights the vacated share by depth
+#      rank. (The NFL practice report is pulled by the nested betting pull
+#      since 2026-09-13, like injuries.) Committed below alongside the projections.
 $out = & $Python (Join-Path $Repo 'scripts\pull_depth_charts.py') 2>&1 | Out-String
 Write-Log ("depth pull: " + $out.Trim().Split("`n")[-1])
 

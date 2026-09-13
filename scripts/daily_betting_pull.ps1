@@ -13,6 +13,9 @@
 # pulls the Sleeper injury report (pull_injuries.py -> data/injury_updates.js,
 # the site's card tags) and bumps its ?v= when it changed, so the daily /
 # pregame / sim-export runs all refresh injuries together with the lines.
+# Same for the official NFL practice report (pull_practice_reports.py ->
+# data/practice_2026.js, a Sim Lab engine input; no index.html tag, so no
+# ?v= bump) since 2026-09-13 as well.
 # Then re-exports the draft-helper players.json (sleeper/espn/yahoo
 # extensions) — the export derives team byes from betting_lines_2026.json,
 # and the 9am ADP task runs the same step (wired 2026-08-28).
@@ -33,7 +36,7 @@ Set-Location $Repo
 Write-Log '=== daily betting pull start ==='
 
 # Refuse to run on a dirty data file so a half-finished manual session isn't clobbered.
-$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'data/injury_updates.js', 'index.html')
+$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'data/injury_updates.js', 'data/practice_2026.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -65,13 +68,20 @@ if ($injChanged) {
     if ($html2 -ne $html) { [System.IO.File]::WriteAllText($idx, $html2) }
 }
 
+# Official NFL practice report (participation + game status). Non-fatal:
+# the puller exits non-zero when the page layout changes and writes nothing.
+$out = & $Python 'scripts\pull_practice_reports.py' 2>&1 | Out-String
+Write-Log ('practice pull: ' + $out.Trim().Split("`n")[-1])
+$pracChanged = git status --porcelain -- data/practice_2026.js
+
 $changed = git status --porcelain -- @Files
 if (-not $changed) {
-    Write-Log 'no line movement, no injury change - nothing to commit'
+    Write-Log 'no line movement, no injury/practice change - nothing to commit'
 } else {
     git add @Files
     $msg = ('Auto betting-lines scan {0} (game lines + UD season + weekly props)' -f (Get-Date -Format 'yyyy-MM-dd'))
     if ($injChanged) { $msg += ' + injuries' }
+    if ($pracChanged) { $msg += ' + practice' }
     if ($recPosted) { $msg = 'SEASON RECEPTIONS POSTED - ' + $msg }
     git commit -m $msg
     git push origin main

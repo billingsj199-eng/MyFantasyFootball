@@ -14,6 +14,9 @@
 #     clear of the Thu/Sun/Mon ~7:45 pre-kickoff runs)
 #   plus ~30 min before each in-season kickoff slot:
 #   Thu 19:40 | Sun 09:00, 12:30, 15:35, 19:50 | Mon 18:40, 19:45
+#   Sun 07:00 (added 2026-09-13, Jack: early Sunday lines + sims before the
+#     8:00/8:15 line pulls; the task is WakeToRun since the same day because
+#     the PC sleeps overnight and a missed trigger only fires on wake)
 # Rows for games that already kicked off are FROZEN by the exporter itself
 # (per-team kickoff times from ESPN), so extra runs never rewrite them.
 #

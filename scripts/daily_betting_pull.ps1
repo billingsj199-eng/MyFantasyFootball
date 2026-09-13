@@ -22,6 +22,11 @@
 # And post-game stats (scripts/postgame_stats.ps1, nested FIRST - it has its
 # own guard/commit/rebase/push, so it runs before this script dirties the
 # tree; FINAL games only, so overlapping a live window is safe).
+# Finally (2026-09-13) the Sim Lab refresh: sim_lab/update_simlab.bat
+# (refresh_data.py mirror + pace tracker + firebase deploy hosting:simlab,
+# ~50 s) runs LAST so it mirrors the lines/injuries just committed. It
+# used to be the second step of sim_lab/pregame_pull.ps1; that wrapper is
+# now just this script. Log: E:\MyFantasyFootball\sim_lab\last_refresh.log.
 # Then re-exports the draft-helper players.json (sleeper/espn/yahoo
 # extensions) — the export derives team byes from betting_lines_2026.json,
 # and the 9am ADP task runs the same step (wired 2026-08-28).
@@ -126,6 +131,11 @@ if (-not $changed) {
 $out = & $Python 'export_sleeper_extension_data.py' 2>&1 | Out-String
 Write-Log $out
 if ($LASTEXITCODE -ne 0) { Write-Log "extension export FAILED (exit $LASTEXITCODE) - helpers keep previous data" }
+
+# Sim Lab refresh + deploy (non-fatal; the bat logs REFRESH/DEPLOY FAILED
+# itself). Runs after the commit above so the mirror carries this run's data.
+& 'E:\MyFantasyFootball\sim_lab\update_simlab.bat' 2>&1 | Out-Null
+Write-Log ('sim lab refresh: exit ' + $LASTEXITCODE + ' (details in sim_lab\last_refresh.log)')
 
 # Trim log to last 400 lines.
 $lines = Get-Content $Log

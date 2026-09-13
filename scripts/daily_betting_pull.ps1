@@ -9,6 +9,10 @@
 # The DK season-props phase (Selenium) runs daily too since 2026-09-08 so
 # DK's season lines carry honest last-seen dates (stale ones grey out on
 # the card); it is wrapped in try/except inside main() and can't abort.
+# Since 2026-09-13 (Jack: "run injury with everything else") every run also
+# pulls the Sleeper injury report (pull_injuries.py -> data/injury_updates.js,
+# the site's card tags) and bumps its ?v= when it changed, so the daily /
+# pregame / sim-export runs all refresh injuries together with the lines.
 # Then re-exports the draft-helper players.json (sleeper/espn/yahoo
 # extensions) — the export derives team byes from betting_lines_2026.json,
 # and the 9am ADP task runs the same step (wired 2026-08-28).
@@ -29,7 +33,7 @@ Set-Location $Repo
 Write-Log '=== daily betting pull start ==='
 
 # Refuse to run on a dirty data file so a half-finished manual session isn't clobbered.
-$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'index.html')
+$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'data/injury_updates.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -48,12 +52,26 @@ if ($LASTEXITCODE -ne 0) {
 $recPosted = $out -match '\*\*\* SEASON RECEPTIONS PROP POSTED'
 if ($recPosted) { Write-Log 'ALERT: season receptions prop posted - commit flagged for Jack' }
 
+# Injury report (Sleeper statuses -> data/injury_updates.js). Bump its ?v=
+# (hour-stamped) when it changed - read the CURRENT html from disk, never
+# assume (two-?v=-writers rule).
+$out = & $Python 'scripts\pull_injuries.py' 2>&1 | Out-String
+Write-Log ('injury pull: ' + $out.Trim().Split("`n")[-1])
+$injChanged = git status --porcelain -- data/injury_updates.js
+if ($injChanged) {
+    $idx = Join-Path $Repo 'index.html'
+    $html = [System.IO.File]::ReadAllText($idx)
+    $html2 = $html -replace 'injury_updates\.js\?v=[\w.-]+', ('injury_updates.js?v=' + (Get-Date -Format 'yyyy-MM-dd-HH'))
+    if ($html2 -ne $html) { [System.IO.File]::WriteAllText($idx, $html2) }
+}
+
 $changed = git status --porcelain -- @Files
 if (-not $changed) {
-    Write-Log 'no line movement - nothing to commit'
+    Write-Log 'no line movement, no injury change - nothing to commit'
 } else {
     git add @Files
     $msg = ('Auto betting-lines scan {0} (game lines + UD season + weekly props)' -f (Get-Date -Format 'yyyy-MM-dd'))
+    if ($injChanged) { $msg += ' + injuries' }
     if ($recPosted) { $msg = 'SEASON RECEPTIONS POSTED - ' + $msg }
     git commit -m $msg
     git push origin main

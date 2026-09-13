@@ -22,7 +22,7 @@
 #
 # EVERY run pulls its own fresh inputs first (Jack's spec 2026-08-26): the
 # sportsbook lines (daily_betting_pull.ps1 — commits on movement itself) and
-# the Sleeper injury report (pull_injuries.py -> data/injury_updates.js),
+# the Sleeper injury report (pull_injuries.py, nested in that same script),
 # so the pre-kickoff runs price the latest lines + actives/inactives.
 # Sleeper injury DESIGNATIONS for the sim itself also arrive fresh via
 # refresh_data.py (it re-pulls sleeper_meta live from the Sleeper API).
@@ -64,10 +64,10 @@ if ($dirty) {
 $out = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Repo 'scripts\daily_betting_pull.ps1') 2>&1 | Out-String
 Write-Log ("betting pull: exit " + $LASTEXITCODE)
 
-# 0b. Fresh injury report (Sleeper statuses -> data/injury_updates.js, the
-#     site's card tags; committed below alongside the projections).
-$out = & $Python (Join-Path $Repo 'scripts\pull_injuries.py') 2>&1 | Out-String
-Write-Log ("injury pull: " + $out.Trim().Split("`n")[-1])
+# 0b. Injury report: since 2026-09-13 the nested betting pull above pulls
+#     pull_injuries.py itself (and commits data/injury_updates.js + its ?v=),
+#     so it is no longer repeated here. The injury_updates entries in $Files
+#     and the ?v= bump below stay as a harmless safety net.
 
 # 0b2. Official NFL practice report (latest practice participation + game
 #      status) and ESPN depth charts — the engine's in-season injury layer

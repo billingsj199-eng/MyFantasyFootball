@@ -19,6 +19,9 @@
 # (pull_depth_charts.py -> data/depth_charts_2026.js, engine input, no tag)
 # and game weather (pull_weather.py -> data/weather_2026.js, Start/Sit
 # WEATHER box + card WEEKLY tab, ?v= bumped when changed).
+# And post-game stats (scripts/postgame_stats.ps1, nested FIRST - it has its
+# own guard/commit/rebase/push, so it runs before this script dirties the
+# tree; FINAL games only, so overlapping a live window is safe).
 # Then re-exports the draft-helper players.json (sleeper/espn/yahoo
 # extensions) — the export derives team byes from betting_lines_2026.json,
 # and the 9am ADP task runs the same step (wired 2026-08-28).
@@ -45,6 +48,12 @@ if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
     exit 0
 }
+
+# Post-game weekly stats first (2026-09-13, Jack: every lines run). The
+# nested wrapper commits + pushes weekly_stats_active.js itself when new
+# FINAL-game rows landed; quiet no-op otherwise. Log: postgame_stats_log.txt.
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Repo 'scripts\postgame_stats.ps1') 2>&1 | Out-Null
+Write-Log ('postgame stats: exit ' + $LASTEXITCODE + ' (details in postgame_stats_log.txt)')
 
 $out = & $Python 'scripts\pull_betting_lines.py' '--game-lines' '--season-props' '--underdog' '--fanduel' '--betmgm' '--weekly-props' 2>&1 | Out-String
 Write-Log $out

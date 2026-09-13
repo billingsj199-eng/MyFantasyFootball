@@ -1,4 +1,4 @@
-# Post-game weekly stats publish (Task Scheduler: "MFF Postgame Stats").
+﻿# Post-game weekly stats publish (Task Scheduler: "MFF Postgame Stats").
 #
 # Runs scripts/pull_postgame_stats.py after every game window so 2026 game
 # logs, L4 PPG and the '26 PPG column land the same night. Only players whose
@@ -8,6 +8,9 @@
 #   Sun 16:50        (1pm slate)
 #   Sun 20:15        (4:05 / 4:25 slate)
 #   Tue 01:45        (MNF doubleheader late game)
+# Since 2026-09-13 it is ALSO nested at the top of scripts/daily_betting_pull.ps1,
+# so every lines run (Mon-Sat 8:00 daily, Pregame Lines, Sim Proj Export)
+# publishes fresh final-game stats too; the guards below make that safe.
 # The Tuesday 8:30 full chain (sim_lab/tuesday_stats.ps1) still rebuilds
 # sigma / Sim Lab / extension packs; this job is stats -> site only.
 #

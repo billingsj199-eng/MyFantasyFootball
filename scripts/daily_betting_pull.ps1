@@ -1,7 +1,8 @@
-# Daily betting-lines scan (Task Scheduler: "MFF Betting Lines Daily").
+﻿# Daily betting-lines scan (Task Scheduler: "MFF Betting Lines Daily").
 #
 # Runs the keyless requests-only phases of pull_betting_lines.py every
-# morning — ESPN game lines (spreads/totals), Underdog + FanDuel + BetMGM
+# morning (Mon-Sat 8:00 since 2026-09-13; Sunday's first pull is the 7:00
+# Sim Proj Export run, which nests this script) — ESPN game lines (spreads/totals), Underdog + FanDuel + BetMGM
 # season props (FD/MGM automated 2026-09-08), and the UD + PrizePicks + DK +
 # FD + MGM weekly prop boards — then commits + pushes ONLY when the
 # data actually changed, so quiet offseason mornings are silent no-ops.

@@ -55712,6 +55712,31 @@ Rules:
   // handled by page-bridge.js. That bridge calls window._mffSetPortfolio()
   // if defined. We define it here so incoming extension data flows through
   // the SITE's own merge + render pipeline (the same code CSV uploads use).
+  // Compact, cloud-safe shape for a later-round H2H group.
+  function _udNormalizeRoundGroup(d) {
+    const teamsIn = d.allTeams && typeof d.allTeams === 'object' ? Object.values(d.allTeams)
+                  : (Array.isArray(d.teams) ? d.teams : []);
+    const teams = teamsIn.map(t => ({
+      entryId: t.entryId != null ? String(t.entryId) : null,
+      username: t.username || null,
+      userId: t.userId != null ? t.userId : null,
+      isMine: !!t.isMine,
+      picks: (t.picks || []).map(p => ({ name: p.name, pos: p.pos || '', team: p.team || '', pick: parseInt(p.pick || 0, 10) || 0 }))
+    }));
+    return {
+      id: String(d.id),
+      tournament: d.tournament || d.title || 'Underdog',
+      teamName: d.teamName || null,
+      fee: parseFloat(d.entry_fee || d.fee || 0) || 0,
+      roundNumber: d.roundNumber != null ? +d.roundNumber : null,
+      roundTitle: d.roundTitle || null,
+      roundStartAt: d.roundStartAt || null,
+      myEntryId: d.myEntryId != null ? String(d.myEntryId) : null,
+      teams: teams
+    };
+  }
+  window._udNormalizeRoundGroup = _udNormalizeRoundGroup;
+
   window._mffSetPortfolio = function(extPortfolio) {
     if (!extPortfolio || !extPortfolio.drafts) {
       console.warn('[MFF/site] _mffSetPortfolio called with no drafts');
@@ -55773,10 +55798,27 @@ Rules:
       if (_existingCount > 0) _hadCloudDrafts = true;
       for (const [id, d] of exEntries) draftsObj[id] = d;
     }
+    window._udRoundGroups = window._udRoundGroups || {};
+    let _groupsAdded = 0;
     for (const d of arr) {
       if (!d || !d.id) continue;
+      // 2026-09-14: a later-round 2-seat group (The Eliminator's H2H rounds,
+      // extension 0.18.16 `roundGroup`; older syncs: an Eliminator record
+      // with <= 2 entries) is NOT a draft — keep it out of the draft count /
+      // exposure and chain it onto its Round-1 draft in the live standings.
+      const _tc = d.teamCount || (d.allTeams ? Object.keys(d.allTeams).length : 0);
+      const _isGroup = d.roundGroup === true ||
+        ((d.roundNumber || 0) >= 2 && _tc > 0 && _tc <= 2) ||
+        (/eliminator/i.test(String(d.tournament || d.title || '')) && _tc > 0 && _tc <= 2);
+      if (_isGroup) {
+        window._udRoundGroups[d.id] = _udNormalizeRoundGroup(d);
+        _groupsAdded++;
+        continue;
+      }
       draftsObj[d.id] = {
         id: d.id,
+        roundNumber: d.roundNumber != null ? d.roundNumber : null,
+        roundsSeen: Array.isArray(d.roundsSeen) ? d.roundsSeen.slice() : null,
         tournament: d.tournament || d.title || 'Underdog',
         teamName: d.teamName || null,         // v0.9.62: user's custom team name on UD (separate from contest)
         slateTitle: d.slateTitle || null,     // v0.9.68: e.g. "2026 Superflex Season"
@@ -55823,6 +55865,10 @@ Rules:
       };
     }
 
+    if (_groupsAdded) {
+      window._udRoundGroupsAt = Date.now();
+      console.log('[MFF/site] round groups (H2H rounds) received:', _groupsAdded, '· total', Object.keys(window._udRoundGroups).length);
+    }
     // Rebuild aggregates with the site's own logic, then render with the
     // site's own dashboard. _udRenderDashboard reads the dashboard DOM
     // (#mtUnderdogDashboard) and rebuilds it from the data.
@@ -56078,11 +56124,17 @@ Rules:
     const draftsArr = Object.values(parsed.drafts).map(d => ({
       id: d.id, tournament: d.tournament, fee: d.fee, size: d.size, date: d.date || '',
       phase: d.phase || 'pre',
+      myEntryId: d.myEntryId != null ? String(d.myEntryId) : null,
+      teamName: d.teamName || null,
+      roundNumber: d.roundNumber != null ? d.roundNumber : null,
       picks: d.picks.map(p => ({ name: p.name, pos: p.pos, team: p.team, pick: p.pick }))
     }));
+    // Later-round H2H groups (The Eliminator) — tiny, so they ride along.
+    const roundGroups = Object.values(window._udRoundGroups || {}).slice(0, 2000);
 
     const payload = {
       drafts: draftsArr,
+      roundGroups: roundGroups,
       totalPicks: parsed.totalPicks,
       numDrafts: parsed.numDrafts,
       totalInvestment: parsed.totalInvestment,
@@ -56109,9 +56161,21 @@ Rules:
     if (!cloud || !cloud.drafts || !cloud.drafts.length) return null;
     const drafts = {};
     cloud.drafts.forEach(d => {
-      drafts[d.id] = { id: d.id, tournament: d.tournament, fee: d.fee || 0, size: d.size || 12, date: d.date || '', phase: d.phase || 'pre', picks: d.picks || [] };
+      drafts[d.id] = { id: d.id, tournament: d.tournament, fee: d.fee || 0, size: d.size || 12, date: d.date || '', phase: d.phase || 'pre', picks: d.picks || [],
+                       myEntryId: d.myEntryId != null ? String(d.myEntryId) : null, teamName: d.teamName || null,
+                       roundNumber: d.roundNumber != null ? d.roundNumber : null };
       drafts[d.id].picks.sort((a, b) => a.pick - b.pick);
     });
+    // Round groups: merge by id (the extension push may already hold newer ones).
+    if (Array.isArray(cloud.roundGroups) && cloud.roundGroups.length) {
+      window._udRoundGroups = window._udRoundGroups || {};
+      let added = 0;
+      cloud.roundGroups.forEach(g => {
+        if (!g || g.id == null) return;
+        if (!window._udRoundGroups[String(g.id)]) { window._udRoundGroups[String(g.id)] = _udNormalizeRoundGroup(g); added++; }
+      });
+      if (added) window._udRoundGroupsAt = Date.now();
+    }
     const parsed = _udRebuildPlayers(drafts);
     parsed.totalInvestment = cloud.totalInvestment != null ? cloud.totalInvestment : parsed.totalInvestment;
     return parsed;
@@ -57237,6 +57301,11 @@ Rules:
     { re: /mastiff/i,             adv: 4, weeks: 14, advPrize: null },
     { re: /big\s*dog/i,           adv: 2, weeks: 14, advPrize: null }
   ];
+  // The Eliminator prize by ROUND REACHED (help page, Sep 2026): entries per
+  // round 196,608 / 98,304 / 49,152 / 24,576 / 12,288 / 6,144 / 3,072 / 1,536
+  // / 768 / 384 / 192 / 96 / 48 / 24 / 12 / 6 / 3 → the payout tier an entry
+  // eliminated in round k has locked in. Payouts start after Round 3.
+  const _UD_ELIM_ROUND_PRIZE = [0, 0, 0, 0, 10, 20, 31, 52, 102, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 76000];
   function _udContestRule(d) {
     const name = String((d && d.tournament) || '');
     const r = _UD_CONTEST_RULES.find(x => x.re.test(name)) || { adv: 2, weeks: 14, advPrize: null };
@@ -57246,8 +57315,48 @@ Rules:
       weeks: r.weeks,
       h2h: !!r.h2h,
       advPrize: r.advPrize == null ? fee : r.advPrize,
+      roundPrize: r.h2h ? _UD_ELIM_ROUND_PRIZE : null,
       size: (d && d.size) || 12
     };
+  }
+  // Later-round groups chained onto a Round-1 draft: same contest AND the
+  // same entry (myEntryId), the same roster (18 names), or the same custom
+  // team name. Sorted by round number.
+  function _udRosterSig(picks) {
+    return (picks || []).map(p => p && p.name).filter(Boolean).slice().sort().join('|');
+  }
+  function _udGroupsForDraft(d) {
+    const all = window._udRoundGroups ? Object.values(window._udRoundGroups) : [];
+    if (!all.length || !d) return [];
+    const tn = String(d.tournament || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const myId = d.myEntryId != null ? String(d.myEntryId) : null;
+    const mySig = _udRosterSig(d.picks);
+    const out = [];
+    all.forEach(g => {
+      if (!g || String(g.tournament || '').toLowerCase().replace(/\s+/g, ' ').trim() !== tn) return;
+      const mine = (g.teams || []).find(t => t.isMine) || null;
+      let link = false;
+      if (myId && mine && mine.entryId && mine.entryId === myId) link = true;
+      else if (myId && g.myEntryId && g.myEntryId === myId) link = true;
+      else if (mine && mine.picks && mine.picks.length >= 10 && mySig && _udRosterSig(mine.picks) === mySig) link = true;
+      else if (d.teamName && g.teamName && d.teamName === g.teamName) link = true;
+      if (link) out.push(g);
+    });
+    out.sort((a, b) => ((a.roundNumber || 0) - (b.roundNumber || 0)));
+    return out;
+  }
+  // NFL week a round group scores on: The Eliminator round k = week k; any
+  // other H2H contest falls back to the week window its start date lands in.
+  function _udGroupWeek(g, rule) {
+    if (g.roundNumber != null && rule.h2h) return +g.roundNumber;
+    if (g.roundStartAt) {
+      const t = Date.parse(g.roundStartAt);
+      if (!isNaN(t)) {
+        const w = _udWeekWindows().find(x => t >= x.kick - 5 * 86400000 && t < x.end);
+        if (w) return w.wk;
+      }
+    }
+    return g.roundNumber != null ? +g.roundNumber : null;
   }
   window._udContestRule = _udContestRule;
 
@@ -57344,7 +57453,7 @@ Rules:
   let _udLiveSigCache = '';
   function _udLiveSig() {
     const lw = _udLiveWeekInfo();
-    return lw.kicked.join(',') + '|' + lw.liveWk + '|' + (window._udWeeklyStamp || 0) + '|' +
+    return lw.kicked.join(',') + '|' + lw.liveWk + '|' + (window._udWeeklyStamp || 0) + '|' + (window._udRoundGroupsAt || 0) + '|' +
       ((window._liveWeekState && window._liveWeekState.sig) || '') + '|' +
       (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS ? 1 : 0);
   }
@@ -57362,10 +57471,12 @@ Rules:
     const dsig = at
       ? atVals.length + ':' + atVals.reduce((s, t) => s + ((t.picks || []).length), 0)
       : 'own:' + (d.picks || []).length;
-    const hit = _udLiveByDraft[key];
-    if (hit && hit.dsig === dsig) return hit;
-
     const rule = _udContestRule(d);
+    const groups = rule.h2h ? _udGroupsForDraft(d) : [];
+    const gsig = groups.map(g => g.id + ':' + (g.teams || []).reduce((s, t) => s + ((t.picks || []).length), 0)).join(',');
+    const hit = _udLiveByDraft[key];
+    if (hit && hit.dsig === dsig && hit.gsig === gsig) return hit;
+
     const lw = _udLiveWeekInfo();
     const weekList = lw.kicked.filter(w => w <= rule.weeks);
     const wkCol = weekList.length ? (lw.liveWk && weekList.includes(lw.liveWk) ? lw.liveWk : weekList[weekList.length - 1]) : null;
@@ -57404,16 +57515,77 @@ Rules:
         : (cutTeam ? -Math.round((cutTeam.pts - me.pts) * 10) / 10 : null);
     }
     const r1Done = rule.h2h && lw.curWk != null && lw.curWk > rule.weeks;
+    // ── H2H rounds (The Eliminator): chain the later-round groups ──
+    let h2h = null;
+    let moneyNow = (me && me.adv && at && scored) ? (rule.advPrize || 0) : 0;
+    let advKnown = true;
+    let inAdvOverride = null, myRankOverride = null, cushionOverride = null, myPtsOverride = null, myWkOverride = null;
+    if (rule.h2h) {
+      const P = rule.roundPrize || [];
+      const prizeAt = k => (k != null && P[k] != null) ? P[k] : (P.length ? P[P.length - 1] : 0);
+      const rounds = [];
+      const r1Alive = me ? me.adv : null;
+      rounds.push({ round: 1, week: rule.weeks, type: 'pool', rank: me ? me.rank : null, of: teams.length, adv: !!r1Alive, pts: me ? me.pts : null, done: !!r1Done });
+      let alive = true, elim = null, unknown = false, reached = 1;
+      if (r1Done && at && scored && !r1Alive) { alive = false; elim = 1; }
+      else if (r1Done && at && scored && r1Alive) reached = 2;
+      let cur = null;
+      groups.forEach(g => {
+        if (!alive) return;
+        const k = g.roundNumber != null ? +g.roundNumber : null;
+        const w = _udGroupWeek(g, rule);
+        const mine = (g.teams || []).find(t => t.isMine) || null;
+        const opp = (g.teams || []).find(t => !t.isMine) || null;
+        const myPicks = (mine && mine.picks && mine.picks.length) ? mine.picks : (d.picks || []);
+        const oppPicks = opp && opp.picks && opp.picks.length ? opp.picks : null;
+        const myPts = (w != null) ? _udBestBall(myPicks, w, lw.liveWk, sf) : null;
+        const oppPts = (w != null && oppPicks) ? _udBestBall(oppPicks, w, lw.liveWk, sf) : null;
+        const done = w != null && lw.curWk != null && lw.curWk > w;
+        const known = oppPicks != null;
+        const leading = (myPts != null && oppPts != null) ? (myPts > oppPts ? true : myPts < oppPts ? false : null) : null;
+        const row = { round: k, week: w, type: 'h2h', opp: opp ? (opp.username || ('Opponent ' + String(opp.entryId || '').slice(0, 6))) : '—',
+                      myPts, oppPts, done, known, leading, won: (done && leading != null) ? leading : null, gid: g.id };
+        rounds.push(row);
+        if (k != null) reached = Math.max(reached, k);
+        cur = row;
+        if (done) {
+          if (!known || leading == null) { unknown = true; }
+          else if (leading) { reached = Math.max(reached, k + 1); }
+          else { alive = false; elim = k; }
+        }
+      });
+      const latest = cur || rounds[0];
+      let money;
+      if (!alive) money = prizeAt(elim);
+      else if (latest.type === 'pool') money = latest.adv ? prizeAt(2) : prizeAt(1);
+      else if (latest.done) money = prizeAt(reached);
+      else money = latest.leading === true ? prizeAt((latest.round || reached) + 1) : prizeAt(latest.round || reached);
+      moneyNow = money || 0;
+      const inAdvNow = !alive ? false
+        : latest.type === 'pool' ? !!latest.adv
+        : latest.done ? (latest.won == null ? null : !!latest.won)
+        : (latest.known ? (latest.leading == null ? null : latest.leading) : null);
+      advKnown = inAdvNow != null;
+      inAdvOverride = inAdvNow;
+      if (latest.type === 'h2h') {
+        myRankOverride = !alive ? 2 : (latest.leading === false ? 2 : 1);
+        cushionOverride = (latest.myPts != null && latest.oppPts != null) ? Math.round((latest.myPts - latest.oppPts) * 10) / 10 : null;
+        myPtsOverride = latest.myPts;
+        myWkOverride = latest.myPts;
+      }
+      h2h = { rounds, alive, elim, reached, unknown, latest, locked: alive ? prizeAt(reached) : prizeAt(elim), groupsLinked: groups.length };
+    }
     const out = {
-      dsig, rule, sf, teams, me, scored,
+      dsig, gsig, rule, sf, teams, me, scored,
+      h2h, moneyNow, advKnown,
       fieldComplete: !!at && atVals.length > 1,
-      myRank: me ? me.rank : null,
-      myPts: me ? me.pts : null,
-      myWk: me ? me.wkPts : null,
-      inAdv: !!(me && me.adv),
+      myRank: myRankOverride != null ? myRankOverride : (me ? me.rank : null),
+      myPts: myPtsOverride != null ? myPtsOverride : (me ? me.pts : null),
+      myWk: myWkOverride != null ? myWkOverride : (me ? me.wkPts : null),
+      inAdv: inAdvOverride != null ? inAdvOverride : !!(me && me.adv),
       advPrize: rule.advPrize,
       cutPts: cutTeam ? cutTeam.pts : null,
-      cushion,
+      cushion: cushionOverride != null ? cushionOverride : cushion,
       weekList, wkCol, liveWk: lw.liveWk, curWk: lw.curWk,
       weeksScored: me ? me.weeksScored : 0,
       r1Done
@@ -57426,21 +57598,25 @@ Rules:
   // Portfolio roll-up over the (filtered) drafts: advance rate + $ in the money.
   function _udLiveSummary(data) {
     const drafts = data && data.drafts ? Object.values(data.drafts) : [];
-    let n = 0, nAdv = 0, winning = 0, rankSum = 0, nRank = 0, nField = 0, ptsSum = 0;
+    let n = 0, nAdv = 0, winning = 0, rankSum = 0, nRank = 0, nField = 0, ptsSum = 0, nMoney = 0;
     drafts.forEach(d => {
       const L = _udLiveDraft(d);
       if (!L) return;
       if (L.fieldComplete) nField++;
       if (!L.fieldComplete || !L.scored) return;
+      winning += L.moneyNow || 0;
+      if (L.moneyNow > 0) nMoney++;
+      if (L.advKnown === false) return;   // H2H round with the opponent's roster unknown
       n++;
       ptsSum += L.myPts || 0;
-      if (L.inAdv) { nAdv++; winning += L.advPrize || 0; }
+      if (L.inAdv) nAdv++;
       if (L.myRank) { rankSum += L.myRank; nRank++; }
     });
     const lw = _udLiveWeekInfo();
     return {
-      n, nAdv, nField,
+      n, nAdv, nField, nMoney,
       advRate: n ? nAdv / n : null,
+      groups: window._udRoundGroups ? Object.keys(window._udRoundGroups).length : 0,
       winning: Math.round(winning * 100) / 100,
       avgRank: nRank ? rankSum / nRank : null,
       avgPts: n ? ptsSum / n : null,
@@ -57467,7 +57643,7 @@ Rules:
     if (!sum || !sum.n) return { val: '—', sub: 'no games scored yet' };
     return {
       val: _udFmtMoney(sum.winning),
-      sub: sum.nAdv + ' draft' + (sum.nAdv === 1 ? '' : 's') + ' in the money if it ended today'
+      sub: sum.nMoney + ' draft' + (sum.nMoney === 1 ? '' : 's') + ' in the money if it ended today' + (sum.groups ? ' · ' + sum.groups + ' H2H round' + (sum.groups === 1 ? '' : 's') : '')
     };
   }
   // Repaint the two live KPI cards in place (no dashboard re-render) and,
@@ -59539,19 +59715,26 @@ Rules:
       _sortedRows.forEach((row, i) => {
         const d = row.d;
         const my = row.myEntry;
-        const rankStr = row.myRank ? `#${row.myRank}/${row.teams.length}` : '—';
         const L = row.live;
         const _isLive = !!(L && L.scored && L.fieldComplete);
+        const rankStr = (_isLive && L.h2h && !L.h2h.alive) ? 'OUT'
+          : (_isLive && L.h2h && L.h2h.latest && L.h2h.latest.type === 'h2h') ? (L.h2h.latest.leading == null ? '—/2' : `#${row.myRank}/2`)
+          : row.myRank ? `#${row.myRank}/${row.teams.length}` : '—';
         // Color the rank cell: live → green in an advancing spot, amber
         // within striking distance of the cut, red otherwise; pre-season
         // (build-graded) keeps the old tiering.
-        const rankColor = !row.myRank ? 'var(--text2)' :
-                          _isLive ? (L.inAdv ? '#22c55e' : (L.cushion != null && L.cushion > -15) ? '#facc15' : (row.myRank <= 6 ? '#f59e0b' : '#ef4444')) :
+        const rankColor = (_isLive && L.h2h && !L.h2h.alive) ? '#ef4444' :
+                          !row.myRank ? 'var(--text2)' :
+                          _isLive ? (L.inAdv === null ? 'var(--text2)' : L.inAdv ? '#22c55e' : (L.cushion != null && L.cushion > -15) ? '#facc15' : (row.myRank <= 6 ? '#f59e0b' : '#ef4444')) :
                           row.myRank === 1 ? '#22c55e' :
                           row.myRank <= 3 ? '#4ade80' :
                           row.myRank <= 6 ? '#facc15' :
                           row.myRank <= 9 ? '#f59e0b' : '#ef4444';
-        const rankLbl = _isLive ? (L.r1Done ? 'R1 FINAL' : 'LIVE RANK') : 'YOUR RANK';
+        const _h = _isLive ? L.h2h : null;
+        const _hLatest = _h ? _h.latest : null;
+        const rankLbl = _isLive
+          ? (_h ? (!_h.alive ? 'OUT · R' + _h.elim : (_hLatest && _hLatest.type === 'h2h' ? 'R' + _hLatest.round + ' H2H' : (L.r1Done ? 'R1 FINAL' : 'R1 LIVE'))) : 'LIVE RANK')
+          : 'YOUR RANK';
         const rankTitle = _isLive
           ? 'Live rank in this pool — every team\'s best-ball lineup scored on real weekly stats (FINAL games from the stats feed, in-progress games from live scoring). Top ' + L.rule.adv + ' advance.'
           : 'Rank in this field by Roster Construction score (pre-season build grade) — flips to live standings once games are scored.';
@@ -59592,8 +59775,25 @@ Rules:
           const payStr = L.inAdv
             ? ` · <span style="color:#22c55e;font-weight:700">${_udFmtMoney(L.advPrize)}</span>${L.advPrize ? '' : ' <span style="color:var(--text2)">(pays from R3)</span>'}`
             : '';
-          const h2hStr = L.rule.h2h ? ` · <span style="color:var(--text2)">${L.r1Done ? 'R1 done · H2H rounds not tracked' : 'W1 only · top ' + L.rule.adv + ' advance'}</span>` : '';
-          html += `<div style="font-size:.68rem;color:var(--text2)"><span style="color:var(--text);font-weight:700;font-size:.78rem">${L.myPts.toFixed(1)}</span> PTS${wkStr}${cushStr}${payStr}${h2hStr}</div>`;
+          if (L.h2h) {
+            const H = L.h2h, la = H.latest;
+            let line = '';
+            if (!H.alive) {
+              line = `<span style="color:#ef4444;font-weight:700">ELIMINATED</span> in R${H.elim}${H.elim === 1 ? ' (pool #' + (L.me ? L.me.rank : '—') + '/' + L.teams.length + ')' : ''}`;
+            } else if (la.type === 'pool') {
+              line = `<span style="color:var(--text);font-weight:700;font-size:.78rem">${(L.me ? L.me.pts : 0).toFixed(1)}</span> PTS · R1 pool #${L.me ? L.me.rank : '—'}/${L.teams.length} · top ${L.rule.adv} advance` +
+                (L.r1Done ? (L.inAdv ? ' · <span style="color:#22c55e;font-weight:700">ADVANCED</span> · awaiting R2 pairing' : '') : cushStr);
+            } else {
+              const lead = la.leading == null ? (la.known ? 'tied' : 'opp roster not synced') : (la.leading ? (la.done ? 'WON' : 'LEADING') : (la.done ? 'LOST' : 'TRAILING'));
+              const leadCol = la.leading == null ? 'var(--text2)' : la.leading ? '#22c55e' : '#ef4444';
+              line = `R${la.round} · W${la.week} vs <span style="color:var(--text);font-weight:600">${_esc(la.opp)}</span> · <span style="color:var(--text);font-weight:700;font-size:.78rem">${la.myPts != null ? la.myPts.toFixed(1) : '—'}</span> – <span style="color:var(--text);font-weight:600">${la.oppPts != null ? la.oppPts.toFixed(1) : '—'}</span> · <span style="color:${leadCol};font-weight:700">${lead}</span>`;
+            }
+            const lockStr = H.locked ? ` · <span style="color:#22c55e;font-weight:700">${_udFmtMoney(H.locked)}</span> <span style="color:var(--text2)">locked</span>` : '';
+            const nowStr = (L.moneyNow && L.moneyNow !== H.locked) ? ` · <span style="color:#22c55e">${_udFmtMoney(L.moneyNow)} if it ended today</span>` : (!H.locked && H.alive ? ' · <span style="color:var(--text2)">pays from R4</span>' : '');
+            html += `<div style="font-size:.68rem;color:var(--text2)">${line}${lockStr}${nowStr}</div>`;
+          } else {
+            html += `<div style="font-size:.68rem;color:var(--text2)"><span style="color:var(--text);font-weight:700;font-size:.78rem">${L.myPts.toFixed(1)}</span> PTS${wkStr}${cushStr}${payStr}</div>`;
+          }
         }
         if (my && !_isLive) {
           // v0.9.91: include Roster Construction Score in header context line.
@@ -59631,6 +59831,7 @@ Rules:
   function _udBuildLiveDraftHtml(row, i) {
     const L = row.live;
     let html = '';
+    if (L.h2h) html += _udBuildH2hRoundsHtml(L);
     const leader = L.teams[0];
     const wkLbl = L.wkCol ? 'W' + L.wkCol : 'WK';
     const thru = L.weekList.length ? (L.weekList.length === 1 ? 'Week ' + L.weekList[0] : 'Weeks ' + L.weekList[0] + '-' + L.weekList[L.weekList.length - 1]) : '';
@@ -59670,6 +59871,50 @@ Rules:
         html += `<div style="display:flex;align-items:center;gap:8px;margin:6px 0 8px;font-size:.5rem;letter-spacing:1.5px;color:#22c55e"><span style="flex:1;border-top:1px dashed #22c55e80"></span>ADVANCE LINE · ${L.cutPts != null ? L.cutPts.toFixed(1) + ' PTS' : ''}<span style="flex:1;border-top:1px dashed #22c55e80"></span></div>`;
       }
     });
+    return html;
+  }
+
+  // The Eliminator: round-by-round timeline (R1 pool, then each 2-seat
+  // H2H round with the opponent, both scores and the result).
+  function _udBuildH2hRoundsHtml(L) {
+    const H = L.h2h;
+    const P = L.rule.roundPrize || [];
+    let html = `<div style="margin-bottom:12px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">`;
+    html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;font-size:.62rem;color:var(--text2)">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--text)">ELIMINATOR ROUNDS</span>
+      <span>${H.alive ? '<b style="color:#22c55e">ALIVE</b> · reached R' + H.reached : '<b style="color:#ef4444">OUT</b> in R' + H.elim}</span>
+      <span>· locked <b style="color:${H.locked ? '#22c55e' : 'var(--text2)'}">${_udFmtMoney(H.locked)}</b></span>
+      <span>· ${H.groupsLinked} H2H round${H.groupsLinked === 1 ? '' : 's'} synced</span>
+    </div>`;
+    html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;min-width:520px;border-collapse:collapse;font-size:.68rem"><thead><tr style="border-bottom:1px solid var(--border)">
+      <th style="text-align:left;padding:3px 6px;color:var(--text2)">ROUND</th><th style="text-align:left;padding:3px 6px;color:var(--text2)">WEEK</th>
+      <th style="text-align:left;padding:3px 6px;color:var(--text2)">OPPONENT</th><th style="text-align:right;padding:3px 6px;color:var(--text2)">YOU</th>
+      <th style="text-align:right;padding:3px 6px;color:var(--text2)">OPP</th><th style="text-align:left;padding:3px 6px;color:var(--text2)">RESULT</th>
+      <th style="text-align:right;padding:3px 6px;color:var(--text2)">NEXT PAYS</th></tr></thead><tbody>`;
+    H.rounds.forEach(r => {
+      let res, col;
+      if (r.type === 'pool') {
+        res = r.done ? (r.adv ? 'ADVANCED (top ' + L.rule.adv + ')' : 'ELIMINATED') : (r.adv ? 'in top ' + L.rule.adv : 'outside top ' + L.rule.adv);
+        col = r.adv ? '#22c55e' : '#ef4444';
+        html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:3px 6px">R1</td><td style="padding:3px 6px">W${r.week}</td>
+          <td style="padding:3px 6px;color:var(--text2)">12-team pool</td><td style="padding:3px 6px;text-align:right;font-weight:700">${r.pts != null ? r.pts.toFixed(1) : '—'}</td>
+          <td style="padding:3px 6px;text-align:right;color:var(--text2)">#${r.rank || '—'}/${r.of}</td><td style="padding:3px 6px;color:${col};font-weight:700">${res}</td>
+          <td style="padding:3px 6px;text-align:right;color:var(--text2)">${_udFmtMoney(P[2] || 0)}</td></tr>`;
+        return;
+      }
+      if (!r.known) { res = r.done ? 'unknown — opponent roster not synced' : 'opponent roster not synced'; col = 'var(--text2)'; }
+      else if (r.done) { res = r.won == null ? 'TIED' : (r.won ? 'WON' : 'LOST'); col = r.won ? '#22c55e' : '#ef4444'; }
+      else { res = r.leading == null ? (r.myPts == null ? 'not started' : 'tied') : (r.leading ? 'LEADING' : 'TRAILING'); col = r.leading == null ? 'var(--text2)' : (r.leading ? '#22c55e' : '#ef4444'); }
+      html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:3px 6px">R${r.round != null ? r.round : '?'}</td><td style="padding:3px 6px">${r.week != null ? 'W' + r.week : '—'}</td>
+        <td style="padding:3px 6px">${_esc(r.opp)}</td><td style="padding:3px 6px;text-align:right;font-weight:700">${r.myPts != null ? r.myPts.toFixed(1) : '—'}</td>
+        <td style="padding:3px 6px;text-align:right">${r.oppPts != null ? r.oppPts.toFixed(1) : '—'}</td><td style="padding:3px 6px;color:${col};font-weight:700">${res}</td>
+        <td style="padding:3px 6px;text-align:right;color:var(--text2)">${r.round != null ? _udFmtMoney(P[r.round + 1] || 0) : '—'}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    if (!H.groupsLinked && H.alive && L.r1Done) {
+      html += `<div style="font-size:.62rem;color:var(--text2);margin-top:6px;font-style:italic">Head-to-head rounds appear here after the next <strong style="color:var(--accent)">Sync from Underdog</strong> (extension 0.18.16+) once Underdog has paired Round 2.</div>`;
+    }
+    html += `</div>`;
     return html;
   }
 

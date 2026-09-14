@@ -60129,6 +60129,8 @@ Rules:
   function _udBuildH2hRoundsHtml(L) {
     const H = L.h2h;
     const P = L.rule.prizeReach || [];
+    // Same fallback as the chain: tiers past the known table pay the last known tier (entry fee back for inferred contests).
+    const prizeAt = k => (k != null && P[k] != null) ? P[k] : (P.length ? P[P.length - 1] : 0);
     const wkLbl = w => !w ? '—' : (w[0] === w[1] ? 'W' + w[0] : 'W' + w[0] + '-' + w[1]);
     let html = `<div style="margin-bottom:12px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">`;
     html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;font-size:.62rem;color:var(--text2)">
@@ -60151,14 +60153,14 @@ Rules:
       if (!r) {
         if (!H.alive && k > (H.elim || 0)) return;
         const grp = rd.final ? (rd.size ? rd.size + '-team FINAL' : 'FINAL') : rd.size === 2 ? 'head-to-head' : (rd.size ? rd.size + '-team group · top ' + rd.adv : 'group · top ' + rd.adv);
-        const nextPays = rd.final ? '' : _udFmtMoney(P[k + 1] || 0);
+        const nextPays = rd.final ? '' : _udFmtMoney(prizeAt(k + 1));
         html += `<tr style="border-bottom:1px solid var(--border);opacity:.45"><td style="padding:3px 6px">${rd.final ? 'FINAL' : 'R' + k}</td><td style="padding:3px 6px">${wkLbl(rd.week)}</td>
           <td style="padding:3px 6px;color:var(--text2)">${grp}</td><td style="padding:3px 6px;text-align:right">—</td><td style="padding:3px 6px;text-align:right">—</td>
           <td style="padding:3px 6px;color:var(--text2);font-style:italic">${H.alive && k === H.reached ? 'awaiting group sync' : 'not reached'}</td><td style="padding:3px 6px;text-align:right;color:var(--text2)">${nextPays}</td></tr>`;
         return;
       }
       let res, col, oppCell;
-      const nextPays = r.final ? '' : _udFmtMoney(P[(r.round || k) + 1] || 0);
+      const nextPays = r.final ? '' : _udFmtMoney(prizeAt((r.round || k) + 1));
       if (r.round === 1) {
         res = r.done ? (r.adv ? 'ADVANCED (top ' + L.rule.adv + ')' : 'ELIMINATED') : (r.adv ? 'in top ' + L.rule.adv : 'outside top ' + L.rule.adv);
         col = r.adv ? '#22c55e' : '#ef4444';

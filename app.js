@@ -8880,19 +8880,18 @@ function _simProjRow(d, wk) {
   return r || null;
 }
 
-// The three PROJ/BOOM/BUST cells for one 2026 log row ('' outside 2026).
+// The PROJ cell for one 2026 log row ('' outside 2026). BOOM/BUST columns
+// were dropped from the card's game log 2026-09-14 (Jack) — the odds still
+// ship in SIM_PROJ_2026 for the rankings WEEKLY view (_wkSimBoomBustCell).
 function _simProjCells(d, wk, fmt, isBye) {
-  if (isBye) return '<td style="color:var(--text2)">—</td><td style="color:var(--text2)">—</td><td style="color:var(--text2)">—</td>';
+  if (isBye) return '<td style="color:var(--text2)">—</td>';
   const r = _simProjRow(d, wk);
-  if (!r) return '<td style="color:var(--text2)">—</td><td style="color:var(--text2)">—</td><td style="color:var(--text2)">—</td>';
+  if (!r) return '<td style="color:var(--text2)">—</td>';
   const fi = fmt === 'ppr' ? 1 : fmt === 'std' ? 2 : 0;
   const proj = r[fi];
-  let out = (proj === 0 && r[3] == null)
+  return (proj === 0 && r[3] == null)
     ? '<td style="color:#ef4444;font-weight:700" title="Ruled out (injury/suspension)">0</td>'
     : '<td style="font-weight:700">' + proj + '</td>';
-  out += _statCell(r[3] != null ? r[3] + '%' : '—', r[3], 8, 35);
-  out += _statCell(r[4] != null ? r[4] + '%' : '—', r[4], 12, 40, true);
-  return out;
 }
 // Sim season PPG row [half, ppr, std] from SIM_PROJ_2026.seasonPpg (mean of
 // the player's weekly sim means across his playable weeks).
@@ -9020,9 +9019,7 @@ function _wkSimBoomBustCell(d, which) {
   return '<td class="' + cls + ' weekly-only-cell" style="display:none"><span style="color:' + c + ';font-weight:700">' + v + '%</span></td>';
 }
 
-const _SIM_PROJ_HDR = '<th><span data-gloss="Sim Lab projected fantasy points for this game — recomputed daily and again before kickoffs, then frozen once the game starts. Reflects Vegas lines, matchup, usage trends, and injuries (a ruled-out player shows 0 and his points shift to teammates).">PROJ</span></th>'
-  + '<th><span data-gloss="Chance of finishing 50%+ ABOVE his own median sim outcome for this game (1,000 Monte Carlo runs). High boom + high bust = wide-range player.">BOOM</span></th>'
-  + '<th><span data-gloss="Chance of finishing 50%+ BELOW his own median sim outcome for this game (1,000 Monte Carlo runs). Steady floor players run low on both boom and bust.">BUST</span></th>';
+const _SIM_PROJ_HDR = '<th><span data-gloss="Sim Lab projected fantasy points for this game — recomputed daily and again before kickoffs, then frozen once the game starts. Reflects Vegas lines, matchup, usage trends, and injuries (a ruled-out player shows 0 and his points shift to teammates).">PROJ</span></th>';
 
 // === K/DST profile data helpers ===
 // Kickers key their history/game-log bundles by nflverse display name; D/ST
@@ -9618,10 +9615,12 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   }
 
   const _is26 = +season === 2026;
-  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
+  // Column order (Jack 2026-09-14): WK · OPP · PROJ · RNK · FPTS · SNP% · then every
+  // share % (CAR% / TS%) BEFORE the counting stats.
+  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th>FPTS</th><th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
-  else if (isRB) hdr += '<th>ATT</th><th><span data-gloss="Share of team carries that week">CAR%</span></th><th>RyD</th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>FL</th>';
-  else hdr += '<th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>RyD</th><th>FL</th>';
+  else if (isRB) hdr += '<th><span data-gloss="Share of team carries that week">CAR%</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>ATT</th><th>RyD</th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>FL</th>';
+  else hdr += '<th><span data-gloss="Share of team targets that week">TS%</span></th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>RyD</th><th>FL</th>';
   hdr += '</tr>';
 
   const _posStatCols = isQB ? 8 : isRB ? 9 : 7;
@@ -9633,8 +9632,9 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
       r += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
       r += '<td style="color:var(--text2)">' + oppCell + '</td>';
       if (_is26) r += _simProjCells(d, w.wk, fmt, !!w._bye);
+      r += '<td style="color:var(--text2)">—</td>';   // RNK
       r += '<td class="fpts-cell" style="color:var(--text2)">' + (w._dnp ? '0' : '—') + '</td>';
-      for (let i = 0; i < 2 + _posStatCols; i++) r += '<td style="color:var(--text2)">—</td>';
+      for (let i = 0; i < 1 + _posStatCols; i++) r += '<td style="color:var(--text2)">—</td>';   // SNP% + position columns
       return r + '</tr>';
     }
     const isBest = w.fpts === bestFpts && bestFpts > 0 ? ' class="best-yr"' : '';
@@ -9646,6 +9646,8 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
     row += '<td style="font-weight:700;color:var(--accent)">' + w.wk + '</td>';
     row += '<td style="color:var(--text2)">' + oppCell + '</td>';
     if (_is26) row += _simProjCells(d, w.wk, fmt, false);
+    const _wkRank = _weeklyPosRank(pos, season, w.wk, w.fpts, fmt);
+    row += '<td' + _posRankStyle(_wkRank, pos) + '>' + (_wkRank != null ? _wkRank : '—') + '</td>';
     const _wkColor = posFptsColor(w.fpts, pos);
     if (_wkColor) {
       row += '<td class="fpts-cell" style="color:' + _wkColor + ';font-weight:700">' + w.fpts + '</td>';
@@ -9653,8 +9655,6 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
       const fptsClass = w.fpts === bestFpts && bestFpts > 0 ? ' class="fpts-cell best-yr"' : ' class="fpts-cell"';
       row += '<td' + fptsClass + '>' + w.fpts + '</td>';
     }
-    const _wkRank = _weeklyPosRank(pos, season, w.wk, w.fpts, fmt);
-    row += '<td' + _posRankStyle(_wkRank, pos) + '>' + (_wkRank != null ? _wkRank : '—') + '</td>';
     const _wkSnp = _snapWeek(d.n, season, w.wk);
     row += _statCell(_wkSnp != null ? _wkSnp + '%' : '—', _wkSnp, 40, 90);
     const _wkTs = isQB ? null : _tsPctWeek(d.n, season, w);
@@ -9667,17 +9667,19 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
     } else if (isRB) {
       const _wkCar = _carPctWeek(d.n, season, w);
       const _wkTd = (w.rtd||0) + (w.rctd||0);
-      row += _statCell(w.ra||0, w.ra||0, 6, 19)
-        + _statCell(_wkCar != null ? _wkCar.toFixed(1) + '%' : '—', _wkCar, 15, 65)
+      row += _statCell(_wkCar != null ? _wkCar.toFixed(1) + '%' : '—', _wkCar, 15, 65)
+        + _wkTsCell
+        + _statCell(w.ra||0, w.ra||0, 6, 19)
         + _statCell(w.ry||0, w.ry||0, 25, 95)
         + _statCell(w.tgt||0, w.tgt||0, 1, 5.5) + _statCell(w.rec||0, w.rec||0, 0.8, 4.5)
         + _statCell(w.rcy||0, w.rcy||0, 5, 40) + _statCell(_wkTd, _wkTd, 0, 1.2)
-        + _wkTsCell + '<td>' + (w.fl||0) + '</td>';
+        + '<td>' + (w.fl||0) + '</td>';
     } else {
       const _wkTd = (w.rtd||0) + (w.rctd||0);
-      row += _statCell(w.tgt||0, w.tgt||0, 3, 10) + _statCell(w.rec||0, w.rec||0, 2, 7)
+      row += _wkTsCell
+        + _statCell(w.tgt||0, w.tgt||0, 3, 10) + _statCell(w.rec||0, w.rec||0, 2, 7)
         + _statCell(w.rcy||0, w.rcy||0, 20, 90) + _statCell(_wkTd, _wkTd, 0, 1.2)
-        + _wkTsCell + '<td>' + (w.ry||0) + '</td><td>' + (w.fl||0) + '</td>';
+        + '<td>' + (w.ry||0) + '</td><td>' + (w.fl||0) + '</td>';
     }
     row += '</tr>';
     return row;
@@ -9690,7 +9692,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   let totalRow = '<tr style="font-weight:700;border-top:2px solid var(--accent);background:rgba(245,158,11,.04)">';
   // Season-level SNP% and TS% for the totals row
   const _totSnp = _snapSeason(d.n, season);
-  totalRow += '<td style="color:var(--accent)">TOT</td><td></td>' + (_is26 ? '<td></td><td></td><td></td>' : '') + '<td style="font-weight:700">' + totals.fpts + '</td><td style="color:var(--text2)">—</td>';
+  totalRow += '<td style="color:var(--accent)">TOT</td><td></td>' + (_is26 ? '<td></td>' : '') + '<td style="color:var(--text2)">—</td><td style="font-weight:700">' + totals.fpts + '</td>';
   totalRow += '<td>' + (_totSnp != null ? Math.round(_totSnp) + '%' : '—') + '</td>';
   let _totTsCell = '<td style="color:var(--text2)">—</td>';
   let _totCarCell = '<td style="color:var(--text2)">—</td>';
@@ -9705,8 +9707,8 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   }
   const _totTd = (totals.rtd||0) + (totals.rctd||0);
   if (isQB) totalRow += '<td>'+totals.pc+'</td><td>'+totals.pa+'</td><td>'+totals.py+'</td><td>'+totals.ptd+'</td><td>'+totals.int+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
-  else if (isRB) totalRow += '<td>'+totals.ra+'</td>'+_totCarCell+'<td>'+totals.ry+'</td><td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td>'+_totTsCell+'<td>'+totals.fl+'</td>';
-  else totalRow += '<td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td>'+_totTsCell+'<td>'+totals.ry+'</td><td>'+totals.fl+'</td>';
+  else if (isRB) totalRow += _totCarCell+_totTsCell+'<td>'+totals.ra+'</td><td>'+totals.ry+'</td><td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td><td>'+totals.fl+'</td>';
+  else totalRow += _totTsCell+'<td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td><td>'+totals.ry+'</td><td>'+totals.fl+'</td>';
   totalRow += '</tr>';
   if (adjusted.length) rows += totalRow;
 

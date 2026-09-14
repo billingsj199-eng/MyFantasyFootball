@@ -4110,6 +4110,8 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
   const card = document.createElement('div');
   card.className = 'tcv-card' + ((typeof currentMode !== 'undefined' && currentMode === 'weekly') ? ' tcv-card-wk' : '');
   card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
+  card._tcvPlayer = d;          // EDIT RANKS (type-a-rank) reads these on both card layouts
+  card._tcvRank = displayRank;
   // Outline the card in its NFL team's colors
   {
     const teamRgb = _tcvHexToRgb(_tcvTeamOutline(d.t));
@@ -4541,6 +4543,243 @@ function _tcvUpdateSelCount(root) {
   if (sb) sb.textContent = root.classList.contains('tcv-select') ? '☑ SELECTING… (click cards)' : '☐ SELECT';
   const zb = root.querySelector('[data-tcvaction="dlZipSel"]');
   if (zb && !zb._tcvBusy) { zb.textContent = '📦 ZIP SELECTED (' + n + ')'; zb.classList.toggle('tcv-primary', n > 0); }
+}
+
+// ── EDIT RANKS in the tier-card view (Jack 2026-09-14) ────────────────────
+// Jack's board only (admin session): "✎ EDIT RANKS" turns every card into a
+// drag handle — drop a card on another card to land before/after it, on a
+// tier letter to go to the top of that tier, or in a tier's empty space to
+// go to its bottom. Clicking a rank number opens a tiny input to type a rank
+// instead. Every move goes through the SAME movePlayer()/movePositionGroup()
+// the table's drag uses, so tier breaks shift the same way, POS LOCK is
+// honoured, and saveLocal() lights the SAVE button. Edit state lives outside
+// the DOM (render() rebuilds the view after each move).
+window._tcvEdit = window._tcvEdit || { on: false };
+function _tcvCanEditRanks() {
+  return typeof currentVersion !== 'undefined' && currentVersion === 'jacks' && typeof canEdit === 'function' && canEdit();
+}
+// Board-position math copied from the table's onPointerUp: `after` = drop
+// below/right of the target card.
+function _tcvMoveRelative(dragIdx, targetIdx, after) {
+  if (dragIdx == null || targetIdx == null || dragIdx === targetIdx) return false;
+  const dragPos = board.indexOf(dragIdx);
+  let targetPos = board.indexOf(targetIdx);
+  if (dragPos < 0 || targetPos < 0) return false;
+  if (after && dragPos < targetPos) { /* stays */ }
+  else if (after) targetPos = targetPos + 1;
+  else if (!after && dragPos < targetPos) targetPos = targetPos - 1;
+  if (targetPos === dragPos) return false;
+  if (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') && typeof movePositionGroup === 'function') movePositionGroup(dragIdx, targetPos);
+  else movePlayer(dragIdx, targetPos);
+  return true;
+}
+// After render() rebuilt the view: flash + scroll to the moved card.
+function _tcvAfterMove(idx) {
+  render();
+  setTimeout(() => {
+    const c = document.querySelector('.tier-card-view .tcv-card[data-cidx="' + idx + '"]');
+    if (!c) return;
+    c.classList.add('tcv-just-moved');
+    c.addEventListener('animationend', () => c.classList.remove('tcv-just-moved'), { once: true });
+    try { c.scrollIntoView({ block: 'nearest' }); } catch (_) {}
+  }, 0);
+}
+// Type-a-rank: displayRank is the card's index in the view's `data` (overall
+// rank on ALL, positional rank on QB/RB/…), so the target slot is "before the
+// card currently showing that rank" when moving up, "after it" moving down.
+function _tcvMoveToDisplayRank(root, data, card, newRank) {
+  const d = card._tcvPlayer;
+  const cur = card._tcvRank;
+  if (!d || !isFinite(newRank)) return;
+  newRank = Math.max(1, Math.min(data.length, Math.round(newRank)));
+  if (newRank === cur) return;
+  const target = data[newRank - 1];
+  if (!target) return;
+  const dragIdx = +card.getAttribute('data-cidx');
+  const targetIdx = target.idx != null ? target.idx : D.indexOf(target);
+  if (_tcvMoveRelative(dragIdx, targetIdx, newRank > cur)) _tcvAfterMove(dragIdx);
+}
+function _tcvOpenRankInput(root, data, card) {
+  const rankEl = card.querySelector('.tcv-row-rank, .tcv-card-rank');
+  if (!rankEl || rankEl.querySelector('input')) return;
+  const inp = document.createElement('input');
+  inp.type = 'number'; inp.min = '1'; inp.max = String(data.length); inp.value = String(card._tcvRank || '');
+  inp.className = 'tcv-rank-input';
+  inp.title = 'Type the rank to move this player to, then Enter (Esc cancels)';
+  const prevHtml = rankEl.innerHTML;
+  rankEl.innerHTML = '';
+  rankEl.appendChild(inp);
+  let done = false;
+  const close = (commit) => {
+    if (done) return; done = true;
+    const v = parseInt(inp.value, 10);
+    if (commit && isFinite(v) && v !== card._tcvRank) { _tcvMoveToDisplayRank(root, data, card, v); return; }
+    rankEl.innerHTML = prevHtml;
+  };
+  inp.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); close(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); close(false); }
+  });
+  inp.addEventListener('blur', () => close(false));
+  ['click', 'pointerdown', 'mousedown'].forEach(t => inp.addEventListener(t, e => e.stopPropagation()));
+  inp.focus(); inp.select();
+}
+function _tcvDragScroller(root) {
+  let el = root.parentElement;
+  while (el && el !== document.body) {
+    const cs = getComputedStyle(el);
+    if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1) return el;
+    el = el.parentElement;
+  }
+  return document.scrollingElement || document.documentElement;
+}
+function _tcvWireEdit(root, data, container) {
+  const rowsMode = root.classList.contains('tcv-rows');
+  let dragCard = null, startX = 0, startY = 0, moving = false, pointerX = 0, pointerY = 0;
+  let ghost = null, bar = null, target = null, rafId = null, scroller = null, suppressClick = false;
+  const editOn = () => root.classList.contains('tcv-edit');
+
+  function clearTarget() {
+    if (target && target.el) target.el.classList.remove('tcv-drop-target');
+    target = null;
+    if (bar) bar.style.display = 'none';
+  }
+  // Resolve what's under the pointer → { card, after } | { row, first/last }
+  function hitTest(x, y) {
+    if (ghost) ghost.style.display = 'none';
+    const el = document.elementFromPoint(x, y);
+    if (ghost) ghost.style.display = '';
+    if (!el || !root.contains(el)) return null;
+    const card = el.closest('.tcv-card');
+    if (card && card !== dragCard) {
+      const r = card.getBoundingClientRect();
+      const after = rowsMode ? (y > r.top + r.height / 2) : (x > r.left + r.width / 2);
+      return { el: card, card: card, after: after, rect: r };
+    }
+    const letter = el.closest('.tcv-letter');
+    const row = el.closest('.tcv-tier-row');
+    if (row) {
+      const cards = Array.prototype.slice.call(row.querySelectorAll('.tcv-card')).filter(c => c !== dragCard && c.offsetParent !== null);
+      if (!cards.length) return null;
+      const c = letter ? cards[0] : cards[cards.length - 1];
+      return { el: letter || row, card: c, after: !letter, rect: c.getBoundingClientRect() };
+    }
+    return null;
+  }
+  function showBar(t) {
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.className = 'tcv-drop-bar';
+      document.body.appendChild(bar);
+    }
+    const r = t.rect;
+    bar.style.display = '';
+    if (rowsMode) {
+      bar.style.left = r.left + 'px'; bar.style.width = r.width + 'px'; bar.style.height = '4px';
+      bar.style.top = ((t.after ? r.bottom : r.top) - 2) + 'px';
+    } else {
+      bar.style.top = r.top + 'px'; bar.style.height = r.height + 'px'; bar.style.width = '4px';
+      bar.style.left = ((t.after ? r.right : r.left) - 2) + 'px';
+    }
+  }
+  function tick() {
+    rafId = null;
+    if (!moving) return;
+    if (ghost) ghost.style.transform = 'translate3d(' + (pointerX - ghost._dx) + 'px,' + (pointerY - ghost._dy) + 'px,0)';
+    // Auto-scroll near the viewport edges
+    const edge = 70, vh = window.innerHeight;
+    if (scroller) {
+      if (pointerY < edge) scroller.scrollTop -= Math.ceil((edge - pointerY) / 4);
+      else if (pointerY > vh - edge) scroller.scrollTop += Math.ceil((pointerY - (vh - edge)) / 4);
+    }
+    const t = hitTest(pointerX, pointerY);
+    if (!t) { clearTarget(); }
+    else {
+      if (!target || target.el !== t.el || target.after !== t.after) {
+        clearTarget();
+        target = t;
+        t.el.classList.add('tcv-drop-target');
+      }
+      showBar(t);   // every tick: the bar is fixed-position, the page may have auto-scrolled
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+  function beginMove(e) {
+    moving = true;
+    root.classList.add('tcv-dragging');
+    dragCard.classList.add('tcv-drag-src');
+    scroller = _tcvDragScroller(root);
+    const r = dragCard.getBoundingClientRect();
+    ghost = document.createElement('div');
+    ghost.className = 'tcv-drag-ghost';
+    const inner = dragCard.cloneNode(true);
+    inner.classList.remove('tcv-drag-src', 'tcv-drop-target', 'tcv-selected');
+    inner.style.zoom = getComputedStyle(root).zoom || '1';
+    ghost.appendChild(inner);
+    ghost._dx = startX - r.left; ghost._dy = startY - r.top;
+    ghost.style.transform = 'translate3d(' + r.left + 'px,' + r.top + 'px,0)';
+    document.body.appendChild(ghost);
+    rafId = requestAnimationFrame(tick);
+  }
+  function onMove(e) {
+    if (!dragCard) return;
+    pointerX = e.clientX; pointerY = e.clientY;
+    if (!moving) {
+      if (Math.abs(pointerX - startX) < 5 && Math.abs(pointerY - startY) < 5) return;
+      beginMove(e);
+    }
+    e.preventDefault();
+  }
+  function endDrag(e) {
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onCancel);
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (ghost) { ghost.remove(); ghost = null; }
+    if (dragCard) dragCard.classList.remove('tcv-drag-src');
+    root.classList.remove('tcv-dragging');
+    const t = target; clearTarget();
+    const was = moving, src = dragCard;
+    moving = false; dragCard = null;
+    return { moved: was, src: src, target: t };
+  }
+  function onUp(e) {
+    // Resolve the drop at the release point itself (don't trust the last
+    // animation-frame hit test — it may be a frame stale, or never have run).
+    if (moving) { const t = hitTest(e.clientX, e.clientY); if (t) { clearTarget(); target = t; } }
+    const st = endDrag(e);
+    if (!st.moved) return;                     // plain click → card's own handler runs
+    suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);
+    if (!st.target || !st.src) return;
+    const dragIdx = +st.src.getAttribute('data-cidx');
+    const targetIdx = +st.target.card.getAttribute('data-cidx');
+    if (_tcvMoveRelative(dragIdx, targetIdx, st.target.after)) _tcvAfterMove(dragIdx);
+  }
+  function onCancel(e) { const st = endDrag(e); if (st.moved) { suppressClick = true; setTimeout(() => { suppressClick = false; }, 0); } }
+
+  root.addEventListener('pointerdown', e => {
+    if (!editOn() || e.button !== 0) return;
+    if (e.target.closest('input, button, .tcv-row-dl')) return;
+    const card = e.target.closest('.tcv-card');
+    if (!card || !root.contains(card)) return;
+    dragCard = card; startX = pointerX = e.clientX; startY = pointerY = e.clientY; moving = false;
+    document.addEventListener('pointermove', onMove, { passive: false });
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onCancel);
+  });
+  // Capture-phase click: swallow the click that ends a drag, and turn a click
+  // on the rank number into the type-a-rank input.
+  root.addEventListener('click', e => {
+    if (!editOn()) return;
+    if (suppressClick) { e.stopPropagation(); e.preventDefault(); return; }
+    const rankEl = e.target.closest('.tcv-row-rank, .tcv-card-rank');
+    const card = rankEl && rankEl.closest('.tcv-card');
+    if (card && root.contains(card) && !card.classList.contains('tcv-covered')) {
+      e.stopPropagation(); e.preventDefault();
+      _tcvOpenRankInput(root, data, card);
+    }
+  }, true);
 }
 
 // ── ROW CARD → PNG (canvas) ───────────────────────────────────────────────
@@ -5037,6 +5276,7 @@ function _renderTierCardView(data, container) {
       '<button class="tcv-reveal-btn" data-tcvaction="clearSel" title="Untick every card">✕ CLEAR</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlZipSel" title="One .zip of just the ticked cards\' PNGs. File: ' + _tcvFilePrefix + '_row_cards_selected.zip">📦 ZIP SELECTED (0)</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlZipAll" title="One .zip of every revealed row card\'s PNG. File: ' + _tcvFilePrefix + '_row_cards.zip">📦 ZIP ALL</button>' : '') +
+    (_tcvCanEditRanks() ? '<button class="tcv-reveal-btn tcv-edit-btn' + (window._tcvEdit.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleEdit" title="Edit Jack\'s ranks right here: drag a card to a new spot (drop on a tier letter = top of that tier, in a tier\'s empty space = bottom of it), or click a rank number and type a rank. Tiers shift exactly as they do in the table. Hit SAVE when you\'re done.">' + (window._tcvEdit.on ? '✎ EDITING… (drag cards)' : '✎ EDIT RANKS') + '</button>' : '') +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
       '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomOut" title="Smaller cards">−</button>' +
@@ -5055,6 +5295,7 @@ function _renderTierCardView(data, container) {
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
     '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + ' PROJ' : 'PROJ PPG') + ' (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
+    ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:#f59e0b">EDITING JACK\'S RANKS:</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:#e2e8f0">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
         _tcvMoveMap
           ? '<b style="color:#e2e8f0">RANK</b> = <span style="opacity:.8">was</span> › <b style="color:#22c55e">now</b> vs ' +
@@ -5125,6 +5366,12 @@ function _renderTierCardView(data, container) {
   });
 
   if (_tcvRows) _tcvUpdateSelCount(root);
+  if (_tcvCanEditRanks()) {
+    if (window._tcvEdit.on) root.classList.add('tcv-edit');
+    _tcvWireEdit(root, data, container);
+  } else {
+    window._tcvEdit.on = false;
+  }
 
   // Cards the reveal flow operates on — excludes the ✂ row while HIDE CUT is on
   function _tcvVisibleCards() {
@@ -5188,7 +5435,24 @@ function _renderTierCardView(data, container) {
         root.classList.toggle('tcv-select', on);
         btn.classList.toggle('tcv-primary', on);
         window._tcvSel.on = on;
+        if (on && root.classList.contains('tcv-edit')) {
+          root.classList.remove('tcv-edit'); window._tcvEdit.on = false;
+          const eb = root.querySelector('[data-tcvaction="toggleEdit"]'); if (eb) { eb.classList.remove('tcv-primary'); eb.textContent = '✎ EDIT RANKS'; }
+          const kh = root.querySelector('.tcv-key-edit'); if (kh) kh.remove();
+        }
         _tcvUpdateSelCount(root);
+        return;
+      }
+      if (action === 'toggleEdit') {
+        // Edit and SELECT both claim card clicks — one at a time.
+        const on = !root.classList.contains('tcv-edit');
+        window._tcvEdit.on = on;
+        if (on && root.classList.contains('tcv-select')) {
+          root.classList.remove('tcv-select'); window._tcvSel.on = false;
+          const sb = root.querySelector('[data-tcvaction="toggleSelect"]'); if (sb) sb.classList.remove('tcv-primary');
+          if (_tcvRows) _tcvUpdateSelCount(root);
+        }
+        _renderTierCardView(data, container);   // toolbar label + key hint live in the markup
         return;
       }
       if (action === 'clearSel') {

@@ -9260,7 +9260,9 @@ function _tsPctSeason(tm, yr, tgt, playerName) {
     }
     let tot = 0;
     for (const k in wks) { if (!played || played.has(k)) tot += wks[k]; }
-    if (tot >= (played ? 20 : 100)) return tgt / tot * 100;
+    // Threshold mirrors _carPctSeason: a single played week (~20-40 team
+    // targets) must count, else the TOT row reads a dash in Week 1 (RB fix 2026-09-14).
+    if (tot >= (played ? 10 : 100)) return tgt / tot * 100;
   }
   // Fallback: sum every player's targets per (team, year) from ALL_PLAYERS_DB
   if (typeof ALL_PLAYERS_DB === 'undefined') return null;

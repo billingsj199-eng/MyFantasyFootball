@@ -4650,6 +4650,42 @@ function _tcvMoveTierTo(id, r) {
   t.afterRank = next;
   _tcvTierAfterChange('Tier ' + t.label + ' now starts at #' + next + (next !== r ? ' (stopped at the neighbouring tier)' : ''));
 }
+// Rename a tier from its letter: ✎ opens a text box beside the letter, Enter
+// / blur commits through renameTier() (same 40-char cap as the table), Esc
+// cancels. The name isn't drawn on the cards — it lives in the letter's
+// tooltip and everywhere else the board is shown.
+function _tcvRenameTierInline(row) {
+  const id = row && row._tcvTierId;
+  const t = (id != null) ? tiers.find(x => x.id === id) : null;
+  const letter = row && row.querySelector('.tcv-letter');
+  if (!t || !letter || letter.querySelector('input')) return;
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.maxLength = 40; inp.value = t.name || '';
+  inp.className = 'tcv-tier-name-input';
+  inp.placeholder = 'Tier ' + t.label + ' name';
+  inp.title = 'Type the tier name, then Enter (Esc cancels)';
+  letter.appendChild(inp);
+  let done = false;
+  const close = (commit) => {
+    if (done) return; done = true;
+    const v = (inp.value || '').trim();
+    if (commit && v && v !== t.name && renameTier(id, v)) {
+      saveLocal();
+      render();
+      if (typeof toast === 'function') toast('Tier ' + t.label + ' renamed to ' + t.name + ' — hit SAVE when done');
+      return;
+    }
+    inp.remove();
+  };
+  inp.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); close(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); close(false); }
+  });
+  inp.addEventListener('blur', () => close(true));
+  ['click', 'pointerdown', 'mousedown'].forEach(ev => inp.addEventListener(ev, e => e.stopPropagation()));
+  inp.focus(); inp.select();
+}
 function _tcvOpenRankInput(root, data, card) {
   const rankEl = card.querySelector('.tcv-row-rank, .tcv-card-rank');
   if (!rankEl || rankEl.querySelector('input')) return;
@@ -4841,6 +4877,9 @@ function _tcvWireEdit(root, data, container) {
     if (addBtn) { e.stopPropagation(); e.preventDefault(); _tcvAddTierAt(addBtn.closest('.tcv-card')); return; }
     const delBtn = e.target.closest('.tcv-tier-del');
     if (delBtn) { e.stopPropagation(); e.preventDefault(); const row = delBtn.closest('.tcv-tier-row'); if (row && row._tcvTierId != null) _tcvRemoveTier(row._tcvTierId); return; }
+    const renBtn = e.target.closest('.tcv-tier-ren');
+    if (renBtn) { e.stopPropagation(); e.preventDefault(); _tcvRenameTierInline(renBtn.closest('.tcv-tier-row')); return; }
+    if (e.target.closest('.tcv-tier-name-input')) { e.stopPropagation(); return; }
     const rankEl = e.target.closest('.tcv-row-rank, .tcv-card-rank');
     const card = rankEl && rankEl.closest('.tcv-card');
     if (card && root.contains(card) && !card.classList.contains('tcv-covered')) {
@@ -5344,7 +5383,7 @@ function _renderTierCardView(data, container) {
       '<button class="tcv-reveal-btn" data-tcvaction="clearSel" title="Untick every card">✕ CLEAR</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlZipSel" title="One .zip of just the ticked cards\' PNGs. File: ' + _tcvFilePrefix + '_row_cards_selected.zip">📦 ZIP SELECTED (0)</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlZipAll" title="One .zip of every revealed row card\'s PNG. File: ' + _tcvFilePrefix + '_row_cards.zip">📦 ZIP ALL</button>' : '') +
-    (_tcvCanEditRanks() ? '<button class="tcv-reveal-btn tcv-edit-btn' + (window._tcvEdit.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleEdit" title="Edit ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' ranks right here: drag a card to a new spot (drop on a tier letter = top of that tier, in a tier\'s empty space = bottom of it), or click a rank number and type a rank. Tier breaks too: hover a card for + TIER, drag a tier letter onto a card to move its break, ✕ on the letter removes it. Tiers shift exactly as they do in the table. Hit SAVE when you\'re done.">' + (window._tcvEdit.on ? '✎ EDITING… (drag cards)' : '✎ EDIT RANKS') + '</button>' : '') +
+    (_tcvCanEditRanks() ? '<button class="tcv-reveal-btn tcv-edit-btn' + (window._tcvEdit.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleEdit" title="Edit ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' ranks right here: drag a card to a new spot (drop on a tier letter = top of that tier, in a tier\'s empty space = bottom of it), or click a rank number and type a rank. Tier breaks too: hover a card for + TIER, drag a tier letter onto a card to move its break, ✎ on the letter renames it, ✕ removes it. Tiers shift exactly as they do in the table. Hit SAVE when you\'re done.">' + (window._tcvEdit.on ? '✎ EDITING… (drag cards)' : '✎ EDIT RANKS') + '</button>' : '') +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
       '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomOut" title="Smaller cards">−</button>' +
@@ -5363,7 +5402,7 @@ function _renderTierCardView(data, container) {
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
     '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + ' PROJ' : 'PROJ PPG') + ' (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
-    ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:#f59e0b">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:#e2e8f0">TIERS:</b> hover a card → <b style="color:#e2e8f0">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✕ on a letter removes it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:#e2e8f0">SAVE</b></span>' : '') +
+    ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:#f59e0b">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:#e2e8f0">TIERS:</b> hover a card → <b style="color:#e2e8f0">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:#e2e8f0">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
         _tcvMoveMap
           ? '<b style="color:#e2e8f0">RANK</b> = <span style="opacity:.8">was</span> › <b style="color:#22c55e">now</b> vs ' +
@@ -5418,9 +5457,11 @@ function _renderTierCardView(data, container) {
     // EDIT RANKS: the tier object behind this group (none for ✂ / untiered)
     const _gTier = (!g.cut && g.label && typeof tiers !== 'undefined') ? tiers.find(t => t.label === g.label) : null;
     if (_gTier) row._tcvTierId = _gTier.id;
+    if (_gTier) letter.title = 'TIER ' + g.label + (_gTier.name ? ' — ' + _gTier.name : '') + ' · ' + letter.title;
     if (_gTier && _tcvCanEditRanks()) {
-      letter.title += ' · EDIT: drag this letter onto a card to move the tier break there · ✕ removes the tier';
-      letter.innerHTML += '<button class="tcv-tier-del" type="button" title="Remove tier ' + g.label + ' (' + (_gTier.name || '') + ') — its players join the tier above">✕</button>';
+      letter.title += ' · EDIT: drag this letter onto a card to move the tier break there · ✎ renames · ✕ removes the tier';
+      letter.innerHTML += '<button class="tcv-tier-del" type="button" title="Remove tier ' + g.label + ' (' + (_gTier.name || '') + ') — its players join the tier above">✕</button>' +
+        '<button class="tcv-tier-ren" type="button" title="Rename tier ' + g.label + ' (currently &quot;' + String(_gTier.name || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') + '&quot;)">✎</button>';
     }
     letter.addEventListener('click', () => {
       const rowCards = row.querySelectorAll('.tcv-card');

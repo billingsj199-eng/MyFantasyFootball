@@ -55936,7 +55936,7 @@ Rules:
       // exposure and chain it onto its Round-1 draft in the live standings.
       const _tc = d.teamCount || (d.allTeams ? Object.keys(d.allTeams).length : 0);
       const _isGroup = d.roundGroup === true ||
-        ((d.roundNumber || 0) >= 2 && _tc > 0 && _tc <= 2) ||
+        ((d.roundNumber || 0) >= 2 && !(Array.isArray(d.roundsSeen) && d.roundsSeen.includes(1)) && _tc > 0) ||
         (/eliminator/i.test(String(d.tournament || d.title || '')) && _tc > 0 && _tc <= 2);
       if (_isGroup) {
         window._udRoundGroups[d.id] = _udNormalizeRoundGroup(d);
@@ -57420,10 +57420,37 @@ Rules:
   //   top 4, The Big Dog — top 2. Contests without a page default to top-2
   //   with the entry fee back (Underdog's standard min-cash tier); `advPrize:
   //   null` means "entry fee".
+  // Playoff schedules (help pages, Sep 2026). rounds[k-1] = { week:[a,b],
+  // size, adv, final }. prizeReach[k] = the prize locked by REACHING round k;
+  // finalTable = place → prize inside the final group (rank if it ended today).
+  //   BBM VII: R1 W1-14 12-team top 2 → R2 W15 14-team top 1 (8,004 groups)
+  //            → R3 W16 12-team top 1 (667 groups) → R4 W17 667-team final.
+  //            Reach R2 $25 (8005-112056th), R3 $70 (2002-8004th), final
+  //            $3,750 min (301-667th).
+  //   Puppy:   R1 W1-14 12-team top 2 → R2 W15 10-team top 1 (3,750 groups)
+  //            → R3 W16 6-team top 1 (625 groups) → R4 W17 625-team final.
+  //            Reach R2 $5, R3 $30, final $500 min (201-625th).
+  //   Eliminator: R1 W1 12-team top 6, then 2-seat H2H rounds R2-R16 (week k),
+  //            R17 3-seat final. Prize by round reached (pays from R4).
+  const _UD_BBM_FINAL = [[1,1,2000000],[2,2,1000000],[3,3,500000],[4,4,400000],[5,5,300000],[6,6,250000],[7,7,200000],[8,8,150000],[9,9,125000],[10,10,100240],[11,15,90000],[16,20,70000],[21,30,50000],[31,40,25000],[41,50,15150],[51,100,7500],[101,200,5500],[201,300,4500],[301,667,3750]];
+  // 76-100th is missing from Underdog's Puppy page — filled at the 101-200th tier.
+  const _UD_PUPPY_FINAL = [[1,1,100000],[2,2,50000],[3,3,25000],[4,4,20000],[5,5,17000],[6,6,15000],[7,7,14000],[8,8,13000],[9,9,12250],[10,10,10000],[11,15,7500],[16,20,5000],[21,25,3000],[26,30,2000],[31,50,1500],[51,75,1000],[76,200,750],[201,625,500]];
+  const _UD_ELIM_FINAL = [[1,1,200000],[2,2,100000],[3,3,76000]];
+  const _UD_ELIM_ROUNDS = (() => {
+    const r = [{ week: [1, 1], size: 12, adv: 6 }];
+    for (let k = 2; k <= 16; k++) r.push({ week: [k, k], size: 2, adv: 1 });
+    r.push({ week: [17, 17], size: 3, adv: 1, final: true });
+    return r;
+  })();
   const _UD_CONTEST_RULES = [
-    { re: /best\s*ball\s*mania/i, adv: 2, weeks: 14, advPrize: 25 },
-    { re: /puppy/i,               adv: 2, weeks: 14, advPrize: 5 },
-    { re: /eliminator/i,          adv: 6, weeks: 1,  advPrize: 0, h2h: true },
+    { re: /best\s*ball\s*mania/i, adv: 2, weeks: 14, advPrize: 25,
+      rounds: [{ week: [1, 14], size: 12, adv: 2 }, { week: [15, 15], size: 14, adv: 1 }, { week: [16, 16], size: 12, adv: 1 }, { week: [17, 17], size: 667, adv: 1, final: true }],
+      prizeReach: [0, 0, 25, 70, 3750], finalTable: _UD_BBM_FINAL },
+    { re: /puppy/i,               adv: 2, weeks: 14, advPrize: 5,
+      rounds: [{ week: [1, 14], size: 12, adv: 2 }, { week: [15, 15], size: 10, adv: 1 }, { week: [16, 16], size: 6, adv: 1 }, { week: [17, 17], size: 625, adv: 1, final: true }],
+      prizeReach: [0, 0, 5, 30, 500], finalTable: _UD_PUPPY_FINAL },
+    { re: /eliminator/i,          adv: 6, weeks: 1,  advPrize: 0, h2h: true,
+      rounds: _UD_ELIM_ROUNDS, prizeReach: [0, 0, 0, 0, 10, 20, 31, 52, 102, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 76000], finalTable: _UD_ELIM_FINAL },
     { re: /bigger\s*board/i,      adv: 4, weeks: 14, advPrize: null },
     { re: /big\s*board/i,         adv: 3, weeks: 14, advPrize: null },
     { re: /mastiff/i,             adv: 4, weeks: 14, advPrize: null },
@@ -57438,14 +57465,24 @@ Rules:
     const name = String((d && d.tournament) || '');
     const r = _UD_CONTEST_RULES.find(x => x.re.test(name)) || { adv: 2, weeks: 14, advPrize: null };
     const fee = parseFloat(d && d.fee) || 0;
+    const rounds = Array.isArray(r.rounds) ? r.rounds : [{ week: [1, r.weeks], size: 12, adv: r.adv }];
     return {
       adv: r.adv,
       weeks: r.weeks,
       h2h: !!r.h2h,
+      multi: rounds.length > 1,
+      rounds: rounds,
       advPrize: r.advPrize == null ? fee : r.advPrize,
+      prizeReach: Array.isArray(r.prizeReach) ? r.prizeReach : [0, 0, (r.advPrize == null ? fee : r.advPrize)],
+      finalTable: Array.isArray(r.finalTable) ? r.finalTable : null,
       roundPrize: r.h2h ? _UD_ELIM_ROUND_PRIZE : null,
       size: (d && d.size) || 12
     };
+  }
+  function _udFinalPrize(rule, rank) {
+    if (!rule || !rule.finalTable || rank == null) return null;
+    const t = rule.finalTable.find(x => rank >= x[0] && rank <= x[1]);
+    return t ? t[2] : 0;
   }
   // Later-round groups chained onto a Round-1 draft: same contest AND the
   // same entry (myEntryId), the same roster (18 names), or the same custom
@@ -57475,16 +57512,20 @@ Rules:
   }
   // NFL week a round group scores on: The Eliminator round k = week k; any
   // other H2H contest falls back to the week window its start date lands in.
-  function _udGroupWeek(g, rule) {
-    if (g.roundNumber != null && rule.h2h) return +g.roundNumber;
+  // [firstWeek, lastWeek] a round group scores on: the contest schedule
+  // when we have it, else the week its start date lands in, else round = week.
+  function _udGroupWeeks(g, rule) {
+    const k = g.roundNumber != null ? +g.roundNumber : null;
+    const rd = (k != null && rule.rounds && rule.rounds[k - 1]) ? rule.rounds[k - 1] : null;
+    if (rd && rd.week) return [rd.week[0], rd.week[1]];
     if (g.roundStartAt) {
       const t = Date.parse(g.roundStartAt);
       if (!isNaN(t)) {
         const w = _udWeekWindows().find(x => t >= x.kick - 5 * 86400000 && t < x.end);
-        if (w) return w.wk;
+        if (w) return [w.wk, w.wk];
       }
     }
-    return g.roundNumber != null ? +g.roundNumber : null;
+    return k != null ? [k, k] : null;
   }
   window._udContestRule = _udContestRule;
 
@@ -57600,7 +57641,7 @@ Rules:
       ? atVals.length + ':' + atVals.reduce((s, t) => s + ((t.picks || []).length), 0)
       : 'own:' + (d.picks || []).length;
     const rule = _udContestRule(d);
-    const groups = rule.h2h ? _udGroupsForDraft(d) : [];
+    const groups = rule.multi ? _udGroupsForDraft(d) : [];
     const gsig = groups.map(g => g.id + ':' + (g.teams || []).reduce((s, t) => s + ((t.picks || []).length), 0)).join(',');
     const hit = _udLiveByDraft[key];
     if (hit && hit.dsig === dsig && hit.gsig === gsig) return hit;
@@ -57642,18 +57683,22 @@ Rules:
         ? (firstOut ? Math.round((me.pts - firstOut.pts) * 10) / 10 : null)
         : (cutTeam ? -Math.round((cutTeam.pts - me.pts) * 10) / 10 : null);
     }
-    const r1Done = rule.h2h && lw.curWk != null && lw.curWk > rule.weeks;
-    // ── H2H rounds (The Eliminator): chain the later-round groups ──
+    const r1Done = rule.multi && lw.curWk != null && lw.curWk > rule.weeks;
+    // ── Playoff / H2H rounds: chain the later-round groups onto this draft ──
+    // Each linked group is a pool of rule.rounds[k-1].size teams scored on
+    // that round's week(s); top `adv` advance (2-seat = head-to-head). A lost
+    // round ends the chain; reaching round k locks prizeReach[k]; inside the
+    // final group the "if it ended today" money is the finalTable at my rank.
     let h2h = null;
-    let moneyNow = (me && me.adv && at && scored) ? (rule.advPrize || 0) : 0;
+    let moneyNow = (me && me.adv && at && scored) ? (rule.prizeReach[2] != null ? rule.prizeReach[2] : (rule.advPrize || 0)) : 0;
     let advKnown = true;
     let inAdvOverride = null, myRankOverride = null, cushionOverride = null, myPtsOverride = null, myWkOverride = null;
-    if (rule.h2h) {
-      const P = rule.roundPrize || [];
+    if (rule.multi) {
+      const P = rule.prizeReach || [];
       const prizeAt = k => (k != null && P[k] != null) ? P[k] : (P.length ? P[P.length - 1] : 0);
       const rounds = [];
       const r1Alive = me ? me.adv : null;
-      rounds.push({ round: 1, week: rule.weeks, type: 'pool', rank: me ? me.rank : null, of: teams.length, adv: !!r1Alive, pts: me ? me.pts : null, done: !!r1Done });
+      rounds.push({ round: 1, week: [1, rule.weeks], type: 'pool', rank: me ? me.rank : null, of: teams.length, adv: !!r1Alive, myPts: me ? me.pts : null, cutPts: cutTeam ? cutTeam.pts : null, done: !!r1Done, known: true, teams: null });
       let alive = true, elim = null, unknown = false, reached = 1;
       if (r1Done && at && scored && !r1Alive) { alive = false; elim = 1; }
       else if (r1Done && at && scored && r1Alive) reached = 2;
@@ -57661,23 +57706,46 @@ Rules:
       groups.forEach(g => {
         if (!alive) return;
         const k = g.roundNumber != null ? +g.roundNumber : null;
-        const w = _udGroupWeek(g, rule);
-        const mine = (g.teams || []).find(t => t.isMine) || null;
-        const opp = (g.teams || []).find(t => !t.isMine) || null;
-        const myPicks = (mine && mine.picks && mine.picks.length) ? mine.picks : (d.picks || []);
-        const oppPicks = opp && opp.picks && opp.picks.length ? opp.picks : null;
-        const myPts = (w != null) ? _udBestBall(myPicks, w, lw.liveWk, sf) : null;
-        const oppPts = (w != null && oppPicks) ? _udBestBall(oppPicks, w, lw.liveWk, sf) : null;
-        const done = w != null && lw.curWk != null && lw.curWk > w;
-        const known = oppPicks != null;
-        const leading = (myPts != null && oppPts != null) ? (myPts > oppPts ? true : myPts < oppPts ? false : null) : null;
-        const row = { round: k, week: w, type: 'h2h', opp: opp ? (opp.username || ('Opponent ' + String(opp.entryId || '').slice(0, 6))) : '—',
-                      myPts, oppPts, done, known, leading, won: (done && leading != null) ? leading : null, gid: g.id };
+        const rd = (k != null && rule.rounds[k - 1]) ? rule.rounds[k - 1] : null;
+        const wr = _udGroupWeeks(g, rule);
+        const wks = wr ? lw.kicked.filter(w => w >= wr[0] && w <= wr[1]) : [];
+        const gTeams = (g.teams || []).map(t => {
+          const picks = (t.picks && t.picks.length) ? t.picks : (t.isMine ? (d.picks || []) : []);
+          let pts = null;
+          wks.forEach(w => { const v = picks.length ? _udBestBall(picks, w, lw.liveWk, sf) : null; if (v == null) return; pts = (pts || 0) + v; });
+          return { entryId: t.entryId, username: t.username || null, isMine: !!t.isMine, hasPicks: picks.length > 0, pts: pts == null ? null : Math.round(pts * 10) / 10, rank: null, adv: false };
+        });
+        const known = gTeams.every(t => t.hasPicks);
+        const played = gTeams.some(t => t.pts != null);
+        gTeams.sort((a, b) => ((b.pts || 0) - (a.pts || 0)));
+        gTeams.forEach((t, i) => { t.rank = (i > 0 && gTeams[i - 1].pts === t.pts) ? gTeams[i - 1].rank : i + 1; });
+        const advN = rd ? rd.adv : 1;
+        const isFinal = !!(rd && rd.final);
+        gTeams.forEach(t => { t.adv = !isFinal && t.rank <= advN; });
+        const mine = gTeams.find(t => t.isMine) || null;
+        const opp = gTeams.length === 2 ? gTeams.find(t => !t.isMine) : null;
+        const cutT = gTeams[advN - 1] || null, firstOut = gTeams[advN] || null;
+        const done = wr != null && lw.curWk != null && lw.curWk > wr[1];
+        let leading = null;
+        if (mine && known && played) {
+          if (gTeams.length === 2 && opp) leading = (mine.pts != null && opp.pts != null) ? (mine.pts > opp.pts ? true : mine.pts < opp.pts ? false : null) : null;
+          else leading = isFinal ? null : mine.adv;
+        }
+        const cushion = (mine && known && played && !isFinal)
+          ? (opp ? ((mine.pts != null && opp.pts != null) ? Math.round((mine.pts - opp.pts) * 10) / 10 : null)
+                 : (mine.adv ? (firstOut && firstOut.pts != null ? Math.round((mine.pts - firstOut.pts) * 10) / 10 : null)
+                             : (cutT && cutT.pts != null ? -Math.round((cutT.pts - mine.pts) * 10) / 10 : null)))
+          : null;
+        const row = { round: k, week: wr, type: gTeams.length === 2 ? 'h2h' : 'pool', final: isFinal, size: rd ? rd.size : gTeams.length, advN,
+                      opp: opp ? (opp.username || ('Opponent ' + String(opp.entryId || '').slice(0, 6))) : null,
+                      myPts: mine ? mine.pts : null, oppPts: opp ? opp.pts : null, rank: mine ? mine.rank : null, of: gTeams.length,
+                      cutPts: cutT ? cutT.pts : null, cushion, done, known, played, leading,
+                      adv: !!(mine && mine.adv), won: (done && leading != null) ? leading : null, teams: gTeams, gid: g.id };
         rounds.push(row);
         if (k != null) reached = Math.max(reached, k);
         cur = row;
-        if (done) {
-          if (!known || leading == null) { unknown = true; }
+        if (done && !isFinal) {
+          if (!known || !played || leading == null) { unknown = true; }
           else if (leading) { reached = Math.max(reached, k + 1); }
           else { alive = false; elim = k; }
         }
@@ -57685,23 +57753,25 @@ Rules:
       const latest = cur || rounds[0];
       let money;
       if (!alive) money = prizeAt(elim);
-      else if (latest.type === 'pool') money = latest.adv ? prizeAt(2) : prizeAt(1);
+      else if (latest.type === 'pool' && latest.round === 1) money = latest.adv ? prizeAt(2) : prizeAt(1);
+      else if (latest.final) money = (latest.known && latest.played && latest.rank != null) ? (_udFinalPrize(rule, latest.rank) != null ? _udFinalPrize(rule, latest.rank) : prizeAt(latest.round)) : prizeAt(latest.round);
       else if (latest.done) money = prizeAt(reached);
       else money = latest.leading === true ? prizeAt((latest.round || reached) + 1) : prizeAt(latest.round || reached);
       moneyNow = money || 0;
       const inAdvNow = !alive ? false
-        : latest.type === 'pool' ? !!latest.adv
+        : (latest.type === 'pool' && latest.round === 1) ? !!latest.adv
+        : latest.final ? (latest.known && latest.played ? true : null)
         : latest.done ? (latest.won == null ? null : !!latest.won)
-        : (latest.known ? (latest.leading == null ? null : latest.leading) : null);
+        : (latest.known && latest.played ? (latest.leading == null ? null : latest.leading) : null);
       advKnown = inAdvNow != null;
       inAdvOverride = inAdvNow;
-      if (latest.type === 'h2h') {
-        myRankOverride = !alive ? 2 : (latest.leading === false ? 2 : 1);
-        cushionOverride = (latest.myPts != null && latest.oppPts != null) ? Math.round((latest.myPts - latest.oppPts) * 10) / 10 : null;
+      if (latest.round !== 1) {
+        myRankOverride = !alive ? (latest.type === 'h2h' ? 2 : (latest.rank || null)) : (latest.rank != null ? latest.rank : null);
+        cushionOverride = latest.cushion;
         myPtsOverride = latest.myPts;
         myWkOverride = latest.myPts;
       }
-      h2h = { rounds, alive, elim, reached, unknown, latest, locked: alive ? prizeAt(reached) : prizeAt(elim), groupsLinked: groups.length };
+      h2h = { rounds, alive, elim, reached, unknown, latest, locked: alive ? prizeAt(reached) : prizeAt(elim), groupsLinked: groups.length, isH2h: !!rule.h2h };
     }
     const out = {
       dsig, gsig, rule, sf, teams, me, scored,
@@ -57771,7 +57841,7 @@ Rules:
     if (!sum || !sum.n) return { val: '—', sub: 'no games scored yet' };
     return {
       val: _udFmtMoney(sum.winning),
-      sub: sum.nMoney + ' draft' + (sum.nMoney === 1 ? '' : 's') + ' in the money if it ended today' + (sum.groups ? ' · ' + sum.groups + ' H2H round' + (sum.groups === 1 ? '' : 's') : '')
+      sub: sum.nMoney + ' draft' + (sum.nMoney === 1 ? '' : 's') + ' in the money if it ended today' + (sum.groups ? ' · ' + sum.groups + ' playoff group' + (sum.groups === 1 ? '' : 's') : '')
     };
   }
   // Repaint the two live KPI cards in place (no dashboard re-render) and,
@@ -59846,7 +59916,7 @@ Rules:
         const L = row.live;
         const _isLive = !!(L && L.scored && L.fieldComplete);
         const rankStr = (_isLive && L.h2h && !L.h2h.alive) ? 'OUT'
-          : (_isLive && L.h2h && L.h2h.latest && L.h2h.latest.type === 'h2h') ? (L.h2h.latest.leading == null ? '—/2' : `#${row.myRank}/2`)
+          : (_isLive && L.h2h && L.h2h.latest && L.h2h.latest.round !== 1) ? ((L.h2h.latest.known && L.h2h.latest.played && row.myRank) ? `#${row.myRank}/${L.h2h.latest.of}` : '—/' + L.h2h.latest.of)
           : row.myRank ? `#${row.myRank}/${row.teams.length}` : '—';
         // Color the rank cell: live → green in an advancing spot, amber
         // within striking distance of the cut, red otherwise; pre-season
@@ -59861,7 +59931,7 @@ Rules:
         const _h = _isLive ? L.h2h : null;
         const _hLatest = _h ? _h.latest : null;
         const rankLbl = _isLive
-          ? (_h ? (!_h.alive ? 'OUT · R' + _h.elim : (_hLatest && _hLatest.type === 'h2h' ? 'R' + _hLatest.round + ' H2H' : (L.r1Done ? 'R1 FINAL' : 'R1 LIVE'))) : 'LIVE RANK')
+          ? (_h ? (!_h.alive ? 'OUT · R' + _h.elim : (_hLatest && _hLatest.round !== 1 ? (_hLatest.final ? 'FINAL · W' + _hLatest.week[0] : 'R' + _hLatest.round + (_hLatest.type === 'h2h' ? ' H2H' : ' · W' + _hLatest.week[0])) : (L.r1Done ? 'R1 FINAL' : 'R1 LIVE'))) : 'LIVE RANK')
           : 'YOUR RANK';
         const rankTitle = _isLive
           ? 'Live rank in this pool — every team\'s best-ball lineup scored on real weekly stats (FINAL games from the stats feed, in-progress games from live scoring). Top ' + L.rule.adv + ' advance.'
@@ -59908,16 +59978,21 @@ Rules:
             let line = '';
             if (!H.alive) {
               line = `<span style="color:#ef4444;font-weight:700">ELIMINATED</span> in R${H.elim}${H.elim === 1 ? ' (pool #' + (L.me ? L.me.rank : '—') + '/' + L.teams.length + ')' : ''}`;
-            } else if (la.type === 'pool') {
+            } else if (la.round === 1) {
               line = `<span style="color:var(--text);font-weight:700;font-size:.78rem">${(L.me ? L.me.pts : 0).toFixed(1)}</span> PTS · R1 pool #${L.me ? L.me.rank : '—'}/${L.teams.length} · top ${L.rule.adv} advance` +
-                (L.r1Done ? (L.inAdv ? ' · <span style="color:#22c55e;font-weight:700">ADVANCED</span> · awaiting R2 pairing' : '') : cushStr);
+                (L.r1Done ? (L.inAdv ? ' · <span style="color:#22c55e;font-weight:700">ADVANCED</span> · awaiting R2 group' : '') : cushStr);
+            } else if (la.type === 'pool') {
+              const st = !la.known ? 'group rosters not synced' : !la.played ? 'not started' : la.final ? '' : (la.adv ? (la.done ? 'ADVANCED' : 'in top ' + la.advN) : (la.done ? 'ELIMINATED' : 'outside top ' + la.advN));
+              const stCol = !la.known || !la.played ? 'var(--text2)' : la.adv ? '#22c55e' : '#ef4444';
+              const cu = la.cushion == null ? '' : (la.cushion >= 0 ? ` · <span style="color:#22c55e;font-weight:700">+${la.cushion.toFixed(1)}</span> <span style="color:var(--text2)">cushion</span>` : ` · <span style="color:#ef4444;font-weight:700">${la.cushion.toFixed(1)}</span> <span style="color:var(--text2)">to cut</span>`);
+              line = `${la.final ? 'FINAL' : 'R' + la.round} · W${la.week[0]}${la.week[1] !== la.week[0] ? '-' + la.week[1] : ''} · ${la.of}-team group · <span style="color:var(--text);font-weight:700;font-size:.78rem">${la.myPts != null ? la.myPts.toFixed(1) : '—'}</span> PTS · #${la.rank != null && la.known ? la.rank : '—'}/${la.of}${cu}${st ? ` · <span style="color:${stCol};font-weight:700">${st}</span>` : ''}`;
             } else {
               const lead = la.leading == null ? (la.known ? 'tied' : 'opp roster not synced') : (la.leading ? (la.done ? 'WON' : 'LEADING') : (la.done ? 'LOST' : 'TRAILING'));
               const leadCol = la.leading == null ? 'var(--text2)' : la.leading ? '#22c55e' : '#ef4444';
-              line = `R${la.round} · W${la.week} vs <span style="color:var(--text);font-weight:600">${_esc(la.opp)}</span> · <span style="color:var(--text);font-weight:700;font-size:.78rem">${la.myPts != null ? la.myPts.toFixed(1) : '—'}</span> – <span style="color:var(--text);font-weight:600">${la.oppPts != null ? la.oppPts.toFixed(1) : '—'}</span> · <span style="color:${leadCol};font-weight:700">${lead}</span>`;
+              line = `R${la.round} · W${la.week[0]} vs <span style="color:var(--text);font-weight:600">${_esc(la.opp)}</span> · <span style="color:var(--text);font-weight:700;font-size:.78rem">${la.myPts != null ? la.myPts.toFixed(1) : '—'}</span> – <span style="color:var(--text);font-weight:600">${la.oppPts != null ? la.oppPts.toFixed(1) : '—'}</span> · <span style="color:${leadCol};font-weight:700">${lead}</span>`;
             }
             const lockStr = H.locked ? ` · <span style="color:#22c55e;font-weight:700">${_udFmtMoney(H.locked)}</span> <span style="color:var(--text2)">locked</span>` : '';
-            const nowStr = (L.moneyNow && L.moneyNow !== H.locked) ? ` · <span style="color:#22c55e">${_udFmtMoney(L.moneyNow)} if it ended today</span>` : (!H.locked && H.alive ? ' · <span style="color:var(--text2)">pays from R4</span>' : '');
+            const nowStr = (L.moneyNow && L.moneyNow !== H.locked) ? ` · <span style="color:#22c55e">${_udFmtMoney(L.moneyNow)} if it ended today</span>` : (!H.locked && H.alive && H.isH2h ? ' · <span style="color:var(--text2)">pays from R4</span>' : '');
             html += `<div style="font-size:.68rem;color:var(--text2)">${line}${lockStr}${nowStr}</div>`;
           } else {
             html += `<div style="font-size:.68rem;color:var(--text2)"><span style="color:var(--text);font-weight:700;font-size:.78rem">${L.myPts.toFixed(1)}</span> PTS${wkStr}${cushStr}${payStr}</div>`;
@@ -60006,41 +60081,88 @@ Rules:
   // H2H round with the opponent, both scores and the result).
   function _udBuildH2hRoundsHtml(L) {
     const H = L.h2h;
-    const P = L.rule.roundPrize || [];
+    const P = L.rule.prizeReach || [];
+    const wkLbl = w => !w ? '—' : (w[0] === w[1] ? 'W' + w[0] : 'W' + w[0] + '-' + w[1]);
     let html = `<div style="margin-bottom:12px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">`;
     html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;font-size:.62rem;color:var(--text2)">
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--text)">ELIMINATOR ROUNDS</span>
-      <span>${H.alive ? '<b style="color:#22c55e">ALIVE</b> · reached R' + H.reached : '<b style="color:#ef4444">OUT</b> in R' + H.elim}</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--text)">${H.isH2h ? 'ELIMINATOR ROUNDS' : 'PLAYOFF ROUNDS'}</span>
+      <span>${H.alive ? '<b style="color:#22c55e">ALIVE</b> · reached ' + (L.rule.rounds[H.reached - 1] && L.rule.rounds[H.reached - 1].final ? 'the FINAL' : 'R' + H.reached) : '<b style="color:#ef4444">OUT</b> in R' + H.elim}</span>
       <span>· locked <b style="color:${H.locked ? '#22c55e' : 'var(--text2)'}">${_udFmtMoney(H.locked)}</b></span>
-      <span>· ${H.groupsLinked} H2H round${H.groupsLinked === 1 ? '' : 's'} synced</span>
+      <span>· ${H.groupsLinked} playoff group${H.groupsLinked === 1 ? '' : 's'} synced</span>
     </div>`;
-    html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;min-width:520px;border-collapse:collapse;font-size:.68rem"><thead><tr style="border-bottom:1px solid var(--border)">
+    html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.68rem"><thead><tr style="border-bottom:1px solid var(--border)">
       <th style="text-align:left;padding:3px 6px;color:var(--text2)">ROUND</th><th style="text-align:left;padding:3px 6px;color:var(--text2)">WEEK</th>
-      <th style="text-align:left;padding:3px 6px;color:var(--text2)">OPPONENT</th><th style="text-align:right;padding:3px 6px;color:var(--text2)">YOU</th>
-      <th style="text-align:right;padding:3px 6px;color:var(--text2)">OPP</th><th style="text-align:left;padding:3px 6px;color:var(--text2)">RESULT</th>
+      <th style="text-align:left;padding:3px 6px;color:var(--text2)">GROUP</th><th style="text-align:right;padding:3px 6px;color:var(--text2)">YOU</th>
+      <th style="text-align:right;padding:3px 6px;color:var(--text2)">OPP / RANK</th><th style="text-align:left;padding:3px 6px;color:var(--text2)">RESULT</th>
       <th style="text-align:right;padding:3px 6px;color:var(--text2)">NEXT PAYS</th></tr></thead><tbody>`;
-    H.rounds.forEach(r => {
-      let res, col;
-      if (r.type === 'pool') {
-        res = r.done ? (r.adv ? 'ADVANCED (top ' + L.rule.adv + ')' : 'ELIMINATED') : (r.adv ? 'in top ' + L.rule.adv : 'outside top ' + L.rule.adv);
-        col = r.adv ? '#22c55e' : '#ef4444';
-        html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:3px 6px">R1</td><td style="padding:3px 6px">W${r.week}</td>
-          <td style="padding:3px 6px;color:var(--text2)">12-team pool</td><td style="padding:3px 6px;text-align:right;font-weight:700">${r.pts != null ? r.pts.toFixed(1) : '—'}</td>
-          <td style="padding:3px 6px;text-align:right;color:var(--text2)">#${r.rank || '—'}/${r.of}</td><td style="padding:3px 6px;color:${col};font-weight:700">${res}</td>
-          <td style="padding:3px 6px;text-align:right;color:var(--text2)">${_udFmtMoney(P[2] || 0)}</td></tr>`;
+    // schedule rows not reached yet (greyed) so the whole bracket is visible
+    const shown = new Set(H.rounds.map(r => r.round));
+    const allRounds = L.rule.rounds.map((rd, i) => ({ k: i + 1, rd }));
+    allRounds.forEach(({ k, rd }) => {
+      const r = H.rounds.find(x => x.round === k);
+      if (!r) {
+        if (!H.alive && k > (H.elim || 0)) return;
+        const grp = rd.final ? rd.size + '-team FINAL' : rd.size === 2 ? 'head-to-head' : rd.size + '-team group · top ' + rd.adv;
+        const nextPays = rd.final ? '' : _udFmtMoney(P[k + 1] || 0);
+        html += `<tr style="border-bottom:1px solid var(--border);opacity:.45"><td style="padding:3px 6px">${rd.final ? 'FINAL' : 'R' + k}</td><td style="padding:3px 6px">${wkLbl(rd.week)}</td>
+          <td style="padding:3px 6px;color:var(--text2)">${grp}</td><td style="padding:3px 6px;text-align:right">—</td><td style="padding:3px 6px;text-align:right">—</td>
+          <td style="padding:3px 6px;color:var(--text2);font-style:italic">${H.alive && k === H.reached ? 'awaiting group sync' : 'not reached'}</td><td style="padding:3px 6px;text-align:right;color:var(--text2)">${nextPays}</td></tr>`;
         return;
       }
-      if (!r.known) { res = r.done ? 'unknown — opponent roster not synced' : 'opponent roster not synced'; col = 'var(--text2)'; }
-      else if (r.done) { res = r.won == null ? 'TIED' : (r.won ? 'WON' : 'LOST'); col = r.won ? '#22c55e' : '#ef4444'; }
-      else { res = r.leading == null ? (r.myPts == null ? 'not started' : 'tied') : (r.leading ? 'LEADING' : 'TRAILING'); col = r.leading == null ? 'var(--text2)' : (r.leading ? '#22c55e' : '#ef4444'); }
-      html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:3px 6px">R${r.round != null ? r.round : '?'}</td><td style="padding:3px 6px">${r.week != null ? 'W' + r.week : '—'}</td>
-        <td style="padding:3px 6px">${_esc(r.opp)}</td><td style="padding:3px 6px;text-align:right;font-weight:700">${r.myPts != null ? r.myPts.toFixed(1) : '—'}</td>
-        <td style="padding:3px 6px;text-align:right">${r.oppPts != null ? r.oppPts.toFixed(1) : '—'}</td><td style="padding:3px 6px;color:${col};font-weight:700">${res}</td>
-        <td style="padding:3px 6px;text-align:right;color:var(--text2)">${r.round != null ? _udFmtMoney(P[r.round + 1] || 0) : '—'}</td></tr>`;
+      let res, col, oppCell;
+      const nextPays = r.final ? '' : _udFmtMoney(P[(r.round || k) + 1] || 0);
+      if (r.round === 1) {
+        res = r.done ? (r.adv ? 'ADVANCED (top ' + L.rule.adv + ')' : 'ELIMINATED') : (r.adv ? 'in top ' + L.rule.adv : 'outside top ' + L.rule.adv);
+        col = r.adv ? '#22c55e' : '#ef4444';
+        html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:3px 6px">R1</td><td style="padding:3px 6px">${wkLbl(r.week)}</td>
+          <td style="padding:3px 6px;color:var(--text2)">${r.of}-team pool · top ${L.rule.adv}</td><td style="padding:3px 6px;text-align:right;font-weight:700">${r.myPts != null ? r.myPts.toFixed(1) : '—'}</td>
+          <td style="padding:3px 6px;text-align:right;color:var(--text2)">#${r.rank || '—'}/${r.of}</td><td style="padding:3px 6px;color:${col};font-weight:700">${res}</td>
+          <td style="padding:3px 6px;text-align:right;color:var(--text2)">${nextPays}</td></tr>`;
+        return;
+      }
+      if (r.type === 'h2h') {
+        oppCell = `${_esc(r.opp || '—')} <span style="color:var(--text2)">${r.oppPts != null ? r.oppPts.toFixed(1) : '—'}</span>`;
+        if (!r.known) { res = r.done ? 'unknown — opponent roster not synced' : 'opponent roster not synced'; col = 'var(--text2)'; }
+        else if (r.done) { res = r.won == null ? 'TIED' : (r.won ? 'WON' : 'LOST'); col = r.won ? '#22c55e' : '#ef4444'; }
+        else { res = r.leading == null ? (r.myPts == null ? 'not started' : 'tied') : (r.leading ? 'LEADING' : 'TRAILING'); col = r.leading == null ? 'var(--text2)' : (r.leading ? '#22c55e' : '#ef4444'); }
+      } else {
+        oppCell = `#${r.known && r.played && r.rank != null ? r.rank : '—'}/${r.of}${r.cutPts != null && !r.final ? ' <span style="color:var(--text2)">cut ' + r.cutPts.toFixed(1) + '</span>' : ''}`;
+        if (!r.known) { res = 'group rosters not synced'; col = 'var(--text2)'; }
+        else if (!r.played) { res = 'not started'; col = 'var(--text2)'; }
+        else if (r.final) { const fp = _udFinalPrize(L.rule, r.rank); res = (r.done ? 'FINISHED' : 'if it ended today') + (fp != null ? ' · ' + _udFmtMoney(fp) : ''); col = '#22c55e'; }
+        else if (r.done) { res = r.adv ? 'ADVANCED' : 'ELIMINATED'; col = r.adv ? '#22c55e' : '#ef4444'; }
+        else { res = r.adv ? 'in top ' + r.advN : 'outside top ' + r.advN; col = r.adv ? '#22c55e' : '#ef4444'; }
+      }
+      const grp = r.final ? r.of + '-team FINAL' : r.type === 'h2h' ? 'head-to-head' : r.of + '-team group · top ' + r.advN;
+      html += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:3px 6px">${r.final ? 'FINAL' : 'R' + (r.round != null ? r.round : '?')}</td><td style="padding:3px 6px">${wkLbl(r.week)}</td>
+        <td style="padding:3px 6px;color:var(--text2)">${grp}</td><td style="padding:3px 6px;text-align:right;font-weight:700">${r.myPts != null ? r.myPts.toFixed(1) : '—'}</td>
+        <td style="padding:3px 6px;text-align:right">${oppCell}</td><td style="padding:3px 6px;color:${col};font-weight:700">${res}</td>
+        <td style="padding:3px 6px;text-align:right;color:var(--text2)">${nextPays}</td></tr>`;
     });
     html += `</tbody></table></div>`;
+    // Latest playoff group standings (pools bigger than a head-to-head).
+    const la = H.latest;
+    if (la && la.round !== 1 && la.type === 'pool' && la.teams && la.teams.length) {
+      html += `<div style="margin-top:8px;font-size:.6rem;letter-spacing:1.5px;color:var(--text2);font-family:'Bebas Neue',sans-serif">${la.final ? 'FINAL' : 'R' + la.round} GROUP · ${wkLbl(la.week)}${la.final ? '' : ' · top ' + la.advN + ' advance'}</div>`;
+      const cap = la.final ? 60 : la.teams.length;
+      la.teams.slice(0, cap).forEach((t, ti) => {
+        const isMine = t.isMine;
+        const bg = isMine ? 'background:linear-gradient(90deg,rgba(251,191,36,0.18),transparent);' : 'background:var(--surface);';
+        const nm = isMine ? '<span style="color:var(--accent);font-weight:700">' + _esc(t.username || 'YOU') + '</span> <span style="font-size:.55rem;color:var(--accent)">(YOU)</span>' : _esc(t.username || ('Opponent ' + String(t.entryId || '').slice(0, 6)));
+        html += `<div style="display:flex;align-items:center;gap:10px;padding:5px 10px;margin-top:3px;border:1px solid ${t.adv ? '#22c55e40' : 'var(--border)'};border-radius:6px;${bg}font-size:.7rem">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:${t.adv ? '#22c55e' : 'var(--text)'};width:34px">#${t.rank != null ? t.rank : '—'}</span>
+          <span style="flex:1;min-width:80px">${nm}${t.adv ? ' <span style="font-size:.5rem;color:#22c55e;font-weight:700;letter-spacing:.5px">ADV</span>' : ''}${!t.hasPicks ? ' <span style="font-size:.5rem;color:var(--text2)">roster not synced</span>' : ''}</span>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--text)">${t.pts != null ? t.pts.toFixed(1) : '—'}</span>
+          ${la.final ? `<span style="min-width:64px;text-align:right;font-size:.65rem;color:#22c55e">${t.rank != null ? _udFmtMoney(_udFinalPrize(L.rule, t.rank) || 0) : ''}</span>` : ''}
+        </div>`;
+        if (!la.final && ti === la.advN - 1 && la.teams.length > la.advN) {
+          html += `<div style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:.5rem;letter-spacing:1.5px;color:#22c55e"><span style="flex:1;border-top:1px dashed #22c55e80"></span>ADVANCE LINE<span style="flex:1;border-top:1px dashed #22c55e80"></span></div>`;
+        }
+      });
+      if (la.teams.length > cap) html += `<div style="font-size:.6rem;color:var(--text2);margin-top:4px">… ${la.teams.length - cap} more</div>`;
+    }
     if (!H.groupsLinked && H.alive && L.r1Done) {
-      html += `<div style="font-size:.62rem;color:var(--text2);margin-top:6px;font-style:italic">Head-to-head rounds appear here after the next <strong style="color:var(--accent)">Sync from Underdog</strong> (extension 0.18.16+) once Underdog has paired Round 2.</div>`;
+      html += `<div style="font-size:.62rem;color:var(--text2);margin-top:6px;font-style:italic">Playoff groups appear here after the next <strong style="color:var(--accent)">Sync from Underdog</strong> (extension 0.18.17+) once Underdog has built Round ${H.reached}.</div>`;
     }
     html += `</div>`;
     return html;

@@ -57551,7 +57551,12 @@ Rules:
     const name = String((d && d.tournament) || '');
     const r = _UD_CONTEST_RULES.find(x => x.re.test(name)) || { adv: 2, weeks: 14, advPrize: null };
     const fee = parseFloat(d && d.fee) || 0;
-    const rounds = Array.isArray(r.rounds) ? r.rounds : [{ week: [1, r.weeks], size: 12, adv: r.adv }];
+    // Contests with no published bracket still get Underdog's standard playoff
+    // shape (R2 W15, R3 W16, final W17, top 1 per round) so synced later-round
+    // groups chain on; pool sizes come from the groups themselves.
+    const rounds = Array.isArray(r.rounds) ? r.rounds
+      : r.unknownBracket ? [{ week: [1, r.weeks], size: 12, adv: r.adv }, { week: [15, 15], size: null, adv: 1 }, { week: [16, 16], size: null, adv: 1 }, { week: [17, 17], size: null, adv: 1, final: true }]
+      : [{ week: [1, r.weeks], size: 12, adv: r.adv }];
     return {
       inferred: !!r.inferred,
       unknownBracket: !!r.unknownBracket || !Array.isArray(r.rounds),
@@ -60183,6 +60188,7 @@ Rules:
       <span>· locked <b style="color:${H.locked ? '#22c55e' : 'var(--text2)'}">${_udFmtMoney(H.locked)}</b></span>
       <span>· ${H.groupsLinked} playoff group${H.groupsLinked === 1 ? '' : 's'} synced</span>
       ${L.rule.inferred ? '<span title="No public rules page for this contest — bracket and payouts assumed from its launch headline (same $ entry / prize pool / 1st place as The Little Board)." style="color:#f59e0b">· bracket INFERRED</span>' : ''}
+      ${L.rule.unknownBracket ? '<span title="Underdog publishes no rules page for this contest. Rounds below use the standard playoff shape (Week 15, Week 16, final in Week 17, top 1 advancing) and the pool sizes of whatever groups have synced; payouts assume entry fee back." style="color:#f59e0b">· bracket NOT ON FILE (generic shape)</span>' : ''}
     </div>`;
     html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.68rem"><thead><tr style="border-bottom:1px solid var(--border)">
       <th style="text-align:left;padding:3px 6px;color:var(--text2)">ROUND</th><th style="text-align:left;padding:3px 6px;color:var(--text2)">WEEK</th>

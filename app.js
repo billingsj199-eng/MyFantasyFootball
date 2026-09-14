@@ -54465,6 +54465,8 @@ Rules:
       if (_mtLineupCheckOpen) _mtRenderLineupCheck();
       if (window._mtSavedLeagues) _mtRenderLineupChecklist(window._mtSavedLeagues);
     } catch (_) {}
+    // Underdog portfolio: live ADVANCE RATE / WINNING cards + TEAMS leaderboards.
+    try { if (typeof window._udLiveRefresh === 'function') window._udLiveRefresh(); } catch (_) {}
   };
   function _mtRenderLineupCheck() {
     const box = document.getElementById('mtLineupCheck');
@@ -57210,6 +57212,303 @@ Rules:
     return typeof window._getTradeValue === 'function' ? window._getTradeValue(matched, src, 'redraft') : 1;
   }
 
+  // ---------- LIVE STANDINGS (2026-09-14) ----------
+  // Round-1 leaderboards for every synced draft, computed on the site from the
+  // opponents' rosters (allTeams, extension sync) + the weekly stats feed
+  // (WEEKLY_STATS 2026 rows = FINAL games, half-PPR fpts, post-game importer)
+  // + the live-week Sleeper actuals (_liveActualFor) for games in progress.
+  // Underdog best ball lineup: QB / RB RB / WR WR WR / TE / FLEX (+ SUPERFLEX
+  // in Superflex slates). No K, no DST.
+  // Contest rules (advance spots + what advancing pays) come from Underdog's
+  // help-center contest pages (read Sep 2026):
+  //   Best Ball Mania VII — top 2 of 12 advance after W14, min cash $25
+  //   (places 8005-112056), The Puppy — top 2, min cash $5 (3751-37500th),
+  //   The Eliminator — top 6 of 12 in W1 then 2-seat H2H rounds, payouts
+  //   only from Round 3, The Big Board — top 3, The Bigger Board/Mastiff —
+  //   top 4, The Big Dog — top 2. Contests without a page default to top-2
+  //   with the entry fee back (Underdog's standard min-cash tier); `advPrize:
+  //   null` means "entry fee".
+  const _UD_CONTEST_RULES = [
+    { re: /best\s*ball\s*mania/i, adv: 2, weeks: 14, advPrize: 25 },
+    { re: /puppy/i,               adv: 2, weeks: 14, advPrize: 5 },
+    { re: /eliminator/i,          adv: 6, weeks: 1,  advPrize: 0, h2h: true },
+    { re: /bigger\s*board/i,      adv: 4, weeks: 14, advPrize: null },
+    { re: /big\s*board/i,         adv: 3, weeks: 14, advPrize: null },
+    { re: /mastiff/i,             adv: 4, weeks: 14, advPrize: null },
+    { re: /big\s*dog/i,           adv: 2, weeks: 14, advPrize: null }
+  ];
+  function _udContestRule(d) {
+    const name = String((d && d.tournament) || '');
+    const r = _UD_CONTEST_RULES.find(x => x.re.test(name)) || { adv: 2, weeks: 14, advPrize: null };
+    const fee = parseFloat(d && d.fee) || 0;
+    return {
+      adv: r.adv,
+      weeks: r.weeks,
+      h2h: !!r.h2h,
+      advPrize: r.advPrize == null ? fee : r.advPrize,
+      size: (d && d.size) || 12
+    };
+  }
+  window._udContestRule = _udContestRule;
+
+  // Season week windows — same Tuesday 09:00 UTC rollover the live-week
+  // module and season strip use (kickoff table _SEASON_KICKS_2026).
+  function _udWeekWindows() {
+    if (typeof _SEASON_KICKS_2026 === 'undefined') return [];
+    return _SEASON_KICKS_2026.map(w => {
+      const e = new Date(w.kick + 2 * 86400000);
+      while (e.getUTCDay() !== 2) e.setUTCDate(e.getUTCDate() + 1);
+      e.setUTCHours(9, 0, 0, 0);
+      return { wk: w.wk, kick: w.kick, end: e.getTime() };
+    });
+  }
+  // kicked = every week whose first game has started (scoring weeks);
+  // liveWk = the current window's week once it has kicked off (games may be
+  // in progress → Sleeper actuals win over the FINAL-only stats rows).
+  function _udLiveWeekInfo() {
+    const now = window._seasonStripNow || Date.now();
+    const wins = _udWeekWindows();
+    const kicked = wins.filter(w => now >= w.kick).map(w => w.wk);
+    const cur = wins.find(w => now < w.end);
+    return { kicked, liveWk: (cur && now >= cur.kick) ? cur.wk : null, curWk: cur ? cur.wk : null };
+  }
+  window._udLiveWeekInfo = _udLiveWeekInfo;
+
+  // Half-PPR points for one player in one week. null = no data yet (game not
+  // played / player unknown); 0 is a real zero.
+  let _udPtsCache = new Map();
+  function _udWeekPts(name, wk, liveWk) {
+    const key = name + '|' + wk;
+    if (_udPtsCache.has(key)) return _udPtsCache.get(key);
+    let v = null;
+    const m = _udMatchPlayer(name);
+    if (m) {
+      if (wk === liveWk && typeof window._liveActualFor === 'function') {
+        try { const a = window._liveActualFor(m, 'half'); if (a != null && isFinite(a)) v = +a; } catch (_) {}
+      }
+      if (v == null && typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS && WEEKLY_STATS[m.n]) {
+        const rows = WEEKLY_STATS[m.n].seasons && WEEKLY_STATS[m.n].seasons['2026'];
+        if (Array.isArray(rows)) {
+          const r = rows.find(x => x && x.wk === wk);
+          if (r && r.fpts != null && isFinite(+r.fpts)) v = Math.round(+r.fpts * 100) / 100;
+        }
+      }
+    }
+    _udPtsCache.set(key, v);
+    return v;
+  }
+  function _udPickPos(p) {
+    let pos = String(p.pos || '').toUpperCase();
+    if (!pos) { const m = _udMatchPlayer(p.name); if (m && m.s) pos = m.s; }
+    return pos;
+  }
+  // Best-ball lineup total for one week. null when no pick on the roster has
+  // any data for that week (so an unplayed week doesn't count as a 0-week).
+  function _udBestBall(picks, wk, liveWk, sf) {
+    const by = { QB: [], RB: [], WR: [], TE: [] };
+    let any = false;
+    picks.forEach(p => {
+      if (!p || !p.name) return;
+      const pos = _udPickPos(p);
+      if (!by[pos]) return;
+      const v = _udWeekPts(p.name, wk, liveWk);
+      if (v != null) any = true;
+      by[pos].push(v || 0);
+    });
+    if (!any) return null;
+    Object.keys(by).forEach(k => by[k].sort((a, b) => b - a));
+    const take = (pos, n) => { let s = 0; for (let i = 0; i < n; i++) s += (by[pos].shift() || 0); return s; };
+    let tot = take('QB', 1) + take('RB', 2) + take('WR', 3) + take('TE', 1);
+    const flexPool = by.RB.concat(by.WR, by.TE).sort((a, b) => b - a);
+    tot += flexPool.shift() || 0;
+    if (sf) tot += Math.max(by.QB[0] || 0, flexPool[0] || 0);
+    return Math.round(tot * 100) / 100;
+  }
+  // Season-to-date points for one player across the scoring weeks (roster
+  // table PTS column). { pts, wk } — wk = points in the display week.
+  function _udPlayerSeasonPts(name, live) {
+    if (!live) return { pts: null, wk: null };
+    let pts = null;
+    live.weekList.forEach(w => {
+      const v = _udWeekPts(name, w, live.liveWk);
+      if (v == null) return;
+      pts = (pts || 0) + v;
+    });
+    const wk = live.wkCol ? _udWeekPts(name, live.wkCol, live.liveWk) : null;
+    return { pts: pts == null ? null : Math.round(pts * 10) / 10, wk };
+  }
+
+  // Per-draft standings, memoized on a global signature (scoring weeks +
+  // weekly-stats stamp + live scoreboard sig) and a per-draft roster sig.
+  const _udLiveByDraft = {};
+  let _udLiveSigCache = '';
+  function _udLiveSig() {
+    const lw = _udLiveWeekInfo();
+    return lw.kicked.join(',') + '|' + lw.liveWk + '|' + (window._udWeeklyStamp || 0) + '|' +
+      ((window._liveWeekState && window._liveWeekState.sig) || '') + '|' +
+      (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS ? 1 : 0);
+  }
+  function _udLiveDraft(d) {
+    if (!d) return null;
+    const sig = _udLiveSig();
+    if (sig !== _udLiveSigCache) {
+      _udLiveSigCache = sig;
+      _udPtsCache = new Map();
+      Object.keys(_udLiveByDraft).forEach(k => { delete _udLiveByDraft[k]; });
+    }
+    const key = String(d.id);
+    const at = d.allTeams && typeof d.allTeams === 'object' ? d.allTeams : null;
+    const atVals = at ? Object.values(at) : [];
+    const dsig = at
+      ? atVals.length + ':' + atVals.reduce((s, t) => s + ((t.picks || []).length), 0)
+      : 'own:' + (d.picks || []).length;
+    const hit = _udLiveByDraft[key];
+    if (hit && hit.dsig === dsig) return hit;
+
+    const rule = _udContestRule(d);
+    const lw = _udLiveWeekInfo();
+    const weekList = lw.kicked.filter(w => w <= rule.weeks);
+    const wkCol = weekList.length ? (lw.liveWk && weekList.includes(lw.liveWk) ? lw.liveWk : weekList[weekList.length - 1]) : null;
+    const sf = d.phase === 'superflex' || /super\s*flex/i.test((d.tournament || '') + ' ' + (d.slateTitle || ''));
+    const teamsIn = at
+      ? atVals
+      : [{ entryId: 'me', isMine: true, username: null, picks: d.picks || [] }];
+    let scored = false;
+    const teams = teamsIn.map(t => {
+      let pts = 0, wkPts = null, n = 0;
+      weekList.forEach(w => {
+        const v = _udBestBall(t.picks || [], w, lw.liveWk, sf);
+        if (v == null) return;
+        pts += v; n++;
+        if (w === wkCol) wkPts = v;
+      });
+      if (n) scored = true;
+      return {
+        entryId: t.entryId, username: t.username || null, isMine: !!t.isMine,
+        pts: Math.round(pts * 10) / 10, wkPts: wkPts == null ? null : Math.round(wkPts * 10) / 10,
+        weeksScored: n, rank: null, adv: false
+      };
+    });
+    teams.sort((a, b) => (b.pts - a.pts) || ((b.wkPts || 0) - (a.wkPts || 0)));
+    teams.forEach((t, i) => {
+      t.rank = (i > 0 && teams[i - 1].pts === t.pts) ? teams[i - 1].rank : i + 1;
+      t.adv = t.rank <= rule.adv;
+    });
+    const me = teams.find(t => t.isMine) || null;
+    const cutTeam = teams[rule.adv - 1] || null;           // last advancing spot
+    const firstOut = teams[rule.adv] || null;              // first non-advancing
+    let cushion = null;                                    // + = above the line, - = below
+    if (me && at && scored) {
+      cushion = me.adv
+        ? (firstOut ? Math.round((me.pts - firstOut.pts) * 10) / 10 : null)
+        : (cutTeam ? -Math.round((cutTeam.pts - me.pts) * 10) / 10 : null);
+    }
+    const r1Done = rule.h2h && lw.curWk != null && lw.curWk > rule.weeks;
+    const out = {
+      dsig, rule, sf, teams, me, scored,
+      fieldComplete: !!at && atVals.length > 1,
+      myRank: me ? me.rank : null,
+      myPts: me ? me.pts : null,
+      myWk: me ? me.wkPts : null,
+      inAdv: !!(me && me.adv),
+      advPrize: rule.advPrize,
+      cutPts: cutTeam ? cutTeam.pts : null,
+      cushion,
+      weekList, wkCol, liveWk: lw.liveWk, curWk: lw.curWk,
+      weeksScored: me ? me.weeksScored : 0,
+      r1Done
+    };
+    _udLiveByDraft[key] = out;
+    return out;
+  }
+  window._udLiveDraft = _udLiveDraft;
+
+  // Portfolio roll-up over the (filtered) drafts: advance rate + $ in the money.
+  function _udLiveSummary(data) {
+    const drafts = data && data.drafts ? Object.values(data.drafts) : [];
+    let n = 0, nAdv = 0, winning = 0, rankSum = 0, nRank = 0, nField = 0, ptsSum = 0;
+    drafts.forEach(d => {
+      const L = _udLiveDraft(d);
+      if (!L) return;
+      if (L.fieldComplete) nField++;
+      if (!L.fieldComplete || !L.scored) return;
+      n++;
+      ptsSum += L.myPts || 0;
+      if (L.inAdv) { nAdv++; winning += L.advPrize || 0; }
+      if (L.myRank) { rankSum += L.myRank; nRank++; }
+    });
+    const lw = _udLiveWeekInfo();
+    return {
+      n, nAdv, nField,
+      advRate: n ? nAdv / n : null,
+      winning: Math.round(winning * 100) / 100,
+      avgRank: nRank ? rankSum / nRank : null,
+      avgPts: n ? ptsSum / n : null,
+      weeks: lw.kicked.length,
+      liveWk: lw.liveWk
+    };
+  }
+  window._udLiveSummary = _udLiveSummary;
+
+  function _udFmtMoney(v) {
+    const n = Math.round(+v || 0);
+    return '$' + n.toLocaleString('en-US');
+  }
+  function _udKpiAdvHtml(sum) {
+    if (!sum || !sum.n) {
+      return { val: '—', sub: sum && sum.nField ? 'no games scored yet' : 'sync from Underdog to see the field' };
+    }
+    return {
+      val: Math.round(100 * sum.advRate) + '%',
+      sub: sum.nAdv + ' of ' + sum.n + ' in advance spots' + (sum.weeks ? ' · thru W' + sum.weeks : '')
+    };
+  }
+  function _udKpiWinHtml(sum) {
+    if (!sum || !sum.n) return { val: '—', sub: 'no games scored yet' };
+    return {
+      val: _udFmtMoney(sum.winning),
+      sub: sum.nAdv + ' draft' + (sum.nAdv === 1 ? '' : 's') + ' in the money if it ended today'
+    };
+  }
+  // Repaint the two live KPI cards in place (no dashboard re-render) and,
+  // when the TEAMS tab is showing, rebuild it — re-opening whatever drafts
+  // were expanded so a 2-minute live tick doesn't collapse the leaderboard.
+  window._udLiveRefresh = function () {
+    try {
+      const data = window._udData;
+      if (!data) return;
+      const dash = document.getElementById('mtUnderdogDashboard');
+      if (!dash || dash.style.display === 'none') return;
+      const sum = _udLiveSummary(data);
+      const adv = _udKpiAdvHtml(sum), win = _udKpiWinHtml(sum);
+      const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+      set('udKpiVal_adv', adv.val); set('udKpiSub_adv', adv.sub);
+      set('udKpiVal_win', win.val); set('udKpiSub_win', win.sub);
+      const teamsTab = document.getElementById('udTab_teams');
+      if (window._udTeamsBuilt && teamsTab && teamsTab.style.display !== 'none') {
+        const open = new Set();
+        document.querySelectorAll('[data-udteamsdraft]').forEach(el => {
+          const idx = el.getAttribute('data-udteamsdraftidx');
+          const ex = document.getElementById('udTeamsDraft_' + idx);
+          if (ex && ex.style.display !== 'none') open.add(el.getAttribute('data-udteamsdraft'));
+        });
+        window._udTeamsBuilt = false;
+        _udEnsureTeamsTab(function () {
+          if (!open.size) return;
+          (window._udTeamsSorted || []).forEach((row, i) => {
+            if (row && row.d && open.has(String(row.d.id))) {
+              try { window._udToggleTeamsDraft(i); } catch (_) {}
+            }
+          });
+        });
+      }
+    } catch (e) { console.warn('[Portfolio] live refresh failed:', e); }
+  };
+  document.addEventListener('mff:weeklydata', function () {
+    window._udWeeklyStamp = Date.now();
+    setTimeout(function () { try { window._udLiveRefresh(); } catch (_) {} }, 0);
+  });
+
   function _udScoreTeam(playerNames) {
     const players = playerNames.map(name => {
       const matched = _udMatchPlayer(name);
@@ -58516,6 +58815,10 @@ Rules:
     try { if (typeof window._bbClearCaches === 'function') window._bbClearCaches(); } catch (_) {}
     // v0.9.65: refresh VOR (lazy — only D-traversal + per-pos sort, ~5ms).
     try { _computeVOR(); } catch (_) {}
+    // Live standings need the 2026 weekly rows (lazy bundle) and the
+    // live-week scoreboard/actuals poller (only runs while My Teams shows).
+    try { if (typeof window._loadWeeklyData === 'function') window._loadWeeklyData(); } catch (_) {}
+    try { if (typeof window._liveWeekPoke === 'function') window._liveWeekPoke(); } catch (_) {}
 
     // Apply phase filter first, then contest filter (composes nicely)
     const phaseFiltered = _udApplyPhaseFilter(originalData);
@@ -58659,18 +58962,24 @@ Rules:
     const _draftsSub = _tourneyEntries.length === 1
       ? _tourneyEntries[0][0]
       : `${_tourneyEntries.length} contests`;
+    // 2026-09-14: PLAYERS + AVG BUILD dropped (Jack); ADVANCE RATE + WINNING
+    // are LIVE — computed from every synced pool's standings (see
+    // _udLiveSummary) and repainted in place by _udLiveRefresh on every
+    // scoreboard / stats tick.
+    const _liveSum = _udLiveSummary(data);
+    const _kpiAdv = _udKpiAdvHtml(_liveSum), _kpiWin = _udKpiWinHtml(_liveSum);
     const cards = [
       { label: 'DRAFTS', val: numDrafts, sub: _draftsSub, subTitle: _tourneyFull, gloss: 'Total number of drafts in your imported portfolio across the selected phase + contest filters.' },
+      { id: 'adv', label: 'ADVANCE RATE', val: _kpiAdv.val, sub: _kpiAdv.sub, color: '#22c55e', gloss: 'LIVE — share of your synced pools where you currently sit in an advancing spot (top 2 of 12 in BBM / Puppy-style contests, top 6 in The Eliminator\'s Week 1). Standings are computed from every team\'s best-ball lineup on real weekly stats, including games in progress.' },
       { label: 'INVESTED', val: '$' + data.totalInvestment.toFixed(0), sub: '$' + (data.totalInvestment / numDrafts).toFixed(2) + ' avg entry', gloss: 'Total dollars invested across all drafts in the current filter. Subtext shows your average entry fee.' },
-      { label: 'PLAYERS', val: Object.keys(data.players).length, sub: data.totalPicks + ' total picks', gloss: 'Number of unique players you own at least one share of, plus your total pick count.' },
-      { label: 'AVG BUILD', val: `${avgPos.QB}/${avgPos.RB}/${avgPos.WR}/${avgPos.TE}`, sub: 'QB/RB/WR/TE per team', gloss: 'Average positional shape of your teams — mean QB/RB/WR/TE count per roster.' }
+      { id: 'win', label: 'WINNING', val: _kpiWin.val, sub: _kpiWin.sub, color: '#22c55e', gloss: 'LIVE — what your entries would pay if the round ended today: the guaranteed min-cash for every pool where you hold an advancing spot (BBM VII $25, The Puppy $5, other contests = entry fee back; The Eliminator pays nothing until Round 3).' }
     ];
     cards.forEach(c => {
-      html += `<div style="text-align:center;padding:14px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px">`;
-      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)"><span data-gloss="${_esc(c.gloss)}">${c.label}</span></div>`;
-      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:var(--accent);margin:2px 0">${c.val}</div>`;
+      html += `<div style="text-align:center;padding:14px 8px;background:var(--surface);border:1px solid ${c.color ? c.color + '55' : 'var(--border)'};border-radius:10px">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)"><span data-gloss="${_esc(c.gloss)}">${c.label}</span>${c.id ? ' <span style="font-size:.5rem;color:#22c55e;letter-spacing:1px">LIVE</span>' : ''}</div>`;
+      html += `<div${c.id ? ` id="udKpiVal_${c.id}"` : ''} style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:${c.color || 'var(--accent)'};margin:2px 0">${c.val}</div>`;
       const _subTitleAttr = c.subTitle ? ` title="${_esc(c.subTitle)}"` : '';
-      html += `<div${_subTitleAttr} style="font-size:.6rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.sub}</div>`;
+      html += `<div${c.id ? ` id="udKpiSub_${c.id}"` : ''}${_subTitleAttr} style="font-size:.6rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.sub}</div>`;
       html += `</div>`;
     });
     html += `</div>`;
@@ -58717,7 +59026,7 @@ Rules:
     // ── TEAMS TAB (v0.9.40 site-side, BB-aware, v0.10.2 fully lazy) ──
     html += `<div id="udTab_teams" style="display:${_activeTabId === 'teams' ? '' : 'none'}">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">TEAMS <span style="font-size:.7rem;color:var(--text2);font-family:'DM Sans',sans-serif;letter-spacing:0">(your team vs every opponent in each pool)</span></div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px;max-width:760px;word-wrap:break-word">Click a draft to see every team in the pool ranked by <span data-gloss="Roster Construction score — how the build grades against 2.5M historical BBM rosters (build shape, round patterns, stacking, structural risk). Superflex pools rank by projected season points instead — the BBM history is standard-lineup only.">build grade</span> (historical BBM data, not a season simulation). Click any team to open its roster. <strong style="color:var(--accent)">Rank grades the build only — anything can happen in a real season.</strong></div>`;
+    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:14px;max-width:760px;word-wrap:break-word">Click a draft for its <strong style="color:var(--accent)">live leaderboard</strong> — every team in the pool ranked by real best-ball points (<span data-gloss="FINAL games come from the weekly stats feed (imported after every game); games in progress use live scoring. Underdog lineup: QB / 2 RB / 3 WR / TE / FLEX, plus a SUPERFLEX in Superflex slates.">how it's scored</span>), with the advance line drawn after the spots the contest advances. Click any team to open its roster. Before Week 1 kicks off, pools rank by the pre-season build grade instead.</div>`;
     // v0.10.2: TEAMS tab body is fully LAZY. The field simulation + all
     // draft/team/roster markup used to be built right here on EVERY dashboard
     // render, parking ~600k hidden DOM nodes (95% of the whole page) inside
@@ -59039,7 +59348,7 @@ Rules:
         // recompute this draft's cached row even though pick counts didn't move.
         _atVals.reduce((s, t) => s + (t.username ? 1 : 0), 0);
       const _cached = _udByDraft[dk];
-      if (_cached && _cached.sig === _dSig) { _udTeamsRows.push(_cached.row); return; }
+      if (_cached && _cached.sig === _dSig) { _udLiveOverlay(_cached.row, d); _udTeamsRows.push(_cached.row); return; }
       const sourceTeams = (_atVals.length >= 2)
         ? _atVals
         : [{ entryId: 'me', isMine: true, picks: d.picks || [], pickCount: (d.picks || []).length }];
@@ -59161,15 +59470,14 @@ Rules:
         fieldComplete: fieldComplete
       };
       _udByDraft[dk] = { sig: _dSig, row: _row };
+      _udLiveOverlay(_row, d);
       _udTeamsRows.push(_row);
     });   // close per-draft forEach
-    // Portfolio summary cards. Advance-rate cards removed; rank-based stats
-    // only since the Monte Carlo overstated team-vs-team confidence.
+    // 2026-09-14: LIVE summary cards (Jack: build grades no longer matter
+    // once the season starts). All three come from _udLiveSummary over the
+    // filtered drafts — same numbers as the KPI strip, plus average live rank.
     const _completeRows = _udTeamsRows.filter(x => x.fieldComplete);
-    const _avgRank = _completeRows.length
-      ? _completeRows.reduce((s, x) => s + (x.myRank || 0), 0) / _completeRows.length : null;
-    const _top4Count = _completeRows.filter(x => x.myRank && x.myRank <= 4).length;
-    const _top1Count = _completeRows.filter(x => x.myRank === 1).length;
+    const _liveSum = _udLiveSummary(data);
 
     function _udSummaryCard(label, val, sub, color) {
       return `<div style="text-align:center;padding:14px 8px;background:var(--surface);border:1px solid ${color || 'var(--border)'};border-radius:10px">
@@ -59180,11 +59488,14 @@ Rules:
     }
     html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px">`;
     if (!_completeRows.length) {
-      html += `<div style="grid-column:1/-1;text-align:center;padding:14px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;color:var(--text2);font-size:.78rem">No full-field drafts yet — re-run <strong style="color:var(--accent)">Sync from Underdog</strong> with the extension to capture every opponent's roster, then field rankings appear here.</div>`;
+      html += `<div style="grid-column:1/-1;text-align:center;padding:14px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;color:var(--text2);font-size:.78rem">No full-field drafts yet — re-run <strong style="color:var(--accent)">Sync from Underdog</strong> with the extension to capture every opponent's roster, then live leaderboards appear here.</div>`;
+    } else if (!_liveSum.n) {
+      html += `<div style="grid-column:1/-1;text-align:center;padding:14px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;color:var(--text2);font-size:.78rem">No games scored yet — live standings for every pool appear once Week 1 kicks off (weekly stats + in-game scoring).</div>`;
     } else {
-      html += _udSummaryCard('AVG RANK', (_avgRank || 0).toFixed(1) + ' / 12', 'where you sit in the field', '#fbbf24');
-      html += _udSummaryCard('TOP-4 RATE', Math.round(100 * _top4Count / _completeRows.length) + '%', _top4Count + ' of ' + _completeRows.length + ' drafts', '#3b82f6');
-      html += _udSummaryCard('#1 BUILD', _top1Count + ' / ' + _completeRows.length, 'drafts where your build grades best', '#22c55e');
+      const _thru = _liveSum.weeks ? ' · thru W' + _liveSum.weeks : '';
+      html += _udSummaryCard('LIVE AVG RANK', (_liveSum.avgRank || 0).toFixed(1) + ' / 12', 'where you sit in the field' + _thru, '#fbbf24');
+      html += _udSummaryCard('ADVANCING', Math.round(100 * _liveSum.advRate) + '%', _liveSum.nAdv + ' of ' + _liveSum.n + ' pools in advance spots', '#3b82f6');
+      html += _udSummaryCard('WINNING', _udFmtMoney(_liveSum.winning), 'min-cash if the round ended today', '#22c55e');
     }
     html += `</div>`;
 
@@ -59194,7 +59505,10 @@ Rules:
     if (!window._udTeamsSortBy) window._udTeamsSortBy = 'rank';
     const _sortKey = window._udTeamsSortBy;
     const _sortOptions = [
-      { key: 'rank',    label: 'Rank in field',    metric: r => (r.myRank != null ? r.myRank : 999), dir: 'asc' },
+      { key: 'rank',    label: 'Live rank',        metric: r => (r.myRank != null ? r.myRank : 999), dir: 'asc' },
+      { key: 'pts',     label: 'Live points',      metric: r => (r.live && r.live.myPts != null ? r.live.myPts : -1), dir: 'desc' },
+      { key: 'cushion', label: 'Cushion / gap to cut', metric: r => (r.live && r.live.cushion != null ? r.live.cushion : -9999), dir: 'desc' },
+      { key: 'wk',      label: 'This week points', metric: r => (r.live && r.live.myWk != null ? r.live.myWk : -1), dir: 'desc' },
       { key: 'ppg',     label: 'BB Proj PPG',      metric: r => (r.myEntry && r.myEntry.weeklyPPG)  || 0, dir: 'desc' },
       { key: 'season',  label: 'Season total',     metric: r => (r.myEntry && r.myEntry.seasonMean) || 0, dir: 'desc' },
       { key: 'build',   label: 'Build score',      metric: r => (r.myEntry && r.myEntry.construction && r.myEntry.construction.score) || 0, dir: 'desc' },
@@ -59226,13 +59540,21 @@ Rules:
         const d = row.d;
         const my = row.myEntry;
         const rankStr = row.myRank ? `#${row.myRank}/${row.teams.length}` : '—';
-        // Color the rank cell — top-tier ranks get the same green/yellow/red
-        // signal the advance % badge used to provide.
+        const L = row.live;
+        const _isLive = !!(L && L.scored && L.fieldComplete);
+        // Color the rank cell: live → green in an advancing spot, amber
+        // within striking distance of the cut, red otherwise; pre-season
+        // (build-graded) keeps the old tiering.
         const rankColor = !row.myRank ? 'var(--text2)' :
+                          _isLive ? (L.inAdv ? '#22c55e' : (L.cushion != null && L.cushion > -15) ? '#facc15' : (row.myRank <= 6 ? '#f59e0b' : '#ef4444')) :
                           row.myRank === 1 ? '#22c55e' :
                           row.myRank <= 3 ? '#4ade80' :
                           row.myRank <= 6 ? '#facc15' :
                           row.myRank <= 9 ? '#f59e0b' : '#ef4444';
+        const rankLbl = _isLive ? (L.r1Done ? 'R1 FINAL' : 'LIVE RANK') : 'YOUR RANK';
+        const rankTitle = _isLive
+          ? 'Live rank in this pool — every team\'s best-ball lineup scored on real weekly stats (FINAL games from the stats feed, in-progress games from live scoring). Top ' + L.rule.adv + ' advance.'
+          : 'Rank in this field by Roster Construction score (pre-season build grade) — flips to live standings once games are scored.';
         const fieldNote = row.fieldComplete ? '' : ' <span style="font-size:.55rem;color:var(--text2);font-style:italic">(opponents not synced)</span>';
         const _safeDid = String(d.id || '').replace(/"/g, '&quot;');
         html += `<div onclick="window._udToggleTeamsDraft(${i})" data-udteamsdraft="${_safeDid}" data-udteamsdraftidx="${i}" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">`;
@@ -59240,9 +59562,9 @@ Rules:
         // Rank badge — promoted to primary metric now that advance % is gone.
         // v0.10.3: rank = Construction-score order within the field (build
         // grade vs historical BBM), not projected points.
-        html += `<div title="Rank in this field by Roster Construction score — the historical-BBM build grade. Ties (and Superflex fields, where the STD-only BBM data doesn't apply) order by expected season points." style="width:84px;text-align:center;padding:6px 4px;background:var(--surface2);border-radius:6px">
+        html += `<div title="${_esc(rankTitle)}" style="width:84px;text-align:center;padding:6px 4px;background:var(--surface2);border-radius:6px">
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:${rankColor};line-height:1">${rankStr}</div>
-          <div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px">YOUR RANK</div>
+          <div style="font-size:.5rem;color:var(--text2);letter-spacing:.5px">${rankLbl}</div>
         </div>`;
         // Title block. Show user's custom team name (e.g. "BBM BAL/SEA/AMONRA")
         // as primary identifier when available; fall back to the tournament name
@@ -59258,7 +59580,22 @@ Rules:
         } else {
           html += `<div style="font-size:.78rem;font-weight:600;color:var(--text)">${_tournLabel} <span style="font-weight:400;color:var(--text2)">· ${_meta}</span>${fieldNote}</div>`;
         }
-        if (my) {
+        if (_isLive) {
+          // Live context line: points, this week, cushion above / gap below
+          // the advance line, and what the spot pays right now.
+          const cush = L.cushion;
+          const cushStr = cush == null ? '' :
+            (cush >= 0
+              ? ` · <span style="color:#22c55e;font-weight:700">+${cush.toFixed(1)}</span> <span style="color:var(--text2)">cushion</span>`
+              : ` · <span style="color:#ef4444;font-weight:700">${cush.toFixed(1)}</span> <span style="color:var(--text2)">to cut</span>`);
+          const wkStr = (L.wkCol && L.myWk != null) ? ` · W${L.wkCol} <span style="color:var(--text);font-weight:600">${L.myWk.toFixed(1)}</span>` : '';
+          const payStr = L.inAdv
+            ? ` · <span style="color:#22c55e;font-weight:700">${_udFmtMoney(L.advPrize)}</span>${L.advPrize ? '' : ' <span style="color:var(--text2)">(pays from R3)</span>'}`
+            : '';
+          const h2hStr = L.rule.h2h ? ` · <span style="color:var(--text2)">${L.r1Done ? 'R1 done · H2H rounds not tracked' : 'W1 only · top ' + L.rule.adv + ' advance'}</span>` : '';
+          html += `<div style="font-size:.68rem;color:var(--text2)"><span style="color:var(--text);font-weight:700;font-size:.78rem">${L.myPts.toFixed(1)}</span> PTS${wkStr}${cushStr}${payStr}${h2hStr}</div>`;
+        }
+        if (my && !_isLive) {
           // v0.9.91: include Roster Construction Score in header context line.
           const myCs = my.construction;
           const myCsCol = _udConstructionColor(myCs ? myCs.score : null);
@@ -59287,8 +59624,85 @@ Rules:
 
   // One draft's expand: the ranked 12-team field. Roster containers start
   // empty; _udToggleTeamsRoster fills each on its first click.
+  // 2026-09-14: LIVE leaderboard for one pool — every team ranked by real
+  // best-ball points (FINAL games from the weekly stats feed + in-progress
+  // games from live scoring), with the advance line drawn after the top-N
+  // spots the contest advances. Click a team for its roster.
+  function _udBuildLiveDraftHtml(row, i) {
+    const L = row.live;
+    let html = '';
+    const leader = L.teams[0];
+    const wkLbl = L.wkCol ? 'W' + L.wkCol : 'WK';
+    const thru = L.weekList.length ? (L.weekList.length === 1 ? 'Week ' + L.weekList[0] : 'Weeks ' + L.weekList[0] + '-' + L.weekList[L.weekList.length - 1]) : '';
+    const liveTag = (L.liveWk && L.weekList.includes(L.liveWk)) ? ' <span style="color:#22c55e;font-weight:700">● LIVE</span>' : '';
+    html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;font-size:.62rem;color:var(--text2)">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--text)">LIVE LEADERBOARD</span>
+      <span>${_esc(thru)}${liveTag}</span>
+      <span>· top <b style="color:var(--text)">${L.rule.adv}</b> advance${L.advPrize ? ' · min-cash ' + _udFmtMoney(L.advPrize) : (L.rule.h2h ? ' · pays from Round 3' : '')}</span>
+      ${L.sf ? '<span>· Superflex lineup</span>' : ''}
+    </div>`;
+    row.teams.forEach((t, ti) => {
+      const isMine = t.isMine;
+      const lt = L.teams.find(x => x.entryId === t.entryId) || null;
+      const pts = lt ? lt.pts : null, wk = lt ? lt.wkPts : null, rk = lt ? lt.rank : null, adv = !!(lt && lt.adv);
+      const rowBg = isMine ? 'background:linear-gradient(90deg,rgba(251,191,36,0.18),transparent);' : 'background:var(--surface2);';
+      const _uname = t.username ? _esc(t.username) : '';
+      const teamLabel = isMine
+        ? '<span style="color:var(--accent);font-weight:700">' + (_uname || 'YOU') + '</span>' + (_uname ? ' <span style="font-size:.55rem;color:var(--accent);letter-spacing:.5px">(YOU)</span>' : '')
+        : (_uname || 'Opponent ' + ((t.entryId || '').slice(0, 6) || (ti + 1)));
+      const behind = (pts != null && leader && leader.pts != null && !adv && L.cutPts != null)
+        ? -(Math.round((L.cutPts - pts) * 10) / 10)
+        : (pts != null && leader && rk !== 1 ? -(Math.round((leader.pts - pts) * 10) / 10) : null);
+      const gapLbl = adv ? (rk === 1 ? 'leader' : 'vs leader') : 'to cut';
+      const rkColor = adv ? '#22c55e' : (behind != null && behind > -15 ? '#facc15' : 'var(--text)');
+      html += `<div onclick="event.stopPropagation();window._udToggleTeamsRoster(${i}, ${ti})" style="padding:7px 12px;border:1px solid ${adv ? '#22c55e40' : 'var(--border)'};border-radius:6px;margin-bottom:4px;${rowBg}cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">`;
+      html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${rkColor};width:30px">#${rk != null ? rk : '—'}</div>`;
+      html += `<div style="flex:1;min-width:90px;font-size:.72rem">${teamLabel}${adv ? ' <span style="font-size:.5rem;color:#22c55e;letter-spacing:.5px;font-weight:700">ADV</span>' : ''}</div>`;
+      html += `<div style="text-align:right;min-width:64px"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--text);line-height:1">${pts != null ? pts.toFixed(1) : '—'}</div><div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px">TOTAL PTS</div></div>`;
+      html += `<div style="text-align:right;min-width:48px"><div style="font-size:.75rem;font-weight:700;color:var(--text)">${wk != null ? wk.toFixed(1) : '—'}</div><div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px">${wkLbl}</div></div>`;
+      html += `<div style="text-align:right;min-width:60px"><div style="font-size:.72rem;font-weight:700;color:${behind == null ? 'var(--text2)' : behind >= 0 ? '#22c55e' : (adv ? 'var(--text2)' : '#ef4444')}">${behind == null ? (rk === 1 ? '—' : '') : (behind > 0 ? '+' : '') + behind.toFixed(1)}</div><div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px">${gapLbl.toUpperCase()}</div></div>`;
+      html += `<div style="text-align:right;min-width:52px;font-size:.6rem;color:var(--text2)" title="Pre-season best-ball projection (PPG)"><span style="color:var(--text)">${t.weeklyPPG != null ? t.weeklyPPG.toFixed(1) : '—'}</span> proj</div>`;
+      html += `</div>`;
+      html += `<div id="udTeamsRoster_${i}_${ti}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0"></div>`;
+      html += `</div>`;
+      if (rk != null && lt && ti === L.rule.adv - 1 && row.teams.length > L.rule.adv) {
+        html += `<div style="display:flex;align-items:center;gap:8px;margin:6px 0 8px;font-size:.5rem;letter-spacing:1.5px;color:#22c55e"><span style="flex:1;border-top:1px dashed #22c55e80"></span>ADVANCE LINE · ${L.cutPts != null ? L.cutPts.toFixed(1) + ' PTS' : ''}<span style="flex:1;border-top:1px dashed #22c55e80"></span></div>`;
+      }
+    });
+    return html;
+  }
+
+  // Overlay live standings on a (cached) TEAMS-tab row: live rank replaces
+  // the build-grade rank, teams re-order by live points, and each team gets
+  // its livePts / liveWk / liveRank for the leaderboard. Rows without scored
+  // games keep the pre-season build order.
+  function _udLiveOverlay(row, d) {
+    const L = _udLiveDraft(d);
+    row.live = L;
+    if (row.buildRank === undefined) row.buildRank = row.myRank;
+    if (L && L.scored && L.fieldComplete) {
+      const byEntry = {};
+      L.teams.forEach(t => { byEntry[t.entryId] = t; });
+      row.teams.forEach(t => {
+        const lt = byEntry[t.entryId];
+        t.livePts = lt ? lt.pts : null;
+        t.liveWk = lt ? lt.wkPts : null;
+        t.liveRank = lt ? lt.rank : null;
+        t.liveAdv = !!(lt && lt.adv);
+      });
+      row.teams = row.teams.slice().sort((a, b) => ((a.liveRank || 999) - (b.liveRank || 999)) || ((a.rank || 999) - (b.rank || 999)));
+      row.myRank = L.myRank;
+    } else {
+      row.myRank = row.buildRank;
+      row.teams = row.teams.slice().sort((a, b) => (a.rank || 999) - (b.rank || 999));
+    }
+  }
+
   function _udBuildTeamsDraftHtml(row, i) {
     let html = '';
+    const L = row.live;
+    if (L && L.scored && L.fieldComplete) return _udBuildLiveDraftHtml(row, i);
         if (!row.fieldComplete) {
           html += `<div style="font-size:.7rem;color:var(--text2);font-style:italic;padding:10px 0">This draft was uploaded via CSV which doesn't capture other entrants. Re-sync from Underdog to see every opponent.</div>`;
           // Even with no field, still show user's roster on click below
@@ -59371,8 +59785,10 @@ Rules:
   }
 
   // One team's grouped roster table (QB/RB/WR/TE sections + totals).
-  function _udBuildTeamsRosterHtml(t) {
+  function _udBuildTeamsRosterHtml(t, live) {
     let html = '';
+          const _liveOn = !!(live && live.scored);
+          const _wkHdr = _liveOn && live.wkCol ? 'W' + live.wkCol : 'WK';
           html += `<table style="width:100%;min-width:680px;border-collapse:collapse;font-size:.68rem">
             <thead><tr style="border-bottom:1px solid var(--border)">
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">RD</th>
@@ -59380,6 +59796,8 @@ Rules:
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">PLAYER</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">POS</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">TEAM</th>
+              ${_liveOn ? `<th style="text-align:right;padding:3px 6px;color:#22c55e"><span data-gloss="2026 half-PPR points so far (FINAL games from the stats feed + live scoring for games in progress).">PTS</span></th>
+              <th style="text-align:right;padding:3px 6px;color:#22c55e"><span data-gloss="Points in the current scoring week.">${_wkHdr}</span></th>` : ''}
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected fantasy points per game.">PROJ PPG</span></th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected total season points.">SZN PTS</span></th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Value Over Replacement — season pts above the BBM 12-team starter cutoff (QB12/RB30/WR42/TE13).">VOR</span></th>
@@ -59403,8 +59821,10 @@ Rules:
             const _totalSzn = Math.round(group.reduce((s, p) => s + (p.seasonPts != null ? p.seasonPts : 0), 0));
             const _totalVor = Math.round(group.reduce((s, p) => s + (p.vor != null ? p.vor : 0), 0));
             const _vorClr = _totalVor > 100 ? '#22c55e' : _totalVor > 0 ? '#4ade80' : _totalVor > -100 ? '#facc15' : '#ef4444';
+            const _grpLive = _liveOn ? group.reduce((acc, p) => { const r = _udPlayerSeasonPts(p.name, live); if (r.pts != null) acc.pts = (acc.pts || 0) + r.pts; if (r.wk != null) acc.wk = (acc.wk || 0) + r.wk; return acc; }, { pts: null, wk: null }) : null;
             html += `<tr class="bb-pos-section-row" style="background:${_hdrColor}10;border-top:2px solid ${_hdrColor}50;border-bottom:1px solid ${_hdrColor}30">
               <td colspan="5" style="padding:5px 6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${_hdrColor}">${pos} <span style="font-size:.55rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif;margin-left:6px">${group.length} player${group.length===1?'':'s'}</span></td>
+              ${_liveOn ? `<td style="padding:5px 6px;text-align:right;font-weight:700;color:#22c55e">${_grpLive.pts != null ? _grpLive.pts.toFixed(1) : '—'}</td><td style="padding:5px 6px;text-align:right;color:#22c55e">${_grpLive.wk != null ? _grpLive.wk.toFixed(1) : '—'}</td>` : ''}
               <td style="padding:5px 6px;text-align:right;font-weight:700;color:${_hdrColor}">${_totalProj > 0 ? _totalProj : '—'}</td>
               <td style="padding:5px 6px;text-align:right;color:var(--text2)">${_totalSzn > 0 ? _totalSzn : '—'}</td>
               <td style="padding:5px 6px;text-align:right;font-weight:700;color:${_vorClr}">${_totalVor > 0 ? '+' : ''}${_totalVor}</td>
@@ -59466,6 +59886,7 @@ Rules:
               <td style="padding:3px 6px;color:var(--text);white-space:nowrap"><span onclick="window._mtOpenCardByName('${String(_bbMatch ? _bbMatch.n : p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" style="cursor:pointer" title="Open player card">${_bbHsHtml}${_esc(p.name)}</span>${wkBadge}</td>
               <td style="padding:3px 6px;color:${posColors[p.pos] || 'var(--text2)'};font-weight:600">${p.pos || '—'}</td>
               <td style="padding:3px 6px;color:var(--text2)">${_esc(p.team || '')}</td>
+              ${_liveOn ? (() => { const r = _udPlayerSeasonPts(p.name, live); return `<td style="padding:3px 6px;text-align:right;font-weight:700;color:${r.pts != null && r.pts > 0 ? '#22c55e' : 'var(--text2)'}">${r.pts != null ? r.pts.toFixed(1) : '—'}</td><td style="padding:3px 6px;text-align:right;color:var(--text)">${r.wk != null ? r.wk.toFixed(1) : '—'}</td>`; })() : ''}
               <td style="padding:3px 6px;text-align:right;font-weight:700;color:${projColor}">${p.proj != null ? p.proj.toFixed(1) : '—'}</td>
               <td style="padding:3px 6px;text-align:right;color:var(--text2)">${p.seasonPts != null ? Math.round(p.seasonPts) : '—'}</td>
               <td style="padding:3px 6px;text-align:right;font-weight:700;color:${vorColor}">${vorStr}</td>
@@ -60006,7 +60427,7 @@ Rules:
     if (opening && !el.dataset.built) {
       const row = (window._udTeamsSorted || [])[draftIdx];
       const t = row && row.teams && row.teams[teamIdx];
-      if (t) { el.innerHTML = _udBuildTeamsRosterHtml(t); el.dataset.built = '1'; }
+      if (t) { el.innerHTML = _udBuildTeamsRosterHtml(t, row.live); el.dataset.built = '1'; }
     }
     el.style.display = opening ? '' : 'none';
   };

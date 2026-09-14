@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-14g" as="script">
+<link rel="preload" href="app.js?v=2026-09-14h" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -4177,7 +4177,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <div class="help-section">
 <div class="help-section-icon">📊</div>
 <div class="help-section-title">KPI STRIP</div>
-<div class="help-section-desc"><b>DRAFTS</b> — count across the selected phase + contest filter. <b>INVESTED</b> — total $ across drafts, with avg entry fee below. <b>PLAYERS</b> — unique players you own, with total picks below. <b>AVG BUILD</b> — mean QB/RB/WR/TE count per roster across your portfolio.</div>
+<div class="help-section-desc"><b>DRAFTS</b> — count across the selected phase + contest filter. <b>ADVANCE RATE</b> (live) — share of your synced pools where you currently hold an advancing spot (top 2 of 12 in BBM / Puppy-style contests, top 6 in The Eliminator's Week 1). <b>INVESTED</b> — total $ across drafts, with avg entry fee below. <b>WINNING</b> (live) — what your entries would pay if the round ended today: the guaranteed min-cash for every pool where you're in an advancing spot (BBM VII $25, The Puppy $5, other contests = entry fee back; The Eliminator pays nothing until Round 3). Both live cards score every team's best-ball lineup on real weekly stats, including games in progress, and refresh on every scoring tick.</div>
 </div>
 
 <div class="help-section">
@@ -4189,7 +4189,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <div class="help-section">
 <div class="help-section-icon">🏆</div>
 <div class="help-section-title">TEAMS TAB</div>
-<div class="help-section-desc">Every draft with all 12 teams ranked by build grade — the Roster Construction score from historical BBM data (Superflex pools rank by projected season points instead). Click any team for the full roster (picks, projections, VOR, vs-ADP). Sort the list by rank, BB Proj, season total, build score, ADP value, or entry fee.</div>
+<div class="help-section-desc">Every draft with its <b>live leaderboard</b> — all 12 teams ranked by real best-ball points (FINAL games from the weekly stats feed, in-progress games from live scoring), the advance line drawn after the spots the contest advances, each team's total, this week's points, and cushion above / gap below the cut. Your card shows LIVE RANK, points, cushion and what the spot pays right now. Click any team for the full roster (picks, 2026 points, this week, projections, vs-ADP). Sort by live rank, live points, cushion, this-week points, entry fee, or the pre-season projections. Before Week 1 kicks off, pools rank by the pre-season build grade instead.</div>
 </div>
 
 <div class="help-section">
@@ -5679,7 +5679,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-14g"></script>
+<script defer src="app.js?v=2026-09-14h"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

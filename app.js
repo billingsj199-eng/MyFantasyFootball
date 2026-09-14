@@ -57533,7 +57533,14 @@ Rules:
       rounds: [{ week: [1, 14], size: 12, adv: 4 }, { week: [15, 15], size: 5, adv: 1 }, { week: [16, 16], size: 4, adv: 1 }, { week: [17, 17], size: 9, adv: 1, final: true }],
       prizeReach: [0, 0, 1000, 1500, 12000],
       finalTable: [[1,1,100000],[2,2,50000],[3,3,40000],[4,4,30000],[5,5,25000],[6,6,23500],[7,7,20000],[8,8,15000],[9,9,12000]] },
-    { re: /big\s*dog/i,           adv: 2, weeks: 14, advPrize: null }
+    // The Big Dog ($500, 2,160 entries; help page — the 2025 rules, the only
+    // published structure): R1 12-team top 2 → R2 W15 6-team top 1 (60 groups)
+    // → R3 W16 6-team top 1 (10 groups) → W17 10-team final. Reach R2 $1,000
+    // (61-360th), R3 $1,500 (21-60th), final $10,000 (10th).
+    { re: /big\s*dog/i,           adv: 2, weeks: 14, advPrize: 1000,
+      rounds: [{ week: [1, 14], size: 12, adv: 2 }, { week: [15, 15], size: 6, adv: 1 }, { week: [16, 16], size: 6, adv: 1 }, { week: [17, 17], size: 10, adv: 1, final: true }],
+      prizeReach: [0, 0, 1000, 1500, 10000],
+      finalTable: [[1,1,200000],[2,2,100000],[3,3,80000],[4,4,70000],[5,5,50000],[6,6,45000],[7,7,30000],[8,8,20000],[9,9,15000],[10,10,10000]] }
   ];
   // The Eliminator prize by ROUND REACHED (help page, Sep 2026): entries per
   // round 196,608 / 98,304 / 49,152 / 24,576 / 12,288 / 6,144 / 3,072 / 1,536

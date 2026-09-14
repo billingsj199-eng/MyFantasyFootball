@@ -888,6 +888,8 @@ window._mineSeedFromJacks = function() {
     syncMode(); renumber();
     if (typeof render === 'function') render();
   }
+  // Trade calc on MY RANKS (virgin format) tracks the reseed (no-op unless open)
+  if (typeof window._tradeRefresh === 'function') window._tradeRefresh();
 };
 // Serialize custom flags for the user doc, committing touched -> custom in
 // memory (the save that carries these flags is what makes the edits permanent).
@@ -1124,6 +1126,8 @@ function rebuildConsensusBoards() {
       if (typeof renumber === 'function') renumber();
       if (typeof render === 'function') render();
     }
+    // Trade calc on the CONSENSUS source re-prices live (no-op unless open)
+    if (typeof window._tradeRefresh === 'function') window._tradeRefresh();
   } catch(e) { console.warn('[Consensus] rebuild failed:', e); }
 }
 // Expose for snapshot listener
@@ -1278,6 +1282,9 @@ function renumber() {
     _num(idx);
   });
   _parked.forEach(_num);
+  // Any board mutation lands here (movePlayer, group drags, tier-card EDIT
+  // RANKS, card rank entry) — re-price an OPEN trade calc; no-op otherwise.
+  if (typeof window._tradeRefresh === 'function') window._tradeRefresh();
 }
 renumber();
 
@@ -15060,7 +15067,12 @@ function switchPage(page) {
   if (page === 'compare') renderCompareGrid();
   // Start/Sit: render on every open — week / lines / sim data may have landed since.
   if (page === 'startsit' && typeof window._sstRender === 'function') window._sstRender();
-  if (page === 'trade' && typeof window._realTradesPoke === 'function') window._realTradesPoke();
+  // Trade calc: re-price on every open so board edits made elsewhere (rankings
+  // page, tier cards, Jack's live saves) show up; includes the real-trades poke.
+  if (page === 'trade') {
+    if (typeof window._tradeRefresh === 'function') window._tradeRefresh(true);
+    else if (typeof window._realTradesPoke === 'function') window._realTradesPoke();
+  }
   // Render backtest when navigating to backtest page
   if (page === 'backtest' && typeof window._renderBacktest === 'function') {
     window._renderBacktest();
@@ -26138,6 +26150,27 @@ window.fmtHeight = fmtHeight;
     renderSide(sideA, 'tradePlayersA', 'tradeTotalA', 'a');
     renderSide(sideB, 'tradePlayersB', 'tradeTotalB', 'b');
   }
+  // Live rankings sync (2026-09-14): _getTradeValue already reads the LIVE
+  // boards, but every panel here only re-rendered on its own clicks — a
+  // board edit on the rankings page / tier cards, Jack's real-time save, a
+  // consensus rebuild or a My Ranks reseed left stale prices on screen until
+  // the user touched the calc. This re-prices the calc sides (+ verdict /
+  // insights), re-runs a visible trade finder and re-renders the real-trades
+  // panel. Cheap no-op unless the trade page is open; coalesces bursts
+  // (the Jack's snapshot handler fires reseed + consensus + this in a row).
+  let _tradeRefreshTimer = null;
+  window._tradeRefresh = function(force) {
+    const pg = document.getElementById('pageTrade');
+    if (!force && (!pg || !pg.classList.contains('active'))) return;
+    if (_tradeRefreshTimer) return;
+    _tradeRefreshTimer = setTimeout(() => {
+      _tradeRefreshTimer = null;
+      try { renderAll(); } catch (e) { console.warn('[Trade] live refresh failed:', e); }
+      try { _finderMaybeReRun(); } catch (_) {}
+      try { _calcRenderRealPicks('a'); _calcRenderRealPicks('b'); } catch (_) {}
+      if (typeof window._realTradesPoke === 'function') window._realTradesPoke();
+    }, 0);
+  };
 
   function attachRemoveListeners() {
     document.querySelectorAll('.tp-remove').forEach(btn => {
@@ -28951,6 +28984,8 @@ window.fmtHeight = fmtHeight;
             renumber();
             render();
           }
+          // Trade calc prices off these boards (jacks / mine-virgin / consensus)
+          if (typeof window._tradeRefresh === 'function') window._tradeRefresh();
           console.log('[Auth] Jack\'s rankings updated in real-time');
         }
       }

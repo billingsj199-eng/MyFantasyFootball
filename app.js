@@ -5430,7 +5430,9 @@ function render() {
   const _wkProjPpgMode = _statMode === 'proj' && _isWeekly;
   // FANTASY view: the tail column is Total Yds (all positions; K/DST have
   // no yardage line so the K / D/ST pills hide it). Y/RR + Rush YPG retired.
-  const showYrr = _statMode === 'fantasy' && filter !== 'K' && filter !== 'DST';
+  // Total Yds tail: WEEKLY board only (Yds/G). Jack 2026-09-14: no total-yards
+  // column on the rest-of-season (season) boards in FANTASY or SIMS view.
+  const showYrr = _statMode === 'fantasy' && _isWeekly && filter !== 'K' && filter !== 'DST';
   // ADP comparison STATS view borrows the JM + Landing columns for Yahoo and
   // the cross-platform AVERAGE (2026-09-09 — Flock's ADP matrix gap).
   const _isAdpCmp = _statMode === 'adp';
@@ -5771,7 +5773,7 @@ function render() {
   const _adpCmpMode = _statMode === 'adp';
   const _simsMode = _statMode === 'sims';
   const yrrH = document.getElementById('yrrHeader');
-  const _yrrShow = showYrr || _adpCmpMode || (_simsMode && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
+  const _yrrShow = showYrr || _adpCmpMode || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
   yrrH.style.display = _yrrShow ? '' : 'none';
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
@@ -9238,6 +9240,21 @@ function _snapWeek(name, yr, wk) {
   const v = s && s.w && s.w[wk];
   return v != null ? v : null;
 }
+// Route participation % (share of team dropbacks on the field) from
+// data/route_pct.js (scripts/pull_route_pct.py; nflverse participation
+// 2016-25, current season from PFF weekly exports). Same lazy bundle as
+// SNAP_COUNTS. Null (→ dash) before it lands / no data for that week.
+function _routeSeason(name, yr) {
+  if (typeof ROUTE_PCT === 'undefined') return null;
+  const s = ROUTE_PCT[name] && ROUTE_PCT[name][yr];
+  return s && s.s != null ? s.s : null;
+}
+function _routeWeek(name, yr, wk) {
+  if (typeof ROUTE_PCT === 'undefined') return null;
+  const s = ROUTE_PCT[name] && ROUTE_PCT[name][yr];
+  const v = s && s.w && s.w[wk];
+  return v != null ? v : null;
+}
 
 // Team target totals for target share %. Season totals sum every player's
 // targets per (team, year) from ALL_PLAYERS_DB (full-league coverage);
@@ -9634,11 +9651,11 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   // share % (CAR% / TS%) BEFORE the counting stats.
   let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th>FPTS</th><th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
-  else if (isRB) hdr += '<th><span data-gloss="Share of team carries that week">CAR%</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th>ATT</th><th>RyD</th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>FL</th>';
-  else hdr += '<th><span data-gloss="Share of team targets that week">TS%</span></th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>RyD</th><th>FL</th>';
+  else if (isRB) hdr += '<th><span data-gloss="Share of team carries that week">CAR%</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RT%</span></th><th>ATT</th><th>RyD</th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>FL</th>';
+  else hdr += '<th><span data-gloss="Share of team targets that week">TS%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RT%</span></th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>RyD</th><th>FL</th>';
   hdr += '</tr>';
 
-  const _posStatCols = isQB ? 8 : isRB ? 9 : 7;
+  const _posStatCols = isQB ? 8 : isRB ? 10 : 8;   // RB/WR/TE include RT% (2026-09-14)
   let rows = full.map(w => {
     if (w._bye || w._dnp || w._upcoming) {
       const oppCell = w._bye ? '<span style="font-style:italic">BYE</span>'
@@ -9674,6 +9691,8 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
     row += _statCell(_wkSnp != null ? _wkSnp + '%' : '—', _wkSnp, 40, 90);
     const _wkTs = isQB ? null : _tsPctWeek(d.n, season, w);
     const _wkTsCell = _statCell(_wkTs != null ? _wkTs.toFixed(1) + '%' : '—', _wkTs, isRB ? 3 : 10, isRB ? 14 : 28);
+    const _wkRt = isQB ? null : _routeWeek(d.n, season, w.wk);
+    const _wkRtCell = _statCell(_wkRt != null ? _wkRt + '%' : '—', _wkRt, isRB ? 20 : 55, isRB ? 60 : 90);
     if (isQB) {
       row += _statCell(w.pc||0, w.pc||0, 12, 24) + _statCell(w.pa||0, w.pa||0, 20, 38)
         + _statCell(w.py||0, w.py||0, 150, 290) + _statCell(w.ptd||0, w.ptd||0, 0, 2.5)
@@ -9683,7 +9702,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
       const _wkCar = _carPctWeek(d.n, season, w);
       const _wkTd = (w.rtd||0) + (w.rctd||0);
       row += _statCell(_wkCar != null ? _wkCar.toFixed(1) + '%' : '—', _wkCar, 15, 65)
-        + _wkTsCell
+        + _wkTsCell + _wkRtCell
         + _statCell(w.ra||0, w.ra||0, 6, 19)
         + _statCell(w.ry||0, w.ry||0, 25, 95)
         + _statCell(w.tgt||0, w.tgt||0, 1, 5.5) + _statCell(w.rec||0, w.rec||0, 0.8, 4.5)
@@ -9691,7 +9710,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
         + '<td>' + (w.fl||0) + '</td>';
     } else {
       const _wkTd = (w.rtd||0) + (w.rctd||0);
-      row += _wkTsCell
+      row += _wkTsCell + _wkRtCell
         + _statCell(w.tgt||0, w.tgt||0, 3, 10) + _statCell(w.rec||0, w.rec||0, 2, 7)
         + _statCell(w.rcy||0, w.rcy||0, 20, 90) + _statCell(_wkTd, _wkTd, 0, 1.2)
         + '<td>' + (w.ry||0) + '</td><td>' + (w.fl||0) + '</td>';
@@ -9711,6 +9730,8 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   totalRow += '<td>' + (_totSnp != null ? Math.round(_totSnp) + '%' : '—') + '</td>';
   let _totTsCell = '<td style="color:var(--text2)">—</td>';
   let _totCarCell = '<td style="color:var(--text2)">—</td>';
+  const _totRt = isQB ? null : _routeSeason(d.n, season);
+  const _totRtCell = _totRt != null ? '<td>' + _totRt.toFixed(1) + '%</td>' : '<td style="color:var(--text2)">—</td>';
   if (!isQB) {
     const _tmSeason = _getTeamForPlayerYear(d.n, +season);
     const _totTs = _tmSeason ? _tsPctSeason(_tmSeason, season, totals.tgt, d.n) : null;
@@ -9722,8 +9743,8 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   }
   const _totTd = (totals.rtd||0) + (totals.rctd||0);
   if (isQB) totalRow += '<td>'+totals.pc+'</td><td>'+totals.pa+'</td><td>'+totals.py+'</td><td>'+totals.ptd+'</td><td>'+totals.int+'</td><td>'+totals.ry+'</td><td>'+totals.rtd+'</td><td>'+totals.fl+'</td>';
-  else if (isRB) totalRow += _totCarCell+_totTsCell+'<td>'+totals.ra+'</td><td>'+totals.ry+'</td><td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td><td>'+totals.fl+'</td>';
-  else totalRow += _totTsCell+'<td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td><td>'+totals.ry+'</td><td>'+totals.fl+'</td>';
+  else if (isRB) totalRow += _totCarCell+_totTsCell+_totRtCell+'<td>'+totals.ra+'</td><td>'+totals.ry+'</td><td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td><td>'+totals.fl+'</td>';
+  else totalRow += _totTsCell+_totRtCell+'<td>'+totals.tgt+'</td><td>'+totals.rec+'</td><td>'+totals.rcy+'</td><td>'+_totTd+'</td><td>'+totals.ry+'</td><td>'+totals.fl+'</td>';
   totalRow += '</tr>';
   if (adjusted.length) rows += totalRow;
 

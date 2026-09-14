@@ -4338,7 +4338,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/kicker_weekly.js?v=2026-09-14" defer></script>
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
-<script src="data/player_weekly_sigma.js?v=2026-09-08" defer></script>
+<script src="data/player_weekly_sigma.js?v=2026-09-14" defer></script>
 <!-- injury_history.js tag removed 2026-07-23: its only consumer was the JS Model
      engine, which moved to the standalone js_model_site project. The data file
      stays in data/ — the standalone site loads it via a relative path. -->
@@ -5584,7 +5584,7 @@ window._loadWeeklyData = function(opts) {
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer). First in
     // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
     // merge listens on the same mff:weeklydata event as the retired merges.
-    'data/weekly_stats_active.js?v=2026-09-14-0834',
+    'data/weekly_stats_active.js?v=2026-09-14',
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
     'data/fpa_2026.js?v=2026-09-14-0834',

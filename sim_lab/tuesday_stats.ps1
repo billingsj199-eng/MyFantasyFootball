@@ -48,6 +48,13 @@ $out = & python 'E:\MyFantasyFootball\MyFantasyFootball Files\scripts\pull_snap_
 Write-Log $out
 if ($LASTEXITCODE -ne 0) { Write-Log "SNAP PULL FAILED (exit $LASTEXITCODE) - continuing without fresh snaps" }
 
+# Route participation (RT%) -> data/route_pct.js (2026-09-14): nflverse
+# participation for past seasons + PFF weekly exports dropped in
+# pbp_cache\pff\weekly\ for the current one. Non-fatal.
+$out = & python 'E:\MyFantasyFootball\MyFantasyFootball Files\scripts\pull_route_pct.py' --years 2026 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "ROUTE PCT FAILED (exit $LASTEXITCODE) - continuing" }
+
 # Publish the refreshed stats to the site repo. Without this the website never
 # sees Tuesday's stats: no other job stages these two files, and the SW serves
 # versioned URLs cache-first, so index.html's ?v= must bump in the same commit.
@@ -55,7 +62,7 @@ if ($LASTEXITCODE -ne 0) { Write-Log "SNAP PULL FAILED (exit $LASTEXITCODE) - co
 # way — this step is what gets it to myfantasyfootball.co.) Modeled on
 # scripts/weekly_kdst_refresh.ps1. Added 2026-08-31.
 $SiteDir = 'E:\MyFantasyFootball\MyFantasyFootball Files'
-$StatFiles = @('data/weekly_stats_active.js', 'data/player_weekly_sigma.js', 'data/snap_counts.js')
+$StatFiles = @('data/weekly_stats_active.js', 'data/player_weekly_sigma.js', 'data/snap_counts.js', 'data/route_pct.js')
 $changedStats = git -C $SiteDir status --porcelain -- @StatFiles
 if (-not $changedStats) {
     Write-Log 'weekly stats unchanged - no site commit'
@@ -71,9 +78,10 @@ if (-not $changedStats) {
         $html = $html -replace 'weekly_stats_active\.js\?v=[0-9A-Za-z.-]+', ('weekly_stats_active.js?v=' + $stamp)
         $html = $html -replace 'player_weekly_sigma\.js\?v=[0-9A-Za-z.-]+', ('player_weekly_sigma.js?v=' + $stamp)
         $html = $html -replace 'snap_counts\.js\?v=[0-9A-Za-z.-]+', ('snap_counts.js?v=' + $stamp)
+        $html = $html -replace 'route_pct\.js\?v=[0-9A-Za-z.-]+', ('route_pct.js?v=' + $stamp)
         [System.IO.File]::WriteAllText($idxPath, $html)
-        git -C $SiteDir add data/weekly_stats_active.js data/player_weekly_sigma.js data/snap_counts.js index.html
-        git -C $SiteDir commit -m ('Auto weekly-stats refresh {0} (weekly_stats_active + sigma + snaps + ?v= bump)' -f $stamp)
+        git -C $SiteDir add data/weekly_stats_active.js data/player_weekly_sigma.js data/snap_counts.js data/route_pct.js index.html
+        git -C $SiteDir commit -m ('Auto weekly-stats refresh {0} (weekly_stats_active + sigma + snaps + routes + ?v= bump)' -f $stamp)
         git -C $SiteDir pull --rebase --autostash origin main
         git -C $SiteDir push origin main
         if ($LASTEXITCODE -eq 0) { Write-Log 'site weekly stats committed + pushed' } else { Write-Log "SITE PUSH FAILED (exit $LASTEXITCODE) - commit is local" }

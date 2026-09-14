@@ -1,4 +1,4 @@
-===== Sim Lab refresh Mon 09/14/2026 10:03:14.19 ===== 
+===== Sim Lab refresh Mon 09/14/2026 10:16:49.19 ===== 
 copied mike_clay_projections.js  (36 KB)
 copied player_weekly_sigma.js  (57 KB)
 copied betting_lines_2026.js  (158 KB)
@@ -10,11 +10,11 @@ wrapped sleeper_players.js  (585 players, exported 2026-09-14 10:03:14)
 wrapped sim_snaps.js  (285 players with 2026 snaps)
 wrapped sim_2026.js  (303 players with 2026 games, 30 defenses; FPA fpa_2026.js (complete league))
 wrapped sleeper_meta.js  (577 players, 127 true rookies, 6 elite CBs)
-wrapped sim_weather.js  (13 outdoor kickoffs in forecast window · site weather_2026.json (2026-09-14T14:03))
-cache-busted index.html scripts (?v=1789394595)
-stamped 2026-09-14 10:03
-wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js — 0 TEs with 2026 route data, 30 defenses with pressure data
-wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js — 32 teams, 30 with 2026 data
+wrapped sim_weather.js  (13 outdoor kickoffs in forecast window Â· site weather_2026.json (2026-09-14T14:03))
+cache-busted index.html scripts (?v=1789395410)
+stamped 2026-09-14 10:16
+wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js â€” 0 TEs with 2026 route data, 30 defenses with pressure data
+wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js â€” 32 teams, 30 with 2026 data
 
 [1m[37m===[39m Deploying to 'jackb933-website'...[22m
 
@@ -31,4 +31,4 @@ wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js — 32 teams, 30 with 2026 da
 
 [1mProject Console:[22m https://console.firebase.google.com/project/jackb933-website/overview
 [1mHosting URL:[22m https://jb-simlab-2026.web.app
-===== done Mon 09/14/2026 10:03:23.73 ===== 
+===== done Mon 09/14/2026 10:16:58.58 ===== 

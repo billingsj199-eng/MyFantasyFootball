@@ -57441,6 +57441,8 @@ Rules:
   // 76-100th is missing from Underdog's Puppy page — filled at the 101-200th tier.
   const _UD_PUPPY_FINAL = [[1,1,100000],[2,2,50000],[3,3,25000],[4,4,20000],[5,5,17000],[6,6,15000],[7,7,14000],[8,8,13000],[9,9,12250],[10,10,10000],[11,15,7500],[16,20,5000],[21,25,3000],[26,30,2000],[31,50,1500],[51,75,1000],[76,200,750],[201,625,500]];
   const _UD_ELIM_FINAL = [[1,1,200000],[2,2,100000],[3,3,76000]];
+  const _UD_BIGBOARD_FINAL = [[1,1,250000],[2,2,100000],[3,3,75000],[4,4,50000],[5,5,25000],[6,6,13000],[7,7,10500],[8,8,9420],[9,9,8500],[10,10,7000],[11,20,5500],[21,50,2500],[51,100,2000],[101,200,1750],[201,300,1250],[301,400,1000],[401,558,750]];
+  const _UD_LITTLEBOARD_FINAL = [[1,1,100000],[2,2,50000],[3,3,25000],[4,4,15350],[5,5,10000],[6,6,9000],[7,7,8000],[8,8,7000],[9,9,6000],[10,10,5000],[11,15,3000],[16,20,2000],[21,50,1000],[51,75,750],[76,100,500],[101,175,400],[176,315,250]];
   const _UD_ELIM_ROUNDS = (() => {
     const r = [{ week: [1, 1], size: 12, adv: 6 }];
     for (let k = 2; k <= 16; k++) r.push({ week: [k, k], size: 2, adv: 1 });
@@ -57457,7 +57459,18 @@ Rules:
     { re: /eliminator/i,          adv: 6, weeks: 1,  advPrize: 0, h2h: true,
       rounds: _UD_ELIM_ROUNDS, prizeReach: [0, 0, 0, 0, 10, 20, 31, 52, 102, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 76000], finalTable: _UD_ELIM_FINAL },
     { re: /bigger\s*board/i,      adv: 4, weeks: 14, advPrize: null },
-    { re: /big\s*board/i,         adv: 3, weeks: 14, advPrize: null },
+    // The Big Board ($10, pre-draft): R1 12-team top 3 → R2 W15 10-team top 1
+    // (5,580 groups) → R3 W16 10-team top 1 (558 groups) → W17 558-team final.
+    // Reach R2 $10 (5581-55800th), R3 $20 (1117-5580th), final $750 (401-558th).
+    { re: /big\s*board/i,         adv: 3, weeks: 14, advPrize: 10,
+      rounds: [{ week: [1, 14], size: 12, adv: 3 }, { week: [15, 15], size: 10, adv: 1 }, { week: [16, 16], size: 10, adv: 1 }, { week: [17, 17], size: 558, adv: 1, final: true }],
+      prizeReach: [0, 0, 10, 20, 750], finalTable: _UD_BIGBOARD_FINAL },
+    // The Little Board ($3, pre-draft): R1 12-team top 2 → R2 W15 10-team top 1
+    // (3,150 groups) → R3 W16 10-team top 1 (315 groups) → W17 315-team final.
+    // Reach R2 $3 (3151-31500th), R3 $10 (316-3150th), final $250 (176-315th).
+    { re: /little\s*board/i,      adv: 2, weeks: 14, advPrize: 3,
+      rounds: [{ week: [1, 14], size: 12, adv: 2 }, { week: [15, 15], size: 10, adv: 1 }, { week: [16, 16], size: 10, adv: 1 }, { week: [17, 17], size: 315, adv: 1, final: true }],
+      prizeReach: [0, 0, 3, 10, 250], finalTable: _UD_LITTLEBOARD_FINAL },
     { re: /mastiff/i,             adv: 4, weeks: 14, advPrize: null },
     { re: /big\s*dog/i,           adv: 2, weeks: 14, advPrize: null }
   ];

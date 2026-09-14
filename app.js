@@ -48500,26 +48500,47 @@ Rules:
   function _mtObservedFpa() {
     if (_mtFpaCache) return _mtFpaCache;
     _mtFpaCache = { weeksPlayed: 0, share: 0, z: null };
-    const WS = (typeof WEEKLY_STATS_ACTIVE !== 'undefined') ? WEEKLY_STATS_ACTIVE : window.WEEKLY_STATS_ACTIVE;
-    if (!WS) return _mtFpaCache; // lazy weekly bundle not landed yet
-    const YEAR = '2026';
-    // pos -> team -> { pts, wks:Set } (wks = distinct weeks faced = games)
+    // 2026-09-14: prefer the COMPLETE-league table (data/fpa_2026.js, built by
+    // scripts/pull_postgame_stats.py from EVERY Sleeper QB/RB/WR/TE in FINAL
+    // games, half-PPR). The board-only sum below undercounts whenever a
+    // defense faced an untracked player (W1: PIT read 0.0 QB pts allowed
+    // because Cooper Rush isn't on the board; NE 0.5 because Drew Lock isn't).
+    const FP = window.FPA_2026;
     const acc = {};
     _MT_FPA_POS.forEach(p => { acc[p] = {}; });
     let maxWk = 0;
-    for (const name in WS) {
-      const rec = WS[name];
-      if (!rec || !acc[rec.pos] || !rec.seasons) continue;
-      const rows = rec.seasons[YEAR];
-      if (!rows) continue;
-      for (let i = 0; i < rows.length; i++) {
-        const r = rows[i];
-        const opp = r && r.opp ? String(r.opp).toUpperCase() : '';
-        if (!opp || typeof r.fpts !== 'number') continue;
-        const slot = acc[rec.pos][opp] || (acc[rec.pos][opp] = { pts: 0, wks: new Set() });
-        slot.pts += r.fpts;
-        slot.wks.add(r.wk);
-        if (r.wk > maxWk) maxWk = r.wk;
+    if (FP && FP.weeks && Object.keys(FP.weeks).length) {
+      Object.keys(FP.weeks).forEach(wk => {
+        const w = +wk, teams = FP.weeks[wk];
+        Object.keys(teams).forEach(team => {
+          _MT_FPA_POS.forEach(pos => {
+            const v = teams[team][pos];
+            if (typeof v !== 'number') return;
+            const slot = acc[pos][team] || (acc[pos][team] = { pts: 0, wks: new Set() });
+            slot.pts += v;
+            slot.wks.add(w);
+          });
+          if (w > maxWk) maxWk = w;
+        });
+      });
+    } else {
+      const WS = (typeof WEEKLY_STATS_ACTIVE !== 'undefined') ? WEEKLY_STATS_ACTIVE : window.WEEKLY_STATS_ACTIVE;
+      if (!WS) return _mtFpaCache; // lazy weekly bundle not landed yet
+      const YEAR = '2026';
+      for (const name in WS) {
+        const rec = WS[name];
+        if (!rec || !acc[rec.pos] || !rec.seasons) continue;
+        const rows = rec.seasons[YEAR];
+        if (!rows) continue;
+        for (let i = 0; i < rows.length; i++) {
+          const r = rows[i];
+          const opp = r && r.opp ? String(r.opp).toUpperCase() : '';
+          if (!opp || typeof r.fpts !== 'number') continue;
+          const slot = acc[rec.pos][opp] || (acc[rec.pos][opp] = { pts: 0, wks: new Set() });
+          slot.pts += r.fpts;
+          slot.wks.add(r.wk);
+          if (r.wk > maxWk) maxWk = r.wk;
+        }
       }
     }
     if (!maxWk) return _mtFpaCache;

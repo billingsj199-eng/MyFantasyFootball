@@ -5202,6 +5202,40 @@
       }
     }
     let _h2hSampleLogged = false;
+    // v0.18.18: the raw `tournament` object UD attaches to each tournament
+    // round (rules_url, entry_fee, and - hopefully - round / prize structure)
+    // keyed by contest name, shipped to the site as `tournaments` so the
+    // brackets of contests without a public rules page (The Dachshund, The
+    // Field General) can be read off real data. Slimmed to scalars + short
+    // arrays; first one per contest logged for schema discovery.
+    const tournamentMeta = {};
+    try {
+      const slim = (o, depth) => {
+        if (o == null || typeof o !== 'object') return o;
+        if (depth > 3) return '[...]';
+        if (Array.isArray(o)) return o.slice(0, 40).map(x => slim(x, depth + 1));
+        const out = {};
+        Object.keys(o).slice(0, 60).forEach(k => { out[k] = slim(o[k], depth + 1); });
+        return out;
+      };
+      for (const p of Object.keys(bulk)) {
+        if (!/^\/v1\/user\/slates\/[a-f0-9-]{20,}\/tournament_rounds$/.test(p)) continue;
+        const rounds = (bulk[p] && bulk[p].tournament_rounds) || [];
+        for (const r of rounds) {
+          if (!r || !r.id) continue;
+          const info = roundInfoById.get(r.id);
+          const tName = roundIdToTournamentName.get(r.id) || (info && info.tournament) || null;
+          if (!tName) continue;
+          if (!tournamentMeta[tName]) {
+            tournamentMeta[tName] = { tournament: slim(r.tournament || null, 0), rounds: [] };
+            try { console.log('[MFF/sync] tournament object for', tName, JSON.stringify(slim(r.tournament || {}, 0)).slice(0, 2500)); } catch (_) {}
+          }
+          const roundSlim = slim(r, 0);
+          if (roundSlim && roundSlim.tournament) delete roundSlim.tournament;
+          tournamentMeta[tName].rounds.push(roundSlim);
+        }
+      }
+    } catch (e) { console.warn('[MFF/sync] tournamentMeta', e); }
     // draft_id -> tournament name. Walk the cached
     // /v1/user/tournament_rounds/<round_id>/drafts paths; the round_id in
     // the path tells us which tournament each draft belongs to.
@@ -5439,7 +5473,8 @@
     } catch (e) {
       try { console.warn('[MFF/sync] diag logging error:', e && e.message); } catch (_) {}
     }
-    return { aggregated, aggregatedRaw };
+    try { _diag.tournaments = tournamentMeta; } catch (_) {}
+    return { aggregated, aggregatedRaw, tournaments: tournamentMeta };
   }
 
   // v0.9.46: incremental checkpoint publish during long syncs. Builds the
@@ -5449,9 +5484,11 @@
   // skipped — they'll show up on the next checkpoint.
   function publishCheckpoint(bulk, label) {
     try {
-      const { aggregated, aggregatedRaw } = buildAggregatedFromBulk(bulk);
+      const { aggregated, aggregatedRaw, tournaments } = buildAggregatedFromBulk(bulk);
       if (!aggregatedRaw.length) return 0;
       const sitePortfolio = buildSitePortfolio(aggregatedRaw);
+      // v0.18.18: raw UD tournament objects ride along (site: window._udTournamentMeta).
+      try { if (tournaments && Object.keys(tournaments).length) sitePortfolio.tournaments = tournaments; } catch (_) {}
       // v0.18.6: mff_portfolio (the sidebar's Port % / page exposure badges)
       // is now derived from the CUMULATIVE merged store inside
       // publishPortfolioToSite. Writing buildPortfolioFromTeams(aggregated)

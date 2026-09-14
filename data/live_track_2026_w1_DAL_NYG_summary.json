@@ -1,0 +1,284 @@
+{
+ "files": [
+  "live_track_2026_w1_DAL_NYG.csv"
+ ],
+ "bins": {
+  "Q1": {
+   "fit": 3.714,
+   "fitx": 3.707,
+   "v1": 4.131,
+   "naive": 4.097,
+   "n": 806
+  },
+  "Q2": {
+   "fit": 3.152,
+   "fitx": 3.132,
+   "v1": 3.383,
+   "naive": 3.334,
+   "n": 1456
+  },
+  "Q3": {
+   "fit": 2.047,
+   "fitx": 2.035,
+   "v1": 2.183,
+   "naive": 2.242,
+   "n": 1248
+  },
+  "Q4": {
+   "fit": 0.995,
+   "fitx": 0.99,
+   "v1": 0.99,
+   "naive": 1.034,
+   "n": 1196
+  }
+ },
+ "players": {
+  "Jaxson Dart": {
+   "pos": "QB",
+   "proj": 20.5,
+   "final": 26.7,
+   "fit": 5.54,
+   "fitx": 5.54,
+   "v1": 4.93,
+   "naive": 4.85
+  },
+  "Dak Prescott": {
+   "pos": "QB",
+   "proj": 18.5,
+   "final": 15.4,
+   "fit": 1.67,
+   "fitx": 1.67,
+   "v1": 1.65,
+   "naive": 1.54
+  },
+  "CeeDee Lamb": {
+   "pos": "WR",
+   "proj": 18.3,
+   "final": 15.4,
+   "fit": 2.27,
+   "fitx": 2.27,
+   "v1": 2.09,
+   "naive": 1.96
+  },
+  "Javonte Williams": {
+   "pos": "RB",
+   "proj": 16.9,
+   "final": 24.2,
+   "fit": 10.57,
+   "fitx": 10.57,
+   "v1": 10.45,
+   "naive": 10.04
+  },
+  "Malik Nabers": {
+   "pos": "WR",
+   "proj": 16.5,
+   "final": 12.9,
+   "fit": 1.19,
+   "fitx": 1.19,
+   "v1": 1.82,
+   "naive": 1.89
+  },
+  "George Pickens": {
+   "pos": "WR",
+   "proj": 15.2,
+   "final": 5.8,
+   "fit": 5.93,
+   "fitx": 5.93,
+   "v1": 5.22,
+   "naive": 5.49
+  },
+  "Cam Skattebo": {
+   "pos": "RB",
+   "proj": 14.1,
+   "final": 14.1,
+   "fit": 1.61,
+   "fitx": 1.56,
+   "v1": 1.64,
+   "naive": 1.46
+  },
+  "Isaiah Likely": {
+   "pos": "TE",
+   "proj": 10.7,
+   "final": 27.8,
+   "fit": 9.0,
+   "fitx": 9.0,
+   "v1": 8.57,
+   "naive": 8.9
+  },
+  "Brandon Aubrey": {
+   "pos": "K",
+   "proj": 9.6,
+   "final": 1.0,
+   "fit": 4.06,
+   "fitx": 4.06,
+   "v1": 4.06,
+   "naive": 4.4
+  },
+  "Jake Ferguson": {
+   "pos": "TE",
+   "proj": 9.3,
+   "final": 2.6,
+   "fit": 3.04,
+   "fitx": 3.04,
+   "v1": 2.57,
+   "naive": 2.89
+  },
+  "Dominic Zvada": {
+   "pos": "K",
+   "proj": 8.2,
+   "final": 4.0,
+   "fit": 1.64,
+   "fitx": 1.64,
+   "v1": 1.64,
+   "naive": 1.84
+  },
+  "Ryan Flournoy": {
+   "pos": "WR",
+   "proj": 7.4,
+   "final": 4.2,
+   "fit": 1.06,
+   "fitx": 1.06,
+   "v1": 1.01,
+   "naive": 1.03
+  },
+  "Dallas Cowboys D/ST": {
+   "pos": "DST",
+   "proj": 6.5,
+   "final": 7.0,
+   "fit": 1.07,
+   "fitx": 1.07,
+   "v1": 3.46,
+   "naive": 3.13
+  },
+  "Malachi Fields": {
+   "pos": "WR",
+   "proj": 6.2,
+   "final": 4.5,
+   "fit": 1.23,
+   "fitx": 1.23,
+   "v1": 1.43,
+   "naive": 1.37
+  },
+  "Darnell Mooney": {
+   "pos": "WR",
+   "proj": 5.6,
+   "final": 4.7,
+   "fit": 0.99,
+   "fitx": 0.99,
+   "v1": 1.1,
+   "naive": 0.99
+  },
+  "New York Giants D/ST": {
+   "pos": "DST",
+   "proj": 5.2,
+   "final": 3.0,
+   "fit": 2.4,
+   "fitx": 2.4,
+   "v1": 5.86,
+   "naive": 5.46
+  },
+  "Theo Johnson": {
+   "pos": "TE",
+   "proj": 4.3,
+   "final": 1.9,
+   "fit": 0.68,
+   "fitx": 0.68,
+   "v1": 0.78,
+   "naive": 0.91
+  },
+  "KaVontae Turpin": {
+   "pos": "WR",
+   "proj": 4.3,
+   "final": 1.8,
+   "fit": 1.66,
+   "fitx": 1.66,
+   "v1": 1.47,
+   "naive": 1.54
+  },
+  "Odell Beckham": {
+   "pos": "WR",
+   "proj": 4.3,
+   "final": 0.0,
+   "fit": 1.68,
+   "fitx": 1.68,
+   "v1": 1.83,
+   "naive": 2.01
+  },
+  "Najee Harris": {
+   "pos": "RB",
+   "proj": 4.2,
+   "final": 0.0,
+   "fit": 1.61,
+   "fitx": 1.61,
+   "v1": 1.78,
+   "naive": 1.96
+  },
+  "Tyrone Tracy": {
+   "pos": "RB",
+   "proj": 2.4,
+   "final": -0.6,
+   "fit": 1.27,
+   "fitx": 1.25,
+   "v1": 1.37,
+   "naive": 1.47
+  },
+  "Emari Demercado": {
+   "pos": "RB",
+   "proj": 1.8,
+   "final": 0.7,
+   "fit": 0.48,
+   "fitx": 0.48,
+   "v1": 0.49,
+   "naive": 0.54
+  },
+  "Luke Schoonmaker": {
+   "pos": "TE",
+   "proj": 1.7,
+   "final": 2.2,
+   "fit": 0.74,
+   "fitx": 0.74,
+   "v1": 0.73,
+   "naive": 0.64
+  },
+  "Sam Howell": {
+   "pos": "QB",
+   "proj": 0.6,
+   "final": 0.0,
+   "fit": 0.29,
+   "fitx": 0.16,
+   "v1": 0.25,
+   "naive": 0.28
+  },
+  "Jameis Winston": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.19,
+   "fitx": 0.08,
+   "v1": 0.21,
+   "naive": 0.23
+  },
+  "Brevyn Spann-Ford": {
+   "pos": "TE",
+   "proj": 0.5,
+   "final": 3.4,
+   "fit": 0.74,
+   "fitx": 0.74,
+   "v1": 0.8,
+   "naive": 0.54
+  }
+ },
+ "all": {
+  "fit": 2.407,
+  "fitx": 2.395,
+  "v1": 2.585,
+  "naive": 2.591,
+  "n": 4706
+ },
+ "wins": {
+  "fit": 10,
+  "fitx": 4,
+  "v1": 5,
+  "naive": 7
+ }
+}

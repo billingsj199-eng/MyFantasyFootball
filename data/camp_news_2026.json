@@ -1,6 +1,106 @@
 {
-  "updated": "2026-09-14T02:10:00Z",
+  "updated": "2026-09-14T16:09:55Z",
   "items": [
+    {
+      "player": "Isaiah Likely",
+      "team": "NYG",
+      "pos": "TE",
+      "date": "2026-09-13",
+      "headline": "Explosive Giants debut: 8 catches on 8 targets for 78 yards, 2 TDs vs. Cowboys",
+      "take": "First game after following John Harbaugh from Baltimore -- instant must-start TE1 on target trust alone",
+      "url": "https://www.giants.com/news/instant-analysis-giants-open-season-with-28-20-win-over-cowboys-jaxson-dart-malik-nabers-isaiah-likely-john-harbaugh",
+      "tag": "riser"
+    },
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Exits Ravens win with hamstring injury after torching Colts for 5-150-1 on 6 targets",
+      "take": "Day-to-day with MRI pending; Rapoport says he likely would have returned in a playoff game -- monitor but not alarming",
+      "url": "https://x.com/RapSheet/status/2099457844625998158",
+      "tag": "injury"
+    },
+    {
+      "player": "Ladd McConkey",
+      "team": "LAC",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Exits Chargers loss with chest injury after 5-82-1 line, did not return",
+      "take": "No postgame update from Jim Harbaugh -- real risk flag heading into this week's injury reports",
+      "url": "https://www.cbssports.com/fantasy/football/news/chargers-ladd-mcconkey-no-update-on-chest-injury-after-loss/",
+      "tag": "injury"
+    },
+    {
+      "player": "Trey McBride",
+      "team": "ARI",
+      "pos": "TE",
+      "date": "2026-09-13",
+      "headline": "9 catches on 12 targets for 95 yards and a TD in Cardinals' 26-14 upset of Chargers",
+      "take": "Clear focal point of Arizona's offense regardless of QB -- locked-in elite TE1",
+      "url": "https://www.cbssports.com/fantasy/football/news/cardinals-trey-mcbride-signature-effort-in-week-1-upset/",
+      "tag": "riser"
+    },
+    {
+      "player": "Chig Okonkwo",
+      "team": "WAS",
+      "pos": "TE",
+      "date": "2026-09-13",
+      "headline": "Exits Commanders debut with hamstring injury after just 2-16 on 3 targets",
+      "take": "John Bates becomes the streaming/backup TE option in Washington if Okonkwo misses time",
+      "url": "https://ca.sports.yahoo.com/news/chigoziem-okonkwo-leaves-week-1-232458340.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Parker Washington",
+      "team": "JAX",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Leads Jaguars in Week 1 win: 5 catches, 83 yards, 30-yard TD from Trevor Lawrence",
+      "take": "Paced Jacksonville in every receiving category -- emerging weekly WR3/flex if the target share holds",
+      "url": "https://www.cbssports.com/fantasy/football/news/jaguars-parker-washington-impressive-td-grab-in-week-1-win/",
+      "tag": "riser"
+    },
+    {
+      "player": "Jaxson Dart",
+      "team": "NYG",
+      "pos": "QB",
+      "date": "2026-09-13",
+      "headline": "Efficient Giants debut under Harbaugh: 23/29, 230 yards, 3 pass TDs plus 54 rush yards",
+      "take": "No turnovers and a real rushing floor -- streamable QB1 with Likely/Nabers/Skattebo around him",
+      "url": "https://www.giants.com/news/instant-analysis-giants-open-season-with-28-20-win-over-cowboys-jaxson-dart-malik-nabers-isaiah-likely-john-harbaugh",
+      "tag": "riser"
+    },
+    {
+      "player": "Cam Skattebo",
+      "team": "NYG",
+      "pos": "RB",
+      "date": "2026-09-13",
+      "headline": "Confirmed as Giants' clear lead back: 18 carries for 81 yards and a TD vs. Cowboys",
+      "take": "Dominated touches over Singletary (6) and Tracy (2) -- workhorse role confirmed in Week 1",
+      "url": "https://ca.sports.yahoo.com/news/cam-skattebo-leads-way-81-060138573.html",
+      "tag": "riser"
+    },
+    {
+      "player": "Malik Nabers",
+      "team": "NYG",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Clean ACL-return debut: 6 catches for 69 yards on 9 targets vs. Cowboys, no setback",
+      "take": "Back to full WR1 role and volume for New York with no ill effects reported",
+      "url": "https://www.giants.com/news/instant-analysis-giants-open-season-with-28-20-win-over-cowboys-jaxson-dart-malik-nabers-isaiah-likely-john-harbaugh",
+      "tag": "riser"
+    },
+    {
+      "player": "Patrick Mahomes",
+      "team": "KC",
+      "pos": "QB",
+      "date": "2026-09-14",
+      "headline": "Officially cleared with no injury designation for MNF season debut vs. Broncos",
+      "take": "9 months removed from ACL/LCL surgery and full-go all week -- locked-in QB1 tonight",
+      "url": "https://www.nfl.com/news/chiefs-qb-patrick-mahomes-knee-has-no-injury-status-cleared-for-comeback-monday-night-vs-broncos",
+      "tag": "riser"
+    },
     {
       "player": "George Kittle",
       "team": "SF",
@@ -2532,16 +2632,6 @@
       "tag": "faller"
     },
     {
-      "player": "Ashton Jeanty",
-      "team": "LV",
-      "pos": "RB",
-      "date": "2026-08-23",
-      "headline": "Left Sunday practice with believed sprained ankle, couldn't bear weight",
-      "take": "Not considered long-term but timeline unclear; monitor before finalizing Week 1 outlook",
-      "url": "https://www.espn.com/nfl/story/_/id/49708202/raiders-rb-jeanty-believed-sprained-ankle",
-      "tag": "injury"
-    },
-    {
       "player": "Trey Benson",
       "team": "ARI",
       "pos": "RB",
@@ -2552,26 +2642,6 @@
       "tag": "faller"
     },
     {
-      "player": "George Kittle",
-      "team": "SF",
-      "pos": "TE",
-      "date": "2026-08-23",
-      "headline": "Activated off PUP list, first practice since January Achilles injury",
-      "take": "Doesn't lock in Week 1 but signals he's trending toward an early-season return",
-      "url": "https://www.espn.com/nfl/story/_/id/49702970/49ers-activate-star-te-george-kittle-pup-list",
-      "tag": "role"
-    },
-    {
-      "player": "Christian McCaffrey",
-      "team": "SF",
-      "pos": "RB",
-      "date": "2026-08-23",
-      "headline": "Returned to full practice after calf tightness",
-      "take": "No setback; RB1 outlook intact heading into the final preseason stretch",
-      "url": "https://sfstandard.com/2026/08/23/george-kittle-49ers-rams-pup-list/",
-      "tag": "riser"
-    },
-    {
       "player": "Travis Etienne Jr.",
       "team": "NO",
       "pos": "RB",
@@ -2580,16 +2650,6 @@
       "take": "Direct early-season beneficiary; solid streaming/flex option in Weeks 1-4",
       "url": "https://heavy.com/sports/nfl/new-orleans-saints/saints-alvin-kamara-injury-creates-challenge/",
       "tag": "riser"
-    },
-    {
-      "player": "Ja'Quinden Jackson",
-      "team": "PHI",
-      "pos": "RB",
-      "date": "2026-08-23",
-      "headline": "CT scan negative, full movement, released from hospital after scary ambulance exit",
-      "take": "Relief story after Saturday's scary hit \u2014 minimal fantasy relevance as a deep-roster back",
-      "url": "https://www.espn.com/nfl/story/_/id/49697364/eagles-jaquinden-jackson-taken-hospital-tackle-movement",
-      "tag": "injury"
     }
   ]
 }

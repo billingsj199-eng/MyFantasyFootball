@@ -24,11 +24,18 @@ def main():
     src = os.path.join(REPO, "data", "weekly_projections.json")
     wk = a.week
     if wk is None:
-        try:
-            wk = int(json.load(open(src, encoding="utf-8")).get("week") or 0)
-        except Exception as e:  # noqa: BLE001
-            print(f"cannot read week from {src}: {e}")
-            return 1
+        # Score the LATEST week that has both a lock snapshot and actual game
+        # rows - never the projections file's week (Sleeper may flip that to
+        # next week before the 8:30 chain runs, which would skip the scoring).
+        import glob, re
+        from score_week import load_actuals
+        cands = sorted(int(re.search(r"_w(\d+)\.json$", f).group(1))
+                       for f in glob.glob(os.path.join(HERE, "data", "snapshots", "simlab_snapshot_w*.json")))
+        wk = next((w for w in reversed(cands) if load_actuals(w)), 0)
+        if not wk:
+            print("no lock snapshot with actuals yet - nothing to score")
+            return 0
+        print(f"scoring W{wk} (latest lock with actuals)")
     if wk < 1:
         print("no week to score")
         return 0

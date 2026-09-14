@@ -1,36 +1,34 @@
-===== Sim Lab refresh Mon 09/14/2026  9:55:07.18 ===== 
+===== Sim Lab refresh Mon 09/14/2026 10:03:14.19 ===== 
 copied mike_clay_projections.js  (36 KB)
 copied player_weekly_sigma.js  (57 KB)
 copied betting_lines_2026.js  (158 KB)
 copied clay_team_grades_2026.js  (4 KB)
 copied yahoo_normalize.js  (13 KB)
-wrapped sim_practice.js  (182 entries, 2026-09-14T13:54)
-wrapped sim_depth.js  (32 entries, 2026-09-14T13:54)
-wrapped sleeper_players.js  (585 players, exported 2026-09-14 09:54:46)
+wrapped sim_practice.js  (182 entries, 2026-09-14T14:02)
+wrapped sim_depth.js  (32 entries, 2026-09-14T14:03)
+wrapped sleeper_players.js  (585 players, exported 2026-09-14 10:03:14)
 wrapped sim_snaps.js  (285 players with 2026 snaps)
 wrapped sim_2026.js  (303 players with 2026 games, 30 defenses; FPA fpa_2026.js (complete league))
 wrapped sleeper_meta.js  (577 players, 127 true rookies, 6 elite CBs)
-wrapped sim_weather.js  (13 outdoor kickoffs in forecast window Â· site weather_2026.json (2026-09-14T13:54))
-cache-busted index.html scripts (?v=1789394108)
-stamped 2026-09-14 09:55
-wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js â€” 0 TEs with 2026 route data, 30 defenses with pressure data
-wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js â€” 32 teams, 30 with 2026 data
+wrapped sim_weather.js  (13 outdoor kickoffs in forecast window · site weather_2026.json (2026-09-14T14:03))
+cache-busted index.html scripts (?v=1789394595)
+stamped 2026-09-14 10:03
+wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js — 0 TEs with 2026 route data, 30 defenses with pressure data
+wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js — 32 teams, 30 with 2026 data
 
-=== Deploying to 'jackb933-website'...
+[1m[37m===[39m Deploying to 'jackb933-website'...[22m
 
-i  deploying hosting
-i  hosting[jb-simlab-2026]: beginning deploy...
-i  hosting[jb-simlab-2026]: found 176 files in sim_lab
-i  hosting: uploading new files [0/4] (0%)
-i  hosting: upload complete
-+  hosting[jb-simlab-2026]: file upload complete
-i  hosting[jb-simlab-2026]: finalizing version...
-+  hosting[jb-simlab-2026]: version finalized
-i  hosting[jb-simlab-2026]: releasing new version...
-+  hosting[jb-simlab-2026]: release complete
+[36m[1mi [22m[39m deploying [1mhosting[22m
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m beginning deploy...
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m found 176 files in [1msim_lab[22m
+[32m[1m+  hosting[jb-simlab-2026]:[22m[39m file upload complete
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m finalizing version...
+[32m[1m+  hosting[jb-simlab-2026]:[22m[39m version finalized
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m releasing new version...
+[32m[1m+  hosting[jb-simlab-2026]:[22m[39m release complete
 
-+  Deploy complete!
+[32m[1m+ [22m[39m [1m[4mDeploy complete![24m[22m
 
-Project Console: https://console.firebase.google.com/project/jackb933-website/overview
-Hosting URL: https://jb-simlab-2026.web.app
-===== done Mon 09/14/2026  9:55:18.79 ===== 
+[1mProject Console:[22m https://console.firebase.google.com/project/jackb933-website/overview
+[1mHosting URL:[22m https://jb-simlab-2026.web.app
+===== done Mon 09/14/2026 10:03:23.73 ===== 

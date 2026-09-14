@@ -57525,7 +57525,7 @@ Rules:
     // launch post found — Round 1 only (top 2 of 12, entry fee back) until
     // the bracket is known. Fill in rounds / prizeReach / finalTable here.
     { re: /dalmatian/i,           adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
-    { re: /udfa/i,            adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
+    { re: /udfa/i,                  adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
     // The Mastiff ($1,000, 540 entries; help page): R1 12-team top 4 → R2 W15
     // 5-team top 1 (36 groups) → R3 W16 4-team top 1 (9 groups) → W17 9-team
     // final. Reach R2 $1,000 (37-180th), R3 $1,500 (10-36th), final $12,000 (9th).
@@ -57555,8 +57555,7 @@ Rules:
     // shape (R2 W15, R3 W16, final W17, top 1 per round) so synced later-round
     // groups chain on; pool sizes come from the groups themselves.
     const rounds = Array.isArray(r.rounds) ? r.rounds
-      : r.unknownBracket ? [{ week: [1, r.weeks], size: 12, adv: r.adv }, { week: [15, 15], size: null, adv: 1 }, { week: [16, 16], size: null, adv: 1 }, { week: [17, 17], size: null, adv: 1, final: true }]
-      : [{ week: [1, r.weeks], size: 12, adv: r.adv }];
+      : [{ week: [1, r.weeks], size: 12, adv: r.adv }, { week: [15, 15], size: null, adv: 1 }, { week: [16, 16], size: null, adv: 1 }, { week: [17, 17], size: null, adv: 1, final: true }];
     return {
       inferred: !!r.inferred,
       unknownBracket: !!r.unknownBracket || !Array.isArray(r.rounds),

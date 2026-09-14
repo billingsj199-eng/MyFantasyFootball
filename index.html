@@ -5594,7 +5594,7 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-09-08'
+    'data/snap_counts.js?v=2026-09-14'
   ];
   window._weeklyDataPromise = _injectScripts(files, 'WeeklyData', opts).then(function() {
     try { document.dispatchEvent(new Event('mff:weeklydata')); }

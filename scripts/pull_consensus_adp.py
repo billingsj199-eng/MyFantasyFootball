@@ -863,7 +863,79 @@ def main():
         bump_version()
     else:
         print('d.js unchanged — skipping ?v= bump.')
+    print('\nPhase O — consensus rank history (RANKINGS MOVERS):')
+    roll_cons_history()
     print('\nDone.')
+
+
+# ---------------------------------------------------------------------------
+# Phase O — consensus rank history (2026-09-14): the consensus redraft board is
+# a client-side blend (_computeConsensusBoard) of Jack's board + seven source
+# inputs that live in d.js. One dated snapshot of those inputs per day lets the
+# site rebuild the board as it stood N days ago for the in-season RANKINGS
+# MOVERS bar (free/anon sessions; premium compares Jack's board to its weekly
+# anchor). Rolled like ud_adp_history.json; backfilled from git by
+# scripts/backfill_cons_rank_history.py.
+# ---------------------------------------------------------------------------
+CONS_HISTORY_FILE = os.path.join(ROOT, 'data', 'cons_rank_history.json')
+CONS_HISTORY_DAYS = 45
+CONS_HISTORY_TOP = 400
+CONS_HISTORY_FIELDS = ['a', 'slR', 'fpR', 'udA', 'espnAdp', 'cbsAdp', 'yahooAdp']
+
+
+def roll_cons_history():
+    try:
+        src = open(os.path.join(ROOT, 'data', 'd.js'), encoding='utf-8').read()
+        D = json.loads(src[src.index('['):src.rindex(']') + 1])
+        rows = []
+        for p in D:
+            if not p.get('n') or p.get('s') in ('K', 'DST'):
+                continue
+            vals = [p.get(f) if isinstance(p.get(f), (int, float)) else None for f in CONS_HISTORY_FIELDS]
+            if all(v is None for v in vals):
+                continue
+            rows.append((p['n'], vals))
+        rows.sort(key=lambda r: (r[1][0] if r[1][0] is not None else 9999))
+        snap = {n: v for n, v in rows[:CONS_HISTORY_TOP]}
+        if len(snap) < 100:
+            print(f'  !! only {len(snap)} players with source inputs — history not rolled')
+            return False
+        hist = {'updated': '', 'days': []}
+        if os.path.exists(CONS_HISTORY_FILE):
+            try:
+                hist = json.load(open(CONS_HISTORY_FILE, encoding='utf-8'))
+            except Exception:
+                pass
+        days = [d for d in hist.get('days', []) if d.get('date') != TODAY and d.get('f')]
+        days.append({'date': TODAY, 'f': snap})
+        days.sort(key=lambda d: d.get('date', ''))
+        hist = {'updated': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'fields': CONS_HISTORY_FIELDS, 'days': days[-CONS_HISTORY_DAYS:]}
+        with open(CONS_HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(hist, f, separators=(',', ':'))
+        print(f'  cons_rank_history.json: {len(hist["days"])} day(s) through {TODAY}')
+        return True
+    except Exception as e:
+        print(f'  !! cons history: {e} — not rolled')
+        return False
+        hist = {'updated': '', 'days': []}
+        if os.path.exists(CONS_HISTORY_FILE):
+            try:
+                hist = json.load(open(CONS_HISTORY_FILE, encoding='utf-8'))
+            except Exception:
+                pass
+        days = [d for d in hist.get('days', []) if d.get('date') != TODAY]
+        days.append({'date': TODAY, 'order': order})
+        days.sort(key=lambda d: d.get('date', ''))
+        hist = {'updated': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'days': days[-CONS_HISTORY_DAYS:]}
+        with open(CONS_HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(hist, f, separators=(',', ':'))
+        print(f'  cons_rank_history.json: {len(hist["days"])} day(s) through {TODAY}')
+        return True
+    except Exception as e:
+        print(f'  !! cons history: {e} — not rolled')
+        return False
 
 
 if __name__ == '__main__':

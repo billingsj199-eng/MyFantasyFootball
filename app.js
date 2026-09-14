@@ -622,6 +622,7 @@ function boardToNames(board) {
 // Renders top movers into #liveTickerItems. Filters out retired/legend-pool
 // players and ignores movers outside the fantasy-relevant rank range.
 window._renderLiveTicker = function() {
+  try { if (typeof window._rankMoversRefresh === 'function') window._rankMoversRefresh(); } catch (_) {}
   const ticker = document.getElementById('liveTickerItems');
   if (!ticker) return;
   // Replace the initial "Loading…" placeholder if data isn't ready yet, so anon
@@ -945,7 +946,11 @@ window._verBoardFor = function(src, mode) {
 
 // === CONSENSUS RANKING ENGINE ===
 // Averages ranks from: Jack's + market ADP + Sleeper + FantasyPros (all modes) + Underdog (redraft) + KTC (dynasty)
-function _computeConsensusBoard(mode) {
+function _computeConsensusBoard(mode, gf) {
+  // gf(i, field) = source-field getter (default: live D). RANKINGS MOVERS passes
+  // a dated snapshot of the same inputs (data/cons_rank_history.json) to rebuild
+  // the consensus board as it stood N days ago with this exact blend.
+  const F = gf || ((i, f) => D[i][f]);
   // bestball uses the same data sources as redraft (single-season, Underdog-friendly)
   const adpField = mode === 'dynastysf' ? 'sa' : mode === 'dynasty' ? 'da' : mode === 'superflex' ? 'sfa' : 'a';
   const slField = mode === 'dynastysf' ? 'slDsf' : mode === 'dynasty' ? 'slDy' : mode === 'superflex' ? 'slSf' : 'slR';
@@ -959,7 +964,7 @@ function _computeConsensusBoard(mode) {
   // Market ADP rank map (lower ADP = better rank)
   const adpList = [];
   for (let i = 0; i < D.length; i++) {
-    const v = D[i][adpField];
+    const v = F(i, adpField);
     if (v != null && v < 900) adpList.push({ idx: i, v: v });
   }
   adpList.sort((a, b) => a.v - b.v);
@@ -969,7 +974,7 @@ function _computeConsensusBoard(mode) {
   // Sleeper rank map
   const slList = [];
   for (let i = 0; i < D.length; i++) {
-    const v = D[i][slField];
+    const v = F(i, slField);
     if (v != null) slList.push({ idx: i, v: v });
   }
   slList.sort((a, b) => a.v - b.v);
@@ -979,7 +984,7 @@ function _computeConsensusBoard(mode) {
   // FantasyPros rank map (all 4 modes)
   const fRank = {};
   for (let i = 0; i < D.length; i++) {
-    const v = D[i][fpField];
+    const v = F(i, fpField);
     if (v != null) fRank[i] = v;
   }
 
@@ -990,7 +995,7 @@ function _computeConsensusBoard(mode) {
   const uRank = {};
   if (mode === 'redraft' || mode === 'bestball') {
     for (let i = 0; i < D.length; i++) {
-      const v = D[i].udA;
+      const v = F(i, 'udA');
       if (v != null) uRank[i] = v;
     }
   }
@@ -1003,9 +1008,10 @@ function _computeConsensusBoard(mode) {
   const yRank = {};
   if (mode === 'redraft' || mode === 'bestball') {
     for (let i = 0; i < D.length; i++) {
-      if (D[i].espnAdp != null) eRank[i] = D[i].espnAdp;
-      if (D[i].cbsAdp != null) cRank[i] = D[i].cbsAdp;
-      if (D[i].yahooAdp != null) yRank[i] = D[i].yahooAdp;
+      const ev = F(i, 'espnAdp'), cv = F(i, 'cbsAdp'), yv = F(i, 'yahooAdp');
+      if (ev != null) eRank[i] = ev;
+      if (cv != null) cRank[i] = cv;
+      if (yv != null) yRank[i] = yv;
     }
   }
 
@@ -10828,9 +10834,11 @@ _renderDataFreshness();
   function _playerChip(m) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const up = m.delta < 0; // ADP number falling = drafted earlier = riser
-    const fmt = v => String(+v.toFixed(1)); // trim float dust, drop trailing .0
+    const fmt = m.kind === 'rank' ? (v => '#' + Math.round(v)) : (v => String(+v.toFixed(1))); // ranks are integers; ADP trims float dust
     const color = up ? '#22c55e' : '#ef4444';
-    const pct = m.from > 0 ? Math.round(Math.abs(m.delta) / m.from * 100) : null;
+    // Ranks: share of the LARGER rank so risers and fallers read symmetrically (#6→#21 and #21→#6 both 71%).
+    const pctDen = m.kind === 'rank' ? Math.max(m.from, m.to) : m.from;
+    const pct = pctDen > 0 ? Math.round(Math.abs(m.delta) / pctDen * 100) : null;
     const img = m.img
       ? `<img class="amc-img" src="${esc(window._fixHeadshotUrl(m.img))}" alt="" loading="eager" onerror="this.style.display='none'">`
       : `<span class="amc-img amc-initials">${esc(m.name.split(' ').map(w => w[0] || '').join('').slice(0, 2))}</span>`;
@@ -10910,22 +10918,135 @@ _renderDataFreshness();
     if (window._mffResizeTicker) window._mffResizeTicker();
   }
 
+  // ── RANKINGS MOVERS (in-season, Jack 2026-09-14) ─────────────────────────
+  // Once the season is underway the bar shows RANK movers instead of ADP:
+  //   premium  → Jack's redraft board vs its weekly anchor (_jacksPrevOrder,
+  //              the snapshot saved up to 7 days ago; span buttons hidden —
+  //              the anchor is the only prior premium sessions can read)
+  //   free/anon → the consensus board (d.js order) vs data/cons_rank_history.json
+  //              (dated snapshots rolled by the 9am job, backfilled from git),
+  //              3D / 7D / 30D like the ADP bar.
+  // Same 300-rank window + ≥3-spot rule as the old live ticker. Re-rendered
+  // when Jack's boards land (_renderLiveTicker hook) so a premium session
+  // flips from consensus to Jack's once the doc arrives.
+  const _titleEl = document.getElementById('adpMoversTitle');
+  let _consHist = null, _rankMode = false;
+  function _seasonStarted() {
+    try { if (window.SIM_PROJ_2026 && +window.SIM_PROJ_2026.currentWeek >= 1) return true; } catch (_) {}
+    return Date.now() >= Date.parse('2026-09-09T00:00:00-04:00');
+  }
+  function _rankMovers(curNames, prevNames) {
+    const prevRank = {};
+    let pc = 0;
+    prevNames.forEach(n => { if (!n) return; pc += 1; prevRank[n] = pc; });
+    const out = [];
+    curNames.forEach((n, i) => {
+      const to = i + 1;
+      if (!n || to > 300) return;
+      const from = prevRank[n];
+      if (!from || from > 300) return;
+      const delta = to - from;            // rank number falling = riser (chip: delta < 0 = ▲)
+      if (Math.abs(delta) < 3) return;
+      out.push({ name: n, from, to, delta, kind: 'rank' });
+    });
+    return out;
+  }
+  function _renderRanks(target) {
+    if (!_titleEl) return;
+    target = target || _span;
+    let movers = [], sub = '', share = '';
+    const premium = (typeof hasPremium === 'function') && hasPremium();
+    const jacksCur = (premium && typeof versionBoards !== 'undefined' && versionBoards.jacks && Array.isArray(versionBoards.jacks.redraft)
+      && typeof boardToNames === 'function') ? boardToNames(versionBoards.jacks.redraft) : null;
+    const jacksPrev = Array.isArray(window._jacksPrevOrder) && window._jacksPrevOrder.length ? window._jacksPrevOrder : null;
+    if (jacksCur && jacksCur.length > 50 && jacksPrev) {
+      movers = _rankMovers(jacksCur, jacksPrev);
+      const at = window._jacksPrevSavedAt ? new Date(window._jacksPrevSavedAt) : null;
+      const since = at && isFinite(at.getTime()) ? at.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'last save';
+      sub = "Jack's Redraft · since " + since;
+      share = "Jack's Redraft rankings, since " + since;
+      if (spanBox) spanBox.style.display = 'none';
+      if (!movers.length) { items.innerHTML = '<span class="amc-empty">No moves of 3+ spots since ' + since + '</span>'; }
+    } else {
+      if (spanBox) spanBox.style.display = '';
+      const days = ((_consHist && _consHist.days) || []).filter(d => d && d.date && d.f && typeof d.f === 'object');
+      if (days.length < 2 || typeof D === 'undefined') return;
+      days.sort((a, b) => a.date.localeCompare(b.date));
+      const latest = days[days.length - 1];
+      let base = days[0];
+      for (const d of days.slice(0, -1)) {
+        if (Math.abs(_daysBetween(d.date, latest.date) - target) < Math.abs(_daysBetween(base.date, latest.date) - target)) base = d;
+      }
+      const span = _daysBetween(base.date, latest.date);
+      if (span < 1) return;
+      // Current = the live consensus board; prior = the same blend rebuilt from the
+      // snapshot's source inputs (a / Sleeper / FP / UD / ESPN / CBS / Yahoo) with
+      // today's Jack's board in both, so the movement is the market + experts.
+      if (typeof _computeConsensusBoard !== 'function' || typeof boardToNames !== 'function' || typeof versionBoards === 'undefined') return;
+      const FIELDS = (_consHist.fields && _consHist.fields.length) ? _consHist.fields : ['a', 'slR', 'fpR', 'udA', 'espnAdp', 'cbsAdp', 'yahooAdp'];
+      const fIdx = {}; FIELDS.forEach((f, k) => { fIdx[f] = k; });
+      const snap = base.f;
+      const gf = (i, f) => {
+        const k = fIdx[f];
+        if (k == null) return D[i][f];
+        const r = snap[D[i].n];
+        return r && r[k] != null ? r[k] : null;
+      };
+      const prevOrder = boardToNames(_computeConsensusBoard('redraft', gf));
+      const cur = boardToNames(versionBoards.consensus && versionBoards.consensus.redraft ? versionBoards.consensus.redraft : []);
+      movers = _rankMovers(cur, prevOrder);
+      sub = 'Consensus rankings · last ' + span + ' day' + (span === 1 ? '' : 's');
+      share = 'Consensus rankings, last ' + span + ' day' + (span === 1 ? '' : 's');
+      if (!movers.length) { items.innerHTML = '<span class="amc-empty">No moves of 3+ spots in the last ' + span + ' day' + (span === 1 ? '' : 's') + '</span>'; }
+    }
+    _rankMode = true;
+    _titleEl.textContent = 'RANKINGS MOVERS';
+    sub = sub; subEl(sub);
+    if (!movers.length) { bar.style.display = ''; return; }
+    const dIdx = {};
+    (window.D || []).forEach(d => { if (d && d.n) dIdx[_campNewsNorm(d.n)] = d; });
+    movers.forEach(m => { const d = dIdx[_campNewsNorm(m.name)]; if (d) { m.pos = d.s; m.img = d._slImg || null; } });
+    // Order by the SHARE of the prior rank moved (same rule as the ADP bar) so a
+    // top-30 player sliding 8 spots outranks a bench body drifting 20 spots at #250.
+    movers.forEach(m => { const den = Math.max(m.from, m.to); m.pct = den > 0 ? Math.abs(m.delta) / den : 0; });
+    const top = movers.sort((a, b) => b.pct - a.pct).slice(0, 12);
+    items.innerHTML = top.map(_playerChip).join('');
+    window._adpMoversShare = { top, span: null, label: share, kind: 'rank' };
+    const shareBtn = document.getElementById('adpMoversShareBtn');
+    if (shareBtn) shareBtn.style.display = '';
+    if (!items._moversWired) {
+      items._moversWired = true;
+      items.addEventListener('click', e => {
+        const el = e.target.closest('.adp-mover-chip');
+        if (!el) return;
+        const d = (window.D || []).find(x => x && x.n && _campNewsNorm(x.n) === _campNewsNorm(el.dataset.mover));
+        if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
+      });
+    }
+    bar.style.display = '';
+    if (window._mffResizeTicker) window._mffResizeTicker();
+  }
+  function subEl(t) { sub.textContent = t; }
+  window._rankMoversRefresh = function () { if (_rankMode || (_seasonStarted() && _consHist)) { try { _renderRanks(_span); } catch (_) {} } };
+  if (spanBox) spanBox.addEventListener('click', e => { if (_rankMode && e.target.closest('button[data-span]')) _renderRanks(+e.target.closest('button[data-span]').dataset.span); });
+
   // Share button: Web Share sheet where available (mobile), clipboard
   // fallback everywhere else. Text built from the rendered movers.
   const _shareBtn = document.getElementById('adpMoversShareBtn');
   if (_shareBtn) _shareBtn.addEventListener('click', () => {
     const s = window._adpMoversShare;
     if (!s || !s.top || !s.top.length) return;
-    const fmt = v => String(+(+v).toFixed(1));
+    const fmt = s.kind === 'rank' ? (v => '#' + Math.round(v)) : (v => String(+(+v).toFixed(1)));
     const lines = s.top.map(m => {
       const up = m.delta < 0;
-      const pct = m.from > 0 ? Math.round(Math.abs(m.delta) / m.from * 100) : null;
+      const den = s.kind === 'rank' ? Math.max(m.from, m.to) : m.from;
+      const pct = den > 0 ? Math.round(Math.abs(m.delta) / den * 100) : null;
       return (up ? '▲' : '▼') + ' ' + m.name + (m.pos ? ' (' + m.pos + ')' : '') + ' ' +
         fmt(m.from) + ' → ' + fmt(m.to) + (pct != null ? ' (' + (up ? '+' : '−') + pct + '%)' : '');
     });
     // /movers.html carries OG tags + the daily-rendered og/movers.png card,
     // so pasting this link unfurls a rich movers image on Discord/X/Slack.
-    const text = '📈 ADP Movers — Underdog BBM, last ' + s.span + ' day' + (s.span === 1 ? '' : 's') + '\n'
+    const text = (s.kind === 'rank' ? '📈 Rankings Movers — ' + s.label : '📈 ADP Movers — Underdog BBM, last ' + s.span + ' day' + (s.span === 1 ? '' : 's')) + '\n'
       + lines.join('\n') + '\n\nhttps://www.myfantasyfootball.co/movers.html';
     const copy = () => {
       try {
@@ -10941,15 +11062,22 @@ _renderDataFreshness();
   const now = new Date();
   const stamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') +
                 String(now.getDate()).padStart(2, '0') + String(now.getHours()).padStart(2, '0');
+  const _inSeason = _seasonStarted();
   fetch('data/ud_adp_history.json?d=' + stamp)
     .then(r => (r && r.ok) ? r.json() : null)
     .then(j => {
       if (!j) return;
       if (j.updated) { window._adpHistUpdated = j.updated; if (window._renderDataFreshness) window._renderDataFreshness(); }
       _adpSparkBuild(j); // rankings ADP-cell sparklines (re-renders the table once)
-      _render(j);
+      if (!_inSeason) _render(j);
     })
     .catch(() => {});
+  if (_inSeason) {
+    fetch('data/cons_rank_history.json?d=' + stamp)
+      .then(r => (r && r.ok) ? r.json() : null)
+      .then(j => { if (j) { _consHist = j; _renderRanks(_span); } })
+      .catch(() => {});
+  }
 })();
 
 // Camp News section — sits directly under ADP Comparison on the FANTASY tab.

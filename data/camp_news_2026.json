@@ -1,6 +1,156 @@
 {
-  "updated": "2026-09-13T16:15:00Z",
+  "updated": "2026-09-14T02:10:00Z",
   "items": [
+    {
+      "player": "George Kittle",
+      "team": "SF",
+      "pos": "TE",
+      "date": "2026-09-13",
+      "headline": "Exits Week 1 win over Seattle with hamstring injury after 4-25-1 line",
+      "take": "Expected out ~4 weeks (targeting Week 6); bench him and stream Jake Tonges short-term",
+      "url": "https://www.si.com/nfl/george-kittle-injury-update-49ers-star-te-exits-week-1-game",
+      "tag": "injury"
+    },
+    {
+      "player": "Kyler Murray",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-09-13",
+      "headline": "Knocked out of Vikings debut with concussion after 1st-quarter hit vs. Packers",
+      "take": "In protocol into Week 2; know Carson Wentz (39-22 comeback win) as the direct streamer if Murray sits",
+      "url": "https://www.vikings.com/news/kyler-murray-quarterback-injury-concussion-evaluation-week-1-packers",
+      "tag": "injury"
+    },
+    {
+      "player": "Malik Nabers",
+      "team": "NYG",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Active for first game back from torn ACL, SNF vs. Cowboys",
+      "take": "Game-time-decision worry resolved in his favor; back at full workload in his season debut",
+      "url": "https://www.espn.com/nfl/story/_/id/49934374/giants-wr-malik-nabers-knee-active-opener-vs-cowboys",
+      "tag": "riser"
+    },
+    {
+      "player": "Ashton Jeanty",
+      "team": "LV",
+      "pos": "RB",
+      "date": "2026-09-13",
+      "headline": "23 carries for 102 yards plus 6 catches, 2 total TDs in Raiders' win over Miami",
+      "take": "Erases the preseason ankle-injury concern entirely; a clear workhorse RB1 role for Week 2",
+      "url": "https://www.cbssports.com/fantasy/football/news/raiders-ashton-jeanty-two-tds-in-week-1-win/",
+      "tag": "riser"
+    },
+    {
+      "player": "Jeremiyah Love",
+      "team": "ARI",
+      "pos": "RB",
+      "date": "2026-09-13",
+      "headline": "Scores rushing TD on his very first career touch in Cardinals' upset of Chargers",
+      "take": "3rd RB since 2015 to score on his career-opening drive; priority waiver add behind starter Tyler Allgeier",
+      "url": "https://sports.yahoo.com/articles/cardinals-rb-jeremiyah-love-scores-234808234.html",
+      "tag": "riser"
+    },
+    {
+      "player": "Caleb Williams",
+      "team": "CHI",
+      "pos": "QB",
+      "date": "2026-09-13",
+      "headline": "2 pass TDs and career-best 2 rush TDs in Bears' 59-37 rout of Panthers",
+      "take": "First career multi-rush-TD game raises his floor as a streaming QB1 option",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-13/caleb-williams-wrecks-panthers-in-week-1",
+      "tag": "riser"
+    },
+    {
+      "player": "Rome Odunze",
+      "team": "CHI",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Played through calf issue but saw just 3 targets (2-52) in Bears' blowout win",
+      "take": "Low volume was game-script driven in a rout, not a new injury setback -- don't overreact",
+      "url": "https://www.cbssports.com/fantasy/football/news/bears-rome-odunze-little-volume-in-week-1-rout/",
+      "tag": "faller"
+    },
+    {
+      "player": "Derrick Henry",
+      "team": "BAL",
+      "pos": "RB",
+      "date": "2026-09-13",
+      "headline": "24 carries, 144 yards, 3 TDs in Ravens' 41-23 win over Colts",
+      "take": "Passed Marcus Allen for 3rd all-time in career rushing TDs; still a clear-cut lead-back RB1",
+      "url": "https://www.cbssports.com/nfl/news/derrick-henry-makes-nfl-history-ravens-week-1-vs-colts/",
+      "tag": "riser"
+    },
+    {
+      "player": "Ja'Marr Chase",
+      "team": "CIN",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Held to just 2 catches for 12 yards on 4 targets vs. Buccaneers",
+      "take": "Lowest yardage game since Nov. 2023, but a game-flow blip (no injury) -- don't panic-sell",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-13/jamarr-chase-bottled-up-for-2-12-in-opener-vs-tb",
+      "tag": "faller"
+    },
+    {
+      "player": "Chase Brown",
+      "team": "CIN",
+      "pos": "RB",
+      "date": "2026-09-13",
+      "headline": "16 carries, 56 yards, 1 TD as Bengals leaned on the run in Week 1 win",
+      "take": "Workhorse early-down role while Chase was quiet -- watch if it sticks into Week 2",
+      "url": "https://www.bengals.com/news/bengals-buccaneers-recap-postgame-notes-quotes-stats-week-1-2026",
+      "tag": "role"
+    },
+    {
+      "player": "Josh Allen",
+      "team": "BUF",
+      "pos": "QB",
+      "date": "2026-09-13",
+      "headline": "334 pass yards and 4 total TDs (2 rushing) in 36-31 win over Texans",
+      "take": "Elite dual-threat floor intact to open the season -- locked-in QB1",
+      "url": "https://www.yardbarker.com/nfl/articles/vintage_josh_allen_game_lifts_bills_over_texans_in_back_and_forth_affair/s1_17049_44299790",
+      "tag": "riser"
+    },
+    {
+      "player": "Dalton Kincaid",
+      "team": "BUF",
+      "pos": "TE",
+      "date": "2026-09-13",
+      "headline": "5 catches for 130 yards, Bills' best Week 1 TE game since 1999",
+      "take": "Every-week TE1 target on current usage alongside Josh Allen",
+      "url": "https://www.yardbarker.com/nfl/articles/vintage_josh_allen_game_lifts_bills_over_texans_in_back_and_forth_affair/s1_17049_44299790",
+      "tag": "riser"
+    },
+    {
+      "player": "Bijan Robinson",
+      "team": "ATL",
+      "pos": "RB",
+      "date": "2026-09-13",
+      "headline": "173 total yards and a TD but fumbled twice in 20-13 loss to Steelers",
+      "take": "Elite volume (29 touches) remains, but the fumbles are a watch-list flag, not a bench decision",
+      "url": "https://sports.yahoo.com/articles/bijan-robinson-carries-atlantas-offense-004838771.html",
+      "tag": "other"
+    },
+    {
+      "player": "Brock Bowers",
+      "team": "LV",
+      "pos": "TE",
+      "date": "2026-09-13",
+      "headline": "Meniscus-trim recovery may run longer than the original 1-2 game estimate",
+      "take": "Downgrade in confidence for a quick return -- keep streaming Michael Mayer",
+      "url": "https://sports.yahoo.com/nfl/breaking-news/article/raiders-all-pro-brock-bowers-reportedly-had-meniscus-trim-surgery-that-will-sideline-him-for-season-opener-maybe-longer-200007786.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Christian Watson",
+      "team": "GB",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Opens season on PUP list, expected out until at least Week 5",
+      "take": "Unavailable near-term recovering from ACL surgery -- no fantasy value until his return window nears",
+      "url": "https://sports.yahoo.com/articles/packers-christian-watson-gets-frustrating-164814156.html",
+      "tag": "injury"
+    },
     {
       "player": "Alvin Kamara",
       "team": "NO",

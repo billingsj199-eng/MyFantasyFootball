@@ -32,6 +32,8 @@ SOURCES (all already on disk from the daily jobs)
                       (pull_pff_weekly.py) -> routes (WR/TE rank), slot_rate /
                       wide_rate / inline_rate (alignment), route_rate (blocking TE)
   nflverse snaps      data/snap_counts.js (pull_snap_counts.py) -> snap share
+  route pct           data/route_pct.js (pull_route_pct.py, built just before this
+                      in route_pct_daily.ps1) -> TE route participation (BLOCKING)
 
 CALLS (season-to-date with the last 3 weeks counting; week-only for the trail)
   RB   rank by share of the team's RB touches -> RB1/RB2/RB3
@@ -53,7 +55,11 @@ CALLS (season-to-date with the last 3 weeks counting; week-only for the trail)
                    standard convention, X = boundary #1.)
   TE   rank by PFF routes -> TE1/TE2
        IN-LINE     >= 60% in-line snaps;  SLOT >= 60% slot+wide;  else HYBRID
-       BLOCKING    route rate < 40% on >= 25% snaps
+       BLOCKING    route participation (routes / team dropbacks, data/route_pct.js)
+                   < 40% on >= 25% snaps. NOT PFF route_rate: that is routes per
+                   pass snap he was on the field for, and blockers still run a
+                   route on most of those (Brock Wright 50%, Josh Oliver 75%),
+                   so it never fired (2026-09-14 live check).
   QB   ESPN depth chart -> QB1 STARTER / QB2 BACKUP (dropbacks confirm)
 
 Only players in data/d.js are kept (the card only opens for D-array players).
@@ -75,6 +81,7 @@ SEASON = 2026
 OUT = os.path.join(ROOT, 'data', f'player_roles_{SEASON}.js')
 DEPTH = os.path.join(ROOT, 'data', f'depth_charts_{SEASON}.json')
 SNAPS = os.path.join(ROOT, 'data', 'snap_counts.js')
+ROUTES = os.path.join(ROOT, 'data', 'route_pct.js')
 CACHE = r'E:\MyFantasyFootball\pbp_cache'
 PBP = os.path.join(CACHE, f'play_by_play_{SEASON}.csv.gz')
 PLAYERS = os.path.join(CACHE, 'players.csv')
@@ -119,6 +126,24 @@ def load_snaps(lookup):
         return out
     src = open(SNAPS, encoding='utf-8').read()
     m = re.search(r'window\.SNAP_COUNTS\s*=\s*(\{.*?\});\s*\n', src, re.S)
+    if not m:
+        return out
+    for name, seasons in json.loads(m.group(1)).items():
+        yr = seasons.get(str(SEASON))
+        if not yr:
+            continue
+        dn = resolve(lookup, name) or name
+        out[dn] = {int(w): v for w, v in (yr.get('w') or {}).items()}
+    return out
+
+
+def load_routes(lookup):
+    """{dname: {week: route participation %}} for the current season (data/route_pct.js)."""
+    out = {}
+    if not os.path.exists(ROUTES):
+        return out
+    src = open(ROUTES, encoding='utf-8').read()
+    m = re.search(r'window\.ROUTE_PCT\s*=\s*(\{.*?\});\s*\n', src, re.S)
     if not m:
         return out
     for name, seasons in json.loads(m.group(1)).items():
@@ -271,7 +296,7 @@ def call_rb(room, snaps):
     return out
 
 
-def call_wr(room, snaps):
+def call_wr(room, snaps, routes=None):
     """room = {dname: {routes, tgt, slot, wide, wide_snaps}} summed/averaged over the window."""
     out = {}
     order = sorted(room, key=lambda k: (-(room[k]['routes'] or 0), -(room[k]['tgt'] or 0)))
@@ -296,7 +321,8 @@ def call_wr(room, snaps):
     return out
 
 
-def call_te(room, snaps):
+def call_te(room, snaps, routes=None):
+    routes = routes or {}
     out = {}
     order = sorted(room, key=lambda k: (-(room[k]['routes'] or 0), -(room[k]['tgt'] or 0)))
     for i, k in enumerate(order):
@@ -312,9 +338,11 @@ def call_te(room, snaps):
         else:
             align = 'HYBRID'
         snap = snaps.get(k)
-        if v['rr'] is not None and v['rr'] < 40 and (snap or 0) >= 25:
+        rtp = routes.get(k)
+        if rtp is not None and rtp < 40 and (snap or 0) >= 25:
             tags.append('BLOCKING')
         out[k] = (role, align, tags, {'snap': snap, 'rt': round(v['routes']) if v['routes'] else None,
+                                      'rtp': rtp,
                                       'inl': round(v['inline']) if v['inline'] is not None else None})
     return out
 
@@ -379,6 +407,7 @@ def main():
     lookup = load_d_names()
     depth = load_depth()
     snaps = load_snaps(lookup)
+    routes = load_routes(lookup)
     pff = load_pff(lookup)
     rb, rec, qb = load_pbp(lookup)
     weeks = sorted(set(rb) | set(pff))
@@ -438,12 +467,15 @@ def main():
                 room = rec_room(win, pff, rec, team, pos)
                 if not room:
                     continue
-                snap_win = {}
+                snap_win, rt_win = {}, {}
                 for k in room:
                     vals = [snaps.get(k, {}).get(w) for w in win]
                     vals = [v for v in vals if v is not None]
                     snap_win[k] = round(sum(vals) / len(vals)) if vals else None
-                for k, (role, align, tags, metrics) in caller(room, snap_win).items():
+                    rv = [routes.get(k, {}).get(w) for w in win]
+                    rv = [v for v in rv if v is not None]
+                    rt_win[k] = round(sum(rv) / len(rv)) if rv else None
+                for k, (role, align, tags, metrics) in caller(room, snap_win, rt_win).items():
                     put(k, team, pos, role, align, tags, metrics, week=week)
 
     # players on an ESPN depth chart with no usage yet: rank from the chart

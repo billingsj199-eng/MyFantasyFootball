@@ -12973,6 +12973,7 @@ function _playerRoleRow(d) {
     if (m.rt != null) bits.push('routes ' + m.rt + '/wk');
     if (m.slot != null) bits.push('slot ' + m.slot + '%');
     if (m.inl != null) bits.push('in-line ' + m.inl + '%');
+    if (m.rtp != null) bits.push('route participation ' + m.rtp + '%');
     const wk = r.w || {};
     const wks = Object.keys(wk).map(Number).sort((a, b) => a - b);
     const trail = wks.map((k) => 'W' + k + ' ' + wk[k]).join(' → ');

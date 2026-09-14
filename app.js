@@ -57479,7 +57479,14 @@ Rules:
     // The Eliminator (and numbered re-runs like The Eliminator 2, assumed to mirror it).
     { re: /eliminator/i,          adv: 6, weeks: 1,  advPrize: 0, h2h: true,
       rounds: _UD_ELIM_ROUNDS, prizeReach: [0, 0, 0, 0, 10, 20, 31, 52, 102, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 76000], finalTable: _UD_ELIM_FINAL },
-    { re: /bigger\s*board/i,      adv: 4, weeks: 14, advPrize: null },
+    // The Bigger Board ($100, 2,208 entries; help page): R1 12-team top 4 →
+    // R2 W15 8-team top 2 (92 groups) → R3 W16 8-team top 1 (23 groups) →
+    // W17 23-team final. Reach R2 $100 (185-736th), R3 $200 (47-184th),
+    // final $750 (16-23rd). Must sit ABOVE the Big Board rule.
+    { re: /bigger\s*board/i,      adv: 4, weeks: 14, advPrize: 100,
+      rounds: [{ week: [1, 14], size: 12, adv: 4 }, { week: [15, 15], size: 8, adv: 2 }, { week: [16, 16], size: 8, adv: 1 }, { week: [17, 17], size: 23, adv: 1, final: true }],
+      prizeReach: [0, 0, 100, 200, 750],
+      finalTable: [[1,1,30000],[2,2,20000],[3,3,15000],[4,4,10000],[5,5,7800],[6,6,5000],[7,7,4000],[8,8,3000],[9,9,2500],[10,10,2000],[11,15,1000],[16,23,750]] },
     // The Big Board ($10, pre-draft): R1 12-team top 3 → R2 W15 10-team top 1
     // (5,580 groups) → R3 W16 10-team top 1 (558 groups) → W17 558-team final.
     // Reach R2 $10 (5581-55800th), R3 $20 (1117-5580th), final $750 (401-558th).
@@ -57519,7 +57526,13 @@ Rules:
     // the bracket is known. Fill in rounds / prizeReach / finalTable here.
     { re: /dalmatian/i,           adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
     { re: /udfa/i,            adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
-    { re: /mastiff/i,             adv: 4, weeks: 14, advPrize: null },
+    // The Mastiff ($1,000, 540 entries; help page): R1 12-team top 4 → R2 W15
+    // 5-team top 1 (36 groups) → R3 W16 4-team top 1 (9 groups) → W17 9-team
+    // final. Reach R2 $1,000 (37-180th), R3 $1,500 (10-36th), final $12,000 (9th).
+    { re: /mastiff/i,             adv: 4, weeks: 14, advPrize: 1000,
+      rounds: [{ week: [1, 14], size: 12, adv: 4 }, { week: [15, 15], size: 5, adv: 1 }, { week: [16, 16], size: 4, adv: 1 }, { week: [17, 17], size: 9, adv: 1, final: true }],
+      prizeReach: [0, 0, 1000, 1500, 12000],
+      finalTable: [[1,1,100000],[2,2,50000],[3,3,40000],[4,4,30000],[5,5,25000],[6,6,23500],[7,7,20000],[8,8,15000],[9,9,12000]] },
     { re: /big\s*dog/i,           adv: 2, weeks: 14, advPrize: null }
   ];
   // The Eliminator prize by ROUND REACHED (help page, Sep 2026): entries per

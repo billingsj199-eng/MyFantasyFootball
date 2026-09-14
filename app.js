@@ -12498,6 +12498,58 @@ function _ageCompsHtml(d) {
   return html;
 }
 
+// ---- Depth-chart ARCHETYPE row (player card header) ------------------------
+// data/player_roles_2026.js (scripts/build_player_roles.py, daily 06:15 via
+// route_pct_daily.ps1): ESPN depth chart rank + nflverse play-by-play usage
+// shares + PFF alignment (slot / wide / in-line) -> "RB1 · BELL COW",
+// "WR2 · SLOT", "TE1 · IN-LINE · BLOCKING". Current call = last 3 weeks;
+// `w` keeps the week-by-week trail so the chip flags a role change.
+function _playerRoleRow(d) {
+  try {
+    const R = window.PLAYER_ROLES_2026;
+    if (!R || !R.p || !d || !d.n) return '';
+    if (!/^(QB|RB|WR|TE)$/.test(d.s) || d._retired || d._isDevy) return '';
+    const r = R.p[d.n];
+    if (!r || !r.line) return '';
+    const esc = (x) => String(x).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const m = r.m || {};
+    const bits = [];
+    if (r.dc) bits.push('ESPN depth chart: ' + r.pos + r.dc);
+    if (m.snap != null) bits.push('snaps ' + m.snap + '%');
+    if (m.tch != null) bits.push('RB-room touches ' + m.tch + '%');
+    if (m.gl != null) bits.push('goal-line carries ' + m.gl + '%');
+    if (m.d3 != null) bits.push('passing-down touches ' + m.d3 + '%');
+    if (m.rt != null) bits.push('routes ' + m.rt + '/wk');
+    if (m.slot != null) bits.push('slot ' + m.slot + '%');
+    if (m.inl != null) bits.push('in-line ' + m.inl + '%');
+    const wk = r.w || {};
+    const wks = Object.keys(wk).map(Number).sort((a, b) => a - b);
+    const trail = wks.map((k) => 'W' + k + ' ' + wk[k]).join(' → ');
+    const tip = 'Role + alignment from this season\'s usage (last 3 weeks; re-checked every morning). '
+      + 'Sources: ESPN depth chart, nflverse play-by-play shares, PFF alignment snaps. '
+      + 'X = primary boundary WR, Z = second outside WR, SLOT = 45%+ slot snaps.'
+      + (bits.length ? '\n' + bits.join(' · ') : '')
+      + (trail ? '\nTrail: ' + trail : '');
+    const chips = [];
+    chips.push(`<span class="card-role rank ${d.s}">${esc(r.role)}</span>`);
+    if (r.align) chips.push(`<span class="card-role align">${esc(r.align)}</span>`);
+    const DIM = /^(HANDCUFF|DEPTH|BACKUP|DEPTH CHART|BLOCKING)$/;
+    const GOOD = /^(BELL COW|STARTER)$/;
+    (r.tags || []).forEach((t) => {
+      const cls = GOOD.test(t) ? 'tag good' : (DIM.test(t) ? 'tag dim' : 'tag');
+      chips.push(`<span class="card-role ${cls}">${esc(t)}</span>`);
+    });
+    // role changed vs the prior week? (trail lines differ) -> flag it
+    if (wks.length >= 2) {
+      const last = wk[wks[wks.length - 1]], prev = wk[wks[wks.length - 2]];
+      if (last && prev && last !== prev) chips.push(`<span class="card-role chg" title="${esc('W' + wks[wks.length - 2] + ': ' + prev + ' → W' + wks[wks.length - 1] + ': ' + last)}">▲▼ W${wks[wks.length - 1]}</span>`);
+    }
+    const thru = R.thru ? `<span class="card-role-thru">thru W${R.thru}</span>` : '';
+    return `<div class="card-role-row"><span class="card-role-lbl" data-gloss="${esc(tip)}">ROLE</span>${chips.join('')}${thru}</div>`;
+  } catch (_e) { return ''; }
+}
+window._playerRoleRow = _playerRoleRow;
+
 function openPlayerCard(d, ctxMode) {
   // Compare-strip cycling (← →) needs to know which player is on screen
   window._cardOpenName = d && d.n ? d.n : null;
@@ -12635,6 +12687,7 @@ function openPlayerCard(d, ctxMode) {
             ${window._irIsOut(d.n) ? `<span class="inj-pill" data-status="OUT" title="Out for season — hidden from the ${IR_SEASON} Redraft / Best Ball / Superflex / Weekly rankings. Dynasty boards and this card are unaffected; the flag clears automatically next season.">OUT FOR SEASON</span>` : ''}
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026) ? `<button id="cardIrToggle" title="${window._irIsOut(d.n) ? 'Restore this player to the season rankings (their board slot was kept)' : 'Hide this player from the ' + IR_SEASON + ' Redraft / Best Ball / Superflex / Weekly rankings — board slot, dynasty ranks, card and search are kept, and the flag auto-clears next season'}" style="padding:2px 8px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid ${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};background:transparent;color:${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};white-space:nowrap">${window._irIsOut(d.n) ? 'RESTORE TO RANKINGS' : 'MARK OUT FOR SEASON'}</button>` : ''}
           </div>
+          ${_playerRoleRow(d)}
         </div>
       </div>
     </div>

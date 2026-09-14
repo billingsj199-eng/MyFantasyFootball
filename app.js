@@ -57498,6 +57498,11 @@ Rules:
     // The Pointer: no public rules page and nothing published on its format —
     // Round 1 only (top 2 of 12, entry fee back) until the bracket is known.
     { re: /pointer/i,             adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
+    // The Little Dalmatian ($1) and The UDFA ($2): no public rules page or
+    // launch post found — Round 1 only (top 2 of 12, entry fee back) until
+    // the bracket is known. Fill in rounds / prizeReach / finalTable here.
+    { re: /dalmatian/i,           adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
+    { re: /udfa/i,            adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
     { re: /mastiff/i,             adv: 4, weeks: 14, advPrize: null },
     { re: /big\s*dog/i,           adv: 2, weeks: 14, advPrize: null }
   ];
@@ -60082,6 +60087,9 @@ Rules:
     const L = row.live;
     let html = '';
     if (L.h2h) html += _udBuildH2hRoundsHtml(L);
+    else if (L.rule && L.rule.unknownBracket) {
+      html += `<div style="margin-bottom:10px;padding:8px 12px;background:var(--surface2);border:1px dashed var(--border);border-radius:8px;font-size:.62rem;color:var(--text2)"><span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text)">PLAYOFF BRACKET NOT ON FILE</span> · Underdog publishes no rules page for this contest — standings track Round 1 (top ${L.rule.adv} of ${L.teams.length} advance, entry fee back as min-cash). Later rounds appear once the bracket is known.</div>`;
+    }
     const leader = L.teams[0];
     const wkLbl = L.wkCol ? 'W' + L.wkCol : 'WK';
     const thru = L.weekList.length ? (L.weekList.length === 1 ? 'Week ' + L.weekList[0] : 'Weeks ' + L.weekList[0] + '-' + L.weekList[L.weekList.length - 1]) : '';

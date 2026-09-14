@@ -38,8 +38,11 @@ CALLS (season-to-date with the last 3 weeks counting; week-only for the trail)
        BELL COW    RB1 with >= 65% of RB touches and >= 60% snaps
        COMMITTEE   top two both between 30% and 60% of touches
        GOAL LINE   >= 50% of the team's RB carries inside the 5 (>= 2 such carries)
-       3RD DOWN    passing-down back: >= 45% of RB 3rd-down/two-minute touches or
-                   target share 15 pts above carry share (not the touch leader)
+       3RD DOWN    passing-down back: >= 45% of RB 3rd-down/two-minute touches
+                   (>= 3 such touches, not the touch leader)
+       PASS CATCHER  target share 15 pts above carry share on >= 3 targets (not
+                   the touch leader) — receiving role without the down-and-
+                   distance usage (Jack 2026-09-14: split from 3RD DOWN)
        HANDCUFF    RB2 with < 25% of touches behind an RB1 at >= 55%
        DEPTH       < 10% of touches
   WR   rank by PFF routes (target share fallback) -> WR1/WR2/WR3/WR4
@@ -255,9 +258,11 @@ def call_rb(room, snaps):
             if not bell:
                 if v['gl'] >= 2 and gl_sh >= 0.5:
                     tags.append('GOAL LINE')
-                if k != lead and ((v['d3'] >= 3 and d3_sh >= 0.45) or (tgt_sh - car_sh >= 0.15 and v['tgt'] >= 3)):
+                if k != lead and v['d3'] >= 3 and d3_sh >= 0.45:
                     tags.append('3RD DOWN')
-                if role == 'RB2' and sh < 0.25 and lead_share >= 0.55 and 'GOAL LINE' not in tags and '3RD DOWN' not in tags:
+                elif k != lead and tgt_sh - car_sh >= 0.15 and v['tgt'] >= 3:
+                    tags.append('PASS CATCHER')
+                if role == 'RB2' and sh < 0.25 and lead_share >= 0.55 and not any(t in tags for t in ('GOAL LINE', '3RD DOWN', 'PASS CATCHER')):
                     tags.append('HANDCUFF')
             if sh < 0.10 and not tags and role != 'RB1':
                 tags.append('DEPTH')

@@ -51,6 +51,8 @@ POS = {'RB', 'WR', 'TE'}
 TEAM_FIX = {'LA': 'LAR', 'WSH': 'WAS', 'JAC': 'JAX', 'OAK': 'LV', 'SD': 'LAC', 'STL': 'LAR',
             'ARZ': 'ARI', 'BLT': 'BAL', 'CLV': 'CLE', 'HST': 'HOU'}
 UA = {'User-Agent': 'curl/8.4.0'}
+# PFF full names -> d.js names that norm_variants cannot bridge (2026 W1 audit)
+PFF_NAME_FIX = {'Joshua Palmer': 'Josh Palmer', 'Chigoziem Okonkwo': 'Chig Okonkwo'}
 
 
 def fetch(url, dest, min_bytes=10000):
@@ -162,6 +164,7 @@ def from_pff_weekly(yr, lookup):
         with open(f, encoding='utf-8-sig') as fh:
             for row in csv.DictReader(fh):
                 nm = (row.get('player') or '').strip()
+                nm = PFF_NAME_FIX.get(nm, nm)
                 tm = TEAM_FIX.get((row.get('team_name') or '').strip(), (row.get('team_name') or '').strip())
                 try:
                     routes = float(row.get('routes') or 0)

@@ -42,6 +42,12 @@ PFF_WEEKLY = os.path.join(PFF_DIR, 'weekly')
 PROFILE = os.path.join(PFF_DIR, 'chrome_profile')
 HOME = 'https://premium.pff.com/nfl/positions/{season}/REG/receiving'
 API = 'https://premium.pff.com/api/v1/facet/receiving/summary?league=nfl&season={season}&week={week}'
+# receiving/summary only lists players with >= 1 TARGET that week (Ridley 64%
+# snaps / 0 targets = no row). offense/summary lists everyone who took a snap
+# with snap_counts_pass_route (= routes run) so zero-target route runners get a
+# row too (routes only; no route_rate/grades - pull_route_pct.py divides by
+# nflverse dropbacks anyway).
+API_OFF = 'https://premium.pff.com/api/v1/facet/offense/summary?league=nfl&season={season}&week={week}'
 # Column order of the season exports already in pbp_cache/pff (kept identical so
 # every consumer can read both shapes); anything else PFF sends is appended.
 LEAD_COLS = ['season', 'player', 'player_id', 'position', 'team_name', 'player_game_count', 'routes',
@@ -120,6 +126,43 @@ def _probe(driver, season):
     if not isinstance(rows, list) or not any('routes' in r for r in rows if isinstance(r, dict)):
         return None, f'{status} (no premium fields - not signed in)'
     return rows, status
+
+
+def _add_zero_target_routes(driver, season, week, live):
+    """Append players who ran routes but drew no target (absent from
+    receiving/summary) using offense/summary snap_counts_pass_route."""
+    status, body = _page_fetch(driver, API_OFF.format(season=season, week=week))
+    if status != 200:
+        print(f'  week {week}: offense/summary HTTP {status} - zero-target route runners not added')
+        return live
+    off = _rows(body) or []
+    # One definition for everyone: `routes` = pass-route SNAPS (on the field
+    # running a route on any dropback, sacks/scrambles included) - the analog of
+    # the 2016-25 nflverse participation proxy and of the nflverse-dropback
+    # denominator pull_route_pct.py uses. PFF's targeted-table `routes` (a
+    # touch lower: Olave 55 vs 59 in 2026 W1) is kept as routes_pff.
+    by_id = {o.get('player_id'): o for o in off}
+    have = {r.get('player_id') for r in live}
+    swapped = 0
+    for r in live:
+        o = by_id.get(r.get('player_id'))
+        if o and o.get('snap_counts_pass_route'):
+            r['routes_pff'] = r.get('routes')
+            r['routes'] = o['snap_counts_pass_route']
+            swapped += 1
+    added = 0
+    for o in off:
+        rt = o.get('snap_counts_pass_route') or 0
+        if o.get('player_id') in have or not rt:
+            continue
+        live.append({'player': o.get('player'), 'player_id': o.get('player_id'), 'position': o.get('position'),
+                     'team_name': o.get('team_name') or o.get('team'), 'player_game_count': o.get('player_game_count'),
+                     'routes': rt, 'targets': 0, 'receptions': 0, 'yards': 0, 'touchdowns': 0,
+                     'franchise_id': o.get('franchise_id')})
+        added += 1
+    print(f'  week {week}: routes = pass-route snaps for {swapped} targeted players, +{added} zero-target route runners '
+          f'(offense/summary {len(off)} rows)')
+    return live
 
 
 def _write_csv(path, season, week, rows):
@@ -204,6 +247,8 @@ def main():
             # PFF returns rows with 0 routes for weeks that have not been played;
             # a week counts as "in" once anyone ran a route.
             live = [r for r in rows if (r.get('routes') or 0)]
+            if live:
+                live = _add_zero_target_routes(driver, season, wk, live)
             if not live:
                 if a.weeks == 'auto':
                     print(f'  week {wk}: no routes yet - stop')

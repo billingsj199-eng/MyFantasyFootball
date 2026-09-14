@@ -10133,7 +10133,7 @@ function _kickerSplitsSectionHtml(d) {
 // renders a loading note until the bundle lands (see the mff:weeklydata hook
 // in the card wiring, which also reveals the LOGS tab button).
 function _logsSectionHtml(d) {
-  if ((!d.career || !d.career.length) && !_kdstHasHistory(d)) return '';
+  if (!_logSeasons(d).length && !_kdstHasHistory(d)) return '';
   // Selector carries 2026 (upcoming schedule) on top, but defaults to the
   // most recent season that actually has game data.
   const dataSeasons = getWeeklySeasons(d);
@@ -12455,6 +12455,11 @@ function openPlayerCard(d, ctxMode) {
   const _cbRow = _getValidCB(d);
   const _onNflRoster = !!(d.t && d.t !== 'TBD' && d.t !== 'FA') || !!(_cbRow && _cbRow.dt);
   const _is2026 = !d._isDevy && !_onNflRoster && (d.t === 'TBD' || (_cbRow && _cbRow.yr === 2026 && (!d.career || !d.career.length)));
+  // CAREER needs season-summary rows; LOGS only needs a season to show (weekly
+  // rows or the current schedule) — rookies get game logs from Week 1 without
+  // waiting for a career row (Jack 2026-09-14).
+  const _showCareer = !d._isDevy && !_is2026 && !!(d.career && d.career.length > 0);
+  const _showLogs = !d._isDevy && !_is2026 && (_showCareer || (!d._retired && !!d.t && _logSeasons(d).length > 0));
 
   // JM Score badge for player card — never for retired players (the prospect
   // model's name-keyed lookup would decorate a retired vet with a same-name
@@ -12505,8 +12510,8 @@ function openPlayerCard(d, ctxMode) {
       <div id="cardNotesWrap"></div>
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
-        ${!d._isDevy && !_is2026 && d.career && d.career.length > 0 ? `<button class="card-view-btn" data-cardview="logs" id="cardLogsTabBtn"${hasWeeklyData(d) ? '' : ' style="display:none"'}>LOGS</button>
-        <button class="card-view-btn" data-cardview="career">CAREER</button>` : ''}
+        ${_showLogs ? `<button class="card-view-btn" data-cardview="logs" id="cardLogsTabBtn"${hasWeeklyData(d) ? '' : ' style="display:none"'}>LOGS</button>` : ''}
+        ${_showCareer ? `<button class="card-view-btn" data-cardview="career">CAREER</button>` : ''}
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
         <button class="card-view-btn" data-cardview="comps">COMPS</button>
         ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? `<button class="card-view-btn" data-cardview="weekly">WEEKLY</button>` : ''}
@@ -13057,10 +13062,11 @@ function openPlayerCard(d, ctxMode) {
       <div class="card-prospect-view" id="cardLinesView" style="display:none">
       ${(d.s === 'K' || d.s === 'DST') ? '' : buildLinesView(d)}
       </div>
-      ${d.s !== 'K' && d.s !== 'DST' && !d._isDevy && !_is2026 && d.career && d.career.length > 0 ? `
+      ${d.s !== 'K' && d.s !== 'DST' && _showCareer ? `
       <div class="card-prospect-view" id="cardCareerView" style="display:none">
       ${_careerSectionHtml(d)}
-      </div>
+      </div>` : ''}
+      ${d.s !== 'K' && d.s !== 'DST' && _showLogs ? `
       <div class="card-prospect-view" id="cardLogsView" style="display:none">
       ${_logsSectionHtml(d)}
       </div>` : ''}

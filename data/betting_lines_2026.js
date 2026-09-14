@@ -963,7 +963,7 @@ const _WEEKLY_PROPS_2026 = {
     'Ashton Dulin': { DK: { atd: 1100 }, FD: { atd: 950 }, MGM: { atd: 675 }, UD: { rrtd: 0.5, atd: 846 }, asOf: '2026-09-13' },
     'Jackson Hawes': { DK: { atd: 1500 }, FD: { atd: 1500 }, MGM: { atd: 1300 }, UD: { rrtd: 0.5, atd: 1330 }, asOf: '2026-09-13' },
     'Kenyon Sadiq': { DK: { rec: 1.5, rcy: 14.5, atd: 800 }, FD: { rec: 1.5, rcy: 14.5, atd: 800 }, MGM: { rec: 1.5, rcy: 14.5, atd: 525 }, UD: { rec: 1.5, rcy: 13.5, rrtd: 0.5, atd: 638 }, PP: { rec: 1.5, rcy: 12.5 }, asOf: '2026-09-13' },
-    'Tyquan Thornton': { DK: { rec: 1.5, rcy: 19.5, atd: 650 }, FD: { rec: 1.5, rcy: 18.5, atd: 600 }, MGM: { atd: 425 }, UD: { rec: 1.5, rcy: 18.5, rrtd: 0.5, atd: 512 }, PP: { rcy: 18.5 }, asOf: '2026-09-14' },
+    'Tyquan Thornton': { DK: { rec: 1.5, rcy: 19.5, atd: 650 }, FD: { rec: 1.5, rcy: 18.5, atd: 600 }, MGM: { atd: 425 }, UD: { rec: 1.5, rcy: 18.5, rrtd: 0.5, atd: 477 }, PP: { rcy: 18.5 }, asOf: '2026-09-14' },
     'Kyle Williams': { DK: { rec: 0.5, rcy: 0.5, atd: 1300 }, FD: { rec: 0.5, rcy: 0.5, atd: 1400 }, MGM: { atd: 1400 }, UD: { rrtd: 0.5, atd: 785 }, asOf: '2026-09-09' },
     'Eli Raridon': { DK: { rec: 0.5, rcy: 5.5, atd: 1400 }, FD: { rec: 0.5, rcy: 6.5, atd: 1100 }, UD: { rrtd: 0.5, atd: 846 }, PP: { rcy: 4.5 }, asOf: '2026-09-09' },
     'Deebo Samuel': { DK: { ry: 9.5, rec: 2.5, rcy: 27.5, atd: 390 }, FD: { ry: 9.5, rec: 2.5, rcy: 28.5, atd: 400 }, MGM: { rec: 2.5, rcy: 27.5, atd: 350 }, UD: { ry: 7.5, rec: 2.5, rcy: 28.5, rrtd: 0.5, atd: 306 }, PP: { ry: 8.5, rec: 3.0, rcy: 30.5 }, asOf: '2026-09-10' },

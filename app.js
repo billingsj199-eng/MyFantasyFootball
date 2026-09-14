@@ -57488,6 +57488,16 @@ Rules:
     // only (top 2 of 12, entry fee back) until the bracket is known. Fill in
     // rounds / prizeReach / finalTable here when Jack pastes the rules.
     { re: /dachshund/i,           adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
+    // The Frenchie (series: Frenchie 2/3/4…): no rules page; Fanspeak's contest
+    // guide describes the format — HALF of each 12-team pool advances (top 6),
+    // then 6-team top-1 pools in Weeks 15 and 16, final in Week 17, $10K to
+    // 1st. Prize tiers unknown → entry fee as min-cash for every round reached.
+    // INFERRED.
+    { re: /frenchie/i,            adv: 6, weeks: 14, advPrize: null, inferred: true,
+      rounds: [{ week: [1, 14], size: 12, adv: 6 }, { week: [15, 15], size: 6, adv: 1 }, { week: [16, 16], size: 6, adv: 1 }, { week: [17, 17], size: null, adv: 1, final: true }] },
+    // The Pointer: no public rules page and nothing published on its format —
+    // Round 1 only (top 2 of 12, entry fee back) until the bracket is known.
+    { re: /pointer/i,             adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
     { re: /mastiff/i,             adv: 4, weeks: 14, advPrize: null },
     { re: /big\s*dog/i,           adv: 2, weeks: 14, advPrize: null }
   ];
@@ -60140,7 +60150,7 @@ Rules:
       const r = H.rounds.find(x => x.round === k);
       if (!r) {
         if (!H.alive && k > (H.elim || 0)) return;
-        const grp = rd.final ? rd.size + '-team FINAL' : rd.size === 2 ? 'head-to-head' : rd.size + '-team group · top ' + rd.adv;
+        const grp = rd.final ? (rd.size ? rd.size + '-team FINAL' : 'FINAL') : rd.size === 2 ? 'head-to-head' : (rd.size ? rd.size + '-team group · top ' + rd.adv : 'group · top ' + rd.adv);
         const nextPays = rd.final ? '' : _udFmtMoney(P[k + 1] || 0);
         html += `<tr style="border-bottom:1px solid var(--border);opacity:.45"><td style="padding:3px 6px">${rd.final ? 'FINAL' : 'R' + k}</td><td style="padding:3px 6px">${wkLbl(rd.week)}</td>
           <td style="padding:3px 6px;color:var(--text2)">${grp}</td><td style="padding:3px 6px;text-align:right">—</td><td style="padding:3px 6px;text-align:right">—</td>

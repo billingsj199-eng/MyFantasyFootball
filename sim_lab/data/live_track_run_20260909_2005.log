@@ -1,0 +1,302 @@
+games: NE@SEA
+tracking 21 players on ['NE', 'SEA'], season 2026 week 1, live model grid [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  NE: pre PRE f=0.00 score 0.0-0.0
+  SEA: pre PRE f=0.00 score 0.0-0.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored   0.0  live fit  19.4 | v1  19.4 | naive  19.4
+    Drake Maye            QB   proj  19.4  scored   0.0  live fit  19.4 | v1  19.4 | naive  19.4
+    Rhamondre Stevenson   RB   proj  17.5  scored   0.0  live fit  17.5 | v1  17.5 | naive  17.5
+    Sam Darnold           QB   proj  16.4  scored   0.0  live fit  16.4 | v1  16.4 | naive  16.4
+    A.J. Brown            WR   proj  16.3  scored   0.0  live fit  16.3 | v1  16.3 | naive  16.3
+    Jadarian Price        RB   proj  12.0  scored   0.0  live fit  12.0 | v1  12.0 | naive  12.0
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   9.7 | v1   9.7 | naive   9.7
+    Hunter Henry          TE   proj   9.7  scored   0.0  live fit   9.7 | v1   9.7 | naive   9.7
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   8.5 | v1   8.5 | naive   8.5
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   8.5 | v1   8.5 | naive   8.5
+    A.J. Barner           TE   proj   7.9  scored   0.0  live fit   7.9 | v1   7.9 | naive   7.9
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   7.4 | v1   7.4 | naive   7.4
+  NE: in Q1 14:55 f=0.01 score 0.0-0.0
+  SEA: in Q1 14:55 f=0.01 score 0.0-0.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored   0.0  live fit  18.4 | v1  19.2 | naive  19.2
+    Drake Maye            QB   proj  19.4  scored   0.0  live fit  19.1 | v1  19.2 | naive  19.2
+    Rhamondre Stevenson   RB   proj  17.5  scored   0.0  live fit  16.3 | v1  17.3 | naive  17.3
+    Sam Darnold           QB   proj  16.4  scored   0.0  live fit  16.1 | v1  16.2 | naive  16.2
+    A.J. Brown            WR   proj  16.3  scored   0.0  live fit  15.5 | v1  16.1 | naive  16.1
+    Jadarian Price        RB   proj  12.0  scored   1.3  live fit  12.9 | v1  13.2 | naive  13.2
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   9.2 | v1   9.6 | naive   9.6
+    Hunter Henry          TE   proj   9.7  scored   0.0  live fit   9.2 | v1   9.6 | naive   9.6
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   8.1 | v1   8.4 | naive   8.4
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   8.4 | v1   8.4 | naive   8.4
+    A.J. Barner           TE   proj   7.9  scored   0.0  live fit   7.5 | v1   7.8 | naive   7.8
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   7.0 | v1   7.3 | naive   7.3
+  NE: in Q1 9:14 f=0.10 score 0.0-0.0
+  SEA: in Q1 9:14 f=0.10 score 0.0-0.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored   2.3  live fit  19.5 | v1  19.8 | naive  19.8
+    Drake Maye            QB   proj  19.4  scored   1.2  live fit  18.9 | v1  18.7 | naive  18.7
+    Rhamondre Stevenson   RB   proj  17.5  scored   0.8  live fit  15.9 | v1  16.6 | naive  16.6
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit  15.3 | v1  15.3 | naive  15.3
+    A.J. Brown            WR   proj  16.3  scored   0.0  live fit  14.1 | v1  14.7 | naive  14.7
+    Jadarian Price        RB   proj  12.0  scored   1.3  live fit  11.9 | v1  12.2 | naive  12.2
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   8.4 | v1   8.8 | naive   8.8
+    Hunter Henry          TE   proj   9.7  scored   0.0  live fit   8.4 | v1   8.8 | naive   8.8
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   7.4 | v1   7.7 | naive   7.7
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   7.7 | v1   7.7 | naive   7.7
+    A.J. Barner           TE   proj   7.9  scored   0.0  live fit   6.8 | v1   7.1 | naive   7.1
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   6.4 | v1   6.7 | naive   6.7
+  NE: in Q1 4:35 f=0.17 score 0.0-0.0
+  SEA: in Q1 4:35 f=0.17 score 0.0-0.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored   4.1  live fit  20.1 | v1  20.3 | naive  20.1
+    Drake Maye            QB   proj  19.4  scored   1.2  live fit  17.2 | v1  16.8 | naive  17.2
+    Rhamondre Stevenson   RB   proj  17.5  scored   1.0  live fit  14.6 | v1  15.0 | naive  15.5
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit  14.0 | v1  13.6 | naive  14.1
+    A.J. Brown            WR   proj  16.3  scored   0.0  live fit  12.9 | v1  12.9 | naive  13.5
+    Jadarian Price        RB   proj  12.0  scored   2.0  live fit  11.7 | v1  11.9 | naive  11.9
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   7.7 | v1   7.7 | naive   8.0
+    Hunter Henry          TE   proj   9.7  scored   0.0  live fit   7.7 | v1   7.7 | naive   8.0
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   6.8 | v1   6.7 | naive   7.0
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   6.7 | v1   6.7 | naive   7.0
+    A.J. Barner           TE   proj   7.9  scored   0.0  live fit   6.3 | v1   6.2 | naive   6.5
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   5.9 | v1   5.8 | naive   6.1
+  NE: in Q1 0:49 f=0.24 score 0.0-0.0
+  SEA: in Q1 0:49 f=0.24 score 0.0-0.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored   4.1  live fit  18.9 | v1  18.8 | naive  18.9
+    Drake Maye            QB   proj  19.4  scored   2.0  live fit  16.9 | v1  16.4 | naive  16.9
+    Rhamondre Stevenson   RB   proj  17.5  scored   1.2  live fit  13.6 | v1  14.0 | naive  14.6
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit  12.8 | v1  12.4 | naive  13.0
+    A.J. Brown            WR   proj  16.3  scored   1.7  live fit  13.9 | v1  13.7 | naive  14.2
+    Jadarian Price        RB   proj  12.0  scored   3.4  live fit  12.6 | v1  12.7 | naive  12.6
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   7.1 | v1   7.0 | naive   7.4
+    Hunter Henry          TE   proj   9.7  scored   0.0  live fit   7.1 | v1   7.0 | naive   7.4
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   6.2 | v1   6.1 | naive   6.5
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   6.1 | v1   6.1 | naive   6.5
+    A.J. Barner           TE   proj   7.9  scored   0.0  live fit   5.8 | v1   5.7 | naive   6.0
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   5.4 | v1   5.3 | naive   5.7
+  NE: in Q2 9:54 f=0.34 score 0.0-0.0
+  SEA: in Q2 9:54 f=0.34 score 0.0-0.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored   4.1  live fit  17.0 | v1  16.6 | naive  17.0
+    Drake Maye            QB   proj  19.4  scored   3.5  live fit  16.6 | v1  15.9 | naive  16.4
+    Rhamondre Stevenson   RB   proj  17.5  scored   1.2  live fit  11.7 | v1  12.1 | naive  12.8
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit  11.0 | v1  10.6 | naive  11.4
+    A.J. Brown            WR   proj  16.3  scored   3.2  live fit  14.0 | v1  13.7 | naive  14.0
+    Jadarian Price        RB   proj  12.0  scored   3.4  live fit  11.2 | v1  11.3 | naive  11.4
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   6.2 | v1   5.9 | naive   6.5
+    Hunter Henry          TE   proj   9.7  scored   0.0  live fit   6.2 | v1   5.9 | naive   6.5
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   5.5 | v1   5.2 | naive   5.7
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   5.2 | v1   5.2 | naive   5.7
+    A.J. Barner           TE   proj   7.9  scored   0.0  live fit   5.1 | v1   4.8 | naive   5.2
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   4.8 | v1   4.5 | naive   4.9
+  NE: in Q2 6:02 f=0.40 score 7.0-0.0
+  SEA: in Q2 6:02 f=0.40 score 0.0-7.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored   5.7  live fit  18.8 | v1  17.0 | naive  17.4
+    Drake Maye            QB   proj  19.4  scored   7.8  live fit  18.7 | v1  19.4 | naive  19.4
+    Rhamondre Stevenson   RB   proj  17.5  scored   1.2  live fit  10.2 | v1  10.8 | naive  11.7
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit  11.3 | v1   9.5 | naive  10.4
+    A.J. Brown            WR   proj  16.3  scored   3.2  live fit  11.9 | v1  12.5 | naive  13.0
+    Jadarian Price        RB   proj  12.0  scored   4.2  live fit  11.7 | v1  11.3 | naive  11.4
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   5.0 | v1   5.2 | naive   5.8
+    Hunter Henry          TE   proj   9.7  scored   0.0  live fit   5.0 | v1   5.2 | naive   5.8
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   5.5 | v1   4.6 | naive   5.1
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   4.6 | v1   4.6 | naive   5.1
+    A.J. Barner           TE   proj   7.9  scored   0.0  live fit   5.1 | v1   4.3 | naive   4.7
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   4.8 | v1   4.0 | naive   4.4
+  NE: in Q2 2:00 f=0.47 score 7.0-0.0
+  SEA: in Q2 2:00 f=0.47 score 0.0-7.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored   8.7  live fit  19.9 | v1  19.0 | naive  19.1
+    Drake Maye            QB   proj  19.4  scored   8.4  live fit  17.4 | v1  18.7 | naive  18.8
+    Rhamondre Stevenson   RB   proj  17.5  scored   1.6  live fit   9.2 | v1  10.1 | naive  10.9
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   9.5 | v1   8.3 | naive   9.3
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit  12.9 | v1  14.0 | naive  14.3
+    Jadarian Price        RB   proj  12.0  scored   4.2  live fit  10.4 | v1  10.4 | naive  10.6
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   4.1 | v1   4.6 | naive   5.2
+    Hunter Henry          TE   proj   9.7  scored   1.3  live fit   5.5 | v1   6.0 | naive   6.5
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   4.6 | v1   4.0 | naive   4.5
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   4.0 | v1   4.0 | naive   4.5
+    A.J. Barner           TE   proj   7.9  scored   0.0  live fit   4.2 | v1   3.7 | naive   4.2
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   4.0 | v1   3.5 | naive   4.0
+  NE: in Q2 0:33 f=0.49 score 7.0-0.0
+  SEA: in Q2 0:33 f=0.49 score 0.0-7.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  10.3  live fit  20.8 | v1  20.3 | naive  20.2
+    Drake Maye            QB   proj  19.4  scored  10.2  live fit  18.8 | v1  20.2 | naive  20.1
+    Rhamondre Stevenson   RB   proj  17.5  scored   3.3  live fit  10.7 | v1  11.5 | naive  12.2
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   8.8 | v1   7.9 | naive   8.9
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit  12.4 | v1  13.6 | naive  13.9
+    Jadarian Price        RB   proj  12.0  scored   4.2  live fit  10.0 | v1  10.1 | naive  10.3
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   3.8 | v1   4.3 | naive   4.9
+    Hunter Henry          TE   proj   9.7  scored   1.3  live fit   5.2 | v1   5.8 | naive   6.2
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   4.2 | v1   3.8 | naive   4.3
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   3.8 | v1   3.8 | naive   4.3
+    A.J. Barner           TE   proj   7.9  scored   0.0  live fit   3.9 | v1   3.5 | naive   4.0
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   3.7 | v1   3.3 | naive   3.8
+  NE: in HALF f=0.50 score 7.0-0.0
+  SEA: in HALF f=0.50 score 0.0-7.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  10.3  live fit  20.6 | v1  20.1 | naive  20.0
+    Drake Maye            QB   proj  19.4  scored  10.2  live fit  18.5 | v1  20.0 | naive  19.9
+    Rhamondre Stevenson   RB   proj  17.5  scored   3.3  live fit  10.5 | v1  11.4 | naive  12.1
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   8.6 | v1   7.8 | naive   8.7
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit  12.2 | v1  13.4 | naive  13.8
+    Jadarian Price        RB   proj  12.0  scored   4.2  live fit   9.9 | v1  10.0 | naive  10.2
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   3.6 | v1   4.2 | naive   4.8
+    Hunter Henry          TE   proj   9.7  scored   1.3  live fit   5.0 | v1   5.7 | naive   6.2
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   4.1 | v1   3.7 | naive   4.2
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   3.7 | v1   3.7 | naive   4.2
+    A.J. Barner           TE   proj   7.9  scored   1.4  live fit   5.3 | v1   5.0 | naive   5.3
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   3.6 | v1   3.2 | naive   3.7
+  NE: in Q3 13:30 f=0.53 score 7.0-0.0
+  SEA: in Q3 13:30 f=0.53 score 0.0-7.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  10.3  live fit  20.1 | v1  19.5 | naive  19.5
+    Drake Maye            QB   proj  19.4  scored  10.8  live fit  18.7 | v1  20.0 | naive  20.0
+    Rhamondre Stevenson   RB   proj  17.5  scored   3.9  live fit  10.8 | v1  11.6 | naive  12.2
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   8.2 | v1   7.3 | naive   8.3
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit  11.8 | v1  13.0 | naive  13.3
+    Jadarian Price        RB   proj  12.0  scored   4.2  live fit   9.6 | v1   9.7 | naive   9.9
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   3.5 | v1   4.0 | naive   4.6
+    Hunter Henry          TE   proj   9.7  scored   3.6  live fit   7.3 | v1   8.0 | naive   8.2
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   4.0 | v1   3.5 | naive   4.0
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   3.5 | v1   3.5 | naive   4.0
+    A.J. Barner           TE   proj   7.9  scored   1.4  live fit   5.2 | v1   4.8 | naive   5.2
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   3.4 | v1   3.0 | naive   3.5
+  NE: in Q3 11:49 f=0.55 score 10.0-0.0
+  SEA: in Q3 11:49 f=0.55 score 0.0-10.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  10.3  live fit  20.1 | v1  18.9 | naive  19.0
+    Drake Maye            QB   proj  19.4  scored  11.0  live fit  17.9 | v1  19.7 | naive  19.6
+    Rhamondre Stevenson   RB   proj  17.5  scored   5.4  live fit  11.9 | v1  12.7 | naive  13.2
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   8.3 | v1   6.9 | naive   7.8
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit  11.1 | v1  12.5 | naive  12.9
+    Jadarian Price        RB   proj  12.0  scored   4.2  live fit   9.3 | v1   9.3 | naive   9.6
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   3.0 | v1   3.7 | naive   4.3
+    Hunter Henry          TE   proj   9.7  scored   3.6  live fit   6.9 | v1   7.7 | naive   7.9
+    Rashid Shaheed        WR   proj   8.5  scored   0.0  live fit   3.9 | v1   3.3 | naive   3.8
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   3.3 | v1   3.3 | naive   3.8
+    A.J. Barner           TE   proj   7.9  scored   1.4  live fit   5.2 | v1   4.6 | naive   4.9
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   3.4 | v1   2.9 | naive   3.3
+  NE: in Q3 8:11 f=0.61 score 10.0-0.0
+  SEA: in Q3 8:11 f=0.61 score 0.0-10.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  10.3  live fit  18.9 | v1  17.6 | naive  17.8
+    Drake Maye            QB   proj  19.4  scored  11.2  live fit  17.1 | v1  18.6 | naive  18.7
+    Rhamondre Stevenson   RB   proj  17.5  scored   6.7  live fit  12.4 | v1  13.1 | naive  13.5
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   7.5 | v1   5.9 | naive   6.9
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit  10.3 | v1  11.5 | naive  11.9
+    Jadarian Price        RB   proj  12.0  scored   3.9  live fit   8.2 | v1   8.2 | naive   8.5
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   2.6 | v1   3.2 | naive   3.8
+    Hunter Henry          TE   proj   9.7  scored   3.6  live fit   6.4 | v1   7.1 | naive   7.3
+    Rashid Shaheed        WR   proj   8.5  scored   1.4  live fit   5.0 | v1   4.3 | naive   4.7
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   2.8 | v1   2.8 | naive   3.3
+    A.J. Barner           TE   proj   7.9  scored   1.4  live fit   4.7 | v1   4.1 | naive   4.5
+    Cooper Kupp           WR   proj   7.4  scored   0.0  live fit   3.0 | v1   2.4 | naive   2.9
+  NE: in Q3 3:21 f=0.69 score 10.0-0.0
+  SEA: in Q3 3:21 f=0.69 score 0.0-10.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  10.3  live fit  17.5 | v1  16.0 | naive  16.2
+    Drake Maye            QB   proj  19.4  scored  11.2  live fit  15.8 | v1  17.0 | naive  17.2
+    Rhamondre Stevenson   RB   proj  17.5  scored   6.8  live fit  11.2 | v1  11.7 | naive  12.2
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   6.2 | v1   4.7 | naive   5.5
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit   9.2 | v1  10.2 | naive  10.6
+    Jadarian Price        RB   proj  12.0  scored   6.5  live fit  10.2 | v1  10.0 | naive  10.2
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   2.0 | v1   2.5 | naive   3.0
+    Hunter Henry          TE   proj   9.7  scored   3.6  live fit   5.8 | v1   6.3 | naive   6.6
+    Rashid Shaheed        WR   proj   8.5  scored   1.4  live fit   4.4 | v1   3.7 | naive   4.0
+    Jason Myers           K    proj   8.5  scored   0.0  live fit   2.1 | v1   2.1 | naive   2.6
+    A.J. Barner           TE   proj   7.9  scored   1.4  live fit   4.2 | v1   3.5 | naive   3.8
+    Cooper Kupp           WR   proj   7.4  scored   3.4  live fit   6.1 | v1   5.5 | naive   5.7
+  NE: in Q4 15:00 f=0.75 score 10.0-3.0
+  SEA: in Q4 15:00 f=0.75 score 3.0-10.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  10.3  live fit  16.0 | v1  14.9 | naive  15.2
+    Drake Maye            QB   proj  19.4  scored  12.7  live fit  16.8 | v1  17.4 | naive  17.5
+    Rhamondre Stevenson   RB   proj  17.5  scored  11.7  live fit  15.7 | v1  16.0 | naive  16.1
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   4.9 | v1   3.9 | naive   4.6
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit   8.8 | v1   9.3 | naive   9.7
+    Jadarian Price        RB   proj  12.0  scored   6.5  live fit   9.4 | v1   9.3 | naive   9.5
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   1.8 | v1   2.0 | naive   2.4
+    Hunter Henry          TE   proj   9.7  scored   3.6  live fit   5.5 | v1   5.8 | naive   6.0
+    Rashid Shaheed        WR   proj   8.5  scored   1.4  live fit   3.8 | v1   3.2 | naive   3.5
+    Jason Myers           K    proj   8.5  scored   3.0  live fit   4.9 | v1   4.9 | naive   5.1
+    A.J. Barner           TE   proj   7.9  scored   1.4  live fit   3.6 | v1   3.1 | naive   3.4
+    Cooper Kupp           WR   proj   7.4  scored   3.4  live fit   5.5 | v1   5.1 | naive   5.2
+  NE: in Q4 11:28 f=0.81 score 10.0-10.0
+  SEA: in Q4 11:28 f=0.81 score 10.0-10.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  24.1  live fit  28.5 | v1  28.2 | naive  27.8
+    Drake Maye            QB   proj  19.4  scored  11.7  live fit  15.6 | v1  15.2 | naive  15.4
+    Rhamondre Stevenson   RB   proj  17.5  scored  11.7  live fit  14.9 | v1  14.9 | naive  15.0
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   3.2 | v1   3.0 | naive   3.6
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit   8.7 | v1   8.3 | naive   8.7
+    Jadarian Price        RB   proj  12.0  scored   7.4  live fit   9.5 | v1   9.6 | naive   9.7
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   1.7 | v1   1.5 | naive   1.9
+    Hunter Henry          TE   proj   9.7  scored   3.6  live fit   5.5 | v1   5.2 | naive   5.5
+    Rashid Shaheed        WR   proj   8.5  scored   1.4  live fit   3.0 | v1   2.8 | naive   3.0
+    Jason Myers           K    proj   8.5  scored   4.0  live fit   5.5 | v1   5.5 | naive   5.6
+    A.J. Barner           TE   proj   7.9  scored   1.4  live fit   2.8 | v1   2.7 | naive   2.9
+    Cooper Kupp           WR   proj   7.4  scored   3.4  live fit   4.8 | v1   4.7 | naive   4.8
+  NE: in Q4 6:42 f=0.89 score 10.0-10.0
+  SEA: in Q4 6:42 f=0.89 score 10.0-10.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  26.2  live fit  29.2 | v1  28.6 | naive  28.4
+    Drake Maye            QB   proj  19.4  scored  10.7  live fit  13.1 | v1  12.7 | naive  12.8
+    Rhamondre Stevenson   RB   proj  17.5  scored  12.5  live fit  14.4 | v1  14.4 | naive  14.4
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   2.2 | v1   2.0 | naive   2.4
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit   7.6 | v1   7.2 | naive   7.4
+    Jadarian Price        RB   proj  12.0  scored   7.8  live fit   9.1 | v1   9.1 | naive   9.1
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   1.1 | v1   0.8 | naive   1.1
+    Hunter Henry          TE   proj   9.7  scored   3.6  live fit   4.8 | v1   4.5 | naive   4.7
+    Rashid Shaheed        WR   proj   8.5  scored   1.4  live fit   2.4 | v1   2.2 | naive   2.4
+    Jason Myers           K    proj   8.5  scored   4.0  live fit   4.8 | v1   4.8 | naive   5.0
+    A.J. Barner           TE   proj   7.9  scored   3.3  live fit   4.3 | v1   4.1 | naive   4.2
+    Cooper Kupp           WR   proj   7.4  scored   5.5  live fit   6.5 | v1   6.3 | naive   6.3
+  NE: in Q4 3:49 f=0.94 score 10.0-13.0
+  SEA: in Q4 3:49 f=0.94 score 13.0-10.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  26.2  live fit  27.8 | v1  27.6 | naive  27.4
+    Drake Maye            QB   proj  19.4  scored  11.4  live fit  13.0 | v1  12.6 | naive  12.7
+    Rhamondre Stevenson   RB   proj  17.5  scored  12.5  live fit  13.6 | v1  13.6 | naive  13.6
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   1.3 | v1   1.3 | naive   1.6
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit   6.8 | v1   6.5 | naive   6.6
+    Jadarian Price        RB   proj  12.0  scored   7.8  live fit   8.5 | v1   8.5 | naive   8.6
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   0.7 | v1   0.5 | naive   0.6
+    Hunter Henry          TE   proj   9.7  scored   3.6  live fit   4.3 | v1   4.1 | naive   4.2
+    Rashid Shaheed        WR   proj   8.5  scored   1.4  live fit   1.9 | v1   1.8 | naive   1.9
+    Jason Myers           K    proj   8.5  scored   7.0  live fit   7.5 | v1   7.5 | naive   7.5
+    A.J. Barner           TE   proj   7.9  scored   3.3  live fit   3.8 | v1   3.7 | naive   3.8
+    Cooper Kupp           WR   proj   7.4  scored   5.5  live fit   6.0 | v1   6.0 | naive   6.0
+  NE: in Q4 1:22 f=0.98 score 10.0-13.0
+  SEA: in Q4 1:22 f=0.98 score 13.0-10.0
+    Jaxon Smith-Njigba    WR   proj  19.4  scored  26.2  live fit  26.8 | v1  26.7 | naive  26.6
+    Drake Maye            QB   proj  19.4  scored  12.7  live fit  13.3 | v1  13.1 | naive  13.1
+    Rhamondre Stevenson   RB   proj  17.5  scored  14.5  live fit  14.9 | v1  14.9 | naive  14.9
+    Sam Darnold           QB   proj  16.4  scored   0.5  live fit   0.8 | v1   0.8 | naive   0.9
+    A.J. Brown            WR   proj  16.3  scored   5.6  live fit   6.0 | v1   5.9 | naive   6.0
+    Jadarian Price        RB   proj  12.0  scored   7.8  live fit   8.1 | v1   8.1 | naive   8.1
+    Romeo Doubs           WR   proj   9.7  scored   0.0  live fit   0.2 | v1   0.2 | naive   0.2
+    Hunter Henry          TE   proj   9.7  scored   5.6  live fit   5.9 | v1   5.8 | naive   5.8
+    Rashid Shaheed        WR   proj   8.5  scored   1.4  live fit   1.6 | v1   1.6 | naive   1.6
+    Jason Myers           K    proj   8.5  scored   7.0  live fit   7.2 | v1   7.2 | naive   7.2
+    A.J. Barner           TE   proj   7.9  scored   3.3  live fit   3.5 | v1   3.5 | naive   3.5
+    Cooper Kupp           WR   proj   7.4  scored   5.5  live fit   5.7 | v1   5.7 | naive   5.7
+all tracked games FINAL
+
+=== LIVE GRADE live_track_2026_w1_NE_SEA.csv: 3759 snapshots, 21 players ===
+|live - final|   fitted | v1 | naive   (n)
+  Q1   4.64 | 4.71 | 4.69   (651)
+  Q2   3.92 | 3.89 | 3.86   (882)
+  Q3   3.48 | 3.54 | 3.56   (1176)
+  Q4   1.29 | 1.27 | 1.30   (1050)
+  ALL  3.173 | 3.190 | 3.196   (3759)
+
+per player (mean |live - final| over the game):  proj -> final   fitted | v1 | naive
+  Jaxon Smith-Njigba    WR    19.4 ->  26.2   5.74 | 6.18 | 6.07
+  Drake Maye            QB    19.4 ->  12.8   4.02 | 4.55 | 4.63
+  Rhamondre Stevenson   RB    17.5 ->  14.5   2.12 | 1.86 | 1.54
+  Sam Darnold           QB    16.4 ->   0.5   7.55 | 6.85 | 7.48
+  A.J. Brown            WR    16.3 ->   5.6   5.32 | 5.81 | 6.12
+  Jadarian Price        RB    12.0 ->   7.8   2.29 | 2.32 | 2.44
+  Romeo Doubs           WR     9.7 ->   0.0   3.80 | 4.02 | 4.43
+  Hunter Henry          TE     9.7 ->   5.6   0.98 | 1.12 | 1.29
+  Rashid Shaheed        WR     8.5 ->   1.4   3.05 | 2.73 | 3.06
+  Jason Myers           K      8.5 ->   7.0   2.08 | 2.08 | 1.77
+  A.J. Barner           TE     7.9 ->   3.3   1.56 | 1.33 | 1.54
+  Cooper Kupp           WR     7.4 ->   5.5   1.05 | 1.30 | 1.10
+  Seattle Seahawks D/ST DST    7.2 ->  13.0   4.76 | 4.76 | 4.59
+  Andy Borregales       K      7.1 ->   6.0   1.35 | 1.35 | 1.19
+  George Holani         RB     6.6 ->   2.9   2.08 | 2.10 | 2.20
+  New England Patriots D/STDST    5.8 ->   6.0   7.44 | 7.44 | 6.69
+  Demario Douglas       WR     5.6 ->   7.0   1.36 | 1.17 | 1.16
+  Elijah Arroyo         TE     3.9 ->   0.0   1.77 | 1.62 | 1.78
+  Mack Hollins          WR     3.3 ->   9.1   5.57 | 5.45 | 5.47
+  Emanuel Wilson        RB     1.8 ->   0.3   0.69 | 0.72 | 0.77
+  Eli Raridon           TE     1.8 ->   7.2   2.05 | 2.23 | 1.81
+closest model per player: fitted 9  v1 5  naive 7
+wrote E:\MyFantasyFootball\sim_lab\data\live_track_2026_w1_NE_SEA_summary.json

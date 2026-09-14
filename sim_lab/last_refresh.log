@@ -1,0 +1,36 @@
+===== Sim Lab refresh Mon 09/14/2026  9:55:07.18 ===== 
+copied mike_clay_projections.js  (36 KB)
+copied player_weekly_sigma.js  (57 KB)
+copied betting_lines_2026.js  (158 KB)
+copied clay_team_grades_2026.js  (4 KB)
+copied yahoo_normalize.js  (13 KB)
+wrapped sim_practice.js  (182 entries, 2026-09-14T13:54)
+wrapped sim_depth.js  (32 entries, 2026-09-14T13:54)
+wrapped sleeper_players.js  (585 players, exported 2026-09-14 09:54:46)
+wrapped sim_snaps.js  (285 players with 2026 snaps)
+wrapped sim_2026.js  (303 players with 2026 games, 30 defenses; FPA fpa_2026.js (complete league))
+wrapped sleeper_meta.js  (577 players, 127 true rookies, 6 elite CBs)
+wrapped sim_weather.js  (13 outdoor kickoffs in forecast window · site weather_2026.json (2026-09-14T13:54))
+cache-busted index.html scripts (?v=1789394108)
+stamped 2026-09-14 09:55
+wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js — 0 TEs with 2026 route data, 30 defenses with pressure data
+wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js — 32 teams, 30 with 2026 data
+
+=== Deploying to 'jackb933-website'...
+
+i  deploying hosting
+i  hosting[jb-simlab-2026]: beginning deploy...
+i  hosting[jb-simlab-2026]: found 176 files in sim_lab
+i  hosting: uploading new files [0/4] (0%)
+i  hosting: upload complete
++  hosting[jb-simlab-2026]: file upload complete
+i  hosting[jb-simlab-2026]: finalizing version...
++  hosting[jb-simlab-2026]: version finalized
+i  hosting[jb-simlab-2026]: releasing new version...
++  hosting[jb-simlab-2026]: release complete
+
++  Deploy complete!
+
+Project Console: https://console.firebase.google.com/project/jackb933-website/overview
+Hosting URL: https://jb-simlab-2026.web.app
+===== done Mon 09/14/2026  9:55:18.79 ===== 

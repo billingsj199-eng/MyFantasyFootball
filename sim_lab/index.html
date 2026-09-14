@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Sim Lab — private projection engine</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --tx:#e6edf3; --dim:#8b949e; --acc:#3fb950; --acc2:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--tx); font:14px/1.45 'Segoe UI',system-ui,sans-serif; }
+  header { padding:14px 20px 10px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  header h1 { margin:0; font-size:19px; letter-spacing:.5px; }
+  header h1 span { color:var(--acc); }
+  #status { color:var(--dim); font-size:12px; }
+  .badge { font-size:10px; background:#3d1d1d; color:#f85149; border:1px solid #f85149; padding:1px 7px; border-radius:9px; letter-spacing:1px; }
+  nav { display:flex; gap:6px; padding:10px 20px 0; }
+  .tab { background:var(--panel); color:var(--dim); border:1px solid var(--line); border-bottom:none;
+         padding:7px 16px; border-radius:7px 7px 0 0; cursor:pointer; font-size:13px; font-weight:600; }
+  .tab.on { color:var(--tx); background:var(--bg); border-color:var(--acc); }
+  .pane { display:none; padding:16px 20px 60px; }
+  .pane.on { display:block; }
+  .bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  select, input, button { background:var(--panel); color:var(--tx); border:1px solid var(--line); border-radius:6px; padding:6px 10px; font:inherit; }
+  input[type=number] { width:90px; } #lg-id, #lg-espn-id, #lg-yahoo-id { width:175px; } #wk-search, #sn-search { width:170px; }
+  button.go { background:var(--acc); color:#04140a; font-weight:700; border:none; cursor:pointer; }
+  button.alt { background:var(--acc2); color:#04101f; font-weight:700; border:none; cursor:pointer; }
+  button:hover { filter:brightness(1.12); }
+  .note { color:var(--dim); font-size:12px; margin:4px 0 10px; min-height:16px; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th, td { padding:5px 9px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
+  th { color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.5px; position:sticky; top:0; background:var(--bg); }
+  th.l, td.l { text-align:left; }
+  td.dim { color:var(--dim); }
+  tbody tr:hover { background:var(--panel); }
+  #wk-table, #sn-table, #sn-detail, #lg-table, #lg-week-table, #lg-teams, #lg-detail, #tk-body, #pc-table { overflow-x:auto; }
+  h3 { margin:20px 0 8px; font-size:14px; color:var(--acc2); }
+  .hint { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:12px; color:var(--dim); margin-bottom:14px; }
+  .hint b { color:var(--tx); }
+</style>
+</head>
+<body>
+<header>
+  <h1>SIM <span>LAB</span></h1>
+  <span class="badge">PRIVATE — NOT DEPLOYED</span>
+  <span id="status">loading…</span>
+</header>
+<nav>
+  <button class="tab on" data-tab="week">WEEK SIM</button>
+  <button class="tab" data-tab="season">SEASON SIM</button>
+  <button class="tab" data-tab="league">LEAGUE SIM</button>
+  <button class="tab" data-tab="bb">BEST BALL</button>
+  <button class="tab" data-tab="pace">TEAM PACE</button>
+  <button class="tab" data-tab="track">TRACKING &amp; ACCURACY</button>
+</nav>
+
+<div class="pane on" id="pane-week">
+  <div class="hint"><b>Model:</b> Clay season projections rescored to the chosen format, split per-week, shifted by the
+    DraftKings implied team total and the opponent's position-specific defense (Clay unit grades — CB/S/ED vs passing,
+    DI/LB/ED vs the run, S/LB vs TEs; capped ±8%), then Monte-Carlo'd with each player's own 3-year weekly volatility
+    (gamma distribution, teammates correlated through a shared game-environment factor). <b>In-season, every sim on every
+    tab samples around the JS Weekly blend</b> (Clay prior shrunk toward actual 2026 PPG, prior worth ~5 games — beat pure
+    Clay at every 2019–25 mid-season checkpoint); preseason the blend equals Clay identically.</div>
+  <div class="bar">
+    <select id="wk-week"></select>
+    <select id="wk-scoring"><option value="half">Half PPR</option><option value="ppr">Full PPR</option><option value="std">Standard</option></select>
+    <label>Sims <input type="number" id="wk-sims" value="100" min="10" max="20000"></label>
+    <button class="go" id="wk-run">RUN WEEK SIM</button>
+    <select id="wk-view"><option value="outcomes">Outcomes view</option><option value="stats">Median stat line</option><option value="compare">Clay vs JS Weekly</option><option value="lines">Median vs Lines</option></select>
+    <select id="wk-pos"><option>ALL</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DST</option></select>
+    <select id="wk-game" title="Filter every view to one game — pair with 'Median vs Lines' for that game's board"><option value="">All games</option></select>
+    <input id="wk-search" placeholder="search player…">
+  </div>
+  <div class="note" id="wk-note"></div>
+  <div id="wk-table"></div>
+</div>
+
+<div class="pane" id="pane-season">
+  <div class="hint"><b>Full season outcome:</b> every player's entire schedule simulated week by week — byes, Vegas implied
+    totals, opponent defense, QB/injury windows and rookie ramps all shape each week, and game environments are shared
+    league-wide within each simulated season, so booms line up with shootouts. You get season-total distributions
+    (p10 / median / p90) plus <b>positional finish odds</b> — how often each player ends the range as the #1 / top-3 /
+    top-12 / top-24 at his position <i>within the same sim</i>. Narrow the week range for a stretch run (e.g. 15–17 =
+    fantasy playoffs). <b>Calibrated on a 2019–25 backtest</b> (backtest_sim_calibration.py): each simulated season draws a
+    per-player <i>season shock</i> — a <b>projection-scaled</b> chance the season <b>busts</b> to 5–50% of projection
+    (~1-in-8 for elite projections, up to ~1-in-4 for deep-roster flyers — matching the real wreck rates of top-projected
+    players), otherwise mild drift that's also narrower for elites (a 350-pt stud can't 1.6× like a bench flyer can) —
+    and players Clay projects for &lt;17 games miss weeks at that rate. Without these layers only 31% of real season
+    totals landed in the sim's p10–p90 band; with them it's <b>80.4%</b> (target 80), below-p10 10.6% vs 10, above-p90
+    8.9% vs 10 — calibrated per projection tier, not just pooled — and the best top-12 finish-odds Brier score.</div>
+  <div class="bar">
+    <label>Weeks <select id="sn-from"></select> – <select id="sn-to"></select></label>
+    <select id="sn-scoring"><option value="half">Half PPR</option><option value="ppr">Full PPR</option><option value="std">Standard</option></select>
+    <label>Sims <input type="number" id="sn-sims" value="300" min="50" max="2000"></label>
+    <button class="go" id="sn-run">RUN SEASON SIM</button>
+    <select id="sn-view"><option value="outcomes">Outcomes view</option><option value="stats">Median stat line</option></select>
+    <select id="sn-odds"><option value="model">Model odds</option><option value="book">Sportsbook</option></select>
+    <select id="sn-pos"><option>ALL</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option><option>K</option><option>DST</option></select>
+    <input id="sn-search" placeholder="search player…">
+  </div>
+  <div class="note" id="sn-note"></div>
+  <div id="sn-table"></div>
+  <div id="sn-detail"></div>
+</div>
+
+<div class="pane" id="pane-league">
+  <div class="hint"><b>Real league:</b> paste your Sleeper league ID (the long number in the league URL) — or an ESPN or Yahoo
+    league ID/URL (<b>publicly viewable leagues only</b>: private ones must be set viewable-to-public in the platform's league
+    settings; ESPN/Yahoo players are matched by name into the projection pool). Rosters, scoring, lineup slots and playoff
+    settings all come from the league API; Sleeper and ESPN bring real weekly matchups too, while Yahoo exposes no matchup
+    feed so its schedule is a synthesized round-robin (records stay real). <b>PRIVATE leagues:</b> import them on the MFF
+    site's My Teams tab (the ESPN/Yahoo extensions bridge private leagues there), then <b>LOAD FROM MFF</b> here — signs into
+    your MFF account and pulls every league you've saved (roster snapshot as-of the last site sync; round-robin schedule,
+    playoffs assumed wk15/6). Every sim replays the remaining schedule with
+    correlated player scores — league-wide, so two teams starting players from the same NFL game share that game's script.
+    Each simulated season also draws a per-player <i>season shock</i> (wrecked-season mixture — same layer as SEASON SIM)
+    that persists through that sim's remaining weeks and playoffs: the mid-season backtest (weeks 5/9/13, 2019–25) showed
+    rest-of-season outcomes need the full shock all year, so playoff/title odds here run cooler and honester than before.</div>
+  <div class="bar">
+    <input id="lg-id" placeholder="Sleeper league ID">
+    <button class="go" id="lg-load">LOAD SLEEPER</button>
+    <input id="lg-espn-id" placeholder="ESPN league ID or URL">
+    <button class="go" id="lg-espn-load">LOAD ESPN</button>
+    <input id="lg-yahoo-id" placeholder="Yahoo league ID or URL">
+    <button class="go" id="lg-yahoo-load">LOAD YAHOO</button>
+    <button class="alt" id="lg-mff">LOAD FROM MFF</button>
+    <select id="lg-mff-pick" style="display:none"></select>
+    <button class="alt" id="lg-demo">DEMO LEAGUE</button>
+    <label>Sims <input type="number" id="lg-sims" value="100" min="10" max="10000"></label>
+    <button class="go" id="lg-run">RUN SEASON SIM</button>
+    <select id="lg-week-view" title="Applies to the standings odds, the Season futures board and the Weekly breakdown"><option value="model">Model odds</option><option value="book">Sportsbook odds</option></select>
+  </div>
+  <div class="note" id="lg-note"></div>
+  <div id="lg-table"></div>
+  <div id="lg-week-wrap" style="display:none">
+    <h3 style="display:flex;align-items:center;gap:10px">Weekly breakdown <select id="lg-week"></select></h3>
+    <div id="lg-week-table"></div>
+  </div>
+  <div id="lg-detail"></div>
+  <div id="lg-trade-wrap" style="display:none">
+    <h3>Trade Analyzer</h3>
+    <div class="bar" style="align-items:flex-start">
+      <div>
+        <select id="tr-a"></select><br>
+        <select id="tr-a-players" multiple size="10" style="margin-top:6px;min-width:230px"></select><br>
+        <span class="dim" style="font-size:11px">Picks going out:</span><br>
+        <select id="tr-a-picks" multiple size="4" style="min-width:230px"></select>
+      </div>
+      <div style="align-self:center;font-size:20px;color:var(--dim)">&#8646;</div>
+      <div>
+        <select id="tr-b"></select><br>
+        <select id="tr-b-players" multiple size="10" style="margin-top:6px;min-width:230px"></select><br>
+        <span class="dim" style="font-size:11px">Picks going out:</span><br>
+        <select id="tr-b-picks" multiple size="4" style="min-width:230px"></select>
+      </div>
+      <button class="go" id="tr-run" style="align-self:center">ANALYZE TRADE</button>
+    </div>
+    <div class="note" id="tr-note">Ctrl-click the players and/or picks leaving each team, then analyze. Uneven trades are fine. Picks are valued on the KTC dynasty ledger (they can't score 2026 points, so they don't move the season sim).</div>
+    <div id="tr-result"></div>
+  </div>
+  <h3 id="lg-teams-h" style="display:none">Rosters</h3>
+  <div id="lg-teams"></div>
+</div>
+
+<div class="pane" id="pane-bb">
+  <div class="hint"><b>Underdog best ball portfolio:</b> three ways in — mix freely. <b>LOAD FROM MFF</b> signs into the MFF
+    Firebase account and pulls the portfolio the Draft Helper extension synced to the site (all your drafts, your picks —
+    the cloud copy doesn't carry opponents, so these get the synthetic pod). Or import CSVs (multi-select several files):
+    <b>exposure export</b> (one row per pick <i>you</i> made) works the same way, while a <b>full draft board</b> export
+    (every pick of one draft, e.g. 216 rows) brings in all 12 <b>real rosters</b> — slots worked out from the snake pick
+    numbers — so advance / pod-win odds run against your <i>actual opponents</i>. Your team on a full board is spotted by
+    your UD username or by any overlapping exposure/MFF import of the same draft. Every team runs the full season engine —
+    shared game environments, per-player <i>season shocks</i>, missed-game draws — with the Underdog lineup auto-picked per
+    sampled week (1QB / 2RB / 3WR / 1TE / 1FLEX, half PPR; superflex contests [SF] start an extra QB-eligible slot). A
+    player appearing on five rosters scores identically on all five within a sim, so portfolio and pod correlation is real.
+    Reg season = weeks 1–14; playoff weeks 15/16/17 simmed separately. Imports persist in localStorage on this device.</div>
+  <div class="bar">
+    <button class="alt" id="bb-mff">LOAD FROM MFF</button>
+    <input type="file" id="bb-file" accept=".csv,text/csv" multiple>
+    <input id="bb-user" placeholder="your UD username" style="width:150px">
+    <label>Sims <input type="number" id="bb-sims" value="300" min="50" max="2000"></label>
+    <label><input type="checkbox" id="bb-pod" checked> Synthetic pod for exposure-only teams</label>
+    <select id="bb-tourney"><option value="ALL">All tournaments</option></select>
+    <select id="bb-show"><option value="mine">My teams</option><option value="all">All teams (incl. opponents)</option></select>
+    <button class="go" id="bb-run">RUN PORTFOLIO SIM</button>
+    <button id="bb-clear">CLEAR IMPORT</button>
+  </div>
+  <div class="note" id="bb-note">No teams imported yet — pick your Underdog CSV export(s) above.</div>
+  <div id="bb-summary"></div>
+  <div id="bb-table" style="overflow-x:auto"></div>
+  <div id="bb-detail"></div>
+</div>
+
+<div class="pane" id="pane-pace">
+  <div class="hint"><b>Team pace &amp; play-calling tracker:</b> season-to-date tendencies vs a coach-aware baseline —
+    same coach = the team's own 2025 identity; new coach = <i>his</i> prior pace/no-huddle/2-TE identity (those travel
+    with coaches) but the roster's pass mix (the QB decides that). Validated 2019–25: drift a team shows by week 8
+    persists the rest of the season (no-huddle r .78, 2+TE .75, PROE .61, neutral pass .57, plays .44).
+    <b>Intel only:</b> converting drift into projection multipliers was backtested (weeks 5/9/13, 2019–25) and made
+    player means <i>worse</i> — Vegas totals and realized PPG already price it at player level — so the sims don't use
+    it. What it's for: spotting a new coordinator's real identity by ~week 3, weeks before Clay/consensus react.
+    Refresh: <code>python pull_pace_tracker.py</code> (in the daily deploy chain).</div>
+  <div class="note" id="pc-note"></div>
+  <div id="pc-table"></div>
+</div>
+
+<div class="pane" id="pane-track">
+  <div class="hint"><b>Private accuracy loop:</b> LOCK a week before kickoff (freezes projections + that week's UD/PP/DK prop
+    lines). SCORE it after the games (pulls actuals from Sleeper, grades MAE / calibration, and counts how often our number was
+    closer to the truth than the books' line). Everything stays in localStorage + downloaded JSON — nothing goes on the site
+    until the beat-rate proves out.</div>
+  <div class="bar">
+    <select id="tk-week"></select>
+    <select id="tk-scoring"><option value="half">Half PPR</option><option value="ppr">Full PPR</option><option value="std">Standard</option></select>
+    <button class="go" id="tk-lock-sel">LOCK SELECTED GAMES</button>
+    <button class="go" id="tk-lock">LOCK ALL REMAINING</button>
+    <button class="alt" id="tk-score">SCORE WEEK (post-games)</button>
+    <button id="tk-export">EXPORT ALL</button>
+  </div>
+  <div id="tk-games" style="margin-bottom:10px"></div>
+  <div class="note" id="tk-note"></div>
+  <div id="tk-body"></div>
+</div>
+
+<!-- data (refresh with: python refresh_data.py) -->
+<script src="data/refresh_stamp.js?v=1789394108"></script>
+<script src="data/mike_clay_projections.js?v=1789394108"></script>
+<script src="data/player_weekly_sigma.js?v=1789394108"></script>
+<script src="data/betting_lines_2026.js?v=1789394108"></script>
+<script src="data/clay_team_grades_2026.js?v=1789394108"></script>
+<script src="data/sleeper_players.js?v=1789394108"></script>
+<script src="data/sleeper_meta.js?v=1789394108"></script>
+<script src="data/sim_snaps.js?v=1789394108"></script>
+<script src="data/sim_routes.js?v=1789394108"></script>
+<script src="data/sim_weather.js?v=1789394108"></script>
+<script src="data/sim_practice.js?v=1789394108"></script>
+<script src="data/sim_depth.js?v=1789394108"></script>
+<script src="data/sim_2026.js?v=1789394108"></script>
+<script src="data/pace_2026.js?v=1789394108"></script>
+<script src="data/sim_tuning.js?v=1789394108"></script>
+<script src="data/yahoo_normalize.js?v=1789394108"></script>
+<!-- app -->
+<script src="overrides.js?v=1789394108"></script>
+<script src="engine.js?v=1789394108"></script>
+<script src="app.js?v=1789394108"></script>
+</body>
+</html>

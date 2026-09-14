@@ -1,0 +1,104 @@
+  TB@CIN: already tracked by pid 28872 — skipping
+  NO@DET: already tracked by pid 28872 — skipping
+  NYJ@TEN: already tracked by pid 28872 — skipping
+  BAL@IND: already tracked by pid 28872 — skipping
+  ATL@PIT: already tracked by pid 28872 — skipping
+  CHI@CAR: already tracked by pid 28872 — skipping
+  BUF@HOU: already tracked by pid 28872 — skipping
+games: MIA@LV, GB@MIN, WAS@PHI, ARI@LAC
+tracking 94 players on ['ARI', 'GB', 'LAC', 'LV', 'MIA', 'MIN', 'PHI', 'WAS'], season 2026 week 1, live model grid [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  ARI: pre PRE f=0.00 score 0.0-0.0
+  GB: pre PRE f=0.00 score 0.0-0.0
+  LAC: pre PRE f=0.00 score 0.0-0.0
+  LV: pre PRE f=0.00 score 0.0-0.0
+  MIA: pre PRE f=0.00 score 0.0-0.0
+  MIN: pre PRE f=0.00 score 0.0-0.0
+  PHI: pre PRE f=0.00 score 0.0-0.0
+  WAS: pre PRE f=0.00 score 0.0-0.0
+    Jalen Hurts           QB   proj  21.0  scored   0.0  live fit  21.0 | +exit  21.0 | v1  21.0 | naive  21.0
+    Justin Herbert        QB   proj  19.2  scored   0.0  live fit  19.2 | +exit  19.2 | v1  19.2 | naive  19.2
+    Kyler Murray          QB   proj  18.8  scored   0.0  live fit  18.8 | +exit  18.8 | v1  18.8 | naive  18.8
+    De'Von Achane         RB   proj  18.2  scored   0.0  live fit  18.2 | +exit  18.2 | v1  18.2 | naive  18.2
+    Omarion Hampton       RB   proj  17.8  scored   0.0  live fit  17.8 | +exit  17.8 | v1  17.8 | naive  17.8
+    Ashton Jeanty         RB   proj  17.7  scored   0.0  live fit  17.7 | +exit  17.7 | v1  17.7 | naive  17.7
+    Justin Jefferson      WR   proj  17.5  scored   0.0  live fit  17.5 | +exit  17.5 | v1  17.5 | naive  17.5
+    Saquon Barkley        RB   proj  17.3  scored   0.0  live fit  17.3 | +exit  17.3 | v1  17.3 | naive  17.3
+    Jordan Love           QB   proj  17.1  scored   0.0  live fit  17.1 | +exit  17.1 | v1  17.1 | naive  17.1
+    Jayden Daniels        QB   proj  16.5  scored   0.0  live fit  16.5 | +exit  16.5 | v1  16.5 | naive  16.5
+    DeVonta Smith         WR   proj  16.0  scored   0.0  live fit  16.0 | +exit  16.0 | v1  16.0 | naive  16.0
+    Jacoby Brissett       QB   proj  15.7  scored   0.0  live fit  15.7 | +exit  15.7 | v1  15.7 | naive  15.7
+  ARI: pre PRE f=0.00 score 0.0-0.0
+  GB: pre PRE f=0.00 score 0.0-0.0
+  LAC: pre PRE f=0.00 score 0.0-0.0
+  LV: pre PRE f=0.00 score 0.0-0.0
+  MIA: pre PRE f=0.00 score 0.0-0.0
+  MIN: pre PRE f=0.00 score 0.0-0.0
+  PHI: pre PRE f=0.00 score 0.0-0.0
+  WAS: pre PRE f=0.00 score 0.0-0.0
+    Jalen Hurts           QB   proj  21.0  scored   0.0  live fit  21.0 | +exit  21.0 | v1  21.0 | naive  21.0
+    Justin Herbert        QB   proj  19.2  scored   0.0  live fit  19.2 | +exit  19.2 | v1  19.2 | naive  19.2
+    Kyler Murray          QB   proj  18.8  scored   0.0  live fit  18.8 | +exit  18.8 | v1  18.8 | naive  18.8
+    De'Von Achane         RB   proj  18.2  scored   0.0  live fit  18.2 | +exit  18.2 | v1  18.2 | naive  18.2
+    Omarion Hampton       RB   proj  17.8  scored   0.0  live fit  17.8 | +exit  17.8 | v1  17.8 | naive  17.8
+    Ashton Jeanty         RB   proj  17.7  scored   0.0  live fit  17.7 | +exit  17.7 | v1  17.7 | naive  17.7
+    Justin Jefferson      WR   proj  17.5  scored   0.0  live fit  17.5 | +exit  17.5 | v1  17.5 | naive  17.5
+    Saquon Barkley        RB   proj  17.3  scored   0.0  live fit  17.3 | +exit  17.3 | v1  17.3 | naive  17.3
+    Jordan Love           QB   proj  17.1  scored   0.0  live fit  17.1 | +exit  17.1 | v1  17.1 | naive  17.1
+    Jayden Daniels        QB   proj  16.5  scored   0.0  live fit  16.5 | +exit  16.5 | v1  16.5 | naive  16.5
+    DeVonta Smith         WR   proj  16.0  scored   0.0  live fit  16.0 | +exit  16.0 | v1  16.0 | naive  16.0
+    Jacoby Brissett       QB   proj  15.7  scored   0.0  live fit  15.7 | +exit  15.7 | v1  15.7 | naive  15.7
+  ARI: in Q1 9:34 f=0.09 score 0.0-0.0
+  GB: in Q1 12:11 f=0.05 score 3.0-0.0
+  LAC: in Q1 9:34 f=0.09 score 0.0-0.0
+  LV: in Q1 10:52 f=0.07 score 0.0-0.0
+  MIA: in Q1 10:52 f=0.07 score 0.0-0.0
+  MIN: in Q1 12:11 f=0.05 score 0.0-3.0
+  PHI: in Q1 11:23 f=0.06 score 0.0-3.0
+  WAS: in Q1 11:23 f=0.06 score 3.0-0.0
+    Jalen Hurts           QB   proj  21.0  scored   0.0  live fit  20.6 | +exit  20.6 | v1  19.7 | naive  19.7
+    Justin Herbert        QB   proj  19.2  scored   0.0  live fit  17.3 | +exit  17.3 | v1  17.5 | naive  17.5
+    Kyler Murray          QB   proj  18.8  scored  -1.0  live fit  17.5 | +exit  17.5 | v1  16.9 | naive  16.9
+    De'Von Achane         RB   proj  18.2  scored   4.3  live fit  21.5 | +exit  21.5 | v1  21.2 | naive  21.2
+    Omarion Hampton       RB   proj  17.8  scored   0.0  live fit  15.2 | +exit  15.2 | v1  16.2 | naive  16.2
+    Ashton Jeanty         RB   proj  17.7  scored   0.0  live fit  15.5 | +exit  15.5 | v1  16.5 | naive  16.5
+    Justin Jefferson      WR   proj  17.5  scored   0.0  live fit  16.7 | +exit  16.7 | v1  16.7 | naive  16.7
+    Saquon Barkley        RB   proj  17.3  scored   0.0  live fit  15.6 | +exit  15.6 | v1  16.3 | naive  16.3
+    Jordan Love           QB   proj  17.1  scored   0.0  live fit  15.3 | +exit  15.3 | v1  16.3 | naive  16.3
+    Jayden Daniels        QB   proj  16.5  scored   0.5  live fit  15.2 | +exit  15.2 | v1  16.0 | naive  16.0
+    DeVonta Smith         WR   proj  16.0  scored   0.0  live fit  15.1 | +exit  15.1 | v1  15.0 | naive  15.0
+    Jacoby Brissett       QB   proj  15.7  scored   3.0  live fit  17.9 | +exit  17.9 | v1  17.3 | naive  17.3
+  ARI: in Q1 4:29 f=0.18 score 7.0-0.0
+  GB: in Q1 7:56 f=0.12 score 3.0-0.0
+  LAC: in Q1 4:29 f=0.18 score 0.0-7.0
+  LV: in Q1 4:13 f=0.18 score 0.0-0.0
+  MIA: in Q1 4:13 f=0.18 score 0.0-0.0
+  MIN: in Q1 7:56 f=0.12 score 0.0-3.0
+  PHI: in Q1 7:32 f=0.12 score 0.0-3.0
+  WAS: in Q1 7:32 f=0.12 score 3.0-0.0
+    Jalen Hurts           QB   proj  21.0  scored   0.7  live fit  20.1 | +exit  20.1 | v1  19.1 | naive  19.1
+    Justin Herbert        QB   proj  19.2  scored   2.9  live fit  21.1 | +exit  21.1 | v1  18.6 | naive  18.7
+    Kyler Murray          QB   proj  18.8  scored   0.3  live fit  17.7 | +exit  17.7 | v1  16.9 | naive  16.9
+    De'Von Achane         RB   proj  18.2  scored   4.3  live fit  19.2 | +exit  19.2 | v1  19.4 | naive  19.2
+    Omarion Hampton       RB   proj  17.8  scored   0.2  live fit  14.4 | +exit  14.4 | v1  14.3 | naive  14.9
+    Ashton Jeanty         RB   proj  17.7  scored   1.8  live fit  15.7 | +exit  15.7 | v1  16.0 | naive  16.3
+    Justin Jefferson      WR   proj  17.5  scored   1.9  live fit  17.7 | +exit  17.7 | v1  17.3 | naive  17.3
+    Saquon Barkley        RB   proj  17.3  scored   0.4  live fit  14.9 | +exit  14.9 | v1  15.6 | naive  15.6
+    Jordan Love           QB   proj  17.1  scored   0.0  live fit  14.1 | +exit  14.1 | v1  15.1 | naive  15.1
+    Jayden Daniels        QB   proj  16.5  scored   0.5  live fit  14.2 | +exit  14.2 | v1  15.0 | naive  15.0
+    DeVonta Smith         WR   proj  16.0  scored   0.0  live fit  14.1 | +exit  14.1 | v1  14.0 | naive  14.0
+    Jacoby Brissett       QB   proj  15.7  scored   3.0  live fit  14.8 | +exit  14.8 | v1  16.0 | naive  16.0
+  ARI: in Q2 15:00 f=0.25 score 7.0-7.0
+  GB: in Q1 7:43 f=0.12 score 9.0-0.0
+  LAC: in Q2 15:00 f=0.25 score 7.0-7.0
+  LV: in Q2 15:00 f=0.25 score 7.0-0.0
+  MIA: in Q2 15:00 f=0.25 score 0.0-7.0
+  MIN: in Q1 7:43 f=0.12 score 0.0-9.0
+  PHI: in Q1 1:57 f=0.22 score 0.0-3.0
+  WAS: in Q1 1:57 f=0.22 score 3.0-0.0
+    Jalen Hurts           QB   proj  21.0  scored   1.0  live fit  18.2 | +exit  18.2 | v1  16.7 | naive  17.4
+    Justin Herbert        QB   proj  19.2  scored   2.8  live fit  17.4 | +exit  17.4 | v1  16.8 | naive  17.2
+    Kyler Murray          QB   proj  18.8  scored   0.3  live fit  19.4 | +exit  19.4 | v1  16.9 | naive  16.9
+    De'Von Achane         RB   proj  18.2  scored   4.5  live fit  18.6 | +exit  18.6 | v1  18.1 | naive  18.1
+    Omarion Hampton       RB   proj  17.8  scored   7.1  live fit  21.0 | +exit  21.0 | v1  20.9 | naive  20.4
+    Ashton Jeanty         RB   proj  17.7  scored   4.0  live fit  16.4 | +exit  16.4 | v1  17.2 | naive  17.3
+    Justin Jefferson      WR   proj  17.5  scored   1.9  live fit  19.0 | +exit  19.0 | v1  17.3 | naive  17.3

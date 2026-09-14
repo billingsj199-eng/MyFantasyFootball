@@ -1,0 +1,844 @@
+games: TB@CIN, NO@DET, NYJ@TEN, BAL@IND, ATL@PIT, CHI@CAR, CLE@JAX, BUF@HOU
+tracking 183 players on ['ATL', 'BAL', 'BUF', 'CAR', 'CHI', 'CIN', 'CLE', 'DET', 'HOU', 'IND', 'JAX', 'NO', 'NYJ', 'PIT', 'TB', 'TEN'], season 2026 week 1, live model grid [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  ATL: pre PRE f=0.00 score 0.0-0.0
+  BAL: pre PRE f=0.00 score 0.0-0.0
+  BUF: pre PRE f=0.00 score 0.0-0.0
+  CAR: pre PRE f=0.00 score 0.0-0.0
+  CHI: pre PRE f=0.00 score 0.0-0.0
+  CIN: pre PRE f=0.00 score 0.0-0.0
+  CLE: pre PRE f=0.00 score 0.0-0.0
+  DET: pre PRE f=0.00 score 0.0-0.0
+  HOU: pre PRE f=0.00 score 0.0-0.0
+  IND: pre PRE f=0.00 score 0.0-0.0
+  JAX: pre PRE f=0.00 score 0.0-0.0
+  NO: pre PRE f=0.00 score 0.0-0.0
+  NYJ: pre PRE f=0.00 score 0.0-0.0
+  PIT: pre PRE f=0.00 score 0.0-0.0
+  TB: pre PRE f=0.00 score 0.0-0.0
+  TEN: pre PRE f=0.00 score 0.0-0.0
+    Jahmyr Gibbs          RB   proj  25.5  scored   0.0  live fit  25.5 | +exit  25.5 | v1  25.5 | naive  25.5
+    Ja'Marr Chase         WR   proj  22.7  scored   0.0  live fit  22.7 | +exit  22.7 | v1  22.7 | naive  22.7
+    Joe Burrow            QB   proj  22.5  scored   0.0  live fit  22.5 | +exit  22.5 | v1  22.5 | naive  22.5
+    Josh Allen            QB   proj  21.6  scored   0.0  live fit  21.6 | +exit  21.6 | v1  21.6 | naive  21.6
+    Lamar Jackson         QB   proj  20.8  scored   0.0  live fit  20.8 | +exit  20.8 | v1  20.8 | naive  20.8
+    Amon-Ra St. Brown     WR   proj  20.4  scored   0.0  live fit  20.4 | +exit  20.4 | v1  20.4 | naive  20.4
+    Bijan Robinson        RB   proj  20.1  scored   0.0  live fit  20.1 | +exit  20.1 | v1  20.1 | naive  20.1
+    Caleb Williams        QB   proj  18.9  scored   0.0  live fit  18.9 | +exit  18.9 | v1  18.9 | naive  18.9
+    Trevor Lawrence       QB   proj  18.9  scored   0.0  live fit  18.9 | +exit  18.9 | v1  18.9 | naive  18.9
+    Jonathan Taylor       RB   proj  18.8  scored   0.0  live fit  18.8 | +exit  18.8 | v1  18.8 | naive  18.8
+    Tyler Shough          QB   proj  18.7  scored   0.0  live fit  18.7 | +exit  18.7 | v1  18.7 | naive  18.7
+    Chase Brown           RB   proj  17.9  scored   0.0  live fit  17.9 | +exit  17.9 | v1  17.9 | naive  17.9
+  ATL: in Q1 12:31 f=0.04 score 0.0-0.0
+  BAL: in Q1 12:37 f=0.04 score 0.0-0.0
+  BUF: in Q1 11:15 f=0.06 score 0.0-0.0
+  CAR: in Q1 13:27 f=0.03 score 0.0-0.0
+  CHI: in Q1 13:27 f=0.03 score 0.0-0.0
+  CIN: in Q1 12:50 f=0.04 score 0.0-0.0
+  CLE: in Q1 12:06 f=0.05 score 0.0-0.0
+  DET: in Q1 12:29 f=0.04 score 0.0-0.0
+  HOU: in Q1 11:15 f=0.06 score 0.0-0.0
+  IND: in Q1 12:37 f=0.04 score 0.0-0.0
+  JAX: in Q1 12:06 f=0.05 score 0.0-0.0
+  NO: in Q1 12:29 f=0.04 score 0.0-0.0
+  NYJ: in Q1 12:55 f=0.03 score 0.0-0.0
+  PIT: in Q1 12:31 f=0.04 score 0.0-0.0
+  TB: in Q1 12:50 f=0.04 score 0.0-0.0
+  TEN: in Q1 12:55 f=0.03 score 0.0-0.0
+    Jahmyr Gibbs          RB   proj  25.5  scored   0.1  live fit  23.1 | +exit  23.1 | v1  24.5 | naive  24.5
+    Ja'Marr Chase         WR   proj  22.7  scored   0.0  live fit  21.0 | +exit  21.0 | v1  21.9 | naive  21.9
+    Joe Burrow            QB   proj  22.5  scored   0.0  live fit  21.5 | +exit  21.5 | v1  21.7 | naive  21.7
+    Josh Allen            QB   proj  21.6  scored   0.2  live fit  20.4 | +exit  20.4 | v1  20.5 | naive  20.5
+    Lamar Jackson         QB   proj  20.8  scored   0.0  live fit  19.8 | +exit  19.8 | v1  20.0 | naive  20.0
+    Amon-Ra St. Brown     WR   proj  20.4  scored   1.5  live fit  20.5 | +exit  20.5 | v1  21.0 | naive  21.0
+    Bijan Robinson        RB   proj  20.1  scored   1.6  live fit  20.2 | +exit  20.2 | v1  20.9 | naive  20.9
+    Caleb Williams        QB   proj  18.9  scored   0.3  live fit  18.6 | +exit  18.6 | v1  18.7 | naive  18.7
+    Trevor Lawrence       QB   proj  18.9  scored   0.0  live fit  17.8 | +exit  17.8 | v1  18.0 | naive  18.0
+    Jonathan Taylor       RB   proj  18.8  scored   1.3  live fit  18.7 | +exit  18.7 | v1  19.4 | naive  19.4
+    Tyler Shough          QB   proj  18.7  scored   0.4  live fit  18.2 | +exit  18.2 | v1  18.3 | naive  18.3
+    Chase Brown           RB   proj  17.9  scored   0.0  live fit  16.2 | +exit  16.2 | v1  17.2 | naive  17.2
+  ATL: in Q1 8:30 f=0.11 score 0.0-3.0
+  BAL: in Q1 8:20 f=0.11 score 7.0-6.0
+  BUF: in Q1 7:28 f=0.13 score 3.0-0.0
+  CAR: in Q1 10:45 f=0.07 score 7.0-0.0
+  CHI: in Q1 10:45 f=0.07 score 0.0-7.0
+  CIN: in Q1 7:38 f=0.12 score 0.0-3.0
+  CLE: in Q1 8:11 f=0.11 score 0.0-7.0
+  DET: in Q1 7:32 f=0.12 score 0.0-0.0
+  HOU: in Q1 7:28 f=0.13 score 0.0-3.0
+  IND: in Q1 8:20 f=0.11 score 6.0-7.0
+  JAX: in Q1 8:11 f=0.11 score 7.0-0.0
+  NO: in Q1 7:32 f=0.12 score 0.0-0.0
+  NYJ: in Q1 8:30 f=0.11 score 7.0-0.0
+  PIT: in Q1 8:30 f=0.11 score 3.0-0.0
+  TB: in Q1 7:38 f=0.12 score 3.0-0.0
+  TEN: in Q1 8:30 f=0.11 score 0.0-7.0
+    Jahmyr Gibbs          RB   proj  25.5  scored   2.7  live fit  24.3 | +exit  24.3 | v1  25.0 | naive  25.0
+    Ja'Marr Chase         WR   proj  22.7  scored   0.0  live fit  20.0 | +exit  20.0 | v1  19.9 | naive  19.9
+    Joe Burrow            QB   proj  22.5  scored   0.0  live fit  20.6 | +exit  20.6 | v1  19.8 | naive  19.8
+    Josh Allen            QB   proj  21.6  scored   0.5  live fit  18.3 | +exit  18.3 | v1  19.4 | naive  19.4
+    Lamar Jackson         QB   proj  20.8  scored   8.5  live fit  28.5 | +exit  28.5 | v1  26.9 | naive  26.9
+    Amon-Ra St. Brown     WR   proj  20.4  scored   1.5  live fit  18.9 | +exit  18.9 | v1  19.4 | naive  19.4
+    Bijan Robinson        RB   proj  20.1  scored   1.6  live fit  19.2 | +exit  19.2 | v1  19.5 | naive  19.5
+    Caleb Williams        QB   proj  18.9  scored   0.3  live fit  20.0 | +exit  20.0 | v1  17.8 | naive  17.8
+    Trevor Lawrence       QB   proj  18.9  scored   5.6  live fit  21.5 | +exit  21.5 | v1  22.4 | naive  22.4
+    Jonathan Taylor       RB   proj  18.8  scored   7.9  live fit  25.9 | +exit  25.9 | v1  24.6 | naive  24.6
+    Tyler Shough          QB   proj  18.7  scored   0.6  live fit  16.9 | +exit  16.9 | v1  17.0 | naive  17.0
+    Chase Brown           RB   proj  17.9  scored   1.4  live fit  16.8 | +exit  16.8 | v1  17.1 | naive  17.1
+  ATL: in Q1 4:54 f=0.17 score 0.0-3.0
+  BAL: in Q1 5:54 f=0.15 score 7.0-6.0
+  BUF: in Q1 1:15 f=0.23 score 3.0-0.0
+  CAR: in Q1 5:52 f=0.15 score 7.0-7.0
+  CHI: in Q1 5:52 f=0.15 score 7.0-7.0
+  CIN: in Q1 5:41 f=0.16 score 7.0-3.0
+  CLE: in Q1 4:03 f=0.18 score 0.0-7.0
+  DET: in Q1 3:39 f=0.19 score 7.0-0.0
+  HOU: in Q1 1:15 f=0.23 score 0.0-3.0
+  IND: in Q1 5:54 f=0.15 score 6.0-7.0
+  JAX: in Q1 4:03 f=0.18 score 7.0-0.0
+  NO: in Q1 3:39 f=0.19 score 0.0-7.0
+  NYJ: in Q1 5:03 f=0.17 score 7.0-3.0
+  PIT: in Q1 4:54 f=0.17 score 3.0-0.0
+  TB: in Q1 5:41 f=0.16 score 3.0-7.0
+  TEN: in Q1 5:03 f=0.17 score 3.0-7.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  12.8  live fit  34.3 | +exit  34.3 | v1  35.1 | naive  33.5
+    Ja'Marr Chase         WR   proj  22.7  scored   0.0  live fit  17.3 | +exit  17.3 | v1  18.4 | naive  19.2
+    Joe Burrow            QB   proj  22.5  scored   0.0  live fit  17.4 | +exit  17.4 | v1  18.3 | naive  19.1
+    Josh Allen            QB   proj  21.6  scored   0.4  live fit  15.7 | +exit  15.7 | v1  16.1 | naive  17.0
+    Lamar Jackson         QB   proj  20.8  scored   8.5  live fit  27.5 | +exit  27.5 | v1  27.2 | naive  26.1
+    Amon-Ra St. Brown     WR   proj  20.4  scored   1.5  live fit  15.9 | +exit  15.9 | v1  17.6 | naive  18.0
+    Bijan Robinson        RB   proj  20.1  scored   5.4  live fit  22.6 | +exit  22.6 | v1  22.5 | naive  22.1
+    Caleb Williams        QB   proj  18.9  scored   8.7  live fit  26.5 | +exit  26.5 | v1  25.9 | naive  24.7
+    Trevor Lawrence       QB   proj  18.9  scored   6.5  live fit  21.3 | +exit  21.3 | v1  22.6 | naive  22.0
+    Jonathan Taylor       RB   proj  18.8  scored   7.7  live fit  24.8 | +exit  24.8 | v1  24.7 | naive  23.6
+    Tyler Shough          QB   proj  18.7  scored   0.6  live fit  17.5 | +exit  17.5 | v1  15.2 | naive  15.8
+    Chase Brown           RB   proj  17.9  scored   1.4  live fit  15.4 | +exit  15.4 | v1  16.2 | naive  16.5
+  ATL: in Q1 1:13 f=0.23 score 7.0-3.0
+  BAL: in Q1 2:19 f=0.21 score 14.0-6.0
+  BUF: in Q2 14:52 f=0.25 score 3.0-7.0
+  CAR: in Q1 1:59 f=0.22 score 7.0-13.0
+  CHI: in Q1 1:59 f=0.22 score 13.0-7.0
+  CIN: in Q1 1:48 f=0.22 score 14.0-3.0
+  CLE: in Q1 0:00 f=0.25 score 0.0-14.0
+  DET: in Q2 15:00 f=0.25 score 7.0-0.0
+  HOU: in Q2 14:52 f=0.25 score 7.0-3.0
+  IND: in Q1 2:19 f=0.21 score 6.0-14.0
+  JAX: in Q1 0:00 f=0.25 score 14.0-0.0
+  NO: in Q2 15:00 f=0.25 score 0.0-7.0
+  NYJ: in Q1 3:18 f=0.20 score 7.0-3.0
+  PIT: in Q1 1:13 f=0.23 score 3.0-7.0
+  TB: in Q1 1:48 f=0.22 score 3.0-14.0
+  TEN: in Q1 3:18 f=0.20 score 3.0-7.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  13.3  live fit  33.1 | +exit  33.1 | v1  33.7 | naive  32.4
+    Ja'Marr Chase         WR   proj  22.7  scored   0.0  live fit  14.3 | +exit  14.3 | v1  16.7 | naive  17.7
+    Joe Burrow            QB   proj  22.5  scored   5.2  live fit  20.1 | +exit  20.1 | v1  22.8 | naive  22.8
+    Josh Allen            QB   proj  21.6  scored   1.5  live fit  18.7 | +exit  18.7 | v1  16.9 | naive  17.7
+    Lamar Jackson         QB   proj  20.8  scored  10.7  live fit  26.9 | +exit  26.9 | v1  28.4 | naive  27.1
+    Amon-Ra St. Brown     WR   proj  20.4  scored   4.8  live fit  18.6 | +exit  18.6 | v1  20.0 | naive  20.1
+    Bijan Robinson        RB   proj  20.1  scored  14.8  live fit  32.4 | +exit  32.4 | v1  32.2 | naive  30.3
+    Caleb Williams        QB   proj  18.9  scored  11.0  live fit  26.5 | +exit  26.5 | v1  27.2 | naive  25.8
+    Trevor Lawrence       QB   proj  18.9  scored  12.2  live fit  25.3 | +exit  25.3 | v1  27.8 | naive  26.4
+    Jonathan Taylor       RB   proj  18.8  scored   8.3  live fit  24.8 | +exit  24.8 | v1  24.0 | naive  23.1
+    Tyler Shough          QB   proj  18.7  scored   0.6  live fit  16.1 | +exit  15.3 | v1  13.9 | naive  14.6  exit x0.95 (stale 0.17)
+    Chase Brown           RB   proj  17.9  scored   2.7  live fit  15.1 | +exit  15.1 | v1  16.4 | naive  16.7
+  BACKUP IN: Cam Ward (TEN) at f=0.11 with 2.0 pts — inherits Mitchell Trubisky 0.5 x 0.9
+  ATL: in Q2 14:18 f=0.26 score 7.0-3.0
+  BAL: in Q2 14:22 f=0.26 score 14.0-6.0
+  BUF: in Q2 10:51 f=0.32 score 10.0-7.0
+  CAR: in Q2 15:00 f=0.25 score 7.0-14.0
+  CHI: in Q2 15:00 f=0.25 score 14.0-7.0
+  CIN: in Q2 12:46 f=0.29 score 14.0-3.0
+  CLE: in Q2 9:58 f=0.33 score 0.0-14.0
+  DET: in Q2 12:50 f=0.29 score 7.0-0.0
+  HOU: in Q2 10:51 f=0.32 score 7.0-10.0
+  IND: in Q2 14:22 f=0.26 score 6.0-14.0
+  JAX: in Q2 9:58 f=0.33 score 14.0-0.0
+  NO: in Q2 12:50 f=0.29 score 0.0-7.0
+  NYJ: in Q2 15:00 f=0.25 score 7.0-3.0
+  PIT: in Q2 14:18 f=0.26 score 3.0-7.0
+  TB: in Q2 12:46 f=0.29 score 3.0-14.0
+  TEN: in Q2 15:00 f=0.25 score 3.0-7.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  13.3  live fit  32.1 | +exit  32.1 | v1  32.6 | naive  31.5
+    Ja'Marr Chase         WR   proj  22.7  scored   0.0  live fit  13.2 | +exit  13.2 | v1  15.0 | naive  16.2
+    Joe Burrow            QB   proj  22.5  scored   5.2  live fit  18.5 | +exit  18.5 | v1  21.0 | naive  21.2
+    Josh Allen            QB   proj  21.6  scored  10.3  live fit  25.9 | +exit  25.9 | v1  25.5 | naive  25.0
+    Lamar Jackson         QB   proj  20.8  scored  12.1  live fit  27.8 | +exit  27.8 | v1  28.8 | naive  27.5
+    Amon-Ra St. Brown     WR   proj  20.4  scored   4.8  live fit  18.0 | +exit  18.0 | v1  19.2 | naive  19.4
+    Bijan Robinson        RB   proj  20.1  scored  14.8  live fit  31.6 | +exit  31.6 | v1  31.4 | naive  29.6
+    Caleb Williams        QB   proj  18.9  scored  11.0  live fit  25.7 | +exit  25.7 | v1  26.4 | naive  25.2
+    Trevor Lawrence       QB   proj  18.9  scored  13.2  live fit  24.9 | +exit  24.9 | v1  26.9 | naive  25.8
+    Jonathan Taylor       RB   proj  18.8  scored   8.3  live fit  23.6 | +exit  23.6 | v1  22.8 | naive  22.2
+    Tyler Shough          QB   proj  18.7  scored   1.5  live fit  16.4 | +exit  16.4 | v1  14.1 | naive  14.8
+    Chase Brown           RB   proj  17.9  scored   2.7  live fit  13.9 | +exit  13.9 | v1  15.0 | naive  15.5
+  ATL: in Q2 10:49 f=0.32 score 7.0-6.0
+  BAL: in Q2 10:37 f=0.32 score 14.0-6.0
+  BUF: in Q2 4:48 f=0.42 score 10.0-14.0
+  CAR: in Q2 12:40 f=0.29 score 14.0-21.0
+  CHI: in Q2 12:40 f=0.29 score 21.0-14.0
+  CIN: in Q2 7:16 f=0.38 score 14.0-3.0
+  CLE: in Q2 7:03 f=0.38 score 0.0-17.0
+  DET: in Q2 9:34 f=0.34 score 7.0-0.0
+  HOU: in Q2 4:48 f=0.42 score 14.0-10.0
+  IND: in Q2 10:37 f=0.32 score 6.0-14.0
+  JAX: in Q2 7:03 f=0.38 score 17.0-0.0
+  NO: in Q2 9:34 f=0.34 score 0.0-7.0
+  NYJ: in Q2 6:06 f=0.40 score 7.0-3.0
+  PIT: in Q2 10:49 f=0.32 score 6.0-7.0
+  TB: in Q2 7:16 f=0.38 score 3.0-14.0
+  TEN: in Q2 6:06 f=0.40 score 3.0-7.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  13.8  live fit  31.1 | +exit  31.1 | v1  31.5 | naive  30.6
+    Ja'Marr Chase         WR   proj  22.7  scored   2.6  live fit  14.2 | +exit  14.2 | v1  15.8 | naive  16.7
+    Joe Burrow            QB   proj  22.5  scored   7.1  live fit  18.8 | +exit  18.8 | v1  20.9 | naive  21.1
+    Josh Allen            QB   proj  21.6  scored  10.3  live fit  24.8 | +exit  24.8 | v1  23.0 | naive  22.8
+    Lamar Jackson         QB   proj  20.8  scored  13.3  live fit  27.8 | +exit  27.8 | v1  28.5 | naive  27.4
+    Amon-Ra St. Brown     WR   proj  20.4  scored   5.8  live fit  18.1 | +exit  18.1 | v1  19.1 | naive  19.2
+    Bijan Robinson        RB   proj  20.1  scored  14.8  live fit  30.4 | +exit  30.4 | v1  29.9 | naive  28.5
+    Caleb Williams        QB   proj  18.9  scored  16.7  live fit  32.1 | +exit  32.1 | v1  32.1 | naive  30.1
+    Trevor Lawrence       QB   proj  18.9  scored  13.7  live fit  23.7 | +exit  23.7 | v1  26.4 | naive  25.4
+    Jonathan Taylor       RB   proj  18.8  scored   9.3  live fit  23.4 | +exit  23.4 | v1  22.6 | naive  22.0
+    Tyler Shough          QB   proj  18.7  scored   1.5  live fit  15.2 | +exit  15.2 | v1  13.0 | naive  13.8
+    Chase Brown           RB   proj  17.9  scored   5.0  live fit  15.1 | +exit  15.1 | v1  15.8 | naive  16.1
+  ATL: in Q2 7:37 f=0.37 score 7.0-13.0
+  BAL: in Q2 6:54 f=0.39 score 21.0-6.0
+  BUF: in Q2 3:59 f=0.43 score 17.0-14.0
+  CAR: in Q2 8:42 f=0.35 score 21.0-21.0
+  CHI: in Q2 8:42 f=0.35 score 21.0-21.0
+  CIN: in Q2 4:43 f=0.42 score 21.0-3.0
+  CLE: in Q2 4:52 f=0.42 score 0.0-24.0
+  DET: in Q2 7:57 f=0.37 score 7.0-0.0
+  HOU: in Q2 3:59 f=0.43 score 14.0-17.0
+  IND: in Q2 6:54 f=0.39 score 6.0-21.0
+  JAX: in Q2 4:52 f=0.42 score 24.0-0.0
+  NO: in Q2 7:57 f=0.37 score 0.0-7.0
+  NYJ: in Q2 2:41 f=0.46 score 10.0-3.0
+  PIT: in Q2 7:37 f=0.37 score 13.0-7.0
+  TB: in Q2 4:43 f=0.42 score 3.0-21.0
+  TEN: in Q2 2:41 f=0.46 score 3.0-10.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  13.8  live fit  30.4 | +exit  30.4 | v1  30.6 | naive  29.9
+    Ja'Marr Chase         WR   proj  22.7  scored   2.6  live fit  11.6 | +exit  11.6 | v1  14.7 | naive  15.7
+    Joe Burrow            QB   proj  22.5  scored   8.0  live fit  16.9 | +exit  16.9 | v1  20.9 | naive  21.1
+    Josh Allen            QB   proj  21.6  scored  17.1  live fit  30.6 | +exit  30.6 | v1  30.4 | naive  29.3
+    Lamar Jackson         QB   proj  20.8  scored  20.2  live fit  32.7 | +exit  32.7 | v1  34.8 | naive  33.0
+    Amon-Ra St. Brown     WR   proj  20.4  scored   5.8  live fit  17.5 | +exit  17.5 | v1  18.4 | naive  18.7
+    Bijan Robinson        RB   proj  20.1  scored  17.5  live fit  32.9 | +exit  32.9 | v1  31.7 | naive  30.1
+    Caleb Williams        QB   proj  18.9  scored  17.5  live fit  33.0 | +exit  33.0 | v1  31.4 | naive  29.6
+    Trevor Lawrence       QB   proj  18.9  scored  18.8  live fit  27.3 | +exit  27.3 | v1  31.4 | naive  29.8
+    Jonathan Taylor       RB   proj  18.8  scored   9.2  live fit  22.3 | +exit  22.3 | v1  21.1 | naive  20.8
+    Tyler Shough          QB   proj  18.7  scored   1.9  live fit  15.2 | +exit  15.2 | v1  13.0 | naive  13.8
+    Chase Brown           RB   proj  17.9  scored  11.5  live fit  21.6 | +exit  21.6 | v1  22.4 | naive  21.9
+  ATL: in Q2 3:30 f=0.44 score 7.0-13.0
+  BAL: in Q2 5:04 f=0.42 score 28.0-6.0
+  BUF: in Q2 1:54 f=0.47 score 17.0-14.0
+  CAR: in Q2 5:20 f=0.41 score 21.0-24.0
+  CHI: in Q2 5:20 f=0.41 score 24.0-21.0
+  CIN: in Q2 1:45 f=0.47 score 21.0-10.0
+  CLE: in Q2 0:50 f=0.49 score 0.0-24.0
+  DET: in Q2 5:25 f=0.41 score 7.0-0.0
+  HOU: in Q2 1:54 f=0.47 score 14.0-17.0
+  IND: in Q2 5:04 f=0.42 score 6.0-28.0
+  JAX: in Q2 0:50 f=0.49 score 24.0-0.0
+  NO: in Q2 5:25 f=0.41 score 0.0-7.0
+  NYJ: in Q2 0:45 f=0.49 score 10.0-3.0
+  PIT: in Q2 3:30 f=0.44 score 13.0-7.0
+  TB: in Q2 1:45 f=0.47 score 10.0-21.0
+  TEN: in Q2 0:45 f=0.49 score 3.0-10.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  13.2  live fit  28.4 | +exit  28.4 | v1  28.7 | naive  28.2
+    Ja'Marr Chase         WR   proj  22.7  scored   2.6  live fit  11.5 | +exit  11.5 | v1  13.5 | naive  14.6
+    Joe Burrow            QB   proj  22.5  scored   8.0  live fit  17.1 | +exit  17.1 | v1  19.6 | naive  19.9
+    Josh Allen            QB   proj  21.6  scored  18.6  live fit  30.9 | +exit  30.9 | v1  31.2 | naive  30.1
+    Lamar Jackson         QB   proj  20.8  scored  20.7  live fit  30.6 | +exit  30.6 | v1  34.6 | naive  32.8
+    Amon-Ra St. Brown     WR   proj  20.4  scored   5.8  live fit  16.6 | +exit  16.6 | v1  17.5 | naive  17.8
+    Bijan Robinson        RB   proj  20.1  scored  17.9  live fit  31.1 | +exit  31.1 | v1  30.4 | naive  29.1
+    Caleb Williams        QB   proj  18.9  scored  17.7  live fit  30.8 | +exit  30.8 | v1  30.2 | naive  28.8
+    Trevor Lawrence       QB   proj  18.9  scored  18.8  live fit  25.4 | +exit  25.4 | v1  29.8 | naive  28.6
+    Jonathan Taylor       RB   proj  18.8  scored   9.6  live fit  22.4 | +exit  22.4 | v1  20.9 | naive  20.6
+    Tyler Shough          QB   proj  18.7  scored   1.3  live fit  13.5 | +exit  13.5 | v1  11.4 | naive  12.4
+    Chase Brown           RB   proj  17.9  scored  11.5  live fit  20.8 | +exit  20.8 | v1  21.4 | naive  21.0
+  ATL: in Q2 1:14 f=0.48 score 7.0-13.0
+  BAL: in Q2 2:16 f=0.46 score 28.0-13.0
+  BUF: in Q2 0:26 f=0.49 score 24.0-21.0
+  CAR: in Q2 2:35 f=0.46 score 24.0-24.0
+  CHI: in Q2 2:35 f=0.46 score 24.0-24.0
+  CIN: in HALF f=0.50 score 24.0-10.0
+  CLE: in HALF f=0.50 score 0.0-24.0
+  DET: in Q2 1:37 f=0.47 score 7.0-0.0
+  HOU: in Q2 0:26 f=0.49 score 21.0-24.0
+  IND: in Q2 2:16 f=0.46 score 13.0-28.0
+  JAX: in HALF f=0.50 score 24.0-0.0
+  NO: in Q2 1:37 f=0.47 score 0.0-7.0
+  NYJ: in HALF f=0.50 score 10.0-3.0
+  PIT: in Q2 1:14 f=0.48 score 13.0-7.0
+  TB: in HALF f=0.50 score 10.0-24.0
+  TEN: in HALF f=0.50 score 3.0-10.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  13.1  live fit  26.0 | +exit  26.0 | v1  26.7 | naive  26.5
+    Ja'Marr Chase         WR   proj  22.7  scored   2.6  live fit  10.1 | +exit  10.1 | v1  12.9 | naive  13.9
+    Joe Burrow            QB   proj  22.5  scored  11.3  live fit  19.2 | +exit  19.2 | v1  22.6 | naive  22.6
+    Josh Allen            QB   proj  21.6  scored  24.9  live fit  37.2 | +exit  37.2 | v1  37.7 | naive  35.9
+    Lamar Jackson         QB   proj  20.8  scored  18.7  live fit  28.2 | +exit  28.2 | v1  31.1 | naive  29.9
+    Amon-Ra St. Brown     WR   proj  20.4  scored   7.7  live fit  16.8 | +exit  16.8 | v1  18.2 | naive  18.4
+    Bijan Robinson        RB   proj  20.1  scored  19.3  live fit  31.5 | +exit  31.5 | v1  31.0 | naive  29.8
+    Caleb Williams        QB   proj  18.9  scored  17.7  live fit  29.7 | +exit  29.7 | v1  29.1 | naive  27.9
+    Trevor Lawrence       QB   proj  18.9  scored  18.8  live fit  25.0 | +exit  25.0 | v1  29.5 | naive  28.3
+    Jonathan Taylor       RB   proj  18.8  scored  16.7  live fit  28.9 | +exit  28.9 | v1  27.9 | naive  26.8
+    Tyler Shough          QB   proj  18.7  scored   1.9  live fit  12.1 | +exit  12.1 | v1  10.8 | naive  11.7
+    Chase Brown           RB   proj  17.9  scored  11.7  live fit  20.2 | +exit  20.2 | v1  21.0 | naive  20.6
+  ATL: in HALF f=0.50 score 7.0-13.0
+  BAL: in Q2 0:51 f=0.49 score 28.0-13.0
+  BUF: in HALF f=0.50 score 24.0-21.0
+  CAR: in Q2 0:22 f=0.49 score 24.0-31.0
+  CHI: in Q2 0:22 f=0.49 score 31.0-24.0
+  CIN: in HALF f=0.50 score 24.0-10.0
+  CLE: in Q3 14:20 f=0.51 score 0.0-24.0
+  DET: in HALF f=0.50 score 7.0-0.0
+  HOU: in HALF f=0.50 score 21.0-24.0
+  IND: in Q2 0:51 f=0.49 score 13.0-28.0
+  JAX: in Q3 14:20 f=0.51 score 24.0-0.0
+  NO: in HALF f=0.50 score 0.0-7.0
+  NYJ: in HALF f=0.50 score 10.0-3.0
+  PIT: in HALF f=0.50 score 13.0-7.0
+  TB: in HALF f=0.50 score 10.0-24.0
+  TEN: in HALF f=0.50 score 3.0-10.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  15.2  live fit  27.5 | +exit  27.5 | v1  28.3 | naive  27.9
+    Ja'Marr Chase         WR   proj  22.7  scored   2.6  live fit  10.1 | +exit  10.1 | v1  12.9 | naive  13.9
+    Joe Burrow            QB   proj  22.5  scored  11.3  live fit  19.2 | +exit  19.2 | v1  22.6 | naive  22.6
+    Josh Allen            QB   proj  21.6  scored  24.9  live fit  36.9 | +exit  36.9 | v1  37.5 | naive  35.7
+    Lamar Jackson         QB   proj  20.8  scored  18.7  live fit  27.4 | +exit  27.4 | v1  30.4 | naive  29.4
+    Amon-Ra St. Brown     WR   proj  20.4  scored   7.7  live fit  16.0 | +exit  16.0 | v1  17.6 | naive  17.9
+    Bijan Robinson        RB   proj  20.1  scored  21.0  live fit  32.8 | +exit  32.8 | v1  32.4 | naive  31.1
+    Caleb Williams        QB   proj  18.9  scored  29.0  live fit  40.1 | +exit  40.1 | v1  41.1 | naive  38.6
+    Trevor Lawrence       QB   proj  18.9  scored  18.8  live fit  24.8 | +exit  24.8 | v1  29.2 | naive  28.1
+    Jonathan Taylor       RB   proj  18.8  scored  16.7  live fit  28.1 | +exit  28.1 | v1  27.3 | naive  26.4
+    Tyler Shough          QB   proj  18.7  scored   2.8  live fit  12.3 | +exit  12.3 | v1  11.3 | naive  12.2
+    Chase Brown           RB   proj  17.9  scored  11.7  live fit  20.2 | +exit  20.2 | v1  21.0 | naive  20.6
+  ATL: in HALF f=0.50 score 7.0-13.0
+  BAL: in HALF f=0.50 score 31.0-13.0
+  BUF: in Q3 13:39 f=0.52 score 24.0-21.0
+  CAR: in HALF f=0.50 score 24.0-31.0
+  CHI: in HALF f=0.50 score 31.0-24.0
+  CIN: in Q3 10:55 f=0.57 score 24.0-10.0
+  CLE: in Q3 9:25 f=0.59 score 0.0-31.0
+  DET: in HALF f=0.50 score 7.0-0.0
+  HOU: in Q3 13:39 f=0.52 score 21.0-24.0
+  IND: in HALF f=0.50 score 13.0-31.0
+  JAX: in Q3 9:25 f=0.59 score 31.0-0.0
+  NO: in HALF f=0.50 score 0.0-7.0
+  NYJ: in Q3 11:14 f=0.56 score 10.0-3.0
+  PIT: in HALF f=0.50 score 13.0-7.0
+  TB: in Q3 10:55 f=0.57 score 10.0-24.0
+  TEN: in Q3 11:14 f=0.56 score 3.0-10.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  15.2  live fit  27.5 | +exit  27.5 | v1  28.3 | naive  27.9
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   9.6 | +exit   9.6 | v1  12.0 | naive  13.0
+    Joe Burrow            QB   proj  22.5  scored  12.5  live fit  19.3 | +exit  19.3 | v1  22.2 | naive  22.2
+    Josh Allen            QB   proj  21.6  scored  24.9  live fit  36.5 | +exit  36.5 | v1  36.9 | naive  35.2
+    Lamar Jackson         QB   proj  20.8  scored  21.2  live fit  29.2 | +exit  29.2 | v1  32.9 | naive  31.6
+    Amon-Ra St. Brown     WR   proj  20.4  scored   7.7  live fit  16.0 | +exit  16.0 | v1  17.6 | naive  17.9
+    Bijan Robinson        RB   proj  20.1  scored  21.0  live fit  32.8 | +exit  32.8 | v1  32.4 | naive  31.1
+    Caleb Williams        QB   proj  18.9  scored  29.0  live fit  39.8 | +exit  39.8 | v1  40.9 | naive  38.5
+    Trevor Lawrence       QB   proj  18.9  scored  25.0  live fit  29.2 | +exit  29.2 | v1  34.1 | naive  32.7
+    Jonathan Taylor       RB   proj  18.8  scored  16.7  live fit  27.8 | +exit  27.8 | v1  27.0 | naive  26.1
+    Tyler Shough          QB   proj  18.7  scored   2.8  live fit  12.3 | +exit  12.3 | v1  11.3 | naive  12.2
+    Chase Brown           RB   proj  17.9  scored  13.3  live fit  20.7 | +exit  20.7 | v1  21.4 | naive  21.0
+  ATL: in Q3 10:54 f=0.57 score 7.0-13.0
+  BAL: in Q3 14:14 f=0.51 score 31.0-13.0
+  BUF: in Q3 9:26 f=0.59 score 24.0-21.0
+  CAR: in HALF f=0.50 score 24.0-31.0
+  CHI: in HALF f=0.50 score 31.0-24.0
+  CIN: in Q3 5:18 f=0.66 score 27.0-10.0
+  CLE: in Q3 4:19 f=0.68 score 3.0-31.0
+  DET: in Q3 11:14 f=0.56 score 14.0-0.0
+  HOU: in Q3 9:26 f=0.59 score 21.0-24.0
+  IND: in Q3 14:14 f=0.51 score 13.0-31.0
+  JAX: in Q3 4:19 f=0.68 score 31.0-3.0
+  NO: in Q3 11:14 f=0.56 score 0.0-14.0
+  NYJ: in Q3 8:38 f=0.61 score 17.0-3.0
+  PIT: in Q3 10:54 f=0.57 score 13.0-7.0
+  TB: in Q3 5:18 f=0.66 score 10.0-27.0
+  TEN: in Q3 8:38 f=0.61 score 3.0-17.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  23.5  live fit  34.8 | +exit  34.8 | v1  35.6 | naive  34.6
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   7.5 | +exit   7.5 | v1   9.9 | naive  10.9
+    Joe Burrow            QB   proj  22.5  scored  12.5  live fit  16.9 | +exit  16.9 | v1  19.9 | naive  20.1
+    Josh Allen            QB   proj  21.6  scored  26.0  live fit  36.2 | +exit  36.2 | v1  36.1 | naive  34.8
+    Lamar Jackson         QB   proj  20.8  scored  21.2  live fit  29.0 | +exit  29.0 | v1  32.6 | naive  31.3
+    Amon-Ra St. Brown     WR   proj  20.4  scored   7.7  live fit  13.9 | +exit  13.9 | v1  16.2 | naive  16.6
+    Bijan Robinson        RB   proj  20.1  scored  23.0  live fit  33.3 | +exit  33.3 | v1  32.9 | naive  31.7
+    Caleb Williams        QB   proj  18.9  scored  29.0  live fit  39.8 | +exit  39.8 | v1  40.9 | naive  38.5
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  29.5 | +exit  29.5 | v1  33.2 | naive  32.2
+    Jonathan Taylor       RB   proj  18.8  scored  16.7  live fit  27.5 | +exit  27.5 | v1  26.7 | naive  25.9
+    Tyler Shough          QB   proj  18.7  scored   1.8  live fit  11.4 | +exit  11.4 | v1   9.0 | naive  10.0
+    Chase Brown           RB   proj  17.9  scored  13.3  live fit  18.8 | +exit  18.8 | v1  19.5 | naive  19.4
+  ATL: in Q3 8:14 f=0.61 score 7.0-13.0
+  BAL: in Q3 8:40 f=0.61 score 31.0-13.0
+  BUF: in Q3 7:22 f=0.63 score 24.0-21.0
+  CAR: in Q3 11:28 f=0.56 score 24.0-31.0
+  CHI: in Q3 11:28 f=0.56 score 31.0-24.0
+  CIN: in Q3 2:16 f=0.71 score 27.0-20.0
+  CLE: in Q4 15:00 f=0.75 score 3.0-34.0
+  DET: in Q3 7:13 f=0.63 score 21.0-0.0
+  HOU: in Q3 7:22 f=0.63 score 21.0-24.0
+  IND: in Q3 8:40 f=0.61 score 13.0-31.0
+  JAX: in Q4 15:00 f=0.75 score 34.0-3.0
+  NO: in Q3 7:13 f=0.63 score 0.0-21.0
+  NYJ: in Q3 4:33 f=0.67 score 20.0-3.0
+  PIT: in Q3 8:14 f=0.61 score 13.0-7.0
+  TB: in Q3 2:16 f=0.71 score 20.0-27.0
+  TEN: in Q3 4:33 f=0.67 score 3.0-20.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  23.5  live fit  32.5 | +exit  32.5 | v1  33.6 | naive  32.9
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   8.2 | +exit   8.2 | v1   8.8 | naive   9.7
+    Joe Burrow            QB   proj  22.5  scored  11.5  live fit  16.8 | +exit  16.8 | v1  17.7 | naive  18.0
+    Josh Allen            QB   proj  21.6  scored  26.0  live fit  35.4 | +exit  35.4 | v1  35.2 | naive  34.0
+    Lamar Jackson         QB   proj  20.8  scored  21.6  live fit  27.7 | +exit  27.7 | v1  30.6 | naive  29.8
+    Amon-Ra St. Brown     WR   proj  20.4  scored  16.6  live fit  21.2 | +exit  21.2 | v1  24.5 | naive  24.1
+    Bijan Robinson        RB   proj  20.1  scored  23.5  live fit  32.7 | +exit  32.7 | v1  32.4 | naive  31.3
+    Caleb Williams        QB   proj  18.9  scored  29.0  live fit  38.7 | +exit  38.7 | v1  39.4 | naive  37.4
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  27.9 | +exit  27.9 | v1  31.6 | naive  30.8
+    Jonathan Taylor       RB   proj  18.8  scored  19.7  live fit  28.6 | +exit  28.6 | v1  27.9 | naive  27.1
+    Tyler Shough          QB   proj  18.7  scored   2.0  live fit  11.7 | +exit  11.7 | v1   8.0 | naive   8.9
+    Chase Brown           RB   proj  17.9  scored  14.4  live fit  19.4 | +exit  19.4 | v1  19.7 | naive  19.6
+  ATL: in Q3 4:41 f=0.67 score 7.0-13.0
+  BAL: in Q3 4:24 f=0.68 score 31.0-16.0
+  BUF: in Q3 2:50 f=0.70 score 27.0-21.0
+  CAR: in Q3 9:02 f=0.60 score 30.0-31.0
+  CHI: in Q3 9:02 f=0.60 score 31.0-30.0
+  CIN: in Q4 15:00 f=0.75 score 27.0-20.0
+  CLE: in Q4 10:39 f=0.82 score 3.0-34.0
+  DET: in Q3 3:20 f=0.69 score 21.0-7.0
+  HOU: in Q3 2:50 f=0.70 score 21.0-27.0
+  IND: in Q3 4:24 f=0.68 score 16.0-31.0
+  JAX: in Q4 10:39 f=0.82 score 34.0-3.0
+  NO: in Q3 3:20 f=0.69 score 7.0-21.0
+  NYJ: in Q3 0:00 f=0.75 score 20.0-3.0
+  PIT: in Q3 4:41 f=0.67 score 13.0-7.0
+  TB: in Q4 15:00 f=0.75 score 20.0-27.0
+  TEN: in Q3 0:00 f=0.75 score 3.0-20.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  23.5  live fit  31.0 | +exit  31.0 | v1  31.7 | naive  31.3
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   7.5 | +exit   7.5 | v1   8.0 | naive   8.9
+    Joe Burrow            QB   proj  22.5  scored  12.8  live fit  17.4 | +exit  17.4 | v1  18.1 | naive  18.4
+    Josh Allen            QB   proj  21.6  scored  26.5  live fit  33.5 | +exit  33.5 | v1  33.8 | naive  32.9
+    Lamar Jackson         QB   proj  20.8  scored  21.9  live fit  27.3 | +exit  27.3 | v1  29.3 | naive  28.6
+    Amon-Ra St. Brown     WR   proj  20.4  scored  16.6  live fit  21.1 | +exit  21.1 | v1  23.0 | naive  22.8
+    Bijan Robinson        RB   proj  20.1  scored  23.5  live fit  31.3 | +exit  31.3 | v1  30.9 | naive  30.1
+    Caleb Williams        QB   proj  18.9  scored  29.0  live fit  39.0 | +exit  39.0 | v1  38.4 | naive  36.6
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  27.0 | +exit  27.0 | v1  29.9 | naive  29.4  exit x0.98 (stale 0.16)
+    Jonathan Taylor       RB   proj  18.8  scored  19.7  live fit  26.9 | +exit  26.9 | v1  26.3 | naive  25.8
+    Tyler Shough          QB   proj  18.7  scored   2.6  live fit   9.9 | +exit   9.9 | v1   7.5 | naive   8.3
+    Chase Brown           RB   proj  17.9  scored  16.1  live fit  20.5 | +exit  20.5 | v1  20.7 | naive  20.6
+  ATL: in Q3 0:02 f=0.75 score 10.0-13.0
+  BAL: in Q3 1:15 f=0.73 score 31.0-16.0
+  BUF: in Q4 13:34 f=0.77 score 27.0-28.0
+  CAR: in Q3 5:23 f=0.66 score 31.0-31.0
+  CHI: in Q3 5:23 f=0.66 score 31.0-31.0
+  CIN: in Q4 13:16 f=0.78 score 30.0-20.0
+  CLE: in Q4 5:38 f=0.91 score 3.0-34.0
+  DET: in Q3 0:23 f=0.74 score 21.0-14.0
+  HOU: in Q4 13:34 f=0.77 score 28.0-27.0
+  IND: in Q3 1:15 f=0.73 score 16.0-31.0
+  JAX: in Q4 5:38 f=0.91 score 34.0-3.0
+  NO: in Q3 0:23 f=0.74 score 14.0-21.0
+  NYJ: in Q4 12:01 f=0.80 score 20.0-3.0
+  PIT: in Q3 0:02 f=0.75 score 13.0-10.0
+  TB: in Q4 13:16 f=0.78 score 20.0-30.0
+  TEN: in Q4 12:01 f=0.80 score 3.0-20.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  24.0  live fit  30.5 | +exit  30.5 | v1  30.9 | naive  30.5
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   6.6 | +exit   6.6 | v1   7.4 | naive   8.2
+    Joe Burrow            QB   proj  22.5  scored  12.8  live fit  16.4 | +exit  16.4 | v1  17.5 | naive  17.8
+    Josh Allen            QB   proj  21.6  scored  26.5  live fit  32.9 | +exit  32.9 | v1  32.0 | naive  31.4
+    Lamar Jackson         QB   proj  20.8  scored  21.9  live fit  26.2 | +exit  26.2 | v1  28.0 | naive  27.6
+    Amon-Ra St. Brown     WR   proj  20.4  scored  16.6  live fit  21.2 | +exit  21.2 | v1  21.9 | naive  21.8
+    Bijan Robinson        RB   proj  20.1  scored  27.4  live fit  33.4 | +exit  33.4 | v1  33.2 | naive  32.4
+    Caleb Williams        QB   proj  18.9  scored  31.0  live fit  39.9 | +exit  39.9 | v1  39.0 | naive  37.4
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  26.3 | +exit  26.2 | v1  28.1 | naive  27.9  exit x0.73 (stale 0.24)
+    Jonathan Taylor       RB   proj  18.8  scored  23.3  live fit  29.6 | +exit  29.6 | v1  29.0 | naive  28.4
+    Tyler Shough          QB   proj  18.7  scored   7.9  live fit  13.6 | +exit  13.6 | v1  12.3 | naive  12.7
+    Chase Brown           RB   proj  17.9  scored  15.8  live fit  19.5 | +exit  19.5 | v1  19.9 | naive  19.8
+  ATL: in Q4 12:05 f=0.80 score 10.0-20.0
+  BAL: in Q4 12:46 f=0.79 score 38.0-16.0
+  BUF: in Q4 10:31 f=0.82 score 30.0-28.0
+  CAR: in Q3 2:35 f=0.71 score 31.0-38.0
+  CHI: in Q3 2:35 f=0.71 score 38.0-31.0
+  CIN: in Q4 8:17 f=0.86 score 30.0-20.0
+  CLE: in Q4 1:52 f=0.97 score 9.0-34.0
+  DET: in Q4 12:04 f=0.80 score 21.0-14.0
+  HOU: in Q4 10:31 f=0.82 score 28.0-30.0
+  IND: in Q4 12:46 f=0.79 score 16.0-38.0
+  JAX: in Q4 1:52 f=0.97 score 34.0-9.0
+  NO: in Q4 12:04 f=0.80 score 14.0-21.0
+  NYJ: in Q4 8:01 f=0.87 score 20.0-3.0
+  PIT: in Q4 12:05 f=0.80 score 20.0-10.0
+  TB: in Q4 8:17 f=0.86 score 20.0-30.0
+  TEN: in Q4 8:01 f=0.87 score 3.0-20.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  24.7  live fit  29.7 | +exit  29.7 | v1  30.1 | naive  29.8
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   5.3 | +exit   5.3 | v1   5.8 | naive   6.3
+    Joe Burrow            QB   proj  22.5  scored  13.0  live fit  15.2 | +exit  15.2 | v1  15.9 | naive  16.1
+    Josh Allen            QB   proj  21.6  scored  28.5  live fit  33.4 | +exit  33.4 | v1  32.7 | naive  32.3
+    Lamar Jackson         QB   proj  20.8  scored  24.3  live fit  26.8 | +exit  26.8 | v1  29.2 | naive  28.8
+    Amon-Ra St. Brown     WR   proj  20.4  scored  18.2  live fit  21.9 | +exit  21.9 | v1  22.4 | naive  22.3
+    Bijan Robinson        RB   proj  20.1  scored  29.3  live fit  34.4 | +exit  34.4 | v1  34.0 | naive  33.4
+    Caleb Williams        QB   proj  18.9  scored  31.0  live fit  37.7 | +exit  37.7 | v1  37.8 | naive  36.5
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  26.3 | +exit  26.2 | v1  26.8 | naive  26.7  exit x0.54 (stale 0.30)
+    Jonathan Taylor       RB   proj  18.8  scored  23.3  live fit  28.4 | +exit  28.4 | v1  27.8 | naive  27.3
+    Tyler Shough          QB   proj  18.7  scored   7.9  live fit  12.5 | +exit  12.5 | v1  11.3 | naive  11.7
+    Chase Brown           RB   proj  17.9  scored  16.9  live fit  19.3 | +exit  19.3 | v1  19.4 | naive  19.4
+  ATL: in Q4 8:27 f=0.86 score 13.0-20.0
+  BAL: in Q4 9:45 f=0.84 score 38.0-23.0
+  BUF: in Q4 5:50 f=0.90 score 30.0-31.0
+  CAR: in Q4 15:00 f=0.75 score 31.0-45.0
+  CHI: in Q4 15:00 f=0.75 score 45.0-31.0
+  CIN: in Q4 3:31 f=0.94 score 33.0-20.0
+  CLE: post FINAL f=1.00 score 10.0-34.0
+  DET: in Q4 7:34 f=0.87 score 21.0-17.0
+  HOU: in Q4 5:50 f=0.90 score 31.0-30.0
+  IND: in Q4 9:45 f=0.84 score 23.0-38.0
+  JAX: post FINAL f=1.00 score 34.0-10.0
+  NO: in Q4 7:34 f=0.87 score 17.0-21.0
+  NYJ: in Q4 2:49 f=0.95 score 23.0-3.0
+  PIT: in Q4 8:27 f=0.86 score 20.0-13.0
+  TB: in Q4 3:31 f=0.94 score 20.0-33.0
+  TEN: in Q4 2:49 f=0.95 score 3.0-23.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  26.2  live fit  29.6 | +exit  29.6 | v1  29.5 | naive  29.4
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   3.9 | +exit   3.9 | v1   4.3 | naive   4.5
+    Joe Burrow            QB   proj  22.5  scored  13.2  live fit  13.9 | +exit  13.9 | v1  14.4 | naive  14.5
+    Josh Allen            QB   proj  21.6  scored  28.5  live fit  31.7 | +exit  31.7 | v1  30.8 | naive  30.6
+    Lamar Jackson         QB   proj  20.8  scored  24.3  live fit  26.9 | +exit  26.9 | v1  28.0 | naive  27.7
+    Amon-Ra St. Brown     WR   proj  20.4  scored  18.2  live fit  21.0 | +exit  21.0 | v1  20.8 | naive  20.8
+    Bijan Robinson        RB   proj  20.1  scored  29.3  live fit  33.0 | +exit  33.0 | v1  32.5 | naive  32.1
+    Caleb Williams        QB   proj  18.9  scored  31.0  live fit  35.7 | +exit  35.7 | v1  36.8 | naive  35.7
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  26.1 | +exit  26.1 | v1  26.1 | naive  26.1
+    Jonathan Taylor       RB   proj  18.8  scored  25.1  live fit  29.1 | +exit  29.1 | v1  28.5 | naive  28.2
+    Tyler Shough          QB   proj  18.7  scored  10.1  live fit  13.1 | +exit  13.1 | v1  12.3 | naive  12.5
+    Chase Brown           RB   proj  17.9  scored  18.5  live fit  19.5 | +exit  19.5 | v1  19.6 | naive  19.6
+  ATL: in Q4 3:32 f=0.94 score 13.0-20.0
+  BAL: in Q4 3:54 f=0.94 score 41.0-23.0
+  BUF: in Q4 2:00 f=0.97 score 30.0-31.0
+  CAR: in Q4 10:55 f=0.82 score 31.0-45.0
+  CHI: in Q4 10:55 f=0.82 score 45.0-31.0
+  CIN: in Q4 2:00 f=0.97 score 33.0-27.0
+  CLE: post FINAL f=1.00 score 10.0-34.0
+  DET: in Q4 2:23 f=0.96 score 24.0-17.0
+  HOU: in Q4 2:00 f=0.97 score 31.0-30.0
+  IND: in Q4 3:54 f=0.94 score 23.0-41.0
+  JAX: post FINAL f=1.00 score 34.0-10.0
+  NO: in Q4 2:23 f=0.96 score 17.0-24.0
+  NYJ: in Q4 0:38 f=0.99 score 23.0-10.0
+  PIT: in Q4 3:32 f=0.94 score 20.0-13.0
+  TB: in Q4 2:00 f=0.97 score 27.0-33.0
+  TEN: in Q4 0:38 f=0.99 score 10.0-23.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  29.1  live fit  30.2 | +exit  30.2 | v1  30.2 | naive  30.1
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   3.8 | +exit   3.8 | v1   3.8 | naive   4.0
+    Joe Burrow            QB   proj  22.5  scored  15.2  live fit  15.9 | +exit  15.9 | v1  15.9 | naive  15.9
+    Josh Allen            QB   proj  21.6  scored  29.0  live fit  30.1 | +exit  30.1 | v1  29.8 | naive  29.7
+    Lamar Jackson         QB   proj  20.8  scored  25.3  live fit  26.1 | +exit  26.1 | v1  26.7 | naive  26.6
+    Amon-Ra St. Brown     WR   proj  20.4  scored  19.6  live fit  20.4 | +exit  20.4 | v1  20.4 | naive  20.4
+    Bijan Robinson        RB   proj  20.1  scored  31.3  live fit  33.0 | +exit  33.0 | v1  32.7 | naive  32.5
+    Caleb Williams        QB   proj  18.9  scored  32.5  live fit  35.9 | +exit  35.9 | v1  36.7 | naive  35.9
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  26.1 | +exit  26.1 | v1  26.1 | naive  26.1
+    Jonathan Taylor       RB   proj  18.8  scored  25.1  live fit  26.9 | +exit  26.9 | v1  26.4 | naive  26.3
+    Tyler Shough          QB   proj  18.7  scored  10.4  live fit  11.5 | +exit  11.5 | v1  11.1 | naive  11.2
+    Chase Brown           RB   proj  17.9  scored  18.4  live fit  19.0 | +exit  19.0 | v1  19.0 | naive  19.0
+  ATL: post FINAL f=1.00 score 13.0-20.0
+  BAL: post FINAL f=1.00 score 41.0-23.0
+  BUF: in Q4 0:39 f=0.99 score 36.0-31.0
+  CAR: in Q4 5:42 f=0.91 score 31.0-52.0
+  CHI: in Q4 5:42 f=0.91 score 52.0-31.0
+  CIN: post FINAL f=1.00 score 33.0-27.0
+  CLE: post FINAL f=1.00 score 10.0-34.0
+  DET: in Q4 1:07 f=0.98 score 24.0-24.0
+  HOU: in Q4 0:39 f=0.99 score 31.0-36.0
+  IND: post FINAL f=1.00 score 23.0-41.0
+  JAX: post FINAL f=1.00 score 34.0-10.0
+  NO: in Q4 1:07 f=0.98 score 24.0-24.0
+  NYJ: post FINAL f=1.00 score 23.0-10.0
+  PIT: post FINAL f=1.00 score 20.0-13.0
+  TB: post FINAL f=1.00 score 27.0-33.0
+  TEN: post FINAL f=1.00 score 10.0-23.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  29.1  live fit  29.6 | +exit  29.6 | v1  29.6 | naive  29.6
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   3.2 | +exit   3.2 | v1   3.2 | naive   3.2
+    Joe Burrow            QB   proj  22.5  scored  15.2  live fit  15.2 | +exit  15.2 | v1  15.2 | naive  15.2
+    Josh Allen            QB   proj  21.6  scored  35.8  live fit  36.1 | +exit  36.1 | v1  36.0 | naive  36.0
+    Lamar Jackson         QB   proj  20.8  scored  25.0  live fit  25.0 | +exit  25.0 | v1  25.0 | naive  25.0
+    Amon-Ra St. Brown     WR   proj  20.4  scored  19.6  live fit  20.1 | +exit  20.1 | v1  20.0 | naive  20.0
+    Bijan Robinson        RB   proj  20.1  scored  31.3  live fit  31.3 | +exit  31.3 | v1  31.3 | naive  31.3
+    Caleb Williams        QB   proj  18.9  scored  37.3  live fit  38.8 | +exit  38.8 | v1  39.5 | naive  39.1
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  26.1 | +exit  26.1 | v1  26.1 | naive  26.1
+    Jonathan Taylor       RB   proj  18.8  scored  25.1  live fit  25.1 | +exit  25.1 | v1  25.1 | naive  25.1
+    Tyler Shough          QB   proj  18.7  scored  17.6  live fit  18.0 | +exit  18.0 | v1  17.9 | naive  17.9
+    Chase Brown           RB   proj  17.9  scored  18.8  live fit  18.8 | +exit  18.8 | v1  18.8 | naive  18.8
+  ATL: post FINAL f=1.00 score 13.0-20.0
+  BAL: post FINAL f=1.00 score 41.0-23.0
+  BUF: post FINAL f=1.00 score 36.0-31.0
+  CAR: in Q4 3:55 f=0.93 score 37.0-52.0
+  CHI: in Q4 3:55 f=0.93 score 52.0-37.0
+  CIN: post FINAL f=1.00 score 33.0-27.0
+  CLE: post FINAL f=1.00 score 10.0-34.0
+  DET: in Q4 0:00 f=0.99 score 24.0-24.0
+  HOU: post FINAL f=1.00 score 31.0-36.0
+  IND: post FINAL f=1.00 score 23.0-41.0
+  JAX: post FINAL f=1.00 score 34.0-10.0
+  NO: in Q4 0:00 f=0.99 score 24.0-24.0
+  NYJ: post FINAL f=1.00 score 23.0-10.0
+  PIT: post FINAL f=1.00 score 20.0-13.0
+  TB: post FINAL f=1.00 score 27.0-33.0
+  TEN: post FINAL f=1.00 score 10.0-23.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  29.1  live fit  29.4 | +exit  29.4 | v1  29.4 | naive  29.4
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   3.2 | +exit   3.2 | v1   3.2 | naive   3.2
+    Joe Burrow            QB   proj  22.5  scored  15.2  live fit  15.2 | +exit  15.2 | v1  15.2 | naive  15.2
+    Josh Allen            QB   proj  21.6  scored  35.7  live fit  35.7 | +exit  35.7 | v1  35.7 | naive  35.7
+    Lamar Jackson         QB   proj  20.8  scored  25.0  live fit  25.0 | +exit  25.0 | v1  25.0 | naive  25.0
+    Amon-Ra St. Brown     WR   proj  20.4  scored  21.3  live fit  21.6 | +exit  21.6 | v1  21.5 | naive  21.5
+    Bijan Robinson        RB   proj  20.1  scored  31.3  live fit  31.3 | +exit  31.3 | v1  31.3 | naive  31.3
+    Caleb Williams        QB   proj  18.9  scored  37.3  live fit  38.6 | +exit  38.6 | v1  38.8 | naive  38.5
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  26.1 | +exit  26.1 | v1  26.1 | naive  26.1
+    Jonathan Taylor       RB   proj  18.8  scored  25.1  live fit  25.1 | +exit  25.1 | v1  25.1 | naive  25.1
+    Tyler Shough          QB   proj  18.7  scored  18.3  live fit  18.6 | +exit  18.6 | v1  18.5 | naive  18.5
+    Chase Brown           RB   proj  17.9  scored  18.8  live fit  18.8 | +exit  18.8 | v1  18.8 | naive  18.8
+  ATL: post FINAL f=1.00 score 13.0-20.0
+  BAL: post FINAL f=1.00 score 41.0-23.0
+  BUF: post FINAL f=1.00 score 36.0-31.0
+  CAR: in Q4 2:00 f=0.97 score 37.0-59.0
+  CHI: in Q4 2:00 f=0.97 score 59.0-37.0
+  CIN: post FINAL f=1.00 score 33.0-27.0
+  CLE: post FINAL f=1.00 score 10.0-34.0
+  DET: in OT 5:04 f=0.97 score 31.0-24.0
+  HOU: post FINAL f=1.00 score 31.0-36.0
+  IND: post FINAL f=1.00 score 23.0-41.0
+  JAX: post FINAL f=1.00 score 34.0-10.0
+  NO: in OT 5:04 f=0.97 score 24.0-31.0
+  NYJ: post FINAL f=1.00 score 23.0-10.0
+  PIT: post FINAL f=1.00 score 20.0-13.0
+  TB: post FINAL f=1.00 score 27.0-33.0
+  TEN: post FINAL f=1.00 score 10.0-23.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  33.6  live fit  34.5 | +exit  34.5 | v1  34.4 | naive  34.4
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   3.2 | +exit   3.2 | v1   3.2 | naive   3.2
+    Joe Burrow            QB   proj  22.5  scored  15.2  live fit  15.2 | +exit  15.2 | v1  15.2 | naive  15.2
+    Josh Allen            QB   proj  21.6  scored  35.7  live fit  35.7 | +exit  35.7 | v1  35.7 | naive  35.7
+    Lamar Jackson         QB   proj  20.8  scored  25.0  live fit  25.0 | +exit  25.0 | v1  25.0 | naive  25.0
+    Amon-Ra St. Brown     WR   proj  20.4  scored  28.7  live fit  29.4 | +exit  29.4 | v1  29.4 | naive  29.3
+    Bijan Robinson        RB   proj  20.1  scored  31.3  live fit  31.3 | +exit  31.3 | v1  31.3 | naive  31.3
+    Caleb Williams        QB   proj  18.9  scored  37.3  live fit  37.7 | +exit  37.7 | v1  38.0 | naive  37.9
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  26.1 | +exit  26.1 | v1  26.1 | naive  26.1
+    Jonathan Taylor       RB   proj  18.8  scored  25.1  live fit  25.1 | +exit  25.1 | v1  25.1 | naive  25.1
+    Tyler Shough          QB   proj  18.7  scored  18.3  live fit  19.2 | +exit  19.2 | v1  18.9 | naive  18.9
+    Chase Brown           RB   proj  17.9  scored  18.8  live fit  18.8 | +exit  18.8 | v1  18.8 | naive  18.8
+  ATL: post FINAL f=1.00 score 13.0-20.0
+  BAL: post FINAL f=1.00 score 41.0-23.0
+  BUF: post FINAL f=1.00 score 36.0-31.0
+  CAR: post FINAL f=1.00 score 37.0-59.0
+  CHI: post FINAL f=1.00 score 59.0-37.0
+  CIN: post FINAL f=1.00 score 33.0-27.0
+  CLE: post FINAL f=1.00 score 10.0-34.0
+  DET: in OT 1:34 f=0.97 score 31.0-30.0
+  HOU: post FINAL f=1.00 score 31.0-36.0
+  IND: post FINAL f=1.00 score 23.0-41.0
+  JAX: post FINAL f=1.00 score 34.0-10.0
+  NO: in OT 1:34 f=0.97 score 30.0-31.0
+  NYJ: post FINAL f=1.00 score 23.0-10.0
+  PIT: post FINAL f=1.00 score 20.0-13.0
+  TB: post FINAL f=1.00 score 27.0-33.0
+  TEN: post FINAL f=1.00 score 10.0-23.0
+    Jahmyr Gibbs          RB   proj  25.5  scored  33.6  live fit  34.5 | +exit  34.5 | v1  34.4 | naive  34.4
+    Ja'Marr Chase         WR   proj  22.7  scored   3.2  live fit   3.2 | +exit   3.2 | v1   3.2 | naive   3.2
+    Joe Burrow            QB   proj  22.5  scored  15.2  live fit  15.2 | +exit  15.2 | v1  15.2 | naive  15.2
+    Josh Allen            QB   proj  21.6  scored  35.7  live fit  35.7 | +exit  35.7 | v1  35.7 | naive  35.7
+    Lamar Jackson         QB   proj  20.8  scored  25.0  live fit  25.0 | +exit  25.0 | v1  25.0 | naive  25.0
+    Amon-Ra St. Brown     WR   proj  20.4  scored  28.7  live fit  29.5 | +exit  29.5 | v1  29.4 | naive  29.3
+    Bijan Robinson        RB   proj  20.1  scored  31.3  live fit  31.3 | +exit  31.3 | v1  31.3 | naive  31.3
+    Caleb Williams        QB   proj  18.9  scored  37.3  live fit  37.3 | +exit  37.3 | v1  37.3 | naive  37.3
+    Trevor Lawrence       QB   proj  18.9  scored  26.1  live fit  26.1 | +exit  26.1 | v1  26.1 | naive  26.1
+    Jonathan Taylor       RB   proj  18.8  scored  25.1  live fit  25.1 | +exit  25.1 | v1  25.1 | naive  25.1
+    Tyler Shough          QB   proj  18.7  scored  25.2  live fit  26.1 | +exit  26.1 | v1  25.9 | naive  25.8
+    Chase Brown           RB   proj  17.9  scored  18.8  live fit  18.8 | +exit  18.8 | v1  18.8 | naive  18.8
+all tracked games FINAL
+
+=== LIVE GRADE live_track_2026_w1_8games_20260913_1255.csv: 34533 snapshots, 184 players ===
+|live - final|   fitted | fit+exit | v1 | naive   (n)
+  Q1   4.21 | 4.21 | 4.57 | 4.53   (6840)
+  Q2   3.49 | 3.48 | 3.81 | 3.76   (9631)
+  Q3   2.68 | 2.67 | 3.01 | 2.97   (9461)
+  Q4   1.51 | 1.50 | 1.60 | 1.59   (8601)
+  ALL  2.916 | 2.914 | 3.192 | 3.155   (34533)
+
+per player (mean |live - final| over the game):  proj -> final   fitted | fit+exit | v1 | naive
+  Jahmyr Gibbs          RB    25.5 ->  33.6   3.73 | 3.73 | 3.44 | 3.64
+  Ja'Marr Chase         WR    22.7 ->   3.2   7.68 | 7.68 | 9.15 | 9.90
+  Joe Burrow            QB    22.5 ->  15.2   2.85 | 2.85 | 4.51 | 4.64
+  Josh Allen            QB    21.6 ->  35.7   6.16 | 6.16 | 6.58 | 6.54
+  Lamar Jackson         QB    20.8 ->  25.0   3.11 | 3.11 | 4.92 | 4.04
+  Amon-Ra St. Brown     WR    20.4 ->  28.7   9.30 | 9.30 | 8.35 | 8.24
+  Bijan Robinson        RB    20.1 ->  31.3   3.01 | 3.01 | 2.79 | 2.84
+  Trevor Lawrence       QB    18.9 ->  26.1   2.24 | 2.23 | 4.13 | 3.36
+  Caleb Williams        QB    18.9 ->  37.3   5.37 | 5.37 | 5.62 | 5.69
+  Jonathan Taylor       RB    18.8 ->  25.1   2.57 | 2.57 | 2.47 | 2.30
+  Tyler Shough          QB    18.7 ->  25.2   10.65 | 10.71 | 12.00 | 11.48
+  Chase Brown           RB    17.9 ->  18.8   1.90 | 1.90 | 1.87 | 1.67
+  Daniel Jones          QB    17.9 ->  10.0   4.35 | 4.39 | 2.83 | 3.12
+  Baker Mayfield        QB    17.8 ->  11.6   2.62 | 2.62 | 2.97 | 2.62
+  Jared Goff            QB    17.2 ->  16.4   3.83 | 3.83 | 3.00 | 2.72
+  Derrick Henry         RB    17.1 ->  35.3   8.34 | 8.34 | 7.98 | 8.68
+  Chris Olave           WR    17.1 ->  28.2   9.62 | 9.62 | 10.46 | 10.30
+  Bryce Young           QB    16.8 ->  32.4   4.15 | 4.15 | 4.99 | 5.80
+  James Cook            RB    16.6 ->   9.9   3.20 | 3.16 | 3.39 | 3.54
+  C.J. Stroud           QB    16.6 ->  16.5   2.64 | 2.66 | 2.84 | 2.53
+  Nico Collins          WR    15.9 ->  21.2   2.95 | 2.95 | 3.12 | 3.09
+  Breece Hall           RB    15.8 ->  19.8   3.86 | 3.86 | 3.61 | 3.41
+  Tee Higgins           WR    15.5 ->   8.9   1.59 | 1.59 | 1.99 | 2.34
+  Zay Flowers           WR    15.5 ->  26.0   5.55 | 5.55 | 6.72 | 5.90
+  Luther Burden III     WR    15.2 ->   9.5   2.20 | 2.20 | 2.71 | 2.95
+  Garrett Wilson        WR    15.1 ->  13.9   1.91 | 1.91 | 1.81 | 1.61
+  Emeka Egbuka          WR    15.1 ->  11.3   6.21 | 6.21 | 5.22 | 5.04
+  Aaron Rodgers         QB    15.1 ->  12.5   2.14 | 2.14 | 2.40 | 2.39
+  Colston Loveland      TE    14.9 ->   0.0   6.33 | 6.33 | 6.72 | 7.36
+  Tetairoa McMillan     WR    14.7 ->  10.5   1.62 | 1.62 | 1.92 | 1.71
+  D'Andre Swift         RB    14.6 ->  32.4   9.77 | 9.77 | 9.74 | 10.41
+  Geno Smith            QB    14.3 ->   9.3   1.78 | 1.78 | 2.60 | 2.82
+  Travis Etienne        RB    14.3 ->  14.8   3.83 | 3.83 | 3.80 | 3.42
+  Jameson Williams      WR    14.1 ->   8.5   1.98 | 1.98 | 2.45 | 2.62
+  Parker Washington     WR    13.9 ->  19.3   4.29 | 4.29 | 6.60 | 5.44
+  Drake London          WR    13.8 ->   5.5   3.77 | 3.77 | 3.30 | 3.75
+  Bucky Irving          RB    13.7 ->  20.3   3.72 | 3.74 | 3.86 | 3.92
+  Tyler Warren          TE    12.7 ->  10.3   1.47 | 1.47 | 1.87 | 1.64
+  David Montgomery      RB    12.6 ->  28.9   5.75 | 5.75 | 5.87 | 6.49
+  Bhayshul Tuten        RB    12.5 ->   9.8   1.00 | 1.01 | 1.21 | 1.32
+  Sam LaPorta           TE    12.4 ->   9.8   2.08 | 2.08 | 2.73 | 2.63
+  Jaylen Warren         RB    12.3 ->  10.3   1.14 | 1.15 | 1.21 | 1.14
+  Quinshon Judkins      RB    12.2 ->   7.0   2.52 | 2.52 | 2.37 | 2.48
+  D.J. Moore            WR    12.2 ->  21.0   6.26 | 6.26 | 6.55 | 5.90
+  Rome Odunze           WR    12.1 ->   7.2   4.01 | 4.01 | 4.52 | 4.46
+  DK Metcalf            WR    11.8 ->   8.0   2.72 | 2.72 | 3.07 | 3.04
+  Chris Godwin          WR    11.8 ->   8.3   3.69 | 3.69 | 2.90 | 2.92
+  Kenneth Gainwell      RB    11.8 ->   2.8   4.60 | 4.48 | 4.58 | 4.88
+  Rico Dowdle           RB    11.7 ->   4.1   2.94 | 2.86 | 3.31 | 3.67
+  Deshaun Watson        QB    11.6 ->  15.0   4.26 | 4.28 | 6.52 | 6.20
+  Carnell Tate          WR    11.5 ->   7.8   2.02 | 2.02 | 1.55 | 1.62
+  Chuba Hubbard         RB    11.5 ->  23.7   3.86 | 3.86 | 4.13 | 4.67
+  Josh Downs            WR    11.5 ->   5.7   6.98 | 6.98 | 5.96 | 5.87
+  Wan'Dale Robinson     WR    11.4 ->   8.8   1.03 | 1.03 | 1.39 | 1.15
+  Tony Pollard          RB    11.2 ->   4.4   3.02 | 2.95 | 3.03 | 3.32
+  Mark Andrews          TE    11.1 ->   8.9   1.41 | 1.41 | 0.79 | 0.68
+  Juwan Johnson         TE    11.0 ->  11.6   5.39 | 5.39 | 6.02 | 5.61
+  Jalen Coker           WR    10.9 ->  33.8   10.10 | 10.10 | 10.06 | 11.07
+  Harold Fannin         TE    10.7 ->   4.1   3.51 | 3.51 | 2.08 | 2.37
+  Michael Pittman Jr.   WR    10.5 ->   8.8   1.42 | 1.42 | 1.33 | 1.24
+  Kyle Pitts            TE    10.4 ->   0.0   5.27 | 5.27 | 4.89 | 5.33
+  Brenton Strange       TE    10.4 ->  10.3   1.83 | 1.83 | 2.68 | 2.40
+  Jakobi Meyers         WR    10.3 ->  12.2   3.89 | 3.89 | 3.60 | 3.32
+  Khalil Shakir         WR    10.1 ->   9.0   2.10 | 2.10 | 2.29 | 2.11
+  Devaughn Vele         WR    10.0 ->  22.8   9.69 | 9.69 | 10.17 | 10.12
+  Brian Thomas Jr.      WR     9.7 ->   7.0   2.33 | 2.33 | 3.88 | 3.67
+  KC Concepcion         WR     9.7 ->   7.8   1.66 | 1.66 | 1.17 | 1.06
+  Kyle Monangai         RB     9.5 ->  20.4   9.32 | 9.32 | 9.09 | 9.08
+  Dalton Kincaid        TE     9.4 ->  18.0   8.47 | 8.47 | 8.34 | 8.22
+  Jake Bates            K      9.4 ->   7.0   1.23 | 1.23 | 1.23 | 1.10
+  Tyjae Spears          RB     9.2 ->   4.4   1.77 | 2.08 | 1.81 | 1.80
+  Evan McPherson        K      9.2 ->  19.0   7.08 | 7.08 | 7.08 | 7.15
+  Jacksonville Jaguars D/STDST    9.2 ->  15.0   3.02 | 3.02 | 6.61 | 5.46
+  Dalton Schultz        TE     9.0 ->   7.5   2.15 | 2.15 | 2.37 | 2.07
+  Pat Freiermuth        TE     9.0 ->  15.6   3.04 | 3.04 | 3.40 | 2.91
+  Chris Boswell         K      9.0 ->   8.0   3.63 | 3.63 | 3.63 | 3.33
+  Pittsburgh Steelers D/STDST    8.8 ->  20.0   9.52 | 9.52 | 4.48 | 4.84
+  Cade Otton            TE     8.7 ->   5.6   2.25 | 2.25 | 1.72 | 1.79
+  Jonathon Brooks       RB     8.7 ->   7.2   1.92 | 1.92 | 1.91 | 1.74
+  Alec Pierce           WR     8.6 ->  10.1   1.59 | 1.59 | 2.22 | 2.12
+  Adonai Mitchell       WR     8.4 ->   9.0   2.36 | 2.36 | 2.31 | 2.10
+  Tyler Loop            K      8.4 ->  14.0   3.81 | 3.81 | 3.81 | 3.92
+  Cairo Santos          K      8.4 ->  12.0   1.59 | 1.59 | 1.59 | 1.59
+  Ka'imi Fairbairn      K      8.3 ->   9.0   2.24 | 2.24 | 2.24 | 2.09
+  Cam Little            K      8.3 ->  12.0   1.72 | 1.72 | 1.72 | 1.77
+  Keenan Allen          WR     8.3 ->   9.2   0.79 | 0.79 | 1.18 | 1.13
+  Tyler Bass            K      8.2 ->  13.0   1.87 | 1.87 | 1.87 | 2.07
+  Chase McLaughlin      K      8.2 ->  11.0   1.89 | 1.89 | 1.89 | 1.86
+  Tennessee Titans D/ST DST    8.1 ->   0.0   3.12 | 3.12 | 6.95 | 6.98
+  Woody Marks           RB     8.0 ->   5.0   1.11 | 1.11 | 1.22 | 1.33
+  Calvin Ridley         WR     7.8 ->   0.0   4.07 | 4.07 | 3.53 | 3.85
+  Spencer Shrader       K      7.8 ->   6.0   1.70 | 1.70 | 1.70 | 1.40
+  Denzel Boston         WR     7.7 ->  13.9   8.33 | 8.33 | 9.51 | 9.20
+  Jerry Jeudy           WR     7.7 ->   4.6   2.72 | 2.72 | 1.75 | 1.77
+  New York Jets D/ST    DST    7.5 ->   9.0   1.58 | 1.58 | 5.09 | 4.53
+  Ryan Fitzgerald       K      7.5 ->   7.0   1.99 | 1.99 | 1.99 | 1.85
+  Daniel Carlson        K      7.3 ->   5.0   1.15 | 1.15 | 1.15 | 0.99
+  Rashod Bateman        WR     7.2 ->   0.0   2.86 | 2.86 | 3.44 | 3.75
+  Mike Gesicki          TE     7.0 ->  18.8   4.61 | 4.61 | 4.48 | 4.42
+  Joey Slye             K      7.0 ->   5.0   2.09 | 2.09 | 2.09 | 2.01
+  Gunnar Helm           TE     6.9 ->   6.8   1.52 | 1.52 | 1.94 | 1.76
+  Detroit Lions D/ST    DST    6.9 ->  11.0   2.03 | 2.03 | 4.57 | 3.79
+  Kayshon Boutte        WR     6.8 ->   3.1   1.02 | 1.02 | 0.98 | 1.09
+  Samaje Perine         RB     6.8 ->   8.0   1.85 | 1.86 | 1.59 | 1.54
+  Buffalo Bills D/ST    DST    6.8 ->   8.0   2.93 | 2.93 | 3.97 | 3.68
+  Nick Folk             K      6.7 ->   8.0   3.33 | 3.33 | 3.33 | 3.11
+  Justice Hill          RB     6.7 ->   3.8   0.99 | 1.01 | 0.90 | 0.95
+  Chris Rodriguez Jr.   RB     6.6 ->   2.3   2.01 | 1.99 | 2.45 | 2.58
+  Chicago Bears D/ST    DST    6.5 ->   6.0   1.38 | 1.38 | 2.13 | 1.98
+  Baltimore Ravens D/ST DST    6.3 ->   7.0   1.75 | 1.75 | 5.97 | 5.24
+  Mason Taylor          TE     6.2 ->   1.8   1.76 | 1.76 | 2.14 | 2.31
+  Houston Texans D/ST   DST    6.2 ->  -1.0   4.08 | 4.08 | 7.09 | 7.04
+  Atlanta Falcons D/ST  DST    6.0 ->   6.0   1.02 | 1.02 | 5.29 | 4.75
+  Cincinnati Bengals D/STDST    6.0 ->  22.0   4.76 | 4.76 | 4.45 | 3.04
+  Xavier Legette        WR     6.0 ->   0.0   2.97 | 2.97 | 2.70 | 2.96
+  Xavier Hutchinson     WR     5.9 ->   6.2   1.08 | 1.08 | 1.14 | 1.05
+  Jaylin Noel           WR     5.8 ->   7.3   2.09 | 2.09 | 2.19 | 2.07
+  Darren Waller         TE     5.8 ->   4.8   1.02 | 1.02 | 1.03 | 0.91
+  Kenyon Sadiq          TE     5.7 ->  11.4   1.11 | 1.11 | 1.11 | 0.92
+  Cleveland Browns D/ST DST    5.5 ->   1.0   1.20 | 1.20 | 4.08 | 4.13
+  Isaac TeSlaa          WR     5.3 ->   0.0   1.86 | 1.86 | 2.06 | 2.26
+  Andre Szmyt           K      5.2 ->   4.0   0.88 | 0.88 | 0.88 | 0.75
+  Ja'Kobi Lane          WR     5.2 ->   2.1   1.61 | 1.61 | 2.08 | 2.15
+  Carolina Panthers D/STDST    5.2 ->   1.0   2.60 | 2.60 | 5.58 | 5.43
+  Ted Hurst             WR     5.0 ->   6.6   3.45 | 3.45 | 3.81 | 3.61
+  Indianapolis Colts D/STDST    5.0 ->   1.0   1.82 | 1.82 | 4.27 | 4.28
+  Darnell Washington    TE     4.9 ->   3.8   1.32 | 1.32 | 1.29 | 1.11
+  Andrei Iosivas        WR     4.9 ->   3.2   1.24 | 1.24 | 1.62 | 1.59
+  Jahan Dotson          WR     4.8 ->   2.9   0.82 | 0.82 | 0.89 | 0.81
+  Braelon Allen         RB     4.6 ->   4.0   0.77 | 0.77 | 0.81 | 0.74
+  Dylan Sampson         RB     4.4 ->   0.0   2.14 | 2.14 | 2.05 | 2.23
+  Brian Robinson Jr.    RB     4.4 ->   3.1   0.56 | 0.58 | 0.57 | 0.60
+  Keon Coleman          WR     4.4 ->   1.1   1.83 | 1.83 | 1.88 | 1.97
+  Tampa Bay Buccaneers D/STDST    4.4 ->   9.0   4.10 | 4.10 | 3.36 | 3.26
+  Travis Hunter         WR     4.3 ->   2.1   0.92 | 0.92 | 1.56 | 1.60
+  Dawson Knox           TE     4.3 ->   1.7   0.76 | 0.76 | 0.78 | 0.85
+  Kalif Raymond         WR     4.3 ->  16.4   5.79 | 5.79 | 5.52 | 5.94
+  Erick All             TE     4.1 ->   0.0   1.56 | 1.56 | 1.82 | 1.99
+  Cole Kmet             TE     4.1 ->  11.5   2.23 | 2.23 | 2.39 | 2.15
+  Tez Johnson           WR     4.0 ->  -0.4   2.06 | 2.06 | 1.75 | 1.95
+  Omar Cooper Jr.       WR     3.9 ->   4.0   1.72 | 1.72 | 1.99 | 1.78
+  New Orleans Saints D/STDST    3.9 ->   3.0   1.23 | 1.23 | 3.81 | 3.52
+  Tommy Tremble         TE     3.8 ->   5.5   0.79 | 0.79 | 0.71 | 0.57
+  Roman Wilson          WR     3.6 ->   5.6   1.58 | 1.58 | 1.63 | 1.50
+  Germie Bernard        WR     3.5 ->   0.0   1.57 | 1.57 | 1.64 | 1.79
+  Josh Palmer           WR     3.5 ->  10.4   8.31 | 8.31 | 8.29 | 8.14
+  Noah Fant             TE     3.4 ->  13.3   9.11 | 9.11 | 9.27 | 9.30
+  Drew Sample           TE     3.3 ->   4.9   1.10 | 1.10 | 1.01 | 0.95
+  Olamide Zaccheaus     WR     3.0 ->   1.5   0.84 | 0.84 | 0.76 | 0.82
+  Bryce Lance           WR     2.9 ->   7.2   3.56 | 3.56 | 3.70 | 3.69
+  LeQuint Allen         RB     2.7 ->   0.0   1.05 | 1.05 | 1.26 | 1.37
+  Isaiah Davis          RB     2.7 ->   0.0   1.09 | 1.09 | 1.22 | 1.33
+  Zachariah Branch      WR     2.5 ->   0.0   1.27 | 1.27 | 1.17 | 1.28
+  Ray Davis             RB     2.4 ->   0.3   0.98 | 0.73 | 1.03 | 1.10
+  Austin Hooper         TE     2.4 ->   0.0   1.22 | 1.22 | 1.13 | 1.23
+  Chimere Dike          WR     2.3 ->  -0.3   1.77 | 1.77 | 1.62 | 1.67
+  Elic Ayomanor         WR     2.1 ->   8.1   6.48 | 6.48 | 6.62 | 6.53
+  Isaiah Williams       WR     2.1 ->   1.7   0.43 | 0.43 | 0.52 | 0.47
+  Daniel Bellinger      TE     2.0 ->   1.7   0.92 | 0.92 | 0.83 | 0.76
+  Isaiah Bond           WR     1.9 ->   0.0   1.18 | 1.18 | 0.89 | 0.96
+  Ashton Dulin          WR     1.9 ->   0.0   1.09 | 1.09 | 0.91 | 0.99
+  Jackson Hawes         TE     1.6 ->   0.0   0.66 | 0.66 | 0.67 | 0.74
+  Durham Smythe         TE     1.5 ->   1.4   0.51 | 0.51 | 0.67 | 0.60
+  Tahj Brooks           RB     1.2 ->   0.0   0.47 | 0.47 | 0.53 | 0.58
+  Seth McGowan          RB     1.2 ->   1.0   0.27 | 0.27 | 0.28 | 0.24
+  Brock Wright          TE     1.2 ->   1.5   0.58 | 0.58 | 0.55 | 0.51
+  Zavion Thomas         WR     1.2 ->   0.0   0.57 | 0.57 | 0.61 | 0.65
+  Kendre Miller         RB     1.1 ->   9.0   4.45 | 4.46 | 4.44 | 4.41
+  Colbie Young          WR     1.0 ->   0.0   0.38 | 0.38 | 0.44 | 0.48
+  Rasheen Ali           RB     1.0 ->   0.0   0.42 | 0.42 | 0.48 | 0.52
+  Malachi Corley        WR     0.8 ->   0.0   0.50 | 0.50 | 0.37 | 0.41
+  Joe Flacco            QB     0.7 ->   0.0   0.25 | 0.15 | 0.31 | 0.34
+  Sione Vaki            RB     0.7 ->   2.8   1.19 | 1.20 | 1.18 | 1.20
+  Barion Brown          WR     0.7 ->   0.3   0.27 | 0.27 | 0.23 | 0.24
+  Jalon Daniels         QB     0.6 ->   0.0   0.32 | 0.19 | 0.27 | 0.29
+  Nate Boerkircher      TE     0.6 ->   1.9   0.54 | 0.54 | 0.64 | 0.52
+  Tyler Conklin         TE     0.6 ->   0.0   0.21 | 0.21 | 0.23 | 0.26
+  Mitchell Trubisky     QB     0.5 ->   0.0   0.27 | 0.16 | 0.23 | 0.25
+  Davis Mills           QB     0.5 ->   0.0   0.22 | 0.12 | 0.21 | 0.23
+  Spencer Rattler       QB     0.5 ->   0.0   0.23 | 0.13 | 0.19 | 0.21
+  Kenny Pickett         QB     0.5 ->   2.4   2.12 | 2.27 | 2.14 | 2.12
+  Jahdae Walker         WR     0.5 ->   7.1   5.89 | 5.89 | 5.88 | 5.84
+  Cam Ward (backup)     QB     0.5 ->  11.7   7.16 | 7.18 | 7.33 | 7.59
+  Cade Klubnik          QB     0.4 ->   0.0   0.15 | 0.10 | 0.18 | 0.20
+closest model per player: fitted 83  fit+exit 14  v1 31  naive 56
+wrote E:\MyFantasyFootball\sim_lab\data\live_track_2026_w1_8games_20260913_1255_summary.json

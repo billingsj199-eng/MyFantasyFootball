@@ -1,0 +1,128 @@
+W1: 460 stat-prop calls, 271 anytime-TD calls, 227 market-vs-model means
+
+=== 1. stat props: model vs consensus line (RAW mean-vs-line) ===
+  all: 238/457 = 52.1%  (p vs coin 0.400) | model called OVER 63%, actual went OVER 51%
+  per-stat table (raw):  stat   n   hit%   p     over-call%  over-act%   median line/model
+    py     28   50.0%  1.000       64%        50%      0.991
+    ptd    28   50.0%  1.000       46%        54%      1.014
+    ry     67   55.2%  0.464       78%        57%      0.903
+    rec   176   53.4%  0.407       53%        51%      0.991
+    rcy   158   50.0%  1.000       72%        49%      0.902
+
+=== 1b. stat props, MEDIAN-ADJUSTED (model scaled by the median line/model ratio per stat) ===
+  all: 235/457 = 51.4%  (p 0.575) | OVER calls 50%
+    QB: 37/75 = 49.3%  (p 1.000)
+    RB: 62/117 = 53.0%  (p 0.579)
+    WR: 92/181 = 50.8%  (p 0.882)
+    TE: 44/84 = 52.4%  (p 0.743)
+
+=== 2. does a bigger disagreement win more? (median-adjusted, |model−line|/line) ===
+  edge [0.00,0.05) n=117  hit  52.1%  p 0.712
+  edge [0.05,0.10) n= 80  hit  48.8%  p 0.911
+  edge [0.10,0.20) n=116  hit  50.0%  p 1.000
+  edge [0.20,0.35) n= 73  hit  57.5%  p 0.242
+  edge [0.35,9.00) n= 71  hit  49.3%  p 1.000
+  biggest 12 disagreements:
+    Jayden Daniels       QB ptd  line    0.5 model    1.2 -> O  act    2.0  HIT
+    Kenyon Sadiq         TE rec  line    1.5 model    3.3 -> O  act    3.0  HIT
+    Kenyon Sadiq         TE rcy  line   14.5 model   31.4 -> O  act   21.0  HIT
+    Chris Bell           WR rcy  line   17.5 model   34.3 -> O  act   25.0  HIT
+    Kayshon Boutte       WR rec  line    1.5 model    2.9 -> O  act    1.0  miss
+    Jaylin Noel          WR rec  line    1.5 model    2.9 -> O  act    2.0  HIT
+    Jaylin Noel          WR rcy  line   15.5 model   30.2 -> O  act   53.0  HIT
+    Terrance Ferguson    TE rec  line    1.5 model    2.8 -> O  act    0.0  miss
+    Chris Bell           WR rec  line    1.5 model    2.8 -> O  act    1.0  miss
+    Jauan Jennings       WR rec  line    1.5 model    2.8 -> O  act    0.0  miss
+    David Njoku          TE rcy  line   13.0 model   23.8 -> O  act   58.0  HIT
+    Darren Waller        TE rec  line    1.5 model    2.7 -> O  act    2.0  HIT
+
+=== 3. anytime-TD: model P(TD) vs devigged book P(TD) ===
+  n=271  scored 23% | model avg P 19%  book avg P 23%
+  Brier: model 0.1597  book 0.1540  (lower = better)
+  disagreements >=5pts: 131; model side right 89 (68%) -- BASE-RATE TRAP: split by direction:
+    model HIGHER than book: n= 14  scored 29%  vs book avg P 28%  model avg P 35%
+    model LOWER than book : n=117  scored 27%  vs book avg P 24%  model avg P 15%
+    |ΔP| [0.05,0.10) n= 96 model right 68%
+    |ΔP| [0.10,0.20) n= 33 model right 67%
+
+=== 4. fantasy points: JS model vs market-implied mean ===
+  n=227  MAE model 4.931  market 5.063 | bias model -0.69 market +0.34
+  model closer on 121/227 rows (53%, p 0.353)
+  by |model − market| bucket: who was closer, and did the actual land on the model's side of the market?
+  (a) ABSOLUTE gap, half-PPR fantasy points
+    Δ [0,1) pts  n= 89  model closer   54%  actual on model's side   56%  MAE model 4.28 mkt 4.38
+    Δ [1,2) pts  n= 76  model closer   47%  actual on model's side   49%  MAE model 5.21 mkt 5.12
+    Δ [2,3) pts  n= 43  model closer   60%  actual on model's side   60%  MAE model 5.30 mkt 5.75
+    Δ [3,99) pts  n= 19  model closer   58%  actual on model's side   79%  MAE model 6.03 mkt 6.51
+  (b) RELATIVE gap, |model − market| / market
+    Δ [  0%,  5%) n= 38  model closer   45%  actual on model's side   45%  MAE model 5.42 mkt 5.44  avg mkt 10.8
+    Δ [  5%, 10%) n= 37  model closer   62%  actual on model's side   62%  MAE model 4.41 mkt 4.59  avg mkt 10.9
+    Δ [ 10%, 20%) n= 75  model closer   49%  actual on model's side   55%  MAE model 5.81 mkt 5.83  avg mkt 11.2
+    Δ [ 20%, 30%) n= 27  model closer   56%  actual on model's side   59%  MAE model 5.17 mkt 5.30  avg mkt 8.8
+    Δ [ 30%,900%) n= 50  model closer   58%  actual on model's side   62%  MAE model 3.50 mkt 3.85  avg mkt 5.5
+    abs >=3 pts  model BELOW market: n= 18  actual on model's side   78%  avg model   9.2 mkt  13.4 actual  11.9
+    rel >=30%    model ABOVE market: n= 10  actual on model's side   60%  avg model   7.1 mkt   5.0 actual   6.5
+    rel >=30%    model BELOW market: n= 40  actual on model's side   62%  avg model   3.1 mkt   5.6 actual   5.5
+  players in either tail (>=3 pts or >=30%):
+    Kaleb Johnson          RB  model   0.4  market   2.4 ( -82%)  actual   0.0  -> model side
+    Kenyon Sadiq           TE  model   6.5  market   3.6 ( +81%)  actual   9.9  -> model side
+    Emanuel Wilson         RB  model   0.6  market   2.2 ( -74%)  actual   0.3  -> model side
+    George Holani          RB  model   2.2  market   7.4 ( -70%)  actual   2.9  -> model side
+    Demarcus Robinson      WR  model   0.9  market   2.9 ( -70%)  actual  12.0  -> market side
+    Jake Tonges            TE  model   0.9  market   3.0 ( -69%)  actual   0.0  -> model side
+    Tez Johnson            WR  model   1.3  market   4.0 ( -68%)  actual  -0.4  -> model side
+    Mike Washington Jr.    RB  model   2.0  market   5.8 ( -66%)  actual   4.1  -> model side
+    Michael Mayer          TE  model   3.9  market  10.5 ( -63%)  actual   6.2  -> model side
+    Charlie Kolar          TE  model   1.8  market   4.7 ( -61%)  actual   0.0  -> model side
+    Roman Wilson           WR  model   1.4  market   3.3 ( -59%)  actual   4.1  -> market side
+    Bryce Lance            WR  model   1.1  market   2.7 ( -58%)  actual   5.7  -> market side
+    Ted Hurst              WR  model   2.2  market   5.0 ( -56%)  actual   5.1  -> market side
+    Malachi Fields         WR  model   2.6  market   5.8 ( -56%)  actual   3.5  -> model side
+    Kendrick Bourne        WR  model   2.2  market   4.9 ( -55%)  actual  11.5  -> market side
+    Tyler Higbee           TE  model   1.9  market   4.0 ( -52%)  actual   0.2  -> model side
+    Jaylin Noel            WR  model   6.2  market   4.1 ( +52%)  actual   6.3  -> model side
+    Elic Ayomanor          WR  model   1.1  market   2.2 ( -49%)  actual   7.6  -> market side
+    David Njoku            TE  model   5.3  market   3.6 ( +48%)  actual   8.3  -> model side
+    Olamide Zaccheaus      WR  model   1.4  market   2.5 ( -46%)  actual   1.0  -> model side
+    Alec Pierce            WR  model   9.0  market   6.2 ( +46%)  actual   8.1  -> model side
+    Mason Taylor           TE  model   3.0  market   5.6 ( -46%)  actual   0.8  -> model side
+    Chris Rodriguez        RB  model   4.2  market   7.3 ( -42%)  actual   2.3  -> model side
+    Chris Bell             WR  model   6.0  market   4.2 ( +42%)  actual   3.0  -> market side
+    Tre Tucker             WR  model   6.8  market  11.5 ( -41%)  actual   3.7  -> model side
+    Tommy Tremble          TE  model   2.0  market   3.4 ( -40%)  actual   4.0  -> market side
+    Kalif Raymond          WR  model   2.3  market   3.9 ( -40%)  actual  12.4  -> market side
+    Noah Fant              TE  model   1.8  market   3.0 ( -40%)  actual  11.3  -> market side
+    Daniel Bellinger       TE  model   1.2  market   1.9 ( -39%)  actual   1.2  -> model side
+    Elijah Higgins         TE  model   1.8  market   3.0 ( -38%)  actual   0.0  -> model side
+    Cade Otton             TE  model   4.8  market   7.7 ( -38%)  actual   4.1  -> model side
+    Darren Waller          TE  model   5.8  market   4.3 ( +38%)  actual   3.8  -> market side
+    Jacoby Brissett        QB  model  11.2  market  17.7 ( -37%)  actual  16.5  -> model side
+    Jeremiyah Love         RB  model  13.2  market   9.6 ( +37%)  actual  12.0  -> model side
+    Devaughn Vele          WR  model   5.7  market   8.9 ( -37%)  actual  16.4  -> market side
+    Ryan Flournoy          WR  model   4.2  market   6.6 ( -37%)  actual   3.2  -> model side
+    Jonnu Smith            TE  model   1.9  market   1.4 ( +37%)  actual   6.0  -> model side
+    Omar Cooper Jr.        WR  model   2.2  market   3.5 ( -36%)  actual   3.5  -> market side
+    Tre Harris             WR  model   4.6  market   7.0 ( -35%)  actual   3.5  -> model side
+    Tyler Allgeier         RB  model   4.5  market   6.8 ( -33%)  actual   8.0  -> market side
+    Jordan Whittington     WR  model   1.1  market   1.7 ( -32%)  actual   1.3  -> model side
+    Makai Lemon            WR  model   7.9  market   6.0 ( +32%)  actual   1.0  -> market side
+    Eli Raridon            TE  model   1.1  market   1.7 ( -32%)  actual   6.7  -> market side
+    Ja'Kobi Lane           WR  model   3.2  market   4.8 ( -32%)  actual   1.6  -> model side
+    Jalen Coker            WR  model   6.6  market   9.6 ( -31%)  actual  29.8  -> market side
+    Juwan Johnson          TE  model   6.5  market   9.5 ( -31%)  actual  12.9  -> market side
+    MarShawn Lloyd         RB  model   7.2  market  10.4 ( -31%)  actual   3.7  -> model side
+    Jalen Nailor           WR  model   6.1  market   8.8 ( -31%)  actual   4.2  -> model side
+    Jonathon Brooks        RB  model   9.3  market   7.1 ( +30%)  actual   6.7  -> market side
+    Malik Washington       WR  model   4.2  market   6.0 ( -30%)  actual   4.8  -> model side
+    Kirk Cousins           QB  model  11.7  market  16.3 ( -28%)  actual  15.8  -> model side
+    Bryce Young            QB  model  13.3  market  18.3 ( -27%)  actual  32.4  -> market side
+    Tyler Shough           QB  model  15.2  market  20.2 ( -25%)  actual  25.2  -> market side
+    Luther Burden III      WR  model  10.2  market  13.4 ( -24%)  actual   7.0  -> model side
+    Joe Burrow             QB  model  18.7  market  24.1 ( -22%)  actual  15.2  -> model side
+    Sam Darnold            QB  model  13.7  market  17.5 ( -22%)  actual   0.5  -> model side
+    C.J. Stroud            QB  model  14.3  market  17.6 ( -19%)  actual  16.5  -> model side
+    Baker Mayfield         QB  model  15.7  market  18.7 ( -16%)  actual  11.6  -> model side
+
+=== 5. randomness of the stat-prop outcomes (median-adjusted) ===
+  observed hit 51.4% | coin-flip 90% band [46.2, 54.0] (n=457)
+  players with >=3 calls: 46; all-hit 5, all-miss 7 (coin-flip expectation ~5.8 each)

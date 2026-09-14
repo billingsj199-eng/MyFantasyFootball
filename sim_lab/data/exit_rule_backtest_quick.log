@@ -1,0 +1,57 @@
+loading [2023, 2024, 2025]
+  2023: 3317 qualified player-games, 661 QB games
+  2024: 3424 qualified player-games, 667 QB games
+  2025: 3384 qualified player-games, 664 QB games
+
+=== EXIT RAMP: empirical multiplier = sum(rem_actual)/sum(rem_fit) by stale bucket (2023-2025) ===
+also: share of samples whose player never touches the ball again (exit-like)
+
+  QB:  stale-bucket   n      mult   mean rem_act  mean rem_fit  exit-like%   (cum>0 only: mult)
+    [0.0, 0.05)     16842    1.05      8.42         8.03        2.1       1.05
+    [0.05, 0.1)      6100    1.05      7.86         7.47        4.8       1.05
+    [0.1, 0.15)      2427    1.02      7.93         7.80        8.1       1.05
+    [0.15, 0.2)       917    0.92      6.39         6.96       16.5       0.98
+    [0.2, 0.25)       379    0.72      4.72         6.55       27.4       0.85
+    [0.25, 0.3)       226    0.53      3.12         5.86       37.6       0.62
+    [0.3, 0.4)        290    0.33      1.83         5.58       41.7       0.19
+    [0.4, 0.5)        221    0.30      1.52         5.03       40.3        nan
+    [0.6, 0.8)        230    0.34      1.26         3.66       23.5        nan
+
+  RB:  stale-bucket   n      mult   mean rem_act  mean rem_fit  exit-like%   (cum>0 only: mult)
+    [0.0, 0.05)     18840    1.05      6.48         6.20        8.0       1.05
+    [0.05, 0.1)     10302    1.03      5.91         5.72       10.7       1.03
+    [0.1, 0.15)      6626    1.03      5.75         5.56       11.6       1.05
+    [0.15, 0.2)      4013    1.01      4.80         4.75       15.8       1.04
+    [0.2, 0.25)      2380    0.97      4.09         4.21       18.2       1.01
+    [0.25, 0.3)      1505    0.90      3.28         3.64       22.9       0.92
+    [0.3, 0.4)       1705    0.88      2.73         3.10       27.4       0.87
+    [0.4, 0.5)        940    0.76      1.82         2.41       36.8       0.62
+    [0.5, 0.6)        547    0.73      1.45         1.98       42.0       0.43
+    [0.6, 0.8)        571    0.83      1.13         1.36       45.0       0.30
+
+  REC:  stale-bucket   n      mult   mean rem_act  mean rem_fit  exit-like%   (cum>0 only: mult)
+    [0.0, 0.05)     17541    1.02      5.73         5.62       16.3       1.02
+    [0.05, 0.1)     14584    1.03      5.44         5.27       17.8       1.03
+    [0.1, 0.15)     15165    1.03      6.09         5.90       14.1       1.03
+    [0.15, 0.2)     12332    1.02      5.55         5.45       16.2       1.02
+    [0.2, 0.25)      9691    1.03      5.28         5.12       16.7       1.03
+    [0.25, 0.3)      7875    1.03      4.90         4.74       18.4       1.03
+    [0.3, 0.4)      11364    1.04      4.34         4.19       21.3       1.03
+    [0.4, 0.5)       7418    1.06      3.66         3.45       26.2       1.04
+    [0.5, 0.6)       4159    1.05      2.97         2.84       28.6       1.02
+    [0.6, 0.8)       4677    1.04      2.19         2.11       35.7       0.93
+    [0.8, 1.01)      1916    1.16      1.21         1.04       54.9       0.91
+
+=== RAMP GRID SEARCH (fit 2019-23 MAE of cum + rem_fit x mult vs final; scored on 2024-25) ===
+  QB: no-ramp MAE 4.061 -> fitted 3.990 with ramp (0.05, 0.4, 0.1)  | holdout: no-ramp 4.447  shipped 4.317  fitted 4.340
+  RB: no-ramp MAE 3.367 -> fitted 3.294 with ramp (0.05, 0.4, 0.3)  | holdout: no-ramp 3.614  shipped 3.584  fitted 3.539
+  REC: no-ramp MAE 3.467 -> fitted 3.409 with ramp (0.05, 0.8, 0.3)  | holdout: no-ramp 3.466  shipped 3.448  fitted 3.405
+
+=== BACKUP QB SHARE + TEAMMATE RULE ===
+  all starter exits < 0.85: n=128  share = sum(backup pts after)/sum(E x (1-f_in)) = 0.84   median per-case 0.45   mean f_in 0.71
+  |margin| < 17 at exit (injury-like): n=55  share = sum(backup pts after)/sum(E x (1-f_in)) = 0.98   median per-case 0.77   mean f_in 0.56
+  |margin| >= 17 (blowout pull): n=73  share = sum(backup pts after)/sum(E x (1-f_in)) = 0.63   median per-case 0.26   mean f_in 0.82
+  injury-like AND entered before halftime: n=22 share 0.92
+  teammate rule triggers: 87; false positives (starter scored again): 30 = 34.5%; mean starter pts after a false trigger 3.26
+
+wrote E:\MyFantasyFootball\sim_lab\data\exit_rule_backtest.json

@@ -1,0 +1,119 @@
+##### score_week.py --week 1
+W1 lock: 342 players, 15 games, preset half, sims 2000
+actuals: 303 game rows | consensus file: yes (2026-09-14T13:00:39.005104+00:00)
+scored: 170 played (shipped mean >= 5.0) | DNP/unmatched: 5
+
+=== ALL positions (same rows for every model where available) ===
+  model               n    MAE   bias   RMSE
+  SHIPPED mean      170   5.69  +0.26   7.13
+  JS Weekly         170   5.61  -0.64   7.26
+  Clay stack        170   5.67  -0.65   7.32
+  prop-anchored     170   5.66  +0.15   7.12
+  site consensus    170   5.70  -0.15   7.22
+  ESPN              170   5.66  -0.47   7.28
+  CBS               168   5.88  +0.14   7.35
+  FantasyPros       170   5.70  -0.25   7.25
+
+=== by position (MAE) ===
+  pos    n    mean     js   clay   prop   cons   espn    cbs     fp
+  QB    28    6.48   6.96   7.03   6.50   6.85   6.64   6.76   6.74 
+  RB    44    5.58   5.56   5.60   5.62   5.60   5.91   5.56   5.75 
+  WR    71    5.55   5.30   5.33   5.49   5.44   5.32   5.91   5.39 
+  TE    27    5.37   5.12   5.26   5.29   5.33   5.12   5.41   5.36 
+
+=== head-to-head, row-level |error| (wins-losses-ties, tie = within 0.1) ===
+  SHIPPED    vs consensus : 82-75-13  (52% of decided)
+  SHIPPED    vs ESPN      : 77-79-14  (49% of decided)
+  JS Weekly  vs consensus : 89-73-8  (55% of decided)
+  JS Weekly  vs ESPN      : 84-71-15  (54% of decided)
+  Clay stack vs consensus : 85-77-8  (52% of decided)
+  Clay stack vs ESPN      : 81-76-13  (52% of decided)
+
+=== p10-p90 band (target 80% inside / 10% / 10%) ===
+  n=170 inside 80.6%  below p10 8.8%  above p90 10.6%
+    QB: n=28 inside 79% below 11% above 11%
+    RB: n=44 inside 89% below 0% above 11%
+    WR: n=71 inside 80% below 13% above 7%
+    TE: n=27 inside 70% below 11% above 19%
+  prop anchor source mix: {'line': 170}
+
+=== biggest misses, shipped mean (top 12) ===
+  Jalen Coker            WR CAR vs CHI  proj   8.9  act  29.8  (-20.9)  js  6.59 clay  6.59 cons   9.8
+  Christian Watson       WR GB  vs MIN  proj  10.5  act  29.7  (-19.2)  js  9.43 clay  9.43 cons  10.8
+  D'Andre Swift          RB CHI vs CAR  proj  13.4  act  31.9  (-18.5)  js 12.03 clay 12.03 cons  12.3
+  Derrick Henry          RB BAL vs IND  proj  16.4  act  34.8  (-18.4)  js  16.9 clay  16.9 cons  14.7
+  Caleb Williams         QB CHI vs CAR  proj  19.0  act  37.3  (-18.3)  js 17.53 clay 17.53 cons  18.1
+  Kyler Murray           QB MIN vs GB   proj  18.8  act   0.6  (+18.2)  js 17.33 clay 17.33 cons  17.6
+  Ja'Marr Chase          WR CIN vs TB   proj  18.9  act   2.2  (+16.7)  js 17.03 clay 17.03 cons  17.0
+  Sam Darnold            QB SEA vs NE   proj  16.8  act   0.5  (+16.3)  js 13.65 clay 13.65 cons  17.1
+  David Montgomery       RB HOU vs BUF  proj  11.8  act  27.4  (-15.6)  js 10.37 clay 10.37 cons  14.2
+  Bryce Young            QB CAR vs CHI  proj  17.3  act  32.4  (-15.1)  js 13.27 clay 13.27 cons  17.1
+  Isaiah Likely          TE NYG vs DAL  proj   9.3  act  23.8  (-14.5)  js 10.16 clay  7.33 cons   9.1
+  Josh Allen             QB BUF vs HOU  proj  21.6  act  35.7  (-14.1)  js 20.64 clay 20.64 cons  18.3
+
+=== locked but no game row (5) ===
+  Cameron Ward (QB 12.8), Cooper Rush (QB 11.4), Kenneth Gainwell (RB 10.0), Josh Jacobs (RB 9.0), Chigoziem Okonkwo (TE 5.6)
+
+
+##### diagnose_week.py --week 1
+W1: 170 skill rows scored (mean >= 5.0)
+
+=== 1. bias (proj − act) and MAE by position ===
+  pos   n         SHIPPED              JS            Clay            prop       consensus            ESPN
+  QB   28    +0.10 /  6.48  -1.81 /  6.96  -1.86 /  7.03  -0.00 /  6.50  -0.50 /  6.85  -1.58 /  6.64
+  RB   44    -0.78 /  5.58  -1.23 /  5.56  -1.27 /  5.60  -0.78 /  5.62  -1.17 /  5.60  -0.95 /  5.91
+  WR   71    +0.99 /  5.55  +0.21 /  5.30  +0.24 /  5.33  +0.83 /  5.49  +0.69 /  5.44  +0.36 /  5.32
+  TE   27    +0.19 /  5.37  -0.69 /  5.12  -0.76 /  5.26  +0.00 /  5.29  -0.34 /  5.33  -0.73 /  5.12
+  ALL 170    +0.26 /  5.69  -0.64 /  5.61  -0.65 /  5.67  +0.15 /  5.66  -0.15 /  5.70  -0.47 /  5.66
+
+=== 2. K + DST (fitted Vegas models, first live grade) ===
+  K   n=29  SHIPPED bias -0.47 MAE  3.42 | model bias -0.99 MAE  3.51 | prop bias -0.50 MAE  3.40 | consensus bias -2.02 MAE  3.47 | band inside 83%
+    proj mean 7.97 vs actual mean 8.45; Spearman -0.08
+  DST n=30  SHIPPED bias +0.61 MAE  3.90 | model bias +0.64 MAE  3.90 | band inside 93%
+    proj mean 6.31 vs actual mean 5.70; Spearman +0.33
+
+=== 3. PROP_W sweep (market anchor weight; shipped .70) ===
+  163 rows with a direct-line anchor that moved the mean
+  market-implied MAE 5.763 | model base MAE 5.621
+  w:   0.00  0.30  0.50  0.60  0.70  0.80  0.90  1.00
+  MAE: 5.62  5.60  5.63  5.65  5.67  5.69  5.73  5.76
+    QB n= 28: 6.96  6.76  6.63  6.50  6.46  6.49
+    RB n= 43: 5.64  5.62  5.66  5.70  5.74  5.76
+    WR n= 66: 5.28  5.33  5.41  5.49  5.58  5.62
+    TE n= 26: 5.00  5.00  5.08  5.18  5.28  5.33
+
+=== 4. JS × consensus blend (MAE) ===
+  w(cons): 0.0  0.2  0.5  0.8  1.0   | shipped
+  MAE:     5.61  5.60  5.63  5.65  5.70   | 5.69
+
+=== 5. tier buckets by shipped mean: bias / MAE / act÷proj ===
+  [ 5, 9) n= 65  bias +0.64  MAE  4.58  act/proj 0.909
+  [ 9,13) n= 50  bias +0.80  MAE  5.42  act/proj 0.926
+  [13,17) n= 30  bias -1.05  MAE  6.43  act/proj 1.070
+  [17,99) n= 25  bias -0.26  MAE  8.18  act/proj 1.014
+
+=== 6. team implied-total terciles: act÷proj (Vegas elasticity check) ===
+  low  implied (n= 40, avg 18.7): act/proj 0.836  bias +1.69
+  mid  implied (n= 62, avg 22.4): act/proj 1.135  bias -1.52
+  high implied (n= 68, avg 25.7): act/proj 0.914  bias +1.04
+
+=== 7. rank accuracy per position: Spearman | top-12 overlap (of 12) ===
+  pos          SHIPPED              JS            Clay            prop       consensus            ESPN
+  QB      +0.35 |  7/12     +0.25 |  7/12     +0.21 |  6/12     +0.36 |  7/12     +0.24 |  7/12     +0.27 |  6/12   
+  RB      +0.70 |  6/12     +0.67 |  6/12     +0.67 |  6/12     +0.68 |  6/12     +0.66 |  5/12     +0.60 |  7/12   
+  WR      +0.42 |  6/12     +0.37 |  5/12     +0.36 |  4/12     +0.43 |  5/12     +0.40 |  5/12     +0.40 |  5/12   
+  TE      +0.33 |  8/12     +0.24 |  7/12     +0.13 |  6/12     +0.31 |  8/12     +0.20 |  7/12     +0.23 |  6/12   
+
+=== 8. stat-component bias: projected comps vs actual stat line (per game, played rows) ===
+  QB: py 226.6→224.8 (-1%) | ptd 1.4→1.6 (+15%) | ry 18.8→20.2 (+8%) | rtd 0.2→0.3 (+60%)
+  RB: ry 55.0→55.8 (+1%) | rtd 0.4→0.6 (+45%) | rec 2.3→2.4 (+7%) | rcy 17.5→17.4 (-1%) | rctd 0.1→0.2 (+50%)
+  WR: ry 1.9→1.1 (-44%) | rec 3.9→3.7 (-5%) | rcy 51.3→50.7 (-1%) | rctd 0.3→0.3 (+3%)
+  TE: rec 3.7→3.4 (-9%) | rcy 37.9→37.6 (-1%) | rctd 0.2→0.4 (+68%)
+
+=== 9. band calibration by tier (inside / below p10 / above p90) ===
+  [ 5, 9) n= 65  inside   75%  below   14%  above   11%   avg (p90−p10)/mean 1.94
+  [ 9,13) n= 50  inside   88%  below    4%  above    8%   avg (p90−p10)/mean 1.78
+  [13,17) n= 30  inside   83%  below    3%  above   13%   avg (p90−p10)/mean 1.45
+  [17,99) n= 25  inside   76%  below   12%  above   12%   avg (p90−p10)/mean 1.13
+
+

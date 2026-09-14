@@ -1,0 +1,68 @@
+  2018: true 0.312 (17594 db) | proxy hit|sack 0.146 (19765 db) | hit 0.143 sack 0.065
+  2019: true 0.293 (17775 db) | proxy hit|sack 0.144 (19922 db) | hit 0.140 sack 0.064
+  2020: true 0.292 (17934 db) | proxy hit|sack 0.143 (20023 db) | hit 0.139 sack 0.057
+  2021: true 0.285 (18645 db) | proxy hit|sack 0.140 (20907 db) | hit 0.137 sack 0.060
+  2022: true 0.291 (18008 db) | proxy hit|sack 0.147 (20298 db) | hit 0.143 sack 0.064
+  2023: true 0.295 (20770 db) | proxy hit|sack 0.149 (20770 db) | hit 0.145 sack 0.068
+  2024: true 0.309 (20215 db) | proxy hit|sack 0.145 (20215 db) | hit 0.141 sack 0.065
+  2025: true 0.298 (19828 db) | proxy hit|sack 0.149 (19828 db) | hit 0.146 sack 0.065
+
+=== proxy vs TRUE pressure, defense-season rates (>=250 db) ===
+  hit|sack : corr +0.675 (n=256 def-seasons) | sd true 0.034 vs proxy 0.023 | soft-side agreement (true z<=-1 vs proxy z<=-1): 0.45
+  hit only : corr +0.674 (n=256 def-seasons) | sd true 0.034 vs proxy 0.023 | soft-side agreement (true z<=-1 vs proxy z<=-1): 0.50
+  sack only: corr +0.436 (n=256 def-seasons) | sd true 0.034 vs proxy 0.013 | soft-side agreement (true z<=-1 vs proxy z<=-1): 0.43
+
+=== GATE A: stability ===
+  TRUE  : in-season wk1-8->wk9+ corr +0.313 (rate mean 0.299, sd 0.044, n=256) | YoY corr +0.309 (n=224)
+  PROXY : in-season wk1-8->wk9+ corr +0.352 (rate mean 0.145, sd 0.029, n=256) | YoY corr +0.292 (n=224)
+
+=== LAYER TEST: QB vs opp pressure deviation, same rows ===
+  common QB player-weeks: 2263 (true-only 0, proxy-only 21)
+
+  TRUE was_pressure: 2263 QB player-weeks, dev sd 0.047, base*FPA MSE 61.642
+    one-sided boost (dev <= thr): MSE change % (negative = better)
+    thr       x1.03  x1.05  x1.08  x1.10  x1.12   share
+    -0.020    -0.25  -0.31  -0.26  -0.12  +0.10    28.1%
+    -0.030    -0.28  -0.39  -0.46  -0.43  -0.35    20.9%
+    -0.040    -0.21  -0.31  -0.38  -0.38  -0.34    14.5%
+    -0.050    -0.17  -0.25  -0.32  -0.34  -0.33    10.2%
+    <- best thr -0.030 x1.08 (-0.46%)
+    buckets (dev in sd units): act/(base*FPA)
+      [-9.0,-1.5)  dev -0.094  ratio 1.082  n=128
+      [-1.5,-1.0)  dev -0.057  ratio 1.109  n=129
+      [-1.0,-0.5)  dev -0.034  ratio 1.073  n=328
+      [-0.5,+0.5)  dev +0.000  ratio 1.034  n=939
+      [+0.5,+1.0)  dev +0.033  ratio 1.037  n=380
+      [+1.0,+1.5)  dev +0.056  ratio 1.034  n=199
+      [+1.5,+9.0)  dev +0.098  ratio 1.026  n=160
+
+  PROXY hit|sack   : 2263 QB player-weeks, dev sd 0.030, base*FPA MSE 61.642
+    one-sided boost (dev <= thr): MSE change % (negative = better)
+    thr       x1.03  x1.05  x1.08  x1.10  x1.12   share
+    -0.015    -0.24  -0.29  -0.21  -0.05  +0.20    28.8%
+    -0.020    -0.26  -0.36  -0.37  -0.31  -0.17    22.5%
+    -0.025    -0.19  -0.25  -0.25  -0.19  -0.07    17.5%
+    -0.030    -0.14  -0.19  -0.18  -0.13  -0.04    14.0%
+    -0.035    -0.11  -0.14  -0.14  -0.10  -0.03    10.6%
+    -0.040    -0.09  -0.12  -0.13  -0.10  -0.06     7.6%
+    -0.050    -0.04  -0.06  -0.07  -0.06  -0.05     3.2%
+    <- best thr -0.020 x1.08 (-0.37%)
+    buckets (dev in sd units): act/(base*FPA)
+      [-9.0,-1.5)  dev -0.056  ratio 1.079  n=116
+      [-1.5,-1.0)  dev -0.037  ratio 1.060  n=203
+      [-1.0,-0.5)  dev -0.021  ratio 1.088  n=334
+      [-0.5,+0.5)  dev -0.000  ratio 1.053  n=943
+      [+0.5,+1.0)  dev +0.022  ratio 0.974  n=349
+      [+1.0,+1.5)  dev +0.036  ratio 1.018  n=167
+      [+1.5,+9.0)  dev +0.065  ratio 1.066  n=151
+
+  soft-set overlap: true(thr -0.03) 20.9% | proxy(thr -0.020) 22.5% | jaccard 0.34 | of true-soft rows, proxy flags 0.52
+
+  proxy pick by season (MSE change %):
+    2019: -1.21%  (soft share 20.9%, n=258)
+    2020: -1.19%  (soft share 24.9%, n=249)
+    2021: +1.20%  (soft share 16.8%, n=340)
+    2022: -0.90%  (soft share 24.5%, n=323)
+    2023: +0.54%  (soft share 21.9%, n=352)
+    2024: -1.21%  (soft share 21.6%, n=388)
+    2025: -0.03%  (soft share 27.2%, n=353)

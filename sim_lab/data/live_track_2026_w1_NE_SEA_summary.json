@@ -1,0 +1,236 @@
+{
+ "bins": {
+  "Q1": {
+   "fit": 4.639,
+   "fitx": 4.621,
+   "v1": 4.707,
+   "naive": 4.69,
+   "n": 651
+  },
+  "Q2": {
+   "fit": 3.919,
+   "fitx": 3.664,
+   "v1": 3.894,
+   "naive": 3.863,
+   "n": 882
+  },
+  "Q3": {
+   "fit": 3.481,
+   "fitx": 3.272,
+   "v1": 3.539,
+   "naive": 3.562,
+   "n": 1176
+  },
+  "Q4": {
+   "fit": 1.291,
+   "fitx": 1.237,
+   "v1": 1.267,
+   "naive": 1.301,
+   "n": 1050
+  }
+ },
+ "players": {
+  "Jaxon Smith-Njigba": {
+   "pos": "WR",
+   "proj": 19.4,
+   "final": 26.2,
+   "fit": 5.74,
+   "fitx": 5.74,
+   "v1": 6.18,
+   "naive": 6.07
+  },
+  "Drake Maye": {
+   "pos": "QB",
+   "proj": 19.4,
+   "final": 12.82,
+   "fit": 4.02,
+   "fitx": 4.02,
+   "v1": 4.55,
+   "naive": 4.63
+  },
+  "Rhamondre Stevenson": {
+   "pos": "RB",
+   "proj": 17.5,
+   "final": 14.5,
+   "fit": 2.12,
+   "fitx": 2.12,
+   "v1": 1.86,
+   "naive": 1.54
+  },
+  "Sam Darnold": {
+   "pos": "QB",
+   "proj": 16.4,
+   "final": 0.52,
+   "fit": 7.55,
+   "fitx": 4.65,
+   "v1": 6.85,
+   "naive": 7.48
+  },
+  "A.J. Brown": {
+   "pos": "WR",
+   "proj": 16.3,
+   "final": 5.6,
+   "fit": 5.32,
+   "fitx": 5.32,
+   "v1": 5.81,
+   "naive": 6.12
+  },
+  "Jadarian Price": {
+   "pos": "RB",
+   "proj": 12.0,
+   "final": 7.8,
+   "fit": 2.29,
+   "fitx": 2.29,
+   "v1": 2.32,
+   "naive": 2.44
+  },
+  "Romeo Doubs": {
+   "pos": "WR",
+   "proj": 9.7,
+   "final": 0.0,
+   "fit": 3.8,
+   "fitx": 3.8,
+   "v1": 4.02,
+   "naive": 4.43
+  },
+  "Hunter Henry": {
+   "pos": "TE",
+   "proj": 9.7,
+   "final": 5.6,
+   "fit": 0.98,
+   "fitx": 0.98,
+   "v1": 1.12,
+   "naive": 1.29
+  },
+  "Rashid Shaheed": {
+   "pos": "WR",
+   "proj": 8.5,
+   "final": 1.4,
+   "fit": 3.05,
+   "fitx": 3.05,
+   "v1": 2.73,
+   "naive": 3.06
+  },
+  "Jason Myers": {
+   "pos": "K",
+   "proj": 8.5,
+   "final": 7.0,
+   "fit": 2.08,
+   "fitx": 2.08,
+   "v1": 2.08,
+   "naive": 1.77
+  },
+  "A.J. Barner": {
+   "pos": "TE",
+   "proj": 7.9,
+   "final": 3.3,
+   "fit": 1.56,
+   "fitx": 1.56,
+   "v1": 1.33,
+   "naive": 1.54
+  },
+  "Cooper Kupp": {
+   "pos": "WR",
+   "proj": 7.4,
+   "final": 5.5,
+   "fit": 1.05,
+   "fitx": 1.05,
+   "v1": 1.3,
+   "naive": 1.1
+  },
+  "Seattle Seahawks D/ST": {
+   "pos": "DST",
+   "proj": 7.2,
+   "final": 13.0,
+   "fit": 4.76,
+   "fitx": 4.76,
+   "v1": 4.76,
+   "naive": 4.59
+  },
+  "Andy Borregales": {
+   "pos": "K",
+   "proj": 7.1,
+   "final": 6.0,
+   "fit": 1.35,
+   "fitx": 1.35,
+   "v1": 1.35,
+   "naive": 1.19
+  },
+  "George Holani": {
+   "pos": "RB",
+   "proj": 6.6,
+   "final": 2.9,
+   "fit": 2.08,
+   "fitx": 2.03,
+   "v1": 2.1,
+   "naive": 2.2
+  },
+  "New England Patriots D/ST": {
+   "pos": "DST",
+   "proj": 5.8,
+   "final": 6.0,
+   "fit": 7.44,
+   "fitx": 7.44,
+   "v1": 7.44,
+   "naive": 6.69
+  },
+  "Demario Douglas": {
+   "pos": "WR",
+   "proj": 5.6,
+   "final": 7.0,
+   "fit": 1.36,
+   "fitx": 1.36,
+   "v1": 1.17,
+   "naive": 1.16
+  },
+  "Elijah Arroyo": {
+   "pos": "TE",
+   "proj": 3.9,
+   "final": 0.0,
+   "fit": 1.77,
+   "fitx": 1.77,
+   "v1": 1.62,
+   "naive": 1.78
+  },
+  "Mack Hollins": {
+   "pos": "WR",
+   "proj": 3.3,
+   "final": 9.1,
+   "fit": 5.57,
+   "fitx": 5.57,
+   "v1": 5.45,
+   "naive": 5.47
+  },
+  "Emanuel Wilson": {
+   "pos": "RB",
+   "proj": 1.8,
+   "final": 0.3,
+   "fit": 0.69,
+   "fitx": 0.63,
+   "v1": 0.72,
+   "naive": 0.77
+  },
+  "Eli Raridon": {
+   "pos": "TE",
+   "proj": 1.8,
+   "final": 7.2,
+   "fit": 2.05,
+   "fitx": 2.05,
+   "v1": 2.23,
+   "naive": 1.81
+  }
+ },
+ "all": {
+  "fit": 3.173,
+  "fitx": 3.029,
+  "v1": 3.19,
+  "naive": 3.196,
+  "n": 3759
+ },
+ "wins": {
+  "fit": 7,
+  "fitx": 3,
+  "v1": 4,
+  "naive": 7
+ }
+}

@@ -5233,7 +5233,12 @@
       const _rounds = draftIdToRounds.get(draft.id) || [];
       const _entryArr = draft.draft_entries || draft.entries || d.draft_entries || [];
       const _maxRound = _rounds.reduce((m, r) => Math.max(m, r.number || 0), 0);
-      const _isRoundGroup = _maxRound >= 2 && _entryArr.length > 0 && _entryArr.length <= 2;
+      // v0.18.17: any group listed ONLY under later rounds is a playoff
+      // group (BBM 14/12-team pools + the 667-team final, Puppy 10/6-team
+      // pools + the 625-team final, Eliminator 2-seat H2H). A draft id that
+      // is also listed under Round 1 is the original draft, whatever else
+      // UD re-lists it under.
+      const _isRoundGroup = _maxRound >= 2 && !_rounds.some(r => r.number === 1) && _entryArr.length > 0;
       if (!Array.isArray(draft.picks)) {
         if (!_isRoundGroup) {
           _diag.droppedNoPicks.push(draft.id || path);
@@ -5387,9 +5392,9 @@
         myEntryId: myEntryId,
         allTeams: allTeams,
         teamCount: teamsByEntry.size,
-        // v0.18.16: tournament-round placement (The Eliminator H2H rounds).
-        // roundGroup = a 2-seat later-round group (site keeps these out of
-        // the draft count / exposure and chains them onto the Round-1 draft).
+        // v0.18.16/17: tournament-round placement (playoff rounds). roundGroup
+        // = a later-round group (site keeps these out of the draft count /
+        // exposure and chains them onto the Round-1 draft).
         roundNumber: _maxRound || (_rounds.length ? 1 : null),
         roundsSeen: _rounds.map(r => r.number).filter(n => n != null),
         roundTitle: _rounds.length ? (_rounds[_rounds.length - 1].title || null) : null,

@@ -178,6 +178,60 @@ def from_pff_weekly(yr, lookup):
     return out
 
 
+def _snap_counts():
+    """window.SNAP_COUNTS from data/snap_counts.js -> {name: {yr: {s, w:{wk}}}}"""
+    p = os.path.join(ROOT, 'data', 'snap_counts.js')
+    raw = open(p, encoding='utf-8').read()
+    i = raw.index('window.SNAP_COUNTS')
+    i = raw.index('=', i) + 1
+    obj, _ = json.JSONDecoder().raw_decode(raw, i + (len(raw[i:]) - len(raw[i:].lstrip())))
+    return obj
+
+
+def estimate_from_snaps(yr, result, dpos):
+    """Current-season fallback (no participation, no PFF weekly): RT% ~=
+    weekly snap share x the player's own routes-per-snap ratio from his most
+    recent season with both numbers (position median for rookies / no
+    history). Marked est:1 so the card renders it as an estimate. Replaced by
+    real numbers as soon as a PFF weekly export exists for the week."""
+    try:
+        snaps = _snap_counts()
+    except Exception as e:  # noqa: BLE001
+        print(f'  snap_counts.js unreadable ({e})')
+        return {}
+    # position median ratio (RT season share / SNP season share), latest prior season
+    ratios_by_pos = {}
+    player_ratio = {}
+    for dn, yrs in result.items():
+        pos = dpos.get(dn)
+        if not pos:
+            continue
+        for y in sorted((int(k) for k in yrs if int(k) < yr), reverse=True):
+            rt = yrs[str(y)].get('s')
+            sn = (snaps.get(dn, {}).get(str(y)) or {}).get('s')
+            if rt and sn and sn >= 20 and not yrs[str(y)].get('est'):
+                r = max(0.25, min(1.2, rt / sn))
+                player_ratio[dn] = r
+                ratios_by_pos.setdefault(pos, []).append(r)
+                break
+    import statistics
+    pos_default = {p: statistics.median(v) for p, v in ratios_by_pos.items() if v}
+    out = {}
+    for dn, pos in dpos.items():
+        cur = (snaps.get(dn) or {}).get(str(yr))
+        if not cur or not cur.get('w'):
+            continue
+        r = player_ratio.get(dn) or pos_default.get(pos)
+        if not r:
+            continue
+        w = {wk: int(round(min(100.0, v * r))) for wk, v in cur['w'].items() if isinstance(v, (int, float))}
+        if not w:
+            continue
+        out[dn] = {'s': round(min(100.0, (cur.get('s') or 0) * r), 1) if cur.get('s') is not None else None, 'w': w, 'est': 1}
+    print(f'  {yr}: ratio medians by pos {{' + ', '.join(f"{k}: {v:.2f}" for k, v in sorted(pos_default.items())) + '}')
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--years', default=None, help='comma list, default 2016-2026')
@@ -196,8 +250,10 @@ def main():
     if os.path.exists(OUT) and a.years:
         raw = open(OUT, encoding='utf-8').read()
         try:
-            result = json.loads(raw[raw.index('{'):raw.rindex('}') + 1])
-        except Exception:  # noqa: BLE001
+            i = raw.index('window.ROUTE_PCT = ') + len('window.ROUTE_PCT = ')
+            result, _ = json.JSONDecoder().raw_decode(raw, i)
+        except Exception as e:  # noqa: BLE001
+            print(f'  existing route_pct.js unreadable ({e}) - rebuilding from scratch')
             result = {}
     src_used = {}
     for yr in years:
@@ -208,7 +264,14 @@ def main():
             data = from_pff_weekly(yr, lookup)
             src = 'pff-weekly'
         if data is None:
-            print(f'  {yr}: no participation file and no PFF weekly exports - skipped')
+            est = estimate_from_snaps(yr, result, dpos)
+            if est:
+                for dn, season in est.items():
+                    result.setdefault(dn, {})[str(yr)] = season
+                src_used[str(yr)] = 'snap-estimate'
+                print(f'  {yr}: no participation file and no PFF weekly exports - ESTIMATED from snap share for {len(est)} players')
+            else:
+                print(f'  {yr}: no participation file, no PFF weekly exports, no snaps - skipped')
             continue
         n = 0
         for dn, wks in data.items():

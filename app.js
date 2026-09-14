@@ -9255,6 +9255,16 @@ function _routeWeek(name, yr, wk) {
   const v = s && s.w && s.w[wk];
   return v != null ? v : null;
 }
+// Current season has no published route data until the postseason: when the
+// season entry is flagged est, the numbers are snap share x the player's own
+// routes-per-snap ratio from last season (pull_route_pct.py). Rendered with a
+// leading ~ and a tooltip; replaced by real numbers once PFF weekly exports land.
+function _routeIsEst(name, yr) {
+  if (typeof ROUTE_PCT === 'undefined') return false;
+  const s = ROUTE_PCT[name] && ROUTE_PCT[name][yr];
+  return !!(s && s.est);
+}
+const _ROUTE_EST_TIP = ' title="Estimated: snap share × routes-per-snap ratio from last season. Real route data for the current season arrives with the weekly PFF export."';
 
 // Team target totals for target share %. Season totals sum every player's
 // targets per (team, year) from ALL_PLAYERS_DB (full-league coverage);
@@ -9692,7 +9702,9 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
     const _wkTs = isQB ? null : _tsPctWeek(d.n, season, w);
     const _wkTsCell = _statCell(_wkTs != null ? _wkTs.toFixed(1) + '%' : '—', _wkTs, isRB ? 3 : 10, isRB ? 14 : 28);
     const _wkRt = isQB ? null : _routeWeek(d.n, season, w.wk);
-    const _wkRtCell = _statCell(_wkRt != null ? _wkRt + '%' : '—', _wkRt, isRB ? 20 : 55, isRB ? 60 : 90);
+    const _wkRtEst = _wkRt != null && _routeIsEst(d.n, season);
+    const _wkRtCell = _statCell(_wkRt != null ? (_wkRtEst ? '~' : '') + _wkRt + '%' : '—', _wkRt, isRB ? 20 : 55, isRB ? 60 : 90)
+      .replace('<td', _wkRtEst ? '<td' + _ROUTE_EST_TIP + ' style="cursor:help"' : '<td');
     if (isQB) {
       row += _statCell(w.pc||0, w.pc||0, 12, 24) + _statCell(w.pa||0, w.pa||0, 20, 38)
         + _statCell(w.py||0, w.py||0, 150, 290) + _statCell(w.ptd||0, w.ptd||0, 0, 2.5)
@@ -9731,7 +9743,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   let _totTsCell = '<td style="color:var(--text2)">—</td>';
   let _totCarCell = '<td style="color:var(--text2)">—</td>';
   const _totRt = isQB ? null : _routeSeason(d.n, season);
-  const _totRtCell = _totRt != null ? '<td>' + _totRt.toFixed(1) + '%</td>' : '<td style="color:var(--text2)">—</td>';
+  const _totRtCell = _totRt != null ? '<td' + (_routeIsEst(d.n, season) ? _ROUTE_EST_TIP + ' style="cursor:help"' : '') + '>' + (_routeIsEst(d.n, season) ? '~' : '') + _totRt.toFixed(1) + '%</td>' : '<td style="color:var(--text2)">—</td>';
   if (!isQB) {
     const _tmSeason = _getTeamForPlayerYear(d.n, +season);
     const _totTs = _tmSeason ? _tsPctSeason(_tmSeason, season, totals.tgt, d.n) : null;

@@ -2302,22 +2302,22 @@ function adj25ppg(d) {
 // players without a 2026 game yet show —. Before that it stays last season's
 // adjusted '25 PPG. window._forcePpgYear = 25|26 is a test hook.
 const _PPG26_FLIP_UTC = Date.UTC(2026, 8, 13, 23, 30);
-let _any2026Cache = { at: 0, v: false };
+// Only a POSITIVE answer is cached. WEEKLY_STATS is lazy-loaded (empty at
+// first paint), and the re-render fired by _mergeWeeklyStatsActive lands well
+// inside any short negative-cache window — a cached "no 2026 rows yet" kept
+// the header on '25 PPG after the data was in (seen 2026-09-14).
+let _any2026Seen = false;
 function _anyWeekly2026() {
-  if (_any2026Cache.v) return true;
-  const now = Date.now();
-  if (now - _any2026Cache.at < 5000) return _any2026Cache.v;
-  let v = false;
+  if (_any2026Seen) return true;
   try {
     if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS) {
       for (const n in WEEKLY_STATS) {
         const sx = WEEKLY_STATS[n] && WEEKLY_STATS[n].seasons;
-        if (sx && sx['2026'] && sx['2026'].length) { v = true; break; }
+        if (sx && sx['2026'] && sx['2026'].length) { _any2026Seen = true; return true; }
       }
     }
   } catch (_) {}
-  _any2026Cache = { at: now, v };
-  return v;
+  return false;
 }
 function _seasonPpgYear() {
   if (window._forcePpgYear === 25 || window._forcePpgYear === 26) return window._forcePpgYear;

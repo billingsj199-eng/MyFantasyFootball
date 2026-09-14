@@ -2095,8 +2095,15 @@ function rnkAdp(d) {
 let _consRankCache = { board: null, ovr: null, pos: null };
 function _consColSrc() { return currentVersion === 'consensus' ? 'jacks' : 'consensus'; }
 function _consColLabel() { return currentVersion === 'consensus' ? "Jack's" : 'Consensus'; }
+// Jack's board is Season Pass-only. On the Consensus tab the reference column
+// IS Jack's board, so free/anon sessions get a lock instead of his rank
+// (Jack 2026-09-14) — +/- column, Moved chip, sort keys and exports follow
+// because they all route through _consRankFor.
+function _consColLocked() { return currentVersion === 'consensus' && !hasPremium(); }
+const _CONS_LOCK_TIP = "Jack's rank is a Season Pass feature — unlock premium to see where Jack has every player.";
 function _consRankFor(d) {
   if (!d || currentMode === 'weekly') return null;
+  if (_consColLocked()) return null;
   const src = _consColSrc();
   const board = versionBoards[src] && versionBoards[src][currentMode];
   if (!Array.isArray(board) || !board.length) return null;
@@ -2120,6 +2127,7 @@ function _consRankFor(d) {
 function _consCellInfo(d) {
   const r = _consRankFor(d);
   const lbl = _consColLabel();
+  if (r == null && _consColLocked()) return { r: null, cls: '', tip: _CONS_LOCK_TIP, locked: true };
   if (r == null) return { r: null, cls: '', tip: 'No ' + lbl + ' rank for this player' };
   if (d.s === 'K' || d.s === 'DST') return { r, cls: '', tip: lbl + ' ' + (d.s === 'DST' ? 'D/ST' : 'K') + r + ' (position rank)' };
   const diff = r - d.myRank;
@@ -2138,9 +2146,10 @@ function _syncConsColHeader() {
   if (!lab) return;
   const isC = currentVersion === 'consensus';
   const want = isC ? "Jack's" : 'Cons';
-  if (lab.textContent !== want) {
+  const locked = isC && _consColLocked();
+  if (lab.textContent !== want || (lab.getAttribute('data-gloss') === _CONS_LOCK_TIP) !== locked) {
     lab.textContent = want;
-    lab.setAttribute('data-gloss', isC
+    lab.setAttribute('data-gloss', locked ? _CONS_LOCK_TIP : isC
       ? "Jack's rank — where this player sits on Jack's board for this format. Green = the consensus is higher on him than Jack, red = lower."
       : 'Consensus rank — where this player sits on the CONSENSUS board for this format (Jack\'s + market ADP + Sleeper + FantasyPros + Underdog/ESPN/CBS/Yahoo blend). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.');
   }
@@ -3883,6 +3892,7 @@ function _weeklyDiff(d) {
   if (currentMode !== 'weekly' || !d) return null;
   const otherVer = currentVersion === 'consensus' ? 'jacks' : 'consensus';
   if (otherVer === 'consensus' && window._consensusWeeklyProj && !window._consensusWeeklyProj[d.n]) return null;
+  if (otherVer === 'jacks' && !hasPremium()) return null;   // Jack's weekly ranks are Season Pass-only
   const mineMap = _posRankMapFor(currentVersion), otherMap = _posRankMapFor(otherVer);
   const mine = mineMap && mineMap[d.n], other = otherMap && otherMap[d.n];
   if (!mine || !other) return null;
@@ -3899,6 +3909,7 @@ function diffHtml(d) {
   // currently viewing (it'd just be the row's own rank).
   function _rankInVer(ver) {
     try {
+      if (ver === 'jacks' && !hasPremium()) return null;   // never leak Jack's placement to free sessions
       const b = versionBoards[ver] && versionBoards[ver][currentMode];
       if (!Array.isArray(b)) return null;
       const i = b.indexOf(d.idx);
@@ -3916,6 +3927,7 @@ function diffHtml(d) {
   if (currentMode === 'weekly') {
     const wd = _weeklyDiff(d);
     const _otherName = currentVersion === 'consensus' ? "Jack's" : 'consensus weekly';
+    if (!wd && currentVersion === 'consensus' && !hasPremium()) return `<span class="diff-even" title="${_CONS_LOCK_TIP}">—</span>`;
     if (!wd) return `<span class="diff-even" title="No ${_otherName} rank for this player this week${_verSuffix}">—</span>`;
     const _pl = d.s === 'DST' ? 'D/ST' : d.s;
     const _wt = `${_pl}${wd.mine} vs ${wd.otherLabel} ${_pl}${wd.other}${_verSuffix}`;
@@ -3923,6 +3935,7 @@ function diffHtml(d) {
     if (wd.diff > 0) return `<span class="diff-up" title="${_wt} — ranked ${wd.diff} spot${wd.diff === 1 ? '' : 's'} higher than ${wd.otherLabel}">▲ ${wd.diff}</span>`;
     return `<span class="diff-down" title="${_wt} — ranked ${-wd.diff} spot${wd.diff === -1 ? '' : 's'} lower than ${wd.otherLabel}">▼ ${-wd.diff}</span>`;
   }
+  if (_cr == null && _consColLocked()) return `<span class="diff-even" title="${_CONS_LOCK_TIP}">—</span>`;
   if (_cr == null) return `<span class="diff-even" title="No ${_cl} rank for this player${_verSuffix}">—</span>`;
   if (d.s === 'K' || d.s === 'DST') {
     // K/DST: position rank on the reference board — no ▲/▼ verdict (overall
@@ -5673,7 +5686,7 @@ function render() {
       <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
-      <td class="adp-cell cons-cell${_cc.cls}" data-lbl="${currentVersion === 'consensus' ? "JACK'S" : 'CONS'}" title="${_cc.tip.replace(/"/g, '&quot;')}">${_cc.r != null ? _cc.r : '—'}</td>
+      <td class="adp-cell cons-cell${_cc.cls}" data-lbl="${currentVersion === 'consensus' ? "JACK'S" : 'CONS'}" title="${_cc.tip.replace(/"/g, '&quot;')}">${_cc.r != null ? _cc.r : _cc.locked ? '<span class="cons-lock" aria-label="Premium">🔒</span>' : '—'}</td>
       ${_statTd1}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
       ${_wkSimBoomBustCell(d, 'bust')}

@@ -2518,3 +2518,4 @@ a.rt-name:hover{color:var(--accent)}
 .wk-live-post{color:var(--text);background:rgba(148,163,184,.18);border:1px solid rgba(148,163,184,.35)}
 @keyframes wkLivePulse{0%,100%{opacity:1}50%{opacity:.6}}
 @media (prefers-reduced-motion:reduce){.wk-live-in{animation:none}}
+td.cons-cell .cons-lock{font-size:.72rem;opacity:.55;cursor:help}

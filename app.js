@@ -9265,10 +9265,15 @@ function _routeWeek(name, yr, wk) {
 // season entry is flagged est, the numbers are snap share x the player's own
 // routes-per-snap ratio from last season (pull_route_pct.py). Rendered with a
 // leading ~ and a tooltip; replaced by real numbers once PFF weekly exports land.
-function _routeIsEst(name, yr) {
+// est is 1 (whole season estimated) or a list of week strings still waiting on
+// the PFF file (scripts/pull_pff_weekly.py); the season total is real once any
+// week is.
+function _routeIsEst(name, yr, wk) {
   if (typeof ROUTE_PCT === 'undefined') return false;
   const s = ROUTE_PCT[name] && ROUTE_PCT[name][yr];
-  return !!(s && s.est);
+  if (!s || !s.est) return false;
+  if (s.est === 1 || s.est === true) return true;
+  return wk != null && Array.isArray(s.est) && s.est.indexOf(String(wk)) >= 0;
 }
 const _ROUTE_EST_TIP = ' title="Estimated: snap share × routes-per-snap ratio from last season. Real route data for the current season arrives with the weekly PFF export."';
 
@@ -9708,7 +9713,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
     const _wkTs = isQB ? null : _tsPctWeek(d.n, season, w);
     const _wkTsCell = _statCell(_wkTs != null ? _wkTs.toFixed(1) + '%' : '—', _wkTs, isRB ? 3 : 10, isRB ? 14 : 28);
     const _wkRt = isQB ? null : _routeWeek(d.n, season, w.wk);
-    const _wkRtEst = _wkRt != null && _routeIsEst(d.n, season);
+    const _wkRtEst = _wkRt != null && _routeIsEst(d.n, season, w.wk);
     const _wkRtCell = _statCell(_wkRt != null ? (_wkRtEst ? '~' : '') + _wkRt + '%' : '—', _wkRt, isRB ? 20 : 55, isRB ? 60 : 90)
       .replace('<td', _wkRtEst ? '<td' + _ROUTE_EST_TIP + ' style="cursor:help"' : '<td');
     if (isQB) {

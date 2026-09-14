@@ -16,13 +16,16 @@ Sources
              RBs/TEs too; PFF's charted routes would run a touch lower).
   2026       nflverse participation is FTN-sourced and published only AFTER
              the postseason (nflreadr schedule: "does not update during the
-             season"), so in-season the ONLY live source is Jack's PFF
-             receiving export filtered to one week, dropped in
+             season"), so in-season the ONLY live source is PFF Premium's
+             weekly receiving table, pulled by scripts/pull_pff_weekly.py into
                E:\\MyFantasyFootball\\pbp_cache\\pff\\weekly\\pff_receiving_2026_w<N>.csv
-             (the standard PFF receiving_summary CSV: player, team_name,
-             routes, ...). RT% = routes / team dropbacks (team dropbacks come
-             from the nightly play_by_play_2026). If pbp_participation_2026
-             ever appears (post-season) it takes over automatically.
+             (the standard PFF receiving_summary columns: player, team_name,
+             routes, route_rate, ...). RT% = routes / team dropbacks (team
+             dropbacks from the nightly play_by_play_2026; PFF's own
+             route_rate is the fallback when pbp lacks the week). Weeks with
+             no PFF file yet stay ESTIMATED from snap share (per-week `est`
+             list) until the file lands. If pbp_participation_2026 ever
+             appears (post-season) it takes over automatically.
 
 Only players in data/d.js at RB/WR/TE are kept (the card only opens for
 D-array players). Names normalized like pull_snap_counts.py.
@@ -174,6 +177,13 @@ def from_pff_weekly(yr, lookup):
                 db = team_db.get((tm, wk), 0)
                 if db >= 10 and routes >= 0:
                     out.setdefault(dn, {})[wk] = (routes, db)
+                elif row.get('route_rate') not in (None, ''):
+                    # pbp for the week not downloaded yet: PFF's own route_rate,
+                    # weighted like one game (~35 dropbacks) for the season sum.
+                    try:
+                        out.setdefault(dn, {})[wk] = (float(row['route_rate']) * 0.35, 35.0)
+                    except ValueError:
+                        pass
     print(f'  {yr}: PFF weekly exports for weeks {[int(re.search(r"_w(\d+)", f).group(1)) for f in files]}')
     return out
 
@@ -273,18 +283,34 @@ def main():
             else:
                 print(f'  {yr}: no participation file, no PFF weekly exports, no snaps - skipped')
             continue
-        n = 0
+        # PFF files lag the games by a day or so: weeks (and players) the
+        # files do not cover yet keep the snap-share estimate, flagged per
+        # week in `est` (list of week strings); a season with only estimated
+        # weeks keeps est:1. The season share `s` counts real weeks only.
+        est = estimate_from_snaps(yr, result, dpos) if src == 'pff-weekly' else {}
+        n = n_mixed = 0
         for dn, wks in data.items():
             plays = sum(c for c, _ in wks.values())
             db = sum(d for _, d in wks.values())
             season = {'s': round(100.0 * plays / db, 1) if db else None,
                       'w': {str(w): int(round(100.0 * c / d)) for w, (c, d) in sorted(wks.items()) if d}}
-            for k in list(result.get(dn, {}).keys()):
-                pass
+            e = est.get(dn)
+            if e:
+                extra = {w: v for w, v in e['w'].items() if w not in season['w']}
+                if extra:
+                    season['w'] = {w: season['w'].get(w, extra.get(w)) for w in sorted(set(season['w']) | set(extra), key=int)}
+                    season['est'] = sorted(extra, key=int)
+                    n_mixed += 1
             result.setdefault(dn, {})[str(yr)] = season
             n += 1
+        n_est = 0
+        for dn, e in est.items():
+            if dn not in data:
+                result.setdefault(dn, {})[str(yr)] = e
+                n_est += 1
         src_used[str(yr)] = src
-        print(f'  {yr}: {n} players ({src}, {time.time() - t0:.0f}s)')
+        print(f'  {yr}: {n} players ({src}, {time.time() - t0:.0f}s)'
+              + (f'; {n_mixed} with estimated weeks pending PFF, {n_est} estimate-only' if est else ''))
 
     # drop empty players, sort
     out = {k: {y: result[k][y] for y in sorted(result[k])} for k in sorted(result) if result[k]}

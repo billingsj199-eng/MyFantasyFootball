@@ -5136,16 +5136,72 @@
     // and the contest filter merged them into one chip. tournament_round_id
     // is unique per tournament-round, so this preserves each contest.
     const roundIdToTournamentName = new Map();
+    // v0.18.16: per-round metadata so the site can place multi-round
+    // contests (The Eliminator's 2-seat H2H rounds) on the right NFL week.
+    // Shape walked defensively: number from round.number / round_number /
+    // round / "Round N" in the title, else the 1-based position of the
+    // round inside its tournament (rounds listed per slate, ordered by any
+    // start-ish date field when present). week from a start date mapped
+    // onto the NFL calendar is left to the site (it owns the kickoff table).
+    const roundInfoById = new Map();
+    const _roundDateOf = (r) => {
+      const cands = [r.start_at, r.starts_at, r.start_time, r.scoring_start, r.lock_at, r.first_lock_at, r.locks_at, r.begin_at];
+      for (const c of cands) { const t = c ? Date.parse(c) : NaN; if (!isNaN(t)) return t; }
+      return null;
+    };
+    const _roundNumberOf = (r) => {
+      const cands = [r.number, r.round_number, r.round, r.position, r.sequence, r.index];
+      for (const c of cands) { const n = parseInt(c, 10); if (!isNaN(n) && n > 0) return n; }
+      const title = String(r.title || r.name || r.label || '');
+      const m = title.match(/round\s*(\d+)/i);
+      return m ? parseInt(m[1], 10) : null;
+    };
     for (const p of Object.keys(bulk)) {
       if (!/^\/v1\/user\/slates\/[a-f0-9-]{20,}\/tournament_rounds$/.test(p)) continue;
       const sd = bulk[p];
       const rounds = (sd && sd.tournament_rounds) || [];
+      const perTourney = new Map();
       for (const round of rounds) {
         if (!round || !round.id) continue;
         const tName = (round.tournament && _udTournamentNameFromUrl(round.tournament.rules_url)) || null;
         if (tName) roundIdToTournamentName.set(round.id, tName);
+        const key = tName || (round.tournament && round.tournament.id) || round.tournament_id || 'slate';
+        if (!perTourney.has(key)) perTourney.set(key, []);
+        perTourney.get(key).push(round);
+      }
+      for (const [key, arr] of perTourney.entries()) {
+        const dated = arr.map((r, i) => ({ r, i, t: _roundDateOf(r) }));
+        dated.sort((a, b) => ((a.t == null ? Infinity : a.t) - (b.t == null ? Infinity : b.t)) || (a.i - b.i));
+        dated.forEach((x, pos) => {
+          const explicit = _roundNumberOf(x.r);
+          roundInfoById.set(x.r.id, {
+            id: x.r.id,
+            number: explicit != null ? explicit : pos + 1,
+            numberSource: explicit != null ? 'explicit' : 'order',
+            title: String(x.r.title || x.r.name || x.r.label || ''),
+            startAt: x.t != null ? new Date(x.t).toISOString() : null,
+            count: arr.length,
+            tournament: typeof key === 'string' ? key : null
+          });
+        });
       }
     }
+    // draft_id -> [round info...] (a draft id can be listed under more than
+    // one round if UD re-lists surviving entries per round).
+    const draftIdToRounds = new Map();
+    for (const p of Object.keys(bulk)) {
+      const m = p.match(/^\/v1\/user\/tournament_rounds\/([a-f0-9-]{20,})\/drafts$/);
+      if (!m) continue;
+      const info = roundInfoById.get(m[1]);
+      if (!info) continue;
+      const arr = (bulk[p] && bulk[p].drafts) || [];
+      for (const d of arr) {
+        if (!d || !d.id) continue;
+        if (!draftIdToRounds.has(d.id)) draftIdToRounds.set(d.id, []);
+        draftIdToRounds.get(d.id).push(info);
+      }
+    }
+    let _h2hSampleLogged = false;
     // draft_id -> tournament name. Walk the cached
     // /v1/user/tournament_rounds/<round_id>/drafts paths; the round_id in
     // the path tells us which tournament each draft belongs to.
@@ -5170,9 +5226,28 @@
       const draft = d && d.draft;
       if (!draft) continue;
       _diag.seen++;
+      // v0.18.16: rounds this draft id is listed under. A 2-seat group of a
+      // later round (The Eliminator) may carry no picks at all — keep it
+      // (entries only) so the site can pair the H2H rounds; everything
+      // else still needs picks.
+      const _rounds = draftIdToRounds.get(draft.id) || [];
+      const _entryArr = draft.draft_entries || draft.entries || d.draft_entries || [];
+      const _maxRound = _rounds.reduce((m, r) => Math.max(m, r.number || 0), 0);
+      const _isRoundGroup = _maxRound >= 2 && _entryArr.length > 0 && _entryArr.length <= 2;
       if (!Array.isArray(draft.picks)) {
-        _diag.droppedNoPicks.push(draft.id || path);
-        continue;
+        if (!_isRoundGroup) {
+          _diag.droppedNoPicks.push(draft.id || path);
+          continue;
+        }
+        draft.picks = [];
+      }
+      if (_isRoundGroup && !_h2hSampleLogged) {
+        _h2hSampleLogged = true;
+        try {
+          console.log('[MFF/sync] H2H round-group sample (' + draft.id + ', rounds ' + _rounds.map(r => r.number).join('/') + '):',
+                      JSON.stringify(d).slice(0, 4000));
+          _diag.h2hSample = { id: draft.id, rounds: _rounds, keys: Object.keys(draft), entryKeys: _entryArr[0] ? Object.keys(_entryArr[0]) : [] };
+        } catch (_) {}
       }
       // v0.17.5: entrant usernames. The same /v2/drafts payload carries the
       // draft's entries (and sometimes a users[] block) alongside picks —
@@ -5223,6 +5298,13 @@
           udProj: appearanceProjTotal.get(p.appearance_id) || null
         });
       }
+      if (_isRoundGroup) {
+        for (const e of _entryArr) {
+          if (e && e.id != null && !teamsByEntry.has(e.id)) teamsByEntry.set(e.id, []);
+        }
+      }
+      const entryUserIdMap = {};
+      try { for (const e of _entryArr) { if (e && e.id != null) entryUserIdMap[e.id] = (e.user_id != null ? e.user_id : (e.user && e.user.id != null ? e.user.id : null)); } } catch (_) {}
       const meta = draftMetaMap.get(draft.id) || {};
       let myEntryId = meta.user_draft_entry_id || null;
       // v0.18.6: fall back to matching MY user id against the draft's own
@@ -5258,6 +5340,7 @@
         allTeams[eid] = {
           entryId: eid,
           username: entryUserMap[eid] || null,
+          userId: entryUserIdMap[eid] != null ? entryUserIdMap[eid] : null,
           isMine: eid === myEntryId,
           pickCount: picks.length,
           picks: picks
@@ -5303,7 +5386,17 @@
         picks: myTeamPicks,
         myEntryId: myEntryId,
         allTeams: allTeams,
-        teamCount: teamsByEntry.size
+        teamCount: teamsByEntry.size,
+        // v0.18.16: tournament-round placement (The Eliminator H2H rounds).
+        // roundGroup = a 2-seat later-round group (site keeps these out of
+        // the draft count / exposure and chains them onto the Round-1 draft).
+        roundNumber: _maxRound || (_rounds.length ? 1 : null),
+        roundsSeen: _rounds.map(r => r.number).filter(n => n != null),
+        roundTitle: _rounds.length ? (_rounds[_rounds.length - 1].title || null) : null,
+        roundStartAt: _rounds.length ? (_rounds[_rounds.length - 1].startAt || null) : null,
+        roundCount: _rounds.length ? (_rounds[_rounds.length - 1].count || null) : null,
+        roundGroup: _isRoundGroup,
+        entryCount: _entryArr.length || teamsByEntry.size
       });
     }
     // v0.10.10 diag: stash on window so it's readable from console regardless of

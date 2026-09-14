@@ -516,9 +516,15 @@ def pull_ktc():
         r = requests.get(KTC_URL, headers={**HEADERS, 'Accept': 'text/html,application/xhtml+xml'},
                          timeout=30)
         r.raise_for_status()
-        m = re.search(r'var\s+playersArray\s*=\s*(\[.*?\])\s*;', r.text, re.DOTALL)
+        # 2026-09 template: the full list moved out of `var playersArray = [...]`
+        # into <script type="application/json" id="ktc-players">[...]</script>
+        # (the page now does playersArray = JSON.parse(#ktc-players)). Try the
+        # JSON tag first, fall back to the old inline var.
+        m = re.search(r'<script[^>]*id="ktc-players"[^>]*>(\[.*?\])\s*</script>', r.text, re.DOTALL)
         if not m:
-            print('  !! KTC: playersArray not found — template changed? Kept old maps.')
+            m = re.search(r'var\s+playersArray\s*=\s*(\[.*?\])\s*;', r.text, re.DOTALL)
+        if not m:
+            print('  !! KTC: neither #ktc-players JSON nor playersArray found — template changed? Kept old maps.')
             return False
         arr = json.loads(m.group(1))
         if len(arr) < KTC_MIN_ROWS:

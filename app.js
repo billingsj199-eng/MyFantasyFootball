@@ -55998,6 +55998,10 @@ Rules:
       };
     }
 
+    if (extPortfolio.tournaments && typeof extPortfolio.tournaments === 'object') {
+      window._udTournamentMeta = Object.assign(window._udTournamentMeta || {}, extPortfolio.tournaments);
+      console.log('[MFF/site] Underdog tournament objects from the extension (window._udTournamentMeta):', Object.keys(extPortfolio.tournaments));
+    }
     if (_groupsAdded) {
       window._udRoundGroupsAt = Date.now();
       console.log('[MFF/site] round groups (H2H rounds) received:', _groupsAdded, '· total', Object.keys(window._udRoundGroups).length);
@@ -57414,8 +57418,9 @@ Rules:
   // opponents' rosters (allTeams, extension sync) + the weekly stats feed
   // (WEEKLY_STATS 2026 rows = FINAL games, half-PPR fpts, post-game importer)
   // + the live-week Sleeper actuals (_liveActualFor) for games in progress.
-  // Underdog best ball lineup: QB / RB RB / WR WR WR / TE / FLEX (+ SUPERFLEX
-  // in Superflex slates). No K, no DST.
+  // Underdog best ball lineup: QB / RB RB / WR WR WR / TE / FLEX. Superflex
+  // slates: QB / RB RB / WR WR / TE / FLEX / SUPERFLEX (8 starters — the
+  // SUPERFLEX slot replaces WR3). No K, no DST.
   // Contest rules (advance spots + what advancing pays) come from Underdog's
   // help-center contest pages (read Sep 2026):
   //   Best Ball Mania VII — top 2 of 12 advance after W14, min cash $25
@@ -57471,6 +57476,18 @@ Rules:
     { re: /little\s*board/i,      adv: 2, weeks: 14, advPrize: 3,
       rounds: [{ week: [1, 14], size: 12, adv: 2 }, { week: [15, 15], size: 10, adv: 1 }, { week: [16, 16], size: 10, adv: 1 }, { week: [17, 17], size: 315, adv: 1, final: true }],
       prizeReach: [0, 0, 3, 10, 250], finalTable: _UD_LITTLEBOARD_FINAL },
+    // The Field General ($3 Superflex): no public rules page. Underdog's
+    // launch post gives the same headline as the Little Board ($3 entry,
+    // $500k pool, $100k to 1st), so it runs the Little Board bracket +
+    // payouts until the real rules are captured (see tournamentMeta in the
+    // extension sync diag). INFERRED.
+    { re: /field\s*general/i,     adv: 2, weeks: 14, advPrize: 3, inferred: true,
+      rounds: [{ week: [1, 14], size: 12, adv: 2 }, { week: [15, 15], size: 10, adv: 1 }, { week: [16, 16], size: 10, adv: 1 }, { week: [17, 17], size: 315, adv: 1, final: true }],
+      prizeReach: [0, 0, 3, 10, 250], finalTable: _UD_LITTLEBOARD_FINAL },
+    // The Dachshund: no public rules page and no launch post found — Round 1
+    // only (top 2 of 12, entry fee back) until the bracket is known. Fill in
+    // rounds / prizeReach / finalTable here when Jack pastes the rules.
+    { re: /dachshund/i,           adv: 2, weeks: 14, advPrize: null, unknownBracket: true },
     { re: /mastiff/i,             adv: 4, weeks: 14, advPrize: null },
     { re: /big\s*dog/i,           adv: 2, weeks: 14, advPrize: null }
   ];
@@ -57485,6 +57502,8 @@ Rules:
     const fee = parseFloat(d && d.fee) || 0;
     const rounds = Array.isArray(r.rounds) ? r.rounds : [{ week: [1, r.weeks], size: 12, adv: r.adv }];
     return {
+      inferred: !!r.inferred,
+      unknownBracket: !!r.unknownBracket || !Array.isArray(r.rounds),
       adv: r.adv,
       weeks: r.weeks,
       h2h: !!r.h2h,
@@ -57614,7 +57633,7 @@ Rules:
     if (!any) return null;
     Object.keys(by).forEach(k => by[k].sort((a, b) => b - a));
     const take = (pos, n) => { let s = 0; for (let i = 0; i < n; i++) s += (by[pos].shift() || 0); return s; };
-    let tot = take('QB', 1) + take('RB', 2) + take('WR', 3) + take('TE', 1);
+    let tot = take('QB', 1) + take('RB', 2) + take('WR', sf ? 2 : 3) + take('TE', 1);
     const flexPool = by.RB.concat(by.WR, by.TE).sort((a, b) => b - a);
     tot += flexPool.shift() || 0;
     if (sf) tot += Math.max(by.QB[0] || 0, flexPool[0] || 0);
@@ -60107,6 +60126,7 @@ Rules:
       <span>${H.alive ? '<b style="color:#22c55e">ALIVE</b> · reached ' + (L.rule.rounds[H.reached - 1] && L.rule.rounds[H.reached - 1].final ? 'the FINAL' : 'R' + H.reached) : '<b style="color:#ef4444">OUT</b> in R' + H.elim}</span>
       <span>· locked <b style="color:${H.locked ? '#22c55e' : 'var(--text2)'}">${_udFmtMoney(H.locked)}</b></span>
       <span>· ${H.groupsLinked} playoff group${H.groupsLinked === 1 ? '' : 's'} synced</span>
+      ${L.rule.inferred ? '<span title="No public rules page for this contest — bracket and payouts assumed from its launch headline (same $ entry / prize pool / 1st place as The Little Board)." style="color:#f59e0b">· bracket INFERRED</span>' : ''}
     </div>`;
     html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.68rem"><thead><tr style="border-bottom:1px solid var(--border)">
       <th style="text-align:left;padding:3px 6px;color:var(--text2)">ROUND</th><th style="text-align:left;padding:3px 6px;color:var(--text2)">WEEK</th>

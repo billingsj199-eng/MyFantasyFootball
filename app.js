@@ -57461,6 +57461,22 @@ Rules:
     { re: /puppy/i,               adv: 2, weeks: 14, advPrize: 5,
       rounds: [{ week: [1, 14], size: 12, adv: 2 }, { week: [15, 15], size: 10, adv: 1 }, { week: [16, 16], size: 6, adv: 1 }, { week: [17, 17], size: 625, adv: 1, final: true }],
       prizeReach: [0, 0, 5, 30, 500], finalTable: _UD_PUPPY_FINAL },
+    // The Big Eliminator ($100, 2,760 entries; help page Sep 2026): 17 rounds,
+    // round k = NFL week k, pool sizes / advance counts straight from the page
+    // (12→10, 10→8, 10→8, 8→6, 8→6, 6→4, 4→2, 6→4, 8→6, 6→4, 4→2, 23→18, 6→4,
+    // 4→2, 4→2, 3→1, 2-seat final). Prize by round reached: R8 $100 (185-276th),
+    // R9 $150, R10 $250, R11 $500, R12 $1,100, R13 $1,500, R14 $2,500,
+    // R15 $5,000, R16 $10,100, R17 $20,000 (2nd) / $50,000 (1st). Must sit
+    // ABOVE the plain Eliminator rule (both names contain "eliminator").
+    { re: /big\s*eliminator/i,    adv: 10, weeks: 1, advPrize: 0,
+      rounds: (() => {
+        const sz  = [12, 10, 10, 8, 8, 6, 4, 6, 8, 6, 4, 23, 6, 4, 4, 3, 2];
+        const adv = [10,  8,  8, 6, 6, 4, 2, 4, 6, 4, 2, 18, 4, 2, 2, 1, 1];
+        return sz.map((n, i) => ({ week: [i + 1, i + 1], size: n, adv: adv[i], final: i === 16 }));
+      })(),
+      prizeReach: [0, 0, 0, 0, 0, 0, 0, 0, 100, 150, 250, 500, 1100, 1500, 2500, 5000, 10100, 20000],
+      finalTable: [[1, 1, 50000], [2, 2, 20000]] },
+    // The Eliminator (and numbered re-runs like The Eliminator 2, assumed to mirror it).
     { re: /eliminator/i,          adv: 6, weeks: 1,  advPrize: 0, h2h: true,
       rounds: _UD_ELIM_ROUNDS, prizeReach: [0, 0, 0, 0, 10, 20, 31, 52, 102, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 76000], finalTable: _UD_ELIM_FINAL },
     { re: /bigger\s*board/i,      adv: 4, weeks: 14, advPrize: null },

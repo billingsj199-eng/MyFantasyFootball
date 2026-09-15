@@ -561,6 +561,11 @@ def _xfp_rush(yl, is_qb):
 def _xfp_qb_rush_td(yl):
     return next(r for hi, r in XFP_QB_RUSH_TD if yl <= hi)
 
+# INT rate per target by air-yards bucket (same 7 buckets), pooled pbp 2018-25
+# (backtest_xfp_variants.py V6: xINT/g 0.71 vs actual 0.70; fixes the QB
+# full-scoring bias -1.33/g -> +0.10/g). Sleeper scores an INT -1.
+XFP_INT = [0.0077, 0.0107, 0.0188, 0.0318, 0.0416, 0.0557, 0.0692]
+
 def build_xfp_2026():
     """{norm: {pos, w: {wk: [components]}}} for every QB/RB/WR/TE with a 2026 touch."""
     out = {}
@@ -573,28 +578,38 @@ def build_xfp_2026():
         pl = pl[pl.position.isin(["QB", "RB", "WR", "TE"]) & pl.gsis_id.notna()]
         pos_of = dict(zip(pl.gsis_id, pl.position)); name_of = dict(zip(pl.gsis_id, pl.display_name))
         pbp = pd.read_csv(pbp_p, usecols=["season_type", "week", "pass_attempt", "rush_attempt", "sack", "passer_player_id",
-                                          "receiver_player_id", "rusher_player_id", "yardline_100", "air_yards"], low_memory=False)
+                                          "receiver_player_id", "rusher_player_id", "yardline_100", "air_yards",
+                                          "cp", "xyac_mean_yardage"], low_memory=False)
         pbp = pbp[pbp.season_type == "REG"]
         acc = {}
         def row(pid, wk):
             a = acc.setdefault(pid, {})
             return a.setdefault(str(int(wk)), {"tg": 0, "xrec": 0.0, "xrecyd": 0.0, "xrectd": 0.0, "car": 0, "xruyd": 0.0, "xrutd": 0.0,
-                                                "att": 0, "xpyd": 0.0, "xptd": 0.0})
-        # targets (receivers) + attempts (passers)
+                                                "att": 0, "xpyd": 0.0, "xptd": 0.0, "xint": 0.0})
+        # targets (receivers) + attempts (passers). Catch / yards per target come
+        # from nflfastR's per-play models where present (cp x (air + xYAC), ~93%
+        # of targets; the ~7% without an xYAC are mostly goal-line throws) and
+        # fall back to the air-yards bucket tables (backtest_xfp_variants.py V3:
+        # WR +.013 weekly r, +.014 rest-of-season r, +.012 YoY; others flat).
         pa = pbp[(pbp.pass_attempt == 1) & (pbp.sack != 1)]
-        for pid, rcv, yl, ay, wk in pa[["passer_player_id", "receiver_player_id", "yardline_100", "air_yards", "week"]].itertuples(index=False):
+        for pid, rcv, yl, ay, wk, cp, xyac in pa[["passer_player_id", "receiver_player_id", "yardline_100", "air_yards", "week",
+                                                  "cp", "xyac_mean_yardage"]].itertuples(index=False):
             yl = float(yl) if pd.notna(yl) else 50.0
             targeted = pd.notna(rcv)
             if targeted:
                 a = float(ay) if pd.notna(ay) else 0.0
                 b = _xfp_ab(a); ez = a >= yl
                 xtd = _xtd_rec(yl, ez)
+                if pd.notna(cp) and pd.notna(xyac):
+                    xr, xy = float(cp), float(cp) * (a + float(xyac))
+                else:
+                    xr, xy = XFP_CATCH[b], XFP_TGT_YDS[b]
                 if rcv in pos_of:
-                    r = row(rcv, wk); r["tg"] += 1; r["xrec"] += XFP_CATCH[b]; r["xrecyd"] += XFP_TGT_YDS[b]; r["xrectd"] += xtd
+                    r = row(rcv, wk); r["tg"] += 1; r["xrec"] += xr; r["xrecyd"] += xy; r["xrectd"] += xtd
             if pd.notna(pid) and pos_of.get(pid) == "QB":
                 q = row(pid, wk); q["att"] += 1
                 if targeted:
-                    q["xpyd"] += XFP_TGT_YDS[b]; q["xptd"] += xtd
+                    q["xpyd"] += xy; q["xptd"] += xtd; q["xint"] += XFP_INT[b]
         ru = pbp[(pbp.rush_attempt == 1) & pbp.rusher_player_id.notna()]
         for pid, yl, wk in ru[["rusher_player_id", "yardline_100", "week"]].itertuples(index=False):
             if pid not in pos_of: continue
@@ -607,7 +622,7 @@ def build_xfp_2026():
             w = {}
             for wk, r in wks.items():
                 if pos == "QB":
-                    w[wk] = [r["att"], round(r["xpyd"], 1), round(r["xptd"], 2), r["car"], round(r["xruyd"], 1), round(r["xrutd"], 2)]
+                    w[wk] = [r["att"], round(r["xpyd"], 1), round(r["xptd"], 2), r["car"], round(r["xruyd"], 1), round(r["xrutd"], 2), round(r["xint"], 2)]
                 else:
                     w[wk] = [r["tg"], round(r["xrec"], 2), round(r["xrecyd"], 1), round(r["xrectd"], 2), r["car"], round(r["xruyd"], 1), round(r["xrutd"], 2)]
             out[norm_name(str(name_of[pid]))] = {"pos": pos, "w": w}

@@ -1562,3 +1562,199 @@ participation "postseason only" blocker does not apply), so:
   persist; per-lane and per-zone EFFICIENCY, per-player man/zone splits are
   noise as layers (backtest_run_direction.py, backtest_target_area.py,
   backtest_man_zone.py) - INTEL ONLY, nothing moves a projection.
+
+## Scheme prior season + reliability (2026-09-15)
+
+Jack: "get the info from last season and see if there are any similarities to
+week 1 because then that team defense or offensive players will be somewhat
+reliable". PFF serves full-season totals without a week param, but those have
+no opponent dimension, so the puller instead fetches the PRIOR season's weekly
+facets once (pull_prior_season: weeks 1-18 x 9 facets + receiving/summary saved
+as receiving_summary_<yr>; 180 files, ~2 min) and build_scheme.py aggregates
+2025 with the same code (defPrior/offPrior/recPrior/rbPrior/qbPrior/lgPrior)
+plus `persist` = league-wide r of each defense metric, 2026-to-date vs 2025.
+
+- W1 2026 vs 2025 (32 D): blitz .64, DB/LB rush share .88, man .38, edge-run
+  share .39, gap share .33, MTF/att faced .32, S-in-box .25; pressure -.03,
+  rusher win .03, ypc -.03, yco -.06, every PFF grade ~0. One game of results is
+  noise; one game of scheme CHOICES already says who a defense is.
+- app.js: defense card shows the 2025 value + a check / flip / ~ agreement
+  cell per metric and an `r` tag (green >= .30) on each metric name; header
+  "RELIABLE / MIXED / NEW LOOK vs 2025 (k/n)" over the identity metrics
+  (SC_IDENTITY: man, blitz, dbRush, sBox, prwr, gap/edge/MTF faced). League
+  table gets a "vs 2025" column + the persistence line. Player profiles are
+  BLENDED (2026 counts + 2025 scaled to <= 200 routes / 100 carries / 200
+  dropbacks, SC_K_*), reads tag "(2025 too)" / "(new vs 2025)". NOTES defense
+  line carries the reliability tag and 2025 values.
+- scheme backtest: backtest_scheme.py (PFF weekly facets 2019-25 pulled once
+  via the scratch history puller) grades every card interaction LOYO - see the
+  next section for the verdicts.
+
+## Coaches / playcallers in the scheme cards (2026-09-15)
+
+Jack: "make sure we are aware of coaches and playcallers at this time and we
+can maybe assign tendencies or strengths/weakness potentially offensively and
+defensively".
+
+- pull_coaches.py -> pbp_cache/coaches.json: HC / OC / DC per team-season
+  2018-2026 from Pro-Football-Reference team pages via Selenium. PFR fronts a
+  JS challenge (~28 KB page) that beats headless Chrome, a fake user-agent, and
+  an immediate page_source read - the window stays VISIBLE (own temp profile,
+  no collision with the PFF profile), no UA override, and the puller polls up
+  to 20 s for "Coordinator" in the HTML. 3.5 s between pages (PFR 429s faster).
+  Re-run after in-season firings (only missing team-seasons are fetched;
+  --years 2026 --force to refresh the current staffs).
+- Playcaller = OC / DC unless sim_lab/coach_overrides.json says the HC calls
+  it: {"2026": {"LAR": {"oc_play": "Sean McVay"}}}. PFR does not carry this;
+  Jack maintains the file (HC playcallers are common on offense).
+- build_scheme.py: the DEFENSE prior travels with the defensive playcaller
+  (coach_prior): same DC as last season -> team prior; new DC -> his most
+  recent defense up to 3 seasons back (priorSrc mode "coach", from/season);
+  no history -> team prior flagged weak. Same for the OFFENSE prior via the
+  OC. defPriorTeam/offPriorTeam keep the plain franchise prior; coaches =
+  current staff + last year's playcallers; coachHist = every season each
+  playcaller has in the data (man/blitz/pressure/S-box/gap/edge...);
+  persistSplit = W-vs-prior r for same-DC vs new-DC teams.
+- app.js: defense card header line "DC <name> (3rd yr here)" / "(new; prior =
+  DEN 2025 under him, replaced X)" / "(new, no playcalling history - prior =
+  team 2025, weak)", the prior column is labelled with the source season, and
+  a Tendencies line shows the playcaller's seasons side by side. Offense block
+  gets the OC line + his history. League table: DC / playcaller column (new =
+  red). NOTES: coach lines under each D scheme / O style line.
+- backtest_scheme.py uses the same coach-aware defense priors and reports YoY
+  persistence three ways: same-DC, new-DC vs the old team, new-DC vs HIS last
+  defense - the evidence that tendencies travel with the coach.
+
+## xFP accuracy backtest (backtest_xfp.py, 2026-09-15)
+
+Jack: "how accurate is our xFP?" Rebuilt the site's xFP (same tables /
+functions as build_xfp_2026) for 36k QB/RB/WR/TE player-weeks 2019-25 and
+graded it. Log: xfp_backtest.log.
+- Descriptive (weekly xFP vs actual, rows xFP >= 5): r .57-.68 (RB best,
+  TE worst), MAE 3.6-4.8 pts/g, bias within +-0.12/g every position (level is
+  calibrated; QB reads -1.5/g under full scoring because INTs are ignored by
+  the standard definition). TD half r ~.46-.53 = the noise.
+- Predictive vs actual PPG: xFP/g wins EARLY for RB/WR/TE (3 games: RB r
+  .60 vs .54, WR .53 vs .52, TE .41 vs .41 ~tie), ties at 5 games, LOSES by
+  8 games (skill efficiency accumulates). Best blend weight on xFP ~.6-.7 at
+  3 games -> ~.3 by 8. QB: xFP worse at every horizon (w=0) - QB efficiency
+  over expected is skill. Next-game r: identical within .01.
+- YoY: FPOE/g persists r .23-.40 (skill), TD luck/g only .07-.15 -> the
+  tooltip split (TD = regresses, yards/catches = repeats) is right.
+- WR/TE carries use the RB rush-yards table and run 1.1-1.5x hot (jet
+  sweeps); tiny component, left as is.
+Verdict: a good USAGE stat, not a projection - do not feed it to the sims
+(they already regress the TD half). Same conclusion as yds_luck_backtest.
+
+## xFP variants backtest (backtest_xfp_variants.py, 2026-09-15)
+
+Jack: "how else can we improve our xFP on games that already happened?"
+Play-level harness, every table refit LEAVE-ONE-YEAR-OUT 2019-25 (V0 =
+site tables refit honestly: r .623 vs .624 in-sample -> no overfit).
+Cumulative variants: V1 receiver position, V2 + yardline bucket for
+catch%/yards, V3 + nflfastR cp / xyac_mean_yardage per play, V4 + rush
+context (scramble, distance, shotgun, goal-to-go TD), V5 + garbage-time /
+2-min situation, V6 = expected INT (QB).
+- Everything is within +-0.015 r. Only WR moves consistently: V3 +0.013
+  weekly r, +0.014 rest-of-season r from 3 games, +0.012 YoY. RB/QB/TE flat
+  (TE +-0.012 is noise, n=174 seasons). Position split, rush context and
+  situation buckets add NOTHING.
+- V6 xINT (by air-yards bucket) fixes the QB full-scoring bias -1.33/g ->
+  +0.10/g; xINT/g 0.71 vs actual 0.70.
+Reading: opportunity context is already ~all the signal a usage stat can
+carry; the residual (weekly r ~.6) is TD/yardage outcome variance, which no
+amount of pbp history removes without adding the player's own skill (= a
+projection, which the sims are). Worth shipping if Jack wants: cp/xyac for
+receivers (+ yardline fallback) and xINT for QB - both are columns already
+in the nightly pbp. Log: xfp_variants_backtest.log.
+
+## xFP upgrade SHIPPED: nflfastR cp/xYAC per target + QB expected INTs (2026-09-15)
+
+Jack: "lets add them" (the two keepers from the variants backtest).
+- pull_pace_tracker.py build_xfp_2026: each target's xrec = nflfastR `cp`,
+  xrecyd = cp x (air_yards + xyac_mean_yardage) when both are present (~93%
+  of targets; the rest, mostly goal-line throws, fall back to the air-yards
+  bucket tables). QB xpyd uses the same per-target value. New QB component
+  [6] = xint (XFP_INT by air-yards bucket, pooled 2018-25). RB/WR/TE arrays
+  unchanged.
+- export_site_proj.js: header comment only (payload passes the arrays).
+- Sim Lab app.js ntXfp: QB xFP nets 1 x xint (SIM_2026 ppg = Sleeper fpts,
+  INT -1) so NOTES FPOE/g is consistent.
+- Site app.js (?v=2026-09-15g): _xfpFor QB subtracts 1 x c[6]; tooltip and
+  season totals show "INTs +/-" as its own luck part for QBs; header gloss +
+  rankings xFP button title reworded. Josh Allen W1: xFP 22.4, +13.3 over =
+  TD +10.0, INTs +0.9, yards +2.4. Coker W1 unchanged at 12.2.
+Old data (6-element QB rows) and old site code (ignores c[6]) are mutually
+compatible, so deploy order doesn't matter. sim_routes.js rebuilt; the
+10:00 / 20:15 export task ships the new components to data/sim_proj_2026.js.
+
+## FPOE stability + rankings Luck tail (2026-09-15, follow-up)
+
+Split-half r of per-game FPOE, first G games vs next G (same season, xFP/g
+>= 5, 2019-25): G=4 QB .16 RB .13 WR .12 TE .14; G=8 QB .37 RB .36 WR .28
+TE .10 (n=75). TD-luck half ~0 at G<=4, .14-.26 at 8; skill half .34-.45 at
+8 for QB/RB. Spearman-Brown: FPOE reaches half-reliable at ~14 games (QB/RB),
+~18 (WR) - i.e. not within a season. Both site xFP glosses now say so.
+Site (?v=2026-09-15h): rankings xFP mode tail "TD Luck" -> "Luck" = TD luck
++ INT luck for QBs (_xfpAgg int/luck/luckg; sort + colour follow).
+
+## Scheme matchup backtest (backtest_scheme.py) - 2026-09-15
+
+Jack: "backtest the whole algo or look for correlation with everything we are
+building in 2025 and even previous years" / "can we try to find any correlation".
+PFF weekly facets 2018-2025 (scratch pull_pff_history.py, 1,430 files) ->
+build_scheme.aggregate() walk-forward per week + prior season (defense K=4 gm,
+player K=200 rt / 100 car / 200 db, the app's blend), coach-aware defense priors
+from coaches.json. 17,657 QB/RB/WR/TE player-weeks 2019-25 on the shipped base
+(bt_common), LOYO. Log scheme_backtest.log; verdicts + persistence + scan ship to
+data/scheme_backtest.js (SIM_SCHEME_BT) and render at the bottom of the ZONES
+league view. Ship bar <= -0.3% MSE with >= 5/7 years better.
+
+- 31 interactions graded, NONE pass. Matchup families (coverage fit R1, lane fit
+  B1, pressure fit Q1, GOOD/TOUGH SPOT flags, slot leak, yco/MTF flags, defense
+  man/blitz/pressure levels): all within +-0.15%. Closest: D blitz rate -> RB
+  -0.14% 6/7 (RBs a touch worse vs blitz-heavy D), D man rate -> RB -0.10% 4/7.
+- Correlation scan (230/251/146/146 features + cross terms per position): the
+  only |r| > .08 are QB EFFICIENCY LEVELS with a NEGATIVE sign - PFF pass grade
+  under pressure r -.12, clean-pocket YPA -.09, no-blitz YPA -.11: QBs whose
+  recent efficiency is high are OVER-projected (mean reversion), not a matchup.
+  LOYO as (1 + k z): pGr -0.33% 4/7, nbYpa -0.23% 5/7, nYpa -0.23% 5/7 = "lean",
+  one year short of the bar. WR/TE YPRR shows the same sign at r -.05/-.06
+  (-0.10% 5/7 WR). CANDIDATE next study: QB efficiency mean-reversion layer
+  (YPA / grade vs the QB's own multi-year level), analogous to the TD-luck
+  family - NOT a scheme layer.
+- Persistence (224 team-seasons): man early->late .73 / YoY .55, blitz .76/.60,
+  DB-LB rush share .77/.53, S-in-box .67/.43, edge share faced .45/.44, rusher
+  win .45/.40, pressure .42/.31; grades, missed tackles, slot yds, ypc, yco,
+  explosive: .05-.3. Same-DC YoY beats new-DC YoY everywhere (man .71 vs .49,
+  blitz .79 vs .54, edge faced .75 vs .37, slot yds .58 vs .12) - tendencies
+  travel with the playcaller. "new DC vs HIS last D" needs the full coaches.json
+  (first run had 2018-21 only; re-run after pull_coaches.py finishes).
+- Conclusion (same as zones / lanes / pairings): the scheme data describes
+  WHO a defense is and WHAT a player does - reliable enough to quote, and the
+  coach-aware prior makes the Week-1 read trustworthy - but no scheme x player
+  interaction moves a projection beyond the shipped base. Intel only.
+
+## Out-flag guard: never zero before he is out (2026-09-15)
+
+Jack: "make sure not to 0 anyone out before they are out or at least doubtful"
+/ "maybe check who sleeper has 0s for". Tuesday's export had zeroed Murray,
+Tua, Flowers, Henderson, McMillan and Grupe for Week 2 on Sleeper's
+injury_status "Out" - a flag that lingers from Sunday's inactives (McMillan,
+Grupe) or lands Monday before any Week-2 designation exists (Murray, Tua).
+
+- refresh_data.py now appends `window.SIM_SLEEPER_WEEKLY` to sleeper_meta.js:
+  Sleeper's OWN projection for the current week per player (repo
+  data/weekly_projections.json 'h'; absent = Sleeper has him at 0).
+- engine applyInSeasonInjuries: a Sleeper "Out" zeroes only when Sleeper's
+  weekly projection is absent/0 too, or the NFL report (sim_practice.js,
+  week-scoped) says Out; NFL Doubtful -> x0.5; otherwise x0.75
+  `out-unconfirmed` (handled like Questionable + DNP: no prop anchor). IR /
+  PUP / NFI / suspension still zero (multi-week by nature); Sleeper
+  "Doubtful" still x0.5. Kill: SIM_INJ_LAYER=false as before. Backup
+  engine.js.bak_pre_outguard_20260915.
+- Result W2: Darnold, Stribling, Penix, McCarthy, Beck, Bagent, Sampson,
+  Leonard, Ewers, Allar, Lane = zero (Sleeper agrees); Murray, Tua, Flowers,
+  Henderson, McMillan, Grupe, Kamara, Najee Harris, Atwell, Tolbert ... =
+  x0.75 unconfirmed. NOTES chip: "OUT flag unconfirmed (Sleeper still projects
+  him) x0.75". The Wednesday/Thursday NFL report flips them either way.

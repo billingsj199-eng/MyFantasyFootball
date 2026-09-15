@@ -1269,6 +1269,8 @@
   // buildPlayers; `active` = designations are for THIS week's games (from
   // ~4 days before the week's first kickoff) — preseason camp tags stay
   // with the start-of-season windows above. Kill: window.SIM_INJ_LAYER=false.
+  // 2026-09-15 (Jack): Sleeper "Out" needs Sleeper's own weekly projection at 0 (SIM_SLEEPER_WEEKLY)
+  // or the NFL report to zero; otherwise x0.75 'out-unconfirmed'.
   var _inj = null;
   var INJ_SHARE = { QB: 0.85, RB: 0.60, WR: 0.60, TE: 0.60 };
   // ---------- TEAM OPPORTUNITY POOL (2026-09-11, Jack: Clay-style) ----------
@@ -1353,7 +1355,21 @@
       var practiced = pr ? String(pr.pr || '') : '';
       if (t && t !== '|') {
         if (/\bir\b|injured reserve|\bpup\b|\bnfi\b|non football/.test(t)) { map[p.norm] = { from: currentWeek, to: Math.min(WEEKS, currentWeek + 3), mult: 0, src: 'ir' }; return; }
-        if (/\bout\b|\bsus\b|suspend/.test(t)) { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0, src: 'out' }; return; }
+        if (/\bsus\b|suspend/.test(t)) { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0, src: 'sus' }; return; }
+        if (/\bout\b/.test(t)) {
+          // Jack 2026-09-15: never zero a player before he is actually out (or at least doubtful).
+          // Sleeper's injury_status "Out" lingers from last week's inactives and gets applied
+          // early after Monday news, so it only zeroes when Sleeper has ALSO pulled the player's
+          // own projection for this week (SIM_SLEEPER_WEEKLY: absent / 0 = ruled out) or the NFL
+          // report says Out/Doubtful below. Otherwise x0.75 'out-unconfirmed' (same handling
+          // as Questionable + DNP: no prop anchor, chip on the card) until a report confirms.
+          var swk = wnd.SIM_SLEEPER_WEEKLY || null;
+          var swOK = swk && swk.p && (+swk.week === +currentWeek);
+          var swProj = swOK ? swk.p[p.norm] : null;
+          if (!swOK || swProj == null || swProj <= 0 || gs === 'out') { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0, src: 'out' }; return; }
+          if (gs === 'doubtful') { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.5, src: 'nfl-doubtful' }; return; }
+          map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.75, src: 'out-unconfirmed' }; return;
+        }
         if (/doubtful/.test(t)) { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.5, src: 'doubtful' }; return; }
       }
       // NFL report as a second opinion (Sleeper lagging the official status)

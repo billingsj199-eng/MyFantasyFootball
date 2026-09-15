@@ -31,6 +31,15 @@ efficiency and per-direction run efficiency are NOISE as projection layers;
 funnels / identities persist. So this file is what a defense IS and what a
 player DOES, for the ZONES + NOTES tabs and Jack's videos.
 
+Coaches (Jack 2026-09-15 "make sure we are aware of coaches and playcallers ... assign
+tendencies"): pbp_cache/coaches.json (pull_coaches.py, PFR) gives HC/OC/DC per team-season;
+coach_overrides.json (hand-edited, optional) names the playcaller when the HC calls plays.
+The DEFENSE prior travels with the defensive playcaller: same DC as last season -> the
+team's prior season; new DC -> his most recent defense (up to 3 seasons back) with the
+source recorded in priorSrc; no history -> the team's prior season flagged weak. Same for
+the OFFENSE prior via the offensive playcaller. coachHist carries every season each
+playcaller has in the data (tendency cards). Player profiles stay with the player.
+
 Team codes: PFF uses ARZ/BLT/CLV/HST/LA -> ARI/BAL/CLE/HOU/LAR (Sim Lab codes).
 Player keys: pull_pace_tracker.norm_name (same key the engine uses).
 Run standalone (python build_scheme.py) or via pull_pace_tracker.build().
@@ -155,6 +164,70 @@ def run_block(rs, rd):
     if lane_att:
         out["edge"] = rate(sum(lanes[l][0] for l in EDGE), lane_att)
         out["lanes"] = {l: v for l, v in lanes.items()}
+    return out
+
+
+COACHES = os.path.join(CACHE, "coaches.json")
+OVERRIDES = os.path.join(HERE, "coach_overrides.json")
+
+
+def load_coaches():
+    """{year: {team: {hc, oc, dc, ocPlay, dcPlay}}} - playcaller = OC/DC unless coach_overrides.json says the HC."""
+    if not os.path.exists(COACHES):
+        return {}
+    raw = json.load(open(COACHES, encoding="utf-8"))
+    ov = json.load(open(OVERRIDES, encoding="utf-8")) if os.path.exists(OVERRIDES) else {}
+    out = {}
+    for y, teams in raw.items():
+        for t, c in teams.items():
+            o = ov.get(str(y), {}).get(t, {})
+            rec = {"hc": c.get("hc"), "oc": c.get("oc"), "dc": c.get("dc")}
+            rec["ocPlay"] = o.get("oc_play") or c.get("oc") or c.get("hc")
+            rec["dcPlay"] = o.get("dc_play") or c.get("dc") or c.get("hc")
+            out.setdefault(int(y), {})[t] = rec
+    return out
+
+
+def coach_prior(kind, team, year, profiles, coaches, back=3):
+    """Prior profile for team's `kind` ('def' -> dcPlay, 'off' -> ocPlay) entering `year`.
+    -> (profile or None, src dict)."""
+    key = "dcPlay" if kind == "def" else "ocPlay"
+    now = coaches.get(year, {}).get(team, {})
+    who = now.get(key)
+    prev = coaches.get(year - 1, {}).get(team, {}).get(key)
+    team_prior = (profiles.get(year - 1) or {}).get(kind, {}).get(team)
+    if not who:
+        return team_prior, {"from": team, "season": year - 1, "coach": prev, "mode": "team (no coach data)"}
+    if prev and who == prev:
+        return team_prior, {"from": team, "season": year - 1, "coach": who, "mode": "same"}
+    for s_ in range(year - 1, year - 1 - back, -1):
+        for X, c in coaches.get(s_, {}).items():
+            if c.get(key) == who and (profiles.get(s_) or {}).get(kind, {}).get(X):
+                return profiles[s_][kind][X], {"from": X, "season": s_, "coach": who, "mode": "coach", "prev": prev}
+    return team_prior, {"from": team, "season": year - 1, "coach": who, "mode": "new-no-history", "prev": prev, "weak": True}
+
+
+DEF_HIST_KEYS = ["man", "blitz", "prs", "prwr", "sBox", "dbRush", "mtRate", "g"]
+OFF_HIST_KEYS = ["manSeen", "screen", "blitzFaced", "prsFaced", "g"]
+
+
+def coach_hist(kind, profiles, coaches):
+    """{playcaller: [{season, team, ...metrics}]} across every season in the data."""
+    key = "dcPlay" if kind == "def" else "ocPlay"
+    out = {}
+    for y in sorted(profiles):
+        prof = (profiles[y] or {}).get(kind, {})
+        for t, p in prof.items():
+            who = coaches.get(y, {}).get(t, {}).get(key)
+            if not who:
+                continue
+            rec = {"season": y, "team": t}
+            for k in (DEF_HIST_KEYS if kind == "def" else OFF_HIST_KEYS):
+                if p.get(k) is not None:
+                    rec[k] = p[k]
+            if p.get("run"):
+                rec["run"] = {k: p["run"].get(k) for k in ("gap", "edge", "ypc", "yco") if p["run"].get(k) is not None}
+            out.setdefault(who, []).append(rec)
     return out
 
 
@@ -361,30 +434,63 @@ def persistence(DEF, DEFP):
     return out
 
 
+def season_profiles(year):
+    agg = aggregate(load_all(year, "receiving_summary" if year != SEASON else "receiving"), opp_map(year))
+    if agg is None:
+        return None
+    DEF, OFF, REC, RB, QB, LG, weeks = agg
+    return {"def": DEF, "off": OFF, "rec": REC, "rb": RB, "qb": QB, "lg": LG, "weeks": weeks}
+
+
 def build():
-    cur = aggregate(load_all(SEASON, "receiving"), opp_map(SEASON))
+    cur = season_profiles(SEASON)
     if cur is None:
         print("scheme: no PFF facet files yet - nothing written")
         return None
-    DEF, OFF, REC, RB, QB, LG, weeks = cur
+    DEF, OFF, REC, RB, QB, LG, weeks = cur["def"], cur["off"], cur["rec"], cur["rb"], cur["qb"], cur["lg"], cur["weeks"]
     payload = {"updated": time.strftime("%Y-%m-%d %H:%M"), "season": SEASON, "prior": PRIOR, "weeks": weeks,
                "lg": LG, "def": DEF, "off": OFF, "rec": REC, "rb": RB, "qb": QB}
-    pri = aggregate(load_all(PRIOR, "receiving_summary"), opp_map(PRIOR))
+    coaches = load_coaches()
+    profiles = {SEASON: cur}
+    for y in range(PRIOR, PRIOR - 3, -1):           # up to 3 prior seasons so a new DC's last defense is findable
+        profiles[y] = season_profiles(y)
+    pri = profiles.get(PRIOR)
     if pri is not None:
-        DEFP, OFFP, RECP, RBP, QBP, LGP, weeksP = pri
-        payload.update({"lgPrior": LGP, "defPrior": DEFP, "offPrior": OFFP, "recPrior": RECP, "rbPrior": RBP, "qbPrior": QBP,
-                        "weeksPrior": weeksP, "persist": persistence(DEF, DEFP)})
+        DEFP, OFFP = {}, {}
+        src = {}
+        for T in sorted(set(DEF) | set(pri["def"])):
+            dp, ds = coach_prior("def", T, SEASON, profiles, coaches)
+            op, os_ = coach_prior("off", T, SEASON, profiles, coaches)
+            if dp: DEFP[T] = dp
+            if op: OFFP[T] = op
+            src[T] = {"def": ds, "off": os_}
+        payload.update({"lgPrior": pri["lg"], "defPrior": DEFP, "offPrior": OFFP, "defPriorTeam": pri["def"], "offPriorTeam": pri["off"],
+                        "recPrior": pri["rec"], "rbPrior": pri["rb"], "qbPrior": pri["qb"], "weeksPrior": pri["weeks"],
+                        "priorSrc": src, "persist": persistence(DEF, DEFP), "persistTeam": persistence(DEF, pri["def"])})
+        if coaches:
+            payload["coaches"] = {T: dict(coaches.get(SEASON, {}).get(T, {}), dcPrev=coaches.get(PRIOR, {}).get(T, {}).get("dcPlay"),
+                                          ocPrev=coaches.get(PRIOR, {}).get(T, {}).get("ocPlay")) for T in DEF}
+            payload["coachHist"] = {"def": coach_hist("def", profiles, coaches), "off": coach_hist("off", profiles, coaches)}
+            same = {T for T in DEF if src.get(T, {}).get("def", {}).get("mode") == "same"}
+            payload["persistSplit"] = {"sameDC": persistence({T: d for T, d in DEF.items() if T in same}, pri["def"]),
+                                       "newDC": persistence({T: d for T, d in DEF.items() if T not in same}, pri["def"]),
+                                       "nSame": len(same), "nNew": len(DEF) - len(same)}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
-        f.write("// built by build_scheme.py from PFF Premium weekly facets - defense scheme (man rate, blitz, pressure, run lanes) + player style profiles, current season + prior season + persistence; INTEL ONLY\n")
+        f.write("// built by build_scheme.py from PFF Premium weekly facets - defense scheme (man rate, blitz, pressure, run lanes) + player style profiles, current season + coach-aware prior season + persistence; INTEL ONLY\n")
         f.write("window.SIM_SCHEME_2026 = ")
         json.dump(payload, f, separators=(",", ":"))
         f.write(";\n")
     msg = f"wrote {OUT} - {SEASON} weeks {weeks}, {len(DEF)} defenses, {len(REC)} receivers, {len(RB)} rushers, {len(QB)} QBs"
     if pri is not None:
         pz = payload["persist"]
-        msg += f"; {PRIOR} prior weeks {weeksP[0]}-{weeksP[-1]} ({len(DEFP)} D, {len(RECP)} rec); W1-vs-{PRIOR} r: " + \
-               ", ".join(f"{k} {v['r']}" for k, v in pz.items() if v["r"] is not None)
+        msg += f"; prior {PRIOR} ({len(payload['defPrior'])} D, coach-aware: " + \
+               ", ".join(f"{m} {sum(1 for v in payload['priorSrc'].values() if v['def'].get('mode') == m)}" for m in ("same", "coach", "new-no-history", "team (no coach data)")) + \
+               f"); W-vs-prior r: " + ", ".join(f"{k} {v['r']}" for k, v in pz.items() if v["r"] is not None)
+        if "persistSplit" in payload:
+            ps = payload["persistSplit"]
+            msg += f"; same-DC ({ps['nSame']}) vs new-DC ({ps['nNew']}) r: " + ", ".join(
+                f"{k} {ps['sameDC'][k]['r']}/{ps['newDC'][k]['r']}" for k in ("man", "blitz", "dbRush", "sBox") if k in ps["sameDC"])
     print(msg)
     return payload
 

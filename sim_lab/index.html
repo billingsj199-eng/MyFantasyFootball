@@ -214,7 +214,7 @@
     a defense's funnel is a soft scheme identity (early&rarr;late r .2&ndash;.5); a defense's per-zone <i>efficiency</i>
     beyond its overall rate is noise (r ~0 in-season and YoY) &mdash; quote it as "so far", never as an identity. The
     matchup multiplier graded flat, so the sims do not use any of this. Season-to-date numbers are shrunk toward the 2025
-    profile (receivers 40 targets, defenses 60) so Week 1&ndash;3 reads are not pure noise. <b>Scheme &amp; alignment (PFF Premium weekly facets, <code>build_scheme.py</code>):</b> man rate, blitz, pressure, rusher win rate, safety-in-box, lanes a defense gets run at and its run-D results, next to each player's profile (man/zone YPRR, slot share, gap vs zone, edge share, yards after contact, QB under pressure / vs blitz). Identities (man rate, blitz, lanes, run style) persist; per-lane and per-zone <i>efficiency</i> graded as noise &mdash; intel only.</div>
+    profile (receivers 40 targets, defenses 60) so Week 1&ndash;3 reads are not pure noise. <b>Scheme &amp; alignment (PFF Premium weekly facets, <code>build_scheme.py</code>):</b> man rate, blitz, pressure, rusher win rate, safety-in-box, lanes a defense gets run at and its run-D results, next to each player's profile (man/zone YPRR, slot share, gap vs zone, edge share, yards after contact, QB under pressure / vs blitz). Identities (man rate, blitz, lanes, run style) persist; per-lane and per-zone <i>efficiency</i> graded as noise &mdash; intel only. Coaches: the prior each card compares against follows the <b>playcaller</b> (PFR staffs via <code>pull_coaches.py</code>; HC playcallers in <code>coach_overrides.json</code>). The <b>Scheme backtest</b> block at the bottom of the league view shows every interaction's LOYO verdict and each metric's persistence (<code>backtest_scheme.py</code>).</div>
   <div class="bar">
     <select id="zn-week"></select>
     <select id="zn-game"><option value="">All defenses</option></select>
@@ -266,27 +266,28 @@
 </div>
 
 <!-- data (refresh with: python refresh_data.py) -->
-<script src="data/refresh_stamp.js?v=1789483019"></script>
-<script src="data/mike_clay_projections.js?v=1789483019"></script>
-<script src="data/player_weekly_sigma.js?v=1789483019"></script>
-<script src="data/betting_lines_2026.js?v=1789483019"></script>
-<script src="data/clay_team_grades_2026.js?v=1789483019"></script>
-<script src="data/sleeper_players.js?v=1789483019"></script>
-<script src="data/sleeper_meta.js?v=1789483019"></script>
-<script src="data/sim_snaps.js?v=1789483019"></script>
-<script src="data/sim_routes.js?v=1789483019"></script>
-<script src="data/sim_weather.js?v=1789483019"></script>
-<script src="data/sim_practice.js?v=1789483019"></script>
-<script src="data/sim_depth.js?v=1789483019"></script>
-<script src="data/sim_2026.js?v=1789483019"></script>
-<script src="data/pace_2026.js?v=1789483019"></script>
-<script src="data/zones_2026.js?v=1789483019"></script>
-<script src="data/scheme_2026.js?v=1789483019"></script>
-<script src="data/sim_tuning.js?v=1789483019"></script>
-<script src="data/yahoo_normalize.js?v=1789483019"></script>
+<script src="data/refresh_stamp.js?v=1789493968"></script>
+<script src="data/mike_clay_projections.js?v=1789493968"></script>
+<script src="data/player_weekly_sigma.js?v=1789493968"></script>
+<script src="data/betting_lines_2026.js?v=1789493968"></script>
+<script src="data/clay_team_grades_2026.js?v=1789493968"></script>
+<script src="data/sleeper_players.js?v=1789493968"></script>
+<script src="data/sleeper_meta.js?v=1789493968"></script>
+<script src="data/sim_snaps.js?v=1789493968"></script>
+<script src="data/sim_routes.js?v=1789493968"></script>
+<script src="data/sim_weather.js?v=1789493968"></script>
+<script src="data/sim_practice.js?v=1789493968"></script>
+<script src="data/sim_depth.js?v=1789493968"></script>
+<script src="data/sim_2026.js?v=1789493968"></script>
+<script src="data/pace_2026.js?v=1789493968"></script>
+<script src="data/zones_2026.js?v=1789493968"></script>
+<script src="data/scheme_2026.js?v=1789493968"></script>
+<script src="data/scheme_backtest.js?v=1789493968"></script>
+<script src="data/sim_tuning.js?v=1789493968"></script>
+<script src="data/yahoo_normalize.js?v=1789493968"></script>
 <!-- app -->
-<script src="overrides.js?v=1789483019"></script>
-<script src="engine.js?v=1789483019"></script>
-<script src="app.js?v=1789483019"></script>
+<script src="overrides.js?v=1789493968"></script>
+<script src="engine.js?v=1789493968"></script>
+<script src="app.js?v=1789493968"></script>
 </body>
 </html>

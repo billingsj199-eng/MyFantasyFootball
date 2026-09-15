@@ -1,39 +1,46 @@
-===== Sim Lab refresh Tue 09/15/2026 10:19:28.41 ===== 
+===== Sim Lab refresh Tue 09/15/2026 12:30:51.21 ===== 
 copied mike_clay_projections.js  (36 KB)
-copied player_weekly_sigma.js  (57 KB)
+copied player_weekly_sigma.js  (56 KB)
 copied betting_lines_2026.js  (187 KB)
 copied clay_team_grades_2026.js  (4 KB)
 copied yahoo_normalize.js  (13 KB)
 wrapped sim_practice.js  (182 entries, 2026-09-15T14:18)
 wrapped sim_depth.js  (32 entries, 2026-09-15T14:19)
-wrapped sleeper_players.js  (585 players, exported 2026-09-15 10:19:28)
+wrapped sleeper_players.js  (585 players, exported 2026-09-15 12:17:04)
 wrapped sim_snaps.js  (305 players with 2026 snaps)
 wrapped sim_2026.js  (325 players with 2026 games, 32 defenses; FPA fpa_2026.js (complete league))
 wrapped sleeper_meta.js  (577 players, 127 true rookies, 6 elite CBs)
 wrapped sim_weather.js  (12 outdoor kickoffs in forecast window · site weather_2026.json (2026-09-15T14:19))
-cache-busted index.html scripts (?v=1789481970)
-stamped 2026-09-15 10:19
+cache-busted index.html scripts (?v=1789489853)
+stamped 2026-09-15 12:30
 wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js — 270 players with 2026 route data (270 from repo route_pct.js / PFF weekly), 32 defenses with pressure data, 78 RBs + 195 WR/TEs + 36 QBs with TD-luck data, 34 kickers with FG-luck data, 32 DSTs, 310 players with xFP components
 wrote E:\MyFantasyFootball\sim_lab\data\zones_2026.js - 32 defenses, 251 receivers with 2026 targets, 249 with 2025 priors
+wrote E:\MyFantasyFootball\sim_lab\data\scheme_2026.js - 2026 weeks [1], 32 defenses, 248 receivers, 124 rushers, 37 QBs; 2025 prior weeks 1-18 (32 D, 488 rec); W1-vs-2025 r: man 0.38, blitz 0.64, prs -0.03, prwr 0.03, sBox 0.25, dbRush 0.88, mtRate 0.11, slotYd -0.3, screenTg 0.12, grCov -0.05, grRun 0.16, grPrsh 0.04, run.ypc -0.03, run.yco -0.06, run.gap 0.33, run.edge 0.39, run.exp -0.19, run.mtf 0.32
 wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js — 32 teams, 32 with 2026 data
-'"E:"' is not recognized as an internal or external command,
-operable program or batch file.
+export_notes failed: browserType.launch: Executable doesn't exist at C:\Users\billi\AppData\Local\ms-playwright\chromium_headless_shell-1234\chrome-headless-shell-win64\chrome-headless-shell.exe
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     npx playwright install                                 ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝
 NOTES EXPORT FAILED - continuing 
 
-=== Deploying to 'jackb933-website'...
+[1m[37m===[39m Deploying to 'jackb933-website'...[22m
 
-i  deploying hosting
-i  hosting[jb-simlab-2026]: beginning deploy...
-i  hosting[jb-simlab-2026]: found 214 files in sim_lab
-i  hosting: upload complete
-+  hosting[jb-simlab-2026]: file upload complete
-i  hosting[jb-simlab-2026]: finalizing version...
-+  hosting[jb-simlab-2026]: version finalized
-i  hosting[jb-simlab-2026]: releasing new version...
-+  hosting[jb-simlab-2026]: release complete
+[36m[1mi [22m[39m deploying [1mhosting[22m
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m beginning deploy...
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m found 227 files in [1msim_lab[22m
+[32m[1m+  hosting[jb-simlab-2026]:[22m[39m file upload complete
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m finalizing version...
+[32m[1m+  hosting[jb-simlab-2026]:[22m[39m version finalized
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m releasing new version...
+[32m[1m+  hosting[jb-simlab-2026]:[22m[39m release complete
 
-+  Deploy complete!
+[32m[1m+ [22m[39m [1m[4mDeploy complete![24m[22m
 
-Project Console: https://console.firebase.google.com/project/jackb933-website/overview
-Hosting URL: https://jb-simlab-2026.web.app
-===== done Tue 09/15/2026 10:19:46.42 ===== 
+[1mProject Console:[22m https://console.firebase.google.com/project/jackb933-website/overview
+[1mHosting URL:[22m https://jb-simlab-2026.web.app
+===== done Tue 09/15/2026 12:31:12.18 ===== 

@@ -217,6 +217,23 @@ try:
         f.write("window.SIM_SLEEPER_META = ")
         json.dump(meta, f, separators=(",", ":"))
         f.write(";\n")
+        # Sleeper's OWN weekly projection (repo data/weekly_projections.json, 'h' = Sleeper half-PPR;
+        # missing/0 = Sleeper has ruled him out). The engine zeroes a Sleeper "Out" flag only when
+        # this is 0 too (Jack 2026-09-15: "not to 0 anyone out before they are out or at least
+        # doubtful ... check who sleeper has 0s for"); a flag with a live projection is a stale
+        # game-day inactive or a premature tag -> x0.75 'out-unconfirmed' instead.
+        sw = {"week": None, "p": {}}
+        try:
+            wp = json.load(open(os.path.join(REPO, "data", "weekly_projections.json"), encoding="utf-8"))
+            sw["week"] = wp.get("week")
+            for nm, rec in (wp.get("players") or {}).items():
+                sw["p"][_cbnorm(nm)] = rec.get("h") if isinstance(rec, dict) else None
+        except Exception as e:  # noqa: BLE001
+            print(f"WARN weekly_projections.json unreadable ({e}) - SIM_SLEEPER_WEEKLY empty")
+        f.write("// Sleeper's own current-week projection per player (half-PPR; absent = Sleeper has him at 0)\n")
+        f.write("window.SIM_SLEEPER_WEEKLY = ")
+        json.dump(sw, f, separators=(",", ":"))
+        f.write(";\n")
         f.write("// elite shadow-CB availability (ELITE_CBS_2026 in overrides.js)\n")
         f.write("window.SIM_CB_STATUS = ")
         json.dump(cb_status, f, separators=(",", ":"))

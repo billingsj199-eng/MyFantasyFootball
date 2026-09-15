@@ -157,3 +157,25 @@ wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\snap_counts.js: 408 play
   2026: 270 players (pff-weekly, 0s); 0 with estimated weeks pending PFF, 4 estimate-only
 wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\route_pct.js: 350 players, 167 KB
 
+[2026-09-15 12:30:50] site weekly stats committed + pushed
+[2026-09-15 12:30:51] wrote E:\MyFantasyFootball\js_model_site\data\volume_share_model.js: 388 players, 32 teams (lg 25.3 tgt/g, 23.9 car/g)
+
+[2026-09-15 12:31:15] IR out for 2026: 4 -> brandon aiyuk, chris brazzell, jayden higgins, ricky pearsall
+Jacks boards: {'jR': 617, 'jSf': 617, 'jDy': 617, 'jDsf': 617}  tiers: {'rank': 18, 'jSf': 4, 'jDy': 4, 'jDsf': 7}  updated: 2026-09-15T16:25:15.136Z
+Clay projections: 468  def grades: 32  kicker splits: 29  team byes: 32
+KTC SF: 500  KTC 1QB: 500  Sleeper names: 4119
+Players: 585  sleeper-id matched: 577  KTC-SF matched: 383  JM matched: 461
+Wrote 585 players + 84 pick assets -> sleeper-extension/data/players.json
+Synced copy -> espn-extension/data/players.json
+Synced copy -> yahoo-extension/data/players.json
+Wrote sleeper-extension/data/sim_pack.js
+Wrote espn-extension/data/sim_pack.js
+Wrote yahoo-extension/data/sim_pack.js
+Synced ../sim_lab/engine.js -> sleeper-extension/engine_sim.js
+Synced ../sim_lab/overrides.js -> sleeper-extension/data/sim_overrides.js
+Synced ../sim_lab/engine.js -> espn-extension/engine_sim.js
+Synced ../sim_lab/overrides.js -> espn-extension/data/sim_overrides.js
+Synced ../sim_lab/engine.js -> yahoo-extension/engine_sim.js
+Synced ../sim_lab/overrides.js -> yahoo-extension/data/sim_overrides.js
+
+[2026-09-15 12:31:15] === done ===

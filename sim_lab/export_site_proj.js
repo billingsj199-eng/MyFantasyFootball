@@ -444,7 +444,7 @@ function kickoffMs(kicks, wk, tm) {
     '// Rows for teams whose game already kicked off are FROZEN at their\n' +
     '// pre-kickoff values by the exporter (never recomputed).\n' +
     '// luck[name] = [pos, expectedTD|expectedKickPts, actual, games, adjThisWeekHalf|null, weekly xtd/td map|null] (card TD/FG LUCK box).\n' +
-    '// xfp[name][wk] = expected components: RB/WR/TE tg,xrec,xrecyd,xrectd,car,xruyd,xrutd; QB att,xpyd,xptd,car,xruyd,xrutd (card xFP column).\n';
+    '// xfp[name][wk] = expected components: RB/WR/TE tg,xrec,xrecyd,xrectd,car,xruyd,xrutd; QB att,xpyd,xptd,car,xruyd,xrutd,xint (card xFP column; targets via nflfastR cp/xYAC, xint = expected INTs).\n';
   fs.writeFileSync(OUT_JS, jsHeader + 'window.SIM_PROJ_2026 = ' + JSON.stringify(payload) + ';\n');
   const kb = Math.round(fs.statSync(OUT_JS).size / 1024);
   console.log('wrote ' + OUT_JS + ' (' + kb + ' KB)');

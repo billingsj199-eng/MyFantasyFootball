@@ -1,0 +1,5 @@
+{
+  "_comment": "Playcaller overrides when the HEAD COACH calls plays (PFR only lists coordinators). Keys: season -> team -> oc_play / dc_play. Edit by hand; build_scheme.py reads it.",
+  "2026": {},
+  "2025": {}
+}

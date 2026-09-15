@@ -1,0 +1,13 @@
+loading PFF weekly facets 2018-2025 (walk-forward per week)...
+  2018: season profiles ok (32 D, 494 rec, 341 rb, 111 qb)
+  2019: season profiles ok (32 D, 487 rec, 334 rb, 111 qb)
+  2020: season profiles ok (32 D, 512 rec, 372 rb, 122 qb)
+  2021: season profiles ok (32 D, 519 rec, 371 rb, 123 qb)
+  2022: season profiles ok (32 D, 496 rec, 365 rb, 120 qb)
+  2023: season profiles ok (32 D, 472 rec, 345 rb, 118 qb)
+  2024: season profiles ok (32 D, 479 rec, 333 rb, 110 qb)
+  2025: season profiles ok (32 D, 488 rec, 335 rb, 103 qb)
+  coach-aware defense priors: {'new-no-history': 74, 'same': 129, 'coach': 21} (coaches.json seasons 2018-2026)
+  2019: walk-forward weeks 2..18
+  2020: walk-forward weeks 2..18
+  2021: walk-forward weeks 2..19

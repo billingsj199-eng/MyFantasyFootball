@@ -3369,7 +3369,7 @@
     $('zn-body').innerHTML = html + '</tbody></table>' +
       '<p class="dim" style="font-size:11px">Pick a game above for the matchup view (defense zone card next to the opposing receivers\' target mixes with auto-generated reads). ' +
       'Shares = where opponents target this defense (season-to-date, shrunk toward its 2025 shares) vs league; pts/tgt = half-PPR receiving points allowed per target in that zone vs league, shrunk toward 1.0x. Click a header to sort.</p>' +
-      (scS() ? scLeagueTable(scS()) : '');
+      (scS() ? scLeagueTable(scS()) : '') + scBacktestBlock();
     wireSort('zn-body', COLS, ss, renderZonesTab);
     if (scS()) wireSort('zn-scheme', [], state.scSort, renderZonesTab);
   }
@@ -3444,6 +3444,49 @@
   // then that team defense or offensive players will be somewhat reliable") ----
   var SC_IDENTITY = ['man', 'blitz', 'dbRush', 'sBox', 'prwr', 'run.gap', 'run.edge', 'run.mtf'];   // scheme choices, not results
   function scPrior(S, team) { return S.defPrior ? S.defPrior[team] : null; }
+  // ---- coaches / playcallers (build_scheme.py <- pbp_cache/coaches.json via pull_coaches.py, PFR) ----
+  // Jack 2026-09-15: "make sure we are aware of coaches and playcallers ... assign tendencies".
+  // The prior a card compares against travels with the PLAYCALLER: same DC -> the team's
+  // prior season; new DC -> his last defense (priorSrc says where from); no history -> team
+  // prior flagged weak. coachHist = every season each playcaller has in the data.
+  function scCoach(S, team) { return S.coaches ? S.coaches[team] : null; }
+  function scSrc(S, team, kind) { return S.priorSrc && S.priorSrc[team] ? S.priorSrc[team][kind || 'def'] : null; }
+  function scYearsIn(S, team, kind) {
+    // consecutive seasons the current playcaller has been in this seat here (1 = first year)
+    var c = scCoach(S, team); if (!c) return null;
+    var H = S.coachHist && S.coachHist[kind || 'def'], who = c[kind === 'off' ? 'ocPlay' : 'dcPlay']; if (!H || !who || !H[who]) return 1;
+    var n = 1, y = S.season - 1;
+    var seasons = {}; H[who].forEach(function (h) { seasons[h.season] = h.team; });
+    while (seasons[y] === team) { n++; y--; }
+    return n;
+  }
+  function scCoachLine(S, team, kind) {
+    // "DC Christian Parker (new; prior = DEN 2025 under Parker)" / "DC Brian Flores (4th yr)"
+    var c = scCoach(S, team); if (!c) return '';
+    var who = c[kind === 'off' ? 'ocPlay' : 'dcPlay']; if (!who) return '';
+    var hc = c.hc && who === c.hc ? 'HC ' : (kind === 'off' ? 'OC ' : 'DC ');
+    var src = scSrc(S, team, kind), yrs = scYearsIn(S, team, kind);
+    var ord = function (n) { return n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : n + 'th'; };
+    var out = hc + who;
+    if (!src || src.mode === 'same') out += ' (' + ord(yrs || 1) + ' yr here)';
+    else if (src.mode === 'coach') out += ' (new; prior = ' + src.from + ' ' + src.season + ' under him' + (src.prev ? ', replaced ' + src.prev : '') + ')';
+    else if (src.mode === 'new-no-history') out += ' (new, no playcalling history in the data' + (src.prev ? '; replaced ' + src.prev : '') + ' \u2014 prior = team ' + src.season + ', weak)';
+    return out;
+  }
+  function scCoachHist(S, team, kind) {
+    // tendency line across the playcaller's seasons: "Flores: blitz 45%/41%/48%, man 38%/35%/30% (2023 MIN, 2024 MIN, 2025 MIN)"
+    var c = scCoach(S, team); if (!c) return '';
+    var H = S.coachHist && S.coachHist[kind || 'def'], who = c[kind === 'off' ? 'ocPlay' : 'dcPlay']; if (!H || !who || !H[who] || H[who].length < 1) return '';
+    var rows = H[who].filter(function (h) { return h.season < S.season; }).sort(function (a, b) { return a.season - b.season; });
+    if (!rows.length) return '';
+    var m = kind === 'off' ? [['manSeen', 'sees man'], ['screen', 'screens'], ['run.gap', 'gap runs'], ['run.edge', 'edge runs']]
+                           : [['man', 'man'], ['blitz', 'blitz'], ['prs', 'pressure'], ['sBox', 'S in box'], ['run.gap', 'gap faced'], ['run.edge', 'edge faced']];
+    var parts = m.map(function (mm) {
+      var vals = rows.map(function (h) { var v = mm[0].indexOf('run.') === 0 ? (h.run ? h.run[mm[0].slice(4)] : null) : h[mm[0]]; return v == null ? '\u2014' : (100 * v).toFixed(0) + '%'; });
+      return mm[1] + ' ' + vals.join('/');
+    });
+    return who + ' as playcaller: ' + parts.join(' \u00b7 ') + ' (' + rows.map(function (h) { return h.season + ' ' + h.team; }).join(', ') + ')';
+  }
   function scLgOf(S, key, sub, prior) { var L = prior ? S.lgPrior : S.lg; if (!L) return null; return sub ? (L[sub] ? L[sub][key] : null) : L[key]; }
   function scAgree(v, p, lg, lgp, pct, thr) {
     // both on the same side of the league by >= thr -> 1 (match), opposite sides -> -1, else 0 (neither leans / mixed)
@@ -3511,10 +3554,12 @@
   function scDefCard(S, team, title) {
     var d = S.def[team];
     if (!d) return '<h3>' + esc(title) + '</h3><p class="dim">No PFF scheme data for ' + esc(team) + '.</p>';
-    var p = scPrior(S, team), rel = scReliability(S, team);
+    var p = scPrior(S, team), rel = scReliability(S, team), src = scSrc(S, team, 'def');
+    var priorLabel = src && src.mode === 'coach' ? src.from + ' ' + src.season : String(S.prior || 2025);
     var html = '<h3>' + esc(title) + ' <span class="dim" style="font-weight:normal;font-size:12px">' + d.g + ' gm' + (d.g > 1 ? 's' : '') + ', PFF</span>' +
-      (rel ? ' <span style="font-size:12px;color:' + rel.col + '" title="identity metrics (man, blitz, DB/LB rush, S in box, rusher win, gap/edge/MTF faced) that keep their 2025 lean vs the league' + (rel.flips.length ? '; flipped: ' + esc(rel.flips.join(', ')) : '') + '">' + rel.label + ' vs 2025 (' + rel.ok + '/' + rel.n + ')</span>' : '') + '</h3>' +
-      '<table style="width:auto"><thead><tr><th class="l">Metric</th><th>Value</th><th>vs lg</th><th>Rank</th>' + (p ? '<th title="2025 full season">2025</th><th title="same lean vs the league as 2025? check = yes, arrows = flipped, ~ = one side neutral">vs 25</th>' : '') + '</tr></thead><tbody>';
+      (rel ? ' <span style="font-size:12px;color:' + rel.col + '" title="identity metrics (man, blitz, DB/LB rush, S in box, rusher win, gap/edge/MTF faced) that keep their prior lean vs the league; prior = ' + esc(priorLabel) + (src && src.coach ? ' under ' + esc(src.coach) : '') + (rel.flips.length ? '; flipped: ' + esc(rel.flips.join(', ')) : '') + '">' + rel.label + ' vs ' + esc(priorLabel) + ' (' + rel.ok + '/' + rel.n + ')</span>' : '') + '</h3>' +
+      (scCoach(S, team) ? '<div style="font-size:12px;margin:-2px 0 6px">' + esc(scCoachLine(S, team, 'def')) + (src && src.weak ? ' <span style="color:#f85149">weak prior</span>' : '') + '</div>' : '') +
+      '<table style="width:auto"><thead><tr><th class="l">Metric</th><th>Value</th><th>vs lg</th><th>Rank</th>' + (p ? '<th title="prior season for THIS playcaller: ' + esc(priorLabel) + (src && src.coach ? ' under ' + esc(src.coach) : '') + '">' + esc(priorLabel) + '</th><th title="same lean vs the league as the prior? check = yes, arrows = flipped, ~ = one side neutral">vs prior</th>' : '') + '</tr></thead><tbody>';
     SC_DEF_ROWS.forEach(function (r) {
       var v = scGet(d, r[0], r[2]); if (v == null) return;
       var lg = scLgOf(S, r[0], r[2], false), fmt = function (x) { return r[3] ? scPct(x) : scNum(x, r[0].indexOf('gr') === 0 ? 1 : 2); };
@@ -3528,7 +3573,9 @@
     });
     html += '</tbody></table>';
     if (d.run && d.run.lanes) html += '<div style="font-size:12px;margin-top:6px"><b>Gets run at:</b> ' + scLaneLine(d.run.lanes, S.lg.lanes, S.lg.laneYpc, true) + '</div>';
-    if (p && p.run && p.run.lanes) html += '<div style="font-size:11px;margin-top:3px" class="dim"><b>2025:</b> ' + scLaneLine(p.run.lanes, S.lgPrior ? S.lgPrior.lanes : null, null, false) + '</div>';
+    if (p && p.run && p.run.lanes) html += '<div style="font-size:11px;margin-top:3px" class="dim"><b>' + esc(priorLabel) + ':</b> ' + scLaneLine(p.run.lanes, S.lgPrior ? S.lgPrior.lanes : null, null, false) + '</div>';
+    var ch = scCoachHist(S, team, 'def');
+    if (ch) html += '<div style="font-size:11px;margin-top:4px" class="dim"><b>Tendencies:</b> ' + esc(ch) + '</div>';
     return html;
   }
   // ---- player profiles ----
@@ -3696,7 +3743,8 @@
       if (off.screen != null) bits.push('screens ' + scPct(off.screen) + ' of targets');
       if (off.blitzFaced != null) bits.push('blitzed ' + scPct(off.blitzFaced) + ', pressured ' + scPct(off.prsFaced));
       html += '<div style="font-size:12px;margin-top:6px"><b>' + esc(team) + ' offense:</b> ' + bits.join(' \u00b7 ') +
-        (off.run && off.run.lanes ? '<br><b>Runs to:</b> ' + scLaneLine(off.run.lanes, S.lg.lanes, null, false) : '') + '</div>';
+        (off.run && off.run.lanes ? '<br><b>Runs to:</b> ' + scLaneLine(off.run.lanes, S.lg.lanes, null, false) : '') +
+        (scCoach(S, team) ? '<br>' + esc(scCoachLine(S, team, 'off')) + (scCoachHist(S, team, 'off') ? '<br><span class="dim" style="font-size:11px">' + esc(scCoachHist(S, team, 'off')) + '</span>' : '') : '') + '</div>';
     }
     return html;
   }
@@ -3709,7 +3757,8 @@
     var ss = state.scSort = state.scSort || { key: 'team', dir: 'asc' };
     var rows = Object.keys(S.def).map(function (t) { return { t: t, d: S.def[t] }; });
     var COLS = [{ h: 'Defense', l: 1, k: 'team', dir: 'asc', get: function (o) { return o.t; } }];
-    if (S.defPrior) COLS.push({ h: 'vs 2025', k: 'rel', tip: 'identity metrics keeping their 2025 lean (RELIABLE >= 70%, NEW LOOK <= 40%)', get: function (o) { var r = scReliability(S, o.t); return r ? r.ok / r.n : -1; }, rel: 1 });
+    if (S.coaches) COLS.push({ h: 'DC / playcaller', l: 1, k: 'dc', dir: 'asc', tip: 'defensive playcaller (PFR staff; HC when he calls it per coach_overrides.json)', get: function (o) { var c = scCoach(S, o.t); return c ? (c.dcPlay || '') : ''; }, dc: 1 });
+    if (S.defPrior) COLS.push({ h: 'vs prior', k: 'rel', tip: 'identity metrics keeping their prior lean (RELIABLE >= 70%, NEW LOOK <= 40%); prior = last season under the SAME playcaller (his previous team when he moved)', get: function (o) { var r = scReliability(S, o.t); return r ? r.ok / r.n : -1; }, rel: 1 });
     SC_DEF_ROWS.forEach(function (r) {
       if (['grCov', 'grRun', 'grPrsh', 'slotYd'].indexOf(r[0]) >= 0) return;
       COLS.push({ h: r[1].replace('Run D: ', 'Run '), k: r[0], sub: r[2], pct: r[3], thr: r[4], tip: r[5], get: function (o) { var v = scGet(o.d, r[0], r[2]); return v == null ? -999 : v; } });
@@ -3718,13 +3767,20 @@
     var html = '<h3 style="margin-top:26px">Defense scheme (PFF, ' + esc(S.updated) + ')</h3>';
     if (S.persist) {
       var ps = Object.keys(S.persist).filter(function (k) { return S.persist[k].r != null; }).sort(function (a, b) { return S.persist[b].r - S.persist[a].r; });
-      html += '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>What carried over from 2025</b> (league-wide r, 2026 to date vs 2025 full season): ' +
+      if (S.persistSplit) {
+        var sp = S.persistSplit, ks = ['man', 'blitz', 'dbRush', 'sBox', 'prs'];
+        html += '<p class="dim" style="font-size:11px;margin:0 0 4px"><b>Same DC vs new DC</b> (r vs the team\'s 2025; ' + sp.nSame + ' kept their playcaller, ' + sp.nNew + ' changed): ' +
+          ks.map(function (k) { var a = sp.sameDC[k], b = sp.newDC[k]; return k + ' ' + (a && a.r != null ? a.r.toFixed(2) : '\u2014') + ' / ' + (b && b.r != null ? b.r.toFixed(2) : '\u2014'); }).join(' \u00b7 ') +
+          '. Tendencies travel with the coach, so the prior below follows the playcaller.</p>';
+      }
+      html += '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>What carried over from the prior</b> (league-wide r, 2026 to date vs each playcaller\'s prior season): ' +
         ps.map(function (k) { var r = S.persist[k].r; return '<span style="color:' + (r >= 0.3 ? 'var(--acc)' : r >= 0.15 ? 'inherit' : '#f85149') + '">' + k.replace('run.', 'run ') + ' ' + r.toFixed(2) + '</span>'; }).join(' \u00b7 ') +
         '. Quote the green ones as identities; the red ones have not separated from noise yet this season.</p>';
     }
     html += '<div id="zn-scheme"><table><thead>' + thRow(COLS, ss) + '</thead><tbody>';
     sorted.forEach(function (o) {
       html += '<tr><td class="l"><b>' + o.t + '</b></td>' + COLS.slice(1).map(function (c) {
+        if (c.dc) { var cc = scCoach(S, o.t), sx = scSrc(S, o.t, 'def'); return '<td class="l" style="font-size:11px" title="' + esc(scCoachLine(S, o.t, 'def')) + '">' + (cc ? esc(cc.dcPlay || '\u2014') + (sx && sx.mode !== 'same' ? ' <span style="color:#f85149">new</span>' : ' <span class="dim">' + scYearsIn(S, o.t, 'def') + 'y</span>') : '<span class="dim">\u2014</span>') + '</td>'; }
         if (c.rel) { var rl = scReliability(S, o.t); return '<td title="' + esc(c.tip) + (rl && rl.flips.length ? '; flipped: ' + esc(rl.flips.join(', ')) : '') + '">' + (rl ? '<span style="color:' + rl.col + '">' + rl.label + ' ' + rl.ok + '/' + rl.n + '</span>' : '<span class="dim">\u2014</span>') + '</td>'; }
         var v = scGet(o.d, c.k, c.sub), lg = c.sub ? (S.lg[c.sub] ? S.lg[c.sub][c.k] : null) : S.lg[c.k];
         return '<td title="' + esc(c.tip) + '">' + (v == null ? '<span class="dim">\u2014</span>' : (c.pct ? scPct(v) : scNum(v, 2)) + scDelta(v, lg, c.pct, c.thr)) + '</td>';
@@ -3732,6 +3788,58 @@
     });
     html += '</tbody></table></div><p class="dim" style="font-size:11px">Man / blitz / pressure / rusher win rate / safety-in-box are scheme identities (they persist); run-D results, missed tackles and per-lane yards are "so far" (per-lane and per-zone efficiency graded as noise in the backtests). ' +
       'Blitz and pressure come from the QBs each defense faced (nflverse opponent map), so they lag a night behind PFF. Click a header to sort.</p>';
+    return html;
+  }
+  // ---- backtest verdicts on the site (Jack 2026-09-15 "make sure to put all this info in the simlab site") ----
+  function scBacktestBlock() {
+    var B = window.SIM_SCHEME_BT; if (!B || !B.loyo) return '';
+    var r2 = function (v) { return v == null ? '\u2014' : (+v).toFixed(2); };
+    var rc = function (v) { return v == null ? 'var(--dim)' : (v >= 0.4 ? 'var(--acc)' : v >= 0.2 ? 'inherit' : '#f85149'); };
+    var html = '<h3 style="margin-top:26px">Scheme backtest (backtest_scheme.py, ' + esc(B.updated || '') + ')</h3>' +
+      '<p class="dim" style="font-size:12px;margin:0 0 8px"><b>' + esc(B.summary || '') + '</b> Ship bar: LOYO MSE ' + (B.bar ? B.bar.pct : -0.3) + '% or better with ' + (B.bar ? B.bar.wins : 5) + '+ of 7 years better. ' +
+      'Everything here is graded on top of the SHIPPED weekly base (P=5 blend x Vegas x in-season FPA), leave-one-year-out 2019-25, same as every layer in the engine.</p>';
+    // persistence
+    if (B.persist && B.persist.length) {
+      html += '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Defense metric</th><th title="weeks 1-4 vs weeks 5+ of the same season, all seasons pooled">Early&rarr;late r</th><th title="full season vs the previous full season, same franchise">YoY r</th>' +
+        '<th title="YoY r for teams that kept their defensive playcaller">same DC</th><th title="YoY r for teams whose DC changed, vs the OLD team profile">new DC vs old team</th><th title="YoY r for teams whose DC changed, vs the new DC\'s OWN previous defense">new DC vs his last D</th><th class="l">Read</th></tr></thead><tbody>';
+      B.persist.forEach(function (p) {
+        var id = (p.yoy != null && p.yoy >= 0.4) ? 'IDENTITY \u2014 quote it' : (p.yoy != null && p.yoy >= 0.2 ? 'soft identity' : 'noise \u2014 "so far" only');
+        var coach = (p.newHis != null && p.newOld != null) ? (p.newHis - p.newOld >= 0.15 ? '; travels with the coach' : (p.newOld - p.newHis >= 0.15 ? '; stays with the roster' : '')) : '';
+        html += '<tr><td class="l">' + esc(p.key.replace('run.', 'run ')) + '</td>' +
+          '<td style="color:' + rc(p.e2l) + '">' + r2(p.e2l) + ' <span class="dim" style="font-size:10px">n' + p.nE2l + '</span></td>' +
+          '<td style="color:' + rc(p.yoy) + '">' + r2(p.yoy) + ' <span class="dim" style="font-size:10px">n' + p.nYoy + '</span></td>' +
+          '<td style="color:' + rc(p.same) + '">' + r2(p.same) + (p.nSame ? ' <span class="dim" style="font-size:10px">n' + p.nSame + '</span>' : '') + '</td>' +
+          '<td style="color:' + rc(p.newOld) + '">' + r2(p.newOld) + (p.nNew ? ' <span class="dim" style="font-size:10px">n' + p.nNew + '</span>' : '') + '</td>' +
+          '<td style="color:' + rc(p.newHis) + '">' + r2(p.newHis) + (p.nMoved ? ' <span class="dim" style="font-size:10px">n' + p.nMoved + '</span>' : '') + '</td>' +
+          '<td class="l" style="font-size:11px">' + id + coach + '</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    // LOYO verdicts
+    html += '<div style="overflow-x:auto;margin-top:10px"><table style="width:auto"><thead><tr><th class="l">Interaction</th><th class="l">Form</th><th>n</th><th title="multiplier exponent / slope / flagged-row multiplier picked on pooled data">best k</th><th title="leave-one-year-out MSE vs the shipped base; negative = better">LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>';
+    B.loyo.forEach(function (r) {
+      var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149');
+      html += '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td>' + (r.best >= 0 ? '+' : '') + r.best.toFixed(2) + '</td>' +
+        '<td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>';
+    });
+    html += '</tbody></table></div>';
+    if (B.scan && B.scan.length) {
+      html += '<h4 style="margin:14px 0 4px">Correlation scan</h4><p class="dim" style="font-size:11px;margin:0 0 6px">Every defense metric (D:, vs league), every player profile feature (P:) and every D x P cross term (residualised on its parts) against actual / shipped, per position. ' +
+        'Top 12 by |r| shown; anything under |r| .05 is noise at these sample sizes, and the top 3 per position were re-graded LOYO above (rows starting "scan").</p>' +
+        '<div style="display:flex;gap:20px;flex-wrap:wrap">';
+      B.scan.forEach(function (sc) {
+        html += '<table style="width:auto"><thead><tr><th class="l">' + esc(sc.pos) + ' (' + sc.scanned + ' scanned)</th><th>r</th><th>n</th></tr></thead><tbody>' +
+          sc.top.map(function (t) { var col = Math.abs(t.r) >= 0.08 ? 'var(--acc)' : Math.abs(t.r) >= 0.05 ? 'inherit' : 'var(--dim)'; return '<tr><td class="l" style="font-size:11px">' + esc(t.k) + '</td><td style="color:' + col + '">' + (t.r >= 0 ? '+' : '') + t.r.toFixed(3) + '</td><td class="dim">' + t.n + '</td></tr>'; }).join('') +
+          '</tbody></table>';
+      });
+      html += '</div>';
+    }
+    var few = Object.keys(B.flags || {}).filter(function (k) { return B.flags[k].verdict === 'too few'; });
+    if (few.length) html += '<p class="dim" style="font-size:11px">Flags with too few player-weeks to grade (actual/shipped in parens): ' + few.map(function (k) { return esc(k) + ' n' + B.flags[k].n + (B.flags[k].ratio != null ? ' (' + B.flags[k].ratio.toFixed(2) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
+    if (B.buckets && B.buckets.length) {
+      html += '<p class="dim" style="font-size:11px"><b>Tercile checks</b> (actual/shipped for low / mid / high thirds of each feature; a real edge would slope): ' +
+        B.buckets.map(function (b) { return esc(b.name) + ' ' + b.terciles.map(function (t) { return t == null ? '\u2014' : t.toFixed(3); }).join(' / ') + ' (r ' + (b.corr >= 0 ? '+' : '') + b.corr.toFixed(3) + ')'; }).join(' \u00b7 ') + '.</p>';
+    }
     return html;
   }
   function scNotesLines(S, team, opp) {
@@ -3756,7 +3864,9 @@
         }
       }
       if (d.mtRate != null && lg.mtRate != null && d.mtRate >= lg.mtRate + 0.03) bits.push('missed tackles ' + scPct(d.mtRate) + ' (lg ' + scPct(lg.mtRate) + ')');
-      out.push(opp + ' D scheme (PFF, ' + d.g + ' gm' + (rel ? '; ' + rel.label + ' vs 2025 ' + rel.ok + '/' + rel.n + (rel.flips.length ? ', flipped ' + rel.flips.join('/') : '') : '') + '): ' + bits.join(' \u00b7 '));
+      var srcD = scSrc(S, opp, 'def'), pl = srcD && srcD.mode === 'coach' ? srcD.from + ' ' + srcD.season : '2025';
+      out.push(opp + ' D scheme (PFF, ' + d.g + ' gm' + (rel ? '; ' + rel.label + ' vs ' + pl + ' ' + rel.ok + '/' + rel.n + (rel.flips.length ? ', flipped ' + rel.flips.join('/') : '') : '') + '): ' + bits.join(' \u00b7 '));
+      if (scCoach(S, opp)) { var cl = scCoachLine(S, opp, 'def'), chh = scCoachHist(S, opp, 'def'); if (cl) out.push(opp + ' ' + cl + (chh ? ' \u2014 ' + chh : '')); }
     }
     if (o && (o.run || o.manSeen != null)) {
       var b2 = [];
@@ -3765,6 +3875,7 @@
       if (o.screen != null) b2.push('screens ' + scPct(o.screen));
       if (o.blitzFaced != null) b2.push('blitzed ' + scPct(o.blitzFaced) + ' / pressured ' + scPct(o.prsFaced));
       out.push(team + ' O style (PFF): ' + b2.join(' \u00b7 '));
+      if (scCoach(S, team)) { var clo = scCoachLine(S, team, 'off'), cho = scCoachHist(S, team, 'off'); if (clo) out.push(team + ' ' + clo + (cho ? ' \u2014 ' + cho : '')); }
     }
     return out;
   }
@@ -3963,7 +4074,7 @@
     var n = 0, x = 0;
     Object.keys(X.w).forEach(function (wk) {
       var c = X.w[wk]; n++;
-      if (p.pos === 'QB') x += sc.pass_yd * c[1] + sc.pass_td * c[2] + sc.rush_yd * c[4] + sc.rush_td * c[5];
+      if (p.pos === 'QB') x += sc.pass_yd * c[1] + sc.pass_td * c[2] + sc.rush_yd * c[4] + sc.rush_td * c[5] - 1 * (c[6] || 0);   // c[6] = expected INTs (Sleeper -1 each, like the ppg below)
       else x += sc.rec * c[1] + sc.rec_yd * c[2] + sc.rec_td * c[3] + sc.rush_yd * c[5] + sc.rush_td * c[6];
     });
     if (!n) return null;
@@ -3980,7 +4091,10 @@
     var chips = [];
     var iA = E.injAdj(p, wk);
     if (iA === 0) chips.push('OUT');
-    else if (iA < 1) chips.push('docked ×' + ntF(iA, 2));
+    else if (iA < 1) {
+      var im = E.injuryState() && E.injuryState().map ? E.injuryState().map[p.norm] : null;
+      chips.push((im && im.src === 'out-unconfirmed' ? 'OUT flag unconfirmed (Sleeper still projects him) ×' : im && im.src === 'q-dnp' ? 'Q + DNP ×' : im && /doubtful/.test(im.src || '') ? 'DOUBTFUL ×' : 'docked ×') + ntF(iA, 2));
+    }
     else if (iA > 1.02) chips.push('role boost ×' + ntF(iA, 2));
     if (p.isDST) return chips;
     var l = E.tdLuckAdj(p, sc) * Math.min(1, iA);

@@ -107,41 +107,97 @@ def strip_suffix(n):
     return n
 
 
+TEAM_ABBR = {
+    'Arizona Cardinals': 'ARI', 'Atlanta Falcons': 'ATL', 'Baltimore Ravens': 'BAL',
+    'Buffalo Bills': 'BUF', 'Carolina Panthers': 'CAR', 'Chicago Bears': 'CHI',
+    'Cincinnati Bengals': 'CIN', 'Cleveland Browns': 'CLE', 'Dallas Cowboys': 'DAL',
+    'Denver Broncos': 'DEN', 'Detroit Lions': 'DET', 'Green Bay Packers': 'GB',
+    'Houston Texans': 'HOU', 'Indianapolis Colts': 'IND', 'Jacksonville Jaguars': 'JAX',
+    'Kansas City Chiefs': 'KC', 'Las Vegas Raiders': 'LV', 'Los Angeles Chargers': 'LAC',
+    'Los Angeles Rams': 'LAR', 'Miami Dolphins': 'MIA', 'Minnesota Vikings': 'MIN',
+    'New England Patriots': 'NE', 'New Orleans Saints': 'NO', 'New York Giants': 'NYG',
+    'New York Jets': 'NYJ', 'Philadelphia Eagles': 'PHI', 'Pittsburgh Steelers': 'PIT',
+    'San Francisco 49ers': 'SF', 'Seattle Seahawks': 'SEA', 'Tampa Bay Buccaneers': 'TB',
+    'Tennessee Titans': 'TEN', 'Washington Commanders': 'WAS',
+}
+TARGET_TEAM = {}   # D name -> site team abbr ('' for FA), filled by load_targets
+# Sleeper positions that can stand in for a site position (Juszczyk = FB, Travis Hunter = DB).
+POS_COMPAT = {'QB': ('QB',), 'RB': ('RB', 'FB'), 'WR': ('WR', 'DB', 'CB', 'S'), 'TE': ('TE',)}
+SLEEPER_POOL_POS = ('QB', 'RB', 'WR', 'TE', 'FB', 'DB', 'CB', 'S')
+
+
 def load_targets():
     with open(D_JS, 'r', encoding='utf-8') as f:
         raw = f.read()
     D = json.loads(raw[raw.index('['):raw.rindex(']') + 1])
+    TARGET_TEAM.clear()
+    TARGET_TEAM.update({p['n']: TEAM_ABBR.get(p.get('t') or '', '') for p in D
+                        if p.get('s') in ('QB', 'RB', 'WR', 'TE')})
     return {p['n']: p['s'] for p in D if p.get('s') in ('QB', 'RB', 'WR', 'TE')}
 
 
 def sleeper_id_map(targets):
-    """D name -> (sleeper_id, team) using the Sleeper player DB."""
+    """D name -> (sleeper_id, team) using the Sleeper player DB.
+
+    Match order per target: exact normalized name -> suffix-stripped / suffix-added
+    (Sleeper drops Jr./III; the site keeps them) -> last name + team + position
+    (Sleeper first-name nicknames: Kenny Gainwell, Joshua Palmer, Matt Hibner,
+    DeaMonte Trayanum...). When several Sleeper records share a name, the one on the
+    site's team wins, then the active one, so a suffix-stripped 'Michael Pittman'
+    cannot land on the retired Sr.
+    """
     db = get_json(SLEEPER_PLAYERS, timeout=60)
     SLEEPER_DB.update(db)
-    by_name = {}
+    by_name = defaultdict(list)     # normalized full name -> [(sid, team, pos, active)]
+    by_last = defaultdict(list)     # (last name, team) -> same
     for sid, sp in db.items():
-        if sp.get('position') not in ('QB', 'RB', 'WR', 'TE'):
+        pos = sp.get('position')
+        if pos not in SLEEPER_POOL_POS:
             continue
         full = sp.get('full_name') or ('%s %s' % (sp.get('first_name', ''), sp.get('last_name', ''))).strip()
         if not full:
             continue
+        rec = (sid, sp.get('team') or '', pos, bool(sp.get('active')))
         key = normalize(full)
-        if key not in by_name or sp.get('active'):
-            by_name[key] = (sid, sp.get('team') or '')
-    out = {}
+        by_name[key].append(rec)
+        last = strip_suffix(normalize(sp.get('last_name') or full.split()[-1]))
+        if rec[1]:
+            by_last[(last, rec[1])].append(rec)
+
+    def pick(cands, name, strict_pos):
+        pos_ok = POS_COMPAT[targets[name]] if strict_pos else SLEEPER_POOL_POS
+        cands = [c for c in cands if c[2] in pos_ok]
+        if not cands:
+            return None
+        team = TARGET_TEAM.get(name, '')
+        cands.sort(key=lambda c: (c[1] == team and bool(team), c[3]), reverse=True)
+        return cands[0]
+
+    out, missed = {}, []
     for name in targets:
         key = normalize(name)
-        hit = by_name.get(key)
+        hit = pick(by_name.get(key, []), name, strict_pos=False)
         if not hit:
             st = strip_suffix(key)
-            hit = by_name.get(st) if st != key else None
+            if st != key:
+                hit = pick(by_name.get(st, []), name, strict_pos=False)
             if not hit:
                 for s in SUFFIXES:
-                    if (key + s) in by_name:
-                        hit = by_name[key + s]
+                    hit = pick(by_name.get(key + s, []), name, strict_pos=False)
+                    if hit:
                         break
+        if not hit and TARGET_TEAM.get(name):
+            last = st.split()[-1] if ' ' in st else st
+            cands = by_last.get((last, TARGET_TEAM[name]), [])
+            cands = [c for c in cands if c[2] in POS_COMPAT[targets[name]]]
+            if len(cands) == 1 or (cands and sum(1 for c in cands if c[3]) == 1):
+                hit = pick(cands, name, strict_pos=True)
         if hit:
-            out[name] = hit
+            out[name] = (hit[0], hit[1])
+        else:
+            missed.append('%s (%s %s)' % (name, targets[name], TARGET_TEAM.get(name) or 'FA'))
+    if missed:
+        log('  no Sleeper id for: ' + ', '.join(missed))
     return out
 
 

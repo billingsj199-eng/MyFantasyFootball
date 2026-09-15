@@ -1518,3 +1518,47 @@ Log: run_direction_backtest.log.
   gets run at, where a back runs), no exploitable interaction. INTEL value
   only ("KC gets run at left edge 30% of the time, lg 22%"; "Henry: 46%
   interior right") - candidate RUN LANES card for the ZONES tab.
+
+## Scheme & alignment intel (build_scheme.py, PFF weekly facets) - SHIPPED 2026-09-15
+
+Jack: "we can definitely find alignments and where each defense gets targeted
+or what type of runs outside/inside zone etc somewhere maybe pff" -> "do it".
+PFF Premium serves its scheme facets WEEKLY in-season (the nflverse
+participation "postseason only" blocker does not apply), so:
+
+- Repo `scripts/pull_pff_weekly.py` (daily 06:15 route_pct_daily.ps1) now
+  saves nine facet CSVs per played week next to the receiving file,
+  `pbp_cache/pff/weekly/pff_<facet>_<season>_w<N>.csv`: receiving_scheme
+  (man/zone), receiving_depth, receiving_concept (screen/slot),
+  rushing_summary (gap/zone, yco, breakaway), rushing_direction (lanes
+  LE LT LG ML MR RG RT RE; JS-*/EA-* folded into the edges, QB* ignored),
+  passing_pressure (blitz/pressure splits), defense_summary (alignment snaps,
+  grades), defense_coverage_scheme (man/zone snaps), defense_pass_rush (win
+  rate). Nested JSON is flattened; `--no-facets` skips them; kept weeks are
+  backfilled. rushing/gap_zone, passing/time_in_pocket, defense/run_defense,
+  defense/slot_coverage, blocking/* are 404 in-season.
+- `build_scheme.py` (called from pull_pace_tracker.build(), 06:45) ->
+  `data/scheme_2026.js` (`SIM_SCHEME_2026`): per DEFENSE man rate, blitz %
+  and pressure % (from the QBs it faced via the nflverse pbp opponent map),
+  rusher win rate, safety-in-box, DB/LB rush share, missed-tackle rate, run D
+  faced (ypc, after contact, gap share, edge share, explosive, MTF, per-lane
+  att/yds; QB carries excluded), slot share of rec yds, PFF grades; per
+  OFFENSE gap/zone + lanes + man seen + screens + blitz/pressure faced; per
+  PLAYER: receivers man/zone routes-targets-yards-rec-TD + slot/wide/inline
+  snaps + screen; rushers gap/zone/yco/explosive/MTF/breakaway/lanes/elusive;
+  QBs blitz/pressure/no-pressure dropbacks, yards, TD, INT, sacks, TWP and
+  PFF grades. League means in `lg`. PFF codes ARZ/BLT/CLV/HST/LA mapped.
+- app.js: ZONES game view gets a "Scheme & alignment (PFF)" section (defense
+  scheme card with value / vs lg / rank + "gets run at" lane line, opposing
+  offense profiles table with auto READS: man-/zone-beater, slot, screen guy,
+  gap/power vs zone back, bounces outside, contact balance, makes people
+  miss, QB falls apart / holds up under pressure, punishes / struggles vs
+  blitz, GOOD SPOT / TOUGH SPOT vs the opponent's man rate, blitz rate,
+  pressure, missed tackles, heavy boxes). League view gets a sortable
+  "Defense scheme" table. NOTES team block gets "<opp> D scheme" + "<team> O
+  style" lines and the read column appends the scheme read (notes_latest.txt
+  carries them). Backups app.js/index.html .bak_pre_scheme_20260915.
+- Honest labels: man rate / blitz / lanes / run style are identities that
+  persist; per-lane and per-zone EFFICIENCY, per-player man/zone splits are
+  noise as layers (backtest_run_direction.py, backtest_target_area.py,
+  backtest_man_zone.py) - INTEL ONLY, nothing moves a projection.

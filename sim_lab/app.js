@@ -3339,6 +3339,7 @@
         '<div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-top:26px">' +
         '<div>' + znDefCard(Z, g.away, lg, g.away + ' defense (vs ' + g.home + ' receivers)') + '</div>' +
         '<div style="flex:1;min-width:520px">' + '<h3>' + esc(g.home) + ' receivers</h3>' + znPlayerRows(Z, g.home, lg, posF, znDef(Z, g.away, lg)) + '</div></div>' +
+        (scS() ? '<h2 style="margin-top:30px">Scheme &amp; alignment (PFF)</h2>' + scMatchupBlock(scS(), g.home, g.away, posF) + scMatchupBlock(scS(), g.away, g.home, posF) : '') +
         '<p class="dim" style="font-size:11px">Share columns: green/red = 3+ points off the league share (defense funnel) or 5+/6+ (receiver mix). Pts/tgt allowed: red = leaky, green = stingy, ' +
         'shrunk toward 1.0x with a 60-target prior — treat as "so far"; the backtest found NO year-to-year or early-to-late persistence in per-zone efficiency. ' +
         'Receiver mixes are shrunk toward their 2025 profile (40-target prior) — those DO persist (deep share r .75, behind-LOS .88).</p>';
@@ -3367,8 +3368,296 @@
     });
     $('zn-body').innerHTML = html + '</tbody></table>' +
       '<p class="dim" style="font-size:11px">Pick a game above for the matchup view (defense zone card next to the opposing receivers\' target mixes with auto-generated reads). ' +
-      'Shares = where opponents target this defense (season-to-date, shrunk toward its 2025 shares) vs league; pts/tgt = half-PPR receiving points allowed per target in that zone vs league, shrunk toward 1.0x. Click a header to sort.</p>';
+      'Shares = where opponents target this defense (season-to-date, shrunk toward its 2025 shares) vs league; pts/tgt = half-PPR receiving points allowed per target in that zone vs league, shrunk toward 1.0x. Click a header to sort.</p>' +
+      (scS() ? scLeagueTable(scS()) : '');
     wireSort('zn-body', COLS, ss, renderZonesTab);
+    if (scS()) wireSort('zn-scheme', [], state.scSort, renderZonesTab);
+  }
+
+
+  // ---------------- SCHEME (PFF Premium weekly facets -> build_scheme.py -> scheme_2026.js) ----------------
+  // Jack 2026-09-15: "alignments and where each defense gets targeted or what type of
+  // runs outside/inside zone etc ... maybe pff" -> "do it". INTEL ONLY: per-player
+  // man/zone splits, per-zone and per-lane defense efficiency all graded as noise in
+  // the LOYO backtests (README), so nothing here touches a projection. What IS shown:
+  // what a defense does (man rate, blitz, pressure, safety-in-box, lanes it gets run
+  // at, run D results) and what a player does (man/zone YPRR, slot share, gap vs
+  // zone, lanes, yards after contact, QB under pressure / vs blitz).
+  function scS() { var S = window.SIM_SCHEME_2026; return (S && S.def && Object.keys(S.def).length) ? S : null; }
+  function scPct(v, d) { return v == null ? '\u2014' : (100 * v).toFixed(d == null ? 0 : d) + '%'; }
+  function scNum(v, d) { return v == null ? '\u2014' : (+v).toFixed(d == null ? 1 : d); }
+  function scGet(d, key, sub) { if (!d) return null; var v = sub ? (d[sub] ? d[sub][key] : null) : d[key]; return v == null ? null : v; }
+  function scRank(S, key, sub, val) {
+    // 1 = highest value league-wide (32 defenses); null when val missing
+    if (val == null) return null;
+    var vals = [];
+    Object.keys(S.def).forEach(function (t) { var v = scGet(S.def[t], key, sub); if (v != null) vals.push(v); });
+    vals.sort(function (a, b) { return b - a; });
+    return { r: vals.indexOf(val) + 1, n: vals.length };
+  }
+  function scDelta(v, lg, pct, thr) {
+    // colored difference vs league (pct = percentage points, else raw units)
+    if (v == null || lg == null) return '';
+    var d = pct ? 100 * (v - lg) : v - lg;
+    var col = Math.abs(d) < thr ? 'var(--dim)' : (d > 0 ? 'var(--acc)' : '#f85149');
+    return ' <span style="color:' + col + ';font-size:11px">' + (d >= 0 ? '+' : '') + d.toFixed(pct ? 0 : 1) + '</span>';
+  }
+  // [key, label, sub, pct?, threshold for color, tooltip]
+  var SC_DEF_ROWS = [
+    ['man', 'Man coverage', null, 1, 5, 'share of coverage snaps in man coverage (PFF charting); lg ~25%'],
+    ['blitz', 'Blitz rate', null, 1, 5, 'share of opponent dropbacks with a blitz (PFF, from the QBs this defense faced)'],
+    ['prs', 'Pressure rate', null, 1, 5, 'share of opponent dropbacks pressured (PFF)'],
+    ['prwr', 'Rusher win rate', null, 1, 2, 'pass-rush wins / pass-rush opportunities summed over the whole front'],
+    ['sBox', 'Safety in box', null, 1, 6, 'share of safety snaps aligned in the box (run-stopping / heavy looks)'],
+    ['mtRate', 'Missed-tackle rate', null, 1, 3, 'missed tackles / (tackles + assists + missed)'],
+    ['ypc', 'Run D: yds/carry', 'run', 0, 0.5, 'yards per carry allowed to RB/WR/FB carries (QB runs excluded)'],
+    ['yco', 'Run D: after contact/att', 'run', 0, 0.4, 'yards after contact per carry allowed'],
+    ['gap', 'Gap runs faced', 'run', 1, 8, 'share of carries against this defense that were gap/power scheme (rest zone)'],
+    ['edge', 'Edge runs faced', 'run', 1, 8, 'share of carries against this defense to LE/RE (incl. jet sweeps / end-arounds)'],
+    ['exp', 'Explosive run % allowed', 'run', 1, 4, 'PFF explosive carries (10+ yds) / carries faced'],
+    ['mtf', 'Missed tackles forced/att', 'run', 0, 0.06, 'avoided tackles by the backs it faced, per carry'],
+    ['slotYd', 'Slot share of rec yds', null, 1, 8, 'share of receiving yards allowed that came on slot routes'],
+    ['grCov', 'PFF coverage grade', null, 0, 5, 'snap-weighted coverage grade'],
+    ['grRun', 'PFF run-D grade', null, 0, 5, 'snap-weighted run-defense grade'],
+    ['grPrsh', 'PFF pass-rush grade', null, 0, 5, 'snap-weighted pass-rush grade']
+  ];
+  var SC_LANES = ['LE', 'LT', 'LG', 'ML', 'MR', 'RG', 'RT', 'RE'];
+  function scLaneMix(lanes) {
+    if (!lanes) return null;
+    var n = 0; SC_LANES.forEach(function (l) { n += (lanes[l] || [0, 0])[0]; });
+    if (!n) return null;
+    var out = { n: n, share: {}, ypc: {} };
+    SC_LANES.forEach(function (l) { var v = lanes[l] || [0, 0]; out.share[l] = v[0] / n; out.ypc[l] = v[0] ? v[1] / v[0] : null; });
+    return out;
+  }
+  function scLaneLine(lanes, lgShare, lgYpc, withYpc) {
+    var m = scLaneMix(lanes); if (!m) return '';
+    return SC_LANES.map(function (l) {
+      var s = m.share[l], L = lgShare ? lgShare[l] : null;
+      var col = (L != null && Math.abs(s - L) >= 0.06) ? (s > L ? 'var(--acc)' : '#f85149') : 'inherit';
+      return '<span style="color:' + col + '" title="' + l + ': ' + (100 * s).toFixed(0) + '% of carries' + (L != null ? ' (lg ' + (100 * L).toFixed(0) + '%)' : '') +
+        (withYpc && m.ypc[l] != null ? ', ' + m.ypc[l].toFixed(1) + ' yds/att' + (lgYpc && lgYpc[l] != null ? ' (lg ' + lgYpc[l].toFixed(1) + ')' : '') : '') + '">' +
+        l + ' ' + (100 * s).toFixed(0) + '%' + (withYpc && m.ypc[l] != null ? ' <span class="dim">(' + m.ypc[l].toFixed(1) + ')</span>' : '') + '</span>';
+    }).join(' \u00b7 ') + ' <span class="dim">(' + m.n + ' carries' + (withYpc ? ', yds/att in parens' : '') + ')</span>';
+  }
+  function scDefCard(S, team, title) {
+    var d = S.def[team];
+    if (!d) return '<h3>' + esc(title) + '</h3><p class="dim">No PFF scheme data for ' + esc(team) + '.</p>';
+    var html = '<h3>' + esc(title) + ' <span class="dim" style="font-weight:normal;font-size:12px">' + d.g + ' gm' + (d.g > 1 ? 's' : '') + ', PFF</span></h3>' +
+      '<table style="width:auto"><thead><tr><th class="l">Metric</th><th>Value</th><th>vs lg</th><th>Rank</th></tr></thead><tbody>';
+    SC_DEF_ROWS.forEach(function (r) {
+      var v = scGet(d, r[0], r[2]); if (v == null) return;
+      var lg = r[2] ? (S.lg[r[2]] ? S.lg[r[2]][r[0]] : null) : S.lg[r[0]];
+      var rk = scRank(S, r[0], r[2], v);
+      html += '<tr title="' + esc(r[5]) + '"><td class="l">' + r[1] + '</td><td><b>' + (r[3] ? scPct(v) : scNum(v, r[0].indexOf('gr') === 0 ? 1 : 2)) + '</b></td>' +
+        '<td>' + scDelta(v, lg, r[3], r[4]) + ' <span class="dim" style="font-size:11px">(lg ' + (r[3] ? scPct(lg) : scNum(lg, r[0].indexOf('gr') === 0 ? 1 : 2)) + ')</span></td>' +
+        '<td class="dim">' + (rk ? '#' + rk.r + '/' + rk.n : '\u2014') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    if (d.run && d.run.lanes) html += '<div style="font-size:12px;margin-top:6px"><b>Gets run at:</b> ' + scLaneLine(d.run.lanes, S.lg.lanes, S.lg.laneYpc, true) + '</div>';
+    return html;
+  }
+  // ---- player profiles ----
+  function scRec(S, nk) {
+    var r = S.rec[nk]; if (!r) return null;
+    var R = r.mR + r.zR, al = (r.sl || 0) + (r.wd || 0) + (r.il || 0), T = r.mT + r.zT;
+    return { raw: r, routes: R, manSeen: R ? r.mR / R : null, mTgR: r.mR ? r.mT / r.mR : null, zTgR: r.zR ? r.zT / r.zR : null,
+      mYprr: r.mR ? r.mY / r.mR : null, zYprr: r.zR ? r.zY / r.zR : null, slot: al ? r.sl / al : null, inline: al ? r.il / al : null,
+      screen: T && r.scT != null ? r.scT / T : null, tg: T };
+  }
+  function scRb(S, nk) {
+    var r = S.rb[nk]; if (!r) return null;
+    var gz = r.gap + r.zone, m = scLaneMix(r.lanes);
+    return { raw: r, att: r.att, ypc: r.att ? r.yds / r.att : null, gap: gz ? r.gap / gz : null, yco: r.att ? r.yco / r.att : null,
+      exp: r.att ? r.exp / r.att : null, mtf: r.att ? r.mtf / r.att : null, brk: r.yds ? r.brkY / r.yds : null,
+      edge: m ? m.share.LE + m.share.RE : null, lanes: m, elu: r.elu };
+  }
+  function scQb(S, nk) {
+    var q = S.qb[nk]; if (!q) return null;
+    return { raw: q, db: q.db, blitz: q.db ? q.bDb / q.db : null, prs: q.db ? q.pDb / q.db : null,
+      pYpa: q.pAtt ? q.pY / q.pAtt : null, nYpa: q.nAtt ? q.nY / q.nAtt : null, bYpa: q.bAtt ? q.bY / q.bAtt : null, nbYpa: q.nbAtt ? q.nbY / q.nbAtt : null,
+      pGr: q.pGr, nGr: q.nGr, bGr: q.bGr, nbGr: q.nbGr, p2s: q.p2s };
+  }
+  function scReads(S, p, prof, D) {
+    // strengths / weaknesses + matchup callouts for videos; D = opposing defense entry
+    var r = [], lg = S.lg, L = lg.rec || {}, LR = lg.run || {}, LQ = lg.qb || {};
+    var dman = scGet(D, 'man'), dbl = scGet(D, 'blitz'), dprs = scGet(D, 'prs');
+    if (p.pos === 'QB') {
+      var q = prof; if (!q || q.db < 20) return '';
+      if (q.pGr != null && q.nGr != null) {
+        if (q.nGr - q.pGr >= 35) r.push('falls apart under pressure (grade ' + scNum(q.pGr, 0) + ' vs ' + scNum(q.nGr, 0) + ' clean)');
+        else if (q.nGr - q.pGr <= 12) r.push('holds up under pressure (grade ' + scNum(q.pGr, 0) + ' vs ' + scNum(q.nGr, 0) + ' clean)');
+      }
+      if (q.bYpa != null && q.nbYpa != null && q.raw.bAtt >= 10) {
+        if (q.bYpa >= q.nbYpa + 1.5) r.push('punishes the blitz (' + scNum(q.bYpa) + ' YPA vs ' + scNum(q.nbYpa) + ' no blitz)');
+        else if (q.bYpa <= q.nbYpa - 1.5) r.push('struggles vs blitz (' + scNum(q.bYpa) + ' YPA vs ' + scNum(q.nbYpa) + ')');
+      }
+      if (q.p2s != null && q.raw.pDb >= 15 && q.p2s >= 0.26) r.push('pressure-to-sack ' + scPct(q.p2s) + ' (takes sacks)');
+      if (D) {
+        if (dbl != null && lg.blitz != null && dbl >= lg.blitz + 0.08) r.push('D blitzes ' + scPct(dbl) + ' (#' + scRank(S, 'blitz', null, dbl).r + ')' + (q.bYpa != null && q.nbYpa != null && q.raw.bAtt >= 10 ? (q.bYpa >= q.nbYpa + 1 ? ' \u2014 GOOD SPOT' : q.bYpa <= q.nbYpa - 1 ? ' \u2014 TOUGH SPOT' : '') : ''));
+        if (dprs != null && lg.prs != null && dprs >= lg.prs + 0.06) r.push('D pressure ' + scPct(dprs) + ' (#' + scRank(S, 'prs', null, dprs).r + ')' + (q.pGr != null && q.nGr != null && q.nGr - q.pGr >= 35 ? ' \u2014 TOUGH SPOT' : ''));
+        else if (dprs != null && lg.prs != null && dprs <= lg.prs - 0.08) r.push('D pressure only ' + scPct(dprs) + ' (clean pockets)');
+        if (dman != null && lg.man != null && dman >= lg.man + 0.10) r.push('D plays man ' + scPct(dman) + ' (#' + scRank(S, 'man', null, dman).r + ')');
+      }
+      return r.join(' \u00b7 ');
+    }
+    if (p.pos === 'RB' && prof && prof.rb && prof.rb.att >= 8) {
+      var b = prof.rb;
+      if (b.gap != null && LR.gap != null) { if (b.gap >= 0.62) r.push('gap/power back (' + scPct(b.gap) + ' gap)'); else if (b.gap <= 0.30) r.push('zone-scheme back (' + scPct(1 - b.gap) + ' zone)'); }
+      if (b.edge != null && LR.edge != null) { if (b.edge >= LR.edge + 0.12) r.push('bounces outside (edge ' + scPct(b.edge) + ', lg ' + scPct(LR.edge) + ')'); else if (b.edge <= LR.edge - 0.15) r.push('between the tackles (edge ' + scPct(b.edge) + ')'); }
+      if (b.yco != null && LR.yco != null && b.att >= 15) { if (b.yco >= LR.yco + 0.7) r.push('contact-balance back (' + scNum(b.yco, 2) + ' after contact/att, lg ' + scNum(LR.yco, 2) + ')'); else if (b.yco <= LR.yco - 0.7) r.push('needs a lane (' + scNum(b.yco, 2) + ' after contact/att)'); }
+      if (b.mtf != null && LR.mtf != null && b.att >= 15 && b.mtf >= LR.mtf + 0.08) r.push('makes people miss (' + scNum(b.mtf, 2) + ' MTF/att)');
+      if (D && D.run) {
+        var dr = D.run, dm = scLaneMix(dr.lanes);
+        if (dr.yco != null && LR.yco != null && dr.att >= 40 && dr.yco >= LR.yco + 0.5) r.push('D allows ' + scNum(dr.yco, 2) + ' after contact/att (lg ' + scNum(LR.yco, 2) + ', noisy)');
+        if (dr.ypc != null && LR.ypc != null && dr.att >= 40) { if (dr.ypc >= LR.ypc + 0.7) r.push('D leaky vs run so far (' + scNum(dr.ypc, 1) + ' ypc)'); else if (dr.ypc <= LR.ypc - 0.7) r.push('D stingy vs run so far (' + scNum(dr.ypc, 1) + ' ypc)'); }
+        if (b.edge != null && LR.edge != null && b.edge >= LR.edge + 0.08 && dm && dm.n >= 40) {
+          var eY = ((dr.lanes.LE || [0, 0])[1] + (dr.lanes.RE || [0, 0])[1]) / Math.max(1, (dr.lanes.LE || [0, 0])[0] + (dr.lanes.RE || [0, 0])[0]);
+          var lgE = (lg.laneYpc && lg.laneYpc.LE != null && lg.laneYpc.RE != null) ? (lg.laneYpc.LE + lg.laneYpc.RE) / 2 : null;
+          if (lgE != null) r.push('D on edge runs: ' + scNum(eY, 1) + ' yds/att (lg ' + scNum(lgE, 1) + ', noisy)');
+        }
+        if (scGet(D, 'mtRate') != null && lg.mtRate != null && scGet(D, 'mtRate') >= lg.mtRate + 0.03 && b.mtf != null && LR.mtf != null && b.mtf >= LR.mtf + 0.05) r.push('D misses tackles (' + scPct(scGet(D, 'mtRate')) + ') \u2014 GOOD SPOT');
+        if (scGet(D, 'sBox') != null && lg.sBox != null && scGet(D, 'sBox') >= lg.sBox + 0.10) r.push('D lives in heavy boxes (S in box ' + scPct(scGet(D, 'sBox')) + ')');
+      }
+    }
+    var w = prof && prof.rec;
+    if (w && w.routes >= 25) {
+      if (w.slot != null) { if (w.slot >= 0.65 && p.pos !== 'RB') r.push('slot (' + scPct(w.slot) + ')'); else if (p.pos === 'WR' && w.slot <= 0.12) r.push('outside only (' + scPct(w.slot) + ' slot)'); if (p.pos === 'TE' && w.inline != null && w.inline <= 0.35) r.push('detached TE (' + scPct(w.inline) + ' inline)'); }
+      if (w.screen != null && w.tg >= 8 && w.screen >= 0.25) r.push('screen guy (' + scPct(w.screen) + ' of targets)');
+      var manOK = w.raw.mR >= 15 && w.raw.zR >= 15;
+      var beater = null;
+      if (manOK && w.mYprr != null && w.zYprr != null) {
+        if (w.mYprr >= w.zYprr * 1.35 && w.mYprr >= (L.mYprr || 1.5)) beater = 'man';
+        else if (w.zYprr >= w.mYprr * 1.35 && w.zYprr >= (L.zYprr || 1.5)) beater = 'zone';
+        if (beater) r.push(beater + '-beater (YPRR ' + scNum(w.mYprr, 2) + ' vs man, ' + scNum(w.zYprr, 2) + ' vs zone; small n)');
+      }
+      if (D && dman != null && lg.man != null) {
+        if (dman >= lg.man + 0.10) r.push('D plays man ' + scPct(dman) + ' (#' + scRank(S, 'man', null, dman).r + ')' + (beater === 'man' ? ' \u2014 GOOD SPOT' : beater === 'zone' ? ' \u2014 TOUGH SPOT' : ''));
+        else if (dman <= lg.man - 0.10) r.push('D zone-heavy (man ' + scPct(dman) + ')' + (beater === 'zone' ? ' \u2014 GOOD SPOT' : beater === 'man' ? ' \u2014 TOUGH SPOT' : ''));
+      }
+      if (D && w.slot != null && w.slot >= 0.55 && scGet(D, 'slotYd') != null && lg.slotYd != null && scGet(D, 'slotYd') >= lg.slotYd + 0.10) r.push('D bleeds slot yards (' + scPct(scGet(D, 'slotYd')) + ' of rec yds, lg ' + scPct(lg.slotYd) + ', noisy)');
+    }
+    return r.join(' \u00b7 ');
+  }
+  function scProfile(S, p) {
+    var prof = { rec: null, rb: null, qb: null };
+    if (p.pos === 'QB') prof.qb = scQb(S, p.norm);
+    else { prof.rec = scRec(S, p.norm); if (p.pos === 'RB') prof.rb = scRb(S, p.norm); }
+    if (!prof.rec && !prof.rb && !prof.qb) return null;
+    return prof;
+  }
+  function scRead(S, p, D) {
+    var prof = scProfile(S, p); if (!prof) return '';
+    return scReads(S, p, p.pos === 'QB' ? prof.qb : prof, D);
+  }
+  function scPlayerRows(S, team, posF, D) {
+    var L = S.lg.rec || {}, LR = S.lg.run || {}, LQ = S.lg.qb || {};
+    var rows = [];
+    state.players.list.forEach(function (p) {
+      if (p.isDST || p.tm !== team || ['QB', 'RB', 'WR', 'TE'].indexOf(p.pos) < 0) return;
+      if (posF && p.pos !== posF && p.pos !== 'QB') return;
+      var prof = scProfile(S, p); if (!prof) return;
+      var vol = prof.qb ? prof.qb.db : ((prof.rec ? prof.rec.routes : 0) + (prof.rb ? prof.rb.att * 2 : 0));
+      if (vol < 10) return;
+      rows.push({ p: p, prof: prof, vol: vol });
+    });
+    rows.sort(function (a, b) { return (a.p.pos === 'QB' ? 1 : 0) - (b.p.pos === 'QB' ? 1 : 0) || b.vol - a.vol; });
+    if (!rows.length) return '<p class="dim">No PFF profiles for ' + esc(team) + ' yet.</p>';
+    var html = '<table><thead><tr><th class="l">Player</th><th>Pos</th><th title="routes run (WR/TE/RB) or dropbacks (QB)">Vol</th>' +
+      '<th title="WR/TE/RB: share of routes vs man coverage. QB: share of dropbacks blitzed">Man seen / Blitz%</th>' +
+      '<th title="WR/TE/RB: yards per route run vs man | vs zone. RB: gap-scheme carry share. QB: pressure rate faced">YPRR man | zone / Gap% / Prs%</th>' +
+      '<th title="WR/TE/RB: slot share of alignment snaps. RB: edge (LE+RE) carry share. QB: PFF pass grade under pressure | clean">Slot% / Edge% / Grade prs | clean</th>' +
+      '<th title="WR/TE/RB: screen share of targets. RB: yards after contact per att. QB: YPA vs blitz | no blitz">Screen% / YCO / YPA blitz | none</th>' +
+      '<th class="l">Read</th></tr></thead><tbody>';
+    rows.forEach(function (o) {
+      var p = o.p, w = o.prof.rec, b = o.prof.rb, q = o.prof.qb, c = [];
+      if (q) {
+        c = [q.db, scPct(q.blitz) + scDelta(q.blitz, LQ.blitz, 1, 5), scPct(q.prs) + scDelta(q.prs, LQ.prs, 1, 5),
+             scNum(q.pGr, 0) + ' | ' + scNum(q.nGr, 0), scNum(q.bYpa) + ' | ' + scNum(q.nbYpa)];
+      } else if (p.pos === 'RB') {
+        c = [(w ? w.routes + ' rt' : '') + (b ? (w ? ' / ' : '') + b.att + ' car' : ''),
+             w ? scPct(w.manSeen) : '\u2014',
+             b ? scPct(b.gap) + scDelta(b.gap, LR.gap, 1, 8) : '\u2014',
+             b ? scPct(b.edge) + scDelta(b.edge, LR.edge, 1, 8) : '\u2014',
+             b ? scNum(b.yco, 2) + scDelta(b.yco, LR.yco, 0, 0.4) : '\u2014'];
+      } else {
+        c = [w.routes + ' rt', scPct(w.manSeen) + scDelta(w.manSeen, L.manSeen, 1, 6),
+             scNum(w.mYprr, 2) + ' | ' + scNum(w.zYprr, 2),
+             scPct(w.slot) + (p.pos === 'TE' && w.inline != null ? ' <span class="dim">(inline ' + scPct(w.inline) + ')</span>' : ''),
+             scPct(w.screen)];
+      }
+      html += '<tr><td class="l"><b>' + esc(p.name) + '</b></td><td>' + p.pos + '</td>' + c.map(function (x) { return '<td>' + x + '</td>'; }).join('') +
+        '<td class="l" style="font-size:11px;white-space:normal;min-width:260px">' + esc(scReads(S, p, q ? q : o.prof, D)) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    var off = S.off[team];
+    if (off) {
+      var bits = [];
+      if (off.run) bits.push('run game ' + scPct(off.run.gap) + ' gap' + scDelta(off.run.gap, LR.gap, 1, 8) + ', edge ' + scPct(off.run.edge) + scDelta(off.run.edge, LR.edge, 1, 8) + ', ' + scNum(off.run.ypc, 1) + ' ypc');
+      if (off.manSeen != null) bits.push('sees man ' + scPct(off.manSeen) + scDelta(off.manSeen, L.manSeen, 1, 6));
+      if (off.screen != null) bits.push('screens ' + scPct(off.screen) + ' of targets');
+      if (off.blitzFaced != null) bits.push('blitzed ' + scPct(off.blitzFaced) + ', pressured ' + scPct(off.prsFaced));
+      html += '<div style="font-size:12px;margin-top:6px"><b>' + esc(team) + ' offense:</b> ' + bits.join(' \u00b7 ') +
+        (off.run && off.run.lanes ? '<br><b>Runs to:</b> ' + scLaneLine(off.run.lanes, S.lg.lanes, null, false) : '') + '</div>';
+    }
+    return html;
+  }
+  function scMatchupBlock(S, defTeam, offTeam, posF) {
+    return '<div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-top:14px">' +
+      '<div>' + scDefCard(S, defTeam, defTeam + ' defense scheme (vs ' + offTeam + ')') + '</div>' +
+      '<div style="flex:1;min-width:520px"><h3>' + esc(offTeam) + ' offense profiles</h3>' + scPlayerRows(S, offTeam, posF, S.def[defTeam]) + '</div></div>';
+  }
+  function scLeagueTable(S) {
+    var ss = state.scSort = state.scSort || { key: 'team', dir: 'asc' };
+    var rows = Object.keys(S.def).map(function (t) { return { t: t, d: S.def[t] }; });
+    var COLS = [{ h: 'Defense', l: 1, k: 'team', dir: 'asc', get: function (o) { return o.t; } }];
+    SC_DEF_ROWS.forEach(function (r) {
+      if (['grCov', 'grRun', 'grPrsh', 'slotYd'].indexOf(r[0]) >= 0) return;
+      COLS.push({ h: r[1].replace('Run D: ', 'Run '), k: r[0], sub: r[2], pct: r[3], thr: r[4], tip: r[5], get: function (o) { var v = scGet(o.d, r[0], r[2]); return v == null ? -999 : v; } });
+    });
+    var sorted = applySort(rows, COLS, ss);
+    var html = '<h3 style="margin-top:26px">Defense scheme (PFF, ' + esc(S.updated) + ')</h3><div id="zn-scheme"><table><thead>' + thRow(COLS, ss) + '</thead><tbody>';
+    sorted.forEach(function (o) {
+      html += '<tr><td class="l"><b>' + o.t + '</b></td>' + COLS.slice(1).map(function (c) {
+        var v = scGet(o.d, c.k, c.sub), lg = c.sub ? (S.lg[c.sub] ? S.lg[c.sub][c.k] : null) : S.lg[c.k];
+        return '<td title="' + esc(c.tip) + '">' + (v == null ? '<span class="dim">\u2014</span>' : (c.pct ? scPct(v) : scNum(v, 2)) + scDelta(v, lg, c.pct, c.thr)) + '</td>';
+      }).join('') + '</tr>';
+    });
+    html += '</tbody></table></div><p class="dim" style="font-size:11px">Man / blitz / pressure / rusher win rate / safety-in-box are scheme identities (they persist); run-D results, missed tackles and per-lane yards are "so far" (per-lane and per-zone efficiency graded as noise in the backtests). ' +
+      'Blitz and pressure come from the QBs each defense faced (nflverse opponent map), so they lag a night behind PFF. Click a header to sort.</p>';
+    return html;
+  }
+  function scNotesLines(S, team, opp) {
+    // one line for the opposing defense + one for this offense (NOTES sheet)
+    var out = [], d = S.def[opp], o = S.off[team], lg = S.lg, LR = lg.run || {}, L = lg.rec || {};
+    function rk(k, sub, v) { var r = scRank(S, k, sub, v); return r ? ' #' + r.r : ''; }
+    if (d) {
+      var bits = [];
+      if (d.man != null) bits.push('man ' + scPct(d.man) + rk('man', null, d.man) + ' (lg ' + scPct(lg.man) + ')');
+      if (d.blitz != null) bits.push('blitz ' + scPct(d.blitz) + rk('blitz', null, d.blitz));
+      if (d.prs != null) bits.push('pressure ' + scPct(d.prs) + rk('prs', null, d.prs));
+      if (d.prwr != null) bits.push('rusher win ' + scPct(d.prwr));
+      if (d.sBox != null) bits.push('S in box ' + scPct(d.sBox));
+      if (d.run) {
+        bits.push('run D ' + scNum(d.run.ypc, 1) + ' ypc' + rk('ypc', 'run', d.run.ypc) + ', ' + scNum(d.run.yco, 1) + ' after contact, edge runs ' + scPct(d.run.edge) + ' of carries faced');
+        var m = scLaneMix(d.run.lanes);
+        if (m && lg.lanes) {
+          var hot = SC_LANES.filter(function (l) { return m.share[l] >= (lg.lanes[l] || 0) + 0.06; });
+          if (hot.length) bits.push('gets run at ' + hot.map(function (l) { return l + ' ' + scPct(m.share[l]); }).join('/'));
+        }
+      }
+      if (d.mtRate != null && lg.mtRate != null && d.mtRate >= lg.mtRate + 0.03) bits.push('missed tackles ' + scPct(d.mtRate) + ' (lg ' + scPct(lg.mtRate) + ')');
+      out.push(opp + ' D scheme (PFF, ' + d.g + ' gm): ' + bits.join(' \u00b7 '));
+    }
+    if (o && (o.run || o.manSeen != null)) {
+      var b2 = [];
+      if (o.run) b2.push(scPct(o.run.gap) + ' gap / ' + scPct(1 - o.run.gap) + ' zone, edge ' + scPct(o.run.edge) + ', ' + scNum(o.run.ypc, 1) + ' ypc');
+      if (o.manSeen != null) b2.push('sees man ' + scPct(o.manSeen) + ' (lg ' + scPct(L.manSeen) + ')');
+      if (o.screen != null) b2.push('screens ' + scPct(o.screen));
+      if (o.blitzFaced != null) b2.push('blitzed ' + scPct(o.blitzFaced) + ' / pressured ' + scPct(o.prsFaced));
+      out.push(team + ' O style (PFF): ' + b2.join(' \u00b7 '));
+    }
+    return out;
   }
 
   // ---------------- NOTES (video prep: TD-luck leaderboard + per-game sheet) ----------------
@@ -3546,6 +3835,7 @@
     if (cb) lines.push(opp + ' CB1: ' + cb.name + (cb.out ? ' — OUT (WR boost live)' : ' active'));
     var ol = window.SIM_OL_2026 && window.SIM_OL_2026[team];
     if (ol) lines.push(team + ' OL: ' + ol + ' starter' + (ol > 1 ? 's' : '') + ' out (dock live)');
+    if (scS()) scNotesLines(scS(), team, opp).forEach(function (s) { lines.push(s); });
     return lines;
   }
   function ntWeather(home, wk) {
@@ -3629,10 +3919,11 @@
       if (lg && !p.isDST && ['WR', 'TE', 'RB'].indexOf(p.pos) >= 0) {
         var pl = znPlayer(Z, p.norm, lg); if (pl && (pl.N + pl.Np) >= 10) read = znReads(pl, znDef(Z, slot.opp, lg), lg);
       }
+      if (scS() && !p.isDST) { var sr = scRead(scS(), p, scS().def[slot.opp]); if (sr) read = read ? read + ' \u00b7 ' + sr : sr; }
       rows.push({ p: p, eff: eff, wp: wp, chips: chips, read: read, xf: xf });
     });
     rows.sort(function (x, y) { return y.eff - x.eff; });
-    html += '<table style="margin-top:10px"><thead><tr><th class="l">Player</th><th>Tm</th><th>Pos</th><th>PROJ</th><th>Model</th><th>Market</th><th title="Expected fantasy points per game, 2026 to date (standard usage-based xFP)">xFP/g</th><th title="Actual PPG minus xFP/g: + = scoring over his usage, - = under (due up)">FPOE/g</th><th class="l">Why / notes</th><th class="l">Zone read</th></tr></thead><tbody>';
+    html += '<table style="margin-top:10px"><thead><tr><th class="l">Player</th><th>Tm</th><th>Pos</th><th>PROJ</th><th>Model</th><th>Market</th><th title="Expected fantasy points per game, 2026 to date (standard usage-based xFP)">xFP/g</th><th title="Actual PPG minus xFP/g: + = scoring over his usage, - = under (due up)">FPOE/g</th><th class="l">Why / notes</th><th class="l">Zone / scheme read</th></tr></thead><tbody>';
     T.push(''); T.push('PLAYERS (PROJ ' + $('nt-scoring').value + '):');
     rows.forEach(function (o) {
       html += '<tr><td class="l"><b>' + esc(o.p.name) + '</b></td><td>' + o.p.tm + '</td><td>' + o.p.pos + '</td><td><b>' + ntF(o.eff, 1) + '</b></td><td class="dim">' +
@@ -3654,6 +3945,11 @@
       html += '<div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">' +
         '<div>' + znDefCard(Z, g.home, lg, g.home + ' defense zones (vs ' + g.away + ')') + '</div>' +
         '<div>' + znDefCard(Z, g.away, lg, g.away + ' defense zones (vs ' + g.home + ')') + '</div></div>';
+    }
+    if (scS()) {
+      html += '<div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">' +
+        '<div>' + scDefCard(scS(), g.home, g.home + ' defense scheme (vs ' + g.away + ')') + '</div>' +
+        '<div>' + scDefCard(scS(), g.away, g.away + ' defense scheme (vs ' + g.home + ')') + '</div></div>';
     }
     html += '</div>';
     return { html: html, text: T.join('\n') };

@@ -811,6 +811,11 @@ def build():
           os.path.join(CACHE, f"pbp_participation_{SEASON}.parquet"))
     build_routes_2026()
     build_zones_2026()
+    try:   # PFF scheme/alignment intel (build_scheme.py) - needs the weekly facet CSVs from scripts/pull_pff_weekly.py
+        import build_scheme
+        build_scheme.build()
+    except Exception as e:
+        print(f"WARN scheme skipped ({e})")
     R = research_metrics()
     weeks, coach = team_weeks(SEASON) if got_pbp else ({}, {})
     teams = {}

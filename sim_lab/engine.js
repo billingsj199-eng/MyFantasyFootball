@@ -1620,6 +1620,17 @@
     // multiply a points term - min(1, iA) keeps Out/Doubtful docks and drops the boost.
     var luckAdj = tdLuckAdj(p, sc) * Math.min(1, iA);
     var jsMean = Math.max(0, jsPg * jsChain + luckAdj);
+    // CLAY-FREE SHADOW BASE (2026-09-15): same blend and chain, but the prior is the
+    // player's OWN 3-yr weighted PPG (player_weekly_sigma mean_ppg, half-PPR, rescaled to
+    // this sheet by the Clay stat mix) instead of Clay. Graded every Tuesday next to the
+    // shipped mean (score_week.py "No-Clay shadow"); the season ledger decides whether
+    // Clay can go. No history -> Clay prior, flagged 'clay-fallback'.
+    var ncSrc = 'hist', ncPrior = clayPg;
+    if (p.histPpg != null && p.histGames >= 8) {
+      var halfPg = seasonPoints(p, PRESETS.half) / perGameDiv;
+      ncPrior = halfPg > 0 && clayPg > 0 ? p.histPpg * (clayPg / halfPg) : p.histPpg;
+    } else ncSrc = 'clay-fallback';
+    var ncMean = Math.max(0, jsBasePg(p, sc, ncPrior) * jsChain + luckAdj);
     var compsWk = {};
     Object.keys(p.comps).forEach(function (k) {
       if (p.comps[k]) compsWk[k] = +(p.comps[k] / perGameDiv * factor).toFixed(2);
@@ -1660,7 +1671,7 @@
         }
       }
     }
-    return { mean: mean, mult: mult, slot: slot, comps: compsWk, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj };
+    return { mean: mean, mult: mult, slot: slot, comps: compsWk, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc };
   }
 
   // ---------- correlated sampling ----------
@@ -1806,6 +1817,7 @@
         player: p, week: wk, mean: mean,
         proj: p._wk.mean, jsProj: p._wk.jsMean, propProj: p._wk.propMean != null ? p._wk.propMean : null, propW: p._wk.propW != null ? p._wk.propW : null,
         luck: p._wk.luckAdj != null ? p._wk.luckAdj : 0,   // TD-luck points inside jsProj (live grading: luck_scorecard.py)
+        ncProj: p._wk.ncMean != null ? p._wk.ncMean : null, ncSrc: p._wk.ncSrc || null,   // Clay-free shadow base
         propSrc: p._wk.propSrc || null,
         mult: p._wk.mult, slot: p._wk.slot, comps: p._wk.comps,
         p10: pct(arr, 0.10), p25: pct(arr, 0.25), p50: pct(arr, 0.50),

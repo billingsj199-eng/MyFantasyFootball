@@ -84,12 +84,23 @@ def main():
         c = cons.get(k) or {}
         rows.append({"name": p["name"], "pos": p["pos"], "tm": p["tm"], "opp": p["opp"], "act": act[k],
                      "mean": p["mean"], "js": p.get("jsMean"), "clay": p.get("clayMean"), "prop": p.get("propMean"),
+                     "nc": p.get("ncMean"), "ncSrc": p.get("ncSrc"), "rep": p.get("rep"), "asc": p.get("asc"),
                      "p10": p.get("p10"), "p90": p.get("p90"), "propSrc": p.get("propSrc"),
                      "cons": c.get("h"), "espn": (c.get("e") or [None])[0], "cbs": (c.get("c") or [None])[0],
                      "fp": (c.get("f") or [None])[0]})
     print(f"scored: {len(rows)} played (shipped mean >= {a.min_proj}) | DNP/unmatched: {len(dnp)}")
+    ncfb = sum(1 for r in rows if r.get("ncSrc") == "clay-fallback")
+    print(f"  No-Clay shadow: {len(rows) - ncfb} rows on the player's own 3-yr prior, {ncfb} still on the Clay fallback (no history)")
+    for lab, mk in (("REPORTS riser (rep>0)", lambda r: (r.get("rep") or 0) > 0), ("REPORTS faller (rep<0)", lambda r: (r.get("rep") or 0) < 0), ("ASCENDING flag", lambda r: r.get("asc") == 1)):
+        sub = [r for r in rows if mk(r) and r.get("mean")]
+        if len(sub) >= 5:
+            import statistics as _st
+            print(f"  shadow {lab}: n={len(sub)} actual/shipped {sum(r['act'] for r in sub) / max(1e-9, sum(r['mean'] for r in sub)):.3f}, "
+                  f"MAE shipped {_st.mean(abs(r['act'] - r['mean']) for r in sub):.2f}")
+        else:
+            print(f"  shadow {lab}: n={len(sub)} (too few to read)")
 
-    models = [("mean", "SHIPPED mean"), ("js", "JS Weekly"), ("clay", "Clay stack"), ("prop", "prop-anchored"),
+    models = [("mean", "SHIPPED mean"), ("js", "JS Weekly"), ("nc", "No-Clay shadow"), ("clay", "Clay stack"), ("prop", "prop-anchored"),
               ("cons", "site consensus"), ("espn", "ESPN"), ("cbs", "CBS"), ("fp", "FantasyPros")]
     print("\n=== ALL positions (same rows for every model where available) ===")
     print(f"  {'model':16s} {'n':>4s} {'MAE':>6s} {'bias':>6s} {'RMSE':>6s}")
@@ -114,7 +125,7 @@ def main():
 
     # head-to-head vs consensus (row-level |err|)
     print("\n=== head-to-head, row-level |error| (wins-losses-ties, tie = within 0.1) ===")
-    for key, lab in (("mean", "SHIPPED"), ("js", "JS Weekly"), ("clay", "Clay stack")):
+    for key, lab in (("mean", "SHIPPED"), ("js", "JS Weekly"), ("nc", "No-Clay shadow"), ("clay", "Clay stack")):
         for okey, olab in (("cons", "consensus"), ("espn", "ESPN")):
             w = l = t = 0
             for r in rows:

@@ -1828,3 +1828,21 @@ least 85% of them (a pulled starter: 42 of 42 competitive snaps, not 42 of
 66), and the week's weight in snapMult / routeMult is scaled by its
 competitive share. Never penalizes, never inflates a part-timer. NOTES chip
 "blowout wk1: role read on competitive snaps". Kill: SIM_BLOWOUT_CTX=false.
+
+## Clay-free SHADOW base in the Tuesday scorecard (2026-09-15)
+
+Jack: "continuously improve our sims so we dont even need a clay projections
+as a base next season". Clay's leverage is the P=5 prior in jsBasePg (5
+games of evidence vs the player's own 2026 PPG - under half the blend by
+week 5). weeklyProjection now also returns ncMean / ncSrc: the SAME blend
+and chain with the prior = the player's own 3-yr weighted PPG
+(player_weekly_sigma mean_ppg, half-PPR, rescaled to the sheet by the Clay
+stat mix; needs >= 8 games of history) instead of Clay; no history ->
+Clay prior flagged 'clay-fallback'. Sim rows carry ncProj/ncSrc, lock rows
+(app + exporter) carry ncMean/ncSrc plus the shadow flags rep/asc, and
+score_week.py grades "No-Clay shadow" next to SHIPPED / JS Weekly / Clay
+stack, prints the fallback count and actual/shipped for the REPORTS and
+ASCENDING flag rows. W2 sample: Jacobs 15.8 vs JS 9.4 (history says more),
+Parker Washington 6.3 vs 8.9 (history drags an ascending player - the case
+the ledger has to settle), Chase 13.6 vs 13.4, Allen 28.0 vs 26.3. Nothing
+shipped changes; the season ledger decides.

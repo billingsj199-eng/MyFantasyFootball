@@ -321,6 +321,7 @@ function kickoffMs(kicks, wk, tm) {
           propMean: r.propProj != null ? +r.propProj.toFixed(2) : null,
           propSrc: r.propSrc || null,
           luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live)
+          ncMean: r.ncProj != null ? +r.ncProj.toFixed(2) : null, ncSrc: r.ncSrc || null,   // SHADOW: Clay-free base (own 3-yr PPG prior)
           rep: (function () { var nf = E.newsFlags(r.player); return nf ? nf.riser - nf.faller : 0; })(),   // SHADOW: beat-report riser minus faller, last 10 days
           asc: E.ascendingFlag(r.player, currentWeek) ? 1 : 0,   // SHADOW: young + snaps/routes trending up
           comps: r.comps, lines: propByNorm[r.player.norm] || null,

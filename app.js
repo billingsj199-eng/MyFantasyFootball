@@ -4206,6 +4206,45 @@ function _tcvRowsPref() {
   try { return localStorage.getItem('tcv_rows') === '1'; } catch(_) { return false; }
 }
 
+// ── ROW SPLIT (Jack 2026-09-15): manual "new row" breaks inside a tier ────
+// A long tier (13 WRs in tier E) can be split onto two or more lines: hover a
+// vertical card and click ↵ to start a new row at that player; ⤴ on a row
+// starter rejoins the line above. Pure presentation — ranks and tier breaks
+// never change. Kept per board (version|mode|filter) as tier label → player
+// names in localStorage, and mirrored in window state because render()
+// rebuilds the whole tier view. ROW CARDS (one per line) ignore breaks.
+function _tcvBreaksAll() {
+  if (!window._tcvBreaks) {
+    try { window._tcvBreaks = JSON.parse(localStorage.getItem('tcv_row_breaks') || '{}') || {}; } catch(_) { window._tcvBreaks = {}; }
+  }
+  return window._tcvBreaks;
+}
+function _tcvBreaksKey(filterLabel) {
+  return ((typeof currentVersion !== 'undefined') ? currentVersion : '') + '|' + ((typeof currentMode !== 'undefined') ? currentMode : '') + '|' + (filterLabel || '');
+}
+function _tcvBreakSet(filterLabel, tierLabel) {
+  const b = _tcvBreaksAll()[_tcvBreaksKey(filterLabel)];
+  return new Set((b && b[tierLabel]) || []);
+}
+// Toggle a break before `name` in `tierLabel`; returns true when it is now ON
+function _tcvToggleBreak(filterLabel, tierLabel, name) {
+  const all = _tcvBreaksAll();
+  const k = _tcvBreaksKey(filterLabel);
+  const board = all[k] = all[k] || {};
+  const list = board[tierLabel] = board[tierLabel] || [];
+  const i = list.indexOf(name);
+  if (i >= 0) list.splice(i, 1); else list.push(name);
+  if (!list.length) delete board[tierLabel];
+  if (!Object.keys(board).length) delete all[k];
+  try { localStorage.setItem('tcv_row_breaks', JSON.stringify(all)); } catch(_) {}
+  return i < 0;
+}
+function _tcvBreakBtnState(btn, on) {
+  btn.classList.toggle('tcv-row-brk-on', on);
+  btn.textContent = on ? '⤴' : '↵';
+  btn.title = on ? 'This player starts a new row — click to rejoin the row above' : 'Start a new row at this player (split the tier onto two lines — display only, ranks do not change)';
+}
+
 // ── RANK MOVEMENT view (Jack 2026-09-11) ──────────────────────────────────
 // Every card's rank slot becomes "7 › 3." — rank at the comparison date, then
 // the rank now, the second number green (rose) / red (fell) / white (same).
@@ -5477,7 +5516,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + ' PROJ' : 'PROJ PPG') + ' (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + '</span>' +
+    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + ' PROJ' : 'PROJ PPG') + ' (' + scoreFmtLabel + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:#38bdf8">↵</b> splits its tier onto a new row') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
     ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:#f59e0b">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:#e2e8f0">TIERS:</b> hover a card → <b style="color:#e2e8f0">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · <b style="color:#ef4444">CUT LINE:</b> hover a card → <b style="color:#ef4444">✂ CUT</b> hides everyone below him · drag the ✂ letter onto a card to move the line · ✕ on ✂ clears it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:#e2e8f0">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
@@ -5554,7 +5593,10 @@ function _renderTierCardView(data, container) {
     row.appendChild(letter);
     const cards = document.createElement('div');
     cards.className = 'tcv-cards';
-    g.players.forEach(p => {
+    // ROW SPLIT: manual line breaks inside this tier (vertical cards only)
+    const _brkTier = g.cut ? '✂' : (g.label || '—');
+    const _brk = _tcvRows ? null : _tcvBreakSet(filterLabel, _brkTier);
+    g.players.forEach((p, pIdx) => {
       // MOVEMENT view: undefined = off, null = not on the board at the comparison date
       const _pr = _tcvMoveMap ? (_tcvMoveMap[p.d.n] != null ? _tcvMoveMap[p.d.n] : null) : undefined;
       const _card = _tcvRows ? _tcvBuildRowCard(p.d, p.displayRank, g.label, glowRgb, _tcvFilePrefix, _pr) : _tcvBuildCard(p.d, p.displayRank, g.label, glowRgb, _pr);
@@ -5567,6 +5609,24 @@ function _renderTierCardView(data, container) {
       // the first card of a tier — a break is already there — nor below the cut)
       if (_tcvCanEditRanks() && !g.cut && !(p.tierRank === (_gTier && _gTier.afterRank))) {
         _card.insertAdjacentHTML('beforeend', '<button class="tcv-tier-add" type="button" title="Start a new tier at ' + (p.d.n || '') + ' (rank ' + p.tierRank + ')">+ TIER</button>');
+      }
+      // ROW SPLIT: ↵ on every card but the tier's first — toggles a full-width
+      // break before the card in place (no rebuild, so reveal state survives)
+      if (_brk && pIdx > 0) {
+        const _on = _brk.has(p.d.n);
+        if (_on) { const br = document.createElement('div'); br.className = 'tcv-row-break'; cards.appendChild(br); }
+        const bb = document.createElement('button');
+        bb.className = 'tcv-row-brk'; bb.type = 'button';
+        _tcvBreakBtnState(bb, _on);
+        bb.addEventListener('click', e => {
+          e.stopPropagation(); e.preventDefault();
+          const nowOn = _tcvToggleBreak(filterLabel, _brkTier, p.d.n);
+          const prev = _card.previousElementSibling;
+          if (nowOn) { if (!(prev && prev.classList.contains('tcv-row-break'))) { const br = document.createElement('div'); br.className = 'tcv-row-break'; _card.before(br); } }
+          else if (prev && prev.classList.contains('tcv-row-break')) prev.remove();
+          _tcvBreakBtnState(bb, nowOn);
+        });
+        _card.appendChild(bb);
       }
       cards.appendChild(_card);
     });

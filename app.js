@@ -4154,6 +4154,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
   let _li = parts.length - 1;
   while (_li > 0 && _TCV_NAME_SUFFIX[parts[_li]]) _li--;
   let lastName = parts[_li] || (d.n || '');
+  if (d.s === 'DST') lastName = _tcvDisplayName(d) || lastName;   // "EAGLES", not "D/ST"
   // Truncate to fit (~10 chars before ellipsis is added by CSS)
   lastName = lastName.toUpperCase();
 
@@ -4443,6 +4444,18 @@ function _tcvShortName(name) {
   if (first.length <= 2 && /\.$/.test(first)) return first + ' ' + tail.join(' ');   // already "J." style
   return first.charAt(0) + '. ' + tail.join(' ');
 }
+// D/ST cards show the team's mascot name ("Eagles", "49ers"), never
+// "P. D/ST" (Jack 2026-09-15). Every mascot fits at full size, so all D/ST
+// rows read uniformly; the full "Philadelphia Eagles D/ST" stays in the tooltip.
+function _tcvDisplayName(d) {
+  if (!d) return '';
+  if (d.s === 'DST') {
+    const team = (d.t || (d.n || '').replace(/\s*D\/ST\s*$/i, '')).trim();
+    const mascot = team.split(/\s+/).pop();
+    if (mascot) return mascot;
+  }
+  return d.n || '';
+}
 function _tcvRowNameFit(name) {
   name = (name || '').toString();
   const maxW = _TCV_ROW.NAME_END - _TCV_ROW.NAME_X - 6;
@@ -4516,9 +4529,10 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
   // the PNG export (see _tcvRowNameFit). Full name stays in the tooltip.
   {
     const nameEl = card.querySelector('.tcv-row-name');
-    const fit = _tcvRowNameFit(d.n || '');
+    const dispName = _tcvDisplayName(d);
+    const fit = _tcvRowNameFit(dispName);
     if (nameEl) {
-      if (fit.text !== (d.n || '')) nameEl.textContent = fit.text;
+      nameEl.textContent = fit.text;
       if (fit.px < 24) nameEl.style.fontSize = fit.px + 'px';
     }
   }
@@ -5079,7 +5093,8 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   }
 
   // Name + pos pill + mini team logo (no abbr text)
-  const nameFit = _tcvRowNameFit(d.n || '');
+  const _dispName = _tcvDisplayName(d);
+  const nameFit = _tcvRowNameFit(_dispName);
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   ctx.font = nameFit.px + 'px ' + BEBAS;
   ctx.save();

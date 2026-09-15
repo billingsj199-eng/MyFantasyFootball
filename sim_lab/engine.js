@@ -918,6 +918,39 @@
   var JS_PRIOR_STRENGTH = 5;   // Clay prior worth ~5 games of evidence
   var JS_FPA_FULL_TRUST = 8;   // defense FPA gets full weight after 8 games
   function jsData() { return (typeof window !== 'undefined' && window.SIM_2026) || {}; }
+  // SHADOW AGING (backtest_age_exp.py, 2026-09-15): season-over-season regression toward the position
+  // mean + residual age / experience curves, graded LOYO 2019-25 against the player's own 3-yr prior.
+  // Used ONLY by the Clay-free shadow prior (ncMean); refreshed by scratch patch_shadow_age.py from
+  // data/age_exp_backtest.js. Kill: window.SIM_SHADOW_AGE = false.
+  var SHADOW_AGE = {"reg":{"QB":[1.3645,0.5086,1.0357],"RB":[0.0147,0.9393,1.1103],"WR":[-0.2146,1.0429,1.0902],"TE":[0.0646,0.9158,1.0838]},"age":{"QB":{"22":1.04,"23":1.037,"24":1.017,"25":0.978,"26":0.921,"27":0.908,"28":0.939,"29":0.993,"30":1.011,"31":1.003,"32":1.0,"33":0.976,"34":0.966,"35":0.958},"RB":{"22":1.026,"23":0.996,"24":0.973,"25":0.935,"26":0.908,"27":0.89,"28":0.866,"29":0.852,"30":0.864,"31":0.843},"WR":{"21":1.068,"22":1.121,"23":1.052,"24":1.03,"25":0.956,"26":0.924,"27":0.872,"28":0.854,"29":0.847,"30":0.868,"31":0.824,"32":0.813,"33":0.794},"TE":{"22":0.974,"23":1.011,"24":1.023,"25":1.022,"26":0.958,"27":0.917,"28":0.906,"29":0.885,"30":0.893,"31":0.896}},"exp":{},"useReg":true,"useAge":true,"useExp":false,"src":"backtest_age_exp.py 2026-09-15 16:53"};
+  function shadowAgeAdjust(p, halfPg) {
+    if (!(halfPg >= 4) || (typeof window !== 'undefined' && window.SIM_SHADOW_AGE === false)) return { v: halfPg, tag: '' };
+    var v = halfPg, tag = '';
+    var rg = SHADOW_AGE.useReg && SHADOW_AGE.reg[p.pos];
+    if (rg) { v = Math.exp(rg[0] + rg[1] * Math.log(v)) * rg[2]; tag += '+reg'; }
+    var ac = SHADOW_AGE.useAge && SHADOW_AGE.age[p.pos];
+    if (ac && p.age != null) {
+      var ks = Object.keys(ac).map(Number).sort(function (a, b) { return a - b; });
+      if (ks.length) { var a = Math.min(ks[ks.length - 1], Math.max(ks[0], Math.floor(p.age))); if (ac[a] != null) { v *= ac[a]; tag += '+age'; } }
+    }
+    var ec = SHADOW_AGE.useExp && SHADOW_AGE.exp[p.pos];
+    if (ec && p.exp != null && p.exp >= 1 && p.exp <= 3 && ec[p.exp] != null) { v *= ec[p.exp]; tag += '+exp'; }
+    return { v: v, tag: tag };
+  }
+  // ROOKIE LEVEL (backtest_age_exp.py, 2026-09-15): on the shipped base x snap trend, rookies with a game
+  // played beat their projection in every week band (QB 1.13-1.15, RB 1.08-1.12, TE 1.01-1.17, WR 1.02-1.12)
+  // - a level gap, not a slope: the season-to-date average lags a role that keeps growing (rookie RB
+  // touches +38% by weeks 13-18). LOYO passes for QB (x1.12-1.15, -0.50%, 6/7) and RB (x1.12, -0.35%,
+  // 5/7); TE lean (-0.16%), WR flat, 2nd-year nothing. Shipped shaved to x1.08 on the MODEL side only
+  // (Clay stack + JS base; the market rate and this week's lines already see the rookie), and only once
+  // he has a 2026 game (the tested rows). Kill: window.SIM_ROOKIE_LEVEL = false.
+  var ROOKIE_LEVEL = { QB: 1.08, RB: 1.08 };
+  function rookieLevel(p) {
+    if (!p || !p.isRookie || !ROOKIE_LEVEL[p.pos]) return 1;
+    if (typeof window !== 'undefined' && window.SIM_ROOKIE_LEVEL === false) return 1;
+    var d = jsData(), rec = d.players && d.players[p.norm];
+    return rec && rec.g >= 1 ? ROOKIE_LEVEL[p.pos] : 1;
+  }
   function jsBasePg(p, sc, clayPg) {
     var d = jsData();
     var rec = d.players && d.players[p.norm];
@@ -1654,12 +1687,12 @@
     var iA = injAdj(p, wk); // in-season availability / vacated-opportunity factor
     var factor = mult * dAdj * cbM * sM * rampF * iA;
     var clayPg = seasonPoints(p, sc) / perGameDiv;
-    mean = clayPg * factor;
+    mean = clayPg * factor * rookieLevel(p);
     // JS Weekly (in-season model): Clay prior shrunk toward 2026 actuals,
     // actual FPA-by-position opponent adj replacing Clay unit grades as the
     // sample grows. Preseason (no 2026 data) both terms collapse to Clay's,
     // so jsMean === mean until real games exist.
-    var jsPg = jsBasePg(p, sc, clayPg);
+    var jsPg = jsBasePg(p, sc, clayPg) * rookieLevel(p);
     var jsChain = mult * jsOppMult(slot.opp, p.pos, dAdj) * cbM * sM * rampF * iA;
     // TD-luck mean reversion (RB/WR/TE/QB), additive after the chain. Scaled by
     // AVAILABILITY only: iA also carries the vacated-opportunity boost for
@@ -1680,6 +1713,10 @@
     if (h3 != null && l8 != null) { ncPrior = 0.5 * h3 + 0.5 * l8; ncSrc = 'hist+l8'; }
     else if (l8 != null) { ncPrior = l8; ncSrc = 'l8'; }
     else if (h3 != null) { ncPrior = h3; ncSrc = 'hist'; }
+    if (ncSrc !== 'clay-fallback') {
+      var sa = shadowAgeAdjust(p, ncPrior / scale);   // curves live in half-PPR units
+      ncPrior = sa.v * scale; ncSrc += sa.tag;
+    }
     var ncMean = Math.max(0, jsBasePg(p, sc, ncPrior) * jsChain + luckAdj);
     var compsWk = {};
     Object.keys(p.comps).forEach(function (k) {
@@ -2687,7 +2724,7 @@
     SEASON: SEASON, WEEKS: WEEKS, PRESETS: PRESETS, BOOM_BUST: BOOM_BUST,
     norm: norm, normTeam: normTeam, makeRng: makeRng,
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
-    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, ctxNote: ctxNote,
+    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, ctxNote: ctxNote,
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult,

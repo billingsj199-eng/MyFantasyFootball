@@ -1,7 +1,7 @@
-# Sim Lab notes — Week 2 (half) — generated 2026-09-15 20:43Z
+# Sim Lab notes — Week 2 (half) — generated 2026-09-15 20:56Z
 # 500 players · 272 Vegas games · avg implied 22.9 · data 2026-09-15 15:03 · wk 2 injury layer: 49 out/docked
 
-SIM LAB NOTES — Week 2 (half) — 2026-09-15 20:43
+SIM LAB NOTES — Week 2 (half) — 2026-09-15 20:56
 
 TD LUCK (top 5 each way):
   QB DUE UP: Aaron Rodgers (1 TD on 1.6 xTD, +0.2); Joe Burrow (1 TD on 1.6 xTD, +0.2); Jacoby Brissett (1 TD on 1.5 xTD, +0.2); Jordan Love (2 TD on 2.4 xTD, +0.1); Drake Maye (1 TD on 1.1 xTD, +0.0)
@@ -528,8 +528,8 @@ PLAYERS (PROJ half):
   Jacoby Brissett (ARI QB) 13.9 · xFP 19.1/g (-2.6 over expected) [TD luck +0.2, market higher (13.9 vs model 12.0)]
   Drew Lock (SEA QB) 12.8 [role boost ×26.72] — D pressure 43% (#8)
   Trey McBride (ARI TE) 12.5 · xFP 19.9/g (+0.1 over expected) [REPORTS +1 riser (10d) - shadow] — Short 0-9 guy (63% of targets, lg 48%) · detached TE (27% inline) · zone-beater (YPRR 1.23 vs man, 2.19 vs zone; small n) (2025 too)
-  Jeremiyah Love (ARI RB) 11.4 · xFP 11.1/g (+0.9 over expected) [TD luck -0.4, REPORTS +2 riser (10d) - shadow] — zone-scheme back (73% zone) · bounces outside (edge 45%, lg 31%)
-  Jadarian Price (SEA RB) 10.9 · xFP 7.1/g (-0.3 over expected) [REPORTS +1 riser (10d) - shadow] — zone-scheme back (90% zone) · bounces outside (edge 60%, lg 31%)
+  Jeremiyah Love (ARI RB) 12.1 · xFP 11.1/g (+0.9 over expected) [TD luck -0.4, rookie level ×1.08, REPORTS +2 riser (10d) - shadow] — zone-scheme back (73% zone) · bounces outside (edge 45%, lg 31%)
+  Jadarian Price (SEA RB) 11.3 · xFP 7.1/g (-0.3 over expected) [rookie level ×1.08, REPORTS +1 riser (10d) - shadow] — zone-scheme back (90% zone) · bounces outside (edge 60%, lg 31%)
   Marvin Harrison Jr. (ARI WR) 8.7 · xFP 4.3/g (-0.5 over expected) — rarely behind los (4%) · rarely short 0-9 (32%) · Int 10-19 guy (39% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 13%) · left-heavy (49%) · man-beater (YPRR 2.63 vs man, 1.45 vs zone; small n) (2025 too)
   Jason Myers (SEA K) 8.6
   Michael Wilson (ARI WR) 8.2 · xFP 8.9/g (-0.8 over expected) [TD luck +0.1] — rarely behind los (2%) · Int 10-19 guy (33% of targets, lg 22%) · man-beater (YPRR 2.14 vs man, 1.54 vs zone; small n) (2025 too)
@@ -625,7 +625,7 @@ PLAYERS (PROJ half):
   Chris Bell (MIA WR) 5.0 · xFP 3.4/g (-0.4 over expected) [role boost ×1.02]
   Demarcus Robinson (SF WR) 3.8 · xFP 8.4/g (+3.6 over expected) [role boost ×1.33, TD luck -0.1] — rarely behind los (3%) · rarely short 0-9 (37%) · Int 10-19 guy (35% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%) · zone-beater (YPRR 0.76 vs man, 1.63 vs zone; small n) (2025 too)
   Dolphins D/ST (MIA DST) 3.4
-  Kaelon Black (SF RB) 3.2 · xFP 7.8/g (-0.3 over expected) [TD luck +0.1, REPORTS +2 riser (10d) - shadow] — between the tackles (edge 14%)
+  Kaelon Black (SF RB) 3.4 · xFP 7.8/g (-0.3 over expected) [TD luck +0.1, rookie level ×1.08, REPORTS +2 riser (10d) - shadow] — between the tackles (edge 14%)
 
 IND @ KC — total 47.5, KC by 6.5 · implied IND 20.5 / KC 27.0
 Weather @KC: wind 12 mph (gusts 20), 69°F, 22% precip — mild wind dock live
@@ -666,7 +666,7 @@ PLAYERS (PROJ half):
   Keenan Allen (IND WR) 6.3 · xFP 8.0/g (-1.8 over expected) [TD luck +0.3, weather ×0.97] — rarely behind los (4%) · Short 0-9 guy (74% of targets, lg 48%) · rarely int 10-19 (12%)
   Colts D/ST (IND DST) 4.3
   Tyquan Thornton (KC WR) 3.6 · xFP 1.8/g (-1.8 over expected) [weather ×0.97, CB shadow ×0.97, blowout wk1: role read on competitive snaps] — rarely behind los (3%) · rarely short 0-9 (16%) · Deep 20+ guy (63% of targets, lg 13%) · D plays man 62% (#1)
-  Emmett Johnson (KC RB) 3.0 · xFP 6.0/g (+1.8 over expected) [TD luck +0.1]
+  Emmett Johnson (KC RB) 3.3 · xFP 6.0/g (+1.8 over expected) [TD luck +0.1, rookie level ×1.08]
 
 NYG @ LAR — total 48.5, LAR by 7.0 · implied NYG 20.8 / LAR 27.8
 Weather @LAR: wind 10 mph (gusts 6), 74°F, 0% precip — mild wind dock live

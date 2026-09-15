@@ -1,0 +1,239 @@
+players.csv bio rows: 24820
+
+================ PART A: IN-SEASON ================
+  2019: samples so far 1796
+  2020: samples so far 3731
+  2021: samples so far 6124
+  2022: samples so far 8631
+  2023: samples so far 11644
+  2024: samples so far 14814
+  2025: samples so far 17657
+  skipped: {'weekly': 389, 'team': 247}
+  17657 player-weeks; age known 17556, exp known 17556; snap trend active on 14954 rows; MSE shipped 43.294 vs base2 (x snapMult) 42.936
+
+=== actual / base2 by position x AGE bucket x week band (REL = / all rows of that position + band) ===
+  QB age <=25   wk2-6 1.009 (n 394) | wk7-12 1.009 (n 418) | wk13-18 1.010 (n 398)
+  QB age 26-29  wk2-6 0.992 (n 264) | wk7-12 0.979 (n 275) | wk13-18 1.011 (n 247)
+  QB age 30-33  wk2-6 1.026 (n 112) | wk7-12 0.982 (n 111) | wk13-18 0.951 (n 109)
+  QB age 34+    wk2-6 0.943 (n 79) | wk7-12 1.056 (n 77) | wk13-18 0.981 (n 70)
+  RB age <=23   wk2-6 0.995 (n 453) | wk7-12 1.039 (n 509) | wk13-18 1.062 (n 515)
+  RB age 24-25  wk2-6 1.001 (n 464) | wk7-12 0.996 (n 505) | wk13-18 1.000 (n 514)
+  RB age 26-27  wk2-6 1.032 (n 290) | wk7-12 1.009 (n 294) | wk13-18 0.897 (n 296)
+  RB age 28+    wk2-6 0.952 (n 171) | wk7-12 0.904 (n 209) | wk13-18 1.003 (n 184)
+  WR age <=23   wk2-6 1.037 (n 708) | wk7-12 1.013 (n 841) | wk13-18 1.036 (n 856)
+  WR age 24-26  wk2-6 1.002 (n 857) | wk7-12 1.006 (n 946) | wk13-18 0.999 (n 918)
+  WR age 27-29  wk2-6 0.967 (n 509) | wk7-12 0.987 (n 559) | wk13-18 0.954 (n 541)
+  WR age 30+    wk2-6 0.957 (n 134) | wk7-12 0.940 (n 163) | wk13-18 0.978 (n 157)
+  TE age <=24   wk2-6 1.017 (n 345) | wk7-12 1.048 (n 394) | wk13-18 1.059 (n 379)
+  TE age 25-27  wk2-6 1.063 (n 383) | wk7-12 0.950 (n 429) | wk13-18 0.962 (n 409)
+  TE age 28-30  wk2-6 0.913 (n 287) | wk7-12 1.021 (n 288) | wk13-18 1.042 (n 284)
+  TE age 31+    wk2-6 0.958 (n 68) | wk7-12 0.963 (n 77) | wk13-18 0.778 (n 66)
+
+=== actual / base2 by position x EXPERIENCE bucket x week band ===
+  QB rookie  wk2-6 1.137 (n 80) | wk7-12 1.151 (n 99) | wk13-18 1.133 (n 102)
+  QB yr2     wk2-6 0.961 (n 124) | wk7-12 1.053 (n 142) | wk13-18 0.966 (n 123)
+  QB yr3-4   wk2-6 0.976 (n 183) | wk7-12 0.932 (n 173) | wk13-18 0.985 (n 167)
+  QB yr5-7   wk2-6 1.003 (n 221) | wk7-12 0.977 (n 224) | wk13-18 1.028 (n 207)
+  QB yr8+    wk2-6 1.002 (n 241) | wk7-12 0.997 (n 243) | wk13-18 0.958 (n 225)
+  RB rookie  wk2-6 1.082 (n 243) | wk7-12 1.110 (n 285) | wk13-18 1.124 (n 277)
+  RB yr2     wk2-6 1.002 (n 245) | wk7-12 1.019 (n 265) | wk13-18 1.069 (n 277)
+  RB yr3-4   wk2-6 0.951 (n 405) | wk7-12 0.981 (n 433) | wk13-18 0.958 (n 461)
+  RB yr5-7   wk2-6 1.034 (n 378) | wk7-12 0.982 (n 408) | wk13-18 0.935 (n 385)
+  RB yr8+    wk2-6 0.943 (n 107) | wk7-12 0.912 (n 126) | wk13-18 0.993 (n 109)
+  WR rookie  wk2-6 1.051 (n 316) | wk7-12 1.015 (n 384) | wk13-18 1.118 (n 385)
+  WR yr2     wk2-6 0.992 (n 336) | wk7-12 1.032 (n 418) | wk13-18 0.979 (n 404)
+  WR yr3-4   wk2-6 1.033 (n 643) | wk7-12 0.999 (n 705) | wk13-18 1.018 (n 717)
+  WR yr5-7   wk2-6 0.972 (n 635) | wk7-12 0.980 (n 695) | wk13-18 0.975 (n 670)
+  WR yr8+    wk2-6 0.969 (n 278) | wk7-12 0.987 (n 307) | wk13-18 0.925 (n 296)
+  TE rookie  wk2-6 1.141 (n 102) | wk7-12 1.171 (n 133) | wk13-18 1.014 (n 115)
+  TE yr2     wk2-6 0.984 (n 128) | wk7-12 1.048 (n 152) | wk13-18 1.140 (n 146)
+  TE yr3-4   wk2-6 1.056 (n 259) | wk7-12 0.945 (n 271) | wk13-18 0.954 (n 280)
+  TE yr5-7   wk2-6 0.969 (n 406) | wk7-12 0.963 (n 438) | wk13-18 1.029 (n 419)
+  TE yr8+    wk2-6 0.936 (n 188) | wk7-12 1.024 (n 194) | wk13-18 0.914 (n 178)
+
+=== WORKLOAD within player: snap share and touches/g by band, relative to the same player's weeks 2-6 ===
+  QB exp rookie  snap wk7-12 1.083 wk13-18 0.990 (n 17) | tou wk7-12 1.092 wk13-18 1.059 (n 16)
+  QB exp yr2     snap wk7-12 1.062 wk13-18 1.024 (n 23) | tou wk7-12 1.091 wk13-18 1.038 (n 23)
+  QB exp yr3-4   snap wk7-12 0.962 wk13-18 0.968 (n 34) | tou wk7-12 0.998 wk13-18 1.121 (n 34)
+  QB exp yr5-7   snap wk7-12 0.991 wk13-18 0.921 (n 33) | tou wk7-12 1.011 wk13-18 0.923 (n 34)
+  QB exp yr8+    snap wk7-12 1.002 wk13-18 0.991 (n 40) | tou wk7-12 0.982 wk13-18 0.964 (n 42)
+  RB exp rookie  snap wk7-12 1.279 wk13-18 1.338 (n 51) | tou wk7-12 1.311 wk13-18 1.382 (n 52)
+  RB exp yr2     snap wk7-12 1.088 wk13-18 1.208 (n 47) | tou wk7-12 1.155 wk13-18 1.366 (n 49)
+  RB exp yr3-4   snap wk7-12 0.972 wk13-18 0.968 (n 78) | tou wk7-12 1.008 wk13-18 1.016 (n 85)
+  RB exp yr5-7   snap wk7-12 0.970 wk13-18 0.960 (n 66) | tou wk7-12 0.982 wk13-18 1.024 (n 70)
+  RB exp yr8+    snap wk7-12 1.081 wk13-18 1.023 (n 19) | tou wk7-12 1.010 wk13-18 1.104 (n 19)
+  WR exp rookie  snap wk7-12 1.191 wk13-18 1.300 (n 74) | tou wk7-12 1.025 wk13-18 1.158 (n 67)
+  WR exp yr2     snap wk7-12 1.195 wk13-18 1.192 (n 74) | tou wk7-12 0.986 wk13-18 0.960 (n 65)
+  WR exp yr3-4   snap wk7-12 1.035 wk13-18 1.019 (n 124) | tou wk7-12 1.016 wk13-18 1.020 (n 126)
+  WR exp yr5-7   snap wk7-12 1.018 wk13-18 0.990 (n 121) | tou wk7-12 1.037 wk13-18 1.003 (n 119)
+  WR exp yr8+    snap wk7-12 1.047 wk13-18 1.009 (n 50) | tou wk7-12 1.016 wk13-18 0.945 (n 50)
+  TE exp rookie  snap wk7-12 1.313 wk13-18 1.465 (n 24) | tou wk7-12 1.320 wk13-18 1.195 (n 17)
+  TE exp yr2     snap wk7-12 1.131 wk13-18 1.230 (n 31) | tou wk7-12 1.226 wk13-18 1.344 (n 25)
+  TE exp yr3-4   snap wk7-12 1.060 wk13-18 1.073 (n 56) | tou wk7-12 1.067 wk13-18 1.092 (n 47)
+  TE exp yr5-7   snap wk7-12 0.969 wk13-18 0.976 (n 87) | tou wk7-12 0.984 wk13-18 1.070 (n 75)
+  TE exp yr8+    snap wk7-12 0.941 wk13-18 0.932 (n 34) | tou wk7-12 1.061 wk13-18 1.007 (n 25)
+  QB age <=25    snap wk7-12 1.025 wk13-18 0.982 (n 74) | tou wk7-12 1.061 wk13-18 1.085 (n 73)
+  QB age 26-29   snap wk7-12 0.994 wk13-18 0.955 (n 42) | tou wk7-12 0.973 wk13-18 0.937 (n 43)
+  QB age 30-33   snap wk7-12 0.998 wk13-18 0.995 (n 20) | tou wk7-12 1.022 wk13-18 0.999 (n 20)
+  RB age <=23    snap wk7-12 1.163 wk13-18 1.181 (n 89) | tou wk7-12 1.182 wk13-18 1.270 (n 92)
+  RB age 24-25   snap wk7-12 1.043 wk13-18 1.117 (n 93) | tou wk7-12 1.086 wk13-18 1.180 (n 97)
+  RB age 26-27   snap wk7-12 0.957 wk13-18 0.946 (n 50) | tou wk7-12 1.000 wk13-18 1.009 (n 56)
+  RB age 28+     snap wk7-12 0.980 wk13-18 0.933 (n 29) | tou wk7-12 0.945 wk13-18 1.001 (n 30)
+  WR age <=23    snap wk7-12 1.171 wk13-18 1.204 (n 157) | tou wk7-12 0.995 wk13-18 1.058 (n 144)
+  WR age 24-26   snap wk7-12 1.035 wk13-18 1.022 (n 167) | tou wk7-12 1.030 wk13-18 1.003 (n 164)
+  WR age 27-29   snap wk7-12 1.050 wk13-18 1.039 (n 94) | tou wk7-12 1.060 wk13-18 1.012 (n 94)
+  WR age 30+     snap wk7-12 1.001 wk13-18 0.945 (n 25) | tou wk7-12 0.931 wk13-18 0.926 (n 25)
+  TE age <=24    snap wk7-12 1.166 wk13-18 1.279 (n 77) | tou wk7-12 1.212 wk13-18 1.287 (n 59)
+  TE age 25-27   snap wk7-12 1.012 wk13-18 1.012 (n 85) | tou wk7-12 1.005 wk13-18 1.047 (n 71)
+  TE age 28-30   snap wk7-12 0.964 wk13-18 0.931 (n 56) | tou wk7-12 1.006 wk13-18 1.048 (n 49)
+
+=== LOYO in-season terms on base2 (shipped x snapMult) ===
+  QB rookie x week slope (rows 281)
+    grid pooled MSE: +0.00:60.865  +0.02:60.864  +0.05:60.874  +0.08:60.896  +0.12:60.948  -0.03:60.878  -0.06:60.905
+    pooled best +0.02 | LOYO MSE 60.7273 vs base 60.6251 (+0.17%), years better 1/7, picks [0.02, 0.05, -0.06, 0.02, 0.05, 0.02, 0.0]
+  QB 2nd-year x week slope (rows 389)
+    grid pooled MSE: +0.00:60.865  +0.02:60.902  +0.05:60.981  +0.08:61.088  +0.12:61.275  -0.03:60.834  -0.06:60.830
+    pooled best -0.06 | LOYO MSE 60.6767 vs base 60.6251 (+0.09%), years better 3/7, picks [-0.06, 0.0, -0.03, -0.06, -0.03, -0.06, -0.03]
+  QB rookie LEVEL (rows 281)
+    grid pooled MSE: +1.00:60.865  +1.03:60.718  +1.06:60.608  +1.09:60.534  +1.12:60.497  +1.15:60.497  +0.97:61.050
+    pooled best +1.15 | LOYO MSE 60.3210 vs base 60.6251 (-0.50%), years better 6/7, picks [1.15, 1.12, 1.15, 1.12, 1.15, 1.12, 1.12]
+  QB 2nd-year LEVEL (rows 389)
+    grid pooled MSE: +1.00:60.865  +1.03:60.810  +1.06:60.835  +1.09:60.939  +1.12:61.122  +1.15:61.386  +0.97:61.000
+    pooled best +1.03 | LOYO MSE 60.6239 vs base 60.6251 (-0.00%), years better 4/7, picks [1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1.06]
+  QB age >= 35 in weeks 10+ (rows 84)
+    grid pooled MSE: +1.00:60.865  +0.97:60.869  +0.94:60.890  +0.91:60.928  +1.03:60.879
+    pooled best +1.00 | LOYO MSE 60.6633 vs base 60.6251 (+0.06%), years better 0/7, picks [1.03, 0.97, 0.97, 1.0, 0.97, 1.0, 1.0]
+  QB age x week interaction
+    grid pooled MSE: +0.00:60.865  +0.02:60.864  +0.04:60.929  +0.08:61.260  -0.02:60.934  -0.04:61.069  -0.08:61.539
+    pooled best +0.02 | LOYO MSE 60.6966 vs base 60.6251 (+0.12%), years better 0/7, picks [0.02, 0.0, 0.02, 0.0, 0.0, 0.02, 0.02]
+  QB age level
+    grid pooled MSE: +0.00:60.865  +0.02:61.088  +0.04:61.493  +0.08:62.853  -0.02:60.826  -0.04:60.969  -0.08:61.804
+    pooled best -0.02 | LOYO MSE 60.6299 vs base 60.6251 (+0.01%), years better 3/7, picks [-0.02, 0.0, -0.02, -0.02, -0.02, -0.02, -0.02]
+  RB rookie x week slope (rows 805)
+    grid pooled MSE: +0.00:48.071  +0.02:48.063  +0.05:48.058  +0.08:48.062  +0.12:48.080  -0.03:48.090  -0.06:48.118
+    pooled best +0.05 | LOYO MSE 47.7168 vs base 47.6935 (+0.05%), years better 3/7, picks [0.05, 0.0, 0.08, 0.05, 0.08, 0.05, 0.05]
+  RB 2nd-year x week slope (rows 787)
+    grid pooled MSE: +0.00:48.071  +0.02:48.067  +0.05:48.072  +0.08:48.090  +0.12:48.133  -0.03:48.087  -0.06:48.116
+    pooled best +0.02 | LOYO MSE 47.7457 vs base 47.6935 (+0.11%), years better 1/7, picks [0.02, 0.0, 0.08, 0.02, 0.0, 0.0, 0.02]
+  RB rookie LEVEL (rows 805)
+    grid pooled MSE: +1.00:48.071  +1.03:47.989  +1.06:47.929  +1.09:47.892  +1.12:47.879  +1.15:47.888  +0.97:48.177
+    pooled best +1.12 | LOYO MSE 47.5248 vs base 47.6935 (-0.35%), years better 5/7, picks [1.15, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12]
+  RB 2nd-year LEVEL (rows 787)
+    grid pooled MSE: +1.00:48.071  +1.03:48.034  +1.06:48.028  +1.09:48.056  +1.12:48.116  +1.15:48.208  +0.97:48.141
+    pooled best +1.06 | LOYO MSE 47.6643 vs base 47.6935 (-0.06%), years better 2/7, picks [1.06, 1.06, 1.06, 1.06, 1.03, 1.03, 1.06]
+  RB age >= 28 in weeks 10+ (rows 285)
+    grid pooled MSE: +1.00:48.071  +0.97:48.056  +0.94:48.053  +0.91:48.061  +1.03:48.098
+    pooled best +0.94 | LOYO MSE 47.7279 vs base 47.6935 (+0.07%), years better 2/7, picks [0.94, 0.97, 0.94, 0.94, 0.91, 1.0, 0.94]
+  RB age x week interaction
+    grid pooled MSE: +0.00:48.071  +0.02:48.104  +0.04:48.144  +0.08:48.241  -0.02:48.044  -0.04:48.024  -0.08:48.002
+    pooled best -0.08 | LOYO MSE 47.6315 vs base 47.6935 (-0.13%), years better 5/7, picks [-0.08, -0.08, -0.08, -0.08, -0.08, -0.08, -0.08]
+  RB age level
+    grid pooled MSE: +0.00:48.071  +0.02:48.113  +0.04:48.173  +0.08:48.344  -0.02:48.046  -0.04:48.039  -0.08:48.076
+    pooled best -0.04 | LOYO MSE 47.6656 vs base 47.6935 (-0.06%), years better 5/7, picks [-0.04, -0.02, -0.04, -0.04, -0.04, -0.04, -0.04]
+  WR rookie x week slope (rows 1085)
+    grid pooled MSE: +0.00:41.913  +0.02:41.907  +0.05:41.904  +0.08:41.906  +0.12:41.918  -0.03:41.927  -0.06:41.946
+    pooled best +0.05 | LOYO MSE 41.5554 vs base 41.5466 (+0.02%), years better 4/7, picks [0.05, 0.08, 0.02, 0.08, 0.05, 0.02, 0.05]
+  WR 2nd-year x week slope (rows 1158)
+    grid pooled MSE: +0.00:41.913  +0.02:41.923  +0.05:41.944  +0.08:41.973  +0.12:42.025  -0.03:41.906  -0.06:41.907
+    pooled best -0.03 | LOYO MSE 41.5421 vs base 41.5466 (-0.01%), years better 6/7, picks [-0.03, -0.03, -0.03, -0.03, -0.06, -0.03, -0.03]
+  WR rookie LEVEL (rows 1085)
+    grid pooled MSE: +1.00:41.913  +1.03:41.882  +1.06:41.866  +1.09:41.866  +1.12:41.882  +1.15:41.913  +0.97:41.960
+    pooled best +1.09 | LOYO MSE 41.5209 vs base 41.5466 (-0.06%), years better 5/7, picks [1.06, 1.06, 1.06, 1.09, 1.06, 1.06, 1.09]
+  WR 2nd-year LEVEL (rows 1158)
+    grid pooled MSE: +1.00:41.913  +1.03:41.926  +1.06:41.962  +1.09:42.020  +1.12:42.102  +1.15:42.206  +0.97:41.923
+    pooled best +1.00 | LOYO MSE 41.5466 vs base 41.5466 (+0.00%), years better 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  WR age >= 30 in weeks 10+ (rows 244)
+    grid pooled MSE: +1.00:41.913  +0.97:41.918  +0.94:41.929  +0.91:41.945  +1.03:41.913
+    pooled best +1.00 | LOYO MSE 41.5520 vs base 41.5466 (+0.01%), years better 0/7, picks [1.03, 1.0, 1.03, 1.0, 1.0, 1.0, 1.03]
+  WR age x week interaction
+    grid pooled MSE: +0.00:41.913  +0.02:41.920  +0.04:41.934  +0.08:41.983  -0.02:41.913  -0.04:41.921  -0.08:41.956
+    pooled best +0.00 | LOYO MSE 41.5665 vs base 41.5466 (+0.05%), years better 0/7, picks [-0.02, -0.02, -0.02, 0.0, 0.02, -0.02, -0.02]
+  WR age level
+    grid pooled MSE: +0.00:41.913  +0.02:41.964  +0.04:42.033  +0.08:42.229  -0.02:41.882  -0.04:41.869  -0.08:41.900
+    pooled best -0.04 | LOYO MSE 41.5064 vs base 41.5466 (-0.10%), years better 6/7, picks [-0.04, -0.04, -0.04, -0.04, -0.04, -0.04, -0.04]
+  TE rookie x week slope (rows 350)
+    grid pooled MSE: +0.00:26.239  +0.02:26.241  +0.05:26.246  +0.08:26.252  +0.12:26.265  -0.03:26.238  -0.06:26.239
+    pooled best -0.03 | LOYO MSE 26.3519 vs base 26.3500 (+0.01%), years better 2/7, picks [-0.03, -0.03, 0.0, -0.03, -0.03, -0.03, -0.06]
+  TE 2nd-year x week slope (rows 426)
+    grid pooled MSE: +0.00:26.239  +0.02:26.233  +0.05:26.227  +0.08:26.224  +0.12:26.224  -0.03:26.250  -0.06:26.265
+    pooled best +0.08 | LOYO MSE 26.3501 vs base 26.3500 (+0.00%), years better 4/7, picks [0.05, 0.12, 0.08, 0.12, 0.08, 0.12, 0.12]
+  TE rookie LEVEL (rows 350)
+    grid pooled MSE: +1.00:26.239  +1.03:26.219  +1.06:26.205  +1.09:26.197  +1.12:26.195  +1.15:26.199  +0.97:26.265
+    pooled best +1.12 | LOYO MSE 26.3071 vs base 26.3500 (-0.16%), years better 6/7, picks [1.15, 1.12, 1.12, 1.12, 1.09, 1.09, 1.12]
+  TE 2nd-year LEVEL (rows 426)
+    grid pooled MSE: +1.00:26.239  +1.03:26.222  +1.06:26.213  +1.09:26.213  +1.12:26.220  +1.15:26.237  +0.97:26.265
+    pooled best +1.09 | LOYO MSE 26.3481 vs base 26.3500 (-0.01%), years better 2/7, picks [1.06, 1.09, 1.09, 1.09, 1.03, 1.09, 1.09]
+  TE age >= 30 in weeks 10+ (rows 175)
+    grid pooled MSE: +1.00:26.239  +0.97:26.227  +0.94:26.223  +0.91:26.226  +1.03:26.258
+    pooled best +0.94 | LOYO MSE 26.3642 vs base 26.3500 (+0.05%), years better 2/7, picks [0.94, 0.91, 0.94, 0.97, 0.97, 0.91, 0.91]
+  TE age x week interaction
+    grid pooled MSE: +0.00:26.239  +0.02:26.252  +0.04:26.270  +0.08:26.323  -0.02:26.231  -0.04:26.229  -0.08:26.241
+    pooled best -0.04 | LOYO MSE 26.3694 vs base 26.3500 (+0.07%), years better 3/7, picks [-0.04, -0.04, -0.08, -0.02, -0.02, -0.04, -0.02]
+  TE age level
+    grid pooled MSE: +0.00:26.239  +0.02:26.289  +0.04:26.354  +0.08:26.527  -0.02:26.204  -0.04:26.183  -0.08:26.187
+    pooled best -0.04 | LOYO MSE 26.3394 vs base 26.3500 (-0.04%), years better 5/7, picks [-0.04, -0.08, -0.04, -0.08, -0.04, -0.08, -0.04]
+
+================ PART B: SEASON OVER SEASON ================
+  1513 player-season pairs 2016-2025 (>= 6 games both, prior PPG >= 4); availability rows 1863
+
+=== YoY multiplier on the 3-yr prior by position x age (PPG | touches/g | P(keeps a 6+ game role)) ===
+  QB: 22: 1.07|1.04|0.82 (n 31)  23: 1.07|1.03|0.84 (n 58)  24: 1.04|1.00|0.84 (n 78)  25: 0.99|0.96|0.78 (n 74)  26: 0.93|0.95|0.78 (n 67)  27: 0.91|0.93|0.75 (n 59)  28: 0.95|0.95|0.74 (n 53)  29: 1.00|0.95|0.65 (n 41)  30: 1.02|0.99|0.65 (n 30)  31: 1.01|0.99|0.76 (n 28)  32: 1.00|0.99|0.83 (n 30)  33: 0.97|0.99|0.82 (n 31)  34: 0.96|0.99|0.81 (n 29)  35: 0.95|0.99|0.76 (n 26)
+  RB: 22: 1.01|1.03|0.88 (n 82)  23: 0.98|1.01|0.88 (n 154)  24: 0.96|0.98|0.87 (n 200)  25: 0.92|0.95|0.83 (n 194)  26: 0.89|0.92|0.81 (n 161)  27: 0.87|0.91|0.80 (n 123)  28: 0.85|0.88|0.79 (n 90)  29: 0.84|0.88|0.73 (n 65)  30: 0.85|0.89|0.68 (n 46)  31: 0.83|0.88|0.62 (n 30)
+  WR: 21: 1.05|1.07|0.92 (n 33)  22: 1.09|1.09|0.93 (n 107)  23: 1.02|1.05|0.92 (n 200)  24: 1.00|1.03|0.90 (n 250)  25: 0.92|0.99|0.90 (n 264)  26: 0.89|0.95|0.90 (n 242)  27: 0.84|0.91|0.90 (n 224)  28: 0.83|0.88|0.87 (n 178)  29: 0.82|0.88|0.84 (n 132)  30: 0.85|0.88|0.77 (n 91)  31: 0.81|0.87|0.75 (n 67)  32: 0.80|0.86|0.69 (n 50)  33: 0.78|0.84|0.63 (n 31)
+  TE: 22: 0.97|1.00|0.89 (n 32)  23: 1.01|1.03|0.94 (n 61)  24: 1.02|1.04|0.92 (n 79)  25: 1.01|1.05|0.96 (n 82)  26: 0.94|0.99|0.95 (n 79)  27: 0.90|0.95|0.97 (n 80)  28: 0.89|0.93|0.93 (n 77)  29: 0.87|0.89|0.88 (n 70)  30: 0.88|0.89|0.77 (n 50)  31: 0.88|0.89|0.73 (n 33)
+
+=== YoY multiplier by experience (season number) ===
+  QB: 2nd season 1.08 (n 33) | 3rd season 1.01 (n 27) | 4th season 1.00 (n 24) | 5th+ season 0.94 (n 156)
+  RB: 2nd season 1.00 (n 77) | 3rd season 0.95 (n 78) | 4th season 0.91 (n 64) | 5th+ season 0.84 (n 181)
+  WR: 2nd season 1.03 (n 92) | 3rd season 1.00 (n 101) | 4th season 0.96 (n 94) | 5th+ season 0.82 (n 345)
+  TE: 2nd season 0.97 (n 32) | 3rd season 1.04 (n 28) | 4th season 1.04 (n 31) | 5th+ season 0.86 (n 150)
+
+=== LOYO season-over-season: PPG_Y predicted by the 3-yr prior x curve (curves refit without the held-out season) ===
+  QB   prior x age curve                              MSE 15.415 vs prior 16.099 (-4.25%), years better 5/7, n 187  PASS
+  RB   prior x age curve                              MSE 12.820 vs prior 13.862 (-7.52%), years better 6/7, n 303  PASS
+  WR   prior x age curve                              MSE 8.028 vs prior 8.848 (-9.27%), years better 5/7, n 490  PASS
+  TE   prior x age curve                              MSE 5.882 vs prior 6.292 (-6.52%), years better 5/6, n 165  PASS
+  ALL  prior x age curve                              MSE 10.144 vs prior 10.938 (-7.26%), years better 7/7, n 1163  PASS
+  QB   prior x experience curve                       MSE 15.461 vs prior 16.099 (-3.96%), years better 5/7, n 187  PASS
+  RB   prior x experience curve                       MSE 13.220 vs prior 13.862 (-4.63%), years better 5/7, n 303  PASS
+  WR   prior x experience curve                       MSE 8.183 vs prior 8.848 (-7.52%), years better 5/7, n 490  PASS
+  TE   prior x experience curve                       MSE 5.563 vs prior 6.292 (-11.60%), years better 6/6, n 165  PASS
+  ALL  prior x experience curve                       MSE 10.273 vs prior 10.938 (-6.08%), years better 7/7, n 1163  PASS
+  QB   prior x age x experience (exp <= 4th season)   MSE 15.474 vs prior 16.099 (-3.88%), years better 5/7, n 187  PASS
+  RB   prior x age x experience (exp <= 4th season)   MSE 13.236 vs prior 13.862 (-4.52%), years better 5/7, n 303  PASS
+  WR   prior x age x experience (exp <= 4th season)   MSE 8.261 vs prior 8.848 (-6.63%), years better 5/7, n 490  PASS
+  TE   prior x age x experience (exp <= 4th season)   MSE 5.853 vs prior 6.292 (-6.98%), years better 5/6, n 165  PASS
+  ALL  prior x age x experience (exp <= 4th season)   MSE 10.356 vs prior 10.938 (-5.33%), years better 6/7, n 1163  PASS
+
+=== CONTROLS: is it age, or plain regression of high priors? (log act = a + b log prior, smeared) ===
+  QB   constant                       vs prior      MSE 16.712 vs 16.099 (+3.81%), years better 1/7, n 187  FAIL
+  RB   constant                       vs prior      MSE 13.739 vs 13.862 (-0.89%), years better 6/7, n 303  PASS
+  WR   constant                       vs prior      MSE 8.577 vs 8.848 (-3.06%), years better 5/7, n 490  PASS
+  TE   constant                       vs prior      MSE 6.177 vs 6.292 (-1.83%), years better 6/6, n 165  PASS
+  ALL  constant                       vs prior      MSE 10.875 vs 10.938 (-0.58%), years better 6/7, n 1163  PASS
+  QB   regression                     vs prior      MSE 14.720 vs 16.099 (-8.57%), years better 4/7, n 187  lean
+  RB   regression                     vs prior      MSE 13.364 vs 13.862 (-3.59%), years better 5/7, n 303  PASS
+  WR   regression                     vs prior      MSE 8.820 vs 8.848 (-0.32%), years better 4/7, n 490  lean
+  TE   regression                     vs prior      MSE 5.954 vs 6.292 (-5.37%), years better 6/6, n 165  PASS
+  ALL  regression                     vs prior      MSE 10.529 vs 10.938 (-3.74%), years better 4/7, n 1163  lean
+  QB   regression + age               vs regression MSE 14.533 vs 14.720 (-1.27%), years better 5/7, n 187  PASS
+  RB   regression + age               vs regression MSE 12.801 vs 13.364 (-4.22%), years better 6/7, n 303  PASS
+  WR   regression + age               vs regression MSE 8.065 vs 8.820 (-8.57%), years better 5/7, n 490  PASS
+  TE   regression + age               vs regression MSE 5.792 vs 5.954 (-2.73%), years better 4/6, n 165  lean
+  ALL  regression + age               vs regression MSE 10.006 vs 10.529 (-4.97%), years better 7/7, n 1163  PASS
+  QB   regression + exp               vs regression MSE 14.712 vs 14.720 (-0.06%), years better 3/7, n 187  FAIL
+  RB   regression + exp               vs regression MSE 13.337 vs 13.364 (-0.20%), years better 3/7, n 303  FAIL
+  WR   regression + exp               vs regression MSE 8.233 vs 8.820 (-6.66%), years better 4/7, n 490  lean
+  TE   regression + exp               vs regression MSE 5.590 vs 5.954 (-6.12%), years better 5/6, n 165  PASS
+  ALL  regression + exp               vs regression MSE 10.215 vs 10.529 (-2.98%), years better 5/7, n 1163  PASS
+  QB   regression + age + exp<=4th    vs regression MSE 14.588 vs 14.720 (-0.89%), years better 5/7, n 187  PASS
+  RB   regression + age + exp<=4th    vs regression MSE 13.200 vs 13.364 (-1.23%), years better 4/7, n 303  lean
+  WR   regression + age + exp<=4th    vs regression MSE 8.202 vs 8.820 (-7.00%), years better 4/7, n 490  lean
+  TE   regression + age + exp<=4th    vs regression MSE 5.723 vs 5.954 (-3.88%), years better 3/6, n 165  FAIL
+  ALL  regression + age + exp<=4th    vs regression MSE 10.166 vs 10.529 (-3.45%), years better 6/7, n 1163  PASS
+  regression per position (a, b, smear): QB +1.36 0.51 1.036; RB +0.01 0.94 1.110; WR -0.21 1.04 1.090; TE +0.06 0.92 1.084
+  residual age curves: QB 22:1.04, 23:1.037, 24:1.017, 25:0.978, 26:0.921, 27:0.908, 28:0.939, 29:0.993, 30:1.011, 31:1.003, 32:1.0, 33:0.976, 34:0.966, 35:0.958 | RB 22:1.026, 23:0.996, 24:0.973, 25:0.935, 26:0.908, 27:0.89, 28:0.866, 29:0.852, 30:0.864, 31:0.843 | WR 21:1.068, 22:1.121, 23:1.052, 24:1.03, 25:0.956, 26:0.924, 27:0.872, 28:0.854, 29:0.847, 30:0.868, 31:0.824, 32:0.813, 33:0.794 | TE 22:0.974, 23:1.011, 24:1.023, 25:1.022, 26:0.958, 27:0.917, 28:0.906, 29:0.885, 30:0.893, 31:0.896
+  residual experience curves: QB 1:1.034, 2:1.001, 3:1.0, 4:0.945 | RB 1:1.008, 2:0.966, 3:0.924, 4:0.861 | WR 1:1.059, 2:1.027, 3:0.985, 4:0.845 | TE 1:0.972, 2:1.045, 3:1.046, 4:0.88
+
+wrote data/age_exp_backtest.js: Age x experience: 68 LOYO tests (in-season on 17657 player-weeks + season-over-season curves); 31 pass: QB rookie level -0.50% (6/7); RB rookie level -0.35% (5/7); QB prior x age curve -4.25% (5/7); RB prior x age curve -7.52% (6/7); WR prior x age curve -9.27% (5/7); TE prior x age curve -6.52% (5/6); ALL prior x age curve -7.26% (7/7); QB prior x experience curve -3.96% (5/7); RB prior x experience curve -4.63% (5/7); WR prior x experience curve -7.52% (5/7); TE prior x experience curve -11.60% (6/6); ALL prior x experience curve -6.08% (7/7); QB prior x age x experience (exp <= 4th season) -3.88% (5/7); RB prior x age x experience (exp <= 4th season) -4.52% (5/7); WR prior x age x experience (exp <= 4th season) -6.63% (5/7); TE prior x age x experience (exp <= 4th season) -6.99% (5/6); ALL prior x age x experience (exp <= 4th season) -5.33% (6/7); RB constant (vs prior) -0.89% (6/7); WR constant (vs prior) -3.06% (5/7); TE constant (vs prior) -1.83% (6/6); ALL constant (vs prior) -0.58% (6/7); RB regression (vs prior) -3.59% (5/7); TE regression (vs prior) -5.37% (6/6); QB regression + age (vs regression) -1.27% (5/7); RB regression + age (vs regression) -4.21% (6/7); WR regression + age (vs regression) -8.56% (5/7); ALL regression + age (vs regression) -4.97% (7/7); TE regression + exp (vs regression) -6.12% (5/6); ALL regression + exp (vs regression) -2.98% (5/7); QB regression + age + exp<=4th (vs regression) -0.89% (5/7); ALL regression + age + exp<=4th (vs regression) -3.45% (6/7)
+done

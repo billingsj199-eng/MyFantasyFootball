@@ -3885,6 +3885,35 @@
       html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>best</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
         BU.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td>' + (r.best >= 0 ? '+' : '') + r.best.toFixed(2) + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
     }
+    var AG = window.SIM_AGEEXP_BT;
+    if (AG && AG.loyo) {
+      html += '<h4 style="margin:14px 0 4px">Age x experience workload curves (backtest_age_exp.py, ' + esc(AG.updated || '') + ')</h4>' +
+        '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>' + esc(AG.summary || '') + '</b> In-season rows are graded on the shipped projection times the shipped snap-trend layer, so they show only what age or experience would add. ' +
+        'REL = that group\'s actual / projection divided by its whole position in the same week band. Season-over-season curves multiply the player\'s own 3-year weighted PPG, the prior the no-Clay shadow uses.</p>';
+      var wl = (AG.workload || []).filter(function (w) { return w.kind === 'exp' && w.snap; });
+      if (wl.length) {
+        html += '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Pos</th><th class="l">Season</th><th title="snap share weeks 7-12 / weeks 2-6, same player">Snaps wk7-12</th><th title="weeks 13-18 / weeks 2-6">Snaps wk13-18</th><th title="touches per game weeks 7-12 / weeks 2-6">Touches wk7-12</th><th>Touches wk13-18</th><th>n</th></tr></thead><tbody>' +
+          wl.map(function (w) {
+            var c = function (v) { return v == null ? '\u2014' : '<span style="color:' + (v >= 1.05 ? 'var(--acc)' : v <= 0.95 ? '#f85149' : 'inherit') + '">' + v.toFixed(2) + '</span>'; };
+            return '<tr><td class="l">' + esc(w.pos) + '</td><td class="l">' + esc(w.bucket) + '</td><td>' + c(w.snap[0]) + '</td><td>' + c(w.snap[1]) + '</td><td>' + c(w.tou ? w.tou[0] : null) + '</td><td>' + c(w.tou ? w.tou[1] : null) + '</td><td class="dim">' + w.snap[2] + '</td></tr>';
+          }).join('') + '</tbody></table></div>';
+      }
+      if (AG.yoy) {
+        html += '<p class="dim" style="font-size:11px;margin:6px 0 2px"><b>Season-over-season PPG multiplier on the 3-year prior, by age</b> (touches multiplier / share keeping a 6+ game role in parens):</p>';
+        ['QB', 'RB', 'WR', 'TE'].forEach(function (p) {
+          var rows = AG.yoy[p] || []; if (!rows.length) return;
+          html += '<div style="font-size:11px;margin:1px 0"><b>' + p + '</b> ' + rows.map(function (r) {
+            var col = r.ppg >= 1.04 ? 'var(--acc)' : r.ppg <= 0.94 ? '#f85149' : 'inherit';
+            return r.age + ': <span style="color:' + col + '">' + r.ppg.toFixed(2) + '</span><span class="dim"> (' + (r.tou != null ? r.tou.toFixed(2) : '\u2014') + ' / ' + (r.avail != null ? Math.round(100 * r.avail) + '%' : '\u2014') + ')</span>';
+          }).join(' \u00b7 ') + '</div>';
+        });
+      }
+      if (AG.yoyExp) {
+        html += '<div style="font-size:11px;margin:4px 0" class="dim"><b>By season number:</b> ' + ['QB', 'RB', 'WR', 'TE'].map(function (p) { return p + ' ' + (AG.yoyExp[p] || []).map(function (r) { return r.season + ' ' + r.ppg.toFixed(2); }).join(', '); }).join(' \u00b7 ') + '</div>';
+      }
+      html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
+        AG.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+    }
     var few = Object.keys(B.flags || {}).filter(function (k) { return B.flags[k].verdict === 'too few'; });
     if (few.length) html += '<p class="dim" style="font-size:11px">Flags with too few player-weeks to grade (actual/shipped in parens): ' + few.map(function (k) { return esc(k) + ' n' + B.flags[k].n + (B.flags[k].ratio != null ? ' (' + B.flags[k].ratio.toFixed(2) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
     if (B.buckets && B.buckets.length) {
@@ -4177,6 +4206,7 @@
     var cb = E.cb1OutBoost(slot.opp, p.pos, p); if (cb !== 1) chips.push('CB1 out ×' + ntF(cb, 2));
     var ol = E.olOutDock(p.tm, p.pos); if (ol !== 1) chips.push('OL out ×' + ntF(ol, 2));
     var sn = E.snapMult(p, wk); if (Math.abs(sn - 1) >= 0.02) chips.push('snap trend ×' + ntF(sn, 2));
+    var rkL = E.rookieLevel ? E.rookieLevel(p) : 1; if (rkL !== 1) chips.push('rookie level ×' + ntF(rkL, 2));
     var cx = E.ctxNote(p, wk); if (cx.length) chips.push('blowout ' + cx.join('/') + ': role read on competitive snaps');
     var rt = E.routeMult(p, wk); if (Math.abs(rt - 1) >= 0.02) chips.push('route trend ×' + ntF(rt, 2));
     if (E.ascendingFlag(p, wk)) chips.push('ASCENDING (age ' + p.age + ', yr ' + (p.exp + 1) + ', snaps+routes up) - shadow');

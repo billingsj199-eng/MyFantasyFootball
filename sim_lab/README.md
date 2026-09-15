@@ -1935,3 +1935,44 @@ data/banged_up_backtest.js on the ZONES tab.
   Backup engine.js.bak_pre_banged_20260915. Scorecard note: score_week.py
   grades played rows only, so docked players who play will read under-
   projected there by design (the dock is an expected value).
+
+## Age x experience workload curves (backtest_age_exp.py) - 2026-09-15
+
+Jack: "projecting trends of increase workload or decrease workload throughout
+the seasons based on age/experience" -> "start on the age and experience
+workload curves next". Log age_exp_backtest.log; data/age_exp_backtest.js
+on the ZONES tab. 68 LOYO tests.
+
+IN-SEASON (bt_common base x the shipped snap trend rebuilt from nflverse snap
+counts, 17,657 player-weeks 2019-25):
+- Every SLOPE term fails: rookie x week, 2nd-year x week, old x late, age x
+  week interaction (best RB age x week -0.13%). Age level: WR -0.10% 6/7.
+- Workload trajectories are real (same player vs his weeks 2-6): rookie RB
+  snaps +28% / +34% and touches +31% / +38% by weeks 7-12 / 13-18, rookie TE
+  snaps +31% / +47%, rookie WR snaps +19% / +30%; 2nd-year RB touches +37% late;
+  vets flat, WR 30+ touches -7%. The shipped snap trend absorbs most of it.
+- ROOKIE LEVEL gap remains in every band (QB 1.13-1.15, RB 1.08-1.12, TE
+  1.01-1.17, WR 1.02-1.12). LOYO flag: QB x1.12-1.15 -0.50% 6/7 PASS, RB x1.12
+  -0.35% 5/7 PASS, TE -0.16% 6/7 lean, WR -0.06%, 2nd-year nothing.
+  SHIPPED: engine ROOKIE_LEVEL {QB 1.08, RB 1.08} via rookieLevel(p), model
+  side only (Clay stack mean and JS base; never the market rate), only once
+  the rookie has a 2026 game. NOTES chip "rookie level x1.08". Kill:
+  window.SIM_ROOKIE_LEVEL = false.
+
+SEASON OVER SEASON (1,513 player-season pairs 2016-25, >= 6 games both, prior =
+the shadow's 3-yr weighted PPG >= 4):
+- Raw curves on the prior pass everywhere (age -7.3% 7/7) but that was graded
+  against the raw prior. CONTROLS: flat position shrink -0.6%; log regression
+  toward the position mean -3.7% (4/7, lean; QB slope .51). Graded against the
+  regression: + residual AGE curve -4.97% 7/7 PASS (RB -4.2% 6/7, WR -8.6% 5/7,
+  QB -1.3% 5/7, TE -2.7% lean); + experience -3.0% 5/7 but + age + exp is worse
+  than + age (they overlap).
+- Residual age curve (x on top of regression): RB 22 1.03, 24 .97, 26 .91, 28
+  .87, 30 .86; WR 22 1.12, 24 1.03, 26 .92, 28 .85, 31 .82, 33 .79; QB 23 1.04,
+  26 .92, 27 .91, 30 1.01, 35 .96. Keep-a-role rate falls with age (RB 88% at
+  22-23 to 68% at 30; QB 84% to 65% by 29-30).
+- SHADOW ONLY (Clay stays the live base): engine SHADOW_AGE + shadowAgeAdjust
+  apply regression + residual age curve to history-based shadow priors >= 4
+  half-PPR (ncSrc gains "+reg+age"); refreshed from this file by scratch
+  patch_shadow_age.py. Kill: window.SIM_SHADOW_AGE = false. The Tuesday
+  scorecard grades the result as "No-Clay shadow".

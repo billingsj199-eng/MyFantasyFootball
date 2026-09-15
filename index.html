@@ -61,7 +61,7 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-09-14b" as="style">
+<link rel="preload" href="styles/main.css?v=2026-09-15c" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
@@ -76,7 +76,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-09-15" as="script">
 <link rel="preload" href="data/d.js?v=2026-09-15" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-09-14b">
+<link rel="stylesheet" href="styles/main.css?v=2026-09-15c">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1254,11 +1254,21 @@ CLEAR ALL
     /* Player cell — headshot + name/team — flex-grow to take remaining space */
     #pageRankings tbody tr td:nth-child(3){flex:1 1 auto;min-width:0!important;padding:0 2px!important;overflow:hidden}
     #pageRankings tbody tr td:nth-child(3) .player-cell{gap:7px!important}
+    /* 2026-09-15 mobile audit: at 375px the name column had ~70px, so names
+       rendered as "Jahmy…" / "Ja'Mar…". Let names wrap to two lines (the card
+       already reserves 88px) instead of ellipsizing on one. */
+    #pageRankings tbody .pc-namecol .player-name{white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.1;font-size:.82rem}
+    /* Signed-out sessions show only a padlock in the JACK'S column — 40px of
+       card width for no information. Drop it on phones (the number stays for
+       premium sessions). */
+    #pageRankings tbody .adp-cell:has(.cons-lock){display:none!important}
+    /* Player-card view tabs (FANTASY / LOGS / …) measured 38×24px on phones. */
+    .card-view-btn{min-height:32px}
     /* Hide the standalone position badge — the pos-rank chip (e.g. "WR6") below
        already conveys the position via colour, so showing both is redundant. */
     #pageRankings tbody tr td:nth-child(4){display:none!important}
     /* Position rank ("WR6") — colour-coded chip, position-tinted background */
-    #pageRankings tbody .pos-rank-cell{flex:0 0 auto;font-size:.62rem;font-weight:700;font-family:'Bebas Neue',sans-serif;letter-spacing:.6px;padding:2px 6px!important;min-width:30px;text-align:center!important;border-radius:4px;line-height:1.1}
+    #pageRankings tbody .pos-rank-cell{flex:0 0 auto;font-size:.62rem;font-weight:700;font-family:'Bebas Neue',sans-serif;letter-spacing:.6px;padding:2px 5px!important;min-width:26px;text-align:center!important;border-radius:4px;line-height:1.1}
     #pageRankings tbody tr:has(.pos-badge.QB) .pos-rank-cell{background:rgba(239,68,68,.18);color:#fca5a5}
     #pageRankings tbody tr:has(.pos-badge.RB) .pos-rank-cell{background:rgba(34,197,94,.18);color:#86efac}
     #pageRankings tbody tr:has(.pos-badge.WR) .pos-rank-cell{background:rgba(59,130,246,.18);color:#93c5fd}
@@ -1459,6 +1469,10 @@ tr:hover .watch-star{opacity:.55}
 .watch-star:hover{opacity:1!important;color:var(--accent)}
 .watch-star.on{opacity:1;color:var(--accent)}
 @media (pointer:coarse){.watch-star{opacity:.35}}
+/* Phones (2026-09-15 mobile audit): the star measured 19×14px. Bigger glyph plus
+   padding that overlaps the card's vertical padding gives a ~30px target without
+   growing the row. */
+@media (max-width:600px){.watch-star{font-size:1.1rem;padding:6px 7px;margin:-6px 0 -6px auto;opacity:.45}}
 /* ADP source pills + hint retired with the ADP column (2026-09-10) */
 #rnkAdpSrcRow,#rnkAdpHint{display:none!important}
 .adp-spark{line-height:0;margin-top:2px}

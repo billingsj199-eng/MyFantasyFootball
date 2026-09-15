@@ -95,6 +95,8 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
 .amb-span button{background:none;border:1px solid var(--border);border-radius:3px;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.6px;line-height:1;padding:2px 5px;cursor:pointer}
 .amb-span button:hover{color:var(--text);border-color:var(--text2)}
 .amb-span button.active{color:#0a0e17;background:var(--accent);border-color:var(--accent)}
+/* Phones: the 3D/7D/30D toggles measured 20×15px — too small for a thumb. */
+@media (max-width:600px){.amb-span button{min-height:26px;padding:4px 8px;font-size:.68rem}}
 .amc-empty{font-size:.66rem;color:var(--text2);padding:0 10px;white-space:nowrap}
 .amb-scroll{flex:1;overflow:hidden;white-space:nowrap}
 .live-ticker-inner{display:inline-flex;align-items:center;gap:8px;animation:tickerScroll 35s linear infinite;padding-left:100%}
@@ -1070,7 +1072,10 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
      longest labels (RANKINGS / DRAFT STRATEGY / PROSPECT / COMPARE / START/SIT)
      touched their neighbours at .5rem + .5px tracking. .48rem with no tracking
      tops out at 38px — 2px clear each side. */
-  .nav-btn .nav-label{font-size:.48rem;letter-spacing:0;margin-top:1px;white-space:normal;line-height:1.05;max-width:44px;text-align:center;word-spacing:100vw}
+  /* 2026-09-15 mobile audit: .48rem DM Sans rendered at 7.7px — below a readable
+     floor. Bebas Neue is condensed enough that .72rem (11.5px) still fits the
+     longest labels inside a 42px tab (STRATEGY measures 40px). */
+  .nav-btn .nav-label{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.3px;margin-top:1px;white-space:normal;line-height:1;max-width:46px;text-align:center;word-spacing:100vw}
   .nav-btn{padding:4px 1px}
 
   /* My Teams import grid: long placeholders (e.g. Sleeper "League ID (e.g. 1312075626064134144)")

@@ -62856,6 +62856,7 @@ Rules:
 
   let _pos = 'QB', _yr = YEARS[0], _sortK = 'fpt', _sortAsc = false;
   let _wired = false, _started = false, _rowCache = {};
+  let _last = null;                 // what the table last rendered (CSV export reads it)
   let _hidden = {}, _mode = 'pg';   // 'pg' = per game, 'tot' = season totals
   try { _hidden = JSON.parse(localStorage.getItem('rsAdvHidden') || '{}') || {}; } catch (e) { _hidden = {}; }
   try { if (localStorage.getItem('rsAdvMode') === 'tot') _mode = 'tot'; } catch (e) { /* storage blocked */ }
@@ -62882,10 +62883,12 @@ Rules:
     return out;
   }
 
+  // A team filter shows the whole room (min 0) so its usage shares read side by side;
+  // league-wide views get the per-week volume floor.
   function _resetMin() {
     const m = MIN[_pos];
-    const inp = _el('rsAdvMin'), lbl = _el('rsAdvMinLbl');
-    if (inp) inp.value = Math.round(m[2] * _thru());
+    const inp = _el('rsAdvMin'), lbl = _el('rsAdvMinLbl'), tm = _el('rsAdvTm');
+    if (inp) inp.value = tm && tm.value ? 0 : Math.round(m[2] * _thru());
     if (lbl) lbl.textContent = m[1];
   }
 
@@ -62913,8 +62916,10 @@ Rules:
     const wrap = _el('rsAdvWrap');
     if (!wrap) return;
     const all = _rows();
-    const cnt = _el('rsAdvCount'), foot = _el('rsAdvFoot');
+    const cnt = _el('rsAdvCount'), foot = _el('rsAdvFoot'), csvBtn = _el('rsAdvCsv');
     if (!all) {
+      _last = null;
+      if (csvBtn) csvBtn.disabled = true;
       wrap.innerHTML = '<div class="rs-empty">No advanced stats file for ' + _yr + '.</div>';
       if (cnt) cnt.textContent = '';
       if (foot) foot.textContent = '';
@@ -62935,7 +62940,20 @@ Rules:
     // counting stats are stored as season totals; Per game divides by games played
     const pg = _mode === 'pg';
     const cntKeys = new Set(COLS[_pos].filter(col => col.cnt).map(col => col.k));
-    const val = (r, k) => (pg && cntKeys.has(k) && r[k] != null ? (r.g ? r[k] / r.g : null) : r[k]);
+    // Team view: shares become share of that team's FULL-SEASON totals (volume while on
+    // that team), so a room adds up. League view keeps "share over games played".
+    const season = _season() || {};
+    const teamTot = tmSel.value && season.teams ? season.teams[tmSel.value] : null;  // [tgt, car, ay, i10, games]
+    const pctOf = (x, i) => (x == null || !teamTot[i] ? null : 100 * x / teamTot[i]);
+    const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3) };
+    const val = (r, k) => {
+      if (teamTot && TEAM_SHARE[k]) return TEAM_SHARE[k](r);
+      if (teamTot && k === 'wopr') {
+        const t = TEAM_SHARE.tsh(r), a = TEAM_SHARE.ays(r);
+        return t == null || a == null ? null : (1.5 * t + 0.7 * a) / 100;
+      }
+      return pg && cntKeys.has(k) && r[k] != null ? (r.g ? r[k] / r.g : null) : r[k];
+    };
 
     const sk = _sortK;
     rows.sort((a, b) => {
@@ -62977,7 +62995,10 @@ Rules:
     html += '</tr><tr class="rs-adv-hdr"><th data-k="n" class="rs-adv-nm' + sortCls('n') + '">Player</th>' +
       '<th data-k="tm" class="rs-adv-tm' + sortCls('tm') + '">Tm</th>';
     cols.forEach((col, i) => {
-      const tip = col.t + (col.cnt ? (pg ? ' per game' : ', season total') : '');
+      const TEAM_TIP = { tsh: 'targets', car: 'carries', ays: 'air yards', i10s: 'carries inside the 10', wopr: 'targets (×1.5) and air yards (×0.7)' };
+      const tip = teamTot && TEAM_TIP[col.k]
+        ? 'Share of ' + tmSel.value + '\'s full-season ' + TEAM_TIP[col.k] + ' (volume while on ' + tmSel.value + ')'
+        : col.t + (col.cnt ? (pg ? ' per game' : ', season total') : '');
       html += '<th data-k="' + col.k + '" title="' + _esc(tip) + '" class="' + (groupStart.has(i) ? 'rs-adv-gs' : '') + sortCls(col.k) + '">' +
         _esc(pg && col.cnt ? col.lg : col.l) + '</th>';
     });
@@ -62993,13 +63014,30 @@ Rules:
       });
       html += '</tr>';
     });
+    // team total row: summed shares + counting stats (per game = team total / team games)
+    let total = null;
+    if (teamTot && rows.length) {
+      total = cols.map(col => {
+        if (TEAM_SHARE[col.k]) return rows.reduce((s, r) => s + (val(r, col.k) || 0), 0).toFixed(col.d);
+        if (!col.cnt) return '';
+        const sum = rows.reduce((s, r) => s + (r[col.k] || 0), 0);
+        if (!pg) return sum.toFixed(col.d);
+        return teamTot[4] ? (sum / teamTot[4]).toFixed(col.dg) : '';
+      });
+      html += '<tr class="rs-adv-total"><td class="rs-adv-nm">' + _esc(tmSel.value) + ' total</td><td class="rs-adv-tm"></td>' +
+        total.map((x, i) => '<td' + (groupStart.has(i) ? ' class="rs-adv-gs"' : '') + '>' + x + '</td>').join('') + '</tr>';
+    }
     html += '</tbody></table>';
     if (!rows.length) html = '<div class="rs-empty">No players match these filters.</div>';
     wrap.innerHTML = html;
+    _last = { rows: rows, cols: cols, val: val, pg: pg, pos: _pos, yr: _yr, tm: tmSel.value, total: total };
+    if (csvBtn) csvBtn.disabled = !rows.length;
 
     const thru = (_season() || {}).thru;
     if (cnt) cnt.textContent = rows.length + ' of ' + all.length + ' ' + _pos + 's · ' + _yr + (thru && thru < 17 ? ' thru Week ' + thru : '');
-    if (foot) foot.textContent = NOTES[_pos] + ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played. ' +
+    if (foot) foot.textContent = NOTES[_pos] + (teamTot
+      ? ' Team view: Tgt%, Carry%, AY%, I10 Car% and WOPR are shares of ' + tmSel.value + '\'s full-season totals (volume while on ' + tmSel.value + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
+      : ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played; pick a team to see its season split. ') +
       'Sources: PFF Premium, nflverse play-by-play + snap counts.' + (thru && thru < 17 ? ' ' + _yr + ' updates daily as PFF posts each week.' : '');
   }
 
@@ -63015,9 +63053,36 @@ Rules:
     });
   }
 
+  // CSV of exactly what the table shows: filtered + sorted rows, visible column
+  // groups, Per game / Totals labels and the on-screen decimals
+  function _exportCsv() {
+    const L = _last;
+    if (!L || !L.rows.length) return;
+    const q = v => { const s = String(v == null ? '' : v); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const lines = [['Rank', 'Player', 'Team'].concat(L.cols.map(col => (L.pg && col.cnt ? col.lg : col.l))).map(q).join(',')];
+    L.rows.forEach((r, i) => {
+      lines.push([i + 1, r.n, r.tm || ''].concat(L.cols.map(col => {
+        const x = L.val(r, col.k);
+        return x == null ? '' : Number(x).toFixed(L.pg && col.cnt ? col.dg : col.d);
+      })).map(q).join(','));
+    });
+    if (L.total) lines.push(['', L.tm + ' total', ''].concat(L.total).map(q).join(','));
+    const csv = '﻿' + lines.join('\r\n'); // BOM for Excel UTF-8
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'MFF-Advanced-Stats-' + L.pos + '-' + L.yr + (L.tm ? '-' + L.tm : '') + '-' + (L.pg ? 'PerGame' : 'Totals') + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    if (typeof toast === 'function') toast('Exported ' + L.rows.length + ' ' + L.pos + 's to CSV');
+  }
+
   function _wire() {
     if (_wired) return;
     _wired = true;
+    _el('rsAdvCsv').addEventListener('click', _exportCsv);
     const yrSel = _el('rsAdvYr');
     YEARS.forEach(y => yrSel.add(new Option(y, y)));
     yrSel.value = _yr;
@@ -63060,7 +63125,8 @@ Rules:
       _renderGroups();
       _render();
     });
-    ['rsAdvTm', 'rsAdvHeat'].forEach(id => _el(id).addEventListener('change', _render));
+    _el('rsAdvTm').addEventListener('change', () => { _resetMin(); _render(); });
+    _el('rsAdvHeat').addEventListener('change', _render);
     ['rsAdvMin', 'rsAdvQ'].forEach(id => _el(id).addEventListener('input', _render));
     _el('rsAdvWrap').addEventListener('click', e => {
       const th = e.target.closest('th[data-k]');

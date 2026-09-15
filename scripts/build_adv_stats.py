@@ -57,9 +57,10 @@ TEAM_FIX = {'LA': 'LAR', 'WSH': 'WAS', 'JAC': 'JAX', 'OAK': 'LV', 'SD': 'LAC', '
             'ARZ': 'ARI', 'BLT': 'BAL', 'CLV': 'CLE', 'HST': 'HOU'}
 PFF_NAME_FIX = {'Joshua Palmer': 'Josh Palmer', 'Chigoziem Okonkwo': 'Chig Okonkwo'}
 POS_MAP = {'HB': 'RB', 'FB': 'RB', 'RB': 'RB', 'WR': 'WR', 'TE': 'TE', 'QB': 'QB'}
-# Full-season volume floor to make the file (scaled by weeks played so far):
-# QB dropbacks / RB carries + targets / WR-TE routes. The page filters further.
-MIN_FULL = {'QB': 50, 'RB': 20, 'WR': 50, 'TE': 40}
+# Volume floor to make the file: QB dropbacks / RB carries + targets / WR-TE routes.
+# Kept near zero so a team filter on the page shows the whole position room
+# (shares add up); the page's min-volume input hides fringe players otherwise.
+MIN_FLOOR = {'QB': 5, 'RB': 1, 'WR': 1, 'TE': 1}
 
 # Counting stats are SEASON TOTALS (fpt, db, att, ra, ry, tch, scy, hvt, rts, yds,
 # td, rz ...); the page's Per game / Totals toggle divides by g client-side.
@@ -70,12 +71,16 @@ QB_F = ['n', 'on', 'tm', 'g', 'fpt', 'db', 'att', 'cmpp', 'ypa', 'anya', 'td', '
 RB_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'att', 'tgt', 'tch', 'scy', 'tds',
         'car', 'tsh', 'rtp', 'i5', 'i10s', 'hvt',
         'ypc', 'yco', 'mtf', 'elu', 'bay', 'exp', 'fdp', 'suc', 'repa', 'rgr', 'gap',
-        'rts', 'tprr', 'yprr', 'recg', 'pbg']
+        'rts', 'tprr', 'yprr', 'recg', 'pbg',
+        'xt', 'xc', 'xi']
+# x* (not displayed) = raw pbp targets / carries / inside-10 carries / air yards while on
+# the listed team; with payload `teams` they give the page's team-view season shares
 REC_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'rts', 'tgt', 'yds', 'tds',
          'rtp', 'tsh', 'ays', 'wopr', 'tprr', 'rz', 'ez', 'slot', 'wide', 'inl', 'pbr',
          'yprr', 'grd', 'adot', 'racr', 'yac', 'mtfr', 'fdr', 'ctch', 'drp', 'cc', 'ctg',
          'tqbr', 'epat',
-         'myprr', 'zyprr', 'mtprr', 'ztprr', 'slyprr', 'scr', 'deep', 'dyd', 'dctch', 'blos']
+         'myprr', 'zyprr', 'mtprr', 'ztprr', 'slyprr', 'scr', 'deep', 'dyd', 'dctch', 'blos',
+         'xt', 'xa']
 
 
 # ---------------------------------------------------------------- helpers
@@ -285,9 +290,11 @@ def load_pbp(yr):
 
 
 def pbp_agg(df):
-    """P[gsis][stat] season sums, T[(team, wk)][stat] team-week totals."""
+    """P[gsis][stat] season sums, T[(team, wk)][stat] team-week totals,
+    PT[(gsis, team)][stat] a player's volume while on that team."""
     P = collections.defaultdict(lambda: collections.defaultdict(float))
     T = collections.defaultdict(lambda: collections.defaultdict(float))
+    PT = collections.defaultdict(lambda: collections.defaultdict(float))
 
     def put(series, key):
         for pid, v in series.items():
@@ -297,6 +304,11 @@ def pbp_agg(df):
     def put_team(series, key):
         for (tm, wk), v in series.items():
             T[(tm, int(wk))][key] += float(v)
+
+    def put_pt(series, key):
+        for (pid, tm), v in series.items():
+            if pd.notna(v):
+                PT[(pid, tm)][key] += float(v)
 
     x = df[df.two_point_attempt != 1]
 
@@ -308,6 +320,8 @@ def pbp_agg(df):
     put(tg[tg.air_yards >= tg.yardline_100].groupby('receiver_player_id').size(), 'ez')
     gt = tg.groupby(['posteam', 'week'])
     put_team(gt.size(), 'tgt'); put_team(gt.air_yards.sum(), 'ay')
+    gp = tg.groupby(['receiver_player_id', 'posteam'])
+    put_pt(gp.size(), 'tgt'); put_pt(gp.air_yards.sum(), 'ay')
 
     ru = x[(x.rush_attempt == 1) & x.rusher_player_id.notna()]
     g = ru.groupby('rusher_player_id')
@@ -320,6 +334,8 @@ def pbp_agg(df):
     put(car[car.yardline_100 <= 5].groupby('rusher_player_id').size(), 'i5')
     put_team(car.groupby(['posteam', 'week']).size(), 'car')
     put_team(i10.groupby(['posteam', 'week']).size(), 'i10')
+    put_pt(car.groupby(['rusher_player_id', 'posteam']).size(), 'car')
+    put_pt(i10.groupby(['rusher_player_id', 'posteam']).size(), 'i10')
 
     pa = x[(x.pass_attempt == 1) & (x.sack != 1) & x.passer_player_id.notna()]
     g = pa.groupby('passer_player_id')
@@ -339,7 +355,7 @@ def pbp_agg(df):
     # pass plays, 2-pt tries kept, spikes out (the RT% denominator)
     db = df[((df.qb_dropback == 1) | (df['pass'] == 1)) & (df.qb_spike != 1) & df.posteam.notna()]
     put_team(db.groupby(['posteam', 'week']).size(), 'db')
-    return P, T
+    return P, T, PT
 
 
 def half_ppr(p):
@@ -408,7 +424,6 @@ def build_year(yr, xw, dlookup):
     if not thru:
         print(f'{yr}: no PFF weekly files - skipped')
         return
-    frac = min(1.0, thru / 17.0)
 
     qb = agg_passing(yr)
     rec = agg_receiving(yr)
@@ -420,7 +435,7 @@ def build_year(yr, xw, dlookup):
     rec_s = season_csv('receiving', yr)
     rush_s = season_csv('rushing', yr)
     pbp = load_pbp(yr)
-    P, T = pbp_agg(pbp) if pbp is not None else ({}, {})
+    P, T, PT = pbp_agg(pbp) if pbp is not None else ({}, {}, {})
     snaps = load_snaps(yr)
     empty = collections.defaultdict(float)
     stats = collections.Counter()
@@ -472,14 +487,15 @@ def build_year(yr, xw, dlookup):
         disp = PFF_NAME_FIX.get(name, name)
         site = next((dlookup[v] for v in norm_variants(disp) if v in dlookup), None)
         return {'n': site or disp, 'on': 1 if site else 0, 'tm': tm, 'g': games, 'snp': snp,
-                'p': p, 'tt': tt, 'fpt': rnd(half_ppr(p)) if ids.get('gsis') else None}
+                'p': p, 'tt': tt, 'fpt': rnd(half_ppr(p)) if ids.get('gsis') else None,
+                'x': PT.get((ids['gsis'], tm), {}) if ids.get('gsis') else {}}
 
     rows = {'QB': [], 'RB': [], 'WR': [], 'TE': []}
     for pid in set(qb) | set(rec) | set(rush) | set(rec_s) | set(rush_s):
         pos = pos_of(pid)
         if pos == 'QB':
             a = qb.get(pid)
-            if not a or a.s['dropbacks'] < MIN_FULL['QB'] * frac:
+            if not a or a.s['dropbacks'] < MIN_FLOOR['QB']:
                 continue
             s = a.s
             c = ctx(pid, [a, rush.get(pid)], [])
@@ -522,7 +538,7 @@ def build_year(yr, xw, dlookup):
                 rts, tgt, recs, ryd = ru['routes'], ru['targets'], ru['receptions'], ru['rec_yards']
                 recg = rw.avg('recg') if rw else None
             att = ru['attempts'] or (fnum(rs.get('attempts')) if rs else 0) or 0
-            if att + tgt < MIN_FULL['RB'] * frac:
+            if att + tgt < MIN_FLOOR['RB']:
                 continue
             c = ctx(pid, [rw, cw], [rs, cs])
             p = c['p']
@@ -544,6 +560,7 @@ def build_year(yr, xw, dlookup):
                 div(p['rufd'], p['car'], 100), div(p['rusucc'], p['car'], 100), div(p['ruepa'], p['car'], 1, 3),
                 rnd(rgr), div(ru['gap_attempts'], ru['gap_attempts'] + ru['zone_attempts'], 100),
                 int(rts), div(tgt, rts, 1, 2), div(ryd, rts, 1, 2), rnd(recg), rnd(pbg),
+                int(c['x'].get('tgt', 0)), int(c['x'].get('car', 0)), int(c['x'].get('i10', 0)),
             ])
         elif pos in ('WR', 'TE'):
             cw, cs = rec.get(pid), rec_s.get(pid)
@@ -566,7 +583,7 @@ def build_year(yr, xw, dlookup):
                 cc = div(w['contested_receptions'], w['contested_targets'], 100)
                 drp = div(w['drops'], w['drops'] + recs, 100)
                 ctch = div(recs, tgt, 100)
-            if rts < MIN_FULL[pos] * frac:
+            if rts < MIN_FLOOR[pos]:
                 continue
             ch, cn, cd = sch.get(pid), con.get(pid), dep.get(pid)
             c = ctx(pid, [cw, ch, cn, cd], [cs])
@@ -608,10 +625,20 @@ def build_year(yr, xw, dlookup):
                 div(k['screen_targets'], k['base_targets'], 100),
                 div(d['deep_targets'], d['base_targets'], 100), div(d['deep_yards'], dy, 100) if dy > 0 else None,
                 div(d['deep_receptions'], d['deep_targets'], 100), div(d['behind_los_targets'], d['base_targets'], 100),
+                int(c['x'].get('tgt', 0)), int(round(c['x'].get('ay', 0))),
             ])
 
     fields = {'QB': QB_F, 'RB': RB_F, 'WR': REC_F, 'TE': REC_F}
-    payload = {'yr': yr, 'thru': thru}
+    # team season totals for the page's team view: [targets, carries, air yards, inside-10 carries, games]
+    teams = collections.defaultdict(lambda: [0.0, 0.0, 0.0, 0.0, 0])
+    for (tm, wk), v in T.items():
+        if not isinstance(tm, str):
+            continue
+        t = teams[tm]
+        t[0] += v.get('tgt', 0.0); t[1] += v.get('car', 0.0); t[2] += v.get('ay', 0.0); t[3] += v.get('i10', 0.0)
+        if v.get('db', 0.0) > 0:
+            t[4] += 1
+    payload = {'yr': yr, 'thru': thru, 'teams': {tm: [int(round(x)) for x in t] for tm, t in sorted(teams.items())}}
     for pos in ('QB', 'RB', 'WR', 'TE'):
         f = fields[pos]
         for r in rows[pos]:

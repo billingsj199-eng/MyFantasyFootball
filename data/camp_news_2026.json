@@ -1,6 +1,126 @@
 {
-  "updated": "2026-09-14T16:09:55Z",
+  "updated": "2026-09-15T02:08:53Z",
   "items": [
+    {
+      "player": "Rashee Rice",
+      "team": "KC",
+      "pos": "WR",
+      "date": "2026-09-14",
+      "headline": "Catch-and-run TD from Mahomes gives Chiefs a 14-7 MNF lead over Broncos",
+      "take": "Clear top target back in the mix on Mahomes' return -- treat as a locked-in WR1 for Kansas City",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/monday-night-football-chiefs-lead-the-broncos-14-7-at-halftime",
+      "tag": "riser"
+    },
+    {
+      "player": "Patrick Mahomes",
+      "team": "KC",
+      "pos": "QB",
+      "date": "2026-09-14",
+      "headline": "Scrambles for a 15-yard rushing TD plus a passing score, Chiefs lead Broncos 21-7 in the 3rd on MNF",
+      "take": "No lingering effects from the ACL/LCL tear through three quarters of his season debut -- confirmed as a top-tier weekly QB1",
+      "url": "https://sports.yahoo.com/articles/chiefs-vs-broncos-patrick-mahomes-004650655.html",
+      "tag": "riser"
+    },
+    {
+      "player": "Kenneth Walker III",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-14",
+      "headline": "14 carries for 89 yards through halftime of MNF debut with Denver vs. Chiefs",
+      "take": "Heavy early-down workload in his first game in a Broncos uniform -- promising sign for his role going forward",
+      "url": "https://www.arrowheadpride.com/kansas-city-chiefs-game-information/210140/chiefs-broncos-live-updates-afc-west-bout-underway",
+      "tag": "riser"
+    },
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-14",
+      "headline": "MRI update: hamstring injury not considered serious, remains day-to-day",
+      "take": "Rapoport's optimistic follow-up eases Week 2 worry after Sunday's career day -- keep him in lineups pending a full practice week",
+      "url": "https://bvmsports.com/2026/09/14/zay-flowers-hamstring-injury-not-considered-serious/",
+      "tag": "injury"
+    },
+    {
+      "player": "Ja'Kobi Lane",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-14",
+      "headline": "Rookie's wrist fracture from Ravens debut could sideline him longer than first believed, per HC Minter",
+      "take": "Seeking 2nd/3rd medical opinions this week -- expected to miss at least Week 2 vs. New Orleans, deep stash only for now",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-14/lane-wrist-seeking-multiple-opinions-on-injury",
+      "tag": "injury"
+    },
+    {
+      "player": "Ladd McConkey",
+      "team": "LAC",
+      "pos": "WR",
+      "date": "2026-09-14",
+      "headline": "Still no official update on rib/chest injury from Sunday's hit; considered questionable for Week 2",
+      "take": "Real risk until the Chargers issue a clearer diagnosis -- have Quentin Johnston/RB pass-catchers ready as a hedge",
+      "url": "https://www.si.com/onsi/fantasy/injuries/fantasy-football-injury-impact-ladd-mcconkey-is-forced-from-week-1-and-could-miss-additional-time",
+      "tag": "injury"
+    },
+    {
+      "player": "Dylan Sampson",
+      "team": "CLE",
+      "pos": "RB",
+      "date": "2026-09-14",
+      "headline": "Knee injury severity still being evaluated Monday; was seen on crutches with a brace after Week 1",
+      "take": "Browns' top pass-catching back and kick returner -- monitor closely before trusting him in Week 2 lineups",
+      "url": "https://heavy.com/sports/nfl/cleveland-browns/dylan-sampson-injury-quinshon-judkins-raheim-sanders-jaguars/",
+      "tag": "injury"
+    },
+    {
+      "player": "Jalen Coker",
+      "team": "CAR",
+      "pos": "WR",
+      "date": "2026-09-14",
+      "headline": "Spotted in a walking boot Monday after 8-catch, 138-yard, 2-TD breakout in Week 1 loss to Bears",
+      "take": "Says the ankle tweak is minor and expects to play Week 2 vs. Falcons -- priority add off his target-share breakout",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-14/coker-spotted-in-boot-expects-to-play-week-2",
+      "tag": "riser"
+    },
+    {
+      "player": "Brock Bowers",
+      "team": "LV",
+      "pos": "TE",
+      "date": "2026-09-14",
+      "headline": "Kubiak now calls him day-to-day, says he's \"working his tail off\" to return from knee procedure",
+      "take": "Real chance to play Week 2 vs. the Chargers -- worth stashing over a streaming TE if you can afford the roster spot",
+      "url": "https://www.espn.com/nfl/story/_/id/49943075/brock-bowers-working-tail-rejoin-raiders-coach-says",
+      "tag": "injury"
+    },
+    {
+      "player": "Kyler Murray",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-09-14",
+      "headline": "In concussion protocol; Vikings unsure if he clears in time for Week 2 at Chicago",
+      "take": "Felt \"pretty good\" Monday and took part in meetings, but Carson Wentz is the direct streamer if Murray can't go",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-14/rap-vikings-unsure-if-kyler-will-play-week-2",
+      "tag": "injury"
+    },
+    {
+      "player": "Caleb Douglas",
+      "team": "MIA",
+      "pos": "WR",
+      "date": "2026-09-13",
+      "headline": "Sets Dolphins rookie-debut record with 94 receiving yards (5/7 targets) in loss to Raiders",
+      "take": "Led all rookie WRs in target share, catches and yards in Week 1 -- priority Week 2 waiver add in Miami's offense",
+      "url": "https://athlonsports.com/nfl/miami-dolphins/dolphins-rookie-caleb-douglas-makes-history-in-impressive-nfl-debut",
+      "tag": "riser"
+    },
+    {
+      "player": "Kenyon Sadiq",
+      "team": "NYJ",
+      "pos": "TE",
+      "date": "2026-09-13",
+      "headline": "Scores a TD on a jet sweep on Jets' opening drive of the season in his NFL debut",
+      "take": "Limited snaps after a hernia-shortened camp but flashed real juice -- speculative TE stash as his role grows",
+      "url": "https://sports.yahoo.com/articles/kenyon-sadiqs-dream-debut-demonstrated-015931352.html",
+      "tag": "riser"
+    },
     {
       "player": "Isaiah Likely",
       "team": "NYG",

@@ -59,21 +59,26 @@ TEAM_FIX = {'LA': 'LAR', 'WSH': 'WAS', 'JAC': 'JAX', 'OAK': 'LV', 'SD': 'LAC', '
 PFF_NAME_FIX = {'Joshua Palmer': 'Josh Palmer', 'Chigoziem Okonkwo': 'Chig Okonkwo'}
 POS_MAP = {'HB': 'RB', 'FB': 'RB', 'RB': 'RB', 'WR': 'WR', 'TE': 'TE', 'QB': 'QB'}
 # Volume floor to make the file: QB dropbacks / RB carries + targets / WR-TE routes.
-# Kept near zero so a team filter on the page shows the whole position room
-# (shares add up); the page's min-volume input hides fringe players otherwise.
-MIN_FLOOR = {'QB': 5, 'RB': 1, 'WR': 1, 'TE': 1}
+# Kept at 1 so a team filter shows the whole position room (shares add up) and a
+# week range rebuilt from week files keeps the same players as a direct build.
+MIN_FLOOR = {'QB': 1, 'RB': 1, 'WR': 1, 'TE': 1}
 
 # Counting stats are SEASON TOTALS (fpt, db, att, ra, ry, tch, scy, hvt, rts, yds,
 # td, rz ...); the page's Per game / Totals toggle divides by g client-side.
 QB_F = ['n', 'on', 'tm', 'g', 'fpt', 'db', 'att', 'cmpp', 'ypa', 'anya', 'td', 'int',
         'cpoe', 'epa', 'grd', 'acc', 'adot', 'ttt', 'deep', 'btt', 'twp', 'tdp', 'intp',
         'prs', 'p2s', 'skp', 'cgr', 'cacc', 'pgr', 'pacc', 'pypa', 'blz', 'bgr', 'bypa',
-        'ra', 'ry', 'rtd', 'scr']
+        'ra', 'ry', 'rtd', 'scr',
+        'sk', 'cpn', 'dbn', 'aim', 'airn', 'ns', 'psn', 'dgp', 'pdb', 'cdb', 'caim', 'paim', 'patt', 'bdb', 'batt']
+# Trailing short keys on every table are NOT displayed: they are the denominators the
+# page uses to rebuild a multi-week range from week files (each rate re-weighted by its
+# own base - see _ADV_AGG in app.js). Keep both sides in sync.
 RB_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'att', 'tgt', 'tch', 'scy', 'tds',
         'car', 'tsh', 'rtp', 'i5', 'i10s', 'hvt',
         'ypc', 'yco', 'mtf', 'elu', 'bay', 'exp', 'fdp', 'suc', 'repa', 'rgr', 'gap',
         'rts', 'tprr', 'yprr', 'recg', 'pbg',
-        'xt', 'xc', 'xi']
+        'xt', 'xc', 'xi',
+        'tsn', 'ttc', 'tmt', 'tmd', 'tmi', 'rsy', 'pcar', 'gz', 'rpl']
 # x* (not displayed) = raw pbp targets / carries / inside-10 carries / air yards while on
 # the listed team; with payload `teams` they give the page's team-view season shares
 REC_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'rts', 'tgt', 'yds', 'tds',
@@ -81,7 +86,27 @@ REC_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'rts', 'tgt', 'yds', 'tds',
          'yprr', 'grd', 'adot', 'racr', 'yac', 'mtfr', 'fdr', 'ctch', 'drp', 'cc', 'ctg',
          'tqbr', 'epat',
          'myprr', 'zyprr', 'mtprr', 'ztprr', 'slyprr', 'scr', 'deep', 'dyd', 'dctch', 'blos',
-         'xt', 'xa']
+         'xt', 'xa',
+         'tsn', 'tmd', 'tmt', 'tma', 'al', 'ppl', 'rec', 'dr', 'ct', 'pry', 'pay', 'mr', 'zr', 'slr', 'cbt', 'dbt', 'dy', 'dtg']
+# TEAM table: one row per team (n = team name, tm = code). Offense, tendency and defense from
+# nflverse pbp; protection / pressure / man coverage from PFF (defense = what opponents saw).
+TM_F = ['n', 'on', 'tm', 'g',
+        'pl', 'pa', 'rua', 'npace', 'sg', 'nh',
+        'pr', 'npr', 'edpr', 'proe', 'rroe',
+        'epa', 'dbepa', 'ruepa', 'sr', 'dbsr', 'rusr', 'xpp', 'xrp', 'adot', 'yac', 'tdc', 'rztd', 'tdd',
+        'skp', 'prsa', 'blzf', 'ttt', 'manf',
+        'depa', 'ddbepa', 'druepa', 'dsr', 'dxp', 'dskp', 'dprs', 'dblz', 'dman', 'dtdc', 'drztd',
+        'pcn', 'npl', 'edn', 'pon', 'ayn', 'cmp', 'tdn', 'rzt', 'drv', 'pdbt', 'tttw', 'mzr',
+        'dpl', 'dpa', 'drua', 'dpdbt', 'dmzr', 'dtdn', 'drzt']
+TEAM_NAMES = {
+    'ARI': 'Arizona Cardinals', 'ATL': 'Atlanta Falcons', 'BAL': 'Baltimore Ravens', 'BUF': 'Buffalo Bills',
+    'CAR': 'Carolina Panthers', 'CHI': 'Chicago Bears', 'CIN': 'Cincinnati Bengals', 'CLE': 'Cleveland Browns',
+    'DAL': 'Dallas Cowboys', 'DEN': 'Denver Broncos', 'DET': 'Detroit Lions', 'GB': 'Green Bay Packers',
+    'HOU': 'Houston Texans', 'IND': 'Indianapolis Colts', 'JAX': 'Jacksonville Jaguars', 'KC': 'Kansas City Chiefs',
+    'LAC': 'Los Angeles Chargers', 'LAR': 'Los Angeles Rams', 'LV': 'Las Vegas Raiders', 'MIA': 'Miami Dolphins',
+    'MIN': 'Minnesota Vikings', 'NE': 'New England Patriots', 'NO': 'New Orleans Saints', 'NYG': 'New York Giants',
+    'NYJ': 'New York Jets', 'PHI': 'Philadelphia Eagles', 'PIT': 'Pittsburgh Steelers', 'SEA': 'Seattle Seahawks',
+    'SF': 'San Francisco 49ers', 'TB': 'Tampa Bay Buccaneers', 'TEN': 'Tennessee Titans', 'WAS': 'Washington Commanders'}
 
 
 # ---------------------------------------------------------------- helpers
@@ -112,13 +137,14 @@ def team(t):
 
 class Acc:
     """Per-player accumulator for one PFF facet-season."""
-    __slots__ = ('s', 'w', 'weeks', 'wk_routes', 'names', 'pos')
+    __slots__ = ('s', 'w', 'weeks', 'wk_routes', 'wk_rec', 'names', 'pos')
 
     def __init__(self):
         self.s = collections.defaultdict(float)             # summed counts
         self.w = collections.defaultdict(lambda: [0.0, 0.0])  # weighted avg [sum v*wt, sum wt]
         self.weeks = {}                                     # wk -> team
         self.wk_routes = {}                                 # wk -> routes (receiving only)
+        self.wk_rec = {}                                    # wk -> [routes, targets, receptions, rec yards]
         self.names = collections.Counter()
         self.pos = collections.Counter()
 
@@ -149,9 +175,9 @@ def weekly_weeks(facet, yr):
 
 
 def weekly(facet, yr, only=None):
-    """Rows of a PFF weekly facet; only=<week> reads just that week's file."""
+    """Rows of a PFF weekly facet; only=<set of weeks> reads just those weeks' files."""
     for wk in weekly_weeks(facet, yr):
-        if only is not None and wk != only:
+        if only is not None and wk not in only:
             continue
         with open(os.path.join(PFF_WEEKLY, f'pff_{facet}_{yr}_w{wk}.csv'), encoding='utf-8-sig', newline='') as fh:
             for row in csv.DictReader(fh):
@@ -228,6 +254,9 @@ def agg_receiving(yr, only=None):
             rt = fnum(row.get('routes')) or 0.0
         a.s['routes'] += rt
         a.wk_routes[wk] = a.wk_routes.get(wk, 0.0) + rt
+        line = a.wk_rec.setdefault(wk, [0.0, 0.0, 0.0, 0.0])
+        for i, v in enumerate((rt, row.get('targets'), row.get('receptions'), row.get('yards'))):
+            line[i] += fnum(v) or 0.0
         for c in REC_SUM:
             a.add(c, row.get(c))
         a.addw('adot', row.get('avg_depth_of_target'), row.get('targets'))
@@ -248,6 +277,9 @@ def agg_rushing(yr, only=None):
         touch(a, wk, row)
         for c in RUSH_SUM:
             a.add(c, row.get(c))
+        line = a.wk_rec.setdefault(wk, [0.0, 0.0, 0.0, 0.0])
+        for i, v in enumerate((row.get('routes'), row.get('targets'), row.get('receptions'), row.get('rec_yards'))):
+            line[i] += fnum(v) or 0.0
         a.addw('rgr', row.get('grades_run'), row.get('attempts'))
         a.addw('elu', row.get('elusive_rating'), row.get('attempts'))
         a.addw('pbg', row.get('grades_pass_block'), row.get('run_plays'))
@@ -267,12 +299,15 @@ def agg_facet(facet, yr, cols, only=None):
 
 # ---------------------------------------------------------------- nflverse
 PBP_ID = ['passer_player_id', 'rusher_player_id', 'receiver_player_id', 'fumbled_1_player_id']
-PBP_FLAG = ['pass', 'rush_attempt', 'pass_attempt', 'qb_dropback', 'qb_spike', 'qb_kneel',
+PBP_STR = ['game_id', 'defteam', 'fixed_drive_result']
+PBP_FLAG = ['pass', 'rush', 'rush_attempt', 'pass_attempt', 'qb_dropback', 'qb_spike', 'qb_kneel',
             'qb_scramble', 'sack', 'complete_pass', 'interception', 'pass_touchdown',
             'rush_touchdown', 'fumble_lost', 'two_point_attempt', 'first_down_rush', 'success',
-            'passing_yards', 'rushing_yards', 'receiving_yards', 'yards_gained']
-PBP_NUM = ['air_yards', 'yardline_100', 'epa', 'qb_epa', 'cpoe']
-PBP_COLS = ['season_type', 'week', 'posteam'] + PBP_ID + PBP_FLAG + PBP_NUM
+            'passing_yards', 'rushing_yards', 'receiving_yards', 'yards_gained',
+            'shotgun', 'no_huddle', 'third_down_converted', 'third_down_failed']
+PBP_NUM = ['air_yards', 'yardline_100', 'epa', 'qb_epa', 'cpoe', 'xpass', 'pass_oe', 'down', 'wp',
+           'half_seconds_remaining', 'game_seconds_remaining', 'fixed_drive', 'yards_after_catch']
+PBP_COLS = ['season_type', 'week', 'posteam'] + PBP_ID + PBP_STR + PBP_FLAG + PBP_NUM
 
 
 def load_pbp(yr):
@@ -285,10 +320,11 @@ def load_pbp(yr):
     df = df[df.season_type == 'REG'].copy()
     for c in PBP_COLS:
         if c not in df.columns:
-            df[c] = None if c in PBP_ID else (float('nan') if c in PBP_NUM else 0)
+            df[c] = None if c in PBP_ID or c in PBP_STR else (float('nan') if c in PBP_NUM else 0)
     for c in PBP_FLAG:
         df[c] = df[c].fillna(0)
-    df['posteam'] = df.posteam.map(lambda t: TEAM_FIX.get(t, t) if isinstance(t, str) else t)
+    for c in ('posteam', 'defteam'):
+        df[c] = df[c].map(lambda t: TEAM_FIX.get(t, t) if isinstance(t, str) else t)
     df['week'] = df.week.astype(int)
     return df
 
@@ -367,6 +403,112 @@ def half_ppr(p):
             p['rec'] * 0.5 + p['recyds'] * 0.1 + p['rectd'] * 6 - p['fl'] * 2)
 
 
+def team_rows(yr, pbp, sel):
+    """TEAM table rows (TM_F order). pbp is already sliced to the season / week / span.
+    Plays = dropbacks (pass flag: incl. sacks + scrambles) + designed runs, 2-pt tries out.
+    Neutral = win probability 20-80% outside the last two minutes of each half.
+    PROE = mean nflverse pass_oe (pass minus xpass, pct points) on neutral plays; RROE = -PROE.
+    Neutral pace = seconds between consecutive snaps of the same drive (gaps 1-60 s)."""
+    if pbp is None or not len(pbp):
+        return []
+    df = pbp[(pbp.two_point_attempt != 1) & pbp.posteam.notna() & pbp.defteam.notna()]
+    S = collections.defaultdict(lambda: collections.defaultdict(float))
+
+    def add(side, key, series):
+        for tm, v in series.items():
+            if isinstance(tm, str) and pd.notna(v):
+                S[(side, tm)][key] += float(v)
+
+    plays = df[((df['pass'] == 1) | (df.rush == 1)) & df.epa.notna()].copy()
+    plays['neutral'] = (plays.wp >= 0.2) & (plays.wp <= 0.8) & (plays.half_seconds_remaining > 120)
+    plays['xp'] = ((plays['pass'] == 1) & (plays.yards_gained >= 20)).astype(int)
+    plays['xr'] = ((plays.rush == 1) & (plays.yards_gained >= 10)).astype(int)
+    drives = df[df.fixed_drive.notna()]
+    for side, col in (('o', 'posteam'), ('d', 'defteam')):
+        g = plays.groupby(col)
+        add(side, 'pl', g.size()); add(side, 'epa', g.epa.sum()); add(side, 'suc', g.success.sum())
+        add(side, 'xp', g.xp.sum()); add(side, 'xr', g.xr.sum())
+        gp = plays[plays['pass'] == 1].groupby(col)
+        add(side, 'pa', gp.size()); add(side, 'dbepa', gp.epa.sum()); add(side, 'dbsuc', gp.success.sum()); add(side, 'sk', gp.sack.sum())
+        gr = plays[plays.rush == 1].groupby(col)
+        add(side, 'rua', gr.size()); add(side, 'ruepa', gr.epa.sum()); add(side, 'rusuc', gr.success.sum())
+        gt = df.groupby(col)
+        add(side, 'tdc', gt.third_down_converted.sum()); add(side, 'tdf', gt.third_down_failed.sum())
+        dr = drives.groupby([col, 'game_id', 'fixed_drive']).agg(yl=('yardline_100', 'min'), res=('fixed_drive_result', 'first')).reset_index()
+        dr['td'] = (dr.res == 'Touchdown').astype(int)
+        dr['rz'] = (dr.yl <= 20).astype(int)
+        gd = dr.groupby(col)
+        add(side, 'drv', gd.size()); add(side, 'tdd', gd.td.sum()); add(side, 'rzt', gd.rz.sum())
+        add(side, 'rztd', dr[dr.rz == 1].groupby(col).td.sum())
+    go = plays.groupby('posteam')
+    add('o', 'sg', go.shotgun.sum()); add('o', 'nh', go.no_huddle.sum())
+    add('o', 'games', df.groupby('posteam').game_id.nunique())
+    neu = plays[plays.neutral]
+    add('o', 'npl', neu.groupby('posteam').size()); add('o', 'npass', neu.groupby('posteam')['pass'].sum())
+    po = neu[neu.pass_oe.notna()]
+    add('o', 'pon', po.groupby('posteam').size()); add('o', 'poe', po.groupby('posteam').pass_oe.sum())
+    ed = neu[neu.down <= 2]
+    add('o', 'edn', ed.groupby('posteam').size()); add('o', 'edp', ed.groupby('posteam')['pass'].sum())
+    att = df[(df.pass_attempt == 1) & (df.sack != 1) & df.air_yards.notna()]
+    add('o', 'ay', att.groupby('posteam').air_yards.sum()); add('o', 'ayn', att.groupby('posteam').size())
+    cm = df[(df.complete_pass == 1) & df.yards_after_catch.notna()]
+    add('o', 'yac', cm.groupby('posteam').yards_after_catch.sum()); add('o', 'cmp', cm.groupby('posteam').size())
+    pc = plays.sort_values(['game_id', 'fixed_drive', 'game_seconds_remaining'], ascending=[True, True, False]).copy()
+    pc['gap'] = pc.groupby(['game_id', 'fixed_drive']).game_seconds_remaining.shift(1) - pc.game_seconds_remaining
+    pc = pc[pc.neutral & (pc.gap > 0) & (pc.gap <= 60)]
+    add('o', 'pace', pc.groupby('posteam').gap.sum()); add('o', 'pcn', pc.groupby('posteam').size())
+
+    # PFF: offense = its own QBs / receivers; defense = the opponent they faced that week
+    opp = {(tm, int(wk)): d for (tm, wk), d in df.groupby(['posteam', 'week']).defteam.first().items()}
+    for wk, _pid, row in weekly('passing_pressure', yr, sel):
+        tm = team(row.get('team_name'))
+        pdb, cdb = fnum(row.get('pressure_dropbacks')) or 0, fnum(row.get('no_pressure_dropbacks')) or 0
+        bdb = fnum(row.get('blitz_dropbacks')) or 0
+        for side, t in (('o', tm), ('d', opp.get((tm, wk)))):
+            if t:
+                S[(side, t)]['pdbt'] += pdb + cdb
+                S[(side, t)]['ppdb'] += pdb
+                S[(side, t)]['pbdb'] += bdb
+        for pre, w in (('pressure_', pdb), ('no_pressure_', cdb)):
+            v = fnum(row.get(pre + 'avg_time_to_throw'))
+            if v is not None and w:
+                S[('o', tm)]['ttts'] += v * w
+                S[('o', tm)]['tttw'] += w
+    for wk, _pid, row in weekly('receiving_scheme', yr, sel):
+        tm = team(row.get('team_name'))
+        mr, zr = fnum(row.get('man_routes')) or 0, fnum(row.get('zone_routes')) or 0
+        for side, t in (('o', tm), ('d', opp.get((tm, wk)))):
+            if t:
+                S[(side, t)]['man'] += mr
+                S[(side, t)]['mzr'] += mr + zr
+
+    rows = []
+    for tm in sorted([t for (side, t) in list(S) if side == 'o' and S[(side, t)]['pl'] > 0]):
+        o, d = S[('o', tm)], S[('d', tm)]
+        tdn, dtdn = o['tdc'] + o['tdf'], d['tdc'] + d['tdf']
+        rows.append([
+            TEAM_NAMES.get(tm, tm), 0, tm, int(o['games']),
+            int(o['pl']), int(o['pa']), int(o['rua']), div(o['pace'], o['pcn'], 1, 1),
+            div(o['sg'], o['pl'], 100), div(o['nh'], o['pl'], 100),
+            div(o['pa'], o['pl'], 100), div(o['npass'], o['npl'], 100), div(o['edp'], o['edn'], 100),
+            div(o['poe'], o['pon'], 1, 1), div(-o['poe'], o['pon'], 1, 1),
+            div(o['epa'], o['pl'], 1, 3), div(o['dbepa'], o['pa'], 1, 3), div(o['ruepa'], o['rua'], 1, 3),
+            div(o['suc'], o['pl'], 100), div(o['dbsuc'], o['pa'], 100), div(o['rusuc'], o['rua'], 100),
+            div(o['xp'], o['pa'], 100), div(o['xr'], o['rua'], 100), div(o['ay'], o['ayn'], 1, 1), div(o['yac'], o['cmp'], 1, 1),
+            div(o['tdc'], tdn, 100), div(o['rztd'], o['rzt'], 100), div(o['tdd'], o['drv'], 100),
+            div(o['sk'], o['pa'], 100), div(o['ppdb'], o['pdbt'], 100), div(o['pbdb'], o['pdbt'], 100),
+            div(o['ttts'], o['tttw'], 1, 2), div(o['man'], o['mzr'], 100),
+            div(d['epa'], d['pl'], 1, 3), div(d['dbepa'], d['pa'], 1, 3), div(d['ruepa'], d['rua'], 1, 3),
+            div(d['suc'], d['pl'], 100), div(d['xp'] + d['xr'], d['pl'], 100), div(d['sk'], d['pa'], 100),
+            div(d['ppdb'], d['pdbt'], 100), div(d['pbdb'], d['pdbt'], 100), div(d['man'], d['mzr'], 100),
+            div(d['tdc'], dtdn, 100), div(d['rztd'], d['rzt'], 100),
+            int(o['pcn']), int(o['npl']), int(o['edn']), int(o['pon']), int(o['ayn']), int(o['cmp']),
+            int(tdn), int(o['rzt']), int(o['drv']), int(o['pdbt']), int(round(o['tttw'])), int(o['mzr']),
+            int(d['pl']), int(d['pa']), int(d['rua']), int(d['pdbt']), int(d['mzr']), int(dtdn), int(d['rzt']),
+        ])
+    return rows
+
+
 def load_snaps(yr):
     cols = ['game_type', 'week', 'pfr_player_id', 'team', 'offense_snaps', 'offense_pct']
     df = None
@@ -430,27 +572,31 @@ def build_year(yr, xw, dlookup):
     wks = sorted(weeks)
     pbp = load_pbp(yr)      # loaded once, sliced per week
     snaps = load_snaps(yr)
-    build_table(yr, xw, dlookup, pbp, snaps, wks[-1], wks=wks)
-    written = sum(build_table(yr, xw, dlookup, pbp, snaps, w, week=w) for w in wks)
+    universe = {}   # pid -> (pos, name, team) of every season-table player
+    build_table(yr, xw, dlookup, pbp, snaps, wks[-1], wks=wks, collect=universe)
+    written = sum(build_table(yr, xw, dlookup, pbp, snaps, w, week=w, forced=universe) for w in wks)
     print(f'  {yr}: {len(wks)} week files ({written} written)')
 
 
-def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
-    """One table set -> data/adv_stats_<yr>.js (week=None: whole season) or
-    data/adv_stats_<yr>_w<week>.js (that week only). True when the file changed."""
-    qb = agg_passing(yr, week)
-    rec = agg_receiving(yr, week)
-    rush = agg_rushing(yr, week)
-    sch = agg_facet('receiving_scheme', yr, ['man_routes', 'man_targets', 'man_yards', 'zone_routes', 'zone_targets', 'zone_yards'], week)
-    con = agg_facet('receiving_concept', yr, ['slot_routes', 'slot_yards', 'screen_targets', 'base_targets'], week)
+def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=None, out_path=None,
+                collect=None, forced=None):
+    """One table set -> data/adv_stats_<yr>.js (whole season) or data/adv_stats_<yr>_w<week>.js
+    (that week only). span=(a, b) + out_path builds weeks a-b directly as JSON - only used to
+    check the page's client-side range rebuild. True when the file changed."""
+    sel = {week} if week is not None else (set(range(span[0], span[1] + 1)) if span else None)
+    qb = agg_passing(yr, sel)
+    rec = agg_receiving(yr, sel)
+    rush = agg_rushing(yr, sel)
+    sch = agg_facet('receiving_scheme', yr, ['man_routes', 'man_targets', 'man_yards', 'zone_routes', 'zone_targets', 'zone_yards'], sel)
+    con = agg_facet('receiving_concept', yr, ['slot_routes', 'slot_yards', 'screen_targets', 'base_targets'], sel)
     dep = agg_facet('receiving_depth', yr, ['deep_targets', 'deep_receptions', 'deep_yards', 'medium_yards', 'short_yards',
-                                           'behind_los_yards', 'behind_los_targets', 'base_targets'], week)
-    # PFF season CSVs are full-season numbers - a week table uses the weekly facets only
-    rec_s = season_csv('receiving', yr) if week is None else {}
-    rush_s = season_csv('rushing', yr) if week is None else {}
-    if week is not None:
-        pbp = pbp[pbp.week == week] if pbp is not None else None
-        snaps = {k: {w: v for w, v in d.items() if w == week} for k, d in snaps.items()}
+                                           'behind_los_yards', 'behind_los_targets', 'base_targets'], sel)
+    # PFF season CSVs are full-season numbers - week/span tables use the weekly facets only
+    rec_s = season_csv('receiving', yr) if sel is None else {}
+    rush_s = season_csv('rushing', yr) if sel is None else {}
+    if sel is not None:
+        pbp = pbp[pbp.week.isin(sel)] if pbp is not None else None
+        snaps = {k: {w: v for w, v in d.items() if w in sel} for k, d in snaps.items()}
         snaps = {k: d for k, d in snaps.items() if d}
     P, T, PT = pbp_agg(pbp) if pbp is not None and len(pbp) else ({}, {}, {})
     empty = collections.defaultdict(float)
@@ -470,19 +616,23 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
     def ctx(pid, accs, srows):
         names = collections.Counter()
         wk_team = {}
-        for a in accs:
+        # the position's own tables plus any other table listing him (a HB whose only line
+        # that week is a pass attempt still gets his name and the game)
+        for a in list(accs) + [qb.get(pid), rec.get(pid), rush.get(pid)]:
             if a:
                 names.update(a.names)
                 wk_team.update(a.weeks)
         for r in srows:
             if r and r.get('player'):
                 names[r['player'].strip()] += 1
+        if not names and forced and pid in forced:
+            names[forced[pid][1]] += 1
         name = names.most_common(1)[0][0] if names else '?'
         last_tm = wk_team[max(wk_team)] if wk_team else next((team(r.get('team_name')) for r in srows if r), '')
         ids = ids_for(pid, name, last_tm, xw)
         stats['gsis' if ids.get('gsis') else 'no_gsis'] += 1
         sn = snaps.get(ids.get('pfr')) if ids.get('pfr') else None
-        snp = None
+        snp = tsn = None
         if sn:
             stats['snaps'] += 1
             # snap weeks win; PFF weeks fill any week the snap file doesn't have yet
@@ -491,6 +641,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
             games = len(tw)
             tsnaps = sum(v[1] / v[2] for v in sn.values() if v[2] > 0)
             snp = div(sum(v[1] for v in sn.values()), tsnaps, 100)
+            tsn = int(round(tsnaps))
         else:
             tw = wk_team
             games = max([len(wk_team)] + [int(fnum(r.get('player_game_count')) or 0) for r in srows if r])
@@ -504,17 +655,30 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
         site = next((dlookup[v] for v in norm_variants(disp) if v in dlookup), None)
         return {'n': site or disp, 'on': 1 if site else 0, 'tm': tm, 'g': games, 'snp': snp,
                 'p': p, 'tt': tt, 'fpt': rnd(half_ppr(p)) if ids.get('gsis') else None,
-                'x': PT.get((ids['gsis'], tm), {}) if ids.get('gsis') else {}}
+                'x': PT.get((ids['gsis'], tm), {}) if ids.get('gsis') else {}, 'tsn': tsn}
 
+    # Week tables keep every player-week (floor 0), including season players (`forced`, filled
+    # by the season build via `collect`) who only took snaps that week, so a range rebuilt on
+    # the page counts the same games and team plays as a direct multi-week build.
+    floor = MIN_FLOOR if week is None else dict.fromkeys(MIN_FLOOR, 0)
+    live = set(qb) | set(rec) | set(rush) | set(rec_s) | set(rush_s)
+    extra = {}
+    for pid, (fpos, fname, ftm) in (forced or {}).items():
+        if pid not in live:
+            pfr = ids_for(pid, fname, ftm, xw).get('pfr')
+            if pfr and pfr in snaps:
+                extra[pid] = (fpos, [{'player': fname, 'team_name': ftm}])
     rows = {'QB': [], 'RB': [], 'WR': [], 'TE': []}
-    for pid in set(qb) | set(rec) | set(rush) | set(rec_s) | set(rush_s):
-        pos = pos_of(pid)
+    for pid in live | set(extra):
+        # season position wins, so a player PFF lists at QB/HB some weeks stays in one table
+        pos = forced[pid][0] if forced and pid in forced else pos_of(pid)
+        fake = extra[pid][1] if pid in extra else []
         if pos == 'QB':
-            a = qb.get(pid)
-            if not a or a.s['dropbacks'] < MIN_FLOOR['QB']:
+            a = qb.get(pid) or (Acc() if forced and pid in forced else None)   # e.g. a rush-only week
+            if not a or a.s['dropbacks'] < floor['QB']:
                 continue
             s = a.s
-            c = ctx(pid, [a, rush.get(pid)], [])
+            c = ctx(pid, [a, rush.get(pid)], fake)
             p = c['p']
             att, sk, db = s['attempts'], s['sacks'], s['dropbacks']
             ns = s['passing_snaps'] - sk - s['scrambles']
@@ -534,7 +698,12 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
                 div(s['p_yards'], s['p_attempts'], 1, 2),
                 div(s['b_dropbacks'], db, 100), rnd(a.avg('bgr')), div(s['b_yards'], s['b_attempts'], 1, 2),
                 int(p['car'] + p['scr']), int(round(p['ruyds'])), int(p['rutd']), int(p['scr']),
+                int(sk), int(p['cpoe_n']), int(p['dbn']), int(s['aimed_passes']), int(p['airn']), int(ns), int(s['passing_snaps']),
+                int(s['def_gen_pressures']), int(s['p_dropbacks']), int(s['c_dropbacks']), int(s['c_aimed_passes']),
+                int(s['p_aimed_passes']), int(s['p_attempts']), int(s['b_dropbacks']), int(s['b_attempts']),
             ])
+            if collect is not None:
+                collect[pid] = (pos, c['n'], c['tm'])
         elif pos == 'RB':
             rw, rs = rush.get(pid), rush_s.get(pid)
             cw, cs = rec.get(pid), rec_s.get(pid)
@@ -543,20 +712,22 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
             if cs:
                 rts, tgt, recs, ryd = (fnum(cs.get(k)) or 0 for k in ('routes', 'targets', 'receptions', 'yards'))
                 recg = fnum(cs.get('grades_pass_route'))
-            elif cw:
-                rts, tgt, recs, ryd = cw.s['routes'], cw.s['targets'], cw.s['receptions'], cw.s['yards']
-                recg = cw.avg('grd')
-            elif rs:
+            elif rs and not cw:
                 rts, tgt, recs = (fnum(rs.get(k)) or 0 for k in ('routes', 'targets', 'receptions'))
                 ryd = None
                 recg = fnum(rs.get('grades_pass_route'))
             else:
-                rts, tgt, recs, ryd = ru['routes'], ru['targets'], ru['receptions'], ru['rec_yards']
-                recg = rw.avg('recg') if rw else None
+                # weekly tables: each week use the receiving table's line when it lists him (before
+                # 2026 only targeted weeks), else the rushing table's - same rule for any span
+                rts = tgt = recs = ryd = 0.0
+                for wk in set(cw.wk_rec if cw else ()) | set(rw.wk_rec if rw else ()):
+                    line = (cw.wk_rec.get(wk) if cw else None) or rw.wk_rec[wk]
+                    rts += line[0]; tgt += line[1]; recs += line[2]; ryd += line[3]
+                recg = cw.avg('grd') if cw else (rw.avg('recg') if rw else None)
             att = ru['attempts'] or (fnum(rs.get('attempts')) if rs else 0) or 0
-            if att + tgt < MIN_FLOOR['RB']:
+            if att + tgt < floor['RB']:
                 continue
-            c = ctx(pid, [rw, cw], [rs, cs])
+            c = ctx(pid, [rw, cw], [rs, cs] + fake)
             p = c['p']
             if ryd is None:
                 ryd = p['recyds']
@@ -577,11 +748,15 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
                 rnd(rgr), div(ru['gap_attempts'], ru['gap_attempts'] + ru['zone_attempts'], 100),
                 int(rts), div(tgt, rts, 1, 2), div(ryd, rts, 1, 2), rnd(recg), rnd(pbg),
                 int(c['x'].get('tgt', 0)), int(c['x'].get('car', 0)), int(c['x'].get('i10', 0)),
+                c['tsn'], int(c['tt']('car')), int(c['tt']('tgt')), int(c['tt']('db')), int(c['tt']('i10')),
+                int(round(yds)), int(p['car']), int(ru['gap_attempts'] + ru['zone_attempts']), int(ru['run_plays']),
             ])
+            if collect is not None:
+                collect[pid] = (pos, c['n'], c['tm'])
         elif pos in ('WR', 'TE'):
             cw, cs = rec.get(pid), rec_s.get(pid)
-            if not cw and not cs:
-                continue   # WR/TE with rushing rows only (jet sweeps, no target)
+            if not cw and not cs and not (forced and pid in forced):
+                continue   # WR/TE with rushing rows only (jet sweeps, no target) - kept for season players
             w = cw.s if cw else empty
             if cs:
                 rts, tgt, recs, yds, tds, fd, avt = (fnum(cs.get(k)) or 0 for k in
@@ -592,17 +767,17 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
             else:
                 rts, tgt, recs, yds, tds, fd, avt = (w['routes'], w['targets'], w['receptions'], w['yards'],
                                                      w['touchdowns'], w['first_downs'], w['avoided_tackles'])
-                grd, adot = cw.avg('grd'), cw.avg('adot')
+                grd, adot = (cw.avg('grd'), cw.avg('adot')) if cw else (None, None)
                 al = w['slot_snaps'] + w['wide_snaps'] + w['inline_snaps']
                 slot, wide, inl = div(w['slot_snaps'], al, 100), div(w['wide_snaps'], al, 100), div(w['inline_snaps'], al, 100)
                 yac = div(w['yards_after_catch'], recs, 1, 1)
                 cc = div(w['contested_receptions'], w['contested_targets'], 100)
                 drp = div(w['drops'], w['drops'] + recs, 100)
                 ctch = div(recs, tgt, 100)
-            if rts < MIN_FLOOR[pos]:
+            if rts < floor[pos]:
                 continue
             ch, cn, cd = sch.get(pid), con.get(pid), dep.get(pid)
-            c = ctx(pid, [cw, ch, cn, cd], [cs])
+            c = ctx(pid, [cw, ch, cn, cd], [cs] + fake)
             p = c['p']
             tt_db, tt_tgt, tt_ay = c['tt']('db'), c['tt']('tgt'), c['tt']('ay')
             tsh = div(p['tgt'], tt_tgt, 1, 4)
@@ -642,9 +817,18 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
                 div(d['deep_targets'], d['base_targets'], 100), div(d['deep_yards'], dy, 100) if dy > 0 else None,
                 div(d['deep_receptions'], d['deep_targets'], 100), div(d['behind_los_targets'], d['base_targets'], 100),
                 int(c['x'].get('tgt', 0)), int(round(c['x'].get('ay', 0))),
+                c['tsn'], int(tt_db), int(tt_tgt), int(round(tt_ay)),
+                int(w['slot_snaps'] + w['wide_snaps'] + w['inline_snaps']), int(w['pass_plays']), int(recs),
+                int(w['drops'] + recs), int(w['contested_targets']), int(round(p['recyds'])), int(round(p['ay'])),
+                rnd(m['man_routes'] * ms) if ms else None, rnd(m['zone_routes'] * ms) if ms else None,
+                rnd(k['slot_routes'] * cs_) if cs_ else None,
+                int(k['base_targets']), int(d['base_targets']), int(round(dy)), int(d['deep_targets']),
             ])
+            if collect is not None:
+                collect[pid] = (pos, c['n'], c['tm'])
 
-    fields = {'QB': QB_F, 'RB': RB_F, 'WR': REC_F, 'TE': REC_F}
+    rows['TM'] = team_rows(yr, pbp, sel)
+    fields = {'QB': QB_F, 'RB': RB_F, 'WR': REC_F, 'TE': REC_F, 'TM': TM_F}
     # team totals (season, or that week) for the page's team view: [targets, carries, air yards, inside-10 carries, games]
     teams = collections.defaultdict(lambda: [0.0, 0.0, 0.0, 0.0, 0])
     for (tm, wk), v in T.items():
@@ -657,17 +841,23 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
     payload = {'yr': yr, 'thru': thru}
     if week is not None:
         payload['wk'] = week
+    if span:
+        payload['span'] = list(span)
     if wks:
         payload['wks'] = wks
     payload['teams'] = {tm: [int(round(x)) for x in t] for tm, t in sorted(teams.items())}
-    for pos in ('QB', 'RB', 'WR', 'TE'):
+    for pos in ('QB', 'RB', 'WR', 'TE', 'TM'):
         f = fields[pos]
         for r in rows[pos]:
             assert len(r) == len(f), (pos, len(r), len(f), r[0])
-        fi = f.index('fpt')
+        fi = f.index('fpt') if 'fpt' in f else f.index('epa')
         rows[pos].sort(key=lambda r: -(r[fi] if r[fi] is not None else -99))
         payload[pos] = {'f': f, 'r': rows[pos]}
     body = json.dumps(payload, separators=(',', ':'), ensure_ascii=False, allow_nan=False)
+    if out_path:
+        with open(out_path, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(body)
+        return True
     if week is None:
         out = os.path.join(ROOT, 'data', f'adv_stats_{yr}.js')
         text = f'window.ADV_STATS=window.ADV_STATS||{{}};window.ADV_STATS[{yr}]={body};\n'
@@ -679,7 +869,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
         with open(out, 'w', encoding='utf-8', newline='\n') as fh:
             fh.write(text)
     if week is None:
-        print(f'{yr}: thru W{thru}  QB {len(rows["QB"])}  RB {len(rows["RB"])}  WR {len(rows["WR"])}  TE {len(rows["TE"])}'
+        print(f'{yr}: thru W{thru}  QB {len(rows["QB"])}  RB {len(rows["RB"])}  WR {len(rows["WR"])}  TE {len(rows["TE"])}  TEAM {len(rows["TM"])}'
               f'  | ids {stats["gsis"]}/{stats["gsis"] + stats["no_gsis"]}  snaps {stats["snaps"]}'
               f'  | {len(text) // 1024} KB {"(unchanged)" if old == text else "written"}')
     return old != text
@@ -688,10 +878,23 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--years', default=None, help='comma list, default 2019-2026')
+    ap.add_argument('--test-span', default=None, help='YYYY:A-B = build weeks A-B directly to --out (JSON) to check the page range rebuild')
+    ap.add_argument('--out', default=None)
     args = ap.parse_args()
     years = [int(y) for y in args.years.split(',')] if args.years else YEARS
     xw = crosswalk()
     dlookup = load_d_names()
+    if args.test_span:
+        y, ab = args.test_span.split(':')
+        y = int(y)
+        a, b = (int(x) for x in ab.split('-'))
+        pbp, snaps = load_pbp(y), load_snaps(y)
+        wks = sorted(set().union(*(weekly_weeks(f, y) for f in ('passing_pressure', 'rushing_summary', 'receiving', 'receiving_summary'))))
+        universe = {}   # season positions, exactly as the week files use them
+        build_table(y, xw, dlookup, pbp, snaps, wks[-1], wks=wks, collect=universe, out_path=os.devnull)
+        build_table(y, xw, dlookup, pbp, snaps, b, span=(a, b), out_path=args.out, forced=universe)
+        print(f'span {y} W{a}-{b} -> {args.out}')
+        return
     for yr in years:
         build_year(yr, xw, dlookup)
 

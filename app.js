@@ -62726,7 +62726,7 @@ Rules:
 (function _advStatsModule() {
   const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019];
   // [row key the min filter reads, its label, default per week played]
-  const MIN = { QB: ['db', 'Min dropbacks', 12], RB: ['opp', 'Min att + tgt', 5], WR: ['rts', 'Min routes', 12], TE: ['rts', 'Min routes', 9] };
+  const MIN = { QB: ['db', 'Min dropbacks', 12], RB: ['opp', 'Min att + tgt', 5], WR: ['rts', 'Min routes', 12], TE: ['rts', 'Min routes', 9], TM: ['g', 'Min games', 0] };
   const N = { heat: false };   // descriptive column: no good/bad shading
   const LO = { lo: true };     // lower is better
   function c(k, l, g, d, t, o) { return Object.assign({ k: k, l: l, g: g, d: d, t: t }, o || {}); }
@@ -62846,15 +62846,146 @@ Rules:
     c('dctch', 'Deep Catch%', 'Coverage & depth', 1, 'Catch rate on 20+ air-yard targets'),
     c('blos', 'bLOS Tgt%', 'Coverage & depth', 1, 'Share of targets caught at or behind the line of scrimmage (PFF)', N)
   ];
-  const COLS = { QB: QB_COLS, RB: RB_COLS, WR: REC_COLS, TE: REC_COLS };
+  const OFF = 'Offense', DEF = 'Defense';
+  const TM_COLS = [
+    c('g', 'G', VOL, 0, 'Games played', N),
+    n('pl', 'Plays', 'Plays/G', VOL, 0, 1, 'Offensive plays: dropbacks (incl. sacks and scrambles) + designed runs'),
+    n('pa', 'Dropbacks', 'DB/G', VOL, 0, 1, 'Dropbacks incl. sacks and scrambles'),
+    n('rua', 'Rush Att', 'Rush/G', VOL, 0, 1, 'Designed runs'),
+    c('npace', 'Neutral Pace', VOL, 1, 'Seconds per play in neutral situations (win probability 20-80%, not the last 2 min of a half); lower = faster', N),
+    c('sg', 'Shotgun%', VOL, 1, 'Share of plays from shotgun', N),
+    c('nh', 'No-Huddle%', VOL, 1, 'Share of plays without a huddle', N),
+    c('pr', 'Pass%', 'Tendency', 1, 'Dropbacks / plays', N),
+    c('npr', 'Neutral Pass%', 'Tendency', 1, 'Pass rate in neutral situations', N),
+    c('edpr', 'Early-Down Pass%', 'Tendency', 1, 'Pass rate on 1st and 2nd down, neutral situations', N),
+    c('proe', 'PROE', 'Tendency', 1, 'Pass rate over expected: neutral pass rate minus nflverse\'s expected pass rate (xpass), in percentage points', N),
+    c('rroe', 'RROE', 'Tendency', 1, 'Run rate over expected: the mirror of PROE (neutral run rate minus expected), in percentage points', N),
+    c('epa', 'EPA/Play', OFF, 3, 'Offensive expected points added per play'),
+    c('dbepa', 'EPA/DB', OFF, 3, 'EPA per dropback'),
+    c('ruepa', 'EPA/Rush', OFF, 3, 'EPA per designed run'),
+    c('sr', 'Success%', OFF, 1, 'Plays with positive EPA'),
+    c('dbsr', 'DB Success%', OFF, 1, 'Dropback success rate'),
+    c('rusr', 'Rush Success%', OFF, 1, 'Designed-run success rate'),
+    c('xpp', 'Expl Pass%', OFF, 1, 'Dropbacks gaining 20+ yards'),
+    c('xrp', 'Expl Rush%', OFF, 1, 'Designed runs gaining 10+ yards'),
+    c('adot', 'aDOT', OFF, 1, 'Air yards per pass attempt', N),
+    c('yac', 'YAC/Comp', OFF, 1, 'Yards after catch per completion'),
+    c('tdc', '3D Conv%', OFF, 1, 'Third-down conversion rate'),
+    c('rztd', 'RZ TD%', OFF, 1, 'Drives reaching the opponent 20 that end in a touchdown'),
+    c('tdd', 'TD/Drive%', OFF, 1, 'Drives ending in a touchdown'),
+    c('skp', 'Sack%', 'Protection', 1, 'Sacks per dropback', LO),
+    c('prsa', 'Pressure%', 'Protection', 1, 'Share of dropbacks under pressure (PFF)', LO),
+    c('blzf', 'Blitzed%', 'Protection', 1, 'Share of dropbacks facing a blitz (PFF)', N),
+    c('ttt', 'TTT', 'Protection', 2, 'Average time to throw in seconds (PFF)', N),
+    c('manf', 'Man% Faced', 'Protection', 1, 'Share of receiver routes run against man coverage (PFF)', N),
+    c('depa', 'EPA/Play', DEF, 3, 'EPA per play allowed', LO),
+    c('ddbepa', 'EPA/DB', DEF, 3, 'EPA per dropback allowed', LO),
+    c('druepa', 'EPA/Rush', DEF, 3, 'EPA per designed run allowed', LO),
+    c('dsr', 'Success%', DEF, 1, 'Success rate allowed', LO),
+    c('dxp', 'Expl%', DEF, 1, 'Explosive plays allowed (20+ yard dropbacks, 10+ yard runs) per play', LO),
+    c('dskp', 'Sack%', DEF, 1, 'Sacks per opponent dropback'),
+    c('dprs', 'Pressure%', DEF, 1, 'Share of opponent dropbacks under pressure (PFF)'),
+    c('dblz', 'Blitz%', DEF, 1, 'Share of opponent dropbacks facing a blitz (PFF)', N),
+    c('dman', 'Man%', DEF, 1, 'Share of opponent receiver routes against man coverage (PFF)', N),
+    c('dtdc', '3D Conv%', DEF, 1, 'Third-down conversion rate allowed', LO),
+    c('drztd', 'RZ TD%', DEF, 1, 'Opponent red-zone drives ending in a touchdown', LO)
+  ];
+  const COLS = { QB: QB_COLS, RB: RB_COLS, WR: REC_COLS, TE: REC_COLS, TM: TM_COLS };
   const NOTES = {
     QB: 'Clean / pressured / blitz splits and grades are PFF (weekly grades weighted by dropbacks). CPOE and EPA are nflverse.',
     RB: 'Rush efficiency is PFF charting except 1D%, Success% and EPA (nflverse). Grades 2019-2025 are PFF season grades; 2026 weights weekly grades by attempts.',
     WR: 'PFF lists a receiver in a week\'s man/zone and slot tables only when he was targeted, so those route counts are scaled up to his full route total.',
-    TE: 'PFF lists a receiver in a week\'s man/zone and slot tables only when he was targeted, so those route counts are scaled up to his full route total. PBlk% = pass-block snaps per pass play.'
+    TE: 'PFF lists a receiver in a week\'s man/zone and slot tables only when he was targeted, so those route counts are scaled up to his full route total. PBlk% = pass-block snaps per pass play.',
+    TM: 'Team metrics come from nflverse play-by-play (2-pt tries excluded). Neutral = win probability 20-80% outside the last two minutes of each half. PROE / RROE = neutral pass (run) rate minus nflverse\'s expected rate. Pressure, blitz, time to throw and man coverage are PFF; defense columns describe what that team\'s opponents faced.'
   };
 
-  let _pos = 'QB', _yr = YEARS[0], _wk = 0, _sortK = 'fpt', _sortAsc = false;   // _wk 0 = full season
+  // ---- week ranges ----
+  // A multi-week range is rebuilt from that season's week files: counting stats add, and
+  // every rate is re-weighted by its own denominator - the hidden trailing fields
+  // build_adv_stats.py writes (string = weight key(s), r = ratio of summed fields,
+  // sc = weighted avg with the build's man/zone/slot route scaling). Unlisted fields sum.
+  const _ADV_AGG = {
+    QB: { cmpp: 'att', ypa: 'att', anya: 'att+sk', cpoe: 'cpn', epa: 'dbn', grd: 'db', acc: 'aim', adot: 'att', ttt: 'db',
+      deep: 'airn', btt: 'ns', twp: 'psn', tdp: 'att', intp: 'att', prs: 'db', p2s: 'dgp', skp: 'db',
+      cgr: 'cdb', cacc: 'caim', pgr: 'pdb', pacc: 'paim', pypa: 'patt', blz: 'db', bgr: 'bdb', bypa: 'batt' },
+    RB: { snp: 'tsn', car: 'ttc', tsh: 'tmt', rtp: 'tmd', i10s: 'tmi', ypc: 'att', yco: 'att', mtf: 'att', elu: 'att',
+      bay: 'rsy', exp: 'att', fdp: 'pcar', suc: 'pcar', repa: 'pcar', rgr: 'att', gap: 'gz',
+      tprr: 'rts', yprr: 'rts', recg: 'rts', pbg: 'rpl' },
+    REC: { snp: 'tsn', rtp: 'tmd', tsh: 'tmt', ays: 'tma', wopr: { wopr: 1 }, tprr: 'rts', slot: 'al', wide: 'al', inl: 'al',
+      pbr: 'ppl', yprr: 'rts', grd: 'rts', adot: 'tgt', racr: { r: ['pry', 'pay'] }, yac: 'rec', mtfr: 'rec', fdr: 'rts',
+      ctch: 'tgt', drp: 'dr', cc: 'ct', ctg: 'tgt', tqbr: 'tgt', epat: 'xt',
+      myprr: { sc: 'mr' }, zyprr: { sc: 'zr' }, mtprr: { sc: 'mr' }, ztprr: { sc: 'zr' }, slyprr: { sc: 'slr' },
+      scr: 'cbt', deep: 'dbt', dyd: 'dy', dctch: 'dtg', blos: 'dbt' },
+    TM: { npace: 'pcn', sg: 'pl', nh: 'pl', pr: 'pl', npr: 'npl', edpr: 'edn', proe: 'pon', rroe: 'pon',
+      epa: 'pl', dbepa: 'pa', ruepa: 'rua', sr: 'pl', dbsr: 'pa', rusr: 'rua', xpp: 'pa', xrp: 'rua', adot: 'ayn', yac: 'cmp',
+      tdc: 'tdn', rztd: 'rzt', tdd: 'drv', skp: 'pa', prsa: 'pdbt', blzf: 'pdbt', ttt: 'tttw', manf: 'mzr',
+      depa: 'dpl', ddbepa: 'dpa', druepa: 'drua', dsr: 'dpl', dxp: 'dpl', dskp: 'dpa', dprs: 'dpdbt', dblz: 'dpdbt',
+      dman: 'dmzr', dtdc: 'dtdn', drztd: 'drzt' }
+  };
+  function _aggregate(yr, wl) {
+    const A = window.ADV_STATS || {};
+    const sets = wl.map(w => A[yr + '-w' + w]).filter(Boolean);
+    if (!sets.length) return null;
+    const out = { yr: yr, thru: wl[wl.length - 1], span: [wl[0], wl[wl.length - 1]], teams: {} };
+    sets.forEach(s => Object.keys(s.teams || {}).forEach(tm => {
+      const t = out.teams[tm] = out.teams[tm] || [0, 0, 0, 0, 0];
+      s.teams[tm].forEach((v, i) => { t[i] += v || 0; });
+    }));
+    ['QB', 'RB', 'WR', 'TE', 'TM'].forEach(pos => {
+      const spec = _ADV_AGG[pos === 'WR' || pos === 'TE' ? 'REC' : pos];
+      const tabs = sets.map(s => s[pos]).filter(Boolean);
+      if (!tabs.length) return;
+      const f = tabs[tabs.length - 1].f;
+      const byName = new Map();
+      tabs.forEach(t => t.r.forEach(r => {
+        const o = {};
+        t.f.forEach((k, i) => { o[k] = r[i]; });
+        const list = byName.get(o.n);
+        if (list) list.push(o); else byName.set(o.n, [o]);
+      }));
+      const rows = [];
+      byName.forEach(list => {
+        const sum = k => { let s = 0, any = false; list.forEach(o => { if (o[k] != null) { s += o[k]; any = true; } }); return any ? s : null; };
+        const wavg = (k, wk) => {
+          const keys = wk.split('+');
+          let num = 0, den = 0;
+          list.forEach(o => {
+            if (o[k] == null) return;
+            const w = keys.reduce((a, x) => a + (o[x] || 0), 0);
+            if (w > 0) { num += o[k] * w; den += w; }
+          });
+          return den ? num / den : null;
+        };
+        const res = {};
+        f.forEach(k => {
+          const sp = spec[k];
+          if (k === 'n' || k === 'tm') res[k] = list[list.length - 1][k];
+          else if (k === 'on') res[k] = list.some(o => o.on) ? 1 : 0;
+          else if (!sp) res[k] = sum(k);
+          else if (typeof sp === 'string') res[k] = wavg(k, sp);
+          else if (sp.r) { const d = sum(sp.r[1]); res[k] = d > 0 ? sum(sp.r[0]) / d : null; }
+          else if (sp.sc) {
+            // build scales facet routes by season routes / routes in the weeks the facet saw him
+            const all = sum('rts') || 0, seen = list.reduce((a, o) => a + (o[sp.sc] != null ? (o.rts || 0) : 0), 0);
+            const v = wavg(k, sp.sc);
+            res[k] = v == null || !all || !seen ? null : v * seen / all;
+          }
+        });
+        if (spec.wopr) res.wopr = res.tsh != null && res.ays != null ? (1.5 * res.tsh + 0.7 * res.ays) / 100 : null;
+        // week files keep zero-volume player-weeks; the range gets the season files' floor
+        if (pos === 'QB' ? (res.db || 0) < 1 : pos === 'RB' ? (res.att || 0) + (res.tgt || 0) < 1 : pos !== 'TM' && (res.rts || 0) < 1) return;
+        rows.push(f.map(k => res[k]));
+      });
+      const fi = f.indexOf('fpt') >= 0 ? f.indexOf('fpt') : f.indexOf('epa');
+      rows.sort((a, b) => (b[fi] == null ? -99 : b[fi]) - (a[fi] == null ? -99 : a[fi]));
+      out[pos] = { f: f, r: rows };
+    });
+    return out;
+  }
+
+  let _pos = 'QB', _yr = YEARS[0], _sortK = 'fpt', _sortAsc = false;
+  // Weeks filter: '' = season, 'N' = one week, 'L3' / 'L5' = last 3 / 5 weeks, 'R' = custom From-To
+  let _wsel = '', _rFrom = 0, _rTo = 0, _loadSeq = 0;
   let _wired = false, _started = false, _rowCache = {};
   let _last = null;                 // what the table last rendered (CSV export reads it)
   let _hidden = {}, _mode = 'pg';   // 'pg' = per game, 'tot' = season totals
@@ -62864,13 +62995,35 @@ Rules:
   function _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
   function _norm(s) { return String(s || '').toLowerCase().replace(/[^a-z]/g, ''); }
   function _seasonFile() { return (window.ADV_STATS || {})[_yr] || null; }
-  // the dataset on screen: the season file, or the picked week's file
-  function _season() { return (window.ADV_STATS || {})[_wk ? _yr + '-w' + _wk : _yr] || null; }
-  function _thru() { if (_wk) return 1; const s = _season(); return s && s.thru ? Math.min(s.thru, 17) : 17; }
+  function _weekList() {
+    if (!_wsel) return null;
+    const wks = (_seasonFile() || {}).wks || [];
+    if (_wsel === 'L3' || _wsel === 'L5') return wks.slice(-(+_wsel.slice(1)));
+    if (_wsel === 'R') return wks.filter(w => w >= Math.min(_rFrom, _rTo) && w <= Math.max(_rFrom, _rTo));
+    return [+_wsel];
+  }
+  // the dataset on screen: season file, one week's file, or a range rebuilt from week files
+  function _dataKey() {
+    const wl = _weekList();
+    if (!wl || !wl.length) return String(_yr);
+    return wl.length === 1 ? _yr + '-w' + wl[0] : _yr + '-r' + wl[0] + '-' + wl[wl.length - 1];
+  }
+  function _scope() {
+    const wl = _weekList();
+    if (!wl || !wl.length) return '';
+    return wl.length === 1 ? 'Week ' + wl[0] : 'Weeks ' + wl[0] + '-' + wl[wl.length - 1];
+  }
+  function _season() { return (window.ADV_STATS || {})[_dataKey()] || null; }
+  function _thru() {
+    const wl = _weekList();
+    if (wl && wl.length) return wl.length;
+    const s = _season();
+    return s && s.thru ? Math.min(s.thru, 17) : 17;
+  }
   function _el(id) { return document.getElementById(id); }
 
   function _rows() {
-    const key = _yr + '|' + _wk + '|' + _pos;
+    const key = _dataKey() + '|' + _pos;
     if (_rowCache[key]) return _rowCache[key];
     const s = _season();
     const t = s && s[_pos];
@@ -62945,7 +63098,7 @@ Rules:
     // Team view: shares become share of that team's FULL-SEASON totals (volume while on
     // that team), so a room adds up. League view keeps "share over games played".
     const season = _season() || {};
-    const teamTot = tmSel.value && season.teams ? season.teams[tmSel.value] : null;  // [tgt, car, ay, i10, games]
+    const teamTot = _pos !== 'TM' && tmSel.value && season.teams ? season.teams[tmSel.value] : null;  // [tgt, car, ay, i10, games]
     const pctOf = (x, i) => (x == null || !teamTot[i] ? null : 100 * x / teamTot[i]);
     const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3) };
     const val = (r, k) => {
@@ -62994,12 +63147,12 @@ Rules:
       html += '<th colspan="' + (j - i) + '">' + _esc(cols[i].g) + '</th>';
       i = j;
     }
-    html += '</tr><tr class="rs-adv-hdr"><th data-k="n" class="rs-adv-nm' + sortCls('n') + '">Player</th>' +
+    html += '</tr><tr class="rs-adv-hdr"><th data-k="n" class="rs-adv-nm' + sortCls('n') + '">' + (_pos === 'TM' ? 'Team' : 'Player') + '</th>' +
       '<th data-k="tm" class="rs-adv-tm' + sortCls('tm') + '">Tm</th>';
     cols.forEach((col, i) => {
       const TEAM_TIP = { tsh: 'targets', car: 'carries', ays: 'air yards', i10s: 'carries inside the 10', wopr: 'targets (×1.5) and air yards (×0.7)' };
       const tip = teamTot && TEAM_TIP[col.k]
-        ? 'Share of ' + tmSel.value + '\'s ' + (_wk ? 'Week ' + _wk : 'full-season') + ' ' + TEAM_TIP[col.k] + ' (volume while on ' + tmSel.value + ')'
+        ? 'Share of ' + tmSel.value + '\'s ' + (_scope() || 'full-season') + ' ' + TEAM_TIP[col.k] + ' (volume while on ' + tmSel.value + ')'
         : col.t + (col.cnt ? (pg ? ' per game' : ', season total') : '');
       html += '<th data-k="' + col.k + '" title="' + _esc(tip) + '" class="' + (groupStart.has(i) ? 'rs-adv-gs' : '') + sortCls(col.k) + '">' +
         _esc(pg && col.cnt ? col.lg : col.l) + '</th>';
@@ -63007,7 +63160,7 @@ Rules:
     html += '</tr></thead><tbody>';
     rows.forEach((r, idx) => {
       html += '<tr' + (r.on ? ' class="rs-adv-click" data-n="' + _esc(r.n) + '"' : '') + '>' +
-        '<td class="rs-adv-nm' + (r.on ? ' rs-name' : ' rs-adv-off') + '" title="' + _esc(r.n) + (r.on ? '' : ' (not on the site board)') + '">' +
+        '<td class="rs-adv-nm' + (r.on || _pos === 'TM' ? ' rs-name' : ' rs-adv-off') + '" title="' + _esc(r.n) + (r.on || _pos === 'TM' ? '' : ' (not on the site board)') + '">' +
         '<span class="rs-adv-rk">' + (idx + 1) + '</span>' + _esc(r.n) + '</td><td class="rs-adv-tm">' + _esc(r.tm || '') + '</td>';
       cols.forEach((col, i) => {
         const x = val(r, col.k);
@@ -63032,39 +63185,63 @@ Rules:
     html += '</tbody></table>';
     if (!rows.length) html = '<div class="rs-empty">No players match these filters.</div>';
     wrap.innerHTML = html;
-    _last = { rows: rows, cols: cols, val: val, pg: pg, pos: _pos, yr: _yr, wk: _wk, tm: tmSel.value, total: total };
+    _last = { rows: rows, cols: cols, val: val, pg: pg, pos: _pos, yr: _yr, scope: _scope(), tm: tmSel.value, total: total };
     if (csvBtn) csvBtn.disabled = !rows.length;
 
     const thru = (_season() || {}).thru;
-    if (cnt) cnt.textContent = rows.length + ' of ' + all.length + ' ' + _pos + 's · ' + _yr + (_wk ? ' Week ' + _wk : thru && thru < 17 ? ' thru Week ' + thru : '');
+    const scope = _scope();
+    if (cnt) cnt.textContent = rows.length + ' of ' + all.length + ' ' + _pos + 's · ' + _yr + (scope ? ' ' + scope : thru && thru < 17 ? ' thru Week ' + thru : '');
     if (foot) foot.textContent = NOTES[_pos] + (teamTot
-      ? ' Team view: Tgt%, Carry%, AY%, I10 Car% and WOPR are shares of ' + tmSel.value + '\'s ' + (_wk ? 'Week ' + _wk : 'full-season') + ' totals (volume while on ' + tmSel.value + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
+      ? ' Team view: Tgt%, Carry%, AY%, I10 Car% and WOPR are shares of ' + tmSel.value + '\'s ' + (scope || 'full-season') + ' totals (volume while on ' + tmSel.value + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
       : ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played; pick a team to see its season split. ') +
-      'Sources: PFF Premium, nflverse play-by-play + snap counts.' + (!_wk && thru && thru < 17 ? ' ' + _yr + ' updates daily as PFF posts each week.' : '') +
-      (_wk && _yr < 2026 && _pos !== 'QB' ? ' Week view before 2026: PFF\'s weekly receiving table only lists players targeted that week, so a receiver with zero targets that week is missing.' : '');
+      'Sources: PFF Premium, nflverse play-by-play + snap counts.' + (!scope && thru && thru < 17 ? ' ' + _yr + ' updates daily as PFF posts each week.' : '') +
+      (scope && _yr < 2026 && _pos !== 'QB' ? ' Week views before 2026: PFF\'s weekly receiving table only lists players targeted that week, so a receiver\'s zero-target weeks are missing.' : '') +
+      (/^Weeks /.test(scope) ? ' Week ranges are rebuilt from the week files: counting stats add up and every rate is re-weighted by its own denominator.' : '');
   }
 
   // week options come from the season file's `wks`
   function _fillWeeks() {
-    const sel = _el('rsAdvWk');
+    const sel = _el('rsAdvWk'), from = _el('rsAdvWkFrom'), to = _el('rsAdvWkTo'), box = _el('rsAdvRange');
     if (!sel) return;
     const wks = (_seasonFile() || {}).wks || [];
-    sel.innerHTML = '<option value="">Season</option>' + wks.map(w => '<option value="' + w + '">Week ' + w + '</option>').join('');
-    sel.value = _wk && wks.indexOf(_wk) >= 0 ? String(_wk) : '';
+    sel.innerHTML = '<option value="">Season</option>' +
+      (wks.length > 1 ? '<option value="L3">Last 3 weeks</option><option value="L5">Last 5 weeks</option><option value="R">Custom range</option>' : '') +
+      wks.map(w => '<option value="' + w + '">Week ' + w + '</option>').join('');
+    const opts = wks.map(w => '<option value="' + w + '">' + w + '</option>').join('');
+    if (from) from.innerHTML = opts;
+    if (to) to.innerHTML = opts;
+    if (_wsel && !Array.from(sel.options).some(o => o.value === _wsel)) _wsel = '';
+    sel.value = _wsel;
+    if (_wsel === 'R' && wks.length) {
+      if (wks.indexOf(_rFrom) < 0) _rFrom = wks[Math.max(0, wks.length - 3)];
+      if (wks.indexOf(_rTo) < 0) _rTo = wks[wks.length - 1];
+      if (from) from.value = String(_rFrom);
+      if (to) to.value = String(_rTo);
+    }
+    if (box) box.hidden = _wsel !== 'R';
   }
 
-  // season file first (it lists the weeks), then the picked week's file
+  // season file first (it lists the weeks), then the week file(s); a multi-week range is
+  // aggregated once and cached under its key
   function _load() {
+    const seq = ++_loadSeq;
     const wrap = _el('rsAdvWrap');
-    const yr = _yr, wk = _wk;
-    if (wrap && !_season()) wrap.innerHTML = '<div class="rs-empty">Loading ' + yr + (wk ? ' Week ' + wk : '') + ' advanced stats&hellip;</div>';
+    const yr = _yr;
     const ens = typeof window._ensureAdvStats === 'function' ? window._ensureAdvStats : function() { return Promise.resolve(null); };
+    if (wrap && !_seasonFile()) wrap.innerHTML = '<div class="rs-empty">Loading ' + yr + ' advanced stats&hellip;</div>';
     ens(yr).then(function() {
-      if (yr !== _yr) return null;
+      if (seq !== _loadSeq) return null;
       _fillWeeks();
-      return wk ? ens(yr, wk) : null;
+      const wl = _weekList();
+      if (!wl || !wl.length) return null;
+      if (wrap && !_season()) wrap.innerHTML = '<div class="rs-empty">Loading ' + yr + ' ' + _scope() + '&hellip;</div>';
+      return Promise.all(wl.map(w => ens(yr, w))).then(function() {
+        const A = window.ADV_STATS = window.ADV_STATS || {};
+        const key = _dataKey();
+        if (wl.length > 1 && !A[key]) A[key] = _aggregate(yr, wl);
+      });
     }).then(function() {
-      if (yr !== _yr || wk !== _wk) return;
+      if (seq !== _loadSeq) return;
       _resetMin();
       _render();
     });
@@ -63076,7 +63253,7 @@ Rules:
     const L = _last;
     if (!L || !L.rows.length) return;
     const q = v => { const s = String(v == null ? '' : v); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-    const lines = [['Rank', 'Player', 'Team'].concat(L.cols.map(col => (L.pg && col.cnt ? col.lg : col.l))).map(q).join(',')];
+    const lines = [['Rank', L.pos === 'TM' ? 'Team' : 'Player', L.pos === 'TM' ? 'Code' : 'Team'].concat(L.cols.map(col => (L.pg && col.cnt ? col.lg : col.l))).map(q).join(',')];
     L.rows.forEach((r, i) => {
       lines.push([i + 1, r.n, r.tm || ''].concat(L.cols.map(col => {
         const x = L.val(r, col.k);
@@ -63088,7 +63265,7 @@ Rules:
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'MFF-Advanced-Stats-' + L.pos + '-' + L.yr + (L.wk ? '-W' + L.wk : '') + (L.tm ? '-' + L.tm : '') + '-' + (L.pg ? 'PerGame' : 'Totals') + '.csv';
+    a.download = 'MFF-Advanced-Stats-' + L.pos + '-' + L.yr + (L.scope ? '-W' + L.scope.replace(/^Weeks? /, '') : '') + (L.tm ? '-' + L.tm : '') + '-' + (L.pg ? 'PerGame' : 'Totals') + '.csv';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -63103,8 +63280,13 @@ Rules:
     const yrSel = _el('rsAdvYr');
     YEARS.forEach(y => yrSel.add(new Option(y, y)));
     yrSel.value = _yr;
-    yrSel.addEventListener('change', () => { _yr = +yrSel.value; _wk = 0; _load(); });
-    _el('rsAdvWk').addEventListener('change', e => { _wk = +e.target.value || 0; _load(); });
+    yrSel.addEventListener('change', () => { _yr = +yrSel.value; _wsel = ''; _load(); });
+    _el('rsAdvWk').addEventListener('change', e => { _wsel = e.target.value; _rFrom = _rTo = 0; _load(); });
+    ['rsAdvWkFrom', 'rsAdvWkTo'].forEach(id => _el(id).addEventListener('change', () => {
+      _rFrom = +_el('rsAdvWkFrom').value;
+      _rTo = +_el('rsAdvWkTo').value;
+      _load();
+    }));
     const modeEl = _el('rsAdvMode');
     const syncMode = () => modeEl.querySelectorAll('button[data-mode]').forEach(b => {
       const on = b.dataset.mode === _mode;
@@ -63129,7 +63311,7 @@ Rules:
         t.classList.toggle('active', on);
         t.setAttribute('aria-selected', on ? 'true' : 'false');
       });
-      if (!COLS[_pos].some(col => col.k === _sortK)) { _sortK = 'fpt'; _sortAsc = false; }
+      if (!COLS[_pos].some(col => col.k === _sortK)) { _sortK = _pos === 'TM' ? 'epa' : 'fpt'; _sortAsc = false; }
       _resetMin();
       _renderGroups();
       _render();
